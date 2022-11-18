@@ -14,6 +14,8 @@ packages/react/src/schematics/**/files/**/*.json
 packages/jest/src/schematics/**/files/**/*.json
 packages/**/schematics/**/files/**/*.html
 packages/**/generators/**/files/**/*.html
+nx-dev/nx-dev/.next/
+docs/generated/
 /.vscode
 /.idea
 /.github

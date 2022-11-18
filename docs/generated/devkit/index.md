@@ -204,7 +204,7 @@ It only uses language primitives and immutable objects
 
 • **DependencyType**: `Object`
 
----
+___
 
 ## Utils Enumerations
 
@@ -218,7 +218,7 @@ It only uses language primitives and immutable objects
 
 • **ProjectGraphBuilder**: `Object`
 
----
+___
 
 ## Utils Classes
 
@@ -226,7 +226,7 @@ It only uses language primitives and immutable objects
 
 • **Hasher**: `Object`
 
----
+___
 
 ## Workspace Classes
 
@@ -240,7 +240,7 @@ It only uses language primitives and immutable objects
 
 • **Target**: `Object`
 
----
+___
 
 ## Other Interfaces
 
@@ -250,7 +250,7 @@ It only uses language primitives and immutable objects
 
 A plugin for Nx
 
----
+___
 
 ## Project Graph Interfaces
 
@@ -258,13 +258,13 @@ A plugin for Nx
 
 • **FileData**: `Object`
 
----
+___
 
 ### ProjectFileMap
 
 • **ProjectFileMap**: `Object`
 
----
+___
 
 ### ProjectGraph
 
@@ -272,29 +272,29 @@ A plugin for Nx
 
 #### Type parameters
 
-| Name | Type  |
-| :--- | :---- |
-| `T`  | `any` |
+| Name | Type |
+| :------ | :------ |
+| `T` | `any` |
 
----
+___
 
 ### ProjectGraphDependency
 
 • **ProjectGraphDependency**: `Object`
 
----
+___
 
 ### ProjectGraphExternalNode
 
 • **ProjectGraphExternalNode**: `Object`
 
----
+___
 
 ### ProjectGraphProcessorContext
 
 • **ProjectGraphProcessorContext**: `Object`
 
----
+___
 
 ### ProjectGraphProjectNode
 
@@ -302,11 +302,11 @@ A plugin for Nx
 
 #### Type parameters
 
-| Name | Type  |
-| :--- | :---- |
-| `T`  | `any` |
+| Name | Type |
+| :------ | :------ |
+| `T` | `any` |
 
----
+___
 
 ### ProjectGraphV4
 
@@ -314,11 +314,11 @@ A plugin for Nx
 
 #### Type parameters
 
-| Name | Type  |
-| :--- | :---- |
-| `T`  | `any` |
+| Name | Type |
+| :------ | :------ |
+| `T` | `any` |
 
----
+___
 
 ## Tree Interfaces
 
@@ -326,13 +326,13 @@ A plugin for Nx
 
 • **FileChange**: `Object`
 
----
+___
 
 ### Tree
 
 • **Tree**: `Object`
 
----
+___
 
 ## Utils Interfaces
 
@@ -340,55 +340,55 @@ A plugin for Nx
 
 • **DefaultTasksRunnerOptions**: `Object`
 
----
+___
 
 ### Hash
 
 • **Hash**: `Object`
 
----
+___
 
 ### JsonParseOptions
 
 • **JsonParseOptions**: `Object`
 
----
+___
 
 ### JsonSerializeOptions
 
 • **JsonSerializeOptions**: `Object`
 
----
+___
 
 ### ModuleFederationConfig
 
 • **ModuleFederationConfig**: `Object`
 
----
+___
 
 ### RemoteCache
 
 • **RemoteCache**: `Object`
 
----
+___
 
 ### SharedLibraryConfig
 
 • **SharedLibraryConfig**: `Object`
 
----
+___
 
 ### StringDeletion
 
 • **StringDeletion**: `Object`
 
----
+___
 
 ### StringInsertion
 
 • **StringInsertion**: `Object`
 
----
+___
 
 ## Workspace Interfaces
 
@@ -396,25 +396,25 @@ A plugin for Nx
 
 • **ExecutorContext**: `Object`
 
----
+___
 
 ### ExecutorsJson
 
 • **ExecutorsJson**: `Object`
 
----
+___
 
 ### GeneratorsJson
 
 • **GeneratorsJson**: `Object`
 
----
+___
 
 ### HasherContext
 
 • **HasherContext**: `Object`
 
----
+___
 
 ### ImplicitJsonSubsetDependency
 
@@ -422,23 +422,23 @@ A plugin for Nx
 
 #### Type parameters
 
-| Name | Type                |
-| :--- | :------------------ |
-| `T`  | `"*"` \| `string`[] |
+| Name | Type |
+| :------ | :------ |
+| `T` | ``"*"`` \| `string`[] |
 
----
+___
 
 ### MigrationsJson
 
 • **MigrationsJson**: `Object`
 
----
+___
 
 ### NxAffectedConfig
 
 • **NxAffectedConfig**: `Object`
 
----
+___
 
 ### NxJsonConfiguration
 
@@ -446,23 +446,23 @@ A plugin for Nx
 
 #### Type parameters
 
-| Name | Type                |
-| :--- | :------------------ |
-| `T`  | `"*"` \| `string`[] |
+| Name | Type |
+| :------ | :------ |
+| `T` | ``"*"`` \| `string`[] |
 
----
+___
 
 ### ProjectConfiguration
 
 • **ProjectConfiguration**: `Object`
 
----
+___
 
 ### ProjectsConfigurations
 
 • **ProjectsConfigurations**: `Object`
 
----
+___
 
 ### TargetConfiguration
 
@@ -470,29 +470,29 @@ A plugin for Nx
 
 #### Type parameters
 
-| Name | Type  |
-| :--- | :---- |
-| `T`  | `any` |
+| Name | Type |
+| :------ | :------ |
+| `T` | `any` |
 
----
+___
 
 ### TargetDependencyConfig
 
 • **TargetDependencyConfig**: `Object`
 
----
+___
 
 ### Task
 
 • **Task**: `Object`
 
----
+___
 
 ### TaskGraph
 
 • **TaskGraph**: `Object`
 
----
+___
 
 ### Workspace
 
@@ -502,9 +502,9 @@ A plugin for Nx
 
 ### WorkspaceConfiguration
 
-Ƭ **WorkspaceConfiguration**: `Omit`<[`ProjectsConfigurations`](../../devkit/index#projectsconfigurations), `"projects"`\> & `Partial`<[`NxJsonConfiguration`](../../devkit/index#nxjsonconfiguration)\>
+Ƭ **WorkspaceConfiguration**: `Omit`<[`ProjectsConfigurations`](../../devkit/index#projectsconfigurations), ``"projects"``\> & `Partial`<[`NxJsonConfiguration`](../../devkit/index#nxjsonconfiguration)\>
 
----
+___
 
 ## Other Type aliases
 
@@ -518,23 +518,23 @@ A plugin for Nx
 
 ##### Parameters
 
-| Name   | Type     |
-| :----- | :------- |
+| Name | Type |
+| :------ | :------ |
 | `file` | `string` |
 
 ##### Returns
 
 `Record`<`string`, [`TargetConfiguration`](../../devkit/index#targetconfiguration)\>
 
----
+___
 
 ## Package Manager Type aliases
 
 ### PackageManager
 
-Ƭ **PackageManager**: `"yarn"` \| `"pnpm"` \| `"npm"`
+Ƭ **PackageManager**: ``"yarn"`` \| ``"pnpm"`` \| ``"npm"``
 
----
+___
 
 ## Project Graph Type aliases
 
@@ -544,19 +544,19 @@ A plugin for Nx
 
 #### Type parameters
 
-| Name | Type  |
-| :--- | :---- |
-| `T`  | `any` |
+| Name | Type |
+| :------ | :------ |
+| `T` | `any` |
 
----
+___
 
 ## Utils Type aliases
 
 ### AdditionalSharedConfig
 
-Ƭ **AdditionalSharedConfig**: (`string` \| [libraryName: string, sharedConfig: SharedLibraryConfig] \| { `libraryName`: `string` ; `sharedConfig`: [`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig) })[]
+Ƭ **AdditionalSharedConfig**: (`string` \| [libraryName: string, sharedConfig: SharedLibraryConfig] \| { `libraryName`: `string` ; `sharedConfig`: [`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig)  })[]
 
----
+___
 
 ### ModuleFederationLibrary
 
@@ -564,39 +564,39 @@ A plugin for Nx
 
 #### Type declaration
 
-| Name   | Type     |
-| :----- | :------- |
+| Name | Type |
+| :------ | :------ |
 | `name` | `string` |
 | `type` | `string` |
 
----
+___
 
 ### Remotes
 
 Ƭ **Remotes**: `string`[] \| [remoteName: string, remoteUrl: string][]
 
----
+___
 
 ### SharedFunction
 
-Ƭ **SharedFunction**: (`libraryName`: `string`, `sharedConfig`: [`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig)) => `undefined` \| `false` \| [`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig)
+Ƭ **SharedFunction**: (`libraryName`: `string`, `sharedConfig`: [`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig)) => `undefined` \| ``false`` \| [`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig)
 
 #### Type declaration
 
-▸ (`libraryName`, `sharedConfig`): `undefined` \| `false` \| [`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig)
+▸ (`libraryName`, `sharedConfig`): `undefined` \| ``false`` \| [`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig)
 
 ##### Parameters
 
-| Name           | Type                                                            |
-| :------------- | :-------------------------------------------------------------- |
-| `libraryName`  | `string`                                                        |
+| Name | Type |
+| :------ | :------ |
+| `libraryName` | `string` |
 | `sharedConfig` | [`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig) |
 
 ##### Returns
 
-`undefined` \| `false` \| [`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig)
+`undefined` \| ``false`` \| [`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig)
 
----
+___
 
 ### SharedWorkspaceLibraryConfig
 
@@ -604,19 +604,19 @@ A plugin for Nx
 
 #### Type declaration
 
-| Name                   | Type                                                                                                          |
-| :--------------------- | :------------------------------------------------------------------------------------------------------------ |
-| `getAliases`           | () => `Record`<`string`, `string`\>                                                                           |
-| `getLibraries`         | (`eager?`: `boolean`) => `Record`<`string`, [`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig)\> |
-| `getReplacementPlugin` | () => `NormalModuleReplacementPlugin`                                                                         |
+| Name | Type |
+| :------ | :------ |
+| `getAliases` | () => `Record`<`string`, `string`\> |
+| `getLibraries` | (`eager?`: `boolean`) => `Record`<`string`, [`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig)\> |
+| `getReplacementPlugin` | () => `NormalModuleReplacementPlugin` |
 
----
+___
 
 ### StringChange
 
 Ƭ **StringChange**: [`StringInsertion`](../../devkit/index#stringinsertion) \| [`StringDeletion`](../../devkit/index#stringdeletion)
 
----
+___
 
 ### WorkspaceLibrary
 
@@ -624,13 +624,13 @@ A plugin for Nx
 
 #### Type declaration
 
-| Name        | Type                    |
-| :---------- | :---------------------- |
+| Name | Type |
+| :------ | :------ |
 | `importKey` | `string` \| `undefined` |
-| `name`      | `string`                |
-| `root`      | `string`                |
+| `name` | `string` |
+| `root` | `string` |
 
----
+___
 
 ### WorkspaceLibrarySecondaryEntryPoint
 
@@ -638,12 +638,12 @@ A plugin for Nx
 
 #### Type declaration
 
-| Name   | Type     |
-| :----- | :------- |
+| Name | Type |
+| :------ | :------ |
 | `name` | `string` |
 | `path` | `string` |
 
----
+___
 
 ## Workspace Type aliases
 
@@ -657,16 +657,16 @@ A plugin for Nx
 
 ##### Parameters
 
-| Name      | Type                                                |
-| :-------- | :-------------------------------------------------- |
-| `task`    | [`Task`](../../devkit/index#task)                   |
+| Name | Type |
+| :------ | :------ |
+| `task` | [`Task`](../../devkit/index#task) |
 | `context` | [`HasherContext`](../../devkit/index#hashercontext) |
 
 ##### Returns
 
 `Promise`<[`Hash`](../../devkit/index#hash)\>
 
----
+___
 
 ### Executor
 
@@ -674,9 +674,9 @@ A plugin for Nx
 
 #### Type parameters
 
-| Name | Type  |
-| :--- | :---- |
-| `T`  | `any` |
+| Name | Type |
+| :------ | :------ |
+| `T` | `any` |
 
 #### Type declaration
 
@@ -686,16 +686,16 @@ Implementation of a target of a project
 
 ##### Parameters
 
-| Name      | Type                                                    |
-| :-------- | :------------------------------------------------------ |
-| `options` | `T`                                                     |
+| Name | Type |
+| :------ | :------ |
+| `options` | `T` |
 | `context` | [`ExecutorContext`](../../devkit/index#executorcontext) |
 
 ##### Returns
 
 `Promise`<`Object`\> \| `AsyncIterableIterator`<`Object`\>
 
----
+___
 
 ### Generator
 
@@ -703,9 +703,9 @@ Implementation of a target of a project
 
 #### Type parameters
 
-| Name | Type      |
-| :--- | :-------- |
-| `T`  | `unknown` |
+| Name | Type |
+| :------ | :------ |
+| `T` | `unknown` |
 
 #### Type declaration
 
@@ -715,16 +715,16 @@ A function that schedules updates to the filesystem to be done atomically
 
 ##### Parameters
 
-| Name     | Type  |
-| :------- | :---- |
-| `tree`   | `any` |
-| `schema` | `T`   |
+| Name | Type |
+| :------ | :------ |
+| `tree` | `any` |
+| `schema` | `T` |
 
 ##### Returns
 
 `void` \| [`GeneratorCallback`](../../devkit/index#generatorcallback) \| `Promise`<`void` \| [`GeneratorCallback`](../../devkit/index#generatorcallback)\>
 
----
+___
 
 ### GeneratorCallback
 
@@ -740,7 +740,7 @@ A callback function that is executed after changes are made to the file system
 
 `void` \| `Promise`<`void`\>
 
----
+___
 
 ### ImplicitDependencyEntry
 
@@ -748,21 +748,21 @@ A callback function that is executed after changes are made to the file system
 
 #### Type parameters
 
-| Name | Type                |
-| :--- | :------------------ |
-| `T`  | `"*"` \| `string`[] |
+| Name | Type |
+| :------ | :------ |
+| `T` | ``"*"`` \| `string`[] |
 
 #### Index signature
 
 ▪ [key: `string`]: `T` \| [`ImplicitJsonSubsetDependency`](../../devkit/index#implicitjsonsubsetdependency)<`T`\>
 
----
+___
 
 ### ProjectType
 
-Ƭ **ProjectType**: `"library"` \| `"application"`
+Ƭ **ProjectType**: ``"library"`` \| ``"application"``
 
----
+___
 
 ### TaskGraphExecutor
 
@@ -770,9 +770,9 @@ A callback function that is executed after changes are made to the file system
 
 #### Type parameters
 
-| Name | Type  |
-| :--- | :---- |
-| `T`  | `any` |
+| Name | Type |
+| :------ | :------ |
+| `T` | `any` |
 
 #### Type declaration
 
@@ -782,18 +782,18 @@ Implementation of a target of a project that handles multiple projects to be bat
 
 ##### Parameters
 
-| Name        | Type                                                    |
-| :---------- | :------------------------------------------------------ |
-| `taskGraph` | [`TaskGraph`](../../devkit/index#taskgraph)             |
-| `options`   | `Record`<`string`, `T`\>                                |
-| `overrides` | `T`                                                     |
-| `context`   | [`ExecutorContext`](../../devkit/index#executorcontext) |
+| Name | Type |
+| :------ | :------ |
+| `taskGraph` | [`TaskGraph`](../../devkit/index#taskgraph) |
+| `options` | `Record`<`string`, `T`\> |
+| `overrides` | `T` |
+| `context` | [`ExecutorContext`](../../devkit/index#executorcontext) |
 
 ##### Returns
 
 `Promise`<`Record`<`string`, `Object`\>\>
 
----
+___
 
 ### WorkspaceJsonConfiguration
 
@@ -807,16 +807,16 @@ Implementation of a target of a project that handles multiple projects to be bat
 
 #### Type declaration
 
-| Name    | Type                        |
-| :------ | :-------------------------- |
+| Name | Type |
+| :------ | :------ |
 | `debug` | (...`s`: `any`[]) => `void` |
-| `error` | (`s`: `any`) => `void`      |
+| `error` | (`s`: `any`) => `void` |
 | `fatal` | (...`s`: `any`[]) => `void` |
-| `info`  | (`s`: `any`) => `void`      |
-| `log`   | (...`s`: `any`[]) => `void` |
-| `warn`  | (`s`: `any`) => `void`      |
+| `info` | (`s`: `any`) => `void` |
+| `log` | (...`s`: `any`[]) => `void` |
+| `warn` | (`s`: `any`) => `void` |
 
----
+___
 
 ## Utils Variables
 
@@ -824,19 +824,19 @@ Implementation of a target of a project that handles multiple projects to be bat
 
 • **appRootPath**: `string` = `workspaceRoot`
 
----
+___
 
 ### cacheDir
 
 • **cacheDir**: `string`
 
----
+___
 
 ### output
 
 • **output**: `CLIOutput`
 
----
+___
 
 ### workspaceRoot
 
@@ -851,21 +851,19 @@ Implementation of a target of a project that handles multiple projects to be bat
 Add Dependencies and Dev Dependencies to package.json
 
 For example:
-
 ```typescript
-addDependenciesToPackageJson(tree, { react: 'latest' }, { jest: 'latest' });
+addDependenciesToPackageJson(tree, { react: 'latest' }, { jest: 'latest' })
 ```
-
 This will **add** `react` and `jest` to the dependencies and devDependencies sections of package.json respectively.
 
 #### Parameters
 
-| Name              | Type                              | Default value    | Description                                                             |
-| :---------------- | :-------------------------------- | :--------------- | :---------------------------------------------------------------------- |
-| `tree`            | [`Tree`](../../devkit/index#tree) | `undefined`      | Tree representing file system to modify                                 |
-| `dependencies`    | `Record`<`string`, `string`\>     | `undefined`      | Dependencies to be added to the dependencies section of package.json    |
-| `devDependencies` | `Record`<`string`, `string`\>     | `undefined`      | Dependencies to be added to the devDependencies section of package.json |
-| `packageJsonPath` | `string`                          | `'package.json'` | Path to package.json                                                    |
+| Name | Type | Default value | Description |
+| :------ | :------ | :------ | :------ |
+| `tree` | [`Tree`](../../devkit/index#tree) | `undefined` | Tree representing file system to modify |
+| `dependencies` | `Record`<`string`, `string`\> | `undefined` | Dependencies to be added to the dependencies section of package.json |
+| `devDependencies` | `Record`<`string`, `string`\> | `undefined` | Dependencies to be added to the devDependencies section of package.json |
+| `packageJsonPath` | `string` | `'package.json'` | Path to package.json |
 
 #### Returns
 
@@ -873,7 +871,7 @@ This will **add** `react` and `jest` to the dependencies and devDependencies sec
 
 Callback to install dependencies only if necessary, no-op otherwise
 
----
+___
 
 ### addProjectConfiguration
 
@@ -886,18 +884,18 @@ The utility will update either files.
 
 #### Parameters
 
-| Name                   | Type                                                              | Description                                                                                |
-| :--------------------- | :---------------------------------------------------------------- | :----------------------------------------------------------------------------------------- |
-| `tree`                 | [`Tree`](../../devkit/index#tree)                                 | the file system tree                                                                       |
-| `projectName`          | `string`                                                          | unique name. Often directories are part of the name (e.g., mydir-mylib)                    |
-| `projectConfiguration` | [`ProjectConfiguration`](../../devkit/index#projectconfiguration) | project configuration                                                                      |
-| `standalone?`          | `boolean`                                                         | should the project use package.json? If false, the project config is inside workspace.json |
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `tree` | [`Tree`](../../devkit/index#tree) | the file system tree |
+| `projectName` | `string` | unique name. Often directories are part of the name (e.g., mydir-mylib) |
+| `projectConfiguration` | [`ProjectConfiguration`](../../devkit/index#projectconfiguration) | project configuration |
+| `standalone?` | `boolean` | should the project use package.json? If false, the project config is inside workspace.json |
 
 #### Returns
 
 `void`
 
----
+___
 
 ### applyAdditionalShared
 
@@ -912,17 +910,17 @@ hierarchy.
 
 #### Parameters
 
-| Name               | Type                                                                                 | Description                        |
-| :----------------- | :----------------------------------------------------------------------------------- | :--------------------------------- |
-| `sharedConfig`     | `Record`<`string`, [`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig)\> | The original Shared Config         |
-| `additionalShared` | [`AdditionalSharedConfig`](../../devkit/index#additionalsharedconfig)                | The additional dependencies to add |
-| `projectGraph`     | [`ProjectGraph`](../../devkit/index#projectgraph)<`any`\>                            | The Nx project graph               |
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `sharedConfig` | `Record`<`string`, [`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig)\> | The original Shared Config |
+| `additionalShared` | [`AdditionalSharedConfig`](../../devkit/index#additionalsharedconfig) | The additional dependencies to add |
+| `projectGraph` | [`ProjectGraph`](../../devkit/index#projectgraph)<`any`\> | The Nx project graph |
 
 #### Returns
 
 `void`
 
----
+___
 
 ### applyChangesToString
 
@@ -944,32 +942,32 @@ const updatedCode = applyChangesToString(code, [
   {
     type: ChangeType.Insert,
     index: indexOfPropertyName,
-    text: 'element',
+    text: 'element'
   },
   {
     type: ChangeType.Delete,
     start: indexOfPropertyName,
-    length: 6,
+    length: 6
   },
 ]);
 
 bootstrap({
-  element: document.querySelector('#app'),
+  element: document.querySelector('#app')
 });
 ```
 
 #### Parameters
 
-| Name      | Type                                                |
-| :-------- | :-------------------------------------------------- |
-| `text`    | `string`                                            |
+| Name | Type |
+| :------ | :------ |
+| `text` | `string` |
 | `changes` | [`StringChange`](../../devkit/index#stringchange)[] |
 
 #### Returns
 
 `string`
 
----
+___
 
 ### applySharedFunction
 
@@ -980,16 +978,16 @@ of the dependencies for the Module Federation build.
 
 #### Parameters
 
-| Name           | Type                                                                                 | Description                               |
-| :------------- | :----------------------------------------------------------------------------------- | :---------------------------------------- |
+| Name | Type | Description |
+| :------ | :------ | :------ |
 | `sharedConfig` | `Record`<`string`, [`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig)\> | The original Shared Config to be modified |
-| `sharedFn`     | [`SharedFunction`](../../devkit/index#sharedfunction)                                | The custom function to run                |
+| `sharedFn` | [`SharedFunction`](../../devkit/index#sharedfunction) | The custom function to run |
 
 #### Returns
 
 `void`
 
----
+___
 
 ### convertNxExecutor
 
@@ -1001,15 +999,15 @@ Use this to expose a compatible Angular Builder
 
 #### Parameters
 
-| Name       | Type                                              |
-| :--------- | :------------------------------------------------ |
+| Name | Type |
+| :------ | :------ |
 | `executor` | [`Executor`](../../devkit/index#executor)<`any`\> |
 
 #### Returns
 
 `any`
 
----
+___
 
 ### convertNxGenerator
 
@@ -1019,16 +1017,16 @@ Convert an Nx Generator into an Angular Devkit Schematic.
 
 #### Type parameters
 
-| Name | Type  |
-| :--- | :---- |
-| `T`  | `any` |
+| Name | Type |
+| :------ | :------ |
+| `T` | `any` |
 
 #### Parameters
 
-| Name                           | Type                                              | Default value | Description                                                                                       |
-| :----------------------------- | :------------------------------------------------ | :------------ | :------------------------------------------------------------------------------------------------ |
-| `generator`                    | [`Generator`](../../devkit/index#generator)<`T`\> | `undefined`   | The Nx generator to convert to an Angular Devkit Schematic.                                       |
-| `skipWritingConfigInOldFormat` | `boolean`                                         | `false`       | Whether to skip writing the configuration in the old format (the one used by the Angular DevKit). |
+| Name | Type | Default value | Description |
+| :------ | :------ | :------ | :------ |
+| `generator` | [`Generator`](../../devkit/index#generator)<`T`\> | `undefined` | The Nx generator to convert to an Angular Devkit Schematic. |
+| `skipWritingConfigInOldFormat` | `boolean` | `false` | Whether to skip writing the configuration in the old format (the one used by the Angular DevKit). |
 
 #### Returns
 
@@ -1038,9 +1036,9 @@ Convert an Nx Generator into an Angular Devkit Schematic.
 
 ##### Parameters
 
-| Name               | Type |
-| :----------------- | :--- |
-| `generatorOptions` | `T`  |
+| Name | Type |
+| :------ | :------ |
+| `generatorOptions` | `T` |
 
 ##### Returns
 
@@ -1050,16 +1048,16 @@ Convert an Nx Generator into an Angular Devkit Schematic.
 
 ##### Parameters
 
-| Name      | Type  |
-| :-------- | :---- |
-| `tree`    | `any` |
+| Name | Type |
+| :------ | :------ |
+| `tree` | `any` |
 | `context` | `any` |
 
 ##### Returns
 
 `Promise`<`any`\>
 
----
+___
 
 ### createProjectGraphAsync
 
@@ -1070,17 +1068,15 @@ Computes and returns a ProjectGraph.
 Nx will compute the graph either in a daemon process or in the current process.
 
 Nx will compute it in the current process if:
-
-- The process is running in CI (CI env variable is to true or other common variables used by CI providers are set).
-- It is running in the docker container.
-- The daemon process is disabled because of the previous error when starting the daemon.
-- `NX_DAEMON` is set to `false`.
-- `useDaemon` is set to false in `nx.json`
+* The process is running in CI (CI env variable is to true or other common variables used by CI providers are set).
+* It is running in the docker container.
+* The daemon process is disabled because of the previous error when starting the daemon.
+* `NX_DAEMON` is set to `false`.
+* `useDaemon` is set to false in `nx.json`
 
 `NX_DAEMON` env variable takes precedence:
-
-- If it is set to true, the daemon will always be used.
-- If it is set to false, the graph will always be computed in the current process.
+* If it is set to true, the daemon will always be used.
+* If it is set to false, the graph will always be computed in the current process.
 
 Tip: If you want to debug project graph creation, run your command with NX_DAEMON=false.
 
@@ -1089,17 +1085,17 @@ stored in the daemon process. To reset both run: `nx reset`.
 
 #### Parameters
 
-| Name                      | Type      |
-| :------------------------ | :-------- |
-| `opts`                    | `Object`  |
-| `opts.exitOnError`        | `boolean` |
+| Name | Type |
+| :------ | :------ |
+| `opts` | `Object` |
+| `opts.exitOnError` | `boolean` |
 | `opts.resetDaemonClient?` | `boolean` |
 
 #### Returns
 
 `Promise`<[`ProjectGraph`](../../devkit/index#projectgraph)\>
 
----
+___
 
 ### defaultTasksRunner
 
@@ -1107,25 +1103,25 @@ stored in the daemon process. To reset both run: `nx reset`.
 
 #### Parameters
 
-| Name                         | Type                                                                                  |
-| :--------------------------- | :------------------------------------------------------------------------------------ |
-| `tasks`                      | [`Task`](../../devkit/index#task)[]                                                   |
-| `options`                    | [`DefaultTasksRunnerOptions`](../../devkit/index#defaulttasksrunneroptions)           |
-| `context?`                   | `Object`                                                                              |
-| `context.daemon?`            | `DaemonClient`                                                                        |
-| `context.hasher?`            | [`Hasher`](../../devkit/index#hasher)                                                 |
-| `context.initiatingProject?` | `string`                                                                              |
-| `context.nxArgs`             | `NxArgs`                                                                              |
-| `context.nxJson`             | [`NxJsonConfiguration`](../../devkit/index#nxjsonconfiguration)<`string`[] \| `"*"`\> |
-| `context.projectGraph`       | [`ProjectGraph`](../../devkit/index#projectgraph)<`any`\>                             |
-| `context.target?`            | `string`                                                                              |
-| `context.taskGraph?`         | [`TaskGraph`](../../devkit/index#taskgraph)                                           |
+| Name | Type |
+| :------ | :------ |
+| `tasks` | [`Task`](../../devkit/index#task)[] |
+| `options` | [`DefaultTasksRunnerOptions`](../../devkit/index#defaulttasksrunneroptions) |
+| `context?` | `Object` |
+| `context.daemon?` | `DaemonClient` |
+| `context.hasher?` | [`Hasher`](../../devkit/index#hasher) |
+| `context.initiatingProject?` | `string` |
+| `context.nxArgs` | `NxArgs` |
+| `context.nxJson` | [`NxJsonConfiguration`](../../devkit/index#nxjsonconfiguration)<`string`[] \| ``"*"``\> |
+| `context.projectGraph` | [`ProjectGraph`](../../devkit/index#projectgraph)<`any`\> |
+| `context.target?` | `string` |
+| `context.taskGraph?` | [`TaskGraph`](../../devkit/index#taskgraph) |
 
 #### Returns
 
 `any`
 
----
+___
 
 ### detectPackageManager
 
@@ -1135,15 +1131,15 @@ Detects which package manager is used in the workspace based on the lock file.
 
 #### Parameters
 
-| Name  | Type     | Default value |
-| :---- | :------- | :------------ |
-| `dir` | `string` | `''`          |
+| Name | Type | Default value |
+| :------ | :------ | :------ |
+| `dir` | `string` | `''` |
 
 #### Returns
 
 [`PackageManager`](../../devkit/index#packagemanager)
 
----
+___
 
 ### detectWorkspaceScope
 
@@ -1153,15 +1149,15 @@ Detect workspace scope from the package.json name
 
 #### Parameters
 
-| Name          | Type     |
-| :------------ | :------- |
+| Name | Type |
+| :------ | :------ |
 | `packageName` | `string` |
 
 #### Returns
 
 `string`
 
----
+___
 
 ### formatFiles
 
@@ -1171,15 +1167,15 @@ Formats all the created or updated files using Prettier
 
 #### Parameters
 
-| Name   | Type                              | Description          |
-| :----- | :-------------------------------- | :------------------- |
+| Name | Type | Description |
+| :------ | :------ | :------ |
 | `tree` | [`Tree`](../../devkit/index#tree) | the file system tree |
 
 #### Returns
 
 `Promise`<`void`\>
 
----
+___
 
 ### generateFiles
 
@@ -1188,19 +1184,13 @@ Formats all the created or updated files using Prettier
 Generates a folder of files based on provided templates.
 
 While doing so it performs two substitutions:
-
-- Substitutes segments of file names surrounded by \_\_
+- Substitutes segments of file names surrounded by __
 - Uses ejs to substitute values in templates
 
 Examples:
-
 ```typescript
-generateFiles(tree, path.join(__dirname, 'files'), './tools/scripts', {
-  tmpl: '',
-  name: 'myscript',
-});
+generateFiles(tree, path.join(__dirname , 'files'), './tools/scripts', {tmpl: '', name: 'myscript'})
 ```
-
 This command will take all the files from the `files` directory next to the place where the command is invoked from.
 It will replace all `__tmpl__` with '' and all `__name__` with 'myscript' in the file names, and will replace all
 `<%= name %>` with `myscript` in the files themselves.
@@ -1209,18 +1199,18 @@ doesn't get confused about incorrect TypeScript files.
 
 #### Parameters
 
-| Name            | Type                              | Description                                   |
-| :-------------- | :-------------------------------- | :-------------------------------------------- |
-| `tree`          | [`Tree`](../../devkit/index#tree) | the file system tree                          |
-| `srcFolder`     | `string`                          | the source folder of files (absolute path)    |
-| `target`        | `string`                          | the target folder (relative to the tree root) |
-| `substitutions` | `Object`                          | an object of key-value pairs                  |
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `tree` | [`Tree`](../../devkit/index#tree) | the file system tree |
+| `srcFolder` | `string` | the source folder of files (absolute path) |
+| `target` | `string` | the target folder (relative to the tree root) |
+| `substitutions` | `Object` | an object of key-value pairs |
 
 #### Returns
 
 `void`
 
----
+___
 
 ### getDependentPackagesForProject
 
@@ -1228,21 +1218,21 @@ doesn't get confused about incorrect TypeScript files.
 
 #### Parameters
 
-| Name           | Type                                                      |
-| :------------- | :-------------------------------------------------------- |
+| Name | Type |
+| :------ | :------ |
 | `projectGraph` | [`ProjectGraph`](../../devkit/index#projectgraph)<`any`\> |
-| `name`         | `string`                                                  |
+| `name` | `string` |
 
 #### Returns
 
 `Object`
 
-| Name                 | Type                                                        |
-| :------------------- | :---------------------------------------------------------- |
-| `npmPackages`        | `string`[]                                                  |
+| Name | Type |
+| :------ | :------ |
+| `npmPackages` | `string`[] |
 | `workspaceLibraries` | [`WorkspaceLibrary`](../../devkit/index#workspacelibrary)[] |
 
----
+___
 
 ### getImportPath
 
@@ -1252,16 +1242,16 @@ Prefixes project name with npm scope
 
 #### Parameters
 
-| Name               | Type     |
-| :----------------- | :------- |
-| `npmScope`         | `string` |
+| Name | Type |
+| :------ | :------ |
+| `npmScope` | `string` |
 | `projectDirectory` | `string` |
 
 #### Returns
 
 `string`
 
----
+___
 
 ### getNpmPackageSharedConfig
 
@@ -1272,16 +1262,16 @@ specified version of that package.
 
 #### Parameters
 
-| Name      | Type     | Description                                                                    |
-| :-------- | :------- | :----------------------------------------------------------------------------- |
-| `pkgName` | `string` | Name of the package to share                                                   |
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `pkgName` | `string` | Name of the package to share |
 | `version` | `string` | Version of the package to require by other apps in the Module Federation setup |
 
 #### Returns
 
 [`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig) \| `undefined`
 
----
+___
 
 ### getOutputsForTargetAndConfiguration
 
@@ -1291,16 +1281,16 @@ Returns the list of outputs that will be cached.
 
 #### Parameters
 
-| Name   | Type                                                                            | Description                                               |
-| :----- | :------------------------------------------------------------------------------ | :-------------------------------------------------------- |
-| `task` | `Pick`<[`Task`](../../devkit/index#task), `"overrides"` \| `"target"`\>         | target + overrides                                        |
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `task` | `Pick`<[`Task`](../../devkit/index#task), ``"overrides"`` \| ``"target"``\> | target + overrides |
 | `node` | [`ProjectGraphProjectNode`](../../devkit/index#projectgraphprojectnode)<`any`\> | ProjectGraphProjectNode object that the task runs against |
 
 #### Returns
 
 `string`[]
 
----
+___
 
 ### getPackageManagerCommand
 
@@ -1318,15 +1308,15 @@ execSync(`${getPackageManagerCommand().addDev} my-dev-package`);
 
 #### Parameters
 
-| Name             | Type                                                  |
-| :--------------- | :---------------------------------------------------- |
+| Name | Type |
+| :------ | :------ |
 | `packageManager` | [`PackageManager`](../../devkit/index#packagemanager) |
 
 #### Returns
 
 `PackageManagerCommands`
 
----
+___
 
 ### getPackageManagerVersion
 
@@ -1338,15 +1328,15 @@ but it can also be passed in explicitly.
 
 #### Parameters
 
-| Name             | Type                                                  |
-| :--------------- | :---------------------------------------------------- |
+| Name | Type |
+| :------ | :------ |
 | `packageManager` | [`PackageManager`](../../devkit/index#packagemanager) |
 
 #### Returns
 
 `string`
 
----
+___
 
 ### getProjects
 
@@ -1358,15 +1348,15 @@ Use [readProjectConfiguration](../../devkit/index#readprojectconfiguration) if o
 
 #### Parameters
 
-| Name   | Type                              |
-| :----- | :-------------------------------- |
+| Name | Type |
+| :------ | :------ |
 | `tree` | [`Tree`](../../devkit/index#tree) |
 
 #### Returns
 
 `Map`<`string`, [`ProjectConfiguration`](../../devkit/index#projectconfiguration)\>
 
----
+___
 
 ### getWorkspaceLayout
 
@@ -1383,38 +1373,38 @@ Example:
 
 #### Parameters
 
-| Name   | Type                              | Description      |
-| :----- | :-------------------------------- | :--------------- |
+| Name | Type | Description |
+| :------ | :------ | :------ |
 | `tree` | [`Tree`](../../devkit/index#tree) | file system tree |
 
 #### Returns
 
 `Object`
 
-| Name                  | Type      |
-| :-------------------- | :-------- |
-| `appsDir`             | `string`  |
-| `libsDir`             | `string`  |
-| `npmScope`            | `string`  |
+| Name | Type |
+| :------ | :------ |
+| `appsDir` | `string` |
+| `libsDir` | `string` |
+| `npmScope` | `string` |
 | `standaloneAsDefault` | `boolean` |
 
----
+___
 
 ### getWorkspacePath
 
-▸ **getWorkspacePath**(`tree`): `"/angular.json"` \| `"/workspace.json"` \| `null`
+▸ **getWorkspacePath**(`tree`): ``"/angular.json"`` \| ``"/workspace.json"`` \| ``null``
 
 #### Parameters
 
-| Name   | Type                              |
-| :----- | :-------------------------------- |
+| Name | Type |
+| :------ | :------ |
 | `tree` | [`Tree`](../../devkit/index#tree) |
 
 #### Returns
 
-`"/angular.json"` \| `"/workspace.json"` \| `null`
+``"/angular.json"`` \| ``"/workspace.json"`` \| ``null``
 
----
+___
 
 ### installPackagesTask
 
@@ -1425,18 +1415,18 @@ Runs `npm install` or `yarn install`. It will skip running the install if
 
 #### Parameters
 
-| Name             | Type                                                  | Default value | Description                                                   |
-| :--------------- | :---------------------------------------------------- | :------------ | :------------------------------------------------------------ |
-| `tree`           | [`Tree`](../../devkit/index#tree)                     | `undefined`   | the file system tree                                          |
-| `alwaysRun`      | `boolean`                                             | `false`       | always run the command even if `package.json` hasn't changed. |
-| `cwd`            | `string`                                              | `''`          | -                                                             |
-| `packageManager` | [`PackageManager`](../../devkit/index#packagemanager) | `undefined`   | -                                                             |
+| Name | Type | Default value | Description |
+| :------ | :------ | :------ | :------ |
+| `tree` | [`Tree`](../../devkit/index#tree) | `undefined` | the file system tree |
+| `alwaysRun` | `boolean` | `false` | always run the command even if `package.json` hasn't changed. |
+| `cwd` | `string` | `''` | - |
+| `packageManager` | [`PackageManager`](../../devkit/index#packagemanager) | `undefined` | - |
 
 #### Returns
 
 `void`
 
----
+___
 
 ### isStandaloneProject
 
@@ -1446,16 +1436,16 @@ Returns if a project has a standalone configuration (project.json).
 
 #### Parameters
 
-| Name      | Type                              | Description          |
-| :-------- | :-------------------------------- | :------------------- |
-| `tree`    | [`Tree`](../../devkit/index#tree) | the file system tree |
-| `project` | `string`                          | the project name     |
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `tree` | [`Tree`](../../devkit/index#tree) | the file system tree |
+| `project` | `string` | the project name |
 
 #### Returns
 
 `boolean`
 
----
+___
 
 ### joinPathFragments
 
@@ -1465,15 +1455,15 @@ Normalized path fragments and joins them
 
 #### Parameters
 
-| Name           | Type       |
-| :------------- | :--------- |
+| Name | Type |
+| :------ | :------ |
 | `...fragments` | `string`[] |
 
 #### Returns
 
 `string`
 
----
+___
 
 ### mapRemotes
 
@@ -1484,17 +1474,17 @@ Federation.
 
 #### Parameters
 
-| Name                 | Type                                    | Description                                              |
-| :------------------- | :-------------------------------------- | :------------------------------------------------------- |
-| `remotes`            | [`Remotes`](../../devkit/index#remotes) | The remotes to map                                       |
-| `remoteEntryExt`     | `"js"` \| `"mjs"`                       | The file extension of the remoteEntry file               |
-| `determineRemoteUrl` | (`remote`: `string`) => `string`        | The function used to lookup the URL of the served remote |
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `remotes` | [`Remotes`](../../devkit/index#remotes) | The remotes to map |
+| `remoteEntryExt` | ``"js"`` \| ``"mjs"`` | The file extension of the remoteEntry file |
+| `determineRemoteUrl` | (`remote`: `string`) => `string` | The function used to lookup the URL of the served remote |
 
 #### Returns
 
 `Record`<`string`, `string`\>
 
----
+___
 
 ### mapRemotesForSSR
 
@@ -1505,17 +1495,17 @@ Federation.
 
 #### Parameters
 
-| Name                 | Type                                    | Description                                              |
-| :------------------- | :-------------------------------------- | :------------------------------------------------------- |
-| `remotes`            | [`Remotes`](../../devkit/index#remotes) | The remotes to map                                       |
-| `remoteEntryExt`     | `"js"` \| `"mjs"`                       | The file extension of the remoteEntry file               |
-| `determineRemoteUrl` | (`remote`: `string`) => `string`        | The function used to lookup the URL of the served remote |
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `remotes` | [`Remotes`](../../devkit/index#remotes) | The remotes to map |
+| `remoteEntryExt` | ``"js"`` \| ``"mjs"`` | The file extension of the remoteEntry file |
+| `determineRemoteUrl` | (`remote`: `string`) => `string` | The function used to lookup the URL of the served remote |
 
 #### Returns
 
 `Record`<`string`, `string`\>
 
----
+___
 
 ### moveFilesToNewDirectory
 
@@ -1525,17 +1515,17 @@ Analogous to cp -r oldDir newDir
 
 #### Parameters
 
-| Name     | Type                              |
-| :------- | :-------------------------------- |
-| `tree`   | [`Tree`](../../devkit/index#tree) |
-| `oldDir` | `string`                          |
-| `newDir` | `string`                          |
+| Name | Type |
+| :------ | :------ |
+| `tree` | [`Tree`](../../devkit/index#tree) |
+| `oldDir` | `string` |
+| `newDir` | `string` |
 
 #### Returns
 
 `void`
 
----
+___
 
 ### names
 
@@ -1546,29 +1536,29 @@ Util function to generate different strings based off the provided name.
 Examples:
 
 ```typescript
-names('my-name'); // {name: 'my-name', className: 'MyName', propertyName: 'myName', constantName: 'MY_NAME', fileName: 'my-name'}
-names('myName'); // {name: 'myName', className: 'MyName', propertyName: 'myName', constantName: 'MY_NAME', fileName: 'my-name'}
+names("my-name") // {name: 'my-name', className: 'MyName', propertyName: 'myName', constantName: 'MY_NAME', fileName: 'my-name'}
+names("myName") // {name: 'myName', className: 'MyName', propertyName: 'myName', constantName: 'MY_NAME', fileName: 'my-name'}
 ```
 
 #### Parameters
 
-| Name   | Type     |
-| :----- | :------- |
+| Name | Type |
+| :------ | :------ |
 | `name` | `string` |
 
 #### Returns
 
 `Object`
 
-| Name           | Type     |
-| :------------- | :------- |
-| `className`    | `string` |
+| Name | Type |
+| :------ | :------ |
+| `className` | `string` |
 | `constantName` | `string` |
-| `fileName`     | `string` |
-| `name`         | `string` |
+| `fileName` | `string` |
+| `name` | `string` |
 | `propertyName` | `string` |
 
----
+___
 
 ### normalizePath
 
@@ -1578,15 +1568,15 @@ Coverts an os specific path to a unix style path
 
 #### Parameters
 
-| Name             | Type     |
-| :--------------- | :------- |
+| Name | Type |
+| :------ | :------ |
 | `osSpecificPath` | `string` |
 
 #### Returns
 
 `string`
 
----
+___
 
 ### offsetFromRoot
 
@@ -1598,20 +1588,20 @@ constructing relative URLs.
 Examples:
 
 ```typescript
-offsetFromRoot('apps/mydir/myapp/'); // returns "../../../"
+offsetFromRoot("apps/mydir/myapp/") // returns "../../../"
 ```
 
 #### Parameters
 
-| Name            | Type     | Description    |
-| :-------------- | :------- | :------------- |
+| Name | Type | Description |
+| :------ | :------ | :------ |
 | `fullPathToDir` | `string` | directory path |
 
 #### Returns
 
 `string`
 
----
+___
 
 ### parseJson
 
@@ -1622,16 +1612,16 @@ By default javascript-style comments are allowed.
 
 #### Type parameters
 
-| Name | Type                     |
-| :--- | :----------------------- |
-| `T`  | extends `object` = `any` |
+| Name | Type |
+| :------ | :------ |
+| `T` | extends `object` = `any` |
 
 #### Parameters
 
-| Name       | Type                                                      | Description            |
-| :--------- | :-------------------------------------------------------- | :--------------------- |
-| `input`    | `string`                                                  | JSON content as string |
-| `options?` | [`JsonParseOptions`](../../devkit/index#jsonparseoptions) | JSON parse options     |
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `input` | `string` | JSON content as string |
+| `options?` | [`JsonParseOptions`](../../devkit/index#jsonparseoptions) | JSON parse options |
 
 #### Returns
 
@@ -1639,7 +1629,7 @@ By default javascript-style comments are allowed.
 
 Object the JSON content represents
 
----
+___
 
 ### parseTargetString
 
@@ -1648,23 +1638,22 @@ Object the JSON content represents
 Parses a target string into {project, target, configuration}
 
 Examples:
-
 ```typescript
-parseTargetString('proj:test'); // returns { project: "proj", target: "test" }
-parseTargetString('proj:test:production'); // returns { project: "proj", target: "test", configuration: "production" }
+parseTargetString("proj:test") // returns { project: "proj", target: "test" }
+parseTargetString("proj:test:production") // returns { project: "proj", target: "test", configuration: "production" }
 ```
 
 #### Parameters
 
-| Name           | Type     | Description      |
-| :------------- | :------- | :--------------- |
+| Name | Type | Description |
+| :------ | :------ | :------ |
 | `targetString` | `string` | target reference |
 
 #### Returns
 
 [`Target`](../../devkit/index#target)
 
----
+___
 
 ### readAllWorkspaceConfiguration
 
@@ -1676,7 +1665,7 @@ parseTargetString('proj:test:production'); // returns { project: "proj", target:
 
 [`ProjectsConfigurations`](../../devkit/index#projectsconfigurations) & [`NxJsonConfiguration`](../../devkit/index#nxjsonconfiguration)
 
----
+___
 
 ### readCachedProjectGraph
 
@@ -1690,7 +1679,7 @@ Synchronously reads the latest cached copy of the workspace's ProjectGraph.
 
 [`ProjectGraph`](../../devkit/index#projectgraph)<[`ProjectConfiguration`](../../devkit/index#projectconfiguration)\>
 
----
+___
 
 ### readJson
 
@@ -1700,23 +1689,23 @@ Reads a json file, removes all comments and parses JSON.
 
 #### Type parameters
 
-| Name | Type                     |
-| :--- | :----------------------- |
-| `T`  | extends `object` = `any` |
+| Name | Type |
+| :------ | :------ |
+| `T` | extends `object` = `any` |
 
 #### Parameters
 
-| Name       | Type                                                      | Description                 |
-| :--------- | :-------------------------------------------------------- | :-------------------------- |
-| `tree`     | [`Tree`](../../devkit/index#tree)                         | file system tree            |
-| `path`     | `string`                                                  | file path                   |
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `tree` | [`Tree`](../../devkit/index#tree) | file system tree |
+| `path` | `string` | file path |
 | `options?` | [`JsonParseOptions`](../../devkit/index#jsonparseoptions) | Optional JSON Parse Options |
 
 #### Returns
 
 `T`
 
----
+___
 
 ### readJsonFile
 
@@ -1726,15 +1715,15 @@ Reads a JSON file and returns the object the JSON content represents.
 
 #### Type parameters
 
-| Name | Type                     |
-| :--- | :----------------------- |
-| `T`  | extends `object` = `any` |
+| Name | Type |
+| :------ | :------ |
+| `T` | extends `object` = `any` |
 
 #### Parameters
 
-| Name       | Type              | Description        |
-| :--------- | :---------------- | :----------------- |
-| `path`     | `string`          | A path to a file.  |
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `path` | `string` | A path to a file. |
 | `options?` | `JsonReadOptions` | JSON parse options |
 
 #### Returns
@@ -1743,7 +1732,7 @@ Reads a JSON file and returns the object the JSON content represents.
 
 Object the JSON content of the file represents
 
----
+___
 
 ### readNxJson
 
@@ -1753,7 +1742,7 @@ Object the JSON content of the file represents
 
 [`NxJsonConfiguration`](../../devkit/index#nxjsonconfiguration)
 
----
+___
 
 ### readProjectConfiguration
 
@@ -1768,16 +1757,16 @@ The utility will read from either file.
 
 #### Parameters
 
-| Name          | Type                              | Description                                                             |
-| :------------ | :-------------------------------- | :---------------------------------------------------------------------- |
-| `tree`        | [`Tree`](../../devkit/index#tree) | the file system tree                                                    |
-| `projectName` | `string`                          | unique name. Often directories are part of the name (e.g., mydir-mylib) |
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `tree` | [`Tree`](../../devkit/index#tree) | the file system tree |
+| `projectName` | `string` | unique name. Often directories are part of the name (e.g., mydir-mylib) |
 
 #### Returns
 
 [`ProjectConfiguration`](../../devkit/index#projectconfiguration)
 
----
+___
 
 ### readRootPackageJson
 
@@ -1787,12 +1776,12 @@ The utility will read from either file.
 
 `Object`
 
-| Name               | Type     |
-| :----------------- | :------- |
-| `dependencies?`    | `Object` |
+| Name | Type |
+| :------ | :------ |
+| `dependencies?` | `Object` |
 | `devDependencies?` | `Object` |
 
----
+___
 
 ### readTargetOptions
 
@@ -1804,22 +1793,22 @@ Works as if you invoked the target yourself without passing any command lint ove
 
 #### Type parameters
 
-| Name | Type  |
-| :--- | :---- |
-| `T`  | `any` |
+| Name | Type |
+| :------ | :------ |
+| `T` | `any` |
 
 #### Parameters
 
-| Name                | Type                                                    |
-| :------------------ | :------------------------------------------------------ |
-| `__namedParameters` | [`Target`](../../devkit/index#target)                   |
-| `context`           | [`ExecutorContext`](../../devkit/index#executorcontext) |
+| Name | Type |
+| :------ | :------ |
+| `__namedParameters` | [`Target`](../../devkit/index#target) |
+| `context` | [`ExecutorContext`](../../devkit/index#executorcontext) |
 
 #### Returns
 
 `T`
 
----
+___
 
 ### readWorkspaceConfiguration
 
@@ -1831,15 +1820,15 @@ This does _not_ provide projects configuration, use [readProjectConfiguration](.
 
 #### Parameters
 
-| Name   | Type                              |
-| :----- | :-------------------------------- |
+| Name | Type |
+| :------ | :------ |
 | `tree` | [`Tree`](../../devkit/index#tree) |
 
 #### Returns
 
 [`WorkspaceConfiguration`](../../devkit/index#workspaceconfiguration)
 
----
+___
 
 ### removeDependenciesFromPackageJson
 
@@ -1848,21 +1837,19 @@ This does _not_ provide projects configuration, use [readProjectConfiguration](.
 Remove Dependencies and Dev Dependencies from package.json
 
 For example:
-
 ```typescript
-removeDependenciesFromPackageJson(tree, ['react'], ['jest']);
+removeDependenciesFromPackageJson(tree, ['react'], ['jest'])
 ```
-
 This will **remove** `react` and `jest` from the dependencies and devDependencies sections of package.json respectively.
 
 #### Parameters
 
-| Name              | Type                              | Default value    | Description                                                                 |
-| :---------------- | :-------------------------------- | :--------------- | :-------------------------------------------------------------------------- |
-| `tree`            | [`Tree`](../../devkit/index#tree) | `undefined`      | -                                                                           |
-| `dependencies`    | `string`[]                        | `undefined`      | Dependencies to be removed from the dependencies section of package.json    |
-| `devDependencies` | `string`[]                        | `undefined`      | Dependencies to be removed from the devDependencies section of package.json |
-| `packageJsonPath` | `string`                          | `'package.json'` | -                                                                           |
+| Name | Type | Default value | Description |
+| :------ | :------ | :------ | :------ |
+| `tree` | [`Tree`](../../devkit/index#tree) | `undefined` | - |
+| `dependencies` | `string`[] | `undefined` | Dependencies to be removed from the dependencies section of package.json |
+| `devDependencies` | `string`[] | `undefined` | Dependencies to be removed from the devDependencies section of package.json |
+| `packageJsonPath` | `string` | `'package.json'` | - |
 
 #### Returns
 
@@ -1870,7 +1857,7 @@ This will **remove** `react` and `jest` from the dependencies and devDependencie
 
 Callback to uninstall dependencies only if necessary. undefined is returned if changes are not necessary.
 
----
+___
 
 ### removeProjectConfiguration
 
@@ -1883,16 +1870,16 @@ The utility will update either file.
 
 #### Parameters
 
-| Name          | Type                              |
-| :------------ | :-------------------------------- |
-| `tree`        | [`Tree`](../../devkit/index#tree) |
-| `projectName` | `string`                          |
+| Name | Type |
+| :------ | :------ |
+| `tree` | [`Tree`](../../devkit/index#tree) |
+| `projectName` | `string` |
 
 #### Returns
 
 `void`
 
----
+___
 
 ### reverse
 
@@ -1905,15 +1892,15 @@ B will depend on A.
 
 #### Parameters
 
-| Name    | Type                                                      |
-| :------ | :-------------------------------------------------------- |
+| Name | Type |
+| :------ | :------ |
 | `graph` | [`ProjectGraph`](../../devkit/index#projectgraph)<`any`\> |
 
 #### Returns
 
 [`ProjectGraph`](../../devkit/index#projectgraph)
 
----
+___
 
 ### runExecutor
 
@@ -1936,11 +1923,7 @@ Apart from that, it works the same way:
 Example:
 
 ```typescript
-for await (const s of await runExecutor(
-  { project: 'myproj', target: 'serve' },
-  { watch: true },
-  context
-)) {
+for await (const s of await runExecutor({project: 'myproj', target: 'serve'}, {watch: true}, context)) {
   // s.success
 }
 ```
@@ -1949,26 +1932,26 @@ Note that the return value is a promise of an iterator, so you need to await bef
 
 #### Type parameters
 
-| Name | Type             |
-| :--- | :--------------- |
-| `T`  | extends `Object` |
+| Name | Type |
+| :------ | :------ |
+| `T` | extends `Object` |
 
 #### Parameters
 
-| Name                               | Type                                                    |
-| :--------------------------------- | :------------------------------------------------------ |
-| `targetDescription`                | `Object`                                                |
-| `targetDescription.configuration?` | `string`                                                |
-| `targetDescription.project`        | `string`                                                |
-| `targetDescription.target`         | `string`                                                |
-| `overrides`                        | `Object`                                                |
-| `context`                          | [`ExecutorContext`](../../devkit/index#executorcontext) |
+| Name | Type |
+| :------ | :------ |
+| `targetDescription` | `Object` |
+| `targetDescription.configuration?` | `string` |
+| `targetDescription.project` | `string` |
+| `targetDescription.target` | `string` |
+| `overrides` | `Object` |
+| `context` | [`ExecutorContext`](../../devkit/index#executorcontext) |
 
 #### Returns
 
 `Promise`<`AsyncIterableIterator`<`T`\>\>
 
----
+___
 
 ### serializeJson
 
@@ -1979,16 +1962,16 @@ By default the JSON string is formatted with a 2 space intendation to be easy re
 
 #### Type parameters
 
-| Name | Type                        |
-| :--- | :-------------------------- |
-| `T`  | extends `object` = `object` |
+| Name | Type |
+| :------ | :------ |
+| `T` | extends `object` = `object` |
 
 #### Parameters
 
-| Name       | Type                                                              | Description                               |
-| :--------- | :---------------------------------------------------------------- | :---------------------------------------- |
-| `input`    | `T`                                                               | Object which should be serialized to JSON |
-| `options?` | [`JsonSerializeOptions`](../../devkit/index#jsonserializeoptions) | JSON serialize options                    |
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `input` | `T` | Object which should be serialized to JSON |
+| `options?` | [`JsonSerializeOptions`](../../devkit/index#jsonserializeoptions) | JSON serialize options |
 
 #### Returns
 
@@ -1996,7 +1979,7 @@ By default the JSON string is formatted with a 2 space intendation to be easy re
 
 the formatted JSON representation of the object
 
----
+___
 
 ### sharePackages
 
@@ -2010,15 +1993,15 @@ workspace.
 
 #### Parameters
 
-| Name       | Type       | Description                       |
-| :--------- | :--------- | :-------------------------------- |
+| Name | Type | Description |
+| :------ | :------ | :------ |
 | `packages` | `string`[] | Array of package names as strings |
 
 #### Returns
 
 `Record`<`string`, [`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig)\>
 
----
+___
 
 ### shareWorkspaceLibraries
 
@@ -2029,16 +2012,16 @@ share Nx Workspace Libraries between Hosts and Remotes.
 
 #### Parameters
 
-| Name           | Type                                                        | Description                                                                  |
-| :------------- | :---------------------------------------------------------- | :--------------------------------------------------------------------------- |
-| `libraries`    | [`WorkspaceLibrary`](../../devkit/index#workspacelibrary)[] | The Nx Workspace Libraries to share                                          |
-| `tsConfigPath` | `string`                                                    | The path to TS Config File that contains the Path Mappings for the Libraries |
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `libraries` | [`WorkspaceLibrary`](../../devkit/index#workspacelibrary)[] | The Nx Workspace Libraries to share |
+| `tsConfigPath` | `string` | The path to TS Config File that contains the Path Mappings for the Libraries |
 
 #### Returns
 
 [`SharedWorkspaceLibraryConfig`](../../devkit/index#sharedworkspacelibraryconfig)
 
----
+___
 
 ### stripIndents
 
@@ -2053,21 +2036,21 @@ stripIndents`
  Options:
  - option1
  - option2
-`;
+`
 ```
 
 #### Parameters
 
-| Name        | Type                   |
-| :---------- | :--------------------- |
-| `strings`   | `TemplateStringsArray` |
-| `...values` | `any`[]                |
+| Name | Type |
+| :------ | :------ |
+| `strings` | `TemplateStringsArray` |
+| `...values` | `any`[] |
 
 #### Returns
 
 `string`
 
----
+___
 
 ### stripJsonComments
 
@@ -2079,16 +2062,16 @@ of comments with a replaceCharacter
 
 #### Parameters
 
-| Name         | Type     |
-| :----------- | :------- |
-| `text`       | `string` |
+| Name | Type |
+| :------ | :------ |
+| `text` | `string` |
 | `replaceCh?` | `string` |
 
 #### Returns
 
 `string`
 
----
+___
 
 ### targetToTargetString
 
@@ -2098,15 +2081,15 @@ Returns a string in the format "project:target[:configuration]" for the target
 
 #### Parameters
 
-| Name     | Type                                  | Description                                                                                                                                                                                                                                     |
-| :------- | :------------------------------------ | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `target` | [`Target`](../../devkit/index#target) | target object Examples: `typescript targetToTargetString({ project: "proj", target: "test" }) // returns "proj:test" targetToTargetString({ project: "proj", target: "test", configuration: "production" }) // returns "proj:test:production" ` |
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `target` | [`Target`](../../devkit/index#target) | target object  Examples:  ```typescript targetToTargetString({ project: "proj", target: "test" }) // returns "proj:test" targetToTargetString({ project: "proj", target: "test", configuration: "production" }) // returns "proj:test:production" ``` |
 
 #### Returns
 
 `string`
 
----
+___
 
 ### toJS
 
@@ -2116,15 +2099,15 @@ Rename and transpile any new typescript files created to javascript files
 
 #### Parameters
 
-| Name   | Type                              |
-| :----- | :-------------------------------- |
+| Name | Type |
+| :------ | :------ |
 | `tree` | [`Tree`](../../devkit/index#tree) |
 
 #### Returns
 
 `void`
 
----
+___
 
 ### updateJson
 
@@ -2134,25 +2117,25 @@ Updates a JSON value to the file system tree
 
 #### Type parameters
 
-| Name | Type                     |
-| :--- | :----------------------- |
-| `T`  | extends `object` = `any` |
-| `U`  | extends `object` = `T`   |
+| Name | Type |
+| :------ | :------ |
+| `T` | extends `object` = `any` |
+| `U` | extends `object` = `T` |
 
 #### Parameters
 
-| Name       | Type                                                                                                                          | Description                                                                                          |
-| :--------- | :---------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------- |
-| `tree`     | [`Tree`](../../devkit/index#tree)                                                                                             | File system tree                                                                                     |
-| `path`     | `string`                                                                                                                      | Path of JSON file in the Tree                                                                        |
-| `updater`  | (`value`: `T`) => `U`                                                                                                         | Function that maps the current value of a JSON document to a new value to be written to the document |
-| `options?` | [`JsonParseOptions`](../../devkit/index#jsonparseoptions) & [`JsonSerializeOptions`](../../devkit/index#jsonserializeoptions) | Optional JSON Parse and Serialize Options                                                            |
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `tree` | [`Tree`](../../devkit/index#tree) | File system tree |
+| `path` | `string` | Path of JSON file in the Tree |
+| `updater` | (`value`: `T`) => `U` | Function that maps the current value of a JSON document to a new value to be written to the document |
+| `options?` | [`JsonParseOptions`](../../devkit/index#jsonparseoptions) & [`JsonSerializeOptions`](../../devkit/index#jsonserializeoptions) | Optional JSON Parse and Serialize Options |
 
 #### Returns
 
 `void`
 
----
+___
 
 ### updateProjectConfiguration
 
@@ -2165,17 +2148,17 @@ The utility will update either files.
 
 #### Parameters
 
-| Name                   | Type                                                              | Description                                                             |
-| :--------------------- | :---------------------------------------------------------------- | :---------------------------------------------------------------------- |
-| `tree`                 | [`Tree`](../../devkit/index#tree)                                 | the file system tree                                                    |
-| `projectName`          | `string`                                                          | unique name. Often directories are part of the name (e.g., mydir-mylib) |
-| `projectConfiguration` | [`ProjectConfiguration`](../../devkit/index#projectconfiguration) | project configuration                                                   |
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `tree` | [`Tree`](../../devkit/index#tree) | the file system tree |
+| `projectName` | `string` | unique name. Often directories are part of the name (e.g., mydir-mylib) |
+| `projectConfiguration` | [`ProjectConfiguration`](../../devkit/index#projectconfiguration) | project configuration |
 
 #### Returns
 
 `void`
 
----
+___
 
 ### updateTsConfigsToJs
 
@@ -2183,17 +2166,17 @@ The utility will update either files.
 
 #### Parameters
 
-| Name                  | Type                              |
-| :-------------------- | :-------------------------------- |
-| `tree`                | [`Tree`](../../devkit/index#tree) |
-| `options`             | `Object`                          |
-| `options.projectRoot` | `string`                          |
+| Name | Type |
+| :------ | :------ |
+| `tree` | [`Tree`](../../devkit/index#tree) |
+| `options` | `Object` |
+| `options.projectRoot` | `string` |
 
 #### Returns
 
 `void`
 
----
+___
 
 ### updateWorkspaceConfiguration
 
@@ -2205,16 +2188,16 @@ This does _not_ update projects configuration, use [updateProjectConfiguration](
 
 #### Parameters
 
-| Name              | Type                                                                  |
-| :---------------- | :-------------------------------------------------------------------- |
-| `tree`            | [`Tree`](../../devkit/index#tree)                                     |
+| Name | Type |
+| :------ | :------ |
+| `tree` | [`Tree`](../../devkit/index#tree) |
 | `workspaceConfig` | [`WorkspaceConfiguration`](../../devkit/index#workspaceconfiguration) |
 
 #### Returns
 
 `void`
 
----
+___
 
 ### visitNotIgnoredFiles
 
@@ -2224,17 +2207,17 @@ Utility to act on all files in a tree that are not ignored by git.
 
 #### Parameters
 
-| Name      | Type                              | Default value |
-| :-------- | :-------------------------------- | :------------ |
-| `tree`    | [`Tree`](../../devkit/index#tree) | `undefined`   |
-| `dirPath` | `string`                          | `tree.root`   |
-| `visitor` | (`path`: `string`) => `void`      | `undefined`   |
+| Name | Type | Default value |
+| :------ | :------ | :------ |
+| `tree` | [`Tree`](../../devkit/index#tree) | `undefined` |
+| `dirPath` | `string` | `tree.root` |
+| `visitor` | (`path`: `string`) => `void` | `undefined` |
 
 #### Returns
 
 `void`
 
----
+___
 
 ### workspaceLayout
 
@@ -2246,12 +2229,12 @@ Returns information about where apps and libs will be created.
 
 `Object`
 
-| Name      | Type     |
-| :-------- | :------- |
+| Name | Type |
+| :------ | :------ |
 | `appsDir` | `string` |
 | `libsDir` | `string` |
 
----
+___
 
 ### writeJson
 
@@ -2261,24 +2244,24 @@ Writes a JSON value to the file system tree
 
 #### Type parameters
 
-| Name | Type                        |
-| :--- | :-------------------------- |
-| `T`  | extends `object` = `object` |
+| Name | Type |
+| :------ | :------ |
+| `T` | extends `object` = `object` |
 
 #### Parameters
 
-| Name       | Type                                                              | Description                     |
-| :--------- | :---------------------------------------------------------------- | :------------------------------ |
-| `tree`     | [`Tree`](../../devkit/index#tree)                                 | File system tree                |
-| `path`     | `string`                                                          | Path of JSON file in the Tree   |
-| `value`    | `T`                                                               | Serializable value to write     |
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `tree` | [`Tree`](../../devkit/index#tree) | File system tree |
+| `path` | `string` | Path of JSON file in the Tree |
+| `value` | `T` | Serializable value to write |
 | `options?` | [`JsonSerializeOptions`](../../devkit/index#jsonserializeoptions) | Optional JSON Serialize Options |
 
 #### Returns
 
 `void`
 
----
+___
 
 ### writeJsonFile
 
@@ -2288,17 +2271,17 @@ Serializes the given data to JSON and writes it to a file.
 
 #### Type parameters
 
-| Name | Type                        |
-| :--- | :-------------------------- |
-| `T`  | extends `object` = `object` |
+| Name | Type |
+| :------ | :------ |
+| `T` | extends `object` = `object` |
 
 #### Parameters
 
-| Name       | Type               | Description                                                     |
-| :--------- | :----------------- | :-------------------------------------------------------------- |
-| `path`     | `string`           | A path to a file.                                               |
-| `data`     | `T`                | data which should be serialized to JSON and written to the file |
-| `options?` | `JsonWriteOptions` | JSON serialize options                                          |
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `path` | `string` | A path to a file. |
+| `data` | `T` | data which should be serialized to JSON and written to the file |
+| `options?` | `JsonWriteOptions` | JSON serialize options |
 
 #### Returns
 
