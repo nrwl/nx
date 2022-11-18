@@ -25,7 +25,6 @@ import { getRootTsConfigPath } from '../utils/typescript';
 import {
   ProjectFileMap,
   ProjectGraph,
-  ProjectGraphExternalNode,
   ProjectGraphProcessorContext,
 } from '../config/project-graph';
 import { readJsonFile } from '../utils/fileutils';
@@ -45,7 +44,7 @@ import {
   lockFileHash,
   mapLockFileDataToPartialGraph,
   parseLockFile,
-} from '../utils/lock-file/lock-file';
+} from '../lock-file/lock-file';
 
 export async function buildProjectGraph() {
   const projectConfigurations = readAllWorkspaceConfiguration();

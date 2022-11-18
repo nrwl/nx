@@ -15,7 +15,6 @@ import {
   lockFileV2YargsAndDevkitOnly,
 } from './__fixtures__/npm.lock';
 import { vol } from 'memfs';
-import { readJsonFile } from '../fileutils';
 
 jest.mock('fs', () => require('memfs').fs);
 
