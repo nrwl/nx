@@ -311,6 +311,7 @@
   "nx": {
     "includedScripts": [
       "echo",
+      "check-commit",
       "check-format",
       "check-imports",
       "check-lock-files",

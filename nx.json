@@ -24,6 +24,10 @@
       }
     }
   },
+  "workspaceLayout": {
+    "libsDir": "",
+    "appsDir": ""
+  },
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "production": [
