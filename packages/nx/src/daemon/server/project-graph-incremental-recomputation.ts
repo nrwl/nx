@@ -1,26 +1,27 @@
 import { performance } from 'perf_hooks';
 import { readAllWorkspaceConfiguration } from '../../config/configuration';
+import { FileData, ProjectFileMap } from '../../config/project-graph';
 import { defaultFileHasher } from '../../hasher/file-hasher';
-import { serverLogger } from './logger';
+import { HashingImpl } from '../../hasher/hashing-impl';
 import { buildProjectGraphUsingProjectFileMap } from '../../project-graph/build-project-graph';
+import {
+  createProjectFileMap,
+  updateProjectFileMap,
+} from '../../project-graph/file-map-utils';
 import {
   nxDepsPath,
   ProjectGraphCache,
   readCache,
 } from '../../project-graph/nx-deps-cache';
 import { fileExists } from '../../utils/fileutils';
-import { HashingImpl } from '../../hasher/hashing-impl';
-import {
-  createProjectFileMap,
-  updateProjectFileMap,
-} from '../../project-graph/file-map-utils';
-import { FileData, ProjectFileMap } from '../../config/project-graph';
+import { notifyFileWatcherSockets } from './file-watching/file-watcher-sockets';
+import { serverLogger } from './logger';
 
 let cachedSerializedProjectGraphPromise: Promise<{
   error: Error | null;
   serializedProjectGraph: string | null;
 }>;
-let projectFileMapWithFiles:
+export let projectFileMapWithFiles:
   | { projectFileMap: ProjectFileMap; allWorkspaceFiles: FileData[] }
   | undefined;
 let currentProjectGraphCache: ProjectGraphCache | undefined;
@@ -58,10 +59,11 @@ export async function getCachedSerializedProjectGraphPromise() {
 }
 
 export function addUpdatedAndDeletedFiles(
+  createdFiles: string[],
   updatedFiles: string[],
   deletedFiles: string[]
 ) {
-  for (let f of updatedFiles) {
+  for (let f of [...createdFiles, ...updatedFiles]) {
     collectedDeletedFiles.delete(f);
     collectedUpdatedFiles.add(f);
   }
@@ -71,14 +73,28 @@ export function addUpdatedAndDeletedFiles(
     collectedDeletedFiles.add(f);
   }
 
+  if (updatedFiles.length > 0 || deletedFiles.length > 0) {
+    notifyFileWatcherSockets(null, updatedFiles, deletedFiles);
+  }
+
+  if (createdFiles.length > 0) {
+    waitPeriod = 100; // reset it to process the graph faster
+  }
+
   if (!scheduledTimeoutId) {
-    scheduledTimeoutId = setTimeout(() => {
+    scheduledTimeoutId = setTimeout(async () => {
       scheduledTimeoutId = undefined;
       if (waitPeriod < 4000) {
         waitPeriod = waitPeriod * 2;
       }
+
       cachedSerializedProjectGraphPromise =
         processFilesAndCreateAndSerializeProjectGraph();
+      await cachedSerializedProjectGraphPromise;
+
+      if (createdFiles.length > 0) {
+        notifyFileWatcherSockets(createdFiles, null, null);
+      }
     }, waitPeriod);
   }
 }
