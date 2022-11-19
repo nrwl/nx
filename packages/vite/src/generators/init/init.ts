@@ -36,14 +36,6 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
     devDependencies['@vitejs/plugin-react'] = vitePluginReactVersion;
   }
 
-  if (schema.uiFramework === 'vue3') {
-    devDependencies['@vitejs/plugin-vue'] = vitePluginReactVersion;
-  }
-
-  if (schema.uiFramework === 'vue3-jsx') {
-    devDependencies['@vitejs/plugin-vue-jsx'] = vitePluginReactVersion;
-  }
-
   return addDependenciesToPackageJson(host, dependencies, devDependencies);
 }
 

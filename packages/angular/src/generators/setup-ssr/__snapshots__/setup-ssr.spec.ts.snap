@@ -9,12 +9,6 @@ Object {
       "sourceMap": true,
     },
     "production": Object {
-      "fileReplacements": Array [
-        Object {
-          "replace": "apps/app1/src/environments/environment.ts",
-          "with": "apps/app1/src/environments/environment.prod.ts",
-        },
-      ],
       "outputHashing": "media",
     },
   },
@@ -22,7 +16,7 @@ Object {
   "executor": "@angular-devkit/build-angular:server",
   "options": Object {
     "main": "apps/app1/server.ts",
-    "outputPath": "dist/apps/apps/app1/server",
+    "outputPath": "dist/apps/app1/server",
     "tsConfig": "apps/app1/tsconfig.server.json",
   },
 }
@@ -89,4 +83,32 @@ if (moduleFilename === __filename || moduleFilename.includes('iisnode')) {
 }
 
 export * from './src/main.server';"
+`;
+
+exports[`setupSSR should use fileReplacements if they already exist 1`] = `
+Object {
+  "configurations": Object {
+    "development": Object {
+      "extractLicenses": false,
+      "optimization": false,
+      "sourceMap": true,
+    },
+    "production": Object {
+      "fileReplacements": Array [
+        Object {
+          "replace": "apps/app1/src/environments/environment.ts",
+          "with": "apps/app1/src/environments/environment.prod.ts",
+        },
+      ],
+      "outputHashing": "media",
+    },
+  },
+  "defaultConfiguration": "production",
+  "executor": "@angular-devkit/build-angular:server",
+  "options": Object {
+    "main": "apps/app1/server.ts",
+    "outputPath": "dist/apps/app1/server",
+    "tsConfig": "apps/app1/tsconfig.server.json",
+  },
+}
 `;

@@ -8,8 +8,8 @@ import {
   TargetConfiguration,
   workspaceRoot,
 } from '@nrwl/devkit';
-import { mapProjectGraphFiles } from '@nrwl/workspace/src/utils/runtime-lint-utils';
 import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
+import { createProjectFileMappings } from 'nx/src/utils/target-project-locator';
 import { dirname, extname, join, relative } from 'path';
 import { lstatSync } from 'fs';
 
@@ -90,16 +90,16 @@ export function getProjectConfigByPath(
       : configFileFromWorkspaceRoot
   );
 
-  const mappedGraph = mapProjectGraphFiles(graph);
+  const mappedGraphFiles = createProjectFileMappings(graph);
   const componentTestingProjectName =
-    mappedGraph.allFiles[normalizedPathFromWorkspaceRoot];
+    mappedGraphFiles[normalizedPathFromWorkspaceRoot];
   if (
     !componentTestingProjectName ||
     !graph.nodes[componentTestingProjectName]?.data
   ) {
     throw new Error(
-      stripIndents`Unable to find the project configuration that includes ${normalizedPathFromWorkspaceRoot}. 
-      Found project name? ${componentTestingProjectName}. 
+      stripIndents`Unable to find the project configuration that includes ${normalizedPathFromWorkspaceRoot}.
+      Found project name? ${componentTestingProjectName}.
       Graph has data? ${!!graph.nodes[componentTestingProjectName]?.data}`
     );
   }

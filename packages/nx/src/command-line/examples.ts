@@ -59,6 +59,10 @@ export const examples: Record<string, Example[]> = {
       description:
         'Run tests for all the projects affected by the last commit on main',
     },
+    {
+      command: 'affected --target=build --tag=$NX_TARGET_TASK_PROJECT:latest',
+      description: 'Use the currently executing project name in your command.',
+    },
   ],
   'affected:test': [
     {

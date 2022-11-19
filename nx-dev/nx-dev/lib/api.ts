@@ -21,6 +21,13 @@ export const packagesApi = new PackagesApi({
   publicPackagesRoot: 'nx-dev/nx-dev/public/documentation',
   packagesIndex: packages,
 });
+export const nxRecipesApi = new DocumentsApi({
+  publicDocsRoot: 'nx-dev/nx-dev/public/documentation',
+  documentSources: [
+    documents.content.find((x) => x.id === 'nx-recipes'),
+  ].filter((x) => !!x) as DocumentMetadata[],
+  addAncestor: { id: 'recipes', name: 'Recipes' },
+});
 export const nxDocumentsApi = new DocumentsApi({
   publicDocsRoot: 'nx-dev/nx-dev/public/documentation',
   documentSources: [
@@ -34,13 +41,7 @@ export const nxDocumentsApi = new DocumentsApi({
     .filter((x) => !!x)
     .map((x) => convertToDocumentMetadata(x)),
   addAncestor: null,
-});
-export const nxRecipesApi = new DocumentsApi({
-  publicDocsRoot: 'nx-dev/nx-dev/public/documentation',
-  documentSources: [
-    documents.content.find((x) => x.id === 'nx-recipes'),
-  ].filter((x) => !!x) as DocumentMetadata[],
-  addAncestor: { id: 'recipes', name: 'Recipes' },
+  relatedSources: [nxRecipesApi],
 });
 export const nxCloudDocumentsApi = new DocumentsApi({
   publicDocsRoot: 'nx-dev/nx-dev/public/documentation',

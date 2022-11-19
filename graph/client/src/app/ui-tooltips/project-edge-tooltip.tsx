@@ -1,18 +1,18 @@
 import Tag from '../ui-components/tag';
 
-export interface EdgeNodeTooltipProps {
+export interface ProjectEdgeNodeTooltipProps {
   type: string;
   source: string;
   target: string;
   fileDependencies: Array<{ fileName: string }>;
 }
 
-export function EdgeNodeTooltip({
+export function ProjectEdgeNodeTooltip({
   type,
   source,
   target,
   fileDependencies,
-}: EdgeNodeTooltipProps) {
+}: ProjectEdgeNodeTooltipProps) {
   return (
     <div>
       <h4 className={type !== 'implicit' ? 'mb-3' : ''}>
@@ -42,4 +42,4 @@ export function EdgeNodeTooltip({
   );
 }
 
-export default EdgeNodeTooltip;
+export default ProjectEdgeNodeTooltip;

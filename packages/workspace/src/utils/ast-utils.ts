@@ -18,17 +18,12 @@ import {
   Tree,
 } from '@angular-devkit/schematics';
 import * as ts from 'typescript';
-import {
-  parseJson,
-  ProjectConfiguration,
-  serializeJson,
-  FileData,
-} from '@nrwl/devkit';
+import { parseJson, serializeJson, FileData } from '@nrwl/devkit';
 import { getWorkspacePath } from './cli-config-utils';
 import { extname, join, normalize, Path } from '@angular-devkit/core';
-import type { NxJsonConfiguration, ProjectsConfigurations } from '@nrwl/devkit';
+import type { NxJsonConfiguration } from '@nrwl/devkit';
 import { addInstallTask } from './rules/add-install-task';
-import { findNodes } from '../utilities/typescript/find-nodes';
+import { findNodes } from 'nx/src/utils/typescript';
 import { getSourceNodes } from '../utilities/typescript/get-source-nodes';
 
 function nodesByPosition(first: ts.Node, second: ts.Node): number {
@@ -71,7 +66,6 @@ export function sortObjectByKeys(obj: unknown) {
     }, {});
 }
 
-export { findNodes } from '../utilities/typescript/find-nodes';
 export { getSourceNodes } from '../utilities/typescript/get-source-nodes';
 
 export interface Change {

@@ -1,4 +1,10 @@
-import { NxJsonConfiguration, Tree, updateJson } from '@nrwl/devkit';
+import {
+  NxJsonConfiguration,
+  readJson,
+  Tree,
+  updateJson,
+  writeJson,
+} from '@nrwl/devkit';
 import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { ciWorkflowGenerator } from './ci-workflow';
 
@@ -40,6 +46,27 @@ describe('lib', () => {
     expect(
       tree.read('.github/workflows/my-custom-workflow.yml', 'utf-8')
     ).toMatchSnapshot();
+  });
+
+  it('should generate bitbucket pipelines config', async () => {
+    setNxCloud(tree);
+    await ciWorkflowGenerator(tree, { ci: 'bitbucket-pipelines' });
+
+    expect(tree.read('bitbucket-pipelines.yml', 'utf-8')).toMatchSnapshot();
+  });
+
+  it('should prefix nx.json affected defaultBase with origin/ if ci is bitbucket-pipelines', async () => {
+    setNxCloud(tree);
+
+    const nxJson = readJson(tree, 'nx.json');
+    nxJson.affected.defaultBase = 'my-branch';
+    writeJson(tree, 'nx.json', nxJson);
+
+    await ciWorkflowGenerator(tree, { ci: 'bitbucket-pipelines' });
+
+    expect(readJson(tree, 'nx.json').affected.defaultBase).toEqual(
+      'origin/my-branch'
+    );
   });
 
   it('should throw error is nx cloud is not set', async () => {

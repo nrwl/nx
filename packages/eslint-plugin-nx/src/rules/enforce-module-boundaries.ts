@@ -5,11 +5,11 @@ import {
   ProjectGraphProjectNode,
   workspaceRoot,
 } from '@nrwl/devkit';
-import { isRelativePath } from '@nrwl/workspace/src/utilities/fileutils';
+import { isRelativePath } from 'nx/src/utils/fileutils';
 import {
   checkCircularPath,
   findFilesInCircularPath,
-} from '@nrwl/workspace/src/utils/graph-utils';
+} from '../utils/graph-utils';
 import {
   DepConstraint,
   findConstraintsFor,
@@ -31,7 +31,7 @@ import {
   matchImportWithWildcard,
   onlyLoadChildren,
   stringifyTags,
-} from '@nrwl/workspace/src/utils/runtime-lint-utils';
+} from '../utils/runtime-lint-utils';
 import { AST_NODE_TYPES, TSESTree } from '@typescript-eslint/utils';
 import { TargetProjectLocator } from 'nx/src/utils/target-project-locator';
 import { basename, dirname, relative } from 'path';
@@ -154,7 +154,8 @@ export default createESLintRule<Options, MessageIds>({
     );
     const fileName = normalizePath(context.getFilename());
 
-    const projectGraph = readProjectGraph(RULE_NAME);
+    const { projectGraph, projectGraphFileMappings } =
+      readProjectGraph(RULE_NAME);
 
     if (!projectGraph) {
       return {};
@@ -198,7 +199,11 @@ export default createESLintRule<Options, MessageIds>({
 
       const sourceFilePath = getSourceFilePath(fileName, projectPath);
 
-      const sourceProject = findSourceProject(projectGraph, sourceFilePath);
+      const sourceProject = findSourceProject(
+        projectGraph,
+        projectGraphFileMappings,
+        sourceFilePath
+      );
       // If source is not part of an nx workspace, return.
       if (!sourceProject) {
         return;
@@ -210,12 +215,17 @@ export default createESLintRule<Options, MessageIds>({
       let targetProject: ProjectGraphProjectNode | ProjectGraphExternalNode;
 
       if (isAbsoluteImportIntoAnotherProj) {
-        targetProject = findTargetProject(projectGraph, imp);
+        targetProject = findTargetProject(
+          projectGraph,
+          projectGraphFileMappings,
+          imp
+        );
       } else {
         targetProject = getTargetProjectBasedOnRelativeImport(
           imp,
           projectPath,
           projectGraph,
+          projectGraphFileMappings,
           sourceFilePath
         );
       }

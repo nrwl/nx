@@ -1,15 +1,15 @@
-import { defaultHashing } from '../../hasher/hashing-impl';
+import { defaultHashing } from '../hasher/hashing-impl';
 import {
   LockFileData,
   PackageDependency,
   PackageVersions,
 } from './lock-file-type';
-import { workspaceRoot } from '../workspace-root';
+import { workspaceRoot } from '../utils/workspace-root';
 import { existsSync, readFileSync } from 'fs';
 import {
   ProjectGraph,
   ProjectGraphExternalNode,
-} from '../../config/project-graph';
+} from '../config/project-graph';
 
 /**
  * Simple sort function to ensure keys are ordered alphabetically

@@ -14,11 +14,10 @@ import { join } from 'path';
 import { getPath, pathExists } from './graph-utils';
 import { existsSync } from 'fs';
 import { readFileIfExisting } from 'nx/src/project-graph/file-utils';
-import { TargetProjectLocator } from 'nx/src/utils/target-project-locator';
-
-export type MappedProjectGraph<T = any> = ProjectGraph<T> & {
-  allFiles: Record<string, string>;
-};
+import {
+  TargetProjectLocator,
+  removeExt,
+} from 'nx/src/utils/target-project-locator';
 
 export type Deps = { [projectName: string]: ProjectGraphDependency[] };
 export type DepConstraint = {
@@ -70,10 +69,6 @@ function hasTag(proj: ProjectGraphProjectNode, tag: string) {
   return tag === '*' || (proj.data.tags || []).indexOf(tag) > -1;
 }
 
-export function removeExt(file: string): string {
-  return file.replace(/(?<!(^|\/))\.[^/.]+$/, '');
-}
-
 export function matchImportWithWildcard(
   // This may or may not contain wildcards ("*")
   allowableImport: string,
@@ -103,7 +98,8 @@ export function isRelative(s: string) {
 export function getTargetProjectBasedOnRelativeImport(
   imp: string,
   projectPath: string,
-  projectGraph: MappedProjectGraph,
+  projectGraph: ProjectGraph,
+  projectGraphFileMappings: Record<string, string>,
   sourceFilePath: string
 ): ProjectGraphProjectNode<any> | undefined {
   if (!isRelative(imp)) {
@@ -115,38 +111,51 @@ export function getTargetProjectBasedOnRelativeImport(
     projectPath.length + 1
   );
 
-  return findTargetProject(projectGraph, targetFile);
+  return findTargetProject(projectGraph, projectGraphFileMappings, targetFile);
 }
 
-export function findProjectUsingFile<T>(
-  projectGraph: MappedProjectGraph<T>,
+function findProjectUsingFile(
+  projectGraph: ProjectGraph,
+  projectGraphFileMappings: Record<string, string>,
   file: string
 ): ProjectGraphProjectNode {
-  return projectGraph.nodes[projectGraph.allFiles[file]];
+  return projectGraph.nodes[projectGraphFileMappings[file]];
 }
 
 export function findSourceProject(
-  projectGraph: MappedProjectGraph,
+  projectGraph: ProjectGraph,
+  projectGraphFileMappings: Record<string, string>,
   sourceFilePath: string
 ) {
   const targetFile = removeExt(sourceFilePath);
-  return findProjectUsingFile(projectGraph, targetFile);
+  return findProjectUsingFile(
+    projectGraph,
+    projectGraphFileMappings,
+    targetFile
+  );
 }
 
 export function findTargetProject(
-  projectGraph: MappedProjectGraph,
+  projectGraph: ProjectGraph,
+  projectGraphFileMappings: Record<string, string>,
   targetFile: string
 ) {
-  let targetProject = findProjectUsingFile(projectGraph, targetFile);
+  let targetProject = findProjectUsingFile(
+    projectGraph,
+    projectGraphFileMappings,
+    targetFile
+  );
   if (!targetProject) {
     targetProject = findProjectUsingFile(
       projectGraph,
+      projectGraphFileMappings,
       normalizePath(path.join(targetFile, 'index'))
     );
   }
   if (!targetProject) {
     targetProject = findProjectUsingFile(
       projectGraph,
+      projectGraphFileMappings,
       normalizePath(path.join(targetFile, 'src', 'index'))
     );
   }
@@ -166,7 +175,7 @@ export function isAbsoluteImportIntoAnotherProject(
 }
 
 export function findProjectUsingImport(
-  projectGraph: MappedProjectGraph,
+  projectGraph: ProjectGraph,
   targetProjectLocator: TargetProjectLocator,
   filePath: string,
   imp: string
@@ -351,28 +360,6 @@ export function hasBuildExecutor(
     projectGraph.data.targets.build &&
     projectGraph.data.targets.build.executor !== ''
   );
-}
-
-export function mapProjectGraphFiles<T>(
-  projectGraph: ProjectGraph<T>
-): MappedProjectGraph | null {
-  if (!projectGraph) {
-    return null;
-  }
-  const allFiles: Record<string, string> = {};
-  Object.entries(
-    projectGraph.nodes as Record<string, ProjectGraphProjectNode>
-  ).forEach(([name, node]) => {
-    node.data.files.forEach(({ file }) => {
-      const fileName = removeExt(file);
-      allFiles[fileName] = name;
-    });
-  });
-
-  return {
-    ...projectGraph,
-    allFiles,
-  };
 }
 
 const ESLINT_REGEX = /node_modules.*[\/\\]eslint$/;

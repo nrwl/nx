@@ -1,5 +1,5 @@
 import { readFileSync, writeFileSync } from 'fs-extra';
-import { detectPackageManager, PackageManager } from '../package-manager';
+import { detectPackageManager, PackageManager } from '../utils/package-manager';
 import {
   parseYarnLockFile,
   pruneYarnLockFile,
@@ -19,13 +19,13 @@ import {
   transitiveDependencyPnpmLookup,
 } from './pnpm';
 import { LockFileData } from './lock-file-type';
-import { workspaceRoot } from '../workspace-root';
+import { workspaceRoot } from '../utils/workspace-root';
 import { join } from 'path';
 import { hashExternalNodes, hashString, mapExternalNodes } from './utils';
 import {
   ProjectGraph,
   ProjectGraphExternalNode,
-} from '../../config/project-graph';
+} from '../config/project-graph';
 import { existsSync } from 'fs';
 
 const YARN_LOCK_PATH = join(workspaceRoot, 'yarn.lock');

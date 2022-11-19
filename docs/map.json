@@ -451,7 +451,6 @@
             {
               "name": "CI Setup",
               "id": "ci-setup",
-              "tags": ["distribute-task-execution"],
               "path": "/recipes/ci/ci-setup"
             },
             {

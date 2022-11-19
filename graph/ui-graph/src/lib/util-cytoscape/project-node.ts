@@ -3,7 +3,7 @@ import type { ProjectGraphProjectNode } from '@nrwl/devkit';
 import * as cy from 'cytoscape';
 import { parseParentDirectoriesFromFilePath } from '../util';
 
-export interface NodeDataDefinition extends cy.NodeDataDefinition {
+export interface ProjectNodeDataDefinition extends cy.NodeDataDefinition {
   id: string;
   type: 'app' | 'lib' | 'e2e';
   tags: string[];
@@ -35,7 +35,7 @@ export class ProjectNode {
     };
   }
 
-  private getData(groupByFolder: boolean): NodeDataDefinition {
+  private getData(groupByFolder: boolean): ProjectNodeDataDefinition {
     return {
       id: this.project.name,
       type: this.project.type,
@@ -50,7 +50,7 @@ export class ProjectNode {
   }
 
   private getClasses(): string {
-    let classes = this.project.type ?? '';
+    let classes = `projectNode ${this.project.type}`;
 
     if (this.affected) {
       classes += ' affected';

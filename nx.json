@@ -3,7 +3,6 @@
   "affected": {
     "defaultBase": "master"
   },
-  "npmScope": "nrwl",
   "tasksRunnerOptions": {
     "default": {
       "runner": "@nrwl/nx-cloud",
@@ -86,11 +85,5 @@
       "inputs": ["default", "^production", "{workspaceRoot}/.storybook/**/*"]
     }
   },
-  "generators": {
-    "@nrwl/react": {
-      "application": {
-        "babel": true
-      }
-    }
-  }
+  "defaultProject": "@nrwl/nx-source"
 }

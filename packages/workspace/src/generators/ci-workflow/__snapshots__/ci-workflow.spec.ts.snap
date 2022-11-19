@@ -58,6 +58,42 @@ jobs:
 "
 `;
 
+exports[`lib should generate bitbucket pipelines config 1`] = `
+"image: node:16.18
+
+clone:
+  depth: full
+
+definitions:
+  steps:
+    - step: &agent
+        name: Agent
+        script:
+          - export NX_BRANCH=$BITBUCKET_PR_ID
+          
+          - yarn install --frozen-lockfile
+          - yarn nx-cloud start-agent
+
+pipelines:
+  pull-requests:
+    '**':
+      - parallel:
+          - step:
+              name: CI
+              script:
+                - export NX_BRANCH=$BITBUCKET_PR_ID
+                
+                - yarn install --frozen-lockfile
+                - yarn nx-cloud start-ci-run --stop-agents-after=\\"build\\" --agent-count=3
+                - yarn nx-cloud record -- yarn nx workspace-lint
+                - yarn nx-cloud record -- yarn nx format:check
+                - yarn nx affected --target=lint & yarn nx affected --target=test & yarn nx affected --target=build
+                - yarn nx-cloud stop-all-agents
+          - step: *agent
+          - step: *agent
+          - step: *agent"
+`;
+
 exports[`lib should generate circleci CI config 1`] = `
 "version: 2.1
 
