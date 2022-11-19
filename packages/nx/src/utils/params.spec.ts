@@ -1460,7 +1460,7 @@ describe('params', () => {
       ]);
     });
 
-    it('should use an multiselect prompt for x-prompts with items', () => {
+    it('should use a multiselect prompt for x-prompts with items', () => {
       const prompts = getPromptsForSchema(
         {},
         {
@@ -1492,7 +1492,46 @@ describe('params', () => {
       ]);
     });
 
-    it('should use an multiselect prompt for x-prompts with items', () => {
+    it('should use a multiselect prompt for array properties', () => {
+      const prompts = getPromptsForSchema(
+        {},
+        {
+          properties: {
+            pets: {
+              type: 'array',
+              'x-prompt': {
+                type: 'list',
+                message: 'What kind of pets do you have?',
+                items: [
+                  { label: 'Cat', value: 'cat' },
+                  { label: 'Dog', value: 'dog' },
+                  { label: 'Fish', value: 'fish' },
+                ],
+              },
+            },
+          },
+        },
+        {
+          version: 2,
+          projects: {},
+        }
+      );
+
+      expect(prompts).toEqual([
+        {
+          type: 'multiselect',
+          name: 'pets',
+          message: 'What kind of pets do you have?',
+          choices: [
+            { message: 'Cat', name: 'cat' },
+            { message: 'Dog', name: 'dog' },
+            { message: 'Fish', name: 'fish' },
+          ],
+        },
+      ]);
+    });
+
+    it('should use a multiselect prompt for x-prompts with items', () => {
       const prompts = getPromptsForSchema(
         {},
         {
