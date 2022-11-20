@@ -1,7 +1,6 @@
 import { ModuleFederationConfig } from '@nrwl/devkit';
 import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
 import { getModuleFederationConfig } from './utils';
-import ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
 
 function determineRemoteUrl(remote: string) {
   const remoteConfiguration = readCachedProjectConfiguration(remote);
@@ -18,42 +17,45 @@ function determineRemoteUrl(remote: string) {
   const port = serveTarget.options?.port ?? 4201;
   return `${
     host.endsWith('/') ? host.slice(0, -1) : host
-  }:${port}/remoteEntry.js`;
+  }:${port}/server/remoteEntry.js`;
 }
 
-export async function withModuleFederation(options: ModuleFederationConfig) {
+export async function withModuleFederationForSSR(
+  options: ModuleFederationConfig
+) {
   const reactWebpackConfig = require('../../plugins/webpack');
 
-  const { sharedDependencies, sharedLibraries, mappedRemotes } =
-    await getModuleFederationConfig(options, determineRemoteUrl);
+  const { sharedLibraries, sharedDependencies, mappedRemotes } =
+    await getModuleFederationConfig(options, determineRemoteUrl, {
+      isServer: true,
+    });
 
   return (config) => {
     config = reactWebpackConfig(config);
-    config.output.uniqueName = options.name;
-    config.output.publicPath = 'auto';
 
+    config.target = false;
+    config.output.uniqueName = options.name;
     config.optimization = {
       runtimeChunk: false,
     };
 
-    config.experiments = {
-      ...config.experiments,
-      outputModule: true,
-    };
-
     config.plugins.push(
-      new ModuleFederationPlugin({
-        name: options.name,
-        library: {
-          type: 'module',
+      new (require('@module-federation/node').UniversalFederationPlugin)(
+        {
+          name: options.name,
+          filename: 'remoteEntry.js',
+          exposes: options.exposes,
+          remotes: mappedRemotes,
+          shared: {
+            ...sharedDependencies,
+          },
+          library: {
+            type: 'commonjs-module',
+          },
+          isServer: true,
         },
-        filename: 'remoteEntry.js',
-        exposes: options.exposes,
-        remotes: mappedRemotes,
-        shared: {
-          ...sharedDependencies,
-        },
-      }),
+        {}
+      ),
       sharedLibraries.getReplacementPlugin()
     );
 
