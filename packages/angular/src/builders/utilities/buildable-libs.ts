@@ -9,14 +9,15 @@ import { join } from 'path';
 
 export function createTmpTsConfigForBuildableLibs(
   tsConfigPath: string,
-  context: BuilderContext
+  context: BuilderContext,
+  target?: string
 ) {
   let dependencies: DependentBuildableProjectNode[];
   const result = calculateProjectDependencies(
     readCachedProjectGraph(),
     context.workspaceRoot,
     context.target.project,
-    context.target.target,
+    target ?? context.target.target,
     context.target.configuration
   );
   dependencies = result.dependencies;
