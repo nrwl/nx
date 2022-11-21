@@ -17,7 +17,7 @@ import {
 } from '../../utils/generator-utils';
 
 import initGenerator from '../init/init';
-import vitestGenerator from '../vitest/vitest';
+import vitestGenerator from '../vitest/vitest-generator';
 import { Schema } from './schema';
 
 export async function viteConfigurationGenerator(tree: Tree, schema: Schema) {

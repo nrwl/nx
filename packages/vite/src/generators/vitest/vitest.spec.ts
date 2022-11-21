@@ -1,7 +1,7 @@
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Tree, readProjectConfiguration } from '@nrwl/devkit';
 
-import generator from './vitest';
+import generator from './vitest-generator';
 import { VitestGeneratorSchema } from './schema';
 
 describe('vitest generator', () => {
