@@ -11,12 +11,12 @@ import type {
   TaskGraphClientResponse,
 } from 'nx/src/command-line/dep-graph';
 import { getGraphService } from '../machines/graph.service';
-import { useEffect } from 'react';
-import FocusedPanel from '../ui-components/focused-panel';
+import { useEffect, useState } from 'react';
 import CheckboxPanel from '../ui-components/checkbox-panel';
 
 // nx-ignore-next-line
-import { TargetConfiguration } from 'nx/src/config/workspace-json-project-json';
+import Dropdown from '../ui-components/dropdown';
+import ShowHideAll from '../ui-components/show-hide-all';
 
 export function TasksSidebar() {
   const graphService = getGraphService();
@@ -25,61 +25,104 @@ export function TasksSidebar() {
 
   const [searchParams, setSearchParams] = useSearchParams();
   const groupByProject = searchParams.get('groupByProject') === 'true';
-  const hideTasksWithoutDeps =
-    searchParams.get('filterTasksWithoutDeps') !== 'false';
 
   const selectedProjectRouteData = useRouteLoaderData(
     'selectedWorkspace'
-  ) as ProjectGraphClientResponse;
+  ) as ProjectGraphClientResponse & { targets: string[] };
   const workspaceLayout = selectedProjectRouteData.layout;
 
   const routeData = useRouteLoaderData(
-    'selectedTask'
+    'selectedTarget'
   ) as TaskGraphClientResponse;
   const { taskGraphs } = routeData;
-  let projects = selectedProjectRouteData.projects;
+  const { projects, targets } = selectedProjectRouteData;
+  const selectedTarget = params['selectedTarget'] ?? targets[0];
 
-  if (searchParams.get('filterTasksWithoutDeps') !== 'false') {
-    projects = projects
-      .map((project) => {
-        const targets: { [p: string]: TargetConfiguration } = {};
+  const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
 
-        Object.keys(project.data.targets).forEach((targetName) => {
-          const taskName = `${project.name}:${targetName}`;
-          if (taskGraphs[taskName]?.dependencies[taskName]?.length > 0) {
-            targets[targetName] = project.data.targets[targetName];
-          }
-        });
+  function selectTarget(target: string) {
+    if (target === selectedTarget) return;
 
-        return Object.keys(targets).length > 0
-          ? { ...project, data: { ...project.data, targets } }
-          : null;
-      })
-      .filter((project) => project !== null);
+    hideAllProjects();
+
+    if (params['selectedTarget']) {
+      navigate({ pathname: `../${target}`, search: searchParams.toString() });
+    } else {
+      navigate({ pathname: `${target}`, search: searchParams.toString() });
+    }
   }
 
-  const selectedTask = params['selectedTaskId'];
+  function toggleProject(project: string) {
+    if (selectedProjects.includes(project)) {
+      deselectProject(project);
+    } else {
+      selectProject(project);
+    }
+  }
+
+  function selectProject(project: string) {
+    setSelectedProjects([...selectedProjects, project]);
+
+    const taskId = `${project}:${selectedTarget}`;
+
+    graphService.handleTaskEvent({
+      type: 'notifyTaskGraphTasksSelected',
+      taskIds: [taskId],
+    });
+  }
+
+  function selectAllProjects() {
+    const allProjectsWithSelectedTarget = projects.filter((project) =>
+      project.data.targets.hasOwnProperty(selectedTarget)
+    );
+
+    setSelectedProjects(
+      allProjectsWithSelectedTarget.map((project) => project.name)
+    );
+
+    graphService.handleTaskEvent({
+      type: 'notifyTaskGraphTasksSelected',
+      taskIds: allProjectsWithSelectedTarget.map(
+        (project) => `${project.name}:${selectedTarget}`
+      ),
+    });
+  }
+
+  function hideAllProjects() {
+    setSelectedProjects([]);
+
+    const allProjects = projects.map(
+      (project) => `${project.name}:${selectedTarget}`
+    );
+
+    graphService.handleTaskEvent({
+      type: 'notifyTaskGraphTasksDeselected',
+      taskIds: allProjects,
+    });
+  }
+
+  function deselectProject(project: string) {
+    const newSelectedProjects = selectedProjects.filter(
+      (selectedProject) => selectedProject !== project
+    );
+    setSelectedProjects(newSelectedProjects);
+
+    const taskId = `${project}:${selectedTarget}`;
+
+    graphService.handleTaskEvent({
+      type: 'notifyTaskGraphTasksDeselected',
+      taskIds: [taskId],
+    });
+  }
 
   useEffect(() => {
+    setSelectedProjects([]);
     graphService.handleTaskEvent({
       type: 'notifyTaskGraphSetProjects',
       projects: selectedProjectRouteData.projects,
       taskGraphs,
     });
   }, [selectedProjectRouteData]);
-
-  useEffect(() => {
-    if (selectedTask) {
-      graphService.handleTaskEvent({
-        type: 'notifyTaskGraphTaskSelected',
-        taskId: selectedTask,
-      });
-    } else {
-      graphService.handleTaskEvent({
-        type: 'notifyTaskGraphDeselectTask',
-      });
-    }
-  }, [params]);
 
   useEffect(() => {
     if (groupByProject) {
@@ -94,26 +137,6 @@ export function TasksSidebar() {
       });
     }
   }, [searchParams]);
-
-  function selectTask(taskId: string) {
-    if (taskId === selectedTask) return;
-
-    if (selectedTask) {
-      navigate(
-        { pathname: `../${taskId}`, search: searchParams.toString() },
-        { relative: 'path' }
-      );
-    } else {
-      navigate(
-        { pathname: `${taskId}`, search: searchParams.toString() },
-        { relative: 'path' }
-      );
-    }
-  }
-
-  function resetFocus() {
-    navigate('..', { relative: 'path' });
-  }
 
   function groupByProjectChanged(checked) {
     setSearchParams(
@@ -130,26 +153,15 @@ export function TasksSidebar() {
     );
   }
 
-  function hideTasksWithoutDepsChanged(checked) {
-    setSearchParams((currentSearchParams) => {
-      if (!checked) {
-        currentSearchParams.set('filterTasksWithoutDeps', 'false');
-      } else {
-        currentSearchParams.delete('filterTasksWithoutDeps');
-      }
-
-      return currentSearchParams;
-    });
-  }
-
   return (
     <>
-      {selectedTask ? (
-        <FocusedPanel
-          focusedLabel={selectedTask}
-          resetFocus={resetFocus}
-        ></FocusedPanel>
-      ) : null}
+      <ShowHideAll
+        showAll={() => selectAllProjects()}
+        hideAll={() => hideAllProjects()}
+        showAffected={() => {}}
+        hasAffected={false}
+        label="tasks"
+      ></ShowHideAll>
 
       <CheckboxPanel
         checked={groupByProject}
@@ -159,22 +171,30 @@ export function TasksSidebar() {
         description={'Visually arrange tasks by project.'}
       />
 
-      <CheckboxPanel
-        checked={hideTasksWithoutDeps}
-        checkChanged={hideTasksWithoutDepsChanged}
-        name={'hideTasksWithoutDeps'}
-        label={'Hide tasks without dependencies'}
-        description={
-          "Don't show tasks without dependencies, which means only that task will be executed when run."
-        }
-      />
-
       <TaskList
         projects={projects}
+        selectedProjects={selectedProjects}
         workspaceLayout={workspaceLayout}
-        selectedTask={selectedTask}
-        selectTask={selectTask}
-      />
+        selectedTarget={selectedTarget}
+        toggleProject={toggleProject}
+      >
+        <label
+          htmlFor="selectedTarget"
+          className="my-2 block text-sm font-medium text-gray-700"
+        >
+          Target Name
+        </label>
+        <Dropdown
+          id="selectedTarget"
+          className="w-full"
+          defaultValue={selectedTarget}
+          onChange={(event) => selectTarget(event.currentTarget.value)}
+        >
+          {targets.map((target) => (
+            <option value={target}>{target}</option>
+          ))}
+        </Dropdown>
+      </TaskList>
     </>
   );
 }

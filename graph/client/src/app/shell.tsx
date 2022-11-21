@@ -33,19 +33,25 @@ import ExperimentalFeature from './ui-components/experimental-feature';
 import RankdirPanel from './feature-projects/panels/rankdir-panel';
 import { getProjectGraphService } from './machines/get-services';
 import TooltipDisplay from './ui-tooltips/graph-tooltip-display';
+import { useSyncExternalStore } from 'use-sync-external-store/shim';
 
 export function Shell(): JSX.Element {
   const projectGraphService = getProjectGraphService();
+  const graphService = getGraphService();
+
+  const lastPerfReport = useSyncExternalStore(
+    (callback) => graphService.listen(callback),
+    () => graphService.lastPerformanceReport
+  );
+
+  const nodesVisible = lastPerfReport.numNodes !== 0;
 
   const environment = useEnvironmentConfig();
-  const lastPerfReport = useProjectGraphSelector(lastPerfReportSelector);
-  const projectIsSelected = useProjectGraphSelector(projectIsSelectedSelector);
   const environmentConfig = useEnvironmentConfig();
 
   const navigate = useNavigate();
   const currentPath = useCurrentPath();
   const { selectedWorkspaceId, selectedTaskId } = useParams();
-  const taskIsSelected = !!selectedTaskId;
   const currentRoute = currentPath.currentPath;
 
   const topLevelRoute = currentRoute.startsWith('/tasks')
@@ -61,12 +67,8 @@ export function Shell(): JSX.Element {
   ];
 
   function projectChange(projectGraphId: string) {
-    // setselectedWorkspaceId(projectGraphId);
-
     navigate(`/${projectGraphId}${topLevelRoute}`);
   }
-
-  const routeData = useLoaderData() as ProjectGraphClientResponse;
 
   function downloadImage() {
     const graph = getGraphService();
@@ -175,23 +177,17 @@ export function Shell(): JSX.Element {
           ></DebuggerPanel>
         ) : null}
 
-        {currentRoute.startsWith('/projects') && !projectIsSelected ? (
-          <div
-            data-cy="no-projects-selected"
-            className="flex h-full w-full items-center justify-center text-slate-700 dark:text-slate-400"
-          >
-            <ArrowLeftCircleIcon className="mr-4 h-6 w-6" />
-            <h4>Please select projects in the sidebar.</h4>
-          </div>
-        ) : null}
-
-        {currentRoute.startsWith('/tasks') && !taskIsSelected ? (
+        {!nodesVisible ? (
           <div
             data-cy="no-tasks-selected"
             className="flex h-full w-full items-center justify-center text-slate-700 dark:text-slate-400"
           >
             <ArrowLeftCircleIcon className="mr-4 h-6 w-6" />
-            <h4>Please select a task in the sidebar.</h4>
+            <h4>
+              Please select a{' '}
+              {currentRoute.startsWith('/tasks') ? 'task' : 'project'} in the
+              sidebar.
+            </h4>
           </div>
         ) : null}
 
@@ -207,7 +203,7 @@ export function Shell(): JSX.Element {
             <button
               type="button"
               className={classNames(
-                !projectIsSelected ? 'opacity-0' : '',
+                !nodesVisible ? 'opacity-0' : '',
                 'fixed bottom-4 right-4 z-50 block h-16 w-16 transform rounded-full bg-blue-500 text-white shadow-sm transition duration-300 dark:bg-sky-500'
               )}
               data-cy="downloadImageButton"
