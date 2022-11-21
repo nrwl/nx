@@ -59,7 +59,29 @@ nx g @nrwl/vite:init
 You will notice that the executor will ask you of the framework you are planning to use. This is just to make sure that the right dependencies are installed. You can always install manually any other dependencies you need.
 {% /callout %}
 
-## Using Vite.js in your applications
+## Generate an application using Vite
+
+You can generate a React or a Web application that uses Vite.js. The `@nrwl/react:app` and `@nrwl/web:app` generators accept the `bundler` option, where you can pass `vite`. This will generate a new application configured to use Vite.js, and it will also install all the necessary dependencies.
+
+To generate a React application using Vite.js, run the following:
+
+```bash
+nx g @nrwl/react:app my-app --bundler=vite
+```
+
+To generate a Web application using Vite.js, run the following:
+
+```bash
+nx g @nrwl/web:app my-app --bundler=vite
+```
+
+## Modify an existing React or Web application to use Vite.js
+
+You can use the `@nrwl/vite:configuration` generator to change your React or Web application to use Vite.js. This generator will modify your application's configuration to use Vite.js, and it will also install all the necessary dependencies.
+
+You can read more about this generator on the [`@nrwl/vite:configuration`](/packages/vite/generators/configuration) generator page.
+
+## Set up your apps to use Vite.js manually
 
 You can use the `@nrwl/vite:dev-server` and the `@nrwl/vite:build` executors to serve and build your applications using Vite.js. To do this, you need to make a few adjustments to your application.
 

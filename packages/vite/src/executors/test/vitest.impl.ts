@@ -1,6 +1,5 @@
 import { ExecutorContext } from '@nrwl/devkit';
 import { File, Reporter } from 'vitest';
-import { normalizeConfigFilePath } from '../../utils/helper-functions';
 import { VitestExecutorSchema } from './schema';
 
 class NxReporter implements Reporter {

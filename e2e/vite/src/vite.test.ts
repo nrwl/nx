@@ -19,13 +19,14 @@ const myApp = uniq('my-app');
 describe('Vite Plugin', () => {
   let proj: string;
 
-  beforeEach(() => {
-    proj = newProject();
-    runCLI(`generate @nrwl/react:app ${myApp}`);
-    runCLI(`generate @nrwl/vite:init`);
-    updateFile(
-      `apps/${myApp}/index.html`,
-      `
+  describe('set up new project manually', () => {
+    beforeEach(() => {
+      proj = newProject();
+      runCLI(`generate @nrwl/react:app ${myApp}`);
+      runCLI(`generate @nrwl/vite:init`);
+      updateFile(
+        `apps/${myApp}/index.html`,
+        `
     <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -38,15 +39,15 @@ describe('Vite Plugin', () => {
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="src/main.tsx"></script>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
     `
-    );
+      );
 
-    createFile(
-      `apps/${myApp}/vite.config.ts`,
-      `
+      createFile(
+        `apps/${myApp}/vite.config.ts`,
+        `
     /// <reference types="vitest" />
     import { defineConfig } from 'vite';
     import react from '@vitejs/plugin-react';
@@ -65,11 +66,11 @@ describe('Vite Plugin', () => {
         environment: 'jsdom',
       }
     });`
-    );
+      );
 
-    updateFile(
-      `apps/${myApp}/tsconfig.json`,
-      `
+      updateFile(
+        `apps/${myApp}/tsconfig.json`,
+        `
       {
         "extends": "../../tsconfig.base.json",
         "compilerOptions": {
@@ -102,56 +103,130 @@ describe('Vite Plugin', () => {
         ]
       }
     `
-    );
+      );
 
-    updateProjectConfig(myApp, (config) => {
-      config.targets.build.executor = '@nrwl/vite:build';
-      config.targets.serve.executor = '@nrwl/vite:dev-server';
-      config.targets.test.executor = '@nrwl/vite:test';
+      updateProjectConfig(myApp, (config) => {
+        config.targets.build.executor = '@nrwl/vite:build';
+        config.targets.serve.executor = '@nrwl/vite:dev-server';
+        config.targets.test.executor = '@nrwl/vite:test';
 
-      config.targets.build.options = {
-        outputPath: `dist/apps/${myApp}`,
-      };
+        config.targets.build.options = {
+          outputPath: `dist/apps/${myApp}`,
+        };
 
-      config.targets.serve.options = {
-        buildTarget: `${myApp}:build`,
-      };
+        config.targets.serve.options = {
+          buildTarget: `${myApp}:build`,
+        };
 
-      config.targets.serve.options = {
-        config: `apps/${myApp}/vite.config.ts`,
-      };
+        config.targets.serve.options = {
+          config: `apps/${myApp}/vite.config.ts`,
+        };
 
-      return config;
+        return config;
+      });
+    });
+    afterEach(() => cleanupProject());
+
+    it('should build applications', async () => {
+      runCLI(`build ${myApp}`);
+      expect(readFile(`dist/apps/${myApp}/index.html`)).toBeDefined();
+      rmDist();
+    }, 200000);
+
+    it('should serve applications in dev mode', async () => {
+      const port = 4212;
+      const p = await runCommandUntil(
+        `run ${myApp}:serve --port=${port}`,
+        (output) => {
+          return output.includes('Local:');
+        }
+      );
+      try {
+        await promisifiedTreeKill(p.pid, 'SIGKILL');
+        await killPorts(port);
+      } catch {
+        // ignore
+      }
+    }, 200000);
+
+    it('should test applications', async () => {
+      const result = await runCLIAsync(`test ${myApp}`);
+      expect(result.combinedOutput).toContain(
+        `Successfully ran target test for project ${myApp}`
+      );
     });
   });
-  afterEach(() => cleanupProject());
 
-  it('should build applications', async () => {
-    runCLI(`build ${myApp}`);
-    expect(readFile(`dist/apps/${myApp}/index.html`)).toBeDefined();
-    rmDist();
-  }, 200000);
+  describe('set up new React project with --bundler=vite option', () => {
+    beforeEach(() => {
+      proj = newProject();
+      runCLI(`generate @nrwl/react:app ${myApp} --bundler=vite`);
+    });
+    afterEach(() => cleanupProject());
+    it('should build applications', async () => {
+      runCLI(`build ${myApp}`);
+      expect(readFile(`dist/apps/${myApp}/index.html`)).toBeDefined();
+      rmDist();
+    }, 200000);
 
-  it('should serve applications in dev mode', async () => {
-    const port = 4212;
-    const p = await runCommandUntil(
-      `run ${myApp}:serve --port=${port}`,
-      (output) => {
-        return output.includes('Local:');
+    it('should serve applications in dev mode', async () => {
+      const port = 4212;
+      const p = await runCommandUntil(
+        `run ${myApp}:serve --port=${port}`,
+        (output) => {
+          return output.includes('Local:');
+        }
+      );
+      try {
+        await promisifiedTreeKill(p.pid, 'SIGKILL');
+        await killPorts(port);
+      } catch {
+        // ignore
       }
-    );
-    try {
-      await promisifiedTreeKill(p.pid, 'SIGKILL');
-      await killPorts(port);
-    } catch {
-      // ignore
-    }
-  }, 200000);
+    }, 200000);
 
-  it('should test applications', async () => {
-    const result = await runCLIAsync(`test ${myApp}`);
-    expect(result.combinedOutput).toContain(
-      `Successfully ran target test for project ${myApp}`
-    );
+    it('should test applications', async () => {
+      const result = await runCLIAsync(`test ${myApp}`);
+      expect(result.combinedOutput).toContain(
+        `Successfully ran target test for project ${myApp}`
+      );
+    });
+  });
+
+  describe('convert React webpack project to vite using the vite:configuration generator', () => {
+    beforeEach(() => {
+      proj = newProject();
+      runCLI(`generate @nrwl/react:app ${myApp} --bundler=webpack`);
+      runCLI(`generate @nrwl/vite:configuration ${myApp}`);
+    });
+    afterEach(() => cleanupProject());
+    it('should build applications', async () => {
+      runCLI(`build ${myApp}`);
+      expect(readFile(`dist/apps/${myApp}/index.html`)).toBeDefined();
+      rmDist();
+    }, 200000);
+
+    it('should serve applications in dev mode', async () => {
+      const port = 4212;
+      const p = await runCommandUntil(
+        `run ${myApp}:serve --port=${port}`,
+        (output) => {
+          return output.includes('Local:');
+        }
+      );
+      try {
+        await promisifiedTreeKill(p.pid, 'SIGKILL');
+        await killPorts(port);
+      } catch {
+        // ignore
+      }
+    }, 200000);
+
+    it('should test applications', async () => {
+      const result = await runCLIAsync(`test ${myApp}`);
+      expect(result.combinedOutput).toContain(
+        `Successfully ran target test for project ${myApp}`
+      );
+    });
   });
 });

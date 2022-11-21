@@ -9,7 +9,7 @@
     "bundler": {
       "type": "string",
       "description": "The bundler to use.",
-      "enum": ["webpack", "none"],
+      "enum": ["webpack", "none", "vite"],
       "default": "webpack"
     },
     "unitTestRunner": {

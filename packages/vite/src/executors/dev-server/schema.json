@@ -8,7 +8,11 @@
   "presets": [
     {
       "name": "Default minimum setup",
-      "keys": []
+      "keys": ["buildTarget"]
+    },
+    {
+      "name": "Using a Different Port",
+      "keys": ["buildTarget", "port"]
     }
   ],
   "properties": {
@@ -16,38 +20,11 @@
       "type": "string",
       "description": "Target which builds the application."
     },
-    "baseHref": {
-      "type": "string",
-      "description": "Base url for the application being built."
-    },
     "proxyConfig": {
       "type": "string",
       "description": "Path to the proxy configuration file.",
       "x-completion-type": "file"
     },
-    "fileReplacements": {
-      "description": "Replace files with other files in the build.",
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "replace": {
-            "type": "string",
-            "description": "The file to be replaced.",
-            "x-completion-type": "file"
-          },
-          "with": {
-            "type": "string",
-            "description": "The file to replace with.",
-            "x-completion-type": "file"
-          }
-        },
-        "additionalProperties": false,
-        "required": ["replace", "with"]
-      },
-      "default": []
-    },
-
     "port": {
       "type": "number",
       "description": "Port to listen on.",
@@ -77,6 +54,6 @@
     }
   },
   "definitions": {},
-  "required": [],
+  "required": ["buildTarget"],
   "examplesFile": "../../../docs/dev-server-examples.md"
 }

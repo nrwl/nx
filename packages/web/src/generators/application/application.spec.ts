@@ -140,6 +140,36 @@ describe('app', () => {
       `);
     });
 
+    it('should generate files if bundler is vite', async () => {
+      await applicationGenerator(tree, {
+        name: 'myApp',
+        standaloneConfig: false,
+        bundler: 'vite',
+      });
+      expect(tree.exists('apps/my-app/src/main.ts')).toBeTruthy();
+      expect(tree.exists('apps/my-app/src/app/app.element.ts')).toBeTruthy();
+      expect(
+        tree.exists('apps/my-app/src/app/app.element.spec.ts')
+      ).toBeTruthy();
+      expect(tree.exists('apps/my-app/src/app/app.element.css')).toBeTruthy();
+
+      const tsconfig = readJson(tree, 'apps/my-app/tsconfig.json');
+      expect(tsconfig.extends).toBe('../../tsconfig.base.json');
+      expect(tsconfig.references).toEqual([
+        {
+          path: './tsconfig.app.json',
+        },
+        {
+          path: './tsconfig.spec.json',
+        },
+      ]);
+      expect(tsconfig.compilerOptions.types).toMatchObject(['vite/client']);
+
+      expect(tree.exists('apps/my-app-e2e/cypress.config.ts')).toBeTruthy();
+      expect(tree.exists('apps/my-app/index.html')).toBeTruthy();
+      expect(tree.exists('apps/my-app/vite.config.ts')).toBeTruthy();
+    });
+
     it('should extend from root tsconfig.json when no tsconfig.base.json', async () => {
       tree.rename('tsconfig.base.json', 'tsconfig.json');
 
@@ -345,6 +375,39 @@ describe('app', () => {
     });
   });
 
+  it('should setup the nrwl vite:build builder if bundler is vite', async () => {
+    await applicationGenerator(tree, {
+      name: 'my-App',
+      standaloneConfig: false,
+      bundler: 'vite',
+    });
+    const workspaceJson = readJson(tree, 'workspace.json');
+    const architectConfig = workspaceJson.projects['my-app'].architect;
+    expect(architectConfig.build.builder).toEqual('@nrwl/vite:build');
+    expect(architectConfig.build.outputs).toEqual(['{options.outputPath}']);
+    expect(architectConfig.build.options).toEqual({
+      outputPath: 'dist/apps/my-app',
+    });
+  });
+
+  it('should setup the nrwl vite:dev-server builder if bundler is vite', async () => {
+    await applicationGenerator(tree, {
+      name: 'my-App',
+      standaloneConfig: false,
+      bundler: 'vite',
+    });
+    const workspaceJson = readJson(tree, 'workspace.json');
+    const architectConfig = workspaceJson.projects['my-app'].architect;
+    expect(architectConfig.serve.builder).toEqual('@nrwl/vite:dev-server');
+    expect(architectConfig.serve.options).toEqual({
+      buildTarget: 'my-app:build',
+    });
+    expect(architectConfig.serve.configurations.production).toEqual({
+      buildTarget: 'my-app:build:production',
+      hmr: false,
+    });
+  });
+
   it('should setup the eslint builder', async () => {
     await applicationGenerator(tree, {
       name: 'my-App',
@@ -465,6 +528,44 @@ describe('app', () => {
         };
         "
       `);
+    });
+  });
+
+  describe('setup web app with --bundler=vite', () => {
+    let viteAppTree: Tree;
+    beforeAll(async () => {
+      viteAppTree = createTreeWithEmptyV1Workspace();
+      await applicationGenerator(viteAppTree, {
+        name: 'myApp',
+        bundler: 'vite',
+      });
+    });
+
+    it('should setup targets with vite configuration', () => {
+      const workspaceJson = getProjects(viteAppTree);
+      const targetConfig = workspaceJson.get('my-app').targets;
+      expect(targetConfig.build.executor).toEqual('@nrwl/vite:build');
+      expect(targetConfig.serve.executor).toEqual('@nrwl/vite:dev-server');
+      expect(targetConfig.serve.options).toEqual({
+        buildTarget: 'my-app:build',
+      });
+    });
+    it('should add dependencies in package.json', () => {
+      const packageJson = readJson(viteAppTree, '/package.json');
+
+      expect(packageJson.devDependencies).toMatchObject({
+        vite: expect.any(String),
+      });
+    });
+
+    it('should create correct tsconfig compilerOptions', () => {
+      const tsconfigJson = readJson(viteAppTree, '/apps/my-app/tsconfig.json');
+      expect(tsconfigJson.compilerOptions.types).toMatchObject(['vite/client']);
+    });
+
+    it('should create index.html and vite.config file at the root of the app', () => {
+      expect(viteAppTree.exists('/apps/my-app/index.html')).toBe(true);
+      expect(viteAppTree.exists('/apps/my-app/vite.config.ts')).toBe(true);
     });
   });
 });

@@ -66,6 +66,7 @@ export async function createTestUIApp(name: string): Promise<Tree> {
     unitTestRunner: 'none',
     name,
     standaloneConfig: false,
+    bundler: 'vite',
   });
 
   const config = readProjectConfiguration(tree, name);

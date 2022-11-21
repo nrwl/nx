@@ -453,6 +453,7 @@ describe('lib', () => {
         routing: true,
         style: 'css',
         standaloneConfig: false,
+        bundler: 'webpack',
       });
 
       await libraryGenerator(appTree, {
@@ -479,6 +480,7 @@ describe('lib', () => {
         name: 'myApp',
         style: 'css',
         standaloneConfig: false,
+        bundler: 'webpack',
       });
 
       await libraryGenerator(appTree, {

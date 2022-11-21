@@ -1,10 +1,7 @@
 import { formatFiles, Tree } from '@nrwl/devkit';
 
 import applicationGenerator from '../application/application';
-import {
-  normalizeOptions,
-  normalizeProjectName,
-} from '../application/lib/normalize-options';
+import { normalizeOptions } from '../application/lib/normalize-options';
 import { updateModuleFederationProject } from '../../rules/update-module-federation-project';
 import { addModuleFederationFiles } from './lib/add-module-federation-files';
 import { updateModuleFederationE2eProject } from './lib/update-module-federation-e2e-project';
@@ -35,6 +32,7 @@ export async function hostGenerator(host: Tree, schema: Schema) {
         e2eTestRunner: options.e2eTestRunner,
         linter: options.linter,
         devServerPort: remotePort,
+        bundler: options.bundler ?? 'webpack',
       });
       remotePort++;
     }

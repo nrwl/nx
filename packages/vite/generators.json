@@ -5,18 +5,32 @@
     "init": {
       "factory": "./src/generators/init/init#initSchematic",
       "schema": "./src/generators/init/schema.json",
-      "description": "Add Storybook configuration to the workspace.",
+      "description": "Initialize Vite in the workspace.",
       "aliases": ["ng-add"],
       "hidden": true
+    },
+    "configuration": {
+      "factory": "./src/generators/configuration/configuration#configurationSchematic",
+      "schema": "./src/generators/configuration/schema.json",
+      "description": "Add Vite configuration to an application.",
+      "aliases": ["ng-add"],
+      "hidden": false
     }
   },
   "generators": {
     "init": {
       "factory": "./src/generators/init/init",
       "schema": "./src/generators/init/schema.json",
-      "description": "Add Vite configuration to the workspace.",
+      "description": "Initialize Vite in the workspace.",
       "aliases": ["ng-add"],
       "hidden": true
+    },
+    "configuration": {
+      "factory": "./src/generators/configuration/configuration",
+      "schema": "./src/generators/configuration/schema.json",
+      "description": "Add Vite configuration to an application.",
+      "aliases": ["ng-add"],
+      "hidden": false
     }
   }
 }

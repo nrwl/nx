@@ -5,6 +5,7 @@ import {
   Tree,
   updateJson,
 } from '@nrwl/devkit';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
 import {
   nxVersion,
@@ -54,9 +55,8 @@ function moveToDevDependencies(tree: Tree) {
 }
 
 export function initGenerator(tree: Tree, schema: Schema) {
-  const installTask = checkDependenciesInstalled(tree, schema);
   moveToDevDependencies(tree);
-
+  const installTask = checkDependenciesInstalled(tree, schema);
   return installTask;
 }
 
