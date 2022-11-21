@@ -1,4 +1,3 @@
-import axios from 'axios';
 import { isCI } from './is-ci';
 
 export class PromptMessages {
@@ -56,7 +55,8 @@ export async function recordStat(opts: {
       console.log(`Record stat. Major: ${major}`);
     }
     if (major < 10 || major > 15) return; // test version, skip it
-    await axios
+    const axios = require('axios');
+    await (axios['default'] ?? axios)
       .create({
         baseURL: 'https://cloud.nx.app',
         timeout: 400,
