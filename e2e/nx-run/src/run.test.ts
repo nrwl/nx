@@ -224,18 +224,18 @@ describe('Nx Running Tests', () => {
       expect(runCLI(`echo ${myapp}`)).toContain('inferred-target');
     });
 
-    it('should build a specific project with the daemon enabled', () => {
+    it('should build a specific project with the daemon disabled', () => {
       const myapp = uniq('app');
       runCLI(`generate @nrwl/web:app ${myapp}`);
 
       const buildWithDaemon = runCLI(`build ${myapp}`, {
-        env: { ...process.env, NX_DAEMON: 'true' },
+        env: { ...process.env, NX_DAEMON: 'false' },
       });
 
       expect(buildWithDaemon).toContain('Successfully ran target build');
 
       const buildAgain = runCLI(`build ${myapp}`, {
-        env: { ...process.env, NX_DAEMON: 'true' },
+        env: { ...process.env, NX_DAEMON: 'false' },
       });
 
       expect(buildAgain).toContain('[local cache]');
@@ -438,9 +438,9 @@ describe('Nx Running Tests', () => {
       expect(buildConfig).toContain(`run ${libC}:build`);
       expect(buildConfig).toContain('Successfully ran target build');
 
-      // testing run many with daemon enabled
+      // testing run many with daemon disabled
       const buildWithDaemon = runCLI(`run-many --target=build`, {
-        env: { ...process.env, NX_DAEMON: 'true' },
+        env: { ...process.env, NX_DAEMON: 'false' },
       });
       expect(buildWithDaemon).toContain(`Successfully ran target build`);
     }, 1000000);
