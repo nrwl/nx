@@ -8,7 +8,7 @@ import {
 export function updateTsConfigs(tree: Tree, project: string): void {
   const projectConfig = readProjectConfiguration(tree, project);
 
-  updateJson(
+  return updateJson(
     tree,
     joinPathFragments(projectConfig.root, 'tsconfig.json'),
     (json) => {
@@ -20,19 +20,6 @@ export function updateTsConfigs(tree: Tree, project: string): void {
             path: './tsconfig.spec.json',
           },
         ],
-      };
-    }
-  );
-
-  const extraFiles =
-    projectConfig.projectType === 'library' ? [] : ['src/polyfills.ts'];
-  return updateJson(
-    tree,
-    joinPathFragments(projectConfig.root, 'tsconfig.spec.json'),
-    (json) => {
-      return {
-        ...json,
-        files: [...json.files, ...extraFiles],
       };
     }
   );

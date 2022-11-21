@@ -19,7 +19,6 @@ export function updateWorkspaceConfig(tree: Tree, project: string): void {
   if (projectConfig.projectType === 'application') {
     projectConfig.targets.test.options = {
       ...projectConfig.targets.test.options,
-      polyfills: joinPathFragments(projectConfig.sourceRoot, 'polyfills.ts'),
       styles: [],
       scripts: [],
       assets: [],
