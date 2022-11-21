@@ -1,5 +1,6 @@
 // source: https://github.com/Myrmod/vitejs-theming/blob/master/build-plugins/rollup/replace-files.js
 
+import fs from 'fs';
 import { resolve } from 'path';
 
 /**
@@ -28,15 +29,13 @@ export default function replaceFiles(replacements: FileReplacement[]) {
         console.info(
           `replace "${foundReplace.replace}" with "${foundReplace.with}"`
         );
-        const { body } = this.parse(code)
-        const newCode = [];
-        if (body.find(({ type }) => type === 'ExportNamedDeclaration')) {
-            newCode.push(`export * from "${foundReplace.with}";`);
+        const foundReplace = replacements.find((replacement)=>{
+          return id.endsWith(replacement.replace)
+        });
+        if (foundReplace) {
+          return fs.readFileSync(id.replace(foundReplace.replace, foundReplace.with)).toString();
         }
-        if (body.find(({ type }) => type === 'ExportDefaultDeclaration')) {
-            newCode.push(`export { default } from "${foundReplace.with}";`);
-        }
-        return newCode.join('\n');
+        return code
       }
       return code;
     },
