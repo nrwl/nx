@@ -9,5 +9,9 @@ export interface ViteBuildExecutorOptions {
   assets?: AssetGlob[];
   fileReplacements?: FileReplacement[];
   sourcemap?: boolean | 'inline' | 'hidden';
-  hmr?: boolean;
+  minify?: boolean | 'esbuild' | 'terser';
+  manifest?: boolean | string;
+  ssrManifest?: boolean | string;
+  logLevel?: 'info' | 'warn' | 'error' | 'silent';
+  mode?: string;
 }

@@ -95,7 +95,7 @@ export function getServerOptions(
   context: ExecutorContext
 ): ServerOptions {
   const projectRoot = context.workspace.projects[context.projectName].root;
-  let serverOptions: ServerOptions = {};
+  let serverOptions: ServerOptions & UserConfig = {};
   if (options.proxyConfig) {
     const proxyConfigPath = options.proxyConfig
       ? join(context.root, options.proxyConfig)
@@ -119,6 +119,11 @@ export function getServerOptions(
     port: options.port,
     https: options.https,
     hmr: options.hmr,
+    open: options.open,
+    cors: options.cors,
+    logLevel: options.logLevel,
+    mode: options.mode,
+    clearScreen: options.clearScreen,
   };
 
   return serverOptions;
@@ -136,7 +141,7 @@ export function getViteBuildOptions(
   options: ViteDevServerExecutorOptions & ViteBuildExecutorOptions,
   projectRoot: string
 ): BuildOptions {
-  let buildOptions: BuildOptions = {
+  let buildOptions: BuildOptions & UserConfig = {
     outDir: relative(projectRoot, options.outputPath),
     emptyOutDir: true,
     reportCompressedSize: true,
@@ -150,6 +155,11 @@ export function getViteBuildOptions(
   buildOptions = {
     ...buildOptions,
     sourcemap: options.sourcemap,
+    minify: options.minify,
+    manifest: options.manifest,
+    ssrManifest: options.ssrManifest,
+    logLevel: options.logLevel,
+    mode: options.mode,
   };
 
   return buildOptions;
