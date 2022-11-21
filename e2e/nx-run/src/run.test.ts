@@ -33,10 +33,7 @@ describe('Nx Running Tests', () => {
         runCLI(`generate @nrwl/workspace:lib ${proj}`);
         updateProjectConfig(proj, (c) => {
           c.targets['echo'] = {
-            executor: 'nx:run-commands',
-            options: {
-              command: 'echo ECHO:',
-            },
+            command: 'echo ECHO:',
           };
           return c;
         });
@@ -129,10 +126,7 @@ describe('Nx Running Tests', () => {
       runCLI(`generate @nrwl/web:app ${myapp2}`);
       updateProjectConfig(myapp1, (c) => {
         c.targets['error'] = {
-          executor: 'nx:run-commands',
-          options: {
-            command: 'echo boom1 && exit 1',
-          },
+          command: 'echo boom1 && exit 1',
         };
         return c;
       });
@@ -325,16 +319,10 @@ describe('Nx Running Tests', () => {
         const nxJson = readJson('nx.json');
         updateProjectConfig(myapp, (config) => {
           config.targets.prep = {
-            executor: 'nx:run-commands',
-            options: {
-              command: 'echo PREP > one.txt',
-            },
+            command: 'echo PREP > one.txt',
           };
           config.targets.outside = {
-            executor: 'nx:run-commands',
-            options: {
-              command: 'echo OUTSIDE',
-            },
+            command: 'echo OUTSIDE',
           };
           return config;
         });
