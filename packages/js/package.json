@@ -41,7 +41,7 @@
     "fs-extra": "^10.1.0",
     "ignore": "^5.0.4",
     "js-tokens": "^4.0.0",
-    "minimatch": "3.0.4",
+    "minimatch": "3.0.5",
     "source-map-support": "0.5.19",
     "tree-kill": "1.2.2"
   }
