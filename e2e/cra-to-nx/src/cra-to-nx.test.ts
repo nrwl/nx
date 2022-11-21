@@ -23,7 +23,7 @@ describe('cra-to-nx', () => {
     const craToNxOutput = runCommand(
       `${
         pmc.runUninstalledPackage
-      } cra-to-nx@${getPublishedVersion()} --nxCloud=false`
+      } cra-to-nx@${getPublishedVersion()} --nxCloud=false --integrated`
     );
 
     expect(craToNxOutput).toContain('🎉 Done!');
@@ -46,7 +46,7 @@ describe('cra-to-nx', () => {
     const craToNxOutput = runCommand(
       `${
         pmc.runUninstalledPackage
-      } cra-to-nx@${getPublishedVersion()} --nxCloud=false --vite`
+      } cra-to-nx@${getPublishedVersion()} --nxCloud=false --vite --integrated`
     );
 
     expect(craToNxOutput).toContain('🎉 Done!');
@@ -56,6 +56,9 @@ describe('cra-to-nx', () => {
 
     runCLI(`build ${appName}`);
     checkFilesExist(`dist/apps/${appName}/index.html`);
+
+    const unitTestsOutput = runCLI(`test ${appName}`);
+    expect(unitTestsOutput).toContain('Successfully ran target test');
   });
 
   it('should convert to an integrated workspace with Vite with custom port', () => {
@@ -66,10 +69,53 @@ describe('cra-to-nx', () => {
     runCommand(
       `${
         pmc.runUninstalledPackage
-      } cra-to-nx@${getPublishedVersion()} --nxCloud=false --vite --force`
+      } cra-to-nx@${getPublishedVersion()} --nxCloud=false --vite --force --integrated`
     );
 
     const viteConfig = readFile(`apps/${appName}/vite.config.js`);
     expect(viteConfig).toContain('port: 3000');
+
+    const unitTestsOutput = runCLI(`test ${appName}`);
+    expect(unitTestsOutput).toContain('Successfully ran target test');
+  });
+
+  it('should convert to a nested workspace with craco (webpack)', () => {
+    const appName = 'my-app';
+    createReactApp(appName);
+
+    const craToNxOutput = runCommand(
+      `${
+        pmc.runUninstalledPackage
+      } cra-to-nx@${getPublishedVersion()} --nxCloud=false`
+    );
+
+    expect(craToNxOutput).toContain('🎉 Done!');
+
+    runCLI(`build ${appName}`);
+    checkFilesExist(`public/index.html`, `dist/asset-manifest.json`);
+    const manifest = readJson(`dist/asset-manifest.json`);
+    checkFilesExist(...manifest['entrypoints'].map((f) => `dist/${f}`));
+  });
+
+  it('should convert to an nested workspace with Vite', () => {
+    const appName = 'my-app';
+    createReactApp(appName);
+
+    const craToNxOutput = runCommand(
+      `${
+        pmc.runUninstalledPackage
+      } cra-to-nx@${getPublishedVersion()} --nxCloud=false --vite`
+    );
+
+    expect(craToNxOutput).toContain('🎉 Done!');
+
+    const viteConfig = readFile(`vite.config.js`);
+    expect(viteConfig).toContain('port: 4200'); // default port
+
+    runCLI(`build ${appName}`);
+    checkFilesExist(`dist/index.html`);
+
+    const unitTestsOutput = runCLI(`test ${appName}`);
+    expect(unitTestsOutput).toContain('Successfully ran target test');
   });
 });

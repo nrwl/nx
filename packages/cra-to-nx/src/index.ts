@@ -27,6 +27,11 @@ export const commandsObject = yargs
     describe: 'Use Vite and Vitest (instead of Webpack and Jest)',
     default: false,
   })
+  .option('integrated', {
+    type: 'boolean',
+    describe: 'Use integrated folder structure, with apps folder',
+    default: false,
+  })
   .help();
 
 createNxWorkspaceForReact(commandsObject.argv).catch((e) => {
