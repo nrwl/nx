@@ -11,7 +11,8 @@ export interface Schema {
   pascalCaseFiles?: boolean;
   routing?: boolean;
   appProject?: string;
-  unitTestRunner: 'jest' | 'none';
+  unitTestRunner: 'jest' | 'vitest' | 'none';
+  inSourceTests?: boolean;
   linter: Linter;
   component?: boolean;
   publishable?: boolean;

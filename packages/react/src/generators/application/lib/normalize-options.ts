@@ -40,6 +40,10 @@ export function normalizeOptions(
 
   assertValidStyle(options.style);
 
+  if (options.bundler === 'vite') {
+    options.unitTestRunner = 'vitest';
+  }
+
   options.routing = options.routing ?? false;
   options.strict = options.strict ?? true;
   options.classComponent = options.classComponent ?? false;

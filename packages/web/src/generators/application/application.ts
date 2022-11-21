@@ -24,7 +24,7 @@ import { swcCoreVersion } from '@nrwl/js/src/utils/versions';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
-import { viteConfigurationGenerator } from '@nrwl/vite';
+import { viteConfigurationGenerator, vitestGenerator } from '@nrwl/vite';
 
 import { swcLoaderVersion } from '../../utils/versions';
 import { webInitGenerator } from '../init/init';
@@ -203,8 +203,18 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
       uiFramework: 'react',
       project: options.projectName,
       newProject: true,
+      includeVitest: true,
     });
     tasks.push(viteTask);
+  }
+
+  if (options.bundler !== 'vite' && options.unitTestRunner === 'vitest') {
+    const vitestTask = await vitestGenerator(host, {
+      uiFramework: 'none',
+      project: options.projectName,
+      inSourceTests: options.inSourceTests,
+    });
+    tasks.push(vitestTask);
   }
 
   const lintTask = await lintProjectGenerator(host, {
@@ -272,6 +282,10 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
     : [];
+
+  if (options.bundler === 'vite') {
+    options.unitTestRunner = 'vitest';
+  }
 
   options.style = options.style || 'css';
   options.linter = options.linter || Linter.EsLint;

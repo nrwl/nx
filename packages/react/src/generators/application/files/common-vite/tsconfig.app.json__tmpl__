@@ -2,7 +2,6 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "<%= offsetFromRoot %>dist/out-tsc",
-    "types": ["node"]
   },
   "files": [
     <% if (style === 'styled-jsx') { %>"<%= offsetFromRoot %>node_modules/@nrwl/react/typings/styled-jsx.d.ts",<% } %>

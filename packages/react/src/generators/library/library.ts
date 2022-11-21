@@ -47,6 +47,7 @@ import componentGenerator from '../component/component';
 import init from '../init/init';
 import { Schema } from './schema';
 import { updateJestConfigContent } from '../../utils/jest-utils';
+import { vitestGenerator } from '@nrwl/vite';
 export interface NormalizedSchema extends Schema {
   name: string;
   fileName: string;
@@ -109,6 +110,13 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
       );
       host.write(jestConfigPath, updatedContent);
     }
+  } else if (options.unitTestRunner === 'vitest') {
+    const vitestTask = await vitestGenerator(host, {
+      uiFramework: 'react',
+      project: options.name,
+      inSourceTests: options.inSourceTests,
+    });
+    tasks.push(vitestTask);
   }
 
   if (options.component) {
@@ -117,7 +125,9 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
       project: options.name,
       flat: true,
       style: options.style,
-      skipTests: options.unitTestRunner === 'none',
+      skipTests:
+        options.unitTestRunner === 'none' ||
+        (options.unitTestRunner === 'vitest' && options.inSourceTests == true),
       export: true,
       routing: options.routing,
       js: options.js,

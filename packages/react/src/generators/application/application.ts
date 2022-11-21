@@ -26,7 +26,7 @@ import reactInitGenerator from '../init/init';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { swcCoreVersion } from '@nrwl/js/src/utils/versions';
 import { swcLoaderVersion } from '@nrwl/webpack/src/utils/versions';
-import { viteConfigurationGenerator } from '@nrwl/vite';
+import { viteConfigurationGenerator, vitestGenerator } from '@nrwl/vite';
 
 async function addLinting(host: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];
@@ -89,8 +89,18 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
       uiFramework: 'react',
       project: options.projectName,
       newProject: true,
+      includeVitest: true,
     });
     tasks.push(viteTask);
+  }
+
+  if (options.bundler !== 'vite' && options.unitTestRunner === 'vitest') {
+    const vitestTask = await vitestGenerator(host, {
+      uiFramework: 'react',
+      project: options.projectName,
+      inSourceTests: options.inSourceTests,
+    });
+    tasks.push(vitestTask);
   }
 
   const lintTask = await addLinting(host, options);

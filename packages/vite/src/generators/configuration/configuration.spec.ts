@@ -91,4 +91,30 @@ describe('@nrwl/vite:configuration', () => {
       expect(tree.exists('apps/my-test-web-app/vite.config.ts')).toBe(true);
     });
   });
+
+  describe('vitest', () => {
+    beforeAll(async () => {
+      tree = createTreeWithEmptyV1Workspace();
+      await mockReactAppGenerator(tree);
+      const existing = 'existing';
+      const existingVersion = '1.0.0';
+      addDependenciesToPackageJson(
+        tree,
+        { '@nrwl/vite': nxVersion, [existing]: existingVersion },
+        { [existing]: existingVersion }
+      );
+      await viteConfigurationGenerator(tree, {
+        uiFramework: 'react',
+        project: 'my-test-react-app',
+        includeVitest: true,
+      });
+    });
+    it('should create a vitest configuration if "includeVitest" is true', () => {
+      const viteConfig = tree
+        .read('apps/my-test-react-app/vite.config.ts')
+        .toString();
+      console.log(viteConfig);
+      expect(viteConfig).toContain('test');
+    });
+  });
 });

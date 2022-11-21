@@ -6,8 +6,9 @@ import {
   Tree,
 } from '@nrwl/devkit';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+import { options } from 'yargs';
 import {
-  findServeAndBuildTargets,
+  findExistingTargets,
   addOrChangeBuildTarget,
   addOrChangeServeTarget,
   editTsConfig,
@@ -16,6 +17,7 @@ import {
 } from '../../utils/generator-utils';
 
 import initGenerator from '../init/init';
+import vitestGenerator from '../vitest/vitest';
 import { Schema } from './schema';
 
 export async function viteConfigurationGenerator(tree: Tree, schema: Schema) {
@@ -26,8 +28,8 @@ export async function viteConfigurationGenerator(tree: Tree, schema: Schema) {
   let serveTarget = 'serve';
 
   if (!schema.newProject) {
-    buildTarget = findServeAndBuildTargets(targets).buildTarget;
-    serveTarget = findServeAndBuildTargets(targets).serveTarget;
+    buildTarget = findExistingTargets(targets).buildTarget;
+    serveTarget = findExistingTargets(targets).serveTarget;
     moveAndEditIndexHtml(tree, schema, buildTarget);
     editTsConfig(tree, schema);
   }
@@ -39,7 +41,18 @@ export async function viteConfigurationGenerator(tree: Tree, schema: Schema) {
 
   addOrChangeBuildTarget(tree, schema, buildTarget);
   addOrChangeServeTarget(tree, schema, serveTarget);
+
   writeViteConfig(tree, schema);
+
+  if (schema.includeVitest) {
+    const vitestTask = await vitestGenerator(tree, {
+      project: schema.project,
+      uiFramework: schema.uiFramework,
+      inSourceTests: schema.inSourceTests,
+      skipViteConfig: true,
+    });
+    tasks.push(vitestTask);
+  }
 
   await formatFiles(tree);
 
