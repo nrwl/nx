@@ -36,13 +36,13 @@
     "enhanced-resolve": "^5.8.3",
     "fs-extra": "^10.1.0",
     "ignore": "^5.0.4",
-    "metro-resolver": "^0.72.3",
+    "metro-resolver": "^0.73.3",
     "minimatch": "3.0.5",
     "node-fetch": "^2.6.7",
     "tsconfig-paths": "^3.9.0"
   },
   "peerDependencies": {
-    "react-native": "^0.70.1"
+    "react-native": "^0.70.6"
   },
   "builders": "./executors.json",
   "ng-update": {
