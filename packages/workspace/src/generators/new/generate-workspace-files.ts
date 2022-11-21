@@ -83,7 +83,10 @@ function createAppsAndLibsFolders(host: Tree, options: NormalizedSchema) {
     options.preset === Preset.NPM
   ) {
     host.write(join(options.directory, 'packages/.gitkeep'), '');
-  } else if (options.preset === Preset.ReactExperimental) {
+  } else if (
+    options.preset === Preset.AngularExperimental ||
+    options.preset === Preset.ReactExperimental
+  ) {
     // don't generate any folders
   } else {
     host.write(join(options.directory, 'apps/.gitkeep'), '');
@@ -139,6 +142,7 @@ function createNxJson(
 function createFiles(host: Tree, options: NormalizedSchema) {
   const formattedNames = names(options.name);
   const filesDirName =
+    options.preset === Preset.AngularExperimental ||
     options.preset === Preset.ReactExperimental
       ? './files-root-app'
       : options.preset === Preset.NPM || options.preset === Preset.Core

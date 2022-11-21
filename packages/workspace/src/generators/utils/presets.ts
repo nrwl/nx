@@ -6,6 +6,7 @@ export enum Preset {
   TS = 'ts',
   WebComponents = 'web-components',
   Angular = 'angular',
+  AngularExperimental = 'angular-experimental',
   React = 'react',
   ReactExperimental = 'react-experimental',
   ReactNative = 'react-native',

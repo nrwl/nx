@@ -35,6 +35,19 @@ async function createPreset(tree: Tree, options: Schema) {
       linter: options.linter,
       standaloneConfig: options.standaloneConfig,
     });
+  } else if (options.preset === Preset.AngularExperimental) {
+    const {
+      applicationGenerator: angularApplicationGenerator,
+    } = require('@nrwl' + '/angular/generators');
+
+    await angularApplicationGenerator(tree, {
+      name: options.name,
+      style: options.style,
+      linter: 'none',
+      unitTestRunner: 'none',
+      standaloneConfig: options.standaloneConfig,
+      rootProject: true,
+    });
   } else if (options.preset === Preset.React) {
     const {
       applicationGenerator: reactApplicationGenerator,

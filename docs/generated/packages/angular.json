@@ -228,6 +228,12 @@
             "description": "Generate an application that is setup to use standalone components.",
             "type": "boolean",
             "default": false
+          },
+          "rootProject": {
+            "description": "Create an application at the root of the workspace.",
+            "type": "boolean",
+            "default": false,
+            "hidden": true
           }
         },
         "additionalProperties": false,

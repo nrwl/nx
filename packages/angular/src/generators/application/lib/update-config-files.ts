@@ -2,6 +2,7 @@ import type { Tree } from '@nrwl/devkit';
 import {
   addProjectConfiguration,
   getProjects,
+  joinPathFragments,
   offsetFromRoot,
   readProjectConfiguration,
   removeProjectConfiguration,
@@ -73,6 +74,13 @@ function updateAppAndE2EProjectConfigurations(
     executor,
     outputs: ['{options.outputPath}'],
     ...rest,
+    options: {
+      ...rest.options,
+      outputPath: joinPathFragments(
+        'dist',
+        !options.rootProject ? options.appProjectRoot : options.name
+      ),
+    },
   };
 
   if (project.generators) {

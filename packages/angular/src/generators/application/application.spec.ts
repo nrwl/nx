@@ -1056,6 +1056,24 @@ describe('app', () => {
       "
     `);
   });
+
+  describe('--root-project', () => {
+    it('should create files at the root', async () => {
+      await generateApp(appTree, 'my-app', {
+        rootProject: true,
+      });
+
+      expect(appTree.exists('src/main.ts')).toBe(true);
+      expect(appTree.exists('src/app/app.module.ts')).toBe(true);
+      expect(appTree.exists('src/app/app.component.ts')).toBe(true);
+      expect(appTree.exists('e2e/cypress.config.ts')).toBe(true);
+      expect(readJson(appTree, 'tsconfig.json').extends).toEqual(
+        './tsconfig.base.json'
+      );
+      const project = readProjectConfiguration(appTree, 'my-app');
+      expect(project.targets.build.options['outputPath']).toBe('dist/my-app');
+    });
+  });
 });
 
 async function generateApp(
