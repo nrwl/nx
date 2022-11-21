@@ -126,7 +126,6 @@
     },
     "reportUnusedDisableDirectives": {
       "type": "string",
-      "default": "off",
       "enum": ["off", "warn", "error"],
       "description": "The equivalent of the `--report-unused-disable-directives` flag on the ESLint CLI."
     }
