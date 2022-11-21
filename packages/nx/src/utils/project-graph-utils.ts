@@ -113,7 +113,7 @@ export function getProjectNameFromDirPath(
  * @param {ProjectGraph} projectGraph
  * @returns {string[]}
  */
-function findAllProjectNodeDependencies(
+export function findAllProjectNodeDependencies(
   parentNodeName: string,
   projectGraph = readCachedProjectGraph()
 ): string[] {
