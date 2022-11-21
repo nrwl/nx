@@ -24,6 +24,7 @@ import { swcCoreVersion } from '@nrwl/js/src/utils/versions';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
+import { viteConfigurationGenerator } from '@nrwl/vite';
 
 import { swcLoaderVersion } from '../../utils/versions';
 import { webInitGenerator } from '../init/init';
@@ -38,16 +39,24 @@ interface NormalizedSchema extends Schema {
 }
 
 function createApplicationFiles(tree: Tree, options: NormalizedSchema) {
-  generateFiles(tree, join(__dirname, './files/app'), options.appProjectRoot, {
-    ...options,
-    ...names(options.name),
-    tmpl: '',
-    offsetFromRoot: offsetFromRoot(options.appProjectRoot),
-    rootTsConfigPath: getRelativePathToRootTsConfig(
-      tree,
-      options.appProjectRoot
+  generateFiles(
+    tree,
+    join(
+      __dirname,
+      options.bundler === 'vite' ? './files/app-vite' : './files/app'
     ),
-  });
+    options.appProjectRoot,
+    {
+      ...options,
+      ...names(options.name),
+      tmpl: '',
+      offsetFromRoot: offsetFromRoot(options.appProjectRoot),
+      rootTsConfigPath: getRelativePathToRootTsConfig(
+        tree,
+        options.appProjectRoot
+      ),
+    }
+  );
   if (options.unitTestRunner === 'none') {
     tree.delete(join(options.appProjectRoot, './src/app/app.element.spec.ts'));
   }
@@ -143,7 +152,9 @@ async function addProject(tree: Tree, options: NormalizedSchema) {
     options.standaloneConfig
   );
 
-  await setupBundler(tree, options);
+  if (options.bundler !== 'vite') {
+    await setupBundler(tree, options);
+  }
 
   const workspace = readWorkspaceConfiguration(tree);
 
@@ -186,6 +197,15 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
 
   createApplicationFiles(host, options);
   await addProject(host, options);
+
+  if (options.bundler === 'vite') {
+    const viteTask = await viteConfigurationGenerator(host, {
+      uiFramework: 'react',
+      project: options.projectName,
+      newProject: true,
+    });
+    tasks.push(viteTask);
+  }
 
   const lintTask = await lintProjectGenerator(host, {
     linter: options.linter,

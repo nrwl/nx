@@ -26,6 +26,7 @@ import reactInitGenerator from '../init/init';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { swcCoreVersion } from '@nrwl/js/src/utils/versions';
 import { swcLoaderVersion } from '@nrwl/webpack/src/utils/versions';
+import { viteConfigurationGenerator } from '@nrwl/vite';
 
 async function addLinting(host: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];
@@ -69,6 +70,8 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
 }
 
 export async function applicationGenerator(host: Tree, schema: Schema) {
+  const tasks = [];
+
   const options = normalizeOptions(host, schema);
 
   const initTask = await reactInitGenerator(host, {
@@ -76,28 +79,39 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
     skipFormat: true,
   });
 
+  tasks.push(initTask);
+
   createApplicationFiles(host, options);
   addProject(host, options);
+
+  if (options.bundler === 'vite') {
+    const viteTask = await viteConfigurationGenerator(host, {
+      uiFramework: 'react',
+      project: options.projectName,
+      newProject: true,
+    });
+    tasks.push(viteTask);
+  }
+
   const lintTask = await addLinting(host, options);
+  tasks.push(lintTask);
+
   const cypressTask = await addCypress(host, options);
+  tasks.push(cypressTask);
   const jestTask = await addJest(host, options);
+  tasks.push(jestTask);
   updateJestConfig(host, options);
   const styledTask = addStyledModuleDependencies(host, options.styledModule);
+  tasks.push(styledTask);
   const routingTask = addRouting(host, options);
+  tasks.push(routingTask);
   setDefaults(host, options);
 
   if (!options.skipFormat) {
     await formatFiles(host);
   }
 
-  return runTasksInSerial(
-    initTask,
-    lintTask,
-    cypressTask,
-    jestTask,
-    styledTask,
-    routingTask
-  );
+  return runTasksInSerial(...tasks);
 }
 
 export default applicationGenerator;

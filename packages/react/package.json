@@ -39,6 +39,7 @@
     "@nrwl/js": "file:../js",
     "@nrwl/linter": "file:../linter",
     "@nrwl/storybook": "file:../storybook",
+    "@nrwl/vite": "file:../vite",
     "@nrwl/web": "file:../web",
     "@nrwl/webpack": "file:../webpack",
     "@nrwl/workspace": "file:../workspace",

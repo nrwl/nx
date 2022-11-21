@@ -56,8 +56,9 @@
     "bundler": {
       "type": "string",
       "description": "The bundler to use.",
-      "enum": ["webpack", "none"],
-      "default": "webpack"
+      "enum": ["webpack", "none", "vite"],
+      "default": "webpack",
+      "x-prompt": "Which bundler do you want to use?"
     },
     "linter": {
       "description": "The tool to use for running lint checks.",
@@ -96,5 +97,6 @@
       "type": "boolean"
     }
   },
-  "required": []
+  "required": [],
+  "examplesFile": "../../../docs/application-examples.md"
 }

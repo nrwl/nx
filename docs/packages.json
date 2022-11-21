@@ -371,7 +371,7 @@
     "path": "generated/packages/vite.json",
     "schemas": {
       "executors": ["dev-server", "build", "test"],
-      "generators": ["init"]
+      "generators": ["init", "configuration"]
     }
   },
   {

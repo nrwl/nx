@@ -175,7 +175,14 @@
       "type": "boolean",
       "default": false,
       "hidden": true
+    },
+    "bundler": {
+      "description": "The bundler to use.",
+      "enum": ["vite", "webpack"],
+      "x-prompt": "Which bundler do you want to use?",
+      "default": "webpack"
     }
   },
-  "required": []
+  "required": [],
+  "examplesFile": "../../../docs/application-examples.md"
 }

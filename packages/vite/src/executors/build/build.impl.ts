@@ -1,7 +1,7 @@
 import { ExecutorContext, logger } from '@nrwl/devkit';
 import { build, InlineConfig } from 'vite';
 import 'dotenv/config';
-import { getBuildConfig } from '../../utils/helper-functions';
+import { getBuildConfig } from '../../utils/options-utils';
 import { ViteBuildExecutorOptions } from './schema';
 import { copyAssets } from '@nrwl/js';
 

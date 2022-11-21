@@ -94,6 +94,8 @@
       "@nrwl/tao": ["packages/tao"],
       "@nrwl/tao/*": ["packages/tao/*"],
       "@nrwl/typedoc-theme": ["/typedoc-theme/src/index.ts"],
+      "@nrwl/vite": ["packages/vite"],
+      "@nrwl/vite/*": ["packages/vite/*"],
       "@nrwl/web": ["packages/web"],
       "@nrwl/web/*": ["packages/web/*"],
       "@nrwl/webpack": ["packages/webpack"],

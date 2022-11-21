@@ -60,7 +60,10 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
 
   generateFiles(
     host,
-    join(__dirname, '../files/common'),
+    join(
+      __dirname,
+      options.bundler === 'vite' ? '../files/common-vite' : '../files/common'
+    ),
     options.appProjectRoot,
     templateVariables
   );

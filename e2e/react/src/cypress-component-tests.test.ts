@@ -16,7 +16,9 @@ describe('React Cypress Component Tests', () => {
 
   beforeAll(() => {
     projectName = newProject({ name: uniq('cy-react') });
-    runCLI(`generate @nrwl/react:app ${appName} --no-interactive`);
+    runCLI(
+      `generate @nrwl/react:app ${appName} --bundler=webpack --no-interactive`
+    );
     runCLI(
       `generate @nrwl/react:component fancy-cmp --project=${appName} --no-interactive`
     );

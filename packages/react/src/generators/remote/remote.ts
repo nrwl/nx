@@ -32,6 +32,7 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
   const initApp = await applicationGenerator(host, {
     ...options,
     skipDefaultProject: true,
+    bundler: schema.bundler ?? 'webpack',
   });
 
   if (schema.host) {

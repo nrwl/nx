@@ -28,7 +28,9 @@ describe('React Applications', () => {
     const libName = uniq('lib');
     const libWithNoComponents = uniq('lib');
 
-    runCLI(`generate @nrwl/react:app ${appName} --style=css --no-interactive`);
+    runCLI(
+      `generate @nrwl/react:app ${appName} --style=css --bundler=webpack --no-interactive`
+    );
     runCLI(`generate @nrwl/react:lib ${libName} --style=css --no-interactive`);
     runCLI(
       `generate @nrwl/react:lib ${libWithNoComponents} --no-interactive --no-component`
@@ -63,7 +65,9 @@ describe('React Applications', () => {
   it('should generate app with legacy-ie support', async () => {
     const appName = uniq('app');
 
-    runCLI(`generate @nrwl/react:app ${appName} --style=css --no-interactive`);
+    runCLI(
+      `generate @nrwl/react:app ${appName} --style=css --bundler=webpack --no-interactive`
+    );
 
     // changing browser support of this application
     updateFile(`apps/${appName}/.browserslistrc`, `IE 11`);
@@ -90,7 +94,9 @@ describe('React Applications', () => {
     const appName = uniq('app');
     const libName = uniq('lib');
 
-    runCLI(`generate @nrwl/react:app ${appName} --no-interactive --js`);
+    runCLI(
+      `generate @nrwl/react:app ${appName} --bundler=webpack --no-interactive --js`
+    );
     runCLI(`generate @nrwl/react:lib ${libName} --no-interactive --js`);
 
     const mainPath = `apps/${appName}/src/main.js`;
@@ -173,7 +179,7 @@ describe('React Applications: --style option', () => {
   `('should support global and css modules', ({ style }) => {
     const appName = uniq('app');
     runCLI(
-      `generate @nrwl/react:app ${appName} --style=${style} --no-interactive`
+      `generate @nrwl/react:app ${appName} --style=${style} --bundler=webpack --no-interactive`
     );
 
     // make sure stylePreprocessorOptions works
@@ -210,7 +216,9 @@ describe('React Applications: additional packages', () => {
   it('should generate app with routing', async () => {
     const appName = uniq('app');
 
-    runCLI(`generate @nrwl/react:app ${appName} --routing --no-interactive`);
+    runCLI(
+      `generate @nrwl/react:app ${appName} --routing --bundler=webpack --no-interactive`
+    );
 
     runCLI(`build ${appName} --outputHashing none`);
 
@@ -226,7 +234,7 @@ describe('React Applications: additional packages', () => {
     const appName = uniq('app');
     const libName = uniq('lib');
 
-    runCLI(`g @nrwl/react:app ${appName} --no-interactive`);
+    runCLI(`g @nrwl/react:app ${appName} --bundler=webpack --no-interactive`);
     runCLI(`g @nrwl/react:redux lemon --project=${appName}`);
     runCLI(`g @nrwl/react:lib ${libName} --no-interactive`);
     runCLI(`g @nrwl/react:redux orange --project=${libName}`);
@@ -252,7 +260,7 @@ describe('React Applications and Libs with PostCSS', () => {
     const appName = uniq('app');
     const libName = uniq('lib');
 
-    runCLI(`g @nrwl/react:app ${appName} --no-interactive`);
+    runCLI(`g @nrwl/react:app ${appName} --bundler=webpack --no-interactive`);
     runCLI(`g @nrwl/react:lib ${libName} --no-interactive`);
 
     const mainPath = `apps/${appName}/src/main.tsx`;

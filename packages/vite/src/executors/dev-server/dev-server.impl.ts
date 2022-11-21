@@ -7,7 +7,7 @@ import {
   getBuildConfig,
   getBuildTargetOptions,
   getServerOptions,
-} from '../../utils/helper-functions';
+} from '../../utils/options-utils';
 
 import { copyAssets, CopyAssetsResult } from '@nrwl/js';
 
