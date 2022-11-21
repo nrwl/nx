@@ -1,9 +1,5 @@
-import {
-  getWorkspaceLayout,
-  joinPathFragments,
-  moveFilesToNewDirectory,
-  Tree,
-} from '@nrwl/devkit';
+import type { Tree } from '@nrwl/devkit';
+import { joinPathFragments, moveFilesToNewDirectory } from '@nrwl/devkit';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import type { NormalizedSchema } from './normalized-schema';
 

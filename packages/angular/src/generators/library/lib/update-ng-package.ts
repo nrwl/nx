@@ -1,5 +1,4 @@
 import {
-  getWorkspaceLayout,
   joinPathFragments,
   offsetFromRoot,
   Tree,
@@ -18,8 +17,7 @@ export function updateNgPackage(
   const dest = joinPathFragments(
     offsetFromRoot(options.projectRoot),
     'dist',
-    getWorkspaceLayout(host).libsDir,
-    options.projectDirectory
+    options.projectRoot
   );
 
   updateJson(host, `${options.projectRoot}/ng-package.json`, (json) => {

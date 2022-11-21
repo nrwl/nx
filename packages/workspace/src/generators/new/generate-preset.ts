@@ -105,6 +105,7 @@ function getPresetDependencies(preset: string, version?: string) {
       return { dependencies: {}, dev: { '@nrwl/js': nxVersion } };
 
     case Preset.Angular:
+    case Preset.AngularExperimental:
       return { dependencies: { '@nrwl/angular': nxVersion }, dev: {} };
 
     case Preset.Express:

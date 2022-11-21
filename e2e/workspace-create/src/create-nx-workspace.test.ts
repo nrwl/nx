@@ -7,12 +7,8 @@ import {
   expectNoTsJestInJestConfig,
   getSelectedPackageManager,
   packageManagerLockFile,
-  readJson,
-  runCLI,
   runCreateWorkspace,
   uniq,
-  updateFile,
-  updateJson,
 } from '@nrwl/e2e/utils';
 import { existsSync, mkdirSync } from 'fs-extra';
 
@@ -21,7 +17,22 @@ describe('create-nx-workspace', () => {
 
   afterEach(() => cleanupProject());
 
-  it('should create a workspace with a single react app', () => {
+  it('should create a workspace with a single angular app at the root', () => {
+    const wsName = uniq('angular');
+    const appName = uniq('app');
+
+    runCreateWorkspace(wsName, {
+      preset: 'angular-experimental',
+      appName,
+      style: 'css',
+      packageManager,
+    });
+
+    checkFilesExist('package.json');
+    checkFilesExist('project.json');
+  });
+
+  it('should create a workspace with a single react app at the root', () => {
     const wsName = uniq('react');
     const appName = uniq('app');
 
@@ -33,6 +44,7 @@ describe('create-nx-workspace', () => {
     });
 
     checkFilesExist('package.json');
+    checkFilesExist('project.json');
   });
 
   it('should be able to create an empty workspace built for apps', () => {

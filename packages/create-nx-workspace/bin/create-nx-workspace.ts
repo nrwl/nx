@@ -52,6 +52,7 @@ enum Preset {
   TS = 'ts',
   WebComponents = 'web-components',
   Angular = 'angular',
+  AngularExperimental = 'angular-experimental',
   React = 'react',
   ReactExperimental = 'react-experimental',
   ReactNative = 'react-native',
@@ -655,7 +656,7 @@ async function determineStyle(
     },
   ];
 
-  if (![Preset.Angular].includes(preset)) {
+  if (![Preset.Angular, Preset.AngularExperimental].includes(preset)) {
     choices.push({
       name: 'styl',
       message: 'Stylus(.styl)     [ http://stylus-lang.com ]',
@@ -1029,6 +1030,7 @@ function pointToTutorialAndCourse(preset: Preset) {
       });
       break;
     case Preset.Angular:
+    case Preset.AngularExperimental:
       output.addVerticalSeparator();
       output.note({
         title,

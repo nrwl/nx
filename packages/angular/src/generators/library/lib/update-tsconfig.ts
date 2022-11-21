@@ -1,9 +1,5 @@
-import {
-  getWorkspaceLayout,
-  joinPathFragments,
-  Tree,
-  updateJson,
-} from '@nrwl/devkit';
+import type { Tree } from '@nrwl/devkit';
+import { joinPathFragments, updateJson } from '@nrwl/devkit';
 import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
 import { NormalizedSchema } from './normalized-schema';
 
@@ -23,11 +19,7 @@ function updateRootConfig(
     }
 
     c.paths[options.importPath] = [
-      joinPathFragments(
-        getWorkspaceLayout(host).libsDir,
-        options.projectDirectory,
-        '/src/index.ts'
-      ),
+      joinPathFragments(options.projectRoot, '/src/index.ts'),
     ];
 
     return json;
