@@ -16,6 +16,8 @@ function updateTarget(tree: Tree, tsconfigPath: string) {
 export default async function updateTypescriptTarget(tree: Tree) {
   const projects = getProjects(tree);
   for (const [, project] of projects) {
+    if (!project.targets) continue;
+
     for (const [, target] of Object.entries(project.targets)) {
       // Update all other known CLI builders that use a tsconfig
       const tsConfigs = [
