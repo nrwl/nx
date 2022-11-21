@@ -280,7 +280,7 @@ function withSchemaDefaults(options: any): BrowserBuilderSchema {
  */
 function getTempStylesForTailwind(ctExecutorContext: ExecutorContext) {
   const mappedGraphFiles = createProjectFileMappings(
-    ctExecutorContext.projectGraph
+    ctExecutorContext.projectGraph.nodes
   );
   const ctProjectConfig = ctExecutorContext.projectGraph.nodes[
     ctExecutorContext.projectName

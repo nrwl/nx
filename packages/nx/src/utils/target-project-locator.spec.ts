@@ -80,6 +80,10 @@ describe('findTargetProjectWithImport', () => {
             file: 'libs/proj/index.ts',
             hash: 'some-hash',
           },
+          {
+            file: 'libs/proj/class.ts',
+            hash: 'some-hash',
+          },
         ],
         proj2: [
           {
@@ -152,7 +156,7 @@ describe('findTargetProjectWithImport', () => {
         type: 'lib',
         data: {
           root: 'libs/proj3a',
-          files: [],
+          files: ctx.fileMap['proj3a'],
         },
       },
       proj2: {
@@ -160,7 +164,7 @@ describe('findTargetProjectWithImport', () => {
         type: 'lib',
         data: {
           root: 'libs/proj2',
-          files: [],
+          files: ctx.fileMap['proj2'],
         },
       },
       proj: {
@@ -168,7 +172,7 @@ describe('findTargetProjectWithImport', () => {
         type: 'lib',
         data: {
           root: 'libs/proj',
-          files: [],
+          files: ctx.fileMap['proj'],
         },
       },
       proj1234: {
@@ -176,7 +180,7 @@ describe('findTargetProjectWithImport', () => {
         type: 'lib',
         data: {
           root: 'libs/proj1234',
-          files: [],
+          files: ctx.fileMap['proj1234'],
         },
       },
       proj123: {
@@ -184,7 +188,7 @@ describe('findTargetProjectWithImport', () => {
         type: 'lib',
         data: {
           root: 'libs/proj123',
-          files: [],
+          files: ctx.fileMap['proj123'],
         },
       },
       proj4ab: {
@@ -192,7 +196,7 @@ describe('findTargetProjectWithImport', () => {
         type: 'lib',
         data: {
           root: 'libs/proj4ab',
-          files: [],
+          files: ctx.fileMap['proj4ab'],
         },
       },
       proj5: {
@@ -200,7 +204,7 @@ describe('findTargetProjectWithImport', () => {
         type: 'lib',
         data: {
           root: 'libs/proj5',
-          files: [],
+          files: ctx.fileMap['proj5'],
         },
       },
       proj6: {
@@ -208,7 +212,7 @@ describe('findTargetProjectWithImport', () => {
         type: 'lib',
         data: {
           root: 'libs/proj6',
-          files: [],
+          files: ctx.fileMap['proj6'],
         },
       },
       proj7: {
@@ -216,7 +220,7 @@ describe('findTargetProjectWithImport', () => {
         type: 'lib',
         data: {
           root: 'libs/proj7',
-          files: [],
+          files: ctx.fileMap['proj7'],
         },
       },
       'proj1234-child': {
@@ -224,7 +228,7 @@ describe('findTargetProjectWithImport', () => {
         type: 'lib',
         data: {
           root: 'libs/proj1234-child',
-          files: [],
+          files: ctx.fileMap['proj1234-child'],
         },
       },
     };
@@ -508,6 +512,10 @@ describe('findTargetProjectWithImport (without tsconfig.json)', () => {
             file: 'libs/proj/index.ts',
             hash: 'some-hash',
           },
+          {
+            file: 'libs/proj/class.ts',
+            hash: 'some-hash',
+          },
         ],
         proj2: [
           {
@@ -580,7 +588,7 @@ describe('findTargetProjectWithImport (without tsconfig.json)', () => {
         type: 'lib',
         data: {
           root: 'libs/proj3a',
-          files: [],
+          files: ctx.fileMap.proj3a,
         },
       },
       proj2: {
@@ -588,7 +596,7 @@ describe('findTargetProjectWithImport (without tsconfig.json)', () => {
         type: 'lib',
         data: {
           root: 'libs/proj2',
-          files: [],
+          files: ctx.fileMap.proj2,
         },
       },
       proj: {
@@ -596,7 +604,7 @@ describe('findTargetProjectWithImport (without tsconfig.json)', () => {
         type: 'lib',
         data: {
           root: 'libs/proj',
-          files: [],
+          files: ctx.fileMap.proj,
         },
       },
       proj1234: {
@@ -604,7 +612,7 @@ describe('findTargetProjectWithImport (without tsconfig.json)', () => {
         type: 'lib',
         data: {
           root: 'libs/proj1234',
-          files: [],
+          files: ctx.fileMap.proj1234,
         },
       },
       proj123: {
@@ -612,7 +620,7 @@ describe('findTargetProjectWithImport (without tsconfig.json)', () => {
         type: 'lib',
         data: {
           root: 'libs/proj123',
-          files: [],
+          files: ctx.fileMap.proj123,
         },
       },
       proj4ab: {
@@ -620,7 +628,7 @@ describe('findTargetProjectWithImport (without tsconfig.json)', () => {
         type: 'lib',
         data: {
           root: 'libs/proj4ab',
-          files: [],
+          files: ctx.fileMap.proj4ab,
         },
       },
       proj5: {
@@ -628,7 +636,7 @@ describe('findTargetProjectWithImport (without tsconfig.json)', () => {
         type: 'lib',
         data: {
           root: 'libs/proj5',
-          files: [],
+          files: ctx.fileMap.proj5,
         },
       },
       proj6: {
@@ -636,7 +644,7 @@ describe('findTargetProjectWithImport (without tsconfig.json)', () => {
         type: 'lib',
         data: {
           root: 'libs/proj6',
-          files: [],
+          files: ctx.fileMap.proj6,
         },
       },
       proj7: {
@@ -644,7 +652,7 @@ describe('findTargetProjectWithImport (without tsconfig.json)', () => {
         type: 'lib',
         data: {
           root: 'libs/proj7',
-          files: [],
+          files: ctx.fileMap.proj7,
         },
       },
       'proj1234-child': {
@@ -652,7 +660,7 @@ describe('findTargetProjectWithImport (without tsconfig.json)', () => {
         type: 'lib',
         data: {
           root: 'libs/proj1234-child',
-          files: [],
+          files: ctx.fileMap['proj1234-child'],
         },
       },
     };

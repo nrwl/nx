@@ -90,7 +90,7 @@ export function getProjectConfigByPath(
       : configFileFromWorkspaceRoot
   );
 
-  const mappedGraphFiles = createProjectFileMappings(graph);
+  const mappedGraphFiles = createProjectFileMappings(graph.nodes);
   const componentTestingProjectName =
     mappedGraphFiles[normalizedPathFromWorkspaceRoot];
   if (
