@@ -107,7 +107,7 @@ function ensureNxTarget(
     output.error({
       title: `Nx cannot find a target called "${targetName}" for ${project.name}`,
       bodyLines: [
-        `Is ${targetName} missing from ${project.data.root}/package.json's nx.includeScripts field?`,
+        `Is ${targetName} missing from ${project.data.root}/package.json's nx.includedScripts field?`,
       ],
     });
     exit(1);

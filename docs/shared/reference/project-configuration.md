@@ -77,7 +77,7 @@ You can add Nx-specific configuration as follows:
         "dependsOn": ["build"]
       }
     },
-    "includeScripts": ["test", "build"] // If you want to limit the scripts Nx sees, you can specify a list here.
+    "includedScripts": ["test", "build"] // If you want to limit the scripts Nx sees, you can specify a list here.
   }
 }
 ```
@@ -400,7 +400,7 @@ If you want to ignore a particular `package.json` file, exclude it from those to
 ### Ignoring package.json scripts
 
 Nx merges package.json scripts with your targets that are defined in project.json.
-If you only wish for some scripts to be used as Nx targets, you can specify them in the `includeScripts` property of the project's package.json.
+If you only wish for some scripts to be used as Nx targets, you can specify them in the `includedScripts` property of the project's package.json.
 
 ```json {% filename="packages/my-library/package.json" }
 {
@@ -411,7 +411,7 @@ If you only wish for some scripts to be used as Nx targets, you can specify them
     "postinstall": "node ./tasks/postinstall"
   },
   "nx": {
-    "includeScripts": ["build"]
+    "includedScripts": ["build"]
   }
 }
 ```

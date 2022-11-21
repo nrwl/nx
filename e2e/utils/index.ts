@@ -7,7 +7,13 @@ import {
   workspaceRoot,
 } from '@nrwl/devkit';
 import { angularCliVersion } from '@nrwl/workspace/src/utils/versions';
-import { ChildProcess, exec, execSync, ExecSyncOptions } from 'child_process';
+import {
+  ChildProcess,
+  exec,
+  ExecOptions,
+  execSync,
+  ExecSyncOptions,
+} from 'child_process';
 import {
   copySync,
   createFileSync,
@@ -466,7 +472,7 @@ export function runCommandAsync(
   command: string,
   opts: RunCmdOpts = {
     silenceError: false,
-    env: undefined,
+    env: process['env'],
   }
 ): Promise<{ stdout: string; stderr: string; combinedOutput: string }> {
   return new Promise((resolve, reject) => {
@@ -502,12 +508,12 @@ export function runCommandUntil(
   const pm = getPackageManagerCommand();
   const p = exec(`${pm.runNx} ${command}`, {
     cwd: tmpProjPath(),
+    encoding: 'utf-8',
     env: {
       CI: 'true',
       ...getStrippedEnvironmentVariables(),
       FORCE_COLOR: 'false',
     },
-    encoding: 'utf-8',
   });
   return new Promise((res, rej) => {
     let output = '';
@@ -653,6 +659,7 @@ export function runCommand(
       stdio: ['pipe', 'pipe', 'pipe'],
       env: {
         ...getStrippedEnvironmentVariables(),
+        ...options?.env,
         FORCE_COLOR: 'false',
       },
       encoding: 'utf-8',
@@ -665,8 +672,10 @@ export function runCommand(
   } catch (e) {
     // this is intentional
     // npm ls fails if package is not found
-    console.log('I THREW');
-    return e.stdout?.toString() + e.stderr?.toString();
+    if (e.stdout || e.stderr) {
+      return e.stdout?.toString() + e.stderr?.toString();
+    }
+    throw e;
   }
 }
 
@@ -1001,10 +1010,13 @@ export async function expectJestTestsToPass(
 }
 
 function getStrippedEnvironmentVariables() {
-  const passthroughNxVars = new Set(['NX_VERBOSE_LOGGING']);
+  const strippedVariables = new Set(['NX_TASK_TARGET_PROJECT']);
   return Object.fromEntries(
     Object.entries(process.env).filter(
-      ([key, value]) => passthroughNxVars.has(key) || !key.startsWith('NX_')
+      ([key, value]) =>
+        !strippedVariables.has(key) ||
+        !key.startsWith('NX_') ||
+        key.startsWith('NX_E2E_')
     )
   );
 }
