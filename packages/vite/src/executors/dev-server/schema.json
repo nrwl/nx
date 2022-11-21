@@ -51,6 +51,36 @@
       "description": "Enable hot module replacement. For more options, use the 'hmr' option in the Vite configuration file.",
       "default": false,
       "type": "boolean"
+    },
+    "open": {
+      "description": "Automatically open the app in the browser on server start. When the value is a string, it will be used as the URL's pathname.",
+      "default": false,
+      "oneOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "cors": {
+      "description": "Configure CORS for the dev server.",
+      "type": "boolean"
+    },
+    "logLevel": {
+      "type": "string",
+      "description": "Adjust console output verbosity.",
+      "enum": ["info", "warn", "error", "silent"]
+    },
+    "mode": {
+      "type": "string",
+      "description": "Specifying this in config will override the default mode for both serve and build."
+    },
+    "clearScreen": {
+      "description": "Set to false to prevent Vite from clearing the terminal screen when logging certain messages.",
+      "default": true,
+      "type": "boolean"
     }
   },
   "definitions": {},
