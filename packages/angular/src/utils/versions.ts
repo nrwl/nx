@@ -11,7 +11,7 @@ export const tsLibVersion = '^2.3.0';
 
 export const ngUniversalVersion = '~15.0.0';
 
-export const angularEslintVersion = '~14.0.4';
+export const angularEslintVersion = '~15.0.0';
 export const tailwindVersion = '^3.0.2';
 export const postcssVersion = '^8.4.5';
 export const postcssImportVersion = '~14.1.0';
