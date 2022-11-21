@@ -4,7 +4,7 @@
   "description": "Run any custom commands with Nx.",
   "type": "object",
   "cli": "nx",
-  "outputCapture": "pipe",
+  "outputCapture": "direct-nodejs",
   "presets": [
     {
       "name": "Arguments forwarding",
