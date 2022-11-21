@@ -40,3 +40,7 @@ export const tsLibVersion = '^2.3.0';
 export const postcssVersion = '8.4.16';
 export const tailwindcssVersion = '3.1.8';
 export const autoprefixerVersion = '10.4.12';
+
+export const expressVersion = '^4.18.1';
+export const typesExpressVersion = '4.17.13';
+export const isbotVersion = '^3.6.5';

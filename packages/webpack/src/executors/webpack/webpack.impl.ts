@@ -91,11 +91,16 @@ async function getWebpackConfigs(
 }
 
 export type WebpackExecutorEvent =
-  | { success: false; outfile?: string }
+  | {
+      success: false;
+      outfile?: string;
+      options?: WebpackExecutorOptions;
+    }
   | {
       success: true;
       outfile: string;
       emittedFiles: EmittedFile[];
+      options?: WebpackExecutorOptions;
     };
 
 export async function* webpackExecutor(
@@ -129,6 +134,7 @@ export async function* webpackExecutor(
           options.outputPath,
           options.outputFileName
         ),
+        options,
       };
     }
   }
@@ -204,6 +210,7 @@ export async function* webpackExecutor(
             options.outputFileName
           ),
           emittedFiles: [...emittedFiles1, ...emittedFiles2],
+          options,
         };
       })
     )
