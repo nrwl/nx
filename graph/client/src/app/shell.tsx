@@ -44,7 +44,7 @@ export function Shell(): JSX.Element {
 
   const navigate = useNavigate();
   const currentPath = useCurrentPath();
-  const { selectedProjectId, selectedTaskId } = useParams();
+  const { selectedWorkspaceId, selectedTaskId } = useParams();
   const taskIsSelected = !!selectedTaskId;
   const currentRoute = currentPath.currentPath;
 
@@ -61,7 +61,7 @@ export function Shell(): JSX.Element {
   ];
 
   function projectChange(projectGraphId: string) {
-    // setSelectedProjectId(projectGraphId);
+    // setselectedWorkspaceId(projectGraphId);
 
     navigate(`/${projectGraphId}${topLevelRoute}`);
   }
@@ -169,7 +169,7 @@ export function Shell(): JSX.Element {
         {environment.appConfig.showDebugger ? (
           <DebuggerPanel
             projects={environment.appConfig.workspaces}
-            selectedProject={selectedProjectId}
+            selectedProject={selectedWorkspaceId}
             lastPerfReport={lastPerfReport}
             selectedProjectChange={projectChange}
           ></DebuggerPanel>

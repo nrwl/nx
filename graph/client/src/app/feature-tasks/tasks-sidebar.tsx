@@ -15,11 +15,18 @@ import { useEffect } from 'react';
 import FocusedPanel from '../ui-components/focused-panel';
 import CheckboxPanel from '../ui-components/checkbox-panel';
 
+// nx-ignore-next-line
+import { TargetConfiguration } from 'nx/src/config/workspace-json-project-json';
+
 export function TasksSidebar() {
   const graphService = getGraphService();
   const navigate = useNavigate();
   const params = useParams();
+
   const [searchParams, setSearchParams] = useSearchParams();
+  const groupByProject = searchParams.get('groupByProject') === 'true';
+  const hideTasksWithoutDeps =
+    searchParams.get('filterTasksWithoutDeps') !== 'false';
 
   const selectedProjectRouteData = useRouteLoaderData(
     'selectedWorkspace'
@@ -30,17 +37,27 @@ export function TasksSidebar() {
     'selectedTask'
   ) as TaskGraphClientResponse;
   const { taskGraphs } = routeData;
-  const projects = selectedProjectRouteData.projects;
-  // const projects = selectedProjectRouteData.projects.filter((project) => {
-  //   return (
-  //     Object.keys(project.data.targets).filter((target) => {
-  //       const taskName = `${project.name}:${target}`;
-  //       return (
-  //         taskGraphs[taskName]?.dependencies[taskName]?.length > 0
-  //       );
-  //     }).length > 0
-  //   );
-  // });
+  let projects = selectedProjectRouteData.projects;
+
+  if (searchParams.get('filterTasksWithoutDeps') !== 'false') {
+    projects = projects
+      .map((project) => {
+        const targets: { [p: string]: TargetConfiguration } = {};
+
+        Object.keys(project.data.targets).forEach((targetName) => {
+          const taskName = `${project.name}:${targetName}`;
+          if (taskGraphs[taskName]?.dependencies[taskName]?.length > 0) {
+            targets[targetName] = project.data.targets[targetName];
+          }
+        });
+
+        return Object.keys(targets).length > 0
+          ? { ...project, data: { ...project.data, targets } }
+          : null;
+      })
+      .filter((project) => project !== null);
+  }
+
   const selectedTask = params['selectedTaskId'];
 
   useEffect(() => {
@@ -64,8 +81,6 @@ export function TasksSidebar() {
     }
   }, [params]);
 
-  const groupByProject = searchParams.get('groupByProject') === 'true';
-
   useEffect(() => {
     if (groupByProject) {
       graphService.handleTaskEvent({
@@ -81,23 +96,46 @@ export function TasksSidebar() {
   }, [searchParams]);
 
   function selectTask(taskId: string) {
+    if (taskId === selectedTask) return;
+
     if (selectedTask) {
-      navigate(`../${taskId}`);
+      navigate(
+        { pathname: `../${taskId}`, search: searchParams.toString() },
+        { relative: 'path' }
+      );
     } else {
-      navigate(`./${taskId}`);
+      navigate(
+        { pathname: `${taskId}`, search: searchParams.toString() },
+        { relative: 'path' }
+      );
     }
   }
 
   function resetFocus() {
-    navigate('..');
+    navigate('..', { relative: 'path' });
   }
 
   function groupByProjectChanged(checked) {
+    setSearchParams(
+      (currentSearchParams) => {
+        if (checked) {
+          currentSearchParams.set('groupByProject', 'true');
+        } else {
+          currentSearchParams.delete('groupByProject');
+        }
+
+        return currentSearchParams;
+      },
+      { relative: 'path' }
+    );
+  }
+
+  function hideTasksWithoutDepsChanged(checked) {
     setSearchParams((currentSearchParams) => {
-      if (checked) {
-        currentSearchParams.set('groupByProject', 'true');
+      if (!checked) {
+        currentSearchParams.set('filterTasksWithoutDeps', 'false');
       } else {
-        currentSearchParams.delete('groupByProject');
+        currentSearchParams.delete('filterTasksWithoutDeps');
       }
 
       return currentSearchParams;
@@ -119,6 +157,16 @@ export function TasksSidebar() {
         name={'groupByProject'}
         label={'Group by project'}
         description={'Visually arrange tasks by project.'}
+      />
+
+      <CheckboxPanel
+        checked={hideTasksWithoutDeps}
+        checkChanged={hideTasksWithoutDepsChanged}
+        name={'hideTasksWithoutDeps'}
+        label={'Hide tasks without dependencies'}
+        description={
+          "Don't show tasks without dependencies, which means only that task will be executed when run."
+        }
       />
 
       <TaskList

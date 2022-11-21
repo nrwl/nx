@@ -10,7 +10,7 @@ export interface TaskNodeTooltipProps {
 
 export function TaskNodeTooltip({ id, executor }: TaskNodeTooltipProps) {
   const params = useParams();
-  const selectedWorkspaceId = params['selectedProjectId'];
+  const selectedWorkspaceId = params['selectedWorkspaceId'];
 
   const to = selectedWorkspaceId
     ? `/${selectedWorkspaceId}/tasks/${id}`
