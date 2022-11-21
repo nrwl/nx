@@ -37,7 +37,7 @@
     "chalk": "^4.1.0",
     "enhanced-resolve": "^5.8.3",
     "fs-extra": "^10.1.0",
-    "metro-resolver": "^0.72.3",
+    "metro-resolver": "^0.73.3",
     "node-fetch": "^2.6.7",
     "tar-fs": "^2.1.1",
     "tsconfig-paths": "^3.9.0",
