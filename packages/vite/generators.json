@@ -17,7 +17,7 @@
       "hidden": false
     },
     "vitest": {
-      "factory": "./src/generators/vitest/vitest#vitestSchematic",
+      "factory": "./src/generators/vitest/vitest-generator#vitestSchematic",
       "schema": "./src/generators/vitest/schema.json",
       "description": "Generate a vitest configuration"
     }
@@ -38,7 +38,7 @@
       "hidden": false
     },
     "vitest": {
-      "factory": "./src/generators/vitest/vitest",
+      "factory": "./src/generators/vitest/vitest-generator",
       "schema": "./src/generators/vitest/schema.json",
       "description": "Generate a vitest configuration"
     }

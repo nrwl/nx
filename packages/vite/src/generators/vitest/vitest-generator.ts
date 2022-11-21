@@ -37,6 +37,7 @@ export async function vitestGenerator(
     writeViteConfig(tree, schema);
   }
 
+  // TODO create tsconfig.spec.json and make sure to add to tsconfig.json
   updateTsConfig(tree, schema, root);
 
   await formatFiles(tree);

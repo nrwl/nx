@@ -365,6 +365,7 @@ export function writeViteConfig(tree: Tree, options: Schema) {
   switch (options.uiFramework) {
     case 'react':
       viteConfigContent = `
+${options.includeVitest ? '/// <reference types="vitest" />' : ''}
       import { defineConfig } from 'vite';
       import react from '@vitejs/plugin-react';
       import ViteTsConfigPathsPlugin from 'vite-tsconfig-paths';
