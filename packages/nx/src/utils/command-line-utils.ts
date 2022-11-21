@@ -40,7 +40,10 @@ export function splitArgsIntoNxArgsAndOverrides(
   mode: 'run-one' | 'run-many' | 'affected' | 'print-affected',
   options = { printWarnings: true },
   nxJson: NxJsonConfiguration
-): { nxArgs: NxArgs; overrides: Arguments } {
+): {
+  nxArgs: NxArgs;
+  overrides: Arguments & { __overrides_unparsed__: string[] };
+} {
   if (!args.__overrides_unparsed__ && args._) {
     // required for backwards compatibility
     args.__overrides_unparsed__ = args._;
