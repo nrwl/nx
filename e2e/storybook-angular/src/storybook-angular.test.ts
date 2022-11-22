@@ -11,15 +11,41 @@ import {
   runCypressTests,
   tmpProjPath,
   uniq,
+  getPackageManagerCommand,
+  updateJson,
+  runCommand,
 } from '@nrwl/e2e/utils';
 import { writeFileSync } from 'fs';
 
-// TODO(jack): disabled for now because latest enhanced-resolve is causing errors for all projects using Storybook
-// See: https://github.com/webpack/enhanced-resolve/issues/362
-xdescribe('Storybook for Angular', () => {
+describe('Storybook for Angular', () => {
   let proj: string;
 
-  beforeAll(() => (proj = newProject()));
+  beforeAll(() => {
+    proj = newProject();
+
+    // TODO(jack): Overriding enhanced-resolve to 5.10.0 now until the package is fixed.
+    // See: https://github.com/webpack/enhanced-resolve/issues/362
+    updateJson('package.json', (json) => {
+      if (process.env.SELECTED_PM === 'yarn') {
+        json['resolutions'] = {
+          'enhanced-resolve': '5.10.0',
+        };
+      } else if (process.env.SELECTED_PM === 'npm') {
+        json['overrides'] = {
+          'enhanced-resolve': '5.10.0',
+        };
+      } else {
+        json['pnpm'] = {
+          overrides: {
+            'enhanced-resolve': '5.10.0',
+          },
+        };
+      }
+      return json;
+    });
+    runCommand(getPackageManagerCommand().install);
+  });
+
   afterAll(() => cleanupProject());
 
   it('should not overwrite global storybook config files', () => {
