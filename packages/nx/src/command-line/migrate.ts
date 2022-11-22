@@ -34,7 +34,7 @@ import {
 import { handleErrors } from '../utils/params';
 import { connectToNxCloudCommand } from './connect';
 import { output } from '../utils/output';
-import { messages, recordStat } from 'nx/src/utils/ab-testing';
+import { messages, recordStat } from '../utils/ab-testing';
 import { nxVersion } from '../utils/versions';
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {

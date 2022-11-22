@@ -1,18 +1,18 @@
 import { join } from 'path';
 import { existsSync } from 'fs';
-import { workspaceRoot } from 'nx/src/utils/workspace-root';
+import { workspaceRoot } from '../../utils/workspace-root';
 import {
   loadNxPlugins,
   mergePluginTargetsWithNxTargets,
-} from 'nx/src/utils/nx-plugin';
-import { ProjectGraphProcessorContext } from 'nx/src/config/project-graph';
-import { mergeNpmScriptsWithTargets } from 'nx/src/utils/project-graph-utils';
+} from '../../utils/nx-plugin';
+import { ProjectGraphProcessorContext } from '../../config/project-graph';
+import { mergeNpmScriptsWithTargets } from '../../utils/project-graph-utils';
 import { ProjectGraphBuilder } from '../project-graph-builder';
-import { PackageJson } from 'nx/src/utils/package-json';
-import { readJsonFile } from 'nx/src/utils/fileutils';
-import { NxJsonConfiguration } from 'nx/src/config/nx-json';
-import { TargetConfiguration } from 'nx/src/config/workspace-json-project-json';
-import { NX_PREFIX } from 'nx/src/utils/logger';
+import { PackageJson } from '../../utils/package-json';
+import { readJsonFile } from '../../utils/fileutils';
+import { NxJsonConfiguration } from '../../config/nx-json';
+import { TargetConfiguration } from '../../config/workspace-json-project-json';
+import { NX_PREFIX } from '../../utils/logger';
 
 export function buildWorkspaceProjectNodes(
   ctx: ProjectGraphProcessorContext,

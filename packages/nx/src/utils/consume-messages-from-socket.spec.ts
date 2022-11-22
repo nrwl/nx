@@ -1,4 +1,4 @@
-import { consumeMessagesFromSocket } from 'nx/src/utils/consume-messages-from-socket';
+import { consumeMessagesFromSocket } from './consume-messages-from-socket';
 
 describe('consumeMessagesFromSocket', () => {
   it('should handle messages where every messages is in its own chunk', () => {

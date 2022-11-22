@@ -4,7 +4,7 @@ import {
   ProjectGraph,
   ProjectGraphProjectNode,
 } from '../../config/project-graph';
-import { ProjectConfiguration } from 'nx/src/config/workspace-json-project-json';
+import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 
 export interface AffectedProjectGraphContext {
   projectGraphNodes: Record<

@@ -1,9 +1,8 @@
-import { ProjectGraphProjectNode } from 'nx/src/config/project-graph';
-import { ProjectConfiguration } from 'nx/src/config/workspace-json-project-json';
+import { ProjectGraphProjectNode } from '../../../config/project-graph';
+import { ProjectConfiguration } from '../../../config/workspace-json-project-json';
 
-import { JsonDiffType } from '../../../utils/json-diff';
 import * as nxPlugin from '../../../utils/nx-plugin';
-import { DeletedFileChange, WholeFileChange } from '../../file-utils';
+import { DeletedFileChange } from '../../file-utils';
 import { getTouchedProjectsFromProjectGlobChanges } from './project-glob-changes';
 
 function makeProjectGraphNode(

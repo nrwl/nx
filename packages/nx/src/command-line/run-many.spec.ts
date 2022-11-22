@@ -1,5 +1,5 @@
 import { ProjectGraph } from '@nrwl/nx-cloud/lib/core/models/run-context.model';
-import { projectsToRun } from 'nx/src/command-line/run-many';
+import { projectsToRun } from './run-many';
 import { performance } from 'perf_hooks';
 
 describe('run-many', () => {

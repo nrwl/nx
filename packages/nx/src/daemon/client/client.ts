@@ -22,8 +22,7 @@ import { isCI } from '../../utils/is-ci';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { readNxJson } from '../../config/configuration';
 import { PromisedBasedQueue } from '../../utils/promised-based-queue';
-import { consumeMessagesFromSocket } from '../../utils/consume-messages-from-socket';
-import { Workspaces } from 'nx/src/config/workspaces';
+import { Workspaces } from '../../config/workspaces';
 import { Message, SocketMessenger } from './socket-messenger';
 
 const DAEMON_ENV_SETTINGS = {
