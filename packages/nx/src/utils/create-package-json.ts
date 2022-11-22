@@ -1,6 +1,6 @@
-import type { ProjectGraph } from '@nrwl/devkit';
-import { readJsonFile } from '@nrwl/devkit';
+import { readJsonFile } from './fileutils';
 import { sortObjectByKeys } from 'nx/src/utils/object-sort';
+import { ProjectGraph } from '../config/project-graph';
 
 /**
  * Creates a package.json in the output directory for support to install dependencies within containers.
