@@ -1,4 +1,4 @@
-import { Tree, readJson } from '@nrwl/devkit';
+import { Tree, readJson, readProjectConfiguration } from '@nrwl/devkit';
 import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { overrideCollectionResolutionForTesting } from '@nrwl/devkit/ngcli-adapter';
 import { presetGenerator } from './preset';
@@ -75,6 +75,7 @@ describe('preset', () => {
       standaloneConfig: false,
     });
     expect(tree.exists('/apps/proj/src/main.tsx')).toBe(true);
+    expect(readProjectConfiguration(tree, 'proj').targets.serve).toBeDefined();
   });
 
   it(`should create files (preset = ${Preset.NextJs})`, async () => {
