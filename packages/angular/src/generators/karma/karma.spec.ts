@@ -7,7 +7,7 @@ describe('karma', () => {
   let tree: devkit.Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it('should do nothing when karma is already installed and karma.conf.js exists', () => {

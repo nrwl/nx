@@ -348,7 +348,7 @@ describe('app', () => {
 
   describe('at the root', () => {
     beforeEach(() => {
-      appTree = createTreeWithEmptyWorkspace();
+      appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       updateJson(appTree, 'nx.json', (json) => ({
         ...json,
         workspaceLayout: { appsDir: '' },
@@ -739,7 +739,7 @@ describe('app', () => {
   describe('--e2e-test-runner', () => {
     describe(E2eTestRunner.Protractor, () => {
       it('should create the e2e project in v2 workspace', async () => {
-        appTree = createTreeWithEmptyWorkspace();
+        appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
         expect(
           async () =>

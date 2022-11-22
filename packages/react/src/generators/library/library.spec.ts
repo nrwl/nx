@@ -738,7 +738,7 @@ describe('lib', () => {
   describe('--skipPackageJson', () => {
     it('should not add dependencies to package.json when true', async () => {
       // ARRANGE
-      const tree = createTreeWithEmptyWorkspace();
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       const packageJsonBeforeGenerator = tree.read('package.json', 'utf-8');
       // ACT
       await libraryGenerator(tree, {

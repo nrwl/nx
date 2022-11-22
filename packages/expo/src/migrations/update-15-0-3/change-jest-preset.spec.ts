@@ -11,7 +11,7 @@ describe('Change expo jest preset', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     updateJson(tree, 'package.json', (packageJson) => {
       packageJson.devDependencies['jest-expo'] = '*';
       return packageJson;

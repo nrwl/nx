@@ -27,7 +27,7 @@ describe('convertToCypressTen', () => {
   > = installedCypressVersion as never;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     mockedInstalledCypressVersion.mockReturnValue(9);
   });
 

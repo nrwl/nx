@@ -5,7 +5,7 @@ import componentGenerator from './component';
 describe('component Generator', () => {
   it('should create the component correctly and export it in the entry point when "export=true"', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'lib1', {
       projectType: 'library',
       sourceRoot: 'libs/lib1/src',
@@ -44,7 +44,7 @@ describe('component Generator', () => {
 
   it('should create the component correctly and export it in the entry point when is standalone and "export=true"', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'lib1', {
       projectType: 'library',
       sourceRoot: 'libs/lib1/src',
@@ -86,7 +86,7 @@ describe('component Generator', () => {
 
   it('should create the component correctly and not export it in the entry point when "export=false"', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'lib1', {
       projectType: 'library',
       sourceRoot: 'libs/lib1/src',
@@ -127,7 +127,7 @@ describe('component Generator', () => {
 
   it('should create the component correctly and not export it in the entry point when is standalone and "export=false"', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'lib1', {
       projectType: 'library',
       sourceRoot: 'libs/lib1/src',
@@ -169,7 +169,7 @@ describe('component Generator', () => {
 
   it('should create the component correctly and not export it when "--skip-import=true"', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'lib1', {
       projectType: 'library',
       sourceRoot: 'libs/lib1/src',
@@ -210,7 +210,7 @@ describe('component Generator', () => {
 
   it('should create the component correctly but not export it in the entry point when it does not exist', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'lib1', {
       projectType: 'library',
       sourceRoot: 'libs/lib1/src',
@@ -248,7 +248,7 @@ describe('component Generator', () => {
 
   it('should not export the component in the entry point when the module it belongs to is not exported', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'lib1', {
       projectType: 'library',
       sourceRoot: 'libs/lib1/src',
@@ -282,7 +282,7 @@ describe('component Generator', () => {
   describe('--flat', () => {
     it('should create the component correctly and export it in the entry point', async () => {
       // ARRANGE
-      const tree = createTreeWithEmptyWorkspace();
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       addProjectConfiguration(tree, 'lib1', {
         projectType: 'library',
         sourceRoot: 'libs/lib1/src',
@@ -322,7 +322,7 @@ describe('component Generator', () => {
 
     it('should create the component correctly and not export it when "export=false"', async () => {
       // ARRANGE
-      const tree = createTreeWithEmptyWorkspace();
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       addProjectConfiguration(tree, 'lib1', {
         projectType: 'library',
         sourceRoot: 'libs/lib1/src',
@@ -366,7 +366,7 @@ describe('component Generator', () => {
   describe('--path', () => {
     it('should create the component correctly and export it in the entry point', async () => {
       // ARRANGE
-      const tree = createTreeWithEmptyWorkspace();
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       addProjectConfiguration(tree, 'lib1', {
         projectType: 'library',
         sourceRoot: 'libs/lib1/src',
@@ -408,7 +408,7 @@ describe('component Generator', () => {
 
     it('should throw if the path specified is not under the project root', async () => {
       // ARRANGE
-      const tree = createTreeWithEmptyWorkspace();
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       addProjectConfiguration(tree, 'lib1', {
         projectType: 'library',
         sourceRoot: 'libs/lib1/src',
@@ -451,7 +451,7 @@ describe('component Generator', () => {
       'should export it in the entry point when "--module" is set to "%s"',
       async (module) => {
         // ARRANGE
-        const tree = createTreeWithEmptyWorkspace();
+        const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
         addProjectConfiguration(tree, 'lib1', {
           projectType: 'library',
           sourceRoot: 'libs/lib1/src',
@@ -491,7 +491,7 @@ describe('component Generator', () => {
 
     it('should not export it in the entry point when the module it belong to is not exported', async () => {
       // ARRANGE
-      const tree = createTreeWithEmptyWorkspace();
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       addProjectConfiguration(tree, 'lib1', {
         projectType: 'library',
         sourceRoot: 'libs/lib1/src',
@@ -540,7 +540,7 @@ describe('component Generator', () => {
   describe('secondary entry points', () => {
     it('should create the component correctly and export it in the entry point', async () => {
       // ARRANGE
-      const tree = createTreeWithEmptyWorkspace();
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       addProjectConfiguration(tree, 'lib1', {
         projectType: 'library',
         sourceRoot: 'libs/lib1/src',
@@ -603,7 +603,7 @@ describe('component Generator', () => {
 
     it('should not export the component in the entry point when the module it belongs to is not exported', async () => {
       // ARRANGE
-      const tree = createTreeWithEmptyWorkspace();
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       addProjectConfiguration(tree, 'lib1', {
         projectType: 'library',
         sourceRoot: 'libs/lib1/src',

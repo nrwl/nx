@@ -12,7 +12,7 @@ describe('remove-library-generator-style-default migration', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     jest.clearAllMocks();
   });
 

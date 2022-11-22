@@ -16,6 +16,8 @@ describe('renameNpmPackages Rule', () => {
   beforeEach(async () => {
     tree = new UnitTestTree(Tree.empty());
     tree = createEmptyWorkspace(tree) as UnitTestTree;
+    tree.create('libs/.gitignore', '');
+    tree.create('apps/.gitignore', '');
   });
 
   it('should rename an npm package in both package.json and any file that imports it', async () => {

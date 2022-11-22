@@ -19,7 +19,7 @@ describe('@nrwl/storybook:configuration', () => {
     let tree: Tree;
 
     beforeEach(async () => {
-      tree = createTreeWithEmptyWorkspace();
+      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
         json.namedInputs = {
           production: ['default'],
@@ -411,7 +411,7 @@ describe('@nrwl/storybook:configuration', () => {
     describe('for js Storybook configurations', () => {
       let tree: Tree;
       beforeAll(async () => {
-        tree = createTreeWithEmptyWorkspace();
+        tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
         writeJson(tree, 'workspace.json', workspaceConfiguration);
         writeJson(tree, 'apps/nxapp/tsconfig.json', {});
         writeJson(tree, 'apps/reapp/tsconfig.json', {});
@@ -509,7 +509,7 @@ describe('@nrwl/storybook:configuration', () => {
     describe('for TypeScript Storybook configurations', () => {
       let tree: Tree;
       beforeAll(async () => {
-        tree = createTreeWithEmptyWorkspace();
+        tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
         writeJson(tree, 'workspace.json', workspaceConfiguration);
         writeJson(tree, 'apps/nxapp/tsconfig.json', {});
         writeJson(tree, 'apps/reapp/tsconfig.json', {});

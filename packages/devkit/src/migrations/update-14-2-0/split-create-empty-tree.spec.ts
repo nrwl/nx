@@ -100,7 +100,7 @@ describe('update-14-2-0-split-create-empty-tree', () => {
 });
 
 function createTreeWithBoilerplate(): { tree: Tree; tsFilePath: string } {
-  const tree = createTreeWithEmptyWorkspace();
+  const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   const project = 'proj';
   addProjectConfiguration(tree, project, {
     root: `libs/${project}`,

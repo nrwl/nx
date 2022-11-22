@@ -214,7 +214,7 @@ describe('project configuration', () => {
 
   describe('workspace v2', () => {
     beforeEach(() => {
-      tree = createTreeWithEmptyWorkspace();
+      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     });
 
     describe('readProjectConfiguration', () => {

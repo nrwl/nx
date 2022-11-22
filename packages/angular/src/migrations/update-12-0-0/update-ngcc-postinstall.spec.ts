@@ -26,7 +26,7 @@ describe('Remove ngcc flags from postinstall script', () => {
     },
   ].forEach((testEntry) => {
     it(`should adjust ngcc for: "${testEntry.test}"`, async () => {
-      const tree = createTreeWithEmptyWorkspace();
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       tree.delete('workspace.json');
       tree.write('angular.json', '{}');
       writeJson(tree, 'package.json', {

@@ -7,7 +7,7 @@ describe('esbuildInitGenerator', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     writeJson(tree, 'package.json', {});
   });
 

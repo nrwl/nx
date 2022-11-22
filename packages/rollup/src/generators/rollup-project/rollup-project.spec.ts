@@ -13,7 +13,7 @@ describe('rollupProjectGenerator', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'mypkg', {
       root: 'libs/mypkg',
       sourceRoot: 'libs/mypkg/src',

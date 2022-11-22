@@ -5,7 +5,7 @@ import scamGenerator from '../scam/scam';
 
 describe('scam-to-standalone', () => {
   it('should convert an inline scam to standalone', async () => {
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await applicationGenerator(tree, { name: 'foo' });
     await scamGenerator(tree, { name: 'bar', project: 'foo' });
 

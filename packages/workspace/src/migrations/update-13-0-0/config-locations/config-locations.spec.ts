@@ -15,7 +15,7 @@ describe('update to v13 config locations', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     tree.write('workspace.json', JSON.stringify({ version: 2, projects: {} }));
     updateJson(tree, 'workspace.json', (json) => ({
       ...json,

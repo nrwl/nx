@@ -10,7 +10,7 @@ describe('15.0.0 migration (add-babel-inputs)', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it('should add babel.config.json to sharedGlobals', async () => {

@@ -52,7 +52,7 @@ describe('update-14-2-0-split-create-empty-tree', () => {
 });
 
 async function createTreeWithBoilerplate() {
-  const tree = createTreeWithEmptyWorkspace();
+  const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   await pluginGenerator(tree, {
     name: 'plugin',
     compiler: 'tsc',

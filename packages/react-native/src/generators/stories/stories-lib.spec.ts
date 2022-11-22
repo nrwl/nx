@@ -90,7 +90,7 @@ describe('react-native:stories for libraries', () => {
 });
 
 export async function createTestUILib(libName: string): Promise<Tree> {
-  let appTree = createTreeWithEmptyWorkspace();
+  let appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   appTree.write('.gitignore', '');
 
   await libraryGenerator(appTree, {
