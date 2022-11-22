@@ -26,40 +26,41 @@ export const DEFAULT_NRWL_PRETTIER_CONFIG = {
 };
 
 export async function generateWorkspaceFiles(
-  host: Tree,
+  tree: Tree,
   options: NormalizedSchema
 ) {
   if (!options.name) {
     throw new Error(`Invalid options, "name" is required.`);
   }
   options = normalizeOptions(options);
-  createFiles(host, options);
-  createNxJson(host, options);
-  createPrettierrc(host, options);
+  createReadme(tree, options);
+  createFiles(tree, options);
+  createNxJson(tree, options);
+  createPrettierrc(tree, options);
   if (options.preset === Preset.Angular) {
-    decorateAngularClI(host, options);
+    decorateAngularClI(tree, options);
   }
   const [packageMajor] = getPackageManagerVersion(
     options.packageManager as PackageManager
   ).split('.');
   if (options.packageManager === 'pnpm' && +packageMajor >= 7) {
-    createNpmrc(host, options);
+    createNpmrc(tree, options);
   } else if (options.packageManager === 'yarn' && +packageMajor >= 2) {
-    createYarnrcYml(host, options);
+    createYarnrcYml(tree, options);
   }
-  setPresetProperty(host, options);
-  addNpmScripts(host, options);
-  createAppsAndLibsFolders(host, options);
-  setUpWorkspacesInPackageJson(host, options);
+  setPresetProperty(tree, options);
+  addNpmScripts(tree, options);
+  createAppsAndLibsFolders(tree, options);
+  setUpWorkspacesInPackageJson(tree, options);
 
-  await formatFiles(host);
+  await formatFiles(tree);
 }
 
-function decorateAngularClI(host: Tree, options: NormalizedSchema) {
+function decorateAngularClI(tree: Tree, options: NormalizedSchema) {
   const decorateCli = readFileSync(
     pathJoin(__dirname as any, '..', 'utils', 'decorate-angular-cli.js__tmpl__')
   ).toString();
-  host.write(join(options.directory, 'decorate-angular-cli.js'), decorateCli);
+  tree.write(join(options.directory, 'decorate-angular-cli.js'), decorateCli);
 }
 
 function setPresetProperty(tree: Tree, options: NormalizedSchema) {
@@ -76,26 +77,26 @@ function setPresetProperty(tree: Tree, options: NormalizedSchema) {
   });
 }
 
-function createAppsAndLibsFolders(host: Tree, options: NormalizedSchema) {
+function createAppsAndLibsFolders(tree: Tree, options: NormalizedSchema) {
   if (
     options.preset === Preset.Core ||
     options.preset === Preset.TS ||
     options.preset === Preset.NPM
   ) {
-    host.write(join(options.directory, 'packages/.gitkeep'), '');
+    tree.write(join(options.directory, 'packages/.gitkeep'), '');
   } else if (
     options.preset === Preset.AngularExperimental ||
     options.preset === Preset.ReactExperimental
   ) {
     // don't generate any folders
   } else {
-    host.write(join(options.directory, 'apps/.gitkeep'), '');
-    host.write(join(options.directory, 'libs/.gitkeep'), '');
+    tree.write(join(options.directory, 'apps/.gitkeep'), '');
+    tree.write(join(options.directory, 'libs/.gitkeep'), '');
   }
 }
 
 function createNxJson(
-  host: Tree,
+  tree: Tree,
   { directory, npmScope, packageManager, defaultBase, preset }: NormalizedSchema
 ) {
   const nxJson: NxJsonConfiguration & { $schema: string } = {
@@ -136,10 +137,10 @@ function createNxJson(
     nxJson.targetDefaults.build.inputs = ['production', '^production'];
   }
 
-  writeJson<NxJsonConfiguration>(host, join(directory, 'nx.json'), nxJson);
+  writeJson<NxJsonConfiguration>(tree, join(directory, 'nx.json'), nxJson);
 }
 
-function createFiles(host: Tree, options: NormalizedSchema) {
+function createFiles(tree: Tree, options: NormalizedSchema) {
   const formattedNames = names(options.name);
   const filesDirName =
     options.preset === Preset.AngularExperimental ||
@@ -148,11 +149,10 @@ function createFiles(host: Tree, options: NormalizedSchema) {
       : options.preset === Preset.NPM || options.preset === Preset.Core
       ? './files-package-based-repo'
       : './files-integrated-repo';
-  generateFiles(host, pathJoin(__dirname, filesDirName), options.directory, {
+  generateFiles(tree, pathJoin(__dirname, filesDirName), options.directory, {
     formattedNames,
     dot: '.',
     tmpl: '',
-    workspaceFile: options.preset === Preset.Angular ? 'angular' : 'workspace',
     cliCommand: options.preset === Preset.Angular ? 'ng' : 'nx',
     nxCli: false,
     typescriptVersion,
@@ -165,33 +165,45 @@ function createFiles(host: Tree, options: NormalizedSchema) {
   });
 }
 
-function createPrettierrc(host: Tree, options: NormalizedSchema) {
+function createReadme(
+  tree: Tree,
+  { name, appName, directory }: NormalizedSchema
+) {
+  const formattedNames = names(name);
+  generateFiles(tree, join(__dirname, './files-readme'), directory, {
+    formattedNames,
+    appName,
+    name,
+  });
+}
+
+function createPrettierrc(tree: Tree, options: NormalizedSchema) {
   writeJson(
-    host,
+    tree,
     join(options.directory, '.prettierrc'),
     DEFAULT_NRWL_PRETTIER_CONFIG
   );
 }
 // ensure that pnpm install add all the missing peer deps
 
-function createNpmrc(host: Tree, options: NormalizedSchema) {
-  host.write(
+function createNpmrc(tree: Tree, options: NormalizedSchema) {
+  tree.write(
     join(options.directory, '.npmrc'),
     'strict-peer-dependencies=false\nauto-install-peers=true\n'
   );
 }
 // ensure that yarn (berry) install uses classic node linker
 
-function createYarnrcYml(host: Tree, options: NormalizedSchema) {
-  host.write(
+function createYarnrcYml(tree: Tree, options: NormalizedSchema) {
+  tree.write(
     join(options.directory, '.yarnrc.yml'),
     'nodeLinker: node-modules\n'
   );
 }
 
-function addNpmScripts(host: Tree, options: NormalizedSchema) {
+function addNpmScripts(tree: Tree, options: NormalizedSchema) {
   if (options.preset === Preset.Angular) {
-    updateJson(host, join(options.directory, 'package.json'), (json) => {
+    updateJson(tree, join(options.directory, 'package.json'), (json) => {
       Object.assign(json.scripts, {
         ng: 'nx',
         postinstall: 'node ./decorate-angular-cli.js',
@@ -205,7 +217,7 @@ function addNpmScripts(host: Tree, options: NormalizedSchema) {
     options.preset !== Preset.Core &&
     options.preset !== Preset.NPM
   ) {
-    updateJson(host, join(options.directory, 'package.json'), (json) => {
+    updateJson(tree, join(options.directory, 'package.json'), (json) => {
       Object.assign(json.scripts, {
         start: 'nx serve',
         build: 'nx build',
