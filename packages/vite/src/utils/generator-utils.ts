@@ -356,11 +356,17 @@ export function writeViteConfig(tree: Tree, options: Schema) {
 
   let viteConfigContent = '';
 
-  const testConfig = `test: {
+  const testOption = `test: {
     globals: true,
     environment: 'jsdom',
-    ${options.inSourceTests ? `includeSource: ['src/**/*.{js,ts}']` : ''}
-  }`;
+    ${
+      options.inSourceTests ? `includeSource: ['src/**/*.{js,ts,jsx,tsx}']` : ''
+    }
+  },`;
+
+  const defineOption = `define: {
+    'import.meta.vitest': undefined
+  },`;
 
   switch (options.uiFramework) {
     case 'react':
@@ -378,11 +384,13 @@ ${options.includeVitest ? '/// <reference types="vitest" />' : ''}
             projects: ['tsconfig.base.json'],
           }),
         ],
-        ${options.includeVitest ? testConfig : ''}
+        ${options.inSourceTests ? defineOption : ''}
+        ${options.includeVitest ? testOption : ''}
       });`;
       break;
     case 'none':
       viteConfigContent = `
+      ${options.includeVitest ? '/// <reference types="vitest" />' : ''}
       import { defineConfig } from 'vite';
       import ViteTsConfigPathsPlugin from 'vite-tsconfig-paths';
       
@@ -393,7 +401,8 @@ ${options.includeVitest ? '/// <reference types="vitest" />' : ''}
             projects: ['tsconfig.base.json'],
           }),
         ],
-        ${options.includeVitest ? testConfig : ''}
+        ${options.inSourceTests ? defineOption : ''}
+        ${options.includeVitest ? testOption : ''}
       });`;
       break;
     default:

@@ -115,11 +115,12 @@ describe('vitest generator', () => {
                     projects: ['tsconfig.base.json'],
                   }),
                 ],
+                
                 test: {
             globals: true,
             environment: 'jsdom',
             
-          }
+          },
               });"
       `);
     });
@@ -146,11 +147,14 @@ describe('vitest generator', () => {
                     projects: ['tsconfig.base.json'],
                   }),
                 ],
+                define: {
+            'import.meta.vitest': undefined
+          },
                 test: {
             globals: true,
             environment: 'jsdom',
-            includeSource: ['src/**/*.{js,ts}']
-          }
+            includeSource: ['src/**/*.{js,ts,jsx,tsx}']
+          },
               });"
       `);
     });
