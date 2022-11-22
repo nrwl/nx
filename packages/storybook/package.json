@@ -34,6 +34,7 @@
     "@nrwl/devkit": "file:../devkit",
     "@nrwl/linter": "file:../linter",
     "@nrwl/workspace": "file:../workspace",
+    "enhanced-resolve": "~5.10.0",
     "dotenv": "~10.0.0",
     "semver": "7.3.4"
   },

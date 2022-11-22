@@ -48,6 +48,7 @@
     "@svgr/webpack": "^6.1.2",
     "chalk": "4.1.0",
     "css-loader": "^6.4.0",
+    "enhanced-resolve": "~5.10.0",
     "minimatch": "3.0.5",
     "react-refresh": "^0.10.0",
     "semver": "7.3.4",

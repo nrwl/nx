@@ -6,7 +6,10 @@ const IGNORE_MATCHES = {
   '*': ['@nrwl/devkit', '@nrwl/workspace', 'chalk', 'tslib', '@swc/helpers'],
   angular: ['@angular-devkit/schematics', '@schematics/angular', 'http-server'],
   cli: [],
-  cypress: [],
+  cypress: [
+    // TODO(jack): We added enhanced resolve to help with an issue introduced in 5.11.0.
+    'enhanced-resolve',
+  ],
   devkit: [],
   'eslint-plugin-nx': [],
   jest: [
@@ -18,9 +21,17 @@ const IGNORE_MATCHES = {
   next: [],
   node: [],
   'nx-plugin': [],
-  react: [],
+  react: [
+    // TODO(jack): We added enhanced resolve to help with an issue introduced in 5.11.0.
+    'enhanced-resolve',
+  ],
   rollup: [],
-  storybook: [],
+  storybook: [
+    // TODO(jack): We added enhanced resolve to help with an issue introduced in 5.11.0.
+    // See: https://github.com/webpack/enhanced-resolve/issues/362
+    // When that issue is resolved we can remove this dep again.
+    'enhanced-resolve',
+  ],
   nx: ['glob'],
   vite: [],
   web: ['http-server'],

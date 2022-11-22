@@ -44,6 +44,7 @@
     "babel-loader": "^8.0.2",
     "chalk": "4.1.0",
     "dotenv": "~10.0.0",
+    "enhanced-resolve": "~5.10.0",
     "fork-ts-checker-webpack-plugin": "7.2.13",
     "semver": "7.3.4",
     "ts-loader": "^9.3.1",

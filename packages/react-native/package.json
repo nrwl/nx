@@ -33,7 +33,7 @@
     "@nrwl/storybook": "file:../storybook",
     "@nrwl/workspace": "file:../workspace",
     "chalk": "^4.1.0",
-    "enhanced-resolve": "^5.8.3",
+    "enhanced-resolve": "~5.10.0",
     "fs-extra": "^10.1.0",
     "ignore": "^5.0.4",
     "metro-resolver": "^0.73.3",

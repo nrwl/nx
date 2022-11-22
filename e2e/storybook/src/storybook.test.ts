@@ -17,7 +17,7 @@ describe('Storybook schematics', () => {
   let proj: string;
 
   beforeAll(() => {
-    process.env.SELECTED_PM = 'yarn';
+    process.env.SELECTED_PM = 'npm';
 
     proj = newProject();
     reactStorybookLib = uniq('test-ui-lib-react');
