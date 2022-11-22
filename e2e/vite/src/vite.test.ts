@@ -2,6 +2,7 @@ import {
   cleanupProject,
   createFile,
   killPorts,
+  listFiles,
   newProject,
   promisifiedTreeKill,
   readFile,
@@ -28,21 +29,52 @@ describe('Vite Plugin', () => {
         `apps/${myApp}/index.html`,
         `
     <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>My App</title>
-    <base href="/" />
+    <html lang="en">
+      <head>
+        <meta charset="utf-8" />
+        <title>My App</title>
+        <base href="/" />
 
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="icon" type="image/x-icon" href="favicon.ico" />
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
-</html>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" type="image/x-icon" href="favicon.ico" />
+      </head>
+      <body>
+        <div id="root"></div>
+        <script type="module" src="src/main.tsx"></script>
+      </body>
+    </html>
     `
+      );
+
+      createFile(
+        `apps/${myApp}/src/environments/environment.prod.ts`,
+        `export const environment = {
+        production: true,
+        myTestVar: 'MyProductionValue',
+      };`
+      );
+      createFile(
+        `apps/${myApp}/src/environments/environment.ts`,
+        `export const environment = {
+        production: false,
+        myTestVar: 'MyDevelopmentValue',
+      };`
+      );
+
+      updateFile(
+        `apps/${myApp}/src/app/app.tsx`,
+        `
+        import { environment } from './../environments/environment';
+        export function App() {
+          return (
+            <>
+              <h1>{environment.myTestVar}</h1>
+              <p>Welcome ${myApp}!</p>
+            </>
+          );
+        }
+        export default App;
+      `
       );
 
       createFile(
@@ -106,34 +138,48 @@ describe('Vite Plugin', () => {
       );
 
       updateProjectConfig(myApp, (config) => {
-        config.targets.build.executor = '@nrwl/vite:build';
         config.targets.serve.executor = '@nrwl/vite:dev-server';
         config.targets.test.executor = '@nrwl/vite:test';
 
-        config.targets.build.options = {
-          outputPath: `dist/apps/${myApp}`,
+        config.targets.build = {
+          executor: '@nrwl/vite:build',
+          outputs: ['{options.outputPath}'],
+          defaultConfiguration: 'production',
+          options: {
+            outputPath: `dist/apps/${myApp}`,
+            fileReplacements: [
+              {
+                replace: `apps/${myApp}/src/environments/environment.ts`,
+                with: `apps/${myApp}/src/environments/environment.prod.ts`,
+              },
+            ],
+          },
+          configurations: {},
         };
 
         config.targets.serve.options = {
           buildTarget: `${myApp}:build`,
         };
 
-        config.targets.serve.options = {
-          config: `apps/${myApp}/vite.config.ts`,
-        };
-
         return config;
       });
     });
-    afterEach(() => cleanupProject());
 
-    it('should build applications', async () => {
+    it('should build application and replace files', async () => {
       runCLI(`build ${myApp}`);
       expect(readFile(`dist/apps/${myApp}/index.html`)).toBeDefined();
+      const fileArray = listFiles(`dist/apps/${myApp}/assets`);
+      const mainBundle = fileArray.find((file) => file.endsWith('.js'));
+      expect(readFile(`dist/apps/${myApp}/assets/${mainBundle}`)).toContain(
+        'MyProductionValue'
+      );
+      expect(readFile(`dist/apps/${myApp}/assets/${mainBundle}`)).not.toContain(
+        'MyDevelopmentValue'
+      );
       rmDist();
     }, 200000);
 
-    it('should serve applications in dev mode', async () => {
+    it('should serve application in dev mode', async () => {
       const port = 4212;
       const p = await runCommandUntil(
         `run ${myApp}:serve --port=${port}`,
@@ -149,7 +195,7 @@ describe('Vite Plugin', () => {
       }
     }, 200000);
 
-    it('should test applications', async () => {
+    it('should test application', async () => {
       const result = await runCLIAsync(`test ${myApp}`);
       expect(result.combinedOutput).toContain(
         `Successfully ran target test for project ${myApp}`
@@ -161,36 +207,51 @@ describe('Vite Plugin', () => {
     beforeEach(() => {
       proj = newProject();
       runCLI(`generate @nrwl/react:app ${myApp} --bundler=vite`);
+      updateFile(
+        `apps/${myApp}/src/environments/environment.prod.ts`,
+        `export const environment = {
+        production: true,
+        myTestVar: 'MyProductionValue',
+      };`
+      );
+      updateFile(
+        `apps/${myApp}/src/environments/environment.ts`,
+        `export const environment = {
+        production: false,
+        myTestVar: 'MyDevelopmentValue',
+      };`
+      );
+
+      updateFile(
+        `apps/${myApp}/src/app/app.tsx`,
+        `
+        import { environment } from './../environments/environment';
+        export function App() {
+          return (
+            <>
+              <h1>{environment.myTestVar}</h1>
+              <p>Welcome ${myApp}!</p>
+            </>
+          );
+        }
+        export default App;
+      `
+      );
     });
     afterEach(() => cleanupProject());
-    it('should build applications', async () => {
+    it('should build application and replace files', async () => {
       runCLI(`build ${myApp}`);
       expect(readFile(`dist/apps/${myApp}/index.html`)).toBeDefined();
+      const fileArray = listFiles(`dist/apps/${myApp}/assets`);
+      const mainBundle = fileArray.find((file) => file.endsWith('.js'));
+      expect(readFile(`dist/apps/${myApp}/assets/${mainBundle}`)).toContain(
+        'MyProductionValue'
+      );
+      expect(readFile(`dist/apps/${myApp}/assets/${mainBundle}`)).not.toContain(
+        'MyDevelopmentValue'
+      );
       rmDist();
     }, 200000);
-
-    it('should serve applications in dev mode', async () => {
-      const port = 4212;
-      const p = await runCommandUntil(
-        `run ${myApp}:serve --port=${port}`,
-        (output) => {
-          return output.includes('Local:');
-        }
-      );
-      try {
-        await promisifiedTreeKill(p.pid, 'SIGKILL');
-        await killPorts(port);
-      } catch {
-        // ignore
-      }
-    }, 200000);
-
-    it('should test applications', async () => {
-      const result = await runCLIAsync(`test ${myApp}`);
-      expect(result.combinedOutput).toContain(
-        `Successfully ran target test for project ${myApp}`
-      );
-    });
   });
 
   describe('convert React webpack project to vite using the vite:configuration generator', () => {
@@ -198,15 +259,52 @@ describe('Vite Plugin', () => {
       proj = newProject();
       runCLI(`generate @nrwl/react:app ${myApp} --bundler=webpack`);
       runCLI(`generate @nrwl/vite:configuration ${myApp}`);
+      updateFile(
+        `apps/${myApp}/src/environments/environment.prod.ts`,
+        `export const environment = {
+        production: true,
+        myTestVar: 'MyProductionValue',
+      };`
+      );
+      updateFile(
+        `apps/${myApp}/src/environments/environment.ts`,
+        `export const environment = {
+        production: false,
+        myTestVar: 'MyDevelopmentValue',
+      };`
+      );
+
+      updateFile(
+        `apps/${myApp}/src/app/app.tsx`,
+        `
+        import { environment } from './../environments/environment';
+        export function App() {
+          return (
+            <>
+              <h1>{environment.myTestVar}</h1>
+              <p>Welcome ${myApp}!</p>
+            </>
+          );
+        }
+        export default App;
+      `
+      );
     });
     afterEach(() => cleanupProject());
-    it('should build applications', async () => {
+    it('should build application and replace files', async () => {
       runCLI(`build ${myApp}`);
       expect(readFile(`dist/apps/${myApp}/index.html`)).toBeDefined();
-      rmDist();
+      const fileArray = listFiles(`dist/apps/${myApp}/assets`);
+      const mainBundle = fileArray.find((file) => file.endsWith('.js'));
+      expect(readFile(`dist/apps/${myApp}/assets/${mainBundle}`)).toContain(
+        'MyProductionValue'
+      );
+      expect(readFile(`dist/apps/${myApp}/assets/${mainBundle}`)).not.toContain(
+        'MyDevelopmentValue'
+      );
     }, 200000);
 
-    it('should serve applications in dev mode', async () => {
+    it('should serve application in dev mode', async () => {
       const port = 4212;
       const p = await runCommandUntil(
         `run ${myApp}:serve --port=${port}`,
@@ -222,7 +320,7 @@ describe('Vite Plugin', () => {
       }
     }, 200000);
 
-    it('should test applications', async () => {
+    it('should test application', async () => {
       const result = await runCLIAsync(`test ${myApp}`);
       expect(result.combinedOutput).toContain(
         `Successfully ran target test for project ${myApp}`
