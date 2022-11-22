@@ -19,7 +19,6 @@ export default function replaceFiles(replacements: FileReplacement[]) {
         ...options,
         skipSelf: true,
       });
-
       /**
        * The reason we're using endsWith here is because the resolved id
        * will be the absolute path to the file. We want to check if the
