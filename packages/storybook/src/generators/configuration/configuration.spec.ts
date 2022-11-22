@@ -427,7 +427,7 @@ describe('@nrwl/storybook:configuration', () => {
       ).toBeFalsy();
     });
 
-    it.only('should add test-storybook target', async () => {
+    it('should add test-storybook target', async () => {
       await configurationGenerator(tree, {
         name: 'test-ui-lib',
         uiFramework: '@storybook/react',
