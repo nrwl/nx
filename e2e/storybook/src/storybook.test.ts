@@ -10,7 +10,9 @@ import {
 } from '@nrwl/e2e/utils';
 import { writeFileSync } from 'fs';
 
-describe('Storybook schematics', () => {
+// TODO(jack): disabled for now because latest enhanced-resolve is causing errors for all projects using Storybook
+// See: https://github.com/webpack/enhanced-resolve/issues/362
+xdescribe('Storybook schematics', () => {
   const previousPM = process.env.SELECTED_PM;
 
   let reactStorybookLib: string;
