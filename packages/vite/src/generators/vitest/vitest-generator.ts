@@ -1,8 +1,10 @@
 import {
   convertNxGenerator,
   formatFiles,
+  generateFiles,
   GeneratorCallback,
   joinPathFragments,
+  offsetFromRoot,
   readProjectConfiguration,
   Tree,
   updateJson,
@@ -37,7 +39,7 @@ export async function vitestGenerator(
     writeViteConfig(tree, schema);
   }
 
-  // TODO create tsconfig.spec.json and make sure to add to tsconfig.json
+  createFiles(tree, schema, root);
   updateTsConfig(tree, schema, root);
 
   await formatFiles(tree);
@@ -50,12 +52,35 @@ function updateTsConfig(
   options: VitestGeneratorSchema,
   projectRoot: string
 ) {
-  if (!options.inSourceTests) {
-    return;
-  }
   updateJson(tree, joinPathFragments(projectRoot, 'tsconfig.json'), (json) => {
-    (json.compilerOptions.types ??= []).push('vitest/importMap');
+    if (json.references) {
+      json.references.push({
+        path: './tsconfig.spec.json',
+      });
+    }
+
+    if (options.inSourceTests) {
+      (json.compilerOptions.types ??= []).push('vitest/importMap');
+    }
+
     return json;
+  });
+
+  updateJson(tree, joinPathFragments(projectRoot, 'tsconfig.json'), (json) => {
+    return json;
+  });
+}
+
+function createFiles(
+  tree: Tree,
+  options: VitestGeneratorSchema,
+  projectRoot: string
+) {
+  generateFiles(tree, joinPathFragments(__dirname, 'files'), projectRoot, {
+    tmpl: '',
+    ...options,
+    projectRoot,
+    offsetFromRoot: offsetFromRoot(projectRoot),
   });
 }
 

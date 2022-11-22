@@ -2,11 +2,7 @@ import { updateJestConfigContent } from '../../../utils/jest-utils';
 import { NormalizedSchema } from '../schema';
 import { offsetFromRoot, Tree, updateJson } from '@nrwl/devkit';
 
-export function updateJestConfig(host: Tree, options: NormalizedSchema) {
-  if (options.unitTestRunner !== 'jest') {
-    return;
-  }
-
+export function updateSpecConfig(host: Tree, options: NormalizedSchema) {
   updateJson(host, `${options.appProjectRoot}/tsconfig.spec.json`, (json) => {
     const offset = offsetFromRoot(options.appProjectRoot);
     json.files = [
@@ -20,6 +16,10 @@ export function updateJestConfig(host: Tree, options: NormalizedSchema) {
     }
     return json;
   });
+
+  if (options.unitTestRunner !== 'jest') {
+    return;
+  }
 
   const configPath = `${options.appProjectRoot}/jest.config.${
     options.js ? 'js' : 'ts'
