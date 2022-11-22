@@ -71,6 +71,7 @@ async function createPreset(tree: Tree, options: Schema) {
       unitTestRunner: 'none',
       standaloneConfig: options.standaloneConfig,
       rootProject: true,
+      bundler: 'vite',
     });
   } else if (options.preset === Preset.NextJs) {
     const { applicationGenerator: nextApplicationGenerator } = require('@nrwl' +
