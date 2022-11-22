@@ -1,6 +1,6 @@
-import type { ProjectGraph } from '@nrwl/devkit';
-import { readJsonFile } from '@nrwl/devkit';
+import { readJsonFile } from './fileutils';
 import { sortObjectByKeys } from 'nx/src/utils/object-sort';
+import { ProjectGraph } from '../config/project-graph';
 
 /**
  * Creates a package.json in the output directory for support to install dependencies within containers.
@@ -11,7 +11,6 @@ export function createPackageJson(
   projectName: string,
   graph: ProjectGraph,
   options: {
-    projectRoot?: string;
     root?: string;
   }
 ): any {
@@ -24,7 +23,9 @@ export function createPackageJson(
     devDependencies: {},
   };
   try {
-    packageJson = readJsonFile(`${options.projectRoot}/package.json`);
+    packageJson = readJsonFile(
+      `${graph.nodes[projectName].data.root}/package.json`
+    );
     if (!packageJson.dependencies) {
       packageJson.dependencies = {};
     }
