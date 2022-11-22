@@ -7,26 +7,20 @@ export function AnnouncementBanner(): JSX.Element {
         <div className="text-center sm:px-16 sm:pr-16">
           <p className="text-sm font-medium">
             <span className="md:hidden">
-              <Link
-                href="/conf?utm_source=announcement-banner text-blue-500 dark:text-sky-500"
-                className="underline"
-              >
-                Nx Conf on October 17th in Phoenix AZ!
+              <Link href="https://stateofjs.com/en-us/" className="underline">
+                State of JS survey:
               </Link>
             </span>
             <span className="hidden md:inline">
-              <span className="font-black">
-                Nx Conf on October 17th in Phoenix AZ
-              </span>
-              , do not miss it!
+              <span className="font-black">State of JS survey is online!</span>
             </span>
             <span className="ml-2 inline-block">
               <Link
-                href="/conf?utm_source=announcement-banner"
+                href="https://stateofjs.com/en-us/"
                 className="font-semibold text-blue-500 underline dark:text-sky-500"
               >
-                <span className="absolute inset-0" aria-hidden="true" />{' '}
-                Tickets, Speakers, Schedule and more{' '}
+                <span className="absolute inset-0" aria-hidden="true" />
+                Give Nx & Lerna a thumbs up
                 <span aria-hidden="true">&rarr;</span>
               </Link>
             </span>
