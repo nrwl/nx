@@ -1,5 +1,5 @@
-import { FsTree } from 'nx/src/generators/tree';
-import type { Tree } from 'nx/src/generators/tree';
+import { FsTree } from '../tree';
+import type { Tree } from '../tree';
 
 /**
  * Creates a host for testing.

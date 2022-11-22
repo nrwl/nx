@@ -21,7 +21,7 @@ import {
 } from './project-configuration';
 
 import * as projectSchema from '../../../schemas/project-schema.json';
-import { joinPathFragments } from 'nx/src/utils/path';
+import { joinPathFragments } from '../../utils/path';
 
 type ProjectConfigurationV1 = Pick<
   ProjectConfiguration,

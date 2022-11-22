@@ -1,7 +1,7 @@
 import { workspaceRoot } from '../../utils/workspace-root';
 import type { Server, Socket } from 'net';
 import { serverLogger } from './logger';
-import { serializeResult } from 'nx/src/daemon/socket-utils';
+import { serializeResult } from '../socket-utils';
 import type { AsyncSubscription } from '@parcel/watcher';
 
 export const SERVER_INACTIVITY_TIMEOUT_MS = 10800000 as const; // 10800000 ms = 3 hours

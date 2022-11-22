@@ -1,15 +1,14 @@
 import * as chalk from 'chalk';
 import { output } from '../output';
-import type { CommunityPlugin, CorePlugin, PluginCapabilities } from './models';
-import { getPluginCapabilities } from './plugin-capabilities';
+import type { PluginCapabilities } from './models';
 import { hasElements } from './shared';
 import { readJsonFile } from '../fileutils';
-import { PackageJson, readModulePackageJson } from '../package-json';
-import { ProjectsConfigurations } from 'nx/src/config/workspace-json-project-json';
+import { PackageJson } from '../package-json';
+import { ProjectsConfigurations } from '../../config/workspace-json-project-json';
 import { join } from 'path';
 import { workspaceRoot } from '../workspace-root';
 import { existsSync } from 'fs';
-import { ExecutorsJson, GeneratorsJson } from 'nx/src/config/misc-interfaces';
+import { ExecutorsJson, GeneratorsJson } from '../../config/misc-interfaces';
 
 export function getLocalWorkspacePlugins(
   projectsConfiguration: ProjectsConfigurations
