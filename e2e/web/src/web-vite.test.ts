@@ -29,9 +29,7 @@ describe('Web Components Applications with bundler set as vite', () => {
 
     const testResults = await runCLIAsync(`test ${appName}`);
 
-    expect(testResults.combinedOutput).toContain(
-      'Test Suites: 1 passed, 1 total'
-    );
+    expect(testResults.combinedOutput).toContain('Tests  2 passed (2)');
 
     const lintE2eResults = runCLI(`lint ${appName}-e2e`);
 
