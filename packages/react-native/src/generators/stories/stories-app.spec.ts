@@ -130,7 +130,7 @@ describe('react:stories for applications', () => {
 });
 
 export async function createTestUIApp(libName: string): Promise<Tree> {
-  let appTree = createTreeWithEmptyWorkspace();
+  let appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   appTree.write('.gitignore', '');
 
   await applicationGenerator(appTree, {

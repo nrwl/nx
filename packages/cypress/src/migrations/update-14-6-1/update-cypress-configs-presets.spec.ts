@@ -28,7 +28,7 @@ describe('updateComponentTestingConfig', () => {
   > = installedCypressVersion as never;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
   it('should update', async () => {
     mockedInstalledCypressVersion.mockReturnValue(10);

@@ -20,7 +20,7 @@ describe('lint-checks generator', () => {
   let appTree: Tree;
 
   beforeEach(async () => {
-    appTree = createTreeWithEmptyWorkspace();
+    appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await pluginGenerator(appTree, {
       name: 'plugin',
       importPath: '@acme/plugin',

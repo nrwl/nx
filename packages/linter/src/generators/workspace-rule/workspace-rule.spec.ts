@@ -6,7 +6,7 @@ describe('@nrwl/linter:workspace-rule', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it('should generate the required files', async () => {

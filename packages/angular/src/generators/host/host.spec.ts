@@ -7,7 +7,7 @@ import { getProjects } from 'nx/src/generators/utils/project-configuration';
 describe('Host App Generator', () => {
   it('should generate a host app with no remotes', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     // ACT
     await host(tree, {
@@ -20,7 +20,7 @@ describe('Host App Generator', () => {
 
   it('should generate a host app with a remote', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     await remote(tree, {
       name: 'remote',
@@ -41,7 +41,7 @@ describe('Host App Generator', () => {
 
   it('should generate a host and any remotes that dont exist with correct routing setup', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     // ACT
 
@@ -71,7 +71,7 @@ describe('Host App Generator', () => {
 
   it('should generate a host, integrate existing remotes and generate any remotes that dont exist', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await remote(tree, {
       name: 'remote1',
     });
@@ -93,7 +93,7 @@ describe('Host App Generator', () => {
 
   it('should generate a host, integrate existing remotes and generate any remotes that dont exist, in a directory', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await remote(tree, {
       name: 'remote1',
     });
@@ -116,7 +116,7 @@ describe('Host App Generator', () => {
 
   it('should generate a host with remotes using standalone components', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     // ACT
     await host(tree, {
@@ -136,7 +136,7 @@ describe('Host App Generator', () => {
 
   it('should generate the correct app component spec file', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     // ACT
     await host(tree, {
@@ -153,7 +153,7 @@ describe('Host App Generator', () => {
 
   it('should generate the correct app component spec file with a directory', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     // ACT
     await host(tree, {
@@ -171,7 +171,7 @@ describe('Host App Generator', () => {
 
   it('should not generate an e2e project when e2eTestRunner is none', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     // ACT
     await host(tree, {

@@ -28,7 +28,7 @@ describe('React:CypressComponentTestConfiguration', () => {
     ReturnType<typeof assertMinimumCypressVersion>
   > = assertMinimumCypressVersion as never;
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
   it('should generate cypress component test config with --build-target', async () => {
     mockedAssertCypressVersion.mockReturnValue();

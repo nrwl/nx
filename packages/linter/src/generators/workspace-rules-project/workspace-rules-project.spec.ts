@@ -16,7 +16,7 @@ describe('@nrwl/linter:workspace-rules-project', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it('should add lint project files to lint inputs', async () => {

@@ -13,7 +13,7 @@ import { UnitTestRunner } from '@nrwl/angular/src/utils/test-runners';
 describe('Migration to update target and add useDefineForClassFields', () => {
   let tree: Tree;
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await applicationGenerator(tree, {
       name: 'test',
     });

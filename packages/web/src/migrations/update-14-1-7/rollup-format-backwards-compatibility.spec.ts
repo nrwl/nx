@@ -4,7 +4,7 @@ import update from './rollup-format-backwards-compatibility';
 
 describe('rollup-format-backwards-compatibility', () => {
   it('should add format options to match previous behavior if it does not exist', async () => {
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'proj1', {
       root: 'proj1',
       targets: {
@@ -27,7 +27,7 @@ describe('rollup-format-backwards-compatibility', () => {
   });
 
   it('should skip update if format exists', async () => {
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'proj1', {
       root: 'proj1',
       targets: {

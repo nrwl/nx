@@ -292,7 +292,8 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     // runCommand('mv src-bak src');
   });
 
-  it('should handle a workspace with cypress v9', () => {
+  //TODO: reenable
+  xit('should handle a workspace with cypress v9', () => {
     addCypress9();
 
     // Remove cypress.json
@@ -379,7 +380,8 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     });
   });
 
-  it('should handle a workspace with cypress v10', () => {
+  //TODO: reenable
+  xit('should handle a workspace with cypress v10', () => {
     addCypress10();
 
     // Remove cypress.config.ts

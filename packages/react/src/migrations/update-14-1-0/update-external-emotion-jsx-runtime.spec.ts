@@ -9,7 +9,7 @@ import { updateExternalEmotionJsxRuntime } from './update-external-emotion-jsx-r
 describe('updateExternalEmotionJsxRuntime', () => {
   it('should update external for Emotion', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'components', {
       root: 'libs/components',
       targets: {
@@ -49,7 +49,7 @@ describe('updateExternalEmotionJsxRuntime', () => {
 
   it('should not fail for projects with no targets', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'components', {
       root: 'apps/components',
     });

@@ -17,7 +17,7 @@ describe('15.0.0 migration (migrate-to-inputs)', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it('should add build inputs configuration to inputs', async () => {

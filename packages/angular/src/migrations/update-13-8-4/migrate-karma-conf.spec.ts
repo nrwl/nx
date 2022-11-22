@@ -6,7 +6,7 @@ import migrateKarmaConfig from './migrate-karma-conf';
 describe('Migrate Karma Config', () => {
   it('should successfully migrate outdate karma setup', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     tree.write(
       'karma.conf.js',
       `// Karma configuration file, see link for more information

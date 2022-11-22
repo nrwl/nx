@@ -103,7 +103,7 @@ describe('react-native:storybook-configuration', () => {
 });
 
 export async function createTestUILib(libName: string): Promise<Tree> {
-  let appTree = createTreeWithEmptyWorkspace();
+  let appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
   await libraryGenerator(appTree, {
     linter: Linter.EsLint,
@@ -119,7 +119,7 @@ export async function createTestAppLib(
   libName: string,
   plainJS = false
 ): Promise<Tree> {
-  let appTree = createTreeWithEmptyWorkspace();
+  let appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
   await applicationGenerator(appTree, {
     e2eTestRunner: 'none',

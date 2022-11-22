@@ -37,7 +37,7 @@ function setup(
 describe('addBabelJestPresetTransformerOption', () => {
   let tree: Tree;
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
   it('should add react preset to babel-jest transformer', () => {
     setup(tree, {

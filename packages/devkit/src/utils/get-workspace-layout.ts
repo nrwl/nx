@@ -25,9 +25,24 @@ export function getWorkspaceLayout(tree: Tree): {
 } {
   const nxJson = readNxJson(tree);
   return {
-    appsDir: nxJson?.workspaceLayout?.appsDir ?? 'apps',
-    libsDir: nxJson?.workspaceLayout?.libsDir ?? 'libs',
+    appsDir:
+      nxJson?.workspaceLayout?.appsDir ??
+      inOrderOfPreference(tree, ['apps', 'packages'], '.'),
+    libsDir:
+      nxJson?.workspaceLayout?.libsDir ??
+      inOrderOfPreference(tree, ['libs', 'packages'], '.'),
     npmScope: nxJson?.npmScope,
     standaloneAsDefault: shouldDefaultToUsingStandaloneConfigs(tree),
   };
+}
+
+function inOrderOfPreference(
+  tree: Tree,
+  selectedFolders: string[],
+  defaultChoice: string
+) {
+  for (let i = 0; i < selectedFolders.length; ++i) {
+    if (tree.exists(selectedFolders[i])) return selectedFolders[i];
+  }
+  return defaultChoice;
 }

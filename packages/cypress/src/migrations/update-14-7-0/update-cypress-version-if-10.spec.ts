@@ -7,7 +7,7 @@ describe('Update Cypress if v10 migration', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     tree.write(
       'package.json',
       JSON.stringify({

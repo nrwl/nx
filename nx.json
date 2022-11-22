@@ -25,8 +25,8 @@
     }
   },
   "workspaceLayout": {
-    "libsDir": "",
-    "appsDir": ""
+    "appsDir": "",
+    "libsDir": ""
   },
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
