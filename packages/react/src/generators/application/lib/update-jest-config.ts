@@ -3,6 +3,10 @@ import { NormalizedSchema } from '../schema';
 import { offsetFromRoot, Tree, updateJson } from '@nrwl/devkit';
 
 export function updateSpecConfig(host: Tree, options: NormalizedSchema) {
+  if (options.unitTestRunner === 'none') {
+    return;
+  }
+
   updateJson(host, `${options.appProjectRoot}/tsconfig.spec.json`, (json) => {
     const offset = offsetFromRoot(options.appProjectRoot);
     json.files = [
