@@ -1,4 +1,3 @@
-import { schema } from '@angular-devkit/core';
 import {
   joinPathFragments,
   logger,

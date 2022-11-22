@@ -100,7 +100,8 @@
           "uiFramework": {
             "type": "string",
             "enum": ["react", "none"],
-            "default": "none"
+            "default": "none",
+            "description": "UI framework to use with vitest"
           },
           "inSourceTests": {
             "type": "boolean",
