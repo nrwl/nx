@@ -36,7 +36,10 @@ export async function vitestGenerator(
   tasks.push(initTask);
 
   if (!schema.skipViteConfig) {
-    writeViteConfig(tree, schema);
+    writeViteConfig(tree, {
+      ...schema,
+      includeVitest: true,
+    });
   }
 
   createFiles(tree, schema, root);

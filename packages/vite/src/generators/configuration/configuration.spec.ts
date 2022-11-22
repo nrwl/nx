@@ -113,7 +113,6 @@ describe('@nrwl/vite:configuration', () => {
       const viteConfig = tree
         .read('apps/my-test-react-app/vite.config.ts')
         .toString();
-      console.log(viteConfig);
       expect(viteConfig).toContain('test');
     });
   });
