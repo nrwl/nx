@@ -91,6 +91,7 @@
         "$id": "Vitest",
         "title": "",
         "type": "object",
+        "description": "Generate a vitest setup for a project.",
         "properties": {
           "project": {
             "type": "string",
