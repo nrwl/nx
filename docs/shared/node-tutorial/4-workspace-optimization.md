@@ -37,7 +37,7 @@ git stash
 
 And then make a minor adjustment to the `products-cli` project:
 
-```typescript {% fileName="apps/products-clit/src/main.ts" %}
+```typescript {% fileName="apps/products-cli/src/main.ts" %}
 import { createProductsDataClient } from '@my-products/products-data-client';
 
 main();
