@@ -28,6 +28,7 @@ import {
   ProjectGraphExternalNode,
 } from '../config/project-graph';
 import { existsSync } from 'fs';
+import { readCachedProjectGraph } from '../project-graph/project-graph';
 
 const YARN_LOCK_PATH = join(workspaceRoot, 'yarn.lock');
 const NPM_LOCK_PATH = join(workspaceRoot, 'package-lock.json');
@@ -178,4 +179,34 @@ export function pruneLockFileData(
     return pruneNpmLockFile(lockFile, packages, projectName);
   }
   throw Error(`Unknown package manager: ${packageManager}`);
+}
+
+export function pruneLockFile(
+  projectName: string,
+  packageManager: PackageManager = detectPackageManager(workspaceRoot)
+): string {
+  const lockFileData = parseLockFile(packageManager);
+  const projectGraph = readCachedProjectGraph();
+
+  if (!projectGraph.nodes[projectName]) {
+    throw Error(`Project "${projectName}" was not found.`);
+  }
+
+  const dependencies = []; // TODO: use createPackageJson to gather the dependencies, probably refactoring of `pruneLockFileData` would be needed
+
+  const result = pruneLockFileData(
+    lockFileData,
+    dependencies,
+    projectName,
+    packageManager
+  );
+  if (packageManager === 'yarn') {
+    return stringifyYarnLockFile(result);
+  }
+  if (packageManager === 'pnpm') {
+    return stringifyPnpmLockFile(result);
+  }
+  if (packageManager === 'npm') {
+    return stringifyNpmLockFile(result);
+  }
 }

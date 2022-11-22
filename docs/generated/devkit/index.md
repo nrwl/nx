@@ -171,6 +171,7 @@ It only uses language primitives and immutable objects
 - [offsetFromRoot](../../devkit/index#offsetfromroot)
 - [parseJson](../../devkit/index#parsejson)
 - [parseTargetString](../../devkit/index#parsetargetstring)
+- [pruneLockFile](../../devkit/index#prunelockfile)
 - [readAllWorkspaceConfiguration](../../devkit/index#readallworkspaceconfiguration)
 - [readCachedProjectGraph](../../devkit/index#readcachedprojectgraph)
 - [readJson](../../devkit/index#readjson)
@@ -1721,6 +1722,23 @@ parseTargetString('proj:test:production'); // returns { project: "proj", target:
 #### Returns
 
 [`Target`](../../devkit/index#target)
+
+---
+
+### pruneLockFile
+
+▸ **pruneLockFile**(`projectName`, `packageManager?`): `string`
+
+#### Parameters
+
+| Name             | Type                                                  |
+| :--------------- | :---------------------------------------------------- |
+| `projectName`    | `string`                                              |
+| `packageManager` | [`PackageManager`](../../devkit/index#packagemanager) |
+
+#### Returns
+
+`string`
 
 ---
 
