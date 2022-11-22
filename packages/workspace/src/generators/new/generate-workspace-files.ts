@@ -136,6 +136,16 @@ function createNxJson(
     nxJson.targetDefaults.build.inputs = ['production', '^production'];
   }
 
+  if (
+    preset === Preset.AngularExperimental ||
+    preset === Preset.ReactExperimental
+  ) {
+    nxJson.workspaceLayout = {
+      appsDir: '.',
+      libsDir: '.',
+    };
+  }
+
   writeJson<NxJsonConfiguration>(host, join(directory, 'nx.json'), nxJson);
 }
 
