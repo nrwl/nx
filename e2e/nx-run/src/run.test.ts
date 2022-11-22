@@ -162,8 +162,13 @@ describe('Nx Running Tests', () => {
         .map((r) => r.trim())
         .filter((r) => r);
       withBail = withBail.slice(withBail.indexOf('Failed tasks:'));
-      expect(withBail).toContain(`- ${myapp1}:error`);
-      expect(withBail).not.toContain(`- ${myapp2}:error`);
+      expect(withBail.length).toEqual(2);
+      if (withBail[1] === `- ${myapp1}:error`) {
+        expect(withBail).not.toContain(`- ${myapp2}:error`);
+      } else {
+        expect(withBail[1]).toEqual(`- ${myapp2}:error`);
+        expect(withBail).not.toContain(`- ${myapp1}:error`);
+      }
     });
   });
 
