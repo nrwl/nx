@@ -12,6 +12,7 @@ import {
   getRemotesWithPorts,
   setupHostIfDynamic,
   setupServeTarget,
+  updateHostAppRoutes,
   updateTsConfigTarget,
 } from './lib';
 
@@ -20,14 +21,19 @@ export async function setupMf(tree: Tree, options: Schema) {
 
   options.federationType = options.federationType ?? 'static';
 
-  setupHostIfDynamic(tree, options);
+  if (options.mfType === 'host') {
+    setupHostIfDynamic(tree, options);
+    updateHostAppRoutes(tree, options);
+  }
+
+  if (options.mfType === 'remote') {
+    addRemoteToHost(tree, options);
+    addRemoteEntry(tree, options, projectConfig.root);
+  }
 
   const remotesWithPorts = getRemotesWithPorts(tree, options);
-  addRemoteToHost(tree, options);
 
   generateWebpackConfig(tree, options, projectConfig.root, remotesWithPorts);
-
-  addRemoteEntry(tree, options, projectConfig.root);
 
   changeBuildTarget(tree, options);
   updateTsConfigTarget(tree, options);
