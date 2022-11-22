@@ -3,18 +3,124 @@ import { Tree, readProjectConfiguration } from '@nrwl/devkit';
 
 import generator from './vitest-generator';
 import { VitestGeneratorSchema } from './schema';
+import { mockReactAppGenerator } from '../../utils/test-utils';
 
 describe('vitest generator', () => {
   let appTree: Tree;
-  const options: VitestGeneratorSchema = { project: 'test' };
+  const options: VitestGeneratorSchema = {
+    project: 'my-test-react-app',
+    uiFramework: 'react',
+  };
 
-  beforeEach(() => {
+  beforeEach(async () => {
     appTree = createTreeWithEmptyWorkspace();
+    await mockReactAppGenerator(appTree);
   });
 
-  it('should run successfully', async () => {
+  it('Should add the test target', async () => {
     await generator(appTree, options);
-    const config = readProjectConfiguration(appTree, 'test');
-    expect(config).toBeDefined();
+    const config = readProjectConfiguration(appTree, 'my-test-react-app');
+    expect(config.targets['test']).toMatchInlineSnapshot(`
+      Object {
+        "executor": "@nrwl/vite:test",
+        "options": Object {
+          "passWithNoTests": true,
+        },
+        "outputs": Array [
+          "{workspaceRoot}/coverage/{projectRoot}",
+        ],
+      }
+    `);
+  });
+
+  describe('tsconfig', () => {
+    it('should add a tsconfig.spec.json file', async () => {
+      await generator(appTree, options);
+      const tsconfig = JSON.parse(
+        appTree.read('apps/my-test-react-app/tsconfig.json')?.toString() ?? '{}'
+      );
+      expect(tsconfig.references).toMatchInlineSnapshot(`
+              Array [
+                Object {
+                  "path": "./tsconfig.app.json",
+                },
+                Object {
+                  "path": "./tsconfig.spec.json",
+                },
+              ]
+          `);
+
+      const tsconfigSpec = JSON.parse(
+        appTree.read('apps/my-test-react-app/tsconfig.spec.json')?.toString() ??
+          '{}'
+      );
+      expect(tsconfigSpec).toMatchInlineSnapshot(`
+              Object {
+                "compilerOptions": Object {
+                  "outDir": "../../dist/out-tsc",
+                  "types": Array [
+                    "vitest/globals",
+                    "node",
+                  ],
+                },
+                "extends": "./tsconfig.json",
+                "include": Array [
+                  "vite.config.ts",
+                  "**/*.test.ts",
+                  "**/*.spec.ts",
+                  "**/*.test.tsx",
+                  "**/*.spec.tsx",
+                  "**/*.test.js",
+                  "**/*.spec.js",
+                  "**/*.test.jsx",
+                  "**/*.spec.jsx",
+                  "**/*.d.ts",
+                ],
+              }
+          `);
+    });
+
+    it('should add vitest/importMap when inSourceTests is true', async () => {
+      await generator(appTree, { ...options, inSourceTests: true });
+      const tsconfig = JSON.parse(
+        appTree.read('apps/my-test-react-app/tsconfig.json')?.toString() ?? '{}'
+      );
+      expect(tsconfig.compilerOptions.types).toMatchInlineSnapshot(`
+        Array [
+          "vitest/importMap",
+        ]
+      `);
+    });
+  });
+
+  describe('vite.config', () => {
+    it('should modify the vite.config.js file to include the test options', async () => {
+      await generator(appTree, options);
+      const viteConfig = appTree
+        .read('apps/my-test-react-app/vite.config.ts')
+        .toString();
+      expect(viteConfig).toMatchInlineSnapshot(`
+        "
+        /// <reference types=\\"vitest\\" />
+              import { defineConfig } from 'vite';
+              import react from '@vitejs/plugin-react';
+              import ViteTsConfigPathsPlugin from 'vite-tsconfig-paths';
+              
+              export default defineConfig({
+                plugins: [
+                  react(),
+                  ViteTsConfigPathsPlugin({
+                    root: '../../',
+                    projects: ['tsconfig.base.json'],
+                  }),
+                ],
+                test: {
+            globals: true,
+            environment: 'jsdom',
+            
+          }
+              });"
+      `);
+    });
   });
 });

@@ -56,7 +56,10 @@ function updateTsConfig(
   projectRoot: string
 ) {
   updateJson(tree, joinPathFragments(projectRoot, 'tsconfig.json'), (json) => {
-    if (json.references) {
+    if (
+      json.references &&
+      !json.references.some((r) => r.path === './tsconfig.spec.json')
+    ) {
       json.references.push({
         path: './tsconfig.spec.json',
       });

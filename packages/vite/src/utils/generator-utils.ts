@@ -103,6 +103,7 @@ export function addOrChangeTestTarget(
 
   if (targets[target]) {
     targets[target].executor = '@nrwl/vite:test';
+    delete targets[target].options.jestConfig;
   } else {
     targets[target] = {
       executor: '@nrwl/vite:test',
