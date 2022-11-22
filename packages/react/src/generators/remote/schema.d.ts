@@ -23,5 +23,4 @@ export interface Schema {
   compiler?: 'babel' | 'swc';
   host?: string;
   devServerPort?: number;
-  bundler?: 'webpack' | 'vite';
 }

@@ -15,6 +15,8 @@ export async function hostGenerator(host: Tree, schema: Schema) {
     ...options,
     // The target use-case is loading remotes as child routes, thus always enable routing.
     routing: true,
+    // Only webpack works with module federation for now.
+    bundler: 'webpack',
   });
 
   const remotesWithPorts: { name: string; port: number }[] = [];
@@ -32,7 +34,6 @@ export async function hostGenerator(host: Tree, schema: Schema) {
         e2eTestRunner: options.e2eTestRunner,
         linter: options.linter,
         devServerPort: remotePort,
-        bundler: options.bundler ?? 'webpack',
       });
       remotePort++;
     }

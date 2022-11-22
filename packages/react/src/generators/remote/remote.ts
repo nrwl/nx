@@ -32,7 +32,8 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
   const initApp = await applicationGenerator(host, {
     ...options,
     skipDefaultProject: true,
-    bundler: schema.bundler ?? 'webpack',
+    // Only webpack works with module federation for now.
+    bundler: 'webpack',
   });
 
   if (schema.host) {

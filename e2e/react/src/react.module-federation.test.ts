@@ -25,9 +25,7 @@ describe('React Module Federation', () => {
     const remote2 = uniq('remote2');
     const remote3 = uniq('remote3');
 
-    runCLI(
-      `generate @nrwl/react:host ${shell} --bundler=webpack --style=css --no-interactive`
-    );
+    runCLI(`generate @nrwl/react:host ${shell} --style=css --no-interactive`);
     runCLI(
       `generate @nrwl/react:remote ${remote1} --style=css --host=${shell} --no-interactive`
     );
