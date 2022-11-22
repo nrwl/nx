@@ -358,7 +358,7 @@ export function writeViteConfig(tree: Tree, options: Schema) {
   let viteConfigContent = '';
 
   const testConfig = `test: {
-    globals: ${options.inSourceTests ? false : true},
+    globals: true,
     environment: 'jsdom',
     ${options.inSourceTests ? `includeSource: ['src/**/*.{js,ts}']` : ''}
   }`;

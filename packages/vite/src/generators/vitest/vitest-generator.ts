@@ -64,17 +64,32 @@ function updateTsConfig(
         path: './tsconfig.spec.json',
       });
     }
+    return json;
+  });
 
-    if (options.inSourceTests) {
-      (json.compilerOptions.types ??= []).push('vitest/importMap');
+  if (options.inSourceTests) {
+    const tsconfigLibPath = joinPathFragments(projectRoot, 'tsconfig.lib.json');
+    const tsconfigAppPath = joinPathFragments(projectRoot, 'tsconfig.app.json');
+    if (tree.exists(tsconfigLibPath)) {
+      updateJson(
+        tree,
+        joinPathFragments(projectRoot, 'tsconfig.lib.json'),
+        (json) => {
+          (json.compilerOptions.types ??= []).push('vitest/importMeta');
+          return json;
+        }
+      );
+    } else if (tree.exists(tsconfigAppPath)) {
+      updateJson(
+        tree,
+        joinPathFragments(projectRoot, 'tsconfig.app.json'),
+        (json) => {
+          (json.compilerOptions.types ??= []).push('vitest/importMeta');
+          return json;
+        }
+      );
     }
-
-    return json;
-  });
-
-  updateJson(tree, joinPathFragments(projectRoot, 'tsconfig.json'), (json) => {
-    return json;
-  });
+  }
 }
 
 function createFiles(

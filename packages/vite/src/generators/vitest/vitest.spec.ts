@@ -80,14 +80,15 @@ describe('vitest generator', () => {
           `);
     });
 
-    it('should add vitest/importMap when inSourceTests is true', async () => {
+    it('should add vitest/importMeta when inSourceTests is true', async () => {
       await generator(appTree, { ...options, inSourceTests: true });
       const tsconfig = JSON.parse(
-        appTree.read('apps/my-test-react-app/tsconfig.json')?.toString() ?? '{}'
+        appTree.read('apps/my-test-react-app/tsconfig.app.json')?.toString() ??
+          '{}'
       );
       expect(tsconfig.compilerOptions.types).toMatchInlineSnapshot(`
         Array [
-          "vitest/importMap",
+          "vitest/importMeta",
         ]
       `);
     });
@@ -118,6 +119,37 @@ describe('vitest generator', () => {
             globals: true,
             environment: 'jsdom',
             
+          }
+              });"
+      `);
+    });
+  });
+
+  describe('insourceTests', () => {
+    it('should add the insourceSource option in the vite config', async () => {
+      await generator(appTree, { ...options, inSourceTests: true });
+      const viteConfig = appTree
+        .read('apps/my-test-react-app/vite.config.ts')
+        .toString();
+      expect(viteConfig).toMatchInlineSnapshot(`
+        "
+        /// <reference types=\\"vitest\\" />
+              import { defineConfig } from 'vite';
+              import react from '@vitejs/plugin-react';
+              import ViteTsConfigPathsPlugin from 'vite-tsconfig-paths';
+              
+              export default defineConfig({
+                plugins: [
+                  react(),
+                  ViteTsConfigPathsPlugin({
+                    root: '../../',
+                    projects: ['tsconfig.base.json'],
+                  }),
+                ],
+                test: {
+            globals: true,
+            environment: 'jsdom',
+            includeSource: ['src/**/*.{js,ts}']
           }
               });"
       `);

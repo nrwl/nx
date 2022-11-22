@@ -26,5 +26,5 @@
       "description": "Skip generating a vite config file"
     }
   },
-  "required": ["name"]
+  "required": ["project"]
 }
