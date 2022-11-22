@@ -21,9 +21,6 @@ export function TaskNodeTooltip({ id, executor }: TaskNodeTooltipProps) {
         <Tag className="mr-3">{executor}</Tag>
         {id}
       </h4>
-      <div className="mt-2 flex">
-        <TooltipLinkButton to={to}>Focus</TooltipLinkButton>
-      </div>
     </div>
   );
 }

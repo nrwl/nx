@@ -55,13 +55,13 @@ export function NxTaskGraphViz({
             'TB'
           );
           graph.handleTaskEvent({
-            type: 'notifiyTaskGraphSetProjects',
+            type: 'notifyTaskGraphSetProjects',
             projects,
             taskGraphs,
           });
           graph.handleTaskEvent({
-            type: 'notifyTaskGraphTaskSelected',
-            taskId,
+            type: 'notifyTaskGraphTasksSelected',
+            taskIds: [taskId],
           });
           setGraph(graph);
         });

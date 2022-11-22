@@ -10,21 +10,23 @@ export class TaskTraversalGraph {
   private projects: ProjectGraphProjectNode[] = [];
   private taskGraphs: TaskGraphRecord = {};
   private cy: Core;
-  private selectedTask: string;
   private groupByProject: boolean = false;
+  private selectedTasks = new Set<string>();
 
   setProjects(
     projects: ProjectGraphProjectNode[],
     taskGraphs: TaskGraphRecord
   ) {
-    this.selectedTask = null;
+    this.selectedTasks.clear();
     this.projects = projects;
     this.taskGraphs = taskGraphs;
   }
 
-  selectTask(taskId: string) {
-    this.selectedTask = taskId;
-    this.createElements(taskId, this.groupByProject);
+  selectTask(taskIds: string[]) {
+    taskIds.forEach((taskId) => {
+      this.selectedTasks.add(taskId);
+    });
+    this.createElements(Array.from(this.selectedTasks), this.groupByProject);
 
     return this.cy.elements();
   }
@@ -32,73 +34,73 @@ export class TaskTraversalGraph {
   setGroupByProject(groupByProject: boolean) {
     this.groupByProject = groupByProject;
 
-    if (this.selectedTask) {
-      this.createElements(this.selectedTask, groupByProject);
+    if (this.selectedTasks.size > 0) {
+      this.createElements(Array.from(this.selectedTasks), groupByProject);
     } else {
       this.cy = cytoscape({
         headless: true,
         elements: [],
       });
-
-      return this.cy.elements();
     }
 
     return this.cy.elements();
   }
 
-  deselectTask() {
-    this.cy = cytoscape({
-      headless: true,
-      elements: [],
+  deselectTask(taskIds: string[]) {
+    taskIds.forEach((taskId) => {
+      this.selectedTasks.delete(taskId);
     });
+    this.createElements(Array.from(this.selectedTasks), this.groupByProject);
 
     return this.cy.elements();
   }
 
-  private createElements(taskId: string, groupByFolder: boolean) {
-    const taskGraph = this.taskGraphs[taskId];
-
-    if (taskGraph === undefined) {
-      throw new Error(`Could not find task graph for ${taskId}`);
-    }
-
+  private createElements(taskIds: string[], groupByFolder: boolean) {
     const taskElements = [];
 
-    const parents: Record<
-      string,
-      { id: string; parentId: string; label: string }
-    > = {};
+    taskIds.forEach((taskId) => {
+      const taskGraph = this.taskGraphs[taskId];
 
-    for (let taskName in taskGraph.tasks) {
-      const task = taskGraph.tasks[taskName];
-      const project = this.projects.find(
-        (project) => project.name === task.target.project
-      );
-
-      if (project === undefined) {
-        throw new Error(`Could not find project ${project.name}`);
+      if (taskGraph === undefined) {
+        throw new Error(`Could not find task graph for ${taskId}`);
       }
 
-      taskElements.push(new TaskNode(taskGraph.tasks[taskName], project));
+      const parents: Record<
+        string,
+        { id: string; parentId: string; label: string }
+      > = {};
 
-      if (groupByFolder) {
-        parents[project.name] = {
-          id: project.name,
-          parentId: null,
-          label: project.name,
-        };
+      for (let taskName in taskGraph.tasks) {
+        const task = taskGraph.tasks[taskName];
+        const project = this.projects.find(
+          (project) => project.name === task.target.project
+        );
+
+        if (project === undefined) {
+          throw new Error(`Could not find project ${project.name}`);
+        }
+
+        taskElements.push(new TaskNode(taskGraph.tasks[taskName], project));
+
+        if (groupByFolder) {
+          parents[project.name] = {
+            id: project.name,
+            parentId: null,
+            label: project.name,
+          };
+        }
       }
-    }
 
-    for (let parent in parents) {
-      taskElements.push(new ParentNode(parents[parent]));
-    }
+      for (let parent in parents) {
+        taskElements.push(new ParentNode(parents[parent]));
+      }
 
-    for (let topDep in taskGraph.dependencies) {
-      taskGraph.dependencies[topDep].forEach((childDep) =>
-        taskElements.push(new TaskEdge(topDep, childDep))
-      );
-    }
+      for (let topDep in taskGraph.dependencies) {
+        taskGraph.dependencies[topDep].forEach((childDep) =>
+          taskElements.push(new TaskEdge(topDep, childDep))
+        );
+      }
+    });
 
     this.cy = cytoscape({
       headless: true,

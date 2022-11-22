@@ -17,6 +17,12 @@ export class GraphService {
   private taskTraversalGraph: TaskTraversalGraph;
   private renderGraph: RenderGraph;
 
+  lastPerformanceReport: GraphPerfReport = {
+    numEdges: 0,
+    numNodes: 0,
+    renderTime: 0,
+  };
+
   private listeners = new Map<
     number,
     (event: GraphInteractionEvents) => void
@@ -68,8 +74,6 @@ export class GraphService {
     if (event.type !== 'notifyGraphUpdateGraph') {
       this.renderGraph.clearFocussedElement();
     }
-
-    this.broadcast({ type: 'GraphRegenerated' });
 
     let elementsToSendToRender: CollectionReturnValue;
 
@@ -196,6 +200,9 @@ export class GraphService {
       };
     }
 
+    this.lastPerformanceReport = perfReport;
+    this.broadcast({ type: 'GraphRegenerated' });
+
     return { selectedProjectNames, perfReport };
   }
 
@@ -209,19 +216,20 @@ export class GraphService {
       case 'notifyTaskGraphSetProjects':
         this.taskTraversalGraph.setProjects(event.projects, event.taskGraphs);
         break;
-      case 'notifyTaskGraphTaskSelected':
+      case 'notifyTaskGraphTasksSelected':
         elementsToSendToRender = this.taskTraversalGraph.selectTask(
-          event.taskId
+          event.taskIds
         );
         break;
-      case 'notifyTaskGraphDeselectTask':
-        elementsToSendToRender = this.taskTraversalGraph.deselectTask();
+      case 'notifyTaskGraphTasksDeselected':
+        elementsToSendToRender = this.taskTraversalGraph.deselectTask(
+          event.taskIds
+        );
         break;
       case 'setGroupByProject':
         elementsToSendToRender = this.taskTraversalGraph.setGroupByProject(
           event.groupByProject
         );
-
         break;
     }
 
@@ -249,6 +257,9 @@ export class GraphService {
         numEdges,
       };
     }
+
+    this.lastPerformanceReport = perfReport;
+    this.broadcast({ type: 'GraphRegenerated' });
 
     return { selectedProjectNames, perfReport };
   }

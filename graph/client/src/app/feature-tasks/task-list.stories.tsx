@@ -5,7 +5,7 @@ const Story: ComponentMeta<typeof TaskList> = {
   component: TaskList,
   title: 'TaskList',
   argTypes: {
-    selectTask: {
+    toggleProject: {
       action: 'selectTask',
     },
   },

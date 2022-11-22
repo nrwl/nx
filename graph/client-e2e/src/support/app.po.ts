@@ -1,5 +1,5 @@
 export const getSelectProjectsMessage = () =>
-  cy.get('[data-cy=no-projects-selected]');
+  cy.contains('Please select a project in the sidebar');
 export const getGraph = () => cy.get('#graph-container');
 export const getSelectAllButton = () => cy.get('[data-cy=selectAllButton]');
 export const getDeselectAllButton = () => cy.get('[data-cy=deselectAllButton]');
