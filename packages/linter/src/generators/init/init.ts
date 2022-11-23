@@ -16,18 +16,68 @@ import {
 
 import { Linter } from '../utils/linter';
 import { findEslintFile } from '../utils/eslint-file';
-import { ESLint } from 'eslint';
+import { ESLint, Linter as LinterType } from 'eslint';
 
 export interface LinterInitOptions {
   linter?: Linter;
   unitTestRunner?: string;
   skipPackageJson?: boolean;
+  rootProject?: boolean;
 }
 
-const getGlobalEsLintConfiguration = (unitTestRunner?: string) => {
+/**
+ * This configuration is intended to apply to all TypeScript source files.
+ * See the eslint-plugin-nx package for what is in the referenced shareable config.
+ */
+export const globalTypeScriptOverrides = {
+  files: ['*.ts', '*.tsx'],
+  extends: ['plugin:@nrwl/nx/typescript'],
+  /**
+   * Having an empty rules object present makes it more obvious to the user where they would
+   * extend things from if they needed to
+   */
+  rules: {},
+};
+
+/**
+ * This configuration is intended to apply to all JavaScript source files.
+ * See the eslint-plugin-nx package for what is in the referenced shareable config.
+ */
+export const globalJavaScriptOverrides = {
+  files: ['*.js', '*.jsx'],
+  extends: ['plugin:@nrwl/nx/javascript'],
+  /**
+   * Having an empty rules object present makes it more obvious to the user where they would
+   * extend things from if they needed to
+   */
+  rules: {},
+};
+
+/**
+ * This configuration is intended to apply to all "source code" (but not
+ * markup like HTML, or other custom file types like GraphQL)
+ */
+export const moduleBoundariesOverride = {
+  files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+  rules: {
+    '@nrwl/nx/enforce-module-boundaries': [
+      'error',
+      {
+        enforceBuildableLibDependency: true,
+        allow: [],
+        depConstraints: [{ sourceTag: '*', onlyDependOnLibsWithTags: ['*'] }],
+      },
+    ],
+  } as LinterType.RulesRecord,
+};
+
+const getGlobalEsLintConfiguration = (
+  unitTestRunner?: string,
+  rootProject?: boolean
+) => {
   const config: ESLint.ConfigData = {
     root: true,
-    ignorePatterns: ['**/*'],
+    ...(!rootProject && { ignorePatterns: ['**/*'] }),
     plugins: ['@nrwl/nx'],
     /**
      * We leverage ESLint's "overrides" capability so that we can set up a root config which will support
@@ -37,53 +87,9 @@ const getGlobalEsLintConfiguration = (unitTestRunner?: string) => {
      * but we still want to share common config where possible.
      */
     overrides: [
-      /**
-       * This configuration is intended to apply to all "source code" (but not
-       * markup like HTML, or other custom file types like GraphQL)
-       */
-      {
-        files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
-        rules: {
-          '@nrwl/nx/enforce-module-boundaries': [
-            'error',
-            {
-              enforceBuildableLibDependency: true,
-              allow: [],
-              depConstraints: [
-                { sourceTag: '*', onlyDependOnLibsWithTags: ['*'] },
-              ],
-            },
-          ],
-        },
-      },
-
-      /**
-       * This configuration is intended to apply to all TypeScript source files.
-       * See the eslint-plugin-nx package for what is in the referenced shareable config.
-       */
-      {
-        files: ['*.ts', '*.tsx'],
-        extends: ['plugin:@nrwl/nx/typescript'],
-        /**
-         * Having an empty rules object present makes it more obvious to the user where they would
-         * extend things from if they needed to
-         */
-        rules: {},
-      },
-
-      /**
-       * This configuration is intended to apply to all JavaScript source files.
-       * See the eslint-plugin-nx package for what is in the referenced shareable config.
-       */
-      {
-        files: ['*.js', '*.jsx'],
-        extends: ['plugin:@nrwl/nx/javascript'],
-        /**
-         * Having an empty rules object present makes it more obvious to the user where they would
-         * extend things from if they needed to
-         */
-        rules: {},
-      },
+      ...(rootProject ? [] : [moduleBoundariesOverride]),
+      globalTypeScriptOverrides,
+      globalJavaScriptOverrides,
     ],
   };
   if (unitTestRunner === 'jest') {
@@ -133,7 +139,7 @@ function initEsLint(tree: Tree, options: LinterInitOptions): GeneratorCallback {
   writeJson(
     tree,
     '.eslintrc.json',
-    getGlobalEsLintConfiguration(options.unitTestRunner)
+    getGlobalEsLintConfiguration(options.unitTestRunner, options.rootProject)
   );
   addTargetDefaults(tree);
 

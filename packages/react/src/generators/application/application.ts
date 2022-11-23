@@ -40,19 +40,20 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
       unitTestRunner: options.unitTestRunner,
       eslintFilePatterns: [`${options.appProjectRoot}/**/*.{ts,tsx,js,jsx}`],
       skipFormat: true,
+      rootProject: options.rootProject,
     });
     tasks.push(lintTask);
 
-    const reactEslintJson = createReactEslintJson(
-      options.appProjectRoot,
-      options.setParserOptionsProject
-    );
+    // const reactEslintJson = createReactEslintJson(
+    //   options.appProjectRoot,
+    //   options.setParserOptionsProject
+    // );
 
-    updateJson(
-      host,
-      joinPathFragments(options.appProjectRoot, '.eslintrc.json'),
-      () => reactEslintJson
-    );
+    // updateJson(
+    //   host,
+    //   joinPathFragments(options.appProjectRoot, '.eslintrc.json'),
+    //   () => reactEslintJson
+    // );
 
     const installTask = await addDependenciesToPackageJson(
       host,

@@ -21,6 +21,7 @@ interface LintProjectOptions {
   setParserOptionsProject?: boolean;
   skipPackageJson?: boolean;
   unitTestRunner?: string;
+  rootProject?: boolean;
 }
 
 function createEsLintConfiguration(
@@ -82,6 +83,7 @@ export async function lintProjectGenerator(
     linter: options.linter,
     unitTestRunner: options.unitTestRunner,
     skipPackageJson: options.skipPackageJson,
+    rootProject: options.rootProject,
   });
   const projectConfig = readProjectConfiguration(tree, options.project);
 
@@ -92,11 +94,14 @@ export async function lintProjectGenerator(
       lintFilePatterns: options.eslintFilePatterns,
     },
   };
-  createEsLintConfiguration(
-    tree,
-    projectConfig,
-    options.setParserOptionsProject
-  );
+  // our root `.eslintrc` is already the project config, so we should not override it
+  if (!options.rootProject) {
+    createEsLintConfiguration(
+      tree,
+      projectConfig,
+      options.setParserOptionsProject
+    );
+  }
 
   updateProjectConfiguration(tree, options.project, projectConfig);
 
