@@ -3,7 +3,7 @@ import {
   isTerminalRun,
   MappedProjectGraph,
   mapProjectGraphFiles,
-} from '@nrwl/workspace/src/utils/runtime-lint-utils';
+} from './runtime-lint-utils';
 import * as chalk from 'chalk';
 
 export function ensureGlobalProjectGraph(ruleName: string) {

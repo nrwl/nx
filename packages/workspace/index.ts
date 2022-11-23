@@ -34,7 +34,7 @@ export {
   getProjectConfig,
   addParameterToConstructor,
   createOrUpdate,
-  findNodes,
+  findNodes, // TODO(v16): remove this
   updatePackageJsonDependencies,
   readWorkspace,
   renameSyncInTree,

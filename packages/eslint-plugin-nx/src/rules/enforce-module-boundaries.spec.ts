@@ -1,6 +1,6 @@
 import type { FileData, ProjectGraph } from '@nrwl/devkit';
 import { DependencyType } from '@nrwl/devkit';
-import { mapProjectGraphFiles } from '@nrwl/workspace/src/utils/runtime-lint-utils';
+import { mapProjectGraphFiles } from '../utils/runtime-lint-utils';
 import * as parser from '@typescript-eslint/parser';
 import { TSESLint } from '@typescript-eslint/utils';
 import { vol } from 'memfs';
