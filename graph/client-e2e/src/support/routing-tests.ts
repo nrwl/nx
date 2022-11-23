@@ -1,17 +1,25 @@
-import * as nxExamplesJson from '../fixtures/nx-examples.json';
+import * as nxExamplesJson from '../fixtures/nx-examples-project-graph.json';
 import {
   getCheckedProjectItems,
   getGroupByFolderCheckbox,
+  getGroupByProjectCheckbox,
   getSearchDepthCheckbox,
+  getSelectTargetDropdown,
 } from './app.po';
 
-function waitForGraph(router: 'hash' | 'browser') {
+function waitForProjectGraph(router: 'hash' | 'browser') {
   if (router === 'browser') {
     cy.wait('@getGraph');
   }
 }
 
-function resolveRoute(
+function waitForTaskGraphs(router: 'hash' | 'browser') {
+  if (router === 'browser') {
+    cy.wait('@getTaskGraphs');
+  }
+}
+
+function resolveProjectsRoute(
   router: 'hash' | 'browser',
   route: string,
   paramString: string
@@ -22,6 +30,19 @@ function resolveRoute(
     return `${route}?${paramString}`;
   }
 }
+
+function resolveTasksRoute(
+  router: 'hash' | 'browser',
+  route: string,
+  paramString: string
+) {
+  if (router === 'hash') {
+    return `/#${route}?${paramString}`;
+  } else {
+    return `${route}?${paramString}`;
+  }
+}
+
 export function testProjectsRoutes(
   router: 'hash' | 'browser',
   routes: string[]
@@ -29,10 +50,10 @@ export function testProjectsRoutes(
   routes.forEach((route) => {
     describe(`for route ${route}`, () => {
       it('should focus projects', () => {
-        cy.visit(resolveRoute(router, route, 'focus=cart'));
+        cy.visit(resolveProjectsRoute(router, route, 'focus=cart'));
 
         // wait for first graph to finish loading
-        waitForGraph(router);
+        waitForProjectGraph(router);
 
         const dependencies = nxExamplesJson.dependencies.cart;
         const dependents = Object.keys(nxExamplesJson.dependencies).filter(
@@ -48,20 +69,24 @@ export function testProjectsRoutes(
       });
 
       it('should focus projects with search depth', () => {
-        cy.visit(resolveRoute(router, route, `focus=cart&searchDepth=2`));
+        cy.visit(
+          resolveProjectsRoute(router, route, `focus=cart&searchDepth=2`)
+        );
 
         // wait for first graph to finish loading
-        waitForGraph(router);
+        waitForProjectGraph(router);
 
         getCheckedProjectItems().should('have.length', 10);
         getSearchDepthCheckbox().should('exist');
       });
 
       it('should focus projects with search depth disabled', () => {
-        cy.visit(resolveRoute(router, route, `focus=cart&searchDepth=0`));
+        cy.visit(
+          resolveProjectsRoute(router, route, `focus=cart&searchDepth=0`)
+        );
 
         // wait for first graph to finish loading
-        waitForGraph(router);
+        waitForProjectGraph(router);
 
         getCheckedProjectItems().should('have.length', 12);
         getSearchDepthCheckbox().should('exist');
@@ -69,7 +94,7 @@ export function testProjectsRoutes(
 
       it('should set group by folder', () => {
         cy.visit(
-          resolveRoute(
+          resolveProjectsRoute(
             router,
             route,
             `focus=nx-dev&searchDepth=1&groupByFolder=true`
@@ -77,21 +102,47 @@ export function testProjectsRoutes(
         );
 
         // wait for first graph to finish loading
-        waitForGraph(router);
+        waitForProjectGraph(router);
 
         getGroupByFolderCheckbox().should('be.checked');
       });
 
       it('should select all projects', () => {
-        cy.visit(resolveRoute(router, route, `select=all`));
+        cy.visit(resolveProjectsRoute(router, route, `select=all`));
 
         // wait for first graph to finish loading
-        waitForGraph(router);
+        waitForProjectGraph(router);
 
         getCheckedProjectItems().should(
           'have.length',
           nxExamplesJson.projects.length
         );
+      });
+    });
+  });
+}
+
+export function testTaskRoutes(router: 'hash' | 'browser', routes: string[]) {
+  routes.forEach((route) => {
+    describe(`for route ${route}`, () => {
+      it('should set group by project', () => {
+        cy.visit(resolveTasksRoute(router, route, `groupByProject=true`));
+
+        // wait for first graph to finish loading
+        waitForProjectGraph(router);
+        waitForTaskGraphs(router);
+
+        getGroupByProjectCheckbox().should('be.checked');
+      });
+
+      it('should set selected target', () => {
+        cy.visit(resolveTasksRoute(router, `${route}/e2e`, ''));
+
+        // wait for first graph to finish loading
+        waitForProjectGraph(router);
+        waitForTaskGraphs(router);
+
+        getSelectTargetDropdown().should('have.value', 'e2e');
       });
     });
   });

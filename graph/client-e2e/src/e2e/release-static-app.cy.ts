@@ -1,6 +1,6 @@
-import { testProjectsRoutes } from '../support/routing-tests';
+import { testProjectsRoutes, testTaskRoutes } from '../support/routing-tests';
 
-describe('graph-client release', () => {
+describe('release static-mode app', () => {
   beforeEach(() => {
     cy.visit('/');
   });
@@ -18,6 +18,6 @@ describe('graph-client release', () => {
       cy.url().should('contain', '/#/projects');
     });
 
-    testProjectsRoutes('hash', ['/projects']);
+    testProjectsRoutes('hash', ['/', '/projects']);
   });
 });

@@ -10,18 +10,6 @@ interface SidebarProject {
   isSelected: boolean;
 }
 
-function createTaskName(
-  project: string,
-  target: string,
-  configuration?: string
-) {
-  if (configuration) {
-    return `${project}:${target}:${configuration}`;
-  } else {
-    return `${project}:${target}`;
-  }
-}
-
 function ProjectListItem({
   project,
   toggleTask,
@@ -163,7 +151,7 @@ export function TaskList({
         );
       })}
 
-      <h2 className="mt-8 border-b border-solid border-slate-200/10 text-lg font-light">
+      <h2 className="mt-8 border-b border-solid border-slate-200/10 text-lg font-light text-slate-400 dark:text-slate-500">
         e2e projects
       </h2>
 
@@ -180,7 +168,7 @@ export function TaskList({
         );
       })}
 
-      <h2 className="mt-8 border-b border-solid border-slate-200/10 text-lg font-light">
+      <h2 className="mt-8 border-b border-solid border-slate-200/10 text-lg font-light text-slate-400 dark:text-slate-500">
         lib projects
       </h2>
 

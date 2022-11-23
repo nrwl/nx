@@ -56,12 +56,6 @@ const childRoutes: RouteObject[] = [
   },
   {
     loader: async ({ request, params }) => {
-      const environmentConfig = getEnvironmentConfig();
-
-      if (!environmentConfig.appConfig.showExperimentalFeatures) {
-        return redirect(`/projects`);
-      }
-
       const selectedWorkspaceId =
         params.selectedWorkspaceId ?? appConfig.defaultWorkspaceId;
       return taskDataLoader(selectedWorkspaceId);
