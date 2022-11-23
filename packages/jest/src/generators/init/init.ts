@@ -8,7 +8,11 @@ import {
   Tree,
   updateJson,
   updateWorkspaceConfiguration,
+  readProjectConfiguration,
+  readJson,
+  updateProjectConfiguration,
 } from '@nrwl/devkit';
+import { findRootJestConfig } from '../../utils/config/find-root-jest-files';
 import {
   babelJestVersion,
   jestTypesVersion,
@@ -20,18 +24,71 @@ import {
   tsNodeVersion,
 } from '../../utils/versions';
 import { JestInitSchema } from './schema';
+import { extname } from 'path';
 
 interface NormalizedSchema extends ReturnType<typeof normalizeOptions> {}
 
 const schemaDefaults = {
   compiler: 'tsc',
   js: false,
+  rootProject: false,
 } as const;
 
-function createJestConfig(tree: Tree, js: boolean = false) {
+function createJestConfig(tree: Tree, options: NormalizedSchema) {
+  if (!tree.exists('jest.preset.js')) {
+    // preset is always js file.
+    tree.write(
+      `jest.preset.js`,
+      `
+      const nxPreset = require('@nrwl/jest/preset').default;
+     
+      module.exports = { ...nxPreset }`
+    );
+
+    addTestInputs(tree);
+  }
+  const rootJestConfig = findRootJestConfig(tree);
+
+  if (options.rootProject && !rootJestConfig) {
+    // we don't want any config to be made because the jest-project generator
+    // will make the config when using rootProject
+    return;
+  }
+  const isProjectConfig =
+    rootJestConfig &&
+    tree.exists(rootJestConfig) &&
+    !tree.read(rootJestConfig, 'utf-8').includes('getJestProjects()');
+  if (!options.rootProject && isProjectConfig) {
+    // moving from single project to multi project.
+    // TODO(caleb): this is brittle and needs to be detected better?
+    const nxJson = readJson(tree, 'nx.json');
+    const defaultProject =
+      nxJson.cli?.defaultProjectName || nxJson?.defaultProject;
+
+    const ext = extname(rootJestConfig);
+    const newJestConfigPath = defaultProject
+      ? `jest.${defaultProject}.config${ext}`
+      : `jest.project-config${ext}`;
+
+    tree.rename(rootJestConfig, newJestConfigPath);
+
+    if (defaultProject) {
+      const projectConfig = readProjectConfiguration(tree, defaultProject);
+
+      // TODO(caleb): do we care about a custom target name?
+      if (projectConfig?.targets?.['test']?.options?.jestConfig) {
+        projectConfig.targets['test'].options.jestConfig = newJestConfigPath;
+        updateProjectConfiguration(tree, defaultProject, projectConfig);
+      }
+    } else {
+      console.warn(stripIndents`Could not find the default project project.json to update the test target options.
+Manually update the 'jestConfig' path to point to ${newJestConfigPath}`);
+    }
+  }
+
   // if the root ts config already exists then don't make a js one or vice versa
   if (!tree.exists('jest.config.ts') && !tree.exists('jest.config.js')) {
-    const contents = js
+    const contents = options.js
       ? stripIndents`
       const { getJestProjects } = require('@nrwl/jest');
 
@@ -44,20 +101,7 @@ function createJestConfig(tree: Tree, js: boolean = false) {
       export default {
        projects: getJestProjects()
       };`;
-    tree.write(`jest.config.${js ? 'js' : 'ts'}`, contents);
-  }
-
-  if (!tree.exists('jest.preset.js')) {
-    // preset is always js file.
-    tree.write(
-      `jest.preset.js`,
-      `
-      const nxPreset = require('@nrwl/jest/preset').default;
-     
-      module.exports = { ...nxPreset }`
-    );
-
-    addTestInputs(tree);
+    tree.write(`jest.config.${options.js ? 'js' : 'ts'}`, contents);
   }
 }
 
@@ -144,7 +188,7 @@ function updateExtensions(host: Tree) {
 
 export function jestInitGenerator(tree: Tree, schema: JestInitSchema) {
   const options = normalizeOptions(schema);
-  createJestConfig(tree, options.js);
+  createJestConfig(tree, options);
 
   let installTask: GeneratorCallback = () => {};
   if (!options.skipPackageJson) {

@@ -362,4 +362,73 @@ describe('jestProject', () => {
       expect(tree.read('libs/lib1/jest.config.ts', 'utf-8')).toMatchSnapshot();
     });
   });
+
+  describe('root project', () => {
+    it('root jest.config.ts should be project config', async () => {
+      writeJson(tree, 'tsconfig.json', {
+        files: [],
+        include: [],
+        references: [],
+      });
+      addProjectConfiguration(tree, 'my-project', {
+        root: '',
+        sourceRoot: 'src',
+        name: 'my-project',
+        targets: {},
+      });
+      await jestProjectGenerator(tree, {
+        ...defaultOptions,
+        project: 'my-project',
+        rootProject: true,
+      });
+      expect(tree.read('jest.config.ts', 'utf-8')).toMatchInlineSnapshot(`
+        "/* eslint-disable */
+        export default {
+          displayName: 'my-project',
+          preset: '../jest.preset.js',
+          globals: {
+            'ts-jest': {
+              tsconfig: '<rootDir>/tsconfig.spec.json',
+            }
+          },
+          coverageDirectory: '../coverage/my-project'
+        };
+        "
+      `);
+    });
+
+    it('root jest.config.js should be project config', async () => {
+      writeJson(tree, 'tsconfig.json', {
+        files: [],
+        include: [],
+        references: [],
+      });
+      addProjectConfiguration(tree, 'my-project', {
+        root: '',
+        sourceRoot: 'src',
+        name: 'my-project',
+        targets: {},
+      });
+      await jestProjectGenerator(tree, {
+        ...defaultOptions,
+        project: 'my-project',
+        rootProject: true,
+        js: true,
+      });
+      expect(tree.read('jest.config.js', 'utf-8')).toMatchInlineSnapshot(`
+        "/* eslint-disable */
+        module.exports = {
+          displayName: 'my-project',
+          preset: '../jest.preset.js',
+          globals: {
+            'ts-jest': {
+              tsconfig: '<rootDir>/tsconfig.spec.json',
+            }
+          },
+          coverageDirectory: '../coverage/my-project'
+        };
+        "
+      `);
+    });
+  });
 });

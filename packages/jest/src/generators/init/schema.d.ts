@@ -6,4 +6,5 @@ export interface JestInitSchema {
    * @deprecated
    */
   babelJest?: boolean;
+  rootProject?: boolean;
 }

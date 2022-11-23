@@ -13,6 +13,7 @@ const schemaDefaults = {
   supportTsx: false,
   skipSetupFile: false,
   skipSerializers: false,
+  rootProject: false,
 } as const;
 
 function normalizeOptions(options: JestProjectSchema) {
@@ -42,7 +43,7 @@ function normalizeOptions(options: JestProjectSchema) {
 
   // setupFile is always 'none'
   options.setupFile = schemaDefaults.setupFile;
-
+  options.rootProject = options.rootProject;
   return {
     ...schemaDefaults,
     ...options,
@@ -59,7 +60,11 @@ export async function jestProjectGenerator(
   createFiles(tree, options);
   updateTsConfig(tree, options);
   updateWorkspace(tree, options);
-  updateJestConfig(tree, options);
+  // TODO(caleb): is this really needed anymore?
+  // surely everyone is on the getJestProjects() fn usage already?
+  // should remove it and provide a migration (just in case) so we can remove it
+  // which makes the root project work simpler
+  // updateJestConfig(tree, options);
   if (!schema.skipFormat) {
     await formatFiles(tree);
   }
