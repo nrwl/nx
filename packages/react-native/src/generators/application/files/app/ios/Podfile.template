@@ -6,6 +6,9 @@ platform :ios, '12.4'
 install! 'cocoapods', :deterministic_uuids => false
 
 target '<%= className %>' do
+  <% if(useFrameworks) { %>
+  use_frameworks! :linkage => :static
+  <% } %>
   config = use_native_modules!
 
   # Flags change depending on the env values.
@@ -23,7 +26,7 @@ target '<%= className %>' do
     #
     # Note that if you have use_frameworks! enabled, Flipper will not work and
     # you should disable the next line.
-    :flipper_configuration => FlipperConfiguration.enabled,
+    :flipper_configuration => FlipperConfiguration.<% if(useFrameworks) { %>disabled<% } else { %>enabled<% } %>,
     # An absolute path to your application root.
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
@@ -41,6 +44,15 @@ target '<%= className %>' do
       :mac_catalyst_enabled => false
     )
     __apply_Xcode_12_5_M1_post_install_workaround(installer)
+    <% if(useFrameworks) { %>
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        config.build_settings["HEADER_SEARCH_PATHS"] ||= "$(inherited) "
+        config.build_settings["HEADER_SEARCH_PATHS"] << '"$(PODS_TARGET_SRCROOT)" '
+      end
+    end
+    <% } %>
+
     nx_post_install(installer)
   end
 end
