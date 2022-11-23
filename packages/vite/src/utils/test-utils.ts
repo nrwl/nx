@@ -39,6 +39,32 @@ export function mockReactAppGenerator(tree: Tree): Tree {
       }
       `
   );
+  tree.write(
+    `apps/${appName}/tsconfig.app.json`,
+    `{
+      "extends": "./tsconfig.json",
+      "compilerOptions": {
+        "outDir": "../../dist/out-tsc"
+      },
+      "files": [
+        "../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
+        "../../node_modules/@nrwl/react/typings/image.d.ts"
+      ],
+      "exclude": [
+        "jest.config.ts",
+        "**/*.spec.ts",
+        "**/*.test.ts",
+        "**/*.spec.tsx",
+        "**/*.test.tsx",
+        "**/*.spec.js",
+        "**/*.test.js",
+        "**/*.spec.jsx",
+        "**/*.test.jsx"
+      ],
+      "include": ["**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx"]
+    }   
+      `
+  );
 
   tree.write(
     `apps/${appName}/src/index.html`,

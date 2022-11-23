@@ -4,7 +4,7 @@ import {
 } from '../../utils/lint';
 import { NormalizedSchema, Schema } from './schema';
 import { createApplicationFiles } from './lib/create-application-files';
-import { updateJestConfig } from './lib/update-jest-config';
+import { updateSpecConfig } from './lib/update-jest-config';
 import { normalizeOptions } from './lib/normalize-options';
 import { addProject } from './lib/add-project';
 import { addCypress } from './lib/add-cypress';
@@ -26,7 +26,7 @@ import reactInitGenerator from '../init/init';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { swcCoreVersion } from '@nrwl/js/src/utils/versions';
 import { swcLoaderVersion } from '@nrwl/webpack/src/utils/versions';
-import { viteConfigurationGenerator } from '@nrwl/vite';
+import { viteConfigurationGenerator, vitestGenerator } from '@nrwl/vite';
 
 async function addLinting(host: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];
@@ -89,8 +89,18 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
       uiFramework: 'react',
       project: options.projectName,
       newProject: true,
+      includeVitest: true,
     });
     tasks.push(viteTask);
+  }
+
+  if (options.bundler !== 'vite' && options.unitTestRunner === 'vitest') {
+    const vitestTask = await vitestGenerator(host, {
+      uiFramework: 'react',
+      project: options.projectName,
+      inSourceTests: options.inSourceTests,
+    });
+    tasks.push(vitestTask);
   }
 
   const lintTask = await addLinting(host, options);
@@ -100,7 +110,7 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
   tasks.push(cypressTask);
   const jestTask = await addJest(host, options);
   tasks.push(jestTask);
-  updateJestConfig(host, options);
+  updateSpecConfig(host, options);
   const styledTask = addStyledModuleDependencies(host, options.styledModule);
   tasks.push(styledTask);
   const routingTask = addRouting(host, options);

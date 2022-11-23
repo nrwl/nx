@@ -11,6 +11,7 @@ import {
 } from '@nrwl/devkit';
 import { ViteBuildExecutorOptions } from '../executors/build/schema';
 import { ViteDevServerExecutorOptions } from '../executors/dev-server/schema';
+import { VitestExecutorOptions } from '../executors/test/schema';
 import { Schema } from '../generators/configuration/schema';
 
 /**
@@ -27,18 +28,21 @@ import { Schema } from '../generators/configuration/schema';
  * they are using, and infer from the executor that the target
  * is a build target.
  */
-export function findServeAndBuildTargets(targets: {
+export function findExistingTargets(targets: {
   [targetName: string]: TargetConfiguration;
 }): {
   buildTarget: string;
   serveTarget: string;
+  testTarget: string;
 } {
   const returnObject: {
     buildTarget: string;
     serveTarget: string;
+    testTarget: string;
   } = {
     buildTarget: 'build',
     serveTarget: 'serve',
+    testTarget: 'test',
   };
 
   Object.entries(targets).forEach(([target, targetConfig]) => {
@@ -68,14 +72,51 @@ export function findServeAndBuildTargets(targets: {
       case '@nxext/vite:build':
         returnObject.buildTarget = target;
         break;
+      case '@nrwl/jest:jest':
+      case 'nxext/vitest:vitest':
+        returnObject.testTarget = target;
       default:
         returnObject.buildTarget = 'build';
         returnObject.serveTarget = 'serve';
+        returnObject.testTarget = 'test';
         break;
     }
   });
 
   return returnObject;
+}
+
+export function addOrChangeTestTarget(
+  tree: Tree,
+  options: Schema,
+  target: string
+) {
+  const project = readProjectConfiguration(tree, options.project);
+  const targets = {
+    ...project.targets,
+  };
+
+  const testOptions: VitestExecutorOptions = {
+    passWithNoTests: true,
+  };
+
+  if (targets[target]) {
+    targets[target].executor = '@nrwl/vite:test';
+    delete targets[target].options.jestConfig;
+  } else {
+    targets[target] = {
+      executor: '@nrwl/vite:test',
+      outputs: ['{projectRoot}/coverage'],
+      options: testOptions,
+    };
+  }
+
+  updateProjectConfiguration(tree, options.project, {
+    ...project,
+    targets: {
+      ...targets,
+    },
+  });
 }
 
 export function addOrChangeBuildTarget(
@@ -315,9 +356,22 @@ export function writeViteConfig(tree: Tree, options: Schema) {
 
   let viteConfigContent = '';
 
+  const testOption = `test: {
+    globals: true,
+    environment: 'jsdom',
+    ${
+      options.inSourceTests ? `includeSource: ['src/**/*.{js,ts,jsx,tsx}']` : ''
+    }
+  },`;
+
+  const defineOption = `define: {
+    'import.meta.vitest': undefined
+  },`;
+
   switch (options.uiFramework) {
     case 'react':
       viteConfigContent = `
+${options.includeVitest ? '/// <reference types="vitest" />' : ''}
       import { defineConfig } from 'vite';
       import react from '@vitejs/plugin-react';
       import ViteTsConfigPathsPlugin from 'vite-tsconfig-paths';
@@ -330,10 +384,13 @@ export function writeViteConfig(tree: Tree, options: Schema) {
             projects: ['tsconfig.base.json'],
           }),
         ],
+        ${options.inSourceTests ? defineOption : ''}
+        ${options.includeVitest ? testOption : ''}
       });`;
       break;
     case 'none':
       viteConfigContent = `
+      ${options.includeVitest ? '/// <reference types="vitest" />' : ''}
       import { defineConfig } from 'vite';
       import ViteTsConfigPathsPlugin from 'vite-tsconfig-paths';
       
@@ -344,6 +401,8 @@ export function writeViteConfig(tree: Tree, options: Schema) {
             projects: ['tsconfig.base.json'],
           }),
         ],
+        ${options.inSourceTests ? defineOption : ''}
+        ${options.includeVitest ? testOption : ''}
       });`;
       break;
     default:

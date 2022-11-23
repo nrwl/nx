@@ -1,6 +1,7 @@
 import {
   cleanupProject,
   createFile,
+  exists,
   killPorts,
   listFiles,
   newProject,
@@ -10,6 +11,7 @@ import {
   runCLI,
   runCLIAsync,
   runCommandUntil,
+  tmpProjPath,
   uniq,
   updateFile,
   updateProjectConfig,
@@ -389,6 +391,47 @@ describe('Vite Plugin', () => {
           `Successfully ran target test for project ${myApp}`
         );
       });
+    });
+  });
+
+  describe('should be able to create libs that use vitest', () => {
+    const lib = uniq('my-lib');
+    beforeEach(() => {
+      proj = newProject();
+    });
+
+    it('should be able to run tests', async () => {
+      runCLI(`generate @nrwl/react:lib ${lib} --unitTestRunner=vitest`);
+      expect(exists(tmpProjPath(`libs/${lib}/vite.config.ts`))).toBeTruthy();
+
+      const result = await runCLIAsync(`test ${lib}`);
+      expect(result.combinedOutput).toContain(
+        `Successfully ran target test for project ${lib}`
+      );
+    });
+
+    it('should be able to run tests with inSourceTests set to true', async () => {
+      runCLI(
+        `generate @nrwl/react:lib ${lib} --unitTestRunner=vitest --inSourceTests`
+      );
+      expect(
+        exists(tmpProjPath(`libs/${lib}/src/lib/${lib}.spec.tsx`))
+      ).toBeFalsy();
+
+      updateFile(`libs/${lib}/src/lib/${lib}.tsx`, (content) => {
+        content += `
+        if (import.meta.vitest) {
+          const { expect, it } = import.meta.vitest;
+          it('should be successful', () => {
+            expect(1 + 1).toBe(2);
+          });
+        }
+        `;
+        return content;
+      });
+
+      const result = await runCLIAsync(`test ${lib}`);
+      expect(result.combinedOutput).toContain(`1 passed`);
     });
   });
 });

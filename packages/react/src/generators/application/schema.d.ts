@@ -7,7 +7,8 @@ export interface Schema {
   skipFormat: boolean;
   directory?: string;
   tags?: string;
-  unitTestRunner: 'jest' | 'none';
+  unitTestRunner: 'jest' | 'vitest' | 'none';
+  inSourceTests?: boolean;
   /**
    * @deprecated
    */

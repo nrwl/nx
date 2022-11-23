@@ -15,6 +15,7 @@ import {
   vitestUiVersion,
   vitestVersion,
   viteTsConfigPathsVersion,
+  jsdomVersion,
 } from '../../utils/versions';
 import { Schema } from './schema';
 
@@ -23,7 +24,7 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
   const devDependencies = {};
   const dependencies = {};
   packageJson.dependencies = packageJson.dependencies || {};
-  packageJson.devDependencices = packageJson.devDependencices || {};
+  packageJson.devDependencies = packageJson.devDependencies || {};
 
   // base deps
   devDependencies['@nrwl/vite'] = nxVersion;
@@ -32,6 +33,7 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
   devDependencies['vite-tsconfig-paths'] = viteTsConfigPathsVersion;
   devDependencies['vitest'] = vitestVersion;
   devDependencies['@vitest/ui'] = vitestUiVersion;
+  devDependencies['jsdom'] = jsdomVersion;
 
   if (schema.uiFramework === 'react') {
     devDependencies['@vitejs/plugin-react'] = vitePluginReactVersion;

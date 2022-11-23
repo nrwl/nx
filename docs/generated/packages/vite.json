@@ -81,6 +81,48 @@
       "hidden": false,
       "implementation": "/packages/vite/src/generators/configuration/configuration.ts",
       "path": "/packages/vite/src/generators/configuration/schema.json"
+    },
+    {
+      "name": "vitest",
+      "factory": "./src/generators/vitest/vitest-generator",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "cli": "nx",
+        "$id": "Vitest",
+        "title": "",
+        "type": "object",
+        "description": "Generate a vitest setup for a project.",
+        "properties": {
+          "project": {
+            "type": "string",
+            "description": "The name of the project to test.",
+            "$default": { "$source": "projectName" }
+          },
+          "uiFramework": {
+            "type": "string",
+            "enum": ["react", "none"],
+            "default": "none",
+            "description": "UI framework to use with vitest"
+          },
+          "inSourceTests": {
+            "type": "boolean",
+            "default": false,
+            "description": "Do not generate separate spec files and set up in-source testing"
+          },
+          "skipViteConfig": {
+            "type": "boolean",
+            "default": false,
+            "description": "Skip generating a vite config file"
+          }
+        },
+        "required": ["project"],
+        "presets": []
+      },
+      "description": "Generate a vitest configuration",
+      "implementation": "/packages/vite/src/generators/vitest/vitest-generator.ts",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/vite/src/generators/vitest/schema.json"
     }
   ],
   "executors": [
