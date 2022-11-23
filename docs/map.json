@@ -36,7 +36,7 @@
             {
               "name": "Angular Tutorial",
               "id": "angular-tutorial",
-              "file": "shared/angular-tutorial/01-create-application"
+              "file": "shared/angular-tutorial/1-code-generation"
             },
             {
               "name": "Node Tutorial",
