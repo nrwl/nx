@@ -21,10 +21,10 @@ import {
   stripIndents,
   workspaceRoot,
 } from '@nrwl/devkit';
-import { createProjectFileMappings } from 'nx/src/utils/target-project-locator';
 import { lstatSync, mkdirSync, writeFileSync } from 'fs';
 import { dirname, join, relative } from 'path';
 import type { BrowserBuilderSchema } from '../src/builders/webpack-browser/webpack-browser.impl';
+import { createProjectPathMappings } from 'nx/src/project-graph/utils/get-project';
 
 /**
  * Angular nx preset for Cypress Component Testing
@@ -279,7 +279,7 @@ function withSchemaDefaults(options: any): BrowserBuilderSchema {
  * this file should get cleaned up via the cypress executor
  */
 function getTempStylesForTailwind(ctExecutorContext: ExecutorContext) {
-  const mappedGraphFiles = createProjectFileMappings(
+  const mappedGraphFiles = createProjectPathMappings(
     ctExecutorContext.projectGraph.nodes
   );
   const ctProjectConfig = ctExecutorContext.projectGraph.nodes[

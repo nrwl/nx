@@ -9,9 +9,12 @@ import {
   workspaceRoot,
 } from '@nrwl/devkit';
 import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
-import { createProjectFileMappings } from 'nx/src/utils/target-project-locator';
 import { dirname, extname, join, relative } from 'path';
 import { lstatSync } from 'fs';
+import {
+  createProjectPathMappings,
+  getProjectForPath,
+} from 'nx/src/project-graph/utils/get-project';
 
 interface BaseCypressPreset {
   videosFolder: string;
@@ -90,9 +93,11 @@ export function getProjectConfigByPath(
       : configFileFromWorkspaceRoot
   );
 
-  const mappedGraphFiles = createProjectFileMappings(graph.nodes);
-  const componentTestingProjectName =
-    mappedGraphFiles[normalizedPathFromWorkspaceRoot];
+  const mappedGraphFiles = createProjectPathMappings(graph.nodes);
+  const componentTestingProjectName = getProjectForPath(
+    normalizedPathFromWorkspaceRoot,
+    mappedGraphFiles
+  );
   if (
     !componentTestingProjectName ||
     !graph.nodes[componentTestingProjectName]?.data

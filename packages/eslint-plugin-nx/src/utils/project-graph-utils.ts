@@ -1,7 +1,7 @@
 import { ProjectGraph, readCachedProjectGraph, readNxJson } from '@nrwl/devkit';
-import { createProjectFileMappings } from 'nx/src/utils/target-project-locator';
 import { isTerminalRun } from './runtime-lint-utils';
 import * as chalk from 'chalk';
+import { createProjectPathMappings } from 'nx/src/project-graph/utils/get-project';
 
 export function ensureGlobalProjectGraph(ruleName: string) {
   /**
@@ -22,7 +22,7 @@ export function ensureGlobalProjectGraph(ruleName: string) {
      */
     try {
       (global as any).projectGraph = readCachedProjectGraph();
-      (global as any).projectGraphFileMappings = createProjectFileMappings(
+      (global as any).projectGraphFileMappings = createProjectPathMappings(
         (global as any).projectGraph.nodes
       );
     } catch {

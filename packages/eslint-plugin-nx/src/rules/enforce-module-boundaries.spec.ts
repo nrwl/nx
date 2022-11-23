@@ -3,13 +3,11 @@ import { DependencyType } from '@nrwl/devkit';
 import * as parser from '@typescript-eslint/parser';
 import { TSESLint } from '@typescript-eslint/utils';
 import { vol } from 'memfs';
-import {
-  TargetProjectLocator,
-  createProjectFileMappings,
-} from 'nx/src/utils/target-project-locator';
+import { TargetProjectLocator } from 'nx/src/utils/target-project-locator';
 import enforceModuleBoundaries, {
   RULE_NAME as enforceModuleBoundariesRuleName,
 } from './enforce-module-boundaries';
+import { createProjectPathMappings } from 'nx/src/project-graph/utils/get-project';
 
 jest.mock('fs', () => require('memfs').fs);
 
@@ -1894,7 +1892,7 @@ function runRule(
 ): TSESLint.Linter.LintMessage[] {
   (global as any).projectPath = `${process.cwd()}/proj`;
   (global as any).projectGraph = projectGraph;
-  (global as any).projectGraphFileMappings = createProjectFileMappings(
+  (global as any).projectGraphFileMappings = createProjectPathMappings(
     projectGraph.nodes
   );
   (global as any).targetProjectLocator = new TargetProjectLocator(

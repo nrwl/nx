@@ -2,12 +2,13 @@ import { joinPathFragments, logger } from '@nrwl/devkit';
 import { workspaceRoot } from 'nx/src/utils/workspace-root';
 import { dirname, join, relative, resolve } from 'path';
 import { readCachedProjectGraph } from 'nx/src/project-graph/project-graph';
-import {
-  getProjectNameFromDirPath,
-  getSourceDirOfDependentProjects,
-} from 'nx/src/utils/project-graph-utils';
+import { getSourceDirOfDependentProjects } from 'nx/src/utils/project-graph-utils';
 import { existsSync, lstatSync, readdirSync, readFileSync } from 'fs';
 import ignore, { Ignore } from 'ignore';
+import {
+  createProjectPathMappings,
+  getProjectForPath,
+} from 'nx/src/project-graph/utils/get-project';
 
 function configureIgnore() {
   let ig: Ignore;
@@ -31,14 +32,21 @@ export function createGlobPatternsForDependencies(
   let ig = configureIgnore();
   const filenameRelativeToWorkspaceRoot = relative(workspaceRoot, dirPath);
   const projectGraph = readCachedProjectGraph();
+  const projectPathMappings = createProjectPathMappings(projectGraph.nodes);
 
   // find the project
   let projectName;
   try {
-    projectName = getProjectNameFromDirPath(
+    projectName = getProjectForPath(
       filenameRelativeToWorkspaceRoot,
-      projectGraph
+      projectPathMappings
     );
+
+    if (!projectName) {
+      throw new Error(
+        `Could not find any project containing the file "${filenameRelativeToWorkspaceRoot}" among it's project files`
+      );
+    }
   } catch (e) {
     throw new Error(
       `createGlobPatternsForDependencies: Error when trying to determine main project.\n${e?.message}`

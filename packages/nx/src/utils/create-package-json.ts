@@ -1,5 +1,5 @@
 import { readJsonFile } from './fileutils';
-import { sortObjectByKeys } from 'nx/src/utils/object-sort';
+import { sortObjectByKeys } from './object-sort';
 import { ProjectGraph } from '../config/project-graph';
 
 /**

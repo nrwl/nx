@@ -16,8 +16,8 @@ import {
   TargetConfiguration,
   ProjectsConfigurations,
 } from '../config/workspace-json-project-json';
-import { findMatchingProjectForPath } from './target-project-locator';
 import { logger } from './logger';
+import { getProjectForPath } from '../project-graph/utils/get-project';
 
 export type ProjectTargetConfigurator = (
   file: string
@@ -197,10 +197,7 @@ function findNxProjectForImportPath(
   if (possiblePaths?.length) {
     const projectRootMappings = buildProjectRootMap(workspace.projects, root);
     for (const tsConfigPath of possiblePaths) {
-      const nxProject = findMatchingProjectForPath(
-        tsConfigPath,
-        projectRootMappings
-      );
+      const nxProject = getProjectForPath(tsConfigPath, projectRootMappings);
       if (nxProject) {
         return nxProject;
       }
@@ -223,9 +220,9 @@ function buildProjectRootMap(
   root: string
 ) {
   return Object.entries(projects).reduce((m, [project, config]) => {
-    m.set(path.resolve(root, config.root), project);
+    m[path.resolve(root, config.root)] = project;
     return m;
-  }, new Map<string, string>());
+  }, {});
 }
 
 let tsconfigPaths: Record<string, string[]>;

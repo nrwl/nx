@@ -6,9 +6,13 @@ import {
   ProjectGraphExternalNode,
   ProjectGraphProjectNode,
 } from '../config/project-graph';
+import {
+  createProjectPathMappings,
+  getProjectForPath,
+} from '../project-graph/utils/get-project';
 
 export class TargetProjectLocator {
-  private allProjectsFiles = createProjectFileMappings(this.nodes);
+  private projectPathMappings = createProjectPathMappings(this.nodes);
   private npmProjects = filterRootExternalDependencies(this.externalNodes);
   private tsConfig = this.getRootTsConfig();
   private paths = this.tsConfig.config?.compilerOptions?.paths;
@@ -146,17 +150,12 @@ export class TargetProjectLocator {
       ? resolvedModule.substring(2)
       : resolvedModule;
 
-    // for wildcard paths, we need to find file that starts with resolvedModule
-    if (normalizedResolvedModule.endsWith('*')) {
-      const matchingFile = Object.keys(this.allProjectsFiles).find((f) =>
-        f.startsWith(normalizedResolvedModule.slice(0, -1))
-      );
-      return matchingFile && this.allProjectsFiles[matchingFile];
-    }
-
     return (
-      this.allProjectsFiles[normalizedResolvedModule] ||
-      this.allProjectsFiles[`${normalizedResolvedModule}/index`]
+      getProjectForPath(normalizedResolvedModule, this.projectPathMappings) ||
+      getProjectForPath(
+        join(normalizedResolvedModule, 'index'),
+        this.projectPathMappings
+      )
     );
   }
 
@@ -181,11 +180,6 @@ export class TargetProjectLocator {
       config: readJsonFile(absolutePath),
     };
   }
-
-  private findMatchingProjectFiles(file: string) {
-    const project = this.allProjectsFiles[file];
-    return project && this.nodes[project];
-  }
 }
 
 // matches `npm:@scope/name`, `npm:name` but not `npm:@scope/name@version` and `npm:name@version`
@@ -205,79 +199,4 @@ function filterRootExternalDependencies(
     }
   }
   return nodes;
-}
-
-/**
- * @deprecated This function will be removed in v16. Use {@link createProjectFileMappings} instead.
- *
- * Mapps the project root paths to the project name
- * @param nodes
- * @returns
- */
-export function createProjectRootMappings(
-  nodes: Record<string, ProjectGraphProjectNode>
-): Map<string, string> {
-  const projectRootMappings = new Map<string, string>();
-  for (const projectName of Object.keys(nodes)) {
-    const root = nodes[projectName].data.root;
-    projectRootMappings.set(
-      root && root.endsWith('/') ? root.substring(0, root.length - 1) : root,
-      projectName
-    );
-  }
-  return projectRootMappings;
-}
-
-/**
- * Strips the file extension from the file path
- * @param file
- * @returns
- */
-export function removeExt(file: string): string {
-  return file.replace(/(?<!(^|\/))\.[^/.]+$/, '');
-}
-
-/**
- * Maps the file paths to the project name, both with and without the file extension
- * apps/myapp/src/main.ts -> { 'apps/myapp/src/main': 'myapp', 'apps/myapp/src/main.ts': 'myapp' }
- * @param projectGraph
- * @returns
- */
-export function createProjectFileMappings(
-  nodes: Record<string, ProjectGraphProjectNode>
-): Record<string, string> {
-  const result: Record<string, string> = {};
-  Object.entries(nodes).forEach(([name, node]) => {
-    node.data.files.forEach(({ file }) => {
-      const fileName = removeExt(file);
-      result[fileName] = name;
-      result[file] = name;
-    });
-  });
-
-  return result;
-}
-
-/**
- * @deprecated This function will be removed in v16. Use {@link createProjectFileMappings} instead.
- *
- * Locates a project in projectRootMap based on a file within it
- * @param filePath path that is inside of projectName
- * @param projectRootMap Map<projectRoot, projectName>
- */
-export function findMatchingProjectForPath(
-  filePath: string,
-  projectRootMap: Map<string, string>
-): string | null {
-  for (
-    let currentPath = filePath;
-    currentPath != dirname(currentPath);
-    currentPath = dirname(currentPath)
-  ) {
-    const p = projectRootMap.get(currentPath);
-    if (p) {
-      return p;
-    }
-  }
-  return null;
 }

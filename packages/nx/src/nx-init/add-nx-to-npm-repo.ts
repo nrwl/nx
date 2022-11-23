@@ -10,7 +10,7 @@ import {
   initCloud,
   runInstall,
 } from './utils';
-import { joinPathFragments } from 'nx/src/utils/path';
+import { joinPathFragments } from '../utils/path';
 
 const parsedArgs = yargsParser(process.argv, {
   boolean: ['yes'],

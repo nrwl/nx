@@ -1,13 +1,13 @@
-import { parseJson, serializeJson } from './json';
 import type { JsonParseOptions, JsonSerializeOptions } from './json';
+import { parseJson, serializeJson } from './json';
 import {
   createReadStream,
   createWriteStream,
+  mkdirSync,
   PathLike,
   readFileSync,
-  writeFileSync,
-  mkdirSync,
   statSync,
+  writeFileSync,
 } from 'fs';
 import { dirname } from 'path';
 import * as tar from 'tar-stream';
@@ -153,4 +153,13 @@ export async function extractFileFromTarball(
 
     createReadStream(tarballPath).pipe(createGunzip()).pipe(tarExtractStream);
   });
+}
+
+/**
+ * Strips the file extension from the file path
+ * @param file
+ * @returns
+ */
+export function removeExt(file: string): string {
+  return file.replace(/(?<!(^|\/))\.[^/.]+$/, '');
 }
