@@ -22,7 +22,7 @@ import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typ
 import {
   globalJavaScriptOverrides,
   globalTypeScriptOverrides,
-} from '@nrwl/linter/src/generators/init/init';
+} from '@nrwl/linter/src/generators/init/global-eslint-config';
 
 import { join } from 'path';
 import { installedCypressVersion } from '../../utils/cypress-version';
@@ -181,6 +181,7 @@ export async function addLinter(host: Tree, options: CypressProjectSchema) {
     ],
     setParserOptionsProject: options.setParserOptionsProject,
     skipPackageJson: options.skipPackageJson,
+    rootProject: options.rootProject,
   });
 
   if (!options.linter || options.linter !== Linter.EsLint) {

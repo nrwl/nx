@@ -11,6 +11,8 @@ import { Linter } from '../utils/linter';
 import { findEslintFile } from '../utils/eslint-file';
 import { join } from 'path';
 import { lintInitGenerator } from '../init/init';
+import { migrateConfigToMonorepoStyle } from '../init/init-migration';
+import { readWorkspace } from 'nx/src/generators/utils/project-configuration';
 
 interface LintProjectOptions {
   project: string;
@@ -103,8 +105,18 @@ export async function lintProjectGenerator(
       lintFilePatterns: options.eslintFilePatterns,
     },
   };
+
+  // we are adding new project which is not the root project or
+  // companion e2e app so we should check if migration to
+  // monorepo style is needed
+  if (!options.rootProject && isMigrationToMonorepoNeeded(tree)) {
+    migrateConfigToMonorepoStyle(tree, options.project);
+  }
+
   // our root `.eslintrc` is already the project config, so we should not override it
-  if (!options.rootProject) {
+  // additionally, the companion e2e app would have `rootProject: true`
+  // so we need to check for the root path as well
+  if (!options.rootProject || projectConfig.root !== '.') {
     createEsLintConfiguration(
       tree,
       projectConfig,
@@ -119,4 +131,44 @@ export async function lintProjectGenerator(
   }
 
   return installTask;
+}
+
+/**
+ * Detect based on the state of lint target configuration of the root project
+ * if we should migrate eslint configs to monorepo style
+ *
+ * @param tree
+ * @returns
+ */
+function isMigrationToMonorepoNeeded(tree: Tree): boolean {
+  const workspace = readWorkspace(tree);
+  const projects = Object.values(workspace.projects);
+  if (projects.length === 1) {
+    return false;
+  }
+  // get root project
+  const rootProject = Object.values(workspace.projects).find(
+    (p) => p.root === '.'
+  );
+  if (!rootProject || !rootProject.targets) {
+    return false;
+  }
+  // find if root project has lint target
+  const lintTarget = Object.entries(rootProject.targets).find(
+    ([name, target]) =>
+      name === 'lint' || target.executor === '@nrwl/linter:eslint'
+  )?.[1];
+  if (!lintTarget) {
+    return false;
+  }
+  // check if target has `eslintConfig` override and if it's not pointing to the source .eslintrc
+  const rootEslintrc = findEslintFile(tree);
+  if (
+    lintTarget.options.eslintConfig &&
+    lintTarget.options.eslintConfig !== rootEslintrc &&
+    lintTarget.options.eslintConfig !== `./${rootEslintrc}`
+  ) {
+    return false;
+  }
+  return true;
 }
