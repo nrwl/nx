@@ -12,5 +12,5 @@ export function findNodes(
   max = Infinity
 ) {
   console.warn('"findNodes" is deprecated and no longer supported.');
-  _findNodes(node, kind, max);
+  return _findNodes(node, kind, max);
 }

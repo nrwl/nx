@@ -6,6 +6,10 @@ import {
   ProjectGraphExternalNode,
   ProjectGraphProjectNode,
 } from '../config/project-graph';
+import {
+  createProjectRootMappings,
+  findProjectForPath,
+} from '../project-graph/utils/find-project-for-path';
 
 export class TargetProjectLocator {
   private projectRootMappings = createProjectRootMappings(this.nodes);
@@ -174,7 +178,7 @@ export class TargetProjectLocator {
   }
 
   private findMatchingProjectFiles(file: string) {
-    const project = findMatchingProjectForPath(file, this.projectRootMappings);
+    const project = findProjectForPath(file, this.projectRootMappings);
     return this.nodes[project];
   }
 }
@@ -196,40 +200,4 @@ function filterRootExternalDependencies(
     }
   }
   return nodes;
-}
-
-export function createProjectRootMappings(
-  nodes: Record<string, ProjectGraphProjectNode>
-) {
-  const projectRootMappings = new Map<string, string>();
-  for (const projectName of Object.keys(nodes)) {
-    const root = nodes[projectName].data.root;
-    projectRootMappings.set(
-      root && root.endsWith('/') ? root.substring(0, root.length - 1) : root,
-      projectName
-    );
-  }
-  return projectRootMappings;
-}
-
-/**
- * Locates a project in projectRootMap based on a file within it
- * @param filePath path that is inside of projectName
- * @param projectRootMap Map<projectRoot, projectName>
- */
-export function findMatchingProjectForPath(
-  filePath: string,
-  projectRootMap: Map<string, string>
-): string | null {
-  for (
-    let currentPath = filePath;
-    currentPath != dirname(currentPath);
-    currentPath = dirname(currentPath)
-  ) {
-    const p = projectRootMap.get(currentPath);
-    if (p) {
-      return p;
-    }
-  }
-  return null;
 }

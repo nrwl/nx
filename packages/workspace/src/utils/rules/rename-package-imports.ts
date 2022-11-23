@@ -7,8 +7,8 @@ import {
 } from '@angular-devkit/schematics';
 import { getWorkspace } from '../workspace';
 import { visitNotIgnoredFiles } from './visit-not-ignored-files';
-import { findNodes } from 'nx/src/utils/typescript';
 import { insert, ReplaceChange } from '../ast-utils';
+import { findNodes } from 'nx/src/utils/typescript';
 import { normalize } from '@angular-devkit/core';
 
 export interface PackageNameMapping {

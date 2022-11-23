@@ -1,24 +1,24 @@
 import * as path from 'path';
+import { join } from 'path';
 import {
+  DependencyType,
+  joinPathFragments,
+  normalizePath,
+  parseJson,
   ProjectGraph,
   ProjectGraphDependency,
-  ProjectGraphProjectNode,
-  normalizePath,
-  DependencyType,
-  parseJson,
   ProjectGraphExternalNode,
-  joinPathFragments,
+  ProjectGraphProjectNode,
   workspaceRoot,
 } from '@nrwl/devkit';
-import { join } from 'path';
 import { getPath, pathExists } from './graph-utils';
 import { existsSync } from 'fs';
 import { readFileIfExisting } from 'nx/src/project-graph/file-utils';
 import { TargetProjectLocator } from 'nx/src/utils/target-project-locator';
-
-export type MappedProjectGraph<T = any> = ProjectGraph<T> & {
-  allFiles: Record<string, string>;
-};
+import {
+  findProjectForPath,
+  ProjectRootMappings,
+} from 'nx/src/project-graph/utils/find-project-for-path';
 
 export type Deps = { [projectName: string]: ProjectGraphDependency[] };
 export type DepConstraint = {
@@ -70,10 +70,6 @@ function hasTag(proj: ProjectGraphProjectNode, tag: string) {
   return tag === '*' || (proj.data.tags || []).indexOf(tag) > -1;
 }
 
-export function removeExt(file: string): string {
-  return file.replace(/(?<!(^|\/))\.[^/.]+$/, '');
-}
-
 export function matchImportWithWildcard(
   // This may or may not contain wildcards ("*")
   allowableImport: string,
@@ -103,7 +99,8 @@ export function isRelative(s: string) {
 export function getTargetProjectBasedOnRelativeImport(
   imp: string,
   projectPath: string,
-  projectGraph: MappedProjectGraph,
+  projectGraph: ProjectGraph,
+  projectRootMappings: ProjectRootMappings,
   sourceFilePath: string
 ): ProjectGraphProjectNode<any> | undefined {
   if (!isRelative(imp)) {
@@ -115,42 +112,17 @@ export function getTargetProjectBasedOnRelativeImport(
     projectPath.length + 1
   );
 
-  return findTargetProject(projectGraph, targetFile);
+  return findProject(projectGraph, projectRootMappings, targetFile);
 }
 
-export function findProjectUsingFile<T>(
-  projectGraph: MappedProjectGraph<T>,
-  file: string
-): ProjectGraphProjectNode {
-  return projectGraph.nodes[projectGraph.allFiles[file]];
-}
-
-export function findSourceProject(
-  projectGraph: MappedProjectGraph,
+export function findProject(
+  projectGraph: ProjectGraph,
+  projectRootMappings: ProjectRootMappings,
   sourceFilePath: string
 ) {
-  const targetFile = removeExt(sourceFilePath);
-  return findProjectUsingFile(projectGraph, targetFile);
-}
-
-export function findTargetProject(
-  projectGraph: MappedProjectGraph,
-  targetFile: string
-) {
-  let targetProject = findProjectUsingFile(projectGraph, targetFile);
-  if (!targetProject) {
-    targetProject = findProjectUsingFile(
-      projectGraph,
-      normalizePath(path.join(targetFile, 'index'))
-    );
-  }
-  if (!targetProject) {
-    targetProject = findProjectUsingFile(
-      projectGraph,
-      normalizePath(path.join(targetFile, 'src', 'index'))
-    );
-  }
-  return targetProject;
+  return projectGraph.nodes[
+    findProjectForPath(sourceFilePath, projectRootMappings)
+  ];
 }
 
 export function isAbsoluteImportIntoAnotherProject(
@@ -166,7 +138,7 @@ export function isAbsoluteImportIntoAnotherProject(
 }
 
 export function findProjectUsingImport(
-  projectGraph: MappedProjectGraph,
+  projectGraph: ProjectGraph,
   targetProjectLocator: TargetProjectLocator,
   filePath: string,
   imp: string
@@ -351,28 +323,6 @@ export function hasBuildExecutor(
     projectGraph.data.targets.build &&
     projectGraph.data.targets.build.executor !== ''
   );
-}
-
-export function mapProjectGraphFiles<T>(
-  projectGraph: ProjectGraph<T>
-): MappedProjectGraph | null {
-  if (!projectGraph) {
-    return null;
-  }
-  const allFiles: Record<string, string> = {};
-  Object.entries(
-    projectGraph.nodes as Record<string, ProjectGraphProjectNode>
-  ).forEach(([name, node]) => {
-    node.data.files.forEach(({ file }) => {
-      const fileName = removeExt(file);
-      allFiles[fileName] = name;
-    });
-  });
-
-  return {
-    ...projectGraph,
-    allFiles,
-  };
 }
 
 const ESLINT_REGEX = /node_modules.*[\/\\]eslint$/;
