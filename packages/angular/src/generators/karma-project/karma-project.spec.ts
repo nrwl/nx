@@ -1,5 +1,9 @@
 import type { Tree } from '@nrwl/devkit';
 import * as devkit from '@nrwl/devkit';
+import {
+  readProjectConfiguration,
+  updateProjectConfiguration,
+} from '@nrwl/devkit';
 import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { karmaProjectGenerator } from './karma-project';
 import libraryGenerator from '../library/library';
@@ -46,8 +50,36 @@ describe('karmaProject', () => {
 
     expect(tree.exists('/libs/lib1/karma.conf.js')).toBeTruthy();
     expect(tree.exists('/libs/lib1/tsconfig.spec.json')).toBeTruthy();
+    expect(
+      tree.read('/libs/lib1/tsconfig.spec.json', 'utf-8')
+    ).toMatchSnapshot();
     expect(tree.exists('/libs/lib1/src/test.ts')).toBeTruthy();
     expect(tree.exists('karma.conf.js')).toBeTruthy();
+  });
+
+  it('should generate files and not add polyfills if it is using ng v15 style polyfills', async () => {
+    expect(tree.exists('karma.conf.js')).toBeFalsy();
+    await karmaProjectGenerator(tree, { project: 'app1' });
+
+    expect(tree.exists('/apps/app1/tsconfig.spec.json')).toBeTruthy();
+    expect(
+      tree.read('/apps/app1/tsconfig.spec.json', 'utf-8')
+    ).toMatchSnapshot();
+  });
+
+  it('should generate files and correctly add polyfills if it is using old ng style polyfills', async () => {
+    tree.write('apps/app1/src/polyfills.ts', 'import zone.js;');
+    const project = readProjectConfiguration(tree, 'app1');
+    project.targets.build.options.polyfills = 'apps/app1/src/polyfills.ts';
+    updateProjectConfiguration(tree, 'app1', project);
+
+    expect(tree.exists('karma.conf.js')).toBeFalsy();
+    await karmaProjectGenerator(tree, { project: 'app1' });
+
+    expect(tree.exists('/apps/app1/tsconfig.spec.json')).toBeTruthy();
+    expect(
+      tree.read('/apps/app1/tsconfig.spec.json', 'utf-8')
+    ).toMatchSnapshot();
   });
 
   it('should create a karma.conf.js', async () => {
@@ -121,7 +153,7 @@ describe('karmaProject', () => {
         builder: '@angular-devkit/build-angular:karma',
         options: {
           main: 'apps/app1/src/test.ts',
-          polyfills: 'apps/app1/src/polyfills.ts',
+          polyfills: ['zone.js', 'zone.js/testing'],
           tsConfig: 'apps/app1/tsconfig.spec.json',
           karmaConfig: 'apps/app1/karma.conf.js',
           styles: [],
@@ -132,6 +164,49 @@ describe('karmaProject', () => {
     });
 
     it('should create a tsconfig.spec.json', async () => {
+      await karmaProjectGenerator(tree, { project: 'app1' });
+
+      const tsConfig = devkit.readJson(tree, 'apps/app1/tsconfig.spec.json');
+      expect(tsConfig).toEqual({
+        extends: './tsconfig.json',
+        compilerOptions: {
+          outDir: '../../dist/out-tsc',
+          types: ['jasmine', 'node'],
+        },
+        files: ['src/test.ts'],
+        include: ['**/*.spec.ts', '**/*.test.ts', '**/*.d.ts'],
+      });
+    });
+
+    it('should update the workspace config correctly when using old style ng polyfills', async () => {
+      tree.write('apps/app1/src/polyfills.ts', 'import zone.js;');
+      const project = readProjectConfiguration(tree, 'app1');
+      project.targets.build.options.polyfills = 'apps/app1/src/polyfills.ts';
+      updateProjectConfiguration(tree, 'app1', project);
+
+      await karmaProjectGenerator(tree, { project: 'app1' });
+
+      const workspaceJson = devkit.readJson(tree, 'workspace.json');
+      expect(workspaceJson.projects.app1.architect.test).toEqual({
+        builder: '@angular-devkit/build-angular:karma',
+        options: {
+          main: 'apps/app1/src/test.ts',
+          polyfills: 'apps/app1/src/polyfills.ts',
+          tsConfig: 'apps/app1/tsconfig.spec.json',
+          karmaConfig: 'apps/app1/karma.conf.js',
+          styles: [],
+          scripts: [],
+          assets: [],
+        },
+      });
+    });
+
+    it('should create a tsconfig.spec.json  when using old style ng polyfills', async () => {
+      tree.write('apps/app1/src/polyfills.ts', 'import zone.js;');
+      const project = readProjectConfiguration(tree, 'app1');
+      project.targets.build.options.polyfills = 'apps/app1/src/polyfills.ts';
+      updateProjectConfiguration(tree, 'app1', project);
+
       await karmaProjectGenerator(tree, { project: 'app1' });
 
       const tsConfig = devkit.readJson(tree, 'apps/app1/tsconfig.spec.json');
