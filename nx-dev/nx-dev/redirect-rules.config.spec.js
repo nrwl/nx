@@ -34,6 +34,15 @@ describe('Redirect rules configuration', () => {
         '/react-tutorial/11-test-affected-projects',
         '/react-tutorial/12-summary',
       ];
+
+      for (const url of oldReactUrls) {
+        expect(redirectRules.tutorialRedirects[url]).toEqual(
+          '/react-tutorial/1-code-generation'
+        );
+      }
+    });
+
+    test('old angular tutorial links', () => {
       const oldAngularUrls = [
         '/angular-tutorial/01-create-application',
         '/angular-tutorial/02-add-e2e-test',
@@ -49,11 +58,6 @@ describe('Redirect rules configuration', () => {
         '/angular-tutorial/12-summary',
       ];
 
-      for (const url of oldReactUrls) {
-        expect(redirectRules.tutorialRedirects[url]).toEqual(
-          '/react-tutorial/1-code-generation'
-        );
-      }
       for (const url of oldAngularUrls) {
         expect(redirectRules.tutorialRedirects[url]).toEqual(
           '/angular-tutorial/1-code-generation'
