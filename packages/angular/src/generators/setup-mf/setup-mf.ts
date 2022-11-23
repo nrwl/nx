@@ -10,6 +10,7 @@ import {
   fixBootstrap,
   generateWebpackConfig,
   getRemotesWithPorts,
+  removeDeadCodeFromRemote,
   setupHostIfDynamic,
   setupServeTarget,
   updateHostAppRoutes,
@@ -29,6 +30,7 @@ export async function setupMf(tree: Tree, options: Schema) {
   if (options.mfType === 'remote') {
     addRemoteToHost(tree, options);
     addRemoteEntry(tree, options, projectConfig.root);
+    removeDeadCodeFromRemote(tree, options);
   }
 
   const remotesWithPorts = getRemotesWithPorts(tree, options);
