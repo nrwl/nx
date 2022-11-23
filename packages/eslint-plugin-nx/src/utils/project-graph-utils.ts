@@ -23,7 +23,7 @@ export function ensureGlobalProjectGraph(ruleName: string) {
     try {
       (global as any).projectGraph = readCachedProjectGraph();
       (global as any).projectGraphFileMappings = createProjectFileMappings(
-        (global as any).projectGraph.nodes
+        (global as any).projectGraph
       );
     } catch {
       const WARNING_PREFIX = `${chalk.reset.keyword('orange')('warning')}`;

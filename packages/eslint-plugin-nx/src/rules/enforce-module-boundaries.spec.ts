@@ -1015,7 +1015,7 @@ Violation detected in:
                 tags: [],
                 implicitDependencies: [],
                 architect: {},
-                files: [createFile(`libs/other/src/index.ts`)],
+                files: [createFile(`libs/other/index.ts`)],
               },
             },
           },
@@ -1033,7 +1033,6 @@ Violation detected in:
       if (importKind === 'type') {
         expect(failures.length).toEqual(0);
       } else {
-        expect(failures.length).toEqual(1);
         expect(failures[0].message).toEqual(
           'Imports of lazy-loaded libraries are forbidden'
         );
@@ -1145,10 +1144,7 @@ Violation detected in:
               tags: [],
               implicitDependencies: [],
               architect: {},
-              files: [
-                createFile(`libs/mylib/src/main.ts`),
-                createFile(`libs/mylib/src/index.ts`),
-              ],
+              files: [createFile(`libs/mylib/src/main.ts`)],
             },
           },
           anotherlibName: {
@@ -1272,10 +1268,7 @@ Violation detected in:
               tags: [],
               implicitDependencies: [],
               architect: {},
-              files: [
-                createFile(`libs/mylib/src/main.ts`, ['anotherlibName']),
-                createFile(`libs/mylib/src/index.ts`),
-              ],
+              files: [createFile(`libs/mylib/src/main.ts`, ['anotherlibName'])],
             },
           },
           anotherlibName: {
@@ -1370,7 +1363,6 @@ Circular file chain:
               architect: {},
               files: [
                 createFile(`libs/badcirclelib/src/main.ts`, ['anotherlibName']),
-                createFile(`libs/badcirclelib/src/index.ts`),
               ],
             },
           },
@@ -1894,9 +1886,8 @@ function runRule(
 ): TSESLint.Linter.LintMessage[] {
   (global as any).projectPath = `${process.cwd()}/proj`;
   (global as any).projectGraph = projectGraph;
-  (global as any).projectGraphFileMappings = createProjectFileMappings(
-    projectGraph.nodes
-  );
+  (global as any).projectGraphFileMappings =
+    createProjectFileMappings(projectGraph);
   (global as any).targetProjectLocator = new TargetProjectLocator(
     projectGraph.nodes,
     projectGraph.externalNodes
