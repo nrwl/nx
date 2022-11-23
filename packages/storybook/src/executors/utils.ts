@@ -1,5 +1,5 @@
 import { ExecutorContext, joinPathFragments, logger } from '@nrwl/devkit';
-import { findNodes } from 'nx/src/utils/typescript';
+import { findNodes } from '@nrwl/workspace/src/utilities/typescript/find-nodes';
 import 'dotenv/config';
 import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
@@ -58,9 +58,9 @@ function reactWebpack5Check(options: CommonNxStorybookConfig) {
       It looks like you use Webpack 5 but your Storybook setup is not configured to leverage that
       and thus falls back to Webpack 4.
       Make sure you upgrade your Storybook config to use Webpack 5.
-
+      
         - https://gist.github.com/shilman/8856ea1786dcd247139b47b270912324#upgrade
-
+            
       `);
     }
   }

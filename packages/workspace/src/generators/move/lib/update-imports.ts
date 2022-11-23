@@ -12,7 +12,7 @@ import {
 import { getImportPath } from 'nx/src/utils/path';
 import * as ts from 'typescript';
 import { getRootTsConfigPathInTree } from '../../../utilities/typescript';
-import { findNodes } from 'nx/src/utils/typescript';
+import { findNodes } from '../../../utilities/typescript/find-nodes';
 import { NormalizedSchema } from '../schema';
 import { normalizeSlashes } from './utils';
 

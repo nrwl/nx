@@ -3,7 +3,6 @@ import { isRelativePath, readJsonFile } from './fileutils';
 import { dirname, join, posix } from 'path';
 import { workspaceRoot } from './workspace-root';
 import {
-  ProjectGraph,
   ProjectGraphExternalNode,
   ProjectGraphProjectNode,
 } from '../config/project-graph';
@@ -199,11 +198,6 @@ function filterRootExternalDependencies(
   return nodes;
 }
 
-/**
- * Mapps the project root paths to the project name
- * @param nodes
- * @returns
- */
 export function createProjectRootMappings(
   nodes: Record<string, ProjectGraphProjectNode>
 ) {
@@ -216,47 +210,6 @@ export function createProjectRootMappings(
     );
   }
   return projectRootMappings;
-}
-
-export type MappedProjectGraph<T = any> = ProjectGraph<T> & {
-  allFiles: Record<string, string>;
-};
-
-/**
- * Strips the file extension from the file path
- * @param file
- * @returns
- */
-export function removeExt(file: string): string {
-  return file.replace(/(?<!(^|\/))\.[^/.]+$/, '');
-}
-
-/**
- * Maps the project graph to a format that makes it easier to find the project
- * based on the file path.
- * @param projectGraph
- * @returns
- */
-export function mapProjectGraphFiles<T>(
-  projectGraph: ProjectGraph<T>
-): MappedProjectGraph | null {
-  if (!projectGraph) {
-    return null;
-  }
-  const allFiles: Record<string, string> = {};
-  Object.entries(
-    projectGraph.nodes as Record<string, ProjectGraphProjectNode>
-  ).forEach(([name, node]) => {
-    node.data.files.forEach(({ file }) => {
-      const fileName = removeExt(file);
-      allFiles[fileName] = name;
-    });
-  });
-
-  return {
-    ...projectGraph,
-    allFiles,
-  };
 }
 
 /**

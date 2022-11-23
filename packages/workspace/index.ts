@@ -21,7 +21,6 @@ export {
   readPackageJson,
 } from 'nx/src/project-graph/file-utils';
 export { ProjectGraphCache } from 'nx/src/project-graph/nx-deps-cache';
-export { findNodes } from 'nx/src/utils/typescript';
 export {
   readJsonInTree,
   updateJsonInTree,
@@ -35,6 +34,7 @@ export {
   getProjectConfig,
   addParameterToConstructor,
   createOrUpdate,
+  findNodes,
   updatePackageJsonDependencies,
   readWorkspace,
   renameSyncInTree,

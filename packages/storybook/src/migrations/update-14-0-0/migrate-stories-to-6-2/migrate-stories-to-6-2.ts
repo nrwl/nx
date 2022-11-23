@@ -9,7 +9,7 @@ import {
   visitNotIgnoredFiles,
 } from '@nrwl/devkit';
 import { fileExists } from '@nrwl/workspace/src/utilities/fileutils';
-import { findNodes } from 'nx/src/utils/typescript';
+import { findNodes } from '@nrwl/workspace/src/utilities/typescript/find-nodes';
 import { join, normalize } from 'path';
 import { SyntaxKind } from 'typescript';
 import { getTsSourceFile } from '../../../utils/utilities';

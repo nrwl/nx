@@ -5,11 +5,11 @@ import {
   ProjectGraphProjectNode,
   workspaceRoot,
 } from '@nrwl/devkit';
-import { isRelativePath } from 'nx/src/utils/fileutils';
+import { isRelativePath } from '@nrwl/workspace/src/utilities/fileutils';
 import {
   checkCircularPath,
   findFilesInCircularPath,
-} from '../utils/graph-utils';
+} from '@nrwl/workspace/src/utils/graph-utils';
 import {
   DepConstraint,
   findConstraintsFor,
@@ -31,7 +31,7 @@ import {
   matchImportWithWildcard,
   onlyLoadChildren,
   stringifyTags,
-} from '../utils/runtime-lint-utils';
+} from '@nrwl/workspace/src/utils/runtime-lint-utils';
 import { AST_NODE_TYPES, TSESTree } from '@typescript-eslint/utils';
 import { TargetProjectLocator } from 'nx/src/utils/target-project-locator';
 import { basename, dirname, relative } from 'path';

@@ -14,11 +14,11 @@ import { join } from 'path';
 import { getPath, pathExists } from './graph-utils';
 import { existsSync } from 'fs';
 import { readFileIfExisting } from 'nx/src/project-graph/file-utils';
-import {
-  TargetProjectLocator,
-  MappedProjectGraph,
-  removeExt,
-} from 'nx/src/utils/target-project-locator';
+import { TargetProjectLocator } from 'nx/src/utils/target-project-locator';
+
+export type MappedProjectGraph<T = any> = ProjectGraph<T> & {
+  allFiles: Record<string, string>;
+};
 
 export type Deps = { [projectName: string]: ProjectGraphDependency[] };
 export type DepConstraint = {
@@ -68,6 +68,10 @@ export function findDependenciesWithTags(
 
 function hasTag(proj: ProjectGraphProjectNode, tag: string) {
   return tag === '*' || (proj.data.tags || []).indexOf(tag) > -1;
+}
+
+export function removeExt(file: string): string {
+  return file.replace(/(?<!(^|\/))\.[^/.]+$/, '');
 }
 
 export function matchImportWithWildcard(
@@ -347,6 +351,28 @@ export function hasBuildExecutor(
     projectGraph.data.targets.build &&
     projectGraph.data.targets.build.executor !== ''
   );
+}
+
+export function mapProjectGraphFiles<T>(
+  projectGraph: ProjectGraph<T>
+): MappedProjectGraph | null {
+  if (!projectGraph) {
+    return null;
+  }
+  const allFiles: Record<string, string> = {};
+  Object.entries(
+    projectGraph.nodes as Record<string, ProjectGraphProjectNode>
+  ).forEach(([name, node]) => {
+    node.data.files.forEach(({ file }) => {
+      const fileName = removeExt(file);
+      allFiles[fileName] = name;
+    });
+  });
+
+  return {
+    ...projectGraph,
+    allFiles,
+  };
 }
 
 const ESLINT_REGEX = /node_modules.*[\/\\]eslint$/;

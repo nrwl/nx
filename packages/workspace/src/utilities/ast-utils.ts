@@ -1,7 +1,7 @@
 import type { Tree } from '@nrwl/devkit';
 import * as ts from 'typescript';
 import { getSourceNodes } from './typescript';
-import { findNodes } from 'nx/src/utils/typescript';
+import { findNodes } from './typescript/find-nodes';
 
 function nodesByPosition(first: ts.Node, second: ts.Node): number {
   return first.getStart() - second.getStart();

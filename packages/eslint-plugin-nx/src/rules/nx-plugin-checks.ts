@@ -9,7 +9,7 @@ import {
 import {
   findSourceProject,
   getSourceFilePath,
-} from '../utils/runtime-lint-utils';
+} from '@nrwl/workspace/src/utils/runtime-lint-utils';
 import { existsSync } from 'fs';
 import { registerTsProject } from 'nx/src/utils/register';
 import * as path from 'path';

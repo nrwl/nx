@@ -6,7 +6,7 @@ import {
 import { joinPathFragments, writeJson } from '@nrwl/devkit';
 import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { storybookVersion } from '@nrwl/storybook';
-import { findNodes } from 'nx/src/utils/typescript';
+import { findNodes } from '@nrwl/workspace/src/utils/ast-utils';
 import * as ts from 'typescript';
 import { SyntaxKind } from 'typescript';
 import { nxVersion } from '../../../utils/versions';

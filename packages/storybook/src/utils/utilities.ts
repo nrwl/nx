@@ -11,7 +11,7 @@ import { StorybookConfig } from '../executors/models';
 import { constants, copyFileSync, mkdtempSync, statSync } from 'fs';
 import { tmpdir } from 'os';
 import { basename, join, sep } from 'path';
-import { findNodes } from 'nx/src/utils/typescript';
+import { findNodes } from '@nrwl/workspace/src/utilities/typescript/find-nodes';
 import ts = require('typescript');
 
 export const Constants = {

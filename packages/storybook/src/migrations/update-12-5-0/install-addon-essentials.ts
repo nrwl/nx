@@ -6,7 +6,7 @@ import {
   applyChangesToString,
   ChangeType,
 } from '@nrwl/devkit';
-import { findNodes } from 'nx/src/utils/typescript';
+import { findNodes } from '@nrwl/workspace/src/utilities/typescript/find-nodes';
 import { getTsSourceFile } from '../../utils/utilities';
 import ts = require('typescript');
 

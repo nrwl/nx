@@ -1,5 +1,5 @@
 import type { Tree } from '@nrwl/devkit';
-import { findNodes } from 'nx/src/utils/typescript';
+import { findNodes } from '@nrwl/workspace/src/utilities/typescript';
 import type { PropertyAssignment } from 'typescript';
 import { SyntaxKind } from 'typescript';
 import {

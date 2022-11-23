@@ -11,7 +11,7 @@ import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 
 import type { NextBuildBuilderOptions } from '../../../utils/types';
-import { findNodes } from 'nx/src/utils/typescript';
+import { findNodes } from '@nrwl/workspace/src/utilities/typescript';
 
 export function createNextConfigFile(
   options: NextBuildBuilderOptions,
