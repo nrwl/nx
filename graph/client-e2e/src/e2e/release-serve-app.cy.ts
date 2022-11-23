@@ -1,4 +1,4 @@
-describe('graph-client release', () => {
+describe('release serve-mode app', () => {
   beforeEach(() => {
     cy.intercept('/assets/project-graphs/*').as('getGraph');
 

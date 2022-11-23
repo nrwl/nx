@@ -1,6 +1,6 @@
 import { getProjectItems } from '../support/app.po';
 
-describe('graph-client in watch mode', () => {
+describe('watch mode  - app', () => {
   beforeEach(() => {
     cy.visit('/projects');
   });
