@@ -125,8 +125,8 @@
           },
           "hmr": {
             "description": "Enable hot module replacement. For more options, use the 'hmr' option in the Vite configuration file.",
-            "default": false,
-            "type": "boolean"
+            "type": "boolean",
+            "default": true
           },
           "open": {
             "description": "Automatically open the app in the browser on server start. When the value is a string, it will be used as the URL's pathname.",
@@ -144,7 +144,9 @@
           },
           "mode": {
             "type": "string",
-            "description": "Specifying this in config will override the default mode for both serve and build."
+            "description": "Mode to run the server in.",
+            "enum": ["production", "development"],
+            "default": "development"
           },
           "clearScreen": {
             "description": "Set to false to prevent Vite from clearing the terminal screen when logging certain messages.",
@@ -280,7 +282,9 @@
           },
           "mode": {
             "type": "string",
-            "description": "Specifying this in config will override the default mode for both serve and build."
+            "description": "Mode to run the build in.",
+            "enum": ["production", "development"],
+            "default": "production"
           }
         },
         "definitions": {
