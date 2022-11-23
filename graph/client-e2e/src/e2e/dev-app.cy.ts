@@ -26,7 +26,7 @@ describe('dev mode - app', () => {
     cy.intercept('/assets/project-graphs/e2e.json', {
       fixture: 'nx-examples-project-graph.json',
     }).as('getGraph');
-    cy.visit('/');
+    cy.visit('/e2e/projects');
 
     // wait for initial graph to finish loading
     cy.wait('@getGraph');
@@ -35,7 +35,7 @@ describe('dev mode - app', () => {
   describe('theme preferences', () => {
     let systemTheme: string;
     before(() => {
-      cy.visit('/');
+      cy.visit('/e2e/projects');
       systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
         ? 'dark'
         : 'light';
@@ -80,7 +80,7 @@ describe('dev mode - app', () => {
   describe('graph layout direction preferences', () => {
     let rankDir: string;
     before(() => {
-      cy.visit('/');
+      cy.visit('/e2e/projects');
       rankDir = 'TB';
     });
 

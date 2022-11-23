@@ -109,6 +109,11 @@
               "glob": "e2e.json"
             },
             {
+              "input": "graph/client/src/assets/task-graphs",
+              "output": "/assets/task-graphs",
+              "glob": "e2e.json"
+            },
+            {
               "input": "graph/client/src/assets/release",
               "output": "/",
               "glob": "environment.js"
