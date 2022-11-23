@@ -26,7 +26,7 @@ describe('dev mode - project graph', () => {
     cy.intercept('/assets/project-graphs/e2e.json', {
       fixture: 'nx-examples-project-graph.json',
     }).as('getGraph');
-    cy.visit('/');
+    cy.visit('/e2e/projects');
 
     // wait for initial graph to finish loading
     cy.wait('@getGraph');
