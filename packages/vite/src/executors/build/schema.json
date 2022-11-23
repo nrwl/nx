@@ -121,7 +121,9 @@
     },
     "mode": {
       "type": "string",
-      "description": "Specifying this in config will override the default mode for both serve and build."
+      "description": "Mode to run the build in.",
+      "enum": ["production", "development"],
+      "default": "production"
     }
   },
   "definitions": {
