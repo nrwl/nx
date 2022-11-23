@@ -1,5 +1,5 @@
 import {
-  createReactEslintJson,
+  extendReactEslintJson,
   extraEslintDependencies,
 } from '../../utils/lint';
 import { NormalizedSchema, Schema } from './schema';
@@ -44,16 +44,11 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
     });
     tasks.push(lintTask);
 
-    // const reactEslintJson = createReactEslintJson(
-    //   options.appProjectRoot,
-    //   options.setParserOptionsProject
-    // );
-
-    // updateJson(
-    //   host,
-    //   joinPathFragments(options.appProjectRoot, '.eslintrc.json'),
-    //   () => reactEslintJson
-    // );
+    updateJson(
+      host,
+      joinPathFragments(options.appProjectRoot, '.eslintrc.json'),
+      extendReactEslintJson
+    );
 
     const installTask = await addDependenciesToPackageJson(
       host,
