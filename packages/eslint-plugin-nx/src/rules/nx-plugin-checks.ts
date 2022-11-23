@@ -87,19 +87,14 @@ export default createESLintRule<Options, MessageIds>({
       return {};
     }
 
-    const { projectGraph, projectGraphFileMappings } =
-      readProjectGraph(RULE_NAME);
+    const projectGraph = readProjectGraph(RULE_NAME);
 
     const sourceFilePath = getSourceFilePath(
       context.getFilename(),
       workspaceRoot
     );
 
-    const sourceProject = findSourceProject(
-      projectGraph,
-      projectGraphFileMappings,
-      sourceFilePath
-    );
+    const sourceProject = findSourceProject(projectGraph, sourceFilePath);
     // If source is not part of an nx workspace, return.
     if (!sourceProject) {
       return {};

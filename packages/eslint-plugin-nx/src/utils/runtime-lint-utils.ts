@@ -16,6 +16,7 @@ import { existsSync } from 'fs';
 import { readFileIfExisting } from 'nx/src/project-graph/file-utils';
 import {
   TargetProjectLocator,
+  MappedProjectGraph,
   removeExt,
 } from 'nx/src/utils/target-project-locator';
 
@@ -98,8 +99,7 @@ export function isRelative(s: string) {
 export function getTargetProjectBasedOnRelativeImport(
   imp: string,
   projectPath: string,
-  projectGraph: ProjectGraph,
-  projectGraphFileMappings: Record<string, string>,
+  projectGraph: MappedProjectGraph,
   sourceFilePath: string
 ): ProjectGraphProjectNode<any> | undefined {
   if (!isRelative(imp)) {
@@ -111,51 +111,38 @@ export function getTargetProjectBasedOnRelativeImport(
     projectPath.length + 1
   );
 
-  return findTargetProject(projectGraph, projectGraphFileMappings, targetFile);
+  return findTargetProject(projectGraph, targetFile);
 }
 
-function findProjectUsingFile(
-  projectGraph: ProjectGraph,
-  projectGraphFileMappings: Record<string, string>,
+export function findProjectUsingFile<T>(
+  projectGraph: MappedProjectGraph<T>,
   file: string
 ): ProjectGraphProjectNode {
-  return projectGraph.nodes[projectGraphFileMappings[file]];
+  return projectGraph.nodes[projectGraph.allFiles[file]];
 }
 
 export function findSourceProject(
-  projectGraph: ProjectGraph,
-  projectGraphFileMappings: Record<string, string>,
+  projectGraph: MappedProjectGraph,
   sourceFilePath: string
 ) {
   const targetFile = removeExt(sourceFilePath);
-  return findProjectUsingFile(
-    projectGraph,
-    projectGraphFileMappings,
-    targetFile
-  );
+  return findProjectUsingFile(projectGraph, targetFile);
 }
 
 export function findTargetProject(
-  projectGraph: ProjectGraph,
-  projectGraphFileMappings: Record<string, string>,
+  projectGraph: MappedProjectGraph,
   targetFile: string
 ) {
-  let targetProject = findProjectUsingFile(
-    projectGraph,
-    projectGraphFileMappings,
-    targetFile
-  );
+  let targetProject = findProjectUsingFile(projectGraph, targetFile);
   if (!targetProject) {
     targetProject = findProjectUsingFile(
       projectGraph,
-      projectGraphFileMappings,
       normalizePath(path.join(targetFile, 'index'))
     );
   }
   if (!targetProject) {
     targetProject = findProjectUsingFile(
       projectGraph,
-      projectGraphFileMappings,
       normalizePath(path.join(targetFile, 'src', 'index'))
     );
   }
@@ -175,7 +162,7 @@ export function isAbsoluteImportIntoAnotherProject(
 }
 
 export function findProjectUsingImport(
-  projectGraph: ProjectGraph,
+  projectGraph: MappedProjectGraph,
   targetProjectLocator: TargetProjectLocator,
   filePath: string,
   imp: string

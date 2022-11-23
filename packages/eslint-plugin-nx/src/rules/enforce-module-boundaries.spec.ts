@@ -5,7 +5,7 @@ import { TSESLint } from '@typescript-eslint/utils';
 import { vol } from 'memfs';
 import {
   TargetProjectLocator,
-  createProjectFileMappings,
+  mapProjectGraphFiles,
 } from 'nx/src/utils/target-project-locator';
 import enforceModuleBoundaries, {
   RULE_NAME as enforceModuleBoundariesRuleName,
@@ -1885,9 +1885,7 @@ function runRule(
   projectGraph: ProjectGraph
 ): TSESLint.Linter.LintMessage[] {
   (global as any).projectPath = `${process.cwd()}/proj`;
-  (global as any).projectGraph = projectGraph;
-  (global as any).projectGraphFileMappings =
-    createProjectFileMappings(projectGraph);
+  (global as any).projectGraph = mapProjectGraphFiles(projectGraph);
   (global as any).targetProjectLocator = new TargetProjectLocator(
     projectGraph.nodes,
     projectGraph.externalNodes

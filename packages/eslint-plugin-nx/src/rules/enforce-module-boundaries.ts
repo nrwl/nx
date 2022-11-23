@@ -154,8 +154,7 @@ export default createESLintRule<Options, MessageIds>({
     );
     const fileName = normalizePath(context.getFilename());
 
-    const { projectGraph, projectGraphFileMappings } =
-      readProjectGraph(RULE_NAME);
+    const projectGraph = readProjectGraph(RULE_NAME);
 
     if (!projectGraph) {
       return {};
@@ -199,11 +198,7 @@ export default createESLintRule<Options, MessageIds>({
 
       const sourceFilePath = getSourceFilePath(fileName, projectPath);
 
-      const sourceProject = findSourceProject(
-        projectGraph,
-        projectGraphFileMappings,
-        sourceFilePath
-      );
+      const sourceProject = findSourceProject(projectGraph, sourceFilePath);
       // If source is not part of an nx workspace, return.
       if (!sourceProject) {
         return;
@@ -215,17 +210,12 @@ export default createESLintRule<Options, MessageIds>({
       let targetProject: ProjectGraphProjectNode | ProjectGraphExternalNode;
 
       if (isAbsoluteImportIntoAnotherProj) {
-        targetProject = findTargetProject(
-          projectGraph,
-          projectGraphFileMappings,
-          imp
-        );
+        targetProject = findTargetProject(projectGraph, imp);
       } else {
         targetProject = getTargetProjectBasedOnRelativeImport(
           imp,
           projectPath,
           projectGraph,
-          projectGraphFileMappings,
           sourceFilePath
         );
       }
