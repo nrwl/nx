@@ -10,6 +10,7 @@ import {
   runCLI,
   runCLIAsync,
   runCommandUntil,
+  tmpProjPath,
   uniq,
   updateFile,
   updateProjectConfig,
@@ -239,8 +240,7 @@ describe('Vite Plugin', () => {
 
     it('should be able to run tests', async () => {
       runCLI(`generate @nrwl/react:lib ${lib} --unitTestRunner=vitest`);
-
-      expect(exists(`libs/${lib}/vite.config.ts`)).toBeTruthy();
+      expect(exists(tmpProjPath(`libs/${lib}/vite.config.ts`))).toBeTruthy();
 
       const result = await runCLIAsync(`test ${lib}`);
       expect(result.combinedOutput).toContain(
@@ -252,9 +252,11 @@ describe('Vite Plugin', () => {
       runCLI(
         `generate @nrwl/react:lib ${lib} --unitTestRunner=vitest --inSourceTests`
       );
-      expect(exists(`libs/${lib}/src/lib/${lib}.spec.tsx`)).toBeFalsy();
+      expect(
+        exists(tmpProjPath(`libs/${lib}/src/lib/${lib}.spec.tsx`))
+      ).toBeFalsy();
 
-      updateFile(`libs/${lib}/src/lib/${lib}.spec.tsx`, (content) => {
+      updateFile(`libs/${lib}/src/lib/${lib}.tsx`, (content) => {
         content += `
         if (import.meta.vitest) {
           const { expect, it } = import.meta.vitest;
