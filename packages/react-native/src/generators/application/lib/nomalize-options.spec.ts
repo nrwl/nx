@@ -34,6 +34,7 @@ describe('Normalize Options', () => {
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
       install: false,
+      useFrameworks: false,
     });
   });
 
@@ -58,6 +59,7 @@ describe('Normalize Options', () => {
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
       install: false,
+      useFrameworks: false,
     });
   });
 
@@ -84,6 +86,7 @@ describe('Normalize Options', () => {
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
       install: false,
+      useFrameworks: false,
     });
   });
 
@@ -108,6 +111,7 @@ describe('Normalize Options', () => {
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
       install: false,
+      useFrameworks: false,
     });
   });
 
@@ -133,6 +137,34 @@ describe('Normalize Options', () => {
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
       install: false,
+      useFrameworks: false,
+    });
+  });
+  it('should normalize options with frameworks', () => {
+    const schema: Schema = {
+      name: 'my-app',
+      displayName: 'My App',
+      e2eTestRunner: 'none',
+      install: false,
+      frameworks: true,
+    };
+    const options = normalizeOptions(appTree, schema);
+    expect(options).toEqual({
+      androidProjectRoot: 'apps/my-app/android',
+      appProjectRoot: 'apps/my-app',
+      className: 'MyApp',
+      displayName: 'My App',
+      iosProjectRoot: 'apps/my-app/ios',
+      lowerCaseName: 'myapp',
+      name: 'my-app',
+      parsedTags: [],
+      projectName: 'my-app',
+      entryFile: 'src/main.tsx',
+      e2eTestRunner: 'none',
+      unitTestRunner: 'jest',
+      install: false,
+      frameworks: true,
+      useFrameworks: true,
     });
   });
 });

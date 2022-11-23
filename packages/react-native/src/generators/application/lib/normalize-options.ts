@@ -16,6 +16,7 @@ export interface NormalizedSchema extends Schema {
   androidProjectRoot: string;
   parsedTags: string[];
   entryFile: string;
+  useFrameworks: boolean;
 }
 
 export function normalizeOptions(
@@ -43,7 +44,7 @@ export function normalizeOptions(
     : [];
 
   const entryFile = options.js ? 'src/main.js' : 'src/main.tsx';
-
+  const useFrameworks = !!options.frameworks; // normalized for template usage
   /**
    * if options.name is "my-app"
    * name: "my-app", className: 'MyApp', lowerCaseName: 'myapp', displayName: 'MyApp', projectName: 'my-app', appProjectRoot: 'apps/my-app', androidProjectRoot: 'apps/my-app/android', iosProjectRoot: 'apps/my-app/ios'
@@ -64,5 +65,6 @@ export function normalizeOptions(
     androidProjectRoot,
     parsedTags,
     entryFile,
+    useFrameworks,
   };
 }
