@@ -75,6 +75,15 @@ function createEsLintConfiguration(
   });
 }
 
+export function mapLintPattern(
+  projectRoot: string,
+  extension: string,
+  rootProject?: boolean
+) {
+  const infix = rootProject ? 'src/' : '';
+  return `${projectRoot}/${infix}**/*.${extension}`;
+}
+
 export async function lintProjectGenerator(
   tree: Tree,
   options: LintProjectOptions
