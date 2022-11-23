@@ -116,25 +116,72 @@ describe('project graph utils', () => {
         expect(warnings).toContain('implicit-lib');
       });
     });
+  });
 
-    it('should find the project given a file within its src root', () => {
-      expect(getProjectNameFromDirPath('apps/demo-app', projGraph)).toEqual(
-        'demo-app'
-      );
+  describe('getProjectNameFromDirPath', () => {
+    describe('root project', () => {
+      const projGraph: ProjectGraph = {
+        nodes: {
+          'demo-app': {
+            name: 'demo-app',
+            type: 'app',
+            data: { root: '.' },
+          },
+          'demo-lib': {
+            name: 'demo-lib',
+            type: 'lib',
+            data: { root: 'demo-lib' },
+          },
+        },
+        dependencies: { 'demo-app': [] },
+      };
 
-      expect(getProjectNameFromDirPath('apps/demo-app/src', projGraph)).toEqual(
-        'demo-app'
-      );
+      it('should find the project given a file within its src root', () => {
+        expect(getProjectNameFromDirPath('', projGraph)).toEqual('demo-app');
+        expect(getProjectNameFromDirPath('src', projGraph)).toEqual('demo-app');
+        expect(getProjectNameFromDirPath('src/subdir/bla', projGraph)).toEqual(
+          'demo-app'
+        );
+      });
 
-      expect(
-        getProjectNameFromDirPath('apps/demo-app/src/subdir/bla', projGraph)
-      ).toEqual('demo-app');
+      it('should find the nested project correctly', () => {
+        expect(getProjectNameFromDirPath('demo-lib', projGraph)).toEqual(
+          'demo-lib'
+        );
+      });
     });
 
-    it('should throw an error if the project name has not been found', () => {
-      expect(() => {
-        getProjectNameFromDirPath('apps/demo-app-unknown');
-      }).toThrowError();
+    describe('non root project', () => {
+      const projGraph: ProjectGraph = {
+        nodes: {
+          'demo-app': {
+            name: 'demo-app',
+            type: 'app',
+            data: { root: 'apps/demo-app' },
+          },
+        },
+        dependencies: { 'demo-app': [] },
+      };
+
+      it('should find the project given a file within its src root', () => {
+        expect(getProjectNameFromDirPath('apps/demo-app', projGraph)).toEqual(
+          'demo-app'
+        );
+
+        expect(
+          getProjectNameFromDirPath('apps/demo-app/src', projGraph)
+        ).toEqual('demo-app');
+
+        expect(
+          getProjectNameFromDirPath('apps/demo-app/src/subdir/bla', projGraph)
+        ).toEqual('demo-app');
+      });
+
+      it('should throw an error if the project name has not been found', () => {
+        expect(() => {
+          getProjectNameFromDirPath('apps/demo-app-unknown');
+        }).toThrowError();
+      });
     });
   });
 

@@ -1,10 +1,11 @@
-import { buildTargetFromScript, PackageJson } from './package-json';
-import { join, relative } from 'path';
+import { join } from 'path';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
-import { readJsonFile } from './fileutils';
-import { normalizePath } from './path';
-import { readCachedProjectGraph } from '../project-graph/project-graph';
 import { TargetConfiguration } from '../config/workspace-json-project-json';
+import { readCachedProjectGraph } from '../project-graph/project-graph';
+import { readJsonFile } from './fileutils';
+import { buildTargetFromScript, PackageJson } from './package-json';
+import { joinPathFragments, normalizePath } from './path';
+import { workspaceRoot } from './workspace-root';
 
 export function projectHasTarget(
   project: ProjectGraphProjectNode,
@@ -83,27 +84,43 @@ export function getProjectNameFromDirPath(
   projRelativeDirPath: string,
   projectGraph = readCachedProjectGraph()
 ) {
-  let parentNodeName = null;
-  for (const [nodeName, node] of Object.entries(projectGraph.nodes)) {
-    const normalizedRootPath = normalizePath(node.data.root);
-    const normalizedProjRelPath = normalizePath(projRelativeDirPath);
+  const isRootPath = (path: string): boolean => path === '.' || path === '';
+  // sort projects descending by root path segments length to ensure we first test
+  // against the more nested projects
+  const sortedNodeEntries = Object.entries(projectGraph.nodes).sort(
+    ([, nodeA], [, nodeB]) => {
+      // ensure the project at the root path comes last
+      if (isRootPath(nodeA.data.root)) {
+        return 1;
+      }
+      if (isRootPath(nodeB.data.root)) {
+        return -1;
+      }
 
-    const relativePath = relative(normalizedRootPath, normalizedProjRelPath);
-    const isMatch = relativePath && !relativePath.startsWith('..');
+      return (
+        normalizePath(nodeB.data.root).split('/').length -
+        normalizePath(nodeA.data.root).split('/').length
+      );
+    }
+  );
 
-    if (isMatch || normalizedRootPath === normalizedProjRelPath) {
-      parentNodeName = nodeName;
-      break;
+  const normalizedDirPath = joinPathFragments(
+    workspaceRoot,
+    projRelativeDirPath
+  );
+  for (const [name, node] of sortedNodeEntries) {
+    const normalizedProjectRootPath = joinPathFragments(
+      workspaceRoot,
+      node.data.root
+    );
+    if (normalizedDirPath.startsWith(normalizedProjectRootPath)) {
+      return name;
     }
   }
 
-  if (!parentNodeName) {
-    throw new Error(
-      `Could not find any project containing the file "${projRelativeDirPath}" among it's project files`
-    );
-  }
-
-  return parentNodeName;
+  throw new Error(
+    `Could not find any project containing the file "${projRelativeDirPath}" among it's project files`
+  );
 }
 
 /**
