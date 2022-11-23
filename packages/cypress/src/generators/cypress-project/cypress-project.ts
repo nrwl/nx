@@ -19,6 +19,10 @@ import {
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
+import {
+  globalJavaScriptOverrides,
+  globalTypeScriptOverrides,
+} from '@nrwl/linter/src/generators/init/init';
 
 import { join } from 'path';
 import { installedCypressVersion } from '../../utils/cypress-version';
@@ -192,8 +196,16 @@ export async function addLinter(host: Tree, options: CypressProjectSchema) {
     : () => {};
 
   updateJson(host, join(options.projectRoot, '.eslintrc.json'), (json) => {
-    json.extends = ['plugin:cypress/recommended', ...json.extends];
+    if (options.rootProject) {
+      json.plugins = ['@nrwl/nx'];
+      json.extends = ['plugin:cypress/recommended'];
+    } else {
+      json.extends = ['plugin:cypress/recommended', ...json.extends];
+    }
     json.overrides = [
+      ...(options.rootProject
+        ? [globalTypeScriptOverrides, globalJavaScriptOverrides]
+        : []),
       /**
        * In order to ensure maximum efficiency when typescript-eslint generates TypeScript Programs
        * behind the scenes during lint runs, we need to make sure the project is configured to use its
