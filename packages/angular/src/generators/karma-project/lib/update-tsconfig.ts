@@ -24,8 +24,19 @@ export function updateTsConfigs(tree: Tree, project: string): void {
     }
   );
 
-  const extraFiles =
-    projectConfig.projectType === 'library' ? [] : ['src/polyfills.ts'];
+  let extraFiles: string[] = [];
+  if (
+    projectConfig.projectType == 'application' &&
+    projectConfig.targets.build?.options?.polyfills &&
+    typeof projectConfig.targets.build.options.polyfills === 'string'
+  ) {
+    let polyfillsPath = projectConfig.targets.build.options.polyfills;
+    polyfillsPath = polyfillsPath.startsWith(projectConfig.root)
+      ? polyfillsPath.replace(`${projectConfig.root}/`, '')
+      : polyfillsPath;
+    extraFiles = [polyfillsPath];
+  }
+
   return updateJson(
     tree,
     joinPathFragments(projectConfig.root, 'tsconfig.spec.json'),
