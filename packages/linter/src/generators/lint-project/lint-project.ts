@@ -161,14 +161,14 @@ function isMigrationToMonorepoNeeded(tree: Tree): boolean {
   if (!lintTarget) {
     return false;
   }
+  // if there is no override for `eslintConfig` we should migrate
+  if (!lintTarget.options.eslintConfig) {
+    return true;
+  }
   // check if target has `eslintConfig` override and if it's not pointing to the source .eslintrc
   const rootEslintrc = findEslintFile(tree);
-  if (
-    lintTarget.options.eslintConfig &&
-    lintTarget.options.eslintConfig !== rootEslintrc &&
-    lintTarget.options.eslintConfig !== `./${rootEslintrc}`
-  ) {
-    return false;
-  }
-  return true;
+  return (
+    lintTarget.options.eslintConfig === rootEslintrc ||
+    lintTarget.options.eslintConfig === `./${rootEslintrc}`
+  );
 }
