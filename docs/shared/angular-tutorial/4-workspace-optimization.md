@@ -12,7 +12,7 @@ git add . && git commit -m "commiting to test affected"
 
 Then make a change to the styles of your `common-ui` project:
 
-```css {% fileName="libs/common-ui/src/lib/common-ui.module.css" %}
+```css {% fileName="libs/common-ui/src/lib/banner/banner.component.css" %}
 .container {
   color: 'blue;';
 }
@@ -84,7 +84,7 @@ Outputs are defined for every target in your workspace:
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/libs/products"],
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
         "jestConfig": "libs/products/jest.config.ts",
         "passWithNoTests": true
@@ -105,18 +105,23 @@ To see caching in action, run the command:
 
 > nx run admin:build:production
 
-Entrypoint main 139 KiB = runtime.54e36ebee261465d.js 1.19 KiB main.623d91691bdb6754.css 42 bytes main.303fe7c1dcf5306b.js 137 KiB
-Entrypoint polyfills 93.5 KiB = runtime.54e36ebee261465d.js 1.19 KiB polyfills.bd0d0abec287a28e.js 92.3 KiB
-Entrypoint styles 1.19 KiB = runtime.54e36ebee261465d.js 1.19 KiB styles.ef46db3751d8e999.css 0 bytes
-chunk (runtime: runtime) main.623d91691bdb6754.css, main.303fe7c1dcf5306b.js (main) 144 KiB (javascript) 50 bytes (css/mini-extract) [initial] [rendered]
-chunk (runtime: runtime) polyfills.bd0d0abec287a28e.js (polyfills) 301 KiB [initial] [rendered]
-chunk (runtime: runtime) styles.ef46db3751d8e999.css (styles) 50 bytes (javascript) 80 bytes (css/mini-extract) [initial] [rendered]
-chunk (runtime: runtime) runtime.54e36ebee261465d.js (runtime) 3.23 KiB [entry] [rendered]
-webpack compiled successfully (0c0df3e6c70c6b7b)
+✔ Browser application bundle generation complete.
+✔ Copying assets complete.
+✔ Index html generation complete.
 
- ———————————————————————————————————————————————————————————————————————————————————————————————————
+Initial Chunk Files           | Names         |  Raw Size | Estimated Transfer Size
+main.b937601e1488b89e.js      | main          |  86.65 kB |                25.97 kB
+polyfills.0b28149b40699473.js | polyfills     |  33.04 kB |                10.61 kB
+runtime.f826166b3c370f7e.js   | runtime       | 888 bytes |               512 bytes
+styles.ef46db3751d8e999.css   | styles        |   0 bytes |                       -
 
- >  NX   Successfully ran target build for project admin (4s)
+                              | Initial Total | 120.55 kB |                37.08 kB
+
+Build at: 2022-11-23T22:51:54.223Z - Hash: c67a92dd8266dfbe - Time: 7877ms
+
+ ————————————————————————————————————————————————————————————————————————————————————————————————
+
+ >  NX   Successfully ran target build for project admin (11s)
 ```
 
 Since you have not run the `build` target before for the `admin` project, Nx runs the `build`, and populates the results in `dist/apps/admin` as specified in the `admin` project's `project.json` file for the `build` target.
@@ -133,18 +138,20 @@ And run the command again:
 
 > nx run admin:build:production  [local cache]
 
-Entrypoint main 139 KiB = runtime.54e36ebee261465d.js 1.19 KiB main.623d91691bdb6754.css 42 bytes main.303fe7c1dcf5306b.js 137 KiB
-Entrypoint polyfills 93.5 KiB = runtime.54e36ebee261465d.js 1.19 KiB polyfills.bd0d0abec287a28e.js 92.3 KiB
-Entrypoint styles 1.19 KiB = runtime.54e36ebee261465d.js 1.19 KiB styles.ef46db3751d8e999.css 0 bytes
-chunk (runtime: runtime) main.623d91691bdb6754.css, main.303fe7c1dcf5306b.js (main) 144 KiB (javascript) 50 bytes (css/mini-extract) [initial] [rendered]
-chunk (runtime: runtime) polyfills.bd0d0abec287a28e.js (polyfills) 301 KiB [initial] [rendered]
-chunk (runtime: runtime) styles.ef46db3751d8e999.css (styles) 50 bytes (javascript) 80 bytes (css/mini-extract) [initial] [rendered]
-chunk (runtime: runtime) runtime.54e36ebee261465d.js (runtime) 3.23 KiB [entry] [rendered]
-webpack compiled successfully (0c0df3e6c70c6b7b)
 
- ———————————————————————————————————————————————————————————————————————————————————————————————————
+Initial Chunk Files           | Names         |  Raw Size | Estimated Transfer Size
+main.b937601e1488b89e.js      | main          |  86.65 kB |                25.97 kB
+polyfills.0b28149b40699473.js | polyfills     |  33.04 kB |                10.61 kB
+runtime.f826166b3c370f7e.js   | runtime       | 888 bytes |               512 bytes
+styles.ef46db3751d8e999.css   | styles        |   0 bytes |                       -
 
- >  NX   Successfully ran target build for project admin (59ms)
+                              | Initial Total | 120.55 kB |                37.08 kB
+
+Build at: 2022-11-23T22:51:54.223Z - Hash: c67a92dd8266dfbe - Time: 7877ms
+
+ ————————————————————————————————————————————————————————————————————————————————————————————————
+
+ >  NX   Successfully ran target build for project admin (37ms)
 
    Nx read the output from the cache instead of running the command for 1 out of 1 tasks.
 ```
@@ -165,23 +172,28 @@ Next, run the command `npx nx build store`:
 
    Hint: you can run the command with --verbose to see the full dependent project outputs
 
- ———————————————————————————————————————————————————————————————————————————————————————————————————
+ ————————————————————————————————————————————————————————————————————————————————————————————————
 
 
 > nx run store:build:production
 
-Entrypoint main 139 KiB = runtime.54e36ebee261465d.js 1.19 KiB main.623d91691bdb6754.css 42 bytes main.94f9a4a3cec4f056.js 138 KiB
-Entrypoint polyfills 93.5 KiB = runtime.54e36ebee261465d.js 1.19 KiB polyfills.bd0d0abec287a28e.js 92.3 KiB
-Entrypoint styles 1.19 KiB = runtime.54e36ebee261465d.js 1.19 KiB styles.ef46db3751d8e999.css 0 bytes
-chunk (runtime: runtime) main.623d91691bdb6754.css, main.94f9a4a3cec4f056.js (main) 145 KiB (javascript) 50 bytes (css/mini-extract) [initial] [rendered]
-chunk (runtime: runtime) polyfills.bd0d0abec287a28e.js (polyfills) 301 KiB [initial] [rendered]
-chunk (runtime: runtime) styles.ef46db3751d8e999.css (styles) 50 bytes (javascript) 80 bytes (css/mini-extract) [initial] [rendered]
-chunk (runtime: runtime) runtime.54e36ebee261465d.js (runtime) 3.23 KiB [entry] [rendered]
-webpack compiled successfully (06e95dfdacea84c7)
+✔ Browser application bundle generation complete.
+✔ Copying assets complete.
+✔ Index html generation complete.
 
- ———————————————————————————————————————————————————————————————————————————————————————————————————
+Initial Chunk Files           | Names         |  Raw Size | Estimated Transfer Size
+main.5995a14e3c34a711.js      | main          | 101.39 kB |                29.83 kB
+polyfills.19459ef8805e51da.js | polyfills     |  33.04 kB |                10.64 kB
+runtime.5d40e95cc0c0e0d1.js   | runtime       | 888 bytes |               512 bytes
+styles.ef46db3751d8e999.css   | styles        |   0 bytes |                       -
 
- >  NX   Successfully ran target build for project store and 1 task(s) it depends on (5s)
+                              | Initial Total | 135.29 kB |                40.97 kB
+
+Build at: 2022-11-23T22:53:29.097Z - Hash: 3cd478c78ebeead2 - Time: 5154ms
+
+ ————————————————————————————————————————————————————————————————————————————————————————————————
+
+ >  NX   Successfully ran target build for project store and 1 task(s) it depends on (8s)
 ```
 
 Notice the line here:

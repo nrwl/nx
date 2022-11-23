@@ -18,9 +18,11 @@ Run the `@nrwl/angular:component` generator with the command:
 
 >  NX  Generating @nrwl/angular:component
 
-CREATE libs/common-ui/src/lib/banner/banner.module.css
-CREATE libs/common-ui/src/lib/banner/banner.spec.tsx
-CREATE libs/common-ui/src/lib/banner/banner.tsx
+CREATE libs/common-ui/src/lib/banner/banner.component.css
+CREATE libs/common-ui/src/lib/banner/banner.component.html
+CREATE libs/common-ui/src/lib/banner/banner.component.spec.ts
+CREATE libs/common-ui/src/lib/banner/banner.component.ts
+UPDATE libs/common-ui/src/lib/common-ui.module.ts
 UPDATE libs/common-ui/src/index.ts
 ```
 
@@ -30,11 +32,11 @@ Then create a simple `Banner` component in the generated file:
 import { Component, Input } from '@angular/core';
 
 @Component({
-  selector: 'common-ui-banner',
+  selector: 'myorg-banner',
   template: `<header>{{ text }}</header>`,
 })
 export class BannerComponent {
-  @Input() text: string;
+  @Input() text = '';
 }
 ```
 
@@ -52,6 +54,23 @@ import { Component } from '@angular/core';
   `,
 })
 export class AppComponent {}
+```
+
+```javascript {% fileName="apps/admin/src/app/app.module.ts" %}
+import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+import { CommonUiModule } from '@myorg/common-ui';
+
+import { AppComponent } from './app.component';
+import { NxWelcomeComponent } from './nx-welcome.component';
+
+@NgModule({
+  declarations: [AppComponent, NxWelcomeComponent],
+  imports: [BrowserModule, CommonUiModule],
+  providers: [],
+  bootstrap: [AppComponent],
+})
+export class AppModule {}
 ```
 
 ### `products`
@@ -83,15 +102,14 @@ export const exampleProducts: Product[] = [
 
 Use both the `Banner` component from your `common-ui` lib, and the `exampleProducts` from your `products` lib:
 
-```javascript {% fileName="apps/store/src/app/app.tsx" %}
-import { Banner } from '@myorg/common-ui';
+```javascript {% fileName="apps/store/src/app/app.component.ts" %}
 import { exampleProducts } from '@myorg/products';
 import { Component } from '@angular/core';
 
 @Component({
-  selector: 'my-app',
+  selector: 'myorg-root',
   template: `
-    <common-ui-banner title="Welcome to the store!"> </common-ui-banner>
+    <myorg-banner title="Welcome to the store!"> </myorg-banner>
     <ul>
       <li *ngFor="let product of products">
         <strong>{{ product.name }}</strong> Price: {{ product.price }}
@@ -102,6 +120,23 @@ import { Component } from '@angular/core';
 export class AppComponent {
   products = exampleProducts;
 }
+```
+
+```javascript {% fileName="apps/store/src/app/app.module.ts" %}
+import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+import { CommonUiModule } from '@myorg/common-ui';
+
+import { AppComponent } from './app.component';
+import { NxWelcomeComponent } from './nx-welcome.component';
+
+@NgModule({
+  declarations: [AppComponent, NxWelcomeComponent],
+  imports: [BrowserModule, CommonUiModule],
+  providers: [],
+  bootstrap: [AppComponent],
+})
+export class AppModule {}
 ```
 
 Now run `npx nx graph` again:

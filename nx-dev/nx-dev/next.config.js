@@ -49,8 +49,8 @@ module.exports = withNx({
       permanent: true,
     });
     rules.push({
-      source: '/(l|latest)/(a|angular)/tutorial/01-create-application',
-      destination: '/angular-tutorial/01-create-application',
+      source: '/(l|latest)/(a|angular)/tutorial/1-code-generation',
+      destination: '/angular-tutorial/1-code-generation',
       permanent: true,
     });
     rules.push({

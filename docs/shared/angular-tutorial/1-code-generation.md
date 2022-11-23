@@ -53,27 +53,33 @@ Once the command completes, notice two projects were added to the workspace:
 Run this command to create your `admin` app:
 
 ```{% command="npx nx g @nrwl/angular:app admin" path="~/myorg" %}
+npx nx g @nrwl/angular:app admin
 
 >  NX  Generating @nrwl/angular:application
 
-CREATE apps/admin/.babelrc
-CREATE apps/admin/.browserslistrc
-CREATE apps/admin/src/app/app.spec.tsx
-CREATE apps/admin/src/app/nx-welcome.tsx
-CREATE apps/admin/src/assets/.gitkeep
-CREATE apps/admin/src/environments/environment.prod.ts
-CREATE apps/admin/src/environments/environment.ts
+✔ Would you like to configure routing for this application? (y/N) · false
+[NX] Angular devkit called `writeWorkspace`, this may have created 'workspace.json' or 'angular.json
+[NX] Double check workspace configuration before proceeding
+Skipping admin since apps/admin/project.json already exists.
+CREATE apps/admin/tsconfig.app.json
+CREATE apps/admin/tsconfig.spec.json
 CREATE apps/admin/src/favicon.ico
 CREATE apps/admin/src/index.html
-CREATE apps/admin/src/main.tsx
-CREATE apps/admin/src/polyfills.ts
-CREATE apps/admin/tsconfig.app.json
-CREATE apps/admin/tsconfig.json
-CREATE apps/admin/src/app/app.module.css
-CREATE apps/admin/src/app/app.tsx
+CREATE apps/admin/src/main.ts
 CREATE apps/admin/src/styles.css
+CREATE apps/admin/src/assets/.gitkeep
+CREATE apps/admin/src/app/app.module.ts
+CREATE apps/admin/src/app/app.component.css
+CREATE apps/admin/src/app/app.component.html
+CREATE apps/admin/src/app/app.component.spec.ts
+CREATE apps/admin/src/app/app.component.ts
 CREATE apps/admin/project.json
+CREATE apps/admin/tsconfig.editor.json
+CREATE apps/admin/tsconfig.json
+CREATE apps/admin/src/app/nx-welcome.component.ts
 CREATE apps/admin/.eslintrc.json
+CREATE apps/admin/jest.config.ts
+CREATE apps/admin/src/test-setup.ts
 CREATE apps/admin-e2e/cypress.config.ts
 CREATE apps/admin-e2e/src/e2e/app.cy.ts
 CREATE apps/admin-e2e/src/fixtures/example.json
@@ -83,8 +89,6 @@ CREATE apps/admin-e2e/src/support/e2e.ts
 CREATE apps/admin-e2e/tsconfig.json
 CREATE apps/admin-e2e/project.json
 CREATE apps/admin-e2e/.eslintrc.json
-CREATE apps/admin/jest.config.ts
-CREATE apps/admin/tsconfig.spec.json
 ```
 
 ![Nx Generator Syntax](/shared/angular-tutorial/generator-syntax.svg)
@@ -97,21 +101,22 @@ To create the `common-ui` and `products` libraries, use the `@nrwl/angular:lib` 
 
 ```{% command="npx nx g @nrwl/angular:lib common-ui" path="~/myorg" %}
 
-> NX Generating @nrwl/angular:library
+>  NX  Generating @nrwl/angular:library
 
-CREATE libs/common-ui/project.json
-CREATE libs/common-ui/.eslintrc.json
-CREATE libs/common-ui/.babelrc
+[NX] Angular devkit called `writeWorkspace`, this may have created 'workspace.json' or 'angular.json
+[NX] Double check workspace configuration before proceeding
+Skipping common-ui since libs/common-ui/project.json already exists.
 CREATE libs/common-ui/README.md
-CREATE libs/common-ui/src/index.ts
-CREATE libs/common-ui/tsconfig.json
 CREATE libs/common-ui/tsconfig.lib.json
+CREATE libs/common-ui/tsconfig.spec.json
+CREATE libs/common-ui/src/index.ts
+CREATE libs/common-ui/src/lib/common-ui.module.ts
+CREATE libs/common-ui/project.json
+CREATE libs/common-ui/tsconfig.json
 UPDATE tsconfig.base.json
 CREATE libs/common-ui/jest.config.ts
-CREATE libs/common-ui/tsconfig.spec.json
-CREATE libs/common-ui/src/lib/common-ui.module.css
-CREATE libs/common-ui/src/lib/common-ui.spec.tsx
-CREATE libs/common-ui/src/lib/common-ui.tsx
+CREATE libs/common-ui/src/test-setup.ts
+CREATE libs/common-ui/.eslintrc.json
 ```
 
 ```{% command="npx nx g @nrwl/js:lib products" path="~/myorg" %}
@@ -125,7 +130,6 @@ CREATE libs/products/src/lib/products.spec.ts
 CREATE libs/products/src/lib/products.ts
 CREATE libs/products/tsconfig.json
 CREATE libs/products/tsconfig.lib.json
-CREATE libs/products/.babelrc
 CREATE libs/products/project.json
 UPDATE tsconfig.base.json
 CREATE libs/products/.eslintrc.json

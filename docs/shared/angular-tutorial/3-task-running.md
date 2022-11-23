@@ -18,26 +18,29 @@ Here's the `project.json` file for your `common-ui` project:
 {
   "name": "common-ui",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "libs/common-ui/src",
   "projectType": "library",
-  "tags": [],
+  "sourceRoot": "libs/common-ui/src",
+  "prefix": "myorg",
   "targets": {
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["libs/common-ui/**/*.ts"]
-      }
-    },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/libs/common-ui"],
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
         "jestConfig": "libs/common-ui/jest.config.ts",
         "passWithNoTests": true
       }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "libs/common-ui/**/*.ts",
+          "libs/common-ui/**/*.html"
+        ]
+      }
     }
-  }
+  },
+  "tags": []
 }
 ```
 
@@ -59,18 +62,20 @@ Run the `test` target for your `common-ui` project:
 
 > nx run common-ui:test
 
- PASS   common-ui  libs/common-ui/src/lib/common-ui.spec.tsx
- PASS   common-ui  libs/common-ui/src/lib/banner/banner.spec.tsx
+ PASS   common-ui  libs/common-ui/src/lib/banner/banner.component.spec.ts
+  BannerComponent
+    ✓ should create (22 ms)
 
-Test Suites: 2 passed, 2 total
-Tests:       2 passed, 2 total
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
 Snapshots:   0 total
-Time:        0.84 s, estimated 1 s
+Time:        2.192 s
 Ran all test suites.
 
- ———————————————————————————————————————————————————————————————————————————————————————————————————
+ ————————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target test for project common-ui (2s)
+ >  NX   Successfully ran target test for project common-ui (4s)
+
 ```
 
 Next, run a lint check on your `common-ui` project:
@@ -85,9 +90,10 @@ Linting "common-ui"...
 All files pass linting.
 
 
-———————————————————————————————————————————————————————————————————————————————————————————————————
+ ————————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target lint for project common-ui (2s)
+ >  NX   Successfully ran target lint for project common-ui (1s)
+
 ```
 
 ## What's Next
