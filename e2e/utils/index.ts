@@ -7,7 +7,13 @@ import {
   workspaceRoot,
 } from '@nrwl/devkit';
 import { angularCliVersion } from '@nrwl/workspace/src/utils/versions';
-import { ChildProcess, exec, execSync, ExecSyncOptions } from 'child_process';
+import {
+  ChildProcess,
+  exec,
+  ExecOptions,
+  execSync,
+  ExecSyncOptions,
+} from 'child_process';
 import {
   copySync,
   createFileSync,
@@ -130,14 +136,17 @@ export function readProjectConfig(projectName: string): ProjectConfiguration {
   return readJson(path);
 }
 
-export function createNonNxProjectDirectory(name = uniq('proj')) {
+export function createNonNxProjectDirectory(
+  name = uniq('proj'),
+  addWorkspaces = true
+) {
   projName = name;
   ensureDirSync(tmpProjPath());
   createFile(
     'package.json',
     JSON.stringify({
       name,
-      workspaces: ['packages/*'],
+      workspaces: addWorkspaces ? ['packages/*'] : undefined,
     })
   );
 }
@@ -466,7 +475,7 @@ export function runCommandAsync(
   command: string,
   opts: RunCmdOpts = {
     silenceError: false,
-    env: undefined,
+    env: process['env'],
   }
 ): Promise<{ stdout: string; stderr: string; combinedOutput: string }> {
   return new Promise((resolve, reject) => {
@@ -476,7 +485,7 @@ export function runCommandAsync(
         cwd: tmpProjPath(),
         env: {
           CI: 'true',
-          ...(opts.env || process.env),
+          ...(opts.env || getStrippedEnvironmentVariables()),
           FORCE_COLOR: 'false',
         },
         encoding: 'utf-8',
@@ -502,12 +511,12 @@ export function runCommandUntil(
   const pm = getPackageManagerCommand();
   const p = exec(`${pm.runNx} ${command}`, {
     cwd: tmpProjPath(),
+    encoding: 'utf-8',
     env: {
       CI: 'true',
-      ...process.env,
+      ...getStrippedEnvironmentVariables(),
       FORCE_COLOR: 'false',
     },
-    encoding: 'utf-8',
   });
   return new Promise((res, rej) => {
     let output = '';
@@ -537,7 +546,7 @@ export function runCLIAsync(
   command: string,
   opts: RunCmdOpts = {
     silenceError: false,
-    env: process.env,
+    env: getStrippedEnvironmentVariables(),
     silent: false,
   }
 ): Promise<{ stdout: string; stderr: string; combinedOutput: string }> {
@@ -564,7 +573,7 @@ export function runNgAdd(
     return execSync(pmc.run(`ng g ${packageName}:ng-add`, command ?? ''), {
       cwd: tmpProjPath(),
       stdio: isVerbose() ? 'inherit' : 'pipe',
-      env: { ...(opts.env || process.env) },
+      env: { ...(opts.env || getStrippedEnvironmentVariables()) },
       encoding: 'utf-8',
     })
       .toString()
@@ -596,7 +605,7 @@ export function runCLI(
     const pm = getPackageManagerCommand();
     const logs = execSync(`${pm.runNx} ${command}`, {
       cwd: opts.cwd || tmpProjPath(),
-      env: { CI: 'true', ...(opts.env || process.env) },
+      env: { CI: 'true', ...(opts.env || getStrippedEnvironmentVariables()) },
       encoding: 'utf-8',
       stdio: 'pipe',
       maxBuffer: 50 * 1024 * 1024,
@@ -652,7 +661,8 @@ export function runCommand(
       cwd: tmpProjPath(),
       stdio: ['pipe', 'pipe', 'pipe'],
       env: {
-        ...process.env,
+        ...getStrippedEnvironmentVariables(),
+        ...options?.env,
         FORCE_COLOR: 'false',
       },
       encoding: 'utf-8',
@@ -665,7 +675,10 @@ export function runCommand(
   } catch (e) {
     // this is intentional
     // npm ls fails if package is not found
-    return e.stdout?.toString() + e.stderr?.toString();
+    if (e.stdout || e.stderr) {
+      return e.stdout?.toString() + e.stderr?.toString();
+    }
+    throw e;
   }
 }
 
@@ -779,9 +792,9 @@ export function listFiles(dirName: string) {
   return readdirSync(tmpProjPath(dirName));
 }
 
-export function readJson(f: string): any {
+export function readJson<T extends Object = any>(f: string): T {
   const content = readFile(f);
-  return parseJson(content);
+  return parseJson<T>(content);
 }
 
 export function readFile(f: string) {
@@ -997,4 +1010,16 @@ export async function expectJestTestsToPass(
 
   const results = await runCLIAsync(`test ${name}`);
   expect(results.combinedOutput).toContain('Test Suites: 1 passed, 1 total');
+}
+
+function getStrippedEnvironmentVariables() {
+  const strippedVariables = new Set(['NX_TASK_TARGET_PROJECT']);
+  return Object.fromEntries(
+    Object.entries(process.env).filter(
+      ([key, value]) =>
+        !strippedVariables.has(key) ||
+        !key.startsWith('NX_') ||
+        key.startsWith('NX_E2E_')
+    )
+  );
 }

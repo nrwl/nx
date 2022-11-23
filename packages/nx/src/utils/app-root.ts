@@ -1,5 +1,5 @@
 // TODO(v16): Remove this file
-import { workspaceRoot } from 'nx/src/utils/workspace-root';
+import { workspaceRoot } from './workspace-root';
 
 /**
  * The root of the workspace.

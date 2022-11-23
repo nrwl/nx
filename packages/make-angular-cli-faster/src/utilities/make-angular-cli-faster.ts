@@ -1,4 +1,5 @@
-import { output } from '@nrwl/devkit';
+import { output } from 'nx/src/utils/output';
+import { getPackageManagerCommand } from 'nx/src/utils/package-manager';
 import { determineMigration, migrateWorkspace } from './migration';
 import { initNxCloud, promptForNxCloud } from './nx-cloud';
 import { installDependencies } from './package-manager';
@@ -10,6 +11,8 @@ export interface Args {
 }
 
 export async function makeAngularCliFaster(args: Args) {
+  const pmc = getPackageManagerCommand();
+
   output.log({ title: '🐳 Nx initialization' });
 
   output.log({ title: '🧐 Checking versions compatibility' });
@@ -21,22 +24,22 @@ export async function makeAngularCliFaster(args: Args) {
       : await promptForNxCloud();
 
   output.log({ title: '📦 Installing dependencies' });
-  await installDependencies(migration, useNxCloud);
+  await installDependencies(migration, useNxCloud, pmc);
 
   output.log({ title: '📝 Setting up workspace for faster computation' });
-  migrateWorkspace(migration);
+  migrateWorkspace(migration, pmc);
 
   if (useNxCloud) {
     output.log({ title: '🛠️ Setting up Nx Cloud' });
-    initNxCloud();
+    initNxCloud(pmc);
   }
 
   output.success({
     title: '🎉 Angular CLI is faster now!',
     bodyLines: [
       `Execute 'npx ng build' twice to see the computation caching in action.`,
-      'Learn more about computation caching, how it is shared with your teammates,' +
-        ' and how it can speed up your CI by up to 10 times at https://nx.dev/getting-started/nx-and-angular',
+      'Learn more about computation caching, how it is shared with your teammates,',
+      'and how it can speed up your CI by up to 10 times at https://nx.dev/getting-started/nx-and-angular',
     ],
   });
 }

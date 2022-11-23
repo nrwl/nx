@@ -23,7 +23,7 @@ export function checkIsCommaNeeded(mfRemoteText: string) {
 }
 
 export function addRemoteToHost(tree: Tree, options: Schema) {
-  if (options.mfType === 'remote' && options.host) {
+  if (options.host) {
     const hostProject = readProjectConfiguration(tree, options.host);
     const pathToMFManifest = joinPathFragments(
       hostProject.sourceRoot,

@@ -1,5 +1,5 @@
 import { DependencyType, ProjectGraph } from '../config/project-graph';
-import { createTaskGraph } from 'nx/src/tasks-runner/create-task-graph';
+import { createTaskGraph } from './create-task-graph';
 
 describe('createTaskGraph', () => {
   let projectGraph: ProjectGraph;

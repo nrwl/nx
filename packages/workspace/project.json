@@ -47,6 +47,11 @@
             "output": "/"
           },
           {
+            "input": "packages/workspace",
+            "glob": "**/files-readme/**",
+            "output": "/"
+          },
+          {
             "glob": "**/files-packaged-based-repo/**/.gitkeep",
             "input": "packages/workspace",
             "output": "/"

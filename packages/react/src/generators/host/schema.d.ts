@@ -21,7 +21,6 @@ export interface Schema {
   compiler?: 'babel' | 'swc';
   devServerPort?: number;
   remotes?: string[];
-  bundler?: 'webpack' | 'vite';
 }
 
 export interface NormalizedSchema extends Schema {

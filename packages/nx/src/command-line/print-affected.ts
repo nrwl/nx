@@ -9,7 +9,7 @@ import { Workspaces } from '../config/workspaces';
 import { Hasher } from '../hasher/hasher';
 import { hashTask } from '../hasher/hash-task';
 import { workspaceRoot } from '../utils/workspace-root';
-import { getPackageManagerCommand } from 'nx/src/utils/package-manager';
+import { getPackageManagerCommand } from '../utils/package-manager';
 
 export async function printAffected(
   affectedProjects: ProjectGraphProjectNode[],

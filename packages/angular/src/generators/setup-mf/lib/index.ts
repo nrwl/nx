@@ -8,3 +8,5 @@ export * from './get-remotes-with-ports';
 export * from './set-tsconfig-target';
 export * from './setup-host-if-dynamic';
 export * from './setup-serve-target';
+export * from './update-host-app-routes';
+export * from './remove-dead-code-from-remote';

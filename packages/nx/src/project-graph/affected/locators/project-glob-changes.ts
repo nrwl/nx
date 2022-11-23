@@ -9,8 +9,8 @@ import minimatch = require('minimatch');
 import {
   getGlobPatternsFromPackageManagerWorkspaces,
   getGlobPatternsFromPlugins,
-} from 'nx/src/config/workspaces';
-import { workspaceRoot } from 'nx/src/utils/workspace-root';
+} from '../../../config/workspaces';
+import { workspaceRoot } from '../../../utils/workspace-root';
 
 export const getTouchedProjectsFromProjectGlobChanges: TouchedProjectLocator<
   WholeFileChange | JsonChange | DeletedFileChange

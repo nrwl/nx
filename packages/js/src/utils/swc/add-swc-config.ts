@@ -5,8 +5,8 @@ import { join } from 'path';
 
 export const defaultExclude = [
   'jest.config.ts',
-  '.*.spec.tsx?$',
-  '.*.test.tsx?$',
+  '.*\\.spec.tsx?$',
+  '.*\\.test.tsx?$',
   './src/jest-setup.ts$',
   './**/jest-setup.ts$',
   '.*.js$',

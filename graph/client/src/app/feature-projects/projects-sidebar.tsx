@@ -16,7 +16,7 @@ import FocusedPanel from '../ui-components/focused-panel';
 import GroupByFolderPanel from './panels/group-by-folder-panel';
 import ProjectList from './project-list';
 import SearchDepth from './panels/search-depth';
-import ShowHideProjects from './panels/show-hide-projects';
+import ShowHideProjects from '../ui-components/show-hide-all';
 import TextFilterPanel from './panels/text-filter-panel';
 import TracingPanel from './panels/tracing-panel';
 import { useEnvironmentConfig } from '../hooks/use-environment-config';
@@ -196,10 +196,11 @@ export function ProjectsSidebar(): JSX.Element {
 
       <div>
         <ShowHideProjects
-          hideAllProjects={hideAllProjects}
-          showAllProjects={showAllProjects}
-          showAffectedProjects={showAffectedProjects}
-          hasAffectedProjects={hasAffectedProjects}
+          hideAll={hideAllProjects}
+          showAll={showAllProjects}
+          showAffected={showAffectedProjects}
+          hasAffected={hasAffectedProjects}
+          label="projects"
         ></ShowHideProjects>
 
         <GroupByFolderPanel

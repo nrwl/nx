@@ -357,6 +357,15 @@ export const commandsObject = yargs
     handler: async () =>
       process.exit(await (await import('./view-logs')).viewLogs()),
   })
+  .command({
+    command: 'exec',
+    describe: 'Executes any command as if it was a target on the project',
+    builder: (yargs) => withRunOneOptions(yargs),
+    handler: async (args) => {
+      await (await import('./exec')).nxExecCommand(withOverrides(args));
+      process.exit(0);
+    },
+  })
   .help()
   .version(nxVersion);
 

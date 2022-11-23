@@ -152,12 +152,6 @@
     "devServerPort": {
       "type": "number",
       "description": "The port for the dev server of the remote app."
-    },
-    "bundler": {
-      "description": "The bundler to use.",
-      "enum": ["vite", "webpack"],
-      "x-prompt": "Which bundler do you want to use?",
-      "default": "webpack"
     }
   },
   "required": ["name"],

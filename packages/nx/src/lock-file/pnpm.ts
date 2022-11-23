@@ -2,17 +2,12 @@ import {
   LockFileData,
   PackageDependency,
   PackageVersions,
-} from './lock-file-type';
+} from './utils/lock-file-type';
 import { load, dump } from '@zkochan/js-yaml';
-import {
-  sortObject,
-  hashString,
-  isRootVersion,
-  TransitiveLookupFunctionInput,
-  generatePrunnedHash,
-} from './utils';
+import { sortObject } from './utils/sorting';
+import { TransitiveLookupFunctionInput, isRootVersion } from './utils/mapping';
+import { hashString, generatePrunnedHash } from './utils/hashing';
 import { satisfies } from 'semver';
-import { dematerialize } from 'rxjs/operators';
 
 type PackageMeta = {
   key: string;

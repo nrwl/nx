@@ -87,6 +87,7 @@ const IGNORE_MATCHES_IN_PACKAGE = {
     'stylus-loader',
     'swc-loader',
     'tsconfig-paths-webpack-plugin',
+    '@module-federation/node',
   ],
   rollup: ['@swc/core'],
   storybook: [

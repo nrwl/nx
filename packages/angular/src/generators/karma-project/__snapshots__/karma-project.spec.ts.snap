@@ -69,3 +69,70 @@ module.exports = function(config) {
 };
 "
 `;
+
+exports[`karmaProject should generate files 1`] = `
+"{
+  \\"extends\\": \\"./tsconfig.json\\",
+  \\"compilerOptions\\": {
+    \\"outDir\\": \\"../../dist/out-tsc\\",
+    \\"types\\": [
+      \\"jasmine\\",
+      \\"node\\"
+    ]
+  },
+  \\"files\\": [
+    \\"src/test.ts\\"
+  ],
+  \\"include\\": [
+    \\"**/*.spec.ts\\",
+    \\"**/*.test.ts\\",
+    \\"**/*.d.ts\\"
+  ]
+}
+"
+`;
+
+exports[`karmaProject should generate files and correctly add polyfills if it is using old ng style polyfills 1`] = `
+"{
+  \\"extends\\": \\"./tsconfig.json\\",
+  \\"compilerOptions\\": {
+    \\"outDir\\": \\"../../dist/out-tsc\\",
+    \\"types\\": [
+      \\"jasmine\\",
+      \\"node\\"
+    ]
+  },
+  \\"files\\": [
+    \\"src/test.ts\\",
+    \\"src/polyfills.ts\\"
+  ],
+  \\"include\\": [
+    \\"**/*.spec.ts\\",
+    \\"**/*.test.ts\\",
+    \\"**/*.d.ts\\"
+  ]
+}
+"
+`;
+
+exports[`karmaProject should generate files and not add polyfills if it is using ng v15 style polyfills 1`] = `
+"{
+  \\"extends\\": \\"./tsconfig.json\\",
+  \\"compilerOptions\\": {
+    \\"outDir\\": \\"../../dist/out-tsc\\",
+    \\"types\\": [
+      \\"jasmine\\",
+      \\"node\\"
+    ]
+  },
+  \\"files\\": [
+    \\"src/test.ts\\"
+  ],
+  \\"include\\": [
+    \\"**/*.spec.ts\\",
+    \\"**/*.test.ts\\",
+    \\"**/*.d.ts\\"
+  ]
+}
+"
+`;

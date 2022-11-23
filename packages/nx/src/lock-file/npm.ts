@@ -4,13 +4,10 @@ import { readJsonFile } from '../utils/fileutils';
 import { output } from '../utils/output';
 import { joinPathFragments } from '../utils/path';
 import { workspaceRoot } from '../utils/workspace-root';
-import { LockFileData, PackageDependency } from './lock-file-type';
-import {
-  sortObject,
-  hashString,
-  TransitiveLookupFunctionInput,
-  generatePrunnedHash,
-} from './utils';
+import { LockFileData, PackageDependency } from './utils/lock-file-type';
+import { sortObject } from './utils/sorting';
+import { TransitiveLookupFunctionInput } from './utils/mapping';
+import { hashString, generatePrunnedHash } from './utils/hashing';
 
 type PackageMeta = {
   path: string;

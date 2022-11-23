@@ -119,11 +119,12 @@ export type TaskGraphRenderEvents =
       taskGraphs: TaskGraphRecord;
     }
   | {
-      type: 'notifyTaskGraphTaskSelected';
-      taskId: string;
+      type: 'notifyTaskGraphTasksSelected';
+      taskIds: string[];
     }
   | {
-      type: 'notifyTaskGraphDeselectTask';
+      type: 'notifyTaskGraphTasksDeselected';
+      taskIds: string[];
     }
   | {
       type: 'setGroupByProject';

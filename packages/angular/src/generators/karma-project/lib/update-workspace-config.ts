@@ -17,9 +17,13 @@ export function updateWorkspaceConfig(tree: Tree, project: string): void {
   };
 
   if (projectConfig.projectType === 'application') {
+    const polyfills = projectConfig.targets.build?.options?.polyfills;
+    let polyfillsPath =
+      polyfills && typeof polyfills === 'string' ? polyfills : undefined;
+
     projectConfig.targets.test.options = {
       ...projectConfig.targets.test.options,
-      polyfills: joinPathFragments(projectConfig.sourceRoot, 'polyfills.ts'),
+      polyfills: polyfillsPath ?? ['zone.js', 'zone.js/testing'],
       styles: [],
       scripts: [],
       assets: [],

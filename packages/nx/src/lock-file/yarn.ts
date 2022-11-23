@@ -4,14 +4,10 @@ import {
   LockFileData,
   PackageDependency,
   PackageVersions,
-} from './lock-file-type';
-import {
-  sortObject,
-  hashString,
-  isRootVersion,
-  TransitiveLookupFunctionInput,
-  generatePrunnedHash,
-} from './utils';
+} from './utils/lock-file-type';
+import { sortObject } from './utils/sorting';
+import { TransitiveLookupFunctionInput, isRootVersion } from './utils/mapping';
+import { hashString, generatePrunnedHash } from './utils/hashing';
 
 type LockFileDependencies = Record<
   string,

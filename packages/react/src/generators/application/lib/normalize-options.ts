@@ -50,6 +50,7 @@ export function normalizeOptions(
   options.unitTestRunner = options.unitTestRunner ?? 'jest';
   options.e2eTestRunner = options.e2eTestRunner ?? 'cypress';
   options.compiler = options.compiler ?? 'babel';
+  options.bundler = options.bundler ?? 'webpack';
   options.devServerPort ??= findFreePort(host);
 
   return {

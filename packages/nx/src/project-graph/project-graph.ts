@@ -6,7 +6,6 @@ import { defaultFileHasher } from '../hasher/file-hasher';
 import { markDaemonAsDisabled, writeDaemonLogs } from '../daemon/tmp-dir';
 import { ProjectGraph, ProjectGraphV4 } from '../config/project-graph';
 import { stripIndents } from '../utils/strip-indents';
-import { readNxJson } from '../config/configuration';
 import {
   ProjectConfiguration,
   ProjectsConfigurations,
