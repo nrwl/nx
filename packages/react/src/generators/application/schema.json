@@ -183,6 +183,7 @@
     },
     "bundler": {
       "description": "The bundler to use.",
+      "type": "string",
       "enum": ["vite", "webpack"],
       "x-prompt": "Which bundler do you want to use?",
       "default": "webpack"
