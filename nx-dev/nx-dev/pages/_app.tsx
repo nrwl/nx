@@ -41,7 +41,6 @@ export default function CustomApp({
           type: 'website',
         }}
         twitter={{
-          handle: '@nrwl_io',
           site: '@nxdevtools',
           cardType: 'summary_large_image',
         }}
