@@ -5,17 +5,17 @@ import {
   Tree,
   updateJson,
 } from '@nrwl/devkit';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
 import {
+  jsdomVersion,
   nxVersion,
+  vitePluginDtsVersion,
   vitePluginEslintVersion,
   vitePluginReactVersion,
-  viteVersion,
   vitestUiVersion,
   vitestVersion,
   viteTsConfigPathsVersion,
-  jsdomVersion,
+  viteVersion,
 } from '../../utils/versions';
 import { Schema } from './schema';
 
@@ -37,6 +37,10 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
 
   if (schema.uiFramework === 'react') {
     devDependencies['@vitejs/plugin-react'] = vitePluginReactVersion;
+  }
+
+  if (schema.includeLib) {
+    devDependencies['vite-plugin-dts'] = vitePluginDtsVersion;
   }
 
   return addDependenciesToPackageJson(host, dependencies, devDependencies);

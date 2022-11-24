@@ -4,4 +4,5 @@ export interface Schema {
   e2eTestRunner?: 'cypress' | 'none';
   skipFormat?: boolean;
   skipPackageJson?: boolean;
+  skipBabelConfig?: boolean;
 }

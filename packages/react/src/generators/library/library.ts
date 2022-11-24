@@ -44,10 +44,12 @@ import {
   typesReactRouterDomVersion,
 } from '../../utils/versions';
 import componentGenerator from '../component/component';
-import init from '../init/init';
+import initGenerator from '../init/init';
 import { Schema } from './schema';
 import { updateJestConfigContent } from '../../utils/jest-utils';
-import { vitestGenerator } from '@nrwl/vite';
+import { viteConfigurationGenerator, vitestGenerator } from '@nrwl/vite';
+import { normalizeOptions } from './lib/normalize-options';
+
 export interface NormalizedSchema extends Schema {
   name: string;
   fileName: string;
@@ -57,6 +59,7 @@ export interface NormalizedSchema extends Schema {
   parsedTags: string[];
   appMain?: string;
   appSourceRoot?: string;
+  unitTestRunner: 'jest' | 'vitest' | 'none';
 }
 
 export async function libraryGenerator(host: Tree, schema: Schema) {
@@ -72,10 +75,11 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
     options.style = 'none';
   }
 
-  const initTask = await init(host, {
+  const initTask = await initGenerator(host, {
     ...options,
     e2eTestRunner: 'none',
     skipFormat: true,
+    skipBabelConfig: options.bundler === 'vite',
   });
   tasks.push(initTask);
 
@@ -88,6 +92,18 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
 
   if (!options.skipTsConfig) {
     updateBaseTsConfig(host, options);
+  }
+
+  if (options.buildable && options.bundler === 'vite') {
+    const viteTask = await viteConfigurationGenerator(host, {
+      uiFramework: 'react',
+      project: options.name,
+      newProject: true,
+      includeLib: true,
+      inSourceTests: options.inSourceTests,
+      includeVitest: true,
+    });
+    tasks.push(viteTask);
   }
 
   if (options.unitTestRunner === 'jest') {
@@ -110,7 +126,10 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
       );
       host.write(jestConfigPath, updatedContent);
     }
-  } else if (options.unitTestRunner === 'vitest') {
+  } else if (
+    options.unitTestRunner === 'vitest' &&
+    options.bundler !== 'vite' // tests are already configured if bundler is vite
+  ) {
     const vitestTask = await vitestGenerator(host, {
       uiFramework: 'react',
       project: options.name,
@@ -299,21 +318,33 @@ function updateBaseTsConfig(host: Tree, options: NormalizedSchema) {
 }
 
 function createFiles(host: Tree, options: NormalizedSchema) {
+  const substitutions = {
+    ...options,
+    ...names(options.name),
+    tmpl: '',
+    offsetFromRoot: offsetFromRoot(options.projectRoot),
+    rootTsConfigPath: getRelativePathToRootTsConfig(host, options.projectRoot),
+  };
+
   generateFiles(
     host,
-    joinPathFragments(__dirname, './files/lib'),
+    joinPathFragments(__dirname, './files/common'),
     options.projectRoot,
-    {
-      ...options,
-      ...names(options.name),
-      tmpl: '',
-      offsetFromRoot: offsetFromRoot(options.projectRoot),
-      rootTsConfigPath: getRelativePathToRootTsConfig(
-        host,
-        options.projectRoot
-      ),
-    }
+    substitutions
   );
+
+  if (options.bundler === 'vite') {
+    generateFiles(
+      host,
+      joinPathFragments(__dirname, './files/vite'),
+      options.projectRoot,
+      substitutions
+    );
+
+    if (host.exists(joinPathFragments(options.projectRoot, '.babelrc'))) {
+      host.delete(joinPathFragments(options.projectRoot, '.babelrc'));
+    }
+  }
 
   if (!options.publishable && !options.buildable) {
     host.delete(`${options.projectRoot}/package.json`);
@@ -413,59 +444,6 @@ function readComponent(
   );
 
   return { content, source };
-}
-
-function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
-  const name = names(options.name).fileName;
-  const projectDirectory = options.directory
-    ? `${names(options.directory).fileName}/${name}`
-    : name;
-
-  const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
-  const fileName = projectName;
-  const { libsDir, npmScope } = getWorkspaceLayout(host);
-  const projectRoot = joinPathFragments(libsDir, projectDirectory);
-
-  const parsedTags = options.tags
-    ? options.tags.split(',').map((s) => s.trim())
-    : [];
-
-  const importPath =
-    options.importPath || getImportPath(npmScope, projectDirectory);
-
-  const normalized: NormalizedSchema = {
-    ...options,
-    fileName,
-    routePath: `/${name}`,
-    name: projectName,
-    projectRoot,
-    projectDirectory,
-    parsedTags,
-    importPath,
-  };
-
-  if (options.appProject) {
-    const appProjectConfig = getProjects(host).get(options.appProject);
-
-    if (appProjectConfig.projectType !== 'application') {
-      throw new Error(
-        `appProject expected type of "application" but got "${appProjectConfig.projectType}"`
-      );
-    }
-
-    try {
-      normalized.appMain = appProjectConfig.targets.build.options.main;
-      normalized.appSourceRoot = normalizePath(appProjectConfig.sourceRoot);
-    } catch (e) {
-      throw new Error(
-        `Could not locate project main for ${options.appProject}`
-      );
-    }
-  }
-
-  assertValidStyle(normalized.style);
-
-  return normalized;
 }
 
 function updateLibPackageNpmScope(host: Tree, options: NormalizedSchema) {

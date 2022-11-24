@@ -7,7 +7,7 @@ export interface Schema {
   skipFormat: boolean;
   directory?: string;
   tags?: string;
-  unitTestRunner: 'jest' | 'vitest' | 'none';
+  unitTestRunner?: 'jest' | 'vitest' | 'none';
   inSourceTests?: boolean;
   /**
    * @deprecated
@@ -41,4 +41,5 @@ export interface NormalizedSchema extends Schema {
   fileName: string;
   styledModule: null | SupportedStyles;
   hasStyles: boolean;
+  unitTestRunner: 'jest' | 'vitest' | 'none';
 }
