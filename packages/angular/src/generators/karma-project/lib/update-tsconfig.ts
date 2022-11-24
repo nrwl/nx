@@ -37,13 +37,17 @@ export function updateTsConfigs(tree: Tree, project: string): void {
     extraFiles = [polyfillsPath];
   }
 
-  return updateJson(
+  if (!extraFiles.length) {
+    return;
+  }
+
+  updateJson(
     tree,
     joinPathFragments(projectConfig.root, 'tsconfig.spec.json'),
     (json) => {
       return {
         ...json,
-        files: [...json.files, ...extraFiles],
+        files: [...(json.files ?? []), ...extraFiles],
       };
     }
   );
