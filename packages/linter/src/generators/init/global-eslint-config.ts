@@ -52,7 +52,7 @@ export const getGlobalEsLintConfiguration = (
 ) => {
   const config: ESLint.ConfigData = {
     root: true,
-    ...(!rootProject && { ignorePatterns: ['**/*'] }),
+    ignorePatterns: rootProject ? ['!**/*'] : ['**/*'],
     plugins: ['@nrwl/nx'],
     /**
      * We leverage ESLint's "overrides" capability so that we can set up a root config which will support

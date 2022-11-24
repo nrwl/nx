@@ -228,13 +228,15 @@ export function createProjectRootMappings(
   return projectRootMappings;
 }
 
+const FILE_EXTENSION_REGEX = /(?<!(^|\/))\.[^/.]+$/;
+
 /**
  * Strips the file extension from the file path
  * @param file
  * @returns
  */
 export function removeExt(file: string): string {
-  return file.replace(/(?<!(^|\/))\.[^/.]+$/, '');
+  return file.replace(FILE_EXTENSION_REGEX, '');
 }
 
 /**
