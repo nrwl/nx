@@ -22,7 +22,7 @@ describe('create-nx-workspace', () => {
     const appName = uniq('app');
 
     runCreateWorkspace(wsName, {
-      preset: 'angular-experimental',
+      preset: 'angular-standalone',
       appName,
       style: 'css',
       packageManager,
@@ -37,7 +37,7 @@ describe('create-nx-workspace', () => {
     const appName = uniq('app');
 
     runCreateWorkspace(wsName, {
-      preset: 'react-experimental',
+      preset: 'react-standalone',
       appName,
       style: 'css',
       packageManager,
@@ -93,7 +93,7 @@ describe('create-nx-workspace', () => {
     const wsName = uniq('angular');
     const appName = uniq('app');
     runCreateWorkspace(wsName, {
-      preset: 'angular',
+      preset: 'angular-monorepo',
       style: 'css',
       appName,
       packageManager,
@@ -108,7 +108,7 @@ describe('create-nx-workspace', () => {
     const appName = uniq('app');
     try {
       runCreateWorkspace(wsName, {
-        preset: 'angular',
+        preset: 'angular-monorepo',
         style: 'css',
         appName,
         packageManager,
@@ -123,7 +123,7 @@ describe('create-nx-workspace', () => {
     const appName = uniq('app');
 
     runCreateWorkspace(wsName, {
-      preset: 'react',
+      preset: 'react-monorepo',
       style: 'css',
       appName,
       packageManager,
@@ -233,7 +233,7 @@ describe('create-nx-workspace', () => {
     process.env.SELECTED_PM = 'npm';
 
     runCreateWorkspace(wsName, {
-      preset: 'react',
+      preset: 'react-monorepo',
       style: 'css',
       appName,
       packageManager: 'npm',
@@ -252,7 +252,7 @@ describe('create-nx-workspace', () => {
     process.env.SELECTED_PM = 'npm';
 
     runCreateWorkspace(wsName, {
-      preset: 'angular',
+      preset: 'angular-monorepo',
       appName,
       style: 'css',
       packageManager: 'npm',

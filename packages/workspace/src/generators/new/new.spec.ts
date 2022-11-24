@@ -42,23 +42,24 @@ describe('new', () => {
   });
 
   describe('--preset', () => {
-    describe.each([[Preset.Empty], [Preset.Angular], [Preset.React]])(
-      '%s',
-      (preset) => {
-        it('should generate necessary npm dependencies', async () => {
-          await newGenerator(tree, {
-            ...defaultOptions,
-            name: 'my-workspace',
-            directory: 'my-workspace',
-            npmScope: 'npmScope',
-            appName: 'app',
-            preset,
-          });
-
-          expect(readJson(tree, 'my-workspace/package.json')).toMatchSnapshot();
+    describe.each([
+      [Preset.Empty],
+      [Preset.AngularMonorepo],
+      [Preset.ReactMonorepo],
+    ])('%s', (preset) => {
+      it('should generate necessary npm dependencies', async () => {
+        await newGenerator(tree, {
+          ...defaultOptions,
+          name: 'my-workspace',
+          directory: 'my-workspace',
+          npmScope: 'npmScope',
+          appName: 'app',
+          preset,
         });
-      }
-    );
+
+        expect(readJson(tree, 'my-workspace/package.json')).toMatchSnapshot();
+      });
+    });
   });
 
   it('should not modify any existing files', async () => {
