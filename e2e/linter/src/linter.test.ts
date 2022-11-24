@@ -439,7 +439,7 @@ export function tslibC(): string {
     });
   });
 
-  describe('Root projects migration MMM', () => {
+  describe('Root projects migration', () => {
     afterEach(() => cleanupProject());
 
     it('should set root project config to app and e2e app and migrate when another lib is added', () => {
