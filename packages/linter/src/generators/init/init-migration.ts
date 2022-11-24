@@ -81,7 +81,7 @@ function migrateEslintFile(projectEslintPath: string, tree: Tree) {
       json.extends = json.extends || [];
       const pathToRootConfig = `${offsetFromRoot(
         dirname(projectEslintPath)
-      )}${basename(projectEslintPath)}`;
+      )}.eslintrc.json`;
       if (json.extends.indexOf(pathToRootConfig) === -1) {
         json.extends.push(pathToRootConfig);
       }
