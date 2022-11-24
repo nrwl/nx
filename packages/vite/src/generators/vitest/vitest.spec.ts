@@ -119,6 +119,7 @@ describe('vitest generator', () => {
                 test: {
             globals: true,
             environment: 'jsdom',
+            include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
             
           },
               });"
@@ -153,7 +154,8 @@ describe('vitest generator', () => {
                 test: {
             globals: true,
             environment: 'jsdom',
-            includeSource: ['src/**/*.{js,ts,jsx,tsx}']
+            include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+            includeSource: ['src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']
           },
               });"
       `);
