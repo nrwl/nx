@@ -47,13 +47,39 @@ function buildServerAppWithCustomWebpackConfiguration(
   pathToWebpackConfig: string
 ) {
   return executeServerBuilder(options, context as any, {
-    webpackConfiguration: (baseWebpackConfig) =>
-      mergeCustomWebpackConfig(
+    webpackConfiguration: async (baseWebpackConfig) => {
+      // Angular 15 auto includes code from @angular/platform-server
+      // This includes the code outside the shared scope created by ModuleFederation
+      // This code will be included in the generated code from our generators,
+      // maintaining it within the shared scope.
+      // Therefore, if the build is an MF Server build, remove the auto-includes from
+      // the base webpack config from Angular
+      let mergedConfig = await mergeCustomWebpackConfig(
         baseWebpackConfig,
         pathToWebpackConfig,
         options,
         context.target
-      ),
+      );
+
+      if (
+        mergedConfig.plugins
+          .map((p) => p.constructor.name)
+          .includes('UniversalFederationPlugin')
+      ) {
+        mergedConfig.entry.main = mergedConfig.entry.main.filter(
+          (m) => !m.startsWith('@angular/platform-server/init')
+        );
+        mergedConfig.module.rules = mergedConfig.module.rules.filter((m) =>
+          !m.loader
+            ? true
+            : !m.loader.endsWith(
+                '@angular-devkit/build-angular/src/builders/server/platform-server-exports-loader.js'
+              )
+        );
+      }
+
+      return mergedConfig;
+    },
   });
 }
 

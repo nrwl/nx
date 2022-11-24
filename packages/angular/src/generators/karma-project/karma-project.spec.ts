@@ -53,7 +53,6 @@ describe('karmaProject', () => {
     expect(
       tree.read('/libs/lib1/tsconfig.spec.json', 'utf-8')
     ).toMatchSnapshot();
-    expect(tree.exists('/libs/lib1/src/test.ts')).toBeTruthy();
     expect(tree.exists('karma.conf.js')).toBeTruthy();
   });
 
@@ -114,9 +113,9 @@ describe('karmaProject', () => {
       expect(workspaceJson.projects.lib1.architect.test).toEqual({
         builder: '@angular-devkit/build-angular:karma',
         options: {
-          main: 'libs/lib1/src/test.ts',
           tsConfig: 'libs/lib1/tsconfig.spec.json',
           karmaConfig: 'libs/lib1/karma.conf.js',
+          polyfills: ['zone.js', 'zone.js/testing'],
         },
       });
     });
@@ -131,16 +130,8 @@ describe('karmaProject', () => {
           outDir: '../../dist/out-tsc',
           types: ['jasmine', 'node'],
         },
-        files: ['src/test.ts'],
         include: ['**/*.spec.ts', '**/*.test.ts', '**/*.d.ts'],
       });
-    });
-
-    it('should create a test.ts', async () => {
-      await karmaProjectGenerator(tree, { project: 'lib1' });
-
-      const testTs = tree.read('libs/lib1/src/test.ts').toString();
-      expect(testTs).toMatchSnapshot();
     });
   });
 
@@ -152,7 +143,6 @@ describe('karmaProject', () => {
       expect(workspaceJson.projects.app1.architect.test).toEqual({
         builder: '@angular-devkit/build-angular:karma',
         options: {
-          main: 'apps/app1/src/test.ts',
           polyfills: ['zone.js', 'zone.js/testing'],
           tsConfig: 'apps/app1/tsconfig.spec.json',
           karmaConfig: 'apps/app1/karma.conf.js',
@@ -173,7 +163,6 @@ describe('karmaProject', () => {
           outDir: '../../dist/out-tsc',
           types: ['jasmine', 'node'],
         },
-        files: ['src/test.ts'],
         include: ['**/*.spec.ts', '**/*.test.ts', '**/*.d.ts'],
       });
     });
@@ -190,7 +179,6 @@ describe('karmaProject', () => {
       expect(workspaceJson.projects.app1.architect.test).toEqual({
         builder: '@angular-devkit/build-angular:karma',
         options: {
-          main: 'apps/app1/src/test.ts',
           polyfills: 'apps/app1/src/polyfills.ts',
           tsConfig: 'apps/app1/tsconfig.spec.json',
           karmaConfig: 'apps/app1/karma.conf.js',
@@ -216,16 +204,55 @@ describe('karmaProject', () => {
           outDir: '../../dist/out-tsc',
           types: ['jasmine', 'node'],
         },
-        files: ['src/test.ts', 'src/polyfills.ts'],
+        files: ['src/polyfills.ts'],
         include: ['**/*.spec.ts', '**/*.test.ts', '**/*.d.ts'],
       });
     });
+  });
 
-    it('should create a test.ts', async () => {
-      await karmaProjectGenerator(tree, { project: 'app1' });
+  describe('--root-project', () => {
+    it('should support a project located at the root', async () => {
+      await applicationGenerator(tree, {
+        name: 'root-app',
+        unitTestRunner: UnitTestRunner.None,
+        rootProject: true,
+      });
+      await karmaProjectGenerator(tree, { project: 'root-app' });
 
-      const testTs = tree.read('apps/app1/src/test.ts').toString();
-      expect(testTs).toMatchSnapshot();
+      expect(tree.exists('karma.conf.js')).toBe(true);
+      expect(tree.read('karma.conf.js', 'utf-8')).toMatchSnapshot();
+      expect(tree.exists('tsconfig.spec.json')).toBe(true);
+      const { references } = devkit.readJson(tree, 'tsconfig.json');
+      expect(references).toContainEqual({
+        path: './tsconfig.spec.json',
+      });
+      const project = devkit.readProjectConfiguration(tree, 'root-app');
+      expect(project.targets.test.options).toStrictEqual({
+        polyfills: ['zone.js', 'zone.js/testing'],
+        tsConfig: 'tsconfig.spec.json',
+        karmaConfig: 'karma.conf.js',
+        styles: [],
+        scripts: [],
+        assets: [],
+      });
+    });
+
+    it('should generate the right karma.conf.js file for a nested project in a workspace with a project at the root', async () => {
+      await applicationGenerator(tree, {
+        name: 'root-app',
+        unitTestRunner: UnitTestRunner.Karma,
+        rootProject: true,
+      });
+      await libraryGenerator(tree, {
+        name: 'nested-lib',
+        unitTestRunner: UnitTestRunner.None,
+      });
+      await karmaProjectGenerator(tree, { project: 'nested-lib' });
+
+      expect(tree.exists('libs/nested-lib/karma.conf.js')).toBe(true);
+      expect(
+        tree.read('libs/nested-lib/karma.conf.js', 'utf-8')
+      ).toMatchSnapshot();
     });
   });
 });

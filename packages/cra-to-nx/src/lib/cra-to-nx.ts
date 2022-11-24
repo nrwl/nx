@@ -166,9 +166,9 @@ function createTempWorkspace(options: NormalizedOptions) {
       options.npxYesFlagNeeded ? '-y' : ''
     } create-nx-workspace@latest temp-workspace --appName=${
       options.reactAppName
-    } --preset=react --style=css --packageManager=${options.packageManager} ${
-      options.nxCloud ? '--nxCloud' : '--nxCloud=false'
-    }`,
+    } --preset=react-monorepo --style=css --packageManager=${
+      options.packageManager
+    } ${options.nxCloud ? '--nxCloud' : '--nxCloud=false'}`,
     { stdio: [0, 1, 2] }
   );
 

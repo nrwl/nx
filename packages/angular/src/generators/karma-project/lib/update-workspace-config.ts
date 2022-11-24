@@ -10,9 +10,9 @@ export function updateWorkspaceConfig(tree: Tree, project: string): void {
   projectConfig.targets.test = {
     executor: '@angular-devkit/build-angular:karma',
     options: {
-      main: joinPathFragments(projectConfig.sourceRoot, 'test.ts'),
       tsConfig: joinPathFragments(projectConfig.root, 'tsconfig.spec.json'),
       karmaConfig: joinPathFragments(projectConfig.root, 'karma.conf.js'),
+      polyfills: ['zone.js', 'zone.js/testing'],
     },
   };
 
@@ -23,7 +23,7 @@ export function updateWorkspaceConfig(tree: Tree, project: string): void {
 
     projectConfig.targets.test.options = {
       ...projectConfig.targets.test.options,
-      polyfills: polyfillsPath ?? ['zone.js', 'zone.js/testing'],
+      polyfills: polyfillsPath ?? projectConfig.targets.test.options.polyfills,
       styles: [],
       scripts: [],
       assets: [],

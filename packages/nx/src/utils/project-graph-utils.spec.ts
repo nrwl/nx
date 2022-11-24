@@ -13,7 +13,6 @@ jest.mock('nx/src/utils/fileutils', () => ({
 import { PackageJson } from './package-json';
 import { ProjectGraph } from '../config/project-graph';
 import {
-  getProjectNameFromDirPath,
   getSourceDirOfDependentProjects,
   mergeNpmScriptsWithTargets,
 } from './project-graph-utils';
@@ -115,26 +114,6 @@ describe('project graph utils', () => {
         );
         expect(warnings).toContain('implicit-lib');
       });
-    });
-
-    it('should find the project given a file within its src root', () => {
-      expect(getProjectNameFromDirPath('apps/demo-app', projGraph)).toEqual(
-        'demo-app'
-      );
-
-      expect(getProjectNameFromDirPath('apps/demo-app/src', projGraph)).toEqual(
-        'demo-app'
-      );
-
-      expect(
-        getProjectNameFromDirPath('apps/demo-app/src/subdir/bla', projGraph)
-      ).toEqual('demo-app');
-    });
-
-    it('should throw an error if the project name has not been found', () => {
-      expect(() => {
-        getProjectNameFromDirPath('apps/demo-app-unknown');
-      }).toThrowError();
     });
   });
 

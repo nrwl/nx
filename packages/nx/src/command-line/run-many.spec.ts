@@ -139,7 +139,7 @@ describe('run-many', () => {
         );
         performance.mark('end');
         const measure = performance.measure('projects', 'start', 'end');
-        expect(measure.duration).toBeLessThan(2000);
+        expect(measure.duration).toBeLessThan(2500);
       });
     });
   });

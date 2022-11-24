@@ -1,57 +1,23 @@
-import { dirname } from 'path';
 import { FileData, ProjectFileMap } from '../config/project-graph';
-
-function createProjectRootMappings(
-  workspaceJson: any,
-  projectFileMap: ProjectFileMap
-) {
-  const projectRootMappings = new Map();
-  for (const projectName of Object.keys(workspaceJson.projects)) {
-    if (!projectFileMap[projectName]) {
-      projectFileMap[projectName] = [];
-    }
-    const root =
-      workspaceJson.projects[projectName].root === ''
-        ? '.'
-        : workspaceJson.projects[projectName].root;
-    projectRootMappings.set(
-      root.endsWith('/') ? root.substring(0, root.length - 1) : root,
-      projectFileMap[projectName]
-    );
-  }
-  return projectRootMappings;
-}
-
-function findMatchingProjectFiles(
-  projectRootMappings: Map<string, FileData[]>,
-  file: string
-) {
-  let currentPath = file;
-  do {
-    currentPath = dirname(currentPath);
-    const p = projectRootMappings.get(currentPath);
-    if (p) {
-      return p;
-    }
-  } while (currentPath != dirname(currentPath));
-
-  return null;
-}
+import {
+  createProjectRootMappingsFromProjectConfigurations,
+  findProjectForPath,
+} from './utils/find-project-for-path';
 
 export function createProjectFileMap(
   workspaceJson: any,
   allWorkspaceFiles: FileData[]
 ): { projectFileMap: ProjectFileMap; allWorkspaceFiles: FileData[] } {
   const projectFileMap: ProjectFileMap = {};
-  const projectRootMappings = createProjectRootMappings(
-    workspaceJson,
-    projectFileMap
-  );
+  const projectRootMappings =
+    createProjectRootMappingsFromProjectConfigurations(workspaceJson.projects);
+
+  for (const projectName of Object.keys(workspaceJson.projects)) {
+    projectFileMap[projectName] ??= [];
+  }
   for (const f of allWorkspaceFiles) {
-    const matchingProjectFiles = findMatchingProjectFiles(
-      projectRootMappings,
-      f.file
-    );
+    const matchingProjectFiles =
+      projectFileMap[findProjectForPath(f.file, projectRootMappings)];
     if (matchingProjectFiles) {
       matchingProjectFiles.push(f);
     }
@@ -66,16 +32,12 @@ export function updateProjectFileMap(
   updatedFiles: Map<string, string>,
   deletedFiles: string[]
 ): { projectFileMap: ProjectFileMap; allWorkspaceFiles: FileData[] } {
-  const projectRootMappings = createProjectRootMappings(
-    workspaceJson,
-    projectFileMap
-  );
+  const projectRootMappings =
+    createProjectRootMappingsFromProjectConfigurations(workspaceJson.projects);
 
   for (const f of updatedFiles.keys()) {
-    const matchingProjectFiles = findMatchingProjectFiles(
-      projectRootMappings,
-      f
-    );
+    const matchingProjectFiles =
+      projectFileMap[findProjectForPath(f, projectRootMappings)] ?? [];
     if (matchingProjectFiles) {
       const fileData: FileData = matchingProjectFiles.find((t) => t.file === f);
       if (fileData) {
@@ -100,10 +62,8 @@ export function updateProjectFileMap(
   }
 
   for (const f of deletedFiles) {
-    const matchingProjectFiles = findMatchingProjectFiles(
-      projectRootMappings,
-      f
-    );
+    const matchingProjectFiles =
+      projectFileMap[findProjectForPath(f, projectRootMappings)] ?? [];
     if (matchingProjectFiles) {
       const index = matchingProjectFiles.findIndex((t) => t.file === f);
       if (index > -1) {

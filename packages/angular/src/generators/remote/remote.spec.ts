@@ -195,4 +195,52 @@ describe('MF Remote App Generator', () => {
       'proj-test-entry'
     );
   });
+
+  describe('--ssr', () => {
+    it('should generate the correct files', async () => {
+      // ARRANGE
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+
+      // ACT
+      await remote(tree, {
+        name: 'test',
+        ssr: true,
+      });
+
+      // ASSERT
+      const project = readProjectConfiguration(tree, 'test');
+      expect(
+        tree.exists(`apps/test/src/app/remote-entry/entry.module.ts`)
+      ).toBeTruthy();
+      expect(
+        tree.read(`apps/test/src/app/app.module.ts`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read(`apps/test/src/bootstrap.ts`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read(`apps/test/src/bootstrap.server.ts`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read(`apps/test/src/main.server.ts`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(tree.read(`apps/test/server.ts`, 'utf-8')).toMatchSnapshot();
+      expect(
+        tree.read(`apps/test/module-federation.config.js`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read(`apps/test/webpack.server.config.js`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read(`apps/test/src/app/remote-entry/entry.component.ts`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read(`apps/test/src/app/app.routes.ts`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read(`apps/test/src/app/remote-entry/entry.routes.ts`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(project.targets.server).toMatchSnapshot();
+    });
+  });
 });

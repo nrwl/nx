@@ -37,7 +37,7 @@ export async function generateWorkspaceFiles(
   createFiles(tree, options);
   createNxJson(tree, options);
   createPrettierrc(tree, options);
-  if (options.preset === Preset.Angular) {
+  if (options.preset === Preset.AngularMonorepo) {
     decorateAngularClI(tree, options);
   }
   const [packageMajor] = getPackageManagerVersion(
@@ -85,8 +85,8 @@ function createAppsAndLibsFolders(tree: Tree, options: NormalizedSchema) {
   ) {
     tree.write(join(options.directory, 'packages/.gitkeep'), '');
   } else if (
-    options.preset === Preset.AngularExperimental ||
-    options.preset === Preset.ReactExperimental
+    options.preset === Preset.AngularStandalone ||
+    options.preset === Preset.ReactStandalone
   ) {
     // don't generate any folders
   } else {
@@ -143,8 +143,8 @@ function createNxJson(
 function createFiles(tree: Tree, options: NormalizedSchema) {
   const formattedNames = names(options.name);
   const filesDirName =
-    options.preset === Preset.AngularExperimental ||
-    options.preset === Preset.ReactExperimental
+    options.preset === Preset.AngularStandalone ||
+    options.preset === Preset.ReactStandalone
       ? './files-root-app'
       : options.preset === Preset.NPM || options.preset === Preset.Core
       ? './files-package-based-repo'
@@ -153,7 +153,7 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
     formattedNames,
     dot: '.',
     tmpl: '',
-    cliCommand: options.preset === Preset.Angular ? 'ng' : 'nx',
+    cliCommand: options.preset === Preset.AngularMonorepo ? 'ng' : 'nx',
     nxCli: false,
     typescriptVersion,
     prettierVersion,
@@ -202,7 +202,7 @@ function createYarnrcYml(tree: Tree, options: NormalizedSchema) {
 }
 
 function addNpmScripts(tree: Tree, options: NormalizedSchema) {
-  if (options.preset === Preset.Angular) {
+  if (options.preset === Preset.AngularMonorepo) {
     updateJson(tree, join(options.directory, 'package.json'), (json) => {
       Object.assign(json.scripts, {
         ng: 'nx',

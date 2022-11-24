@@ -1131,7 +1131,6 @@ describe('lib', () => {
       // ASSERT
       const workspaceJson = readJson(tree, 'workspace.json');
 
-      expect(tree.exists('libs/my-lib/src/test.ts')).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/test-setup.ts')).toBeFalsy();
       expect(tree.exists('libs/my-lib/tsconfig.spec.json')).toBeTruthy();
       expect(tree.exists('libs/my-lib/karma.conf.js')).toBeTruthy();

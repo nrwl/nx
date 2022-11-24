@@ -1,4 +1,4 @@
-import { rootMain } from '<%= offsetFromRoot %>../.storybook/main';
+import { rootMain } from '<%= offsetFromRoot %>../.storybook/<%= rootMainName %>';
 import type { StorybookConfig, Options } from '@storybook/core-common';
 <% if (isNextJs){ %>import path from 'path';<% } %>
 

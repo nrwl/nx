@@ -113,7 +113,8 @@ describe('setupSSR', () => {
         providers: [],
         bootstrap: [AppComponent]
       })
-      export class AppModule { }"
+      export class AppModule { }
+      "
     `);
     const packageJson = readJson<PackageJson>(tree, 'package.json');
     const dependencies = {

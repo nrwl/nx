@@ -1,30 +1,11 @@
-import {
-  formatFiles,
-  getProjects,
-  readProjectConfiguration,
-  Tree,
-} from '@nrwl/devkit';
+import { formatFiles, getProjects, Tree } from '@nrwl/devkit';
 import type { Schema } from './schema';
 import applicationGenerator from '../application/application';
-import { getMFProjects } from '../../utils/get-mf-projects';
 import { normalizeProjectName } from '../utils/project';
 import { setupMf } from '../setup-mf/setup-mf';
 import { E2eTestRunner } from '../../utils/test-runners';
-
-function findNextAvailablePort(tree: Tree) {
-  const mfProjects = getMFProjects(tree);
-
-  const ports = new Set<number>([4200]);
-  for (const mfProject of mfProjects) {
-    const { targets } = readProjectConfiguration(tree, mfProject);
-    const port = targets?.serve?.options?.port ?? 4200;
-    ports.add(port);
-  }
-
-  const nextAvailablePort = Math.max(...ports) + 1;
-
-  return nextAvailablePort;
-}
+import { addSsr, findNextAvailablePort } from './lib';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
 export async function remote(tree: Tree, options: Schema) {
   const projects = getProjects(tree);
@@ -37,7 +18,7 @@ export async function remote(tree: Tree, options: Schema) {
   const appName = normalizeProjectName(options.name, options.directory);
   const port = options.port ?? findNextAvailablePort(tree);
 
-  const installTask = await applicationGenerator(tree, {
+  const appInstallTask = await applicationGenerator(tree, {
     ...options,
     routing: true,
     skipDefaultProject: true,
@@ -60,11 +41,17 @@ export async function remote(tree: Tree, options: Schema) {
     standalone: options.standalone,
   });
 
+  let installTasks = [appInstallTask];
+  if (options.ssr) {
+    let ssrInstallTask = await addSsr(tree, options, appName);
+    installTasks.push(ssrInstallTask);
+  }
+
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
 
-  return installTask;
+  return runTasksInSerial(...installTasks);
 }
 
 export default remote;

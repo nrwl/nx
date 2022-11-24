@@ -211,7 +211,10 @@ function migrateRootLevelStorybookInstance(tree: Tree) {
     tree,
     join(__dirname, '../../../generators/configuration/root-files/.storybook'),
     '.storybook',
-    { rootTsConfigPath: getRootTsConfigPathInTree(tree) }
+    {
+      mainName: 'main',
+      tmpl: '',
+    }
   );
 }
 
