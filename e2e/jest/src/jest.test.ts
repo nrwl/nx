@@ -153,7 +153,7 @@ describe('Jest', () => {
   }, 90000);
 });
 
-describe('Jest root projects MMM', () => {
+describe('Jest root projects', () => {
   afterEach(() => cleanupProject());
 
   it('should set root project config to app and migrate when another lib is added', () => {

@@ -8,8 +8,6 @@ import {
   Tree,
   updateJson,
   updateWorkspaceConfiguration,
-  readProjectConfiguration,
-  readJson,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
 import { findRootJestConfig } from '../../utils/config/find-root-jest-files';
@@ -24,7 +22,6 @@ import {
   tsNodeVersion,
 } from '../../utils/versions';
 import { JestInitSchema } from './schema';
-import { extname } from 'path';
 import { readWorkspace } from 'nx/src/generators/utils/project-configuration';
 
 interface NormalizedSchema extends ReturnType<typeof normalizeOptions> {}
@@ -84,7 +81,6 @@ function createJestConfig(tree: Tree, options: NormalizedSchema) {
 
   const isProjectConfig =
     rootJestPath &&
-    // TODO: (meeroslav) is this condition enough?
     !tree.read(rootJestPath, 'utf-8').includes('getJestProjects()');
 
   if (isProjectConfig) {
