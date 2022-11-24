@@ -12,11 +12,15 @@ export function AnnouncementBanner(): JSX.Element {
               </Link>
             </span>
             <span className="hidden md:inline">
-              <span className="font-black">State of JS survey is online!</span>
+              <span className="font-semibold">
+                State of JS survey is online!
+              </span>
             </span>
             <span className="ml-2 inline-block">
               <Link
                 href="https://stateofjs.com/en-us/"
+                rel="noreferrer"
+                target="_blank"
                 className="font-semibold text-blue-500 underline dark:text-sky-500"
               >
                 <span className="absolute inset-0" aria-hidden="true" />
