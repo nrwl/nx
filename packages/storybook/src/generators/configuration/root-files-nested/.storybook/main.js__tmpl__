@@ -1,5 +1,5 @@
-const rootMain = require('<%= offsetFromRoot %>../.storybook/<%= rootMainName %>');
-<% if (existsRootWebpackConfig){ %>const rootWebpackConfig = require('<%= offsetFromRoot %>../.storybook/webpack.config'); <% } %>
+const rootMain = require('./main.root');
+<% if (existsRootWebpackConfig){ %>const rootWebpackConfig = require('./webpack.config'); <% } %>
 <% if (isNextJs){ %>const path = require('path');<% } %>
 
 module.exports = {

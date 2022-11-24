@@ -1,0 +1,28 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "emitDecoratorMetadata": true
+    <% if(uiFramework === '@storybook/react') { %>, "outDir": "" <% } %>
+  },
+  <% if(uiFramework === '@storybook/react') { %>"files": [
+    "../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
+    "../node_modules/@nrwl/react/typings/cssmodule.d.ts",
+    "../node_modules/@nrwl/react/typings/image.d.ts"
+  ],<% } %>
+  "exclude": ["../**/*.spec.ts" <% if(uiFramework === '@storybook/react') { %>, "../**/*.spec.js", "../**/*.spec.tsx", "../**/*.spec.jsx"<% } %>],
+  "include": [<% if(uiFramework === '@storybook/angular' && projectType === 'library') { %>
+    "../**/*.stories.ts",
+    "../**/*.stories.js",
+    "../**/*.stories.jsx",
+    "../**/*.stories.tsx",
+    "../**/*.stories.mdx",
+    "*.ts",
+    "*.js"<% } else { %>
+    "../<%= mainDir %>/**/*.stories.ts",
+    "../<%= mainDir %>/**/*.stories.js",
+    "../<%= mainDir %>/**/*.stories.jsx",
+    "../<%= mainDir %>/**/*.stories.tsx",
+    "../<%= mainDir %>/**/*.stories.mdx",
+    "*.ts",
+    "*.js"<% if(uiFramework === '@storybook/react-native') { %>, *.tsx"<% } %><% } %>]
+}
