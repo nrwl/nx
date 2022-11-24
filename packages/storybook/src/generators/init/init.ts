@@ -19,6 +19,7 @@ import {
   storybookVersion,
   svgrVersion,
   urlLoaderVersion,
+  viteBuilderVeresion,
   webpack5Version,
 } from '../../utils/versions';
 import { Schema } from './schema';
@@ -35,10 +36,15 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
   devDependencies['@storybook/core-server'] = storybookVersion;
   devDependencies['@storybook/addon-essentials'] = storybookVersion;
 
-  if (isFramework('angular', schema)) {
-    devDependencies['@storybook/angular'] = storybookVersion;
+  if (schema.bundler === 'vite') {
+    devDependencies['@storybook/builder-vite'] = viteBuilderVeresion;
+  } else {
     devDependencies['@storybook/builder-webpack5'] = storybookVersion;
     devDependencies['@storybook/manager-webpack5'] = storybookVersion;
+  }
+
+  if (isFramework('angular', schema)) {
+    devDependencies['@storybook/angular'] = storybookVersion;
     devDependencies['webpack'] = webpack5Version;
 
     if (
@@ -57,8 +63,6 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
     devDependencies['@babel/core'] = babelCoreVersion;
     devDependencies['@babel/preset-typescript'] = babelPresetTypescriptVersion;
     devDependencies['@storybook/react'] = storybookVersion;
-    devDependencies['@storybook/builder-webpack5'] = storybookVersion;
-    devDependencies['@storybook/manager-webpack5'] = storybookVersion;
   }
 
   if (isFramework('html', schema)) {

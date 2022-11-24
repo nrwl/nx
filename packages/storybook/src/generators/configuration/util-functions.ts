@@ -337,7 +337,8 @@ export function createRootStorybookDirForRootProjectInNestedWorkspace(
   root: string,
   projectType: string,
   isNextJs?: boolean,
-  usesSwc?: boolean
+  usesSwc?: boolean,
+  usesVite?: boolean
 ) {
   const rootConfigExists =
     tree.exists('.storybook/main.root.js') ||
@@ -384,14 +385,12 @@ export function createRootStorybookDirForRootProjectInNestedWorkspace(
     offsetFromRoot: offsetFromRoot(root),
     rootTsConfigPath: getRootTsConfigPathInTree(tree),
     projectDirectory,
-    useWebpack5:
-      uiFramework === '@storybook/angular' ||
-      uiFramework === '@storybook/react',
     existsRootWebpackConfig: tree.exists('.storybook/webpack.config.js'),
     projectType,
     mainDir: isNextJs && projectType === 'application' ? 'components' : 'src',
     isNextJs: isNextJs && projectType === 'application',
     usesSwc,
+    usesVite,
   });
 
   if (js) {
@@ -406,7 +405,8 @@ export function createProjectStorybookDir(
   js: boolean,
   tsConfiguration: boolean,
   isNextJs?: boolean,
-  usesSwc?: boolean
+  usesSwc?: boolean,
+  usesVite?: boolean
 ) {
   const { root, projectType } = readProjectConfiguration(tree, projectName);
 
@@ -445,14 +445,12 @@ export function createProjectStorybookDir(
       tree.exists('.storybook/main.root.ts')
         ? 'main.root'
         : 'main',
-    useWebpack5:
-      uiFramework === '@storybook/angular' ||
-      uiFramework === '@storybook/react',
     existsRootWebpackConfig: tree.exists('.storybook/webpack.config.js'),
     projectType,
     mainDir: isNextJs && projectType === 'application' ? 'components' : 'src',
     isNextJs: isNextJs && projectType === 'application',
     usesSwc,
+    usesVite,
   });
 
   if (js) {

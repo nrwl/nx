@@ -609,5 +609,110 @@ describe('@nrwl/storybook:configuration', () => {
         ).toMatchSnapshot();
       });
     });
+
+    describe('for Storybook configurations with Vite', () => {
+      let tree: Tree;
+      beforeAll(async () => {
+        tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+        writeJson(tree, 'workspace.json', workspaceConfiguration);
+        writeJson(tree, 'apps/nxapp/tsconfig.json', {});
+        writeJson(tree, 'apps/reapp/tsconfig.json', {});
+        writeJson(tree, 'libs/nxlib/tsconfig.json', {});
+        writeJson(tree, 'libs/nxlib-buildable/tsconfig.json', {});
+        writeJson(tree, 'libs/relib-buildable/tsconfig.json', {});
+        writeJson(tree, 'apps/reapp-swc/tsconfig.json', {});
+        await configurationGenerator(tree, {
+          name: 'nxapp',
+          uiFramework: '@storybook/react',
+          bundler: 'vite',
+          tsConfiguration: true,
+        });
+        await configurationGenerator(tree, {
+          name: 'reapp',
+          uiFramework: '@storybook/react',
+          bundler: 'vite',
+        });
+        await configurationGenerator(tree, {
+          name: 'nxlib',
+          uiFramework: '@storybook/react',
+          bundler: 'vite',
+        });
+        await configurationGenerator(tree, {
+          name: 'nxlib-buildable',
+          uiFramework: '@storybook/react',
+          bundler: 'vite',
+        });
+        await configurationGenerator(tree, {
+          name: 'relib-buildable',
+          uiFramework: '@storybook/react',
+          bundler: 'vite',
+        });
+        await configurationGenerator(tree, {
+          name: 'reapp-swc',
+          uiFramework: '@storybook/react',
+          bundler: 'vite',
+        });
+      });
+
+      it(`should create correct main.ts and tsconfig.json for NextJs apps`, async () => {
+        expect(
+          tree.read('apps/nxapp/.storybook/main.ts', 'utf-8')
+        ).toMatchSnapshot();
+
+        expect(
+          tree.read('apps/nxapp/.storybook/tsconfig.json', 'utf-8')
+        ).toMatchSnapshot();
+      });
+
+      it(`should create correct main.ts and tsconfig.json for React apps`, async () => {
+        expect(
+          tree.read('apps/reapp/.storybook/main.ts', 'utf-8')
+        ).toMatchSnapshot();
+
+        expect(
+          tree.read('apps/reapp/.storybook/tsconfig.json', 'utf-8')
+        ).toMatchSnapshot();
+      });
+
+      it(`should create correct main.ts and tsconfig.json for NextJS libs`, async () => {
+        expect(
+          tree.read('libs/nxlib/.storybook/main.ts', 'utf-8')
+        ).toMatchSnapshot();
+
+        expect(
+          tree.read('libs/nxlib/.storybook/tsconfig.json', 'utf-8')
+        ).toMatchSnapshot();
+      });
+
+      it(`should create correct main.ts and tsconfig.json for NextJS buildable libs`, async () => {
+        expect(
+          tree.read('libs/nxlib-buildable/.storybook/main.ts', 'utf-8')
+        ).toMatchSnapshot();
+
+        expect(
+          tree.read('libs/nxlib-buildable/.storybook/tsconfig.json', 'utf-8')
+        ).toMatchSnapshot();
+      });
+
+      it(`should create correct main.ts and tsconfig.json for React buildable libs`, async () => {
+        expect(
+          tree.read('libs/relib-buildable/.storybook/main.ts', 'utf-8')
+        ).toMatchSnapshot();
+
+        expect(
+          tree.read('libs/relib-buildable/.storybook/tsconfig.json', 'utf-8')
+        ).toMatchSnapshot();
+      });
+
+      it(`should create correct main.ts and tsconfig.json for React apps using the swc compiler`, async () => {
+        expect(
+          tree.read('apps/reapp-swc/.storybook/main.ts', 'utf-8')
+        ).toMatchSnapshot();
+
+        expect(
+          tree.read('apps/reapp-swc/.storybook/tsconfig.json', 'utf-8')
+        ).toMatchSnapshot();
+      });
+    });
   });
 });

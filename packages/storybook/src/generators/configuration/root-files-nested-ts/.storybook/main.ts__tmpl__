@@ -4,10 +4,7 @@ import type { StorybookConfig, Options } from '@storybook/core-common';
 
 const config: StorybookConfig = {
   ...rootMain,
-  <% if (useWebpack5) { %>
-  core: { ...rootMain.core, builder: 'webpack5' },
-  <% } %>
-
+  core: { ...rootMain.core, builder: <% if (!usesVite) { %>'webpack5'<% } %><% if (usesVite) { %>'@storybook/builder-vite'<% } %> },
   stories: [
     ...rootMain.stories,<% if(uiFramework === '@storybook/angular' && projectType === 'library') { %>
     '../**/*.stories.mdx',

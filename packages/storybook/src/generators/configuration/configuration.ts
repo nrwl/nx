@@ -50,6 +50,7 @@ export async function configurationGenerator(
 
   const initTask = await initGenerator(tree, {
     uiFramework: schema.uiFramework,
+    bundler: schema.bundler,
   });
   tasks.push(initTask);
 
@@ -63,7 +64,8 @@ export async function configurationGenerator(
       root,
       projectType,
       !!nextBuildTarget,
-      compiler === 'swc'
+      compiler === 'swc',
+      schema.bundler === 'vite'
     );
   } else {
     createRootStorybookDir(tree, schema.js, schema.tsConfiguration);
@@ -74,7 +76,8 @@ export async function configurationGenerator(
       schema.js,
       schema.tsConfiguration,
       !!nextBuildTarget,
-      compiler === 'swc'
+      compiler === 'swc',
+      schema.bundler === 'vite'
     );
   }
 

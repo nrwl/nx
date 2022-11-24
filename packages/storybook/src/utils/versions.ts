@@ -6,6 +6,7 @@ export const babelPresetTypescriptVersion = '7.12.13';
 export const svgrVersion = '^5.4.0';
 export const urlLoaderVersion = '^3.0.0';
 export const webpack5Version = '^5.64.0';
+export const viteBuilderVeresion = '0.2.5';
 export const storybookReactNativeVersion = '^6.0.1-beta.9';
 export const reactNativeStorybookLoader = '^2.0.5';
 export const storybookSwcAddonVersion = '^1.1.7';
