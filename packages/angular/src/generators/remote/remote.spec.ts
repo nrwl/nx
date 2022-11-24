@@ -199,7 +199,7 @@ describe('MF Remote App Generator', () => {
   describe('--ssr', () => {
     it('should generate the correct files', async () => {
       // ARRANGE
-      const tree = createTreeWithEmptyWorkspace();
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
       // ACT
       await remote(tree, {
