@@ -1,7 +1,6 @@
 import type { Tree } from '@nrwl/devkit';
-import { getSourceNodes } from '@nrwl/workspace/src/utilities/typescript';
 import { findNodes } from 'nx/src/utils/typescript';
-
+import { getSourceNodes } from '@nrwl/workspace/src/utilities/typescript';
 import type { PropertyDeclaration } from 'typescript';
 import { SyntaxKind } from 'typescript';
 import { getTsSourceFile } from '../../../utils/nx-devkit/ast-utils';

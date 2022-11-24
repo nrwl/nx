@@ -2,6 +2,7 @@ import { workspaceRoot } from './workspace-root';
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
 import type * as ts from 'typescript';
+import type { Node, SyntaxKind } from 'typescript';
 
 const normalizedAppRoot = workspaceRoot.replace(/\\/g, '/');
 
@@ -106,15 +107,15 @@ export function getRootTsConfigPath(): string | null {
 }
 
 export function findNodes(
-  node: ts.Node,
-  kind: ts.SyntaxKind | ts.SyntaxKind[],
+  node: Node,
+  kind: SyntaxKind | SyntaxKind[],
   max = Infinity
-): ts.Node[] {
+): Node[] {
   if (!node || max == 0) {
     return [];
   }
 
-  const arr: ts.Node[] = [];
+  const arr: Node[] = [];
   const hasMatch = Array.isArray(kind)
     ? kind.includes(node.kind)
     : node.kind === kind;

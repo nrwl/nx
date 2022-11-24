@@ -1,18 +1,17 @@
 import { ProjectGraph, readCachedProjectGraph, readNxJson } from '@nrwl/devkit';
-import { createProjectFileMappings } from 'nx/src/utils/target-project-locator';
 import { isTerminalRun } from './runtime-lint-utils';
 import * as chalk from 'chalk';
+import {
+  createProjectRootMappings,
+  ProjectRootMappings,
+} from 'nx/src/project-graph/utils/find-project-for-path';
 
 export function ensureGlobalProjectGraph(ruleName: string) {
   /**
    * Only reuse graph when running from terminal
    * Enforce every IDE change to get a fresh nxdeps.json
    */
-  if (
-    !(global as any).projectGraph ||
-    !(global as any).projectGraphFileMappings ||
-    !isTerminalRun()
-  ) {
+  if (!(global as any).projectGraph || !isTerminalRun()) {
     const nxJson = readNxJson();
     (global as any).workspaceLayout = nxJson.workspaceLayout;
 
@@ -22,7 +21,7 @@ export function ensureGlobalProjectGraph(ruleName: string) {
      */
     try {
       (global as any).projectGraph = readCachedProjectGraph();
-      (global as any).projectGraphFileMappings = createProjectFileMappings(
+      (global as any).projectRootMappings = createProjectRootMappings(
         (global as any).projectGraph.nodes
       );
     } catch {
@@ -38,11 +37,11 @@ export function ensureGlobalProjectGraph(ruleName: string) {
 
 export function readProjectGraph(ruleName: string): {
   projectGraph: ProjectGraph;
-  projectGraphFileMappings: Record<string, string>;
+  projectRootMappings: ProjectRootMappings;
 } {
   ensureGlobalProjectGraph(ruleName);
   return {
     projectGraph: (global as any).projectGraph,
-    projectGraphFileMappings: (global as any).projectGraphFileMappings,
+    projectRootMappings: (global as any).projectRootMappings,
   };
 }

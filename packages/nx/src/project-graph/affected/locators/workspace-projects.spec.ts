@@ -22,9 +22,9 @@ describe('getTouchedProjects', () => {
   it('should return a list of projects for the given changes', () => {
     const fileChanges = getFileChanges(['libs/a/index.ts', 'libs/b/index.ts']);
     const projects = {
-      a: { root: 'libs/a', files: [{ file: 'libs/a/index.ts' }] },
-      b: { root: 'libs/b', files: [{ file: 'libs/b/index.ts' }] },
-      c: { root: 'libs/c', files: [{ file: 'libs/c/index.ts' }] },
+      a: { root: 'libs/a' },
+      b: { root: 'libs/b' },
+      c: { root: 'libs/c' },
     };
     expect(
       getTouchedProjects(fileChanges, buildProjectGraphNodes(projects))
@@ -34,9 +34,9 @@ describe('getTouchedProjects', () => {
   it('should return projects with the root matching a whole directory name in the file path', () => {
     const fileChanges = getFileChanges(['libs/a-b/index.ts']);
     const projects = {
-      a: { root: 'libs/a', files: [{ file: 'libs/a/index.ts' }] },
-      abc: { root: 'libs/a-b-c', files: [{ file: 'libs/a-b-c/index.ts' }] },
-      ab: { root: 'libs/a-b', files: [{ file: 'libs/a-b/index.ts' }] },
+      a: { root: 'libs/a' },
+      abc: { root: 'libs/a-b-c' },
+      ab: { root: 'libs/a-b' },
     };
     expect(
       getTouchedProjects(fileChanges, buildProjectGraphNodes(projects))
@@ -46,9 +46,9 @@ describe('getTouchedProjects', () => {
   it('should return projects with the root matching a whole directory name in the file path', () => {
     const fileChanges = getFileChanges(['libs/a-b/index.ts']);
     const projects = {
-      aaaaa: { root: 'libs/a', files: [{ file: 'libs/a/index.ts' }] },
-      abc: { root: 'libs/a-b-c', files: [{ file: 'libs/a-b-c/index.ts' }] },
-      ab: { root: 'libs/a-b', files: [{ file: 'libs/a-b/index.ts' }] },
+      aaaaa: { root: 'libs/a' },
+      abc: { root: 'libs/a-b-c' },
+      ab: { root: 'libs/a-b' },
     };
     expect(
       getTouchedProjects(fileChanges, buildProjectGraphNodes(projects))
@@ -58,8 +58,8 @@ describe('getTouchedProjects', () => {
   it('should return the most qualifying match with the file path', () => {
     const fileChanges = getFileChanges(['libs/a/b/index.ts']);
     const projects = {
-      aaaaa: { root: 'libs/a', files: [{ file: 'libs/a/index.ts' }] },
-      ab: { root: 'libs/a/b', files: [{ file: 'libs/a/b/index.ts' }] },
+      aaaaa: { root: 'libs/a' },
+      ab: { root: 'libs/a/b' },
     };
     expect(
       getTouchedProjects(fileChanges, buildProjectGraphNodes(projects))
@@ -69,8 +69,8 @@ describe('getTouchedProjects', () => {
   it('should not return parent project if nested project is touched', () => {
     const fileChanges = getFileChanges(['libs/a/b/index.ts']);
     const projects = {
-      a: { root: 'libs/a', files: [{ file: 'libs/a/index.ts' }] },
-      b: { root: 'libs/a/b', files: [{ file: 'libs/a/b/index.ts' }] },
+      a: { root: 'libs/a' },
+      b: { root: 'libs/a/b' },
     };
     expect(
       getTouchedProjects(fileChanges, buildProjectGraphNodes(projects))

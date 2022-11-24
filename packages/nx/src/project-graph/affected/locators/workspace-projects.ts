@@ -2,23 +2,24 @@ import * as minimatch from 'minimatch';
 import { TouchedProjectLocator } from '../affected-project-graph-models';
 import { NxJsonConfiguration } from '../../../config/nx-json';
 import { ProjectGraphProjectNode } from '../../../config/project-graph';
-import { createProjectFileMappings } from '../../../utils/target-project-locator';
+import {
+  createProjectRootMappings,
+  findProjectForPath,
+} from '../../utils/find-project-for-path';
 
 export const getTouchedProjects: TouchedProjectLocator = (
   touchedFiles,
   projectGraphNodes
 ): string[] => {
-  const allProjectFiles = createProjectFileMappings(projectGraphNodes);
-  const affected = [];
+  const projectRootMap = createProjectRootMappings(projectGraphNodes);
 
-  touchedFiles.forEach((f) => {
-    const matchingProject = allProjectFiles[f.file];
+  return touchedFiles.reduce((affected, f) => {
+    const matchingProject = findProjectForPath(f.file, projectRootMap);
     if (matchingProject) {
       affected.push(matchingProject);
     }
-  });
-
-  return affected;
+    return affected;
+  }, []);
 };
 
 export const getImplicitlyTouchedProjects: TouchedProjectLocator = (
