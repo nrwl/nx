@@ -13,5 +13,9 @@ describe('path helpers', () => {
     it('should return true regardless if path has relative path chars', () => {
       expect(pathStartsWith(`lib1/src/app`, `./lib1/src/app`)).toBeTruthy();
     });
+
+    it('should return true for a root path', () => {
+      expect(pathStartsWith('lib1/src/app', '.')).toBe(true);
+    });
   });
 });
