@@ -32,7 +32,7 @@ export function updateAppModule(tree: Tree, schema: Schema) {
     browserModuleNode.getEnd()
   )}.withServerTransition({ appId: '${schema.appId}' })${fileContents.slice(
     browserModuleNode.getEnd(),
-    -1
+    fileContents.length
   )}`;
 
   tree.write(pathToAppModule, newFileContents);
