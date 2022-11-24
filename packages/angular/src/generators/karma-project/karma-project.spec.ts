@@ -209,4 +209,50 @@ describe('karmaProject', () => {
       });
     });
   });
+
+  describe('--root-project', () => {
+    it('should support a project located at the root', async () => {
+      await applicationGenerator(tree, {
+        name: 'root-app',
+        unitTestRunner: UnitTestRunner.None,
+        rootProject: true,
+      });
+      await karmaProjectGenerator(tree, { project: 'root-app' });
+
+      expect(tree.exists('karma.conf.js')).toBe(true);
+      expect(tree.read('karma.conf.js', 'utf-8')).toMatchSnapshot();
+      expect(tree.exists('tsconfig.spec.json')).toBe(true);
+      const { references } = devkit.readJson(tree, 'tsconfig.json');
+      expect(references).toContainEqual({
+        path: './tsconfig.spec.json',
+      });
+      const project = devkit.readProjectConfiguration(tree, 'root-app');
+      expect(project.targets.test.options).toStrictEqual({
+        polyfills: ['zone.js', 'zone.js/testing'],
+        tsConfig: 'tsconfig.spec.json',
+        karmaConfig: 'karma.conf.js',
+        styles: [],
+        scripts: [],
+        assets: [],
+      });
+    });
+
+    it('should generate the right karma.conf.js file for a nested project in a workspace with a project at the root', async () => {
+      await applicationGenerator(tree, {
+        name: 'root-app',
+        unitTestRunner: UnitTestRunner.Karma,
+        rootProject: true,
+      });
+      await libraryGenerator(tree, {
+        name: 'nested-lib',
+        unitTestRunner: UnitTestRunner.None,
+      });
+      await karmaProjectGenerator(tree, { project: 'nested-lib' });
+
+      expect(tree.exists('libs/nested-lib/karma.conf.js')).toBe(true);
+      expect(
+        tree.read('libs/nested-lib/karma.conf.js', 'utf-8')
+      ).toMatchSnapshot();
+    });
+  });
 });
