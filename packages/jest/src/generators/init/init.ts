@@ -25,6 +25,7 @@ import {
 } from '../../utils/versions';
 import { JestInitSchema } from './schema';
 import { extname } from 'path';
+import { readWorkspace } from 'nx/src/generators/utils/project-configuration';
 
 interface NormalizedSchema extends ReturnType<typeof normalizeOptions> {}
 
@@ -34,6 +35,25 @@ const schemaDefaults = {
   rootProject: false,
 } as const;
 
+const FILE_EXTENSION_REGEX = /(?<!(^|\/))(\.[^/.]+)$/;
+
+function generateGlobalConfig(tree: Tree, isJS: boolean) {
+  const contents = isJS
+    ? stripIndents`
+    const { getJestProjects } = require('@nrwl/jest');
+
+    module.exports = {
+      projects: getJestProjects()
+    };`
+    : stripIndents`
+    import { getJestProjects } from '@nrwl/jest';
+
+    export default {
+     projects: getJestProjects()
+    };`;
+  tree.write(`jest.config.${isJS ? 'js' : 'ts'}`, contents);
+}
+
 function createJestConfig(tree: Tree, options: NormalizedSchema) {
   if (!tree.exists('jest.preset.js')) {
     // preset is always js file.
@@ -41,67 +61,63 @@ function createJestConfig(tree: Tree, options: NormalizedSchema) {
       `jest.preset.js`,
       `
       const nxPreset = require('@nrwl/jest/preset').default;
-     
+
       module.exports = { ...nxPreset }`
     );
 
     addTestInputs(tree);
   }
-  const rootJestConfig = findRootJestConfig(tree);
-
-  if (options.rootProject && !rootJestConfig) {
-    // we don't want any config to be made because the jest-project generator
-    // will make the config when using rootProject
+  if (options.rootProject) {
+    // we don't want any config to be made because the `jestProjectGenerator`
+    // will copy the template config file
     return;
   }
-  const isProjectConfig =
-    rootJestConfig &&
-    tree.exists(rootJestConfig) &&
-    !tree.read(rootJestConfig, 'utf-8').includes('getJestProjects()');
-  if (!options.rootProject && isProjectConfig) {
-    // moving from single project to multi project.
-    // TODO(caleb): this is brittle and needs to be detected better?
-    const nxJson = readJson(tree, 'nx.json');
-    const defaultProject =
-      nxJson.cli?.defaultProjectName || nxJson?.defaultProject;
-
-    const ext = extname(rootJestConfig);
-    const newJestConfigPath = defaultProject
-      ? `jest.${defaultProject}.config${ext}`
-      : `jest.project-config${ext}`;
-
-    tree.rename(rootJestConfig, newJestConfigPath);
-
-    if (defaultProject) {
-      const projectConfig = readProjectConfiguration(tree, defaultProject);
-
-      // TODO(caleb): do we care about a custom target name?
-      if (projectConfig?.targets?.['test']?.options?.jestConfig) {
-        projectConfig.targets['test'].options.jestConfig = newJestConfigPath;
-        updateProjectConfiguration(tree, defaultProject, projectConfig);
-      }
-    } else {
-      console.warn(stripIndents`Could not find the default project project.json to update the test target options.
-Manually update the 'jestConfig' path to point to ${newJestConfigPath}`);
-    }
+  const rootJestPath = findRootJestConfig(tree);
+  if (!rootJestPath) {
+    // if there's not root jest config, we will create one and return
+    // this can happen when:
+    // - root jest config was renamed => in which case there is migration needed
+    // - root project didn't have jest setup => again, no migration is needed
+    generateGlobalConfig(tree, options.js);
+    return;
   }
 
-  // if the root ts config already exists then don't make a js one or vice versa
-  if (!tree.exists('jest.config.ts') && !tree.exists('jest.config.js')) {
-    const contents = options.js
-      ? stripIndents`
-      const { getJestProjects } = require('@nrwl/jest');
+  const isProjectConfig =
+    rootJestPath &&
+    // TODO: (meeroslav) is this condition enough?
+    !tree.read(rootJestPath, 'utf-8').includes('getJestProjects()');
 
-      module.exports = {
-        projects: getJestProjects()
-      };`
-      : stripIndents`
-      import { getJestProjects } from '@nrwl/jest';
+  if (isProjectConfig) {
+    // moving from root project config to monorepo-style config
+    const projects = readWorkspace(tree).projects;
+    const projectNames = Object.keys(projects);
+    const rootProject = projectNames.find(
+      (projecName) => projects[projecName].root === '.'
+    );
+    // root project might have been removed,
+    // if it's missing there's nothing to migrate
+    if (rootProject) {
+      const jestTarget = Object.values(
+        projects[rootProject].targets || {}
+      ).find((t) => t.executor === '@nrwl/jest:jest');
+      // if root project doesn't have jest target, there's nothing to migrate
+      if (jestTarget) {
+        const pathSegments = rootJestPath
+          .split(FILE_EXTENSION_REGEX)
+          .filter(Boolean);
+        // insert root app name before the extension e.g. `jest.config.js` => `jest.config.myapp.js`
+        const rootProjJestPath = pathSegments.join(`.${rootProject}`);
+        tree.rename(rootJestPath, rootProjJestPath);
+        jestTarget.options.jestConfig = rootProjJestPath;
+        updateProjectConfiguration(tree, rootProject, projects[rootProject]);
+      }
+    }
 
-      export default {
-       projects: getJestProjects()
-      };`;
-    tree.write(`jest.config.${options.js ? 'js' : 'ts'}`, contents);
+    // original root file was renamed just now OR
+    // root project doesn't have target with jest executor OR
+    // root project was not found
+    // => generate new global config
+    generateGlobalConfig(tree, options.js);
   }
 }
 

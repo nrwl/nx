@@ -43,7 +43,6 @@ function normalizeOptions(options: JestProjectSchema) {
 
   // setupFile is always 'none'
   options.setupFile = schemaDefaults.setupFile;
-  options.rootProject = options.rootProject;
   return {
     ...schemaDefaults,
     ...options,

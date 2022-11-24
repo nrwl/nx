@@ -160,9 +160,8 @@ export default {
     });
 
     it('should rename the project jest.config.ts to project jest config', () => {
-      tree.write('nx.json', JSON.stringify({ defaultProject: 'my-project' }));
       addProjectConfiguration(tree, 'my-project', {
-        root: '',
+        root: '.',
         name: 'my-project',
         sourceRoot: 'src',
         targets: {
@@ -186,12 +185,12 @@ export default {
   globals: { 'ts-jest': { tsconfig: '<rootDir>/tsconfig.spec.json' } },
   displayName: 'my-project',
   testEnvironment: 'node',
-  preset: '../../jest.preset.js',
+  preset: './jest.preset.js',
 };
 `
       );
       jestInitGenerator(tree, { rootProject: false });
-      expect(tree.exists('jest.my-project.config.ts')).toBeTruthy();
+      expect(tree.exists('jest.config.my-project.ts')).toBeTruthy();
       expect(tree.read('jest.config.ts', 'utf-8'))
         .toEqual(`import { getJestProjects } from '@nrwl/jest';
 
@@ -203,13 +202,26 @@ projects: getJestProjects()
         Object {
           "executor": "@nrwl/jest:jest",
           "options": Object {
-            "jestConfig": "jest.my-project.config.ts",
+            "jestConfig": "jest.config.my-project.ts",
           },
         }
       `);
     });
 
     it('should work with --js', () => {
+      addProjectConfiguration(tree, 'my-project', {
+        root: '.',
+        name: 'my-project',
+        sourceRoot: 'src',
+        targets: {
+          test: {
+            executor: '@nrwl/jest:jest',
+            options: {
+              jestConfig: 'jest.config.js',
+            },
+          },
+        },
+      });
       tree.write(
         'jest.config.js',
         `
@@ -222,12 +234,12 @@ module.exports = {
   globals: { 'ts-jest': { tsconfig: '<rootDir>/tsconfig.spec.json' } },
   displayName: 'my-project',
   testEnvironment: 'node',
-  preset: '../../jest.preset.js',
+  preset: './jest.preset.js',
 };
 `
       );
       jestInitGenerator(tree, { js: true, rootProject: false });
-      expect(tree.exists('jest.project-config.js')).toBeTruthy();
+      expect(tree.exists('jest.config.my-project.js')).toBeTruthy();
       expect(tree.read('jest.config.js', 'utf-8'))
         .toEqual(`const { getJestProjects } = require('@nrwl/jest');
 

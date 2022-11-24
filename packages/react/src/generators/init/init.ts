@@ -8,7 +8,6 @@ import {
   Tree,
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
-import { jestInitGenerator } from '@nrwl/jest';
 import { webInitGenerator } from '@nrwl/web';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import {
@@ -71,10 +70,6 @@ export async function reactInitGenerator(host: Tree, schema: InitSchema) {
 
   setDefault(host);
 
-  if (!schema.unitTestRunner || schema.unitTestRunner === 'jest') {
-    const jestTask = jestInitGenerator(host, schema);
-    tasks.push(jestTask);
-  }
   if (!schema.e2eTestRunner || schema.e2eTestRunner === 'cypress') {
     const cypressTask = cypressInitGenerator(host, {});
     tasks.push(cypressTask);
