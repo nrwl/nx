@@ -21,6 +21,8 @@ import {
   configureTsSolutionConfig,
   createProjectStorybookDir,
   createRootStorybookDir,
+  createRootStorybookDirForRootProjectInNestedWorkspace,
+  projectIsRootProjectInNestedWorkspace,
   updateLintConfig,
 } from './util-functions';
 import { Linter } from '@nrwl/linter';
@@ -39,7 +41,10 @@ export async function configurationGenerator(
 
   const tasks: GeneratorCallback[] = [];
 
-  const { projectType, targets } = readProjectConfiguration(tree, schema.name);
+  const { projectType, targets, root, sourceRoot } = readProjectConfiguration(
+    tree,
+    schema.name
+  );
   const { nextBuildTarget, compiler } =
     findStorybookAndBuildTargetsAndCompiler(targets);
 
@@ -48,16 +53,31 @@ export async function configurationGenerator(
   });
   tasks.push(initTask);
 
-  createRootStorybookDir(tree, schema.js, schema.tsConfiguration);
-  createProjectStorybookDir(
-    tree,
-    schema.name,
-    schema.uiFramework,
-    schema.js,
-    schema.tsConfiguration,
-    !!nextBuildTarget,
-    compiler === 'swc'
-  );
+  if (projectIsRootProjectInNestedWorkspace(root)) {
+    createRootStorybookDirForRootProjectInNestedWorkspace(
+      tree,
+      schema.name,
+      schema.uiFramework,
+      schema.js,
+      schema.tsConfiguration,
+      root,
+      projectType,
+      !!nextBuildTarget,
+      compiler === 'swc'
+    );
+  } else {
+    createRootStorybookDir(tree, schema.js, schema.tsConfiguration);
+    createProjectStorybookDir(
+      tree,
+      schema.name,
+      schema.uiFramework,
+      schema.js,
+      schema.tsConfiguration,
+      !!nextBuildTarget,
+      compiler === 'swc'
+    );
+  }
+
   configureTsProjectConfig(tree, schema);
   configureTsSolutionConfig(tree, schema);
   updateLintConfig(tree, schema);
