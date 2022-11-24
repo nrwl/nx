@@ -385,6 +385,7 @@ describe('Angular Projects', () => {
       });
     } catch (err) {
       console.error(err);
+      throw err;
     }
 
     // port and process cleanup

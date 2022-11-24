@@ -11,6 +11,7 @@ import type { Schema } from '../schema';
 import setupSsr from '../../setup-ssr/setup-ssr';
 import {
   corsVersion,
+  expressVersion,
   moduleFederationNodeVersion,
 } from '../../../utils/versions';
 
@@ -34,6 +35,7 @@ export async function addSsr(tree: Tree, options: Schema, appName: string) {
     appName,
     tmpl: '',
   });
+  console.log('after generate files');
 
   // update project.json
   project = readProjectConfiguration(tree, appName);
@@ -49,6 +51,7 @@ export async function addSsr(tree: Tree, options: Schema, appName: string) {
     tree,
     {
       cors: corsVersion,
+      express: expressVersion,
       '@module-federation/node': moduleFederationNodeVersion,
     },
     {}
