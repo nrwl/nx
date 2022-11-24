@@ -1,5 +1,5 @@
 import {
-  createReactEslintJson,
+  extendReactEslintJson,
   extraEslintDependencies,
 } from '../../utils/lint';
 import { NormalizedSchema, Schema } from './schema';
@@ -27,6 +27,7 @@ import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { swcCoreVersion } from '@nrwl/js/src/utils/versions';
 import { swcLoaderVersion } from '@nrwl/webpack/src/utils/versions';
 import { viteConfigurationGenerator, vitestGenerator } from '@nrwl/vite';
+import { mapLintPattern } from '@nrwl/linter/src/generators/lint-project/lint-project';
 
 async function addLinting(host: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];
@@ -38,20 +39,22 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
         joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
       ],
       unitTestRunner: options.unitTestRunner,
-      eslintFilePatterns: [`${options.appProjectRoot}/**/*.{ts,tsx,js,jsx}`],
+      eslintFilePatterns: [
+        mapLintPattern(
+          options.appProjectRoot,
+          '{ts,tsx,js,jsx}',
+          options.rootProject
+        ),
+      ],
       skipFormat: true,
+      rootProject: options.rootProject,
     });
     tasks.push(lintTask);
-
-    const reactEslintJson = createReactEslintJson(
-      options.appProjectRoot,
-      options.setParserOptionsProject
-    );
 
     updateJson(
       host,
       joinPathFragments(options.appProjectRoot, '.eslintrc.json'),
-      () => reactEslintJson
+      extendReactEslintJson
     );
 
     const installTask = await addDependenciesToPackageJson(
