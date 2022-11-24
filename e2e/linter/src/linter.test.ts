@@ -473,9 +473,6 @@ export function tslibC(): string {
         'plugin:@nrwl/nx/javascript',
       ]);
 
-      console.log(JSON.stringify(rootEslint, null, 2));
-      console.log(JSON.stringify(e2eEslint, null, 2));
-
       runCLI(`generate @nrwl/react:lib ${mylib}`);
       // should add new tslint
       expect(() => checkFilesExist(`.eslintrc.base.json`)).not.toThrow();
