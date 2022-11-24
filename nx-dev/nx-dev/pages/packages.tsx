@@ -46,11 +46,11 @@ export default function Packages(props: ReferencesProps): JSX.Element {
           description: 'Reference: Official Packages & API',
           images: [
             {
-              url: 'https://nx.dev/images/nx-media.jpg',
-              width: 800,
-              height: 421,
+              url: 'https://nx.dev/socials/nx-media.png',
+              width: 1200,
+              height: 600,
               alt: 'Nx: Smart, Fast and Extensible Build System',
-              type: 'image/jpeg',
+              type: 'image/png',
             },
           ],
           siteName: 'NxDev',

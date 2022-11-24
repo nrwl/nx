@@ -29,7 +29,7 @@ export function DocViewer({
           images: [
             {
               url: router.asPath.includes('turbo-and-nx')
-                ? 'https://nx.dev/images/nx-media-monorepo.jpg'
+                ? 'https://nx.dev/socials/nx-media-monorepo.jpg'
                 : `https://nx.dev/images/open-graph/${router.asPath
                     .replace('/', '')
                     .replace(/\//gi, '-')}.jpg`,
@@ -39,7 +39,7 @@ export function DocViewer({
               type: 'image/jpeg',
             },
           ],
-          site_name: 'Nx',
+          siteName: 'Nx',
           type: 'website',
         }}
       />

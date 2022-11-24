@@ -27,11 +27,11 @@ export default function Index(): JSX.Element {
             'Nx is a smart, fast and extensible build system which comes with first class monorepo support and powerful integrations.',
           images: [
             {
-              url: 'https://nx.dev/images/nx-media.jpg',
-              width: 800,
-              height: 421,
+              url: 'https://nx.dev/socials/nx-media.png',
+              width: 1200,
+              height: 600,
               alt: 'Nx: Smart, Fast and Extensible Build System',
-              type: 'image/jpeg',
+              type: 'image/png',
             },
           ],
           siteName: 'Nx',
