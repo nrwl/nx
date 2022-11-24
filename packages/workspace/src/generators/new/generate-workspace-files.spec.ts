@@ -34,10 +34,10 @@ describe('@nrwl/workspace:generateWorkspaceFiles', () => {
         let appName;
         if (
           [
-            Preset.React,
-            Preset.ReactExperimental,
-            Preset.Angular,
-            Preset.AngularExperimental,
+            Preset.ReactMonorepo,
+            Preset.ReactStandalone,
+            Preset.AngularMonorepo,
+            Preset.AngularStandalone,
             Preset.Nest,
             Preset.NextJs,
             Preset.WebComponents,
@@ -112,7 +112,7 @@ describe('@nrwl/workspace:generateWorkspaceFiles', () => {
     await generateWorkspaceFiles(tree, {
       name: 'proj',
       directory: 'proj',
-      preset: Preset.React,
+      preset: Preset.ReactMonorepo,
       defaultBase: 'main',
     });
     const nxJson = readJson<NxJsonConfiguration>(tree, '/proj/nx.json');
@@ -202,7 +202,7 @@ describe('@nrwl/workspace:generateWorkspaceFiles', () => {
     await generateWorkspaceFiles(tree, {
       name: 'proj',
       directory: 'proj',
-      preset: Preset.Angular,
+      preset: Preset.AngularMonorepo,
       defaultBase: 'main',
     });
     expect(tree.exists('/proj/decorate-angular-cli.js')).toBe(true);

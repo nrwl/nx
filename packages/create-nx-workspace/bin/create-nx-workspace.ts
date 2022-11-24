@@ -51,64 +51,50 @@ enum Preset {
   NPM = 'npm',
   TS = 'ts',
   WebComponents = 'web-components',
-  Angular = 'angular',
-  AngularExperimental = 'angular-experimental',
-  React = 'react',
-  ReactExperimental = 'react-experimental',
+  AngularMonorepo = 'angular-monorepo',
+  AngularStandalone = 'angular-standalone',
+  ReactMonorepo = 'react-monorepo',
+  ReactStandalone = 'react-standalone',
   ReactNative = 'react-native',
   Expo = 'expo',
   NextJs = 'next',
   Nest = 'nest',
   Express = 'express',
+  React = 'react',
+  Angular = 'angular',
 }
 
 const presetOptions: { name: Preset; message: string }[] = [
   {
     name: Preset.Apps,
     message:
-      'apps              [an empty workspace with no plugins with a layout that works best for building apps]',
+      'apps              [an empty monorepo with no plugins with a layout that works best for building apps]',
   },
   {
     name: Preset.TS,
     message:
-      'ts                [an empty workspace with the JS/TS plugin preinstalled]',
+      'ts                [an empty monorepo with the JS/TS plugin preinstalled]',
   },
   {
-    name: Preset.React,
-    message: 'react             [a workspace with a single React application]',
+    name: Preset.ReactMonorepo,
+    message: 'react             [a monorepo with a single React application]',
   },
   {
-    name: Preset.Angular,
-    message:
-      'angular           [a workspace with a single Angular application]',
+    name: Preset.AngularMonorepo,
+    message: 'angular           [a monorepo with a single Angular application]',
   },
   {
     name: Preset.NextJs,
-    message:
-      'next.js           [a workspace with a single Next.js application]',
+    message: 'next.js           [a monorepo with a single Next.js application]',
   },
   {
     name: Preset.Nest,
-    message: 'nest              [a workspace with a single Nest application]',
-  },
-  {
-    name: Preset.Express,
-    message:
-      'express           [a workspace with a single Express application]',
-  },
-  {
-    name: Preset.WebComponents,
-    message:
-      'web components    [a workspace with a single app built using web components]',
+    message: 'nest              [a monorepo with a single Nest application]',
   },
   {
     name: Preset.ReactNative,
     message:
       'react-native      [a workspace with a single React Native application]',
-  },
-  {
-    name: Preset.Expo,
-    message: 'expo              [a workspace with a single Expo application]',
   },
 ];
 
@@ -325,11 +311,20 @@ async function getConfiguration(
       style = null;
     } else {
       if (!argv.preset) {
-        if ((await determineMonorepoStyle()) === 'package-based') {
+        const monorepoStyle = await determineMonorepoStyle();
+        if (monorepoStyle === 'package-based') {
           preset = 'npm';
+        } else if (monorepoStyle === 'react') {
+          preset = Preset.ReactStandalone;
+        } else if (monorepoStyle === 'angular') {
+          preset = Preset.AngularStandalone;
         } else {
           preset = await determinePreset(argv);
         }
+      } else if (argv.preset === 'react') {
+        preset = await monorepoOrStandalone('react');
+      } else if (argv.preset === 'angular') {
+        preset = await monorepoOrStandalone('angular');
       } else {
         preset = argv.preset;
       }
@@ -392,23 +387,63 @@ function determineRepoName(
     });
 }
 
+function monorepoOrStandalone(preset: string): Promise<string> {
+  return enquirer
+    .prompt([
+      {
+        name: 'MonorepoOrStandalone',
+        message: `--preset=${preset} has been replaced with the following:`,
+        type: 'autocomplete',
+        choices: [
+          {
+            name: preset + '-standalone',
+            message: `${preset}-standalone: a standalone ${preset} application.`,
+          },
+          {
+            name: preset + '-monorepo',
+            message: `${preset}-monorepo:   a monorepo with the apps and libs folders.`,
+          },
+        ],
+      },
+    ])
+    .then((a: { MonorepoOrStandalone: string }) => {
+      if (!a.MonorepoOrStandalone) {
+        output.error({
+          title: 'Invalid selection',
+        });
+        process.exit(1);
+      }
+      return a.MonorepoOrStandalone;
+    });
+}
+
 function determineMonorepoStyle(): Promise<string> {
   return enquirer
     .prompt([
       {
         name: 'MonorepoStyle',
-        message: `Choose your style                    `,
+        message: `Choose what to create                `,
         type: 'autocomplete',
         choices: [
           {
             name: 'package-based',
             message:
-              'Package-based: Craft your own setup. Nx makes it fast, but lets you run things your way.',
+              'Package-based monorepo: Nx makes it fast, but lets you run things your way.',
           },
           {
             name: 'integrated',
             message:
-              'Integrated:    Get a pre-configured setup. Nx configures your favorite frameworks and lets you focus on shipping features.',
+              'Integrated monorepo:    Nx configures your favorite frameworks and lets you focus on shipping features.',
+          },
+          {
+            name: 'react',
+            message:
+              'Standalone React app:   Nx configures Vite, ESLint and Cypress.',
+          },
+          {
+            name: 'angular',
+            message:
+              'Standalone Angular app: Nx configures Jest, ESLint and Cypress.',
           },
         ],
       },
@@ -614,7 +649,7 @@ async function determineCli(
   }
 
   switch (preset) {
-    case Preset.Angular: {
+    case Preset.AngularMonorepo: {
       return Promise.resolve('angular');
     }
     default: {
@@ -656,7 +691,7 @@ async function determineStyle(
     },
   ];
 
-  if (![Preset.Angular, Preset.AngularExperimental].includes(preset)) {
+  if (![Preset.AngularMonorepo, Preset.AngularStandalone].includes(preset)) {
     choices.push({
       name: 'styl',
       message: 'Stylus(.styl)     [ http://stylus-lang.com ]',
@@ -664,7 +699,9 @@ async function determineStyle(
   }
 
   if (
-    [Preset.React, Preset.ReactExperimental, Preset.NextJs].includes(preset)
+    [Preset.ReactMonorepo, Preset.ReactStandalone, Preset.NextJs].includes(
+      preset
+    )
   ) {
     choices.push(
       {
@@ -1020,8 +1057,8 @@ function pointToTutorialAndCourse(preset: Preset) {
       });
       break;
 
-    case Preset.React:
-    case Preset.ReactExperimental:
+    case Preset.ReactMonorepo:
+    case Preset.ReactStandalone:
     case Preset.NextJs:
       output.addVerticalSeparator();
       output.note({
@@ -1029,8 +1066,8 @@ function pointToTutorialAndCourse(preset: Preset) {
         bodyLines: [`https://nx.dev/react-tutorial/1-code-generation`],
       });
       break;
-    case Preset.Angular:
-    case Preset.AngularExperimental:
+    case Preset.AngularMonorepo:
+    case Preset.AngularStandalone:
       output.addVerticalSeparator();
       output.note({
         title,
