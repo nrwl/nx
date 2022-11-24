@@ -1034,7 +1034,7 @@ function pointToTutorialAndCourse(preset: Preset) {
       output.addVerticalSeparator();
       output.note({
         title,
-        bodyLines: [`https://nx.dev/angular-tutorial/01-create-application`],
+        bodyLines: [`https://nx.dev/angular-tutorial/1-code-generation`],
       });
       break;
     case Preset.Express:
