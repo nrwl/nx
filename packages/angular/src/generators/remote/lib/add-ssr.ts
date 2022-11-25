@@ -35,7 +35,6 @@ export async function addSsr(tree: Tree, options: Schema, appName: string) {
     appName,
     tmpl: '',
   });
-  console.log('after generate files');
 
   // update project.json
   project = readProjectConfiguration(tree, appName);
