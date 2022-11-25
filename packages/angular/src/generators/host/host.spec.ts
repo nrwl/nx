@@ -2,7 +2,10 @@ import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import host from './host';
 import remote from '../remote/remote';
 import { E2eTestRunner } from '../../utils/test-runners';
-import { getProjects } from 'nx/src/generators/utils/project-configuration';
+import {
+  getProjects,
+  readProjectConfiguration,
+} from 'nx/src/generators/utils/project-configuration';
 
 describe('Host App Generator', () => {
   it('should generate a host app with no remotes', async () => {
@@ -184,5 +187,44 @@ describe('Host App Generator', () => {
     const projects = getProjects(tree);
     expect(projects.has('dashboard-e2e')).toBeFalsy();
     expect(projects.has('remote1-e2e')).toBeFalsy();
+  });
+
+  describe('--ssr', () => {
+    it('should generate the correct files', async () => {
+      // ARRANGE
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+
+      // ACT
+      await host(tree, {
+        name: 'test',
+        ssr: true,
+      });
+
+      // ASSERT
+      const project = readProjectConfiguration(tree, 'test');
+      expect(
+        tree.read(`apps/test/src/app/app.module.ts`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read(`apps/test/src/bootstrap.ts`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read(`apps/test/src/bootstrap.server.ts`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read(`apps/test/src/main.server.ts`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(tree.read(`apps/test/server.ts`, 'utf-8')).toMatchSnapshot();
+      expect(
+        tree.read(`apps/test/module-federation.config.js`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read(`apps/test/webpack.server.config.js`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read(`apps/test/src/app/app.routes.ts`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(project.targets.server).toMatchSnapshot();
+    });
   });
 });

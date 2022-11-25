@@ -1452,6 +1452,11 @@
             "type": "boolean",
             "description": "Whether to generate a host application that uses standalone components.",
             "default": false
+          },
+          "ssr": {
+            "description": "Whether to configure SSR for the host application",
+            "type": "boolean",
+            "default": false
           }
         },
         "additionalProperties": false,
