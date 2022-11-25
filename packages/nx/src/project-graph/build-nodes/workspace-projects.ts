@@ -51,9 +51,10 @@ export function buildWorkspaceProjectNodes(
       loadNxPlugins(ctx.workspace.plugins)
     );
 
+    // TODO: remove in v16
     const projectType =
       p.projectType === 'application'
-        ? key.endsWith('-e2e')
+        ? key.endsWith('-e2e') || key === 'e2e'
           ? 'e2e'
           : 'app'
         : 'lib';
