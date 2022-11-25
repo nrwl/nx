@@ -699,6 +699,10 @@ function withRunOneOptions(yargs: yargs.Argv) {
     .option('project', {
       describe: 'Target project',
       type: 'string',
+    })
+    .option('help', {
+      describe: 'Show Help',
+      type: 'boolean',
     });
 
   if (executorShouldShowHelp) {
