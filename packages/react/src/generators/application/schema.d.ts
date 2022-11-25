@@ -34,7 +34,7 @@ export interface Schema {
   minimal?: boolean;
 }
 
-export interface NormalizedSchema extends Schema {
+export interface NormalizedSchema<T extends Schema = Schema> extends T {
   projectName: string;
   appProjectRoot: string;
   e2eProjectName: string;

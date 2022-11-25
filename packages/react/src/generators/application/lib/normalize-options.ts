@@ -13,10 +13,10 @@ export function normalizeProjectName(options: Schema) {
   return normalizeDirectory(options).replace(new RegExp('/', 'g'), '-');
 }
 
-export function normalizeOptions(
+export function normalizeOptions<T extends Schema = Schema>(
   host: Tree,
   options: Schema
-): NormalizedSchema {
+): NormalizedSchema<T> {
   const appDirectory = normalizeDirectory(options);
   const appProjectName = normalizeProjectName(options);
   const e2eProjectName = options.rootProject

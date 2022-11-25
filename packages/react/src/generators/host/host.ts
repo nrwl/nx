@@ -1,15 +1,19 @@
-import { formatFiles, Tree } from '@nrwl/devkit';
+import { formatFiles, GeneratorCallback, Tree } from '@nrwl/devkit';
 
 import applicationGenerator from '../application/application';
 import { normalizeOptions } from '../application/lib/normalize-options';
 import { updateModuleFederationProject } from '../../rules/update-module-federation-project';
 import { addModuleFederationFiles } from './lib/add-module-federation-files';
 import { updateModuleFederationE2eProject } from './lib/update-module-federation-e2e-project';
+
 import { Schema } from './schema';
 import remoteGenerator from '../remote/remote';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+import { addSsr } from './lib/add-ssr';
 
 export async function hostGenerator(host: Tree, schema: Schema) {
-  const options = normalizeOptions(host, schema);
+  const tasks: GeneratorCallback[] = [];
+  const options = normalizeOptions<Schema>(host, schema);
 
   const initTask = await applicationGenerator(host, {
     ...options,
@@ -18,6 +22,12 @@ export async function hostGenerator(host: Tree, schema: Schema) {
     // Only webpack works with module federation for now.
     bundler: 'webpack',
   });
+  tasks.push(initTask);
+
+  if (options.ssr) {
+    let ssrInstallTask = await addSsr(host, options, options.projectName);
+    tasks.push(ssrInstallTask);
+  }
 
   const remotesWithPorts: { name: string; port: number }[] = [];
 
@@ -47,7 +57,7 @@ export async function hostGenerator(host: Tree, schema: Schema) {
     await formatFiles(host);
   }
 
-  return initTask;
+  return runTasksInSerial(...tasks);
 }
 
 export default hostGenerator;

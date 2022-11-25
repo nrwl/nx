@@ -41,6 +41,9 @@ export const postcssVersion = '8.4.19';
 export const tailwindcssVersion = '3.2.4';
 export const autoprefixerVersion = '10.4.13';
 
-export const expressVersion = '^4.18.1';
+// SSR and Module Federation
+export const expressVersion = '~4.18.2';
 export const typesExpressVersion = '4.17.14';
 export const isbotVersion = '^3.6.5';
+export const corsVersion = '~2.8.5';
+export const moduleFederationNodeVersion = '~0.9.6';

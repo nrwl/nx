@@ -1,6 +1,6 @@
 export interface Schema {
   project: string;
-  appComponentImportPath: string;
+  appComponentImportPath?: string;
   serverPort?: number;
   skipFormat?: boolean;
 }
