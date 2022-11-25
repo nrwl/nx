@@ -6,7 +6,6 @@ import {
   readProjectConfiguration,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
-import type { Schema } from '../schema';
 
 import setupSsr from '../../setup-ssr/setup-ssr';
 import {
@@ -15,7 +14,10 @@ import {
   moduleFederationNodeVersion,
 } from '../../../utils/versions';
 
-export async function addSsr(tree: Tree, options: Schema, appName: string) {
+export async function addSsr(
+  tree: Tree,
+  { appName, port }: { appName: string; port: number }
+) {
   let project = readProjectConfiguration(tree, appName);
 
   await setupSsr(tree, {
@@ -43,6 +45,10 @@ export async function addSsr(tree: Tree, options: Schema, appName: string) {
   project.targets.server.executor = '@nrwl/angular:webpack-server';
   project.targets.server.options.customWebpackConfig = {
     path: joinPathFragments(project.root, 'webpack.server.config.js'),
+  };
+  project.targets['serve-ssr'].options = {
+    ...(project.targets['serve-ssr'].options ?? {}),
+    port,
   };
 
   updateProjectConfiguration(tree, appName, project);

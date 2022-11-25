@@ -43,7 +43,7 @@ export async function remote(tree: Tree, options: Schema) {
 
   let installTasks = [appInstallTask];
   if (options.ssr) {
-    let ssrInstallTask = await addSsr(tree, options, appName);
+    let ssrInstallTask = await addSsr(tree, { appName, port });
     installTasks.push(ssrInstallTask);
   }
 
