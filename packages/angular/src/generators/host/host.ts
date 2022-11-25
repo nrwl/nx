@@ -5,6 +5,8 @@ import remoteGenerator from '../remote/remote';
 import { normalizeProjectName } from '../utils/project';
 import { setupMf } from '../setup-mf/setup-mf';
 import { E2eTestRunner } from '../../utils/test-runners';
+import { addSsr } from './lib';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
 export async function host(tree: Tree, options: Schema) {
   const projects = getProjects(tree);
@@ -24,7 +26,7 @@ export async function host(tree: Tree, options: Schema) {
 
   const appName = normalizeProjectName(options.name, options.directory);
 
-  const installTask = await applicationGenerator(tree, {
+  const appInstallTask = await applicationGenerator(tree, {
     ...options,
     routing: true,
     port: 4200,
@@ -46,6 +48,12 @@ export async function host(tree: Tree, options: Schema) {
     e2eProjectName: skipE2E ? undefined : `${appName}-e2e`,
   });
 
+  let installTasks = [appInstallTask];
+  if (options.ssr) {
+    let ssrInstallTask = await addSsr(tree, options, appName);
+    installTasks.push(ssrInstallTask);
+  }
+
   for (const remote of remotesToGenerate) {
     await remoteGenerator(tree, {
       ...options,
@@ -60,7 +68,7 @@ export async function host(tree: Tree, options: Schema) {
     await formatFiles(tree);
   }
 
-  return installTask;
+  return runTasksInSerial(...installTasks);
 }
 
 export default host;
