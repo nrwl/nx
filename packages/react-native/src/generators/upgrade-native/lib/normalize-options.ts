@@ -10,6 +10,7 @@ export interface NormalizedSchema {
   entryFileIos: string;
   e2eTestRunner: 'detox' | 'none';
   offsetFromRoot: string;
+  frameworks: boolean;
 }
 
 export function normalizeOptions(
@@ -36,5 +37,6 @@ export function normalizeOptions(
     entryFileIos,
     e2eTestRunner: options.e2eTestRunner,
     offsetFromRoot: offsetFromRoot(appProjectRoot),
+    frameworks: !!options.frameworks,
   };
 }

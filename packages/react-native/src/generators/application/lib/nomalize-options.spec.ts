@@ -34,7 +34,7 @@ describe('Normalize Options', () => {
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
       install: false,
-      useFrameworks: false,
+      frameworks: false,
     });
   });
 
@@ -59,7 +59,7 @@ describe('Normalize Options', () => {
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
       install: false,
-      useFrameworks: false,
+      frameworks: false,
     });
   });
 
@@ -86,7 +86,7 @@ describe('Normalize Options', () => {
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
       install: false,
-      useFrameworks: false,
+      frameworks: false,
     });
   });
 
@@ -111,7 +111,7 @@ describe('Normalize Options', () => {
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
       install: false,
-      useFrameworks: false,
+      frameworks: false,
     });
   });
 
@@ -137,7 +137,7 @@ describe('Normalize Options', () => {
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
       install: false,
-      useFrameworks: false,
+      frameworks: false,
     });
   });
   it('should normalize options with frameworks', () => {
@@ -164,7 +164,6 @@ describe('Normalize Options', () => {
       unitTestRunner: 'jest',
       install: false,
       frameworks: true,
-      useFrameworks: true,
     });
   });
 });
