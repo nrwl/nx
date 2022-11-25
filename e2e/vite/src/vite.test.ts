@@ -84,6 +84,7 @@ describe('Vite Plugin', () => {
           `apps/${myApp}/vite.config.ts`,
           `
     /// <reference types="vitest" />
+    import { join } from 'path';
     import { defineConfig } from 'vite';
     import react from '@vitejs/plugin-react';
     import plugin from 'vite-tsconfig-paths';
@@ -93,7 +94,7 @@ describe('Vite Plugin', () => {
         react(),
         plugin({
           root: '../../',
-          projects: ['tsconfig.base.json'],
+          projects: [join(__dirname, 'tsconfig.json')],
         }),
       ],
       test: {
