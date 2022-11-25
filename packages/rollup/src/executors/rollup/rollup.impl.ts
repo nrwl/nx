@@ -302,7 +302,7 @@ function createTsCompilerOptions(
 ) {
   const compilerOptionPaths = computeCompilerOptionsPaths(config, dependencies);
   const compilerOptions = {
-    rootDir: options.entryRoot,
+    rootDir: options.projectRoot,
     allowJs: false,
     declaration: true,
     paths: compilerOptionPaths,

@@ -8,6 +8,7 @@ import {
 import { writeJsonFile } from 'nx/src/utils/fileutils';
 import { PackageJson } from 'nx/src/utils/package-json';
 import { NormalizedRollupExecutorOptions } from './normalize';
+import { joinPathFragments } from 'nx/src/utils/path';
 
 export function updatePackageJson(
   options: NormalizedRollupExecutorOptions,
@@ -19,7 +20,7 @@ export function updatePackageJson(
   const hasEsmFormat = options.format.includes('esm');
   const hasCjsFormat = options.format.includes('cjs');
 
-  const types = `./${relative(options.entryRoot, options.main).replace(
+  const types = `./${relative(options.projectRoot, options.main).replace(
     /\.[jt]sx?$/,
     '.d.ts'
   )}`;
