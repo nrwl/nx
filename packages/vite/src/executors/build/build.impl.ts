@@ -19,9 +19,9 @@ export default async function viteBuildExecutor(
     );
   }
 
-  logger.info(`NX Vite builder starting ...`);
+  logger.info(`NX Vite build starting ...`);
   await runInstance(await getBuildConfig(options, context));
-  logger.info(`NX Vite builder finished ...`);
+  logger.info(`NX Vite build finished ...`);
   logger.info(`NX Vite files available in ${options.outputPath}`);
   return { success: true };
 }
