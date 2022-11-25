@@ -74,9 +74,9 @@ export function ThemeSwitcher() {
                       className={cx(
                         'flex cursor-pointer items-center px-4 py-2 text-sm',
                         {
-                          'bg-gray-100 dark:bg-slate-800/60': active,
+                          'bg-slate-100 dark:bg-slate-800/60': active,
                           'text-blue-500 dark:text-sky-500': active || selected,
-                          'text-gray-700 dark:text-slate-400': !active,
+                          'text-slate-700 dark:text-slate-400': !active,
                         }
                       )}
                     >

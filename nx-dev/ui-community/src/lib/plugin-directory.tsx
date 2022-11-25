@@ -21,7 +21,7 @@ export function PluginDirectory({
       className="max-w-screen mx-auto p-4 lg:max-w-7xl lg:px-8"
     >
       <div className="flex w-full flex-col justify-between gap-8 md:flex-row ">
-        <h2 className="text-3xl font-extrabold tracking-tight text-gray-900">
+        <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">
           Nx Plugin Directory
         </h2>
         <div>

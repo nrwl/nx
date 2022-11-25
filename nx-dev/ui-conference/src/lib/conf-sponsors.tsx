@@ -86,10 +86,10 @@ export function ConfSponsors(): JSX.Element {
     return result;
   }
   return (
-    <div className="border-t border-gray-600">
+    <div className="border-t border-slate-600">
       {sponsorLevelList.map((key, levelIndex) => (
         <div key={'sponsor-level--' + key}>
-          {/*<div className="border-b border-gray-600">*/}
+          {/*<div className="border-b border-slate-600">*/}
           {/*  <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto text-white">*/}
           {/*    <h4 className="my-8 px-5 text-lg font-input-mono">{key}</h4>*/}
           {/*  </div>*/}
@@ -98,7 +98,7 @@ export function ConfSponsors(): JSX.Element {
             <div
               key={'speaker-row--' + rowIndex}
               className={cx(
-                'border-b border-gray-600',
+                'border-b border-slate-600',
                 sponsorLevelList.length === levelIndex + 1 && 'border-b'
               )}
             >
@@ -107,7 +107,7 @@ export function ConfSponsors(): JSX.Element {
                   {row.map((speaker) => (
                     <div
                       key={speaker.name}
-                      className="border-gray-600 py-8 odd:border-b md:odd:border-r md:odd:border-b-0 md:odd:pr-12 md:even:pl-12"
+                      className="border-slate-600 py-8 odd:border-b md:odd:border-r md:odd:border-b-0 md:odd:pr-12 md:even:pl-12"
                     >
                       <div className="h-full px-5">
                         <SponsorCard
