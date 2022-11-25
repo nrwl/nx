@@ -415,7 +415,11 @@ ${options.includeVitest ? '/// <reference types="vitest" />' : ''}
       import { defineConfig } from 'vite';
       import react from '@vitejs/plugin-react';
       import ViteTsConfigPathsPlugin from 'vite-tsconfig-paths';
-      ${options.includeLib ? "import dts from 'vite-plugin-dts';" : ''}
+      ${
+        options.includeLib
+          ? `import dts from 'vite-plugin-dts';\nimport { join } from 'path';`
+          : ''
+      }
       
       export default defineConfig({
         plugins: [
@@ -436,7 +440,11 @@ ${options.includeVitest ? '/// <reference types="vitest" />' : ''}
       ${options.includeVitest ? '/// <reference types="vitest" />' : ''}
       import { defineConfig } from 'vite';
       import ViteTsConfigPathsPlugin from 'vite-tsconfig-paths';
-      ${options.includeLib ? "import dts from 'vite-plugin-dts';" : ''}
+      ${
+        options.includeLib
+          ? `import dts from 'vite-plugin-dts';\nimport { join } from 'path';`
+          : ''
+      }
       
       export default defineConfig({
         plugins: [
