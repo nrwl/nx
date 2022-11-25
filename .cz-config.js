@@ -45,6 +45,7 @@ module.exports = {
       name: 'testing',
       description: 'anything testing specific (e.g., jest or cypress)',
     },
+    { name: 'vite', description: 'anything Vite specific' },
     { name: 'web', description: 'anything Web specific' },
     { name: 'webpack', description: 'anything Webpack specific' },
   ],
