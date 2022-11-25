@@ -16,6 +16,12 @@
       "x-dropdown": "project",
       "x-prompt": "What is the name of the project to set up a webpack for?"
     },
+    "includeLib": {
+      "type": "boolean",
+      "description": "Add a library build option.",
+      "default": false,
+      "x-prompt": "Does this project contain a buildable library?"
+    },
     "uiFramework": {
       "type": "string",
       "description": "UI Framework to use for Vite.",

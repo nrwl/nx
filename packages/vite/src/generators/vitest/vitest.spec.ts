@@ -107,14 +107,17 @@ describe('vitest generator', () => {
               import react from '@vitejs/plugin-react';
               import ViteTsConfigPathsPlugin from 'vite-tsconfig-paths';
               
+              
               export default defineConfig({
                 plugins: [
+                  
                   react(),
                   ViteTsConfigPathsPlugin({
                     root: '../../',
                     projects: ['tsconfig.base.json'],
                   }),
                 ],
+                
                 
                 test: {
             globals: true,
@@ -140,14 +143,17 @@ describe('vitest generator', () => {
               import react from '@vitejs/plugin-react';
               import ViteTsConfigPathsPlugin from 'vite-tsconfig-paths';
               
+              
               export default defineConfig({
                 plugins: [
+                  
                   react(),
                   ViteTsConfigPathsPlugin({
                     root: '../../',
                     projects: ['tsconfig.base.json'],
                   }),
                 ],
+                
                 define: {
             'import.meta.vitest': undefined
           },

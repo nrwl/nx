@@ -80,6 +80,7 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
   const initTask = await reactInitGenerator(host, {
     ...options,
     skipFormat: true,
+    skipBabelConfig: options.bundler === 'vite',
   });
 
   tasks.push(initTask);
@@ -88,6 +89,10 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
   addProject(host, options);
 
   if (options.bundler === 'vite') {
+    // We recommend users use `import.meta.env.MODE` and other variables in their code to differentiate between production and development.
+    // See: https://vitejs.dev/guide/env-and-mode.html
+    host.delete(joinPathFragments(options.appProjectRoot, 'src/environments'));
+
     const viteTask = await viteConfigurationGenerator(host, {
       uiFramework: 'react',
       project: options.projectName,
@@ -111,9 +116,11 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
 
   const cypressTask = await addCypress(host, options);
   tasks.push(cypressTask);
-  const jestTask = await addJest(host, options);
-  tasks.push(jestTask);
-  updateSpecConfig(host, options);
+  if (options.unitTestRunner === 'jest') {
+    const jestTask = await addJest(host, options);
+    tasks.push(jestTask);
+    updateSpecConfig(host, options);
+  }
   const styledTask = addStyledModuleDependencies(host, options.styledModule);
   tasks.push(styledTask);
   const routingTask = addRouting(host, options);

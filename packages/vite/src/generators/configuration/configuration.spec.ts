@@ -1,4 +1,9 @@
-import { addDependenciesToPackageJson, readJson, Tree } from '@nrwl/devkit';
+import {
+  addDependenciesToPackageJson,
+  addProjectConfiguration,
+  readJson,
+  Tree,
+} from '@nrwl/devkit';
 import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { nxVersion } from '../../utils/versions';
 
@@ -114,6 +119,29 @@ describe('@nrwl/vite:configuration', () => {
         .read('apps/my-test-react-app/vite.config.ts')
         .toString();
       expect(viteConfig).toContain('test');
+    });
+  });
+
+  describe('library mode', () => {
+    beforeEach(async () => {
+      tree = createTreeWithEmptyV1Workspace();
+      addProjectConfiguration(tree, 'my-lib', {
+        root: 'my-lib',
+      });
+    });
+
+    it('should add config for building library', async () => {
+      await viteConfigurationGenerator(tree, {
+        uiFramework: 'react',
+        includeLib: true,
+        project: 'my-lib',
+        newProject: true,
+      });
+
+      const viteConfig = tree.read('my-lib/vite.config.ts').toString();
+
+      expect(viteConfig).toMatch('build: {');
+      expect(viteConfig).toMatch("external: ['react'");
     });
   });
 });

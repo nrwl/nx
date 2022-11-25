@@ -35,6 +35,7 @@ export async function viteConfigurationGenerator(tree: Tree, schema: Schema) {
 
   const initTask = await initGenerator(tree, {
     uiFramework: schema.uiFramework,
+    includeLib: schema.includeLib,
   });
   tasks.push(initTask);
 

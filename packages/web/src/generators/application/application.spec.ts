@@ -168,6 +168,12 @@ describe('app', () => {
       expect(tree.exists('apps/my-app-e2e/cypress.config.ts')).toBeTruthy();
       expect(tree.exists('apps/my-app/index.html')).toBeTruthy();
       expect(tree.exists('apps/my-app/vite.config.ts')).toBeTruthy();
+      expect(
+        tree.exists(`apps/my-app/environments/environment.ts`)
+      ).toBeFalsy();
+      expect(
+        tree.exists(`apps/my-app/environments/environment.prod.ts`)
+      ).toBeFalsy();
     });
 
     it('should extend from root tsconfig.json when no tsconfig.base.json', async () => {

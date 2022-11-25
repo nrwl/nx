@@ -40,20 +40,7 @@ export function normalizeOptions(
 
   assertValidStyle(options.style);
 
-  if (options.bundler === 'vite') {
-    options.unitTestRunner = 'vitest';
-  }
-
-  options.routing = options.routing ?? false;
-  options.strict = options.strict ?? true;
-  options.classComponent = options.classComponent ?? false;
-  options.unitTestRunner = options.unitTestRunner ?? 'jest';
-  options.e2eTestRunner = options.e2eTestRunner ?? 'cypress';
-  options.compiler = options.compiler ?? 'babel';
-  options.bundler = options.bundler ?? 'webpack';
-  options.devServerPort ??= findFreePort(host);
-
-  return {
+  const normalized = {
     ...options,
     name: names(options.name).fileName,
     projectName: appProjectName,
@@ -63,5 +50,18 @@ export function normalizeOptions(
     fileName,
     styledModule,
     hasStyles: options.style !== 'none',
-  };
+  } as NormalizedSchema;
+
+  normalized.routing = normalized.routing ?? false;
+  normalized.strict = normalized.strict ?? true;
+  normalized.classComponent = normalized.classComponent ?? false;
+  normalized.compiler = normalized.compiler ?? 'babel';
+  normalized.bundler = normalized.bundler ?? 'webpack';
+  normalized.unitTestRunner =
+    normalized.unitTestRunner ??
+    (normalized.bundler === 'vite' ? 'vitest' : 'jest');
+  normalized.e2eTestRunner = normalized.e2eTestRunner ?? 'cypress';
+  normalized.devServerPort ??= findFreePort(host);
+
+  return normalized;
 }

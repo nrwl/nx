@@ -185,7 +185,7 @@
       "description": "The bundler to use.",
       "type": "string",
       "enum": ["vite", "webpack"],
-      "x-prompt": "Which bundler do you want to use?",
+      "x-prompt": "Which bundler do you want to use to build the application?",
       "default": "webpack"
     }
   },

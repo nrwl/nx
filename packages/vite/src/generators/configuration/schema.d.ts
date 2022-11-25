@@ -4,4 +4,5 @@ export interface Schema {
   newProject?: boolean;
   includeVitest?: boolean;
   inSourceTests?: boolean;
+  includeLib?: boolean;
 }

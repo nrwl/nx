@@ -28,8 +28,8 @@ export function setDefaults(host: Tree, options: NormalizedSchema) {
       ...prev,
       application: {
         style: options.style,
-        unitTestRunner: options.unitTestRunner,
         linter: options.linter,
+        bundler: options.bundler,
         ...prev.application,
       },
       component: {
@@ -38,7 +38,6 @@ export function setDefaults(host: Tree, options: NormalizedSchema) {
       },
       library: {
         style: options.style,
-        unitTestRunner: options.unitTestRunner,
         linter: options.linter,
         ...prev.library,
       },

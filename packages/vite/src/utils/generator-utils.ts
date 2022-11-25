@@ -150,21 +150,23 @@ export function addOrChangeBuildTarget(
       options: buildOptions,
       configurations: {
         development: {},
-        production: {
-          fileReplacements: [
-            {
-              replace: joinPathFragments(
-                project.sourceRoot,
-                'environments/environment.ts'
-              ),
-              with: joinPathFragments(
-                project.sourceRoot,
-                'environments/environment.prod.ts'
-              ),
+        production: options.includeLib
+          ? {}
+          : {
+              fileReplacements: [
+                {
+                  replace: joinPathFragments(
+                    project.sourceRoot,
+                    'environments/environment.ts'
+                  ),
+                  with: joinPathFragments(
+                    project.sourceRoot,
+                    'environments/environment.prod.ts'
+                  ),
+                },
+              ],
+              sourceMap: false,
             },
-          ],
-          sourceMap: false,
-        },
       },
     };
   }
@@ -356,7 +358,8 @@ export function writeViteConfig(tree: Tree, options: Schema) {
 
   let viteConfigContent = '';
 
-  const testOption = `test: {
+  const testOption = options.includeVitest
+    ? `test: {
     globals: true,
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
@@ -365,11 +368,45 @@ export function writeViteConfig(tree: Tree, options: Schema) {
         ? `includeSource: ['src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']`
         : ''
     }
-  },`;
+  },`
+    : '';
 
-  const defineOption = `define: {
+  const defineOption = options.inSourceTests
+    ? `define: {
     'import.meta.vitest': undefined
-  },`;
+  },`
+    : '';
+
+  const dtsPlugin = `dts({
+      tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
+      // Faster builds by skipping tests. Set this to false to enable type checking.
+      skipDiagnostics: true,
+    }),`;
+
+  const buildOption = options.includeLib
+    ? `
+        // Configuration for building your library.
+        // See: https://vitejs.dev/guide/build.html#library-mode
+        build: {
+          lib: {
+            // Could also be a dictionary or array of multiple entry points.
+            entry: 'src/index.ts',
+            name: '${options.project}',
+            fileName: 'index',
+            // Change this to the formats you want to support.
+            // Don't forgot to update your package.json as well.
+            formats: ['es', 'cjs']
+          },
+          rollupOptions: {
+            // External packages that should not be bundled into your library.
+            external: [${
+              options.uiFramework === 'react'
+                ? "'react', 'react-dom', 'react/jsx-runtime'"
+                : ''
+            }]
+          }
+        },`
+    : '';
 
   switch (options.uiFramework) {
     case 'react':
@@ -378,17 +415,20 @@ ${options.includeVitest ? '/// <reference types="vitest" />' : ''}
       import { defineConfig } from 'vite';
       import react from '@vitejs/plugin-react';
       import ViteTsConfigPathsPlugin from 'vite-tsconfig-paths';
+      ${options.includeLib ? "import dts from 'vite-plugin-dts';" : ''}
       
       export default defineConfig({
         plugins: [
+          ${options.includeLib ? dtsPlugin : ''}
           react(),
           ViteTsConfigPathsPlugin({
             root: '${offsetFromRoot(projectConfig.root)}',
             projects: ['tsconfig.base.json'],
           }),
         ],
-        ${options.inSourceTests ? defineOption : ''}
-        ${options.includeVitest ? testOption : ''}
+        ${buildOption}
+        ${defineOption}
+        ${testOption}
       });`;
       break;
     case 'none':
@@ -396,16 +436,19 @@ ${options.includeVitest ? '/// <reference types="vitest" />' : ''}
       ${options.includeVitest ? '/// <reference types="vitest" />' : ''}
       import { defineConfig } from 'vite';
       import ViteTsConfigPathsPlugin from 'vite-tsconfig-paths';
+      ${options.includeLib ? "import dts from 'vite-plugin-dts';" : ''}
       
       export default defineConfig({
         plugins: [
+          ${options.includeLib ? dtsPlugin : ''}
           ViteTsConfigPathsPlugin({
             root: '${offsetFromRoot(projectConfig.root)}',
             projects: ['tsconfig.base.json'],
           }),
         ],
-        ${options.inSourceTests ? defineOption : ''}
-        ${options.includeVitest ? testOption : ''}
+        ${buildOption}
+        ${defineOption}
+        ${testOption}
       });`;
       break;
     default:

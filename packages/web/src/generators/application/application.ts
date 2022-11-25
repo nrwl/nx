@@ -192,6 +192,8 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
   const webTask = await webInitGenerator(host, {
     ...options,
     skipFormat: true,
+    // Vite does not use babel by default
+    skipBabelConfig: options.bundler === 'vite',
   });
   tasks.push(webTask);
 
@@ -199,6 +201,10 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
   await addProject(host, options);
 
   if (options.bundler === 'vite') {
+    // We recommend users use `import.meta.env.MODE` and other variables in their code to differentiate between production and development.
+    // See: https://vitejs.dev/guide/env-and-mode.html
+    host.delete(joinPathFragments(options.appProjectRoot, 'src/environments'));
+
     const viteTask = await viteConfigurationGenerator(host, {
       uiFramework: 'react',
       project: options.projectName,

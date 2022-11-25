@@ -31,6 +31,11 @@
             "enum": ["react", "none"],
             "default": "react",
             "x-prompt": "What UI framework plugin should Vite use?"
+          },
+          "includeLib": {
+            "type": "boolean",
+            "description": "Add dependencies needed to build libraries.",
+            "default": false
           }
         },
         "examplesFile": "This is a generator will initialize Vite.js in your workspace. It will install all the necessary dependencies. You can read more about how this generator works, in the [Vite package overview page](/packages/vite).\n\nYou can use it on its own like this:\n\n```bash\nnx g @nrwl/vite:configuration\n```\n\nHowever, this generator will be called when you are either converting an existing React or Web app to use Vite, using the [`@nrwl/vite:configuration` generator](/packages/vite/generators/configuration), or when you are creating a new React or Web app using the [`@nrwl/react:app`](/packages/react/generators/application) or [`@nrwl/web:app`](<(/packages/web/generators/application)>) generators, if you choose `vite` as the `bundler`.\n\n## Examples\n\n### Install all the necessary dependencies for Vite and the React plugin\n\n```bash\nnx g @nrwl/vite:init --uiFramework=react\n```\n\n### Install all the necessary dependencies for Vite\n\n```bash\nnx g @nrwl/vite:init --uiFramework=none\n```\n",
@@ -59,6 +64,12 @@
             "aliases": ["name", "projectName"],
             "x-dropdown": "project",
             "x-prompt": "What is the name of the project to set up a webpack for?"
+          },
+          "includeLib": {
+            "type": "boolean",
+            "description": "Add a library build option.",
+            "default": false,
+            "x-prompt": "Does this project contain a buildable library?"
           },
           "uiFramework": {
             "type": "string",

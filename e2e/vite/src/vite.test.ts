@@ -1,4 +1,5 @@
 import {
+  checkFilesExist,
   cleanupProject,
   createFile,
   exists,
@@ -32,36 +33,21 @@ describe('Vite Plugin', () => {
           `apps/${myApp}/index.html`,
           `
     <!DOCTYPE html>
-    <html lang="en">
+    <html lang='en'>
       <head>
-        <meta charset="utf-8" />
+        <meta charset='utf-8' />
         <title>My App</title>
-        <base href="/" />
+        <base href='/' />
 
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" type="image/x-icon" href="favicon.ico" />
+        <meta name='viewport' content='width=device-width, initial-scale=1' />
+        <link rel='icon' type='image/x-icon' href='favicon.ico' />
       </head>
       <body>
-        <div id="root"></div>
-        <script type="module" src="src/main.tsx"></script>
+        <div id='root'></div>
+        <script type='module' src='src/main.tsx'></script>
       </body>
     </html>
     `
-        );
-
-        createFile(
-          `apps/${myApp}/src/environments/environment.prod.ts`,
-          `export const environment = {
-        production: true,
-        myTestVar: 'MyProductionValue',
-      };`
-        );
-        createFile(
-          `apps/${myApp}/src/environments/environment.ts`,
-          `export const environment = {
-        production: false,
-        myTestVar: 'MyDevelopmentValue',
-      };`
         );
 
         updateFile(
@@ -168,20 +154,6 @@ describe('Vite Plugin', () => {
         });
       });
 
-      it('should build application and replace files', async () => {
-        runCLI(`build ${myApp}`);
-        expect(readFile(`dist/apps/${myApp}/index.html`)).toBeDefined();
-        const fileArray = listFiles(`dist/apps/${myApp}/assets`);
-        const mainBundle = fileArray.find((file) => file.endsWith('.js'));
-        expect(readFile(`dist/apps/${myApp}/assets/${mainBundle}`)).toContain(
-          'MyProductionValue'
-        );
-        expect(
-          readFile(`dist/apps/${myApp}/assets/${mainBundle}`)
-        ).not.toContain('MyDevelopmentValue');
-        rmDist();
-      }, 200000);
-
       it('should serve application in dev mode', async () => {
         const port = 4212;
         const p = await runCommandUntil(
@@ -206,76 +178,11 @@ describe('Vite Plugin', () => {
       });
     });
 
-    describe('set up new React app with --bundler=vite option', () => {
-      beforeEach(() => {
-        proj = newProject();
-        runCLI(`generate @nrwl/react:app ${myApp} --bundler=vite`);
-        updateFile(
-          `apps/${myApp}/src/environments/environment.prod.ts`,
-          `export const environment = {
-        production: true,
-        myTestVar: 'MyProductionValue',
-      };`
-        );
-        updateFile(
-          `apps/${myApp}/src/environments/environment.ts`,
-          `export const environment = {
-        production: false,
-        myTestVar: 'MyDevelopmentValue',
-      };`
-        );
-
-        updateFile(
-          `apps/${myApp}/src/app/app.tsx`,
-          `
-        import { environment } from './../environments/environment';
-        export function App() {
-          return (
-            <>
-              <h1>{environment.myTestVar}</h1>
-              <p>Welcome ${myApp}!</p>
-            </>
-          );
-        }
-        export default App;
-      `
-        );
-      });
-      afterEach(() => cleanupProject());
-      it('should build application and replace files', async () => {
-        runCLI(`build ${myApp}`);
-        expect(readFile(`dist/apps/${myApp}/index.html`)).toBeDefined();
-        const fileArray = listFiles(`dist/apps/${myApp}/assets`);
-        const mainBundle = fileArray.find((file) => file.endsWith('.js'));
-        expect(readFile(`dist/apps/${myApp}/assets/${mainBundle}`)).toContain(
-          'MyProductionValue'
-        );
-        expect(
-          readFile(`dist/apps/${myApp}/assets/${mainBundle}`)
-        ).not.toContain('MyDevelopmentValue');
-        rmDist();
-      }, 200000);
-    });
-
     describe('convert React webpack app to vite using the vite:configuration generator', () => {
       beforeEach(() => {
         proj = newProject();
         runCLI(`generate @nrwl/react:app ${myApp} --bundler=webpack`);
         runCLI(`generate @nrwl/vite:configuration ${myApp}`);
-        updateFile(
-          `apps/${myApp}/src/environments/environment.prod.ts`,
-          `export const environment = {
-        production: true,
-        myTestVar: 'MyProductionValue',
-      };`
-        );
-        updateFile(
-          `apps/${myApp}/src/environments/environment.ts`,
-          `export const environment = {
-        production: false,
-        myTestVar: 'MyDevelopmentValue',
-      };`
-        );
 
         updateFile(
           `apps/${myApp}/src/app/app.tsx`,
@@ -294,18 +201,6 @@ describe('Vite Plugin', () => {
         );
       });
       afterEach(() => cleanupProject());
-      it('should build application and replace files', async () => {
-        runCLI(`build ${myApp}`);
-        expect(readFile(`dist/apps/${myApp}/index.html`)).toBeDefined();
-        const fileArray = listFiles(`dist/apps/${myApp}/assets`);
-        const mainBundle = fileArray.find((file) => file.endsWith('.js'));
-        expect(readFile(`dist/apps/${myApp}/assets/${mainBundle}`)).toContain(
-          'MyProductionValue'
-        );
-        expect(
-          readFile(`dist/apps/${myApp}/assets/${mainBundle}`)
-        ).not.toContain('MyDevelopmentValue');
-      }, 200000);
 
       it('should serve application in dev mode', async () => {
         const port = 4212;
@@ -348,7 +243,7 @@ describe('Vite Plugin', () => {
           readFile(`dist/apps/${myApp}/assets/${mainBundle}`)
         ).toBeDefined();
         rmDist();
-      }, 200000);
+      }, 200_000);
     });
 
     describe('convert @nrwl/web webpack app to vite using the vite:configuration generator', () => {
@@ -391,14 +286,16 @@ describe('Vite Plugin', () => {
           `Successfully ran target test for project ${myApp}`
         );
       });
-    });
+    }),
+      100_000;
   });
 
   describe('should be able to create libs that use vitest', () => {
     const lib = uniq('my-lib');
     beforeEach(() => {
       proj = newProject();
-    });
+    }),
+      100_000;
 
     it('should be able to run tests', async () => {
       runCLI(`generate @nrwl/react:lib ${lib} --unitTestRunner=vitest`);
@@ -408,7 +305,8 @@ describe('Vite Plugin', () => {
       expect(result.combinedOutput).toContain(
         `Successfully ran target test for project ${lib}`
       );
-    });
+    }),
+      100_000;
 
     it('should be able to run tests with inSourceTests set to true', async () => {
       runCLI(
@@ -432,6 +330,6 @@ describe('Vite Plugin', () => {
 
       const result = await runCLIAsync(`test ${lib}`);
       expect(result.combinedOutput).toContain(`1 passed`);
-    });
+    }, 100_000);
   });
 });

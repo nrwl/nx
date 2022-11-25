@@ -19,7 +19,6 @@ describe('app', () => {
     compiler: 'babel',
     e2eTestRunner: 'cypress',
     skipFormat: false,
-    unitTestRunner: 'jest',
     name: 'myApp',
     linter: Linter.EsLint,
     style: 'css',
@@ -381,6 +380,12 @@ describe('app', () => {
     expect(targetConfig.build.options).toEqual({
       outputPath: 'dist/apps/my-app',
     });
+    expect(
+      appTree.exists(`apps/my-app/environments/environment.ts`)
+    ).toBeFalsy();
+    expect(
+      appTree.exists(`apps/my-app/environments/environment.prod.ts`)
+    ).toBeFalsy();
   });
 
   it('should setup the nrwl web dev server builder', async () => {
