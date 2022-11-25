@@ -4,7 +4,7 @@ export function MigrationsAndCodeGeneration(): JSX.Element {
   return (
     <article
       id="affected-and-code-generation"
-      className="relative overflow-hidden bg-gray-50 py-28 dark:bg-slate-800/40"
+      className="relative overflow-hidden bg-slate-50 py-28 dark:bg-slate-800/40"
     >
       <div className="mx-auto max-w-7xl py-12 px-4 sm:grid sm:grid-cols-2 sm:gap-8 sm:px-6 lg:py-16 lg:px-8">
         <div>

@@ -46,7 +46,7 @@ export function VscodeIntegrationTab(): JSX.Element {
       className="wrapper my-8 grid h-full items-center gap-16 md:grid-cols-2 lg:grid-cols-3"
     >
       <div className="lg:col-span-2">
-        <div className="w-full overflow-hidden overflow-hidden rounded-lg rounded-lg border border-gray-200 shadow-lg shadow dark:hidden dark:border-slate-700">
+        <div className="w-full overflow-hidden overflow-hidden rounded-lg rounded-lg border border-slate-200 shadow-lg shadow dark:hidden dark:border-slate-700">
           <Image
             src="/images/nx-console/vscode-light.webp"
             alt="Nx Console app screenshot"
@@ -56,7 +56,7 @@ export function VscodeIntegrationTab(): JSX.Element {
             height={800}
           />
         </div>
-        <div className="hidden w-full overflow-hidden overflow-hidden rounded-lg rounded-lg border border-gray-200 shadow-lg shadow dark:block dark:border-slate-700">
+        <div className="hidden w-full overflow-hidden overflow-hidden rounded-lg rounded-lg border border-slate-200 shadow-lg shadow dark:block dark:border-slate-700">
           <Image
             src="/images/nx-console/vscode-dark.webp"
             alt="Nx Console app screenshot"
@@ -96,7 +96,7 @@ export function VscodeIntegrationTab(): JSX.Element {
               <h3 className="text-sm font-medium">{feature.name}</h3>
               <Link href={feature.link}>
                 <span className="absolute inset-0" aria-hidden="true" />
-                <p className="mt-2 text-sm text-gray-500">
+                <p className="mt-2 text-sm text-slate-500">
                   {feature.description}
                 </p>
               </Link>

@@ -68,7 +68,7 @@ export function NxIsFast(): JSX.Element {
   return (
     <article
       id="nx-is-fast"
-      className="relative bg-gray-50 py-28 dark:bg-slate-800/40"
+      className="relative bg-slate-50 py-28 dark:bg-slate-800/40"
     >
       <motion.div
         ref={ref}
@@ -145,7 +145,7 @@ export function NxIsFast(): JSX.Element {
                   aria-hidden="true"
                 />
               </div>
-              <p className="relative mt-4 text-base font-medium leading-6 text-gray-900 dark:text-slate-100">
+              <p className="relative mt-4 text-base font-medium leading-6 text-slate-900 dark:text-slate-100">
                 <span className="absolute -left-4 h-full w-0.5 bg-blue-500 dark:bg-sky-500"></span>
                 Never rebuild the same code twice
               </p>
@@ -171,7 +171,7 @@ export function NxIsFast(): JSX.Element {
                   aria-hidden="true"
                 />
               </div>
-              <p className="relative mt-4 text-base font-medium leading-6 text-gray-900 dark:text-slate-100">
+              <p className="relative mt-4 text-base font-medium leading-6 text-slate-900 dark:text-slate-100">
                 <span className="absolute -left-4 h-full w-0.5 bg-blue-500 dark:bg-sky-500"></span>
                 Distributed task execution (DTE)
               </p>
@@ -201,12 +201,12 @@ export function NxIsFast(): JSX.Element {
                   aria-hidden="true"
                 />
               </div>
-              <p className="relative mt-4 text-base font-medium leading-6 text-gray-900 dark:text-slate-100">
+              <p className="relative mt-4 text-base font-medium leading-6 text-slate-900 dark:text-slate-100">
                 <span className="absolute -left-4 h-full w-0.5 bg-blue-500 dark:bg-sky-500"></span>
                 Remote caching
               </p>
             </dt>
-            <dd className="mt-2 text-base text-gray-500 dark:text-slate-400">
+            <dd className="mt-2 text-base text-slate-500 dark:text-slate-400">
               <span className="font-medium">
                 Share your local computation cache
               </span>{' '}
@@ -229,12 +229,12 @@ export function NxIsFast(): JSX.Element {
                   aria-hidden="true"
                 />
               </div>
-              <p className="relative mt-4 text-base font-medium leading-6 text-gray-900 dark:text-slate-100">
+              <p className="relative mt-4 text-base font-medium leading-6 text-slate-900 dark:text-slate-100">
                 <span className="absolute -left-4 h-full w-0.5 bg-blue-500 dark:bg-sky-500"></span>
                 Only run what changed
               </p>
             </dt>
-            <dd className="mt-2 text-base text-gray-500 dark:text-slate-400">
+            <dd className="mt-2 text-base text-slate-500 dark:text-slate-400">
               Nothing is faster than not running a task. Nx analyzes your
               project graph and can{' '}
               <span className="font-medium">
