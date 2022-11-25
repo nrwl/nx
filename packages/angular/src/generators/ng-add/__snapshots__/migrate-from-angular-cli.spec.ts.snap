@@ -5,17 +5,24 @@ Object {
   "affected": Object {
     "defaultBase": "main",
   },
-  "implicitDependencies": Object {
-    ".eslintrc.json": "*",
-    "package.json": Object {
-      "dependencies": "*",
-      "devDependencies": "*",
-    },
+  "namedInputs": Object {
+    "default": Array [
+      "{projectRoot}/**/*",
+      "sharedGlobals",
+    ],
+    "production": Array [
+      "default",
+    ],
+    "sharedGlobals": Array [],
   },
   "targetDefaults": Object {
     "build": Object {
       "dependsOn": Array [
         "^build",
+      ],
+      "inputs": Array [
+        "production",
+        "^production",
       ],
     },
   },
@@ -24,9 +31,6 @@ Object {
       "options": Object {
         "cacheableOperations": Array [
           "build",
-          "lint",
-          "test",
-          "e2e",
         ],
       },
       "runner": "nx/tasks-runners/default",
@@ -44,18 +48,40 @@ Object {
   "affected": Object {
     "defaultBase": "main",
   },
-  "defaultProject": "app1",
-  "implicitDependencies": Object {
-    ".eslintrc.json": "*",
-    "package.json": Object {
-      "dependencies": "*",
-      "devDependencies": "*",
-    },
+  "namedInputs": Object {
+    "default": Array [
+      "{projectRoot}/**/*",
+      "sharedGlobals",
+    ],
+    "production": Array [
+      "default",
+      "!{projectRoot}/tsconfig.spec.json",
+      "!{projectRoot}/**/*.spec.[jt]s",
+      "!{projectRoot}/karma.conf.js",
+    ],
+    "sharedGlobals": Array [],
   },
   "targetDefaults": Object {
     "build": Object {
       "dependsOn": Array [
         "^build",
+      ],
+      "inputs": Array [
+        "production",
+        "^production",
+      ],
+    },
+    "e2e": Object {
+      "inputs": Array [
+        "default",
+        "^production",
+      ],
+    },
+    "test": Object {
+      "inputs": Array [
+        "default",
+        "^production",
+        "{workspaceRoot}/karma.conf.js",
       ],
     },
   },
@@ -64,7 +90,6 @@ Object {
       "options": Object {
         "cacheableOperations": Array [
           "build",
-          "lint",
           "test",
           "e2e",
         ],
@@ -75,6 +100,81 @@ Object {
   "workspaceLayout": Object {
     "appsDir": "projects",
     "libsDir": "projects",
+  },
+}
+`;
+
+exports[`workspace --preserve-angular-cli-layout should support multiple projects 2`] = `
+Object {
+  "name": "app1",
+  "sourceRoot": "src",
+  "targets": Object {
+    "build": Object {
+      "executor": "@angular-devkit/build-angular:browser",
+      "options": Object {
+        "tsConfig": "tsconfig.app.json",
+      },
+    },
+    "e2e": Object {
+      "executor": "@angular-devkit/build-angular:protractor",
+      "options": Object {
+        "protractorConfig": "e2e/protractor.conf.js",
+      },
+    },
+    "test": Object {
+      "executor": "@angular-devkit/build-angular:karma",
+      "options": Object {
+        "tsConfig": "tsconfig.spec.json",
+      },
+    },
+  },
+}
+`;
+
+exports[`workspace --preserve-angular-cli-layout should support multiple projects 3`] = `
+Object {
+  "name": "app2",
+  "sourceRoot": "projects/app2/src",
+  "targets": Object {
+    "build": Object {
+      "executor": "@angular-devkit/build-angular:browser",
+      "options": Object {
+        "tsConfig": "projects/app2/tsconfig.app.json",
+      },
+    },
+    "e2e": Object {
+      "executor": "@angular-devkit/build-angular:protractor",
+      "options": Object {
+        "protractorConfig": "projects/app2/e2e/protractor.conf.js",
+      },
+    },
+    "test": Object {
+      "executor": "@angular-devkit/build-angular:karma",
+      "options": Object {
+        "tsConfig": "projects/app2/tsconfig.spec.json",
+      },
+    },
+  },
+}
+`;
+
+exports[`workspace --preserve-angular-cli-layout should support multiple projects 4`] = `
+Object {
+  "name": "lib1",
+  "sourceRoot": "projects/lib1/src",
+  "targets": Object {
+    "build": Object {
+      "executor": "@angular-devkit/build-angular:ng-packagr",
+      "options": Object {
+        "tsConfig": "projects/lib1/tsconfig.lib.json",
+      },
+    },
+    "test": Object {
+      "executor": "@angular-devkit/build-angular:karma",
+      "options": Object {
+        "tsConfig": "projects/lib1/tsconfig.spec.json",
+      },
+    },
   },
 }
 `;
@@ -163,18 +263,35 @@ Object {
     "defaultBase": "main",
   },
   "defaultProject": "myApp",
-  "implicitDependencies": Object {
-    ".eslintrc.json": "*",
-    "package.json": Object {
-      "dependencies": "*",
-      "devDependencies": "*",
-    },
+  "namedInputs": Object {
+    "default": Array [
+      "{projectRoot}/**/*",
+      "sharedGlobals",
+    ],
+    "production": Array [
+      "default",
+      "!{projectRoot}/tsconfig.spec.json",
+      "!{projectRoot}/**/*.spec.[jt]s",
+      "!{projectRoot}/karma.conf.js",
+      "!{projectRoot}/.eslintrc.json",
+    ],
+    "sharedGlobals": Array [],
   },
   "npmScope": "my-org",
   "targetDefaults": Object {
     "build": Object {
       "dependsOn": Array [
         "^build",
+      ],
+      "inputs": Array [
+        "production",
+        "^production",
+      ],
+    },
+    "e2e": Object {
+      "inputs": Array [
+        "default",
+        "^production",
       ],
     },
     "lint": Object {
@@ -183,14 +300,21 @@ Object {
         "{workspaceRoot}/.eslintrc.json",
       ],
     },
+    "test": Object {
+      "inputs": Array [
+        "default",
+        "^production",
+        "{workspaceRoot}/karma.conf.js",
+      ],
+    },
   },
   "tasksRunnerOptions": Object {
     "default": Object {
       "options": Object {
         "cacheableOperations": Array [
           "build",
-          "lint",
           "test",
+          "lint",
           "e2e",
         ],
       },
