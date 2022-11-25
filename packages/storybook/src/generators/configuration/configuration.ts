@@ -21,7 +21,7 @@ import {
   configureTsSolutionConfig,
   createProjectStorybookDir,
   createRootStorybookDir,
-  createRootStorybookDirForRootProjectInNestedWorkspace,
+  createRootStorybookDirForRootProject,
   projectIsRootProjectInNestedWorkspace,
   updateLintConfig,
 } from './util-functions';
@@ -32,6 +32,7 @@ import {
   storybookSwcAddonVersion,
   storybookTestRunnerVersion,
 } from '../../utils/versions';
+import { Console } from 'console';
 
 export async function configurationGenerator(
   tree: Tree,
@@ -41,20 +42,23 @@ export async function configurationGenerator(
 
   const tasks: GeneratorCallback[] = [];
 
-  const { projectType, targets, root, sourceRoot } = readProjectConfiguration(
+  const { projectType, targets, root } = readProjectConfiguration(
     tree,
     schema.name
   );
-  const { nextBuildTarget, compiler } =
+  const { nextBuildTarget, compiler, viteBuildTarget } =
     findStorybookAndBuildTargetsAndCompiler(targets);
+
+  console.log(findStorybookAndBuildTargetsAndCompiler(targets));
 
   const initTask = await initGenerator(tree, {
     uiFramework: schema.uiFramework,
+    bundler: schema.bundler,
   });
   tasks.push(initTask);
 
   if (projectIsRootProjectInNestedWorkspace(root)) {
-    createRootStorybookDirForRootProjectInNestedWorkspace(
+    createRootStorybookDirForRootProject(
       tree,
       schema.name,
       schema.uiFramework,
@@ -63,7 +67,8 @@ export async function configurationGenerator(
       root,
       projectType,
       !!nextBuildTarget,
-      compiler === 'swc'
+      compiler === 'swc',
+      schema.bundler === 'vite' || !!viteBuildTarget
     );
   } else {
     createRootStorybookDir(tree, schema.js, schema.tsConfiguration);
@@ -74,7 +79,8 @@ export async function configurationGenerator(
       schema.js,
       schema.tsConfiguration,
       !!nextBuildTarget,
-      compiler === 'swc'
+      compiler === 'swc',
+      schema.bundler === 'vite' || !!viteBuildTarget
     );
   }
 

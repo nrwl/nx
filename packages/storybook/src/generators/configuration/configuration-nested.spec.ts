@@ -105,6 +105,20 @@ describe('@nrwl/storybook:configuration for workspaces with Root project', () =>
       expect(tree.exists('.storybook/main.ts')).toBeTruthy();
       expect(tree.exists('.storybook/tsconfig.json')).toBeTruthy();
       expect(tree.exists('.storybook/preview.ts')).toBeTruthy();
+
+      expect(tree.read('.storybook/main.ts', 'utf-8')).toMatchSnapshot();
+      expect(tree.read('.storybook/tsconfig.json', 'utf-8')).toMatchSnapshot();
+      expect(tree.read('.storybook/preview.ts', 'utf-8')).toMatchSnapshot();
+      expect(tree.read('.storybook/main.root.ts', 'utf-8')).toMatchSnapshot();
+      expect(
+        tree.read('apps/reapp/.storybook/main.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read('apps/reapp/.storybook/tsconfig.json', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read('apps/reapp/.storybook/preview.ts', 'utf-8')
+      ).toMatchSnapshot();
     });
   });
 });

@@ -8,4 +8,5 @@ export interface Schema {
     | '@storybook/vue3'
     | '@storybook/svelte'
     | '@storybook/react-native';
+  bundler?: 'webpack' | 'vite';
 }

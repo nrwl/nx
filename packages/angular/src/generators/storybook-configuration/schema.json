@@ -72,8 +72,7 @@
     },
     "configureTestRunner": {
       "type": "boolean",
-      "description": "Add a Storybook Test-Runner target.",
-      "x-prompt": "Add a Storybook Test-Runner target?"
+      "description": "Add a Storybook Test-Runner target."
     }
   },
   "additionalProperties": false,

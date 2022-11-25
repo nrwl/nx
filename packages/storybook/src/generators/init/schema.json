@@ -19,6 +19,12 @@
         "@storybook/react-native"
       ],
       "x-prompt": "What UI framework plugin should storybook use?"
+    },
+    "bundler": {
+      "description": "The bundler to use.",
+      "enum": ["vite", "webpack"],
+      "x-prompt": "Which bundler do you want to use?",
+      "default": "webpack"
     }
   }
 }

@@ -705,8 +705,13 @@
           },
           "configureTestRunner": {
             "type": "boolean",
-            "description": "Add a Storybook Test-Runner target.",
-            "x-prompt": "Add a Storybook Test-Runner target?"
+            "description": "Add a Storybook Test-Runner target."
+          },
+          "bundler": {
+            "description": "The Storybook builder to use.",
+            "enum": ["vite", "webpack"],
+            "x-prompt": "Which Storybook builder do you want to use?",
+            "default": "webpack"
           }
         },
         "required": ["name"],
