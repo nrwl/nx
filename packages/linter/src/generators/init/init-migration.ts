@@ -66,7 +66,10 @@ export function findLintTarget(
 }
 
 function migrateEslintFile(projectEslintPath: string, tree: Tree) {
-  if (projectEslintPath.endsWith('.json')) {
+  if (
+    projectEslintPath.endsWith('.json') ||
+    projectEslintPath.endsWith('.eslintrc')
+  ) {
     updateJson(tree, projectEslintPath, (json) => {
       // we have a new root now
       delete json.root;
