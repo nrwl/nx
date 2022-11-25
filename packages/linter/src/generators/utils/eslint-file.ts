@@ -7,6 +7,7 @@ export const eslintConfigFileWhitelist = [
   '.eslintrc.yaml',
   '.eslintrc.yml',
   '.eslintrc.json',
+  'eslint.config.js', // new format that requires `ESLINT_USE_FLAT_CONFIG=true`
 ];
 
 export function findEslintFile(tree: Tree): string | null {
