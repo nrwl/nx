@@ -32,6 +32,10 @@ const DAEMON_ENV_SETTINGS = {
 };
 
 export type UnregisterCallback = () => void;
+export type ChangedFiles = {
+  path: string;
+  type: 'create' | 'update' | 'delete';
+};
 
 export class DaemonClient {
   constructor(private readonly nxJson: NxJsonConfiguration) {
@@ -113,7 +117,7 @@ export class DaemonClient {
       error: Error | null | 'closed',
       data: {
         changedProjects: string[];
-        changedFiles: { path: string; type: 'CREATE' | 'UPDATE' | 'DELETE' }[];
+        changedFiles: ChangedFiles[];
       } | null
     ) => void
   ): Promise<UnregisterCallback> {

@@ -177,14 +177,14 @@ export async function* tscExecutor(
     const disposeWatchAssetChanges =
       await assetHandler.watchAndProcessOnAssetChange();
     const disposePackageJsonChanges = await watchForSingleFileChanges(
-      join(context.root, projectRoot),
+      context.projectName,
       'package.json',
       () => updatePackageJson(options, context, target, dependencies)
     );
     const handleTermination = async (exitCode: number) => {
-      await disposeWatchAssetChanges();
-      await disposePackageJsonChanges();
       await typescriptCompilation.close();
+      disposeWatchAssetChanges();
+      disposePackageJsonChanges();
       process.exit(exitCode);
     };
     process.on('SIGINT', () => handleTermination(128 + 2));

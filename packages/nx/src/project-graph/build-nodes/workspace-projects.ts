@@ -26,20 +26,24 @@ export function buildWorkspaceProjectNodes(
     if (existsSync(join(projectRoot, 'package.json'))) {
       p.targets = mergeNpmScriptsWithTargets(projectRoot, p.targets);
 
-      const { nx }: PackageJson = readJsonFile(
-        join(projectRoot, 'package.json')
-      );
-      if (nx?.tags) {
-        p.tags = [...(p.tags || []), ...nx.tags];
-      }
-      if (nx?.implicitDependencies) {
-        p.implicitDependencies = [
-          ...(p.implicitDependencies || []),
-          ...nx.implicitDependencies,
-        ];
-      }
-      if (nx?.namedInputs) {
-        p.namedInputs = { ...(p.namedInputs || {}), ...nx.namedInputs };
+      try {
+        const { nx }: PackageJson = readJsonFile(
+          join(projectRoot, 'package.json')
+        );
+        if (nx?.tags) {
+          p.tags = [...(p.tags || []), ...nx.tags];
+        }
+        if (nx?.implicitDependencies) {
+          p.implicitDependencies = [
+            ...(p.implicitDependencies || []),
+            ...nx.implicitDependencies,
+          ];
+        }
+        if (nx?.namedInputs) {
+          p.namedInputs = { ...(p.namedInputs || {}), ...nx.namedInputs };
+        }
+      } catch (e) {
+        // ignore json parser errors
       }
     }
 
