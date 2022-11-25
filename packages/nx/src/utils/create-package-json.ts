@@ -1,6 +1,8 @@
 import { readJsonFile } from './fileutils';
 import { sortObjectByKeys } from 'nx/src/utils/object-sort';
 import { ProjectGraph } from '../config/project-graph';
+import { PackageJson } from './package-json';
+import { existsSync } from 'fs';
 
 /**
  * Creates a package.json in the output directory for support to install dependencies within containers.
@@ -13,7 +15,7 @@ export function createPackageJson(
   options: {
     root?: string;
   }
-): any {
+): PackageJson {
   const npmDeps = findAllNpmDeps(projectName, graph);
   // default package.json if one does not exist
   let packageJson = {
@@ -22,19 +24,21 @@ export function createPackageJson(
     dependencies: {},
     devDependencies: {},
   };
-  try {
-    packageJson = readJsonFile(
-      `${graph.nodes[projectName].data.root}/package.json`
-    );
-    if (!packageJson.dependencies) {
-      packageJson.dependencies = {};
-    }
-    if (!packageJson.devDependencies) {
-      packageJson.devDependencies = {};
-    }
-  } catch (e) {}
+  if (existsSync(`${graph.nodes[projectName].data.root}/package.json`)) {
+    try {
+      packageJson = readJsonFile(
+        `${graph.nodes[projectName].data.root}/package.json`
+      );
+      if (!packageJson.dependencies) {
+        packageJson.dependencies = {};
+      }
+      if (!packageJson.devDependencies) {
+        packageJson.devDependencies = {};
+      }
+    } catch (e) {}
+  }
 
-  const rootPackageJson = readJsonFile(`${options.root}/package.json`);
+  const rootPackageJson = readJsonFile(`${options.root || '.'}/package.json`);
   Object.entries(npmDeps).forEach(([packageName, version]) => {
     if (rootPackageJson.devDependencies?.[packageName]) {
       packageJson.devDependencies[packageName] = version;
@@ -69,7 +73,9 @@ function findAllNpmDeps(
   } else {
     // we are not interested in the dependencies of external projects
     graph.dependencies[projectName]?.forEach((dep) => {
-      findAllNpmDeps(dep.target, graph, list, seen);
+      if (dep.type === 'static' || dep.type === 'dynamic') {
+        findAllNpmDeps(dep.target, graph, list, seen);
+      }
     });
   }
 
