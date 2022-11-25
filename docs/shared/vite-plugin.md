@@ -170,7 +170,7 @@ export default defineConfig({
     react(),
     ViteTsConfigPathsPlugin({
       root: '../../',
-      projects: ['tsconfig.base.json'],
+      projects: ['./tsconfig.json'],
     }),
   ],
 });
@@ -213,7 +213,7 @@ export default mergeConfig(baseConfig, {
     react(),
     ViteTsConfigPathsPlugin({
       root: '../../',
-      projects: ['tsconfig.base.json'],
+      projects: ['./tsconfig.json'],
     }),
   ],
 });

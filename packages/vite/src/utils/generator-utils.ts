@@ -375,6 +375,7 @@ export function writeViteConfig(tree: Tree, options: Schema) {
     case 'react':
       viteConfigContent = `
 ${options.includeVitest ? '/// <reference types="vitest" />' : ''}
+      import { join } from 'path';
       import { defineConfig } from 'vite';
       import react from '@vitejs/plugin-react';
       import ViteTsConfigPathsPlugin from 'vite-tsconfig-paths';
@@ -384,7 +385,7 @@ ${options.includeVitest ? '/// <reference types="vitest" />' : ''}
           react(),
           ViteTsConfigPathsPlugin({
             root: '${offsetFromRoot(projectConfig.root)}',
-            projects: ['tsconfig.base.json'],
+            projects: [join(__dirname, 'tsconfig.json')],
           }),
         ],
         ${options.inSourceTests ? defineOption : ''}
@@ -394,6 +395,7 @@ ${options.includeVitest ? '/// <reference types="vitest" />' : ''}
     case 'none':
       viteConfigContent = `
       ${options.includeVitest ? '/// <reference types="vitest" />' : ''}
+      import { join } from 'path';
       import { defineConfig } from 'vite';
       import ViteTsConfigPathsPlugin from 'vite-tsconfig-paths';
       
@@ -401,7 +403,7 @@ ${options.includeVitest ? '/// <reference types="vitest" />' : ''}
         plugins: [
           ViteTsConfigPathsPlugin({
             root: '${offsetFromRoot(projectConfig.root)}',
-            projects: ['tsconfig.base.json'],
+            projects: [join(__dirname, 'tsconfig.json')],
           }),
         ],
         ${options.inSourceTests ? defineOption : ''}
