@@ -5,6 +5,7 @@ exports[`@nrwl/storybook:configuration basic functionalities should generate a w
 
 
 
+
 module.exports = {
   ...rootMain,
   core: { ...rootMain.core, builder: 'webpack5' },
@@ -104,6 +105,7 @@ Array [
 
 exports[`@nrwl/storybook:configuration basic functionalities should reference the "old" webpack.config.js if there - for backwards compatibility 1`] = `
 "const rootMain = require('../../../.storybook/main');
+
 const rootWebpackConfig = require('../../../.storybook/webpack.config'); 
 
 
@@ -140,6 +142,7 @@ module.exports = {
 
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for Storybook configurations with Vite should create correct main.ts and tsconfig.json for NextJS buildable libs 1`] = `
 "import { rootMain } from '../../../.storybook/main';
+
 import type { StorybookConfig, Options } from '@storybook/core-common';
 
 
@@ -198,6 +201,7 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for Storybook configurations with Vite should create correct main.ts and tsconfig.json for NextJS libs 1`] = `
 "import { rootMain } from '../../../.storybook/main';
+
 import type { StorybookConfig, Options } from '@storybook/core-common';
 
 
@@ -256,6 +260,7 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for Storybook configurations with Vite should create correct main.ts and tsconfig.json for NextJs apps 1`] = `
 "import { rootMain } from '../../../.storybook/main';
+
 import type { StorybookConfig, Options } from '@storybook/core-common';
 import path from 'path';
 
@@ -321,6 +326,7 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for Storybook configurations with Vite should create correct main.ts and tsconfig.json for React apps 1`] = `
 "import { rootMain } from '../../../.storybook/main';
+
 import type { StorybookConfig, Options } from '@storybook/core-common';
 
 
@@ -379,6 +385,7 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for Storybook configurations with Vite should create correct main.ts and tsconfig.json for React apps using the swc compiler 1`] = `
 "import { rootMain } from '../../../.storybook/main';
+
 import type { StorybookConfig, Options } from '@storybook/core-common';
 
 
@@ -437,6 +444,7 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for Storybook configurations with Vite should create correct main.ts and tsconfig.json for React buildable libs 1`] = `
 "import { rootMain } from '../../../.storybook/main';
+
 import type { StorybookConfig, Options } from '@storybook/core-common';
 
 
@@ -495,6 +503,7 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for NextJS buildable libs 1`] = `
 "import { rootMain } from '../../../.storybook/main';
+
 import type { StorybookConfig, Options } from '@storybook/core-common';
 
 
@@ -553,6 +562,7 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for NextJS libs 1`] = `
 "import { rootMain } from '../../../.storybook/main';
+
 import type { StorybookConfig, Options } from '@storybook/core-common';
 
 
@@ -611,6 +621,7 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for NextJs apps 1`] = `
 "import { rootMain } from '../../../.storybook/main';
+
 import type { StorybookConfig, Options } from '@storybook/core-common';
 import path from 'path';
 
@@ -676,6 +687,7 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for React apps 1`] = `
 "import { rootMain } from '../../../.storybook/main';
+
 import type { StorybookConfig, Options } from '@storybook/core-common';
 
 
@@ -734,6 +746,7 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for React apps using the swc compiler 1`] = `
 "import { rootMain } from '../../../.storybook/main';
+
 import type { StorybookConfig, Options } from '@storybook/core-common';
 
 
@@ -792,6 +805,7 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for React buildable libs 1`] = `
 "import { rootMain } from '../../../.storybook/main';
+
 import type { StorybookConfig, Options } from '@storybook/core-common';
 
 
@@ -853,6 +867,7 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 
 
 
+
 module.exports = {
   ...rootMain,
   core: { ...rootMain.core, builder: 'webpack5' },
@@ -910,6 +925,7 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 
 
 
+
 module.exports = {
   ...rootMain,
   core: { ...rootMain.core, builder: 'webpack5' },
@@ -964,6 +980,7 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for NextJs apps 1`] = `
 "const rootMain = require('../../../.storybook/main');
+
 
 const path = require('path');
 
@@ -1031,6 +1048,7 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 
 
 
+
 module.exports = {
   ...rootMain,
   core: { ...rootMain.core, builder: 'webpack5' },
@@ -1088,6 +1106,7 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 
 
 
+
 module.exports = {
   ...rootMain,
   core: { ...rootMain.core, builder: 'webpack5' },
@@ -1142,6 +1161,7 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for React buildable libs 1`] = `
 "const rootMain = require('../../../.storybook/main');
+
 
 
 

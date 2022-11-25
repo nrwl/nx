@@ -328,7 +328,7 @@ export function createRootStorybookDir(
   }
 }
 
-export function createRootStorybookDirForRootProjectInNestedWorkspace(
+export function createRootStorybookDirForRootProject(
   tree: Tree,
   projectName: string,
   uiFramework: StorybookConfigureSchema['uiFramework'],
@@ -340,6 +340,7 @@ export function createRootStorybookDirForRootProjectInNestedWorkspace(
   usesSwc?: boolean,
   usesVite?: boolean
 ) {
+  console.log('IS NEXT0', isNextJs);
   const rootConfigExists =
     tree.exists('.storybook/main.root.js') ||
     tree.exists('.storybook/main.root.ts');
@@ -374,7 +375,7 @@ export function createRootStorybookDirForRootProjectInNestedWorkspace(
 
   const templatePath = join(
     __dirname,
-    `./root-files-nested${
+    `./project-files${
       rootFileIsTs(tree, 'main.root', tsConfiguration) ? '-ts' : ''
     }`
   );
@@ -385,12 +386,14 @@ export function createRootStorybookDirForRootProjectInNestedWorkspace(
     offsetFromRoot: offsetFromRoot(root),
     rootTsConfigPath: getRootTsConfigPathInTree(tree),
     projectDirectory,
+    rootMainName: 'main.root',
     existsRootWebpackConfig: tree.exists('.storybook/webpack.config.js'),
     projectType,
     mainDir: isNextJs && projectType === 'application' ? 'components' : 'src',
     isNextJs: isNextJs && projectType === 'application',
     usesSwc,
     usesVite,
+    isRootProject: true,
   });
 
   if (js) {
@@ -408,6 +411,7 @@ export function createProjectStorybookDir(
   usesSwc?: boolean,
   usesVite?: boolean
 ) {
+  console.log('IS NEXT2 ', isNextJs);
   const { root, projectType } = readProjectConfiguration(tree, projectName);
 
   const projectDirectory =
@@ -427,11 +431,18 @@ export function createProjectStorybookDir(
   }
 
   logger.debug(`adding .storybook folder to your ${projectType}`);
+
+  const rootMainName =
+    tree.exists('.storybook/main.root.js') ||
+    tree.exists('.storybook/main.root.ts')
+      ? 'main.root'
+      : 'main';
+
   const templatePath = join(
     __dirname,
-    rootFileIsTs(tree, 'main', tsConfiguration)
-      ? './project-files-ts'
-      : './project-files'
+    `./project-files${
+      rootFileIsTs(tree, rootMainName, tsConfiguration) ? '-ts' : ''
+    }`
   );
 
   generateFiles(tree, templatePath, root, {
@@ -440,17 +451,14 @@ export function createProjectStorybookDir(
     offsetFromRoot: offsetFromRoot(root),
     rootTsConfigPath: getRootTsConfigPathInTree(tree),
     projectDirectory,
-    rootMainName:
-      tree.exists('.storybook/main.root.js') ||
-      tree.exists('.storybook/main.root.ts')
-        ? 'main.root'
-        : 'main',
+    rootMainName,
     existsRootWebpackConfig: tree.exists('.storybook/webpack.config.js'),
     projectType,
     mainDir: isNextJs && projectType === 'application' ? 'components' : 'src',
     isNextJs: isNextJs && projectType === 'application',
     usesSwc,
     usesVite,
+    isRootProject: false,
   });
 
   if (js) {

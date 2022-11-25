@@ -1,0 +1,139 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`@nrwl/storybook:configuration for workspaces with Root project basic functionalities should generate Storybook files for nested first - then for root 1`] = `
+"
+import { rootMain } from './main.root';
+import type { StorybookConfig, Options } from '@storybook/core-common';
+
+
+const config: StorybookConfig = {
+  ...rootMain,
+  core: { ...rootMain.core, builder: '@storybook/builder-vite' },
+  stories: [
+    ...rootMain.stories,
+    '../src/app/**/*.stories.mdx',
+    '../src/app/**/*.stories.@(js|jsx|ts|tsx)'
+  ],
+  addons: [...(rootMain.addons || []) , '@nrwl/react/plugins/storybook' 
+    
+    
+  ],
+  webpackFinal: async (config, { configType }: Options) => {
+    // apply any global webpack configs that might have been specified in .storybook/main.ts
+    if (rootMain.webpackFinal) {
+      config = await rootMain.webpackFinal(config, { configType } as Options);
+    }
+
+    // add your own webpack tweaks if needed
+
+    return config;
+  },
+};
+
+module.exports = config;
+"
+`;
+
+exports[`@nrwl/storybook:configuration for workspaces with Root project basic functionalities should generate Storybook files for nested first - then for root 2`] = `
+"{
+  \\"extends\\": \\"../tsconfig.json\\",
+  \\"compilerOptions\\": {
+    \\"emitDecoratorMetadata\\": true
+    , \\"outDir\\": \\"\\" 
+  },
+  \\"files\\": [
+    \\"../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
+    \\"../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
+    \\"../node_modules/@nrwl/react/typings/image.d.ts\\"
+  ],
+  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"include\\": [
+    \\"../src/**/*.stories.ts\\",
+    \\"../src/**/*.stories.js\\",
+    \\"../src/**/*.stories.jsx\\",
+    \\"../src/**/*.stories.tsx\\",
+    \\"../src/**/*.stories.mdx\\",
+    \\"*.ts\\",
+    \\"*.js\\"]
+}
+"
+`;
+
+exports[`@nrwl/storybook:configuration for workspaces with Root project basic functionalities should generate Storybook files for nested first - then for root 3`] = `""`;
+
+exports[`@nrwl/storybook:configuration for workspaces with Root project basic functionalities should generate Storybook files for nested first - then for root 4`] = `
+"import type { StorybookConfig } from '@storybook/core-common';
+
+export const rootMain: StorybookConfig = {
+  stories: [],
+  addons: ['@storybook/addon-essentials'],
+  // webpackFinal: async (config, { configType }) => {
+  //   // Make whatever fine-grained changes you need that should apply to all storybook configs
+
+  //   // Return the altered config
+  //   return config;
+  // },
+};
+"
+`;
+
+exports[`@nrwl/storybook:configuration for workspaces with Root project basic functionalities should generate Storybook files for nested first - then for root 5`] = `
+"import { rootMain } from '../../../.storybook/main.root';
+
+import type { StorybookConfig, Options } from '@storybook/core-common';
+
+
+const config: StorybookConfig = {
+  ...rootMain,
+  core: { ...rootMain.core, builder: 'webpack5' },
+  stories: [
+    ...rootMain.stories,
+    '../src/app/**/*.stories.mdx',
+    '../src/app/**/*.stories.@(js|jsx|ts|tsx)'
+  ],
+  addons: [...(rootMain.addons || []) , '@nrwl/react/plugins/storybook' 
+    
+    
+  ],
+  webpackFinal: async (config, { configType }: Options) => {
+    // apply any global webpack configs that might have been specified in .storybook/main.ts
+    if (rootMain.webpackFinal) {
+      config = await rootMain.webpackFinal(config, { configType } as Options);
+    }
+
+    // add your own webpack tweaks if needed
+
+    return config;
+  },
+};
+
+module.exports = config;
+"
+`;
+
+exports[`@nrwl/storybook:configuration for workspaces with Root project basic functionalities should generate Storybook files for nested first - then for root 6`] = `
+"{
+  \\"extends\\": \\"../tsconfig.json\\",
+  \\"compilerOptions\\": {
+    \\"emitDecoratorMetadata\\": true
+    , \\"outDir\\": \\"\\" 
+  },
+  \\"files\\": [
+    \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
+    \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
+    \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
+  ],
+  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"include\\": [
+    \\"../src/**/*.stories.ts\\",
+    \\"../src/**/*.stories.js\\",
+    \\"../src/**/*.stories.jsx\\",
+    \\"../src/**/*.stories.tsx\\",
+    \\"../src/**/*.stories.mdx\\",
+    \\"*.ts\\",
+    \\"*.js\\"]
+}
+"
+`;
+
+exports[`@nrwl/storybook:configuration for workspaces with Root project basic functionalities should generate Storybook files for nested first - then for root 7`] = `""`;
