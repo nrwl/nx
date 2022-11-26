@@ -13,9 +13,9 @@ export class <%= className %>Facade {
    * Combine pieces of state using createSelector, 
    * and expose them as observables through the facade.
    */
-  loaded$ = this.store.pipe(select(<%= className %>Selectors.get<%= className %>Loaded));
-  all<%= className %>$ = this.store.pipe(select(<%= className %>Selectors.getAll<%= className %>));
-  selected<%= className %>$ = this.store.pipe(select(<%= className %>Selectors.getSelected));
+  loaded$ = this.store.pipe(select(<%= className %>Selectors.select<%= className %>Loaded));
+  all<%= className %>$ = this.store.pipe(select(<%= className %>Selectors.selectAll<%= className %>));
+  selected<%= className %>$ = this.store.pipe(select(<%= className %>Selectors.selectEntity));
 
   /**
    * Use the initialization action to perform one 
