@@ -17,7 +17,7 @@ describe('update-libraries-secondary-entrypoints migration', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it.each(libraryExecutors)(

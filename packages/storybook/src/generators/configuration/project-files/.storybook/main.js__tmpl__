@@ -1,12 +1,11 @@
-const rootMain = require('<%= offsetFromRoot %>../.storybook/main');
+<% if (!isRootProject){ %>const rootMain = require('<%= offsetFromRoot %>../.storybook/<%= rootMainName %>');<% } %>
+<% if (isRootProject){ %>const rootMain = require('./main.root');<% } %>
 <% if (existsRootWebpackConfig){ %>const rootWebpackConfig = require('<%= offsetFromRoot %>../.storybook/webpack.config'); <% } %>
 <% if (isNextJs){ %>const path = require('path');<% } %>
 
 module.exports = {
   ...rootMain,
-  <% if (useWebpack5) { %>
-  core: { ...rootMain.core, builder: 'webpack5' },
-  <% } %>
+  core: { ...rootMain.core, builder: <% if (!usesVite) { %>'webpack5'<% } %><% if (usesVite) { %>'@storybook/builder-vite'<% } %> },
   stories: [
     ...rootMain.stories,<% if(uiFramework === '@storybook/angular' && projectType === 'library') { %>
     '../**/*.stories.mdx',

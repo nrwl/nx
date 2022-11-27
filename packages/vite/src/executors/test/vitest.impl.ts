@@ -1,7 +1,6 @@
 import { ExecutorContext } from '@nrwl/devkit';
 import { File, Reporter } from 'vitest';
-import { normalizeConfigFilePath } from '../../utils/helper-functions';
-import { VitestExecutorSchema } from './schema';
+import { VitestExecutorOptions } from './schema';
 
 class NxReporter implements Reporter {
   deferred: {
@@ -39,7 +38,7 @@ class NxReporter implements Reporter {
 }
 
 export default async function* runExecutor(
-  options: VitestExecutorSchema,
+  options: VitestExecutorOptions,
   context: ExecutorContext
 ) {
   const { startVitest } = await (Function(

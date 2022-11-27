@@ -2,7 +2,7 @@ export function WhyIsNxFast(): JSX.Element {
   return (
     <article
       id="why-is-nx-fast"
-      className="relative bg-gray-50 pt-28 dark:bg-slate-800/40"
+      className="relative bg-slate-50 pt-28 dark:bg-slate-800/40"
     >
       <div className="mx-auto max-w-7xl py-12 px-4 sm:px-6 lg:py-16 lg:px-8">
         <header className="max-w-prose">

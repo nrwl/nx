@@ -18,10 +18,11 @@ import {
   stringifyPnpmLockFile,
   transitiveDependencyPnpmLookup,
 } from './pnpm';
-import { LockFileData } from './lock-file-type';
+import { LockFileData } from './utils/lock-file-type';
 import { workspaceRoot } from '../utils/workspace-root';
 import { join } from 'path';
-import { hashExternalNodes, hashString, mapExternalNodes } from './utils';
+import { mapExternalNodes } from './utils/mapping';
+import { hashExternalNodes, hashString } from './utils/hashing';
 import {
   ProjectGraph,
   ProjectGraphExternalNode,
@@ -161,7 +162,7 @@ export function writeLockFile(
  * Prunes {@link LockFileData} based on minimal necessary set of packages
  * Returns new {@link LockFileData}
  */
-export function pruneLockFile(
+export function pruneLockFileData(
   lockFile: LockFileData,
   packages: string[],
   projectName?: string,

@@ -48,6 +48,11 @@
             "type": "boolean",
             "default": false
           },
+          "skipBabelConfig": {
+            "description": "Do not generate a root babel.config.json (if babel is not needed).",
+            "type": "boolean",
+            "default": false
+          },
           "js": {
             "type": "boolean",
             "default": false,
@@ -162,9 +167,14 @@
           },
           "unitTestRunner": {
             "type": "string",
-            "enum": ["jest", "none"],
+            "enum": ["jest", "vitest", "none"],
             "description": "Test runner to use for unit tests.",
             "default": "jest"
+          },
+          "inSourceTests": {
+            "type": "boolean",
+            "default": false,
+            "description": "When using Vitest, separate spec files will not be generated and instead will be included within the source files. Read more on the Vitest docs site: https://vitest.dev/guide/in-source.html"
           },
           "e2eTestRunner": {
             "type": "string",
@@ -234,9 +244,17 @@
             "type": "boolean",
             "default": false,
             "hidden": true
+          },
+          "bundler": {
+            "description": "The bundler to use.",
+            "type": "string",
+            "enum": ["vite", "webpack"],
+            "x-prompt": "Which bundler do you want to use to build the application?",
+            "default": "webpack"
           }
         },
         "required": [],
+        "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Simple Application\" %}\n\nCreate an application named `my-app`:\n\n```bash\nnx g @nrwl/react:application my-app\n```\n\n{% /tab %}\n\n{% tab label=\"Application using Vite as bundler\" %}\n\nCreate an application named `my-app`:\n\n```bash\nnx g @nrwl/react:app my-app --bundler=vite\n```\n\n{% /tab %}\n\n{% tab label=\"Specify directory and style extension\" %}\n\nCreate an application named `my-app` in the `my-dir` directory and use `scss` for styles:\n\n```bash\nnx g @nrwl/react:app my-app --directory=my-dir --style=scss\n```\n\n{% /tab %}\n\n{% tab label=\"Add tags\" %}\n\nAdd tags to the application (used for linting).\n\n```bash\nnx g @nrwl/react:app my-app --tags=scope:admin,type:ui\n```\n\n{% /tab %}\n{% /tabs %}\n",
         "presets": []
       },
       "aliases": ["app"],
@@ -325,9 +343,13 @@
           },
           "unitTestRunner": {
             "type": "string",
-            "enum": ["jest", "none"],
-            "description": "Test runner to use for unit tests.",
-            "default": "jest"
+            "enum": ["jest", "vitest", "none"],
+            "description": "Test runner to use for unit tests."
+          },
+          "inSourceTests": {
+            "type": "boolean",
+            "default": false,
+            "description": "When using Vitest, separate spec files will not be generated and instead will be included within the source files."
           },
           "tags": {
             "type": "string",
@@ -366,7 +388,7 @@
           "buildable": {
             "type": "boolean",
             "default": false,
-            "description": "Generate a buildable library."
+            "description": "Generate a buildable library. If a bundler is set then the library is buildable by default."
           },
           "importPath": {
             "type": "string",
@@ -401,11 +423,17 @@
             "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
             "type": "boolean"
           },
+          "bundler": {
+            "type": "string",
+            "description": "The bundler to use.",
+            "enum": ["vite", "rollup"],
+            "x-prompt": "Which bundler would you like to use to build the library?"
+          },
           "compiler": {
             "type": "string",
             "enum": ["babel", "swc"],
             "default": "babel",
-            "description": "Which compiler to use."
+            "description": "Which compiler to use. Does not apply if bundler is set to Vite."
           },
           "skipPackageJson": {
             "description": "Do not add dependencies to `package.json`.",
@@ -687,8 +715,13 @@
           },
           "configureTestRunner": {
             "type": "boolean",
-            "description": "Add a Storybook Test-Runner target.",
-            "x-prompt": "Add a Storybook Test-Runner target?"
+            "description": "Add a Storybook Test-Runner target."
+          },
+          "bundler": {
+            "description": "The Storybook builder to use.",
+            "enum": ["vite", "webpack"],
+            "x-prompt": "Which Storybook builder do you want to use?",
+            "default": "webpack"
           }
         },
         "required": ["name"],
@@ -1372,6 +1405,49 @@
       "implementation": "/packages/react/src/generators/setup-tailwind/setup-tailwind#setupTailwindGenerator.ts",
       "aliases": [],
       "path": "/packages/react/src/generators/setup-tailwind/schema.json"
+    },
+    {
+      "name": "setup-ssr",
+      "factory": "./src/generators/setup-ssr/setup-ssr#setupSsrGenerator",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "$id": "GeneratorAngularUniversalSetup",
+        "cli": "nx",
+        "title": "Generate Angular Universal (SSR) setup for an Angular App",
+        "description": "Create the additional configuration required to enable SSR via Angular Universal for an Angular application.",
+        "type": "object",
+        "properties": {
+          "project": {
+            "type": "string",
+            "description": "The name of the application to add SSR support to.",
+            "$default": { "$source": "argv", "index": 0 },
+            "x-prompt": "What app would you like to add SSR support to?",
+            "x-dropdown": "projects"
+          },
+          "appComponentImportPath": {
+            "type": "string",
+            "description": "The import path of the <App/> component, relative to project sourceRoot.",
+            "default": "app/app"
+          },
+          "serverPort": {
+            "type": "number",
+            "default": 4200,
+            "description": "The port for the Express server."
+          },
+          "skipFormat": {
+            "type": "boolean",
+            "description": "Skip formatting the workspace after the generator completes."
+          }
+        },
+        "required": ["project"],
+        "additionalProperties": false,
+        "presets": []
+      },
+      "description": "Set up SSR configuration for a project.",
+      "hidden": false,
+      "implementation": "/packages/react/src/generators/setup-ssr/setup-ssr#setupSsrGenerator.ts",
+      "aliases": [],
+      "path": "/packages/react/src/generators/setup-ssr/schema.json"
     }
   ],
   "executors": [

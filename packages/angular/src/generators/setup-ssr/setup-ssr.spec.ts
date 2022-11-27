@@ -13,7 +13,7 @@ import setupSsr from './setup-ssr';
 describe('setupSSR', () => {
   it('should create the files correctly for ssr', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     await applicationGenerator(tree, {
       name: 'app1',
@@ -113,7 +113,8 @@ describe('setupSSR', () => {
         providers: [],
         bootstrap: [AppComponent]
       })
-      export class AppModule { }"
+      export class AppModule { }
+      "
     `);
     const packageJson = readJson<PackageJson>(tree, 'package.json');
     const dependencies = {
@@ -133,7 +134,7 @@ describe('setupSSR', () => {
 
   it('should use fileReplacements if they already exist', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     await applicationGenerator(tree, {
       name: 'app1',

@@ -19,6 +19,7 @@ import {
   storybookVersion,
   svgrVersion,
   urlLoaderVersion,
+  viteBuilderVeresion,
   webpack5Version,
 } from '../../utils/versions';
 import { Schema } from './schema';
@@ -35,10 +36,15 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
   devDependencies['@storybook/core-server'] = storybookVersion;
   devDependencies['@storybook/addon-essentials'] = storybookVersion;
 
-  if (isFramework('angular', schema)) {
-    devDependencies['@storybook/angular'] = storybookVersion;
+  if (schema.bundler === 'vite') {
+    devDependencies['@storybook/builder-vite'] = viteBuilderVeresion;
+  } else {
     devDependencies['@storybook/builder-webpack5'] = storybookVersion;
     devDependencies['@storybook/manager-webpack5'] = storybookVersion;
+  }
+
+  if (isFramework('angular', schema)) {
+    devDependencies['@storybook/angular'] = storybookVersion;
     devDependencies['webpack'] = webpack5Version;
 
     if (
@@ -57,8 +63,6 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
     devDependencies['@babel/core'] = babelCoreVersion;
     devDependencies['@babel/preset-typescript'] = babelPresetTypescriptVersion;
     devDependencies['@storybook/react'] = storybookVersion;
-    devDependencies['@storybook/builder-webpack5'] = storybookVersion;
-    devDependencies['@storybook/manager-webpack5'] = storybookVersion;
   }
 
   if (isFramework('html', schema)) {
@@ -99,7 +103,7 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
   return addDependenciesToPackageJson(host, dependencies, devDependencies);
 }
 
-export function addCacheableOperation(tree: Tree) {
+function addCacheableOperation(tree: Tree) {
   const workspace = readWorkspaceConfiguration(tree);
   if (
     !workspace.tasksRunnerOptions ||
@@ -143,9 +147,39 @@ function moveToDevDependencies(tree: Tree) {
   });
 }
 
+/**
+ * This is a temporary fix for Storybook to support TypeScript configuration files.
+ * The issue is that if there is a root tsconfig.json file, Storybook will use it, and
+ * ignore the tsconfig.json file in the .storybook folder. This results in module being set
+ * to esnext, and Storybook does not recognise the main.ts code as a module.
+ */
+function editRootTsConfig(tree: Tree) {
+  if (tree.exists('tsconfig.json')) {
+    updateJson(tree, 'tsconfig.json', (json) => {
+      if (json['ts-node']) {
+        json['ts-node'] = {
+          ...json['ts-node'],
+          compilerOptions: {
+            ...(json['ts-node'].compilerOptions ?? {}),
+            module: 'commonjs',
+          },
+        };
+      } else {
+        json['ts-node'] = {
+          compilerOptions: {
+            module: 'commonjs',
+          },
+        };
+      }
+      return json;
+    });
+  }
+}
+
 export function initGenerator(tree: Tree, schema: Schema) {
   const installTask = checkDependenciesInstalled(tree, schema);
   moveToDevDependencies(tree);
+  editRootTsConfig(tree);
   addCacheableOperation(tree);
   return installTask;
 }

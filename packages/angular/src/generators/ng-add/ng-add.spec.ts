@@ -8,7 +8,7 @@ describe('ngAdd generator', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     jest
       .spyOn(angularCliMigrator, 'migrateFromAngularCli')
       .mockImplementation(() => Promise.resolve(() => {}));

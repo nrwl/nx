@@ -4,13 +4,13 @@ import {
   readWorkspaceConfiguration,
   updateWorkspaceConfiguration,
 } from '../../generators/utils/project-configuration';
-import createTargetDefaults from 'nx/src/migrations/update-14-3-4/create-target-defaults';
+import createTargetDefaults from './create-target-defaults';
 
 describe('createTargetDefaults', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it('should work', async () => {

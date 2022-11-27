@@ -1,4 +1,4 @@
-import { workspaceRoot } from 'nx/src/utils/workspace-root';
+import { workspaceRoot } from '../utils/workspace-root';
 import { watch } from 'chokidar';
 import { createHash } from 'crypto';
 import { existsSync, readFileSync, statSync, writeFileSync } from 'fs';
@@ -21,9 +21,9 @@ import {
 } from '../config/project-graph';
 import { pruneExternalNodes } from '../project-graph/operators';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
-import { createTaskGraph } from 'nx/src/tasks-runner/create-task-graph';
-import { TargetDefaults, TargetDependencies } from 'nx/src/config/nx-json';
-import { TaskGraph } from 'nx/src/config/task-graph';
+import { createTaskGraph } from '../tasks-runner/create-task-graph';
+import { TargetDefaults, TargetDependencies } from '../config/nx-json';
+import { TaskGraph } from '../config/task-graph';
 
 export interface ProjectGraphClientResponse {
   hash: string;

@@ -14,7 +14,7 @@ describe('component', () => {
 
   beforeEach(async () => {
     projectName = 'my-lib';
-    appTree = createTreeWithEmptyWorkspace();
+    appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     appTree.write('.gitignore', '');
     defaultSchema = {
       name: 'hello',

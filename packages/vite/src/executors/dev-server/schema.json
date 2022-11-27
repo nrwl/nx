@@ -8,7 +8,11 @@
   "presets": [
     {
       "name": "Default minimum setup",
-      "keys": []
+      "keys": ["buildTarget"]
+    },
+    {
+      "name": "Using a Different Port",
+      "keys": ["buildTarget", "port"]
     }
   ],
   "properties": {
@@ -16,38 +20,11 @@
       "type": "string",
       "description": "Target which builds the application."
     },
-    "baseHref": {
-      "type": "string",
-      "description": "Base url for the application being built."
-    },
     "proxyConfig": {
       "type": "string",
       "description": "Path to the proxy configuration file.",
       "x-completion-type": "file"
     },
-    "fileReplacements": {
-      "description": "Replace files with other files in the build.",
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "replace": {
-            "type": "string",
-            "description": "The file to be replaced.",
-            "x-completion-type": "file"
-          },
-          "with": {
-            "type": "string",
-            "description": "The file to replace with.",
-            "x-completion-type": "file"
-          }
-        },
-        "additionalProperties": false,
-        "required": ["replace", "with"]
-      },
-      "default": []
-    },
-
     "port": {
       "type": "number",
       "description": "Port to listen on.",
@@ -72,11 +49,43 @@
     },
     "hmr": {
       "description": "Enable hot module replacement. For more options, use the 'hmr' option in the Vite configuration file.",
+      "type": "boolean",
+      "default": true
+    },
+    "open": {
+      "description": "Automatically open the app in the browser on server start. When the value is a string, it will be used as the URL's pathname.",
       "default": false,
+      "oneOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "cors": {
+      "description": "Configure CORS for the dev server.",
+      "type": "boolean"
+    },
+    "logLevel": {
+      "type": "string",
+      "description": "Adjust console output verbosity.",
+      "enum": ["info", "warn", "error", "silent"]
+    },
+    "mode": {
+      "type": "string",
+      "description": "Mode to run the server in.",
+      "enum": ["production", "development"],
+      "default": "development"
+    },
+    "clearScreen": {
+      "description": "Set to false to prevent Vite from clearing the terminal screen when logging certain messages.",
+      "default": true,
       "type": "boolean"
     }
   },
   "definitions": {},
-  "required": [],
+  "required": ["buildTarget"],
   "examplesFile": "../../../docs/dev-server-examples.md"
 }

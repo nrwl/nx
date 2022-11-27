@@ -11,7 +11,7 @@ import { ExecutorContext } from '../../config/misc-interfaces';
 import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
-} from 'nx/src/project-graph/project-graph';
+} from '../../project-graph/project-graph';
 
 function getBatchExecutor(executorName: string) {
   const workspace = new Workspaces(workspaceRoot);

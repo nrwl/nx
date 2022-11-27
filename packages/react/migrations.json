@@ -699,6 +699,75 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "15.2.2-beta.0": {
+      "version": "15.2.2-beta.0",
+      "packages": {
+        "@types/react": {
+          "version": "18.0.25",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-dom": {
+          "version": "18.0.9",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/node": {
+          "version": "18.11.9",
+          "alwaysAddToPackageJson": false
+        },
+        "styled-components": {
+          "version": "5.3.6",
+          "alwaysAddToPackageJson": false
+        },
+        "@emotion/styled": {
+          "version": "11.10.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@emotion/react": {
+          "version": "11.10.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@emotion/babel-plugin": {
+          "version": "11.10.5",
+          "alwaysAddToPackageJson": false
+        },
+        "styled-jsx": {
+          "version": "5.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "react-router-dom": {
+          "version": "6.4.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@reduxjs/toolkit": {
+          "version": "1.9.0",
+          "alwaysAddToPackageJson": false
+        },
+        "react-redux": {
+          "version": "8.0.5",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-plugin-react": {
+          "version": "7.31.11",
+          "alwaysAddToPackageJson": false
+        },
+        "postcss": {
+          "version": "8.4.19",
+          "alwaysAddToPackageJson": false
+        },
+        "tailwindcss": {
+          "version": "3.2.4",
+          "alwaysAddToPackageJson": false
+        },
+        "autoprefixer": {
+          "version": "10.4.13",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/express": {
+          "version": "4.17.14",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

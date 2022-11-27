@@ -15,7 +15,7 @@ import { normalizeOptions } from './lib/normalize';
 
 import { EsBuildExecutorOptions } from './schema';
 import { removeSync, writeJsonSync } from 'fs-extra';
-import { createAsyncIterable } from '@nrwl/js/src/utils/create-async-iterable/create-async-iteratable';
+import { createAsyncIterable } from '@nrwl/js/src/utils/async-iterable/create-async-iterable';
 import { buildEsbuildOptions } from './lib/build-esbuild-options';
 import { getExtraDependencies } from './lib/get-extra-dependencies';
 import { DependentBuildableProjectNode } from '@nrwl/workspace/src/utilities/buildable-libs-utils';

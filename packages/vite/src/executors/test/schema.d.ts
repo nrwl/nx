@@ -1,9 +1,9 @@
-export interface VitestExecutorSchema {
-  config: string;
-  passWithNoTests: boolean;
+export interface VitestExecutorOptions {
+  config?: string;
+  passWithNoTests?: boolean;
   testNamePattern?: string;
-  mode: 'test' | 'benchmark' | 'typecheck';
+  mode?: 'test' | 'benchmark' | 'typecheck';
   reporters?: string[];
-  watch: boolean;
-  update: boolean;
+  watch?: boolean;
+  update?: boolean;
 }

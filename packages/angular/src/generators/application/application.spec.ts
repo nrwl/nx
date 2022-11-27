@@ -348,7 +348,7 @@ describe('app', () => {
 
   describe('at the root', () => {
     beforeEach(() => {
-      appTree = createTreeWithEmptyWorkspace();
+      appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       updateJson(appTree, 'nx.json', (json) => ({
         ...json,
         workspaceLayout: { appsDir: '' },
@@ -739,7 +739,7 @@ describe('app', () => {
   describe('--e2e-test-runner', () => {
     describe(E2eTestRunner.Protractor, () => {
       it('should create the e2e project in v2 workspace', async () => {
-        appTree = createTreeWithEmptyWorkspace();
+        appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
         expect(
           async () =>
@@ -1055,6 +1055,24 @@ describe('app', () => {
         .catch(err => console.error(err));
       "
     `);
+  });
+
+  describe('--root-project', () => {
+    it('should create files at the root', async () => {
+      await generateApp(appTree, 'my-app', {
+        rootProject: true,
+      });
+
+      expect(appTree.exists('src/main.ts')).toBe(true);
+      expect(appTree.exists('src/app/app.module.ts')).toBe(true);
+      expect(appTree.exists('src/app/app.component.ts')).toBe(true);
+      expect(appTree.exists('e2e/cypress.config.ts')).toBe(true);
+      expect(readJson(appTree, 'tsconfig.json').extends).toEqual(
+        './tsconfig.base.json'
+      );
+      const project = readProjectConfiguration(appTree, 'my-app');
+      expect(project.targets.build.options['outputPath']).toBe('dist/my-app');
+    });
   });
 });
 

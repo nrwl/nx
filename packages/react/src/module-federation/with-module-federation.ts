@@ -1,17 +1,6 @@
-import {
-  applyAdditionalShared,
-  applySharedFunction,
-  createProjectGraphAsync,
-  getDependentPackagesForProject,
-  mapRemotes,
-  ModuleFederationConfig,
-  ProjectConfiguration,
-  ProjectGraph,
-  readCachedProjectGraph,
-  sharePackages,
-  shareWorkspaceLibraries,
-} from '@nrwl/devkit';
+import { ModuleFederationConfig } from '@nrwl/devkit';
 import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
+import { getModuleFederationConfig } from './utils';
 import ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
 
 function determineRemoteUrl(remote: string) {
@@ -34,42 +23,9 @@ function determineRemoteUrl(remote: string) {
 
 export async function withModuleFederation(options: ModuleFederationConfig) {
   const reactWebpackConfig = require('../../plugins/webpack');
-  let projectGraph: ProjectGraph<ProjectConfiguration>;
-  try {
-    projectGraph = readCachedProjectGraph();
-  } catch (e) {
-    projectGraph = await createProjectGraphAsync();
-  }
 
-  const project = projectGraph.nodes[options.name]?.data;
-
-  if (!project) {
-    throw Error(
-      `Cannot find project "${options.name}". Check that the name is correct in module-federation.config.js`
-    );
-  }
-
-  const dependencies = getDependentPackagesForProject(
-    projectGraph,
-    options.name
-  );
-  const sharedLibraries = shareWorkspaceLibraries(
-    dependencies.workspaceLibraries
-  );
-
-  const npmPackages = sharePackages(dependencies.npmPackages);
-
-  const sharedDependencies = {
-    ...sharedLibraries.getLibraries(),
-    ...npmPackages,
-  };
-
-  applySharedFunction(sharedDependencies, options.shared);
-  applyAdditionalShared(
-    sharedDependencies,
-    options.additionalShared,
-    projectGraph
-  );
+  const { sharedDependencies, sharedLibraries, mappedRemotes } =
+    await getModuleFederationConfig(options, determineRemoteUrl);
 
   return (config) => {
     config = reactWebpackConfig(config);
@@ -84,11 +40,6 @@ export async function withModuleFederation(options: ModuleFederationConfig) {
       ...config.experiments,
       outputModule: true,
     };
-
-    const mappedRemotes =
-      !options.remotes || options.remotes.length === 0
-        ? {}
-        : mapRemotes(options.remotes, 'js', determineRemoteUrl);
 
     config.plugins.push(
       new ModuleFederationPlugin({

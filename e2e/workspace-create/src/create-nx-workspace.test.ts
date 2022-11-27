@@ -7,12 +7,8 @@ import {
   expectNoTsJestInJestConfig,
   getSelectedPackageManager,
   packageManagerLockFile,
-  readJson,
-  runCLI,
   runCreateWorkspace,
   uniq,
-  updateFile,
-  updateJson,
 } from '@nrwl/e2e/utils';
 import { existsSync, mkdirSync } from 'fs-extra';
 
@@ -21,18 +17,34 @@ describe('create-nx-workspace', () => {
 
   afterEach(() => cleanupProject());
 
-  it('should create a workspace with a single react app', () => {
-    const wsName = uniq('react');
+  it('should create a workspace with a single angular app at the root', () => {
+    const wsName = uniq('angular');
     const appName = uniq('app');
 
     runCreateWorkspace(wsName, {
-      preset: 'react-experimental',
+      preset: 'angular-standalone',
       appName,
       style: 'css',
       packageManager,
     });
 
     checkFilesExist('package.json');
+    checkFilesExist('project.json');
+  });
+
+  it('should create a workspace with a single react app at the root', () => {
+    const wsName = uniq('react');
+    const appName = uniq('app');
+
+    runCreateWorkspace(wsName, {
+      preset: 'react-standalone',
+      appName,
+      style: 'css',
+      packageManager,
+    });
+
+    checkFilesExist('package.json');
+    checkFilesExist('project.json');
   });
 
   it('should be able to create an empty workspace built for apps', () => {
@@ -81,7 +93,7 @@ describe('create-nx-workspace', () => {
     const wsName = uniq('angular');
     const appName = uniq('app');
     runCreateWorkspace(wsName, {
-      preset: 'angular',
+      preset: 'angular-monorepo',
       style: 'css',
       appName,
       packageManager,
@@ -96,7 +108,7 @@ describe('create-nx-workspace', () => {
     const appName = uniq('app');
     try {
       runCreateWorkspace(wsName, {
-        preset: 'angular',
+        preset: 'angular-monorepo',
         style: 'css',
         appName,
         packageManager,
@@ -111,7 +123,7 @@ describe('create-nx-workspace', () => {
     const appName = uniq('app');
 
     runCreateWorkspace(wsName, {
-      preset: 'react',
+      preset: 'react-monorepo',
       style: 'css',
       appName,
       packageManager,
@@ -221,7 +233,7 @@ describe('create-nx-workspace', () => {
     process.env.SELECTED_PM = 'npm';
 
     runCreateWorkspace(wsName, {
-      preset: 'react',
+      preset: 'react-monorepo',
       style: 'css',
       appName,
       packageManager: 'npm',
@@ -240,7 +252,7 @@ describe('create-nx-workspace', () => {
     process.env.SELECTED_PM = 'npm';
 
     runCreateWorkspace(wsName, {
-      preset: 'angular',
+      preset: 'angular-monorepo',
       appName,
       style: 'css',
       packageManager: 'npm',

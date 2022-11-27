@@ -104,7 +104,8 @@ function getPresetDependencies(preset: string, version?: string) {
     case Preset.TS:
       return { dependencies: {}, dev: { '@nrwl/js': nxVersion } };
 
-    case Preset.Angular:
+    case Preset.AngularMonorepo:
+    case Preset.AngularStandalone:
       return { dependencies: { '@nrwl/angular': nxVersion }, dev: {} };
 
     case Preset.Express:
@@ -116,10 +117,10 @@ function getPresetDependencies(preset: string, version?: string) {
     case Preset.NextJs:
       return { dependencies: { '@nrwl/next': nxVersion }, dev: {} };
 
-    case Preset.React:
+    case Preset.ReactMonorepo:
       return { dependencies: {}, dev: { '@nrwl/react': nxVersion } };
 
-    case Preset.ReactExperimental:
+    case Preset.ReactStandalone:
       return { dependencies: {}, dev: { '@nrwl/react': nxVersion } };
 
     case Preset.ReactNative:

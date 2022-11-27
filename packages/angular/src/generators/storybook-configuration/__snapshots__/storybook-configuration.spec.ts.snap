@@ -5,11 +5,10 @@ exports[`StorybookConfiguration generator should configure storybook to use webp
 
 
 
+
 module.exports = {
   ...rootMain,
-  
   core: { ...rootMain.core, builder: 'webpack5' },
-  
   stories: [
     ...rootMain.stories,
     '../**/*.stories.mdx',
@@ -39,7 +38,7 @@ Array [
   ".eslintrc.json",
   ".prettierrc",
   ".storybook/main.js",
-  ".storybook/tsconfig.json",
+  "apps/.gitignore",
   "apps/one/two/test-ui-lib-e2e/.eslintrc.json",
   "apps/one/two/test-ui-lib-e2e/cypress.config.ts",
   "apps/one/two/test-ui-lib-e2e/src/e2e/barrel-button/barrel-button.component.cy.ts",
@@ -62,6 +61,7 @@ Array [
   "apps/one/two/test-ui-lib-e2e/tsconfig.json",
   "jest.config.ts",
   "jest.preset.js",
+  "libs/.gitignore",
   "libs/test-ui-lib/.eslintrc.json",
   "libs/test-ui-lib/.storybook/main.js",
   "libs/test-ui-lib/.storybook/preview.js",
@@ -167,7 +167,7 @@ Array [
   ".eslintrc.json",
   ".prettierrc",
   ".storybook/main.js",
-  ".storybook/tsconfig.json",
+  "apps/.gitignore",
   "apps/test-ui-lib-e2e/.eslintrc.json",
   "apps/test-ui-lib-e2e/cypress.config.ts",
   "apps/test-ui-lib-e2e/src/e2e/barrel-button/barrel-button.component.cy.ts",
@@ -190,6 +190,7 @@ Array [
   "apps/test-ui-lib-e2e/tsconfig.json",
   "jest.config.ts",
   "jest.preset.js",
+  "libs/.gitignore",
   "libs/test-ui-lib/.eslintrc.json",
   "libs/test-ui-lib/.storybook/main.js",
   "libs/test-ui-lib/.storybook/preview.js",

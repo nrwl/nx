@@ -26,4 +26,5 @@ export interface Schema {
   viewEncapsulation?: 'Emulated' | 'Native' | 'None';
   skipFormat?: boolean;
   standalone?: boolean;
+  ssr?: boolean;
 }

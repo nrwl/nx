@@ -1,7 +1,13 @@
 import { readJsonFile, writeJsonFile } from 'nx/src/utils/fileutils';
 
-export function addViteCommandsToPackageScripts(appName: string) {
-  const packageJson = readJsonFile(`apps/${appName}/package.json`);
+export function addViteCommandsToPackageScripts(
+  appName: string,
+  isNested: boolean
+) {
+  const packageJsonPath = isNested
+    ? 'package.json'
+    : `apps/${appName}/package.json`;
+  const packageJson = readJsonFile(packageJsonPath);
   packageJson.scripts = {
     ...packageJson.scripts,
     start: 'vite',
@@ -9,5 +15,5 @@ export function addViteCommandsToPackageScripts(appName: string) {
     build: `vite build`,
     test: 'vitest',
   };
-  writeJsonFile(`apps/${appName}/package.json`, packageJson, { spaces: 2 });
+  writeJsonFile(packageJsonPath, packageJson, { spaces: 2 });
 }

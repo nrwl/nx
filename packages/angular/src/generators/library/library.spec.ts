@@ -47,7 +47,7 @@ describe('lib', () => {
 
   describe('workspace v2', () => {
     beforeEach(() => {
-      tree = createTreeWithEmptyWorkspace();
+      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     });
 
     it('should run the library generator without erroring if the directory has a trailing slash', async () => {
@@ -708,7 +708,7 @@ describe('lib', () => {
 
   describe('at the root', () => {
     beforeEach(() => {
-      tree = createTreeWithEmptyWorkspace();
+      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       updateJson(tree, 'nx.json', (json) => ({
         ...json,
         workspaceLayout: { libsDir: '' },
@@ -1131,7 +1131,6 @@ describe('lib', () => {
       // ASSERT
       const workspaceJson = readJson(tree, 'workspace.json');
 
-      expect(tree.exists('libs/my-lib/src/test.ts')).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/test-setup.ts')).toBeFalsy();
       expect(tree.exists('libs/my-lib/tsconfig.spec.json')).toBeTruthy();
       expect(tree.exists('libs/my-lib/karma.conf.js')).toBeTruthy();

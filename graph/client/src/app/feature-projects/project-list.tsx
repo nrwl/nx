@@ -279,7 +279,7 @@ export function ProjectList() {
         );
       })}
 
-      <h2 className="mt-8 border-b border-solid border-slate-200/10 text-lg font-light">
+      <h2 className="mt-8 border-b border-solid border-slate-200/10 text-lg font-light text-slate-400 dark:text-slate-500">
         e2e projects
       </h2>
 
@@ -294,7 +294,7 @@ export function ProjectList() {
         );
       })}
 
-      <h2 className="mt-8 border-b border-solid border-slate-200/10 text-lg font-light">
+      <h2 className="mt-8 border-b border-solid border-slate-200/10 text-lg font-light text-slate-400 dark:text-slate-500">
         lib projects
       </h2>
 

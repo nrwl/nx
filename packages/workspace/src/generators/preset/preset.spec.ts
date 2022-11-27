@@ -1,4 +1,4 @@
-import { Tree, readJson } from '@nrwl/devkit';
+import { Tree, readJson, readProjectConfiguration } from '@nrwl/devkit';
 import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { overrideCollectionResolutionForTesting } from '@nrwl/devkit/ngcli-adapter';
 import { presetGenerator } from './preset';
@@ -41,10 +41,10 @@ describe('preset', () => {
     overrideCollectionResolutionForTesting(null);
   });
 
-  it(`should create files (preset = ${Preset.Angular})`, async () => {
+  it(`should create files (preset = ${Preset.AngularMonorepo})`, async () => {
     await presetGenerator(tree, {
       name: 'proj',
-      preset: Preset.Angular,
+      preset: Preset.AngularMonorepo,
       cli: 'nx',
       style: 'css',
       linter: 'eslint',
@@ -65,16 +65,17 @@ describe('preset', () => {
     expect(tree.exists('/apps/proj/src/main.ts')).toBe(true);
   });
 
-  it(`should create files (preset = ${Preset.React})`, async () => {
+  it(`should create files (preset = ${Preset.ReactMonorepo})`, async () => {
     await presetGenerator(tree, {
       name: 'proj',
-      preset: Preset.React,
+      preset: Preset.ReactMonorepo,
       style: 'css',
       linter: 'eslint',
       cli: 'nx',
       standaloneConfig: false,
     });
     expect(tree.exists('/apps/proj/src/main.tsx')).toBe(true);
+    expect(readProjectConfiguration(tree, 'proj').targets.serve).toBeDefined();
   });
 
   it(`should create files (preset = ${Preset.NextJs})`, async () => {

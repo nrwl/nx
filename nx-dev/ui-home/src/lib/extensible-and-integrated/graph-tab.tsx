@@ -49,8 +49,8 @@ export function GraphTab(): JSX.Element {
         </span>
         <div className="-m-0.5 h-0.5 w-full bg-slate-200 dark:bg-slate-700" />
       </div>
-      <div className="z-10 h-auto overflow-hidden rounded-lg border border-gray-200 shadow dark:border-slate-700 lg:min-h-[485px] lg:w-[690px]">
-        <div className="flex h-7 w-full items-center justify-start space-x-1.5 bg-gray-200 px-3 dark:bg-slate-700">
+      <div className="z-10 h-auto overflow-hidden rounded-lg border border-slate-200 shadow dark:border-slate-700 lg:min-h-[485px] lg:w-[690px]">
+        <div className="flex h-7 w-full items-center justify-start space-x-1.5 bg-slate-200 px-3 dark:bg-slate-700">
           <span className="h-2 w-2 rounded-full bg-red-400"></span>
           <span className="h-2 w-2 rounded-full bg-yellow-400"></span>
           <span className="h-2 w-2 rounded-full bg-green-400"></span>

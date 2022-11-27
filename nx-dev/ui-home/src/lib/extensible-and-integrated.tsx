@@ -9,7 +9,7 @@ export function ExtensibleAndIntegrated(): JSX.Element {
   return (
     <article
       id="extensible-and-integrated"
-      className="overflow-hidden bg-gray-50 pt-28 dark:bg-slate-800/40"
+      className="overflow-hidden bg-slate-50 pt-28 dark:bg-slate-800/40"
     >
       <div className="mx-auto max-w-7xl py-12 px-4 sm:px-6 lg:py-16 lg:px-8">
         <header className="max-w-2xl">

@@ -9,7 +9,7 @@ const cypressJsonConfig = {
   videosFolder: '../../dist/cypress/graph/client-e2e/videos',
   screenshotsFolder: '../../dist/cypress/graph/client-e2e/screenshots',
   chromeWebSecurity: false,
-  specPattern: './src/watch-mode-integration/**/*.cy.{js,jsx,ts,tsx}',
+  specPattern: './src/e2e/**/watch-mode-*.cy.{js,jsx,ts,tsx}',
   supportFile: 'src/support/e2e.ts',
 };
 export default defineConfig({

@@ -1,7 +1,7 @@
 {
   "cli": "nx",
-  "title": "Add Vite Configuration to the workspace",
-  "description": "Add Vite Configuration to the workspace.",
+  "title": "Initialize Vite in the workspace.",
+  "description": "Initialize Vite in the workspace.",
   "$id": "init-vite-plugin",
   "type": "object",
   "properties": {
@@ -11,6 +11,12 @@
       "enum": ["react", "none"],
       "default": "react",
       "x-prompt": "What UI framework plugin should Vite use?"
+    },
+    "includeLib": {
+      "type": "boolean",
+      "description": "Add dependencies needed to build libraries.",
+      "default": false
     }
-  }
+  },
+  "examplesFile": "../../../docs/init-examples.md"
 }

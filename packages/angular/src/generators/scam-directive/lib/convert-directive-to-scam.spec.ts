@@ -6,7 +6,7 @@ import { convertDirectiveToScam } from './convert-directive-to-scam';
 describe('convertDirectiveToScam', () => {
   it('should create the scam directive inline correctly', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'app1', {
       projectType: 'application',
       sourceRoot: 'apps/app1/src',
@@ -73,7 +73,7 @@ describe('convertDirectiveToScam', () => {
 
   it('should create the scam directive separately correctly', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'app1', {
       projectType: 'application',
       sourceRoot: 'apps/app1/src',
@@ -132,7 +132,7 @@ describe('convertDirectiveToScam', () => {
 
   it('should create the scam directive inline correctly when --flat', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'app1', {
       projectType: 'application',
       sourceRoot: 'apps/app1/src',
@@ -199,7 +199,7 @@ describe('convertDirectiveToScam', () => {
 
   it('should create the scam directive separately correctly when --flat', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'app1', {
       projectType: 'application',
       sourceRoot: 'apps/app1/src',
@@ -258,7 +258,7 @@ describe('convertDirectiveToScam', () => {
 
   it('should place the directive and scam directive in the correct folder when --path is used', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'app1', {
       projectType: 'application',
       sourceRoot: 'apps/app1/src',
@@ -326,7 +326,7 @@ describe('convertDirectiveToScam', () => {
 
   it('should place the directive and scam directive in the correct folder when --path and --flat is used', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'app1', {
       projectType: 'application',
       sourceRoot: 'apps/app1/src',

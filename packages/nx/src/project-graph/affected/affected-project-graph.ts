@@ -16,9 +16,9 @@ import { ProjectGraph } from '../../config/project-graph';
 import { reverse } from '../operators';
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import { readNxJson } from '../../config/configuration';
-import { workspaceConfigName } from 'nx/src/config/workspaces';
+import { workspaceConfigName } from '../../config/workspaces';
 import { getTouchedProjectsFromProjectGlobChanges } from './locators/project-glob-changes';
-import { workspaceRoot } from 'nx/src/utils/workspace-root';
+import { workspaceRoot } from '../../utils/workspace-root';
 
 export function filterAffected(
   graph: ProjectGraph<ProjectConfiguration>,

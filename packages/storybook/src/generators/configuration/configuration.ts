@@ -21,6 +21,8 @@ import {
   configureTsSolutionConfig,
   createProjectStorybookDir,
   createRootStorybookDir,
+  createRootStorybookDirForRootProject,
+  projectIsRootProjectInNestedWorkspace,
   updateLintConfig,
 } from './util-functions';
 import { Linter } from '@nrwl/linter';
@@ -30,6 +32,7 @@ import {
   storybookSwcAddonVersion,
   storybookTestRunnerVersion,
 } from '../../utils/versions';
+import { Console } from 'console';
 
 export async function configurationGenerator(
   tree: Tree,
@@ -39,25 +42,48 @@ export async function configurationGenerator(
 
   const tasks: GeneratorCallback[] = [];
 
-  const { projectType, targets } = readProjectConfiguration(tree, schema.name);
-  const { nextBuildTarget, compiler } =
+  const { projectType, targets, root } = readProjectConfiguration(
+    tree,
+    schema.name
+  );
+  const { nextBuildTarget, compiler, viteBuildTarget } =
     findStorybookAndBuildTargetsAndCompiler(targets);
+
+  console.log(findStorybookAndBuildTargetsAndCompiler(targets));
 
   const initTask = await initGenerator(tree, {
     uiFramework: schema.uiFramework,
+    bundler: schema.bundler,
   });
   tasks.push(initTask);
 
-  createRootStorybookDir(tree, schema.js, schema.tsConfiguration);
-  createProjectStorybookDir(
-    tree,
-    schema.name,
-    schema.uiFramework,
-    schema.js,
-    schema.tsConfiguration,
-    !!nextBuildTarget,
-    compiler === 'swc'
-  );
+  if (projectIsRootProjectInNestedWorkspace(root)) {
+    createRootStorybookDirForRootProject(
+      tree,
+      schema.name,
+      schema.uiFramework,
+      schema.js,
+      schema.tsConfiguration,
+      root,
+      projectType,
+      !!nextBuildTarget,
+      compiler === 'swc',
+      schema.bundler === 'vite' || !!viteBuildTarget
+    );
+  } else {
+    createRootStorybookDir(tree, schema.js, schema.tsConfiguration);
+    createProjectStorybookDir(
+      tree,
+      schema.name,
+      schema.uiFramework,
+      schema.js,
+      schema.tsConfiguration,
+      !!nextBuildTarget,
+      compiler === 'swc',
+      schema.bundler === 'vite' || !!viteBuildTarget
+    );
+  }
+
   configureTsProjectConfig(tree, schema);
   configureTsSolutionConfig(tree, schema);
   updateLintConfig(tree, schema);

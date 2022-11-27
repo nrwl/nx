@@ -6,7 +6,7 @@ describe('Add next eslint 14.5.7', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     addProjectConfiguration(tree, 'app1', {
       root: 'apps/app1',

@@ -70,7 +70,7 @@ In the Storybook case, Storybook has the `--tsconfig` option [prefilled](https:/
 
 In your project's `.storybook/tsconfig.json` file, in the `include` array, add the path to the component files (eg. `"../src/**/*.component.ts"`). For example, if you have an application called `web`, the file `apps/web/.storybook/tsconfig.json` will look like this:
 
-```json {% fileName=".storybook/tsconfig.json" %}
+```json {% fileName="apps/web/.storybook/tsconfig.json" %}
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {

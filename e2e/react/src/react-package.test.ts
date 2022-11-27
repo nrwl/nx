@@ -97,7 +97,7 @@ describe('Build React libraries and apps', () => {
 
   afterEach(() => {
     killPorts();
-    cleanupProject();
+    // cleanupProject();
   });
 
   describe('Buildable libraries', () => {
@@ -251,5 +251,22 @@ export async function h() { return 'c'; }
         checkFilesExist(`dist/libs/${libName}/package.json`);
       }).toThrow();
     }, 250000);
+  });
+
+  it('should support bundling with Vite', async () => {
+    const libName = uniq('lib');
+
+    runCLI(
+      `generate @nrwl/react:lib ${libName} --bundler=vite --no-interactive`
+    );
+
+    await runCLIAsync(`build ${libName}`);
+
+    checkFilesExist(
+      `dist/libs/${libName}/package.json`,
+      `dist/libs/${libName}/index.d.ts`,
+      `dist/libs/${libName}/index.js`,
+      `dist/libs/${libName}/index.mjs`
+    );
   });
 });

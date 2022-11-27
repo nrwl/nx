@@ -5,7 +5,7 @@ import {
   type ProjectGraph,
   serializeJson,
 } from '@nrwl/devkit';
-import { createPackageJson } from '@nrwl/workspace/src/utilities/create-package-json';
+import { createPackageJson } from 'nx/src/utils/create-package-json';
 import {
   getHelperDependenciesFromProjectGraph,
   HelperDependency,
@@ -15,14 +15,12 @@ import { readTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 import { NormalizedWebpackExecutorOptions } from '../executors/webpack/schema';
 
 export class GeneratePackageJsonWebpackPlugin implements WebpackPluginInstance {
-  private readonly projectConfig: ProjectConfiguration;
   private readonly projectGraph: ProjectGraph;
 
   constructor(
     private readonly context: ExecutorContext,
     private readonly options: NormalizedWebpackExecutorOptions
   ) {
-    this.projectConfig = context.workspace.projects[context.projectName];
     this.projectGraph = context.projectGraph;
   }
 
@@ -68,7 +66,7 @@ export class GeneratePackageJsonWebpackPlugin implements WebpackPluginInstance {
           const packageJson = createPackageJson(
             this.context.projectName,
             this.projectGraph,
-            { root: this.context.root, projectRoot: this.projectConfig.root }
+            { root: this.context.root }
           );
           packageJson.main = packageJson.main ?? this.options.outputFileName;
 

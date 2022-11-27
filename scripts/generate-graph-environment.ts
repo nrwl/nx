@@ -48,7 +48,8 @@ function writeFile() {
       return {
         id,
         label: id,
-        url: join('assets/project-graphs/', filename),
+        projectGraphUrl: join('assets/project-graphs/', filename),
+        taskGraphUrl: join('assets/task-graphs/', filename),
       };
     });
   } catch {

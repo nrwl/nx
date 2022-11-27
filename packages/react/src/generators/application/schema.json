@@ -103,9 +103,14 @@
     },
     "unitTestRunner": {
       "type": "string",
-      "enum": ["jest", "none"],
+      "enum": ["jest", "vitest", "none"],
       "description": "Test runner to use for unit tests.",
       "default": "jest"
+    },
+    "inSourceTests": {
+      "type": "boolean",
+      "default": false,
+      "description": "When using Vitest, separate spec files will not be generated and instead will be included within the source files. Read more on the Vitest docs site: https://vitest.dev/guide/in-source.html"
     },
     "e2eTestRunner": {
       "type": "string",
@@ -175,7 +180,15 @@
       "type": "boolean",
       "default": false,
       "hidden": true
+    },
+    "bundler": {
+      "description": "The bundler to use.",
+      "type": "string",
+      "enum": ["vite", "webpack"],
+      "x-prompt": "Which bundler do you want to use to build the application?",
+      "default": "webpack"
     }
   },
-  "required": []
+  "required": [],
+  "examplesFile": "../../../docs/application-examples.md"
 }

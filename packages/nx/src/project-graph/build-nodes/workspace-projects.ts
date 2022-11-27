@@ -1,17 +1,18 @@
 import { join } from 'path';
 import { existsSync } from 'fs';
-import { workspaceRoot } from 'nx/src/utils/workspace-root';
+import { workspaceRoot } from '../../utils/workspace-root';
 import {
   loadNxPlugins,
   mergePluginTargetsWithNxTargets,
-} from 'nx/src/utils/nx-plugin';
-import { ProjectGraphProcessorContext } from 'nx/src/config/project-graph';
-import { mergeNpmScriptsWithTargets } from 'nx/src/utils/project-graph-utils';
+} from '../../utils/nx-plugin';
+import { ProjectGraphProcessorContext } from '../../config/project-graph';
+import { mergeNpmScriptsWithTargets } from '../../utils/project-graph-utils';
 import { ProjectGraphBuilder } from '../project-graph-builder';
-import { PackageJson } from 'nx/src/utils/package-json';
-import { readJsonFile } from 'nx/src/utils/fileutils';
-import { NxJsonConfiguration } from 'nx/src/config/nx-json';
-import { TargetConfiguration } from 'nx/src/config/workspace-json-project-json';
+import { PackageJson } from '../../utils/package-json';
+import { readJsonFile } from '../../utils/fileutils';
+import { NxJsonConfiguration } from '../../config/nx-json';
+import { TargetConfiguration } from '../../config/workspace-json-project-json';
+import { NX_PREFIX } from '../../utils/logger';
 
 export function buildWorkspaceProjectNodes(
   ctx: ProjectGraphProcessorContext,
@@ -42,10 +43,7 @@ export function buildWorkspaceProjectNodes(
       }
     }
 
-    p.targets = mergeNxDefaultTargetsWithNxTargets(
-      p.targets,
-      nxJson.targetDefaults
-    );
+    p.targets = normalizeProjectTargets(p.targets, nxJson.targetDefaults, key);
 
     p.targets = mergePluginTargetsWithNxTargets(
       p.root,
@@ -53,9 +51,10 @@ export function buildWorkspaceProjectNodes(
       loadNxPlugins(ctx.workspace.plugins)
     );
 
+    // TODO: remove in v16
     const projectType =
       p.projectType === 'application'
-        ? key.endsWith('-e2e')
+        ? key.endsWith('-e2e') || key === 'e2e'
           ? 'e2e'
           : 'app'
         : 'lib';
@@ -91,9 +90,13 @@ export function buildWorkspaceProjectNodes(
   });
 }
 
-function mergeNxDefaultTargetsWithNxTargets(
+/**
+ * Apply target defaults and normalization
+ */
+function normalizeProjectTargets(
   targets: Record<string, TargetConfiguration>,
-  defaultTargets: NxJsonConfiguration['targetDefaults']
+  defaultTargets: NxJsonConfiguration['targetDefaults'],
+  projectName: string
 ) {
   for (const targetName in defaultTargets) {
     const target = targets?.[targetName];
@@ -108,6 +111,25 @@ function mergeNxDefaultTargetsWithNxTargets(
     }
     if (defaultTargets[targetName].outputs && !target.outputs) {
       target.outputs = defaultTargets[targetName].outputs;
+    }
+  }
+  for (const target in targets) {
+    const config = targets[target];
+    if (config.command) {
+      if (config.executor) {
+        throw new Error(
+          `${NX_PREFIX} ${projectName}: ${target} should not have executor and command both configured.`
+        );
+      } else {
+        targets[target] = {
+          ...targets[target],
+          executor: 'nx:run-commands',
+          options: {
+            ...config.options,
+            command: config.command,
+          },
+        };
+      }
     }
   }
   return targets;

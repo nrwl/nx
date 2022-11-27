@@ -22,8 +22,7 @@ import { isCI } from '../../utils/is-ci';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { readNxJson } from '../../config/configuration';
 import { PromisedBasedQueue } from '../../utils/promised-based-queue';
-import { consumeMessagesFromSocket } from '../../utils/consume-messages-from-socket';
-import { Workspaces } from 'nx/src/config/workspaces';
+import { Workspaces } from '../../config/workspaces';
 import { Message, SocketMessenger } from './socket-messenger';
 
 const DAEMON_ENV_SETTINGS = {
@@ -107,7 +106,7 @@ export class DaemonClient {
   async registerFileWatcher(
     config: {
       watchProjects: string[] | 'all';
-      watchGlobalWorkspaceFiles: boolean;
+      includeGlobalWorkspaceFiles: boolean;
     },
     callback: (
       error: Error | null | 'closed',
@@ -117,7 +116,7 @@ export class DaemonClient {
       } | null
     ) => void
   ): Promise<UnregisterCallback> {
-    await this.sendToDaemonViaQueue({ type: 'PING' });
+    await this.getProjectGraph();
     const messenger = new SocketMessenger(connect(FULL_OS_SOCKET_PATH)).listen(
       (message) => {
         try {

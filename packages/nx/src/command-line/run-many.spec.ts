@@ -1,5 +1,5 @@
 import { ProjectGraph } from '@nrwl/nx-cloud/lib/core/models/run-context.model';
-import { projectsToRun } from 'nx/src/command-line/run-many';
+import { projectsToRun } from './run-many';
 import { performance } from 'perf_hooks';
 
 describe('run-many', () => {
@@ -139,7 +139,7 @@ describe('run-many', () => {
         );
         performance.mark('end');
         const measure = performance.measure('projects', 'start', 'end');
-        expect(measure.duration).toBeLessThan(2000);
+        expect(measure.duration).toBeLessThan(2500);
       });
     });
   });

@@ -20,18 +20,19 @@ export function normalizeOptions(
   host: Tree,
   options: Partial<Schema>
 ): NormalizedSchema {
-  const { appsDir, npmScope, standaloneAsDefault } = getWorkspaceLayout(host);
-
   const appDirectory = normalizeDirectory(options.name, options.directory);
-
-  let e2eProjectName = `${names(options.name).fileName}-e2e`;
   const appProjectName = normalizeProjectName(options.name, options.directory);
-  if (options.e2eTestRunner !== 'cypress') {
-    e2eProjectName = `${appProjectName}-e2e`;
-  }
+  const e2eProjectName = options.rootProject
+    ? 'e2e'
+    : `${names(options.name).fileName}-e2e`;
 
-  const appProjectRoot = joinPathFragments(appsDir, appDirectory);
-  const e2eProjectRoot = joinPathFragments(appsDir, `${appDirectory}-e2e`);
+  const { appsDir, npmScope, standaloneAsDefault } = getWorkspaceLayout(host);
+  const appProjectRoot = options.rootProject
+    ? '.'
+    : joinPathFragments(appsDir, appDirectory);
+  const e2eProjectRoot = options.rootProject
+    ? 'e2e'
+    : joinPathFragments(appsDir, `${appDirectory}-e2e`);
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())

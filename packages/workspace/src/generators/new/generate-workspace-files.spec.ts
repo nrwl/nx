@@ -20,10 +20,52 @@ describe('@nrwl/workspace:generateWorkspaceFiles', () => {
       preset: Preset.Empty,
       defaultBase: 'main',
     });
+    expect(tree.exists('/proj/README.md')).toBe(true);
     expect(tree.exists('/proj/nx.json')).toBe(true);
     expect(tree.exists('/proj/workspace.json')).toBe(false);
     expect(tree.exists('/proj/.prettierrc')).toBe(true);
     expect(tree.exists('/proj/.prettierignore')).toBe(true);
+  });
+
+  describe('README.md', () => {
+    it.each(Object.keys(Preset))(
+      'should be created for %s preset',
+      async (preset) => {
+        let appName;
+        if (
+          [
+            Preset.ReactMonorepo,
+            Preset.ReactStandalone,
+            Preset.AngularMonorepo,
+            Preset.AngularStandalone,
+            Preset.Nest,
+            Preset.NextJs,
+            Preset.WebComponents,
+            Preset.Express,
+          ].includes(Preset[preset])
+        ) {
+          appName = 'app1';
+        }
+
+        await generateWorkspaceFiles(tree, {
+          name: 'proj',
+          directory: 'proj',
+          preset: Preset[preset],
+          defaultBase: 'main',
+          appName,
+        });
+        expect(tree.read('proj/README.md', 'utf-8')).toMatchSnapshot();
+      }
+    );
+    it('should be created for custom plugins', async () => {
+      await generateWorkspaceFiles(tree, {
+        name: 'proj',
+        directory: 'proj',
+        preset: 'custom-nx-preset',
+        defaultBase: 'main',
+      });
+      expect(tree.read('proj/README.md', 'utf-8')).toMatchSnapshot();
+    });
   });
 
   it('should create nx.json', async () => {
@@ -70,7 +112,7 @@ describe('@nrwl/workspace:generateWorkspaceFiles', () => {
     await generateWorkspaceFiles(tree, {
       name: 'proj',
       directory: 'proj',
-      preset: Preset.React,
+      preset: Preset.ReactMonorepo,
       defaultBase: 'main',
     });
     const nxJson = readJson<NxJsonConfiguration>(tree, '/proj/nx.json');
@@ -160,7 +202,7 @@ describe('@nrwl/workspace:generateWorkspaceFiles', () => {
     await generateWorkspaceFiles(tree, {
       name: 'proj',
       directory: 'proj',
-      preset: Preset.Angular,
+      preset: Preset.AngularMonorepo,
       defaultBase: 'main',
     });
     expect(tree.exists('/proj/decorate-angular-cli.js')).toBe(true);

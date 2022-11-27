@@ -2,17 +2,20 @@
 
 import * as path from 'path';
 import * as fs from 'fs';
-import { execSync } from 'child_process';
 import * as enquirer from 'enquirer';
 import { joinPathFragments } from 'nx/src/utils/path';
-import {
-  getPackageManagerCommand,
-  PackageManagerCommands,
-} from 'nx/src/utils/package-manager';
+import { getPackageManagerCommand } from 'nx/src/utils/package-manager';
 import { output } from 'nx/src/utils/output';
-import { readJsonFile, writeJsonFile } from 'nx/src/utils/fileutils';
+import { readJsonFile } from 'nx/src/utils/fileutils';
 import ignore from 'ignore';
 import * as yargsParser from 'yargs-parser';
+import {
+  askAboutNxCloud,
+  createNxJsonFile,
+  initCloud,
+  runInstall,
+  addDepsToPackageJson,
+} from 'nx/src/nx-init/utils';
 
 const parsedArgs = yargsParser(process.argv, {
   boolean: ['yes'],
@@ -38,13 +41,12 @@ async function addNxToMonorepo() {
 
   output.log({ title: `🐳 Nx initialization` });
 
-  const pmc = getPackageManagerCommand();
   const packageJsonFiles = allProjectPackageJsonFiles(repoRoot);
   const scripts = combineAllScriptNames(repoRoot, packageJsonFiles);
 
   let targetDefaults: string[];
   let cacheableOperations: string[];
-  let scriptOutputs = {};
+  let scriptOutputs = {} as { [script: string]: string };
   let useCloud: boolean;
 
   if (parsedArgs.yes !== true) {
@@ -57,8 +59,7 @@ async function addNxToMonorepo() {
         {
           type: 'multiselect',
           name: 'targetDefaults',
-          message:
-            'Which of the following scripts need to be run in deterministic/topological order?',
+          message: `Which scripts need to be run in order?  (e.g. before building a project, dependent projects must be built.)`,
           choices: scripts,
         },
       ])) as any
@@ -70,7 +71,7 @@ async function addNxToMonorepo() {
           type: 'multiselect',
           name: 'cacheableOperations',
           message:
-            'Which of the following scripts are cacheable? (Produce the same output given the same input, e.g. build, test and lint usually are, serve and start are not)',
+            'Which scripts are cacheable? (Produce the same output given the same input, e.g. build, test and lint usually are, serve and start are not)',
           choices: scripts,
         },
       ])) as any
@@ -78,13 +79,15 @@ async function addNxToMonorepo() {
 
     for (const scriptName of cacheableOperations) {
       // eslint-disable-next-line no-await-in-loop
-      scriptOutputs[scriptName] = await enquirer.prompt([
-        {
-          type: 'input',
-          name: scriptName,
-          message: `Does the "${scriptName}" script create any outputs? If not, leave blank, otherwise provide a path relative to a project root (e.g. dist, lib, build, coverage)`,
-        },
-      ]);
+      scriptOutputs[scriptName] = (
+        await enquirer.prompt([
+          {
+            type: 'input',
+            name: scriptName,
+            message: `Does the "${scriptName}" script create any outputs? If not, leave blank, otherwise provide a path relative to a project root (e.g. dist, lib, build, coverage)`,
+          },
+        ])
+      )[scriptName];
     }
 
     useCloud = await askAboutNxCloud();
@@ -98,42 +101,20 @@ async function addNxToMonorepo() {
     repoRoot,
     targetDefaults,
     cacheableOperations,
-    scriptOutputs
+    scriptOutputs,
+    undefined
   );
 
   addDepsToPackageJson(repoRoot, useCloud);
 
   output.log({ title: `📦 Installing dependencies` });
-  runInstall(repoRoot, pmc);
+  runInstall(repoRoot);
 
   if (useCloud) {
-    initCloud(repoRoot, pmc);
+    initCloud(repoRoot);
   }
 
-  printFinalMessage(pmc);
-}
-
-function askAboutNxCloud() {
-  return enquirer
-    .prompt([
-      {
-        name: 'NxCloud',
-        message: `Enable distributed caching to make your CI faster`,
-        type: 'autocomplete',
-        choices: [
-          {
-            name: 'Yes',
-            hint: 'I want faster builds',
-          },
-
-          {
-            name: 'No',
-          },
-        ],
-        initial: 'Yes' as any,
-      },
-    ])
-    .then((a: { NxCloud: 'Yes' | 'No' }) => a.NxCloud === 'Yes');
+  printFinalMessage();
 }
 
 // scanning package.json files
@@ -198,102 +179,8 @@ function combineAllScriptNames(
   return [...res];
 }
 
-function createNxJsonFile(
-  repoRoot: string,
-  targetDefaults: string[],
-  cacheableOperations: string[],
-  scriptOutputs: { [name: string]: string }
-) {
-  const nxJsonPath = joinPathFragments(repoRoot, 'nx.json');
-  let nxJson = {} as any;
-  try {
-    nxJson = readJsonFile(nxJsonPath);
-    // eslint-disable-next-line no-empty
-  } catch {}
-
-  nxJson.tasksRunnerOptions ||= {};
-  nxJson.tasksRunnerOptions.default ||= {};
-  nxJson.tasksRunnerOptions.default.runner ||= 'nx/tasks-runners/default';
-  nxJson.tasksRunnerOptions.default.options ||= {};
-  nxJson.tasksRunnerOptions.default.options.cacheableOperations =
-    cacheableOperations;
-  nxJson.targetDefaults ||= {};
-  for (const scriptName of targetDefaults) {
-    nxJson.targetDefaults[scriptName] ||= {};
-    nxJson.targetDefaults[scriptName] = { dependsOn: [`^${scriptName}`] };
-  }
-  for (const [scriptName, scriptAnswerData] of Object.entries(scriptOutputs)) {
-    if (!scriptAnswerData[scriptName]) {
-      // eslint-disable-next-line no-continue
-      continue;
-    }
-    nxJson.targetDefaults[scriptName] ||= {};
-    nxJson.targetDefaults[scriptName].outputs = [
-      `{projectRoot}/${scriptAnswerData[scriptName]}`,
-    ];
-  }
-  nxJson.defaultBase = deduceDefaultBase();
-  writeJsonFile(nxJsonPath, nxJson);
-}
-
-function deduceDefaultBase() {
-  try {
-    execSync(`git rev-parse --verify main`, {
-      stdio: ['ignore', 'ignore', 'ignore'],
-    });
-    return 'main';
-  } catch {
-    try {
-      execSync(`git rev-parse --verify dev`, {
-        stdio: ['ignore', 'ignore', 'ignore'],
-      });
-      return 'dev';
-    } catch {
-      try {
-        execSync(`git rev-parse --verify develop`, {
-          stdio: ['ignore', 'ignore', 'ignore'],
-        });
-        return 'develop';
-      } catch {
-        try {
-          execSync(`git rev-parse --verify next`, {
-            stdio: ['ignore', 'ignore', 'ignore'],
-          });
-          return 'next';
-        } catch {
-          return 'master';
-        }
-      }
-    }
-  }
-}
-
-// add dependencies
-function addDepsToPackageJson(repoRoot: string, useCloud: boolean) {
-  const json = readJsonFile(joinPathFragments(repoRoot, `package.json`));
-  if (!json.devDependencies) json.devDependencies = {};
-  json.devDependencies['nx'] = require('../package.json').version;
-  if (useCloud) {
-    json.devDependencies['@nrwl/nx-cloud'] = 'latest';
-  }
-  writeJsonFile(`package.json`, json);
-}
-
-function runInstall(repoRoot: string, pmc: PackageManagerCommands) {
-  execSync(pmc.install, { stdio: [0, 1, 2], cwd: repoRoot });
-}
-
-function initCloud(repoRoot: string, pmc: PackageManagerCommands) {
-  execSync(
-    `${pmc.exec} nx g @nrwl/nx-cloud:init --installationSource=add-nx-to-monorepo`,
-    {
-      stdio: [0, 1, 2],
-      cwd: repoRoot,
-    }
-  );
-}
-
-function printFinalMessage(pmc: PackageManagerCommands) {
+function printFinalMessage() {
+  const pmc = getPackageManagerCommand();
   output.success({
     title: `🎉 Done!`,
     bodyLines: [

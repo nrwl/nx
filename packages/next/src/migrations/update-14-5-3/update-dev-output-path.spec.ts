@@ -7,7 +7,7 @@ import update from './update-dev-output-path';
 
 describe('React default development configuration', () => {
   it('should add output path if it does not alreayd exist', async () => {
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(
       tree,
       'example',
@@ -37,7 +37,7 @@ describe('React default development configuration', () => {
   });
 
   it('should add output path is default generated pat', async () => {
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(
       tree,
       'example',
@@ -67,7 +67,7 @@ describe('React default development configuration', () => {
   });
 
   it('should skip update if outputPath already exists for development and does not match expected path', async () => {
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(
       tree,
       'example',

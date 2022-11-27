@@ -149,6 +149,11 @@
       "description": "Whether to generate a remote application with standalone components.",
       "type": "boolean",
       "default": false
+    },
+    "ssr": {
+      "description": "Whether to configure SSR for the remote application to be consumed by a host application using SSR.",
+      "type": "boolean",
+      "default": false
     }
   },
   "additionalProperties": false,

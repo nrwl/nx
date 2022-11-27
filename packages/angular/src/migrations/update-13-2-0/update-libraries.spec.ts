@@ -5,7 +5,7 @@ import updateLibraries from './update-libraries';
 describe('update-libraries migration', () => {
   it('should remove enableIvy flag from tsconfig and add compilationMode', () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'testing', {
       root: 'libs/testing',
       targets: {
@@ -42,7 +42,7 @@ describe('update-libraries migration', () => {
 
   it('should remove deprecated flags from ng-pacakgr', () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'testing', {
       root: 'libs/testing',
       targets: {
@@ -78,7 +78,7 @@ describe('update-libraries migration', () => {
   });
 
   it("shouldn't error on null targets", async () => {
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'app', {
       root: 'apps/testing',
     });

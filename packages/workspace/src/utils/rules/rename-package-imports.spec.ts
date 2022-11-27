@@ -18,6 +18,8 @@ describe('renamePackageImports Rule', () => {
         },
       })
     );
+    tree.create('libs/.gitignore', '');
+    tree.create('apps/.gitignore', '');
   });
 
   it('should rename package imports', async () => {

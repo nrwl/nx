@@ -1,8 +1,8 @@
 import {
   ProjectGraph,
   ProjectGraphProjectNode,
-} from 'nx/src/config/project-graph';
-import { ProjectConfiguration } from 'nx/src/config/workspace-json-project-json';
+} from '../../../config/project-graph';
+import { ProjectConfiguration } from '../../../config/workspace-json-project-json';
 import { WholeFileChange } from '../../file-utils';
 import {
   getTouchedProjects,

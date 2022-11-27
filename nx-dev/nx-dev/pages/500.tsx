@@ -1,5 +1,6 @@
 import { Footer, Header } from '@nrwl/nx-dev/ui-common';
 import { NextSeo } from 'next-seo';
+import Image from 'next/image';
 import Link from 'next/link';
 
 export default function FiveOhOh(): JSX.Element {
@@ -9,12 +10,20 @@ export default function FiveOhOh(): JSX.Element {
       <Header />
       <main id="main" role="main">
         <div className="w-full">
-          <article
-            id="getting-started"
-            className="relative py-16 sm:pt-24 lg:py-32"
-          >
+          <article className="relative py-16 sm:pt-24 lg:py-32">
             <div className="mx-auto px-4 sm:px-6 lg:px-8 xl:max-w-7xl">
-              <h1 className="mt-2 text-4xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 sm:text-6xl">
+              <div className="w-full">
+                <Image
+                  aria-hidden="true"
+                  height={200}
+                  width={140}
+                  loading="lazy"
+                  alt="500 illustration"
+                  src="/images/illustrations/500.svg"
+                  className="drop-shadow"
+                />
+              </div>
+              <h1 className="mt-4 text-4xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 sm:text-6xl">
                 500 - Internal Server Error!
               </h1>
               <p className="mt-8 text-lg">

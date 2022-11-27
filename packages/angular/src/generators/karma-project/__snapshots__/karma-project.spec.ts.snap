@@ -1,58 +1,75 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`karmaProject applications should create a test.ts 1`] = `
-"// This file is required by karma.conf.js and loads recursively all the .spec and framework files
+exports[`karmaProject --root-project should generate the right karma.conf.js file for a nested project in a workspace with a project at the root 1`] = `
+"// Karma configuration file, see link for more information
+// https://karma-runner.github.io/6.4/config/configuration-file.html
 
-import 'zone.js/dist/zone-testing';
-import { getTestBed } from '@angular/core/testing';
-import {
-  BrowserDynamicTestingModule,
-  platformBrowserDynamicTesting
-} from '@angular/platform-browser-dynamic/testing';
+const { join } = require('path');
+const setBaseKarmaConfig = require('../../karma.conf');
 
-declare const require: any;
+module.exports = function (config) {
+  setBaseKarmaConfig(config);
 
-// First, initialize the Angular testing environment.
-getTestBed().initTestEnvironment(
-  BrowserDynamicTestingModule,
-  platformBrowserDynamicTesting()
-);
-// Then we find all the tests.
-const context = require.context('./', true, /\\\\.spec\\\\.ts$/);
-// And load the modules.
-context.keys().map(context);
+  config.set({
+    coverageReporter: {
+      dir: join(__dirname, '../../coverage/libs/nested-lib')
+    }
+  });
+};
 "
 `;
 
-exports[`karmaProject library should create a test.ts 1`] = `
-"// This file is required by karma.conf.js and loads recursively all the .spec and framework files
+exports[`karmaProject --root-project should support a project located at the root 1`] = `
+"// Karma configuration file, see link for more information
+// https://karma-runner.github.io/6.4/config/configuration-file.html
 
-import 'zone.js/dist/zone';
+const { constants } = require('karma');
+const { join } = require('path');
 
-import 'zone.js/dist/zone-testing';
-import { getTestBed } from '@angular/core/testing';
-import {
-  BrowserDynamicTestingModule,
-  platformBrowserDynamicTesting
-} from '@angular/platform-browser-dynamic/testing';
-
-declare const require: any;
-
-// First, initialize the Angular testing environment.
-getTestBed().initTestEnvironment(
-  BrowserDynamicTestingModule,
-  platformBrowserDynamicTesting()
-);
-// Then we find all the tests.
-const context = require.context('./', true, /\\\\.spec\\\\.ts$/);
-// And load the modules.
-context.keys().map(context);
+module.exports = (config) => {
+  config.set({
+    basePath: '',
+    frameworks: ['jasmine', '@angular-devkit/build-angular'],
+    plugins: [
+      require('karma-jasmine'),
+      require('karma-chrome-launcher'),
+      require('karma-jasmine-html-reporter'),
+      require('karma-coverage'),
+      require('@angular-devkit/build-angular/plugins/karma'),
+    ],
+    client: {
+      jasmine: {
+        // you can add configuration options for Jasmine here
+        // the possible options are listed at https://jasmine.github.io/api/edge/Configuration.html
+        // for example, you can disable the random execution with \`random: false\`
+        // or set a specific seed with \`seed: 4321\`
+      },
+      clearContext: false, // leave Jasmine Spec Runner output visible in browser
+    },
+    jasmineHtmlReporter: {
+      suppressAll: true, // removes the duplicated traces
+    },
+    coverageReporter: {
+      dir: join(__dirname, 'coverage/root-app'),
+      subdir: '.',
+      reporters: [{ type: 'html' }, { type: 'text-summary' }],
+    },
+    reporters: ['progress', 'kjhtml'],
+    port: 9876,
+    colors: true,
+    logLevel: constants.LOG_INFO,
+    autoWatch: true,
+    browsers: ['Chrome'],
+    singleRun: true,
+    restartOnFileChange: true,
+  });
+};
 "
 `;
 
 exports[`karmaProject should create a karma.conf.js 1`] = `
 "// Karma configuration file, see link for more information
-// https://karma-runner.github.io/1.0/config/configuration-file.html
+// https://karma-runner.github.io/6.4/config/configuration-file.html
 
 const { join } = require('path');
 const getBaseKarmaConfig = require('../../karma.conf');
@@ -67,5 +84,51 @@ module.exports = function(config) {
     }
   });
 };
+"
+`;
+
+exports[`karmaProject should generate files 1`] = `
+"{
+  \\"extends\\": \\"./tsconfig.json\\",
+  \\"compilerOptions\\": {
+    \\"outDir\\": \\"../../dist/out-tsc\\",
+    \\"types\\": [\\"jasmine\\", \\"node\\"]
+  },
+  \\"include\\": [\\"**/*.spec.ts\\", \\"**/*.test.ts\\", \\"**/*.d.ts\\"]
+}
+"
+`;
+
+exports[`karmaProject should generate files and correctly add polyfills if it is using old ng style polyfills 1`] = `
+"{
+  \\"extends\\": \\"./tsconfig.json\\",
+  \\"compilerOptions\\": {
+    \\"outDir\\": \\"../../dist/out-tsc\\",
+    \\"types\\": [
+      \\"jasmine\\",
+      \\"node\\"
+    ]
+  },
+  \\"include\\": [
+    \\"**/*.spec.ts\\",
+    \\"**/*.test.ts\\",
+    \\"**/*.d.ts\\"
+  ],
+  \\"files\\": [
+    \\"src/polyfills.ts\\"
+  ]
+}
+"
+`;
+
+exports[`karmaProject should generate files and not add polyfills if it is using ng v15 style polyfills 1`] = `
+"{
+  \\"extends\\": \\"./tsconfig.json\\",
+  \\"compilerOptions\\": {
+    \\"outDir\\": \\"../../dist/out-tsc\\",
+    \\"types\\": [\\"jasmine\\", \\"node\\"]
+  },
+  \\"include\\": [\\"**/*.spec.ts\\", \\"**/*.test.ts\\", \\"**/*.d.ts\\"]
+}
 "
 `;

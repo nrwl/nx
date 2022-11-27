@@ -5,7 +5,7 @@ import { readProjectConfiguration } from 'nx/src/generators/utils/project-config
 
 describe('run-commands', () => {
   it('should generate a target', async () => {
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     const opts = {
       name: 'custom',
       project: 'lib',

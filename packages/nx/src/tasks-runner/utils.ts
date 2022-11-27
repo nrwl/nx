@@ -14,8 +14,8 @@ import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { workspaceRoot } from '../utils/workspace-root';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { joinPathFragments } from '../utils/path';
-import { isRelativePath } from 'nx/src/utils/fileutils';
-import { serializeOverridesIntoCommandLine } from 'nx/src/utils/serialize-overrides-into-command-line';
+import { isRelativePath } from '../utils/fileutils';
+import { serializeOverridesIntoCommandLine } from '../utils/serialize-overrides-into-command-line';
 
 export function getCommandAsString(execCommand: string, task: Task) {
   const args = getPrintableCommandArgsForTask(task);

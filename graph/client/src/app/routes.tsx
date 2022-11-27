@@ -28,12 +28,22 @@ const workspaceDataLoader = async (selectedWorkspaceId: string) => {
       workspaceInfo.projectGraphUrl
     );
 
-  return projectGraph;
+  const targetsSet = new Set<string>();
+
+  projectGraph.projects.forEach((project) => {
+    Object.keys(project.data.targets ?? {}).forEach((targetName) => {
+      targetsSet.add(targetName);
+    });
+  });
+
+  const targets = Array.from(targetsSet).sort((a, b) => a.localeCompare(b));
+
+  return { ...projectGraph, targets };
 };
 
-const taskDataLoader = async (selectedProjectId: string) => {
+const taskDataLoader = async (selectedWorkspaceId: string) => {
   const projectInfo = appConfig.workspaces.find(
-    (graph) => graph.id === selectedProjectId
+    (graph) => graph.id === selectedWorkspaceId
   );
 
   return await projectGraphDataService.getTaskGraph(projectInfo.taskGraphUrl);
@@ -42,30 +52,29 @@ const taskDataLoader = async (selectedProjectId: string) => {
 const childRoutes: RouteObject[] = [
   {
     path: 'projects',
-    loader: () => {},
     element: <ProjectsSidebar />,
   },
   {
     loader: async ({ request, params }) => {
-      const environmentConfig = getEnvironmentConfig();
-
-      if (!environmentConfig.appConfig.showExperimentalFeatures) {
-        return redirect(`/projects`);
-      }
-
-      const selectedProjectId =
-        params.selectedProjectId ?? appConfig.defaultWorkspaceId;
-      return taskDataLoader(selectedProjectId);
+      const selectedWorkspaceId =
+        params.selectedWorkspaceId ?? appConfig.defaultWorkspaceId;
+      return taskDataLoader(selectedWorkspaceId);
     },
     path: 'tasks',
-    id: 'selectedTask',
+    id: 'selectedTarget',
+    shouldRevalidate: ({ currentParams, nextParams }) => {
+      return (
+        !currentParams.selectedWorkspaceId ||
+        currentParams.selectedWorkspaceId !== nextParams.selectedWorkspaceId
+      );
+    },
     children: [
       {
         index: true,
         element: <TasksSidebar />,
       },
       {
-        path: ':selectedTaskId',
+        path: ':selectedTarget',
         element: <TasksSidebar />,
       },
     ],
@@ -85,13 +94,18 @@ export const devRoutes: RouteObject[] = [
         },
       },
       {
-        path: ':selectedProjectId',
+        path: ':selectedWorkspaceId',
         id: 'selectedWorkspace',
         element: <Shell />,
+        shouldRevalidate: ({ currentParams, nextParams }) => {
+          return (
+            currentParams.selectedWorkspaceId !== nextParams.selectedWorkspaceId
+          );
+        },
         loader: async ({ request, params }) => {
-          const selectedProjectId =
-            params.selectedProjectId ?? appConfig.defaultWorkspaceId;
-          return workspaceDataLoader(selectedProjectId);
+          const selectedWorkspaceId =
+            params.selectedWorkspaceId ?? appConfig.defaultWorkspaceId;
+          return workspaceDataLoader(selectedWorkspaceId);
         },
         children: childRoutes,
       },
@@ -106,6 +120,9 @@ export const releaseRoutes: RouteObject[] = [
     loader: async ({ request, params }) => {
       const selectedWorkspaceId = appConfig.defaultWorkspaceId;
       return workspaceDataLoader(selectedWorkspaceId);
+    },
+    shouldRevalidate: () => {
+      return false;
     },
     element: <Shell />,
     children: [

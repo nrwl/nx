@@ -10,7 +10,7 @@ describe('NxPlugin Executor Generator', () => {
 
   beforeEach(async () => {
     projectName = 'my-plugin';
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     await pluginGenerator(tree, {
       name: projectName,

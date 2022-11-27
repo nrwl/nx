@@ -33,7 +33,7 @@
     "chalk": "^4.1.0"
   },
   "peerDependencies": {
-    "detox": "^19.12.1"
+    "detox": "^20.0.3"
   },
   "builders": "./executors.json",
   "ng-update": {

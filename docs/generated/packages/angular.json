@@ -11,14 +11,14 @@
       "id": "overview",
       "path": "/packages/angular",
       "file": "shared/angular-plugin",
-      "content": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides:\n\n- Integration with libraries such as Storybook, Jest, Cypress, Karma, and Protractor.\n- Generators to help scaffold code quickly, including:\n  - Micro Frontends\n  - Libraries, both internal to your codebase and publishable to npm\n  - Upgrading AngularJS applications\n  - Single Component Application Modules (SCAMs)\n- NgRx helpers.\n- Utilities for automatic workspace refactoring.\n\n{% callout type=\"note\" title=\"Currently using the Angular CLI?\" %}\nYou can easily and mostly **automatically migrate from an Angular CLI** project to Nx! Learn more [here](/recipes/adopting-nx/migration-angular).\n{% /callout %}\n\n## Setting up the Angular plugin\n\nAdding the Angular plugin to an existing Nx workspace can be done with the following:\n\n```shell\nyarn add -D @nrwl/angular\n```\n\n```shell\nnpm install -D @nrwl/angular\n```\n\n## Using the Angular Plugin\n\n### Generating an application\n\nIt's straightforward to generate an Angular application:\n\n```shell\nnx g @nrwl/angular:app appName\n```\n\nBy default, the application will be generated with:\n\n- ESLint as the linter.\n- Jest as the unit test runner.\n- Cypress as the E2E test runner.\n\nWe can then serve, build, test, lint, and run e2e tests on the application with the following commands:\n\n```shell\nnx serve appName\nnx build appName\nnx test appName\nnx lint appName\nnx e2e appName\n```\n\n### Generating a library\n\nGenerating an Angular library is very similar to generating an application:\n\n```shell\nnx g @nrwl/angular:lib libName\n```\n\nBy default, the library will be generated with:\n\n- ESLint as the linter.\n- Jest as the unit test runner.\n\nWe can then test and lint the library with the following commands:\n\n```shell\nnx test libName\nnx lint libName\n```\n\nRead more about:\n\n- [Creating Libraries](/more-concepts/creating-libraries)\n- [Library Types](/more-concepts/library-types)\n- [Buildable and Publishable Libraries](/more-concepts/buildable-and-publishable-libraries)\n\n## More Documentation\n\n- [Angular Nx Tutorial](/angular-tutorial/01-create-application)\n- [Migrating from the Angular CLI](recipe/migration-angular)\n- [Setup Module Federation with Angular and Nx](/recipes/module-federation/faster-builds)\n- [Using NgRx](/recipes/other/misc-ngrx)\n- [Using Data Persistence operators](/recipes/other/misc-data-persistence)\n- [Upgrading an AngularJS application to Angular](/recipes/adopting-nx/migration-angularjs)\n- [Using Tailwind CSS with Angular projects](/recipes/other/using-tailwind-css-with-angular-projects)\n"
+      "content": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides:\n\n- Integration with libraries such as Storybook, Jest, Cypress, Karma, and Protractor.\n- Generators to help scaffold code quickly, including:\n  - Micro Frontends\n  - Libraries, both internal to your codebase and publishable to npm\n  - Upgrading AngularJS applications\n  - Single Component Application Modules (SCAMs)\n- NgRx helpers.\n- Utilities for automatic workspace refactoring.\n\n{% callout type=\"note\" title=\"Currently using the Angular CLI?\" %}\nYou can easily and mostly **automatically migrate from an Angular CLI** project to Nx! Learn more [here](/recipes/adopting-nx/migration-angular).\n{% /callout %}\n\n## Setting up the Angular plugin\n\nAdding the Angular plugin to an existing Nx workspace can be done with the following:\n\n```shell\nyarn add -D @nrwl/angular\n```\n\n```shell\nnpm install -D @nrwl/angular\n```\n\n## Using the Angular Plugin\n\n### Generating an application\n\nIt's straightforward to generate an Angular application:\n\n```shell\nnx g @nrwl/angular:app appName\n```\n\nBy default, the application will be generated with:\n\n- ESLint as the linter.\n- Jest as the unit test runner.\n- Cypress as the E2E test runner.\n\nWe can then serve, build, test, lint, and run e2e tests on the application with the following commands:\n\n```shell\nnx serve appName\nnx build appName\nnx test appName\nnx lint appName\nnx e2e appName\n```\n\n### Generating a library\n\nGenerating an Angular library is very similar to generating an application:\n\n```shell\nnx g @nrwl/angular:lib libName\n```\n\nBy default, the library will be generated with:\n\n- ESLint as the linter.\n- Jest as the unit test runner.\n\nWe can then test and lint the library with the following commands:\n\n```shell\nnx test libName\nnx lint libName\n```\n\nRead more about:\n\n- [Creating Libraries](/more-concepts/creating-libraries)\n- [Library Types](/more-concepts/library-types)\n- [Buildable and Publishable Libraries](/more-concepts/buildable-and-publishable-libraries)\n\n## More Documentation\n\n- [Angular Nx Tutorial](/angular-tutorial/1-code-generation)\n- [Migrating from the Angular CLI](recipe/migration-angular)\n- [Setup Module Federation with Angular and Nx](/recipes/module-federation/faster-builds)\n- [Using NgRx](/recipes/other/misc-ngrx)\n- [Using Data Persistence operators](/recipes/other/misc-data-persistence)\n- [Upgrading an AngularJS application to Angular](/recipes/adopting-nx/migration-angularjs)\n- [Using Tailwind CSS with Angular projects](/recipes/other/using-tailwind-css-with-angular-projects)\n"
     },
     {
       "name": "Angular and Nx Version Matrix",
       "id": "angular-nx-version-matrix",
       "file": "shared/angular-nx-version-matrix",
       "path": "/angular-nx-version-matrix",
-      "content": "# Nx and Angular Version Compatibility Matrix\n\nBelow is a reference table that matches versions of Angular to the version of Nx that is compatible with it. The table shows the version of Angular, the recommended version of Nx to use and the range of Nx versions that support the version of Angular.\n\nWe provide a recommended version, and it is usually the latest minor version of Nx in the range provided because there will have been bug fixes added since the first release in the range.\n\n| Angular Version | **Nx Version _(recommended)_** | Nx Version _(range)_ |\n| --------------- | ------------------------------ | -------------------- |\n| ^8.0.0          | **8.12.2**                     | 8.7.0 <= 8.12.2      |\n| ^9.0.0          | **9.6.0**                      | 8.12.4 <= 9.6.0      |\n| ^10.0.0         | **10.4.15**                    | 9.7.0 <= 10.4.15     |\n| ^11.0.0         | **12.2.0**                     | 11.0.0 <= 12.2.0     |\n| ^12.0.0         | **13.1.4**                     | 12.3.0 <= 13.1.4     |\n| ^13.0.0         | **14.1.9**                     | .13.2.0 <= 14.1.9    |\n| ~14.0.0         | **14.4.3**                     | 14.2.1 <= 14.4.3     |\n| ~14.1.0         | **14.5.10**                    | 14.5.0 <= 14.5.10    |\n| ~14.2.0         | **latest**                     | 14.6.0 <= latest     |\n\nIf you would like to see how the supported versions of Node and Typescript for the version of Angular you are using, [Lars Gyrup Brink Nielsen](https://twitter.com/LayZeeDK) has a very good resource for that [here](https://gist.github.com/LayZeeDK/c822cc812f75bb07b7c55d07ba2719b3).\n"
+      "content": "# Nx and Angular Version Compatibility Matrix\n\nBelow is a reference table that matches versions of Angular to the version of Nx that is compatible with it. The table shows the version of Angular, the recommended version of Nx to use and the range of Nx versions that support the version of Angular.\n\nWe provide a recommended version, and it is usually the latest minor version of Nx in the range provided because there will have been bug fixes added since the first release in the range.\n\n| Angular Version | **Nx Version _(recommended)_** | Nx Version _(range)_ |\n| --------------- | ------------------------------ | -------------------- |\n| ^8.0.0          | **8.12.2**                     | 8.7.0 <= 8.12.2      |\n| ^9.0.0          | **9.6.0**                      | 8.12.4 <= 9.6.0      |\n| ^10.0.0         | **10.4.15**                    | 9.7.0 <= 10.4.15     |\n| ^11.0.0         | **12.2.0**                     | 11.0.0 <= 12.2.0     |\n| ^12.0.0         | **13.1.4**                     | 12.3.0 <= 13.1.4     |\n| ^13.0.0         | **14.1.9**                     | 13.2.0 <= 14.1.9     |\n| ~14.0.0         | **14.4.3**                     | 14.2.1 <= 14.4.3     |\n| ~14.1.0         | **14.5.10**                    | 14.5.0 <= 14.5.10    |\n| ~14.2.0         | **15.1.1**                     | 14.6.0 <= 15.1.1     |\n| ~15.0.0         | **latest**                     | 15.2.0 <= latest     |\n\nIf you would like to see how the supported versions of Node and Typescript for the version of Angular you are using, [Lars Gyrup Brink Nielsen](https://twitter.com/LayZeeDK) has a very good resource for that [here](https://gist.github.com/LayZeeDK/c822cc812f75bb07b7c55d07ba2719b3).\n"
     }
   ],
   "generators": [
@@ -228,6 +228,12 @@
             "description": "Generate an application that is setup to use standalone components.",
             "type": "boolean",
             "default": false
+          },
+          "rootProject": {
+            "description": "Create an application at the root of the workspace.",
+            "type": "boolean",
+            "default": false,
+            "hidden": true
           }
         },
         "additionalProperties": false,
@@ -1189,6 +1195,11 @@
             "description": "Whether to generate a remote application with standalone components.",
             "type": "boolean",
             "default": false
+          },
+          "ssr": {
+            "description": "Whether to configure SSR for the remote application to be consumed by a host application using SSR.",
+            "type": "boolean",
+            "default": false
           }
         },
         "additionalProperties": false,
@@ -1440,6 +1451,11 @@
           "standalone": {
             "type": "boolean",
             "description": "Whether to generate a host application that uses standalone components.",
+            "default": false
+          },
+          "ssr": {
+            "description": "Whether to configure SSR for the host application",
+            "type": "boolean",
             "default": false
           }
         },
@@ -2250,8 +2266,7 @@
           },
           "configureTestRunner": {
             "type": "boolean",
-            "description": "Add a Storybook Test-Runner target.",
-            "x-prompt": "Add a Storybook Test-Runner target?"
+            "description": "Add a Storybook Test-Runner target."
           }
         },
         "additionalProperties": false,

@@ -29,7 +29,7 @@ export function DocViewer({
           images: [
             {
               url: router.asPath.includes('turbo-and-nx')
-                ? 'https://nx.dev/images/nx-media-monorepo.jpg'
+                ? 'https://nx.dev/socials/nx-media-monorepo.jpg'
                 : `https://nx.dev/images/open-graph/${router.asPath
                     .replace('/', '')
                     .replace(/\//gi, '-')}.jpg`,
@@ -39,7 +39,7 @@ export function DocViewer({
               type: 'image/jpeg',
             },
           ],
-          site_name: 'Nx',
+          siteName: 'Nx',
           type: 'website',
         }}
       />
@@ -59,7 +59,7 @@ export function DocViewer({
                 target="_blank"
                 rel="noreferrer"
                 title="Report an issue on Github"
-                className="relative inline-flex items-center rounded-l-md border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-gray-600 focus-within:ring-blue-500 hover:bg-gray-50 focus:z-10 focus:outline-none focus:ring-1 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400 dark:focus-within:ring-sky-500 dark:hover:bg-slate-800"
+                className="relative inline-flex items-center rounded-l-md border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-600 focus-within:ring-blue-500 hover:bg-slate-50 focus:z-10 focus:outline-none focus:ring-1 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400 dark:focus-within:ring-sky-500 dark:hover:bg-slate-800"
               >
                 Report an issue
               </a>
@@ -75,7 +75,7 @@ export function DocViewer({
                 target="_blank"
                 rel="noreferrer"
                 title="Edit this page on Github"
-                className="relative -ml-px inline-flex items-center rounded-r-md border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-600 focus-within:ring-blue-500 hover:bg-gray-50 focus:z-10 focus:outline-none focus:ring-1 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400 dark:focus-within:ring-sky-500 dark:hover:bg-slate-800"
+                className="relative -ml-px inline-flex items-center rounded-r-md border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-600 focus-within:ring-blue-500 hover:bg-slate-50 focus:z-10 focus:outline-none focus:ring-1 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400 dark:focus-within:ring-sky-500 dark:hover:bg-slate-800"
               >
                 Edit this page
               </a>

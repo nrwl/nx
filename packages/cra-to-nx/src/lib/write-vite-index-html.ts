@@ -1,8 +1,17 @@
 import * as fs from 'fs';
 
-export function writeViteIndexHtml(appName: string) {
+export function writeViteIndexHtml(
+  appName: string,
+  isNested: boolean,
+  isJs: boolean
+) {
+  const indexPath = isNested ? 'index.html' : `apps/${appName}/index.html`;
+  if (fs.existsSync(indexPath)) {
+    fs.copyFileSync(indexPath, indexPath + '.old');
+  }
+  const indexFile = isJs ? '/src/index.jsx' : '/src/index.tsx';
   fs.writeFileSync(
-    `apps/${appName}/index.html`,
+    indexPath,
     `<!DOCTYPE html>
 <html lang="en">
   <head>
@@ -13,7 +22,7 @@ export function writeViteIndexHtml(appName: string) {
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/index.jsx"></script>
+    <script type="module" src="${indexFile}"></script>
   </body>
 </html>`
   );

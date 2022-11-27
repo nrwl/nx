@@ -1,11 +1,14 @@
 import type { FileReplacement } from '../../plugins/rollup-replace-files.plugin';
 export interface ViteDevServerExecutorOptions {
   buildTarget: string;
-  baseHref?: string;
   proxyConfig?: string;
-  fileReplacements: FileReplacement[];
   port?: number;
   host?: string | boolean;
   https?: boolean;
   hmr?: boolean;
+  open?: string | boolean;
+  cors?: boolean;
+  logLevel?: info | warn | error | silent;
+  mode?: string;
+  clearScreen?: boolean;
 }

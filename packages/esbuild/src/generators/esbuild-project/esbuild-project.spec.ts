@@ -11,7 +11,7 @@ describe('esbuildProjectGenerator', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'mypkg', {
       root: 'libs/mypkg',
     });

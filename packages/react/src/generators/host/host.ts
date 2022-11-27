@@ -1,10 +1,7 @@
 import { formatFiles, Tree } from '@nrwl/devkit';
 
 import applicationGenerator from '../application/application';
-import {
-  normalizeOptions,
-  normalizeProjectName,
-} from '../application/lib/normalize-options';
+import { normalizeOptions } from '../application/lib/normalize-options';
 import { updateModuleFederationProject } from '../../rules/update-module-federation-project';
 import { addModuleFederationFiles } from './lib/add-module-federation-files';
 import { updateModuleFederationE2eProject } from './lib/update-module-federation-e2e-project';
@@ -18,6 +15,8 @@ export async function hostGenerator(host: Tree, schema: Schema) {
     ...options,
     // The target use-case is loading remotes as child routes, thus always enable routing.
     routing: true,
+    // Only webpack works with module federation for now.
+    bundler: 'webpack',
   });
 
   const remotesWithPorts: { name: string; port: number }[] = [];

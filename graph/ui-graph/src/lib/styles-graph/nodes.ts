@@ -40,6 +40,7 @@ const focusedNodes: Stylesheet = {
       switchValueByDarkMode(node, NrwlPalette.slate_700, NrwlPalette.slate_200),
     backgroundColor: (node) =>
       switchValueByDarkMode(node, NrwlPalette.sky_500, NrwlPalette.blue_500),
+    width: (node: NodeSingular) => labelWidthCalculator.calculateWidth(node),
   },
 };
 

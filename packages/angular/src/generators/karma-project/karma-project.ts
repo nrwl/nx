@@ -1,4 +1,4 @@
-import type { Tree } from '@nrwl/devkit';
+import type { GeneratorCallback, Tree } from '@nrwl/devkit';
 import { formatFiles } from '@nrwl/devkit';
 import { checkProjectTestTarget } from './lib/check-test-target';
 import { generateKarmaProjectFiles } from './lib/generate-karma-project-files';
@@ -10,15 +10,18 @@ import { karmaGenerator } from '../karma/karma';
 export async function karmaProjectGenerator(
   tree: Tree,
   options: KarmaProjectOptions
-) {
-  karmaGenerator(tree, options);
+): Promise<GeneratorCallback> {
+  const installTask = karmaGenerator(tree, options);
   checkProjectTestTarget(tree, options.project);
   generateKarmaProjectFiles(tree, options.project);
   updateTsConfigs(tree, options.project);
   updateWorkspaceConfig(tree, options.project);
+
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
+
+  return installTask;
 }
 
 export default karmaProjectGenerator;

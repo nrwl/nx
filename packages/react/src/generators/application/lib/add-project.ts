@@ -11,12 +11,16 @@ export function addProject(host, options: NormalizedSchema) {
     root: options.appProjectRoot,
     sourceRoot: `${options.appProjectRoot}/src`,
     projectType: 'application',
-    targets: {
-      build: createBuildTarget(options),
-      serve: createServeTarget(options),
-    },
+    targets: {},
     tags: options.parsedTags,
   };
+
+  if (options.bundler === 'webpack') {
+    project.targets = {
+      build: createBuildTarget(options),
+      serve: createServeTarget(options),
+    };
+  }
 
   addProjectConfiguration(
     host,

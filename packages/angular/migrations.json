@@ -1650,6 +1650,23 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "15.2.2": {
+      "version": "15.2.2-beta.0",
+      "packages": {
+        "@angular-eslint/eslint-plugin": {
+          "version": "~15.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/eslint-plugin-template": {
+          "version": "~15.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/template-parser": {
+          "version": "~15.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

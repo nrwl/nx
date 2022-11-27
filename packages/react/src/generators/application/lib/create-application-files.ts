@@ -60,12 +60,18 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
 
   generateFiles(
     host,
-    join(__dirname, '../files/common'),
+    join(
+      __dirname,
+      options.bundler === 'vite' ? '../files/common-vite' : '../files/common'
+    ),
     options.appProjectRoot,
     templateVariables
   );
 
-  if (options.unitTestRunner === 'none') {
+  if (
+    options.unitTestRunner === 'none' ||
+    (options.unitTestRunner === 'vitest' && options.inSourceTests == true)
+  ) {
     host.delete(
       `${options.appProjectRoot}/src/app/${options.fileName}.spec.tsx`
     );
@@ -76,6 +82,18 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     options.appProjectRoot,
     templateVariables
   );
+
+  if (options.unitTestRunner === 'vitest' && options.inSourceTests == true) {
+    let originalAppContents = host
+      .read(`${options.appProjectRoot}/src/app/${options.fileName}.tsx`)
+      .toString();
+    originalAppContents += `
+    if (import.meta.vitest) {
+      // add tests related to your file here
+      // For more information please visit the Vitest docs site here: https://vitest.dev/guide/in-source.html
+    }
+    `;
+  }
 
   if (options.js) {
     toJS(host);

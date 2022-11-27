@@ -24,7 +24,7 @@ export default presetGenerator;
 async function createPreset(tree: Tree, options: Schema) {
   if (options.preset === Preset.Empty || options.preset === Preset.Apps) {
     return;
-  } else if (options.preset === Preset.Angular) {
+  } else if (options.preset === Preset.AngularMonorepo) {
     const {
       applicationGenerator: angularApplicationGenerator,
     } = require('@nrwl' + '/angular/generators');
@@ -35,7 +35,20 @@ async function createPreset(tree: Tree, options: Schema) {
       linter: options.linter,
       standaloneConfig: options.standaloneConfig,
     });
-  } else if (options.preset === Preset.React) {
+  } else if (options.preset === Preset.AngularStandalone) {
+    const {
+      applicationGenerator: angularApplicationGenerator,
+    } = require('@nrwl' + '/angular/generators');
+
+    await angularApplicationGenerator(tree, {
+      name: options.name,
+      style: options.style,
+      linter: 'none',
+      unitTestRunner: 'none',
+      standaloneConfig: options.standaloneConfig,
+      rootProject: true,
+    });
+  } else if (options.preset === Preset.ReactMonorepo) {
     const {
       applicationGenerator: reactApplicationGenerator,
     } = require('@nrwl' + '/react');
@@ -46,7 +59,7 @@ async function createPreset(tree: Tree, options: Schema) {
       linter: options.linter,
       standaloneConfig: options.standaloneConfig,
     });
-  } else if (options.preset === Preset.ReactExperimental) {
+  } else if (options.preset === Preset.ReactStandalone) {
     const {
       applicationGenerator: reactApplicationGenerator,
     } = require('@nrwl' + '/react');
@@ -54,10 +67,11 @@ async function createPreset(tree: Tree, options: Schema) {
     await reactApplicationGenerator(tree, {
       name: options.name,
       style: options.style,
-      linter: 'none',
+      linter: options.linter,
       unitTestRunner: 'none',
       standaloneConfig: options.standaloneConfig,
       rootProject: true,
+      bundler: 'vite',
     });
   } else if (options.preset === Preset.NextJs) {
     const { applicationGenerator: nextApplicationGenerator } = require('@nrwl' +

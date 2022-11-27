@@ -13,7 +13,7 @@ describe('15.0.0 migration (add-eslint-inputs)', () => {
 
   describe('production', () => {
     beforeEach(() => {
-      tree = createTreeWithEmptyWorkspace();
+      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
       updateWorkspaceConfiguration(tree, {
         version: 2,
@@ -76,7 +76,7 @@ describe('15.0.0 migration (add-eslint-inputs)', () => {
 
   describe('development', () => {
     beforeEach(() => {
-      tree = createTreeWithEmptyWorkspace();
+      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
       addProjectConfiguration(tree, 'proj', {
         root: 'proj',
@@ -134,7 +134,7 @@ describe('15.0.0 migration (add-eslint-inputs)', () => {
 
   describe('lintTargetDefaults.input fallback values', () => {
     beforeEach(() => {
-      tree = createTreeWithEmptyWorkspace();
+      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
       addProjectConfiguration(tree, 'proj', {
         root: 'proj',

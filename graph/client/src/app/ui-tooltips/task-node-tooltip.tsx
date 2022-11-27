@@ -10,7 +10,7 @@ export interface TaskNodeTooltipProps {
 
 export function TaskNodeTooltip({ id, executor }: TaskNodeTooltipProps) {
   const params = useParams();
-  const selectedWorkspaceId = params['selectedProjectId'];
+  const selectedWorkspaceId = params['selectedWorkspaceId'];
 
   const to = selectedWorkspaceId
     ? `/${selectedWorkspaceId}/tasks/${id}`
@@ -21,9 +21,6 @@ export function TaskNodeTooltip({ id, executor }: TaskNodeTooltipProps) {
         <Tag className="mr-3">{executor}</Tag>
         {id}
       </h4>
-      <div className="mt-2 flex">
-        <TooltipLinkButton to={to}>Focus</TooltipLinkButton>
-      </div>
     </div>
   );
 }

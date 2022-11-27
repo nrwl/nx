@@ -21,8 +21,7 @@ import {
   stripIndents,
   workspaceRoot,
 } from '@nrwl/devkit';
-import { createProjectFileMappings } from 'nx/src/utils/target-project-locator';
-import { lstatSync, mkdirSync, writeFileSync } from 'fs';
+import { existsSync, lstatSync, mkdirSync, writeFileSync } from 'fs';
 import { dirname, join, relative } from 'path';
 import type { BrowserBuilderSchema } from '../src/builders/webpack-browser/webpack-browser.impl';
 
@@ -74,7 +73,7 @@ ${e.stack ? e.stack : e}`
   const buildTarget = getBuildableTarget(ctContext);
 
   if (!buildTarget.project && !graph.nodes?.[buildTarget.project]?.data) {
-    throw new Error(stripIndents`Unable to find project configuration for build target.
+    throw new Error(stripIndents`Unable to find project configuration for build target. 
     Project Name? ${buildTarget.project}
     Has project config? ${!!graph.nodes?.[buildTarget.project]?.data}`);
   }
@@ -279,16 +278,22 @@ function withSchemaDefaults(options: any): BrowserBuilderSchema {
  * this file should get cleaned up via the cypress executor
  */
 function getTempStylesForTailwind(ctExecutorContext: ExecutorContext) {
-  const mappedGraphFiles = createProjectFileMappings(
-    ctExecutorContext.projectGraph
-  );
   const ctProjectConfig = ctExecutorContext.projectGraph.nodes[
     ctExecutorContext.projectName
   ].data as ProjectConfiguration;
   // angular only supports `tailwind.config.{js,cjs}`
-  const ctProjectTailwindConfig = join(ctProjectConfig.root, 'tailwind.config');
-  const isTailWindInCtProject = !!mappedGraphFiles[ctProjectTailwindConfig];
-  const isTailWindInRoot = !!mappedGraphFiles['tailwind.config'];
+  const ctProjectTailwindConfig = join(
+    ctExecutorContext.root,
+    ctProjectConfig.root,
+    'tailwind.config'
+  );
+  const isTailWindInCtProject =
+    existsSync(ctProjectTailwindConfig + '.js') ||
+    existsSync(ctProjectTailwindConfig + '.cjs');
+  const rootTailwindPath = join(ctExecutorContext.root, 'tailwind.config');
+  const isTailWindInRoot =
+    existsSync(rootTailwindPath + '.js') ||
+    existsSync(rootTailwindPath + '.cjs');
 
   if (isTailWindInRoot || isTailWindInCtProject) {
     const pathToStyle = getTempTailwindPath(ctExecutorContext);

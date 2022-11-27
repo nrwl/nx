@@ -25,7 +25,9 @@ describe('lib', () => {
   };
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree.write('/apps/.gitignore', '');
+    tree.write('/libs/.gitignore', '');
   });
 
   describe('configs', () => {

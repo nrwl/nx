@@ -1,0 +1,19 @@
+/*
+ * This a a demo file that can be helpful when developing components by serving and interacting with them in the browser.
+ */
+<% if (component) { %>
+import * as ReactDOM from 'react-dom/client';
+import { <%= className %> } from './index';
+
+const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
+root.render(
+  <<%= className %> />
+);
+<% } else { %>
+import * as ReactDOM from 'react-dom/client';
+
+const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
+root.render(
+  <h1><%= className %> Demo</h1>
+);
+<% } %>

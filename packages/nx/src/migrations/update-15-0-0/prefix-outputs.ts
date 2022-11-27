@@ -11,7 +11,7 @@ import { join, relative } from 'path';
 import {
   transformLegacyOutputs,
   validateOutputs,
-} from 'nx/src/tasks-runner/utils';
+} from '../../tasks-runner/utils';
 import { updateJson } from '../../generators/utils/json';
 import { PackageJson } from '../../utils/package-json';
 

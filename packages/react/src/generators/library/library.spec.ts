@@ -225,7 +225,11 @@ describe('lib', () => {
       `);
     });
     it('should update jest.config.ts for babel', async () => {
-      await libraryGenerator(appTree, { ...defaultSchema, compiler: 'babel' });
+      await libraryGenerator(appTree, {
+        ...defaultSchema,
+        buildable: true,
+        compiler: 'babel',
+      });
       expect(appTree.read('libs/my-lib/jest.config.ts', 'utf-8')).toContain(
         "['babel-jest', { presets: ['@nrwl/react/babel'] }]"
       );
@@ -280,6 +284,7 @@ describe('lib', () => {
       await libraryGenerator(appTree, {
         ...defaultSchema,
         directory: 'myDir',
+        buildable: true,
         compiler: 'babel',
       });
       expect(
@@ -453,6 +458,7 @@ describe('lib', () => {
         routing: true,
         style: 'css',
         standaloneConfig: false,
+        bundler: 'webpack',
       });
 
       await libraryGenerator(appTree, {
@@ -479,6 +485,7 @@ describe('lib', () => {
         name: 'myApp',
         style: 'css',
         standaloneConfig: false,
+        bundler: 'webpack',
       });
 
       await libraryGenerator(appTree, {
@@ -723,6 +730,7 @@ describe('lib', () => {
     it('should install swc dependencies if needed', async () => {
       await libraryGenerator(appTree, {
         ...defaultSchema,
+        buildable: true,
         compiler: 'swc',
       });
       const packageJson = readJson(appTree, 'package.json');
@@ -736,7 +744,7 @@ describe('lib', () => {
   describe('--skipPackageJson', () => {
     it('should not add dependencies to package.json when true', async () => {
       // ARRANGE
-      const tree = createTreeWithEmptyWorkspace();
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       const packageJsonBeforeGenerator = tree.read('package.json', 'utf-8');
       // ACT
       await libraryGenerator(tree, {
@@ -762,6 +770,7 @@ describe('lib', () => {
       await libraryGenerator(appTree, {
         ...defaultSchema,
         style,
+        compiler: 'babel',
         name: 'myLib',
       });
 

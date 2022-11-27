@@ -75,6 +75,12 @@ describe('findTargetProjectWithImport', () => {
         ...nxJson,
       } as any,
       fileMap: {
+        rootProj: [
+          {
+            file: 'index.ts',
+            hash: 'some-hash',
+          },
+        ],
         proj: [
           {
             file: 'libs/proj/index.ts',
@@ -147,6 +153,14 @@ describe('findTargetProjectWithImport', () => {
     } as any;
 
     projects = {
+      rootProj: {
+        name: 'rootProj',
+        type: 'lib',
+        data: {
+          root: '.',
+          files: [],
+        },
+      },
       proj3a: {
         name: 'proj3a',
         type: 'lib',
@@ -315,11 +329,16 @@ describe('findTargetProjectWithImport', () => {
       '../proj/../index.ts',
       'libs/proj/src/index.ts'
     );
+    const res5 = targetProjectLocator.findProjectWithImport(
+      '../../../index.ts',
+      'libs/proj/src/index.ts'
+    );
 
     expect(res1).toEqual('proj');
     expect(res2).toEqual('proj');
     expect(res3).toEqual('proj2');
     expect(res4).toEqual('proj');
+    expect(res5).toEqual('rootProj');
   });
 
   it('should be able to resolve a module by using tsConfig paths', () => {

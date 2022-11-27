@@ -234,7 +234,7 @@ jobs:
           name: Run E2E Tests
           command: |
             if $E2E_AFFECTED; then
-              npx nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --exclude=e2e-make-angular-cli-faster,e2e-detox,e2e-js,e2e-next,e2e-workspace-create,e2e-nx-run,e2e-nx-misc,e2e-react,e2e-web,e2e-webpack,e2e-rollup,e2e-esbuild,e2e-angular-extensions,e2e-angular-core,e2e-nx-plugin,e2e-cypress,e2e-node,e2e-linter,e2e-jest,e2e-add-nx-to-monorepo,nx-dev-e2e,e2e-nx-init,e2e-graph-client,e2e-vite,e2e-cra-to-nx --parallel=1;
+              npx nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --exclude=e2e-make-angular-cli-faster,e2e-detox,e2e-js,e2e-next,e2e-workspace-create,e2e-nx-run,e2e-nx-misc,e2e-react,e2e-web,e2e-webpack,e2e-rollup,e2e-esbuild,e2e-angular-extensions,e2e-angular-core,e2e-nx-plugin,e2e-cypress,e2e-node,e2e-linter,e2e-jest,e2e-add-nx-to-monorepo,nx-dev-e2e,e2e-nx-init,e2e-graph-client,e2e-vite,e2e-cra-to-nx,e2e-storybook,e2e-storybook-angular --parallel=1;
             else
               echo "Skipping E2E tests";
             fi
