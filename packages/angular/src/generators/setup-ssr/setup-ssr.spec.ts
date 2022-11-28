@@ -53,7 +53,7 @@ describe('setupSSR', () => {
       };
 
 
-       if (document.readyState === 'complete') {
+       if (document.readyState !== 'loading') {
          bootstrap();
        } else {
          document.addEventListener('DOMContentLoaded', bootstrap);
