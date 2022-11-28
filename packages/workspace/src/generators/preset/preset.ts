@@ -43,7 +43,7 @@ async function createPreset(tree: Tree, options: Schema) {
     await angularApplicationGenerator(tree, {
       name: options.name,
       style: options.style,
-      linter: 'none',
+      linter: options.linter,
       unitTestRunner: 'none',
       standaloneConfig: options.standaloneConfig,
       rootProject: true,
