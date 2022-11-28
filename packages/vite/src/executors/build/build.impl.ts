@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { ExecutorContext, logger } from '@nrwl/devkit';
 import { build, InlineConfig } from 'vite';
-import { getBuildConfig } from '../../utils/options-utils';
+import { getBuildAndSharedConfig } from '../../utils/options-utils';
 import { ViteBuildExecutorOptions } from './schema';
 import { copyAssets } from '@nrwl/js';
 import { existsSync } from 'fs';
@@ -14,7 +14,9 @@ export default async function viteBuildExecutor(
   const projectRoot = context.workspace.projects[context.projectName].root;
 
   logger.info(`NX Vite build starting ...`);
-  const buildResult = await runInstance(await getBuildConfig(options, context));
+  const buildResult = await runInstance(
+    await getBuildAndSharedConfig(options, context)
+  );
   logger.info(`NX Vite build finished ...`);
   logger.info(`NX Vite files available in ${options.outputPath}`);
 

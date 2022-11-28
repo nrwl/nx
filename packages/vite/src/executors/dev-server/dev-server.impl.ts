@@ -3,7 +3,7 @@ import { ExecutorContext } from '@nrwl/devkit';
 import { createServer, InlineConfig, mergeConfig, ViteDevServer } from 'vite';
 
 import {
-  getBuildConfig,
+  getBuildAndSharedConfig,
   getBuildTargetOptions,
   getServerOptions,
 } from '../../utils/options-utils';
@@ -21,7 +21,7 @@ export default async function* viteDevServerExecutor(
   } as ViteDevServerExecutorOptions & ViteBuildExecutorOptions;
 
   const serverConfig: InlineConfig = mergeConfig(
-    await getBuildConfig(mergedOptions, context),
+    await getBuildAndSharedConfig(mergedOptions, context),
     {
       server: getServerOptions(mergedOptions, context),
     } as InlineConfig

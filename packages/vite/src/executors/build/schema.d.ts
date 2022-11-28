@@ -3,7 +3,6 @@ export interface ViteBuildExecutorOptions {
   outputPath: string;
   baseHref?: string;
   proxyConfig?: string;
-  tsConfig?: string;
   configFile?: string;
   fileReplacements?: FileReplacement[];
   sourcemap?: boolean | 'inline' | 'hidden';

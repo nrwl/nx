@@ -27,12 +27,10 @@
     },
     "port": {
       "type": "number",
-      "description": "Port to listen on.",
-      "default": 4200
+      "description": "Port to listen on."
     },
     "host": {
       "description": "Specify which IP addresses the server should listen on.",
-      "default": "localhost",
       "oneOf": [
         {
           "type": "boolean"
@@ -44,17 +42,14 @@
     },
     "https": {
       "type": "boolean",
-      "description": "Serve using HTTPS.",
-      "default": false
+      "description": "Serve using HTTPS."
     },
     "hmr": {
       "description": "Enable hot module replacement. For more options, use the 'hmr' option in the Vite configuration file.",
-      "type": "boolean",
-      "default": true
+      "type": "boolean"
     },
     "open": {
       "description": "Automatically open the app in the browser on server start. When the value is a string, it will be used as the URL's pathname.",
-      "default": false,
       "oneOf": [
         {
           "type": "boolean"
@@ -76,12 +71,10 @@
     "mode": {
       "type": "string",
       "description": "Mode to run the server in.",
-      "enum": ["production", "development"],
-      "default": "development"
+      "enum": ["production", "development"]
     },
     "clearScreen": {
       "description": "Set to false to prevent Vite from clearing the terminal screen when logging certain messages.",
-      "default": true,
       "type": "boolean"
     }
   },
