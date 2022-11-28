@@ -23,19 +23,31 @@ export async function nxExecCommand(
 ): Promise<unknown> {
   const scriptArgV: string[] = readScriptArgV(args);
 
+  const ctx = await readContext();
+
   // NX is already running
   if (process.env.NX_TASK_TARGET_PROJECT) {
-    const command = scriptArgV
-      .reduce((cmd, arg) => cmd + `"${arg}" `, '')
-      .trim();
+    const command =
+      ctx.scriptDefinition +
+      ' ' +
+      getExtraCLIArgs(scriptArgV, ctx.scriptDefinition).join(' ');
     execSync(command, { stdio: 'inherit' });
   } else {
     // nx exec is being ran inside of Nx's context
-    return runScriptAsNxTarget(scriptArgV);
+    return runScriptAsNxTarget(scriptArgV, ctx);
   }
 }
 
-async function runScriptAsNxTarget(argv: string[]) {
+async function runScriptAsNxTarget(argv: string[], ctx: NxExecContext) {
+  const pm = getPackageManagerCommand();
+  const extraArgs = getExtraCLIArgs(argv, ctx.scriptDefinition);
+  let command = `${pm.exec} nx run ${ctx.projectName}:\\\"${
+    ctx.targetName
+  }\\\" ${extraArgs.join(' ')}`;
+  return execSync(command, { stdio: 'inherit' });
+}
+
+async function readContext(): Promise<NxExecContext> {
   const projectGraph = await createProjectGraphAsync();
 
   const { projectName, project } = getProject(projectGraph);
@@ -43,20 +55,37 @@ async function runScriptAsNxTarget(argv: string[]) {
   // NPM, Yarn, and PNPM set this to the name of the currently executing script. Lets use it if we can.
   const targetName = process.env.npm_lifecycle_event;
   const scriptDefinition = getScriptDefinition(project, targetName);
+  const scriptWithoutNxExec = scriptDefinition.substring(
+    scriptDefinition.indexOf('--') + 3
+  );
 
   ensureNxTarget(project, targetName);
 
-  // Get ArgV that is provided in npm script definition
-  const providedArgs = yargs(scriptDefinition)._.slice(2);
-  const extraArgs =
-    providedArgs.length === argv.length ? [] : argv.slice(providedArgs.length);
+  return {
+    projectGraph,
+    projectName,
+    project,
+    targetName,
+    scriptDefinition: scriptWithoutNxExec,
+  };
+}
 
-  const pm = getPackageManagerCommand();
-  // `targetName` might be an npm script with `:` like: `start:dev`, `start:debug`.
-  let command = `${
-    pm.exec
-  } nx run ${projectName}:\\\"${targetName}\\\" ${extraArgs.join(' ')}`;
-  return execSync(command, { stdio: 'inherit' });
+/**
+ * Seperates argv into 2 portions.
+ * - arguments defined in the npm script definition
+ * - arguments actually passed by the user on the CLI
+ *
+ * @returns arguments passed on the CLI
+ */
+function getExtraCLIArgs(
+  scriptArgV: string[],
+  scriptDefinition: string
+): string[] {
+  // Get ArgV that is provided in npm script definition
+  const providedArgs = yargs(scriptDefinition);
+  return providedArgs.length === scriptArgV.length
+    ? [] // no extra CLI args were passed in to the script
+    : scriptArgV.slice(providedArgs.length); // extra elements from argv come after the argv from the script definiton
 }
 
 function readScriptArgV(args: Record<string, string[]>) {
@@ -138,3 +167,11 @@ function getProject(projectGraph: ProjectGraph) {
 
   return { projectName, project };
 }
+
+type NxExecContext = {
+  projectGraph: ProjectGraph;
+  projectName: string;
+  project: ProjectGraphProjectNode<ProjectConfiguration>;
+  targetName: string;
+  scriptDefinition: string;
+};

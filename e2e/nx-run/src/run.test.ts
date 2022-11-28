@@ -466,6 +466,7 @@ describe('Nx Running Tests', () => {
           scripts: {
             build: 'nx exec -- echo HELLO',
             'build:option': 'nx exec -- echo HELLO WITH OPTION',
+            compound: 'nx exec -- echo HELLO && echo COMPOUND',
           },
         })
       );
@@ -487,6 +488,13 @@ describe('Nx Running Tests', () => {
       const output = runCommand('npm run build:option', { cwd: pkgRoot });
       expect(output).toContain('HELLO WITH OPTION');
       expect(output).toContain(`nx run ${pkg}:"build:option"`);
+    });
+
+    it('should support compound scripts', () => {
+      const output = runCommand('npm run compound test', { cwd: pkgRoot });
+      expect(output).toContain('HELLO\n');
+      expect(output).toContain('COMPOUND TEST');
+      expect(output).not.toContain('HELLO COMPOUND');
     });
 
     it('should pass overrides', () => {
