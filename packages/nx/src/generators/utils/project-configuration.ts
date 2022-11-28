@@ -159,9 +159,9 @@ export function updateWorkspaceConfiguration(
   };
 
   if (tree.exists('nx.json')) {
-    updateJson<NxConfig>(tree, 'nx.json', (json) => {
-      if (json.extends) {
-        const nxJsonExtends = readNxConfigExtends(tree, json.extends);
+    updateJson<NxConfig>(tree, 'nx.json', (config) => {
+      if (config.extends) {
+        const nxJsonExtends = readNxConfigExtends(tree, config.extends);
         const changedPropsOfNxJson = {};
         Object.keys(nxConfig).forEach((prop) => {
           if (
@@ -171,9 +171,9 @@ export function updateWorkspaceConfiguration(
             changedPropsOfNxJson[prop] = nxConfig[prop];
           }
         });
-        return { ...json, ...changedPropsOfNxJson };
+        return { ...config, ...changedPropsOfNxJson };
       } else {
-        return { ...json, ...nxConfig };
+        return { ...config, ...nxConfig };
       }
     });
   }
@@ -183,9 +183,9 @@ export function updateWorkspaceConfiguration(
   // in project config.
   const workspacePath = getWorkspacePath(tree);
   if (workspacePath) {
-    updateJson<ProjectsConfigurations>(tree, workspacePath, (json) => {
-      const config = {
-        ...json,
+    updateJson<ProjectsConfigurations>(tree, workspacePath, (config) => {
+      config = {
+        ...config,
         version: workspaceConfig.version,
       };
       if (!(workspaceConfig as any).newProjectRoot) {
