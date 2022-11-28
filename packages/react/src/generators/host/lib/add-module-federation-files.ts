@@ -29,17 +29,17 @@ export function addModuleFederationFiles(
     join(options.appProjectRoot, 'src/bootstrap.tsx')
   );
 
-  // New entry file is created here.
   generateFiles(
     host,
-    join(__dirname, `../files/module-federation`),
+    join(__dirname, `../files/common`),
     options.appProjectRoot,
     templateVariables
   );
 
+  // New entry file is created here.
   generateFiles(
     host,
-    join(__dirname, `../files/common`),
+    join(__dirname, `../files/module-federation`),
     options.appProjectRoot,
     templateVariables
   );

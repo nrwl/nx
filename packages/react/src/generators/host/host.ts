@@ -1,4 +1,11 @@
-import { formatFiles, GeneratorCallback, Tree } from '@nrwl/devkit';
+import {
+  formatFiles,
+  GeneratorCallback,
+  joinPathFragments,
+  readProjectConfiguration,
+  Tree,
+  updateProjectConfiguration,
+} from '@nrwl/devkit';
 
 import applicationGenerator from '../application/application';
 import { normalizeOptions } from '../application/lib/normalize-options';
@@ -9,7 +16,8 @@ import { updateModuleFederationE2eProject } from './lib/update-module-federation
 import { Schema } from './schema';
 import remoteGenerator from '../remote/remote';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
-import { addSsr } from './lib/add-ssr';
+import setupSsrGenerator from '../setup-ssr/setup-ssr';
+import { setupSsrForHost } from './lib/setup-ssr-for-host';
 
 export async function hostGenerator(host: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
@@ -23,11 +31,6 @@ export async function hostGenerator(host: Tree, schema: Schema) {
     bundler: 'webpack',
   });
   tasks.push(initTask);
-
-  if (options.ssr) {
-    let ssrInstallTask = await addSsr(host, options, options.projectName);
-    tasks.push(ssrInstallTask);
-  }
 
   const remotesWithPorts: { name: string; port: number }[] = [];
 
@@ -44,6 +47,7 @@ export async function hostGenerator(host: Tree, schema: Schema) {
         e2eTestRunner: options.e2eTestRunner,
         linter: options.linter,
         devServerPort: remotePort,
+        ssr: options.ssr,
       });
       remotePort++;
     }
@@ -52,6 +56,28 @@ export async function hostGenerator(host: Tree, schema: Schema) {
   addModuleFederationFiles(host, options, remotesWithPorts);
   updateModuleFederationProject(host, options);
   updateModuleFederationE2eProject(host, options);
+
+  if (options.ssr) {
+    const setupSsrTask = await setupSsrGenerator(host, {
+      project: options.projectName,
+    });
+    tasks.push(setupSsrTask);
+
+    const setupSsrForHostTask = await setupSsrForHost(
+      host,
+      options,
+      options.projectName,
+      remotesWithPorts
+    );
+    tasks.push(setupSsrForHostTask);
+
+    const projectConfig = readProjectConfiguration(host, options.projectName);
+    projectConfig.targets.server.options.webpackConfig = joinPathFragments(
+      projectConfig.root,
+      'webpack.server.config.js'
+    );
+    updateProjectConfiguration(host, options.projectName, projectConfig);
+  }
 
   if (!options.skipFormat) {
     await formatFiles(host);

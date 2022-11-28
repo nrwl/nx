@@ -14,7 +14,7 @@ export interface Schema {
   pascalCaseFiles?: boolean;
   remotes?: string[];
   setParserOptionsProject?: boolean;
-  skipFormat: boolean;
+  skipFormat?: boolean;
   skipWorkspaceJson?: boolean;
   ssr?: boolean;
   standaloneConfig?: boolean;

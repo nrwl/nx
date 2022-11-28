@@ -452,6 +452,36 @@ export function addBrowserRouter(
   }
 }
 
+export function addStaticRouter(
+  sourcePath: string,
+  source: ts.SourceFile
+): StringChange[] {
+  const app = findElements(source, 'App')[0];
+  if (app) {
+    return [
+      ...addImport(
+        source,
+        `import { StaticRouter } from 'react-router-dom/server';`
+      ),
+      {
+        type: ChangeType.Insert,
+        index: app.getStart(),
+        text: `<StaticRouter location={req.url}>`,
+      },
+      {
+        type: ChangeType.Insert,
+        index: app.getEnd(),
+        text: `</StaticRouter>`,
+      },
+    ];
+  } else {
+    logger.warn(
+      `Could not find App component in ${sourcePath}; Skipping add <StaticRouter>`
+    );
+    return [];
+  }
+}
+
 export function addReduxStoreToMain(
   sourcePath: string,
   source: ts.SourceFile

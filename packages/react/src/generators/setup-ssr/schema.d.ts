@@ -3,4 +3,5 @@ export interface Schema {
   appComponentImportPath?: string;
   serverPort?: number;
   skipFormat?: boolean;
+  extraInclude?: string[];
 }

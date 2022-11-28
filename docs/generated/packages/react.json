@@ -1265,6 +1265,11 @@
           "devServerPort": {
             "type": "number",
             "description": "The port for the dev server of the remote app."
+          },
+          "ssr": {
+            "description": "Whether to configure SSR for the host application",
+            "type": "boolean",
+            "default": false
           }
         },
         "required": ["name"],
@@ -1452,6 +1457,13 @@
           "skipFormat": {
             "type": "boolean",
             "description": "Skip formatting the workspace after the generator completes."
+          },
+          "extraInclude": {
+            "type": "array",
+            "items": { "type": "string" },
+            "hidden": true,
+            "description": "Extra include entries in tsconfig.",
+            "default": []
           }
         },
         "required": ["project"],

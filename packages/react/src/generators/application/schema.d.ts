@@ -4,7 +4,7 @@ import { SupportedStyles } from '../../../typings/style';
 export interface Schema {
   name: string;
   style: SupportedStyles;
-  skipFormat: boolean;
+  skipFormat?: boolean;
   directory?: string;
   tags?: string;
   unitTestRunner?: 'jest' | 'vitest' | 'none';
