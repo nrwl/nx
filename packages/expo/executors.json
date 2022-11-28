@@ -138,12 +138,12 @@
       "description": "Deploy a project to Expo hosting"
     },
     "publish-set": {
-      "implementation": "./src/executors/publish-set/compact",
+      "implementation": "./src/executors/publish-set/compat",
       "schema": "./src/executors/publish-set/schema.json",
       "description": "Specify the channel to serve a published release"
     },
     "rollback": {
-      "implementation": "./src/executors/rollback/compact",
+      "implementation": "./src/executors/rollback/compat",
       "schema": "./src/executors/rollback/schema.json",
       "description": "Undo an update to a channel"
     },
