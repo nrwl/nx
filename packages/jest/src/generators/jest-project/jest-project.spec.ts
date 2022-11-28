@@ -391,7 +391,11 @@ describe('jestProject', () => {
               tsconfig: '<rootDir>/tsconfig.spec.json',
             }
           },
-          coverageDirectory: '../coverage/my-project'
+          coverageDirectory: '../coverage/my-project',
+          testMatch: [
+            '<rootDir>/src/**/__tests__/**/*.[jt]s?(x)',
+            '<rootDir>/src/**/?(*.)+(spec|test).[jt]s?(x)',
+          ],
         };
         "
       `);
@@ -425,7 +429,11 @@ describe('jestProject', () => {
               tsconfig: '<rootDir>/tsconfig.spec.json',
             }
           },
-          coverageDirectory: '../coverage/my-project'
+          coverageDirectory: '../coverage/my-project',
+          testMatch: [
+            '<rootDir>/src/**/__tests__/**/*.[jt]s?(x)',
+            '<rootDir>/src/**/?(*.)+(spec|test).[jt]s?(x)',
+          ],
         };
         "
       `);

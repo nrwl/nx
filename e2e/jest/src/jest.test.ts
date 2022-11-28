@@ -152,36 +152,3 @@ describe('Jest', () => {
     );
   }, 90000);
 });
-
-describe('Jest root projects', () => {
-  afterEach(() => cleanupProject());
-
-  it('should set root project config to app and migrate when another lib is added', () => {
-    const myapp = uniq('myapp');
-    const mylib = uniq('mylib');
-
-    newProject();
-    runCLI(`generate @nrwl/react:app ${myapp} --rootProject=true`);
-
-    expect(() => checkFilesExist('jest.config.ts')).not.toThrow();
-    expect(() => checkFilesExist('jest.preset.js')).not.toThrow();
-    const rootConfig = readFile('jest.config.ts');
-    expect(rootConfig).not.toContain(`getJestProjects`);
-
-    let rootProjectConfig = readJson('project.json');
-    expect(rootProjectConfig.targets.test.options.jestConfig).toEqual(
-      'jest.config.ts'
-    );
-
-    runCLI(`generate @nrwl/react:lib ${mylib}`);
-
-    const newName = `jest.config.${myapp}.ts`;
-    expect(() => checkFilesExist(newName)).not.toThrow();
-    const newRootConfig = readFile('jest.config.ts');
-    expect(newRootConfig).toContain(`getJestProjects`);
-    const projectConfig = readFile(newName);
-    expect(projectConfig).toEqual(rootConfig);
-    rootProjectConfig = readJson('project.json');
-    expect(rootProjectConfig.targets.test.options.jestConfig).toEqual(newName);
-  });
-});

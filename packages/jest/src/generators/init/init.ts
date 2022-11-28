@@ -9,6 +9,7 @@ import {
   updateJson,
   updateWorkspaceConfiguration,
   updateProjectConfiguration,
+  getProjects,
 } from '@nrwl/devkit';
 import { findRootJestConfig } from '../../utils/config/find-root-jest-files';
 import {
@@ -20,9 +21,9 @@ import {
   tsJestVersion,
   tslibVersion,
   tsNodeVersion,
+  typesNodeVersion,
 } from '../../utils/versions';
 import { JestInitSchema } from './schema';
-import { readWorkspace } from 'nx/src/generators/utils/project-configuration';
 
 interface NormalizedSchema extends ReturnType<typeof normalizeOptions> {}
 
@@ -31,8 +32,6 @@ const schemaDefaults = {
   js: false,
   rootProject: false,
 } as const;
-
-const FILE_EXTENSION_REGEX = /(?<!(^|\/))(\.[^/.]+)$/;
 
 function generateGlobalConfig(tree: Tree, isJS: boolean) {
   const contents = isJS
@@ -79,41 +78,32 @@ function createJestConfig(tree: Tree, options: NormalizedSchema) {
     return;
   }
 
-  const isProjectConfig =
-    rootJestPath &&
-    !tree.read(rootJestPath, 'utf-8').includes('getJestProjects()');
-
-  if (isProjectConfig) {
+  if (tree.exists(rootJestPath)) {
     // moving from root project config to monorepo-style config
-    const projects = readWorkspace(tree).projects;
-    const projectNames = Object.keys(projects);
+    const projects = getProjects(tree);
+    const projectNames = Array.from(projects.keys());
     const rootProject = projectNames.find(
-      (projecName) => projects[projecName].root === '.'
+      (projectName) => projects.get(projectName)?.root === '.'
     );
     // root project might have been removed,
     // if it's missing there's nothing to migrate
     if (rootProject) {
-      const jestTarget = Object.values(
-        projects[rootProject].targets || {}
-      ).find((t) => t.executor === '@nrwl/jest:jest');
+      const rootProjectConfig = projects.get(rootProject);
+      const jestTarget = Object.values(rootProjectConfig.targets || {}).find(
+        (t) => t?.executor === '@nrwl/jest:jest'
+      );
+      const isProjectConfig = jestTarget?.options?.jestConfig === rootJestPath;
       // if root project doesn't have jest target, there's nothing to migrate
-      if (jestTarget) {
-        const pathSegments = rootJestPath
-          .split(FILE_EXTENSION_REGEX)
-          .filter(Boolean);
-        // insert root app name before the extension e.g. `jest.config.js` => `jest.config.myapp.js`
-        const rootProjJestPath = pathSegments.join(`.${rootProject}`);
-        tree.rename(rootJestPath, rootProjJestPath);
-        jestTarget.options.jestConfig = rootProjJestPath;
-        updateProjectConfiguration(tree, rootProject, projects[rootProject]);
-      }
-    }
+      if (isProjectConfig) {
+        const jestAppConfig = `jest.config.app.${options.js ? 'js' : 'ts'}`;
 
-    // original root file was renamed just now OR
-    // root project doesn't have target with jest executor OR
-    // root project was not found
-    // => generate new global config
-    generateGlobalConfig(tree, options.js);
+        tree.rename(rootJestPath, jestAppConfig);
+        jestTarget.options.jestConfig = jestAppConfig;
+        updateProjectConfiguration(tree, rootProject, rootProjectConfig);
+      }
+      // generate new global config as it was move to project config or is missing
+      generateGlobalConfig(tree, options.js);
+    }
   }
 }
 
@@ -169,7 +159,7 @@ function updateDependencies(tree: Tree, options: NormalizedSchema) {
   if (!options.js) {
     devDeps['ts-node'] = tsNodeVersion;
     devDeps['@types/jest'] = jestTypesVersion;
-    devDeps['@types/node'] = '16.11.7';
+    devDeps['@types/node'] = typesNodeVersion;
   }
 
   if (options.compiler === 'babel' || options.babelJest) {

@@ -12,7 +12,6 @@ function isUsingUtilityFunction(host: Tree) {
 
 export function updateJestConfig(host: Tree, options: JestProjectSchema) {
   if (isUsingUtilityFunction(host)) {
-    console.log('is not using util function');
     return;
   }
   const project = readProjectConfiguration(host, options.project);

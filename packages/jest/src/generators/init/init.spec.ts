@@ -43,6 +43,19 @@ describe('jest', () => {
   });
 
   it('should not override existing files', async () => {
+    addProjectConfiguration(tree, 'my-project', {
+      root: 'apps/my-app',
+      name: 'my-app',
+      sourceRoot: 'apps/my-app/src',
+      targets: {
+        test: {
+          executor: '@nrwl/jest:jest',
+          options: {
+            jestConfig: 'apps/my-app/jest.config.ts',
+          },
+        },
+      },
+    });
     const expected = stripIndents`
 import { getJestProjects } from '@nrwl/jest';
 export default {
@@ -190,7 +203,7 @@ export default {
 `
       );
       jestInitGenerator(tree, { rootProject: false });
-      expect(tree.exists('jest.config.my-project.ts')).toBeTruthy();
+      expect(tree.exists('jest.config.app.ts')).toBeTruthy();
       expect(tree.read('jest.config.ts', 'utf-8'))
         .toEqual(`import { getJestProjects } from '@nrwl/jest';
 
@@ -202,7 +215,7 @@ projects: getJestProjects()
         Object {
           "executor": "@nrwl/jest:jest",
           "options": Object {
-            "jestConfig": "jest.config.my-project.ts",
+            "jestConfig": "jest.config.app.ts",
           },
         }
       `);
@@ -239,7 +252,7 @@ module.exports = {
 `
       );
       jestInitGenerator(tree, { js: true, rootProject: false });
-      expect(tree.exists('jest.config.my-project.js')).toBeTruthy();
+      expect(tree.exists('jest.config.app.js')).toBeTruthy();
       expect(tree.read('jest.config.js', 'utf-8'))
         .toEqual(`const { getJestProjects } = require('@nrwl/jest');
 

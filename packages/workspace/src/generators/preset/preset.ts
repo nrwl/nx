@@ -44,7 +44,6 @@ async function createPreset(tree: Tree, options: Schema) {
       name: options.name,
       style: options.style,
       linter: options.linter,
-      unitTestRunner: 'none',
       standaloneConfig: options.standaloneConfig,
       rootProject: true,
     });

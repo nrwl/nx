@@ -55,15 +55,12 @@ export async function jestProjectGenerator(
 ) {
   const options = normalizeOptions(schema);
   const installTask = init(tree, options);
+
   checkForTestTarget(tree, options);
   createFiles(tree, options);
   updateTsConfig(tree, options);
   updateWorkspace(tree, options);
-  // TODO(caleb): is this really needed anymore?
-  // surely everyone is on the getJestProjects() fn usage already?
-  // should remove it and provide a migration (just in case) so we can remove it
-  // which makes the root project work simpler
-  // updateJestConfig(tree, options);
+
   if (!schema.skipFormat) {
     await formatFiles(tree);
   }
