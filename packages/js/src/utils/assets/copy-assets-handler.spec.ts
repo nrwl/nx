@@ -40,24 +40,6 @@ jest.mock(
   }
 );
 
-jest.mock('fs-extra', (): Partial<typeof import('fs-extra')> => {
-  const original = jest.requireActual('fs-extra');
-  return {
-    ...original,
-    existsSync: () => {
-      return true;
-    },
-    readFileSync: (path: string) => {
-      if (path.endsWith('.gitignore')) {
-        return 'git-ignore.md';
-      }
-      if (path.endsWith('.nxignore')) {
-        return 'nx-ignore.md';
-      }
-    },
-  };
-});
-
 function createMockedWatchedFile(path: string) {
   mockWatcher.next({
     type: 'create',
@@ -94,6 +76,14 @@ describe('AssetInputOutputHandler', () => {
     rootDir = path.join(tmp, 'nx-assets-test');
     projectDir = path.join(rootDir, 'mylib');
     outputDir = path.join(rootDir, 'dist/mylib');
+
+    // Reset temp directory
+    fse.removeSync(rootDir);
+    fse.mkdirpSync(path.join(projectDir, 'docs/a/b'));
+
+    // Workspace ignore files
+    fse.writeFileSync(path.join(rootDir, '.gitignore'), `git-ignore.md`);
+    fse.writeFileSync(path.join(rootDir, '.nxignore'), `nx-ignore.md`);
 
     sut = new CopyAssetsHandler({
       rootDir,
@@ -198,14 +188,17 @@ describe('AssetInputOutputHandler', () => {
   });
 
   test('processAllAssetsOnce', async () => {
-    createMockedWatchedFile(path.join(rootDir, 'LICENSE'));
-    createMockedWatchedFile(path.join(projectDir, 'README.md'));
-    createMockedWatchedFile(path.join(projectDir, 'docs/test1.md'));
-    createMockedWatchedFile(path.join(projectDir, 'docs/test2.md'));
-    createMockedWatchedFile(path.join(projectDir, 'docs/ignore.md'));
-    createMockedWatchedFile(path.join(projectDir, 'docs/git-ignore.md'));
-    createMockedWatchedFile(path.join(projectDir, 'docs/nx-ignore.md'));
-    createMockedWatchedFile(path.join(projectDir, 'docs/a/b/nested-ignore.md'));
+    fse.writeFileSync(path.join(rootDir, 'LICENSE'), 'license');
+    fse.writeFileSync(path.join(projectDir, 'README.md'), 'readme');
+    fse.writeFileSync(path.join(projectDir, 'docs/test1.md'), 'test');
+    fse.writeFileSync(path.join(projectDir, 'docs/test2.md'), 'test');
+    fse.writeFileSync(path.join(projectDir, 'docs/ignore.md'), 'IGNORE ME');
+    fse.writeFileSync(path.join(projectDir, 'docs/git-ignore.md'), 'IGNORE ME');
+    fse.writeFileSync(path.join(projectDir, 'docs/nx-ignore.md'), 'IGNORE ME');
+    fse.writeFileSync(
+      path.join(projectDir, 'docs/a/b/nested-ignore.md'),
+      'IGNORE ME'
+    );
 
     await sut.processAllAssetsOnce();
 
