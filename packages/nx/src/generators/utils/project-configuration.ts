@@ -103,7 +103,7 @@ export function getProjects(tree: Tree): Map<string, ProjectConfiguration> {
 export function readWorkspaceConfiguration(tree: Tree): WorkspaceConfiguration {
   const { projects, ...workspace } = readRawWorkspaceJson(tree); // Create a new object, without projects
 
-  let nxConfig = readNxJson(tree);
+  let nxConfig = readNxConfig(tree);
   if (nxConfig === null) {
     return workspace;
   }
@@ -240,7 +240,7 @@ export function readProjectConfiguration(
   return getProjectConfiguration(projectName, workspace);
 }
 
-export function readNxJson(tree: Tree): NxConfig | null {
+export function readNxConfig(tree: Tree): NxConfig | null {
   if (!tree.exists('nx.json')) {
     return null;
   }
@@ -490,7 +490,7 @@ function readRawWorkspaceJson(tree: Tree): RawProjectsConfigurations {
     // `workspace.json` exists, use it.
     return readJson<RawProjectsConfigurations>(tree, path);
   } else {
-    const nxConfig = readNxJson(tree);
+    const nxConfig = readNxConfig(tree);
     const createdProjects = buildWorkspaceConfigurationFromGlobs(
       nxConfig,
       findCreatedProjects(tree),

@@ -2,7 +2,7 @@ import { toOldFormatOrNull, Workspaces } from '../config/workspaces';
 import { execSync } from 'child_process';
 import { existsSync, readFileSync } from 'fs';
 import { extname, join, relative, sep } from 'path';
-import { readNxJson } from '../config/configuration';
+import { readNxConfig } from '../config/configuration';
 import { NxConfig } from '../config/nx-json';
 import { FileData } from '../config/project-graph';
 import { ProjectsConfigurations } from '../config/workspace-json-project-json';
@@ -139,7 +139,7 @@ export function readWorkspaceConfig(opts: {
   try {
     const projectGraph = readCachedProjectGraph();
     configuration = {
-      ...readNxJson(),
+      ...readNxConfig(),
       ...readProjectsConfigurationFromProjectGraph(projectGraph),
     };
   } catch {
@@ -174,7 +174,7 @@ export { FileData };
 
 // TODO(v16): Remove these exports
 export {
-  readNxJson,
+  readNxConfig,
   readAllWorkspaceConfiguration,
   workspaceLayout,
 } from '../config/configuration';

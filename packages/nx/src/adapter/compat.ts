@@ -9,7 +9,7 @@ import {
   readProjectsConfigurationFromProjectGraph,
 } from '../project-graph/project-graph';
 import { ProjectsConfigurations } from '../config/workspace-json-project-json';
-import { readNxJson } from '../config/configuration';
+import { readNxConfig } from '../config/configuration';
 import { NxConfig } from '../config/nx-json';
 
 /* eslint-disable */
@@ -154,7 +154,7 @@ function mockReadJsonWorkspace(
           '[NX] Angular devkit readJsonWorkspace fell back to Nx workspaces logic'
         );
         const projectGraph = await createProjectGraphAsync();
-        const nxConfig = readNxJson();
+        const nxConfig = readNxConfig();
 
         // Construct old workspace.json format from project graph
         const w: ProjectsConfigurations & NxConfig = {

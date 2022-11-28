@@ -24,7 +24,7 @@ export class TaskOrchestrator {
   private cache = new Cache(this.options);
   private workspace = new Workspaces(workspaceRoot);
   private forkedProcessTaskRunner = new ForkedProcessTaskRunner(this.options);
-  private readonly nxConfig = this.workspace.readNxJson();
+  private readonly nxConfig = this.workspace.readNxConfig();
 
   private tasksSchedule = new TasksSchedule(
     this.hasher,

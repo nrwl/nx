@@ -173,7 +173,7 @@ It only uses language primitives and immutable objects
 - [readCachedProjectGraph](../../devkit/index#readcachedprojectgraph)
 - [readJson](../../devkit/index#readjson)
 - [readJsonFile](../../devkit/index#readjsonfile)
-- [readNxJson](../../devkit/index#readnxjson)
+- [readNxConfig](../../devkit/index#readnxjson)
 - [readProjectConfiguration](../../devkit/index#readprojectconfiguration)
 - [readRootPackageJson](../../devkit/index#readrootpackagejson)
 - [readTargetOptions](../../devkit/index#readtargetoptions)
@@ -1745,9 +1745,9 @@ Object the JSON content of the file represents
 
 ---
 
-### readNxJson
+### readNxConfig
 
-▸ **readNxJson**(): [`NxConfig`](../../devkit/index#NxConfig)
+▸ **readNxConfig**(): [`NxConfig`](../../devkit/index#NxConfig)
 
 #### Returns
 

@@ -3,8 +3,8 @@ import { workspaceRoot } from '../utils/workspace-root';
 import { NxConfig } from './nx-json';
 import { ProjectsConfigurations } from './workspace-json-project-json';
 
-export function readNxJson(): NxConfig {
-  return new Workspaces(workspaceRoot).readNxJson();
+export function readNxConfig(): NxConfig {
+  return new Workspaces(workspaceRoot).readNxConfig();
 }
 
 // TODO(v16): Remove this
@@ -20,7 +20,7 @@ export function readAllWorkspaceConfiguration(): ProjectsConfigurations &
  * Returns information about where apps and libs will be created.
  */
 export function workspaceLayout(): { appsDir: string; libsDir: string } {
-  const nxConfig = readNxJson();
+  const nxConfig = readNxConfig();
   return {
     appsDir: nxConfig.workspaceLayout?.appsDir ?? 'apps',
     libsDir: nxConfig.workspaceLayout?.libsDir ?? 'libs',

@@ -1,7 +1,7 @@
-import { readNxJson } from '../config/configuration';
+import { readNxConfig } from '../config/configuration';
 
 export function isNxCloudUsed() {
-  const nxConfig = readNxJson();
+  const nxConfig = readNxConfig();
   return Object.values(nxConfig.tasksRunnerOptions).find(
     (r) => r.runner == '@nrwl/nx-cloud'
   );

@@ -12,7 +12,7 @@ import {
   readTargetOptions,
   ExecutorContext,
   workspaceRoot,
-  readNxJson,
+  readNxConfig,
 } from '@nrwl/devkit';
 import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
 
@@ -196,7 +196,7 @@ function createExecutorContext(
     isVerbose: false,
     projectName,
     workspace: {
-      ...readNxJson(),
+      ...readNxConfig(),
       ...projectConfigs,
     },
   };

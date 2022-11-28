@@ -2,7 +2,7 @@ import * as chalk from 'chalk';
 import { prompt } from 'enquirer';
 import { readJsonFile } from '../utils/fileutils';
 
-import { readNxJson } from '../config/configuration';
+import { readNxConfig } from '../config/configuration';
 import { ProjectsConfigurations } from '../config/workspace-json-project-json';
 import { Workspaces } from '../config/workspaces';
 import { FileChange, flushChanges, FsTree } from '../generators/tree';
@@ -272,7 +272,7 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
   const verbose = process.env.NX_VERBOSE_LOGGING === 'true';
 
   const ws = new Workspaces(workspaceRoot);
-  const nxConfig = readNxJson();
+  const nxConfig = readNxConfig();
   const projectGraph = await createProjectGraphAsync({ exitOnError: true });
   const projectsConfiguration =
     readProjectsConfigurationFromProjectGraph(projectGraph);

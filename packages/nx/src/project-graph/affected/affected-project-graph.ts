@@ -15,7 +15,7 @@ import { NxConfig } from '../../config/nx-json';
 import { ProjectGraph } from '../../config/project-graph';
 import { reverse } from '../operators';
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
-import { readNxJson } from '../../config/configuration';
+import { readNxConfig } from '../../config/configuration';
 import { workspaceConfigName } from '../../config/workspaces';
 import { getTouchedProjectsFromProjectGlobChanges } from './locators/project-glob-changes';
 import { workspaceRoot } from '../../utils/workspace-root';
@@ -23,7 +23,7 @@ import { workspaceRoot } from '../../utils/workspace-root';
 export function filterAffected(
   graph: ProjectGraph<ProjectConfiguration>,
   touchedFiles: FileChange[],
-  nxConfig: NxConfig = readNxJson(),
+  nxConfig: NxConfig = readNxConfig(),
   packageJson: any = readPackageJson()
 ): ProjectGraph {
   // Additional affected logic should be in this array.

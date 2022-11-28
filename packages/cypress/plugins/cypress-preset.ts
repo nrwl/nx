@@ -3,7 +3,7 @@ import {
   normalizePath,
   ProjectConfiguration,
   ProjectGraph,
-  readNxJson,
+  readNxConfig,
   stripIndents,
   TargetConfiguration,
   workspaceRoot,
@@ -132,7 +132,7 @@ export function createExecutorContext(
     isVerbose: false,
     projectName,
     workspace: {
-      ...readNxJson(),
+      ...readNxConfig(),
       ...projectConfigs,
     },
   };

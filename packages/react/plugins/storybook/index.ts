@@ -4,7 +4,7 @@ import {
   logger,
   ProjectGraph,
   readJsonFile,
-  readNxJson,
+  readNxConfig,
   TargetConfiguration,
   workspaceRoot,
 } from '@nrwl/devkit';

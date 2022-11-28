@@ -38,7 +38,7 @@ import {
   RawProjectsConfigurations,
   ProjectsConfigurations,
 } from '../config/workspace-json-project-json';
-import { readNxJson } from '../generators/utils/project-configuration';
+import { readNxConfig } from '../generators/utils/project-configuration';
 import { readModulePackageJson } from '../utils/package-json';
 
 export async function scheduleTarget(
@@ -621,7 +621,7 @@ export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
         // we have to add them into the file.
         const createdProjectFiles = findCreatedProjects(this.host);
         const deletedProjectFiles = findDeletedProjects(this.host);
-        const nxJsonInTree = readNxJson(this.host);
+        const nxJsonInTree = readNxConfig(this.host);
         const readJsonWithHost = (file) => ({
           root: dirname(file),
           ...parseJson(this.host.read(file).toString()),

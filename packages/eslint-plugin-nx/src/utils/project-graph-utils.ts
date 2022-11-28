@@ -1,4 +1,4 @@
-import { ProjectGraph, readCachedProjectGraph, readNxJson } from '@nrwl/devkit';
+import { ProjectGraph, readCachedProjectGraph, readNxConfig } from '@nrwl/devkit';
 import { isTerminalRun } from './runtime-lint-utils';
 import * as chalk from 'chalk';
 import {
@@ -16,7 +16,7 @@ export function ensureGlobalProjectGraph(ruleName: string) {
     !(global as any).projectRootMappings ||
     !isTerminalRun()
   ) {
-    const nxConfig = readNxJson();
+    const nxConfig = readNxConfig();
     (global as any).workspaceLayout = nxConfig.workspaceLayout;
 
     /**

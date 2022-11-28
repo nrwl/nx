@@ -3,7 +3,7 @@ import { join } from 'path';
 import { exit } from 'process';
 import * as yargs from 'yargs-parser';
 
-import { readNxJson } from '../config/configuration';
+import { readNxConfig } from '../config/configuration';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { ProjectConfiguration } from '../config/workspace-json-project-json';
 import {
@@ -64,7 +64,7 @@ function readScriptArgV(args: Record<string, string[]>) {
     args,
     'run-one',
     { printWarnings: false },
-    readNxJson()
+    readNxConfig()
   );
 
   const scriptSeparatorIdx = process.argv.findIndex((el) => el === '--');

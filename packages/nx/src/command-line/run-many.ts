@@ -8,7 +8,7 @@ import * as minimatch from 'minimatch';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
-import { readNxJson } from '../config/configuration';
+import { readNxConfig } from '../config/configuration';
 import { output } from '../utils/output';
 
 export async function runMany(
@@ -23,7 +23,7 @@ export async function runMany(
   }
 ) {
   performance.mark('command-execution-begins');
-  const nxConfig = readNxJson();
+  const nxConfig = readNxConfig();
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
     args,
     'run-many',

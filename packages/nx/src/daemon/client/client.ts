@@ -20,7 +20,7 @@ import {
 import { ProjectGraph } from '../../config/project-graph';
 import { isCI } from '../../utils/is-ci';
 import { NxConfig } from '../../config/nx-json';
-import { readNxJson } from '../../config/configuration';
+import { readNxConfig } from '../../config/configuration';
 import { PromisedBasedQueue } from '../../utils/promised-based-queue';
 import { Workspaces } from '../../config/workspaces';
 import { Message, SocketMessenger } from './socket-messenger';
@@ -369,7 +369,7 @@ export class DaemonClient {
   }
 }
 
-export const daemonClient = new DaemonClient(readNxJson());
+export const daemonClient = new DaemonClient(readNxConfig());
 
 function isDocker() {
   try {

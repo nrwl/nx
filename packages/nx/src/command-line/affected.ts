@@ -15,7 +15,7 @@ import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { projectHasTarget } from '../utils/project-graph-utils';
 import { filterAffected } from '../project-graph/affected/affected-project-graph';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
-import { readNxJson } from '../config/configuration';
+import { readNxConfig } from '../config/configuration';
 
 export async function affected(
   command: 'apps' | 'libs' | 'graph' | 'print-affected' | 'affected',
@@ -26,7 +26,7 @@ export async function affected(
   > = {}
 ): Promise<void> {
   performance.mark('command-execution-begins');
-  const nxConfig = readNxJson();
+  const nxConfig = readNxConfig();
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
     args,
     'affected',

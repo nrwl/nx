@@ -9,7 +9,7 @@ import * as open from 'open';
 import { basename, dirname, extname, isAbsolute, join, parse } from 'path';
 import { performance } from 'perf_hooks';
 import { URL, URLSearchParams } from 'url';
-import { readNxJson, workspaceLayout } from '../config/configuration';
+import { readNxConfig, workspaceLayout } from '../config/configuration';
 import { defaultFileHasher } from '../hasher/file-hasher';
 import { output } from '../utils/output';
 import { writeJsonFile } from '../utils/fileutils';
@@ -572,7 +572,7 @@ async function createTaskGraphClientResponse(): Promise<TaskGraphClientResponse>
 function getAllTaskGraphsForWorkspace(
   projectGraph: ProjectGraph
 ): Record<string, TaskGraph> {
-  const nxConfig = readNxJson();
+  const nxConfig = readNxConfig();
 
   const defaultDependencyConfigs = mapTargetDefaultsToDependencies(
     nxConfig.targetDefaults

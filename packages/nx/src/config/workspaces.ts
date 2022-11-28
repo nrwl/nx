@@ -78,7 +78,7 @@ export class Workspaces {
     ) {
       return this.cachedWorkspaceConfig;
     }
-    const nxConfig = this.readNxJson();
+    const nxConfig = this.readNxConfig();
     const workspace = buildWorkspaceConfigurationFromGlobs(
       nxConfig,
       globForProjectFiles(this.root, nxConfig, opts?._ignorePluginInference),
@@ -240,7 +240,7 @@ export class Workspaces {
     return existsSync(nxConfig);
   }
 
-  readNxJson(): NxConfig {
+  readNxConfig(): NxConfig {
     const nxConfig = path.join(this.root, 'nx.json');
     if (existsSync(nxConfig)) {
       const nxJsonConfig = readJsonFile<NxConfig>(nxConfig);

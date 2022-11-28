@@ -28,7 +28,7 @@ import {
   ProjectConfiguration,
   ProjectsConfigurations,
 } from '../config/workspace-json-project-json';
-import { readNxJson } from '../config/configuration';
+import { readNxConfig } from '../config/configuration';
 import { ProjectGraph } from '../config/project-graph';
 
 const PRETTIER_PATH = require.resolve('prettier/bin-prettier');
@@ -41,7 +41,7 @@ export async function format(
     args,
     'affected',
     { printWarnings: false },
-    readNxJson()
+    readNxConfig()
   );
   const patterns = (await getPatterns({ ...args, ...nxArgs } as any)).map(
     // prettier removes one of the \

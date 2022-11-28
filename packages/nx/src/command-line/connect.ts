@@ -1,14 +1,14 @@
 import { output } from '../utils/output';
 import { getPackageManagerCommand } from '../utils/package-manager';
 import { execSync } from 'child_process';
-import { readNxJson } from '../config/configuration';
+import { readNxConfig } from '../config/configuration';
 import { isNxCloudUsed } from '../utils/nx-cloud-utils';
 
 export async function connectToNxCloudIfExplicitlyAsked(opts: {
   [k: string]: any;
 }): Promise<void> {
   if (opts['cloud'] === true) {
-    const nxConfig = readNxJson();
+    const nxConfig = readNxConfig();
     const runners = Object.values(nxConfig.tasksRunnerOptions);
     const onlyDefaultRunnerIsUsed =
       runners.length === 1 && runners[0].runner === 'nx/tasks-runners/default';

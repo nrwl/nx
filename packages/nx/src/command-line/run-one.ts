@@ -15,7 +15,7 @@ import {
   ProjectsConfigurations,
   TargetDependencyConfig,
 } from '../config/workspace-json-project-json';
-import { readNxJson } from '../config/configuration';
+import { readNxConfig } from '../config/configuration';
 
 export async function runOne(
   cwd: string,
@@ -32,7 +32,7 @@ export async function runOne(
   performance.mark('command-execution-begins');
   performance.measure('code-loading', 'init-local', 'command-execution-begins');
 
-  const nxConfig = readNxJson();
+  const nxConfig = readNxConfig();
   const projectGraph = await createProjectGraphAsync({ exitOnError: true });
 
   const opts = parseRunOneOptions(cwd, args, {

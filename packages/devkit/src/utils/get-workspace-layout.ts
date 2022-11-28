@@ -1,5 +1,5 @@
 import {
-  readNxJson,
+  readNxConfig,
   shouldDefaultToUsingStandaloneConfigs,
 } from 'nx/src/generators/utils/project-configuration';
 import type { Tree } from 'nx/src/generators/tree';
@@ -23,7 +23,7 @@ export function getWorkspaceLayout(tree: Tree): {
   standaloneAsDefault: boolean;
   npmScope: string;
 } {
-  const nxConfig = readNxJson(tree);
+  const nxConfig = readNxConfig(tree);
   return {
     appsDir:
       nxConfig?.workspaceLayout?.appsDir ??

@@ -16,7 +16,7 @@ export function hashDependsOnOtherTasks(
     const customHasher = getCustomHasher(
       task,
       workspaces,
-      workspaces.readNxJson(),
+      workspaces.readNxConfig(),
       projectGraph
     );
     if (customHasher) return true;
@@ -36,7 +36,7 @@ export async function hashTask(
   const customHasher = getCustomHasher(
     task,
     workspaces,
-    workspaces.readNxJson(),
+    workspaces.readNxConfig(),
     projectGraph
   );
   const { value, details } = await (customHasher

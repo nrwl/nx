@@ -53,7 +53,7 @@ describe('TasksSchedule', () => {
             batchImplementationFactory: jest.fn(),
           } as any;
         },
-        readNxJson() {
+        readNxConfig() {
           return {};
         },
       };
@@ -280,7 +280,7 @@ describe('TasksSchedule', () => {
             batchImplementationFactory: jest.fn(),
           } as any;
         },
-        readNxJson() {
+        readNxConfig() {
           return {};
         },
       };

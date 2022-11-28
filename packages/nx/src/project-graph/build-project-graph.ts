@@ -37,7 +37,7 @@ import {
 } from '../config/workspace-json-project-json';
 import {
   readAllWorkspaceConfiguration,
-  readNxJson,
+  readNxConfig,
 } from '../config/configuration';
 import {
   lockFileExists,
@@ -76,7 +76,7 @@ export async function buildProjectGraphUsingProjectFileMap(
   projectGraph: ProjectGraph;
   projectGraphCache: ProjectGraphCache;
 }> {
-  const nxConfig = readNxJson();
+  const nxConfig = readNxConfig();
   const projectGraphVersion = '5.0';
   assertWorkspaceValidity(projectsConfigurations, nxConfig);
   const packageJsonDeps = readCombinedDeps();
