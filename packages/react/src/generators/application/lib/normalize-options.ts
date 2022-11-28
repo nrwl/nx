@@ -40,6 +40,10 @@ export function normalizeOptions(
 
   assertValidStyle(options.style);
 
+  if (options.bundler === 'vite') {
+    options.unitTestRunner = 'vitest';
+  }
+
   const normalized = {
     ...options,
     name: names(options.name).fileName,
