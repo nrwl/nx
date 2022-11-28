@@ -38,7 +38,7 @@ Test proj1 and proj2 in parallel:
 Test all projects ending with `*-app` except `excluded-app`:
 
 ```terminal
- nx nx run-many --target=test --projects=*-app --exclude excluded-app
+ nx run-many --target=test --projects=*-app --exclude excluded-app
 ```
 
 ## Options
