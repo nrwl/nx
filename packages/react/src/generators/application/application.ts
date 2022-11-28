@@ -111,6 +111,18 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
     tasks.push(vitestTask);
   }
 
+  if (
+    (options.bundler === 'vite' || options.unitTestRunner === 'vitest') &&
+    options.inSourceTests
+  ) {
+    host.delete(
+      joinPathFragments(
+        options.appProjectRoot,
+        `src/app/${options.fileName}.spec.tsx`
+      )
+    );
+  }
+
   const lintTask = await addLinting(host, options);
   tasks.push(lintTask);
 
@@ -120,8 +132,10 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
   if (options.unitTestRunner === 'jest') {
     const jestTask = await addJest(host, options);
     tasks.push(jestTask);
-    updateSpecConfig(host, options);
   }
+
+  // Handle tsconfig.spec.json for jest or vitest
+  updateSpecConfig(host, options);
   const styledTask = addStyledModuleDependencies(host, options.styledModule);
   tasks.push(styledTask);
   const routingTask = addRouting(host, options);

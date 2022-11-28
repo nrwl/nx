@@ -1002,5 +1002,23 @@ describe('app', () => {
       expect(viteAppTree.exists('/apps/my-app/index.html')).toBe(true);
       expect(viteAppTree.exists('/apps/my-app/vite.config.ts')).toBe(true);
     });
+
+    it('should not include a spec file when the bundler or unitTestRunner is vite and insourceTests is false', async () => {
+      // check to make sure that the other spec file exists
+      expect(viteAppTree.exists('/apps/my-app/src/app/app.spec.tsx')).toBe(
+        true
+      );
+
+      await applicationGenerator(viteAppTree, {
+        ...schema,
+        name: 'insourceTests',
+        bundler: 'vite',
+        inSourceTests: true,
+      });
+
+      expect(
+        viteAppTree.exists('/apps/insourceTests/src/app/app.spec.tsx')
+      ).toBe(false);
+    });
   });
 });
