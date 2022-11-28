@@ -305,8 +305,7 @@ describe('Vite Plugin', () => {
       expect(result.combinedOutput).toContain(
         `Successfully ran target test for project ${lib}`
       );
-    }),
-      100_000;
+    }, 100_000);
 
     it('should be able to run tests with inSourceTests set to true', async () => {
       runCLI(
