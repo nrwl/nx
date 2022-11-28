@@ -34,7 +34,7 @@ import {
   findComponentImportPath,
 } from '../../utils/ast-utils';
 import {
-  createReactEslintJson,
+  extendReactEslintJson,
   extraEslintDependencies,
 } from '../../utils/lint';
 import {
@@ -195,15 +195,10 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
       skipPackageJson: options.skipPackageJson,
     });
 
-    const reactEslintJson = createReactEslintJson(
-      options.projectRoot,
-      options.setParserOptionsProject
-    );
-
     updateJson(
       host,
       joinPathFragments(options.projectRoot, '.eslintrc.json'),
-      () => reactEslintJson
+      extendReactEslintJson
     );
 
     let installTask = () => {};

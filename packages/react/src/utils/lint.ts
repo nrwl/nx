@@ -26,6 +26,9 @@ export const extendReactEslintJson = (json: Linter.Config) => {
   };
 };
 
+/**
+ * @deprecated Use {@link extendReactEslintJson} instead.
+ */
 export const createReactEslintJson = (
   projectRoot: string,
   setParserOptionsProject: boolean
