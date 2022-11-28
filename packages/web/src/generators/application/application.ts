@@ -206,10 +206,11 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
     host.delete(joinPathFragments(options.appProjectRoot, 'src/environments'));
 
     const viteTask = await viteConfigurationGenerator(host, {
-      uiFramework: 'react',
+      uiFramework: 'none',
       project: options.projectName,
       newProject: true,
       includeVitest: true,
+      inSourceTests: options.inSourceTests,
     });
     tasks.push(viteTask);
   }
@@ -221,6 +222,15 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
       inSourceTests: options.inSourceTests,
     });
     tasks.push(vitestTask);
+  }
+
+  if (
+    (options.bundler === 'vite' || options.unitTestRunner === 'vitest') &&
+    options.inSourceTests
+  ) {
+    host.delete(
+      joinPathFragments(options.appProjectRoot, `src/app/app.element.spec.ts`)
+    );
   }
 
   const lintTask = await lintProjectGenerator(host, {
