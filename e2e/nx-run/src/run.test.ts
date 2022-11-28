@@ -1,7 +1,6 @@
 import {
   checkFilesExist,
   cleanupProject,
-  e2eCwd,
   fileExists,
   isWindows,
   newProject,
@@ -466,6 +465,7 @@ describe('Nx Running Tests', () => {
           version: '0.0.1',
           scripts: {
             build: 'nx exec -- echo HELLO',
+            'build:option': 'nx exec -- echo HELLO WITH OPTION',
           },
         })
       );
@@ -481,6 +481,12 @@ describe('Nx Running Tests', () => {
       });
       expect(output).toContain('HELLO');
       expect(output).toContain(`nx run ${pkg}:build`);
+    });
+
+    it('should work for npm scripts with delimiter', () => {
+      const output = runCommand('npm run build:option', { cwd: pkgRoot });
+      expect(output).toContain('HELLO WITH OPTION');
+      expect(output).toContain(`nx run ${pkg}:"build:option"`);
     });
 
     it('should pass overrides', () => {
