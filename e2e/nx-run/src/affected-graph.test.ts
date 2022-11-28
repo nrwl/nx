@@ -179,7 +179,7 @@ describe('Nx Affected and Graph Tests', () => {
       myapp = uniq('myapp');
       myapp2 = uniq('myapp');
       mylib = uniq('mylib');
-      const nxConfig: NxConfiguration = readJson('nx.json');
+      const nxConfig: NxConfiguration = readNxConfig();
 
       delete nxConfig.implicitDependencies;
 

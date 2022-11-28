@@ -48,7 +48,7 @@ describe('Extra Nx Misc Tests', () => {
 
   describe('Nx Plugins', () => {
     it('should use plugins defined in nx.json', () => {
-      const nxConfig = readJson('nx.json');
+      const nxConfig = readNxConfig();
       nxConfig.plugins = ['./tools/plugin'];
       updateFile('nx.json', JSON.stringify(nxConfig));
       updateFile(

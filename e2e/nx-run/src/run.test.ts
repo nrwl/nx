@@ -302,7 +302,7 @@ describe('Nx Running Tests', () => {
 
       it('should be able to include deps using target dependencies defined at the root', () => {
         const originalNxJson = readFile('nx.json');
-        const nxConfig = readJson('nx.json');
+        const nxConfig = readNxConfig();
         nxConfig.targetDependencies = {
           build: ['^build', '^e2e-extra-entry-to-bust-cache'],
         };
@@ -320,7 +320,7 @@ describe('Nx Running Tests', () => {
       }, 10000);
 
       it('should be able to include deps using target defaults defined at the root', () => {
-        const nxConfig = readJson('nx.json');
+        const nxConfig = readNxConfig();
         updateProjectConfig(myapp, (config) => {
           config.targets.prep = {
             command: 'echo PREP > one.txt',

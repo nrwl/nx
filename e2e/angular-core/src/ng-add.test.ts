@@ -140,7 +140,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     expect(updatedPackageJson.devDependencies['@angular/cli']).toBeDefined();
 
     // check nx.json
-    const nxConfig = readJson('nx.json');
+    const nxConfig = readNxConfig();
     expect(nxConfig).toEqual({
       affected: {
         defaultBase: 'main',
