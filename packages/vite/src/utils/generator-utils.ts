@@ -406,7 +406,13 @@ export function writeViteConfig(tree: Tree, options: Schema) {
             }]
           }
         },`
-    : '';
+    : ``;
+
+  const serverOption = `
+    server:{
+      port: 4200,
+      host: 'localhost',
+    },`;
 
   switch (options.uiFramework) {
     case 'react':
@@ -422,6 +428,7 @@ ${options.includeVitest ? '/// <reference types="vitest" />' : ''}
       }
       
       export default defineConfig({
+        ${serverOption}
         plugins: [
           ${options.includeLib ? dtsPlugin : ''}
           react(),
@@ -447,6 +454,7 @@ ${options.includeVitest ? '/// <reference types="vitest" />' : ''}
       }
       
       export default defineConfig({
+        ${serverOption}
         plugins: [
           ${options.includeLib ? dtsPlugin : ''}
           tsconfigPaths({

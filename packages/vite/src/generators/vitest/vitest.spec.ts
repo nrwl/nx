@@ -109,6 +109,11 @@ describe('vitest generator', () => {
               
               
               export default defineConfig({
+                
+            server:{
+              port: 4200,
+              host: 'localhost',
+            },
                 plugins: [
                   
                   react(),
@@ -145,6 +150,11 @@ describe('vitest generator', () => {
               
               
               export default defineConfig({
+                
+            server:{
+              port: 4200,
+              host: 'localhost',
+            },
                 plugins: [
                   
                   react(),

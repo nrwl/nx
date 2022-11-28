@@ -19,18 +19,13 @@
     },
     "baseHref": {
       "type": "string",
-      "description": "Base url for the application being built."
+      "description": "Base public path when served in development or production.",
+      "alias": "base"
     },
     "proxyConfig": {
       "type": "string",
       "description": "Path to the proxy configuration file.",
       "x-completion-type": "file"
-    },
-    "tsConfig": {
-      "type": "string",
-      "description": "The name of the Typescript configuration file.",
-      "x-completion-type": "file",
-      "x-completion-glob": "tsconfig.*.json"
     },
     "configFile": {
       "type": "string",
@@ -62,7 +57,6 @@
     },
     "sourcemap": {
       "description": "Output sourcemaps. Use 'hidden' for use with error reporting tools without generating sourcemap comment.",
-      "default": true,
       "oneOf": [
         {
           "type": "boolean"
@@ -74,7 +68,6 @@
     },
     "minify": {
       "description": "Output sourcemaps. Use 'hidden' for use with error reporting tools without generating sourcemap comment.",
-      "default": "esbuild",
       "oneOf": [
         {
           "type": "boolean"
@@ -114,8 +107,7 @@
     "mode": {
       "type": "string",
       "description": "Mode to run the build in.",
-      "enum": ["production", "development"],
-      "default": "production"
+      "enum": ["production", "development"]
     }
   },
   "definitions": {
