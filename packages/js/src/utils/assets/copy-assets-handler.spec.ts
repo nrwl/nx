@@ -5,6 +5,59 @@ import * as fse from 'fs-extra';
 
 import { CopyAssetsHandler } from './copy-assets-handler';
 
+import * as nxClient from 'nx/src/daemon/client/client';
+import { Subject } from 'rxjs';
+
+const mockWatcher = new Subject<nxClient.ChangedFile>();
+
+jest.mock('nx/src/daemon/client/client', (): Partial<typeof nxClient> => {
+  const original = jest.requireActual('nx/src/daemon/client/client');
+  return {
+    ...original,
+    daemonClient: {
+      registerFileWatcher: async (
+        config: unknown,
+        callback: (
+          err,
+          data: {
+            changedProjects: string[];
+            changedFiles: nxClient.ChangedFile[];
+          }
+        ) => void
+      ) => {
+        mockWatcher.subscribe((data) => {
+          callback(null, {
+            changedProjects: [],
+            changedFiles: [data],
+          });
+        });
+        return () => {};
+      },
+    },
+  };
+});
+
+function createMockedWatchedFile(path: string) {
+  mockWatcher.next({
+    type: 'create',
+    path,
+  });
+}
+
+function deletedMockedWatchedFile(path: string) {
+  mockWatcher.next({
+    type: 'delete',
+    path,
+  });
+}
+
+function updateMockedWatchedFile(path: string) {
+  mockWatcher.next({
+    type: 'update',
+    path,
+  });
+}
+
 describe('AssetInputOutputHandler', () => {
   let sut: CopyAssetsHandler;
   let rootDir: string;
@@ -20,14 +73,6 @@ describe('AssetInputOutputHandler', () => {
     rootDir = path.join(tmp, 'nx-assets-test');
     projectDir = path.join(rootDir, 'mylib');
     outputDir = path.join(rootDir, 'dist/mylib');
-
-    // Reset temp directory
-    fse.removeSync(rootDir);
-    fse.mkdirpSync(path.join(projectDir, 'docs/a/b'));
-
-    // Workspace ignore files
-    fse.writeFileSync(path.join(rootDir, '.gitignore'), `git-ignore.md`);
-    fse.writeFileSync(path.join(rootDir, '.nxignore'), `nx-ignore.md`);
 
     sut = new CopyAssetsHandler({
       rootDir,
@@ -50,29 +95,17 @@ describe('AssetInputOutputHandler', () => {
   test('watchAndProcessOnAssetChange', async () => {
     const dispose = await sut.watchAndProcessOnAssetChange();
 
-    fse.writeFileSync(path.join(rootDir, 'LICENSE'), 'license');
-    await wait(100);
-    fse.writeFileSync(path.join(projectDir, 'README.md'), 'readme');
-    await wait(100); // give watch time to react
-    fse.writeFileSync(path.join(projectDir, 'docs/test1.md'), 'test');
-    await wait(100);
-    fse.writeFileSync(path.join(projectDir, 'docs/test2.md'), 'test');
-    await wait(100);
-    fse.writeFileSync(path.join(projectDir, 'docs/ignore.md'), 'IGNORE ME');
-    await wait(100);
-    fse.writeFileSync(path.join(projectDir, 'docs/git-ignore.md'), 'IGNORE ME');
-    await wait(100);
-    fse.writeFileSync(path.join(projectDir, 'docs/nx-ignore.md'), 'IGNORE ME');
-    await wait(100);
-    fse.writeFileSync(
-      path.join(projectDir, 'docs/a/b/nested-ignore.md'),
-      'IGNORE ME'
-    );
-    await wait(100);
-    fse.writeFileSync(path.join(projectDir, 'docs/test1.md'), 'updated');
-    await wait(100);
-    fse.removeSync(path.join(projectDir, 'docs'));
-    await wait(100);
+    createMockedWatchedFile(path.join(rootDir, 'LICENSE'));
+    createMockedWatchedFile(path.join(projectDir, 'README.md'));
+    createMockedWatchedFile(path.join(projectDir, 'docs/test1.md'));
+    createMockedWatchedFile(path.join(projectDir, 'docs/test2.md'));
+    createMockedWatchedFile(path.join(projectDir, 'docs/ignore.md'));
+    createMockedWatchedFile(path.join(projectDir, 'docs/git-ignore.md'));
+    createMockedWatchedFile(path.join(projectDir, 'docs/nx-ignore.md'));
+    createMockedWatchedFile(path.join(projectDir, 'docs/a/b/nested-ignore.md'));
+    updateMockedWatchedFile(path.join(projectDir, 'docs/test1.md'));
+    deletedMockedWatchedFile(path.join(projectDir, 'docs/test1.md'));
+    deletedMockedWatchedFile(path.join(projectDir, 'docs/test2.md'));
 
     expect(callback.mock.calls).toEqual([
       [
@@ -120,7 +153,6 @@ describe('AssetInputOutputHandler', () => {
           },
         ],
       ],
-      // Deleting the directory should only happen once, not per file.
       [
         [
           {
@@ -128,6 +160,10 @@ describe('AssetInputOutputHandler', () => {
             src: path.join(rootDir, 'mylib/docs/test1.md'),
             dest: path.join(rootDir, 'dist/mylib/docs/test1.md'),
           },
+        ],
+      ],
+      [
+        [
           {
             type: 'delete',
             src: path.join(rootDir, 'mylib/docs/test2.md'),
@@ -137,22 +173,18 @@ describe('AssetInputOutputHandler', () => {
       ],
     ]);
 
-    await dispose();
-    fse.removeSync(rootDir);
+    dispose();
   });
 
   test('processAllAssetsOnce', async () => {
-    fse.writeFileSync(path.join(rootDir, 'LICENSE'), 'license');
-    fse.writeFileSync(path.join(projectDir, 'README.md'), 'readme');
-    fse.writeFileSync(path.join(projectDir, 'docs/test1.md'), 'test');
-    fse.writeFileSync(path.join(projectDir, 'docs/test2.md'), 'test');
-    fse.writeFileSync(path.join(projectDir, 'docs/ignore.md'), 'IGNORE ME');
-    fse.writeFileSync(path.join(projectDir, 'docs/git-ignore.md'), 'IGNORE ME');
-    fse.writeFileSync(path.join(projectDir, 'docs/nx-ignore.md'), 'IGNORE ME');
-    fse.writeFileSync(
-      path.join(projectDir, 'docs/a/b/nested-ignore.md'),
-      'IGNORE ME'
-    );
+    createMockedWatchedFile(path.join(rootDir, 'LICENSE'));
+    createMockedWatchedFile(path.join(projectDir, 'README.md'));
+    createMockedWatchedFile(path.join(projectDir, 'docs/test1.md'));
+    createMockedWatchedFile(path.join(projectDir, 'docs/test2.md'));
+    createMockedWatchedFile(path.join(projectDir, 'docs/ignore.md'));
+    createMockedWatchedFile(path.join(projectDir, 'docs/git-ignore.md'));
+    createMockedWatchedFile(path.join(projectDir, 'docs/nx-ignore.md'));
+    createMockedWatchedFile(path.join(projectDir, 'docs/a/b/nested-ignore.md'));
 
     await sut.processAllAssetsOnce();
 

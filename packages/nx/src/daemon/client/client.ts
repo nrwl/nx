@@ -32,7 +32,7 @@ const DAEMON_ENV_SETTINGS = {
 };
 
 export type UnregisterCallback = () => void;
-export type ChangedFiles = {
+export type ChangedFile = {
   path: string;
   type: 'create' | 'update' | 'delete';
 };
@@ -117,7 +117,7 @@ export class DaemonClient {
       error: Error | null | 'closed',
       data: {
         changedProjects: string[];
-        changedFiles: ChangedFiles[];
+        changedFiles: ChangedFile[];
       } | null
     ) => void
   ): Promise<UnregisterCallback> {

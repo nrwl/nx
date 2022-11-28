@@ -6,7 +6,7 @@ import ignore, { Ignore } from 'ignore';
 import * as fg from 'fast-glob';
 import { AssetGlob } from '@nrwl/workspace/src/utilities/assets';
 import { logger } from '@nrwl/devkit';
-import { ChangedFiles, daemonClient } from 'nx/src/daemon/client/client';
+import { ChangedFile, daemonClient } from 'nx/src/daemon/client/client';
 
 export type FileEventType = 'create' | 'update' | 'delete';
 
@@ -160,7 +160,7 @@ export class CopyAssetsHandler {
     return () => unregisterFileWatcher();
   }
 
-  private async processEvents(events: ChangedFiles[]): Promise<void> {
+  private async processEvents(events: ChangedFile[]): Promise<void> {
     const fileEvents: FileEvent[] = [];
     for (const event of events) {
       const pathFromRoot = path.relative(this.rootDir, event.path);
