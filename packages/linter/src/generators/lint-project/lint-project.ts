@@ -161,10 +161,16 @@ function isMigrationToMonorepoNeeded(
   projects: Record<string, ProjectConfiguration>,
   tree: Tree
 ): boolean {
+  // the base config is already created, migration has been done
+  if (tree.exists('.eslintrc.base.json')) {
+    return false;
+  }
+
   const configs = Object.values(projects);
   if (configs.length === 1) {
     return false;
   }
+
   // get root project
   const rootProject = configs.find((p) => p.root === '.');
   if (!rootProject || !rootProject.targets) {
@@ -175,14 +181,6 @@ function isMigrationToMonorepoNeeded(
   if (!lintTarget) {
     return false;
   }
-  // if there is no override for `eslintConfig` we should migrate
-  if (!lintTarget.options.eslintConfig) {
-    return true;
-  }
-  // check if target has `eslintConfig` override and if it's not pointing to the source .eslintrc
-  const rootEslintrc = findEslintFile(tree);
-  return (
-    lintTarget.options.eslintConfig === rootEslintrc ||
-    lintTarget.options.eslintConfig === `./${rootEslintrc}`
-  );
+
+  return true;
 }
