@@ -5,11 +5,11 @@ import {
 } from './workspace-json-project-json';
 
 export type ImplicitDependencyEntry<T = '*' | string[]> = {
-  [key: string]: T | ImplicitJsonSubsetDependency<T>;
+  [key: string]: T | ImplicitSubsetDependency<T>;
 };
 
-export interface ImplicitJsonSubsetDependency<T = '*' | string[]> {
-  [key: string]: T | ImplicitJsonSubsetDependency<T>;
+export interface ImplicitSubsetDependency<T = '*' | string[]> {
+  [key: string]: T | ImplicitSubsetDependency<T>;
 }
 
 export interface NxAffectedConfig {
