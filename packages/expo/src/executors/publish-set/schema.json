@@ -5,7 +5,7 @@
   "$id": "NxExpoPublishSet",
   "$schema": "http://json-schema.org/schema",
   "title": "Set Publish Channel for Expo",
-  "description": "Specify the channel to serve a published release",
+  "description": "Specify the channel to serve a published release.",
   "type": "object",
   "properties": {
     "releaseChannel": {

@@ -5,7 +5,7 @@
   "$id": "NxExpoPublish",
   "$schema": "http://json-schema.org/schema",
   "title": "Publish for Expo",
-  "description": "Deploy a project to Expo hosting",
+  "description": "Deploy a project to Expo hosting.",
   "type": "object",
   "properties": {
     "quiet": {

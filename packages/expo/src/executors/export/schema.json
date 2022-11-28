@@ -5,7 +5,7 @@
   "$id": "NxExpoExport",
   "$schema": "http://json-schema.org/schema",
   "title": "Expo Export",
-  "description": "Export the JavaScript and assets for your app using Metro/webpack bundler",
+  "description": "Export the JavaScript and assets for your app using Metro/webpack bundler.",
   "type": "object",
   "properties": {
     "platform": {
