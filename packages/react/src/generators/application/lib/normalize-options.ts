@@ -65,6 +65,7 @@ export function normalizeOptions(
     normalized.unitTestRunner ??
     (normalized.bundler === 'vite' ? 'vitest' : 'jest');
   normalized.e2eTestRunner = normalized.e2eTestRunner ?? 'cypress';
+  normalized.inSourceTests = normalized.minimal || normalized.inSourceTests;
   normalized.devServerPort ??= findFreePort(host);
 
   return normalized;

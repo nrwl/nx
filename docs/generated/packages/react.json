@@ -251,6 +251,11 @@
             "enum": ["vite", "webpack"],
             "x-prompt": "Which bundler do you want to use to build the application?",
             "default": "webpack"
+          },
+          "minimal": {
+            "description": "Generate a React app with a minimal setup, no separate test files.",
+            "type": "boolean",
+            "default": false
           }
         },
         "required": [],
@@ -437,6 +442,11 @@
           },
           "skipPackageJson": {
             "description": "Do not add dependencies to `package.json`.",
+            "type": "boolean",
+            "default": false
+          },
+          "minimal": {
+            "description": "Create a React library with a minimal setup, no separate test files.",
             "type": "boolean",
             "default": false
           }
