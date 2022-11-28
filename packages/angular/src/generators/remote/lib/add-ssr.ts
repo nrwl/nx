@@ -50,6 +50,17 @@ export async function addSsr(
     port,
   };
 
+  project.targets['static-server'] = {
+    dependsOn: ['build', 'server'],
+    executor: 'nx:run-commands',
+    options: {
+      command: `PORT=${port} node ${joinPathFragments(
+        project.targets.server.options.outputPath,
+        'main.js'
+      )}`,
+    },
+  };
+
   updateProjectConfiguration(tree, appName, project);
 
   const installTask = addDependenciesToPackageJson(

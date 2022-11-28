@@ -182,6 +182,26 @@ Object {
 }
 `;
 
+exports[`MF Remote App Generator --ssr should generate the correct files 12`] = `
+"import { Route } from '@angular/router';
+import { RemoteEntryComponent } from './entry.component';
+
+export const remoteRoutes: Route[] = [{ path: '', component: RemoteEntryComponent }];"
+`;
+
+exports[`MF Remote App Generator --ssr should generate the correct files 13`] = `
+Object {
+  "dependsOn": Array [
+    "build",
+    "server",
+  ],
+  "executor": "nx:run-commands",
+  "options": Object {
+    "command": "PORT=4201 node dist/apps/test/server/main.js",
+  },
+}
+`;
+
 exports[`MF Remote App Generator should generate a remote mf app with a host 1`] = `
 "const { withModuleFederation } = require('@nrwl/angular/module-federation');
 const config = require('./module-federation.config');
