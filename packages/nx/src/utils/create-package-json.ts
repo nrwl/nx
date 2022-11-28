@@ -40,7 +40,10 @@ export function createPackageJson(
 
   const rootPackageJson = readJsonFile(`${options.root || '.'}/package.json`);
   Object.entries(npmDeps).forEach(([packageName, version]) => {
-    if (rootPackageJson.devDependencies?.[packageName]) {
+    if (
+      rootPackageJson.devDependencies?.[packageName] &&
+      !packageJson.dependencies[packageName]
+    ) {
       packageJson.devDependencies[packageName] = version;
     } else {
       packageJson.dependencies[packageName] = version;
@@ -106,8 +109,12 @@ function recursivelyCollectPeerDependencies(
       .map((dependency) => graph.externalNodes[dependency])
       .filter(Boolean)
       .forEach((node) => {
-        list[node.data.packageName] = node.data.version;
-        recursivelyCollectPeerDependencies(node.name, graph, list, seen);
+        if (
+          !packageJson.peerDependenciesMeta?.[node.data.packageName]?.optional
+        ) {
+          list[node.data.packageName] = node.data.version;
+          recursivelyCollectPeerDependencies(node.name, graph, list, seen);
+        }
       });
     return list;
   } catch (e) {
