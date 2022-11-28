@@ -38,14 +38,6 @@
       "x-completion-type": "file",
       "x-completion-glob": "vite.config.@(js|ts)"
     },
-    "assets": {
-      "type": "array",
-      "description": "List of static application assets.",
-      "default": [],
-      "items": {
-        "$ref": "#/definitions/assetPattern"
-      }
-    },
     "fileReplacements": {
       "description": "Replace files with other files in the build.",
       "type": "array",
