@@ -11,7 +11,11 @@ export function ensureGlobalProjectGraph(ruleName: string) {
    * Only reuse graph when running from terminal
    * Enforce every IDE change to get a fresh nxdeps.json
    */
-  if (!(global as any).projectGraph || !isTerminalRun()) {
+  if (
+    !(global as any).projectGraph ||
+    !(global as any).projectRootMappings ||
+    !isTerminalRun()
+  ) {
     const nxJson = readNxJson();
     (global as any).workspaceLayout = nxJson.workspaceLayout;
 
