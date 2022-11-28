@@ -161,7 +161,7 @@ export function updateWorkspaceConfiguration(
   if (tree.exists('nx.json')) {
     updateJson<NxConfig>(tree, 'nx.json', (json) => {
       if (json.extends) {
-        const nxJsonExtends = readNxJsonExtends(tree, json.extends);
+        const nxJsonExtends = readNxConfigExtends(tree, json.extends);
         const changedPropsOfNxJson = {};
         Object.keys(nxConfig).forEach((prop) => {
           if (
@@ -196,7 +196,7 @@ export function updateWorkspaceConfiguration(
   }
 }
 
-function readNxJsonExtends(tree: Tree, extendsPath: string) {
+function readNxConfigExtends(tree: Tree, extendsPath: string) {
   try {
     return readJson(
       tree,
@@ -246,7 +246,7 @@ export function readNxConfig(tree: Tree): NxConfig | null {
   }
   let nxConfig = readJson<NxConfig>(tree, 'nx.json');
   if (nxConfig.extends) {
-    nxConfig = { ...readNxJsonExtends(tree, nxConfig.extends), ...nxConfig };
+    nxConfig = { ...readNxConfigExtends(tree, nxConfig.extends), ...nxConfig };
   }
   return nxConfig;
 }
