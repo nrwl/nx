@@ -124,7 +124,7 @@ export function updateWorkspaceConfiguration(
   workspaceConfig: WorkspaceConfiguration
 ): void {
   const {
-    // Nx Json Properties
+    // Nx Config Properties
     cli,
     defaultProject,
     generators,
