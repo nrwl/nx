@@ -150,23 +150,7 @@ export function addOrChangeBuildTarget(
       options: buildOptions,
       configurations: {
         development: {},
-        production: options.includeLib
-          ? {}
-          : {
-              fileReplacements: [
-                {
-                  replace: joinPathFragments(
-                    project.sourceRoot,
-                    'environments/environment.ts'
-                  ),
-                  with: joinPathFragments(
-                    project.sourceRoot,
-                    'environments/environment.prod.ts'
-                  ),
-                },
-              ],
-              sourceMap: false,
-            },
+        production: {},
       },
     };
   }
@@ -408,7 +392,9 @@ export function writeViteConfig(tree: Tree, options: Schema) {
         },`
     : ``;
 
-  const serverOption = `
+  const serverOption = options.includeLib
+    ? ''
+    : `
     server:{
       port: 4200,
       host: 'localhost',

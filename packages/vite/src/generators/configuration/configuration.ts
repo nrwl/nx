@@ -40,7 +40,10 @@ export async function viteConfigurationGenerator(tree: Tree, schema: Schema) {
   tasks.push(initTask);
 
   addOrChangeBuildTarget(tree, schema, buildTarget);
-  addOrChangeServeTarget(tree, schema, serveTarget);
+
+  if (!schema.includeLib) {
+    addOrChangeServeTarget(tree, schema, serveTarget);
+  }
 
   writeViteConfig(tree, schema);
 
