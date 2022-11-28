@@ -5,7 +5,7 @@
   "$id": "NxExpoRollback",
   "$schema": "http://json-schema.org/schema",
   "title": "Rollback Publish Command for Expo",
-  "description": "Undo an update to a channel",
+  "description": "Undo an update to a channel.",
   "type": "object",
   "properties": {
     "releaseChannel": {

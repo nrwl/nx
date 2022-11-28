@@ -14,7 +14,7 @@
         "cli": "nx",
         "$id": "NxExpoInit",
         "$schema": "http://json-schema.org/schema",
-        "title": "Add Nx Expo Schematics",
+        "description": "Add Nx Expo Schematics.",
         "type": "object",
         "properties": {
           "unitTestRunner": {
@@ -51,7 +51,7 @@
         "cli": "nx",
         "$id": "NxExpoApplication",
         "$schema": "http://json-schema.org/schema",
-        "title": "Create an Expo Application for Nx",
+        "description": "Create an Expo Application for Nx.",
         "examples": [
           {
             "command": "g app myapp --directory=nested",
@@ -138,7 +138,7 @@
         "cli": "nx",
         "$id": "NxExpoLibrary",
         "$schema": "http://json-schema.org/schema",
-        "title": "Create a Expo Library for Nx",
+        "description": "Create a Expo Library for Nx.",
         "type": "object",
         "examples": [
           {
@@ -242,7 +242,7 @@
         "cli": "nx",
         "$id": "NxExpoComponent",
         "$schema": "http://json-schema.org/schema",
-        "title": "Create a Expo Component for Nx",
+        "description": "Create a Expo Component for Nx.",
         "type": "object",
         "examples": [
           {
@@ -333,7 +333,7 @@
         "$id": "NxExpoEasUpdate",
         "cli": "nx",
         "title": "Expo EAS Update executor",
-        "description": "Start an EAS update for your expo project",
+        "description": "Start an EAS update for your expo project.",
         "type": "object",
         "properties": {
           "branch": {
@@ -406,7 +406,7 @@
         "$id": "NxExpoEasBuild",
         "cli": "nx",
         "title": "Expo EAS Build executor",
-        "description": "Start an EAS build for your expo project",
+        "description": "Start an EAS build for your expo project.",
         "type": "object",
         "properties": {
           "platform": {
@@ -473,7 +473,7 @@
         "$id": "NxExpoEasBuildList",
         "cli": "nx",
         "title": "Expo EAS Build List executor",
-        "description": "List all EAS builds for your Expo project",
+        "description": "List all EAS builds for your Expo project.",
         "type": "object",
         "properties": {
           "platform": {
@@ -559,7 +559,7 @@
         "$id": "NxExpoDownloadEasBuild",
         "cli": "nx",
         "title": "Download EAS Build executor",
-        "description": "Download an EAS build",
+        "description": "Download an EAS build.",
         "type": "object",
         "properties": {
           "platform": {
@@ -626,7 +626,7 @@
         "$id": "NxExpoBuildIOS",
         "cli": "nx",
         "title": "Expo iOS Build executor",
-        "description": "Build and sign a standalone IPA for the Apple App Store",
+        "description": "Build and sign a standalone IPA for the Apple App Store.",
         "type": "object",
         "properties": {
           "clearCredentials": {
@@ -725,7 +725,7 @@
         "$id": "NxExpoBuildAndroid",
         "cli": "nx",
         "title": "Expo Android Build executor",
-        "description": "Build and sign a standalone APK or App Bundle for the Google Play Store",
+        "description": "Build and sign a standalone APK or App Bundle for the Google Play Store.",
         "type": "object",
         "properties": {
           "clearCredentials": {
@@ -790,7 +790,7 @@
         "$id": "NxExpoBuildWeb",
         "cli": "nx",
         "title": "Expo web Build executor",
-        "description": "Build the web app for production",
+        "description": "Build the web app for production.",
         "type": "object",
         "properties": {
           "clear": {
@@ -825,7 +825,7 @@
         "$id": "NxExpoBuildStatus",
         "cli": "nx",
         "title": "Expo web Build executor",
-        "description": "Get the status of the latest build for the project",
+        "description": "Get the status of the latest build for the project.",
         "type": "object",
         "properties": {
           "publicUrl": {
@@ -851,7 +851,7 @@
         "$id": "NxExpoPublish",
         "$schema": "http://json-schema.org/schema",
         "title": "Publish for Expo",
-        "description": "Deploy a project to Expo hosting",
+        "description": "Deploy a project to Expo hosting.",
         "type": "object",
         "properties": {
           "quiet": {
@@ -904,7 +904,7 @@
         "$id": "NxExpoPublishSet",
         "$schema": "http://json-schema.org/schema",
         "title": "Set Publish Channel for Expo",
-        "description": "Specify the channel to serve a published release",
+        "description": "Specify the channel to serve a published release.",
         "type": "object",
         "properties": {
           "releaseChannel": {
@@ -934,7 +934,7 @@
         "$id": "NxExpoRollback",
         "$schema": "http://json-schema.org/schema",
         "title": "Rollback Publish Command for Expo",
-        "description": "Undo an update to a channel",
+        "description": "Undo an update to a channel.",
         "type": "object",
         "properties": {
           "releaseChannel": {
@@ -968,7 +968,7 @@
         "$id": "NxExpoRun",
         "$schema": "http://json-schema.org/schema",
         "title": "Run iOS or Android application",
-        "description": "Run Expo target options",
+        "description": "Run Expo target options.",
         "type": "object",
         "properties": {
           "platform": {
@@ -1038,7 +1038,7 @@
         "$id": "NxExpoStart",
         "$schema": "http://json-schema.org/schema",
         "title": "Packager Server for Expo",
-        "description": "Packager Server target options",
+        "description": "Packager Server target options.",
         "type": "object",
         "properties": {
           "forceManifestType": {
@@ -1147,7 +1147,7 @@
         "$id": "NxExpoSyncDeps",
         "$schema": "http://json-schema.org/schema",
         "title": "Sync Deps for Expo",
-        "description": "Updates package.json with project dependencies",
+        "description": "Updates package.json with project dependencies.",
         "type": "object",
         "properties": {
           "include": {
@@ -1200,7 +1200,7 @@
         "$id": "NxExpoPrebuild",
         "$schema": "http://json-schema.org/schema",
         "title": "Expo Prebuild",
-        "description": "Create native iOS and Android project files for building natively",
+        "description": "Create native iOS and Android project files for building natively.",
         "type": "object",
         "properties": {
           "install": {
@@ -1236,7 +1236,7 @@
         "$id": "NxExpoInstall",
         "$schema": "http://json-schema.org/schema",
         "title": "Expo Install",
-        "description": "Install a module or other package to a project",
+        "description": "Install a module or other package to a project.",
         "type": "object",
         "properties": {
           "packages": {
@@ -1274,7 +1274,7 @@
         "$id": "NxExpoExport",
         "$schema": "http://json-schema.org/schema",
         "title": "Expo Export",
-        "description": "Export the JavaScript and assets for your app using Metro/webpack bundler",
+        "description": "Export the JavaScript and assets for your app using Metro/webpack bundler.",
         "type": "object",
         "properties": {
           "platform": {

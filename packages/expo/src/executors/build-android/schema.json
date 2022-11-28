@@ -5,7 +5,7 @@
   "$id": "NxExpoBuildAndroid",
   "cli": "nx",
   "title": "Expo Android Build executor",
-  "description": "Build and sign a standalone APK or App Bundle for the Google Play Store",
+  "description": "Build and sign a standalone APK or App Bundle for the Google Play Store.",
   "type": "object",
   "properties": {
     "clearCredentials": {

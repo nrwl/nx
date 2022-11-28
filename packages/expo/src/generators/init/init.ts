@@ -100,4 +100,4 @@ function moveDependency(host: Tree) {
 }
 
 export default expoInitGenerator;
-export const reactNativeInitSchematic = convertNxGenerator(expoInitGenerator);
+export const expoInitSchematic = convertNxGenerator(expoInitGenerator);
