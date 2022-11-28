@@ -116,6 +116,7 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
 
   const cypressTask = await addCypress(host, options);
   tasks.push(cypressTask);
+
   if (options.unitTestRunner === 'jest') {
     const jestTask = await addJest(host, options);
     tasks.push(jestTask);
