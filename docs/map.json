@@ -34,6 +34,11 @@
               "file": "shared/react-tutorial/1-code-generation"
             },
             {
+              "name": "React Standalone Tutorial",
+              "id": "react-standalone-tutorial",
+              "file": "shared/react-standalone-tutorial/1-code-generation"
+            },
+            {
               "name": "Angular Tutorial",
               "id": "angular-tutorial",
               "file": "shared/angular-tutorial/1-code-generation"
@@ -111,6 +116,38 @@
               "name": "5 - Summary",
               "id": "5-summary",
               "file": "shared/react-tutorial/5-summary"
+            }
+          ]
+        },
+        {
+          "name": "React Standalone Tutorial",
+          "id": "react-standalone-tutorial",
+          "description": "In this tutorial you'll create a frontend-focused workspace with Nx.",
+          "itemList": [
+            {
+              "name": "1 - Code Generation",
+              "id": "1-code-generation",
+              "file": "shared/react-standalone-tutorial/1-code-generation"
+            },
+            {
+              "name": "2 - Project Graph",
+              "id": "2-project-graph",
+              "file": "shared/react-standalone-tutorial/2-project-graph"
+            },
+            {
+              "name": "3 - Task Running",
+              "id": "3-task-running",
+              "file": "shared/react-standalone-tutorial/3-task-running"
+            },
+            {
+              "name": "4 - Workspace Optimization",
+              "id": "4-workspace-optimization",
+              "file": "shared/react-standalone-tutorial/4-workspace-optimization"
+            },
+            {
+              "name": "5 - Summary",
+              "id": "5-summary",
+              "file": "shared/react-standalone-tutorial/5-summary"
             }
           ]
         },
