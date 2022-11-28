@@ -21,7 +21,7 @@ Find more information in this [detailed guide to improve your worst case CI time
 To distribute your task execution, you need to (1) connect to Nx Cloud and (2) enable DTE in your CI workflow. Each of these steps can be enabled with a single command:
 
 ```shell title="1. Connect to Nx Cloud"
-nx connect-to-nx-cloud
+nx connect
 ```
 
 {% callout type="note" title="Use the latest version of Nx Cloud" %}
