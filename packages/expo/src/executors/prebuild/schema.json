@@ -5,7 +5,7 @@
   "$id": "NxExpoPrebuild",
   "$schema": "http://json-schema.org/schema",
   "title": "Expo Prebuild",
-  "description": "Create native iOS and Android project files for building natively",
+  "description": "Create native iOS and Android project files for building natively.",
   "type": "object",
   "properties": {
     "install": {
