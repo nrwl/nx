@@ -31,6 +31,7 @@ export interface Schema {
   skipPackageJson?: boolean;
   rootProject?: boolean;
   bundler?: 'webpack' | 'vite';
+  minimal?: boolean;
 }
 
 export interface NormalizedSchema extends Schema {

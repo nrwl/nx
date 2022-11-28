@@ -187,6 +187,11 @@
       "enum": ["vite", "webpack"],
       "x-prompt": "Which bundler do you want to use to build the application?",
       "default": "webpack"
+    },
+    "minimal": {
+      "description": "Generate a React app with a minimal setup, no separate test files.",
+      "type": "boolean",
+      "default": false
     }
   },
   "required": [],

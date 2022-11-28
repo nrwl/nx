@@ -54,6 +54,8 @@ export function normalizeOptions(
     normalized.unitTestRunner ??
     (normalized.bundler === 'vite' ? 'vitest' : 'jest');
 
+  normalized.inSourceTests === normalized.minimal || normalized.inSourceTests;
+
   if (options.appProject) {
     const appProjectConfig = getProjects(host).get(options.appProject);
 
