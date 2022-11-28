@@ -10,7 +10,7 @@ import {
 } from '../project-graph/project-graph';
 import { ProjectsConfigurations } from '../config/workspace-json-project-json';
 import { readNxJson } from '../config/configuration';
-import { NxJsonConfiguration } from '../config/nx-json';
+import { NxConfiguration } from '../config/nx-json';
 
 /* eslint-disable */
 const Module = require('module');
@@ -157,7 +157,7 @@ function mockReadJsonWorkspace(
         const nxJson = readNxJson();
 
         // Construct old workspace.json format from project graph
-        const w: ProjectsConfigurations & NxJsonConfiguration = {
+        const w: ProjectsConfigurations & NxConfiguration = {
           ...nxJson,
           ...readProjectsConfigurationFromProjectGraph(projectGraph),
         };

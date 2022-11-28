@@ -1,4 +1,4 @@
-import { NxJsonConfiguration, readJson, Tree, writeJson } from '@nrwl/devkit';
+import { NxConfiguration, readJson, Tree, writeJson } from '@nrwl/devkit';
 import { createTree } from '@nrwl/devkit/testing';
 import removeOldTaskRunnerOptions from '@nrwl/workspace/src/migrations/update-13-6-0/remove-old-task-runner-options';
 
@@ -10,7 +10,7 @@ describe('removeOldTaskRunnerOptions', () => {
   });
 
   it('should remove scan and analytics', () => {
-    writeJson<NxJsonConfiguration>(tree, 'nx.json', {
+    writeJson<NxConfiguration>(tree, 'nx.json', {
       npmScope: 'scope',
       tasksRunnerOptions: {
         default: {

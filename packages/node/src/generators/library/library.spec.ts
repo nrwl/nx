@@ -1,6 +1,6 @@
 import {
   getProjects,
-  NxJsonConfiguration,
+  NxConfiguration,
   readJson,
   readProjectConfiguration,
   Tree,

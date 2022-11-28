@@ -15,7 +15,7 @@ import { isCI } from '../utils/is-ci';
 import { createRunOneDynamicOutputRenderer } from './life-cycles/dynamic-run-one-terminal-output-life-cycle';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import {
-  NxJsonConfiguration,
+  NxConfiguration,
   TargetDefaults,
   TargetDependencies,
 } from '../config/nx-json';
@@ -107,7 +107,7 @@ async function hashTasksThatDontDependOnOtherTasks(
 export async function runCommand(
   projectsToRun: ProjectGraphProjectNode[],
   projectGraph: ProjectGraph,
-  { nxJson }: { nxJson: NxJsonConfiguration },
+  { nxJson }: { nxJson: NxConfiguration },
   nxArgs: NxArgs,
   overrides: any,
   initiatingProject: string | null,
@@ -291,7 +291,7 @@ function shouldUseDynamicLifeCycle(
 
 export function getRunner(
   nxArgs: NxArgs,
-  nxJson: NxJsonConfiguration
+  nxJson: NxConfiguration
 ): {
   tasksRunner: TasksRunner;
   runnerOptions: any;

@@ -1,11 +1,11 @@
-import { NxJsonConfiguration } from '../config/nx-json';
+import { NxConfiguration } from '../config/nx-json';
 import {
   readNxJson,
   readAllWorkspaceConfiguration,
 } from '../config/configuration';
 
 export interface Environment {
-  nxJson: NxJsonConfiguration;
+  nxJson: NxConfiguration;
   workspaceJson: any;
   /**
    * @deprecated the field will be removed after Nx 14 is released. It's left here

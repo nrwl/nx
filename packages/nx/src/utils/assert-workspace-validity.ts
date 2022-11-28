@@ -1,12 +1,12 @@
 import {
   ImplicitJsonSubsetDependency,
-  NxJsonConfiguration,
+  NxConfiguration,
 } from '../config/nx-json';
 import { stripIndents } from './strip-indents';
 
 export function assertWorkspaceValidity(
   workspaceJson,
-  nxJson: NxJsonConfiguration
+  nxJson: NxConfiguration
 ) {
   const workspaceJsonProjects = Object.keys(workspaceJson.projects);
 

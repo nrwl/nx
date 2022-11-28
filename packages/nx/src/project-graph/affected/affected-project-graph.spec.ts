@@ -5,7 +5,7 @@ import { WholeFileChange } from '../file-utils';
 import { buildProjectGraph } from '../build-project-graph';
 import { defaultFileHasher } from '../../hasher/file-hasher';
 import { WorkspaceJsonConfiguration } from '../../config/workspace-json-project-json';
-import { NxJsonConfiguration } from '../../config/nx-json';
+import { NxConfiguration } from '../../config/nx-json';
 import { stripIndents } from '../../utils/strip-indents';
 
 jest.mock('fs', () => require('memfs').fs);
@@ -18,7 +18,7 @@ describe('project graph', () => {
   let packageLockJson: any;
   let workspaceJson: WorkspaceJsonConfiguration;
   let tsConfigJson: any;
-  let nxJson: NxJsonConfiguration;
+  let nxJson: NxConfiguration;
   let filesJson: any;
 
   beforeEach(() => {

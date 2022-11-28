@@ -1,5 +1,5 @@
 import {
-  NxJsonConfiguration,
+  NxConfiguration,
   readJson,
   stripIndents,
   Tree,
@@ -47,7 +47,7 @@ describe('jest', () => {
   });
 
   it('should add target defaults for test', async () => {
-    updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
+    updateJson<NxConfiguration>(tree, 'nx.json', (json) => {
       json.namedInputs ??= {};
       json.namedInputs.production = ['default'];
       return json;
@@ -55,9 +55,9 @@ describe('jest', () => {
 
     jestInitGenerator(tree, {});
 
-    const productionFileSet = readJson<NxJsonConfiguration>(tree, 'nx.json')
+    const productionFileSet = readJson<NxConfiguration>(tree, 'nx.json')
       .namedInputs.production;
-    const testDefaults = readJson<NxJsonConfiguration>(tree, 'nx.json')
+    const testDefaults = readJson<NxConfiguration>(tree, 'nx.json')
       .targetDefaults.test;
     expect(productionFileSet).toContain(
       '!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)'
@@ -70,7 +70,7 @@ describe('jest', () => {
   });
 
   it('should not alter target defaults if jest.preset.js already exists', async () => {
-    updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
+    updateJson<NxConfiguration>(tree, 'nx.json', (json) => {
       json.namedInputs ??= {};
       json.namedInputs.production = ['default', '^production'];
       return json;
@@ -78,8 +78,8 @@ describe('jest', () => {
 
     jestInitGenerator(tree, {});
 
-    let nxJson: NxJsonConfiguration;
-    updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
+    let nxJson: NxConfiguration;
+    updateJson<NxConfiguration>(tree, 'nx.json', (json) => {
       json.namedInputs.production = [
         'default',
         '^production',
@@ -98,7 +98,7 @@ describe('jest', () => {
       return json;
     });
     jestInitGenerator(tree, {});
-    expect(readJson<NxJsonConfiguration>(tree, 'nx.json')).toEqual(nxJson);
+    expect(readJson<NxConfiguration>(tree, 'nx.json')).toEqual(nxJson);
   });
 
   it('should add dependencies', async () => {

@@ -11,7 +11,7 @@ import { logger, NX_PREFIX } from '../utils/logger';
 import { loadNxPlugins, readPluginPackageJson } from '../utils/nx-plugin';
 import * as yaml from 'js-yaml';
 
-import type { NxJsonConfiguration } from './nx-json';
+import type { NxConfiguration } from './nx-json';
 import {
   ProjectConfiguration,
   ProjectsConfigurations,
@@ -43,7 +43,7 @@ export function workspaceConfigName(
 }
 
 export class Workspaces {
-  private cachedWorkspaceConfig: ProjectsConfigurations & NxJsonConfiguration;
+  private cachedWorkspaceConfig: ProjectsConfigurations & NxConfiguration;
 
   constructor(private root: string) {}
 
@@ -53,7 +53,7 @@ export class Workspaces {
 
   calculateDefaultProjectName(
     cwd: string,
-    wc: ProjectsConfigurations & NxJsonConfiguration
+    wc: ProjectsConfigurations & NxConfiguration
   ) {
     const relativeCwd = this.relativeCwd(cwd);
     if (relativeCwd) {
@@ -71,7 +71,7 @@ export class Workspaces {
 
   readWorkspaceConfiguration(opts?: {
     _ignorePluginInference?: boolean;
-  }): ProjectsConfigurations & NxJsonConfiguration {
+  }): ProjectsConfigurations & NxConfiguration {
     if (
       this.cachedWorkspaceConfig &&
       process.env.NX_CACHE_WORKSPACE_CONFIG !== 'false'
@@ -122,7 +122,7 @@ export class Workspaces {
 
   private mergeTargetDefaultsIntoProjectDescriptions(
     config: ProjectsConfigurations,
-    nxJson: NxJsonConfiguration
+    nxJson: NxConfiguration
   ) {
     for (const proj of Object.values(config.projects)) {
       if (proj.targets) {
@@ -240,16 +240,16 @@ export class Workspaces {
     return existsSync(nxJson);
   }
 
-  readNxJson(): NxJsonConfiguration {
+  readNxJson(): NxConfiguration {
     const nxJson = path.join(this.root, 'nx.json');
     if (existsSync(nxJson)) {
-      const nxJsonConfig = readJsonFile<NxJsonConfiguration>(nxJson);
+      const nxJsonConfig = readJsonFile<NxConfiguration>(nxJson);
       if (nxJsonConfig.extends) {
         const extendedNxJsonPath = require.resolve(nxJsonConfig.extends, {
           paths: [dirname(nxJson)],
         });
         const baseNxJson =
-          readJsonFile<NxJsonConfiguration>(extendedNxJsonPath);
+          readJsonFile<NxConfiguration>(extendedNxJsonPath);
         return this.mergeTargetDefaultsAndTargetDependencies({
           ...baseNxJson,
           ...nxJsonConfig,
@@ -269,7 +269,7 @@ export class Workspaces {
   }
 
   private mergeTargetDefaultsAndTargetDependencies(
-    nxJson: NxJsonConfiguration
+    nxJson: NxConfiguration
   ) {
     if (!nxJson.targetDefaults) {
       nxJson.targetDefaults = {};
@@ -421,7 +421,7 @@ function normalizeExecutorSchema(
 }
 
 function assertValidWorkspaceConfiguration(
-  nxJson: NxJsonConfiguration & { projects?: any }
+  nxJson: NxConfiguration & { projects?: any }
 ) {
   // Assert valid workspace configuration
   if (nxJson.projects) {
@@ -581,7 +581,7 @@ let projectGlobCache: string[];
 let projectGlobCacheKey: string;
 
 export function getGlobPatternsFromPlugins(
-  nxJson: NxJsonConfiguration,
+  nxJson: NxConfiguration,
   paths: string[],
   root = workspaceRoot
 ): string[] {
@@ -669,7 +669,7 @@ function removeRelativePath(pattern: string): string {
 
 export function globForProjectFiles(
   root,
-  nxJson?: NxJsonConfiguration,
+  nxJson?: NxConfiguration,
   ignorePluginInference = false
 ) {
   // Deal w/ Caching
@@ -794,7 +794,7 @@ export function deduplicateProjectFiles(
 function buildProjectConfigurationFromPackageJson(
   path: string,
   packageJson: { name: string },
-  nxJson: NxJsonConfiguration
+  nxJson: NxConfiguration
 ): ProjectConfiguration & { name: string } {
   const normalizedPath = path.split('\\').join('/');
   const directory = dirname(normalizedPath);
@@ -821,7 +821,7 @@ function buildProjectConfigurationFromPackageJson(
 
 export function inferProjectFromNonStandardFile(
   file: string,
-  nxJson: NxJsonConfiguration
+  nxJson: NxConfiguration
 ): ProjectConfiguration & { name: string } {
   const directory = dirname(file).split('\\').join('/');
 
@@ -832,7 +832,7 @@ export function inferProjectFromNonStandardFile(
 }
 
 export function buildWorkspaceConfigurationFromGlobs(
-  nxJson: NxJsonConfiguration,
+  nxJson: NxConfiguration,
   projectFiles: string[], // making this parameter allows devkit to pick up newly created projects
   readJson: <T extends Object>(string) => T = <T extends Object>(string) =>
     readJsonFile<T>(string) // making this an arg allows us to reuse in devkit

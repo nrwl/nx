@@ -7,7 +7,7 @@ import {
   MigrationsJson,
   PackageJsonUpdateForPackage,
 } from '../config/misc-interfaces';
-import { NxJsonConfiguration } from '../config/nx-json';
+import { NxConfiguration } from '../config/nx-json';
 import { flushChanges, FsTree, printChanges } from '../generators/tree';
 import {
   extractFileFromTarball,
@@ -894,7 +894,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
 
 function showConnectToCloudMessage() {
   try {
-    const nxJson = readJsonFile<NxJsonConfiguration>('nx.json');
+    const nxJson = readJsonFile<NxConfiguration>('nx.json');
     const defaultRunnerIsUsed =
       !nxJson.tasksRunnerOptions ||
       Object.values(nxJson.tasksRunnerOptions).find(

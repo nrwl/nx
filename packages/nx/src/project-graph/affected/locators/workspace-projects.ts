@@ -1,6 +1,6 @@
 import * as minimatch from 'minimatch';
 import { TouchedProjectLocator } from '../affected-project-graph-models';
-import { NxJsonConfiguration } from '../../../config/nx-json';
+import { NxConfiguration } from '../../../config/nx-json';
 import { ProjectGraphProjectNode } from '../../../config/project-graph';
 import {
   createProjectRootMappings,
@@ -58,7 +58,7 @@ export const getImplicitlyTouchedProjects: TouchedProjectLocator = (
 };
 
 export function extractGlobalFilesFromInputs(
-  nxJson: NxJsonConfiguration,
+  nxJson: NxConfiguration,
   projectGraphNodes: Record<string, ProjectGraphProjectNode>
 ) {
   const globalFiles = [];

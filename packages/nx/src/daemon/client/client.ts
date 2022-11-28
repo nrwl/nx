@@ -19,7 +19,7 @@ import {
 } from '../tmp-dir';
 import { ProjectGraph } from '../../config/project-graph';
 import { isCI } from '../../utils/is-ci';
-import { NxJsonConfiguration } from '../../config/nx-json';
+import { NxConfiguration } from '../../config/nx-json';
 import { readNxJson } from '../../config/configuration';
 import { PromisedBasedQueue } from '../../utils/promised-based-queue';
 import { Workspaces } from '../../config/workspaces';
@@ -34,7 +34,7 @@ const DAEMON_ENV_SETTINGS = {
 export type UnregisterCallback = () => void;
 
 export class DaemonClient {
-  constructor(private readonly nxJson: NxJsonConfiguration) {
+  constructor(private readonly nxJson: NxConfiguration) {
     this.reset();
   }
 

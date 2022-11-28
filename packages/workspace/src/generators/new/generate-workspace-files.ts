@@ -3,7 +3,7 @@ import {
   generateFiles,
   getPackageManagerVersion,
   names,
-  NxJsonConfiguration,
+  NxConfiguration,
   PackageManager,
   Tree,
   updateJson,
@@ -99,7 +99,7 @@ function createNxJson(
   tree: Tree,
   { directory, npmScope, packageManager, defaultBase, preset }: NormalizedSchema
 ) {
-  const nxJson: NxJsonConfiguration & { $schema: string } = {
+  const nxJson: NxConfiguration & { $schema: string } = {
     $schema: './node_modules/nx/schemas/nx-schema.json',
     npmScope: npmScope,
     affected: {
@@ -137,7 +137,7 @@ function createNxJson(
     nxJson.targetDefaults.build.inputs = ['production', '^production'];
   }
 
-  writeJson<NxJsonConfiguration>(tree, join(directory, 'nx.json'), nxJson);
+  writeJson<NxConfiguration>(tree, join(directory, 'nx.json'), nxJson);
 }
 
 function createFiles(tree: Tree, options: NormalizedSchema) {

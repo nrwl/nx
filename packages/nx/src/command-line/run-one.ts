@@ -7,7 +7,7 @@ import {
   readProjectsConfigurationFromProjectGraph,
 } from '../project-graph/project-graph';
 import { ProjectGraph } from '../config/project-graph';
-import { NxJsonConfiguration } from '../config/nx-json';
+import { NxConfiguration } from '../config/nx-json';
 import { workspaceRoot } from '../utils/workspace-root';
 import { splitTarget } from '../utils/split-target';
 import { output } from '../utils/output';
@@ -102,7 +102,7 @@ const targetAliases = {
 function parseRunOneOptions(
   cwd: string,
   parsedArgs: { [k: string]: any },
-  workspaceConfiguration: ProjectsConfigurations & NxJsonConfiguration
+  workspaceConfiguration: ProjectsConfigurations & NxConfiguration
 ): { project; target; configuration; parsedArgs } {
   const defaultProjectName = calculateDefaultProjectName(
     cwd,
@@ -158,7 +158,7 @@ function parseRunOneOptions(
 export function calculateDefaultProjectName(
   cwd: string,
   root: string,
-  workspaceConfiguration: ProjectsConfigurations & NxJsonConfiguration
+  workspaceConfiguration: ProjectsConfigurations & NxConfiguration
 ) {
   let relativeCwd = cwd.replace(/\\/g, '/').split(root.replace(/\\/g, '/'))[1];
 

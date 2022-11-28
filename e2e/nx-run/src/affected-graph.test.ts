@@ -1,4 +1,4 @@
-import type { NxJsonConfiguration } from '@nrwl/devkit';
+import type { NxConfiguration } from '@nrwl/devkit';
 import {
   getPackageManagerCommand,
   isNotWindows,
@@ -179,7 +179,7 @@ describe('Nx Affected and Graph Tests', () => {
       myapp = uniq('myapp');
       myapp2 = uniq('myapp');
       mylib = uniq('mylib');
-      const nxJson: NxJsonConfiguration = readJson('nx.json');
+      const nxJson: NxConfiguration = readJson('nx.json');
 
       delete nxJson.implicitDependencies;
 

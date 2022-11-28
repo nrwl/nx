@@ -1,6 +1,6 @@
 import {
   addProjectConfiguration,
-  NxJsonConfiguration,
+  NxConfiguration,
   readJson,
   readProjectConfiguration,
   Tree,
@@ -20,7 +20,7 @@ describe('@nrwl/linter:workspace-rules-project', () => {
   });
 
   it('should add lint project files to lint inputs', async () => {
-    updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
+    updateJson<NxConfiguration>(tree, 'nx.json', (json) => {
       json.targetDefaults = {
         lint: {
           inputs: ['default', '{workspaceRoot}/.eslintrc.json'],
@@ -31,7 +31,7 @@ describe('@nrwl/linter:workspace-rules-project', () => {
     await lintWorkspaceRulesProjectGenerator(tree);
 
     expect(
-      readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults.lint.inputs
+      readJson<NxConfiguration>(tree, 'nx.json').targetDefaults.lint.inputs
     ).toContain('{workspaceRoot}/tools/eslint-rules/**/*');
   });
 

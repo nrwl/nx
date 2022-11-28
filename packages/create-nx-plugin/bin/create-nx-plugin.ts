@@ -3,7 +3,7 @@
 // we can't import from '@nrwl/workspace' because it will require typescript
 import {
   getPackageManagerCommand,
-  NxJsonConfiguration,
+  NxConfiguration,
   readJsonFile,
   writeJsonFile,
   output,
@@ -110,7 +110,7 @@ function createNxPlugin(
 
 function updateWorkspace(workspaceName: string) {
   const nxJsonPath = path.join(workspaceName, 'nx.json');
-  const nxJson = readJsonFile<NxJsonConfiguration>(nxJsonPath);
+  const nxJson = readJsonFile<NxConfiguration>(nxJsonPath);
 
   nxJson.workspaceLayout = {
     appsDir: 'e2e',

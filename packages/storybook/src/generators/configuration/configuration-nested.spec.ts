@@ -1,4 +1,4 @@
-import { NxJsonConfiguration, Tree, updateJson, writeJson } from '@nrwl/devkit';
+import { NxConfiguration, Tree, updateJson, writeJson } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
 import configurationGenerator from './configuration';
@@ -11,7 +11,7 @@ describe('@nrwl/storybook:configuration for workspaces with Root project', () =>
 
     beforeEach(async () => {
       tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
+      updateJson<NxConfiguration>(tree, 'nx.json', (json) => {
         json.namedInputs = {
           production: ['default'],
         };

@@ -21,7 +21,7 @@ import {
   getRootTsConfigPath,
 } from '../utils/typescript';
 import { readJsonFile, writeJsonFile } from '../utils/fileutils';
-import { NxJsonConfiguration } from '../config/nx-json';
+import { NxConfiguration } from '../config/nx-json';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { filterAffected } from '../project-graph/affected/affected-project-graph';
 import {
@@ -258,9 +258,9 @@ function sortTsConfig() {
 function movePropertiesToNewLocations(workspaceJsonPath: string) {
   try {
     const workspaceJson = readJsonFile<
-      NxJsonConfiguration & ProjectsConfigurations
+      NxConfiguration & ProjectsConfigurations
     >(workspaceJsonPath);
-    const nxJson = readJsonFile<NxJsonConfiguration & ProjectsConfigurations>(
+    const nxJson = readJsonFile<NxConfiguration & ProjectsConfigurations>(
       'nx.json'
     );
     if (
@@ -290,7 +290,7 @@ function movePropertiesToNewLocations(workspaceJsonPath: string) {
 
 export function moveTagsAndImplicitDepsFromNxJsonToWorkspaceJson(
   workspaceJson: ProjectsConfigurations,
-  nxJson: NxJsonConfiguration & {
+  nxJson: NxConfiguration & {
     projects: Record<
       string,
       Pick<ProjectConfiguration, 'tags' | 'implicitDependencies'>

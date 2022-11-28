@@ -6,7 +6,7 @@ import {
   ProjectsConfigurations,
 } from './workspace-json-project-json';
 
-import type { NxJsonConfiguration } from './nx-json';
+import type { NxConfiguration } from './nx-json';
 import { Schema } from '../utils/params';
 /**
  * A callback function that is executed after changes are made to the file system
@@ -113,7 +113,7 @@ export interface HasherContext {
   hasher: Hasher;
   projectGraph: ProjectGraph<any>;
   taskGraph: TaskGraph;
-  workspaceConfig: ProjectsConfigurations & NxJsonConfiguration;
+  workspaceConfig: ProjectsConfigurations & NxConfiguration;
 }
 
 export type CustomHasher = (
@@ -172,7 +172,7 @@ export interface ExecutorContext {
   /**
    * The full workspace configuration
    */
-  workspace: ProjectsConfigurations & NxJsonConfiguration;
+  workspace: ProjectsConfigurations & NxConfiguration;
 
   /**
    * The current working directory

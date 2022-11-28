@@ -4,7 +4,7 @@ import type { NxArgs } from '../utils/command-line-utils';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { Task } from '../config/task-graph';
 import { ProcessTasks } from '../tasks-runner/create-task-graph';
-import { NxJsonConfiguration } from '../config/nx-json';
+import { NxConfiguration } from '../config/nx-json';
 import { Workspaces } from '../config/workspaces';
 import { Hasher } from '../hasher/hasher';
 import { hashTask } from '../hasher/hash-task';
@@ -14,7 +14,7 @@ import { getPackageManagerCommand } from '../utils/package-manager';
 export async function printAffected(
   affectedProjects: ProjectGraphProjectNode[],
   projectGraph: ProjectGraph,
-  { nxJson }: { nxJson: NxJsonConfiguration },
+  { nxJson }: { nxJson: NxConfiguration },
   nxArgs: NxArgs,
   overrides: yargs.Arguments
 ) {
@@ -47,7 +47,7 @@ async function createTasks(
   affectedProjectsWithTargetAndConfig: ProjectGraphProjectNode[],
   projectGraph: ProjectGraph,
   nxArgs: NxArgs,
-  nxJson: NxJsonConfiguration,
+  nxJson: NxConfiguration,
   overrides: yargs.Arguments
 ) {
   const workspaces = new Workspaces(workspaceRoot);

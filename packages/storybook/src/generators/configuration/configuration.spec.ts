@@ -1,5 +1,5 @@
 import {
-  NxJsonConfiguration,
+  NxConfiguration,
   readJson,
   readProjectConfiguration,
   Tree,
@@ -20,7 +20,7 @@ describe('@nrwl/storybook:configuration', () => {
 
     beforeEach(async () => {
       tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
+      updateJson<NxConfiguration>(tree, 'nx.json', (json) => {
         json.namedInputs = {
           production: ['default'],
         };

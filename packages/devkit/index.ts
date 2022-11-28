@@ -81,7 +81,7 @@ export type { Task, TaskGraph } from 'nx/src/config/task-graph';
 export type {
   ImplicitDependencyEntry,
   ImplicitJsonSubsetDependency,
-  NxJsonConfiguration,
+  NxConfiguration,
   NxAffectedConfig,
 } from 'nx/src/config/nx-json';
 

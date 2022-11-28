@@ -2,7 +2,7 @@ import * as yargsParser from 'yargs-parser';
 import type { Arguments } from 'yargs';
 import { TEN_MEGABYTES } from '../project-graph/file-utils';
 import { output } from './output';
-import { NxJsonConfiguration } from '../config/nx-json';
+import { NxConfiguration } from '../config/nx-json';
 import { execSync } from 'child_process';
 import { ProjectGraph } from '../config/project-graph';
 
@@ -39,7 +39,7 @@ export function splitArgsIntoNxArgsAndOverrides(
   args: { [k: string]: any },
   mode: 'run-one' | 'run-many' | 'affected' | 'print-affected',
   options = { printWarnings: true },
-  nxJson: NxJsonConfiguration
+  nxJson: NxConfiguration
 ): {
   nxArgs: NxArgs;
   overrides: Arguments & { __overrides_unparsed__: string[] };

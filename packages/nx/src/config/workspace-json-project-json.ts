@@ -1,6 +1,6 @@
-import type { NxJsonConfiguration } from './nx-json';
+import type { NxConfiguration } from './nx-json';
 
-export interface Workspace extends ProjectsConfigurations, NxJsonConfiguration {
+export interface Workspace extends ProjectsConfigurations, NxConfiguration {
   projects: Record<string, ProjectConfiguration>;
 }
 

@@ -11,7 +11,7 @@ import {
 } from './affected-project-graph-models';
 import { getTouchedProjectsInWorkspaceJson } from './locators/workspace-json-changes';
 import { getTouchedProjectsFromTsConfig } from './locators/tsconfig-json-changes';
-import { NxJsonConfiguration } from '../../config/nx-json';
+import { NxConfiguration } from '../../config/nx-json';
 import { ProjectGraph } from '../../config/project-graph';
 import { reverse } from '../operators';
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
@@ -23,7 +23,7 @@ import { workspaceRoot } from '../../utils/workspace-root';
 export function filterAffected(
   graph: ProjectGraph<ProjectConfiguration>,
   touchedFiles: FileChange[],
-  nxJson: NxJsonConfiguration = readNxJson(),
+  nxJson: NxConfiguration = readNxJson(),
   packageJson: any = readPackageJson()
 ): ProjectGraph {
   // Additional affected logic should be in this array.

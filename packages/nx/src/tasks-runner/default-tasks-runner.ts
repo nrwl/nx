@@ -4,7 +4,7 @@ import { performance } from 'perf_hooks';
 import { Hasher } from '../hasher/hasher';
 import { LifeCycle } from './life-cycle';
 import { ProjectGraph } from '../config/project-graph';
-import { NxJsonConfiguration } from '../config/nx-json';
+import { NxConfiguration } from '../config/nx-json';
 import { Task, TaskGraph } from '../config/task-graph';
 import { NxArgs } from '../utils/command-line-utils';
 import { DaemonClient } from '../daemon/client/client';
@@ -35,7 +35,7 @@ export const defaultTasksRunner: TasksRunner<
     target: string;
     initiatingProject?: string;
     projectGraph: ProjectGraph;
-    nxJson: NxJsonConfiguration;
+    nxJson: NxConfiguration;
     nxArgs: NxArgs;
     taskGraph: TaskGraph;
     hasher: Hasher;
@@ -69,7 +69,7 @@ async function runAllTasks(
   context: {
     initiatingProject?: string;
     projectGraph: ProjectGraph;
-    nxJson: NxJsonConfiguration;
+    nxJson: NxConfiguration;
     nxArgs: NxArgs;
     taskGraph: TaskGraph;
     hasher: Hasher;

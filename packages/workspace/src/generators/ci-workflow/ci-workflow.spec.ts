@@ -1,5 +1,5 @@
 import {
-  NxJsonConfiguration,
+  NxConfiguration,
   readJson,
   Tree,
   updateJson,
@@ -79,7 +79,7 @@ describe('lib', () => {
 });
 
 function setNxCloud(tree: Tree) {
-  updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
+  updateJson<NxConfiguration>(tree, 'nx.json', (json) => {
     return {
       ...json,
       tasksRunnerOptions: {

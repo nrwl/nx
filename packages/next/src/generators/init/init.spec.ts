@@ -1,5 +1,5 @@
 import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
-import { readJson, NxJsonConfiguration, Tree } from '@nrwl/devkit';
+import { readJson, NxConfiguration, Tree } from '@nrwl/devkit';
 
 import { nextInitGenerator } from './init';
 

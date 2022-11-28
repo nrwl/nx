@@ -1,5 +1,5 @@
 import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
-import type { NxJsonConfiguration, Tree } from '@nrwl/devkit';
+import type { NxConfiguration, Tree } from '@nrwl/devkit';
 import { getProjects, readJson } from '@nrwl/devkit';
 import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 
@@ -26,7 +26,7 @@ describe('app', () => {
         standaloneConfig: false,
       });
       const workspaceJson = readJson(tree, '/workspace.json');
-      const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
+      const nxJson = readJson<NxConfiguration>(tree, 'nx.json');
 
       expect(workspaceJson.projects['my-app'].root).toEqual('apps/my-app');
       expect(workspaceJson.projects['my-app-e2e'].root).toEqual(

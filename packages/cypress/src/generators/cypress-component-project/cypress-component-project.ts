@@ -9,7 +9,7 @@ import {
   Tree,
   updateJson,
   updateProjectConfiguration,
-  NxJsonConfiguration,
+  NxConfiguration,
   readWorkspaceConfiguration,
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';

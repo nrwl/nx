@@ -1,6 +1,6 @@
 import {
   getProjects,
-  NxJsonConfiguration,
+  NxConfiguration,
   parseJson,
   readJson,
   readProjectConfiguration,
@@ -318,7 +318,7 @@ describe('lib', () => {
 
     it('should check for existence of spec files before deleting them', async () => {
       // ARRANGE
-      updateJson<NxJsonConfiguration, NxJsonConfiguration>(
+      updateJson<NxConfiguration, NxConfiguration>(
         tree,
         '/nx.json',
         (nxJson) => {
@@ -1243,7 +1243,7 @@ describe('lib', () => {
         tree,
         'libs/my-lib/tsconfig.json'
       );
-      const { generators } = readJson<NxJsonConfiguration>(tree, 'nx.json');
+      const { generators } = readJson<NxConfiguration>(tree, 'nx.json');
 
       // check that the TypeScript compiler options have been updated
       expect(compilerOptions.forceConsistentCasingInFileNames).toBe(true);
@@ -1273,7 +1273,7 @@ describe('lib', () => {
       // ASSERT
       // check to see if the workspace configuration has been updated to turn off
       // strict mode by default in future libraries
-      const { generators } = readJson<NxJsonConfiguration>(tree, 'nx.json');
+      const { generators } = readJson<NxConfiguration>(tree, 'nx.json');
       expect(generators['@nrwl/angular:library'].strict).toBe(false);
     });
   });

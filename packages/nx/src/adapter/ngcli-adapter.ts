@@ -32,7 +32,7 @@ import { catchError, map, switchMap, toArray, tap } from 'rxjs/operators';
 import { NX_ERROR, NX_PREFIX } from '../utils/logger';
 import { readJsonFile } from '../utils/fileutils';
 import { parseJson, serializeJson } from '../utils/json';
-import { NxJsonConfiguration } from '../config/nx-json';
+import { NxConfiguration } from '../config/nx-json';
 import {
   ProjectConfiguration,
   RawProjectsConfigurations,
@@ -215,9 +215,9 @@ async function runSchematic(
 }
 
 type AngularJsonConfiguration = ProjectsConfigurations &
-  Pick<NxJsonConfiguration, 'cli' | 'defaultProject' | 'generators'> & {
-    schematics?: NxJsonConfiguration['generators'];
-    cli?: NxJsonConfiguration['cli'] & {
+  Pick<NxConfiguration, 'cli' | 'defaultProject' | 'generators'> & {
+    schematics?: NxConfiguration['generators'];
+    cli?: NxConfiguration['cli'] & {
       schematicCollections?: string[];
     };
   };
@@ -232,7 +232,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
     configFileName: ChangeContext['actualConfigFileName'],
     overrides?: {
       workspace?: Observable<RawProjectsConfigurations>;
-      nx?: Observable<NxJsonConfiguration>;
+      nx?: Observable<NxConfiguration>;
     }
   ): Observable<FileBuffer> => {
     const readJsonFile = (path: string) =>
@@ -241,7 +241,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
         .pipe(map((data) => JSON.parse(Buffer.from(data).toString())));
 
     const readWorkspaceJsonFile = (
-      nxJson: NxJsonConfiguration
+      nxJson: NxConfiguration
     ): Observable<RawProjectsConfigurations> => {
       if (overrides?.workspace) {
         return overrides.workspace;
@@ -284,11 +284,11 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
 
     return super.exists('nx.json' as Path).pipe(
       switchMap((nxJsonExists) => {
-        let nxJsonObservable: Observable<NxJsonConfiguration> = NEVER;
+        let nxJsonObservable: Observable<NxConfiguration> = NEVER;
         if (nxJsonExists) {
           nxJsonObservable = readNxJsonFile();
         } else {
-          nxJsonObservable = of({} as NxJsonConfiguration);
+          nxJsonObservable = of({} as NxConfiguration);
         }
         const workspaceJsonObservable: Observable<RawProjectsConfigurations> =
           nxJsonObservable.pipe(switchMap((x) => readWorkspaceJsonFile(x)));
@@ -483,7 +483,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
   }
 
   private __saveNxJsonProps(
-    props: Partial<NxJsonConfiguration>
+    props: Partial<NxConfiguration>
   ): Observable<void> {
     const nxJsonPath = 'nx.json' as Path;
     return super.read(nxJsonPath).pipe(
@@ -1217,7 +1217,7 @@ function saveWorkspaceConfigurationInWrappedSchematic(
       );
     }
   }
-  const nxJson: NxJsonConfiguration = parseJson(
+  const nxJson: NxConfiguration = parseJson(
     host.read('nx.json').toString()
   );
   nxJson.generators = workspace.generators || workspace.schematics;

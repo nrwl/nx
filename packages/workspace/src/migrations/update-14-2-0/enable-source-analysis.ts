@@ -1,12 +1,12 @@
 import {
   formatFiles,
-  NxJsonConfiguration,
+  NxConfiguration,
   Tree,
   updateJson,
 } from '@nrwl/devkit';
 
 export async function enableSourceAnalysis(tree: Tree) {
-  updateJson<NxJsonConfiguration>(tree, 'nx.json', (config) => {
+  updateJson<NxConfiguration>(tree, 'nx.json', (config) => {
     if (
       config.extends === 'nx/presets/core.json' ||
       config.extends === 'nx/presets/npm.json'

@@ -1,4 +1,4 @@
-import type { NxJsonConfiguration, Tree } from '@nrwl/devkit';
+import type { NxConfiguration, Tree } from '@nrwl/devkit';
 import { readJson } from '@nrwl/devkit';
 import Ajv from 'ajv';
 import { generateWorkspaceFiles } from './generate-workspace-files';
@@ -77,7 +77,7 @@ describe('@nrwl/workspace:generateWorkspaceFiles', () => {
       preset: Preset.Empty,
       defaultBase: 'main',
     });
-    const nxJson = readJson<NxJsonConfiguration>(tree, '/proj/nx.json');
+    const nxJson = readJson<NxConfiguration>(tree, '/proj/nx.json');
     expect(nxJson).toMatchInlineSnapshot(`
       Object {
         "$schema": "./node_modules/nx/schemas/nx-schema.json",
@@ -115,7 +115,7 @@ describe('@nrwl/workspace:generateWorkspaceFiles', () => {
       preset: Preset.ReactMonorepo,
       defaultBase: 'main',
     });
-    const nxJson = readJson<NxJsonConfiguration>(tree, '/proj/nx.json');
+    const nxJson = readJson<NxConfiguration>(tree, '/proj/nx.json');
     expect(nxJson).toMatchInlineSnapshot(`
       Object {
         "$schema": "./node_modules/nx/schemas/nx-schema.json",

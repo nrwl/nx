@@ -1,9 +1,9 @@
 import { Workspaces } from './workspaces';
 import { workspaceRoot } from '../utils/workspace-root';
-import { NxJsonConfiguration } from './nx-json';
+import { NxConfiguration } from './nx-json';
 import { ProjectsConfigurations } from './workspace-json-project-json';
 
-export function readNxJson(): NxJsonConfiguration {
+export function readNxJson(): NxConfiguration {
   return new Workspaces(workspaceRoot).readNxJson();
 }
 
@@ -12,7 +12,7 @@ export function readNxJson(): NxJsonConfiguration {
  * @deprecated Use readProjectsConfigurationFromProjectGraph(await createProjectGraphAsync())
  */
 export function readAllWorkspaceConfiguration(): ProjectsConfigurations &
-  NxJsonConfiguration {
+  NxConfiguration {
   return new Workspaces(workspaceRoot).readWorkspaceConfiguration();
 }
 

@@ -1,4 +1,4 @@
-import { NxJsonConfiguration } from '@nrwl/devkit';
+import { NxConfiguration } from '@nrwl/devkit';
 import { Tree, readJson, updateJson } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { reactNativeInitGenerator } from './init';
@@ -38,7 +38,7 @@ describe('init', () => {
 
   describe('babel config', () => {
     it('should create babel config if not present', async () => {
-      updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
+      updateJson<NxConfiguration>(tree, 'nx.json', (json) => {
         json.namedInputs = {
           sharedGlobals: ['{workspaceRoot}/exiting-file.json'],
         };
@@ -51,7 +51,7 @@ describe('init', () => {
       });
 
       expect(tree.exists('babel.config.json')).toBe(true);
-      const sharedGloabls = readJson<NxJsonConfiguration>(tree, 'nx.json')
+      const sharedGloabls = readJson<NxConfiguration>(tree, 'nx.json')
         .namedInputs.sharedGlobals;
       expect(sharedGloabls).toContain('{workspaceRoot}/exiting-file.json');
       expect(sharedGloabls).toContain('{workspaceRoot}/babel.config.json');

@@ -1,4 +1,4 @@
-import { NxJsonConfiguration, readJson, Tree, updateJson } from '@nrwl/devkit';
+import { NxConfiguration, readJson, Tree, updateJson } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
 import { cypressVersion } from '../../utils/versions';
@@ -33,7 +33,7 @@ describe('init', () => {
   });
 
   it('should setup e2e target defaults', async () => {
-    updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
+    updateJson<NxConfiguration>(tree, 'nx.json', (json) => {
       json.namedInputs ??= {};
       json.namedInputs.production = ['default'];
       return json;
@@ -42,7 +42,7 @@ describe('init', () => {
     cypressInitGenerator(tree, {});
 
     expect(
-      readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults.e2e
+      readJson<NxConfiguration>(tree, 'nx.json').targetDefaults.e2e
     ).toEqual({
       inputs: ['default', '^production'],
     });

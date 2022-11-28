@@ -1,5 +1,5 @@
 import * as devkit from '@nrwl/devkit';
-import { getProjects, NxJsonConfiguration, readJson, Tree } from '@nrwl/devkit';
+import { getProjects, NxConfiguration, readJson, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 
 // nx-ignore-next-line
@@ -38,7 +38,7 @@ describe('app', () => {
         standaloneConfig: false,
       });
       const workspaceJson = readJson(tree, '/workspace.json');
-      const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
+      const nxJson = readJson<NxConfiguration>(tree, 'nx.json');
       const project = workspaceJson.projects['my-node-app'];
       expect(project.root).toEqual('apps/my-node-app');
       expect(project.architect).toEqual(
@@ -198,7 +198,7 @@ describe('app', () => {
         standaloneConfig: false,
       });
       const workspaceJson = readJson(tree, '/workspace.json');
-      const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
+      const nxJson = readJson<NxConfiguration>(tree, 'nx.json');
 
       expect(workspaceJson.projects['my-dir-my-node-app'].root).toEqual(
         'apps/my-dir/my-node-app'

@@ -2,7 +2,7 @@ import { existsSync } from 'fs';
 import { ensureDirSync, renameSync } from 'fs-extra';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
-import { NxJsonConfiguration } from '../config/nx-json';
+import { NxConfiguration } from '../config/nx-json';
 import {
   FileData,
   ProjectFileMap,
@@ -83,7 +83,7 @@ export function readCache(): null | ProjectGraphCache {
 }
 
 export function createCache(
-  nxJson: NxJsonConfiguration<'*' | string[]>,
+  nxJson: NxConfiguration<'*' | string[]>,
   packageJsonDeps: Record<string, string>,
   projectGraph: ProjectGraph,
   tsConfig: { compilerOptions?: { paths?: { [p: string]: any } } },
@@ -146,7 +146,7 @@ export function shouldRecomputeWholeGraph(
   cache: ProjectGraphCache,
   packageJsonDeps: Record<string, string>,
   workspaceJson: ProjectsConfigurations,
-  nxJson: NxJsonConfiguration,
+  nxJson: NxConfiguration,
   tsConfig: { compilerOptions: { paths: { [k: string]: any } } }
 ): boolean {
   if (cache.version !== '5.0') {
