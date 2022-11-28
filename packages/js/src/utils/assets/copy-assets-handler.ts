@@ -1,4 +1,3 @@
-import type { Event } from '@parcel/watcher';
 import * as minimatch from 'minimatch';
 import * as path from 'path';
 import * as fse from 'fs-extra';

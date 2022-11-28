@@ -5,34 +5,55 @@ import * as fse from 'fs-extra';
 
 import { CopyAssetsHandler } from './copy-assets-handler';
 
-import * as nxClient from 'nx/src/daemon/client/client';
 import { Subject } from 'rxjs';
+import type { ChangedFile } from 'nx/src/daemon/client/client';
 
-const mockWatcher = new Subject<nxClient.ChangedFile>();
+const mockWatcher = new Subject<ChangedFile>();
 
-jest.mock('nx/src/daemon/client/client', (): Partial<typeof nxClient> => {
-  const original = jest.requireActual('nx/src/daemon/client/client');
+jest.mock(
+  'nx/src/daemon/client/client',
+  (): Partial<typeof import('nx/src/daemon/client/client')> => {
+    const original = jest.requireActual('nx/src/daemon/client/client');
+    return {
+      ...original,
+      daemonClient: {
+        registerFileWatcher: async (
+          config: unknown,
+          callback: (
+            err,
+            data: {
+              changedProjects: string[];
+              changedFiles: ChangedFile[];
+            }
+          ) => void
+        ) => {
+          mockWatcher.subscribe((data) => {
+            callback(null, {
+              changedProjects: [],
+              changedFiles: [data],
+            });
+          });
+          return () => {};
+        },
+      },
+    };
+  }
+);
+
+jest.mock('fs-extra', (): Partial<typeof import('fs-extra')> => {
+  const original = jest.requireActual('fs-extra');
   return {
     ...original,
-    daemonClient: {
-      registerFileWatcher: async (
-        config: unknown,
-        callback: (
-          err,
-          data: {
-            changedProjects: string[];
-            changedFiles: nxClient.ChangedFile[];
-          }
-        ) => void
-      ) => {
-        mockWatcher.subscribe((data) => {
-          callback(null, {
-            changedProjects: [],
-            changedFiles: [data],
-          });
-        });
-        return () => {};
-      },
+    existsSync: () => {
+      return true;
+    },
+    readFileSync: (path: string) => {
+      if (path.endsWith('.gitignore')) {
+        return 'git-ignore.md';
+      }
+      if (path.endsWith('.nxignore')) {
+        return 'nx-ignore.md';
+      }
     },
   };
 });
