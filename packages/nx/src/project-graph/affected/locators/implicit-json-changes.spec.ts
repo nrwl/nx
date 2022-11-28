@@ -1,7 +1,7 @@
 import { getImplicitlyTouchedProjectsByJsonChanges } from './implicit-json-changes';
 import { WholeFileChange } from '../../file-utils';
 import { JsonDiffType } from '../../../utils/json-diff';
-import { NxConfiguration } from '../../../config/nx-json';
+import { NxConfig } from '../../../config/nx-json';
 
 function getModifiedChange(path: string[]) {
   return {
@@ -16,7 +16,7 @@ function getModifiedChange(path: string[]) {
 
 describe('getImplicitlyTouchedProjectsByJsonChanges', () => {
   let workspaceJson;
-  let nxConfig: NxConfiguration<string[]>;
+  let nxConfig: NxConfig<string[]>;
   beforeEach(() => {
     workspaceJson = {};
     nxConfig = {

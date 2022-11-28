@@ -1,4 +1,4 @@
-import { NxConfiguration } from '../../../config/nx-json';
+import { NxConfig } from '../../../config/nx-json';
 import { ProjectGraph } from '../../../config/project-graph';
 import { JsonDiffType } from '../../../utils/json-diff';
 import { WholeFileChange } from '../../file-utils';
@@ -6,7 +6,7 @@ import { getTouchedNpmPackages } from './npm-packages';
 
 describe('getTouchedNpmPackages', () => {
   let workspaceJson;
-  let nxConfig: NxConfiguration<string[]>;
+  let nxConfig: NxConfig<string[]>;
   let projectGraph: ProjectGraph;
   beforeEach(() => {
     workspaceJson = {

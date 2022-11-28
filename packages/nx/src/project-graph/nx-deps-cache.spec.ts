@@ -6,7 +6,7 @@ import {
 } from './nx-deps-cache';
 import { ProjectGraph } from '../config/project-graph';
 import { WorkspaceJsonConfiguration } from '../config/workspace-json-project-json';
-import { NxConfiguration } from '../config/nx-json';
+import { NxConfig } from '../config/nx-json';
 
 describe('nx deps utils', () => {
   describe('shouldRecomputeWholeGraph', () => {
@@ -353,8 +353,8 @@ describe('nx deps utils', () => {
     return { ...defaults, ...p };
   }
 
-  function createNxJson(p: Partial<NxConfiguration>): NxConfiguration {
-    const defaults: NxConfiguration = {
+  function createNxJson(p: Partial<NxConfig>): NxConfig {
+    const defaults: NxConfig = {
       npmScope: '',
       workspaceLayout: {} as any,
       targetDependencies: {},

@@ -20,7 +20,7 @@ import {
 import { getLocalWorkspacePlugins } from '../utils/plugins/local-plugins';
 import { printHelp } from '../utils/print-help';
 import { workspaceRoot } from '../utils/workspace-root';
-import { NxConfiguration } from '../config/nx-json';
+import { NxConfig } from '../config/nx-json';
 
 export interface GenerateOptions {
   collectionName: string;
@@ -241,7 +241,7 @@ function throwInvalidInvocation(availableGenerators: string[]) {
   );
 }
 
-function readDefaultCollection(nxConfig: NxConfiguration) {
+function readDefaultCollection(nxConfig: NxConfig) {
   return nxConfig.cli ? nxConfig.cli.defaultCollection : null;
 }
 export function printGenHelp(

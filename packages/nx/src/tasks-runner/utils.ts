@@ -12,7 +12,7 @@ import { Task, TaskGraph } from '../config/task-graph';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { workspaceRoot } from '../utils/workspace-root';
-import { NxConfiguration } from '../config/nx-json';
+import { NxConfig } from '../config/nx-json';
 import { joinPathFragments } from '../utils/path';
 import { isRelativePath } from '../utils/fileutils';
 import { serializeOverridesIntoCommandLine } from '../utils/serialize-overrides-into-command-line';
@@ -200,7 +200,7 @@ export function interpolate(template: string, data: any): string {
 
 export function getExecutorNameForTask(
   task: Task,
-  nxConfig: NxConfiguration,
+  nxConfig: NxConfig,
   projectGraph: ProjectGraph
 ) {
   const project = projectGraph.nodes[task.target.project].data;
@@ -228,7 +228,7 @@ export function getExecutorForTask(
   task: Task,
   workspace: Workspaces,
   projectGraph: ProjectGraph,
-  nxConfig: NxConfiguration
+  nxConfig: NxConfig
 ) {
   const executor = getExecutorNameForTask(task, nxConfig, projectGraph);
   const [nodeModule, executorName] = executor.split(':');
@@ -239,7 +239,7 @@ export function getExecutorForTask(
 export function getCustomHasher(
   task: Task,
   workspace: Workspaces,
-  nxConfig: NxConfiguration,
+  nxConfig: NxConfig,
   projectGraph: ProjectGraph
 ) {
   const factory = getExecutorForTask(

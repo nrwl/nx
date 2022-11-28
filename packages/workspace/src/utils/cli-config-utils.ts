@@ -2,7 +2,7 @@ import { Tree } from '@angular-devkit/schematics';
 
 import { readJsonInTree } from './ast-utils';
 
-import type { NxConfiguration } from '@nrwl/devkit';
+import type { NxConfig } from '@nrwl/devkit';
 
 export function getWorkspacePath(host: Tree) {
   const possibleFiles = ['/angular.json', '/workspace.json'];
@@ -10,7 +10,7 @@ export function getWorkspacePath(host: Tree) {
 }
 
 export function getNpmScope(host: Tree): string {
-  return readJsonInTree<NxConfiguration>(host, 'nx.json').npmScope;
+  return readJsonInTree<NxConfig>(host, 'nx.json').npmScope;
 }
 
 export function parseTarget(targetString: string) {

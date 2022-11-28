@@ -1,4 +1,4 @@
-import type { NxConfiguration } from '@nrwl/devkit';
+import type { NxConfig } from '@nrwl/devkit';
 import {
   getPackageManagerCommand,
   isNotWindows,
@@ -179,7 +179,7 @@ describe('Nx Affected and Graph Tests', () => {
       myapp = uniq('myapp');
       myapp2 = uniq('myapp');
       mylib = uniq('mylib');
-      const nxConfig: NxConfiguration = readNxConfig();
+      const nxConfig: NxConfig = readNxConfig();
 
       delete nxConfig.implicitDependencies;
 

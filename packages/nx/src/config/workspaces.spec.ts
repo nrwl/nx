@@ -1,5 +1,5 @@
 import { toProjectName, Workspaces } from './workspaces';
-import { NxConfiguration } from './nx-json';
+import { NxConfig } from './nx-json';
 import { vol } from 'memfs';
 
 import * as fastGlob from 'fast-glob';
@@ -102,7 +102,7 @@ describe('Workspaces', () => {
 
   describe('to project name', () => {
     it('should lowercase names', () => {
-      const nxConfig: NxConfiguration = {
+      const nxConfig: NxConfig = {
         npmScope: '',
         workspaceLayout: {
           appsDir: 'my-apps',

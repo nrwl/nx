@@ -1,5 +1,5 @@
 import { basename, dirname, join, relative } from 'path';
-import type { NxConfiguration } from '../../config/nx-json';
+import type { NxConfig } from '../../config/nx-json';
 import {
   ProjectConfiguration,
   RawProjectsConfigurations,
@@ -20,7 +20,7 @@ import type { Tree } from '../tree';
 import { readJson, updateJson, writeJson } from './json';
 
 export type WorkspaceConfiguration = Omit<ProjectsConfigurations, 'projects'> &
-  Partial<NxConfiguration>;
+  Partial<NxConfig>;
 
 /**
  * Adds project configuration to the Nx workspace.
@@ -141,7 +141,7 @@ export function updateWorkspaceConfiguration(
     extends: ext,
   } = workspaceConfig;
 
-  const nxConfig: Required<NxConfiguration> = {
+  const nxConfig: Required<NxConfig> = {
     implicitDependencies,
     plugins,
     pluginsConfig,
@@ -159,7 +159,7 @@ export function updateWorkspaceConfiguration(
   };
 
   if (tree.exists('nx.json')) {
-    updateJson<NxConfiguration>(tree, 'nx.json', (json) => {
+    updateJson<NxConfig>(tree, 'nx.json', (json) => {
       if (json.extends) {
         const nxJsonExtends = readNxJsonExtends(tree, json.extends);
         const changedPropsOfNxJson = {};
@@ -240,11 +240,11 @@ export function readProjectConfiguration(
   return getProjectConfiguration(projectName, workspace);
 }
 
-export function readNxJson(tree: Tree): NxConfiguration | null {
+export function readNxJson(tree: Tree): NxConfig | null {
   if (!tree.exists('nx.json')) {
     return null;
   }
-  let nxConfig = readJson<NxConfiguration>(tree, 'nx.json');
+  let nxConfig = readJson<NxConfig>(tree, 'nx.json');
   if (nxConfig.extends) {
     nxConfig = { ...readNxJsonExtends(tree, nxConfig.extends), ...nxConfig };
   }

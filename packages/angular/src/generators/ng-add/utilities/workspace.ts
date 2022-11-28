@@ -1,4 +1,4 @@
-import type { NxConfiguration, Tree } from '@nrwl/devkit';
+import type { NxConfig, Tree } from '@nrwl/devkit';
 import {
   generateFiles,
   joinPathFragments,
@@ -49,7 +49,7 @@ export function createNxJson(
   const { newProjectRoot = '' } = readJson(tree, 'angular.json');
   const { npmScope } = options;
 
-  writeJson<NxConfiguration>(tree, 'nx.json', {
+  writeJson<NxConfig>(tree, 'nx.json', {
     ...(npmScope ? { npmScope } : {}),
     affected: {
       defaultBase: options.defaultBase ?? deduceDefaultBase(),

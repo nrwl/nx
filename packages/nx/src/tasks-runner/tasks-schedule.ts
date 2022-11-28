@@ -10,7 +10,7 @@ import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { Hasher } from '../hasher/hasher';
 import { Task, TaskGraph } from '../config/task-graph';
 import { ProjectGraph } from '../config/project-graph';
-import { NxConfiguration } from '../config/nx-json';
+import { NxConfig } from '../config/nx-json';
 import { hashTask } from '../hasher/hash-task';
 import { findAllProjectNodeDependencies } from '../utils/project-graph-utils';
 import { reverse } from '../project-graph/operators';
@@ -32,7 +32,7 @@ export class TasksSchedule {
 
   constructor(
     private readonly hasher: Hasher,
-    private readonly nxConfig: NxConfiguration,
+    private readonly nxConfig: NxConfig,
     private readonly projectGraph: ProjectGraph,
     private readonly taskGraph: TaskGraph,
     private readonly workspaces: Workspaces,

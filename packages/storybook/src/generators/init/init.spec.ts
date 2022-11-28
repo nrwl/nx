@@ -1,6 +1,6 @@
 import {
   addDependenciesToPackageJson,
-  NxConfiguration,
+  NxConfig,
   readJson,
   Tree,
 } from '@nrwl/devkit';
@@ -355,7 +355,7 @@ describe('@nrwl/storybook:init', () => {
       await initGenerator(tree, {
         uiFramework: '@storybook/html',
       });
-      const nxConfig = readJson<NxConfiguration>(tree, 'nx.json');
+      const nxConfig = readJson<NxConfig>(tree, 'nx.json');
       expect(
         nxConfig.tasksRunnerOptions.default.options.cacheableOperations
       ).toContain('build-storybook');
@@ -365,7 +365,7 @@ describe('@nrwl/storybook:init', () => {
       await initGenerator(tree, {
         uiFramework: '@storybook/web-components',
       });
-      const nxConfig = readJson<NxConfiguration>(tree, 'nx.json');
+      const nxConfig = readJson<NxConfig>(tree, 'nx.json');
       expect(
         nxConfig.tasksRunnerOptions.default.options.cacheableOperations
       ).toContain('build-storybook');
@@ -375,7 +375,7 @@ describe('@nrwl/storybook:init', () => {
       await initGenerator(tree, {
         uiFramework: '@storybook/vue',
       });
-      const nxConfig = readJson<NxConfiguration>(tree, 'nx.json');
+      const nxConfig = readJson<NxConfig>(tree, 'nx.json');
       expect(
         nxConfig.tasksRunnerOptions.default.options.cacheableOperations
       ).toContain('build-storybook');

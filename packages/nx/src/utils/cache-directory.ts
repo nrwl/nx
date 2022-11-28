@@ -1,11 +1,11 @@
 import { join, isAbsolute } from 'path';
 import { workspaceRoot } from './workspace-root';
 import { readJsonFile } from './fileutils';
-import { NxConfiguration } from '../config/nx-json';
+import { NxConfig } from '../config/nx-json';
 
 function readCacheDirectoryProperty(root: string): string | undefined {
   try {
-    const nxConfig = readJsonFile<NxConfiguration>(join(root, 'nx.json'));
+    const nxConfig = readJsonFile<NxConfig>(join(root, 'nx.json'));
     return nxConfig.tasksRunnerOptions.default.options.cacheDirectory;
   } catch {
     return undefined;

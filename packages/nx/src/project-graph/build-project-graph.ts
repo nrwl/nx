@@ -28,7 +28,7 @@ import {
   ProjectGraphProcessorContext,
 } from '../config/project-graph';
 import { readJsonFile } from '../utils/fileutils';
-import { NxConfiguration } from '../config/nx-json';
+import { NxConfig } from '../config/nx-json';
 import { logger } from '../utils/logger';
 import { ProjectGraphBuilder } from './project-graph-builder';
 import {
@@ -165,7 +165,7 @@ function isolatePartialGraphFromCache(cache: ProjectGraphCache): ProjectGraph {
 }
 
 async function buildProjectGraphUsingContext(
-  nxConfig: NxConfiguration,
+  nxConfig: NxConfig,
   ctx: ProjectGraphProcessorContext,
   cachedFileData: { [project: string]: { [file: string]: FileData } },
   projectGraphVersion: string,
@@ -217,7 +217,7 @@ interface NrwlJsPluginConfig {
 }
 
 function jsPluginConfig(
-  nxConfig: NxConfiguration,
+  nxConfig: NxConfig,
   packageJsonDeps: { [packageName: string]: string }
 ): NrwlJsPluginConfig {
   if (nxConfig?.pluginsConfig?.['@nrwl/js']) {
@@ -410,7 +410,7 @@ function getNumberOfWorkers(): number {
 
 function createContext(
   projectsConfigurations: ProjectsConfigurations,
-  nxConfig: NxConfiguration,
+  nxConfig: NxConfig,
   fileMap: ProjectFileMap,
   filesToProcess: ProjectFileMap
 ): ProjectGraphProcessorContext {

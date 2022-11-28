@@ -1,9 +1,9 @@
 import { TasksRunner } from './tasks-runner';
 import { getRunner } from './run-command';
-import { NxConfiguration } from '../config/nx-json';
+import { NxConfig } from '../config/nx-json';
 
 describe('getRunner', () => {
-  let nxConfig: NxConfiguration;
+  let nxConfig: NxConfig;
   let mockRunner: TasksRunner;
   let overrides: any;
 

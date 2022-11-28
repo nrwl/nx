@@ -5,7 +5,7 @@ import {
   joinPathFragments,
   getPackageManagerCommand,
   readJson,
-  NxConfiguration,
+  NxConfig,
   formatFiles,
   writeJson,
 } from '@nrwl/devkit';
@@ -20,7 +20,7 @@ export async function ciWorkflowGenerator(host: Tree, schema: Schema) {
   const ci = schema.ci;
   const options = normalizeOptions(schema);
 
-  const nxConfig: NxConfiguration = readJson(host, 'nx.json');
+  const nxConfig: NxConfig = readJson(host, 'nx.json');
   const nxCloudUsed = Object.values(nxConfig.tasksRunnerOptions).find(
     (r) => r.runner == '@nrwl/nx-cloud'
   );
@@ -61,11 +61,11 @@ function normalizeOptions(options: Schema): Substitutes {
   };
 }
 
-function defaultBranchNeedsOriginPrefix(nxConfig: NxConfiguration): boolean {
+function defaultBranchNeedsOriginPrefix(nxConfig: NxConfig): boolean {
   return !nxConfig.affected?.defaultBase?.startsWith('origin/');
 }
 
-function appendOriginPrefix(nxConfig: NxConfiguration): NxConfiguration {
+function appendOriginPrefix(nxConfig: NxConfig): NxConfig {
   return {
     ...nxConfig,
     affected: {

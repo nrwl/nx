@@ -1,5 +1,5 @@
 import type { Change, FileChange } from '../file-utils';
-import { NxConfiguration } from '../../config/nx-json';
+import { NxConfig } from '../../config/nx-json';
 import {
   ProjectGraph,
   ProjectGraphProjectNode,
@@ -11,7 +11,7 @@ export interface AffectedProjectGraphContext {
     string,
     ProjectGraphProjectNode<ProjectConfiguration>
   >;
-  nxConfig: NxConfiguration<any>;
+  nxConfig: NxConfig<any>;
   touchedProjects: string[];
 }
 
@@ -22,7 +22,7 @@ export interface TouchedProjectLocator<T extends Change = Change> {
       string,
       ProjectGraphProjectNode<ProjectConfiguration>
     >,
-    nxConfig?: NxConfiguration<any>,
+    nxConfig?: NxConfig<any>,
     packageJson?: any,
     projectGraph?: ProjectGraph
   ): string[];

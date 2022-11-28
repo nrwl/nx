@@ -1,4 +1,4 @@
-import { Tree, readJson, NxConfiguration, updateJson } from '@nrwl/devkit';
+import { Tree, readJson, NxConfig, updateJson } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
 import { webpackInitGenerator } from './init';
@@ -11,7 +11,7 @@ describe('webpackInitGenerator', () => {
   });
 
   it('should support babel', async () => {
-    updateJson<NxConfiguration>(tree, 'nx.json', (json) => {
+    updateJson<NxConfig>(tree, 'nx.json', (json) => {
       json.namedInputs = {
         sharedGlobals: ['{workspaceRoot}/exiting-file.json'],
       };
@@ -21,7 +21,7 @@ describe('webpackInitGenerator', () => {
     await webpackInitGenerator(tree, { compiler: 'babel' });
 
     expect(tree.exists('babel.config.json'));
-    const sharedGlobals = readJson<NxConfiguration>(tree, 'nx.json')
+    const sharedGlobals = readJson<NxConfig>(tree, 'nx.json')
       .namedInputs.sharedGlobals;
     expect(sharedGlobals).toContain('{workspaceRoot}/exiting-file.json');
     expect(sharedGlobals).toContain('{workspaceRoot}/babel.config.json');

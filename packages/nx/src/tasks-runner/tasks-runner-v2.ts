@@ -4,7 +4,7 @@ import {
 } from './default-tasks-runner';
 import { TaskStatus } from './tasks-runner';
 import { ProjectGraph } from '../config/project-graph';
-import { NxConfiguration } from '../config/nx-json';
+import { NxConfig } from '../config/nx-json';
 import { Task } from '../config/task-graph';
 import { NxArgs } from '../utils/command-line-utils';
 
@@ -24,7 +24,7 @@ export const tasksRunnerV2 = (
     target: string;
     initiatingProject?: string;
     projectGraph: ProjectGraph;
-    nxConfig: NxConfiguration;
+    nxConfig: NxConfig;
     nxArgs: NxArgs;
   }
 ): any => {

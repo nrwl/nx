@@ -10,14 +10,14 @@ import { mergeNpmScriptsWithTargets } from '../../utils/project-graph-utils';
 import { ProjectGraphBuilder } from '../project-graph-builder';
 import { PackageJson } from '../../utils/package-json';
 import { readJsonFile } from '../../utils/fileutils';
-import { NxConfiguration } from '../../config/nx-json';
+import { NxConfig } from '../../config/nx-json';
 import { TargetConfiguration } from '../../config/workspace-json-project-json';
 import { NX_PREFIX } from '../../utils/logger';
 
 export function buildWorkspaceProjectNodes(
   ctx: ProjectGraphProcessorContext,
   builder: ProjectGraphBuilder,
-  nxConfig: NxConfiguration
+  nxConfig: NxConfig
 ) {
   const toAdd = [];
   Object.keys(ctx.workspace.projects).forEach((key) => {
@@ -95,7 +95,7 @@ export function buildWorkspaceProjectNodes(
  */
 function normalizeProjectTargets(
   targets: Record<string, TargetConfiguration>,
-  defaultTargets: NxConfiguration['targetDefaults'],
+  defaultTargets: NxConfig['targetDefaults'],
   projectName: string
 ) {
   for (const targetName in defaultTargets) {

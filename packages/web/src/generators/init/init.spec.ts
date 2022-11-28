@@ -1,6 +1,6 @@
 import {
   addDependenciesToPackageJson,
-  NxConfiguration,
+  NxConfig,
   readJson,
   Tree,
   updateJson,

@@ -8,7 +8,7 @@ import {
   ProjectGraphDependency,
   ProjectGraphProjectNode,
 } from '../config/project-graph';
-import { NxConfiguration } from '../config/nx-json';
+import { NxConfig } from '../config/nx-json';
 import { Task } from '../config/task-graph';
 import { readJsonFile } from '../utils/fileutils';
 import { InputDefinition } from '../config/workspace-json-project-json';
@@ -60,7 +60,7 @@ export class Hasher {
 
   constructor(
     private readonly projectGraph: ProjectGraph,
-    private readonly nxConfig: NxConfiguration,
+    private readonly nxConfig: NxConfig,
     private readonly options: any,
     hashing: HashingImpl = undefined
   ) {
@@ -206,7 +206,7 @@ class TaskHasher {
   } = {};
 
   constructor(
-    private readonly nxConfig: NxConfiguration,
+    private readonly nxConfig: NxConfig,
     private readonly legacyRuntimeInputs: { runtime: string }[],
     private readonly legacyFilesetInputs: { fileset: string }[],
     private readonly projectGraph: ProjectGraph,

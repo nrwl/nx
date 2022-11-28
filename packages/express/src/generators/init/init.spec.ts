@@ -1,7 +1,7 @@
 import {
   addDependenciesToPackageJson,
   readJson,
-  NxConfiguration,
+  NxConfig,
   Tree,
 } from '@nrwl/devkit';
 import { expressVersion } from '../../utils/versions';

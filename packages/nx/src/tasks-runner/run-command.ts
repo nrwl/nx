@@ -15,7 +15,7 @@ import { isCI } from '../utils/is-ci';
 import { createRunOneDynamicOutputRenderer } from './life-cycles/dynamic-run-one-terminal-output-life-cycle';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import {
-  NxConfiguration,
+  NxConfig,
   TargetDefaults,
   TargetDependencies,
 } from '../config/nx-json';
@@ -107,7 +107,7 @@ async function hashTasksThatDontDependOnOtherTasks(
 export async function runCommand(
   projectsToRun: ProjectGraphProjectNode[],
   projectGraph: ProjectGraph,
-  { nxConfig }: { nxConfig: NxConfiguration },
+  { nxConfig }: { nxConfig: NxConfig },
   nxArgs: NxArgs,
   overrides: any,
   initiatingProject: string | null,
@@ -291,7 +291,7 @@ function shouldUseDynamicLifeCycle(
 
 export function getRunner(
   nxArgs: NxArgs,
-  nxConfig: NxConfiguration
+  nxConfig: NxConfig
 ): {
   tasksRunner: TasksRunner;
   runnerOptions: any;

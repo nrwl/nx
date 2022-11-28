@@ -2,7 +2,7 @@ import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version
 import type { Tree } from '@nrwl/devkit';
 import * as devkit from '@nrwl/devkit';
 import {
-  NxConfiguration,
+  NxConfig,
   parseJson,
   readJson,
   readProjectConfiguration,
@@ -913,7 +913,7 @@ describe('app', () => {
       }
 
       // should not update workspace configuration since --strict=true is the default
-      const nxConfig = readJson<NxConfiguration>(appTree, 'nx.json');
+      const nxConfig = readJson<NxConfig>(appTree, 'nx.json');
       expect(
         nxConfig.generators['@nrwl/angular:application'].strict
       ).not.toBeDefined();
@@ -924,7 +924,7 @@ describe('app', () => {
 
       // check to see if the workspace configuration has been updated to turn off
       // strict mode by default in future applications
-      const nxConfig = readJson<NxConfiguration>(appTree, 'nx.json');
+      const nxConfig = readJson<NxConfig>(appTree, 'nx.json');
       expect(nxConfig.generators['@nrwl/angular:application'].strict).toBe(false);
     });
   });

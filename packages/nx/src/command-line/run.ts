@@ -5,7 +5,7 @@ import {
 } from '../utils/params';
 import { printHelp } from '../utils/print-help';
 import { Workspaces } from '../config/workspaces';
-import { NxConfiguration } from '../config/nx-json';
+import { NxConfig } from '../config/nx-json';
 import { readJsonFile } from '../utils/fileutils';
 import { buildTargetFromScript, PackageJson } from '../utils/package-json';
 import { join } from 'path';
@@ -135,7 +135,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
   overrides: { [k: string]: any },
   root: string,
   cwd: string,
-  workspace: ProjectsConfigurations & NxConfiguration,
+  workspace: ProjectsConfigurations & NxConfig,
   projectGraph: ProjectGraph,
   isVerbose: boolean,
   printHelp: boolean

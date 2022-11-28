@@ -1,6 +1,6 @@
 import {
   addProjectConfiguration,
-  NxConfiguration,
+  NxConfig,
   ProjectConfiguration,
   readProjectConfiguration,
   Tree,
@@ -66,7 +66,7 @@ describe('normalizeSchema', () => {
   });
 
   it('should honor custom workspace layouts', async () => {
-    updateJson<NxConfiguration>(tree, 'nx.json', (json) => {
+    updateJson<NxConfig>(tree, 'nx.json', (json) => {
       json.workspaceLayout = { appsDir: 'apps', libsDir: 'packages' };
       return json;
     });

@@ -1,5 +1,5 @@
 import { logger } from './logger';
-import { NxConfiguration } from '../config/nx-json';
+import { NxConfig } from '../config/nx-json';
 import {
   TargetConfiguration,
   ProjectsConfigurations,
@@ -571,7 +571,7 @@ export async function combineOptionsForGenerator(
   commandLineOpts: Options,
   collectionName: string,
   generatorName: string,
-  wc: (ProjectsConfigurations & NxConfiguration) | null,
+  wc: (ProjectsConfigurations & NxConfig) | null,
   schema: Schema,
   isInteractive: boolean,
   defaultProjectName: string | null,
@@ -677,7 +677,7 @@ export function convertSmartDefaultsIntoNamedParams(
 
 function getGeneratorDefaults(
   projectName: string | null,
-  wc: (ProjectsConfigurations & NxConfiguration) | null,
+  wc: (ProjectsConfigurations & NxConfig) | null,
   collectionName: string,
   generatorName: string
 ) {
@@ -722,7 +722,7 @@ interface Prompt {
 export function getPromptsForSchema(
   opts: Options,
   schema: Schema,
-  wc: (ProjectsConfigurations & NxConfiguration) | null
+  wc: (ProjectsConfigurations & NxConfig) | null
 ): Prompt[] {
   const prompts: Prompt[] = [];
   Object.entries(schema.properties).forEach(([k, v]) => {
@@ -800,7 +800,7 @@ export function getPromptsForSchema(
 async function promptForValues(
   opts: Options,
   schema: Schema,
-  wc: (ProjectsConfigurations & NxConfiguration) | null
+  wc: (ProjectsConfigurations & NxConfig) | null
 ) {
   return await (
     await import('enquirer')

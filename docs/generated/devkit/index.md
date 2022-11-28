@@ -76,7 +76,7 @@ It only uses language primitives and immutable objects
 - [ImplicitJsonSubsetDependency](../../devkit/index#implicitjsonsubsetdependency)
 - [MigrationsJson](../../devkit/index#migrationsjson)
 - [NxAffectedConfig](../../devkit/index#nxaffectedconfig)
-- [NxConfiguration](../../devkit/index#NxConfiguration)
+- [NxConfig](../../devkit/index#NxConfig)
 - [ProjectConfiguration](../../devkit/index#projectconfiguration)
 - [ProjectsConfigurations](../../devkit/index#projectsconfigurations)
 - [TargetConfiguration](../../devkit/index#targetconfiguration)
@@ -440,9 +440,9 @@ A plugin for Nx
 
 ---
 
-### NxConfiguration
+### NxConfig
 
-• **NxConfiguration**<`T`\>: `Object`
+• **NxConfig**<`T`\>: `Object`
 
 #### Type parameters
 
@@ -502,7 +502,7 @@ A plugin for Nx
 
 ### WorkspaceConfiguration
 
-Ƭ **WorkspaceConfiguration**: `Omit`<[`ProjectsConfigurations`](../../devkit/index#projectsconfigurations), `"projects"`\> & `Partial`<[`NxConfiguration`](../../devkit/index#NxConfiguration)\>
+Ƭ **WorkspaceConfiguration**: `Omit`<[`ProjectsConfigurations`](../../devkit/index#projectsconfigurations), `"projects"`\> & `Partial`<[`NxConfig`](../../devkit/index#NxConfig)\>
 
 ---
 
@@ -1116,7 +1116,7 @@ stored in the daemon process. To reset both run: `nx reset`.
 | `context.hasher?`            | [`Hasher`](../../devkit/index#hasher)                                                 |
 | `context.initiatingProject?` | `string`                                                                              |
 | `context.nxArgs`             | `NxArgs`                                                                              |
-| `context.nxConfig`             | [`NxConfiguration`](../../devkit/index#NxConfiguration)<`string`[] \| `"*"`\> |
+| `context.nxConfig`             | [`NxConfig`](../../devkit/index#NxConfig)<`string`[] \| `"*"`\> |
 | `context.projectGraph`       | [`ProjectGraph`](../../devkit/index#projectgraph)<`any`\>                             |
 | `context.target?`            | `string`                                                                              |
 | `context.taskGraph?`         | [`TaskGraph`](../../devkit/index#taskgraph)                                           |
@@ -1668,13 +1668,13 @@ parseTargetString('proj:test:production'); // returns { project: "proj", target:
 
 ### readAllWorkspaceConfiguration
 
-▸ **readAllWorkspaceConfiguration**(): [`ProjectsConfigurations`](../../devkit/index#projectsconfigurations) & [`NxConfiguration`](../../devkit/index#NxConfiguration)
+▸ **readAllWorkspaceConfiguration**(): [`ProjectsConfigurations`](../../devkit/index#projectsconfigurations) & [`NxConfig`](../../devkit/index#NxConfig)
 
 **`deprecated`** Use readProjectsConfigurationFromProjectGraph(await createProjectGraphAsync())
 
 #### Returns
 
-[`ProjectsConfigurations`](../../devkit/index#projectsconfigurations) & [`NxConfiguration`](../../devkit/index#NxConfiguration)
+[`ProjectsConfigurations`](../../devkit/index#projectsconfigurations) & [`NxConfig`](../../devkit/index#NxConfig)
 
 ---
 
@@ -1747,11 +1747,11 @@ Object the JSON content of the file represents
 
 ### readNxJson
 
-▸ **readNxJson**(): [`NxConfiguration`](../../devkit/index#NxConfiguration)
+▸ **readNxJson**(): [`NxConfig`](../../devkit/index#NxConfig)
 
 #### Returns
 
-[`NxConfiguration`](../../devkit/index#NxConfiguration)
+[`NxConfig`](../../devkit/index#NxConfig)
 
 ---
 

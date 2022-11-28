@@ -3,7 +3,7 @@ import { execSync } from 'child_process';
 import { existsSync, readFileSync } from 'fs';
 import { extname, join, relative, sep } from 'path';
 import { readNxJson } from '../config/configuration';
-import { NxConfiguration } from '../config/nx-json';
+import { NxConfig } from '../config/nx-json';
 import { FileData } from '../config/project-graph';
 import { ProjectsConfigurations } from '../config/workspace-json-project-json';
 import type { NxArgs } from '../utils/command-line-utils';
@@ -134,8 +134,8 @@ function defaultReadFileAtRevision(
 export function readWorkspaceConfig(opts: {
   format: 'angularCli' | 'nx';
   path?: string;
-}): ProjectsConfigurations & NxConfiguration {
-  let configuration: (ProjectsConfigurations & NxConfiguration) | null;
+}): ProjectsConfigurations & NxConfig {
+  let configuration: (ProjectsConfigurations & NxConfig) | null;
   try {
     const projectGraph = readCachedProjectGraph();
     configuration = {

@@ -26,7 +26,7 @@ import {
 } from '@nrwl/devkit';
 import { getWorkspacePath } from './cli-config-utils';
 import { extname, join, normalize, Path } from '@angular-devkit/core';
-import type { NxConfiguration, ProjectsConfigurations } from '@nrwl/devkit';
+import type { NxConfig, ProjectsConfigurations } from '@nrwl/devkit';
 import { addInstallTask } from './rules/add-install-task';
 import { findNodes } from 'nx/src/utils/typescript';
 import { getSourceNodes } from '../utilities/typescript/get-source-nodes';
@@ -430,24 +430,24 @@ export function updateWorkspaceInTree<
 }
 
 export function readNxJsonInTree(host: Tree) {
-  return readJsonInTree<NxConfiguration>(host, 'nx.json');
+  return readJsonInTree<NxConfig>(host, 'nx.json');
 }
 
 export function libsDir(host: Tree) {
-  const json = readJsonInTree<NxConfiguration>(host, 'nx.json');
+  const json = readJsonInTree<NxConfig>(host, 'nx.json');
   return json?.workspaceLayout?.libsDir ?? 'libs';
 }
 
 export function appsDir(host: Tree) {
-  const json = readJsonInTree<NxConfiguration>(host, 'nx.json');
+  const json = readJsonInTree<NxConfig>(host, 'nx.json');
   return json?.workspaceLayout?.appsDir ?? 'apps';
 }
 
 export function updateNxJsonInTree(
   callback: (
-    json: NxConfiguration,
+    json: NxConfig,
     context: SchematicContext
-  ) => NxConfiguration
+  ) => NxConfig
 ): Rule {
   return (host: Tree, context: SchematicContext): Tree => {
     host.overwrite(

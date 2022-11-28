@@ -1,5 +1,5 @@
 import {
-  NxConfiguration,
+  NxConfig,
   ProjectConfiguration,
   readJson,
   writeJson,
@@ -10,7 +10,7 @@ import {
 } from '@nrwl/devkit';
 
 export default async function update(host: Tree) {
-  const nxConfig = readJson(host, 'nx.json') as NxConfiguration & {
+  const nxConfig = readJson(host, 'nx.json') as NxConfig & {
     projects: Record<
       string,
       Pick<ProjectConfiguration, 'tags' | 'implicitDependencies'>

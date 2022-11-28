@@ -1,7 +1,7 @@
 import * as devkit from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { karmaGenerator } from './karma';
-import { NxConfiguration, readJson, updateJson } from '@nrwl/devkit';
+import { NxConfig, readJson, updateJson } from '@nrwl/devkit';
 
 describe('karma', () => {
   let tree: devkit.Tree;
@@ -60,14 +60,14 @@ describe('karma', () => {
   });
 
   it('should add inputs for test targets', () => {
-    updateJson<NxConfiguration>(tree, 'nx.json', (json) => {
+    updateJson<NxConfig>(tree, 'nx.json', (json) => {
       json.namedInputs ??= {};
       json.namedInputs.production = ['default', '^production'];
       return json;
     });
     karmaGenerator(tree, {});
 
-    const nxConfig = readJson<NxConfiguration>(tree, 'nx.json');
+    const nxConfig = readJson<NxConfig>(tree, 'nx.json');
     expect(nxConfig.namedInputs.production).toContain(
       '!{projectRoot}/karma.conf.js'
     );
