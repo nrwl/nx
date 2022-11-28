@@ -5,41 +5,20 @@ import {
   TargetConfiguration,
   Tree,
   updateJson,
-  updateProjectConfiguration,
   writeJson,
 } from '@nrwl/devkit';
-import { basename, dirname } from 'path';
+import { dirname } from 'path';
 import { findEslintFile } from '../utils/eslint-file';
 import { getGlobalEsLintConfiguration } from './global-eslint-config';
-
-const FILE_EXTENSION_REGEX = /(?<!(^|\/))(\.[^/.]+)$/;
 
 export function migrateConfigToMonorepoStyle(
   projects: ProjectConfiguration[],
   tree: Tree,
   unitTestRunner: string
 ): void {
-  // copy the root's .eslintrc.json to new name
-  const rootProject = projects.find((p) => p.root === '.');
-  const eslintPath =
-    rootProject.targets?.lint?.options?.eslintConfig || findEslintFile(tree);
-  const pathSegments = eslintPath.split(FILE_EXTENSION_REGEX).filter(Boolean);
-  const rootProjEslintPath =
-    pathSegments.length > 1
-      ? pathSegments.join(`.${rootProject.name}`)
-      : `.${rootProject.name}.${rootProject.name}`;
-  tree.write(rootProjEslintPath, tree.read(eslintPath));
-
-  // update root project's configuration
-  const lintTarget = findLintTarget(rootProject);
-  lintTarget.options.eslintConfig = rootProjEslintPath;
-  updateProjectConfiguration(tree, rootProject.name, rootProject);
-
-  // replace root eslint with default global
-  tree.delete(eslintPath);
   writeJson(
     tree,
-    '.eslintrc.json',
+    '.eslintrc.base.json',
     getGlobalEsLintConfiguration(unitTestRunner)
   );
 
@@ -84,7 +63,7 @@ function migrateEslintFile(projectEslintPath: string, tree: Tree) {
       json.extends = json.extends || [];
       const pathToRootConfig = `${offsetFromRoot(
         dirname(projectEslintPath)
-      )}.eslintrc.json`;
+      )}.eslintrc.base.json`;
       if (json.extends.indexOf(pathToRootConfig) === -1) {
         json.extends.push(pathToRootConfig);
       }

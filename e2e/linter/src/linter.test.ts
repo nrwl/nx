@@ -451,7 +451,7 @@ export function tslibC(): string {
 
       let rootEslint = readJson('.eslintrc.json');
       let e2eEslint = readJson('e2e/.eslintrc.json');
-      expect(() => checkFilesExist(`.eslintrc.${myapp}.json`)).toThrow();
+      expect(() => checkFilesExist(`.eslintrc.base.json`)).toThrow();
 
       // should directly refer to nx plugin
       expect(rootEslint.plugins).toEqual(['@nrwl/nx']);
@@ -478,9 +478,9 @@ export function tslibC(): string {
 
       runCLI(`generate @nrwl/react:lib ${mylib}`);
       // should add new tslint
-      expect(() => checkFilesExist(`.eslintrc.${myapp}.json`)).not.toThrow();
-      const appEslint = readJson(`.eslintrc.${myapp}.json`);
-      rootEslint = readJson('.eslintrc.json');
+      expect(() => checkFilesExist(`.eslintrc.base.json`)).not.toThrow();
+      const appEslint = readJson(`.eslintrc.json`);
+      rootEslint = readJson('.eslintrc.base.json');
       e2eEslint = readJson('e2e/.eslintrc.json');
       const libEslint = readJson(`libs/${mylib}/.eslintrc.json`);
 
@@ -491,15 +491,15 @@ export function tslibC(): string {
       // should extend framework plugin and root config
       expect(appEslint.extends).toEqual([
         'plugin:@nrwl/nx/react',
-        './.eslintrc.json',
+        './.eslintrc.base.json',
       ]);
       expect(e2eEslint.extends).toEqual([
         'plugin:cypress/recommended',
-        '../.eslintrc.json',
+        '../.eslintrc.base.json',
       ]);
       expect(libEslint.extends).toEqual([
         'plugin:@nrwl/nx/react',
-        '../../.eslintrc.json',
+        '../../.eslintrc.base.json',
       ]);
       // should have no plugin extends
       expect(appEslint.overrides[0].extends).toBeUndefined();
