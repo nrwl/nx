@@ -17,8 +17,8 @@ describe('changeNxJsonPresets', () => {
   it('should not set any new extends', async () => {
     await changeNxJsonPresets(tree);
 
-    const nxJson = readJson(tree, 'nx.json');
-    expect(nxJson.extends).toBeUndefined();
+    const nxConfig = readJson(tree, 'nx.json');
+    expect(nxConfig.extends).toBeUndefined();
   });
 
   it('should change @nrwl/workspace/presets/npm.json', async () => {
@@ -29,8 +29,8 @@ describe('changeNxJsonPresets', () => {
 
     await changeNxJsonPresets(tree);
 
-    const nxJson = readJson(tree, 'nx.json');
-    expect(nxJson.extends).toEqual('nx/presets/npm.json');
+    const nxConfig = readJson(tree, 'nx.json');
+    expect(nxConfig.extends).toEqual('nx/presets/npm.json');
   });
 
   it('should change @nrwl/workspace/presets/core.json', async () => {
@@ -41,7 +41,7 @@ describe('changeNxJsonPresets', () => {
 
     await changeNxJsonPresets(tree);
 
-    const nxJson = readJson(tree, 'nx.json');
-    expect(nxJson.extends).toEqual('nx/presets/core.json');
+    const nxConfig = readJson(tree, 'nx.json');
+    expect(nxConfig.extends).toEqual('nx/presets/core.json');
   });
 });

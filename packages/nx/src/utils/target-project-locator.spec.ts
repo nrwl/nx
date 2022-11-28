@@ -23,7 +23,7 @@ describe('findTargetProjectWithImport', () => {
         proj1: {},
       },
     };
-    const nxJson = {
+    const nxConfig = {
       npmScope: 'proj',
     };
     const tsConfig = {
@@ -50,7 +50,7 @@ describe('findTargetProjectWithImport', () => {
     };
     fsJson = {
       './workspace.json': JSON.stringify(workspaceJson),
-      './nx.json': JSON.stringify(nxJson),
+      './nx.json': JSON.stringify(nxConfig),
       './tsconfig.base.json': JSON.stringify(tsConfig),
       './libs/proj/index.ts': `import {a} from '@proj/my-second-proj';
                               import('@proj/project-3');
@@ -72,7 +72,7 @@ describe('findTargetProjectWithImport', () => {
     ctx = {
       workspace: {
         ...workspaceJson,
-        ...nxJson,
+        ...nxConfig,
       } as any,
       fileMap: {
         rootProj: [
@@ -494,12 +494,12 @@ describe('findTargetProjectWithImport (without tsconfig.json)', () => {
         proj1: {},
       },
     };
-    const nxJson = {
+    const nxConfig = {
       npmScope: 'proj',
     };
     fsJson = {
       './workspace.json': JSON.stringify(workspaceJson),
-      './nx.json': JSON.stringify(nxJson),
+      './nx.json': JSON.stringify(nxConfig),
       './libs/proj/index.ts': `import {a} from '@proj/my-second-proj';
                               import('@proj/project-3');
                               const a = { loadChildren: '@proj/proj4ab#a' };
@@ -519,7 +519,7 @@ describe('findTargetProjectWithImport (without tsconfig.json)', () => {
     ctx = {
       workspace: {
         ...workspaceJson,
-        ...nxJson,
+        ...nxConfig,
       } as any,
       fileMap: {
         proj: [

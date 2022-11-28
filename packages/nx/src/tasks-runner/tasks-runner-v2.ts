@@ -24,7 +24,7 @@ export const tasksRunnerV2 = (
     target: string;
     initiatingProject?: string;
     projectGraph: ProjectGraph;
-    nxJson: NxConfiguration;
+    nxConfig: NxConfiguration;
     nxArgs: NxArgs;
   }
 ): any => {

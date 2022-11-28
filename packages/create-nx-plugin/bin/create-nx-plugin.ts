@@ -110,14 +110,14 @@ function createNxPlugin(
 
 function updateWorkspace(workspaceName: string) {
   const nxJsonPath = path.join(workspaceName, 'nx.json');
-  const nxJson = readJsonFile<NxConfiguration>(nxJsonPath);
+  const nxConfig = readJsonFile<NxConfiguration>(nxJsonPath);
 
-  nxJson.workspaceLayout = {
+  nxConfig.workspaceLayout = {
     appsDir: 'e2e',
     libsDir: 'packages',
   };
 
-  writeJsonFile(nxJsonPath, nxJson);
+  writeJsonFile(nxJsonPath, nxConfig);
 
   removeSync(path.join(workspaceName, 'apps'));
   removeSync(path.join(workspaceName, 'libs'));

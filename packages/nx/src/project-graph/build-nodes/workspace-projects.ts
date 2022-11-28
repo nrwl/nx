@@ -17,7 +17,7 @@ import { NX_PREFIX } from '../../utils/logger';
 export function buildWorkspaceProjectNodes(
   ctx: ProjectGraphProcessorContext,
   builder: ProjectGraphBuilder,
-  nxJson: NxConfiguration
+  nxConfig: NxConfiguration
 ) {
   const toAdd = [];
   Object.keys(ctx.workspace.projects).forEach((key) => {
@@ -43,7 +43,7 @@ export function buildWorkspaceProjectNodes(
       }
     }
 
-    p.targets = normalizeProjectTargets(p.targets, nxJson.targetDefaults, key);
+    p.targets = normalizeProjectTargets(p.targets, nxConfig.targetDefaults, key);
 
     p.targets = mergePluginTargetsWithNxTargets(
       p.root,

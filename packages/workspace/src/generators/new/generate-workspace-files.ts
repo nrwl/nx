@@ -99,7 +99,7 @@ function createNxJson(
   tree: Tree,
   { directory, npmScope, packageManager, defaultBase, preset }: NormalizedSchema
 ) {
-  const nxJson: NxConfiguration & { $schema: string } = {
+  const nxConfig: NxConfiguration & { $schema: string } = {
     $schema: './node_modules/nx/schemas/nx-schema.json',
     npmScope: npmScope,
     affected: {
@@ -115,29 +115,29 @@ function createNxJson(
     },
   };
 
-  nxJson.targetDefaults = {
+  nxConfig.targetDefaults = {
     build: {
       dependsOn: ['^build'],
     },
   };
 
   if (defaultBase === 'main') {
-    delete nxJson.affected;
+    delete nxConfig.affected;
   }
   if (
     preset !== Preset.Core &&
     preset !== Preset.NPM &&
     preset !== Preset.Empty
   ) {
-    nxJson.namedInputs = {
+    nxConfig.namedInputs = {
       default: ['{projectRoot}/**/*', 'sharedGlobals'],
       production: ['default'],
       sharedGlobals: [],
     };
-    nxJson.targetDefaults.build.inputs = ['production', '^production'];
+    nxConfig.targetDefaults.build.inputs = ['production', '^production'];
   }
 
-  writeJson<NxConfiguration>(tree, join(directory, 'nx.json'), nxJson);
+  writeJson<NxConfiguration>(tree, join(directory, 'nx.json'), nxConfig);
 }
 
 function createFiles(tree: Tree, options: NormalizedSchema) {

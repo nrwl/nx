@@ -272,20 +272,20 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
   const verbose = process.env.NX_VERBOSE_LOGGING === 'true';
 
   const ws = new Workspaces(workspaceRoot);
-  const nxJson = readNxJson();
+  const nxConfig = readNxJson();
   const projectGraph = await createProjectGraphAsync({ exitOnError: true });
   const projectsConfiguration =
     readProjectsConfigurationFromProjectGraph(projectGraph);
 
   const workspaceConfiguration = {
-    ...nxJson,
+    ...nxConfig,
     ...projectsConfiguration,
   };
   return handleErrors(verbose, async () => {
     const opts = await convertToGenerateOptions(
       args,
       ws,
-      readDefaultCollection(nxJson),
+      readDefaultCollection(nxConfig),
       'generate',
       projectsConfiguration
     );

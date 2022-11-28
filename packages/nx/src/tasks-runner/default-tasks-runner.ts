@@ -35,7 +35,7 @@ export const defaultTasksRunner: TasksRunner<
     target: string;
     initiatingProject?: string;
     projectGraph: ProjectGraph;
-    nxJson: NxConfiguration;
+    nxConfig: NxConfiguration;
     nxArgs: NxArgs;
     taskGraph: TaskGraph;
     hasher: Hasher;
@@ -69,7 +69,7 @@ async function runAllTasks(
   context: {
     initiatingProject?: string;
     projectGraph: ProjectGraph;
-    nxJson: NxConfiguration;
+    nxConfig: NxConfiguration;
     nxArgs: NxArgs;
     taskGraph: TaskGraph;
     hasher: Hasher;

@@ -18,7 +18,7 @@ describe('project graph', () => {
   let packageLockJson: any;
   let workspaceJson: WorkspaceJsonConfiguration;
   let tsConfigJson: any;
-  let nxJson: NxConfiguration;
+  let nxConfig: NxConfiguration;
   let filesJson: any;
 
   beforeEach(() => {
@@ -109,7 +109,7 @@ describe('project graph', () => {
         },
       },
     };
-    nxJson = {
+    nxConfig = {
       npmScope: 'nrwl',
       implicitDependencies: {
         'package.json': {
@@ -150,7 +150,7 @@ describe('project graph', () => {
       `,
       './package.json': JSON.stringify(packageJson),
       './package-lock.json': JSON.stringify(packageLockJson),
-      './nx.json': JSON.stringify(nxJson),
+      './nx.json': JSON.stringify(nxConfig),
       './workspace.json': JSON.stringify(workspaceJson),
       './tsconfig.base.json': JSON.stringify(tsConfigJson),
     };

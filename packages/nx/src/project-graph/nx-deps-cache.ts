@@ -83,13 +83,13 @@ export function readCache(): null | ProjectGraphCache {
 }
 
 export function createCache(
-  nxJson: NxConfiguration<'*' | string[]>,
+  nxConfig: NxConfiguration<'*' | string[]>,
   packageJsonDeps: Record<string, string>,
   projectGraph: ProjectGraph,
   tsConfig: { compilerOptions?: { paths?: { [p: string]: any } } },
   lockFileHash: string
 ) {
-  const nxJsonPlugins = (nxJson.plugins || []).map((p) => ({
+  const nxJsonPlugins = (nxConfig.plugins || []).map((p) => ({
     name: p,
     version: packageJsonDeps[p],
   }));
@@ -100,7 +100,7 @@ export function createCache(
     // compilerOptions may not exist, especially for repos converted through add-nx-to-monorepo
     pathMappings: tsConfig?.compilerOptions?.paths || {},
     nxJsonPlugins,
-    pluginsConfig: nxJson.pluginsConfig,
+    pluginsConfig: nxConfig.pluginsConfig,
     nodes: projectGraph.nodes,
     externalNodes: projectGraph.externalNodes,
     dependencies: projectGraph.dependencies,
@@ -146,7 +146,7 @@ export function shouldRecomputeWholeGraph(
   cache: ProjectGraphCache,
   packageJsonDeps: Record<string, string>,
   workspaceJson: ProjectsConfigurations,
-  nxJson: NxConfiguration,
+  nxConfig: NxConfiguration,
   tsConfig: { compilerOptions: { paths: { [k: string]: any } } }
 ): boolean {
   if (cache.version !== '5.0') {
@@ -190,11 +190,11 @@ export function shouldRecomputeWholeGraph(
   }
 
   // a new plugin has been added
-  if ((nxJson.plugins || []).length !== cache.nxJsonPlugins.length) return true;
+  if ((nxConfig.plugins || []).length !== cache.nxJsonPlugins.length) return true;
 
   // a plugin has changed
   if (
-    (nxJson.plugins || []).some((t) => {
+    (nxConfig.plugins || []).some((t) => {
       const matchingPlugin = cache.nxJsonPlugins.find((p) => p.name === t);
       if (!matchingPlugin) return true;
       return matchingPlugin.version !== packageJsonDeps[t];
@@ -204,7 +204,7 @@ export function shouldRecomputeWholeGraph(
   }
 
   if (
-    JSON.stringify(nxJson.pluginsConfig) !== JSON.stringify(cache.pluginsConfig)
+    JSON.stringify(nxConfig.pluginsConfig) !== JSON.stringify(cache.pluginsConfig)
   ) {
     return true;
   }

@@ -200,7 +200,7 @@ export function interpolate(template: string, data: any): string {
 
 export function getExecutorNameForTask(
   task: Task,
-  nxJson: NxConfiguration,
+  nxConfig: NxConfiguration,
   projectGraph: ProjectGraph
 ) {
   const project = projectGraph.nodes[task.target.project].data;
@@ -212,7 +212,7 @@ export function getExecutorNameForTask(
   project.targets = mergePluginTargetsWithNxTargets(
     project.root,
     project.targets,
-    loadNxPlugins(nxJson.plugins)
+    loadNxPlugins(nxConfig.plugins)
   );
 
   if (!project.targets[task.target.target]) {
@@ -228,9 +228,9 @@ export function getExecutorForTask(
   task: Task,
   workspace: Workspaces,
   projectGraph: ProjectGraph,
-  nxJson: NxConfiguration
+  nxConfig: NxConfiguration
 ) {
-  const executor = getExecutorNameForTask(task, nxJson, projectGraph);
+  const executor = getExecutorNameForTask(task, nxConfig, projectGraph);
   const [nodeModule, executorName] = executor.split(':');
 
   return workspace.readExecutor(nodeModule, executorName);
@@ -239,14 +239,14 @@ export function getExecutorForTask(
 export function getCustomHasher(
   task: Task,
   workspace: Workspaces,
-  nxJson: NxConfiguration,
+  nxConfig: NxConfiguration,
   projectGraph: ProjectGraph
 ) {
   const factory = getExecutorForTask(
     task,
     workspace,
     projectGraph,
-    nxJson
+    nxConfig
   ).hasherFactory;
   return factory ? factory() : null;
 }

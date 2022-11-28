@@ -20,9 +20,9 @@ export function readAllWorkspaceConfiguration(): ProjectsConfigurations &
  * Returns information about where apps and libs will be created.
  */
 export function workspaceLayout(): { appsDir: string; libsDir: string } {
-  const nxJson = readNxJson();
+  const nxConfig = readNxJson();
   return {
-    appsDir: nxJson.workspaceLayout?.appsDir ?? 'apps',
-    libsDir: nxJson.workspaceLayout?.libsDir ?? 'libs',
+    appsDir: nxConfig.workspaceLayout?.appsDir ?? 'apps',
+    libsDir: nxConfig.workspaceLayout?.libsDir ?? 'libs',
   };
 }

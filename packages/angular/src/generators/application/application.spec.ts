@@ -913,9 +913,9 @@ describe('app', () => {
       }
 
       // should not update workspace configuration since --strict=true is the default
-      const nxJson = readJson<NxConfiguration>(appTree, 'nx.json');
+      const nxConfig = readJson<NxConfiguration>(appTree, 'nx.json');
       expect(
-        nxJson.generators['@nrwl/angular:application'].strict
+        nxConfig.generators['@nrwl/angular:application'].strict
       ).not.toBeDefined();
     });
 
@@ -924,8 +924,8 @@ describe('app', () => {
 
       // check to see if the workspace configuration has been updated to turn off
       // strict mode by default in future applications
-      const nxJson = readJson<NxConfiguration>(appTree, 'nx.json');
-      expect(nxJson.generators['@nrwl/angular:application'].strict).toBe(false);
+      const nxConfig = readJson<NxConfiguration>(appTree, 'nx.json');
+      expect(nxConfig.generators['@nrwl/angular:application'].strict).toBe(false);
     });
   });
 

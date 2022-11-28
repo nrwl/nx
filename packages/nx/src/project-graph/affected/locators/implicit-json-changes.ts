@@ -11,8 +11,8 @@ import { ImplicitDependencyEntry } from '../../../config/nx-json';
 
 export const getImplicitlyTouchedProjectsByJsonChanges: TouchedProjectLocator<
   WholeFileChange | JsonChange
-> = (touchedFiles, projects, nxJson): string[] => {
-  const { implicitDependencies } = nxJson;
+> = (touchedFiles, projects, nxConfig): string[] => {
+  const { implicitDependencies } = nxConfig;
 
   if (!implicitDependencies) {
     return [];

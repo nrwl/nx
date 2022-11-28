@@ -20,16 +20,16 @@ export async function ciWorkflowGenerator(host: Tree, schema: Schema) {
   const ci = schema.ci;
   const options = normalizeOptions(schema);
 
-  const nxJson: NxConfiguration = readJson(host, 'nx.json');
-  const nxCloudUsed = Object.values(nxJson.tasksRunnerOptions).find(
+  const nxConfig: NxConfiguration = readJson(host, 'nx.json');
+  const nxCloudUsed = Object.values(nxConfig.tasksRunnerOptions).find(
     (r) => r.runner == '@nrwl/nx-cloud'
   );
   if (!nxCloudUsed) {
     throw new Error('This workspace is not connected to Nx Cloud.');
   }
 
-  if (ci === 'bitbucket-pipelines' && defaultBranchNeedsOriginPrefix(nxJson)) {
-    writeJson(host, 'nx.json', appendOriginPrefix(nxJson));
+  if (ci === 'bitbucket-pipelines' && defaultBranchNeedsOriginPrefix(nxConfig)) {
+    writeJson(host, 'nx.json', appendOriginPrefix(nxConfig));
   }
 
   generateFiles(host, joinPathFragments(__dirname, 'files', ci), '', options);
@@ -61,17 +61,17 @@ function normalizeOptions(options: Schema): Substitutes {
   };
 }
 
-function defaultBranchNeedsOriginPrefix(nxJson: NxConfiguration): boolean {
-  return !nxJson.affected?.defaultBase?.startsWith('origin/');
+function defaultBranchNeedsOriginPrefix(nxConfig: NxConfiguration): boolean {
+  return !nxConfig.affected?.defaultBase?.startsWith('origin/');
 }
 
-function appendOriginPrefix(nxJson: NxConfiguration): NxConfiguration {
+function appendOriginPrefix(nxConfig: NxConfiguration): NxConfiguration {
   return {
-    ...nxJson,
+    ...nxConfig,
     affected: {
-      ...(nxJson.affected ?? {}),
-      defaultBase: nxJson.affected?.defaultBase
-        ? `origin/${nxJson.affected.defaultBase}`
+      ...(nxConfig.affected ?? {}),
+      defaultBase: nxConfig.affected?.defaultBase
+        ? `origin/${nxConfig.affected.defaultBase}`
         : 'origin/main',
     },
   };

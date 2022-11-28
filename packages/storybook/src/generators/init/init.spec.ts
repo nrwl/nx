@@ -355,9 +355,9 @@ describe('@nrwl/storybook:init', () => {
       await initGenerator(tree, {
         uiFramework: '@storybook/html',
       });
-      const nxJson = readJson<NxConfiguration>(tree, 'nx.json');
+      const nxConfig = readJson<NxConfiguration>(tree, 'nx.json');
       expect(
-        nxJson.tasksRunnerOptions.default.options.cacheableOperations
+        nxConfig.tasksRunnerOptions.default.options.cacheableOperations
       ).toContain('build-storybook');
     });
 
@@ -365,9 +365,9 @@ describe('@nrwl/storybook:init', () => {
       await initGenerator(tree, {
         uiFramework: '@storybook/web-components',
       });
-      const nxJson = readJson<NxConfiguration>(tree, 'nx.json');
+      const nxConfig = readJson<NxConfiguration>(tree, 'nx.json');
       expect(
-        nxJson.tasksRunnerOptions.default.options.cacheableOperations
+        nxConfig.tasksRunnerOptions.default.options.cacheableOperations
       ).toContain('build-storybook');
     });
 
@@ -375,9 +375,9 @@ describe('@nrwl/storybook:init', () => {
       await initGenerator(tree, {
         uiFramework: '@storybook/vue',
       });
-      const nxJson = readJson<NxConfiguration>(tree, 'nx.json');
+      const nxConfig = readJson<NxConfiguration>(tree, 'nx.json');
       expect(
-        nxJson.tasksRunnerOptions.default.options.cacheableOperations
+        nxConfig.tasksRunnerOptions.default.options.cacheableOperations
       ).toContain('build-storybook');
     });
 
@@ -385,9 +385,9 @@ describe('@nrwl/storybook:init', () => {
       await initGenerator(tree, {
         uiFramework: '@storybook/vue3',
       });
-      const nxJson = readJson(tree, 'nx.json');
+      const nxConfig = readJson(tree, 'nx.json');
       expect(
-        nxJson.tasksRunnerOptions.default.options.cacheableOperations
+        nxConfig.tasksRunnerOptions.default.options.cacheableOperations
       ).toContain('build-storybook');
     });
   });

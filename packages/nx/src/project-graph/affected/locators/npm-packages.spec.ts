@@ -6,7 +6,7 @@ import { getTouchedNpmPackages } from './npm-packages';
 
 describe('getTouchedNpmPackages', () => {
   let workspaceJson;
-  let nxJson: NxConfiguration<string[]>;
+  let nxConfig: NxConfiguration<string[]>;
   let projectGraph: ProjectGraph;
   beforeEach(() => {
     workspaceJson = {
@@ -15,7 +15,7 @@ describe('getTouchedNpmPackages', () => {
         proj2: {},
       },
     };
-    nxJson = {
+    nxConfig = {
       implicitDependencies: {
         'package.json': {
           dependencies: ['proj1'],
@@ -87,7 +87,7 @@ describe('getTouchedNpmPackages', () => {
         },
       ],
       workspaceJson,
-      nxJson,
+      nxConfig,
       {
         dependencies: {
           'happy-nrwl': '0.0.2',
@@ -117,7 +117,7 @@ describe('getTouchedNpmPackages', () => {
         },
       ],
       workspaceJson,
-      nxJson,
+      nxConfig,
       {
         dependencies: {
           'happy-nrwl': '0.0.2',
@@ -152,7 +152,7 @@ describe('getTouchedNpmPackages', () => {
         },
       ],
       workspaceJson,
-      nxJson,
+      nxConfig,
       {
         devDependencies: {
           '@types/happy-nrwl': '0.0.2',
@@ -182,7 +182,7 @@ describe('getTouchedNpmPackages', () => {
         },
       ],
       workspaceJson,
-      nxJson,
+      nxConfig,
       {
         dependencies: {
           'happy-nrwl': '0.0.2',
@@ -220,7 +220,7 @@ describe('getTouchedNpmPackages', () => {
         },
       ],
       workspaceJson,
-      nxJson,
+      nxConfig,
       {
         dependencies: {
           'happy-nrwl': '0.0.2',
@@ -250,7 +250,7 @@ describe('getTouchedNpmPackages', () => {
         },
       ],
       workspaceJson,
-      nxJson,
+      nxConfig,
       {
         dependencies: {
           'happy-nrwl': '0.0.1',

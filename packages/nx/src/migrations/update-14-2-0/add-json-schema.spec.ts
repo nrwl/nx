@@ -12,8 +12,8 @@ describe('add-json-schema >', () => {
   });
 
   it('should update nx.json $schema', async () => {
-    const nxJson = readJson(tree, 'nx.json');
-    delete nxJson['$schema'];
+    const nxConfig = readJson(tree, 'nx.json');
+    delete nxConfig['$schema'];
 
     await addJsonSchema(tree);
     expect(readJson(tree, 'nx.json')['$schema']).toEqual(

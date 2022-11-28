@@ -24,7 +24,7 @@ export type TasksRunner<T = unknown> = (
     target?: string;
     initiatingProject?: string | null;
     projectGraph: ProjectGraph;
-    nxJson: NxConfiguration;
+    nxConfig: NxConfiguration;
     nxArgs: NxArgs;
     taskGraph?: TaskGraph;
     hasher?: Hasher;

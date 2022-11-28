@@ -5,8 +5,8 @@ import { NxConfiguration } from '../config/nx-json';
 
 function readCacheDirectoryProperty(root: string): string | undefined {
   try {
-    const nxJson = readJsonFile<NxConfiguration>(join(root, 'nx.json'));
-    return nxJson.tasksRunnerOptions.default.options.cacheDirectory;
+    const nxConfig = readJsonFile<NxConfiguration>(join(root, 'nx.json'));
+    return nxConfig.tasksRunnerOptions.default.options.cacheDirectory;
   } catch {
     return undefined;
   }

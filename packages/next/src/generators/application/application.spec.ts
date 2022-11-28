@@ -19,13 +19,13 @@ describe('app', () => {
       });
 
       const workspaceJson = readJson(tree, 'workspace.json');
-      const nxJson = readJson<NxConfiguration>(tree, 'nx.json');
+      const nxConfig = readJson<NxConfiguration>(tree, 'nx.json');
 
       expect(workspaceJson.projects['my-app'].root).toEqual('apps/my-app');
       expect(workspaceJson.projects['my-app-e2e'].root).toEqual(
         'apps/my-app-e2e'
       );
-      expect(nxJson.defaultProject).toEqual('my-app');
+      expect(nxConfig.defaultProject).toEqual('my-app');
     });
 
     it('should update tags and implicit dependencies', async () => {

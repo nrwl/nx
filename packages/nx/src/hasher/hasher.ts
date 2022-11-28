@@ -60,7 +60,7 @@ export class Hasher {
 
   constructor(
     private readonly projectGraph: ProjectGraph,
-    private readonly nxJson: NxConfiguration,
+    private readonly nxConfig: NxConfiguration,
     private readonly options: any,
     hashing: HashingImpl = undefined
   ) {
@@ -82,7 +82,7 @@ export class Hasher {
     }
 
     const legacyFilesetInputs = [
-      ...Object.keys(this.nxJson.implicitDependencies ?? {}),
+      ...Object.keys(this.nxConfig.implicitDependencies ?? {}),
       'nx.json',
 
       // ignore files will change the set of inputs to the hasher
@@ -91,7 +91,7 @@ export class Hasher {
     ].map((d) => ({ fileset: `{workspaceRoot}/${d}` }));
 
     this.taskHasher = new TaskHasher(
-      nxJson,
+      nxConfig,
       legacyRuntimeInputs,
       legacyFilesetInputs,
       this.projectGraph,
@@ -206,7 +206,7 @@ class TaskHasher {
   } = {};
 
   constructor(
-    private readonly nxJson: NxConfiguration,
+    private readonly nxConfig: NxConfiguration,
     private readonly legacyRuntimeInputs: { runtime: string }[],
     private readonly legacyFilesetInputs: { fileset: string }[],
     private readonly projectGraph: ProjectGraph,
@@ -223,11 +223,11 @@ class TaskHasher {
       }
       const namedInputs = {
         default: [{ fileset: '{projectRoot}/**/*' }],
-        ...this.nxJson.namedInputs,
+        ...this.nxConfig.namedInputs,
         ...projectNode.data.namedInputs,
       };
       const targetData = projectNode.data.targets[task.target.target];
-      const targetDefaults = (this.nxJson.targetDefaults || {})[
+      const targetDefaults = (this.nxConfig.targetDefaults || {})[
         task.target.target
       ];
       const { selfInputs, depsInputs } = splitInputsIntoSelfAndDependencies(
@@ -264,7 +264,7 @@ class TaskHasher {
     }
     const namedInputs = {
       default: [{ fileset: '{projectRoot}/**/*' }],
-      ...this.nxJson.namedInputs,
+      ...this.nxConfig.namedInputs,
       ...projectNode.data.namedInputs,
     };
 
@@ -559,7 +559,7 @@ class TaskHasher {
     const { paths, ...compilerOptions } = this.tsConfigJson.compilerOptions;
     const rootPath = p.data.root.split('/');
     rootPath.shift();
-    const pathAlias = getImportPath(this.nxJson?.npmScope, rootPath.join('/'));
+    const pathAlias = getImportPath(this.nxConfig?.npmScope, rootPath.join('/'));
 
     return JSON.stringify({
       compilerOptions: {

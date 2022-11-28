@@ -16,8 +16,8 @@ export function ensureGlobalProjectGraph(ruleName: string) {
     !(global as any).projectRootMappings ||
     !isTerminalRun()
   ) {
-    const nxJson = readNxJson();
-    (global as any).workspaceLayout = nxJson.workspaceLayout;
+    const nxConfig = readNxJson();
+    (global as any).workspaceLayout = nxConfig.workspaceLayout;
 
     /**
      * Because there are a number of ways in which the rule can be invoked (executor vs ESLint CLI vs IDE Plugin),

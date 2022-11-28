@@ -238,9 +238,9 @@ describe('NxPlugin Plugin Generator', () => {
 
     it('should correctly setup npmScope less workspaces', async () => {
       // remove the npmScope from nx.json
-      const nxJson = JSON.parse(tree.read('nx.json')!.toString());
-      delete nxJson.npmScope;
-      tree.write('nx.json', JSON.stringify(nxJson));
+      const nxConfig = JSON.parse(tree.read('nx.json')!.toString());
+      delete nxConfig.npmScope;
+      tree.write('nx.json', JSON.stringify(nxConfig));
 
       await pluginGenerator(tree, getSchema());
 

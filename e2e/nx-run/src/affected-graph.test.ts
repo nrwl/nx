@@ -179,11 +179,11 @@ describe('Nx Affected and Graph Tests', () => {
       myapp = uniq('myapp');
       myapp2 = uniq('myapp');
       mylib = uniq('mylib');
-      const nxJson: NxConfiguration = readJson('nx.json');
+      const nxConfig: NxConfiguration = readJson('nx.json');
 
-      delete nxJson.implicitDependencies;
+      delete nxConfig.implicitDependencies;
 
-      updateFile('nx.json', JSON.stringify(nxJson));
+      updateFile('nx.json', JSON.stringify(nxConfig));
       runCommand(`git init`);
       runCommand(`git config user.email "test@test.com"`);
       runCommand(`git config user.name "Test"`);

@@ -241,7 +241,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
         .pipe(map((data) => JSON.parse(Buffer.from(data).toString())));
 
     const readWorkspaceJsonFile = (
-      nxJson: NxConfiguration
+      nxConfig: NxConfiguration
     ): Observable<RawProjectsConfigurations> => {
       if (overrides?.workspace) {
         return overrides.workspace;
@@ -255,7 +255,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
         } else {
           const staticProjects = globForProjectFiles(this.root);
           this.__nxInMemoryWorkspace = buildWorkspaceConfigurationFromGlobs(
-            nxJson,
+            nxConfig,
             staticProjects.filter((x) => basename(x) !== 'package.json')
           );
           Object.entries(this.__nxInMemoryWorkspace.projects).forEach(
@@ -269,9 +269,9 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
     };
 
     const readNxJsonFile = () => {
-      let nxJson = overrides?.nx ? overrides.nx : readJsonFile('nx.json');
+      let nxConfig = overrides?.nx ? overrides.nx : readJsonFile('nx.json');
 
-      return nxJson.pipe(
+      return nxConfig.pipe(
         map((json) => {
           if (json.extends) {
             return { ...require(json.extends), ...json };
@@ -294,16 +294,16 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
           nxJsonObservable.pipe(switchMap((x) => readWorkspaceJsonFile(x)));
         return forkJoin([nxJsonObservable, workspaceJsonObservable]);
       }),
-      switchMap(([nxJson, workspaceJson]) => {
+      switchMap(([nxConfig, workspaceJson]) => {
         try {
           // resolve inline configurations and downlevel format
           return this.resolveInlineProjectConfigurations(workspaceJson).pipe(
             map((x) => {
               const angularJson: AngularJsonConfiguration = x;
               // assign props ng cli expects from nx json, if it exists
-              angularJson.cli ??= nxJson?.cli;
-              angularJson.generators ??= nxJson?.generators;
-              angularJson.defaultProject ??= nxJson?.defaultProject;
+              angularJson.cli ??= nxConfig?.cli;
+              angularJson.generators ??= nxConfig?.generators;
+              angularJson.defaultProject ??= nxConfig?.defaultProject;
 
               if (workspaceJson.version === 2) {
                 const formatted = toOldFormatOrNull(workspaceJson);
@@ -488,9 +488,9 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
     const nxJsonPath = 'nx.json' as Path;
     return super.read(nxJsonPath).pipe(
       switchMap((buf) => {
-        const nxJson = parseJson(Buffer.from(buf).toString());
-        Object.assign(nxJson, props);
-        return super.write(nxJsonPath, Buffer.from(serializeJson(nxJson)));
+        const nxConfig = parseJson(Buffer.from(buf).toString());
+        Object.assign(nxConfig, props);
+        return super.write(nxJsonPath, Buffer.from(serializeJson(nxConfig)));
       })
     );
   }
@@ -673,7 +673,7 @@ export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
       // we try to format it, if it changes, return it, otherwise return the original change
       try {
         return this.__readWorkspaceConfiguration(actualConfigFileName, {
-          // we are overriding workspaceJson + nxJson,
+          // we are overriding workspaceJson + nxConfig,
           workspace: workspaceJsonOverride,
           nx: nxJsonChange
             ? of(parseJson(nxJsonChange.content.toString()))
@@ -1217,12 +1217,12 @@ function saveWorkspaceConfigurationInWrappedSchematic(
       );
     }
   }
-  const nxJson: NxConfiguration = parseJson(
+  const nxConfig: NxConfiguration = parseJson(
     host.read('nx.json').toString()
   );
-  nxJson.generators = workspace.generators || workspace.schematics;
-  nxJson.cli = workspace.cli || nxJson.cli;
-  nxJson.defaultProject = workspace.defaultProject;
+  nxConfig.generators = workspace.generators || workspace.schematics;
+  nxConfig.cli = workspace.cli || nxConfig.cli;
+  nxConfig.defaultProject = workspace.defaultProject;
   delete workspace.cli;
   delete workspace.generators;
   delete workspace.schematics;

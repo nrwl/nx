@@ -1116,7 +1116,7 @@ stored in the daemon process. To reset both run: `nx reset`.
 | `context.hasher?`            | [`Hasher`](../../devkit/index#hasher)                                                 |
 | `context.initiatingProject?` | `string`                                                                              |
 | `context.nxArgs`             | `NxArgs`                                                                              |
-| `context.nxJson`             | [`NxConfiguration`](../../devkit/index#NxConfiguration)<`string`[] \| `"*"`\> |
+| `context.nxConfig`             | [`NxConfiguration`](../../devkit/index#NxConfiguration)<`string`[] \| `"*"`\> |
 | `context.projectGraph`       | [`ProjectGraph`](../../devkit/index#projectgraph)<`any`\>                             |
 | `context.target?`            | `string`                                                                              |
 | `context.taskGraph?`         | [`TaskGraph`](../../devkit/index#taskgraph)                                           |

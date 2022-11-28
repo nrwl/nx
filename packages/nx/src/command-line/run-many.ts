@@ -23,12 +23,12 @@ export async function runMany(
   }
 ) {
   performance.mark('command-execution-begins');
-  const nxJson = readNxJson();
+  const nxConfig = readNxJson();
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
     args,
     'run-many',
     { printWarnings: true },
-    nxJson
+    nxConfig
   );
   if (nxArgs.verbose) {
     process.env.NX_VERBOSE_LOGGING = 'true';
@@ -42,7 +42,7 @@ export async function runMany(
   await runCommand(
     projects,
     projectGraph,
-    { nxJson },
+    { nxConfig },
     nxArgs,
     overrides,
     null,

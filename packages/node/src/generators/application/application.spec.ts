@@ -38,7 +38,7 @@ describe('app', () => {
         standaloneConfig: false,
       });
       const workspaceJson = readJson(tree, '/workspace.json');
-      const nxJson = readJson<NxConfiguration>(tree, 'nx.json');
+      const nxConfig = readJson<NxConfiguration>(tree, 'nx.json');
       const project = workspaceJson.projects['my-node-app'];
       expect(project.root).toEqual('apps/my-node-app');
       expect(project.architect).toEqual(
@@ -89,7 +89,7 @@ describe('app', () => {
         },
       });
       expect(workspaceJson.projects['my-node-app-e2e']).toBeUndefined();
-      expect(nxJson.defaultProject).toEqual('my-node-app');
+      expect(nxConfig.defaultProject).toEqual('my-node-app');
     });
 
     it('should update tags', async () => {
@@ -198,7 +198,7 @@ describe('app', () => {
         standaloneConfig: false,
       });
       const workspaceJson = readJson(tree, '/workspace.json');
-      const nxJson = readJson<NxConfiguration>(tree, 'nx.json');
+      const nxConfig = readJson<NxConfiguration>(tree, 'nx.json');
 
       expect(workspaceJson.projects['my-dir-my-node-app'].root).toEqual(
         'apps/my-dir/my-node-app'
@@ -215,7 +215,7 @@ describe('app', () => {
       });
 
       expect(workspaceJson.projects['my-dir-my-node-app-e2e']).toBeUndefined();
-      expect(nxJson.defaultProject).toEqual('my-dir-my-node-app');
+      expect(nxConfig.defaultProject).toEqual('my-dir-my-node-app');
     });
 
     it('should update tags', async () => {

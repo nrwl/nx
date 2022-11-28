@@ -26,14 +26,14 @@ export async function affected(
   > = {}
 ): Promise<void> {
   performance.mark('command-execution-begins');
-  const nxJson = readNxJson();
+  const nxConfig = readNxJson();
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
     args,
     'affected',
     {
       printWarnings: command !== 'print-affected' && !args.plain,
     },
-    nxJson
+    nxConfig
   );
 
   if (nxArgs.verbose) {
@@ -97,7 +97,7 @@ export async function affected(
           await printAffected(
             allProjectsWithTarget(projects, nxArgs),
             projectGraph,
-            { nxJson },
+            { nxConfig },
             nxArgs,
             overrides
           );
@@ -105,7 +105,7 @@ export async function affected(
           await printAffected(
             projects,
             projectGraph,
-            { nxJson },
+            { nxConfig },
             nxArgs,
             overrides
           );
@@ -117,7 +117,7 @@ export async function affected(
         await runCommand(
           projectsWithTarget,
           projectGraph,
-          { nxJson },
+          { nxConfig },
           nxArgs,
           overrides,
           null,

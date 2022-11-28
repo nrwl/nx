@@ -77,8 +77,8 @@ describe('@nrwl/workspace:generateWorkspaceFiles', () => {
       preset: Preset.Empty,
       defaultBase: 'main',
     });
-    const nxJson = readJson<NxConfiguration>(tree, '/proj/nx.json');
-    expect(nxJson).toMatchInlineSnapshot(`
+    const nxConfig = readJson<NxConfiguration>(tree, '/proj/nx.json');
+    expect(nxConfig).toMatchInlineSnapshot(`
       Object {
         "$schema": "./node_modules/nx/schemas/nx-schema.json",
         "npmScope": "proj",
@@ -105,7 +105,7 @@ describe('@nrwl/workspace:generateWorkspaceFiles', () => {
       }
     `);
     const validateNxJson = ajv.compile(nxSchema);
-    expect(validateNxJson(nxJson)).toEqual(true);
+    expect(validateNxJson(nxConfig)).toEqual(true);
   });
 
   it('should setup named inputs and target defaults for non-empty presets', async () => {
@@ -115,8 +115,8 @@ describe('@nrwl/workspace:generateWorkspaceFiles', () => {
       preset: Preset.ReactMonorepo,
       defaultBase: 'main',
     });
-    const nxJson = readJson<NxConfiguration>(tree, '/proj/nx.json');
-    expect(nxJson).toMatchInlineSnapshot(`
+    const nxConfig = readJson<NxConfiguration>(tree, '/proj/nx.json');
+    expect(nxConfig).toMatchInlineSnapshot(`
       Object {
         "$schema": "./node_modules/nx/schemas/nx-schema.json",
         "namedInputs": Object {

@@ -577,9 +577,9 @@ describe('Workspace Tests', () => {
       const lib2 = uniq('mylib');
       const lib3 = uniq('mylib');
 
-      let nxJson = readJson('nx.json');
-      nxJson.workspaceLayout = { libsDir: 'packages' };
-      updateFile('nx.json', JSON.stringify(nxJson));
+      let nxConfig = readJson('nx.json');
+      nxConfig.workspaceLayout = { libsDir: 'packages' };
+      updateFile('nx.json', JSON.stringify(nxConfig));
 
       runCLI(`generate @nrwl/workspace:lib ${lib1}/data-access`);
 
@@ -700,9 +700,9 @@ describe('Workspace Tests', () => {
         `import { fromLibOne } from '@${proj}/shared/${lib1}/data-access';`
       );
 
-      nxJson = readJson('nx.json');
-      delete nxJson.workspaceLayout;
-      updateFile('nx.json', JSON.stringify(nxJson));
+      nxConfig = readJson('nx.json');
+      delete nxConfig.workspaceLayout;
+      updateFile('nx.json', JSON.stringify(nxConfig));
     });
 
     it('should work for libraries when scope is unset', async () => {

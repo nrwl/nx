@@ -35,7 +35,7 @@ describe('explicit package json dependencies', () => {
       },
     };
 
-    const nxJson = {
+    const nxConfig = {
       npmScope: 'proj',
     };
 
@@ -46,7 +46,7 @@ describe('explicit package json dependencies', () => {
         "devDependencies": []
       }`,
       './workspace.json': JSON.stringify(workspaceJson),
-      './nx.json': JSON.stringify(nxJson),
+      './nx.json': JSON.stringify(nxConfig),
       './tsconfig.base.json': JSON.stringify({}),
       './libs/proj2/package.json': JSON.stringify({ name: 'proj2' }),
       './libs/proj3/package.json': JSON.stringify({ name: 'proj3' }),
@@ -70,7 +70,7 @@ describe('explicit package json dependencies', () => {
           },
         },
         workspaceJson,
-        nxJson,
+        nxConfig,
       },
       filesToProcess: createProjectFileMap(
         workspaceJson,

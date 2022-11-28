@@ -32,12 +32,12 @@ export async function runOne(
   performance.mark('command-execution-begins');
   performance.measure('code-loading', 'init-local', 'command-execution-begins');
 
-  const nxJson = readNxJson();
+  const nxConfig = readNxJson();
   const projectGraph = await createProjectGraphAsync({ exitOnError: true });
 
   const opts = parseRunOneOptions(cwd, args, {
     ...readProjectsConfigurationFromProjectGraph(projectGraph),
-    ...nxJson,
+    ...nxConfig,
   });
 
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
@@ -48,7 +48,7 @@ export async function runOne(
     },
     'run-one',
     { printWarnings: true },
-    nxJson
+    nxConfig
   );
   if (nxArgs.verbose) {
     process.env.NX_VERBOSE_LOGGING = 'true';
@@ -67,7 +67,7 @@ export async function runOne(
   await runCommand(
     projects,
     projectGraph,
-    { nxJson },
+    { nxConfig },
     nxArgs,
     overrides,
     opts.project,

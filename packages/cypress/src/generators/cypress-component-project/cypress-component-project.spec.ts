@@ -161,15 +161,15 @@ describe('Cypress Component Project', () => {
       skipFormat: false,
     });
 
-    const nxJson = readJson(tree, 'nx.json');
+    const nxConfig = readJson(tree, 'nx.json');
 
     expect(
-      nxJson.tasksRunnerOptions.default.options.cacheableOperations
+      nxConfig.tasksRunnerOptions.default.options.cacheableOperations
     ).toEqual(expect.arrayContaining(['component-test']));
-    expect(nxJson.targetDefaults['component-test']).toEqual({
+    expect(nxConfig.targetDefaults['component-test']).toEqual({
       inputs: ['default', '^production'],
     });
-    expect(nxJson.namedInputs.production).toEqual([
+    expect(nxConfig.namedInputs.production).toEqual([
       '!{projectRoot}/cypress/**/*',
       '!{projectRoot}/**/*.cy.[jt]s?(x)',
       '!{projectRoot}/cypress.config.[jt]s',

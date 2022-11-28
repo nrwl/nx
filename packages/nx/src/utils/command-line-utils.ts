@@ -39,7 +39,7 @@ export function splitArgsIntoNxArgsAndOverrides(
   args: { [k: string]: any },
   mode: 'run-one' | 'run-many' | 'affected' | 'print-affected',
   options = { printWarnings: true },
-  nxJson: NxConfiguration
+  nxConfig: NxConfiguration
 ): {
   nxArgs: NxArgs;
   overrides: Arguments & { __overrides_unparsed__: string[] };
@@ -141,7 +141,7 @@ export function splitArgsIntoNxArgsAndOverrides(
     }
 
     if (!nxArgs.base) {
-      nxArgs.base = nxJson.affected?.defaultBase || 'main';
+      nxArgs.base = nxConfig.affected?.defaultBase || 'main';
 
       // No user-provided arguments to set the affected criteria, so inform the user of the defaults being used
       if (

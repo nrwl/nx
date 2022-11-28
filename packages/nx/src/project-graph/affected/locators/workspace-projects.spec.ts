@@ -79,10 +79,10 @@ describe('getTouchedProjects', () => {
 });
 
 describe('getImplicitlyTouchedProjects', () => {
-  let nxJson;
+  let nxConfig;
 
   beforeEach(() => {
-    nxJson = {
+    nxConfig = {
       npmScope: 'nrwl',
       implicitDependencies: {
         'styles/file1.css': ['a'],
@@ -95,12 +95,12 @@ describe('getImplicitlyTouchedProjects', () => {
 
   it('should return a list of projects for the given changes', () => {
     let fileChanges = getFileChanges(['styles/file1.css']);
-    expect(getImplicitlyTouchedProjects(fileChanges, null, nxJson)).toEqual([
+    expect(getImplicitlyTouchedProjects(fileChanges, null, nxConfig)).toEqual([
       'a',
     ]);
 
     fileChanges = getFileChanges(['styles/file1.css', 'styles/file2.css']);
-    expect(getImplicitlyTouchedProjects(fileChanges, null, nxJson)).toEqual([
+    expect(getImplicitlyTouchedProjects(fileChanges, null, nxConfig)).toEqual([
       'a',
       'b',
       'c',
@@ -112,7 +112,7 @@ describe('getImplicitlyTouchedProjects', () => {
       'styles/file2.css',
       'styles/deep/file3.css',
     ]);
-    expect(getImplicitlyTouchedProjects(fileChanges, null, nxJson)).toEqual([
+    expect(getImplicitlyTouchedProjects(fileChanges, null, nxConfig)).toEqual([
       'b',
       'c',
       'd',
@@ -120,42 +120,42 @@ describe('getImplicitlyTouchedProjects', () => {
   });
 
   it('should support glob path matching', () => {
-    nxJson.implicitDependencies = {
+    nxConfig.implicitDependencies = {
       'styles/*.css': ['a'],
       'styles/deep/file2.css': ['b', 'c'],
     };
     let fileChanges = getFileChanges(['styles/file1.css']);
-    expect(getImplicitlyTouchedProjects(fileChanges, null, nxJson)).toEqual([
+    expect(getImplicitlyTouchedProjects(fileChanges, null, nxConfig)).toEqual([
       'a',
     ]);
   });
 
   it('should support glob `**` path matching', () => {
-    nxJson.implicitDependencies = {
+    nxConfig.implicitDependencies = {
       'styles/**/*.css': ['a'],
       'styles/deep/file2.css': ['b', 'c'],
     };
     let fileChanges = getFileChanges(['styles/file1.css']);
-    expect(getImplicitlyTouchedProjects(fileChanges, null, nxJson)).toEqual([
+    expect(getImplicitlyTouchedProjects(fileChanges, null, nxConfig)).toEqual([
       'a',
     ]);
 
     fileChanges = getFileChanges(['styles/deep/file2.css']);
-    expect(getImplicitlyTouchedProjects(fileChanges, null, nxJson)).toEqual([
+    expect(getImplicitlyTouchedProjects(fileChanges, null, nxConfig)).toEqual([
       'a',
       'b',
       'c',
     ]);
 
     fileChanges = getFileChanges(['styles/file1.css', 'styles/deep/file2.css']);
-    expect(getImplicitlyTouchedProjects(fileChanges, null, nxJson)).toEqual([
+    expect(getImplicitlyTouchedProjects(fileChanges, null, nxConfig)).toEqual([
       'a',
       'b',
       'c',
     ]);
 
     fileChanges = getFileChanges(['styles.css']);
-    expect(getImplicitlyTouchedProjects(fileChanges, null, nxJson)).toEqual([]);
+    expect(getImplicitlyTouchedProjects(fileChanges, null, nxConfig)).toEqual([]);
   });
 });
 

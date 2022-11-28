@@ -78,7 +78,7 @@ describe('jest', () => {
 
     jestInitGenerator(tree, {});
 
-    let nxJson: NxConfiguration;
+    let nxConfig: NxConfiguration;
     updateJson<NxConfiguration>(tree, 'nx.json', (json) => {
       json.namedInputs.production = [
         'default',
@@ -94,11 +94,11 @@ describe('jest', () => {
           '{workspaceRoot}/testSetup.ts',
         ],
       };
-      nxJson = json;
+      nxConfig = json;
       return json;
     });
     jestInitGenerator(tree, {});
-    expect(readJson<NxConfiguration>(tree, 'nx.json')).toEqual(nxJson);
+    expect(readJson<NxConfiguration>(tree, 'nx.json')).toEqual(nxConfig);
   });
 
   it('should add dependencies', async () => {

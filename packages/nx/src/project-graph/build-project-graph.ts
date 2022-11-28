@@ -76,9 +76,9 @@ export async function buildProjectGraphUsingProjectFileMap(
   projectGraph: ProjectGraph;
   projectGraphCache: ProjectGraphCache;
 }> {
-  const nxJson = readNxJson();
+  const nxConfig = readNxJson();
   const projectGraphVersion = '5.0';
-  assertWorkspaceValidity(projectsConfigurations, nxJson);
+  assertWorkspaceValidity(projectsConfigurations, nxConfig);
   const packageJsonDeps = readCombinedDeps();
   const rootTsConfig = readRootTsConfig();
 
@@ -90,7 +90,7 @@ export async function buildProjectGraphUsingProjectFileMap(
       cache,
       packageJsonDeps,
       projectsConfigurations,
-      nxJson,
+      nxConfig,
       rootTsConfig
     )
   ) {
@@ -114,12 +114,12 @@ export async function buildProjectGraphUsingProjectFileMap(
   }
   const context = createContext(
     projectsConfigurations,
-    nxJson,
+    nxConfig,
     projectFileMap,
     filesToProcess
   );
   let projectGraph = await buildProjectGraphUsingContext(
-    nxJson,
+    nxConfig,
     context,
     cachedFileData,
     projectGraphVersion,
@@ -127,7 +127,7 @@ export async function buildProjectGraphUsingProjectFileMap(
     packageJsonDeps
   );
   const projectGraphCache = createCache(
-    nxJson,
+    nxConfig,
     packageJsonDeps,
     projectGraph,
     rootTsConfig,
@@ -165,7 +165,7 @@ function isolatePartialGraphFromCache(cache: ProjectGraphCache): ProjectGraph {
 }
 
 async function buildProjectGraphUsingContext(
-  nxJson: NxConfiguration,
+  nxConfig: NxConfiguration,
   ctx: ProjectGraphProcessorContext,
   cachedFileData: { [project: string]: { [file: string]: FileData } },
   projectGraphVersion: string,
@@ -176,7 +176,7 @@ async function buildProjectGraphUsingContext(
 
   const builder = new ProjectGraphBuilder(partialGraph);
 
-  buildWorkspaceProjectNodes(ctx, builder, nxJson);
+  buildWorkspaceProjectNodes(ctx, builder, nxConfig);
   if (!partialGraph) {
     buildNpmPackageNodes(builder);
   }
@@ -190,7 +190,7 @@ async function buildProjectGraphUsingContext(
   }
 
   await buildExplicitDependencies(
-    jsPluginConfig(nxJson, packageJsonDeps),
+    jsPluginConfig(nxConfig, packageJsonDeps),
     ctx,
     builder
   );
@@ -217,11 +217,11 @@ interface NrwlJsPluginConfig {
 }
 
 function jsPluginConfig(
-  nxJson: NxConfiguration,
+  nxConfig: NxConfiguration,
   packageJsonDeps: { [packageName: string]: string }
 ): NrwlJsPluginConfig {
-  if (nxJson?.pluginsConfig?.['@nrwl/js']) {
-    return nxJson?.pluginsConfig?.['@nrwl/js'];
+  if (nxConfig?.pluginsConfig?.['@nrwl/js']) {
+    return nxConfig?.pluginsConfig?.['@nrwl/js'];
   }
   if (
     packageJsonDeps['@nrwl/workspace'] ||
@@ -410,7 +410,7 @@ function getNumberOfWorkers(): number {
 
 function createContext(
   projectsConfigurations: ProjectsConfigurations,
-  nxJson: NxConfiguration,
+  nxConfig: NxConfiguration,
   fileMap: ProjectFileMap,
   filesToProcess: ProjectFileMap
 ): ProjectGraphProcessorContext {
@@ -425,7 +425,7 @@ function createContext(
   return {
     workspace: {
       ...projectsConfigurations,
-      ...nxJson,
+      ...nxConfig,
       projects,
     },
     fileMap,

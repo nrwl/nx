@@ -6,7 +6,7 @@ import { stripIndents } from './strip-indents';
 
 export function assertWorkspaceValidity(
   workspaceJson,
-  nxJson: NxConfiguration
+  nxConfig: NxConfiguration
 ) {
   const workspaceJsonProjects = Object.keys(workspaceJson.projects);
 
@@ -17,7 +17,7 @@ export function assertWorkspaceValidity(
   const invalidImplicitDependencies = new Map<string, string[]>();
 
   Object.entries<'*' | string[] | ImplicitJsonSubsetDependency>(
-    nxJson.implicitDependencies || {}
+    nxConfig.implicitDependencies || {}
   )
     .reduce((acc, entry) => {
       function recur(value, acc = [], path: string[]) {

@@ -154,11 +154,11 @@ function mockReadJsonWorkspace(
           '[NX] Angular devkit readJsonWorkspace fell back to Nx workspaces logic'
         );
         const projectGraph = await createProjectGraphAsync();
-        const nxJson = readNxJson();
+        const nxConfig = readNxJson();
 
         // Construct old workspace.json format from project graph
         const w: ProjectsConfigurations & NxConfiguration = {
-          ...nxJson,
+          ...nxConfig,
           ...readProjectsConfigurationFromProjectGraph(projectGraph),
         };
 

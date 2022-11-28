@@ -102,7 +102,7 @@ describe('Workspaces', () => {
 
   describe('to project name', () => {
     it('should lowercase names', () => {
-      const nxJson: NxConfiguration = {
+      const nxConfig: NxConfiguration = {
         npmScope: '',
         workspaceLayout: {
           appsDir: 'my-apps',

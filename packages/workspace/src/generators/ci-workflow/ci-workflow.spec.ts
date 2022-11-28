@@ -58,9 +58,9 @@ describe('lib', () => {
   it('should prefix nx.json affected defaultBase with origin/ if ci is bitbucket-pipelines', async () => {
     setNxCloud(tree);
 
-    const nxJson = readJson(tree, 'nx.json');
-    nxJson.affected.defaultBase = 'my-branch';
-    writeJson(tree, 'nx.json', nxJson);
+    const nxConfig = readJson(tree, 'nx.json');
+    nxConfig.affected.defaultBase = 'my-branch';
+    writeJson(tree, 'nx.json', nxConfig);
 
     await ciWorkflowGenerator(tree, { ci: 'bitbucket-pipelines' });
 

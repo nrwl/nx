@@ -25,11 +25,11 @@ export const getTouchedProjects: TouchedProjectLocator = (
 export const getImplicitlyTouchedProjects: TouchedProjectLocator = (
   fileChanges,
   projectGraphNodes,
-  nxJson
+  nxConfig
 ): string[] => {
-  const implicits = { ...nxJson.implicitDependencies };
+  const implicits = { ...nxConfig.implicitDependencies };
   const globalFiles = [
-    ...extractGlobalFilesFromInputs(nxJson, projectGraphNodes),
+    ...extractGlobalFilesFromInputs(nxConfig, projectGraphNodes),
     'nx.json',
   ];
   globalFiles.forEach((file) => {
@@ -58,12 +58,12 @@ export const getImplicitlyTouchedProjects: TouchedProjectLocator = (
 };
 
 export function extractGlobalFilesFromInputs(
-  nxJson: NxConfiguration,
+  nxConfig: NxConfiguration,
   projectGraphNodes: Record<string, ProjectGraphProjectNode>
 ) {
   const globalFiles = [];
-  globalFiles.push(...extractGlobalFilesFromNamedInputs(nxJson.namedInputs));
-  globalFiles.push(...extractGlobalFilesFromTargets(nxJson.targetDefaults));
+  globalFiles.push(...extractGlobalFilesFromNamedInputs(nxConfig.namedInputs));
+  globalFiles.push(...extractGlobalFilesFromTargets(nxConfig.targetDefaults));
   Object.values(projectGraphNodes || {}).forEach((node) => {
     globalFiles.push(
       ...extractGlobalFilesFromNamedInputs(node.data.namedInputs)

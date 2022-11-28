@@ -35,39 +35,39 @@ export function createNxJsonFile(
   defaultProject: string | undefined
 ) {
   const nxJsonPath = joinPathFragments(repoRoot, 'nx.json');
-  let nxJson = {} as any;
+  let nxConfig = {} as any;
   try {
-    nxJson = readJsonFile(nxJsonPath);
+    nxConfig = readJsonFile(nxJsonPath);
     // eslint-disable-next-line no-empty
   } catch {}
 
-  nxJson.tasksRunnerOptions ||= {};
-  nxJson.tasksRunnerOptions.default ||= {};
-  nxJson.tasksRunnerOptions.default.runner ||= 'nx/tasks-runners/default';
-  nxJson.tasksRunnerOptions.default.options ||= {};
-  nxJson.tasksRunnerOptions.default.options.cacheableOperations =
+  nxConfig.tasksRunnerOptions ||= {};
+  nxConfig.tasksRunnerOptions.default ||= {};
+  nxConfig.tasksRunnerOptions.default.runner ||= 'nx/tasks-runners/default';
+  nxConfig.tasksRunnerOptions.default.options ||= {};
+  nxConfig.tasksRunnerOptions.default.options.cacheableOperations =
     cacheableOperations;
 
   if (targetDefaults.length > 0) {
-    nxJson.targetDefaults ||= {};
+    nxConfig.targetDefaults ||= {};
     for (const scriptName of targetDefaults) {
-      nxJson.targetDefaults[scriptName] ||= {};
-      nxJson.targetDefaults[scriptName] = { dependsOn: [`^${scriptName}`] };
+      nxConfig.targetDefaults[scriptName] ||= {};
+      nxConfig.targetDefaults[scriptName] = { dependsOn: [`^${scriptName}`] };
     }
     for (const [scriptName, output] of Object.entries(scriptOutputs)) {
       if (!output) {
         // eslint-disable-next-line no-continue
         continue;
       }
-      nxJson.targetDefaults[scriptName] ||= {};
-      nxJson.targetDefaults[scriptName].outputs = [`{projectRoot}/${output}`];
+      nxConfig.targetDefaults[scriptName] ||= {};
+      nxConfig.targetDefaults[scriptName].outputs = [`{projectRoot}/${output}`];
     }
   }
-  nxJson.defaultBase = deduceDefaultBase();
+  nxConfig.defaultBase = deduceDefaultBase();
   if (defaultProject) {
-    nxJson.defaultProject = defaultProject;
+    nxConfig.defaultProject = defaultProject;
   }
-  writeJsonFile(nxJsonPath, nxJson);
+  writeJsonFile(nxJsonPath, nxConfig);
 }
 
 function deduceDefaultBase() {

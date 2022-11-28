@@ -14,9 +14,9 @@ import { workspaceRoot } from '../../../utils/workspace-root';
 
 export const getTouchedProjectsFromProjectGlobChanges: TouchedProjectLocator<
   WholeFileChange | JsonChange | DeletedFileChange
-> = (touchedFiles, projectGraphNodes, nxJson): string[] => {
+> = (touchedFiles, projectGraphNodes, nxConfig): string[] => {
   const pluginGlobPatterns = getGlobPatternsFromPlugins(
-    nxJson,
+    nxConfig,
     [workspaceRoot],
     workspaceRoot
   );

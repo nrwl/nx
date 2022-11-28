@@ -295,8 +295,8 @@ describe('ProjectConverter', () => {
         eslintInitializer: () => undefined,
       });
 
-      const nxJson = readJson<NxConfiguration>(host, 'nx.json');
-      nxJson.generators = {
+      const nxConfig = readJson<NxConfiguration>(host, 'nx.json');
+      nxConfig.generators = {
         '@nrwl/angular': {
           application: {
             linter: 'tslint',
@@ -306,7 +306,7 @@ describe('ProjectConverter', () => {
           },
         },
       };
-      writeJson(host, 'nx.json', nxJson);
+      writeJson(host, 'nx.json', nxConfig);
 
       // BEFORE - no entry for convert-tslint-to-eslint wthin @nrwl/angular generators
       expect(readJson(host, 'nx.json')).toMatchSnapshot();
@@ -350,9 +350,9 @@ describe('ProjectConverter', () => {
         }
       )();
 
-      const nxJson = readJson<NxConfiguration>(host, 'nx.json');
+      const nxConfig = readJson<NxConfiguration>(host, 'nx.json');
       // Not using shorthand syntax this time
-      nxJson.generators = {
+      nxConfig.generators = {
         '@nrwl/angular': {
           application: {
             linter: 'tslint',
@@ -362,7 +362,7 @@ describe('ProjectConverter', () => {
           },
         },
       };
-      writeJson(host, 'nx.json', nxJson);
+      writeJson(host, 'nx.json', nxConfig);
 
       // BEFORE - tslint and codelyzer are present
       expect(readJson(host, 'package.json')).toMatchSnapshot();
@@ -395,15 +395,15 @@ describe('ProjectConverter', () => {
         eslintInitializer: () => undefined,
       });
 
-      const nxJson = readJson<NxConfiguration>(host, 'nx.json');
-      nxJson.generators = {
+      const nxConfig = readJson<NxConfiguration>(host, 'nx.json');
+      nxConfig.generators = {
         '@nrwl/angular': {
           'convert-tslint-to-eslint': {
             removeTSLintIfNoMoreTSLintTargets: true,
           },
         },
       };
-      writeJson(host, 'nx.json', nxJson);
+      writeJson(host, 'nx.json', nxConfig);
 
       // BEFORE - convert-tslint-to-eslint wthin @nrwl/angular generators has a value for removeTSLintIfNoMoreTSLintTargets
       expect(readJson(host, 'nx.json')).toMatchSnapshot();

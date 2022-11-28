@@ -5,7 +5,7 @@ import {
 } from '../config/configuration';
 
 export interface Environment {
-  nxJson: NxConfiguration;
+  nxConfig: NxConfiguration;
   workspaceJson: any;
   /**
    * @deprecated the field will be removed after Nx 14 is released. It's left here
@@ -19,7 +19,7 @@ export interface Environment {
  * @deprecated Read workspaceJson from projectGraph, and use readNxJson on its own.
  */
 export function readEnvironment(): Environment {
-  const nxJson = readNxJson();
+  const nxConfig = readNxJson();
   const workspaceJson = readAllWorkspaceConfiguration();
-  return { nxJson, workspaceJson, workspaceResults: null } as any;
+  return { nxConfig, workspaceJson, workspaceResults: null } as any;
 }

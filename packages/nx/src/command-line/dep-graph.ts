@@ -572,10 +572,10 @@ async function createTaskGraphClientResponse(): Promise<TaskGraphClientResponse>
 function getAllTaskGraphsForWorkspace(
   projectGraph: ProjectGraph
 ): Record<string, TaskGraph> {
-  const nxJson = readNxJson();
+  const nxConfig = readNxJson();
 
   const defaultDependencyConfigs = mapTargetDefaultsToDependencies(
-    nxJson.targetDefaults
+    nxConfig.targetDefaults
   );
 
   const taskGraphs: Record<string, TaskGraph> = {};

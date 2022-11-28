@@ -260,25 +260,25 @@ function movePropertiesToNewLocations(workspaceJsonPath: string) {
     const workspaceJson = readJsonFile<
       NxConfiguration & ProjectsConfigurations
     >(workspaceJsonPath);
-    const nxJson = readJsonFile<NxConfiguration & ProjectsConfigurations>(
+    const nxConfig = readJsonFile<NxConfiguration & ProjectsConfigurations>(
       'nx.json'
     );
     if (
       workspaceJson.cli ||
       workspaceJson.generators ||
-      nxJson.projects ||
-      nxJson.defaultProject
+      nxConfig.projects ||
+      nxConfig.defaultProject
     ) {
-      nxJson.cli ??= workspaceJson.cli;
-      nxJson.generators ??=
+      nxConfig.cli ??= workspaceJson.cli;
+      nxConfig.generators ??=
         workspaceJson.generators ?? (workspaceJson as any).schematics;
-      nxJson.defaultProject ??= workspaceJson.defaultProject;
+      nxConfig.defaultProject ??= workspaceJson.defaultProject;
       delete workspaceJson['cli'];
       delete workspaceJson['generators'];
       delete workspaceJson['defaultProject'];
-      moveTagsAndImplicitDepsFromNxJsonToWorkspaceJson(workspaceJson, nxJson);
+      moveTagsAndImplicitDepsFromNxJsonToWorkspaceJson(workspaceJson, nxConfig);
       writeJsonFile(workspaceJsonPath, workspaceJson);
-      writeJsonFile('nx.json', nxJson);
+      writeJsonFile('nx.json', nxConfig);
     }
   } catch (e) {
     console.error(
@@ -290,21 +290,21 @@ function movePropertiesToNewLocations(workspaceJsonPath: string) {
 
 export function moveTagsAndImplicitDepsFromNxJsonToWorkspaceJson(
   workspaceJson: ProjectsConfigurations,
-  nxJson: NxConfiguration & {
+  nxConfig: NxConfiguration & {
     projects: Record<
       string,
       Pick<ProjectConfiguration, 'tags' | 'implicitDependencies'>
     >;
   }
 ) {
-  if (!nxJson.projects) {
+  if (!nxConfig.projects) {
     return;
   }
-  Object.entries(nxJson.projects).forEach(([project, config]) => {
+  Object.entries(nxConfig.projects).forEach(([project, config]) => {
     workspaceJson.projects[project] = {
       ...workspaceJson.projects[project],
       ...config,
     };
   });
-  delete nxJson.projects;
+  delete nxConfig.projects;
 }

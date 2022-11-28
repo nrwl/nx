@@ -3,12 +3,12 @@ import { getRunner } from './run-command';
 import { NxConfiguration } from '../config/nx-json';
 
 describe('getRunner', () => {
-  let nxJson: NxConfiguration;
+  let nxConfig: NxConfiguration;
   let mockRunner: TasksRunner;
   let overrides: any;
 
   beforeEach(() => {
-    nxJson = {
+    nxConfig = {
       npmScope: 'proj',
     };
     mockRunner = jest.fn();
@@ -19,7 +19,7 @@ describe('getRunner', () => {
       virtual: true,
     });
 
-    nxJson.tasksRunnerOptions = {
+    nxConfig.tasksRunnerOptions = {
       custom: {
         runner: 'custom-runner',
       },
@@ -27,7 +27,7 @@ describe('getRunner', () => {
 
     const { tasksRunner, runnerOptions } = getRunner(
       { runner: 'custom' },
-      nxJson
+      nxConfig
     );
 
     expect(tasksRunner).toEqual(mockRunner);
@@ -38,7 +38,7 @@ describe('getRunner', () => {
       virtual: true,
     });
 
-    nxJson.tasksRunnerOptions = {
+    nxConfig.tasksRunnerOptions = {
       custom: {
         runner: 'custom-runner2',
         options: {
@@ -49,7 +49,7 @@ describe('getRunner', () => {
 
     const { tasksRunner, runnerOptions } = getRunner(
       { runner: 'custom' },
-      nxJson
+      nxConfig
     );
     expect(tasksRunner).toBe(mockRunner);
     expect(runnerOptions).toEqual({
@@ -63,13 +63,13 @@ describe('getRunner', () => {
       virtual: true,
     });
 
-    nxJson.tasksRunnerOptions = {
+    nxConfig.tasksRunnerOptions = {
       default: {
         runner: 'custom-default-runner',
       },
     };
 
-    const { tasksRunner } = getRunner({}, nxJson);
+    const { tasksRunner } = getRunner({}, nxConfig);
 
     expect(tasksRunner).toEqual(mockRunner);
   });

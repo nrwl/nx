@@ -14,7 +14,7 @@ import { getPackageManagerCommand } from '../utils/package-manager';
 export async function printAffected(
   affectedProjects: ProjectGraphProjectNode[],
   projectGraph: ProjectGraph,
-  { nxJson }: { nxJson: NxConfiguration },
+  { nxConfig }: { nxConfig: NxConfiguration },
   nxArgs: NxArgs,
   overrides: yargs.Arguments
 ) {
@@ -27,7 +27,7 @@ export async function printAffected(
         projectsForType,
         projectGraph,
         nxArgs,
-        nxJson,
+        nxConfig,
         overrides
       )
     : [];
@@ -47,11 +47,11 @@ async function createTasks(
   affectedProjectsWithTargetAndConfig: ProjectGraphProjectNode[],
   projectGraph: ProjectGraph,
   nxArgs: NxArgs,
-  nxJson: NxConfiguration,
+  nxConfig: NxConfiguration,
   overrides: yargs.Arguments
 ) {
   const workspaces = new Workspaces(workspaceRoot);
-  const hasher = new Hasher(projectGraph, nxJson, {});
+  const hasher = new Hasher(projectGraph, nxConfig, {});
   const execCommand = getPackageManagerCommand().exec;
 
   const tasks: Task[] = affectedProjectsWithTargetAndConfig.map(

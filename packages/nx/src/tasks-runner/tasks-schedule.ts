@@ -32,7 +32,7 @@ export class TasksSchedule {
 
   constructor(
     private readonly hasher: Hasher,
-    private readonly nxJson: NxConfiguration,
+    private readonly nxConfig: NxConfiguration,
     private readonly projectGraph: ProjectGraph,
     private readonly taskGraph: TaskGraph,
     private readonly workspaces: Workspaces,
@@ -134,7 +134,7 @@ export class TasksSchedule {
       const rootTask = this.notScheduledTaskGraph.tasks[root];
       const executorName = getExecutorNameForTask(
         rootTask,
-        this.nxJson,
+        this.nxConfig,
         this.projectGraph
       );
       this.processTaskForBatches(batchMap, rootTask, executorName, true);
@@ -164,11 +164,11 @@ export class TasksSchedule {
       task,
       this.workspaces,
       this.projectGraph,
-      this.nxJson
+      this.nxConfig
     );
     const executorName = getExecutorNameForTask(
       task,
-      this.nxJson,
+      this.nxConfig,
       this.projectGraph
     );
     if (rootExecutorName !== executorName) {

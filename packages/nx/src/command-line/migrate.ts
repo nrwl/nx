@@ -894,10 +894,10 @@ async function generateMigrationsJsonAndUpdatePackageJson(
 
 function showConnectToCloudMessage() {
   try {
-    const nxJson = readJsonFile<NxConfiguration>('nx.json');
+    const nxConfig = readJsonFile<NxConfiguration>('nx.json');
     const defaultRunnerIsUsed =
-      !nxJson.tasksRunnerOptions ||
-      Object.values(nxJson.tasksRunnerOptions).find(
+      !nxConfig.tasksRunnerOptions ||
+      Object.values(nxConfig.tasksRunnerOptions).find(
         (r: any) =>
           r.runner == '@nrwl/workspace/tasks-runners/default' ||
           r.runner == 'nx/tasks-runners/default'

@@ -78,10 +78,10 @@ export class Workspaces {
     ) {
       return this.cachedWorkspaceConfig;
     }
-    const nxJson = this.readNxJson();
+    const nxConfig = this.readNxJson();
     const workspace = buildWorkspaceConfigurationFromGlobs(
-      nxJson,
-      globForProjectFiles(this.root, nxJson, opts?._ignorePluginInference),
+      nxConfig,
+      globForProjectFiles(this.root, nxConfig, opts?._ignorePluginInference),
       (path) => readJsonFile(join(this.root, path))
     );
 
@@ -94,10 +94,10 @@ export class Workspaces {
       );
     }
 
-    assertValidWorkspaceConfiguration(nxJson);
+    assertValidWorkspaceConfiguration(nxConfig);
     this.cachedWorkspaceConfig = {
-      ...this.mergeTargetDefaultsIntoProjectDescriptions(workspace, nxJson),
-      ...nxJson,
+      ...this.mergeTargetDefaultsIntoProjectDescriptions(workspace, nxConfig),
+      ...nxConfig,
     };
     return this.cachedWorkspaceConfig;
   }
@@ -122,20 +122,20 @@ export class Workspaces {
 
   private mergeTargetDefaultsIntoProjectDescriptions(
     config: ProjectsConfigurations,
-    nxJson: NxConfiguration
+    nxConfig: NxConfiguration
   ) {
     for (const proj of Object.values(config.projects)) {
       if (proj.targets) {
         for (const targetName of Object.keys(proj.targets)) {
-          if (nxJson.targetDefaults[targetName]) {
+          if (nxConfig.targetDefaults[targetName]) {
             const projectTargetDefinition = proj.targets[targetName];
             if (!projectTargetDefinition.outputs) {
               projectTargetDefinition.outputs =
-                nxJson.targetDefaults[targetName].outputs;
+                nxConfig.targetDefaults[targetName].outputs;
             }
             if (!projectTargetDefinition.dependsOn) {
               projectTargetDefinition.dependsOn =
-                nxJson.targetDefaults[targetName].dependsOn;
+                nxConfig.targetDefaults[targetName].dependsOn;
             }
           }
         }
@@ -236,17 +236,17 @@ export class Workspaces {
   }
 
   hasNxJson(): boolean {
-    const nxJson = path.join(this.root, 'nx.json');
-    return existsSync(nxJson);
+    const nxConfig = path.join(this.root, 'nx.json');
+    return existsSync(nxConfig);
   }
 
   readNxJson(): NxConfiguration {
-    const nxJson = path.join(this.root, 'nx.json');
-    if (existsSync(nxJson)) {
-      const nxJsonConfig = readJsonFile<NxConfiguration>(nxJson);
+    const nxConfig = path.join(this.root, 'nx.json');
+    if (existsSync(nxConfig)) {
+      const nxJsonConfig = readJsonFile<NxConfiguration>(nxConfig);
       if (nxJsonConfig.extends) {
         const extendedNxJsonPath = require.resolve(nxJsonConfig.extends, {
-          paths: [dirname(nxJson)],
+          paths: [dirname(nxConfig)],
         });
         const baseNxJson =
           readJsonFile<NxConfiguration>(extendedNxJsonPath);
@@ -269,26 +269,26 @@ export class Workspaces {
   }
 
   private mergeTargetDefaultsAndTargetDependencies(
-    nxJson: NxConfiguration
+    nxConfig: NxConfiguration
   ) {
-    if (!nxJson.targetDefaults) {
-      nxJson.targetDefaults = {};
+    if (!nxConfig.targetDefaults) {
+      nxConfig.targetDefaults = {};
     }
-    if (nxJson.targetDependencies) {
-      for (const targetName of Object.keys(nxJson.targetDependencies)) {
-        if (!nxJson.targetDefaults[targetName]) {
-          nxJson.targetDefaults[targetName] = {};
+    if (nxConfig.targetDependencies) {
+      for (const targetName of Object.keys(nxConfig.targetDependencies)) {
+        if (!nxConfig.targetDefaults[targetName]) {
+          nxConfig.targetDefaults[targetName] = {};
         }
-        if (!nxJson.targetDefaults[targetName].dependsOn) {
-          nxJson.targetDefaults[targetName].dependsOn = [];
+        if (!nxConfig.targetDefaults[targetName].dependsOn) {
+          nxConfig.targetDefaults[targetName].dependsOn = [];
         }
-        nxJson.targetDefaults[targetName].dependsOn = [
-          ...nxJson.targetDefaults[targetName].dependsOn,
-          ...nxJson.targetDependencies[targetName],
+        nxConfig.targetDefaults[targetName].dependsOn = [
+          ...nxConfig.targetDefaults[targetName].dependsOn,
+          ...nxConfig.targetDependencies[targetName],
         ];
       }
     }
-    return nxJson;
+    return nxConfig;
   }
 
   private getImplementationFactory<T>(
@@ -421,10 +421,10 @@ function normalizeExecutorSchema(
 }
 
 function assertValidWorkspaceConfiguration(
-  nxJson: NxConfiguration & { projects?: any }
+  nxConfig: NxConfiguration & { projects?: any }
 ) {
   // Assert valid workspace configuration
-  if (nxJson.projects) {
+  if (nxConfig.projects) {
     logger.warn(
       'NX As of Nx 13, project configuration should be moved from nx.json to workspace.json/project.json. Please run "nx format" to fix this.'
     );
@@ -581,11 +581,11 @@ let projectGlobCache: string[];
 let projectGlobCacheKey: string;
 
 export function getGlobPatternsFromPlugins(
-  nxJson: NxConfiguration,
+  nxConfig: NxConfiguration,
   paths: string[],
   root = workspaceRoot
 ): string[] {
-  const plugins = loadNxPlugins(nxJson?.plugins, paths, root);
+  const plugins = loadNxPlugins(nxConfig?.plugins, paths, root);
 
   const patterns = [];
   for (const plugin of plugins) {
@@ -669,11 +669,11 @@ function removeRelativePath(pattern: string): string {
 
 export function globForProjectFiles(
   root,
-  nxJson?: NxConfiguration,
+  nxConfig?: NxConfiguration,
   ignorePluginInference = false
 ) {
   // Deal w/ Caching
-  const cacheKey = [root, ...(nxJson?.plugins || [])].join(',');
+  const cacheKey = [root, ...(nxConfig?.plugins || [])].join(',');
   if (
     process.env.NX_PROJECT_GLOB_CACHE !== 'false' &&
     projectGlobCache &&
@@ -706,7 +706,7 @@ export function globForProjectFiles(
 
   if (!ignorePluginInference) {
     projectGlobPatterns.push(
-      ...getGlobPatternsFromPlugins(nxJson, [root], root)
+      ...getGlobPatternsFromPlugins(nxConfig, [root], root)
     );
   }
 
@@ -756,7 +756,7 @@ export function globForProjectFiles(
   if (
     projectGlobCache.length === 0 &&
     _globPatternsFromPackageManagerWorkspaces === undefined &&
-    nxJson?.extends === 'nx/presets/npm.json'
+    nxConfig?.extends === 'nx/presets/npm.json'
   ) {
     output.warn({
       title:
@@ -794,21 +794,21 @@ export function deduplicateProjectFiles(
 function buildProjectConfigurationFromPackageJson(
   path: string,
   packageJson: { name: string },
-  nxJson: NxConfiguration
+  nxConfig: NxConfiguration
 ): ProjectConfiguration & { name: string } {
   const normalizedPath = path.split('\\').join('/');
   const directory = dirname(normalizedPath);
   let name = packageJson.name ?? toProjectName(normalizedPath);
-  if (nxJson?.npmScope) {
-    const npmPrefix = `@${nxJson.npmScope}/`;
+  if (nxConfig?.npmScope) {
+    const npmPrefix = `@${nxConfig.npmScope}/`;
     if (name.startsWith(npmPrefix)) {
       name = name.replace(npmPrefix, '');
     }
   }
   const projectType =
-    nxJson?.workspaceLayout?.appsDir != nxJson?.workspaceLayout?.libsDir &&
-    nxJson?.workspaceLayout?.appsDir &&
-    directory.startsWith(nxJson.workspaceLayout.appsDir)
+    nxConfig?.workspaceLayout?.appsDir != nxConfig?.workspaceLayout?.libsDir &&
+    nxConfig?.workspaceLayout?.appsDir &&
+    directory.startsWith(nxConfig.workspaceLayout.appsDir)
       ? 'application'
       : 'library';
   return {
@@ -821,7 +821,7 @@ function buildProjectConfigurationFromPackageJson(
 
 export function inferProjectFromNonStandardFile(
   file: string,
-  nxJson: NxConfiguration
+  nxConfig: NxConfiguration
 ): ProjectConfiguration & { name: string } {
   const directory = dirname(file).split('\\').join('/');
 
@@ -832,7 +832,7 @@ export function inferProjectFromNonStandardFile(
 }
 
 export function buildWorkspaceConfigurationFromGlobs(
-  nxJson: NxConfiguration,
+  nxConfig: NxConfiguration,
   projectFiles: string[], // making this parameter allows devkit to pick up newly created projects
   readJson: <T extends Object>(string) => T = <T extends Object>(string) =>
     readJsonFile<T>(string) // making this an arg allows us to reuse in devkit
@@ -872,7 +872,7 @@ export function buildWorkspaceConfigurationFromGlobs(
         const { name, ...config } = buildProjectConfigurationFromPackageJson(
           file,
           projectPackageJson,
-          nxJson
+          nxConfig
         );
         if (!projects[name]) {
           projects[name] = config;
@@ -886,7 +886,7 @@ export function buildWorkspaceConfigurationFromGlobs(
         // The only thing we know about the file is its location
         const { name, ...config } = inferProjectFromNonStandardFile(
           file,
-          nxJson
+          nxConfig
         );
         if (!projects[name]) {
           projects[name] = config;

@@ -23,15 +23,15 @@ export function getWorkspaceLayout(tree: Tree): {
   standaloneAsDefault: boolean;
   npmScope: string;
 } {
-  const nxJson = readNxJson(tree);
+  const nxConfig = readNxJson(tree);
   return {
     appsDir:
-      nxJson?.workspaceLayout?.appsDir ??
+      nxConfig?.workspaceLayout?.appsDir ??
       inOrderOfPreference(tree, ['apps', 'packages'], '.'),
     libsDir:
-      nxJson?.workspaceLayout?.libsDir ??
+      nxConfig?.workspaceLayout?.libsDir ??
       inOrderOfPreference(tree, ['libs', 'packages'], '.'),
-    npmScope: nxJson?.npmScope,
+    npmScope: nxConfig?.npmScope,
     standaloneAsDefault: shouldDefaultToUsingStandaloneConfigs(tree),
   };
 }

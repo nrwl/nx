@@ -107,7 +107,7 @@ async function hashTasksThatDontDependOnOtherTasks(
 export async function runCommand(
   projectsToRun: ProjectGraphProjectNode[],
   projectGraph: ProjectGraph,
-  { nxJson }: { nxJson: NxConfiguration },
+  { nxConfig }: { nxConfig: NxConfiguration },
   nxArgs: NxArgs,
   overrides: any,
   initiatingProject: string | null,
@@ -117,10 +117,10 @@ export async function runCommand(
   const status = await handleErrors(
     process.env.NX_VERBOSE_LOGGING === 'true',
     async () => {
-      const { tasksRunner, runnerOptions } = getRunner(nxArgs, nxJson);
+      const { tasksRunner, runnerOptions } = getRunner(nxArgs, nxConfig);
 
       const defaultDependencyConfigs = mergeTargetDependencies(
-        nxJson.targetDefaults,
+        nxConfig.targetDefaults,
         extraTargetDependencies
       );
       const projectNames = projectsToRun.map((t) => t.name);
@@ -135,7 +135,7 @@ export async function runCommand(
         extraOptions.excludeTaskDependencies
       );
 
-      const hasher = new Hasher(projectGraph, nxJson, runnerOptions);
+      const hasher = new Hasher(projectGraph, nxConfig, runnerOptions);
       await hashTasksThatDontDependOnOtherTasks(
         new Workspaces(workspaceRoot),
         hasher,
@@ -201,7 +201,7 @@ export async function runCommand(
             nxArgs.outputStyle === 'compact' ? null : initiatingProject,
           target: nxArgs.target,
           projectGraph,
-          nxJson,
+          nxConfig,
           nxArgs,
           taskGraph,
           hasher,
@@ -291,18 +291,18 @@ function shouldUseDynamicLifeCycle(
 
 export function getRunner(
   nxArgs: NxArgs,
-  nxJson: NxConfiguration
+  nxConfig: NxConfiguration
 ): {
   tasksRunner: TasksRunner;
   runnerOptions: any;
 } {
   let runner = nxArgs.runner;
   runner = runner || 'default';
-  if (!nxJson.tasksRunnerOptions) {
+  if (!nxConfig.tasksRunnerOptions) {
     throw new Error(`Could not find any runner configurations in nx.json`);
   }
-  if (nxJson.tasksRunnerOptions[runner]) {
-    let modulePath: string = nxJson.tasksRunnerOptions[runner].runner;
+  if (nxConfig.tasksRunnerOptions[runner]) {
+    let modulePath: string = nxConfig.tasksRunnerOptions[runner].runner;
 
     let tasksRunner;
     if (modulePath) {
@@ -322,7 +322,7 @@ export function getRunner(
     return {
       tasksRunner,
       runnerOptions: {
-        ...nxJson.tasksRunnerOptions[runner].options,
+        ...nxConfig.tasksRunnerOptions[runner].options,
         ...nxArgs,
       },
     };

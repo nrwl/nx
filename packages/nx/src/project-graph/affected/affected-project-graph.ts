@@ -23,7 +23,7 @@ import { workspaceRoot } from '../../utils/workspace-root';
 export function filterAffected(
   graph: ProjectGraph<ProjectConfiguration>,
   touchedFiles: FileChange[],
-  nxJson: NxConfiguration = readNxJson(),
+  nxConfig: NxConfiguration = readNxJson(),
   packageJson: any = readPackageJson()
 ): ProjectGraph {
   // Additional affected logic should be in this array.
@@ -40,12 +40,12 @@ export function filterAffected(
     touchedProjectLocators.push(getTouchedProjectsFromProjectGlobChanges);
   }
   const touchedProjects = touchedProjectLocators.reduce((acc, f) => {
-    return acc.concat(f(touchedFiles, graph.nodes, nxJson, packageJson, graph));
+    return acc.concat(f(touchedFiles, graph.nodes, nxConfig, packageJson, graph));
   }, [] as string[]);
 
   return filterAffectedProjects(graph, {
     projectGraphNodes: graph.nodes,
-    nxJson,
+    nxConfig,
     touchedProjects,
   });
 }

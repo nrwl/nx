@@ -309,8 +309,8 @@ describe('Nx Plugin', () => {
       );
 
       // Register plugin in nx.json (required for inference)
-      updateFile(`nx.json`, (nxJson) => {
-        const nx = JSON.parse(nxJson);
+      updateFile(`nx.json`, (nxConfig) => {
+        const nx = JSON.parse(nxConfig);
         nx.plugins = [`@${npmScope}/${plugin}`];
         return JSON.stringify(nx, null, 2);
       });

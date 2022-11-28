@@ -112,7 +112,7 @@ Named inputs defined in `nx.json` are merged with the named inputs defined in ea
 In other words, every project has a set of named inputs, and it's defined as: `{...namedInputsFromNxJson, ...namedInputsFromProjectsProjectJson}`.
 
 Defining `inputs` for a given target would replace the set of inputs for that target name defined in `nx.json`.
-Using pseudocode `inputs = projectJson.targets.build.inputs || nxJson.targetDefaults.build.inputs`.
+Using pseudocode `inputs = projectJson.targets.build.inputs || nxConfig.targetDefaults.build.inputs`.
 
 You can also define and redefine named inputs. This enables one key use case, where your `nx.json` can define things
 like this (which applies to every project):

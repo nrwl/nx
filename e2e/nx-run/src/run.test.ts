@@ -216,9 +216,9 @@ describe('Nx Running Tests', () => {
 }`;
       updateFile('tools/local-plugin/plugin.js', plugin);
       updateFile('nx.json', (c) => {
-        const nxJson = JSON.parse(c);
-        nxJson.plugins = ['./tools/local-plugin/plugin.js'];
-        return JSON.stringify(nxJson, null, 2);
+        const nxConfig = JSON.parse(c);
+        nxConfig.plugins = ['./tools/local-plugin/plugin.js'];
+        return JSON.stringify(nxConfig, null, 2);
       });
 
       // Create a custom project file for the app
@@ -302,11 +302,11 @@ describe('Nx Running Tests', () => {
 
       it('should be able to include deps using target dependencies defined at the root', () => {
         const originalNxJson = readFile('nx.json');
-        const nxJson = readJson('nx.json');
-        nxJson.targetDependencies = {
+        const nxConfig = readJson('nx.json');
+        nxConfig.targetDependencies = {
           build: ['^build', '^e2e-extra-entry-to-bust-cache'],
         };
-        updateFile('nx.json', JSON.stringify(nxJson));
+        updateFile('nx.json', JSON.stringify(nxConfig));
 
         const output = runCLI(`build ${myapp}`);
         expect(output).toContain(
@@ -320,7 +320,7 @@ describe('Nx Running Tests', () => {
       }, 10000);
 
       it('should be able to include deps using target defaults defined at the root', () => {
-        const nxJson = readJson('nx.json');
+        const nxConfig = readJson('nx.json');
         updateProjectConfig(myapp, (config) => {
           config.targets.prep = {
             command: 'echo PREP > one.txt',
@@ -331,11 +331,11 @@ describe('Nx Running Tests', () => {
           return config;
         });
 
-        nxJson.tasksRunnerOptions.default.options.cacheableOperations = [
+        nxConfig.tasksRunnerOptions.default.options.cacheableOperations = [
           'prep',
           'outside',
         ];
-        nxJson.targetDefaults = {
+        nxConfig.targetDefaults = {
           prep: {
             outputs: ['{workspaceRoot}/one.txt'],
           },
@@ -343,7 +343,7 @@ describe('Nx Running Tests', () => {
             dependsOn: ['prep'],
           },
         };
-        updateFile('nx.json', JSON.stringify(nxJson));
+        updateFile('nx.json', JSON.stringify(nxConfig));
 
         const output = runCLI(`outside ${myapp}`);
         expect(output).toContain(

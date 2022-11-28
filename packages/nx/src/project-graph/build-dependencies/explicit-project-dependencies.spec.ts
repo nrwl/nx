@@ -555,7 +555,7 @@ interface VirtualWorkspaceConfig {
  * projects in order to be able to execute `buildExplicitTypeScriptDependencies()` in the tests.
  */
 function createVirtualWorkspace(config: VirtualWorkspaceConfig) {
-  const nxJson = {
+  const nxConfig = {
     npmScope: 'proj',
   };
   const workspaceJson = {
@@ -574,7 +574,7 @@ function createVirtualWorkspace(config: VirtualWorkspaceConfig) {
       "devDependencies": []
     }`,
     './workspace.json': JSON.stringify(workspaceJson),
-    './nx.json': JSON.stringify(nxJson),
+    './nx.json': JSON.stringify(nxConfig),
     ...config.sourceProjectFiles.reduce(
       (acc, file) => ({
         ...acc,
@@ -644,7 +644,7 @@ function createVirtualWorkspace(config: VirtualWorkspaceConfig) {
     ctx: {
       workspace: {
         ...workspaceJson,
-        ...nxJson,
+        ...nxConfig,
       } as Workspace,
       filesToProcess: createProjectFileMap(
         workspaceJson,

@@ -103,14 +103,14 @@ export function getProjects(tree: Tree): Map<string, ProjectConfiguration> {
 export function readWorkspaceConfiguration(tree: Tree): WorkspaceConfiguration {
   const { projects, ...workspace } = readRawWorkspaceJson(tree); // Create a new object, without projects
 
-  let nxJson = readNxJson(tree);
-  if (nxJson === null) {
+  let nxConfig = readNxJson(tree);
+  if (nxConfig === null) {
     return workspace;
   }
 
   return {
     ...workspace,
-    ...nxJson,
+    ...nxConfig,
   };
 }
 
@@ -141,7 +141,7 @@ export function updateWorkspaceConfiguration(
     extends: ext,
   } = workspaceConfig;
 
-  const nxJson: Required<NxConfiguration> = {
+  const nxConfig: Required<NxConfiguration> = {
     implicitDependencies,
     plugins,
     pluginsConfig,
@@ -163,17 +163,17 @@ export function updateWorkspaceConfiguration(
       if (json.extends) {
         const nxJsonExtends = readNxJsonExtends(tree, json.extends);
         const changedPropsOfNxJson = {};
-        Object.keys(nxJson).forEach((prop) => {
+        Object.keys(nxConfig).forEach((prop) => {
           if (
-            JSON.stringify(nxJson[prop], null, 2) !=
+            JSON.stringify(nxConfig[prop], null, 2) !=
             JSON.stringify(nxJsonExtends[prop], null, 2)
           ) {
-            changedPropsOfNxJson[prop] = nxJson[prop];
+            changedPropsOfNxJson[prop] = nxConfig[prop];
           }
         });
         return { ...json, ...changedPropsOfNxJson };
       } else {
-        return { ...json, ...nxJson };
+        return { ...json, ...nxConfig };
       }
     });
   }
@@ -244,11 +244,11 @@ export function readNxJson(tree: Tree): NxConfiguration | null {
   if (!tree.exists('nx.json')) {
     return null;
   }
-  let nxJson = readJson<NxConfiguration>(tree, 'nx.json');
-  if (nxJson.extends) {
-    nxJson = { ...readNxJsonExtends(tree, nxJson.extends), ...nxJson };
+  let nxConfig = readJson<NxConfiguration>(tree, 'nx.json');
+  if (nxConfig.extends) {
+    nxConfig = { ...readNxJsonExtends(tree, nxConfig.extends), ...nxConfig };
   }
-  return nxJson;
+  return nxConfig;
 }
 
 /**
@@ -490,17 +490,17 @@ function readRawWorkspaceJson(tree: Tree): RawProjectsConfigurations {
     // `workspace.json` exists, use it.
     return readJson<RawProjectsConfigurations>(tree, path);
   } else {
-    const nxJson = readNxJson(tree);
+    const nxConfig = readNxJson(tree);
     const createdProjects = buildWorkspaceConfigurationFromGlobs(
-      nxJson,
+      nxConfig,
       findCreatedProjects(tree),
       (file) => readJson(tree, file)
     ).projects;
     // We already have built a cache but need to confirm it's the same tree
     if (!staticFSWorkspace || tree !== cachedTree) {
       staticFSWorkspace = buildWorkspaceConfigurationFromGlobs(
-        nxJson,
-        [...globForProjectFiles(tree.root, nxJson)],
+        nxConfig,
+        [...globForProjectFiles(tree.root, nxConfig)],
         (file) => readJson(tree, file)
       );
       cachedTree = tree;

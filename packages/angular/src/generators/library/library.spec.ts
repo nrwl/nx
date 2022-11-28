@@ -321,8 +321,8 @@ describe('lib', () => {
       updateJson<NxConfiguration, NxConfiguration>(
         tree,
         '/nx.json',
-        (nxJson) => {
-          nxJson.generators = {
+        (nxConfig) => {
+          nxConfig.generators = {
             '@schematics/angular:service': {
               skipTests: true,
             },
@@ -331,7 +331,7 @@ describe('lib', () => {
             },
           };
 
-          return nxJson;
+          return nxConfig;
         }
       );
 

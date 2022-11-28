@@ -34,7 +34,7 @@ const DAEMON_ENV_SETTINGS = {
 export type UnregisterCallback = () => void;
 
 export class DaemonClient {
-  constructor(private readonly nxJson: NxConfiguration) {
+  constructor(private readonly nxConfig: NxConfiguration) {
     this.reset();
   }
 
@@ -51,7 +51,7 @@ export class DaemonClient {
   enabled() {
     if (this._enabled === undefined) {
       const useDaemonProcessOption =
-        this.nxJson.tasksRunnerOptions?.['default']?.options?.useDaemonProcess;
+        this.nxConfig.tasksRunnerOptions?.['default']?.options?.useDaemonProcess;
       const env = process.env.NX_DAEMON;
 
       // env takes precedence

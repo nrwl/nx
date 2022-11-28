@@ -41,10 +41,10 @@ describe('update to v13 config locations', () => {
   it('should move properties to correct place', async () => {
     await update(tree);
     const workspaceJson = readJson(tree, 'workspace.json');
-    const nxJson = readJson(tree, 'nx.json');
-    expect(nxJson.projects).not.toBeDefined();
-    expect(nxJson.cli?.packageManager).toEqual('npm');
-    expect(nxJson.generators).toEqual({});
+    const nxConfig = readJson(tree, 'nx.json');
+    expect(nxConfig.projects).not.toBeDefined();
+    expect(nxConfig.cli?.packageManager).toEqual('npm');
+    expect(nxConfig.generators).toEqual({});
     expect(workspaceJson.projects.a.tags).toEqual(['test']);
     expect(workspaceJson.cli).not.toBeDefined();
     expect(workspaceJson.defaultProject).not.toBeDefined();
@@ -81,10 +81,10 @@ describe('update to v13 config locations', () => {
     it('should move properties to correct place', async () => {
       await update(tree);
       const workspaceJson = readJson(tree, 'workspace.json');
-      const nxJson = readJson(tree, 'nx.json');
-      expect(nxJson.projects).not.toBeDefined();
-      expect(nxJson.cli?.packageManager).toEqual('npm');
-      expect(nxJson.generators).toEqual({
+      const nxConfig = readJson(tree, 'nx.json');
+      expect(nxConfig.projects).not.toBeDefined();
+      expect(nxConfig.cli?.packageManager).toEqual('npm');
+      expect(nxConfig.generators).toEqual({
         '@nrwl/workspace:lib': {
           name: 'This is a wierd default',
         },

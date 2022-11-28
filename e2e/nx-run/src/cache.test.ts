@@ -139,15 +139,15 @@ describe('cache', () => {
     // --------------------------------------------
     const originalNxJson = readFile('nx.json');
     updateFile('nx.json', (c) => {
-      const nxJson = JSON.parse(c);
-      nxJson.tasksRunnerOptions = {
+      const nxConfig = JSON.parse(c);
+      nxConfig.tasksRunnerOptions = {
         default: {
           options: {
             cacheableOperations: [],
           },
         },
       };
-      return JSON.stringify(nxJson, null, 2);
+      return JSON.stringify(nxConfig, null, 2);
     });
 
     const outputWithoutCachingEnabled1 = runCLI(`affected:build ${files}`);

@@ -67,17 +67,17 @@ describe('karma', () => {
     });
     karmaGenerator(tree, {});
 
-    const nxJson = readJson<NxConfiguration>(tree, 'nx.json');
-    expect(nxJson.namedInputs.production).toContain(
+    const nxConfig = readJson<NxConfiguration>(tree, 'nx.json');
+    expect(nxConfig.namedInputs.production).toContain(
       '!{projectRoot}/karma.conf.js'
     );
-    expect(nxJson.namedInputs.production).toContain(
+    expect(nxConfig.namedInputs.production).toContain(
       '!{projectRoot}/tsconfig.spec.json'
     );
-    expect(nxJson.namedInputs.production).toContain(
+    expect(nxConfig.namedInputs.production).toContain(
       '!{projectRoot}/**/*.spec.[jt]s'
     );
-    expect(nxJson.targetDefaults.test).toEqual({
+    expect(nxConfig.targetDefaults.test).toEqual({
       inputs: ['default', '^production', '{workspaceRoot}/karma.conf.js'],
     });
   });
