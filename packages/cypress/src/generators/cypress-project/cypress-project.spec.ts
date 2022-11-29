@@ -4,7 +4,7 @@ import {
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
-  WorkspaceJsonConfiguration,
+  WorkspaceConfigConfiguration,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { cypressProjectGenerator } from './cypress-project';
@@ -256,7 +256,7 @@ describe('Cypress Project', () => {
             baseUrl: 'http://localhost:7788',
           });
 
-          const workspaceJson = readJson<WorkspaceJsonConfiguration>(
+          const workspaceJson = readJson<WorkspaceConfigConfiguration>(
             tree,
             'workspace.json'
           );

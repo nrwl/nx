@@ -1,10 +1,10 @@
 import { getJestProjects } from './get-jest-projects';
 import * as Workspace from 'nx/src/project-graph/file-utils';
-import type { WorkspaceJsonConfiguration } from '@nrwl/devkit';
+import type { WorkspaceConfigConfiguration } from '@nrwl/devkit';
 
 describe('getJestProjects', () => {
   test('single project', () => {
-    const mockedWorkspaceConfig: WorkspaceJsonConfiguration = {
+    const mockedWorkspaceConfig: WorkspaceConfigConfiguration = {
       projects: {
         'test-1': {
           root: 'blah',
@@ -28,7 +28,7 @@ describe('getJestProjects', () => {
   });
 
   test('custom target name', () => {
-    const mockedWorkspaceConfig: WorkspaceJsonConfiguration = {
+    const mockedWorkspaceConfig: WorkspaceConfigConfiguration = {
       projects: {
         'test-1': {
           root: 'blah',
@@ -52,7 +52,7 @@ describe('getJestProjects', () => {
   });
 
   test('configuration set with unique jestConfig', () => {
-    const mockedWorkspaceConfig: WorkspaceJsonConfiguration = {
+    const mockedWorkspaceConfig: WorkspaceConfigConfiguration = {
       projects: {
         test: {
           root: 'blah',
@@ -84,7 +84,7 @@ describe('getJestProjects', () => {
   });
 
   test('configuration, set with same jestConfig on configuration', () => {
-    const mockedWorkspaceConfig: WorkspaceJsonConfiguration = {
+    const mockedWorkspaceConfig: WorkspaceConfigConfiguration = {
       projects: {
         test: {
           root: 'blah',
@@ -113,7 +113,7 @@ describe('getJestProjects', () => {
   });
 
   test('other projects and targets that do not use the nrwl jest test runner', () => {
-    const mockedWorkspaceConfig: WorkspaceJsonConfiguration = {
+    const mockedWorkspaceConfig: WorkspaceConfigConfiguration = {
       projects: {
         otherTarget: {
           root: 'test',

@@ -7,7 +7,7 @@ export interface Workspace extends ProjectsConfigurations, NxConfig {
 /**
  * @deprecated use ProjectsConfigurations
  */
-export type WorkspaceJsonConfiguration = ProjectsConfigurations;
+export type WorkspaceConfigConfiguration = ProjectsConfigurations;
 
 /**
  * Projects Configurations

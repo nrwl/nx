@@ -5,7 +5,7 @@ import {
   shouldRecomputeWholeGraph,
 } from './nx-deps-cache';
 import { ProjectGraph } from '../config/project-graph';
-import { WorkspaceJsonConfiguration } from '../config/workspace-config-project-config';
+import { WorkspaceConfigConfiguration } from '../config/workspace-config-project-config';
 import { NxConfig } from '../config/nx-config';
 
 describe('nx deps utils', () => {
@@ -346,7 +346,7 @@ describe('nx deps utils', () => {
     return { ...defaults, ...p };
   }
 
-  function createWorkspaceJson(p: any): WorkspaceJsonConfiguration {
+  function createWorkspaceJson(p: any): WorkspaceConfigConfiguration {
     const defaults = {
       projects: { mylib: {} },
     } as any;

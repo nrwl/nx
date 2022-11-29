@@ -121,7 +121,7 @@ It only uses language primitives and immutable objects
 - [ImplicitDependencyEntry](../../devkit/index#implicitdependencyentry)
 - [ProjectType](../../devkit/index#projecttype)
 - [TaskGraphExecutor](../../devkit/index#taskgraphexecutor)
-- [WorkspaceJsonConfiguration](../../devkit/index#workspacejsonconfiguration)
+- [WorkspaceConfigConfiguration](../../devkit/index#workspacejsonconfiguration)
 
 ### Logger Variables
 
@@ -795,9 +795,9 @@ Implementation of a target of a project that handles multiple projects to be bat
 
 ---
 
-### WorkspaceJsonConfiguration
+### WorkspaceConfigConfiguration
 
-Ƭ **WorkspaceJsonConfiguration**: [`ProjectsConfigurations`](../../devkit/index#projectsconfigurations)
+Ƭ **WorkspaceConfigConfiguration**: [`ProjectsConfigurations`](../../devkit/index#projectsconfigurations)
 
 ## Logger Variables
 

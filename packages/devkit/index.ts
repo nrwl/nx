@@ -28,7 +28,7 @@ export type { Tree, FileChange } from 'nx/src/generators/tree';
  * @category Workspace
  */
 export type {
-  WorkspaceJsonConfiguration,
+  WorkspaceConfigConfiguration,
   ProjectsConfigurations,
   TargetDependencyConfig,
   TargetConfiguration,
