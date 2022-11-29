@@ -1,5 +1,6 @@
 import { assertValidStyle } from '@nrwl/react';
 import {
+  extractLayoutDirectory,
   getWorkspaceLayout,
   joinPathFragments,
   names,
@@ -24,11 +25,15 @@ export function normalizeOptions(
   host: Tree,
   options: Schema
 ): NormalizedSchema {
-  const appDirectory = options.directory
-    ? `${names(options.directory).fileName}/${names(options.name).fileName}`
+  const { layoutDirectory, projectDirectory } = extractLayoutDirectory(
+    options.directory
+  );
+
+  const appDirectory = projectDirectory
+    ? `${names(projectDirectory).fileName}/${names(options.name).fileName}`
     : names(options.name).fileName;
 
-  const { appsDir } = getWorkspaceLayout(host);
+  const appsDir = layoutDirectory ?? getWorkspaceLayout(host).appsDir;
 
   const appProjectName = appDirectory.replace(new RegExp('/', 'g'), '-');
   const e2eProjectName = `${appProjectName}-e2e`;

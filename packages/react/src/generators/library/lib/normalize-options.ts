@@ -1,4 +1,5 @@
 import {
+  extractLayoutDirectory,
   getImportPath,
   getProjects,
   getWorkspaceLayout,
@@ -16,21 +17,25 @@ export function normalizeOptions(
   options: Schema
 ): NormalizedSchema {
   const name = names(options.name).fileName;
-  const projectDirectory = options.directory
-    ? `${names(options.directory).fileName}/${name}`
+  const { projectDirectory, layoutDirectory } = extractLayoutDirectory(
+    options.directory
+  );
+  const fullProjectDirectory = projectDirectory
+    ? `${names(projectDirectory).fileName}/${name}`
     : name;
 
-  const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
+  const projectName = fullProjectDirectory.replace(new RegExp('/', 'g'), '-');
   const fileName = projectName;
-  const { libsDir, npmScope } = getWorkspaceLayout(host);
-  const projectRoot = joinPathFragments(libsDir, projectDirectory);
+  const { libsDir: defaultLibsDir, npmScope } = getWorkspaceLayout(host);
+  const libsDir = layoutDirectory ?? defaultLibsDir;
+  const projectRoot = joinPathFragments(libsDir, fullProjectDirectory);
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
   const importPath =
-    options.importPath || getImportPath(npmScope, projectDirectory);
+    options.importPath || getImportPath(npmScope, fullProjectDirectory);
 
   const normalized = {
     ...options,
@@ -40,9 +45,10 @@ export function normalizeOptions(
     routePath: `/${name}`,
     name: projectName,
     projectRoot,
-    projectDirectory,
+    projectDirectory: fullProjectDirectory,
     parsedTags,
     importPath,
+    libsDir,
   } as NormalizedSchema;
 
   // Libraries with a bundler or is publishable must also be buildable.

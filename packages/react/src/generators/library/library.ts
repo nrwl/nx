@@ -59,6 +59,7 @@ export interface NormalizedSchema extends Schema {
   parsedTags: string[];
   appMain?: string;
   appSourceRoot?: string;
+  libsDir?: string;
   unitTestRunner: 'jest' | 'vitest' | 'none';
 }
 
@@ -233,7 +234,10 @@ function addProject(host: Tree, options: NormalizedSchema) {
       executor: '@nrwl/web:rollup',
       outputs: ['{options.outputPath}'],
       options: {
-        outputPath: `dist/${libsDir}/${options.projectDirectory}`,
+        outputPath:
+          libsDir !== '.'
+            ? `dist/${libsDir}/${options.projectDirectory}`
+            : `dist/${options.projectDirectory}`,
         tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
         project: `${options.projectRoot}/package.json`,
         entryFile: maybeJs(options, `${options.projectRoot}/src/index.ts`),

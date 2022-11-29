@@ -1,4 +1,5 @@
 import {
+  extractLayoutDirectory,
   getWorkspacePath,
   joinPathFragments,
   readJson,
@@ -20,13 +21,21 @@ export function normalizeOptions(
   host: Tree,
   options: Partial<Schema>
 ): NormalizedSchema {
-  const appDirectory = normalizeDirectory(options.name, options.directory);
-  const appProjectName = normalizeProjectName(options.name, options.directory);
+  const { layoutDirectory, projectDirectory } = extractLayoutDirectory(
+    options.directory
+  );
+  const appDirectory = normalizeDirectory(options.name, projectDirectory);
+  const appProjectName = normalizeProjectName(options.name, projectDirectory);
   const e2eProjectName = options.rootProject
     ? 'e2e'
     : `${names(options.name).fileName}-e2e`;
 
-  const { appsDir, npmScope, standaloneAsDefault } = getWorkspaceLayout(host);
+  const {
+    appsDir: defaultAppsDir,
+    npmScope,
+    standaloneAsDefault,
+  } = getWorkspaceLayout(host);
+  const appsDir = layoutDirectory ?? defaultAppsDir;
   const appProjectRoot = options.rootProject
     ? '.'
     : joinPathFragments(appsDir, appDirectory);

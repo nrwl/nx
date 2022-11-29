@@ -340,7 +340,6 @@ export function createRootStorybookDirForRootProject(
   usesSwc?: boolean,
   usesVite?: boolean
 ) {
-  console.log('IS NEXT0', isNextJs);
   const rootConfigExists =
     tree.exists('.storybook/main.root.js') ||
     tree.exists('.storybook/main.root.ts');
@@ -411,7 +410,6 @@ export function createProjectStorybookDir(
   usesSwc?: boolean,
   usesVite?: boolean
 ) {
-  console.log('IS NEXT2 ', isNextJs);
   const { root, projectType } = readProjectConfiguration(tree, projectName);
 
   const projectDirectory =

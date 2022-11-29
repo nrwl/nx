@@ -5,6 +5,7 @@ import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
   convertNxGenerator,
+  extractLayoutDirectory,
   formatFiles,
   generateFiles,
   GeneratorCallback,
@@ -283,11 +284,16 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
 }
 
 function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
-  const appDirectory = options.directory
-    ? `${names(options.directory).fileName}/${names(options.name).fileName}`
+  const { layoutDirectory, projectDirectory } = extractLayoutDirectory(
+    options.directory
+  );
+
+  const appDirectory = projectDirectory
+    ? `${names(projectDirectory).fileName}/${names(options.name).fileName}`
     : names(options.name).fileName;
 
-  const { appsDir, npmScope } = getWorkspaceLayout(host);
+  const { appsDir: defaultAppsDir, npmScope } = getWorkspaceLayout(host);
+  const appsDir = layoutDirectory ?? defaultAppsDir;
 
   const appProjectName = appDirectory.replace(new RegExp('/', 'g'), '-');
   const e2eProjectName = `${appProjectName}-e2e`;

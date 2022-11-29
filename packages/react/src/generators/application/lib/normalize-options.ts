@@ -1,11 +1,18 @@
 import { NormalizedSchema, Schema } from '../schema';
 import { assertValidStyle } from '../../../utils/assertion';
-import { getWorkspaceLayout, names, normalizePath, Tree } from '@nrwl/devkit';
+import {
+  extractLayoutDirectory,
+  getWorkspaceLayout,
+  names,
+  normalizePath,
+  Tree,
+} from '@nrwl/devkit';
 import { findFreePort } from './find-free-port';
 
 export function normalizeDirectory(options: Schema) {
-  return options.directory
-    ? `${names(options.directory).fileName}/${names(options.name).fileName}`
+  const { projectDirectory } = extractLayoutDirectory(options.directory);
+  return projectDirectory
+    ? `${names(projectDirectory).fileName}/${names(options.name).fileName}`
     : names(options.name).fileName;
 }
 
@@ -23,7 +30,8 @@ export function normalizeOptions<T extends Schema = Schema>(
     ? 'e2e'
     : `${names(options.name).fileName}-e2e`;
 
-  const { appsDir } = getWorkspaceLayout(host);
+  const { layoutDirectory } = extractLayoutDirectory(options.directory);
+  const appsDir = layoutDirectory ?? getWorkspaceLayout(host).appsDir;
   const appProjectRoot = options.rootProject
     ? '.'
     : normalizePath(`${appsDir}/${appDirectory}`);
