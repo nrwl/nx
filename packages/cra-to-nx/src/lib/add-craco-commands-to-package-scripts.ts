@@ -11,10 +11,10 @@ export function addCracoCommandsToPackageScripts(
   const packageJson = readJsonFile(packageJsonPath);
   packageJson.scripts = {
     ...packageJson.scripts,
-    start: 'craco start',
+    start: 'nx exec -- craco start',
     serve: 'npm start',
-    build: `cross-env BUILD_PATH=${distPath} craco build`,
-    test: 'craco test',
+    build: `cross-env BUILD_PATH=${distPath} nx exec -- craco build`,
+    test: 'nx exec -- craco test',
   };
   writeJsonFile(packageJsonPath, packageJson);
 }
