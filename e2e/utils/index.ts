@@ -97,6 +97,7 @@ export function uniq(prefix: string) {
 }
 
 export function workspaceConfigName() {
+  // TODO(milahu): workspace.yaml
   return currentCli() === 'angular' ? 'angular.json' : 'workspace.json';
 }
 
