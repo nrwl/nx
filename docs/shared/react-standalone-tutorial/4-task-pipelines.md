@@ -16,20 +16,12 @@ Let's build the `store` application:
 > nx run store:build:production
 
 
->  NX  Vite build starting ...
-
 vite v3.2.4 building for production...
 ✓ 43 modules transformed.
 dist/store/index.html                  0.46 KiB
 dist/store/assets/index.50de2671.css   0.03 KiB / gzip: 0.05 KiB
 dist/store/assets/index.f18c2b19.js    157.69 KiB / gzip: 51.26 KiB
 dist/store/assets/index.f18c2b19.js.map 565.79 KiB
-
->  NX  Vite build finished ...
-
-
->  NX  Vite files available in dist/store
-
 
  ————————————————————————————————————————————————————————————————————————————————————————————————————————
 
@@ -84,19 +76,12 @@ It would, if Nx didn't have a robust caching mechanism to take care of that prob
 > nx run store:build:production  [local cache]
 
 
->  NX  Vite build starting ...
-
 vite v3.2.4 building for production...
 ✓ 43 modules transformed.
 dist/store/index.html                  0.46 KiB
 dist/store/assets/index.50de2671.css   0.03 KiB / gzip: 0.05 KiB
 dist/store/assets/index.f18c2b19.js    157.69 KiB / gzip: 51.26 KiB
 dist/store/assets/index.f18c2b19.js.map 565.79 KiB
-
->  NX  Vite build finished ...
-
-
->  NX  Vite files available in dist/store
 
 
  ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
