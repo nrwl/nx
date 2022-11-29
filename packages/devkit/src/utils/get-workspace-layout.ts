@@ -46,7 +46,7 @@ export function extractLayoutDirectory(directory: string): {
   if (directory) {
     directory = directory.startsWith('/') ? directory.substring(1) : directory;
     for (let dir of ['apps', 'libs', 'packages', 'appsD']) {
-      if (directory.startsWith(dir + '/')) {
+      if (directory.startsWith(dir + '/') || directory === dir) {
         return {
           layoutDirectory: dir,
           projectDirectory: directory.substring(dir.length + 1),
