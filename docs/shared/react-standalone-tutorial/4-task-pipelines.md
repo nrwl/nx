@@ -120,9 +120,9 @@ Nx determines if a project has been modified by looking at the task's defined `i
 
 Inputs for your task caching includes by default any environment details and all the source code of the projects and dependencies affecting your project.
 
-When running a task, Nx will determine all the inputs for your task and create a hash that will be used to index your cache. If you've already run this task with the same inputs, your cache will already be populated at this index, and Nx will replay the results stored in the cache.
+When you run a task, Nx uses the inputs for your task to create a hash that is used as an index for the task results. If the task has already been run with the same inputs, Nx replays the results stored in the cache.
 
-If this index does not exist, Nx will run the command and if the command succeeds, it will store the result in the cache.
+If this index does not exist, Nx runs the command and if the command succeeds, it stores the result in the cache.
 
 {% card title="More On Customizing Inputs" description="See the Customizing Inputs Guide for more details on how to set inputs for your tasks." url="/concepts/task-pipeline-configuration" /%}
 
@@ -130,7 +130,7 @@ If this index does not exist, Nx will run the command and if the command succeed
 
 Outputs of the cache include the terminal output created by the task, as well as any files created by the task - for example: the artifact created by running a `build` task.
 
-Outputs are defined for every target in your workspace:
+Here are the outputs defined for the `shared-ui` project:
 
 ```json {% fileName="shared/ui/project.json" %}
 {
