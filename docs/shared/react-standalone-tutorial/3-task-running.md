@@ -12,7 +12,7 @@ When you ran your generators in Part 1, you already set up these more common tas
 
 ## Defining Targets
 
-Here's the `project.json` file for your `common-ui` project:
+Here's the `project.json` file for your `shared-ui` project:
 
 ```json {% fileName="libs/common-ui/project.json" %}
 {
