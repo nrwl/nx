@@ -8,7 +8,8 @@
     ]
   },
   "include": [
+    <%- extraInclude %>
     "src/main.server.tsx",
-    "server.ts",
+    "server.ts"
   ]
 }

@@ -1,5 +1,7 @@
+import * as ts from 'typescript';
 import {
   addDependenciesToPackageJson,
+  applyChangesToString,
   convertNxGenerator,
   formatFiles,
   generateFiles,
@@ -10,32 +12,59 @@ import {
   updateProjectConfiguration,
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
+import initGenerator from '../init/init';
 
 import type { Schema } from './schema';
 import {
+  corsVersion,
   expressVersion,
   isbotVersion,
+  typesCorsVersion,
   typesExpressVersion,
 } from '../../utils/versions';
+import { addStaticRouter } from '../../utils/ast-utils';
+
+function readEntryFile(
+  host: Tree,
+  path: string
+): { content: string; source: ts.SourceFile } {
+  const content = host.read(path, 'utf-8');
+  return {
+    content,
+    source: ts.createSourceFile(path, content, ts.ScriptTarget.Latest, true),
+  };
+}
+
+interface AppComponentInfo {
+  importPath: string;
+  filePath: string;
+}
 
 export async function setupSsrGenerator(tree: Tree, options: Schema) {
+  await initGenerator(tree, {});
   const projectConfig = readProjectConfiguration(tree, options.project);
   const projectRoot = projectConfig.root;
-  const appImportCandidates = [
-    options.appComponentImportPath,
+  const appImportCandidates: AppComponentInfo[] = [
+    options.appComponentImportPath ?? 'app/app',
     'app',
     'App',
     'app/App',
     'App/App',
-  ];
-  const appComponentImport = appImportCandidates.find(
-    (app) =>
-      tree.exists(joinPathFragments(projectConfig.sourceRoot, `${app}.tsx`)) ||
-      tree.exists(joinPathFragments(projectConfig.sourceRoot, `${app}.jsx`)) ||
-      tree.exists(joinPathFragments(projectConfig.sourceRoot, `${app}.js`))
+  ].map((importPath) => {
+    return {
+      importPath,
+      filePath: joinPathFragments(
+        projectConfig.sourceRoot || projectConfig.root,
+        `${importPath}.tsx`
+      ),
+    };
+  });
+
+  const appComponentInfo = appImportCandidates.find((candidate) =>
+    tree.exists(candidate.filePath)
   );
 
-  if (!appComponentImport) {
+  if (!appComponentInfo) {
     throw new Error(
       `Cannot find an import path for <App/> component. Try passing setting --appComponentImportPath option.`
     );
@@ -148,9 +177,27 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
 
   generateFiles(tree, joinPathFragments(__dirname, 'files'), projectRoot, {
     tmpl: '',
-    appComponentImport,
+    extraInclude:
+      options.extraInclude?.length > 0
+        ? `"${options.extraInclude.join('", "')}",`
+        : '',
+    appComponentImport: appComponentInfo.importPath,
     browserBuildOutputPath: projectConfig.targets.build.options.outputPath,
   });
+
+  // Add <StaticRouter> to server main if needed.
+  // TODO: need to read main.server.tsx not main.tsx.
+  const appContent = tree.read(appComponentInfo.filePath, 'utf-8');
+  const isRouterPresent = appContent.match(/react-router-dom/);
+  if (isRouterPresent) {
+    const serverEntry = joinPathFragments(projectRoot, 'src/main.server.tsx');
+    const { content, source } = readEntryFile(tree, serverEntry);
+    const changes = applyChangesToString(
+      content,
+      addStaticRouter(serverEntry, source)
+    );
+    tree.write(serverEntry, changes);
+  }
 
   updateWorkspaceConfiguration(tree, workspace);
 
@@ -159,9 +206,11 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
     {
       express: expressVersion,
       isbot: isbotVersion,
+      cors: corsVersion,
     },
     {
       '@types/express': typesExpressVersion,
+      '@types/cors': typesCorsVersion,
     }
   );
 

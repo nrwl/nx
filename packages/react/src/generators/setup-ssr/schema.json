@@ -29,6 +29,15 @@
     "skipFormat": {
       "type": "boolean",
       "description": "Skip formatting the workspace after the generator completes."
+    },
+    "extraInclude": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "hidden": true,
+      "description": "Extra include entries in tsconfig.",
+      "default": []
     }
   },
   "required": ["project"],

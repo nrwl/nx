@@ -1,5 +1,14 @@
 import { join } from 'path';
-import { formatFiles, generateFiles, names, Tree } from '@nrwl/devkit';
+import {
+  formatFiles,
+  generateFiles,
+  GeneratorCallback,
+  joinPathFragments,
+  names,
+  readProjectConfiguration,
+  Tree,
+  updateProjectConfiguration,
+} from '@nrwl/devkit';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
 import { normalizeOptions } from '../application/lib/normalize-options';
@@ -8,6 +17,8 @@ import { NormalizedSchema } from '../application/schema';
 import { updateHostWithRemote } from './lib/update-host-with-remote';
 import { updateModuleFederationProject } from '../../rules/update-module-federation-project';
 import { Schema } from './schema';
+import setupSsrGenerator from '../setup-ssr/setup-ssr';
+import { setupSsrForRemote } from './lib/setup-ssr-for-remote';
 
 export function addModuleFederationFiles(
   host: Tree,
@@ -28,13 +39,15 @@ export function addModuleFederationFiles(
 }
 
 export async function remoteGenerator(host: Tree, schema: Schema) {
-  const options = normalizeOptions(host, schema);
-  const initApp = await applicationGenerator(host, {
+  const tasks: GeneratorCallback[] = [];
+  const options = normalizeOptions<Schema>(host, schema);
+  const initAppTask = await applicationGenerator(host, {
     ...options,
     skipDefaultProject: true,
     // Only webpack works with module federation for now.
     bundler: 'webpack',
   });
+  tasks.push(initAppTask);
 
   if (schema.host) {
     updateHostWithRemote(host, schema.host, options.name);
@@ -51,11 +64,32 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
   addModuleFederationFiles(host, options);
   updateModuleFederationProject(host, options);
 
+  if (options.ssr) {
+    const setupSsrTask = await setupSsrGenerator(host, {
+      project: options.projectName,
+    });
+    tasks.push(setupSsrTask);
+
+    const setupSsrForRemoteTask = await setupSsrForRemote(
+      host,
+      options,
+      options.projectName
+    );
+    tasks.push(setupSsrForRemoteTask);
+
+    const projectConfig = readProjectConfiguration(host, options.projectName);
+    projectConfig.targets.server.options.webpackConfig = joinPathFragments(
+      projectConfig.root,
+      'webpack.server.config.js'
+    );
+    updateProjectConfiguration(host, options.projectName, projectConfig);
+  }
+
   if (!options.skipFormat) {
     await formatFiles(host);
   }
 
-  return runTasksInSerial(initApp);
+  return runTasksInSerial(...tasks);
 }
 
 export default remoteGenerator;
