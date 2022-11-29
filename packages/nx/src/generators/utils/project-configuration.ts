@@ -338,11 +338,11 @@ function addProjectToWorkspaceConfig(
   standalone: boolean = false
 ) {
   const workspaceConfigPath = getWorkspacePath(tree);
-  const workspaceJson = readRawWorkspaceJson(tree);
+  const workspaceConfig = readRawWorkspaceJson(tree);
   if (workspaceConfigPath) {
     validateProjectConfigurationOperationsGivenWorkspaceJson(
       mode,
-      workspaceJson,
+      workspaceConfig,
       projectName
     );
   } else {
@@ -366,11 +366,11 @@ function addProjectToWorkspaceConfig(
   if (projectConfigFile) {
     if (mode === 'delete') {
       tree.delete(projectConfigFile);
-      delete workspaceJson.projects[projectName];
+      delete workspaceConfig.projects[projectName];
     } else {
       // keep real workspace up to date
       if (workspaceConfigPath && mode === 'create') {
-        workspaceJson.projects[projectName] = project.root;
+        workspaceConfig.projects[projectName] = project.root;
       }
 
       // update the project.json file
@@ -382,15 +382,15 @@ function addProjectToWorkspaceConfig(
       });
     }
   } else if (mode === 'delete') {
-    delete workspaceJson.projects[projectName];
+    delete workspaceConfig.projects[projectName];
   } else {
-    workspaceJson.projects[projectName] = project;
+    workspaceConfig.projects[projectName] = project;
   }
   if (workspaceConfigPath && tree.exists(workspaceConfigPath)) {
     writeJson(
       tree,
       workspaceConfigPath,
-      reformattedWorkspaceJsonOrNull(workspaceJson) ?? workspaceJson
+      reformattedWorkspaceJsonOrNull(workspaceConfig) ?? workspaceConfig
     );
   }
 }
@@ -399,10 +399,10 @@ function addProjectToWorkspaceConfig(
  * Read the workspace configuration, including projects.
  */
 export function readWorkspace(tree: Tree): ProjectsConfigurations {
-  const workspaceJson = inlineProjectConfigurationsWithTree(tree);
-  const originalVersion = workspaceJson.version;
+  const workspaceConfig = inlineProjectConfigurationsWithTree(tree);
+  const originalVersion = workspaceConfig.version;
   return {
-    ...toNewFormat(workspaceJson),
+    ...toNewFormat(workspaceConfig),
     version: originalVersion,
   };
 }
@@ -416,17 +416,17 @@ export function readWorkspace(tree: Tree): ProjectsConfigurations {
 function inlineProjectConfigurationsWithTree(
   tree: Tree
 ): ProjectsConfigurations {
-  const workspaceJson = readRawWorkspaceJson(tree);
-  Object.entries(workspaceJson.projects || {}).forEach(([project, config]) => {
+  const workspaceConfig = readRawWorkspaceJson(tree);
+  Object.entries(workspaceConfig.projects || {}).forEach(([project, config]) => {
     if (typeof config === 'string') {
       const configFileLocation = joinPathFragments(config, 'project.json');
-      workspaceJson.projects[project] = {
+      workspaceConfig.projects[project] = {
         root: config,
         ...readJson<ProjectConfiguration>(tree, configFileLocation),
       };
     }
   });
-  return workspaceJson as ProjectsConfigurations;
+  return workspaceConfig as ProjectsConfigurations;
 }
 
 /**
@@ -540,20 +540,20 @@ function getProjectFileLocation(tree: Tree, project: string): string | null {
 
 function validateProjectConfigurationOperationsGivenWorkspaceJson(
   mode: 'create' | 'update' | 'delete',
-  workspaceJson: RawProjectsConfigurations | ProjectsConfigurations | null,
+  workspaceConfig: RawProjectsConfigurations | ProjectsConfigurations | null,
   projectName: string
 ) {
-  if (mode == 'create' && workspaceJson.projects[projectName]) {
+  if (mode == 'create' && workspaceConfig.projects[projectName]) {
     throw new Error(
       `Cannot create Project '${projectName}'. It already exists.`
     );
   }
-  if (mode == 'update' && !workspaceJson.projects[projectName]) {
+  if (mode == 'update' && !workspaceConfig.projects[projectName]) {
     throw new Error(
       `Cannot update Project '${projectName}'. It does not exist.`
     );
   }
-  if (mode == 'delete' && !workspaceJson.projects[projectName]) {
+  if (mode == 'delete' && !workspaceConfig.projects[projectName]) {
     throw new Error(
       `Cannot delete Project '${projectName}'. It does not exist.`
     );
