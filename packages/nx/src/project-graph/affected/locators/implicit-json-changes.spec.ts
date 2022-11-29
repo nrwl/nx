@@ -1,7 +1,7 @@
 import { getImplicitlyTouchedProjectsByJsonChanges } from './implicit-json-changes';
 import { WholeFileChange } from '../../file-utils';
 import { JsonDiffType } from '../../../utils/json-diff';
-import { NxConfig } from '../../../config/nx-json';
+import { NxConfig } from '../../../config/nx-config';
 
 function getModifiedChange(path: string[]) {
   return {

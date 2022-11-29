@@ -28,7 +28,7 @@ import {
   ProjectGraphProcessorContext,
 } from '../config/project-graph';
 import { readJsonFile } from '../utils/fileutils';
-import { NxConfig } from '../config/nx-json';
+import { NxConfig } from '../config/nx-config';
 import { logger } from '../utils/logger';
 import { ProjectGraphBuilder } from './project-graph-builder';
 import {

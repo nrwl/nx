@@ -1,7 +1,7 @@
 import {
   ImplicitSubsetDependency,
   NxConfig,
-} from '../config/nx-json';
+} from '../config/nx-config';
 import { stripIndents } from './strip-indents';
 
 export function assertWorkspaceValidity(

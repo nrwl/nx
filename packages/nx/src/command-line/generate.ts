@@ -20,7 +20,7 @@ import {
 import { getLocalWorkspacePlugins } from '../utils/plugins/local-plugins';
 import { printHelp } from '../utils/print-help';
 import { workspaceRoot } from '../utils/workspace-root';
-import { NxConfig } from '../config/nx-json';
+import { NxConfig } from '../config/nx-config';
 
 export interface GenerateOptions {
   collectionName: string;

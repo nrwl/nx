@@ -1,1 +1,1 @@
-export * from 'nx/src/config/nx-json';
+export * from 'nx/src/config/nx-config';

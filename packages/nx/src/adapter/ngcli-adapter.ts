@@ -32,7 +32,7 @@ import { catchError, map, switchMap, toArray, tap } from 'rxjs/operators';
 import { NX_ERROR, NX_PREFIX } from '../utils/logger';
 import { readJsonFile } from '../utils/fileutils';
 import { parseJson, serializeJson } from '../utils/json';
-import { NxConfig } from '../config/nx-json';
+import { NxConfig } from '../config/nx-config';
 import {
   ProjectConfiguration,
   RawProjectsConfigurations,

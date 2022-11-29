@@ -5,7 +5,7 @@ import {
 } from '../utils/params';
 import { printHelp } from '../utils/print-help';
 import { Workspaces } from '../config/workspaces';
-import { NxConfig } from '../config/nx-json';
+import { NxConfig } from '../config/nx-config';
 import { readJsonFile } from '../utils/fileutils';
 import { buildTargetFromScript, PackageJson } from '../utils/package-json';
 import { join } from 'path';

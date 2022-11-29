@@ -4,7 +4,7 @@ import {
 } from './default-tasks-runner';
 import { TaskStatus } from './tasks-runner';
 import { ProjectGraph } from '../config/project-graph';
-import { NxConfig } from '../config/nx-json';
+import { NxConfig } from '../config/nx-config';
 import { Task } from '../config/task-graph';
 import { NxArgs } from '../utils/command-line-utils';
 

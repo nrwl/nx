@@ -7,7 +7,7 @@ import {
   MigrationsJson,
   PackageJsonUpdateForPackage,
 } from '../config/misc-interfaces';
-import { NxConfig } from '../config/nx-json';
+import { NxConfig } from '../config/nx-config';
 import { flushChanges, FsTree, printChanges } from '../generators/tree';
 import {
   extractFileFromTarball,

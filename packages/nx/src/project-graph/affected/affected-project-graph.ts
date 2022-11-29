@@ -11,7 +11,7 @@ import {
 } from './affected-project-graph-models';
 import { getTouchedProjectsInWorkspaceJson } from './locators/workspace-json-changes';
 import { getTouchedProjectsFromTsConfig } from './locators/tsconfig-json-changes';
-import { NxConfig } from '../../config/nx-json';
+import { NxConfig } from '../../config/nx-config';
 import { ProjectGraph } from '../../config/project-graph';
 import { reverse } from '../operators';
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';

@@ -1,5 +1,5 @@
 import { basename, dirname, join, relative } from 'path';
-import type { NxConfig } from '../../config/nx-json';
+import type { NxConfig } from '../../config/nx-config';
 import {
   ProjectConfiguration,
   RawProjectsConfigurations,

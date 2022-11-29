@@ -4,7 +4,7 @@ import type { NxArgs } from '../utils/command-line-utils';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { Task } from '../config/task-graph';
 import { ProcessTasks } from '../tasks-runner/create-task-graph';
-import { NxConfig } from '../config/nx-json';
+import { NxConfig } from '../config/nx-config';
 import { Workspaces } from '../config/workspaces';
 import { Hasher } from '../hasher/hasher';
 import { hashTask } from '../hasher/hash-task';

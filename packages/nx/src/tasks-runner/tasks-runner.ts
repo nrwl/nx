@@ -1,4 +1,4 @@
-import { NxConfig } from '../config/nx-json';
+import { NxConfig } from '../config/nx-config';
 import { ProjectGraph } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
 import { NxArgs } from '../utils/command-line-utils';

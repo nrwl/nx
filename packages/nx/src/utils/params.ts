@@ -1,5 +1,5 @@
 import { logger } from './logger';
-import { NxConfig } from '../config/nx-json';
+import { NxConfig } from '../config/nx-config';
 import {
   TargetConfiguration,
   ProjectsConfigurations,

@@ -1,4 +1,4 @@
-import { NxConfig } from '../../../config/nx-json';
+import { NxConfig } from '../../../config/nx-config';
 import { ProjectGraph } from '../../../config/project-graph';
 import { JsonDiffType } from '../../../utils/json-diff';
 import { WholeFileChange } from '../../file-utils';

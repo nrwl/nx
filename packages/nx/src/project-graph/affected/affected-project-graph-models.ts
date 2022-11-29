@@ -1,5 +1,5 @@
 import type { Change, FileChange } from '../file-utils';
-import { NxConfig } from '../../config/nx-json';
+import { NxConfig } from '../../config/nx-config';
 import {
   ProjectGraph,
   ProjectGraphProjectNode,

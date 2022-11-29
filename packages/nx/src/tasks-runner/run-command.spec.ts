@@ -1,6 +1,6 @@
 import { TasksRunner } from './tasks-runner';
 import { getRunner } from './run-command';
-import { NxConfig } from '../config/nx-json';
+import { NxConfig } from '../config/nx-config';
 
 describe('getRunner', () => {
   let nxConfig: NxConfig;

@@ -3,7 +3,7 @@ import { execSync } from 'child_process';
 import { existsSync, readFileSync } from 'fs';
 import { extname, join, relative, sep } from 'path';
 import { readNxConfig } from '../config/configuration';
-import { NxConfig } from '../config/nx-json';
+import { NxConfig } from '../config/nx-config';
 import { FileData } from '../config/project-graph';
 import { ProjectsConfigurations } from '../config/workspace-json-project-json';
 import type { NxArgs } from '../utils/command-line-utils';

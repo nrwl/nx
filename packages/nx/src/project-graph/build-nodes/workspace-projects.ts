@@ -10,7 +10,7 @@ import { mergeNpmScriptsWithTargets } from '../../utils/project-graph-utils';
 import { ProjectGraphBuilder } from '../project-graph-builder';
 import { PackageJson } from '../../utils/package-json';
 import { readJsonFile } from '../../utils/fileutils';
-import { NxConfig } from '../../config/nx-json';
+import { NxConfig } from '../../config/nx-config';
 import { TargetConfiguration } from '../../config/workspace-json-project-json';
 import { NX_PREFIX } from '../../utils/logger';
 

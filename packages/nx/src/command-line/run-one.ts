@@ -7,7 +7,7 @@ import {
   readProjectsConfigurationFromProjectGraph,
 } from '../project-graph/project-graph';
 import { ProjectGraph } from '../config/project-graph';
-import { NxConfig } from '../config/nx-json';
+import { NxConfig } from '../config/nx-config';
 import { workspaceRoot } from '../utils/workspace-root';
 import { splitTarget } from '../utils/split-target';
 import { output } from '../utils/output';

@@ -5,7 +5,7 @@ import {
   projectHasTargetAndConfiguration,
 } from '../utils/project-graph-utils';
 import { Task, TaskGraph } from '../config/task-graph';
-import { TargetDependencies } from '../config/nx-json';
+import { TargetDependencies } from '../config/nx-config';
 
 export class ProcessTasks {
   private readonly seen = new Set<string>();

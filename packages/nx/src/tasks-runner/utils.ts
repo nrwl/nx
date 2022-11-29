@@ -12,7 +12,7 @@ import { Task, TaskGraph } from '../config/task-graph';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { workspaceRoot } from '../utils/workspace-root';
-import { NxConfig } from '../config/nx-json';
+import { NxConfig } from '../config/nx-config';
 import { joinPathFragments } from '../utils/path';
 import { isRelativePath } from '../utils/fileutils';
 import { serializeOverridesIntoCommandLine } from '../utils/serialize-overrides-into-command-line';

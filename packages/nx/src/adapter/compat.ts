@@ -10,7 +10,7 @@ import {
 } from '../project-graph/project-graph';
 import { ProjectsConfigurations } from '../config/workspace-json-project-json';
 import { readNxConfig } from '../config/configuration';
-import { NxConfig } from '../config/nx-json';
+import { NxConfig } from '../config/nx-config';
 
 /* eslint-disable */
 const Module = require('module');

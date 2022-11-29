@@ -1,7 +1,7 @@
 import { join, isAbsolute } from 'path';
 import { workspaceRoot } from './workspace-root';
 import { readJsonFile } from './fileutils';
-import { NxConfig } from '../config/nx-json';
+import { NxConfig } from '../config/nx-config';
 
 function readCacheDirectoryProperty(root: string): string | undefined {
   try {

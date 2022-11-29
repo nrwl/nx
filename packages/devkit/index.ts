@@ -83,7 +83,7 @@ export type {
   ImplicitSubsetDependency as ImplicitJsonSubsetDependency,
   NxConfig,
   NxAffectedConfig,
-} from 'nx/src/config/nx-json';
+} from 'nx/src/config/nx-config';
 
 /**
  * @category Logger

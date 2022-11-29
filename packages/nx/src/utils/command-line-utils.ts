@@ -2,7 +2,7 @@ import * as yargsParser from 'yargs-parser';
 import type { Arguments } from 'yargs';
 import { TEN_MEGABYTES } from '../project-graph/file-utils';
 import { output } from './output';
-import { NxConfig } from '../config/nx-json';
+import { NxConfig } from '../config/nx-config';
 import { execSync } from 'child_process';
 import { ProjectGraph } from '../config/project-graph';
 

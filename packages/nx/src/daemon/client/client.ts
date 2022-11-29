@@ -19,7 +19,7 @@ import {
 } from '../tmp-dir';
 import { ProjectGraph } from '../../config/project-graph';
 import { isCI } from '../../utils/is-ci';
-import { NxConfig } from '../../config/nx-json';
+import { NxConfig } from '../../config/nx-config';
 import { readNxConfig } from '../../config/configuration';
 import { PromisedBasedQueue } from '../../utils/promised-based-queue';
 import { Workspaces } from '../../config/workspaces';

@@ -22,7 +22,7 @@ import {
 import { pruneExternalNodes } from '../project-graph/operators';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { createTaskGraph } from '../tasks-runner/create-task-graph';
-import { TargetDefaults, TargetDependencies } from '../config/nx-json';
+import { TargetDefaults, TargetDependencies } from '../config/nx-config';
 import { TaskGraph } from '../config/task-graph';
 
 export interface ProjectGraphClientResponse {

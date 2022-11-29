@@ -1,4 +1,4 @@
-import { NxConfig } from '../config/nx-json';
+import { NxConfig } from '../config/nx-config';
 import {
   readNxConfig,
   readAllWorkspaceConfiguration,

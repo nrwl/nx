@@ -1,6 +1,6 @@
 import * as minimatch from 'minimatch';
 import { TouchedProjectLocator } from '../affected-project-graph-models';
-import { NxConfig } from '../../../config/nx-json';
+import { NxConfig } from '../../../config/nx-config';
 import { ProjectGraphProjectNode } from '../../../config/project-graph';
 import {
   createProjectRootMappings,

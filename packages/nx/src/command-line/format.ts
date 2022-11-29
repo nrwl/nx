@@ -21,7 +21,7 @@ import {
   getRootTsConfigPath,
 } from '../utils/typescript';
 import { readJsonFile, writeJsonFile } from '../utils/fileutils';
-import { NxConfig } from '../config/nx-json';
+import { NxConfig } from '../config/nx-config';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { filterAffected } from '../project-graph/affected/affected-project-graph';
 import {

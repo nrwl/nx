@@ -7,7 +7,7 @@ import {
   walkJsonTree,
 } from '../../../utils/json-diff';
 import { TouchedProjectLocator } from '../affected-project-graph-models';
-import { ImplicitDependencyEntry } from '../../../config/nx-json';
+import { ImplicitDependencyEntry } from '../../../config/nx-config';
 
 export const getImplicitlyTouchedProjectsByJsonChanges: TouchedProjectLocator<
   WholeFileChange | JsonChange

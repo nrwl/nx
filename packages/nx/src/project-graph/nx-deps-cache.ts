@@ -2,7 +2,7 @@ import { existsSync } from 'fs';
 import { ensureDirSync, renameSync } from 'fs-extra';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
-import { NxConfig } from '../config/nx-json';
+import { NxConfig } from '../config/nx-config';
 import {
   FileData,
   ProjectFileMap,

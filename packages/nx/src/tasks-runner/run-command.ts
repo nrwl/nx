@@ -18,7 +18,7 @@ import {
   NxConfig,
   TargetDefaults,
   TargetDependencies,
-} from '../config/nx-json';
+} from '../config/nx-config';
 import { Task, TaskGraph } from '../config/task-graph';
 import { createTaskGraph } from './create-task-graph';
 import { findCycle, makeAcyclic } from './task-graph-utils';
