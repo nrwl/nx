@@ -37,7 +37,6 @@ export default function Document(): JSX.Element {
         />
         <meta name="theme-color" content="#FFFFFF" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Nx: Smart, Fast and Extensible Build System</title>
         <script
           dangerouslySetInnerHTML={{
             __html: `
