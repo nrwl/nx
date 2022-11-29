@@ -81,6 +81,7 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
     ...options,
     skipFormat: true,
     skipBabelConfig: options.bundler === 'vite',
+    skipHelperLibs: options.bundler === 'vite',
   });
 
   tasks.push(initTask);

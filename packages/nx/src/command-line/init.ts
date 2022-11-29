@@ -1,6 +1,6 @@
 import { execSync } from 'child_process';
 import { existsSync } from 'fs';
-import { readJsonFile } from '../utils/fileutils';
+import { readJsonFile, directoryExists } from '../utils/fileutils';
 import { addNxToNpmRepo } from '../nx-init/add-nx-to-npm-repo';
 
 export async function initHandler() {
@@ -9,6 +9,11 @@ export async function initHandler() {
     if (existsSync('angular.json')) {
       // TODO(leo): remove make-angular-cli-faster
       execSync(`npx --yes make-angular-cli-faster@latest ${args}`, {
+        stdio: [0, 1, 2],
+      });
+    } else if (isCRA()) {
+      // TODO(jack): remove cra-to-nx
+      execSync(`npx --yes cra-to-nx@latest ${args}`, {
         stdio: [0, 1, 2],
       });
     } else if (isMonorepo()) {
@@ -24,6 +29,25 @@ export async function initHandler() {
       stdio: [0, 1, 2],
     });
   }
+}
+
+function isCRA() {
+  const packageJson = readJsonFile('package.json');
+  const combinedDependencies = {
+    ...packageJson.dependencies,
+    ...packageJson.devDependencies,
+  };
+  return (
+    // Required dependencies for CRA projects
+    combinedDependencies['react'] &&
+    combinedDependencies['react-dom'] &&
+    combinedDependencies['react-scripts'] &&
+    // // Don't convert customized CRA projects
+    !combinedDependencies['react-app-rewired'] &&
+    !combinedDependencies['@craco/craco'] &&
+    directoryExists('src') &&
+    directoryExists('public')
+  );
 }
 
 function isMonorepo() {
