@@ -1665,6 +1665,10 @@
         "@angular-eslint/template-parser": {
           "version": "~15.0.0",
           "alwaysAddToPackageJson": false
+        },
+        "jest-preset-angular": {
+          "version": "12.2.3",
+          "alwaysAddToPackageJson": false
         }
       }
     }
