@@ -65,11 +65,10 @@ export function PackageSchemaList({
       url: 'https://nx.dev' + router.asPath,
     },
     get markdown(): ReactNode {
-      return renderMarkdown({
-        content: this.package.readme.content || this.package.description,
-        filePath: this.package.readme.filePath,
-        data: {},
-      });
+      return renderMarkdown(
+        this.package.readme.content || this.package.description,
+        { filePath: this.package.readme.filePath }
+      );
     },
   };
 

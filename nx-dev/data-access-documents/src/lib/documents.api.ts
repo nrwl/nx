@@ -98,6 +98,8 @@ export class DocumentsApi {
         cardsTemplate,
         '{% /cards %}\n\n',
       ].join(''),
+      relatedContent: '',
+      tags: [],
     };
   }
 
@@ -123,8 +125,9 @@ export class DocumentsApi {
     return {
       filePath,
       data: frontmatter,
-      content:
-        originalContent + '\n\n' + this.getRelatedDocumentsSection(tags, path),
+      content: originalContent,
+      relatedContent: this.getRelatedDocumentsSection(tags, path),
+      tags: tags,
     };
   }
 
