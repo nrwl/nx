@@ -41,3 +41,17 @@ export function getJestProjects() {
   }
   return Array.from(jestConfigurationSet);
 }
+
+/**
+ * a list of nested projects that have jest configured
+ * to be used in the testPathIgnorePatterns property of a given jest config
+ * https://jestjs.io/docs/configuration#testpathignorepatterns-arraystring
+ * */
+export function getNestedJestProjects() {
+  // TODO(caleb): get current project path and list of all projects and their rootDir
+  // return a list of all projects that are nested in the current projects path
+  // always include node_modules as that's the default
+
+  const allProjects = getJestProjects();
+  return ['/node_modules/'];
+}
