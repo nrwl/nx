@@ -9,7 +9,7 @@ Run the command: `npx nx graph`. A browser should open up with the following con
   "hash": "85fd0561bd88f0bcd8703a9e9369592e2805f390d04982fb2401e700dc9ebc59",
   "projects": [
     {
-      "name": "routes-cart",
+      "name": "cart",
       "type": "lib",
       "data": {
         "tags": []
@@ -38,7 +38,7 @@ Run the command: `npx nx graph`. A browser should open up with the following con
     }
   ],
   "dependencies": {
-    "routes-cart": [],
+    "cart": [],
     "shared-ui": [],
     "e2e": [{ "source": "e2e", "target": "store", "type": "implicit" }],
     "store": []
@@ -62,7 +62,7 @@ This is still different than the design from the start of Part 1:
   "hash": "85fd0561bd88f0bcd8703a9e9369592e2805f390d04982fb2401e700dc9ebc59",
   "projects": [
     {
-      "name": "routes-cart",
+      "name": "cart",
       "type": "lib",
       "data": {
         "tags": []
@@ -91,13 +91,11 @@ This is still different than the design from the start of Part 1:
     }
   ],
   "dependencies": {
-    "routes-cart": [
-      { "source": "routes-cart", "target": "shared-ui", "type": "static" }
-    ],
+    "cart": [{ "source": "cart", "target": "shared-ui", "type": "static" }],
     "shared-ui": [],
     "e2e": [{ "source": "e2e", "target": "store", "type": "implicit" }],
     "store": [
-      { "source": "store", "target": "routes-cart", "type": "static" },
+      { "source": "store", "target": "cart", "type": "static" },
       { "source": "store", "target": "shared-ui", "type": "static" }
     ]
   },
@@ -143,7 +141,7 @@ root.render(
 ```
 
 ```javascript {% fileName="src/app/app.tsx" %}
-import { RoutesCart } from '@myorg/routes/cart';
+import { RoutesCart } from '@myorg/cart';
 import { Route, Routes } from 'react-router-dom';
 import Shop from './shop/shop';
 
@@ -193,10 +191,10 @@ export default Banner;
 
 Add the `Banner` component to the cart route and link back to the main page:
 
-```javascript {% fileName="routes/cart/src/lib/routes-cart.tsx" %}
+```javascript {% fileName="cart/src/lib/cart.tsx" %}
 import { Banner } from '@myorg/shared/ui';
 import { Link } from 'react-router-dom';
-import styles from './routes-cart.module.css';
+import styles from './cart.module.css';
 
 /* eslint-disable-next-line */
 export interface RoutesCartProps {}
@@ -246,7 +244,7 @@ Now run `npx nx graph` again:
   "hash": "85fd0561bd88f0bcd8703a9e9369592e2805f390d04982fb2401e700dc9ebc59",
   "projects": [
     {
-      "name": "routes-cart",
+      "name": "cart",
       "type": "lib",
       "data": {
         "tags": []
@@ -275,13 +273,11 @@ Now run `npx nx graph` again:
     }
   ],
   "dependencies": {
-    "routes-cart": [
-      { "source": "routes-cart", "target": "shared-ui", "type": "static" }
-    ],
+    "cart": [{ "source": "cart", "target": "shared-ui", "type": "static" }],
     "shared-ui": [],
     "e2e": [{ "source": "e2e", "target": "store", "type": "implicit" }],
     "store": [
-      { "source": "store", "target": "routes-cart", "type": "static" },
+      { "source": "store", "target": "cart", "type": "static" },
       { "source": "store", "target": "shared-ui", "type": "static" }
     ]
   },

@@ -10,9 +10,9 @@ Run the command:
 git add . && git commit -m "commiting to test affected"
 ```
 
-Then make a change to the styles of your `routes-cart` project:
+Then make a change to the styles of your `cart` project:
 
-```css {% fileName="routes/cart/src/lib/routes-cart.module.css" %}
+```css {% fileName="cart/src/lib/cart.module.css" %}
 .container {
   color: blue;
 }
@@ -31,7 +31,7 @@ npx nx affected:graph
   "hash": "85fd0561bd88f0bcd8703a9e9369592e2805f390d04982fb2401e700dc9ebc59",
   "projects": [
     {
-      "name": "routes-cart",
+      "name": "cart",
       "type": "lib",
       "data": {
         "tags": []
@@ -60,18 +60,16 @@ npx nx affected:graph
     }
   ],
   "dependencies": {
-    "routes-cart": [
-      { "source": "routes-cart", "target": "shared-ui", "type": "static" }
-    ],
+    "cart": [{ "source": "cart", "target": "shared-ui", "type": "static" }],
     "shared-ui": [],
     "e2e": [{ "source": "e2e", "target": "store", "type": "implicit" }],
     "store": [
-      { "source": "store", "target": "routes-cart", "type": "static" },
+      { "source": "store", "target": "cart", "type": "static" },
       { "source": "store", "target": "shared-ui", "type": "static" }
     ]
   },
   "workspaceLayout": { "appsDir": "apps", "libsDir": "libs" },
-  "affectedProjectIds": ["routes-cart", "store", "e2e"],
+  "affectedProjectIds": ["cart", "store", "e2e"],
   "focus": null,
   "groupByFolder": false,
   "exclude": []
@@ -80,7 +78,7 @@ npx nx affected:graph
 
 {% /graph %}
 
-The change made to the `routes-cart` project is also affecting the `store` project. This can be leveraged to run tasks only on the projects that were affected by this commit.
+The change made to the `cart` project is also affecting the `store` project. This can be leveraged to run tasks only on the projects that were affected by this commit.
 
 To run the `test` targets only for affected projects, run the command:
 
@@ -246,7 +244,7 @@ Notice this line:
    ✔    2/2 dependent project tasks succeeded [2 read from cache]
 ```
 
-This is because your `store` project depends on the `routes-cart` and `shared-ui` projects, which also have `build` targets. By default Nx is configured to run the `build` target for any dependencies that have a `build` target, before running the `build` on the original project.
+This is because your `store` project depends on the `cart` and `shared-ui` projects, which also have `build` targets. By default Nx is configured to run the `build` target for any dependencies that have a `build` target, before running the `build` on the original project.
 
 This feature allows the Nx graph to dynamically maintain task dependencies, rather than having to manually maintain those task dependencies as your workspace continues to grow.
 

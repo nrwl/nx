@@ -30,7 +30,7 @@ This tutorial sets up a repo with one main React application, two React librarie
   "hash": "85fd0561bd88f0bcd8703a9e9369592e2805f390d04982fb2401e700dc9ebc59",
   "projects": [
     {
-      "name": "routes-cart",
+      "name": "cart",
       "type": "lib",
       "data": {
         "tags": []
@@ -59,13 +59,11 @@ This tutorial sets up a repo with one main React application, two React librarie
     }
   ],
   "dependencies": {
-    "routes-cart": [
-      { "source": "routes-cart", "target": "shared-ui", "type": "static" }
-    ],
+    "cart": [{ "source": "cart", "target": "shared-ui", "type": "static" }],
     "shared-ui": [],
     "e2e": [{ "source": "e2e", "target": "store", "type": "implicit" }],
     "store": [
-      { "source": "store", "target": "routes-cart", "type": "static" },
+      { "source": "store", "target": "cart", "type": "static" },
       { "source": "store", "target": "shared-ui", "type": "static" }
     ]
   },
@@ -121,36 +119,36 @@ CREATE src/app/shop/shop.tsx
 
 ## Generating Libraries
 
-To create the `routes/cart` and `shared/ui` libraries, use the `@nrwl/react:lib` generator:
+To create the `cart` and `shared/ui` libraries, use the `@nrwl/react:lib` generator:
 
 {% side-by-side %}
 
-```{% command="npx nx g @nrwl/react:library routes/cart" path="~/myorg" %}
+```{% command="npx nx g @nrwl/react:library cart" path="~/myorg" %}
 
 >  NX  Generating @nrwl/react:library
 
 ✔ Which bundler would you like to use to build the library? · vite
 UPDATE nx.json
-CREATE routes/cart/project.json
+CREATE cart/project.json
 CREATE .eslintrc.store.json
 UPDATE project.json
 UPDATE .eslintrc.json
 UPDATE e2e/.eslintrc.json
-CREATE routes/cart/.eslintrc.json
-CREATE routes/cart/README.md
-CREATE routes/cart/package.json
-CREATE routes/cart/src/index.ts
-CREATE routes/cart/tsconfig.json
-CREATE routes/cart/tsconfig.lib.json
-CREATE routes/cart/index.html
-CREATE routes/cart/src/demo.tsx
+CREATE cart/.eslintrc.json
+CREATE cart/README.md
+CREATE cart/package.json
+CREATE cart/src/index.ts
+CREATE cart/tsconfig.json
+CREATE cart/tsconfig.lib.json
+CREATE cart/index.html
+CREATE cart/src/demo.tsx
 UPDATE tsconfig.base.json
 UPDATE package.json
-CREATE routes/cart/vite.config.ts
-CREATE routes/cart/tsconfig.spec.json
-CREATE routes/cart/src/lib/routes-cart.module.css
-CREATE routes/cart/src/lib/routes-cart.spec.tsx
-CREATE routes/cart/src/lib/routes-cart.tsx
+CREATE cart/vite.config.ts
+CREATE cart/tsconfig.spec.json
+CREATE cart/src/lib/cart.module.css
+CREATE cart/src/lib/cart.spec.tsx
+CREATE cart/src/lib/cart.tsx
 ```
 
 ```{% command="npx nx g @nrwl/react:lib shared/ui" path="~/myorg" %}
@@ -181,7 +179,7 @@ CREATE shared/ui/src/lib/shared-ui.tsx
 You should now be able to see all three projects of our design:
 
 - `store` in the root
-- `routes-cart` in `routes/cart`
+- `cart` in `cart`
 - `shared-ui` in `shared/ui`
 
 ## What's Next
