@@ -47,7 +47,7 @@ Here's the `project.json` file for your `common-ui` project:
 }
 ```
 
-You can see that two targets are defined here: `test` and `lint`.
+You can see that three targets are defined here: `build`, `test` and `lint`.
 
 The properties inside each of these these targets is defined as follows:
 

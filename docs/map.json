@@ -34,11 +34,6 @@
               "file": "shared/react-tutorial/1-code-generation"
             },
             {
-              "name": "React Standalone Tutorial",
-              "id": "react-standalone-tutorial",
-              "file": "shared/react-standalone-tutorial/1-code-generation"
-            },
-            {
               "name": "Angular Tutorial",
               "id": "angular-tutorial",
               "file": "shared/angular-tutorial/1-code-generation"
