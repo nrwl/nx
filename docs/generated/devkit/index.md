@@ -1168,6 +1168,8 @@ Detect workspace scope from the package.json name
 
 ▸ **extractLayoutDirectory**(`directory`): `Object`
 
+Experimental
+
 #### Parameters
 
 | Name        | Type     |
