@@ -13,12 +13,7 @@ export default async function viteBuildExecutor(
 ) {
   const projectRoot = context.workspace.projects[context.projectName].root;
 
-  logger.info(`NX Vite build starting ...`);
-  const buildResult = await runInstance(
-    await getBuildAndSharedConfig(options, context)
-  );
-  logger.info(`NX Vite build finished ...`);
-  logger.info(`NX Vite files available in ${options.outputPath}`);
+  await runInstance(await getBuildAndSharedConfig(options, context));
 
   // For buildable libs, copy package.json if it exists.
   if (existsSync(join(projectRoot, 'package.json'))) {
