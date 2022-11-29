@@ -2,6 +2,7 @@ import {
   getProjects,
   NxJsonConfiguration,
   parseJson,
+  ProjectGraph,
   readJson,
   readProjectConfiguration,
   Tree,
@@ -23,6 +24,14 @@ import {
 import libraryGenerator from './library';
 import { Schema } from './schema';
 import applicationGenerator from '../application/application';
+
+let projectGraph: ProjectGraph;
+jest.mock('@nrwl/devkit', () => {
+  return {
+    ...jest.requireActual('@nrwl/devkit'),
+    createProjectGraphAsync: jest.fn().mockImplementation(() => projectGraph),
+  };
+});
 
 describe('lib', () => {
   let tree: Tree;
@@ -1441,6 +1450,21 @@ describe('lib', () => {
   });
 
   describe('--standalone', () => {
+    beforeEach(() => {
+      projectGraph = {
+        nodes: {
+          'my-lib': {
+            name: 'my-lib',
+            type: 'lib',
+            data: {
+              root: 'libs/my-lib',
+            },
+          },
+        },
+        dependencies: {},
+      };
+    });
+
     it('should generate a library with a standalone component as entry point', async () => {
       await runLibraryGeneratorWithOpts({ standalone: true });
 

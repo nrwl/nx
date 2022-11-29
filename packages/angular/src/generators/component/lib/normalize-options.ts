@@ -1,5 +1,6 @@
 import type { Tree } from '@nrwl/devkit';
 import {
+  createProjectGraphAsync,
   joinPathFragments,
   readCachedProjectGraph,
   readProjectConfiguration,
@@ -11,15 +12,19 @@ import {
   findProjectForPath,
 } from 'nx/src/project-graph/utils/find-project-for-path';
 
-export function normalizeOptions(
+async function findProjectFromOptions(options: Schema) {
+  const projectGraph = await createProjectGraphAsync();
+  const projectRootMappings = createProjectRootMappings(projectGraph.nodes);
+  return findProjectForPath(options.path, projectRootMappings);
+}
+
+export async function normalizeOptions(
   tree: Tree,
   options: Schema
-): NormalizedSchema {
-  const projectGraph = readCachedProjectGraph();
-  const projectRootMappings = createProjectRootMappings(projectGraph.nodes);
+): Promise<NormalizedSchema> {
   const project =
     options.project ??
-    findProjectForPath(options.path, projectRootMappings) ??
+    (await findProjectFromOptions(options)) ??
     readWorkspaceConfiguration(tree).defaultProject;
   const { projectType, root, sourceRoot } = readProjectConfiguration(
     tree,
