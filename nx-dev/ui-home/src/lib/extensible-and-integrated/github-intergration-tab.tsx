@@ -141,22 +141,23 @@ export function GitHubIntegrationTab(): JSX.Element {
         </div>
         <div className="spacer h-56" />
       </div>
-      <div className="relative hidden px-4 pr-6 md:flex lg:col-span-2 lg:h-full lg:px-0">
+      <div
+        aria-hidden="true"
+        className="relative hidden px-4 pr-6 md:flex lg:col-span-2 lg:h-full lg:px-0"
+      >
         <div className="absolute -top-28 left-36 mx-auto h-[510px] w-full w-auto max-w-none overflow-hidden rounded-xl border border-slate-200 shadow-xl dark:border-slate-700">
           <Image
             src="/images/nx-cloud.webp"
             alt="Nx Cloud app"
-            layout={'fixed'}
             loading="lazy"
-            width={718}
+            width={715}
             height={510}
           />
         </div>
-        <div className="absolute left-12 -bottom-2 mx-auto flex max-h-[380px] w-full w-auto max-w-none overflow-hidden rounded-xl border border-slate-200 shadow-xl">
+        <div className="absolute left-12 -bottom-2 mx-auto flex w-full w-auto max-w-none overflow-hidden rounded-xl border border-slate-200 shadow-xl">
           <Image
             src="/images/github-nxcloud.webp"
             alt="Nx Cloud Github app"
-            layout={'fixed'}
             loading="lazy"
             width={715}
             height={510}

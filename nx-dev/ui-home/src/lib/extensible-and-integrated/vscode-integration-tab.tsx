@@ -50,7 +50,6 @@ export function VscodeIntegrationTab(): JSX.Element {
           <Image
             src="/images/nx-console/vscode-light.webp"
             alt="Nx Console app screenshot"
-            layout={'responsive'}
             loading="lazy"
             width={800}
             height={800}
@@ -60,7 +59,6 @@ export function VscodeIntegrationTab(): JSX.Element {
           <Image
             src="/images/nx-console/vscode-dark.webp"
             alt="Nx Console app screenshot"
-            layout={'responsive'}
             loading="lazy"
             width={800}
             height={800}
