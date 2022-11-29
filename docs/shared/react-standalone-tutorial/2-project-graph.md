@@ -1,4 +1,4 @@
-# React Tutorial - Part 2: Project Graph
+# React Standalone Tutorial - Part 2: Project Graph
 
 Run the command: `npx nx graph`. A browser should open up with the following contents:
 
@@ -53,65 +53,9 @@ Run the command: `npx nx graph`. A browser should open up with the following con
 
 {% /graph %}
 
-This is still different than the design from the start of Part 1:
+Nx creates the graph based on the source code. The projects are not linked in this diagram because we haven't actually finished our application. Once we use the shared components in another project, Nx will create the dependency in the graph. Let's do that now.
 
-{% graph height="450px" %}
-
-```json
-{
-  "hash": "85fd0561bd88f0bcd8703a9e9369592e2805f390d04982fb2401e700dc9ebc59",
-  "projects": [
-    {
-      "name": "cart",
-      "type": "lib",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "shared-ui",
-      "type": "lib",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "e2e",
-      "type": "e2e",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "store",
-      "type": "app",
-      "data": {
-        "tags": []
-      }
-    }
-  ],
-  "dependencies": {
-    "cart": [{ "source": "cart", "target": "shared-ui", "type": "static" }],
-    "shared-ui": [],
-    "e2e": [{ "source": "e2e", "target": "store", "type": "implicit" }],
-    "store": [
-      { "source": "store", "target": "cart", "type": "static" },
-      { "source": "store", "target": "shared-ui", "type": "static" }
-    ]
-  },
-  "workspaceLayout": { "appsDir": "apps", "libsDir": "libs" },
-  "affectedProjectIds": [],
-  "focus": null,
-  "groupByFolder": false,
-  "exclude": []
-}
-```
-
-{% /graph %}
-
-The Project Graph is derived from the source code of your workspace. Make the following adjustments to your existing projects, so that our Project Graph will match the design:
-
-### Set up the router
+## Set Up the Router
 
 Install the `react-router-dom` package:
 
@@ -291,9 +235,9 @@ Now run `npx nx graph` again:
 
 {% /graph %}
 
-Your graph now matches the original design.
+Your graph now shows the dependency lines we expected.
 
-The Project Graph is more than just a visualization - Nx provides tooling to optimize your task-running and even automate your CI based on this graph. This will be covered in more detail in: [4: Workspace Optimization](/react-standalone-tutorial/4-workspace-optimization).
+The Project Graph is more than just a visualization - Nx provides tooling to optimize your task-running and even automate your CI based on this graph. This will be covered in more detail in: [4: Task Pipelines](/react-standalone-tutorial/4-task-pipelines).
 
 ## What's Next
 

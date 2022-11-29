@@ -135,9 +135,9 @@
               "file": "shared/react-standalone-tutorial/3-task-running"
             },
             {
-              "name": "4 - Workspace Optimization",
-              "id": "4-workspace-optimization",
-              "file": "shared/react-standalone-tutorial/4-workspace-optimization"
+              "name": "4 - Task Pipelines",
+              "id": "4-task-pipelines",
+              "file": "shared/react-standalone-tutorial/4-task-pipelines"
             },
             {
               "name": "5 - Summary",

@@ -1,4 +1,4 @@
-# React Tutorial - 3: Task-Running
+# React Standalone Tutorial - 3: Task-Running
 
 Common tasks include:
 
@@ -52,7 +52,7 @@ You can see that three targets are defined here: `build`, `test` and `lint`.
 The properties inside each of these these targets is defined as follows:
 
 - `executor` - which Nx executor to run. The syntax here is: `<plugin name>:<executor name>`
-- `outputs` - this is an array of files that would be created by running this target. (This informs Nx on what to save for it's caching mechanisms you'll learn about in [4 - Workspace Optimizations](/react-standalone-tutorial/4-workspace-optimization)).
+- `outputs` - this is an array of files that would be created by running this target. (This informs Nx on what to save for it's caching mechanisms you'll learn about in [4 - Task Pipelines](/react-standalone-tutorial/4-task-pipelines)).
 - `options` - this is an object defining which executor options to use for the given target. Every Nx executor allows for options as a way to parameterize it's functionality.
 
 ## Running Tasks
@@ -97,4 +97,4 @@ All files pass linting.
 
 ## What's Next
 
-- Continue to [4: Workspace Optimization](/react-standalone-tutorial/4-workspace-optimization)
+- Continue to [4: Task Pipelines](/react-standalone-tutorial/4-task-pipelines)

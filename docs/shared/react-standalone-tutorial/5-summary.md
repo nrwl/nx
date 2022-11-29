@@ -1,4 +1,4 @@
-# React Tutorial - Part 5: Summary
+# React Standalone Tutorial - Part 5: Summary
 
 In this tutorial you:
 
