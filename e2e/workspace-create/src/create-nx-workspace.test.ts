@@ -19,11 +19,10 @@ describe('create-nx-workspace', () => {
 
   it('should create a workspace with a single angular app at the root', () => {
     const wsName = uniq('angular');
-    const appName = uniq('app');
 
     runCreateWorkspace(wsName, {
       preset: 'angular-standalone',
-      appName,
+      appName: wsName,
       style: 'css',
       packageManager,
     });
@@ -34,11 +33,10 @@ describe('create-nx-workspace', () => {
 
   it('should create a workspace with a single react app at the root', () => {
     const wsName = uniq('react');
-    const appName = uniq('app');
 
     runCreateWorkspace(wsName, {
       preset: 'react-standalone',
-      appName,
+      appName: wsName,
       style: 'css',
       packageManager,
     });

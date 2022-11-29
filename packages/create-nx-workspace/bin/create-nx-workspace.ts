@@ -328,8 +328,17 @@ async function getConfiguration(
       } else {
         preset = argv.preset;
       }
-      name = await determineRepoName(argv);
-      appName = await determineAppName(preset, argv);
+
+      if (
+        preset === Preset.ReactStandalone ||
+        preset === Preset.AngularStandalone
+      ) {
+        appName = await determineAppName(preset, argv);
+        name = appName;
+      } else {
+        name = await determineRepoName(argv);
+        appName = await determineAppName(preset, argv);
+      }
       style = await determineStyle(preset, argv);
     }
 
