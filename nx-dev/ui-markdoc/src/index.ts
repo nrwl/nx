@@ -32,13 +32,13 @@ import { YouTube } from './lib/tags/youtube.components';
 import { youtube } from './lib/tags/youtube.schema';
 
 export const getMarkdocCustomConfig = (
-  document: DocumentData
+  documentFilePath: string
 ): { config: any; components: any } => ({
   config: {
     nodes: {
       fence,
       heading,
-      image: getImageSchema(document),
+      image: getImageSchema(documentFilePath),
       link,
     },
     tags: {
@@ -82,11 +82,15 @@ export const getMarkdocCustomConfig = (
 export const parseMarkdown: (markdown: string) => Node = (markdown) =>
   parse(markdown);
 
-export const renderMarkdown: (document: DocumentData) => ReactNode = (
-  document: DocumentData
+export const renderMarkdown: (
+  documentContent: string,
+  options: { filePath: string }
+) => ReactNode = (
+  documentContent: string,
+  options: { filePath: string } = { filePath: '' }
 ): ReactNode => {
-  const ast = parseMarkdown(document.content.toString());
-  const configuration = getMarkdocCustomConfig(document);
+  const ast = parseMarkdown(documentContent);
+  const configuration = getMarkdocCustomConfig(options.filePath);
   return renderers.react(transform(ast, configuration.config), React, {
     components: configuration.components,
   });

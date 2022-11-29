@@ -2,6 +2,8 @@ export interface DocumentData {
   filePath: string;
   data: { [key: string]: any };
   content: string;
+  relatedContent: string;
+  tags: string[];
 }
 
 export interface DocumentMetadata {

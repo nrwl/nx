@@ -3,7 +3,7 @@ import { join } from 'path';
 import { uriTransformer } from './uri-transformer';
 
 export function transformImagePath(
-  document: DocumentData
+  documentFilePath: string
 ): (src: string) => string {
   return (src) => {
     const isRelative = src.startsWith('.');
@@ -14,7 +14,7 @@ export function transformImagePath(
 
     if (isRelative) {
       return uriTransformer(
-        join('/', document.filePath.split('/').splice(3).join('/'), '..', src)
+        join('/', documentFilePath.split('/').splice(3).join('/'), '..', src)
       );
     }
 

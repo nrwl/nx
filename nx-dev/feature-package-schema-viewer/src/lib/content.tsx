@@ -78,17 +78,18 @@ export function Content({
       );
     },
     get markdown(): ReactNode {
-      return renderMarkdown({
-        content: getMarkdown({
+      return renderMarkdown(
+        getMarkdown({
           type: schemaViewModel.type,
           packageName: schemaViewModel.packageName,
           schemaName: schemaViewModel.schemaMetadata.name,
           schemaAlias: schemaViewModel.schemaMetadata.aliases[0] ?? '',
           schema: schemaViewModel.currentSchema as NxSchema,
         }),
-        filePath: '',
-        data: {},
-      });
+        {
+          filePath: '',
+        }
+      );
     },
   };
 
