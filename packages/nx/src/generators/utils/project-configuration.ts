@@ -294,7 +294,7 @@ function setProjectConfiguration(
   standalone: boolean = false
 ): void {
   if (mode === 'delete') {
-    addProjectToWorkspaceJson(
+    addProjectToWorkspaceConfig(
       tree,
       projectName,
       readProjectConfiguration(tree, projectName),
@@ -309,7 +309,7 @@ function setProjectConfiguration(
     );
   }
 
-  addProjectToWorkspaceJson(
+  addProjectToWorkspaceConfig(
     tree,
     projectName,
     projectConfiguration,
@@ -330,7 +330,7 @@ export function getRelativeProjectConfigSchemaPath(
   );
 }
 
-function addProjectToWorkspaceJson(
+function addProjectToWorkspaceConfig(
   tree: Tree,
   projectName: string,
   project: ProjectConfiguration,
