@@ -6,7 +6,12 @@ import { addNxToNpmRepo } from '../nx-init/add-nx-to-npm-repo';
 export async function initHandler() {
   const args = process.argv.slice(2).join(' ');
   if (existsSync('package.json')) {
-    if (isMonorepo()) {
+    if (existsSync('angular.json')) {
+      // TODO(leo): remove make-angular-cli-faster
+      execSync(`npx --yes make-angular-cli-faster@latest ${args}`, {
+        stdio: [0, 1, 2],
+      });
+    } else if (isMonorepo()) {
       // TODO: vsavkin remove add-nx-to-monorepo
       execSync(`npx --yes add-nx-to-monorepo@latest ${args}`, {
         stdio: [0, 1, 2],

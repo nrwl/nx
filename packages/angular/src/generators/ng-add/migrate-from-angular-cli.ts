@@ -1,13 +1,14 @@
-import type { Tree } from '@nrwl/devkit';
+import type { GeneratorCallback, Tree } from '@nrwl/devkit';
 import {
   addDependenciesToPackageJson,
-  formatFiles,
   installPackagesTask,
   readJson,
   readWorkspaceConfiguration,
   updateJson,
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
+import { convertToNxProjectGenerator } from '@nrwl/workspace/generators';
+import { prettierVersion } from '@nrwl/workspace/src/utils/versions';
 import { nxVersion } from '../../utils/versions';
 import type { ProjectMigrator } from './migrators';
 import { AppMigrator, LibMigrator } from './migrators';
@@ -18,12 +19,16 @@ import {
   createRootKarmaConfig,
   createWorkspaceFiles,
   decorateAngularCli,
+  deleteAngularJson,
+  formatFilesTask,
   getAllProjects,
   getWorkspaceRootFileTypesInfo,
   normalizeOptions,
   updatePackageJson,
+  updatePrettierConfig,
   updateRootEsLintConfig,
   updateRootTsConfig,
+  updateVsCodeRecommendedExtensions,
   updateWorkspaceConfigDefaults,
   validateProjects,
   validateWorkspace,
@@ -32,12 +37,10 @@ import {
 export async function migrateFromAngularCli(
   tree: Tree,
   rawOptions: GeneratorOptions
-) {
+): Promise<GeneratorCallback> {
   validateWorkspace(tree);
   const projects = getAllProjects(tree);
   const options = normalizeOptions(tree, rawOptions, projects);
-
-  const defaultProject = projects.apps.find((app) => app.config.root === '');
 
   if (options.preserveAngularCliLayout) {
     addDependenciesToPackageJson(
@@ -46,10 +49,21 @@ export async function migrateFromAngularCli(
       {
         nx: nxVersion,
         '@nrwl/workspace': nxVersion,
+        prettier: prettierVersion,
       }
     );
     createNxJson(tree, options, true);
     decorateAngularCli(tree);
+    updateVsCodeRecommendedExtensions(tree);
+    await updatePrettierConfig(tree);
+
+    // convert workspace config format to standalone project configs
+    updateJson(tree, 'angular.json', (json) => ({
+      ...json,
+      version: 2,
+      $schema: undefined,
+    }));
+    await convertToNxProjectGenerator(tree, { all: true, skipFormat: true });
   } else {
     const migrators: ProjectMigrator[] = [
       ...projects.apps.map((app) => new AppMigrator(tree, options, app)),
@@ -105,21 +119,14 @@ export async function migrateFromAngularCli(
       updateRootEsLintConfig(tree, eslintConfig, options.unitTestRunner);
       cleanupEsLintPackages(tree);
     }
-
-    await formatFiles(tree);
   }
 
-  if (defaultProject) {
-    const workspaceConfig = readWorkspaceConfiguration(tree);
-    updateWorkspaceConfiguration(tree, {
-      ...workspaceConfig,
-      defaultProject: defaultProject.name,
-    });
-  }
+  deleteAngularJson(tree);
 
   if (!options.skipInstall) {
     return () => {
       installPackagesTask(tree);
+      formatFilesTask(tree);
     };
   }
 }
