@@ -80,7 +80,7 @@ export type { Task, TaskGraph } from 'nx/src/config/task-graph';
  */
 export type {
   ImplicitDependencyEntry,
-  ImplicitSubsetDependency as ImplicitJsonSubsetDependency,
+  ImplicitConfigSubsetDependency as ImplicitJsonSubsetDependency,
   NxConfig,
   NxAffectedConfig,
 } from 'nx/src/config/nx-config';

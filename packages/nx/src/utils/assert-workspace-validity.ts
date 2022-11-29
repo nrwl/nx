@@ -1,5 +1,5 @@
 import {
-  ImplicitSubsetDependency,
+  ImplicitConfigSubsetDependency,
   NxConfig,
 } from '../config/nx-config';
 import { stripIndents } from './strip-indents';
@@ -16,7 +16,7 @@ export function assertWorkspaceValidity(
 
   const invalidImplicitDependencies = new Map<string, string[]>();
 
-  Object.entries<'*' | string[] | ImplicitSubsetDependency>(
+  Object.entries<'*' | string[] | ImplicitConfigSubsetDependency>(
     nxConfig.implicitDependencies || {}
   )
     .reduce((acc, entry) => {

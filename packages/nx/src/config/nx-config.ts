@@ -5,11 +5,11 @@ import {
 } from './workspace-config-project-config';
 
 export type ImplicitDependencyEntry<T = '*' | string[]> = {
-  [key: string]: T | ImplicitSubsetDependency<T>;
+  [key: string]: T | ImplicitConfigSubsetDependency<T>;
 };
 
-export interface ImplicitSubsetDependency<T = '*' | string[]> {
-  [key: string]: T | ImplicitSubsetDependency<T>;
+export interface ImplicitConfigSubsetDependency<T = '*' | string[]> {
+  [key: string]: T | ImplicitConfigSubsetDependency<T>;
 }
 
 export interface NxAffectedConfig {
