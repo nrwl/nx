@@ -318,7 +318,7 @@ function setProjectConfiguration(
   );
 }
 
-export function getRelativeProjectJsonSchemaPath(
+export function getRelativeProjectConfigSchemaPath(
   tree: Tree,
   project: ProjectConfiguration
 ): string {
@@ -360,7 +360,7 @@ function addProjectToWorkspaceJson(
       : getProjectFileLocation(tree, projectName);
   const jsonSchema =
     projectConfigFile && mode === 'create'
-      ? { $schema: getRelativeProjectJsonSchemaPath(tree, project) }
+      ? { $schema: getRelativeProjectConfigSchemaPath(tree, project) }
       : {};
 
   if (projectConfigFile) {

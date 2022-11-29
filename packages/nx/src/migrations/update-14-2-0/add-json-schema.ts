@@ -4,7 +4,7 @@ import type { Tree } from '../../generators/tree';
 import { updateJson } from '../../generators/utils/json';
 import {
   getProjects,
-  getRelativeProjectJsonSchemaPath,
+  getRelativeProjectConfigSchemaPath,
   updateProjectConfiguration,
 } from '../../generators/utils/project-configuration';
 import { logger } from '../../utils/logger';
@@ -42,7 +42,7 @@ export default async function (tree: Tree) {
       continue;
 
     try {
-      const relativeProjectJsonSchemaPath = getRelativeProjectJsonSchemaPath(
+      const relativeProjectJsonSchemaPath = getRelativeProjectConfigSchemaPath(
         tree,
         projConfig
       );
