@@ -43,7 +43,7 @@ export type ProjectType = 'library' | 'application';
  */
 export interface ProjectConfiguration {
   /**
-   * Project's name. Optional if specified in workspace.json
+   * Project's name. Optional if specified in workspace config
    */
   name?: string;
 
