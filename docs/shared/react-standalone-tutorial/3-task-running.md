@@ -61,11 +61,11 @@ The properties inside each of these these targets is defined as follows:
 
 Run the `test` target for your `shared-ui` project:
 
-```{% command="npx nx test shared-ui" path="~/myorg" %}
+```{% command="npx nx test shared-ui" path="~/store" %}
 
 > nx run shared-ui:test
 
- RUN  v0.25.3 /Users/isaac/Documents/code/myorg/shared/ui
+ RUN  v0.25.3 /Users/isaac/Documents/code/store/shared/ui
  ✓ src/lib/banner/banner.spec.tsx  (1 test) 12ms
  ✓ src/lib/shared-ui.spec.tsx  (1 test) 10ms
  Test Files  2 passed (2)
@@ -80,7 +80,7 @@ Run the `test` target for your `shared-ui` project:
 
 Next, run a lint check on your `shared-ui` project:
 
-```{% command="npx nx lint shared-ui" path="~/myorg" %}
+```{% command="npx nx lint shared-ui" path="~/store" %}
 
 > nx run shared-ui:lint
 

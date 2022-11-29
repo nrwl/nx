@@ -4,7 +4,7 @@
 
 Let's build the `store` application:
 
-```{% command="npx nx build store" path="~/myorg" %}
+```{% command="npx nx build store" path="~/store" %}
 
    ✔    2/2 dependent project tasks succeeded [0 read from cache]
 
@@ -64,7 +64,7 @@ Why does Nx always run the dependent tasks? Doesn't that waste time repeating th
 
 It would, if Nx didn't have a robust caching mechanism to take care of that problem for you. Let's build the `store` app again.
 
-```{% command="npx nx build store" path="~/myorg" %}
+```{% command="npx nx build store" path="~/store" %}
 
    ✔    2/2 dependent project tasks succeeded [2 read from cache]
 

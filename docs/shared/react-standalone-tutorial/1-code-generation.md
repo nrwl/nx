@@ -28,7 +28,7 @@ Run the command `npx create-nx-workspace@latest` and when prompted, provide the 
  >  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
 ✔ Choose what to create                 · react
-✔ Repository name                       · myorg
+✔ Repository name                       · store
 ✔ Application name                      · store
 ✔ Default stylesheet format             · css
 ✔ Enable distributed caching to make your CI faster · No
@@ -39,7 +39,7 @@ Run the command `npx create-nx-workspace@latest` and when prompted, provide the 
 Once the command completes, the file structure should look like this:
 
 ```treeview
-myorg/
+store/
 ├── e2e/
 ├── src/
 ├── tools/
@@ -62,7 +62,7 @@ As far as Nx is concerned, the root-level `store` app owns every file that doesn
 
 ## Generating a Component for the Store
 
-```{% command="npx nx g @nrwl/react:component shop" path="~/myorg" %}
+```{% command="npx nx g @nrwl/react:component shop" path="~/store" %}
 
 >  NX  Generating @nrwl/react:component
 
@@ -80,7 +80,7 @@ To create the `cart` and `shared/ui` libraries, use the `@nrwl/react:lib` genera
 
 {% side-by-side %}
 
-```{% command="npx nx g @nrwl/react:library cart" path="~/myorg" %}
+```{% command="npx nx g @nrwl/react:library cart" path="~/store" %}
 
 >  NX  Generating @nrwl/react:library
 
@@ -108,7 +108,7 @@ CREATE cart/src/lib/cart.spec.tsx
 CREATE cart/src/lib/cart.tsx
 ```
 
-```{% command="npx nx g @nrwl/react:lib shared/ui" path="~/myorg" %}
+```{% command="npx nx g @nrwl/react:lib shared/ui" path="~/store" %}
 
 >  NX  Generating @nrwl/react:library
 
