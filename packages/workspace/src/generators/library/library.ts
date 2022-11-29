@@ -13,6 +13,7 @@ import {
   joinPathFragments,
   ProjectConfiguration,
   addDependenciesToPackageJson,
+  extractLayoutDirectory,
 } from '@nrwl/devkit';
 import { getImportPath } from 'nx/src/utils/path';
 import { join } from 'path';
@@ -34,6 +35,7 @@ export interface NormalizedSchema extends Schema {
   fileName: string;
   projectRoot: string;
   projectDirectory: string;
+  libsDir: string;
   parsedTags: string[];
   importPath?: string;
 }
@@ -48,13 +50,15 @@ function addProject(tree: Tree, options: NormalizedSchema) {
   };
 
   if (options.buildable) {
-    const { libsDir } = getWorkspaceLayout(tree);
     addDependenciesToPackageJson(tree, {}, { '@nrwl/js': nxVersion });
     projectConfiguration.targets.build = {
       executor: '@nrwl/js:tsc',
       outputs: ['{options.outputPath}'],
       options: {
-        outputPath: `dist/${libsDir}/${options.projectDirectory}`,
+        outputPath:
+          options.libsDir != '.'
+            ? `dist/${options.libsDir}/${options.projectDirectory}`
+            : `dist/${options.projectDirectory}`,
         main: `${options.projectRoot}/src/index` + (options.js ? '.js' : '.ts'),
         tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
         assets: [`${options.projectRoot}/*.md`],
@@ -219,9 +223,9 @@ export const librarySchematic = convertNxGenerator(libraryGenerator);
 
 function normalizeOptions(tree: Tree, options: Schema): NormalizedSchema {
   const name = names(options.name).fileName;
-  const projectDirectory = options.directory
-    ? `${names(options.directory).fileName}/${name}`
-    : name;
+  const { layoutDirectory, projectDirectory } = extractLayoutDirectory(
+    options.directory ? `${names(options.directory).fileName}/${name}` : name
+  );
 
   if (!options.unitTestRunner) {
     options.unitTestRunner = 'jest';
@@ -237,7 +241,8 @@ function normalizeOptions(tree: Tree, options: Schema): NormalizedSchema {
     pascalCaseFiles: options.pascalCaseFiles,
   });
 
-  const { libsDir, npmScope } = getWorkspaceLayout(tree);
+  const { libsDir: defaultLibsDir, npmScope } = getWorkspaceLayout(tree);
+  const libsDir = layoutDirectory ?? defaultLibsDir;
 
   const projectRoot = joinPathFragments(libsDir, projectDirectory);
 
@@ -256,6 +261,7 @@ function normalizeOptions(tree: Tree, options: Schema): NormalizedSchema {
     projectDirectory,
     parsedTags,
     importPath,
+    libsDir,
   };
 }
 

@@ -147,6 +147,7 @@ It only uses language primitives and immutable objects
 - [defaultTasksRunner](../../devkit/index#defaulttasksrunner)
 - [detectPackageManager](../../devkit/index#detectpackagemanager)
 - [detectWorkspaceScope](../../devkit/index#detectworkspacescope)
+- [extractLayoutDirectory](../../devkit/index#extractlayoutdirectory)
 - [formatFiles](../../devkit/index#formatfiles)
 - [generateFiles](../../devkit/index#generatefiles)
 - [getDependentPackagesForProject](../../devkit/index#getdependentpackagesforproject)
@@ -1160,6 +1161,27 @@ Detect workspace scope from the package.json name
 #### Returns
 
 `string`
+
+---
+
+### extractLayoutDirectory
+
+▸ **extractLayoutDirectory**(`directory`): `Object`
+
+#### Parameters
+
+| Name        | Type     |
+| :---------- | :------- |
+| `directory` | `string` |
+
+#### Returns
+
+`Object`
+
+| Name               | Type     |
+| :----------------- | :------- |
+| `layoutDirectory`  | `string` |
+| `projectDirectory` | `string` |
 
 ---
 

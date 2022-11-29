@@ -2,6 +2,7 @@ import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
   convertNxGenerator,
+  extractLayoutDirectory,
   formatFiles,
   generateFiles,
   GeneratorCallback,
@@ -39,7 +40,11 @@ export async function libraryGenerator(
   tree: Tree,
   schema: LibraryGeneratorSchema
 ) {
-  const { libsDir } = getWorkspaceLayout(tree);
+  const { layoutDirectory, projectDirectory } = extractLayoutDirectory(
+    schema.directory
+  );
+  schema.directory = projectDirectory;
+  const libsDir = layoutDirectory ?? getWorkspaceLayout(tree).libsDir;
   return projectGenerator(tree, schema, libsDir, join(__dirname, './files'));
 }
 
@@ -108,7 +113,9 @@ function addProject(
   };
 
   if (options.buildable && options.config !== 'npm-scripts') {
-    const outputPath = `dist/${destinationDir}/${options.projectDirectory}`;
+    const outputPath = destinationDir
+      ? `dist/${destinationDir}/${options.projectDirectory}`
+      : `dist/${options.projectDirectory}`;
     projectConfiguration.targets.build = {
       executor: getBuildExecutor(options),
       outputs: ['{options.outputPath}'],

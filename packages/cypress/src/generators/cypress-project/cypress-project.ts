@@ -2,6 +2,7 @@ import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
   convertNxGenerator,
+  extractLayoutDirectory,
   formatFiles,
   generateFiles,
   getWorkspaceLayout,
@@ -280,7 +281,10 @@ export async function cypressProjectGenerator(host: Tree, schema: Schema) {
 }
 
 function normalizeOptions(host: Tree, options: Schema): CypressProjectSchema {
-  const { appsDir } = getWorkspaceLayout(host);
+  const { layoutDirectory, projectDirectory } = extractLayoutDirectory(
+    options.directory
+  );
+  const appsDir = layoutDirectory ?? getWorkspaceLayout(host).appsDir;
   let projectName, projectRoot;
 
   if (options.rootProject) {
@@ -288,12 +292,12 @@ function normalizeOptions(host: Tree, options: Schema): CypressProjectSchema {
     projectRoot = options.name;
   } else {
     projectName = filePathPrefix(
-      options.directory ? `${options.directory}-${options.name}` : options.name
+      projectDirectory ? `${projectDirectory}-${options.name}` : options.name
     );
-    projectRoot = options.directory
+    projectRoot = projectDirectory
       ? joinPathFragments(
           appsDir,
-          names(options.directory).fileName,
+          names(projectDirectory).fileName,
           options.name
         )
       : joinPathFragments(appsDir, options.name);

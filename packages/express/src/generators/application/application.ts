@@ -1,5 +1,6 @@
 import {
   convertNxGenerator,
+  extractLayoutDirectory,
   formatFiles,
   getWorkspaceLayout,
   joinPathFragments,
@@ -84,10 +85,14 @@ export default applicationGenerator;
 export const applicationSchematic = convertNxGenerator(applicationGenerator);
 
 function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
-  const appDirectory = options.directory
-    ? `${names(options.directory).fileName}/${names(options.name).fileName}`
+  const { layoutDirectory, projectDirectory } = extractLayoutDirectory(
+    options.directory
+  );
+  const appDirectory = projectDirectory
+    ? `${names(projectDirectory).fileName}/${names(options.name).fileName}`
     : names(options.name).fileName;
-  const { appsDir } = getWorkspaceLayout(host);
+
+  const appsDir = layoutDirectory ?? getWorkspaceLayout(host).appsDir;
   const appProjectRoot = joinPathFragments(appsDir, appDirectory);
 
   return {
