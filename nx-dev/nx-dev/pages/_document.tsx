@@ -5,6 +5,7 @@ export default function Document(): JSX.Element {
     <Html className="h-full scroll-smooth" lang="en">
       <Head>
         <meta charSet="utf-8" />
+        <link rel="icon" href="/favicon/favicon.svg" type="image/svg+xml" />
         <link
           rel="apple-touch-icon"
           sizes="180x180"
