@@ -15,6 +15,7 @@ export function updateProjectConfig(tree: Tree, schema: Schema) {
     projectConfig.targets.build.configurations?.production?.fileReplacements;
 
   projectConfig.targets.server = {
+    dependsOn: ['build'],
     executor: '@angular-devkit/build-angular:server',
     options: {
       outputPath: `dist/${projectConfig.root}/server`,

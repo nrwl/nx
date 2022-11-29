@@ -166,6 +166,9 @@ Object {
     },
   },
   "defaultConfiguration": "production",
+  "dependsOn": Array [
+    "build",
+  ],
   "executor": "@nrwl/angular:webpack-server",
   "options": Object {
     "customWebpackConfig": Object {
