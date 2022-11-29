@@ -14,22 +14,23 @@ export const commandsObject = yargs
   })
   .option('e2e', {
     type: 'boolean',
-    describe: 'Generate end-to-end tests with Cypress',
+    describe: 'Generate end-to-end tests with Cypress.',
     default: false,
   })
   .option('nxCloud', {
     type: 'boolean',
-    describe: 'Setup Nx Cloud',
+    describe: 'Setup Nx Cloud.',
     default: true,
   })
   .option('vite', {
     type: 'boolean',
-    describe: 'Use Vite and Vitest (instead of Webpack and Jest)',
-    default: false,
+    describe:
+      'Use Vite and Vitest (instead of Webpack and Jest). Pass --vite=false to use Webpack.',
+    default: true,
   })
   .option('integrated', {
     type: 'boolean',
-    describe: 'Use integrated folder structure, with apps folder',
+    describe: 'Use integrated folder structure, with apps folder.',
     default: false,
   })
   .help();
