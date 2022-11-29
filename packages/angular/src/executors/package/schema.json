@@ -3,7 +3,7 @@
   "outputCapture": "direct-nodejs",
   "$schema": "http://json-schema.org/schema",
   "title": "ng-packagr Target",
-  "description": "ng-packagr target options for Build Architect. Use to build and package library projects for publishing.",
+  "description": "Builds and packages an Angular library producing an output following the Angular Package Format (APF) to be distributed as an NPM package.\n\nThis executor is similar to the `@angular-devkit/build-angular:ng-packagr` with additional support for incremental builds.",
   "cli": "nx",
   "type": "object",
   "presets": [
