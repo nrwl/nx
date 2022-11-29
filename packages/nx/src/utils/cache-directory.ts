@@ -1,7 +1,7 @@
-import { join, isAbsolute } from 'path';
-import { workspaceRoot } from './workspace-root';
-import { readJsonFile } from './fileutils';
+import { isAbsolute, join } from 'path';
 import { NxJsonConfiguration } from '../config/nx-json';
+import { readJsonFile } from './fileutils';
+import { workspaceRoot } from './workspace-root';
 
 function readCacheDirectoryProperty(root: string): string | undefined {
   try {
@@ -12,17 +12,21 @@ function readCacheDirectoryProperty(root: string): string | undefined {
   }
 }
 
+function absolutePath(root: string, path: string): string {
+  if (isAbsolute(path)) {
+    return path;
+  } else {
+    return join(root, path);
+  }
+}
+
 function cacheDirectory(root: string, cacheDirectory: string) {
   const cacheDirFromEnv = process.env.NX_CACHE_DIRECTORY;
   if (cacheDirFromEnv) {
     cacheDirectory = cacheDirFromEnv;
   }
   if (cacheDirectory) {
-    if (isAbsolute(cacheDirectory)) {
-      return cacheDirectory;
-    } else {
-      return join(root, cacheDirectory);
-    }
+    return absolutePath(root, cacheDirectory);
   } else {
     return join(root, 'node_modules', '.cache', 'nx');
   }
@@ -36,5 +40,8 @@ export const cacheDir = cacheDirectory(
   readCacheDirectoryProperty(workspaceRoot)
 );
 
-export const projectGraphCacheDirectory =
-  process.env.NX_PROJECT_GRAPH_CACHE_DIRECTORY ?? cacheDir;
+export const projectGraphCacheDirectory = absolutePath(
+  workspaceRoot,
+  process.env.NX_PROJECT_GRAPH_CACHE_DIRECTORY ??
+    join(workspaceRoot, 'node_modules', '.cache', 'nx')
+);
