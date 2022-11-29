@@ -11,7 +11,7 @@ import { logger, NX_PREFIX } from '../utils/logger';
 import { loadNxPlugins, readPluginPackageJson } from '../utils/nx-plugin';
 import * as yaml from 'js-yaml';
 
-import type { NxConfig } from './nx-json';
+import type { NxConfig } from './nx-config';
 import {
   ProjectConfiguration,
   ProjectsConfigurations,

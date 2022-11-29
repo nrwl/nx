@@ -1,6 +1,6 @@
 import { Workspaces } from './workspaces';
 import { workspaceRoot } from '../utils/workspace-root';
-import { NxConfig } from './nx-json';
+import { NxConfig } from './nx-config';
 import { ProjectsConfigurations } from './workspace-json-project-json';
 
 export function readNxConfig(): NxConfig {

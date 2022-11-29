@@ -1,5 +1,5 @@
 import { toProjectName, Workspaces } from './workspaces';
-import { NxConfig } from './nx-json';
+import { NxConfig } from './nx-config';
 import { vol } from 'memfs';
 
 import * as fastGlob from 'fast-glob';

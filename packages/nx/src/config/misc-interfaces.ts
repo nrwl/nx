@@ -6,7 +6,7 @@ import {
   ProjectsConfigurations,
 } from './workspace-json-project-json';
 
-import type { NxConfig } from './nx-json';
+import type { NxConfig } from './nx-config';
 import { Schema } from '../utils/params';
 /**
  * A callback function that is executed after changes are made to the file system
