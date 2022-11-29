@@ -1,5 +1,5 @@
 import { ProjectGraphProjectNode } from '../../../config/project-graph';
-import { ProjectConfiguration } from '../../../config/workspace-json-project-json';
+import { ProjectConfiguration } from '../../../config/workspace-config-project-config';
 
 import * as nxPlugin from '../../../utils/nx-plugin';
 import { DeletedFileChange } from '../../file-utils';

@@ -1,7 +1,7 @@
 import { buildExplicitTypeScriptDependencies } from './explicit-project-dependencies';
 import { buildExplicitPackageJsonDependencies } from './explicit-package-json-dependencies';
 import { ProjectFileMap, ProjectGraph } from '../../config/project-graph';
-import { Workspace } from '../../config/workspace-json-project-json';
+import { Workspace } from '../../config/workspace-config-project-config';
 
 export function buildExplicitTypescriptAndPackageJsonDependencies(
   jsPluginConfig: {

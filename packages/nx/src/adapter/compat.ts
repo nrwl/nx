@@ -8,7 +8,7 @@ import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
 } from '../project-graph/project-graph';
-import { ProjectsConfigurations } from '../config/workspace-json-project-json';
+import { ProjectsConfigurations } from '../config/workspace-config-project-config';
 import { readNxConfig } from '../config/configuration';
 import { NxConfig } from '../config/nx-config';
 

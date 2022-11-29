@@ -3,7 +3,7 @@ import { join } from 'path';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { readJsonFile } from './fileutils';
 import { readCachedProjectGraph } from '../project-graph/project-graph';
-import { TargetConfiguration } from '../config/workspace-json-project-json';
+import { TargetConfiguration } from '../config/workspace-config-project-config';
 
 export function projectHasTarget(
   project: ProjectGraphProjectNode,

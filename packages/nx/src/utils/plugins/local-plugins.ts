@@ -4,7 +4,7 @@ import type { PluginCapabilities } from './models';
 import { hasElements } from './shared';
 import { readJsonFile } from '../fileutils';
 import { PackageJson } from '../package-json';
-import { ProjectsConfigurations } from '../../config/workspace-json-project-json';
+import { ProjectsConfigurations } from '../../config/workspace-config-project-config';
 import { join } from 'path';
 import { workspaceRoot } from '../workspace-root';
 import { existsSync } from 'fs';

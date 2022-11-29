@@ -1,7 +1,7 @@
 import { parentPort } from 'worker_threads';
 import { buildExplicitTypescriptAndPackageJsonDependencies } from './build-dependencies/build-explicit-typescript-and-package-json-dependencies';
 import { ProjectGraph } from '../config/project-graph';
-import { Workspace } from '../config/workspace-json-project-json';
+import { Workspace } from '../config/workspace-config-project-config';
 
 let workspace: Workspace | null;
 let projectGraph: ProjectGraph | null;

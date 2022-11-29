@@ -11,7 +11,7 @@ import {
   ProjectGraphExternalNode,
   ProjectGraphNode,
 } from '../config/project-graph';
-import { ProjectsConfigurations } from '../config/workspace-json-project-json';
+import { ProjectsConfigurations } from '../config/workspace-config-project-config';
 import { projectGraphCacheDirectory } from '../utils/cache-directory';
 import {
   directoryExists,

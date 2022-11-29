@@ -9,7 +9,7 @@ import { stripIndents } from '../utils/strip-indents';
 import {
   ProjectConfiguration,
   ProjectsConfigurations,
-} from '../config/workspace-json-project-json';
+} from '../config/workspace-config-project-config';
 import { daemonClient } from '../daemon/client/client';
 
 /**

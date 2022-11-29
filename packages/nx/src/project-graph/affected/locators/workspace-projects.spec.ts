@@ -2,7 +2,7 @@ import {
   ProjectGraph,
   ProjectGraphProjectNode,
 } from '../../../config/project-graph';
-import { ProjectConfiguration } from '../../../config/workspace-json-project-json';
+import { ProjectConfiguration } from '../../../config/workspace-config-project-config';
 import { WholeFileChange } from '../../file-utils';
 import {
   getTouchedProjects,

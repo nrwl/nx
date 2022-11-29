@@ -4,7 +4,7 @@ import { filterAffected } from './affected-project-graph';
 import { WholeFileChange } from '../file-utils';
 import { buildProjectGraph } from '../build-project-graph';
 import { defaultFileHasher } from '../../hasher/file-hasher';
-import { WorkspaceJsonConfiguration } from '../../config/workspace-json-project-json';
+import { WorkspaceJsonConfiguration } from '../../config/workspace-config-project-config';
 import { NxConfig } from '../../config/nx-config';
 import { stripIndents } from '../../utils/strip-indents';
 

@@ -14,7 +14,7 @@ import { output } from '../utils/output';
 import {
   ProjectsConfigurations,
   TargetDependencyConfig,
-} from '../config/workspace-json-project-json';
+} from '../config/workspace-config-project-config';
 import { readNxConfig } from '../config/configuration';
 
 export async function runOne(

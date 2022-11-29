@@ -4,7 +4,7 @@ import { Task, TaskGraph } from './task-graph';
 import {
   TargetConfiguration,
   ProjectsConfigurations,
-} from './workspace-json-project-json';
+} from './workspace-config-project-config';
 
 import type { NxConfig } from './nx-config';
 import { Schema } from '../utils/params';

@@ -5,7 +5,7 @@ import * as yargs from 'yargs-parser';
 
 import { readNxConfig } from '../config/configuration';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
-import { ProjectConfiguration } from '../config/workspace-json-project-json';
+import { ProjectConfiguration } from '../config/workspace-config-project-config';
 import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,

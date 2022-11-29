@@ -15,7 +15,7 @@ import type { NxConfig } from './nx-config';
 import {
   ProjectConfiguration,
   ProjectsConfigurations,
-} from './workspace-json-project-json';
+} from './workspace-config-project-config';
 import {
   CustomHasher,
   Executor,

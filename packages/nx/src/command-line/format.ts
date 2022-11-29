@@ -27,7 +27,7 @@ import { filterAffected } from '../project-graph/affected/affected-project-graph
 import {
   ProjectConfiguration,
   ProjectsConfigurations,
-} from '../config/workspace-json-project-json';
+} from '../config/workspace-config-project-config';
 import { readNxConfig } from '../config/configuration';
 import { ProjectGraph } from '../config/project-graph';
 

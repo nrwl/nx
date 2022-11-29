@@ -15,7 +15,7 @@ import {
   ProjectConfiguration,
   ProjectsConfigurations,
   TargetConfiguration,
-} from '../config/workspace-json-project-json';
+} from '../config/workspace-config-project-config';
 import { logger } from './logger';
 import {
   createProjectRootMappingsFromProjectConfigurations,

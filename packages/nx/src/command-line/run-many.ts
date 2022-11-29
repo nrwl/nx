@@ -7,7 +7,7 @@ import { performance } from 'perf_hooks';
 import * as minimatch from 'minimatch';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
-import { TargetDependencyConfig } from '../config/workspace-json-project-json';
+import { TargetDependencyConfig } from '../config/workspace-config-project-config';
 import { readNxConfig } from '../config/configuration';
 import { output } from '../utils/output';
 

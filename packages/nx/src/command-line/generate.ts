@@ -3,7 +3,7 @@ import { prompt } from 'enquirer';
 import { readJsonFile } from '../utils/fileutils';
 
 import { readNxConfig } from '../config/configuration';
-import { ProjectsConfigurations } from '../config/workspace-json-project-json';
+import { ProjectsConfigurations } from '../config/workspace-config-project-config';
 import { Workspaces } from '../config/workspaces';
 import { FileChange, flushChanges, FsTree } from '../generators/tree';
 import {

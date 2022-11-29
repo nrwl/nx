@@ -1,5 +1,5 @@
 import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
-import { ProjectConfiguration } from '../../config/workspace-json-project-json';
+import { ProjectConfiguration } from '../../config/workspace-config-project-config';
 import type { Tree } from '../../generators/tree';
 import { updateJson } from '../../generators/utils/json';
 import {

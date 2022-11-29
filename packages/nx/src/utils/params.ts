@@ -3,7 +3,7 @@ import { NxConfig } from '../config/nx-config';
 import {
   TargetConfiguration,
   ProjectsConfigurations,
-} from '../config/workspace-json-project-json';
+} from '../config/workspace-config-project-config';
 import { output } from './output';
 
 type PropertyDescription = {

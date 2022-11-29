@@ -5,7 +5,7 @@ import {
   shouldRecomputeWholeGraph,
 } from './nx-deps-cache';
 import { ProjectGraph } from '../config/project-graph';
-import { WorkspaceJsonConfiguration } from '../config/workspace-json-project-json';
+import { WorkspaceJsonConfiguration } from '../config/workspace-config-project-config';
 import { NxConfig } from '../config/nx-config';
 
 describe('nx deps utils', () => {

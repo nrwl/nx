@@ -1,6 +1,6 @@
 import Ajv from 'ajv';
 import { Tree } from '../tree';
-import { ProjectConfiguration } from '../../config/workspace-json-project-json';
+import { ProjectConfiguration } from '../../config/workspace-config-project-config';
 
 import { createTree } from '../testing-utils/create-tree';
 import {

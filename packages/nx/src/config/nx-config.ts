@@ -2,7 +2,7 @@ import { PackageManager } from '../utils/package-manager';
 import {
   InputDefinition,
   TargetDependencyConfig,
-} from './workspace-json-project-json';
+} from './workspace-config-project-config';
 
 export type ImplicitDependencyEntry<T = '*' | string[]> = {
   [key: string]: T | ImplicitSubsetDependency<T>;

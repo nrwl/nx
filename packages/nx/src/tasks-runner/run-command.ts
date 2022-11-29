@@ -22,7 +22,7 @@ import {
 import { Task, TaskGraph } from '../config/task-graph';
 import { createTaskGraph } from './create-task-graph';
 import { findCycle, makeAcyclic } from './task-graph-utils';
-import { TargetDependencyConfig } from '../config/workspace-json-project-json';
+import { TargetDependencyConfig } from '../config/workspace-config-project-config';
 import { handleErrors } from '../utils/params';
 import { Workspaces } from '../config/workspaces';
 import { Hasher } from '../hasher/hasher';

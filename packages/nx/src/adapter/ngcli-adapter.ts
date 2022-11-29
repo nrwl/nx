@@ -37,7 +37,7 @@ import {
   ProjectConfiguration,
   RawProjectsConfigurations,
   ProjectsConfigurations,
-} from '../config/workspace-json-project-json';
+} from '../config/workspace-config-project-config';
 import { readNxConfig } from '../generators/utils/project-configuration';
 import { readModulePackageJson } from '../utils/package-json';
 

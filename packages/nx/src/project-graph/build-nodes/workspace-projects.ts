@@ -11,7 +11,7 @@ import { ProjectGraphBuilder } from '../project-graph-builder';
 import { PackageJson } from '../../utils/package-json';
 import { readJsonFile } from '../../utils/fileutils';
 import { NxConfig } from '../../config/nx-config';
-import { TargetConfiguration } from '../../config/workspace-json-project-json';
+import { TargetConfiguration } from '../../config/workspace-config-project-config';
 import { NX_PREFIX } from '../../utils/logger';
 
 export function buildWorkspaceProjectNodes(

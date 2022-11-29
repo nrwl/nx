@@ -4,7 +4,7 @@ import {
   ProjectConfiguration,
   RawProjectsConfigurations,
   ProjectsConfigurations,
-} from '../../config/workspace-json-project-json';
+} from '../../config/workspace-config-project-config';
 import {
   buildWorkspaceConfigurationFromGlobs,
   deduplicateProjectFiles,

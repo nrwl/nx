@@ -11,7 +11,7 @@ import {
 import { NxConfig } from '../config/nx-config';
 import { Task } from '../config/task-graph';
 import { readJsonFile } from '../utils/fileutils';
-import { InputDefinition } from '../config/workspace-json-project-json';
+import { InputDefinition } from '../config/workspace-config-project-config';
 import { getImportPath } from '../utils/path';
 
 type ExpandedSelfInput =

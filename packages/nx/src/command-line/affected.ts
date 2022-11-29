@@ -14,7 +14,7 @@ import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { projectHasTarget } from '../utils/project-graph-utils';
 import { filterAffected } from '../project-graph/affected/affected-project-graph';
-import { TargetDependencyConfig } from '../config/workspace-json-project-json';
+import { TargetDependencyConfig } from '../config/workspace-config-project-config';
 import { readNxConfig } from '../config/configuration';
 
 export async function affected(

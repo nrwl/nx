@@ -6,7 +6,7 @@ import {
 } from '@nrwl/devkit';
 import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { excludeJestConfigSwcrc } from './exclude-jest-config-swcrc';
-import { ProjectConfiguration } from 'nx/src/config/workspace-json-project-json';
+import { ProjectConfiguration } from 'nx/src/config/workspace-config-project-config';
 
 const projectConfig: ProjectConfiguration = {
   root: 'libs/swc-lib',

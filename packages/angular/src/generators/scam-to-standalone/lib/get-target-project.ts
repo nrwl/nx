@@ -1,4 +1,4 @@
-import { ProjectConfiguration } from 'nx/src/config/workspace-json-project-json';
+import { ProjectConfiguration } from 'nx/src/config/workspace-config-project-config';
 
 export function getTargetProject(
   projectName: string,

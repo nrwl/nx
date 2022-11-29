@@ -18,7 +18,7 @@ import {
   ProjectConfiguration,
   TargetConfiguration,
   ProjectsConfigurations,
-} from '../config/workspace-json-project-json';
+} from '../config/workspace-config-project-config';
 import { Executor, ExecutorContext } from '../config/misc-interfaces';
 import { serializeOverridesIntoCommandLine } from '../utils/serialize-overrides-into-command-line';
 import {

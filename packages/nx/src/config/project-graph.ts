@@ -1,8 +1,8 @@
 import type {
   TargetConfiguration,
   Workspace,
-} from './workspace-json-project-json';
-import { InputDefinition } from './workspace-json-project-json';
+} from './workspace-config-project-config';
+import { InputDefinition } from './workspace-config-project-config';
 
 /**
  * Some metadata about a file

@@ -6,7 +6,7 @@ jest.mock('nx/src/utils/workspace-root', () => ({
 }));
 import { buildProjectGraph } from './build-project-graph';
 import { defaultFileHasher } from '../hasher/file-hasher';
-import { WorkspaceJsonConfiguration } from '../config/workspace-json-project-json';
+import { WorkspaceJsonConfiguration } from '../config/workspace-config-project-config';
 import { NxConfig } from '../config/nx-config';
 import { stripIndents } from '../utils/strip-indents';
 import { DependencyType } from '../config/project-graph';

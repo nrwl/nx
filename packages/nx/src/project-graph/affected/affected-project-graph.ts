@@ -14,7 +14,7 @@ import { getTouchedProjectsFromTsConfig } from './locators/tsconfig-json-changes
 import { NxConfig } from '../../config/nx-config';
 import { ProjectGraph } from '../../config/project-graph';
 import { reverse } from '../operators';
-import { ProjectConfiguration } from '../../config/workspace-json-project-json';
+import { ProjectConfiguration } from '../../config/workspace-config-project-config';
 import { readNxConfig } from '../../config/configuration';
 import { workspaceConfigName } from '../../config/workspaces';
 import { getTouchedProjectsFromProjectGlobChanges } from './locators/project-glob-changes';

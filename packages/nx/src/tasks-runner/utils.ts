@@ -10,7 +10,7 @@ import {
 } from '../utils/nx-plugin';
 import { Task, TaskGraph } from '../config/task-graph';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
-import { TargetDependencyConfig } from '../config/workspace-json-project-json';
+import { TargetDependencyConfig } from '../config/workspace-config-project-config';
 import { workspaceRoot } from '../utils/workspace-root';
 import { NxConfig } from '../config/nx-config';
 import { joinPathFragments } from '../utils/path';

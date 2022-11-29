@@ -3,7 +3,7 @@ import { dirname, join } from 'path';
 import {
   InputDefinition,
   TargetConfiguration,
-} from '../config/workspace-json-project-json';
+} from '../config/workspace-config-project-config';
 import { readJsonFile } from './fileutils';
 import { workspaceRoot } from './workspace-root';
 

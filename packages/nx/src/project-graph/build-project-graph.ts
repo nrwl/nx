@@ -34,7 +34,7 @@ import { ProjectGraphBuilder } from './project-graph-builder';
 import {
   ProjectConfiguration,
   ProjectsConfigurations,
-} from '../config/workspace-json-project-json';
+} from '../config/workspace-config-project-config';
 import {
   readAllWorkspaceConfiguration,
   readNxConfig,

@@ -35,7 +35,7 @@ export type {
   ProjectConfiguration,
   ProjectType,
   Workspace,
-} from 'nx/src/config/workspace-json-project-json';
+} from 'nx/src/config/workspace-config-project-config';
 
 /**
  * @category Workspace

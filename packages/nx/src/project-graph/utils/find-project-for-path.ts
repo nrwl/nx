@@ -1,6 +1,6 @@
 import { dirname } from 'path';
 import { ProjectGraphProjectNode } from '../../config/project-graph';
-import { ProjectConfiguration } from '../../config/workspace-json-project-json';
+import { ProjectConfiguration } from '../../config/workspace-config-project-config';
 
 export type ProjectRootMappings = Map<string, string>;
 

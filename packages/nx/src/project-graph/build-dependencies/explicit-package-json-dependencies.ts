@@ -3,7 +3,7 @@ import { join } from 'path';
 import { ProjectFileMap, ProjectGraph } from '../../config/project-graph';
 import { parseJson } from '../../utils/json';
 import { getImportPath, joinPathFragments } from '../../utils/path';
-import { Workspace } from '../../config/workspace-json-project-json';
+import { Workspace } from '../../config/workspace-config-project-config';
 
 class ProjectGraphNodeRecords {}
 
