@@ -101,7 +101,7 @@ export function getProjects(tree: Tree): Map<string, ProjectConfiguration> {
  * This does _not_ provide projects configuration, use {@link readProjectConfiguration} instead.
  */
 export function readWorkspaceConfiguration(tree: Tree): WorkspaceConfiguration {
-  const { projects, ...workspace } = readRawWorkspaceJson(tree); // Create a new object, without projects
+  const { projects, ...workspace } = readRawWorkspaceConfig(tree); // Create a new object, without projects
 
   let nxConfig = readNxConfig(tree);
   if (nxConfig === null) {
@@ -338,7 +338,7 @@ function addProjectToWorkspaceConfig(
   standalone: boolean = false
 ) {
   const workspaceConfigPath = getWorkspacePath(tree);
-  const workspaceConfig = readRawWorkspaceJson(tree);
+  const workspaceConfig = readRawWorkspaceConfig(tree);
   if (workspaceConfigPath) {
     validateProjectConfigurationOperationsGivenWorkspaceJson(
       mode,
@@ -416,7 +416,7 @@ export function readWorkspace(tree: Tree): ProjectsConfigurations {
 function inlineProjectConfigurationsWithTree(
   tree: Tree
 ): ProjectsConfigurations {
-  const workspaceConfig = readRawWorkspaceJson(tree);
+  const workspaceConfig = readRawWorkspaceConfig(tree);
   Object.entries(workspaceConfig.projects || {}).forEach(([project, config]) => {
     if (typeof config === 'string') {
       const configFileLocation = joinPathFragments(config, 'project.json');
@@ -484,7 +484,7 @@ function findDeletedProjects(tree: Tree) {
 
 let staticFSWorkspace: RawProjectsConfigurations;
 let cachedTree: Tree;
-function readRawWorkspaceJson(tree: Tree): RawProjectsConfigurations {
+function readRawWorkspaceConfig(tree: Tree): RawProjectsConfigurations {
   const path = getWorkspacePath(tree);
   if (path && tree.exists(path)) {
     // `workspace.json` exists, use it.
@@ -531,7 +531,7 @@ function readRawWorkspaceJson(tree: Tree): RawProjectsConfigurations {
  * @returns file path if separate from root config, null otherwise.
  */
 function getProjectFileLocation(tree: Tree, project: string): string | null {
-  const rawWorkspace = readRawWorkspaceJson(tree);
+  const rawWorkspace = readRawWorkspaceConfig(tree);
   const projectConfig = rawWorkspace.projects?.[project];
   return typeof projectConfig === 'string'
     ? joinPathFragments(projectConfig, 'project.json')
