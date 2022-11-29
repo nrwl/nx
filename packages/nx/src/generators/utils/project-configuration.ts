@@ -18,6 +18,20 @@ import { joinPathFragments, normalizePath } from '../../utils/path';
 import type { Tree } from '../tree';
 
 import { readJson, updateJson, writeJson } from './json';
+import { readYaml, updateYaml, writeYaml } from './yaml';
+
+const fileHandlers = {
+  json: {
+    read: readJson,
+    update: updateJson,
+    write: writeJson,
+  },
+  yaml: {
+    read: readYaml,
+    update: updateYaml,
+    write: writeYaml,
+  },
+};
 
 export type WorkspaceConfiguration = Omit<ProjectsConfigurations, 'projects'> &
   Partial<NxConfig>;
@@ -25,7 +39,7 @@ export type WorkspaceConfiguration = Omit<ProjectsConfigurations, 'projects'> &
 /**
  * Adds project configuration to the Nx workspace.
  *
- * The project configuration is stored in workspace.json or the associated project.json file.
+ * The project configuration is stored in workspace.* or the associated project.* file.
  * The utility will update either files.
  *
  * @param tree - the file system tree
@@ -52,7 +66,7 @@ export function addProjectConfiguration(
 /**
  * Updates the configuration of an existing project.
  *
- * The project configuration is stored in workspace.json or the associated project.json file.
+ * The project configuration is stored in workspace.* or the associated project.* file.
  * The utility will update either files.
  *
  * @param tree - the file system tree
@@ -70,7 +84,7 @@ export function updateProjectConfiguration(
 /**
  * Removes the configuration of an existing project.
  *
- * The project configuration is stored in workspace.json or the associated project.json file.
+ * The project configuration is stored in workspace.* or the associated project.* file.
  * The utility will update either file.
  */
 export function removeProjectConfiguration(
@@ -197,8 +211,9 @@ export function updateWorkspaceConfiguration(
 }
 
 function readNxConfigExtends(tree: Tree, extendsPath: string) {
+  const extension = extendsPath.split('.').slice(-1)[0] || 'json';
   try {
-    return readJson(
+    return fileHandlers[extension].read(
       tree,
       relative(
         tree.root,
@@ -215,7 +230,7 @@ function readNxConfigExtends(tree: Tree, extendsPath: string) {
 /**
  * Reads a project configuration.
  *
- * The project configuration is stored in workspace.json or the associated project.json file.
+ * The project configuration is stored in workspace.* or the associated project.* file.
  * The utility will read from either file.
  *
  * @param tree - the file system tree
@@ -241,27 +256,37 @@ export function readProjectConfiguration(
 }
 
 export function readNxConfig(tree: Tree): NxConfig | null {
-  if (!tree.exists('nx.json')) {
-    return null;
+  let nxConfig = null;
+  for (const extension in fileHandlers) {
+    const file = `nx.${extension}`;
+    if (tree.exists(file)) {
+      nxConfig = fileHandlers[extension].read<NxConfig>(tree, file);
+      break;
+    }
   }
-  let nxConfig = readJson<NxConfig>(tree, 'nx.json');
-  if (nxConfig.extends) {
+  if (nxConfig && nxConfig.extends) {
     nxConfig = { ...readNxConfigExtends(tree, nxConfig.extends), ...nxConfig };
   }
   return nxConfig;
 }
 
 /**
- * Returns if a project has a standalone configuration (project.json).
+ * Returns if a project has a standalone configuration.
+ *
+ * Supported filenames:
+ *
+ * - project.json
+ * - project.yaml
  *
  * @param tree - the file system tree
  * @param project - the project name
  */
 export function isStandaloneProject(tree: Tree, project: string): boolean {
   const path = getWorkspacePath(tree);
+  const extension = path.split('.').slice(-1)[0] || 'json';
   const rawWorkspace =
     path && tree.exists(path)
-      ? readJson<RawProjectsConfigurations>(tree, path)
+      ? fileHandlers[extension].read<RawProjectsConfigurations>(tree, path)
       : null;
   if (rawWorkspace) {
     const projectConfig = rawWorkspace.projects?.[project];
@@ -356,6 +381,7 @@ function addProjectToWorkspaceConfig(
 
   const projectConfigFile =
     (mode === 'create' && standalone) || !workspaceConfigPath
+      // TODO(milahu): project.yaml
       ? joinPathFragments(project.root, 'project.json')
       : getProjectFileLocation(tree, projectName);
   const jsonSchema =
@@ -419,10 +445,12 @@ function inlineProjectConfigurationsWithTree(
   const workspaceConfig = readRawWorkspaceConfig(tree);
   Object.entries(workspaceConfig.projects || {}).forEach(([project, config]) => {
     if (typeof config === 'string') {
+      // TODO(milahu): project.yaml
       const configFileLocation = joinPathFragments(config, 'project.json');
+      const extension = configFileLocation.split('.').slice(-1)[0] || 'json';
       workspaceConfig.projects[project] = {
         root: config,
-        ...readJson<ProjectConfiguration>(tree, configFileLocation),
+        ...fileHandlers[extension].read<ProjectConfiguration>(tree, configFileLocation),
       };
     }
   });
@@ -445,6 +473,7 @@ function findCreatedProjects(tree: Tree) {
     if (change.type === 'CREATE') {
       const fileName = basename(change.path);
       // all created project json files are created projects
+      // TODO(milahu): project.yaml
       if (fileName === 'project.json') {
         createdProjectFiles.push(change.path);
       } else if (fileName === 'package.json') {
@@ -477,6 +506,7 @@ function findDeletedProjects(tree: Tree) {
     const fileName = basename(f.path);
     return (
       f.type === 'DELETE' &&
+      // TODO(milahu): project.yaml
       (fileName === 'project.json' || fileName === 'package.json')
     );
   });
@@ -488,20 +518,27 @@ function readRawWorkspaceConfig(tree: Tree): RawProjectsConfigurations {
   const path = getWorkspacePath(tree);
   if (path && tree.exists(path)) {
     // `workspace.json` exists, use it.
-    return readJson<RawProjectsConfigurations>(tree, path);
+    const extension = path.split('.').slice(-1)[0] || 'json';
+    return fileHandlers[extension].read<RawProjectsConfigurations>(tree, path);
   } else {
     const nxConfig = readNxConfig(tree);
     const createdProjects = buildWorkspaceConfigurationFromGlobs(
       nxConfig,
       findCreatedProjects(tree),
-      (file) => readJson(tree, file)
+      (file) => {
+        const extension = file.split('.').slice(-1)[0] || 'json';
+        return fileHandlers[extension].read(tree, file);
+      }
     ).projects;
     // We already have built a cache but need to confirm it's the same tree
     if (!staticFSWorkspace || tree !== cachedTree) {
       staticFSWorkspace = buildWorkspaceConfigurationFromGlobs(
         nxConfig,
         [...globForProjectFiles(tree.root, nxConfig)],
-        (file) => readJson(tree, file)
+        (file) => {
+          const extension = file.split('.').slice(-1)[0] || 'json';
+          return fileHandlers[extension].read(tree, file);
+        }
       );
       cachedTree = tree;
     }
@@ -534,6 +571,7 @@ function getProjectFileLocation(tree: Tree, project: string): string | null {
   const rawWorkspace = readRawWorkspaceConfig(tree);
   const projectConfig = rawWorkspace.projects?.[project];
   return typeof projectConfig === 'string'
+    // TODO(milahu): project.yaml
     ? joinPathFragments(projectConfig, 'project.json')
     : null;
 }
@@ -568,6 +606,7 @@ function validateProjectConfigurationOperationsWithoutWorkspaceJson(
 ) {
   if (
     mode == 'create' &&
+    // TODO(milahu): project.yaml
     tree.exists(joinPathFragments(projectRoot, 'project.json'))
   ) {
     throw new Error(
@@ -576,6 +615,7 @@ function validateProjectConfigurationOperationsWithoutWorkspaceJson(
   }
   if (
     mode == 'update' &&
+    // TODO(milahu): project.yaml
     !tree.exists(joinPathFragments(projectRoot, 'project.json'))
   ) {
     throw new Error(
@@ -591,30 +631,32 @@ function validateProjectConfigurationOperationsWithoutWorkspaceJson(
 
 export function shouldDefaultToUsingStandaloneConfigs(tree: Tree): boolean {
   const workspacePath = getWorkspacePath(tree);
-  const rawWorkspace =
-    workspacePath && tree.exists(workspacePath)
-      ? readJson<RawProjectsConfigurations>(tree, workspacePath)
-      : null;
-  return !rawWorkspace
-    ? true // if workspace.json doesn't exist, all projects **must** be standalone
-    : Object.values(rawWorkspace.projects).reduce(
-        // default for second, third... projects should be based on all projects being defined as a path
-        // for configuration read from ng schematics, this is determined by configFilePath's presence
-        (allStandalone, next) =>
-          allStandalone &&
-          (typeof next === 'string' || 'configFilePath' in next),
-
-        // default for first project should be true if using Nx Schema
-        rawWorkspace.version > 1
-      );
+  let rawWorkspace: RawProjectsConfigurations | null = null;
+  if (!(workspacePath && tree.exists(workspacePath))) {
+    return true; // if workspace.json doesn't exist, all projects **must** be standalone
+  }
+  const extension = workspacePath.split('.').slice(-1)[0] || 'json';
+  rawWorkspace = fileHandlers[extension].read<RawProjectsConfigurations>(tree, workspacePath);
+  return Object.values(rawWorkspace.projects).reduce(
+    // default for second, third... projects should be based on all projects being defined as a path
+    // for configuration read from ng schematics, this is determined by configFilePath's presence
+    (allStandalone, next) =>
+      allStandalone &&
+      (typeof next === 'string' || 'configFilePath' in next),
+    // default for first project should be true if using Nx Schema
+    rawWorkspace.version > 1
+  );
 }
+
+type WorkspaceConfigFiles = '/angular.json' | '/workspace.json' | '/workspace.yaml';
 
 export function getWorkspacePath(
   tree: Tree
-): '/angular.json' | '/workspace.json' | null {
-  const possibleFiles: ('/angular.json' | '/workspace.json')[] = [
+): WorkspaceConfigFiles | null {
+  const possibleFiles: (WorkspaceConfigFiles)[] = [
     '/angular.json',
     '/workspace.json',
+    '/workspace.yaml',
   ];
-  return possibleFiles.filter((path) => tree.exists(path))[0];
+  return possibleFiles.find((path) => tree.exists(path));
 }
