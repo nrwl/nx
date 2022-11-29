@@ -8,7 +8,7 @@
     "ng-packagr-lite": {
       "implementation": "./src/executors/ng-packagr-lite/ng-packagr-lite.impl",
       "schema": "./src/executors/ng-packagr-lite/schema.json",
-      "description": "Builds a library with support for incremental builds."
+      "description": "Builds a library with support for incremental builds.\nThis executor is meant to be used with buildable libraries in an incremental build scenario. It is similar to the `@nrwl/angular:package` executor but with some key differences:\n- It doesn't run `ngcc` automatically (`ngcc` needs to be run separately beforehand if needed, this can be done in a `postinstall` hook on `package.json`).\n- It only produces ESM2020 bundles.\n- It doesn't generate package exports in the `package.json`."
     },
     "package": {
       "implementation": "./src/executors/package/package.impl",
@@ -30,7 +30,7 @@
     "ng-packagr-lite": {
       "implementation": "./src/executors/ng-packagr-lite/compat",
       "schema": "./src/executors/ng-packagr-lite/schema.json",
-      "description": "Builds a library with support for incremental builds."
+      "description": "Builds a library with support for incremental builds.\nThis executor is meant to be used with buildable libraries in an incremental build scenario. It is similar to the `@nrwl/angular:package` executor but with some key differences:\n- It doesn't run `ngcc` automatically (`ngcc` needs to be run separately beforehand if needed, this can be done in a `postinstall` hook on `package.json`)\n- It only produces ESM2020 bundles\n- It doesn't generate package exports in the `package.json`"
     },
     "package": {
       "implementation": "./src/executors/package/compat",

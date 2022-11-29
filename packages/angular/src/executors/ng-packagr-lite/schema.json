@@ -3,7 +3,7 @@
   "outputCapture": "direct-nodejs",
   "$schema": "http://json-schema.org/schema",
   "title": "ng-packagr Target",
-  "description": "ng-packagr target options for Build Architect. Use to build library projects.",
+  "description": "Builds a library with support for incremental builds.\nThis executor is meant to be used with buildable libraries in an incremental build scenario. It is similar to the `@nrwl/angular:package` executor but with some key differences:\n- It doesn't run `ngcc` automatically (`ngcc` needs to be run separately beforehand if needed, this can be done in a `postinstall` hook on `package.json`).\n- It only produces ESM2020 bundles.\n- It doesn't generate package exports in the `package.json`.",
   "cli": "nx",
   "type": "object",
   "presets": [
