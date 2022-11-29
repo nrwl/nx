@@ -58,9 +58,7 @@ export const commandsObject = yargs
     describe: 'Run target for multiple listed projects',
     builder: (yargs) =>
       linkToNxDevAndExamples(
-        withRunManyOptions(
-          withOutputStyleOption(withTargetAndConfigurationOption(yargs))
-        ),
+        withRunManyOptions(withOutputStyleOption(withTargetOption(yargs))),
         'run-many'
       ),
     handler: async (args) =>
@@ -72,9 +70,7 @@ export const commandsObject = yargs
     builder: (yargs) =>
       linkToNxDevAndExamples(
         withAffectedOptions(
-          withRunOptions(
-            withOutputStyleOption(withTargetAndConfigurationOption(yargs))
-          )
+          withRunOptions(withOutputStyleOption(withTargetOption(yargs)))
         ),
         'affected'
       ),
@@ -194,10 +190,7 @@ export const commandsObject = yargs
     builder: (yargs) =>
       linkToNxDevAndExamples(
         withAffectedOptions(
-          withTargetAndConfigurationOption(
-            withPrintAffectedOptions(yargs),
-            false
-          )
+          withTargetOption(withPrintAffectedOptions(yargs), false)
         ),
         'print-affected'
       ),
@@ -441,6 +434,12 @@ function withRunOptions(yargs: yargs.Argv): yargs.Argv {
       describe: 'This is the name of the tasks runner configured in nx.json',
       type: 'string',
     })
+    .options('configuration', {
+      describe:
+        'This is the configuration to use when performing tasks on projects',
+      type: 'string',
+      alias: 'c',
+    })
     .option('prod', {
       describe: 'Use the production configuration',
       type: 'boolean',
@@ -618,24 +617,14 @@ function withOutputStyleOption(
   });
 }
 
-function withTargetAndConfigurationOption(
-  yargs: yargs.Argv,
-  demandOption = true
-): yargs.Argv {
-  return yargs
-    .option('target', {
-      describe: 'Task to run for affected projects',
-      type: 'string',
-      requiresArg: true,
-      demandOption,
-      global: false,
-    })
-    .options('configuration', {
-      describe:
-        'This is the configuration to use when performing tasks on projects',
-      type: 'string',
-      alias: 'c',
-    });
+function withTargetOption(yargs: yargs.Argv, demandOption = true): yargs.Argv {
+  return yargs.option('target', {
+    describe: 'Task to run for affected projects',
+    type: 'string',
+    requiresArg: true,
+    demandOption,
+    global: false,
+  });
 }
 
 function withNewOptions(yargs: yargs.Argv) {
@@ -694,7 +683,7 @@ function withRunOneOptions(yargs: yargs.Argv) {
   );
 
   const res = withRunOptions(
-    withOutputStyleOption(withTargetAndConfigurationOption(yargs, false), [
+    withOutputStyleOption(withTargetOption(yargs, false), [
       'dynamic',
       'static',
       'stream',

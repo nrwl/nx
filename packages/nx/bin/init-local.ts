@@ -68,7 +68,6 @@ function isKnownCommand() {
     'affected:dep-graph',
     'format',
     'workspace-schematic',
-    'connect-to-nx-cloud',
     'clear-cache',
     'help',
   ];

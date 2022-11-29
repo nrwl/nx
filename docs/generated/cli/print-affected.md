@@ -61,12 +61,6 @@ Type: `string`
 
 Base of the current branch (usually main)
 
-### configuration
-
-Type: `string`
-
-This is the configuration to use when performing tasks on projects
-
 ### exclude
 
 Type: `array`
