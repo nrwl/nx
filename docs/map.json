@@ -753,14 +753,14 @@
           "description": "Adopting Nx incrementally, on existing project or from scratch.",
           "itemList": [
             {
-              "name": "Nx and Lerna",
-              "id": "lerna-and-nx",
-              "file": "shared/migration/lerna-and-nx"
-            },
-            {
               "name": "NPM/Yarn/PNPM workspaces",
               "id": "adding-to-monorepo",
               "file": "shared/migration/adding-to-monorepo"
+            },
+            {
+              "name": "Add to any Project",
+              "id": "adding-to-existing-project",
+              "file": "shared/migration/adding-to-existing-project"
             },
             {
               "name": "From CRA",
@@ -771,6 +771,11 @@
               "name": "From Angular CLI",
               "id": "migration-angular",
               "file": "shared/migration/migration-angular"
+            },
+            {
+              "name": "Nx and Lerna",
+              "id": "lerna-and-nx",
+              "file": "shared/migration/lerna-and-nx"
             },
             {
               "name": "From AngularJS",
