@@ -30,6 +30,7 @@ import {
 import { existsSync } from 'fs';
 import { readCachedProjectGraph } from '../project-graph/project-graph';
 import { createPackageJson } from '../utils/create-package-json';
+import { normalizePackageJson } from './utils/pruning';
 
 const YARN_LOCK_PATH = join(workspaceRoot, 'yarn.lock');
 const NPM_LOCK_PATH = join(workspaceRoot, 'package-lock.json');
@@ -201,8 +202,9 @@ export function pruneLockFile(
   }
 
   const packageJson = createPackageJson(projectName, projectGraph, {});
+  const normalizedPackageJson = normalizePackageJson(packageJson, isProduction);
 
-  const dependencies = Object.keys(packageJson.dependencies); // TODO: use createPackageJson to gather the dependencies, probably refactoring of `pruneLockFileData` would be needed
+  const dependencies = Object.keys(normalizedPackageJson.dependencies); // TODO: use createPackageJson to gather the dependencies, probably refactoring of `pruneLockFileData` would be needed
 
   const result = pruneLockFileData(
     lockFileData,
