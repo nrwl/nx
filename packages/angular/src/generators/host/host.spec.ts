@@ -225,6 +225,7 @@ describe('Host App Generator', () => {
         tree.read(`apps/test/src/app/app.routes.ts`, 'utf-8')
       ).toMatchSnapshot();
       expect(project.targets.server).toMatchSnapshot();
+      expect(project.targets['serve-ssr']).toMatchSnapshot();
     });
   });
 });
