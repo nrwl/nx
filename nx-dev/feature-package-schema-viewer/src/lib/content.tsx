@@ -199,7 +199,7 @@ export function Content({
                       setPresets(p.keys);
                     }}
                     type="button"
-                    className="relative inline-flex items-center rounded-md border border-slate-200 bg-white px-4 py-2 px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400 dark:hover:bg-slate-800"
+                    className="relative inline-flex items-center rounded-md border border-slate-200 bg-white px-4 px-4 py-2 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400 dark:hover:bg-slate-800"
                   >
                     {p.name}
                   </button>
@@ -208,7 +208,7 @@ export function Content({
                   <button
                     onClick={() => setPresets([])}
                     type="button"
-                    className="relative inline-flex items-center rounded-md border border-slate-200 bg-white px-4 py-2 px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400 dark:hover:bg-slate-800"
+                    className="relative inline-flex items-center rounded-md border border-slate-200 bg-white px-4 px-4 py-2 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400 dark:hover:bg-slate-800"
                   >
                     Reset <XCircleIcon className="ml-1.5 h-4 w-4" />
                   </button>
