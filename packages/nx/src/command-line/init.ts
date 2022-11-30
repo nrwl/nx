@@ -6,6 +6,9 @@ import { addNxToNpmRepo } from '../nx-init/add-nx-to-npm-repo';
 export async function initHandler() {
   const args = process.argv.slice(2).join(' ');
   const version = process.env.NX_VERSION ?? 'latest';
+  if (process.env.NX_VERSION) {
+    console.log(`Using version ${process.env.NX_VERSION}`);
+  }
   if (existsSync('package.json')) {
     if (existsSync('angular.json')) {
       // TODO(leo): remove make-angular-cli-faster

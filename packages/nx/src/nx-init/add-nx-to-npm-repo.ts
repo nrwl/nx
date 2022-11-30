@@ -104,10 +104,9 @@ export function markRootPackageJsonAsNxProject(
   scriptOutputs: { [script: string]: string }
 ) {
   const json = readJsonFile(joinPathFragments(repoRoot, `package.json`));
-  json.nx = { includeScripts: cacheableScripts };
+  json.nx.targets = {};
   for (let script of Object.keys(scriptOutputs)) {
     if (scriptOutputs[script]) {
-      json.nx.targets ||= {};
       json.nx.targets[script] = {
         outputs: [`{projectRoot}/${scriptOutputs[script]}`],
       };
