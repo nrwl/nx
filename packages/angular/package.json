@@ -49,7 +49,7 @@
     "@nrwl/webpack": "file:../webpack",
     "@nrwl/workspace": "file:../workspace",
     "@phenomnomnominal/tsquery": "4.1.1",
-    "@schematics/angular": "~15.0.0",
+    "@schematics/angular": "~15.0.1",
     "chalk": "4.1.0",
     "chokidar": "^3.5.1",
     "http-server": "^14.1.0",

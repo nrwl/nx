@@ -5,7 +5,6 @@ import type { JsonObject } from '@angular-devkit/core';
 import { executeSSRDevServerBuilder } from '@nguniversal/builders';
 import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
 import {
-  logger,
   readCachedProjectGraph,
   workspaceRoot,
   Workspaces,
@@ -15,9 +14,10 @@ import {
   getStaticRemotes,
   validateDevRemotes,
 } from '../utilities/module-federation';
-import { exec } from 'child_process';
 import { switchMap } from 'rxjs/operators';
 import { from } from 'rxjs';
+import { join } from 'path';
+import { execSync, fork } from 'child_process';
 
 export function executeModuleFederationDevSSRBuilder(
   schema: Schema,
@@ -80,19 +80,23 @@ export function executeModuleFederationDevSSRBuilder(
     }
 
     const remotePromise = new Promise<void>((res, rej) => {
-      const child = exec(
-        `npx nx run ${remote}:${target}${
-          context.target.configuration ? `:${context.target.configuration}` : ''
-        }`
+      const remoteProject = workspaceProjects[remote];
+      const remoteServerOutput = join(
+        workspaceRoot,
+        remoteProject.targets.server.options.outputPath,
+        'main.js'
       );
-      child.stdout.on('data', (data) => {
-        logger.log(data);
-        if (
-          data.includes('Node Express server listening') ||
-          data.includes(
-            'Angular Universal Live Development Server is listening'
-          )
-        ) {
+      execSync(
+        `npx nx run ${remote}:server${
+          context.target.configuration ? `:${context.target.configuration}` : ''
+        }`,
+        { stdio: 'inherit' }
+      );
+      const child = fork(remoteServerOutput, {
+        env: remoteProject.targets['serve-ssr'].options.port,
+      });
+      child.on('message', (msg) => {
+        if (msg === 'nx.server.ready') {
           res();
         }
       });
