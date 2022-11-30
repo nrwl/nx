@@ -93,6 +93,8 @@ async function reorgnizeWorkspaceStructure(options: NormalizedOptions) {
 
   moveFilesToTempWorkspace(options);
 
+  console.log('Here are the options:', options);
+
   await addBundler(options);
 
   output.log({ title: '🧶  Add all node_modules to .gitignore' });
@@ -229,6 +231,7 @@ function moveFilesToTempWorkspace(options: NormalizedOptions) {
 
 async function addBundler(options: NormalizedOptions) {
   if (options.isVite) {
+    console.log('I am setting up vite');
     output.log({ title: '🧑‍🔧  Setting up Vite' });
     const { addViteCommandsToPackageScripts } = await import(
       './add-vite-commands-to-package-scripts'
@@ -238,6 +241,7 @@ async function addBundler(options: NormalizedOptions) {
     writeViteIndexHtml(options.reactAppName, options.isNested, options.appIsJs);
     renameJsToJsx(options.reactAppName, options.isNested);
   } else {
+    console.log('I am setting up webpack');
     output.log({ title: '🧑‍🔧  Setting up craco + Webpack' });
     const { addCracoCommandsToPackageScripts } = await import(
       './add-craco-commands-to-package-scripts'

@@ -22,7 +22,7 @@ describe('nx init (for CRA)', () => {
     const craToNxOutput = runCommand(
       `${
         pmc.runUninstalledPackage
-      } nx@${getPublishedVersion()} init --nxCloud=false --integrated --vite=false`
+      } nx@${getPublishedVersion()} init --nxCloud=false --integrated`
     );
 
     expect(craToNxOutput).toContain('🎉 Done!');
@@ -78,7 +78,7 @@ describe('nx init (for CRA)', () => {
     const craToNxOutput = runCommand(
       `${
         pmc.runUninstalledPackage
-      } nx@${getPublishedVersion()} init --nxCloud=false --vite=false`
+      } nx@${getPublishedVersion()} init --nxCloud=false`
     );
 
     expect(craToNxOutput).toContain('🎉 Done!');
