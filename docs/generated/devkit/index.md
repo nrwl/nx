@@ -1727,14 +1727,17 @@ parseTargetString('proj:test:production'); // returns { project: "proj", target:
 
 ### pruneLockFile
 
-▸ **pruneLockFile**(`projectName`, `packageManager?`): `string`
+▸ **pruneLockFile**(`projectName`, `isProduction?`, `packageManager?`): `string`
+
+Prune lock file based on the giveb project
 
 #### Parameters
 
-| Name             | Type                                                  |
-| :--------------- | :---------------------------------------------------- |
-| `projectName`    | `string`                                              |
-| `packageManager` | [`PackageManager`](../../devkit/index#packagemanager) |
+| Name             | Type                                                  | Default value |
+| :--------------- | :---------------------------------------------------- | :------------ |
+| `projectName`    | `string`                                              | `undefined`   |
+| `isProduction`   | `boolean`                                             | `true`        |
+| `packageManager` | [`PackageManager`](../../devkit/index#packagemanager) | `undefined`   |
 
 #### Returns
 

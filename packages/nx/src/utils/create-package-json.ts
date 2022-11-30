@@ -34,6 +34,7 @@ export function createPackageJson(
   const rootPackageJson = readJsonFile(
     `${options.root || workspaceRoot}/package.json`
   );
+
   Object.entries(npmDeps.dependencies).forEach(([packageName, version]) => {
     if (
       rootPackageJson.devDependencies?.[packageName] &&
