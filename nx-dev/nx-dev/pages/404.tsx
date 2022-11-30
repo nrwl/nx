@@ -35,7 +35,7 @@ export function FourOhFour(): JSX.Element {
             className="relative py-16 sm:pt-24 lg:py-32"
           >
             <div className="mx-auto px-4 sm:px-6 lg:px-8 xl:max-w-7xl">
-              <div className="w-full">
+              <div className="w-full lg:flex lg:items-center">
                 <Image
                   aria-hidden="true"
                   height={200}
@@ -45,10 +45,10 @@ export function FourOhFour(): JSX.Element {
                   src={illustrationUrl}
                   className="drop-shadow"
                 />
+                <h1 className="mt-4 text-4xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 sm:text-6xl lg:ml-8">
+                  <span className="sr-only">404 - </span>Page not found!
+                </h1>
               </div>
-              <h1 className="mt-4 text-4xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 sm:text-6xl">
-                404 - Page not found!
-              </h1>
               <p className="mt-8 text-lg">
                 Sorry, but the page you were looking for could not be found.
               </p>
