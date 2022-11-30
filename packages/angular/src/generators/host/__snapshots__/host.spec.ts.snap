@@ -181,6 +181,23 @@ Object {
 }
 `;
 
+exports[`Host App Generator --ssr should generate the correct files 10`] = `
+Object {
+  "configurations": Object {
+    "development": Object {
+      "browserTarget": "test:build:development",
+      "serverTarget": "test:server:development",
+    },
+    "production": Object {
+      "browserTarget": "test:build:production",
+      "serverTarget": "test:server:production",
+    },
+  },
+  "defaultConfiguration": "development",
+  "executor": "@nrwl/angular:module-federation-dev-ssr",
+}
+`;
+
 exports[`Host App Generator should generate a host app with a remote 1`] = `
 "const { withModuleFederation } = require('@nrwl/angular/module-federation');
 const config = require('./module-federation.config');

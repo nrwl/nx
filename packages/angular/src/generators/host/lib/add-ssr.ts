@@ -53,6 +53,9 @@ export async function addSsr(tree: Tree, options: Schema, appName: string) {
     path: joinPathFragments(project.root, 'webpack.server.config.js'),
   };
 
+  project.targets['serve-ssr'].executor =
+    '@nrwl/angular:module-federation-dev-ssr';
+
   updateProjectConfiguration(tree, appName, project);
 
   const installTask = addDependenciesToPackageJson(
