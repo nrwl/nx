@@ -98,7 +98,10 @@ export function PackageSchemaList({
           <div className="mb-6 pt-8">
             <Breadcrumbs path={router.asPath} />
           </div>
-          <div className="mb-8 flex w-full items-center space-x-2">
+          <div
+            data-document="main"
+            className="mb-8 flex w-full items-center space-x-2"
+          >
             <div className="w-full flex-grow">
               <div
                 className="relative inline-flex rounded-md border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-medium uppercase dark:border-slate-700 dark:bg-slate-800/60"
