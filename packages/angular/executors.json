@@ -57,6 +57,11 @@
       "schema": "./src/builders/module-federation-dev-server/schema.json",
       "description": "The module-federation-dev-server executor is reserved exclusively for use with host Module Federation applications. It allows the user to specify which remote applications should be served with the host."
     },
+    "module-federation-dev-ssr": {
+      "implementation": "./src/builders/module-federation-dev-ssr/module-federation-dev-ssr.impl",
+      "schema": "./src/builders/module-federation-dev-ssr/schema.json",
+      "description": "The module-federation-dev-ssr executor is reserved exclusively for use with host Module Federation applications that use SSR. It allows the user to specify which remote applications should be served with the host."
+    },
     "file-server": {
       "implementation": "./src/executors/file-server/compat",
       "schema": "./src/executors/file-server/schema.json",

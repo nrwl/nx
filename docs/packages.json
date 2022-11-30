@@ -20,7 +20,8 @@
         "webpack-browser",
         "webpack-dev-server",
         "webpack-server",
-        "module-federation-dev-server"
+        "module-federation-dev-server",
+        "module-federation-dev-ssr"
       ],
       "generators": [
         "add-linting",

@@ -1,21 +1,25 @@
 import type { Schema } from './schema';
+import type { BuilderContext } from '@angular-devkit/architect';
+import { createBuilder } from '@angular-devkit/architect';
+import type { JsonObject } from '@angular-devkit/core';
+import { executeSSRDevServerBuilder } from '@nguniversal/builders';
+import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
 import {
   readCachedProjectGraph,
   workspaceRoot,
   Workspaces,
 } from '@nrwl/devkit';
-import { scheduleTarget } from 'nx/src/adapter/ngcli-adapter';
-import { BuilderContext, createBuilder } from '@angular-devkit/architect';
-import { JsonObject } from '@angular-devkit/core';
-import { executeWebpackDevServerBuilder } from '../webpack-dev-server/webpack-dev-server.impl';
-import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
 import {
   getDynamicRemotes,
   getStaticRemotes,
   validateDevRemotes,
 } from '../utilities/module-federation';
+import { switchMap } from 'rxjs/operators';
+import { from } from 'rxjs';
+import { join } from 'path';
+import { execSync, fork } from 'child_process';
 
-export function executeModuleFederationDevServerBuilder(
+export function executeModuleFederationDevSSRBuilder(
   schema: Schema,
   context: BuilderContext
 ) {
@@ -49,9 +53,10 @@ export function executeModuleFederationDevServerBuilder(
     ? options.devRemotes
     : [options.devRemotes];
 
+  const remoteProcessPromises = [];
   for (const remote of remotes) {
     const isDev = devServeRemotes.includes(remote);
-    const target = isDev ? 'serve' : 'serve-static';
+    const target = isDev ? 'serve-ssr' : 'static-server';
 
     if (!workspaceProjects[remote].targets?.[target]) {
       throw new Error(
@@ -74,27 +79,37 @@ export function executeModuleFederationDevServerBuilder(
       }
     }
 
-    scheduleTarget(
-      context.workspaceRoot,
-      {
-        project: remote,
-        target,
-        configuration: context.target.configuration,
-        runOptions,
-      },
-      options.verbose
-    ).then((obs) => {
-      obs.toPromise().catch((err) => {
-        throw new Error(
-          `Remote '${remote}' failed to serve correctly due to the following: \r\n${err.toString()}`
-        );
+    const remotePromise = new Promise<void>((res, rej) => {
+      const remoteProject = workspaceProjects[remote];
+      const remoteServerOutput = join(
+        workspaceRoot,
+        remoteProject.targets.server.options.outputPath,
+        'main.js'
+      );
+      execSync(
+        `npx nx run ${remote}:server${
+          context.target.configuration ? `:${context.target.configuration}` : ''
+        }`,
+        { stdio: 'inherit' }
+      );
+      const child = fork(remoteServerOutput, {
+        env: remoteProject.targets['serve-ssr'].options.port,
+      });
+      child.on('message', (msg) => {
+        if (msg === 'nx.server.ready') {
+          res();
+        }
       });
     });
+
+    remoteProcessPromises.push(remotePromise);
   }
 
-  return executeWebpackDevServerBuilder(options, context);
+  return from(Promise.all(remoteProcessPromises)).pipe(
+    switchMap(() => executeSSRDevServerBuilder(options, context))
+  );
 }
 
 export default createBuilder<JsonObject & Schema>(
-  executeModuleFederationDevServerBuilder
+  executeModuleFederationDevSSRBuilder
 );
