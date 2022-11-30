@@ -42,7 +42,7 @@ describe('nx init', () => {
     expect(runCLI('run package:echo')).toContain('123');
   });
 
-  it('should work in a regular npm repo ttt', () => {
+  it('should work in a regular npm repo', () => {
     createNonNxProjectDirectory('regular-repo', false);
     updateFile(
       'package.json',
