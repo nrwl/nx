@@ -3,7 +3,7 @@ import { projectFileMapWithFiles } from '../project-graph-incremental-recomputat
 
 export type ChangedFile = {
   path: string;
-  type: 'CREATED' | 'UPDATED' | 'DELETED';
+  type: 'create' | 'update' | 'delete';
 };
 
 export function getProjectsAndGlobalChanges(
@@ -24,15 +24,15 @@ export function getProjectsAndGlobalChanges(
   const allChangedFiles: ChangedFile[] = [
     ...(createdFiles ?? []).map<ChangedFile>((c) => ({
       path: c,
-      type: 'CREATED',
+      type: 'create',
     })),
     ...(updatedFiles ?? []).map<ChangedFile>((c) => ({
       path: c,
-      type: 'UPDATED',
+      type: 'update',
     })),
     ...(deletedFiles ?? []).map<ChangedFile>((c) => ({
       path: c,
-      type: 'DELETED',
+      type: 'delete',
     })),
   ];
 

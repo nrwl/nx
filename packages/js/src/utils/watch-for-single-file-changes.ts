@@ -1,25 +1,30 @@
 import { logger } from '@nrwl/devkit';
+import { daemonClient } from 'nx/src/daemon/client/client';
 import { join } from 'path';
 
 export async function watchForSingleFileChanges(
-  watchDir: string,
+  projectName: string,
+  projectRoot: string,
   relativeFilePath: string,
   callback: () => void
-) {
-  const watcher = await import('@parcel/watcher');
-  const subscription = await watcher.subscribe(watchDir, (err, events) => {
-    const file = join(watchDir, relativeFilePath);
-    if (err) {
-      logger.error(`Watch error: ${err?.message ?? 'Unknown'}`);
-    } else {
-      for (const event of events) {
-        if (event.path === file) {
-          callback();
-          break;
-        }
+): Promise<() => void> {
+  const unregisterFileWatcher = await daemonClient.registerFileWatcher(
+    { watchProjects: [projectName] },
+    (err, data) => {
+      if (err === 'closed') {
+        logger.error(`Watch error: Daemon closed the connection`);
+        process.exit(1);
+      } else if (err) {
+        logger.error(`Watch error: ${err?.message ?? 'Unknown'}`);
+      } else if (
+        data.changedFiles.some(
+          (file) => file.path == join(projectRoot, relativeFilePath)
+        )
+      ) {
+        callback();
       }
     }
-  });
+  );
 
-  return () => subscription.unsubscribe();
+  return () => unregisterFileWatcher();
 }

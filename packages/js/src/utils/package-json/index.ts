@@ -44,7 +44,8 @@ export async function copyPackageJson(
 
   if (options.watch) {
     const dispose = await watchForSingleFileChanges(
-      join(context.root, projectRoot),
+      context.projectName,
+      options.projectRoot,
       'package.json',
       () => updatePackageJson(options, context, target, dependencies)
     );
