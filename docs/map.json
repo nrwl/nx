@@ -179,6 +179,38 @@
           ]
         },
         {
+          "name": "Angular Standalon Tutorial",
+          "id": "angular-standalone-tutorial",
+          "description": "Learn to use Nx with this Angular tutorial where you will learn about all its main feature with a real project.",
+          "itemList": [
+            {
+              "name": "1 - Code Generation",
+              "id": "1-code-generation",
+              "file": "shared/angular-standalone-tutorial/1-code-generation"
+            },
+            {
+              "name": "2 - Project Graph",
+              "id": "2-project-graph",
+              "file": "shared/angular-standalone-tutorial/2-project-graph"
+            },
+            {
+              "name": "3 - Task Running",
+              "id": "3-task-running",
+              "file": "shared/angular-standalone-tutorial/3-task-running"
+            },
+            {
+              "name": "4 - Task Pipelines",
+              "id": "4-task-pipelines",
+              "file": "shared/angular-standalone-tutorial/4-task-pipelines"
+            },
+            {
+              "name": "5 - Summary",
+              "id": "5-summary",
+              "file": "shared/angular-standalone-tutorial/5-summary"
+            }
+          ]
+        },
+        {
           "name": "Node Tutorial",
           "id": "node-tutorial",
           "description": "Learn to use Nx with this Node tutorial where you will learn about all its main feature with a real project.",
