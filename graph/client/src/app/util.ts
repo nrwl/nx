@@ -1,9 +1,43 @@
 // nx-ignore-next-line
 import { ProjectGraphDependency, ProjectGraphNode } from '@nrwl/devkit';
+import { getEnvironmentConfig } from './hooks/use-environment-config';
+import { To, useParams, useSearchParams } from 'react-router-dom';
 
-export function trimBackSlash(value: string): string {
-  return value.replace(/\/$/, '');
-}
+export const useRouteConstructor = (): ((
+  to: To,
+  retainSearchParams: true
+) => To) => {
+  const { environment } = getEnvironmentConfig();
+  const { selectedWorkspaceId } = useParams();
+  const [searchParams] = useSearchParams();
+
+  return (to: To, retainSearchParams: true) => {
+    let pathname = '';
+
+    if (typeof to === 'object') {
+      if (environment === 'dev') {
+        pathname = `/${selectedWorkspaceId}${to.pathname}`;
+      } else {
+        pathname = to.pathname;
+      }
+      return {
+        ...to,
+        pathname,
+        search: retainSearchParams ? searchParams.toString() : '',
+      };
+    } else if (typeof to === 'string') {
+      if (environment === 'dev') {
+        pathname = `/${selectedWorkspaceId}${to}`;
+      } else {
+        pathname = to;
+      }
+      return {
+        pathname,
+        search: retainSearchParams ? searchParams.toString() : '',
+      };
+    }
+  };
+};
 
 export function parseParentDirectoriesFromFilePath(
   path: string,

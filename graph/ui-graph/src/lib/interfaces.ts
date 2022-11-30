@@ -76,41 +76,6 @@ export type ProjectGraphRenderEvents =
       algorithm: TracingAlgorithmType;
     };
 
-export type RouteEvents =
-  | {
-      type: 'notifyRouteFocusProject';
-      focusedProject: string;
-    }
-  | {
-      type: 'notifyRouteGroupByFolder';
-      groupByFolder: boolean;
-    }
-  | {
-      type: 'notifyRouteCollapseEdges';
-      collapseEdges: boolean;
-    }
-  | {
-      type: 'notifyRouteSearchDepth';
-      searchDepthEnabled: boolean;
-      searchDepth: number;
-    }
-  | {
-      type: 'notifyRouteUnfocusProject';
-    }
-  | {
-      type: 'notifyRouteSelectAll';
-    }
-  | {
-      type: 'notifyRouteSelectAffected';
-    }
-  | { type: 'notifyRouteClearSelect' }
-  | {
-      type: 'notifyRouteTracing';
-      start: string;
-      end: string;
-      algorithm: TracingAlgorithmType;
-    };
-
 export type TaskGraphRecord = Record<string, TaskGraph>;
 export type TaskGraphRenderEvents =
   | {

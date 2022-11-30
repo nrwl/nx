@@ -5,7 +5,7 @@ import {
   ProjectGraphProjectNode,
 } from 'nx/src/config/project-graph';
 import { ActionObject, ActorRef, State, StateNodeConfig } from 'xstate';
-import { GraphRenderEvents, RouteEvents } from '../../machines/interfaces';
+import { GraphRenderEvents } from '../../machines/interfaces';
 
 // The hierarchical schema for the states
 export interface ProjectGraphSchema {
@@ -85,8 +85,6 @@ export interface ProjectGraphContext {
     appsDir: string;
   };
   graphActor: ActorRef<GraphRenderEvents>;
-  routeSetterActor: ActorRef<RouteEvents>;
-  routeListenerActor: ActorRef<ProjectGraphMachineEvents>;
   lastPerfReport: GraphPerfReport;
   tracing: {
     start: string;

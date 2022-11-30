@@ -1,18 +1,9 @@
 import { assign } from '@xstate/immer';
-import { send, spawn } from 'xstate';
-import { routeListener } from '../../machines/route-listener.actor';
+import { send } from 'xstate';
 import { ProjectGraphStateNodeConfig } from './interfaces';
 
 export const unselectedStateConfig: ProjectGraphStateNodeConfig = {
-  entry: [
-    'notifyGraphHideAllProjects',
-    assign((ctx, event) => {
-      if (ctx.routeListenerActor === null) {
-        ctx.routeListenerActor = spawn(routeListener, 'routeListener');
-      }
-    }),
-    'notifyRouteClearSelect',
-  ],
+  entry: ['notifyGraphHideAllProjects'],
   on: {
     updateGraph: {
       target: 'customSelected',

@@ -1,26 +1,3 @@
-import {
-  getCheckedProjectItems,
-  getDeselectAllButton,
-  getFocusButtonForProject,
-  getGroupByFolderCheckbox,
-  getImageDownloadButton,
-  getIncludeProjectsInPathButton,
-  getSearchDepthCheckbox,
-  getSearchDepthIncrementButton,
-  getSelectAffectedButton,
-  getSelectAllButton,
-  getSelectProjectsMessage,
-  getTextFilterInput,
-  getTextFilterReset,
-  getToggleAllButtonForFolder,
-  getUncheckedProjectItems,
-  getUnfocusProjectButton,
-} from '../support/app.po';
-
-import * as affectedJson from '../fixtures/affected.json';
-import { testProjectsRoutes } from '../support/routing-tests';
-import * as nxExamplesJson from '../fixtures/nx-examples-project-graph.json';
-
 describe('dev mode - app', () => {
   before(() => {
     cy.intercept('/assets/project-graphs/e2e.json', {
