@@ -32,7 +32,6 @@ import {
   storybookSwcAddonVersion,
   storybookTestRunnerVersion,
 } from '../../utils/versions';
-import { Console } from 'console';
 
 export async function configurationGenerator(
   tree: Tree,
