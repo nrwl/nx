@@ -1,7 +1,6 @@
 import {
   checkFilesDoNotExist,
   checkFilesExist,
-  cleanupProject,
   getSize,
   killPorts,
   newProject,
@@ -252,6 +251,14 @@ export async function h() { return 'c'; }
       }).toThrow();
     }, 250000);
   });
+});
+
+describe('Build React applications and libraries with Vite', () => {
+  let proj: string;
+
+  beforeEach(() => {
+    proj = newProject();
+  });
 
   it('should support bundling with Vite', async () => {
     const libName = uniq('lib');
@@ -259,6 +266,11 @@ export async function h() { return 'c'; }
     runCLI(
       `generate @nrwl/react:lib ${libName} --bundler=vite --no-interactive`
     );
+
+    const packageJson = readJson('package.json');
+    // Vite does not need these libraries to work.
+    expect(packageJson.dependencies['core-js']).toBeUndefined();
+    expect(packageJson.dependencies['tslib']).toBeUndefined();
 
     await runCLIAsync(`build ${libName}`);
 

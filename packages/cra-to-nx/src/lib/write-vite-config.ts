@@ -25,7 +25,7 @@ import react from '@vitejs/plugin-react'
 // https://vitejs.dev/config/
 export default defineConfig({
   build: {
-    outDir: ${isNested ? `'./dist'` : `'../../dist/apps/${appName}'`}
+    outDir: ${isNested ? `'./dist/${appName}'` : `'../../dist/apps/${appName}'`}
   },
   server: {
     port: ${port},

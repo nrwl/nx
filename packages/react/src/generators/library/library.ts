@@ -81,6 +81,7 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
     e2eTestRunner: 'none',
     skipFormat: true,
     skipBabelConfig: options.bundler === 'vite',
+    skipHelperLibs: options.bundler === 'vite',
   });
   tasks.push(initTask);
 
