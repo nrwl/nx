@@ -178,6 +178,7 @@ export async function* tscExecutor(
       await assetHandler.watchAndProcessOnAssetChange();
     const disposePackageJsonChanges = await watchForSingleFileChanges(
       context.projectName,
+      options.projectRoot,
       'package.json',
       () => updatePackageJson(options, context, target, dependencies)
     );

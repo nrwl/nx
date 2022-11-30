@@ -1,8 +1,10 @@
 import { logger } from '@nrwl/devkit';
 import { daemonClient } from 'nx/src/daemon/client/client';
+import { join } from 'path';
 
 export async function watchForSingleFileChanges(
   projectName: string,
+  projectRoot: string,
   relativeFilePath: string,
   callback: () => void
 ): Promise<() => void> {
@@ -15,7 +17,9 @@ export async function watchForSingleFileChanges(
       } else if (err) {
         logger.error(`Watch error: ${err?.message ?? 'Unknown'}`);
       } else if (
-        data.changedFiles.some((file) => file.path.includes(relativeFilePath))
+        data.changedFiles.some(
+          (file) => file.path == join(projectRoot, relativeFilePath)
+        )
       ) {
         callback();
       }

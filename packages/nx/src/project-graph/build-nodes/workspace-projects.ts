@@ -42,7 +42,7 @@ export function buildWorkspaceProjectNodes(
         if (nx?.namedInputs) {
           p.namedInputs = { ...(p.namedInputs || {}), ...nx.namedInputs };
         }
-      } catch (e) {
+      } catch {
         // ignore json parser errors
       }
     }
