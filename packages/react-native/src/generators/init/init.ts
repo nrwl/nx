@@ -3,6 +3,7 @@ import {
   convertNxGenerator,
   detectPackageManager,
   formatFiles,
+  GeneratorCallback,
   removeDependenciesFromPackageJson,
   Tree,
 } from '@nrwl/devkit';
@@ -42,7 +43,14 @@ export async function reactNativeInitGenerator(host: Tree, schema: Schema) {
   addGitIgnoreEntry(host);
   initRootBabelConfig(host);
 
-  const tasks = [moveDependency(host), updateDependencies(host)];
+  const tasks: GeneratorCallback[] = [];
+
+  if (!schema.skipPackageJson) {
+    const installTask = updateDependencies(host);
+
+    tasks.push(moveDependency(host));
+    tasks.push(installTask);
+  }
 
   if (!schema.unitTestRunner || schema.unitTestRunner === 'jest') {
     const jestTask = jestInitGenerator(host, schema);

@@ -75,6 +75,11 @@
       "type": "boolean",
       "description": "Runs `pod install` for native modules before building iOS app.",
       "default": true
+    },
+    "skipPackageJson": {
+      "description": "Do not add dependencies to `package.json`.",
+      "type": "boolean",
+      "default": false
     }
   },
   "required": []
