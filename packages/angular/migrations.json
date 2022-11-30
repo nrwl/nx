@@ -1671,6 +1671,40 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "15.2.4": {
+      "version": "15.2.4-beta.0",
+      "packages": {
+        "packages": {
+          "@ngrx/store": {
+            "version": "~15.0.0",
+            "alwaysAddToPackageJson": false
+          },
+          "@ngrx/effects": {
+            "version": "~15.0.0",
+            "alwaysAddToPackageJson": false
+          },
+          "@ngrx/entity": {
+            "version": "~15.0.0",
+            "alwaysAddToPackageJson": false
+          },
+          "@ngrx/router-store": {
+            "version": "~15.0.0",
+            "alwaysAddToPackageJson": false
+          },
+          "@ngrx/schematics": {
+            "version": "~15.0.0",
+            "alwaysAddToPackageJson": false
+          },
+          "@ngrx/store-devtools": {
+            "version": "~15.0.0",
+            "alwaysAddToPackageJson": false
+          },
+          "@ngrx/component-store": {
+            "version": "~15.0.0"
+          }
+        }
+      }
     }
   }
 }
