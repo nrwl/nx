@@ -1,11 +1,11 @@
-import { dirname, join } from 'path';
+import { join } from 'path';
 import type { ProjectsConfigurations } from '@nrwl/devkit';
 import { readWorkspaceConfig } from 'nx/src/project-graph/file-utils';
 
 const JEST_RUNNER_TOKEN = '@nrwl/jest:jest';
 
 function getJestConfigProjectPath(projectJestConfigPath: string): string {
-  return join('<rootDir>', dirname(projectJestConfigPath));
+  return join('<rootDir>', projectJestConfigPath);
 }
 
 export function getJestProjects() {
