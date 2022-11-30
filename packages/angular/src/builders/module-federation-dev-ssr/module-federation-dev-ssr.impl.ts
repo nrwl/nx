@@ -14,10 +14,11 @@ import {
   getStaticRemotes,
   validateDevRemotes,
 } from '../utilities/module-federation';
-import { switchMap } from 'rxjs/operators';
+import { switchMap, tap } from 'rxjs/operators';
 import { from } from 'rxjs';
 import { join } from 'path';
 import { execSync, fork } from 'child_process';
+import { scheduleTarget } from 'nx/src/adapter/ngcli-adapter';
 
 export function executeModuleFederationDevSSRBuilder(
   schema: Schema,
@@ -80,26 +81,51 @@ export function executeModuleFederationDevSSRBuilder(
     }
 
     const remotePromise = new Promise<void>((res, rej) => {
-      const remoteProject = workspaceProjects[remote];
-      const remoteServerOutput = join(
-        workspaceRoot,
-        remoteProject.targets.server.options.outputPath,
-        'main.js'
-      );
-      execSync(
-        `npx nx run ${remote}:server${
-          context.target.configuration ? `:${context.target.configuration}` : ''
-        }`,
-        { stdio: 'inherit' }
-      );
-      const child = fork(remoteServerOutput, {
-        env: remoteProject.targets['serve-ssr'].options.port,
-      });
-      child.on('message', (msg) => {
-        if (msg === 'nx.server.ready') {
-          res();
-        }
-      });
+      if (target === 'static-server') {
+        const remoteProject = workspaceProjects[remote];
+        const remoteServerOutput = join(
+          workspaceRoot,
+          remoteProject.targets.server.options.outputPath,
+          'main.js'
+        );
+        execSync(
+          `npx nx run ${remote}:server${
+            context.target.configuration
+              ? `:${context.target.configuration}`
+              : ''
+          }`,
+          { stdio: 'inherit' }
+        );
+        const child = fork(remoteServerOutput, {
+          env: remoteProject.targets['serve-ssr'].options.port,
+        });
+        child.on('message', (msg) => {
+          if (msg === 'nx.server.ready') {
+            res();
+          }
+        });
+      }
+
+      if (target === 'serve-ssr') {
+        scheduleTarget(
+          context.workspaceRoot,
+          {
+            project: remote,
+            target,
+            configuration: context.target.configuration,
+            runOptions,
+          },
+          options.verbose
+        ).then((obs) =>
+          obs
+            .pipe(
+              tap((result) => {
+                result.success && res();
+              })
+            )
+            .toPromise()
+        );
+      }
     });
 
     remoteProcessPromises.push(remotePromise);
