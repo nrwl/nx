@@ -489,13 +489,10 @@ class TaskHasher {
     if (!this.filesetHashes[mapKey]) {
       this.filesetHashes[mapKey] = new Promise(async (res) => {
         const p = this.projectGraph.nodes[projectName];
-        const filesetWithExpandedProjectRoot = filesetPatterns.map((f) =>
-          f.replace('{projectRoot}', p.data.root)
-        );
         const filteredFiles = filterUsingGlobPatterns(
           p.data.root,
           p.data.files,
-          filesetWithExpandedProjectRoot
+          filesetPatterns
         );
         const fileNames = filteredFiles.map((f) => f.file);
         const values = filteredFiles.map((f) => f.hash);
@@ -640,13 +637,22 @@ export function expandNamedInput(
 }
 
 export function filterUsingGlobPatterns(
-  projectRoot: string,
+  root: string,
   files: FileData[],
   patterns: string[]
 ): FileData[] {
+  const filesetWithExpandedProjectRoot = patterns
+    .map((f) => f.replace('{projectRoot}', root))
+    .map((r) => {
+      // handling root level projects that create './' pattern that doesn't work with minimatch
+      if (r.startsWith('./')) return r.substring(2);
+      if (r.startsWith('!./')) return '!' + r.substring(3);
+      return r;
+    });
+
   const positive = [];
   const negative = [];
-  for (const p of patterns) {
+  for (const p of filesetWithExpandedProjectRoot) {
     if (p.startsWith('!')) {
       negative.push(p);
     } else {
@@ -662,7 +668,7 @@ export function filterUsingGlobPatterns(
     let matchedPositive = false;
     if (
       positive.length === 0 ||
-      (positive.length === 1 && positive[0] === `${projectRoot}/**/*`)
+      (positive.length === 1 && positive[0] === `${root}/**/*`)
     ) {
       matchedPositive = true;
     } else {
