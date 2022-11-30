@@ -40,7 +40,7 @@ export function normalizeOptions(
   const normalized = {
     ...options,
     compiler: options.compiler ?? 'babel',
-    bundler: options.bundler ?? 'rollup',
+    bundler: options.bundler ?? 'none',
     fileName,
     routePath: `/${name}`,
     name: projectName,
@@ -53,7 +53,7 @@ export function normalizeOptions(
 
   // Libraries with a bundler or is publishable must also be buildable.
   normalized.buildable = Boolean(
-    options.bundler || options.buildable || options.publishable
+    normalized.bundler !== 'none' || options.buildable || options.publishable
   );
 
   normalized.unitTestRunner =

@@ -10,7 +10,7 @@ describe('normalizeOptions', () => {
     tree = createTreeWithEmptyWorkspace();
   });
 
-  it('should set unitTestRunner=jest and bundler=rollup by default', async () => {
+  it('should set unitTestRunner=jest and bundler=none by default', async () => {
     const options = normalizeOptions(tree, {
       name: 'test',
       style: 'css',
@@ -19,9 +19,35 @@ describe('normalizeOptions', () => {
 
     expect(options).toMatchObject({
       buildable: false,
-      bundler: 'rollup',
+      bundler: 'none',
       compiler: 'babel',
       unitTestRunner: 'jest',
+    });
+  });
+
+  it('should set buildable to true when bundler is not "none"', async () => {
+    let options = normalizeOptions(tree, {
+      name: 'test',
+      style: 'css',
+      linter: Linter.None,
+      bundler: 'rollup',
+    });
+
+    expect(options).toMatchObject({
+      buildable: true,
+      bundler: 'rollup',
+    });
+
+    options = normalizeOptions(tree, {
+      name: 'test',
+      style: 'css',
+      linter: Linter.None,
+      bundler: 'vite',
+    });
+
+    expect(options).toMatchObject({
+      buildable: true,
+      bundler: 'vite',
     });
   });
 

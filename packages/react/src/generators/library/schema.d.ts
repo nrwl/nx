@@ -4,7 +4,7 @@ import { SupportedStyles } from '../../../typings/style';
 export interface Schema {
   appProject?: string;
   buildable?: boolean;
-  bundler?: 'rollup' | 'vite';
+  bundler?: 'none' | 'rollup' | 'vite';
   compiler?: 'babel' | 'swc';
   component?: boolean;
   directory?: string;

@@ -6,11 +6,9 @@ import {
   formatFiles,
   generateFiles,
   GeneratorCallback,
-  getProjects,
   getWorkspaceLayout,
   joinPathFragments,
   names,
-  normalizePath,
   offsetFromRoot,
   toJS,
   Tree,
@@ -26,7 +24,6 @@ import {
   getRootTsConfigPathInTree,
 } from '@nrwl/workspace/src/utilities/typescript';
 import * as ts from 'typescript';
-import { assertValidStyle } from '../../utils/assertion';
 import {
   addBrowserRouter,
   addInitialRoutes,

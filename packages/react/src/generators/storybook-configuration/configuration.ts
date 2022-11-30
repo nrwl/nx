@@ -30,7 +30,7 @@ export async function storybookConfigurationGenerator(
   host: Tree,
   schema: StorybookConfigureSchema
 ) {
-  let bundler = schema.bundler;
+  let bundler = schema.bundler ?? 'webpack';
   const projectConfig = readProjectConfiguration(host, schema.name);
 
   if (

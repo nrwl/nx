@@ -162,9 +162,9 @@
     },
     "bundler": {
       "type": "string",
-      "description": "The bundler to use.",
-      "enum": ["vite", "rollup"],
-      "x-prompt": "Which bundler would you like to use to build the library?"
+      "description": "The bundler to use. Choosing 'none' means this library is not buildable.",
+      "enum": ["none", "vite", "rollup"],
+      "x-prompt": "Which bundler would you like to use to build the library? Choose 'none' to skip build setup."
     },
     "compiler": {
       "type": "string",
