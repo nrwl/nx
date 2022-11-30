@@ -2,6 +2,7 @@ import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-ser
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import {
   addDependenciesToPackageJson,
+  GeneratorCallback,
   joinPathFragments,
   Tree,
   updateJson,
@@ -15,12 +16,14 @@ interface NormalizedSchema {
   projectRoot: string;
   setParserOptionsProject?: boolean;
   tsConfigPaths: string[];
+  skipPackageJson?: boolean;
 }
 
 export async function addLinting(host: Tree, options: NormalizedSchema) {
   if (options.linter === Linter.None) {
     return () => {};
   }
+  const tasks: GeneratorCallback[] = [];
 
   const lintTask = await lintProjectGenerator(host, {
     linter: options.linter,
@@ -28,7 +31,10 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     tsConfigPaths: options.tsConfigPaths,
     eslintFilePatterns: [`${options.projectRoot}/**/*.{ts,tsx,js,jsx}`],
     skipFormat: true,
+    skipPackageJson: options.skipPackageJson,
   });
+
+  tasks.push(lintTask);
 
   updateJson(
     host,
@@ -51,11 +57,14 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     }
   );
 
-  const installTask = await addDependenciesToPackageJson(
-    host,
-    extraEslintDependencies.dependencies,
-    extraEslintDependencies.devDependencies
-  );
+  if (!options.skipPackageJson) {
+    const installTask = await addDependenciesToPackageJson(
+      host,
+      extraEslintDependencies.dependencies,
+      extraEslintDependencies.devDependencies
+    );
+    tasks.push(installTask);
+  }
 
-  return runTasksInSerial(lintTask, installTask);
+  return runTasksInSerial(...tasks);
 }
