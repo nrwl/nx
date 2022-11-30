@@ -71,13 +71,19 @@ function findAllNpmDeps(
   } = { dependencies: {}, peerDependencies: {} },
   seen = new Set<string>()
 ) {
+  const node = graph.externalNodes[projectName];
+
   if (seen.has(projectName)) {
+    // if it's in peerDependencies, move it to regular dependencies
+    // since this is a direct dependency of the project
+    if (node && list.peerDependencies[node.data.packageName]) {
+      list.dependencies[node.data.packageName] = node.data.version;
+      delete list.peerDependencies[node.data.packageName];
+    }
     return list;
   }
 
   seen.add(projectName);
-
-  const node = graph.externalNodes[projectName];
 
   if (node) {
     list.dependencies[node.data.packageName] = node.data.version;
