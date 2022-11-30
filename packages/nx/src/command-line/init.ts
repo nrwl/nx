@@ -5,27 +5,28 @@ import { addNxToNpmRepo } from '../nx-init/add-nx-to-npm-repo';
 
 export async function initHandler() {
   const args = process.argv.slice(2).join(' ');
+  const version = process.env.NX_VERSION ?? 'latest';
   if (existsSync('package.json')) {
     if (existsSync('angular.json')) {
       // TODO(leo): remove make-angular-cli-faster
-      execSync(`npx --yes make-angular-cli-faster@latest ${args}`, {
+      execSync(`npx --yes make-angular-cli-faster@${version} ${args}`, {
         stdio: [0, 1, 2],
       });
     } else if (isCRA()) {
       // TODO(jack): remove cra-to-nx
-      execSync(`npx --yes cra-to-nx@latest ${args}`, {
+      execSync(`npx --yes cra-to-nx@${version} ${args}`, {
         stdio: [0, 1, 2],
       });
     } else if (isMonorepo()) {
       // TODO: vsavkin remove add-nx-to-monorepo
-      execSync(`npx --yes add-nx-to-monorepo@latest ${args}`, {
+      execSync(`npx --yes add-nx-to-monorepo@${version} ${args}`, {
         stdio: [0, 1, 2],
       });
     } else {
       await addNxToNpmRepo();
     }
   } else {
-    execSync(`npx --yes create-nx-workspace@latest ${args}`, {
+    execSync(`npx --yes create-nx-workspace@${version} ${args}`, {
       stdio: [0, 1, 2],
     });
   }
