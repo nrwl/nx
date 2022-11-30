@@ -1,16 +1,17 @@
-import { cypressInitGenerator } from '@nrwl/cypress';
 import {
   addDependenciesToPackageJson,
   convertNxGenerator,
+  ensurePackage,
   GeneratorCallback,
   readWorkspaceConfiguration,
   removeDependenciesFromPackageJson,
   Tree,
   updateWorkspaceConfiguration,
+  writeJson,
 } from '@nrwl/devkit';
-import { webInitGenerator } from '@nrwl/web';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import {
+  babelPresetReactVersion,
   nxVersion,
   reactDomVersion,
   reactTestRendererVersion,
@@ -66,22 +67,54 @@ function updateDependencies(host: Tree, schema: InitSchema) {
   });
 }
 
+function initRootBabelConfig(tree: Tree, schema: InitSchema) {
+  if (tree.exists('/babel.config.json') || tree.exists('/babel.config.js')) {
+    return;
+  }
+
+  if (!schema.skipBabelConfig) {
+    writeJson(tree, '/babel.config.json', {
+      babelrcRoots: ['*'], // Make sure .babelrc files other than root can be loaded in a monorepo
+    });
+  }
+
+  const workspaceConfiguration = readWorkspaceConfiguration(tree);
+
+  if (workspaceConfiguration.namedInputs?.sharedGlobals) {
+    workspaceConfiguration.namedInputs.sharedGlobals.push(
+      '{workspaceRoot}/babel.config.json'
+    );
+  }
+  updateWorkspaceConfiguration(tree, workspaceConfiguration);
+}
+
 export async function reactInitGenerator(host: Tree, schema: InitSchema) {
   const tasks: GeneratorCallback[] = [];
 
   setDefault(host);
 
   if (!schema.e2eTestRunner || schema.e2eTestRunner === 'cypress') {
+    await ensurePackage(host, '@nrwl/cypress', nxVersion);
+    const { cypressInitGenerator } = await import('@nrwl/cypress');
     const cypressTask = cypressInitGenerator(host, {});
     tasks.push(cypressTask);
   }
 
-  // TODO(jack): We should be able to remove this generator and have react init everything.
-  const initTask = await webInitGenerator(host, {
-    ...schema,
-    skipPackageJson: true,
-  });
-  tasks.push(initTask);
+  if (!schema.skipPackageJson && !schema.skipBabelConfig) {
+    const installBabelTask = addDependenciesToPackageJson(
+      host,
+      {},
+      {
+        '@babel/preset-react': babelPresetReactVersion,
+      }
+    );
+    tasks.push(installBabelTask);
+  }
+
+  if (!schema.skipBabelConfig) {
+    initRootBabelConfig(host, schema);
+  }
+
   if (!schema.skipPackageJson) {
     const installTask = updateDependencies(host, schema);
     tasks.push(installTask);

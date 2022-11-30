@@ -15,6 +15,7 @@ import { addStyledModuleDependencies } from '../../rules/add-styled-dependencies
 import {
   addDependenciesToPackageJson,
   convertNxGenerator,
+  ensurePackage,
   formatFiles,
   GeneratorCallback,
   joinPathFragments,
@@ -24,10 +25,12 @@ import {
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import reactInitGenerator from '../init/init';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
-import { swcCoreVersion } from '@nrwl/js/src/utils/versions';
-import { swcLoaderVersion } from '@nrwl/webpack/src/utils/versions';
-import { viteConfigurationGenerator, vitestGenerator } from '@nrwl/vite';
 import { mapLintPattern } from '@nrwl/linter/src/generators/lint-project/lint-project';
+import {
+  nxVersion,
+  swcCoreVersion,
+  swcLoaderVersion,
+} from '../../utils/versions';
 
 async function addLinting(host: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];
@@ -90,6 +93,8 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
   addProject(host, options);
 
   if (options.bundler === 'vite') {
+    await ensurePackage(host, '@nrwl/vite', nxVersion);
+    const { viteConfigurationGenerator } = await import('@nrwl/vite');
     // We recommend users use `import.meta.env.MODE` and other variables in their code to differentiate between production and development.
     // See: https://vitejs.dev/guide/env-and-mode.html
     host.delete(joinPathFragments(options.appProjectRoot, 'src/environments'));
@@ -101,9 +106,20 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
       includeVitest: true,
     });
     tasks.push(viteTask);
+  } else if (options.bundler === 'webpack') {
+    await ensurePackage(host, '@nrwl/webpack', nxVersion);
+
+    const { webpackInitGenerator } = await import('@nrwl/webpack');
+    const webpackInitTask = await webpackInitGenerator(host, {
+      uiFramework: 'react',
+    });
+    tasks.push(webpackInitTask);
   }
 
   if (options.bundler !== 'vite' && options.unitTestRunner === 'vitest') {
+    await ensurePackage(host, '@nrwl/vite', nxVersion);
+    const { vitestGenerator } = await import('@nrwl/vite');
+
     const vitestTask = await vitestGenerator(host, {
       uiFramework: 'react',
       project: options.projectName,

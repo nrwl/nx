@@ -13,7 +13,7 @@ import { CypressComponentConfigurationSchema } from '../schema';
 const allowedFileExt = new RegExp(/\.[jt]sx?/g);
 const isSpecFile = new RegExp(/(spec|test)\./g);
 
-export function addFiles(
+export async function addFiles(
   tree: Tree,
   projectConfig: ProjectConfiguration,
   options: CypressComponentConfigurationSchema
@@ -36,14 +36,19 @@ export function addFiles(
   );
 
   if (options.generateTests) {
+    const filePaths = [];
     visitNotIgnoredFiles(tree, projectConfig.sourceRoot, (filePath) => {
       if (isComponent(tree, filePath)) {
-        componentTestGenerator(tree, {
-          project: options.project,
-          componentPath: filePath,
-        });
+        filePaths.push(filePath);
       }
     });
+
+    for (const filePath of filePaths) {
+      await componentTestGenerator(tree, {
+        project: options.project,
+        componentPath: filePath,
+      });
+    }
   }
 }
 

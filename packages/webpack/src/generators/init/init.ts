@@ -8,23 +8,30 @@ import {
   updateWorkspaceConfiguration,
   writeJson,
 } from '@nrwl/devkit';
-import { Schema } from './schema';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { swcCoreVersion } from '@nrwl/js/src/utils/versions';
+
+import { Schema } from './schema';
 import {
+  reactRefreshVersion,
+  reactRefreshWebpackPluginVersion,
+  svgrWebpackVersion,
   swcHelpersVersion,
   swcLoaderVersion,
   tsLibVersion,
+  tsQueryVersion,
+  urlLoaderVersion,
 } from '../../utils/versions';
 
 export async function webpackInitGenerator(tree: Tree, schema: Schema) {
-  let task: GeneratorCallback;
+  const tasks: GeneratorCallback[] = [];
 
   if (schema.compiler === 'babel') {
     initRootBabelConfig(tree);
   }
 
   if (schema.compiler === 'swc') {
-    task = addDependenciesToPackageJson(
+    const swcInstallTask = addDependenciesToPackageJson(
       tree,
       {},
       {
@@ -33,17 +40,39 @@ export async function webpackInitGenerator(tree: Tree, schema: Schema) {
         'swc-loader': swcLoaderVersion,
       }
     );
+    tasks.push(swcInstallTask);
   }
 
   if (schema.compiler === 'tsc') {
-    task = addDependenciesToPackageJson(tree, {}, { tslib: tsLibVersion });
+    const tscInstallTask = addDependenciesToPackageJson(
+      tree,
+      {},
+      { tslib: tsLibVersion }
+    );
+    tasks.push(tscInstallTask);
+  }
+
+  if (schema.uiFramework === 'react') {
+    const reactInstallTask = addDependenciesToPackageJson(
+      tree,
+      {},
+      {
+        '@pmmmwh/react-refresh-webpack-plugin':
+          reactRefreshWebpackPluginVersion,
+        '@phenomnomnominal/tsquery': tsQueryVersion,
+        '@svgr/webpack': svgrWebpackVersion,
+        'react-refresh': reactRefreshVersion,
+        'url-loader': urlLoaderVersion,
+      }
+    );
+    tasks.push(reactInstallTask);
   }
 
   if (!schema.skipFormat) {
     await formatFiles(tree);
   }
 
-  return task;
+  return runTasksInSerial(...tasks);
 }
 
 function initRootBabelConfig(tree: Tree) {

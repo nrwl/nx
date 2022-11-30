@@ -5,7 +5,7 @@ export async function* mapAsyncIterable<T = any, I = any, O = any>(
     index?: number,
     data?: AsyncIterable<T> | AsyncIterableIterator<T>
   ) => O
-) {
+): AsyncIterable<O> | AsyncIterableIterator<O> {
   async function* f() {
     const generator = data[Symbol.asyncIterator] || data[Symbol.iterator];
     const iterator = generator.call(data);

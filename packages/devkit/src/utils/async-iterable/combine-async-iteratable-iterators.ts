@@ -1,6 +1,6 @@
-export async function* combineAsyncIterableIterators(
-  ...iterators: { 0: AsyncIterableIterator<any> } & AsyncIterableIterator<any>[]
-) {
+export async function* combineAsyncIterableIterators<T = any>(
+  ...iterators: { 0: AsyncIterableIterator<T> } & AsyncIterableIterator<T>[]
+): AsyncGenerator<T> {
   let [options] = iterators;
   if (typeof options.next === 'function') {
     options = Object.create(null);

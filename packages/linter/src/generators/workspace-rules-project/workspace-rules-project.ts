@@ -2,6 +2,7 @@ import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
   convertNxGenerator,
+  ensurePackage,
   formatFiles,
   generateFiles,
   joinPathFragments,
@@ -11,17 +12,22 @@ import {
   Tree,
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
-import { addPropertyToJestConfig, jestProjectGenerator } from '@nrwl/jest';
 import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 import { join } from 'path';
 import { workspaceLintPluginDir } from '../../utils/workspace-lint-rules';
 import { swcCoreVersion, swcNodeVersion } from 'nx/src/utils/versions';
+import { nxVersion } from '../../utils/versions';
 
 export const WORKSPACE_RULES_PROJECT_NAME = 'eslint-rules';
 
 export const WORKSPACE_PLUGIN_DIR = 'tools/eslint-rules';
 
 export async function lintWorkspaceRulesProjectGenerator(tree: Tree) {
+  await ensurePackage(tree, '@nrwl/jest/', nxVersion);
+  const { addPropertyToJestConfig, jestProjectGenerator } = await import(
+    '@nrwl/jest'
+  );
+
   // Noop if the workspace rules project already exists
   try {
     readProjectConfiguration(tree, WORKSPACE_RULES_PROJECT_NAME);

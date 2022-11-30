@@ -225,6 +225,7 @@ export { readJsonFile, writeJsonFile } from 'nx/src/utils/fileutils';
  */
 export {
   addDependenciesToPackageJson,
+  ensurePackage,
   removeDependenciesFromPackageJson,
 } from './src/utils/package-json';
 

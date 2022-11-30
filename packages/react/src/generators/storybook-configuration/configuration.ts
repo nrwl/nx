@@ -2,14 +2,18 @@ import { StorybookConfigureSchema } from './schema';
 import storiesGenerator from '../stories/stories';
 import {
   convertNxGenerator,
+  ensurePackage,
   logger,
   readProjectConfiguration,
   Tree,
 } from '@nrwl/devkit';
-import { configurationGenerator } from '@nrwl/storybook';
-import { getE2eProjectName } from '@nrwl/cypress/src/utils/project-name';
+import { nxVersion } from '../../utils/versions';
 
 async function generateStories(host: Tree, schema: StorybookConfigureSchema) {
+  await ensurePackage(host, '@nrwl/cypress', nxVersion);
+  const { getE2eProjectName } = await import(
+    '@nrwl/cypress/src/utils/project-name'
+  );
   const projectConfig = readProjectConfiguration(host, schema.name);
   const cypressProject = getE2eProjectName(
     schema.name,
@@ -30,6 +34,9 @@ export async function storybookConfigurationGenerator(
   host: Tree,
   schema: StorybookConfigureSchema
 ) {
+  await ensurePackage(host, '@nrwl/storybook', nxVersion);
+  const { configurationGenerator } = await import('@nrwl/storybook');
+
   let bundler = schema.bundler ?? 'webpack';
   const projectConfig = readProjectConfiguration(host, schema.name);
 

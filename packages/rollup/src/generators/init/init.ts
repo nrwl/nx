@@ -29,9 +29,7 @@ export async function rollupInitGenerator(tree: Tree, schema: Schema) {
         'swc-loader': swcLoaderVersion,
       }
     );
-  }
-
-  if (schema.compiler === 'tsc') {
+  } else {
     task = addDependenciesToPackageJson(tree, {}, { tslib: tsLibVersion });
   }
 
