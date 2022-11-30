@@ -955,19 +955,23 @@
           "description": "Other recipes you will find useful.",
           "itemList": [
             {
+              "name": "Run Root-Level NPM Scripts with Nx",
+              "id": "root-level-scripts",
+              "tags": ["run-tasks"],
+              "file": "shared/recipes/root-level-scripts"
+            },
+            {
               "name": "Disable Graph Links Created from Analyzing Source Files",
               "id": "analyze-source-files",
               "tags": ["explore-graph"],
               "file": "shared/recipes/analyze-source-files"
             },
-
             {
               "name": "Advanced Update Nx",
               "id": "advanced-update",
               "tags": ["automate-updating-dependencies"],
               "file": "shared/recipes/advanced-update"
             },
-
             {
               "name": "JavaScript and TypeScript",
               "id": "js-and-ts",
