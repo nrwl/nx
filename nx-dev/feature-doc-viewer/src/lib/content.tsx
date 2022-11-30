@@ -9,7 +9,7 @@ export function Content(props: ContentProps): JSX.Element {
   return (
     <div className="min-w-0 flex-auto pb-24 lg:pb-16">
       <div
-        id="document-data"
+        data-document="main"
         className="prose prose-slate dark:prose-invert max-w-none"
       >
         {renderMarkdown(props.document.content.toString(), {
@@ -17,7 +17,7 @@ export function Content(props: ContentProps): JSX.Element {
         })}
       </div>
       <div
-        id="related-document-data"
+        data-document="related"
         className="prose prose-slate dark:prose-invert max-w-none"
       >
         {renderMarkdown(props.document.relatedContent.toString(), {

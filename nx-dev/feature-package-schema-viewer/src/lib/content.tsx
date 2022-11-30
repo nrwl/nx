@@ -94,7 +94,7 @@ export function Content({
   };
 
   return (
-    <div className="min-w-0 flex-auto pt-8 pb-24 lg:pb-16">
+    <div data-document="main" className="min-w-0 flex-auto pt-8 pb-24 lg:pb-16">
       <div className="mb-8 flex w-full items-center space-x-2">
         <div className="w-full flex-grow space-x-4">
           <div
@@ -208,7 +208,7 @@ export function Content({
                   <button
                     onClick={() => setPresets([])}
                     type="button"
-                    className="relative inline-flex items-center rounded-md border border-slate-200 bg-white px-4 px-4 py-2 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400 dark:hover:bg-slate-800"
+                    className="relative inline-flex items-center rounded-md border border-slate-200 bg-white px-4 py-2 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400 dark:hover:bg-slate-800"
                   >
                     Reset <XCircleIcon className="ml-1.5 h-4 w-4" />
                   </button>
