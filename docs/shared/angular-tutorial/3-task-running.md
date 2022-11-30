@@ -1,4 +1,4 @@
-# Angular Tutorial - 3: Task-Running
+# Angular Monorepo Tutorial - 3: Task-Running
 
 Common tasks include:
 

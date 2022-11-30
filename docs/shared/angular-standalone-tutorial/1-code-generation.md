@@ -6,7 +6,7 @@ description: In this tutorial you'll create a frontend-focused workspace with Nx
 {% callout type="check" title="Standalone Repo" %}
 This tutorial sets up a repo with a single application at the root level that breaks out its code into libraries to add structure.
 
-You can find more information on about other repo styles in [our introduction](/getting-started/intro).
+Looking for a Angular monorepo setup? Check our [Angular monorepo tutorial](/angular-tutorial/1-code-generation).
 {% /callout %}
 
 # Angular Standalone Tutorial - Part 1: Code Generation

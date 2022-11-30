@@ -1,4 +1,4 @@
-# Angular Tutorial - Part 5: Summary
+# Angular Monorepo Tutorial - Part 5: Summary
 
 In this tutorial you:
 
