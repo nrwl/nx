@@ -333,8 +333,9 @@ async function getConfiguration(
         preset === Preset.ReactStandalone ||
         preset === Preset.AngularStandalone
       ) {
-        appName = await determineAppName(preset, argv);
-        name = appName;
+        appName =
+          argv.appName ?? argv.name ?? (await determineAppName(preset, argv));
+        name = argv.name ?? appName;
       } else {
         name = await determineRepoName(argv);
         appName = await determineAppName(preset, argv);
