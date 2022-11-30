@@ -27,6 +27,7 @@ export async function createPackageJson(
 
   const typescriptNode = context.projectGraph.externalNodes['npm:typescript'];
   if (typescriptNode) {
+    packageJson.dependencies = packageJson.dependencies || {};
     packageJson.dependencies['typescript'] = typescriptNode.data.version;
   }
 
