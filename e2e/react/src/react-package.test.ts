@@ -67,13 +67,13 @@ describe('Build React libraries and apps', () => {
 
     // generate buildable libs
     runCLI(
-      `generate @nrwl/react:library ${parentLib} --buildable --importPath=@${proj}/${parentLib} --no-interactive `
+      `generate @nrwl/react:library ${parentLib} --bundler=rollup --importPath=@${proj}/${parentLib} --no-interactive `
     );
     runCLI(
-      `generate @nrwl/react:library ${childLib} --buildable --importPath=@${proj}/${childLib} --no-interactive `
+      `generate @nrwl/react:library ${childLib} --bundler=rollup --importPath=@${proj}/${childLib} --no-interactive `
     );
     runCLI(
-      `generate @nrwl/react:library ${childLib2} --buildable --importPath=@${proj}/${childLib2} --no-interactive `
+      `generate @nrwl/react:library ${childLib2} --bundler=rollup --importPath=@${proj}/${childLib2} --no-interactive `
     );
 
     createDep(parentLib, [childLib, childLib2]);
@@ -237,7 +237,7 @@ export async function h() { return 'c'; }
       const libName = uniq('lib');
 
       runCLI(
-        `generate @nrwl/react:lib ${libName} --buildable --importPath=@${proj}/${libName} --no-interactive`
+        `generate @nrwl/react:lib ${libName} --bundler=rollup --importPath=@${proj}/${libName} --no-interactive`
       );
 
       const mainPath = `libs/${libName}/src/lib/${libName}.tsx`;
@@ -261,10 +261,10 @@ describe('Build React applications and libraries with Vite', () => {
   });
 
   it('should support bundling with Vite', async () => {
-    const libName = uniq('lib');
+    const viteLib = uniq('vitelib');
 
     runCLI(
-      `generate @nrwl/react:lib ${libName} --bundler=vite --no-interactive`
+      `generate @nrwl/react:lib ${viteLib} --bundler=vite --no-interactive`
     );
 
     const packageJson = readJson('package.json');
@@ -272,13 +272,26 @@ describe('Build React applications and libraries with Vite', () => {
     expect(packageJson.dependencies['core-js']).toBeUndefined();
     expect(packageJson.dependencies['tslib']).toBeUndefined();
 
-    await runCLIAsync(`build ${libName}`);
+    await runCLIAsync(`build ${viteLib}`);
 
     checkFilesExist(
-      `dist/libs/${libName}/package.json`,
-      `dist/libs/${libName}/index.d.ts`,
-      `dist/libs/${libName}/index.js`,
-      `dist/libs/${libName}/index.mjs`
+      `dist/libs/${viteLib}/package.json`,
+      `dist/libs/${viteLib}/index.d.ts`,
+      `dist/libs/${viteLib}/index.js`,
+      `dist/libs/${viteLib}/index.mjs`
     );
-  });
+
+    // Convert non-buildable lib to buildable one
+    const nonBuildableLib = uniq('nonbuildablelib');
+    runCLI(`generate @nrwl/react:lib ${nonBuildableLib} --no-interactive`);
+    runCLI(
+      `generate @nrwl/vite:configuration ${nonBuildableLib} --uiFramework=react --no-interactive`
+    );
+    await runCLIAsync(`build ${nonBuildableLib}`);
+    checkFilesExist(
+      `dist/libs/${nonBuildableLib}/index.d.ts`,
+      `dist/libs/${nonBuildableLib}/index.js`,
+      `dist/libs/${nonBuildableLib}/index.mjs`
+    );
+  }, 300_000);
 });

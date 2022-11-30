@@ -19,8 +19,7 @@
     "includeLib": {
       "type": "boolean",
       "description": "Add a library build option and skip the server option.",
-      "default": false,
-      "x-prompt": "Does this project contain a buildable library?"
+      "hidden": true
     },
     "uiFramework": {
       "type": "string",

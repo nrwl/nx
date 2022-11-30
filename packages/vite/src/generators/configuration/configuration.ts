@@ -22,14 +22,21 @@ import { Schema } from './schema';
 export async function viteConfigurationGenerator(tree: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
 
-  const { targets } = readProjectConfiguration(tree, schema.project);
+  const { targets, projectType } = readProjectConfiguration(
+    tree,
+    schema.project
+  );
   let buildTarget = 'build';
   let serveTarget = 'serve';
+
+  schema.includeLib ??= projectType === 'library';
 
   if (!schema.newProject) {
     buildTarget = findExistingTargets(targets).buildTarget;
     serveTarget = findExistingTargets(targets).serveTarget;
-    moveAndEditIndexHtml(tree, schema, buildTarget);
+    if (projectType === 'application') {
+      moveAndEditIndexHtml(tree, schema, buildTarget);
+    }
     editTsConfig(tree, schema);
   }
 
