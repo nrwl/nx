@@ -122,7 +122,7 @@ import { Component, Input } from '@angular/core';
   styleUrls: ['./banner.component.css'],
 })
 export class BannerComponent {
-  @Input() text: string = '';
+  @Input() text = '';
 }
 ```
 
