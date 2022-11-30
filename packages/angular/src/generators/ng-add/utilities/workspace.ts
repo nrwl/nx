@@ -400,3 +400,12 @@ export function deleteAngularJson(tree: Tree): void {
   }
   tree.delete('angular.json');
 }
+
+export function deleteGitKeepFilesIfNotNeeded(tree: Tree): void {
+  if (tree.children('apps').length > 1 && tree.exists('apps/.gitkeep')) {
+    tree.delete('apps/.gitkeep');
+  }
+  if (tree.children('libs').length > 1 && tree.exists('libs/.gitkeep')) {
+    tree.delete('libs/.gitkeep');
+  }
+}
