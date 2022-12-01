@@ -3,24 +3,22 @@ import {
   ProjectEdgeNodeTooltip,
   ProjectEdgeNodeTooltipProps,
 } from './project-edge-tooltip';
-import Tippy from '@tippyjs/react';
+import { Tooltip } from './tooltip';
 
 export default {
   component: ProjectEdgeNodeTooltip,
   title: 'Tooltips/ProjectEdgeNodeTooltip',
 } as ComponentMeta<typeof ProjectEdgeNodeTooltip>;
 
-const Template: ComponentStory<typeof ProjectEdgeNodeTooltip> = (args) => (
-  <Tippy
-    content={<ProjectEdgeNodeTooltip {...args} />}
-    visible={true}
-    theme="nx"
-    interactive={true}
-    maxWidth="none"
-  >
-    <p></p>
-  </Tippy>
-);
+const Template: ComponentStory<typeof ProjectEdgeNodeTooltip> = (args) => {
+  return (
+    <div className="flex w-full justify-center">
+      <Tooltip open={true} content={<ProjectEdgeNodeTooltip {...args} />}>
+        <p>Internal Reference</p>
+      </Tooltip>
+    </div>
+  );
+};
 
 export const Primary = Template.bind({});
 Primary.args = {

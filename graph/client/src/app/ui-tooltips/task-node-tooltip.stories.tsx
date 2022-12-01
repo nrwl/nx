@@ -1,6 +1,6 @@
-import type { ComponentStory, ComponentMeta } from '@storybook/react';
+import type { ComponentMeta, ComponentStory } from '@storybook/react';
 import { TaskNodeTooltip } from './task-node-tooltip';
-import Tippy from '@tippyjs/react';
+import { Tooltip } from './tooltip';
 
 const Story: ComponentMeta<typeof TaskNodeTooltip> = {
   component: TaskNodeTooltip,
@@ -9,15 +9,11 @@ const Story: ComponentMeta<typeof TaskNodeTooltip> = {
 export default Story;
 
 const Template: ComponentStory<typeof TaskNodeTooltip> = (args) => (
-  <Tippy
-    content={<TaskNodeTooltip {...args} />}
-    visible={true}
-    theme="nx"
-    interactive={true}
-    maxWidth="none"
-  >
-    <p></p>
-  </Tippy>
+  <div className="flex w-full justify-center">
+    <Tooltip open={true} content={<TaskNodeTooltip {...args} />}>
+      <p>Internal Reference</p>
+    </Tooltip>
+  </div>
 );
 
 export const Primary = Template.bind({});

@@ -6,7 +6,7 @@ import cytoscape, {
 } from 'cytoscape';
 import { edgeStyles, nodeStyles } from '../styles-graph';
 import { GraphInteractionEvents } from '@nrwl/graph/ui-graph';
-import { VirtualElement } from '@popperjs/core';
+import { VirtualElement } from '@floating-ui/react-dom';
 import {
   darkModeScratchKey,
   switchValueByDarkMode,

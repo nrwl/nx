@@ -1,6 +1,6 @@
 import { getGraphService } from '../machines/graph.service';
 
-import { VirtualElement } from '@popperjs/core';
+import { VirtualElement } from '@floating-ui/react-dom';
 import { ProjectNodeToolTipProps } from './project-node-tooltip';
 import { ProjectEdgeNodeTooltipProps } from './project-edge-tooltip';
 import { GraphService } from '@nrwl/graph/ui-graph';
