@@ -1,6 +1,5 @@
 import { getProjects, Tree } from '@nrwl/devkit';
-
-import { initRootBabelConfig } from '../../generators/init/lib/init-root-babel-config';
+import { addBabelInputs } from '@nrwl/js/src/utils/add-babel-inputs';
 
 export default async function update(tree: Tree) {
   const projects = getProjects(tree);
@@ -17,6 +16,6 @@ export default async function update(tree: Tree) {
     );
 
   if (hasReactNaiveProject) {
-    initRootBabelConfig(tree);
+    addBabelInputs(tree);
   }
 }
