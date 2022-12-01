@@ -191,6 +191,9 @@ Object {
           "apps/my-dir/my-app/**/*.html",
         ],
       },
+      "outputs": Array [
+        "{options.outputFile}",
+      ],
     },
     "serve": Object {
       "builder": "@angular-devkit/build-angular:dev-server",
@@ -359,6 +362,9 @@ Object {
           "apps/my-app/**/*.html",
         ],
       },
+      "outputs": Array [
+        "{options.outputFile}",
+      ],
     },
     "serve": Object {
       "builder": "@angular-devkit/build-angular:dev-server",

@@ -104,7 +104,7 @@ export async function applicationGenerator(
     addRouterRootConfiguration(host, options);
   }
 
-  addLinting(host, options);
+  await addLinting(host, options);
   await addUnitTestRunner(host, options);
   await addE2e(host, options);
   updateEditorTsConfig(host, options);

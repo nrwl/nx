@@ -25,8 +25,8 @@ describe('addLinting generator', () => {
     } as ProjectConfiguration);
   });
 
-  it('should invoke the lint init generator', async () => {
-    jest.spyOn(linter, 'lintInitGenerator');
+  it('should invoke the lintProjectGenerator', async () => {
+    jest.spyOn(linter, 'lintProjectGenerator');
 
     await addLintingGenerator(tree, {
       prefix: 'myOrg',
@@ -34,7 +34,7 @@ describe('addLinting generator', () => {
       projectRoot: appProjectRoot,
     });
 
-    expect(linter.lintInitGenerator).toHaveBeenCalled();
+    expect(linter.lintProjectGenerator).toHaveBeenCalled();
   });
 
   it('should add the Angular specific EsLint devDependencies', async () => {
@@ -79,18 +79,7 @@ describe('addLinting generator', () => {
           `${appProjectRoot}/**/*.html`,
         ],
       },
+      outputs: ['{options.outputFile}'],
     });
-  });
-
-  it('should format files', async () => {
-    jest.spyOn(devkit, 'formatFiles');
-
-    await addLintingGenerator(tree, {
-      prefix: 'myOrg',
-      projectName: appProjectName,
-      projectRoot: appProjectRoot,
-    });
-
-    expect(devkit.formatFiles).toHaveBeenCalled();
   });
 });
