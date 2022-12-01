@@ -65,6 +65,12 @@
       "version": "14.6.0-beta.0",
       "description": "Update babel-jest to include the @nrwl/react/babel preset in project jest config",
       "factory": "./src/migrations/update-14-6-0/add-preset-jest-config"
+    },
+    "update-rollup-executor": {
+      "cli": "nx",
+      "version": "15.3.0-beta.0",
+      "description": "Update projects using @nrwl/web:rollup to @nrwl/rollup:rollup for build.",
+      "factory": "./src/migrations/update-15-3-0/update-rollup-executor"
     }
   },
   "packageJsonUpdates": {
