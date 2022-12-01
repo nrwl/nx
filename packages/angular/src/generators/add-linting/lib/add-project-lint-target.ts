@@ -3,6 +3,7 @@ import {
   readProjectConfiguration,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
+import { mapLintPattern } from '@nrwl/linter/src/generators/lint-project/lint-project';
 import type { AddLintingGeneratorSchema } from '../schema';
 
 export function addProjectLintTarget(
@@ -10,12 +11,13 @@ export function addProjectLintTarget(
   options: AddLintingGeneratorSchema
 ): void {
   const project = readProjectConfiguration(tree, options.projectName);
+  const rootProject = options.projectRoot === '.' || options.projectRoot === '';
   project.targets.lint = {
     executor: '@nrwl/linter:eslint',
     options: {
       lintFilePatterns: [
-        `${options.projectRoot}/**/*.ts`,
-        `${options.projectRoot}/**/*.html`,
+        mapLintPattern(options.projectRoot, 'ts', rootProject),
+        mapLintPattern(options.projectRoot, 'html', rootProject),
       ],
     },
   };

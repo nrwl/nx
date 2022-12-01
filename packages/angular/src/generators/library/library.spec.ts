@@ -1307,6 +1307,9 @@ describe('lib', () => {
                 "libs/my-lib/**/*.html",
               ],
             },
+            "outputs": Array [
+              "{options.outputFile}",
+            ],
           }
         `);
       });
@@ -1661,17 +1664,9 @@ describe('lib', () => {
       });
 
       // ASSERT
-      expect(tree.read('libs/my-lib/src/lib/lib.routes.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { Route } from '@angular/router';
-            import { MyLibComponent } from './my-lib/my-lib.component';
-        import { secondRoutes } from '@proj/second';
-            
-                export const myLibRoutes: Route[] = [
-            { path: 'second', children: secondRoutes },
-                  {path: '', component: MyLibComponent}
-                ]"
-      `);
+      expect(
+        tree.read('libs/my-lib/src/lib/lib.routes.ts', 'utf-8')
+      ).toMatchSnapshot();
     });
 
     it('should generate a library with a standalone component as entry point with routing setup and attach it to standalone parent routes as a lazy child', async () => {
@@ -1691,16 +1686,9 @@ describe('lib', () => {
       });
 
       // ASSERT
-      expect(tree.read('libs/my-lib/src/lib/lib.routes.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { Route } from '@angular/router';
-            import { MyLibComponent } from './my-lib/my-lib.component';
-            
-                export const myLibRoutes: Route[] = [
-            {path: 'second', loadChildren: () => import('@proj/second').then(m => m.secondRoutes)},
-                  {path: '', component: MyLibComponent}
-                ]"
-      `);
+      expect(
+        tree.read('libs/my-lib/src/lib/lib.routes.ts', 'utf-8')
+      ).toMatchSnapshot();
     });
 
     it('should generate a library with a standalone component as entry point following SFC pattern', async () => {

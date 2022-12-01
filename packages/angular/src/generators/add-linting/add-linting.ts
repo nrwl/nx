@@ -1,33 +1,51 @@
-import type { GeneratorCallback, Tree } from '@nrwl/devkit';
-import { formatFiles } from '@nrwl/devkit';
-import { Linter, lintInitGenerator } from '@nrwl/linter';
+import {
+  GeneratorCallback,
+  joinPathFragments,
+  Tree,
+  updateJson,
+} from '@nrwl/devkit';
+import { Linter, lintProjectGenerator } from '@nrwl/linter';
+import { mapLintPattern } from '@nrwl/linter/src/generators/lint-project/lint-project';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { addAngularEsLintDependencies } from './lib/add-angular-eslint-dependencies';
-import { addProjectLintTarget } from './lib/add-project-lint-target';
-import { createEsLintConfiguration } from './lib/create-eslint-configuration';
+import { extendAngularEslintJson } from './lib/create-eslint-configuration';
 import type { AddLintingGeneratorSchema } from './schema';
 
 export async function addLintingGenerator(
   tree: Tree,
   options: AddLintingGeneratorSchema
 ): Promise<GeneratorCallback> {
-  const installTask = lintInitGenerator(tree, {
+  const tasks: GeneratorCallback[] = [];
+  const rootProject = options.projectRoot === '.' || options.projectRoot === '';
+  const lintTask = await lintProjectGenerator(tree, {
     linter: Linter.EsLint,
+    project: options.projectName,
+    tsConfigPaths: [
+      joinPathFragments(options.projectRoot, 'tsconfig.app.json'),
+    ],
     unitTestRunner: options.unitTestRunner,
-    skipPackageJson: options.skipPackageJson,
+    eslintFilePatterns: [
+      mapLintPattern(options.projectRoot, 'ts', rootProject),
+      mapLintPattern(options.projectRoot, 'html', rootProject),
+    ],
+    setParserOptionsProject: options.setParserOptionsProject,
+    skipFormat: true,
+    rootProject: rootProject,
   });
+  tasks.push(lintTask);
+
+  updateJson(
+    tree,
+    joinPathFragments(options.projectRoot, '.eslintrc.json'),
+    (json) => extendAngularEslintJson(json, options)
+  );
 
   if (!options.skipPackageJson) {
-    addAngularEsLintDependencies(tree);
+    const installTask = await addAngularEsLintDependencies(tree);
+    tasks.push(installTask);
   }
 
-  createEsLintConfiguration(tree, options);
-  addProjectLintTarget(tree, options);
-
-  if (!options.skipFormat) {
-    await formatFiles(tree);
-  }
-
-  return installTask;
+  return runTasksInSerial(...tasks);
 }
 
 export default addLintingGenerator;

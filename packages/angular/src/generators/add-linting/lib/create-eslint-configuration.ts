@@ -1,8 +1,65 @@
 import type { Tree } from '@nrwl/devkit';
 import { joinPathFragments, offsetFromRoot, writeJson } from '@nrwl/devkit';
 import { camelize, dasherize } from '@nrwl/workspace/src/utils/strings';
+import { Linter } from 'eslint';
 import type { AddLintingGeneratorSchema } from '../schema';
 
+type EslintExtensionSchema = {
+  prefix: string;
+};
+
+export const extendAngularEslintJson = (
+  json: Linter.Config,
+  options: EslintExtensionSchema
+) => {
+  const overrides = [
+    {
+      ...json.overrides[0],
+      files: ['*.ts'],
+      extends: [
+        ...(json.overrides[0].extends || []),
+        'plugin:@nrwl/nx/angular',
+        'plugin:@angular-eslint/template/process-inline-templates',
+      ],
+      rules: {
+        '@angular-eslint/directive-selector': [
+          'error',
+          {
+            type: 'attribute',
+            prefix: camelize(options.prefix),
+            style: 'camelCase',
+          },
+        ],
+        '@angular-eslint/component-selector': [
+          'error',
+          {
+            type: 'element',
+            prefix: dasherize(options.prefix),
+            style: 'kebab-case',
+          },
+        ],
+      },
+    },
+    {
+      files: ['*.html'],
+      extends: ['plugin:@nrwl/nx/angular-template'],
+      /**
+       * Having an empty rules object present makes it more obvious to the user where they would
+       * extend things from if they needed to
+       */
+      rules: {},
+    },
+  ];
+
+  return {
+    ...json,
+    overrides,
+  };
+};
+
+/**
+ * @deprecated Use {@link extendAngularEslintJson} instead
+ */
 export function createEsLintConfiguration(
   tree: Tree,
   options: AddLintingGeneratorSchema
