@@ -1,7 +1,7 @@
 import type { Tree } from '@nrwl/devkit';
 import { joinPathFragments, offsetFromRoot, writeJson } from '@nrwl/devkit';
 import { camelize, dasherize } from '@nrwl/workspace/src/utils/strings';
-import { Linter } from 'eslint';
+import type { Linter } from 'eslint';
 import type { AddLintingGeneratorSchema } from '../schema';
 
 type EslintExtensionSchema = {
