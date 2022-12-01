@@ -18,6 +18,7 @@ import {
   typesNodeVersion,
 } from '../../utils/versions';
 import { Schema } from './schema';
+import { addBabelInputs } from '@nrwl/js/src/utils/add-babel-inputs';
 
 function updateDependencies(tree: Tree, schema: Schema) {
   removeDependenciesFromPackageJson(tree, ['@nrwl/web'], []);
@@ -42,27 +43,6 @@ function updateDependencies(tree: Tree, schema: Schema) {
   );
 }
 
-function initRootBabelConfig(tree: Tree, schema: Schema) {
-  if (tree.exists('/babel.config.json') || tree.exists('/babel.config.js')) {
-    return;
-  }
-
-  if (!schema.skipBabelConfig) {
-    writeJson(tree, '/babel.config.json', {
-      babelrcRoots: ['*'], // Make sure .babelrc files other than root can be loaded in a monorepo
-    });
-  }
-
-  const workspaceConfiguration = readWorkspaceConfiguration(tree);
-
-  if (workspaceConfiguration.namedInputs?.sharedGlobals) {
-    workspaceConfiguration.namedInputs.sharedGlobals.push(
-      '{workspaceRoot}/babel.config.json'
-    );
-  }
-  updateWorkspaceConfiguration(tree, workspaceConfiguration);
-}
-
 export async function webInitGenerator(tree: Tree, schema: Schema) {
   let tasks: GeneratorCallback[] = [];
 
@@ -82,7 +62,8 @@ export async function webInitGenerator(tree: Tree, schema: Schema) {
     const installTask = updateDependencies(tree, schema);
     tasks.push(installTask);
   }
-  initRootBabelConfig(tree, schema);
+  addBabelInputs(tree);
+
   if (!schema.skipFormat) {
     await formatFiles(tree);
   }
