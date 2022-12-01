@@ -50,14 +50,16 @@ export function createPackageJson(
     }
   });
   Object.entries(npmDeps.peerDependencies).forEach(([packageName, version]) => {
-    packageJson.peerDependencies = packageJson.peerDependencies || {};
-    if (!packageJson.peerDependencies[packageName]) {
-      packageJson.peerDependencies[packageName] = version;
+    if (!packageJson.peerDependencies?.[packageName]) {
+      packageJson.dependencies[packageName] = version;
     }
   });
 
   packageJson.devDependencies &&= sortObjectByKeys(packageJson.devDependencies);
   packageJson.dependencies &&= sortObjectByKeys(packageJson.dependencies);
+  packageJson.peerDependencies &&= sortObjectByKeys(
+    packageJson.peerDependencies
+  );
 
   return packageJson;
 }

@@ -229,7 +229,7 @@ describe('Build Node apps', () => {
 
   afterEach(() => cleanupProject());
 
-  it('should generate a package.json with the `--generatePackageJson` flag MMM', async () => {
+  it('should generate a package.json with the `--generatePackageJson` flag', async () => {
     const scope = newProject();
     const nestapp = uniq('nestapp');
     runCLI(`generate @nrwl/nest:app ${nestapp} --linter=eslint`);

@@ -444,7 +444,7 @@ async function checkApp(
 
   const packageJson = readJson(`dist/apps/${appName}/package.json`);
   expect(packageJson.dependencies.react).toBeDefined();
-  expect(packageJson.peerDependencies['react-dom']).toBeDefined();
+  expect(packageJson.dependencies['react-dom']).toBeDefined();
   expect(packageJson.dependencies.next).toBeDefined();
 
   if (opts.checkLint) {
