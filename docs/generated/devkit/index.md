@@ -1183,14 +1183,14 @@ When running with --dryRun, the function will throw when dependencies are missin
 
 #### Parameters
 
-| Name                      | Type                              | Description                            |
-| :------------------------ | :-------------------------------- | :------------------------------------- |
-| `tree`                    | [`Tree`](../../devkit/index#tree) | the file system tree                   |
-| `pkg`                     | `string`                          | the package to check (e.g. @nrwl/jest) |
-| `requiredVersion`         | `string`                          | the version to check                   |
-| `options`                 | `Object`                          |                                        |
-| `options.dev?`            | `boolean`                         | -                                      |
-| `options.throwOnMissing?` | `boolean`                         | -                                      |
+| Name                      | Type                              | Description                                                        |
+| :------------------------ | :-------------------------------- | :----------------------------------------------------------------- |
+| `tree`                    | [`Tree`](../../devkit/index#tree) | the file system tree                                               |
+| `pkg`                     | `string`                          | the package to check (e.g. @nrwl/jest)                             |
+| `requiredVersion`         | `string`                          | the version or semver range to check (e.g. ~1.0.0, >=1.0.0 <2.0.0) |
+| `options`                 | `Object`                          |                                                                    |
+| `options.dev?`            | `boolean`                         | -                                                                  |
+| `options.throwOnMissing?` | `boolean`                         | -                                                                  |
 
 #### Returns
 

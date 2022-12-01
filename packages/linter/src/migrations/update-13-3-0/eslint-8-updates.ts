@@ -1,13 +1,16 @@
 import {
+  ensurePackage,
   formatFiles,
   normalizePath,
   Tree,
   visitNotIgnoredFiles,
 } from '@nrwl/devkit';
 import { tsquery } from '@phenomnomnominal/tsquery';
+import { nxVersion } from '../../utils/versions';
 
 export default async function eslint8Updates(tree: Tree) {
   try {
+    await ensurePackage(tree, '@nrwl/jest/', nxVersion);
     const { addPropertyToJestConfig } = await import('@nrwl/jest');
     const existingJestConfigPath = normalizePath(
       'tools/eslint-rules/jest.config.js'

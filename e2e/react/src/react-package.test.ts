@@ -178,7 +178,7 @@ export async function h() { return 'c'; }
       // Setup
       const myLib = uniq('my-lib');
       runCLI(
-        `generate @nrwl/react:library ${myLib} --publishable --importPath="@mproj/${myLib}" --no-interactive`
+        `generate @nrwl/react:library ${myLib} --bundler=rollup --publishable --importPath="@mproj/${myLib}" --no-interactive`
       );
 
       /**

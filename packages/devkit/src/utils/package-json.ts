@@ -281,7 +281,7 @@ function requiresRemovingOfPackages(
  * @typedef EnsurePackageOptions
  * @type {object}
  * @property {boolean} dev indicate if the package is a dev dependency
- * @property {throwOnMissing} boolean throws an error when the packag is missing
+ * @property {throwOnMissing} boolean throws an error when the package is missing
  */
 
 /**
@@ -297,7 +297,7 @@ function requiresRemovingOfPackages(
  *
  * @param tree the file system tree
  * @param pkg the package to check (e.g. @nrwl/jest)
- * @param requiredVersion the version to check
+ * @param requiredVersion the version or semver range to check (e.g. ~1.0.0, >=1.0.0 <2.0.0)
  * @param {EnsurePackageOptions} options
  * @returns {Promise<void>}
  */

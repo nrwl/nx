@@ -80,7 +80,7 @@ describe('Web Components Applications', () => {
       `generate @nrwl/web:app ${appName} --bundler=webpack --no-interactive --compiler swc`
     );
     runCLI(
-      `generate @nrwl/react:lib ${libName} --buildable --no-interactive --compiler swc`
+      `generate @nrwl/react:lib ${libName} --bundler=rollup --no-interactive --compiler swc`
     );
 
     createFile(`dist/apps/${appName}/_should_remove.txt`);
