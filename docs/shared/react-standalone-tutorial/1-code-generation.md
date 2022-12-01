@@ -87,7 +87,7 @@ To create the `cart` and `shared/ui` libraries, use the `@nrwl/react:lib` genera
 ✔ Which bundler would you like to use to build the library? · vite
 UPDATE nx.json
 CREATE cart/project.json
-CREATE .eslintrc.store.json
+CREATE .eslintrc.base.json
 UPDATE project.json
 UPDATE .eslintrc.json
 UPDATE e2e/.eslintrc.json
