@@ -229,7 +229,7 @@ function addProject(host: Tree, options: NormalizedSchema) {
     }
 
     targets.build = {
-      executor: '@nrwl/web:rollup',
+      executor: '@nrwl/rollup:rollup',
       outputs: ['{options.outputPath}'],
       options: {
         outputPath:

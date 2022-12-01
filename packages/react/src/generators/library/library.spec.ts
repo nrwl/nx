@@ -510,7 +510,7 @@ describe('lib', () => {
       const workspaceJson = getProjects(tree);
 
       expect(workspaceJson.get('my-lib').targets.build).toMatchObject({
-        executor: '@nrwl/web:rollup',
+        executor: '@nrwl/rollup:rollup',
         outputs: ['{options.outputPath}'],
         options: {
           external: ['react/jsx-runtime'],
