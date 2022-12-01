@@ -246,7 +246,7 @@ A new Nx workspace with your `org name` as the folder name, and your `applicatio
 Your application code is self-contained within the `src` folder of your Angular CLI workspace.
 
 - Copy the `src` folder from your Angular CLI project to the `apps/<app name>` folder, overwriting the existing `src` folder.
-- Copy any project-specific configuration files, such as `browserslist`, or service worker configuration files into their relative path in the root of the repo.
+- Copy any project-specific configuration files, such as `browserslist`, or service worker configuration files into their relative path under `src` in the root of the repo.
 - Transfer the `assets`, `scripts`, `styles`, and build-specific configuration, such as service worker configuration, from your Angular CLI `angular.json` to the root-level `project.json` file.
 
 Verify your application runs correctly by running:
@@ -270,33 +270,7 @@ If you are using `Karma` for unit testing:
 - Copy the `karma.conf.js` file to the root folder.
 - Copy the `test.ts` file to your `src` folder.
 - Copy the `test` target in your `architect` configuration from your Angular CLI `angular.json` file into the `targets` configuration in the `project.json` file in your Nx workspace.
-- Update the `test` target file paths to be relative to `apps/<app name>`.
-
-```jsonc {% fileName="project.json" %}
-{
-  "projectType": "application",
-  "sourceRoot": "src",
-  "prefix": "myapp",
-  "targets": {
-    "test": {
-      "executor": "@angular-devkit/build-angular:karma",
-      "options": {
-        "main": "src/test.ts",
-        "polyfills": "src/polyfills.ts",
-        "tsConfig": "tsconfig.spec.json",
-        "karmaConfig": "karma.conf.js",
-        "assets": [
-          "src/favicon.ico",
-          "src/assets"
-        ],
-        "styles": ["src/styles.css"],
-        "scripts": []
-      }
-    }
-    ...
-  }
-}
-```
+- Run `nx format` to change `architect` to `targets` and `builder` to `executor`.
 
 > Jest will be used by default when generating new applications. If you want to continue using `Karma`, set the `unitTestRunner` to `karma` in the `generators` section of the `nx.json` file.
 
@@ -332,48 +306,17 @@ If you are using `Protractor` for E2E testing:
 
 - Delete the `e2e` folder that was generated to use Cypress.
 - Copy the `e2e` folder from your Angular CLI workspace into the root folder.
-- Rename the `e2e` folder to `<app name>-e2e`.
 - Create the project configuration file at `e2e/project.json`.
-- Copy the project configuration for `app name` from the Angular CLI workspace `angular.json` file to `e2e/project.json` and adjust the file paths to be relative to `e2e`.
+- Copy the project configuration for `e2e` from the Angular CLI workspace `angular.json` file to `e2e/project.json` and adjust the file paths to be relative to `e2e`.
+- Run `nx format` to change `architect` to `targets` and `builder` to `executor`.
 
-```json {% fileName="e2e/project.json" %}
+Create a `tsconfig.json` file under `e2e` folder:
+
+```json {% fileName="e2e/tsconfig.json" %}
 {
-  "projectType": "application",
-  "targets": {
-    "e2e": {
-      "executor": "@angular-devkit/build-angular:protractor",
-      "options": {
-        "protractorConfig": "e2e/protractor.conf.js"
-      },
-      "configurations": {
-        "production": {
-          "devServerTarget": "<app name>:serve:production"
-        },
-        "development": {
-          "devServerTarget": "<app name>:serve:development"
-        }
-      }
-      "defaultConfiguration": "development"
-    },
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "lintFilePatterns": ["apps/myapp/**/*.ts", "apps/myapp/**/*.html"]
-      }
-    },
-  },
-  "implicitDependencies": ["<app name>"],
-  "tags": []
-}
-```
-
-Create a `tsconfig.e2e.json` file under `e2e` folder:
-
-```json {% fileName="e2e/tsconfig.e2e.json" %}
-{
-  "extends": "./tsconfig.json",
+  "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc"
+    "outDir": "../dist/out-tsc"
   }
 }
 ```
