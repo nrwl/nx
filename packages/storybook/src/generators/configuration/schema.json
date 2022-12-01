@@ -68,7 +68,6 @@
     "bundler": {
       "description": "The Storybook builder to use.",
       "enum": ["vite", "webpack"],
-      "x-prompt": "Which Storybook builder do you want to use?",
       "default": "webpack"
     }
   },
