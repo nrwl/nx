@@ -5,7 +5,7 @@ import { getBuildAndSharedConfig } from '../../utils/options-utils';
 import { ViteBuildExecutorOptions } from './schema';
 import { copyAssets } from '@nrwl/js';
 import { existsSync } from 'fs';
-import { join } from 'path';
+import { resolve } from 'path';
 
 export default async function viteBuildExecutor(
   options: ViteBuildExecutorOptions,
@@ -15,8 +15,14 @@ export default async function viteBuildExecutor(
 
   await runInstance(await getBuildAndSharedConfig(options, context));
 
+  const libraryPackageJson = resolve(projectRoot, 'package.json');
+  const rootPackageJson = resolve(context.root, 'package.json');
+
   // For buildable libs, copy package.json if it exists.
-  if (existsSync(join(projectRoot, 'package.json'))) {
+  if (
+    existsSync(libraryPackageJson) &&
+    rootPackageJson !== libraryPackageJson
+  ) {
     await copyAssets(
       {
         outputPath: options.outputPath,
