@@ -157,10 +157,11 @@ function mapPackageDependency(
     peer,
     optional,
   };
-  if (!mappedPackages[packageName][key]) {
+  const rootVersion =
+    isRootVersion ?? packagePath.split('/node_modules/').length === 1;
+
+  if (!mappedPackages[packageName][key] || rootVersion) {
     // const packageDependencies = lockfileVersion === 1 ? requires : dependencies;
-    const rootVersion =
-      isRootVersion ?? packagePath.split('/node_modules/').length === 1;
 
     if (lockfileVersion === 1) {
       const { requires, ...rest } = value;
