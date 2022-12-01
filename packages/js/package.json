@@ -33,7 +33,6 @@
   "builders": "./executors.json",
   "dependencies": {
     "@nrwl/devkit": "file:../devkit",
-    "@nrwl/jest": "file:../jest",
     "@nrwl/linter": "file:../linter",
     "@nrwl/workspace": "file:../workspace",
     "chalk": "4.1.0",

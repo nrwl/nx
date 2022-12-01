@@ -11,6 +11,7 @@ import {
   createTreeWithEmptyWorkspace,
 } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
+import { nxVersion } from '../../utils/versions';
 import applicationGenerator from '../application/application';
 import libraryGenerator from './library';
 import { Schema } from './schema';
@@ -37,6 +38,16 @@ describe('lib', () => {
   beforeEach(() => {
     mockedInstalledCypressVersion.mockReturnValue(10);
     tree = createTreeWithEmptyV1Workspace();
+    updateJson(tree, '/package.json', (json) => {
+      json.devDependencies = {
+        '@nrwl/cypress': nxVersion,
+        '@nrwl/jest': nxVersion,
+        '@nrwl/rollup': nxVersion,
+        '@nrwl/vite': nxVersion,
+        '@nrwl/webpack': nxVersion,
+      };
+      return json;
+    });
   });
 
   describe('not nested', () => {
@@ -726,7 +737,6 @@ describe('lib', () => {
   describe('--skipPackageJson', () => {
     it('should not add dependencies to package.json when true', async () => {
       // ARRANGE
-      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       const packageJsonBeforeGenerator = tree.read('package.json', 'utf-8');
       // ACT
       await libraryGenerator(tree, {

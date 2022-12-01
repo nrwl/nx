@@ -1,4 +1,4 @@
-import { Linter } from '@nrwl/linter';
+import type { Linter } from '@nrwl/linter';
 import { SupportedStyles } from '../../../typings/style';
 
 export interface Schema {
@@ -27,4 +27,18 @@ export interface Schema {
   tags?: string;
   unitTestRunner?: 'jest' | 'vitest' | 'none';
   minimal?: boolean;
+}
+
+export interface NormalizedSchema extends Schema {
+  js: boolean;
+  name: string;
+  fileName: string;
+  projectRoot: string;
+  routePath: string;
+  projectDirectory: string;
+  parsedTags: string[];
+  appMain?: string;
+  appSourceRoot?: string;
+  libsDir?: string;
+  unitTestRunner: 'jest' | 'vitest' | 'none';
 }

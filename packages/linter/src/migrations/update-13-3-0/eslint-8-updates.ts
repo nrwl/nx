@@ -4,11 +4,11 @@ import {
   Tree,
   visitNotIgnoredFiles,
 } from '@nrwl/devkit';
-import { addPropertyToJestConfig } from '@nrwl/jest';
 import { tsquery } from '@phenomnomnominal/tsquery';
 
 export default async function eslint8Updates(tree: Tree) {
   try {
+    const { addPropertyToJestConfig } = await import('@nrwl/jest');
     const existingJestConfigPath = normalizePath(
       'tools/eslint-rules/jest.config.js'
     );

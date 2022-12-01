@@ -1,10 +1,6 @@
-import { findBuildConfig } from '@nrwl/cypress/src/utils/find-target-options';
 import {
-  joinPathFragments,
-  ProjectConfiguration,
   readProjectConfiguration,
   Tree,
-  updateJson,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
 import { CypressComponentConfigurationSchema } from '../schema';
@@ -13,6 +9,9 @@ export async function updateProjectConfig(
   tree: Tree,
   options: CypressComponentConfigurationSchema
 ) {
+  const { findBuildConfig } = await import(
+    '@nrwl/cypress/src/utils/find-target-options'
+  );
   const found = await findBuildConfig(tree, {
     project: options.project,
     buildTarget: options.buildTarget,

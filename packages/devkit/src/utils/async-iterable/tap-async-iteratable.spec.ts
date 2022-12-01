@@ -1,4 +1,4 @@
-import { tapAsyncIterator } from './tap-async-iteratable';
+import { tapAsyncIterable } from './tap-async-iteratable';
 
 describe('tapAsyncIterator', () => {
   it('should tap values', async () => {
@@ -11,7 +11,7 @@ describe('tapAsyncIterator', () => {
     const tapped = [];
     const results = [];
 
-    const c = tapAsyncIterator(f(), (x) => {
+    const c = tapAsyncIterable(f(), (x) => {
       tapped.push(`tap: ${x}`);
     });
 

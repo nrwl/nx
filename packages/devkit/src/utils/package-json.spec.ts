@@ -1,6 +1,6 @@
 import type { Tree } from 'nx/src/generators/tree';
 import { readJson, writeJson } from 'nx/src/generators/utils/json';
-import { addDependenciesToPackageJson } from './package-json';
+import { addDependenciesToPackageJson, ensurePackage } from './package-json';
 import { createTree } from 'nx/src/generators/testing-utils/create-tree';
 
 describe('addDependenciesToPackageJson', () => {
@@ -308,5 +308,44 @@ describe('addDependenciesToPackageJson', () => {
       nx: '15.0.0',
     });
     expect(installTask).toBeDefined();
+  });
+});
+
+describe('ensureDependencies', () => {
+  let tree: Tree;
+
+  beforeEach(() => {
+    tree = createTree();
+  });
+
+  it('should return without error when dependency is satisfied', async () => {
+    writeJson(tree, 'package.json', {
+      devDependencies: {
+        '@nrwl/vite': '15.0.0',
+      },
+    });
+
+    await expect(
+      ensurePackage(tree, '@nrwl/vite', '>=15.0.0', {
+        throwOnMissing: true,
+      })
+    ).resolves.toBeUndefined();
+  });
+
+  it('should throw when dependencies are missing', async () => {
+    writeJson(tree, 'package.json', {});
+
+    await expect(() =>
+      ensurePackage(tree, '@nrwl/does-not-exist', '>=15.0.0', {
+        throwOnMissing: true,
+      })
+    ).rejects.toThrow(/-D( -W)? @nrwl\/does-not-exist@>=15.0.0/);
+
+    await expect(() =>
+      ensurePackage(tree, '@nrwl/does-not-exist', '>=15.0.0', {
+        dev: false,
+        throwOnMissing: true,
+      })
+    ).rejects.toThrow('@nrwl/does-not-exist@>=15.0.0');
   });
 });

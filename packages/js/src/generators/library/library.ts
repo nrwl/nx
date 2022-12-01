@@ -2,6 +2,7 @@ import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
   convertNxGenerator,
+  ensurePackage,
   extractLayoutDirectory,
   formatFiles,
   generateFiles,
@@ -18,7 +19,6 @@ import {
   writeJson,
 } from '@nrwl/devkit';
 import { getImportPath } from 'nx/src/utils/path';
-import { jestProjectGenerator } from '@nrwl/jest';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import {
@@ -293,6 +293,8 @@ async function addJest(
   tree: Tree,
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
+  await ensurePackage(tree, '@nrwl/jest', nxVersion);
+  const { jestProjectGenerator } = await import('@nrwl/jest');
   return await jestProjectGenerator(tree, {
     ...options,
     project: options.name,
