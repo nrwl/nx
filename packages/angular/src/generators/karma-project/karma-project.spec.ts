@@ -130,7 +130,7 @@ describe('karmaProject', () => {
           outDir: '../../dist/out-tsc',
           types: ['jasmine', 'node'],
         },
-        include: ['**/*.spec.ts', '**/*.test.ts', '**/*.d.ts'],
+        include: ['src/**/*.spec.ts', 'src/**/*.test.ts', 'src/**/*.d.ts'],
       });
     });
   });
@@ -163,7 +163,7 @@ describe('karmaProject', () => {
           outDir: '../../dist/out-tsc',
           types: ['jasmine', 'node'],
         },
-        include: ['**/*.spec.ts', '**/*.test.ts', '**/*.d.ts'],
+        include: ['src/**/*.spec.ts', 'src/**/*.test.ts', 'src/**/*.d.ts'],
       });
     });
 
@@ -205,7 +205,7 @@ describe('karmaProject', () => {
           types: ['jasmine', 'node'],
         },
         files: ['src/polyfills.ts'],
-        include: ['**/*.spec.ts', '**/*.test.ts', '**/*.d.ts'],
+        include: ['src/**/*.spec.ts', 'src/**/*.test.ts', 'src/**/*.d.ts'],
       });
     });
   });

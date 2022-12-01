@@ -31,13 +31,13 @@ function updateProjectConfig(
   options: NormalizedSchema['libraryOptions']
 ) {
   updateJson(host, `${options.projectRoot}/tsconfig.lib.json`, (json) => {
-    json.include = ['**/*.ts'];
+    json.include = ['src/**/*.ts'];
     json.exclude = [
       ...new Set([
         ...(json.exclude || []),
         'jest.config.ts',
-        '**/*.test.ts',
-        '**/*.spec.ts',
+        'src/**/*.test.ts',
+        'src/**/*.spec.ts',
       ]),
     ];
     return json;

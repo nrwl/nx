@@ -381,7 +381,7 @@ describe('lib', () => {
 
         // ASSERT
         const tsConfigJson = readJson(tree, 'libs/my-lib/tsconfig.lib.json');
-        expect(tsConfigJson.include).toEqual(['**/*.ts']);
+        expect(tsConfigJson.include).toEqual(['src/**/*.ts']);
       });
 
       it('should exclude the test setup file when unitTestRunner is jest', async () => {
@@ -392,9 +392,9 @@ describe('lib', () => {
         const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.lib.json');
         expect(tsconfigJson.exclude).toEqual([
           'src/test-setup.ts',
-          '**/*.spec.ts',
+          'src/**/*.spec.ts',
           'jest.config.ts',
-          '**/*.test.ts',
+          'src/**/*.test.ts',
         ]);
       });
 
@@ -407,9 +407,9 @@ describe('lib', () => {
         // ASSERT
         const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.lib.json');
         expect(tsconfigJson.exclude).toEqual([
-          '**/*.spec.ts',
+          'src/**/*.spec.ts',
           'jest.config.ts',
-          '**/*.test.ts',
+          'src/**/*.test.ts',
         ]);
       });
 
@@ -423,8 +423,8 @@ describe('lib', () => {
         const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.lib.json');
         expect(tsconfigJson.exclude).toEqual([
           'jest.config.ts',
-          '**/*.test.ts',
-          '**/*.spec.ts',
+          'src/**/*.test.ts',
+          'src/**/*.spec.ts',
         ]);
       });
     });
@@ -899,9 +899,9 @@ describe('lib', () => {
 
         expect(tsConfigLibJson.exclude).toEqual([
           'src/test-setup.ts',
-          '**/*.spec.ts',
+          'src/**/*.spec.ts',
           'jest.config.ts',
-          '**/*.test.ts',
+          'src/**/*.test.ts',
         ]);
 
         expect(moduleContents2).toContain('RouterModule.forRoot([');
@@ -914,9 +914,9 @@ describe('lib', () => {
 
         expect(tsConfigLibJson2.exclude).toEqual([
           'src/test-setup.ts',
-          '**/*.spec.ts',
+          'src/**/*.spec.ts',
           'jest.config.ts',
-          '**/*.test.ts',
+          'src/**/*.test.ts',
         ]);
 
         expect(moduleContents3).toContain('RouterModule.forRoot([');
@@ -932,9 +932,9 @@ describe('lib', () => {
 
         expect(tsConfigLibJson3.exclude).toEqual([
           'src/test-setup.ts',
-          '**/*.spec.ts',
+          'src/**/*.spec.ts',
           'jest.config.ts',
-          '**/*.test.ts',
+          'src/**/*.test.ts',
         ]);
       });
 

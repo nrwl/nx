@@ -10,6 +10,7 @@ import {
   readProjectConfiguration,
   readWorkspaceConfiguration,
   Tree,
+  updateJson,
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
@@ -69,7 +70,32 @@ export async function lintWorkspaceRulesProjectGenerator(tree: Tree) {
     skipSerializers: true,
     setupFile: 'none',
     compiler: 'tsc',
+    skipFormat: true,
   });
+
+  updateJson(
+    tree,
+    join(workspaceLintPluginDir, 'tsconfig.spec.json'),
+    (json) => {
+      if (json.include) {
+        json.include = json.include.map((v) => {
+          if (v.startsWith('src/**')) {
+            return v.replace('src/', '');
+          }
+          return v;
+        });
+      }
+      if (json.exclude) {
+        json.exclude = json.exclude.map((v) => {
+          if (v.startsWith('src/**')) {
+            return v.replace('src/', '');
+          }
+          return v;
+        });
+      }
+      return json;
+    }
+  );
 
   // Add swc dependencies
   addDependenciesToPackageJson(

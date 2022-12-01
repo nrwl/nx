@@ -422,8 +422,8 @@ describe('app', () => {
       expect(tsConfig.compilerOptions.allowJs).toEqual(true);
 
       const tsConfigApp = readJson(tree, 'apps/my-app/tsconfig.json');
-      expect(tsConfigApp.include).toContain('**/*.js');
-      expect(tsConfigApp.exclude).not.toContain('**/*.spec.js');
+      expect(tsConfigApp.include).toContain('src/**/*.js');
+      expect(tsConfigApp.exclude).not.toContain('src/**/*.spec.js');
     });
   });
 

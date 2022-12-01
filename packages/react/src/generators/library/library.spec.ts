@@ -173,14 +173,14 @@ describe('lib', () => {
       const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.lib.json');
       expect(tsconfigJson.exclude).toEqual([
         'jest.config.ts',
-        '**/*.spec.ts',
-        '**/*.test.ts',
-        '**/*.spec.tsx',
-        '**/*.test.tsx',
-        '**/*.spec.js',
-        '**/*.test.js',
-        '**/*.spec.jsx',
-        '**/*.test.jsx',
+        'src/**/*.spec.ts',
+        'src/**/*.test.ts',
+        'src/**/*.spec.tsx',
+        'src/**/*.test.tsx',
+        'src/**/*.spec.js',
+        'src/**/*.test.js',
+        'src/**/*.spec.jsx',
+        'src/**/*.test.jsx',
       ]);
     });
 

@@ -639,8 +639,8 @@ describe('lib', () => {
         js: true,
       });
       expect(readJson(tree, 'libs/my-lib/tsconfig.lib.json').include).toEqual([
-        '**/*.ts',
-        '**/*.js',
+        'src/**/*.ts',
+        'src/**/*.js',
       ]);
     });
 
