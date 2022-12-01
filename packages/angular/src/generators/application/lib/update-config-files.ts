@@ -32,8 +32,8 @@ function updateTsConfigOptions(host: Tree, options: NormalizedSchema) {
       ...new Set([
         ...(json.exclude || []),
         'jest.config.ts',
-        '**/*.test.ts',
-        '**/*.spec.ts',
+        'src/**/*.test.ts',
+        'src/**/*.spec.ts',
       ]),
     ],
   }));

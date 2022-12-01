@@ -45,8 +45,12 @@ export function updateTsConfigsToJs(
   }
 
   updateJson(tree, updateConfigPath, (json) => {
-    json.include = uniq([...json.include, '**/*.js']);
-    json.exclude = uniq([...json.exclude, '**/*.spec.js', '**/*.test.js']);
+    json.include = uniq([...json.include, 'src/**/*.js']);
+    json.exclude = uniq([
+      ...json.exclude,
+      'src/**/*.spec.js',
+      'src/**/*.test.js',
+    ]);
 
     return json;
   });

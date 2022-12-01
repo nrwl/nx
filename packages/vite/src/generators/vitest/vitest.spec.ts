@@ -56,29 +56,29 @@ describe('vitest generator', () => {
           '{}'
       );
       expect(tsconfigSpec).toMatchInlineSnapshot(`
-              Object {
-                "compilerOptions": Object {
-                  "outDir": "../../dist/out-tsc",
-                  "types": Array [
-                    "vitest/globals",
-                    "node",
-                  ],
-                },
-                "extends": "./tsconfig.json",
-                "include": Array [
-                  "vite.config.ts",
-                  "**/*.test.ts",
-                  "**/*.spec.ts",
-                  "**/*.test.tsx",
-                  "**/*.spec.tsx",
-                  "**/*.test.js",
-                  "**/*.spec.js",
-                  "**/*.test.jsx",
-                  "**/*.spec.jsx",
-                  "**/*.d.ts",
-                ],
-              }
-          `);
+        Object {
+          "compilerOptions": Object {
+            "outDir": "../../dist/out-tsc",
+            "types": Array [
+              "vitest/globals",
+              "node",
+            ],
+          },
+          "extends": "./tsconfig.json",
+          "include": Array [
+            "vite.config.ts",
+            "src/**/*.test.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.test.tsx",
+            "src/**/*.spec.tsx",
+            "src/**/*.test.js",
+            "src/**/*.spec.js",
+            "src/**/*.test.jsx",
+            "src/**/*.spec.jsx",
+            "src/**/*.d.ts",
+          ],
+        }
+      `);
     });
 
     it('should add vitest/importMeta when inSourceTests is true', async () => {

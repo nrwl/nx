@@ -45,8 +45,8 @@ describe('application generator', () => {
     expect(tsConfig.compilerOptions.target).toBe('es2015');
     expect(tsConfig.exclude).toEqual([
       'jest.config.ts',
-      '**/*.spec.ts',
-      '**/*.test.ts',
+      'src/**/*.spec.ts',
+      'src/**/*.test.ts',
     ]);
   });
 

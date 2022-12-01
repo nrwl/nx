@@ -209,7 +209,7 @@ exports[`karmaProject should generate files 1`] = `
     \\"outDir\\": \\"../../dist/out-tsc\\",
     \\"types\\": [\\"jasmine\\", \\"node\\"]
   },
-  \\"include\\": [\\"**/*.spec.ts\\", \\"**/*.test.ts\\", \\"**/*.d.ts\\"]
+  \\"include\\": [\\"src/**/*.spec.ts\\", \\"src/**/*.test.ts\\", \\"src/**/*.d.ts\\"]
 }
 "
 `;
@@ -225,9 +225,9 @@ exports[`karmaProject should generate files and correctly add polyfills if it is
     ]
   },
   \\"include\\": [
-    \\"**/*.spec.ts\\",
-    \\"**/*.test.ts\\",
-    \\"**/*.d.ts\\"
+    \\"src/**/*.spec.ts\\",
+    \\"src/**/*.test.ts\\",
+    \\"src/**/*.d.ts\\"
   ],
   \\"files\\": [
     \\"src/polyfills.ts\\"
@@ -243,7 +243,7 @@ exports[`karmaProject should generate files and not add polyfills if it is using
     \\"outDir\\": \\"../../dist/out-tsc\\",
     \\"types\\": [\\"jasmine\\", \\"node\\"]
   },
-  \\"include\\": [\\"**/*.spec.ts\\", \\"**/*.test.ts\\", \\"**/*.d.ts\\"]
+  \\"include\\": [\\"src/**/*.spec.ts\\", \\"src/**/*.test.ts\\", \\"src/**/*.d.ts\\"]
 }
 "
 `;

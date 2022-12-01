@@ -136,8 +136,8 @@ describe('app', () => {
       expect(tsconfigApp.extends).toEqual('./tsconfig.json');
       expect(tsconfigApp.exclude).toEqual([
         'jest.config.ts',
-        '**/*.spec.ts',
-        '**/*.test.ts',
+        'src/**/*.spec.ts',
+        'src/**/*.test.ts',
       ]);
       const eslintrc = readJson(tree, 'apps/my-node-app/.eslintrc.json');
       expect(eslintrc).toMatchInlineSnapshot(`
@@ -268,7 +268,11 @@ describe('app', () => {
         {
           path: 'apps/my-dir/my-node-app/tsconfig.app.json',
           lookupFn: (json) => json.exclude,
-          expectedValue: ['jest.config.ts', '**/*.spec.ts', '**/*.test.ts'],
+          expectedValue: [
+            'jest.config.ts',
+            'src/**/*.spec.ts',
+            'src/**/*.test.ts',
+          ],
         },
         {
           path: 'apps/my-dir/my-node-app/.eslintrc.json',
@@ -412,13 +416,13 @@ describe('app', () => {
       });
 
       const tsConfigApp = readJson(tree, 'apps/my-node-app/tsconfig.app.json');
-      expect(tsConfigApp.include).toEqual(['**/*.ts', '**/*.js']);
+      expect(tsConfigApp.include).toEqual(['src/**/*.ts', 'src/**/*.js']);
       expect(tsConfigApp.exclude).toEqual([
         'jest.config.ts',
-        '**/*.spec.ts',
-        '**/*.test.ts',
-        '**/*.spec.js',
-        '**/*.test.js',
+        'src/**/*.spec.ts',
+        'src/**/*.test.ts',
+        'src/**/*.spec.js',
+        'src/**/*.test.js',
       ]);
     });
 

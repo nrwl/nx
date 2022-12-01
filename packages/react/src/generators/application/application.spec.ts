@@ -110,14 +110,14 @@ describe('app', () => {
       expect(tsconfigApp.extends).toEqual('./tsconfig.json');
       expect(tsconfigApp.exclude).toEqual([
         'jest.config.ts',
-        '**/*.spec.ts',
-        '**/*.test.ts',
-        '**/*.spec.tsx',
-        '**/*.test.tsx',
-        '**/*.spec.js',
-        '**/*.test.js',
-        '**/*.spec.jsx',
-        '**/*.test.jsx',
+        'src/**/*.spec.ts',
+        'src/**/*.test.ts',
+        'src/**/*.spec.tsx',
+        'src/**/*.test.tsx',
+        'src/**/*.spec.js',
+        'src/**/*.test.js',
+        'src/**/*.spec.jsx',
+        'src/**/*.test.jsx',
       ]);
 
       const eslintJson = readJson(appTree, 'apps/my-app/.eslintrc.json');
@@ -220,14 +220,14 @@ describe('app', () => {
           lookupFn: (json) => json.exclude,
           expectedValue: [
             'jest.config.ts',
-            '**/*.spec.ts',
-            '**/*.test.ts',
-            '**/*.spec.tsx',
-            '**/*.test.tsx',
-            '**/*.spec.js',
-            '**/*.test.js',
-            '**/*.spec.jsx',
-            '**/*.test.jsx',
+            'src/**/*.spec.ts',
+            'src/**/*.test.ts',
+            'src/**/*.spec.tsx',
+            'src/**/*.test.tsx',
+            'src/**/*.spec.js',
+            'src/**/*.test.js',
+            'src/**/*.spec.jsx',
+            'src/**/*.test.jsx',
           ],
         },
         {
