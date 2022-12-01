@@ -1424,83 +1424,6 @@
       }
     },
     {
-      "name": "new-lib",
-      "type": "lib",
-      "data": {
-        "tags": [],
-        "root": "libs/new-lib",
-        "files": [
-          {
-            "file": "libs/new-lib/.eslintrc.json",
-            "hash": "69f0f5128f733f3ef756c81439f0548eb3f314ff"
-          },
-          {
-            "file": "libs/new-lib/jest.config.ts",
-            "hash": "4920380a6eaa2ffaa6ac16eafcccb60622ab0dc0"
-          },
-          {
-            "file": "libs/new-lib/project.json",
-            "hash": "12563cc2fb5447cd596a4a46766ac0e089c35e36"
-          },
-          {
-            "file": "libs/new-lib/README.md",
-            "hash": "ae28060a863433273a37b6a6818126817b405add"
-          },
-          {
-            "file": "libs/new-lib/src/index.ts",
-            "hash": "001f7c36454094a6f9a387e47b14445eab276fce"
-          },
-          {
-            "file": "libs/new-lib/src/lib/new-lib.module.ts",
-            "hash": "4936692048161ebc3cfbf0d146327a7b3c9de46e",
-            "deps": ["npm:@angular/core", "npm:@angular/common"]
-          },
-          {
-            "file": "libs/new-lib/src/test-setup.ts",
-            "hash": "1100b3e8a6ed08f4b5c27a96471846d57023c320",
-            "deps": ["npm:jest-preset-angular"]
-          },
-          {
-            "file": "libs/new-lib/tsconfig.json",
-            "hash": "1c995b83bf3715a370457c4296b1a11f40572cff"
-          },
-          {
-            "file": "libs/new-lib/tsconfig.lib.json",
-            "hash": "8e00439a4ac91e9d14eae4b313f59c1d435003ee"
-          },
-          {
-            "file": "libs/new-lib/tsconfig.spec.json",
-            "hash": "c5db02778f96a2a200d787c0a7b376fe0d6c36f7"
-          }
-        ],
-        "targets": {
-          "test": {
-            "executor": "@nrwl/jest:jest",
-            "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-            "options": {
-              "jestConfig": "libs/new-lib/jest.config.ts",
-              "passWithNoTests": true
-            },
-            "inputs": [
-              "default",
-              "^production",
-              "{workspaceRoot}/jest.preset.js"
-            ]
-          },
-          "lint": {
-            "executor": "@nrwl/linter:eslint",
-            "options": {
-              "lintFilePatterns": [
-                "libs/new-lib/**/*.ts",
-                "libs/new-lib/**/*.html"
-              ]
-            },
-            "inputs": ["default", "{workspaceRoot}/.eslintrc.json"]
-          }
-        }
-      }
-    },
-    {
       "name": "cart",
       "type": "app",
       "data": {
@@ -1539,12 +1462,7 @@
           {
             "file": "apps/cart/src/app/app.tsx",
             "hash": "e971864bdab1bea4c48550c2ab1d9e0e8489e753",
-            "deps": [
-              "npm:react-router-dom",
-              "new-lib",
-              "shared-header",
-              "cart-cart-page"
-            ]
+            "deps": ["npm:react-router-dom", "shared-header", "cart-cart-page"]
           },
           {
             "file": "apps/cart/src/assets/.gitkeep",
@@ -1858,7 +1776,6 @@
         "type": "static"
       }
     ],
-    "new-lib": [],
     "cart": [
       {
         "source": "cart",
@@ -1872,7 +1789,6 @@
       },
       {
         "source": "cart",
-        "target": "new-lib",
         "type": "static"
       },
       {

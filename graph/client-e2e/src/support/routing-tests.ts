@@ -25,7 +25,7 @@ function resolveProjectsRoute(
   paramString: string
 ) {
   if (router === 'hash') {
-    return `/?${paramString}#${route}`;
+    return `/#${route}?${paramString}`;
   } else {
     return `${route}?${paramString}`;
   }
@@ -50,7 +50,7 @@ export function testProjectsRoutes(
   routes.forEach((route) => {
     describe(`for route ${route}`, () => {
       it('should focus projects', () => {
-        cy.visit(resolveProjectsRoute(router, route, 'focus=cart'));
+        cy.visit(resolveProjectsRoute(router, `${route}/cart`, ''));
 
         // wait for first graph to finish loading
         waitForProjectGraph(router);
@@ -70,7 +70,7 @@ export function testProjectsRoutes(
 
       it('should focus projects with search depth', () => {
         cy.visit(
-          resolveProjectsRoute(router, route, `focus=cart&searchDepth=2`)
+          resolveProjectsRoute(router, `${route}/cart`, `searchDepth=2`)
         );
 
         // wait for first graph to finish loading
@@ -82,7 +82,7 @@ export function testProjectsRoutes(
 
       it('should focus projects with search depth disabled', () => {
         cy.visit(
-          resolveProjectsRoute(router, route, `focus=cart&searchDepth=0`)
+          resolveProjectsRoute(router, `${route}/cart`, `searchDepth=0`)
         );
 
         // wait for first graph to finish loading
@@ -94,11 +94,7 @@ export function testProjectsRoutes(
 
       it('should set group by folder', () => {
         cy.visit(
-          resolveProjectsRoute(
-            router,
-            route,
-            `focus=nx-dev&searchDepth=1&groupByFolder=true`
-          )
+          resolveProjectsRoute(router, `${route}/cart`, `groupByFolder=true`)
         );
 
         // wait for first graph to finish loading
@@ -108,7 +104,7 @@ export function testProjectsRoutes(
       });
 
       it('should select all projects', () => {
-        cy.visit(resolveProjectsRoute(router, route, `select=all`));
+        cy.visit(resolveProjectsRoute(router, `${route}/all`, ``));
 
         // wait for first graph to finish loading
         waitForProjectGraph(router);

@@ -3,12 +3,6 @@ import { actions, send } from 'xstate';
 import { ProjectGraphStateNodeConfig } from './interfaces';
 
 export const customSelectedStateConfig: ProjectGraphStateNodeConfig = {
-  entry: actions.choose([
-    {
-      cond: 'selectActionCannotBePersistedToRoute',
-      actions: ['notifyRouteClearSelect'],
-    },
-  ]),
   on: {
     updateGraph: {
       target: 'customSelected',

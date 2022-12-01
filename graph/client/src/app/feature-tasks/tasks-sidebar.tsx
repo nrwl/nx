@@ -38,16 +38,16 @@ export function TasksSidebar() {
   const [searchParams, setSearchParams] = useSearchParams();
   const groupByProject = searchParams.get('groupByProject') === 'true';
 
-  const selectedProjectRouteData = useRouteLoaderData(
+  const selectedWorkspaceRouteData = useRouteLoaderData(
     'selectedWorkspace'
   ) as ProjectGraphClientResponse & { targets: string[] };
-  const workspaceLayout = selectedProjectRouteData.layout;
+  const workspaceLayout = selectedWorkspaceRouteData.layout;
 
   const routeData = useRouteLoaderData(
     'selectedTarget'
   ) as TaskGraphClientResponse;
   const { taskGraphs } = routeData;
-  const { projects, targets } = selectedProjectRouteData;
+  const { projects, targets } = selectedWorkspaceRouteData;
   const selectedTarget = params['selectedTarget'] ?? targets[0];
 
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
@@ -131,10 +131,10 @@ export function TasksSidebar() {
     setSelectedProjects([]);
     graphService.handleTaskEvent({
       type: 'notifyTaskGraphSetProjects',
-      projects: selectedProjectRouteData.projects,
+      projects: selectedWorkspaceRouteData.projects,
       taskGraphs,
     });
-  }, [selectedProjectRouteData]);
+  }, [selectedWorkspaceRouteData]);
 
   useEffect(() => {
     if (groupByProject) {
