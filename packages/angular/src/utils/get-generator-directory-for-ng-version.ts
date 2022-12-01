@@ -4,7 +4,12 @@ import { coerce, major } from 'semver';
 
 export function getGeneratorDirectoryForInstalledAngularVersion(tree: Tree) {
   const pkgJson = readJson(tree, 'package.json');
-  const angularVersion = pkgJson.dependencies['@angular/core'];
+  const angularVersion =
+    pkgJson.dependencies && pkgJson.dependencies['@angular/core'];
+
+  if (!angularVersion) {
+    return null;
+  }
 
   const majorAngularVersion = major(coerce(angularVersion));
 

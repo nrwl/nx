@@ -11,52 +11,27 @@ import {
 import { jestInitGenerator } from '@nrwl/jest';
 import { Linter } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
-import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
-import {
-  angularDevkitVersion,
-  angularVersion,
-  jasmineCoreVersion,
-  jasmineSpecReporterVersion,
-  jestPresetAngularVersion,
-  protractorVersion,
-  rxjsVersion,
-  tsLibVersion,
-  tsNodeVersion,
-  typesJasmineVersion,
-  typesJasminewd2Version,
-  zoneJsVersion,
-} from '../../utils/versions';
-import { karmaGenerator } from '../karma/karma';
+import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
+import { karmaGenerator } from '../../karma/karma';
 import { Schema } from './schema';
-import { getGeneratorDirectoryForInstalledAngularVersion } from '../../utils/get-generator-directory-for-ng-version';
-import { join } from 'path';
+import { versions } from '../../../utils/versions';
 
 export async function angularInitGenerator(
-  tree: Tree,
+  host: Tree,
   rawOptions: Schema
 ): Promise<GeneratorCallback> {
-  const generatorDirectory =
-    getGeneratorDirectoryForInstalledAngularVersion(tree);
-  if (generatorDirectory) {
-    let previousGenerator = await import(
-      join(__dirname, generatorDirectory, 'init')
-    );
-    await previousGenerator.default(tree, rawOptions);
-    return;
-  }
-
   const options = normalizeOptions(rawOptions);
-  setDefaults(tree, options);
+  setDefaults(host, options);
 
   const depsTask = !options.skipPackageJson
-    ? updateDependencies(tree)
+    ? updateDependencies(host)
     : () => {};
-  const unitTestTask = addUnitTestRunner(tree, options);
-  const e2eTask = addE2ETestRunner(tree, options);
-  addGitIgnoreEntry(tree, '.angular');
+  const unitTestTask = addUnitTestRunner(host, options);
+  const e2eTask = addE2ETestRunner(host, options);
+  addGitIgnoreEntry(host, '.angular');
 
   if (!options.skipFormat) {
-    await formatFiles(tree);
+    await formatFiles(host);
   }
 
   return runTasksInSerial(depsTask, unitTestTask, e2eTask);
@@ -102,23 +77,23 @@ function updateDependencies(host: Tree): GeneratorCallback {
   return addDependenciesToPackageJson(
     host,
     {
-      '@angular/animations': angularVersion,
-      '@angular/common': angularVersion,
-      '@angular/compiler': angularVersion,
-      '@angular/core': angularVersion,
-      '@angular/forms': angularVersion,
-      '@angular/platform-browser': angularVersion,
-      '@angular/platform-browser-dynamic': angularVersion,
-      '@angular/router': angularVersion,
-      rxjs: rxjsVersion,
-      tslib: tsLibVersion,
-      'zone.js': zoneJsVersion,
+      '@angular/animations': versions.angularV14.angularVersion,
+      '@angular/common': versions.angularV14.angularVersion,
+      '@angular/compiler': versions.angularV14.angularVersion,
+      '@angular/core': versions.angularV14.angularVersion,
+      '@angular/forms': versions.angularV14.angularVersion,
+      '@angular/platform-browser': versions.angularV14.angularVersion,
+      '@angular/platform-browser-dynamic': versions.angularV14.angularVersion,
+      '@angular/router': versions.angularV14.angularVersion,
+      rxjs: versions.angularV14.rxjsVersion,
+      tslib: versions.angularV14.tsLibVersion,
+      'zone.js': versions.angularV14.zoneJsVersion,
     },
     {
-      '@angular/cli': angularDevkitVersion,
-      '@angular/compiler-cli': angularVersion,
-      '@angular/language-service': angularVersion,
-      '@angular-devkit/build-angular': angularDevkitVersion,
+      '@angular/cli': versions.angularV14.angularDevkitVersion,
+      '@angular/compiler-cli': versions.angularV14.angularVersion,
+      '@angular/language-service': versions.angularV14.angularVersion,
+      '@angular-devkit/build-angular': versions.angularV14.angularDevkitVersion,
     }
   );
 }
@@ -133,7 +108,7 @@ function addUnitTestRunner(host: Tree, options: Schema): GeneratorCallback {
           host,
           {},
           {
-            'jest-preset-angular': jestPresetAngularVersion,
+            'jest-preset-angular': versions.angularV14.jestPresetAngularVersion,
           }
         );
       }
@@ -154,12 +129,13 @@ function addE2ETestRunner(host: Tree, options: Schema): GeneratorCallback {
             host,
             {},
             {
-              protractor: protractorVersion,
-              'jasmine-core': jasmineCoreVersion,
-              'jasmine-spec-reporter': jasmineSpecReporterVersion,
-              'ts-node': tsNodeVersion,
-              '@types/jasmine': typesJasmineVersion,
-              '@types/jasminewd2': typesJasminewd2Version,
+              protractor: versions.angularV14.protractorVersion,
+              'jasmine-core': versions.angularV14.jasmineCoreVersion,
+              'jasmine-spec-reporter':
+                versions.angularV14.jasmineSpecReporterVersion,
+              'ts-node': versions.angularV14.tsNodeVersion,
+              '@types/jasmine': versions.angularV14.typesJasmineVersion,
+              '@types/jasminewd2': versions.angularV14.typesJasminewd2Version,
             }
           )
         : () => {};
