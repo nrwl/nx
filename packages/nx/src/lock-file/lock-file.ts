@@ -28,7 +28,7 @@ import {
   ProjectGraphExternalNode,
 } from '../config/project-graph';
 import { existsSync } from 'fs';
-import { readCachedProjectGraph } from '../project-graph/project-graph';
+import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { createPackageJson } from '../utils/create-package-json';
 import { normalizePackageJson } from './utils/pruning';
 
@@ -189,13 +189,13 @@ export function pruneLockFileData(
  * @param packageManager
  * @returns
  */
-export function pruneLockFile(
+export async function pruneLockFile(
   projectName: string,
   isProduction = true,
   packageManager: PackageManager = detectPackageManager(workspaceRoot)
-): string {
+): Promise<string> {
   const lockFileData = parseLockFile(packageManager);
-  const projectGraph = readCachedProjectGraph();
+  const projectGraph = await createProjectGraphAsync();
 
   if (!projectGraph.nodes[projectName]) {
     throw Error(`Project "${projectName}" was not found.`);

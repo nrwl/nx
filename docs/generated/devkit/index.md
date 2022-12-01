@@ -1727,7 +1727,7 @@ parseTargetString('proj:test:production'); // returns { project: "proj", target:
 
 ### pruneLockFile
 
-▸ **pruneLockFile**(`projectName`, `isProduction?`, `packageManager?`): `string`
+▸ **pruneLockFile**(`projectName`, `isProduction?`, `packageManager?`): `Promise`<`string`\>
 
 Prune lock file based on the giveb project
 
@@ -1741,7 +1741,7 @@ Prune lock file based on the giveb project
 
 #### Returns
 
-`string`
+`Promise`<`string`\>
 
 ---
 
