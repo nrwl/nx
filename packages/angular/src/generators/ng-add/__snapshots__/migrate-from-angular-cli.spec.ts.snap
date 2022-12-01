@@ -36,10 +36,6 @@ Object {
       "runner": "nx/tasks-runners/default",
     },
   },
-  "workspaceLayout": Object {
-    "appsDir": "",
-    "libsDir": "",
-  },
 }
 `;
 
@@ -96,10 +92,6 @@ Object {
       },
       "runner": "nx/tasks-runners/default",
     },
-  },
-  "workspaceLayout": Object {
-    "appsDir": "projects",
-    "libsDir": "projects",
   },
 }
 `;
