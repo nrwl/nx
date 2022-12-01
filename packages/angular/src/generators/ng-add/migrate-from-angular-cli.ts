@@ -52,7 +52,7 @@ export async function migrateFromAngularCli(
         prettier: prettierVersion,
       }
     );
-    createNxJson(tree, options, true);
+    createNxJson(tree, options);
     decorateAngularCli(tree);
     updateVsCodeRecommendedExtensions(tree);
     await updatePrettierConfig(tree);
