@@ -187,19 +187,19 @@ To start, run the command to generate an Nx workspace with an Angular applicatio
 **Using `npx`**
 
 ```shell
-npx create-nx-workspace myorg --preset=angular
+npx create-nx-workspace myorg --preset=angular-standalone
 ```
 
 **Using `npm init`**
 
 ```shell
-npm init nx-workspace myorg --preset=angular
+npm init nx-workspace myorg --preset=angular-standalone
 ```
 
 **Using `yarn create`**
 
 ```shell
-yarn create nx-workspace myorg --preset=angular
+yarn create nx-workspace myorg --preset=angular-standalone
 ```
 
 When prompted for the `application name`, enter the _project name_ from your current `angular.json` file.
@@ -223,7 +223,7 @@ A new Nx workspace with your `org name` as the folder name, and your `applicatio
 │   ├── styles.css
 │   └── test-setup.ts
 ├── .eslintrc.json
-├── .eslintrc.<app name>.json
+├── .eslintrc.base.json
 ├── .gitignore
 ├── .prettierignore
 ├── .prettierrc
@@ -356,12 +356,11 @@ If you are using `Protractor` for E2E testing:
       "defaultConfiguration": "development"
     },
     "lint": {
-      "executor": "@angular-devkit/build-angular:tslint",
+      "executor": "@nrwl/linter:eslint",
       "options": {
-        "tsConfig": "e2e/tsconfig.e2e.json",
-        "exclude": ["**/node_modules/**", "!e2e/**/*"]
+        "lintFilePatterns": ["apps/myapp/**/*.ts", "apps/myapp/**/*.html"]
       }
-    }
+    },
   },
   "implicitDependencies": ["<app name>"],
   "tags": []
@@ -403,7 +402,7 @@ ng e2e e2e
 
 ### Updating your linting configuration
 
-For lint rules, migrate your existing rules into the root `tslint.json` file.
+For lint rules, migrate your existing rules into the root `.eslintrc.base.json` file.
 
 Verify your lint checks run correctly by running:
 
