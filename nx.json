@@ -42,6 +42,7 @@
     "sharedGlobals": ["{workspaceRoot}/babel.config.json"]
   },
   "targetDefaults": {
+    "test-target": {},
     "build": {
       "dependsOn": ["build-base"],
       "inputs": ["production", "^production"]
