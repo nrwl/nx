@@ -6,7 +6,7 @@ import {
   Tree,
   updateJson,
 } from '@nrwl/devkit';
-import { createReactEslintJson, extraEslintDependencies } from '@nrwl/react';
+import { extendReactEslintJson, extraEslintDependencies } from '@nrwl/react';
 import { NormalizedSchema } from './normalize-options';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
@@ -26,28 +26,24 @@ export async function addLinting(
   });
 
   if (options.linter === Linter.EsLint) {
-    const reactEslintJson = createReactEslintJson(
-      options.appProjectRoot,
-      options.setParserOptionsProject
-    );
     updateJson(
       host,
       joinPathFragments(options.appProjectRoot, '.eslintrc.json'),
-      () => {
+      (json) => {
+        json = extendReactEslintJson(json);
+
         // Turn off @next/next/no-html-link-for-pages since there is an issue with nextjs throwing linting errors
         // TODO(nicholas): remove after Vercel updates nextjs linter to only lint ["*.ts", "*.tsx", "*.js", "*.jsx"]
 
-        reactEslintJson.ignorePatterns = [
-          ...reactEslintJson.ignorePatterns,
-          '.next/**/*',
-        ];
+        json.ignorePatterns = [...json.ignorePatterns, '.next/**/*'];
 
-        reactEslintJson.rules = {
+        json.rules = {
           '@next/next/no-html-link-for-pages': 'off',
-          ...reactEslintJson.rules,
+          ...json.rules,
         };
+
         // Find the override that handles both TS and JS files.
-        const commonOverride = reactEslintJson.overrides?.find((o) =>
+        const commonOverride = json.overrides?.find((o) =>
           ['*.ts', '*.tsx', '*.js', '*.jsx'].every((ext) =>
             o.files.includes(ext)
           )
@@ -70,23 +66,25 @@ export async function addLinting(
             };
           }
         }
-        reactEslintJson.extends ??= [];
-        if (typeof reactEslintJson.extends === 'string') {
-          reactEslintJson.extends = [reactEslintJson.extends];
+
+        json.extends ??= [];
+        if (typeof json.extends === 'string') {
+          json.extends = [json.extends];
         }
         // add next.js configuration
-        reactEslintJson.extends.unshift(...['next', 'next/core-web-vitals']);
+        json.extends.unshift(...['next', 'next/core-web-vitals']);
         // remove nx/react plugin, as it conflicts with the next.js one
-        reactEslintJson.extends = reactEslintJson.extends.filter(
+        json.extends = json.extends.filter(
           (name) => name !== 'plugin:@nrwl/nx/react'
         );
 
-        reactEslintJson.extends.unshift('plugin:@nrwl/nx/react-typescript');
-        if (!reactEslintJson.env) {
-          reactEslintJson.env = {};
+        json.extends.unshift('plugin:@nrwl/nx/react-typescript');
+        if (!json.env) {
+          json.env = {};
         }
-        reactEslintJson.env.jest = true;
-        return reactEslintJson;
+        json.env.jest = true;
+
+        return json;
       }
     );
   }

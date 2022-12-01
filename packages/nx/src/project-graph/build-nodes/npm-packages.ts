@@ -1,6 +1,6 @@
 import { join } from 'path';
-import { workspaceRoot } from 'nx/src/utils/workspace-root';
-import { readJsonFile } from 'nx/src/utils/fileutils';
+import { workspaceRoot } from '../../utils/workspace-root';
+import { readJsonFile } from '../../utils/fileutils';
 import { ProjectGraphBuilder } from '../project-graph-builder';
 
 export function buildNpmPackageNodes(builder: ProjectGraphBuilder) {

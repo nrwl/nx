@@ -1,16 +1,12 @@
 # Nx and Turborepo
 
-Turborepo is a build tool that has just been released (Dec 2021). It borrows many ideas from Nx, so, naturally, some folks will compare Nx and Turborepo. This document provides some context to help you evaluate what works best for you.
+Turborepo is a build tool that was released in December 2021. It borrows many ideas from Nx, so, naturally, some folks will compare Nx and Turborepo. This document provides some context to help you evaluate what works best for you.
 
 {% callout type="warning" title="Few key differences" %}
 Note that the relationship between Nx and Turborepo isn’t the same as with Nx and say Yarn workspaces or Lerna. Nx and Yarn workspaces are complementary, so it makes sense to use both in some situations. Turborepo is a subset of Nx (at this point), so we don’t think it makes sense to use both.
 {% /callout %}
 
 We do our best to be unbiased, but, of course you should do your own research. Read the docs, try things out and build your own opinion.
-
-{% callout type="note" title="December 14, 2021" %}
-This document was written on December 14, 2021. At this point Turborepo has just been released, it’s about 5k lines of code. It’s a small project. Many of the things listed below are the things Turborepo cannot do now and Nx can. We’re sure Turborepo will eventually support some of them. So if you read this later, consult the documentation.
-{% /callout %}
 
 We clearly separate Nx (the open source tool) and [Nx Cloud](https://nx.app) (the SAAS product). Turborepo doesn’t have such a separation. Hence, in this guide we compare Turborepo with Nx+Nx Cloud (so it’s apples to apples). That said, you don’t have to use Nx Cloud to get features such as distributed caching and distributed task execution. We provide public APIs so you can build your own, if you'd prefer not to use Nx Cloud.
 
@@ -22,8 +18,8 @@ We are going to compare the tools in three different ways: **features**, **tech 
 
 We should distinguish between [package-based vs integrated approach](/concepts/integrated-vs-package-based) to monorepos. Turbo uses a package-based approach to monorepos, while Nx can do both. To be able to compare the two from an incremental adoption point of view, let's focus on the package-based approach for now:
 
-- both, Turbo and Nx can be added to a repo with almost no friction. Install `turbo` and add a `turbo.json` or install `nx` and add a `nx.json`.
-- with Nx you have the possibility to also transition to a more [integrated monorepo style](/concepts/integrated-vs-package-based#integrated-repos) that has been proven to lead to better maintainability and DX in the long-run.
+- Both Turbo and Nx can be added to a repo with almost no friction. Install `turbo` and add a `turbo.json` or install `nx` and add an `nx.json`.
+- With Nx you have the possibility to also transition to a more [integrated monorepo style](/concepts/integrated-vs-package-based#integrated-repos) that has been proven to lead to better maintainability and DX in the long-run.
 
 Here are some examples for Nx:
 
@@ -35,8 +31,8 @@ Here are some examples for Nx:
 The starting point of any non-trivial monorepo management tool is to be able to understand the monorepo workspace structure, what projects there are and how they relate to each other.
 
 - Turborepo only analyzes package.json files to understand how projects relate to each other. Built-in Nx plugins also analyze package.json files but in addition they analyze JS/TS files, so you don't have to have bogus package.json files (that you don’t use for the purposes of installing packages or publishing) in your repo. There are plugins for Nx that do that for other languages (e.g., Golang, .Net).
-- Since the computation of the project graph can take a lot of time for complex workspaces, **Nx does its analysis in the background. Turborepo does it at request time.**
-- **Nx has visibility rules, which are essential for any monorepo with multiple teams contributing.** You can say that some things in the monorepo are private to your team so they cannot be depended on by other teams. Turborepo doesn't have visibility rules. **Visibility rules prevent the monorepo from becoming the “big ball of mud”.**
+- Since the computation of the project graph can take a lot of time for complex workspaces, both Nx and Turborepo have a daemon process to create the graph in the background.
+- **Nx has [project boundary rules](/core-features/enforce-project-boundaries), which are essential for any monorepo with multiple teams contributing.** You can say that some things in the monorepo are private to your team so they cannot be depended on by other teams. Turborepo doesn't have project boundary rules. **Project boundary rules prevent the monorepo from becoming a “big ball of mud”.**
 
 #### 3. Project graph visualization
 
@@ -102,7 +98,8 @@ Learn more [by watching this Egghead lesson](https://egghead.io/lessons/javascri
 
 Nx has grown over the last 5 years, providing curated presets for common setups, but at the same time focusing on remaining flexible and extensible.
 
-- When it comes to Nx core, **the amount of the configuration Nx and Turborepo generate is the same**. Nx generates 1 small json file at the root of your workspace. Turborepo adds its configuration to package.json.
+- When it comes to Nx core, **the amount of the configuration Nx and Turborepo generate is the same**. Nx and Turborepo both generate a json file at the root of your workspace.
+- Turborepo requires you to keep all of your caching configuration in the root `turbo.json` file. This means that if you change a caching setting for a particular project, it will break the cache for every project in the repo. Nx did the same thing 2 years ago, but now you can break out project specific configuration into separate `project.json` files, which makes for less cache misses on large repos.
 
 Getting started quickly is very easy. Check out some of the examples below:
 
@@ -171,9 +168,9 @@ It’s also worth noting that the backend of Nx Cloud is written in Kotlin. This
 
 ## Community
 
-Nx was released 5 years ago. Turborepo has just been open sourced (Dec 2021). Turborepo doesn't have a large community yet, but it probably will at some point.
+Nx was released in 2016. Turborepo was open sourced in December of 2021. Turborepo doesn't have a large community yet, but it probably will at some point.
 
-- There are about [2.5 million downloads per week](https://www.npmjs.com/package/@nrwl/tao).
+- There are about [3 million downloads per week](https://www.npmjs.com/package/@nrwl/tao).
 - There are about 1 million+ unique [Nx Console](https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console) (a plugin for VSCode) installations.
 - There is a rich ecosystem of [third-party plugins.](https://nx.dev/community)
 - There are 5500+ active users in [the community slack.](https://nrwlcommunity.slack.com/join/shared_invite/zt-jba969hz-e5zm1Ou_jiOP1J2h8UTu0w#/shared-invite/email)

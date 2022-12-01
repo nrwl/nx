@@ -8,14 +8,6 @@ describe('nx-dev: Nx Cloud section', () => {
   (<{ title: string; path: string }[]>[
     { title: 'What is Nx Cloud?', path: '/nx-cloud/intro/what-is-nx-cloud' },
     {
-      title: 'Enabling Distributed Caching',
-      path: '/nx-cloud/set-up/set-up-caching',
-    },
-    {
-      title: 'Set Up Distributed Task Execution',
-      path: '/nx-cloud/set-up/set-up-dte',
-    },
-    {
       title: 'Recording Non-Nx Commands',
       path: '/nx-cloud/set-up/record-commands',
     },

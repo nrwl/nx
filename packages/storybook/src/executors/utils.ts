@@ -1,5 +1,5 @@
 import { ExecutorContext, joinPathFragments, logger } from '@nrwl/devkit';
-import { findNodes } from '@nrwl/workspace/src/utilities/typescript/find-nodes';
+import { findNodes } from 'nx/src/utils/typescript';
 import 'dotenv/config';
 import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';

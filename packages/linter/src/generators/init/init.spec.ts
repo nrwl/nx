@@ -7,7 +7,7 @@ describe('@nrwl/linter:init', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   describe('--linter', () => {

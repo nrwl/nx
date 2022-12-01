@@ -5,7 +5,7 @@ import remote from './remote';
 
 describe('remote generator', () => {
   it('should not set the remote as the default project', async () => {
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     await remote(tree, {
       name: 'test',

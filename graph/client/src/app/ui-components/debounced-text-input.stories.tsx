@@ -1,4 +1,4 @@
-import { ComponentStory, ComponentMeta } from '@storybook/react';
+import { ComponentMeta, ComponentStory } from '@storybook/react';
 import { DebouncedTextInput } from './debounced-text-input';
 
 const Story: ComponentMeta<typeof DebouncedTextInput> = {

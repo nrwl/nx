@@ -7,6 +7,9 @@ import {
   runCommandUntil,
   tmpProjPath,
   uniq,
+  updateJson,
+  getPackageManagerCommand,
+  runCommand,
 } from '@nrwl/e2e/utils';
 import { writeFileSync } from 'fs';
 
@@ -26,6 +29,16 @@ describe('Storybook schematics', () => {
     runCLI(
       `generate @nrwl/react:storybook-configuration ${reactStorybookLib} --generateStories --no-interactive`
     );
+
+    // TODO(jack): Overriding enhanced-resolve to 5.10.0 now until the package is fixed.
+    // See: https://github.com/webpack/enhanced-resolve/issues/362
+    updateJson('package.json', (json) => {
+      json['overrides'] = {
+        'enhanced-resolve': '5.10.0',
+      };
+      return json;
+    });
+    runCommand(getPackageManagerCommand().install);
   });
 
   afterAll(() => {

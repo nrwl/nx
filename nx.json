@@ -3,7 +3,6 @@
   "affected": {
     "defaultBase": "master"
   },
-  "npmScope": "nrwl",
   "tasksRunnerOptions": {
     "default": {
       "runner": "@nrwl/nx-cloud",
@@ -26,8 +25,8 @@
     }
   },
   "workspaceLayout": {
-    "libsDir": "",
-    "appsDir": ""
+    "appsDir": "",
+    "libsDir": ""
   },
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
@@ -79,18 +78,9 @@
     "run-e2e-tests": {
       "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"]
     },
-    "test": {
-      "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"]
-    },
     "build-storybook": {
       "inputs": ["default", "^production", "{workspaceRoot}/.storybook/**/*"]
     }
   },
-  "generators": {
-    "@nrwl/react": {
-      "application": {
-        "babel": true
-      }
-    }
-  }
+  "defaultProject": "@nrwl/nx-source"
 }

@@ -1,6 +1,6 @@
 // nx-ignore-next-line
 import type {
-  DepGraphClientResponse,
+  ProjectGraphClientResponse,
   TaskGraphClientResponse,
 } from 'nx/src/command-line/dep-graph';
 import { ProjectGraphService } from './interfaces';
@@ -14,7 +14,7 @@ export class FetchProjectGraphService implements ProjectGraphService {
     return response.json();
   }
 
-  async getProjectGraph(url: string): Promise<DepGraphClientResponse> {
+  async getProjectGraph(url: string): Promise<ProjectGraphClientResponse> {
     const request = new Request(url, { mode: 'no-cors' });
 
     const response = await fetch(request);

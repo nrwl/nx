@@ -4,28 +4,28 @@ export default function Document(): JSX.Element {
   return (
     <Html className="h-full scroll-smooth" lang="en">
       <Head>
-        <meta charSet="utf-8" />
+        <link rel="icon" href="/favicon/favicon.svg" type="image/svg+xml" />
         <link
           rel="apple-touch-icon"
           sizes="180x180"
-          href="/images/apple-touch-icon.png"
+          href="/favicon/apple-touch-icon.png"
         />
         <link
           rel="icon"
           type="image/png"
           sizes="32x32"
-          href="/images/favicon-32x32.png"
+          href="/favicon/favicon-32x32.png"
         />
         <link
           rel="icon"
           type="image/png"
           sizes="16x16"
-          href="/images/favicon-16x16.png"
+          href="/favicon/favicon-16x16.png"
         />
-        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/x-icon" href="/favicon/favicon.ico" />
         <link
           rel="mask-icon"
-          href="/images/safari-pinned-tab.svg"
+          href="/favicon/safari-pinned-tab.svg"
           color="#5bbad5"
         />
         <meta name="apple-mobile-web-app-title" content="Nx" />
@@ -37,7 +37,6 @@ export default function Document(): JSX.Element {
         />
         <meta name="theme-color" content="#FFFFFF" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Nx: Smart, Fast and Extensible Build System</title>
         <script
           dangerouslySetInnerHTML={{
             __html: `

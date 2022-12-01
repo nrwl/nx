@@ -32,7 +32,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     updateFile(
       'e2e/src/app.e2e-spec.ts',
       `describe('app', () => {
-        it('should pass', {
+        it('should pass', () => {
           expect(true).toBe(true);
         });
       });`
@@ -148,49 +148,52 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
       cli: {
         packageManager: packageManager,
       },
-      defaultProject: project,
-      implicitDependencies: {
-        '.eslintrc.json': '*',
-        'package.json': {
-          dependencies: '*',
-          devDependencies: '*',
-        },
-      },
       npmScope: 'projscope',
-      targetDefaults: {
-        build: {
-          dependsOn: ['^build'],
-        },
-      },
       tasksRunnerOptions: {
         default: {
           options: {
-            cacheableOperations: ['build', 'lint', 'test', 'e2e'],
+            cacheableOperations: ['build', 'test', 'e2e'],
           },
           runner: 'nx/tasks-runners/default',
         },
       },
-    });
-
-    // check angular.json
-    expect(readJson('angular.json')).toStrictEqual({
-      version: 2,
-      projects: {
-        [project]: `apps/${project}`,
-        [`${project}-e2e`]: `apps/${project}-e2e`,
+      namedInputs: {
+        default: ['{projectRoot}/**/*', 'sharedGlobals'],
+        production: [
+          'default',
+          '!{projectRoot}/tsconfig.spec.json',
+          '!{projectRoot}/**/*.spec.[jt]s',
+          '!{projectRoot}/karma.conf.js',
+        ],
+        sharedGlobals: [],
+      },
+      targetDefaults: {
+        build: {
+          dependsOn: ['^build'],
+          inputs: ['production', '^production'],
+        },
+        e2e: {
+          inputs: ['default', '^production'],
+        },
+        test: {
+          inputs: ['default', '^production', '{workspaceRoot}/karma.conf.js'],
+        },
       },
     });
+
+    // check angular.json does not exist
+    checkFilesDoNotExist('angular.json');
 
     // check project configuration
     const projectConfig = readJson(`apps/${project}/project.json`);
     expect(projectConfig.sourceRoot).toEqual(`apps/${project}/src`);
-    expect(projectConfig.targets.build).toEqual({
+    expect(projectConfig.targets.build).toStrictEqual({
       executor: '@angular-devkit/build-angular:browser',
       options: {
         outputPath: `dist/apps/${project}`,
         index: `apps/${project}/src/index.html`,
         main: `apps/${project}/src/main.ts`,
-        polyfills: `apps/${project}/src/polyfills.ts`,
+        polyfills: [`zone.js`],
         tsConfig: `apps/${project}/tsconfig.app.json`,
         assets: [
           `apps/${project}/src/favicon.ico`,
@@ -201,12 +204,6 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
       },
       configurations: {
         production: {
-          fileReplacements: [
-            {
-              replace: `apps/${project}/src/environments/environment.ts`,
-              with: `apps/${project}/src/environments/environment.prod.ts`,
-            },
-          ],
           budgets: [
             {
               type: 'initial',
@@ -240,13 +237,11 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
       },
       defaultConfiguration: 'development',
     });
-    expect(projectConfig.targets.test).toEqual({
+    expect(projectConfig.targets.test).toStrictEqual({
       executor: '@angular-devkit/build-angular:karma',
       options: {
-        main: `apps/${project}/src/test.ts`,
-        polyfills: `apps/${project}/src/polyfills.ts`,
+        polyfills: [`zone.js`, `zone.js/testing`],
         tsConfig: `apps/${project}/tsconfig.spec.json`,
-        karmaConfig: `apps/${project}/karma.conf.js`,
         assets: [
           `apps/${project}/src/favicon.ico`,
           `apps/${project}/src/assets`,
@@ -300,7 +295,8 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     // runCommand('mv src-bak src');
   });
 
-  it('should handle a workspace with cypress v9', () => {
+  //TODO: reenable
+  xit('should handle a workspace with cypress v9', () => {
     addCypress9();
 
     // Remove cypress.json
@@ -387,7 +383,8 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     });
   });
 
-  it('should handle a workspace with cypress v10', () => {
+  //TODO: reenable
+  xit('should handle a workspace with cypress v10', () => {
     addCypress10();
 
     // Remove cypress.config.ts
@@ -519,15 +516,8 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
 
     runNgAdd('@nrwl/angular', '--npm-scope projscope');
 
-    // check angular.json
-    expect(readJson('angular.json')).toStrictEqual({
-      version: 2,
-      projects: {
-        [project]: `apps/${project}`,
-        [lib1]: `libs/${lib1}`,
-        [lib2]: `libs/${lib2}`,
-      },
-    });
+    // check angular.json does not exist
+    checkFilesDoNotExist('angular.json');
 
     // check building lib1
     let output = runCLI(`build ${lib1}`);
@@ -569,14 +559,8 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
 
     runNgAdd('@nrwl/angular', '--npm-scope projscope');
 
-    // check angular.json
-    expect(readJson('angular.json')).toStrictEqual({
-      version: 2,
-      projects: {
-        [project]: `apps/${project}`,
-        [app1]: `apps/${app1}`,
-      },
-    });
+    // check angular.json does not exist
+    checkFilesDoNotExist('angular.json');
 
     // check building project
     let output = runCLI(`build ${project} --outputHashing none`);
@@ -622,18 +606,13 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
 
     runNgAdd('@nrwl/angular', '--preserve-angular-cli-layout');
 
-    // check config still uses Angular CLI layout
-    const updatedAngularJson = readJson('angular.json');
-    expect(updatedAngularJson.projects[project].root).toEqual('');
-    expect(updatedAngularJson.projects[project].sourceRoot).toEqual('src');
-    expect(updatedAngularJson.projects.app2.root).toEqual('projects/app2');
-    expect(updatedAngularJson.projects.app2.sourceRoot).toEqual(
-      'projects/app2/src'
-    );
-    expect(updatedAngularJson.projects.lib1.root).toEqual('projects/lib1');
-    expect(updatedAngularJson.projects.lib1.sourceRoot).toEqual(
-      'projects/lib1/src'
-    );
+    // check project configs
+    const projectJson = readJson('project.json');
+    expect(projectJson.sourceRoot).toEqual('src');
+    const app2ProjectJson = readJson('projects/app2/project.json');
+    expect(app2ProjectJson.sourceRoot).toEqual('projects/app2/src');
+    const lib1ProjectJson = readJson('projects/lib1/project.json');
+    expect(lib1ProjectJson.sourceRoot).toEqual('projects/lib1/src');
 
     // check building an app
     let output = runCLI(`build ${project} --outputHashing none`);

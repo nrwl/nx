@@ -10,7 +10,8 @@ exports[`Init MF --federationType=dynamic should create a host with the correct 
 `;
 
 exports[`Init MF should add a remote application and add it to a specified host applications router config 1`] = `
-"import { Route } from '@angular/router';
+"import { NxWelcomeComponent } from './nx-welcome.component';
+    import { Route } from '@angular/router';
 
 export const appRoutes: Route[] = [
     {
@@ -20,7 +21,11 @@ export const appRoutes: Route[] = [
     {
     path: 'remote1',
     loadChildren: () => import('remote1/Module').then(m => m.RemoteEntryModule)
-    },"
+    },
+    {
+      path: '',
+      component: NxWelcomeComponent
+    }"
 `;
 
 exports[`Init MF should add a remote application and add it to a specified host applications webpack config that contains a remote application already 1`] = `
@@ -38,14 +43,19 @@ exports[`Init MF should add a remote application and add it to a specified host 
 `;
 
 exports[`Init MF should add a remote to dynamic host correctly 1`] = `
-"import { Route } from '@angular/router';
+"import { NxWelcomeComponent } from './nx-welcome.component';
+    import { Route } from '@angular/router';
 import { loadRemoteModule } from '@nrwl/angular/mf';
 
 export const appRoutes: Route[] = [
     {
     path: 'remote1',
     loadChildren: () => loadRemoteModule('remote1', './Module').then(m => m.RemoteEntryModule)
-    },]"
+    },
+    {
+      path: '',
+      component: NxWelcomeComponent
+    },"
 `;
 
 exports[`Init MF should create webpack and mf configs correctly 1`] = `

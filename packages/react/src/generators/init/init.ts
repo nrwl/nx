@@ -8,7 +8,6 @@ import {
   Tree,
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
-import { jestInitGenerator } from '@nrwl/jest';
 import { webInitGenerator } from '@nrwl/web';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import {
@@ -43,27 +42,28 @@ function setDefault(host: Tree) {
   updateWorkspaceConfiguration(host, { ...workspace, generators });
 }
 
-function updateDependencies(host: Tree) {
+function updateDependencies(host: Tree, schema: InitSchema) {
   removeDependenciesFromPackageJson(host, ['@nrwl/react'], []);
 
-  return addDependenciesToPackageJson(
-    host,
-    {
-      'core-js': '^3.6.5',
-      react: reactVersion,
-      'react-dom': reactDomVersion,
-      'regenerator-runtime': '0.13.7',
-      tslib: tsLibVersion,
-    },
-    {
-      '@nrwl/react': nxVersion,
-      '@types/node': typesNodeVersion,
-      '@types/react': typesReactVersion,
-      '@types/react-dom': typesReactDomVersion,
-      '@testing-library/react': testingLibraryReactVersion,
-      'react-test-renderer': reactTestRendererVersion,
-    }
-  );
+  const dependencies = {
+    react: reactVersion,
+    'react-dom': reactDomVersion,
+  };
+
+  if (!schema.skipHelperLibs) {
+    dependencies['core-js'] = '^3.6.5';
+    dependencies['regenerator-runtime'] = '0.13.7';
+    dependencies['tslib'] = tsLibVersion;
+  }
+
+  return addDependenciesToPackageJson(host, dependencies, {
+    '@nrwl/react': nxVersion,
+    '@types/node': typesNodeVersion,
+    '@types/react': typesReactVersion,
+    '@types/react-dom': typesReactDomVersion,
+    '@testing-library/react': testingLibraryReactVersion,
+    'react-test-renderer': reactTestRendererVersion,
+  });
 }
 
 export async function reactInitGenerator(host: Tree, schema: InitSchema) {
@@ -71,19 +71,19 @@ export async function reactInitGenerator(host: Tree, schema: InitSchema) {
 
   setDefault(host);
 
-  if (!schema.unitTestRunner || schema.unitTestRunner === 'jest') {
-    const jestTask = jestInitGenerator(host, schema);
-    tasks.push(jestTask);
-  }
   if (!schema.e2eTestRunner || schema.e2eTestRunner === 'cypress') {
     const cypressTask = cypressInitGenerator(host, {});
     tasks.push(cypressTask);
   }
 
-  const initTask = await webInitGenerator(host, schema);
+  // TODO(jack): We should be able to remove this generator and have react init everything.
+  const initTask = await webInitGenerator(host, {
+    ...schema,
+    skipPackageJson: true,
+  });
   tasks.push(initTask);
   if (!schema.skipPackageJson) {
-    const installTask = updateDependencies(host);
+    const installTask = updateDependencies(host, schema);
     tasks.push(installTask);
   }
 

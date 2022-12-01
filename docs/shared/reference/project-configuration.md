@@ -57,7 +57,8 @@ You can add Nx-specific configuration as follows:
   "name": "mylib",
   "scripts": {
     "test": "jest",
-    "build": "tsc -p tsconfig.lib.json" // the actual command here is arbitrary
+    "build": "tsc -p tsconfig.lib.json", // the actual command here is arbitrary
+    "ignored": "exit 1"
   },
   "nx": {
     "namedInputs": {
@@ -75,7 +76,8 @@ You can add Nx-specific configuration as follows:
         "outputs": [],
         "dependsOn": ["build"]
       }
-    }
+    },
+    "includedScripts": ["test", "build"] // If you want to limit the scripts Nx sees, you can specify a list here.
   }
 }
 ```
@@ -389,7 +391,27 @@ You can also remove a dependency as follows:
 {% /tab %}
 {% /tabs %}
 
-### Ignoring a project
+### Including package.json files as projects in the graph
 
-Nx will add every project with a `package.json` file in it to its project graph. If you want to ignore a particular
-project, add the directory to your `.nxignore` file.
+Any `package.json` file that is referenced by the `workspaces` property in the root `package.json` file will be included as a project in the graph. If you are using Lerna, projects defined in `lerna.json` will be included. If you are using pnpm, projects defined in `pnpm-workspace.yml` will be included.
+
+If you want to ignore a particular `package.json` file, exclude it from those tools. For example, you can add `!packages/myproject` to the `workspaces` property.
+
+### Ignoring package.json scripts
+
+Nx merges package.json scripts with your targets that are defined in project.json.
+If you only wish for some scripts to be used as Nx targets, you can specify them in the `includedScripts` property of the project's package.json.
+
+```json {% filename="packages/my-library/package.json" }
+{
+  "name": "my-library",
+  "version": "0.0.1",
+  "scripts": {
+    "build": "tsc",
+    "postinstall": "node ./tasks/postinstall"
+  },
+  "nx": {
+    "includedScripts": ["build"]
+  }
+}
+```

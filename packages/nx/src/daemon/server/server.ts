@@ -41,6 +41,10 @@ import {
   processFileChangesInOutputs,
 } from './outputs-tracking';
 import { handleRequestShutdown } from './handle-request-shutdown';
+import {
+  registeredFileWatcherSockets,
+  removeRegisteredFileWatcherSocket,
+} from './file-watching/file-watcher-sockets';
 
 let performanceObserver: PerformanceObserver | undefined;
 let workspaceWatcherError: Error | undefined;
@@ -85,6 +89,8 @@ const server = createServer(async (socket) => {
     serverLogger.log(
       `Closed a connection. Number of open connections: ${numberOfOpenConnections}`
     );
+
+    removeRegisteredFileWatcherSocket(socket);
   });
 });
 
@@ -136,6 +142,8 @@ async function handleMessage(socket, data: string) {
       socket,
       await handleRequestShutdown(server, numberOfOpenConnections)
     );
+  } else if (payload.type === 'REGISTER_FILE_WATCHER') {
+    registeredFileWatcherSockets.push({ socket, config: payload.config });
   } else {
     await respondWithErrorAndExit(
       socket,
@@ -145,7 +153,7 @@ async function handleMessage(socket, data: string) {
   }
 }
 
-async function handleResult(socket: Socket, hr: HandlerResult) {
+export async function handleResult(socket: Socket, hr: HandlerResult) {
   if (hr.error) {
     await respondWithErrorAndExit(socket, hr.description, hr.error);
   } else {
@@ -247,23 +255,34 @@ const handleWorkspaceChanges: FileWatcherCallback = async (
 
     serverLogger.watcherLog(convertChangeEventsToLogMessage(changeEvents));
 
-    const filesToHash = [];
+    const updatedFilesToHash = [];
+    const createdFilesToHash = [];
     const deletedFiles = [];
+
     for (const event of changeEvents) {
       if (event.type === 'delete') {
         deletedFiles.push(event.path);
       } else {
         try {
           const s = statSync(join(workspaceRoot, event.path));
-          if (!s.isDirectory()) {
-            filesToHash.push(event.path);
+          if (s.isFile()) {
+            if (event.type === 'update') {
+              updatedFilesToHash.push(event.path);
+            } else {
+              createdFilesToHash.push(event.path);
+            }
           }
         } catch (e) {
           // this can happen when the update file was deleted right after
         }
       }
     }
-    addUpdatedAndDeletedFiles(filesToHash, deletedFiles);
+
+    addUpdatedAndDeletedFiles(
+      createdFilesToHash,
+      updatedFilesToHash,
+      deletedFiles
+    );
   } catch (err) {
     serverLogger.watcherLog(`Unexpected workspace error`, err.message);
     console.error(err);

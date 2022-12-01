@@ -1,5 +1,6 @@
 import {
   convertNxGenerator,
+  extractLayoutDirectory,
   formatFiles,
   generateFiles,
   getWorkspaceLayout,
@@ -61,25 +62,29 @@ export default libraryGenerator;
 export const librarySchematic = convertNxGenerator(libraryGenerator);
 
 function normalizeOptions(tree: Tree, options: Schema): NormalizedSchema {
-  const { npmScope, libsDir } = getWorkspaceLayout(tree);
+  const { layoutDirectory, projectDirectory } = extractLayoutDirectory(
+    options.directory
+  );
+  const { npmScope, libsDir: defaultLibsDir } = getWorkspaceLayout(tree);
+  const libsDir = layoutDirectory ?? defaultLibsDir;
   const name = names(options.name).fileName;
-  const projectDirectory = options.directory
-    ? `${names(options.directory).fileName}/${name}`
+  const fullProjectDirectory = projectDirectory
+    ? `${names(projectDirectory).fileName}/${name}`
     : name;
 
-  const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
+  const projectName = fullProjectDirectory.replace(new RegExp('/', 'g'), '-');
   const fileName = getCaseAwareFileName({
     fileName: options.simpleModuleName ? name : projectName,
     pascalCaseFiles: options.pascalCaseFiles,
   });
-  const projectRoot = joinPathFragments(libsDir, projectDirectory);
+  const projectRoot = joinPathFragments(libsDir, fullProjectDirectory);
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
   const importPath =
-    options.importPath || getImportPath(npmScope, projectDirectory);
+    options.importPath || getImportPath(npmScope, fullProjectDirectory);
 
   return {
     ...options,
@@ -87,7 +92,7 @@ function normalizeOptions(tree: Tree, options: Schema): NormalizedSchema {
     fileName,
     name: projectName,
     projectRoot,
-    projectDirectory,
+    projectDirectory: fullProjectDirectory,
     parsedTags,
     importPath,
   };

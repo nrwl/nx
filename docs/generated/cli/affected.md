@@ -53,6 +53,12 @@ Run tests for all the projects affected by the last commit on main:
  nx affected --target=test --base=main~1 --head=main
 ```
 
+Use the currently executing project name in your command.:
+
+```terminal
+ nx affected --target=build --tag=$NX_TARGET_TASK_PROJECT:latest
+```
+
 ## Options
 
 ### all

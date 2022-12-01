@@ -47,7 +47,6 @@ This file describes the options being sent to the executor (very similar to the 
 {
   "$schema": "http://json-schema.org/schema",
   "type": "object",
-  "cli": "nx",
   "properties": {
     "textToEcho": {
       "type": "string",

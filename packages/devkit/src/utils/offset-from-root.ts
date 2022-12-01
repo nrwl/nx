@@ -13,6 +13,8 @@ import { normalize, sep } from 'path';
  * @param fullPathToDir - directory path
  */
 export function offsetFromRoot(fullPathToDir: string): string {
+  if (fullPathToDir === '.') return './';
+
   const parts = normalize(fullPathToDir).split(sep);
   let offset = '';
   for (let i = 0; i < parts.length; ++i) {

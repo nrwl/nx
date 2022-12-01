@@ -481,6 +481,15 @@
           "addToPackageJson": "devDependencies"
         }
       }
+    },
+    "15.2.2": {
+      "version": "15.2.2-beta.0",
+      "packages": {
+        "metro-resolver": {
+          "version": "0.73.3",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

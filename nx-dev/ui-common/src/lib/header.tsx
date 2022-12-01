@@ -30,7 +30,7 @@ export function Header(): JSX.Element {
       name: 'Distributed cache & task execution',
       description:
         'Executes tasks remotely on different agents in parallel. Enable remote cache in one command.',
-      href: '/core-features/distribute-task-execution',
+      href: '/nx-cloud/intro/what-is-nx-cloud',
     },
     {
       name: 'Recipes',
@@ -103,8 +103,7 @@ export function Header(): JSX.Element {
         {/*PRIMARY NAVIGATION*/}
         <div className="flex-shrink-0 text-sm">
           <nav
-            role="primary"
-            aria-labelledby="primary-navigation"
+            role="menu"
             className="items-justified flex justify-center space-x-2 py-0.5"
           >
             <h2 className="sr-only">Main navigation</h2>

@@ -1,5 +1,6 @@
 import * as ts from 'typescript';
-import { findNodes, InsertChange, ReplaceChange } from '@nrwl/workspace';
+import { InsertChange, ReplaceChange } from '@nrwl/workspace';
+import { findNodes } from 'nx/src/utils/typescript';
 import { Tree } from '@angular-devkit/schematics';
 import { stripJsonComments } from '@nrwl/devkit';
 import { Config } from '@jest/types';

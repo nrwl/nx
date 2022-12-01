@@ -5,7 +5,7 @@
   "$id": "NxExpoStart",
   "$schema": "http://json-schema.org/schema",
   "title": "Packager Server for Expo",
-  "description": "Packager Server target options",
+  "description": "Packager Server target options.",
   "type": "object",
   "properties": {
     "forceManifestType": {

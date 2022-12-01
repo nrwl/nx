@@ -90,6 +90,7 @@ export function getBaseWebpackPartial(
       hashFunction: 'xxhash64',
       // Disabled for performance
       pathinfo: false,
+      scriptType: internalOptions.esm ? 'module' : undefined,
     },
     module: {
       // Enabled for performance

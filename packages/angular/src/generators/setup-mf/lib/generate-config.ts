@@ -3,15 +3,15 @@ import { generateFiles, joinPathFragments, logger } from '@nrwl/devkit';
 import type { Schema } from '../schema';
 
 export function generateWebpackConfig(
-  host: Tree,
+  tree: Tree,
   options: Schema,
   appRoot: string,
   remotesWithPorts: { remoteName: string; port: number }[]
 ) {
   if (
-    host.exists(`${appRoot}/module-federation.config.js`) ||
-    host.exists(`${appRoot}/webpack.config.js`) ||
-    host.exists(`${appRoot}/webpack.prod.config.js`)
+    tree.exists(`${appRoot}/module-federation.config.js`) ||
+    tree.exists(`${appRoot}/webpack.config.js`) ||
+    tree.exists(`${appRoot}/webpack.prod.config.js`)
   ) {
     logger.warn(
       `NOTE: We encountered an existing webpack config for the app ${options.appName}. We have overwritten this file with the Module Federation Config.\n
@@ -20,7 +20,7 @@ export function generateWebpackConfig(
   }
 
   generateFiles(
-    host,
+    tree,
     joinPathFragments(__dirname, '../files/webpack'),
     appRoot,
     {

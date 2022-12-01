@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "<%= offsetFromRoot %>dist/out-tsc",
+    "types": ["jasmine", "node"]
+  },
+  "include": ["**/*.spec.ts", "**/*.test.ts", "**/*.d.ts"]
+}

@@ -1,0 +1,13 @@
+// @ts-check
+
+/**
+ * @type {import('@nrwl/devkit').ModuleFederationConfig}
+ **/
+const moduleFederationConfig = {
+    name: '<%= projectName %>',
+   exposes: {
+     './Module': '<%= appProjectRoot %>/src/remote-entry.ts',
+   },
+};
+
+module.exports = moduleFederationConfig;

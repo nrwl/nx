@@ -1,14 +1,14 @@
 import { ComponentStory, ComponentMeta } from '@storybook/react';
-import { NxGraphViz } from './nx-graph-viz';
+import { NxProjectGraphViz } from './nx-project-graph-viz';
 
-const Story: ComponentMeta<typeof NxGraphViz> = {
-  component: NxGraphViz,
+const Story: ComponentMeta<typeof NxProjectGraphViz> = {
+  component: NxProjectGraphViz,
   title: 'NxGraphViz',
 };
 export default Story;
 
-const Template: ComponentStory<typeof NxGraphViz> = (args) => (
-  <NxGraphViz {...args} />
+const Template: ComponentStory<typeof NxProjectGraphViz> = (args) => (
+  <NxProjectGraphViz {...args} />
 );
 
 export const Primary = Template.bind({});

@@ -134,6 +134,16 @@ that sets the `forwardAllArgs` option to `false` as shown below:
 ```
 
 {% /tab %}
+{% tab label="Shorthand" %}
+When you only need to run a single command, you can use a shorthand for nx:run-commands:
+
+```json
+"webpack": {
+    "command": "webpack"
+}
+```
+
+{% /tab %}
 {% tab label="Custom done conditions" %}
 
 Normally, `run-commands` considers the commands done when all of them have finished running. If you don't need to wait until they're all done, you can set a special string that considers the commands finished the moment the string appears in `stdout` or `stderr`:

@@ -2,7 +2,7 @@ import { workspaceRoot } from '../../utils/workspace-root';
 import { ChildProcess, spawn, spawnSync } from 'child_process';
 import { openSync, readFileSync, statSync } from 'fs';
 import { ensureDirSync, ensureFileSync } from 'fs-extra';
-import { connect } from 'net';
+import { connect, Socket } from 'net';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
 import { output } from '../../utils/output';
@@ -22,13 +22,19 @@ import { isCI } from '../../utils/is-ci';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { readNxJson } from '../../config/configuration';
 import { PromisedBasedQueue } from '../../utils/promised-based-queue';
-import { consumeMessagesFromSocket } from '../../utils/consume-messages-from-socket';
-import { Workspaces } from 'nx/src/config/workspaces';
+import { Workspaces } from '../../config/workspaces';
+import { Message, SocketMessenger } from './socket-messenger';
 
 const DAEMON_ENV_SETTINGS = {
   ...process.env,
   NX_PROJECT_GLOB_CACHE: 'false',
   NX_CACHE_WORKSPACE_CONFIG: 'false',
+};
+
+export type UnregisterCallback = () => void;
+export type ChangedFile = {
+  path: string;
+  type: 'create' | 'update' | 'delete';
 };
 
 export class DaemonClient {
@@ -37,8 +43,7 @@ export class DaemonClient {
   }
 
   private queue: PromisedBasedQueue;
-
-  private socket;
+  private socketMessenger: SocketMessenger;
 
   private currentMessage;
   private currentResolve;
@@ -84,8 +89,8 @@ export class DaemonClient {
   }
 
   reset() {
+    this.socketMessenger = null;
     this.queue = new PromisedBasedQueue();
-    this.socket = null;
     this.currentMessage = null;
     this.currentResolve = null;
     this.currentReject = null;
@@ -100,6 +105,45 @@ export class DaemonClient {
   async getProjectGraph(): Promise<ProjectGraph> {
     return (await this.sendToDaemonViaQueue({ type: 'REQUEST_PROJECT_GRAPH' }))
       .projectGraph;
+  }
+
+  async registerFileWatcher(
+    config: {
+      watchProjects: string[] | 'all';
+      includeGlobalWorkspaceFiles?: boolean;
+      includeDependentProjects?: boolean;
+    },
+    callback: (
+      error: Error | null | 'closed',
+      data: {
+        changedProjects: string[];
+        changedFiles: ChangedFile[];
+      } | null
+    ) => void
+  ): Promise<UnregisterCallback> {
+    await this.getProjectGraph();
+    const messenger = new SocketMessenger(connect(FULL_OS_SOCKET_PATH)).listen(
+      (message) => {
+        try {
+          const parsedMessage = JSON.parse(message);
+          callback(null, parsedMessage);
+        } catch (e) {
+          callback(e, null);
+        }
+      },
+      () => {
+        callback('closed', null);
+      },
+      (err) => callback(err, null)
+    );
+
+    await this.queue.sendToQueue(() =>
+      messenger.sendMessage({ type: 'REGISTER_FILE_WATCHER', config })
+    );
+
+    return () => {
+      messenger.close();
+    };
   }
 
   processInBackground(requirePath: string, data: any): Promise<any> {
@@ -146,75 +190,68 @@ export class DaemonClient {
     });
   }
 
-  private async sendToDaemonViaQueue(messageToDaemon: any): Promise<any> {
+  private async sendToDaemonViaQueue(messageToDaemon: Message): Promise<any> {
     return this.queue.sendToQueue(() =>
       this.sendMessageToDaemon(messageToDaemon)
     );
   }
 
   private setUpConnection() {
-    this.socket = connect(FULL_OS_SOCKET_PATH);
+    this.socketMessenger = new SocketMessenger(
+      connect(FULL_OS_SOCKET_PATH)
+    ).listen(
+      (message) => this.handleMessage(message),
+      () => {
+        // it's ok for the daemon to terminate if the client doesn't wait on
+        // any messages from the daemon
+        if (this.queue.isEmpty()) {
+          this._connected = false;
+        } else {
+          output.error({
+            title: 'Daemon process terminated and closed the connection',
+            bodyLines: [
+              'Please rerun the command, which will restart the daemon.',
+            ],
+          });
+          process.exit(1);
+        }
+      },
+      (err) => {
+        if (!err.message) {
+          return this.currentReject(daemonProcessException(err.toString()));
+        }
 
-    this.socket.on('ready', () => {
-      this.socket.on(
-        'data',
-        consumeMessagesFromSocket(async (message) => {
-          this.handleMessage(message);
-        })
-      );
-    });
+        if (err.message.startsWith('LOCK-FILES-CHANGED')) {
+          // retry the current message
+          // we cannot send it via the queue because we are in the middle of processing
+          // a message from the queue
+          return this.sendMessageToDaemon(this.currentMessage).then(
+            this.currentResolve,
+            this.currentReject
+          );
+        }
 
-    this.socket.on('close', () => {
-      // it's ok for the daemon to terminate if the client doesn't wait on
-      // any messages from the daemon
-      if (this.queue.isEmpty()) {
-        this._connected = false;
-      } else {
-        output.error({
-          title: 'Daemon process terminated and closed the connection',
-          bodyLines: [
-            'Please rerun the command, which will restart the daemon.',
-          ],
-        });
-        process.exit(1);
+        let error: any;
+        if (err.message.startsWith('connect ENOENT')) {
+          error = daemonProcessException('The Daemon Server is not running');
+        } else if (err.message.startsWith('connect ECONNREFUSED')) {
+          error = daemonProcessException(
+            `A server instance had not been fully shut down. Please try running the command again.`
+          );
+          killSocketOrPath();
+        } else if (err.message.startsWith('read ECONNRESET')) {
+          error = daemonProcessException(
+            `Unable to connect to the daemon process.`
+          );
+        } else {
+          error = daemonProcessException(err.toString());
+        }
+        return this.currentReject(error);
       }
-    });
-
-    this.socket.on('error', (err) => {
-      if (!err.message) {
-        return this.currentReject(daemonProcessException(err.toString()));
-      }
-
-      if (err.message.startsWith('LOCK-FILES-CHANGED')) {
-        // retry the current message
-        // we cannot send it via the queue because we are in the middle of processing
-        // a message from the queue
-        return this.sendMessageToDaemon(this.currentMessage).then(
-          this.currentResolve,
-          this.currentReject
-        );
-      }
-
-      let error: any;
-      if (err.message.startsWith('connect ENOENT')) {
-        error = daemonProcessException('The Daemon Server is not running');
-      } else if (err.message.startsWith('connect ECONNREFUSED')) {
-        error = daemonProcessException(
-          `A server instance had not been fully shut down. Please try running the command again.`
-        );
-        killSocketOrPath();
-      } else if (err.message.startsWith('read ECONNRESET')) {
-        error = daemonProcessException(
-          `Unable to connect to the daemon process.`
-        );
-      } else {
-        error = daemonProcessException(err.toString());
-      }
-      return this.currentReject(error);
-    });
+    );
   }
 
-  private async sendMessageToDaemon(message: any): Promise<any> {
+  private async sendMessageToDaemon(message: Message): Promise<any> {
     if (!this._connected) {
       this._connected = true;
       if (!(await this.isServerAvailable())) {
@@ -230,9 +267,7 @@ export class DaemonClient {
       this.currentResolve = resolve;
       this.currentReject = reject;
 
-      this.socket.write(JSON.stringify(message));
-      // send EOT to indicate that the message has been fully written
-      this.socket.write(String.fromCodePoint(4));
+      this.socketMessenger.sendMessage(message);
     });
   }
 
@@ -296,6 +331,7 @@ export class DaemonClient {
       }
     );
     backgroundProcess.unref();
+    //
 
     // Persist metadata about the background process so that it can be cleaned up later if needed
     await writeDaemonJsonProcessCache({

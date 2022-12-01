@@ -35,6 +35,12 @@ Test proj1 and proj2 in parallel:
  nx run-many --target=test --projects=proj1,proj2 --parallel=2
 ```
 
+Test all projects ending with `*-app` except `excluded-app`:
+
+```terminal
+ nx run-many --target=test --projects=*-app --exclude excluded-app
+```
+
 ## Options
 
 ### all
@@ -99,7 +105,7 @@ Max number of parallel processes [default is 3]
 
 Type: `string`
 
-Projects to run (comma delimited)
+Projects to run. (comma delimited project names and/or patterns)
 
 ### runner
 

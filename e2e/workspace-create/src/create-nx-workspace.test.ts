@@ -7,12 +7,8 @@ import {
   expectNoTsJestInJestConfig,
   getSelectedPackageManager,
   packageManagerLockFile,
-  readJson,
-  runCLI,
   runCreateWorkspace,
   uniq,
-  updateFile,
-  updateJson,
 } from '@nrwl/e2e/utils';
 import { existsSync, mkdirSync } from 'fs-extra';
 
@@ -20,6 +16,34 @@ describe('create-nx-workspace', () => {
   const packageManager = getSelectedPackageManager() || 'pnpm';
 
   afterEach(() => cleanupProject());
+
+  it('should create a workspace with a single angular app at the root', () => {
+    const wsName = uniq('angular');
+
+    runCreateWorkspace(wsName, {
+      preset: 'angular-standalone',
+      appName: wsName,
+      style: 'css',
+      packageManager,
+    });
+
+    checkFilesExist('package.json');
+    checkFilesExist('project.json');
+  });
+
+  it('should create a workspace with a single react app at the root', () => {
+    const wsName = uniq('react');
+
+    runCreateWorkspace(wsName, {
+      preset: 'react-standalone',
+      appName: wsName,
+      style: 'css',
+      packageManager,
+    });
+
+    checkFilesExist('package.json');
+    checkFilesExist('project.json');
+  });
 
   it('should be able to create an empty workspace built for apps', () => {
     const wsName = uniq('apps');
@@ -67,7 +91,7 @@ describe('create-nx-workspace', () => {
     const wsName = uniq('angular');
     const appName = uniq('app');
     runCreateWorkspace(wsName, {
-      preset: 'angular',
+      preset: 'angular-monorepo',
       style: 'css',
       appName,
       packageManager,
@@ -82,7 +106,7 @@ describe('create-nx-workspace', () => {
     const appName = uniq('app');
     try {
       runCreateWorkspace(wsName, {
-        preset: 'angular',
+        preset: 'angular-monorepo',
         style: 'css',
         appName,
         packageManager,
@@ -97,7 +121,7 @@ describe('create-nx-workspace', () => {
     const appName = uniq('app');
 
     runCreateWorkspace(wsName, {
-      preset: 'react',
+      preset: 'react-monorepo',
       style: 'css',
       appName,
       packageManager,
@@ -131,31 +155,6 @@ describe('create-nx-workspace', () => {
     });
 
     expectNoAngularDevkit();
-  });
-
-  it('should be able to create an angular + nest workspace', () => {
-    const wsName = uniq('angular-nest');
-    const appName = uniq('app');
-    runCreateWorkspace(wsName, {
-      preset: 'angular-nest',
-      style: 'css',
-      appName,
-      packageManager,
-    });
-  });
-
-  it('should be able to create an react + express workspace', () => {
-    const wsName = uniq('react-express');
-    const appName = uniq('app');
-    runCreateWorkspace(wsName, {
-      preset: 'react-express',
-      style: 'css',
-      appName,
-      packageManager,
-    });
-
-    expectNoAngularDevkit();
-    expectNoTsJestInJestConfig(appName);
   });
 
   it('should be able to create an express workspace', () => {
@@ -232,7 +231,7 @@ describe('create-nx-workspace', () => {
     process.env.SELECTED_PM = 'npm';
 
     runCreateWorkspace(wsName, {
-      preset: 'react',
+      preset: 'react-monorepo',
       style: 'css',
       appName,
       packageManager: 'npm',
@@ -251,15 +250,13 @@ describe('create-nx-workspace', () => {
     process.env.SELECTED_PM = 'npm';
 
     runCreateWorkspace(wsName, {
-      preset: 'angular',
+      preset: 'angular-monorepo',
       appName,
       style: 'css',
       packageManager: 'npm',
       cli: 'angular',
     });
 
-    const nxJson = readJson('nx.json');
-    expect(nxJson.cli.packageManager).toEqual('npm');
     checkFilesDoNotExist('yarn.lock');
     checkFilesExist('package-lock.json');
     process.env.SELECTED_PM = packageManager;

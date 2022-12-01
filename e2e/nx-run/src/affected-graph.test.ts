@@ -345,7 +345,7 @@ describe('Nx Affected and Graph Tests', () => {
 
       const resWithTargetWithSelect2 = (
         await runCLIAsync(
-          `print-affected --files=apps/${myapp}/src/app.element.spec.ts --target=test --select="tasks.target.project"`,
+          `print-affected --files=apps/${myapp}/src/app/app.element.spec.ts --target=test --select="tasks.target.project"`,
           { silent: true }
         )
       ).stdout.trim();

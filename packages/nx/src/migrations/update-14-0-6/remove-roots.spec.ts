@@ -12,7 +12,7 @@ describe('remove-roots >', () => {
 
   describe('projects with project.json configs', () => {
     beforeEach(() => {
-      tree = createTreeWithEmptyWorkspace();
+      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     });
 
     it('should remove the root property', async () => {
@@ -51,7 +51,7 @@ describe('remove-roots >', () => {
 
   describe('projects with package.json configs', () => {
     beforeEach(() => {
-      tree = createTreeWithEmptyWorkspace();
+      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       tree.delete('workspace.json');
     });
 

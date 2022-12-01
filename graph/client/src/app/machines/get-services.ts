@@ -1,25 +1,14 @@
 import { interpret, InterpreterStatus } from 'xstate';
-import { appMachine } from './app.machine';
+import { projectGraphMachine } from '../feature-projects/machines/project-graph.machine';
 
-let appService = interpret(appMachine, {
+let projectGraphService = interpret(projectGraphMachine, {
   devTools: !!window.useXstateInspect,
 });
 
-export function getAppService() {
-  if (appService.status === InterpreterStatus.NotStarted) {
-    appService.start();
+export function getProjectGraphService() {
+  if (projectGraphService.status === InterpreterStatus.NotStarted) {
+    projectGraphService.start();
   }
 
-  return appService;
-}
-export function getProjectGraphService() {
-  const appService = getAppService();
-  const depGraphService = appService.getSnapshot().context.projectGraphActor;
-  return depGraphService;
-}
-
-export function getTaskGraphService() {
-  const appService = getAppService();
-  const taskGraph = appService.getSnapshot().context.taskGraphActor;
-  return taskGraph;
+  return projectGraphService;
 }

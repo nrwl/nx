@@ -36,7 +36,7 @@
             {
               "name": "Angular Tutorial",
               "id": "angular-tutorial",
-              "file": "shared/angular-tutorial/01-create-application"
+              "file": "shared/angular-tutorial/1-code-generation"
             },
             {
               "name": "Node Tutorial",
@@ -115,69 +115,98 @@
           ]
         },
         {
+          "name": "React Standalone Tutorial",
+          "id": "react-standalone-tutorial",
+          "description": "In this tutorial you'll create a frontend-focused workspace with Nx.",
+          "itemList": [
+            {
+              "name": "1 - Code Generation",
+              "id": "1-code-generation",
+              "file": "shared/react-standalone-tutorial/1-code-generation"
+            },
+            {
+              "name": "2 - Project Graph",
+              "id": "2-project-graph",
+              "file": "shared/react-standalone-tutorial/2-project-graph"
+            },
+            {
+              "name": "3 - Task Running",
+              "id": "3-task-running",
+              "file": "shared/react-standalone-tutorial/3-task-running"
+            },
+            {
+              "name": "4 - Task Pipelines",
+              "id": "4-task-pipelines",
+              "file": "shared/react-standalone-tutorial/4-task-pipelines"
+            },
+            {
+              "name": "5 - Summary",
+              "id": "5-summary",
+              "file": "shared/react-standalone-tutorial/5-summary"
+            }
+          ]
+        },
+        {
           "name": "Angular Tutorial",
           "id": "angular-tutorial",
           "description": "Learn to use Nx with this Angular tutorial where you will learn about all its main feature with a real project.",
           "itemList": [
             {
-              "name": "1 - Create Application",
-              "id": "01-create-application",
-              "file": "shared/angular-tutorial/01-create-application"
+              "name": "1 - Code Generation",
+              "id": "1-code-generation",
+              "file": "shared/angular-tutorial/1-code-generation"
             },
             {
-              "name": "2 - Add E2E Test",
-              "id": "02-add-e2e-test",
-              "file": "shared/angular-tutorial/02-add-e2e-test"
+              "name": "2 - Project Graph",
+              "id": "2-project-graph",
+              "file": "shared/angular-tutorial/2-project-graph"
             },
             {
-              "name": "3 - Display Todos",
-              "id": "03-display-todos",
-              "file": "shared/angular-tutorial/03-display-todos"
+              "name": "3 - Task Running",
+              "id": "3-task-running",
+              "file": "shared/angular-tutorial/3-task-running"
             },
             {
-              "name": "4 - Connect to API",
-              "id": "04-connect-to-api",
-              "file": "shared/angular-tutorial/04-connect-to-api"
+              "name": "4 - Workspace Optimization",
+              "id": "4-workspace-optimization",
+              "file": "shared/angular-tutorial/4-workspace-optimization"
             },
             {
-              "name": "5 - Add Node Application",
-              "id": "05-add-node-app",
-              "file": "shared/angular-tutorial/05-add-node-app"
+              "name": "5 - Summary",
+              "id": "5-summary",
+              "file": "shared/angular-tutorial/5-summary"
+            }
+          ]
+        },
+        {
+          "name": "Angular Standalon Tutorial",
+          "id": "angular-standalone-tutorial",
+          "description": "Learn to use Nx with this Angular tutorial where you will learn about all its main feature with a real project.",
+          "itemList": [
+            {
+              "name": "1 - Code Generation",
+              "id": "1-code-generation",
+              "file": "shared/angular-standalone-tutorial/1-code-generation"
             },
             {
-              "name": "6 - Proxy Configuration",
-              "id": "06-proxy",
-              "file": "shared/angular-tutorial/06-proxy"
+              "name": "2 - Project Graph",
+              "id": "2-project-graph",
+              "file": "shared/angular-standalone-tutorial/2-project-graph"
             },
             {
-              "name": "7 - Share Code",
-              "id": "07-share-code",
-              "file": "shared/angular-tutorial/07-share-code"
+              "name": "3 - Task Running",
+              "id": "3-task-running",
+              "file": "shared/angular-standalone-tutorial/3-task-running"
             },
             {
-              "name": "8 - Create Libraries",
-              "id": "08-create-libs",
-              "file": "shared/angular-tutorial/08-create-libs"
+              "name": "4 - Task Pipelines",
+              "id": "4-task-pipelines",
+              "file": "shared/angular-standalone-tutorial/4-task-pipelines"
             },
             {
-              "name": "9 - Project Graph",
-              "id": "09-dep-graph",
-              "file": "shared/angular-tutorial/09-dep-graph"
-            },
-            {
-              "name": "10 - Use Computation Caching",
-              "id": "10-computation-caching",
-              "file": "shared/angular-tutorial/10-computation-caching"
-            },
-            {
-              "name": "11 - Test Affected Projects",
-              "id": "11-test-affected-projects",
-              "file": "shared/angular-tutorial/11-test-affected-projects"
-            },
-            {
-              "name": "12 - Summary",
-              "id": "12-summary",
-              "file": "shared/angular-tutorial/12-summary"
+              "name": "5 - Summary",
+              "id": "5-summary",
+              "file": "shared/angular-standalone-tutorial/5-summary"
             }
           ]
         },
@@ -229,6 +258,12 @@
               "id": "cache-task-results",
               "tags": ["cache-task-results"],
               "file": "shared/core-features/cache-task-results"
+            },
+            {
+              "name": "Share Your Cache",
+              "id": "share-your-cache",
+              "tags": ["share-your-cache"],
+              "file": "shared/core-features/share-your-cache"
             },
             {
               "name": "Explore the Graph",
@@ -311,10 +346,10 @@
               "file": "shared/concepts/how-caching-works"
             },
             {
-              "name": "Distributed Task Execution Guide",
+              "name": "Improve Worst Case CI Times",
               "tags": ["distribute-task-execution"],
               "id": "dte",
-              "file": "shared/concepts/dte-guide"
+              "file": "shared/concepts/improve-worst-case-ci-times"
             },
             {
               "name": "Task Pipeline Configuration",
@@ -351,6 +386,12 @@
               "id": "incremental-builds",
               "tags": ["use-task-executors"],
               "file": "shared/incremental-builds"
+            },
+            {
+              "name": "Illustrated Distributed Task Execution",
+              "tags": ["distribute-task-execution"],
+              "id": "illustrated-dte",
+              "file": "shared/concepts/illustrated-dte-guide"
             },
             {
               "name": "Nx and Turborepo",
@@ -439,7 +480,6 @@
             {
               "name": "CI Setup",
               "id": "ci-setup",
-              "tags": ["distribute-task-execution"],
               "path": "/recipes/ci/ci-setup"
             },
             {
@@ -533,6 +573,77 @@
               "name": "runtimeCacheInputs",
               "id": "runtime-cache-inputs",
               "file": "shared/deprecated/runtime-cache-inputs"
+            }
+          ]
+        },
+        {
+          "name": "See Also",
+          "id": "see-also",
+          "description": "Links to other pieces of documentation",
+          "itemList": [
+            {
+              "name": "Nx Cloud Documentation",
+              "id": "nx-cloud-documentation",
+              "file": "",
+              "tags": ["cache-task-results", "distribute-task-execution"],
+              "path": "/nx-cloud/intro/what-is-nx-cloud",
+              "isExternal": true
+            },
+            {
+              "name": "Nx Cloud Main Site",
+              "id": "nx-cloud-main-site",
+              "file": "",
+              "tags": ["cache-task-results", "distribute-task-execution"],
+              "path": "https://nx.app",
+              "isExternal": true
+            },
+            {
+              "name": "--skip-nx-cache flag",
+              "id": "skip-nx-cache-flag",
+              "file": "",
+              "tags": ["cache-task-results"],
+              "path": "/nx/affected#skip-nx-cache",
+              "isExternal": true
+            },
+            {
+              "name": "tasks-runner-options property",
+              "id": "tasks-runner-options-property",
+              "file": "",
+              "tags": ["cache-task-results"],
+              "path": "/reference/nx-json#tasks-runner-options",
+              "isExternal": true
+            },
+            {
+              "name": "nx.json reference: inputs and namedInputs",
+              "id": "nxjson-inputs",
+              "file": "",
+              "tags": ["cache-task-results"],
+              "path": "/reference/nx-json#inputs-&-namedinputs",
+              "isExternal": true
+            },
+            {
+              "name": "Project Configuration reference: inputs and namedInputs",
+              "id": "project-config-inputs",
+              "file": "",
+              "tags": ["cache-task-results"],
+              "path": "/reference/project-configuration#inputs-&-namedinputs",
+              "isExternal": true
+            },
+            {
+              "name": "nx.json workspaceLayout property",
+              "id": "nxjson-workspaceLayout",
+              "file": "",
+              "tags": ["enforce-project-boundaries"],
+              "path": "/reference/nx-json#workspace-layout",
+              "isExternal": true
+            },
+            {
+              "name": "nx.json generator defaults",
+              "id": "nxjson-generator-defaults",
+              "file": "",
+              "tags": ["use-code-generators"],
+              "path": "/reference/nx-json#generators",
+              "isExternal": true
             }
           ]
         }
@@ -642,14 +753,14 @@
           "description": "Adopting Nx incrementally, on existing project or from scratch.",
           "itemList": [
             {
-              "name": "Nx and Lerna",
-              "id": "lerna-and-nx",
-              "file": "shared/migration/lerna-and-nx"
-            },
-            {
               "name": "NPM/Yarn/PNPM workspaces",
               "id": "adding-to-monorepo",
               "file": "shared/migration/adding-to-monorepo"
+            },
+            {
+              "name": "Add to any Project",
+              "id": "adding-to-existing-project",
+              "file": "shared/migration/adding-to-existing-project"
             },
             {
               "name": "From CRA",
@@ -660,6 +771,11 @@
               "name": "From Angular CLI",
               "id": "migration-angular",
               "file": "shared/migration/migration-angular"
+            },
+            {
+              "name": "Nx and Lerna",
+              "id": "lerna-and-nx",
+              "file": "shared/migration/lerna-and-nx"
             },
             {
               "name": "From AngularJS",
@@ -959,6 +1075,12 @@
             },
 
             {
+              "name": "Troubleshoot Cache Misses",
+              "id": "troubleshoot-cache-misses",
+              "tags": ["cache-task-results"],
+              "file": "shared/recipes/troubleshoot-cache-misses"
+            },
+            {
               "name": "Ban Dependencies with Certain Tags",
               "id": "ban-dependencies-with-tags",
               "tags": ["enforce-project-boundaries"],
@@ -993,6 +1115,12 @@
               "id": "resolve-circular-dependencies",
               "tags": ["explore-graph"],
               "file": "shared/recipes/resolve-circular-dependencies"
+            },
+            {
+              "name": "Include All package.json Files as Projects",
+              "id": "include-all-packagejson",
+              "tags": [],
+              "file": "shared/recipes/include-all-packagejson"
             }
           ]
         }
@@ -1020,21 +1148,6 @@
           "id": "set-up",
           "description": "Learn how to set up Nx Cloud for your workspace.",
           "itemList": [
-            {
-              "name": "Adding Nx Cloud to an Nx Workspace",
-              "id": "add-nx-cloud",
-              "file": "nx-cloud/set-up/add-nx-cloud"
-            },
-            {
-              "name": "Set Up Distributed Caching",
-              "id": "set-up-caching",
-              "file": "nx-cloud/set-up/set-up-caching"
-            },
-            {
-              "name": "Set Up Distributed Task Execution",
-              "id": "set-up-dte",
-              "file": "nx-cloud/set-up/set-up-dte"
-            },
             {
               "name": "Record Non-Nx Commands",
               "id": "record-commands",
@@ -1145,6 +1258,11 @@
               "name": "Configuration Options",
               "id": "config",
               "file": "nx-cloud/reference/config"
+            },
+            {
+              "name": "nx-cloud CLI",
+              "id": "nx-cloud-cli",
+              "file": "nx-cloud/reference/nx-cloud-cli"
             },
             {
               "name": "Environment Variables",
@@ -1287,6 +1405,11 @@
               "name": "repair",
               "id": "repair",
               "file": "generated/cli/repair"
+            },
+            {
+              "name": "exec",
+              "id": "exec",
+              "file": "generated/cli/exec"
             }
           ]
         },

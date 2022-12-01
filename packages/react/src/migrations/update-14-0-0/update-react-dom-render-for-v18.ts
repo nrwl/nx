@@ -7,7 +7,7 @@ import {
   Tree,
   formatFiles,
 } from '@nrwl/devkit';
-import { findNodes } from '@nrwl/workspace/src/utilities/typescript/find-nodes';
+import { findNodes } from 'nx/src/utils/typescript';
 import * as ts from 'typescript';
 
 export async function update(tree: Tree) {

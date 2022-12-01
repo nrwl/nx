@@ -32,7 +32,7 @@ describe('ngrx', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     createApp(tree, 'myapp');
     appConfig = getAppConfig();
     statePath = `${dirname(appConfig.appModule)}/+state`;

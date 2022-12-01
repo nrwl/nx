@@ -2,6 +2,7 @@ import {
   getProjects,
   NxJsonConfiguration,
   parseJson,
+  ProjectGraph,
   readJson,
   readProjectConfiguration,
   Tree,
@@ -23,6 +24,14 @@ import {
 import libraryGenerator from './library';
 import { Schema } from './schema';
 import applicationGenerator from '../application/application';
+
+let projectGraph: ProjectGraph;
+jest.mock('@nrwl/devkit', () => {
+  return {
+    ...jest.requireActual('@nrwl/devkit'),
+    createProjectGraphAsync: jest.fn().mockImplementation(() => projectGraph),
+  };
+});
 
 describe('lib', () => {
   let tree: Tree;
@@ -47,7 +56,7 @@ describe('lib', () => {
 
   describe('workspace v2', () => {
     beforeEach(() => {
-      tree = createTreeWithEmptyWorkspace();
+      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     });
 
     it('should run the library generator without erroring if the directory has a trailing slash', async () => {
@@ -288,7 +297,8 @@ describe('lib', () => {
           noImplicitOverride: true,
           noImplicitReturns: true,
           strict: true,
-          target: 'es2020',
+          target: 'es2022',
+          useDefineForClassFields: false,
         },
         files: [],
         include: [],
@@ -397,7 +407,6 @@ describe('lib', () => {
         // ASSERT
         const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.lib.json');
         expect(tsconfigJson.exclude).toEqual([
-          'src/test.ts',
           '**/*.spec.ts',
           'jest.config.ts',
           '**/*.test.ts',
@@ -677,7 +686,8 @@ describe('lib', () => {
           noImplicitOverride: true,
           noImplicitReturns: true,
           strict: true,
-          target: 'es2020',
+          target: 'es2022',
+          useDefineForClassFields: false,
         },
         files: [],
         include: [],
@@ -707,7 +717,7 @@ describe('lib', () => {
 
   describe('at the root', () => {
     beforeEach(() => {
-      tree = createTreeWithEmptyWorkspace();
+      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       updateJson(tree, 'nx.json', (json) => ({
         ...json,
         workspaceLayout: { libsDir: '' },
@@ -1130,7 +1140,6 @@ describe('lib', () => {
       // ASSERT
       const workspaceJson = readJson(tree, 'workspace.json');
 
-      expect(tree.exists('libs/my-lib/src/test.ts')).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/test-setup.ts')).toBeFalsy();
       expect(tree.exists('libs/my-lib/tsconfig.spec.json')).toBeTruthy();
       expect(tree.exists('libs/my-lib/karma.conf.js')).toBeTruthy();
@@ -1441,6 +1450,21 @@ describe('lib', () => {
   });
 
   describe('--standalone', () => {
+    beforeEach(() => {
+      projectGraph = {
+        nodes: {
+          'my-lib': {
+            name: 'my-lib',
+            type: 'lib',
+            data: {
+              root: 'libs/my-lib',
+            },
+          },
+        },
+        dependencies: {},
+      };
+    });
+
     it('should generate a library with a standalone component as entry point', async () => {
       await runLibraryGeneratorWithOpts({ standalone: true });
 

@@ -147,6 +147,7 @@ It only uses language primitives and immutable objects
 - [defaultTasksRunner](../../devkit/index#defaulttasksrunner)
 - [detectPackageManager](../../devkit/index#detectpackagemanager)
 - [detectWorkspaceScope](../../devkit/index#detectworkspacescope)
+- [extractLayoutDirectory](../../devkit/index#extractlayoutdirectory)
 - [formatFiles](../../devkit/index#formatfiles)
 - [generateFiles](../../devkit/index#generatefiles)
 - [getDependentPackagesForProject](../../devkit/index#getdependentpackagesforproject)
@@ -162,6 +163,7 @@ It only uses language primitives and immutable objects
 - [isStandaloneProject](../../devkit/index#isstandaloneproject)
 - [joinPathFragments](../../devkit/index#joinpathfragments)
 - [mapRemotes](../../devkit/index#mapremotes)
+- [mapRemotesForSSR](../../devkit/index#mapremotesforssr)
 - [moveFilesToNewDirectory](../../devkit/index#movefilestonewdirectory)
 - [names](../../devkit/index#names)
 - [normalizePath](../../devkit/index#normalizepath)
@@ -1162,6 +1164,29 @@ Detect workspace scope from the package.json name
 
 ---
 
+### extractLayoutDirectory
+
+▸ **extractLayoutDirectory**(`directory`): `Object`
+
+Experimental
+
+#### Parameters
+
+| Name        | Type     |
+| :---------- | :------- |
+| `directory` | `string` |
+
+#### Returns
+
+`Object`
+
+| Name               | Type     |
+| :----------------- | :------- |
+| `layoutDirectory`  | `string` |
+| `projectDirectory` | `string` |
+
+---
+
 ### formatFiles
 
 ▸ **formatFiles**(`tree`): `Promise`<`void`\>
@@ -1292,7 +1317,7 @@ Returns the list of outputs that will be cached.
 
 | Name   | Type                                                                            | Description                                               |
 | :----- | :------------------------------------------------------------------------------ | :-------------------------------------------------------- |
-| `task` | `Pick`<[`Task`](../../devkit/index#task), `"target"` \| `"overrides"`\>         | target + overrides                                        |
+| `task` | `Pick`<[`Task`](../../devkit/index#task), `"overrides"` \| `"target"`\>         | target + overrides                                        |
 | `node` | [`ProjectGraphProjectNode`](../../devkit/index#projectgraphprojectnode)<`any`\> | ProjectGraphProjectNode object that the task runs against |
 
 #### Returns
@@ -1477,6 +1502,27 @@ Normalized path fragments and joins them
 ### mapRemotes
 
 ▸ **mapRemotes**(`remotes`, `remoteEntryExt`, `determineRemoteUrl`): `Record`<`string`, `string`\>
+
+Map remote names to a format that can be understood and used by Module
+Federation.
+
+#### Parameters
+
+| Name                 | Type                                    | Description                                              |
+| :------------------- | :-------------------------------------- | :------------------------------------------------------- |
+| `remotes`            | [`Remotes`](../../devkit/index#remotes) | The remotes to map                                       |
+| `remoteEntryExt`     | `"js"` \| `"mjs"`                       | The file extension of the remoteEntry file               |
+| `determineRemoteUrl` | (`remote`: `string`) => `string`        | The function used to lookup the URL of the served remote |
+
+#### Returns
+
+`Record`<`string`, `string`\>
+
+---
+
+### mapRemotesForSSR
+
+▸ **mapRemotesForSSR**(`remotes`, `remoteEntryExt`, `determineRemoteUrl`): `Record`<`string`, `string`\>
 
 Map remote names to a format that can be understood and used by Module
 Federation.

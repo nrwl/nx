@@ -1,7 +1,8 @@
 import { readJson, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
-import { applicationGenerator, libraryGenerator } from '@nrwl/react';
 import { Linter } from '@nrwl/linter';
+import { applicationGenerator } from '../application/application';
+import { libraryGenerator } from '../library/library';
 import { reduxGenerator } from './redux';
 
 describe('redux', () => {

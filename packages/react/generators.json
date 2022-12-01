@@ -95,6 +95,13 @@
       "schema": "./src/generators/setup-tailwind/schema.json",
       "description": "Set up Tailwind configuration for a project.",
       "hidden": false
+    },
+
+    "setup-ssr": {
+      "factory": "./src/generators/setup-ssr/setup-ssr#setupSsrSchematic",
+      "schema": "./src/generators/setup-ssr/schema.json",
+      "description": "Set up SSR configuration for a project.",
+      "hidden": false
     }
   },
   "generators": {
@@ -203,6 +210,13 @@
       "factory": "./src/generators/setup-tailwind/setup-tailwind#setupTailwindGenerator",
       "schema": "./src/generators/setup-tailwind/schema.json",
       "description": "Set up Tailwind configuration for a project.",
+      "hidden": false
+    },
+
+    "setup-ssr": {
+      "factory": "./src/generators/setup-ssr/setup-ssr#setupSsrGenerator",
+      "schema": "./src/generators/setup-ssr/schema.json",
+      "description": "Set up SSR configuration for a project.",
       "hidden": false
     }
   }

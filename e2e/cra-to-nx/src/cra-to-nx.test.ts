@@ -4,7 +4,6 @@ import {
   getPublishedVersion,
   getSelectedPackageManager,
   readFile,
-  readJson,
   runCLI,
   runCommand,
   updateFile,
@@ -15,7 +14,7 @@ const pmc = getPackageManagerCommand({
   packageManager: getSelectedPackageManager(),
 });
 
-describe('cra-to-nx', () => {
+describe('nx init (for CRA)', () => {
   it('should convert to an integrated workspace with craco (webpack)', () => {
     const appName = 'my-app';
     createReactApp(appName);
@@ -23,20 +22,13 @@ describe('cra-to-nx', () => {
     const craToNxOutput = runCommand(
       `${
         pmc.runUninstalledPackage
-      } cra-to-nx@${getPublishedVersion()} --nxCloud=false`
+      } nx@${getPublishedVersion()} init --nxCloud=false --integrated --vite=false`
     );
 
     expect(craToNxOutput).toContain('🎉 Done!');
 
     runCLI(`build ${appName}`);
-    checkFilesExist(
-      `dist/apps/${appName}/index.html`,
-      `dist/apps/${appName}/asset-manifest.json`
-    );
-    const manifest = readJson(`dist/apps/${appName}/asset-manifest.json`);
-    checkFilesExist(
-      ...manifest['entrypoints'].map((f) => `dist/apps/${appName}/${f}`)
-    );
+    checkFilesExist(`dist/apps/${appName}/index.html`);
   });
 
   it('should convert to an integrated workspace with Vite', () => {
@@ -46,7 +38,7 @@ describe('cra-to-nx', () => {
     const craToNxOutput = runCommand(
       `${
         pmc.runUninstalledPackage
-      } cra-to-nx@${getPublishedVersion()} --nxCloud=false --vite`
+      } nx@${getPublishedVersion()} init --nxCloud=false --integrated`
     );
 
     expect(craToNxOutput).toContain('🎉 Done!');
@@ -56,6 +48,9 @@ describe('cra-to-nx', () => {
 
     runCLI(`build ${appName}`);
     checkFilesExist(`dist/apps/${appName}/index.html`);
+
+    const unitTestsOutput = runCLI(`test ${appName}`);
+    expect(unitTestsOutput).toContain('Successfully ran target test');
   });
 
   it('should convert to an integrated workspace with Vite with custom port', () => {
@@ -66,10 +61,51 @@ describe('cra-to-nx', () => {
     runCommand(
       `${
         pmc.runUninstalledPackage
-      } cra-to-nx@${getPublishedVersion()} --nxCloud=false --vite --force`
+      } nx@${getPublishedVersion()} init --nxCloud=false --force --integrated`
     );
 
     const viteConfig = readFile(`apps/${appName}/vite.config.js`);
     expect(viteConfig).toContain('port: 3000');
+
+    const unitTestsOutput = runCLI(`test ${appName}`);
+    expect(unitTestsOutput).toContain('Successfully ran target test');
+  });
+
+  it('should convert to a nested workspace with craco (webpack)', () => {
+    const appName = 'my-app';
+    createReactApp(appName);
+
+    const craToNxOutput = runCommand(
+      `${
+        pmc.runUninstalledPackage
+      } nx@${getPublishedVersion()} init --nxCloud=false --vite=false`
+    );
+
+    expect(craToNxOutput).toContain('🎉 Done!');
+
+    runCLI(`build ${appName}`);
+    checkFilesExist(`dist/${appName}/index.html`);
+  });
+
+  it('should convert to an nested workspace with Vite', () => {
+    const appName = 'my-app';
+    createReactApp(appName);
+
+    const craToNxOutput = runCommand(
+      `${
+        pmc.runUninstalledPackage
+      } nx@${getPublishedVersion()} init --nxCloud=false --vite`
+    );
+
+    expect(craToNxOutput).toContain('🎉 Done!');
+
+    const viteConfig = readFile(`vite.config.js`);
+    expect(viteConfig).toContain('port: 4200'); // default port
+
+    runCLI(`build ${appName}`);
+    checkFilesExist(`dist/${appName}/index.html`);
+
+    const unitTestsOutput = runCLI(`test ${appName}`);
+    expect(unitTestsOutput).toContain('Successfully ran target test');
   });
 });

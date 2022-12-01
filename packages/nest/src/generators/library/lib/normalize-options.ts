@@ -1,4 +1,4 @@
-import type { Tree } from '@nrwl/devkit';
+import { extractLayoutDirectory, Tree } from '@nrwl/devkit';
 import { getWorkspaceLayout, joinPathFragments, names } from '@nrwl/devkit';
 import type { LibraryGeneratorSchema as JsLibraryGeneratorSchema } from '@nrwl/js/src/utils/schema';
 import { Linter } from '@nrwl/linter';
@@ -8,15 +8,19 @@ export function normalizeOptions(
   tree: Tree,
   options: LibraryGeneratorOptions
 ): NormalizedOptions {
-  const { libsDir, npmScope } = getWorkspaceLayout(tree);
+  const { layoutDirectory, projectDirectory } = extractLayoutDirectory(
+    options.directory
+  );
+  const { libsDir: defaultLibsDir, npmScope } = getWorkspaceLayout(tree);
+  const libsDir = layoutDirectory ?? defaultLibsDir;
   const name = names(options.name).fileName;
-  const projectDirectory = options.directory
-    ? `${names(options.directory).fileName}/${name}`
+  const fullProjectDirectory = projectDirectory
+    ? `${names(projectDirectory).fileName}/${name}`
     : name;
 
-  const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
+  const projectName = fullProjectDirectory.replace(new RegExp('/', 'g'), '-');
   const fileName = projectName;
-  const projectRoot = joinPathFragments(libsDir, projectDirectory);
+  const projectRoot = joinPathFragments(libsDir, fullProjectDirectory);
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
@@ -30,13 +34,14 @@ export function normalizeOptions(
     linter: options.linter ?? Linter.EsLint,
     parsedTags,
     prefix: npmScope, // we could also allow customizing this
-    projectDirectory,
+    projectDirectory: fullProjectDirectory,
     projectName,
     projectRoot,
     service: options.service ?? false,
     target: options.target ?? 'es6',
     testEnvironment: options.testEnvironment ?? 'node',
     unitTestRunner: options.unitTestRunner ?? 'jest',
+    libsDir,
   };
 
   return normalized;

@@ -8,10 +8,13 @@ import {
   TargetConfiguration,
   workspaceRoot,
 } from '@nrwl/devkit';
-import { mapProjectGraphFiles } from '@nrwl/workspace/src/utils/runtime-lint-utils';
 import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
 import { dirname, extname, join, relative } from 'path';
 import { lstatSync } from 'fs';
+import {
+  createProjectRootMappings,
+  findProjectForPath,
+} from 'nx/src/project-graph/utils/find-project-for-path';
 
 interface BaseCypressPreset {
   videosFolder: string;
@@ -90,9 +93,11 @@ export function getProjectConfigByPath(
       : configFileFromWorkspaceRoot
   );
 
-  const mappedGraph = mapProjectGraphFiles(graph);
-  const componentTestingProjectName =
-    mappedGraph.allFiles[normalizedPathFromWorkspaceRoot];
+  const projectRootMappings = createProjectRootMappings(graph.nodes);
+  const componentTestingProjectName = findProjectForPath(
+    normalizedPathFromWorkspaceRoot,
+    projectRootMappings
+  );
   if (
     !componentTestingProjectName ||
     !graph.nodes[componentTestingProjectName]?.data

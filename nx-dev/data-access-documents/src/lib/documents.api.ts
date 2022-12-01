@@ -21,6 +21,7 @@ export class DocumentsApi {
       publicDocsRoot: string;
       documentSources: DocumentMetadata[];
       addAncestor: { id: string; name: string } | null;
+      relatedSources?: DocumentsApi[];
     }
   ) {
     if (!options.publicDocsRoot) {
@@ -78,7 +79,7 @@ export class DocumentsApi {
       ?.map((i) => ({
         title: i.name,
         description: i.description ?? '',
-        url: i.path ?? '/' + path.concat(i.id).join('/'),
+        url: '/' + (i.path ?? path.concat(i.id).join('/')),
       }))
       .map(
         (card) =>
@@ -97,6 +98,8 @@ export class DocumentsApi {
         cardsTemplate,
         '{% /cards %}\n\n',
       ].join(''),
+      relatedContent: '',
+      tags: [],
     };
   }
 
@@ -110,7 +113,7 @@ export class DocumentsApi {
     const originalContent = readFileSync(filePath, 'utf8');
     const ast = parseMarkdown(originalContent);
     const frontmatter = ast.attributes.frontmatter
-      ? yamlLoad(ast.attributes.frontmatter)
+      ? (yamlLoad(ast.attributes.frontmatter) as Record<string, any>)
       : {};
 
     // Set default title if not provided in front-matter section.
@@ -122,8 +125,9 @@ export class DocumentsApi {
     return {
       filePath,
       data: frontmatter,
-      content:
-        originalContent + '\n\n' + this.getRelatedDocumentsSection(tags, path),
+      content: originalContent,
+      relatedContent: this.getRelatedDocumentsSection(tags, path),
+      tags: tags,
     };
   }
 
@@ -234,6 +238,7 @@ export class DocumentsApi {
     let relatedConcepts: MenuItem[] = [];
     let relatedRecipes: MenuItem[] = [];
     let relatedReference: MenuItem[] = [];
+    let relatedSeeAlso: MenuItem[] = [];
     function recur(curr, acc) {
       if (curr.itemList) {
         curr.itemList.forEach((ii) => {
@@ -247,7 +252,7 @@ export class DocumentsApi {
           tags.some((tag) => curr.tags.includes(tag)) &&
           ['concepts', 'more-concepts'].some((id) => acc.includes(id))
         ) {
-          curr.path = [...acc, curr.id].join('/');
+          curr.path = curr.path || [...acc, curr.id].join('/');
           relatedConcepts.push(curr);
         }
         if (
@@ -255,7 +260,7 @@ export class DocumentsApi {
           tags.some((tag) => curr.tags.includes(tag)) &&
           acc.includes('recipes')
         ) {
-          curr.path = [...acc, curr.id].join('/');
+          curr.path = curr.path || [...acc, curr.id].join('/');
           relatedRecipes.push(curr);
         }
         if (
@@ -263,19 +268,35 @@ export class DocumentsApi {
           tags.some((tag) => curr.tags.includes(tag)) &&
           ['nx', 'workspace'].some((id) => acc.includes(id))
         ) {
-          curr.path = [...acc, curr.id].join('/');
+          curr.path = curr.path || [...acc, curr.id].join('/');
           relatedReference.push(curr);
+        }
+        if (
+          curr.tags &&
+          tags.some((tag) => curr.tags.includes(tag)) &&
+          acc.includes('see-also')
+        ) {
+          curr.path = curr.path || [...acc, curr.id].join('/');
+          relatedSeeAlso.push(curr);
         }
       }
     }
     this.documents.itemList!.forEach((item) => {
       recur(item, []);
     });
+    if (this.options.relatedSources) {
+      this.options.relatedSources.forEach((source) =>
+        source.documents.itemList.forEach((item) => {
+          recur(item, []);
+        })
+      );
+    }
 
     if (
       relatedConcepts.length === 0 &&
       relatedRecipes.length === 0 &&
-      relatedReference.length === 0
+      relatedReference.length === 0 &&
+      relatedSeeAlso.length === 0
     ) {
       return '';
     }
@@ -297,6 +318,9 @@ export class DocumentsApi {
     }
     if (relatedReference.length > 0) {
       output += '### Reference\n' + listify(relatedReference) + '\n';
+    }
+    if (relatedSeeAlso.length > 0) {
+      output += '### See Also\n' + listify(relatedSeeAlso) + '\n';
     }
 
     return output;

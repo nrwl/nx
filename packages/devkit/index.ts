@@ -244,6 +244,7 @@ export { names } from './src/utils/names';
 export {
   getWorkspaceLayout,
   getWorkspacePath,
+  extractLayoutDirectory,
 } from './src/utils/get-workspace-layout';
 
 /**
@@ -305,6 +306,7 @@ export {
   applySharedFunction,
   applyAdditionalShared,
   mapRemotes,
+  mapRemotesForSSR,
   getNpmPackageSharedConfig,
   shareWorkspaceLibraries,
   sharePackages,

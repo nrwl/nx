@@ -32,6 +32,12 @@ jobs:
 
 The `pr` and `main` jobs implement the CI workflow. Setting `timeout-minutes` is needed only if you have very slow tasks.
 
+{% callout type="note" title="Tracking the origin branch" %}
+
+If you're using this action in the context of a branch you may need to add `run: "git branch --track main origin/main"` before running `nx affected` since `origin/main` won't exist.
+
+{% /callout %}
+
 {% nx-cloud-section %}
 
 ## Distributed CI with Nx Cloud
@@ -58,9 +64,7 @@ jobs:
         npx nx-cloud record -- npx nx workspace-lint
         npx nx-cloud record -- npx nx format:check
       parallel-commands-on-agents: |
-        npx nx affected --target=lint --parallel=3
-        npx nx affected --target=test --parallel=3 --ci --code-coverage
-        npx nx affected --target=build --parallel=3
+        npx nx affected --target=lint --parallel=3 & npx nx affected --target=test --parallel=3 --ci --code-coverage & npx nx affected --target=build --parallel=3
 
   agents:
     name: Nx Cloud - Agents

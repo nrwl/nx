@@ -8,7 +8,7 @@ import update from './update-rollup-executor';
 
 describe('Migration: @nrwl/rollup', () => {
   it(`should update usage of rollup executor`, async () => {
-    let tree = createTreeWithEmptyWorkspace();
+    let tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     addProjectConfiguration(tree, 'mylib', {
       root: 'libs/mylib',
@@ -39,7 +39,7 @@ describe('Migration: @nrwl/rollup', () => {
   });
 
   it(`should replace umd with cjs`, async () => {
-    let tree = createTreeWithEmptyWorkspace();
+    let tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     addProjectConfiguration(tree, 'lib1', {
       root: 'libs/lib1',

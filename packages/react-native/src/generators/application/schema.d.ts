@@ -15,4 +15,5 @@ export interface Schema {
   setParserOptionsProject?: boolean;
   e2eTestRunner?: 'detox' | 'none';
   install: boolean; // default is true
+  skipPackageJson?: boolean; //default is false
 }

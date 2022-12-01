@@ -36,7 +36,6 @@
     "@nrwl/jest": "file:../jest",
     "@nrwl/linter": "file:../linter",
     "@nrwl/workspace": "file:../workspace",
-    "@parcel/watcher": "2.0.4",
     "chalk": "4.1.0",
     "fast-glob": "3.2.7",
     "fs-extra": "^10.1.0",

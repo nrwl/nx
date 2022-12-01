@@ -6,11 +6,9 @@ import {
   formatFiles,
   generateFiles,
   GeneratorCallback,
-  getProjects,
   getWorkspaceLayout,
   joinPathFragments,
   names,
-  normalizePath,
   offsetFromRoot,
   toJS,
   Tree,
@@ -19,14 +17,13 @@ import {
 import { getImportPath } from 'nx/src/utils/path';
 import { jestProjectGenerator } from '@nrwl/jest';
 import { swcCoreVersion } from '@nrwl/js/src/utils/versions';
-import { lintProjectGenerator } from '@nrwl/linter';
+import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import {
   getRelativePathToRootTsConfig,
   getRootTsConfigPathInTree,
 } from '@nrwl/workspace/src/utilities/typescript';
 import * as ts from 'typescript';
-import { assertValidStyle } from '../../utils/assertion';
 import {
   addBrowserRouter,
   addInitialRoutes,
@@ -34,7 +31,7 @@ import {
   findComponentImportPath,
 } from '../../utils/ast-utils';
 import {
-  createReactEslintJson,
+  extendReactEslintJson,
   extraEslintDependencies,
 } from '../../utils/lint';
 import {
@@ -44,8 +41,11 @@ import {
   typesReactRouterDomVersion,
 } from '../../utils/versions';
 import componentGenerator from '../component/component';
-import init from '../init/init';
+import initGenerator from '../init/init';
 import { Schema } from './schema';
+import { updateJestConfigContent } from '../../utils/jest-utils';
+import { viteConfigurationGenerator, vitestGenerator } from '@nrwl/vite';
+import { normalizeOptions } from './lib/normalize-options';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -56,6 +56,8 @@ export interface NormalizedSchema extends Schema {
   parsedTags: string[];
   appMain?: string;
   appSourceRoot?: string;
+  libsDir?: string;
+  unitTestRunner: 'jest' | 'vitest' | 'none';
 }
 
 export async function libraryGenerator(host: Tree, schema: Schema) {
@@ -71,10 +73,12 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
     options.style = 'none';
   }
 
-  const initTask = await init(host, {
+  const initTask = await initGenerator(host, {
     ...options,
     e2eTestRunner: 'none',
     skipFormat: true,
+    skipBabelConfig: options.bundler === 'vite',
+    skipHelperLibs: options.bundler === 'vite',
   });
   tasks.push(initTask);
 
@@ -89,6 +93,18 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
     updateBaseTsConfig(host, options);
   }
 
+  if (options.buildable && options.bundler === 'vite') {
+    const viteTask = await viteConfigurationGenerator(host, {
+      uiFramework: 'react',
+      project: options.name,
+      newProject: true,
+      includeLib: true,
+      inSourceTests: options.inSourceTests,
+      includeVitest: true,
+    });
+    tasks.push(viteTask);
+  }
+
   if (options.unitTestRunner === 'jest') {
     const jestTask = await jestProjectGenerator(host, {
       ...options,
@@ -99,6 +115,26 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
       compiler: options.compiler,
     });
     tasks.push(jestTask);
+    const jestConfigPath = joinPathFragments(
+      options.projectRoot,
+      options.js ? 'jest.config.js' : 'jest.config.ts'
+    );
+    if (options.compiler === 'babel' && host.exists(jestConfigPath)) {
+      const updatedContent = updateJestConfigContent(
+        host.read(jestConfigPath, 'utf-8')
+      );
+      host.write(jestConfigPath, updatedContent);
+    }
+  } else if (
+    options.unitTestRunner === 'vitest' &&
+    options.bundler !== 'vite' // tests are already configured if bundler is vite
+  ) {
+    const vitestTask = await vitestGenerator(host, {
+      uiFramework: 'react',
+      project: options.name,
+      inSourceTests: options.inSourceTests,
+    });
+    tasks.push(vitestTask);
   }
 
   if (options.component) {
@@ -107,7 +143,9 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
       project: options.name,
       flat: true,
       style: options.style,
-      skipTests: options.unitTestRunner === 'none',
+      skipTests:
+        options.unitTestRunner === 'none' ||
+        (options.unitTestRunner === 'vitest' && options.inSourceTests == true),
       export: true,
       routing: options.routing,
       js: options.js,
@@ -143,39 +181,38 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
 }
 
 async function addLinting(host: Tree, options: NormalizedSchema) {
-  const lintTask = await lintProjectGenerator(host, {
-    linter: options.linter,
-    project: options.name,
-    tsConfigPaths: [
-      joinPathFragments(options.projectRoot, 'tsconfig.lib.json'),
-    ],
-    unitTestRunner: options.unitTestRunner,
-    eslintFilePatterns: [`${options.projectRoot}/**/*.{ts,tsx,js,jsx}`],
-    skipFormat: true,
-    skipPackageJson: options.skipPackageJson,
-  });
+  if (options.linter === Linter.EsLint) {
+    const lintTask = await lintProjectGenerator(host, {
+      linter: options.linter,
+      project: options.name,
+      tsConfigPaths: [
+        joinPathFragments(options.projectRoot, 'tsconfig.lib.json'),
+      ],
+      unitTestRunner: options.unitTestRunner,
+      eslintFilePatterns: [`${options.projectRoot}/**/*.{ts,tsx,js,jsx}`],
+      skipFormat: true,
+      skipPackageJson: options.skipPackageJson,
+    });
 
-  const reactEslintJson = createReactEslintJson(
-    options.projectRoot,
-    options.setParserOptionsProject
-  );
-
-  updateJson(
-    host,
-    joinPathFragments(options.projectRoot, '.eslintrc.json'),
-    () => reactEslintJson
-  );
-
-  let installTask = () => {};
-  if (!options.skipPackageJson) {
-    installTask = await addDependenciesToPackageJson(
+    updateJson(
       host,
-      extraEslintDependencies.dependencies,
-      extraEslintDependencies.devDependencies
+      joinPathFragments(options.projectRoot, '.eslintrc.json'),
+      extendReactEslintJson
     );
-  }
 
-  return runTasksInSerial(lintTask, installTask);
+    let installTask = () => {};
+    if (!options.skipPackageJson) {
+      installTask = await addDependenciesToPackageJson(
+        host,
+        extraEslintDependencies.dependencies,
+        extraEslintDependencies.devDependencies
+      );
+    }
+
+    return runTasksInSerial(lintTask, installTask);
+  } else {
+    return () => {};
+  }
 }
 
 function addProject(host: Tree, options: NormalizedSchema) {
@@ -192,10 +229,13 @@ function addProject(host: Tree, options: NormalizedSchema) {
     }
 
     targets.build = {
-      builder: '@nrwl/web:rollup',
+      executor: '@nrwl/rollup:rollup',
       outputs: ['{options.outputPath}'],
       options: {
-        outputPath: `dist/${libsDir}/${options.projectDirectory}`,
+        outputPath:
+          libsDir !== '.'
+            ? `dist/${libsDir}/${options.projectDirectory}`
+            : `dist/${options.projectDirectory}`,
         tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
         project: `${options.projectRoot}/package.json`,
         entryFile: maybeJs(options, `${options.projectRoot}/src/index.ts`),
@@ -275,21 +315,33 @@ function updateBaseTsConfig(host: Tree, options: NormalizedSchema) {
 }
 
 function createFiles(host: Tree, options: NormalizedSchema) {
+  const substitutions = {
+    ...options,
+    ...names(options.name),
+    tmpl: '',
+    offsetFromRoot: offsetFromRoot(options.projectRoot),
+    rootTsConfigPath: getRelativePathToRootTsConfig(host, options.projectRoot),
+  };
+
   generateFiles(
     host,
-    joinPathFragments(__dirname, './files/lib'),
+    joinPathFragments(__dirname, './files/common'),
     options.projectRoot,
-    {
-      ...options,
-      ...names(options.name),
-      tmpl: '',
-      offsetFromRoot: offsetFromRoot(options.projectRoot),
-      rootTsConfigPath: getRelativePathToRootTsConfig(
-        host,
-        options.projectRoot
-      ),
-    }
+    substitutions
   );
+
+  if (options.bundler === 'vite') {
+    generateFiles(
+      host,
+      joinPathFragments(__dirname, './files/vite'),
+      options.projectRoot,
+      substitutions
+    );
+
+    if (host.exists(joinPathFragments(options.projectRoot, '.babelrc'))) {
+      host.delete(joinPathFragments(options.projectRoot, '.babelrc'));
+    }
+  }
 
   if (!options.publishable && !options.buildable) {
     host.delete(`${options.projectRoot}/package.json`);
@@ -389,59 +441,6 @@ function readComponent(
   );
 
   return { content, source };
-}
-
-function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
-  const name = names(options.name).fileName;
-  const projectDirectory = options.directory
-    ? `${names(options.directory).fileName}/${name}`
-    : name;
-
-  const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
-  const fileName = projectName;
-  const { libsDir, npmScope } = getWorkspaceLayout(host);
-  const projectRoot = joinPathFragments(libsDir, projectDirectory);
-
-  const parsedTags = options.tags
-    ? options.tags.split(',').map((s) => s.trim())
-    : [];
-
-  const importPath =
-    options.importPath || getImportPath(npmScope, projectDirectory);
-
-  const normalized: NormalizedSchema = {
-    ...options,
-    fileName,
-    routePath: `/${name}`,
-    name: projectName,
-    projectRoot,
-    projectDirectory,
-    parsedTags,
-    importPath,
-  };
-
-  if (options.appProject) {
-    const appProjectConfig = getProjects(host).get(options.appProject);
-
-    if (appProjectConfig.projectType !== 'application') {
-      throw new Error(
-        `appProject expected type of "application" but got "${appProjectConfig.projectType}"`
-      );
-    }
-
-    try {
-      normalized.appMain = appProjectConfig.targets.build.options.main;
-      normalized.appSourceRoot = normalizePath(appProjectConfig.sourceRoot);
-    } catch (e) {
-      throw new Error(
-        `Could not locate project main for ${options.appProject}`
-      );
-    }
-  }
-
-  assertValidStyle(normalized.style);
-
-  return normalized;
 }
 
 function updateLibPackageNpmScope(host: Tree, options: NormalizedSchema) {

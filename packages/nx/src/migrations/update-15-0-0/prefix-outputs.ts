@@ -11,7 +11,7 @@ import { join, relative } from 'path';
 import {
   transformLegacyOutputs,
   validateOutputs,
-} from 'nx/src/tasks-runner/utils';
+} from '../../tasks-runner/utils';
 import { updateJson } from '../../generators/utils/json';
 import { PackageJson } from '../../utils/package-json';
 
@@ -39,19 +39,21 @@ export default async function (tree: Tree) {
         target.outputs = transformLegacyOutputs(project.root, e);
       }
     }
-    if (tree.exists(join(project.root, 'project.json'))) {
+    try {
       updateProjectConfiguration(tree, projectName, project);
-    } else if (tree.exists(join(project.root, 'package.json'))) {
-      updateJson<PackageJson>(
-        tree,
-        join(project.root, 'package.json'),
-        (json) => {
-          json.nx ??= {};
-          json.nx.targets ??= project.targets;
+    } catch {
+      if (tree.exists(join(project.root, 'package.json'))) {
+        updateJson<PackageJson>(
+          tree,
+          join(project.root, 'package.json'),
+          (json) => {
+            json.nx ??= {};
+            json.nx.targets ??= project.targets;
 
-          return json;
-        }
-      );
+            return json;
+          }
+        );
+      }
     }
   }
 

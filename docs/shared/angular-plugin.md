@@ -79,7 +79,7 @@ Read more about:
 
 ## More Documentation
 
-- [Angular Nx Tutorial](/angular-tutorial/01-create-application)
+- [Angular Nx Tutorial](/angular-tutorial/1-code-generation)
 - [Migrating from the Angular CLI](recipe/migration-angular)
 - [Setup Module Federation with Angular and Nx](/recipes/module-federation/faster-builds)
 - [Using NgRx](/recipes/other/misc-ngrx)

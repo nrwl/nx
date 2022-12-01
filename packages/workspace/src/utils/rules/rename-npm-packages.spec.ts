@@ -16,6 +16,8 @@ describe('renameNpmPackages Rule', () => {
   beforeEach(async () => {
     tree = new UnitTestTree(Tree.empty());
     tree = createEmptyWorkspace(tree) as UnitTestTree;
+    tree.create('libs/.gitignore', '');
+    tree.create('apps/.gitignore', '');
   });
 
   it('should rename an npm package in both package.json and any file that imports it', async () => {
@@ -94,7 +96,7 @@ describe('renameNpmPackages Rule', () => {
     tree = await runSchematic('lib', { name: 'library-1' }, tree);
     tree = await runSchematic('lib', { name: 'library-2' }, tree);
     tree = await runExternalSchematic(
-      '@nrwl/angular',
+      '@nrwl/react',
       'application',
       { name: 'app-one' },
       tree

@@ -47,6 +47,16 @@
           },
           {
             "input": "packages/storybook",
+            "glob": "**/root-files-nested/.storybook/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/storybook",
+            "glob": "**/root-files-nested-ts/.storybook/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/storybook",
             "glob": "**/*.json",
             "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
             "output": "/"

@@ -16,14 +16,7 @@ describe(SomethingOneComponent.name, () => {
   })
 
   it('renders', () => {
-     cy.mount(SomethingOneComponent, {
-           componentProperties: {
-               type:  'button',
-               style:  'default',
-               age:  0,
-               isOn:  false,
-          }
-       });
+     cy.mount(SomethingOneComponent,);
   })
 
 })
@@ -46,14 +39,7 @@ describe(SomethingTwoComponent.name, () => {
   })
 
   it('renders', () => {
-     cy.mount(SomethingTwoComponent, {
-           componentProperties: {
-               type:  'button',
-               style:  'default',
-               age:  0,
-               isOn:  false,
-          }
-       });
+     cy.mount(SomethingTwoComponent,);
   })
 
 })
@@ -76,14 +62,7 @@ describe(SomethingThreeComponent.name, () => {
   })
 
   it('renders', () => {
-     cy.mount(SomethingThreeComponent, {
-           componentProperties: {
-               type:  'button',
-               style:  'default',
-               age:  0,
-               isOn:  false,
-          }
-       });
+     cy.mount(SomethingThreeComponent,);
   })
 
 })
@@ -106,14 +85,7 @@ describe(SomethingOneComponent.name, () => {
   })
 
   it('renders', () => {
-     cy.mount(SomethingOneComponent, {
-           componentProperties: {
-               type:  'button',
-               style:  'default',
-               age:  0,
-               isOn:  false,
-          }
-       });
+     cy.mount(SomethingOneComponent,);
   })
 
 })
@@ -136,14 +108,7 @@ describe(SomethingTwoComponent.name, () => {
   })
 
   it('renders', () => {
-     cy.mount(SomethingTwoComponent, {
-           componentProperties: {
-               type:  'button',
-               style:  'default',
-               age:  0,
-               isOn:  false,
-          }
-       });
+     cy.mount(SomethingTwoComponent,);
   })
 
 })
@@ -166,14 +131,7 @@ describe(SomethingThreeComponent.name, () => {
   })
 
   it('renders', () => {
-     cy.mount(SomethingThreeComponent, {
-           componentProperties: {
-               type:  'button',
-               style:  'default',
-               age:  0,
-               isOn:  false,
-          }
-       });
+     cy.mount(SomethingThreeComponent,);
   })
 
 })

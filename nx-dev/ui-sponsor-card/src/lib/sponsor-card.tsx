@@ -21,7 +21,7 @@ export function SponsorCard(data: Sponsor): JSX.Element {
       </div>
       <div className="md:col-span-2">
         <h5 className="font-input-mono mb-3">{data.name}</h5>
-        <p className="text-gray-400">{data.description}</p>
+        <p className="text-slate-400">{data.description}</p>
       </div>
     </figure>
   );

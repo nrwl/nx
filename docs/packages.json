@@ -16,11 +16,12 @@
         "delegate-build",
         "ng-packagr-lite",
         "package",
+        "file-server",
         "webpack-browser",
         "webpack-dev-server",
         "webpack-server",
         "module-federation-dev-server",
-        "file-server"
+        "module-federation-dev-ssr"
       ],
       "generators": [
         "add-linting",
@@ -304,7 +305,8 @@
         "remote",
         "cypress-component-configuration",
         "component-test",
-        "setup-tailwind"
+        "setup-tailwind",
+        "setup-ssr"
       ]
     }
   },
@@ -373,7 +375,10 @@
     "packageName": "vite",
     "description": "The Nx Plugin for building and testing applications using Vite (Early Release)",
     "path": "generated/packages/vite.json",
-    "schemas": { "executors": [], "generators": ["init"] }
+    "schemas": {
+      "executors": ["dev-server", "build", "test"],
+      "generators": ["init", "configuration", "vitest"]
+    }
   },
   {
     "name": "web",
@@ -391,7 +396,7 @@
     "description": "The Nx Plugin for Webpack contains executors and generators that support building applications using Webpack.",
     "path": "generated/packages/webpack.json",
     "schemas": {
-      "executors": ["webpack", "dev-server"],
+      "executors": ["webpack", "dev-server", "ssr-dev-server"],
       "generators": ["init", "webpack-project"]
     }
   },
@@ -403,7 +408,6 @@
     "schemas": {
       "executors": ["run-commands", "counter", "run-script"],
       "generators": [
-        "workspace",
         "preset",
         "move",
         "remove",

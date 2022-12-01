@@ -3,9 +3,12 @@ import {
   readJsonFile,
   writeJsonFile,
 } from 'nx/src/utils/fileutils';
+import { join } from 'path';
 
-const defaultTsConfig = {
-  extends: '../../tsconfig.base.json',
+const defaultTsConfig = (relativePathToRoot: string) => ({
+  extends: relativePathToRoot
+    ? join(relativePathToRoot, 'tsconfig.base.json')
+    : './tsconfig.base.json',
   compilerOptions: {
     jsx: 'react',
     allowJs: true,
@@ -22,26 +25,26 @@ const defaultTsConfig = {
       path: './tsconfig.spec.json',
     },
   ],
-};
+});
 
-const defaultTsConfigApp = {
+const defaultTsConfigApp = (relativePathToRoot: string) => ({
   extends: './tsconfig.json',
   compilerOptions: {
-    outDir: '../../dist/out-tsc',
+    outDir: join(relativePathToRoot, 'dist/out-tsc'),
     types: ['node'],
   },
   files: [
-    '../../node_modules/@nrwl/react/typings/cssmodule.d.ts',
-    '../../node_modules/@nrwl/react/typings/image.d.ts',
+    join(relativePathToRoot, 'node_modules/@nrwl/react/typings/cssmodule.d.ts'),
+    join(relativePathToRoot, 'node_modules/@nrwl/react/typings/image.d.ts'),
   ],
   exclude: ['**/*.spec.ts', '**/*.spec.tsx'],
   include: ['**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx'],
-};
+});
 
-const defaultTsConfigSpec = {
+const defaultTsConfigSpec = (relativePathToRoot: string) => ({
   extends: './tsconfig.json',
   compilerOptions: {
-    outDir: '../../dist/out-tsc',
+    outDir: join(relativePathToRoot, 'dist/out-tsc'),
     module: 'commonjs',
     types: ['jest', 'node'],
   },
@@ -53,15 +56,28 @@ const defaultTsConfigSpec = {
     '**/*.d.ts',
   ],
   files: [
-    '../../node_modules/@nrwl/react/typings/cssmodule.d.ts',
-    '../../node_modules/@nrwl/react/typings/image.d.ts',
+    join(relativePathToRoot, 'node_modules/@nrwl/react/typings/cssmodule.d.ts'),
+    join(relativePathToRoot, 'node_modules/@nrwl/react/typings/image.d.ts'),
   ],
-};
+});
 
-export function setupTsConfig(appName: string) {
-  if (fileExists(`apps/${appName}/tsconfig.json`)) {
-    const json = readJsonFile(`apps/${appName}/tsconfig.json`);
-    json.extends = '../../tsconfig.base.json';
+export function setupTsConfig(appName: string, isNested: boolean) {
+  const tsconfigPath = isNested
+    ? 'tsconfig.json'
+    : `apps/${appName}/tsconfig.json`;
+  const tsconfigAppPath = isNested
+    ? 'tsconfig.app.json'
+    : `apps/${appName}/tsconfig.app.json`;
+  const tsconfiSpecPath = isNested
+    ? 'tsconfig.spec.json'
+    : `apps/${appName}/tsconfig.spec.json`;
+  const tsconfigBasePath = isNested
+    ? './tsconfig.base.json'
+    : '../../tsconfig.base.json';
+  const relativePathToRoot = isNested ? '' : '../../';
+  if (fileExists(tsconfigPath)) {
+    const json = readJsonFile(tsconfigPath);
+    json.extends = tsconfigBasePath;
     if (json.compilerOptions) {
       json.compilerOptions.jsx = 'react';
     } else {
@@ -72,24 +88,24 @@ export function setupTsConfig(appName: string) {
         allowSyntheticDefaultImports: true,
       };
     }
-    writeJsonFile(`apps/${appName}/tsconfig.json`, json);
+    writeJsonFile(tsconfigPath, json);
   } else {
-    writeJsonFile(`apps/${appName}/tsconfig.json`, defaultTsConfig);
+    writeJsonFile(tsconfigPath, defaultTsConfig(relativePathToRoot));
   }
 
-  if (fileExists(`apps/${appName}/tsconfig.app.json`)) {
-    const json = readJsonFile(`apps/${appName}/tsconfig.app.json`);
+  if (fileExists(tsconfigAppPath)) {
+    const json = readJsonFile(tsconfigAppPath);
     json.extends = './tsconfig.json';
-    writeJsonFile(`apps/${appName}/tsconfig.app.json`, json);
+    writeJsonFile(tsconfigAppPath, json);
   } else {
-    writeJsonFile(`apps/${appName}/tsconfig.app.json`, defaultTsConfigApp);
+    writeJsonFile(tsconfigAppPath, defaultTsConfigApp(relativePathToRoot));
   }
 
-  if (fileExists(`apps/${appName}/tsconfig.spec.json`)) {
-    const json = readJsonFile(`apps/${appName}/tsconfig.spec.json`);
+  if (fileExists(tsconfiSpecPath)) {
+    const json = readJsonFile(tsconfiSpecPath);
     json.extends = './tsconfig.json';
-    writeJsonFile(`apps/${appName}/tsconfig.spec.json`, json);
+    writeJsonFile(tsconfiSpecPath, json);
   } else {
-    writeJsonFile(`apps/${appName}/tsconfig.spec.json`, defaultTsConfigSpec);
+    writeJsonFile(tsconfiSpecPath, defaultTsConfigSpec(relativePathToRoot));
   }
 }

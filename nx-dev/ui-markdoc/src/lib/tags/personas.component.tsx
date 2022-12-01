@@ -1,3 +1,7 @@
+import {
+  CloudArrowDownIcon,
+  Squares2X2Icon,
+} from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { ReactNode } from 'react';
 
@@ -7,13 +11,25 @@ export function Personas({ children }: { children: ReactNode }): JSX.Element {
   );
 }
 
-type PersonaType = 'javascript' | 'lerna' | 'angular' | 'integrated';
+type PersonaType =
+  | 'cache'
+  | 'distribute'
+  | 'javascript'
+  | 'lerna'
+  | 'angular'
+  | 'integrated';
 const typeMap: Record<
   PersonaType,
   {
     image: JSX.Element;
   }
 > = {
+  cache: {
+    image: <CloudArrowDownIcon role="img" className="h-6 w-6" />,
+  },
+  distribute: {
+    image: <Squares2X2Icon role="img" className="h-6 w-6" />,
+  },
   javascript: {
     image: (
       <svg

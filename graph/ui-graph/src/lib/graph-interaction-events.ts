@@ -1,12 +1,20 @@
 import { VirtualElement } from '@popperjs/core';
-import { NodeDataDefinition } from './util-cytoscape/project-node';
-import { EdgeDataDefinition } from './util-cytoscape/edge';
+import { ProjectNodeDataDefinition } from './util-cytoscape/project-node';
+import { EdgeDataDefinition } from './util-cytoscape/project-edge';
+import { TaskNodeDataDefinition } from './util-cytoscape/task-node';
 
-interface NodeClickEvent {
-  type: 'NodeClick';
+interface ProjectNodeClickEvent {
+  type: 'ProjectNodeClick';
   ref: VirtualElement;
   id: string;
-  data: NodeDataDefinition;
+  data: ProjectNodeDataDefinition;
+}
+
+interface TaskNodeClickEvent {
+  type: 'TaskNodeClick';
+  ref: VirtualElement;
+  id: string;
+  data: TaskNodeDataDefinition;
 }
 
 interface EdgeClickEvent {
@@ -26,6 +34,7 @@ interface GraphRegeneratedEvent {
 }
 
 export type GraphInteractionEvents =
-  | NodeClickEvent
+  | ProjectNodeClickEvent
   | EdgeClickEvent
-  | GraphRegeneratedEvent;
+  | GraphRegeneratedEvent
+  | TaskNodeClickEvent;

@@ -7,12 +7,15 @@ import {
 } from '@nrwl/devkit';
 
 import {
+  jsdomVersion,
   nxVersion,
+  vitePluginDtsVersion,
   vitePluginEslintVersion,
   vitePluginReactVersion,
-  viteVersion,
   vitestUiVersion,
   vitestVersion,
+  viteTsConfigPathsVersion,
+  viteVersion,
 } from '../../utils/versions';
 import { Schema } from './schema';
 
@@ -21,25 +24,23 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
   const devDependencies = {};
   const dependencies = {};
   packageJson.dependencies = packageJson.dependencies || {};
-  packageJson.devDependencices = packageJson.devDependencices || {};
+  packageJson.devDependencies = packageJson.devDependencies || {};
 
   // base deps
   devDependencies['@nrwl/vite'] = nxVersion;
   devDependencies['vite'] = viteVersion;
   devDependencies['vite-plugin-eslint'] = vitePluginEslintVersion;
+  devDependencies['vite-tsconfig-paths'] = viteTsConfigPathsVersion;
   devDependencies['vitest'] = vitestVersion;
   devDependencies['@vitest/ui'] = vitestUiVersion;
+  devDependencies['jsdom'] = jsdomVersion;
 
   if (schema.uiFramework === 'react') {
     devDependencies['@vitejs/plugin-react'] = vitePluginReactVersion;
   }
 
-  if (schema.uiFramework === 'vue3') {
-    devDependencies['@vitejs/plugin-vue'] = vitePluginReactVersion;
-  }
-
-  if (schema.uiFramework === 'vue3-jsx') {
-    devDependencies['@vitejs/plugin-vue-jsx'] = vitePluginReactVersion;
+  if (schema.includeLib) {
+    devDependencies['vite-plugin-dts'] = vitePluginDtsVersion;
   }
 
   return addDependenciesToPackageJson(host, dependencies, devDependencies);
@@ -60,9 +61,8 @@ function moveToDevDependencies(tree: Tree) {
 }
 
 export function initGenerator(tree: Tree, schema: Schema) {
-  const installTask = checkDependenciesInstalled(tree, schema);
   moveToDevDependencies(tree);
-
+  const installTask = checkDependenciesInstalled(tree, schema);
   return installTask;
 }
 

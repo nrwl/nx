@@ -11,28 +11,23 @@ export function updateProjectConfig(tree: Tree, schema: Schema) {
 
   projectConfig.targets.build.options.outputPath = `dist/apps/${schema.project}/browser`;
 
+  const buildTargetFileReplacements =
+    projectConfig.targets.build.configurations?.production?.fileReplacements;
+
   projectConfig.targets.server = {
+    dependsOn: ['build'],
     executor: '@angular-devkit/build-angular:server',
     options: {
-      outputPath: `dist/apps/${projectConfig.root}/server`,
+      outputPath: `dist/${projectConfig.root}/server`,
       main: joinPathFragments(projectConfig.root, schema.serverFileName),
       tsConfig: joinPathFragments(projectConfig.root, 'tsconfig.server.json'),
     },
     configurations: {
       production: {
         outputHashing: 'media',
-        fileReplacements: [
-          {
-            replace: joinPathFragments(
-              projectConfig.sourceRoot,
-              'environments/environment.ts'
-            ),
-            with: joinPathFragments(
-              projectConfig.sourceRoot,
-              'environments/environment.prod.ts'
-            ),
-          },
-        ],
+        ...(buildTargetFileReplacements
+          ? { fileReplacements: buildTargetFileReplacements }
+          : {}),
       },
       development: {
         optimization: false,

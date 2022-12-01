@@ -2,16 +2,11 @@ import { assertMinimumCypressVersion } from '@nrwl/cypress/src/utils/cypress-ver
 import {
   DependencyType,
   ProjectGraph,
-  readJson,
   readProjectConfiguration,
-  readTargetOptions,
   Tree,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
-import {
-  createTreeWithEmptyV1Workspace,
-  createTreeWithEmptyWorkspace,
-} from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
 import { applicationGenerator } from '../application/application';
 import { componentGenerator } from '../component/component';
@@ -33,7 +28,7 @@ describe('React:CypressComponentTestConfiguration', () => {
     ReturnType<typeof assertMinimumCypressVersion>
   > = assertMinimumCypressVersion as never;
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
   it('should generate cypress component test config with --build-target', async () => {
     mockedAssertCypressVersion.mockReturnValue();
@@ -45,6 +40,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       style: 'scss',
       unitTestRunner: 'none',
       name: 'my-app',
+      bundler: 'vite',
     });
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
@@ -79,6 +75,7 @@ describe('React:CypressComponentTestConfiguration', () => {
         ],
       },
     };
+
     await cypressComponentConfigGenerator(tree, {
       project: 'some-lib',
       generateTests: false,
@@ -115,6 +112,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       style: 'scss',
       unitTestRunner: 'none',
       name: 'my-app',
+      bundler: 'vite',
     });
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
@@ -185,6 +183,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       style: 'scss',
       unitTestRunner: 'none',
       name: 'my-app',
+      bundler: 'vite',
     });
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
@@ -232,6 +231,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       style: 'scss',
       unitTestRunner: 'none',
       name: 'my-app',
+      bundler: 'vite',
     });
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
@@ -286,6 +286,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       style: 'scss',
       unitTestRunner: 'none',
       name: 'my-app',
+      bundler: 'vite',
     });
     await libraryGenerator(tree, {
       name: 'some-lib',
@@ -327,7 +328,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       "Error trying to find build configuration. Try manually specifying the build target with the --build-target flag.
       Provided project? some-lib
       Provided build target? my-app:build
-      Provided Executors? @nrwl/webpack:webpack"
+      Provided Executors? @nrwl/webpack:webpack, @nrwl/vite:build"
     `);
   });
 });

@@ -1,6 +1,6 @@
 import type { ExecutorContext } from '@nrwl/devkit';
 import { writeJsonFile } from '@nrwl/devkit';
-import { createPackageJson as generatePackageJson } from '@nrwl/workspace/src/utilities/create-package-json';
+import { createPackageJson as generatePackageJson } from 'nx/src/utils/create-package-json';
 import type { NextBuildBuilderOptions } from '../../../utils/types';
 
 export async function createPackageJson(
@@ -12,7 +12,6 @@ export async function createPackageJson(
     context.projectGraph,
     {
       root: context.root,
-      projectRoot: context.workspace.projects[context.projectName].sourceRoot,
     }
   );
 

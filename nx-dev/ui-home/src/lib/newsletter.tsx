@@ -69,7 +69,7 @@ export function Newsletter(): JSX.Element {
   ];
 
   return (
-    <div className="bg-gray-50 pt-28 dark:bg-slate-800/40">
+    <div className="bg-slate-50 pt-28 dark:bg-slate-800/40">
       <div className="mx-auto max-w-7xl py-16 px-4 sm:px-6 lg:flex lg:items-center lg:py-24 lg:px-8">
         <div className="lg:w-0 lg:flex-1">
           <h1 className="text-lg font-semibold tracking-tight text-blue-500 dark:text-sky-500">

@@ -61,8 +61,11 @@ async function collectTsConfigPaths(tree: Tree): Promise<string[]> {
 
   const projectGraph = await createProjectGraphAsync();
   const angularProjects = Object.entries(projectGraph.dependencies)
-    .filter(([, dep]) =>
-      dep.some(({ target }) => target === 'npm:@angular/core')
+    .filter(([node, dep]) =>
+      dep.some(
+        ({ target }) =>
+          target === 'npm:@angular/core' && !projectGraph.externalNodes?.[node]
+      )
     )
     .map(([projectName]) => ({
       projectName,

@@ -363,6 +363,41 @@ describe('Angular Projects', () => {
     expect(buildOutput).toContain('Successfully ran target build');
   }, 300000);
 
+  it('MF - should serve a ssr remote app successfully', async () => {
+    // ARRANGE
+    const remoteApp1 = uniq('remote');
+    // generate remote apps
+    runCLI(
+      `generate @nrwl/angular:remote ${remoteApp1} --ssr --no-interactive`
+    );
+
+    let process: ChildProcess;
+
+    try {
+      process = await runCommandUntil(`serve-ssr ${remoteApp1}`, (output) => {
+        return (
+          output.includes(`Browser application bundle generation complete.`) &&
+          output.includes(`Server application bundle generation complete.`) &&
+          output.includes(
+            `Angular Universal Live Development Server is listening`
+          )
+        );
+      });
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+
+    // port and process cleanup
+    try {
+      if (process && process.pid) {
+        await promisifiedTreeKill(process.pid, 'SIGKILL');
+      }
+    } catch (err) {
+      expect(err).toBeFalsy();
+    }
+  }, 300000);
+
   it('Custom Webpack Config for SSR - should serve the app correctly', async () => {
     // ARRANGE
     const ssrApp = uniq('app');

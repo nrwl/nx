@@ -322,6 +322,15 @@ const recipesUrls = {
 };
 
 /**
+ * Nx Cloud
+ */
+const nxCloudUrls = {
+  '/nx-cloud/set-up/add-nx-cloud': '/core-features/share-your-cache',
+  '/nx-cloud/set-up/set-up-caching': '/core-features/share-your-cache',
+  '/nx-cloud/set-up/set-up-dte': '/core-features/distribute-task-execution',
+};
+
+/**
  * Tutorial Updates
  */
 const oldReactTutorialPaths = [
@@ -363,6 +372,26 @@ const tutorialRedirects = Object.assign(
   nodeTutorialRedirects
 );
 
+const oldAngularTutorialPaths = [
+  '/angular-tutorial/01-create-application',
+  '/angular-tutorial/02-add-e2e-test',
+  '/angular-tutorial/03-display-todos',
+  '/angular-tutorial/04-connect-to-api',
+  '/angular-tutorial/05-add-node-app',
+  '/angular-tutorial/06-proxy',
+  '/angular-tutorial/07-share-code',
+  '/angular-tutorial/08-create-libs',
+  '/angular-tutorial/09-dep-graph',
+  '/angular-tutorial/10-computation-caching',
+  '/angular-tutorial/11-test-affected-projects',
+  '/angular-tutorial/12-summary',
+];
+
+const angularRedirectDestination = '/angular-tutorial/1-code-generation';
+for (const path of oldAngularTutorialPaths) {
+  tutorialRedirects[path] = angularRedirectDestination;
+}
+
 /**
  * Public export API
  */
@@ -372,6 +401,7 @@ module.exports = {
   guideUrls,
   overviewUrls,
   recipesUrls,
+  nxCloudUrls,
   schemaUrls,
   tutorialRedirects,
 };

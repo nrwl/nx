@@ -8,6 +8,7 @@ export class ParentNode {
   getCytoscapeNodeDef(): cy.NodeDefinition {
     return {
       group: 'nodes',
+      classes: 'parentNode',
       data: {
         id: this.config.id,
         parent: this.config.parentId,

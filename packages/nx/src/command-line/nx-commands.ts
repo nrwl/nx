@@ -58,7 +58,9 @@ export const commandsObject = yargs
     describe: 'Run target for multiple listed projects',
     builder: (yargs) =>
       linkToNxDevAndExamples(
-        withRunManyOptions(withOutputStyleOption(withTargetOption(yargs))),
+        withRunManyOptions(
+          withOutputStyleOption(withTargetAndConfigurationOption(yargs))
+        ),
         'run-many'
       ),
     handler: async (args) =>
@@ -70,7 +72,9 @@ export const commandsObject = yargs
     builder: (yargs) =>
       linkToNxDevAndExamples(
         withAffectedOptions(
-          withRunOptions(withOutputStyleOption(withTargetOption(yargs)))
+          withRunOptions(
+            withOutputStyleOption(withTargetAndConfigurationOption(yargs))
+          )
         ),
         'affected'
       ),
@@ -82,7 +86,9 @@ export const commandsObject = yargs
     describe: false,
     builder: (yargs) =>
       linkToNxDevAndExamples(
-        withAffectedOptions(withRunOptions(withOutputStyleOption(yargs))),
+        withAffectedOptions(
+          withRunOptions(withOutputStyleOption(withConfiguration(yargs)))
+        ),
         'affected'
       ),
     handler: async (args) =>
@@ -96,7 +102,9 @@ export const commandsObject = yargs
     describe: false,
     builder: (yargs) =>
       linkToNxDevAndExamples(
-        withAffectedOptions(withRunOptions(withOutputStyleOption(yargs))),
+        withAffectedOptions(
+          withRunOptions(withOutputStyleOption(withConfiguration(yargs)))
+        ),
         'affected'
       ),
     handler: async (args) =>
@@ -110,7 +118,9 @@ export const commandsObject = yargs
     describe: false,
     builder: (yargs) =>
       linkToNxDevAndExamples(
-        withAffectedOptions(withRunOptions(withOutputStyleOption(yargs))),
+        withAffectedOptions(
+          withRunOptions(withOutputStyleOption(withConfiguration(yargs)))
+        ),
         'affected'
       ),
     handler: async (args) =>
@@ -124,7 +134,9 @@ export const commandsObject = yargs
     describe: false,
     builder: (yargs) =>
       linkToNxDevAndExamples(
-        withAffectedOptions(withRunOptions(withOutputStyleOption(yargs))),
+        withAffectedOptions(
+          withRunOptions(withOutputStyleOption(withConfiguration(yargs)))
+        ),
         'affected'
       ),
     handler: async (args) =>
@@ -190,7 +202,10 @@ export const commandsObject = yargs
     builder: (yargs) =>
       linkToNxDevAndExamples(
         withAffectedOptions(
-          withTargetOption(withPrintAffectedOptions(yargs), false)
+          withTargetAndConfigurationOption(
+            withPrintAffectedOptions(yargs),
+            false
+          )
         ),
         'print-affected'
       ),
@@ -325,7 +340,7 @@ export const commandsObject = yargs
       args._ = args._.slice(1);
       process.exit(
         await (
-          await import('./generate')
+          await import('./new')
         ).newWorkspace(args['nxWorkspaceRoot'] as string, args)
       );
     },
@@ -356,6 +371,15 @@ export const commandsObject = yargs
     describe: false,
     handler: async () =>
       process.exit(await (await import('./view-logs')).viewLogs()),
+  })
+  .command({
+    command: 'exec',
+    describe: 'Executes any command as if it was a target on the project',
+    builder: (yargs) => withRunOneOptions(yargs),
+    handler: async (args) => {
+      await (await import('./exec')).nxExecCommand(withOverrides(args));
+      process.exit(0);
+    },
   })
   .help()
   .version(nxVersion);
@@ -433,12 +457,6 @@ function withRunOptions(yargs: yargs.Argv): yargs.Argv {
     .options('runner', {
       describe: 'This is the name of the tasks runner configured in nx.json',
       type: 'string',
-    })
-    .options('configuration', {
-      describe:
-        'This is the configuration to use when performing tasks on projects',
-      type: 'string',
-      alias: 'c',
     })
     .option('prod', {
       describe: 'Use the production configuration',
@@ -543,7 +561,8 @@ function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
       'populate--': true,
     })
     .option('projects', {
-      describe: 'Projects to run (comma delimited)',
+      describe:
+        'Projects to run. (comma delimited project names and/or patterns)',
       type: 'string',
     })
     .option('all', {
@@ -616,13 +635,25 @@ function withOutputStyleOption(
   });
 }
 
-function withTargetOption(yargs: yargs.Argv, demandOption = true): yargs.Argv {
-  return yargs.option('target', {
+function withTargetAndConfigurationOption(
+  yargs: yargs.Argv,
+  demandOption = true
+): yargs.Argv {
+  return withConfiguration(yargs).option('target', {
     describe: 'Task to run for affected projects',
     type: 'string',
     requiresArg: true,
     demandOption,
     global: false,
+  });
+}
+
+function withConfiguration(yargs: yargs.Argv) {
+  return yargs.options('configuration', {
+    describe:
+      'This is the configuration to use when performing tasks on projects',
+    type: 'string',
+    alias: 'c',
   });
 }
 
@@ -682,7 +713,7 @@ function withRunOneOptions(yargs: yargs.Argv) {
   );
 
   const res = withRunOptions(
-    withOutputStyleOption(withTargetOption(yargs, false), [
+    withOutputStyleOption(withTargetAndConfigurationOption(yargs, false), [
       'dynamic',
       'static',
       'stream',
@@ -698,6 +729,10 @@ function withRunOneOptions(yargs: yargs.Argv) {
     .option('project', {
       describe: 'Target project',
       type: 'string',
+    })
+    .option('help', {
+      describe: 'Show Help',
+      type: 'boolean',
     });
 
   if (executorShouldShowHelp) {

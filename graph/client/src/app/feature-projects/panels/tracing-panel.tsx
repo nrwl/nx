@@ -5,7 +5,7 @@ import {
   XCircleIcon,
 } from '@heroicons/react/24/outline';
 import { memo } from 'react';
-import { TracingAlgorithmType } from '../../machines/interfaces';
+import { TracingAlgorithmType } from '../machines/interfaces';
 
 export interface TracingPanelProps {
   start: string;

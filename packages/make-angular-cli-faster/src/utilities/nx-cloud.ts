@@ -1,9 +1,9 @@
-import { getPackageManagerCommand } from '@nrwl/devkit';
 import { execSync } from 'child_process';
 import { prompt } from 'enquirer';
+import { PackageManagerCommands } from 'nx/src/utils/package-manager';
 
-export async function promptForNxCloud(): Promise<boolean> {
-  const { useNxCloud } = await prompt<{ useNxCloud: 'Yes' | 'No' }>([
+export function promptForNxCloud(): Promise<boolean> {
+  return prompt([
     {
       name: 'useNxCloud',
       message: `Enable distributed caching to make your CI faster`,
@@ -17,16 +17,12 @@ export async function promptForNxCloud(): Promise<boolean> {
       ],
       initial: 'Yes' as any,
     },
-  ]);
-
-  return useNxCloud === 'Yes';
+  ]).then((a: { useNxCloud: 'Yes' | 'No' }) => a.useNxCloud === 'Yes');
 }
 
-export function initNxCloud(): void {
+export function initNxCloud(pmc: PackageManagerCommands): void {
   execSync(
-    `${
-      getPackageManagerCommand().exec
-    } nx g @nrwl/nx-cloud:init --installationSource=make-angular-cli-faster`,
+    `${pmc.exec} nx g @nrwl/nx-cloud:init --installationSource=make-angular-cli-faster`,
     {
       stdio: [0, 1, 2],
     }

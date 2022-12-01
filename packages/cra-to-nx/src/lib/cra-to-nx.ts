@@ -20,27 +20,35 @@ import { renameJsToJsx } from './rename-js-to-jsx';
 import { writeViteIndexHtml } from './write-vite-index-html';
 import { checkForCustomWebpackSetup } from './check-for-custom-webpack-setup';
 
+export interface Options {
+  force: boolean;
+  e2e: boolean;
+  nxCloud: boolean;
+  vite: boolean;
+  integrated: boolean;
+}
+interface NormalizedOptions extends Options {
+  packageManager: string;
+  pmc: PackageManagerCommands;
+  appIsJs: boolean;
+  reactAppName: string;
+  isCRA5: boolean;
+  npxYesFlagNeeded: boolean;
+  isVite: boolean;
+  isNested: boolean;
+}
+
 function addDependencies(pmc: PackageManagerCommands, ...deps: string[]) {
   const depsArg = deps.join(' ');
   output.log({ title: `📦 Adding dependencies: ${depsArg}` });
   execSync(`${pmc.addDev} ${depsArg}`, { stdio: [0, 1, 2] });
 }
 
-export async function createNxWorkspaceForReact(options: Record<string, any>) {
-  if (!options.force) {
-    checkForUncommittedChanges();
-    checkForCustomWebpackSetup();
-  }
+export function normalizeOptions(options: Options): NormalizedOptions {
   const packageManager = detectPackageManager();
   const pmc = getPackageManagerCommand(packageManager);
 
-  output.log({ title: '✨ Nx initialization' });
-
-  let appIsJs = true;
-
-  if (fileExists(`tsconfig.json`)) {
-    appIsJs = false;
-  }
+  const appIsJs = !fileExists(`tsconfig.json`);
 
   const reactAppName = readNameFromPackageJson();
   const packageJson = readJsonFile('package.json');
@@ -52,82 +60,40 @@ export async function createNxWorkspaceForReact(options: Record<string, any>) {
   const npmVersion = execSync('npm -v').toString();
   // Should remove this check 04/2023 once Node 14 & npm 6 reach EOL
   const npxYesFlagNeeded = !npmVersion.startsWith('6'); // npm 7 added -y flag to npx
-  const isVite = options.vite || options.bundler === 'vite';
+  const isVite = options.vite;
+  const isNested = !options.integrated;
 
-  execSync(
-    `npx ${
-      npxYesFlagNeeded ? '-y' : ''
-    } create-nx-workspace@latest temp-workspace --appName=${reactAppName} --preset=react --style=css --packageManager=${packageManager} ${
-      options.nxCloud ? '--nxCloud' : '--nxCloud=false'
-    }`,
-    { stdio: [0, 1, 2] }
-  );
+  return {
+    ...options,
+    packageManager,
+    pmc,
+    appIsJs,
+    reactAppName,
+    isCRA5,
+    npxYesFlagNeeded,
+    isVite,
+    isNested,
+  };
+}
 
-  output.log({ title: '👋 Welcome to Nx!' });
-
-  output.log({ title: '🧹 Clearing unused files' });
-
-  copySync(`temp-workspace/apps/${reactAppName}/project.json`, 'project.json');
-  removeSync(`temp-workspace/apps/${reactAppName}/`);
-  removeSync('node_modules');
-
-  output.log({ title: '🚚 Moving your React app in your new Nx workspace' });
-
-  const requiredCraFiles = [
-    'project.json',
-    'package.json',
-    'src',
-    'public',
-    appIsJs ? null : 'tsconfig.json',
-    packageManager === 'yarn' ? 'yarn.lock' : null,
-    packageManager === 'pnpm' ? 'pnpm-lock.yaml' : null,
-    packageManager === 'npm' ? 'package-lock.json' : null,
-  ];
-
-  const optionalCraFiles = ['README.md'];
-
-  const filesToMove = [...requiredCraFiles, ...optionalCraFiles].filter(
-    Boolean
-  );
-
-  filesToMove.forEach((f) => {
-    try {
-      moveSync(f, `temp-workspace/apps/${reactAppName}/${f}`, {
-        overwrite: true,
-      });
-    } catch (error) {
-      if (requiredCraFiles.includes(f)) {
-        throw error;
-      }
-    }
-  });
-
-  process.chdir('temp-workspace/');
-
-  if (isVite) {
-    output.log({ title: '🧑‍🔧  Setting up Vite' });
-    const { addViteCommandsToPackageScripts } = await import(
-      './add-vite-commands-to-package-scripts'
-    );
-    addViteCommandsToPackageScripts(reactAppName);
-    writeViteConfig(reactAppName);
-    writeViteIndexHtml(reactAppName);
-    renameJsToJsx(reactAppName);
-  } else {
-    output.log({ title: '🧑‍🔧  Setting up craco + Webpack' });
-    const { addCracoCommandsToPackageScripts } = await import(
-      './add-craco-commands-to-package-scripts'
-    );
-    addCracoCommandsToPackageScripts(reactAppName);
-
-    writeCracoConfig(reactAppName, isCRA5);
-
-    output.log({
-      title: '🛬 Skip CRA preflight check since Nx manages the monorepo',
-    });
-
-    execSync(`echo "SKIP_PREFLIGHT_CHECK=true" > .env`, { stdio: [0, 1, 2] });
+export async function createNxWorkspaceForReact(options: Record<string, any>) {
+  if (!options.force) {
+    checkForUncommittedChanges();
+    checkForCustomWebpackSetup();
   }
+
+  output.log({ title: '✨ Nx initialization' });
+
+  const normalizedOptions = normalizeOptions(options as Options);
+  reorgnizeWorkspaceStructure(normalizedOptions);
+}
+
+async function reorgnizeWorkspaceStructure(options: NormalizedOptions) {
+  createTempWorkspace(options);
+
+  moveFilesToTempWorkspace(options);
+
+  await addBundler(options);
 
   output.log({ title: '🧶  Add all node_modules to .gitignore' });
 
@@ -135,27 +101,9 @@ export async function createNxWorkspaceForReact(options: Record<string, any>) {
 
   process.chdir('../');
 
-  output.log({ title: '🚚 Folder restructuring.' });
+  copyFromTempWorkspaceToRoot();
 
-  readdirSync('./temp-workspace').forEach((f) => {
-    moveSync(`temp-workspace/${f}`, `./${f}`, { overwrite: true });
-  });
-
-  output.log({ title: '🧹  Cleaning up.' });
-
-  cleanUpFiles(reactAppName);
-
-  output.log({ title: "📃 Extend the app's tsconfig.json from the base" });
-
-  setupTsConfig(reactAppName);
-
-  if (options.e2e) {
-    output.log({ title: '📃 Setup e2e tests' });
-    setupE2eProject(reactAppName);
-  } else {
-    removeSync(`apps/${reactAppName}-e2e`);
-    execSync(`${pmc.rm} @nrwl/cypress eslint-plugin-cypress`);
-  }
+  cleanUpUnusedFilesAndAddConfigFiles(options);
 
   output.log({ title: '🙂 Please be patient, one final step remaining!' });
 
@@ -164,17 +112,17 @@ export async function createNxWorkspaceForReact(options: Record<string, any>) {
   });
 
   addDependencies(
-    pmc,
+    options.pmc,
     '@testing-library/jest-dom',
     'eslint-config-react-app',
     'web-vitals',
     'jest-watch-typeahead'
   );
 
-  if (isVite) {
-    addDependencies(pmc, 'vite', 'vitest', '@vitejs/plugin-react');
+  if (options.isVite) {
+    addDependencies(options.pmc, 'vite', 'vitest', '@vitejs/plugin-react');
   } else {
-    addDependencies(pmc, '@craco/craco', 'cross-env', 'react-scripts');
+    addDependencies(options.pmc, '@craco/craco', 'cross-env', 'react-scripts');
   }
 
   output.log({ title: '🎉 Done!' });
@@ -188,20 +136,150 @@ export async function createNxWorkspaceForReact(options: Record<string, any>) {
     ],
   });
 
-  if (isVite) {
+  if (options.isVite) {
+    const indexPath = options.isNested
+      ? 'index.html'
+      : `apps/${options.reactAppName}/index.html`;
+    const oldIndexPath = options.isNested
+      ? 'public/index.html'
+      : `apps/${options.reactAppName}/public/index.html`;
     output.note({
-      title: `A new apps/${reactAppName}/index.html has been created. Compare it to the previous apps/${reactAppName}/public/index.html file and make any changes needed, then delete the previous file.`,
+      title: `A new ${indexPath} has been created. Compare it to the previous ${oldIndexPath} file and make any changes needed, then delete the previous file.`,
     });
   }
 
   output.note({
     title: 'Or, you can try the commands!',
     bodyLines: [
-      `npx nx serve ${reactAppName}`,
-      `npx nx build ${reactAppName}`,
-      `npx nx test ${reactAppName}`,
+      options.integrated ? `npx nx serve ${options.reactAppName}` : 'npm start',
+      options.integrated
+        ? `npx nx build ${options.reactAppName}`
+        : 'npm run build',
+      options.integrated ? `npx nx test ${options.reactAppName}` : `npm test`,
       ` `,
       `https://nx.dev/getting-started/intro#10-try-the-commands`,
     ],
   });
+}
+
+function createTempWorkspace(options: NormalizedOptions) {
+  execSync(
+    `npx ${
+      options.npxYesFlagNeeded ? '-y' : ''
+    } create-nx-workspace@latest temp-workspace --appName=${
+      options.reactAppName
+    } --preset=react-monorepo --style=css --packageManager=${
+      options.packageManager
+    } ${options.nxCloud ? '--nxCloud' : '--nxCloud=false'}`,
+    { stdio: [0, 1, 2] }
+  );
+
+  output.log({ title: '👋 Welcome to Nx!' });
+
+  output.log({ title: '🧹 Clearing unused files' });
+
+  copySync(
+    `temp-workspace/apps/${options.reactAppName}/project.json`,
+    'project.json'
+  );
+  removeSync(`temp-workspace/apps/${options.reactAppName}/`);
+  removeSync('node_modules');
+}
+
+function moveFilesToTempWorkspace(options: NormalizedOptions) {
+  output.log({ title: '🚚 Moving your React app in your new Nx workspace' });
+
+  const requiredCraFiles = [
+    'project.json',
+    options.isNested ? null : 'package.json',
+    'src',
+    'public',
+    options.appIsJs ? null : 'tsconfig.json',
+    options.packageManager === 'yarn' ? 'yarn.lock' : null,
+    options.packageManager === 'pnpm' ? 'pnpm-lock.yaml' : null,
+    options.packageManager === 'npm' ? 'package-lock.json' : null,
+  ];
+
+  const optionalCraFiles = ['README.md'];
+
+  const filesToMove = [...requiredCraFiles, ...optionalCraFiles].filter(
+    Boolean
+  );
+
+  filesToMove.forEach((f) => {
+    try {
+      moveSync(
+        f,
+        options.isNested
+          ? `temp-workspace/${f}`
+          : `temp-workspace/apps/${options.reactAppName}/${f}`,
+        {
+          overwrite: true,
+        }
+      );
+    } catch (error) {
+      if (requiredCraFiles.includes(f)) {
+        throw error;
+      }
+    }
+  });
+
+  process.chdir('temp-workspace/');
+}
+
+async function addBundler(options: NormalizedOptions) {
+  if (options.isVite) {
+    output.log({ title: '🧑‍🔧  Setting up Vite' });
+    const { addViteCommandsToPackageScripts } = await import(
+      './add-vite-commands-to-package-scripts'
+    );
+    addViteCommandsToPackageScripts(options.reactAppName, options.isNested);
+    writeViteConfig(options.reactAppName, options.isNested, options.appIsJs);
+    writeViteIndexHtml(options.reactAppName, options.isNested, options.appIsJs);
+    renameJsToJsx(options.reactAppName, options.isNested);
+  } else {
+    output.log({ title: '🧑‍🔧  Setting up craco + Webpack' });
+    const { addCracoCommandsToPackageScripts } = await import(
+      './add-craco-commands-to-package-scripts'
+    );
+    addCracoCommandsToPackageScripts(options.reactAppName, options.isNested);
+
+    writeCracoConfig(options.reactAppName, options.isCRA5, options.isNested);
+
+    output.log({
+      title: '🛬 Skip CRA preflight check since Nx manages the monorepo',
+    });
+
+    execSync(`echo "SKIP_PREFLIGHT_CHECK=true" > .env`, { stdio: [0, 1, 2] });
+  }
+}
+
+function copyFromTempWorkspaceToRoot() {
+  output.log({ title: '🚚 Folder restructuring.' });
+
+  readdirSync('./temp-workspace').forEach((f) => {
+    moveSync(`temp-workspace/${f}`, `./${f}`, { overwrite: true });
+  });
+}
+
+function cleanUpUnusedFilesAndAddConfigFiles(options: NormalizedOptions) {
+  output.log({ title: '🧹  Cleaning up.' });
+
+  cleanUpFiles(options.reactAppName, options.isNested);
+
+  output.log({ title: "📃 Extend the app's tsconfig.json from the base" });
+
+  setupTsConfig(options.reactAppName, options.isNested);
+
+  if (options.e2e && !options.isNested) {
+    output.log({ title: '📃 Setup e2e tests' });
+    setupE2eProject(options.reactAppName);
+  } else {
+    removeSync(`apps/${options.reactAppName}-e2e`);
+    execSync(`${options.pmc.rm} @nrwl/cypress eslint-plugin-cypress`);
+  }
+
+  if (options.isNested) {
+    removeSync('apps');
+  }
 }

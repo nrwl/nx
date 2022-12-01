@@ -1,4 +1,8 @@
-import { readJson, readProjectConfiguration } from '@nrwl/devkit';
+import {
+  readJson,
+  readProjectConfiguration,
+  updateProjectConfiguration,
+} from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { PackageJson } from 'nx/src/utils/package-json';
 import { angularVersion, ngUniversalVersion } from '../../utils/versions';
@@ -9,7 +13,7 @@ import setupSsr from './setup-ssr';
 describe('setupSSR', () => {
   it('should create the files correctly for ssr', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     await applicationGenerator(tree, {
       name: 'app1',
@@ -34,27 +38,13 @@ describe('setupSSR', () => {
        */
       import '@angular/platform-server/init';
 
-      import { enableProdMode } from '@angular/core';
-
-      import { environment } from './environments/environment';
-
-      if (environment.production) {
-        enableProdMode();
-      }
-
       export { AppServerModule } from './app/app.server.module';
       export { renderModule } from '@angular/platform-server';"
     `);
     expect(tree.read('apps/app1/src/main.ts', 'utf-8')).toMatchInlineSnapshot(`
-      "import { enableProdMode } from '@angular/core';
-      import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+      "import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 
       import { AppModule } from './app/app.module';
-      import { environment } from './environments/environment';
-
-      if (environment.production) {
-        enableProdMode();
-      }
 
       function bootstrap() {
         platformBrowserDynamic()
@@ -63,7 +53,7 @@ describe('setupSSR', () => {
       };
 
 
-       if (document.readyState === 'complete') {
+       if (document.readyState !== 'loading') {
          bootstrap();
        } else {
          document.addEventListener('DOMContentLoaded', bootstrap);
@@ -123,7 +113,8 @@ describe('setupSSR', () => {
         providers: [],
         bootstrap: [AppComponent]
       })
-      export class AppModule { }"
+      export class AppModule { }
+      "
     `);
     const packageJson = readJson<PackageJson>(tree, 'package.json');
     const dependencies = {
@@ -139,5 +130,33 @@ describe('setupSSR', () => {
     for (const [dep, version] of Object.entries(devDeps)) {
       expect(packageJson.devDependencies[dep]).toEqual(version);
     }
+  });
+
+  it('should use fileReplacements if they already exist', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+
+    await applicationGenerator(tree, {
+      name: 'app1',
+    });
+
+    tree.write('apps/app1/src/environments/environment.ts', '');
+    tree.write('apps/app1/src/environments/environment.prod.ts', '');
+    const project = readProjectConfiguration(tree, 'app1');
+    project.targets.build.configurations.production.fileReplacements = [
+      {
+        replace: 'apps/app1/src/environments/environment.ts',
+        with: 'apps/app1/src/environments/environment.prod.ts',
+      },
+    ];
+    updateProjectConfiguration(tree, 'app1', project);
+
+    // ACT
+    await setupSsr(tree, { project: 'app1' });
+
+    // ASSERT
+    expect(
+      readProjectConfiguration(tree, 'app1').targets.server
+    ).toMatchSnapshot();
   });
 });

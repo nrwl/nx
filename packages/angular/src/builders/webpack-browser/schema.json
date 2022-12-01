@@ -37,8 +37,22 @@
       "description": "The full path for the main entry point to the app, relative to the current workspace."
     },
     "polyfills": {
-      "type": "string",
-      "description": "The full path for the polyfills file, relative to the current workspace."
+      "description": "Polyfills to be included in the build.",
+      "oneOf": [
+        {
+          "type": "array",
+          "description": "A list of polyfills to include in the build. Can be a full path for a file, relative to the current workspace or module specifier. Example: 'zone.js'.",
+          "items": {
+            "type": "string",
+            "uniqueItems": true
+          },
+          "default": []
+        },
+        {
+          "type": "string",
+          "description": "The full path for the polyfills file, relative to the current workspace or a module specifier. Example: 'zone.js'."
+        }
+      ]
     },
     "tsConfig": {
       "type": "string",

@@ -2,7 +2,7 @@ import { StrictMode } from 'react';
 import * as ReactDOM from 'react-dom';
 import { inspect } from '@xstate/inspect';
 import App from './app/app';
-import { ExternalApi } from './app/machines/externalApi';
+import { ExternalApi } from './app/external-api';
 
 if (window.useXstateInspect === true) {
   inspect({

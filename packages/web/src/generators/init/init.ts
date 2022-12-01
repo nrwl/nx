@@ -42,14 +42,16 @@ function updateDependencies(tree: Tree, schema: Schema) {
   );
 }
 
-function initRootBabelConfig(tree: Tree) {
+function initRootBabelConfig(tree: Tree, schema: Schema) {
   if (tree.exists('/babel.config.json') || tree.exists('/babel.config.js')) {
     return;
   }
 
-  writeJson(tree, '/babel.config.json', {
-    babelrcRoots: ['*'], // Make sure .babelrc files other than root can be loaded in a monorepo
-  });
+  if (!schema.skipBabelConfig) {
+    writeJson(tree, '/babel.config.json', {
+      babelrcRoots: ['*'], // Make sure .babelrc files other than root can be loaded in a monorepo
+    });
+  }
 
   const workspaceConfiguration = readWorkspaceConfiguration(tree);
 
@@ -80,7 +82,7 @@ export async function webInitGenerator(tree: Tree, schema: Schema) {
     const installTask = updateDependencies(tree, schema);
     tasks.push(installTask);
   }
-  initRootBabelConfig(tree);
+  initRootBabelConfig(tree, schema);
   if (!schema.skipFormat) {
     await formatFiles(tree);
   }

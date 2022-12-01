@@ -5,7 +5,7 @@
   "$id": "NxExpoBuildIOS",
   "cli": "nx",
   "title": "Expo iOS Build executor",
-  "description": "Build and sign a standalone IPA for the Apple App Store",
+  "description": "Build and sign a standalone IPA for the Apple App Store.",
   "type": "object",
   "properties": {
     "clearCredentials": {

@@ -4,7 +4,7 @@ import { readdirSync, writeFileSync } from 'fs';
 import { execSync } from 'child_process';
 
 function generateFileContent(
-  projects: { id: string; label: string; url: string }[]
+  workspaces: { id: string; label: string; url: string }[]
 ) {
   return `
   window.exclude = [];
@@ -15,8 +15,8 @@ function generateFileContent(
   window.appConfig = {
     showDebugger: true,
     showExperimentalFeatures: true,
-    projects: ${JSON.stringify(projects)},
-    defaultProject: '${projects[0].id}',
+    workspaces: ${JSON.stringify(workspaces)},
+    defaultWorkspaceId: '${workspaces[0].id}',
   };
   `;
 }
@@ -48,7 +48,8 @@ function writeFile() {
       return {
         id,
         label: id,
-        url: join('assets/project-graphs/', filename),
+        projectGraphUrl: join('assets/project-graphs/', filename),
+        taskGraphUrl: join('assets/task-graphs/', filename),
       };
     });
   } catch {

@@ -1,13 +1,13 @@
 // nx-ignore-next-line
 const withNx = require('@nrwl/next/plugins/with-nx');
-const { copy } = require('fs-extra');
+const { copySync } = require('fs-extra');
 const path = require('path');
 const redirectRules = require('./redirect-rules.config');
 
 /**
  * TODO@ben: Temporary solution before Nextjs' assets management tasks is up and running
  */
-copy(
+copySync(
   path.resolve(__dirname + '/../../docs'),
   path.resolve(__dirname + '/public/documentation'),
   { overwrite: true }
@@ -49,8 +49,8 @@ module.exports = withNx({
       permanent: true,
     });
     rules.push({
-      source: '/(l|latest)/(a|angular)/tutorial/01-create-application',
-      destination: '/angular-tutorial/01-create-application',
+      source: '/(l|latest)/(a|angular)/tutorial/1-code-generation',
+      destination: '/angular-tutorial/1-code-generation',
       permanent: true,
     });
     rules.push({
@@ -185,6 +185,14 @@ module.exports = withNx({
       rules.push({
         source: s,
         destination: redirectRules.recipesUrls[s],
+        permanent: true,
+      });
+    }
+    // Nx Cloud restructure
+    for (let s of Object.keys(redirectRules.nxCloudUrls)) {
+      rules.push({
+        source: s,
+        destination: redirectRules.nxCloudUrls[s],
         permanent: true,
       });
     }

@@ -39,7 +39,8 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@angular-devkit/schematics": "~14.2.0",
+    "@angular-devkit/schematics": "~15.0.1",
+    "@nguniversal/builders": "~15.0.0",
     "@nrwl/cypress": "file:../cypress",
     "@nrwl/devkit": "file:../devkit",
     "@nrwl/jest": "file:../jest",
@@ -48,7 +49,7 @@
     "@nrwl/webpack": "file:../webpack",
     "@nrwl/workspace": "file:../workspace",
     "@phenomnomnominal/tsquery": "4.1.1",
-    "@schematics/angular": "~14.2.0",
+    "@schematics/angular": "~15.0.1",
     "chalk": "4.1.0",
     "chokidar": "^3.5.1",
     "http-server": "^14.1.0",
@@ -58,7 +59,7 @@
     "semver": "7.3.4",
     "ts-node": "10.9.1",
     "tsconfig-paths": "^3.9.0",
-    "webpack": "^5.58.1",
+    "webpack": "^5.75.0",
     "webpack-merge": "5.7.3"
   },
   "publishConfig": {

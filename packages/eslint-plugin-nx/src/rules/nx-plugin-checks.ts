@@ -6,10 +6,7 @@ import {
   readJsonFile,
   workspaceRoot,
 } from '@nrwl/devkit';
-import {
-  findSourceProject,
-  getSourceFilePath,
-} from '@nrwl/workspace/src/utils/runtime-lint-utils';
+import { findProject, getSourceFilePath } from '../utils/runtime-lint-utils';
 import { existsSync } from 'fs';
 import { registerTsProject } from 'nx/src/utils/register';
 import * as path from 'path';
@@ -87,14 +84,18 @@ export default createESLintRule<Options, MessageIds>({
       return {};
     }
 
-    const projectGraph = readProjectGraph(RULE_NAME);
+    const { projectGraph, projectRootMappings } = readProjectGraph(RULE_NAME);
 
     const sourceFilePath = getSourceFilePath(
       context.getFilename(),
       workspaceRoot
     );
 
-    const sourceProject = findSourceProject(projectGraph, sourceFilePath);
+    const sourceProject = findProject(
+      projectGraph,
+      projectRootMappings,
+      sourceFilePath
+    );
     // If source is not part of an nx workspace, return.
     if (!sourceProject) {
       return {};

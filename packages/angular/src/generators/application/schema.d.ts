@@ -26,4 +26,5 @@ export interface Schema {
   skipPackageJson?: boolean;
   skipDefaultProject?: boolean;
   standalone?: boolean;
+  rootProject?: boolean;
 }

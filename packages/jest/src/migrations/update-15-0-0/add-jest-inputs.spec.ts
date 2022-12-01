@@ -11,7 +11,7 @@ describe('15.0.0 migration (add-jest-inputs)', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it('should add inputs configuration for jest targets', async () => {

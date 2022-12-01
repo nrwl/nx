@@ -40,6 +40,7 @@ const focusedNodes: Stylesheet = {
       switchValueByDarkMode(node, NrwlPalette.slate_700, NrwlPalette.slate_200),
     backgroundColor: (node) =>
       switchValueByDarkMode(node, NrwlPalette.sky_500, NrwlPalette.blue_500),
+    width: (node: NodeSingular) => labelWidthCalculator.calculateWidth(node),
   },
 };
 
@@ -63,7 +64,7 @@ const affectedNodes: Stylesheet = {
 };
 
 const parentNodes: Stylesheet = {
-  selector: ':parent',
+  selector: 'node.parentNode',
   style: {
     'background-opacity': (node) => switchValueByDarkMode(node, 0.5, 0.8),
     backgroundColor: (node) =>
@@ -91,6 +92,13 @@ const highlightedNodes: Stylesheet = {
   },
 };
 
+const taskNodes: Stylesheet = {
+  selector: 'node.taskNode',
+  style: {
+    label: 'data(label)',
+  },
+};
+
 const transparentProjectNodes: Stylesheet = {
   selector: 'node.transparent:childless',
   style: { opacity: 0.5 },
@@ -113,4 +121,5 @@ export const nodeStyles = [
   highlightedNodes,
   transparentProjectNodes,
   transparentParentNodes,
+  taskNodes,
 ];

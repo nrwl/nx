@@ -38,4 +38,5 @@ export interface NormalizedOptions extends LibraryGeneratorOptions {
   projectDirectory: string;
   projectName: string;
   projectRoot: Path;
+  libsDir: string;
 }

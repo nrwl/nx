@@ -1,36 +1,16 @@
-import * as ts from 'typescript';
+import { findNodes as _findNodes } from 'nx/src/utils/typescript';
+import type { Node, SyntaxKind } from 'typescript';
 
+// TODO(v16): This should be removed.
+
+/**
+ * @deprecated This function is deprecated and no longer supported.
+ */
 export function findNodes(
-  node: ts.Node,
-  kind: ts.SyntaxKind | ts.SyntaxKind[],
+  node: Node,
+  kind: SyntaxKind | SyntaxKind[],
   max = Infinity
-): ts.Node[] {
-  if (!node || max == 0) {
-    return [];
-  }
-
-  const arr: ts.Node[] = [];
-  const hasMatch = Array.isArray(kind)
-    ? kind.includes(node.kind)
-    : node.kind === kind;
-  if (hasMatch) {
-    arr.push(node);
-    max--;
-  }
-  if (max > 0) {
-    for (const child of node.getChildren()) {
-      findNodes(child, kind, max).forEach((node) => {
-        if (max > 0) {
-          arr.push(node);
-        }
-        max--;
-      });
-
-      if (max <= 0) {
-        break;
-      }
-    }
-  }
-
-  return arr;
+) {
+  console.warn('"findNodes" is deprecated and no longer supported.');
+  return _findNodes(node, kind, max);
 }

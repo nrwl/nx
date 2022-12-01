@@ -1,12 +1,11 @@
-import { GlobalStateProvider } from './state.provider';
 import { themeInit } from './theme-resolver';
 import { rankDirInit } from './rankdir-resolver';
 import {
   createBrowserRouter,
-  RouterProvider,
   createHashRouter,
+  RouterProvider,
 } from 'react-router-dom';
-import { routes } from './routes';
+import { getRoutesForEnvironment } from './routes';
 import { getEnvironmentConfig } from './hooks/use-environment-config';
 
 themeInit();
@@ -19,14 +18,10 @@ if (environmentConfig.localMode === 'build') {
   routerCreate = createHashRouter;
 }
 
-const router = routerCreate(routes);
+const router = routerCreate(getRoutesForEnvironment());
 
 export function App() {
-  return (
-    <GlobalStateProvider>
-      <RouterProvider router={router} />
-    </GlobalStateProvider>
-  );
+  return <RouterProvider router={router} />;
 }
 
 export default App;

@@ -133,9 +133,7 @@ function SchemaListItem({
           )}
         </p>
         <div className="prose prose-slate dark:prose-invert prose-sm">
-          {renderMarkdown({
-            content: schema.description,
-            data: {},
+          {renderMarkdown(schema.description, {
             filePath: '',
           })}
         </div>

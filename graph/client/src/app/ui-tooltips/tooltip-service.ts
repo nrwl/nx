@@ -2,8 +2,9 @@ import { getGraphService } from '../machines/graph.service';
 
 import { VirtualElement } from '@popperjs/core';
 import { ProjectNodeToolTipProps } from './project-node-tooltip';
-import { EdgeNodeTooltipProps } from './edge-tooltip';
-import { GraphInteractionEvents, GraphService } from '@nrwl/graph/ui-graph';
+import { ProjectEdgeNodeTooltipProps } from './project-edge-tooltip';
+import { GraphService } from '@nrwl/graph/ui-graph';
+import { TaskNodeTooltipProps } from './task-node-tooltip';
 
 export class GraphTooltipService {
   private subscribers: Set<Function> = new Set();
@@ -14,11 +15,16 @@ export class GraphTooltipService {
         case 'GraphRegenerated':
           this.hideAll();
           break;
-        case 'NodeClick':
+        case 'ProjectNodeClick':
           this.openProjectNodeToolTip(event.ref, {
             id: event.data.id,
             tags: event.data.tags,
             type: event.data.type,
+          });
+          break;
+        case 'TaskNodeClick':
+          this.openTaskNodeTooltip(event.ref, {
+            ...event.data,
           });
           break;
         case 'EdgeClick':
@@ -34,16 +40,30 @@ export class GraphTooltipService {
   }
 
   currentTooltip:
-    | { ref: VirtualElement; type: 'node'; props: ProjectNodeToolTipProps }
-    | { ref: VirtualElement; type: 'edge'; props: EdgeNodeTooltipProps };
+    | {
+        ref: VirtualElement;
+        type: 'projectNode';
+        props: ProjectNodeToolTipProps;
+      }
+    | { ref: VirtualElement; type: 'taskNode'; props: TaskNodeTooltipProps }
+    | {
+        ref: VirtualElement;
+        type: 'projectEdge';
+        props: ProjectEdgeNodeTooltipProps;
+      };
 
   openProjectNodeToolTip(ref: VirtualElement, props: ProjectNodeToolTipProps) {
-    this.currentTooltip = { type: 'node', ref, props };
+    this.currentTooltip = { type: 'projectNode', ref, props };
     this.broadcastChange();
   }
 
-  openEdgeToolTip(ref: VirtualElement, props: EdgeNodeTooltipProps) {
-    this.currentTooltip = { type: 'edge', ref, props };
+  openTaskNodeTooltip(ref: VirtualElement, props: TaskNodeTooltipProps) {
+    this.currentTooltip = { type: 'taskNode', ref, props };
+    this.broadcastChange();
+  }
+
+  openEdgeToolTip(ref: VirtualElement, props: ProjectEdgeNodeTooltipProps) {
+    this.currentTooltip = { type: 'projectEdge', ref, props };
     this.broadcastChange();
   }
 

@@ -19,7 +19,6 @@ describe('app', () => {
     compiler: 'babel',
     e2eTestRunner: 'cypress',
     skipFormat: false,
-    unitTestRunner: 'jest',
     name: 'myApp',
     linter: Linter.EsLint,
     style: 'css',
@@ -311,6 +310,14 @@ describe('app', () => {
     );
   });
 
+  it('should setup jest with babel-jest support', async () => {
+    await applicationGenerator(appTree, { ...schema, name: 'my-app' });
+
+    expect(appTree.read('apps/my-app/jest.config.ts').toString()).toContain(
+      "['babel-jest', { presets: ['@nrwl/react/babel'] }]"
+    );
+  });
+
   it('should setup jest without serializers', async () => {
     await applicationGenerator(appTree, { ...schema, name: 'my-app' });
 
@@ -320,7 +327,11 @@ describe('app', () => {
   });
 
   it('should setup the nrwl web build builder', async () => {
-    await applicationGenerator(appTree, { ...schema, name: 'my-app' });
+    await applicationGenerator(appTree, {
+      ...schema,
+      name: 'my-app',
+      bundler: 'webpack',
+    });
 
     const workspaceJson = getProjects(appTree);
     const targetConfig = workspaceJson.get('my-app').targets;
@@ -355,8 +366,34 @@ describe('app', () => {
     });
   });
 
+  it('should setup the nrwl vite builder if bundler is vite', async () => {
+    await applicationGenerator(appTree, {
+      ...schema,
+      name: 'my-app',
+      bundler: 'vite',
+    });
+
+    const workspaceJson = getProjects(appTree);
+    const targetConfig = workspaceJson.get('my-app').targets;
+    expect(targetConfig.build.executor).toEqual('@nrwl/vite:build');
+    expect(targetConfig.build.outputs).toEqual(['{options.outputPath}']);
+    expect(targetConfig.build.options).toEqual({
+      outputPath: 'dist/apps/my-app',
+    });
+    expect(
+      appTree.exists(`apps/my-app/environments/environment.ts`)
+    ).toBeFalsy();
+    expect(
+      appTree.exists(`apps/my-app/environments/environment.prod.ts`)
+    ).toBeFalsy();
+  });
+
   it('should setup the nrwl web dev server builder', async () => {
-    await applicationGenerator(appTree, { ...schema, name: 'my-app' });
+    await applicationGenerator(appTree, {
+      ...schema,
+      name: 'my-app',
+      bundler: 'webpack',
+    });
 
     const workspaceJson = getProjects(appTree);
     const targetConfig = workspaceJson.get('my-app').targets;
@@ -364,6 +401,25 @@ describe('app', () => {
     expect(targetConfig.serve.options).toEqual({
       buildTarget: 'my-app:build',
       hmr: true,
+    });
+    expect(targetConfig.serve.configurations.production).toEqual({
+      buildTarget: 'my-app:build:production',
+      hmr: false,
+    });
+  });
+
+  it('should setup the nrwl vite dev server builder if bundler is vite', async () => {
+    await applicationGenerator(appTree, {
+      ...schema,
+      name: 'my-app',
+      bundler: 'vite',
+    });
+
+    const workspaceJson = getProjects(appTree);
+    const targetConfig = workspaceJson.get('my-app').targets;
+    expect(targetConfig.serve.executor).toEqual('@nrwl/vite:dev-server');
+    expect(targetConfig.serve.options).toEqual({
+      buildTarget: 'my-app:build',
     });
     expect(targetConfig.serve.configurations.production).toEqual({
       buildTarget: 'my-app:build:production',
@@ -576,13 +632,31 @@ describe('app', () => {
     });
 
     it('should exclude styles from workspace.json', async () => {
-      await applicationGenerator(appTree, { ...schema, style: 'none' });
+      await applicationGenerator(appTree, {
+        ...schema,
+        style: 'none',
+        bundler: 'webpack',
+      });
 
       const workspaceJson = getProjects(appTree);
 
       expect(workspaceJson.get('my-app').targets.build.options.styles).toEqual(
         []
       );
+    });
+
+    it('should not break if bundler is vite', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        style: 'none',
+        bundler: 'vite',
+      });
+
+      const workspaceJson = getProjects(appTree);
+
+      expect(
+        workspaceJson.get('my-app').targets.build.options.styles
+      ).toBeUndefined();
     });
   });
 
@@ -650,6 +724,7 @@ describe('app', () => {
       await applicationGenerator(appTree, {
         ...schema,
         style: '@emotion/styled',
+        bundler: 'webpack',
       });
 
       const workspaceJson = getProjects(appTree);
@@ -657,6 +732,20 @@ describe('app', () => {
       expect(workspaceJson.get('my-app').targets.build.options.styles).toEqual(
         []
       );
+    });
+
+    it('should not break if bundler is vite', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        style: '@emotion/styled',
+        bundler: 'vite',
+      });
+
+      const workspaceJson = getProjects(appTree);
+
+      expect(
+        workspaceJson.get('my-app').targets.build.options.styles
+      ).toBeUndefined();
     });
 
     it('should add dependencies to package.json', async () => {
@@ -727,9 +816,10 @@ describe('app', () => {
     });
   });
 
-  it('should adds custom webpack config', async () => {
+  it('should add custom webpack config', async () => {
     await applicationGenerator(appTree, {
       ...schema,
+      bundler: 'webpack',
     });
 
     const workspaceJson = getProjects(appTree);
@@ -737,6 +827,19 @@ describe('app', () => {
     expect(
       workspaceJson.get('my-app').targets.build.options.webpackConfig
     ).toEqual('@nrwl/react/plugins/webpack');
+  });
+
+  it('should NOT add custom webpack config if bundler is vite', async () => {
+    await applicationGenerator(appTree, {
+      ...schema,
+      bundler: 'vite',
+    });
+
+    const workspaceJson = getProjects(appTree);
+
+    expect(
+      workspaceJson.get('my-app').targets.build.options.webpackConfig
+    ).toBeUndefined();
   });
 
   it('should add required polyfills for core-js and regenerator', async () => {
@@ -823,6 +926,99 @@ describe('app', () => {
         '@swc/core': expect.any(String),
         'swc-loader': expect.any(String),
       });
+    });
+  });
+
+  describe('--root-project', () => {
+    it('should create files at the root', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        rootProject: true,
+        bundler: 'webpack',
+      });
+      expect(appTree.read('/src/main.tsx')).toBeDefined();
+      expect(appTree.read('/e2e/cypress.config.ts')).toBeDefined();
+      expect(readJson(appTree, '/tsconfig.json').extends).toEqual(
+        './tsconfig.base.json'
+      );
+      expect(
+        readJson(appTree, '/workspace.json').projects['my-app'].architect[
+          'build'
+        ].options['outputPath']
+      ).toEqual('dist/my-app');
+    });
+
+    it('should create files at the root if bundler is vite', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        name: 'my-app2',
+        rootProject: true,
+        bundler: 'vite',
+      });
+      expect(appTree.read('/src/main.tsx')).toBeDefined();
+      expect(appTree.read('/e2e/cypress.config.ts')).toBeDefined();
+      expect(readJson(appTree, '/tsconfig.json').extends).toEqual(
+        './tsconfig.base.json'
+      );
+      expect(
+        readJson(appTree, '/workspace.json').projects['my-app2'].architect[
+          'build'
+        ].options['outputPath']
+      ).toEqual('dist/my-app2');
+    });
+  });
+
+  describe('setup React app with --bundler=vite', () => {
+    let viteAppTree: Tree;
+    beforeAll(async () => {
+      viteAppTree = createTreeWithEmptyV1Workspace();
+      await applicationGenerator(viteAppTree, { ...schema, bundler: 'vite' });
+    });
+
+    it('should setup targets with vite configuration', () => {
+      const workspaceJson = getProjects(viteAppTree);
+      const targetConfig = workspaceJson.get('my-app').targets;
+      expect(targetConfig.build.executor).toEqual('@nrwl/vite:build');
+      expect(targetConfig.serve.executor).toEqual('@nrwl/vite:dev-server');
+      expect(targetConfig.serve.options).toEqual({
+        buildTarget: 'my-app:build',
+      });
+    });
+    it('should add dependencies in package.json', () => {
+      const packageJson = readJson(viteAppTree, '/package.json');
+
+      expect(packageJson.devDependencies).toMatchObject({
+        vite: expect.any(String),
+        '@vitejs/plugin-react': expect.any(String),
+      });
+    });
+
+    it('should create correct tsconfig compilerOptions', () => {
+      const tsconfigJson = readJson(viteAppTree, '/apps/my-app/tsconfig.json');
+      expect(tsconfigJson.compilerOptions.types).toMatchObject(['vite/client']);
+    });
+
+    it('should create index.html and vite.config file at the root of the app', () => {
+      expect(viteAppTree.exists('/apps/my-app/index.html')).toBe(true);
+      expect(viteAppTree.exists('/apps/my-app/vite.config.ts')).toBe(true);
+    });
+
+    it('should not include a spec file when the bundler or unitTestRunner is vite and insourceTests is false', async () => {
+      // check to make sure that the other spec file exists
+      expect(viteAppTree.exists('/apps/my-app/src/app/app.spec.tsx')).toBe(
+        true
+      );
+
+      await applicationGenerator(viteAppTree, {
+        ...schema,
+        name: 'insourceTests',
+        bundler: 'vite',
+        inSourceTests: true,
+      });
+
+      expect(
+        viteAppTree.exists('/apps/insourceTests/src/app/app.spec.tsx')
+      ).toBe(false);
     });
   });
 });

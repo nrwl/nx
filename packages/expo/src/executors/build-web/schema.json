@@ -5,7 +5,7 @@
   "$id": "NxExpoBuildWeb",
   "cli": "nx",
   "title": "Expo web Build executor",
-  "description": "Build the web app for production",
+  "description": "Build the web app for production.",
   "type": "object",
   "properties": {
     "clear": {

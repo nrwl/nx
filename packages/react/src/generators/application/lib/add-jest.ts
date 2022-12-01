@@ -14,5 +14,6 @@ export async function addJest(host: Tree, options: NormalizedSchema) {
     skipSerializers: true,
     setupFile: 'none',
     compiler: options.compiler,
+    rootProject: options.rootProject,
   });
 }

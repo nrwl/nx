@@ -26,7 +26,7 @@ import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { handleErrors } from '../utils/params';
 import { Workspaces } from '../config/workspaces';
 import { Hasher } from '../hasher/hasher';
-import { hashDependsOnOtherTasks, hashTask } from 'nx/src/hasher/hash-task';
+import { hashDependsOnOtherTasks, hashTask } from '../hasher/hash-task';
 import { daemonClient } from '../daemon/client/client';
 import { StoreRunInformationLifeCycle } from './life-cycles/store-run-information-life-cycle';
 

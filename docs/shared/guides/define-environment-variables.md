@@ -38,7 +38,7 @@ For example:
    from `apps/my-app/.env`, it will notice that `NX_API_URL` already exists, so it will ignore it.
 
 We recommend nesting your **app** specific `env` files in `apps/your-app`, and creating workspace/root level `env` files
-for workspace-specific settings (like the [Nx Cloud token](/concepts/how-caching-works#distributed-computation-caching)).
+for workspace-specific settings (like the [Nx Cloud token](/core-features/share-your-cache)).
 {% /callout %}
 
 ### Pointing to custom env files

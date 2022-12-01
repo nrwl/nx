@@ -57,6 +57,7 @@ export const SearchDepth = memo(
             </button>
             <span
               id="depthFilterValue"
+              data-cy="depth-value"
               className="block w-full flex-1 rounded-none border-t border-b border-slate-300 bg-white p-1.5 text-center font-mono dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
             >
               {searchDepth}

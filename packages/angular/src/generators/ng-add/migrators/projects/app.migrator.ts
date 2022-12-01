@@ -1,12 +1,10 @@
-import type { TargetConfiguration, Tree } from '@nrwl/devkit';
+import type { Tree } from '@nrwl/devkit';
 import {
   joinPathFragments,
   offsetFromRoot,
-  readJson,
   updateJson,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
-import { hasRulesRequiringTypeChecking } from '@nrwl/linter';
 import { convertToNxProjectGenerator } from '@nrwl/workspace/generators';
 import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
 import { basename } from 'path';
@@ -18,7 +16,10 @@ import type {
   ValidationResult,
 } from '../../utilities';
 import type { BuilderMigratorClassType } from '../builders';
-import { AngularDevkitKarmaMigrator } from '../builders';
+import {
+  AngularDevkitKarmaMigrator,
+  AngularEslintLintMigrator,
+} from '../builders';
 import { E2eMigrator } from './e2e.migrator';
 import { ProjectMigrator } from './project.migrator';
 
@@ -26,7 +27,6 @@ type SupportedTargets =
   | 'build'
   | 'e2e'
   | 'i18n'
-  | 'lint'
   | 'prerender'
   | 'serve'
   | 'server'
@@ -41,7 +41,6 @@ const supportedTargets: Record<SupportedTargets, Target> = {
     ],
   },
   i18n: { builders: ['@angular-devkit/build-angular:extract-i18n'] },
-  lint: { builders: ['@angular-eslint/builder:lint'] },
   prerender: { builders: ['@nguniversal/builders:prerender'] },
   serve: { builders: ['@angular-devkit/build-angular:dev-server'] },
   server: { builders: ['@angular-devkit/build-angular:server'] },
@@ -51,12 +50,11 @@ const supportedTargets: Record<SupportedTargets, Target> = {
 // TODO(leo): this will replace `supportedTargets` once the full refactor is done.
 const supportedBuilderMigrators: BuilderMigratorClassType[] = [
   AngularDevkitKarmaMigrator,
+  AngularEslintLintMigrator,
 ];
 
 export class AppMigrator extends ProjectMigrator<SupportedTargets> {
   private e2eMigrator: E2eMigrator;
-  private newEsLintConfigPath: string;
-  private oldEsLintConfigPath: string;
 
   constructor(
     tree: Tree,
@@ -74,20 +72,18 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
       supportedBuilderMigrators
     );
 
+    const eslintBuilderMigrator =
+      this.builderMigrators[
+        supportedBuilderMigrators.indexOf(AngularEslintLintMigrator)
+      ];
     this.e2eMigrator = new E2eMigrator(
       tree,
       options,
       project,
-      this.targetNames.lint
+      eslintBuilderMigrator.targets.size
+        ? Object.keys(eslintBuilderMigrator.targets)[0]
+        : undefined
     );
-
-    if (this.targetNames.lint) {
-      this.oldEsLintConfigPath =
-        this.projectConfig.targets[this.targetNames.lint].options
-          ?.eslintConfig ??
-        joinPathFragments(this.project.oldRoot, '.eslintrc.json');
-      this.newEsLintConfigPath = this.convertRootPath(this.oldEsLintConfigPath);
-    }
   }
 
   override async migrate(): Promise<void> {
@@ -101,13 +97,8 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
     }
 
     this.updateTsConfigs();
-    this.updateEsLintConfig();
     this.updateCacheableOperations(
-      [
-        this.targetNames.build,
-        this.targetNames.lint,
-        this.targetNames.e2e,
-      ].filter(Boolean)
+      [this.targetNames.build, this.targetNames.e2e].filter(Boolean)
     );
   }
 
@@ -151,20 +142,6 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
       );
     }
 
-    if (this.targetNames.lint) {
-      this.moveProjectRootFile(this.oldEsLintConfigPath);
-    } else {
-      // there could still be a .eslintrc.json file in the root
-      // so move to new location
-      const eslintConfig = '.eslintrc.json';
-      if (this.tree.exists(eslintConfig)) {
-        this.logger.info(
-          'No "lint" target was found, but an ESLint config file was found in the project root. The file will be moved to the new location.'
-        );
-        this.moveProjectRootFile(eslintConfig);
-      }
-    }
-
     this.moveDir(this.project.oldSourceRoot, this.project.newSourceRoot);
   }
 
@@ -181,7 +158,6 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
       );
     } else {
       this.updateBuildTargetConfiguration();
-      this.updateLintTargetConfiguration();
       this.updateServerTargetConfiguration();
       this.updatePrerenderTargetConfiguration();
       this.updateServeSsrTargetConfiguration();
@@ -208,49 +184,6 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
     this.updateTsConfigFileUsedByServerTarget(projectOffsetFromRoot);
   }
 
-  private updateEsLintConfig(): void {
-    if (!this.targetNames.lint || !this.tree.exists(this.newEsLintConfigPath)) {
-      return;
-    }
-
-    updateJson(this.tree, this.newEsLintConfigPath, (json) => {
-      delete json.root;
-      json.ignorePatterns = ['!**/*'];
-
-      const rootEsLintConfigRelativePath = joinPathFragments(
-        offsetFromRoot(this.projectConfig.root),
-        '.eslintrc.json'
-      );
-      if (Array.isArray(json.extends)) {
-        json.extends = json.extends.map((extend: string) =>
-          this.convertEsLintConfigExtendToNewPath(
-            this.oldEsLintConfigPath,
-            extend
-          )
-        );
-
-        // it might have not been extending from the root config, make sure it does
-        if (!json.extends.includes(rootEsLintConfigRelativePath)) {
-          json.extends.unshift(rootEsLintConfigRelativePath);
-        }
-      } else {
-        json.extends = rootEsLintConfigRelativePath;
-      }
-
-      json.overrides?.forEach((override) => {
-        if (!override.parserOptions?.project) {
-          return;
-        }
-
-        override.parserOptions.project = [
-          `${this.projectConfig.root}/tsconfig.*?.json`,
-        ];
-      });
-
-      return json;
-    });
-  }
-
   private convertBuildOptions(buildOptions: any): void {
     buildOptions.outputPath =
       buildOptions.outputPath &&
@@ -264,7 +197,10 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
     buildOptions.main =
       buildOptions.main && this.convertAsset(buildOptions.main);
     buildOptions.polyfills =
-      buildOptions.polyfills && this.convertAsset(buildOptions.polyfills);
+      buildOptions.polyfills &&
+      (Array.isArray(buildOptions.polyfills)
+        ? buildOptions.polyfills.map((asset) => this.convertAsset(asset))
+        : this.convertAsset(buildOptions.polyfills as string));
     buildOptions.tsConfig =
       buildOptions.tsConfig &&
       joinPathFragments(this.project.newRoot, basename(buildOptions.tsConfig));
@@ -343,74 +279,6 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
     Object.values(buildTarget.configurations ?? {}).forEach((config) =>
       this.convertBuildOptions(config)
     );
-  }
-
-  private updateLintTargetConfiguration(): void {
-    if (!this.targetNames.lint) {
-      return;
-    }
-
-    this.projectConfig.targets[this.targetNames.lint].executor =
-      '@nrwl/linter:eslint';
-
-    const lintOptions =
-      this.projectConfig.targets[this.targetNames.lint].options;
-    if (!lintOptions) {
-      this.logger.warn(
-        `The target "${this.targetNames.lint}" is not specifying any options. Skipping updating the target configuration.`
-      );
-      return;
-    }
-
-    const existEsLintConfigPath = this.tree.exists(this.newEsLintConfigPath);
-    if (!existEsLintConfigPath) {
-      this.logger.warn(
-        `The ESLint config file "${this.oldEsLintConfigPath}" could not be found. Skipping updating the file.`
-      );
-    }
-
-    lintOptions.eslintConfig =
-      lintOptions.eslintConfig &&
-      joinPathFragments(
-        this.project.newRoot,
-        basename(lintOptions.eslintConfig)
-      );
-    lintOptions.lintFilePatterns =
-      lintOptions.lintFilePatterns &&
-      lintOptions.lintFilePatterns.map((pattern) => {
-        // replace the old source root with the new root, we want to lint all
-        // matching files in the project, not just the ones in the source root
-        if (pattern.startsWith(this.project.oldSourceRoot)) {
-          return joinPathFragments(
-            this.project.newRoot,
-            pattern.replace(this.project.oldSourceRoot, '')
-          );
-        }
-
-        // replace the old root with the new root
-        if (pattern.startsWith(this.project.oldRoot)) {
-          return joinPathFragments(
-            this.project.newRoot,
-            pattern.replace(this.project.oldRoot, '')
-          );
-        }
-
-        // do nothing, warn about the pattern
-        this.logger.warn(
-          `The lint file pattern "${pattern}" specified in the "${this.targetNames.lint}" target is not contained in the project root or source root. The pattern will not be updated.`
-        );
-
-        return pattern;
-      });
-
-    if (!existEsLintConfigPath) {
-      return;
-    }
-
-    const eslintConfig = readJson(this.tree, this.newEsLintConfigPath);
-    if (hasRulesRequiringTypeChecking(eslintConfig)) {
-      lintOptions.hasTypeAwareRules = true;
-    }
   }
 
   private updatePrerenderTargetConfiguration(): void {

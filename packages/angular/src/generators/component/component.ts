@@ -12,7 +12,7 @@ import { normalizeOptions } from './lib/normalize-options';
 import type { NormalizedSchema, Schema } from './schema';
 
 export async function componentGenerator(tree: Tree, rawOptions: Schema) {
-  const options = normalizeOptions(tree, rawOptions);
+  const options = await normalizeOptions(tree, rawOptions);
   const { projectSourceRoot, ...schematicOptions } = options;
 
   checkPathUnderProjectRoot(tree, options);

@@ -18,7 +18,7 @@ describe('setupTailwind generator', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     jest.clearAllMocks();
   });
 

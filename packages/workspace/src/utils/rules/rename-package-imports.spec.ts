@@ -1,7 +1,7 @@
 import { Tree } from '@angular-devkit/schematics';
 import { UnitTestTree } from '@angular-devkit/schematics/testing';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { callRule, runSchematic, runExternalSchematic } from '../testing';
+import { callRule, runExternalSchematic, runSchematic } from '../testing';
 import { renamePackageImports } from './rename-package-imports';
 
 describe('renamePackageImports Rule', () => {
@@ -18,6 +18,8 @@ describe('renamePackageImports Rule', () => {
         },
       })
     );
+    tree.create('libs/.gitignore', '');
+    tree.create('apps/.gitignore', '');
   });
 
   it('should rename package imports', async () => {

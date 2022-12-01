@@ -4,8 +4,8 @@ import { NxJsonConfiguration } from '../../../config/nx-json';
 import { ProjectGraphProjectNode } from '../../../config/project-graph';
 import {
   createProjectRootMappings,
-  findMatchingProjectForPath,
-} from '../../../utils/target-project-locator';
+  findProjectForPath,
+} from '../../utils/find-project-for-path';
 
 export const getTouchedProjects: TouchedProjectLocator = (
   touchedFiles,
@@ -14,7 +14,7 @@ export const getTouchedProjects: TouchedProjectLocator = (
   const projectRootMap = createProjectRootMappings(projectGraphNodes);
 
   return touchedFiles.reduce((affected, f) => {
-    const matchingProject = findMatchingProjectForPath(f.file, projectRootMap);
+    const matchingProject = findProjectForPath(f.file, projectRootMap);
     if (matchingProject) {
       affected.push(matchingProject);
     }

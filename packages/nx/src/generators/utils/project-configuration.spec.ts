@@ -21,7 +21,7 @@ import {
 } from './project-configuration';
 
 import * as projectSchema from '../../../schemas/project-schema.json';
-import { joinPathFragments } from 'nx/src/utils/path';
+import { joinPathFragments } from '../../utils/path';
 
 type ProjectConfigurationV1 = Pick<
   ProjectConfiguration,
@@ -214,7 +214,7 @@ describe('project configuration', () => {
 
   describe('workspace v2', () => {
     beforeEach(() => {
-      tree = createTreeWithEmptyWorkspace();
+      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     });
 
     describe('readProjectConfiguration', () => {

@@ -19,7 +19,7 @@ describe('update-router-initial-navigation migration', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it('should update "initialNavigation" to "enabledBlocking"', async () => {

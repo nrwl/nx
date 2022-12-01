@@ -73,6 +73,10 @@ export function addMigrationJsonChecks(
     options.projectName
   );
 
+  if (!projectIsEsLintEnabled(projectConfiguration)) {
+    return;
+  }
+
   const [eslintTarget, eslintTargetConfiguration] =
     getEsLintOptions(projectConfiguration);
 

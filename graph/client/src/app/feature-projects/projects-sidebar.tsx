@@ -1,8 +1,6 @@
-import { InformationCircleIcon } from '@heroicons/react/24/outline';
-import { useCallback } from 'react';
-import ExperimentalFeature from '../experimental-feature';
-import { useDepGraphService } from '../hooks/use-dep-graph';
-import { useDepGraphSelector } from '../hooks/use-dep-graph-selector';
+import { useCallback, useEffect } from 'react';
+import ExperimentalFeature from '../ui-components/experimental-feature';
+import { useProjectGraphSelector } from './hooks/use-project-graph-selector';
 import {
   collapseEdgesSelector,
   focusedProjectNameSelector,
@@ -12,110 +10,331 @@ import {
   includePathSelector,
   searchDepthSelector,
   textFilterSelector,
-} from '../machines/selectors';
+} from './machines/selectors';
 import CollapseEdgesPanel from './panels/collapse-edges-panel';
-import FocusedProjectPanel from './panels/focused-project-panel';
+import FocusedPanel from '../ui-components/focused-panel';
 import GroupByFolderPanel from './panels/group-by-folder-panel';
 import ProjectList from './project-list';
 import SearchDepth from './panels/search-depth';
-import ShowHideProjects from './panels/show-hide-projects';
+import ShowHideProjects from '../ui-components/show-hide-all';
 import TextFilterPanel from './panels/text-filter-panel';
 import TracingPanel from './panels/tracing-panel';
-import { TracingAlgorithmType } from '../machines/interfaces';
 import { useEnvironmentConfig } from '../hooks/use-environment-config';
+import { TracingAlgorithmType } from './machines/interfaces';
+import { getProjectGraphService } from '../machines/get-services';
+import { useIntervalWhen } from '../hooks/use-interval-when';
+// nx-ignore-next-line
+import { ProjectGraphClientResponse } from 'nx/src/command-line/dep-graph';
+import {
+  useNavigate,
+  useParams,
+  useRouteLoaderData,
+  useSearchParams,
+} from 'react-router-dom';
+import { getProjectGraphDataService } from '../hooks/get-project-graph-data-service';
+import { useCurrentPath } from '../hooks/use-current-path';
+import { useRouteConstructor } from '../util';
 
 export function ProjectsSidebar(): JSX.Element {
   const environmentConfig = useEnvironmentConfig();
-  const depGraphService = useDepGraphService();
-  const focusedProject = useDepGraphSelector(focusedProjectNameSelector);
-  const searchDepthInfo = useDepGraphSelector(searchDepthSelector);
-  const includePath = useDepGraphSelector(includePathSelector);
-  const textFilter = useDepGraphSelector(textFilterSelector);
-  const hasAffectedProjects = useDepGraphSelector(hasAffectedProjectsSelector);
-  const groupByFolder = useDepGraphSelector(groupByFolderSelector);
-  const collapseEdges = useDepGraphSelector(collapseEdgesSelector);
+  const projectGraphService = getProjectGraphService();
+  const focusedProject = useProjectGraphSelector(focusedProjectNameSelector);
+  const searchDepthInfo = useProjectGraphSelector(searchDepthSelector);
+  const includePath = useProjectGraphSelector(includePathSelector);
+  const textFilter = useProjectGraphSelector(textFilterSelector);
+  const hasAffectedProjects = useProjectGraphSelector(
+    hasAffectedProjectsSelector
+  );
+  const groupByFolder = useProjectGraphSelector(groupByFolderSelector);
+  const collapseEdges = useProjectGraphSelector(collapseEdgesSelector);
 
-  const isTracing = depGraphService.state.matches('tracing');
+  const isTracing = projectGraphService.getSnapshot().matches('tracing');
+  const tracingInfo = useProjectGraphSelector(getTracingInfo);
+  const projectGraphDataService = getProjectGraphDataService();
 
-  // const isTracing = depGraphService.state.matches('tracing');
-  const tracingInfo = useDepGraphSelector(getTracingInfo);
+  const routeParams = useParams();
+  const currentRoute = useCurrentPath();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const selectedProjectRouteData = useRouteLoaderData(
+    'selectedWorkspace'
+  ) as ProjectGraphClientResponse;
+  const params = useParams();
+  const navigate = useNavigate();
+  const routeContructor = useRouteConstructor();
 
   function resetFocus() {
-    depGraphService.send({ type: 'unfocusProject' });
+    projectGraphService.send({ type: 'unfocusProject' });
+    navigate(routeContructor('/projects', true));
   }
 
   function showAllProjects() {
-    depGraphService.send({ type: 'selectAll' });
+    navigate(routeContructor('/projects/all', true));
   }
 
   function hideAllProjects() {
-    depGraphService.send({ type: 'deselectAll' });
+    projectGraphService.send({ type: 'deselectAll' });
+    navigate(routeContructor('/projects', true));
   }
 
   function showAffectedProjects() {
-    depGraphService.send({ type: 'selectAffected' });
+    navigate(routeContructor('/projects/affected', true));
   }
 
   function searchDepthFilterEnabledChange(checked: boolean) {
-    depGraphService.send({
-      type: 'setSearchDepthEnabled',
-      searchDepthEnabled: checked,
+    setSearchParams((currentSearchParams) => {
+      if (checked && searchDepthInfo.searchDepth > 1) {
+        currentSearchParams.set(
+          'searchDepth',
+          searchDepthInfo.searchDepth.toString()
+        );
+      } else if (checked && searchDepthInfo.searchDepth === 1) {
+        currentSearchParams.delete('searchDepth');
+      } else {
+        currentSearchParams.set('searchDepth', '0');
+      }
+      return currentSearchParams;
     });
   }
 
   function groupByFolderChanged(checked: boolean) {
-    depGraphService.send({ type: 'setGroupByFolder', groupByFolder: checked });
+    setSearchParams((currentSearchParams) => {
+      if (checked) {
+        currentSearchParams.set('groupByFolder', 'true');
+      } else {
+        currentSearchParams.delete('groupByFolder');
+      }
+      return currentSearchParams;
+    });
   }
 
   function collapseEdgesChanged(checked: boolean) {
-    depGraphService.send({ type: 'setCollapseEdges', collapseEdges: checked });
+    setSearchParams((currentSearchParams) => {
+      if (checked) {
+        currentSearchParams.set('collapseEdges', 'true');
+      } else {
+        currentSearchParams.delete('collapseEdges');
+      }
+      return currentSearchParams;
+    });
   }
 
   function incrementDepthFilter() {
-    depGraphService.send({ type: 'incrementSearchDepth' });
+    if (searchDepthInfo.searchDepthEnabled) {
+      const newSearchDepth = searchDepthInfo.searchDepth + 1;
+      setSearchParams((currentSearchParams) => {
+        if (newSearchDepth === 1) {
+          currentSearchParams.delete('searchDepth');
+        } else {
+          currentSearchParams.set('searchDepth', newSearchDepth.toString());
+        }
+
+        return currentSearchParams;
+      });
+    }
   }
 
   function decrementDepthFilter() {
-    depGraphService.send({ type: 'decrementSearchDepth' });
+    if (searchDepthInfo.searchDepthEnabled) {
+      const newSearchDepth =
+        searchDepthInfo.searchDepth === 0 ? 0 : searchDepthInfo.searchDepth - 1;
+      setSearchParams((currentSearchParams) => {
+        if (newSearchDepth === 1) {
+          currentSearchParams.delete('searchDepth');
+        } else {
+          currentSearchParams.set('searchDepth', newSearchDepth.toString());
+        }
+
+        return currentSearchParams;
+      });
+    }
   }
 
   function resetTextFilter() {
-    depGraphService.send({ type: 'clearTextFilter' });
+    projectGraphService.send({ type: 'clearTextFilter' });
   }
 
   function includeLibsInPathChange() {
-    depGraphService.send({
+    projectGraphService.send({
       type: 'setIncludeProjectsByPath',
       includeProjectsByPath: !includePath,
     });
   }
 
   function resetTraceStart() {
-    depGraphService.send({ type: 'clearTraceStart' });
+    projectGraphService.send({ type: 'clearTraceStart' });
+    navigate(routeContructor('/projects', true));
   }
 
   function resetTraceEnd() {
-    depGraphService.send({ type: 'clearTraceEnd' });
+    projectGraphService.send({ type: 'clearTraceEnd' });
+    navigate(routeContructor('/projects', true));
   }
 
   function setAlgorithm(algorithm: TracingAlgorithmType) {
-    depGraphService.send({ type: 'setTracingAlgorithm', algorithm: algorithm });
+    setSearchParams((searchParams) => {
+      searchParams.set('traceAlgorithm', algorithm);
+
+      return searchParams;
+    });
   }
+
+  useEffect(() => {
+    projectGraphService.send({
+      type: 'setProjects',
+      projects: selectedProjectRouteData.projects,
+      dependencies: selectedProjectRouteData.dependencies,
+      affectedProjects: selectedProjectRouteData.affected,
+      workspaceLayout: selectedProjectRouteData.layout,
+    });
+  }, [selectedProjectRouteData]);
+
+  useEffect(() => {
+    switch (currentRoute.currentPath) {
+      case '/projects/all':
+        projectGraphService.send({ type: 'selectAll' });
+        break;
+      case '/projects/affected':
+        projectGraphService.send({ type: 'selectAffected' });
+        break;
+    }
+  }, [currentRoute]);
+
+  useEffect(() => {
+    if (routeParams.focusedProject) {
+      projectGraphService.send({
+        type: 'focusProject',
+        projectName: routeParams.focusedProject,
+      });
+    }
+
+    if (routeParams.startTrace) {
+      projectGraphService.send({
+        type: 'setTracingStart',
+        projectName: routeParams.startTrace,
+      });
+    }
+    if (routeParams.endTrace) {
+      projectGraphService.send({
+        type: 'setTracingEnd',
+        projectName: routeParams.endTrace,
+      });
+    }
+  }, [routeParams]);
+
+  useEffect(() => {
+    if (searchParams.has('groupByFolder') && groupByFolder === false) {
+      projectGraphService.send({
+        type: 'setGroupByFolder',
+        groupByFolder: true,
+      });
+    } else if (!searchParams.has('groupByFolder') && groupByFolder === true) {
+      projectGraphService.send({
+        type: 'setGroupByFolder',
+        groupByFolder: false,
+      });
+    }
+
+    if (searchParams.has('collapseEdges') && collapseEdges === false) {
+      projectGraphService.send({
+        type: 'setCollapseEdges',
+        collapseEdges: true,
+      });
+    } else if (!searchParams.has('collapseEdges') && collapseEdges === true) {
+      projectGraphService.send({
+        type: 'setCollapseEdges',
+        collapseEdges: false,
+      });
+    }
+
+    if (searchParams.has('searchDepth')) {
+      const parsedValue = parseInt(searchParams.get('searchDepth'), 10);
+
+      if (parsedValue === 0) {
+        projectGraphService.send({
+          type: 'setSearchDepthEnabled',
+          searchDepthEnabled: false,
+        });
+      } else {
+        projectGraphService.send({
+          type: 'setSearchDepth',
+          searchDepth: parsedValue,
+        });
+      }
+    } else if (
+      searchDepthInfo.searchDepthEnabled === false ||
+      searchDepthInfo.searchDepth !== 1
+    ) {
+      projectGraphService.send({
+        type: 'setSearchDepthEnabled',
+        searchDepthEnabled: true,
+      });
+      projectGraphService.send({
+        type: 'setSearchDepth',
+        searchDepth: 1,
+      });
+    }
+
+    if (searchParams.has('traceAlgorithm')) {
+      const tracingAlgorithm = searchParams.get('traceAlgorithm');
+      if (tracingAlgorithm === 'shortest' || tracingAlgorithm === 'all') {
+        projectGraphService.send({
+          type: 'setTracingAlgorithm',
+          algorithm: tracingAlgorithm,
+        });
+      }
+    } else if (tracingInfo.algorithm !== 'shortest') {
+      projectGraphService.send({
+        type: 'setTracingAlgorithm',
+        algorithm: 'shortest',
+      });
+    }
+  }, [searchParams]);
+
+  useIntervalWhen(
+    () => {
+      const selectedWorkspaceId =
+        params.selectedWorkspaceId ??
+        environmentConfig.appConfig.defaultWorkspaceId;
+
+      const projectInfo = environmentConfig.appConfig.workspaces.find(
+        (graph) => graph.id === selectedWorkspaceId
+      );
+
+      const fetchProjectGraph = async () => {
+        const project: ProjectGraphClientResponse =
+          await projectGraphDataService.getProjectGraph(
+            projectInfo.projectGraphUrl
+          );
+
+        projectGraphService.send({
+          type: 'updateGraph',
+          projects: project.projects,
+          dependencies: project.dependencies,
+        });
+      };
+
+      fetchProjectGraph();
+    },
+    5000,
+    environmentConfig.watch
+  );
 
   const updateTextFilter = useCallback(
     (textFilter: string) => {
-      depGraphService.send({ type: 'filterByText', search: textFilter });
+      projectGraphService.send({ type: 'filterByText', search: textFilter });
+      navigate(routeContructor('/projects', true));
     },
-    [depGraphService]
+    [projectGraphService]
   );
 
   return (
     <>
       {focusedProject ? (
-        <FocusedProjectPanel
-          focusedProject={focusedProject}
+        <FocusedPanel
+          focusedLabel={focusedProject}
           resetFocus={resetFocus}
-        ></FocusedProjectPanel>
+        ></FocusedPanel>
       ) : null}
       {isTracing ? (
         <TracingPanel
@@ -138,10 +357,11 @@ export function ProjectsSidebar(): JSX.Element {
 
       <div>
         <ShowHideProjects
-          hideAllProjects={hideAllProjects}
-          showAllProjects={showAllProjects}
-          showAffectedProjects={showAffectedProjects}
-          hasAffectedProjects={hasAffectedProjects}
+          hideAll={hideAllProjects}
+          showAll={showAllProjects}
+          showAffected={showAffectedProjects}
+          hasAffected={hasAffectedProjects}
+          label="projects"
         ></ShowHideProjects>
 
         <GroupByFolderPanel

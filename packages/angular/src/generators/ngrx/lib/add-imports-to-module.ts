@@ -50,7 +50,7 @@ export function addImportsToModule(
   const propertyName = `${names(options.name).propertyName}`;
   const reducerImports = `* as from${className}`;
 
-  const storeMetaReducers = `metaReducers: !environment.production ? [] : []`;
+  const storeMetaReducers = `metaReducers: []`;
 
   const storeForRoot = `StoreModule.forRoot({}, {
       ${storeMetaReducers},
@@ -63,7 +63,6 @@ export function addImportsToModule(
   const effectsForEmptyRoot = `EffectsModule.forRoot([])`;
   const storeForFeature = `StoreModule.forFeature(from${className}.${constantName}_FEATURE_KEY, from${className}.${propertyName}Reducer)`;
   const effectsForFeature = `EffectsModule.forFeature([${effectsName}])`;
-  const devTools = `!environment.production ? StoreDevtoolsModule.instrument() : []`;
   const storeRouterModule = 'StoreRouterConnectingModule.forRoot()';
 
   // this is just a heuristic
@@ -73,17 +72,6 @@ export function addImportsToModule(
   sourceFile = addImport(sourceFile, 'EffectsModule', '@ngrx/effects');
 
   if (options.minimal && options.root) {
-    sourceFile = addImport(
-      sourceFile,
-      'StoreDevtoolsModule',
-      '@ngrx/store-devtools'
-    );
-    sourceFile = addImport(
-      sourceFile,
-      'environment',
-      '../environments/environment'
-    );
-
     sourceFile = addImportToModule(tree, sourceFile, modulePath, storeForRoot);
     sourceFile = addImportToModule(
       tree,
@@ -91,7 +79,6 @@ export function addImportsToModule(
       modulePath,
       effectsForEmptyRoot
     );
-    sourceFile = addImportToModule(tree, sourceFile, modulePath, devTools);
 
     if (hasRouter) {
       sourceFile = addImport(
@@ -127,17 +114,6 @@ export function addImportsToModule(
     if (options.root) {
       sourceFile = addCommonImports();
 
-      sourceFile = addImport(
-        sourceFile,
-        'StoreDevtoolsModule',
-        '@ngrx/store-devtools'
-      );
-      sourceFile = addImport(
-        sourceFile,
-        'environment',
-        '../environments/environment'
-      );
-
       sourceFile = addImportToModule(
         tree,
         sourceFile,
@@ -150,7 +126,6 @@ export function addImportsToModule(
         modulePath,
         effectsForRoot
       );
-      sourceFile = addImportToModule(tree, sourceFile, modulePath, devTools);
 
       if (hasRouter) {
         sourceFile = addImport(

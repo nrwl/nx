@@ -20,9 +20,8 @@ import {
   ProjectsConfigurations,
 } from '../config/workspace-json-project-json';
 import { Executor, ExecutorContext } from '../config/misc-interfaces';
-import { serializeOverridesIntoCommandLine } from 'nx/src/utils/serialize-overrides-into-command-line';
+import { serializeOverridesIntoCommandLine } from '../utils/serialize-overrides-into-command-line';
 import {
-  createProjectGraphAsync,
   readCachedProjectGraph,
   readProjectsConfigurationFromProjectGraph,
 } from '../project-graph/project-graph';
@@ -114,7 +113,10 @@ function createImplicitTargetConfig(
     return null;
   }
   const { scripts, nx } = readJsonFile<PackageJson>(packageJsonPath);
-  if (!(targetName in (scripts || {}))) {
+  if (
+    !(targetName in (scripts || {})) ||
+    !(nx.includedScripts && nx.includedScripts.includes(targetName))
+  ) {
     return null;
   }
   return buildTargetFromScript(targetName, nx);

@@ -1,12 +1,22 @@
 import { sendCustomEvent } from '@nrwl/nx-dev/feature-analytics';
 import { Footer, Header } from '@nrwl/nx-dev/ui-common';
 import { NextSeo } from 'next-seo';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 
 export function FourOhFour(): JSX.Element {
   const router = useRouter();
+  const illustrationUrl = (function (): string {
+    const urls = [
+      '/images/illustrations/404-1.svg',
+      '/images/illustrations/404-2.svg',
+      '/images/illustrations/404-3.svg',
+      '/images/illustrations/404-4.svg',
+    ];
+    return urls[Math.floor(Math.random() * urls.length)];
+  })();
   useEffect(() => {
     const handleRouteChange = (url: URL) =>
       sendCustomEvent('custom_page_view', '404', url.toString());
@@ -25,9 +35,20 @@ export function FourOhFour(): JSX.Element {
             className="relative py-16 sm:pt-24 lg:py-32"
           >
             <div className="mx-auto px-4 sm:px-6 lg:px-8 xl:max-w-7xl">
-              <h1 className="mt-2 text-4xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 sm:text-6xl">
-                404 - Page not found!
-              </h1>
+              <div className="w-full lg:flex lg:items-center">
+                <Image
+                  aria-hidden="true"
+                  height={200}
+                  width={140}
+                  loading="lazy"
+                  alt="404 illustration"
+                  src={illustrationUrl}
+                  className="drop-shadow"
+                />
+                <h1 className="mt-4 text-4xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 sm:text-6xl lg:ml-8">
+                  <span className="sr-only">404 - </span>Page not found!
+                </h1>
+              </div>
               <p className="mt-8 text-lg">
                 Sorry, but the page you were looking for could not be found.
               </p>

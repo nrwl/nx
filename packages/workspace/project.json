@@ -33,12 +33,32 @@
           },
           {
             "input": "packages/workspace",
-            "glob": "**/files-npm/**",
+            "glob": "**/files-integrated-repo/**",
             "output": "/"
           },
           {
             "input": "packages/workspace",
-            "glob": "**/files-npm/**/.gitkeep",
+            "glob": "**/files-integrated-repo/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/workspace",
+            "glob": "**/files-package-based-repo/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/workspace",
+            "glob": "**/files-readme/**",
+            "output": "/"
+          },
+          {
+            "glob": "**/files-packaged-based-repo/**/.gitkeep",
+            "input": "packages/workspace",
+            "output": "/"
+          },
+          {
+            "input": "packages/workspace",
+            "glob": "**/files-root-app/**",
             "output": "/"
           },
           {

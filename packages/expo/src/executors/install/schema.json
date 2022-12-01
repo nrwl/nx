@@ -5,7 +5,7 @@
   "$id": "NxExpoInstall",
   "$schema": "http://json-schema.org/schema",
   "title": "Expo Install",
-  "description": "Install a module or other package to a project",
+  "description": "Install a module or other package to a project.",
   "type": "object",
   "properties": {
     "packages": {

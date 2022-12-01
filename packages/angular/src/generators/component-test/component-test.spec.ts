@@ -13,7 +13,7 @@ describe('Angular Cypress Component Test Generator', () => {
     ReturnType<typeof assertMinimumCypressVersion>
   > = assertMinimumCypressVersion as never;
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     // silence warnings about missing .gitignore file
     tree.write('.gitignore', '');
     mockedAssertMinimumCypressVersion.mockReturnValue();

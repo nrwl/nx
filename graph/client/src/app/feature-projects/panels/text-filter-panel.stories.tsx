@@ -1,5 +1,5 @@
-import { ComponentStory, ComponentMeta } from '@storybook/react';
-import { TextFilterPanel, TextFilterPanelProps } from './text-filter-panel';
+import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { TextFilterPanel } from './text-filter-panel';
 
 export default {
   component: TextFilterPanel,

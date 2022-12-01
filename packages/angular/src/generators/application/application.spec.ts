@@ -348,7 +348,7 @@ describe('app', () => {
 
   describe('at the root', () => {
     beforeEach(() => {
-      appTree = createTreeWithEmptyWorkspace();
+      appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       updateJson(appTree, 'nx.json', (json) => ({
         ...json,
         workspaceLayout: { appsDir: '' },
@@ -739,7 +739,7 @@ describe('app', () => {
   describe('--e2e-test-runner', () => {
     describe(E2eTestRunner.Protractor, () => {
       it('should create the e2e project in v2 workspace', async () => {
-        appTree = createTreeWithEmptyWorkspace();
+        appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
         expect(
           async () =>
@@ -1036,6 +1036,42 @@ describe('app', () => {
       expect(
         appTree.read('apps/standalone/src/app/nx-welcome.component.ts', 'utf-8')
       ).toContain('standalone: true');
+    });
+  });
+
+  it('should generate correct main.ts', async () => {
+    // ACT
+    await generateApp(appTree, 'myapp');
+
+    // ASSERT
+    expect(appTree.read('apps/myapp/src/main.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+
+      import { AppModule } from './app/app.module';
+
+
+      platformBrowserDynamic().bootstrapModule(AppModule)
+        .catch(err => console.error(err));
+      "
+    `);
+  });
+
+  describe('--root-project', () => {
+    it('should create files at the root', async () => {
+      await generateApp(appTree, 'my-app', {
+        rootProject: true,
+      });
+
+      expect(appTree.exists('src/main.ts')).toBe(true);
+      expect(appTree.exists('src/app/app.module.ts')).toBe(true);
+      expect(appTree.exists('src/app/app.component.ts')).toBe(true);
+      expect(appTree.exists('e2e/cypress.config.ts')).toBe(true);
+      expect(readJson(appTree, 'tsconfig.json').extends).toEqual(
+        './tsconfig.base.json'
+      );
+      const project = readProjectConfiguration(appTree, 'my-app');
+      expect(project.targets.build.options['outputPath']).toBe('dist/my-app');
     });
   });
 });

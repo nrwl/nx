@@ -5,11 +5,10 @@
     <% if(uiFramework === '@storybook/react') { %>, "outDir": "" <% } %>
   },
   <% if(uiFramework === '@storybook/react') { %>"files": [
-    "<%= offsetFromRoot %>../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
-    "<%= offsetFromRoot %>../node_modules/@nrwl/react/typings/cssmodule.d.ts",
-    "<%= offsetFromRoot %>../node_modules/@nrwl/react/typings/image.d.ts"
+    "<% if(!isRootProject) { %><%= offsetFromRoot %><% } %>../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
+    "<% if(!isRootProject) { %><%= offsetFromRoot %><% } %>../node_modules/@nrwl/react/typings/cssmodule.d.ts",
+    "<% if(!isRootProject) { %><%= offsetFromRoot %><% } %>../node_modules/@nrwl/react/typings/image.d.ts"
   ],<% } %>
-  <% if(uiFramework === '@storybook/angular' && projectType === 'application') { %>"files": ["../src/polyfills.ts"],<% } %>
   "exclude": ["../**/*.spec.ts" <% if(uiFramework === '@storybook/react') { %>, "../**/*.spec.js", "../**/*.spec.tsx", "../**/*.spec.jsx"<% } %>],
   "include": [<% if(uiFramework === '@storybook/angular' && projectType === 'library') { %>
     "../**/*.stories.ts",

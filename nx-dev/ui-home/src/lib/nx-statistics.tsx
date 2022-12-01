@@ -15,7 +15,7 @@ export function NxStatistics(): JSX.Element {
           </p>
         </div>
       </div>
-      <div className="mt-10 bg-gray-50 pb-12 dark:bg-slate-800/40 sm:pb-16">
+      <div className="mt-10 bg-slate-50 pb-12 dark:bg-slate-800/40 sm:pb-16">
         <div className="relative">
           <div className="absolute inset-0 h-1/2 border-b border-slate-100 bg-white dark:border-black dark:bg-slate-900"></div>
           <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

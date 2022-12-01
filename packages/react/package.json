@@ -39,6 +39,7 @@
     "@nrwl/js": "file:../js",
     "@nrwl/linter": "file:../linter",
     "@nrwl/storybook": "file:../storybook",
+    "@nrwl/vite": "file:../vite",
     "@nrwl/web": "file:../web",
     "@nrwl/webpack": "file:../webpack",
     "@nrwl/workspace": "file:../workspace",
@@ -54,7 +55,7 @@
     "stylus": "^0.55.0",
     "stylus-loader": "^7.1.0",
     "url-loader": "^4.1.1",
-    "webpack": "^5.58.1",
+    "webpack": "^5.75.0",
     "webpack-merge": "^5.8.0"
   },
   "publishConfig": {

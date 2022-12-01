@@ -6,7 +6,7 @@ window.useXstateInspect = false;
 window.appConfig = {
   showDebugger: true,
   showExperimentalFeatures: true,
-  projects: [
+  workspaces: [
     {
       id: 'e2e',
       label: 'e2e',
@@ -20,5 +20,5 @@ window.appConfig = {
       taskGraphUrl: 'assets/task-graphs/affected.json',
     },
   ],
-  defaultProject: 'e2e',
+  defaultWorkspaceId: 'e2e',
 };

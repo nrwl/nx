@@ -69,7 +69,11 @@ export function executeWebpackDevServerBuilder(
     const buildTargetTsConfigPath =
       buildTargetConfiguration?.tsConfig ?? buildTarget.options.tsConfig;
     const { tsConfigPath, dependencies: foundDependencies } =
-      createTmpTsConfigForBuildableLibs(buildTargetTsConfigPath, context);
+      createTmpTsConfigForBuildableLibs(
+        buildTargetTsConfigPath,
+        context,
+        parsedBrowserTarget.target
+      );
     dependencies = foundDependencies;
 
     // We can't just pass the tsconfig path in memory to the angular builder
@@ -84,6 +88,12 @@ export function executeWebpackDevServerBuilder(
       options.tsConfig = tsConfigPath;
       return options;
     };
+
+    // The buildTargetConfiguration also needs to use the generated tsconfig path
+    // otherwise the build will fail if customWebpack function/file is referencing
+    // local libs. This synchronize the behavior with webpack-browser and
+    // webpack-server implementation.
+    buildTargetConfiguration.tsConfig = tsConfigPath;
   }
 
   return executeDevServerBuilder(options as DevServerBuilderOptions, context, {

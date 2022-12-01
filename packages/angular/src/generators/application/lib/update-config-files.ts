@@ -2,6 +2,7 @@ import type { Tree } from '@nrwl/devkit';
 import {
   addProjectConfiguration,
   getProjects,
+  joinPathFragments,
   offsetFromRoot,
   readProjectConfiguration,
   removeProjectConfiguration,
@@ -38,7 +39,11 @@ function updateTsConfigOptions(host: Tree, options: NormalizedSchema) {
   // tsconfig.json
   updateJson(host, `${options.appProjectRoot}/tsconfig.json`, (json) => ({
     ...json,
-    compilerOptions: { ...json.compilerOptions, target: 'es2020' },
+    compilerOptions: {
+      ...json.compilerOptions,
+      target: 'es2022',
+      useDefineForClassFields: false, // This will eventually need updated when Angular switch to using TC39 Compliant code
+    },
   }));
 }
 
@@ -69,6 +74,13 @@ function updateAppAndE2EProjectConfigurations(
     executor,
     outputs: ['{options.outputPath}'],
     ...rest,
+    options: {
+      ...rest.options,
+      outputPath: joinPathFragments(
+        'dist',
+        !options.rootProject ? options.appProjectRoot : options.name
+      ),
+    },
   };
 
   if (project.generators) {
@@ -116,8 +128,4 @@ function updateAppAndE2EProjectConfigurations(
       removeProjectConfiguration(host, options.e2eProjectName);
     }
   }
-
-  // delete some default test configs
-  host.delete(`${options.appProjectRoot}/karma.conf.js`);
-  host.delete(`${options.appProjectRoot}/src/test.ts`);
 }

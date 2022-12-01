@@ -46,29 +46,12 @@ export class RenderGraph {
 
   set theme(theme: 'light' | 'dark') {
     this._theme = theme;
-
-    if (this.cy) {
-      this.cy.unmount();
-      const useDarkMode = theme === 'dark';
-
-      this.cy.scratch(darkModeScratchKey, useDarkMode);
-      this.cy.elements().scratch(darkModeScratchKey, useDarkMode);
-
-      this.cy.mount(this.activeContainer);
-    }
+    this.render();
   }
 
   set rankDir(rankDir: 'LR' | 'TB') {
     this._rankDir = rankDir;
-    if (this.cy) {
-      const elements = this.cy.elements();
-      elements
-        .layout({
-          ...cytoscapeDagreConfig,
-          ...{ rankDir: rankDir },
-        } as CytoscapeDagreConfig)
-        .run();
-    }
+    this.render();
   }
 
   get activeContainer() {
@@ -120,6 +103,7 @@ export class RenderGraph {
     this.listenForProjectNodeClicks();
     this.listenForEdgeNodeClicks();
     this.listenForProjectNodeHovers();
+    this.listenForTaskNodeClicks();
   }
 
   render(): { numEdges: number; numNodes: number } {
@@ -234,13 +218,13 @@ export class RenderGraph {
   }
 
   private listenForProjectNodeClicks() {
-    this.cy.$('node:childless').on('click', (event) => {
+    this.cy.$('node.projectNode').on('click', (event) => {
       const node = event.target;
 
       let ref: VirtualElement = node.popperRef(); // used only for positioning
 
       this.broadcast({
-        type: 'NodeClick',
+        type: 'ProjectNodeClick',
         ref,
         id: node.id(),
 
@@ -253,8 +237,28 @@ export class RenderGraph {
     });
   }
 
+  private listenForTaskNodeClicks() {
+    this.cy.$('node.taskNode').on('click', (event) => {
+      const node = event.target;
+
+      let ref: VirtualElement = node.popperRef(); // used only for positioning
+
+      this.broadcast({
+        type: 'TaskNodeClick',
+        ref,
+        id: node.id(),
+
+        data: {
+          id: node.id(),
+          label: node.data('label'),
+          executor: node.data('executor'),
+        },
+      });
+    });
+  }
+
   private listenForEdgeNodeClicks() {
-    this.cy.$('edge').on('click', (event) => {
+    this.cy.$('edge.projectEdge').on('click', (event) => {
       const edge: EdgeSingular = event.target;
       let ref: VirtualElement = edge.popperRef(); // used only for positioning
 
