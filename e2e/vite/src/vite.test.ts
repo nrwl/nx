@@ -3,6 +3,7 @@ import {
   cleanupProject,
   createFile,
   exists,
+  fileExists,
   killPorts,
   listFiles,
   newProject,
@@ -242,6 +243,7 @@ describe('Vite Plugin', () => {
         expect(
           readFile(`dist/apps/${myApp}/assets/${mainBundle}`)
         ).toBeDefined();
+        expect(fileExists(`dist/apps/${myApp}/package.json`)).toBeFalsy();
         rmDist();
       }, 200_000);
     });
