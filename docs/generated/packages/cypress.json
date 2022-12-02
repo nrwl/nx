@@ -111,12 +111,6 @@
             "type": "boolean",
             "default": false,
             "description": "Do not add dependencies to `package.json`."
-          },
-          "rootProject": {
-            "description": "Create a application at the root of the workspace",
-            "type": "boolean",
-            "default": false,
-            "hidden": true
           }
         },
         "required": ["name"],
