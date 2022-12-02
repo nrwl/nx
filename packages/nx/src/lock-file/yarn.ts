@@ -5,10 +5,10 @@ import {
   PackageDependency,
   PackageVersions,
 } from './utils/lock-file-type';
-import { sortObject } from './utils/sorting';
 import { TransitiveLookupFunctionInput, isRootVersion } from './utils/mapping';
 import { hashString, generatePrunnedHash } from './utils/hashing';
 import { PackageJsonDeps } from './utils/pruning';
+import { sortObjectByKeys } from '../utils/object-sort';
 
 type LockFileDependencies = Record<
   string,
@@ -33,6 +33,8 @@ export function parseYarnLockFile(lockFile: string): LockFileData {
     isBerry
   );
   const hash = hashString(lockFile);
+  const [mappedPackages, workspacePackages] = mapPackages(dependencies);
+
   if (isBerry) {
     return {
       dependencies: mappedPackages,
@@ -133,12 +135,14 @@ export function stringifyYarnLockFile(lockFileData: LockFileData): string {
   // this is an easy way to distinguish it from the classic
   const isBerry = !!lockFileData.lockFileMetadata?.__metadata;
   const dependencies = unmapPackages(lockFileData.dependencies, isBerry);
+
   if (isBerry) {
     const lockFile = {
       __metadata: lockFileData.lockFileMetadata.__metadata,
       ...lockFileData.lockFileMetadata.workspacePackages,
       ...dependencies,
     };
+
     // berry's stringifySyml doesn't generate comment
     return BERRY_LOCK_FILE_DISCLAIMER + stringifySyml(lockFile);
   } else {
@@ -214,6 +218,7 @@ export function pruneYarnLockFile(
   normalizedPackageJson: PackageJsonDeps
 ): LockFileData {
   const isBerry = !!lockFileData.lockFileMetadata?.__metadata;
+
   const prunedDependencies = pruneDependencies(
     lockFileData.dependencies,
     normalizedPackageJson
@@ -353,7 +358,7 @@ function pruneWorkspacePackages(
       resolution: workspaceProjKey,
       languageName: 'unknown',
       linkType: 'soft',
-      dependencies: sortObject(prunedWorkspaceDependencies),
+      dependencies: sortObjectByKeys(prunedWorkspaceDependencies),
     };
   }
 
@@ -433,10 +438,12 @@ function findDependencyTriplet(
 
   for (let i = 0; i < entries.length; i++) {
     const [key, value] = entries[i];
+
     let metaVersion = `${packageName}@${version}`;
     if (value.packageMeta.includes(metaVersion)) {
       return [key, value, metaVersion];
     }
+
     // for berry, meta version starts with 'npm:'
     metaVersion = `${packageName}@npm:${version}`;
     if (value.packageMeta.includes(metaVersion)) {

@@ -182,6 +182,7 @@ export async function pruneLockFile(
   }
 
   const packageJson = createPackageJson(projectName, projectGraph, {});
+  // cleanup irrelevant fields from the generated pacakge.json
   const normalizedPackageJson = normalizePackageJson(
     packageJson,
     isProduction,

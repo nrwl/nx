@@ -4,11 +4,11 @@ import {
   PackageVersions,
 } from './utils/lock-file-type';
 import { load, dump } from '@zkochan/js-yaml';
-import { sortObject } from './utils/sorting';
 import { TransitiveLookupFunctionInput, isRootVersion } from './utils/mapping';
 import { hashString, generatePrunnedHash } from './utils/hashing';
 import { satisfies } from 'semver';
 import { PackageJsonDeps } from './utils/pruning';
+import { sortObjectByKeys } from '../utils/object-sort';
 
 type PackageMeta = {
   key: string;
@@ -124,6 +124,7 @@ function mapPackages(
       };
     }
   });
+
   Object.keys(mappedPackages).forEach((packageName) => {
     const versions = mappedPackages[packageName];
     const versionKeys = Object.keys(versions);
@@ -344,10 +345,18 @@ function unmapLockFile(lockFileData: LockFileData): PnpmLockFile {
 
   return {
     ...(lockFileMetatada as { lockfileVersion: number }),
-    specifiers: sortObject(specifiers),
-    dependencies: sortObject(dependencies),
-    devDependencies: sortObject(devDependencies),
-    packages: sortObject(packages),
+    ...(Object.keys(specifiers).length && {
+      specifiers: sortObjectByKeys(specifiers),
+    }),
+    ...(Object.keys(dependencies).length && {
+      dependencies: sortObjectByKeys(dependencies),
+    }),
+    ...(Object.keys(devDependencies).length && {
+      devDependencies: sortObjectByKeys(devDependencies),
+    }),
+    ...(Object.keys(packages).length && {
+      packages: sortObjectByKeys(packages),
+    }),
     time,
   };
 }

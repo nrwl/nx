@@ -5,7 +5,6 @@ import { output } from '../utils/output';
 import { joinPathFragments } from '../utils/path';
 import { workspaceRoot } from '../utils/workspace-root';
 import { LockFileData, PackageDependency } from './utils/lock-file-type';
-import { sortObject } from './utils/sorting';
 import { TransitiveLookupFunctionInput } from './utils/mapping';
 import { hashString, generatePrunnedHash } from './utils/hashing';
 import { PackageJsonDeps } from './utils/pruning';
@@ -263,17 +262,27 @@ export function stringifyNpmLockFile(lockFileData: LockFileData): string {
   const lockFileJson: NpmLockFile = {
     ...lockFileData.lockFileMetadata.metadata,
     ...(notV1 && {
-      packages: sortObject(
-        packages,
-        (value) => value,
-        false,
-        (a, b) => a.localeCompare(b)
-      ),
+      packages: sortObject(packages),
     }),
     ...(notV3 && { dependencies: sortDependencies(dependencies) }),
   };
 
   return JSON.stringify(lockFileJson, null, 2) + '\n';
+}
+
+function sortObject(packages: Dependencies): Dependencies | undefined {
+  const keys = Object.keys(packages);
+  if (keys.length === 0) {
+    return;
+  }
+
+  keys.sort((a, b) => a.localeCompare(b));
+
+  const result: Dependencies = {};
+  keys.forEach((key) => {
+    result[key] = packages[key];
+  });
+  return result;
 }
 
 // remapping the package back to package-lock format
