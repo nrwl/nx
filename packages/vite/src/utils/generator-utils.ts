@@ -138,6 +138,12 @@ export function addOrChangeBuildTarget(
   };
 
   if (targets[target]) {
+    buildOptions.fileReplacements = targets[target].options.fileReplacements;
+
+    if (target === '@nxext/vite:build') {
+      buildOptions.base = targets[target].options.baseHref;
+      buildOptions.sourcemap = targets[target].options.sourcemaps;
+    }
     targets[target].options = {
       ...buildOptions,
     };
@@ -179,6 +185,9 @@ export function addOrChangeServeTarget(
   };
 
   if (targets[target]) {
+    if (target === '@nxext/vite:dev') {
+      serveOptions.proxyConfig = targets[target].options.proxyConfig;
+    }
     targets[target].options = {
       ...serveOptions,
     };
