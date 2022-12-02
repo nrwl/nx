@@ -3,6 +3,7 @@ import {
   ProjectGraph,
   ProjectGraphExternalNode,
 } from '../../config/project-graph';
+import { PackageJsonDeps } from './pruning';
 
 /**
  * Apply simple hashing of the content using the default hashing implementation
@@ -59,12 +60,8 @@ function traverseExternalNodesDependencies(
  */
 export function generatePrunnedHash(
   originalHash: string,
-  packages: string[],
-  projectName?: string
+  normalizedPackageJson: PackageJsonDeps
 ) {
-  const hashingInput = [originalHash, ...packages];
-  if (projectName) {
-    hashingInput.push(projectName);
-  }
+  const hashingInput = [originalHash, JSON.stringify(normalizedPackageJson)];
   return defaultHashing.hashArray(hashingInput);
 }

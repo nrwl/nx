@@ -394,7 +394,7 @@ export function prunePnpmLockFile(
       dependencies
     ),
     dependencies,
-    hash: generatePrunnedHash(lockFileData.hash, packages, projectName),
+    hash: generatePrunnedHash(lockFileData.hash, normalizedPackageJson),
   };
   return prunedLockFileData;
 }

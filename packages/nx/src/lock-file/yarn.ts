@@ -222,6 +222,8 @@ export function pruneYarnLockFile(
     packages
   );
 
+  const hash = generatePrunnedHash(lockFileData.hash, normalizedPackageJson);
+
   let prunedLockFileData: LockFileData;
   if (isBerry) {
     const { __metadata, workspacePackages } = lockFileData.lockFileMetadata;
@@ -236,12 +238,12 @@ export function pruneYarnLockFile(
         ),
       },
       dependencies: prunedDependencies,
-      hash: generatePrunnedHash(lockFileData.hash, packages, projectName),
+      hash,
     };
   } else {
     prunedLockFileData = {
       dependencies: prunedDependencies,
-      hash: generatePrunnedHash(lockFileData.hash, packages, projectName),
+      hash,
     };
   }
 
