@@ -9,6 +9,7 @@ import { sortObject } from './utils/sorting';
 import { TransitiveLookupFunctionInput } from './utils/mapping';
 import { hashString, generatePrunnedHash } from './utils/hashing';
 import { PackageJsonDeps } from './utils/pruning';
+import { Dependency } from 'webpack';
 
 type PackageMeta = {
   path: string;
@@ -487,7 +488,7 @@ export function pruneNpmLockFile(
   );
   const lockFileMetadata = {
     ...lockFileData.lockFileMetadata,
-    ...pruneRootPackage(lockFileData, packages, projectName),
+    ...pruneRootPackage(lockFileData, normalizedPackageJson),
   };
   let prunedLockFileData: LockFileData;
   prunedLockFileData = {
@@ -500,27 +501,19 @@ export function pruneNpmLockFile(
 
 function pruneRootPackage(
   lockFileData: LockFileData,
-  packages: string[],
-  projectName?: string
+  { name, ...dependencyInfo }: PackageJsonDeps
 ): Record<string, any> {
   if (lockFileData.lockFileMetadata.metadata.lockfileVersion === 1) {
     return undefined;
   }
   const rootPackage = {
-    name: projectName || lockFileData.lockFileMetadata.rootPackage.name,
+    name: name || lockFileData.lockFileMetadata.rootPackage.name,
     version: lockFileData.lockFileMetadata.rootPackage.version,
     ...(lockFileData.lockFileMetadata.rootPackage.license && {
       license: lockFileData.lockFileMetadata.rootPackage.license,
     }),
-    dependencies: {} as Record<string, string>,
+    ...dependencyInfo
   };
-  for (const packageName of packages) {
-    const version = Object.values(lockFileData.dependencies[packageName]).find(
-      (v) => v.rootVersion
-    ).version;
-    rootPackage.dependencies[packageName] = version;
-  }
-  rootPackage.dependencies = sortObject(rootPackage.dependencies);
 
   return { rootPackage };
 }
