@@ -1,7 +1,7 @@
 import type { FileReplacement } from '../../plugins/rollup-replace-files.plugin';
 export interface ViteBuildExecutorOptions {
   outputPath: string;
-  baseHref?: string;
+  base?: string;
   proxyConfig?: string;
   configFile?: string;
   fileReplacements?: FileReplacement[];

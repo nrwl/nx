@@ -30,7 +30,7 @@ export async function getBuildAndSharedConfig(
   return mergeConfig({}, {
     mode: options.mode,
     root: projectRoot,
-    base: options.baseHref,
+    base: options.base,
     configFile: normalizeConfigFilePath(
       options.configFile,
       context.root,
