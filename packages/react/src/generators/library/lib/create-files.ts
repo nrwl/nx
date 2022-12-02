@@ -27,7 +27,7 @@ export function createFiles(host: Tree, options: NormalizedSchema) {
     substitutions
   );
 
-  if (options.bundler === 'vite') {
+  if (options.bundler === 'vite' || options.unitTestRunner === 'vitest') {
     generateFiles(
       host,
       joinPathFragments(__dirname, '../files/vite'),
