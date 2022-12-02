@@ -381,6 +381,14 @@ export const commandsObject = yargs
       process.exit(0);
     },
   })
+  .command({
+    command: 'watch [project]',
+    describe: 'Watch for changes within projects, and execute commands',
+    builder: (yargs) => withWatchOptions(yargs),
+    handler: async (args) => {
+      await import('./watch').then((m) => m.watch(args));
+    },
+  })
   .help()
   .version(nxVersion);
 
@@ -925,6 +933,69 @@ function withMigrationOptions(yargs: yargs.Argv) {
       }
       return true;
     });
+}
+
+function withWatchOptions(yargs: yargs.Argv) {
+  return yargs
+    .parserConfiguration({
+      'strip-dashed': true,
+      'populate--': true,
+    })
+    .example(
+      'nx watch app -- "echo &1; echo &2"',
+      'Watch app and echo the project name and the file that changed'
+    )
+    .example(
+      'nx watch --projects=app1,app2 --includeDependencies -- "echo &1"',
+      'Watch app1 and app2 and echo the project name whenever a specified project or its dependencies change'
+    )
+    .example(
+      'nx watch --all --includeGlobalWorkspaceFiles -- "echo &1"',
+      'Watch all projects and all files in the workspace'
+    )
+    .positional('project', {
+      describe: 'The project to watch',
+      type: 'string',
+    })
+    .option('projects', {
+      type: 'array',
+      string: true,
+      coerce: parseCSV,
+      description: 'Projects to watch (comma delimited).',
+    })
+    .option('all', {
+      type: 'boolean',
+      description: 'Watch all projects.',
+    })
+    .option('includeDependentProjects', {
+      type: 'boolean',
+      description:
+        'When watching selected projects, include dependent projects as well.',
+      alias: 'd',
+    })
+    .option('includeGlobalWorkspaceFiles', {
+      type: 'boolean',
+      description:
+        'Include global workspace files that are not part of a project. For example, the root eslint, or tsconfig file.',
+      alias: 'g',
+    })
+    .option('callback', { type: 'string', hidden: true })
+    .option('verbose', {
+      type: 'boolean',
+      description:
+        'Run watch mode in verbose mode, where commands are logged before execution.',
+    })
+    .check((args) => {
+      if ((args.project || args.projects) && args.all) {
+        throw Error('Cannot use --all with a project or --projects');
+      }
+
+      return true;
+    })
+    .middleware((args) => {
+      const { '--': underscore } = args;
+      args.callback = underscore?.[0];
+    }, true);
 }
 
 function parseCSV(args: string[]) {

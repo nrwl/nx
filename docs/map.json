@@ -1373,6 +1373,12 @@
               "name": "exec",
               "id": "exec",
               "file": "generated/cli/exec"
+            },
+            {
+              "name": "watch",
+              "id": "watch",
+              "tags": ["workspace-watching"],
+              "file": "generated/cli/watch"
             }
           ]
         },
