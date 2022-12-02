@@ -1,4 +1,5 @@
 import {
+  Attributes,
   cloneElement,
   HTMLAttributes,
   ReactElement,
@@ -23,6 +24,7 @@ export type TooltipProps = HTMLAttributes<HTMLDivElement> & {
   children?: ReactElement;
   placement?: Placement;
   reference?: ReferenceType;
+  openAction?: 'click' | 'hover' | 'manual';
 };
 
 export function Tooltip({
@@ -31,6 +33,7 @@ export function Tooltip({
   content,
   placement = 'top',
   reference: externalReference,
+  openAction = 'click',
 }: TooltipProps) {
   const [isOpen, setIsOpen] = useState(open);
   const arrowRef = useRef(null);
@@ -65,14 +68,19 @@ export function Tooltip({
     }
   }, [reference, externalReference]);
 
+  const cloneProps: Partial<any> & Attributes = { ref: reference };
+
+  if (openAction === 'click') {
+    cloneProps.onClick = () => setIsOpen(!isOpen);
+  } else if (openAction === 'hover') {
+    cloneProps.onMouseEnter = () => setIsOpen(true);
+    cloneProps.onMouseLeave = () => setIsOpen(false);
+  }
+
   return (
     <>
       {!externalReference && !!children
-        ? cloneElement(children, {
-            ref: reference,
-            onMouseEnter: () => setIsOpen(true),
-            onMouseLeave: () => setIsOpen(false),
-          })
+        ? cloneElement(children, cloneProps)
         : children}
 
       {isOpen ? (

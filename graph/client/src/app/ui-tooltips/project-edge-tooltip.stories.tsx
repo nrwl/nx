@@ -13,7 +13,11 @@ export default {
 const Template: ComponentStory<typeof ProjectEdgeNodeTooltip> = (args) => {
   return (
     <div className="flex w-full justify-center">
-      <Tooltip open={true} content={<ProjectEdgeNodeTooltip {...args} />}>
+      <Tooltip
+        open={true}
+        openAction="manual"
+        content={<ProjectEdgeNodeTooltip {...args} />}
+      >
         <p>Internal Reference</p>
       </Tooltip>
     </div>

@@ -179,7 +179,11 @@ export function Shell(): JSX.Element {
           <div className="h-full w-full" id="cytoscape-graph"></div>
           <TooltipDisplay></TooltipDisplay>
 
-          <Tooltip content="Download Graph as PNG" placement="right">
+          <Tooltip
+            openAction="hover"
+            content="Download Graph as PNG"
+            placement="right"
+          >
             <button
               type="button"
               className={classNames(

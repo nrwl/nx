@@ -33,6 +33,7 @@ export function TooltipDisplay() {
       open={true}
       reference={currentTooltip.ref}
       placement="top"
+      openAction="manual"
     ></Tooltip>
   ) : null;
 }
