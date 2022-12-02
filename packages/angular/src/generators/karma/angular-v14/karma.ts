@@ -7,20 +7,8 @@ import {
   readWorkspaceConfiguration,
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
-import {
-  jasmineCoreVersion,
-  jasmineSpecReporterVersion,
-  karmaChromeLauncherVersion,
-  karmaCoverageVersion,
-  karmaJasmineHtmlReporterVersion,
-  karmaJasmineVersion,
-  karmaVersion,
-  typesJasmineVersion,
-  typesNodeVersion,
-} from '../../utils/versions';
+import { versions } from '../../../utils/versions';
 import { GeneratorOptions } from './schema';
-import { getGeneratorDirectoryForInstalledAngularVersion } from '../../utils/get-generator-directory-for-ng-version';
-import { join } from 'path';
 
 function addTestInputs(tree: Tree) {
   const workspaceConfiguration = readWorkspaceConfiguration(tree);
@@ -55,16 +43,7 @@ function addTestInputs(tree: Tree) {
   updateWorkspaceConfiguration(tree, workspaceConfiguration);
 }
 
-export async function karmaGenerator(tree: Tree, options: GeneratorOptions) {
-  const generatorDirectory =
-    getGeneratorDirectoryForInstalledAngularVersion(tree);
-  if (generatorDirectory) {
-    let previousGenerator = await import(
-      join(__dirname, generatorDirectory, 'karma')
-    );
-    await previousGenerator.default(tree, options);
-    return;
-  }
+export function karmaGenerator(tree: Tree, options: GeneratorOptions) {
   const packageJson = readJson(tree, 'package.json');
 
   if (!tree.exists('karma.conf.js')) {
@@ -83,15 +62,16 @@ export async function karmaGenerator(tree: Tree, options: GeneratorOptions) {
     tree,
     {},
     {
-      karma: karmaVersion,
-      'karma-chrome-launcher': karmaChromeLauncherVersion,
-      'karma-coverage': karmaCoverageVersion,
-      'karma-jasmine': karmaJasmineVersion,
-      'karma-jasmine-html-reporter': karmaJasmineHtmlReporterVersion,
-      'jasmine-core': jasmineCoreVersion,
-      'jasmine-spec-reporter': jasmineSpecReporterVersion,
-      '@types/jasmine': typesJasmineVersion,
-      '@types/node': typesNodeVersion,
+      karma: versions.angularV14.karmaVersion,
+      'karma-chrome-launcher': versions.angularV14.karmaChromeLauncherVersion,
+      'karma-coverage': versions.angularV14.karmaCoverageVersion,
+      'karma-jasmine': versions.angularV14.karmaJasmineVersion,
+      'karma-jasmine-html-reporter':
+        versions.angularV14.karmaJasmineHtmlReporterVersion,
+      'jasmine-core': versions.angularV14.jasmineCoreVersion,
+      'jasmine-spec-reporter': versions.angularV14.jasmineSpecReporterVersion,
+      '@types/jasmine': versions.angularV14.typesJasmineVersion,
+      '@types/node': versions.angularV14.typesNodeVersion,
     }
   );
 }

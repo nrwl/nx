@@ -26,7 +26,7 @@ export async function angularInitGenerator(
   const depsTask = !options.skipPackageJson
     ? updateDependencies(host)
     : () => {};
-  const unitTestTask = addUnitTestRunner(host, options);
+  const unitTestTask = await addUnitTestRunner(host, options);
   const e2eTask = addE2ETestRunner(host, options);
   addGitIgnoreEntry(host, '.angular');
 
@@ -98,10 +98,15 @@ function updateDependencies(host: Tree): GeneratorCallback {
   );
 }
 
-function addUnitTestRunner(host: Tree, options: Schema): GeneratorCallback {
+async function addUnitTestRunner(
+  host: Tree,
+  options: Schema
+): Promise<GeneratorCallback> {
   switch (options.unitTestRunner) {
     case UnitTestRunner.Karma:
-      return karmaGenerator(host, { skipPackageJson: options.skipPackageJson });
+      return await karmaGenerator(host, {
+        skipPackageJson: options.skipPackageJson,
+      });
     case UnitTestRunner.Jest:
       if (!options.skipPackageJson) {
         addDependenciesToPackageJson(
