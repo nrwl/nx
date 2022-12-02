@@ -313,16 +313,13 @@ describe('lib', () => {
       });
     });
 
-    it('should support a root tsconfig.json instead of tsconfig.base.json', async () => {
-      // ARRANGE
+    it('should create tsconfig.base.json when it is missing', async () => {
       tree.rename('tsconfig.base.json', 'tsconfig.json');
 
-      // ACT
       await runLibraryGeneratorWithOpts();
 
-      // ASSERT
       const appTsConfig = readJson(tree, 'libs/my-lib/tsconfig.json');
-      expect(appTsConfig.extends).toBe('../../tsconfig.json');
+      expect(appTsConfig.extends).toBe('../../tsconfig.base.json');
     });
 
     it('should check for existence of spec files before deleting them', async () => {
@@ -662,56 +659,6 @@ describe('lib', () => {
       expect(
         tsconfigJson.compilerOptions.paths['my-dir-my-lib/*']
       ).toBeUndefined();
-    });
-
-    it('should create a local tsconfig.json', async () => {
-      // ACT
-      await runLibraryGeneratorWithOpts({ directory: 'myDir' });
-
-      // ASSERT
-      const tsconfigJson = readJson(tree, 'libs/my-dir/my-lib/tsconfig.json');
-
-      expect(tsconfigJson).toEqual({
-        extends: '../../../tsconfig.base.json',
-        angularCompilerOptions: {
-          enableI18nLegacyMessageIdFormat: false,
-          strictInjectionParameters: true,
-          strictInputAccessModifiers: true,
-          strictTemplates: true,
-        },
-        compilerOptions: {
-          forceConsistentCasingInFileNames: true,
-          noFallthroughCasesInSwitch: true,
-          noPropertyAccessFromIndexSignature: true,
-          noImplicitOverride: true,
-          noImplicitReturns: true,
-          strict: true,
-          target: 'es2022',
-          useDefineForClassFields: false,
-        },
-        files: [],
-        include: [],
-        references: [
-          {
-            path: './tsconfig.lib.json',
-          },
-          {
-            path: './tsconfig.spec.json',
-          },
-        ],
-      });
-    });
-
-    it('should support a root tsconfig.json instead of tsconfig.base.json', async () => {
-      // ARRANGE
-      tree.rename('tsconfig.base.json', 'tsconfig.json');
-
-      // ACT
-      await runLibraryGeneratorWithOpts({ directory: 'myDir' });
-
-      // ASSERT
-      const appTsConfig = readJson(tree, 'libs/my-dir/my-lib/tsconfig.json');
-      expect(appTsConfig.extends).toBe('../../../tsconfig.json');
     });
   });
 

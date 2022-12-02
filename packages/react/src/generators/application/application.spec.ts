@@ -104,17 +104,7 @@ describe('app', () => {
           path: './tsconfig.spec.json',
         },
       ]);
-      expect(tsconfig.compilerOptions.forceConsistentCasingInFileNames).toEqual(
-        true
-      );
       expect(tsconfig.compilerOptions.strict).toEqual(true);
-      expect(tsconfig.compilerOptions.noImplicitOverride).toEqual(true);
-      expect(
-        tsconfig.compilerOptions.noPropertyAccessFromIndexSignature
-      ).toEqual(true);
-      expect(tsconfig.compilerOptions.noImplicitReturns).toEqual(true);
-      expect(tsconfig.compilerOptions.noFallthroughCasesInSwitch).toEqual(true);
-
       const tsconfigApp = readJson(appTree, 'apps/my-app/tsconfig.app.json');
       expect(tsconfigApp.compilerOptions.outDir).toEqual('../../dist/out-tsc');
       expect(tsconfigApp.extends).toEqual('./tsconfig.json');
@@ -164,15 +154,6 @@ describe('app', () => {
 
       const tsConfig = readJson(appTree, 'apps/my-app/tsconfig.json');
       expect(tsConfig.extends).toEqual('../../tsconfig.base.json');
-    });
-
-    it('should extend from root tsconfig.json when no tsconfig.base.json', async () => {
-      appTree.rename('tsconfig.base.json', 'tsconfig.json');
-
-      await applicationGenerator(appTree, schema);
-
-      const tsConfig = readJson(appTree, 'apps/my-app/tsconfig.json');
-      expect(tsConfig.extends).toEqual('../../tsconfig.json');
     });
   });
 
@@ -902,15 +883,7 @@ describe('app', () => {
       expect(
         tsconfigJson.compilerOptions.forceConsistentCasingInFileNames
       ).not.toBeDefined();
-      expect(tsconfigJson.compilerOptions.strict).not.toBeDefined();
-      expect(tsconfigJson.compilerOptions.noImplicitOverride).not.toBeDefined();
-      expect(
-        tsconfigJson.compilerOptions.noPropertyAccessFromIndexSignature
-      ).not.toBeDefined();
-      expect(tsconfigJson.compilerOptions.noImplicitReturns).not.toBeDefined();
-      expect(
-        tsconfigJson.compilerOptions.noFallthroughCasesInSwitch
-      ).not.toBeDefined();
+      expect(tsconfigJson.compilerOptions.strict).toEqual(false);
     });
   });
 
@@ -933,33 +906,17 @@ describe('app', () => {
     it('should create files at the root', async () => {
       await applicationGenerator(appTree, {
         ...schema,
-        rootProject: true,
-        bundler: 'webpack',
-      });
-      expect(appTree.read('/src/main.tsx')).toBeDefined();
-      expect(appTree.read('/e2e/cypress.config.ts')).toBeDefined();
-      expect(readJson(appTree, '/tsconfig.json').extends).toEqual(
-        './tsconfig.base.json'
-      );
-      expect(
-        readJson(appTree, '/workspace.json').projects['my-app'].architect[
-          'build'
-        ].options['outputPath']
-      ).toEqual('dist/my-app');
-    });
-
-    it('should create files at the root if bundler is vite', async () => {
-      await applicationGenerator(appTree, {
-        ...schema,
         name: 'my-app2',
         rootProject: true,
         bundler: 'vite',
       });
       expect(appTree.read('/src/main.tsx')).toBeDefined();
       expect(appTree.read('/e2e/cypress.config.ts')).toBeDefined();
-      expect(readJson(appTree, '/tsconfig.json').extends).toEqual(
-        './tsconfig.base.json'
-      );
+
+      const rootTsConfig = readJson(appTree, '/tsconfig.json');
+      expect(rootTsConfig.extends).toBeUndefined();
+      expect(rootTsConfig.compilerOptions.sourceMap).toBe(true);
+
       expect(
         readJson(appTree, '/workspace.json').projects['my-app2'].architect[
           'build'
