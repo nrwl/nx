@@ -19,16 +19,16 @@ Read more about Vite and Vitest in the [Vite documentation](https://vitejs.dev/)
 
 You can create a new workspace that uses Vite with one of the following commands:
 
-- Generate a new monorepo with a Web Components app set up with Vite
-
-```shell
-npx create-nx-workspace@latest --preset=web-components
-```
-
 - Generate a new standalone React app set up with Vite
 
 ```shell
 npx create-nx-workspace@latest --preset=react-standalone
+```
+
+- Generate a new monorepo with a Web Components app set up with Vite
+
+```shell
+npx create-nx-workspace@latest --preset=web-components
 ```
 
 ### Add Vite to an existing workspace
