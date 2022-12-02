@@ -3,6 +3,8 @@ import { PackageJson } from '../../utils/package-json';
 export type PackageJsonDeps = Pick<
   PackageJson,
   | 'name'
+  | 'version'
+  | 'license'
   | 'dependencies'
   | 'devDependencies'
   | 'peerDependencies'
@@ -24,6 +26,7 @@ export function normalizePackageJson(
 ): PackageJsonDeps {
   const normalized: PackageJsonDeps = {
     name: packageJson.name || projectName,
+    version: packageJson.version || '0.0.0',
   };
   if (packageJson.dependencies) {
     normalized.dependencies = packageJson.dependencies;

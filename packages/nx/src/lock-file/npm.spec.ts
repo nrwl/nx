@@ -15,7 +15,6 @@ import {
   lockFileV2YargsAndDevkitOnly,
 } from './__fixtures__/npm.lock';
 import { vol } from 'memfs';
-import { parseLockFile } from './lock-file';
 
 jest.mock('fs', () => require('memfs').fs);
 
@@ -30,10 +29,12 @@ jest.mock('nx/src/utils/workspace-root', () => ({
 
 const TypeScriptOnlyPackage = {
   name: 'test',
+  version: '0.0.0',
   dependencies: { typescript: '4.8.4' },
 };
 const YargsAndDevkitPackage = {
   name: 'test',
+  version: '0.0.0',
   dependencies: { '@nrwl/devkit': '15.0.13', yargs: '17.6.2' },
 };
 

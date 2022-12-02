@@ -213,13 +213,10 @@ export function pruneYarnLockFile(
   lockFileData: LockFileData,
   normalizedPackageJson: PackageJsonDeps
 ): LockFileData {
-  const packages = Object.keys(normalizedPackageJson.dependencies);
-  const projectName = normalizedPackageJson.name;
-
   const isBerry = !!lockFileData.lockFileMetadata?.__metadata;
   const prunedDependencies = pruneDependencies(
     lockFileData.dependencies,
-    packages
+    normalizedPackageJson
   );
 
   const hash = generatePrunnedHash(lockFileData.hash, normalizedPackageJson);
@@ -233,8 +230,7 @@ export function pruneYarnLockFile(
         workspacePackages: pruneWorkspacePackages(
           workspacePackages,
           prunedDependencies,
-          packages,
-          projectName
+          normalizedPackageJson
         ),
       },
       dependencies: prunedDependencies,
@@ -254,11 +250,15 @@ export function pruneYarnLockFile(
 // iterate over packages to collect the affected tree of dependencies
 function pruneDependencies(
   dependencies: LockFileData['dependencies'],
-  packages: string[]
+  normalizedPackageJson: PackageJsonDeps
 ): LockFileData['dependencies'] {
   const result: LockFileData['dependencies'] = {};
 
-  packages.forEach((packageName) => {
+  Object.keys({
+    ...normalizedPackageJson.dependencies,
+    ...normalizedPackageJson.devDependencies,
+    ...normalizedPackageJson.peerDependencies,
+  }).forEach((packageName) => {
     if (dependencies[packageName]) {
       const [key, value] = Object.entries(dependencies[packageName]).find(
         ([, v]) => v.rootVersion
@@ -332,32 +332,28 @@ function pruneTransitiveDependencies(
 function pruneWorkspacePackages(
   workspacePackages: LockFileDependencies,
   prunedDependencies: LockFileData['dependencies'],
-  packages: string[],
-  projectName?: string
+  normalizedPackageJson: PackageJsonDeps
 ): LockFileDependencies {
   const result: LockFileDependencies = {};
-
-  let workspaceProjKey = '';
-
-  if (projectName) {
-    workspaceProjKey =
-      Object.keys(workspacePackages).find((key) =>
-        key.startsWith(`${projectName}@workspace:`)
-      ) || `${projectName}@workspace:^`;
-  } else {
-    workspaceProjKey = Object.keys(workspacePackages).find(
-      (key) => key.indexOf('@workspace:.') !== -1
-    );
-  }
+  const name = normalizedPackageJson.name;
+  const workspaceProjKey =
+    Object.keys(workspacePackages).find((key) =>
+      key.startsWith(`${name}@workspace:`)
+    ) || `${name}@workspace:^`;
+  // } else {
+  //   workspaceProjKey = Object.keys(workspacePackages).find(
+  //     (key) => key.indexOf('@workspace:.') !== -1
+  //   );
+  // }
 
   if (workspaceProjKey) {
     const prunedWorkspaceDependencies = pruneWorkspacePackageDependencies(
       workspacePackages[workspaceProjKey]?.dependencies || {},
-      packages,
+      normalizedPackageJson,
       prunedDependencies
     );
     result[workspaceProjKey] = {
-      version: '0.0.0-use.local',
+      version: `${normalizedPackageJson.version || '0.0.0'}-use.local`,
       resolution: workspaceProjKey,
       languageName: 'unknown',
       linkType: 'soft',
@@ -370,7 +366,7 @@ function pruneWorkspacePackages(
 
 function pruneWorkspacePackageDependencies(
   dependencies: Record<string, string>,
-  packages: string[],
+  normalizedPackageJson: PackageJsonDeps,
   prunedDependencies: LockFileData['dependencies']
 ): Record<string, string> {
   const result: Record<string, string> = {};
@@ -389,7 +385,11 @@ function pruneWorkspacePackageDependencies(
     }
   );
   // add all missing deps to root workspace package
-  packages.forEach((p) => {
+  Object.keys({
+    ...normalizedPackageJson.dependencies,
+    ...normalizedPackageJson.devDependencies,
+    ...normalizedPackageJson.peerDependencies,
+  }).forEach((p) => {
     if (!result[p]) {
       // extract first version expression from package's structure
       const metaVersion = Object.values(prunedDependencies[p])[0]

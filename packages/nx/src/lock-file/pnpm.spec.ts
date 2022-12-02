@@ -14,10 +14,12 @@ import {
 
 const TypeScriptOnlyPackage = {
   name: 'test',
+  version: '1.0.0',
   dependencies: { typescript: '4.8.4' },
 };
 const YargsAndDevkitPackage = {
   name: 'test',
+  version: '1.2.3',
   dependencies: { '@nrwl/devkit': '15.0.13', yargs: '17.6.2' },
 };
 

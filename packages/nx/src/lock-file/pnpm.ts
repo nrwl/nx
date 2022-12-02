@@ -380,13 +380,9 @@ export function prunePnpmLockFile(
   lockFileData: LockFileData,
   normalizedPackageJson: PackageJsonDeps
 ): LockFileData {
-  const packages = Object.keys(normalizedPackageJson.dependencies);
-  const projectName = normalizedPackageJson.name;
-
   const dependencies = pruneDependencies(
     lockFileData.dependencies,
-    packages,
-    projectName
+    normalizedPackageJson
   );
   const prunedLockFileData = {
     lockFileMetadata: pruneMetadata(
@@ -402,12 +398,15 @@ export function prunePnpmLockFile(
 // iterate over packages to collect the affected tree of dependencies
 function pruneDependencies(
   dependencies: LockFileData['dependencies'],
-  packages: string[],
-  projectName?: string
+  normalizedPackageJson: PackageJsonDeps
 ): LockFileData['dependencies'] {
   const result: LockFileData['dependencies'] = {};
 
-  packages.forEach((packageName) => {
+  Object.keys({
+    ...normalizedPackageJson.dependencies,
+    ...normalizedPackageJson.devDependencies,
+    ...normalizedPackageJson.peerDependencies,
+  }).forEach((packageName) => {
     if (dependencies[packageName]) {
       const [key, { packageMeta, ...value }] = Object.entries(
         dependencies[packageName]
@@ -419,7 +418,11 @@ function pruneDependencies(
       result[packageName][key] = Object.assign(value, {
         packageMeta: [
           {
-            isDependency: true,
+            isDependency:
+              !!normalizedPackageJson.dependencies?.[packageName] ||
+              !!normalizedPackageJson.peerDependencies?.[packageName],
+            isDevDependency:
+              !!normalizedPackageJson.devDependencies?.[packageName],
             key: meta.key,
             specifier: value.version,
             dependencyDetails: meta.dependencyDetails,
