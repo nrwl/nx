@@ -540,7 +540,7 @@ function pruneDependencies(
     ...normalizedPackageJson.peerDependencies,
   }).forEach((packageName) => {
     if (dependencies[packageName]) {
-      const [key, { packageMeta, dev: _, peer: __, optional: ___, ...value }] =
+      const [key, { packageMeta, dev: _d, peer: _p, optional: _o, ...value }] =
         Object.entries(dependencies[packageName]).find(
           ([_, v]) => v.rootVersion
         );
@@ -549,6 +549,13 @@ function pruneDependencies(
       const peer = normalizedPackageJson.peerDependencies?.[packageName];
       const optional =
         normalizedPackageJson.peerDependenciesMeta?.[packageName]?.optional;
+      const modifier = peer
+        ? 'peer'
+        : optional
+        ? 'optional'
+        : dev
+        ? 'dev'
+        : undefined;
 
       result[packageName] = result[packageName] || {};
       result[packageName][key] = Object.assign(value, {
@@ -568,7 +575,7 @@ function pruneDependencies(
         result,
         result[packageName][key],
         isV1,
-        peer ? 'peer' : optional ? 'optional' : dev ? 'dev' : undefined,
+        modifier,
         peerDependenciesToPrune
       );
     } else {
@@ -657,8 +664,8 @@ function pruneTransitiveDependencies(
           packageJSON || value,
           modifier
         );
-        // in the first run we will parse only non-peer dependencies
-        // this gives priority to direct dependencies
+        // initially will collect only non-peer dependencies
+        // this gives priority to direct dependencies over peer ones
         if (
           peerDependenciesToPrune &&
           (value.peerDependencies?.[packageName] ||

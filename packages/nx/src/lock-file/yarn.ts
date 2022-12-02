@@ -336,15 +336,11 @@ function pruneWorkspacePackages(
 ): LockFileDependencies {
   const result: LockFileDependencies = {};
   const name = normalizedPackageJson.name;
+
   const workspaceProjKey =
     Object.keys(workspacePackages).find((key) =>
       key.startsWith(`${name}@workspace:`)
     ) || `${name}@workspace:^`;
-  // } else {
-  //   workspaceProjKey = Object.keys(workspacePackages).find(
-  //     (key) => key.indexOf('@workspace:.') !== -1
-  //   );
-  // }
 
   if (workspaceProjKey) {
     const prunedWorkspaceDependencies = pruneWorkspacePackageDependencies(

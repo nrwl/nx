@@ -12,11 +12,13 @@ export type PackageJsonDeps = Pick<
 >;
 
 /**
- * Strip off non-dependency related fields from package.json
+ * Strip off non-pruning related fields from package.json
  * Remove devDependencies if production target
- * Remove optional peerDependencies
+ * Remove optional peerDependencies if production target
+ *
  * @param packageJson
  * @param isProduction
+ * @param projectName
  * @returns
  */
 export function normalizePackageJson(
@@ -27,6 +29,7 @@ export function normalizePackageJson(
   const normalized: PackageJsonDeps = {
     name: packageJson.name || projectName,
     version: packageJson.version || '0.0.0',
+    ...(packageJson.license && { license: packageJson.license }),
   };
   if (packageJson.dependencies) {
     normalized.dependencies = packageJson.dependencies;
