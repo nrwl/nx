@@ -1021,4 +1021,21 @@ describe('app', () => {
       ).toBe(false);
     });
   });
+
+  describe('setting generator defaults', () => {
+    it('should set libraries to use vitest when app uses vite bundler', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        name: 'my-app',
+        bundler: 'vite',
+      });
+
+      const workspace = readWorkspaceConfiguration(appTree);
+      expect(workspace.generators['@nrwl/react']).toMatchObject({
+        library: {
+          unitTestRunner: 'vitest',
+        },
+      });
+    });
+  });
 });

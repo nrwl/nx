@@ -8,7 +8,7 @@
   "properties": {
     "uiFramework": {
       "type": "string",
-      "description": "UI Framework to use for Vite.",
+      "description": "UI Framework to use for Webpack.",
       "enum": ["react", "none"],
       "x-prompt": "What UI framework plugin should Webpack use?"
     },

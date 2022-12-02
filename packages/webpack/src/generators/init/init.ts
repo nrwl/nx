@@ -16,7 +16,6 @@ import {
   swcHelpersVersion,
   swcLoaderVersion,
   tsLibVersion,
-  tsQueryVersion,
   urlLoaderVersion,
 } from '../../utils/versions';
 import { addBabelInputs } from '@nrwl/js/src/utils/add-babel-inputs';
@@ -57,7 +56,6 @@ export async function webpackInitGenerator(tree: Tree, schema: Schema) {
       {
         '@pmmmwh/react-refresh-webpack-plugin':
           reactRefreshWebpackPluginVersion,
-        '@phenomnomnominal/tsquery': tsQueryVersion,
         '@svgr/webpack': svgrWebpackVersion,
         'react-refresh': reactRefreshVersion,
         'url-loader': urlLoaderVersion,
