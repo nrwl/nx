@@ -8,6 +8,7 @@ import {
 import { sortObject } from './utils/sorting';
 import { TransitiveLookupFunctionInput, isRootVersion } from './utils/mapping';
 import { hashString, generatePrunnedHash } from './utils/hashing';
+import { PackageJsonDeps } from './utils/pruning';
 
 type LockFileDependencies = Record<
   string,
@@ -210,9 +211,11 @@ export function transitiveDependencyYarnLookup({
  */
 export function pruneYarnLockFile(
   lockFileData: LockFileData,
-  packages: string[],
-  projectName?: string
+  normalizedPackageJson: PackageJsonDeps
 ): LockFileData {
+  const packages = Object.keys(normalizedPackageJson.dependencies);
+  const projectName = normalizedPackageJson.name;
+
   const isBerry = !!lockFileData.lockFileMetadata?.__metadata;
   const prunedDependencies = pruneDependencies(
     lockFileData.dependencies,

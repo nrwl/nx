@@ -8,6 +8,7 @@ import { sortObject } from './utils/sorting';
 import { TransitiveLookupFunctionInput, isRootVersion } from './utils/mapping';
 import { hashString, generatePrunnedHash } from './utils/hashing';
 import { satisfies } from 'semver';
+import { PackageJsonDeps } from './utils/pruning';
 
 type PackageMeta = {
   key: string;
@@ -377,9 +378,11 @@ export function transitiveDependencyPnpmLookup({
  */
 export function prunePnpmLockFile(
   lockFileData: LockFileData,
-  packages: string[],
-  projectName?: string
+  normalizedPackageJson: PackageJsonDeps
 ): LockFileData {
+  const packages = Object.keys(normalizedPackageJson.dependencies);
+  const projectName = normalizedPackageJson.name;
+
   const dependencies = pruneDependencies(
     lockFileData.dependencies,
     packages,

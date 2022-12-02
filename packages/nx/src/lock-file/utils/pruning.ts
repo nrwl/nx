@@ -1,7 +1,8 @@
 import { PackageJson } from '../../utils/package-json';
 
-type PackageJsonDeps = Pick<
+export type PackageJsonDeps = Pick<
   PackageJson,
+  | 'name'
   | 'dependencies'
   | 'devDependencies'
   | 'peerDependencies'
@@ -18,9 +19,12 @@ type PackageJsonDeps = Pick<
  */
 export function normalizePackageJson(
   packageJson: PackageJson,
-  isProduction: boolean
+  isProduction: boolean,
+  projectName: string
 ): PackageJsonDeps {
-  const normalized: PackageJsonDeps = {};
+  const normalized: PackageJsonDeps = {
+    name: packageJson.name || projectName,
+  };
   if (packageJson.dependencies) {
     normalized.dependencies = packageJson.dependencies;
   }
@@ -28,15 +32,23 @@ export function normalizePackageJson(
     normalized.devDependencies = packageJson.devDependencies;
   }
   if (packageJson.peerDependencies) {
-    const normalizedPeedDeps = normalizePeerDependencies(packageJson);
-    if (normalizedPeedDeps) {
-      normalized.peerDependencies = normalizedPeedDeps;
+    if (isProduction) {
+      const normalizedPeedDeps = filterOptionalPeerDependencies(packageJson);
+      if (normalizedPeedDeps) {
+        normalized.peerDependencies = normalizedPeedDeps;
+      }
+    } else {
+      normalized.peerDependencies = packageJson.peerDependencies;
+      if (packageJson.peerDependenciesMeta) {
+        normalized.peerDependenciesMeta = packageJson.peerDependenciesMeta;
+      }
     }
   }
+
   return normalized;
 }
 
-function normalizePeerDependencies(
+function filterOptionalPeerDependencies(
   packageJson: PackageJson
 ): Record<string, string> {
   let peerDependencies;

@@ -162,28 +162,6 @@ export function writeLockFile(
 }
 
 /**
- * Prunes {@link LockFileData} based on minimal necessary set of packages
- * Returns new {@link LockFileData}
- */
-export function pruneLockFileData(
-  lockFile: LockFileData,
-  packages: string[],
-  projectName?: string,
-  packageManager: PackageManager = detectPackageManager(workspaceRoot)
-): LockFileData {
-  if (packageManager === 'yarn') {
-    return pruneYarnLockFile(lockFile, packages, projectName);
-  }
-  if (packageManager === 'pnpm') {
-    return prunePnpmLockFile(lockFile, packages, projectName);
-  }
-  if (packageManager === 'npm') {
-    return pruneNpmLockFile(lockFile, packages, projectName);
-  }
-  throw Error(`Unknown package manager: ${packageManager}`);
-}
-
-/**
  * Prune lock file based on the giveb project
  * @param projectName
  * @param packageManager
@@ -202,23 +180,23 @@ export async function pruneLockFile(
   }
 
   const packageJson = createPackageJson(projectName, projectGraph, {});
-  const normalizedPackageJson = normalizePackageJson(packageJson, isProduction);
-
-  const dependencies = Object.keys(normalizedPackageJson.dependencies); // TODO: use createPackageJson to gather the dependencies, probably refactoring of `pruneLockFileData` would be needed
-
-  const result = pruneLockFileData(
-    lockFileData,
-    dependencies,
-    projectName,
-    packageManager
+  const normalizedPackageJson = normalizePackageJson(
+    packageJson,
+    isProduction,
+    projectName
   );
+
   if (packageManager === 'yarn') {
-    return stringifyYarnLockFile(result);
+    const prunedData = pruneYarnLockFile(lockFileData, normalizedPackageJson);
+    return stringifyYarnLockFile(prunedData);
   }
   if (packageManager === 'pnpm') {
-    return stringifyPnpmLockFile(result);
+    const prunedData = prunePnpmLockFile(lockFileData, normalizedPackageJson);
+    return stringifyPnpmLockFile(prunedData);
   }
   if (packageManager === 'npm') {
-    return stringifyNpmLockFile(result);
+    const prunedData = pruneNpmLockFile(lockFileData, normalizedPackageJson);
+    return stringifyNpmLockFile(prunedData);
   }
+  throw Error(`Unknown package manager: ${packageManager}`);
 }
