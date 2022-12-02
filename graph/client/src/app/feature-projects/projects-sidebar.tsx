@@ -120,34 +120,30 @@ export function ProjectsSidebar(): JSX.Element {
   }
 
   function incrementDepthFilter() {
-    if (searchDepthInfo.searchDepthEnabled) {
-      const newSearchDepth = searchDepthInfo.searchDepth + 1;
-      setSearchParams((currentSearchParams) => {
-        if (newSearchDepth === 1) {
-          currentSearchParams.delete('searchDepth');
-        } else {
-          currentSearchParams.set('searchDepth', newSearchDepth.toString());
-        }
+    const newSearchDepth = searchDepthInfo.searchDepth + 1;
+    setSearchParams((currentSearchParams) => {
+      if (newSearchDepth === 1) {
+        currentSearchParams.delete('searchDepth');
+      } else {
+        currentSearchParams.set('searchDepth', newSearchDepth.toString());
+      }
 
-        return currentSearchParams;
-      });
-    }
+      return currentSearchParams;
+    });
   }
 
   function decrementDepthFilter() {
-    if (searchDepthInfo.searchDepthEnabled) {
-      const newSearchDepth =
-        searchDepthInfo.searchDepth === 0 ? 0 : searchDepthInfo.searchDepth - 1;
-      setSearchParams((currentSearchParams) => {
-        if (newSearchDepth === 1) {
-          currentSearchParams.delete('searchDepth');
-        } else {
-          currentSearchParams.set('searchDepth', newSearchDepth.toString());
-        }
+    const newSearchDepth =
+      searchDepthInfo.searchDepth === 1 ? 1 : searchDepthInfo.searchDepth - 1;
+    setSearchParams((currentSearchParams) => {
+      if (newSearchDepth === 1) {
+        currentSearchParams.delete('searchDepth');
+      } else {
+        currentSearchParams.set('searchDepth', newSearchDepth.toString());
+      }
 
-        return currentSearchParams;
-      });
-    }
+      return currentSearchParams;
+    });
   }
 
   function resetTextFilter() {
@@ -250,12 +246,12 @@ export function ProjectsSidebar(): JSX.Element {
     if (searchParams.has('searchDepth')) {
       const parsedValue = parseInt(searchParams.get('searchDepth'), 10);
 
-      if (parsedValue === 0) {
+      if (parsedValue === 0 && searchDepthInfo.searchDepthEnabled !== false) {
         projectGraphService.send({
           type: 'setSearchDepthEnabled',
           searchDepthEnabled: false,
         });
-      } else {
+      } else if (parsedValue !== 0) {
         projectGraphService.send({
           type: 'setSearchDepth',
           searchDepth: parsedValue,
