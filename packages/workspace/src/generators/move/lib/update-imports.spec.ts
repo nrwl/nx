@@ -1,12 +1,13 @@
 import { readJson, readProjectConfiguration, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { libraryGenerator } from '../../library/library';
-import { NormalizedSchema } from '../schema';
+import { Schema } from '../schema';
 import { updateImports } from './update-imports';
+import { normalizeSchema } from './normalize-schema';
 
 describe('updateImports', () => {
   let tree: Tree;
-  let schema: NormalizedSchema;
+  let schema: Schema;
 
   beforeEach(async () => {
     tree = createTreeWithEmptyV1Workspace();
@@ -14,10 +15,7 @@ describe('updateImports', () => {
     schema = {
       projectName: 'my-source',
       destination: 'my-destination',
-      importPath: '@proj/my-destination',
       updateImportPath: true,
-      newProjectName: 'my-destination',
-      relativeToRootDestination: 'libs/my-destination',
     };
   });
 
@@ -48,7 +46,11 @@ describe('updateImports', () => {
     );
     const projectConfig = readProjectConfiguration(tree, 'my-source');
 
-    updateImports(tree, schema, projectConfig);
+    updateImports(
+      tree,
+      normalizeSchema(tree, schema, projectConfig),
+      projectConfig
+    );
 
     expect(tree.read(importerFilePath, 'utf-8')).toMatchSnapshot();
   });
@@ -261,7 +263,18 @@ export MyExtendedClass extends MyClass {};`
     schema.updateImportPath = false;
     const projectConfig = readProjectConfiguration(tree, 'my-source');
 
-    updateImports(tree, { ...schema, updateImportPath: false }, projectConfig);
+    updateImports(
+      tree,
+      normalizeSchema(
+        tree,
+        {
+          ...schema,
+          updateImportPath: false,
+        },
+        projectConfig
+      ),
+      projectConfig
+    );
 
     expect(tree.read(importerFilePath).toString()).toContain(
       `import { MyClass } from '@proj/my-source';`
@@ -275,11 +288,35 @@ export MyExtendedClass extends MyClass {};`
     });
     const projectConfig = readProjectConfiguration(tree, 'my-source');
 
-    updateImports(tree, schema, projectConfig);
+    updateImports(
+      tree,
+      normalizeSchema(tree, schema, projectConfig),
+      projectConfig
+    );
 
     const tsConfig = readJson(tree, '/tsconfig.base.json');
     expect(tsConfig.compilerOptions.paths).toEqual({
       '@proj/my-destination': ['libs/my-destination/src/index.ts'],
+    });
+  });
+
+  it('should update project ref of a project not under libs in the root tsconfig.base.json', async () => {
+    tree.delete('libs');
+    await libraryGenerator(tree, {
+      name: 'my-source',
+      standaloneConfig: false,
+    });
+    const projectConfig = readProjectConfiguration(tree, 'my-source');
+
+    updateImports(
+      tree,
+      normalizeSchema(tree, schema, projectConfig),
+      projectConfig
+    );
+
+    const tsConfig = readJson(tree, '/tsconfig.base.json');
+    expect(tsConfig.compilerOptions.paths).toEqual({
+      '@proj/my-destination': ['my-destination/src/index.ts'],
     });
   });
 
@@ -291,7 +328,11 @@ export MyExtendedClass extends MyClass {};`
     });
     const projectConfig = readProjectConfiguration(tree, 'my-source');
 
-    updateImports(tree, schema, projectConfig);
+    updateImports(
+      tree,
+      normalizeSchema(tree, schema, projectConfig),
+      projectConfig
+    );
 
     const tsConfig = readJson(tree, '/tsconfig.json');
     expect(tsConfig.compilerOptions.paths).toEqual({
@@ -306,7 +347,19 @@ export MyExtendedClass extends MyClass {};`
     });
     const projectConfig = readProjectConfiguration(tree, 'my-source');
 
-    updateImports(tree, { ...schema, updateImportPath: false }, projectConfig);
+    updateImports(
+      tree,
+      normalizeSchema(
+        tree,
+        {
+          ...schema,
+          updateImportPath: false,
+        },
+        projectConfig
+      ),
+
+      projectConfig
+    );
 
     const tsConfig = readJson(tree, '/tsconfig.base.json');
     expect(tsConfig.compilerOptions.paths).toEqual({
