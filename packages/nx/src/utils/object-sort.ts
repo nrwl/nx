@@ -1,10 +1,8 @@
 export function sortObjectByKeys(originalObject: object) {
-  return Object.keys(originalObject)
-    .sort()
-    .reduce((obj, key) => {
-      return {
-        ...obj,
-        [key]: originalObject[key],
-      };
-    }, {});
+  const keys = Object.keys(originalObject).sort();
+
+  const sortedObject = {};
+  keys.forEach((key) => (sortedObject[key] = originalObject[key]));
+
+  return sortedObject;
 }
