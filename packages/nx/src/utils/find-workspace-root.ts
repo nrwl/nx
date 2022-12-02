@@ -1,5 +1,3 @@
-import { existsSync } from 'fs';
-import * as path from 'path';
 import { workspaceRootInner } from './workspace-root';
 
 /**
@@ -13,7 +11,7 @@ export function findWorkspaceRoot(dir: string): WorkspaceTypeAndRoot | null {
 
   if (r === null) return null;
 
-  if (existsSync(path.join(r, 'angular.json'))) {
+  if (isAngularCliInstalled(r)) {
     return { type: 'angular', dir: r };
   } else {
     return { type: 'nx', dir: r };
@@ -23,4 +21,15 @@ export function findWorkspaceRoot(dir: string): WorkspaceTypeAndRoot | null {
 export interface WorkspaceTypeAndRoot {
   type: 'nx' | 'angular';
   dir: string;
+}
+
+function isAngularCliInstalled(root: string): boolean {
+  try {
+    require.resolve('@angular/cli', {
+      paths: [root],
+    });
+    return true;
+  } catch {
+    return false;
+  }
 }
