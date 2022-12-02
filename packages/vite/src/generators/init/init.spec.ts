@@ -1,4 +1,10 @@
-import { addDependenciesToPackageJson, readJson, Tree } from '@nrwl/devkit';
+import {
+  addDependenciesToPackageJson,
+  NxJsonConfiguration,
+  readJson,
+  Tree,
+  updateJson,
+} from '@nrwl/devkit';
 import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { nxVersion } from '../../utils/versions';
 
@@ -26,6 +32,32 @@ describe('@nrwl/vite:init', () => {
       const packageJson = readJson(tree, 'package.json');
 
       expect(packageJson).toMatchSnapshot();
+    });
+  });
+
+  describe('vitest targets', () => {
+    it('should add target defaults for test', async () => {
+      updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
+        json.namedInputs ??= {};
+        json.namedInputs.production = ['default'];
+        return json;
+      });
+
+      initGenerator(tree, { uiFramework: 'react' });
+
+      const productionNamedInputs = readJson(tree, 'nx.json').namedInputs
+        .production;
+      const testDefaults = readJson(tree, 'nx.json').targetDefaults.test;
+
+      expect(productionNamedInputs).toContain(
+        '!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)'
+      );
+      expect(productionNamedInputs).toContain(
+        '!{projectRoot}/tsconfig.spec.json'
+      );
+      expect(testDefaults).toEqual({
+        inputs: ['default', '^production'],
+      });
     });
   });
 });
