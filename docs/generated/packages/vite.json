@@ -224,11 +224,6 @@
             "description": "Base public path when served in development or production.",
             "alias": "baseHref"
           },
-          "proxyConfig": {
-            "type": "string",
-            "description": "Path to the proxy configuration file.",
-            "x-completion-type": "file"
-          },
           "configFile": {
             "type": "string",
             "description": "The name of the Vite.js configuration file.",
