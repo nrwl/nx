@@ -970,7 +970,8 @@ describe('app', () => {
 
   describe('setup React app with --bundler=vite', () => {
     let viteAppTree: Tree;
-    beforeAll(async () => {
+
+    beforeEach(async () => {
       viteAppTree = createTreeWithEmptyV1Workspace();
       await applicationGenerator(viteAppTree, { ...schema, bundler: 'vite' });
     });
@@ -984,6 +985,7 @@ describe('app', () => {
         buildTarget: 'my-app:build',
       });
     });
+
     it('should add dependencies in package.json', () => {
       const packageJson = readJson(viteAppTree, '/package.json');
 
@@ -1020,6 +1022,30 @@ describe('app', () => {
         viteAppTree.exists('/apps/insourceTests/src/app/app.spec.tsx')
       ).toBe(false);
     });
+
+    it.each`
+      style     | pkg
+      ${'less'} | ${'less'}
+      ${'scss'} | ${'sass'}
+      ${'styl'} | ${'stylus'}
+    `(
+      'should add style preprocessor when vite is used',
+      async ({ style, pkg }) => {
+        await applicationGenerator(viteAppTree, {
+          ...schema,
+          style,
+          bundler: 'vite',
+          unitTestRunner: 'vitest',
+          name: style,
+        });
+
+        expect(readJson(viteAppTree, 'package.json')).toMatchObject({
+          devDependencies: {
+            [pkg]: expect.any(String),
+          },
+        });
+      }
+    );
   });
 
   describe('setting generator defaults', () => {

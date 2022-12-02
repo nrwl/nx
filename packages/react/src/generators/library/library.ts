@@ -1,5 +1,4 @@
 import {
-  addDependenciesToPackageJson,
   addProjectConfiguration,
   convertNxGenerator,
   ensurePackage,
@@ -11,12 +10,7 @@ import {
 } from '@nrwl/devkit';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
-import {
-  nxVersion,
-  reactDomVersion,
-  reactVersion,
-  swcCoreVersion,
-} from '../../utils/versions';
+import { nxVersion } from '../../utils/versions';
 import componentGenerator from '../component/component';
 import initGenerator from '../init/init';
 import { Schema } from './schema';
@@ -27,6 +21,7 @@ import { addLinting } from './lib/add-linting';
 import { updateAppRoutes } from './lib/update-app-routes';
 import { createFiles } from './lib/create-files';
 import { updateBaseTsConfig } from './lib/update-base-tsconfig';
+import { installCommonDependencies } from './lib/install-common-dependencies';
 
 export async function libraryGenerator(host: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
@@ -123,6 +118,7 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
     const vitestTask = await vitestGenerator(host, {
       uiFramework: 'react',
       project: options.name,
+      coverageProvider: 'c8',
       inSourceTests: options.inSourceTests,
     });
     tasks.push(vitestTask);
@@ -153,14 +149,7 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
   }
 
   if (!options.skipPackageJson) {
-    const installReactTask = await addDependenciesToPackageJson(
-      host,
-      {
-        react: reactVersion,
-        'react-dom': reactDomVersion,
-      },
-      options.compiler === 'swc' ? { '@swc/core': swcCoreVersion } : {}
-    );
+    const installReactTask = await installCommonDependencies(host, options);
     tasks.push(installReactTask);
   }
 

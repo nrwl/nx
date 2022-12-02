@@ -31,6 +31,7 @@ import {
   swcCoreVersion,
   swcLoaderVersion,
 } from '../../utils/versions';
+import { installCommonDependencies } from './lib/install-common-dependencies';
 
 async function addLinting(host: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];
@@ -122,6 +123,7 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
 
     const vitestTask = await vitestGenerator(host, {
       uiFramework: 'react',
+      coverageProvider: 'c8',
       project: options.projectName,
       inSourceTests: options.inSourceTests,
     });
@@ -153,6 +155,8 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
 
   // Handle tsconfig.spec.json for jest or vitest
   updateSpecConfig(host, options);
+  const stylePreprocessorTask = installCommonDependencies(host, options);
+  tasks.push(stylePreprocessorTask);
   const styledTask = addStyledModuleDependencies(host, options.styledModule);
   tasks.push(styledTask);
   const routingTask = addRouting(host, options);

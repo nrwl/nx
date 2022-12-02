@@ -771,4 +771,28 @@ describe('lib', () => {
       }).not.toThrow();
     }
   );
+
+  it.each`
+    style     | pkg
+    ${'less'} | ${'less'}
+    ${'scss'} | ${'sass'}
+    ${'styl'} | ${'stylus'}
+  `(
+    'should add style preprocessor when vite is used',
+    async ({ style, pkg }) => {
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        style,
+        bundler: 'vite',
+        unitTestRunner: 'vitest',
+        name: 'myLib',
+      });
+
+      expect(readJson(tree, 'package.json')).toMatchObject({
+        devDependencies: {
+          [pkg]: expect.any(String),
+        },
+      });
+    }
+  );
 });

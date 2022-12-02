@@ -52,3 +52,8 @@ export const isbotVersion = '^3.6.5';
 export const corsVersion = '~2.8.5';
 export const typesCorsVersion = '~2.8.12';
 export const moduleFederationNodeVersion = '~0.9.6';
+
+// style preprocessors
+export const lessVersion = '3.12.2';
+export const sassVersion = '^1.55.0';
+export const stylusVersion = '^0.55.0';
