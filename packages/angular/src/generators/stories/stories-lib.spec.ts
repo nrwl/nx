@@ -1,9 +1,9 @@
 import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
-import { ensurePackage, Tree } from '@nrwl/devkit';
+import type { Tree } from '@nrwl/devkit';
 import { writeJson } from '@nrwl/devkit';
 import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
-import { nxVersion } from '../../utils/versions';
+import { cypressProjectGenerator } from '@nrwl/storybook';
 import { componentGenerator } from '../component/component';
 import { librarySecondaryEntryPointGenerator } from '../library-secondary-entry-point/library-secondary-entry-point';
 import { libraryGenerator } from '../library/library';
@@ -13,7 +13,6 @@ import { angularStoriesGenerator } from './stories';
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
 jest.mock('@nrwl/cypress/src/utils/cypress-version');
-
 describe('angularStories generator: libraries', () => {
   const libName = 'test-ui-lib';
   let mockedInstalledCypressVersion: jest.Mock<
@@ -44,14 +43,9 @@ describe('angularStories generator: libraries', () => {
 
   describe('Stories for non-empty Angular library', () => {
     let tree: Tree;
-    let cypressProjectGenerator;
 
     beforeEach(async () => {
       tree = await createStorybookTestWorkspaceForLib(libName);
-      await ensurePackage(tree, '@nrwl/storybook', nxVersion);
-      cypressProjectGenerator = await (
-        await import('@nrwl/storybook')
-      ).cypressProjectGenerator;
     });
 
     it('should generate stories.ts files', async () => {

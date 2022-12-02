@@ -31,6 +31,7 @@
     "@nrwl/js": "file:../js",
     "@nrwl/linter": "file:../linter",
     "@nrwl/react": "file:../react",
+    "@nrwl/storybook": "file:../storybook",
     "@nrwl/workspace": "file:../workspace",
     "chalk": "^4.1.0",
     "enhanced-resolve": "^5.8.3",
