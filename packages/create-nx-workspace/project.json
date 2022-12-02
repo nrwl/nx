@@ -90,5 +90,14 @@
       "outputs": ["{options.outputFile}"]
     }
   },
-  "implicitDependencies": ["workspace"]
+  "implicitDependencies": [
+    "workspace",
+    "js",
+    "react",
+    "expo",
+    "next",
+    "angular",
+    "nest",
+    "express"
+  ]
 }
