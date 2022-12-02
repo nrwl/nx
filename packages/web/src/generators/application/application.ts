@@ -220,6 +220,7 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
     const vitestTask = await vitestGenerator(host, {
       uiFramework: 'none',
       project: options.projectName,
+      coverageProvider: 'c8',
       inSourceTests: options.inSourceTests,
     });
     tasks.push(vitestTask);

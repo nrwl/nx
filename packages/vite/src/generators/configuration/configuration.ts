@@ -59,6 +59,7 @@ export async function viteConfigurationGenerator(tree: Tree, schema: Schema) {
       project: schema.project,
       uiFramework: schema.uiFramework,
       inSourceTests: schema.inSourceTests,
+      coverageProvider: 'c8',
       skipViteConfig: true,
     });
     tasks.push(vitestTask);

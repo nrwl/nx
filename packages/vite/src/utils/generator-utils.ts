@@ -354,6 +354,9 @@ export function writeViteConfig(tree: Tree, options: Schema) {
   const testOption = options.includeVitest
     ? `test: {
     globals: true,
+    cache: {
+      dir: '${offsetFromRoot(projectConfig.root)}node_modules/.vitest'
+    },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     ${

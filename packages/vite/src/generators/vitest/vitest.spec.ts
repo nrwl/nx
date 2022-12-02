@@ -10,6 +10,7 @@ describe('vitest generator', () => {
   const options: VitestGeneratorSchema = {
     project: 'my-test-react-app',
     uiFramework: 'react',
+    coverageProvider: 'c8',
   };
 
   beforeEach(async () => {
@@ -126,6 +127,9 @@ describe('vitest generator', () => {
                 
                 test: {
             globals: true,
+            cache: {
+              dir: '../../node_modules/.vitest'
+            },
             environment: 'jsdom',
             include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
             
@@ -169,6 +173,9 @@ describe('vitest generator', () => {
           },
                 test: {
             globals: true,
+            cache: {
+              dir: '../../node_modules/.vitest'
+            },
             environment: 'jsdom',
             include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
             includeSource: ['src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']
