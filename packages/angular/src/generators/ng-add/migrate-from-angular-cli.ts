@@ -3,9 +3,7 @@ import {
   addDependenciesToPackageJson,
   installPackagesTask,
   readJson,
-  readWorkspaceConfiguration,
   updateJson,
-  updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import { convertToNxProjectGenerator } from '@nrwl/workspace/generators';
 import { prettierVersion } from '@nrwl/workspace/src/utils/versions';
@@ -20,6 +18,7 @@ import {
   createWorkspaceFiles,
   decorateAngularCli,
   deleteAngularJson,
+  deleteGitKeepFilesIfNotNeeded,
   formatFilesTask,
   getAllProjects,
   getWorkspaceRootFileTypesInfo,
@@ -119,6 +118,8 @@ export async function migrateFromAngularCli(
       updateRootEsLintConfig(tree, eslintConfig, options.unitTestRunner);
       cleanupEsLintPackages(tree);
     }
+
+    deleteGitKeepFilesIfNotNeeded(tree);
   }
 
   deleteAngularJson(tree);
