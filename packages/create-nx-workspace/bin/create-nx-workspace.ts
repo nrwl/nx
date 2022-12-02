@@ -447,8 +447,7 @@ function determineMonorepoStyle(): Promise<string> {
           },
           {
             name: 'react',
-            message:
-              'Standalone React app:   Nx configures Vite, ESLint and Cypress.',
+            message: 'Standalone React app:   Nx configures Vite and ESLint.',
           },
           {
             name: 'angular',
