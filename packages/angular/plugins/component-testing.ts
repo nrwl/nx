@@ -100,7 +100,7 @@ ${e.stack ? e.stack : e}`
   return {
     ...nxBaseCypressPreset(pathToConfig),
     // NOTE: cannot use a glob pattern since it will break cypress generated tsconfig.
-    specPattern: ['**/*.cy.ts', '**/*.cy.js'],
+    specPattern: ['src/**/*.cy.ts', 'src/**/*.cy.js'],
     devServer: {
       // cypress uses string union type,
       // need to use const to prevent typing to string
