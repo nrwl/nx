@@ -1729,15 +1729,15 @@ parseTargetString('proj:test:production'); // returns { project: "proj", target:
 
 ▸ **pruneLockFile**(`projectName`, `isProduction?`, `packageManager?`): `Promise`<`string`\>
 
-Prune lock file based on the giveb project
+Prune lock file based on the given project's dependencies and overrides in local package.json
 
 #### Parameters
 
-| Name             | Type                                                  | Default value |
-| :--------------- | :---------------------------------------------------- | :------------ |
-| `projectName`    | `string`                                              | `undefined`   |
-| `isProduction`   | `boolean`                                             | `true`        |
-| `packageManager` | [`PackageManager`](../../devkit/index#packagemanager) | `undefined`   |
+| Name             | Type                                                  | Default value | Description                                                        |
+| :--------------- | :---------------------------------------------------- | :------------ | :----------------------------------------------------------------- |
+| `projectName`    | `string`                                              | `undefined`   | Project to prune against                                           |
+| `isProduction`   | `boolean`                                             | `true`        | Whether to include optional and dev dependencies                   |
+| `packageManager` | [`PackageManager`](../../devkit/index#packagemanager) | `undefined`   | Package manager to use (automatically detected based on lock file) |
 
 #### Returns
 

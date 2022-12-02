@@ -162,9 +162,11 @@ export function writeLockFile(
 }
 
 /**
- * Prune lock file based on the giveb project
- * @param projectName
- * @param packageManager
+ * Prune lock file based on the given project's dependencies and overrides in local package.json
+ *
+ * @param projectName Project to prune against
+ * @param isProduction Whether to include optional and dev dependencies
+ * @param packageManager Package manager to use (automatically detected based on lock file)
  * @returns
  */
 export async function pruneLockFile(
