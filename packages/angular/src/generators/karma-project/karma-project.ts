@@ -11,7 +11,7 @@ export async function karmaProjectGenerator(
   tree: Tree,
   options: KarmaProjectOptions
 ): Promise<GeneratorCallback> {
-  const installTask = karmaGenerator(tree, options);
+  const installTask = await karmaGenerator(tree, options);
   checkProjectTestTarget(tree, options.project);
   generateKarmaProjectFiles(tree, options.project);
   updateTsConfigs(tree, options.project);
