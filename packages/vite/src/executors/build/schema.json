@@ -17,10 +17,10 @@
       "description": "The output path of the generated files.",
       "x-completion-type": "directory"
     },
-    "baseHref": {
+    "base": {
       "type": "string",
       "description": "Base public path when served in development or production.",
-      "alias": "base"
+      "alias": "baseHref"
     },
     "proxyConfig": {
       "type": "string",
