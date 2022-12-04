@@ -26,7 +26,7 @@ describe(componentTestGenerator.name, () => {
       component: true,
     });
 
-    componentTestGenerator(tree, {
+    await componentTestGenerator(tree, {
       project: 'some-lib',
       componentPath: 'lib/some-lib.tsx',
     });
@@ -47,7 +47,7 @@ describe(componentTestGenerator.name, () => {
       js: true,
     });
 
-    componentTestGenerator(tree, {
+    await componentTestGenerator(tree, {
       project: 'some-lib',
       componentPath: 'lib/some-lib.js',
     });
@@ -67,7 +67,7 @@ describe(componentTestGenerator.name, () => {
       component: true,
     });
     tree.write('libs/some-lib/src/lib/some-lib.cy.tsx', 'existing content');
-    componentTestGenerator(tree, {
+    await componentTestGenerator(tree, {
       project: 'some-lib',
       componentPath: 'lib/some-lib.tsx',
     });
@@ -89,12 +89,12 @@ describe(componentTestGenerator.name, () => {
       component: true,
     });
 
-    expect(() => {
+    await expect(
       componentTestGenerator(tree, {
         project: 'some-lib',
         componentPath: 'lib/blah/abc-123.blah',
-      });
-    }).not.toThrow();
+      })
+    ).resolves.not.toThrow();
   });
 
   it('should handle being provided the full path to the component', async () => {
@@ -109,7 +109,7 @@ describe(componentTestGenerator.name, () => {
       component: true,
     });
 
-    componentTestGenerator(tree, {
+    await componentTestGenerator(tree, {
       project: 'some-lib',
       componentPath: 'libs/some-lib/src/lib/some-lib.tsx',
     });
@@ -144,11 +144,11 @@ export interface AnotherCmpProps {
 }
 
 export function AnotherCmp(props: AnotherCmpProps) {
- return <button onClick="{handleClick}">{props.text}</button>;
+ return <button onClick='{handleClick}'>{props.text}</button>;
 }
 `
       );
-      componentTestGenerator(tree, {
+      await componentTestGenerator(tree, {
         project: 'some-lib',
         componentPath: 'libs/some-lib/src/lib/some-lib.tsx',
       });
@@ -180,7 +180,7 @@ export function AnotherCmp() {
 }
 `
       );
-      componentTestGenerator(tree, {
+      await componentTestGenerator(tree, {
         project: 'some-lib',
         componentPath: 'libs/some-lib/src/lib/some-lib.tsx',
       });
@@ -214,7 +214,7 @@ export interface AnotherCmpProps {
 }
 
 export default function AnotherCmp(props: AnotherCmpProps) {
- return <button onClick="{handleClick}">{props.text}</button>;
+ return <button onClick='{handleClick}'>{props.text}</button>;
 }
 
 export function AnotherCmp2() {
@@ -222,7 +222,7 @@ export function AnotherCmp2() {
 }
 `
       );
-      componentTestGenerator(tree, {
+      await componentTestGenerator(tree, {
         project: 'some-lib',
         componentPath: 'libs/some-lib/src/lib/some-lib.tsx',
       });
@@ -257,7 +257,7 @@ export interface AnotherCmpProps {
 }
 
 export function AnotherCmp(props: AnotherCmpProps) {
- return <button onClick="{handleClick}">{props.text}</button>;
+ return <button onClick='{handleClick}'>{props.text}</button>;
 }
 
 export function AnotherCmp2() {
@@ -265,7 +265,7 @@ export function AnotherCmp2() {
 }
 `
       );
-      componentTestGenerator(tree, {
+      await componentTestGenerator(tree, {
         project: 'some-lib',
         componentPath: 'libs/some-lib/src/lib/some-lib.tsx',
       });
@@ -302,11 +302,11 @@ export interface AnotherCmpProps {
 }
 
 export function AnotherCmp(props: AnotherCmpProps) {
- return <button onClick="{handleClick}">{props.text}</button>;
+ return <button onClick='{handleClick}'>{props.text}</button>;
 }
 `
       );
-      componentTestGenerator(tree, {
+      await componentTestGenerator(tree, {
         project: 'some-lib',
         componentPath: 'libs/some-lib/src/lib/some-lib.tsx',
       });
@@ -328,7 +328,7 @@ export function AnotherCmp(props: AnotherCmpProps) {
         unitTestRunner: 'none',
         component: true,
       });
-      componentTestGenerator(tree, {
+      await componentTestGenerator(tree, {
         project: 'some-lib',
         componentPath: 'libs/some-lib/src/lib/some-lib.tsx',
       });
@@ -362,11 +362,11 @@ export interface AnotherCmpProps {
 }
 
 export default function AnotherCmp(props: AnotherCmpProps) {
- return <button onClick="{handleClick}">{props.text}</button>;
+ return <button onClick='{handleClick}'>{props.text}</button>;
 }
 `
       );
-      componentTestGenerator(tree, {
+      await componentTestGenerator(tree, {
         project: 'some-lib',
         componentPath: 'libs/some-lib/src/lib/some-lib.tsx',
       });
@@ -400,11 +400,11 @@ export interface AnotherCmpProps {
 }
 
 export function AnotherCmp(props: AnotherCmpProps) {
- return <button onClick="{handleClick}">{props.text}</button>;
+ return <button onClick='{handleClick}'>{props.text}</button>;
 }
 `
       );
-      componentTestGenerator(tree, {
+      await componentTestGenerator(tree, {
         project: 'some-lib',
         componentPath: 'libs/some-lib/src/lib/some-lib.tsx',
       });

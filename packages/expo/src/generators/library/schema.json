@@ -2,7 +2,7 @@
   "cli": "nx",
   "$id": "NxExpoLibrary",
   "$schema": "http://json-schema.org/schema",
-  "title": "Create a Expo Library for Nx",
+  "description": "Create a Expo Library for Nx.",
   "type": "object",
   "examples": [
     {

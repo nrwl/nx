@@ -12,7 +12,7 @@ export default function FiveOhOh(): JSX.Element {
         <div className="w-full">
           <article className="relative py-16 sm:pt-24 lg:py-32">
             <div className="mx-auto px-4 sm:px-6 lg:px-8 xl:max-w-7xl">
-              <div className="w-full">
+              <div className="w-full lg:flex lg:items-center">
                 <Image
                   aria-hidden="true"
                   height={200}
@@ -22,10 +22,10 @@ export default function FiveOhOh(): JSX.Element {
                   src="/images/illustrations/500.svg"
                   className="drop-shadow"
                 />
+                <h1 className="mt-4 text-4xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 sm:text-6xl lg:ml-8">
+                  <div className="sr-only">500 - </div>Internal Server Error!
+                </h1>
               </div>
-              <h1 className="mt-4 text-4xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 sm:text-6xl">
-                500 - Internal Server Error!
-              </h1>
               <p className="mt-8 text-lg">
                 Sorry, an error occurred while we were loading this page.
               </p>

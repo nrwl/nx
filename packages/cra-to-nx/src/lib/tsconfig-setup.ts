@@ -6,7 +6,9 @@ import {
 import { join } from 'path';
 
 const defaultTsConfig = (relativePathToRoot: string) => ({
-  extends: join(relativePathToRoot, 'tsconfig.base.json'),
+  extends: relativePathToRoot
+    ? join(relativePathToRoot, 'tsconfig.base.json')
+    : './tsconfig.base.json',
   compilerOptions: {
     jsx: 'react',
     allowJs: true,
@@ -72,7 +74,7 @@ export function setupTsConfig(appName: string, isNested: boolean) {
   const tsconfigBasePath = isNested
     ? './tsconfig.base.json'
     : '../../tsconfig.base.json';
-  const relativePathToRoot = isNested ? '.' : '../../';
+  const relativePathToRoot = isNested ? '' : '../../';
   if (fileExists(tsconfigPath)) {
     const json = readJsonFile(tsconfigPath);
     json.extends = tsconfigBasePath;

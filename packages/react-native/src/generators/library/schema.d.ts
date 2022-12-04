@@ -19,4 +19,5 @@ export interface Schema {
   globalCss?: boolean;
   strict?: boolean;
   setParserOptionsProject?: boolean;
+  skipPackageJson?: boolean; //default is false
 }

@@ -1,10 +1,12 @@
 import type { NxJsonConfiguration, Tree } from '@nrwl/devkit';
 import {
   generateFiles,
+  getProjects,
   joinPathFragments,
   readJson,
   readWorkspaceConfiguration,
   updateJson,
+  updateProjectConfiguration,
   updateWorkspaceConfiguration,
   writeJson,
 } from '@nrwl/devkit';
@@ -41,41 +43,93 @@ export function validateWorkspace(tree: Tree): void {
   - ${errors.join('\n  ')}`);
 }
 
-export function createNxJson(
-  tree: Tree,
-  options: GeneratorOptions,
-  setWorkspaceLayoutAsNewProjectRoot: boolean = false
-): void {
-  const { newProjectRoot = '' } = readJson(tree, 'angular.json');
+export function createNxJson(tree: Tree, options: GeneratorOptions): void {
   const { npmScope } = options;
+
+  const targets = getWorkspaceCommonTargets(tree);
 
   writeJson<NxJsonConfiguration>(tree, 'nx.json', {
     ...(npmScope ? { npmScope } : {}),
     affected: {
       defaultBase: options.defaultBase ?? deduceDefaultBase(),
     },
-    implicitDependencies: {
-      'package.json': {
-        dependencies: '*',
-        devDependencies: '*',
-      },
-      '.eslintrc.json': '*',
-    },
     tasksRunnerOptions: {
       default: {
         runner: 'nx/tasks-runners/default',
         options: {
-          cacheableOperations: ['build', 'lint', 'test', 'e2e'],
+          cacheableOperations: [
+            'build',
+            targets.test ? 'test' : undefined,
+            targets.lint ? 'lint' : undefined,
+            targets.e2e ? 'e2e' : undefined,
+          ].filter(Boolean),
         },
       },
     },
-    targetDefaults: {
-      build: { dependsOn: ['^build'] },
+    namedInputs: {
+      sharedGlobals: [],
+      default: ['{projectRoot}/**/*', 'sharedGlobals'],
+      production: [
+        'default',
+        ...(targets.test
+          ? [
+              '!{projectRoot}/tsconfig.spec.json',
+              '!{projectRoot}/**/*.spec.[jt]s',
+              '!{projectRoot}/karma.conf.js',
+            ]
+          : []),
+        targets.lint ? '!{projectRoot}/.eslintrc.json' : undefined,
+      ].filter(Boolean),
     },
-    workspaceLayout: setWorkspaceLayoutAsNewProjectRoot
-      ? { appsDir: newProjectRoot, libsDir: newProjectRoot }
-      : undefined,
+    targetDefaults: {
+      build: {
+        dependsOn: ['^build'],
+        inputs: ['production', '^production'],
+      },
+      test: targets.test
+        ? {
+            inputs: ['default', '^production', '{workspaceRoot}/karma.conf.js'],
+          }
+        : undefined,
+      lint: targets.lint
+        ? {
+            inputs: ['default', '{workspaceRoot}/.eslintrc.json'],
+          }
+        : undefined,
+      e2e: targets.e2e
+        ? {
+            inputs: ['default', '^production'],
+          }
+        : undefined,
+    },
   });
+}
+
+function getWorkspaceCommonTargets(tree: Tree): {
+  e2e: boolean;
+  lint: boolean;
+  test: boolean;
+} {
+  const targets = { e2e: false, lint: false, test: false };
+  const projects = getProjects(tree);
+
+  for (const [, project] of projects) {
+    if (!targets.e2e && project.targets?.e2e) {
+      targets.e2e = true;
+    }
+    if (!targets.lint && project.targets?.lint) {
+      targets.lint = true;
+    }
+    if (!targets.test && project.targets?.test) {
+      targets.test = true;
+    }
+
+    if (targets.e2e && targets.lint && targets.test) {
+      return targets;
+    }
+  }
+
+  return targets;
 }
 
 export function decorateAngularCli(tree: Tree): void {
@@ -98,7 +152,7 @@ export function decorateAngularCli(tree: Tree): void {
       // if exists, add execution of this script
       json.scripts.postinstall += ' && node ./decorate-angular-cli.js';
     } else {
-      if (!json.scripts) json.scripts = {};
+      json.scripts ??= {};
       // if doesn't exist, set to execute this script
       json.scripts.postinstall = 'node ./decorate-angular-cli.js';
     }
@@ -293,7 +347,7 @@ export function getWorkspaceRootFileTypesInfo(
   return workspaceRootFileTypesInfo;
 }
 
-function updateVsCodeRecommendedExtensions(tree: Tree): void {
+export function updateVsCodeRecommendedExtensions(tree: Tree): void {
   const recommendations = [
     'nrwl.angular-console',
     'angular.ng-template',
@@ -322,7 +376,7 @@ function updateVsCodeRecommendedExtensions(tree: Tree): void {
   }
 }
 
-async function updatePrettierConfig(tree: Tree): Promise<void> {
+export async function updatePrettierConfig(tree: Tree): Promise<void> {
   const existingPrettierConfig = await resolveUserExistingPrettierConfig();
   if (!existingPrettierConfig) {
     writeJson(tree, '.prettierrc', DEFAULT_NRWL_PRETTIER_CONFIG);
@@ -335,5 +389,23 @@ async function updatePrettierConfig(tree: Tree): Promise<void> {
       '.',
       { tmpl: '', dot: '.' }
     );
+  }
+}
+
+export function deleteAngularJson(tree: Tree): void {
+  const projects = getProjects(tree);
+  for (const [project, config] of projects) {
+    config.name = project;
+    updateProjectConfiguration(tree, project, config);
+  }
+  tree.delete('angular.json');
+}
+
+export function deleteGitKeepFilesIfNotNeeded(tree: Tree): void {
+  if (tree.children('apps').length > 1 && tree.exists('apps/.gitkeep')) {
+    tree.delete('apps/.gitkeep');
+  }
+  if (tree.children('libs').length > 1 && tree.exists('libs/.gitkeep')) {
+    tree.delete('libs/.gitkeep');
   }
 }

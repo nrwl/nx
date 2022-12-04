@@ -296,8 +296,7 @@ export const examples: Record<string, Example[]> = {
       description: 'Test proj1 and proj2 in parallel',
     },
     {
-      command:
-        'nx run-many --target=test --projects=*-app --exclude excluded-app',
+      command: 'run-many --target=test --projects=*-app --exclude excluded-app',
       description:
         'Test all projects ending with `*-app` except `excluded-app`',
     },

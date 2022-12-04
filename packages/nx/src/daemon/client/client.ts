@@ -32,6 +32,10 @@ const DAEMON_ENV_SETTINGS = {
 };
 
 export type UnregisterCallback = () => void;
+export type ChangedFile = {
+  path: string;
+  type: 'create' | 'update' | 'delete';
+};
 
 export class DaemonClient {
   constructor(private readonly nxJson: NxJsonConfiguration) {
@@ -106,13 +110,14 @@ export class DaemonClient {
   async registerFileWatcher(
     config: {
       watchProjects: string[] | 'all';
-      includeGlobalWorkspaceFiles: boolean;
+      includeGlobalWorkspaceFiles?: boolean;
+      includeDependentProjects?: boolean;
     },
     callback: (
       error: Error | null | 'closed',
       data: {
         changedProjects: string[];
-        changedFiles: { path: string; type: 'CREATE' | 'UPDATE' | 'DELETE' }[];
+        changedFiles: ChangedFile[];
       } | null
     ) => void
   ): Promise<UnregisterCallback> {

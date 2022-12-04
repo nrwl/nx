@@ -1,15 +1,12 @@
-import { ExecutorContext } from '@nrwl/devkit';
-
 import 'dotenv/config';
-import { InlineConfig, createServer, mergeConfig, ViteDevServer } from 'vite';
+import { ExecutorContext } from '@nrwl/devkit';
+import { createServer, InlineConfig, mergeConfig, ViteDevServer } from 'vite';
 
 import {
-  getBuildConfig,
+  getBuildAndSharedConfig,
   getBuildTargetOptions,
   getServerOptions,
 } from '../../utils/options-utils';
-
-import { copyAssets, CopyAssetsResult } from '@nrwl/js';
 
 import { ViteDevServerExecutorOptions } from './schema';
 import { ViteBuildExecutorOptions } from '../build/schema';
@@ -23,20 +20,8 @@ export default async function* viteDevServerExecutor(
     ...options,
   } as ViteDevServerExecutorOptions & ViteBuildExecutorOptions;
 
-  let assetsResult: CopyAssetsResult;
-  if (mergedOptions.assets) {
-    assetsResult = await copyAssets(
-      {
-        outputPath: mergedOptions.outputPath,
-        assets: mergedOptions.assets ?? [],
-        watch: true,
-      },
-      context
-    );
-  }
-
   const serverConfig: InlineConfig = mergeConfig(
-    await getBuildConfig(mergedOptions, context),
+    await getBuildAndSharedConfig(mergedOptions, context),
     {
       server: getServerOptions(mergedOptions, context),
     } as InlineConfig
@@ -44,7 +29,7 @@ export default async function* viteDevServerExecutor(
 
   const server = await createServer(serverConfig);
 
-  const baseUrl = await runViteDevServer(server, assetsResult);
+  const baseUrl = await runViteDevServer(server);
 
   yield {
     success: true,
@@ -55,16 +40,12 @@ export default async function* viteDevServerExecutor(
   await new Promise<{ success: boolean }>(() => {});
 }
 
-async function runViteDevServer(
-  server: ViteDevServer,
-  assetsResult: CopyAssetsResult
-): Promise<string> {
+async function runViteDevServer(server: ViteDevServer): Promise<string> {
   try {
     await server.listen();
     server.printUrls();
 
     const processOnExit = () => {
-      assetsResult?.stop();
       process.off('SIGINT', processOnExit);
       process.off('SIGTERM', processOnExit);
       process.off('exit', processOnExit);

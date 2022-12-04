@@ -227,6 +227,8 @@ describe('Node Applications', () => {
 describe('Build Node apps', () => {
   beforeEach(() => newProject());
 
+  afterEach(() => cleanupProject());
+
   it('should generate a package.json with the `--generatePackageJson` flag', async () => {
     const scope = newProject();
     const nestapp = uniq('nestapp');
@@ -250,9 +252,6 @@ describe('Build Node apps', () => {
     ).toBeTruthy();
     expect(
       satisfies(packageJson.dependencies['@nestjs/core'], '^9.0.0')
-    ).toBeTruthy();
-    expect(
-      satisfies(packageJson.dependencies['@nestjs/platform-express'], '^9.0.0')
     ).toBeTruthy();
     expect(
       satisfies(packageJson.dependencies['reflect-metadata'], '^0.1.13')

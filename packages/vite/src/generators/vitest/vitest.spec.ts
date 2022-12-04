@@ -10,6 +10,7 @@ describe('vitest generator', () => {
   const options: VitestGeneratorSchema = {
     project: 'my-test-react-app',
     uiFramework: 'react',
+    coverageProvider: 'c8',
   };
 
   beforeEach(async () => {
@@ -105,14 +106,19 @@ describe('vitest generator', () => {
         /// <reference types=\\"vitest\\" />
               import { defineConfig } from 'vite';
               import react from '@vitejs/plugin-react';
-              import ViteTsConfigPathsPlugin from 'vite-tsconfig-paths';
+              import tsconfigPaths from 'vite-tsconfig-paths';
               
               
               export default defineConfig({
+                
+            server:{
+              port: 4200,
+              host: 'localhost',
+            },
                 plugins: [
                   
                   react(),
-                  ViteTsConfigPathsPlugin({
+                  tsconfigPaths({
                     root: '../../',
                     projects: ['tsconfig.base.json'],
                   }),
@@ -121,6 +127,9 @@ describe('vitest generator', () => {
                 
                 test: {
             globals: true,
+            cache: {
+              dir: '../../node_modules/.vitest'
+            },
             environment: 'jsdom',
             include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
             
@@ -141,14 +150,19 @@ describe('vitest generator', () => {
         /// <reference types=\\"vitest\\" />
               import { defineConfig } from 'vite';
               import react from '@vitejs/plugin-react';
-              import ViteTsConfigPathsPlugin from 'vite-tsconfig-paths';
+              import tsconfigPaths from 'vite-tsconfig-paths';
               
               
               export default defineConfig({
+                
+            server:{
+              port: 4200,
+              host: 'localhost',
+            },
                 plugins: [
                   
                   react(),
-                  ViteTsConfigPathsPlugin({
+                  tsconfigPaths({
                     root: '../../',
                     projects: ['tsconfig.base.json'],
                   }),
@@ -159,6 +173,9 @@ describe('vitest generator', () => {
           },
                 test: {
             globals: true,
+            cache: {
+              dir: '../../node_modules/.vitest'
+            },
             environment: 'jsdom',
             include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
             includeSource: ['src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']

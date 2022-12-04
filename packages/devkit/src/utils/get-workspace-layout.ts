@@ -36,6 +36,27 @@ export function getWorkspaceLayout(tree: Tree): {
   };
 }
 
+/**
+ * Experimental
+ */
+export function extractLayoutDirectory(directory: string): {
+  layoutDirectory: string;
+  projectDirectory: string;
+} {
+  if (directory) {
+    directory = directory.startsWith('/') ? directory.substring(1) : directory;
+    for (let dir of ['apps', 'libs', 'packages', 'appsD']) {
+      if (directory.startsWith(dir + '/') || directory === dir) {
+        return {
+          layoutDirectory: dir,
+          projectDirectory: directory.substring(dir.length + 1),
+        };
+      }
+    }
+  }
+  return { layoutDirectory: null, projectDirectory: directory };
+}
+
 function inOrderOfPreference(
   tree: Tree,
   selectedFolders: string[],

@@ -215,6 +215,7 @@ describe('dev mode - project graph', () => {
             .map((dependencies) => dependencies.target)
             .includes('cart')
       );
+      getUnfocusProjectButton().should('exist');
       getCheckedProjectItems().should(
         'have.length',
         ['cart', ...dependencies, ...dependents].length
@@ -226,6 +227,7 @@ describe('dev mode - project graph', () => {
     it('should uncheck all project items', () => {
       getFocusButtonForProject('cart').click({ force: true });
       getUnfocusProjectButton().click();
+      getUnfocusProjectButton().should('not.exist');
 
       getCheckedProjectItems().should('have.length', 0);
     });
@@ -274,34 +276,52 @@ describe('dev mode - project graph', () => {
     it('should set focused project', () => {
       cy.contains('cart').scrollIntoView().should('be.visible');
       getFocusButtonForProject('cart').click({ force: true });
-
-      cy.url().should('contain', 'focus=cart');
+      getUnfocusProjectButton().should('exist');
+      cy.url().should('contain', '/projects/cart');
+      cy.reload();
+      getUnfocusProjectButton().should('exist');
     });
 
     it('should set group by folder', () => {
       getGroupByFolderCheckbox().click();
-
+      getGroupByFolderCheckbox().should('be.checked');
       cy.url().should('contain', 'groupByFolder=true');
+      cy.reload();
+      getGroupByFolderCheckbox().should('be.checked');
     });
 
     it('should set search depth disabled', () => {
       // it's on by default, clicking should disable it
       getSearchDepthCheckbox().click();
-
+      getSearchDepthCheckbox().should('not.be.checked');
       cy.url().should('contain', 'searchDepth=0');
+      cy.reload();
+      getSearchDepthCheckbox().should('not.be.checked');
+      // re-enable to clean-up for following tests
+      getSearchDepthCheckbox().click();
     });
 
     it('should set search depth if greater than 1', () => {
       // it's on by default and set to 1, clicking should change it to 2
       getSearchDepthIncrementButton().click();
-
+      cy.get('[data-cy="depth-value"]').should('contain', '2');
       cy.url().should('contain', 'searchDepth=2');
+      cy.reload();
+      cy.get('[data-cy="depth-value"]').should('contain', '2');
     });
 
     it('should set select to all', () => {
       getSelectAllButton().click();
-
-      cy.url().should('contain', 'select=all');
+      getCheckedProjectItems().should(
+        'have.length',
+        nxExamplesJson.projects.length
+      );
+      cy.url().should('contain', '/projects/all');
+      cy.reload();
+      getCheckedProjectItems().should(
+        'have.length',
+        nxExamplesJson.projects.length
+      );
     });
   });
 });
@@ -313,7 +333,5 @@ describe('loading graph client with url params', () => {
     }).as('getGraph');
   });
 
-  // check that params work from old base url of /
-  // and also new /projects route
-  testProjectsRoutes('browser', ['/', '/e2e/projects']);
+  testProjectsRoutes('browser', ['/e2e/projects']);
 });

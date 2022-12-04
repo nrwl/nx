@@ -8,7 +8,7 @@ import {
 import { DocumentData } from '@nrwl/nx-dev/models-document';
 import { transformImagePath } from './helpers/transform-image-path';
 
-export const getImageSchema = (document: DocumentData): Schema => ({
+export const getImageSchema = (documentFilePath: string): Schema => ({
   render: 'img',
   attributes: {
     src: { type: 'String', required: true },
@@ -17,7 +17,7 @@ export const getImageSchema = (document: DocumentData): Schema => ({
   transform(node: Node, config: Config): RenderableTreeNodes {
     const attributes = node.transformAttributes(config);
     const children = node.transformChildren(config);
-    const src = transformImagePath(document)(attributes['src']);
+    const src = transformImagePath(documentFilePath)(attributes['src']);
 
     return new Tag(
       this.render,

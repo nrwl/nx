@@ -3,7 +3,21 @@ import { join } from 'path';
 
 // Ignore packages that are defined here per package
 const IGNORE_MATCHES_IN_PACKAGE = {
-  '*': ['nx', '@nrwl/cli', '@nrwl/workspace', 'prettier', 'typescript', 'rxjs'],
+  '*': [
+    'nx',
+    'prettier',
+    'typescript',
+    'rxjs',
+    '@nrwl/cli',
+    '@nrwl/workspace',
+    // These are installed as needed and should not be added to package.json
+    '@nrwl/cypress',
+    '@nrwl/jest',
+    '@nrwl/rollup',
+    '@nrwl/storybook',
+    '@nrwl/vite',
+    '@nrwl/webpack',
+  ],
   angular: [
     '@angular-devkit/architect',
     '@angular-devkit/build-angular',
@@ -68,26 +82,30 @@ const IGNORE_MATCHES_IN_PACKAGE = {
     'webpack',
   ],
   react: [
-    'babel-plugin-emotion',
-    'babel-plugin-styled-components',
-    'rollup',
-    'webpack',
+    // These are brought in by the webpack, rollup, or vite packages via init generators.
+    '@babel/preset-react',
+    '@module-federation/node',
+    '@phenomnomnominal/tsquery',
+    '@pmmmwh/react-refresh-webpack-plugin',
+    '@svgr/webpack',
     '@swc/jest',
     'babel-jest',
-    '@angular-devkit/core',
-    '@angular-devkit/schematics',
-    // TODO(caleb): remove when refactoring plugin to use @nrwl/web
-    //  webpack plugins for cypress component testing dev server
     'babel-loader',
+    'babel-plugin-emotion',
+    'babel-plugin-styled-components',
     'css-loader',
     'less-loader',
+    'react-refresh',
+    'rollup',
     'sass',
     'sass-loader',
     'style-loader',
     'stylus-loader',
     'swc-loader',
     'tsconfig-paths-webpack-plugin',
-    '@module-federation/node',
+    'url-loader',
+    'webpack',
+    'webpack-merge',
   ],
   rollup: ['@swc/core'],
   storybook: [

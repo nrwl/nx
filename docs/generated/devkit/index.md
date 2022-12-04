@@ -147,6 +147,8 @@ It only uses language primitives and immutable objects
 - [defaultTasksRunner](../../devkit/index#defaulttasksrunner)
 - [detectPackageManager](../../devkit/index#detectpackagemanager)
 - [detectWorkspaceScope](../../devkit/index#detectworkspacescope)
+- [ensurePackage](../../devkit/index#ensurepackage)
+- [extractLayoutDirectory](../../devkit/index#extractlayoutdirectory)
 - [formatFiles](../../devkit/index#formatfiles)
 - [generateFiles](../../devkit/index#generatefiles)
 - [getDependentPackagesForProject](../../devkit/index#getdependentpackagesforproject)
@@ -1160,6 +1162,62 @@ Detect workspace scope from the package.json name
 #### Returns
 
 `string`
+
+---
+
+### ensurePackage
+
+▸ **ensurePackage**(`tree`, `pkg`, `requiredVersion`, `options?`): `Promise`<`void`\>
+
+Ensure that dependencies and devDependencies from package.json are installed at the required versions.
+
+For example:
+
+```typescript
+ensureDependencies(tree, {}, { '@nrwl/jest': nxVersion });
+```
+
+This will check that @nrwl/jest@<nxVersion> exists in devDependencies.
+If it exists then function returns, otherwise it will install the package before continuing.
+When running with --dryRun, the function will throw when dependencies are missing.
+
+#### Parameters
+
+| Name                      | Type                              | Description                                                        |
+| :------------------------ | :-------------------------------- | :----------------------------------------------------------------- |
+| `tree`                    | [`Tree`](../../devkit/index#tree) | the file system tree                                               |
+| `pkg`                     | `string`                          | the package to check (e.g. @nrwl/jest)                             |
+| `requiredVersion`         | `string`                          | the version or semver range to check (e.g. ~1.0.0, >=1.0.0 <2.0.0) |
+| `options`                 | `Object`                          |                                                                    |
+| `options.dev?`            | `boolean`                         | -                                                                  |
+| `options.throwOnMissing?` | `boolean`                         | -                                                                  |
+
+#### Returns
+
+`Promise`<`void`\>
+
+---
+
+### extractLayoutDirectory
+
+▸ **extractLayoutDirectory**(`directory`): `Object`
+
+Experimental
+
+#### Parameters
+
+| Name        | Type     |
+| :---------- | :------- |
+| `directory` | `string` |
+
+#### Returns
+
+`Object`
+
+| Name               | Type     |
+| :----------------- | :------- |
+| `layoutDirectory`  | `string` |
+| `projectDirectory` | `string` |
 
 ---
 

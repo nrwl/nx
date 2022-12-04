@@ -1,4 +1,5 @@
 import {
+  addDependenciesToPackageJson,
   convertNxGenerator,
   formatFiles,
   generateFiles,
@@ -18,6 +19,10 @@ import { VitestGeneratorSchema } from './schema';
 
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import initGenerator from '../init/init';
+import {
+  vitestCoverageC8Version,
+  vitestCoverageIstanbulVersion,
+} from '../../utils/versions';
 
 export async function vitestGenerator(
   tree: Tree,
@@ -44,6 +49,22 @@ export async function vitestGenerator(
 
   createFiles(tree, schema, root);
   updateTsConfig(tree, schema, root);
+
+  const installCoverageProviderTask = addDependenciesToPackageJson(
+    tree,
+    {},
+    schema.coverageProvider === 'istanbul'
+      ? {
+          '@vitest/coverage-istanbul': vitestCoverageIstanbulVersion,
+        }
+      : {
+          '@vitest/coverage-c8': vitestCoverageC8Version,
+        }
+  );
+  tasks.push(installCoverageProviderTask);
+
+  if (schema.coverageProvider === 'istanbul') {
+  }
 
   await formatFiles(tree);
 

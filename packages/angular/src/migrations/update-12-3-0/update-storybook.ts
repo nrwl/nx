@@ -12,6 +12,7 @@ import type { StorybookExecutorOptions } from '@nrwl/storybook/src/executors/sto
 
 export default async function (tree: Tree) {
   let storybookVersion;
+
   try {
     storybookVersion = require('@storybook/core/package.json').version;
   } catch {}

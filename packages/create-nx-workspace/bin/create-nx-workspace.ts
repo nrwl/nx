@@ -328,8 +328,18 @@ async function getConfiguration(
       } else {
         preset = argv.preset;
       }
-      name = await determineRepoName(argv);
-      appName = await determineAppName(preset, argv);
+
+      if (
+        preset === Preset.ReactStandalone ||
+        preset === Preset.AngularStandalone
+      ) {
+        appName =
+          argv.appName ?? argv.name ?? (await determineAppName(preset, argv));
+        name = argv.name ?? appName;
+      } else {
+        name = await determineRepoName(argv);
+        appName = await determineAppName(preset, argv);
+      }
       style = await determineStyle(preset, argv);
     }
 
@@ -437,8 +447,7 @@ function determineMonorepoStyle(): Promise<string> {
           },
           {
             name: 'react',
-            message:
-              'Standalone React app:   Nx configures Vite, ESLint and Cypress.',
+            message: 'Standalone React app:   Nx configures Vite and ESLint.',
           },
           {
             name: 'angular',

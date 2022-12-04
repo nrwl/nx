@@ -2,6 +2,8 @@ import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
   convertNxGenerator,
+  ensurePackage,
+  extractLayoutDirectory,
   formatFiles,
   generateFiles,
   GeneratorCallback,
@@ -17,7 +19,6 @@ import {
   writeJson,
 } from '@nrwl/devkit';
 import { getImportPath } from 'nx/src/utils/path';
-import { jestProjectGenerator } from '@nrwl/jest';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import {
@@ -39,7 +40,11 @@ export async function libraryGenerator(
   tree: Tree,
   schema: LibraryGeneratorSchema
 ) {
-  const { libsDir } = getWorkspaceLayout(tree);
+  const { layoutDirectory, projectDirectory } = extractLayoutDirectory(
+    schema.directory
+  );
+  schema.directory = projectDirectory;
+  const libsDir = layoutDirectory ?? getWorkspaceLayout(tree).libsDir;
   return projectGenerator(tree, schema, libsDir, join(__dirname, './files'));
 }
 
@@ -108,7 +113,9 @@ function addProject(
   };
 
   if (options.buildable && options.config !== 'npm-scripts') {
-    const outputPath = `dist/${destinationDir}/${options.projectDirectory}`;
+    const outputPath = destinationDir
+      ? `dist/${destinationDir}/${options.projectDirectory}`
+      : `dist/${options.projectDirectory}`;
     projectConfiguration.targets.build = {
       executor: getBuildExecutor(options),
       outputs: ['{options.outputPath}'],
@@ -286,6 +293,8 @@ async function addJest(
   tree: Tree,
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
+  await ensurePackage(tree, '@nrwl/jest', nxVersion);
+  const { jestProjectGenerator } = await import('@nrwl/jest');
   return await jestProjectGenerator(tree, {
     ...options,
     project: options.name,

@@ -2,7 +2,7 @@
   "cli": "nx",
   "$id": "NxExpoApplication",
   "$schema": "http://json-schema.org/schema",
-  "title": "Create an Expo Application for Nx",
+  "description": "Create an Expo Application for Nx.",
   "examples": [
     {
       "command": "g app myapp --directory=nested",

@@ -2,11 +2,12 @@ import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-ser
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import {
   addDependenciesToPackageJson,
+  GeneratorCallback,
   joinPathFragments,
   Tree,
   updateJson,
 } from '@nrwl/devkit';
-import { createReactEslintJson, extraEslintDependencies } from '@nrwl/react';
+import { extendReactEslintJson, extraEslintDependencies } from '@nrwl/react';
 import type { Linter as ESLintLinter } from 'eslint';
 
 interface NormalizedSchema {
@@ -15,12 +16,14 @@ interface NormalizedSchema {
   projectRoot: string;
   setParserOptionsProject?: boolean;
   tsConfigPaths: string[];
+  skipPackageJson?: boolean;
 }
 
 export async function addLinting(host: Tree, options: NormalizedSchema) {
   if (options.linter === Linter.None) {
     return () => {};
   }
+  const tasks: GeneratorCallback[] = [];
 
   const lintTask = await lintProjectGenerator(host, {
     linter: options.linter,
@@ -28,18 +31,17 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     tsConfigPaths: options.tsConfigPaths,
     eslintFilePatterns: [`${options.projectRoot}/**/*.{ts,tsx,js,jsx}`],
     skipFormat: true,
+    skipPackageJson: options.skipPackageJson,
   });
 
-  const reactEslintJson = createReactEslintJson(
-    options.projectRoot,
-    options.setParserOptionsProject
-  );
+  tasks.push(lintTask);
 
   updateJson(
     host,
     joinPathFragments(options.projectRoot, '.eslintrc.json'),
     (json: ESLintLinter.Config) => {
-      json = reactEslintJson;
+      json = extendReactEslintJson(json);
+
       json.ignorePatterns = ['!**/*', 'public', '.cache', 'node_modules'];
 
       // Find the override that handles both TS and JS files.
@@ -55,11 +57,14 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     }
   );
 
-  const installTask = await addDependenciesToPackageJson(
-    host,
-    extraEslintDependencies.dependencies,
-    extraEslintDependencies.devDependencies
-  );
+  if (!options.skipPackageJson) {
+    const installTask = await addDependenciesToPackageJson(
+      host,
+      extraEslintDependencies.dependencies,
+      extraEslintDependencies.devDependencies
+    );
+    tasks.push(installTask);
+  }
 
-  return runTasksInSerial(lintTask, installTask);
+  return runTasksInSerial(...tasks);
 }

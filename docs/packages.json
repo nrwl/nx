@@ -16,7 +16,12 @@
         "delegate-build",
         "ng-packagr-lite",
         "package",
-        "file-server"
+        "file-server",
+        "webpack-browser",
+        "webpack-dev-server",
+        "webpack-server",
+        "module-federation-dev-server",
+        "module-federation-dev-ssr"
       ],
       "generators": [
         "add-linting",

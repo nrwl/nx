@@ -14,7 +14,7 @@ import { Route, Link } from 'react-router-dom';
   import styled from '<%= styledModule %>';
   <% } else {
     var wrapper = 'div';
-    var extras = globalCss ? '' : " className={styles['container']}";
+    var extras = globalCss || styledModule === 'styled-jsx' ? '' : " className={styles['container']}";
   %>
   <%- style !== 'styled-jsx' ? globalCss ? `import './${fileName}.${style}';` : `import styles from './${fileName}.module.${style}';`: '' %>
   <% }

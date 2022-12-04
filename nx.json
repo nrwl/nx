@@ -78,9 +78,6 @@
     "run-e2e-tests": {
       "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"]
     },
-    "test": {
-      "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"]
-    },
     "build-storybook": {
       "inputs": ["default", "^production", "{workspaceRoot}/.storybook/**/*"]
     }

@@ -241,6 +241,10 @@ describe('MF Remote App Generator', () => {
         tree.read(`apps/test/src/app/remote-entry/entry.routes.ts`, 'utf-8')
       ).toMatchSnapshot();
       expect(project.targets.server).toMatchSnapshot();
+      expect(
+        tree.read(`apps/test/src/app/remote-entry/entry.routes.ts`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(project.targets['static-server']).toMatchSnapshot();
     });
   });
 });

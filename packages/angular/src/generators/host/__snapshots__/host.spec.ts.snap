@@ -37,7 +37,7 @@ function bootstrap() {
 };
 
 
- if (document.readyState === 'complete') {
+ if (document.readyState !== 'loading') {
    bootstrap();
  } else {
    document.addEventListener('DOMContentLoaded', bootstrap);
@@ -166,6 +166,9 @@ Object {
     },
   },
   "defaultConfiguration": "production",
+  "dependsOn": Array [
+    "build",
+  ],
   "executor": "@nrwl/angular:webpack-server",
   "options": Object {
     "customWebpackConfig": Object {
@@ -175,6 +178,23 @@ Object {
     "outputPath": "dist/apps/test/server",
     "tsConfig": "apps/test/tsconfig.server.json",
   },
+}
+`;
+
+exports[`Host App Generator --ssr should generate the correct files 10`] = `
+Object {
+  "configurations": Object {
+    "development": Object {
+      "browserTarget": "test:build:development",
+      "serverTarget": "test:server:development",
+    },
+    "production": Object {
+      "browserTarget": "test:build:production",
+      "serverTarget": "test:server:production",
+    },
+  },
+  "defaultConfiguration": "development",
+  "executor": "@nrwl/angular:module-federation-dev-ssr",
 }
 `;
 

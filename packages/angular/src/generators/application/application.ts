@@ -28,14 +28,26 @@ import {
   updateNxComponentTemplate,
 } from './lib';
 import type { Schema } from './schema';
+import { getGeneratorDirectoryForInstalledAngularVersion } from '../../utils/get-generator-directory-for-ng-version';
+import { join } from 'path';
 
 export async function applicationGenerator(
-  host: Tree,
+  tree: Tree,
   schema: Partial<Schema>
 ) {
-  const options = normalizeOptions(host, schema);
+  const generatorDirectory =
+    getGeneratorDirectoryForInstalledAngularVersion(tree);
+  if (generatorDirectory) {
+    let previousGenerator = await import(
+      join(__dirname, generatorDirectory, 'application')
+    );
+    await previousGenerator.default(tree, schema);
+    return;
+  }
 
-  await angularInitGenerator(host, {
+  const options = normalizeOptions(tree, schema);
+
+  await angularInitGenerator(tree, {
     ...options,
     skipFormat: true,
   });
@@ -44,7 +56,7 @@ export async function applicationGenerator(
     '@schematics/angular',
     'application'
   );
-  await angularAppSchematic(host, {
+  await angularAppSchematic(tree, {
     name: options.name,
     inlineStyle: options.inlineStyle,
     inlineTemplate: options.inlineTemplate,
@@ -59,22 +71,22 @@ export async function applicationGenerator(
 
   if (options.ngCliSchematicAppRoot !== options.appProjectRoot) {
     moveFilesToNewDirectory(
-      host,
+      tree,
       options.ngCliSchematicAppRoot,
       options.appProjectRoot
     );
   }
 
-  createFiles(host, options);
-  updateConfigFiles(host, options);
-  updateAppComponentTemplate(host, options);
+  createFiles(tree, options);
+  updateConfigFiles(tree, options);
+  updateAppComponentTemplate(tree, options);
 
   // Create the NxWelcomeComponent
   const angularComponentSchematic = wrapAngularDevkitSchematic(
     '@schematics/angular',
     'component'
   );
-  await angularComponentSchematic(host, {
+  await angularComponentSchematic(tree, {
     name: 'NxWelcome',
     inlineTemplate: true,
     inlineStyle: true,
@@ -86,10 +98,10 @@ export async function applicationGenerator(
     project: options.name,
     standalone: options.standalone,
   });
-  updateNxComponentTemplate(host, options);
+  updateNxComponentTemplate(tree, options);
 
   if (options.addTailwind) {
-    await setupTailwindGenerator(host, {
+    await setupTailwindGenerator(tree, {
       project: options.name,
       skipFormat: true,
       skipPackageJson: options.skipPackageJson,
@@ -97,49 +109,49 @@ export async function applicationGenerator(
   }
 
   if (options.unitTestRunner !== UnitTestRunner.None) {
-    updateComponentSpec(host, options);
+    updateComponentSpec(tree, options);
   }
 
   if (options.routing) {
-    addRouterRootConfiguration(host, options);
+    addRouterRootConfiguration(tree, options);
   }
 
-  addLinting(host, options);
-  await addUnitTestRunner(host, options);
-  await addE2e(host, options);
-  updateEditorTsConfig(host, options);
+  await addLinting(tree, options);
+  await addUnitTestRunner(tree, options);
+  await addE2e(tree, options);
+  updateEditorTsConfig(tree, options);
 
   if (!options.skipDefaultProject) {
-    setDefaultProject(host, options);
+    setDefaultProject(tree, options);
   }
 
   if (options.backendProject) {
-    addProxyConfig(host, options);
+    addProxyConfig(tree, options);
   }
 
   if (options.strict) {
-    enableStrictTypeChecking(host, options);
+    enableStrictTypeChecking(tree, options);
   } else {
-    setApplicationStrictDefault(host, false);
+    setApplicationStrictDefault(tree, false);
   }
 
   if (options.standaloneConfig) {
-    await convertToNxProjectGenerator(host, {
+    await convertToNxProjectGenerator(tree, {
       project: options.name,
       all: false,
     });
   }
 
   if (options.standalone) {
-    convertToStandaloneApp(host, options);
+    convertToStandaloneApp(tree, options);
   }
 
   if (!options.skipFormat) {
-    await formatFiles(host);
+    await formatFiles(tree);
   }
 
   return () => {
-    installPackagesTask(host);
+    installPackagesTask(tree);
   };
 }
 

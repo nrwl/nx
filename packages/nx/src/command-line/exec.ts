@@ -52,9 +52,10 @@ async function runScriptAsNxTarget(argv: string[]) {
     providedArgs.length === argv.length ? [] : argv.slice(providedArgs.length);
 
   const pm = getPackageManagerCommand();
+  // `targetName` might be an npm script with `:` like: `start:dev`, `start:debug`.
   let command = `${
     pm.exec
-  } nx run ${projectName}:\"${targetName}\" ${extraArgs.join(' ')}`;
+  } nx run ${projectName}:\\\"${targetName}\\\" ${extraArgs.join(' ')}`;
   return execSync(command, { stdio: 'inherit' });
 }
 

@@ -1,3 +1,4 @@
+import * as devkit from '@nrwl/devkit';
 import {
   addProjectConfiguration,
   joinPathFragments,
@@ -9,11 +10,6 @@ import {
 import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { exampleRootTslintJson } from '@nrwl/linter';
 import { conversionGenerator } from './convert-tslint-to-eslint';
-
-/**
- * Don't run actual child_process implementation of installPackagesTask()
- */
-jest.mock('child_process');
 
 const appProjectName = 'nest-app-1';
 const appProjectRoot = `apps/${appProjectName}`;
@@ -101,6 +97,7 @@ describe('convert-tslint-to-eslint', () => {
   let host: Tree;
 
   beforeEach(async () => {
+    jest.spyOn(devkit, 'installPackagesTask');
     host = createTreeWithEmptyV1Workspace();
 
     writeJson(host, 'tslint.json', exampleRootTslintJson.raw);

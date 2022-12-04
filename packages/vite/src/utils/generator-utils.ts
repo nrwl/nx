@@ -138,6 +138,12 @@ export function addOrChangeBuildTarget(
   };
 
   if (targets[target]) {
+    buildOptions.fileReplacements = targets[target].options.fileReplacements;
+
+    if (target === '@nxext/vite:build') {
+      buildOptions.base = targets[target].options.baseHref;
+      buildOptions.sourcemap = targets[target].options.sourcemaps;
+    }
     targets[target].options = {
       ...buildOptions,
     };
@@ -150,23 +156,7 @@ export function addOrChangeBuildTarget(
       options: buildOptions,
       configurations: {
         development: {},
-        production: options.includeLib
-          ? {}
-          : {
-              fileReplacements: [
-                {
-                  replace: joinPathFragments(
-                    project.sourceRoot,
-                    'environments/environment.ts'
-                  ),
-                  with: joinPathFragments(
-                    project.sourceRoot,
-                    'environments/environment.prod.ts'
-                  ),
-                },
-              ],
-              sourceMap: false,
-            },
+        production: {},
       },
     };
   }
@@ -195,6 +185,9 @@ export function addOrChangeServeTarget(
   };
 
   if (targets[target]) {
+    if (target === '@nxext/vite:dev') {
+      serveOptions.proxyConfig = targets[target].options.proxyConfig;
+    }
     targets[target].options = {
       ...serveOptions,
     };
@@ -361,6 +354,9 @@ export function writeViteConfig(tree: Tree, options: Schema) {
   const testOption = options.includeVitest
     ? `test: {
     globals: true,
+    cache: {
+      dir: '${offsetFromRoot(projectConfig.root)}node_modules/.vitest'
+    },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     ${
@@ -406,7 +402,15 @@ export function writeViteConfig(tree: Tree, options: Schema) {
             }]
           }
         },`
-    : '';
+    : ``;
+
+  const serverOption = options.includeLib
+    ? ''
+    : `
+    server:{
+      port: 4200,
+      host: 'localhost',
+    },`;
 
   switch (options.uiFramework) {
     case 'react':
@@ -414,7 +418,7 @@ export function writeViteConfig(tree: Tree, options: Schema) {
 ${options.includeVitest ? '/// <reference types="vitest" />' : ''}
       import { defineConfig } from 'vite';
       import react from '@vitejs/plugin-react';
-      import ViteTsConfigPathsPlugin from 'vite-tsconfig-paths';
+      import tsconfigPaths from 'vite-tsconfig-paths';
       ${
         options.includeLib
           ? `import dts from 'vite-plugin-dts';\nimport { join } from 'path';`
@@ -422,10 +426,11 @@ ${options.includeVitest ? '/// <reference types="vitest" />' : ''}
       }
       
       export default defineConfig({
+        ${serverOption}
         plugins: [
           ${options.includeLib ? dtsPlugin : ''}
           react(),
-          ViteTsConfigPathsPlugin({
+          tsconfigPaths({
             root: '${offsetFromRoot(projectConfig.root)}',
             projects: ['tsconfig.base.json'],
           }),
@@ -439,7 +444,7 @@ ${options.includeVitest ? '/// <reference types="vitest" />' : ''}
       viteConfigContent = `
       ${options.includeVitest ? '/// <reference types="vitest" />' : ''}
       import { defineConfig } from 'vite';
-      import ViteTsConfigPathsPlugin from 'vite-tsconfig-paths';
+      import tsconfigPaths from 'vite-tsconfig-paths';
       ${
         options.includeLib
           ? `import dts from 'vite-plugin-dts';\nimport { join } from 'path';`
@@ -447,9 +452,10 @@ ${options.includeVitest ? '/// <reference types="vitest" />' : ''}
       }
       
       export default defineConfig({
+        ${serverOption}
         plugins: [
           ${options.includeLib ? dtsPlugin : ''}
-          ViteTsConfigPathsPlugin({
+          tsconfigPaths({
             root: '${offsetFromRoot(projectConfig.root)}',
             projects: ['tsconfig.base.json'],
           }),

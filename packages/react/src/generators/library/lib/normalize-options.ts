@@ -1,4 +1,5 @@
 import {
+  extractLayoutDirectory,
   getImportPath,
   getProjects,
   getWorkspaceLayout,
@@ -8,51 +9,59 @@ import {
   Tree,
 } from '@nrwl/devkit';
 import { assertValidStyle } from '../../../utils/assertion';
-import { NormalizedSchema } from '../library';
-import { Schema } from '../schema';
+import { NormalizedSchema, Schema } from '../schema';
 
 export function normalizeOptions(
   host: Tree,
   options: Schema
 ): NormalizedSchema {
   const name = names(options.name).fileName;
-  const projectDirectory = options.directory
-    ? `${names(options.directory).fileName}/${name}`
+  const { projectDirectory, layoutDirectory } = extractLayoutDirectory(
+    options.directory
+  );
+  const fullProjectDirectory = projectDirectory
+    ? `${names(projectDirectory).fileName}/${name}`
     : name;
 
-  const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
+  const projectName = fullProjectDirectory.replace(new RegExp('/', 'g'), '-');
   const fileName = projectName;
-  const { libsDir, npmScope } = getWorkspaceLayout(host);
-  const projectRoot = joinPathFragments(libsDir, projectDirectory);
+  const { libsDir: defaultLibsDir, npmScope } = getWorkspaceLayout(host);
+  const libsDir = layoutDirectory ?? defaultLibsDir;
+  const projectRoot = joinPathFragments(libsDir, fullProjectDirectory);
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
   const importPath =
-    options.importPath || getImportPath(npmScope, projectDirectory);
+    options.importPath || getImportPath(npmScope, fullProjectDirectory);
 
   const normalized = {
     ...options,
     compiler: options.compiler ?? 'babel',
-    bundler: options.bundler ?? 'rollup',
+    bundler:
+      options.bundler ??
+      (options.buildable || options.publishable ? 'rollup' : 'none'),
     fileName,
     routePath: `/${name}`,
     name: projectName,
     projectRoot,
-    projectDirectory,
+    projectDirectory: fullProjectDirectory,
     parsedTags,
     importPath,
+    libsDir,
   } as NormalizedSchema;
 
   // Libraries with a bundler or is publishable must also be buildable.
   normalized.buildable = Boolean(
-    options.bundler || options.buildable || options.publishable
+    normalized.bundler !== 'none' || options.buildable || options.publishable
   );
 
   normalized.unitTestRunner =
     normalized.unitTestRunner ??
     (normalized.bundler === 'vite' ? 'vitest' : 'jest');
+
+  normalized.inSourceTests === normalized.minimal || normalized.inSourceTests;
 
   if (options.appProject) {
     const appProjectConfig = getProjects(host).get(options.appProject);

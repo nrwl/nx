@@ -4,7 +4,7 @@ export default function Document(): JSX.Element {
   return (
     <Html className="h-full scroll-smooth" lang="en">
       <Head>
-        <meta charSet="utf-8" />
+        <link rel="icon" href="/favicon/favicon.svg" type="image/svg+xml" />
         <link
           rel="apple-touch-icon"
           sizes="180x180"
@@ -37,7 +37,6 @@ export default function Document(): JSX.Element {
         />
         <meta name="theme-color" content="#FFFFFF" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Nx: Smart, Fast and Extensible Build System</title>
         <script
           dangerouslySetInnerHTML={{
             __html: `

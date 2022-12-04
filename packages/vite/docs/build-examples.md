@@ -74,38 +74,4 @@ or even
 
 {% /tab %}
 
-{% tab label="Adding assets" %}
-
-Assets are non-JS and non-TS files, such as images, CSS, etc. You can add them to the project configuration as follows.
-
-```jsonc
-"serve": {
- "executor": "@nrwl/vite:build",
-  "options": {
-    //...
-    "assets": [
-      { "input": "apps/my-app", "glob": "README.md", "output": "/" },
-      { "input": "apps/my-app", "glob": "logo.png", "output": "/" },
-      { "input": "apps/my-app", "glob": "docs/**/*.md", "output": "/docs" },
-      //...
-    ]
- }
-}
-```
-
-Running `nx build my-app` outputs something like this.
-
-```text
-dist/apps/my-app/
-├── README.md
-├── docs
-│   ├── CONTRIBUTING.md
-│   └── TESTING.md
-├── index.js
-├── logo.png
-└── package.json
-```
-
-{% /tab %}
-
 {% /tabs %}

@@ -4,5 +4,6 @@ export interface InitSchema {
   skipBabelConfig?: boolean;
   skipFormat?: boolean;
   skipPackageJson?: boolean;
+  skipHelperLibs?: boolean;
   js?: boolean;
 }

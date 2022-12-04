@@ -544,6 +544,9 @@ describe('app', () => {
                 "apps/my-app/**/*.html",
               ],
             },
+            "outputs": Array [
+              "{options.outputFile}",
+            ],
           }
         `);
         expect(workspaceJson.projects['my-app-e2e'].architect.lint)
@@ -578,6 +581,9 @@ describe('app', () => {
                 "apps/my-app/**/*.html",
               ],
             },
+            "outputs": Array [
+              "{options.outputFile}",
+            ],
           }
         `);
         expect(appTree.exists('apps/my-app-e2e/.eslintrc.json')).toBeTruthy();

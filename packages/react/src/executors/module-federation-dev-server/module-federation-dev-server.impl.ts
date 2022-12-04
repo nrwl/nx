@@ -3,8 +3,10 @@ import devServerExecutor from '@nrwl/webpack/src/executors/dev-server/dev-server
 import { WebDevServerOptions } from '@nrwl/webpack/src/executors/dev-server/schema';
 import { join } from 'path';
 import * as chalk from 'chalk';
-import { combineAsyncIterableIterators } from '@nrwl/js/src/utils/async-iterable/combine-async-iteratable-iterators';
-import { tapAsyncIterator } from '@nrwl/js/src/utils/async-iterable/tap-async-iteratable';
+import {
+  combineAsyncIterableIterators,
+  tapAsyncIterable,
+} from '@nrwl/devkit/src/utils/async-iterable';
 
 type ModuleFederationDevServerOptions = WebDevServerOptions & {
   devRemotes?: string | string[];
@@ -65,7 +67,7 @@ export default async function* moduleFederationDevServer(
   }
 
   let numAwaiting = knownRemotes.length + 1; // remotes + host
-  return yield* tapAsyncIterator(iter, (x) => {
+  return yield* tapAsyncIterable(iter, (x) => {
     numAwaiting--;
     if (numAwaiting === 0) {
       logger.info(

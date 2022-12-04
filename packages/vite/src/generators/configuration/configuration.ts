@@ -22,14 +22,21 @@ import { Schema } from './schema';
 export async function viteConfigurationGenerator(tree: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
 
-  const { targets } = readProjectConfiguration(tree, schema.project);
+  const { targets, projectType } = readProjectConfiguration(
+    tree,
+    schema.project
+  );
   let buildTarget = 'build';
   let serveTarget = 'serve';
+
+  schema.includeLib ??= projectType === 'library';
 
   if (!schema.newProject) {
     buildTarget = findExistingTargets(targets).buildTarget;
     serveTarget = findExistingTargets(targets).serveTarget;
-    moveAndEditIndexHtml(tree, schema, buildTarget);
+    if (projectType === 'application') {
+      moveAndEditIndexHtml(tree, schema, buildTarget);
+    }
     editTsConfig(tree, schema);
   }
 
@@ -40,7 +47,10 @@ export async function viteConfigurationGenerator(tree: Tree, schema: Schema) {
   tasks.push(initTask);
 
   addOrChangeBuildTarget(tree, schema, buildTarget);
-  addOrChangeServeTarget(tree, schema, serveTarget);
+
+  if (!schema.includeLib) {
+    addOrChangeServeTarget(tree, schema, serveTarget);
+  }
 
   writeViteConfig(tree, schema);
 
@@ -49,6 +59,7 @@ export async function viteConfigurationGenerator(tree: Tree, schema: Schema) {
       project: schema.project,
       uiFramework: schema.uiFramework,
       inSourceTests: schema.inSourceTests,
+      coverageProvider: 'c8',
       skipViteConfig: true,
     });
     tasks.push(vitestTask);

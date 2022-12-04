@@ -8,7 +8,6 @@
   "dependencies": {
   },
   "devDependencies": {
-    "@nrwl/cli": "<%= nxVersion %>",
     "@nrwl/workspace": "<%= nxVersion %>",
     "nx": "<%= nxVersion %>",
     "prettier": "<%= prettierVersion %>",

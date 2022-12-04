@@ -26,6 +26,12 @@
       "type": "boolean",
       "default": false,
       "description": "Skip generating a vite config file"
+    },
+    "coverageProvider": {
+      "type": "string",
+      "enum": ["c8", "istanbul"],
+      "default": "c8",
+      "description": "Coverage provider to use."
     }
   },
   "required": ["project"]

@@ -2,6 +2,7 @@ import {
   addDependenciesToPackageJson,
   convertNxGenerator,
   formatFiles,
+  GeneratorCallback,
   removeDependenciesFromPackageJson,
   Tree,
 } from '@nrwl/devkit';
@@ -15,7 +16,12 @@ import {
 } from '../../utils/versions';
 
 export async function detoxInitGenerator(host: Tree, schema: Schema) {
-  const tasks = [moveDependency(host), updateDependencies(host)];
+  const tasks: GeneratorCallback[] = [];
+
+  if (!schema.skipPackageJson) {
+    tasks.push(moveDependency(host));
+    tasks.push(updateDependencies(host));
+  }
 
   if (!schema.skipFormat) {
     await formatFiles(host);

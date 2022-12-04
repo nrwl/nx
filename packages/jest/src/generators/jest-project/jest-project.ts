@@ -13,6 +13,7 @@ const schemaDefaults = {
   supportTsx: false,
   skipSetupFile: false,
   skipSerializers: false,
+  rootProject: false,
 } as const;
 
 function normalizeOptions(options: JestProjectSchema) {
@@ -42,7 +43,6 @@ function normalizeOptions(options: JestProjectSchema) {
 
   // setupFile is always 'none'
   options.setupFile = schemaDefaults.setupFile;
-
   return {
     ...schemaDefaults,
     ...options,
@@ -55,11 +55,12 @@ export async function jestProjectGenerator(
 ) {
   const options = normalizeOptions(schema);
   const installTask = init(tree, options);
+
   checkForTestTarget(tree, options);
   createFiles(tree, options);
   updateTsConfig(tree, options);
   updateWorkspace(tree, options);
-  updateJestConfig(tree, options);
+
   if (!schema.skipFormat) {
     await formatFiles(tree);
   }

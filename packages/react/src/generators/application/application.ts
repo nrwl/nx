@@ -15,6 +15,7 @@ import { addStyledModuleDependencies } from '../../rules/add-styled-dependencies
 import {
   addDependenciesToPackageJson,
   convertNxGenerator,
+  ensurePackage,
   formatFiles,
   GeneratorCallback,
   joinPathFragments,
@@ -24,10 +25,13 @@ import {
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import reactInitGenerator from '../init/init';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
-import { swcCoreVersion } from '@nrwl/js/src/utils/versions';
-import { swcLoaderVersion } from '@nrwl/webpack/src/utils/versions';
-import { viteConfigurationGenerator, vitestGenerator } from '@nrwl/vite';
 import { mapLintPattern } from '@nrwl/linter/src/generators/lint-project/lint-project';
+import {
+  nxVersion,
+  swcCoreVersion,
+  swcLoaderVersion,
+} from '../../utils/versions';
+import { installCommonDependencies } from './lib/install-common-dependencies';
 
 async function addLinting(host: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];
@@ -81,6 +85,7 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
     ...options,
     skipFormat: true,
     skipBabelConfig: options.bundler === 'vite',
+    skipHelperLibs: options.bundler === 'vite',
   });
 
   tasks.push(initTask);
@@ -89,6 +94,8 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
   addProject(host, options);
 
   if (options.bundler === 'vite') {
+    await ensurePackage(host, '@nrwl/vite', nxVersion);
+    const { viteConfigurationGenerator } = await import('@nrwl/vite');
     // We recommend users use `import.meta.env.MODE` and other variables in their code to differentiate between production and development.
     // See: https://vitejs.dev/guide/env-and-mode.html
     host.delete(joinPathFragments(options.appProjectRoot, 'src/environments'));
@@ -100,15 +107,39 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
       includeVitest: true,
     });
     tasks.push(viteTask);
+  } else if (options.bundler === 'webpack') {
+    await ensurePackage(host, '@nrwl/webpack', nxVersion);
+
+    const { webpackInitGenerator } = await import('@nrwl/webpack');
+    const webpackInitTask = await webpackInitGenerator(host, {
+      uiFramework: 'react',
+    });
+    tasks.push(webpackInitTask);
   }
 
   if (options.bundler !== 'vite' && options.unitTestRunner === 'vitest') {
+    await ensurePackage(host, '@nrwl/vite', nxVersion);
+    const { vitestGenerator } = await import('@nrwl/vite');
+
     const vitestTask = await vitestGenerator(host, {
       uiFramework: 'react',
+      coverageProvider: 'c8',
       project: options.projectName,
       inSourceTests: options.inSourceTests,
     });
     tasks.push(vitestTask);
+  }
+
+  if (
+    (options.bundler === 'vite' || options.unitTestRunner === 'vitest') &&
+    options.inSourceTests
+  ) {
+    host.delete(
+      joinPathFragments(
+        options.appProjectRoot,
+        `src/app/${options.fileName}.spec.tsx`
+      )
+    );
   }
 
   const lintTask = await addLinting(host, options);
@@ -116,11 +147,16 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
 
   const cypressTask = await addCypress(host, options);
   tasks.push(cypressTask);
+
   if (options.unitTestRunner === 'jest') {
     const jestTask = await addJest(host, options);
     tasks.push(jestTask);
-    updateSpecConfig(host, options);
   }
+
+  // Handle tsconfig.spec.json for jest or vitest
+  updateSpecConfig(host, options);
+  const stylePreprocessorTask = installCommonDependencies(host, options);
+  tasks.push(stylePreprocessorTask);
   const styledTask = addStyledModuleDependencies(host, options.styledModule);
   tasks.push(styledTask);
   const routingTask = addRouting(host, options);

@@ -5,7 +5,7 @@
   "$id": "NxExpoEasBuildList",
   "cli": "nx",
   "title": "Expo EAS Build List executor",
-  "description": "List all EAS builds for your Expo project",
+  "description": "List all EAS builds for your Expo project.",
   "type": "object",
   "properties": {
     "platform": {

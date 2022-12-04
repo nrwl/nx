@@ -17,7 +17,19 @@ Read more about Vite and Vitest in the [Vite documentation](https://vitejs.dev/)
 
 ## Setting up Vite
 
-To create a new workspace, run `npx create-nx-workspace@latest --preset=vite`.
+You can create a new workspace that uses Vite with one of the following commands:
+
+- Generate a new monorepo with a Web Components app set up with Vite
+
+```shell
+npx create-nx-workspace@latest --preset=web-components
+```
+
+- Generate a new standalone React app set up with Vite
+
+```shell
+npx create-nx-workspace@latest --preset=react-standalone
+```
 
 ### Add Vite to an existing workspace
 
@@ -236,7 +248,7 @@ Then, add a module `script` tag pointing to the `main.tsx` (or `main.ts`) file o
 
 ### 4. Add a `public` folder
 
-You can add a `public` folder to the root of your app. You can read more about the public folder in the [Vite.js documentation](https://vitejs.dev/guide/assets.html#the-public-directory). Use that folder as you would normally do.
+You can add a `public` folder to the root of your app. You can read more about the public folder in the [Vite.js documentation](https://vitejs.dev/guide/assets.html#the-public-directory).
 
 ```treeview
 myorg/
@@ -249,6 +261,7 @@ myorg/
 │   │   │   └── main.tsx
 │   │   ├── index.html
 │   │   ├── public/
+| . | . |   ├── favicon.ico
 │   │   │   └── my-page.md
 │   │   ├── project.json
 │   │   ├── ...
@@ -256,6 +269,8 @@ myorg/
 │   │   ├── tsconfig.json
 │   │   └── tsconfig.spec.json
 ```
+
+You can use the `public` folder to store static **assets**, such as images, fonts, and so on. You can also use it to store Markdown files, which you can then import in your app and use as a source of content.
 
 ### 5. Adjust your app's tsconfig.json
 

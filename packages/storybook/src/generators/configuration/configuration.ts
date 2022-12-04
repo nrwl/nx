@@ -32,7 +32,6 @@ import {
   storybookSwcAddonVersion,
   storybookTestRunnerVersion,
 } from '../../utils/versions';
-import { Console } from 'console';
 
 export async function configurationGenerator(
   tree: Tree,
@@ -49,7 +48,13 @@ export async function configurationGenerator(
   const { nextBuildTarget, compiler, viteBuildTarget } =
     findStorybookAndBuildTargetsAndCompiler(targets);
 
-  console.log(findStorybookAndBuildTargetsAndCompiler(targets));
+  if (viteBuildTarget && schema.bundler !== 'vite') {
+    logger.info(
+      `Your project ${schema.name} uses Vite as a bundler. 
+      Nx will configure Storybook for this project to use Vite as well.`
+    );
+    schema.bundler = 'vite';
+  }
 
   const initTask = await initGenerator(tree, {
     uiFramework: schema.uiFramework,
@@ -68,7 +73,7 @@ export async function configurationGenerator(
       projectType,
       !!nextBuildTarget,
       compiler === 'swc',
-      schema.bundler === 'vite' || !!viteBuildTarget
+      schema.bundler === 'vite'
     );
   } else {
     createRootStorybookDir(tree, schema.js, schema.tsConfiguration);
@@ -80,7 +85,7 @@ export async function configurationGenerator(
       schema.tsConfiguration,
       !!nextBuildTarget,
       compiler === 'swc',
-      schema.bundler === 'vite' || !!viteBuildTarget
+      schema.bundler === 'vite'
     );
   }
 

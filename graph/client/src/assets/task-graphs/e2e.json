@@ -548,40 +548,6 @@
         "products:deploy": []
       }
     },
-    "new-lib:test": {
-      "roots": ["new-lib:test"],
-      "tasks": {
-        "new-lib:test": {
-          "id": "new-lib:test",
-          "target": {
-            "project": "new-lib",
-            "target": "test"
-          },
-          "projectRoot": "libs/new-lib",
-          "overrides": {}
-        }
-      },
-      "dependencies": {
-        "new-lib:test": []
-      }
-    },
-    "new-lib:lint": {
-      "roots": ["new-lib:lint"],
-      "tasks": {
-        "new-lib:lint": {
-          "id": "new-lib:lint",
-          "target": {
-            "project": "new-lib",
-            "target": "lint"
-          },
-          "projectRoot": "libs/new-lib",
-          "overrides": {}
-        }
-      },
-      "dependencies": {
-        "new-lib:lint": []
-      }
-    },
     "cart:build": {
       "roots": ["cart:build:production"],
       "tasks": {

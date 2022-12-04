@@ -3,7 +3,6 @@ import { createMachine, send, spawn } from 'xstate';
 import { customSelectedStateConfig } from './custom-selected.state';
 import { focusedStateConfig } from './focused.state';
 import { graphActor } from './graph.actor';
-import { createRouteMachine } from '../../machines/route-setter.machine';
 import { textFilteredStateConfig } from './text-filtered.state';
 import { tracingStateConfig } from './tracing.state';
 import { unselectedStateConfig } from './unselected.state';
@@ -26,8 +25,6 @@ export const initialContext: ProjectGraphContext = {
     appsDir: '',
   },
   graphActor: null,
-  routeSetterActor: null,
-  routeListenerActor: null,
   lastPerfReport: {
     numEdges: 0,
     numNodes: 0,
@@ -96,14 +93,11 @@ export const projectGraphMachine = createMachine<
       },
       selectAll: {
         target: 'customSelected',
-        actions: ['notifyGraphShowAllProjects', 'notifyRouteSelectAll'],
+        actions: ['notifyGraphShowAllProjects'],
       },
       selectAffected: {
         target: 'customSelected',
-        actions: [
-          'notifyGraphShowAffectedProjects',
-          'notifyRouteSelectAffected',
-        ],
+        actions: ['notifyGraphShowAffectedProjects'],
       },
       deselectProject: [
         {
@@ -155,19 +149,6 @@ export const projectGraphMachine = createMachine<
               to: (context) => context.graphActor,
             }
           ),
-          send(
-            (ctx, event) => {
-              if (event.type !== 'setCollapseEdges') return;
-
-              return {
-                type: 'notifyRouteCollapseEdges',
-                collapseEdges: event.collapseEdges,
-              };
-            },
-            {
-              to: (context) => context.routeSetterActor,
-            }
-          ),
         ],
       },
       setGroupByFolder: {
@@ -188,19 +169,6 @@ export const projectGraphMachine = createMachine<
               to: (context) => context.graphActor,
             }
           ),
-          send(
-            (ctx, event) => {
-              if (event.type !== 'setGroupByFolder') return;
-
-              return {
-                type: 'notifyRouteGroupByFolder',
-                groupByFolder: event.groupByFolder,
-              };
-            },
-            {
-              to: (context) => context.routeSetterActor,
-            }
-          ),
         ],
       },
       setIncludeProjectsByPath: {
@@ -211,23 +179,22 @@ export const projectGraphMachine = createMachine<
         ],
       },
       incrementSearchDepth: {
-        actions: ['incrementSearchDepth', 'notifyRouteSearchDepth'],
+        actions: ['incrementSearchDepth'],
       },
       decrementSearchDepth: {
-        actions: ['decrementSearchDepth', 'notifyRouteSearchDepth'],
+        actions: ['decrementSearchDepth'],
       },
       setSearchDepthEnabled: {
-        actions: ['setSearchDepthEnabled', 'notifyRouteSearchDepth'],
+        actions: ['setSearchDepthEnabled'],
       },
       setSearchDepth: {
-        actions: ['setSearchDepth', 'notifyRouteSearchDepth'],
+        actions: ['setSearchDepth'],
       },
       setTracingAlgorithm: {
         actions: [
           assign((ctx, event) => {
             ctx.tracing.algorithm = event.algorithm;
           }),
-          'notifyRouteTracing',
           'notifyGraphTracing',
         ],
       },
@@ -240,9 +207,6 @@ export const projectGraphMachine = createMachine<
     guards: {
       deselectLastProject: (ctx) => {
         return ctx.selectedProjects.length <= 1;
-      },
-      selectActionCannotBePersistedToRoute: (ctx, event) => {
-        return event.type !== 'selectAffected' && event.type !== 'selectAll';
       },
     },
     actions: {
@@ -286,9 +250,9 @@ export const projectGraphMachine = createMachine<
         ctx.projects = event.projects;
         ctx.dependencies = event.dependencies;
         ctx.graphActor = spawn(graphActor, 'graphActor');
-        ctx.routeSetterActor = spawn(createRouteMachine(), {
-          name: 'route',
-        });
+        // ctx.routeSetterActor = spawn(createRouteMachine(), {
+        //   name: 'route',
+        // });
 
         if (event.type === 'setProjects') {
           ctx.workspaceLayout = event.workspaceLayout;
@@ -388,62 +352,7 @@ export const projectGraphMachine = createMachine<
           to: (context) => context.graphActor,
         }
       ),
-      notifyRouteUnfocusProject: send(
-        () => ({
-          type: 'notifyRouteUnfocusProject',
-        }),
-        {
-          to: (ctx) => ctx.routeSetterActor,
-        }
-      ),
-      notifyRouteSelectAll: send(
-        () => ({
-          type: 'notifyRouteSelectAll',
-        }),
-        {
-          to: (ctx) => ctx.routeSetterActor,
-        }
-      ),
-      notifyRouteSelectAffected: send(
-        () => ({
-          type: 'notifyRouteSelectAffected',
-        }),
-        {
-          to: (ctx) => ctx.routeSetterActor,
-        }
-      ),
-      notifyRouteClearSelect: send(
-        () => ({
-          type: 'notifyRouteClearSelect',
-        }),
-        {
-          to: (ctx) => ctx.routeSetterActor,
-        }
-      ),
-      notifyRouteTracing: send(
-        (ctx) => {
-          return {
-            type: 'notifyRouteTracing',
-            start: ctx.tracing.start,
-            end: ctx.tracing.end,
-            algorithm: ctx.tracing.algorithm,
-          };
-        },
-        {
-          to: (ctx) => ctx.routeSetterActor,
-        }
-      ),
-      notifyRouteSearchDepth: send(
-        (ctx, event) => ({
-          type: 'notifyRouteSearchDepth',
-          searchDepth: ctx.searchDepth,
-          searchDepthEnabled: ctx.searchDepthEnabled,
-        }),
 
-        {
-          to: (ctx) => ctx.routeSetterActor,
-        }
-      ),
       notifyGraphFilterProjectsByText: send(
         (context, event) => ({
           type: 'notifyGraphFilterProjectsByText',

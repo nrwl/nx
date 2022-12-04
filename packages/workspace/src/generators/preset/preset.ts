@@ -43,8 +43,7 @@ async function createPreset(tree: Tree, options: Schema) {
     await angularApplicationGenerator(tree, {
       name: options.name,
       style: options.style,
-      linter: 'none',
-      unitTestRunner: 'none',
+      linter: options.linter,
       standaloneConfig: options.standaloneConfig,
       rootProject: true,
     });
@@ -68,10 +67,11 @@ async function createPreset(tree: Tree, options: Schema) {
       name: options.name,
       style: options.style,
       linter: options.linter,
-      unitTestRunner: 'none',
       standaloneConfig: options.standaloneConfig,
       rootProject: true,
       bundler: 'vite',
+      e2eTestRunner: 'none',
+      unitTestRunner: 'vitest',
     });
   } else if (options.preset === Preset.NextJs) {
     const { applicationGenerator: nextApplicationGenerator } = require('@nrwl' +
@@ -92,19 +92,8 @@ async function createPreset(tree: Tree, options: Schema) {
       style: options.style,
       linter: options.linter,
       standaloneConfig: options.standaloneConfig,
+      bundler: 'vite',
     });
-    addDependenciesToPackageJson(
-      tree,
-      {},
-      {
-        '@ungap/custom-elements': '0.1.6',
-      }
-    );
-    addPolyfills(
-      tree,
-      `apps/${names(options.name).fileName}/src/polyfills.ts`,
-      ['@ungap/custom-elements']
-    );
   } else if (options.preset === Preset.Nest) {
     const { applicationGenerator: nestApplicationGenerator } = require('@nrwl' +
       '/nest');

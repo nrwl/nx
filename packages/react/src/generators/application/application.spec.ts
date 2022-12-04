@@ -970,7 +970,8 @@ describe('app', () => {
 
   describe('setup React app with --bundler=vite', () => {
     let viteAppTree: Tree;
-    beforeAll(async () => {
+
+    beforeEach(async () => {
       viteAppTree = createTreeWithEmptyV1Workspace();
       await applicationGenerator(viteAppTree, { ...schema, bundler: 'vite' });
     });
@@ -984,6 +985,7 @@ describe('app', () => {
         buildTarget: 'my-app:build',
       });
     });
+
     it('should add dependencies in package.json', () => {
       const packageJson = readJson(viteAppTree, '/package.json');
 
@@ -1001,6 +1003,65 @@ describe('app', () => {
     it('should create index.html and vite.config file at the root of the app', () => {
       expect(viteAppTree.exists('/apps/my-app/index.html')).toBe(true);
       expect(viteAppTree.exists('/apps/my-app/vite.config.ts')).toBe(true);
+    });
+
+    it('should not include a spec file when the bundler or unitTestRunner is vite and insourceTests is false', async () => {
+      // check to make sure that the other spec file exists
+      expect(viteAppTree.exists('/apps/my-app/src/app/app.spec.tsx')).toBe(
+        true
+      );
+
+      await applicationGenerator(viteAppTree, {
+        ...schema,
+        name: 'insourceTests',
+        bundler: 'vite',
+        inSourceTests: true,
+      });
+
+      expect(
+        viteAppTree.exists('/apps/insourceTests/src/app/app.spec.tsx')
+      ).toBe(false);
+    });
+
+    it.each`
+      style     | pkg
+      ${'less'} | ${'less'}
+      ${'scss'} | ${'sass'}
+      ${'styl'} | ${'stylus'}
+    `(
+      'should add style preprocessor when vite is used',
+      async ({ style, pkg }) => {
+        await applicationGenerator(viteAppTree, {
+          ...schema,
+          style,
+          bundler: 'vite',
+          unitTestRunner: 'vitest',
+          name: style,
+        });
+
+        expect(readJson(viteAppTree, 'package.json')).toMatchObject({
+          devDependencies: {
+            [pkg]: expect.any(String),
+          },
+        });
+      }
+    );
+  });
+
+  describe('setting generator defaults', () => {
+    it('should set libraries to use vitest when app uses vite bundler', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        name: 'my-app',
+        bundler: 'vite',
+      });
+
+      const workspace = readWorkspaceConfiguration(appTree);
+      expect(workspace.generators['@nrwl/react']).toMatchObject({
+        library: {
+          unitTestRunner: 'vitest',
+        },
+      });
     });
   });
 });

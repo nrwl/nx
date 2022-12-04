@@ -2,8 +2,10 @@ import {
   addDependenciesToPackageJson,
   convertNxGenerator,
   readJson,
+  readWorkspaceConfiguration,
   Tree,
   updateJson,
+  updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
 
 import {
@@ -60,8 +62,34 @@ function moveToDevDependencies(tree: Tree) {
   });
 }
 
+export function createVitestConfig(tree: Tree) {
+  const workspaceConfiguration = readWorkspaceConfiguration(tree);
+
+  const productionFileSet = workspaceConfiguration.namedInputs?.production;
+  if (productionFileSet) {
+    productionFileSet.push(
+      '!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)',
+      '!{projectRoot}/tsconfig.spec.json'
+    );
+
+    workspaceConfiguration.namedInputs.production = Array.from(
+      new Set(productionFileSet)
+    );
+  }
+
+  workspaceConfiguration.targetDefaults ??= {};
+  workspaceConfiguration.targetDefaults.test ??= {};
+  workspaceConfiguration.targetDefaults.test.inputs ??= [
+    'default',
+    productionFileSet ? '^production' : '^default',
+  ];
+
+  updateWorkspaceConfiguration(tree, workspaceConfiguration);
+}
+
 export function initGenerator(tree: Tree, schema: Schema) {
   moveToDevDependencies(tree);
+  createVitestConfig(tree);
   const installTask = checkDependenciesInstalled(tree, schema);
   return installTask;
 }

@@ -30,12 +30,10 @@
   "builders": "./executors.json",
   "schematics": "./generators.json",
   "peerDependencies": {
-    "eslint": "^8.0.0",
-    "js-yaml": "4.1.0"
+    "eslint": "^8.0.0"
   },
   "dependencies": {
     "@nrwl/devkit": "file:../devkit",
-    "@nrwl/jest": "file:../jest",
     "@phenomnomnominal/tsquery": "4.1.1",
     "nx": "file:../nx",
     "tmp": "~0.2.1",

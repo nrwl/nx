@@ -1,4 +1,5 @@
 import {
+  extractLayoutDirectory,
   getWorkspaceLayout,
   getWorkspacePath,
   joinPathFragments,
@@ -35,17 +36,25 @@ export function normalizeOptions(
   };
 
   const name = names(options.name).fileName;
-  const projectDirectory = options.directory
-    ? `${names(options.directory).fileName}/${name}`.replace(/\/+/g, '/')
+  const { layoutDirectory, projectDirectory } = extractLayoutDirectory(
+    options.directory
+  );
+  const fullProjectDirectory = projectDirectory
+    ? `${names(projectDirectory).fileName}/${name}`.replace(/\/+/g, '/')
     : name;
 
-  const { libsDir, npmScope, standaloneAsDefault } = getWorkspaceLayout(host);
+  const {
+    libsDir: defaultLibsDirectory,
+    npmScope,
+    standaloneAsDefault,
+  } = getWorkspaceLayout(host);
+  const libsDir = layoutDirectory ?? defaultLibsDirectory;
 
-  const projectName = projectDirectory
+  const projectName = fullProjectDirectory
     .replace(new RegExp('/', 'g'), '-')
     .replace(/-\d+/g, '');
   const fileName = options.simpleModuleName ? name : projectName;
-  const projectRoot = joinPathFragments(libsDir, projectDirectory);
+  const projectRoot = joinPathFragments(libsDir, fullProjectDirectory);
 
   const moduleName = `${names(fileName).className}Module`;
   const parsedTags = options.tags
@@ -57,7 +66,7 @@ export function normalizeOptions(
   options.standaloneConfig = options.standaloneConfig ?? standaloneAsDefault;
 
   const importPath =
-    options.importPath || getImportPath(npmScope, projectDirectory);
+    options.importPath || getImportPath(npmScope, fullProjectDirectory);
 
   // Determine the roots where @schematics/angular will place the projects
   // This might not be where the projects actually end up
@@ -79,7 +88,7 @@ export function normalizeOptions(
     projectRoot,
     entryFile: 'index',
     moduleName,
-    projectDirectory,
+    projectDirectory: fullProjectDirectory,
     modulePath,
     parsedTags,
     fileName,

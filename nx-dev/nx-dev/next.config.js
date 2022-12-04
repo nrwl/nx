@@ -197,12 +197,14 @@ module.exports = withNx({
       });
     }
 
-    // Landing pages
-    rules.push({
-      source: '/(angular|react|node)',
-      destination: '/',
-      permanent: true,
-    });
+    // Packages Indexes
+    for (let s of Object.keys(redirectRules.packagesIndexes)) {
+      rules.push({
+        source: s,
+        destination: redirectRules.packagesIndexes[s],
+        permanent: true,
+      });
+    }
 
     // Docs
     rules.push({

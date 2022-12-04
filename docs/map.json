@@ -115,6 +115,38 @@
           ]
         },
         {
+          "name": "React Standalone Tutorial",
+          "id": "react-standalone-tutorial",
+          "description": "In this tutorial you'll create a frontend-focused workspace with Nx.",
+          "itemList": [
+            {
+              "name": "1 - Code Generation",
+              "id": "1-code-generation",
+              "file": "shared/react-standalone-tutorial/1-code-generation"
+            },
+            {
+              "name": "2 - Project Graph",
+              "id": "2-project-graph",
+              "file": "shared/react-standalone-tutorial/2-project-graph"
+            },
+            {
+              "name": "3 - Task Running",
+              "id": "3-task-running",
+              "file": "shared/react-standalone-tutorial/3-task-running"
+            },
+            {
+              "name": "4 - Task Pipelines",
+              "id": "4-task-pipelines",
+              "file": "shared/react-standalone-tutorial/4-task-pipelines"
+            },
+            {
+              "name": "5 - Summary",
+              "id": "5-summary",
+              "file": "shared/react-standalone-tutorial/5-summary"
+            }
+          ]
+        },
+        {
           "name": "Angular Tutorial",
           "id": "angular-tutorial",
           "description": "Learn to use Nx with this Angular tutorial where you will learn about all its main feature with a real project.",
@@ -143,6 +175,38 @@
               "name": "5 - Summary",
               "id": "5-summary",
               "file": "shared/angular-tutorial/5-summary"
+            }
+          ]
+        },
+        {
+          "name": "Angular Standalon Tutorial",
+          "id": "angular-standalone-tutorial",
+          "description": "Learn to use Nx with this Angular tutorial where you will learn about all its main feature with a real project.",
+          "itemList": [
+            {
+              "name": "1 - Code Generation",
+              "id": "1-code-generation",
+              "file": "shared/angular-standalone-tutorial/1-code-generation"
+            },
+            {
+              "name": "2 - Project Graph",
+              "id": "2-project-graph",
+              "file": "shared/angular-standalone-tutorial/2-project-graph"
+            },
+            {
+              "name": "3 - Task Running",
+              "id": "3-task-running",
+              "file": "shared/angular-standalone-tutorial/3-task-running"
+            },
+            {
+              "name": "4 - Task Pipelines",
+              "id": "4-task-pipelines",
+              "file": "shared/angular-standalone-tutorial/4-task-pipelines"
+            },
+            {
+              "name": "5 - Summary",
+              "id": "5-summary",
+              "file": "shared/angular-standalone-tutorial/5-summary"
             }
           ]
         },
@@ -689,14 +753,14 @@
           "description": "Adopting Nx incrementally, on existing project or from scratch.",
           "itemList": [
             {
-              "name": "Nx and Lerna",
-              "id": "lerna-and-nx",
-              "file": "shared/migration/lerna-and-nx"
-            },
-            {
               "name": "NPM/Yarn/PNPM workspaces",
               "id": "adding-to-monorepo",
               "file": "shared/migration/adding-to-monorepo"
+            },
+            {
+              "name": "Add to any Project",
+              "id": "adding-to-existing-project",
+              "file": "shared/migration/adding-to-existing-project"
             },
             {
               "name": "From CRA",
@@ -707,6 +771,11 @@
               "name": "From Angular CLI",
               "id": "migration-angular",
               "file": "shared/migration/migration-angular"
+            },
+            {
+              "name": "Nx and Lerna",
+              "id": "lerna-and-nx",
+              "file": "shared/migration/lerna-and-nx"
             },
             {
               "name": "From AngularJS",
@@ -891,19 +960,23 @@
           "description": "Other recipes you will find useful.",
           "itemList": [
             {
+              "name": "Run Root-Level NPM Scripts with Nx",
+              "id": "root-level-scripts",
+              "tags": ["run-tasks"],
+              "file": "shared/recipes/root-level-scripts"
+            },
+            {
               "name": "Disable Graph Links Created from Analyzing Source Files",
               "id": "analyze-source-files",
               "tags": ["explore-graph"],
               "file": "shared/recipes/analyze-source-files"
             },
-
             {
               "name": "Advanced Update Nx",
               "id": "advanced-update",
               "tags": ["automate-updating-dependencies"],
               "file": "shared/recipes/advanced-update"
             },
-
             {
               "name": "JavaScript and TypeScript",
               "id": "js-and-ts",

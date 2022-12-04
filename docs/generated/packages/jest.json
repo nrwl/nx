@@ -41,6 +41,12 @@
             "type": "boolean",
             "default": false,
             "description": "Use JavaScript instead of TypeScript for config files"
+          },
+          "rootProject": {
+            "description": "initialize Jest for an application at the root of the workspace",
+            "type": "boolean",
+            "default": false,
+            "hidden": true
           }
         },
         "required": [],
@@ -123,6 +129,12 @@
             "type": "boolean",
             "default": false,
             "description": "Use JavaScript instead of TypeScript for config files"
+          },
+          "rootProject": {
+            "description": "Add Jest to an application at the root of the workspace",
+            "type": "boolean",
+            "default": false,
+            "hidden": true
           }
         },
         "required": [],

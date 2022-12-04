@@ -17,34 +17,16 @@
       "description": "The output path of the generated files.",
       "x-completion-type": "directory"
     },
-    "baseHref": {
+    "base": {
       "type": "string",
-      "description": "Base url for the application being built."
-    },
-    "proxyConfig": {
-      "type": "string",
-      "description": "Path to the proxy configuration file.",
-      "x-completion-type": "file"
-    },
-    "tsConfig": {
-      "type": "string",
-      "description": "The name of the Typescript configuration file.",
-      "x-completion-type": "file",
-      "x-completion-glob": "tsconfig.*.json"
+      "description": "Base public path when served in development or production.",
+      "alias": "baseHref"
     },
     "configFile": {
       "type": "string",
       "description": "The name of the Vite.js configuration file.",
       "x-completion-type": "file",
       "x-completion-glob": "vite.config.@(js|ts)"
-    },
-    "assets": {
-      "type": "array",
-      "description": "List of static application assets.",
-      "default": [],
-      "items": {
-        "$ref": "#/definitions/assetPattern"
-      }
     },
     "fileReplacements": {
       "description": "Replace files with other files in the build.",
@@ -70,7 +52,6 @@
     },
     "sourcemap": {
       "description": "Output sourcemaps. Use 'hidden' for use with error reporting tools without generating sourcemap comment.",
-      "default": true,
       "oneOf": [
         {
           "type": "boolean"
@@ -82,7 +63,6 @@
     },
     "minify": {
       "description": "Output sourcemaps. Use 'hidden' for use with error reporting tools without generating sourcemap comment.",
-      "default": "esbuild",
       "oneOf": [
         {
           "type": "boolean"
@@ -122,45 +102,10 @@
     "mode": {
       "type": "string",
       "description": "Mode to run the build in.",
-      "enum": ["production", "development"],
-      "default": "production"
+      "enum": ["production", "development"]
     }
   },
-  "definitions": {
-    "assetPattern": {
-      "oneOf": [
-        {
-          "type": "object",
-          "properties": {
-            "glob": {
-              "type": "string",
-              "description": "The pattern to match."
-            },
-            "input": {
-              "type": "string",
-              "description": "The input directory path in which to apply 'glob'. Defaults to the project root."
-            },
-            "ignore": {
-              "description": "An array of globs to ignore.",
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "output": {
-              "type": "string",
-              "description": "Absolute path within the output."
-            }
-          },
-          "additionalProperties": false,
-          "required": ["glob", "input", "output"]
-        },
-        {
-          "type": "string"
-        }
-      ]
-    }
-  },
+  "definitions": {},
   "required": [],
   "examplesFile": "../../../docs/build-examples.md"
 }

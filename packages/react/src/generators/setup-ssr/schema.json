@@ -1,9 +1,9 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "$id": "GeneratorAngularUniversalSetup",
+  "$id": "GeneratorReactSSRSetup",
   "cli": "nx",
-  "title": "Generate Angular Universal (SSR) setup for an Angular App",
-  "description": "Create the additional configuration required to enable SSR via Angular Universal for an Angular application.",
+  "title": "Generate SSR setup for a React app",
+  "description": "Create the additional configuration required to enable SSR via Express for a React application.",
   "type": "object",
   "properties": {
     "project": {
@@ -18,7 +18,7 @@
     },
     "appComponentImportPath": {
       "type": "string",
-      "description": "The import path of the <App/> component, relative to project sourceRoot.",
+      "description": "The import path of the <App/ > component, relative to project sourceRoot.",
       "default": "app/app"
     },
     "serverPort": {
@@ -29,6 +29,15 @@
     "skipFormat": {
       "type": "boolean",
       "description": "Skip formatting the workspace after the generator completes."
+    },
+    "extraInclude": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "hidden": true,
+      "description": "Extra include entries in tsconfig.",
+      "default": []
     }
   },
   "required": ["project"],

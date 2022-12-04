@@ -2,7 +2,7 @@
   "cli": "nx",
   "$id": "NxExpoComponent",
   "$schema": "http://json-schema.org/schema",
-  "title": "Create a Expo Component for Nx",
+  "description": "Create a Expo Component for Nx.",
   "type": "object",
   "examples": [
     {

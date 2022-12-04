@@ -3,7 +3,6 @@ import {
   checkFilesExist,
   cleanupProject,
   createFile,
-  expectJestTestsToPass,
   killPorts,
   newProject,
   readFile,
@@ -74,34 +73,6 @@ describe('React Applications', () => {
     });
   }, 500000);
 
-  it('should generate app with legacy-ie support', async () => {
-    const appName = uniq('app');
-
-    runCLI(
-      `generate @nrwl/react:app ${appName} --style=css --bundler=webpack --no-interactive`
-    );
-
-    // changing browser support of this application
-    updateFile(`apps/${appName}/.browserslistrc`, `IE 11`);
-
-    await testGeneratedApp(appName, {
-      checkStyles: false,
-      checkLinter: false,
-      checkE2E: false,
-    });
-
-    const filesToCheck = [
-      `dist/apps/${appName}/polyfills.es5.js`,
-      `dist/apps/${appName}/main.es5.js`,
-    ];
-
-    checkFilesExist(...filesToCheck);
-
-    expect(readFile(`dist/apps/${appName}/index.html`)).toContain(
-      '<script src="main.js" type="module"></script><script src="main.es5.js" nomodule defer></script>'
-    );
-  }, 250_000);
-
   it('should be able to use JS and JSX', async () => {
     const appName = uniq('app');
     const libName = uniq('lib');
@@ -122,6 +93,34 @@ describe('React Applications', () => {
       checkLinter: false,
       checkE2E: false,
     });
+  }, 250_000);
+
+  it('should be able to use Vite to build and test apps', async () => {
+    const appName = uniq('app');
+    const libName = uniq('lib');
+
+    runCLI(
+      `generate @nrwl/react:app ${appName} --bundler=vite --no-interactive`
+    );
+    runCLI(
+      `generate @nrwl/react:lib ${libName} --bundler=none --no-interactive`
+    );
+
+    // Library generated with Vite
+    checkFilesExist(`libs/${libName}/vite.config.ts`);
+
+    const mainPath = `apps/${appName}/src/main.tsx`;
+    updateFile(
+      mainPath,
+      `
+        import '@${proj}/${libName}';
+        ${readFile(mainPath)}
+      `
+    );
+
+    runCLI(`build ${appName}`);
+
+    checkFilesExist(`dist/apps/${appName}/index.html`);
   }, 250_000);
 
   async function testGeneratedApp(
@@ -222,47 +221,6 @@ describe('React Applications: --style option', () => {
   });
 });
 
-describe('React Applications: additional packages', () => {
-  beforeAll(() => newProject());
-
-  it('should generate app with routing', async () => {
-    const appName = uniq('app');
-
-    runCLI(
-      `generate @nrwl/react:app ${appName} --routing --bundler=webpack --no-interactive`
-    );
-
-    runCLI(`build ${appName} --outputHashing none`);
-
-    checkFilesExist(
-      `dist/apps/${appName}/index.html`,
-      `dist/apps/${appName}/runtime.js`,
-      `dist/apps/${appName}/polyfills.js`,
-      `dist/apps/${appName}/main.js`
-    );
-  }, 250_000);
-
-  it('should be able to add a redux slice', async () => {
-    const appName = uniq('app');
-    const libName = uniq('lib');
-
-    runCLI(`g @nrwl/react:app ${appName} --bundler=webpack --no-interactive`);
-    runCLI(`g @nrwl/react:redux lemon --project=${appName}`);
-    runCLI(`g @nrwl/react:lib ${libName} --no-interactive`);
-    runCLI(`g @nrwl/react:redux orange --project=${libName}`);
-
-    const appTestResults = await runCLIAsync(`test ${appName}`);
-    expect(appTestResults.combinedOutput).toContain(
-      'Test Suites: 2 passed, 2 total'
-    );
-
-    const libTestResults = await runCLIAsync(`test ${libName}`);
-    expect(libTestResults.combinedOutput).toContain(
-      'Test Suites: 2 passed, 2 total'
-    );
-  }, 250_000);
-});
-
 describe('React Applications and Libs with PostCSS', () => {
   let proj: string;
 
@@ -312,9 +270,4 @@ describe('React Applications and Libs with PostCSS', () => {
     expect(buildResults.combinedOutput).toMatch(/HELLO FROM APP/);
     expect(buildResults.combinedOutput).not.toMatch(/HELLO FROM LIB/);
   }, 250_000);
-
-  it('should run default jest tests', async () => {
-    await expectJestTestsToPass('@nrwl/react:lib');
-    await expectJestTestsToPass('@nrwl/react:app');
-  }, 200000);
 });
