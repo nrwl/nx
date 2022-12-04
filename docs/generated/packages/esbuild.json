@@ -261,6 +261,11 @@
             "enum": ["dependencies", "peerDependencies"],
             "default": "dependencies"
           },
+          "generateTypings": {
+            "type": "boolean",
+            "description": "Generate d.ts bundle using npm-dts",
+            "default": false
+          },
           "esbuildOptions": {
             "type": "object",
             "description": "Additional options to pass to esbuild. See https://esbuild.github.io/api/.",

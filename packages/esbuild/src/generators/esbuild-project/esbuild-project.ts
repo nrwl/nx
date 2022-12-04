@@ -58,6 +58,7 @@ function addBuildTarget(tree: Tree, options: EsBuildProjectSchema) {
     project: `${project.root}/package.json`,
     assets: [],
     platform: options.platform,
+    generateTypings: false,
   };
 
   if (options.platform === 'browser') {

@@ -36,6 +36,7 @@ describe('buildEsbuildOptions', () => {
           outputFileName: 'index.js',
           singleEntry: true,
           external: [],
+          generateTypings: false,
         },
         context
       )
@@ -72,6 +73,7 @@ describe('buildEsbuildOptions', () => {
           outputFileName: 'index.js',
           singleEntry: false,
           external: [],
+          generateTypings: false,
         },
         context
       )
@@ -107,6 +109,7 @@ describe('buildEsbuildOptions', () => {
           outputFileName: 'index.js',
           singleEntry: true,
           external: [],
+          generateTypings: false,
         },
         context
       )
@@ -142,6 +145,7 @@ describe('buildEsbuildOptions', () => {
           outputFileName: 'index.js',
           singleEntry: true,
           external: [],
+          generateTypings: false,
         },
         context
       )

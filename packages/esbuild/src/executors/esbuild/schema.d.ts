@@ -23,6 +23,7 @@ export interface EsBuildExecutorOptions {
   target?: string;
   thirdParty?: boolean;
   tsConfig: string;
+  generateTypings: boolean;
   watch?: boolean;
 }
 

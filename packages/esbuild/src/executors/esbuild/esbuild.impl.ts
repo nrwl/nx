@@ -11,6 +11,7 @@ import {
   TypeCheckOptions,
 } from '@nrwl/js';
 import * as esbuild from 'esbuild';
+import * as dts from 'npm-dts';
 import { normalizeOptions } from './lib/normalize';
 
 import { EsBuildExecutorOptions } from './schema';
@@ -188,6 +189,12 @@ export async function* esbuildExecutor(
           r.metafile
         );
       });
+    }
+    if (options.generateTypings === true) {
+      new dts.Generator({
+        entry: options.main,
+        output: options.outputPath,
+      }).generate();
     }
 
     return { success: buildSuccess && !hasTypeErrors };

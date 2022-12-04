@@ -38,6 +38,7 @@ describe('esbuildProjectGenerator', () => {
       outputPath: 'dist/libs/mypkg',
       project: 'libs/mypkg/package.json',
       tsConfig: `libs/mypkg/${tsConfig}`,
+      generateTypings: false,
     });
   });
 });

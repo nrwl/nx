@@ -9,6 +9,7 @@ describe('normalizeOptions', () => {
         tsConfig: 'apps/myapp/tsconfig.app.json',
         project: 'apps/myapp/package.json',
         assets: [],
+        generateTypings: false,
       })
     ).toEqual({
       main: 'apps/myapp/src/index.ts',
@@ -19,6 +20,7 @@ describe('normalizeOptions', () => {
       outputFileName: 'index.js',
       singleEntry: true,
       external: [],
+      generateTypings: false,
     });
   });
 
@@ -31,6 +33,7 @@ describe('normalizeOptions', () => {
         project: 'apps/myapp/package.json',
         assets: [],
         additionalEntryPoints: ['apps/myapp/src/extra-entry.ts'],
+        generateTypings: false,
       })
     ).toEqual({
       main: 'apps/myapp/src/index.ts',
@@ -41,6 +44,7 @@ describe('normalizeOptions', () => {
       additionalEntryPoints: ['apps/myapp/src/extra-entry.ts'],
       singleEntry: false,
       external: [],
+      generateTypings: false,
     });
   });
 
@@ -53,6 +57,7 @@ describe('normalizeOptions', () => {
         project: 'apps/myapp/package.json',
         assets: [],
         outputFileName: 'test.js',
+        generateTypings: false,
       })
     ).toEqual({
       main: 'apps/myapp/src/index.ts',
@@ -63,6 +68,7 @@ describe('normalizeOptions', () => {
       outputFileName: 'test.js',
       singleEntry: true,
       external: [],
+      generateTypings: false,
     });
   });
 
@@ -76,6 +82,7 @@ describe('normalizeOptions', () => {
         assets: [],
         additionalEntryPoints: ['apps/myapp/src/extra-entry.ts'],
         outputFileName: 'test.js',
+        generateTypings: false,
       })
     ).toThrow(/Cannot use/);
   });
