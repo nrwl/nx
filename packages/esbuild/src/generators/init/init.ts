@@ -5,7 +5,7 @@ import {
   Tree,
 } from '@nrwl/devkit';
 import { Schema } from './schema';
-import { esbuildVersion } from '@nrwl/js/src/utils/versions';
+import { esbuildVersion, npmdtsVersion } from '@nrwl/js/src/utils/versions';
 
 export async function esbuildInitGenerator(tree: Tree, schema: Schema) {
   const task = addDependenciesToPackageJson(
@@ -13,6 +13,7 @@ export async function esbuildInitGenerator(tree: Tree, schema: Schema) {
     {},
     {
       esbuild: esbuildVersion,
+      'npm-dts': npmdtsVersion,
     }
   );
 

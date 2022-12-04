@@ -17,6 +17,7 @@ describe('esbuildInitGenerator', () => {
     const packageJson = readJson(tree, 'package.json');
     expect(packageJson.devDependencies).toEqual({
       esbuild: expect.any(String),
+      'npm-dts': expect.any(String),
     });
   });
 });
