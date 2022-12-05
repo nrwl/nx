@@ -2,11 +2,6 @@
 
 Within an Nx workspace, you gain many capabilities that help you build applications and libraries using a monorepo approach. If you are currently using an Angular CLI workspace, you can transform it into an Nx workspace.
 
-{% youtube
-src="https://www.youtube.com/embed/dJG9zH30c-o"
-title="Nx in 100 seconds: Migrate an Angular CLI app to Nx"
-width="100%" /%}
-
 ## Migrating to a Standalone Angular App with Nx
 
 You can migrate to a [Standalone Angular App](/angular-standalone-tutorial/1-code-generation) with the command:
