@@ -86,13 +86,15 @@ function pnpmResolver(
     if (filePath) {
       return { type: 'sourceFile', filePath };
     }
-  } catch {
-    if (debug)
+  } catch (error) {
+    if (debug) {
       console.log(
         chalk.cyan(
           `[Nx] Unable to resolve with default PNPM resolver: ${realModuleName}`
         )
       );
+      console.log(error);
+    }
   }
 }
 
@@ -177,6 +179,7 @@ function getPnpmResolver(extensions: string[]) {
       extensions: extensions.map((extension) => '.' + extension),
       useSyncFileSystemCalls: true,
       modules: [join(workspaceRoot, 'node_modules'), 'node_modules'],
+      conditionNames: ["node", "require"]
     });
   }
   return resolver;
