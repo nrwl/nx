@@ -1,6 +1,8 @@
 import {
   convertNxGenerator,
+  createProjectGraphAsync,
   formatFiles,
+  ProjectGraph,
   readProjectConfiguration,
   Tree,
 } from '@nrwl/devkit';
@@ -20,7 +22,7 @@ export async function removeGenerator(tree: Tree, schema: Schema) {
   updateJestConfig(tree, schema, project);
   removeProjectConfig(tree, schema);
   removeProject(tree, project);
-  updateTsconfig(tree, schema, project);
+  await updateTsconfig(tree, schema);
   if (!schema.skipFormat) {
     await formatFiles(tree);
   }

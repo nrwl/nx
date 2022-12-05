@@ -3,6 +3,7 @@ import {
   ChangeType,
   getProjects,
   getWorkspaceLayout,
+  joinPathFragments,
   ProjectConfiguration,
   StringChange,
   Tree,
@@ -15,6 +16,7 @@ import { getRootTsConfigPathInTree } from '../../../utilities/typescript';
 import { findNodes } from 'nx/src/utils/typescript';
 import { NormalizedSchema } from '../schema';
 import { normalizeSlashes } from './utils';
+import { relative } from 'path';
 
 /**
  * Updates all the imports in the workspace and modifies the tsconfig appropriately.
@@ -81,8 +83,8 @@ export function updateImports(
   }
 
   const projectRoot = {
-    from: project.root.slice(libsDir.length).replace(/^\/|\\/, ''),
-    to: schema.destination,
+    from: project.root,
+    to: schema.relativeToRootDestination,
   };
 
   if (tsConfig) {
@@ -96,7 +98,7 @@ export function updateImports(
       );
     }
     const updatedPath = path.map((x) =>
-      x.replace(new RegExp(projectRoot.from, 'g'), projectRoot.to)
+      joinPathFragments(projectRoot.to, relative(projectRoot.from, x))
     );
 
     if (schema.updateImportPath) {
