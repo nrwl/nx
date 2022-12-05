@@ -1,10 +1,10 @@
 import {
-  createExecutorContext,
-  getProjectConfigByPath,
   nxBaseCypressPreset,
   NxComponentTestingOptions,
 } from '@nrwl/cypress/plugins/cypress-preset';
 import {
+  createExecutorContext,
+  getProjectConfigByPath,
   getTempTailwindPath,
   isCtProjectUsingBuildProject,
 } from '@nrwl/cypress/src/utils/ct-helpers';
