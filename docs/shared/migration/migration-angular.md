@@ -7,19 +7,15 @@ src="https://www.youtube.com/embed/dJG9zH30c-o"
 title="Nx in 100 seconds: Migrate an Angular CLI app to Nx"
 width="100%" /%}
 
-## Prerequisites
+## Migrating to a Standalone Angular App with Nx
 
-**The major version of your `Angular CLI` must align with the version of `Nx` you are upgrading to**. You can check the [Nx and Angular Version Compatibility Matrix](/angular-nx-version-matrix) for more information.
-
-## Using the Nx CLI while preserving the existing structure
-
-To use the Nx CLI in an existing Angular CLI workspace while keeping your existing file structure in place, use the `ng add` command with the `--preserve-angular-cli-layout` option:
+You can migrate to a [Standalone Angular App](/angular-standalone-tutorial/1-code-generation) with the command:
 
 ```shell
-ng add @nrwl/angular --preserve-angular-cli-layout
+nx init
 ```
 
-**Note**: If you specify a version of Nx (e.g. `ng add @nrwl/angular@13.10.0`), please make sure to use the appropriate command as shown in the compatibility table below:
+**Note**: To migrate to legacy versions of Nx, you'll need to refer to the following compatibility table below:
 
 | Nx version          | Collection to use | Flag to use                     | Example                                                       |
 | ------------------- | ----------------- | ------------------------------- | ------------------------------------------------------------- |
@@ -27,17 +23,31 @@ ng add @nrwl/angular --preserve-angular-cli-layout
 | >= 13.8.4 < 13.10.0 | `@nrwl/workspace` | `--preserve-angular-cli-layout` | `ng add @nrwl/workspace@13.8.4 --preserve-angular-cli-layout` |
 | < 13.8.4            | `@nrwl/workspace` | `--preserveAngularCLILayout`    | `ng add @nrwl/workspace@13.5.0 --preserveAngularCLILayout`    |
 
-This installs the `@nrwl/angular` (or `@nrwl/workspace`) package into your workspace and runs a generator (or schematic) to make following changes:
+This will enable you to use the Nx CLI in your existing Angular CLI workspace while keeping your existing file structure in place. The following changes will be made in your repo to enable Nx:
 
-- Installs the `nx` and `@nrwl/workspace` packages.
-- Creates an `nx.json` file in the root of your workspace.
-- Adds a `decorate-angular-cli.js` to the root of your workspace, and a `postinstall` script in your `package.json` to run the script when your dependencies are updated. The script forwards the `ng` commands to the Nx CLI (`nx`) to enable features such as [Computation Caching](/concepts/how-caching-works).
+- The `nx` and `@nrwl/workspace` packages will be installed.
+- An `nx.json` file will be created in the root of your workspace.
+- A `decorate-angular-cli.js` file will be added to the root of your workspace, and a `postinstall` script will be added to your `package.json` to run this script when your dependencies are updated. (The script forwards the `ng` commands to the Nx CLI (`nx`) to enable features such as [Computation Caching](/concepts/how-caching-works).)
 
 After the process completes, you can continue using the same `serve/build/lint/test` commands you are used to.
 
-## Transforming an Angular CLI workspace to an Nx workspace
+## Transforming an Angular CLI workspace to an Integrated Nx Monorepo
 
-To fully take advantage of all the features provided by Nx and the Nx Angular plugin, you can do a full migration from an Angular CLI to an Nx workspace.
+To take advantage of Nx's monorepo features provided by Nx and the Nx Angular plugin, you can also perform a migration from an Angular CLI to an Integrated Nx Monorepo with the command:
+
+```shell
+ng add @nrwl/angular
+```
+
+**Note**: To migrate to legacy versions of Nx prior to Nx 13.10, run the command:
+
+```shell
+ng add @nrwl/workspace@<version_number>
+```
+
+**Note**: Refer to the [Nx and Angular Version Compatibility Matrix](/angular-nx-version-matrix) for matching Angular and Nx versions.
+
+**Note**: Support for workspaces with multiple applications and libraries was added in Nx v14.1.0. If you are migrating using an older version of Nx, your workspace can only contain one application and no libraries in order to use the automated migration, otherwise, you can still [migrate manually](#transitioning-manually).
 
 > The automated migration supports Angular CLI workspaces with a standard structure, configurations and features. If your workspace has deviated from what the Angular CLI generates, you might not be able to use the automated migration and you will need to [manually migrate your workspace](#transitioning-manually).
 >
@@ -57,21 +67,6 @@ To fully take advantage of all the features provided by Nx and the Nx Angular pl
 >
 > Support for other executors may be added in the future.
 
-To transform an Angular CLI workspace to an Nx workspace, run the following command:
-
-```shell
-ng add @nrwl/angular
-```
-
-**Note**: If you specify a version of Nx (e.g. `ng add @nrwl/angular@13.10.0`), please make sure to use the appropriate command as shown in the compatibility table below:
-
-| Nx version | Command to run           |
-| ---------- | ------------------------ |
-| >= 13.10.0 | `ng add @nrwl/angular`   |
-| < 13.10.0  | `ng add @nrwl/workspace` |
-
-> **Note**: Support for workspaces with multiple applications and libraries was added in Nx v14.1.0. If you are migrating using an older version of Nx, your workspace can only contain one application and no libraries in order to use the automated migration, otherwise, you can still [migrate manually](#transitioning-manually).
-
 This installs the `@nrwl/angular` (or `@nrwl/workspace`) package into your workspace and runs a generator (or schematic) to transform your workspace. The generator applies the following changes to your workspace:
 
 - Installs the `nx` and `@nrwl/workspace` packages.
@@ -85,7 +80,6 @@ This installs the `@nrwl/angular` (or `@nrwl/workspace`) package into your works
 - Moves your libraries into the `libs` folder, and updates the relevant file paths in your configuration files.
 - Updates your `package.json` scripts to use `nx` instead of `ng`.
 - Splits your `angular.json` into `project.json` files for each project with updated paths.
-- Updates the `angular.json` configuration to reflect the changes made.
 
 After the changes are applied, your workspace file structure should look similar to the one below:
 
@@ -146,7 +140,7 @@ Your workspace is now powered by Nx! You can verify out that your application st
 - To run e2e tests, run `ng e2e` (or `nx e2e`).
 - To see your project graph, run `nx graph`.
 
-> Your project graph will grow as you add, and use more applications and libraries. You can add the `--watch` flag to `nx graph` to see this changes in-browser as you add them.
+> Your project graph will grow as you add, and use more applications and libraries. You can add the `--watch` flag to `nx graph` to see the changes in-browser as you add them.
 
 Learn more about the advantages of Nx in the following guides:
 
