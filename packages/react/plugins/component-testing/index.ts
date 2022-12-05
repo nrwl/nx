@@ -93,6 +93,7 @@ export function nxComponentTestingPreset(
   }
   return {
     ...nxBaseCypressPreset(pathToConfig),
+    specPattern: 'src/**/*.cy.{js,jsx,ts,tsx}',
     devServer: {
       // cypress uses string union type,
       // need to use const to prevent typing to string
