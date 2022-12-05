@@ -38,10 +38,12 @@ The `--ci` flag can be `github`, `circleci` or `azure`. For more details on sett
 
 Distributed task execution can work on any CI provider. You are responsible for launching jobs in your CI system. Nx Cloud then coordinates the way those jobs work together. There are two different kinds of jobs that you'll need to create in your CI system.
 
-1. One main job that controls what is going to be executed
+1. One main job (CI) that controls what is going to be executed
 2. Multiple agent jobs that actually execute the tasks
 
-The main job execution flow looks like this:
+![Diagram showing Nx Cloud distributing tasks to multiple agents](../images/dte/distributed-caching-and-task-execution.svg)
+
+The main CI job execution flow looks like this:
 
 ```yaml
 # Coordinate the agents to run the tasks
