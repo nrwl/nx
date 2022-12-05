@@ -46,7 +46,8 @@
     },
     "hmr": {
       "description": "Enable hot module replacement. For more options, use the 'hmr' option in the Vite configuration file.",
-      "type": "boolean"
+      "type": "boolean",
+      "default": true
     },
     "open": {
       "description": "Automatically open the app in the browser on server start. When the value is a string, it will be used as the URL's pathname.",
