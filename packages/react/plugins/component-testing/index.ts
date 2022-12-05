@@ -1,6 +1,4 @@
 import {
-  createExecutorContext,
-  getProjectConfigByPath,
   nxBaseCypressPreset,
   NxComponentTestingOptions,
 } from '@nrwl/cypress/plugins/cypress-preset';
@@ -21,6 +19,10 @@ import { normalizeOptions } from '@nrwl/webpack/src/executors/webpack/lib/normal
 import { getWebpackConfig } from '@nrwl/webpack/src/executors/webpack/lib/get-webpack-config';
 import { resolveCustomWebpackConfig } from '@nrwl/webpack/src/utils/webpack/custom-webpack';
 import { buildBaseWebpackConfig } from './webpack-fallback';
+import {
+  createExecutorContext,
+  getProjectConfigByPath,
+} from '@nrwl/cypress/src/utils/ct-helpers';
 
 /**
  * React nx preset for Cypress Component Testing
