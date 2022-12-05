@@ -1,8 +1,10 @@
 import {
   generateFiles,
+  getProjects,
   joinPathFragments,
   logger,
   offsetFromRoot,
+  parseTargetString,
   readJson,
   readProjectConfiguration,
   readWorkspaceConfiguration,
@@ -24,6 +26,7 @@ import {
 } from '../../utils/utilities';
 import { StorybookConfigureSchema } from './schema';
 import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
+import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
 
 const DEFAULT_PORT = 4400;
 
@@ -532,4 +535,32 @@ export function rootFileIsTs(
   } else {
     return tsConfiguration;
   }
+}
+
+export function getE2EProjectName(
+  tree: Tree,
+  mainProject: string
+): string | undefined {
+  let e2eProject: string;
+  forEachExecutorOptions(
+    tree,
+    '@nrwl/cypress:cypress',
+    (options, projectName) => {
+      if (e2eProject) {
+        return;
+      }
+      if (options['devServerTarget']) {
+        const { project, target } = parseTargetString(
+          options['devServerTarget']
+        );
+        if (
+          (project === mainProject && target === 'serve') ||
+          (project === mainProject && target === 'storybook')
+        ) {
+          e2eProject = projectName;
+        }
+      }
+    }
+  );
+  return e2eProject;
 }
