@@ -91,7 +91,7 @@
         "init",
         "cypress-project",
         "cypress-component-project",
-        "migrate-to-cypress-10"
+        "migrate-to-cypress-11"
       ]
     }
   },

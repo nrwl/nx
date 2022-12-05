@@ -1579,9 +1579,9 @@
               "file": "shared/cypress-component-testing"
             },
             {
-              "name": "v10 Migration Guide",
-              "id": "v10-migration-guide",
-              "file": "shared/guides/cypress/cypress-v10-migration"
+              "name": "v11 Migration Guide",
+              "id": "v11-migration-guide",
+              "file": "shared/guides/cypress/cypress-v11-migration"
             }
           ]
         },

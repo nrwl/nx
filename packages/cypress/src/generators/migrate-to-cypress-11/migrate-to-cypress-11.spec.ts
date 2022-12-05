@@ -16,7 +16,7 @@ import {
   updatePluginFile,
   updateProjectPaths,
 } from './conversion.util';
-import { migrateCypressProject } from './migrate-to-cypress-ten';
+import { migrateCypressProject } from './migrate-to-cypress-11';
 
 jest.mock('../../utils/cypress-version');
 
