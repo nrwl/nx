@@ -2,13 +2,14 @@
 // https://karma-runner.github.io/6.4/config/configuration-file.html
 
 const { join } = require('path');
-const setBaseKarmaConfig = require('<%= offsetFromRoot %>karma.conf');
+const getBaseKarmaConfig = require('<%= offsetFromRoot %>karma.conf');
 
 module.exports = function (config) {
-  setBaseKarmaConfig(config);
-
+  const baseConfig = getBaseKarmaConfig();
   config.set({
+    ...baseConfig,
     coverageReporter: {
+      ...baseConfig.coverageReporter,
       dir: join(__dirname, '<%= offsetFromRoot %>coverage/<%= projectRoot %>')
     }
   });
