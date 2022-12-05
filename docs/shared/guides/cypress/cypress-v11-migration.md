@@ -1,13 +1,13 @@
-# Migrating to Cypress V10
+# Migrating to Cypress V11
 
-Cypress v10 introduce new features, like component testing, along with some breaking changes.
+Cypress v10 introduce new features, like component testing, along with some breaking changes. Nx can help you migrate from v8 or v9 of Cypress to v10 and then to v11.
 
 Before continuing, make sure you have all your changes committed and have a clean working tree.
 
-You can migrate an E2E project to v10 by running the following command:
+You can migrate an E2E project to v11 by running the following command:
 
 ```shell
-nx g @nrwl/cypress:migrate-to-cypress-10
+nx g @nrwl/cypress:migrate-to-cypress-11
 ```
 
 In general, these are the steps taken to migrate your project:
