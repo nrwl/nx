@@ -81,32 +81,20 @@ After the changes are applied, your workspace file structure should look similar
 ```text
 <workspace name>/
 ├── apps/
-│   ├── <app name>/
-│   │   ├── src/
-│   │   │   ├── app/
-│   │   │   ├── assets/
-│   │   │   ├── environments/
-│   │   │   ├── favicon.ico
-│   │   │   ├── index.html
-│   │   │   ├── main.ts
-│   │   │   ├── polyfills.ts
-│   │   │   ├── styles.css
-│   │   │   └── test.ts
-│   │   ├── .browserslistrc
-│   │   ├── karma.conf.js
-│   │   ├── project.json
-│   │   ├── tsconfig.app.json
-│   │   └── tsconfig.spec.json
-│   └── <app name>-e2e/
+│   └─ <app name>/
 │       ├── src/
-│       ├── protractor.conf.js | cypress.json
+│       │   ├── app/
+│       │   ├── assets/
+│       │   ├── favicon.ico
+│       │   ├── index.html
+│       │   ├── main.ts
+│       │   └── styles.css
 │       ├── project.json
-│       └── tsconfig.json
+│       ├── tsconfig.app.json
+│       └── tsconfig.spec.json
 ├── libs/
 │   └── <lib name>/
 │       ├── src/
-│       ├── .browserslistrc
-│       ├── karma.conf.js
 │       ├── ng-package.json
 │       ├── package.json
 │       ├── project.json
@@ -129,10 +117,9 @@ After the changes are applied, your workspace file structure should look similar
 
 Your workspace is now powered by Nx! You can verify out that your application still runs as intended:
 
-- To serve, run `ng serve` (or `nx serve`).
-- To build, run `ng build` (or `nx build`).
-- To run unit tests, run `ng test` (or `nx test`).
-- To run e2e tests, run `ng e2e` (or `nx e2e`).
+- To serve, run `ng serve <app name>` (or `nx serve <app name>`).
+- To build, run `ng build <app name>` (or `nx build <app name>`).
+- To run unit tests, run `ng test <app name>` (or `nx test <app name>`).
 - To see your project graph, run `nx graph`.
 
 > Your project graph will grow as you add, and use more applications and libraries. You can add the `--watch` flag to `nx graph` to see the changes in-browser as you add them.
