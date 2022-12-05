@@ -67,7 +67,7 @@ Our fully configured example would look like this:
         // generates docs from source code of all dependencies
         "inputs": ["^production"],
         // the docs site is created under /docs
-        "outpus": ["{workspaceRoot}/docs"]
+        "outputs": ["{workspaceRoot}/docs"]
       }
     }
   },
