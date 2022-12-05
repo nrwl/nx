@@ -412,6 +412,9 @@ export function writeViteConfig(tree: Tree, options: Schema) {
       host: 'localhost',
     },`;
 
+  const projectsTsConfig = tree.exists('tsconfig.base.json')
+    ? "'tsconfig.base.json'"
+    : '';
   switch (options.uiFramework) {
     case 'react':
       viteConfigContent = `
@@ -432,7 +435,7 @@ ${options.includeVitest ? '/// <reference types="vitest" />' : ''}
           react(),
           tsconfigPaths({
             root: '${offsetFromRoot(projectConfig.root)}',
-            projects: ['tsconfig.base.json'],
+            projects: [${projectsTsConfig}],
           }),
         ],
         ${buildOption}
@@ -457,7 +460,7 @@ ${options.includeVitest ? '/// <reference types="vitest" />' : ''}
           ${options.includeLib ? dtsPlugin : ''}
           tsconfigPaths({
             root: '${offsetFromRoot(projectConfig.root)}',
-            projects: ['tsconfig.base.json'],
+            projects: [${projectsTsConfig}],
           }),
         ],
         ${buildOption}

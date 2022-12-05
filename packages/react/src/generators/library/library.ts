@@ -21,6 +21,7 @@ import { addLinting } from './lib/add-linting';
 import { updateAppRoutes } from './lib/update-app-routes';
 import { createFiles } from './lib/create-files';
 import { updateBaseTsConfig } from './lib/update-base-tsconfig';
+import { extractTsConfigBase } from '../../utils/create-ts-config';
 import { installCommonDependencies } from './lib/install-common-dependencies';
 
 export async function libraryGenerator(host: Tree, schema: Schema) {
@@ -35,6 +36,8 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
   if (!options.component) {
     options.style = 'none';
   }
+
+  extractTsConfigBase(host);
 
   const initTask = await initGenerator(host, {
     ...options,

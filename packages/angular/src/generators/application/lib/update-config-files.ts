@@ -11,6 +11,8 @@ import {
 import { replaceAppNameWithPath } from '@nrwl/workspace/src/utils/cli-config-utils';
 import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
 import type { NormalizedSchema } from './normalized-schema';
+import { createTsConfig } from '../../utils/create-ts-config';
+import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 
 export function updateConfigFiles(host: Tree, options: NormalizedSchema) {
   updateTsConfigOptions(host, options);
@@ -37,14 +39,13 @@ function updateTsConfigOptions(host: Tree, options: NormalizedSchema) {
   }));
 
   // tsconfig.json
-  updateJson(host, `${options.appProjectRoot}/tsconfig.json`, (json) => ({
-    ...json,
-    compilerOptions: {
-      ...json.compilerOptions,
-      target: 'es2022',
-      useDefineForClassFields: false, // This will eventually need updated when Angular switch to using TC39 Compliant code
-    },
-  }));
+  createTsConfig(
+    host,
+    options.appProjectRoot,
+    'app',
+    options,
+    getRelativePathToRootTsConfig(host, options.appProjectRoot)
+  );
 }
 
 function updateAppAndE2EProjectConfigurations(

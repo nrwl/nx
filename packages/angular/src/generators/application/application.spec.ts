@@ -1073,9 +1073,7 @@ describe('app', () => {
       expect(appTree.exists('src/app/app.module.ts')).toBe(true);
       expect(appTree.exists('src/app/app.component.ts')).toBe(true);
       expect(appTree.exists('e2e/cypress.config.ts')).toBe(true);
-      expect(readJson(appTree, 'tsconfig.json').extends).toEqual(
-        './tsconfig.base.json'
-      );
+      expect(readJson(appTree, 'tsconfig.json').extends).toBeUndefined();
       const project = readProjectConfiguration(appTree, 'my-app');
       expect(project.targets.build.options['outputPath']).toBe('dist/my-app');
     });

@@ -10,14 +10,18 @@ import {
 import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 
 import { NormalizedSchema } from '../schema';
+import { createTsConfig } from '../../../utils/create-ts-config';
 
 export function createFiles(host: Tree, options: NormalizedSchema) {
+  const relativePathToRootTsConfig = getRelativePathToRootTsConfig(
+    host,
+    options.projectRoot
+  );
   const substitutions = {
     ...options,
     ...names(options.name),
     tmpl: '',
     offsetFromRoot: offsetFromRoot(options.projectRoot),
-    rootTsConfigPath: getRelativePathToRootTsConfig(host, options.projectRoot),
   };
 
   generateFiles(
@@ -48,27 +52,11 @@ export function createFiles(host: Tree, options: NormalizedSchema) {
     toJS(host);
   }
 
-  updateTsConfig(host, options);
-}
-
-function updateTsConfig(tree: Tree, options: NormalizedSchema) {
-  updateJson(
-    tree,
-    joinPathFragments(options.projectRoot, 'tsconfig.json'),
-    (json) => {
-      if (options.strict) {
-        json.compilerOptions = {
-          ...json.compilerOptions,
-          forceConsistentCasingInFileNames: true,
-          strict: true,
-          noImplicitOverride: true,
-          noPropertyAccessFromIndexSignature: true,
-          noImplicitReturns: true,
-          noFallthroughCasesInSwitch: true,
-        };
-      }
-
-      return json;
-    }
+  createTsConfig(
+    host,
+    options.projectRoot,
+    'lib',
+    options,
+    relativePathToRootTsConfig
   );
 }

@@ -10,10 +10,6 @@ export function createFiles(tree: Tree, options: NormalizedSchema) {
     options.appProjectRoot,
     {
       ...options,
-      rootTsConfigPath: getRelativePathToRootTsConfig(
-        tree,
-        options.appProjectRoot
-      ),
       tpl: '',
     }
   );
