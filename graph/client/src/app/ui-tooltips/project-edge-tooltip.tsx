@@ -14,10 +14,12 @@ export function ProjectEdgeNodeTooltip({
   fileDependencies,
 }: ProjectEdgeNodeTooltipProps) {
   return (
-    <div>
+    <div className="text-sm text-slate-700 dark:text-slate-400">
       <h4 className={type !== 'implicit' ? 'mb-3' : ''}>
         <Tag className="mr-3">{type ?? 'unknown'}</Tag>
-        {source} &rarr; {target}
+        <span className="font-mono">
+          {source} &rarr; {target}
+        </span>
       </h4>
       {type !== 'implicit' ? (
         <div className="overflow-hidden rounded-md border border-slate-200 dark:border-slate-800">
