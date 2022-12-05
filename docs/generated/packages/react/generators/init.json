@@ -1,0 +1,60 @@
+{
+  "name": "init",
+  "factory": "./src/generators/init/init#reactInitGenerator",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "$id": "NxReactNgInit",
+    "title": "Init React Plugin",
+    "description": "Initialize a React Plugin.",
+    "cli": "nx",
+    "type": "object",
+    "properties": {
+      "unitTestRunner": {
+        "description": "Adds the specified unit test runner.",
+        "type": "string",
+        "enum": ["jest", "none"],
+        "default": "jest"
+      },
+      "e2eTestRunner": {
+        "description": "Adds the specified E2E test runner.",
+        "type": "string",
+        "enum": ["cypress", "none"],
+        "default": "cypress"
+      },
+      "skipFormat": {
+        "description": "Skip formatting files.",
+        "type": "boolean",
+        "default": false
+      },
+      "skipPackageJson": {
+        "description": "Do not add dependencies to `package.json`.",
+        "type": "boolean",
+        "default": false
+      },
+      "skipBabelConfig": {
+        "description": "Do not generate a root babel.config.json (if babel is not needed).",
+        "type": "boolean",
+        "default": false
+      },
+      "skipHelperLibs": {
+        "description": "Do not install helpers libs (tslib, core-js, regenerator-runtime).",
+        "type": "boolean",
+        "default": false,
+        "hidden": true
+      },
+      "js": {
+        "type": "boolean",
+        "default": false,
+        "description": "Use JavaScript instead of TypeScript"
+      }
+    },
+    "required": [],
+    "presets": []
+  },
+  "description": "Initialize the `@nrwl/react` plugin.",
+  "aliases": ["ng-add"],
+  "hidden": true,
+  "implementation": "/packages/react/src/generators/init/init#reactInitGenerator.ts",
+  "path": "/packages/react/src/generators/init/schema.json",
+  "type": "generator"
+}

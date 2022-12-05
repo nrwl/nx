@@ -1,0 +1,48 @@
+{
+  "name": "setup-tailwind",
+  "factory": "./src/generators/setup-tailwind/setup-tailwind",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "$id": "NxAngularTailwindSetupGenerator",
+    "cli": "nx",
+    "title": "Configures Tailwind CSS for an application or a buildable/publishable library.",
+    "description": "Adds the Tailwind CSS configuration files for a given Angular project and installs, if needed, the packages required for Tailwind CSS to work.",
+    "type": "object",
+    "properties": {
+      "project": {
+        "type": "string",
+        "description": "The name of the project to add the Tailwind CSS setup for.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "What project would you like to add the Tailwind CSS setup?"
+      },
+      "buildTarget": {
+        "type": "string",
+        "description": "The name of the target used to build the project. This option only applies to buildable/publishable libraries.",
+        "default": "build"
+      },
+      "skipFormat": {
+        "type": "boolean",
+        "description": "Skips formatting the workspace after the generator completes."
+      },
+      "stylesEntryPoint": {
+        "type": "string",
+        "description": "Path to the styles entry point relative to the workspace root. If not provided the generator will do its best to find it and it will error if it can't. This option only applies to applications."
+      },
+      "skipPackageJson": {
+        "type": "boolean",
+        "default": false,
+        "description": "Do not add dependencies to `package.json`."
+      }
+    },
+    "additionalProperties": false,
+    "required": ["project"],
+    "examplesFile": "## Examples\n\nThe `setup-tailwind` generator can be used to add [Tailwind](https://tailwindcss.com) configuration to apps and publishable libraries.\n\n{% tabs %}\n\n{% tab label=\"Standard Setup\" %}\n\nTo generate a standard Tailwind setup, just run the following command.\n\n```bash\nnx g @nrwl/angular:setup-tailwind myapp\n```\n\n{% /tab %}\n\n{% tab label=\"Specifying the Styles Entrypoint\" %}\n\nTo specify the styles file that should be used as the entrypoint for Tailwind, simply pass the `--stylesEntryPoint` flag, relative to workspace root.\n\n```bash\nnx g @nrwl/angular:setup-tailwind myapp --stylesEntryPoint=apps/myapp/src/styles.css\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
+    "presets": []
+  },
+  "description": "Configures Tailwind CSS for an application or a buildable/publishable library.",
+  "implementation": "/packages/angular/src/generators/setup-tailwind/setup-tailwind.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/angular/src/generators/setup-tailwind/schema.json",
+  "type": "generator"
+}

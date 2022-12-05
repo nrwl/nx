@@ -1,0 +1,86 @@
+{
+  "name": "setup-mf",
+  "factory": "./src/generators/setup-mf/setup-mf",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "$id": "GeneratorAngularMFSetup",
+    "cli": "nx",
+    "title": "Generate Module Federation Setup for Angular App",
+    "description": "Create Module Federation configuration files for given Angular Application.",
+    "type": "object",
+    "properties": {
+      "appName": {
+        "type": "string",
+        "description": "The name of the application to generate the Module Federation configuration for.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "What app would you like to generate a Module Federation configuration for?",
+        "x-dropdown": "projects"
+      },
+      "mfType": {
+        "type": "string",
+        "enum": ["host", "remote"],
+        "description": "Type of application to generate the Module Federation configuration for.",
+        "default": "remote"
+      },
+      "federationType": {
+        "type": "string",
+        "enum": ["static", "dynamic"],
+        "description": "Use either Static or Dynamic Module Federation pattern for the application.",
+        "default": "static"
+      },
+      "port": {
+        "type": "number",
+        "description": "The port at which the remote application should be served."
+      },
+      "remotes": {
+        "type": "array",
+        "description": "A list of remote application names that the host application should consume."
+      },
+      "host": {
+        "type": "string",
+        "description": "The name of the host application that the remote application will be consumed by."
+      },
+      "routing": {
+        "type": "boolean",
+        "description": "Generate a routing setup to allow a host application to route to the remote application."
+      },
+      "skipFormat": {
+        "type": "boolean",
+        "description": "Skip formatting the workspace after the generator completes."
+      },
+      "skipPackageJson": {
+        "type": "boolean",
+        "default": false,
+        "description": "Do not add dependencies to `package.json`."
+      },
+      "skipE2E": {
+        "type": "boolean",
+        "default": false,
+        "description": "Do not set up E2E related config."
+      },
+      "e2eProjectName": {
+        "type": "string",
+        "description": "The project name of the associated E2E project for the application. This is only required for Cypress E2E projects that do not follow the naming convention `<appName>-e2e`."
+      },
+      "prefix": {
+        "type": "string",
+        "description": "The prefix to use for any generated component."
+      },
+      "standalone": {
+        "type": "boolean",
+        "description": "Whether the application is a standalone application.",
+        "default": false
+      }
+    },
+    "required": ["appName", "mfType"],
+    "additionalProperties": false,
+    "examplesFile": "## Examples\n\nThe `setup-mf` generator is used to add Module Federation support to existing applications.\n\n{% tabs %}\n\n{% tab label=\"Convert to Host\" %}\nTo convert an existing application to a host application, run the following\n\n```bash\nnx g setup-mf myapp --mfType=host --routing=true\n```\n\n{% /tab %}\n\n{% tab label=\"Convert to Remote\" %}\nTo convert an existing application to a remote application, run the following\n\n```bash\nnx g setup-mf myapp --mfType=remote --routing=true\n```\n\n{% /tab %}\n\n{% tab label=\"Convert to Remote and attach to a host application\" %}\nTo convert an existing application to a remote application and attach it to an existing host application name `myhostapp`, run the following\n\n```bash\nnx g setup-mf myapp --mfType=remote --routing=true --host=myhostapp\n```\n\n{% /tab %}\n\n{% tab label=\"Convert to Host and attach to existing remote applications\" %}\nTo convert an existing application to a host application and attaching existing remote applications named `remote1` and `remote2`, run the following\n\n```bash\nnx g setup-mf myapp --mfType=host --routing=true --remotes=remote1,remote2\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
+    "presets": []
+  },
+  "description": "Generate a Module Federation configuration for a given Angular application.",
+  "implementation": "/packages/angular/src/generators/setup-mf/setup-mf.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/angular/src/generators/setup-mf/schema.json",
+  "type": "generator"
+}

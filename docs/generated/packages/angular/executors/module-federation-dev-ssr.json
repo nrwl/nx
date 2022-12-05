@@ -1,0 +1,90 @@
+{
+  "name": "module-federation-dev-ssr",
+  "implementation": "/packages/angular/src/builders/module-federation-dev-ssr/module-federation-dev-ssr.impl.ts",
+  "schema": {
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "title": "Module Federation SSR Dev Server Target",
+    "description": "SSR Dev Server target options for Module Federation host applications.",
+    "type": "object",
+    "properties": {
+      "browserTarget": {
+        "type": "string",
+        "description": "Browser target to build.",
+        "pattern": ".+:.+(:.+)?"
+      },
+      "serverTarget": {
+        "type": "string",
+        "description": "Server target to build.",
+        "pattern": ".+:.+(:.+)?"
+      },
+      "host": {
+        "type": "string",
+        "description": "Host to listen on.",
+        "default": "localhost"
+      },
+      "port": {
+        "type": "number",
+        "default": 4200,
+        "description": "Port to start the development server at. Default is 4200. Pass 0 to get a dynamically assigned port."
+      },
+      "publicHost": {
+        "type": "string",
+        "description": "The URL that the browser client should use to connect to the development server. Use for a complex dev server setup, such as one with reverse proxies."
+      },
+      "open": {
+        "type": "boolean",
+        "description": "Opens the url in default browser.",
+        "default": false,
+        "alias": "o"
+      },
+      "progress": {
+        "type": "boolean",
+        "description": "Log progress to the console while building."
+      },
+      "inspect": {
+        "type": "boolean",
+        "description": "Launch the development server in inspector mode and listen on address and port '127.0.0.1:9229'.",
+        "default": false
+      },
+      "ssl": {
+        "type": "boolean",
+        "description": "Serve using HTTPS.",
+        "default": false
+      },
+      "sslKey": {
+        "type": "string",
+        "description": "SSL key to use for serving HTTPS."
+      },
+      "sslCert": {
+        "type": "string",
+        "description": "SSL certificate to use for serving HTTPS."
+      },
+      "proxyConfig": {
+        "type": "string",
+        "description": "Proxy configuration file."
+      },
+      "devRemotes": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "List of remote applications to run in development mode (i.e. using serve target)."
+      },
+      "skipRemotes": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "List of remote applications to not automatically serve, either statically or in development mode. This can be useful for multi-repository module federation setups where the host application uses a remote application from an external repository."
+      },
+      "verbose": {
+        "type": "boolean",
+        "description": "Adds more details to output logging."
+      }
+    },
+    "additionalProperties": false,
+    "required": ["browserTarget", "serverTarget"],
+    "presets": []
+  },
+  "description": "The module-federation-dev-ssr executor is reserved exclusively for use with host Module Federation applications that use SSR. It allows the user to specify which remote applications should be served with the host.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/angular/src/builders/module-federation-dev-ssr/schema.json",
+  "type": "executor"
+}

@@ -8,4 +8,4 @@ If you are on Nx `14.1.8` or later and you did not use `nx migrate`, you can run
 nx g @nrwl/storybook:change-storybook-targets
 ```
 
-You can read more about how this generator works, and why we are changing the Storybook targets, in the [Angular Storybook targets documentation page](/storybook/angular-storybook-targets).
+You can read more about how this generator works, and why we are changing the Storybook targets, in the [Angular Storybook targets documentation page](/packages/storybook/documents/angular-storybook-targets).

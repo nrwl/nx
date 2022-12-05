@@ -6,51 +6,49 @@ import {
 import {
   JsonSchema,
   NxSchema,
+  ProcessedPackageMetadata,
   SchemaMetadata,
 } from '@nrwl/nx-dev/models-package';
 import { ParsedUrlQuery } from 'querystring';
 import { Errors, Example, generateJsonExampleFor } from './examples';
-import { SchemaRequest } from './schema-request.models';
 
 function getReferenceFromQuery(query: string): string {
   return query.replace('root/', '#/');
 }
 
 export interface SchemaViewModel {
-  packageName: string;
-  packageUrl: string;
-  schemaGithubUrl: string;
-  schemaMetadata: SchemaMetadata;
-  rootReference: string;
-  subReference: string;
-  lookup: Lookup;
   currentSchema: NxSchema | null;
   currentSchemaExamples: Example | Errors;
-  type: 'executors' | 'generators';
   hidden: boolean;
+  lookup: Lookup;
+  packageName: string;
+  packageUrl: string;
+  rootReference: string;
+  schemaGithubUrl: string;
+  schemaMetadata: SchemaMetadata;
+  subReference: string;
+  type: 'executor' | 'generator';
 }
 
 export function getSchemaViewModel(
   routerQuery: ParsedUrlQuery,
-  schemaRequest: SchemaRequest
+  pkg: ProcessedPackageMetadata,
+  schema: SchemaMetadata
 ): SchemaViewModel | null {
-  const schemaMetadata = schemaRequest.pkg[schemaRequest.type].find(
-    (s) => s.name === schemaRequest.schemaName
-  );
-  if (!schemaMetadata) return null;
+  if (!schema.schema) return null;
 
   return {
-    schemaMetadata,
-    packageName: schemaRequest.pkg.packageName,
-    packageUrl: `/packages/${schemaRequest.pkg.name}`,
-    schemaGithubUrl: schemaRequest.pkg.githubRoot + schemaMetadata.path,
+    schemaMetadata: schema,
+    packageName: pkg.packageName,
+    packageUrl: `/packages/${pkg.name}`,
+    schemaGithubUrl: pkg.githubRoot + schema.path,
     rootReference: '#',
     subReference:
       Object.prototype.hasOwnProperty.call(routerQuery, 'ref') &&
       !Array.isArray(routerQuery['ref'])
         ? getReferenceFromQuery(String(routerQuery['ref']))
         : '',
-    lookup: new InternalLookup(schemaMetadata.schema as JsonSchema),
+    lookup: new InternalLookup(schema.schema as JsonSchema),
     get currentSchema(): NxSchema | null {
       return (
         (getSchemaFromReference(this.rootReference, this.lookup) as NxSchema) ??
@@ -64,7 +62,7 @@ export function getSchemaViewModel(
         'both'
       );
     },
-    type: schemaRequest.type,
-    hidden: schemaMetadata.hidden,
+    hidden: schema.hidden,
+    type: schema.type,
   };
 }

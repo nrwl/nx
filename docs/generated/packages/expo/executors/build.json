@@ -1,0 +1,68 @@
+{
+  "name": "build",
+  "implementation": "/packages/expo/src/executors/build/build.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "$schema": "http://json-schema.org/schema",
+    "$id": "NxExpoEasBuild",
+    "cli": "nx",
+    "title": "Expo EAS Build executor",
+    "description": "Start an EAS build for your expo project.",
+    "type": "object",
+    "properties": {
+      "platform": {
+        "enum": ["ios", "android", "all"],
+        "alias": "p",
+        "description": "The platform to build the app, example values: ios, android, all."
+      },
+      "json": {
+        "type": "boolean",
+        "description": "Enable JSON output, non-JSON messages will be printed to stderr",
+        "default": false
+      },
+      "profile": {
+        "type": "string",
+        "description": "Name of the build profile from eas.json. Defaults to \"production\" if defined in eas.json.",
+        "examples": ["PROFILE_NAME"]
+      },
+      "nonInteractive": {
+        "type": "boolean",
+        "description": "Run command in non-interactive mode",
+        "default": false
+      },
+      "local": {
+        "type": "boolean",
+        "description": "Run build locally [experimental]",
+        "default": false
+      },
+      "wait": {
+        "type": "boolean",
+        "description": "Wait for build(s) to complete",
+        "default": true
+      },
+      "clearCache": {
+        "type": "boolean",
+        "description": "Clear cache before the build",
+        "default": false
+      },
+      "autoSubmit": {
+        "type": "boolean",
+        "description": "Submit on build complete using the submit profile with the same name as the build profile",
+        "default": false
+      },
+      "autoSubmitWithProfile": {
+        "type": "string",
+        "description": "Submit on build complete using the submit profile with provided name",
+        "examples": ["PROFILE_NAME"]
+      }
+    },
+    "required": [],
+    "presets": []
+  },
+  "description": "Start an EAS build for your expo project",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/expo/src/executors/build/schema.json",
+  "type": "executor"
+}

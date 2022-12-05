@@ -1,0 +1,59 @@
+{
+  "name": "configuration",
+  "factory": "./src/generators/configuration/configuration",
+  "schema": {
+    "cli": "nx",
+    "title": "Add Vite Configuration to an application.",
+    "description": "Add Vite Configuration to an application.",
+    "$id": "configure-vite-app",
+    "type": "object",
+    "properties": {
+      "project": {
+        "type": "string",
+        "description": "The name of the project.",
+        "$default": { "$source": "argv", "index": 0 },
+        "aliases": ["name", "projectName"],
+        "x-dropdown": "project",
+        "x-prompt": "What is the name of the project to set up Vite for?"
+      },
+      "includeLib": {
+        "type": "boolean",
+        "description": "Add a library build option and skip the server option.",
+        "hidden": true
+      },
+      "uiFramework": {
+        "type": "string",
+        "description": "UI Framework to use for Vite.",
+        "enum": ["react", "none"],
+        "default": "none",
+        "x-prompt": "What UI framework plugin should Vite use?"
+      },
+      "newProject": {
+        "type": "boolean",
+        "description": "Is this a new project?",
+        "default": false,
+        "hidden": true
+      },
+      "buildTarget": {
+        "type": "string",
+        "description": "The build target of the project to be transformed to use the @nrwl/vite:build executor."
+      },
+      "serveTarget": {
+        "type": "string",
+        "description": "The serve target of the project to be transformed to use the @nrwl/vite:dev-server executor."
+      },
+      "testTarget": {
+        "type": "string",
+        "description": "The test target of the project to be transformed to use the @nrwl/vite:test executor."
+      }
+    },
+    "examplesFile": "This is a generator for setting up Vite configuration for an existing React or Web application. It will change the build and serve targets to use the `@nrwl/vite` executors for serving and building the application. This generator will modify your code, so make sure to commit your changes before running it.\n\n```bash\nnx g @nrwl/vite:configuration\n```\n\nWhen running this generator, you will be prompted to provide the following:\n\n- The `project`, as the name of the project you want to generate the configuration for.\n- The `uiFramework` you want to use. Supported values are: `react` and `none`.\n\nYou must provide a `project` and a `uiFramework` for the generator to work.\n\nYou can read more about how this generator works, in the [Vite package overview page](/packages/vite).\n\n## Examples\n\n### Change a React app to use Vite\n\n```bash\nnx g @nrwl/vite:configuration --project=my-app --uiFramework=react\n```\n\nThis will change the `my-app` project to use Vite instead of the default Webpack configuration. The changes this generator will do are described in the [Vite package overview page](/packages/vite).\n\n### Change a Web app to use Vite\n\n```bash\nnx g @nrwl/vite:configuration --project=my-app --uiFramework=none\n```\n\nThis will change the `my-app` project to use Vite instead of the existing bundler configuration.\n",
+    "presets": []
+  },
+  "description": "Add Vite configuration to an application.",
+  "aliases": ["ng-add"],
+  "hidden": false,
+  "implementation": "/packages/vite/src/generators/configuration/configuration.ts",
+  "path": "/packages/vite/src/generators/configuration/schema.json",
+  "type": "generator"
+}

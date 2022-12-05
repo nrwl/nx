@@ -1,0 +1,50 @@
+{
+  "name": "web-worker",
+  "factory": "./src/generators/web-worker/web-worker",
+  "schema": {
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "NxAngularWebWorkerGenerator",
+    "title": "Angular Web Worker Options Schema",
+    "description": "Creates a new, generic web worker definition in the given or default project.",
+    "cli": "nx",
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string",
+        "format": "path",
+        "description": "The path at which to create the worker file, relative to the current workspace."
+      },
+      "project": {
+        "type": "string",
+        "description": "The name of the project.",
+        "x-dropdown": "projects"
+      },
+      "name": {
+        "type": "string",
+        "description": "The name of the worker.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "What name would you like to use for the worker?"
+      },
+      "snippet": {
+        "type": "boolean",
+        "default": true,
+        "description": "Add a worker creation snippet in a sibling file of the same name."
+      },
+      "skipFormat": {
+        "description": "Skip formatting files.",
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "additionalProperties": false,
+    "required": ["name", "project"],
+    "examplesFile": "## Examples\n\n{% tabs %}\n\n{% tab label=\"Simple Usage\" %}\n\nThe basic usage of the `web-worker` generator is defined below. You must provide a name for the web worker and the project to assign it to.\n\n```bash\nnx g @nrwl/angular:web-worker myWebWorker --project=myapp\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
+    "presets": []
+  },
+  "description": "Creates a Web Worker.",
+  "implementation": "/packages/angular/src/generators/web-worker/web-worker.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/angular/src/generators/web-worker/schema.json",
+  "type": "generator"
+}

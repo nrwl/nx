@@ -1,0 +1,54 @@
+{
+  "name": "publish",
+  "implementation": "/packages/expo/src/executors/publish/publish.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "cli": "nx",
+    "$id": "NxExpoPublish",
+    "$schema": "http://json-schema.org/schema",
+    "title": "Publish for Expo",
+    "description": "Deploy a project to Expo hosting.",
+    "type": "object",
+    "properties": {
+      "quiet": {
+        "type": "boolean",
+        "description": "Suppress verbose output from the Metro bundler",
+        "default": false,
+        "alias": "q"
+      },
+      "sendTo": {
+        "type": "string",
+        "description": "A phone number or email address to send a link to",
+        "alias": "s"
+      },
+      "clear": {
+        "type": "boolean",
+        "description": "Clear the Metro bundler cache",
+        "default": false,
+        "alias": "c"
+      },
+      "target": {
+        "enum": ["managed", "bare"],
+        "default": "managed",
+        "description": "Target environment for which this publish is intended. Options are managed or bare.",
+        "alias": "t"
+      },
+      "maxWorkers": {
+        "type": "number",
+        "description": "Maximum number of tasks to allow Metro to spawn"
+      },
+      "releaseChannel": {
+        "type": "string",
+        "description": "The release channel to publish to. Default is 'default'.",
+        "default": "default"
+      }
+    },
+    "presets": []
+  },
+  "description": "Deploy a project to Expo hosting",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/expo/src/executors/publish/schema.json",
+  "type": "executor"
+}

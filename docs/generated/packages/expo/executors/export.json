@@ -1,0 +1,57 @@
+{
+  "name": "export",
+  "implementation": "/packages/expo/src/executors/export/export.impl.ts",
+  "schema": {
+    "cli": "nx",
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "$id": "NxExpoExport",
+    "$schema": "http://json-schema.org/schema",
+    "title": "Expo Export",
+    "description": "Export the JavaScript and assets for your app using Metro/webpack bundler.",
+    "type": "object",
+    "properties": {
+      "platform": {
+        "description": "Choose the platform to compile for",
+        "enum": ["ios", "android", "all", "web"],
+        "alias": "p"
+      },
+      "dev": {
+        "type": "boolean",
+        "description": "Bundle for development environments without minifying code or stripping the __DEV__ boolean. Configure static files for developing locally using a non-https server."
+      },
+      "clear": {
+        "type": "boolean",
+        "description": "Clear the bundler cache before exporting"
+      },
+      "outputDir": {
+        "type": "string",
+        "description": "The directory to export the static files to. Default: dist"
+      },
+      "maxWorkers": {
+        "type": "number",
+        "description": "Maximum number of tasks to allow Metro to spawn"
+      },
+      "dumpAssetmap": {
+        "type": "string",
+        "description": "Dump the asset map for further processing"
+      },
+      "dumpSourcemap": {
+        "type": "string",
+        "description": "Dump the source map for debugging the JS bundle"
+      },
+      "bundler": {
+        "enum": ["metro", "webpack"],
+        "description": "Choose the bundler to compile for",
+        "default": "metro"
+      }
+    },
+    "required": ["bundler"],
+    "presets": []
+  },
+  "description": "Export the JavaScript and assets for your app using Metro/webpack bundler",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/expo/src/executors/export/schema.json",
+  "type": "executor"
+}

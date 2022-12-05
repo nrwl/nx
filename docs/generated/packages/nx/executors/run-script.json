@@ -1,0 +1,33 @@
+{
+  "name": "run-script",
+  "implementation": "/packages/nx/src/executors/run-script/run-script.impl.ts",
+  "schema": {
+    "version": 2,
+    "title": "Run Script",
+    "description": "Run any NPM script of a project in the project's root directory.",
+    "type": "object",
+    "cli": "nx",
+    "outputCapture": "pipe",
+    "properties": {
+      "script": {
+        "type": "string",
+        "description": "An npm script name in the `package.json` file of the project (e.g., `build`)."
+      },
+      "__unparsed__": {
+        "hidden": true,
+        "type": "array",
+        "items": { "type": "string" },
+        "$default": { "$source": "unparsed" }
+      }
+    },
+    "additionalProperties": true,
+    "required": ["script"],
+    "examplesFile": "`workspace.json`:\n\n```json\n\"frontend\": {\n    \"root\": \"packages/frontend\",\n    \"targets\": {\n        \"build\": {\n            \"executor\": \"nx:run-script\",\n            \"options\": {\n                \"script\": \"build-my-project\"\n            }\n        }\n    }\n}\n```\n\n```bash\nnx run frontend:build\n```\n\nThe `build` target is going to run `npm run build-my-project` (or `yarn build-my-project`) in the `packages/frontend` directory.\n\n#### Caching Artifacts\n\nBy default, Nx is going to cache `dist/packages/frontend`, `packages/frontend/dist`, `packages/frontend/build`, `packages/frontend/public`. If your npm script writes files to other places, you can override the list of cached outputs as follows:\n\n```json\n\"frontend\": {\n    \"root\": \"packages/frontend\",\n    \"targets\": {\n        \"build\": {\n            \"executor\": \"nx:run-script\",\n            \"outputs\": [\"{projectRoot}/dist\", \"{projectRoot}/docs\"],\n            \"options\": {\n                \"script\": \"build-my-project\"\n            }\n        }\n    }\n}\n```\n",
+    "presets": []
+  },
+  "description": "Run an NPM script using Nx.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/nx/src/executors/run-script/schema.json",
+  "type": "executor"
+}

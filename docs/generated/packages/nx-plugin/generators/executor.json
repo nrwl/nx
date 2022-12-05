@@ -1,0 +1,57 @@
+{
+  "name": "executor",
+  "factory": "./src/generators/executor/executor",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "cli": "nx",
+    "$id": "NxPluginExecutor",
+    "title": "Create an Executor for an Nx Plugin",
+    "description": "Create an Executor for an Nx Plugin.",
+    "type": "object",
+    "examples": [
+      {
+        "command": "nx g executor my-executor --project=my-plugin",
+        "description": "Generate `libs/my-plugin/src/executors/my-executor`"
+      }
+    ],
+    "properties": {
+      "project": {
+        "type": "string",
+        "description": "The name of the project.",
+        "alias": "p",
+        "$default": { "$source": "projectName" },
+        "x-prompt": "What is the name of the project for the executor?"
+      },
+      "name": {
+        "type": "string",
+        "description": "Executor name.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "What name would you like to use for the executor?"
+      },
+      "description": {
+        "type": "string",
+        "description": "Executor description."
+      },
+      "unitTestRunner": {
+        "type": "string",
+        "enum": ["jest", "none"],
+        "description": "Test runner to use for unit tests.",
+        "default": "jest"
+      },
+      "includeHasher": {
+        "type": "boolean",
+        "default": false,
+        "description": "Should the boilerplate for a custom hasher be generated?"
+      }
+    },
+    "required": ["project", "name"],
+    "additionalProperties": false,
+    "presets": []
+  },
+  "description": "Create an executor for an Nx Plugin.",
+  "implementation": "/packages/nx-plugin/src/generators/executor/executor.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/nx-plugin/src/generators/executor/schema.json",
+  "type": "generator"
+}

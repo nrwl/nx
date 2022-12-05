@@ -1,0 +1,134 @@
+{
+  "name": "application",
+  "factory": "./src/generators/application/application#applicationGenerator",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "cli": "nx",
+    "$id": "NxNextApp",
+    "title": "Create a Next.js Application for Nx",
+    "description": "Create a Next.js Application for Nx.",
+    "type": "object",
+    "properties": {
+      "name": {
+        "description": "The name of the application.",
+        "type": "string",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "What name would you like to use for the application?",
+        "pattern": "^[a-zA-Z].*$"
+      },
+      "directory": {
+        "description": "The directory of the new application.",
+        "type": "string",
+        "alias": "d"
+      },
+      "style": {
+        "description": "The file extension to be used for style files.",
+        "type": "string",
+        "default": "css",
+        "alias": "s",
+        "x-prompt": {
+          "message": "Which stylesheet format would you like to use?",
+          "type": "list",
+          "items": [
+            { "value": "css", "label": "CSS" },
+            {
+              "value": "scss",
+              "label": "SASS(.scss)       [ http://sass-lang.com          ]"
+            },
+            {
+              "value": "styl",
+              "label": "Stylus(.styl)     [ http://stylus-lang.com        ]"
+            },
+            {
+              "value": "less",
+              "label": "LESS              [ http://lesscss.org            ]"
+            },
+            {
+              "value": "styled-components",
+              "label": "styled-components [ https://styled-components.com ]"
+            },
+            {
+              "value": "@emotion/styled",
+              "label": "emotion           [ https://emotion.sh            ]"
+            },
+            {
+              "value": "styled-jsx",
+              "label": "styled-jsx        [ https://www.npmjs.com/package/styled-jsx ]"
+            }
+          ]
+        }
+      },
+      "server": {
+        "description": "The server script path to be used with next.",
+        "type": "string"
+      },
+      "linter": {
+        "description": "The tool to use for running lint checks.",
+        "type": "string",
+        "enum": ["eslint"],
+        "default": "eslint"
+      },
+      "skipFormat": {
+        "description": "Skip formatting files.",
+        "type": "boolean",
+        "default": false
+      },
+      "skipWorkspaceJson": {
+        "description": "Skip updating `workspace.json` with default options based on values provided to this app (e.g. `babel`, `style`).",
+        "type": "boolean",
+        "default": false
+      },
+      "unitTestRunner": {
+        "type": "string",
+        "enum": ["jest", "none"],
+        "description": "Test runner to use for unit tests.",
+        "default": "jest"
+      },
+      "e2eTestRunner": {
+        "type": "string",
+        "enum": ["cypress", "none"],
+        "description": "Test runner to use for end to end (E2E) tests.",
+        "default": "cypress"
+      },
+      "tags": {
+        "type": "string",
+        "description": "Add tags to the application (used for linting).",
+        "alias": "t"
+      },
+      "js": {
+        "type": "boolean",
+        "description": "Generate JavaScript files rather than TypeScript files.",
+        "default": false
+      },
+      "setParserOptionsProject": {
+        "type": "boolean",
+        "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
+        "default": false
+      },
+      "standaloneConfig": {
+        "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`",
+        "type": "boolean"
+      },
+      "swc": {
+        "description": "Enable the Rust-based compiler SWC to compile JS/TS files.",
+        "type": "boolean",
+        "default": true
+      },
+      "customServer": {
+        "description": "Use a custom Express server for the Next.js application.",
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "required": [],
+    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Create app in a directory\" %}\n\n```shell\nnx g app myapp --directory\n```\n\n{% /tab %}\n{% tab label=\"Use a custom Express server\" %}\n\n```shell\nnx g app myapp --custom-server\n```\n\n{% /tab %}\n{% tab label=\"Use plain JavaScript (not TypeScript)\" %}\n\n```shell\nnx g app myapp --js\n```\n\n{% /tab %}\n{% /tabs %}\n",
+    "presets": []
+  },
+  "aliases": ["app"],
+  "x-type": "application",
+  "description": "Create an application.",
+  "implementation": "/packages/next/src/generators/application/application#applicationGenerator.ts",
+  "hidden": false,
+  "path": "/packages/next/src/generators/application/schema.json",
+  "type": "generator"
+}

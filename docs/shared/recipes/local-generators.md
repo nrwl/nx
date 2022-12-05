@@ -108,4 +108,4 @@ nx generate @myorg/my-plugin:my-generator mylib
 
 ## Generator Utilities
 
-The [`@nrwl/devkit` package](/devkit/index) provides many utility functions that can be used in generators to help with modifying files, reading and updating configuration files, and working with an Abstract Syntax Tree (AST).
+The [`@nrwl/devkit` package](/packages/devkit/documents/index) provides many utility functions that can be used in generators to help with modifying files, reading and updating configuration files, and working with an Abstract Syntax Tree (AST).

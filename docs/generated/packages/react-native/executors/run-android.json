@@ -1,0 +1,89 @@
+{
+  "name": "run-android",
+  "implementation": "/packages/react-native/src/executors/run-android/run-android.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "cli": "nx",
+    "$id": "NxReactNativeRunAndroid",
+    "$schema": "http://json-schema.org/schema",
+    "title": "Run Android application",
+    "description": "Run Android target options.",
+    "type": "object",
+    "presets": [
+      {
+        "name": "Run Android without cache",
+        "keys": ["variant", "sync", "port", "packager", "resetCache"]
+      }
+    ],
+    "properties": {
+      "variant": {
+        "type": "string",
+        "description": "Specify your app's build variant (e.g. `debug`, `release`).",
+        "default": "debug",
+        "examples": ["debug", "release"]
+      },
+      "appId": {
+        "type": "string",
+        "description": "Specify an `applicationId` to launch after build. If not specified, `package` from `AndroidManifest.xml` will be used."
+      },
+      "appIdSuffix": {
+        "type": "string",
+        "description": "Specify an `applicationIdSuffix` to launch after build."
+      },
+      "mainActivity": {
+        "type": "string",
+        "description": "Name of the activity to start.",
+        "default": "MainActivity"
+      },
+      "deviceId": {
+        "type": "string",
+        "description": "Builds your app and starts it on a specific device/simulator with the given device id (listed by running `adb devices` on the command line)."
+      },
+      "tasks": {
+        "type": "string",
+        "description": "Run custom Gradle tasks. If this argument is provided, then `--variant` option is ignored. Example: `yarn react-native run-android --tasks clean,installDebug`."
+      },
+      "jetifier": {
+        "type": "boolean",
+        "description": "Run Jetifier – the AndroidX transition tool. By default it runs before Gradle to ease working with libraries that don't support AndroidX yet.",
+        "default": true
+      },
+      "sync": {
+        "type": "boolean",
+        "description": "Syncs npm dependencies to `package.json` (for React Native autolink).",
+        "default": true
+      },
+      "port": {
+        "type": "number",
+        "description": "The port where the packager server is listening on.",
+        "default": 8081
+      },
+      "terminal": {
+        "type": "string",
+        "description": "Launches the Metro Bundler in a new window using the specified terminal path."
+      },
+      "packager": {
+        "type": "boolean",
+        "description": "Starts the packager server.",
+        "default": true
+      },
+      "resetCache": {
+        "type": "boolean",
+        "description": "Resets metro cache.",
+        "default": false
+      },
+      "interactive": {
+        "type": "boolean",
+        "description": "Run packager server in interactive mode.",
+        "default": true
+      }
+    },
+    "examplesFile": "`project.json`:\n\n```json\n{\n  \"name\": \"mobile\",\n  //...\n  \"targets\": {\n    //...\n    \"run-android\": {\n      \"executor\": \"@nrwl/react-native:run-android\",\n      \"options\": {}\n    }\n  }\n}\n```\n\n```bash\nnx run mobile:run-android\n```\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Run on a specific device/simulator\" %}\nTo see all the avaiable emulators, run command:\n\n```bash\nemulator -list-avds\n```\n\nThe `deviceId` option allows you to launch your android app in a specific device/simulator:\n\n```json\n    \"run-android\": {\n      \"executor\": \"@nrwl/react-native:run-android\",\n      \"options\": {\n        \"deviceId\": \"Pixel_5_API_30\"\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Run the debug/release app\" %}\nThe `variant` option allows to specify the build variant, such as `debug` or `release`.\n\n```json\n    \"run-android\": {\n      \"executor\": \"@nrwl/react-native:run-android\",\n      \"options\": {\n        \"variant\": \"release\"\n      }\n    }\n```\n\n{% /tab %}\n{% /tabs %}\n\n---\n"
+  },
+  "description": "Runs Android application.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/react-native/src/executors/run-android/schema.json",
+  "type": "executor"
+}

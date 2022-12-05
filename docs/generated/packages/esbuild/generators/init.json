@@ -1,0 +1,33 @@
+{
+  "name": "init",
+  "factory": "./src/generators/init/init#esbuildInitGenerator",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "$id": "NxWebpackInit",
+    "cli": "nx",
+    "title": "Init Webpack Plugin",
+    "description": "Init Webpack Plugin.",
+    "type": "object",
+    "properties": {
+      "compiler": {
+        "type": "string",
+        "enum": ["babel", "swc", "tsc"],
+        "description": "The compiler to initialize for.",
+        "default": "babel"
+      },
+      "skipFormat": {
+        "description": "Skip formatting files.",
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "required": [],
+    "presets": []
+  },
+  "description": "Initialize the `@nrwl/esbuild` plugin.",
+  "aliases": ["ng-add"],
+  "hidden": true,
+  "implementation": "/packages/esbuild/src/generators/init/init#esbuildInitGenerator.ts",
+  "path": "/packages/esbuild/src/generators/init/schema.json",
+  "type": "generator"
+}

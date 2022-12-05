@@ -1,0 +1,43 @@
+{
+  "name": "library-secondary-entry-point",
+  "factory": "./src/generators/library-secondary-entry-point/library-secondary-entry-point",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "$id": "NxAngularLibrarySecondaryEntryPoint",
+    "title": "Creates a secondary entry point for a library",
+    "description": "Creates a secondary entry point for an Angular publishable library.",
+    "type": "object",
+    "cli": "nx",
+    "properties": {
+      "name": {
+        "type": "string",
+        "description": "The name of the secondary entry point.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "What name would you like to use for the secondary entry point?",
+        "pattern": "^[a-zA-Z].*$"
+      },
+      "library": {
+        "type": "string",
+        "description": "The name of the library to create the secondary entry point for.",
+        "x-prompt": "What library would you like to create the secondary entry point for?",
+        "pattern": "^[a-zA-Z].*$",
+        "x-dropdown": "projects"
+      },
+      "skipModule": {
+        "type": "boolean",
+        "description": "Skip generating a module for the secondary entry point.",
+        "default": false
+      }
+    },
+    "additionalProperties": false,
+    "required": ["name", "library"],
+    "examplesFile": "## Examples\n\n{% tabs %}\n\n{% tab label=\"Basic Usage\" %}\nCreate a secondary entrypoint named `button` in the `ui` library.\n\n```bash\nnx g @nrwl/angular:library-secondary-entry-point --library=ui --name=button\n```\n\n{% /tab %}\n\n{% tab label=\"Skip generating module\" %}\nCreate a secondary entrypoint named `button` in the `ui` library but skip creating an NgModule.\n\n```bash\nnx g @nrwl/angular:library-secondary-entry-point --library=ui --name=button --skipModule\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
+    "presets": []
+  },
+  "aliases": ["secondary-entry-point", "entry-point"],
+  "description": "Creates a secondary entry point for an Angular publishable library.",
+  "implementation": "/packages/angular/src/generators/library-secondary-entry-point/library-secondary-entry-point.ts",
+  "hidden": false,
+  "path": "/packages/angular/src/generators/library-secondary-entry-point/schema.json",
+  "type": "generator"
+}

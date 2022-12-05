@@ -37,7 +37,7 @@ ng add @nrwl/angular@<version_number>
 ng add @nrwl/workspace@<version_number>
 ```
 
-**Note**: Refer to the [Nx and Angular Version Compatibility Matrix](/angular-nx-version-matrix) for matching Angular and Nx versions.
+**Note**: Refer to the [Nx and Angular Version Compatibility Matrix](/packages/angular/documents/angular-nx-version-matrix) for matching Angular and Nx versions.
 
 **Note**: Support for workspaces with multiple applications and libraries was added in Nx v14.1.0. If you are migrating using an older version of Nx, your workspace can only contain one application and no libraries in order to use the automated migration, otherwise, you can still [migrate manually](#transitioning-manually).
 
@@ -152,7 +152,7 @@ width="100%" /%}
 ## Migrating an Angular app manually
 
 {% callout type="note" title="Older Angular Versions" %}
-If you are using older versions of Angular (version 14 or lower), make sure to use the appropriate version of Nx that matches your version of Angular. See the [Nx and Angular Version Compatibility Matrix](/angular-nx-version-matrix) to find the correct version. The generated files will also be slightly different.
+If you are using older versions of Angular (version 14 or lower), make sure to use the appropriate version of Nx that matches your version of Angular. See the [Nx and Angular Version Compatibility Matrix](/packages/angular/documents/angular-nx-version-matrix) to find the correct version. The generated files will also be slightly different.
 {% /callout %}
 
 If you are unable to automatically transform your Angular CLI workspace to an Nx workspace using the [ng add](#transforming-an-angular-cli-workspace-to-an-nx-workspace) method, there are some manual steps you can take to move your project(s) into an Nx workspace.

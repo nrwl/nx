@@ -38,7 +38,7 @@ Nx provides tools to give you the benefits of a monorepo without the drawbacks o
 
 - **Consistent Code Generation** - Generators allow you to customize and standardize organizational conventions and structure, removing the need to perform the same manual setup tasks repetitively.
 
-- **Affected Commands** - [Nx’s affected commands](/nx/affected) analyze your source code, the context of the changes, and only runs tasks on the affected projects impacted by the source code changes.
+- **Affected Commands** - [Nx’s affected commands](/packages/nx/documents/affected) analyze your source code, the context of the changes, and only runs tasks on the affected projects impacted by the source code changes.
 
 - **Distributed Caching** - Nx provides local caching and support for distributed caching of command executions. With distributed caching, when someone on your team runs a command, everyone else gets access to those artifacts to speed up their command executions, bringing them down from minutes to seconds. Nx helps you scale your development to massive applications and libraries even more with distributed task execution and incremental builds.
 

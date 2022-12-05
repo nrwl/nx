@@ -205,6 +205,14 @@ module.exports = withNx({
         permanent: true,
       });
     }
+    // Packages Documents
+    for (let s of Object.keys(redirectRules.packagesDocuments)) {
+      rules.push({
+        source: s,
+        destination: redirectRules.packagesDocuments[s],
+        permanent: true,
+      });
+    }
 
     // Docs
     rules.push({

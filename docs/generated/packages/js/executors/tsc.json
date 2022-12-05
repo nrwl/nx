@@ -1,0 +1,175 @@
+{
+  "name": "tsc",
+  "implementation": "/packages/js/src/executors/tsc/tsc.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "title": "Typescript Build Target",
+    "description": "Builds using TypeScript.",
+    "cli": "nx",
+    "type": "object",
+    "properties": {
+      "main": {
+        "type": "string",
+        "description": "The name of the main entry-point file.",
+        "x-completion-type": "file",
+        "x-completion-glob": "main@(.js|.ts|.jsx|.tsx)"
+      },
+      "rootDir": {
+        "type": "string",
+        "description": "Sets the rootDir for TypeScript compilation. When not defined, it uses the root of project."
+      },
+      "outputPath": {
+        "type": "string",
+        "description": "The output path of the generated files.",
+        "x-completion-type": "directory"
+      },
+      "tsConfig": {
+        "type": "string",
+        "description": "The path to the Typescript configuration file.",
+        "x-completion-type": "file",
+        "x-completion-glob": "tsconfig.*.json"
+      },
+      "assets": {
+        "type": "array",
+        "description": "List of static assets.",
+        "default": [],
+        "items": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "glob": {
+                  "type": "string",
+                  "description": "The pattern to match."
+                },
+                "input": {
+                  "type": "string",
+                  "description": "The input directory path in which to apply 'glob'. Defaults to the project root."
+                },
+                "ignore": {
+                  "description": "An array of globs to ignore.",
+                  "type": "array",
+                  "items": { "type": "string" }
+                },
+                "output": {
+                  "type": "string",
+                  "description": "Absolute path within the output."
+                }
+              },
+              "additionalProperties": false,
+              "required": ["glob", "input", "output"]
+            },
+            { "type": "string" }
+          ]
+        }
+      },
+      "watch": {
+        "type": "boolean",
+        "description": "Enable re-building when files change.",
+        "default": false
+      },
+      "clean": {
+        "type": "boolean",
+        "description": "Remove previous output before build.",
+        "default": true
+      },
+      "transformers": {
+        "type": "array",
+        "description": "List of TypeScript Transformer Plugins.",
+        "default": [],
+        "items": {
+          "oneOf": [
+            { "type": "string" },
+            {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "options": { "type": "object", "additionalProperties": true }
+              },
+              "additionalProperties": false,
+              "required": ["name"]
+            }
+          ]
+        }
+      },
+      "updateBuildableProjectDepsInPackageJson": {
+        "type": "boolean",
+        "description": "Whether to update the buildable project dependencies in `package.json`.",
+        "default": true
+      },
+      "buildableProjectDepsInPackageJsonType": {
+        "type": "string",
+        "description": "When `updateBuildableProjectDepsInPackageJson` is `true`, this adds dependencies to either `peerDependencies` or `dependencies`.",
+        "enum": ["dependencies", "peerDependencies"],
+        "default": "peerDependencies"
+      },
+      "external": {
+        "description": "A list projects to be treated as external. This feature is experimental",
+        "oneOf": [
+          { "type": "string", "enum": ["all", "none"] },
+          { "type": "array", "items": { "type": "string" } }
+        ]
+      },
+      "externalBuildTargets": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "List of target names that annotate a build target for a project",
+        "default": ["build"]
+      }
+    },
+    "required": ["main", "outputPath", "tsConfig"],
+    "definitions": {
+      "assetPattern": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "glob": {
+                "type": "string",
+                "description": "The pattern to match."
+              },
+              "input": {
+                "type": "string",
+                "description": "The input directory path in which to apply 'glob'. Defaults to the project root."
+              },
+              "ignore": {
+                "description": "An array of globs to ignore.",
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "output": {
+                "type": "string",
+                "description": "Absolute path within the output."
+              }
+            },
+            "additionalProperties": false,
+            "required": ["glob", "input", "output"]
+          },
+          { "type": "string" }
+        ]
+      },
+      "transformerPattern": {
+        "oneOf": [
+          { "type": "string" },
+          {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "options": { "type": "object", "additionalProperties": true }
+            },
+            "additionalProperties": false,
+            "required": ["name"]
+          }
+        ]
+      }
+    },
+    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Using TypeScript Transformer Plugins\" %}\n\n`@nrwl/js:tsc` can run the [TypeScript Transformers](https://github.com/madou/typescript-transformer-handbook) by using the `transformers` option.\n\n```json {% fileName=\"libs/ts-lib/project.json\" %}\n{\n  \"build\": {\n    \"executor\": \"@nrwl/js:tsc\",\n    \"options\": {\n      \"outputPath\": \"dist/libs/ts-lib\",\n      \"main\": \"libs/ts-lib/src/index.ts\",\n      \"tsConfig\": \"libs/ts-lib/tsconfig.lib.json\",\n      \"assets\": [\"libs/ts-lib/*.md\"],\n      \"transformers\": [\n        \"@nestjs/swagger/plugin\",\n        {\n          \"name\": \"@automapper/classes/transformer-plugin\",\n          \"options\": {}\n        }\n      ]\n    }\n  }\n}\n```\n\n{% /tab %}\n{% tab label=\"Inline libraries\" %}\n\n`@nrwl/js:tsc` can inline non-buildable libraries by opt-in to **Inlining** mode with `external` option.\n\n```json {% fileName=\"libs/ts-lib/project.json\" %}\n{\n  \"build\": {\n    \"executor\": \"@nrwl/js:tsc\",\n    \"options\": {\n      \"outputPath\": \"dist/libs/ts-lib\",\n      \"main\": \"libs/ts-lib/src/index.ts\",\n      \"tsConfig\": \"libs/ts-lib/tsconfig.lib.json\",\n      \"assets\": [\"libs/ts-lib/*.md\"],\n      \"external\": \"all\"\n    }\n  }\n}\n```\n\n```shell\nnpx nx build ts-lib --external=all\n```\n\n`@nrwl/js:tsc` can also inline buildable libraries by setting `external: 'none'`\n\n```json {% fileName=\"libs/ts-lib/project.json\" %}\n{\n  \"build\": {\n    \"executor\": \"@nrwl/js:tsc\",\n    \"options\": {\n      \"outputPath\": \"dist/libs/ts-lib\",\n      \"main\": \"libs/ts-lib/src/index.ts\",\n      \"tsConfig\": \"libs/ts-lib/tsconfig.lib.json\",\n      \"assets\": [\"libs/ts-lib/*.md\"],\n      \"external\": \"none\"\n    }\n  }\n}\n```\n\n```shell\nnpx nx build ts-lib --external=none\n```\n\n{% /tab %}\n{% /tabs %}\n",
+    "presets": []
+  },
+  "description": "Build a project using TypeScript.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/js/src/executors/tsc/schema.json",
+  "type": "executor"
+}

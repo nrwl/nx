@@ -12,7 +12,7 @@ There are three main types of generators:
 
 ## Invoking Plugin Generators
 
-Generators allow you to create or modify your codebase in a simple and repeatable way. Generators are invoked using the [`nx generate`](/nx/generate) command.
+Generators allow you to create or modify your codebase in a simple and repeatable way. Generators are invoked using the [`nx generate`](/packages/nx/documents/generate) command.
 
 ```shell
 nx generate [plugin]:[generator-name] [options]

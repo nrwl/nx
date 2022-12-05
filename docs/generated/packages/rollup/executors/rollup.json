@@ -1,0 +1,178 @@
+{
+  "name": "rollup",
+  "implementation": "/packages/rollup/src/executors/rollup/rollup.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "title": "Web Library Rollup Target (Experimental)",
+    "description": "Packages a library for different web usages (ESM, CommonJS).",
+    "cli": "nx",
+    "type": "object",
+    "properties": {
+      "project": {
+        "type": "string",
+        "description": "The path to package.json file."
+      },
+      "main": {
+        "type": "string",
+        "description": "The path to the entry file, relative to project.",
+        "alias": "entryFile",
+        "x-completion-type": "file",
+        "x-completion-glob": "**/*@(.js|.ts)"
+      },
+      "outputPath": {
+        "type": "string",
+        "description": "The output path of the generated files.",
+        "x-completion-type": "directory"
+      },
+      "outputFileName": {
+        "type": "string",
+        "description": "Name of the main output file. Defaults same basename as 'main' file."
+      },
+      "deleteOutputPath": {
+        "type": "boolean",
+        "description": "Delete the output path before building.",
+        "default": true
+      },
+      "tsConfig": {
+        "type": "string",
+        "description": "The path to tsconfig file.",
+        "x-completion-type": "file",
+        "x-completion-glob": "tsconfig.*.json"
+      },
+      "format": {
+        "type": "array",
+        "description": "List of module formats to output. Defaults to matching format from tsconfig (e.g. CJS for CommonJS, and ESM otherwise).",
+        "alias": "f",
+        "items": { "type": "string", "enum": ["esm", "cjs"] }
+      },
+      "external": {
+        "type": "array",
+        "description": "A list of external modules that will not be bundled (`react`, `react-dom`, etc.).",
+        "items": { "type": "string" }
+      },
+      "watch": {
+        "type": "boolean",
+        "description": "Enable re-building when files change.",
+        "default": false
+      },
+      "updateBuildableProjectDepsInPackageJson": {
+        "type": "boolean",
+        "description": "Update buildable project dependencies in `package.json`.",
+        "default": true
+      },
+      "buildableProjectDepsInPackageJsonType": {
+        "type": "string",
+        "description": "When `updateBuildableProjectDepsInPackageJson` is `true`, this adds dependencies to either `peerDependencies` or `dependencies`.",
+        "enum": ["dependencies", "peerDependencies"],
+        "default": "peerDependencies"
+      },
+      "rollupConfig": {
+        "oneOf": [
+          {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "x-completion-type": "file",
+              "x-completion-glob": "rollup?(*)@(.js|.ts)"
+            }
+          },
+          {
+            "type": "string",
+            "x-completion-type": "file",
+            "x-completion-glob": "rollup?(*)@(.js|.ts)"
+          }
+        ],
+        "description": "Path to a function which takes a rollup config and returns an updated rollup config."
+      },
+      "extractCss": {
+        "type": ["boolean", "string"],
+        "description": "CSS files will be extracted to the output folder. Alternatively custom filename can be provided (e.g. styles.css)",
+        "default": true
+      },
+      "assets": {
+        "type": "array",
+        "description": "List of static assets.",
+        "default": [],
+        "items": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "glob": {
+                  "type": "string",
+                  "description": "The pattern to match."
+                },
+                "input": {
+                  "type": "string",
+                  "description": "The input directory path in which to apply `glob`. Defaults to the project root."
+                },
+                "output": {
+                  "type": "string",
+                  "description": "Relative path within the output folder."
+                }
+              },
+              "additionalProperties": false,
+              "required": ["glob", "input", "output"]
+            },
+            { "type": "string" }
+          ]
+        }
+      },
+      "compiler": {
+        "type": "string",
+        "enum": ["babel", "swc", "tsc"],
+        "default": "babel",
+        "description": "Which compiler to use."
+      },
+      "javascriptEnabled": {
+        "type": "boolean",
+        "description": "Sets `javascriptEnabled` option for less loader",
+        "default": false
+      },
+      "generateExportsField": {
+        "type": "boolean",
+        "description": "Generate package.json with 'exports' field. This field defines entry points in the package and is used by Node and the TypeScript compiler.",
+        "default": false
+      },
+      "skipTypeField": {
+        "type": "boolean",
+        "description": "Prevents 'type' field from being added to compiled package.json file. Only use this if you are having an issue with this field.",
+        "default": false
+      }
+    },
+    "required": ["tsConfig", "project", "main", "outputPath"],
+    "definitions": {
+      "assetPattern": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "glob": {
+                "type": "string",
+                "description": "The pattern to match."
+              },
+              "input": {
+                "type": "string",
+                "description": "The input directory path in which to apply `glob`. Defaults to the project root."
+              },
+              "output": {
+                "type": "string",
+                "description": "Relative path within the output folder."
+              }
+            },
+            "additionalProperties": false,
+            "required": ["glob", "input", "output"]
+          },
+          { "type": "string" }
+        ]
+      }
+    },
+    "presets": []
+  },
+  "description": "Bundle a package using Rollup.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/rollup/src/executors/rollup/schema.json",
+  "type": "executor"
+}

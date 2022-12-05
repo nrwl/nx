@@ -1,14 +1,15 @@
 /*
  * Lookup for all the schema.json and add create a list with their path and related package information
  * */
+import { createDocumentMetadata } from '../../../nx-dev/models-document/src';
 import * as chalk from 'chalk';
 import { join, resolve } from 'path';
 import {
   getSchemaFromReference,
   InternalLookup,
-} from '../../../nx-dev/data-access-packages/src/lib/lookup';
-import { NxSchema } from '../../../nx-dev/models-package/src/lib/package.models';
-import { generateJsonFile } from '../utils';
+} from '../../../nx-dev/data-access-packages/src';
+import { NxSchema, PackageMetadata } from '../../../nx-dev/models-package/src';
+import { generateJsonFile, generateMarkdownFile } from '../utils';
 import { getPackageMetadataList } from './package-metadata';
 import { schemaResolver } from './schema.resolver';
 
@@ -32,7 +33,7 @@ function pathResolver(root: string): (path: string) => string {
   return (path) => join(root, path.replace('schema.json', ''));
 }
 
-export function generatePackageSchemas(): Promise<void>[] {
+export function generatePackageSchemas(): Promise<void[]> {
   console.log(`${chalk.blue('i')} Generating Package Schemas`);
   const absoluteRoot = resolve(join(__dirname, '../../../'));
 
@@ -43,7 +44,7 @@ export function generatePackageSchemas(): Promise<void>[] {
         packageMetadata.executors = packageMetadata.executors.map((item) => ({
           ...item,
           schema: processSchemaData(
-            item.schema,
+            item.schema as NxSchema,
             getCurrentSchemaPath(item['path'].replace('schema.json', ''))
           ),
         }));
@@ -52,7 +53,7 @@ export function generatePackageSchemas(): Promise<void>[] {
         packageMetadata.generators = packageMetadata.generators.map((item) => ({
           ...item,
           schema: processSchemaData(
-            item.schema,
+            item.schema as NxSchema,
             getCurrentSchemaPath(item['path'].replace('schema.json', ''))
           ),
         }));
@@ -60,32 +61,97 @@ export function generatePackageSchemas(): Promise<void>[] {
       return packageMetadata;
     }
   );
+  const packagesMetadata = packages.map(
+    (p): PackageMetadata => ({
+      description: p.description,
+      documents: p.documents.map((d) => ({
+        ...createDocumentMetadata({
+          description: p.description,
+          file: ['generated', 'packages', p.name, 'documents', d.id].join('/'),
+          id: d.id,
+          itemList: d.itemList,
+          name: d.name,
+          path: [p.name, 'documents', d.id].join('/'),
+          tags: d.tags,
+        }),
+        originalFilePath: d.file,
+      })),
+      executors: p.executors.map((e) => ({
+        description: e.description,
+        file: [
+          'generated',
+          'packages',
+          p.name,
+          'executors',
+          e.name + '.json',
+        ].join('/'),
+        hidden: e.hidden,
+        name: e.name,
+        originalFilePath: e.path,
+        path: [p.name, 'executors', e.name].join('/'),
+        type: 'executor',
+      })),
+      generators: p.generators.map((g) => ({
+        description: g.description,
+        file: [
+          'generated',
+          'packages',
+          p.name,
+          'generators',
+          g.name + '.json',
+        ].join('/'),
+        hidden: g.hidden,
+        name: g.name,
+        originalFilePath: g.path,
+        path: [p.name, 'generators', g.name].join('/'),
+        type: 'generator',
+      })),
+      githubRoot: p.githubRoot,
+      name: p.name,
+      packageName: p.packageName,
+      root: p.root,
+      source: p.source,
+    })
+  );
 
   const outputPath: string = join(absoluteRoot, 'docs');
+  const outputPackagesPath: string = join(outputPath, 'generated', 'packages');
+  const fileGenerationPromises = [];
 
-  /*
-   * Creates packages.json file containing the list of the packages created with their path.
-   */
-  const packageList = packages.map((p) => ({
-    name: p.name,
-    packageName: p.name,
-    description: p.description,
-    path: join('generated', 'packages', p.name + '.json'),
-    schemas: {
-      executors: p.executors.map((s) => s.name),
-      generators: p.generators.map((s) => s.name),
-    },
-  }));
-  generateJsonFile(join(outputPath, 'packages.json'), packageList);
-
-  /**
-   * Generates each package metadata in an `/packages` sub-folder.
-   */
-  return packages.map(
-    (p): Promise<void> =>
-      generateJsonFile(
-        join(outputPath, 'generated', 'packages', p.name + '.json'),
-        p
+  // Generates all documents and schemas into their own directories per packages.
+  packages.forEach((p) => {
+    p.documents.forEach((d) =>
+      fileGenerationPromises.push(
+        generateMarkdownFile(join(outputPackagesPath, p.name, 'documents'), {
+          name: d.id,
+          template: d.content,
+        })
       )
+    );
+    p.executors.forEach((e) =>
+      fileGenerationPromises.push(
+        generateJsonFile(
+          join(outputPackagesPath, p.name, 'executors', e.name + '.json'),
+          e
+        )
+      )
+    );
+    p.generators.forEach((g) =>
+      fileGenerationPromises.push(
+        generateJsonFile(
+          join(outputPackagesPath, p.name, 'generators', g.name + '.json'),
+          g
+        )
+      )
+    );
+  });
+
+  // Generates the packages-metadata.json file.
+  fileGenerationPromises.push(
+    generateJsonFile(
+      join(outputPath, 'packages-metadata.json'),
+      packagesMetadata
+    )
   );
+  return Promise.all(fileGenerationPromises);
 }

@@ -4,12 +4,12 @@ This generator will set up Storybook for your Angular project.
 nx g @nrwl/angular:storybook-configuration project-name
 ```
 
-You can read more about how this generator works, in the [Storybook for Angular overview page](/storybook/overview-angular#generate-storybook-configuration-for-an-angular-project).
+You can read more about how this generator works, in the [Storybook for Angular overview page](/packages/storybook/documents/overview-angular#generate-storybook-configuration-for-an-angular-project).
 
 When running this generator, you will be prompted to provide the following:
 
 - The `name` of the project you want to generate the configuration for.
-- Whether you want to `configureCypress`. If you choose `yes`, a Cypress e2e app will be created (or configured) to run against the project's Storybook instance. You can read more about this in the [Storybook for Angular - Cypress section](/storybook/overview-angular#cypress-tests-for-stories).
+- Whether you want to `configureCypress`. If you choose `yes`, a Cypress e2e app will be created (or configured) to run against the project's Storybook instance. You can read more about this in the [Storybook for Angular - Cypress section](/packages/storybook/documents/overview-angular#cypress-tests-for-stories).
 - Whether you want to `generateStories` for the components in your project. If you choose `yes`, a `.stories.ts` file will be generated next to each of your components in your project.
 - Whether you want to `generateCypressSpecs`. If you choose `yes`, a test file is going to be generated in the project's Cypress e2e app for each of your components.
 - Whether you want to `configureTestRunner`. If you choose `yes`, a `test-storybook` target will be generated in your project's `project.json`, with a command to invoke the [Storybook `test-runner`](https://storybook.js.org/docs/react/writing-tests/test-runner).
