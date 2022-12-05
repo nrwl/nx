@@ -1,10 +1,4 @@
-import {
-  formatFiles,
-  joinPathFragments,
-  logger,
-  readProjectConfiguration,
-  Tree,
-} from '@nrwl/devkit';
+import { formatFiles, joinPathFragments, logger, Tree } from '@nrwl/devkit';
 import componentCypressSpecGenerator from '../component-cypress-spec/component-cypress-spec';
 import componentStoryGenerator from '../component-story/component-story';
 import type { ComponentInfo } from '../utils/storybook-ast/component-info';
@@ -25,7 +19,6 @@ export function angularStoriesGenerator(
   const e2eProjectName = options.cypressProject ?? `${options.name}-e2e`;
   const e2eProject = getE2EProject(tree, e2eProjectName);
   const entryPoints = getProjectEntryPoints(tree, options.name);
-  const { root } = readProjectConfiguration(tree, options.name);
   const componentsInfo: ComponentInfo[] = [];
   for (const entryPoint of entryPoints) {
     const moduleFilePaths = getModuleFilePaths(tree, entryPoint);
