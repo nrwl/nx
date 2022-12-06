@@ -342,18 +342,17 @@ export const examples: Record<string, Example[]> = {
   ],
   watch: [
     {
-      command: 'nx watch app -- "echo &1; echo &2"',
+      command: 'watch app -- "echo &1; echo &2"',
       description:
         'Watch the "app" project and echo the project name and the file that changed',
     },
     {
-      command:
-        'nx watch --projects=app1,app2 --includeDependencies -- "echo &1"',
+      command: 'watch --projects=app1,app2 --includeDependencies -- "echo &1"',
       description:
         'Watch "app1" and "app2" and echo the project name whenever a specified project or its dependencies change',
     },
     {
-      command: 'nx watch --all --includeGlobalWorkspaceFiles -- "echo &1"',
+      command: 'watch --all --includeGlobalWorkspaceFiles -- "echo &1"',
       description: 'Watch all projects and all files in the workspace',
     },
   ],
