@@ -10,7 +10,7 @@ type PropertyDescription = {
   type?: string | string[];
   required?: string[];
   enum?: string[];
-  properties?: any;
+  properties?: Properties;
   oneOf?: PropertyDescription[];
   anyOf?: PropertyDescription[];
   allOf?: PropertyDescription[];
@@ -57,6 +57,8 @@ type Properties = {
 export type Schema = {
   properties: Properties;
   required?: string[];
+  anyOf?: Partial<Schema>[];
+  oneOf?: Partial<Schema>[];
   description?: string;
   definitions?: Properties;
   additionalProperties?: boolean;
@@ -213,31 +215,64 @@ export function validateOptsAgainstSchema(
   opts: { [k: string]: any },
   schema: Schema
 ) {
-  validateObject(
-    opts,
-    schema.properties || {},
-    schema.required || [],
-    schema.additionalProperties,
-    schema.definitions || {}
-  );
+  validateObject(opts, schema, schema.definitions || {});
 }
 
 export function validateObject(
-  opts: { [k: string]: any },
-  properties: Properties,
-  required: string[],
-  additionalProperties: boolean | undefined,
+  opts: { [p: string]: any },
+  schema: Schema | PropertyDescription,
   definitions: Properties
 ) {
-  required.forEach((p) => {
+  if (schema.anyOf) {
+    const errors: Error[] = [];
+    for (const s of schema.anyOf) {
+      try {
+        validateObject(opts, s, definitions);
+      } catch (e) {
+        errors.push(e);
+      }
+    }
+    if (errors.length > 0) {
+      throw new Error(
+        `Options did not match schema. Please fix any of the following errors:\n${errors
+          .map((e) => ' - ' + e.message)
+          .join('\n')}`
+      );
+    }
+  }
+  if (schema.oneOf) {
+    for (const s of schema.oneOf) {
+      const errors: Error[] = [];
+      for (const s of schema.oneOf) {
+        try {
+          validateObject(opts, s, definitions);
+        } catch (e) {
+          errors.push(e);
+        }
+      }
+      if (errors.length === schema.oneOf.length) {
+        throw new Error(
+          `Options did not match schema. Please fix 1 of the following errors:\n${errors
+            .map((e) => ' - ' + e.message)
+            .join('\n')}`
+        );
+      }
+      if (errors.length < schema.oneOf.length - 1) {
+        // TODO: This error could be better.
+        throw new Error(`Options did not match schema.`);
+      }
+    }
+  }
+
+  (schema.required ?? []).forEach((p) => {
     if (opts[p] === undefined) {
       throw new SchemaError(`Required property '${p}' is missing`);
     }
   });
 
-  if (additionalProperties === false) {
+  if (schema.additionalProperties === false) {
     Object.keys(opts).find((p) => {
-      if (Object.keys(properties).indexOf(p) === -1) {
+      if (Object.keys(schema.properties).indexOf(p) === -1) {
         if (p === '_') {
           throw new SchemaError(
             `Schema does not support positional arguments. Argument '${opts[p]}' found`
@@ -250,7 +285,7 @@ export function validateObject(
   }
 
   Object.keys(opts).forEach((p) => {
-    validateProperty(p, opts[p], properties[p], definitions);
+    validateProperty(p, opts[p], (schema.properties ?? {})[p], definitions);
   });
 }
 
@@ -423,13 +458,7 @@ function validateProperty(
     );
   } else {
     if (schema.type !== 'object') throwInvalidSchema(propName, schema);
-    validateObject(
-      value,
-      schema.properties || {},
-      schema.required || [],
-      schema.additionalProperties,
-      definitions
-    );
+    validateObject(value, schema, definitions);
   }
 }
 
