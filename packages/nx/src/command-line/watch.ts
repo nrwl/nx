@@ -174,8 +174,11 @@ export function buildCommands(
   };
 
   /**
-   * if the command  has both a replacement for files and projects, we need to replace the placeholders in the command for each file and project
-   * Since we always get files, we'll go through those first
+   * if the command  has both a replacement for files and projects, we need to replace the
+   * files first, then loop through the file replaced commands to replace the project
+   *
+   * If the command only has a replacement for projects, we just loop through the projects
+   * only
    */
   if (command.match(fileReplacementRegex)) {
     for (const { path } of changedFiles) {
