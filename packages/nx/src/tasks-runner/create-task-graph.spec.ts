@@ -274,7 +274,14 @@ describe('createTaskGraph', () => {
           data: {
             root: 'lib2-root',
             files: [],
-            targets: { build: {}, test: {} },
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+              },
+              test: {
+                executor: 'nx:run-commands',
+              },
+            },
           },
         },
       },
@@ -976,7 +983,9 @@ describe('createTaskGraph', () => {
                   { target: 'build', projects: 'dependencies' },
                 ],
               },
-              prebuild: {},
+              prebuild: {
+                executor: 'nx:run-commands',
+              },
             },
           },
         },

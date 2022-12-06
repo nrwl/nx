@@ -26,14 +26,6 @@ export class ProcessTasks {
   ) {
     for (const projectName of projectNames) {
       for (const target of targets) {
-        if (
-          !this.projectGraph.nodes[projectName].data.targets[target].executor
-        ) {
-          throw new Error(
-            `Target "${projectName}:${target}" does not have an executor configured`
-          );
-        }
-
         const resolvedConfiguration = this.resolveConfiguration(
           this.projectGraph.nodes[projectName],
           target,
@@ -198,6 +190,18 @@ export class ProcessTasks {
     resolvedConfiguration: string | undefined,
     overrides: Object
   ): Task {
+    if (!project.data.targets[target]) {
+      throw new Error(
+        `Cannot find configuration for task ${project.name}:${target}`
+      );
+    }
+
+    if (!project.data.targets[target].executor) {
+      throw new Error(
+        `Target "${project.name}:${target}" does not have an executor configured`
+      );
+    }
+
     const qualifiedTarget = {
       project: project.name,
       target,
