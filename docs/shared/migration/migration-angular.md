@@ -14,12 +14,14 @@ This command will install the correct version of Nx based on your Angular versio
 
 This will enable you to use the Nx CLI in your existing Angular CLI workspace while keeping your existing file structure in place. The following changes will be made in your repo to enable Nx:
 
-- The `nx` and `@nrwl/workspace` packages will be installed.
+- The `nx`, `@nrwl/workspace` and `prettier` packages will be installed.
 - An `nx.json` file will be created in the root of your workspace.
 - A `decorate-angular-cli.js` file will be added to the root of your workspace, and a `postinstall` script will be added to your `package.json` to run this script when your dependencies are updated. (The script forwards the `ng` commands to the Nx CLI (`nx`) to enable features such as [Computation Caching](/concepts/how-caching-works).)
 - For an Angular 15+ repo, the `angular.json` file is split into separate `project.json` files for each project.
 
 After the process completes, you can continue using the same `serve/build/lint/test` commands you are used to.
+
+**Note:** The changes will be slightly different for Angular 14 and lower.
 
 ## Transforming an Angular CLI workspace to an Integrated Nx Monorepo
 
