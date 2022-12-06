@@ -202,6 +202,7 @@ export function addOrChangeServeTarget(
       configurations: {
         development: {
           buildTarget: `${options.project}:build:development`,
+          hmr: true,
         },
         production: {
           buildTarget: `${options.project}:build:production`,
