@@ -26,6 +26,14 @@ export class ProcessTasks {
   ) {
     for (const projectName of projectNames) {
       for (const target of targets) {
+        if (
+          !this.projectGraph.nodes[projectName].data.targets[target].executor
+        ) {
+          throw new Error(
+            `Target "${projectName}:${target}" does not have an executor configured`
+          );
+        }
+
         const resolvedConfiguration = this.resolveConfiguration(
           this.projectGraph.nodes[projectName],
           target,
