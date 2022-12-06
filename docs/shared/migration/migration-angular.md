@@ -7,22 +7,17 @@ Within an Nx workspace, you gain many capabilities that help you build applicati
 You can migrate to a [Standalone Angular App](/angular-standalone-tutorial/1-code-generation) with the command:
 
 ```shell
-nx init
+npx nx init
 ```
 
-**Note**: To migrate to legacy versions of Nx, you'll need to refer to the following compatibility table below:
-
-| Nx version          | Collection to use | Flag to use                     | Example                                                       |
-| ------------------- | ----------------- | ------------------------------- | ------------------------------------------------------------- |
-| >= 13.10.0          | `@nrwl/angular`   | `--preserve-angular-cli-layout` | `ng add @nrwl/angular@13.10.0 --preserve-angular-cli-layout`  |
-| >= 13.8.4 < 13.10.0 | `@nrwl/workspace` | `--preserve-angular-cli-layout` | `ng add @nrwl/workspace@13.8.4 --preserve-angular-cli-layout` |
-| < 13.8.4            | `@nrwl/workspace` | `--preserveAngularCLILayout`    | `ng add @nrwl/workspace@13.5.0 --preserveAngularCLILayout`    |
+This command will install the correct version of Nx based on your Angular version.
 
 This will enable you to use the Nx CLI in your existing Angular CLI workspace while keeping your existing file structure in place. The following changes will be made in your repo to enable Nx:
 
 - The `nx` and `@nrwl/workspace` packages will be installed.
 - An `nx.json` file will be created in the root of your workspace.
 - A `decorate-angular-cli.js` file will be added to the root of your workspace, and a `postinstall` script will be added to your `package.json` to run this script when your dependencies are updated. (The script forwards the `ng` commands to the Nx CLI (`nx`) to enable features such as [Computation Caching](/concepts/how-caching-works).)
+- For an Angular 15+ repo, the `angular.json` file is split into separate `project.json` files for each project.
 
 After the process completes, you can continue using the same `serve/build/lint/test` commands you are used to.
 
@@ -31,7 +26,7 @@ After the process completes, you can continue using the same `serve/build/lint/t
 To take advantage of Nx's monorepo features provided by Nx and the Nx Angular plugin, you can also perform a migration from an Angular CLI to an Integrated Nx Monorepo with the command:
 
 ```shell
-ng add @nrwl/angular
+ng add @nrwl/angular@<version_number>
 ```
 
 **Note**: To migrate to legacy versions of Nx prior to Nx 13.10, run the command:
