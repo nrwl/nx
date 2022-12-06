@@ -336,7 +336,7 @@ export async function ensurePackage(
     } ${pkg}@${requiredVersion}`;
     if (throwOnMissing) {
       throw new Error(
-        `Required package ${pkg}@${requiredVersion} is missing. Run "${installCmd}", and then try again.`
+        `Cannot install required package ${pkg} during a dry run. Run the generator without --dryRun, or install the package with "${installCmd}" and try again.`
       );
     } else {
       execSync(installCmd, {
