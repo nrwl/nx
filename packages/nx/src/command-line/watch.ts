@@ -156,7 +156,7 @@ export async function watch(args: WatchArguments) {
   );
 }
 
-function buildCommands(
+export function buildCommands(
   command: string,
   changedFiles: ChangedFile[],
   changedProjects: string[]
