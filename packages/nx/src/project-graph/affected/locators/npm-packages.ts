@@ -31,6 +31,7 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
         const npmPackage = npmPackages.find(
           (pkg) => pkg.data.packageName === c.path[1]
         );
+        if (!npmPackage) break;
         touched.push(npmPackage.name);
         // If it was a type declarations package then also mark its corresponding implementation package as affected
         if (npmPackage.name.startsWith('npm:@types/')) {

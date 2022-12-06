@@ -265,4 +265,32 @@ describe('getTouchedNpmPackages', () => {
       'npm:awesome-nrwl',
     ]);
   });
+  it('should handle workspace package.json changes when the changes are not in npmPackages (projectGraph.externalNodes)', () => {
+    expect(() => {
+      getTouchedNpmPackages(
+        [
+          {
+            file: 'package.json',
+            hash: 'some-hash',
+            getChanges: () => [
+              {
+                type: 'JsonPropertyAdded',
+                path: ['devDependencies', 'changed-test-pkg-name'],
+                value: { rhs: 'workspace:*' },
+              },
+            ],
+          },
+        ],
+        workspaceJson,
+        nxJson,
+        {
+          dependencies: {
+            'happy-nrwl': '0.0.1',
+            'awesome-nrwl': '0.0.1',
+          },
+        },
+        projectGraph
+      );
+    }).not.toThrowError();
+  });
 });
