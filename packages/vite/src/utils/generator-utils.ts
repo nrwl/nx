@@ -4,7 +4,6 @@ import {
   offsetFromRoot,
   readJson,
   readProjectConfiguration,
-  TargetConfiguration,
   Tree,
   updateProjectConfiguration,
   writeJson,
@@ -13,74 +12,69 @@ import { ViteBuildExecutorOptions } from '../executors/build/schema';
 import { ViteDevServerExecutorOptions } from '../executors/dev-server/schema';
 import { VitestExecutorOptions } from '../executors/test/schema';
 import { Schema } from '../generators/configuration/schema';
+import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
 
-/**
- * This function is used to find the build and serve targets for
- * an application.
- *
- * The reason this function exists is because we cannot assume
- * that the user has not created a custom build target for the application,
- * or that they have not changed the name of the build target
- * from build to anything else.
- *
- * So, in order to find the correct name of the target,
- * we have to look into all the targets, check the executor
- * they are using, and infer from the executor that the target
- * is a build target.
- */
-export function findExistingTargets(targets: {
-  [targetName: string]: TargetConfiguration;
-}): {
-  buildTarget: string;
-  serveTarget: string;
-  testTarget: string;
+export function getTargetNames(
+  tree: Tree,
+  mainProject: string
+): {
+  buildTarget?: string;
+  serveTarget?: string;
+  testTarget?: string;
+  unsupported?: boolean;
 } {
-  const returnObject: {
-    buildTarget: string;
-    serveTarget: string;
-    testTarget: string;
-  } = {
-    buildTarget: 'build',
-    serveTarget: 'serve',
-    testTarget: 'test',
-  };
+  const arrayOfBuilders = [
+    '@nxext/vite:build',
+    '@nrwl/js:babel',
+    '@nrwl/js:swc',
+    '@nrwl/webpack:webpack',
+    '@nrwl/rollup:rollup',
+  ];
 
-  Object.entries(targets).forEach(([target, targetConfig]) => {
-    switch (targetConfig.executor) {
-      case '@nrwl/webpack:dev-server':
-      case '@nxext/vite:dev':
-        returnObject.serveTarget = target;
-        break;
-      case '@angular-devkit/build-angular:browser':
-        /**
-         * Not looking for '@nrwl/angular:ng-packagr-lite' or any other
-         * angular executors.
-         * Only looking for '@angular-devkit/build-angular:browser'
-         * because the '@nrwl/angular:ng-packagr-lite' executor
-         * (and maybe the other custom exeucutors) is only used for libs atm.
-         */
-        returnObject.buildTarget = target;
-        break;
-      case '@nrwl/webpack:webpack':
-      case '@nrwl/next:build':
-      case '@nrwl/web:webpack':
-      case '@nrwl/web:rollup':
-      case '@nrwl/js:tsc':
-      case '@nrwl/angular:ng-packagr-lite':
-      case '@nrwl/js:babel':
-      case '@nrwl/js:swc':
-      case '@nxext/vite:build':
-        returnObject.buildTarget = target;
-        break;
-      case '@nrwl/jest:jest':
-      case 'nxext/vitest:vitest':
-        returnObject.testTarget = target;
-      default:
-        returnObject.buildTarget = 'build';
-        returnObject.serveTarget = 'serve';
-        returnObject.testTarget = 'test';
-        break;
-    }
+  const arrayOfServers = ['@nxext/vite:dev', '@nrwl/webpack:dev-server'];
+
+  const arrayOfTesters = ['@nrwl/jest:jest', '@nxext/vitest:vitest'];
+
+  let returnObject: {
+    buildTarget?: string;
+    serveTarget?: string;
+    testTarget?: string;
+  } = {};
+
+  arrayOfBuilders.forEach((builder) => {
+    forEachExecutorOptions(tree, builder, (_options, projectName, target) => {
+      if (projectName !== mainProject) {
+        return;
+      }
+      if (returnObject.buildTarget) {
+        return;
+      }
+      returnObject.buildTarget = target;
+    });
+  });
+
+  arrayOfServers.forEach((server) => {
+    forEachExecutorOptions(tree, server, (_options, projectName, target) => {
+      if (projectName !== mainProject) {
+        return;
+      }
+      if (returnObject.serveTarget) {
+        return;
+      }
+      returnObject.serveTarget = target;
+    });
+  });
+
+  arrayOfTesters.forEach((tester) => {
+    forEachExecutorOptions(tree, tester, (_options, projectName, target) => {
+      if (projectName !== mainProject) {
+        return;
+      }
+      if (returnObject.testTarget) {
+        return;
+      }
+      returnObject.testTarget = target;
+    });
   });
 
   return returnObject;

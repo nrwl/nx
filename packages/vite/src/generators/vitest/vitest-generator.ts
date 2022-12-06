@@ -12,7 +12,7 @@ import {
 } from '@nrwl/devkit';
 import {
   addOrChangeTestTarget,
-  findExistingTargets,
+  getTargetNames,
   writeViteConfig,
 } from '../../utils/generator-utils';
 import { VitestGeneratorSchema } from './schema';
@@ -30,10 +30,10 @@ export async function vitestGenerator(
 ) {
   const tasks: GeneratorCallback[] = [];
 
-  const { targets, root } = readProjectConfiguration(tree, schema.project);
-  let testTarget = findExistingTargets(targets).testTarget;
+  const { root } = readProjectConfiguration(tree, schema.project);
+  let { testTarget } = getTargetNames(tree, schema.project);
 
-  addOrChangeTestTarget(tree, schema, testTarget);
+  addOrChangeTestTarget(tree, schema, testTarget ?? 'test');
 
   const initTask = await initGenerator(tree, {
     uiFramework: schema.uiFramework,
