@@ -9,5 +9,5 @@ export interface ViteBuildExecutorOptions {
   manifest?: boolean | string;
   ssrManifest?: boolean | string;
   logLevel?: 'info' | 'warn' | 'error' | 'silent';
-  mode?: string;
+  mode?: 'production' | 'development';
 }

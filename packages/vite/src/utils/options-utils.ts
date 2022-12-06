@@ -28,7 +28,7 @@ export async function getBuildAndSharedConfig(
   const projectRoot = context.workspace.projects[context.projectName].root;
 
   return mergeConfig({}, {
-    mode: options.mode,
+    mode: options.mode ?? context.configurationName,
     root: projectRoot,
     base: options.base,
     configFile: normalizeConfigFilePath(
@@ -97,10 +97,10 @@ export function getServerOptions(
 }
 
 export function getBuildTargetOptions(
-  options: ViteDevServerExecutorOptions,
+  buildTarget: string,
   context: ExecutorContext
 ) {
-  const target = parseTargetString(options.buildTarget);
+  const target = parseTargetString(buildTarget);
   return readTargetOptions(target, context);
 }
 
