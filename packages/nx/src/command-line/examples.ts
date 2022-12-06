@@ -340,4 +340,21 @@ export const examples: Record<string, Example[]> = {
         'Create a dedicated commit for each successfully completed migration. You can customize the prefix used for each commit by additionally setting --commit-prefix="PREFIX_HERE "',
     },
   ],
+  watch: [
+    {
+      command: 'nx watch app -- "echo &1; echo &2"',
+      description:
+        'Watch the "app" project and echo the project name and the file that changed',
+    },
+    {
+      command:
+        'nx watch --projects=app1,app2 --includeDependencies -- "echo &1"',
+      description:
+        'Watch "app1" and "app2" and echo the project name whenever a specified project or its dependencies change',
+    },
+    {
+      command: 'nx watch --all --includeGlobalWorkspaceFiles -- "echo &1"',
+      description: 'Watch all projects and all files in the workspace',
+    },
+  ],
 };

@@ -15,6 +15,26 @@ nx watch [project]
 
 Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpm nx`.
 
+### Examples
+
+Watch the "app" project and echo the project name and the file that changed:
+
+```terminal
+ nx nx watch app -- "echo &1; echo &2"
+```
+
+Watch "app1" and "app2" and echo the project name whenever a specified project or its dependencies change:
+
+```terminal
+ nx nx watch --projects=app1,app2 --includeDependencies -- "echo &1"
+```
+
+Watch all projects and all files in the workspace:
+
+```terminal
+ nx nx watch --all --includeGlobalWorkspaceFiles -- "echo &1"
+```
+
 ## Options
 
 ### all

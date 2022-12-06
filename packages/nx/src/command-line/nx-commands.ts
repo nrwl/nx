@@ -7,6 +7,7 @@ import { examples } from './examples';
 import { workspaceRoot } from '../utils/workspace-root';
 import { getPackageManagerCommand } from '../utils/package-manager';
 import { writeJsonFile } from '../utils/fileutils';
+import { WatchArguments } from './watch';
 
 // Ensure that the output takes up the available width of the terminal.
 yargs.wrap(yargs.terminalWidth());
@@ -384,9 +385,10 @@ export const commandsObject = yargs
   .command({
     command: 'watch [project]',
     describe: 'Watch for changes within projects, and execute commands',
-    builder: (yargs) => withWatchOptions(yargs),
+    builder: (yargs) =>
+      linkToNxDevAndExamples(withWatchOptions(yargs), 'watch'),
     handler: async (args) => {
-      await import('./watch').then((m) => m.watch(args));
+      await import('./watch').then((m) => m.watch(args as WatchArguments));
     },
   })
   .help()
@@ -941,18 +943,6 @@ function withWatchOptions(yargs: yargs.Argv) {
       'strip-dashed': true,
       'populate--': true,
     })
-    .example(
-      'nx watch app -- "echo &1; echo &2"',
-      'Watch app and echo the project name and the file that changed'
-    )
-    .example(
-      'nx watch --projects=app1,app2 --includeDependencies -- "echo &1"',
-      'Watch app1 and app2 and echo the project name whenever a specified project or its dependencies change'
-    )
-    .example(
-      'nx watch --all --includeGlobalWorkspaceFiles -- "echo &1"',
-      'Watch all projects and all files in the workspace'
-    )
     .positional('project', {
       describe: 'The project to watch',
       type: 'string',
