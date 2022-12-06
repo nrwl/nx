@@ -265,7 +265,7 @@ describe('getTouchedNpmPackages', () => {
       'npm:awesome-nrwl',
     ]);
   });
-  it('should handle workspace package.json changes when the changes are not in npmPackages (projectGraph.externalNodes)', () => {
+  it('should handle workspace package.json changes when the changes are not in `npmPackages` (projectGraph.externalNodes)', () => {
     expect(() => {
       getTouchedNpmPackages(
         [
