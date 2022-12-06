@@ -1,4 +1,4 @@
-# Angular Tutorial - Part 2: Project Graph
+# Angular Monorepo Tutorial - Part 2: Project Graph
 
 Run the command: `npx nx graph`. A browser should open up with the following contents:
 

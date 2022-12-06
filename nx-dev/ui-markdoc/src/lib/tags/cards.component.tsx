@@ -6,9 +6,24 @@ import {
 } from '@heroicons/react/24/outline';
 import { ReactNode } from 'react';
 
-export function Cards({ children }: { children: ReactNode }) {
+export function Cards({
+  cols = 2,
+  children,
+}: {
+  cols: number;
+  children: ReactNode;
+}) {
+  const gridColums: { [key: number]: string } = {
+    1: 'lg:grid-cols-1',
+    2: 'lg:grid-cols-2',
+    3: 'lg:grid-cols-3',
+    4: 'lg:grid-cols-4',
+  };
+
   return (
-    <div className="not-prose mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
+    <div
+      className={`not-prose mt-8 grid grid-cols-1 gap-6 ${gridColums[cols]}`}
+    >
       {children}
     </div>
   );
@@ -39,11 +54,12 @@ export function Card({
   return (
     <div
       key={title}
-      className="group relative flex items-center rounded-md border border-slate-200 bg-slate-50/40 pr-8 text-sm shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-slate-50 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:bg-slate-800"
+      className="group relative flex rounded-md border border-slate-200 bg-slate-50/40 pr-8 text-sm shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-slate-50 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:bg-slate-800"
     >
       {!!hasYoutubeId && (
         <img
           className="!m-0 aspect-video rounded-md"
+          alt="Youtube Link"
           src={`https://img.youtube.com/vi/${hasYoutubeId}/default.jpg`}
         />
       )}

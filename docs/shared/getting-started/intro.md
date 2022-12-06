@@ -18,41 +18,54 @@ Get a pre-configured setup. Nx configures your favorite frameworks and lets you 
 
 {% /persona %}
 
-{% persona type="lerna" title="Add to an Existing Monorepo" url="/recipes/adopting-nx/adding-to-monorepo" %}
+{% persona type="react" title="Create a Standalone React app" url="/getting-started/react-standalone-tutorial" %}
 
-Incrementally add Nx to your repo and enjoy faster CI runs and local development. All without modifying your existing setup.
+A modern React setup with built-in support for Vite, ESLint, Cypress and more. Think CRA but modern, always up-to-date and scalable.
 
-- [Add Nx to an Existing Monorepo](/recipes/adopting-nx/adding-to-monorepo)
+- [Create a Standalone React app](/getting-started/react-standalone-tutorial)
+
+{% /persona %}
+
+{% persona type="angular" title="Create a Standalone Angular app" url="/getting-started/angular-standalone-tutorial" %}
+
+A modern Angular development experience powered by advanced generators and integrations with modern tooling.
+
+- [Create a Standalone Angular app](/getting-started/angular-standalone-tutorial)
 
 {% /persona %}
 
-{% persona type="angular" title="Enter Modern Angular" url="/recipes/adopting-nx/migration-angular" %}
-Enhance your Angular development experience by leveraging its advanced generators and integrations with modern tooling.
-
-- [Switch from the Angular CLI to Nx](/recipes/adopting-nx/migration-angular)
-
-{% /persona %}
 {% /personas %}
+
+## Adopting Nx
+
+Coming from an existing project and want to adopt Nx? We have a few recipes to help you get started.
+
+{% cards cols="4" %}
+
+{% card title="Add to Existing Monorepo" description="Add Nx to your existing NPM/YARN/PNPM workspace" type="documentation" url="/recipes/adopting-nx/adding-to-monorepo" /%}
+
+{% card title="Add to any Project" description="Add Nx to an standalone project" type="documentation" url="/recipes/adopting-nx/adding-to-existing-project" /%}
+
+{% card title="Migrate from CRA" description="Migrate from a CRA setup and automatically switch to Vite" type="documentation" url="/recipes/adopting-nx/migration-cra" /%}
+
+{% card title="Migrate from Angular CLI" description="Automatically migrate from the Angular CLI" type="documentation" url="/recipes/adopting-nx/migration-angular" /%}
+
+{% /cards %}
+
+## Why Nx?
+
+Nx has two main goals:
+
+- **Speed up your existing workflow with minimum effort.**
+- **Provide a first-rate developer experience no matter the size of the repo.**
+
+It achieves speed that via [computation caching](/core-features/cache-task-results), by only [run tasks affected by a given change](/core-features/run-tasks#run-tasks-affected-by-a-pr) and by being able to [distribute your task execution](/core-features/distribute-task-execution) across multiple agents in CI.
+
+High quality DX is implemented via [code generators](/plugin-features/use-code-generators), [IDE extensions](/core-features/integrate-with-editors#integrate-with-editors) and by helping you [keep your codebase evergreen](/core-features/automate-updating-dependencies).
+
+## How does Nx compare to other tools?
 
 If you know other tools in the monorepo space, here is how Nx compares:
 
 - [Monorepo.tools](https://monorepo.tools)
 - [Nx and Turborepo](/more-concepts/turbo-and-nx)
-
-## Nx Has Two Goals
-
-**Speed up your existing workflow with minimum effort.**
-
-- Never rebuild the same code twice by [caching task results](/core-features/cache-task-results).
-- Only [run tasks affected by the current PR](/core-features/run-tasks#run-tasks-affected-by-a-pr).
-- [Distribute your task execution](/core-features/distribute-task-execution) across multiple agents in CI.
-
-These features can be enabled without touching your existing workflows if you use Nx with a [package-based repo](/concepts/integrated-vs-package-based).
-
-**Provide a first-rate developer experience no matter the size of the repo:**
-
-- Encode common coding tasks in [code generators](/plugin-features/use-code-generators) to make them easily repeatable.
-- Offload the maintenance burden of [updating dependencies and configuration files](/core-features/automate-updating-dependencies) to the Nrwl team.
-- [Enforce project boundaries](/core-features/enforce-project-boundaries) based on your own organization structure.
-
-These features and the [integrated repository](/concepts/integrated-vs-package-based) mindset allow large teams to collaborate in a single monorepo without getting in each other's way.

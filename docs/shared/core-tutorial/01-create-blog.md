@@ -3,7 +3,7 @@
 In this tutorial you create multiple projects in a monorepo and take advantage of the core Nx features with a minimum of configuration.
 
 {% callout type="check" title="Package-Based Repo" %}
-This tutorial sets up a [package-based repo](/concepts/integrated-vs-package-based). If you prefer an [integrated repo](/concepts/integrated-vs-package-based), check out the [React](/getting-started/react-tutorial), [Angular](/getting-started/angular-tutorial) or [Node](/getting-started/node-tutorial) tutorials.
+This tutorial sets up a [package-based repo](/concepts/integrated-vs-package-based). If you prefer an [integrated repo](/concepts/integrated-vs-package-based), check out the [React](/react-tutorial/1-code-generation), [Angular](/angular-tutorial/1-code-generation) or [Node](/getting-started/node-tutorial) tutorials.
 {% /callout %}
 
 ## Contents:

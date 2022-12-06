@@ -2,7 +2,12 @@ import { Schema } from '@markdoc/markdoc';
 
 export const cards: Schema = {
   render: 'Cards',
-  attributes: {},
+  attributes: {
+    cols: {
+      type: 'Number',
+      description: 'The number of colums per row',
+    },
+  },
 };
 
 export const card: Schema = {

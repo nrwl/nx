@@ -1,4 +1,4 @@
-# Angular Tutorial - Part 4: Workspace Optimization
+# Angular Monorepo Tutorial - Part 4: Workspace Optimization
 
 ## Testing Affected Projects
 
