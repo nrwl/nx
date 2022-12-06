@@ -15,34 +15,30 @@ The old way to have the `myapp` project depend on specific files in the root of 
 }
 ```
 
-To express the same dependencies with `inputs` and `namedInputs`, do this:
+To express the same dependencies with `inputs` and `namedInputs`, modify the default `sharedGlobals` named input:
 
 ```json {% fileName="nx.json" %}
 {
   "namedInputs": {
-    "globalFiles": [
+    "sharedGlobals": [
       "{workspaceRoot}/globalConfig.js",
       "{workspaceRoot}/styles/**/*.css"
+    ],
+    "default": [
+      "sharedGlobals"
+      // etc
     ]
   }
 }
 ```
 
-```json {% fileName="project.json" %}
-{
-  "targets": {
-    "build": {
-      "inputs": ["globalFiles" /* etc */]
-    }
-  }
-}
-```
+The `sharedGlobals` are included in the `default` named input, so most targets will be set up to depend on them.
 
 For a more detailed explanation, read the [Customizing Inputs and Named Inputs guide](/more-concepts/customizing-inputs)
 
 ### Dependencies on Sections of the Root `package.json` File
 
-You used to be able to set up dependencies on specific sections of the `package.json` file, like this:
+You used to be able to set up dependencies on specific packages in the `dependenceis` and `devDependencies` sections of the `package.json` file, like this:
 
 ```json
 {
@@ -51,15 +47,10 @@ You used to be able to set up dependencies on specific sections of the `package.
       "dependencies": "*",
       "devDependencies": {
         "mypackage": ["mylib"]
-      },
-      "scripts": {
-        "check:*": "*"
       }
     }
   }
 }
 ```
 
-This never worked correctly with the caching mechanism and is not possible to specify using `inputs` and `namedInputs`.
-
-As of Nx 15.3, you can create a root-level project and treat the root-level `package.json` scripts as targets like any other project and then set up the `dependsOn` property for those individual targets. Depending on your use case, this might be a sufficient replacement.
+As of Nx 15, this is inferred automatically by Nx based on the `import` statements in your code. These `implicitDependencies` can be safely deleted.
