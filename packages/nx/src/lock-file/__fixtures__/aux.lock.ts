@@ -1,3 +1,5 @@
+// TODO: add also { "eslint-plugin-disable-autofix": "npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0" } to devDependencies for test
+
 export const npmLockFileWithAliases = `{
   "name": "test",
   "version": "0.0.0",
@@ -2704,9 +2706,9 @@ packages:
   github.com/charsleysa/postgres/3b1a01b2da3e2fafb1a79006f838eff11a8de3cb:
     resolution: {tarball: https://codeload.github.com/charsleysa/postgres/tar.gz/3b1a01b2da3e2fafb1a79006f838eff11a8de3cb}
     name: postgres
-    version: 3.2.4
     prepare: true
     requiresBuild: true
+    version: 3.2.4
     dev: false
 `;
 

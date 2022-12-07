@@ -1,7 +1,12 @@
 import { mapLockFileDataToPartialGraph } from './lock-file';
-import { parseNpmLockFile } from './npm';
-import { parsePnpmLockFile } from './pnpm';
-import { parseYarnLockFile } from './yarn';
+import { parseNpmLockFile, stringifyNpmLockFile } from './npm';
+import { parsePnpmLockFile, stringifyPnpmLockFile } from './pnpm';
+import { parseYarnLockFile, stringifyYarnLockFile } from './yarn';
+import {
+  npmLockFileWithAliases,
+  pnpmLockFileWithAliases,
+  yarnLockFileWithAliases,
+} from './__fixtures__/aux.lock';
 import {
   lockFileV3YargsAndDevkitOnly as npmLockFileV3YargsAndDevkit,
   lockFileV2YargsAndDevkitOnly as npmLockFileV2YargsAndDevkit,
@@ -184,6 +189,36 @@ describe('lock-file', () => {
           partialGraph.dependencies['npm:@phenomnomnominal/tsquery']
         ).toMatchSnapshot();
       });
+    });
+  });
+
+  describe('package aliases and direct urls', () => {
+    it('should properly parse, map and stringify npm', () => {
+      const lockFileData = parseNpmLockFile(npmLockFileWithAliases);
+
+      const partialGraph = mapLockFileDataToPartialGraph(lockFileData, 'npm');
+
+      const lockFile = stringifyNpmLockFile(lockFileData);
+
+      expect(lockFile).toEqual(npmLockFileWithAliases);
+    });
+    it('should properly parse, map and stringify yarn', () => {
+      const lockFileData = parseYarnLockFile(yarnLockFileWithAliases);
+
+      const partialGraph = mapLockFileDataToPartialGraph(lockFileData, 'yarn');
+
+      const lockFile = stringifyYarnLockFile(lockFileData);
+
+      expect(lockFile).toEqual(yarnLockFileWithAliases);
+    });
+    it('should properly parse, map and stringify pnpm', () => {
+      const lockFileData = parsePnpmLockFile(pnpmLockFileWithAliases);
+
+      const partialGraph = mapLockFileDataToPartialGraph(lockFileData, 'pnpm');
+
+      const lockFile = stringifyPnpmLockFile(lockFileData);
+
+      expect(lockFile).toEqual(pnpmLockFileWithAliases);
     });
   });
 });
