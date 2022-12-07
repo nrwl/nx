@@ -24,6 +24,8 @@ import {
   lockFile as yarnLockFile,
 } from './__fixtures__/yarn.lock';
 import { vol } from 'memfs';
+import { ProjectGraph } from '../config/project-graph';
+import { createPackageJson } from '../utils/create-package-json';
 
 jest.mock('fs', () => require('memfs').fs);
 
@@ -193,32 +195,105 @@ describe('lock-file', () => {
   });
 
   describe('package aliases and direct urls', () => {
+    function expandGraph(partialGraph: ProjectGraph) {
+      partialGraph.nodes['lib1'] = {
+        type: 'lib',
+        name: 'lib1',
+        data: {
+          root: 'libs/lib1',
+        },
+      };
+      partialGraph.dependencies['lib1'] = [
+        {
+          type: 'static',
+          source: 'lib1',
+          target: 'npm:postgres',
+        },
+      ];
+      return partialGraph;
+    }
+
+    const fileSys = {
+      'package.json': JSON.stringify({
+        name: 'test',
+        version: '0.0.0',
+        license: 'MIT',
+        dependencies: {
+          '@nrwl/devkit': '15.0.13',
+          yargs: '17.6.2',
+          postgres: 'charsleysa/postgres#fix-errors-compiled',
+        },
+        devDependencies: {
+          react: '18.2.0',
+        },
+        peerDependencies: {
+          typescript: '4.8.4',
+        },
+      }),
+    };
+    beforeEach(() => {
+      vol.fromJSON(fileSys, '/root');
+    });
+
     it('should properly parse, map and stringify npm', () => {
       const lockFileData = parseNpmLockFile(npmLockFileWithAliases);
-
-      const partialGraph = mapLockFileDataToPartialGraph(lockFileData, 'npm');
-
       const lockFile = stringifyNpmLockFile(lockFileData);
 
       expect(lockFile).toEqual(npmLockFileWithAliases);
+
+      const partialGraph = expandGraph(
+        mapLockFileDataToPartialGraph(lockFileData, 'npm')
+      );
+      const newPackage = createPackageJson('lib1', partialGraph, {});
+      expect(newPackage).toMatchInlineSnapshot(`
+        Object {
+          "dependencies": Object {
+            "postgres": "git+ssh://git@github.com/charsleysa/postgres.git#3b1a01b2da3e2fafb1a79006f838eff11a8de3cb",
+          },
+          "name": "lib1",
+          "version": "0.0.1",
+        }
+      `);
     });
     it('should properly parse, map and stringify yarn', () => {
       const lockFileData = parseYarnLockFile(yarnLockFileWithAliases);
-
-      const partialGraph = mapLockFileDataToPartialGraph(lockFileData, 'yarn');
-
       const lockFile = stringifyYarnLockFile(lockFileData);
 
       expect(lockFile).toEqual(yarnLockFileWithAliases);
+
+      const partialGraph = expandGraph(
+        mapLockFileDataToPartialGraph(lockFileData, 'yarn')
+      );
+      const newPackage = createPackageJson('lib1', partialGraph, {});
+      expect(newPackage).toMatchInlineSnapshot(`
+        Object {
+          "dependencies": Object {
+            "postgres": "charsleysa/postgres#fix-errors-compiled",
+          },
+          "name": "lib1",
+          "version": "0.0.1",
+        }
+      `);
     });
     it('should properly parse, map and stringify pnpm', () => {
       const lockFileData = parsePnpmLockFile(pnpmLockFileWithAliases);
-
-      const partialGraph = mapLockFileDataToPartialGraph(lockFileData, 'pnpm');
-
       const lockFile = stringifyPnpmLockFile(lockFileData);
 
       expect(lockFile).toEqual(pnpmLockFileWithAliases);
+
+      const partialGraph = expandGraph(
+        mapLockFileDataToPartialGraph(lockFileData, 'pnpm')
+      );
+      const newPackage = createPackageJson('lib1', partialGraph, {});
+      expect(newPackage).toMatchInlineSnapshot(`
+        Object {
+          "dependencies": Object {
+            "postgres": "github.com/charsleysa/postgres/3b1a01b2da3e2fafb1a79006f838eff11a8de3cb",
+          },
+          "name": "lib1",
+          "version": "0.0.1",
+        }
+      `);
     });
   });
 });

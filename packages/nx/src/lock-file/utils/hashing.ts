@@ -40,16 +40,12 @@ function traverseExternalNodesDependencies(
 ) {
   graph.dependencies[projectName].forEach((d) => {
     const target = graph.externalNodes[d.target];
-    try {
-      const targetKey = `${target.data.packageName}@${target.data.version}`;
-      if (visited.indexOf(targetKey) === -1) {
-        visited.push(targetKey);
-        if (graph.dependencies[d.target]) {
-          traverseExternalNodesDependencies(d.target, graph, visited);
-        }
+    const targetKey = `${target.data.packageName}@${target.data.version}`;
+    if (visited.indexOf(targetKey) === -1) {
+      visited.push(targetKey);
+      if (graph.dependencies[d.target]) {
+        traverseExternalNodesDependencies(d.target, graph, visited);
       }
-    } catch (e) {
-      console.log(d.target, Object.keys(graph.externalNodes));
     }
   });
 }
