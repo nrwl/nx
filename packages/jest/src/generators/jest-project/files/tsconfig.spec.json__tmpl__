@@ -8,14 +8,14 @@
   "files": ["src/test-setup.ts"],<% } %>
   "include": [
     "jest.config.ts",
-    "**/*.test.ts",
-    "**/*.spec.ts",<% if (supportTsx) { %>
-    "**/*.test.tsx",
-    "**/*.spec.tsx",
-    "**/*.test.js",
-    "**/*.spec.js",
-    "**/*.test.jsx",
-    "**/*.spec.jsx",<% } %>
-    "**/*.d.ts"
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",<% if (supportTsx) { %>
+    "src/**/*.test.tsx",
+    "src/**/*.spec.tsx",
+    "src/**/*.test.js",
+    "src/**/*.spec.js",
+    "src/**/*.test.jsx",
+    "src/**/*.spec.jsx",<% } %>
+    "src/**/*.d.ts"
   ]
 }

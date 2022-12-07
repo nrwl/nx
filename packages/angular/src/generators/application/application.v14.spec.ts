@@ -214,18 +214,6 @@ describe('app', () => {
       expect(appTsConfig.extends).toBe('../../tsconfig.base.json');
     });
 
-    it('should support a root tsconfig.json instead of tsconfig.base.json', async () => {
-      // ARRANGE
-      appTree.rename('tsconfig.base.json', 'tsconfig.json');
-
-      // ACT
-      await generateApp(appTree, 'app');
-
-      // ASSERT
-      const appTsConfig = readJson(appTree, 'apps/app/tsconfig.json');
-      expect(appTsConfig.extends).toBe('../../tsconfig.json');
-    });
-
     it('should set default project', async () => {
       // ACT
       await generateApp(appTree);
@@ -338,18 +326,6 @@ describe('app', () => {
       // ASSERT
       const appTsConfig = readJson(appTree, 'apps/my-dir/app/tsconfig.json');
       expect(appTsConfig.extends).toBe('../../../tsconfig.base.json');
-    });
-
-    it('should support a root tsconfig.json instead of tsconfig.base.json', async () => {
-      // ARRANGE
-      appTree.rename('tsconfig.base.json', 'tsconfig.json');
-
-      // ACT
-      await generateApp(appTree, 'app', { directory: 'myDir' });
-
-      // ASSERT
-      const appTsConfig = readJson(appTree, 'apps/my-dir/app/tsconfig.json');
-      expect(appTsConfig.extends).toBe('../../../tsconfig.json');
     });
   });
 

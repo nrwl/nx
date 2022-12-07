@@ -194,11 +194,17 @@ function updateProjectTsConfig(
   }
   updateJson(host, `${options.projectRoot}/tsconfig.lib.json`, (json) => {
     if (options.unitTestRunner === 'jest') {
-      json.exclude = ['src/test-setup.ts', '**/*.spec.ts'];
+      json.exclude = ['src/test-setup.ts', 'src/**/*.spec.ts'];
     } else if (options.unitTestRunner === 'none') {
       json.exclude = [];
     } else {
       json.exclude = json.exclude || [];
+      json.exclude = json.exclude.map((v) => {
+        if (v.startsWith('**/*')) {
+          return v.replace('**/*', 'src/**/*');
+        }
+        return v;
+      });
     }
 
     return {

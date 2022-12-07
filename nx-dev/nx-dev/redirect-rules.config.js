@@ -162,6 +162,7 @@ const guideUrls = {
   '/using-nx/nx-devkit': '/extending-nx/nx-devkit',
   '/structure/project-graph-plugins': '/extending-nx/project-graph-plugins',
   '/guides/lerna-and-nx': '/migration/lerna-and-nx',
+  '/cypress/v10-migration-guide': '/cypress/v11-migration-guide',
 };
 
 /**

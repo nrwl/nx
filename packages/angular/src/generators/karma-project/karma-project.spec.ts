@@ -130,7 +130,7 @@ describe('karmaProject', () => {
           outDir: '../../dist/out-tsc',
           types: ['jasmine', 'node'],
         },
-        include: ['**/*.spec.ts', '**/*.test.ts', '**/*.d.ts'],
+        include: ['src/**/*.spec.ts', 'src/**/*.test.ts', 'src/**/*.d.ts'],
       });
     });
   });
@@ -163,7 +163,7 @@ describe('karmaProject', () => {
           outDir: '../../dist/out-tsc',
           types: ['jasmine', 'node'],
         },
-        include: ['**/*.spec.ts', '**/*.test.ts', '**/*.d.ts'],
+        include: ['src/**/*.spec.ts', 'src/**/*.test.ts', 'src/**/*.d.ts'],
       });
     });
 
@@ -205,7 +205,7 @@ describe('karmaProject', () => {
           types: ['jasmine', 'node'],
         },
         files: ['src/polyfills.ts'],
-        include: ['**/*.spec.ts', '**/*.test.ts', '**/*.d.ts'],
+        include: ['src/**/*.spec.ts', 'src/**/*.test.ts', 'src/**/*.d.ts'],
       });
     });
   });
@@ -253,6 +253,26 @@ describe('karmaProject', () => {
       expect(
         tree.read('libs/nested-lib/karma.conf.js', 'utf-8')
       ).toMatchSnapshot();
+      expect(tree.read('karma.conf.js', 'utf-8')).toMatchSnapshot();
+    });
+
+    it('should use get syntax when root project does not have karma conf with set syntax', async () => {
+      await applicationGenerator(tree, {
+        name: 'root-app',
+        unitTestRunner: UnitTestRunner.Jest,
+        rootProject: true,
+      });
+      await libraryGenerator(tree, {
+        name: 'nested-lib',
+        unitTestRunner: UnitTestRunner.None,
+      });
+      await karmaProjectGenerator(tree, { project: 'nested-lib' });
+
+      expect(tree.exists('libs/nested-lib/karma.conf.js')).toBe(true);
+      expect(
+        tree.read('libs/nested-lib/karma.conf.js', 'utf-8')
+      ).toMatchSnapshot();
+      expect(tree.read('karma.conf.js', 'utf-8')).toMatchSnapshot();
     });
   });
 });

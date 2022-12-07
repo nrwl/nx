@@ -32,6 +32,7 @@ import {
   swcLoaderVersion,
 } from '../../utils/versions';
 import { installCommonDependencies } from './lib/install-common-dependencies';
+import { extractTsConfigBase } from '../../utils/create-ts-config';
 
 async function addLinting(host: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];
@@ -89,6 +90,10 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
   });
 
   tasks.push(initTask);
+
+  if (!options.rootProject) {
+    extractTsConfigBase(host);
+  }
 
   createApplicationFiles(host, options);
   addProject(host, options);

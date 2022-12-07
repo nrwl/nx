@@ -6,6 +6,7 @@ import {
   getImageDownloadButton,
   getIncludeProjectsInPathButton,
   getSearchDepthCheckbox,
+  getSearchDepthDecrementButton,
   getSearchDepthIncrementButton,
   getSelectAffectedButton,
   getSelectAllButton,
@@ -110,6 +111,53 @@ describe('dev mode - project graph', () => {
           project.name.includes('cart')
         ).length
       );
+    });
+  });
+
+  describe('proximity', () => {
+    it('should change when increment/decrement button is clicked', () => {
+      cy.get('[data-cy="depth-value"]').should('contain', '1');
+      getSearchDepthIncrementButton().click();
+      cy.get('[data-cy="depth-value"]').should('contain', '2');
+      getSearchDepthDecrementButton().click();
+      cy.get('[data-cy="depth-value"]').should('contain', '1');
+    });
+
+    it("should reactivate proximity if it's disabled and a button is clicked", () => {
+      getSearchDepthIncrementButton().click();
+      cy.get('[data-cy="depth-value"]').should('contain', '2');
+      getSearchDepthCheckbox()
+        .should('be.checked')
+        .click()
+        .should('not.be.checked')
+        .click();
+      getSearchDepthIncrementButton().click();
+      cy.get('[data-cy="depth-value"]').should('contain', '3');
+      getSearchDepthCheckbox()
+        .should('be.checked')
+        .click()
+        .should('not.be.checked')
+        .click();
+      getSearchDepthDecrementButton().click();
+      cy.get('[data-cy="depth-value"]').should('contain', '2');
+      getSearchDepthCheckbox()
+        .should('be.checked')
+        .click()
+        .should('not.be.checked')
+        .click();
+      // return to 1 for following tests
+      getSearchDepthDecrementButton().click();
+    });
+
+    it('should not go below 1', () => {
+      getSearchDepthIncrementButton().click();
+      getSearchDepthIncrementButton().click();
+      cy.get('[data-cy="depth-value"]').should('contain', '3');
+      getSearchDepthDecrementButton().click();
+      getSearchDepthDecrementButton().click();
+      cy.get('[data-cy="depth-value"]').should('contain', '1');
+      getSearchDepthDecrementButton().click();
+      cy.get('[data-cy="depth-value"]').should('contain', '1');
     });
   });
 

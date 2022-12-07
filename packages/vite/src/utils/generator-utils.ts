@@ -14,76 +14,68 @@ import { ViteDevServerExecutorOptions } from '../executors/dev-server/schema';
 import { VitestExecutorOptions } from '../executors/test/schema';
 import { Schema } from '../generators/configuration/schema';
 
-/**
- * This function is used to find the build and serve targets for
- * an application.
- *
- * The reason this function exists is because we cannot assume
- * that the user has not created a custom build target for the application,
- * or that they have not changed the name of the build target
- * from build to anything else.
- *
- * So, in order to find the correct name of the target,
- * we have to look into all the targets, check the executor
- * they are using, and infer from the executor that the target
- * is a build target.
- */
 export function findExistingTargets(targets: {
   [targetName: string]: TargetConfiguration;
 }): {
-  buildTarget: string;
-  serveTarget: string;
-  testTarget: string;
+  buildTarget?: string;
+  serveTarget?: string;
+  testTarget?: string;
+  unsuppored?: boolean;
 } {
-  const returnObject: {
-    buildTarget: string;
-    serveTarget: string;
-    testTarget: string;
-  } = {
-    buildTarget: 'build',
-    serveTarget: 'serve',
-    testTarget: 'test',
-  };
+  let buildTarget, serveTarget, testTarget, unsuppored;
 
-  Object.entries(targets).forEach(([target, targetConfig]) => {
-    switch (targetConfig.executor) {
-      case '@nrwl/webpack:dev-server':
-      case '@nxext/vite:dev':
-        returnObject.serveTarget = target;
-        break;
-      case '@angular-devkit/build-angular:browser':
-        /**
-         * Not looking for '@nrwl/angular:ng-packagr-lite' or any other
-         * angular executors.
-         * Only looking for '@angular-devkit/build-angular:browser'
-         * because the '@nrwl/angular:ng-packagr-lite' executor
-         * (and maybe the other custom exeucutors) is only used for libs atm.
-         */
-        returnObject.buildTarget = target;
-        break;
-      case '@nrwl/webpack:webpack':
-      case '@nrwl/next:build':
-      case '@nrwl/web:webpack':
-      case '@nrwl/web:rollup':
-      case '@nrwl/js:tsc':
-      case '@nrwl/angular:ng-packagr-lite':
-      case '@nrwl/js:babel':
-      case '@nrwl/js:swc':
-      case '@nxext/vite:build':
-        returnObject.buildTarget = target;
-        break;
-      case '@nrwl/jest:jest':
-      case 'nxext/vitest:vitest':
-        returnObject.testTarget = target;
-      default:
-        returnObject.buildTarget = 'build';
-        returnObject.serveTarget = 'serve';
-        returnObject.testTarget = 'test';
-        break;
+  const arrayOfBuilders = [
+    '@nxext/vite:build',
+    '@nrwl/js:babel',
+    '@nrwl/js:swc',
+    '@nrwl/webpack:webpack',
+    '@nrwl/rollup:rollup',
+    '@nrwl/web:rollup',
+  ];
+
+  const arrayOfServers = ['@nxext/vite:dev', '@nrwl/webpack:dev-server'];
+
+  const arrayOfTesters = ['@nrwl/jest:jest', '@nxext/vitest:vitest'];
+
+  const arrayofUnsupported = [
+    '@nrwl/angular:ng-packagr-lite',
+    '@angular-devkit/build-angular:browser',
+    '@nrwl/angular:package',
+    '@nrwl/angular:webpack-browser',
+    '@angular-devkit/build-angular:browser',
+    '@angular-devkit/build-angular:dev-server',
+    '@nrwl/angular:ng-packagr-lite',
+    '@nrwl/esbuild:esbuild',
+    '@nrwl/react-native:start',
+    '@nrwl/next:build',
+    '@nrwl/next:server',
+    '@nrwl/js:tsc',
+  ];
+
+  for (const target in targets) {
+    if (buildTarget && serveTarget && testTarget) {
+      break;
     }
-  });
+    if (arrayOfBuilders.includes(targets[target].executor)) {
+      buildTarget = target;
+    }
+    if (arrayOfServers.includes(targets[target].executor)) {
+      serveTarget = target;
+    }
+    if (arrayOfTesters.includes(targets[target].executor)) {
+      testTarget = target;
+    }
+    if (arrayofUnsupported.includes(targets[target].executor)) {
+      unsuppored = true;
+    }
+  }
 
-  return returnObject;
+  return {
+    buildTarget,
+    serveTarget,
+    testTarget,
+    unsuppored,
+  };
 }
 
 export function addOrChangeTestTarget(
@@ -202,6 +194,7 @@ export function addOrChangeServeTarget(
       configurations: {
         development: {
           buildTarget: `${options.project}:build:development`,
+          hmr: true,
         },
         production: {
           buildTarget: `${options.project}:build:production`,
@@ -412,6 +405,9 @@ export function writeViteConfig(tree: Tree, options: Schema) {
       host: 'localhost',
     },`;
 
+  const projectsTsConfig = tree.exists('tsconfig.base.json')
+    ? "'tsconfig.base.json'"
+    : '';
   switch (options.uiFramework) {
     case 'react':
       viteConfigContent = `
@@ -432,7 +428,7 @@ ${options.includeVitest ? '/// <reference types="vitest" />' : ''}
           react(),
           tsconfigPaths({
             root: '${offsetFromRoot(projectConfig.root)}',
-            projects: ['tsconfig.base.json'],
+            projects: [${projectsTsConfig}],
           }),
         ],
         ${buildOption}
@@ -457,7 +453,7 @@ ${options.includeVitest ? '/// <reference types="vitest" />' : ''}
           ${options.includeLib ? dtsPlugin : ''}
           tsconfigPaths({
             root: '${offsetFromRoot(projectConfig.root)}',
-            projects: ['tsconfig.base.json'],
+            projects: [${projectsTsConfig}],
           }),
         ],
         ${buildOption}

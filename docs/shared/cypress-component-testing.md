@@ -1,7 +1,7 @@
 # Cypress Component Testing
 
 > Component testing requires Cypress v10 and above.
-> See our [guide for more information](/cypress/v10-migration-guide) to migrate to Cypress v10.
+> See our [guide for more information](/cypress/v11-migration-guide) to migrate to Cypress v10.
 
 Unlike [E2E testing](/packages/cypress), component testing does not create a new project. Instead, Cypress component testing is added
 directly to a project, like [Jest](/packages/jest)

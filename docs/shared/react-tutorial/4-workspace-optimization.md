@@ -1,4 +1,4 @@
-# React Tutorial - Part 4: Workspace Optimization
+# React Monorepo Tutorial - Part 4: Workspace Optimization
 
 ## Testing Affected Projects
 

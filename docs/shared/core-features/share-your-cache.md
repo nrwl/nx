@@ -5,6 +5,10 @@ of the cache or use Nx Cloud. Nx Cloud is an app that provides a fast and zero-c
 caching. It's completely free for OSS projects and for most closed-sourced
 projects ([read more here](https://dev.to/nrwl/more-time-saved-for-free-with-nx-cloud-4a2j)).
 
+![Diagram showing Teika sharing his cache with CI, Kimiko and James](../images/dte/distributed-caching.svg)
+
+In this diagram, Teika runs the build once on his machine, then CI, Kimiko and James can use the cached artifact from Teika instead of re-executing the same work.
+
 You can connect your workspace to Nx Cloud by running:
 
 ```shell

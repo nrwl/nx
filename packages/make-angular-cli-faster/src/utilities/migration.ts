@@ -1,7 +1,7 @@
 import { execSync } from 'child_process';
-import { lt, lte, major } from 'semver';
 import { readModulePackageJson } from 'nx/src/utils/package-json';
 import { PackageManagerCommands } from 'nx/src/utils/package-manager';
+import { gt, lt, lte, major } from 'semver';
 import { resolvePackageVersion } from './package-manager';
 import { MigrationDefinition } from './types';
 
@@ -12,12 +12,11 @@ let latestWorkspaceVersionWithMigration: string;
 const latestVersionWithOldFlag = '13.8.3';
 // map of Angular major versions to the versions of Nx that are compatible with them,
 // key is the Angular major version, value is an object with the range of supported
-// versions and the max version of the range if there's a bigger major version that
-// is already supported
-const nxAngularVersionMap: Record<number, { range: string; max?: string }> = {
-  13: { range: '>= 13.2.0 < 14.2.0', max: '~14.1.0' },
-  14: { range: '>= 14.2.0 < 15.2.0', max: '~15.1.0' },
-  15: { range: '>= 15.2.0' },
+// versions
+const nxAngularVersionMap: Record<number, { min: string; max?: string }> = {
+  13: { min: '13.2.0', max: '~14.1.0' },
+  14: { min: '14.2.0', max: '~15.1.0' },
+  15: { min: '15.2.0' },
 };
 // latest major version of Angular that is compatible with Nx, based on the map above
 const latestCompatibleAngularMajorVersion = Math.max(
@@ -27,10 +26,6 @@ const latestCompatibleAngularMajorVersion = Math.max(
 export async function determineMigration(
   version: string | undefined
 ): Promise<MigrationDefinition> {
-  if (version) {
-    return { packageName: '@nrwl/angular', version };
-  }
-
   const angularVersion = getInstalledAngularVersion();
   const majorAngularVersion = major(angularVersion);
   latestWorkspaceVersionWithMigration = await resolvePackageVersion(
@@ -42,6 +37,37 @@ export async function determineMigration(
       angularVersion,
       majorAngularVersion
     );
+
+  if (version) {
+    const normalizedVersion = await normalizeVersion(version);
+    if (lte(normalizedVersion, latestWorkspaceVersionWithMigration)) {
+      // specified version should use @nrwl/workspace:ng-add
+      return { packageName: '@nrwl/workspace', version: normalizedVersion };
+    }
+
+    // check the versions map for compatibility with Angular
+    if (
+      nxAngularVersionMap[majorAngularVersion] &&
+      (lt(normalizedVersion, nxAngularVersionMap[majorAngularVersion].min) ||
+        (nxAngularVersionMap[majorAngularVersion].max &&
+          gt(
+            normalizedVersion,
+            await resolvePackageVersion(
+              '@nrwl/angular',
+              nxAngularVersionMap[majorAngularVersion].max
+            )
+          )))
+    ) {
+      return {
+        packageName: '@nrwl/angular',
+        version: normalizedVersion,
+        angularVersion,
+        incompatibleWithAngularVersion: true,
+      };
+    }
+
+    return { packageName: '@nrwl/angular', version: normalizedVersion };
+  }
 
   // should use @nrwl/workspace:ng-add if the version is less than the
   // latest workspace version that has the migration, otherwise use
@@ -101,4 +127,16 @@ async function getNxVersionBasedOnInstalledAngularVersion(
 
 function getInstalledAngularVersion(): string {
   return readModulePackageJson('@angular/core').packageJson.version;
+}
+
+async function normalizeVersion(version: string): Promise<string> {
+  if (
+    version.startsWith('^') ||
+    version.startsWith('~') ||
+    version.split('.').length < 3
+  ) {
+    return await resolvePackageVersion('@nrwl/angular', version);
+  }
+
+  return version;
 }
