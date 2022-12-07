@@ -573,6 +573,11 @@
               "name": "runtimeCacheInputs",
               "id": "runtime-cache-inputs",
               "file": "shared/deprecated/runtime-cache-inputs"
+            },
+            {
+              "name": "globalImplicitDependencies",
+              "id": "global-implicit-dependencies",
+              "file": "shared/deprecated/global-implicit-dependencies"
             }
           ]
         },

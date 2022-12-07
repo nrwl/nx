@@ -26,8 +26,11 @@ export function parseYarnLockFile(lockFile: string): LockFileData {
   const { __metadata, ...dependencies } = parseSyml(lockFile);
 
   // Yarn Berry has workspace packages includes, so we need to extract those to metadata
-  const [mappedPackages, workspacePackages] = mapPackages(dependencies);
   const isBerry = !!__metadata;
+  const [mappedPackages, workspacePackages] = mapPackages(
+    dependencies,
+    isBerry
+  );
   const hash = hashString(lockFile);
   if (isBerry) {
     return {
@@ -43,9 +46,34 @@ export function parseYarnLockFile(lockFile: string): LockFileData {
   }
 }
 
+function extendVersionProperty(
+  key: string,
+  value: Omit<PackageDependency, 'packageMeta'>,
+  isBerry: boolean
+) {
+  if (isBerry) {
+    const packageName = key.slice(0, key.lastIndexOf('@'));
+    if (value.resolution !== `${packageName}@npm:${value.version}`) {
+      return {
+        version: value.resolution.slice(packageName.length + 1),
+        actualVersion: value.version,
+      };
+    }
+    return;
+  }
+  if (value.integrity) {
+    return;
+  }
+  return {
+    version: key.slice(key.lastIndexOf('@') + 1),
+    actualVersion: value.version,
+  };
+}
+
 // map original yarn packages to the LockFileData structure
 function mapPackages(
-  packages: LockFileDependencies
+  packages: LockFileDependencies,
+  isBerry: boolean
 ): [LockFileData['dependencies'], LockFileDependencies] {
   const mappedPackages: LockFileData['dependencies'] = {};
   const workspacePackages: LockFileDependencies = {};
@@ -65,6 +93,7 @@ function mapPackages(
       if (!mappedPackages[packageName][newKey]) {
         mappedPackages[packageName][newKey] = {
           ...value,
+          ...extendVersionProperty(keys[0], value, isBerry),
           packageMeta: keys,
         };
       } else {
@@ -137,7 +166,10 @@ function unmapPackages(
 
   Object.values(dependencies).forEach((packageVersions) => {
     Object.values(packageVersions).forEach((value) => {
-      const { packageMeta, rootVersion, ...rest } = value;
+      const { packageMeta, rootVersion, actualVersion, ...rest } = value;
+      if (actualVersion) {
+        rest.version = actualVersion;
+      }
       if (isBerry) {
         // berry's `stringifySyml` does not combine packages
         // we have to do it manually

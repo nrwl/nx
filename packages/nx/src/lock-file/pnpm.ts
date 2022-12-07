@@ -91,18 +91,22 @@ function mapPackages(
   const mappedPackages: LockFileData['dependencies'] = {};
 
   Object.entries(packages).forEach(([key, value]) => {
+    // create new key
+    const { version, packageName, actualVersion } = parseVersionAndPackage(
+      key,
+      value
+    );
+    const newKey = `${packageName}@${version.split('_')[0]}`;
+
     // construct packageMeta object
     const meta = mapMetaInformation(
       { dependencies, devDependencies, specifiers },
       inlineSpecifiers,
       key,
-      value
+      value,
+      packageName,
+      version
     );
-
-    // create new key
-    const version = key.split('/').pop().split('_')[0];
-    const packageName = key.slice(1, key.lastIndexOf('/'));
-    const newKey = `${packageName}@${version}`;
 
     if (!mappedPackages[packageName]) {
       mappedPackages[packageName] = {};
@@ -113,7 +117,8 @@ function mapPackages(
       const { dev, optional, peer, ...rest } = value;
       mappedPackages[packageName][newKey] = {
         ...rest,
-        version,
+        version: version.split('_')[0],
+        ...(actualVersion !== version && { actualVersion }),
         packageMeta: [meta],
       };
     }
@@ -138,6 +143,23 @@ function mapPackages(
   return mappedPackages;
 }
 
+function parseVersionAndPackage(
+  key: string,
+  value: Omit<PackageDependency, 'packageMeta'>
+): { version: string; packageName: string; actualVersion: string } {
+  let version, packageName, actualVersion;
+  if (key.startsWith('/')) {
+    version = key.split('/').pop();
+    actualVersion = version;
+    packageName = key.slice(1, key.lastIndexOf('/'));
+  } else {
+    version = key;
+    packageName = value.name ?? key;
+    actualVersion = value.version ?? key;
+  }
+  return { version, packageName, actualVersion };
+}
+
 // maps packageMeta based on dependencies, devDependencies and (inline) specifiers
 function mapMetaInformation(
   {
@@ -152,11 +174,10 @@ function mapMetaInformation(
     optional,
     peer,
     ...dependencyDetails
-  }: Omit<PackageDependency, 'packageMeta'>
+  }: Omit<PackageDependency, 'packageMeta'>,
+  packageName: string,
+  matchingVersion: string
 ): PackageMeta {
-  const matchingVersion = key.split('/').pop();
-  const packageName = key.slice(1, key.lastIndexOf('/'));
-
   const isDependency = isVersionMatch(
     dependencies?.[packageName],
     matchingVersion,
@@ -264,48 +285,55 @@ function unmapLockFile(lockFileData: LockFileData): PnpmLockFile {
     const packageName = packageNames[i];
     const versions = Object.values(lockFileData.dependencies[packageName]);
 
-    versions.forEach(({ packageMeta, version: _, rootVersion, ...rest }) => {
-      (packageMeta as PackageMeta[]).forEach(
-        ({
-          key,
-          specifier,
-          isDependency,
-          isDevDependency,
-          dependencyDetails,
-          dev,
-          optional,
-          peer,
-        }) => {
-          let version;
-          if (inlineSpecifiers) {
-            version = {
-              specifier,
-              version: key.slice(key.lastIndexOf('/') + 1),
-            };
-          } else {
-            version = key.slice(key.lastIndexOf('/') + 1);
+    versions.forEach(
+      ({ packageMeta, version: _, actualVersion, rootVersion, ...rest }) => {
+        (packageMeta as PackageMeta[]).forEach(
+          ({
+            key,
+            specifier,
+            isDependency,
+            isDevDependency,
+            dependencyDetails,
+            dev,
+            optional,
+            peer,
+          }) => {
+            let version;
+            if (inlineSpecifiers) {
+              version = {
+                specifier,
+                version: actualVersion
+                  ? key
+                  : key.slice(key.lastIndexOf('/') + 1),
+              };
+            } else {
+              version = actualVersion
+                ? key
+                : key.slice(key.lastIndexOf('/') + 1);
 
-            if (specifier) {
-              specifiers[packageName] = specifier;
+              if (specifier) {
+                specifiers[packageName] = specifier;
+              }
             }
-          }
 
-          if (isDependency) {
-            dependencies[packageName] = version;
+            if (isDependency) {
+              dependencies[packageName] = version;
+            }
+            if (isDevDependency) {
+              devDependencies[packageName] = version;
+            }
+            packages[key] = {
+              ...rest,
+              ...(actualVersion && { version: actualVersion }),
+              dev: !!dev,
+              ...(optional && { optional }),
+              ...(peer && { peer }),
+              ...dependencyDetails,
+            };
           }
-          if (isDevDependency) {
-            devDependencies[packageName] = version;
-          }
-          packages[key] = {
-            ...rest,
-            dev: !!dev,
-            ...(optional && { optional }),
-            ...(peer && { peer }),
-            ...dependencyDetails,
-          };
-        }
-      );
-    });
+        );
+      }
+    );
   }
 
   const { time, ...lockFileMetatada } = lockFileData.lockFileMetadata as Omit<
