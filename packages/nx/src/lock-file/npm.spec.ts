@@ -15,6 +15,7 @@ import {
   lockFileV2YargsAndDevkitOnly,
 } from './__fixtures__/npm.lock';
 import { vol } from 'memfs';
+import { npmLockFileWithWorkspaces } from './__fixtures__/workspaces.lock';
 
 jest.mock('fs', () => require('memfs').fs);
 
@@ -182,6 +183,15 @@ describe('npm LockFile utility', () => {
         parsedLockFile.dependencies['@ampproject/remapping']
       ).toMatchSnapshot();
       expect(parsedLockFile.dependencies['typescript']).toMatchSnapshot();
+    });
+
+    it('should parse lockfile with workspaces correctly', () => {
+      const parsedWorkspaceLockFile = parseNpmLockFile(
+        npmLockFileWithWorkspaces
+      );
+      expect(stringifyNpmLockFile(parsedWorkspaceLockFile)).toEqual(
+        npmLockFileWithWorkspaces
+      );
     });
 
     it('should map various versions of packages', () => {

@@ -7,10 +7,12 @@ import {
   lockFile,
   lockFileJustTypescript,
   lockFileWithInlineSpecifiers,
-  lockFileWithInlineSpecifiersAndWorkspaces,
-  lockFileWithWorkspacesAndTime,
   lockFileYargsAndDevkit,
 } from './__fixtures__/pnpm.lock';
+import {
+  pnpmLockFileWithInlineSpecifiersAndWorkspaces,
+  pnpmLockFileWithWorkspacesAndTime,
+} from './__fixtures__/workspaces.lock';
 
 const TypeScriptOnlyPackage = {
   name: 'test',
@@ -154,11 +156,11 @@ describe('pnpm LockFile utility', () => {
   });
 
   it('should parse lockfile with time-based resolution and workspaces', () => {
-    const parsedLockFile = parsePnpmLockFile(lockFileWithWorkspacesAndTime);
+    const parsedLockFile = parsePnpmLockFile(pnpmLockFileWithWorkspacesAndTime);
     expect(parsedLockFile.lockFileMetadata.time).toBeDefined();
 
     expect(stringifyPnpmLockFile(parsedLockFile)).toEqual(
-      lockFileWithWorkspacesAndTime
+      pnpmLockFileWithWorkspacesAndTime
     );
   });
 
@@ -258,10 +260,10 @@ describe('pnpm LockFile utility', () => {
 
   it('should parse lockfile with inline specifiers and workspaces', () => {
     const parsedLockFile = parsePnpmLockFile(
-      lockFileWithInlineSpecifiersAndWorkspaces
+      pnpmLockFileWithInlineSpecifiersAndWorkspaces
     );
     expect(stringifyPnpmLockFile(parsedLockFile)).toEqual(
-      lockFileWithInlineSpecifiersAndWorkspaces
+      pnpmLockFileWithInlineSpecifiersAndWorkspaces
     );
   });
 });

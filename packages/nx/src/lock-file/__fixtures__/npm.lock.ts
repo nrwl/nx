@@ -22642,3 +22642,41 @@ export const lockFileV1YargsAndDevkitOnly = `{
   }
 }
 `;
+
+/**
+ * V1
+ * dependencies:
+ *   "workspace-a": {
+        "version": "file:workspace-a",
+        "requires": {
+          "@nrwl/devkit": "15.0.13",
+          "postgres": "charsleysa/postgres#fix-errors-compiled",
+          "yargs": "17.6.2"
+        }
+      },
+*/
+
+/**
+ * V1
+ * packages:
+ *   "node_modules/workspace-a": {
+        "resolved": "workspace-a",
+        "link": true
+      },
+      "workspace-a": {
+        "dependencies": {
+          "@nrwl/devkit": "15.0.13",
+          "postgres": "charsleysa/postgres#fix-errors-compiled",
+          "yargs": "17.6.2"
+        }
+      },
+* dependencies:
+    "workspace-a": {
+      "version": "file:workspace-a",
+      "requires": {
+        "@nrwl/devkit": "15.0.13",
+        "postgres": "charsleysa/postgres#fix-errors-compiled",
+        "yargs": "17.6.2"
+      }
+    },
+*/
