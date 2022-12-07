@@ -572,7 +572,7 @@ function pruneDependencies(
           {
             path: `node_modules/${packageName}`,
             ...(dev ? { dev } : {}),
-            ...(optional ? { dev } : {}),
+            ...(optional ? { optional } : {}),
             ...(peer ? { peer } : {}),
           },
         ],

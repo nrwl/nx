@@ -33,7 +33,6 @@ export function parseYarnLockFile(lockFile: string): LockFileData {
     isBerry
   );
   const hash = hashString(lockFile);
-  const [mappedPackages, workspacePackages] = mapPackages(dependencies);
 
   if (isBerry) {
     return {
