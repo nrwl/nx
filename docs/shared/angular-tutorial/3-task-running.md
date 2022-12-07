@@ -46,7 +46,7 @@ Here's the `project.json` file for your `common-ui` project:
 
 You can see that two targets are defined here: `test` and `lint`.
 
-The properties inside each of these these targets is defined as follows:
+The properties inside each of these targets is defined as follows:
 
 - `executor` - which Nx executor to run. The syntax here is: `<plugin name>:<executor name>`
 - `outputs` - this is an array of files that would be created by running this target. (This informs Nx on what to save for it's caching mechanisms you'll learn about in [4 - Workspace Optimizations](/angular-tutorial/4-workspace-optimization)).
