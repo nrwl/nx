@@ -331,7 +331,7 @@ describe('Nx Affected and Graph Tests', () => {
           target: 'test',
         },
         command: `${runNx} run ${myapp}:test`,
-        outputs: [`coverage/apps/${myapp}`],
+        outputs: [`coverage/${myapp}`],
       });
       compareTwoArrays(resWithTarget.projects, [myapp]);
 

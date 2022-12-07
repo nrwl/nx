@@ -11,9 +11,7 @@ describe('Jest root projects', () => {
 
     it('should test root level app projects', async () => {
       runCLI(`generate @nrwl/angular:app ${myapp} --rootProject=true`);
-
       const rootProjectTestResults = await runCLIAsync(`test ${myapp}`);
-
       expect(rootProjectTestResults.combinedOutput).toContain(
         'Test Suites: 1 passed, 1 total'
       );

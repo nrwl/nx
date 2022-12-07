@@ -40,7 +40,7 @@ Here's the `project.json` file for your `shared-ui` project:
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "outputs": ["{workspaceRoot}/coverage/{projectName}"],
       "options": {
         "jestConfig": "shared/ui/jest.config.ts",
         "passWithNoTests": true
