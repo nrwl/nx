@@ -6,9 +6,25 @@ import { ReactElement } from 'react';
  * dynamic() can't be used inside of React rendering as it needs to be marked
  * in the top level of the module for preloading to work, similar to React.lazy.
  */
-const NxGraphViz = dynamic(
+const NxProjectGraphViz = dynamic(
   () =>
     import('@nrwl/graph/ui-graph').then((module) => module.NxProjectGraphViz),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-[450px] w-full items-center justify-center">
+        <div
+          className="spinner-border inline-block h-8 w-8 animate-spin rounded-full border-4 border-slate-100 border-r-slate-400 dark:border-slate-700 dark:border-r-slate-500"
+          role="status"
+        >
+          <span className="sr-only">Loading...</span>
+        </div>
+      </div>
+    ),
+  }
+);
+const NxTaskGraphViz = dynamic(
+  () => import('@nrwl/graph/ui-graph').then((module) => module.NxTaskGraphViz),
   {
     ssr: false,
     loading: () => (
@@ -26,9 +42,11 @@ const NxGraphViz = dynamic(
 
 export function Graph({
   height,
+  type,
   children,
 }: {
   height: string;
+  type: 'project' | 'task';
   children: ReactElement;
 }): JSX.Element {
   const [theme] = useTheme();
@@ -57,15 +75,25 @@ export function Graph({
 
   return (
     <div className="my-6 w-full place-content-center overflow-hidden rounded-md ring-1 ring-slate-100 dark:ring-slate-700">
-      <NxGraphViz
-        height={height}
-        groupByFolder={false}
-        theme={theme}
-        projects={parsedProps.projects}
-        workspaceLayout={parsedProps.workspaceLayout}
-        dependencies={parsedProps.dependencies}
-        affectedProjectIds={parsedProps.affectedProjectIds}
-      />
+      {type === 'project' ? (
+        <NxProjectGraphViz
+          height={height}
+          groupByFolder={false}
+          theme={theme}
+          projects={parsedProps.projects}
+          workspaceLayout={parsedProps.workspaceLayout}
+          dependencies={parsedProps.dependencies}
+          affectedProjectIds={parsedProps.affectedProjectIds}
+        />
+      ) : (
+        <NxTaskGraphViz
+          height={height}
+          theme={theme}
+          projects={parsedProps.projects}
+          taskGraphs={parsedProps.taskGraphs}
+          taskId={parsedProps.taskId}
+        />
+      )}
     </div>
   );
 }

@@ -40,15 +40,178 @@ graph and then executes the tasks in that graph.
 
 For instance `nx test lib` creates a task graph with a single node:
 
-![task-graph](/shared/mental-model/task-graph.svg)
+{% graph height="100px" type="task" %}
+
+```json
+{
+  "projects": [
+    {
+      "name": "lib",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "targets": {
+          "test": {}
+        }
+      }
+    }
+  ],
+  "taskId": "lib:test",
+  "taskGraphs": {
+    "lib:test": {
+      "roots": ["lib:test"],
+      "tasks": {
+        "lib:test": {
+          "id": "lib:test",
+          "target": { "project": "lib", "target": "test" },
+          "projectRoot": "libs/lib",
+          "overrides": {}
+        }
+      },
+      "dependencies": {}
+    }
+  }
+}
+```
+
+{% /graph %}
 
 A task is an invocation of a target. If you invoke the same target twice, you create two tasks.
 
 Nx uses the [project graph](#the-project-graph), but the task graph and project graph aren’t isomorphic, meaning they
 aren’t directly connected. In the case above, `app1` and `app2` depend on `lib`, but
 running `nx run-many --target=test --projects=app1,app2,lib`, the created task graph will look like this:
+{% side-by-side %}
 
-![task-graph-creation](/shared/mental-model/task-graph-creation.svg)
+**Project Graph**
+
+**Task Graph**
+
+{% /side-by-side %}
+
+{% side-by-side %}
+{% graph height="200px" type="project" %}
+
+```json
+{
+  "projects": [
+    {
+      "name": "app1",
+      "type": "app",
+      "data": {
+        "tags": [],
+        "targets": {
+          "test": {}
+        }
+      }
+    },
+    {
+      "name": "app2",
+      "type": "app",
+      "data": {
+        "tags": [],
+        "targets": {
+          "test": {}
+        }
+      }
+    },
+    {
+      "name": "lib",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "targets": {
+          "test": {}
+        }
+      }
+    }
+  ],
+  "dependencies": {
+    "app1": [{ "source": "app1", "target": "lib", "type": "static" }],
+    "app2": [{ "source": "app2", "target": "lib", "type": "static" }],
+    "lib": []
+  },
+  "workspaceLayout": {
+    "appsDir": "apps",
+    "libsDir": "libs"
+  },
+  "affectedProjectIds": [],
+  "focus": null,
+  "groupByFolder": false,
+  "exclude": []
+}
+```
+
+{% /graph %}
+
+{% graph height="200px" type="task" %}
+
+```json
+{
+  "projects": [
+    {
+      "name": "app1",
+      "type": "app",
+      "data": {
+        "tags": [],
+        "targets": {
+          "test": {}
+        }
+      }
+    },
+    {
+      "name": "app2",
+      "type": "app",
+      "data": {
+        "tags": [],
+        "targets": {
+          "test": {}
+        }
+      }
+    },
+    {
+      "name": "lib",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "targets": {
+          "test": {}
+        }
+      }
+    }
+  ],
+  "taskId": "lib:test",
+  "taskGraphs": {
+    "lib:test": {
+      "roots": ["app1:test", "app2:test", "lib:test"],
+      "tasks": {
+        "app1:test": {
+          "id": "app1:test",
+          "target": { "project": "app1", "target": "test" },
+          "projectRoot": "apps/app1",
+          "overrides": {}
+        },
+        "app2:test": {
+          "id": "app2:test",
+          "target": { "project": "app2", "target": "test" },
+          "projectRoot": "apps/app2",
+          "overrides": {}
+        },
+        "lib:test": {
+          "id": "lib:test",
+          "target": { "project": "lib", "target": "test" },
+          "projectRoot": "libs/lib",
+          "overrides": {}
+        }
+      },
+      "dependencies": {}
+    }
+  }
+}
+```
+
+{% /graph %}
+{% /side-by-side %}
 
 Even though the apps depend on `lib`, testing `app1` doesn’t depend on the testing `lib`. This means that the two tasks
 can
@@ -72,7 +235,140 @@ Let’s look at the test target relying on its dependencies.
 
 With this, running the same test command creates the following task graph:
 
-![task-graph-run](/shared/mental-model/task-graph-run.svg)
+{% side-by-side %}
+
+**Project Graph**
+
+**Task Graph**
+
+{% /side-by-side %}
+
+{% side-by-side %}
+{% graph height="200px" type="project" %}
+
+```json
+{
+  "projects": [
+    {
+      "name": "app1",
+      "type": "app",
+      "data": {
+        "tags": [],
+        "targets": {
+          "test": {}
+        }
+      }
+    },
+    {
+      "name": "app2",
+      "type": "app",
+      "data": {
+        "tags": [],
+        "targets": {
+          "test": {}
+        }
+      }
+    },
+    {
+      "name": "lib",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "targets": {
+          "test": {}
+        }
+      }
+    }
+  ],
+  "dependencies": {
+    "app1": [{ "source": "app1", "target": "lib", "type": "static" }],
+    "app2": [{ "source": "app2", "target": "lib", "type": "static" }],
+    "lib": []
+  },
+  "workspaceLayout": {
+    "appsDir": "apps",
+    "libsDir": "libs"
+  },
+  "affectedProjectIds": [],
+  "focus": null,
+  "groupByFolder": false,
+  "exclude": []
+}
+```
+
+{% /graph %}
+
+{% graph height="200px" type="task" %}
+
+```json
+{
+  "projects": [
+    {
+      "name": "app1",
+      "type": "app",
+      "data": {
+        "tags": [],
+        "targets": {
+          "test": {}
+        }
+      }
+    },
+    {
+      "name": "app2",
+      "type": "app",
+      "data": {
+        "tags": [],
+        "targets": {
+          "test": {}
+        }
+      }
+    },
+    {
+      "name": "lib",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "targets": {
+          "test": {}
+        }
+      }
+    }
+  ],
+  "taskId": "lib:test",
+  "taskGraphs": {
+    "lib:test": {
+      "roots": ["app1:test", "app2:test", "lib:test"],
+      "tasks": {
+        "app1:test": {
+          "id": "app1:test",
+          "target": { "project": "app1", "target": "test" },
+          "projectRoot": "apps/app1",
+          "overrides": {}
+        },
+        "app2:test": {
+          "id": "app2:test",
+          "target": { "project": "app2", "target": "test" },
+          "projectRoot": "apps/app2",
+          "overrides": {}
+        },
+        "lib:test": {
+          "id": "lib:test",
+          "target": { "project": "lib", "target": "test" },
+          "projectRoot": "libs/lib",
+          "overrides": {}
+        }
+      },
+      "dependencies": {
+        "app1:test": ["lib:test"],
+        "app2:test": ["lib:test"]
+      }
+    }
+  }
+}
+```
+
+{% /graph %}
+{% /side-by-side %}
 
 This often makes more sense for builds, where to build `app1`, you want to build `lib` first. You can also define
 similar
