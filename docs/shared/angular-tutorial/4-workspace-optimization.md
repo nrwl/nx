@@ -38,7 +38,7 @@ This can be particularly helpful in CI pipelines for larger repos, where most co
 
 {% card title="Affected Documentation" description="Checkout Affected documentation for more details" url="/nx/affected" /%}
 
-{% callout type="warning" title="Warning" %}
+{% callout type="warning" title="Not too fast!" %}
 Running this at this stage may result in some runtime errors being logged to the terminal.
 The apps that use `<myorg-banner></myorg-banner>` wil need to have the `TestBed.configureTestingModule` in their `app.component.spec.ts` file updated to import `CommonUiModule`.
 {% /callout %}
