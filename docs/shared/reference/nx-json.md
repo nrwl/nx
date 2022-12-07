@@ -74,38 +74,6 @@ You can add a `workspaceLayout` property to modify where libraries and apps are 
 These settings would store apps in `/demos/` and libraries in `/packages/`. The paths specified are relative to the
 workspace root.
 
-### Files & Implicit Dependencies
-
-Nx performs advanced source-code analysis to figure out the project graph of the workspace. So when you make a change,
-Nx can deduce what can be broken by this change. Some dependencies between projects and shared files cannot be inferred
-statically. You can configure those using `implicitDependencies`.
-
-```json
-{
-  "implicitDependencies": {
-    "package.json": {
-      "dependencies": "*",
-      "devDependencies": {
-        "mypackage": ["mylib"]
-      },
-      "scripts": {
-        "check:*": "*"
-      }
-    },
-    "globalFile": ["myapp"],
-    "styles/**/*.css": ["myapp"]
-  }
-}
-```
-
-In the example above:
-
-- Changing the `dependencies` property in `package.json` affects every project.
-- Changing the `mypackage` property in `package.json` only affects `mylib`.
-- Changing any of the custom check `scripts` in `package.json` affects every project.
-- Changing `globalFile` only affects `myapp`.
-- Changing any CSS file inside the `styles` directory only affects `myapp`.
-
 ### inputs & namedInputs
 
 Named inputs defined in `nx.json` are merged with the named inputs defined in each project's project.json.
