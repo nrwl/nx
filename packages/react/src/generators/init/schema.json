@@ -28,6 +28,17 @@
       "type": "boolean",
       "default": false
     },
+    "skipBabelConfig": {
+      "description": "Do not generate a root babel.config.json (if babel is not needed).",
+      "type": "boolean",
+      "default": false
+    },
+    "skipHelperLibs": {
+      "description": "Do not install helpers libs (tslib, core-js, regenerator-runtime).",
+      "type": "boolean",
+      "default": false,
+      "hidden": true
+    },
     "js": {
       "type": "boolean",
       "default": false,

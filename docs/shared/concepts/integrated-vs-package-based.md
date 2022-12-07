@@ -17,11 +17,19 @@ A package-based repo is a collection of packages that depend on each other via `
 
 Lerna, Yarn, Lage, [Turborepo](/more-concepts/turbo-and-nx) and Nx (without plugins) support this style.
 
+{% cards %}
+{% card title="Tutorial: Getting Started with Package-Based Repos" description="Walkthrough for creating a package-based monorepo with Nx" type="documentation" url="/getting-started/package-based-repo-tutorial" /%}
+{% /cards %}
+
 ## Integrated Repos
 
 An integrated repo contains projects that depend on each other through standard import statements. There is typically a single version of every dependency defined at the root. Sometimes build tools like Jest and Webpack need to be wrapped in order to work correctly. It's harder to add an existing package to this style of repo, because the build tooling for that package may need to be modified. It's very simple to add a brand new project to the repo, because all the tooling decisions have already been made.
 
 Bazel and Nx (with plugins) support this style.
+
+{% cards %}
+{% card title="Tutorial: Getting Started with Integrated Repos" description="Walkthrough for creating an integrated monorepo with Nx" type="documentation" url="/getting-started/integrated-repo-tutorial" /%}
+{% /cards %}
 
 ## How to Choose
 

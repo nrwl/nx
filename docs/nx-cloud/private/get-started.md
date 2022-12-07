@@ -2,7 +2,7 @@
 
 Nx Cloud can be deployed to your cloud, which gives you full control of your data, with no external API calls.
 
-You can learn more about it at [nx.app/enterprise](https://nx.app/enterprise).
+This solution is included as part of the Nx Enterprise package. You can learn more about it at [nx.app/enterprise](https://nx.app/enterprise).
 
 Nx Cloud can be deployed in two ways:
 

@@ -23,7 +23,9 @@ describe('getJestProjects', () => {
     jest
       .spyOn(Workspace, 'readWorkspaceConfig')
       .mockImplementation(() => mockedWorkspaceConfig);
-    const expectedResults = ['<rootDir>/test/jest/config/location'];
+    const expectedResults = [
+      '<rootDir>/test/jest/config/location/jest.config.js',
+    ];
     expect(getJestProjects()).toEqual(expectedResults);
   });
 
@@ -47,7 +49,33 @@ describe('getJestProjects', () => {
     jest
       .spyOn(Workspace, 'readWorkspaceConfig')
       .mockImplementation(() => mockedWorkspaceConfig);
-    const expectedResults = ['<rootDir>/test/jest/config/location'];
+    const expectedResults = [
+      '<rootDir>/test/jest/config/location/jest.config.js',
+    ];
+    expect(getJestProjects()).toEqual(expectedResults);
+  });
+
+  test('root project', () => {
+    const mockedWorkspaceConfig: WorkspaceJsonConfiguration = {
+      projects: {
+        'test-1': {
+          root: '.',
+          targets: {
+            test: {
+              executor: '@nrwl/jest:jest',
+              options: {
+                jestConfig: 'jest.config.app.js',
+              },
+            },
+          },
+        },
+      },
+      version: 1,
+    };
+    jest
+      .spyOn(Workspace, 'readWorkspaceConfig')
+      .mockImplementation(() => mockedWorkspaceConfig);
+    const expectedResults = ['<rootDir>/jest.config.app.js'];
     expect(getJestProjects()).toEqual(expectedResults);
   });
 
@@ -77,8 +105,8 @@ describe('getJestProjects', () => {
       .spyOn(Workspace, 'readWorkspaceConfig')
       .mockImplementation(() => mockedWorkspaceConfig);
     const expectedResults = [
-      '<rootDir>/test/jest/config/location',
-      '<rootDir>/configuration-specific',
+      '<rootDir>/test/jest/config/location/jest.config.js',
+      '<rootDir>/configuration-specific/jest.config.js',
     ];
     expect(getJestProjects()).toEqual(expectedResults);
   });
@@ -108,7 +136,9 @@ describe('getJestProjects', () => {
     jest
       .spyOn(Workspace, 'readWorkspaceConfig')
       .mockImplementation(() => mockedWorkspaceConfig);
-    const expectedResults = ['<rootDir>/test/jest/config/location'];
+    const expectedResults = [
+      '<rootDir>/test/jest/config/location/jest.config.js',
+    ];
     expect(getJestProjects()).toEqual(expectedResults);
   });
 

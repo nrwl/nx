@@ -1,10 +1,10 @@
 import {
-  createReactEslintJson,
+  extendReactEslintJson,
   extraEslintDependencies,
 } from '../../utils/lint';
 import { NormalizedSchema, Schema } from './schema';
 import { createApplicationFiles } from './lib/create-application-files';
-import { updateJestConfig } from './lib/update-jest-config';
+import { updateSpecConfig } from './lib/update-jest-config';
 import { normalizeOptions } from './lib/normalize-options';
 import { addProject } from './lib/add-project';
 import { addCypress } from './lib/add-cypress';
@@ -15,6 +15,7 @@ import { addStyledModuleDependencies } from '../../rules/add-styled-dependencies
 import {
   addDependenciesToPackageJson,
   convertNxGenerator,
+  ensurePackage,
   formatFiles,
   GeneratorCallback,
   joinPathFragments,
@@ -24,9 +25,14 @@ import {
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import reactInitGenerator from '../init/init';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
-import { swcCoreVersion } from '@nrwl/js/src/utils/versions';
-import { swcLoaderVersion } from '@nrwl/webpack/src/utils/versions';
-import { viteConfigurationGenerator } from '@nrwl/vite';
+import { mapLintPattern } from '@nrwl/linter/src/generators/lint-project/lint-project';
+import {
+  nxVersion,
+  swcCoreVersion,
+  swcLoaderVersion,
+} from '../../utils/versions';
+import { installCommonDependencies } from './lib/install-common-dependencies';
+import { extractTsConfigBase } from '../../utils/create-ts-config';
 
 async function addLinting(host: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];
@@ -38,20 +44,22 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
         joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
       ],
       unitTestRunner: options.unitTestRunner,
-      eslintFilePatterns: [`${options.appProjectRoot}/**/*.{ts,tsx,js,jsx}`],
+      eslintFilePatterns: [
+        mapLintPattern(
+          options.appProjectRoot,
+          '{ts,tsx,js,jsx}',
+          options.rootProject
+        ),
+      ],
       skipFormat: true,
+      rootProject: options.rootProject,
     });
     tasks.push(lintTask);
-
-    const reactEslintJson = createReactEslintJson(
-      options.appProjectRoot,
-      options.setParserOptionsProject
-    );
 
     updateJson(
       host,
       joinPathFragments(options.appProjectRoot, '.eslintrc.json'),
-      () => reactEslintJson
+      extendReactEslintJson
     );
 
     const installTask = await addDependenciesToPackageJson(
@@ -77,20 +85,66 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
   const initTask = await reactInitGenerator(host, {
     ...options,
     skipFormat: true,
+    skipBabelConfig: options.bundler === 'vite',
+    skipHelperLibs: options.bundler === 'vite',
   });
 
   tasks.push(initTask);
+
+  if (!options.rootProject) {
+    extractTsConfigBase(host);
+  }
 
   createApplicationFiles(host, options);
   addProject(host, options);
 
   if (options.bundler === 'vite') {
+    await ensurePackage(host, '@nrwl/vite', nxVersion);
+    const { viteConfigurationGenerator } = await import('@nrwl/vite');
+    // We recommend users use `import.meta.env.MODE` and other variables in their code to differentiate between production and development.
+    // See: https://vitejs.dev/guide/env-and-mode.html
+    host.delete(joinPathFragments(options.appProjectRoot, 'src/environments'));
+
     const viteTask = await viteConfigurationGenerator(host, {
       uiFramework: 'react',
       project: options.projectName,
       newProject: true,
+      includeVitest: true,
     });
     tasks.push(viteTask);
+  } else if (options.bundler === 'webpack') {
+    await ensurePackage(host, '@nrwl/webpack', nxVersion);
+
+    const { webpackInitGenerator } = await import('@nrwl/webpack');
+    const webpackInitTask = await webpackInitGenerator(host, {
+      uiFramework: 'react',
+    });
+    tasks.push(webpackInitTask);
+  }
+
+  if (options.bundler !== 'vite' && options.unitTestRunner === 'vitest') {
+    await ensurePackage(host, '@nrwl/vite', nxVersion);
+    const { vitestGenerator } = await import('@nrwl/vite');
+
+    const vitestTask = await vitestGenerator(host, {
+      uiFramework: 'react',
+      coverageProvider: 'c8',
+      project: options.projectName,
+      inSourceTests: options.inSourceTests,
+    });
+    tasks.push(vitestTask);
+  }
+
+  if (
+    (options.bundler === 'vite' || options.unitTestRunner === 'vitest') &&
+    options.inSourceTests
+  ) {
+    host.delete(
+      joinPathFragments(
+        options.appProjectRoot,
+        `src/app/${options.fileName}.spec.tsx`
+      )
+    );
   }
 
   const lintTask = await addLinting(host, options);
@@ -98,9 +152,16 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
 
   const cypressTask = await addCypress(host, options);
   tasks.push(cypressTask);
-  const jestTask = await addJest(host, options);
-  tasks.push(jestTask);
-  updateJestConfig(host, options);
+
+  if (options.unitTestRunner === 'jest') {
+    const jestTask = await addJest(host, options);
+    tasks.push(jestTask);
+  }
+
+  // Handle tsconfig.spec.json for jest or vitest
+  updateSpecConfig(host, options);
+  const stylePreprocessorTask = installCommonDependencies(host, options);
+  tasks.push(stylePreprocessorTask);
   const styledTask = addStyledModuleDependencies(host, options.styledModule);
   tasks.push(styledTask);
   const routingTask = addRouting(host, options);

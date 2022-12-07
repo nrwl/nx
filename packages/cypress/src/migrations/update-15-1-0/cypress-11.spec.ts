@@ -12,7 +12,7 @@ describe('Cypress 11 Migration', () => {
     ReturnType<typeof installedCypressVersion>
   > = installedCypressVersion as never;
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     jest.resetAllMocks();
   });
 

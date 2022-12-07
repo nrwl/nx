@@ -25,8 +25,8 @@
     }
   },
   "workspaceLayout": {
-    "libsDir": "",
-    "appsDir": ""
+    "appsDir": "",
+    "libsDir": ""
   },
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
@@ -76,9 +76,6 @@
       "inputs": ["default", "^production"]
     },
     "run-e2e-tests": {
-      "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"]
-    },
-    "test": {
       "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"]
     },
     "build-storybook": {

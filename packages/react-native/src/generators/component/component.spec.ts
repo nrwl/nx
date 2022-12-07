@@ -9,7 +9,7 @@ describe('component', () => {
 
   beforeEach(async () => {
     projectName = 'my-lib';
-    appTree = createTreeWithEmptyWorkspace();
+    appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     appTree.write('.gitignore', '');
     await createApp(appTree, 'my-app');
     await createLib(appTree, projectName);

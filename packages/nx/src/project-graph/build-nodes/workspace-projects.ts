@@ -26,20 +26,24 @@ export function buildWorkspaceProjectNodes(
     if (existsSync(join(projectRoot, 'package.json'))) {
       p.targets = mergeNpmScriptsWithTargets(projectRoot, p.targets);
 
-      const { nx }: PackageJson = readJsonFile(
-        join(projectRoot, 'package.json')
-      );
-      if (nx?.tags) {
-        p.tags = [...(p.tags || []), ...nx.tags];
-      }
-      if (nx?.implicitDependencies) {
-        p.implicitDependencies = [
-          ...(p.implicitDependencies || []),
-          ...nx.implicitDependencies,
-        ];
-      }
-      if (nx?.namedInputs) {
-        p.namedInputs = { ...(p.namedInputs || {}), ...nx.namedInputs };
+      try {
+        const { nx }: PackageJson = readJsonFile(
+          join(projectRoot, 'package.json')
+        );
+        if (nx?.tags) {
+          p.tags = [...(p.tags || []), ...nx.tags];
+        }
+        if (nx?.implicitDependencies) {
+          p.implicitDependencies = [
+            ...(p.implicitDependencies || []),
+            ...nx.implicitDependencies,
+          ];
+        }
+        if (nx?.namedInputs) {
+          p.namedInputs = { ...(p.namedInputs || {}), ...nx.namedInputs };
+        }
+      } catch {
+        // ignore json parser errors
       }
     }
 
@@ -51,9 +55,10 @@ export function buildWorkspaceProjectNodes(
       loadNxPlugins(ctx.workspace.plugins)
     );
 
+    // TODO: remove in v16
     const projectType =
       p.projectType === 'application'
-        ? key.endsWith('-e2e')
+        ? key.endsWith('-e2e') || key === 'e2e'
           ? 'e2e'
           : 'app'
         : 'lib';

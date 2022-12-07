@@ -46,11 +46,11 @@ export default function Packages(props: ReferencesProps): JSX.Element {
           description: 'Reference: Official Packages & API',
           images: [
             {
-              url: 'https://nx.dev/images/nx-media.jpg',
-              width: 800,
-              height: 421,
+              url: 'https://nx.dev/socials/nx-media.png',
+              width: 1200,
+              height: 600,
               alt: 'Nx: Smart, Fast and Extensible Build System',
-              type: 'image/jpeg',
+              type: 'image/png',
             },
           ],
           siteName: 'NxDev',
@@ -80,33 +80,35 @@ export default function Packages(props: ReferencesProps): JSX.Element {
                 <div className="mb-6 pt-8">
                   <Breadcrumbs path={router.asPath} />
                 </div>
-                <Heading1 title={'Official Packages Reference'} />
+                <div data-document="main">
+                  <Heading1 title={'Official Packages Reference'} />
 
-                <section id="packages-section" className="py-12">
-                  <nav
-                    aria-labelledby="package-index-navigation"
-                    className="relative mb-24 grid grid-cols-2 gap-4 md:grid-cols-4"
-                  >
-                    {references.map((category: MenuItem, index, all) => (
-                      <Link
-                        key={'ref-' + category.id}
-                        href={category.path as string}
-                        className="group relative flex items-center gap-3 rounded-md border border-slate-200 bg-slate-50/40 p-4 text-sm capitalize shadow-sm transition hover:bg-slate-50 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:bg-slate-800"
-                      >
-                        <img
-                          className="h-5 w-5 object-cover opacity-75 dark:invert"
-                          loading="lazy"
-                          src={iconsMap[category.id]}
-                          alt={category.name + ' illustration'}
-                          aria-hidden="true"
-                        />
-                        <span className="text-base font-medium">
-                          {category.name}
-                        </span>
-                      </Link>
-                    ))}
-                  </nav>
-                </section>
+                  <section id="packages-section" className="py-12">
+                    <nav
+                      aria-labelledby="package-index-navigation"
+                      className="relative mb-24 grid grid-cols-2 gap-4 md:grid-cols-4"
+                    >
+                      {references.map((category: MenuItem, index, all) => (
+                        <Link
+                          key={'ref-' + category.id}
+                          href={category.path as string}
+                          className="group relative flex items-center gap-3 rounded-md border border-slate-200 bg-slate-50/40 p-4 text-sm capitalize shadow-sm transition hover:bg-slate-50 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:bg-slate-800"
+                        >
+                          <img
+                            className="h-5 w-5 object-cover opacity-75 dark:invert"
+                            loading="lazy"
+                            src={iconsMap[category.id]}
+                            alt={category.name + ' illustration'}
+                            aria-hidden="true"
+                          />
+                          <span className="text-base font-medium">
+                            {category.name}
+                          </span>
+                        </Link>
+                      ))}
+                    </nav>
+                  </section>
+                </div>
               </div>
             </div>
             <Footer />

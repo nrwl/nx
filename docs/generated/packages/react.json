@@ -48,6 +48,17 @@
             "type": "boolean",
             "default": false
           },
+          "skipBabelConfig": {
+            "description": "Do not generate a root babel.config.json (if babel is not needed).",
+            "type": "boolean",
+            "default": false
+          },
+          "skipHelperLibs": {
+            "description": "Do not install helpers libs (tslib, core-js, regenerator-runtime).",
+            "type": "boolean",
+            "default": false,
+            "hidden": true
+          },
           "js": {
             "type": "boolean",
             "default": false,
@@ -162,9 +173,14 @@
           },
           "unitTestRunner": {
             "type": "string",
-            "enum": ["jest", "none"],
+            "enum": ["jest", "vitest", "none"],
             "description": "Test runner to use for unit tests.",
             "default": "jest"
+          },
+          "inSourceTests": {
+            "type": "boolean",
+            "default": false,
+            "description": "When using Vitest, separate spec files will not be generated and instead will be included within the source files. Read more on the Vitest docs site: https://vitest.dev/guide/in-source.html"
           },
           "e2eTestRunner": {
             "type": "string",
@@ -237,9 +253,15 @@
           },
           "bundler": {
             "description": "The bundler to use.",
+            "type": "string",
             "enum": ["vite", "webpack"],
-            "x-prompt": "Which bundler do you want to use?",
+            "x-prompt": "Which bundler do you want to use to build the application?",
             "default": "webpack"
+          },
+          "minimal": {
+            "description": "Generate a React app with a minimal setup, no separate test files.",
+            "type": "boolean",
+            "default": false
           }
         },
         "required": [],
@@ -332,9 +354,13 @@
           },
           "unitTestRunner": {
             "type": "string",
-            "enum": ["jest", "none"],
-            "description": "Test runner to use for unit tests.",
-            "default": "jest"
+            "enum": ["jest", "vitest", "none"],
+            "description": "Test runner to use for unit tests."
+          },
+          "inSourceTests": {
+            "type": "boolean",
+            "default": false,
+            "description": "When using Vitest, separate spec files will not be generated and instead will be included within the source files."
           },
           "tags": {
             "type": "string",
@@ -373,7 +399,8 @@
           "buildable": {
             "type": "boolean",
             "default": false,
-            "description": "Generate a buildable library."
+            "description": "Generate a buildable library that uses rollup to bundle. Use 'bundler' option instead for greater control (none, vite, rollup).",
+            "x-deprecated": true
           },
           "importPath": {
             "type": "string",
@@ -408,14 +435,26 @@
             "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
             "type": "boolean"
           },
+          "bundler": {
+            "type": "string",
+            "description": "The bundler to use. Choosing 'none' means this library is not buildable.",
+            "enum": ["none", "vite", "rollup"],
+            "default": "none",
+            "x-prompt": "Which bundler would you like to use to build the library? Choose 'none' to skip build setup."
+          },
           "compiler": {
             "type": "string",
             "enum": ["babel", "swc"],
             "default": "babel",
-            "description": "Which compiler to use."
+            "description": "Which compiler to use. Only applies to `bundler: 'rollup'`."
           },
           "skipPackageJson": {
             "description": "Do not add dependencies to `package.json`.",
+            "type": "boolean",
+            "default": false
+          },
+          "minimal": {
+            "description": "Create a React library with a minimal setup, no separate test files.",
             "type": "boolean",
             "default": false
           }
@@ -694,12 +733,15 @@
           },
           "configureTestRunner": {
             "type": "boolean",
-            "description": "Add a Storybook Test-Runner target.",
-            "x-prompt": "Add a Storybook Test-Runner target?"
+            "description": "Add a Storybook Test-Runner target."
+          },
+          "bundler": {
+            "description": "The Storybook builder to use.",
+            "enum": ["vite", "webpack"]
           }
         },
         "required": ["name"],
-        "examplesFile": "This generator will set up Storybook for your Angular project.\n\n```bash\nnx g @nrwl/react:storybook-configuration project-name\n```\n\nYou can read more about how this generator works, in the [Storybook for React overview page](/storybook/overview-react#generate-storybook-configuration-for-an-react-project).\n\nWhen running this generator, you will be prompted to provide the following:\n\n- The `name` of the project you want to generate the configuration for.\n- Whether you want to `configureCypress`. If you choose `yes`, a Cypress e2e app will be created (or configured) to run against the project's Storybook instance. You can read more about this in the [Storybook for React - Cypress section](/storybook/overview-react#cypress-tests-for-stories).\n- Whether you want to `generateStories` for the components in your project. If you choose `yes`, a `.stories.ts` file will be generated next to each of your components in your project.\n- Whether you want to `generateCypressSpecs`. If you choose `yes`, a test file is going to be generated in the project's Cypress e2e app for each of your components.\n- Whether you want to `configureTestRunner`. If you choose `yes`, a `test-storybook` target will be generated in your project's `project.json`, with a command to invoke the [Storybook `test-runner`](https://storybook.js.org/docs/react/writing-tests/test-runner).\n\nYou must provide a `name` for the generator to work.\n\nThere are a number of other options available. Let's take a look at some examples.\n\n## Examples\n\n### Generate Storybook configuration using TypeScript\n\n```bash\nnx g @nrwl/react:storybook-configuration ui --tsConfiguration=true\n```\n\nThis will generate a Storybook configuration for the `ui` project using TypeScript for the Storybook configuration files (the files inside the `.storybook` directory).\n\n### Ignore certain paths when generating stories\n\n```bash\nnx g @nrwl/react:storybook-configuration ui --generateStories=true --ignorePaths=libs/ui/src/not-stories/**,**/**/src/**/*.other.*,apps/my-app/**/*.something.ts\n```\n\nThis will generate a Storybook configuration for the `ui` project and generate stories for all components in the `libs/ui/src/lib` directory, except for the ones in the `libs/ui/src/not-stories` directory, and the ones in the `apps/my-app` directory that end with `.something.ts`, and also for components that their file name is of the pattern `*.other.*`.\n\nThis is useful if you have a project that contains components that are not meant to be used in isolation, but rather as part of a larger component.\n\n### Generate stories using JavaScript instead of TypeScript\n\n```bash\nnx g @nrwl/react:storybook-configuration ui --generateStories=true --js=true\n```\n\nThis will generate stories for all the components in the `ui` project using JavaScript instead of TypeScript. So, you will have `.stories.js` files next to your components.\n",
+        "examplesFile": "This generator will set up Storybook for your React project.\n\n```bash\nnx g @nrwl/react:storybook-configuration project-name\n```\n\nYou can read more about how this generator works, in the [Storybook for React overview page](/storybook/overview-react#generate-storybook-configuration-for-an-react-project).\n\nWhen running this generator, you will be prompted to provide the following:\n\n- The `name` of the project you want to generate the configuration for.\n- Whether you want to `configureCypress`. If you choose `yes`, a Cypress e2e app will be created (or configured) to run against the project's Storybook instance. You can read more about this in the [Storybook for React - Cypress section](/storybook/overview-react#cypress-tests-for-stories).\n- Whether you want to `generateStories` for the components in your project. If you choose `yes`, a `.stories.ts` file will be generated next to each of your components in your project.\n- Whether you want to `generateCypressSpecs`. If you choose `yes`, a test file is going to be generated in the project's Cypress e2e app for each of your components.\n- Whether you want to `configureTestRunner`. If you choose `yes`, a `test-storybook` target will be generated in your project's `project.json`, with a command to invoke the [Storybook `test-runner`](https://storybook.js.org/docs/react/writing-tests/test-runner).\n\nYou must provide a `name` for the generator to work.\n\nThere are a number of other options available. Let's take a look at some examples.\n\n## Examples\n\n### Generate Storybook configuration using TypeScript\n\n```bash\nnx g @nrwl/react:storybook-configuration ui --tsConfiguration=true\n```\n\nThis will generate a Storybook configuration for the `ui` project using TypeScript for the Storybook configuration files (the files inside the `.storybook` directory).\n\n### Ignore certain paths when generating stories\n\n```bash\nnx g @nrwl/react:storybook-configuration ui --generateStories=true --ignorePaths=libs/ui/src/not-stories/**,**/**/src/**/*.other.*,apps/my-app/**/*.something.ts\n```\n\nThis will generate a Storybook configuration for the `ui` project and generate stories for all components in the `libs/ui/src/lib` directory, except for the ones in the `libs/ui/src/not-stories` directory, and the ones in the `apps/my-app` directory that end with `.something.ts`, and also for components that their file name is of the pattern `*.other.*`.\n\nThis is useful if you have a project that contains components that are not meant to be used in isolation, but rather as part of a larger component.\n\n### Generate stories using JavaScript instead of TypeScript\n\n```bash\nnx g @nrwl/react:storybook-configuration ui --generateStories=true --js=true\n```\n\nThis will generate stories for all the components in the `ui` project using JavaScript instead of TypeScript. So, you will have `.stories.js` files next to your components.\n",
         "presets": []
       },
       "description": "Set up storybook for a React app or library.",
@@ -1063,6 +1105,11 @@
           "devServerPort": {
             "type": "number",
             "description": "The port for the dev server of the remote app."
+          },
+          "ssr": {
+            "description": "Whether to configure SSR for the host application",
+            "type": "boolean",
+            "default": false
           }
         },
         "required": ["name"],
@@ -1224,6 +1271,11 @@
           "devServerPort": {
             "type": "number",
             "description": "The port for the dev server of the remote app."
+          },
+          "ssr": {
+            "description": "Whether to configure SSR for the host application",
+            "type": "boolean",
+            "default": false
           }
         },
         "required": ["name"],
@@ -1385,10 +1437,10 @@
       "factory": "./src/generators/setup-ssr/setup-ssr#setupSsrGenerator",
       "schema": {
         "$schema": "http://json-schema.org/schema",
-        "$id": "GeneratorAngularUniversalSetup",
+        "$id": "GeneratorReactSSRSetup",
         "cli": "nx",
-        "title": "Generate Angular Universal (SSR) setup for an Angular App",
-        "description": "Create the additional configuration required to enable SSR via Angular Universal for an Angular application.",
+        "title": "Generate SSR setup for a React app",
+        "description": "Create the additional configuration required to enable SSR via Express for a React application.",
         "type": "object",
         "properties": {
           "project": {
@@ -1400,7 +1452,7 @@
           },
           "appComponentImportPath": {
             "type": "string",
-            "description": "The import path of the <App/> component, relative to project sourceRoot.",
+            "description": "The import path of the <App/ > component, relative to project sourceRoot.",
             "default": "app/app"
           },
           "serverPort": {
@@ -1411,6 +1463,13 @@
           "skipFormat": {
             "type": "boolean",
             "description": "Skip formatting the workspace after the generator completes."
+          },
+          "extraInclude": {
+            "type": "array",
+            "items": { "type": "string" },
+            "hidden": true,
+            "description": "Extra include entries in tsconfig.",
+            "default": []
           }
         },
         "required": ["project"],

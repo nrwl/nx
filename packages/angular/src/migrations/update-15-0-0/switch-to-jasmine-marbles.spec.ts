@@ -20,7 +20,7 @@ jest.mock('@nrwl/devkit', () => ({
 describe('switchToJasmineMarbles', () => {
   it('should correctly migrate a file that is using imports from nrwl/angular/testing that exist in jasmine-marbles', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     projectGraph = {
       nodes: {},
@@ -75,7 +75,7 @@ describe('switchToJasmineMarbles', () => {
 
   it('should correctly migrate and split imports from nrwl/angular/testing that exist in jasmine-marbles and nrwl/angular/testing', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     projectGraph = {
       nodes: {},
       dependencies: {
@@ -126,7 +126,7 @@ describe('switchToJasmineMarbles', () => {
 
   it('should add jasmine-marbles as a dependency if it does not exist but uses jasmine-marbles symbols in files', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     projectGraph = {
       nodes: {},
       dependencies: {

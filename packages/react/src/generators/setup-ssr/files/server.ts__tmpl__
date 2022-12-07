@@ -1,6 +1,8 @@
-import express from 'express';
-import { handleRequest } from './src/main.server';
 import * as path from 'path';
+import express from 'express';
+import cors from 'cors';
+
+import { handleRequest } from './src/main.server';
 
 const port = process.env['port'] || 4200;
 const app = express();
@@ -8,12 +10,14 @@ const app = express();
 const browserDist = path.join(process.cwd(), '<%= browserBuildOutputPath %>');
 const indexPath =path.join(browserDist, 'index.html');
 
-  app.get(
-    '*.*',
-    express.static(browserDist, {
-      maxAge: '1y',
-    })
-  );
+app.use(cors());
+
+app.get(
+  '*.*',
+  express.static(browserDist, {
+    maxAge: '1y',
+  })
+);
 
 app.use('*', handleRequest(indexPath));
 

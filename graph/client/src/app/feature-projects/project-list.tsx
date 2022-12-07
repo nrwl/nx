@@ -13,10 +13,15 @@ import {
   selectedProjectNamesSelector,
   workspaceLayoutSelector,
 } from './machines/selectors';
-import { getProjectsByType, parseParentDirectoriesFromFilePath } from '../util';
+import {
+  getProjectsByType,
+  parseParentDirectoriesFromFilePath,
+  useRouteConstructor,
+} from '../util';
 import ExperimentalFeature from '../ui-components/experimental-feature';
 import { TracingAlgorithmType } from './machines/interfaces';
 import { getProjectGraphService } from '../machines/get-services';
+import { Link, useNavigate } from 'react-router-dom';
 
 interface SidebarProject {
   projectGraphNode: ProjectGraphNode;
@@ -70,6 +75,8 @@ function ProjectListItem({
   tracingInfo: TracingInfo;
 }) {
   const projectGraphService = getProjectGraphService();
+  const navigate = useNavigate();
+  const routeConstructor = useRouteConstructor();
 
   function startTrace(projectName: string) {
     projectGraphService.send({ type: 'setTracingStart', projectName });
@@ -85,24 +92,23 @@ function ProjectListItem({
     } else {
       projectGraphService.send({ type: 'selectProject', projectName });
     }
-  }
-
-  function focusProject(projectName: string) {
-    projectGraphService.send({ type: 'focusProject', projectName });
+    navigate(routeConstructor('/projects', true));
   }
 
   return (
     <li className="relative block cursor-default select-none py-1 pl-2 pr-6 text-xs text-slate-600 dark:text-slate-400">
       <div className="flex items-center">
-        <button
+        <Link
           data-cy={`focus-button-${project.projectGraphNode.name}`}
-          type="button"
           className="mr-1 flex items-center rounded-md border-slate-300 bg-white p-1 font-medium text-slate-500 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-600 hover:dark:bg-slate-700"
           title="Focus on this library"
-          onClick={() => focusProject(project.projectGraphNode.name)}
+          to={routeConstructor(
+            `/projects/${project.projectGraphNode.name}`,
+            true
+          )}
         >
           <DocumentMagnifyingGlassIcon className="h-5 w-5" />
-        </button>
+        </Link>
 
         <ExperimentalFeature>
           <span className="relative z-0 inline-flex rounded-md shadow-sm">
@@ -279,7 +285,7 @@ export function ProjectList() {
         );
       })}
 
-      <h2 className="mt-8 border-b border-solid border-slate-200/10 text-lg font-light">
+      <h2 className="mt-8 border-b border-solid border-slate-200/10 text-lg font-light text-slate-400 dark:text-slate-500">
         e2e projects
       </h2>
 
@@ -294,7 +300,7 @@ export function ProjectList() {
         );
       })}
 
-      <h2 className="mt-8 border-b border-solid border-slate-200/10 text-lg font-light">
+      <h2 className="mt-8 border-b border-solid border-slate-200/10 text-lg font-light text-slate-400 dark:text-slate-500">
         lib projects
       </h2>
 

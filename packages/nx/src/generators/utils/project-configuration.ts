@@ -375,8 +375,8 @@ function addProjectToWorkspaceJson(
 
       // update the project.json file
       writeJson(tree, projectConfigFile, {
-        ...jsonSchema,
         name: mode === 'create' ? projectName : project.name ?? projectName,
+        ...jsonSchema,
         ...project,
         root: undefined,
       });

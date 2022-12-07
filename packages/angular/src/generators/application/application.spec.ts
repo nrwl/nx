@@ -108,8 +108,8 @@ describe('app', () => {
       expect(tsconfigApp.extends).toEqual('./tsconfig.json');
       expect(tsconfigApp.exclude).toEqual([
         'jest.config.ts',
-        '**/*.test.ts',
-        '**/*.spec.ts',
+        'src/**/*.test.ts',
+        'src/**/*.spec.ts',
       ]);
 
       const eslintrcJson = parseJson(
@@ -314,7 +314,11 @@ describe('app', () => {
         {
           path: 'apps/my-dir/my-app/tsconfig.app.json',
           lookupFn: (json) => json.exclude,
-          expectedValue: ['jest.config.ts', '**/*.test.ts', '**/*.spec.ts'],
+          expectedValue: [
+            'jest.config.ts',
+            'src/**/*.test.ts',
+            'src/**/*.spec.ts',
+          ],
         },
         {
           path: 'apps/my-dir/my-app/.eslintrc.json',
@@ -348,7 +352,7 @@ describe('app', () => {
 
   describe('at the root', () => {
     beforeEach(() => {
-      appTree = createTreeWithEmptyWorkspace();
+      appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       updateJson(appTree, 'nx.json', (json) => ({
         ...json,
         workspaceLayout: { appsDir: '' },
@@ -398,7 +402,11 @@ describe('app', () => {
         {
           path: 'my-dir/my-app/tsconfig.app.json',
           lookupFn: (json) => json.exclude,
-          expectedValue: ['jest.config.ts', '**/*.test.ts', '**/*.spec.ts'],
+          expectedValue: [
+            'jest.config.ts',
+            'src/**/*.test.ts',
+            'src/**/*.spec.ts',
+          ],
         },
         {
           path: 'my-dir/my-app/.eslintrc.json',
@@ -544,6 +552,9 @@ describe('app', () => {
                 "apps/my-app/**/*.html",
               ],
             },
+            "outputs": Array [
+              "{options.outputFile}",
+            ],
           }
         `);
         expect(workspaceJson.projects['my-app-e2e'].architect.lint)
@@ -578,6 +589,9 @@ describe('app', () => {
                 "apps/my-app/**/*.html",
               ],
             },
+            "outputs": Array [
+              "{options.outputFile}",
+            ],
           }
         `);
         expect(appTree.exists('apps/my-app-e2e/.eslintrc.json')).toBeTruthy();
@@ -739,7 +753,7 @@ describe('app', () => {
   describe('--e2e-test-runner', () => {
     describe(E2eTestRunner.Protractor, () => {
       it('should create the e2e project in v2 workspace', async () => {
-        appTree = createTreeWithEmptyWorkspace();
+        appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
         expect(
           async () =>
@@ -1067,9 +1081,7 @@ describe('app', () => {
       expect(appTree.exists('src/app/app.module.ts')).toBe(true);
       expect(appTree.exists('src/app/app.component.ts')).toBe(true);
       expect(appTree.exists('e2e/cypress.config.ts')).toBe(true);
-      expect(readJson(appTree, 'tsconfig.json').extends).toEqual(
-        './tsconfig.base.json'
-      );
+      expect(readJson(appTree, 'tsconfig.json').extends).toBeUndefined();
       const project = readProjectConfiguration(appTree, 'my-app');
       expect(project.targets.build.options['outputPath']).toBe('dist/my-app');
     });

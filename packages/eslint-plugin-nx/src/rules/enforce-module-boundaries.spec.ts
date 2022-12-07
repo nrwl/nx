@@ -3,13 +3,11 @@ import { DependencyType } from '@nrwl/devkit';
 import * as parser from '@typescript-eslint/parser';
 import { TSESLint } from '@typescript-eslint/utils';
 import { vol } from 'memfs';
-import {
-  TargetProjectLocator,
-  createProjectFileMappings,
-} from 'nx/src/utils/target-project-locator';
+import { TargetProjectLocator } from 'nx/src/utils/target-project-locator';
 import enforceModuleBoundaries, {
   RULE_NAME as enforceModuleBoundariesRuleName,
-} from './enforce-module-boundaries';
+} from '../../src/rules/enforce-module-boundaries';
+import { createProjectRootMappings } from 'nx/src/project-graph/utils/find-project-for-path';
 
 jest.mock('fs', () => require('memfs').fs);
 
@@ -1015,7 +1013,7 @@ Violation detected in:
                 tags: [],
                 implicitDependencies: [],
                 architect: {},
-                files: [createFile(`libs/other/src/index.ts`)],
+                files: [createFile(`libs/other/index.ts`)],
               },
             },
           },
@@ -1033,7 +1031,6 @@ Violation detected in:
       if (importKind === 'type') {
         expect(failures.length).toEqual(0);
       } else {
-        expect(failures.length).toEqual(1);
         expect(failures[0].message).toEqual(
           'Imports of lazy-loaded libraries are forbidden'
         );
@@ -1145,10 +1142,7 @@ Violation detected in:
               tags: [],
               implicitDependencies: [],
               architect: {},
-              files: [
-                createFile(`libs/mylib/src/main.ts`),
-                createFile(`libs/mylib/src/index.ts`),
-              ],
+              files: [createFile(`libs/mylib/src/main.ts`)],
             },
           },
           anotherlibName: {
@@ -1272,10 +1266,7 @@ Violation detected in:
               tags: [],
               implicitDependencies: [],
               architect: {},
-              files: [
-                createFile(`libs/mylib/src/main.ts`, ['anotherlibName']),
-                createFile(`libs/mylib/src/index.ts`),
-              ],
+              files: [createFile(`libs/mylib/src/main.ts`, ['anotherlibName'])],
             },
           },
           anotherlibName: {
@@ -1370,7 +1361,6 @@ Circular file chain:
               architect: {},
               files: [
                 createFile(`libs/badcirclelib/src/main.ts`, ['anotherlibName']),
-                createFile(`libs/badcirclelib/src/index.ts`),
               ],
             },
           },
@@ -1894,7 +1884,7 @@ function runRule(
 ): TSESLint.Linter.LintMessage[] {
   (global as any).projectPath = `${process.cwd()}/proj`;
   (global as any).projectGraph = projectGraph;
-  (global as any).projectGraphFileMappings = createProjectFileMappings(
+  (global as any).projectRootMappings = createProjectRootMappings(
     projectGraph.nodes
   );
   (global as any).targetProjectLocator = new TargetProjectLocator(

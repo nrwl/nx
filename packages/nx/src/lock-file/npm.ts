@@ -40,7 +40,7 @@ type NpmLockFile = {
   name?: string;
   lockfileVersion: number;
   requires?: boolean;
-  packages?: Dependencies;
+  packages?: Record<string, NpmDependency>;
   dependencies?: Record<string, NpmDependency>;
 };
 
@@ -67,7 +67,7 @@ export function parseNpmLockFile(lockFile: string): LockFileData {
 // Maps /node_modules/@abc/def with version 1.2.3 => @abc/def > @abc/dev@1.2.3
 function mapPackages(
   dependencies: Record<string, NpmDependency>,
-  packages: Dependencies,
+  packages: Record<string, NpmDependency>,
   lockfileVersion: number
 ): LockFileData['dependencies'] {
   const mappedPackages: LockFileData['dependencies'] = {};
@@ -76,7 +76,7 @@ function mapPackages(
     Object.entries(dependencies).forEach(([packageName, value]) => {
       const { newKey, packagePath } = prepareDependency(
         packageName,
-        value.version,
+        value,
         mappedPackages
       );
 
@@ -104,7 +104,7 @@ function mapPackages(
         const packageName = packagePath.split('node_modules/').pop();
         const { newKey } = prepareDependency(
           packageName,
-          value.version,
+          value,
           mappedPackages,
           undefined,
           packagePath
@@ -127,12 +127,15 @@ function mapPackages(
 
 function prepareDependency(
   packageName: string,
-  version: string,
+  dependency: NpmDependency,
   mappedPackages: LockFileData['dependencies'],
   pathPrefix: string = '',
   path?: string
 ) {
   mappedPackages[packageName] = mappedPackages[packageName] || {};
+  const version = dependency.integrity
+    ? dependency.version
+    : dependency.resolved;
   const newKey = packageName + '@' + version;
   const packagePath =
     path || pathPrefix
@@ -157,10 +160,11 @@ function mapPackageDependency(
     peer,
     optional,
   };
-  if (!mappedPackages[packageName][key]) {
+  const rootVersion =
+    isRootVersion ?? packagePath.split('/node_modules/').length === 1;
+
+  if (!mappedPackages[packageName][key] || rootVersion) {
     // const packageDependencies = lockfileVersion === 1 ? requires : dependencies;
-    const rootVersion =
-      isRootVersion ?? packagePath.split('/node_modules/').length === 1;
 
     if (lockfileVersion === 1) {
       const { requires, ...rest } = value;
@@ -172,6 +176,10 @@ function mapPackageDependency(
 
     mappedPackages[packageName][key] = {
       ...(value as Omit<PackageDependency, 'packageMeta'>),
+      ...(!value.integrity && {
+        actualVersion: value.version,
+        version: value.resolved,
+      }),
       packageMeta: [],
       rootVersion,
     };
@@ -193,7 +201,7 @@ function mapPackageDependencies(
   Object.entries(dependencies).forEach(([packageName, value]) => {
     const { newKey, packagePath } = prepareDependency(
       packageName,
-      value.version,
+      value,
       mappedPackages,
       parentPath
     );
@@ -272,6 +280,7 @@ function unmapPackage(packages: Dependencies, dependency: PackageDependency) {
     packageMeta,
     rootVersion,
     version,
+    actualVersion,
     resolved,
     integrity,
     dev,
@@ -285,7 +294,7 @@ function unmapPackage(packages: Dependencies, dependency: PackageDependency) {
     const { path, dev, peer, optional } = packageMeta[i];
     // we are sorting the properties to get as close as possible to the original package-lock.json
     packages[path] = {
-      version,
+      version: actualVersion || version,
       resolved,
       integrity,
       dev,

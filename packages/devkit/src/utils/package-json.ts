@@ -2,7 +2,9 @@ import { readJson, updateJson } from 'nx/src/generators/utils/json';
 import { installPackagesTask } from '../tasks/install-packages-task';
 import type { Tree } from 'nx/src/generators/tree';
 import { GeneratorCallback } from 'nx/src/config/misc-interfaces';
-import { coerce, gt } from 'semver';
+import { coerce, gt, satisfies } from 'semver';
+import { getPackageManagerCommand } from 'nx/src/utils/package-manager';
+import { execSync } from 'child_process';
 
 const NON_SEMVER_TAGS = {
   '*': 2,
@@ -273,4 +275,74 @@ function requiresRemovingOfPackages(
   }
 
   return needsDepsUpdate || needsDevDepsUpdate;
+}
+
+/**
+ * @typedef EnsurePackageOptions
+ * @type {object}
+ * @property {boolean} dev indicate if the package is a dev dependency
+ * @property {throwOnMissing} boolean throws an error when the package is missing
+ */
+
+/**
+ * Ensure that dependencies and devDependencies from package.json are installed at the required versions.
+ *
+ * For example:
+ * ```typescript
+ * ensureDependencies(tree, {}, { '@nrwl/jest': nxVersion })
+ * ```
+ * This will check that @nrwl/jest@<nxVersion> exists in devDependencies.
+ * If it exists then function returns, otherwise it will install the package before continuing.
+ * When running with --dryRun, the function will throw when dependencies are missing.
+ *
+ * @param tree the file system tree
+ * @param pkg the package to check (e.g. @nrwl/jest)
+ * @param requiredVersion the version or semver range to check (e.g. ~1.0.0, >=1.0.0 <2.0.0)
+ * @param {EnsurePackageOptions} options
+ * @returns {Promise<void>}
+ */
+export async function ensurePackage(
+  tree: Tree,
+  pkg: string,
+  requiredVersion: string,
+  options: {
+    dev?: boolean;
+    throwOnMissing?: boolean;
+  } = {}
+): Promise<void> {
+  let version: string;
+
+  // Read package and version from root package.json file.
+  const packageJson = readJson(tree, 'package.json');
+  const dev = options.dev ?? true;
+  const throwOnMissing = options.throwOnMissing ?? !!process.env.NX_DRY_RUN; // NX_DRY_RUN is set in `packages/nx/src/command-line/generate.ts`
+  const pmc = getPackageManagerCommand();
+  const field = dev ? 'devDependencies' : 'dependencies';
+
+  version = packageJson[field]?.[pkg];
+
+  // If package not found, try to resolve it using Node and get its version.
+  if (!version) {
+    try {
+      version = require(`${pkg}/package.json`).version;
+    } catch {
+      // ignore
+    }
+  }
+
+  if (!satisfies(version, requiredVersion)) {
+    const installCmd = `${
+      dev ? pmc.addDev : pmc.add
+    } ${pkg}@${requiredVersion}`;
+    if (throwOnMissing) {
+      throw new Error(
+        `Cannot install required package ${pkg} during a dry run. Run the generator without --dryRun, or install the package with "${installCmd}" and try again.`
+      );
+    } else {
+      execSync(installCmd, {
+        cwd: tree.root,
+        stdio: [0, 1, 2],
+      });
+    }
+  }
 }

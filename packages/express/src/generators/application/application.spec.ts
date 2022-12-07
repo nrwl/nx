@@ -91,12 +91,12 @@ Object {
   },
   "exclude": Array [
     "jest.config.ts",
-    "**/*.spec.ts",
-    "**/*.test.ts",
+    "src/**/*.spec.ts",
+    "src/**/*.test.ts",
   ],
   "extends": "./tsconfig.json",
   "include": Array [
-    "**/*.ts",
+    "src/**/*.ts",
   ],
 }
 `);
@@ -123,13 +123,13 @@ Object {
         appTree,
         'apps/my-node-app/tsconfig.app.json'
       );
-      expect(tsConfigApp.include).toEqual(['**/*.ts', '**/*.js']);
+      expect(tsConfigApp.include).toEqual(['src/**/*.ts', 'src/**/*.js']);
       expect(tsConfigApp.exclude).toEqual([
         'jest.config.ts',
-        '**/*.spec.ts',
-        '**/*.test.ts',
-        '**/*.spec.js',
-        '**/*.test.js',
+        'src/**/*.spec.ts',
+        'src/**/*.test.ts',
+        'src/**/*.spec.js',
+        'src/**/*.test.js',
       ]);
     });
   });

@@ -4,9 +4,12 @@ import {
   runCLI,
   runCLIAsync,
   uniq,
+  readJson,
   updateFile,
   expectJestTestsToPass,
   cleanupProject,
+  readFile,
+  checkFilesExist,
 } from '@nrwl/e2e/utils';
 
 describe('Jest', () => {

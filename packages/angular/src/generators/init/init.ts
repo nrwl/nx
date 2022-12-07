@@ -28,23 +28,35 @@ import {
 } from '../../utils/versions';
 import { karmaGenerator } from '../karma/karma';
 import { Schema } from './schema';
+import { getGeneratorDirectoryForInstalledAngularVersion } from '../../utils/get-generator-directory-for-ng-version';
+import { join } from 'path';
 
 export async function angularInitGenerator(
-  host: Tree,
+  tree: Tree,
   rawOptions: Schema
 ): Promise<GeneratorCallback> {
+  const generatorDirectory =
+    getGeneratorDirectoryForInstalledAngularVersion(tree);
+  if (generatorDirectory) {
+    let previousGenerator = await import(
+      join(__dirname, generatorDirectory, 'init')
+    );
+    await previousGenerator.default(tree, rawOptions);
+    return;
+  }
+
   const options = normalizeOptions(rawOptions);
-  setDefaults(host, options);
+  setDefaults(tree, options);
 
   const depsTask = !options.skipPackageJson
-    ? updateDependencies(host)
+    ? updateDependencies(tree)
     : () => {};
-  const unitTestTask = addUnitTestRunner(host, options);
-  const e2eTask = addE2ETestRunner(host, options);
-  addGitIgnoreEntry(host, '.angular');
+  const unitTestTask = await addUnitTestRunner(tree, options);
+  const e2eTask = addE2ETestRunner(tree, options);
+  addGitIgnoreEntry(tree, '.angular');
 
   if (!options.skipFormat) {
-    await formatFiles(host);
+    await formatFiles(tree);
   }
 
   return runTasksInSerial(depsTask, unitTestTask, e2eTask);
@@ -111,10 +123,15 @@ function updateDependencies(host: Tree): GeneratorCallback {
   );
 }
 
-function addUnitTestRunner(host: Tree, options: Schema): GeneratorCallback {
+async function addUnitTestRunner(
+  host: Tree,
+  options: Schema
+): Promise<GeneratorCallback> {
   switch (options.unitTestRunner) {
     case UnitTestRunner.Karma:
-      return karmaGenerator(host, { skipPackageJson: options.skipPackageJson });
+      return await karmaGenerator(host, {
+        skipPackageJson: options.skipPackageJson,
+      });
     case UnitTestRunner.Jest:
       if (!options.skipPackageJson) {
         addDependenciesToPackageJson(

@@ -6,7 +6,7 @@ import { convertPipeToScam } from './convert-pipe-to-scam';
 describe('convertPipeToScam', () => {
   it('should create the scam pipe inline correctly', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'app1', {
       projectType: 'application',
       sourceRoot: 'apps/app1/src',
@@ -75,7 +75,7 @@ describe('convertPipeToScam', () => {
 
   it('should create the scam pipe separately correctly', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'app1', {
       projectType: 'application',
       sourceRoot: 'apps/app1/src',
@@ -134,7 +134,7 @@ describe('convertPipeToScam', () => {
 
   it('should create the scam pipe inline correctly when --flat', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'app1', {
       projectType: 'application',
       sourceRoot: 'apps/app1/src',
@@ -200,7 +200,7 @@ describe('convertPipeToScam', () => {
 
   it('should create the scam pipe separately correctly when --flat', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'app1', {
       projectType: 'application',
       sourceRoot: 'apps/app1/src',
@@ -259,7 +259,7 @@ describe('convertPipeToScam', () => {
 
   it('should place the pipe and scam pipe in the correct folder when --path is used', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'app1', {
       projectType: 'application',
       sourceRoot: 'apps/app1/src',
@@ -329,7 +329,7 @@ describe('convertPipeToScam', () => {
 
   it('should place the pipe and scam pipe in the correct folder when --path and --flat is used', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'app1', {
       projectType: 'application',
       sourceRoot: 'apps/app1/src',

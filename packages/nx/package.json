@@ -36,6 +36,7 @@
     "@yarnpkg/lockfile": "^1.1.0",
     "@yarnpkg/parsers": "^3.0.0-rc.18",
     "@zkochan/js-yaml": "0.0.6",
+    "axios": "^1.0.0",
     "chalk": "4.1.0",
     "chokidar": "^3.5.1",
     "cli-cursor": "3.1.0",
@@ -49,6 +50,7 @@
     "fs-extra": "^10.1.0",
     "glob": "7.1.4",
     "ignore": "^5.0.4",
+    "js-yaml": "4.1.0",
     "jsonc-parser": "3.2.0",
     "minimatch": "3.0.5",
     "npm-run-path": "^4.0.1",
@@ -62,9 +64,7 @@
     "tslib": "^2.3.0",
     "v8-compile-cache": "2.3.0",
     "yargs": "^17.6.2",
-    "yargs-parser": "21.1.1",
-    "js-yaml": "4.1.0",
-    "axios": "^1.0.0"
+    "yargs-parser": "21.1.1"
   },
   "peerDependencies": {
     "@swc-node/register": "^1.4.2",

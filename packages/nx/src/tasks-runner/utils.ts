@@ -215,12 +215,6 @@ export function getExecutorNameForTask(
     loadNxPlugins(nxJson.plugins)
   );
 
-  if (!project.targets[task.target.target]) {
-    throw new Error(
-      `Cannot find configuration for task ${task.target.project}:${task.target.target}`
-    );
-  }
-
   return project.targets[task.target.target].executor;
 }
 

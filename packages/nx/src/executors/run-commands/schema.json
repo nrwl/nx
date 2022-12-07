@@ -138,6 +138,13 @@
     }
   },
   "additionalProperties": true,
-  "required": [],
+  "oneOf": [
+    {
+      "required": ["commands"]
+    },
+    {
+      "required": ["command"]
+    }
+  ],
   "examplesFile": "../../../docs/run-commands-examples.md"
 }

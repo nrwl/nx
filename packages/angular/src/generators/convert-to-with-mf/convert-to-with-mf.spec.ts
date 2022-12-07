@@ -12,7 +12,7 @@ import convertToWithMF from './convert-to-with-mf';
 describe('convertToWithMF', () => {
   it('should migrate a standard previous generated host config correctly', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'host1', {
       name: 'host1',
       root: 'apps/host1',
@@ -43,7 +43,7 @@ describe('convertToWithMF', () => {
 
   it('should migrate a standard previous generated remote config correctly', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'remote1', {
       name: 'remote1',
       root: 'apps/remote1',
@@ -74,7 +74,7 @@ describe('convertToWithMF', () => {
 
   it('should migrate a standard previous generated remote config using object shared syntax correctly', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'remote1', {
       name: 'remote1',
       root: 'apps/remote1',
@@ -105,7 +105,7 @@ describe('convertToWithMF', () => {
 
   it('should throw when the uniqueName doesnt match the project name', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'remote1', {
       name: 'remote1',
       root: 'apps/remote1',
@@ -134,7 +134,7 @@ describe('convertToWithMF', () => {
 
   it('should throw when the shared npm packages configs has been modified', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'host1', {
       name: 'host1',
       root: 'apps/host1',

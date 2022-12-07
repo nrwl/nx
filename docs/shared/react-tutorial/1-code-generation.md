@@ -1,5 +1,5 @@
 ---
-title: 'React Tutorial - Part 1: Code Generation'
+title: 'React Monorepo Tutorial - Part 1: Code Generation'
 description: In this tutorial you'll create a frontend-focused workspace with Nx.
 ---
 
@@ -9,7 +9,7 @@ There are two styles of repos: integrated and package-based. This tutorial shows
 You can find more information on the difference between the two in [our introduction](/getting-started/intro).
 {% /callout %}
 
-# React Tutorial - Part 1: Code Generation
+# React Monorepo Tutorial - Part 1: Code Generation
 
 ## Contents
 

@@ -119,7 +119,12 @@ describe('jestProject', () => {
         types: ['jest', 'node'],
       },
       files: ['src/test-setup.ts'],
-      include: ['jest.config.ts', '**/*.test.ts', '**/*.spec.ts', '**/*.d.ts'],
+      include: [
+        'jest.config.ts',
+        'src/**/*.test.ts',
+        'src/**/*.spec.ts',
+        'src/**/*.d.ts',
+      ],
     });
   });
 
@@ -360,6 +365,83 @@ describe('jestProject', () => {
         supportTsx: true,
       } as JestProjectSchema);
       expect(tree.read('libs/lib1/jest.config.ts', 'utf-8')).toMatchSnapshot();
+    });
+  });
+
+  describe('root project', () => {
+    it('root jest.config.ts should be project config', async () => {
+      writeJson(tree, 'tsconfig.json', {
+        files: [],
+        include: [],
+        references: [],
+      });
+      addProjectConfiguration(tree, 'my-project', {
+        root: '',
+        sourceRoot: 'src',
+        name: 'my-project',
+        targets: {},
+      });
+      await jestProjectGenerator(tree, {
+        ...defaultOptions,
+        project: 'my-project',
+        rootProject: true,
+      });
+      expect(tree.read('jest.config.ts', 'utf-8')).toMatchInlineSnapshot(`
+        "/* eslint-disable */
+        export default {
+          displayName: 'my-project',
+          preset: '../jest.preset.js',
+          globals: {
+            'ts-jest': {
+              tsconfig: '<rootDir>/tsconfig.spec.json',
+            }
+          },
+          coverageDirectory: '../coverage/my-project',
+          testMatch: [
+            '<rootDir>/src/**/__tests__/**/*.[jt]s?(x)',
+            '<rootDir>/src/**/?(*.)+(spec|test).[jt]s?(x)',
+          ],
+        };
+        "
+      `);
+    });
+
+    it('root jest.config.js should be project config', async () => {
+      writeJson(tree, 'tsconfig.json', {
+        files: [],
+        include: [],
+        references: [],
+      });
+      addProjectConfiguration(tree, 'my-project', {
+        root: '',
+        sourceRoot: 'src',
+        name: 'my-project',
+        targets: {},
+      });
+      await jestProjectGenerator(tree, {
+        ...defaultOptions,
+        project: 'my-project',
+        rootProject: true,
+        js: true,
+      });
+      expect(tree.read('jest.config.js', 'utf-8')).toMatchInlineSnapshot(`
+        "/* eslint-disable */
+        module.exports = {
+          displayName: 'my-project',
+          preset: '../jest.preset.js',
+          globals: {
+            'ts-jest': {
+              tsconfig: '<rootDir>/tsconfig.spec.json',
+            }
+          },
+          coverageDirectory: '../coverage/my-project',
+          testMatch: [
+            '<rootDir>/src/**/__tests__/**/*.[jt]s?(x)',
+            '<rootDir>/src/**/?(*.)+(spec|test).[jt]s?(x)',
+          ],
+        };
+        "
+      `);
     });
   });
 });

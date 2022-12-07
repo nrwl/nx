@@ -16,7 +16,12 @@
         "delegate-build",
         "ng-packagr-lite",
         "package",
-        "file-server"
+        "file-server",
+        "webpack-browser",
+        "webpack-dev-server",
+        "webpack-server",
+        "module-federation-dev-server",
+        "module-federation-dev-ssr"
       ],
       "generators": [
         "add-linting",
@@ -86,7 +91,7 @@
         "init",
         "cypress-project",
         "cypress-component-project",
-        "migrate-to-cypress-10"
+        "migrate-to-cypress-11"
       ]
     }
   },
@@ -372,7 +377,7 @@
     "path": "generated/packages/vite.json",
     "schemas": {
       "executors": ["dev-server", "build", "test"],
-      "generators": ["init", "configuration"]
+      "generators": ["init", "configuration", "vitest"]
     }
   },
   {

@@ -12,6 +12,10 @@ export function buildExplicitTypeScriptDependencies(
   graph: ProjectGraph,
   filesToProcess: ProjectFileMap
 ) {
+  function isRoot(projectName: string) {
+    return graph.nodes[projectName]?.data?.root === '.';
+  }
+
   const importLocator = new TypeScriptImportLocator();
   const targetProjectLocator = new TargetProjectLocator(
     graph.nodes as any,
@@ -28,6 +32,11 @@ export function buildExplicitTypeScriptDependencies(
             f.file
           );
           if (target) {
+            if (!isRoot(source) && isRoot(target)) {
+              // TODO: These edges technically should be allowed but we need to figure out how to separate config files out from root
+              return;
+            }
+
             res.push({
               sourceProjectName: source,
               targetProjectName: target,

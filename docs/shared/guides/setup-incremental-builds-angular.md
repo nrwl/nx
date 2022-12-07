@@ -9,9 +9,10 @@ Incremental builds requires Nx version 10.4.0 or later.
 
 ## Requirements
 
-It’s required that you run the Angular compatibility compiler (`ngcc`) after every package installation if you have Ivy
-enabled. This comes configured by default in every Nx workspace. The incremental build relies on the fact that `ngcc`
-must have already been run. You can check your `package.json` and make sure you have the following:
+If your library consumes any Angular package that has not been compiled with Ivy, you must ensure the
+Angular compatibility compiler (`ngcc`) has run before building the library. The incremental build relies
+on the fact that `ngcc` must have already been run. One way to do this is to run `ngcc` after every package
+installation. You can check your `package.json` and make sure you have the following:
 
 ```jsonc {% fileName="package.json" %}
 {

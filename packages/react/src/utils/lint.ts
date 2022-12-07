@@ -17,6 +17,18 @@ export const extraEslintDependencies = {
   },
 };
 
+export const extendReactEslintJson = (json: Linter.Config) => {
+  const { extends: pluginExtends, ...config } = json;
+
+  return {
+    extends: ['plugin:@nrwl/nx/react', ...(pluginExtends || [])],
+    ...config,
+  };
+};
+
+/**
+ * @deprecated Use {@link extendReactEslintJson} instead.
+ */
 export const createReactEslintJson = (
   projectRoot: string,
   setParserOptionsProject: boolean

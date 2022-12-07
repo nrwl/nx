@@ -25,8 +25,15 @@ import { getProjectGraphService } from '../machines/get-services';
 import { useIntervalWhen } from '../hooks/use-interval-when';
 // nx-ignore-next-line
 import { ProjectGraphClientResponse } from 'nx/src/command-line/dep-graph';
-import { useParams, useRouteLoaderData } from 'react-router-dom';
+import {
+  useNavigate,
+  useParams,
+  useRouteLoaderData,
+  useSearchParams,
+} from 'react-router-dom';
 import { getProjectGraphDataService } from '../hooks/get-project-graph-data-service';
+import { useCurrentPath } from '../hooks/use-current-path';
+import { useRouteConstructor } from '../util';
 
 export function ProjectsSidebar(): JSX.Element {
   const environmentConfig = useEnvironmentConfig();
@@ -41,58 +48,102 @@ export function ProjectsSidebar(): JSX.Element {
   const groupByFolder = useProjectGraphSelector(groupByFolderSelector);
   const collapseEdges = useProjectGraphSelector(collapseEdgesSelector);
 
-  const isTracing = projectGraphService.state.matches('tracing');
+  const isTracing = projectGraphService.getSnapshot().matches('tracing');
   const tracingInfo = useProjectGraphSelector(getTracingInfo);
   const projectGraphDataService = getProjectGraphDataService();
+
+  const routeParams = useParams();
+  const currentRoute = useCurrentPath();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const selectedProjectRouteData = useRouteLoaderData(
     'selectedWorkspace'
   ) as ProjectGraphClientResponse;
   const params = useParams();
+  const navigate = useNavigate();
+  const routeContructor = useRouteConstructor();
 
   function resetFocus() {
     projectGraphService.send({ type: 'unfocusProject' });
+    navigate(routeContructor('/projects', true));
   }
 
   function showAllProjects() {
-    projectGraphService.send({ type: 'selectAll' });
+    navigate(routeContructor('/projects/all', true));
   }
 
   function hideAllProjects() {
     projectGraphService.send({ type: 'deselectAll' });
+    navigate(routeContructor('/projects', true));
   }
 
   function showAffectedProjects() {
-    projectGraphService.send({ type: 'selectAffected' });
+    navigate(routeContructor('/projects/affected', true));
   }
 
   function searchDepthFilterEnabledChange(checked: boolean) {
-    projectGraphService.send({
-      type: 'setSearchDepthEnabled',
-      searchDepthEnabled: checked,
+    setSearchParams((currentSearchParams) => {
+      if (checked && searchDepthInfo.searchDepth > 1) {
+        currentSearchParams.set(
+          'searchDepth',
+          searchDepthInfo.searchDepth.toString()
+        );
+      } else if (checked && searchDepthInfo.searchDepth === 1) {
+        currentSearchParams.delete('searchDepth');
+      } else {
+        currentSearchParams.set('searchDepth', '0');
+      }
+      return currentSearchParams;
     });
   }
 
   function groupByFolderChanged(checked: boolean) {
-    projectGraphService.send({
-      type: 'setGroupByFolder',
-      groupByFolder: checked,
+    setSearchParams((currentSearchParams) => {
+      if (checked) {
+        currentSearchParams.set('groupByFolder', 'true');
+      } else {
+        currentSearchParams.delete('groupByFolder');
+      }
+      return currentSearchParams;
     });
   }
 
   function collapseEdgesChanged(checked: boolean) {
-    projectGraphService.send({
-      type: 'setCollapseEdges',
-      collapseEdges: checked,
+    setSearchParams((currentSearchParams) => {
+      if (checked) {
+        currentSearchParams.set('collapseEdges', 'true');
+      } else {
+        currentSearchParams.delete('collapseEdges');
+      }
+      return currentSearchParams;
     });
   }
 
   function incrementDepthFilter() {
-    projectGraphService.send({ type: 'incrementSearchDepth' });
+    const newSearchDepth = searchDepthInfo.searchDepth + 1;
+    setSearchParams((currentSearchParams) => {
+      if (newSearchDepth === 1) {
+        currentSearchParams.delete('searchDepth');
+      } else {
+        currentSearchParams.set('searchDepth', newSearchDepth.toString());
+      }
+
+      return currentSearchParams;
+    });
   }
 
   function decrementDepthFilter() {
-    projectGraphService.send({ type: 'decrementSearchDepth' });
+    const newSearchDepth =
+      searchDepthInfo.searchDepth === 1 ? 1 : searchDepthInfo.searchDepth - 1;
+    setSearchParams((currentSearchParams) => {
+      if (newSearchDepth === 1) {
+        currentSearchParams.delete('searchDepth');
+      } else {
+        currentSearchParams.set('searchDepth', newSearchDepth.toString());
+      }
+
+      return currentSearchParams;
+    });
   }
 
   function resetTextFilter() {
@@ -108,16 +159,19 @@ export function ProjectsSidebar(): JSX.Element {
 
   function resetTraceStart() {
     projectGraphService.send({ type: 'clearTraceStart' });
+    navigate(routeContructor('/projects', true));
   }
 
   function resetTraceEnd() {
     projectGraphService.send({ type: 'clearTraceEnd' });
+    navigate(routeContructor('/projects', true));
   }
 
   function setAlgorithm(algorithm: TracingAlgorithmType) {
-    projectGraphService.send({
-      type: 'setTracingAlgorithm',
-      algorithm: algorithm,
+    setSearchParams((searchParams) => {
+      searchParams.set('traceAlgorithm', algorithm);
+
+      return searchParams;
     });
   }
 
@@ -130,6 +184,108 @@ export function ProjectsSidebar(): JSX.Element {
       workspaceLayout: selectedProjectRouteData.layout,
     });
   }, [selectedProjectRouteData]);
+
+  useEffect(() => {
+    switch (currentRoute.currentPath) {
+      case '/projects/all':
+        projectGraphService.send({ type: 'selectAll' });
+        break;
+      case '/projects/affected':
+        projectGraphService.send({ type: 'selectAffected' });
+        break;
+    }
+  }, [currentRoute]);
+
+  useEffect(() => {
+    if (routeParams.focusedProject) {
+      projectGraphService.send({
+        type: 'focusProject',
+        projectName: routeParams.focusedProject,
+      });
+    }
+
+    if (routeParams.startTrace) {
+      projectGraphService.send({
+        type: 'setTracingStart',
+        projectName: routeParams.startTrace,
+      });
+    }
+    if (routeParams.endTrace) {
+      projectGraphService.send({
+        type: 'setTracingEnd',
+        projectName: routeParams.endTrace,
+      });
+    }
+  }, [routeParams]);
+
+  useEffect(() => {
+    if (searchParams.has('groupByFolder') && groupByFolder === false) {
+      projectGraphService.send({
+        type: 'setGroupByFolder',
+        groupByFolder: true,
+      });
+    } else if (!searchParams.has('groupByFolder') && groupByFolder === true) {
+      projectGraphService.send({
+        type: 'setGroupByFolder',
+        groupByFolder: false,
+      });
+    }
+
+    if (searchParams.has('collapseEdges') && collapseEdges === false) {
+      projectGraphService.send({
+        type: 'setCollapseEdges',
+        collapseEdges: true,
+      });
+    } else if (!searchParams.has('collapseEdges') && collapseEdges === true) {
+      projectGraphService.send({
+        type: 'setCollapseEdges',
+        collapseEdges: false,
+      });
+    }
+
+    if (searchParams.has('searchDepth')) {
+      const parsedValue = parseInt(searchParams.get('searchDepth'), 10);
+
+      if (parsedValue === 0 && searchDepthInfo.searchDepthEnabled !== false) {
+        projectGraphService.send({
+          type: 'setSearchDepthEnabled',
+          searchDepthEnabled: false,
+        });
+      } else if (parsedValue !== 0) {
+        projectGraphService.send({
+          type: 'setSearchDepth',
+          searchDepth: parsedValue,
+        });
+      }
+    } else if (
+      searchDepthInfo.searchDepthEnabled === false ||
+      searchDepthInfo.searchDepth !== 1
+    ) {
+      projectGraphService.send({
+        type: 'setSearchDepthEnabled',
+        searchDepthEnabled: true,
+      });
+      projectGraphService.send({
+        type: 'setSearchDepth',
+        searchDepth: 1,
+      });
+    }
+
+    if (searchParams.has('traceAlgorithm')) {
+      const tracingAlgorithm = searchParams.get('traceAlgorithm');
+      if (tracingAlgorithm === 'shortest' || tracingAlgorithm === 'all') {
+        projectGraphService.send({
+          type: 'setTracingAlgorithm',
+          algorithm: tracingAlgorithm,
+        });
+      }
+    } else if (tracingInfo.algorithm !== 'shortest') {
+      projectGraphService.send({
+        type: 'setTracingAlgorithm',
+        algorithm: 'shortest',
+      });
+    }
+  }, [searchParams]);
 
   useIntervalWhen(
     () => {
@@ -163,6 +319,7 @@ export function ProjectsSidebar(): JSX.Element {
   const updateTextFilter = useCallback(
     (textFilter: string) => {
       projectGraphService.send({ type: 'filterByText', search: textFilter });
+      navigate(routeContructor('/projects', true));
     },
     [projectGraphService]
   );

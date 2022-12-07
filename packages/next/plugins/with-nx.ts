@@ -38,6 +38,10 @@ export function withNx(
   nextConfig = {} as WithNxOptions,
   context: WithNxContext = getWithNxContext()
 ): NextConfig {
+  // If `next-compose-plugins` is used, the context argument is invalid.
+  if (!context.libsDir || !context.workspaceRoot) {
+    context = getWithNxContext();
+  }
   const userWebpack = nextConfig.webpack || ((x) => x);
   const { nx, ...validNextConfig } = nextConfig;
   return {

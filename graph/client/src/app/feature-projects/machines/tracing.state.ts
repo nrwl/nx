@@ -10,7 +10,6 @@ export const tracingStateConfig: ProjectGraphStateNodeConfig = {
         ctx.tracing.end = event.projectName;
       }
     }),
-    'notifyRouteTracing',
     'notifyGraphTracing',
   ],
   exit: [
@@ -20,7 +19,6 @@ export const tracingStateConfig: ProjectGraphStateNodeConfig = {
         ctx.tracing.end = null;
       }
     }),
-    'notifyRouteTracing',
   ],
   on: {
     clearTraceStart: {
@@ -28,7 +26,6 @@ export const tracingStateConfig: ProjectGraphStateNodeConfig = {
         assign((ctx) => {
           ctx.tracing.start = null;
         }),
-        'notifyRouteTracing',
         'notifyGraphTracing',
       ],
     },
@@ -37,7 +34,6 @@ export const tracingStateConfig: ProjectGraphStateNodeConfig = {
         assign((ctx) => {
           ctx.tracing.end = null;
         }),
-        'notifyRouteTracing',
         'notifyGraphTracing',
       ],
     },

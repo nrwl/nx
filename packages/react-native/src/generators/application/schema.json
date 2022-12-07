@@ -81,6 +81,11 @@
       "description": "Whether to `use_frameworks` for iOS Pod resolution.",
       "default": false
     }
+    "skipPackageJson": {
+      "description": "Do not add dependencies to `package.json`.",
+      "type": "boolean",
+      "default": false
+    }
   },
   "required": []
 }

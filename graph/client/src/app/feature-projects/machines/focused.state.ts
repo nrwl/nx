@@ -9,59 +9,28 @@ export const focusedStateConfig: ProjectGraphStateNodeConfig = {
 
       ctx.focusedProject = event.projectName;
     }),
-    send(
-      (ctx, event) => {
-        if (event.type !== 'focusProject') return;
-
-        return {
-          type: 'notifyRouteFocusProject',
-          focusedProject: event.projectName,
-        };
-      },
-      {
-        to: (context) => context.routeSetterActor,
-      }
-    ),
     'notifyGraphFocusProject',
   ],
   exit: [
     assign((ctx) => {
       ctx.focusedProject = null;
     }),
-    'notifyRouteUnfocusProject',
   ],
   on: {
     incrementSearchDepth: {
-      actions: [
-        'incrementSearchDepth',
-        'notifyGraphFocusProject',
-        'notifyRouteSearchDepth',
-      ],
+      actions: ['incrementSearchDepth', 'notifyGraphFocusProject'],
     },
     decrementSearchDepth: {
-      actions: [
-        'decrementSearchDepth',
-        'notifyGraphFocusProject',
-        'notifyRouteSearchDepth',
-      ],
+      actions: ['decrementSearchDepth', 'notifyGraphFocusProject'],
     },
     setSearchDepthEnabled: {
-      actions: [
-        'setSearchDepthEnabled',
-        'notifyGraphFocusProject',
-        'notifyRouteSearchDepth',
-      ],
+      actions: ['setSearchDepthEnabled', 'notifyGraphFocusProject'],
     },
     setSearchDepth: {
-      actions: [
-        'setSearchDepth',
-        'notifyGraphFocusProject',
-        'notifyRouteSearchDepth',
-      ],
+      actions: ['setSearchDepth', 'notifyGraphFocusProject'],
     },
     unfocusProject: {
       target: 'unselected',
-      actions: ['notifyRouteUnfocusProject'],
     },
     updateGraph: {
       actions: [

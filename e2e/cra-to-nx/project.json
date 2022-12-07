@@ -31,5 +31,5 @@
       "outputs": ["{workspaceRoot}/coverage/e2e/cra-to-nx"]
     }
   },
-  "implicitDependencies": ["workspace"]
+  "implicitDependencies": ["cra-to-nx"]
 }

@@ -19,10 +19,10 @@
       "schema": "./src/generators/cypress-component-project/schema.json",
       "description": "Set up Cypress Component Test for a project"
     },
-    "migrate-to-cypress-10": {
-      "factory": "./src/generators/migrate-to-cypress-ten/migrate-to-cypress-ten#migrateCypressProject",
-      "schema": "./src/generators/migrate-to-cypress-ten/schema.json",
-      "description": "Migrate existing Cypress e2e projects to Cypress v10"
+    "migrate-to-cypress-11": {
+      "factory": "./src/generators/migrate-to-cypress-11/migrate-to-cypress-11#migrateCypressProject",
+      "schema": "./src/generators/migrate-to-cypress-11/schema.json",
+      "description": "Migrate existing Cypress e2e projects to Cypress v11"
     }
   },
   "generators": {
@@ -45,11 +45,10 @@
       "description": "Set up Cypress Component Test for a project",
       "hidden": true
     },
-    "migrate-to-cypress-10": {
-      "factory": "./src/generators/migrate-to-cypress-ten/migrate-to-cypress-ten#migrateCypressProject",
-      "schema": "./src/generators/migrate-to-cypress-ten/schema.json",
-      "description": "Migrate existing Cypress e2e projects to Cypress v10",
-      "hidden": true
+    "migrate-to-cypress-11": {
+      "factory": "./src/generators/migrate-to-cypress-11/migrate-to-cypress-11#migrateCypressProject",
+      "schema": "./src/generators/migrate-to-cypress-11/schema.json",
+      "description": "Migrate existing Cypress e2e projects to Cypress v11"
     }
   }
 }

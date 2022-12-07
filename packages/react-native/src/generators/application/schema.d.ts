@@ -16,4 +16,5 @@ export interface Schema {
   e2eTestRunner?: 'detox' | 'none';
   install: boolean; // default is true
   frameworks?: boolean; //default is false
+  skipPackageJson?: boolean; //default is false
 }

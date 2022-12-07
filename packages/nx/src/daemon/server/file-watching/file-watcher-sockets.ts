@@ -1,6 +1,8 @@
 import { Socket } from 'net';
-import { ProjectGraphCache } from '../../../project-graph/nx-deps-cache';
+import { ProjectGraph } from '../../../config/project-graph';
+import { findAllProjectNodeDependencies } from '../../../utils/project-graph-utils';
 import { PromisedBasedQueue } from '../../../utils/promised-based-queue';
+import { currentProjectGraphCache } from '../project-graph-incremental-recomputation';
 import { handleResult } from '../server';
 import { getProjectsAndGlobalChanges } from './changed-projects';
 
@@ -11,6 +13,7 @@ export let registeredFileWatcherSockets: {
   config: {
     watchProjects: string[] | 'all';
     includeGlobalWorkspaceFiles: boolean;
+    includeDependentProjects: boolean;
   };
 }[] = [];
 
@@ -52,7 +55,20 @@ export function notifyFileWatcherSockets(
             changedFiles.push(...projectFiles);
           }
         } else {
-          for (const watchedProject of config.watchProjects) {
+          const watchedProjects = [...config.watchProjects];
+
+          if (config.includeDependentProjects) {
+            for (const project of watchedProjects) {
+              watchedProjects.push(
+                ...findAllProjectNodeDependencies(
+                  project,
+                  currentProjectGraphCache as ProjectGraph
+                )
+              );
+            }
+          }
+
+          for (const watchedProject of new Set(watchedProjects)) {
             if (!!projectAndGlobalChanges.projects[watchedProject]) {
               changedProjects.push(watchedProject);
 

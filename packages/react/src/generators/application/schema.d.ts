@@ -4,10 +4,11 @@ import { SupportedStyles } from '../../../typings/style';
 export interface Schema {
   name: string;
   style: SupportedStyles;
-  skipFormat: boolean;
+  skipFormat?: boolean;
   directory?: string;
   tags?: string;
-  unitTestRunner: 'jest' | 'none';
+  unitTestRunner?: 'jest' | 'vitest' | 'none';
+  inSourceTests?: boolean;
   /**
    * @deprecated
    */
@@ -30,9 +31,10 @@ export interface Schema {
   skipPackageJson?: boolean;
   rootProject?: boolean;
   bundler?: 'webpack' | 'vite';
+  minimal?: boolean;
 }
 
-export interface NormalizedSchema extends Schema {
+export interface NormalizedSchema<T extends Schema = Schema> extends T {
   projectName: string;
   appProjectRoot: string;
   e2eProjectName: string;
@@ -40,4 +42,5 @@ export interface NormalizedSchema extends Schema {
   fileName: string;
   styledModule: null | SupportedStyles;
   hasStyles: boolean;
+  unitTestRunner: 'jest' | 'vitest' | 'none';
 }

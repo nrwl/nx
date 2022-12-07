@@ -13,11 +13,23 @@ import {
   updateApplicationStyles,
 } from './lib';
 import { GeneratorOptions } from './schema';
+import { getGeneratorDirectoryForInstalledAngularVersion } from '../../utils/get-generator-directory-for-ng-version';
+import { join } from 'path';
 
 export async function setupTailwindGenerator(
   tree: Tree,
   rawOptions: GeneratorOptions
 ): Promise<GeneratorCallback> {
+  const generatorDirectory =
+    getGeneratorDirectoryForInstalledAngularVersion(tree);
+  if (generatorDirectory) {
+    let previousGenerator = await import(
+      join(__dirname, generatorDirectory, 'setup-tailwind')
+    );
+    await previousGenerator.default(tree, rawOptions);
+    return;
+  }
+
   const options = normalizeOptions(rawOptions);
   const project = readProjectConfiguration(tree, options.project);
 

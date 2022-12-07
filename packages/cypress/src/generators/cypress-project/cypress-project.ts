@@ -2,6 +2,7 @@ import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
   convertNxGenerator,
+  extractLayoutDirectory,
   formatFiles,
   generateFiles,
   getWorkspaceLayout,
@@ -15,10 +16,15 @@ import {
   toJS,
   Tree,
   updateJson,
+  getProjects,
 } from '@nrwl/devkit';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
+import {
+  globalJavaScriptOverrides,
+  globalTypeScriptOverrides,
+} from '@nrwl/linter/src/generators/init/global-eslint-config';
 
 import { join } from 'path';
 import { installedCypressVersion } from '../../utils/cypress-version';
@@ -177,6 +183,7 @@ export async function addLinter(host: Tree, options: CypressProjectSchema) {
     ],
     setParserOptionsProject: options.setParserOptionsProject,
     skipPackageJson: options.skipPackageJson,
+    rootProject: options.rootProject,
   });
 
   if (!options.linter || options.linter !== Linter.EsLint) {
@@ -192,8 +199,16 @@ export async function addLinter(host: Tree, options: CypressProjectSchema) {
     : () => {};
 
   updateJson(host, join(options.projectRoot, '.eslintrc.json'), (json) => {
-    json.extends = ['plugin:cypress/recommended', ...json.extends];
+    if (options.rootProject) {
+      json.plugins = ['@nrwl/nx'];
+      json.extends = ['plugin:cypress/recommended'];
+    } else {
+      json.extends = ['plugin:cypress/recommended', ...json.extends];
+    }
     json.overrides = [
+      ...(options.rootProject
+        ? [globalTypeScriptOverrides, globalJavaScriptOverrides]
+        : []),
       /**
        * In order to ensure maximum efficiency when typescript-eslint generates TypeScript Programs
        * behind the scenes during lint runs, we need to make sure the project is configured to use its
@@ -267,20 +282,38 @@ export async function cypressProjectGenerator(host: Tree, schema: Schema) {
 }
 
 function normalizeOptions(host: Tree, options: Schema): CypressProjectSchema {
-  const { appsDir } = getWorkspaceLayout(host);
-  let projectName, projectRoot;
+  const { layoutDirectory, projectDirectory } = extractLayoutDirectory(
+    options.directory
+  );
+  const appsDir = layoutDirectory ?? getWorkspaceLayout(host).appsDir;
+  let projectName: string;
+  let projectRoot: string;
+  let maybeRootProject: ProjectConfiguration;
+  let isRootProject = false;
 
-  if (options.rootProject) {
+  const projects = getProjects(host);
+  // nx will set the project option for generators when ran within a project.
+  // since the root project will always be set for standlone projects we can just check it here.
+  if (options.project) {
+    maybeRootProject = projects.get(options.project);
+  }
+
+  if (
+    maybeRootProject?.root === '.' ||
+    // should still check to see if we are in a standalone based workspace
+    Array.from(projects.values()).some((config) => config.root === '.')
+  ) {
     projectName = options.name;
     projectRoot = options.name;
+    isRootProject = true;
   } else {
     projectName = filePathPrefix(
-      options.directory ? `${options.directory}-${options.name}` : options.name
+      projectDirectory ? `${projectDirectory}-${options.name}` : options.name
     );
-    projectRoot = options.directory
+    projectRoot = projectDirectory
       ? joinPathFragments(
           appsDir,
-          names(options.directory).fileName,
+          names(projectDirectory).fileName,
           options.name
         )
       : joinPathFragments(appsDir, options.name);
@@ -289,6 +322,8 @@ function normalizeOptions(host: Tree, options: Schema): CypressProjectSchema {
   options.linter = options.linter || Linter.EsLint;
   return {
     ...options,
+    // other generators depend on the rootProject flag down stream
+    rootProject: isRootProject,
     projectName,
     projectRoot,
   };

@@ -397,18 +397,18 @@ async function startServer(
   });
 
   if (openBrowser) {
-    let url = `http://${host}:${port}`;
+    let url = `http://${host}:${port}/projects`;
     let params = new URLSearchParams();
 
     if (focus) {
-      params.append('focus', focus);
+      url += `/${focus}`;
     }
 
     if (groupByFolder) {
       params.append('groupByFolder', 'true');
     }
 
-    open(`${url}/projects?${params.toString()}`);
+    open(`${url}?${params.toString()}`);
   }
 }
 

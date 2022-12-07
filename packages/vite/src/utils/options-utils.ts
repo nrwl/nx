@@ -9,19 +9,17 @@ import { existsSync } from 'fs';
 import { join, relative } from 'path';
 import {
   BuildOptions,
-  defineConfig,
   InlineConfig,
   mergeConfig,
   searchForWorkspaceRoot,
   ServerOptions,
   UserConfig,
-  UserConfigFn,
 } from 'vite';
 import { ViteDevServerExecutorOptions } from '../executors/dev-server/schema';
 import replaceFiles from '../../plugins/rollup-replace-files.plugin';
 import { ViteBuildExecutorOptions } from '../executors/build/schema';
 
-export async function getBuildConfig(
+export async function getBuildAndSharedConfig(
   options:
     | (ViteDevServerExecutorOptions & ViteBuildExecutorOptions)
     | ViteBuildExecutorOptions,
@@ -29,13 +27,10 @@ export async function getBuildConfig(
 ): Promise<InlineConfig> {
   const projectRoot = context.workspace.projects[context.projectName].root;
 
-  const userConfig: UserConfig = await getUserConfig(
-    options as ViteDevServerExecutorOptions & ViteBuildExecutorOptions,
-    context,
-    projectRoot
-  );
-
-  return mergeConfig(userConfig, {
+  return mergeConfig({}, {
+    mode: options.mode ?? context.configurationName,
+    root: projectRoot,
+    base: options.base,
     configFile: normalizeConfigFilePath(
       options.configFile,
       context.root,
@@ -61,33 +56,6 @@ export function normalizeConfigFilePath(
     : existsSync(joinPathFragments(`${projectRoot}/vite.config.js`))
     ? joinPathFragments(`${projectRoot}/vite.config.js`)
     : undefined;
-}
-
-export function normalizeTsConfigPath(
-  tsConfig: string,
-  workspaceRoot: string
-): string {
-  return tsConfig
-    ? joinPathFragments(`${workspaceRoot}/${tsConfig}`)
-    : undefined;
-}
-
-export async function getUserConfig(
-  options: ViteDevServerExecutorOptions & ViteBuildExecutorOptions,
-  context: ExecutorContext,
-  projectRoot: string
-): Promise<UserConfig> {
-  const baseUserConfig: UserConfigFn = (await defineConfig(() => {
-    return {
-      base: options.baseHref ?? '/',
-      root: projectRoot,
-      tsConfig: normalizeTsConfigPath(options.tsConfig, context.root),
-    };
-  })) as UserConfigFn;
-  return baseUserConfig({
-    command: 'build',
-    mode: options['configurationName'],
-  });
 }
 
 export function getServerOptions(
@@ -122,7 +90,6 @@ export function getServerOptions(
     open: options.open,
     cors: options.cors,
     logLevel: options.logLevel,
-    mode: options.mode,
     clearScreen: options.clearScreen,
   };
 
@@ -130,10 +97,10 @@ export function getServerOptions(
 }
 
 export function getBuildTargetOptions(
-  options: ViteDevServerExecutorOptions,
+  buildTarget: string,
   context: ExecutorContext
 ) {
-  const target = parseTargetString(options.buildTarget);
+  const target = parseTargetString(buildTarget);
   return readTargetOptions(target, context);
 }
 
@@ -159,7 +126,6 @@ export function getViteBuildOptions(
     manifest: options.manifest,
     ssrManifest: options.ssrManifest,
     logLevel: options.logLevel,
-    mode: options.mode,
   };
 
   return buildOptions;

@@ -8,7 +8,7 @@ describe('Normalize Options', () => {
   let appTree: Tree;
 
   beforeEach(() => {
-    appTree = createTreeWithEmptyWorkspace();
+    appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it('should normalize options with name in kebab case', () => {

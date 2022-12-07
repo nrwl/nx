@@ -9,7 +9,7 @@ import { Builders } from '@schematics/angular/utility/workspace-models';
 
 describe(`Migration to remove bundleDependencies`, () => {
   it(`should remove 'bundleDependencies'`, async () => {
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await applicationGenerator(tree, {
       name: 'test',
     });

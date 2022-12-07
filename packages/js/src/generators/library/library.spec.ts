@@ -25,7 +25,9 @@ describe('lib', () => {
   };
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree.write('/apps/.gitignore', '');
+    tree.write('/libs/.gitignore', '');
   });
 
   describe('configs', () => {
@@ -575,14 +577,14 @@ describe('lib', () => {
         ).toBeTruthy();
       });
 
-      it('should update tsconfig.lib.json include with **/*.js glob', async () => {
+      it('should update tsconfig.lib.json include with src/**/*.js glob', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
           name: 'myLib',
           js: true,
         });
         expect(readJson(tree, 'libs/my-lib/tsconfig.lib.json').include).toEqual(
-          ['**/*.ts', '**/*.js']
+          ['src/**/*.ts', 'src/**/*.js']
         );
       });
 

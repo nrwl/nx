@@ -151,9 +151,11 @@ async function reorgnizeWorkspaceStructure(options: NormalizedOptions) {
   output.note({
     title: 'Or, you can try the commands!',
     bodyLines: [
-      `npx nx serve ${options.reactAppName}`,
-      `npx nx build ${options.reactAppName}`,
-      `npx nx test ${options.reactAppName}`,
+      options.integrated ? `npx nx serve ${options.reactAppName}` : 'npm start',
+      options.integrated
+        ? `npx nx build ${options.reactAppName}`
+        : 'npm run build',
+      options.integrated ? `npx nx test ${options.reactAppName}` : `npm test`,
       ` `,
       `https://nx.dev/getting-started/intro#10-try-the-commands`,
     ],
@@ -166,9 +168,9 @@ function createTempWorkspace(options: NormalizedOptions) {
       options.npxYesFlagNeeded ? '-y' : ''
     } create-nx-workspace@latest temp-workspace --appName=${
       options.reactAppName
-    } --preset=react --style=css --packageManager=${options.packageManager} ${
-      options.nxCloud ? '--nxCloud' : '--nxCloud=false'
-    }`,
+    } --preset=react-monorepo --style=css --packageManager=${
+      options.packageManager
+    } ${options.nxCloud ? '--nxCloud' : '--nxCloud=false'}`,
     { stdio: [0, 1, 2] }
   );
 

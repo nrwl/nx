@@ -2,19 +2,22 @@ import {
   addDependenciesToPackageJson,
   convertNxGenerator,
   readJson,
+  readWorkspaceConfiguration,
   Tree,
   updateJson,
+  updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
 import {
+  jsdomVersion,
   nxVersion,
+  vitePluginDtsVersion,
   vitePluginEslintVersion,
   vitePluginReactVersion,
-  viteVersion,
   vitestUiVersion,
   vitestVersion,
   viteTsConfigPathsVersion,
+  viteVersion,
 } from '../../utils/versions';
 import { Schema } from './schema';
 
@@ -23,7 +26,7 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
   const devDependencies = {};
   const dependencies = {};
   packageJson.dependencies = packageJson.dependencies || {};
-  packageJson.devDependencices = packageJson.devDependencices || {};
+  packageJson.devDependencies = packageJson.devDependencies || {};
 
   // base deps
   devDependencies['@nrwl/vite'] = nxVersion;
@@ -32,9 +35,14 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
   devDependencies['vite-tsconfig-paths'] = viteTsConfigPathsVersion;
   devDependencies['vitest'] = vitestVersion;
   devDependencies['@vitest/ui'] = vitestUiVersion;
+  devDependencies['jsdom'] = jsdomVersion;
 
   if (schema.uiFramework === 'react') {
     devDependencies['@vitejs/plugin-react'] = vitePluginReactVersion;
+  }
+
+  if (schema.includeLib) {
+    devDependencies['vite-plugin-dts'] = vitePluginDtsVersion;
   }
 
   return addDependenciesToPackageJson(host, dependencies, devDependencies);
@@ -54,8 +62,34 @@ function moveToDevDependencies(tree: Tree) {
   });
 }
 
+export function createVitestConfig(tree: Tree) {
+  const workspaceConfiguration = readWorkspaceConfiguration(tree);
+
+  const productionFileSet = workspaceConfiguration.namedInputs?.production;
+  if (productionFileSet) {
+    productionFileSet.push(
+      '!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)',
+      '!{projectRoot}/tsconfig.spec.json'
+    );
+
+    workspaceConfiguration.namedInputs.production = Array.from(
+      new Set(productionFileSet)
+    );
+  }
+
+  workspaceConfiguration.targetDefaults ??= {};
+  workspaceConfiguration.targetDefaults.test ??= {};
+  workspaceConfiguration.targetDefaults.test.inputs ??= [
+    'default',
+    productionFileSet ? '^production' : '^default',
+  ];
+
+  updateWorkspaceConfiguration(tree, workspaceConfiguration);
+}
+
 export function initGenerator(tree: Tree, schema: Schema) {
   moveToDevDependencies(tree);
+  createVitestConfig(tree);
   const installTask = checkDependenciesInstalled(tree, schema);
   return installTask;
 }

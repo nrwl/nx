@@ -3,8 +3,5 @@
     "build": {
       "dependsOn": ["^build"]
     }
-  },
-  "workspaceLayout": {
-    "libsDir": "packages"
   }
 }

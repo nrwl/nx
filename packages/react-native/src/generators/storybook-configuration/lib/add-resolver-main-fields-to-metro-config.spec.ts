@@ -9,7 +9,7 @@ describe('addResolverMainFieldsToMetroConfig', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     addProjectConfiguration(tree, 'products', {
       root: 'apps/products',

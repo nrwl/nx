@@ -1,4 +1,9 @@
-import { addDependenciesToPackageJson, readJson, Tree } from '@nrwl/devkit';
+import {
+  addDependenciesToPackageJson,
+  addProjectConfiguration,
+  readJson,
+  Tree,
+} from '@nrwl/devkit';
 import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { nxVersion } from '../../utils/versions';
 
@@ -51,6 +56,10 @@ describe('@nrwl/vite:configuration', () => {
     it('should create vite.config file at the root of the app', () => {
       expect(tree.exists('apps/my-test-react-app/vite.config.ts')).toBe(true);
     });
+
+    it('should transform workspace.json project config', () => {
+      expect(tree.read('workspace.json', 'utf-8')).toMatchSnapshot();
+    });
   });
 
   describe('transform Web app to use Vite', () => {
@@ -89,6 +98,58 @@ describe('@nrwl/vite:configuration', () => {
 
     it('should create vite.config file at the root of the app', () => {
       expect(tree.exists('apps/my-test-web-app/vite.config.ts')).toBe(true);
+    });
+
+    it('should transform workspace.json project config', () => {
+      expect(tree.read('workspace.json', 'utf-8')).toMatchSnapshot();
+    });
+  });
+
+  describe('vitest', () => {
+    beforeAll(async () => {
+      tree = createTreeWithEmptyV1Workspace();
+      await mockReactAppGenerator(tree);
+      const existing = 'existing';
+      const existingVersion = '1.0.0';
+      addDependenciesToPackageJson(
+        tree,
+        { '@nrwl/vite': nxVersion, [existing]: existingVersion },
+        { [existing]: existingVersion }
+      );
+      await viteConfigurationGenerator(tree, {
+        uiFramework: 'react',
+        project: 'my-test-react-app',
+        includeVitest: true,
+      });
+    });
+    it('should create a vitest configuration if "includeVitest" is true', () => {
+      const viteConfig = tree
+        .read('apps/my-test-react-app/vite.config.ts')
+        .toString();
+      expect(viteConfig).toContain('test');
+    });
+  });
+
+  describe('library mode', () => {
+    beforeEach(async () => {
+      tree = createTreeWithEmptyV1Workspace();
+      addProjectConfiguration(tree, 'my-lib', {
+        root: 'my-lib',
+      });
+    });
+
+    it('should add config for building library', async () => {
+      await viteConfigurationGenerator(tree, {
+        uiFramework: 'react',
+        includeLib: true,
+        project: 'my-lib',
+        newProject: true,
+      });
+
+      const viteConfig = tree.read('my-lib/vite.config.ts').toString();
+
+      expect(viteConfig).toMatch('build: {');
+      expect(viteConfig).toMatch("external: ['react'");
     });
   });
 });

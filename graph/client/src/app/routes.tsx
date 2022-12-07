@@ -6,6 +6,7 @@ import { getEnvironmentConfig } from './hooks/use-environment-config';
 // nx-ignore-next-line
 import { ProjectGraphClientResponse } from 'nx/src/command-line/dep-graph';
 import { getProjectGraphDataService } from './hooks/get-project-graph-data-service';
+import { getProjectGraphService } from './machines/get-services';
 
 const { appConfig } = getEnvironmentConfig();
 const projectGraphDataService = getProjectGraphDataService();
@@ -52,16 +53,35 @@ const taskDataLoader = async (selectedWorkspaceId: string) => {
 const childRoutes: RouteObject[] = [
   {
     path: 'projects',
-    element: <ProjectsSidebar />,
+    children: [
+      {
+        index: true,
+        element: <ProjectsSidebar />,
+      },
+      {
+        path: 'all',
+        element: <ProjectsSidebar />,
+      },
+      {
+        path: 'affected',
+        element: <ProjectsSidebar />,
+      },
+      {
+        path: ':focusedProject',
+        element: <ProjectsSidebar />,
+      },
+      {
+        path: 'trace/:startTrace',
+        element: <ProjectsSidebar />,
+      },
+      {
+        path: 'trace/:startTrace/:endTrace',
+        element: <ProjectsSidebar />,
+      },
+    ],
   },
   {
     loader: async ({ request, params }) => {
-      const environmentConfig = getEnvironmentConfig();
-
-      if (!environmentConfig.appConfig.showExperimentalFeatures) {
-        return redirect(`/projects`);
-      }
-
       const selectedWorkspaceId =
         params.selectedWorkspaceId ?? appConfig.defaultWorkspaceId;
       return taskDataLoader(selectedWorkspaceId);

@@ -75,11 +75,28 @@ export class DocumentsApi {
 
     if (!found) return null;
 
+    function interpolateUrl(
+      el: { id: string; path?: string },
+      ancestorPath
+    ): string {
+      const isLinkExternal: (p: string) => boolean = (p: string) =>
+        p.startsWith('http');
+      const isLinkAbsolute: (p: string) => boolean = (p: string) =>
+        p.startsWith('/');
+
+      // Using internal path or Constructing it from id (default behaviour)
+      if (!el.path) return '/' + ancestorPath.concat(el.id).join('/');
+      // Support absolute & external paths
+      if (isLinkAbsolute(el.path) || isLinkExternal(el.path)) return el.path;
+      // Path is defined to point towards internal target, just use the value
+      return '/' + el.path;
+    }
+
     const cardsTemplate = items
       ?.map((i) => ({
         title: i.name,
         description: i.description ?? '',
-        url: '/' + (i.path ?? path.concat(i.id).join('/')),
+        url: interpolateUrl({ id: i.id, path: i.path }, path),
       }))
       .map(
         (card) =>
@@ -98,6 +115,8 @@ export class DocumentsApi {
         cardsTemplate,
         '{% /cards %}\n\n',
       ].join(''),
+      relatedContent: '',
+      tags: [],
     };
   }
 
@@ -123,8 +142,9 @@ export class DocumentsApi {
     return {
       filePath,
       data: frontmatter,
-      content:
-        originalContent + '\n\n' + this.getRelatedDocumentsSection(tags, path),
+      content: originalContent,
+      relatedContent: this.getRelatedDocumentsSection(tags, path),
+      tags: tags,
     };
   }
 

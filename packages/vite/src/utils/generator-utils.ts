@@ -11,71 +11,104 @@ import {
 } from '@nrwl/devkit';
 import { ViteBuildExecutorOptions } from '../executors/build/schema';
 import { ViteDevServerExecutorOptions } from '../executors/dev-server/schema';
+import { VitestExecutorOptions } from '../executors/test/schema';
 import { Schema } from '../generators/configuration/schema';
 
-/**
- * This function is used to find the build and serve targets for
- * an application.
- *
- * The reason this function exists is because we cannot assume
- * that the user has not created a custom build target for the application,
- * or that they have not changed the name of the build target
- * from build to anything else.
- *
- * So, in order to find the correct name of the target,
- * we have to look into all the targets, check the executor
- * they are using, and infer from the executor that the target
- * is a build target.
- */
-export function findServeAndBuildTargets(targets: {
+export function findExistingTargets(targets: {
   [targetName: string]: TargetConfiguration;
 }): {
-  buildTarget: string;
-  serveTarget: string;
+  buildTarget?: string;
+  serveTarget?: string;
+  testTarget?: string;
+  unsuppored?: boolean;
 } {
-  const returnObject: {
-    buildTarget: string;
-    serveTarget: string;
-  } = {
-    buildTarget: 'build',
-    serveTarget: 'serve',
+  let buildTarget, serveTarget, testTarget, unsuppored;
+
+  const arrayOfBuilders = [
+    '@nxext/vite:build',
+    '@nrwl/js:babel',
+    '@nrwl/js:swc',
+    '@nrwl/webpack:webpack',
+    '@nrwl/rollup:rollup',
+    '@nrwl/web:rollup',
+  ];
+
+  const arrayOfServers = ['@nxext/vite:dev', '@nrwl/webpack:dev-server'];
+
+  const arrayOfTesters = ['@nrwl/jest:jest', '@nxext/vitest:vitest'];
+
+  const arrayofUnsupported = [
+    '@nrwl/angular:ng-packagr-lite',
+    '@angular-devkit/build-angular:browser',
+    '@nrwl/angular:package',
+    '@nrwl/angular:webpack-browser',
+    '@angular-devkit/build-angular:browser',
+    '@angular-devkit/build-angular:dev-server',
+    '@nrwl/angular:ng-packagr-lite',
+    '@nrwl/esbuild:esbuild',
+    '@nrwl/react-native:start',
+    '@nrwl/next:build',
+    '@nrwl/next:server',
+    '@nrwl/js:tsc',
+  ];
+
+  for (const target in targets) {
+    if (buildTarget && serveTarget && testTarget) {
+      break;
+    }
+    if (arrayOfBuilders.includes(targets[target].executor)) {
+      buildTarget = target;
+    }
+    if (arrayOfServers.includes(targets[target].executor)) {
+      serveTarget = target;
+    }
+    if (arrayOfTesters.includes(targets[target].executor)) {
+      testTarget = target;
+    }
+    if (arrayofUnsupported.includes(targets[target].executor)) {
+      unsuppored = true;
+    }
+  }
+
+  return {
+    buildTarget,
+    serveTarget,
+    testTarget,
+    unsuppored,
+  };
+}
+
+export function addOrChangeTestTarget(
+  tree: Tree,
+  options: Schema,
+  target: string
+) {
+  const project = readProjectConfiguration(tree, options.project);
+  const targets = {
+    ...project.targets,
   };
 
-  Object.entries(targets).forEach(([target, targetConfig]) => {
-    switch (targetConfig.executor) {
-      case '@nrwl/webpack:dev-server':
-      case '@nxext/vite:dev':
-        returnObject.serveTarget = target;
-        break;
-      case '@angular-devkit/build-angular:browser':
-        /**
-         * Not looking for '@nrwl/angular:ng-packagr-lite' or any other
-         * angular executors.
-         * Only looking for '@angular-devkit/build-angular:browser'
-         * because the '@nrwl/angular:ng-packagr-lite' executor
-         * (and maybe the other custom exeucutors) is only used for libs atm.
-         */
-        returnObject.buildTarget = target;
-        break;
-      case '@nrwl/webpack:webpack':
-      case '@nrwl/next:build':
-      case '@nrwl/web:webpack':
-      case '@nrwl/web:rollup':
-      case '@nrwl/js:tsc':
-      case '@nrwl/angular:ng-packagr-lite':
-      case '@nrwl/js:babel':
-      case '@nrwl/js:swc':
-      case '@nxext/vite:build':
-        returnObject.buildTarget = target;
-        break;
-      default:
-        returnObject.buildTarget = 'build';
-        returnObject.serveTarget = 'serve';
-        break;
-    }
-  });
+  const testOptions: VitestExecutorOptions = {
+    passWithNoTests: true,
+  };
 
-  return returnObject;
+  if (targets[target]) {
+    targets[target].executor = '@nrwl/vite:test';
+    delete targets[target].options.jestConfig;
+  } else {
+    targets[target] = {
+      executor: '@nrwl/vite:test',
+      outputs: ['{projectRoot}/coverage'],
+      options: testOptions,
+    };
+  }
+
+  updateProjectConfiguration(tree, options.project, {
+    ...project,
+    targets: {
+      ...targets,
+    },
+  });
 }
 
 export function addOrChangeBuildTarget(
@@ -97,6 +130,12 @@ export function addOrChangeBuildTarget(
   };
 
   if (targets[target]) {
+    buildOptions.fileReplacements = targets[target].options.fileReplacements;
+
+    if (target === '@nxext/vite:build') {
+      buildOptions.base = targets[target].options.baseHref;
+      buildOptions.sourcemap = targets[target].options.sourcemaps;
+    }
     targets[target].options = {
       ...buildOptions,
     };
@@ -109,21 +148,7 @@ export function addOrChangeBuildTarget(
       options: buildOptions,
       configurations: {
         development: {},
-        production: {
-          fileReplacements: [
-            {
-              replace: joinPathFragments(
-                project.sourceRoot,
-                'environments/environment.ts'
-              ),
-              with: joinPathFragments(
-                project.sourceRoot,
-                'environments/environment.prod.ts'
-              ),
-            },
-          ],
-          sourceMap: false,
-        },
+        production: {},
       },
     };
   }
@@ -152,6 +177,9 @@ export function addOrChangeServeTarget(
   };
 
   if (targets[target]) {
+    if (target === '@nxext/vite:dev') {
+      serveOptions.proxyConfig = targets[target].options.proxyConfig;
+    }
     targets[target].options = {
       ...serveOptions,
     };
@@ -166,6 +194,7 @@ export function addOrChangeServeTarget(
       configurations: {
         development: {
           buildTarget: `${options.project}:build:development`,
+          hmr: true,
         },
         production: {
           buildTarget: `${options.project}:build:production`,
@@ -315,35 +344,121 @@ export function writeViteConfig(tree: Tree, options: Schema) {
 
   let viteConfigContent = '';
 
+  const testOption = options.includeVitest
+    ? `test: {
+    globals: true,
+    cache: {
+      dir: '${offsetFromRoot(projectConfig.root)}node_modules/.vitest'
+    },
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    ${
+      options.inSourceTests
+        ? `includeSource: ['src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']`
+        : ''
+    }
+  },`
+    : '';
+
+  const defineOption = options.inSourceTests
+    ? `define: {
+    'import.meta.vitest': undefined
+  },`
+    : '';
+
+  const dtsPlugin = `dts({
+      tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
+      // Faster builds by skipping tests. Set this to false to enable type checking.
+      skipDiagnostics: true,
+    }),`;
+
+  const buildOption = options.includeLib
+    ? `
+        // Configuration for building your library.
+        // See: https://vitejs.dev/guide/build.html#library-mode
+        build: {
+          lib: {
+            // Could also be a dictionary or array of multiple entry points.
+            entry: 'src/index.ts',
+            name: '${options.project}',
+            fileName: 'index',
+            // Change this to the formats you want to support.
+            // Don't forgot to update your package.json as well.
+            formats: ['es', 'cjs']
+          },
+          rollupOptions: {
+            // External packages that should not be bundled into your library.
+            external: [${
+              options.uiFramework === 'react'
+                ? "'react', 'react-dom', 'react/jsx-runtime'"
+                : ''
+            }]
+          }
+        },`
+    : ``;
+
+  const serverOption = options.includeLib
+    ? ''
+    : `
+    server:{
+      port: 4200,
+      host: 'localhost',
+    },`;
+
+  const projectsTsConfig = tree.exists('tsconfig.base.json')
+    ? "'tsconfig.base.json'"
+    : '';
   switch (options.uiFramework) {
     case 'react':
       viteConfigContent = `
+${options.includeVitest ? '/// <reference types="vitest" />' : ''}
       import { defineConfig } from 'vite';
       import react from '@vitejs/plugin-react';
-      import ViteTsConfigPathsPlugin from 'vite-tsconfig-paths';
+      import tsconfigPaths from 'vite-tsconfig-paths';
+      ${
+        options.includeLib
+          ? `import dts from 'vite-plugin-dts';\nimport { join } from 'path';`
+          : ''
+      }
       
       export default defineConfig({
+        ${serverOption}
         plugins: [
+          ${options.includeLib ? dtsPlugin : ''}
           react(),
-          ViteTsConfigPathsPlugin({
+          tsconfigPaths({
             root: '${offsetFromRoot(projectConfig.root)}',
-            projects: ['tsconfig.base.json'],
+            projects: [${projectsTsConfig}],
           }),
         ],
+        ${buildOption}
+        ${defineOption}
+        ${testOption}
       });`;
       break;
     case 'none':
       viteConfigContent = `
+      ${options.includeVitest ? '/// <reference types="vitest" />' : ''}
       import { defineConfig } from 'vite';
-      import ViteTsConfigPathsPlugin from 'vite-tsconfig-paths';
+      import tsconfigPaths from 'vite-tsconfig-paths';
+      ${
+        options.includeLib
+          ? `import dts from 'vite-plugin-dts';\nimport { join } from 'path';`
+          : ''
+      }
       
       export default defineConfig({
+        ${serverOption}
         plugins: [
-          ViteTsConfigPathsPlugin({
+          ${options.includeLib ? dtsPlugin : ''}
+          tsconfigPaths({
             root: '${offsetFromRoot(projectConfig.root)}',
-            projects: ['tsconfig.base.json'],
+            projects: [${projectsTsConfig}],
           }),
         ],
+        ${buildOption}
+        ${defineOption}
+        ${testOption}
       });`;
       break;
     default:

@@ -162,6 +162,7 @@ const guideUrls = {
   '/using-nx/nx-devkit': '/extending-nx/nx-devkit',
   '/structure/project-graph-plugins': '/extending-nx/project-graph-plugins',
   '/guides/lerna-and-nx': '/migration/lerna-and-nx',
+  '/cypress/v10-migration-guide': '/cypress/v11-migration-guide',
 };
 
 /**
@@ -372,6 +373,53 @@ const tutorialRedirects = Object.assign(
   nodeTutorialRedirects
 );
 
+const oldAngularTutorialPaths = [
+  '/angular-tutorial/01-create-application',
+  '/angular-tutorial/02-add-e2e-test',
+  '/angular-tutorial/03-display-todos',
+  '/angular-tutorial/04-connect-to-api',
+  '/angular-tutorial/05-add-node-app',
+  '/angular-tutorial/06-proxy',
+  '/angular-tutorial/07-share-code',
+  '/angular-tutorial/08-create-libs',
+  '/angular-tutorial/09-dep-graph',
+  '/angular-tutorial/10-computation-caching',
+  '/angular-tutorial/11-test-affected-projects',
+  '/angular-tutorial/12-summary',
+];
+
+const angularRedirectDestination = '/angular-tutorial/1-code-generation';
+for (const path of oldAngularTutorialPaths) {
+  tutorialRedirects[path] = angularRedirectDestination;
+}
+
+const packagesIndexes = {
+  '/nx': '/packages/nx',
+  '/workspace': '/packages/workspace',
+  '/devkit': '/packages/devkit',
+  '/nx-plugin': '/packages/nx-plugin',
+  '/angular': '/packages/angular',
+  '/cypress': '/packages/cypress',
+  '/detox': '/packages/detox',
+  '/esbuild': '/packages/esbuild',
+  '/eslint-plugin-nx': '/packages/eslint',
+  '/expo': '/packages/expo',
+  '/express': '/packages/express',
+  '/jest': '/packages/jest',
+  '/js': '/packages/js',
+  '/linter': '/packages/linter',
+  '/nest': '/packages/nest',
+  '/next': '/packages/next',
+  '/node': '/packages/node',
+  '/react': '/packages/react',
+  '/react-native': '/packages/react',
+  '/rollup': '/packages/rollup',
+  '/storybook': '/packages/storybook',
+  '/vite': '/packages/vite',
+  '/web': '/packages/web',
+  '/webpack': '/packages/webpack',
+};
+
 /**
  * Public export API
  */
@@ -384,4 +432,5 @@ module.exports = {
   nxCloudUrls,
   schemaUrls,
   tutorialRedirects,
+  packagesIndexes,
 };

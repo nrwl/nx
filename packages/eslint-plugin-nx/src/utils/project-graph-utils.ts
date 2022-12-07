@@ -1,7 +1,10 @@
 import { ProjectGraph, readCachedProjectGraph, readNxJson } from '@nrwl/devkit';
-import { createProjectFileMappings } from 'nx/src/utils/target-project-locator';
 import { isTerminalRun } from './runtime-lint-utils';
 import * as chalk from 'chalk';
+import {
+  createProjectRootMappings,
+  ProjectRootMappings,
+} from 'nx/src/project-graph/utils/find-project-for-path';
 
 export function ensureGlobalProjectGraph(ruleName: string) {
   /**
@@ -10,7 +13,7 @@ export function ensureGlobalProjectGraph(ruleName: string) {
    */
   if (
     !(global as any).projectGraph ||
-    !(global as any).projectGraphFileMappings ||
+    !(global as any).projectRootMappings ||
     !isTerminalRun()
   ) {
     const nxJson = readNxJson();
@@ -22,7 +25,7 @@ export function ensureGlobalProjectGraph(ruleName: string) {
      */
     try {
       (global as any).projectGraph = readCachedProjectGraph();
-      (global as any).projectGraphFileMappings = createProjectFileMappings(
+      (global as any).projectRootMappings = createProjectRootMappings(
         (global as any).projectGraph.nodes
       );
     } catch {
@@ -38,11 +41,11 @@ export function ensureGlobalProjectGraph(ruleName: string) {
 
 export function readProjectGraph(ruleName: string): {
   projectGraph: ProjectGraph;
-  projectGraphFileMappings: Record<string, string>;
+  projectRootMappings: ProjectRootMappings;
 } {
   ensureGlobalProjectGraph(ruleName);
   return {
     projectGraph: (global as any).projectGraph,
-    projectGraphFileMappings: (global as any).projectGraphFileMappings,
+    projectRootMappings: (global as any).projectRootMappings,
   };
 }

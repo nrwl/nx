@@ -5,7 +5,7 @@
   "$id": "NxExpoBuildStatus",
   "cli": "nx",
   "title": "Expo web Build executor",
-  "description": "Get the status of the latest build for the project",
+  "description": "Get the status of the latest build for the project.",
   "type": "object",
   "properties": {
     "publicUrl": {

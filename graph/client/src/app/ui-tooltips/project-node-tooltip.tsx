@@ -1,7 +1,9 @@
 import { getProjectGraphService } from '../machines/get-services';
 import { FlagIcon, MapPinIcon } from '@heroicons/react/24/solid';
 import Tag from '../ui-components/tag';
-import { TooltipButton } from './tooltip-button';
+import { TooltipButton, TooltipLinkButton } from './tooltip-button';
+import { useRouteConstructor } from '../util';
+import { useNavigate } from 'react-router-dom';
 
 export interface ProjectNodeToolTipProps {
   type: 'app' | 'lib' | 'e2e';
@@ -15,65 +17,62 @@ export function ProjectNodeToolTip({
   tags,
 }: ProjectNodeToolTipProps) {
   const projectGraphService = getProjectGraphService();
-
-  function onFocus() {
-    projectGraphService.send({
-      type: 'focusProject',
-      projectName: id,
-    });
-  }
+  const { start, end, algorithm } =
+    projectGraphService.getSnapshot().context.tracing;
+  const routeConstructor = useRouteConstructor();
+  const navigate = useNavigate();
 
   function onExclude() {
     projectGraphService.send({
       type: 'deselectProject',
       projectName: id,
     });
+    navigate(routeConstructor('/projects', true));
   }
 
   function onStartTrace() {
-    projectGraphService.send({
-      type: 'setTracingStart',
-      projectName: id,
-    });
+    navigate(routeConstructor(`/projects/trace/${id}`, true));
   }
 
   function onEndTrace() {
-    projectGraphService.send({
-      type: 'setTracingEnd',
-      projectName: id,
-    });
+    navigate(routeConstructor(`/projects/trace/${start}/${id}`, true));
   }
 
   return (
-    <div>
+    <div className="text-sm text-slate-700 dark:text-slate-400">
       <h4>
         <Tag className="mr-3">{type}</Tag>
-        {id}
+        <span className="font-mono">{id}</span>
       </h4>
       {tags.length > 0 ? (
-        <p>
+        <p className="my-2">
           <strong>tags</strong>
           <br></br>
           {tags.join(', ')}
         </p>
       ) : null}
-      <div className="flex">
-        <TooltipButton onClick={onFocus}>Focus</TooltipButton>
+      <div className="grid grid-cols-3 gap-4">
+        <TooltipLinkButton to={routeConstructor(`/projects/${id}`, true)}>
+          Focus
+        </TooltipLinkButton>
         <TooltipButton onClick={onExclude}>Exclude</TooltipButton>
-        <TooltipButton
-          className="flex flex-row items-center"
-          onClick={onStartTrace}
-        >
-          <MapPinIcon className="mr-2 h-5 w-5 text-slate-500"></MapPinIcon>
-          Start
-        </TooltipButton>
-        <TooltipButton
-          className="flex flex-row items-center"
-          onClick={onEndTrace}
-        >
-          <FlagIcon className="mr-2 h-5 w-5 text-slate-500"></FlagIcon>
-          End
-        </TooltipButton>
+        {!start ? (
+          <TooltipButton
+            className="flex flex-row items-center"
+            onClick={onStartTrace}
+          >
+            <MapPinIcon className="mr-2 h-5 w-5 text-slate-500"></MapPinIcon>
+            Start
+          </TooltipButton>
+        ) : (
+          <TooltipButton
+            className="flex flex-row items-center"
+            onClick={onEndTrace}
+          >
+            <FlagIcon className="mr-2 h-5 w-5 text-slate-500"></FlagIcon>
+            End
+          </TooltipButton>
+        )}
       </div>
     </div>
   );

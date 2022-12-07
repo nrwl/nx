@@ -17,7 +17,7 @@ describe('15.0.0 migration (prefix-outputs)', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it('should prefix project outputs', async () => {

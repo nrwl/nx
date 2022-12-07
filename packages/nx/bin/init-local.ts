@@ -68,6 +68,7 @@ function isKnownCommand() {
     'affected:dep-graph',
     'format',
     'workspace-schematic',
+    'connect-to-nx-cloud',
     'clear-cache',
     'help',
   ];
@@ -138,9 +139,11 @@ function handleAngularCLIFallbacks(workspace: WorkspaceTypeAndRoot) {
         })
     );
   } else if (process.argv[2] === 'completion') {
-    console.log(`"ng completion" is not natively supported by Nx.
-Instead, you could try an Nx Editor Plugin for a visual tool to run Nx commands. If you're using VSCode, you can use the Nx Console plugin, or if you're using WebStorm, you could use one of the available community plugins.
-For more information, see https://nx.dev/using-nx/console`);
+    if (!process.argv[3]) {
+      console.log(`"ng completion" is not natively supported by Nx.
+  Instead, you could try an Nx Editor Plugin for a visual tool to run Nx commands. If you're using VSCode, you can use the Nx Console plugin, or if you're using WebStorm, you could use one of the available community plugins.
+  For more information, see https://nx.dev/core-features/integrate-with-editors`);
+    }
   } else {
     require('nx/src/adapter/compat');
     try {

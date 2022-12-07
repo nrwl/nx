@@ -47,7 +47,9 @@ export function DebouncedTextInput({
   }
 
   useEffect(() => {
-    updateTextFilter(debouncedValue);
+    if (debouncedValue !== '') {
+      updateTextFilter(debouncedValue);
+    }
   }, [debouncedValue, updateTextFilter]);
 
   return (

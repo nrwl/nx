@@ -18,6 +18,18 @@ import CheckboxPanel from '../ui-components/checkbox-panel';
 import Dropdown from '../ui-components/dropdown';
 import ShowHideAll from '../ui-components/show-hide-all';
 
+function createTaskName(
+  project: string,
+  target: string,
+  configuration?: string
+) {
+  if (configuration) {
+    return `${project}:${target}:${configuration}`;
+  } else {
+    return `${project}:${target}`;
+  }
+}
+
 export function TasksSidebar() {
   const graphService = getGraphService();
   const navigate = useNavigate();
@@ -26,16 +38,16 @@ export function TasksSidebar() {
   const [searchParams, setSearchParams] = useSearchParams();
   const groupByProject = searchParams.get('groupByProject') === 'true';
 
-  const selectedProjectRouteData = useRouteLoaderData(
+  const selectedWorkspaceRouteData = useRouteLoaderData(
     'selectedWorkspace'
   ) as ProjectGraphClientResponse & { targets: string[] };
-  const workspaceLayout = selectedProjectRouteData.layout;
+  const workspaceLayout = selectedWorkspaceRouteData.layout;
 
   const routeData = useRouteLoaderData(
     'selectedTarget'
   ) as TaskGraphClientResponse;
   const { taskGraphs } = routeData;
-  const { projects, targets } = selectedProjectRouteData;
+  const { projects, targets } = selectedWorkspaceRouteData;
   const selectedTarget = params['selectedTarget'] ?? targets[0];
 
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
@@ -63,7 +75,7 @@ export function TasksSidebar() {
   function selectProject(project: string) {
     setSelectedProjects([...selectedProjects, project]);
 
-    const taskId = `${project}:${selectedTarget}`;
+    const taskId = createTaskName(project, selectedTarget);
 
     graphService.handleTaskEvent({
       type: 'notifyTaskGraphTasksSelected',
@@ -119,10 +131,10 @@ export function TasksSidebar() {
     setSelectedProjects([]);
     graphService.handleTaskEvent({
       type: 'notifyTaskGraphSetProjects',
-      projects: selectedProjectRouteData.projects,
+      projects: selectedWorkspaceRouteData.projects,
       taskGraphs,
     });
-  }, [selectedProjectRouteData]);
+  }, [selectedWorkspaceRouteData]);
 
   useEffect(() => {
     if (groupByProject) {
@@ -187,6 +199,7 @@ export function TasksSidebar() {
         <Dropdown
           id="selectedTarget"
           className="w-full"
+          data-cy="selected-target-dropdown"
           defaultValue={selectedTarget}
           onChange={(event) => selectTarget(event.currentTarget.value)}
         >

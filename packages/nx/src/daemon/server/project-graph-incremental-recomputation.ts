@@ -24,7 +24,7 @@ let cachedSerializedProjectGraphPromise: Promise<{
 export let projectFileMapWithFiles:
   | { projectFileMap: ProjectFileMap; allWorkspaceFiles: FileData[] }
   | undefined;
-let currentProjectGraphCache: ProjectGraphCache | undefined;
+export let currentProjectGraphCache: ProjectGraphCache | undefined;
 
 const collectedUpdatedFiles = new Set<string>();
 const collectedDeletedFiles = new Set<string>();

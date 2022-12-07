@@ -178,26 +178,40 @@ export class GraphService {
       renderTime: 0,
     };
 
-    if (this.renderGraph && elementsToSendToRender) {
-      this.renderGraph.setElements(elementsToSendToRender);
+    if (this.renderGraph) {
+      if (elementsToSendToRender) {
+        this.renderGraph.setElements(elementsToSendToRender);
 
-      if (event.type === 'notifyGraphFocusProject') {
-        this.renderGraph.setFocussedElement(event.projectName);
+        if (event.type === 'notifyGraphFocusProject') {
+          this.renderGraph.setFocussedElement(event.projectName);
+        }
+
+        const { numEdges, numNodes } = this.renderGraph.render();
+
+        selectedProjectNames = (
+          elementsToSendToRender.nodes('[type!="dir"]') ?? []
+        ).map((node) => node.id());
+
+        const renderTime = Date.now() - time;
+
+        perfReport = {
+          renderTime,
+          numNodes,
+          numEdges,
+        };
+      } else {
+        const { numEdges, numNodes } = this.renderGraph.render();
+
+        this.renderGraph.getCurrentlyShownProjectIds();
+
+        const renderTime = Date.now() - time;
+
+        perfReport = {
+          renderTime,
+          numNodes,
+          numEdges,
+        };
       }
-
-      const { numEdges, numNodes } = this.renderGraph.render();
-
-      selectedProjectNames = (
-        elementsToSendToRender.nodes('[type!="dir"]') ?? []
-      ).map((node) => node.id());
-
-      const renderTime = Date.now() - time;
-
-      perfReport = {
-        renderTime,
-        numNodes,
-        numEdges,
-      };
     }
 
     this.lastPerformanceReport = perfReport;

@@ -41,10 +41,10 @@ describe('preset', () => {
     overrideCollectionResolutionForTesting(null);
   });
 
-  it(`should create files (preset = ${Preset.Angular})`, async () => {
+  it(`should create files (preset = ${Preset.AngularMonorepo})`, async () => {
     await presetGenerator(tree, {
       name: 'proj',
-      preset: Preset.Angular,
+      preset: Preset.AngularMonorepo,
       cli: 'nx',
       style: 'css',
       linter: 'eslint',
@@ -65,10 +65,10 @@ describe('preset', () => {
     expect(tree.exists('/apps/proj/src/main.ts')).toBe(true);
   });
 
-  it(`should create files (preset = ${Preset.React})`, async () => {
+  it(`should create files (preset = ${Preset.ReactMonorepo})`, async () => {
     await presetGenerator(tree, {
       name: 'proj',
-      preset: Preset.React,
+      preset: Preset.ReactMonorepo,
       style: 'css',
       linter: 'eslint',
       cli: 'nx',

@@ -6,7 +6,7 @@ import {
   Tree,
   updateJson,
 } from '@nrwl/devkit';
-import { createReactEslintJson, extraEslintDependencies } from '@nrwl/react';
+import { extendReactEslintJson, extraEslintDependencies } from '@nrwl/react';
 import { NormalizedSchema } from './normalize-options';
 
 export async function addLinting(host: Tree, options: NormalizedSchema) {
@@ -24,15 +24,10 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     skipFormat: true,
   });
 
-  const reactEslintJson = createReactEslintJson(
-    options.e2eProjectRoot,
-    options.setParserOptionsProject
-  );
-
   updateJson(
     host,
     joinPathFragments(options.e2eProjectRoot, '.eslintrc.json'),
-    () => reactEslintJson
+    extendReactEslintJson
   );
 
   const installTask = addDependenciesToPackageJson(

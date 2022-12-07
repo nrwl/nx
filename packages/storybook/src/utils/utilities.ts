@@ -233,6 +233,7 @@ export function findStorybookAndBuildTargetsAndCompiler(targets: {
   storybookTarget?: string;
   ngBuildTarget?: string;
   nextBuildTarget?: string;
+  viteBuildTarget?: string;
   otherBuildTarget?: string;
   compiler?: string;
 } {
@@ -241,6 +242,7 @@ export function findStorybookAndBuildTargetsAndCompiler(targets: {
     storybookTarget?: string;
     ngBuildTarget?: string;
     nextBuildTarget?: string;
+    viteBuildTarget?: string;
     otherBuildTarget?: string;
     compiler?: string;
   } = {};
@@ -275,6 +277,9 @@ export function findStorybookAndBuildTargetsAndCompiler(targets: {
          */
         returnObject.ngBuildTarget = target;
         returnObject.compiler = targetConfig?.options?.compiler;
+        break;
+      case '@nrwl/vite:build':
+        returnObject.viteBuildTarget = target;
         break;
       case '@nrwl/next:build':
         returnObject.nextBuildTarget = target;

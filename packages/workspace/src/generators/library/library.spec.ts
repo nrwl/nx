@@ -33,7 +33,7 @@ describe('lib', () => {
 
   describe('workspace v2', () => {
     beforeEach(() => {
-      tree = createTreeWithEmptyWorkspace();
+      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     });
 
     it('should default to standalone project for first project', async () => {
@@ -639,8 +639,8 @@ describe('lib', () => {
         js: true,
       });
       expect(readJson(tree, 'libs/my-lib/tsconfig.lib.json').include).toEqual([
-        '**/*.ts',
-        '**/*.js',
+        'src/**/*.ts',
+        'src/**/*.js',
       ]);
     });
 

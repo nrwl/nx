@@ -5,10 +5,10 @@ import {
   runExecutor,
 } from '@nrwl/devkit';
 import * as chalk from 'chalk';
-import { combineAsyncIterableIterators } from '@nrwl/js/src/utils/async-iterable/combine-async-iteratable-iterators';
+import { combineAsyncIterableIterators } from '@nrwl/devkit/src/utils/async-iterable';
 
 import { WebpackExecutorOptions } from '../webpack/schema';
-import { WebSsrDevServerOptions } from './schema';
+import { TargetOptions, WebSsrDevServerOptions } from './schema';
 import { waitUntilServerIsListening } from './lib/wait-until-server-is-listening';
 
 export async function* ssrDevServerExecutor(
@@ -29,6 +29,7 @@ export async function* ssrDevServerExecutor(
   const runBrowser = await runExecutor<{
     success: boolean;
     baseUrl?: string;
+    options: TargetOptions;
   }>(
     browserTarget,
     { ...browserOptions, ...options.browserTargetOptions },
@@ -37,6 +38,7 @@ export async function* ssrDevServerExecutor(
   const runServer = await runExecutor<{
     success: boolean;
     baseUrl?: string;
+    options: TargetOptions;
   }>(
     serverTarget,
     { ...serverOptions, ...options.serverTargetOptions },

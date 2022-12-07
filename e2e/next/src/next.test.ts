@@ -242,11 +242,11 @@ describe('Next.js Applications', () => {
             if (found) throw new Error('Found SVGR plugin');
 
             console.log('NODE_ENV is', process.env.NODE_ENV);
-            
+
             return config;
           }
         };
-        
+
         module.exports = withNx(nextConfig);
       `
     );
@@ -265,7 +265,7 @@ describe('Next.js Applications', () => {
         const { withNx } = require('@nrwl/next/plugins/with-nx');
         // Not including "nx" entry should still work.
         const nextConfig = {};
-        
+
         module.exports = withNx(nextConfig);
       `
     );

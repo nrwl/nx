@@ -7,7 +7,7 @@ describe.each([
 ])('standalone component utils - %s', (routes, routeType) => {
   it('should add a static route to the routes file', () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     tree.write(
       'routes-file.ts',
       `import { ${routeType} } from '@angular/router';
@@ -35,7 +35,7 @@ describe.each([
 
   it('should add a lazy route to the routes file', () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     tree.write(
       'routes-file.ts',
       `import { ${routeType} } from '@angular/router';

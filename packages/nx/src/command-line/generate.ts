@@ -289,6 +289,9 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
       'generate',
       projectsConfiguration
     );
+    if (opts.dryRun) {
+      process.env.NX_DRY_RUN = 'true';
+    }
     const { normalizedGeneratorName, schema, implementationFactory, aliases } =
       ws.readGenerator(opts.collectionName, opts.generatorName);
 

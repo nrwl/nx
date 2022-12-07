@@ -2,18 +2,22 @@ import { StorybookConfigureSchema } from './schema';
 import storiesGenerator from '../stories/stories';
 import {
   convertNxGenerator,
+  ensurePackage,
+  logger,
   readProjectConfiguration,
   Tree,
 } from '@nrwl/devkit';
-import { configurationGenerator } from '@nrwl/storybook';
-import { getE2eProjectName } from '@nrwl/cypress/src/utils/project-name';
+import { nxVersion } from '../../utils/versions';
 
 async function generateStories(host: Tree, schema: StorybookConfigureSchema) {
-  const libConfig = readProjectConfiguration(host, schema.name);
-  const libRoot = libConfig.root;
+  await ensurePackage(host, '@nrwl/cypress', nxVersion);
+  const { getE2eProjectName } = await import(
+    '@nrwl/cypress/src/utils/project-name'
+  );
+  const projectConfig = readProjectConfiguration(host, schema.name);
   const cypressProject = getE2eProjectName(
     schema.name,
-    libRoot,
+    projectConfig.root,
     schema.cypressDirectory
   );
   await storiesGenerator(host, {
@@ -30,6 +34,25 @@ export async function storybookConfigurationGenerator(
   host: Tree,
   schema: StorybookConfigureSchema
 ) {
+  await ensurePackage(host, '@nrwl/storybook', nxVersion);
+  const { configurationGenerator } = await import('@nrwl/storybook');
+
+  let bundler = schema.bundler ?? 'webpack';
+  const projectConfig = readProjectConfiguration(host, schema.name);
+
+  if (
+    projectConfig.projectType === 'application' &&
+    projectConfig.targets['build']?.executor === '@nrwl/vite:build'
+  ) {
+    bundler = 'vite';
+    if (schema.bundler !== 'vite') {
+      logger.info(
+        `The project ${schema.name} is set up to use Vite. So
+      Storybook will be configured to use Vite as well.`
+      );
+    }
+  }
+
   const installTask = await configurationGenerator(host, {
     name: schema.name,
     uiFramework: '@storybook/react',
@@ -39,6 +62,7 @@ export async function storybookConfigurationGenerator(
     cypressDirectory: schema.cypressDirectory,
     standaloneConfig: schema.standaloneConfig,
     tsConfiguration: schema.tsConfiguration,
+    bundler,
   });
 
   if (schema.generateStories) {

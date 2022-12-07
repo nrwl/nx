@@ -6,7 +6,7 @@ import renameWebpackServer from './rename-webpack-server';
 describe('renameWebpackServer', () => {
   it('should rename webpack-server to webpack-dev-server correctly', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await remote(tree, { name: 'remote' });
 
     updateJson(tree, 'apps/remote/project.json', (json) => {

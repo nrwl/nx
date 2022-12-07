@@ -168,6 +168,12 @@ describe('app', () => {
       expect(tree.exists('apps/my-app-e2e/cypress.config.ts')).toBeTruthy();
       expect(tree.exists('apps/my-app/index.html')).toBeTruthy();
       expect(tree.exists('apps/my-app/vite.config.ts')).toBeTruthy();
+      expect(
+        tree.exists(`apps/my-app/environments/environment.ts`)
+      ).toBeFalsy();
+      expect(
+        tree.exists(`apps/my-app/environments/environment.prod.ts`)
+      ).toBeFalsy();
     });
 
     it('should extend from root tsconfig.json when no tsconfig.base.json', async () => {
@@ -566,6 +572,22 @@ describe('app', () => {
     it('should create index.html and vite.config file at the root of the app', () => {
       expect(viteAppTree.exists('/apps/my-app/index.html')).toBe(true);
       expect(viteAppTree.exists('/apps/my-app/vite.config.ts')).toBe(true);
+    });
+
+    it('should not include a spec file when the bundler or unitTestRunner is vite and insourceTests is false', async () => {
+      expect(
+        viteAppTree.exists('/apps/my-app/src/app/app.element.spec.ts')
+      ).toBe(true);
+
+      await applicationGenerator(viteAppTree, {
+        name: 'insourceTests',
+        bundler: 'vite',
+        inSourceTests: true,
+      });
+
+      expect(
+        viteAppTree.exists('/apps/insource-tests/src/app/app.element.spec.ts')
+      ).toBe(false);
     });
   });
 });

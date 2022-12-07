@@ -19,7 +19,6 @@ describe('app', () => {
     compiler: 'babel',
     e2eTestRunner: 'cypress',
     skipFormat: false,
-    unitTestRunner: 'jest',
     name: 'myApp',
     linter: Linter.EsLint,
     style: 'css',
@@ -105,30 +104,20 @@ describe('app', () => {
           path: './tsconfig.spec.json',
         },
       ]);
-      expect(tsconfig.compilerOptions.forceConsistentCasingInFileNames).toEqual(
-        true
-      );
       expect(tsconfig.compilerOptions.strict).toEqual(true);
-      expect(tsconfig.compilerOptions.noImplicitOverride).toEqual(true);
-      expect(
-        tsconfig.compilerOptions.noPropertyAccessFromIndexSignature
-      ).toEqual(true);
-      expect(tsconfig.compilerOptions.noImplicitReturns).toEqual(true);
-      expect(tsconfig.compilerOptions.noFallthroughCasesInSwitch).toEqual(true);
-
       const tsconfigApp = readJson(appTree, 'apps/my-app/tsconfig.app.json');
       expect(tsconfigApp.compilerOptions.outDir).toEqual('../../dist/out-tsc');
       expect(tsconfigApp.extends).toEqual('./tsconfig.json');
       expect(tsconfigApp.exclude).toEqual([
         'jest.config.ts',
-        '**/*.spec.ts',
-        '**/*.test.ts',
-        '**/*.spec.tsx',
-        '**/*.test.tsx',
-        '**/*.spec.js',
-        '**/*.test.js',
-        '**/*.spec.jsx',
-        '**/*.test.jsx',
+        'src/**/*.spec.ts',
+        'src/**/*.test.ts',
+        'src/**/*.spec.tsx',
+        'src/**/*.test.tsx',
+        'src/**/*.spec.js',
+        'src/**/*.test.js',
+        'src/**/*.spec.jsx',
+        'src/**/*.test.jsx',
       ]);
 
       const eslintJson = readJson(appTree, 'apps/my-app/.eslintrc.json');
@@ -165,15 +154,6 @@ describe('app', () => {
 
       const tsConfig = readJson(appTree, 'apps/my-app/tsconfig.json');
       expect(tsConfig.extends).toEqual('../../tsconfig.base.json');
-    });
-
-    it('should extend from root tsconfig.json when no tsconfig.base.json', async () => {
-      appTree.rename('tsconfig.base.json', 'tsconfig.json');
-
-      await applicationGenerator(appTree, schema);
-
-      const tsConfig = readJson(appTree, 'apps/my-app/tsconfig.json');
-      expect(tsConfig.extends).toEqual('../../tsconfig.json');
     });
   });
 
@@ -240,14 +220,14 @@ describe('app', () => {
           lookupFn: (json) => json.exclude,
           expectedValue: [
             'jest.config.ts',
-            '**/*.spec.ts',
-            '**/*.test.ts',
-            '**/*.spec.tsx',
-            '**/*.test.tsx',
-            '**/*.spec.js',
-            '**/*.test.js',
-            '**/*.spec.jsx',
-            '**/*.test.jsx',
+            'src/**/*.spec.ts',
+            'src/**/*.test.ts',
+            'src/**/*.spec.tsx',
+            'src/**/*.test.tsx',
+            'src/**/*.spec.js',
+            'src/**/*.test.js',
+            'src/**/*.spec.jsx',
+            'src/**/*.test.jsx',
           ],
         },
         {
@@ -381,6 +361,12 @@ describe('app', () => {
     expect(targetConfig.build.options).toEqual({
       outputPath: 'dist/apps/my-app',
     });
+    expect(
+      appTree.exists(`apps/my-app/environments/environment.ts`)
+    ).toBeFalsy();
+    expect(
+      appTree.exists(`apps/my-app/environments/environment.prod.ts`)
+    ).toBeFalsy();
   });
 
   it('should setup the nrwl web dev server builder', async () => {
@@ -897,15 +883,7 @@ describe('app', () => {
       expect(
         tsconfigJson.compilerOptions.forceConsistentCasingInFileNames
       ).not.toBeDefined();
-      expect(tsconfigJson.compilerOptions.strict).not.toBeDefined();
-      expect(tsconfigJson.compilerOptions.noImplicitOverride).not.toBeDefined();
-      expect(
-        tsconfigJson.compilerOptions.noPropertyAccessFromIndexSignature
-      ).not.toBeDefined();
-      expect(tsconfigJson.compilerOptions.noImplicitReturns).not.toBeDefined();
-      expect(
-        tsconfigJson.compilerOptions.noFallthroughCasesInSwitch
-      ).not.toBeDefined();
+      expect(tsconfigJson.compilerOptions.strict).toEqual(false);
     });
   });
 
@@ -928,33 +906,17 @@ describe('app', () => {
     it('should create files at the root', async () => {
       await applicationGenerator(appTree, {
         ...schema,
-        rootProject: true,
-        bundler: 'webpack',
-      });
-      expect(appTree.read('/src/main.tsx')).toBeDefined();
-      expect(appTree.read('/e2e/cypress.config.ts')).toBeDefined();
-      expect(readJson(appTree, '/tsconfig.json').extends).toEqual(
-        './tsconfig.base.json'
-      );
-      expect(
-        readJson(appTree, '/workspace.json').projects['my-app'].architect[
-          'build'
-        ].options['outputPath']
-      ).toEqual('dist/my-app');
-    });
-
-    it('should create files at the root if bundler is vite', async () => {
-      await applicationGenerator(appTree, {
-        ...schema,
         name: 'my-app2',
         rootProject: true,
         bundler: 'vite',
       });
       expect(appTree.read('/src/main.tsx')).toBeDefined();
       expect(appTree.read('/e2e/cypress.config.ts')).toBeDefined();
-      expect(readJson(appTree, '/tsconfig.json').extends).toEqual(
-        './tsconfig.base.json'
-      );
+
+      const rootTsConfig = readJson(appTree, '/tsconfig.json');
+      expect(rootTsConfig.extends).toBeUndefined();
+      expect(rootTsConfig.compilerOptions.sourceMap).toBe(true);
+
       expect(
         readJson(appTree, '/workspace.json').projects['my-app2'].architect[
           'build'
@@ -965,7 +927,8 @@ describe('app', () => {
 
   describe('setup React app with --bundler=vite', () => {
     let viteAppTree: Tree;
-    beforeAll(async () => {
+
+    beforeEach(async () => {
       viteAppTree = createTreeWithEmptyV1Workspace();
       await applicationGenerator(viteAppTree, { ...schema, bundler: 'vite' });
     });
@@ -979,6 +942,7 @@ describe('app', () => {
         buildTarget: 'my-app:build',
       });
     });
+
     it('should add dependencies in package.json', () => {
       const packageJson = readJson(viteAppTree, '/package.json');
 
@@ -996,6 +960,65 @@ describe('app', () => {
     it('should create index.html and vite.config file at the root of the app', () => {
       expect(viteAppTree.exists('/apps/my-app/index.html')).toBe(true);
       expect(viteAppTree.exists('/apps/my-app/vite.config.ts')).toBe(true);
+    });
+
+    it('should not include a spec file when the bundler or unitTestRunner is vite and insourceTests is false', async () => {
+      // check to make sure that the other spec file exists
+      expect(viteAppTree.exists('/apps/my-app/src/app/app.spec.tsx')).toBe(
+        true
+      );
+
+      await applicationGenerator(viteAppTree, {
+        ...schema,
+        name: 'insourceTests',
+        bundler: 'vite',
+        inSourceTests: true,
+      });
+
+      expect(
+        viteAppTree.exists('/apps/insourceTests/src/app/app.spec.tsx')
+      ).toBe(false);
+    });
+
+    it.each`
+      style     | pkg
+      ${'less'} | ${'less'}
+      ${'scss'} | ${'sass'}
+      ${'styl'} | ${'stylus'}
+    `(
+      'should add style preprocessor when vite is used',
+      async ({ style, pkg }) => {
+        await applicationGenerator(viteAppTree, {
+          ...schema,
+          style,
+          bundler: 'vite',
+          unitTestRunner: 'vitest',
+          name: style,
+        });
+
+        expect(readJson(viteAppTree, 'package.json')).toMatchObject({
+          devDependencies: {
+            [pkg]: expect.any(String),
+          },
+        });
+      }
+    );
+  });
+
+  describe('setting generator defaults', () => {
+    it('should set libraries to use vitest when app uses vite bundler', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        name: 'my-app',
+        bundler: 'vite',
+      });
+
+      const workspace = readWorkspaceConfiguration(appTree);
+      expect(workspace.generators['@nrwl/react']).toMatchObject({
+        library: {
+          unitTestRunner: 'vitest',
+        },
+      });
     });
   });
 });

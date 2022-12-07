@@ -11,7 +11,7 @@ describe('add `defaultBase` in nx.json', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it('should update @nrwl/workspace:tsc -> @nrwl/js:tsc', async () => {

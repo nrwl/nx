@@ -76,7 +76,7 @@ export function Testimonials(): JSX.Element {
   return (
     <article
       id="next-generation"
-      className="relative bg-gray-50 pt-28 dark:bg-slate-800/40"
+      className="relative bg-slate-50 pt-28 dark:bg-slate-800/40"
     >
       <div className="mx-auto max-w-7xl items-stretch py-12 px-4 sm:grid sm:grid-cols-1 sm:gap-8 sm:px-6 md:grid-cols-3 lg:py-16 lg:px-8">
         <div className="md:col-span-2">

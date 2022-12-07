@@ -10,7 +10,7 @@ describe('changeRunCommandsExecutor', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     addProjectConfiguration(tree, 'proj1', {
       root: 'proj1',

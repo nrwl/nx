@@ -16,6 +16,11 @@
       "x-dropdown": "project",
       "x-prompt": "What is the name of the project to set up a webpack for?"
     },
+    "includeLib": {
+      "type": "boolean",
+      "description": "Add a library build option and skip the server option.",
+      "hidden": true
+    },
     "uiFramework": {
       "type": "string",
       "description": "UI Framework to use for Vite.",
@@ -26,7 +31,8 @@
     "newProject": {
       "type": "boolean",
       "description": "Is this a new project?",
-      "default": false
+      "default": false,
+      "hidden": true
     }
   },
   "examplesFile": "../../../docs/configuration-examples.md"

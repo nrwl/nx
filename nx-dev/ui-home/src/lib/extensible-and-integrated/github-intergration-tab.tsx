@@ -89,20 +89,23 @@ export function GitHubIntegrationTab(): JSX.Element {
           <div className="absolute inset-x-0 top-0 h-1 w-full bg-blue-500 dark:bg-sky-500"></div>
           <div className="flex-shrink-0">
             <svg
-              className="h-10 w-10 rounded-md shadow"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
+              id="nx-cloud-header-logo"
+              role="img"
               xmlns="http://www.w3.org/2000/svg"
+              stroke="currentColor"
+              fill="transparent"
+              viewBox="0 0 24 24"
+              className="h-10 w-10"
             >
               <path
-                d="M24 3V6C20.688 6 18 8.688 18 12C18 15.312 15.312 18 12 18C8.688 18 6 20.688 6 24H3C1.344 24 0 22.656 0 21V3C0 1.344 1.344 0 3 0H21C22.656 0 24 1.344 24 3Z"
-                fill="#0E2039"
+                strokeWidth="2"
+                d="M23 3.75V6.5c-3.036 0-5.5 2.464-5.5 5.5s-2.464 5.5-5.5 5.5-5.5 2.464-5.5 5.5H3.75C2.232 23 1 21.768 1 20.25V3.75C1 2.232 2.232 1 3.75 1h16.5C21.768 1 23 2.232 23 3.75Z"
+                id="nx-cloud-header-logo-stroke-1"
               />
               <path
-                d="M24 6V21C24 22.656 22.656 24 21 24H6C6 20.688 8.688 18 12 18C15.312 18 18 15.312 18 12C18 8.688 20.688 6 24 6Z"
-                fill="white"
+                strokeWidth="2"
+                d="M23 6v14.1667C23 21.7307 21.7307 23 20.1667 23H6c0-3.128 2.53867-5.6667 5.6667-5.6667 3.128 0 5.6666-2.5386 5.6666-5.6666C17.3333 8.53867 19.872 6 23 6Z"
+                id="nx-cloud-header-logo-stroke-2"
               />
             </svg>
           </div>
@@ -141,22 +144,23 @@ export function GitHubIntegrationTab(): JSX.Element {
         </div>
         <div className="spacer h-56" />
       </div>
-      <div className="relative hidden px-4 pr-6 md:flex lg:col-span-2 lg:h-full lg:px-0">
+      <div
+        aria-hidden="true"
+        className="relative hidden px-4 pr-6 md:flex lg:col-span-2 lg:h-full lg:px-0"
+      >
         <div className="absolute -top-28 left-36 mx-auto h-[510px] w-full w-auto max-w-none overflow-hidden rounded-xl border border-slate-200 shadow-xl dark:border-slate-700">
           <Image
             src="/images/nx-cloud.webp"
             alt="Nx Cloud app"
-            layout={'fixed'}
             loading="lazy"
-            width={718}
+            width={715}
             height={510}
           />
         </div>
-        <div className="absolute left-12 -bottom-2 mx-auto flex max-h-[380px] w-full w-auto max-w-none overflow-hidden rounded-xl border border-slate-200 shadow-xl">
+        <div className="absolute left-12 -bottom-2 mx-auto flex w-full w-auto max-w-none overflow-hidden rounded-xl border border-slate-200 shadow-xl">
           <Image
             src="/images/github-nxcloud.webp"
             alt="Nx Cloud Github app"
-            layout={'fixed'}
             loading="lazy"
             width={715}
             height={510}

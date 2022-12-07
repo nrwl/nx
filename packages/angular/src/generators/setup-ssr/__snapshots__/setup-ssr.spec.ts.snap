@@ -13,6 +13,9 @@ Object {
     },
   },
   "defaultConfiguration": "production",
+  "dependsOn": Array [
+    "build",
+  ],
   "executor": "@angular-devkit/build-angular:server",
   "options": Object {
     "main": "apps/app1/server.ts",
@@ -104,6 +107,9 @@ Object {
     },
   },
   "defaultConfiguration": "production",
+  "dependsOn": Array [
+    "build",
+  ],
   "executor": "@angular-devkit/build-angular:server",
   "options": Object {
     "main": "apps/app1/server.ts",

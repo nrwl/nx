@@ -9,7 +9,7 @@ import update from './replace-testing-library-react-hook';
 
 describe('Remove deprecated hook testing package', () => {
   it('should replace imports for packages that has jest test target', async () => {
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(
       tree,
       'example',

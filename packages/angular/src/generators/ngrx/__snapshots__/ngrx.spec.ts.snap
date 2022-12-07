@@ -216,29 +216,29 @@ describe('SuperUsers Selectors', () => {
   });
 
   describe('SuperUsers Selectors', () => {
-    it('getAllSuperUsers() should return the list of SuperUsers', () => {
-      const results = SuperUsersSelectors.getAllSuperUsers(state);
+    it('selectAllSuperUsers() should return the list of SuperUsers', () => {
+      const results = SuperUsersSelectors.selectAllSuperUsers(state);
       const selId = getSuperUsersId(results[1]);
 
       expect(results.length).toBe(3);
       expect(selId).toBe('PRODUCT-BBB');
     });
 
-    it('getSelected() should return the selected Entity', () => {
-      const result = SuperUsersSelectors.getSelected(state) as SuperUsersEntity;
+    it('selectEntity() should return the selected Entity', () => {
+      const result = SuperUsersSelectors.selectEntity(state) as SuperUsersEntity;
       const selId = getSuperUsersId(result);
 
       expect(selId).toBe('PRODUCT-BBB');
     });
 
-    it('getSuperUsersLoaded() should return the current \\"loaded\\" status', () => {
-      const result = SuperUsersSelectors.getSuperUsersLoaded(state);
+    it('selectSuperUsersLoaded() should return the current \\"loaded\\" status', () => {
+      const result = SuperUsersSelectors.selectSuperUsersLoaded(state);
 
       expect(result).toBe(true);
     });
 
-    it('getSuperUsersError() should return the current \\"error\\" state', () => {
-      const result = SuperUsersSelectors.getSuperUsersError(state);
+    it('selectSuperUsersError() should return the current \\"error\\" state', () => {
+      const result = SuperUsersSelectors.selectSuperUsersError(state);
 
       expect(result).toBe(ERROR_MSG);
     });
@@ -369,15 +369,15 @@ export class UsersFacade {
   private readonly store = inject(Store);
 
   /**
-   * Combine pieces of state using createSelector, 
+   * Combine pieces of state using createSelector,
    * and expose them as observables through the facade.
    */
-  loaded$ = this.store.pipe(select(UsersSelectors.getUsersLoaded));
-  allUsers$ = this.store.pipe(select(UsersSelectors.getAllUsers));
-  selectedUsers$ = this.store.pipe(select(UsersSelectors.getSelected));
+  loaded$ = this.store.pipe(select(UsersSelectors.selectUsersLoaded));
+  allUsers$ = this.store.pipe(select(UsersSelectors.selectAllUsers));
+  selectedUsers$ = this.store.pipe(select(UsersSelectors.selectEntity));
 
   /**
-   * Use the initialization action to perform one 
+   * Use the initialization action to perform one
    * or more tasks in your Effects.
    */
   init() {
@@ -437,38 +437,38 @@ exports[`ngrx should generate the ngrx selectors 1`] = `
 import { USERS_FEATURE_KEY, UsersState, usersAdapter } from './users.reducer';
 
 // Lookup the 'Users' feature state managed by NgRx
-export const getUsersState = createFeatureSelector<UsersState>(USERS_FEATURE_KEY);
+export const selectUsersState = createFeatureSelector<UsersState>(USERS_FEATURE_KEY);
 
 const { selectAll, selectEntities } = usersAdapter.getSelectors();
 
-export const getUsersLoaded = createSelector(
-  getUsersState,
+export const selectUsersLoaded = createSelector(
+  selectUsersState,
   (state: UsersState) => state.loaded
 );
 
-export const getUsersError = createSelector(
-  getUsersState,
+export const selectUsersError = createSelector(
+  selectUsersState,
   (state: UsersState) => state.error
 );
 
-export const getAllUsers = createSelector(
-  getUsersState,
+export const selectAllUsers = createSelector(
+  selectUsersState,
   (state: UsersState) => selectAll(state)
 );
 
-export const getUsersEntities = createSelector(
-  getUsersState,
+export const selectUsersEntities = createSelector(
+  selectUsersState,
   (state: UsersState) => selectEntities(state)
 );
 
-export const getSelectedId = createSelector(
-  getUsersState,
+export const selectSelectedId = createSelector(
+  selectUsersState,
   (state: UsersState) => state.selectedId
 );
 
-export const getSelected = createSelector(
-  getUsersEntities,
-  getSelectedId,
+export const selectEntity = createSelector(
+  selectUsersEntities,
+  selectSelectedId,
   (entities, selectedId) => (selectedId ? entities[selectedId] : undefined)
 );
 "

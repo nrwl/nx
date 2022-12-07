@@ -3,7 +3,7 @@ import {
   ProjectNodeToolTip,
   ProjectNodeToolTipProps,
 } from './project-node-tooltip';
-import Tippy from '@tippyjs/react';
+import { Tooltip } from './tooltip';
 
 export default {
   component: ProjectNodeToolTip,
@@ -11,15 +11,11 @@ export default {
 } as ComponentMeta<typeof ProjectNodeToolTip>;
 
 const Template: ComponentStory<typeof ProjectNodeToolTip> = (args) => (
-  <Tippy
-    content={<ProjectNodeToolTip {...args} />}
-    visible={true}
-    theme="nx"
-    interactive={true}
-    maxWidth="none"
-  >
-    <p></p>
-  </Tippy>
+  <div className="flex w-full justify-center">
+    <Tooltip open={true} content={<ProjectNodeToolTip {...args} />}>
+      <p>Internal Reference</p>
+    </Tooltip>
+  </div>
 );
 
 export const Primary = Template.bind({});

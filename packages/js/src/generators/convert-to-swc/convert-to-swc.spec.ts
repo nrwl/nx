@@ -22,7 +22,9 @@ describe('convert to swc', () => {
   };
 
   beforeAll(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree.write('/apps/.gitignore', '');
+    tree.write('/libs/.gitignore', '');
   });
 
   it('should convert tsc to swc', async () => {

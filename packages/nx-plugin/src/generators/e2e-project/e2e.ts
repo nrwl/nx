@@ -1,6 +1,7 @@
 import {
   addProjectConfiguration,
   convertNxGenerator,
+  extractLayoutDirectory,
   formatFiles,
   generateFiles,
   getWorkspaceLayout,
@@ -24,11 +25,15 @@ interface NormalizedSchema extends Schema {
 }
 
 function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
-  const { npmScope, appsDir } = getWorkspaceLayout(host);
+  const { layoutDirectory, projectDirectory } = extractLayoutDirectory(
+    options.projectDirectory
+  );
+  const { npmScope, appsDir: defaultAppsDir } = getWorkspaceLayout(host);
+  const appsDir = layoutDirectory ?? defaultAppsDir;
 
   const projectName = `${options.pluginName}-e2e`;
-  const projectRoot = options.projectDirectory
-    ? joinPathFragments(appsDir, `${options.projectDirectory}-e2e`)
+  const projectRoot = projectDirectory
+    ? joinPathFragments(appsDir, `${projectDirectory}-e2e`)
     : joinPathFragments(appsDir, projectName);
   const pluginPropertyName = names(options.pluginName).propertyName;
 

@@ -5,6 +5,7 @@ import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
   convertNxGenerator,
+  extractLayoutDirectory,
   formatFiles,
   generateFiles,
   GeneratorCallback,
@@ -24,7 +25,7 @@ import { swcCoreVersion } from '@nrwl/js/src/utils/versions';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
-import { viteConfigurationGenerator } from '@nrwl/vite';
+import { viteConfigurationGenerator, vitestGenerator } from '@nrwl/vite';
 
 import { swcLoaderVersion } from '../../utils/versions';
 import { webInitGenerator } from '../init/init';
@@ -192,6 +193,8 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
   const webTask = await webInitGenerator(host, {
     ...options,
     skipFormat: true,
+    // Vite does not use babel by default
+    skipBabelConfig: options.bundler === 'vite',
   });
   tasks.push(webTask);
 
@@ -199,12 +202,37 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
   await addProject(host, options);
 
   if (options.bundler === 'vite') {
+    // We recommend users use `import.meta.env.MODE` and other variables in their code to differentiate between production and development.
+    // See: https://vitejs.dev/guide/env-and-mode.html
+    host.delete(joinPathFragments(options.appProjectRoot, 'src/environments'));
+
     const viteTask = await viteConfigurationGenerator(host, {
-      uiFramework: 'react',
+      uiFramework: 'none',
       project: options.projectName,
       newProject: true,
+      includeVitest: true,
+      inSourceTests: options.inSourceTests,
     });
     tasks.push(viteTask);
+  }
+
+  if (options.bundler !== 'vite' && options.unitTestRunner === 'vitest') {
+    const vitestTask = await vitestGenerator(host, {
+      uiFramework: 'none',
+      project: options.projectName,
+      coverageProvider: 'c8',
+      inSourceTests: options.inSourceTests,
+    });
+    tasks.push(vitestTask);
+  }
+
+  if (
+    (options.bundler === 'vite' || options.unitTestRunner === 'vitest') &&
+    options.inSourceTests
+  ) {
+    host.delete(
+      joinPathFragments(options.appProjectRoot, `src/app/app.element.spec.ts`)
+    );
   }
 
   const lintTask = await lintProjectGenerator(host, {
@@ -257,11 +285,16 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
 }
 
 function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
-  const appDirectory = options.directory
-    ? `${names(options.directory).fileName}/${names(options.name).fileName}`
+  const { layoutDirectory, projectDirectory } = extractLayoutDirectory(
+    options.directory
+  );
+
+  const appDirectory = projectDirectory
+    ? `${names(projectDirectory).fileName}/${names(options.name).fileName}`
     : names(options.name).fileName;
 
-  const { appsDir, npmScope } = getWorkspaceLayout(host);
+  const { appsDir: defaultAppsDir, npmScope } = getWorkspaceLayout(host);
+  const appsDir = layoutDirectory ?? defaultAppsDir;
 
   const appProjectName = appDirectory.replace(new RegExp('/', 'g'), '-');
   const e2eProjectName = `${appProjectName}-e2e`;
@@ -272,6 +305,10 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
     : [];
+
+  if (options.bundler === 'vite') {
+    options.unitTestRunner = 'vitest';
+  }
 
   options.style = options.style || 'css';
   options.linter = options.linter || Linter.EsLint;

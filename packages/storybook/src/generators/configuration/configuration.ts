@@ -21,6 +21,9 @@ import {
   configureTsSolutionConfig,
   createProjectStorybookDir,
   createRootStorybookDir,
+  createRootStorybookDirForRootProject,
+  getE2EProjectName,
+  projectIsRootProjectInNestedWorkspace,
   updateLintConfig,
 } from './util-functions';
 import { Linter } from '@nrwl/linter';
@@ -39,25 +42,54 @@ export async function configurationGenerator(
 
   const tasks: GeneratorCallback[] = [];
 
-  const { projectType, targets } = readProjectConfiguration(tree, schema.name);
-  const { nextBuildTarget, compiler } =
+  const { projectType, targets, root } = readProjectConfiguration(
+    tree,
+    schema.name
+  );
+  const { nextBuildTarget, compiler, viteBuildTarget } =
     findStorybookAndBuildTargetsAndCompiler(targets);
+
+  if (viteBuildTarget && schema.bundler !== 'vite') {
+    logger.info(
+      `Your project ${schema.name} uses Vite as a bundler. 
+      Nx will configure Storybook for this project to use Vite as well.`
+    );
+    schema.bundler = 'vite';
+  }
 
   const initTask = await initGenerator(tree, {
     uiFramework: schema.uiFramework,
+    bundler: schema.bundler,
   });
   tasks.push(initTask);
 
-  createRootStorybookDir(tree, schema.js, schema.tsConfiguration);
-  createProjectStorybookDir(
-    tree,
-    schema.name,
-    schema.uiFramework,
-    schema.js,
-    schema.tsConfiguration,
-    !!nextBuildTarget,
-    compiler === 'swc'
-  );
+  if (projectIsRootProjectInNestedWorkspace(root)) {
+    createRootStorybookDirForRootProject(
+      tree,
+      schema.name,
+      schema.uiFramework,
+      schema.js,
+      schema.tsConfiguration,
+      root,
+      projectType,
+      !!nextBuildTarget,
+      compiler === 'swc',
+      schema.bundler === 'vite'
+    );
+  } else {
+    createRootStorybookDir(tree, schema.js, schema.tsConfiguration);
+    createProjectStorybookDir(
+      tree,
+      schema.name,
+      schema.uiFramework,
+      schema.js,
+      schema.tsConfiguration,
+      !!nextBuildTarget,
+      compiler === 'swc',
+      schema.bundler === 'vite'
+    );
+  }
+
   configureTsProjectConfig(tree, schema);
   configureTsSolutionConfig(tree, schema);
   updateLintConfig(tree, schema);
@@ -75,19 +107,20 @@ export async function configurationGenerator(
     );
   }
 
-  if (schema.configureCypress) {
-    if (projectType !== 'application') {
-      const cypressTask = await cypressProjectGenerator(tree, {
-        name: schema.name,
-        js: schema.js,
-        linter: schema.linter,
-        directory: schema.cypressDirectory,
-        standaloneConfig: schema.standaloneConfig,
-      });
-      tasks.push(cypressTask);
-    } else {
-      logger.warn('There is already an e2e project setup');
-    }
+  const e2eProject = getE2EProjectName(tree, schema.name);
+  if (schema.configureCypress && !e2eProject) {
+    const cypressTask = await cypressProjectGenerator(tree, {
+      name: schema.name,
+      js: schema.js,
+      linter: schema.linter,
+      directory: schema.cypressDirectory,
+      standaloneConfig: schema.standaloneConfig,
+    });
+    tasks.push(cypressTask);
+  } else {
+    logger.warn(
+      `There is already an e2e project setup for ${schema.name}, called ${e2eProject}.`
+    );
   }
 
   if (nextBuildTarget && projectType === 'application') {

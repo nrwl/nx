@@ -9,7 +9,7 @@ const cypressJsonConfig = {
   videosFolder: '../../dist/cypress/graph/client-e2e/videos',
   screenshotsFolder: '../../dist/cypress/graph/client-e2e/screenshots',
   chromeWebSecurity: false,
-  specPattern: './src/release-static-integration/**/*.cy.{js,jsx,ts,tsx}',
+  specPattern: './src/e2e/**/release-static*.cy.{js,jsx,ts,tsx}',
   supportFile: 'src/support/e2e.ts',
 };
 export default defineConfig({

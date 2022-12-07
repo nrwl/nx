@@ -225,6 +225,7 @@ export { readJsonFile, writeJsonFile } from 'nx/src/utils/fileutils';
  */
 export {
   addDependenciesToPackageJson,
+  ensurePackage,
   removeDependenciesFromPackageJson,
 } from './src/utils/package-json';
 
@@ -244,6 +245,7 @@ export { names } from './src/utils/names';
 export {
   getWorkspaceLayout,
   getWorkspacePath,
+  extractLayoutDirectory,
 } from './src/utils/get-workspace-layout';
 
 /**

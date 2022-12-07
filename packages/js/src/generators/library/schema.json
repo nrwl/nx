@@ -105,6 +105,7 @@
     },
     "bundler": {
       "description": "The bundler to use.",
+      "type": "string",
       "enum": ["none", "esbuild", "rollup", "webpack"],
       "default": "none"
     },

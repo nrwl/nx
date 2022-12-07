@@ -58,7 +58,9 @@ export const commandsObject = yargs
     describe: 'Run target for multiple listed projects',
     builder: (yargs) =>
       linkToNxDevAndExamples(
-        withRunManyOptions(withOutputStyleOption(withTargetOption(yargs))),
+        withRunManyOptions(
+          withOutputStyleOption(withTargetAndConfigurationOption(yargs))
+        ),
         'run-many'
       ),
     handler: async (args) =>
@@ -70,7 +72,9 @@ export const commandsObject = yargs
     builder: (yargs) =>
       linkToNxDevAndExamples(
         withAffectedOptions(
-          withRunOptions(withOutputStyleOption(withTargetOption(yargs)))
+          withRunOptions(
+            withOutputStyleOption(withTargetAndConfigurationOption(yargs))
+          )
         ),
         'affected'
       ),
@@ -82,7 +86,9 @@ export const commandsObject = yargs
     describe: false,
     builder: (yargs) =>
       linkToNxDevAndExamples(
-        withAffectedOptions(withRunOptions(withOutputStyleOption(yargs))),
+        withAffectedOptions(
+          withRunOptions(withOutputStyleOption(withConfiguration(yargs)))
+        ),
         'affected'
       ),
     handler: async (args) =>
@@ -96,7 +102,9 @@ export const commandsObject = yargs
     describe: false,
     builder: (yargs) =>
       linkToNxDevAndExamples(
-        withAffectedOptions(withRunOptions(withOutputStyleOption(yargs))),
+        withAffectedOptions(
+          withRunOptions(withOutputStyleOption(withConfiguration(yargs)))
+        ),
         'affected'
       ),
     handler: async (args) =>
@@ -110,7 +118,9 @@ export const commandsObject = yargs
     describe: false,
     builder: (yargs) =>
       linkToNxDevAndExamples(
-        withAffectedOptions(withRunOptions(withOutputStyleOption(yargs))),
+        withAffectedOptions(
+          withRunOptions(withOutputStyleOption(withConfiguration(yargs)))
+        ),
         'affected'
       ),
     handler: async (args) =>
@@ -124,7 +134,9 @@ export const commandsObject = yargs
     describe: false,
     builder: (yargs) =>
       linkToNxDevAndExamples(
-        withAffectedOptions(withRunOptions(withOutputStyleOption(yargs))),
+        withAffectedOptions(
+          withRunOptions(withOutputStyleOption(withConfiguration(yargs)))
+        ),
         'affected'
       ),
     handler: async (args) =>
@@ -190,7 +202,10 @@ export const commandsObject = yargs
     builder: (yargs) =>
       linkToNxDevAndExamples(
         withAffectedOptions(
-          withTargetOption(withPrintAffectedOptions(yargs), false)
+          withTargetAndConfigurationOption(
+            withPrintAffectedOptions(yargs),
+            false
+          )
         ),
         'print-affected'
       ),
@@ -443,12 +458,6 @@ function withRunOptions(yargs: yargs.Argv): yargs.Argv {
       describe: 'This is the name of the tasks runner configured in nx.json',
       type: 'string',
     })
-    .options('configuration', {
-      describe:
-        'This is the configuration to use when performing tasks on projects',
-      type: 'string',
-      alias: 'c',
-    })
     .option('prod', {
       describe: 'Use the production configuration',
       type: 'boolean',
@@ -626,13 +635,25 @@ function withOutputStyleOption(
   });
 }
 
-function withTargetOption(yargs: yargs.Argv, demandOption = true): yargs.Argv {
-  return yargs.option('target', {
+function withTargetAndConfigurationOption(
+  yargs: yargs.Argv,
+  demandOption = true
+): yargs.Argv {
+  return withConfiguration(yargs).option('target', {
     describe: 'Task to run for affected projects',
     type: 'string',
     requiresArg: true,
     demandOption,
     global: false,
+  });
+}
+
+function withConfiguration(yargs: yargs.Argv) {
+  return yargs.options('configuration', {
+    describe:
+      'This is the configuration to use when performing tasks on projects',
+    type: 'string',
+    alias: 'c',
   });
 }
 
@@ -692,7 +713,7 @@ function withRunOneOptions(yargs: yargs.Argv) {
   );
 
   const res = withRunOptions(
-    withOutputStyleOption(withTargetOption(yargs, false), [
+    withOutputStyleOption(withTargetAndConfigurationOption(yargs, false), [
       'dynamic',
       'static',
       'stream',
@@ -708,6 +729,10 @@ function withRunOneOptions(yargs: yargs.Argv) {
     .option('project', {
       describe: 'Target project',
       type: 'string',
+    })
+    .option('help', {
+      describe: 'Show Help',
+      type: 'boolean',
     });
 
   if (executorShouldShowHelp) {
