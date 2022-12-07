@@ -80,7 +80,7 @@ describe('NxPlugin Plugin Generator', () => {
     });
     expect(project.targets.test).toEqual({
       executor: '@nrwl/jest:jest',
-      outputs: ['{workspaceRoot}/coverage/{projectRoot}'],
+      outputs: ['{workspaceRoot}/coverage/{projectName}'],
       options: {
         jestConfig: 'libs/my-plugin/jest.config.ts',
         passWithNoTests: true,
