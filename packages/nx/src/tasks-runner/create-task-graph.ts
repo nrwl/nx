@@ -190,6 +190,18 @@ export class ProcessTasks {
     resolvedConfiguration: string | undefined,
     overrides: Object
   ): Task {
+    if (!project.data.targets[target]) {
+      throw new Error(
+        `Cannot find configuration for task ${project.name}:${target}`
+      );
+    }
+
+    if (!project.data.targets[target].executor) {
+      throw new Error(
+        `Target "${project.name}:${target}" does not have an executor configured`
+      );
+    }
+
     const qualifiedTarget = {
       project: project.name,
       target,
