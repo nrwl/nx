@@ -33,7 +33,7 @@ export async function vitestGenerator(
   const { targets, root } = readProjectConfiguration(tree, schema.project);
   let testTarget = findExistingTargets(targets).testTarget;
 
-  addOrChangeTestTarget(tree, schema, testTarget);
+  addOrChangeTestTarget(tree, schema, testTarget ?? 'test');
 
   const initTask = await initGenerator(tree, {
     uiFramework: schema.uiFramework,
