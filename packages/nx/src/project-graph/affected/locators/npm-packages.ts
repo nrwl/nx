@@ -28,9 +28,8 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
         touched = Object.keys(projectGraph.nodes);
         break;
       } else {
-        const packagePaths = getPossiblePackagePaths(c);
-        const npmPackage = npmPackages.find((pkg) =>
-          packagePaths.includes(pkg.data.packageName)
+        const npmPackage = npmPackages.find(
+          (pkg) => pkg.data.packageName === c.path[1]
         );
         touched.push(npmPackage.name);
         // If it was a type declarations package then also mark its corresponding implementation package as affected
@@ -52,17 +51,3 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
 
   return touched;
 };
-
-function getPossiblePackagePaths(change: JsonChange): string[] {
-  const paths = [change.path[1]];
-
-  // check if it's an alternative package e.g. npm:@myorg/package-name@1.2.3
-  // standard package versions do not contain `@`
-  const npmPackage = change.value.rhs.split('@').slice(0, -1).join('@');
-  if (npmPackage) {
-    const alternativePath = `${change.path[1]}@${npmPackage}`;
-    paths.push(alternativePath);
-  }
-
-  return paths;
-}
