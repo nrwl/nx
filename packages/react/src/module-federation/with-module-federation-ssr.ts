@@ -4,11 +4,11 @@ import { getModuleFederationConfig } from './utils';
 
 function determineRemoteUrl(remote: string) {
   const remoteConfiguration = readCachedProjectConfiguration(remote);
-  const serveTarget = remoteConfiguration?.targets?.serve;
+  const serveTarget = remoteConfiguration?.targets?.['serve-server'];
 
   if (!serveTarget) {
     throw new Error(
-      `Cannot automatically determine URL of remote (${remote}). Looked for property "host" in the project's "serve" target.\n
+      `Cannot automatically determine URL of remote (${remote}). Looked for property "host" in the project's "serve-server" target.\n
       You can also use the tuple syntax in your webpack config to configure your remotes. e.g. \`remotes: [['remote1', '//localhost:4201']]\``
     );
   }
