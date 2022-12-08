@@ -1675,34 +1675,32 @@
     "15.3.1": {
       "version": "15.3.1-beta.0",
       "packages": {
-        "packages": {
-          "@ngrx/store": {
-            "version": "~15.0.0",
-            "alwaysAddToPackageJson": false
-          },
-          "@ngrx/effects": {
-            "version": "~15.0.0",
-            "alwaysAddToPackageJson": false
-          },
-          "@ngrx/entity": {
-            "version": "~15.0.0",
-            "alwaysAddToPackageJson": false
-          },
-          "@ngrx/router-store": {
-            "version": "~15.0.0",
-            "alwaysAddToPackageJson": false
-          },
-          "@ngrx/schematics": {
-            "version": "~15.0.0",
-            "alwaysAddToPackageJson": false
-          },
-          "@ngrx/store-devtools": {
-            "version": "~15.0.0",
-            "alwaysAddToPackageJson": false
-          },
-          "@ngrx/component-store": {
-            "version": "~15.0.0"
-          }
+        "@ngrx/store": {
+          "version": "~15.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/effects": {
+          "version": "~15.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/entity": {
+          "version": "~15.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/router-store": {
+          "version": "~15.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/schematics": {
+          "version": "~15.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/store-devtools": {
+          "version": "~15.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/component-store": {
+          "version": "~15.0.0"
         }
       }
     }
