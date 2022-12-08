@@ -64,30 +64,31 @@ export function postProcessInlinedDependencies(
   const inlinedDepsDestOutputRecord: Record<string, string> = {};
   // move inlined outputs
 
-  for (const inlineDependenciesNames of Object.values(
-    inlineGraph.dependencies
-  )) {
-    for (const inlineDependenciesName of inlineDependenciesNames) {
-      const inlineDependency = inlineGraph.nodes[inlineDependenciesName];
-      const depOutputPath =
-        inlineDependency.buildOutputPath ||
-        join(outputPath, inlineDependency.root);
-      const destDepOutputPath = join(outputPath, inlineDependency.name);
-      const isBuildable = !!inlineDependency.buildOutputPath;
+  //get deduplicated inlineDependencies
+  const inlineDependenciesNames = Object.values(inlineGraph.dependencies)
+    .flat()
+    .filter((v, idx, arr) => arr.indexOf(v) === idx);
 
-      if (isBuildable) {
-        copySync(depOutputPath, destDepOutputPath, {
-          overwrite: true,
-          recursive: true,
-        });
-      } else {
-        movePackage(depOutputPath, destDepOutputPath);
-      }
+  for (const inlineDependenciesName of inlineDependenciesNames) {
+    const inlineDependency = inlineGraph.nodes[inlineDependenciesName];
+    const depOutputPath =
+      inlineDependency.buildOutputPath ||
+      join(outputPath, inlineDependency.root);
+    const destDepOutputPath = join(outputPath, inlineDependency.name);
+    const isBuildable = !!inlineDependency.buildOutputPath;
 
-      // TODO: hard-coded "src"
-      inlinedDepsDestOutputRecord[inlineDependency.pathAlias] =
-        destDepOutputPath + '/src';
+    if (isBuildable) {
+      copySync(depOutputPath, destDepOutputPath, {
+        overwrite: true,
+        recursive: true,
+      });
+    } else {
+      movePackage(depOutputPath, destDepOutputPath);
     }
+
+    // TODO: hard-coded "src"
+    inlinedDepsDestOutputRecord[inlineDependency.pathAlias] =
+      destDepOutputPath + '/src';
   }
 
   updateImports(outputPath, inlinedDepsDestOutputRecord);
