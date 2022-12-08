@@ -4,6 +4,7 @@ import {
   isJsonChange,
   JsonChange,
 } from '../../../utils/json-diff';
+import { logger } from '../../../utils/logger';
 import { TouchedProjectLocator } from '../affected-project-graph-models';
 
 export const getTouchedNpmPackages: TouchedProjectLocator<
@@ -16,6 +17,8 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
   const changes = packageJsonChange.getChanges();
 
   const npmPackages = Object.values(projectGraph.externalNodes);
+
+  const missingTouchedNpmPackages: string[] = [];
 
   for (const c of changes) {
     if (
@@ -31,7 +34,10 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
         const npmPackage = npmPackages.find(
           (pkg) => pkg.data.packageName === c.path[1]
         );
-        if (!npmPackage) continue;
+        if (!npmPackage) {
+          missingTouchedNpmPackages.push(c.path[1]);
+          continue;
+        }
         touched.push(npmPackage.name);
         // If it was a type declarations package then also mark its corresponding implementation package as affected
         if (npmPackage.name.startsWith('npm:@types/')) {
@@ -50,5 +56,12 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
     }
   }
 
+  if (missingTouchedNpmPackages.length) {
+    logger.warn(
+      `The affected projects might have not been identified properly. The package(s) ${missingTouchedNpmPackages.join(
+        ', '
+      )} were not found. Please open an issue in Github including the package.json file.`
+    );
+  }
   return touched;
 };
