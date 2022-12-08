@@ -88,7 +88,14 @@ function mapPackages(
     } else {
       // key might be "@nrwl/somedep@1.2.3, @nrwl/somedep@^1.0.0..."
       const keys = keyExpr.split(', ');
-      const packageName = keys[0].slice(0, keys[0].indexOf('@', 1));
+      let packageName = keys[0].slice(0, keys[0].indexOf('@', 1));
+      if (
+        isBerry &&
+        keys[0].startsWith(`${packageName}@patch:${packageName}`)
+      ) {
+        // handle Berry's patch format as a separate package
+        packageName = `${packageName}@patch:${packageName}`;
+      }
       const newKey = `${packageName}@${value.version}`;
 
       mappedPackages[packageName] = mappedPackages[packageName] || {};
