@@ -184,8 +184,6 @@ As your workspace grows, the task graph looks more like this:
 {% graph height="400px" type="task" jsonFile="shared/mental-model/large-tasks.json"%}
 {% /graph %}
 
-![cache](/shared/mental-model/task-graph-big.svg)
-
 All of these optimizations are crucial for making Nx usable for any non-trivial workspace. Only the minimum amount of
 work happens. The rest is either left as is or restored from the cache.
 
