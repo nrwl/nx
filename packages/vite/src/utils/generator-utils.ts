@@ -405,16 +405,13 @@ export function writeViteConfig(tree: Tree, options: Schema) {
       host: 'localhost',
     },`;
 
-  const projectsTsConfig = tree.exists('tsconfig.base.json')
-    ? "'tsconfig.base.json'"
-    : '';
   switch (options.uiFramework) {
     case 'react':
       viteConfigContent = `
 ${options.includeVitest ? '/// <reference types="vitest" />' : ''}
       import { defineConfig } from 'vite';
       import react from '@vitejs/plugin-react';
-      import tsconfigPaths from 'vite-tsconfig-paths';
+      import viteTsConfigPaths from 'vite-tsconfig-paths';
       ${
         options.includeLib
           ? `import dts from 'vite-plugin-dts';\nimport { join } from 'path';`
@@ -426,9 +423,8 @@ ${options.includeVitest ? '/// <reference types="vitest" />' : ''}
         plugins: [
           ${options.includeLib ? dtsPlugin : ''}
           react(),
-          tsconfigPaths({
+          viteTsConfigPaths({
             root: '${offsetFromRoot(projectConfig.root)}',
-            projects: [${projectsTsConfig}],
           }),
         ],
         ${buildOption}
@@ -440,7 +436,7 @@ ${options.includeVitest ? '/// <reference types="vitest" />' : ''}
       viteConfigContent = `
       ${options.includeVitest ? '/// <reference types="vitest" />' : ''}
       import { defineConfig } from 'vite';
-      import tsconfigPaths from 'vite-tsconfig-paths';
+      import viteTsConfigPaths from 'vite-tsconfig-paths';
       ${
         options.includeLib
           ? `import dts from 'vite-plugin-dts';\nimport { join } from 'path';`
@@ -451,9 +447,8 @@ ${options.includeVitest ? '/// <reference types="vitest" />' : ''}
         ${serverOption}
         plugins: [
           ${options.includeLib ? dtsPlugin : ''}
-          tsconfigPaths({
+          viteTsConfigPaths({
             root: '${offsetFromRoot(projectConfig.root)}',
-            projects: [${projectsTsConfig}],
           }),
         ],
         ${buildOption}

@@ -4,6 +4,7 @@ import {
   logger,
   parseTargetString,
   readTargetOptions,
+  Tree,
 } from '@nrwl/devkit';
 import { existsSync } from 'fs';
 import { join, relative } from 'path';
@@ -32,9 +33,9 @@ export async function getBuildAndSharedConfig(
     root: projectRoot,
     base: options.base,
     configFile: normalizeConfigFilePath(
+      projectRoot,
       options.configFile,
-      context.root,
-      projectRoot
+      context.root
     ),
     plugins: [replaceFiles(options.fileReplacements)],
     build: getViteBuildOptions(
@@ -45,9 +46,9 @@ export async function getBuildAndSharedConfig(
 }
 
 export function normalizeConfigFilePath(
-  configFile: string,
-  workspaceRoot: string,
-  projectRoot: string
+  projectRoot: string,
+  configFile?: string,
+  workspaceRoot?: string
 ): string {
   return configFile
     ? joinPathFragments(`${workspaceRoot}/${configFile}`)

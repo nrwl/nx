@@ -1,1 +1,21 @@
-{}
+{
+  "schematics": {
+    "update-vite-tsconfig-paths": {
+      "cli": "nx",
+      "version": "15.3.1-beta.0",
+      "description": "Update vite-tsconfig-paths to 4.0.1 and remove projects property from vite.config.ts.",
+      "factory": "./src/migrations/update-15-3-1/update-vite-tsconfig-paths"
+    }
+  },
+  "packageJsonUpdates": {
+    "15.3.1-beta.0": {
+      "version": "15.3.1-beta.0",
+      "packages": {
+        "vite-tsconfig-paths": {
+          "version": "^4.0.1",
+          "alwaysAddToPackageJson": true
+        }
+      }
+    }
+  }
+}

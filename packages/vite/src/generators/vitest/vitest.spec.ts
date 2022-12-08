@@ -106,7 +106,7 @@ describe('vitest generator', () => {
         /// <reference types=\\"vitest\\" />
               import { defineConfig } from 'vite';
               import react from '@vitejs/plugin-react';
-              import tsconfigPaths from 'vite-tsconfig-paths';
+              import viteTsConfigPaths from 'vite-tsconfig-paths';
               
               
               export default defineConfig({
@@ -118,9 +118,8 @@ describe('vitest generator', () => {
                 plugins: [
                   
                   react(),
-                  tsconfigPaths({
+                  viteTsConfigPaths({
                     root: '../../',
-                    projects: ['tsconfig.base.json'],
                   }),
                 ],
                 
@@ -150,7 +149,7 @@ describe('vitest generator', () => {
         /// <reference types=\\"vitest\\" />
               import { defineConfig } from 'vite';
               import react from '@vitejs/plugin-react';
-              import tsconfigPaths from 'vite-tsconfig-paths';
+              import viteTsConfigPaths from 'vite-tsconfig-paths';
               
               
               export default defineConfig({
@@ -162,9 +161,8 @@ describe('vitest generator', () => {
                 plugins: [
                   
                   react(),
-                  tsconfigPaths({
+                  viteTsConfigPaths({
                     root: '../../',
-                    projects: ['tsconfig.base.json'],
                   }),
                 ],
                 
