@@ -362,3 +362,8 @@ export { Hash, Hasher } from 'nx/src/hasher/hasher';
  * @category Utils
  */
 export { cacheDir } from 'nx/src/utils/cache-directory';
+
+/**
+ * @category Package Manager
+ */
+export { pruneLockFile } from 'nx/src/lock-file/lock-file';

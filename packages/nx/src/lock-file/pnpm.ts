@@ -4,10 +4,11 @@ import {
   PackageVersions,
 } from './utils/lock-file-type';
 import { load, dump } from '@zkochan/js-yaml';
-import { sortObject } from './utils/sorting';
 import { TransitiveLookupFunctionInput, isRootVersion } from './utils/mapping';
 import { hashString, generatePrunnedHash } from './utils/hashing';
 import { satisfies } from 'semver';
+import { PackageJsonDeps } from './utils/pruning';
+import { sortObjectByKeys } from '../utils/object-sort';
 
 type PackageMeta = {
   key: string;
@@ -123,6 +124,7 @@ function mapPackages(
       };
     }
   });
+
   Object.keys(mappedPackages).forEach((packageName) => {
     const versions = mappedPackages[packageName];
     const versionKeys = Object.keys(versions);
@@ -343,10 +345,18 @@ function unmapLockFile(lockFileData: LockFileData): PnpmLockFile {
 
   return {
     ...(lockFileMetatada as { lockfileVersion: number }),
-    specifiers: sortObject(specifiers),
-    dependencies: sortObject(dependencies),
-    devDependencies: sortObject(devDependencies),
-    packages: sortObject(packages),
+    ...(Object.keys(specifiers).length && {
+      specifiers: sortObjectByKeys(specifiers),
+    }),
+    ...(Object.keys(dependencies).length && {
+      dependencies: sortObjectByKeys(dependencies),
+    }),
+    ...(Object.keys(devDependencies).length && {
+      devDependencies: sortObjectByKeys(devDependencies),
+    }),
+    ...(Object.keys(packages).length && {
+      packages: sortObjectByKeys(packages),
+    }),
     time,
   };
 }
@@ -377,13 +387,11 @@ export function transitiveDependencyPnpmLookup({
  */
 export function prunePnpmLockFile(
   lockFileData: LockFileData,
-  packages: string[],
-  projectName?: string
+  normalizedPackageJson: PackageJsonDeps
 ): LockFileData {
   const dependencies = pruneDependencies(
     lockFileData.dependencies,
-    packages,
-    projectName
+    normalizedPackageJson
   );
   const prunedLockFileData = {
     lockFileMetadata: pruneMetadata(
@@ -391,7 +399,7 @@ export function prunePnpmLockFile(
       dependencies
     ),
     dependencies,
-    hash: generatePrunnedHash(lockFileData.hash, packages, projectName),
+    hash: generatePrunnedHash(lockFileData.hash, normalizedPackageJson),
   };
   return prunedLockFileData;
 }
@@ -399,12 +407,15 @@ export function prunePnpmLockFile(
 // iterate over packages to collect the affected tree of dependencies
 function pruneDependencies(
   dependencies: LockFileData['dependencies'],
-  packages: string[],
-  projectName?: string
+  normalizedPackageJson: PackageJsonDeps
 ): LockFileData['dependencies'] {
   const result: LockFileData['dependencies'] = {};
 
-  packages.forEach((packageName) => {
+  Object.keys({
+    ...normalizedPackageJson.dependencies,
+    ...normalizedPackageJson.devDependencies,
+    ...normalizedPackageJson.peerDependencies,
+  }).forEach((packageName) => {
     if (dependencies[packageName]) {
       const [key, { packageMeta, ...value }] = Object.entries(
         dependencies[packageName]
@@ -416,7 +427,11 @@ function pruneDependencies(
       result[packageName][key] = Object.assign(value, {
         packageMeta: [
           {
-            isDependency: true,
+            isDependency:
+              !!normalizedPackageJson.dependencies?.[packageName] ||
+              !!normalizedPackageJson.peerDependencies?.[packageName],
+            isDevDependency:
+              !!normalizedPackageJson.devDependencies?.[packageName],
             key: meta.key,
             specifier: value.version,
             dependencyDetails: meta.dependencyDetails,

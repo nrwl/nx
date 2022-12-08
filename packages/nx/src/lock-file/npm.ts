@@ -5,9 +5,9 @@ import { output } from '../utils/output';
 import { joinPathFragments } from '../utils/path';
 import { workspaceRoot } from '../utils/workspace-root';
 import { LockFileData, PackageDependency } from './utils/lock-file-type';
-import { sortObject } from './utils/sorting';
 import { TransitiveLookupFunctionInput } from './utils/mapping';
 import { hashString, generatePrunnedHash } from './utils/hashing';
+import { PackageJsonDeps } from './utils/pruning';
 
 type PackageMeta = {
   path: string;
@@ -160,6 +160,7 @@ function mapPackageDependency(
     peer,
     optional,
   };
+
   const rootVersion =
     isRootVersion ?? packagePath.split('/node_modules/').length === 1;
 
@@ -261,17 +262,27 @@ export function stringifyNpmLockFile(lockFileData: LockFileData): string {
   const lockFileJson: NpmLockFile = {
     ...lockFileData.lockFileMetadata.metadata,
     ...(notV1 && {
-      packages: sortObject(
-        packages,
-        (value) => value,
-        false,
-        (a, b) => a.localeCompare(b)
-      ),
+      packages: sortObject(packages),
     }),
     ...(notV3 && { dependencies: sortDependencies(dependencies) }),
   };
 
   return JSON.stringify(lockFileJson, null, 2) + '\n';
+}
+
+function sortObject(packages: Dependencies): Dependencies | undefined {
+  const keys = Object.keys(packages);
+  if (keys.length === 0) {
+    return;
+  }
+
+  keys.sort((a, b) => a.localeCompare(b));
+
+  const result: Dependencies = {};
+  keys.forEach((key) => {
+    result[key] = packages[key];
+  });
+  return result;
 }
 
 // remapping the package back to package-lock format
@@ -458,14 +469,13 @@ function isPathMatching(
  */
 export function pruneNpmLockFile(
   lockFileData: LockFileData,
-  packages: string[],
-  projectName?: string
+  normalizedPackageJson: PackageJsonDeps
 ): LockFileData {
-  let isV1;
+  const isV1 = lockFileData.lockFileMetadata.metadata.lockfileVersion === 1;
 
   // NPM V1 does not track full dependency list in the lock file,
   // so we can't reuse the lock file to generate a new one
-  if (lockFileData.lockFileMetadata.metadata.lockfileVersion === 1) {
+  if (isV1) {
     output.warn({
       title: 'Pruning v1 lock file',
       bodyLines: [
@@ -473,72 +483,99 @@ export function pruneNpmLockFile(
         `Run "npm ci" to ensure your installed packages are synchronized or upgrade to NPM v7+ to benefit from the new lock file format`,
       ],
     });
-    isV1 = true;
   }
 
   const dependencies = pruneDependencies(
     lockFileData.dependencies,
-    packages,
+    normalizedPackageJson,
     isV1
   );
   const lockFileMetadata = {
     ...lockFileData.lockFileMetadata,
-    ...pruneRootPackage(lockFileData, packages, projectName),
+    ...pruneRootPackage(lockFileData, normalizedPackageJson),
   };
   let prunedLockFileData: LockFileData;
   prunedLockFileData = {
     dependencies,
     lockFileMetadata,
-    hash: generatePrunnedHash(lockFileData.hash, packages, projectName),
+    hash: generatePrunnedHash(lockFileData.hash, normalizedPackageJson),
   };
   return prunedLockFileData;
 }
 
 function pruneRootPackage(
   lockFileData: LockFileData,
-  packages: string[],
-  projectName?: string
+  { name, version, license, ...dependencyInfo }: PackageJsonDeps
 ): Record<string, any> {
   if (lockFileData.lockFileMetadata.metadata.lockfileVersion === 1) {
     return undefined;
   }
   const rootPackage = {
-    name: projectName || lockFileData.lockFileMetadata.rootPackage.name,
-    version: lockFileData.lockFileMetadata.rootPackage.version,
+    name: name || lockFileData.lockFileMetadata.rootPackage.name,
+    version: version || lockFileData.lockFileMetadata.rootPackage.version,
     ...(lockFileData.lockFileMetadata.rootPackage.license && {
-      license: lockFileData.lockFileMetadata.rootPackage.license,
+      license: license || lockFileData.lockFileMetadata.rootPackage.license,
     }),
-    dependencies: {} as Record<string, string>,
+    ...dependencyInfo,
   };
-  for (const packageName of packages) {
-    const version = Object.values(lockFileData.dependencies[packageName]).find(
-      (v) => v.rootVersion
-    ).version;
-    rootPackage.dependencies[packageName] = version;
-  }
-  rootPackage.dependencies = sortObject(rootPackage.dependencies);
 
   return { rootPackage };
 }
 
+type PeerDepsInfo = Record<
+  string,
+  {
+    parentPackages: string[];
+    dependency: PackageDependency;
+    packageMeta: PackageMeta;
+    packageName: string;
+    key: string;
+  }
+>;
+
 // iterate over packages to collect the affected tree of dependencies
 function pruneDependencies(
   dependencies: LockFileData['dependencies'],
-  packages: string[],
+  normalizedPackageJson: PackageJsonDeps,
   isV1?: boolean
 ): LockFileData['dependencies'] {
   const result: LockFileData['dependencies'] = {};
 
-  packages.forEach((packageName) => {
+  const peerDependenciesToPrune: PeerDepsInfo = {};
+
+  Object.keys({
+    ...normalizedPackageJson.dependencies,
+    ...normalizedPackageJson.devDependencies,
+    ...normalizedPackageJson.peerDependencies,
+  }).forEach((packageName) => {
     if (dependencies[packageName]) {
-      const [key, { packageMeta, dev, peer, optional, ...value }] =
+      const [key, { packageMeta, dev: _d, peer: _p, optional: _o, ...value }] =
         Object.entries(dependencies[packageName]).find(
           ([_, v]) => v.rootVersion
         );
 
+      const dev = normalizedPackageJson.devDependencies?.[packageName];
+      const peer = normalizedPackageJson.peerDependencies?.[packageName];
+      const optional =
+        normalizedPackageJson.peerDependenciesMeta?.[packageName]?.optional;
+      const modifier = peer
+        ? 'peer'
+        : optional
+        ? 'optional'
+        : dev
+        ? 'dev'
+        : undefined;
+
       result[packageName] = result[packageName] || {};
       result[packageName][key] = Object.assign(value, {
-        packageMeta: [{ path: `node_modules/${packageName}` }],
+        packageMeta: [
+          {
+            path: `node_modules/${packageName}`,
+            ...(dev ? { dev } : {}),
+            ...(optional ? { optional } : {}),
+            ...(peer ? { peer } : {}),
+          },
+        ],
       });
 
       pruneTransitiveDependencies(
@@ -546,7 +583,9 @@ function pruneDependencies(
         dependencies,
         result,
         result[packageName][key],
-        isV1
+        isV1,
+        modifier,
+        peerDependenciesToPrune
       );
     } else {
       console.warn(
@@ -554,6 +593,22 @@ function pruneDependencies(
       );
     }
   });
+
+  // add all peer dependencies
+  Object.values(peerDependenciesToPrune).forEach(
+    ({ parentPackages, dependency, packageMeta, packageName, key }) => {
+      addPrunedDependency(
+        parentPackages,
+        dependencies,
+        result,
+        dependency,
+        packageMeta,
+        packageName,
+        key,
+        isV1
+      );
+    }
+  );
 
   return result;
 }
@@ -567,7 +622,8 @@ function pruneTransitiveDependencies(
   prunedDeps: LockFileData['dependencies'],
   value: PackageDependency,
   isV1?: boolean,
-  modifier?: 'dev' | 'optional' | 'peer'
+  modifier?: 'dev' | 'optional' | 'peer',
+  peerDependenciesToPrune?: PeerDepsInfo
 ): void {
   let packageJSON: PackageDependency;
   if (isV1) {
@@ -610,44 +666,77 @@ function pruneTransitiveDependencies(
           prunedDeps[packageName] = {};
         }
         const key = `${packageName}@${dependency.version}`;
-        if (prunedDeps[packageName][key]) {
-          const currentMeta = prunedDeps[packageName][key].packageMeta;
 
-          if (
-            !currentMeta.find((p) => p.path === dependency.packageMeta[0].path)
-          ) {
-            const packageMeta = setPackageMetaModifiers(
-              packageName,
-              dependency,
-              packageJSON || value,
-              modifier
-            );
-            currentMeta.push(packageMeta);
-            currentMeta.sort();
-          }
-        } else {
-          const packageMeta = setPackageMetaModifiers(
-            packageName,
+        const packageMeta = setPackageMetaModifiers(
+          packageName,
+          dependency,
+          packageJSON || value,
+          modifier
+        );
+        // initially will collect only non-peer dependencies
+        // this gives priority to direct dependencies over peer ones
+        if (
+          peerDependenciesToPrune &&
+          (value.peerDependencies?.[packageName] ||
+            packageJSON?.peerDependencies?.[packageName])
+        ) {
+          peerDependenciesToPrune[key] = peerDependenciesToPrune[key] || {
+            parentPackages,
             dependency,
-            packageJSON || value,
-            modifier
-          );
-
-          dependency.packageMeta = [packageMeta];
-          prunedDeps[packageName][key] = dependency;
-          // recurively collect dependencies
-          pruneTransitiveDependencies(
-            [...parentPackages, packageName],
-            dependencies,
-            prunedDeps,
-            prunedDeps[packageName][key],
-            isV1,
-            getModifier(packageMeta)
-          );
+            packageMeta,
+            packageName,
+            key,
+          };
+          return;
         }
+        addPrunedDependency(
+          parentPackages,
+          dependencies,
+          prunedDeps,
+          dependency,
+          packageMeta,
+          packageName,
+          key,
+          isV1,
+          peerDependenciesToPrune
+        );
       }
     }
   });
+}
+
+function addPrunedDependency(
+  parentPackages,
+  dependencies: LockFileData['dependencies'],
+  prunedDeps: LockFileData['dependencies'],
+  dependency: PackageDependency,
+  packageMeta: PackageMeta,
+  packageName: string,
+  key: string,
+  isV1?: boolean,
+  peerDependenciesToPrune?: PeerDepsInfo
+) {
+  if (prunedDeps[packageName][key]) {
+    const currentMeta = prunedDeps[packageName][key].packageMeta;
+
+    if (!currentMeta.find((p) => p.path === dependency.packageMeta[0].path)) {
+      currentMeta.push(packageMeta);
+      currentMeta.sort();
+    }
+  } else {
+    dependency.packageMeta = [packageMeta];
+    prunedDeps[packageName][key] = dependency;
+    // recurively collect dependencies
+    pruneTransitiveDependencies(
+      [...parentPackages, packageName],
+      dependencies,
+      prunedDeps,
+      prunedDeps[packageName][key],
+      isV1,
+      getModifier(packageMeta),
+      peerDependenciesToPrune
+    );
+  }
 }
 
 function getModifier(

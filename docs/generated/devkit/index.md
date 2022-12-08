@@ -171,6 +171,7 @@ It only uses language primitives and immutable objects
 - [offsetFromRoot](../../devkit/index#offsetfromroot)
 - [parseJson](../../devkit/index#parsejson)
 - [parseTargetString](../../devkit/index#parsetargetstring)
+- [pruneLockFile](../../devkit/index#prunelockfile)
 - [readAllWorkspaceConfiguration](../../devkit/index#readallworkspaceconfiguration)
 - [readCachedProjectGraph](../../devkit/index#readcachedprojectgraph)
 - [readJson](../../devkit/index#readjson)
@@ -1721,6 +1722,26 @@ parseTargetString('proj:test:production'); // returns { project: "proj", target:
 #### Returns
 
 [`Target`](../../devkit/index#target)
+
+---
+
+### pruneLockFile
+
+▸ **pruneLockFile**(`projectName`, `isProduction?`, `packageManager?`): `Promise`<`string`\>
+
+Prune lock file based on the given project's dependencies and overrides in local package.json
+
+#### Parameters
+
+| Name             | Type                                                  | Default value | Description                                                        |
+| :--------------- | :---------------------------------------------------- | :------------ | :----------------------------------------------------------------- |
+| `projectName`    | `string`                                              | `undefined`   | Project to prune against                                           |
+| `isProduction`   | `boolean`                                             | `true`        | Whether to include optional and dev dependencies                   |
+| `packageManager` | [`PackageManager`](../../devkit/index#packagemanager) | `undefined`   | Package manager to use (automatically detected based on lock file) |
+
+#### Returns
+
+`Promise`<`string`\>
 
 ---
 
