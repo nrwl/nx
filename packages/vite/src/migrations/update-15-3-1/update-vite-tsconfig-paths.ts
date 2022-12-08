@@ -17,6 +17,8 @@ export async function removeProjectsFromViteTsConfigPaths(tree: Tree) {
   await formatFiles(tree);
 }
 
+export default removeProjectsFromViteTsConfigPaths;
+
 function findAllProjectsWithViteConfig(tree: Tree): void {
   forEachExecutorOptions(tree, '@nrwl/vite:build', (options, project) => {
     const projectConfiguration = readProjectConfiguration(tree, project);
