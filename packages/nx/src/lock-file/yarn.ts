@@ -88,7 +88,7 @@ function mapPackages(
     } else {
       // key might be "@nrwl/somedep@1.2.3, @nrwl/somedep@^1.0.0..."
       const keys = keyExpr.split(', ');
-      const packageName = keys[0].slice(0, keys[0].lastIndexOf('@'));
+      const packageName = keys[0].slice(0, keys[0].indexOf('@', 1));
       const newKey = `${packageName}@${value.version}`;
 
       mappedPackages[packageName] = mappedPackages[packageName] || {};
