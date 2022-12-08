@@ -1012,7 +1012,7 @@ export async function expectJestTestsToPass(
   expect(results.combinedOutput).toContain('Test Suites: 1 passed, 1 total');
 }
 
-function getStrippedEnvironmentVariables() {
+export function getStrippedEnvironmentVariables() {
   const strippedVariables = new Set(['NX_TASK_TARGET_PROJECT']);
   return Object.fromEntries(
     Object.entries(process.env).filter(

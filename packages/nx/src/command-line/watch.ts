@@ -112,6 +112,8 @@ export async function watch(args: WatchArguments) {
     process.exit(1);
   }
 
+  args.verbose && output.logSingleLine('starting watch process');
+
   const whatToWatch = args.all ? 'all' : args.projects;
 
   await daemonClient.registerFileWatcher(
@@ -154,6 +156,7 @@ export async function watch(args: WatchArguments) {
       }
     }
   );
+  args.verbose && output.logSingleLine('watch process waiting...');
 }
 
 export function buildCommands(
