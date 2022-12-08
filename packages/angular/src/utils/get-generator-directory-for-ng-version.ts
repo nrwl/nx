@@ -7,7 +7,11 @@ export function getGeneratorDirectoryForInstalledAngularVersion(tree: Tree) {
   const angularVersion =
     pkgJson.dependencies && pkgJson.dependencies['@angular/core'];
 
-  if (!angularVersion) {
+  if (
+    !angularVersion ||
+    angularVersion === 'latest' ||
+    angularVersion === 'next'
+  ) {
     return null;
   }
 
