@@ -5,6 +5,9 @@ export const graph: Schema = {
   children: [],
 
   attributes: {
+    jsonFile: {
+      type: 'String',
+    },
     type: {
       type: 'String',
       matches: ['project', 'task'],
