@@ -978,4 +978,43 @@ describe('lib', () => {
       });
     });
   });
+
+  describe('--bundler=vite', () => {
+    it('should add build and test targets with vite and vitest', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        name: 'myLib',
+        bundler: 'vite',
+        unitTestRunner: undefined,
+      });
+
+      const project = readProjectConfiguration(tree, 'my-lib');
+      expect(project.targets.build).toMatchObject({
+        executor: '@nrwl/vite:build',
+      });
+      expect(project.targets.test).toMatchObject({
+        executor: '@nrwl/vite:test',
+      });
+      expect(tree.exists('libs/my-lib/vite.config.ts')).toBeTruthy();
+    });
+
+    it.each`
+      unitTestRunner | executor
+      ${'none'}      | ${undefined}
+      ${'jest'}      | ${'@nrwl/jest:jest'}
+    `(
+      'should respect unitTestRunner if passed',
+      async ({ unitTestRunner, executor }) => {
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          name: 'myLib',
+          bundler: 'vite',
+          unitTestRunner,
+        });
+
+        const project = readProjectConfiguration(tree, 'my-lib');
+        expect(project.targets.test?.executor).toEqual(executor);
+      }
+    );
+  });
 });

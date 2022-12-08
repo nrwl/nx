@@ -63,6 +63,19 @@ export async function projectGenerator(
 
   tasks.push(addProjectDependencies(tree, options));
 
+  if (options.bundler === 'vite') {
+    await ensurePackage(tree, '@nrwl/vite', nxVersion);
+    const { viteConfigurationGenerator } = require('@nrwl/vite');
+    const viteTask = await viteConfigurationGenerator(tree, {
+      project: options.name,
+      newProject: true,
+      uiFramework: 'none',
+      includeVitest: options.unitTestRunner === 'vitest',
+      includeLib: true,
+    });
+    tasks.push(viteTask);
+  }
+
   if (!schema.skipTsConfig) {
     updateRootTsConfig(tree, options);
   }
@@ -81,6 +94,18 @@ export async function projectGenerator(
     if (options.compiler === 'swc') {
       replaceJestConfig(tree, options, `${filesDir}/jest-config`);
     }
+  } else if (
+    options.unitTestRunner === 'vitest' &&
+    options.bundler !== 'vite' // Test would have been set up already
+  ) {
+    await ensurePackage(tree, '@nrwl/vite', nxVersion);
+    const { vitestGenerator } = require('@nrwl/vite');
+    const vitestTask = await vitestGenerator(tree, {
+      project: options.name,
+      uiFramework: 'none',
+      coverageProvider: 'c8',
+    });
+    tasks.push(vitestTask);
   }
 
   if (!options.skipFormat) {
@@ -294,7 +319,7 @@ async function addJest(
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
   await ensurePackage(tree, '@nrwl/jest', nxVersion);
-  const { jestProjectGenerator } = await import('@nrwl/jest');
+  const { jestProjectGenerator } = require('@nrwl/jest');
   return await jestProjectGenerator(tree, {
     ...options,
     project: options.name,
@@ -361,7 +386,9 @@ function normalizeOptions(
     ? `${names(options.directory).fileName}/${name}`
     : name;
 
-  if (!options.unitTestRunner && options.config !== 'npm-scripts') {
+  if (!options.unitTestRunner && options.bundler === 'vite') {
+    options.unitTestRunner = 'vitest';
+  } else if (!options.unitTestRunner && options.config !== 'npm-scripts') {
     options.unitTestRunner = 'jest';
   }
 
