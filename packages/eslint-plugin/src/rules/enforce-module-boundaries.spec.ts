@@ -1627,6 +1627,65 @@ Circular file chain:
     expect(failures[1].message).toEqual(message);
   });
 
+  it('should respect excludeFromDeepCheck option in circular dependency check', () => {
+    const failures = runRule(
+      { excludeFromDeepCheck: ['mylibName'] },
+      `${process.cwd()}/proj/libs/anotherlib/src/main.ts`,
+      `
+        import '@mycompany/mylib';
+        import('@mycompany/mylib');
+      `,
+      {
+        nodes: {
+          mylibName: {
+            name: 'mylibName',
+            type: 'lib',
+            data: {
+              root: 'libs/mylib',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [createFile(`libs/mylib/src/main.ts`, ['anotherlibName'])],
+            },
+          },
+          anotherlibName: {
+            name: 'anotherlibName',
+            type: 'lib',
+            data: {
+              root: 'libs/anotherlib',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [createFile(`libs/anotherlib/src/main.ts`, ['mylibName'])],
+            },
+          },
+          myappName: {
+            name: 'myappName',
+            type: 'app',
+            data: {
+              root: 'apps/myapp',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [createFile(`apps/myapp/src/index.ts`)],
+            },
+          },
+        },
+        dependencies: {
+          mylibName: [
+            {
+              source: 'mylibName',
+              target: 'anotherlibName',
+              type: DependencyType.static,
+            },
+          ],
+        },
+      }
+    );
+
+    expect(failures.length).toEqual(0);
+  });
+
   describe('buildable library imports', () => {
     it('should ignore the buildable library verification if the enforceBuildableLibDependency is set to false', () => {
       const failures = runRule(

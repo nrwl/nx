@@ -46,6 +46,7 @@ import { readProjectGraph } from '../utils/project-graph-utils';
 type Options = [
   {
     allow: string[];
+    excludeFromDeepCheck: string[];
     depConstraints: DepConstraint[];
     enforceBuildableLibDependency: boolean;
     allowCircularSelfDependency: boolean;
@@ -90,6 +91,7 @@ export default createESLintRule<Options, MessageIds>({
           banTransitiveDependencies: { type: 'boolean' },
           checkNestedExternalImports: { type: 'boolean' },
           allow: [{ type: 'string' }],
+          excludeFromDeepCheck: [{ type: 'string' }],
           depConstraints: [
             {
               type: 'object',
@@ -138,6 +140,7 @@ export default createESLintRule<Options, MessageIds>({
   defaultOptions: [
     {
       allow: [],
+      excludeFromDeepCheck: [],
       depConstraints: [],
       enforceBuildableLibDependency: false,
       allowCircularSelfDependency: false,
@@ -151,6 +154,7 @@ export default createESLintRule<Options, MessageIds>({
     [
       {
         allow,
+        excludeFromDeepCheck,
         depConstraints,
         enforceBuildableLibDependency,
         allowCircularSelfDependency,
@@ -420,7 +424,10 @@ export default createESLintRule<Options, MessageIds>({
         sourceProject,
         targetProject
       );
-      if (circularPath.length !== 0) {
+      if (
+        circularPath.length !== 0 &&
+        circularPath.every((i) => !excludeFromDeepCheck.includes(i.name))
+      ) {
         const circularFilePath = findFilesInCircularPath(circularPath);
 
         // spacer text used for indirect dependencies when printing one line per file.
@@ -572,6 +579,8 @@ export default createESLintRule<Options, MessageIds>({
               targetProject,
               constraint.notDependOnLibsWithTags,
               projectGraph
+            ).filter((i) =>
+              i.every((j) => !excludeFromDeepCheck.includes(j.name))
             );
             if (projectPaths.length > 0) {
               context.report({
