@@ -12,6 +12,7 @@ import {
   runCLIAsync,
   runCommandUntil,
   runCypressTests,
+  tmpProjPath,
   uniq,
   updateFile,
   updateProjectConfig,
@@ -450,7 +451,9 @@ async function checkApp(
   expect(packageJson.dependencies.next).toBeDefined();
 
   checkFilesExist(
-    `dist/apps/${appName}/${getLockFileName(detectPackageManager())}`
+    `dist/apps/${appName}/${getLockFileName(
+      detectPackageManager(tmpProjPath())
+    )}`
   );
 
   if (opts.checkLint) {

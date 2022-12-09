@@ -240,7 +240,9 @@ describe('Build Node apps', () => {
 
     checkFilesExist(`dist/apps/${nestapp}/package.json`);
     checkFilesExist(
-      `dist/apps/${nestapp}/${getLockFileName(detectPackageManager())}`
+      `dist/apps/${nestapp}/${getLockFileName(
+        detectPackageManager(tmpProjPath())
+      )}`
     );
     const packageJson = JSON.parse(
       readFile(`dist/apps/${nestapp}/package.json`)
