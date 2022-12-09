@@ -175,6 +175,9 @@ async function buildProjectGraphUsingContext(
   performance.mark('build project graph:start');
 
   const builder = new ProjectGraphBuilder(partialGraph);
+  if (nxJson.excludeFromProjectGraph) {
+    builder.setExclusionGlob(nxJson.excludeFromProjectGraph);
+  }
 
   buildWorkspaceProjectNodes(ctx, builder, nxJson);
   if (!partialGraph) {

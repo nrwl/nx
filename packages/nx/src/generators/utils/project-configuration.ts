@@ -138,6 +138,7 @@ export function updateWorkspaceConfiguration(
     workspaceLayout,
     tasksRunnerOptions,
     affected,
+    excludeFromProjectGraph,
     extends: ext,
   } = workspaceConfig;
 
@@ -155,6 +156,7 @@ export function updateWorkspaceConfiguration(
     cli,
     generators,
     defaultProject,
+    excludeFromProjectGraph,
     extends: ext,
   };
 

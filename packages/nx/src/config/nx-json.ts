@@ -136,4 +136,14 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    * will be used. Convenient for small workspaces with one main application.
    */
   defaultProject?: string;
+
+  /**
+   * Glob pattern of files to be excluded from project graph calculation.
+   *
+   * Can be useful to exclude imports in test files from affecting the project dependency
+   * graph which then affects the deep import checks.
+   *
+   * Example: `['*.spec.ts', '*.spec.tsx']`
+   */
+  excludeFromProjectGraph?: string[];
 }

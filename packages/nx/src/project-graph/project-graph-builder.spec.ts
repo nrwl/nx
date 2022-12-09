@@ -138,4 +138,24 @@ describe('ProjectGraphBuilder', () => {
       target2: [],
     });
   });
+
+  it(`should allow excluding via glob pattern`, () => {
+    builder.addNode({ name: 'target2', type: 'lib', data: {} });
+    builder.addExplicitDependency('source', 'source/index.ts', 'target');
+    builder.addExplicitDependency('source', 'source/second.ts', 'target2');
+    builder.setExclusionGlob(['*second.ts']);
+
+    const graph = builder.getUpdatedProjectGraph();
+    expect(graph.dependencies).toEqual({
+      source: [
+        {
+          source: 'source',
+          target: 'target',
+          type: 'static',
+        },
+      ],
+      target: [],
+      target2: [],
+    });
+  });
 });

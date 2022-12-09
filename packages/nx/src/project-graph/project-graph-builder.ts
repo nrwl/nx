@@ -8,10 +8,12 @@ import {
   ProjectGraphExternalNode,
   ProjectGraphProjectNode,
 } from '../config/project-graph';
+import * as globToRegExp from 'glob-to-regexp';
 
 export class ProjectGraphBuilder {
   readonly graph: ProjectGraph;
   readonly removedEdges: { [source: string]: Set<string> } = {};
+  regexExcludeFromProjectGraph?: RegExp[];
 
   constructor(g?: ProjectGraph) {
     if (g) {
@@ -23,6 +25,12 @@ export class ProjectGraphBuilder {
         dependencies: {},
       };
     }
+    this.regexExcludeFromProjectGraph = [];
+  }
+
+  setExclusionGlob(excludeFromProjectGraph: string[]): void {
+    this.regexExcludeFromProjectGraph =
+      excludeFromProjectGraph.map(globToRegExp);
   }
 
   /**
@@ -184,6 +192,9 @@ export class ProjectGraphBuilder {
     const files = this.graph.nodes[sourceProject].data.files;
     if (!files) return fileDeps;
     for (let f of files) {
+      if (this.regexExcludeFromProjectGraph.some((r) => r.test(f.file))) {
+        continue;
+      }
       if (f.deps) {
         for (let p of f.deps) {
           fileDeps.add(p);
