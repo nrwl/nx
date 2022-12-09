@@ -5,6 +5,10 @@ import {
   JsonChange,
 } from '../../../utils/json-diff';
 import { TouchedProjectLocator } from '../affected-project-graph-models';
+import {
+  ProjectGraphExternalNode,
+  ProjectGraphProjectNode,
+} from 'nx/src/config/project-graph';
 
 export const getTouchedNpmPackages: TouchedProjectLocator<
   WholeFileChange | JsonChange
@@ -28,9 +32,13 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
         touched = Object.keys(projectGraph.nodes);
         break;
       } else {
-        const npmPackage = npmPackages.find(
-          (pkg) => pkg.data.packageName === c.path[1]
-        );
+        let npmPackage: ProjectGraphProjectNode | ProjectGraphExternalNode =
+          npmPackages.find((pkg) => pkg.data.packageName === c.path[1]);
+        if (!npmPackage) {
+          // dependency can also point to a workspace project
+          const nodes = Object.values(projectGraph.nodes);
+          npmPackage = nodes.find((n) => n.name === c.path[1]);
+        }
         touched.push(npmPackage.name);
         // If it was a type declarations package then also mark its corresponding implementation package as affected
         if (npmPackage.name.startsWith('npm:@types/')) {

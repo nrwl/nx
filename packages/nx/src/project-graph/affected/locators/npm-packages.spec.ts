@@ -265,4 +265,42 @@ describe('getTouchedNpmPackages', () => {
       'npm:awesome-nrwl',
     ]);
   });
+
+  it('should handle and workspace packages when defined in dependencies', () => {
+    const result = getTouchedNpmPackages(
+      [
+        {
+          file: 'package.json',
+          hash: 'some-hash',
+          getChanges: () => [
+            {
+              type: 'JsonPropertyAdded',
+              path: ['devDependencies', 'changed-test-pkg-name-1'],
+              value: { rhs: 'workspace:*' },
+            },
+          ],
+        },
+      ],
+      workspaceJson,
+      nxJson,
+      {
+        dependencies: {
+          'happy-nrwl': '0.0.1',
+          'awesome-nrwl': '0.0.1',
+        },
+      },
+      {
+        ...projectGraph,
+        nodes: {
+          ...projectGraph.nodes,
+          'any-random-name': {
+            name: 'changed-test-pkg-name-1',
+            type: 'lib',
+            data: {},
+          },
+        },
+      }
+    );
+    expect(result).toEqual(['changed-test-pkg-name-1']);
+  });
 });
