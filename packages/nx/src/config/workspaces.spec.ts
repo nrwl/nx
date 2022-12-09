@@ -1,6 +1,6 @@
-import { toProjectName, Workspaces } from './workspaces';
-import { NxJsonConfiguration } from './nx-json';
 import { vol } from 'memfs';
+import { NxJsonConfiguration } from './nx-json';
+import { toProjectName, workspaceConfigName, Workspaces } from './workspaces';
 
 import * as fastGlob from 'fast-glob';
 
@@ -135,6 +135,76 @@ describe('Workspaces', () => {
         root: 'packages/my-package',
         sourceRoot: 'packages/my-package',
         projectType: 'library',
+      });
+    });
+  });
+
+  describe('workspace config name', () => {
+    describe('when nx.json exists', () => {
+      it('should return angular.json', () => {
+        vol.fromJSON(
+          {
+            'nx.json': '{}',
+            'workspace.json': '{}',
+            'angular.json': '{}',
+          },
+          '/root'
+        );
+
+        const workspaceFileName = workspaceConfigName('/root');
+        expect(workspaceFileName).toBe('angular.json');
+      });
+
+      it('should return workspace.json', () => {
+        vol.fromJSON(
+          {
+            'nx.json': '{}',
+            'workspace.json': '{}',
+          },
+          '/root'
+        );
+
+        const workspaceFileName = workspaceConfigName('/root');
+        expect(workspaceFileName).toBe('workspace.json');
+      });
+
+      it('should return null if no config exists', () => {
+        vol.fromJSON(
+          {
+            'nx.json': '{}',
+          },
+          '/root'
+        );
+
+        const workspaceFileName = workspaceConfigName('/root');
+        expect(workspaceFileName).toBeNull();
+      });
+    });
+
+    describe('when nx.json does not exist', () => {
+      it('should ignore angular.json and return workspace.json', () => {
+        vol.fromJSON(
+          {
+            'workspace.json': '{}',
+            'angular.json': '{}',
+          },
+          '/root'
+        );
+
+        const workspaceFileName = workspaceConfigName('/root');
+        expect(workspaceFileName).toBe('workspace.json');
+      });
+
+      it('should ignore angular.json and return null if no workspace.json exists', () => {
+        vol.fromJSON(
+          {
+            'angular.json': '{}',
+          },
+          '/root'
+        );
+
+        const workspaceFileName = workspaceConfigName('/root');
+        expect(workspaceFileName).toBeNull();
       });
     });
   });

@@ -33,7 +33,10 @@ import { joinPathFragments } from '../utils/path';
 export function workspaceConfigName(
   root: string
 ): 'angular.json' | 'workspace.json' | null {
-  if (existsSync(path.join(root, 'angular.json'))) {
+  if (
+    existsSync(path.join(root, 'angular.json')) &&
+    existsSync(path.join(root, 'nx.json'))
+  ) {
     return 'angular.json';
   } else if (existsSync(path.join(root, 'workspace.json'))) {
     return 'workspace.json';
