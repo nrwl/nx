@@ -31,10 +31,15 @@ import { existsSync } from 'fs';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { createPackageJson } from '../utils/create-package-json';
 import { normalizePackageJson } from './utils/pruning';
+import { PackageJson } from '../utils/package-json';
 
-const YARN_LOCK_PATH = join(workspaceRoot, 'yarn.lock');
-const NPM_LOCK_PATH = join(workspaceRoot, 'package-lock.json');
-const PNPM_LOCK_PATH = join(workspaceRoot, 'pnpm-lock.yaml');
+const YARN_LOCK_FILE = 'yarn.lock';
+const NPM_LOCK_FILE = 'package-lock.json';
+const PNPM_LOCK_FILE = 'pnpm-lock.yaml';
+
+const YARN_LOCK_PATH = join(workspaceRoot, YARN_LOCK_FILE);
+const NPM_LOCK_PATH = join(workspaceRoot, NPM_LOCK_FILE);
+const PNPM_LOCK_PATH = join(workspaceRoot, PNPM_LOCK_FILE);
 
 /**
  * Check if lock file exists
@@ -161,6 +166,21 @@ export function writeLockFile(
   throw Error(`Unknown package manager: ${packageManager}`);
 }
 
+export function getLockFileName(
+  packageManager: PackageManager = detectPackageManager(workspaceRoot)
+): string {
+  if (packageManager === 'yarn') {
+    return YARN_LOCK_FILE;
+  }
+  if (packageManager === 'pnpm') {
+    return PNPM_LOCK_FILE;
+  }
+  if (packageManager === 'npm') {
+    return NPM_LOCK_FILE;
+  }
+  throw Error(`Unknown package manager: ${packageManager}`);
+}
+
 /**
  * Prune lock file based on the given project's dependencies and overrides in local package.json
  *
@@ -174,7 +194,6 @@ export async function pruneLockFile(
   isProduction = true,
   packageManager: PackageManager = detectPackageManager(workspaceRoot)
 ): Promise<string> {
-  const lockFileData = parseLockFile(packageManager);
   const projectGraph = await createProjectGraphAsync();
 
   if (!projectGraph.nodes[projectName]) {
@@ -182,12 +201,28 @@ export async function pruneLockFile(
   }
 
   const packageJson = createPackageJson(projectName, projectGraph, {});
-  // cleanup irrelevant fields from the generated package.json
-  const normalizedPackageJson = normalizePackageJson(
+  return pruneLockFileFromPackageJson(
     packageJson,
     isProduction,
-    projectName
+    packageManager
   );
+}
+
+/**
+ * Prune lock file based on the package.json
+ *
+ * @param packageJson
+ * @param isProduction
+ * @param packageManager
+ * @returns
+ */
+export function pruneLockFileFromPackageJson(
+  packageJson: PackageJson,
+  isProduction = true,
+  packageManager: PackageManager = detectPackageManager(workspaceRoot)
+): string {
+  const lockFileData = parseLockFile(packageManager);
+  const normalizedPackageJson = normalizePackageJson(packageJson, isProduction);
 
   if (packageManager === 'yarn') {
     const prunedData = pruneYarnLockFile(lockFileData, normalizedPackageJson);

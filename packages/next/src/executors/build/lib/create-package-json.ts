@@ -1,5 +1,10 @@
 import type { ExecutorContext } from '@nrwl/devkit';
 import { writeJsonFile } from '@nrwl/devkit';
+import { writeFileSync } from 'fs';
+import {
+  getLockFileName,
+  pruneLockFileFromPackageJson,
+} from 'nx/src/lock-file/lock-file';
 import { createPackageJson as generatePackageJson } from 'nx/src/utils/create-package-json';
 import type { NextBuildBuilderOptions } from '../../../utils/types';
 
@@ -32,4 +37,14 @@ export async function createPackageJson(
   }
 
   writeJsonFile(`${options.outputPath}/package.json`, packageJson);
+
+  // generate lock file
+  const prunedLockFile = pruneLockFileFromPackageJson(
+    packageJson,
+    !options.includeDevDependenciesInPackageJson
+  );
+  const lockFileName = getLockFileName();
+  writeFileSync(`${options.outputPath}/${lockFileName}`, prunedLockFile, {
+    encoding: 'utf-8',
+  });
 }

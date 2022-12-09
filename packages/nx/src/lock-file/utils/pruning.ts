@@ -23,11 +23,10 @@ export type PackageJsonDeps = Pick<
  */
 export function normalizePackageJson(
   packageJson: PackageJson,
-  isProduction: boolean,
-  projectName: string
+  isProduction: boolean
 ): PackageJsonDeps {
   const normalized: PackageJsonDeps = {
-    name: packageJson.name || projectName,
+    name: packageJson.name,
     version: packageJson.version || '0.0.0',
     ...(packageJson.license && { license: packageJson.license }),
   };
