@@ -22,7 +22,7 @@ describe('karmaProject', () => {
       buildable: false,
       linter: Linter.EsLint,
       publishable: false,
-      simpleModuleName: false,
+      simpleName: false,
       skipFormat: false,
       unitTestRunner: UnitTestRunner.None,
     });

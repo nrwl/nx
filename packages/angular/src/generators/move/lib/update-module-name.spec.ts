@@ -18,7 +18,7 @@ describe('updateModuleName Rule', () => {
     const updatedModulePath = '/libs/my/first/src/lib/my-first.module.ts';
     await libraryGenerator(tree, {
       name: 'my-first',
-      simpleModuleName: true,
+      simpleName: true,
     });
     const schema: Schema = {
       projectName: 'my-first',
@@ -54,7 +54,7 @@ describe('updateModuleName Rule', () => {
         buildable: false,
         linter: Linter.EsLint,
         publishable: false,
-        simpleModuleName: true,
+        simpleName: true,
         skipFormat: false,
         unitTestRunner: UnitTestRunner.Jest,
       });
@@ -63,7 +63,7 @@ describe('updateModuleName Rule', () => {
         buildable: false,
         linter: Linter.EsLint,
         publishable: false,
-        simpleModuleName: true,
+        simpleName: true,
         skipFormat: false,
         unitTestRunner: UnitTestRunner.Jest,
       });
@@ -169,7 +169,7 @@ describe('updateModuleName Rule', () => {
         buildable: false,
         linter: Linter.EsLint,
         publishable: false,
-        simpleModuleName: true,
+        simpleName: true,
         skipFormat: false,
         unitTestRunner: UnitTestRunner.Jest,
       });
@@ -214,7 +214,7 @@ describe('updateModuleName Rule', () => {
         buildable: false,
         linter: Linter.EsLint,
         publishable: false,
-        simpleModuleName: true,
+        simpleName: true,
         skipFormat: false,
         unitTestRunner: UnitTestRunner.Jest,
       });
