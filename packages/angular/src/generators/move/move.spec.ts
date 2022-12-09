@@ -17,7 +17,7 @@ describe('@nrwl/angular:move', () => {
       buildable: false,
       linter: Linter.EsLint,
       publishable: false,
-      simpleModuleName: true,
+      simpleName: true,
       skipFormat: false,
       unitTestRunner: UnitTestRunner.Jest,
     });
