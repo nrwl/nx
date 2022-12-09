@@ -107,6 +107,20 @@ describe('component', () => {
     ).toBeFalsy();
   });
 
+  describe('--classComponent', () => {
+    it('should add the override keyword to the render() method', async () => {
+      await componentGenerator(appTree, {
+        name: 'hello',
+        style: 'css',
+        project: projectName,
+        classComponent: true
+      });
+
+      const tsxFileContent = appTree.read(`libs/my-lib/src/lib/hello/hello.tsx/`, 'utf-8');
+      expect(tsxFileContent).toMatch(/override\srender\(\)/);
+    });
+  });
+
   describe('--export', () => {
     it('should add to index.ts barrel', async () => {
       await componentGenerator(appTree, {
