@@ -569,7 +569,8 @@
                 {
                   "value": "bitbucket-pipelines",
                   "label": "BitBucket Pipelines"
-                }
+                },
+                { "value": "gitlab", "label": "Gitlab" }
               ]
             }
           },
