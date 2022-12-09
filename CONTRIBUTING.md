@@ -119,7 +119,7 @@ nx test jest
 
 ### Running E2E Tests
 
-**Use Node 14 and NPM 6. E2E tests won't work on Node 15 and NPM 7.**
+**Use Node 16 and NPM 8. E2E tests won't work on Node 15 and NPM 7.**
 
 To make sure your changes do not break any E2E tests, run:
 
@@ -132,6 +132,14 @@ Running E2E tests can take some time, so it is often useful to run a single test
 ```bash
 nx e2e e2e-cli -t versions # I often add qqqq to my test name so I can use -t qqqq
 ```
+
+Sometimes tests pass locally but they fail on the CI. To reproduce the CI environment and be able to debug the issue, run:
+
+```bash
+NX_VERBOSE_LOGGING=true CI=true PACKAGE_MANAGER=pnpm yarn nx e2e e2e-cli --t="should do something is this test"
+```
+
+The above command sets verbose logging (this exposes stack traces and underlying errors), sets the defaults to be CI-like and sets Pnpm as the selected package manager.
 
 ### Developing on Windows
 
