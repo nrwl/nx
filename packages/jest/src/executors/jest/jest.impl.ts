@@ -202,7 +202,6 @@ export async function batchJest(
     },
     [workspaceRoot]
   );
-
   const { configs } = await readConfigs({ $0: undefined, _: [] }, configPaths);
   const jestTaskExecutionResults: Record<
     string,
@@ -219,6 +218,15 @@ export async function batchJest(
     let resultOutput = '';
     for (const testResult of results.testResults) {
       if (testResult.testFilePath.startsWith(projectRoot)) {
+        console.log(testResult.perfStats);
+        if (aggregatedResults.startTime) {
+          aggregatedResults.startTime = Math.min(
+            aggregatedResults.startTime,
+            testResult.perfStats.start
+          );
+        } else {
+          aggregatedResults.startTime = testResult.perfStats.start;
+        }
         addResult(aggregatedResults, testResult);
         resultOutput +=
           '\n\r' +
