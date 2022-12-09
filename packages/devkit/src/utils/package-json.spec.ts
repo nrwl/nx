@@ -311,7 +311,7 @@ describe('addDependenciesToPackageJson', () => {
   });
 });
 
-describe('ensureDependencies', () => {
+describe('ensurePackage', () => {
   let tree: Tree;
 
   beforeEach(() => {
