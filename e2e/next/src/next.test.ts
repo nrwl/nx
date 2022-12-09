@@ -1,6 +1,7 @@
 import {
   checkFilesExist,
   cleanupProject,
+  detectPackageManager,
   isNotWindows,
   killPorts,
   newProject,
@@ -17,6 +18,7 @@ import {
 } from '@nrwl/e2e/utils';
 import { stringUtils } from '@nrwl/workspace';
 import * as http from 'http';
+import { getLockFileName } from 'nx/src/lock-file/lock-file';
 
 describe('Next.js Applications', () => {
   let proj: string;
@@ -446,6 +448,10 @@ async function checkApp(
   expect(packageJson.dependencies.react).toBeDefined();
   expect(packageJson.dependencies['react-dom']).toBeDefined();
   expect(packageJson.dependencies.next).toBeDefined();
+
+  checkFilesExist(
+    `dist/apps/${appName}/${getLockFileName(detectPackageManager())}`
+  );
 
   if (opts.checkLint) {
     const lintResults = runCLI(`lint ${appName}`);

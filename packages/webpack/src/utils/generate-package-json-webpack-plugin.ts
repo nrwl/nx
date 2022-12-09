@@ -1,7 +1,6 @@
 import { type Compiler, sources, type WebpackPluginInstance } from 'webpack';
 import {
   ExecutorContext,
-  ProjectConfiguration,
   type ProjectGraph,
   serializeJson,
 } from '@nrwl/devkit';
@@ -13,6 +12,10 @@ import {
 import { readTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 
 import { NormalizedWebpackExecutorOptions } from '../executors/webpack/schema';
+import {
+  getLockFileName,
+  pruneLockFileFromPackageJson,
+} from 'nx/src/lock-file/lock-file';
 
 export class GeneratePackageJsonWebpackPlugin implements WebpackPluginInstance {
   private readonly projectGraph: ProjectGraph;
@@ -75,6 +78,10 @@ export class GeneratePackageJsonWebpackPlugin implements WebpackPluginInstance {
           compilation.emitAsset(
             'package.json',
             new sources.RawSource(serializeJson(packageJson))
+          );
+          compilation.emitAsset(
+            getLockFileName(),
+            new sources.RawSource(pruneLockFileFromPackageJson(packageJson))
           );
         }
       );
