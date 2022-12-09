@@ -1,4 +1,10 @@
 import { testProjectsRoutes, testTaskRoutes } from '../support/routing-tests';
+import {
+  getCheckedProjectItems,
+  getFocusButtonForProject,
+  getUnfocusProjectButton,
+} from '../support/app.po';
+import * as nxExamplesJson from '../fixtures/nx-examples-project-graph.json';
 
 describe('release static-mode app', () => {
   describe('smoke tests', () => {
@@ -21,5 +27,29 @@ describe('release static-mode app', () => {
 
   describe('routing', () => {
     testProjectsRoutes('hash', ['/projects']);
+  });
+
+  describe('api tests', () => {
+    describe('focusProject', () => {
+      it('should focus project', () => {
+        cy.window().then((window) => {
+          window.externalApi.focusProject('cart');
+
+          const dependencies = nxExamplesJson.dependencies.cart;
+          const dependents = Object.keys(nxExamplesJson.dependencies).filter(
+            (key) =>
+              nxExamplesJson.dependencies[key]
+                .map((dependencies) => dependencies.target)
+                .includes('cart')
+          );
+          getUnfocusProjectButton().should('exist');
+          getCheckedProjectItems().should(
+            'have.length',
+            ['cart', ...dependencies, ...dependents].length
+          );
+          cy.url().should('contain', '/projects/cart');
+        });
+      });
+    });
   });
 });

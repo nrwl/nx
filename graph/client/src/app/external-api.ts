@@ -1,10 +1,10 @@
-import { getProjectGraphService } from './machines/get-services';
+import { getRouter } from './get-router';
 
 export class ExternalApi {
-  projectGraphService = getProjectGraphService();
+  router = getRouter();
 
   focusProject(projectName: string) {
-    this.projectGraphService.send({ type: 'focusProject', projectName });
+    this.router.navigate(`/projects/${projectName}`);
   }
 
   enableExperimentalFeatures() {
