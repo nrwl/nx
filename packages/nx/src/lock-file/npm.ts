@@ -110,13 +110,32 @@ function mapPackages(
           packagePath
         );
 
+        let dependency;
+        if (lockfileVersion === 2) {
+          const path = packagePath.split(/\/?node_modules\//).slice(1);
+
+          path.forEach((proj) => {
+            if (!dependency) {
+              dependency = dependencies[proj];
+            } else {
+              dependency = dependency.dependencies[proj];
+            }
+          });
+          // if versions are same, no need to track it further
+          if (dependency && value.version === dependency.version) {
+            dependency = undefined;
+          }
+        }
+
         mapPackageDependency(
           mappedPackages,
           packageName,
           newKey,
           packagePath,
           value,
-          lockfileVersion
+          lockfileVersion,
+          undefined,
+          dependency
         );
       }
     });
@@ -151,7 +170,8 @@ function mapPackageDependency(
   packagePath: string,
   value: NpmDependency | Omit<PackageDependency, 'packageMeta'>,
   lockfileVersion: number,
-  isRootVersion?: boolean
+  isRootVersion?: boolean,
+  dependencyValue?: NpmDependency
 ) {
   const { dev, peer, optional } = value;
   const packageMeta = {
@@ -181,6 +201,12 @@ function mapPackageDependency(
         actualVersion: value.version,
         version: value.resolved,
       }),
+      ...(value.integrity &&
+        dependencyValue && {
+          actualVersion: value.version,
+          version: dependencyValue.version,
+        }),
+      ...(dependencyValue && { dependencyValue }),
       packageMeta: [],
       rootVersion,
     };
@@ -297,6 +323,7 @@ function unmapPackage(packages: Dependencies, dependency: PackageDependency) {
     dev,
     peer,
     optional,
+    dependencyValue,
     ...value
   } = dependency;
   // we need to decompose value, to achieve particular field ordering
@@ -321,7 +348,8 @@ function unmapDependencies(
   packageName: string,
   { packageMeta, ...value }: PackageDependency & { packageMeta: PackageMeta[] }
 ): void {
-  const { version, resolved, integrity, devOptional } = value;
+  const { version, resolved, integrity, devOptional, dependencyValue, from } =
+    value;
 
   for (let i = 0; i < packageMeta.length; i++) {
     const { path, dev, optional, peer } = packageMeta[i];
@@ -334,10 +362,11 @@ function unmapDependencies(
     );
 
     // sorting fields to match package-lock structure
-    innerDeps[packageName] = {
+    innerDeps[packageName] = dependencyValue || {
       version,
       resolved,
       integrity,
+      from,
       dev,
       devOptional,
       optional,

@@ -95,7 +95,8 @@ function mapPackages(
     // create new key
     const { version, packageName, actualVersion } = parseVersionAndPackage(
       key,
-      value
+      value,
+      { dependencies, devDependencies }
     );
     const newKey = `${packageName}@${version.split('_')[0]}`;
 
@@ -119,7 +120,7 @@ function mapPackages(
       mappedPackages[packageName][newKey] = {
         ...rest,
         version: version.split('_')[0],
-        ...(actualVersion !== version && { actualVersion }),
+        ...(actualVersion && { actualVersion }),
         packageMeta: [meta],
       };
     }
@@ -147,18 +148,27 @@ function mapPackages(
 
 function parseVersionAndPackage(
   key: string,
-  value: Omit<PackageDependency, 'packageMeta'>
+  value: Omit<PackageDependency, 'packageMeta'>,
+  { dependencies, devDependencies }
 ): { version: string; packageName: string; actualVersion: string } {
   let version, packageName, actualVersion;
-  if (key.startsWith('/')) {
-    version = key.split('/').pop();
-    actualVersion = version;
-    packageName = key.slice(1, key.lastIndexOf('/'));
-  } else {
+
+  const combinedDependencies = {
+    ...(dependencies || {}),
+    ...(devDependencies || {}),
+  };
+  // check if it's a special case package - npm:... or github:...
+  packageName = Object.keys(combinedDependencies).find(
+    (k) => combinedDependencies[k] === key
+  );
+  if (packageName) {
     version = key;
-    packageName = value.name ?? key;
     actualVersion = value.version ?? key;
+  } else {
+    version = key.split('/').pop();
+    packageName = key.slice(1, key.lastIndexOf('/'));
   }
+
   return { version, packageName, actualVersion };
 }
 
@@ -326,7 +336,8 @@ function unmapLockFile(lockFileData: LockFileData): PnpmLockFile {
             }
             packages[key] = {
               ...rest,
-              ...(actualVersion && { version: actualVersion }),
+              ...(actualVersion &&
+                actualVersion !== version && { version: actualVersion }),
               dev: !!dev,
               ...(optional && { optional }),
               ...(peer && { peer }),
