@@ -1,4 +1,6 @@
 {
+  "version": 2,
+  "outputCapture": "direct-nodejs",
   "$schema": "http://json-schema.org/schema",
   "title": "ESLint Lint Target",
   "description": "ESLint Lint Target.",
@@ -124,10 +126,10 @@
     },
     "reportUnusedDisableDirectives": {
       "type": "string",
-      "default": "off",
       "enum": ["off", "warn", "error"],
       "description": "The equivalent of the `--report-unused-disable-directives` flag on the ESLint CLI."
     }
   },
-  "required": ["lintFilePatterns"]
+  "required": ["lintFilePatterns"],
+  "examplesFile": "../../../docs/eslint-examples.md"
 }

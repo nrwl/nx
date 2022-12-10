@@ -10,13 +10,13 @@ Starting from Nx 11, your Next.js application should already be ready for deploy
 2. Ensure the Next.js "Framework Preset" is selected
 3. Expand the "Build and Output Settings" and toggle the override switch for the build command. For example, for an application named `tuskdesk` the value will look like this:
 
-```bash
+```shell
 npx nx build tuskdesk --prod
 ```
 
 4. Toggle the override switch for the output directory. Point it to the `.next` directory inside the built app:
 
-```bash
+```shell
 dist/apps/tuskdesk/.next
 ```
 

@@ -7,7 +7,7 @@ Visualizing where and when the tasks were executed can help optimize the entire 
 
 1. Prepend `NX_PROFILE=profile.json` before running targets with Nx. For example,
 
-```bash
+```shell
 # This builds the "cart" application and creates a profile.json file
 NX_PROFILE=profile.json nx build cart
 

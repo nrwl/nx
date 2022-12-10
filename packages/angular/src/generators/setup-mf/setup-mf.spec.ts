@@ -122,7 +122,7 @@ describe('Init MF', () => {
       expect(serve.executor).toEqual(
         type === 'host'
           ? '@nrwl/angular:module-federation-dev-server'
-          : '@nrwl/angular:webpack-server'
+          : '@nrwl/angular:webpack-dev-server'
       );
       expect(build.executor).toEqual('@nrwl/angular:webpack-browser');
       expect(build.options.customWebpackConfig.path).toEqual(
@@ -262,8 +262,8 @@ describe('Init MF', () => {
     });
 
     // ASSERT
-    const hostAppModule = tree.read('apps/app1/src/app/app.module.ts', 'utf-8');
-    expect(hostAppModule).toMatchSnapshot();
+    const hostAppRoutes = tree.read('apps/app1/src/app/app.routes.ts', 'utf-8');
+    expect(hostAppRoutes).toMatchSnapshot();
   });
 
   it('should modify the associated cypress project to add the workaround correctly', async () => {
@@ -283,7 +283,7 @@ describe('Init MF', () => {
 
     // ASSERT
     const cypressCommands = tree.read(
-      'apps/test-app-e2e/src/support/index.ts',
+      'apps/test-app-e2e/src/support/e2e.ts',
       'utf-8'
     );
     expect(cypressCommands).toContain(
@@ -340,7 +340,7 @@ describe('Init MF', () => {
       remote1: 'http://localhost:4201',
     });
     expect(
-      tree.read('apps/app1/src/app/app.module.ts', 'utf-8')
+      tree.read('apps/app1/src/app/app.routes.ts', 'utf-8')
     ).toMatchSnapshot();
   });
 });

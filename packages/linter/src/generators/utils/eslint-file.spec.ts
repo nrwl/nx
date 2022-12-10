@@ -1,4 +1,8 @@
-import { findEslintFile } from './eslint-file';
+import {
+  baseEsLintConfigFile,
+  eslintConfigFileWhitelist,
+  findEslintFile,
+} from './eslint-file';
 
 import { Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
@@ -15,20 +19,21 @@ describe('@nrwl/linter:eslint-file', () => {
       expect(findEslintFile(tree)).toBe(null);
     });
 
-    it('should return the name of the eslint config when calling findEslintFile', () => {
-      tree.write('.eslintrc.json', '{}');
-      expect(findEslintFile(tree)).toBe('.eslintrc.json');
-    });
+    test.each(eslintConfigFileWhitelist)(
+      'should return %p when calling findEslintFile',
+      (eslintFileName) => {
+        tree.write(eslintFileName, '{}');
+        expect(findEslintFile(tree)).toBe(eslintFileName);
+      }
+    );
 
-    it('should return the name of the eslint config when calling findEslintFile', () => {
-      tree.write('.eslintrc.js', '{}');
-      expect(findEslintFile(tree)).toBe('.eslintrc.js');
-    });
-
-    it('should return default name when calling findEslintFile when no eslint is found', () => {
-      tree.write('.eslintrc.yaml', '{}');
-
-      expect(findEslintFile(tree)).toBe(null);
-    });
+    test.each(eslintConfigFileWhitelist)(
+      'should return base file instead %p when calling findEslintFile',
+      (eslintFileName) => {
+        tree.write(baseEsLintConfigFile, '{}');
+        tree.write(eslintFileName, '{}');
+        expect(findEslintFile(tree)).toBe(baseEsLintConfigFile);
+      }
+    );
   });
 });

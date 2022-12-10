@@ -3,7 +3,6 @@
   "affected": {
     "defaultBase": "master"
   },
-  "npmScope": "nrwl",
   "tasksRunnerOptions": {
     "default": {
       "runner": "@nrwl/nx-cloud",
@@ -14,12 +13,11 @@
           "lint-base",
           "lint",
           "build-base",
+          "e2e",
           "test",
           "sitemap",
-          "e2e",
           "build-storybook"
         ],
-        "useDaemonProcess": true,
         "cacheDirectory": "/tmp/nx-cache",
         "parallel": 1,
         "url": "https://staging.nx.app"
@@ -27,8 +25,8 @@
     }
   },
   "workspaceLayout": {
-    "libsDir": "",
-    "appsDir": ""
+    "appsDir": "",
+    "libsDir": ""
   },
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
@@ -37,7 +35,9 @@
       "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
       "!{projectRoot}/tsconfig.spec.json",
       "!{projectRoot}/jest.config.[jt]s",
-      "!{projectRoot}/.eslintrc.json"
+      "!{projectRoot}/.eslintrc.json",
+      "!{projectRoot}/.storybook/**/*",
+      "!{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)"
     ],
     "sharedGlobals": ["{workspaceRoot}/babel.config.json"]
   },
@@ -71,13 +71,16 @@
           "env": "NX_E2E_CI_CACHE_KEY"
         }
       ]
+    },
+    "e2e-base": {
+      "inputs": ["default", "^production"]
+    },
+    "run-e2e-tests": {
+      "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"]
+    },
+    "build-storybook": {
+      "inputs": ["default", "^production", "{workspaceRoot}/.storybook/**/*"]
     }
   },
-  "generators": {
-    "@nrwl/react": {
-      "application": {
-        "babel": true
-      }
-    }
-  }
+  "defaultProject": "@nrwl/nx-source"
 }

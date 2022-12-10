@@ -28,7 +28,10 @@
         "message": "Which stylesheet format would you like to use?",
         "type": "list",
         "items": [
-          { "value": "css", "label": "CSS" },
+          {
+            "value": "css",
+            "label": "CSS"
+          },
           {
             "value": "scss",
             "label": "SASS(.scss)  [ http://sass-lang.com   ]"
@@ -53,13 +56,14 @@
     "bundler": {
       "type": "string",
       "description": "The bundler to use.",
-      "enum": ["webpack", "none"],
-      "default": "webpack"
+      "enum": ["webpack", "none", "vite"],
+      "default": "webpack",
+      "x-prompt": "Which bundler do you want to use?"
     },
     "linter": {
       "description": "The tool to use for running lint checks.",
       "type": "string",
-      "enum": ["eslint", "tslint"],
+      "enum": ["eslint"],
       "default": "eslint"
     },
     "skipFormat": {
@@ -69,9 +73,14 @@
     },
     "unitTestRunner": {
       "type": "string",
-      "enum": ["jest", "none"],
+      "enum": ["jest", "vitest", "none"],
       "description": "Test runner to use for unit tests",
       "default": "jest"
+    },
+    "inSourceTests": {
+      "type": "boolean",
+      "default": false,
+      "description": "When using Vitest, separate spec files will not be generated and instead will be included within the source files."
     },
     "e2eTestRunner": {
       "type": "string",
@@ -93,5 +102,6 @@
       "type": "boolean"
     }
   },
-  "required": []
+  "required": [],
+  "examplesFile": "../../../docs/application-examples.md"
 }

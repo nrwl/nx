@@ -49,18 +49,14 @@ describe('rollupExecutor', () => {
         {
           dir: '/root/dist/ui',
           format: 'esm',
-          globals: { 'react/jsx-runtime': 'jsxRuntime' },
           name: 'Example',
-          inlineDynamicImports: false,
           chunkFileNames: '[name].js',
           entryFileNames: '[name].js',
         },
         {
           dir: '/root/dist/ui',
           format: 'cjs',
-          globals: { 'react/jsx-runtime': 'jsxRuntime' },
           name: 'Example',
-          inlineDynamicImports: false,
           chunkFileNames: '[name].cjs',
           entryFileNames: '[name].cjs',
         },

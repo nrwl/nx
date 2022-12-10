@@ -84,7 +84,7 @@ export default function (options: Schema): Rule {
 
 The Nx CLI can invoke Nx Generator or Angular Schematics directly. When the user runs:
 
-```bash
+```shell
 nx g mygenerator params
 nx g mygenerator params  # will work exactly the same same as the line above
 ```

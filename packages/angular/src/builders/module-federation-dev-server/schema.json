@@ -1,4 +1,6 @@
 {
+  "version": 2,
+  "outputCapture": "direct-nodejs",
   "$schema": "http://json-schema.org/draft-07/schema",
   "title": "Schema for Module Federation Dev Server",
   "description": "The module-federation-dev-server executor is reserved exclusively for use with host Module Federation applications. It allows the user to specify which remote applications should be served with the host.",
@@ -108,8 +110,16 @@
         "type": "string"
       },
       "description": "List of remote applications to run in development mode (i.e. using serve target)."
+    },
+    "skipRemotes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of remote applications to not automatically serve, either statically or in development mode. This can be useful for multi-repository module federation setups where the host application uses a remote application from an external repository."
     }
   },
   "additionalProperties": false,
-  "required": ["browserTarget"]
+  "required": ["browserTarget"],
+  "examplesFile": "../../../docs/module-federation-dev-server-examples.md"
 }

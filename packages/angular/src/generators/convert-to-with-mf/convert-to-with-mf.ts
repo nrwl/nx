@@ -1,7 +1,11 @@
-import { joinPathFragments, logger, Tree } from '@nrwl/devkit';
+import {
+  formatFiles,
+  joinPathFragments,
+  logger,
+  readProjectConfiguration,
+  Tree,
+} from '@nrwl/devkit';
 import type { Schema } from './schema';
-
-import { readProjectConfiguration, formatFiles } from '@nrwl/devkit';
 import { getMFProjects } from '../../utils/get-mf-projects';
 import {
   checkOutputNameMatchesProjectName,
@@ -12,7 +16,7 @@ import {
   writeNewWebpackConfig,
 } from './lib';
 
-export default async function convertToWithMF(tree: Tree, schema: Schema) {
+export async function convertToWithMF(tree: Tree, schema: Schema) {
   const projects = new Set(getMFProjects(tree, { legacy: true }));
 
   if (!projects.has(schema.project)) {
@@ -56,3 +60,5 @@ export default async function convertToWithMF(tree: Tree, schema: Schema) {
 
   await formatFiles(tree);
 }
+
+export default convertToWithMF;

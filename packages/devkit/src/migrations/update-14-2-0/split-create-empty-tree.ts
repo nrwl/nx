@@ -9,7 +9,7 @@ import { extname } from 'path';
 import { tsquery } from '@phenomnomnominal/tsquery';
 
 import { visitNotIgnoredFiles } from '../../generators/visit-not-ignored-files';
-import { formatFiles } from '@nrwl/devkit';
+import { formatFiles } from '../../generators/format-files';
 
 export default async function update(tree: Tree): Promise<void> {
   for (const [project, { root }] of getProjects(tree)) {

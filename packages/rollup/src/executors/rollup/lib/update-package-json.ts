@@ -8,6 +8,7 @@ import {
 import { writeJsonFile } from 'nx/src/utils/fileutils';
 import { PackageJson } from 'nx/src/utils/package-json';
 import { NormalizedRollupExecutorOptions } from './normalize';
+import { joinPathFragments } from 'nx/src/utils/path';
 
 export function updatePackageJson(
   options: NormalizedRollupExecutorOptions,
@@ -17,10 +18,9 @@ export function updatePackageJson(
   packageJson: PackageJson
 ) {
   const hasEsmFormat = options.format.includes('esm');
-  const hasCjsFormat =
-    options.format.includes('umd') || options.format.includes('cjs');
+  const hasCjsFormat = options.format.includes('cjs');
 
-  const types = `./${relative(options.entryRoot, options.main).replace(
+  const types = `./${relative(options.projectRoot, options.main).replace(
     /\.[jt]sx?$/,
     '.d.ts'
   )}`;
@@ -54,8 +54,8 @@ export function updatePackageJson(
   // Support for older TS versions < 4.5
   packageJson.types = types;
 
-  // TODO(jack): remove this for Nx 15
-  if (options.generateExportsField) {
+  // TODO(jack): remove this for Nx 16
+  if (options.generateExportsField && typeof packageJson.exports !== 'string') {
     packageJson.exports = {
       ...packageJson.exports,
       ...exports,

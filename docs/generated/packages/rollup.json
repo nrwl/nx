@@ -82,6 +82,11 @@
             "default": false,
             "description": "Do not add dependencies to `package.json`."
           },
+          "skipValidation": {
+            "type": "boolean",
+            "default": false,
+            "description": "Do not perform any validation on existing project."
+          },
           "importPath": {
             "type": "string",
             "description": "The library name used to import it, like `@myorg/my-awesome-lib`."
@@ -111,8 +116,10 @@
       "name": "rollup",
       "implementation": "/packages/rollup/src/executors/rollup/rollup.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "title": "Web Library Rollup Target (Experimental)",
-        "description": "Packages a library for different web usages (`UMD`, `ESM`, `CJS`).",
+        "description": "Packages a library for different web usages (ESM, CommonJS).",
         "cli": "nx",
         "type": "object",
         "properties": {
@@ -151,7 +158,7 @@
             "type": "array",
             "description": "List of module formats to output. Defaults to matching format from tsconfig (e.g. CJS for CommonJS, and ESM otherwise).",
             "alias": "f",
-            "items": { "type": "string", "enum": ["esm", "umd", "cjs"] }
+            "items": { "type": "string", "enum": ["esm", "cjs"] }
           },
           "external": {
             "type": "array",
@@ -191,30 +198,6 @@
               }
             ],
             "description": "Path to a function which takes a rollup config and returns an updated rollup config."
-          },
-          "umdName": {
-            "type": "string",
-            "description": "The name of your module in `UMD` format. Defaulted to your project name."
-          },
-          "globals": {
-            "description": "A mapping of node modules to their `UMD` global names. Used by the `UMD` bundle.",
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "moduleId": {
-                  "type": "string",
-                  "description": "The node module to map from (e.g. `react-dom`)."
-                },
-                "global": {
-                  "type": "string",
-                  "description": "The global name to map to (e.g. `ReactDOM`)."
-                }
-              },
-              "additionalProperties": false,
-              "required": ["moduleId", "global"]
-            },
-            "default": []
           },
           "extractCss": {
             "type": ["boolean", "string"],

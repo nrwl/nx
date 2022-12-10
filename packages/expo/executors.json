@@ -75,10 +75,20 @@
       "schema": "./src/executors/ensure-symlink/schema.json",
       "description": "Ensure workspace node_modules is symlink under app's node_modules folder."
     },
-    "eject": {
-      "implementation": "./src/executors/eject/eject.impl",
-      "schema": "./src/executors/eject/schema.json",
-      "description": "Create native iOS and Android project files."
+    "prebuild": {
+      "implementation": "./src/executors/prebuild/prebuild.impl",
+      "schema": "./src/executors/prebuild/schema.json",
+      "description": "Create native iOS and Android project files for building natively."
+    },
+    "install": {
+      "implementation": "./src/executors/install/install.impl",
+      "schema": "./src/executors/install/schema.json",
+      "description": "Install a module or other package to a project."
+    },
+    "export": {
+      "implementation": "./src/executors/export/export.impl",
+      "schema": "./src/executors/export/schema.json",
+      "description": "Export the JavaScript and assets for your app using Metro/webpack bundler"
     }
   },
   "builders": {
@@ -128,12 +138,12 @@
       "description": "Deploy a project to Expo hosting"
     },
     "publish-set": {
-      "implementation": "./src/executors/publish-set/compact",
+      "implementation": "./src/executors/publish-set/compat",
       "schema": "./src/executors/publish-set/schema.json",
       "description": "Specify the channel to serve a published release"
     },
     "rollback": {
-      "implementation": "./src/executors/rollback/compact",
+      "implementation": "./src/executors/rollback/compat",
       "schema": "./src/executors/rollback/schema.json",
       "description": "Undo an update to a channel"
     },
@@ -157,10 +167,20 @@
       "schema": "./src/executors/ensure-symlink/schema.json",
       "description": "Ensure workspace node_modules is symlink under app's node_modules folder."
     },
-    "eject": {
-      "implementation": "./src/executors/eject/compat",
-      "schema": "./src/executors/eject/schema.json",
-      "description": "Create native iOS and Android project files."
+    "prebuild": {
+      "implementation": "./src/executors/prebuild/compat",
+      "schema": "./src/executors/prebuild/schema.json",
+      "description": "Create native iOS and Android project files for building natively."
+    },
+    "install": {
+      "implementation": "./src/executors/install/compat",
+      "schema": "./src/executors/install/schema.json",
+      "description": "Install a module or other package to a project."
+    },
+    "export": {
+      "implementation": "./src/executors/export/compat",
+      "schema": "./src/executors/export/schema.json",
+      "description": "Export the JavaScript and assets for your app using Metro/webpack bundler"
     }
   }
 }

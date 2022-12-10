@@ -11,7 +11,7 @@ describe('set-build-libs-from-source migration', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it('should not error when project does not have targets', async () => {
@@ -22,6 +22,7 @@ describe('set-build-libs-from-source migration', () => {
 
   it('should not update when not using the @nrwl/angular:webpack-browser executor', async () => {
     const project: ProjectConfiguration = {
+      name: 'app1',
       root: 'apps/app1',
       targets: { build: { executor: '@nrwl/angular:package' } },
     };
@@ -38,6 +39,7 @@ describe('set-build-libs-from-source migration', () => {
 
   it('should set buildLibsFromSource to false', async () => {
     addProjectConfiguration(tree, 'app1', {
+      name: 'app1',
       root: 'apps/app1',
       targets: { build: { executor: '@nrwl/angular:webpack-browser' } },
     });
@@ -52,6 +54,7 @@ describe('set-build-libs-from-source migration', () => {
 
   it('should support any target name using @nrwl/angular:webpack-browser', async () => {
     addProjectConfiguration(tree, 'app1', {
+      name: 'app1',
       root: 'apps/app1',
       targets: { 'build-base': { executor: '@nrwl/angular:webpack-browser' } },
     });

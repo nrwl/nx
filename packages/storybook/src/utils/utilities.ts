@@ -11,7 +11,7 @@ import { StorybookConfig } from '../executors/models';
 import { constants, copyFileSync, mkdtempSync, statSync } from 'fs';
 import { tmpdir } from 'os';
 import { basename, join, sep } from 'path';
-import { findNodes } from '@nrwl/workspace/src/utilities/typescript/find-nodes';
+import { findNodes } from 'nx/src/utils/typescript';
 import ts = require('typescript');
 
 export const Constants = {
@@ -233,6 +233,7 @@ export function findStorybookAndBuildTargetsAndCompiler(targets: {
   storybookTarget?: string;
   ngBuildTarget?: string;
   nextBuildTarget?: string;
+  viteBuildTarget?: string;
   otherBuildTarget?: string;
   compiler?: string;
 } {
@@ -241,6 +242,7 @@ export function findStorybookAndBuildTargetsAndCompiler(targets: {
     storybookTarget?: string;
     ngBuildTarget?: string;
     nextBuildTarget?: string;
+    viteBuildTarget?: string;
     otherBuildTarget?: string;
     compiler?: string;
   } = {};
@@ -275,6 +277,9 @@ export function findStorybookAndBuildTargetsAndCompiler(targets: {
          */
         returnObject.ngBuildTarget = target;
         returnObject.compiler = targetConfig?.options?.compiler;
+        break;
+      case '@nrwl/vite:build':
+        returnObject.viteBuildTarget = target;
         break;
       case '@nrwl/next:build':
         returnObject.nextBuildTarget = target;

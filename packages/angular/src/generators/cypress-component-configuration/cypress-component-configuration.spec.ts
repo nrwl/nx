@@ -5,6 +5,7 @@ import {
   ProjectGraph,
   readProjectConfiguration,
   Tree,
+  updateProjectConfiguration,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { applicationGenerator } from '../application/application';
@@ -28,7 +29,7 @@ describe('Cypress Component Testing Configuration', () => {
   > = installedCypressVersion as never;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     tree.write('.gitignore', '');
     mockedInstalledCypressVersion.mockReturnValue(10);
   });
@@ -158,21 +159,60 @@ describe('Cypress Component Testing Configuration', () => {
       });
     });
 
-    it('should throw if --build-target is invalid', async () => {
+    it('should throw with invalid --build-target', async () => {
+      await applicationGenerator(tree, {
+        name: 'fancy-app',
+      });
       await libraryGenerator(tree, {
         name: 'fancy-lib',
       });
-      await expect(
-        cypressComponentConfiguration(tree, {
+      await componentGenerator(tree, {
+        name: 'fancy-cmp',
+        project: 'fancy-lib',
+        export: true,
+      });
+      const appConfig = readProjectConfiguration(tree, 'fancy-app');
+      appConfig.targets['build'].executor = 'something/else';
+      updateProjectConfiguration(tree, 'fancy-app', appConfig);
+      projectGraph = {
+        nodes: {
+          'fancy-app': {
+            name: 'fancy-app',
+            type: 'app',
+            data: {
+              ...appConfig,
+            },
+          },
+          'fancy-lib': {
+            name: 'fancy-lib',
+            type: 'lib',
+            data: {
+              ...readProjectConfiguration(tree, 'fancy-lib'),
+            },
+          },
+        },
+        dependencies: {
+          'fancy-app': [
+            {
+              type: DependencyType.static,
+              source: 'fancy-app',
+              target: 'fancy-lib',
+            },
+          ],
+        },
+      };
+      await expect(async () => {
+        await cypressComponentConfiguration(tree, {
           project: 'fancy-lib',
-          buildTarget: 'fancy-app:build:development',
+          buildTarget: 'fancy-app:build',
           generateTests: false,
-        })
-      ).rejects
-        .toThrow(`Error trying to find build configuration. Try manually specifying the build target with the --build-target flag.
-Provided project? fancy-lib
-Provided build target? fancy-app:build:development
-Provided Executors? @nrwl/angular:webpack-browser, @angular-devkit/build-angular:browser`);
+        });
+      }).rejects.toThrowErrorMatchingInlineSnapshot(`
+        "Error trying to find build configuration. Try manually specifying the build target with the --build-target flag.
+        Provided project? fancy-lib
+        Provided build target? fancy-app:build
+        Provided Executors? @nrwl/angular:webpack-browser, @angular-devkit/build-angular:browser"
+      `);
     });
     it('should use own project config', async () => {
       await applicationGenerator(tree, {
@@ -273,6 +313,7 @@ Provided Executors? @nrwl/angular:webpack-browser, @angular-devkit/build-angular
     });
   });
 
+  it('should throw if an invalid --build-target', async () => {});
   it('should work with simple components', async () => {
     await libraryGenerator(tree, {
       name: 'my-lib',

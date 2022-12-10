@@ -24,7 +24,7 @@ Only operations listed in `cacheableOperations` can be cached using Nx Cloud and
 
 By default, Nx Cloud requests will time out after 10 seconds. `NX_CLOUD_NO_TIMEOUTS` disables the timeout.
 
-```bash
+```shell
 NX_CLOUD_NO_TIMEOUTS=true nx run-many --target=build --all
 ```
 
@@ -68,7 +68,7 @@ Under the options property, you can add an additional property called `encryptio
 
 To instead use an environment variable to provide your secret key, run any Nx command as follows:
 
-```bash
+```shell
 NX_CLOUD_ENCRYPTION_KEY=myEncryptionKey nx build my-project
 ```
 

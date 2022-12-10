@@ -1,4 +1,4 @@
-import { ExecutorContext, names } from '@nrwl/devkit';
+import { ExecutorContext, logger, names } from '@nrwl/devkit';
 import { join } from 'path';
 import { ChildProcess, fork } from 'child_process';
 
@@ -16,6 +16,10 @@ export default async function* buildWebExecutor(
   options: ExpoBuildWebOptions,
   context: ExecutorContext
 ): AsyncGenerator<ReactNativeBuildOutput> {
+  logger.warn(
+    '@nrwl/expo:build-web is deprecated and will be removed in Nx 16. Please switch to expo:export --bundler webpack.'
+  );
+
   const projectRoot = context.workspace.projects[context.projectName].root;
   ensureNodeModulesSymlink(context.root, projectRoot);
 

@@ -12,10 +12,7 @@ export function updateWorkspace(tree: Tree, options: JestProjectSchema) {
   projectConfig.targets.test = {
     executor: '@nrwl/jest:jest',
     outputs: [
-      joinPathFragments(
-        normalizePath('coverage'),
-        normalizePath(projectConfig.root)
-      ),
+      joinPathFragments('{workspaceRoot}', 'coverage', '{projectRoot}'),
     ],
     options: {
       jestConfig: joinPathFragments(

@@ -24,10 +24,11 @@ import { createTaskGraph } from './create-task-graph';
 import { findCycle, makeAcyclic } from './task-graph-utils';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { handleErrors } from '../utils/params';
-import { Workspaces } from 'nx/src/config/workspaces';
-import { Hasher } from 'nx/src/hasher/hasher';
-import { hashDependsOnOtherTasks, hashTask } from 'nx/src/hasher/hash-task';
+import { Workspaces } from '../config/workspaces';
+import { Hasher } from '../hasher/hasher';
+import { hashDependsOnOtherTasks, hashTask } from '../hasher/hash-task';
 import { daemonClient } from '../daemon/client/client';
+import { StoreRunInformationLifeCycle } from './life-cycles/store-run-information-life-cycle';
 
 async function getTerminalOutputLifeCycle(
   initiatingProject: string,
@@ -111,7 +112,7 @@ export async function runCommand(
   overrides: any,
   initiatingProject: string | null,
   extraTargetDependencies: Record<string, (TargetDependencyConfig | string)[]>,
-  extraOptions: { excludeTaskDependencies: boolean }
+  extraOptions: { excludeTaskDependencies: boolean; loadDotEnvFiles: boolean }
 ) {
   const status = await handleErrors(
     process.env.NX_VERBOSE_LOGGING === 'true',
@@ -175,7 +176,10 @@ export async function runCommand(
         overrides,
         runnerOptions
       );
-      const lifeCycles = [lifeCycle] as LifeCycle[];
+      const lifeCycles = [] as LifeCycle[];
+
+      lifeCycles.push(new StoreRunInformationLifeCycle());
+      lifeCycles.push(lifeCycle);
 
       if (process.env.NX_PERF_LOGGING) {
         lifeCycles.push(new TaskTimingsLifeCycle());
@@ -183,6 +187,10 @@ export async function runCommand(
 
       if (process.env.NX_PROFILE) {
         lifeCycles.push(new TaskProfilingLifeCycle(process.env.NX_PROFILE));
+      }
+
+      if (extraOptions.loadDotEnvFiles) {
+        process.env.NX_LOAD_DOT_ENV_FILES = 'true';
       }
 
       const promiseOrObservable = tasksRunner(

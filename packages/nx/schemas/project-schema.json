@@ -71,8 +71,22 @@
                 }
               ]
             }
+          },
+          "command": {
+            "type": "string",
+            "description": "A shorthand for using the nx:run-commands executor"
           }
-        }
+        },
+        "oneOf": [
+          {
+            "type": "object",
+            "required": ["executor"]
+          },
+          {
+            "type": "object",
+            "required": ["command"]
+          }
+        ]
       }
     },
     "tags": {

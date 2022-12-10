@@ -2,10 +2,10 @@ import 'dotenv/config';
 import * as chalk from 'chalk';
 import type { ExecutorContext } from '@nrwl/devkit';
 import { cacheDir, joinPathFragments, logger } from '@nrwl/devkit';
-import { parse } from 'path';
 import {
   copyAssets,
   copyPackageJson,
+  CopyPackageJsonOptions,
   printDiagnostics,
   runTypeCheck as _runTypeCheck,
   TypeCheckOptions,
@@ -15,10 +15,12 @@ import { normalizeOptions } from './lib/normalize';
 
 import { EsBuildExecutorOptions } from './schema';
 import { removeSync, writeJsonSync } from 'fs-extra';
-import { getClientEnvironment } from '../../utils/environment-variables';
-import { createAsyncIterable } from '@nrwl/js/src/utils/create-async-iterable/create-async-iteratable';
+import { createAsyncIterable } from '@nrwl/devkit/src/utils/async-iterable';
+import { buildEsbuildOptions } from './lib/build-esbuild-options';
+import { getExtraDependencies } from './lib/get-extra-dependencies';
+import { DependentBuildableProjectNode } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 
-const CJS_FILE_EXTENSION = '.cjs';
+const CJS_FILE_EXTENSION = '.cjs' as const;
 
 const BUILD_WATCH_FAILED = `[ ${chalk.red(
   'watch'
@@ -32,71 +34,104 @@ export async function* esbuildExecutor(
   context: ExecutorContext
 ) {
   const options = normalizeOptions(_options);
-  if (options.clean) removeSync(options.outputPath);
+  if (options.deleteOutputPath) removeSync(options.outputPath);
 
   const assetsResult = await copyAssets(options, context);
 
-  const packageJsonResult = await copyPackageJson(
-    {
-      ...options,
-      skipTypings: options.skipTypeCheck,
-      outputFileExtensionForCjs: CJS_FILE_EXTENSION,
-    },
-    context
-  );
+  const externalDependencies: DependentBuildableProjectNode[] =
+    options.external.map((name) => {
+      const externalNode = context.projectGraph.externalNodes[`npm:${name}`];
+      if (!externalNode)
+        throw new Error(
+          `Cannot find external dependency ${name}. Check your package.json file.`
+        );
+      return {
+        name,
+        outputs: [],
+        node: externalNode,
+      };
+    });
 
-  const esbuildOptions: esbuild.BuildOptions = {
-    entryPoints: [options.main],
-    bundle: true,
-    define: getClientEnvironment(),
-    external: options.external,
-    minify: options.minify,
-    platform: options.platform,
-    target: options.target,
-    metafile: options.metafile,
-    tsconfig: options.tsConfig,
+  if (!options.thirdParty) {
+    const thirdPartyDependencies = getExtraDependencies(
+      context.projectName,
+      context.projectGraph
+    );
+    for (const tpd of thirdPartyDependencies) {
+      options.external.push(tpd.node.data.packageName);
+      externalDependencies.push(tpd);
+    }
+  }
+
+  const cpjOptions: CopyPackageJsonOptions = {
+    ...options,
+    // TODO(jack): make types generate with esbuild
+    skipTypings: true,
+    outputFileExtensionForCjs: CJS_FILE_EXTENSION,
+    excludeLibsInPackageJson: !options.thirdParty,
+    updateBuildableProjectDepsInPackageJson: externalDependencies.length > 0,
   };
 
+  // If we're bundling third-party packages, then any extra deps from external should be the only deps in package.json
+  if (options.thirdParty && externalDependencies.length > 0) {
+    cpjOptions.overrideDependencies = externalDependencies;
+  } else {
+    cpjOptions.extraDependencies = externalDependencies;
+  }
+
+  const packageJsonResult = await copyPackageJson(cpjOptions, context);
+
   if (options.watch) {
-    return yield* createAsyncIterable<{ success: boolean; outfile: string }>(
+    return yield* createAsyncIterable<{ success: boolean; outfile?: string }>(
       async ({ next, done }) => {
         let hasTypeErrors = false;
 
         const results = await Promise.all(
-          options.format.map((format, idx) => {
-            const outfile = getOutfile(format, options, context);
-            return esbuild.build({
-              ...esbuildOptions,
-              watch:
-                // Only emit info on one of the watch processes.
-                idx === 0
-                  ? {
-                      onRebuild: async (
-                        error: esbuild.BuildFailure,
-                        result: esbuild.BuildResult
-                      ) => {
-                        if (!options.skipTypeCheck) {
-                          const { errors } = await runTypeCheck(
-                            options,
-                            context
-                          );
-                          hasTypeErrors = errors.length > 0;
-                        }
-                        const success = !error && !hasTypeErrors;
-
-                        if (!success) {
-                          logger.info(BUILD_WATCH_FAILED);
-                        } else {
-                          logger.info(BUILD_WATCH_SUCCEEDED);
-                        }
-
-                        next({ success: !!error && !hasTypeErrors, outfile });
-                      },
-                    }
-                  : true,
+          options.format.map(async (format, idx) => {
+            const esbuildOptions = buildEsbuildOptions(
               format,
-              outfile,
-            });
+              options,
+              context
+            );
+            const watch =
+              // Only emit info on one of the watch processes.
+              idx === 0
+                ? {
+                    onRebuild: async (
+                      error: esbuild.BuildFailure,
+                      result: esbuild.BuildResult
+                    ) => {
+                      if (!options.skipTypeCheck) {
+                        const { errors } = await runTypeCheck(options, context);
+                        hasTypeErrors = errors.length > 0;
+                      }
+                      const success = !error && !hasTypeErrors;
+
+                      if (!success) {
+                        logger.info(BUILD_WATCH_FAILED);
+                      } else {
+                        logger.info(BUILD_WATCH_SUCCEEDED);
+                      }
+
+                      next({
+                        success: !!error && !hasTypeErrors,
+                        outfile: esbuildOptions.outfile,
+                      });
+                    },
+                  }
+                : true;
+            try {
+              const result = await esbuild.build({ ...esbuildOptions, watch });
+
+              next({
+                success: true,
+                outfile: esbuildOptions.outfile,
+              });
+
+              return result;
+            } catch {
+              next({ success: false });
+            }
           })
         );
         const processOnExit = () => {
@@ -126,21 +161,12 @@ export async function* esbuildExecutor(
         } else {
           logger.info(BUILD_WATCH_SUCCEEDED);
         }
-
-        next({
-          success,
-          outfile: getOutfile(options.format[0], options, context),
-        });
       }
     );
   } else {
     const buildResults = await Promise.all(
       options.format.map((format) =>
-        esbuild.build({
-          ...esbuildOptions,
-          format,
-          outfile: getOutfile(format, options, context),
-        })
+        esbuild.build(buildEsbuildOptions(format, options, context))
       )
     );
     const buildSuccess = buildResults.every((r) => r.errors?.length === 0);
@@ -189,23 +215,6 @@ function getTypeCheckOptions(
   }
 
   return typeCheckOptions;
-}
-
-function getOutfile(
-  format: 'cjs' | 'esm',
-  options: EsBuildExecutorOptions,
-  context: ExecutorContext
-) {
-  const candidate = joinPathFragments(
-    context.target.options.outputPath,
-    options.outputFileName
-  );
-  if (format === 'esm') {
-    return candidate;
-  } else {
-    const { dir, name } = parse(candidate);
-    return `${dir}/${name}${CJS_FILE_EXTENSION}`;
-  }
 }
 
 async function runTypeCheck(

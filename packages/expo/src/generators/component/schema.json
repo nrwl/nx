@@ -2,7 +2,7 @@
   "cli": "nx",
   "$id": "NxExpoComponent",
   "$schema": "http://json-schema.org/schema",
-  "title": "Create a Expo Component for Nx",
+  "description": "Create a Expo Component for Nx.",
   "type": "object",
   "examples": [
     {
@@ -50,8 +50,7 @@
     },
     "directory": {
       "type": "string",
-      "description": "Create the component under this directory (can be nested).",
-      "alias": "d"
+      "description": "Create the component under this directory (can be nested)."
     },
     "flat": {
       "type": "boolean",

@@ -12,7 +12,7 @@ In the `nx.json` you can set a `defaultCollection` property like this:
 
 This would cause the following command
 
-```bash
+```shell
 nx g library my-lib
 ```
 
@@ -20,7 +20,7 @@ To create a `@nrwl/next:library` library instead of some other generator with th
 
 This property is no longer needed because the Nx cli automatically will prompt you to choose between the available options if there is any ambiguity. The output looks like this:
 
-```bash
+```shell
 > nx g lib my-lib
 ? Which generator would you like to use? …
 @nrwl/react-native:library

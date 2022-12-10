@@ -13,7 +13,7 @@ export function setupServeTarget(host: Tree, options: Schema) {
     executor:
       options.mfType === 'host'
         ? '@nrwl/angular:module-federation-dev-server'
-        : '@nrwl/angular:webpack-server',
+        : '@nrwl/angular:webpack-dev-server',
     options: {
       ...appConfig.targets['serve'].options,
       port: options.port ?? undefined,

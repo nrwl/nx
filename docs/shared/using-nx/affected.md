@@ -23,7 +23,7 @@ that can be affected by this change. It then runs the `run-many` command with th
 For instance, if my PR changes `lib`, and I then run `nx affected --target=test`, Nx figures out that `app1` and `app2`
 depend on `lib`, so it will invoke `nx run-many --target=test --projects=app1,app2,lib`.
 
-![affected](/shared/mental-model/affected.png)
+![affected](/shared/mental-model/affected.svg)
 
 Nx analyzes the nature of the changes. For example, if you change the version of Next.js in the package.json, Nx knows
 that `app2` cannot be affected by it, so it only retests `app1`.
@@ -32,7 +32,7 @@ that `app2` cannot be affected by it, so it only retests `app1`.
 
 To visualise what is affected, run:
 
-```bash
+```shell
 nx affected:graph
 ```
 
@@ -40,14 +40,14 @@ nx affected:graph
 
 The SHAs you pass must be defined in the git repository. The `main` and `HEAD` SHAs are what you normally use while developing. Most likely you will want to provision other SHAs in your CI environment.
 
-```bash
+```shell
 nx affected:build --base= origin/main --head=$PR_BRANCH_NAME # where PR_BRANCH_NAME is defined by your CI system
 nx affected:build --base= origin/main~1 --head= origin/main # rerun what is affected by the last commit in main
 ```
 
 You can also set the base and head SHAs as env variables:
 
-```bash
+```shell
 NX_BASE=origin/main~1
 NX_HEAD=origin/main
 ```

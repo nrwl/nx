@@ -8,9 +8,7 @@ By default, Nx sets up your ESLint configs with performance in mind - we want yo
 
 Let's take an example of an ESLint config that Nx might generate for you out of the box for a Next.js project called `tuskdesk`:
 
-**apps/tuskdesk/.eslintrc.json**
-
-```jsonc
+```jsonc {% fileName="apps/tuskdesk/.eslintrc.json" %}
 {
   "extends": ["plugin:@nrwl/nx/react", "../../.eslintrc.json"],
   "ignorePatterns": ["!**/*"],
@@ -35,9 +33,7 @@ Here we do _not_ have `parserOptions.project`, which is appropriate because we a
 
 If we now come in and add a rule which does require type information, for example `@typescript-eslint/await-thenable`, our config will look as follows:
 
-**apps/tuskdesk/.eslintrc.json**
-
-```jsonc
+```jsonc {% fileName="apps/tuskdesk/.eslintrc.json" %}
 {
   "extends": ["plugin:@nrwl/nx/react", "../../.eslintrc.json"],
   "ignorePatterns": ["!**/*"],
@@ -63,7 +59,7 @@ If we now come in and add a rule which does require type information, for exampl
 
 Now if we try and run `nx lint tuskdesk` we will get an error
 
-```bash
+```{% command="nx lint tuskdesk" %}
 > nx run tuskdesk:lint
 
 Linting "tuskdesk"...
@@ -78,9 +74,7 @@ Linting "tuskdesk"...
 
 The solution is to update our config once more, this time to set `parserOptions.project` to appropriately point at our various tsconfig.json files which belong to our project:
 
-**apps/tuskdesk/.eslintrc.json**
-
-```jsonc
+```jsonc {% fileName="apps/tuskdesk/.eslintrc.json" %}
 {
   "extends": ["plugin:@nrwl/nx/react", "../../.eslintrc.json"],
   "ignorePatterns": ["!**/*"],

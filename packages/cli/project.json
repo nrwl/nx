@@ -1,4 +1,5 @@
 {
+  "name": "cli",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/cli",
   "projectType": "library",
@@ -9,7 +10,7 @@
         "jestConfig": "packages/cli/jest.config.ts",
         "passWithNoTests": true
       },
-      "outputs": ["coverage/packages/cli"]
+      "outputs": ["{workspaceRoot}/coverage/packages/cli"]
     },
     "build-base": {
       "executor": "@nrwl/js:tsc",
@@ -57,7 +58,7 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["build/packages/cli"],
+      "outputs": ["{workspaceRoot}/build/packages/cli"],
       "options": {
         "commands": [
           {

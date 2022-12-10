@@ -3,7 +3,7 @@ import * as depcheck from 'depcheck';
 // Ignore packages that are defined here per package.
 // Note: If @babel/parser fails to parse a file, then its imports will not be detected.
 const IGNORE_MATCHES = {
-  '*': ['@nrwl/workspace', 'chalk', 'tslib'],
+  '*': ['@nrwl/devkit', '@nrwl/workspace', 'chalk', 'tslib', '@swc/helpers'],
   angular: ['@angular-devkit/schematics', '@schematics/angular', 'http-server'],
   cli: [],
   cypress: [],
@@ -22,9 +22,11 @@ const IGNORE_MATCHES = {
   rollup: [],
   storybook: [],
   nx: ['glob'],
+  vite: [],
   web: ['http-server'],
   webpack: [
     // These are not being picked up because @babel/parser is failing on the files that import them.
+    'css-loader',
     'style-loader',
     'ts-loader',
     'webpack-merge',

@@ -1,8 +1,16 @@
+import { Tree } from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
 import { Schema } from '../schema';
 import { normalizeOptions } from './normalize-options';
 
 describe('Normalize Options', () => {
+  let appTree: Tree;
+
+  beforeEach(() => {
+    appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+  });
+
   it('should normalize options with name in kebab case', () => {
     const schema: Schema = {
       name: 'my-app',
@@ -12,7 +20,7 @@ describe('Normalize Options', () => {
       js: true,
       unitTestRunner: 'jest',
     };
-    const options = normalizeOptions(schema);
+    const options = normalizeOptions(appTree, schema);
     expect(options).toEqual({
       appProjectRoot: 'apps/my-app',
       className: 'MyApp',
@@ -38,7 +46,7 @@ describe('Normalize Options', () => {
       js: true,
       unitTestRunner: 'jest',
     };
-    const options = normalizeOptions(schema);
+    const options = normalizeOptions(appTree, schema);
     expect(options).toEqual({
       appProjectRoot: 'apps/my-app',
       className: 'MyApp',
@@ -65,7 +73,7 @@ describe('Normalize Options', () => {
       js: true,
       unitTestRunner: 'jest',
     };
-    const options = normalizeOptions(schema);
+    const options = normalizeOptions(appTree, schema);
     expect(options).toEqual({
       appProjectRoot: 'apps/directory/my-app',
       className: 'MyApp',
@@ -92,7 +100,7 @@ describe('Normalize Options', () => {
       js: true,
       unitTestRunner: 'jest',
     };
-    const options = normalizeOptions(schema);
+    const options = normalizeOptions(appTree, schema);
     expect(options).toEqual({
       appProjectRoot: 'apps/directory/my-app',
       className: 'DirectoryMyApp',
@@ -119,7 +127,7 @@ describe('Normalize Options', () => {
       js: true,
       unitTestRunner: 'jest',
     };
-    const options = normalizeOptions(schema);
+    const options = normalizeOptions(appTree, schema);
     expect(options).toEqual({
       appProjectRoot: 'apps/my-app',
       className: 'MyApp',

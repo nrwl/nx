@@ -40,6 +40,17 @@ export async function workspaceGenerators(args: string[]) {
   }
 }
 
+export function workspaceGeneratorSchema(name: string) {
+  const schemaFile = path.join(generatorsDir, name, 'schema.json');
+
+  if (fileExists(schemaFile)) {
+    return readJsonFile(schemaFile);
+  } else {
+    logger.error(`Cannot find schema for ${name}. Does the generator exist?`);
+    process.exit(1);
+  }
+}
+
 // compile tools
 function compileTools() {
   const toolsOutDir = getToolsOutDir();

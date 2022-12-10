@@ -44,7 +44,7 @@
     "linter": {
       "description": "The tool to use for running lint checks.",
       "type": "string",
-      "enum": ["eslint", "tslint", "none"],
+      "enum": ["eslint", "none"],
       "default": "eslint"
     },
     "js": {
@@ -60,7 +60,16 @@
     "standaloneConfig": {
       "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
       "type": "boolean"
+    },
+    "configureTestRunner": {
+      "type": "boolean",
+      "description": "Add a Storybook Test-Runner target."
+    },
+    "bundler": {
+      "description": "The Storybook builder to use.",
+      "enum": ["vite", "webpack"]
     }
   },
-  "required": ["name"]
+  "required": ["name"],
+  "examplesFile": "../../../docs/configuration-generator-examples.md"
 }

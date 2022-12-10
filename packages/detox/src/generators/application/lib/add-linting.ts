@@ -3,10 +3,10 @@ import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import {
   addDependenciesToPackageJson,
   joinPathFragments,
-  updateJson,
   Tree,
+  updateJson,
 } from '@nrwl/devkit';
-import { extraEslintDependencies, createReactEslintJson } from '@nrwl/react';
+import { extendReactEslintJson, extraEslintDependencies } from '@nrwl/react';
 import { NormalizedSchema } from './normalize-options';
 
 export async function addLinting(host: Tree, options: NormalizedSchema) {
@@ -16,27 +16,18 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
 
   const lintTask = await lintProjectGenerator(host, {
     linter: options.linter,
-    project: options.projectName,
+    project: options.e2eProjectName,
     tsConfigPaths: [
-      joinPathFragments(options.projectRoot, 'tsconfig.app.json'),
+      joinPathFragments(options.e2eProjectRoot, 'tsconfig.app.json'),
     ],
-    eslintFilePatterns: [`${options.projectRoot}/**/*.{ts,tsx,js,jsx}`],
+    eslintFilePatterns: [`${options.e2eProjectRoot}/**/*.{ts,tsx,js,jsx}`],
     skipFormat: true,
   });
 
-  if (options.linter === Linter.TsLint) {
-    return () => {};
-  }
-
-  const reactEslintJson = createReactEslintJson(
-    options.projectRoot,
-    options.setParserOptionsProject
-  );
-
   updateJson(
     host,
-    joinPathFragments(options.projectRoot, '.eslintrc.json'),
-    () => reactEslintJson
+    joinPathFragments(options.e2eProjectRoot, '.eslintrc.json'),
+    extendReactEslintJson
   );
 
   const installTask = addDependenciesToPackageJson(

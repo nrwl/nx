@@ -14,7 +14,6 @@ import {
   updateFile,
   updateProjectConfig,
 } from '@nrwl/e2e/utils';
-import { ChildProcess } from 'child_process';
 
 import { names } from '@nrwl/devkit';
 
@@ -97,7 +96,7 @@ describe('Angular Projects', () => {
     }
   }, 1000000);
 
-  it('should build the dependent buildable lib and its child lib, as well as the app', () => {
+  it('should build the dependent buildable lib and its child lib, as well as the app', async () => {
     // ARRANGE
     const app = uniq('app');
     const buildableLib = uniq('buildlib1');
@@ -221,145 +220,4 @@ describe('Angular Projects', () => {
     );
     expect(buildOutput).toContain('Successfully ran target build');
   });
-
-  it('MF - should serve the host and remote apps successfully, even with a shared library with a secondary entry point between them', async () => {
-    // ACT + ASSERT
-    const port1 = 4200;
-    const port2 = 4206;
-    const hostApp = uniq('app');
-    const remoteApp1 = uniq('remote');
-    const sharedLib = uniq('shared-lib');
-    const secondaryEntry = uniq('secondary');
-
-    // generate host app
-    runCLI(
-      `generate @nrwl/angular:host ${hostApp} --style=css --no-interactive`
-    );
-
-    // generate remote apps
-    runCLI(
-      `generate @nrwl/angular:remote ${remoteApp1} --host=${hostApp} --port=${port2} --style=css --no-interactive`
-    );
-
-    // generate a shared lib
-    runCLI(
-      `generate @nrwl/angular:library ${sharedLib} --buildable --no-interactive`
-    );
-    runCLI(
-      `generate @nrwl/angular:library-secondary-entry-point --library=${sharedLib} --name=${secondaryEntry} --no-interactive`
-    );
-
-    // update the files to use shared library
-    updateFile(
-      `apps/${hostApp}/src/app/app.module.ts`,
-      `import { NgModule } from '@angular/core';
-      import { BrowserModule } from '@angular/platform-browser';
-      import { ${
-        names(sharedLib).className
-      }Module } from '@${proj}/${sharedLib}';
-      import { ${
-        names(secondaryEntry).className
-      }Module } from '@${proj}/${secondaryEntry}';
-      import { AppComponent } from './app.component';
-      import { NxWelcomeComponent } from './nx-welcome.component';
-      import { RouterModule } from '@angular/router';
-      
-      @NgModule({
-        declarations: [AppComponent, NxWelcomeComponent],
-        imports: [
-          BrowserModule,
-          SharedModule,
-          RouterModule.forRoot(
-            [
-              {
-                path: '${remoteApp1}',
-                loadChildren: () =>
-                  import('${remoteApp1}/Module').then(
-                    (m) => m.RemoteEntryModule
-                  ),
-              },
-            ],
-            { initialNavigation: 'enabledBlocking' }
-          ),
-        ],
-        providers: [],
-        bootstrap: [AppComponent],
-      })
-      export class AppModule {}
-      `
-    );
-    updateFile(
-      `apps/${remoteApp1}/src/app/remote-entry/entry.module.ts`,
-      `import { NgModule } from '@angular/core';
-    import { CommonModule } from '@angular/common';
-    import { RouterModule } from '@angular/router';
-    import { ${names(sharedLib).className}Module } from '@${proj}/${sharedLib}';
-      import { ${
-        names(secondaryEntry).className
-      }Module } from '@${proj}/${secondaryEntry}';
-    import { RemoteEntryComponent } from './entry.component';
-    
-    @NgModule({
-      declarations: [RemoteEntryComponent],
-      imports: [
-        CommonModule,
-        SharedModule,
-        RouterModule.forChild([
-          {
-            path: '',
-            component: RemoteEntryComponent,
-          },
-        ]),
-      ],
-      providers: [],
-    })
-    export class RemoteEntryModule {}
-    `
-    );
-
-    let process: ChildProcess;
-
-    try {
-      process = await runCommandUntil(
-        `serve ${hostApp} --dev-remotes=${remoteApp1}`,
-        (output) => {
-          return (
-            output.includes(`listening on localhost:${port2}`) &&
-            output.includes(`listening on localhost:${port1}`)
-          );
-        }
-      );
-    } catch (err) {
-      console.error(err);
-    }
-
-    // port and process cleanup
-    try {
-      if (process && process.pid) {
-        await promisifiedTreeKill(process.pid, 'SIGKILL');
-      }
-    } catch (err) {
-      expect(err).toBeFalsy();
-    }
-  }, 300000);
-
-  it('MF - should build the host app successfully', async () => {
-    // ARRANGE
-    const hostApp = uniq('app');
-    const remoteApp1 = uniq('remote');
-
-    // generate host app
-    runCLI(`generate @nrwl/angular:host ${hostApp} --no-interactive`);
-
-    // generate remote apps
-    runCLI(
-      `generate @nrwl/angular:remote ${remoteApp1} --host=${hostApp} --no-interactive`
-    );
-
-    // ACT
-    const buildOutput = runCLI(`build ${hostApp}`);
-
-    // ASSERT
-    expect(buildOutput).toContain('Successfully ran target build');
-  }, 300000);
 });

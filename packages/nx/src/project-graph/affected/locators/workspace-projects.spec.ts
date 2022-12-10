@@ -1,8 +1,8 @@
 import {
   ProjectGraph,
   ProjectGraphProjectNode,
-} from 'nx/src/config/project-graph';
-import { ProjectConfiguration } from 'nx/src/config/workspace-json-project-json';
+} from '../../../config/project-graph';
+import { ProjectConfiguration } from '../../../config/workspace-json-project-json';
 import { WholeFileChange } from '../../file-utils';
 import {
   getTouchedProjects,
@@ -64,6 +64,17 @@ describe('getTouchedProjects', () => {
     expect(
       getTouchedProjects(fileChanges, buildProjectGraphNodes(projects))
     ).toEqual(['ab']);
+  });
+
+  it('should not return parent project if nested project is touched', () => {
+    const fileChanges = getFileChanges(['libs/a/b/index.ts']);
+    const projects = {
+      a: { root: 'libs/a' },
+      b: { root: 'libs/a/b' },
+    };
+    expect(
+      getTouchedProjects(fileChanges, buildProjectGraphNodes(projects))
+    ).toEqual(['b']);
   });
 });
 

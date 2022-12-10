@@ -5,14 +5,14 @@ export function CustomLink(props: any) {
     props.target || (props.href.startsWith('http') ? '_blank' : undefined);
 
   return (
-    <Link {...props} passHref>
-      <a
-        target={target}
-        rel={target === '_blank' ? 'noreferrer' : undefined}
-        className={props.className}
-      >
-        {props.children}
-      </a>
+    <Link
+      {...props}
+      passHref
+      target={target}
+      rel={target === '_blank' ? 'noreferrer' : undefined}
+      className={props.className}
+    >
+      {props.children}
     </Link>
   );
 }

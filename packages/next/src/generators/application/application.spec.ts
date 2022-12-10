@@ -1,6 +1,5 @@
-import { Linter } from '@nrwl/linter';
 import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
-import { getProjects, readJson, NxJsonConfiguration, Tree } from '@nrwl/devkit';
+import { getProjects, NxJsonConfiguration, readJson, Tree } from '@nrwl/devkit';
 
 import { applicationGenerator } from './application';
 
@@ -403,30 +402,6 @@ describe('app', () => {
         `);
       });
     });
-
-    describe('tslint', () => {
-      it('should generate files', async () => {
-        await applicationGenerator(tree, {
-          name: 'myApp',
-          style: 'css',
-          linter: Linter.TsLint,
-          standaloneConfig: false,
-        });
-
-        const tslintJson = readJson(tree, 'apps/my-app/tslint.json');
-        expect(tslintJson).toMatchInlineSnapshot(`
-          Object {
-            "extends": "../../tslint.json",
-            "linterOptions": Object {
-              "exclude": Array [
-                "!**/*",
-              ],
-            },
-            "rules": Object {},
-          }
-        `);
-      });
-    });
   });
 
   describe('--js', () => {
@@ -447,8 +422,8 @@ describe('app', () => {
       expect(tsConfig.compilerOptions.allowJs).toEqual(true);
 
       const tsConfigApp = readJson(tree, 'apps/my-app/tsconfig.json');
-      expect(tsConfigApp.include).toContain('**/*.js');
-      expect(tsConfigApp.exclude).not.toContain('**/*.spec.js');
+      expect(tsConfigApp.include).toContain('src/**/*.js');
+      expect(tsConfigApp.exclude).not.toContain('src/**/*.spec.js');
     });
   });
 

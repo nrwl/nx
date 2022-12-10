@@ -44,8 +44,8 @@ function startAsync(
 ): Promise<number> {
   return new Promise((resolve, reject) => {
     childProcess = fork(
-      join(workspaceRoot, './node_modules/expo-cli/bin/expo.js'),
-      [options.webpack ? 'web' : 'start', ...createStartOptions(options)],
+      join(workspaceRoot, './node_modules/@expo/cli/build/bin/cli'),
+      ['start', ...createStartOptions(options)],
       { cwd: join(workspaceRoot, projectRoot) }
     );
 
@@ -66,17 +66,15 @@ function startAsync(
   });
 }
 
-const nxOptions = ['webpack'];
+// options from https://github.com/expo/expo/blob/main/packages/%40expo/cli/src/start/index.ts
 function createStartOptions(options: ExpoStartOptions) {
   return Object.keys(options).reduce((acc, k) => {
     const v = options[k];
-    if (k === 'dev' && v === false) {
-      acc.push(`--no-dev`);
-    } else if (k === 'minify' && v === false) {
-      acc.push(`--no-minify`);
-    } else if (k === 'https' && v === false) {
-      acc.push(`--no-https`);
-    } else if (!nxOptions.includes(k)) {
+    if (k === 'dev') {
+      if (v === false) {
+        acc.push(`--no-dev`);
+      }
+    } else {
       if (typeof v === 'boolean') {
         if (v === true) {
           // when true, does not need to pass the value true, just need to pass the flag in kebob case

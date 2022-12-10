@@ -7,13 +7,13 @@ Nx runs tasks in the most efficient way possible. The `nx.json` file is the plac
 If you want to increase the number of processes running tasks to, say, 5 (by default, it is 3), pass the
 following:
 
-```bash
+```shell
 npx nx build myapp --parallel=5
 ```
 
 Note, you can also change the default in `nx.json`, like this:
 
-```json title="nx.json"
+```json {% fileName="nx.json"%}
 {
   "tasksRunnerOptions": {
     "default": {
@@ -31,7 +31,7 @@ Note, you can also change the default in `nx.json`, like this:
 
 To ensure tasks run in the correct order, Nx needs to know how the tasks depend on each other. Add the following to `nx.json`:
 
-```json title="nx.json"
+```jsonc {% fileName="nx.json"%}
 {
   ...
   "targetDefaults": {
@@ -46,7 +46,7 @@ With this, Nx knows that before it can build a project, it needs to build all of
 
 This mechanism is very flexible. Let's look at this example:
 
-```json title="nx.json"
+```jsonc {% fileName="nx.json"%}
 {
   ...
   "targetDefaults": {
@@ -76,12 +76,12 @@ in parallel as possible as long as the constraints are met.
 
 Situations like this are pretty common:
 
-![Mixing Targets](../images/running-tasks/mixing-targets.png)
+![task-graph-execution](/shared/mental-model/task-graph-execution.svg)
 
 Because we described the rules in `nx.json`, they will apply to all the projects in the repo. You can also define
 project-specific rules by adding them to the project's configuration.
 
-```json
+```jsonc {% fileName="nx.json"%}
 {
   ...
   "nx": {

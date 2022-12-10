@@ -1,5 +1,3 @@
-![ESLint logo](/shared/eslint-logo.png)
-
 A plugin containing a collection of recommended ESLint rule configurations wrapped as ESLint plugins and an Nx specific [enforce-module-boundaries](#enforce-module-boundaries) rule.
 
 ## Setting Up ESLint Plugin
@@ -8,13 +6,22 @@ A plugin containing a collection of recommended ESLint rule configurations wrapp
 
 In any Nx workspace, you can install `@nrwl/eslint-plugin-nx` by running the following commands if the package is not already installed:
 
-```bash
+{% tabs %}
+{%tab label="npm"%}
+
+```shell
 npm i --save-dev @nrwl/eslint-plugin-nx
 ```
 
-```bash
+{% /tab %}
+{%tab label="yarn"%}
+
+```shell
 yarn add --dev @nrwl/eslint-plugin-nx
 ```
+
+{% /tab %}
+{% /tabs %}
 
 ## ESLint plugins
 
@@ -53,7 +60,7 @@ The `@nrwl/nx/enforce-module-boundaries` ESLint rule enables you to define stric
 
 You can use `enforce-module-boundaries` rule by adding it to your ESLint rules configuration:
 
-```json
+```jsonc
 {
   // ... more ESLint config here
   "overrides": [
@@ -76,8 +83,8 @@ You can use `enforce-module-boundaries` rule by adding it to your ESLint rules c
 Read more about proper usage of this rule:
 
 - [Enforce Project Boundaries](/core-features/enforce-project-boundaries)
-- [Ban Dependencies with Certain Tags](/recipe/ban-dependencies-with-tags)
-- [Tag in Multiple Dimensions](/recipe/tag-multiple-dimensions)
-- [Ban External Imports](/recipe/ban-external-imports)
-- [Tags Allow List](/recipe/tags-allow-list)
+- [Ban Dependencies with Certain Tags](/recipes/other/ban-dependencies-with-tags)
+- [Tag in Multiple Dimensions](/recipes/other/tag-multiple-dimensions)
+- [Ban External Imports](/recipes/other/ban-external-imports)
+- [Tags Allow List](/recipes/other/tags-allow-list)
 - [Taming Code Organization with Module Boundaries in Nx](https://blog.nrwl.io/mastering-the-project-boundaries-in-nx-f095852f5bf4)

@@ -1,5 +1,5 @@
 import * as chalk from 'chalk';
-import { ProjectMigrator } from './project.migrator';
+import type { ProjectMigrator } from '../migrators';
 import { validateProjects } from './validate-projects';
 
 describe('validateProjects', () => {

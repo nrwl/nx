@@ -1,6 +1,6 @@
 # Library Types
 
-There are many different types of libraries in a workspace. In order to maintain a certain sense of order, we recommend having a small number of types, such as the below four (4) types of libraries.
+There are many types of libraries in a workspace. In order to maintain a certain sense of order, we recommend having a small number of types, such as the below four (4) types of libraries.
 
 **Feature libraries:**
 
@@ -28,7 +28,7 @@ A feature library contains a set of files that configure a business use case or 
 
 **Naming Convention**
 
-`feature` (if nested) or `feature-\*` (e.g., `feature-home`).
+`feature` (if nested) or `feature-*` (e.g., `feature-home`).
 
 **Dependency Constraints**
 
@@ -55,7 +55,7 @@ A UI library is a collection of related presentational components. There are gen
 
 **Naming Convention**
 
-`ui` (if nested) or `ui-\*` (e.g., `ui-buttons`)
+`ui` (if nested) or `ui-*` (e.g., `ui-buttons`)
 
 **Dependency Constraints**
 
@@ -73,7 +73,7 @@ All files related to state management also reside in a `data-access` folder (by 
 
 **Naming Convention**
 
-`data-access` (if nested) or `data-access-\*` (e.g. `data-access-seatmap`)
+`data-access` (if nested) or `data-access-*` (e.g. `data-access-seatmap`)
 
 **Dependency Constraints**
 
@@ -89,7 +89,7 @@ A utility library contains low level code used by many libraries. Often there is
 
 **Naming Convention**
 
-`util` (if nested), or `util-\*` (e.g., `util-testing`)
+`util` (if nested), or `util-*` (e.g., `util-testing`)
 
 **Dependency Constraints**
 

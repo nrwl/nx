@@ -1,4 +1,5 @@
 {
+  "name": "e2e-nx-run",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "e2e/nx-run",
   "projectType": "application",
@@ -27,7 +28,7 @@
         "passWithNoTests": true,
         "runInBand": true
       },
-      "outputs": ["coverage/e2e/nx-run"]
+      "outputs": ["{workspaceRoot}/coverage/e2e/nx-run"]
     }
   },
   "implicitDependencies": ["js"]

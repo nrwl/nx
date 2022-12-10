@@ -75,14 +75,18 @@
     "linter": {
       "description": "The tool to use for running lint checks.",
       "type": "string",
-      "enum": ["eslint", "tslint"],
+      "enum": ["eslint", "none"],
       "default": "eslint"
     },
     "unitTestRunner": {
       "type": "string",
-      "enum": ["jest", "none"],
-      "description": "Test runner to use for unit tests.",
-      "default": "jest"
+      "enum": ["jest", "vitest", "none"],
+      "description": "Test runner to use for unit tests."
+    },
+    "inSourceTests": {
+      "type": "boolean",
+      "default": false,
+      "description": "When using Vitest, separate spec files will not be generated and instead will be included within the source files."
     },
     "tags": {
       "type": "string",
@@ -121,7 +125,8 @@
     "buildable": {
       "type": "boolean",
       "default": false,
-      "description": "Generate a buildable library."
+      "description": "Generate a buildable library that uses rollup to bundle. Use 'bundler' option instead for greater control (none, vite, rollup).",
+      "x-deprecated": true
     },
     "importPath": {
       "type": "string",
@@ -156,11 +161,28 @@
       "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
       "type": "boolean"
     },
+    "bundler": {
+      "type": "string",
+      "description": "The bundler to use. Choosing 'none' means this library is not buildable.",
+      "enum": ["none", "vite", "rollup"],
+      "default": "none",
+      "x-prompt": "Which bundler would you like to use to build the library? Choose 'none' to skip build setup."
+    },
     "compiler": {
       "type": "string",
       "enum": ["babel", "swc"],
       "default": "babel",
-      "description": "Which compiler to use."
+      "description": "Which compiler to use. Only applies to `bundler: 'rollup'`."
+    },
+    "skipPackageJson": {
+      "description": "Do not add dependencies to `package.json`.",
+      "type": "boolean",
+      "default": false
+    },
+    "minimal": {
+      "description": "Create a React library with a minimal setup, no separate test files.",
+      "type": "boolean",
+      "default": false
     }
   },
   "required": ["name"]

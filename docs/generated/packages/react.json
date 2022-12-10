@@ -11,7 +11,7 @@
       "id": "overview",
       "path": "/packages/react",
       "file": "shared/react-plugin",
-      "content": "![React Logo](/shared/react-logo.png)\n\nThe React plugin contains executors and generators for managing React applications and libraries within an Nx workspace.\nIt provides:\n\n- Integration with libraries such as Jest, Cypress, and Storybook.\n- Generators for applications, libraries, components, hooks, and more.\n- Library build support for publishing packages to npm or other registries.\n- Utilities for automatic workspace refactoring.\n\n## Setting Up React\n\nTo create a new workspace with React, run `npx create-nx-workspace@latest --preset=react`.\n\nTo add the React plugin to an existing workspace, run one of the following:\n\n```bash\n# For npm users\nnpm install -D @nrwl/react\n\n# For yarn users\nyarn add -D @nrwl/react\n```\n\n### Creating Applications and Libraries\n\nYou can add a new application with the following:\n\n```bash\nnx g @nrwl/react:app my-new-app\n```\n\nTo start the application in development mode, run `nx serve my-new-app`.\n\nAnd add a new library as follows:\n\n```bash\nnx g @nrwl/react:lib my-new-lib\n\n# If you want the library to be buildable or publishable to npm\nnx g @nrwl/react:lib my-new-lib --buildable\nnx g @nrwl/react:lib my-new-lib \\\n--publishable \\\n--importPath=@myorg/my-new-lib\n```\n\nRead more about [building and publishing libraries here](/more-concepts/buildable-and-publishable-libraries).\n\n### Creating Components\n\nAdding a component to an existing project can be done with:\n\n```bash\nnx g @nrwl/react:component my-new-component \\\n--project=my-new-app\n\n# Note: If you want to export the component\n# from the library use  --export\nnx g @nrwl/react:component my-new-component \\\n--project=my-new-lib \\\n--export\n```\n\nReplace `my-new-app` and `my-new-lib` with the name of your projects.\n\n### Creating Hooks\n\nIf you want to add a new hook, run the following\n\n```bash\nnx g @nrwl/react:hook my-new-hook --project=my-new-lib\n```\n\nReplace `my-new-lib` with the name of your project.\n\n## Using React\n\n### Testing Projects\n\nYou can run unit tests with:\n\n```bash\nnx test my-new-app\nnx test my-new-lib\n```\n\nReplace `my-new-app` with the name or your project. This command works for both applications and libraries.\n\nYou can also run E2E tests for applications:\n\n```bash\nnx e2e my-new-app-e2e\n```\n\nReplace `my-new-app-e2e` with the name or your project with `-e2e` appended.\n\n### Building Projects\n\nReact applications can be build with:\n\n```bash\nnx build my-new-app\n```\n\nAnd if you generated a library with `--buildable`, then you can build a library as well:\n\n```bash\nnx build my-new-lib\n```\n\nThe output is in the `dist` folder. You can customize the output folder by setting `outputPath` in the\nproject's `project.json` file.\n\nThe application in `dist` is deployable, and you can try it out locally with:\n\n```bash\nnpx http-server dist/apps/my-new-app\n```\n\nThe library in `dist` is publishable to npm or a private registry.\n\n## More Documentation\n\n- [Using Cypress](/packages/cypress)\n- [Using Jest](/packages/jest)\n- [Using Storybook](/storybook/overview-react)\n"
+      "content": "The React plugin contains executors and generators for managing React applications and libraries within an Nx workspace.\nIt provides:\n\n- Integration with libraries such as Jest, Cypress, and Storybook.\n- Generators for applications, libraries, components, hooks, and more.\n- Library build support for publishing packages to npm or other registries.\n- Utilities for automatic workspace refactoring.\n\n## Setting Up React\n\nTo create a new workspace with React, run `npx create-nx-workspace@latest --preset=react`.\n\nTo add the React plugin to an existing workspace, run one of the following:\n\n```shell\n# For npm users\nnpm install -D @nrwl/react\n\n# For yarn users\nyarn add -D @nrwl/react\n```\n\n### Creating Applications and Libraries\n\nYou can add a new application with the following:\n\n```shell\nnx g @nrwl/react:app my-new-app\n```\n\nTo start the application in development mode, run `nx serve my-new-app`.\n\nAnd add a new library as follows:\n\n```shell\nnx g @nrwl/react:lib my-new-lib\n\n# If you want the library to be buildable or publishable to npm\nnx g @nrwl/react:lib my-new-lib --buildable\nnx g @nrwl/react:lib my-new-lib \\\n--publishable \\\n--importPath=@myorg/my-new-lib\n```\n\nRead more about [building and publishing libraries here](/more-concepts/buildable-and-publishable-libraries).\n\n### Creating Components\n\nAdding a component to an existing project can be done with:\n\n```shell\nnx g @nrwl/react:component my-new-component \\\n--project=my-new-app\n\n# Note: If you want to export the component\n# from the library use  --export\nnx g @nrwl/react:component my-new-component \\\n--project=my-new-lib \\\n--export\n```\n\nReplace `my-new-app` and `my-new-lib` with the name of your projects.\n\n### Creating Hooks\n\nIf you want to add a new hook, run the following\n\n```shell\nnx g @nrwl/react:hook my-new-hook --project=my-new-lib\n```\n\nReplace `my-new-lib` with the name of your project.\n\n## Using React\n\n### Testing Projects\n\nYou can run unit tests with:\n\n```shell\nnx test my-new-app\nnx test my-new-lib\n```\n\nReplace `my-new-app` with the name or your project. This command works for both applications and libraries.\n\nYou can also run E2E tests for applications:\n\n```shell\nnx e2e my-new-app-e2e\n```\n\nReplace `my-new-app-e2e` with the name or your project with `-e2e` appended.\n\n### Building Projects\n\nReact applications can be build with:\n\n```shell\nnx build my-new-app\n```\n\nAnd if you generated a library with `--buildable`, then you can build a library as well:\n\n```shell\nnx build my-new-lib\n```\n\nThe output is in the `dist` folder. You can customize the output folder by setting `outputPath` in the\nproject's `project.json` file.\n\nThe application in `dist` is deployable, and you can try it out locally with:\n\n```shell\nnpx http-server dist/apps/my-new-app\n```\n\nThe library in `dist` is publishable to npm or a private registry.\n\n## More Documentation\n\n- [Using Cypress](/packages/cypress)\n- [Using Jest](/packages/jest)\n- [Using Storybook](/storybook/overview-react)\n"
     }
   ],
   "generators": [
@@ -42,6 +42,22 @@
             "description": "Skip formatting files.",
             "type": "boolean",
             "default": false
+          },
+          "skipPackageJson": {
+            "description": "Do not add dependencies to `package.json`.",
+            "type": "boolean",
+            "default": false
+          },
+          "skipBabelConfig": {
+            "description": "Do not generate a root babel.config.json (if babel is not needed).",
+            "type": "boolean",
+            "default": false
+          },
+          "skipHelperLibs": {
+            "description": "Do not install helpers libs (tslib, core-js, regenerator-runtime).",
+            "type": "boolean",
+            "default": false,
+            "hidden": true
           },
           "js": {
             "type": "boolean",
@@ -136,7 +152,7 @@
           "linter": {
             "description": "The tool to use for running lint checks.",
             "type": "string",
-            "enum": ["eslint", "tslint"],
+            "enum": ["eslint", "none"],
             "default": "eslint"
           },
           "routing": {
@@ -157,9 +173,14 @@
           },
           "unitTestRunner": {
             "type": "string",
-            "enum": ["jest", "none"],
+            "enum": ["jest", "vitest", "none"],
             "description": "Test runner to use for unit tests.",
             "default": "jest"
+          },
+          "inSourceTests": {
+            "type": "boolean",
+            "default": false,
+            "description": "When using Vitest, separate spec files will not be generated and instead will be included within the source files. Read more on the Vitest docs site: https://vitest.dev/guide/in-source.html"
           },
           "e2eTestRunner": {
             "type": "string",
@@ -218,9 +239,33 @@
             "description": "Skip setting the project as the default project. When `false` (the default), the project is set as the default project only if there is no default project already set.",
             "type": "boolean",
             "default": false
+          },
+          "skipPackageJson": {
+            "description": "Do not add dependencies to `package.json`.",
+            "type": "boolean",
+            "default": false
+          },
+          "rootProject": {
+            "description": "Create a application at the root of the workspace",
+            "type": "boolean",
+            "default": false,
+            "hidden": true
+          },
+          "bundler": {
+            "description": "The bundler to use.",
+            "type": "string",
+            "enum": ["vite", "webpack"],
+            "x-prompt": "Which bundler do you want to use to build the application?",
+            "default": "webpack"
+          },
+          "minimal": {
+            "description": "Generate a React app with a minimal setup, no separate test files.",
+            "type": "boolean",
+            "default": false
           }
         },
         "required": [],
+        "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Simple Application\" %}\n\nCreate an application named `my-app`:\n\n```bash\nnx g @nrwl/react:application my-app\n```\n\n{% /tab %}\n\n{% tab label=\"Application using Vite as bundler\" %}\n\nCreate an application named `my-app`:\n\n```bash\nnx g @nrwl/react:app my-app --bundler=vite\n```\n\n{% /tab %}\n\n{% tab label=\"Specify directory and style extension\" %}\n\nCreate an application named `my-app` in the `my-dir` directory and use `scss` for styles:\n\n```bash\nnx g @nrwl/react:app my-app --directory=my-dir --style=scss\n```\n\n{% /tab %}\n\n{% tab label=\"Add tags\" %}\n\nAdd tags to the application (used for linting).\n\n```bash\nnx g @nrwl/react:app my-app --tags=scope:admin,type:ui\n```\n\n{% /tab %}\n{% /tabs %}\n",
         "presets": []
       },
       "aliases": ["app"],
@@ -304,14 +349,18 @@
           "linter": {
             "description": "The tool to use for running lint checks.",
             "type": "string",
-            "enum": ["eslint", "tslint"],
+            "enum": ["eslint", "none"],
             "default": "eslint"
           },
           "unitTestRunner": {
             "type": "string",
-            "enum": ["jest", "none"],
-            "description": "Test runner to use for unit tests.",
-            "default": "jest"
+            "enum": ["jest", "vitest", "none"],
+            "description": "Test runner to use for unit tests."
+          },
+          "inSourceTests": {
+            "type": "boolean",
+            "default": false,
+            "description": "When using Vitest, separate spec files will not be generated and instead will be included within the source files."
           },
           "tags": {
             "type": "string",
@@ -350,7 +399,8 @@
           "buildable": {
             "type": "boolean",
             "default": false,
-            "description": "Generate a buildable library."
+            "description": "Generate a buildable library that uses rollup to bundle. Use 'bundler' option instead for greater control (none, vite, rollup).",
+            "x-deprecated": true
           },
           "importPath": {
             "type": "string",
@@ -385,11 +435,28 @@
             "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
             "type": "boolean"
           },
+          "bundler": {
+            "type": "string",
+            "description": "The bundler to use. Choosing 'none' means this library is not buildable.",
+            "enum": ["none", "vite", "rollup"],
+            "default": "none",
+            "x-prompt": "Which bundler would you like to use to build the library? Choose 'none' to skip build setup."
+          },
           "compiler": {
             "type": "string",
             "enum": ["babel", "swc"],
             "default": "babel",
-            "description": "Which compiler to use."
+            "description": "Which compiler to use. Only applies to `bundler: 'rollup'`."
+          },
+          "skipPackageJson": {
+            "description": "Do not add dependencies to `package.json`.",
+            "type": "boolean",
+            "default": false
+          },
+          "minimal": {
+            "description": "Create a React library with a minimal setup, no separate test files.",
+            "type": "boolean",
+            "default": false
           }
         },
         "required": ["name"],
@@ -645,7 +712,7 @@
           "linter": {
             "description": "The tool to use for running lint checks.",
             "type": "string",
-            "enum": ["eslint", "tslint"],
+            "enum": ["eslint"],
             "default": "eslint"
           },
           "standaloneConfig": {
@@ -663,9 +730,18 @@
               "**/**/src/**/*.other.*",
               "libs/my-lib/src/not-stories/**,**/**/src/**/*.other.*,apps/my-app/**/*.something.ts"
             ]
+          },
+          "configureTestRunner": {
+            "type": "boolean",
+            "description": "Add a Storybook Test-Runner target."
+          },
+          "bundler": {
+            "description": "The Storybook builder to use.",
+            "enum": ["vite", "webpack"]
           }
         },
         "required": ["name"],
+        "examplesFile": "This generator will set up Storybook for your React project.\n\n```bash\nnx g @nrwl/react:storybook-configuration project-name\n```\n\nYou can read more about how this generator works, in the [Storybook for React overview page](/storybook/overview-react#generate-storybook-configuration-for-an-react-project).\n\nWhen running this generator, you will be prompted to provide the following:\n\n- The `name` of the project you want to generate the configuration for.\n- Whether you want to `configureCypress`. If you choose `yes`, a Cypress e2e app will be created (or configured) to run against the project's Storybook instance. You can read more about this in the [Storybook for React - Cypress section](/storybook/overview-react#cypress-tests-for-stories).\n- Whether you want to `generateStories` for the components in your project. If you choose `yes`, a `.stories.ts` file will be generated next to each of your components in your project.\n- Whether you want to `generateCypressSpecs`. If you choose `yes`, a test file is going to be generated in the project's Cypress e2e app for each of your components.\n- Whether you want to `configureTestRunner`. If you choose `yes`, a `test-storybook` target will be generated in your project's `project.json`, with a command to invoke the [Storybook `test-runner`](https://storybook.js.org/docs/react/writing-tests/test-runner).\n\nYou must provide a `name` for the generator to work.\n\nThere are a number of other options available. Let's take a look at some examples.\n\n## Examples\n\n### Generate Storybook configuration using TypeScript\n\n```bash\nnx g @nrwl/react:storybook-configuration ui --tsConfiguration=true\n```\n\nThis will generate a Storybook configuration for the `ui` project using TypeScript for the Storybook configuration files (the files inside the `.storybook` directory).\n\n### Ignore certain paths when generating stories\n\n```bash\nnx g @nrwl/react:storybook-configuration ui --generateStories=true --ignorePaths=libs/ui/src/not-stories/**,**/**/src/**/*.other.*,apps/my-app/**/*.something.ts\n```\n\nThis will generate a Storybook configuration for the `ui` project and generate stories for all components in the `libs/ui/src/lib` directory, except for the ones in the `libs/ui/src/not-stories` directory, and the ones in the `apps/my-app` directory that end with `.something.ts`, and also for components that their file name is of the pattern `*.other.*`.\n\nThis is useful if you have a project that contains components that are not meant to be used in isolation, but rather as part of a larger component.\n\n### Generate stories using JavaScript instead of TypeScript\n\n```bash\nnx g @nrwl/react:storybook-configuration ui --generateStories=true --js=true\n```\n\nThis will generate stories for all the components in the `ui` project using JavaScript instead of TypeScript. So, you will have `.stories.js` files next to your components.\n",
         "presets": []
       },
       "description": "Set up storybook for a React app or library.",
@@ -755,6 +831,7 @@
           }
         },
         "required": ["project"],
+        "examplesFile": "This generator will generate stories for all your components in your project.\n\n```bash\nnx g @nrwl/react:stories project-name\n```\n\nYou can read more about how this generator works, in the [Storybook for React overview page](/storybook/overview-react#auto-generate-stories).\n\nWhen running this generator, you will be prompted to provide the following:\n\n- The `name` of the project you want to generate the configuration for.\n- Whether you want to `generateCypressSpecs`. If you choose `yes`, a test file is going to be generated in the project's Cypress e2e app for each of your components.\n\nYou must provide a `name` for the generator to work.\n\nThere are a number of other options available. Let's take a look at some examples.\n\n## Examples\n\n### Ignore certain paths when generating stories\n\n```bash\nnx g @nrwl/react:stories --name=ui --ignorePaths=libs/ui/src/not-stories/**,**/**/src/**/*.other.*\n```\n\nThis will generate stories for all the components in the `ui` project, except for the ones in the `libs/ui/src/not-stories` directory, and also for components that their file name is of the pattern `*.other.*`.\n\nThis is useful if you have a project that contains components that are not meant to be used in isolation, but rather as part of a larger component.\n\n### Generate stories using JavaScript instead of TypeScript\n\n```bash\nnx g @nrwl/react:stories --name=ui --js=true\n```\n\nThis will generate stories for all the components in the `ui` project using JavaScript instead of TypeScript. So, you will have `.stories.js` files next to your components.\n",
         "presets": []
       },
       "description": "Create stories/specs for all components declared in an app or library.",
@@ -848,8 +925,7 @@
           },
           "directory": {
             "type": "string",
-            "description": "Create the hook under this directory (can be nested).",
-            "alias": "d"
+            "description": "Create the hook under this directory (can be nested)."
           },
           "flat": {
             "type": "boolean",
@@ -949,7 +1025,7 @@
           "linter": {
             "description": "The tool to use for running lint checks.",
             "type": "string",
-            "enum": ["eslint", "tslint"],
+            "enum": ["eslint"],
             "default": "eslint"
           },
           "skipFormat": {
@@ -1029,6 +1105,11 @@
           "devServerPort": {
             "type": "number",
             "description": "The port for the dev server of the remote app."
+          },
+          "ssr": {
+            "description": "Whether to configure SSR for the host application",
+            "type": "boolean",
+            "default": false
           }
         },
         "required": ["name"],
@@ -1106,7 +1187,7 @@
           "linter": {
             "description": "The tool to use for running lint checks.",
             "type": "string",
-            "enum": ["eslint", "tslint"],
+            "enum": ["eslint"],
             "default": "eslint"
           },
           "routing": {
@@ -1190,6 +1271,11 @@
           "devServerPort": {
             "type": "number",
             "description": "The port for the dev server of the remote app."
+          },
+          "ssr": {
+            "description": "Whether to configure SSR for the host application",
+            "type": "boolean",
+            "default": false
           }
         },
         "required": ["name"],
@@ -1248,6 +1334,7 @@
           }
         },
         "required": ["project"],
+        "examplesFile": "{% callout type=\"caution\" title=\"Can I use component testing?\" %}\nReact component testing with Nx requires **Cypress version 10.7.0** and up.\n\nYou can migrate with to v10 via the [migrate-to-cypress-10 generator](/packages/cypress/generators/migrate-to-cypress-10).\n\nThis generator is for Cypress based component testing.\n\nIf you want to test components via Storybook with Cypress, then check out the [storybook-configuration generator docs](/packages/react/generators/storybook-configuration)\n{% /callout %}\n\nThis generator is designed to get your React project up and running with Cypress Component Testing.\n\n```shell\nnx g @nrwl/react:cypress-component-project --project=my-cool-react-project\n```\n\nRunning this generator, adds the required files to the specified project with a preconfigured `cypress.config.ts` designed for Nx workspaces.\n\n```ts {% fileName=\"cypress.config.ts\" %}\nimport { defineConfig } from 'cypress';\nimport { nxComponentTestingPreset } from '@nrwl/react/plugins/component-testing';\n\nexport default defineConfig({\n  component: nxComponentTestingPreset(__filename),\n});\n```\n\nHere is an example on how to add custom options to the configuration\n\n```ts {% fileName=\"cypress.config.ts\" %}\nimport { defineConfig } from 'cypress';\nimport { nxComponentTestingPreset } from '@nrwl/react/plugins/component-testing';\n\nexport default defineConfig({\n  component: {\n    ...nxComponentTestingPreset(__filename),\n    // extra options here\n  },\n});\n```\n\n## Specifying a Build Target\n\nComponent testing requires a _build target_ to correctly run the component test dev server. This option can be manually specified with `--build-target=some-react-app:build`, but Nx will infer this usage from the [project graph](/concepts/mental-model#the-project-graph) if one isn't provided.\n\nFor React projects, the build target needs to be using the `@nrwl/webpack:webpack` executor.\nThe generator will throw an error if a build target can't be found and suggest passing one in manually.\n\nLetting Nx infer the build target by default\n\n```shell\nnx g @nrwl/react:cypress-component-project --project=my-cool-react-project\n```\n\nManually specifying the build target\n\n```shell\nnx g @nrwl/react:cypress-component-project --project=my-cool-react-project --build-target:some-react-app:build --generate-tests\n```\n\n{% callout type=\"note\" title=\"Build Target with Configuration\" %}\nIf you're wanting to use a build target with a specific configuration. i.e. `my-app:build:production`,\nthen manually providing `--build-target=my-app:build:production` is the best way to do that.\n{% /callout %}\n\n## Auto Generating Tests\n\nYou can optionally use the `--generate-tests` flag to generate a test file for each component in your project.\n\n```shell\nnx g @nrwl/react:cypress-component-project --project=my-cool-react-project --generate-tests\n```\n\n## Running Component Tests\n\nA new `component-test` target will be added to the specified project to run your component tests.\n\n```shell\nnx g component-test my-cool-react-project\n```\n\nHere is an example of the project configuration that is generated. The `--build-target` option is added as the `devServerTarget` which can be changed as needed.\n\n```json {% fileName=\"project.json\" %}\n{\n  \"targets\" {\n    \"component-test\": {\n      \"executor\": \"@nrwl/cypress:cypress\",\n      \"options\": {\n        \"cypressConfig\": \"<path-to-project-root>/cypress.config.ts\",\n        \"testingType\": \"component\",\n        \"devServerTarget\": \"some-react-app:build\",\n        \"skipServe\": true\n      }\n    }\n  }\n}\n```\n\nNx also supports [Angular component testing](/packages/angular/generators/cypress-component-configuration).\n",
         "presets": []
       },
       "description": "Setup Cypress component testing for a React project",
@@ -1286,6 +1373,7 @@
           }
         },
         "required": ["project", "componentPath"],
+        "examplesFile": "{% callout type=\"caution\" title=\"Can I use component testing?\" %}\nReact component testing with Nx requires **Cypress version 10** and up.\n\nYou can migrate with to v10 via the [migrate-to-cypress-10 generator](/packages/cypress/generators/migrate-to-cypress-10).\n\nThis generator is for Cypress based component testing.\n\nIf you're wanting to create Cypress tests for a Storybook story, then check out the [component-cypress-spec generator docs](/packages/react/generators/component-cypress-spec)\n\nIf you're wanting to create Storybook stories for a component, then check out the [stories generator docs](/packages/react/generators/stories) or [component-story generator docs](/packages/react/generators/component-cypress-spec)\n\n{% /callout %}\n\nThis generator is used to create a Cypress component test file for a given React component.\n\n```shell\nnx g @nrwl/react:component-test --project=my-cool-react-project --componentPath=src/my-fancy-button.tsx\n```\n\nTest file are generated with the `.cy.` suffix. this is to prevent colliding with any existing `.spec.` files contained in the project.\n\nIt's currently expected the generated `.cy.` file will live side by side with the component. It is also assumed the project is already setup for component testing. If it isn't, then you can run the [cypress-component-project generator](/packages/react/generators/cypress-component-configuration) to set up the project for component testing.\n",
         "presets": []
       },
       "description": "Generate a Cypress component test for a React component",
@@ -1343,6 +1431,56 @@
       "implementation": "/packages/react/src/generators/setup-tailwind/setup-tailwind#setupTailwindGenerator.ts",
       "aliases": [],
       "path": "/packages/react/src/generators/setup-tailwind/schema.json"
+    },
+    {
+      "name": "setup-ssr",
+      "factory": "./src/generators/setup-ssr/setup-ssr#setupSsrGenerator",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "$id": "GeneratorReactSSRSetup",
+        "cli": "nx",
+        "title": "Generate SSR setup for a React app",
+        "description": "Create the additional configuration required to enable SSR via Express for a React application.",
+        "type": "object",
+        "properties": {
+          "project": {
+            "type": "string",
+            "description": "The name of the application to add SSR support to.",
+            "$default": { "$source": "argv", "index": 0 },
+            "x-prompt": "What app would you like to add SSR support to?",
+            "x-dropdown": "projects"
+          },
+          "appComponentImportPath": {
+            "type": "string",
+            "description": "The import path of the <App/ > component, relative to project sourceRoot.",
+            "default": "app/app"
+          },
+          "serverPort": {
+            "type": "number",
+            "default": 4200,
+            "description": "The port for the Express server."
+          },
+          "skipFormat": {
+            "type": "boolean",
+            "description": "Skip formatting the workspace after the generator completes."
+          },
+          "extraInclude": {
+            "type": "array",
+            "items": { "type": "string" },
+            "hidden": true,
+            "description": "Extra include entries in tsconfig.",
+            "default": []
+          }
+        },
+        "required": ["project"],
+        "additionalProperties": false,
+        "presets": []
+      },
+      "description": "Set up SSR configuration for a project.",
+      "hidden": false,
+      "implementation": "/packages/react/src/generators/setup-ssr/setup-ssr#setupSsrGenerator.ts",
+      "aliases": [],
+      "path": "/packages/react/src/generators/setup-ssr/schema.json"
     }
   ],
   "executors": [
@@ -1350,6 +1488,8 @@
       "name": "module-federation-dev-server",
       "implementation": "/packages/react/src/executors/module-federation-dev-server/module-federation-dev-server.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "title": "Module Federation Dev Server",
         "description": "Serve a web application.",
         "cli": "nx",
@@ -1359,6 +1499,11 @@
             "type": "array",
             "items": { "type": "string" },
             "description": "List of remote applications to run in development mode (i.e. using serve target)."
+          },
+          "skipRemotes": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "List of remote applications to not automatically serve, either statically or in development mode. This can be useful for multi-repository module federation setups where the host application uses a remote application from an external repository."
           },
           "buildTarget": {
             "type": "string",
@@ -1434,6 +1579,54 @@
       "aliases": [],
       "hidden": false,
       "path": "/packages/react/src/executors/module-federation-dev-server/schema.json"
+    },
+    {
+      "name": "module-federation-ssr-dev-server",
+      "implementation": "/packages/react/src/executors/module-federation-ssr-dev-server/module-federation-ssr-dev-server.impl.ts",
+      "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
+        "title": "Module Federation SSR Dev Server",
+        "description": "Serve a SSR host application along with its known remotes.",
+        "cli": "nx",
+        "type": "object",
+        "properties": {
+          "browserTarget": {
+            "type": "string",
+            "description": "Target which builds the browser application."
+          },
+          "serverTarget": {
+            "type": "string",
+            "description": "Target which builds the server application."
+          },
+          "port": {
+            "type": "number",
+            "description": "The port to be set on `process.env.PORT` for use in the server.",
+            "default": 4200
+          },
+          "devRemotes": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "List of remote applications to run in development mode (i.e. using serve target)."
+          },
+          "skipRemotes": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "List of remote applications to not automatically serve, either statically or in development mode. This can be useful for multi-repository module federation setups where the host application uses a remote application from an external repository."
+          },
+          "host": {
+            "type": "string",
+            "description": "Host to listen on.",
+            "default": "localhost"
+          }
+        },
+        "required": ["browserTarget", "serverTarget"],
+        "presets": []
+      },
+      "description": "Serve a host application along with it's known remotes.",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/react/src/executors/module-federation-ssr-dev-server/schema.json"
     }
   ]
 }

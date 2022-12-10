@@ -1,4 +1,6 @@
 {
+  "version": 2,
+  "outputCapture": "direct-nodejs",
   "title": "Storybook Dev Builder",
   "cli": "nx",
   "description": "Serve up storybook in development mode.",
@@ -98,5 +100,6 @@
     }
   },
   "definitions": {},
-  "required": ["uiFramework", "config"]
+  "required": ["uiFramework", "config"],
+  "examplesFile": "../../../docs/storybook-executor-examples.md"
 }

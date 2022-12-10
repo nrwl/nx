@@ -6,7 +6,7 @@ import { libraryGenerator } from '../library/library';
 describe('move', () => {
   let tree: Tree;
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it('should update jest config when moving down directories', async () => {

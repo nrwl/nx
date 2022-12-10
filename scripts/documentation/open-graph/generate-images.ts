@@ -2,7 +2,7 @@ import { Canvas, Image, SKRSContext2D } from '@napi-rs/canvas';
 import { ensureDir, readFile, readJSONSync, writeFileSync } from 'fs-extra';
 import { resolve } from 'path';
 
-const mapJson = readJSONSync('./docs/map.json', 'utf8');
+const mapJson = readJSONSync('./docs/map.json', 'utf8').content;
 
 const documents: any[] = [
   ...mapJson.find((x) => x.id === 'nx-documentation')?.['itemList'],
@@ -79,16 +79,16 @@ function createOpenGraphImage(
     const context = canvas.getContext('2d');
     context.drawImage(image, 0, 0, 1200, 630);
 
-    context.font = 'bold 60px sans-serif';
+    context.font = 'bold 60px system-ui';
     context.textAlign = 'center';
     context.textBaseline = 'top';
-    context.fillStyle = '#fff';
+    context.fillStyle = '#212121';
     context.fillText(title.toUpperCase(), 600, 220);
 
-    context.font = 'bold 42px sans-serif';
+    context.font = 'normal 42px system-ui';
     context.textAlign = 'center';
     context.textBaseline = 'top';
-    context.fillStyle = '#fff';
+    context.fillStyle = '#212121';
 
     const lines = splitLines(context, content, 1100);
     lines.forEach((line, index) => {

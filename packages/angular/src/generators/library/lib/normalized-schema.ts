@@ -1,12 +1,12 @@
 import { UnitTestRunner } from '../../../utils/test-runners';
-import type { AngularLinter } from '../schema';
+import type { Linter } from '@nrwl/linter';
 
 export interface NormalizedSchema {
   libraryOptions: {
     name: string;
     addTailwind?: boolean;
     skipFormat?: boolean;
-    simpleModuleName?: boolean;
+    simpleName?: boolean;
     addModuleSpec?: boolean;
     directory?: string;
     sourceDir?: string;
@@ -15,11 +15,10 @@ export interface NormalizedSchema {
     importPath?: string;
     standaloneConfig?: boolean;
     spec?: boolean;
-    flat?: boolean;
     commonModule?: boolean;
     routing?: boolean;
     lazy?: boolean;
-    parentModule?: string;
+    parent?: string;
     tags?: string;
     strict?: boolean;
     compilationMode?: 'full' | 'partial';
@@ -28,7 +27,7 @@ export interface NormalizedSchema {
     skipPackageJson?: boolean;
     skipPostInstall?: boolean;
     standalone?: boolean;
-    linter: AngularLinter;
+    linter: Linter;
     unitTestRunner: UnitTestRunner;
     prefix: string;
     fileName: string;
@@ -53,5 +52,6 @@ export interface NormalizedSchema {
     skipTests?: boolean;
     selector?: string;
     skipSelector?: boolean;
+    flat?: boolean;
   };
 }

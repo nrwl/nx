@@ -7,7 +7,7 @@ export function createMenuItems(root: DocumentMetadata): MenuItem[] {
   const createPathMetadata = (g: DocumentMetadata, parentId = ''): MenuItem => {
     const pathData = {
       ...g,
-      path: g.path ?? `/${parentId}/${g.id}`,
+      path: g.path ?? `${parentId}/${g.id}`,
     };
 
     if (Array.isArray(g.itemList)) {
@@ -16,17 +16,12 @@ export function createMenuItems(root: DocumentMetadata): MenuItem[] {
       );
     }
 
-    return pathData;
+    return {
+      ...pathData,
+      disableCollapsible: false,
+    } as MenuItem;
   };
-
-  return (
-    items?.map((item) => {
-      return {
-        ...item,
-        itemList: item.itemList?.map((ii) => createPathMetadata(ii, item.id)),
-      };
-    }) ?? []
-  );
+  return items?.map((item) => createPathMetadata(item)) ?? [];
 }
 
 export function getBasicSection(items: MenuItem[]): MenuSection {
@@ -53,10 +48,27 @@ export function getBasicSection(items: MenuItem[]): MenuSection {
   };
 }
 
+export function getBasicRecipesSection(items: MenuItem[]): MenuSection {
+  return {
+    id: 'basic',
+    name: 'Basic',
+    hideSectionHeader: true,
+    itemList: items
+      // .filter((m) => m.id === 'getting-started')
+      .map((m) => {
+        return {
+          ...m,
+          disableCollapsible: true,
+        };
+      }),
+  };
+}
+
 export function getDeepDiveSection(items: MenuItem[]): MenuSection {
   return {
     id: 'deep-dive',
     name: 'Deep Dive',
+    hideSectionHeader: false,
     itemList: items
       .filter(
         (m) =>
@@ -84,18 +96,50 @@ export function getDeepDiveSection(items: MenuItem[]): MenuSection {
 }
 
 export function getPackageApiSection(items: MenuItem[]): MenuSection {
+  const getGuides = (menu: MenuItem) =>
+    menu.itemList?.filter(
+      (x) => !x.path?.includes('executors') && !x.path?.includes('generators')
+    ) || [];
+  const getExecutors = (menu: MenuItem) =>
+    menu.itemList?.filter((x) => x.path?.includes('executors')) || [];
+  const getGenerators = (menu: MenuItem) =>
+    menu.itemList?.filter((x) => x.path?.includes('generators')) || [];
+
   return {
     id: 'official-packages',
     name: 'Reference',
-    itemList: items.filter(
-      (m) =>
-        m.id !== 'add-nx-to-monorepo' &&
-        m.id !== 'cra-to-nx' &&
-        m.id !== 'create-nx-plugin' &&
-        m.id !== 'create-nx-workspace' &&
-        m.id !== 'make-angular-cli-faster' &&
-        m.id !== 'tao'
-    ),
+    hideSectionHeader: false,
+    itemList: items
+      .filter(
+        (m) =>
+          m.id !== 'add-nx-to-monorepo' &&
+          m.id !== 'cra-to-nx' &&
+          m.id !== 'create-nx-plugin' &&
+          m.id !== 'create-nx-workspace' &&
+          m.id !== 'make-angular-cli-faster' &&
+          m.id !== 'tao'
+      )
+      .map((m) => ({
+        ...m,
+        disableCollapsible: true,
+        itemList: [
+          {
+            id: m.id + '-guides',
+            name: 'Guides',
+            itemList: getGuides(m),
+          },
+          {
+            id: m.id + '-executors',
+            name: 'Executors',
+            itemList: getExecutors(m),
+          },
+          {
+            id: m.id + '-generators',
+            name: 'Generators',
+            itemList: getGenerators(m),
+          },
+        ],
+      })),
   };
 }
 
@@ -121,6 +165,7 @@ export function getDeepDiveNxCloudSection(items: MenuItem[]): MenuSection {
   return {
     id: 'deep-dive',
     name: 'Deep Dive',
+    hideSectionHeader: false,
     itemList: items
       .filter((m) => m.id === 'private-cloud' || m.id === 'reference')
       .map((m) => ({

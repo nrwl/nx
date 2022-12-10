@@ -50,14 +50,28 @@ function getSchemaList(
     folderName: string;
     root: string;
   },
-  type: 'generators' | 'executors'
+  collectionFileName: string,
+  collectionEntries: string[]
 ): SchemaMetadata[] {
-  const targetPath = join(paths.absoluteRoot, paths.root, type + '.json');
+  const targetPath = join(paths.absoluteRoot, paths.root, collectionFileName);
   try {
-    return Object.entries(readJsonSync(targetPath, 'utf8')[type]).map(
-      ([name, schema]: [string, JsonSchema1]) =>
-        createSchemaMetadata(name, schema, paths)
-    );
+    const metadata: SchemaMetadata[] = [];
+    const collectionFile = readJsonSync(targetPath, 'utf8');
+    for (const entry of collectionEntries) {
+      if (!collectionFile[entry]) {
+        continue;
+      }
+
+      metadata.push(
+        ...Object.entries<JsonSchema1>(collectionFile[entry])
+          .filter(([name]) => !metadata.find((x) => x.name === name))
+          .map(([name, schema]: [string, JsonSchema1]) =>
+            createSchemaMetadata(name, schema, paths)
+          )
+      );
+    }
+
+    return metadata;
   } catch (e) {
     console.log(
       `SchemaMetadata "${paths.root
@@ -85,9 +99,9 @@ export function getPackageMetadataList(
   /**
    * Get all the custom overview information on each package if available
    */
-  const additionalApiReferences: any = DocumentationMap.find(
+  const additionalApiReferences: any = DocumentationMap.content.find(
     (data) => data.id === 'additional-api-references'
-  ).itemList;
+  )!.itemList;
 
   // Do not use map.json, but add a documentation property on the package.json directly that can be easily resolved
   return sync(`${packagesDir}/*`, { ignore: [`${packagesDir}/cli`] }).map(
@@ -123,7 +137,8 @@ export function getPackageMetadataList(
             folderName,
             root: relativeFolderPath,
           },
-          'generators'
+          'generators.json',
+          ['generators']
         ),
         executors: getSchemaList(
           {
@@ -131,7 +146,8 @@ export function getPackageMetadataList(
             folderName,
             root: relativeFolderPath,
           },
-          'executors'
+          'executors.json',
+          ['executors', 'builders']
         ),
       };
     }

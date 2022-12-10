@@ -15,7 +15,7 @@ describe('Angular Cypress Component Tests', () => {
   const usedInAppLibName = uniq('cy-angular-lib');
   const buildableLibName = uniq('cy-angular-buildable-lib');
 
-  beforeAll(() => {
+  beforeAll(async () => {
     projectName = newProject({ name: uniq('cy-ng') });
     runCLI(`generate @nrwl/angular:app ${appName} --no-interactive`);
     runCLI(
@@ -70,7 +70,15 @@ export class BtnStandaloneComponent {
 `
     );
     const btnModuleName = names(usedInAppLibName).className;
+    updateFile(
+      `apps/${appName}/src/app/app.component.scss`,
+      `
+@use 'styleguide' as *;
 
+h1 {
+  @include headline;
+}`
+    );
     updateFile(
       `apps/${appName}/src/app/app.module.ts`,
       `
@@ -135,7 +143,21 @@ import {CommonModule} from '@angular/common';
 
     // make sure assets from the workspace root work.
     createFile('libs/assets/data.json', JSON.stringify({ data: 'data' }));
+    createFile(
+      'assets/styles/styleguide.scss',
+      `
+    @mixin headline {
+    font-weight: bold;
+    color: darkkhaki;
+    background: lightcoral;
+    font-weight: 24px;
+  }
+  `
+    );
     updateProjectConfig(appName, (config) => {
+      config.targets['build'].options.stylePreprocessorOptions = {
+        includePaths: ['assets/styles'],
+      };
       config.targets['build'].options.assets.push({
         glob: '**/*',
         input: 'libs/assets',
@@ -175,7 +197,7 @@ import {CommonModule} from '@angular/common';
     createFile(
       `libs/${buildableLibName}/src/lib/input/input.component.cy.ts`,
       `
-import { MountConfig, mount } from 'cypress/angular';
+import { MountConfig } from 'cypress/angular';
 import { InputComponent } from './input.component';
 
 describe(InputComponent.name, () => {
@@ -186,12 +208,12 @@ describe(InputComponent.name, () => {
   };
 
   it('renders', () => {
-    mount(InputComponent, config);
+    cy.mount(InputComponent, config);
     // make sure tailwind isn't getting applied
     cy.get('label').should('have.css', 'color', 'rgb(0, 0, 0)');
   });
   it('should be readonly', () => {
-    mount(InputComponent, {
+    cy.mount(InputComponent, {
       ...config,
       componentProperties: {
         readOnly: true,
@@ -206,7 +228,7 @@ describe(InputComponent.name, () => {
     createFile(
       `libs/${buildableLibName}/src/lib/input-standalone/input-standalone.component.cy.ts`,
       `
-import { MountConfig, mount } from 'cypress/angular';
+import { MountConfig } from 'cypress/angular';
 import { InputStandaloneComponent } from './input-standalone.component';
 
 describe(InputStandaloneComponent.name, () => {
@@ -217,12 +239,12 @@ describe(InputStandaloneComponent.name, () => {
   };
 
   it('renders', () => {
-    mount(InputStandaloneComponent, config);
+    cy.mount(InputStandaloneComponent, config);
     // make sure tailwind isn't getting applied
     cy.get('label').should('have.css', 'color', 'rgb(0, 0, 0)');
   });
   it('should be readonly', () => {
-    mount(InputStandaloneComponent, {
+    cy.mount(InputStandaloneComponent, {
       ...config,
       componentProperties: {
         readOnly: true,

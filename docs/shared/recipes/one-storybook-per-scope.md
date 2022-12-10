@@ -7,13 +7,13 @@ Sometimes, you have multiple apps and libraries, and each of these is associated
 
 In this case, you can have one Storybook instance per scope. If you follow the folder organization convention described above, it is easy to configure Storybook to import all the stories under a specific folder, for example, which are associated with a specific app or scope.
 
-{% github-repository url="https://github.com/mandarini/nx-recipes/tree/storybook/publishing-recipe-1/storybook-recipes/publishing-strategies-single-framework" /%}
+{% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/storybook-publishing-strategies-single-framework" /%}
 
 ## Structure of the folders
 
 Say, for example, that you have a client app, an admin app, and a number of UI libraries, organized under the name of each app. So you would have a folder structure that looks like this:
 
-```treeview
+```text
 happynrwl/
 ├── .storybook/
 ├── apps/
@@ -87,7 +87,7 @@ Let's assume in this case that all our libraries are using Angular.
 
 Let's generate three Angular libraries, one for each scope, and let's call them `storybook-host-client`, `storybook-host-admin`, and `storybook-host-shared`. We can do this by running the following commands:
 
-```bash
+```shell
 nx g @nrwl/angular:lib storybook-host-client
 nx g @nrwl/angular:lib storybook-host-admin
 nx g @nrwl/angular:lib storybook-host-shared
@@ -97,7 +97,7 @@ nx g @nrwl/angular:lib storybook-host-shared
 
 Now, we need to generate Storybook configuration for all these new libraries. We don't want to generate `stories` or a new Cypress project for these libraries, so we can run the following commands:
 
-```bash
+```shell
 nx g @nrwl/storybook:configuration storybook-host-client --uiFramework=@storybook/angular
 nx g @nrwl/storybook:configuration storybook-host-admin --uiFramework=@storybook/angular
 nx g @nrwl/storybook:configuration storybook-host-shared --uiFramework=@storybook/angular
@@ -111,7 +111,7 @@ Thanks to our folder structure, we can easily configure Storybook to import all 
 
 For example, `libs/storybook-host-admin/.storybook/main.js`:
 
-```javascript
+```javascript {% fileName="libs/storybook-host-admin/.storybook/main.js" %}
 const rootMain = require('../../../.storybook/main');
 module.exports = {
   ...rootMain,
@@ -123,7 +123,7 @@ module.exports = {
 
 And don't forget the `libs/storybook-host-admin/.storybook/tsconfig.json`:
 
-```json
+```json {% fileName="libs/storybook-host-admin/.storybook/tsconfig.json" %}
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {

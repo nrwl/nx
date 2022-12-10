@@ -1,17 +1,17 @@
-`workspace.json`:
+`project.json`:
 
 ```json
-//...
-"frontend": {
-    "targets": {
-        //...
-        "ls-project-root": {
-            "executor": "nx:run-commands",
-            "options": {
-                "command": "ls apps/frontend/src"
-            }
-        }
+{
+  // ...
+  "targets": {
+    //...
+    "ls-project-root": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "ls apps/frontend/src"
+      }
     }
+  }
 }
 ```
 
@@ -130,6 +130,16 @@ that sets the `forwardAllArgs` option to `false` as shown below:
             }
         ]
     }
+}
+```
+
+{% /tab %}
+{% tab label="Shorthand" %}
+When you only need to run a single command, you can use a shorthand for nx:run-commands:
+
+```json
+"webpack": {
+    "command": "webpack"
 }
 ```
 

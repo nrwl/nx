@@ -9,8 +9,8 @@ Lint nx specific workspace files (nx.json, workspace.json)
 
 ## Usage
 
-```bash
+```terminal
 nx workspace-lint [files..]
 ```
 
-Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpx nx`.
+Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpm nx`.

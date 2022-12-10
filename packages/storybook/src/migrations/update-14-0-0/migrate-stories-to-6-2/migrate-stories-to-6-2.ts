@@ -8,11 +8,11 @@ import {
   Tree,
   visitNotIgnoredFiles,
 } from '@nrwl/devkit';
-import { getTsSourceFile } from '@nrwl/storybook/src/utils/utilities';
 import { fileExists } from '@nrwl/workspace/src/utilities/fileutils';
-import { findNodes } from '@nrwl/workspace/src/utilities/typescript/find-nodes';
+import { findNodes } from 'nx/src/utils/typescript';
 import { join, normalize } from 'path';
 import { SyntaxKind } from 'typescript';
+import { getTsSourceFile } from '../../../utils/utilities';
 import ts = require('typescript');
 
 export async function migrateStoriesTo62Generator(tree: Tree) {

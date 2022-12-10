@@ -1,9 +1,11 @@
 {
+  "version": 2,
+  "outputCapture": "direct-nodejs",
   "cli": "nx",
   "$id": "NxExpoPublish",
   "$schema": "http://json-schema.org/schema",
   "title": "Publish for Expo",
-  "description": "Deploy a project to Expo hosting",
+  "description": "Deploy a project to Expo hosting.",
   "type": "object",
   "properties": {
     "quiet": {

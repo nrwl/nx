@@ -1,0 +1,711 @@
+{
+  "taskGraphs": {
+    "products-product-detail-page:lint": {
+      "roots": ["products-product-detail-page:lint"],
+      "tasks": {
+        "products-product-detail-page:lint": {
+          "id": "products-product-detail-page:lint",
+          "target": {
+            "project": "products-product-detail-page",
+            "target": "lint"
+          },
+          "projectRoot": "libs/products/product-detail-page",
+          "overrides": {}
+        }
+      },
+      "dependencies": {
+        "products-product-detail-page:lint": []
+      }
+    },
+    "products-product-detail-page:test": {
+      "roots": ["products-product-detail-page:test"],
+      "tasks": {
+        "products-product-detail-page:test": {
+          "id": "products-product-detail-page:test",
+          "target": {
+            "project": "products-product-detail-page",
+            "target": "test"
+          },
+          "projectRoot": "libs/products/product-detail-page",
+          "overrides": {}
+        }
+      },
+      "dependencies": {
+        "products-product-detail-page:test": []
+      }
+    },
+    "shared-product-state:lint": {
+      "roots": ["shared-product-state:lint"],
+      "tasks": {
+        "shared-product-state:lint": {
+          "id": "shared-product-state:lint",
+          "target": {
+            "project": "shared-product-state",
+            "target": "lint"
+          },
+          "projectRoot": "libs/shared/product/state",
+          "overrides": {}
+        }
+      },
+      "dependencies": {
+        "shared-product-state:lint": []
+      }
+    },
+    "shared-product-state:test": {
+      "roots": ["shared-product-state:test"],
+      "tasks": {
+        "shared-product-state:test": {
+          "id": "shared-product-state:test",
+          "target": {
+            "project": "shared-product-state",
+            "target": "test"
+          },
+          "projectRoot": "libs/shared/product/state",
+          "overrides": {}
+        }
+      },
+      "dependencies": {
+        "shared-product-state:test": []
+      }
+    },
+    "shared-product-types:lint": {
+      "roots": ["shared-product-types:lint"],
+      "tasks": {
+        "shared-product-types:lint": {
+          "id": "shared-product-types:lint",
+          "target": {
+            "project": "shared-product-types",
+            "target": "lint"
+          },
+          "projectRoot": "libs/shared/product/types",
+          "overrides": {}
+        }
+      },
+      "dependencies": {
+        "shared-product-types:lint": []
+      }
+    },
+    "shared-product-data:lint": {
+      "roots": ["shared-product-data:lint"],
+      "tasks": {
+        "shared-product-data:lint": {
+          "id": "shared-product-data:lint",
+          "target": {
+            "project": "shared-product-data",
+            "target": "lint"
+          },
+          "projectRoot": "libs/shared/product/data",
+          "overrides": {}
+        }
+      },
+      "dependencies": {
+        "shared-product-data:lint": []
+      }
+    },
+    "products-home-page:lint": {
+      "roots": ["products-home-page:lint"],
+      "tasks": {
+        "products-home-page:lint": {
+          "id": "products-home-page:lint",
+          "target": {
+            "project": "products-home-page",
+            "target": "lint"
+          },
+          "projectRoot": "libs/products/home-page",
+          "overrides": {}
+        }
+      },
+      "dependencies": {
+        "products-home-page:lint": []
+      }
+    },
+    "products-home-page:test": {
+      "roots": ["products-home-page:test"],
+      "tasks": {
+        "products-home-page:test": {
+          "id": "products-home-page:test",
+          "target": {
+            "project": "products-home-page",
+            "target": "test"
+          },
+          "projectRoot": "libs/products/home-page",
+          "overrides": {}
+        }
+      },
+      "dependencies": {
+        "products-home-page:test": []
+      }
+    },
+    "shared-cart-state:lint": {
+      "roots": ["shared-cart-state:lint"],
+      "tasks": {
+        "shared-cart-state:lint": {
+          "id": "shared-cart-state:lint",
+          "target": {
+            "project": "shared-cart-state",
+            "target": "lint"
+          },
+          "projectRoot": "libs/shared/cart/state",
+          "overrides": {}
+        }
+      },
+      "dependencies": {
+        "shared-cart-state:lint": []
+      }
+    },
+    "shared-cart-state:test": {
+      "roots": ["shared-cart-state:test"],
+      "tasks": {
+        "shared-cart-state:test": {
+          "id": "shared-cart-state:test",
+          "target": {
+            "project": "shared-cart-state",
+            "target": "test"
+          },
+          "projectRoot": "libs/shared/cart/state",
+          "overrides": {}
+        }
+      },
+      "dependencies": {
+        "shared-cart-state:test": []
+      }
+    },
+    "shared-product-ui:lint": {
+      "roots": ["shared-product-ui:lint"],
+      "tasks": {
+        "shared-product-ui:lint": {
+          "id": "shared-product-ui:lint",
+          "target": {
+            "project": "shared-product-ui",
+            "target": "lint"
+          },
+          "projectRoot": "libs/shared/product/ui",
+          "overrides": {}
+        }
+      },
+      "dependencies": {
+        "shared-product-ui:lint": []
+      }
+    },
+    "shared-product-ui:test": {
+      "roots": ["shared-product-ui:test"],
+      "tasks": {
+        "shared-product-ui:test": {
+          "id": "shared-product-ui:test",
+          "target": {
+            "project": "shared-product-ui",
+            "target": "test"
+          },
+          "projectRoot": "libs/shared/product/ui",
+          "overrides": {}
+        }
+      },
+      "dependencies": {
+        "shared-product-ui:test": []
+      }
+    },
+    "shared-e2e-utils:lint": {
+      "roots": ["shared-e2e-utils:lint"],
+      "tasks": {
+        "shared-e2e-utils:lint": {
+          "id": "shared-e2e-utils:lint",
+          "target": {
+            "project": "shared-e2e-utils",
+            "target": "lint"
+          },
+          "projectRoot": "libs/shared/e2e-utils",
+          "overrides": {}
+        }
+      },
+      "dependencies": {
+        "shared-e2e-utils:lint": []
+      }
+    },
+    "cart-cart-page:lint": {
+      "roots": ["cart-cart-page:lint"],
+      "tasks": {
+        "cart-cart-page:lint": {
+          "id": "cart-cart-page:lint",
+          "target": {
+            "project": "cart-cart-page",
+            "target": "lint"
+          },
+          "projectRoot": "libs/cart/cart-page",
+          "overrides": {}
+        }
+      },
+      "dependencies": {
+        "cart-cart-page:lint": []
+      }
+    },
+    "cart-cart-page:test": {
+      "roots": ["cart-cart-page:test"],
+      "tasks": {
+        "cart-cart-page:test": {
+          "id": "cart-cart-page:test",
+          "target": {
+            "project": "cart-cart-page",
+            "target": "test"
+          },
+          "projectRoot": "libs/cart/cart-page",
+          "overrides": {}
+        }
+      },
+      "dependencies": {
+        "cart-cart-page:test": []
+      }
+    },
+    "shared-header:lint": {
+      "roots": ["shared-header:lint"],
+      "tasks": {
+        "shared-header:lint": {
+          "id": "shared-header:lint",
+          "target": {
+            "project": "shared-header",
+            "target": "lint"
+          },
+          "projectRoot": "libs/shared/header",
+          "overrides": {}
+        }
+      },
+      "dependencies": {
+        "shared-header:lint": []
+      }
+    },
+    "shared-header:test": {
+      "roots": ["shared-header:test"],
+      "tasks": {
+        "shared-header:test": {
+          "id": "shared-header:test",
+          "target": {
+            "project": "shared-header",
+            "target": "test"
+          },
+          "projectRoot": "libs/shared/header",
+          "overrides": {}
+        }
+      },
+      "dependencies": {
+        "shared-header:test": []
+      }
+    },
+    "shared-jsxify:lint": {
+      "roots": ["shared-jsxify:lint"],
+      "tasks": {
+        "shared-jsxify:lint": {
+          "id": "shared-jsxify:lint",
+          "target": {
+            "project": "shared-jsxify",
+            "target": "lint"
+          },
+          "projectRoot": "libs/shared/jsxify",
+          "overrides": {}
+        }
+      },
+      "dependencies": {
+        "shared-jsxify:lint": []
+      }
+    },
+    "products-e2e:e2e": {
+      "roots": ["products-e2e:e2e"],
+      "tasks": {
+        "products-e2e:e2e": {
+          "id": "products-e2e:e2e",
+          "target": {
+            "project": "products-e2e",
+            "target": "e2e"
+          },
+          "projectRoot": "apps/products-e2e",
+          "overrides": {}
+        }
+      },
+      "dependencies": {
+        "products-e2e:e2e": []
+      }
+    },
+    "products-e2e:e2e:production": {
+      "roots": ["products-e2e:e2e:production"],
+      "tasks": {
+        "products-e2e:e2e:production": {
+          "id": "products-e2e:e2e:production",
+          "target": {
+            "project": "products-e2e",
+            "target": "e2e",
+            "configuration": "production"
+          },
+          "projectRoot": "apps/products-e2e",
+          "overrides": {}
+        }
+      },
+      "dependencies": {
+        "products-e2e:e2e:production": []
+      }
+    },
+    "products-e2e:lint": {
+      "roots": ["products-e2e:lint"],
+      "tasks": {
+        "products-e2e:lint": {
+          "id": "products-e2e:lint",
+          "target": {
+            "project": "products-e2e",
+            "target": "lint"
+          },
+          "projectRoot": "apps/products-e2e",
+          "overrides": {}
+        }
+      },
+      "dependencies": {
+        "products-e2e:lint": []
+      }
+    },
+    "cart-e2e:e2e": {
+      "roots": ["cart-e2e:e2e"],
+      "tasks": {
+        "cart-e2e:e2e": {
+          "id": "cart-e2e:e2e",
+          "target": {
+            "project": "cart-e2e",
+            "target": "e2e"
+          },
+          "projectRoot": "apps/cart-e2e",
+          "overrides": {}
+        }
+      },
+      "dependencies": {
+        "cart-e2e:e2e": []
+      }
+    },
+    "cart-e2e:e2e:production": {
+      "roots": ["cart-e2e:e2e:production"],
+      "tasks": {
+        "cart-e2e:e2e:production": {
+          "id": "cart-e2e:e2e:production",
+          "target": {
+            "project": "cart-e2e",
+            "target": "e2e",
+            "configuration": "production"
+          },
+          "projectRoot": "apps/cart-e2e",
+          "overrides": {}
+        }
+      },
+      "dependencies": {
+        "cart-e2e:e2e:production": []
+      }
+    },
+    "cart-e2e:lint": {
+      "roots": ["cart-e2e:lint"],
+      "tasks": {
+        "cart-e2e:lint": {
+          "id": "cart-e2e:lint",
+          "target": {
+            "project": "cart-e2e",
+            "target": "lint"
+          },
+          "projectRoot": "apps/cart-e2e",
+          "overrides": {}
+        }
+      },
+      "dependencies": {
+        "cart-e2e:lint": []
+      }
+    },
+    "products:build": {
+      "roots": ["products:build"],
+      "tasks": {
+        "products:build": {
+          "id": "products:build",
+          "target": {
+            "project": "products",
+            "target": "build"
+          },
+          "projectRoot": "apps/products",
+          "overrides": {}
+        }
+      },
+      "dependencies": {
+        "products:build": []
+      }
+    },
+    "products:build:production": {
+      "roots": ["products:build:production"],
+      "tasks": {
+        "products:build:production": {
+          "id": "products:build:production",
+          "target": {
+            "project": "products",
+            "target": "build",
+            "configuration": "production"
+          },
+          "projectRoot": "apps/products",
+          "overrides": {}
+        }
+      },
+      "dependencies": {
+        "products:build:production": []
+      }
+    },
+    "products:serve": {
+      "roots": ["products:serve"],
+      "tasks": {
+        "products:serve": {
+          "id": "products:serve",
+          "target": {
+            "project": "products",
+            "target": "serve"
+          },
+          "projectRoot": "apps/products",
+          "overrides": {}
+        }
+      },
+      "dependencies": {
+        "products:serve": []
+      }
+    },
+    "products:serve:production": {
+      "roots": ["products:serve:production"],
+      "tasks": {
+        "products:serve:production": {
+          "id": "products:serve:production",
+          "target": {
+            "project": "products",
+            "target": "serve",
+            "configuration": "production"
+          },
+          "projectRoot": "apps/products",
+          "overrides": {}
+        }
+      },
+      "dependencies": {
+        "products:serve:production": []
+      }
+    },
+    "products:extract-i18n": {
+      "roots": ["products:extract-i18n"],
+      "tasks": {
+        "products:extract-i18n": {
+          "id": "products:extract-i18n",
+          "target": {
+            "project": "products",
+            "target": "extract-i18n"
+          },
+          "projectRoot": "apps/products",
+          "overrides": {}
+        }
+      },
+      "dependencies": {
+        "products:extract-i18n": []
+      }
+    },
+    "products:lint": {
+      "roots": ["products:lint"],
+      "tasks": {
+        "products:lint": {
+          "id": "products:lint",
+          "target": {
+            "project": "products",
+            "target": "lint"
+          },
+          "projectRoot": "apps/products",
+          "overrides": {}
+        }
+      },
+      "dependencies": {
+        "products:lint": []
+      }
+    },
+    "products:test": {
+      "roots": ["products:test"],
+      "tasks": {
+        "products:test": {
+          "id": "products:test",
+          "target": {
+            "project": "products",
+            "target": "test"
+          },
+          "projectRoot": "apps/products",
+          "overrides": {}
+        }
+      },
+      "dependencies": {
+        "products:test": []
+      }
+    },
+    "products:deploy": {
+      "roots": ["products:deploy"],
+      "tasks": {
+        "products:deploy": {
+          "id": "products:deploy",
+          "target": {
+            "project": "products",
+            "target": "deploy"
+          },
+          "projectRoot": "apps/products",
+          "overrides": {}
+        }
+      },
+      "dependencies": {
+        "products:deploy": []
+      }
+    },
+    "cart:build": {
+      "roots": ["cart:build:production"],
+      "tasks": {
+        "cart:build:production": {
+          "id": "cart:build:production",
+          "target": {
+            "project": "cart",
+            "target": "build",
+            "configuration": "production"
+          },
+          "projectRoot": "apps/cart",
+          "overrides": {}
+        }
+      },
+      "dependencies": {
+        "cart:build:production": []
+      }
+    },
+    "cart:build:production": {
+      "roots": ["cart:build:production"],
+      "tasks": {
+        "cart:build:production": {
+          "id": "cart:build:production",
+          "target": {
+            "project": "cart",
+            "target": "build",
+            "configuration": "production"
+          },
+          "projectRoot": "apps/cart",
+          "overrides": {}
+        }
+      },
+      "dependencies": {
+        "cart:build:production": []
+      }
+    },
+    "cart:build:development": {
+      "roots": ["cart:build:development"],
+      "tasks": {
+        "cart:build:development": {
+          "id": "cart:build:development",
+          "target": {
+            "project": "cart",
+            "target": "build",
+            "configuration": "development"
+          },
+          "projectRoot": "apps/cart",
+          "overrides": {}
+        }
+      },
+      "dependencies": {
+        "cart:build:development": []
+      }
+    },
+    "cart:serve": {
+      "roots": ["cart:serve:development"],
+      "tasks": {
+        "cart:serve:development": {
+          "id": "cart:serve:development",
+          "target": {
+            "project": "cart",
+            "target": "serve",
+            "configuration": "development"
+          },
+          "projectRoot": "apps/cart",
+          "overrides": {}
+        }
+      },
+      "dependencies": {
+        "cart:serve:development": []
+      }
+    },
+    "cart:serve:production": {
+      "roots": ["cart:serve:production"],
+      "tasks": {
+        "cart:serve:production": {
+          "id": "cart:serve:production",
+          "target": {
+            "project": "cart",
+            "target": "serve",
+            "configuration": "production"
+          },
+          "projectRoot": "apps/cart",
+          "overrides": {}
+        }
+      },
+      "dependencies": {
+        "cart:serve:production": []
+      }
+    },
+    "cart:serve:development": {
+      "roots": ["cart:serve:development"],
+      "tasks": {
+        "cart:serve:development": {
+          "id": "cart:serve:development",
+          "target": {
+            "project": "cart",
+            "target": "serve",
+            "configuration": "development"
+          },
+          "projectRoot": "apps/cart",
+          "overrides": {}
+        }
+      },
+      "dependencies": {
+        "cart:serve:development": []
+      }
+    },
+    "cart:lint": {
+      "roots": ["cart:lint"],
+      "tasks": {
+        "cart:lint": {
+          "id": "cart:lint",
+          "target": {
+            "project": "cart",
+            "target": "lint"
+          },
+          "projectRoot": "apps/cart",
+          "overrides": {}
+        }
+      },
+      "dependencies": {
+        "cart:lint": []
+      }
+    },
+    "cart:test": {
+      "roots": ["cart:test"],
+      "tasks": {
+        "cart:test": {
+          "id": "cart:test",
+          "target": {
+            "project": "cart",
+            "target": "test"
+          },
+          "projectRoot": "apps/cart",
+          "overrides": {}
+        }
+      },
+      "dependencies": {
+        "cart:test": []
+      }
+    },
+    "cart:deploy": {
+      "roots": ["cart:deploy"],
+      "tasks": {
+        "cart:deploy": {
+          "id": "cart:deploy",
+          "target": {
+            "project": "cart",
+            "target": "deploy"
+          },
+          "projectRoot": "apps/cart",
+          "overrides": {}
+        }
+      },
+      "dependencies": {
+        "cart:deploy": []
+      }
+    }
+  }
+}

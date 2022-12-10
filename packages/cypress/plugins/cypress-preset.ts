@@ -1,16 +1,5 @@
-import {
-  ExecutorContext,
-  normalizePath,
-  ProjectConfiguration,
-  ProjectGraph,
-  readNxJson,
-  stripIndents,
-  TargetConfiguration,
-  workspaceRoot,
-} from '@nrwl/devkit';
-import { mapProjectGraphFiles } from '@nrwl/workspace/src/utils/runtime-lint-utils';
-import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
-import { dirname, extname, join, relative } from 'path';
+import { workspaceRoot } from '@nrwl/devkit';
+import { dirname, join, relative } from 'path';
 import { lstatSync } from 'fs';
 
 interface BaseCypressPreset {
@@ -76,59 +65,5 @@ export function nxE2EPreset(pathToConfig: string) {
     supportFile: 'src/support/e2e.ts',
     specPattern: 'src/**/*.cy.{js,jsx,ts,tsx}',
     fixturesFolder: 'src/fixtures',
-  };
-}
-
-export function getProjectConfigByPath(
-  graph: ProjectGraph,
-  configPath: string
-): ProjectConfiguration {
-  const configFileFromWorkspaceRoot = relative(workspaceRoot, configPath);
-  const normalizedPathFromWorkspaceRoot = normalizePath(
-    lstatSync(configPath).isFile()
-      ? configFileFromWorkspaceRoot.replace(extname(configPath), '')
-      : configFileFromWorkspaceRoot
-  );
-
-  const mappedGraph = mapProjectGraphFiles(graph);
-  const componentTestingProjectName =
-    mappedGraph.allFiles[normalizedPathFromWorkspaceRoot];
-  if (
-    !componentTestingProjectName ||
-    !graph.nodes[componentTestingProjectName]?.data
-  ) {
-    throw new Error(
-      stripIndents`Unable to find the project configuration that includes ${normalizedPathFromWorkspaceRoot}. 
-      Found project name? ${componentTestingProjectName}. 
-      Graph has data? ${!!graph.nodes[componentTestingProjectName]?.data}`
-    );
-  }
-  // make sure name is set since it can be undefined
-  graph.nodes[componentTestingProjectName].data.name ??=
-    componentTestingProjectName;
-  return graph.nodes[componentTestingProjectName].data;
-}
-
-export function createExecutorContext(
-  graph: ProjectGraph,
-  targets: Record<string, TargetConfiguration>,
-  projectName: string,
-  targetName: string,
-  configurationName: string
-): ExecutorContext {
-  const projectConfigs = readProjectsConfigurationFromProjectGraph(graph);
-  return {
-    cwd: process.cwd(),
-    projectGraph: graph,
-    target: targets[targetName],
-    targetName,
-    configurationName,
-    root: workspaceRoot,
-    isVerbose: false,
-    projectName,
-    workspace: {
-      ...readNxJson(),
-      ...projectConfigs,
-    },
   };
 }

@@ -2,28 +2,28 @@ import { exec } from 'child_process';
 import { writeFileSync } from 'fs';
 import * as enquirer from 'enquirer';
 import * as path from 'path';
+import { join } from 'path';
 import { dirSync } from 'tmp';
 import * as yargs from 'yargs';
 import { showNxWarning, unparse } from './shared';
-import { isCI, output } from './output';
+import { output } from './output';
 import * as ora from 'ora';
 import {
   detectInvokedPackageManager,
+  generatePackageManagerFiles,
   getPackageManagerCommand,
   getPackageManagerVersion,
   PackageManager,
   packageManagerList,
-  generatePackageManagerFiles,
 } from './package-manager';
 import { validateNpmPackage } from './validate-npm-package';
 import { deduceDefaultBase } from './default-base';
 import { getFileName, stringifyCollection } from './utils';
 import { yargsDecorator } from './decorator';
-import chalk = require('chalk');
 import { ciList } from './ci';
-import { join } from 'path';
 import { initializeGitRepo } from './git';
-import axios from 'axios';
+import { messages, recordStat } from './ab-testing';
+import chalk = require('chalk');
 
 type Arguments = {
   name: string;
@@ -51,118 +51,56 @@ enum Preset {
   NPM = 'npm',
   TS = 'ts',
   WebComponents = 'web-components',
-  Angular = 'angular',
-  AngularWithNest = 'angular-nest',
-  React = 'react',
-  ReactWithExpress = 'react-express',
+  AngularMonorepo = 'angular-monorepo',
+  AngularStandalone = 'angular-standalone',
+  ReactMonorepo = 'react-monorepo',
+  ReactStandalone = 'react-standalone',
   ReactNative = 'react-native',
   Expo = 'expo',
   NextJs = 'next',
   Nest = 'nest',
   Express = 'express',
-}
-
-class PromptMessages {
-  private messages = {
-    nxCloud: [
-      {
-        code: 'set-up-distributed-caching-ci',
-        message: `Enable distributed caching to make your CI faster`,
-      },
-    ],
-  };
-
-  private selectedMessages = {};
-
-  getPromptMessage(key: string): string {
-    if (this.selectedMessages[key] === undefined) {
-      if (process.env.NX_GENERATE_DOCS_PROCESS === 'true') {
-        this.selectedMessages[key] = 0;
-      } else {
-        this.selectedMessages[key] = Math.floor(
-          Math.random() * this.messages[key].length
-        );
-      }
-    }
-    return this.messages[key][this.selectedMessages[key]].message;
-  }
-
-  codeOfSelectedPromptMessage(key: string): string {
-    if (this.selectedMessages[key] === undefined) return null;
-    return this.messages[key][this.selectedMessages[key]].code;
-  }
+  React = 'react',
+  Angular = 'angular',
 }
 
 const presetOptions: { name: Preset; message: string }[] = [
   {
     name: Preset.Apps,
     message:
-      'apps              [an empty workspace with no plugins with a layout that works best for building apps]',
-  },
-  {
-    name: Preset.NPM,
-    message:
-      'npm               [an empty workspace with no plugins set up to publish npm packages (similar to yarn workspaces)]',
+      'apps              [an empty monorepo with no plugins with a layout that works best for building apps]',
   },
   {
     name: Preset.TS,
     message:
-      'ts                [an empty workspace with the JS/TS plugin preinstalled]',
+      'ts                [an empty monorepo with the JS/TS plugin preinstalled]',
   },
   {
-    name: Preset.React,
-    message: 'react             [a workspace with a single React application]',
+    name: Preset.ReactMonorepo,
+    message: 'react             [a monorepo with a single React application]',
   },
   {
-    name: Preset.Angular,
-    message:
-      'angular           [a workspace with a single Angular application]',
+    name: Preset.AngularMonorepo,
+    message: 'angular           [a monorepo with a single Angular application]',
   },
   {
     name: Preset.NextJs,
-    message:
-      'next.js           [a workspace with a single Next.js application]',
+    message: 'next.js           [a monorepo with a single Next.js application]',
   },
   {
     name: Preset.Nest,
-    message: 'nest              [a workspace with a single Nest application]',
-  },
-  {
-    name: Preset.Express,
-    message:
-      'express           [a workspace with a single Express application]',
-  },
-  {
-    name: Preset.WebComponents,
-    message:
-      'web components    [a workspace with a single app built using web components]',
+    message: 'nest              [a monorepo with a single Nest application]',
   },
   {
     name: Preset.ReactNative,
     message:
       'react-native      [a workspace with a single React Native application]',
   },
-  {
-    name: Preset.Expo,
-    message: 'expo              [a workspace with a single Expo application]',
-  },
-  {
-    name: Preset.ReactWithExpress,
-    message:
-      'react-express     [a workspace with a full stack application (React + Express)]',
-  },
-  {
-    name: Preset.AngularWithNest,
-    message:
-      'angular-nest      [a workspace with a full stack application (Angular + Nest)]',
-  },
 ];
 
 const nxVersion = require('../package.json').version;
 const tsVersion = 'TYPESCRIPT_VERSION'; // This gets replaced with the typescript version in the root package.json during build
 const prettierVersion = 'PRETTIER_VERSION'; // This gets replaced with the prettier version in the root package.json during build
-
-const messages = new PromptMessages();
 
 export const commandsObject: yargs.Argv<Arguments> = yargs
   .wrap(yargs.terminalWidth())
@@ -208,7 +146,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           type: 'string',
         })
         .option('nxCloud', {
-          describe: chalk.dim(messages.getPromptMessage('nxCloud')),
+          describe: chalk.dim(messages.getPromptMessage('nxCloudCreation')),
           type: 'boolean',
         })
         .option('ci', {
@@ -346,21 +284,62 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
     printNxCloudSuccessMessage(nxCloudInstallRes.stdout);
   }
 
-  await recordWorkspaceCreationStats(nxCloud);
+  await recordStat({
+    nxVersion,
+    command: 'create-nx-workspace',
+    useCloud: nxCloud,
+    meta: messages.codeOfSelectedPromptMessage('nxCloudCreation'),
+  });
 }
 
 async function getConfiguration(
   argv: yargs.Arguments<Arguments>
 ): Promise<void> {
   try {
-    let style, appName;
+    let name, appName, style, preset;
 
-    const name = await determineWorkspaceName(argv);
-    let preset = await determineThirdPartyPackage(argv);
+    output.log({
+      title:
+        "Let's create a new workspace [https://nx.dev/getting-started/intro]",
+    });
 
-    if (!preset) {
-      preset = await determinePreset(argv);
-      appName = await determineAppName(preset, argv);
+    const thirdPartyPreset = await determineThirdPartyPackage(argv);
+    if (thirdPartyPreset) {
+      preset = thirdPartyPreset;
+      name = await determineRepoName(argv);
+      appName = '';
+      style = null;
+    } else {
+      if (!argv.preset) {
+        const monorepoStyle = await determineMonorepoStyle();
+        if (monorepoStyle === 'package-based') {
+          preset = 'npm';
+        } else if (monorepoStyle === 'react') {
+          preset = Preset.ReactStandalone;
+        } else if (monorepoStyle === 'angular') {
+          preset = Preset.AngularStandalone;
+        } else {
+          preset = await determinePreset(argv);
+        }
+      } else if (argv.preset === 'react') {
+        preset = await monorepoOrStandalone('react');
+      } else if (argv.preset === 'angular') {
+        preset = await monorepoOrStandalone('angular');
+      } else {
+        preset = argv.preset;
+      }
+
+      if (
+        preset === Preset.ReactStandalone ||
+        preset === Preset.AngularStandalone
+      ) {
+        appName =
+          argv.appName ?? argv.name ?? (await determineAppName(preset, argv));
+        name = argv.name ?? appName;
+      } else {
+        name = await determineRepoName(argv);
+        appName = await determineAppName(preset, argv);
+      }
       style = await determineStyle(preset, argv);
     }
 
@@ -387,34 +366,105 @@ async function getConfiguration(
   }
 }
 
-function determineWorkspaceName(
+function determineRepoName(
   parsedArgs: yargs.Arguments<Arguments>
 ): Promise<string> {
-  const workspaceName: string = parsedArgs._[0]
+  const repoName: string = parsedArgs._[0]
     ? parsedArgs._[0].toString()
     : parsedArgs.name;
 
-  if (workspaceName) {
-    return Promise.resolve(workspaceName);
+  if (repoName) {
+    return Promise.resolve(repoName);
   }
 
   return enquirer
     .prompt([
       {
-        name: 'WorkspaceName',
-        message: `Workspace name (e.g., org name)    `,
+        name: 'RepoName',
+        message: `Repository name                      `,
         type: 'input',
       },
     ])
-    .then((a: { WorkspaceName: string }) => {
-      if (!a.WorkspaceName) {
+    .then((a: { RepoName: string }) => {
+      if (!a.RepoName) {
         output.error({
-          title: 'Invalid workspace name',
-          bodyLines: [`Workspace name cannot be empty`],
+          title: 'Invalid repository name',
+          bodyLines: [`Repository name cannot be empty`],
         });
         process.exit(1);
       }
-      return a.WorkspaceName;
+      return a.RepoName;
+    });
+}
+
+function monorepoOrStandalone(preset: string): Promise<string> {
+  return enquirer
+    .prompt([
+      {
+        name: 'MonorepoOrStandalone',
+        message: `--preset=${preset} has been replaced with the following:`,
+        type: 'autocomplete',
+        choices: [
+          {
+            name: preset + '-standalone',
+            message: `${preset}-standalone: a standalone ${preset} application.`,
+          },
+          {
+            name: preset + '-monorepo',
+            message: `${preset}-monorepo:   a monorepo with the apps and libs folders.`,
+          },
+        ],
+      },
+    ])
+    .then((a: { MonorepoOrStandalone: string }) => {
+      if (!a.MonorepoOrStandalone) {
+        output.error({
+          title: 'Invalid selection',
+        });
+        process.exit(1);
+      }
+      return a.MonorepoOrStandalone;
+    });
+}
+
+function determineMonorepoStyle(): Promise<string> {
+  return enquirer
+    .prompt([
+      {
+        name: 'MonorepoStyle',
+        message: `Choose what to create                `,
+        type: 'autocomplete',
+        choices: [
+          {
+            name: 'package-based',
+            message:
+              'Package-based monorepo: Nx makes it fast, but lets you run things your way.',
+          },
+          {
+            name: 'integrated',
+            message:
+              'Integrated monorepo:    Nx configures your favorite frameworks and lets you focus on shipping features.',
+          },
+          {
+            name: 'react',
+            message: 'Standalone React app:   Nx configures Vite and ESLint.',
+          },
+          {
+            name: 'angular',
+            message:
+              'Standalone Angular app: Nx configures Jest, ESLint and Cypress.',
+          },
+        ],
+      },
+    ])
+    .then((a: { MonorepoStyle: string }) => {
+      if (!a.MonorepoStyle) {
+        output.error({
+          title: 'Invalid monorepo style',
+        });
+        process.exit(1);
+      }
+      return a.MonorepoStyle;
     });
 }
 
@@ -443,7 +493,7 @@ async function determinePackageManager(
       .prompt([
         {
           name: 'PackageManager',
-          message: `Which package manager to use       `,
+          message: `Which package manager to use         `,
           initial: 'npm' as any,
           type: 'autocomplete',
           choices: [
@@ -541,7 +591,7 @@ async function determinePreset(parsedArgs: any): Promise<Preset> {
     .prompt([
       {
         name: 'Preset',
-        message: `What to create in the new workspace`,
+        message: `What to create in the new workspace  `,
         initial: 'empty' as any,
         type: 'autocomplete',
         choices: presetOptions,
@@ -572,7 +622,7 @@ async function determineAppName(
     .prompt([
       {
         name: 'AppName',
-        message: `Application name                   `,
+        message: `Application name                     `,
         type: 'input',
       },
     ])
@@ -608,8 +658,7 @@ async function determineCli(
   }
 
   switch (preset) {
-    case Preset.Angular:
-    case Preset.AngularWithNest: {
+    case Preset.AngularMonorepo: {
       return Promise.resolve('angular');
     }
     default: {
@@ -651,14 +700,18 @@ async function determineStyle(
     },
   ];
 
-  if (![Preset.Angular, Preset.AngularWithNest].includes(preset)) {
+  if (![Preset.AngularMonorepo, Preset.AngularStandalone].includes(preset)) {
     choices.push({
       name: 'styl',
       message: 'Stylus(.styl)     [ http://stylus-lang.com ]',
     });
   }
 
-  if ([Preset.ReactWithExpress, Preset.React, Preset.NextJs].includes(preset)) {
+  if (
+    [Preset.ReactMonorepo, Preset.ReactStandalone, Preset.NextJs].includes(
+      preset
+    )
+  ) {
     choices.push(
       {
         name: 'styled-components',
@@ -683,7 +736,7 @@ async function determineStyle(
       .prompt([
         {
           name: 'style',
-          message: `Default stylesheet format          `,
+          message: `Default stylesheet format            `,
           initial: 'css' as any,
           type: 'autocomplete',
           choices: choices,
@@ -718,7 +771,7 @@ async function determineNxCloud(
       .prompt([
         {
           name: 'NxCloud',
-          message: messages.getPromptMessage('nxCloud'),
+          message: messages.getPromptMessage('nxCloudCreation'),
           type: 'autocomplete',
           choices: [
             {
@@ -844,7 +897,7 @@ async function createApp(
 
   const pmc = getPackageManagerCommand(packageManager);
 
-  const command = `new ${name} ${args} --collection=@nrwl/workspace/generators.json --cli=${cli}`;
+  const command = `new ${name} ${args}`;
 
   const workingDir = process.cwd().replace(/\\/g, '/');
   let nxWorkspaceRoot = `"${workingDir}"`;
@@ -1012,84 +1065,43 @@ function pointToTutorialAndCourse(preset: Preset) {
         bodyLines: [`https://nx.dev/getting-started/nx-and-typescript`],
       });
       break;
-
-    case Preset.React:
-    case Preset.ReactWithExpress:
+    case Preset.ReactStandalone:
+      output.addVerticalSeparator();
+      output.note({
+        title,
+        bodyLines: [`https://nx.dev/getting-started/react-standalone-tutorial`],
+      });
+      break;
+    case Preset.ReactMonorepo:
     case Preset.NextJs:
       output.addVerticalSeparator();
       output.note({
         title,
-        bodyLines: [
-          `https://nx.dev/react-tutorial/01-create-application`,
-          ...pointToFreeCourseOnEgghead(),
-        ],
+        bodyLines: [`https://nx.dev/react-tutorial/1-code-generation`],
       });
       break;
-    case Preset.Angular:
-    case Preset.AngularWithNest:
+    case Preset.AngularStandalone:
       output.addVerticalSeparator();
       output.note({
         title,
         bodyLines: [
-          `https://nx.dev/angular-tutorial/01-create-application`,
-          ...pointToFreeCourseOnYoutube(),
+          `https://nx.dev/getting-started/angular-standalone-tutorial`,
         ],
       });
       break;
-    case Preset.Nest:
+    case Preset.AngularMonorepo:
       output.addVerticalSeparator();
       output.note({
         title,
-        bodyLines: [
-          `https://nx.dev/node-tutorial/01-create-application`,
-          ...pointToFreeCourseOnYoutube(),
-        ],
+        bodyLines: [`https://nx.dev/angular-tutorial/1-code-generation`],
       });
       break;
-  }
-}
-
-function pointToFreeCourseOnYoutube(): string[] {
-  return [
-    ``,
-    `Prefer watching videos? Check out this free Nx course on YouTube.`,
-    `https://www.youtube.com/watch?v=2mYLe9Kp9VM&list=PLakNactNC1dH38AfqmwabvOszDmKriGco`,
-  ];
-}
-
-function pointToFreeCourseOnEgghead(): string[] {
-  return [
-    ``,
-    `Prefer watching videos? Check out this free Nx course on Egghead.io.`,
-    `https://egghead.io/playlists/scale-react-development-with-nx-4038`,
-  ];
-}
-
-/**
- * We are incrementing a counter to track how often create-nx-workspace is used in CI
- * vs dev environments. No personal information is collected.
- */
-async function recordWorkspaceCreationStats(useCloud: boolean) {
-  try {
-    const major = Number(nxVersion.split('.')[0]);
-    if (process.env.NX_VERBOSE_LOGGING === 'true') {
-      console.log(`Record stat. Major: ${major}`);
-    }
-    if (major < 10 || major > 14) return; // test version, skip it
-    await axios
-      .create({
-        baseURL: 'https://cloud.nx.app',
-        timeout: 400,
-      })
-      .post('/nx-cloud/stats', {
-        command: 'create-nx-workspace',
-        isCI: isCI(),
-        useCloud,
-        meta: messages.codeOfSelectedPromptMessage('nxCloud'),
+    case Preset.Express:
+      output.addVerticalSeparator();
+      output.note({
+        title,
+        bodyLines: [`https://nx.dev/node-tutorial/1-code-generation`],
       });
-  } catch (e) {
-    if (process.env.NX_VERBOSE_LOGGING === 'true') {
-      console.error(e);
-    }
+      break;
   }
 }

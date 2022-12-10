@@ -1,7 +1,9 @@
 {
+  "version": 2,
+  "outputCapture": "direct-nodejs",
   "$schema": "http://json-schema.org/draft-07/schema",
   "title": "Schema for an executor which delegates a build.",
-  "description": "Options for delegating a build to a different target.",
+  "description": "Delegates the build to a different target while supporting incremental builds.",
   "cli": "nx",
   "type": "object",
   "properties": {
@@ -27,5 +29,6 @@
     }
   },
   "additionalProperties": false,
-  "required": ["buildTarget", "outputPath", "tsConfig"]
+  "required": ["buildTarget", "outputPath", "tsConfig"],
+  "examplesFile": "../../../docs/delegate-build-examples.md"
 }

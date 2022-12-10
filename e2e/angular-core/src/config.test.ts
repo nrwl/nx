@@ -17,22 +17,6 @@ describe('Angular Config', () => {
   beforeAll(() => newProject());
   afterAll(() => cleanupProject());
 
-  it('should support workspaces w/o workspace config file', async () => {
-    if (isNotWindows()) {
-      const oldWorkspaceJson = readJson('workspace.json');
-      removeFile('workspace.json');
-      const myapp = uniq('myapp');
-      runCLI(`generate @nrwl/angular:app ${myapp} --directory=myDir --routing`);
-
-      runCLI(`build my-dir-${myapp} --aot`);
-      expectTestsPass(await runCLIAsync(`test my-dir-${myapp} --no-watch`));
-      expect(() =>
-        checkFilesDoNotExist('workspace.json', 'angular.json')
-      ).not.toThrow();
-      createFile('workspace.json', JSON.stringify(oldWorkspaceJson, null, 2));
-    }
-  }, 1000000);
-
   it('should upgrade the config correctly', async () => {
     const previousCI = process.env.SELECTED_CLI;
     process.env.SELECTED_CLI = 'angular';

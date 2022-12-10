@@ -68,7 +68,7 @@
     "linter": {
       "description": "The tool to use for running lint checks.",
       "type": "string",
-      "enum": ["eslint", "tslint"],
+      "enum": ["eslint"],
       "default": "eslint"
     },
     "routing": {
@@ -152,6 +152,11 @@
     "devServerPort": {
       "type": "number",
       "description": "The port for the dev server of the remote app."
+    },
+    "ssr": {
+      "description": "Whether to configure SSR for the host application",
+      "type": "boolean",
+      "default": false
     }
   },
   "required": ["name"],

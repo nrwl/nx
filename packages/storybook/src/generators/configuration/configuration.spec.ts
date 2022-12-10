@@ -19,7 +19,7 @@ describe('@nrwl/storybook:configuration', () => {
     let tree: Tree;
 
     beforeEach(async () => {
-      tree = createTreeWithEmptyWorkspace();
+      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
         json.namedInputs = {
           production: ['default'],
@@ -45,26 +45,8 @@ describe('@nrwl/storybook:configuration', () => {
         standaloneConfig: false,
       });
 
-      // Root
-      expect(tree.exists('.storybook/tsconfig.json')).toBeTruthy();
       expect(tree.exists('.storybook/main.js')).toBeTruthy();
-      const rootStorybookTsconfigJson = readJson<TsConfig>(
-        tree,
-        '.storybook/tsconfig.json'
-      );
-      expect(rootStorybookTsconfigJson.extends).toBe('../tsconfig.base.json');
-      expect(rootStorybookTsconfigJson.exclude).toEqual([
-        '../**/*.spec.js',
-        '../**/*.test.js',
-        '../**/*.spec.ts',
-        '../**/*.test.ts',
-        '../**/*.spec.tsx',
-        '../**/*.test.tsx',
-        '../**/*.spec.jsx',
-        '../**/*.test.jsx',
-      ]);
 
-      // Local
       expect(
         tree.exists('libs/test-ui-lib/.storybook/tsconfig.json')
       ).toBeTruthy();
@@ -101,16 +83,8 @@ describe('@nrwl/storybook:configuration', () => {
         tsConfiguration: true,
       });
 
-      // Root
-      expect(tree.exists('.storybook/tsconfig.json')).toBeTruthy();
       expect(tree.exists('.storybook/main.ts')).toBeTruthy();
-      const rootStorybookTsconfigJson = readJson<TsConfig>(
-        tree,
-        '.storybook/tsconfig.json'
-      );
-      expect(rootStorybookTsconfigJson.extends).toBe('../tsconfig.base.json');
 
-      // Local
       expect(
         tree.exists('libs/test-ui-lib/.storybook/tsconfig.json')
       ).toBeTruthy();
@@ -118,22 +92,6 @@ describe('@nrwl/storybook:configuration', () => {
       expect(
         tree.exists('libs/test-ui-lib/.storybook/preview.ts')
       ).toBeTruthy();
-    });
-
-    it('should extend from root tsconfig.json when no tsconfig.base.json', async () => {
-      tree.rename('tsconfig.base.json', 'tsconfig.json');
-
-      await configurationGenerator(tree, {
-        name: 'test-ui-lib',
-        uiFramework: '@storybook/angular',
-        standaloneConfig: false,
-      });
-
-      const rootStorybookTsconfigJson = readJson<TsConfig>(
-        tree,
-        '.storybook/tsconfig.json'
-      );
-      expect(rootStorybookTsconfigJson.extends).toBe('../tsconfig.json');
     });
 
     it('should generate a webpackFinal into the main.js and reference a potential global webpackFinal definition', async () => {
@@ -426,13 +384,34 @@ describe('@nrwl/storybook:configuration', () => {
         tree.exists('libs/test-ui-lib-2/.storybook/preview.js')
       ).toBeFalsy();
     });
+
+    it('should add test-storybook target', async () => {
+      await configurationGenerator(tree, {
+        name: 'test-ui-lib',
+        uiFramework: '@storybook/react',
+        configureTestRunner: true,
+      });
+
+      expect(
+        readJson(tree, 'package.json').devDependencies['@storybook/test-runner']
+      ).toBeTruthy();
+
+      const project = readProjectConfiguration(tree, 'test-ui-lib');
+      expect(project.targets['test-storybook']).toEqual({
+        executor: 'nx:run-commands',
+        options: {
+          command:
+            'test-storybook -c libs/test-ui-lib/.storybook --url=http://localhost:4400',
+        },
+      });
+    });
   });
 
   describe('for other types of projects - Next.js and the swc compiler', () => {
     describe('for js Storybook configurations', () => {
       let tree: Tree;
       beforeAll(async () => {
-        tree = createTreeWithEmptyWorkspace();
+        tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
         writeJson(tree, 'workspace.json', workspaceConfiguration);
         writeJson(tree, 'apps/nxapp/tsconfig.json', {});
         writeJson(tree, 'apps/reapp/tsconfig.json', {});
@@ -530,7 +509,7 @@ describe('@nrwl/storybook:configuration', () => {
     describe('for TypeScript Storybook configurations', () => {
       let tree: Tree;
       beforeAll(async () => {
-        tree = createTreeWithEmptyWorkspace();
+        tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
         writeJson(tree, 'workspace.json', workspaceConfiguration);
         writeJson(tree, 'apps/nxapp/tsconfig.json', {});
         writeJson(tree, 'apps/reapp/tsconfig.json', {});
@@ -567,6 +546,111 @@ describe('@nrwl/storybook:configuration', () => {
           name: 'reapp-swc',
           uiFramework: '@storybook/react',
           tsConfiguration: true,
+        });
+      });
+
+      it(`should create correct main.ts and tsconfig.json for NextJs apps`, async () => {
+        expect(
+          tree.read('apps/nxapp/.storybook/main.ts', 'utf-8')
+        ).toMatchSnapshot();
+
+        expect(
+          tree.read('apps/nxapp/.storybook/tsconfig.json', 'utf-8')
+        ).toMatchSnapshot();
+      });
+
+      it(`should create correct main.ts and tsconfig.json for React apps`, async () => {
+        expect(
+          tree.read('apps/reapp/.storybook/main.ts', 'utf-8')
+        ).toMatchSnapshot();
+
+        expect(
+          tree.read('apps/reapp/.storybook/tsconfig.json', 'utf-8')
+        ).toMatchSnapshot();
+      });
+
+      it(`should create correct main.ts and tsconfig.json for NextJS libs`, async () => {
+        expect(
+          tree.read('libs/nxlib/.storybook/main.ts', 'utf-8')
+        ).toMatchSnapshot();
+
+        expect(
+          tree.read('libs/nxlib/.storybook/tsconfig.json', 'utf-8')
+        ).toMatchSnapshot();
+      });
+
+      it(`should create correct main.ts and tsconfig.json for NextJS buildable libs`, async () => {
+        expect(
+          tree.read('libs/nxlib-buildable/.storybook/main.ts', 'utf-8')
+        ).toMatchSnapshot();
+
+        expect(
+          tree.read('libs/nxlib-buildable/.storybook/tsconfig.json', 'utf-8')
+        ).toMatchSnapshot();
+      });
+
+      it(`should create correct main.ts and tsconfig.json for React buildable libs`, async () => {
+        expect(
+          tree.read('libs/relib-buildable/.storybook/main.ts', 'utf-8')
+        ).toMatchSnapshot();
+
+        expect(
+          tree.read('libs/relib-buildable/.storybook/tsconfig.json', 'utf-8')
+        ).toMatchSnapshot();
+      });
+
+      it(`should create correct main.ts and tsconfig.json for React apps using the swc compiler`, async () => {
+        expect(
+          tree.read('apps/reapp-swc/.storybook/main.ts', 'utf-8')
+        ).toMatchSnapshot();
+
+        expect(
+          tree.read('apps/reapp-swc/.storybook/tsconfig.json', 'utf-8')
+        ).toMatchSnapshot();
+      });
+    });
+
+    describe('for Storybook configurations with Vite', () => {
+      let tree: Tree;
+      beforeAll(async () => {
+        tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+        writeJson(tree, 'workspace.json', workspaceConfiguration);
+        writeJson(tree, 'apps/nxapp/tsconfig.json', {});
+        writeJson(tree, 'apps/reapp/tsconfig.json', {});
+        writeJson(tree, 'libs/nxlib/tsconfig.json', {});
+        writeJson(tree, 'libs/nxlib-buildable/tsconfig.json', {});
+        writeJson(tree, 'libs/relib-buildable/tsconfig.json', {});
+        writeJson(tree, 'apps/reapp-swc/tsconfig.json', {});
+        await configurationGenerator(tree, {
+          name: 'nxapp',
+          uiFramework: '@storybook/react',
+          bundler: 'vite',
+          tsConfiguration: true,
+        });
+        await configurationGenerator(tree, {
+          name: 'reapp',
+          uiFramework: '@storybook/react',
+          bundler: 'vite',
+        });
+        await configurationGenerator(tree, {
+          name: 'nxlib',
+          uiFramework: '@storybook/react',
+          bundler: 'vite',
+        });
+        await configurationGenerator(tree, {
+          name: 'nxlib-buildable',
+          uiFramework: '@storybook/react',
+          bundler: 'vite',
+        });
+        await configurationGenerator(tree, {
+          name: 'relib-buildable',
+          uiFramework: '@storybook/react',
+          bundler: 'vite',
+        });
+        await configurationGenerator(tree, {
+          name: 'reapp-swc',
+          uiFramework: '@storybook/react',
+          bundler: 'vite',
         });
       });
 

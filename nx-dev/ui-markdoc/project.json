@@ -1,4 +1,5 @@
 {
+  "name": "nx-dev-ui-markdoc",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "nx-dev/ui-markdoc/src",
   "projectType": "library",
@@ -13,7 +14,7 @@
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/nx-dev/ui-markdoc"],
+      "outputs": ["{workspaceRoot}/coverage/nx-dev/ui-markdoc"],
       "options": {
         "jestConfig": "nx-dev/ui-markdoc/jest.config.ts",
         "passWithNoTests": true

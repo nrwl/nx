@@ -1,5 +1,4 @@
 import * as chalk from 'chalk';
-import { dedent } from 'tslint/lib/utils';
 import {
   generateMarkdownFile,
   generateOptionsMarkdown,
@@ -40,22 +39,23 @@ export async function generateCnwDocumentation(
 }
 
 function generateMarkdown(command: ParsedCommand) {
-  let template = dedent`
-  ---
-  title: "${command.name} - CLI command"
-  description: "${command.description}"
-  ---
-  # ${command.name}
+  let template = `
+---
+title: "${command.name} - CLI command"
+description: "${command.description}"
+---
+# ${command.name}
 
-  ${command.description}
+${command.description}
 
-  ## Usage
+## Usage
 
-  \`\`\`bash
-  ${command.commandString}
-  \`\`\`
+\`\`\`bash
+${command.commandString}
+\`\`\`
 
-  Install \`create-nx-workspace\` globally to invoke the command directly, or use \`npx create-nx-workspace\`, \`yarn create nx-workspace\`, or \`pnpx create-nx-workspace\`.\n`;
+Install \`create-nx-workspace\` globally to invoke the command directly, or use \`npx create-nx-workspace\`, \`yarn create nx-workspace\`, or \`pnpx create-nx-workspace\`.\n
+  `;
 
   template += generateOptionsMarkdown(command);
 

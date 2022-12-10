@@ -23,7 +23,6 @@ describe('ngrx', () => {
     minimal: true,
     module: 'apps/myapp/src/app/app.module.ts',
     name: 'users',
-    useDataPersistence: false,
   };
 
   const expectFileToExist = (file: string) =>
@@ -33,7 +32,7 @@ describe('ngrx', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     createApp(tree, 'myapp');
     appConfig = getAppConfig();
     statePath = `${dirname(appConfig.appModule)}/+state`;
@@ -312,19 +311,6 @@ describe('ngrx', () => {
     ).toMatchSnapshot();
   });
 
-  it('should use DataPersistence when useDataPersistence is true', async () => {
-    await ngrxGenerator(tree, {
-      ...defaultOptions,
-      module: appConfig.appModule,
-      minimal: false,
-      useDataPersistence: true,
-    });
-
-    expect(
-      tree.read(`${statePath}/users.effects.ts`, 'utf-8')
-    ).toMatchSnapshot();
-  });
-
   it('should generate with custom directory', async () => {
     statePath = '/apps/myapp/src/app/my-custom-directory';
 
@@ -413,20 +399,6 @@ describe('ngrx', () => {
         name: 'super-users',
         module: appConfig.appModule,
         minimal: false,
-      });
-
-      expect(
-        tree.read(`${statePath}/super-users.effects.spec.ts`, 'utf-8')
-      ).toMatchSnapshot();
-    });
-
-    it('should generate specs for the ngrx effects correctly when useDataPersistence is true', async () => {
-      await ngrxGenerator(tree, {
-        ...defaultOptions,
-        name: 'super-users',
-        module: appConfig.appModule,
-        minimal: false,
-        useDataPersistence: true,
       });
 
       expect(

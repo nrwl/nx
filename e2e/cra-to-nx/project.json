@@ -1,0 +1,35 @@
+{
+  "name": "e2e-cra-to-nx",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "e2e/cra-to-nx",
+  "projectType": "application",
+  "targets": {
+    "e2e": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "command": "yarn e2e-start-local-registry"
+          },
+          {
+            "command": "yarn e2e-build-package-publish"
+          },
+          {
+            "command": "nx run-e2e-tests e2e-cra-to-nx"
+          }
+        ],
+        "parallel": false
+      }
+    },
+    "run-e2e-tests": {
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "jestConfig": "e2e/cra-to-nx/jest.config.ts",
+        "passWithNoTests": true,
+        "runInBand": true
+      },
+      "outputs": ["{workspaceRoot}/coverage/e2e/cra-to-nx"]
+    }
+  },
+  "implicitDependencies": ["cra-to-nx"]
+}

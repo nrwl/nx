@@ -2,6 +2,7 @@ import {
   cleanupProject,
   createNonNxProjectDirectory,
   getPackageManagerCommand,
+  getPublishedVersion,
   getSelectedPackageManager,
   renameFile,
   runCLI,
@@ -10,14 +11,14 @@ import {
 } from '@nrwl/e2e/utils';
 
 describe('nx init', () => {
-  const packageManagerCommand = getPackageManagerCommand({
+  const pmc = getPackageManagerCommand({
     packageManager: getSelectedPackageManager(),
-  }).runUninstalledPackage;
+  });
 
   afterEach(() => cleanupProject());
 
-  it('should work', () => {
-    createNonNxProjectDirectory();
+  it('should work in a monorepo', () => {
+    createNonNxProjectDirectory('monorepo', true);
     updateFile(
       'packages/package/package.json',
       JSON.stringify({
@@ -28,13 +29,44 @@ describe('nx init', () => {
       })
     );
 
-    const output = runCommand(`${packageManagerCommand} nx init`);
-    expect(output).toContain('Nx has been installed');
-    expect(output).toContain('nx.json has been created');
+    runCommand(pmc.install);
+
+    const output = runCommand(
+      `${pmc.runUninstalledPackage} nx@${getPublishedVersion()}  init -y`
+    );
+    expect(output).toContain('Enabled computation caching');
 
     expect(runCLI('run package:echo')).toContain('123');
     renameFile('nx.json', 'nx.json.old');
 
     expect(runCLI('run package:echo')).toContain('123');
+  });
+
+  it('should work in a regular npm repo', () => {
+    createNonNxProjectDirectory('regular-repo', false);
+    updateFile(
+      'package.json',
+      JSON.stringify({
+        name: 'package',
+        scripts: {
+          echo: 'echo 123',
+        },
+      })
+    );
+
+    runCommand(pmc.install);
+
+    const output = runCommand(
+      `${
+        pmc.runUninstalledPackage
+      } nx@${getPublishedVersion()} init -y --cacheable=echo`
+    );
+    console.log(output);
+    expect(output).toContain('Enabled computation caching');
+
+    expect(runCLI('echo')).toContain('123');
+    renameFile('nx.json', 'nx.json.old');
+
+    expect(runCLI('echo')).toContain('123');
   });
 });

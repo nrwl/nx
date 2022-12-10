@@ -9,17 +9,21 @@ import {
 } from '../socket-utils';
 import { serverLogger } from './logger';
 import {
+  getOutputsWatcherSubscription,
+  getSourceWatcherSubscription,
   handleServerProcessTermination,
   resetInactivityTimeout,
   respondToClient,
   respondWithErrorAndExit,
   SERVER_INACTIVITY_TIMEOUT_MS,
+  storeOutputsWatcherSubscription,
+  storeSourceWatcherSubscription,
 } from './shutdown-utils';
 import {
   convertChangeEventsToLogMessage,
+  subscribeToOutputsChanges,
   subscribeToWorkspaceChanges,
-  SubscribeToWorkspaceChangesCallback,
-  WatcherSubscription,
+  FileWatcherCallback,
 } from './watcher';
 import { addUpdatedAndDeletedFiles } from './project-graph-incremental-recomputation';
 import { existsSync, statSync } from 'fs';
@@ -30,12 +34,21 @@ import { handleProcessInBackground } from './handle-process-in-background';
 import {
   handleOutputsHashesMatch,
   handleRecordOutputsHash,
-} from './handle-output-contents';
-import { consumeMessagesFromSocket } from 'nx/src/utils/consume-messages-from-socket';
+} from './handle-outputs-tracking';
+import { consumeMessagesFromSocket } from '../../utils/consume-messages-from-socket';
+import {
+  disableOutputsTracking,
+  processFileChangesInOutputs,
+} from './outputs-tracking';
+import { handleRequestShutdown } from './handle-request-shutdown';
+import {
+  registeredFileWatcherSockets,
+  removeRegisteredFileWatcherSocket,
+} from './file-watching/file-watcher-sockets';
 
-let watcherSubscription: WatcherSubscription | undefined;
 let performanceObserver: PerformanceObserver | undefined;
-let watcherError: Error | undefined;
+let workspaceWatcherError: Error | undefined;
+let outputsWatcherError: Error | undefined;
 
 export type HandlerResult = {
   description: string;
@@ -43,8 +56,13 @@ export type HandlerResult = {
   response?: string;
 };
 
+let numberOfOpenConnections = 0;
+
 const server = createServer(async (socket) => {
-  serverLogger.log('Established a connection');
+  numberOfOpenConnections += 1;
+  serverLogger.log(
+    `Established a connection. Number of open connections: ${numberOfOpenConnections}`
+  );
   resetInactivityTimeout(handleInactivityTimeout);
   if (!performanceObserver) {
     performanceObserver = new PerformanceObserver((list) => {
@@ -67,16 +85,21 @@ const server = createServer(async (socket) => {
   });
 
   socket.on('close', () => {
-    serverLogger.log('Closed a connection');
+    numberOfOpenConnections -= 1;
+    serverLogger.log(
+      `Closed a connection. Number of open connections: ${numberOfOpenConnections}`
+    );
+
+    removeRegisteredFileWatcherSocket(socket);
   });
 });
 
 async function handleMessage(socket, data: string) {
-  if (watcherError) {
+  if (workspaceWatcherError) {
     await respondWithErrorAndExit(
       socket,
       `File watcher error in the workspace '${workspaceRoot}'.`,
-      watcherError
+      workspaceWatcherError
     );
   }
 
@@ -114,6 +137,13 @@ async function handleMessage(socket, data: string) {
     await handleResult(socket, await handleRecordOutputsHash(payload));
   } else if (payload.type === 'OUTPUTS_HASHES_MATCH') {
     await handleResult(socket, await handleOutputsHashesMatch(payload));
+  } else if (payload.type === 'REQUEST_SHUTDOWN') {
+    await handleResult(
+      socket,
+      await handleRequestShutdown(server, numberOfOpenConnections)
+    );
+  } else if (payload.type === 'REGISTER_FILE_WATCHER') {
+    registeredFileWatcherSockets.push({ socket, config: payload.config });
   } else {
     await respondWithErrorAndExit(
       socket,
@@ -123,7 +153,7 @@ async function handleMessage(socket, data: string) {
   }
 }
 
-async function handleResult(socket: Socket, hr: HandlerResult) {
+export async function handleResult(socket: Socket, hr: HandlerResult) {
   if (hr.error) {
     await respondWithErrorAndExit(socket, hr.description, hr.error);
   } else {
@@ -132,32 +162,35 @@ async function handleResult(socket: Socket, hr: HandlerResult) {
 }
 
 function handleInactivityTimeout() {
-  handleServerProcessTermination({
-    server,
-    watcherSubscription,
-    reason: `${SERVER_INACTIVITY_TIMEOUT_MS}ms of inactivity`,
-  });
+  if (numberOfOpenConnections > 0) {
+    serverLogger.log(
+      `There are ${numberOfOpenConnections} open connections. Reset inactivity timer.`
+    );
+    resetInactivityTimeout(handleInactivityTimeout);
+  } else {
+    handleServerProcessTermination({
+      server,
+      reason: `${SERVER_INACTIVITY_TIMEOUT_MS}ms of inactivity`,
+    });
+  }
 }
 
 process
   .on('SIGINT', () =>
     handleServerProcessTermination({
       server,
-      watcherSubscription,
       reason: 'received process SIGINT',
     })
   )
   .on('SIGTERM', () =>
     handleServerProcessTermination({
       server,
-      watcherSubscription,
       reason: 'received process SIGTERM',
     })
   )
   .on('SIGHUP', () =>
     handleServerProcessTermination({
       server,
-      watcherSubscription,
       reason: 'received process SIGHUP',
     })
   );
@@ -188,11 +221,11 @@ function lockFileChanged(): boolean {
  * we need to recompute the cached serialized project graph so that it is readily
  * available for the next client request to the server.
  */
-const handleWorkspaceChanges: SubscribeToWorkspaceChangesCallback = async (
+const handleWorkspaceChanges: FileWatcherCallback = async (
   err,
   changeEvents
 ) => {
-  if (watcherError) {
+  if (workspaceWatcherError) {
     serverLogger.watcherLog(
       'Skipping handleWorkspaceChanges because of a previously recorded watcher error.'
     );
@@ -205,42 +238,76 @@ const handleWorkspaceChanges: SubscribeToWorkspaceChangesCallback = async (
     if (lockFileChanged()) {
       await handleServerProcessTermination({
         server,
-        watcherSubscription,
         reason: 'Lock file changed',
       });
       return;
     }
 
     if (err || !changeEvents || !changeEvents.length) {
-      serverLogger.watcherLog('Unexpected watcher error', err.message);
+      serverLogger.watcherLog(
+        'Unexpected workspace watcher error',
+        err.message
+      );
       console.error(err);
-      watcherError = err;
+      workspaceWatcherError = err;
       return;
     }
 
     serverLogger.watcherLog(convertChangeEventsToLogMessage(changeEvents));
 
-    const filesToHash = [];
+    const updatedFilesToHash = [];
+    const createdFilesToHash = [];
     const deletedFiles = [];
+
     for (const event of changeEvents) {
       if (event.type === 'delete') {
         deletedFiles.push(event.path);
       } else {
         try {
           const s = statSync(join(workspaceRoot, event.path));
-          if (!s.isDirectory()) {
-            filesToHash.push(event.path);
+          if (s.isFile()) {
+            if (event.type === 'update') {
+              updatedFilesToHash.push(event.path);
+            } else {
+              createdFilesToHash.push(event.path);
+            }
           }
         } catch (e) {
           // this can happen when the update file was deleted right after
         }
       }
     }
-    addUpdatedAndDeletedFiles(filesToHash, deletedFiles);
+
+    addUpdatedAndDeletedFiles(
+      createdFilesToHash,
+      updatedFilesToHash,
+      deletedFiles
+    );
   } catch (err) {
-    serverLogger.watcherLog(`Unexpected error`, err.message);
+    serverLogger.watcherLog(`Unexpected workspace error`, err.message);
     console.error(err);
-    watcherError = err;
+    workspaceWatcherError = err;
+  }
+};
+
+const handleOutputsChanges: FileWatcherCallback = async (err, changeEvents) => {
+  try {
+    if (err || !changeEvents || !changeEvents.length) {
+      serverLogger.watcherLog('Unexpected outputs watcher error', err.message);
+      console.error(err);
+      outputsWatcherError = err;
+      disableOutputsTracking();
+      return;
+    }
+    if (outputsWatcherError) {
+      return;
+    }
+    processFileChangesInOutputs(changeEvents);
+  } catch (err) {
+    serverLogger.watcherLog(`Unexpected outputs watcher error`, err.message);
+    console.error(err);
+    outputsWatcherError = err;
+    disableOutputsTracking();
   }
 };
 
@@ -258,18 +325,30 @@ export async function startServer(): Promise<Server> {
           // this triggers the storage of the lock file hash
           lockFileChanged();
 
-          if (!watcherSubscription) {
-            watcherSubscription = await subscribeToWorkspaceChanges(
-              server,
-              handleWorkspaceChanges
+          if (!getSourceWatcherSubscription()) {
+            storeSourceWatcherSubscription(
+              await subscribeToWorkspaceChanges(server, handleWorkspaceChanges)
             );
             serverLogger.watcherLog(
               `Subscribed to changes within: ${workspaceRoot}`
             );
           }
+
+          // temporary disable outputs tracking on linux
+          const outputsTrackingIsEnabled = process.platform != 'linux';
+          if (outputsTrackingIsEnabled) {
+            if (!getOutputsWatcherSubscription()) {
+              storeOutputsWatcherSubscription(
+                await subscribeToOutputsChanges(handleOutputsChanges)
+              );
+            }
+          } else {
+            disableOutputsTracking();
+          }
+
           return resolve(server);
         } catch (err) {
-          reject(err);
+          await handleWorkspaceChanges(err, []);
         }
       });
     } catch (err) {

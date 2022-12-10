@@ -1,17 +1,14 @@
-import {
-  getPackageManagerCommand,
-  readJsonFile,
-  workspaceRoot,
-} from '@nrwl/devkit';
+import { join } from 'path';
 import { execSync } from 'child_process';
-import { writeFileSync } from 'fs';
+import { gte, major } from 'semver';
+import { readJsonFile, writeJsonFile } from 'nx/src/utils/fileutils';
+import { workspaceRoot } from 'nx/src/utils/workspace-root';
 import { sortObjectByKeys } from 'nx/src/utils/object-sort';
 import {
   resolvePackageVersionUsingInstallation,
   resolvePackageVersionUsingRegistry,
+  PackageManagerCommands,
 } from 'nx/src/utils/package-manager';
-import { join } from 'path';
-import { gte, major } from 'semver';
 import { MigrationDefinition } from './types';
 
 // version when the Nx CLI changed from @nrwl/tao & @nrwl/cli to nx
@@ -19,7 +16,8 @@ const versionWithConsolidatedPackages = '13.9.0';
 
 export async function installDependencies(
   { packageName, version }: MigrationDefinition,
-  useNxCloud: boolean
+  useNxCloud: boolean,
+  pmc: PackageManagerCommands
 ): Promise<void> {
   const json = readJsonFile(join(workspaceRoot, 'package.json'));
 
@@ -48,11 +46,9 @@ export async function installDependencies(
     json.dependencies['@nrwl/angular'] = version;
     json.dependencies = sortObjectByKeys(json.dependencies);
   }
-  writeFileSync(`package.json`, JSON.stringify(json, null, 2));
+  writeJsonFile(`package.json`, json);
 
-  execSync(getPackageManagerCommand().install, {
-    stdio: [0, 1, 2],
-  });
+  execSync(pmc.install, { stdio: [0, 1, 2] });
 }
 
 export async function resolvePackageVersion(

@@ -1,59 +1,60 @@
 # Running Custom Commands
 
-This recipe will show how to run any terminal command within the nx build-chain.
+You can easily run any command with the Nx toolchain. The main benefit is to make the [operation cacheable](/concepts/how-caching-works), [distributeable](/core-features/distribute-task-execution) as well as being able to use it [with Nx's affected commands](/concepts/affected).
 
-## Steps
-
-##### 1. Define the terminal command to be run
+## 1. Define the terminal command to be run
 
 The command we want to run for each project is:
 
-```bash
+```shell
 make hello
 ```
 
 With this `Makefile` in the root of the project:
 
-```bash
+```shell
 hello:
   echo "Hello, world!"
 ```
 
-##### 2. Update `project.json`
+## 2. Update `project.json`
 
 For each project for which you want to enable `make`, add a target in its `project.json`:
 
-```json
+```jsonc {% fileName="project.json" %}
 // ...
 "targets": {
     "make": {
-        "executor": "nx:run-commands",
-            "options": {
-            "commands": [
-                {
-                    "command": "make hello"
-                }
-            ]
-        }
+        "command": "make hello"
     }
     // ...
 }
 ```
 
-For more information, see the [run-commands api doc](/packages/nx/executors/run-commands).
+For more information (e.g. how to forward arguments), see the [run-commands api doc](/packages/nx/executors/run-commands).
 
-##### 3. Trigger the executor from the terminal
+## 3. Run the command
 
-To run the executor for a single project:
+To run the command, use the usual Nx syntax:
 
-```bash
+```shell
 nx run my-app:make
 ```
 
-To run the executor for all affected projects:
+or
 
-```bash
-nx affected --target=make
+```shell
+nx make my-app
 ```
 
-For more information, see the [nx affected](/nx/affected).
+You can also run the `make` command for all projects it has been defined on:
+
+```shell
+nx run-many --target=make
+```
+
+Or just on a subset of projects that are [affected by a given change](/concepts/affected):
+
+```shell
+nx affected --target=make
+```

@@ -1,4 +1,5 @@
 {
+  "name": "storybook",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/storybook",
   "projectType": "library",
@@ -9,7 +10,7 @@
         "jestConfig": "packages/storybook/jest.config.ts",
         "passWithNoTests": true
       },
-      "outputs": ["coverage/packages/storybook"]
+      "outputs": ["{workspaceRoot}/coverage/packages/storybook"]
     },
     "build-base": {
       "executor": "@nrwl/js:tsc",
@@ -46,6 +47,16 @@
           },
           {
             "input": "packages/storybook",
+            "glob": "**/root-files-nested/.storybook/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/storybook",
+            "glob": "**/root-files-nested-ts/.storybook/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/storybook",
             "glob": "**/*.json",
             "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
             "output": "/"
@@ -72,7 +83,7 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["build/packages/storybook"],
+      "outputs": ["{workspaceRoot}/build/packages/storybook"],
       "options": {
         "command": "node ./scripts/copy-readme.js storybook"
       }

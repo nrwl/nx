@@ -156,5 +156,15 @@ describe('eslint-utils', () => {
         useEslintrc: true,
       });
     });
+
+    it('should create a ESLint instance with no "reportUnusedDisableDirectives" if it is undefined', async () => {
+      await lint(undefined, {});
+
+      expect(ESLint).toHaveBeenCalledWith(
+        expect.objectContaining({
+          reportUnusedDisableDirectives: undefined,
+        })
+      );
+    });
   });
 });

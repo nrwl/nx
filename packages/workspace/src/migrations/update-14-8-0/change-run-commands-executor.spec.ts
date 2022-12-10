@@ -10,7 +10,7 @@ describe('changeRunCommandsExecutor', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     addProjectConfiguration(tree, 'proj1', {
       root: 'proj1',
@@ -33,6 +33,7 @@ describe('changeRunCommandsExecutor', () => {
     expect(readProjectConfiguration(tree, 'proj1')).toMatchInlineSnapshot(`
       Object {
         "$schema": "../node_modules/nx/schemas/project-schema.json",
+        "name": "proj1",
         "root": "proj1",
         "targets": Object {
           "notScriptTarget": Object {

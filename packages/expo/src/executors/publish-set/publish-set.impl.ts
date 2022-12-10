@@ -1,4 +1,4 @@
-import { ExecutorContext, names } from '@nrwl/devkit';
+import { ExecutorContext, logger, names } from '@nrwl/devkit';
 import { join } from 'path';
 import { ChildProcess, fork } from 'child_process';
 
@@ -15,6 +15,10 @@ export default async function* publishSetExecutor(
   options: ExpoPublishSetOptions,
   context: ExecutorContext
 ): AsyncGenerator<ExpoPublishSetOutput> {
+  logger.warn(
+    '@nrwl/expo:publish-set is deprecated and will be removed in Nx 16.'
+  );
+
   const projectRoot = context.workspace.projects[context.projectName].root;
   ensureNodeModulesSymlink(context.root, projectRoot);
 

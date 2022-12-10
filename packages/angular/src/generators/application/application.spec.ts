@@ -108,8 +108,8 @@ describe('app', () => {
       expect(tsconfigApp.extends).toEqual('./tsconfig.json');
       expect(tsconfigApp.exclude).toEqual([
         'jest.config.ts',
-        '**/*.test.ts',
-        '**/*.spec.ts',
+        'src/**/*.test.ts',
+        'src/**/*.spec.ts',
       ]);
 
       const eslintrcJson = parseJson(
@@ -314,7 +314,11 @@ describe('app', () => {
         {
           path: 'apps/my-dir/my-app/tsconfig.app.json',
           lookupFn: (json) => json.exclude,
-          expectedValue: ['jest.config.ts', '**/*.test.ts', '**/*.spec.ts'],
+          expectedValue: [
+            'jest.config.ts',
+            'src/**/*.test.ts',
+            'src/**/*.spec.ts',
+          ],
         },
         {
           path: 'apps/my-dir/my-app/.eslintrc.json',
@@ -348,7 +352,7 @@ describe('app', () => {
 
   describe('at the root', () => {
     beforeEach(() => {
-      appTree = createTreeWithEmptyWorkspace();
+      appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       updateJson(appTree, 'nx.json', (json) => ({
         ...json,
         workspaceLayout: { appsDir: '' },
@@ -360,9 +364,10 @@ describe('app', () => {
       await generateApp(appTree, 'myApp', { directory: 'src/9-websites' });
 
       // ASSERT
-      const workspaceJson = readJson(appTree, '/workspace.json');
 
-      expect(workspaceJson.projects['src-9-websites-my-app']).toMatchSnapshot();
+      expect(
+        readProjectConfiguration(appTree, 'src-9-websites-my-app').root
+      ).toMatchSnapshot();
     });
 
     it('should generate files', async () => {
@@ -397,7 +402,11 @@ describe('app', () => {
         {
           path: 'my-dir/my-app/tsconfig.app.json',
           lookupFn: (json) => json.exclude,
-          expectedValue: ['jest.config.ts', '**/*.test.ts', '**/*.spec.ts'],
+          expectedValue: [
+            'jest.config.ts',
+            'src/**/*.test.ts',
+            'src/**/*.spec.ts',
+          ],
         },
         {
           path: 'my-dir/my-app/.eslintrc.json',
@@ -543,6 +552,9 @@ describe('app', () => {
                 "apps/my-app/**/*.html",
               ],
             },
+            "outputs": Array [
+              "{options.outputFile}",
+            ],
           }
         `);
         expect(workspaceJson.projects['my-app-e2e'].architect.lint)
@@ -577,6 +589,9 @@ describe('app', () => {
                 "apps/my-app/**/*.html",
               ],
             },
+            "outputs": Array [
+              "{options.outputFile}",
+            ],
           }
         `);
         expect(appTree.exists('apps/my-app-e2e/.eslintrc.json')).toBeTruthy();
@@ -738,7 +753,7 @@ describe('app', () => {
   describe('--e2e-test-runner', () => {
     describe(E2eTestRunner.Protractor, () => {
       it('should create the e2e project in v2 workspace', async () => {
-        appTree = createTreeWithEmptyWorkspace();
+        appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
         expect(
           async () =>
@@ -928,99 +943,6 @@ describe('app', () => {
     });
   });
 
-  describe('--mf', () => {
-    test.each(['host', 'remote'])(
-      'should generate a Module Federation correctly for a each app',
-      async (type: 'host' | 'remote') => {
-        await generateApp(appTree, 'my-app', { mf: true, mfType: type });
-
-        expect(appTree.exists(`apps/my-app/webpack.config.js`)).toBeTruthy();
-        expect(
-          appTree.exists(`apps/my-app/webpack.prod.config.js`)
-        ).toBeTruthy();
-        expect(
-          appTree.read(`apps/my-app/webpack.config.js`, 'utf-8')
-        ).toMatchSnapshot();
-      }
-    );
-
-    test.each(['host', 'remote'])(
-      'should update the builder to use webpack-browser',
-      async (type: 'host' | 'remote') => {
-        await generateApp(appTree, 'my-app', { mf: true, mfType: type });
-
-        const projectConfig = readProjectConfiguration(appTree, 'my-app');
-
-        expect(projectConfig.targets.build.executor).toEqual(
-          '@nrwl/angular:webpack-browser'
-        );
-      }
-    );
-
-    it('should add a remote application and add it to a specified host applications webpack config when no other remote has been added to it', async () => {
-      // ARRANGE
-      await generateApp(appTree, 'app1', {
-        mf: true,
-        mfType: 'host',
-      });
-
-      // ACT
-      await generateApp(appTree, 'remote1', {
-        mf: true,
-        mfType: 'remote',
-        host: 'app1',
-      });
-
-      // ASSERT
-      const hostWebpackConfig = appTree.read(
-        'apps/app1/webpack.config.js',
-        'utf-8'
-      );
-      expect(hostWebpackConfig).toMatchSnapshot();
-    });
-
-    it('should add a remote application and add it to a specified host applications webpack config that contains a remote application already', async () => {
-      // ARRANGE
-      await generateApp(appTree, 'app1', {
-        mf: true,
-        mfType: 'host',
-      });
-
-      await generateApp(appTree, 'remote1', {
-        mf: true,
-        mfType: 'remote',
-        host: 'app1',
-        port: 4201,
-      });
-
-      // ACT
-      await generateApp(appTree, 'remote2', {
-        mf: true,
-        mfType: 'remote',
-        host: 'app1',
-        port: 4202,
-      });
-
-      // ASSERT
-      const hostWebpackConfig = appTree.read(
-        'apps/app1/webpack.config.js',
-        'utf-8'
-      );
-      expect(hostWebpackConfig).toMatchSnapshot();
-    });
-
-    it('should add a port to a non-mf app', async () => {
-      // ACT
-      await generateApp(appTree, 'app1', {
-        port: 4205,
-      });
-
-      // ASSERT
-      const projectConfig = readProjectConfiguration(appTree, 'app1');
-      expect(projectConfig.targets.serve.options.port).toBe(4205);
-    });
-  });
-
   describe('--add-tailwind', () => {
     it('should not add a tailwind.config.js and relevant packages when "--add-tailwind" is not specified', async () => {
       // ACT
@@ -1089,6 +1011,9 @@ describe('app', () => {
         appTree.read('apps/standalone/src/main.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
+        appTree.read('apps/standalone/src/app/app.routes.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
         appTree.read('apps/standalone/src/app/app.component.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
@@ -1125,6 +1050,40 @@ describe('app', () => {
       expect(
         appTree.read('apps/standalone/src/app/nx-welcome.component.ts', 'utf-8')
       ).toContain('standalone: true');
+    });
+  });
+
+  it('should generate correct main.ts', async () => {
+    // ACT
+    await generateApp(appTree, 'myapp');
+
+    // ASSERT
+    expect(appTree.read('apps/myapp/src/main.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+
+      import { AppModule } from './app/app.module';
+
+
+      platformBrowserDynamic().bootstrapModule(AppModule)
+        .catch(err => console.error(err));
+      "
+    `);
+  });
+
+  describe('--root-project', () => {
+    it('should create files at the root', async () => {
+      await generateApp(appTree, 'my-app', {
+        rootProject: true,
+      });
+
+      expect(appTree.exists('src/main.ts')).toBe(true);
+      expect(appTree.exists('src/app/app.module.ts')).toBe(true);
+      expect(appTree.exists('src/app/app.component.ts')).toBe(true);
+      expect(appTree.exists('e2e/cypress.config.ts')).toBe(true);
+      expect(readJson(appTree, 'tsconfig.json').extends).toBeUndefined();
+      const project = readProjectConfiguration(appTree, 'my-app');
+      expect(project.targets.build.options['outputPath']).toBe('dist/my-app');
     });
   });
 });

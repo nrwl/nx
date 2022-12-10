@@ -10,7 +10,7 @@ In this guide we will show you how to develop [React Native](https://reactnative
 
 The easiest way to create your workspace is via `npx`.
 
-```bash
+```shell
 npx create-nx-workspace happynrwl \
 --preset=react-native \
 --appName=mobile
@@ -20,13 +20,13 @@ npx create-nx-workspace happynrwl \
 You can also run the command without arguments to go through the interactive prompts.
 {% /callout %}
 
-```bash
+```shell
 npx create-nx-workspace happynrwl
 ```
 
 Once the command completes, the workspace will look as follows:
 
-```treeview
+```text
 happynrwl/
 ├── apps/
 │   ├── mobile/
@@ -82,13 +82,13 @@ To run the application in development mode:
 
 On Android simulator/device:
 
-```bash
+```shell
 npx nx run-android mobile
 ```
 
 iOS simulator/device:
 
-```bash
+```shell
 npx nx run-ios mobile
 ```
 
@@ -103,7 +103,7 @@ Try out other commands as well.
 
 **Android:**
 
-```bash
+```shell
 npx nx build-android mobile
 ```
 
@@ -115,13 +115,13 @@ No CLI support yet. Run in the Xcode project. See: https://reactnative.dev/docs/
 
 **Android:**
 
-```bash
+```shell
 npx nx test-android mobile-e2e
 ```
 
 **iOS:** (Mac only)
 
-```bash
+```shell
 npx nx test-ios mobile-e2e
 ```
 
@@ -131,7 +131,7 @@ When using React Native in Nx, you get the out-of-the-box support for TypeScript
 
 For existing Nx workspaces, install the `@nrwl/react-native` package to add React Native capabilities to it.
 
-```bash
+```shell
 npm install @nrwl/react-native --save-dev
 
 # Or with yarn
@@ -142,7 +142,7 @@ yarn add @nrwl/react-native --dev
 
 To create additional React Native apps run:
 
-```bash
+```shell
 npx nx g @nrwl/react-native:app
 ```
 
@@ -159,13 +159,13 @@ and [Library Types](/more-concepts/library-types).
 
 To generate a new library run:
 
-```bash
+```shell
 npx nx g @nrwl/react-native:lib shared-ui-layout
 ```
 
 And you will see the following:
 
-```treeview
+```text
 happynrwl/
 ├── apps/
 │   └── mobile/
@@ -199,7 +199,7 @@ Run:
 
 To generate a new component inside `shared-ui-layout` run:
 
-```bash
+```shell
 npx nx g @nrwl/react-native:component layout --project=shared-ui-layout --export
 ```
 
@@ -221,8 +221,7 @@ happynrwl/
 
 You can import the `shared-ui-layout` library in your application as follows.
 
-```typescript jsx
-// apps/mobile/src/app/App.tsx
+```typescript jsx {% fileName="apps/mobile/src/app/App.tsx" %}
 import React from 'react';
 import { SafeAreaView } from 'react-native';
 
@@ -245,14 +244,14 @@ That's it! There is no need to build the library prior to using it. When you upd
 
 For libraries intended to be built and published to a registry (e.g. npm) you can use the `--publishable` and `--importPath` options.
 
-```bash
+```shell
 npx nx g @nrwl/react-native:lib shared-ui-layout --publishable --importPath=@happynrwl/ui-components
 npx nx g @nrwl/react-native:component layout --project=shared-ui-layout --export
 ```
 
 Run `npx nx build shared-ui-layout` to build the library. It will generate the following:
 
-```treeview
+```text
 dist/libs/shared-ui-layout/
 ├── README.md
 ├── index.d.ts

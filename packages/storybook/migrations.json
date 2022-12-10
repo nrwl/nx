@@ -1,42 +1,10 @@
 {
   "schematics": {
-    "update-10.2.1": {
-      "version": "10.2.1-beta.1",
-      "description": "Adjusts the tsconfig mapping",
-      "factory": "./src/migrations/update-10-2-1/update-10-2-1"
-    },
-    "update-10.3.1": {
-      "version": "10.3.1-beta.1",
-      "description": "Add missing storybook config to lint target",
-      "factory": "./src/migrations/update-10-3-0/update-10-3-0"
-    },
-    "update-11-0-12": {
-      "version": "11.0.12",
-      "description": "Update storybook if installed and above 6",
-      "factory": "./src/migrations/update-11-0-12/update-storybook"
-    },
-    "update-11-5-3": {
-      "version": "11.5.3-beta.1",
-      "description": "Update react storybook lint config",
-      "factory": "./src/migrations/update-11-5-3/update-lint-ignores"
-    },
-    "update-11-6-0": {
-      "version": "11.6.4",
-      "cli": "nx",
-      "description": "Update storybook if installed and above 6 but below 6.2.9",
-      "factory": "./src/migrations/update-11-6-0/update-storybook"
-    },
     "update-12-1-0": {
       "version": "12.1.0-beta.7",
       "cli": "nx",
       "description": "Update react storybook tsconfig to avoid VSCode errors",
       "factory": "./src/migrations/update-12-1-0/fix-storybook-tsconfig"
-    },
-    "update-12-3-0": {
-      "version": "12.3.0-rc.1",
-      "cli": "nx",
-      "description": "Update storybook if installed and above 6 but below 6.2.9",
-      "factory": "./src/migrations/update-11-6-0/update-storybook"
     },
     "update-12-5-0": {
       "version": "12.5.0-beta.5",
@@ -79,9 +47,40 @@
       "cli": "nx",
       "description": "Change storybook targets for Angular projects to use @storybook/angular executors",
       "factory": "./src/migrations/update-14-1-8/change-storybook-targets"
+    },
+    "update-15.0.8-add-storybook-inputs": {
+      "cli": "nx",
+      "version": "15.0.0-beta.0",
+      "description": "Stop hashing storybook config files and story files for build targets and dependent tasks",
+      "factory": "./src/migrations/update-15-0-0/add-storybook-inputs"
     }
   },
   "packageJsonUpdates": {
+    "15.1.1": {
+      "version": "15.1.1-beta.0",
+      "packages": {
+        "@storybook/react-native": {
+          "version": "^6.0.1-beta.9",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/addon-ondevice-actions": {
+          "version": "^6.0.1-beta.9",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/addon-ondevice-backgrounds": {
+          "version": "^6.0.1-beta.9",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/addon-ondevice-controls": {
+          "version": "^6.0.1-beta.9",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/addon-ondevice-notes": {
+          "version": "^6.0.1-beta.9",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
     "14.3.2": {
       "version": "14.3.2-beta.1",
       "packages": {
@@ -232,27 +231,6 @@
         "@storybook/manager-webpack5": {
           "version": "~6.4.5",
           "alwaysAddToPackageJson": true
-        }
-      }
-    },
-    "9.0.0": {
-      "version": "9.0.0-beta.1",
-      "packages": {
-        "@storybook/angular": {
-          "version": "5.3.9",
-          "alwaysAddToPackageJson": false
-        },
-        "@storybook/react": {
-          "version": "5.3.9",
-          "alwaysAddToPackageJson": false
-        },
-        "@storybook/web": {
-          "version": "5.3.9",
-          "alwaysAddToPackageJson": false
-        },
-        "@storybook/addon-knobs": {
-          "version": "5.3.9",
-          "alwaysAddToPackageJson": false
         }
       }
     }

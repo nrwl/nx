@@ -19,19 +19,17 @@ export interface RollupExecutorOptions {
   main: string;
   outputFileName?: string;
   extractCss?: boolean | string;
-  globals?: Globals[];
   external?: string[];
   rollupConfig?: string | string[];
   watch?: boolean;
   assets?: any[];
   updateBuildableProjectDepsInPackageJson?: boolean;
   buildableProjectDepsInPackageJsonType?: 'dependencies' | 'peerDependencies';
-  umdName?: string;
   deleteOutputPath?: boolean;
   format?: string[];
   compiler?: 'babel' | 'tsc' | 'swc';
   javascriptEnabled?: boolean;
-  // TODO(jack): remove this for Nx 15
+  // TODO(jack): remove this for Nx 16
   skipTypeField?: boolean;
   generateExportsField?: boolean;
 }

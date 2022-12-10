@@ -1,7 +1,5 @@
 import {
   Tree,
-  writeJson,
-  readWorkspaceConfiguration,
   addProjectConfiguration,
   getProjects,
   readJson,
@@ -13,7 +11,7 @@ describe('add `defaultBase` in nx.json', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it('should update @nrwl/workspace:tsc -> @nrwl/js:tsc', async () => {
@@ -44,6 +42,7 @@ describe('add `defaultBase` in nx.json', () => {
     expect(projects).toEqual({
       'tsc-project': {
         $schema: '../../node_modules/nx/schemas/project-schema.json',
+        name: 'tsc-project',
         root: 'projects/tsc-project',
         targets: {
           build: {
@@ -56,6 +55,7 @@ describe('add `defaultBase` in nx.json', () => {
       },
       'other-project': {
         $schema: '../../node_modules/nx/schemas/project-schema.json',
+        name: 'other-project',
         root: 'projects/other-project',
         targets: {
           build: {

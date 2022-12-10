@@ -1,12 +1,14 @@
 import type { NextConfig } from 'next';
-import type { WebpackConfigOptions } from '../src/utils/types';
-
-const { join } = require('path');
-const { workspaceRoot } = require('@nrwl/devkit');
-const { workspaceLayout } = require('@nrwl/devkit');
 
 export interface WithNxOptions extends NextConfig {
-  nx?: WebpackConfigOptions;
+  nx?: {
+    svgr?: boolean;
+  };
+}
+
+export interface WithNxContext {
+  workspaceRoot: string;
+  libsDir: string;
 }
 
 function regexEqual(x, y) {
@@ -20,7 +22,26 @@ function regexEqual(x, y) {
   );
 }
 
-export function withNx(nextConfig = {} as WithNxOptions) {
+/**
+ * Do not remove or rename this function. Production builds inline `with-nx.js` file with a replacement
+ * To this function that hard-codes the libsDir.
+ */
+function getWithNxContext(): WithNxContext {
+  const { workspaceRoot, workspaceLayout } = require('@nrwl/devkit');
+  return {
+    workspaceRoot,
+    libsDir: workspaceLayout().libsDir,
+  };
+}
+
+export function withNx(
+  nextConfig = {} as WithNxOptions,
+  context: WithNxContext = getWithNxContext()
+): NextConfig {
+  // If `next-compose-plugins` is used, the context argument is invalid.
+  if (!context.libsDir || !context.workspaceRoot) {
+    context = getWithNxContext();
+  }
   const userWebpack = nextConfig.webpack || ((x) => x);
   const { nx, ...validNextConfig } = nextConfig;
   return {
@@ -43,7 +64,9 @@ export function withNx(nextConfig = {} as WithNxOptions) {
        */
 
       // Include workspace libs in css/sass loaders
-      const includes = [join(workspaceRoot, workspaceLayout().libsDir)];
+      const includes = [
+        require('path').join(context.workspaceRoot, context.libsDir),
+      ];
 
       const nextCssLoaders = config.module.rules.find(
         (rule) => typeof rule.oneOf === 'object'
@@ -60,7 +83,7 @@ export function withNx(nextConfig = {} as WithNxOptions) {
           rule.sideEffects === false && regexEqual(rule.test, /\.module\.css$/)
       );
       // Might not be found if Next.js webpack config changes in the future
-      if (nextCssLoader) {
+      if (nextCssLoader && nextCssLoader.issuer) {
         nextCssLoader.issuer.or = nextCssLoader.issuer.and
           ? nextCssLoader.issuer.and.concat(includes)
           : includes;
@@ -76,7 +99,7 @@ export function withNx(nextConfig = {} as WithNxOptions) {
           regexEqual(rule.test, /\.module\.(scss|sass)$/)
       );
       // Might not be found if Next.js webpack config changes in the future
-      if (nextSassLoader) {
+      if (nextSassLoader && nextSassLoader.issuer) {
         nextSassLoader.issuer.or = nextSassLoader.issuer.and
           ? nextSassLoader.issuer.and.concat(includes)
           : includes;
@@ -111,7 +134,7 @@ export function withNx(nextConfig = {} as WithNxOptions) {
         )
       );
       // Might not be found if Next.js webpack config changes in the future
-      if (nextGlobalCssLoader) {
+      if (nextGlobalCssLoader && nextGlobalCssLoader.issuer) {
         nextGlobalCssLoader.issuer.or = nextGlobalCssLoader.issuer.and
           ? nextGlobalCssLoader.issuer.and.concat(includes)
           : includes;

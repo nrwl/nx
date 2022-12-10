@@ -8,7 +8,10 @@ import {
   Tree,
   updateJson,
   updateWorkspaceConfiguration,
+  updateProjectConfiguration,
+  getProjects,
 } from '@nrwl/devkit';
+import { findRootJestConfig } from '../../utils/config/find-root-jest-files';
 import {
   babelJestVersion,
   jestTypesVersion,
@@ -18,6 +21,7 @@ import {
   tsJestVersion,
   tslibVersion,
   tsNodeVersion,
+  typesNodeVersion,
 } from '../../utils/versions';
 import { JestInitSchema } from './schema';
 
@@ -26,38 +30,80 @@ interface NormalizedSchema extends ReturnType<typeof normalizeOptions> {}
 const schemaDefaults = {
   compiler: 'tsc',
   js: false,
+  rootProject: false,
 } as const;
 
-function createJestConfig(tree: Tree, js: boolean = false) {
-  // if the root ts config already exists then don't make a js one or vice versa
-  if (!tree.exists('jest.config.ts') && !tree.exists('jest.config.js')) {
-    const contents = js
-      ? stripIndents`
-      const { getJestProjects } = require('@nrwl/jest');
+function generateGlobalConfig(tree: Tree, isJS: boolean) {
+  const contents = isJS
+    ? stripIndents`
+    const { getJestProjects } = require('@nrwl/jest');
 
-      module.exports = {
-        projects: getJestProjects()
-      };`
-      : stripIndents`
-      import { getJestProjects } from '@nrwl/jest';
+    module.exports = {
+      projects: getJestProjects()
+    };`
+    : stripIndents`
+    import { getJestProjects } from '@nrwl/jest';
 
-      export default {
-       projects: getJestProjects()
-      };`;
-    tree.write(`jest.config.${js ? 'js' : 'ts'}`, contents);
-  }
+    export default {
+     projects: getJestProjects()
+    };`;
+  tree.write(`jest.config.${isJS ? 'js' : 'ts'}`, contents);
+}
 
+function createJestConfig(tree: Tree, options: NormalizedSchema) {
   if (!tree.exists('jest.preset.js')) {
     // preset is always js file.
     tree.write(
       `jest.preset.js`,
       `
       const nxPreset = require('@nrwl/jest/preset').default;
-     
+
       module.exports = { ...nxPreset }`
     );
 
     addTestInputs(tree);
+  }
+  if (options.rootProject) {
+    // we don't want any config to be made because the `jestProjectGenerator`
+    // will copy the template config file
+    return;
+  }
+  const rootJestPath = findRootJestConfig(tree);
+  if (!rootJestPath) {
+    // if there's not root jest config, we will create one and return
+    // this can happen when:
+    // - root jest config was renamed => in which case there is migration needed
+    // - root project didn't have jest setup => again, no migration is needed
+    generateGlobalConfig(tree, options.js);
+    return;
+  }
+
+  if (tree.exists(rootJestPath)) {
+    // moving from root project config to monorepo-style config
+    const projects = getProjects(tree);
+    const projectNames = Array.from(projects.keys());
+    const rootProject = projectNames.find(
+      (projectName) => projects.get(projectName)?.root === '.'
+    );
+    // root project might have been removed,
+    // if it's missing there's nothing to migrate
+    if (rootProject) {
+      const rootProjectConfig = projects.get(rootProject);
+      const jestTarget = Object.values(rootProjectConfig.targets || {}).find(
+        (t) => t?.executor === '@nrwl/jest:jest'
+      );
+      const isProjectConfig = jestTarget?.options?.jestConfig === rootJestPath;
+      // if root project doesn't have jest target, there's nothing to migrate
+      if (isProjectConfig) {
+        const jestAppConfig = `jest.config.app.${options.js ? 'js' : 'ts'}`;
+
+        tree.rename(rootJestPath, jestAppConfig);
+        jestTarget.options.jestConfig = jestAppConfig;
+        updateProjectConfiguration(tree, rootProject, rootProjectConfig);
+      }
+      // generate new global config as it was move to project config or is missing
+      generateGlobalConfig(tree, options.js);
+    }
   }
 }
 
@@ -113,7 +159,7 @@ function updateDependencies(tree: Tree, options: NormalizedSchema) {
   if (!options.js) {
     devDeps['ts-node'] = tsNodeVersion;
     devDeps['@types/jest'] = jestTypesVersion;
-    devDeps['@types/node'] = '16.11.7';
+    devDeps['@types/node'] = typesNodeVersion;
   }
 
   if (options.compiler === 'babel' || options.babelJest) {
@@ -144,7 +190,7 @@ function updateExtensions(host: Tree) {
 
 export function jestInitGenerator(tree: Tree, schema: JestInitSchema) {
   const options = normalizeOptions(schema);
-  createJestConfig(tree, options.js);
+  createJestConfig(tree, options);
 
   let installTask: GeneratorCallback = () => {};
   if (!options.skipPackageJson) {

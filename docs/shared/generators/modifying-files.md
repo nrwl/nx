@@ -4,7 +4,7 @@ Modifying existing files is an order of magnitude harder than creating new files
 
 ## Compose Existing Generators
 
-If you can compose together existing generators to modify the files you need, you should take that approach. See [Composing Generators](/recipe/composing-generators) for more information.
+If you can compose together existing generators to modify the files you need, you should take that approach. See [Composing Generators](/recipes/generators/composing-generators) for more information.
 
 ## Modify JSON Files
 

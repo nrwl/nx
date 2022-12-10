@@ -1,19 +1,22 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Angular Cypress Component Test Generator should generate a component test 1`] = `
-"import { MountConfig, mount } from 'cypress/angular';
+"import { TestBed } from '@angular/core/testing';
 import { MyLibComponent } from './my-lib.component';
 
 describe(MyLibComponent.name, () => {
-  const config: MountConfig<MyLibComponent> = {
-    declarations: [],
-    imports: [],
-    providers: []
-  }
+
+  beforeEach(() => {
+    TestBed.overrideComponent(MyLibComponent, {
+      add: { 
+        imports: [],
+        providers: []
+      }
+    }) 
+  })
 
   it('renders', () => {
-     mount(MyLibComponent, {
-           ...config,
+     cy.mount(MyLibComponent, {
            componentProperties: {
                type:  'button',
                style:  'default',
@@ -22,42 +25,51 @@ describe(MyLibComponent.name, () => {
           }
        });
   })
+
 })
 "
 `;
 
 exports[`Angular Cypress Component Test Generator should handle component w/o inputs 1`] = `
-"import { MountConfig, mount } from 'cypress/angular';
+"import { TestBed } from '@angular/core/testing';
 import { MyLibComponent } from './my-lib.component';
 
 describe(MyLibComponent.name, () => {
-  const config: MountConfig<MyLibComponent> = {
-    declarations: [],
-    imports: [],
-    providers: []
-  }
+
+  beforeEach(() => {
+    TestBed.overrideComponent(MyLibComponent, {
+      add: { 
+        imports: [],
+        providers: []
+      }
+    }) 
+  })
 
   it('renders', () => {
-     mount(MyLibComponent, config);
+     cy.mount(MyLibComponent,);
   })
+
 })
 "
 `;
 
 exports[`Angular Cypress Component Test Generator should work with standalone components 1`] = `
-"import { MountConfig, mount } from 'cypress/angular';
+"import { TestBed } from '@angular/core/testing';
 import { MyLibComponent } from './my-lib.component';
 
 describe(MyLibComponent.name, () => {
-  const config: MountConfig<MyLibComponent> = {
-    declarations: [],
-    imports: [],
-    providers: []
-  }
+
+  beforeEach(() => {
+    TestBed.overrideComponent(MyLibComponent, {
+      add: { 
+        imports: [],
+        providers: []
+      }
+    }) 
+  })
 
   it('renders', () => {
-     mount(MyLibComponent, {
-           ...config,
+     cy.mount(MyLibComponent, {
            componentProperties: {
                type:  'button',
                style:  'default',
@@ -66,6 +78,7 @@ describe(MyLibComponent.name, () => {
           }
        });
   })
+
 })
 "
 `;

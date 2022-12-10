@@ -46,8 +46,7 @@
     },
     "directory": {
       "type": "string",
-      "description": "Create the component under this directory (can be nested).",
-      "alias": "d"
+      "description": "Create the component under this directory (can be nested)."
     },
     "flat": {
       "type": "boolean",

@@ -11,13 +11,13 @@
       "name": "Overview",
       "path": "/packages/linter",
       "file": "shared/linter-plugin",
-      "content": "The Linter plugin contains executors, generator, plugin and utilities used for linting JavaScript/TypeScript projects within an Nx workspace.\n\n## Setting Up Linter\n\n### Installation\n\nIn any Nx workspace, you can install `@nrwl/linter` by running the following commands if `@nrwl/linter` package is not installed:\n\n```bash\nnpm i --save-dev @nrwl/linter\n```\n\n```bash\nyarn add --dev @nrwl/linter\n```\n\n## Lint\n\nYou can lint an application or a library with the following command:\n\n```bash\nnx lint my-app\n```\n\n```bash\nnx lint my-lib\n```\n\n## Utils\n\n- [convert-tslint-to-eslint](/packages/angular/generators/convert-tslint-to-eslint) - Converts a project linter from [TSLint](https://palantir.github.io/tslint/) to [ESLint](https://eslint.org/)\n"
+      "content": "The Linter plugin contains executors, generator, plugin and utilities used for linting JavaScript/TypeScript projects within an Nx workspace.\n\n## Setting Up Linter\n\n### Installation\n\nIn any Nx workspace, you can install `@nrwl/linter` by running the following commands if `@nrwl/linter` package is not installed:\n\n```shell\nnpm i --save-dev @nrwl/linter\n```\n\n```shell\nyarn add --dev @nrwl/linter\n```\n\n## Lint\n\nYou can lint an application or a library with the following command:\n\n```shell\nnx lint my-app\n```\n\n```shell\nnx lint my-lib\n```\n\n## Utils\n\n- [convert-tslint-to-eslint](/packages/angular/generators/convert-tslint-to-eslint) - Converts a project linter from [TSLint](https://palantir.github.io/tslint/) to [ESLint](https://eslint.org/)\n"
     },
     {
       "id": "eslint-plugin-nx",
       "name": "eslint-plugin-nx",
       "file": "shared/eslint-plugin-nx",
-      "content": "![ESLint logo](/shared/eslint-logo.png)\n\nA plugin containing a collection of recommended ESLint rule configurations wrapped as ESLint plugins and an Nx specific [enforce-module-boundaries](#enforce-module-boundaries) rule.\n\n## Setting Up ESLint Plugin\n\n### Installation\n\nIn any Nx workspace, you can install `@nrwl/eslint-plugin-nx` by running the following commands if the package is not already installed:\n\n```bash\nnpm i --save-dev @nrwl/eslint-plugin-nx\n```\n\n```bash\nyarn add --dev @nrwl/eslint-plugin-nx\n```\n\n## ESLint plugins\n\nThe plugin contains the following rule configurations divided into sub-plugins.\n\n### JavaScript\n\nThe `@nrwl/nx/javascript` ESLint plugin contains best practices when using JavaScript.\n\n### TypeScript\n\nThe `@nrwl/nx/typescript` ESLint plugin contains best practices when using TypeSript.\n\n### Angular\n\nContains configurations matching best practices when using Angular framework:\n\n- @nrwl/nx/angular\n- @nrwl/nx/angular-template\n\n### React\n\nContains configurations matching best practices when using React framework:\n\n- @nrwl/nx/react-base\n- @nrwl/nx/react-jsx\n- @nrwl/nx/react-typescript\n\nYou can also use `@nrwl/nx/react` which includes all three `@nrwl/nx/react-*` plugins\n\n## enforce-module-boundaries\n\nThe `@nrwl/nx/enforce-module-boundaries` ESLint rule enables you to define strict rules for accessing resources between different projects in the repository. By enforcing strict boundaries it helps keep prevent unplanned cross-dependencies.\n\n### Usage\n\nYou can use `enforce-module-boundaries` rule by adding it to your ESLint rules configuration:\n\n```json\n{\n  // ... more ESLint config here\n  \"overrides\": [\n    {\n      \"files\": [\"*.ts\", \"*.tsx\", \"*.js\", \"*.jsx\"],\n      \"rules\": {\n        \"@nrwl/nx/enforce-module-boundaries\": [\n          \"error\",\n          {\n            // ...rule specific configuration\n          }\n        ]\n      }\n    }\n    // ... more ESLint overrides here\n  ]\n}\n```\n\nRead more about proper usage of this rule:\n\n- [Enforce Project Boundaries](/core-features/enforce-project-boundaries)\n- [Ban Dependencies with Certain Tags](/recipe/ban-dependencies-with-tags)\n- [Tag in Multiple Dimensions](/recipe/tag-multiple-dimensions)\n- [Ban External Imports](/recipe/ban-external-imports)\n- [Tags Allow List](/recipe/tags-allow-list)\n- [Taming Code Organization with Module Boundaries in Nx](https://blog.nrwl.io/mastering-the-project-boundaries-in-nx-f095852f5bf4)\n"
+      "content": "A plugin containing a collection of recommended ESLint rule configurations wrapped as ESLint plugins and an Nx specific [enforce-module-boundaries](#enforce-module-boundaries) rule.\n\n## Setting Up ESLint Plugin\n\n### Installation\n\nIn any Nx workspace, you can install `@nrwl/eslint-plugin-nx` by running the following commands if the package is not already installed:\n\n{% tabs %}\n{%tab label=\"npm\"%}\n\n```shell\nnpm i --save-dev @nrwl/eslint-plugin-nx\n```\n\n{% /tab %}\n{%tab label=\"yarn\"%}\n\n```shell\nyarn add --dev @nrwl/eslint-plugin-nx\n```\n\n{% /tab %}\n{% /tabs %}\n\n## ESLint plugins\n\nThe plugin contains the following rule configurations divided into sub-plugins.\n\n### JavaScript\n\nThe `@nrwl/nx/javascript` ESLint plugin contains best practices when using JavaScript.\n\n### TypeScript\n\nThe `@nrwl/nx/typescript` ESLint plugin contains best practices when using TypeSript.\n\n### Angular\n\nContains configurations matching best practices when using Angular framework:\n\n- @nrwl/nx/angular\n- @nrwl/nx/angular-template\n\n### React\n\nContains configurations matching best practices when using React framework:\n\n- @nrwl/nx/react-base\n- @nrwl/nx/react-jsx\n- @nrwl/nx/react-typescript\n\nYou can also use `@nrwl/nx/react` which includes all three `@nrwl/nx/react-*` plugins\n\n## enforce-module-boundaries\n\nThe `@nrwl/nx/enforce-module-boundaries` ESLint rule enables you to define strict rules for accessing resources between different projects in the repository. By enforcing strict boundaries it helps keep prevent unplanned cross-dependencies.\n\n### Usage\n\nYou can use `enforce-module-boundaries` rule by adding it to your ESLint rules configuration:\n\n```jsonc\n{\n  // ... more ESLint config here\n  \"overrides\": [\n    {\n      \"files\": [\"*.ts\", \"*.tsx\", \"*.js\", \"*.jsx\"],\n      \"rules\": {\n        \"@nrwl/nx/enforce-module-boundaries\": [\n          \"error\",\n          {\n            // ...rule specific configuration\n          }\n        ]\n      }\n    }\n    // ... more ESLint overrides here\n  ]\n}\n```\n\nRead more about proper usage of this rule:\n\n- [Enforce Project Boundaries](/core-features/enforce-project-boundaries)\n- [Ban Dependencies with Certain Tags](/recipes/other/ban-dependencies-with-tags)\n- [Tag in Multiple Dimensions](/recipes/other/tag-multiple-dimensions)\n- [Ban External Imports](/recipes/other/ban-external-imports)\n- [Tags Allow List](/recipes/other/tags-allow-list)\n- [Taming Code Organization with Module Boundaries in Nx](https://blog.nrwl.io/mastering-the-project-boundaries-in-nx-f095852f5bf4)\n"
     }
   ],
   "generators": [
@@ -57,16 +57,6 @@
         "title": "Create a new Workspace Lint Rule",
         "description": "Create a new Workspace Lint Rule.",
         "type": "object",
-        "examples": [
-          {
-            "command": "nx g @nrwl/linter:workspace-rule my-custom-rule",
-            "description": "Create a new workspace lint rule called my-custom-rule"
-          },
-          {
-            "command": "nx g @nrwl/linter:workspace-rule --name=my-custom-rule --directory=a/b/c",
-            "description": "Create a new workspace lint rule located at `tools/eslint-rules/a/b/c/my-custom-rule.ts`"
-          }
-        ],
         "properties": {
           "name": {
             "type": "string",
@@ -81,6 +71,7 @@
           }
         },
         "required": ["name", "directory"],
+        "examplesFile": "{% tabs %}\n{% tab label=\"Create rule\" %}\n\nThis command will generate a new workspace lint rule called `my-custom-rule`. The new rule will be generated in `tools/eslint-rules/rules` folder:\n\n```shell\nnx g @nrwl/linter:workspace-rule my-custom-rule\n```\n\n{% /tab %}\n{% tab label=\"Custom sub-folder\" %}\n\nWe can change the default sub-folder from `rules` and specify a custom one:\n\n```shell\nnx g @nrwl/linter:workspace-rule --name=my-custom-rule --directory=my/custom/path\n```\n\nThe command above will generate the rule in `tools/eslint-rules/my/custom/path` folder.\n\n{% /tab %}\n{% /tabs %}\n\n---\n",
         "presets": []
       },
       "description": "Create a new Workspace ESLint rule.",
@@ -92,136 +83,11 @@
   ],
   "executors": [
     {
-      "name": "lint",
-      "implementation": "/packages/linter/src/executors/lint/lint.impl.ts",
-      "schema": {
-        "$schema": "http://json-schema.org/schema",
-        "title": "Lint Target",
-        "description": "Linter.",
-        "cli": "nx",
-        "type": "object",
-        "properties": {
-          "linter": {
-            "description": "The tool to use for running lint checks.",
-            "type": "string",
-            "enum": ["eslint", "tslint"],
-            "default": "eslint"
-          },
-          "config": {
-            "type": "string",
-            "description": "The name of the configuration file.",
-            "x-completion-type": "file",
-            "x-completion-glob": "(tslint.json|.eslintrc.json)"
-          },
-          "tsConfig": {
-            "description": "The name of the TypeScript configuration file.",
-            "oneOf": [
-              {
-                "type": "string",
-                "x-completion-type": "file",
-                "x-completion-glob": "tsconfig.*.json"
-              },
-              {
-                "type": "array",
-                "items": {
-                  "type": "string",
-                  "x-completion-type": "file",
-                  "x-completion-glob": "tsconfig.*.json"
-                }
-              }
-            ]
-          },
-          "format": {
-            "type": "string",
-            "description": "ESLint Output formatter (https://eslint.org/docs/user-guide/formatters).",
-            "default": "stylish",
-            "anyOf": [
-              {
-                "enum": [
-                  "stylish",
-                  "compact",
-                  "codeframe",
-                  "unix",
-                  "visualstudio",
-                  "table",
-                  "checkstyle",
-                  "html",
-                  "jslint-xml",
-                  "json",
-                  "json-with-metadata",
-                  "junit",
-                  "tap"
-                ]
-              },
-              { "minLength": 1 }
-            ]
-          },
-          "exclude": {
-            "type": "array",
-            "description": "Files to exclude from linting.",
-            "default": [],
-            "items": { "type": "string", "x-completion-type": "file" }
-          },
-          "files": {
-            "type": "array",
-            "description": "Files to include in linting.",
-            "default": [],
-            "items": { "type": "string", "x-completion-type": "file" }
-          },
-          "force": {
-            "type": "boolean",
-            "description": "Succeeds even if there was linting errors.",
-            "default": false
-          },
-          "silent": {
-            "type": "boolean",
-            "description": "Hide output text.",
-            "default": false
-          },
-          "fix": {
-            "type": "boolean",
-            "description": "Fixes linting errors (may overwrite linted files).",
-            "default": false
-          },
-          "cache": {
-            "type": "boolean",
-            "description": "Only check changed files.",
-            "default": false
-          },
-          "cacheLocation": {
-            "type": "string",
-            "description": "Path to the cache file or directory.",
-            "x-completion-type": "directory"
-          },
-          "outputFile": {
-            "type": "string",
-            "description": "File to write report to.",
-            "x-completion-type": "file"
-          },
-          "maxWarnings": {
-            "type": "number",
-            "description": "Number of warnings to trigger nonzero exit code - default: `-1`.",
-            "default": -1
-          },
-          "quiet": {
-            "type": "boolean",
-            "description": "Report errors only - default: `false`.",
-            "default": false
-          }
-        },
-        "additionalProperties": false,
-        "required": ["linter"],
-        "presets": []
-      },
-      "description": "**[DEPRECATED]**: Please use the eslint builder instead, an automated migration was provided in `v10.3.0`.",
-      "aliases": [],
-      "hidden": false,
-      "path": "/packages/linter/src/executors/lint/schema.json"
-    },
-    {
       "name": "eslint",
       "implementation": "/packages/linter/src/executors/eslint/lint.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "$schema": "http://json-schema.org/schema",
         "title": "ESLint Lint Target",
         "description": "ESLint Lint Target.",
@@ -340,12 +206,12 @@
           },
           "reportUnusedDisableDirectives": {
             "type": "string",
-            "default": "off",
             "enum": ["off", "warn", "error"],
             "description": "The equivalent of the `--report-unused-disable-directives` flag on the ESLint CLI."
           }
         },
         "required": ["lintFilePatterns"],
+        "examplesFile": "Linter can be configured in multiple ways. The basic way is to provide only `lintFilePatterns`, which is a mandatory property. This tells us where to look for files to lint.\n\n`project.json`:\n\n```json\n\"lint\": {\n  \"executor\": \"@nrwl/linter:eslint\",\n  \"options\": {\n    \"lintFilePatterns\": [\"apps/frontend/**/*.ts\"]\n  }\n}\n```\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Fixing linter issues\" %}\n\nLinter provides an automated way of fixing known issues. To ensure that those changes are properly cached, we need to add an `outputs` property to the `lint` target. Omitting the `outputs` property would produce an invalid cache record. Both of these properties are set by default when scaffolding a new project.\n\n```json\n\"lint\": {\n  \"executor\": \"@nrwl/linter:eslint\",\n  \"outputs\": [\"{options.outputFile}\"],\n  \"options\": {\n    \"lintFilePatterns\": [\"apps/frontend/**/*.ts\"]\n  }\n}\n```\n\nWith these settings, we can run the command with a `--fix` flag:\n\n```bash\nnx run frontend:lint --fix\n```\n\nWe can also set this flag via project configuration to always fix files when running lint:\n\n```json\n\"lint\": {\n  \"executor\": \"@nrwl/linter:eslint\",\n  \"outputs\": [\"{options.outputFile}\"],\n  \"options\": {\n    \"lintFilePatterns\": [\"apps/frontend/**/*.ts\"],\n    \"fix\": true\n  }\n}\n```\n\n{% /tab %}\n{% tab label=\"Custom output format\" %}\n\nESLint executor uses the `stylish` output format by default. You can change this by specifying the `format` property:\n\n```json\n\"lint\": {\n  \"executor\": \"@nrwl/linter:eslint\",\n  \"outputs\": [\"{options.outputFile}\"],\n  \"options\": {\n    \"lintFilePatterns\": [\"apps/frontend/**/*.ts\"],\n    \"format\": \"compact\"\n  }\n}\n```\n\n{% /tab %}\n{% tab label=\"Silence warnings\" %}\n\nMigrated or legacy projects tend to have an overwhelming amount of lint errors. We might want to change those temporarily to be warnings so they don't block the development. But they would still clutter the report. We can run the command with `--quiet` to hide warning (errors would still break the lint):\n\n```bash\nnx run frontend:lint --quiet\n```\n\nWe can also set this via project configuration as a default option.\n\n```json\n\"lint\": {\n  \"executor\": \"@nrwl/linter:eslint\",\n  \"outputs\": [\"{options.outputFile}\"],\n  \"options\": {\n    \"lintFilePatterns\": [\"apps/frontend/**/*.ts\"],\n    \"quiet\": true\n  }\n}\n```\n\n{% /tab %}\n{% tab label=\"ESLint config file\" %}\n\n`ESLint` provides several ways of specifying the configuration. The default one is using `.eslintrc.json` but you can override it by setting the `eslintConfig` flag:\n\n```json\n\"lint\": {\n  \"executor\": \"@nrwl/linter:eslint\",\n  \"outputs\": [\"{options.outputFile}\"],\n  \"options\": {\n    \"lintFilePatterns\": [\"apps/frontend/**/*.ts\"],\n    \"eslintConfig\": \".eslintrc.js\"\n  }\n}\n```\n\n{% /tab %}\n{% /tabs %}\n\n---\n",
         "presets": []
       },
       "hasher": "./src/executors/eslint/hasher",

@@ -1,160 +1,99 @@
-# Adding Nx to Lerna/Yarn/PNPM/NPM Workspace
+# Adding Nx to NPM/Yarn/PNPM Workspace
 
 {% callout type="note" title="Migrating from Lerna?" %}
-Interested in migrating from [Lerna](https://github.com/lerna/lerna) in particular? In case you missed it, Nrwl, the company behind Nx, [took over stewardship of Lerna](https://blog.nrwl.io/lerna-is-dead-long-live-lerna-61259f97dbd9). This allows for a much better integration between the two. [Read more in our dedicated guide](/recipe/lerna-and-nx).
+Interested in migrating from [Lerna](https://github.com/lerna/lerna) in particular? In case you missed it, Lerna v6 is powering Nx underneath. As a result, Lerna gets all the modern features such as caching and task pipelines. Read more on [https://lerna.js.org/upgrade](https://lerna.js.org/upgrade).
 {% /callout %}
 
-**Short story:** you can use Nx easily together with your current Lerna/Yarn/PNPM/NPM monorepo setup. Why? To speed up
-your tasks by leveraging Nx's powerful scheduling and caching capabilities.
+Nx has first class support for [package-based monorepos](/getting-started/package-based-repo-tutorial). As a result, if you have an existing NPM/Yarn or PNPM based monorepo setup, you can easily add Nx to get
 
-Adding Nx is a low impact operation that does not require any particular change to your repository like how your
-packages and scripts are organized. Whatever setup you have still works the same way but faster and with better dev
-ergonomics. You could manually configure Nx, but it is way easier by running the following command:
+- fast [task scheduling](/core-features/run-tasks)
+- support for [task pipelines](/concepts/task-pipeline-configuration)
+- [caching](/core-features/cache-task-results)
+- optionally [remote caching with Nx Cloud](/core-features/share-your-cache)
+- optionally [distributed task execution with Nx Cloud](/core-features/distribute-task-execution)
 
-```bash
-npx add-nx-to-monorepo
+This is a low-impact operation because all that needs to be done is to install the `nx` package at the root-level and add an `nx.json` for configuring caching and task pipelines.
+
+## Installing Nx
+
+Run the following command to automatically set up Nx:
+
+```shell
+npx nx@latest init
 ```
 
-Here's a short video walking you through the steps of adding Nx to a Lerna & Yarn workspaces based monorepo:
+Running this command will
 
-{% youtube
-src="https://www.youtube.com/embed/hCm373Aq1uQ"
-title="Add Nx to a Lerna & Yarn workspaces monorepo"
-width="100%" /%}
+- collect all the NPM scripts in the corresponding `package.json` files of your workspace packages
+- ask you which of those scripts are cacheable (e.g. build, test, lint)
+- ask you which of those scripts might need to be run in a certain order (e.g. if you run the `build` script you might want to first build all the dependent projects)
+- ask you for custom output folders that should be captured as part of the caching
 
-`npx add-nx-to-monorepo` does the following:
+This process adds `nx` to your `package.json` at the root of your workspace:
 
-1. Add Nx to your package.json.
-2. Create `nx.json`, containing all the necessary configuration for Nx.
-3. Set up [Nx Cloud](https://nx.app) (if you chose "yes").
-
-{% callout type="note" title="Familiar with Turborepo?" %}
-If you are familiar with Turborepo, check out [this guide](/more-concepts/turbo-and-nx). At this point, Nx can do anything Turbo can, and much more.
-{% /callout %}
-
-## What You Get Right Away
-
-This sets up Nx core in your existing monorepo which comes with a series of interesting features that help intelligenty schedule tasks and make sure operations are quick:
-
-- **Run any npm script -** with Nx installed, you can use its powerful task scheduler which automatically picks up your
-  npm scripts from your package's script section. For instance if package `myproj` has a `build` script, you can just
-  run it using `nx build myproj`. Similarly, for running tests use `nx test myproj` and so on.
-- **Parallelization and task dependencies -** Nx
-  automatically [knows how your projects relate to each other](/more-concepts/how-project-graph-is-built). As a result, if `project-a`
-  depends on `project-b` and you run `nx build project-a`, Nx first runs the builds for all of `project-a`'s
-  dependencies, in this specific example it builds `project-b` before `project-a`.
-- **Only run what changed -** Using [Nx affected commands](/concepts/affected) you only really execute tasks on the
-  projects that changed, compared to a given baseline (usually the main branch).
-- **Caching -** You get Nx's [computation caching](/concepts/how-caching-works) for free. All operations, including artifacts and
-  terminal output are restored from the cache (if present) in a completely transparent way without disrupting your DX.
-  No configuration needed. Obviously this results in an incredible speed improvement.
-- **Distributed Task Execution -** This is unique to Nx. In combination with Nx Cloud your tasks are automatically
-  distributed across CI agents, taking into account build order, maximizing parallelization and thus agent utilization.
-  It even learns from previous runs to better distribute tasks! [Learn more](/concepts/dte)
-- **Interactive workspace visualization -** Nx comes with a [project graph visualization](/core-features/explore-graph)
-  built-in which you can use to interactively explore your workspace, understand dependencies and find paths between
-  nodes and why they exist.
-- **Dedicated VSCode extension -** You can install [Nx Console](/core-features/integrate-with-editors) which is a dedicated VSCode extension
-  to provide a visual interface for navigating your monorepo workspace in terms of launching commands as well as for
-  generating code.
-- **GitHub integration -** Install the [Nx Cloud Github App](https://github.com/apps/nx-cloud) to get inline reporting
-  on your CI jobs.
-
-## Looking for integrating Lerna and Nx?
-
-Check out our dedicated guide: [Lerna and Nx](/recipe/lerna-and-nx)
-
-## Further customizations
-
-Here are some further customizations we found to be useful when adding Nx to existing monorepos.
-
-### Excluding Sources
-
-The `add-nx-to-monorepo` command does its best to figure out what projects you have in the repo. Similar to other tools,
-it looks at the `workspaces` property in the root `package.json` and tries to find all `package.json` files matching the
-globs. You can change those globs to exclude some projects. You can also exclude files by creating an `.nxignore` file,
-like this:
-
-```text
-third_party # nx will ignore everything in the third-party dir
-```
-
-### Enabling JS Analysis
-
-After running `add-nx-to-monorepo` Nx will only analyze `package.json` files like Lerna or Turborepo.
-
-```json
+```json {% fileName="package.json" %}
 {
-  "pluginsConfig": {
-    "@nrwl/js": {
-      "analyzeSourceFiles": false
+  "name": "my-workspace",
+  ...
+  "devDependencies": {
+    ...
+    "nx": "15.3.0"
+  }
+}
+```
+
+It also creates a `nx.json` based on the answers given during the setup process. This includes cacheable operations as well as some initial definition of the task pipeline. Here is an example:
+
+```json {% fileName="nx.json" %}
+{
+  "tasksRunnerOptions": {
+    "default": {
+      "runner": "nx/tasks-runners/default",
+      "options": {
+        "cacheableOperations": ["build", "test", "lint"]
+      }
+    }
+  },
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["^build"]
     }
   }
 }
 ```
 
-We do this because most existing Lerna monorepos have implicit dependencies between projects Lerna knows nothing about.
+## Incrementally Adopting Nx
 
-To enable JS analysis, add the following to your configuration:
+In a package-based monorepo, Nx only manages the scheduling and caching of your npm scripts. Hence, it can easily be adopt incrementally by initially using Nx just for a subset of your scripts and then gradually adding more.
 
-```json
-{
-  "pluginsConfig": {
-    "@nrwl/js": {
-      "analyzeSourceFiles": true
-    }
-  }
-}
+For example, use Nx to run your builds:
+
+```shell
+npx nx run-many --target=build
 ```
 
-In this case, Nx will consider all import
-and require statements in your JS/TS files when creating its project graph. If you do that, you can also add the `paths`
-property to the root `tsconfig.base.json` (if you don't have this file, create it), which will tell Nx how to resolve
-imports.
+But instead keep using NPM/Yarn/PNPM workspace commands for your tests and other scripts. Here's an example of using PNPM commands to run tests across packages
 
-```json
-{
-  "compilerOptions": {
-    "paths": {
-      "one": ["packages/one/index"],
-      "one/*": ["packages/one/*"],
-      "two": ["packages/two/index"],
-      "two/*": ["packages/two/*"]
-    }
-  }
-}
+```shell
+pnpm run -r test
 ```
 
-## Next Steps
+This allows for incrementally adopting Nx in your existing workspace.
 
-Nx is like a VS Code of build tools. It has a very powerful core, but it's really the plugins and extra capabilities
-that really transform how you develop.
+## Learn More
 
-Nx has first class support for React, Next.js, React Native, Angular, Node, NestJS, Jest, Cypress, Storybook and many
-more. All the plugins are designed to work together and create a cohesive and pleasant to use dev environment.
+{% cards %}
 
-In addition, Nx makes a lot of things much easier, like building large apps incrementally, distributing CI (no point in
-doing caching unless you can do that), enforcing best practices, building design systems.
+{% card title="Cache Task Results" description="Learn more about how caching works" type="documentation" url="/core-features/cache-task-results" /%}
 
-## Real world examples of using add-nx-to-monorepo
+{% card title="Task Pipeline Configuration" description="Learn more about how to setup task dependencies" type="documentation" url="/concepts/task-pipeline-configuration" /%}
 
-### Speeding Up Facebook React Monorepo with Nx
+{% card title="Nx Ignore" description="Learn about how to ignore certain projects using .nxignore" type="documentation" url="/reference/nxignore" /%}
 
-{% youtube
-src="https://www.youtube.com/embed/XLP2RAOwfLQ"
-title="Speeding Up github.com/facebook/react with Nx"
-width="100%" /%}
+{% card title="Nx and Turbo" description="Read about how Nx compares to Turborepo" url="/more-concepts/turbo-and-nx" /%}
 
-### Speeding Up Remotion Monorepo with Nx
+{% card title="Nx and Lerna" description="Read about how Nx and Lerna can be used together" url="/recipes/adopting-nx/lerna-and-nx" /%}
 
-{% youtube
-src="https://www.youtube.com/embed/TXySu4dZLp0"
-title="Speeding Up Remotion Monorepo with Nx"
-width="100%" /%}
+{% card title="Integrated Repos vs Package-Based Repos" description="Learn about two styles of monorepos." url="/concepts/integrated-vs-package-based" /%}
 
-### Speeding Up Storybook Monorepo with Nx
-
-{% youtube
-src="https://www.youtube.com/embed/3o8w6jbDr4A"
-title="Speeding Up Storybook Monorepo with Nx"
-width="100%" /%}
+{% /cards %}

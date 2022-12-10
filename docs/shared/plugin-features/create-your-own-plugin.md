@@ -7,6 +7,11 @@ execution of tasks, computation caching, and code generation. [Nx plugins](#nx-p
 Many organizations use Nx without any plugins. If you are mainly interested in making your workspace faster or enabling distributed task execution, then plugins aren't necessary.
 {% /callout %}
 
+{% cards %}
+{% card title="Create a Nx Generator in 100 seconds" description="Learn how to setup a new local generator in less than 2 minutes" type="video" url="https://www.youtube.com/watch?v=ubgroK5T6cA" /%}
+{% card title="Creating and Publishing Your Own Nx Plugin" description="Learn how to build your own Playwright" type="video" url="https://youtu.be/vVT7Al01VZc" /%}
+{% /cards %}
+
 ## Nx plugins
 
 Nx plugins are npm packages that contain generators and executors to extend the capabilities of an Nx workspace.
@@ -29,7 +34,7 @@ Plugins have:
 
   - Plugins can provide a function `processProjectGraph` to add extra edges to the project graph.
   - This allows plugins to influence the behavior of `nx affected` and the project graph visualization.
-  - See [project graph plugins](/recipe/project-graph-plugins) for more information.
+  - See [project graph plugins](/recipes/advanced-plugins/project-graph-plugins) for more information.
 
 - **Project Inference Extensions**
 
@@ -43,7 +48,7 @@ All the core plugins are written using Nx Devkit, and you can use the same utili
 executors.
 
 {% callout type="check" title="Plugins!" %}
-The Nx team maintains a core set of plugins for many application and tooling frameworks. You can write [custom generators](/recipe/local-generators) and [executors](/recipe/creating-custom-executors) for your own workspace. You can also write your own plugin and share it with the community. The [Nx Plugin](/packages/nx-plugin) plugin provides guidance on how you can build your own custom plugins.
+The Nx team maintains a core set of plugins for many application and tooling frameworks. You can write [custom generators](/recipes/generators/local-generators) and [executors](/recipes/executors/creating-custom-executors) for your own workspace. You can also write your own plugin and share it with the community. The [Nx Plugin](/packages/nx-plugin) plugin provides guidance on how you can build your own custom plugins.
 {% /callout %}
 
 ### Local workspace plugins
@@ -74,7 +79,7 @@ Trees (ASTs), and more.
 ### Pay as you go
 
 As with most things in Nx, the core of Nx Devkit is very simple. It only uses language primitives and immutable
-objects (the tree being the only exception). See [Simplest Generator](/recipe/creating-files)
+objects (the tree being the only exception). See [Simplest Generator](/recipes/generators/creating-files)
 and [Simplest Executor](/plugin-features/use-task-executors#simplest-executor) for examples on creating generators
 and executors. The [Using Executors](/plugin-features/use-task-executors)
 and [Using Generators](/plugin-features/use-code-generators) guides also have additional information on executors
@@ -83,6 +88,6 @@ and generators.
 ## Learn more
 
 - [Creating and Publishing Your Own Nx Plugin - Youtube](https://www.youtube.com/watch?v=vVT7Al01VZc)
-- [Local generators](/recipe/local-generators)
-- [Local executors](/recipe/creating-custom-executors)
+- [Local generators](/recipes/generators/local-generators)
+- [Local executors](/recipes/executors/creating-custom-executors)
 - [Nx Community Plugins](/community)

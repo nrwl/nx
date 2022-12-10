@@ -15,9 +15,7 @@ i.e. `apps/my-app/custom-webpack.config.js`
 The custom webpack file contains a function that takes as input the existing webpack config and then returns a modified
 config object. `context` includes all the options specified for the executor.
 
-`apps/my-app/custom-webpack.config.js`:
-
-```typescript
+```typescript {% fileName="apps/my-app/custom-webpack.config.js" %}
 // Helper for combining webpack config objects
 const { merge } = require('webpack-merge');
 
@@ -30,7 +28,7 @@ module.exports = (config, context) => {
 
 Also supports async functions
 
-```typescript
+```typescript {% fileName="apps/my-app/custom-webpack.config.js" %}
 // Utility function for sleeping
 const sleep = (n) => new Promise((resolve) => setTimeout(resolve, n));
 
@@ -46,7 +44,7 @@ module.exports = async (config, context) => {
 
 To add the `css-loader` to your config, install it and add the rule.
 
-```bash
+```shell
 npm install -save-dev css-loader
 ```
 
@@ -69,7 +67,7 @@ module.exports = (config, context) => {
 
 ## Module Federation
 
-If you use the [Module Federation](/recipe/faster-builds) support from `@nrwl/angular` or `@nrwl/react` then
+If you use the [Module Federation](/recipes/module-federation/faster-builds) support from `@nrwl/angular` or `@nrwl/react` then
 you can customize your webpack configuration as follows.
 
 ```typescript
@@ -95,7 +93,7 @@ config object.
 
 Next.js supports webpack customization in the `next.config.js` file.
 
-```js
+```js {% fileName="next.config.js" %}
 const { withNx } = require('@nrwl/next/plugins/with-nx');
 
 const nextConfig = {

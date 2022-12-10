@@ -1,17 +1,21 @@
-import { readCachedProjectGraph, readNxJson } from '@nrwl/devkit';
-import {
-  isTerminalRun,
-  MappedProjectGraph,
-  mapProjectGraphFiles,
-} from '@nrwl/workspace/src/utils/runtime-lint-utils';
+import { ProjectGraph, readCachedProjectGraph, readNxJson } from '@nrwl/devkit';
+import { isTerminalRun } from './runtime-lint-utils';
 import * as chalk from 'chalk';
+import {
+  createProjectRootMappings,
+  ProjectRootMappings,
+} from 'nx/src/project-graph/utils/find-project-for-path';
 
 export function ensureGlobalProjectGraph(ruleName: string) {
   /**
    * Only reuse graph when running from terminal
    * Enforce every IDE change to get a fresh nxdeps.json
    */
-  if (!(global as any).projectGraph || !isTerminalRun()) {
+  if (
+    !(global as any).projectGraph ||
+    !(global as any).projectRootMappings ||
+    !isTerminalRun()
+  ) {
     const nxJson = readNxJson();
     (global as any).workspaceLayout = nxJson.workspaceLayout;
 
@@ -20,8 +24,9 @@ export function ensureGlobalProjectGraph(ruleName: string) {
      * the ProjectGraph may or may not exist by the time the lint rule is invoked for the first time.
      */
     try {
-      (global as any).projectGraph = mapProjectGraphFiles(
-        readCachedProjectGraph()
+      (global as any).projectGraph = readCachedProjectGraph();
+      (global as any).projectRootMappings = createProjectRootMappings(
+        (global as any).projectGraph.nodes
       );
     } catch {
       const WARNING_PREFIX = `${chalk.reset.keyword('orange')('warning')}`;
@@ -34,7 +39,13 @@ export function ensureGlobalProjectGraph(ruleName: string) {
   }
 }
 
-export function readProjectGraph(ruleName: string) {
+export function readProjectGraph(ruleName: string): {
+  projectGraph: ProjectGraph;
+  projectRootMappings: ProjectRootMappings;
+} {
   ensureGlobalProjectGraph(ruleName);
-  return (global as any).projectGraph as MappedProjectGraph;
+  return {
+    projectGraph: (global as any).projectGraph,
+    projectRootMappings: (global as any).projectRootMappings,
+  };
 }

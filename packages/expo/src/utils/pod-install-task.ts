@@ -1,4 +1,4 @@
-import { spawn } from 'child_process';
+import { execSync } from 'child_process';
 import { platform } from 'os';
 import * as chalk from 'chalk';
 import { GeneratorCallback, logger } from '@nrwl/devkit';
@@ -19,10 +19,18 @@ ${chalk.bold('sudo xcode-select --switch /Applications/Xcode.app')}
  * @param iosDirectory ios directory that contains Podfile
  * @returns resolve with 0 if not error, reject with error otherwise
  */
-export function runPodInstall(iosDirectory: string): GeneratorCallback {
+export function runPodInstall(
+  iosDirectory: string,
+  install: boolean = true
+): GeneratorCallback {
   return () => {
     if (platform() !== 'darwin') {
       logger.info('Skipping `pod install` on non-darwin platform');
+      return;
+    }
+
+    if (!install) {
+      logger.info('Skipping `pod install`');
       return;
     }
 
@@ -34,21 +42,14 @@ export function runPodInstall(iosDirectory: string): GeneratorCallback {
 
 export function podInstall(iosDirectory: string): Promise<void> {
   return new Promise((resolve, reject) => {
-    const process = spawn('pod', ['install'], {
+    const result = execSync('pod install', {
       cwd: iosDirectory,
-      stdio: [0, 1, 2],
     });
-
-    process.on('close', (code: number) => {
-      if (code === 0) {
-        resolve();
-      } else {
-        reject(new Error(podInstallErrorMessage));
-      }
-    });
-
-    process.on('error', () => {
+    logger.info(result.toString());
+    if (result.toString().includes('Pod installation complete')) {
+      resolve();
+    } else {
       reject(new Error(podInstallErrorMessage));
-    });
+    }
   });
 }

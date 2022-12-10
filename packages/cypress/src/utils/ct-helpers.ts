@@ -1,7 +1,21 @@
-import type { ExecutorContext } from 'nx/src/config/misc-interfaces';
-import { ProjectGraph } from 'nx/src/config/project-graph';
-import { join } from 'path';
+import type { ExecutorContext, ProjectGraph } from '@nrwl/devkit';
+import {
+  normalizePath,
+  ProjectConfiguration,
+  readNxJson,
+  stripIndents,
+  TargetConfiguration,
+  workspaceRoot,
+} from '@nrwl/devkit';
+import { extname, join, relative } from 'path';
+import { lstatSync } from 'fs';
+import {
+  createProjectRootMappings,
+  findProjectForPath,
+} from 'nx/src/project-graph/utils/find-project-for-path';
+import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
 
+export const CY_FILE_MATCHER = new RegExp(/\.cy\.[tj]sx?$/);
 /**
  * return a path to a temp css file
  * temp file is scoped to the project root
@@ -39,4 +53,60 @@ export function isCtProjectUsingBuildProject(
       (p) => p.target === childProjectName
     )
   );
+}
+
+export function getProjectConfigByPath(
+  graph: ProjectGraph,
+  configPath: string
+): ProjectConfiguration {
+  const configFileFromWorkspaceRoot = relative(workspaceRoot, configPath);
+  const normalizedPathFromWorkspaceRoot = normalizePath(
+    lstatSync(configPath).isFile()
+      ? configFileFromWorkspaceRoot.replace(extname(configPath), '')
+      : configFileFromWorkspaceRoot
+  );
+
+  const projectRootMappings = createProjectRootMappings(graph.nodes);
+  const componentTestingProjectName = findProjectForPath(
+    normalizedPathFromWorkspaceRoot,
+    projectRootMappings
+  );
+  if (
+    !componentTestingProjectName ||
+    !graph.nodes[componentTestingProjectName]?.data
+  ) {
+    throw new Error(
+      stripIndents`Unable to find the project configuration that includes ${normalizedPathFromWorkspaceRoot}. 
+      Found project name? ${componentTestingProjectName}. 
+      Graph has data? ${!!graph.nodes[componentTestingProjectName]?.data}`
+    );
+  }
+  // make sure name is set since it can be undefined
+  graph.nodes[componentTestingProjectName].data.name ??=
+    componentTestingProjectName;
+  return graph.nodes[componentTestingProjectName].data;
+}
+
+export function createExecutorContext(
+  graph: ProjectGraph,
+  targets: Record<string, TargetConfiguration>,
+  projectName: string,
+  targetName: string,
+  configurationName: string
+): ExecutorContext {
+  const projectConfigs = readProjectsConfigurationFromProjectGraph(graph);
+  return {
+    cwd: process.cwd(),
+    projectGraph: graph,
+    target: targets[targetName],
+    targetName,
+    configurationName,
+    root: workspaceRoot,
+    isVerbose: false,
+    projectName,
+    workspace: {
+      ...readNxJson(),
+      ...projectConfigs,
+    },
+  };
 }

@@ -1,6 +1,7 @@
 import {
   checkFilesExist,
   cleanupProject,
+  fileExists,
   isWindows,
   newProject,
   readFile,
@@ -10,10 +11,14 @@ import {
   runCLI,
   runCLIAsync,
   runCommand,
+  tmpProjPath,
   uniq,
   updateFile,
+  updateJson,
   updateProjectConfig,
 } from '@nrwl/e2e/utils';
+import { PackageJson } from 'nx/src/utils/package-json';
+import * as path from 'path';
 
 describe('Nx Running Tests', () => {
   let proj: string;
@@ -21,6 +26,34 @@ describe('Nx Running Tests', () => {
   afterAll(() => cleanupProject());
 
   describe('running targets', () => {
+    describe('(forwarding params)', () => {
+      let proj = uniq('proj');
+      beforeAll(() => {
+        runCLI(`generate @nrwl/workspace:lib ${proj}`);
+        updateProjectConfig(proj, (c) => {
+          c.targets['echo'] = {
+            command: 'echo ECHO:',
+          };
+          return c;
+        });
+      });
+
+      it.each([
+        '--watch false',
+        '--watch=false',
+        '--arr=a,b,c',
+        '--arr=a --arr=b --arr=c',
+        'a',
+        '--a.b=1',
+        '--a.b 1',
+        '-- a b c --a --a.b=1',
+        '--ignored -- a b c --a --a.b=1',
+      ])('should forward %s properly', (args) => {
+        const output = runCLI(`echo ${proj} ${args}`);
+        expect(output).toContain(`ECHO: ${args.replace(/^.*-- /, '')}`);
+      });
+    });
+
     it('should execute long running tasks', async () => {
       const myapp = uniq('myapp');
       runCLI(`generate @nrwl/web:app ${myapp}`);
@@ -54,9 +87,13 @@ describe('Nx Running Tests', () => {
 
       updateFile(
         `libs/${mylib}/package.json`,
-        JSON.stringify({
+        JSON.stringify(<PackageJson>{
           name: 'mylib1',
-          scripts: { 'echo:dev': `echo ECHOED` },
+          version: '1.0.0',
+          scripts: { 'echo:dev': `echo ECHOED`, 'echo:fail': 'should not run' },
+          nx: {
+            includedScripts: ['echo:dev'],
+          },
         })
       );
 
@@ -72,6 +109,10 @@ describe('Nx Running Tests', () => {
         expect(stdout).toMatch(/ECHOED positional --a=123 --no-b/);
       }
 
+      expect(runCLI(`echo:fail ${mylib}`, { silenceError: true })).toContain(
+        `Cannot find configuration for task ${mylib}:echo:fail`
+      );
+
       updateProjectConfig(mylib, (c) => original);
     }, 1000000);
   });
@@ -84,10 +125,7 @@ describe('Nx Running Tests', () => {
       runCLI(`generate @nrwl/web:app ${myapp2}`);
       updateProjectConfig(myapp1, (c) => {
         c.targets['error'] = {
-          executor: 'nx:run-commands',
-          options: {
-            command: 'echo boom1 && exit 1',
-          },
+          command: 'echo boom1 && exit 1',
         };
         return c;
       });
@@ -122,8 +160,13 @@ describe('Nx Running Tests', () => {
         .map((r) => r.trim())
         .filter((r) => r);
       withBail = withBail.slice(withBail.indexOf('Failed tasks:'));
-      expect(withBail).toContain(`- ${myapp1}:error`);
-      expect(withBail).not.toContain(`- ${myapp2}:error`);
+      expect(withBail.length).toEqual(2);
+      if (withBail[1] === `- ${myapp1}:error`) {
+        expect(withBail).not.toContain(`- ${myapp2}:error`);
+      } else {
+        expect(withBail[1]).toEqual(`- ${myapp2}:error`);
+        expect(withBail).not.toContain(`- ${myapp1}:error`);
+      }
     });
   });
 
@@ -164,7 +207,7 @@ describe('Nx Running Tests', () => {
   projectFilePatterns: ['inferred-project.nxproject'],
   registerProjectTargets: () => ({
     "echo": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "command": "echo inferred-target"
       }
@@ -184,21 +227,21 @@ describe('Nx Running Tests', () => {
       expect(runCLI(`echo ${myapp}`)).toContain('inferred-target');
     });
 
-    it('should build a specific project with the daemon enabled', () => {
+    it('should build a specific project with the daemon disabled', () => {
       const myapp = uniq('app');
       runCLI(`generate @nrwl/web:app ${myapp}`);
 
       const buildWithDaemon = runCLI(`build ${myapp}`, {
-        env: { ...process.env, NX_DAEMON: 'true' },
+        env: { ...process.env, NX_DAEMON: 'false' },
       });
 
       expect(buildWithDaemon).toContain('Successfully ran target build');
 
       const buildAgain = runCLI(`build ${myapp}`, {
-        env: { ...process.env, NX_DAEMON: 'true' },
+        env: { ...process.env, NX_DAEMON: 'false' },
       });
 
-      expect(buildAgain).toContain('local cache');
+      expect(buildAgain).toContain('[local cache]');
     }, 10000);
 
     it('should build the project when within the project root', () => {
@@ -280,16 +323,10 @@ describe('Nx Running Tests', () => {
         const nxJson = readJson('nx.json');
         updateProjectConfig(myapp, (config) => {
           config.targets.prep = {
-            executor: 'nx:run-commands',
-            options: {
-              command: 'echo PREP > one.txt',
-            },
+            command: 'echo PREP > one.txt',
           };
           config.targets.outside = {
-            executor: 'nx:run-commands',
-            options: {
-              command: 'echo OUTSIDE',
-            },
+            command: 'echo OUTSIDE',
           };
           return config;
         });
@@ -300,7 +337,7 @@ describe('Nx Running Tests', () => {
         ];
         nxJson.targetDefaults = {
           prep: {
-            outputs: ['one.txt'],
+            outputs: ['{workspaceRoot}/one.txt'],
           },
           outside: {
             dependsOn: ['prep'],
@@ -398,11 +435,118 @@ describe('Nx Running Tests', () => {
       expect(buildConfig).toContain(`run ${libC}:build`);
       expect(buildConfig).toContain('Successfully ran target build');
 
-      // testing run many with daemon enabled
+      // testing run many with daemon disabled
       const buildWithDaemon = runCLI(`run-many --target=build`, {
-        env: { ...process.env, NX_DAEMON: 'true' },
+        env: { ...process.env, NX_DAEMON: 'false' },
       });
       expect(buildWithDaemon).toContain(`Successfully ran target build`);
     }, 1000000);
+  });
+
+  describe('exec', () => {
+    let pkg: string;
+    let pkgRoot: string;
+    let originalRootPackageJson: PackageJson;
+
+    beforeAll(() => {
+      originalRootPackageJson = readJson<PackageJson>('package.json');
+      pkg = uniq('package');
+      pkgRoot = tmpProjPath(path.join('libs', pkg));
+
+      updateJson<PackageJson>('package.json', (v) => {
+        v.workspaces = ['libs/*'];
+        return v;
+      });
+
+      updateFile(
+        `libs/${pkg}/package.json`,
+        JSON.stringify(<PackageJson>{
+          name: pkg,
+          version: '0.0.1',
+          scripts: {
+            build: 'nx exec -- echo HELLO',
+            'build:option': 'nx exec -- echo HELLO WITH OPTION',
+          },
+        })
+      );
+    });
+
+    afterAll(() => {
+      updateJson('package.json', () => originalRootPackageJson);
+    });
+
+    it('should work for npm scripts', () => {
+      const output = runCommand('npm run build', {
+        cwd: pkgRoot,
+      });
+      expect(output).toContain('HELLO');
+      expect(output).toContain(`nx run ${pkg}:build`);
+    });
+
+    it('should work for npm scripts with delimiter', () => {
+      const output = runCommand('npm run build:option', { cwd: pkgRoot });
+      expect(output).toContain('HELLO WITH OPTION');
+      expect(output).toContain(`nx run ${pkg}:"build:option"`);
+    });
+
+    it('should pass overrides', () => {
+      const output = runCommand('npm run build WORLD', {
+        cwd: pkgRoot,
+      });
+      expect(output).toContain('HELLO WORLD');
+    });
+
+    describe('caching', () => {
+      it('shoud cache subsequent calls', () => {
+        runCommand('npm run build', {
+          cwd: pkgRoot,
+        });
+        const output = runCommand('npm run build', {
+          cwd: pkgRoot,
+        });
+        expect(output).toContain('Nx read the output from the cache');
+      });
+
+      it('should read outputs', () => {
+        console.log(pkgRoot);
+        const nodeCommands = [
+          "const fs = require('fs')",
+          "fs.mkdirSync('../../tmp/exec-outputs-test', {recursive: true})",
+          "fs.writeFileSync('../../tmp/exec-outputs-test/file.txt', 'Outputs')",
+        ];
+        updateFile(
+          `libs/${pkg}/package.json`,
+          JSON.stringify(<PackageJson>{
+            name: pkg,
+            version: '0.0.1',
+            scripts: {
+              build: `nx exec -- node -e "${nodeCommands.join(';')}"`,
+            },
+            nx: {
+              targets: {
+                build: {
+                  outputs: ['{workspaceRoot}/tmp/exec-outputs-test'],
+                },
+              },
+            },
+          })
+        );
+        const out = runCommand('npm run build', {
+          cwd: pkgRoot,
+        });
+        console.log(out);
+        expect(
+          fileExists(tmpProjPath('tmp/exec-outputs-test/file.txt'))
+        ).toBeTruthy();
+        removeFile('tmp');
+        const output = runCommand('npm run build', {
+          cwd: pkgRoot,
+        });
+        expect(output).toContain('[local cache]');
+        expect(
+          fileExists(tmpProjPath('tmp/exec-outputs-test/file.txt'))
+        ).toBeTruthy();
+      });
+    });
   });
 });

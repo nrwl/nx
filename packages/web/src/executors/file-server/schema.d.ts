@@ -12,4 +12,5 @@ export interface Schema {
   proxyOptions?: object;
   watch?: boolean;
   spa: boolean;
+  staticFilePath?: string;
 }

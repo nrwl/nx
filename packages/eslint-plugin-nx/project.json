@@ -1,4 +1,5 @@
 {
+  "name": "eslint-plugin-nx",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/eslint-plugin-nx",
   "projectType": "library",
@@ -9,7 +10,7 @@
         "jestConfig": "packages/eslint-plugin-nx/jest.config.ts",
         "passWithNoTests": true
       },
-      "outputs": ["coverage/packages/eslint-plugin-nx"]
+      "outputs": ["{workspaceRoot}/coverage/packages/eslint-plugin-nx"]
     },
     "build-base": {
       "executor": "@nrwl/js:tsc",
@@ -57,7 +58,7 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["build/packages/eslint-plugin-nx"],
+      "outputs": ["{workspaceRoot}/build/packages/eslint-plugin-nx"],
       "options": {
         "command": "node ./scripts/copy-readme.js eslint-plugin-nx"
       }

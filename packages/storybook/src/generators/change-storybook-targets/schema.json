@@ -6,5 +6,6 @@
   "description": "Change the Storybook target executors of Angular projects to use the native Storybook for Angular executor schema.",
   "type": "object",
   "properties": {},
-  "required": []
+  "required": [],
+  "examplesFile": "../../../docs/change-storybook-targets-example.md"
 }

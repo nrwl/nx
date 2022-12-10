@@ -1,4 +1,5 @@
 {
+  "name": "nx-dev-ui-home",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "nx-dev/ui-home/src",
   "projectType": "library",
@@ -13,7 +14,7 @@
     },
     "xtest": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/nx-dev/ui-home"],
+      "outputs": ["{workspaceRoot}/coverage/nx-dev/ui-home"],
       "options": {
         "jestConfig": "nx-dev/ui-home/jest.config.ts",
         "passWithNoTests": true

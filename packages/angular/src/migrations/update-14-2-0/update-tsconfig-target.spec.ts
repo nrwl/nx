@@ -20,7 +20,7 @@ describe('update-tsconfig-target migration', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it('should update target in "tsconfig.json" at the project root when it is an Angular project', async () => {

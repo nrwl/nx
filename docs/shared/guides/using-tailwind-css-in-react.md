@@ -8,7 +8,7 @@ For more in-depth look on this topic, be sure to check out our blog post on [Set
 
 The easiest way to set up Tailwind is using the `@nrwl/react:setup-tailwind` generator.
 
-```bash
+```shell
 nx g @nrwl/react:setup-tailwind --project=<your app here>
 ```
 
@@ -30,7 +30,7 @@ These manual steps are not required if you use the generator from the previous s
 
 ### Step 1: Install Tailwind Dependencies
 
-```bash
+```shell
 npm install -D tailwindcss@latest postcss@latest autoprefixer@latest
 
 # or with yarn
@@ -43,8 +43,8 @@ This installs the requisite tailwind dependencies.
 
 The simplest way to initialize Tailwind is to use their CLI.
 
-```bash
-cd apps/{your app here}
+```shell
+cd {path to your app}
 npx tailwindcss init -p
 ```
 
@@ -54,7 +54,7 @@ This creates the required files with a general boilerplate implementation.
 
 Next, adjust the `postcss.config.js` as follows:
 
-```javascript
+```javascript {% fileName="postcss.config.js" %}
 const { join } = require('path');
 
 module.exports = {
@@ -77,8 +77,7 @@ Nx has a utility function that can be used to construct the glob representation 
 
 The function receives a directory path that is used to identify the project for which the dependencies are going to be identified (therefore it needs to be a directory path within a project). It can also receive an optional glob pattern to append to each dependency source root path to conform the final glob pattern. If the glob pattern is not provided, it will default to `/**/!(*.stories|*.spec).{ts,html}`.
 
-```javascript
-// apps/app1/tailwind.config.js
+```javascript {% fileName="apps/app1/tailwind.config.js" %}
 const { createGlobPatternsForDependencies } = require('@nrwl/react/tailwind');
 const { join } = require('path');
 
@@ -122,7 +121,7 @@ Lastly, let's update the application's project configuration to point to the `po
 
 Open up the `apps/{your app here}/project.json` file and add the following to the build target.
 
-```json lines
+```json lines {% fileName="apps/{your app here}/project.json" %}
 {
   // ...
   "targets": {

@@ -438,6 +438,145 @@ export function tslibC(): string {
       );
     });
   });
+
+  describe('Root projects migration', () => {
+    afterEach(() => cleanupProject());
+
+    it('(React standalone) should set root project config to app and e2e app and migrate when another lib is added', () => {
+      const myapp = uniq('myapp');
+      const mylib = uniq('mylib');
+
+      newProject();
+      runCLI(`generate @nrwl/react:app ${myapp} --rootProject=true`);
+
+      let rootEslint = readJson('.eslintrc.json');
+      let e2eEslint = readJson('e2e/.eslintrc.json');
+      expect(() => checkFilesExist(`.eslintrc.base.json`)).toThrow();
+
+      // should directly refer to nx plugin
+      expect(rootEslint.plugins).toEqual(['@nrwl/nx']);
+      expect(e2eEslint.plugins).toEqual(['@nrwl/nx']);
+      // should only extend framework plugin
+      expect(rootEslint.extends).toEqual(['plugin:@nrwl/nx/react']);
+      expect(e2eEslint.extends).toEqual(['plugin:cypress/recommended']);
+      // should have plugin extends
+      expect(rootEslint.overrides[0].extends).toEqual([
+        'plugin:@nrwl/nx/typescript',
+      ]);
+      expect(rootEslint.overrides[1].extends).toEqual([
+        'plugin:@nrwl/nx/javascript',
+      ]);
+      expect(e2eEslint.overrides[0].extends).toEqual([
+        'plugin:@nrwl/nx/typescript',
+      ]);
+      expect(e2eEslint.overrides[1].extends).toEqual([
+        'plugin:@nrwl/nx/javascript',
+      ]);
+
+      runCLI(`generate @nrwl/react:lib ${mylib}`);
+      // should add new tslint
+      expect(() => checkFilesExist(`.eslintrc.base.json`)).not.toThrow();
+      const appEslint = readJson(`.eslintrc.json`);
+      rootEslint = readJson('.eslintrc.base.json');
+      e2eEslint = readJson('e2e/.eslintrc.json');
+      const libEslint = readJson(`libs/${mylib}/.eslintrc.json`);
+
+      // should directly refer to nx plugin only in the root
+      expect(rootEslint.plugins).toEqual(['@nrwl/nx']);
+      expect(appEslint.plugins).toBeUndefined();
+      expect(e2eEslint.plugins).toBeUndefined();
+      // should extend framework plugin and root config
+      expect(appEslint.extends).toEqual([
+        'plugin:@nrwl/nx/react',
+        './.eslintrc.base.json',
+      ]);
+      expect(e2eEslint.extends).toEqual([
+        'plugin:cypress/recommended',
+        '../.eslintrc.base.json',
+      ]);
+      expect(libEslint.extends).toEqual([
+        'plugin:@nrwl/nx/react',
+        '../../.eslintrc.base.json',
+      ]);
+      // should have no plugin extends
+      expect(appEslint.overrides[0].extends).toBeUndefined();
+      expect(appEslint.overrides[1].extends).toBeUndefined();
+      expect(e2eEslint.overrides[0].extends).toBeUndefined();
+      expect(e2eEslint.overrides[1].extends).toBeUndefined();
+      expect(libEslint.overrides[1].extends).toBeUndefined();
+      expect(libEslint.overrides[1].extends).toBeUndefined();
+    });
+
+    it('(Angular standalone) should set root project config to app and e2e app and migrate when another lib is added', () => {
+      const myapp = uniq('myapp');
+      const mylib = uniq('mylib');
+
+      newProject();
+      runCLI(`generate @nrwl/angular:app ${myapp} --rootProject=true`);
+
+      let rootEslint = readJson('.eslintrc.json');
+      let e2eEslint = readJson('e2e/.eslintrc.json');
+      expect(() => checkFilesExist(`.eslintrc.base.json`)).toThrow();
+
+      // should directly refer to nx plugin
+      expect(rootEslint.plugins).toEqual(['@nrwl/nx']);
+      expect(e2eEslint.plugins).toEqual(['@nrwl/nx']);
+      // should only extend framework plugin
+      expect(e2eEslint.extends).toEqual(['plugin:cypress/recommended']);
+      // should have plugin extends
+      expect(rootEslint.overrides[0].files).toEqual(['*.ts']);
+      expect(rootEslint.overrides[0].extends).toEqual([
+        'plugin:@nrwl/nx/typescript',
+        'plugin:@nrwl/nx/angular',
+        'plugin:@angular-eslint/template/process-inline-templates',
+      ]);
+      expect(Object.keys(rootEslint.overrides[0].rules)).toEqual([
+        '@angular-eslint/directive-selector',
+        '@angular-eslint/component-selector',
+      ]);
+      expect(rootEslint.overrides[1].files).toEqual(['*.html']);
+      expect(rootEslint.overrides[1].extends).toEqual([
+        'plugin:@nrwl/nx/angular-template',
+      ]);
+      expect(e2eEslint.overrides[0].extends).toEqual([
+        'plugin:@nrwl/nx/typescript',
+      ]);
+      expect(e2eEslint.overrides[1].extends).toEqual([
+        'plugin:@nrwl/nx/javascript',
+      ]);
+
+      runCLI(`generate @nrwl/angular:lib ${mylib}`);
+      // should add new tslint
+      expect(() => checkFilesExist(`.eslintrc.base.json`)).not.toThrow();
+      const appEslint = readJson(`.eslintrc.json`);
+      rootEslint = readJson('.eslintrc.base.json');
+      e2eEslint = readJson('e2e/.eslintrc.json');
+      const libEslint = readJson(`libs/${mylib}/.eslintrc.json`);
+
+      // should directly refer to nx plugin only in the root
+      expect(rootEslint.plugins).toEqual(['@nrwl/nx']);
+      expect(appEslint.plugins).toBeUndefined();
+      expect(e2eEslint.plugins).toBeUndefined();
+      // should extend framework plugin and root config
+      expect(appEslint.extends).toEqual(['./.eslintrc.base.json']);
+      expect(e2eEslint.extends).toEqual([
+        'plugin:cypress/recommended',
+        '../.eslintrc.base.json',
+      ]);
+      expect(libEslint.extends).toEqual(['../../.eslintrc.base.json']);
+      // should have no plugin extends
+      expect(appEslint.overrides[0].extends).toEqual([
+        'plugin:@nrwl/nx/angular',
+        'plugin:@angular-eslint/template/process-inline-templates',
+      ]);
+      expect(e2eEslint.overrides[0].extends).toBeUndefined();
+      expect(e2eEslint.overrides[1].extends).toBeUndefined();
+      expect(libEslint.overrides[0].extends).toEqual([
+        'plugin:@nrwl/nx/angular',
+        'plugin:@angular-eslint/template/process-inline-templates',
+      ]);
+    });
+  });
 });
 
 /**

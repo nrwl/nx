@@ -13,7 +13,7 @@ First of all, you have to create two Storybook host apps, one for Angular and on
 
 Now, we are going to combine the two Storybook host apps into one, using Storybook composition. You can read our [Storybook Composition guide](/storybook/storybook-composition-setup) for a detailed explanation for how Storybook Composition works. In a nutshell, you can have one “host” Storybook instance running, where you can link other running Storybook instances.
 
-{% github-repository url="https://github.com/mandarini/nx-recipes/tree/storybook/publishing-recipe-1/storybook-recipes/publishing-strategies-multiple-frameworks" /%}
+{% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/storybook-publishing-strategies-multiple-frameworks" /%}
 
 ## Steps
 
@@ -25,7 +25,7 @@ It does not matter which framework you use for the host Storybook library. It ca
 
 So, let’s use React for the Storybook Composition host library:
 
-```bash
+```shell
 nx g @nrwl/react:lib storybook-host
 ```
 
@@ -35,7 +35,7 @@ Now that your library is generated, you can write your intro in the generated co
 
 Since you do need a story for your host Storybook, you should use the React storybook configuration generator, and actually choose to generate stories (not an e2e project though):
 
-```bash
+```shell
 nx g @nrwl/react:storybook-configuration –-name=storybook-host
 ```
 
@@ -47,9 +47,9 @@ Now it’s important to change the Storybook ports in the `storybook-host-angula
 
 ### Add the `refs` to the main.js of the host library
 
-Create the composition in `libs/storybook-host/.storybook/main.js`:
+Create the composition in ``:
 
-```javascript
+```javascript {% fileName="libs/storybook-host/.storybook/main.js" %}
 const rootMain = require('../../../.storybook/main');
 module.exports = {
   ...rootMain,
@@ -75,7 +75,7 @@ You can now start your three Storybook instances, and see the composed result.
 
 In three separate terminals run the following commands:
 
-```bash
+```shell
 nx storybook storybook-host-angular
 nx storybook storybook-host-react
 nx storybook storybook-host

@@ -69,8 +69,13 @@
         "**/**/src/**/*.other.*",
         "libs/my-lib/src/not-stories/**,**/**/src/**/*.other.*,apps/my-app/**/*.something.ts"
       ]
+    },
+    "configureTestRunner": {
+      "type": "boolean",
+      "description": "Add a Storybook Test-Runner target."
     }
   },
   "additionalProperties": false,
-  "required": ["name"]
+  "required": ["name"],
+  "examplesFile": "../../../docs/storybook-configuration-examples.md"
 }

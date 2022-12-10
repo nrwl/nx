@@ -31,7 +31,7 @@
     "migrations": "./migrations.json"
   },
   "peerDependencies": {
-    "next": "^12.1.0"
+    "next": "^13.0.0"
   },
   "dependencies": {
     "@babel/plugin-proposal-decorators": "^7.14.5",

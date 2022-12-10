@@ -9,7 +9,7 @@
     "bundler": {
       "type": "string",
       "description": "The bundler to use.",
-      "enum": ["webpack", "none"],
+      "enum": ["webpack", "none", "vite"],
       "default": "webpack"
     },
     "unitTestRunner": {
@@ -26,6 +26,16 @@
     },
     "skipFormat": {
       "description": "Skip formatting files",
+      "type": "boolean",
+      "default": false
+    },
+    "skipPackageJson": {
+      "description": "Do not add dependencies to `package.json`.",
+      "type": "boolean",
+      "default": false
+    },
+    "skipBabelConfig": {
+      "description": "Do not generate a root babel.config.json (if babel is not needed).",
       "type": "boolean",
       "default": false
     }

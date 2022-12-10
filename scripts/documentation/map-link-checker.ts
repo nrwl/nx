@@ -13,7 +13,7 @@ const basePath = 'docs';
 const sharedFilesPattern = 'shared/cli';
 
 const readmePathList: string[] = glob
-  .sync(`${basePath}/**/*.md`)
+  .sync(`${basePath}/**/!(README).md`)
   .map((path: string) => path.split(basePath)[1])
   .map((path: string) => path.slice(1, -3)) // Removing first `/` and `.md`
   .filter((path: string) => !path.startsWith(sharedFilesPattern));
@@ -37,7 +37,7 @@ function filePathExtractor(file: any): string[] {
 const mapPathList: string[] = readJsonSync(`${basePath}/map.json`, {
   encoding: 'utf8',
 })
-  .map((file: any) => filePathExtractor(file))
+  .content.map((file: any) => filePathExtractor(file))
   .flat();
 const readmeMissList = readmePathList.filter((x) => !mapPathList.includes(x));
 const mapMissList = mapPathList.filter((x) => !readmePathList.includes(x));

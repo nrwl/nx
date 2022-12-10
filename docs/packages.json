@@ -16,10 +16,12 @@
         "delegate-build",
         "ng-packagr-lite",
         "package",
+        "file-server",
         "webpack-browser",
+        "webpack-dev-server",
         "webpack-server",
         "module-federation-dev-server",
-        "file-server"
+        "module-federation-dev-ssr"
       ],
       "generators": [
         "add-linting",
@@ -46,6 +48,7 @@
         "scam-directive",
         "scam-pipe",
         "setup-mf",
+        "setup-ssr",
         "setup-tailwind",
         "stories",
         "storybook-configuration",
@@ -88,7 +91,7 @@
         "init",
         "cypress-project",
         "cypress-component-project",
-        "migrate-to-cypress-10"
+        "migrate-to-cypress-11"
       ]
     }
   },
@@ -112,7 +115,7 @@
   {
     "name": "esbuild",
     "packageName": "esbuild",
-    "description": "The Nx Plugin for EsBuild contains executors and generators that support building applications using EsBuild",
+    "description": "The Nx Plugin for esbuild contains executors and generators that support building applications using esbuild",
     "path": "generated/packages/esbuild.json",
     "schemas": {
       "executors": ["esbuild"],
@@ -148,7 +151,9 @@
         "start",
         "sync-deps",
         "ensure-symlink",
-        "eject"
+        "prebuild",
+        "install",
+        "export"
       ],
       "generators": ["init", "application", "library", "component"]
     }
@@ -183,7 +188,7 @@
     "description": "The Linter plugin for Nx contains executors, generators and utilities used for linting JavaScript/TypeScript projects within an Nx workspace.",
     "path": "generated/packages/linter.json",
     "schemas": {
-      "executors": ["lint", "eslint"],
+      "executors": ["eslint"],
       "generators": ["workspace-rules-project", "workspace-rule"]
     }
   },
@@ -284,7 +289,10 @@
     "description": "The React plugin for Nx contains executors and generators for managing React applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Jest, Cypress, and Storybook.\n\n- Generators for applications, libraries, components, hooks, and more.\n\n- Library build support for publishing packages to npm or other registries.\n\n- Utilities for automatic workspace refactoring.",
     "path": "generated/packages/react.json",
     "schemas": {
-      "executors": ["module-federation-dev-server"],
+      "executors": [
+        "module-federation-dev-server",
+        "module-federation-ssr-dev-server"
+      ],
       "generators": [
         "init",
         "application",
@@ -300,7 +308,8 @@
         "remote",
         "cypress-component-configuration",
         "component-test",
-        "setup-tailwind"
+        "setup-tailwind",
+        "setup-ssr"
       ]
     }
   },
@@ -365,6 +374,16 @@
     "schemas": { "executors": [], "generators": [] }
   },
   {
+    "name": "vite",
+    "packageName": "vite",
+    "description": "The Nx Plugin for building and testing applications using Vite (Early Release)",
+    "path": "generated/packages/vite.json",
+    "schemas": {
+      "executors": ["dev-server", "build", "test"],
+      "generators": ["init", "configuration", "vitest"]
+    }
+  },
+  {
     "name": "web",
     "packageName": "web",
     "description": "The Nx Plugin for Web Components contains generators for managing Web Component applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Jest, Cypress, and Storybook.\n\n- Scaffolding for creating buildable libraries that can be published to npm.\n\n- Utilities for automatic workspace refactoring.",
@@ -380,7 +399,7 @@
     "description": "The Nx Plugin for Webpack contains executors and generators that support building applications using Webpack.",
     "path": "generated/packages/webpack.json",
     "schemas": {
-      "executors": ["webpack", "dev-server"],
+      "executors": ["webpack", "dev-server", "ssr-dev-server"],
       "generators": ["init", "webpack-project"]
     }
   },
@@ -392,7 +411,6 @@
     "schemas": {
       "executors": ["run-commands", "counter", "run-script"],
       "generators": [
-        "workspace",
         "preset",
         "move",
         "remove",

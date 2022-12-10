@@ -2,6 +2,7 @@ import {
   checkFilesExist,
   cleanupProject,
   createFile,
+  ensureCypressInstallation,
   killPorts,
   newProject,
   readJson,
@@ -16,6 +17,7 @@ describe('Cypress E2E Test runner', () => {
 
   beforeAll(() => {
     newProject();
+    ensureCypressInstallation();
   });
 
   afterAll(() => cleanupProject());

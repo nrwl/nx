@@ -1,6 +1,6 @@
 import { NxJsonConfiguration } from '../../../config/nx-json';
 import { ProjectGraph } from '../../../config/project-graph';
-import { DiffType } from '../../../utils/json-diff';
+import { JsonDiffType } from '../../../utils/json-diff';
 import { WholeFileChange } from '../../file-utils';
 import { getTouchedNpmPackages } from './npm-packages';
 
@@ -76,7 +76,7 @@ describe('getTouchedNpmPackages', () => {
           hash: 'some-hash',
           getChanges: () => [
             {
-              type: DiffType.Modified,
+              type: JsonDiffType.Modified,
               path: ['dependencies', 'happy-nrwl'],
               value: {
                 lhs: '0.0.1',
@@ -106,7 +106,7 @@ describe('getTouchedNpmPackages', () => {
           hash: 'some-hash',
           getChanges: () => [
             {
-              type: DiffType.Modified,
+              type: JsonDiffType.Modified,
               path: ['dependencies', '@types/happy-nrwl'],
               value: {
                 lhs: '0.0.1',
@@ -141,7 +141,7 @@ describe('getTouchedNpmPackages', () => {
           hash: 'some-hash',
           getChanges: () => [
             {
-              type: DiffType.Modified,
+              type: JsonDiffType.Modified,
               path: ['dependencies', '@types/happy-nrwl'],
               value: {
                 lhs: '0.0.1',
@@ -171,7 +171,7 @@ describe('getTouchedNpmPackages', () => {
           hash: 'some-hash',
           getChanges: () => [
             {
-              type: DiffType.Deleted,
+              type: JsonDiffType.Deleted,
               path: ['dependencies', 'sad-nrwl'],
               value: {
                 lhs: '0.0.1',
@@ -209,7 +209,7 @@ describe('getTouchedNpmPackages', () => {
           hash: 'some-hash',
           getChanges: () => [
             {
-              type: DiffType.Added,
+              type: JsonDiffType.Added,
               path: ['dependencies', 'awesome-nrwl'],
               value: {
                 lhs: undefined,

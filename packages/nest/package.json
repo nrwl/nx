@@ -34,7 +34,8 @@
     "@nrwl/devkit": "file:../devkit",
     "@nrwl/js": "file:../js",
     "@nrwl/linter": "file:../linter",
-    "@nrwl/node": "file:../node"
+    "@nrwl/node": "file:../node",
+    "enquirer": "~2.3.6"
   },
   "publishConfig": {
     "access": "public"

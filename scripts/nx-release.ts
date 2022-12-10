@@ -36,6 +36,24 @@ function hideFromGitIndex(uncommittedFiles: string[]) {
     stdio: [0, 1, 2],
   });
 
+  if (options.local) {
+    // Force all projects to be not private
+    const projects = JSON.parse(
+      execSync('npx lerna list --json --all').toString()
+    );
+    for (const proj of projects) {
+      if (proj.private) {
+        console.log('Publishing private package locally:', proj.name);
+        const packageJsonPath = join(proj.location, 'package.json');
+        const original = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
+        writeFileSync(
+          packageJsonPath,
+          JSON.stringify({ ...original, private: false })
+        );
+      }
+    }
+  }
+
   const versionOptions = {
     bump: options.version ? options.version : undefined,
     conventionalCommits: true,

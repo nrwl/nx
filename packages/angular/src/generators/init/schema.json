@@ -5,6 +5,12 @@
   "title": "Init Angular Plugin",
   "description": "Initializes the `@nrwl/angular` plugin. NOTE: Does not work in the `--dry-run` mode.",
   "type": "object",
+  "examples": [
+    {
+      "command": "nx g @nrwl/angular:init --style=scss",
+      "description": "Installs angular dependencies and initializes the `@nrwl/angular` plugin with the `scss` stylesheet format."
+    }
+  ],
   "properties": {
     "unitTestRunner": {
       "type": "string",
@@ -66,11 +72,6 @@
       "type": "boolean",
       "default": false,
       "description": "Do not add dependencies to `package.json`."
-    },
-    "skipPostInstall": {
-      "type": "boolean",
-      "default": false,
-      "description": "Do not add or append `ngcc` to the `postinstall` script in `package.json`."
     }
   },
   "additionalProperties": false

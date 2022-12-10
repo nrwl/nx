@@ -1,12 +1,11 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`new --preset angular should generate necessary npm dependencies 1`] = `
+exports[`new --preset angular-monorepo should generate necessary npm dependencies 1`] = `
 Object {
   "dependencies": Object {
     "@nrwl/angular": "0.0.1",
   },
   "devDependencies": Object {
-    "@nrwl/cli": "0.0.1",
     "@nrwl/workspace": "0.0.1",
     "nx": "0.0.1",
     "prettier": "^2.6.2",
@@ -17,6 +16,8 @@ Object {
   "private": true,
   "scripts": Object {
     "build": "nx build",
+    "ng": "nx",
+    "postinstall": "node ./decorate-angular-cli.js",
     "start": "nx serve",
     "test": "nx test",
   },
@@ -28,7 +29,6 @@ exports[`new --preset empty should generate necessary npm dependencies 1`] = `
 Object {
   "dependencies": Object {},
   "devDependencies": Object {
-    "@nrwl/cli": "0.0.1",
     "@nrwl/workspace": "0.0.1",
     "nx": "0.0.1",
     "prettier": "^2.6.2",
@@ -46,11 +46,10 @@ Object {
 }
 `;
 
-exports[`new --preset react should generate necessary npm dependencies 1`] = `
+exports[`new --preset react-monorepo should generate necessary npm dependencies 1`] = `
 Object {
   "dependencies": Object {},
   "devDependencies": Object {
-    "@nrwl/cli": "0.0.1",
     "@nrwl/react": "0.0.1",
     "@nrwl/workspace": "0.0.1",
     "nx": "0.0.1",
@@ -72,9 +71,6 @@ Object {
 exports[`new should generate an empty nx.json 1`] = `
 Object {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
-  "affected": Object {
-    "defaultBase": "main",
-  },
   "namedInputs": Object {
     "default": Array [
       "{projectRoot}/**/*",
@@ -110,13 +106,5 @@ Object {
       "runner": "nx/tasks-runners/default",
     },
   },
-}
-`;
-
-exports[`new should generate an empty workspace.json 1`] = `
-Object {
-  "$schema": "./node_modules/nx/schemas/workspace-schema.json",
-  "projects": Object {},
-  "version": 2,
 }
 `;

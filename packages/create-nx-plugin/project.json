@@ -1,4 +1,5 @@
 {
+  "name": "create-nx-plugin",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/create-nx-plugin",
   "projectType": "library",
@@ -9,7 +10,7 @@
         "jestConfig": "packages/create-nx-plugin/jest.config.ts",
         "passWithNoTests": true
       },
-      "outputs": ["coverage/packages/create-nx-plugin"]
+      "outputs": ["{workspaceRoot}/coverage/packages/create-nx-plugin"]
     },
     "build-base": {
       "executor": "@nrwl/js:tsc",
@@ -57,7 +58,7 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["build/packages/create-nx-plugin"],
+      "outputs": ["{workspaceRoot}/build/packages/create-nx-plugin"],
       "options": {
         "commands": [
           {

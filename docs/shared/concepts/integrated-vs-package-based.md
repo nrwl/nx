@@ -5,17 +5,31 @@ There are two styles of monorepos that you can build with Nx: integrated repos a
 - Package-based repos focus on flexibility and ease of adoption.
 - Integrated repos focus on efficiency and ease of maintenance.
 
+{% cards %}
+{% card title="Packaged based vs Integrated Style - Use Nx however it works best for you" description="Choose your style and what works best for you!" type="video" url="https://youtu.be/ArmERpNvC8Y" /%}
+{% card title="Getting Started with Package-Based Repos" description="Walkthrough for creating a package-based monorepo with Nx" type="video" url="https://youtu.be/hzTMKuE3CDw" /%}
+{% card title="Getting Started with Integrated Repos" description="Walkthrough for creating an integrated monorepo with Nx" type="video" url="https://youtu.be/weZ7NAzB7PM" /%}
+{% /cards %}
+
 ## Package-Based Repos
 
 A package-based repo is a collection of packages that depend on each other via `package.json` files and nested `node_modules`. With this set up, you typically have a different set of dependencies for each project. Build tools like Jest and Webpack work as usual, since everything is resolved as if each package was in a separate repo and all of its dependencies were published to npm. It's very easy to move an existing package into a package-based repo, since you generally leave that package's existing build tooling untouched. Creating a new package inside the repo is just as difficult as spinning up a new repo, since you have to create all the build tooling from scratch.
 
-Lerna, Yarn, Lage and Nx (without plugins) support this style.
+Lerna, Yarn, Lage, [Turborepo](/more-concepts/turbo-and-nx) and Nx (without plugins) support this style.
+
+{% cards %}
+{% card title="Tutorial: Getting Started with Package-Based Repos" description="Walkthrough for creating a package-based monorepo with Nx" type="documentation" url="/getting-started/package-based-repo-tutorial" /%}
+{% /cards %}
 
 ## Integrated Repos
 
 An integrated repo contains projects that depend on each other through standard import statements. There is typically a single version of every dependency defined at the root. Sometimes build tools like Jest and Webpack need to be wrapped in order to work correctly. It's harder to add an existing package to this style of repo, because the build tooling for that package may need to be modified. It's very simple to add a brand new project to the repo, because all the tooling decisions have already been made.
 
 Bazel and Nx (with plugins) support this style.
+
+{% cards %}
+{% card title="Tutorial: Getting Started with Integrated Repos" description="Walkthrough for creating an integrated monorepo with Nx" type="documentation" url="/getting-started/integrated-repo-tutorial" /%}
+{% /cards %}
 
 ## How to Choose
 

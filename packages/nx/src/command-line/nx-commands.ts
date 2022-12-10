@@ -59,7 +59,7 @@ export const commandsObject = yargs
     builder: (yargs) =>
       linkToNxDevAndExamples(
         withRunManyOptions(
-          withOutputStyleOption(withParallelOption(withTargetOption(yargs)))
+          withOutputStyleOption(withTargetAndConfigurationOption(yargs))
         ),
         'run-many'
       ),
@@ -72,7 +72,9 @@ export const commandsObject = yargs
     builder: (yargs) =>
       linkToNxDevAndExamples(
         withAffectedOptions(
-          withOutputStyleOption(withParallelOption(withTargetOption(yargs)))
+          withRunOptions(
+            withOutputStyleOption(withTargetAndConfigurationOption(yargs))
+          )
         ),
         'affected'
       ),
@@ -84,7 +86,9 @@ export const commandsObject = yargs
     describe: false,
     builder: (yargs) =>
       linkToNxDevAndExamples(
-        withAffectedOptions(withOutputStyleOption(withParallelOption(yargs))),
+        withAffectedOptions(
+          withRunOptions(withOutputStyleOption(withConfiguration(yargs)))
+        ),
         'affected'
       ),
     handler: async (args) =>
@@ -98,7 +102,9 @@ export const commandsObject = yargs
     describe: false,
     builder: (yargs) =>
       linkToNxDevAndExamples(
-        withAffectedOptions(withOutputStyleOption(withParallelOption(yargs))),
+        withAffectedOptions(
+          withRunOptions(withOutputStyleOption(withConfiguration(yargs)))
+        ),
         'affected'
       ),
     handler: async (args) =>
@@ -112,7 +118,9 @@ export const commandsObject = yargs
     describe: false,
     builder: (yargs) =>
       linkToNxDevAndExamples(
-        withAffectedOptions(withOutputStyleOption(withParallelOption(yargs))),
+        withAffectedOptions(
+          withRunOptions(withOutputStyleOption(withConfiguration(yargs)))
+        ),
         'affected'
       ),
     handler: async (args) =>
@@ -126,7 +134,9 @@ export const commandsObject = yargs
     describe: false,
     builder: (yargs) =>
       linkToNxDevAndExamples(
-        withAffectedOptions(withOutputStyleOption(withParallelOption(yargs))),
+        withAffectedOptions(
+          withRunOptions(withOutputStyleOption(withConfiguration(yargs)))
+        ),
         'affected'
       ),
     handler: async (args) =>
@@ -191,7 +201,12 @@ export const commandsObject = yargs
       'Prints information about the projects and targets affected by changes',
     builder: (yargs) =>
       linkToNxDevAndExamples(
-        withAffectedOptions(withPrintAffectedOptions(yargs)),
+        withAffectedOptions(
+          withTargetAndConfigurationOption(
+            withPrintAffectedOptions(yargs),
+            false
+          )
+        ),
         'print-affected'
       ),
     handler: async (args) => {
@@ -256,15 +271,10 @@ export const commandsObject = yargs
     aliases: ['workspace-schematic [name]'],
     builder: async (yargs) =>
       linkToNxDevAndExamples(
-        await withWorkspaceGeneratorOptions(yargs),
+        await withWorkspaceGeneratorOptions(yargs, process.argv.slice(3)),
         'workspace-generator'
       ),
-    handler: async () => {
-      await (
-        await import('./workspace-generators')
-      ).workspaceGenerators(process.argv.slice(3));
-      process.exit(0);
-    },
+    handler: workspaceGeneratorHandler,
   })
   .command({
     command: 'migrate [packageAndVersion]',
@@ -313,11 +323,12 @@ export const commandsObject = yargs
     handler: async () => (await import('./reset')).resetHandler(),
   })
   .command({
-    command: 'connect-to-nx-cloud',
-    describe: `Makes sure the workspace is connected to Nx Cloud`,
+    command: 'connect',
+    aliases: ['connect-to-nx-cloud'],
+    describe: `Connect workspace to Nx Cloud`,
     builder: (yargs) => linkToNxDevAndExamples(yargs, 'connect-to-nx-cloud'),
     handler: async () => {
-      await (await import('./connect-to-nx-cloud')).connectToNxCloudCommand();
+      await (await import('./connect')).connectToNxCloudCommand();
       process.exit(0);
     },
   })
@@ -329,31 +340,47 @@ export const commandsObject = yargs
       args._ = args._.slice(1);
       process.exit(
         await (
-          await import('./generate')
+          await import('./new')
         ).newWorkspace(args['nxWorkspaceRoot'] as string, args)
       );
     },
   })
-  .command(
-    '_migrate [packageAndVersion]',
-    false,
-    (yargs) => withMigrationOptions(yargs),
-    async (args) =>
+  .command({
+    command: '_migrate [packageAndVersion]',
+    describe: false,
+    builder: (yargs) => withMigrationOptions(yargs),
+    handler: async (args) =>
       process.exit(
         await (await import('./migrate')).migrate(process.cwd(), args)
-      )
-  )
-  .command(
-    'repair',
-    'Repair any configuration that is no longer supported by Nx.',
-    (yargs) =>
+      ),
+  })
+  .command({
+    command: 'repair',
+    describe: 'Repair any configuration that is no longer supported by Nx.',
+    builder: (yargs) =>
       linkToNxDevAndExamples(yargs, 'repair').option('verbose', {
         type: 'boolean',
         describe:
           'Prints additional information about the commands (e.g., stack traces)',
       }),
-    async (args) => process.exit(await (await import('./repair')).repair(args))
-  )
+    handler: async (args) =>
+      process.exit(await (await import('./repair')).repair(args)),
+  })
+  .command({
+    command: 'view-logs',
+    describe: false,
+    handler: async () =>
+      process.exit(await (await import('./view-logs')).viewLogs()),
+  })
+  .command({
+    command: 'exec',
+    describe: 'Executes any command as if it was a target on the project',
+    builder: (yargs) => withRunOneOptions(yargs),
+    handler: async (args) => {
+      await (await import('./exec')).nxExecCommand(withOverrides(args));
+      process.exit(0);
+    },
+  })
   .help()
   .version(nxVersion);
 
@@ -408,12 +435,73 @@ function withPlainOption(yargs: yargs.Argv): yargs.Argv {
   });
 }
 
+function withExcludeOption(yargs: yargs.Argv): yargs.Argv {
+  return yargs.option('exclude', {
+    describe: 'Exclude certain projects from being processed',
+    type: 'array',
+    coerce: parseCSV,
+    default: [],
+  });
+}
+
+function withRunOptions(yargs: yargs.Argv): yargs.Argv {
+  return withExcludeOption(yargs)
+    .option('parallel', {
+      describe: 'Max number of parallel processes [default is 3]',
+      type: 'string',
+    })
+    .option('maxParallel', {
+      type: 'number',
+      hidden: true,
+    })
+    .options('runner', {
+      describe: 'This is the name of the tasks runner configured in nx.json',
+      type: 'string',
+    })
+    .option('prod', {
+      describe: 'Use the production configuration',
+      type: 'boolean',
+      default: false,
+      hidden: true,
+    })
+    .option('verbose', {
+      type: 'boolean',
+      describe:
+        'Prints additional information about the commands (e.g., stack traces)',
+      default: false,
+    })
+    .option('nx-bail', {
+      describe: 'Stop command execution after the first failed task',
+      type: 'boolean',
+      default: false,
+    })
+    .option('nx-ignore-cycles', {
+      describe: 'Ignore cycles in the task graph',
+      type: 'boolean',
+      default: false,
+    })
+    .options('skip-nx-cache', {
+      describe:
+        'Rerun the tasks even when the results are available in the cache',
+      type: 'boolean',
+      default: false,
+    })
+    .options('cloud', {
+      type: 'boolean',
+      hidden: true,
+    })
+    .options('dte', {
+      type: 'boolean',
+      hidden: true,
+    });
+}
+
 function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
-  return yargs
+  return withExcludeOption(yargs)
     .parserConfiguration({
-      'camel-case-expansion': false,
-      // allow parsing --env.SOME_ARG for cypress cli env args
-      'dot-notation': true,
+      'strip-dashed': true,
+      'unknown-options-as-args': true,
+      'populate--': true,
     })
     .option('files', {
       describe:
@@ -457,50 +545,6 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
     )
     .group(['files', 'uncommitted', 'untracked'], 'or using:')
     .implies('head', 'base')
-    .option('exclude', {
-      describe: 'Exclude certain projects from being processed',
-      type: 'array',
-      coerce: parseCSV,
-      default: [],
-    })
-    .options('runner', {
-      describe: 'This is the name of the tasks runner configured in nx.json',
-      type: 'string',
-    })
-    .options('skip-nx-cache', {
-      describe:
-        'Rerun the tasks even when the results are available in the cache',
-      type: 'boolean',
-      default: false,
-    })
-    .options('configuration', {
-      describe:
-        'This is the configuration to use when performing tasks on projects',
-      type: 'string',
-    })
-    .options('only-failed', {
-      deprecated:
-        'The command to rerun failed projects will appear if projects fail. This now does nothing and will be removed in v15.',
-      describe: 'Isolate projects which previously failed',
-      type: 'boolean',
-      default: false,
-    })
-    .option('verbose', {
-      type: 'boolean',
-      describe:
-        'Prints additional information about the commands (e.g., stack traces)',
-      default: false,
-    })
-    .option('nx-bail', {
-      describe: 'Stop command execution after the first failed task',
-      type: 'boolean',
-      default: false,
-    })
-    .option('nx-ignore-cycles', {
-      describe: 'Ignore cycles in the task graph',
-      type: 'boolean',
-      default: false,
-    })
     .conflicts({
       files: ['uncommitted', 'untracked', 'base', 'head', 'all'],
       untracked: ['uncommitted', 'files', 'base', 'head', 'all'],
@@ -510,64 +554,21 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
 }
 
 function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
-  return yargs
+  return withRunOptions(yargs)
     .parserConfiguration({
-      'camel-case-expansion': false,
-      // allow parsing --env.SOME_ARG for cypress cli env args
-      'dot-notation': true,
+      'strip-dashed': true,
+      'unknown-options-as-args': true,
+      'populate--': true,
     })
     .option('projects', {
-      describe: 'Projects to run (comma delimited)',
+      describe:
+        'Projects to run. (comma delimited project names and/or patterns)',
       type: 'string',
     })
     .option('all', {
       describe: '[deprecated] Run the target on all projects in the workspace',
       type: 'boolean',
       default: true,
-    })
-    .options('runner', {
-      describe: 'Override the tasks runner in `nx.json`',
-      type: 'string',
-    })
-    .options('skip-nx-cache', {
-      describe:
-        'Rerun the tasks even when the results are available in the cache',
-      type: 'boolean',
-      default: false,
-    })
-    .options('configuration', {
-      describe:
-        'This is the configuration to use when performing tasks on projects',
-      type: 'string',
-    })
-    .options('only-failed', {
-      deprecated:
-        'The command to rerun failed projects will appear if projects fail. This now does nothing and will be removed in v15.',
-      describe: 'Only run the target on projects which previously failed',
-      type: 'boolean',
-      default: false,
-    })
-    .option('exclude', {
-      describe: 'Exclude certain projects from being processed',
-      type: 'array',
-      coerce: parseCSV,
-      default: [],
-    })
-    .option('verbose', {
-      type: 'boolean',
-      describe:
-        'Prints additional information about the commands (e.g., stack traces)',
-      default: false,
-    })
-    .option('nx-bail', {
-      describe: 'Stop command execution after the first failed task',
-      type: 'boolean',
-      default: false,
-    })
-    .option('nx-ignore-cycles', {
-      describe: 'Ignore cycles in the task graph',
-      type: 'boolean',
-      default: false,
     });
 }
 
@@ -615,40 +616,44 @@ function withDepGraphOptions(yargs: yargs.Argv): yargs.Argv {
 }
 
 function withOverrides(args: any): any {
-  const split = process.argv.indexOf('--');
-  if (split > -1) {
-    const overrides = process.argv.slice(split + 1);
-    delete args._;
-    return { ...args, __overrides__: overrides };
-  } else {
-    args['__positional_overrides__'] = args._.slice(1);
-    delete args._;
-    return args;
-  }
+  args.__overrides_unparsed__ = (args['--'] ?? args._.slice(1)).map((v) =>
+    v.toString()
+  );
+  delete args['--'];
+  delete args._;
+  return args;
 }
 
-function withParallelOption(yargs: yargs.Argv): yargs.Argv {
-  return yargs.option('parallel', {
-    describe: 'Max number of parallel processes [default is 3]',
-    type: 'string',
-  });
-}
-
-function withOutputStyleOption(yargs: yargs.Argv): yargs.Argv {
+function withOutputStyleOption(
+  yargs: yargs.Argv,
+  choices = ['dynamic', 'static', 'stream', 'stream-without-prefixes']
+): yargs.Argv {
   return yargs.option('output-style', {
     describe: 'Defines how Nx emits outputs tasks logs',
     type: 'string',
-    choices: ['dynamic', 'static', 'stream', 'stream-without-prefixes'],
+    choices,
   });
 }
 
-function withTargetOption(yargs: yargs.Argv): yargs.Argv {
-  return yargs.option('target', {
+function withTargetAndConfigurationOption(
+  yargs: yargs.Argv,
+  demandOption = true
+): yargs.Argv {
+  return withConfiguration(yargs).option('target', {
     describe: 'Task to run for affected projects',
     type: 'string',
     requiresArg: true,
-    demandOption: true,
+    demandOption,
     global: false,
+  });
+}
+
+function withConfiguration(yargs: yargs.Argv) {
+  return yargs.options('configuration', {
+    describe:
+      'This is the configuration to use when performing tasks on projects',
+    type: 'string',
+    alias: 'c',
   });
 }
 
@@ -706,52 +711,28 @@ function withRunOneOptions(yargs: yargs.Argv) {
   const executorShouldShowHelp = !(
     process.argv[2] === 'run' && process.argv[3] === '--help'
   );
-  const res = yargs
+
+  const res = withRunOptions(
+    withOutputStyleOption(withTargetAndConfigurationOption(yargs, false), [
+      'dynamic',
+      'static',
+      'stream',
+      'stream-without-prefixes',
+      'compact',
+    ])
+  )
     .parserConfiguration({
-      'camel-case-expansion': false,
-      // allow parsing --env.SOME_ARG for cypress cli env args
-      'dot-notation': true,
-    })
-    .option('prod', {
-      describe: 'Use the production configuration',
-      type: 'boolean',
-      default: false,
-    })
-    .option('configuration', {
-      describe: 'Target configuration',
-      alias: 'c',
-      type: 'string',
+      'strip-dashed': true,
+      'unknown-options-as-args': true,
+      'populate--': true,
     })
     .option('project', {
       describe: 'Target project',
       type: 'string',
     })
-    .option('output-style', {
-      describe: 'Defines how Nx emits outputs tasks logs',
-      type: 'string',
-      choices: [
-        'dynamic',
-        'static',
-        'stream',
-        'stream-without-prefixes',
-        'compact',
-      ],
-    })
-    .option('nx-bail', {
-      describe: 'Stop command execution after the first failed task',
+    .option('help', {
+      describe: 'Show Help',
       type: 'boolean',
-      default: false,
-    })
-    .option('nx-ignore-cycles', {
-      describe: 'Ignore cycles in the task graph',
-      type: 'boolean',
-      default: false,
-    })
-    .option('verbose', {
-      type: 'boolean',
-      describe:
-        'Prints additional information about the commands (e.g., stack traces)',
-      default: false,
     });
 
   if (executorShouldShowHelp) {
@@ -763,25 +744,143 @@ function withRunOneOptions(yargs: yargs.Argv) {
   }
 }
 
-async function withWorkspaceGeneratorOptions(yargs: yargs.Argv) {
-  yargs
-    .option('list-generators', {
-      describe: 'List the available workspace-generators',
-      type: 'boolean',
-    })
-    .positional('name', {
-      type: 'string',
-      describe: 'The name of your generator',
-    });
+type OptionArgumentDefinition = {
+  type: yargs.Options['type'];
+  describe?: string;
+  default?: any;
+  choices?: yargs.Options['type'][];
+  demandOption?: boolean;
+};
 
-  /**
-   * Don't require `name` if only listing available
-   * schematics
-   */
-  if ((await yargs.argv).listGenerators !== true) {
-    yargs.demandOption('name');
+type WorkspaceGeneratorProperties = {
+  [name: string]:
+    | {
+        type: yargs.Options['type'];
+        description?: string;
+        default?: any;
+        enum?: yargs.Options['type'][];
+        demandOption?: boolean;
+      }
+    | {
+        type: yargs.PositionalOptionsType;
+        description?: string;
+        default?: any;
+        enum?: yargs.PositionalOptionsType[];
+        $default: {
+          $source: 'argv';
+          index: number;
+        };
+      };
+};
+
+function isPositionalProperty(
+  property: WorkspaceGeneratorProperties[keyof WorkspaceGeneratorProperties]
+): property is { type: yargs.PositionalOptionsType } {
+  return property['$default']?.['$source'] === 'argv';
+}
+
+async function withWorkspaceGeneratorOptions(
+  yargs: yargs.Argv,
+  args: string[]
+) {
+  // filter out only positional arguments
+  args = args.filter((a) => !a.startsWith('-'));
+  if (args.length) {
+    // this is an actual workspace generator
+    return withCustomGeneratorOptions(yargs, args[0]);
+  } else {
+    yargs
+      .option('list-generators', {
+        describe: 'List the available workspace-generators',
+        type: 'boolean',
+      })
+      .positional('name', {
+        type: 'string',
+        describe: 'The name of your generator',
+      });
+    /**
+     * Don't require `name` if only listing available
+     * schematics
+     */
+    if ((await yargs.argv).listGenerators !== true) {
+      yargs.demandOption('name');
+    }
+    return yargs;
   }
+}
+
+async function withCustomGeneratorOptions(
+  yargs: yargs.Argv,
+  generatorName: string
+) {
+  const schema = (
+    await import('./workspace-generators')
+  ).workspaceGeneratorSchema(generatorName);
+  const options = [];
+  const positionals = [];
+
+  Object.entries(
+    (schema.properties ?? {}) as WorkspaceGeneratorProperties
+  ).forEach(([name, prop]) => {
+    const option: { name: string; definition: OptionArgumentDefinition } = {
+      name,
+      definition: {
+        describe: prop.description,
+        type: prop.type,
+        default: prop.default,
+        choices: prop.enum,
+      },
+    };
+    if (schema.required && schema.required.includes(name)) {
+      option.definition.demandOption = true;
+    }
+    options.push(option);
+    if (isPositionalProperty(prop)) {
+      positionals.push({
+        name,
+        definition: {
+          describe: prop.description,
+          type: prop.type,
+          choices: prop.enum,
+        },
+      });
+    }
+  });
+
+  let command = generatorName;
+  positionals.forEach(({ name }) => {
+    command += ` [${name}]`;
+  });
+  if (options.length) {
+    command += ' (options)';
+  }
+
+  yargs
+    .command({
+      // this is the default and only command
+      command,
+      describe: schema.description || '',
+      builder: (y) => {
+        options.forEach(({ name, definition }) => {
+          y.option(name, definition);
+        });
+        positionals.forEach(({ name, definition }) => {
+          y.positional(name, definition);
+        });
+        return linkToNxDevAndExamples(y, 'workspace-generator');
+      },
+      handler: workspaceGeneratorHandler,
+    })
+    .fail(() => void 0); // no action is needed on failure as Nx will handle it based on schema validation
+
   return yargs;
+}
+
+async function workspaceGeneratorHandler() {
+  await (
+    await import('./workspace-generators')
+  ).workspaceGenerators(process.argv.slice(3));
+  process.exit(0);
 }
 
 function withMigrationOptions(yargs: yargs.Argv) {
@@ -845,7 +944,7 @@ function linkToNxDevAndExamples(yargs: yargs.Argv, command: string) {
   });
   return yargs.epilog(
     chalk.bold(
-      `Find more information and examples at https://nx.dev/cli/${command.replace(
+      `Find more information and examples at https://nx.dev/nx/${command.replace(
         ':',
         '-'
       )}`

@@ -52,7 +52,7 @@
     "linter": {
       "description": "The tool to use for running lint checks.",
       "type": "string",
-      "enum": ["eslint", "tslint"],
+      "enum": ["eslint"],
       "default": "eslint"
     },
     "standaloneConfig": {
@@ -73,7 +73,16 @@
         "**/**/src/**/*.other.*",
         "libs/my-lib/src/not-stories/**,**/**/src/**/*.other.*,apps/my-app/**/*.something.ts"
       ]
+    },
+    "configureTestRunner": {
+      "type": "boolean",
+      "description": "Add a Storybook Test-Runner target."
+    },
+    "bundler": {
+      "description": "The Storybook builder to use.",
+      "enum": ["vite", "webpack"]
     }
   },
-  "required": ["name"]
+  "required": ["name"],
+  "examplesFile": "../../../docs/storybook-configuration-examples.md"
 }

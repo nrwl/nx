@@ -1,9 +1,11 @@
 {
+  "version": 2,
+  "outputCapture": "direct-nodejs",
   "$schema": "http://json-schema.org/schema",
   "$id": "NxExpoDownloadEasBuild",
   "cli": "nx",
   "title": "Download EAS Build executor",
-  "description": "Download an EAS build",
+  "description": "Download an EAS build.",
   "type": "object",
   "properties": {
     "platform": {

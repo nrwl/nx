@@ -8,7 +8,7 @@ Don't be too anxious about choosing the exact right folder structure from the be
 
 For instance, if a library under the `booking` folder is now being shared by multiple apps, you can move it to the shared folder like this:
 
-```bash
+```shell
 nx g move --project booking-some-library shared/some-library
 ```
 
@@ -20,7 +20,7 @@ For Angular projects, you should use the [`@nrwl/angular:move` generator](/packa
 
 Similarly, if you no longer need a library, you can remove it with the [`@nrwl/workspace:remove` generator](/packages/workspace/generators/remove).
 
-```bash
+```shell
 nx g remove booking-some-library
 ```
 

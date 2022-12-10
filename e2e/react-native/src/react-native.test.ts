@@ -14,8 +14,8 @@ import { join } from 'path';
 describe('react native', () => {
   let proj: string;
 
-  beforeEach(() => (proj = newProject()));
-  afterEach(() => cleanupProject());
+  beforeAll(() => (proj = newProject()));
+  afterAll(() => cleanupProject());
 
   it('should test, create ios and android JS bundles', async () => {
     const appName = uniq('my-app');
@@ -122,7 +122,7 @@ describe('react native', () => {
     expect(() => {
       runCLI(`build ${libName}`);
       checkFilesExist(`dist/libs/${libName}/index.js`);
-      checkFilesExist(`dist/libs/${libName}/index.d.ts`);
+      checkFilesExist(`dist/libs/${libName}/src/index.d.ts`);
     }).not.toThrow();
   });
 
@@ -141,11 +141,11 @@ describe('react native', () => {
     });
     // Add import for Nx to pick up
     updateFile(join('apps', appName, 'src/app/App.tsx'), (content) => {
-      return `import { launchImageLibrary } from 'react-native-image-picker';\n${content}`;
+      return `import AsyncStorage from '@react-native-async-storage/async-storage';import Config from 'react-native-config';\n${content}`;
     });
 
     await runCLIAsync(
-      `sync-deps ${appName} --include=react-native-gesture-handler,react-native-safe-area-context`
+      `sync-deps ${appName} --include=react-native-gesture-handler,react-native-safe-area-context,react-native-image-picker`
     );
 
     const result = readJson(join('apps', appName, 'package.json'));
@@ -154,6 +154,9 @@ describe('react native', () => {
         'react-native-image-picker': '*',
         'react-native-gesture-handler': '*',
         'react-native-safe-area-context': '*',
+        'react-native': '*',
+        'react-native-config': '*',
+        '@react-native-async-storage/async-storage': '*',
       },
     });
   });

@@ -40,9 +40,21 @@ export function getPluginCapabilities(
           packageJson.generators,
           'generators'
         ) ||
+        tryGetCollection(
+          packageJsonPath,
+          packageJson.schematics,
+          'generators'
+        ) ||
+        tryGetCollection(
+          packageJsonPath,
+          packageJson.schematics,
+          'generators'
+        ) ||
         tryGetCollection(packageJsonPath, packageJson.schematics, 'schematics'),
       executors:
         tryGetCollection(packageJsonPath, packageJson.executors, 'executors') ||
+        tryGetCollection(packageJsonPath, packageJson.executors, 'builders') ||
+        tryGetCollection(packageJsonPath, packageJson.builders, 'executors') ||
         tryGetCollection(packageJsonPath, packageJson.builders, 'builders'),
     };
   } catch {

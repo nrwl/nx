@@ -1,9 +1,9 @@
 import {
-  BookmarkAltIcon,
-  ChipIcon,
+  BookmarkIcon,
   CogIcon,
-  TerminalIcon,
-} from '@heroicons/react/solid';
+  CommandLineIcon,
+  CpuChipIcon,
+} from '@heroicons/react/24/solid';
 import { MenuItem } from '@nrwl/nx-dev/models-menu';
 import { ReferencesNavList } from './references-nav-list';
 import { ReferencesPackageCard } from './references-package-card';
@@ -13,14 +13,13 @@ export function ReferencesSection({
 }: {
   section: MenuItem;
 }): JSX.Element {
-  const guides =
-    section.itemList?.filter(
-      (x) => !x.path?.includes('executors') && !x.path?.includes('generators')
-    ) || [];
+  const guides: MenuItem | null =
+    section.itemList?.find((x) => x.id === section.id + '-guides') || null;
   const executors =
-    section.itemList?.filter((x) => x.path?.includes('executors')) || [];
+    section.itemList?.find((x) => x.id === section.id + '-executors') || null;
   const generators =
-    section.itemList?.filter((x) => x.path?.includes('generators')) || [];
+    section.itemList?.find((x) => x.id === section.id + '-generators') || null;
+
   return (
     <section
       id={section.id}
@@ -34,17 +33,17 @@ export function ReferencesSection({
         />
       </header>
       <div className="mt-10 grid grid-cols-2 gap-8 sm:grid-cols-3 sm:space-y-0 md:col-span-2 md:mt-0">
-        {!!guides.length && (
+        {!!guides && (
           <ReferencesNavList
             header={{
               icon:
                 section.id === 'nx' ? (
-                  <TerminalIcon className="mr-2 h-5 w-5" aria-hidden="true" />
-                ) : (
-                  <BookmarkAltIcon
+                  <CommandLineIcon
                     className="mr-2 h-5 w-5"
                     aria-hidden="true"
                   />
+                ) : (
+                  <BookmarkIcon className="mr-2 h-5 w-5" aria-hidden="true" />
                 ),
               title: section.id === 'nx' ? 'Commands' : 'Guides',
             }}
@@ -52,21 +51,21 @@ export function ReferencesSection({
           />
         )}
 
-        {!!executors.length && (
+        {!!executors && (
           <ReferencesNavList
             header={{
-              icon: <ChipIcon className="mr-2 h-5 w-5" aria-hidden="true" />,
-              title: 'Executors',
+              icon: <CpuChipIcon className="mr-2 h-5 w-5" aria-hidden="true" />,
+              title: executors.name,
             }}
             links={executors}
           />
         )}
 
-        {!!generators.length && (
+        {!!generators && (
           <ReferencesNavList
             header={{
               icon: <CogIcon className="mr-2 h-5 w-5" aria-hidden="true" />,
-              title: 'Generators',
+              title: generators.name,
             }}
             links={generators}
           />

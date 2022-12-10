@@ -5,12 +5,6 @@
   "title": "Create a TypeScript Library",
   "description": "Create a TypeScript Library.",
   "type": "object",
-  "examples": [
-    {
-      "command": "nx g lib mylib --directory=myapp",
-      "description": "Generate libs/myapp/mylib"
-    }
-  ],
   "properties": {
     "name": {
       "type": "string",
@@ -34,9 +28,9 @@
     },
     "unitTestRunner": {
       "type": "string",
-      "enum": ["jest", "none"],
+      "enum": ["jest", "vitest", "none"],
       "description": "Test runner to use for unit tests.",
-      "default": "jest"
+      "x-prompt": "Which unit test runner would you like to use?"
     },
     "tags": {
       "type": "string",
@@ -111,7 +105,8 @@
     },
     "bundler": {
       "description": "The bundler to use.",
-      "enum": ["none", "esbuild", "rollup", "webpack"],
+      "type": "string",
+      "enum": ["none", "esbuild", "rollup", "vite", "webpack"],
       "default": "none"
     },
     "skipTypeCheck": {
@@ -120,5 +115,6 @@
       "default": false
     }
   },
-  "required": ["name"]
+  "required": ["name"],
+  "examplesFile": "../../../docs/library-examples.md"
 }

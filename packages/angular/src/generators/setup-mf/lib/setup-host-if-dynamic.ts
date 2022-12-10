@@ -3,7 +3,7 @@ import { joinPathFragments, readProjectConfiguration } from '@nrwl/devkit';
 import type { Schema } from '../schema';
 
 export function setupHostIfDynamic(tree: Tree, options: Schema) {
-  if (options.federationType === 'static' || options.mfType === 'remote') {
+  if (options.federationType === 'static') {
     return;
   }
 

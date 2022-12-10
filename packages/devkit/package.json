@@ -31,10 +31,11 @@
     "ejs": "^3.1.7",
     "ignore": "^5.0.4",
     "tslib": "^2.3.0",
-    "@phenomnomnominal/tsquery": "4.1.1"
+    "@phenomnomnominal/tsquery": "4.1.1",
+    "semver": "7.3.4"
   },
   "peerDependencies": {
-    "nx": ">= 13.10 <= 15"
+    "nx": ">= 14 <= 16"
   },
   "nx-migrations": {
     "migrations": "./migrations.json"

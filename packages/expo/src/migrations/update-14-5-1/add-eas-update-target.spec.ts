@@ -6,7 +6,7 @@ describe('add-eas-update-target', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'product', {
       root: 'apps/product',
       sourceRoot: 'apps/product/src',
@@ -18,7 +18,7 @@ describe('add-eas-update-target', () => {
     });
   });
 
-  it(`should update project.json with target build and build-list`, async () => {
+  it(`should update project.json with target update`, async () => {
     await update(tree);
 
     getProjects(tree).forEach((project) => {

@@ -1,6 +1,5 @@
 import type { FileData, ProjectGraph } from '@nrwl/devkit';
 import { DependencyType } from '@nrwl/devkit';
-import { mapProjectGraphFiles } from '@nrwl/workspace/src/utils/runtime-lint-utils';
 import * as parser from '@typescript-eslint/parser';
 import { TSESLint } from '@typescript-eslint/utils';
 import { vol } from 'memfs';
@@ -8,6 +7,7 @@ import { TargetProjectLocator } from 'nx/src/utils/target-project-locator';
 import enforceModuleBoundaries, {
   RULE_NAME as enforceModuleBoundariesRuleName,
 } from '../../src/rules/enforce-module-boundaries';
+import { createProjectRootMappings } from 'nx/src/project-graph/utils/find-project-for-path';
 
 jest.mock('fs', () => require('memfs').fs);
 
@@ -26,6 +26,7 @@ const tsconfig = {
     paths: {
       '@mycompany/impl': ['libs/impl/src/index.ts'],
       '@mycompany/untagged': ['libs/untagged/src/index.ts'],
+      '@mycompany/tagged': ['libs/tagged/src/index.ts'],
       '@mycompany/api': ['libs/api/src/index.ts'],
       '@mycompany/impl-domain2': ['libs/impl-domain2/src/index.ts'],
       '@mycompany/impl-both-domains': ['libs/impl-both-domains/src/index.ts'],
@@ -69,6 +70,7 @@ const packageJson = {
 const fileSys = {
   './libs/impl/src/index.ts': '',
   './libs/untagged/src/index.ts': '',
+  './libs/tagged/src/index.ts': '',
   './libs/api/src/index.ts': '',
   './libs/impl-domain2/src/index.ts': '',
   './libs/impl-both-domains/src/index.ts': '',
@@ -310,9 +312,10 @@ describe('Enforce Module Boundaries (eslint)', () => {
             implicitDependencies: [],
             architect: {},
             files: [
-              createFile(
-                `libs/private/src/index.tslibs/private/src/index.tslibs/private/src/index.ts`
-              ),
+              createFile(`libs/private/src/index.ts`, [
+                'untaggedName',
+                'taggedName',
+              ]),
             ],
           },
         },
@@ -325,6 +328,17 @@ describe('Enforce Module Boundaries (eslint)', () => {
             implicitDependencies: [],
             architect: {},
             files: [createFile(`libs/untagged/src/index.ts`)],
+          },
+        },
+        taggedName: {
+          name: 'taggedName',
+          type: 'lib',
+          data: {
+            root: 'libs/tagged',
+            tags: ['some-tag'],
+            implicitDependencies: [],
+            architect: {},
+            files: [createFile(`libs/tagged/src/index.ts`)],
           },
         },
       },
@@ -387,6 +401,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
         { sourceTag: 'domain1', onlyDependOnLibsWithTags: ['domain1'] },
         { sourceTag: 'domain2', onlyDependOnLibsWithTags: ['domain2'] },
         { sourceTag: 'public', notDependOnLibsWithTags: ['private'] },
+        { sourceTag: 'private', onlyDependOnLibsWithTags: [] },
       ],
     };
 
@@ -525,6 +540,38 @@ describe('Enforce Module Boundaries (eslint)', () => {
 
       const message =
         'A project tagged with "api" can only depend on libs tagged with "api"';
+      expect(failures.length).toEqual(2);
+      expect(failures[0].message).toEqual(message);
+      expect(failures[1].message).toEqual(message);
+    });
+
+    it('should not error when the target library is untagged, if source expects it', () => {
+      const failures = runRule(
+        depConstraints,
+        `${process.cwd()}/proj/libs/private/src/index.ts`,
+        `
+          import '@mycompany/untagged';
+          import('@mycompany/untagged');
+        `,
+        graph
+      );
+
+      expect(failures.length).toEqual(0);
+    });
+
+    it('should error when the target library is tagged, if source does not expect it', () => {
+      const failures = runRule(
+        depConstraints,
+        `${process.cwd()}/proj/libs/private/src/index.ts`,
+        `
+          import '@mycompany/tagged';
+          import('@mycompany/tagged');
+        `,
+        graph
+      );
+
+      const message =
+        'A project tagged with "private" cannot depend on any libs with tags';
       expect(failures.length).toEqual(2);
       expect(failures[0].message).toEqual(message);
       expect(failures[1].message).toEqual(message);
@@ -1836,7 +1883,10 @@ function runRule(
   projectGraph: ProjectGraph
 ): TSESLint.Linter.LintMessage[] {
   (global as any).projectPath = `${process.cwd()}/proj`;
-  (global as any).projectGraph = mapProjectGraphFiles(projectGraph);
+  (global as any).projectGraph = projectGraph;
+  (global as any).projectRootMappings = createProjectRootMappings(
+    projectGraph.nodes
+  );
   (global as any).targetProjectLocator = new TargetProjectLocator(
     projectGraph.nodes,
     projectGraph.externalNodes

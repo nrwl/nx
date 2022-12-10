@@ -225,6 +225,7 @@ export { readJsonFile, writeJsonFile } from 'nx/src/utils/fileutils';
  */
 export {
   addDependenciesToPackageJson,
+  ensurePackage,
   removeDependenciesFromPackageJson,
 } from './src/utils/package-json';
 
@@ -244,6 +245,7 @@ export { names } from './src/utils/names';
 export {
   getWorkspaceLayout,
   getWorkspacePath,
+  extractLayoutDirectory,
 } from './src/utils/get-workspace-layout';
 
 /**
@@ -295,6 +297,30 @@ export {
  */
 export { moveFilesToNewDirectory } from './src/utils/move-dir';
 
+/**
+ * @category Utils
+ */
+export {
+  SharedLibraryConfig,
+  SharedWorkspaceLibraryConfig,
+  AdditionalSharedConfig,
+  applySharedFunction,
+  applyAdditionalShared,
+  mapRemotes,
+  mapRemotesForSSR,
+  getNpmPackageSharedConfig,
+  shareWorkspaceLibraries,
+  sharePackages,
+  getDependentPackagesForProject,
+  ModuleFederationConfig,
+  ModuleFederationLibrary,
+  readRootPackageJson,
+  WorkspaceLibrary,
+  SharedFunction,
+  WorkspaceLibrarySecondaryEntryPoint,
+  Remotes,
+} from './src/utils/module-federation';
+
 // TODO(v16): Change this to export from 'nx/src/utils/workspace-root'
 /**
  * @category Utils
@@ -336,3 +362,8 @@ export { Hash, Hasher } from 'nx/src/hasher/hasher';
  * @category Utils
  */
 export { cacheDir } from 'nx/src/utils/cache-directory';
+
+/**
+ * @category Package Manager
+ */
+export { pruneLockFile } from 'nx/src/lock-file/lock-file';

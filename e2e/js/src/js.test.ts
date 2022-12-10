@@ -1,3 +1,5 @@
+import { execSync } from 'child_process';
+import { satisfies } from 'semver';
 import {
   checkFilesDoNotExist,
   checkFilesExist,
@@ -150,10 +152,12 @@ describe('js e2e', () => {
 
     const rootPackageJson = readJson(`package.json`);
 
-    expect(readJson(`dist/libs/${lib}/package.json`)).toHaveProperty(
-      'peerDependencies.tslib',
-      rootPackageJson.dependencies.tslib
-    );
+    expect(
+      satisfies(
+        readJson(`dist/libs/${lib}/package.json`).peerDependencies.tslib,
+        rootPackageJson.dependencies.tslib
+      )
+    ).toBeTruthy();
 
     updateJson(`libs/${lib}/tsconfig.json`, (json) => {
       json.compilerOptions = { ...json.compilerOptions, importHelpers: false };
@@ -232,12 +236,12 @@ describe('js e2e', () => {
 
     runCLI(`build ${lib}`);
 
-    const rootPackageJson = readJson(`package.json`);
+    const swcHelpersFromRoot =
+      readJson(`package.json`).dependencies['@swc/helpers'];
+    const swcHelpersFromDist = readJson(`dist/libs/${lib}/package.json`)
+      .peerDependencies['@swc/helpers'];
 
-    expect(readJson(`dist/libs/${lib}/package.json`)).toHaveProperty(
-      'peerDependencies.@swc/helpers',
-      rootPackageJson.dependencies['@swc/helpers']
-    );
+    expect(satisfies(swcHelpersFromDist, swcHelpersFromRoot)).toBeTruthy();
 
     updateJson(`libs/${lib}/.lib.swcrc`, (json) => {
       json.jsc.externalHelpers = false;
@@ -302,6 +306,151 @@ export function ${lib}Wildcard() {
       'Done compiling TypeScript files'
     );
   }, 120000);
+
+  describe('inlining', () => {
+    it.each(['tsc', 'swc'])(
+      'should inline libraries with --compiler=%s',
+      async (compiler) => {
+        const parent = uniq('parent');
+        runCLI(`generate @nrwl/js:lib ${parent} --compiler=${compiler}`);
+
+        const buildable = uniq('buildable');
+        runCLI(`generate @nrwl/js:lib ${buildable}`);
+
+        const buildableTwo = uniq('buildabletwo');
+        runCLI(`generate @nrwl/js:lib ${buildableTwo}`);
+
+        const nonBuildable = uniq('nonbuildable');
+        runCLI(`generate @nrwl/js:lib ${nonBuildable} --buildable=false`);
+
+        updateFile(`libs/${parent}/src/lib/${parent}.ts`, () => {
+          return `
+import { ${buildable} } from '@${scope}/${buildable}';
+import { ${buildableTwo} } from '@${scope}/${buildableTwo}';
+import { ${nonBuildable} } from '@${scope}/${nonBuildable}';
+
+export function ${parent}() {
+  ${buildable}();
+  ${buildableTwo}();
+  ${nonBuildable}();
+}
+        `;
+        });
+
+        // 1. external is set to all
+        execSync(`rm -rf dist`);
+        runCLI(`build ${parent} --external=all`);
+        checkFilesExist(
+          `dist/libs/${buildable}/src/index.js`, // buildable
+          `dist/libs/${buildableTwo}/src/index.js`, // buildable two
+          `dist/libs/${parent}/src/index.js`, // parent
+          `dist/libs/${parent}/${nonBuildable}/src/index.js` // inlined non buildable
+        );
+        // non-buildable lib import path is modified to relative path
+        let fileContent = readFile(`dist/libs/${parent}/src/lib/${parent}.js`);
+        expect(fileContent).toContain(`${nonBuildable}/src`);
+
+        // 2. external is set to none
+        execSync(`rm -rf dist`);
+        runCLI(`build ${parent} --external=none`);
+        checkFilesExist(
+          `dist/libs/${parent}/src/index.js`, // parent
+          `dist/libs/${parent}/${buildable}/src/index.js`, // inlined buildable
+          `dist/libs/${parent}/${buildableTwo}/src/index.js`, // inlined buildable two
+          `dist/libs/${parent}/${nonBuildable}/src/index.js` // inlined non buildable
+        );
+        fileContent = readFile(`dist/libs/${parent}/src/lib/${parent}.js`);
+        expect(fileContent).toContain(`${nonBuildable}/src`);
+        expect(fileContent).toContain(`${buildable}/src`);
+        expect(fileContent).toContain(`${buildableTwo}/src`);
+
+        // 3. external is set to an array of libs
+        execSync(`rm -rf dist`);
+        runCLI(`build ${parent} --external=${buildable}`);
+        checkFilesExist(
+          `dist/libs/${buildable}/src/index.js`, // buildable
+          `dist/libs/${buildableTwo}/src/index.js`, // buildable two original output should be persisted
+          `dist/libs/${parent}/src/index.js`, // parent
+          `dist/libs/${parent}/${buildableTwo}/src/index.js`, // inlined buildable two
+          `dist/libs/${parent}/${nonBuildable}/src/index.js` // inlined non buildable
+        );
+        fileContent = readFile(`dist/libs/${parent}/src/lib/${parent}.js`);
+        expect(fileContent).toContain(`${nonBuildable}/src`);
+        expect(fileContent).toContain(`${buildableTwo}/src`);
+        expect(fileContent).not.toContain(`${buildable}/src`);
+      },
+      120000
+    );
+
+    it('should inline nesting libraries', async () => {
+      const parent = uniq('parent');
+      runCLI(`generate @nrwl/js:lib ${parent}`);
+
+      const child = uniq('child');
+      runCLI(`generate @nrwl/js:lib ${child} --buildable=false`);
+
+      const grandChild = uniq('grandchild');
+      runCLI(`generate @nrwl/js:lib ${grandChild} --buildable=false`);
+
+      updateFile(`libs/${parent}/src/lib/${parent}.ts`, () => {
+        return `
+import { ${child} } from '@${scope}/${child}';
+
+export function ${parent}() {
+  ${child}();
+}
+        `;
+      });
+
+      updateFile(`libs/${child}/src/lib/${child}.ts`, () => {
+        return `
+import { ${grandChild} } from '@${scope}/${grandChild}';
+
+export function ${child}() {
+  ${grandChild}();
+}
+        `;
+      });
+
+      runCLI(`build ${parent} --external=all`);
+      checkFilesExist(
+        `dist/libs/${parent}/src/index.js`, // parent
+        `dist/libs/${parent}/${child}/src/index.js`, // inlined child
+        `dist/libs/${parent}/${grandChild}/src/index.js` // inlined grand child
+      );
+      // non-buildable lib import path is modified to relative path
+      const parentFileContent = readFile(
+        `dist/libs/${parent}/src/lib/${parent}.js`
+      );
+      expect(parentFileContent).toContain(`${child}/src`);
+      expect(parentFileContent).not.toContain(`${grandChild}/src`);
+
+      const childFileContent = readFile(
+        `dist/libs/${parent}/${child}/src/lib/${child}.js`
+      );
+      expect(childFileContent).toContain(`${grandChild}/src`);
+    }, 120000);
+  });
+
+  describe('bundling libs', () => {
+    it('should support esbuild and vite bundlers for building libs', () => {
+      const esbuildLib = uniq('esbuildlib');
+      const viteLib = uniq('vitelib');
+
+      runCLI(
+        `generate @nrwl/js:lib ${esbuildLib} --bundler=esbuild --no-interactive`
+      );
+      runCLI(
+        `generate @nrwl/js:lib ${viteLib} --bundler=vite --no-interactive`
+      );
+
+      runCLI(`build ${esbuildLib}`);
+      runCLI(`build ${viteLib}`);
+
+      checkFilesExist(`dist/libs/${esbuildLib}/index.js`);
+      checkFilesExist(`dist/libs/${viteLib}/index.js`);
+    });
+  });
 
   it('should not create a `.babelrc` file when creating libs with js executors (--compiler=tsc)', () => {
     const lib = uniq('lib');

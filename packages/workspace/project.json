@@ -1,4 +1,5 @@
 {
+  "name": "workspace",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/workspace/src",
   "projectType": "library",
@@ -9,7 +10,7 @@
         "jestConfig": "packages/workspace/jest.config.ts",
         "passWithNoTests": true
       },
-      "outputs": ["coverage/packages/workspace"]
+      "outputs": ["{workspaceRoot}/coverage/packages/workspace"]
     },
     "build-base": {
       "executor": "@nrwl/js:tsc",
@@ -28,6 +29,36 @@
           {
             "input": "packages/workspace",
             "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/workspace",
+            "glob": "**/files-integrated-repo/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/workspace",
+            "glob": "**/files-integrated-repo/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/workspace",
+            "glob": "**/files-package-based-repo/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/workspace",
+            "glob": "**/files-readme/**",
+            "output": "/"
+          },
+          {
+            "glob": "**/files-packaged-based-repo/**/.gitkeep",
+            "input": "packages/workspace",
+            "output": "/"
+          },
+          {
+            "input": "packages/workspace",
+            "glob": "**/files-root-app/**",
             "output": "/"
           },
           {
@@ -63,7 +94,7 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["build/packages/workspace"],
+      "outputs": ["{workspaceRoot}/build/packages/workspace"],
       "options": {
         "commands": [
           {
@@ -77,9 +108,6 @@
           },
           {
             "command": "node ./scripts/add-dependency-to-build.js workspace @nrwl/devkit"
-          },
-          {
-            "command": "node ./scripts/add-dependency-to-build.js workspace @nrwl/jest"
           },
           {
             "command": "node ./scripts/add-dependency-to-build.js workspace @nrwl/linter"

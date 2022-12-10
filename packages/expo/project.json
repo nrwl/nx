@@ -1,4 +1,6 @@
 {
+  "name": "expo",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/expo/src",
   "projectType": "library",
   "targets": {
@@ -22,7 +24,7 @@
         "jestConfig": "packages/expo/jest.config.ts",
         "passWithNoTests": true
       },
-      "outputs": ["coverage/packages/expo"]
+      "outputs": ["{workspaceRoot}/coverage/packages/expo"]
     },
     "build-base": {
       "executor": "@nrwl/js:tsc",
@@ -72,19 +74,9 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["build/packages/expo"],
+      "outputs": ["{workspaceRoot}/build/packages/expo"],
       "options": {
         "command": "node ./scripts/copy-readme.js expo"
-      }
-    },
-    "publish": {
-      "executor": "@nrwl/workspace:run-commands",
-      "options": {
-        "parallel": false,
-        "commands": [
-          "nx build expo",
-          "node tools/scripts/publish.mjs expo {args.ver} {args.tag}"
-        ]
       }
     }
   },

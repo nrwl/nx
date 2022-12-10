@@ -30,7 +30,7 @@ By default, Nx is going to cache `dist/packages/frontend`, `packages/frontend/di
     "targets": {
         "build": {
             "executor": "nx:run-script",
-            "outputs": ["packages/frontend/dist", "packaged/frontend/docs"],
+            "outputs": ["{projectRoot}/dist", "{projectRoot}/docs"],
             "options": {
                 "script": "build-my-project"
             }

@@ -15,7 +15,7 @@ describe('lib', () => {
   });
 
   describe('not nested', () => {
-    it('should update workspace.json', async () => {
+    it('should update project configuration', async () => {
       await libraryGenerator(tree, { name: libName });
 
       const workspaceJson = readJson(tree, '/workspace.json');
@@ -34,7 +34,7 @@ describe('lib', () => {
       });
       expect(workspaceJson.projects[libFileName].architect.test).toEqual({
         builder: '@nrwl/jest:jest',
-        outputs: [`coverage/libs/${libFileName}`],
+        outputs: [`{workspaceRoot}/coverage/{projectRoot}`],
         options: {
           jestConfig: `libs/${libFileName}/jest.config.ts`,
           passWithNoTests: true,
@@ -158,8 +158,8 @@ describe('lib', () => {
       expect(tsconfigJson.extends).toEqual('./tsconfig.json');
       expect(tsconfigJson.exclude).toEqual([
         'jest.config.ts',
-        '**/*.spec.ts',
-        '**/*.test.ts',
+        'src/**/*.spec.ts',
+        'src/**/*.test.ts',
       ]);
     });
 

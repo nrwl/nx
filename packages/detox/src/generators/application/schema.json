@@ -4,15 +4,15 @@
   "description": "Create Detox Configuration for the workspace.",
   "type": "object",
   "properties": {
-    "project": {
+    "appProject": {
       "type": "string",
-      "description": "The name of the frontend project to test.",
+      "description": "Name of the frontend project to be tested.",
       "$default": {
         "$source": "projectName"
       },
       "x-prompt": "What is the name of the frontend project to test?"
     },
-    "name": {
+    "e2eName": {
       "type": "string",
       "description": "Name of the E2E Project.",
       "$default": {
@@ -21,20 +21,28 @@
       },
       "x-prompt": "What name would you like to use for the E2E project?"
     },
+    "appName": {
+      "type": "string",
+      "description": "Name of the app to be tested if different from appProject"
+    },
+    "appDisplayName": {
+      "type": "string",
+      "description": "Display name of the app to be tested if different from appProject"
+    },
     "framework": {
       "type": "string",
       "description": "App framework to test",
       "enum": ["react-native", "expo"],
       "x-prompt": "What app framework should detox test?"
     },
-    "directory": {
+    "e2eDirectory": {
       "type": "string",
-      "description": "A directory where the project is placed."
+      "description": "A directory where the project is placed relative to apps directory."
     },
     "linter": {
       "description": "The tool to use for running lint checks.",
       "type": "string",
-      "enum": ["eslint", "tslint", "none"],
+      "enum": ["eslint", "none"],
       "default": "eslint"
     },
     "js": {
@@ -53,5 +61,5 @@
       "default": false
     }
   },
-  "required": ["name", "project", "framework"]
+  "required": ["e2eName", "appProject", "framework"]
 }

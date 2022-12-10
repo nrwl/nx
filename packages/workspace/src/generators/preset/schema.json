@@ -25,7 +25,7 @@
     "linter": {
       "description": "The tool to use for running lint checks.",
       "type": "string",
-      "enum": ["tslint", "eslint"],
+      "enum": ["eslint"],
       "default": "eslint"
     },
     "style": {
@@ -36,7 +36,10 @@
         "message": "Which stylesheet format would you like to use?",
         "type": "list",
         "items": [
-          { "value": "css", "label": "CSS" },
+          {
+            "value": "css",
+            "label": "CSS"
+          },
           {
             "value": "scss",
             "label": "SASS(.scss)  [ http://sass-lang.com   ]"

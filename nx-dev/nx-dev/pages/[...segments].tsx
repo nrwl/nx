@@ -2,24 +2,26 @@ import {
   PackageSchemaList,
   PackageSchemaViewer,
 } from '@nrwl/nx-dev-feature-package-schema-viewer';
+import { sortCorePackagesFirst } from '@nrwl/nx-dev/data-access-packages';
 import { DocViewer } from '@nrwl/nx-dev/feature-doc-viewer';
 import { DocumentData } from '@nrwl/nx-dev/models-document';
-import { Menu } from '@nrwl/nx-dev/models-menu';
+import { Menu, MenuItem, MenuSection } from '@nrwl/nx-dev/models-menu';
 import { PackageMetadata } from '@nrwl/nx-dev/models-package';
-import { Footer, Header } from '@nrwl/nx-dev/ui-common';
-import cx from 'classnames';
-import Router from 'next/router';
+import { DocumentationHeader, SidebarContainer } from '@nrwl/nx-dev/ui-common';
 import type { GetStaticPaths, GetStaticProps } from 'next';
-import { useCallback, useEffect, useState } from 'react';
-
-import { FourOhFour } from './404';
+import { useRouter } from 'next/router';
+import { useEffect, useRef } from 'react';
 import {
   nxCloudDocumentsApi,
   nxCloudMenuApi,
   nxDocumentsApi,
   nxMenuApi,
+  nxRecipesApi,
+  nxRecipesMenuApi,
   packagesApi,
 } from '../lib/api';
+import { useNavToggle } from '../lib/navigation-toggle.effect';
+import { FourOhFour } from './404';
 
 type DocumentationPageProps =
   | { statusCode: 404 }
@@ -34,82 +36,28 @@ type DocumentationPageProps =
       } | null;
     };
 
-// We may want to extract this to another lib.
-function useNavToggle() {
-  const [navIsOpen, setNavIsOpen] = useState(false);
-  const toggleNav = useCallback(() => {
-    setNavIsOpen(!navIsOpen);
-  }, [navIsOpen, setNavIsOpen]);
-
-  useEffect(() => {
-    if (!navIsOpen) return;
-
-    function handleRouteChange() {
-      setNavIsOpen(false);
-    }
-
-    Router.events.on('routeChangeComplete', handleRouteChange);
-
-    return () => Router.events.off('routeChangeComplete', handleRouteChange);
-  }, [navIsOpen, setNavIsOpen]);
-
-  return { navIsOpen, toggleNav };
-}
-
-function SidebarButton(props: { onClick: () => void; navIsOpen: boolean }) {
-  return (
-    <button
-      type="button"
-      className="bg-green-nx-base fixed bottom-4 right-4 z-50 block h-16 w-16 rounded-full text-white shadow-sm lg:hidden"
-      onClick={props.onClick}
-    >
-      <span className="sr-only">Open site navigation</span>
-      <svg
-        width="24"
-        height="24"
-        fill="none"
-        className={cx(
-          'absolute top-1/2 left-1/2 -mt-3 -ml-3 transform transition duration-300',
-          {
-            'scale-80 opacity-0': props.navIsOpen,
-          }
-        )}
-      >
-        <path
-          d="M4 7h16M4 14h16M4 21h16"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-      <svg
-        width="24"
-        height="24"
-        fill="none"
-        className={cx(
-          'absolute top-1/2 left-1/2 -mt-3 -ml-3 transform transition duration-300',
-          {
-            'scale-80 opacity-0': !props.navIsOpen,
-          }
-        )}
-      >
-        <path
-          d="M6 18L18 6M6 6l12 12"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    </button>
-  );
-}
-
 export default function DocumentationPage(
   props: DocumentationPageProps
 ): JSX.Element {
+  const router = useRouter();
   const { toggleNav, navIsOpen } = useNavToggle();
+  const wrapperElement = useRef(null);
+
+  useEffect(() => {
+    const handleRouteChange = (url: string) => {
+      if (url.includes('#')) return;
+      if (!wrapperElement) return;
+
+      (wrapperElement as any).current.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: 'smooth',
+      });
+    };
+
+    router.events.on('routeChangeComplete', handleRouteChange);
+    return () => router.events.off('routeChangeComplete', handleRouteChange);
+  }, [router, wrapperElement]);
 
   if (props.statusCode === 404) {
     return <FourOhFour />;
@@ -117,42 +65,58 @@ export default function DocumentationPage(
 
   const { menu, document, pkg, schemaRequest } = props;
 
-  const vm: { entryComponent: JSX.Element } = {
-    entryComponent: (
-      <DocViewer
-        document={document || ({} as any)}
-        menu={{
-          sections: menu.sections.filter((x) => x.id !== 'official-packages'),
-        }}
-        toc={null}
-        navIsOpen={navIsOpen}
-      />
-    ),
+  const vm: { entryComponent: JSX.Element; menu: Menu } = {
+    entryComponent: <DocViewer document={document || ({} as any)} toc={null} />,
+    menu: {
+      sections: menu.sections.filter((x) => x.id !== 'official-packages'),
+    },
   };
 
   if (!!pkg) {
-    vm.entryComponent = <PackageSchemaList pkg={pkg} />;
-  }
+    const reference: MenuSection | null =
+      menu.sections.find((x) => x.id === 'official-packages') ?? null;
+    if (!reference)
+      throw new Error('Could not find menu section for "official-packages".');
+    vm.menu = {
+      sections: sortCorePackagesFirst<MenuItem>(reference.itemList).map(
+        (x) => ({ ...x, hideSectionHeader: false })
+      ),
+    };
 
-  if (!!pkg && !!schemaRequest) {
-    vm.entryComponent = (
+    vm.entryComponent = !!schemaRequest ? (
       <PackageSchemaViewer
         schemaRequest={{
           ...schemaRequest,
           pkg,
         }}
       />
+    ) : (
+      <PackageSchemaList navIsOpen={navIsOpen} menu={vm.menu} pkg={pkg} />
     );
   }
 
   return (
     <>
-      <Header isDocViewer={true} />
-      <main id="main" role="main">
-        {vm.entryComponent}
-        {!pkg && <SidebarButton onClick={toggleNav} navIsOpen={navIsOpen} />}
-      </main>
-      {!navIsOpen ? <Footer /> : null}
+      <div id="shell" className="flex h-full flex-col">
+        <div className="w-full flex-shrink-0">
+          <DocumentationHeader isNavOpen={navIsOpen} toggleNav={toggleNav} />
+        </div>
+        <main
+          id="main"
+          role="main"
+          className="flex h-full flex-1 overflow-y-hidden"
+        >
+          <SidebarContainer menu={vm.menu} navIsOpen={navIsOpen} />
+          <div
+            ref={wrapperElement}
+            id="wrapper"
+            data-testid="wrapper"
+            className="relative flex flex-grow flex-col items-stretch justify-start overflow-y-scroll"
+          >
+            {vm.entryComponent}
+          </div>
+        </main>
+      </div>
     </>
   );
 }
@@ -168,6 +132,10 @@ export const getStaticProps: GetStaticProps = async ({
   if (params.segments[0] === 'nx-cloud') {
     documentsApi = nxCloudDocumentsApi;
     menuApi = nxCloudMenuApi;
+  }
+  if (params.segments[0] === 'recipes') {
+    documentsApi = nxRecipesApi;
+    menuApi = nxRecipesMenuApi;
   }
 
   const menu = menuApi.getMenu();
@@ -250,6 +218,7 @@ export const getStaticPaths: GetStaticPaths = () => {
     paths: [
       ...packagesApi.getStaticPackagePaths(),
       ...nxDocumentsApi.getStaticDocumentPaths(),
+      ...nxRecipesApi.getStaticDocumentPaths(),
       ...nxCloudDocumentsApi.getStaticDocumentPaths(),
     ],
     fallback: 'blocking',

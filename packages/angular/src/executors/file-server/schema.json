@@ -1,6 +1,8 @@
 {
+  "version": 2,
+  "outputCapture": "direct-nodejs",
   "title": "File Server",
-  "description": "Serve a web application from a folder.",
+  "description": "Serves a static web application from a folder.",
   "type": "object",
   "cli": "nx",
   "properties": {
@@ -68,5 +70,6 @@
     }
   },
   "additionalProperties": false,
-  "required": ["buildTarget"]
+  "required": ["buildTarget"],
+  "examplesFile": "../../../docs/file-server-examples.md"
 }

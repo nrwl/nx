@@ -1,5 +1,3 @@
-![Express Logo](/shared/express-logo.png)
-
 [Express](https://expressjs.com/) is mature, minimal, and an open source web framework for making web applications and
 apis.
 
@@ -15,13 +13,22 @@ To create a new workspace with Express, run the following command:
 
 Install the express plugin
 
+{% tabs %}
+{%tab label="npm"%}
+
 ```shell
-npm install --save-dev @nrwl/express
+npm i --save-dev @nrwl/express
 ```
+
+{% /tab %}
+{%tab label="yarn"%}
 
 ```shell
 yarn add --dev @nrwl/express
 ```
+
+{% /tab %}
+{% /tabs %}
 
 ## Creating Applications
 

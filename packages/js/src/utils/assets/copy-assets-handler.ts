@@ -1,4 +1,3 @@
-import type { Event } from '@parcel/watcher';
 import * as minimatch from 'minimatch';
 import * as path from 'path';
 import * as fse from 'fs-extra';
@@ -6,6 +5,7 @@ import ignore, { Ignore } from 'ignore';
 import * as fg from 'fast-glob';
 import { AssetGlob } from '@nrwl/workspace/src/utilities/assets';
 import { logger } from '@nrwl/devkit';
+import { ChangedFile, daemonClient } from 'nx/src/daemon/client/client';
 
 export type FileEventType = 'create' | 'update' | 'delete';
 
@@ -36,7 +36,9 @@ export const defaultFileEventHandler = (events: FileEvent[]) => {
   dirs.forEach((d) => fse.ensureDirSync(d));
   events.forEach((event) => {
     if (event.type === 'create' || event.type === 'update') {
-      fse.copyFileSync(event.src, event.dest);
+      if (fse.lstatSync(event.src).isFile()) {
+        fse.copyFileSync(event.src, event.dest);
+      }
     } else if (event.type === 'delete') {
       fse.removeSync(event.dest);
     } else {
@@ -136,23 +138,28 @@ export class CopyAssetsHandler {
     );
   }
 
-  async watchAndProcessOnAssetChange(): Promise<() => Promise<void>> {
-    const watcher = await import('@parcel/watcher');
-    const subscription = await watcher.subscribe(
-      this.rootDir,
-      (err, events) => {
-        if (err) {
+  async watchAndProcessOnAssetChange(): Promise<() => void> {
+    const unregisterFileWatcher = await daemonClient.registerFileWatcher(
+      {
+        watchProjects: 'all',
+        includeGlobalWorkspaceFiles: true,
+      },
+      (err, data) => {
+        if (err === 'closed') {
+          logger.error(`Watch error: Daemon closed the connection`);
+          process.exit(1);
+        } else if (err) {
           logger.error(`Watch error: ${err?.message ?? 'Unknown'}`);
         } else {
-          this.processEvents(events);
+          this.processEvents(data.changedFiles);
         }
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => unregisterFileWatcher();
   }
 
-  private async processEvents(events: Event[]): Promise<void> {
+  private async processEvents(events: ChangedFile[]): Promise<void> {
     const fileEvents: FileEvent[] = [];
     for (const event of events) {
       const pathFromRoot = path.relative(this.rootDir, event.path);

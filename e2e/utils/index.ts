@@ -4,6 +4,7 @@ import {
   ProjectConfiguration,
   ProjectsConfigurations,
   readJsonFile,
+  workspaceRoot,
 } from '@nrwl/devkit';
 import { angularCliVersion } from '@nrwl/workspace/src/utils/versions';
 import { ChildProcess, exec, execSync, ExecSyncOptions } from 'child_process';
@@ -35,7 +36,8 @@ export function getPublishedVersion(): string {
   process.env.PUBLISHED_VERSION =
     process.env.PUBLISHED_VERSION ||
     // read version of built nx package
-    readJsonFile(`./build/packages/nx/package.json`).version ||
+    readJsonFile(join(workspaceRoot, `./build/packages/nx/package.json`))
+      .version ||
     // fallback to latest if built nx package is missing
     'latest';
   return process.env.PUBLISHED_VERSION as string;
@@ -72,6 +74,13 @@ export const e2eRoot = isCI
   ? dirSync({ prefix: 'nx-e2e-' }).name
   : '/tmp/nx-e2e';
 
+function isVerbose() {
+  return (
+    process.env.NX_VERBOSE_LOGGING === 'true' ||
+    process.argv.includes('--verbose')
+  );
+}
+
 export const e2eCwd = `${e2eRoot}/${currentCli()}`;
 ensureDirSync(e2eCwd);
 
@@ -89,10 +98,17 @@ export function updateProjectConfig(
   projectName: string,
   callback: (c: ProjectConfiguration) => ProjectConfiguration
 ) {
-  const root = readJson(workspaceConfigName()).projects[projectName];
+  const workspace = readResolvedWorkspaceConfiguration();
+  const root = workspace.projects[projectName].root;
   const path = join(root, 'project.json');
   const current = readJson(path);
   updateFile(path, JSON.stringify(callback(current), null, 2));
+}
+
+export function readResolvedWorkspaceConfiguration() {
+  process.env.NX_PROJECT_GLOB_CACHE = 'false';
+  const ws = new Workspaces(tmpProjPath());
+  return ws.readWorkspaceConfiguration();
 }
 
 /**
@@ -109,18 +125,22 @@ export function readWorkspaceConfig(): Omit<
 }
 
 export function readProjectConfig(projectName: string): ProjectConfiguration {
-  const root = readJson(workspaceConfigName()).projects[projectName];
+  const root = readResolvedWorkspaceConfiguration().projects[projectName].root;
   const path = join(root, 'project.json');
   return readJson(path);
 }
 
-export function createNonNxProjectDirectory(name = uniq('proj')) {
+export function createNonNxProjectDirectory(
+  name = uniq('proj'),
+  addWorkspaces = true
+) {
   projName = name;
   ensureDirSync(tmpProjPath());
   createFile(
     'package.json',
     JSON.stringify({
       name,
+      workspaces: addWorkspaces ? ['packages/*'] : undefined,
     })
   );
 }
@@ -182,8 +202,7 @@ export function runCreateWorkspace(
 
   const create = execSync(command, {
     cwd,
-    // stdio: [0, 1, 2],
-    stdio: ['pipe', 'pipe', 'pipe'],
+    stdio: isVerbose() ? 'inherit' : 'pipe',
     env: { CI: 'true', ...process.env },
     encoding: 'utf-8',
   });
@@ -226,7 +245,6 @@ export function runCreatePlugin(
 
   const create = execSync(command, {
     cwd: e2eCwd,
-    //stdio: [0, 1, 2],
     stdio: ['pipe', 'pipe', 'pipe'],
     env: process.env,
     encoding: 'utf-8',
@@ -237,7 +255,8 @@ export function runCreatePlugin(
 export function packageInstall(
   pkg: string,
   projName?: string,
-  version = getPublishedVersion()
+  version = getPublishedVersion(),
+  mode: 'dev' | 'prod' = 'dev'
 ) {
   const cwd = projName ? `${e2eCwd}/${projName}` : tmpProjPath();
   const pm = getPackageManagerCommand({ path: cwd });
@@ -245,13 +264,15 @@ export function packageInstall(
     .split(' ')
     .map((pgk) => `${pgk}@${version}`)
     .join(' ');
-  const install = execSync(`${pm.addDev} ${pkgsWithVersions}`, {
-    cwd,
-    // stdio: [0, 1, 2],
-    stdio: ['pipe', 'pipe', 'pipe'],
-    env: process.env,
-    encoding: 'utf-8',
-  });
+  const install = execSync(
+    `${mode === 'dev' ? pm.addDev : pm.addProd} ${pkgsWithVersions}`,
+    {
+      cwd,
+      stdio: ['pipe', 'pipe', 'pipe'],
+      env: process.env,
+      encoding: 'utf-8',
+    }
+  );
   return install ? install.toString() : '';
 }
 
@@ -268,6 +289,7 @@ export function runNgNew(
 
   return execSync(command, {
     cwd: e2eCwd,
+    stdio: ['pipe', 'pipe', 'pipe'],
     env: process.env,
     encoding: 'utf-8',
   }).toString();
@@ -319,6 +341,7 @@ export function newProject({
         `@nrwl/rollup`,
         `@nrwl/react`,
         `@nrwl/storybook`,
+        `@nrwl/vite`,
         `@nrwl/web`,
         `@nrwl/webpack`,
         `@nrwl/react-native`,
@@ -328,7 +351,10 @@ export function newProject({
 
       if (useBackupProject) {
         // stop the daemon
-        execSync('nx reset', { cwd: `${e2eCwd}/proj` });
+        execSync('nx reset', {
+          cwd: `${e2eCwd}/proj`,
+          stdio: isVerbose() ? 'inherit' : 'pipe',
+        });
 
         moveSync(`${e2eCwd}/proj`, `${tmpBackupProjPath()}`);
       }
@@ -391,7 +417,36 @@ export async function cleanupProject(opts?: RunCmdOpts) {
 }
 
 export function runCypressTests() {
-  return process.env.NX_E2E_RUN_CYPRESS === 'true';
+  if (process.env.NX_E2E_RUN_CYPRESS === 'true') {
+    ensureCypressInstallation();
+    return true;
+  }
+  return false;
+}
+
+export function ensureCypressInstallation() {
+  let cypressVerified = true;
+  try {
+    const r = execSync('npx cypress verify', {
+      stdio: isVerbose() ? 'inherit' : 'pipe',
+      encoding: 'utf-8',
+      cwd: tmpProjPath(),
+    });
+    if (r.indexOf('Verified Cypress!') === -1) {
+      cypressVerified = false;
+    }
+  } catch {
+    cypressVerified = false;
+  } finally {
+    if (!cypressVerified) {
+      e2eConsoleLogger('Cypress was not verified. Installing Cypress now.');
+      execSync('npx cypress install', {
+        stdio: isVerbose() ? 'inherit' : 'pipe',
+        encoding: 'utf-8',
+        cwd: tmpProjPath(),
+      });
+    }
+  }
 }
 
 export function isNotWindows() {
@@ -414,7 +469,7 @@ export function runCommandAsync(
   command: string,
   opts: RunCmdOpts = {
     silenceError: false,
-    env: undefined,
+    env: process['env'],
   }
 ): Promise<{ stdout: string; stderr: string; combinedOutput: string }> {
   return new Promise((resolve, reject) => {
@@ -424,7 +479,7 @@ export function runCommandAsync(
         cwd: tmpProjPath(),
         env: {
           CI: 'true',
-          ...(opts.env || process.env),
+          ...(opts.env || getStrippedEnvironmentVariables()),
           FORCE_COLOR: 'false',
         },
         encoding: 'utf-8',
@@ -450,12 +505,12 @@ export function runCommandUntil(
   const pm = getPackageManagerCommand();
   const p = exec(`${pm.runNx} ${command}`, {
     cwd: tmpProjPath(),
+    encoding: 'utf-8',
     env: {
       CI: 'true',
-      ...process.env,
+      ...getStrippedEnvironmentVariables(),
       FORCE_COLOR: 'false',
     },
-    encoding: 'utf-8',
   });
   return new Promise((res, rej) => {
     let output = '';
@@ -485,7 +540,7 @@ export function runCLIAsync(
   command: string,
   opts: RunCmdOpts = {
     silenceError: false,
-    env: process.env,
+    env: getStrippedEnvironmentVariables(),
     silent: false,
   }
 ): Promise<{ stdout: string; stderr: string; combinedOutput: string }> {
@@ -511,7 +566,8 @@ export function runNgAdd(
     packageInstall(packageName, undefined, version);
     return execSync(pmc.run(`ng g ${packageName}:ng-add`, command ?? ''), {
       cwd: tmpProjPath(),
-      env: { ...(opts.env || process.env) },
+      stdio: isVerbose() ? 'inherit' : 'pipe',
+      env: { ...(opts.env || getStrippedEnvironmentVariables()) },
       encoding: 'utf-8',
     })
       .toString()
@@ -541,16 +597,17 @@ export function runCLI(
 ): string {
   try {
     const pm = getPackageManagerCommand();
-    let r = stripConsoleColors(
-      execSync(`${pm.runNx} ${command}`, {
-        cwd: opts.cwd || tmpProjPath(),
-        env: { CI: 'true', ...(opts.env || process.env) },
-        encoding: 'utf-8',
-        maxBuffer: 50 * 1024 * 1024,
-      })
-    );
-    if (process.env.NX_VERBOSE_LOGGING) {
-      logInfo(`result of running: ${command}`, r);
+    const logs = execSync(`${pm.runNx} ${command}`, {
+      cwd: opts.cwd || tmpProjPath(),
+      env: { CI: 'true', ...(opts.env || getStrippedEnvironmentVariables()) },
+      encoding: 'utf-8',
+      stdio: 'pipe',
+      maxBuffer: 50 * 1024 * 1024,
+    });
+    const r = stripConsoleColors(logs);
+
+    if (isVerbose()) {
+      console.log(logs);
     }
 
     const needsMaxWorkers = /g.*(express|nest|node|web|react):app.*/;
@@ -598,7 +655,8 @@ export function runCommand(
       cwd: tmpProjPath(),
       stdio: ['pipe', 'pipe', 'pipe'],
       env: {
-        ...process.env,
+        ...getStrippedEnvironmentVariables(),
+        ...options?.env,
         FORCE_COLOR: 'false',
       },
       encoding: 'utf-8',
@@ -611,7 +669,10 @@ export function runCommand(
   } catch (e) {
     // this is intentional
     // npm ls fails if package is not found
-    return e.stdout?.toString() + e.stderr?.toString();
+    if (e.stdout || e.stderr) {
+      return e.stdout?.toString() + e.stderr?.toString();
+    }
+    throw e;
   }
 }
 
@@ -725,9 +786,9 @@ export function listFiles(dirName: string) {
   return readdirSync(tmpProjPath(dirName));
 }
 
-export function readJson(f: string): any {
+export function readJson<T extends Object = any>(f: string): T {
   const content = readFile(f);
-  return parseJson(content);
+  return parseJson<T>(content);
 }
 
 export function readFile(f: string) {
@@ -817,6 +878,8 @@ export function getPackageManagerCommand({
   runNx: string;
   runNxSilent: string;
   runUninstalledPackage: string;
+  install: string;
+  addProd: string;
   addDev: string;
   list: string;
 } {
@@ -832,6 +895,8 @@ export function getPackageManagerCommand({
       runNx: `npx nx`,
       runNxSilent: `npx nx`,
       runUninstalledPackage: `npx --yes`,
+      install: 'npm install',
+      addProd: `npm install --legacy-peer-deps`,
       addDev: `npm install --legacy-peer-deps -D`,
       list: 'npm ls --depth 10',
     },
@@ -842,6 +907,8 @@ export function getPackageManagerCommand({
       runNx: `yarn nx`,
       runNxSilent: `yarn --silent nx`,
       runUninstalledPackage: 'npx --yes',
+      install: 'yarn',
+      addProd: `yarn add`,
       addDev: `yarn add -D`,
       list: 'npm ls --depth 10',
     },
@@ -852,6 +919,8 @@ export function getPackageManagerCommand({
       runNx: `pnpm exec nx`,
       runNxSilent: `pnpm exec nx`,
       runUninstalledPackage: 'pnpm dlx',
+      install: 'pnpm i',
+      addProd: `pnpm add`,
       addDev: `pnpm add -D`,
       list: 'npm ls --depth 10',
     },
@@ -935,4 +1004,16 @@ export async function expectJestTestsToPass(
 
   const results = await runCLIAsync(`test ${name}`);
   expect(results.combinedOutput).toContain('Test Suites: 1 passed, 1 total');
+}
+
+function getStrippedEnvironmentVariables() {
+  const strippedVariables = new Set(['NX_TASK_TARGET_PROJECT']);
+  return Object.fromEntries(
+    Object.entries(process.env).filter(
+      ([key, value]) =>
+        !strippedVariables.has(key) ||
+        !key.startsWith('NX_') ||
+        key.startsWith('NX_E2E_')
+    )
+  );
 }

@@ -1,158 +1,103 @@
 import { BuilderContext, createBuilder } from '@angular-devkit/architect';
-import {
-  DevServerBuilderOptions,
-  executeDevServerBuilder,
-} from '@angular-devkit/build-angular';
 import { JsonObject } from '@angular-devkit/core';
-import {
-  joinPathFragments,
-  parseTargetString,
-  readCachedProjectGraph,
-} from '@nrwl/devkit';
-import { WebpackNxBuildCoordinationPlugin } from '@nrwl/webpack/src/plugins/webpack-nx-build-coordination-plugin';
-import {
-  calculateProjectDependencies,
-  createTmpTsConfig,
-  DependentBuildableProjectNode,
-} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
-import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
+import { joinPathFragments } from '@nrwl/devkit';
 import { existsSync } from 'fs';
-import { isNpmProject } from 'nx/src/project-graph/operators';
-import { merge } from 'webpack-merge';
-import { resolveCustomWebpackConfig } from '../utilities/webpack';
-import { normalizeOptions } from './lib';
-import type { Schema } from './schema';
+import { Observable } from 'rxjs';
+import { mergeCustomWebpackConfig } from '../utilities/webpack';
+import {
+  executeServerBuilder,
+  ServerBuilderOutput,
+} from '@angular-devkit/build-angular';
+import { Schema } from './schema';
+import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
 
-export function executeWebpackServerBuilder(
-  rawOptions: Schema,
+function buildServerApp(
+  options: Schema,
   context: BuilderContext
-) {
-  process.env.NX_TSCONFIG_PATH = joinPathFragments(
-    context.workspaceRoot,
-    'tsconfig.base.json'
-  );
-
-  const options = normalizeOptions(rawOptions);
-
-  const parsedBrowserTarget = parseTargetString(options.browserTarget);
-  const browserTargetProjectConfiguration = readCachedProjectConfiguration(
-    parsedBrowserTarget.project
-  );
-
-  const buildTarget =
-    browserTargetProjectConfiguration.targets[parsedBrowserTarget.target];
-
-  const buildTargetConfiguration = parsedBrowserTarget.configuration
-    ? buildTarget.configurations[parsedBrowserTarget.configuration]
-    : buildTarget.defaultConfiguration
-    ? buildTarget.configurations[buildTarget.defaultConfiguration]
-    : undefined;
-
-  const buildLibsFromSource =
-    options.buildLibsFromSource ??
-    buildTargetConfiguration?.buildLibsFromSource ??
-    buildTarget.options.buildLibsFromSource ??
-    true;
-
-  const customWebpackConfig: { path: string } =
-    buildTargetConfiguration?.customWebpackConfig ??
-    buildTarget.options.customWebpackConfig;
-
-  let pathToWebpackConfig: string;
+): Observable<ServerBuilderOutput> {
+  const { buildLibsFromSource, customWebpackConfig, ...delegateOptions } =
+    options;
+  // If there is a path to custom webpack config
+  // Invoke our own support for custom webpack config
   if (customWebpackConfig && customWebpackConfig.path) {
-    pathToWebpackConfig = joinPathFragments(
+    const pathToWebpackConfig = joinPathFragments(
       context.workspaceRoot,
       customWebpackConfig.path
     );
 
-    if (!existsSync(pathToWebpackConfig)) {
+    if (existsSync(pathToWebpackConfig)) {
+      return buildServerAppWithCustomWebpackConfiguration(
+        delegateOptions,
+        context,
+        pathToWebpackConfig
+      );
+    } else {
       throw new Error(
         `Custom Webpack Config File Not Found!\nTo use a custom webpack config, please ensure the path to the custom webpack file is correct: \n${pathToWebpackConfig}`
       );
     }
   }
 
-  let dependencies: DependentBuildableProjectNode[];
-  if (!buildLibsFromSource) {
-    const buildTargetTsConfigPath =
-      buildTargetConfiguration?.tsConfig ?? buildTarget.options.tsConfig;
-    const result = calculateProjectDependencies(
-      readCachedProjectGraph(),
-      context.workspaceRoot,
-      context.target.project,
-      parsedBrowserTarget.target,
-      context.target.configuration
-    );
-    dependencies = result.dependencies;
-    const updatedTsConfig = createTmpTsConfig(
-      joinPathFragments(context.workspaceRoot, buildTargetTsConfigPath),
-      context.workspaceRoot,
-      result.target.data.root,
-      dependencies
-    );
-    process.env.NX_TSCONFIG_PATH = updatedTsConfig;
+  return executeServerBuilder(delegateOptions, context);
+}
 
-    // We can't just pass the tsconfig path in memory to the angular builder
-    // function because we can't pass the build target options to it, the build
-    // targets options will be retrieved by the builder from the project
-    // configuration. Therefore, we patch the method in the context to retrieve
-    // the target options to overwrite the tsconfig path to use the generated
-    // one with the updated path mappings.
-    const originalGetTargetOptions = context.getTargetOptions;
-    context.getTargetOptions = async (target) => {
-      const options = await originalGetTargetOptions(target);
-      options.tsConfig = updatedTsConfig;
-      return options;
-    };
-  }
-
-  return executeDevServerBuilder(options as DevServerBuilderOptions, context, {
+function buildServerAppWithCustomWebpackConfiguration(
+  options: Schema,
+  context: BuilderContext,
+  pathToWebpackConfig: string
+) {
+  return executeServerBuilder(options, context as any, {
     webpackConfiguration: async (baseWebpackConfig) => {
-      if (!buildLibsFromSource) {
-        const workspaceDependencies = dependencies
-          .filter((dep) => !isNpmProject(dep.node))
-          .map((dep) => dep.node.name);
-        // default for `nx run-many` is --all projects
-        // by passing an empty string for --projects, run-many will default to
-        // run the target for all projects.
-        // This will occur when workspaceDependencies = []
-        if (workspaceDependencies.length > 0) {
-          baseWebpackConfig.plugins.push(
-            new WebpackNxBuildCoordinationPlugin(
-              `nx run-many --target=${
-                parsedBrowserTarget.target
-              } --projects=${workspaceDependencies.join(',')}`
-            )
-          );
-        }
-      }
-
-      if (!pathToWebpackConfig) {
-        return baseWebpackConfig;
-      }
-
-      const customWebpackConfiguration = resolveCustomWebpackConfig(
+      // Angular 15 auto includes code from @angular/platform-server
+      // This includes the code outside the shared scope created by ModuleFederation
+      // This code will be included in the generated code from our generators,
+      // maintaining it within the shared scope.
+      // Therefore, if the build is an MF Server build, remove the auto-includes from
+      // the base webpack config from Angular
+      let mergedConfig = await mergeCustomWebpackConfig(
+        baseWebpackConfig,
         pathToWebpackConfig,
-        buildTarget.options.tsConfig
+        options,
+        context.target
       );
-      // The extra Webpack configuration file can also export a Promise, for instance:
-      // `module.exports = new Promise(...)`. If it exports a single object, but not a Promise,
-      // then await will just resolve that object.
-      const config = await customWebpackConfiguration;
 
-      // The extra Webpack configuration file can export a synchronous or asynchronous function,
-      // for instance: `module.exports = async config => { ... }`.
-      if (typeof config === 'function') {
-        return config(
-          baseWebpackConfig,
-          buildTargetConfiguration,
-          context.target
+      if (
+        mergedConfig.plugins
+          .map((p) => p.constructor.name)
+          .includes('UniversalFederationPlugin')
+      ) {
+        mergedConfig.entry.main = mergedConfig.entry.main.filter(
+          (m) => !m.startsWith('@angular/platform-server/init')
+        );
+        mergedConfig.module.rules = mergedConfig.module.rules.filter((m) =>
+          !m.loader
+            ? true
+            : !m.loader.endsWith(
+                '@angular-devkit/build-angular/src/builders/server/platform-server-exports-loader.js'
+              )
         );
       }
 
-      return merge(baseWebpackConfig, config);
+      return mergedConfig;
     },
   });
+}
+
+export function executeWebpackServerBuilder(
+  options: Schema,
+  context: BuilderContext
+): Observable<ServerBuilderOutput> {
+  options.buildLibsFromSource ??= true;
+
+  if (!options.buildLibsFromSource) {
+    const { tsConfigPath } = createTmpTsConfigForBuildableLibs(
+      options.tsConfig,
+      context
+    );
+    options.tsConfig = tsConfigPath;
+  }
+
+  return buildServerApp(options, context);
 }
 
 export default createBuilder<JsonObject & Schema>(

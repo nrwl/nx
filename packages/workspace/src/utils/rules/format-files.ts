@@ -82,8 +82,8 @@ export function formatFiles(
 function updateWorkspaceJsonToMatchFormatVersion(host: Tree) {
   const workspaceConfigPath = workspaceConfigName(workspaceRoot);
 
-  try {
-    if (workspaceConfigPath) {
+  if (workspaceConfigPath) {
+    try {
       const workspaceJson = parseJson(
         host.read(workspaceConfigPath).toString()
       );
@@ -91,9 +91,11 @@ function updateWorkspaceJsonToMatchFormatVersion(host: Tree) {
       if (reformatted) {
         host.overwrite(workspaceConfigPath, serializeJson(reformatted));
       }
+    } catch (e) {
+      console.error(
+        `Failed to format workspace config: ${workspaceConfigPath}`
+      );
+      console.error(e);
     }
-  } catch (e) {
-    console.error(`Failed to format workspace config: ${workspaceConfigPath}`);
-    console.error(e);
   }
 }

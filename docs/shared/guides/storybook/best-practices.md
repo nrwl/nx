@@ -94,13 +94,13 @@ Setting up Storybook on Nx reflects - and takes advantage of - the [mental model
 
 In the process of setting up Storybook in your Nx workspace that we described above, you end up with one Storybook instance per project. That way, you can use your project’s Storybook targets to serve and build Storybook:
 
-```bash
+```shell
 nx storybook my-project
 ```
 
 and
 
-```bash
+```shell
 nx build-storybook my-project
 ```
 
@@ -123,7 +123,7 @@ You can think of the central Storybook container as a grouping of similar-concep
 Then, according to your use-case, you can have one central Storybook for your whole workspace, importing all the stories from all the projects. Alternatively, you can have one Storybook per "scope", which imports all the stories from projects the same scope. Or even one Storybook per application, importing all the stories of all the libraries that it is depending on. As you can see, there are many options, and you can choose the one that best suits your needs.
 
 {% callout type="note" title="Storybook Composition" %}
-In order to achieve some of the things mentioned above, you may use [Storybook Composition](/storybook/storybook-composition-setup). However, in this case, you would still need to build each project’s Storybook individually, and also deploy it individually. So in the cases where you have multiple projects, Storybook Composition would not be very efficient.
+In order to achieve some things mentioned above, you may use [Storybook Composition](/storybook/storybook-composition-setup). However, in this case, you would still need to build each project’s Storybook individually, and also deploy it individually. So in the cases where you have multiple projects, Storybook Composition would not be very efficient.
 {% /callout %}
 
 Before moving on to the examples section, it could be useful to read the [Library Types](/more-concepts/library-types) documentation page and the [Grouping libraries](/more-concepts/grouping-libraries) documentation page. These could help you decide which way fits your use case better.
@@ -132,9 +132,9 @@ Before moving on to the examples section, it could be useful to read the [Librar
 
 You can check out the following examples (recipes) to see publishing strategies for Storybook in Nx:
 
-- [One main Storybook instance for all projects](/recipe/one-storybook-for-all)
-- [One Storybook instance per scope](/recipe/one-storybook-per-scope)
-- [One main Storybook instance using Storybook Composition](/recipe/one-storybook-with-composition)
+- [One main Storybook instance for all projects](/recipes/storybook/one-storybook-for-all)
+- [One Storybook instance per scope](/recipes/storybook/one-storybook-per-scope)
+- [One main Storybook instance using Storybook Composition](/recipes/storybook/one-storybook-with-composition)
 
 ## Conclusion
 

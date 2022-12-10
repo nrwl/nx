@@ -24,5 +24,6 @@
       "type": "boolean",
       "description": "Skip formatting the workspace after the generator completes."
     }
-  }
+  },
+  "examplesFile": "../../../docs/scam-to-standalone-examples.md"
 }

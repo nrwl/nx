@@ -1,4 +1,5 @@
 {
+  "name": "rollup",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/rollup",
   "projectType": "library",
@@ -9,7 +10,7 @@
         "jestConfig": "packages/rollup/jest.config.ts",
         "passWithNoTests": true
       },
-      "outputs": ["coverage/packages/rollup"]
+      "outputs": ["{workspaceRoot}/coverage/packages/rollup"]
     },
     "build-base": {
       "executor": "@nrwl/js:tsc",
@@ -57,7 +58,7 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["build/packages/rollup"],
+      "outputs": ["{workspaceRoot}/build/packages/rollup"],
       "options": {
         "command": "node ./scripts/copy-readme.js rollup"
       }

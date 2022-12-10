@@ -16,7 +16,7 @@ describe('@nrwl/linter:workspace-rules-project', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it('should add lint project files to lint inputs', async () => {
@@ -76,6 +76,7 @@ describe('@nrwl/linter:workspace-rules-project', () => {
       .toMatchInlineSnapshot(`
       Object {
         "$schema": "../../node_modules/nx/schemas/project-schema.json",
+        "name": "eslint-rules",
         "root": "tools/eslint-rules",
         "sourceRoot": "tools/eslint-rules",
         "targets": Object {
@@ -86,7 +87,7 @@ describe('@nrwl/linter:workspace-rules-project', () => {
               "passWithNoTests": true,
             },
             "outputs": Array [
-              "coverage/tools/eslint-rules",
+              "{workspaceRoot}/coverage/{projectRoot}",
             ],
           },
         },

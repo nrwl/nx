@@ -181,6 +181,11 @@ export class Cache {
   }
 
   private async copy(src: string, destination: string): Promise<void> {
+    // 'cp -a /path/dir/ dest/' operates differently to 'cp -a /path/dir dest/'
+    // --> which means actual build works but subsequent populate from cache (using cp -a) does not
+    // --> the fix is to remove trailing slashes to ensure consistent & expected behaviour
+    src = src.replace(/[\/\\]$/, '');
+
     if (this.useFsExtraToCopyAndRemove) {
       return copy(src, destination);
     }

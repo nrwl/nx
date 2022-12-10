@@ -9,34 +9,34 @@ Prints information about the Nx Daemon process or starts a daemon process
 
 ## Usage
 
-```bash
+```terminal
 nx daemon
 ```
 
-Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpx nx`.
+Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpm nx`.
 
 ## Options
 
 ### help
 
-Type: boolean
+Type: `boolean`
 
 Show help
 
 ### start
 
-Type: boolean
+Type: `boolean`
 
-Default: false
+Default: `false`
 
 ### stop
 
-Type: boolean
+Type: `boolean`
 
-Default: false
+Default: `false`
 
 ### version
 
-Type: boolean
+Type: `boolean`
 
 Show version number

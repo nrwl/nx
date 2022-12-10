@@ -1,4 +1,5 @@
 {
+  "name": "create-nx-workspace",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/create-nx-workspace",
   "projectType": "library",
@@ -9,7 +10,7 @@
         "jestConfig": "packages/create-nx-workspace/jest.config.ts",
         "passWithNoTests": true
       },
-      "outputs": ["coverage/packages/create-nx-workspace"]
+      "outputs": ["{workspaceRoot}/coverage/packages/create-nx-workspace"]
     },
     "build-base": {
       "executor": "@nrwl/js:tsc",
@@ -57,7 +58,7 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["build/packages/create-nx-workspace"],
+      "outputs": ["{workspaceRoot}/build/packages/create-nx-workspace"],
       "options": {
         "commands": [
           {
@@ -89,5 +90,14 @@
       "outputs": ["{options.outputFile}"]
     }
   },
-  "implicitDependencies": ["workspace"]
+  "implicitDependencies": [
+    "workspace",
+    "js",
+    "react",
+    "expo",
+    "next",
+    "angular",
+    "nest",
+    "express"
+  ]
 }

@@ -4,7 +4,7 @@ import {
   TypeScriptCompilationOptions,
 } from '@nrwl/workspace/src/utilities/typescript/compilation';
 import type { Diagnostic } from 'typescript';
-import { createAsyncIterable } from '../create-async-iterable/create-async-iteratable';
+import { createAsyncIterable } from '@nrwl/devkit/src/utils/async-iterable';
 import { NormalizedExecutorOptions } from '../schema';
 
 const TYPESCRIPT_FOUND_N_ERRORS_WATCHING_FOR_FILE_CHANGES = 6194;
@@ -16,33 +16,58 @@ function getErrorCountFromMessage(messageText: string) {
   return Number.parseInt(ERROR_COUNT_REGEX.exec(messageText)[1]);
 }
 
-export async function* compileTypeScriptFiles(
+export interface TypescriptCompilationResult {
+  success: boolean;
+  outfile: string;
+}
+
+export function compileTypeScriptFiles(
   normalizedOptions: NormalizedExecutorOptions,
   tscOptions: TypeScriptCompilationOptions,
   postCompilationCallback: () => void | Promise<void>
-) {
+): {
+  iterator: AsyncIterable<TypescriptCompilationResult>;
+  close: () => void | Promise<void>;
+} {
   const getResult = (success: boolean) => ({
     success,
     outfile: normalizedOptions.mainOutputPath,
   });
 
-  return yield* createAsyncIterable<{ success: boolean; outfile: string }>(
-    async ({ next, done }) => {
-      if (normalizedOptions.watch) {
-        compileTypeScriptWatcher(tscOptions, async (d: Diagnostic) => {
-          if (d.code === TYPESCRIPT_FOUND_N_ERRORS_WATCHING_FOR_FILE_CHANGES) {
-            await postCompilationCallback();
-            next(
-              getResult(getErrorCountFromMessage(d.messageText as string) === 0)
-            );
-          }
-        });
-      } else {
-        const { success } = compileTypeScript(tscOptions);
-        await postCompilationCallback();
-        next(getResult(success));
-        done();
+  let tearDown: (() => void) | undefined;
+
+  return {
+    iterator: createAsyncIterable<TypescriptCompilationResult>(
+      async ({ next, done }) => {
+        if (normalizedOptions.watch) {
+          const host = compileTypeScriptWatcher(
+            tscOptions,
+            async (d: Diagnostic) => {
+              if (
+                d.code === TYPESCRIPT_FOUND_N_ERRORS_WATCHING_FOR_FILE_CHANGES
+              ) {
+                await postCompilationCallback();
+                next(
+                  getResult(
+                    getErrorCountFromMessage(d.messageText as string) === 0
+                  )
+                );
+              }
+            }
+          );
+
+          tearDown = () => {
+            host.close();
+            done();
+          };
+        } else {
+          const { success } = compileTypeScript(tscOptions);
+          await postCompilationCallback();
+          next(getResult(success));
+          done();
+        }
       }
-    }
-  );
+    ),
+    close: () => tearDown?.(),
+  };
 }

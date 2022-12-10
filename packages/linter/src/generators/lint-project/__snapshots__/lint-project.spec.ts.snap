@@ -73,16 +73,3 @@ exports[`@nrwl/linter:lint-project --linter eslint should generate a eslint conf
 }
 "
 `;
-
-exports[`@nrwl/linter:lint-project --linter tslint should generate a tslint config 1`] = `
-"{
-  \\"extends\\": \\"../../tslint.json\\",
-  \\"linterOptions\\": {
-    \\"exclude\\": [
-      \\"!**/*\\"
-    ]
-  },
-  \\"rules\\": {}
-}
-"
-`;

@@ -5,12 +5,16 @@ on:
     - cron: "0 0 * * *"
   workflow_dispatch:
 
+permissions: {}
 jobs:
   audit:
+    permissions:
+      contents: read  #  to fetch code (actions/checkout)
+
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Run a security audit
       run: npx audit-ci --critical --report-type summary

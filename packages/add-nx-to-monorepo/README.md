@@ -17,6 +17,6 @@ Simply run: `npx add-nx-to-monorepo` in your monorepo.
 
 ## Learn More
 
-- [Guide: Add Nx to Lerna / Yarn / PNPM / NPM Workspaces](/recipe/adding-to-monorepo#adding-nx-to-lernayarnpnpmnpm-workspace)
+- [Guide: Add Nx to Lerna / Yarn / PNPM / NPM Workspaces](/recipes/adopting-nx/adding-to-monorepo#adding-nx-to-lernayarnpnpmnpm-workspace)
 - [Video: https://youtu.be/Dq2ftPf3sn4]
 - See [https://github.com/nrwl/nx](https://github.com/nrwl/nx) to learn more about Nx.

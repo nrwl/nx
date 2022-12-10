@@ -1,4 +1,5 @@
 {
+  "name": "linter",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/linter",
   "projectType": "library",
@@ -9,7 +10,7 @@
         "jestConfig": "packages/linter/jest.config.ts",
         "passWithNoTests": true
       },
-      "outputs": ["coverage/packages/linter"]
+      "outputs": ["{workspaceRoot}/coverage/packages/linter"]
     },
     "build-base": {
       "executor": "@nrwl/js:tsc",
@@ -57,7 +58,7 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["build/packages/linter"],
+      "outputs": ["{workspaceRoot}/build/packages/linter"],
       "options": {
         "command": "node ./scripts/copy-readme.js linter"
       }

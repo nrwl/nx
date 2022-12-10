@@ -1,12 +1,26 @@
-import type { Tree } from '@nrwl/devkit';
+import { joinPathFragments, Tree } from '@nrwl/devkit';
 
-const eslintFileList = ['.eslintrc.json', '.eslintrc.js'];
+export const eslintConfigFileWhitelist = [
+  '.eslintrc',
+  '.eslintrc.js',
+  '.eslintrc.cjs',
+  '.eslintrc.yaml',
+  '.eslintrc.yml',
+  '.eslintrc.json',
+  'eslint.config.js', // new format that requires `ESLINT_USE_FLAT_CONFIG=true`
+];
 
-export function findEslintFile(tree: Tree): string | null {
-  for (const file of eslintFileList) {
-    if (tree.exists(file)) {
+export const baseEsLintConfigFile = '.eslintrc.base.json';
+
+export function findEslintFile(tree: Tree, projectRoot = ''): string | null {
+  if (projectRoot === '' && tree.exists(baseEsLintConfigFile)) {
+    return baseEsLintConfigFile;
+  }
+  for (const file of eslintConfigFileWhitelist) {
+    if (tree.exists(joinPathFragments(projectRoot, file))) {
       return file;
     }
   }
+
   return null;
 }

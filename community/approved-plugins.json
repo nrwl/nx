@@ -1,5 +1,15 @@
 [
   {
+    "name": "@nxkit/playwright",
+    "description": "The Playwright plugin allows your workspace to use the power of Playwright end-to-end testing",
+    "url": "https://github.com/nxkit/nxkit"
+  },
+  {
+    "name": "@nxkit/style-dictionary",
+    "description": "Nx plugin to generate and build Style Dictionary projects inside your Nx workspace",
+    "url": "https://github.com/nxkit/nxkit"
+  },
+  {
     "name": "nx-plugins",
     "description": "Nx plugin integrations with ESBuild / Vite / Snowpack / Prisma, with derived ESBuild / Snowpack / ... plugins.",
     "url": "https://nx-plugins.netlify.app/"
@@ -85,11 +95,6 @@
     "url": "https://github.com/FabianGosebrink/nx-protractor-to-cypress"
   },
   {
-    "name": "@nx-tools/nx-docker",
-    "description": "Nx plugin to build docker images of your affected apps",
-    "url": "https://github.com/gperdomor/nx-tools/tree/main/packages/nx-docker"
-  },
-  {
     "name": "@angular-custom-builders/lite-serve",
     "description": "Nx plugin to run the e2e test on an existing dist folder",
     "url": "https://github.com/mauriziovitale/angular-plugins/tree/master/libs/lite-serve"
@@ -113,6 +118,11 @@
     "name": "@twittwer/compodoc",
     "description": "Nx Plugin to integrate the generation of documentation with Compodoc in the Nx workflow",
     "url": "https://github.com/twittwer/nx-tools/tree/master/libs/compodoc#readme"
+  },
+  {
+    "name": "@enio.ai/typedoc",
+    "description": "typedoc is a transparent wrapper plugin for Nx workspaces to quickly setup documentation automation on your projects using typedoc.",
+    "url": "https://github.com/enio-ireland/enio/tree/develop/packages/typedoc#readme"
   },
   {
     "name": "@nxext/svelte",
@@ -297,7 +307,7 @@
   {
     "name": "@diogovcs/graphql-mesh",
     "description": "Nx plugin to add GraphQL Mesh integration to Nx Workspace.",
-    "url": "https://github.com/DiogoVCS/nx-graphql-mesh"
+    "url": "https://github.com/DiogoVCS/nx-workspace-plugins"
   },
   {
     "name": "@computas/nx-yarn",
@@ -318,5 +328,30 @@
     "name": "@nxrocks/nx-micronaut",
     "description": "Nx plugin to generate, run, package, build (and more) Micronaut projects inside your Nx workspace",
     "url": "https://github.com/tinesoft/nxrocks/tree/master/packages/nx-micronaut"
+  },
+  {
+    "name": "@koliveira15/nx-sonarqube",
+    "description": "Nx plugin that analyses projects using SonarQube / SonarCloud.",
+    "url": "https://github.com/koliveira15/nx-sonarqube"
+  },
+  {
+    "name": "@mands/nx-playwright",
+    "description": "The Playwright plugin allows your workspace to use the power of Playwright end-to-end testing using a native runner.",
+    "url": "https://github.com/marksandspencer/nx-plugins/tree/main/packages/nx-playwright"
+  },
+  {
+    "name": "@diogovcs/stryker-mutator",
+    "description": "Nx plugin to add Stryker Mutator mutation tests to the Nx Workspace.",
+    "url": "https://github.com/DiogoVCS/nx-workspace-plugins"
+  },
+  {
+    "name": "@spaceribs/nx-web-ext",
+    "description": "Nx plugin that allows you to build, test and deploy web extensions.",
+    "url": "https://github.com/spaceribs/spaceribs/tree/main/packages/nx-web-ext"
+  },
+  {
+    "name": "@nx-tools/nx-container",
+    "description": "Nx plugin to build OCI containers with Docker, Podman or Kaniko.",
+    "url": "https://github.com/gperdomor/nx-tools/tree/main/packages/nx-container"
   }
 ]

@@ -1,13 +1,15 @@
 import { UnitTestRunner } from '../../utils/test-runners';
 import { Linter } from '@nrwl/linter';
 
-type AngularLinter = Exclude<Linter, Linter.TsLint>;
-
 export interface Schema {
   name: string;
   addTailwind?: boolean;
   skipFormat?: boolean;
+  /**
+   * @deprecated Use `simpleName` instead. It will be removed in v16.
+   */
   simpleModuleName?: boolean;
+  simpleName?: boolean;
   addModuleSpec?: boolean;
   directory?: string;
   sourceDir?: string;
@@ -21,16 +23,15 @@ export interface Schema {
   prefix?: string;
   routing?: boolean;
   lazy?: boolean;
-  parentModule?: string;
+  parent?: string;
   tags?: string;
   strict?: boolean;
-  linter?: AngularLinter;
+  linter?: Linter;
   unitTestRunner?: UnitTestRunner;
   compilationMode?: 'full' | 'partial';
   setParserOptionsProject?: boolean;
   skipModule?: boolean;
   skipPackageJson?: boolean;
-  skipPostInstall?: boolean;
   standalone?: boolean;
   displayBlock?: boolean;
   inlineStyle?: boolean;

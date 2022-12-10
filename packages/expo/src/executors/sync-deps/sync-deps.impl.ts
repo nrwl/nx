@@ -3,9 +3,9 @@ import * as chalk from 'chalk';
 import {
   ExecutorContext,
   logger,
+  ProjectGraph,
   readJsonFile,
   writeJsonFile,
-  createProjectGraphAsync,
 } from '@nrwl/devkit';
 
 import { findAllNpmDependencies } from '../../utils/find-all-npm-dependencies';
@@ -23,7 +23,18 @@ export default async function* syncDepsExecutor(
   const projectRoot = context.workspace.projects[context.projectName].root;
   displayNewlyAddedDepsMessage(
     context.projectName,
-    await syncDeps(context.projectName, projectRoot, options.include)
+    await syncDeps(
+      context.projectName,
+      projectRoot,
+      context.root,
+      context.projectGraph,
+      typeof options.include === 'string'
+        ? options.include.split(',')
+        : options.include,
+      typeof options.exclude === 'string'
+        ? options.exclude.split(',')
+        : options.exclude
+    )
   );
 
   yield { success: true };
@@ -32,14 +43,15 @@ export default async function* syncDepsExecutor(
 export async function syncDeps(
   projectName: string,
   projectRoot: string,
-  include?: string
+  workspaceRoot: string,
+  projectGraph: ProjectGraph,
+  include: string[] = [],
+  exclude: string[] = []
 ): Promise<string[]> {
-  const graph = await createProjectGraphAsync();
-  const npmDeps = findAllNpmDependencies(graph, projectName);
-  const packageJsonPath = join(projectRoot, 'package.json');
+  let npmDeps = findAllNpmDependencies(projectGraph, projectName);
+  const packageJsonPath = join(workspaceRoot, projectRoot, 'package.json');
   const packageJson = readJsonFile(packageJsonPath);
   const newDeps = [];
-  const includeDeps = include?.split(',');
   let updated = false;
 
   if (!packageJson.dependencies) {
@@ -47,8 +59,11 @@ export async function syncDeps(
     updated = true;
   }
 
-  if (includeDeps) {
-    npmDeps.push(...includeDeps);
+  if (include && include.length) {
+    npmDeps.push(...include);
+  }
+  if (exclude && exclude.length) {
+    npmDeps = npmDeps.filter((dep) => !exclude.includes(dep));
   }
 
   npmDeps.forEach((dep) => {

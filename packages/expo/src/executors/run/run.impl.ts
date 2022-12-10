@@ -28,7 +28,12 @@ export default async function* runExecutor(
   if (options.sync) {
     displayNewlyAddedDepsMessage(
       context.projectName,
-      await syncDeps(context.projectName, projectRoot)
+      await syncDeps(
+        context.projectName,
+        projectRoot,
+        context.root,
+        context.projectGraph
+      )
     );
   }
 
@@ -50,7 +55,7 @@ function runCliRun(
 ) {
   return new Promise((resolve, reject) => {
     childProcess = fork(
-      join(workspaceRoot, './node_modules/expo-cli/bin/expo.js'),
+      join(workspaceRoot, './node_modules/@expo/cli/build/bin/cli'),
       ['run:' + options.platform, ...createRunOptions(options)],
       {
         cwd: projectRoot,
@@ -77,7 +82,11 @@ function runCliRun(
 const nxOptions = ['sync', 'platform'];
 const iOSOptions = ['xcodeConfiguration', 'schema'];
 const androidOptions = ['variant'];
-
+/*
+ * run options:
+ * ios: https://github.com/expo/expo/blob/main/packages/@expo/cli/src/run/ios/index.ts
+ * android: https://github.com/expo/expo/blob/main/packages/@expo/cli/src/run/android/index.ts
+ */
 function createRunOptions(options: ExpoRunOptions) {
   return Object.keys(options).reduce((acc, k) => {
     if (
@@ -91,14 +100,10 @@ function createRunOptions(options: ExpoRunOptions) {
     {
       if (k === 'xcodeConfiguration') {
         acc.push('--configuration', v);
-      } else if (k === 'bundler') {
-        if (v === false) {
-          acc.push('--no-bundler');
-        }
       } else if (typeof v === 'boolean') {
-        if (v === true) {
-          // when true, does not need to pass the value true, just need to pass the flag in kebob case
-          acc.push(`--${names(k).fileName}`);
+        // no need to pass in the flag when it is true, pass the --no-<flag> when it is false
+        if (v === false) {
+          acc.push(`--no-${names(k).fileName}`);
         }
       } else {
         acc.push(`--${names(k).fileName}`, v);

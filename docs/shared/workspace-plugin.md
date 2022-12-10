@@ -4,7 +4,7 @@ The workspace plugin contains executors and generators that are useful for any N
 
 Codifying your organization's best practices into local generators is a great way to ensure that the best practices are easy to follow and implement. Running `nx g @nrwl/nx-plugin:plugin feature` will create a local plugin with a generator which is written the same way generators are written for Nx plugins.
 
-> See more about [local generators](/recipe/local-generators)
+> See more about [local generators](/recipes/generators/local-generators)
 
 ## Reorganizing Projects
 

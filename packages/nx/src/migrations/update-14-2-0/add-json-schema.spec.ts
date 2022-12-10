@@ -1,6 +1,6 @@
 import { createTreeWithEmptyWorkspace } from '../../generators/testing-utils/create-tree-with-empty-workspace';
 import type { Tree } from '../../generators/tree';
-import { readJson } from '../../generators/utils/json';
+import { readJson, writeJson } from '../../generators/utils/json';
 import { addProjectConfiguration } from '../../generators/utils/project-configuration';
 import addJsonSchema from './add-json-schema';
 
@@ -8,7 +8,7 @@ describe('add-json-schema >', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it('should update nx.json $schema', async () => {
@@ -22,6 +22,7 @@ describe('add-json-schema >', () => {
   });
 
   it('should update workspace.json $schema', async () => {
+    writeJson(tree, 'workspace.json', { version: 2, projects: {} });
     const workspaceJson = readJson(tree, 'workspace.json');
     delete workspaceJson['$schema'];
 

@@ -1,5 +1,5 @@
 import { ExecutorContext, joinPathFragments, logger } from '@nrwl/devkit';
-import { findNodes } from '@nrwl/workspace/src/utilities/typescript/find-nodes';
+import { findNodes } from 'nx/src/utils/typescript';
 import 'dotenv/config';
 import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
@@ -47,37 +47,47 @@ export function runStorybookSetupCheck(options: CommonNxStorybookConfig) {
 
 function reactWebpack5Check(options: CommonNxStorybookConfig) {
   if (options.uiFramework === '@storybook/react') {
-    let storybookConfigFilePath = joinPathFragments(
-      options.config.configFolder,
-      'main.js'
-    );
-
-    if (!existsSync(storybookConfigFilePath)) {
-      storybookConfigFilePath = joinPathFragments(
-        options.config.configFolder,
-        'main.ts'
-      );
-    }
-
-    if (!existsSync(storybookConfigFilePath)) {
-      // looks like there's no main config file, so skip
-      return;
-    }
-
+    const source = mainJsTsFileContent(options.config.configFolder);
+    const rootSource = mainJsTsFileContent('.storybook');
     // check whether the current Storybook configuration has the webpack 5 builder enabled
-    const storybookConfig = readFileSync(storybookConfigFilePath, {
-      encoding: 'utf8',
-    });
-
-    const source = ts.createSourceFile(
-      storybookConfigFilePath,
-      storybookConfig,
-      ts.ScriptTarget.Latest,
-      true
-    );
-
-    findBuilderInMainJsTs(source);
+    if (
+      builderIsWebpackButNotWebpack5(source) &&
+      builderIsWebpackButNotWebpack5(rootSource)
+    ) {
+      logger.warn(`
+      It looks like you use Webpack 5 but your Storybook setup is not configured to leverage that
+      and thus falls back to Webpack 4.
+      Make sure you upgrade your Storybook config to use Webpack 5.
+      
+        - https://gist.github.com/shilman/8856ea1786dcd247139b47b270912324#upgrade
+            
+      `);
+    }
   }
+}
+
+function mainJsTsFileContent(configFolder: string): ts.SourceFile {
+  let storybookConfigFilePath = joinPathFragments(configFolder, 'main.js');
+
+  if (!existsSync(storybookConfigFilePath)) {
+    storybookConfigFilePath = joinPathFragments(configFolder, 'main.ts');
+  }
+
+  if (!existsSync(storybookConfigFilePath)) {
+    // looks like there's no main config file, so skip
+    return;
+  }
+
+  const storybookConfig = readFileSync(storybookConfigFilePath, {
+    encoding: 'utf8',
+  });
+
+  return ts.createSourceFile(
+    storybookConfigFilePath,
+    storybookConfig,
+    ts.ScriptTarget.Latest,
+    true
+  );
 }
 
 function webpackFinalPropertyCheck(options: CommonNxStorybookConfig) {
@@ -135,33 +145,25 @@ export function resolveCommonStorybookOptionMapper(
   return storybookOptions;
 }
 
-export function findBuilderInMainJsTs(storybookConfig: ts.SourceFile) {
+export function builderIsWebpackButNotWebpack5(
+  storybookConfig: ts.SourceFile
+): boolean {
   const importArray = findNodes(storybookConfig, [
     ts.SyntaxKind.PropertyAssignment,
   ]);
-  let builderIsSpecified = false;
+  let builderIsWebpackNot5 = false;
   importArray.forEach((parent) => {
     const identifier = findNodes(parent, ts.SyntaxKind.Identifier);
     const sbBuilder = findNodes(parent, ts.SyntaxKind.StringLiteral);
     const builderText = sbBuilder?.[0]?.getText() ?? '';
-    if (identifier[0].getText() === 'builder') {
-      builderIsSpecified = true;
-      if (
-        builderText.includes('webpack') &&
-        !builderText.includes('webpack5')
-      ) {
-        builderIsSpecified = false;
-      }
+    if (
+      identifier?.[0]?.getText() === 'builder' &&
+      builderText.includes('webpack') &&
+      !builderText.includes('webpack5')
+    ) {
+      builderIsWebpackNot5 = true;
     }
   });
-  if (!builderIsSpecified) {
-    logger.warn(`
-    It looks like you use Webpack 5 but your Storybook setup is not configured to leverage that
-    and thus falls back to Webpack 4.
-    Make sure you upgrade your Storybook config to use Webpack 5.
-    
-      - https://gist.github.com/shilman/8856ea1786dcd247139b47b270912324#upgrade
-          
-    `);
-  }
+
+  return builderIsWebpackNot5;
 }

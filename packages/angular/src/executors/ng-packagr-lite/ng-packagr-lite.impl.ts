@@ -7,6 +7,7 @@ import { NgPackagr } from 'ng-packagr';
 import { resolve } from 'path';
 import { createLibraryExecutor } from '../package/package.impl';
 import type { BuildAngularLibraryExecutorOptions } from '../package/schema';
+import { parseRemappedTsConfigAndMergeDefaults } from '../utilities/typescript';
 import { NX_ENTRY_POINT_PROVIDERS } from './ng-packagr-adjustments/ng-package/entry-point/entry-point.di';
 import { nxProvideOptions } from './ng-packagr-adjustments/ng-package/options.di';
 import {
@@ -32,13 +33,18 @@ async function initializeNgPackgrLite(
   packager.withBuildTransform(NX_PACKAGE_TRANSFORM.provide);
 
   if (options.tsConfig) {
-    const tsConfigPath = createTmpTsConfig(
+    const remappedTsConfigFilePath = createTmpTsConfig(
       options.tsConfig,
       context.root,
       context.workspace.projects[context.projectName].root,
       projectDependencies
     );
-    packager.withTsConfig(tsConfigPath);
+    const tsConfig = await parseRemappedTsConfigAndMergeDefaults(
+      context.root,
+      options.tsConfig,
+      remappedTsConfigFilePath
+    );
+    packager.withTsConfig(tsConfig);
   }
 
   return packager;

@@ -1,7 +1,7 @@
 # Webpack 5 Migration
 
 {% callout type="note" title="Customizing webpack" %}
-This page is for Nx 13 migration to Webpack 5, and is no longer applicable in Nx 14+. For customizing Webpack, see [our recipe on this topic](/recipe/customize-webpack).
+This page is for Nx 13 migration to Webpack 5, and is no longer applicable in Nx 14+. For customizing Webpack, see [our recipe on this topic](/recipes/other/customize-webpack).
 {% /callout %}
 
 Starting in Nx 13, we only support Webpack 5, which is automatically enabled for all workspaces.
@@ -22,7 +22,7 @@ If you have any failing plugins, try upgrading to the latest versions. For more 
 As of Next.js 11 and Nx 12.6.0, Webpack 5 is the default version used. Check your `next.config.js` file to ensure it is
 enabled.
 
-```javascript
+```javascript {% fileName="next.config.js" %}
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const withNx = require('@nrwl/next/plugins/with-nx');
 

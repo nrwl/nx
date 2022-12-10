@@ -32,8 +32,10 @@ import {
   resolvePackageVersionUsingRegistry,
 } from '../utils/package-manager';
 import { handleErrors } from '../utils/params';
-import { connectToNxCloudCommand } from './connect-to-nx-cloud';
+import { connectToNxCloudCommand } from './connect';
 import { output } from '../utils/output';
+import { messages, recordStat } from '../utils/ab-testing';
+import { nxVersion } from '../utils/versions';
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
   packageGroup?: NxMigrationsConfiguration['packageGroup'];
@@ -815,9 +817,15 @@ async function generateMigrationsJsonAndUpdatePackageJson(
           opts.targetVersion
         ))
       ) {
-        await connectToNxCloudCommand(
-          'We noticed you are migrating to a new major version, but are not taking advantage of Nx Cloud. Nx Cloud can make your CI up to 10 times faster. Learn more about it here: nx.app. Would you like to add it?'
+        const useCloud = await connectToNxCloudCommand(
+          messages.getPromptMessage('nxCloudMigration')
         );
+        await recordStat({
+          command: 'migrate',
+          nxVersion,
+          useCloud,
+          meta: messages.codeOfSelectedPromptMessage('nxCloudMigration'),
+        });
         originalPackageJson = readJsonFile<PackageJson>(
           join(root, 'package.json')
         );
@@ -865,7 +873,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
         ...(migrations.length > 0
           ? [`- Run '${pmc.exec} nx migrate --run-migrations'`]
           : []),
-        `- To learn more go to https://nx.dev/using-nx/updating-nx`,
+        `- To learn more go to https://nx.dev/core-features/automate-updating-dependencies`,
         ...(showConnectToCloudMessage()
           ? [
               `- You may run '${pmc.run(
@@ -924,6 +932,13 @@ export async function executeMigrations(
   const depsBeforeMigrations = getStringifiedPackageJsonDeps(root);
 
   const migrationsWithNoChanges: typeof migrations = [];
+
+  let ngCliAdapter: typeof import('../adapter/ngcli-adapter');
+  if (migrations.some((m) => m.cli !== 'nx')) {
+    ngCliAdapter = await import('../adapter/ngcli-adapter');
+    require('../adapter/compat');
+  }
+
   for (const m of migrations) {
     try {
       if (m.cli === 'nx') {
@@ -939,9 +954,12 @@ export async function executeMigrations(
         logger.info(`  ${m.description}\n`);
         printChanges(changes, '  ');
       } else {
-        const { madeChanges, loggingQueue } = await (
-          await import('../adapter/ngcli-adapter')
-        ).runMigration(root, m.package, m.name, isVerbose);
+        const { madeChanges, loggingQueue } = await ngCliAdapter.runMigration(
+          root,
+          m.package,
+          m.name,
+          isVerbose
+        );
 
         if (!madeChanges) {
           migrationsWithNoChanges.push(m);

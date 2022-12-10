@@ -27,23 +27,23 @@ Nx Cloud allows this cache to be shared across your entire organization, meaning
 In order to use distributed task execution, we need to start agents and set the `NX_CLOUD_DISTRIBUTED_EXECUTION` flag to `true`.
 We enable agents to listen for Nx commands using:
 
-```bash
+```shell
 npx nx-cloud start-agent
 ```
 
 and notify Nx Cloud of the upcoming Nx commands using:
 
-```bash
+```shell
 npx nx-cloud start-ci-run
 ```
 
 Once all tasks are finished, we must not forget to cleanup used agents:
 
-```bash
+```shell
 npx nx-cloud stop-all-agents
 ```
 
-Learn more about configuring your CI environment using Nx Cloud with [Distributed Caching](/nx-cloud/set-up/set-up-caching) and [Distributed Task Execution](/nx-cloud/set-up/set-up-dte) in the Nx Cloud docs.
+Learn more about configuring your CI environment using Nx Cloud with [Distributed Caching](/core-features/share-your-cache) and [Distributed Task Execution](/core-features/distribute-task-execution).
 
 {% /nx-cloud-section %}
 
@@ -51,9 +51,9 @@ Learn more about configuring your CI environment using Nx Cloud with [Distribute
 
 The following guides cover optimizing your CI/CD environments with affected commands and distributed caching:
 
-- [Setting up CI using Azure Pipelines](/recipe/monorepo-ci-azure)
-- [Setting up CI using CircleCI](/recipe/monorepo-ci-circle-ci)
-- [Setting up CI using GitHub Actions](/recipe/monorepo-ci-github-actions)
-- [Setting up CI using Jenkins](/recipe/monorepo-ci-jenkins)
-- [Setting up CI using GitLab](/recipe/monorepo-ci-gitlab)
-- [Setting up CI using Bitbucket](/recipe/monorepo-ci-bitbucket-pipelines)
+- [Setting up CI using Azure Pipelines](/recipes/ci/monorepo-ci-azure)
+- [Setting up CI using CircleCI](/recipes/ci/monorepo-ci-circle-ci)
+- [Setting up CI using GitHub Actions](/recipes/ci/monorepo-ci-github-actions)
+- [Setting up CI using Jenkins](/recipes/ci/monorepo-ci-jenkins)
+- [Setting up CI using GitLab](/recipes/ci/monorepo-ci-gitlab)
+- [Setting up CI using Bitbucket](/recipes/ci/monorepo-ci-bitbucket-pipelines)

@@ -26,6 +26,7 @@ import {
   tailwindDirectives,
   TailwindSetup,
 } from '../../../utilities/tailwindcss';
+import { pathToFileURL } from 'url';
 
 const postcss = require('postcss');
 
@@ -243,12 +244,10 @@ export class StylesheetProcessor {
       case '.sass':
       case '.scss': {
         return (await import('sass'))
-          .renderSync({
-            file: filePath,
-            data: css,
-            indentedSyntax: '.sass' === ext,
-            importer: customSassImporter,
-            includePaths: this.styleIncludePaths,
+          .compileString(css, {
+            url: pathToFileURL(filePath),
+            syntax: '.sass' === ext ? 'indented' : 'scss',
+            loadPaths: this.styleIncludePaths,
           })
           .css.toString();
       }
@@ -263,27 +262,6 @@ export class StylesheetProcessor {
         });
 
         return content;
-      }
-      case '.styl':
-      case '.stylus': {
-        const stylus = await import('stylus');
-
-        return (
-          stylus(css)
-            // add paths for resolve
-            .set('paths', [
-              this.basePath,
-              '.',
-              ...this.styleIncludePaths,
-              'node_modules',
-            ])
-            // add support for resolving plugins from node_modules
-            .set('filename', filePath)
-            // turn on url resolver in stylus, same as flag --resolve-url
-            .set('resolve url', true)
-            .define('url', stylus.resolver(undefined))
-            .render()
-        );
       }
       case '.css':
       default:
@@ -332,20 +310,4 @@ function transformSupportedBrowsersToTargets(
   }
 
   return transformed.length ? transformed : undefined;
-}
-
-function customSassImporter(
-  url: string,
-  prev: string
-): { file: string; prev: string } | undefined {
-  // NB: Sass importer should always be sync as otherwise it will cause
-  // sass to go in the async path which is slower.
-  if (url[0] !== '~') {
-    return undefined;
-  }
-
-  return {
-    file: url.substring(1),
-    prev,
-  };
 }

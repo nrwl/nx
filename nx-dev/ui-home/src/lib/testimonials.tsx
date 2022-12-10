@@ -21,40 +21,8 @@ export function Testimonials(): JSX.Element {
         "A year ago I used Nx for my Angular stuff, now it's a core piece of everything I build.",
       ].join(' '),
     },
-    {
-      link: 'https://twitter.com/241Dev/status/1487531051484278791',
-      title: 'Web Engineer',
-      author: 'Akira Tsuboi',
-      imageUrl: '/images/testimonials/akira-tsuboi.jpg',
-      content: 'I just started using Nx (@NxDevTools). It’s awesome 😍',
-    },
   ];
   const column2 = [
-    {
-      author: 'Kent C. Dodds',
-      content: 'Wow, @NxDevTools is no joke. This is awesome!',
-      imageUrl: '/images/testimonials/kent-c-dodds.jpg',
-      link: 'https://twitter.com/kentcdodds/status/1487079957536788480',
-      title: 'Co-founder and Director of Developer Experience at Remix.run',
-    },
-    {
-      author: 'Tejas Kumar',
-      content:
-        "There is a lot to be learned from @nrwl_io's Nx developer experience. It is exemplary.",
-      imageUrl: '/images/testimonials/tejas-kumar.jpg',
-      link: 'https://twitter.com/TejasKumar_/status/1503676694208655361',
-      title: 'Director of Developer Relations, @xatabase',
-    },
-    {
-      author: 'Alan Montgomery',
-      content:
-        'Beautiful! I’m using NX on a nextjs/tailwind project and I must say it’s such a nice developer experience',
-      imageUrl: '/images/testimonials/alan-montgomery.jpg',
-      link: 'https://twitter.com/93alan/status/1488825290973405184',
-      title: 'Senior React Dev/Mobile Team Lead @Idox',
-    },
-  ];
-  const column3 = [
     {
       author: 'Tomek Sułkowski',
       content:
@@ -72,28 +40,79 @@ export function Testimonials(): JSX.Element {
       title: 'Creator of @vendure_io',
     },
   ];
+  const column3 = [
+    {
+      author: 'Kent C. Dodds',
+      content: 'Wow, @NxDevTools is no joke. This is awesome!',
+      imageUrl: '/images/testimonials/kent-c-dodds.jpg',
+      link: 'https://twitter.com/kentcdodds/status/1487079957536788480',
+      title: 'Teacher, OSS',
+    },
+    {
+      author: 'Tejas Kumar',
+      content:
+        "There is a lot to be learned from @nrwl_io's Nx developer experience. It is exemplary.",
+      imageUrl: '/images/testimonials/tejas-kumar.jpg',
+      link: 'https://twitter.com/TejasKumar_/status/1503676694208655361',
+      title: 'Director of Developer Relations, @xatabase',
+    },
+    {
+      author: 'Alan Montgomery',
+      content:
+        'Beautiful! I’m using NX on a nextjs/tailwind project and I must say it’s such a nice developer experience',
+      imageUrl: '/images/testimonials/alan-montgomery.jpg',
+      link: 'https://twitter.com/93alan/status/1488825290973405184',
+      title: 'Senior React Dev/Mobile Team Lead @Idox',
+    },
+    {
+      link: 'https://twitter.com/241Dev/status/1487531051484278791',
+      title: 'Web Engineer',
+      author: 'Akira Tsuboi',
+      imageUrl: '/images/testimonials/akira-tsuboi.jpg',
+      content: 'I just started using Nx (@NxDevTools). It’s awesome 😍',
+    },
+  ];
 
   return (
-    <div id="testimonials-tweets">
-      <div className="flex p-4 lg:mx-auto lg:max-w-7xl">
-        <div className="grid w-full grid-cols-1 items-start gap-12 md:grid-cols-2 lg:grid-cols-3">
-          <div className="flex w-full flex-col space-y-8">
-            {column1.map((data) => (
-              <TestimonialCard key={data.author} data={data} />
-            ))}
+    <article
+      id="next-generation"
+      className="relative bg-slate-50 pt-28 dark:bg-slate-800/40"
+    >
+      <div className="mx-auto max-w-7xl items-stretch py-12 px-4 sm:grid sm:grid-cols-1 sm:gap-8 sm:px-6 md:grid-cols-3 lg:py-16 lg:px-8">
+        <div className="md:col-span-2">
+          <header>
+            <h1 className="text-lg font-semibold tracking-tight text-blue-500 dark:text-sky-500">
+              They use Nx every day
+            </h1>
+            <p className="mt-4 text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 sm:text-5xl">
+              Devs & CEOs, Startups & big companies are loving Nx
+            </p>
+          </header>
+          <div className="mt-8 flex gap-16 font-normal">
+            <p className="max-w-xl text-lg text-slate-700 dark:text-slate-400">
+              Here is what they say about Nx, what they like about it, how it
+              transforms their developer life and what you are missing out on!
+            </p>
           </div>
-          <div className="flex w-full flex-col space-y-8">
-            {column2.map((data) => (
-              <TestimonialCard key={data.author} data={data} />
-            ))}
-          </div>
-          <div className="flex w-full flex-col space-y-8">
-            {column3.map((data) => (
-              <TestimonialCard key={data.author} data={data} />
-            ))}
+          <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-2">
+            <div className="space-y-6">
+              {column1.map((data) => (
+                <TestimonialCard key={data.author} data={data} />
+              ))}
+            </div>
+            <div className="space-y-6">
+              {column2.map((data) => (
+                <TestimonialCard key={data.author} data={data} />
+              ))}
+            </div>
           </div>
         </div>
+        <div className="mt-6 flex h-full w-full flex-col items-start items-stretch gap-6 md:mt-0">
+          {column3.map((data) => (
+            <TestimonialCard key={data.author} data={data} />
+          ))}
+        </div>
       </div>
-    </div>
+    </article>
   );
 }

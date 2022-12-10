@@ -9,7 +9,7 @@ The following configuration creates `build` and `test` targets for Nx.
 {% tabs %}
 {% tab label="package.json" %}
 
-```jsonc
+```jsonc {% fileName="package.json" %}
 {
   "name": "mylib",
   "scripts": {
@@ -22,7 +22,7 @@ The following configuration creates `build` and `test` targets for Nx.
 {% /tab %}
 {% tab label="project.json" %}
 
-```jsonc
+```jsonc {% fileName="project.json" %}
 {
   "root": "libs/mylib/",
   "targets": {
@@ -52,26 +52,23 @@ You can add Nx-specific configuration as follows:
 {% tabs %}
 {% tab label="package.json" %}
 
-```jsonc
+```jsonc {% fileName="package.json" %}
 {
   "name": "mylib",
   "scripts": {
-    "test: "jest",
-    "build": "tsc -p tsconfig.lib.json" // the actual command here is arbitrary
+    "test": "jest",
+    "build": "tsc -p tsconfig.lib.json", // the actual command here is arbitrary
+    "ignored": "exit 1"
   },
   "nx": {
     "namedInputs": {
-      "default": [
-        "{projectRoot}/**/*"
-      ],
-      "production": [
-        "!{projectRoot}/**/*.spec.tsx"
-      ]
+      "default": ["{projectRoot}/**/*"],
+      "production": ["!{projectRoot}/**/*.spec.tsx"]
     },
     "targets": {
       "build": {
         "inputs": ["production", "^production"],
-        "outputs": ["dist/libs/mylib"],
+        "outputs": ["{workspaceRoot}/dist/libs/mylib"],
         "dependsOn": ["^build"]
       },
       "test": {
@@ -79,7 +76,8 @@ You can add Nx-specific configuration as follows:
         "outputs": [],
         "dependsOn": ["build"]
       }
-    }
+    },
+    "includedScripts": ["test", "build"] // If you want to limit the scripts Nx sees, you can specify a list here.
   }
 }
 ```
@@ -87,7 +85,7 @@ You can add Nx-specific configuration as follows:
 {% /tab %}
 {% tab label="project.json" %}
 
-```json
+```json {% fileName="project.json" %}
 {
   "root": "libs/mylib/",
   "sourceRoot": "libs/mylib/src",
@@ -107,7 +105,7 @@ You can add Nx-specific configuration as follows:
     "build": {
       "executor": "@nrwl/js:tsc",
       "inputs": ["production", "^production"],
-      "outputs": ["dist/libs/mylib"],
+      "outputs": ["{workspaceRoot}/dist/libs/mylib"],
       "dependsOn": ["^build"],
       "options": {}
     }
@@ -134,6 +132,11 @@ Examples:
 - `{workspaceRoot}/jest.config.ts`
 - same as `{fileset: "{workspaceRoot}/jest.config.ts}`
 
+{% callout type="note" title="{projectRoot} and {workspaceRoot}" %}
+`{projectRoot}` is a key word that is replaced by the path to the current project's root directory.
+`{workspaceRoot}` is a key word that is replaced by the path to the workspace root directory.
+{% /callout %}
+
 _Runtime Inputs_
 
 Examples:
@@ -158,7 +161,7 @@ Examples:
 - same as `inputs: [{input: "production", projects: "self"}]`
 
 Often the same glob will appear in many places (e.g., prod fileset will exclude spec files for all projects). Because
-keeping them in sync is error-prone, we recommend defining named inputs, which you can then reference in all of those
+keeping them in sync is error-prone, we recommend defining `namedInputs`, which you can then reference in all of those
 places.
 
 #### Using ^
@@ -180,9 +183,14 @@ an example.
 The configuration above means that the test target depends on all source files of a given project and only prod
 sources (non-test sources) of its dependencies. In other words, it treats test sources as private.
 
+{% cards %}
+{% card title="nx.json reference" type="documentation" description="inputs and namedInputs are also described in the nx.json reference" url="/reference/nx-json#inputs-&-namedinputs" /%}
+{% card title="Customizing inputs and namedInputs" type="documentation" description="This guide walks through a few examples of how to customize inputs and namedInputs" url="/more-concepts/customizing-inputs" /%}
+{% /cards %}
+
 ### outputs
 
-Targets may define outputs to tell Nx where the target is going to create file artifacts that Nx should cache. `"outputs": ["dist/libs/mylib"]` tells Nx where the `build` target is going to create file artifacts.
+Targets may define outputs to tell Nx where the target is going to create file artifacts that Nx should cache. `"outputs": ["{workspaceRoot}/dist/libs/mylib"]` tells Nx where the `build` target is going to create file artifacts.
 
 This configuration is usually not needed. Nx comes with reasonable defaults (imported in `nx.json`) which implement the configuration above.
 
@@ -193,7 +201,10 @@ Usually, a target writes to a specific directory or a file. The following instru
 ```json
 {
   "build": {
-    "outputs": ["dist/libs/mylib", "build/libs/mylib/main.js"]
+    "outputs": [
+      "{workspaceRoot}/dist/libs/mylib",
+      "{workspaceRoot}/build/libs/mylib/main.js"
+    ]
   }
 }
 ```
@@ -205,10 +216,10 @@ Sometimes, multiple targets might write to the same directory. When possible it 
 ```json
 {
   "build-js": {
-    "outputs": ["dist/libs/mylib/js"]
+    "outputs": ["{workspaceRoot}/dist/libs/mylib/js"]
   },
   "build-css": {
-    "outputs": ["dist/libs/mylib/css"]
+    "outputs": ["{workspaceRoot}/dist/libs/mylib/css"]
   }
 }
 ```
@@ -218,10 +229,10 @@ But if the above is not possible, globs can be specified as outputs to only cach
 ```json
 {
   "build-js": {
-    "outputs": ["dist/libs/mylib/**/*.js"]
+    "outputs": ["{workspaceRoot}/dist/libs/mylib/**/*.js"]
   },
   "build-css": {
-    "outputs": ["dist/libs/mylib/**/*.css"]
+    "outputs": ["{workspaceRoot}/dist/libs/mylib/**/*.css"]
   }
 }
 ```
@@ -298,7 +309,7 @@ You can annotate your projects with `tags` as follows:
 {% tabs %}
 {% tab label="package.json" %}
 
-```jsonc
+```jsonc {% fileName="package.json" %}
 {
   "name": "mylib",
   "nx": {
@@ -310,7 +321,7 @@ You can annotate your projects with `tags` as follows:
 {% /tab %}
 {% tab label="project.json" %}
 
-```jsonc
+```jsonc {% fileName="project.json" %}
 {
   "root": "/libs/mylib",
   "tags": ["scope:myteam"]
@@ -331,7 +342,7 @@ statically, so you can set them manually like this:
 {% tabs %}
 {% tab label="package.json" %}
 
-```jsonc
+```jsonc {% fileName="package.json" %}
 {
   "name": "mylib",
   "nx": {
@@ -343,7 +354,7 @@ statically, so you can set them manually like this:
 {% /tab %}
 {% tab label="project.json" %}
 
-```jsonc
+```jsonc {% fileName="project.json" %}
 {
   "root": "/libs/mylib",
   "implicitDependencies": ["anotherlib"]
@@ -358,7 +369,7 @@ You can also remove a dependency as follows:
 {% tabs %}
 {% tab label="package.json" %}
 
-```jsonc
+```jsonc {% fileName="package.json" %}
 {
   "name": "mylib",
   "nx": {
@@ -370,7 +381,7 @@ You can also remove a dependency as follows:
 {% /tab %}
 {% tab label="project.json" %}
 
-```jsonc
+```jsonc {% fileName="project.json" %}
 {
   "root": "/libs/mylib",
   "implicitDependencies": ["!anotherlib"] # regardless of what Nx thinks, "mylib" doesn't depend on "anotherlib"
@@ -380,16 +391,27 @@ You can also remove a dependency as follows:
 {% /tab %}
 {% /tabs %}
 
-### Ignoring a project
+### Including package.json files as projects in the graph
 
-Nx will add every project with a `package.json` file in it to its project graph. If you want to ignore a particular
-project, add the following to its `package.json`:
+Any `package.json` file that is referenced by the `workspaces` property in the root `package.json` file will be included as a project in the graph. If you are using Lerna, projects defined in `lerna.json` will be included. If you are using pnpm, projects defined in `pnpm-workspace.yml` will be included.
 
-```jsonc
+If you want to ignore a particular `package.json` file, exclude it from those tools. For example, you can add `!packages/myproject` to the `workspaces` property.
+
+### Ignoring package.json scripts
+
+Nx merges package.json scripts with your targets that are defined in project.json.
+If you only wish for some scripts to be used as Nx targets, you can specify them in the `includedScripts` property of the project's package.json.
+
+```json {% filename="packages/my-library/package.json" }
 {
-  "name": "mylib",
+  "name": "my-library",
+  "version": "0.0.1",
+  "scripts": {
+    "build": "tsc",
+    "postinstall": "node ./tasks/postinstall"
+  },
   "nx": {
-    "ignore": true
+    "includedScripts": ["build"]
   }
 }
 ```

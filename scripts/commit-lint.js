@@ -8,12 +8,10 @@ const gitMessage = require('child_process')
   .toString()
   .trim();
 
-const allowedTypes = types.map((type) => type.value);
-const allowedScopes = scopes.map((scope) => scope.name);
+const allowedTypes = types.map((type) => type.value).join('|');
+const allowedScopes = scopes.map((scope) => scope.name).join('|');
 
-const commitMsgRegex = `(${allowedTypes.join('|')})\\((${allowedScopes.join(
-  '|'
-)})\\):\\s(([a-z0-9:\-\s])+)`;
+const commitMsgRegex = `(${allowedTypes})\\((${allowedScopes})\\)!?:\\s(([a-z0-9:\-\s])+)`;
 
 const matchCommit = new RegExp(commitMsgRegex, 'g').test(gitMessage);
 const matchRevert = /Revert/gi.test(gitMessage);
@@ -32,13 +30,12 @@ if (exitCode === 0) {
   );
   console.log('\ntype(scope): subject \n BLANK LINE \n body');
   console.log('\n');
-  console.log(`possible types: ${allowedTypes.join('|')}`);
-  console.log(
-    `possible scopes: ${allowedScopes.join('|')} (if unsure use "core")`
-  );
+  console.log(`possible types: ${allowedTypes}`);
+  console.log(`possible scopes: ${allowedScopes} (if unsure use "core")`);
   console.log(
     '\nEXAMPLE: \n' +
-      'feat(nx): add an option to generate lazy-loadable modules\n'
+      'feat(nx): add an option to generate lazy-loadable modules\n' +
+      'fix(core)!: breaking change should have exclamation mark\n'
   );
 }
 process.exit(exitCode);

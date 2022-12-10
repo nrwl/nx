@@ -12,7 +12,7 @@ Project inference plugins allow you to extend this functionality of Nx to other 
 
 You can register a plugin by adding it to the plugins array in `nx.json`:
 
-```json
+```jsonc {% fileName="nx.json" %}
 {
   ...,
   "plugins": [
@@ -30,9 +30,7 @@ Project file patterns are used in two scenarios:
 
 Let's use the below plugin and workspace layout as an example:
 
-> libs/awesome-plugin/index.ts
-
-```typescript
+```typescript {% fileName="libs/awesome-plugin/index.ts" %}
 export const projectFilePatterns = ['project.json', 'my-other-project-file'];
 export function registerProjectTargets(projectFilePath) {
   console.log(projectFilePath);
@@ -51,7 +49,7 @@ my-workspace/
 │  │  ├─ my-other-project-file
 │  │  ├─ project.json
 ├─ nx.json
-├─ package.json
+└─ package.json
 
 ```
 

@@ -2,26 +2,17 @@ const path = require('path');
 const { createGlobPatternsForDependencies } = require('@nrwl/next/tailwind');
 
 module.exports = {
+  experimental: {
+    optimizeUniversalDefaults: true,
+  },
   mode: 'jit',
+  darkMode: 'class',
   content: [
     path.join(__dirname, 'pages/**/*.{js,ts,jsx,tsx}'),
     ...createGlobPatternsForDependencies(__dirname),
   ],
   theme: {
     extend: {
-      colors: {
-        black: 'hsla(0, 0%, 13%, 1)',
-        blue: {
-          'nx-dark': 'hsla(214, 61%, 11%, 1)',
-          'nx-base': 'hsla(214, 62%, 21%, 1)',
-        },
-        green: {
-          'nx-base': 'hsla(162, 47%, 50%, 1)',
-        },
-        purple: {
-          'nx-base': 'hsla(258, 76%, 62%, 1)',
-        },
-      },
       typography: {
         DEFAULT: {
           css: {

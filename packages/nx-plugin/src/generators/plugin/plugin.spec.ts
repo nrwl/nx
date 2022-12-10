@@ -27,7 +27,7 @@ describe('NxPlugin Plugin Generator', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it('should update the workspace.json file', async () => {
@@ -80,7 +80,7 @@ describe('NxPlugin Plugin Generator', () => {
     });
     expect(project.targets.test).toEqual({
       executor: '@nrwl/jest:jest',
-      outputs: ['coverage/libs/my-plugin'],
+      outputs: ['{workspaceRoot}/coverage/{projectRoot}'],
       options: {
         jestConfig: 'libs/my-plugin/jest.config.ts',
         passWithNoTests: true,

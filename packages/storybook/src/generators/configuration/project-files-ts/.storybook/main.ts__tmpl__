@@ -1,13 +1,11 @@
-import { rootMain } from '<%= offsetFromRoot %>../.storybook/main';
+<% if (!isRootProject){ %>import { rootMain } from '<%= offsetFromRoot %>../.storybook/<%= rootMainName %>';<% } %>
+<% if (isRootProject){ %>import { rootMain } from './main.root';<% } %>
 import type { StorybookConfig, Options } from '@storybook/core-common';
 <% if (isNextJs){ %>import path from 'path';<% } %>
 
 const config: StorybookConfig = {
   ...rootMain,
-  <% if (useWebpack5) { %>
-  core: { ...rootMain.core, builder: 'webpack5' },
-  <% } %>
-
+  core: { ...rootMain.core, builder: <% if (!usesVite) { %>'webpack5'<% } %><% if (usesVite) { %>'@storybook/builder-vite'<% } %> },
   stories: [
     ...rootMain.stories,<% if(uiFramework === '@storybook/angular' && projectType === 'library') { %>
     '../**/*.stories.mdx',
@@ -15,7 +13,7 @@ const config: StorybookConfig = {
     '../<%= projectDirectory %>/**/*.stories.mdx',
     '../<%= projectDirectory %>/**/*.stories.@(js|jsx|ts|tsx)'
   <% } %>],
-  addons: [...(rootMain.addons || []) <% if(uiFramework === '@storybook/react') { %>, '@nrwl/react/plugins/storybook' <% } %><% if(uiFramework === '@storybook/react-native') { %>, '@storybook/addon-ondevice-actions',  '@storybook/addon-ondevice-backgrounds', '@storybook/addon-ondevice-controls', '@storybook/addon-ondevice-notes'  <% } %>
+  addons: [...(rootMain.addons || []) <% if(uiFramework === '@storybook/react' && !usesVite) { %>, '@nrwl/react/plugins/storybook' <% } %><% if(uiFramework === '@storybook/react-native') { %>, '@storybook/addon-ondevice-actions',  '@storybook/addon-ondevice-backgrounds', '@storybook/addon-ondevice-controls', '@storybook/addon-ondevice-notes'  <% } %>
     <% if(usesSwc && !isNextJs) { %>, 'storybook-addon-swc' <% } %>
     <% if(isNextJs) { %>, 'storybook-addon-swc', 
         {
@@ -25,7 +23,7 @@ const config: StorybookConfig = {
       },
     }
      <% } %>
-  ],
+  ]<% if (!usesVite) { %>,
   webpackFinal: async (config, { configType }: Options) => {
     // apply any global webpack configs that might have been specified in .storybook/main.ts
     if (rootMain.webpackFinal) {
@@ -35,7 +33,7 @@ const config: StorybookConfig = {
     // add your own webpack tweaks if needed
 
     return config;
-  },
+  },<% } %>
 };
 
 module.exports = config;

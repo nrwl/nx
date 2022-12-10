@@ -12,8 +12,7 @@
  * Every command you run should work the same when using the Nx CLI, except faster.
  *
  * Because of symlinking you can still type `ng build/test/lint` in the terminal. The ng command, in this case,
- * will point to nx, which will perform optimizations before invoking ng. So the Angular CLI is always invoked.
- * The Nx CLI simply does some optimizations before invoking the Angular CLI.
+ * will point to nx, which will perform optimizations before running your task.
  *
  * To opt out of this patch:
  * - Replace occurrences of nx with ng in your package.json

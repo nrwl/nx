@@ -1,7 +1,25 @@
-import { getOutputsForTargetAndConfiguration } from './utils';
+import {
+  getOutputsForTargetAndConfiguration,
+  transformLegacyOutputs,
+  validateOutputs,
+} from './utils';
 import { ProjectGraphProjectNode } from '../config/project-graph';
 
 describe('utils', () => {
+  function getNode(build): ProjectGraphProjectNode {
+    return {
+      name: 'myapp',
+      type: 'app',
+      data: {
+        root: 'myapp',
+        targets: {
+          build: { ...build, executor: '' },
+        },
+        files: [],
+      },
+    };
+  }
+
   describe('getOutputsForTargetAndConfiguration', () => {
     const task = {
       overrides: {},
@@ -12,194 +30,143 @@ describe('utils', () => {
       },
     };
 
-    function getNode(build): ProjectGraphProjectNode {
-      return {
-        name: 'myapp',
-        type: 'app',
-        data: {
-          root: '/myapp',
-          targets: {
-            build: { ...build, executor: '' },
-          },
-          files: [],
-        },
-      };
-    }
+    it('should return empty arrays', () => {
+      expect(
+        getOutputsForTargetAndConfiguration(
+          task,
+          getNode({
+            outputs: [],
+          })
+        )
+      ).toEqual([]);
+    });
 
-    describe('when `outputs` are defined', () => {
-      it('should return them', () => {
-        expect(
-          getOutputsForTargetAndConfiguration(
-            task,
-            getNode({
-              outputs: ['one', 'two'],
-            })
-          )
-        ).toEqual(['one', 'two']);
-      });
+    it('should interpolate {workspaceRoot}, {projectRoot} and {projectName}', () => {
+      expect(
+        getOutputsForTargetAndConfiguration(
+          task,
+          getNode({
+            outputs: [
+              '{workspaceRoot}/one',
+              '{projectRoot}/two',
+              '{projectName}/three',
+            ],
+          })
+        )
+      ).toEqual(['one', 'myapp/two', 'myapp/three']);
+    });
 
-      it('should return them', () => {
-        expect(
-          getOutputsForTargetAndConfiguration(
-            task,
-            getNode({
-              outputs: ['one', 'two'],
-            })
-          )
-        ).toEqual(['one', 'two']);
-      });
+    it('should interpolate {projectRoot} when it is not in front', () => {
+      expect(
+        getOutputsForTargetAndConfiguration(
+          task,
+          getNode({
+            outputs: ['{workspaceRoot}/dist/{projectRoot}'],
+          })
+        )
+      ).toEqual(['dist/myapp']);
+    });
 
-      it('should support interpolation based on options', () => {
-        expect(
-          getOutputsForTargetAndConfiguration(
-            task,
-            getNode({
-              outputs: ['path/{options.myVar}', 'two'],
-              options: {
-                myVar: 'one',
-              },
-            })
-          )
-        ).toEqual(['path/one', 'two']);
-      });
+    it('should support interpolation based on options', () => {
+      expect(
+        getOutputsForTargetAndConfiguration(
+          task,
+          getNode({
+            outputs: ['{workspaceRoot}/path/{options.myVar}'],
+            options: {
+              myVar: 'value',
+            },
+          })
+        )
+      ).toEqual(['path/value']);
+    });
 
-      it('should support interpolating root', () => {
-        expect(
-          getOutputsForTargetAndConfiguration(
-            task,
-            getNode({
-              outputs: ['{projectRoot}/sub', 'two'],
-              options: {
-                myVar: 'one',
-              },
-            })
-          )
-        ).toEqual(['/myapp/sub', 'two']);
-      });
-
-      it('should support relative paths', () => {
-        expect(
-          getOutputsForTargetAndConfiguration(
-            task,
-            getNode({
-              outputs: ['./sub', 'two'],
-              options: {
-                myVar: 'one',
-              },
-            })
-          )
-        ).toEqual(['/myapp/sub', 'two']);
-      });
-
-      it('should support nested interpolation based on options', () => {
-        expect(
-          getOutputsForTargetAndConfiguration(
-            task,
-            getNode({
-              outputs: ['path/{options.nested.myVar}', 'two'],
-              options: {
-                nested: {
-                  myVar: 'one',
-                },
-              },
-            })
-          )
-        ).toEqual(['path/one', 'two']);
-      });
-
-      it('should support interpolation based on configuration-specific options', () => {
-        expect(
-          getOutputsForTargetAndConfiguration(
-            task,
-            getNode({
-              outputs: ['path/{options.myVar}', 'two'],
-              options: {
-                myVar: 'one',
-              },
-              configurations: {
-                production: {
-                  myVar: 'other',
-                },
-              },
-            })
-          )
-        ).toEqual(['path/other', 'two']);
-      });
-
-      it('should support interpolation outputs from overrides', () => {
-        expect(
-          getOutputsForTargetAndConfiguration(
-            {
-              ...task,
-              overrides: {
-                myVar: 'overridePath',
+    it('should support nested interpolation based on options', () => {
+      expect(
+        getOutputsForTargetAndConfiguration(
+          task,
+          getNode({
+            outputs: ['{options.nested.myVar}'],
+            options: {
+              nested: {
+                myVar: 'value',
               },
             },
-            getNode({
-              outputs: ['path/{options.myVar}', 'two'],
-              options: {
-                myVar: 'one',
+          })
+        )
+      ).toEqual(['value']);
+    });
+
+    it('should support interpolation for non-existing options', () => {
+      expect(
+        getOutputsForTargetAndConfiguration(
+          task,
+          getNode({
+            outputs: ['{options.outputFile}'],
+            options: {},
+          })
+        )
+      ).toEqual([]);
+    });
+
+    it('should support interpolation based on configuration-specific options', () => {
+      expect(
+        getOutputsForTargetAndConfiguration(
+          task,
+          getNode({
+            outputs: ['{options.myVar}'],
+            options: {
+              myVar: 'value',
+            },
+            configurations: {
+              production: {
+                myVar: 'value/production',
               },
-              configurations: {
-                production: {
-                  myVar: 'other',
-                },
+            },
+          })
+        )
+      ).toEqual(['value/production']);
+    });
+
+    it('should support interpolation outputs from overrides', () => {
+      expect(
+        getOutputsForTargetAndConfiguration(
+          {
+            ...task,
+            overrides: {
+              myVar: 'value/override',
+            },
+          },
+          getNode({
+            outputs: ['{options.myVar}'],
+            options: {
+              myVar: 'value',
+            },
+            configurations: {
+              production: {
+                myVar: 'value/production',
               },
-            })
-          )
-        ).toEqual(['path/overridePath', 'two']);
-      });
+            },
+          })
+        )
+      ).toEqual(['value/override']);
     });
 
     describe('when `outputs` is missing (backwards compatibility)', () => {
-      it('should return configuration-specific outputPath when defined', () => {
+      it('should return the outputPath option', () => {
         expect(
           getOutputsForTargetAndConfiguration(
             task,
             getNode({
               options: {
-                outputPath: 'one',
-              },
-              configurations: {
-                production: {
-                  outputPath: 'two',
-                },
+                outputPath: 'value',
               },
             })
           )
-        ).toEqual(['two']);
+        ).toEqual(['value']);
       });
 
-      it('should return configuration-independent outputPath when defined', () => {
-        expect(
-          getOutputsForTargetAndConfiguration(
-            task,
-            getNode({
-              options: {
-                outputPath: 'one',
-              },
-              configurations: {
-                production: {},
-              },
-            })
-          )
-        ).toEqual(['one']);
-      });
-
-      it('should handle invalid configuration', () => {
-        expect(
-          getOutputsForTargetAndConfiguration(
-            task,
-            getNode({
-              options: {
-                outputPath: 'one',
-              },
-            })
-          )
-        ).toEqual(['one']);
-      });
-
-      it('should handle overrides', () => {
+      it('should handle outputPath overrides', () => {
         expect(
           getOutputsForTargetAndConfiguration(
             {
@@ -217,7 +184,41 @@ describe('utils', () => {
         ).toEqual(['overrideOutputPath']);
       });
 
-      it('should return default output path when nothing else is defined', () => {
+      it('should return configuration-specific outputPath when defined', () => {
+        expect(
+          getOutputsForTargetAndConfiguration(
+            task,
+            getNode({
+              options: {
+                outputPath: 'value',
+              },
+              configurations: {
+                production: {
+                  outputPath: 'value/production',
+                },
+              },
+            })
+          )
+        ).toEqual(['value/production']);
+      });
+
+      it('should return configuration-independent outputPath when defined', () => {
+        expect(
+          getOutputsForTargetAndConfiguration(
+            task,
+            getNode({
+              options: {
+                outputPath: 'value',
+              },
+              configurations: {
+                production: {},
+              },
+            })
+          )
+        ).toEqual(['value']);
+      });
+
+      it('should return default output paths when nothing else is defined', () => {
         expect(
           getOutputsForTargetAndConfiguration(task, {
             name: 'myapp',
@@ -240,5 +241,92 @@ describe('utils', () => {
         ]);
       });
     });
+
+    describe('invalid outputs should be transformed', () => {
+      it('should transform non-prefixed paths', () => {
+        expect(
+          getOutputsForTargetAndConfiguration(
+            task,
+            getNode({
+              outputs: ['dist'],
+            })
+          )
+        ).toEqual(['dist']);
+      });
+      it('should transform non-prefixed paths that use interpolation', () => {
+        expect(
+          getOutputsForTargetAndConfiguration(
+            task,
+            getNode({
+              outputs: ['dist/{projectRoot}'],
+            })
+          )
+        ).toEqual(['dist/myapp']);
+      });
+
+      it('should transform relative paths', () => {
+        expect(
+          getOutputsForTargetAndConfiguration(
+            task,
+            getNode({
+              outputs: ['./sub'],
+            })
+          )
+        ).toEqual(['myapp/sub']);
+      });
+
+      it('should transform unix-absolute paths', () => {
+        expect(
+          getOutputsForTargetAndConfiguration(
+            task,
+            getNode({
+              outputs: ['/dist'],
+            })
+          )
+        ).toEqual(['dist']);
+      });
+    });
+  });
+
+  describe('transformLegacyOutputs', () => {
+    it('should prefix paths with {workspaceRoot}', () => {
+      const outputs = ['dist'];
+      try {
+        validateOutputs(outputs);
+      } catch (e) {
+        const result = transformLegacyOutputs('myapp', e);
+        expect(result).toEqual(['{workspaceRoot}/dist']);
+      }
+    });
+
+    it('should prefix unix-absolute paths with {workspaceRoot}', () => {
+      const outputs = ['/dist'];
+      try {
+        validateOutputs(outputs);
+      } catch (e) {
+        const result = transformLegacyOutputs('myapp', e);
+        expect(result).toEqual(['{workspaceRoot}/dist']);
+      }
+    });
+  });
+
+  it('should prefix relative paths with {projectRoot}', () => {
+    const outputs = ['/dist'];
+    try {
+      validateOutputs(outputs);
+    } catch (e) {
+      const result = transformLegacyOutputs('myapp', e);
+      expect(result).toEqual(['{workspaceRoot}/dist']);
+    }
+  });
+
+  it('should prefix paths within the project with {projectRoot}', () => {
+    const outputs = ['myapp/dist'];
+    try {
+      validateOutputs(outputs);
+    } catch (e) {
+      const result = transformLegacyOutputs('myapp', e);
+      expect(result).toEqual(['{projectRoot}/dist']);
+    }
   });
 });

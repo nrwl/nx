@@ -22,7 +22,7 @@ export async function expoApplicationGenerator(
   host: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
-  const options = normalizeOptions(schema);
+  const options = normalizeOptions(host, schema);
 
   createApplicationFiles(host, options);
   addProject(host, options);

@@ -1,5 +1,5 @@
 // nx-ignore-next-line
-import type { DepGraphClientResponse } from 'nx/src/command-line/dep-graph';
+import type { ProjectGraphClientResponse } from 'nx/src/command-line/dep-graph';
 import { useRef } from 'react';
 import { AppConfig } from '../interfaces';
 
@@ -7,7 +7,7 @@ export function useEnvironmentConfig(): {
   exclude: string[];
   watch: boolean;
   localMode: 'serve' | 'build';
-  projectGraphResponse?: DepGraphClientResponse;
+  projectGraphResponse?: ProjectGraphClientResponse;
   environment: 'dev' | 'watch' | 'release' | 'nx-console';
   appConfig: AppConfig;
   useXstateInspect: boolean;
@@ -24,7 +24,13 @@ export function getEnvironmentConfig() {
     localMode: window.localMode,
     projectGraphResponse: window.projectGraphResponse,
     environment: window.environment,
-    appConfig: window.appConfig,
+    appConfig: {
+      ...window.appConfig,
+      showExperimentalFeatures:
+        localStorage.getItem('showExperimentalFeatures') === 'true'
+          ? true
+          : window.appConfig.showExperimentalFeatures,
+    },
     useXstateInspect: window.useXstateInspect,
   };
 }

@@ -1,4 +1,5 @@
 {
+  "name": "nx-dev-data-access-packages",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "nx-dev/data-access-packages/src",
   "projectType": "library",
@@ -12,7 +13,7 @@
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/nx-dev/data-access-packages"],
+      "outputs": ["{workspaceRoot}/coverage/nx-dev/data-access-packages"],
       "options": {
         "jestConfig": "nx-dev/data-access-packages/jest.config.ts",
         "passWithNoTests": true

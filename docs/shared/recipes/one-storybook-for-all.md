@@ -7,7 +7,7 @@ This case would work if all your projects (applications and libraries) containin
 
 Let’s see how we can implement this solution:
 
-{% github-repository url="https://github.com/mandarini/nx-recipes/tree/storybook/publishing-recipe-1/storybook-recipes/publishing-strategies-single-framework" /%}
+{% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/storybook-publishing-strategies-single-framework" /%}
 
 ## Steps
 
@@ -15,7 +15,7 @@ Let’s see how we can implement this solution:
 
 According to the framework you are using, use the corresponding generator to generate a new library. Let’s suppose that you are using React and all your stories are using `@storybook/react`:
 
-```bash
+```shell
 nx g @nrwl/react:library storybook-host
 ```
 
@@ -25,7 +25,7 @@ Now, you have a new library, which will act as a shell/host for all your stories
 
 Now let’s configure our new library to use Storybook, using the [`@nrwl/storybook:configuration` generator](/packages/storybook/generators/configuration). Run:
 
-```bash
+```shell
 nx g @nrwl/storybook:configuration storybook-host
 ```
 
@@ -39,7 +39,7 @@ Now it’s time to import the stories of our other projects in our new library's
 
 Here is a sample `libs/storybook-host/.storybook/main.js` file:
 
-```javascript
+```javascript {% fileName="libs/storybook-host/.storybook/main.js" %}
 const rootMain = require('../../../.storybook/main');
 module.exports = {
   ...rootMain,
@@ -54,10 +54,11 @@ Notice how we only link the stories matching that pattern. According to your wor
 For example:
 
 ```javascript
-stories: ['../../**/ui/**/src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)',
-          '../../**/src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)',
-          etc.
-         ],
+stories: [
+  '../../**/ui/**/src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)',
+  '../../**/src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)',
+  // etc...
+];
 ```
 
 ### Import the stories in Storybook’s tsconfig.json
@@ -66,7 +67,7 @@ If you are using Angular, do not forget to import the stories in the TypeScript 
 
 Here is a sample `libs/storybook-host-angular/.storybook/tsconfig.json` file:
 
-```json
+```json {% fileName="libs/storybook-host-angular/.storybook/tsconfig.json" %}
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
@@ -83,13 +84,13 @@ Notice how in the `include` array we are specifying the paths to our stories, us
 
 Now you can serve or build your Storybook as you would, normally. And then you can publish the bundled app!
 
-```bash
+```shell
 nx storybook storybook-host
 ```
 
 or
 
-```bash
+```shell
 nx build-storybook storybook-host
 ```
 
@@ -109,7 +110,7 @@ Your new Storybook host, essentially, depends on all the projects from which it 
 
 For example, `libs/storybook-host/project.json`:
 
-```json
+```json {% fileName="libs/storybook-host/project.json" %}
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/storybook-host/src",

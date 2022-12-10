@@ -1,8 +1,7 @@
 import { buildTargetFromScript, PackageJson } from './package-json';
-import { join, relative } from 'path';
+import { join } from 'path';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { readJsonFile } from './fileutils';
-import { normalizePath } from './path';
 import { readCachedProjectGraph } from '../project-graph/project-graph';
 import { TargetConfiguration } from '../config/workspace-json-project-json';
 
@@ -40,7 +39,9 @@ export function mergeNpmScriptsWithTargets(
     const res: Record<string, TargetConfiguration> = {};
     // handle no scripts
     Object.keys(scripts || {}).forEach((script) => {
-      res[script] = buildTargetFromScript(script, nx);
+      if (!nx?.includedScripts || nx?.includedScripts.includes(script)) {
+        res[script] = buildTargetFromScript(script, nx);
+      }
     });
     return { ...res, ...(targets || {}) };
   } catch (e) {
@@ -73,45 +74,13 @@ export function getSourceDirOfDependentProjects(
 }
 
 /**
- * Finds the project node name by a file that lives within it's src root
- * @param projRelativeDirPath directory path relative to the workspace root
- * @param projectGraph
- */
-export function getProjectNameFromDirPath(
-  projRelativeDirPath: string,
-  projectGraph = readCachedProjectGraph()
-) {
-  let parentNodeName = null;
-  for (const [nodeName, node] of Object.entries(projectGraph.nodes)) {
-    const normalizedRootPath = normalizePath(node.data.root);
-    const normalizedProjRelPath = normalizePath(projRelativeDirPath);
-
-    const relativePath = relative(normalizedRootPath, normalizedProjRelPath);
-    const isMatch = relativePath && !relativePath.startsWith('..');
-
-    if (isMatch || normalizedRootPath === normalizedProjRelPath) {
-      parentNodeName = nodeName;
-      break;
-    }
-  }
-
-  if (!parentNodeName) {
-    throw new Error(
-      `Could not find any project containing the file "${projRelativeDirPath}" among it's project files`
-    );
-  }
-
-  return parentNodeName;
-}
-
-/**
  * Find all internal project dependencies.
  * All the external (npm) dependencies will be filtered out
  * @param {string} parentNodeName
  * @param {ProjectGraph} projectGraph
  * @returns {string[]}
  */
-function findAllProjectNodeDependencies(
+export function findAllProjectNodeDependencies(
   parentNodeName: string,
   projectGraph = readCachedProjectGraph()
 ): string[] {

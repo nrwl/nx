@@ -7,14 +7,14 @@ Generators provide a way to automate many tasks you regularly perform as part of
 There are three main types of generators:
 
 1. **Plugin Generators** are available when an Nx plugin has been installed in your workspace.
-2. **Local Generators** are generators that you can create for your own workspace. [Local generators](/recipe/local-generators) allow you to codify the processes that are unique to your own organization.
+2. **Local Generators** are generators that you can create for your own workspace. [Local generators](/recipes/generators/local-generators) allow you to codify the processes that are unique to your own organization.
 3. **Update Generators** are invoked by Nx plugins when you [update Nx](/recipes/adopting-nx) to keep your config files in sync with the latest versions of third party tools.
 
 ## Invoking Plugin Generators
 
 Generators allow you to create or modify your codebase in a simple and repeatable way. Generators are invoked using the [`nx generate`](/nx/generate) command.
 
-```bash
+```shell
 nx generate [plugin]:[generator-name] [options]
 nx generate @nrwl/react:component mycmp --project=myapp
 ```

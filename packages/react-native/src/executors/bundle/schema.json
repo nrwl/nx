@@ -1,4 +1,6 @@
 {
+  "version": 2,
+  "outputCapture": "direct-nodejs",
   "cli": "nx",
   "$id": "NxReactNativeBundle",
   "$schema": "http://json-schema.org/schema",
@@ -14,6 +16,7 @@
     },
     "platform": {
       "enum": ["ios", "android"],
+      "alias": "p",
       "description": "Platform to build for."
     },
     "transformer": {
@@ -66,5 +69,6 @@
       "default": false
     }
   },
-  "required": ["platform", "entryFile", "bundleOutput"]
+  "required": ["platform", "entryFile", "bundleOutput"],
+  "examplesFile": "../../../docs/bundle-examples.md"
 }

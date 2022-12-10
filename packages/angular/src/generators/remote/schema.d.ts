@@ -2,8 +2,6 @@ import { Linter } from '@nrwl/linter';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import type { Styles } from '../utils/types';
 
-type AngularLinter = Exclude<Linter, Linter.TsLint>;
-
 export interface Schema {
   name: string;
   host?: string;
@@ -16,7 +14,7 @@ export interface Schema {
   skipTests?: boolean;
   directory?: string;
   tags?: string;
-  linter?: AngularLinter;
+  linter?: Linter;
   unitTestRunner?: UnitTestRunner;
   e2eTestRunner?: E2eTestRunner;
   backendProject?: string;
@@ -27,4 +25,5 @@ export interface Schema {
   viewEncapsulation?: 'Emulated' | 'Native' | 'None';
   skipFormat?: boolean;
   standalone?: boolean;
+  ssr?: boolean;
 }

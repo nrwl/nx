@@ -1,5 +1,5 @@
 import { DependencyType, ProjectGraph } from '../config/project-graph';
-import { createTaskGraph } from 'nx/src/tasks-runner/create-task-graph';
+import { createTaskGraph } from './create-task-graph';
 
 describe('createTaskGraph', () => {
   let projectGraph: ProjectGraph;
@@ -14,8 +14,11 @@ describe('createTaskGraph', () => {
             root: 'app1-root',
             files: [],
             targets: {
-              prebuild: {},
+              prebuild: {
+                executor: 'nx:run-commands',
+              },
               build: {
+                executor: 'nx:run-commands',
                 dependsOn: [
                   {
                     projects: 'dependencies',
@@ -27,8 +30,12 @@ describe('createTaskGraph', () => {
                   },
                 ],
               },
-              test: {},
-              serve: {},
+              test: {
+                executor: 'nx:run-commands',
+              },
+              serve: {
+                executor: 'nx:run-commands',
+              },
             },
           },
         },
@@ -39,8 +46,12 @@ describe('createTaskGraph', () => {
             root: 'lib1-root',
             files: [],
             targets: {
-              build: {},
-              test: {},
+              build: {
+                executor: 'nx:run-commands',
+              },
+              test: {
+                executor: 'nx:run-commands',
+              },
             },
           },
         },
@@ -168,6 +179,36 @@ describe('createTaskGraph', () => {
     });
   });
 
+  it('should not interpolate non-existing options and leave those untouched', () => {
+    const oneTask = createTaskGraph(
+      projectGraph,
+      {},
+      ['app1'],
+      ['test'],
+      'development',
+      {
+        a: '--base-href=/{projectRoot}${deploymentId}',
+      }
+    );
+    expect(oneTask).toEqual({
+      roots: ['app1:test'],
+      tasks: {
+        'app1:test': {
+          id: 'app1:test',
+          target: {
+            project: 'app1',
+            target: 'test',
+          },
+          overrides: { a: '--base-href=/app1-root${deploymentId}' },
+          projectRoot: 'app1-root',
+        },
+      },
+      dependencies: {
+        'app1:test': [],
+      },
+    });
+  });
+
   it('should forward args when configured', () => {
     projectGraph = {
       nodes: {
@@ -178,9 +219,14 @@ describe('createTaskGraph', () => {
             root: 'app1-root',
             files: [],
             targets: {
-              'prebuild-base': {},
-              prebuild: {},
+              'prebuild-base': {
+                executor: 'nx:run-commands',
+              },
+              prebuild: {
+                executor: 'nx:run-commands',
+              },
               build: {
+                executor: 'nx:run-commands',
                 dependsOn: [
                   {
                     projects: 'dependencies',
@@ -190,8 +236,12 @@ describe('createTaskGraph', () => {
                   { projects: 'self', target: 'prebuild', params: 'forward' },
                 ],
               },
-              test: {},
-              serve: {},
+              test: {
+                executor: 'nx:run-commands',
+              },
+              serve: {
+                executor: 'nx:run-commands',
+              },
             },
           },
         },
@@ -203,6 +253,7 @@ describe('createTaskGraph', () => {
             files: [],
             targets: {
               build: {
+                executor: 'nx:run-commands',
                 dependsOn: [
                   {
                     projects: 'dependencies',
@@ -211,7 +262,9 @@ describe('createTaskGraph', () => {
                   },
                 ],
               },
-              test: {},
+              test: {
+                executor: 'nx:run-commands',
+              },
             },
           },
         },
@@ -221,7 +274,14 @@ describe('createTaskGraph', () => {
           data: {
             root: 'lib2-root',
             files: [],
-            targets: { build: {}, test: {} },
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+              },
+              test: {
+                executor: 'nx:run-commands',
+              },
+            },
           },
         },
       },
@@ -362,7 +422,9 @@ describe('createTaskGraph', () => {
             root: 'app1-root',
             files: [],
             targets: {
-              build: {},
+              build: {
+                executor: 'nx:run-commands',
+              },
             },
           },
         },
@@ -373,7 +435,9 @@ describe('createTaskGraph', () => {
             root: 'lib1-root',
             files: [],
             targets: {
-              build: {},
+              build: {
+                executor: 'nx:run-commands',
+              },
             },
           },
         },
@@ -384,7 +448,9 @@ describe('createTaskGraph', () => {
             root: 'lib2-root',
             files: [],
             targets: {
-              build: {},
+              build: {
+                executor: 'nx:run-commands',
+              },
             },
           },
         },
@@ -395,7 +461,9 @@ describe('createTaskGraph', () => {
             root: 'lib3-root',
             files: [],
             targets: {
-              build: {},
+              build: {
+                executor: 'nx:run-commands',
+              },
             },
           },
         },
@@ -486,6 +554,164 @@ describe('createTaskGraph', () => {
     });
   });
 
+  it('should handle-mix of targets', () => {
+    projectGraph = {
+      nodes: {
+        app1: {
+          name: 'app1',
+          type: 'app',
+          data: {
+            root: 'app1-root',
+            files: [],
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+              },
+            },
+          },
+        },
+        app2: {
+          name: 'app2',
+          type: 'app',
+          data: {
+            root: 'app2-root',
+            files: [],
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+              },
+            },
+          },
+        },
+        infra1: {
+          name: 'infra1',
+          type: 'app',
+          data: {
+            root: 'infra1-root',
+            files: [],
+            targets: {
+              apply: {
+                executor: 'nx:run-commands',
+              },
+            },
+          },
+        },
+        infra2: {
+          name: 'infra2',
+          type: 'app',
+          data: {
+            root: 'infra2-root',
+            files: [],
+            targets: {
+              apply: {
+                executor: 'nx:run-commands',
+              },
+            },
+          },
+        },
+        coreInfra: {
+          name: 'coreInfra',
+          type: 'app',
+          data: {
+            root: 'infra3-root',
+            files: [],
+            targets: {
+              apply: {
+                executor: 'nx:run-commands',
+              },
+            },
+          },
+        },
+      },
+      dependencies: {
+        app1: [],
+        app2: [],
+        // Scenario is app 1 depends on app 2, so this extends to the infrastructure projects
+        infra1: [
+          { source: 'infra1', target: 'coreInfra', type: 'implicit' },
+          { source: 'infra1', target: 'infra2', type: 'implicit' },
+          { source: 'infra1', target: 'app1', type: 'implicit' },
+        ],
+        infra2: [
+          { source: 'infra2', target: 'coreInfra', type: 'implicit' },
+          { source: 'infra1', target: 'app2', type: 'implicit' },
+        ],
+        coreInfra: [],
+      },
+    };
+
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      {
+        build: ['^build'],
+        apply: [
+          { projects: 'dependencies', target: 'build' },
+          {
+            projects: 'dependencies',
+            target: 'apply',
+            params: 'forward',
+          },
+        ],
+      },
+      ['infra1'],
+      ['apply'],
+      'development',
+      {
+        myFlag: 'flag value',
+      }
+    );
+
+    // prebuild should also be in here
+    expect(taskGraph).toEqual({
+      roots: ['app2:build', 'coreInfra:apply', 'app1:build'],
+      tasks: {
+        'infra1:apply': {
+          id: 'infra1:apply',
+          target: { project: 'infra1', target: 'apply' },
+          projectRoot: 'infra1-root',
+          overrides: { myFlag: 'flag value' },
+        },
+        'app2:build': {
+          id: 'app2:build',
+          target: { project: 'app2', target: 'build' },
+          projectRoot: 'app2-root',
+          overrides: { __overrides_unparsed__: [] },
+        },
+        'coreInfra:apply': {
+          id: 'coreInfra:apply',
+          target: { project: 'coreInfra', target: 'apply' },
+          projectRoot: 'infra3-root',
+          overrides: { myFlag: 'flag value' },
+        },
+        'app1:build': {
+          id: 'app1:build',
+          target: { project: 'app1', target: 'build' },
+          projectRoot: 'app1-root',
+          overrides: { __overrides_unparsed__: [] },
+        },
+        'infra2:apply': {
+          id: 'infra2:apply',
+          target: { project: 'infra2', target: 'apply' },
+          projectRoot: 'infra2-root',
+          overrides: { myFlag: 'flag value' },
+        },
+      },
+      dependencies: {
+        'infra1:apply': [
+          'app2:build',
+          'coreInfra:apply',
+          'app1:build',
+          'coreInfra:apply',
+          'infra2:apply',
+        ],
+        'app2:build': [],
+        'coreInfra:apply': [],
+        'app1:build': [],
+        'infra2:apply': ['app2:build', 'coreInfra:apply'],
+      },
+    });
+  });
+
   it('should handle cycles within the same project', () => {
     projectGraph = {
       nodes: {
@@ -497,9 +723,11 @@ describe('createTaskGraph', () => {
             files: [],
             targets: {
               build: {
+                executor: 'nx:run-commands',
                 dependsOn: [{ target: 'test', projects: 'self' }],
               },
               test: {
+                executor: 'nx:run-commands',
                 dependsOn: [{ target: 'build', projects: 'self' }],
               },
             },
@@ -563,7 +791,9 @@ describe('createTaskGraph', () => {
             root: 'app1-root',
             files: [],
             targets: {
-              build: {},
+              build: {
+                executor: 'nx:run-commands',
+              },
             },
           },
         },
@@ -583,7 +813,9 @@ describe('createTaskGraph', () => {
             root: 'app3-root',
             files: [],
             targets: {
-              build: {},
+              build: {
+                executor: 'nx:run-commands',
+              },
             },
           },
         },
@@ -653,7 +885,9 @@ describe('createTaskGraph', () => {
             root: 'app1-root',
             files: [],
             targets: {
-              build: {},
+              build: {
+                executor: 'nx:run-commands',
+              },
             },
           },
         },
@@ -673,7 +907,9 @@ describe('createTaskGraph', () => {
             root: 'app3-root',
             files: [],
             targets: {
-              build: {},
+              build: {
+                executor: 'nx:run-commands',
+              },
             },
           },
         },
@@ -741,12 +977,15 @@ describe('createTaskGraph', () => {
             files: [],
             targets: {
               build: {
+                executor: 'nx:run-commands',
                 dependsOn: [
                   { target: 'prebuild', projects: 'self' },
                   { target: 'build', projects: 'dependencies' },
                 ],
               },
-              prebuild: {},
+              prebuild: {
+                executor: 'nx:run-commands',
+              },
             },
           },
         },
@@ -757,7 +996,9 @@ describe('createTaskGraph', () => {
             root: 'app2-root',
             files: [],
             targets: {
-              build: {},
+              build: {
+                executor: 'nx:run-commands',
+              },
             },
           },
         },

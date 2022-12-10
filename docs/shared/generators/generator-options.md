@@ -11,7 +11,7 @@ export interface GeneratorOptions {
 }
 ```
 
-Import the TypeScript schema into your generator file and replace the any in your generator function with the interface.
+Import the TypeScript schema into your generator file and replace the `any` in your generator function with the interface.
 
 ```typescript
 import { Tree, formatFiles, installPackagesTask } from '@nrwl/devkit';
@@ -108,7 +108,7 @@ Properties tagged with ⚠️ are required. Others are optional.
 
 ### Schema
 
-```json
+```jsonc
 {
   "properties": {
     "name": {} // see Properties
@@ -124,7 +124,7 @@ Properties tagged with ⚠️ are required. Others are optional.
 
 The properties of a generator. Properties are listed by name:
 
-```json
+```jsonc
 {
   "properties_name": {
     // properties configuration
@@ -350,7 +350,7 @@ In this example, the property `a` is required, while the property `b` is optiona
 
 Make sure that the value is in the enumeration. Example:
 
-```json
+```jsonc
 {
   "type": "string",
   "enum": ["foo", "bar"]
@@ -369,7 +369,6 @@ The sub-properties of a property. Example:
   "index": {
     "description": "Configures the generation of the application's HTML index.",
     "type": "object",
-    "description": "",
     "properties": {
       "input": {
         "type": "string",

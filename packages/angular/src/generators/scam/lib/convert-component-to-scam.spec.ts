@@ -6,7 +6,7 @@ import { convertComponentToScam } from './convert-component-to-scam';
 describe('convertComponentToScam', () => {
   it('should create the scam inline correctly', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'app1', {
       projectType: 'application',
       sourceRoot: 'apps/app1/src',
@@ -48,7 +48,7 @@ describe('convertComponentToScam', () => {
       'utf-8'
     );
     expect(componentSource).toMatchInlineSnapshot(`
-      "import { Component, OnInit, NgModule } from '@angular/core';
+      "import { Component, NgModule } from '@angular/core';
       import { CommonModule } from '@angular/common';
 
       @Component({
@@ -56,12 +56,7 @@ describe('convertComponentToScam', () => {
         templateUrl: './example.component.html',
         styleUrls: ['./example.component.css']
       })
-      export class ExampleComponent implements OnInit {
-
-        constructor() { }
-
-        ngOnInit(): void {
-        }
+      export class ExampleComponent {
 
       }
 
@@ -76,7 +71,7 @@ describe('convertComponentToScam', () => {
 
   it('should create the scam separately correctly', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'app1', {
       projectType: 'application',
       sourceRoot: 'apps/app1/src',
@@ -133,7 +128,7 @@ describe('convertComponentToScam', () => {
 
   it('should create the scam inline correctly when --flat', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'app1', {
       projectType: 'application',
       sourceRoot: 'apps/app1/src',
@@ -177,7 +172,7 @@ describe('convertComponentToScam', () => {
       'utf-8'
     );
     expect(componentSource).toMatchInlineSnapshot(`
-      "import { Component, OnInit, NgModule } from '@angular/core';
+      "import { Component, NgModule } from '@angular/core';
       import { CommonModule } from '@angular/common';
 
       @Component({
@@ -185,12 +180,7 @@ describe('convertComponentToScam', () => {
         templateUrl: './example.component.html',
         styleUrls: ['./example.component.css']
       })
-      export class ExampleComponent implements OnInit {
-
-        constructor() { }
-
-        ngOnInit(): void {
-        }
+      export class ExampleComponent {
 
       }
 
@@ -205,7 +195,7 @@ describe('convertComponentToScam', () => {
 
   it('should create the scam separately correctly when --flat', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'app1', {
       projectType: 'application',
       sourceRoot: 'apps/app1/src',
@@ -264,7 +254,7 @@ describe('convertComponentToScam', () => {
 
   it('should create the scam inline correctly when --type', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'app1', {
       projectType: 'application',
       sourceRoot: 'apps/app1/src',
@@ -310,7 +300,7 @@ describe('convertComponentToScam', () => {
       'utf-8'
     );
     expect(componentSource).toMatchInlineSnapshot(`
-      "import { Component, OnInit, NgModule } from '@angular/core';
+      "import { Component, NgModule } from '@angular/core';
       import { CommonModule } from '@angular/common';
 
       @Component({
@@ -318,12 +308,7 @@ describe('convertComponentToScam', () => {
         templateUrl: './example.random.html',
         styleUrls: ['./example.random.css']
       })
-      export class ExampleRandom implements OnInit {
-
-        constructor() { }
-
-        ngOnInit(): void {
-        }
+      export class ExampleRandom {
 
       }
 
@@ -338,7 +323,7 @@ describe('convertComponentToScam', () => {
 
   it('should create the scam separately correctly when --type', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'app1', {
       projectType: 'application',
       sourceRoot: 'apps/app1/src',
@@ -399,7 +384,7 @@ describe('convertComponentToScam', () => {
 
   it('should place the component and scam in the correct folder when --path is used', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'app1', {
       projectType: 'application',
       sourceRoot: 'apps/app1/src',
@@ -444,7 +429,7 @@ describe('convertComponentToScam', () => {
       'utf-8'
     );
     expect(componentModuleSource).toMatchInlineSnapshot(`
-      "import { Component, OnInit, NgModule } from '@angular/core';
+      "import { Component, NgModule } from '@angular/core';
       import { CommonModule } from '@angular/common';
 
       @Component({
@@ -452,12 +437,7 @@ describe('convertComponentToScam', () => {
         templateUrl: './example.component.html',
         styleUrls: ['./example.component.css']
       })
-      export class ExampleComponent implements OnInit {
-
-        constructor() { }
-
-        ngOnInit(): void {
-        }
+      export class ExampleComponent {
 
       }
 
@@ -472,7 +452,7 @@ describe('convertComponentToScam', () => {
 
   it('should place the component and scam in the correct folder when --path and --flat is used', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'app1', {
       projectType: 'application',
       sourceRoot: 'apps/app1/src',
@@ -517,7 +497,7 @@ describe('convertComponentToScam', () => {
       'utf-8'
     );
     expect(componentModuleSource).toMatchInlineSnapshot(`
-      "import { Component, OnInit, NgModule } from '@angular/core';
+      "import { Component, NgModule } from '@angular/core';
       import { CommonModule } from '@angular/common';
 
       @Component({
@@ -525,12 +505,7 @@ describe('convertComponentToScam', () => {
         templateUrl: './example.component.html',
         styleUrls: ['./example.component.css']
       })
-      export class ExampleComponent implements OnInit {
-
-        constructor() { }
-
-        ngOnInit(): void {
-        }
+      export class ExampleComponent {
 
       }
 

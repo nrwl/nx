@@ -32,39 +32,17 @@ To achieve the aims, we will do the following:
 
 To start with, we need to create a new Nx Workspace. We can do this easily with:
 
-```bash
+```shell
 # Npm
 npx create-nx-workspace ng-mf
 ```
 
-```bash
+```shell
 # Yarn
 yarn create nx-workspace ng-mf --packageManager=yarn
 ```
 
-You'll be prompted for a preset. We recommend selecting `empty` as it will allow you finer control over your workspace configuration.
-
-You'll also be prompted if you would like to setup Nx Cloud. For this tutorial select `No`, however, I highly recommend that you read more about it [here](https://nx.app/).
-
-### Add the Angular Plugin
-
-To add Angular-related features to our newly created monorepo we need to install the Angular Plugin. Again, this is pretty easy to do:
-
-{% callout type="warning" title="Be at the root" %}
-Check that you are now at the root of your monorepo in your terminal. If not, run `cd ng-mf`.
-{% /callout %}
-
-```bash
-# Npm
-npm install --save-dev @nrwl/angular
-```
-
-```bash
-# Yarn
-yarn add -D @nrwl/angular
-```
-
-Simple! You are now able to use Nx Generators to scaffold Angular applications and libraries.
+You'll be prompted for a preset. Select `"Angular"`.
 
 ### Creating our applications
 
@@ -72,12 +50,12 @@ We need to generate two applications that support Module Federation.
 
 We'll start with the Admin Dashboard application which will act as a host application for the Micro-Frontends (_MFEs_):
 
-```bash
+```shell
 # Npm
 npx nx g @nrwl/angular:host dashboard
 ```
 
-```bash
+```shell
 # Yarn
 yarn nx g @nrwl/angular:host dashboard
 ```
@@ -86,12 +64,12 @@ The application generator will create and modify the files needed to set up the 
 
 Now, let's generate the Login application as a remote application.
 
-```bash
+```shell
 # Npm
 npx nx g @nrwl/angular:remote login --host=dashboard
 ```
 
-```bash
+```shell
 # Yarn
 yarn nx g @nrwl/angular:remote login --host=dashboard
 ```
@@ -117,7 +95,7 @@ For both applications, the generator did the following:
 - Moved the code that is normally in `main.ts` to `bootstrap.ts`
 - Changed `main.ts` to dynamically import `bootstrap.ts` _(this is required for the Module Federation to correct load versions of shared libraries)_
 - Updated the `build` target in the `project.json` to use the `@nrwl/angular:webpack-browser` executor _(this is required as it supports passing a custom Webpack configuration to the Angular compiler)_
-- Updated the `serve` target to use `@nrwl/angular:webpack-server` _(this is required as we first need Webpack to build the application with our custom Webpack configuration)_
+- Updated the `serve` target to use `@nrwl/angular:webpack-dev-server` _(this is required as we first need Webpack to build the application with our custom Webpack configuration)_
 
 The key differences reside within the configuration of the Module Federation Plugin within each application's `module-federation.config.js`.
 
@@ -168,7 +146,7 @@ We'll start by building the Login application, which will consist of a login for
 
 Let's create a user data-access library that will be shared between the host application and the remote application. This will be used to determine if there is an authenticated user as well as providing logic for authenticating the user.
 
-```bash
+```shell
 nx g @nrwl/angular:lib shared/data-access-user
 ```
 
@@ -176,13 +154,13 @@ This will scaffold a new library for us to use.
 
 We need an Angular Service that we will use to hold state:
 
-```bash
+```shell
 nx g @nrwl/angular:service user --project=shared-data-access-user
 ```
 
-This will create a file `user.service.ts` under the `shared/data-access-user` library. Change it's contents to match:
+This will create a file `user.service.ts` under the `shared/data-access-user` library. Change its contents to match:
 
-```ts
+```ts {% fileName="shared/data-access-user/user.service.ts" %}
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 @Injectable({
@@ -209,7 +187,7 @@ Add a new export to the shared/data-access-user's `index.ts` file:
 
 First, add `FormsModule` to the `imports` array in your `remote-entry/entry.module.ts` file:
 
-```ts
+```ts {% fileName="remote-entry/entry.module.ts" %}
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -234,7 +212,7 @@ export class RemoteEntryModule {}
 
 Next we want to set up our `entry.component.ts` file so that it renders a login and has injected our `UserService` to allow us to sign the user in:
 
-```ts
+```ts {% fileName="entry.component.ts" %}
 import { Component } from '@angular/core';
 import { UserService } from '@ng-mf/shared/data-access-user';
 @Component({
@@ -294,7 +272,7 @@ This could be improved with error handling etc. but for the purposes of this tut
 Let's add a route to our Login application so that we can render the `RemoteEntryComponent`.  
 Open `app.module.ts` and add the following route to the `RouterMoodule.forRoot(...)` declaration.
 
-```ts
+```ts {% fileName="app.module.ts" %}
 RouterModule.forRoot(
   [
     {
@@ -309,7 +287,7 @@ RouterModule.forRoot(
 
 Now let's serve the application and view it in a browser to check that the form renders correctly.
 
-```bash
+```shell
 nx run login:serve
 ```
 
@@ -334,7 +312,7 @@ Now, let's delete the `app.component.html` and `app.component.css` files in the 
 
 Finally, let's add our logic to `app.component.ts`. Change it to match the following:
 
-```ts
+```ts {% fileName="app.component.ts" %}
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { distinctUntilChanged } from 'rxjs/operators';
@@ -371,7 +349,7 @@ export class AppComponent implements OnInit {
 
 We can run both the dashboard application and the login application and you can try it out using:
 
-```bash
+```shell
 nx serve dashboard --devRemotes=login
 ```
 
@@ -411,7 +389,7 @@ We’ll start by creating this file. Add a `module-federation.manifest.json` fil
 
 Next, open `main.ts` under the `src/`folder and replace it with the following:
 
-```typescript
+```typescript {% fileName="src/main.ts" %}
 import { setRemoteDefinitions } from '@nrwl/angular/mf';
 
 fetch('/assets/module-federation.manifest.json')
@@ -477,7 +455,7 @@ That’s all the changes required to replace Static Module Federation with Dynam
 
 Running:
 
-```bash
+```shell
 nx serve dashboard --devRemotes=login
 ```
 
@@ -497,7 +475,7 @@ To showcase this, let’s create a new Host application that will use our previo
 
 Run the following command to generate a new Host application that is preconfigured for Dynamic Federation and add specify the Login Remote application we want to add:
 
-```bash
+```shell
 nx g @nrwl/angular:host employee --remotes=login --dynamic
 ```
 
@@ -515,7 +493,7 @@ You should take a look at the files generated and see how the Login Remote appli
 
 We’re going to demonstrate how when specifying a dynamic Host when adding a new Remote application, the Remote application will be added to the Host’s Micro Frontend Manifest file correctly.
 
-```bash
+```shell
 nx g @nrwl/angular:remote todo --host=employee
 ```
 

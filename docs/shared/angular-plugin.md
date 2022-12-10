@@ -1,5 +1,3 @@
-![Angular logo](/shared/angular-logo.png)
-
 The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides:
 
 - Integration with libraries such as Storybook, Jest, Cypress, Karma, and Protractor.
@@ -12,18 +10,18 @@ The Nx Plugin for Angular contains executors, generators, and utilities for mana
 - Utilities for automatic workspace refactoring.
 
 {% callout type="note" title="Currently using the Angular CLI?" %}
-You can easily and mostly **automatically migrate from an Angular CLI** project to Nx! Learn more [here](/recipe/migration-angular).
+You can easily and mostly **automatically migrate from an Angular CLI** project to Nx! Learn more [here](/recipes/adopting-nx/migration-angular).
 {% /callout %}
 
 ## Setting up the Angular plugin
 
 Adding the Angular plugin to an existing Nx workspace can be done with the following:
 
-```bash
+```shell
 yarn add -D @nrwl/angular
 ```
 
-```bash
+```shell
 npm install -D @nrwl/angular
 ```
 
@@ -33,7 +31,7 @@ npm install -D @nrwl/angular
 
 It's straightforward to generate an Angular application:
 
-```bash
+```shell
 nx g @nrwl/angular:app appName
 ```
 
@@ -45,7 +43,7 @@ By default, the application will be generated with:
 
 We can then serve, build, test, lint, and run e2e tests on the application with the following commands:
 
-```bash
+```shell
 nx serve appName
 nx build appName
 nx test appName
@@ -57,7 +55,7 @@ nx e2e appName
 
 Generating an Angular library is very similar to generating an application:
 
-```bash
+```shell
 nx g @nrwl/angular:lib libName
 ```
 
@@ -68,7 +66,7 @@ By default, the library will be generated with:
 
 We can then test and lint the library with the following commands:
 
-```bash
+```shell
 nx test libName
 nx lint libName
 ```
@@ -81,10 +79,10 @@ Read more about:
 
 ## More Documentation
 
-- [Angular Nx Tutorial](/angular-tutorial/01-create-application)
+- [Angular Nx Tutorial](/angular-tutorial/1-code-generation)
 - [Migrating from the Angular CLI](recipe/migration-angular)
-- [Setup Module Federation with Angular and Nx](/recipe/faster-builds)
-- [Using NgRx](/recipe/misc-ngrx)
-- [Using Data Persistence operators](/recipe/misc-data-persistence)
-- [Upgrading an AngularJS application to Angular](/recipe/migration-angularjs)
-- [Using Tailwind CSS with Angular projects](/recipe/using-tailwind-css-with-angular-projects)
+- [Setup Module Federation with Angular and Nx](/recipes/module-federation/faster-builds)
+- [Using NgRx](/recipes/other/misc-ngrx)
+- [Using Data Persistence operators](/recipes/other/misc-data-persistence)
+- [Upgrading an AngularJS application to Angular](/recipes/adopting-nx/migration-angularjs)
+- [Using Tailwind CSS with Angular projects](/recipes/other/using-tailwind-css-with-angular-projects)

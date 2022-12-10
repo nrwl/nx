@@ -28,7 +28,7 @@ database and the file server separately.
 
 ### Step 1: Pull the Image
 
-```bash
+```shell
 > docker pull nxprivatecloud/nxcloud
 ```
 
@@ -57,7 +57,7 @@ proxy/load-balancer will handle TLS). Otherwise, you will likely want to run Nx 
 
 **Using HTTPS**
 
-```bash
+```shell
 > docker create --name cloud \
 
         -p 443:8081 \
@@ -70,7 +70,7 @@ proxy/load-balancer will handle TLS). Otherwise, you will likely want to run Nx 
 
 **Using HTTP (no proxy)**
 
-```bash
+```shell
 > docker create --name cloud \
 
         -p 80:8081 \
@@ -81,7 +81,7 @@ proxy/load-balancer will handle TLS). Otherwise, you will likely want to run Nx 
 
 **Using HTTPS via proxy**
 
-```bash
+```shell
 > docker create --name cloud \
         -p 80:8081 \
         -e NX_CLOUD_APP_URL="https://cloud.myorg.com" \
@@ -109,7 +109,7 @@ proxy/load-balancer will handle TLS). Otherwise, you will likely want to run Nx 
 
 Once you create the container, you can start it using:
 
-```bash
+```shell
 > docker start cloud
 ```
 
@@ -145,14 +145,14 @@ its data in the provided volume. But you can also tell Nx Cloud to use a differe
 you are using MongoDB Atlas or Cosmos DB). To do this, provision the `NX_CLOUD_MONGO_SERVER_ENDPOINT` env variable when
 creating a container, like so:
 
-```bash
+```shell
 -e NX_CLOUD_MONGO_SERVER_ENDPOINT="mongodb://domain-with-mongo:27017/nrwl-api"
 ```
 
 By default, Nx Cloud requires Mongo 4.2+. If you are using an older version of Mongo (for instance, if you are using
 Cosmos DB), please add
 
-```bash
+```shell
 -e NX_CLOUD_USE_MONGO42=false
 ```
 
@@ -181,7 +181,7 @@ supported.
 To configure S3 as a file storage, provision the `AWS_S3_ACCESS_KEY_ID`, `AWS_S3_SECRET_ACCESS_KEY`, and `AWS_S3_BUCKET`
 env variables when creating the Nx Cloud docker container, like so:
 
-```bash
+```shell
 -e AWS_S3_ACCESS_KEY_ID="SOMEKEY"
 -e AWS_S3_SECRET_ACCESS_KEY="SOMESECRETKEY"
 -e AWS_S3_BUCKET="nx-cache-bucket-name"
@@ -191,7 +191,7 @@ If you are using an accelerated bucket, add: `-e AWS_S3_ACCELERATED=true`
 
 If you are using a local S3 installation (e.g., Minio), you can set the endpoint as follows:
 
-```bash
+```shell
 -e AWS_S3_ENDPOINT="https://local-installation.myorg.com"
 -e AWS_S3_ACCESS_KEY_ID="SOMEKEY"
 -e AWS_S3_SECRET_ACCESS_KEY="SOMESECRETKEY"
@@ -211,7 +211,7 @@ cache entries as well.
 To configure Azure Blob as a file storage, provision the `AZURE_CONNECTION_STRING`, `AZURE_CONTAINER` env variables when
 creating the Nx Cloud docker container, like so:
 
-```bash
+```shell
 -e AZURE_CONNECTION_STRING="SOME-CONNECTION-STRING"
 -e AZURE_CONTAINER="files"
 ```
@@ -238,7 +238,7 @@ If you have a container with 4GB of RAM, you can decrease the memory limits by s
 
 Example:
 
-```bash
+```shell
 > docker create --name cloud \
     -p 80:8081 \
     -e NX_CLOUD_APP_URL="https://cloud.myorg.com" \
@@ -266,7 +266,7 @@ By default, the Nx Cloud container is going to remove cached artifacts after two
 
 Example:
 
-```bash
+```shell
 > docker create --name cloud \
     -p 80:8081 \
     -e NX_CLOUD_APP_URL="https://cloud.myorg.com" \

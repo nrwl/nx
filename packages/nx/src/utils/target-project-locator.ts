@@ -6,12 +6,14 @@ import {
   ProjectGraphExternalNode,
   ProjectGraphProjectNode,
 } from '../config/project-graph';
+import {
+  createProjectRootMappings,
+  findProjectForPath,
+} from '../project-graph/utils/find-project-for-path';
 
 export class TargetProjectLocator {
   private projectRootMappings = createProjectRootMappings(this.nodes);
-  private npmProjects = this.externalNodes
-    ? Object.values(this.externalNodes)
-    : [];
+  private npmProjects = filterRootExternalDependencies(this.externalNodes);
   private tsConfig = this.getRootTsConfig();
   private paths = this.tsConfig.config?.compilerOptions?.paths;
   private typescriptResolutionCache = new Map<string, string | null>();
@@ -176,43 +178,26 @@ export class TargetProjectLocator {
   }
 
   private findMatchingProjectFiles(file: string) {
-    const project = findMatchingProjectForPath(file, this.projectRootMappings);
+    const project = findProjectForPath(file, this.projectRootMappings);
     return this.nodes[project];
   }
 }
 
-function createProjectRootMappings(
-  nodes: Record<string, ProjectGraphProjectNode>
-) {
-  const projectRootMappings = new Map<string, string>();
-  for (const projectName of Object.keys(nodes)) {
-    const root = nodes[projectName].data.root;
-    projectRootMappings.set(
-      root && root.endsWith('/') ? root.substring(0, root.length - 1) : root,
-      projectName
-    );
-  }
-  return projectRootMappings;
-}
+// matches `npm:@scope/name`, `npm:name` but not `npm:@scope/name@version` and `npm:name@version`
+const ROOT_VERSION_PACKAGE_NAME_REGEX = /^npm:(?!.+@.+)/;
 
-/**
- * Locates a project in projectRootMap based on a file within it
- * @param filePath path that is inside of projectName
- * @param projectRootMap Map<projectRoot, projectName>
- */
-export function findMatchingProjectForPath(
-  filePath: string,
-  projectRootMap: Map<string, string>
-) {
-  for (
-    let currentPath = filePath;
-    currentPath != dirname(currentPath);
-    currentPath = dirname(currentPath)
-  ) {
-    const p = projectRootMap.get(currentPath);
-    if (p) {
-      return p;
+function filterRootExternalDependencies(
+  externalNodes: Record<string, ProjectGraphExternalNode>
+): ProjectGraphExternalNode[] {
+  if (!externalNodes) {
+    return [];
+  }
+  const keys = Object.keys(externalNodes);
+  const nodes = [];
+  for (let i = 0; i < keys.length; i++) {
+    if (keys[i].match(ROOT_VERSION_PACKAGE_NAME_REGEX)) {
+      nodes.push(externalNodes[keys[i]]);
     }
   }
-  return null;
+  return nodes;
 }

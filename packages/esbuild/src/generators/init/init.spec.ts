@@ -1,4 +1,4 @@
-import { Tree } from '@nrwl/devkit';
+import { readJson, writeJson, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
 import { esbuildInitGenerator } from './init';
@@ -7,10 +7,16 @@ describe('esbuildInitGenerator', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    writeJson(tree, 'package.json', {});
   });
 
-  it('should run successfully', async () => {
-    await expect(esbuildInitGenerator(tree, {})).resolves.not.toThrow();
+  it('should add esbuild as a dev dependency', async () => {
+    await esbuildInitGenerator(tree, {});
+
+    const packageJson = readJson(tree, 'package.json');
+    expect(packageJson.devDependencies).toEqual({
+      esbuild: expect.any(String),
+    });
   });
 });

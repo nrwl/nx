@@ -10,7 +10,7 @@ about to run has been executed before, so it can use the cache to restore the re
 
 To enable caching for `build` and `test`, edit the `cacheableOperations` property in `nx.json` to include the `build` and `test` tasks:
 
-```json title="nx.json"
+```json {% fileName="nx.json" %}
 {
   "tasksRunnerOptions": {
     "default": {
@@ -31,32 +31,40 @@ the result of the test run.
 
 Now, run the following command twice. The second time the operation will be instant:
 
-```bash
-nx test header
+```shell
+nx build header
 ```
 
-```bash title="Terminal Output"
-> nx run header:test  [existing outputs match the cache, left as is]
+```{% command="nx build header"%}
+> nx run header:build  [local cache]
 
 
-> header@0.0.0 test
-> jest
+> header@0.0.0 build
+> rimraf dist && rollup --config
 
- PASS  src/Header.spec.tsx
-  ✓ renders header (14 ms)
 
-Test Suites: 1 passed, 1 total
-Tests:       1 passed, 1 total
-Snapshots:   0 total
-Time:        0.528 s, estimated 2 s
-Ran all test suites.
+src/index.tsx → dist...
+created dist in 858ms
 
- ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+ —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target test for project header (4ms)
+ >  NX   Successfully ran target build for project header (13ms)
 
    Nx read the output from the cache instead of running the command for 1 out of 1 tasks.
 ```
+
+## Replaying from Cache
+
+When Nx determines that the inputs for a task have not changed, it recreates the outputs of that task as if it actually ran on your machine - but much faster. The outputs of a cached task include both the terminal output and the files created in the defined `output` directories for that task.
+
+You can test this out by deleting the `dist` folder that the `header:build` task outputs to and then running `nx build header` again. The cached task will replay instantly and the correct files will be present in the `dist` folder.
+
+```treeview
+header/
+└── dist/  <-- this folder gets recreated
+```
+
+If your task creates output artifacts in a different location, you can [change the output folder(s)](/reference/project-configuration#outputs) that are cached. You can also [customize which inputs](/more-concepts/customizing-inputs) will invalidate the cache if they are changed.
 
 ## Advanced Caching
 
@@ -66,23 +74,3 @@ For a more in-depth understanding of the caching implementation and to fine-tune
 
 By default, Nx uses a local computation cache. Nx stores the cached values only for a week, after which they
 are deleted. To clear the cache run [`nx reset`](/nx/reset), and Nx will create a new one the next time it tries to access it.
-
-## Distributed Computation Caching
-
-The computation cache provided by Nx can be distributed across multiple machines. You can either build an implementation
-of the cache or use Nx Cloud. Nx Cloud is an app that provides a fast and zero-config implementation of distributed
-caching. It's completely free for OSS projects and for most closed-sourced
-projects ([read more here](https://dev.to/nrwl/more-time-saved-for-free-with-nx-cloud-4a2j)).
-
-You can connect your workspace to Nx Cloud by running:
-
-```bash
-npx nx connect-to-nx-cloud
-```
-
-## See Also:
-
-- [Nx Cloud Documentation](/nx-cloud/intro/what-is-nx-cloud)
-- [Nx Cloud Main Site](https://nx.app)
-- [--skip-nx-cache flag](/nx/affected#skip-nx-cache)
-- [tasks-runner-options property](/reference/nx-json#tasks-runner-options)

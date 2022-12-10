@@ -4,7 +4,7 @@ The Node Plugin contains generators and executors to manage Node applications wi
 
 To add the Node plugin to an existing workspace, run one of the following:
 
-```bash
+```shell
 # For npm users
 npm install -D @nrwl/node
 
@@ -16,7 +16,7 @@ yarn add -D @nrwl/node
 
 You can add a new application with the following:
 
-```bash
+```shell
 nx g @nrwl/node:application my-new-app
 ```
 
@@ -26,8 +26,8 @@ You can run your application with `nx serve my-new-app`, which starts it in watc
 
 Node libraries are a good way to separate features within your organization. To create a Node library run the following command:
 
-```bash
-nx g @nrwl/js:node my-new-lib
+```shell
+nx g @nrwl/node:lib my-new-lib
 
 # If you want the library to be buildable or publishable to npm
 nx g @nrwl/node:lib my-new-lib --buildable
@@ -42,7 +42,7 @@ nx g @nrwl/node:lib my-new-lib \
 
 You can run unit tests with:
 
-```bash
+```shell
 nx test my-new-app
 nx test my-new-lib
 ```
@@ -53,13 +53,13 @@ Replace `my-new-app` with the name or your project. This command works for both 
 
 Node applications can be build with:
 
-```bash
+```shell
 nx build my-new-app
 ```
 
 And if you generated a library with `--buildable`, then you can build a library as well:
 
-```bash
+```shell
 nx build my-new-lib
 ```
 
@@ -69,7 +69,7 @@ The output is in the `dist` folder. You can customize the output folder by setti
 
 Generating Node applications has an option to configure other projects in the workspace to proxy API requests. This can be done by passing the `--frontendProject` with the project name you wish to enable proxy support for.
 
-```bash
+```shell
 nx g @nrwl/node:application my-new-app \
 --frontendProject my-react-app
 ```

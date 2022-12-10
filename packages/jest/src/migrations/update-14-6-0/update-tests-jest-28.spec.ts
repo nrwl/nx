@@ -13,7 +13,7 @@ import {
 
 describe('Jest Migration - jest 28 test files', () => {
   it('should convert test files', async () => {
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await workspaceLib(tree, {
       name: 'blah',
       linter: undefined,

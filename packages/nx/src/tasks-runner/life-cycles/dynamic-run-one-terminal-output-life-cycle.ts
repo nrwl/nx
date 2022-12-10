@@ -7,6 +7,7 @@ import type { LifeCycle } from '../life-cycle';
 import { prettyTime } from './pretty-time';
 import { Task } from '../../config/task-graph';
 import { formatFlags } from './formatting-utils';
+import { viewLogsFooterRows } from './view-logs-utils';
 
 /**
  * As tasks are completed the overall state moves from:
@@ -335,6 +336,8 @@ export async function createRunOneDynamicOutputRenderer({
           .forEach((arg) => taskOverridesLines.push(arg));
       }
 
+      const viewLogs = viewLogsFooterRows(totalFailedTasks);
+
       renderLines(
         [
           output.applyNxPrefix(
@@ -351,6 +354,7 @@ export async function createRunOneDynamicOutputRenderer({
           )}    ${totalSuccessfulTasks}${`/${totalCompletedTasks}`} succeeded ${output.dim(
             `[${totalCachedTasks} read from cache]`
           )}`,
+          ...viewLogs,
         ],
         'red'
       );

@@ -1,5 +1,3 @@
-![NestJS logo](/shared/nest-logo.png)
-
 Nest.js is a framework designed for building scalable server-side applications. In many ways, Nest is familiar to Angular developers:
 
 - It has excellent TypeScript support.
@@ -147,5 +145,4 @@ nx test my-nest-lib
 
 ## More Documentation
 
-- [Todo Tutorial](/node-tutorial/01-create-application)
 - [Using Jest](/packages/jest)

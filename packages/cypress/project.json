@@ -1,4 +1,5 @@
 {
+  "name": "cypress",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/cypress",
   "projectType": "library",
@@ -9,7 +10,7 @@
         "jestConfig": "packages/cypress/jest.config.ts",
         "passWithNoTests": true
       },
-      "outputs": ["coverage/packages/cypress"]
+      "outputs": ["{workspaceRoot}/coverage/packages/cypress"]
     },
     "build-base": {
       "executor": "@nrwl/js:tsc",
@@ -57,7 +58,7 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["build/packages/cypress"],
+      "outputs": ["{workspaceRoot}/build/packages/cypress"],
       "options": {
         "command": "node ./scripts/copy-readme.js cypress"
       }

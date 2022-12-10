@@ -6,12 +6,13 @@ window.useXstateInspect = false;
 window.appConfig = {
   showDebugger: false,
   showExperimentalFeatures: true,
-  projectGraphs: [
+  workspaces: [
     {
       id: 'local',
       label: 'local',
-      url: 'projectGraph.json',
+      projectGraphUrl: 'assets/project-graphs/e2e.json',
+      taskGraphUrl: 'assets/task-graphs/e2e.json',
     },
   ],
-  defaultProjectGraph: 'local',
+  defaultWorkspaceId: 'local',
 };

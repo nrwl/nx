@@ -28,29 +28,29 @@ describe('<%= className %> Selectors', () => {
   });
 
   describe('<%= className %> Selectors', () => {
-    it('getAll<%= className %>() should return the list of <%= className %>', () => {
-      const results = <%= className %>Selectors.getAll<%= className %>(state);
+    it('selectAll<%= className %>() should return the list of <%= className %>', () => {
+      const results = <%= className %>Selectors.selectAll<%= className %>(state);
       const selId = get<%= className %>Id(results[1]);
 
       expect(results.length).toBe(3);
       expect(selId).toBe('PRODUCT-BBB');
     });
 
-    it('getSelected() should return the selected Entity', () => {
-      const result = <%= className %>Selectors.getSelected(state) as <%= className %>Entity;
+    it('selectEntity() should return the selected Entity', () => {
+      const result = <%= className %>Selectors.selectEntity(state) as <%= className %>Entity;
       const selId = get<%= className %>Id(result);
 
       expect(selId).toBe('PRODUCT-BBB');
     });
 
-    it('get<%= className %>Loaded() should return the current "loaded" status', () => {
-      const result = <%= className %>Selectors.get<%= className %>Loaded(state);
+    it('select<%= className %>Loaded() should return the current "loaded" status', () => {
+      const result = <%= className %>Selectors.select<%= className %>Loaded(state);
 
       expect(result).toBe(true);
     });
 
-    it('get<%= className %>Error() should return the current "error" state', () => {
-      const result = <%= className %>Selectors.get<%= className %>Error(state);
+    it('select<%= className %>Error() should return the current "error" state', () => {
+      const result = <%= className %>Selectors.select<%= className %>Error(state);
 
       expect(result).toBe(ERROR_MSG);
     });

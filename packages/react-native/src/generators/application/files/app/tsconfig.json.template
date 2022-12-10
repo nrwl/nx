@@ -5,9 +5,10 @@
     "jsx": "react-native",
     "lib": ["dom", "esnext"],
     "moduleResolution": "node",
-    "noEmit": true,
     "skipLibCheck": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "composite": true,
+    "declaration": true
   },
   "files": [
     "../../node_modules/@nrwl/react-native/typings/svg.d.ts"

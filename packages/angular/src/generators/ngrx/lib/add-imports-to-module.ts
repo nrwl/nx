@@ -50,7 +50,7 @@ export function addImportsToModule(
   const propertyName = `${names(options.name).propertyName}`;
   const reducerImports = `* as from${className}`;
 
-  const storeMetaReducers = `metaReducers: !environment.production ? [] : []`;
+  const storeMetaReducers = `metaReducers: []`;
 
   const storeForRoot = `StoreModule.forRoot({}, {
       ${storeMetaReducers},
@@ -59,33 +59,19 @@ export function addImportsToModule(
         strictStateImmutability: true
       }
     })`;
-  const nxModule = 'NxModule.forRoot()';
   const effectsForRoot = `EffectsModule.forRoot([${effectsName}])`;
   const effectsForEmptyRoot = `EffectsModule.forRoot([])`;
   const storeForFeature = `StoreModule.forFeature(from${className}.${constantName}_FEATURE_KEY, from${className}.${propertyName}Reducer)`;
   const effectsForFeature = `EffectsModule.forFeature([${effectsName}])`;
-  const devTools = `!environment.production ? StoreDevtoolsModule.instrument() : []`;
   const storeRouterModule = 'StoreRouterConnectingModule.forRoot()';
 
   // this is just a heuristic
   const hasRouter = sourceText.indexOf('RouterModule') > -1;
-  const hasNxModule = sourceText.includes(nxModule);
 
   sourceFile = addImport(sourceFile, 'StoreModule', '@ngrx/store');
   sourceFile = addImport(sourceFile, 'EffectsModule', '@ngrx/effects');
 
   if (options.minimal && options.root) {
-    sourceFile = addImport(
-      sourceFile,
-      'StoreDevtoolsModule',
-      '@ngrx/store-devtools'
-    );
-    sourceFile = addImport(
-      sourceFile,
-      'environment',
-      '../environments/environment'
-    );
-
     sourceFile = addImportToModule(tree, sourceFile, modulePath, storeForRoot);
     sourceFile = addImportToModule(
       tree,
@@ -93,7 +79,6 @@ export function addImportsToModule(
       modulePath,
       effectsForEmptyRoot
     );
-    sourceFile = addImportToModule(tree, sourceFile, modulePath, devTools);
 
     if (hasRouter) {
       sourceFile = addImport(
@@ -129,22 +114,6 @@ export function addImportsToModule(
     if (options.root) {
       sourceFile = addCommonImports();
 
-      if (!hasNxModule) {
-        sourceFile = addImport(sourceFile, 'NxModule', '@nrwl/angular');
-        sourceFile = addImportToModule(tree, sourceFile, modulePath, nxModule);
-      }
-
-      sourceFile = addImport(
-        sourceFile,
-        'StoreDevtoolsModule',
-        '@ngrx/store-devtools'
-      );
-      sourceFile = addImport(
-        sourceFile,
-        'environment',
-        '../environments/environment'
-      );
-
       sourceFile = addImportToModule(
         tree,
         sourceFile,
@@ -157,7 +126,6 @@ export function addImportsToModule(
         modulePath,
         effectsForRoot
       );
-      sourceFile = addImportToModule(tree, sourceFile, modulePath, devTools);
 
       if (hasRouter) {
         sourceFile = addImport(

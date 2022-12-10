@@ -1,4 +1,6 @@
 {
+  "version": 2,
+  "outputCapture": "direct-nodejs",
   "title": "Typescript Build Target",
   "description": "Builds using TypeScript.",
   "cli": "nx",
@@ -61,6 +63,29 @@
       "description": "When `updateBuildableProjectDepsInPackageJson` is `true`, this adds dependencies to either `peerDependencies` or `dependencies`.",
       "enum": ["dependencies", "peerDependencies"],
       "default": "peerDependencies"
+    },
+    "external": {
+      "description": "A list projects to be treated as external. This feature is experimental",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": ["all", "none"]
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "externalBuildTargets": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of target names that annotate a build target for a project",
+      "default": ["build"]
     }
   },
   "required": ["main", "outputPath", "tsConfig"],
@@ -119,5 +144,6 @@
         }
       ]
     }
-  }
+  },
+  "examplesFile": "../../../docs/tsc-examples.md"
 }

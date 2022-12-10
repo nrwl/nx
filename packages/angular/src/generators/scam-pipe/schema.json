@@ -4,6 +4,12 @@
   "cli": "nx",
   "title": "SCAM Pipe Generator Options Schema",
   "type": "object",
+  "examples": [
+    {
+      "command": "nx g @nrwl/angular:scam-pipe --project=my-lib --flat=false my-transformation",
+      "description": "Generates a `MyTransformationPipe` in a `my-transformation` folder in the `my-lib` project"
+    }
+  ],
   "description": "Creates a new, generic Angular pipe definition in the given or default project.",
   "additionalProperties": false,
   "properties": {

@@ -1,4 +1,6 @@
 {
+  "version": 2,
+  "outputCapture": "direct-nodejs",
   "cli": "nx",
   "$id": "NxReactNativeStart",
   "$schema": "http://json-schema.org/schema",
@@ -21,5 +23,6 @@
       "description": "Run packager server in interactive mode.",
       "default": true
     }
-  }
+  },
+  "examplesFile": "../../../docs/start-examples.md"
 }

@@ -5,16 +5,6 @@
   "title": "Create a React Component for Next",
   "description": "Create a React Component for Next.",
   "type": "object",
-  "examples": [
-    {
-      "command": "nx g component my-component --project=mylib",
-      "description": "Generate a component in the `mylib` library"
-    },
-    {
-      "command": "nx g component my-component --project=mylib --classComponent",
-      "description": "Generate a class component in the `mylib` library"
-    }
-  ],
   "properties": {
     "project": {
       "type": "string",
@@ -96,7 +86,20 @@
       "type": "boolean",
       "description": "Create component at the source root rather than its own directory.",
       "default": false
+    },
+    "pascalCaseFiles": {
+      "type": "boolean",
+      "description": "Use pascal case component file name (e.g. `App.tsx`).",
+      "alias": "P",
+      "default": false
+    },
+    "pascalCaseDirectory": {
+      "type": "boolean",
+      "description": "Use pascal case directory name (e.g. `App/App.tsx`).",
+      "alias": "R",
+      "default": false
     }
   },
-  "required": ["name", "project"]
+  "required": ["name", "project"],
+  "examplesFile": "../../../docs/component-examples.md"
 }

@@ -51,5 +51,6 @@
     "componentName",
     "componentPath",
     "componentFileName"
-  ]
+  ],
+  "examplesFile": "../../../docs/component-cypress-spec-examples.md"
 }

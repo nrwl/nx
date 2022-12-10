@@ -19,21 +19,21 @@ Install `create-nx-workspace` globally to invoke the command directly, or use `n
 
 ### allPrompts
 
-Type: boolean
+Type: `boolean`
 
-Default: false
+Default: `false`
 
 Show all prompts
 
 ### appName
 
-Type: string
+Type: `string`
 
 The name of the application when a preset with pregenerated app is selected
 
 ### ci
 
-Type: string
+Type: `string`
 
 Choices: [github, circleci, azure]
 
@@ -41,7 +41,7 @@ Generate a CI workflow file
 
 ### cli
 
-Type: string
+Type: `string`
 
 Choices: [nx, angular]
 
@@ -49,88 +49,88 @@ CLI to power the Nx workspace
 
 ### commit.email
 
-Type: string
+Type: `string`
 
 E-mail of the committer
 
 ### commit.message
 
-Type: string
+Type: `string`
 
-Default: Initial commit
+Default: `Initial commit`
 
 Commit message
 
 ### commit.name
 
-Type: string
+Type: `string`
 
 Name of the committer
 
 ### defaultBase
 
-Type: string
+Type: `string`
 
-Default: main
+Default: `main`
 
 Default base to use for new projects
 
 ### help
 
-Type: boolean
+Type: `boolean`
 
 Show help
 
 ### interactive
 
-Type: boolean
+Type: `boolean`
 
 Enable interactive mode with presets
 
 ### name
 
-Type: string
+Type: `string`
 
 Workspace name (e.g. org name)
 
 ### nxCloud
 
-Type: boolean
+Type: `boolean`
 
 Enable distributed caching to make your CI faster
 
 ### packageManager
 
-Type: string
+Type: `string`
 
 Choices: [npm, pnpm, yarn]
 
-Default: npm
+Default: `npm`
 
 Package manager to use
 
 ### preset
 
-Type: string
+Type: `string`
 
-Customizes the initial content of your workspace. Default presets include: ["apps", "empty", "core", "npm", "ts", "web-components", "angular", "angular-nest", "react", "react-express", "react-native", "expo", "next", "nest", "express"]. To build your own see https://nx.dev/packages/nx-plugin#preset
+Customizes the initial content of your workspace. Default presets include: ["apps", "empty", "core", "npm", "ts", "web-components", "angular-monorepo", "angular-standalone", "react-monorepo", "react-standalone", "react-native", "expo", "next", "nest", "express", "react", "angular"]. To build your own see https://nx.dev/packages/nx-plugin#preset
 
 ### skipGit
 
-Type: boolean
+Type: `boolean`
 
-Default: false
+Default: `false`
 
 Skip initializing a git repository.
 
 ### style
 
-Type: string
+Type: `string`
 
 Style option to be used when a preset with pregenerated app is selected
 
 ### version
 
-Type: boolean
+Type: `boolean`
 
 Show version number

@@ -10,16 +10,20 @@ export function updateWorkspaceConfig(tree: Tree, project: string): void {
   projectConfig.targets.test = {
     executor: '@angular-devkit/build-angular:karma',
     options: {
-      main: joinPathFragments(projectConfig.sourceRoot, 'test.ts'),
       tsConfig: joinPathFragments(projectConfig.root, 'tsconfig.spec.json'),
       karmaConfig: joinPathFragments(projectConfig.root, 'karma.conf.js'),
+      polyfills: ['zone.js', 'zone.js/testing'],
     },
   };
 
   if (projectConfig.projectType === 'application') {
+    const polyfills = projectConfig.targets.build?.options?.polyfills;
+    let polyfillsPath =
+      polyfills && typeof polyfills === 'string' ? polyfills : undefined;
+
     projectConfig.targets.test.options = {
       ...projectConfig.targets.test.options,
-      polyfills: joinPathFragments(projectConfig.sourceRoot, 'polyfills.ts'),
+      polyfills: polyfillsPath ?? projectConfig.targets.test.options.polyfills,
       styles: [],
       scripts: [],
       assets: [],

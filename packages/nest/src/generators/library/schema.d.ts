@@ -8,7 +8,7 @@ export interface LibraryGeneratorOptions {
   directory?: string;
   global?: boolean;
   importPath?: string;
-  linter?: Exclude<Linter, Linter.TsLint>;
+  linter?: Linter;
   publishable?: boolean;
   service?: boolean;
   skipFormat?: boolean;
@@ -38,4 +38,5 @@ export interface NormalizedOptions extends LibraryGeneratorOptions {
   projectDirectory: string;
   projectName: string;
   projectRoot: Path;
+  libsDir: string;
 }

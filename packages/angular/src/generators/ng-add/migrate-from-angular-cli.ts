@@ -1,37 +1,42 @@
+import type { GeneratorCallback, Tree } from '@nrwl/devkit';
 import {
   addDependenciesToPackageJson,
-  formatFiles,
   installPackagesTask,
   readJson,
-  Tree,
   updateJson,
 } from '@nrwl/devkit';
+import { convertToNxProjectGenerator } from '@nrwl/workspace/generators';
+import { prettierVersion } from '@nrwl/workspace/src/utils/versions';
 import { nxVersion } from '../../utils/versions';
+import type { ProjectMigrator } from './migrators';
+import { AppMigrator, LibMigrator } from './migrators';
 import type { GeneratorOptions } from './schema';
-import { AppMigrator } from './utilities/app.migrator';
-import { getAllProjects } from './utilities/get-all-projects';
-import { LibMigrator } from './utilities/lib.migrator';
-import { normalizeOptions } from './utilities/normalize-options';
-import { ProjectMigrator } from './utilities/project.migrator';
-import { validateProjects } from './utilities/validate-projects';
 import {
   cleanupEsLintPackages,
   createNxJson,
   createRootKarmaConfig,
   createWorkspaceFiles,
   decorateAngularCli,
-  getWorkspaceCapabilities,
+  deleteAngularJson,
+  deleteGitKeepFilesIfNotNeeded,
+  formatFilesTask,
+  getAllProjects,
+  getWorkspaceRootFileTypesInfo,
+  normalizeOptions,
   updatePackageJson,
+  updatePrettierConfig,
   updateRootEsLintConfig,
   updateRootTsConfig,
+  updateVsCodeRecommendedExtensions,
   updateWorkspaceConfigDefaults,
+  validateProjects,
   validateWorkspace,
-} from './utilities/workspace';
+} from './utilities';
 
 export async function migrateFromAngularCli(
   tree: Tree,
   rawOptions: GeneratorOptions
-) {
+): Promise<GeneratorCallback> {
   validateWorkspace(tree);
   const projects = getAllProjects(tree);
   const options = normalizeOptions(tree, rawOptions, projects);
@@ -43,10 +48,21 @@ export async function migrateFromAngularCli(
       {
         nx: nxVersion,
         '@nrwl/workspace': nxVersion,
+        prettier: prettierVersion,
       }
     );
-    createNxJson(tree, options, true);
+    createNxJson(tree, options);
     decorateAngularCli(tree);
+    updateVsCodeRecommendedExtensions(tree);
+    await updatePrettierConfig(tree);
+
+    // convert workspace config format to standalone project configs
+    updateJson(tree, 'angular.json', (json) => ({
+      ...json,
+      version: 2,
+      $schema: undefined,
+    }));
+    await convertToNxProjectGenerator(tree, { all: true, skipFormat: true });
   } else {
     const migrators: ProjectMigrator[] = [
       ...projects.apps.map((app) => new AppMigrator(tree, options, app)),
@@ -56,7 +72,10 @@ export async function migrateFromAngularCli(
     // validate all projects
     validateProjects(migrators);
 
-    const workspaceCapabilities = getWorkspaceCapabilities(tree, projects);
+    const workspaceRootFileTypesInfo = getWorkspaceRootFileTypesInfo(
+      tree,
+      migrators
+    );
 
     /**
      * Keep a copy of the root eslint config to restore it later. We need to
@@ -65,7 +84,7 @@ export async function migrateFromAngularCli(
      * the app migration.
      */
     let eslintConfig =
-      workspaceCapabilities.eslint && tree.exists('.eslintrc.json')
+      workspaceRootFileTypesInfo.eslint && tree.exists('.eslintrc.json')
         ? readJson(tree, '.eslintrc.json')
         : undefined;
 
@@ -92,20 +111,23 @@ export async function migrateFromAngularCli(
      * these files in the root for the root application, so we wait until
      * those root config files are moved when the projects are migrated.
      */
-    if (workspaceCapabilities.karma) {
+    if (workspaceRootFileTypesInfo.karma) {
       createRootKarmaConfig(tree);
     }
-    if (workspaceCapabilities.eslint) {
+    if (workspaceRootFileTypesInfo.eslint) {
       updateRootEsLintConfig(tree, eslintConfig, options.unitTestRunner);
       cleanupEsLintPackages(tree);
     }
 
-    await formatFiles(tree);
+    deleteGitKeepFilesIfNotNeeded(tree);
   }
+
+  deleteAngularJson(tree);
 
   if (!options.skipInstall) {
     return () => {
       installPackagesTask(tree);
+      formatFilesTask(tree);
     };
   }
 }

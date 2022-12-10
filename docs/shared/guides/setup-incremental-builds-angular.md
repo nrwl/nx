@@ -9,11 +9,12 @@ Incremental builds requires Nx version 10.4.0 or later.
 
 ## Requirements
 
-It’s required that you run the Angular compatibility compiler (`ngcc`) after every package installation if you have Ivy
-enabled. This comes configured by default in every Nx workspace. The incremental build relies on the fact that `ngcc`
-must have already been run. You can check your `package.json` and make sure you have the following:
+If your library consumes any Angular package that has not been compiled with Ivy, you must ensure the
+Angular compatibility compiler (`ngcc`) has run before building the library. The incremental build relies
+on the fact that `ngcc` must have already been run. One way to do this is to run `ngcc` after every package
+installation. You can check your `package.json` and make sure you have the following:
 
-```json
+```jsonc {% fileName="package.json" %}
 {
   ...
   "scripts": {
@@ -35,14 +36,14 @@ To enable incremental builds you need to use buildable libraries.
 
 You can generate a new buildable library with:
 
-```bash
+```shell
 nx g @nrwl/angular:lib my-lib --buildable
 ```
 
 The generated buildable library uses the `@nrwl/angular:ng-packagr-lite` executor which is optimized for the incremental
 builds scenario:
 
-```json
+```jsonc
 {
   "projectType": "library",
   ...
@@ -50,7 +51,7 @@ builds scenario:
     "build": {
       "executor": "@nrwl/angular:ng-packagr-lite",
       "outputs": [
-        "dist/libs/my-lib"
+        "{workspaceRoot}/dist/libs/my-lib"
       ],
       "options": {
         ...
@@ -77,7 +78,7 @@ The `@nrwl/angular:package` executor also supports incremental builds. It is use
 Change your Angular application’s "build" target executor to `@nrwl/angular:webpack-browser` and the "serve" target
 executor to `@nrwl/web:file-server` as shown below:
 
-```json
+```jsonc
 {
   "projectType": "application",
   ...
@@ -116,13 +117,13 @@ executor to `@nrwl/web:file-server` as shown below:
 
 To build an application incrementally use the following command:
 
-```bash
+```shell
 nx build my-app --parallel
 ```
 
 To serve an application incrementally use this command:
 
-```bash
+```shell
 nx serve my-app --parallel
 ```
 
@@ -131,7 +132,7 @@ You can specify the `--parallel` flags as part of the options property on the fi
 your `project.json` file. The file-server executor will pass those to the `nx build` command it invokes.
 {% /callout %}
 
-```json
+```jsonc
 {
   "projectType": "application",
   ...
@@ -178,7 +179,7 @@ targets), you need to make sure the build target name of all the relevant projec
 
 Say you have the same application above with a configuration as follows:
 
-```json
+```jsonc
 {
   "projectType": "application",
   ...
@@ -247,7 +248,7 @@ And the `targetDefaults` configured in the `nx.json` as:
 The build target name of the application is `build-base`. Therefore, the build target name of the buildable libraries it
 depends on must also be `build-base`:
 
-```json
+```jsonc
 {
   "projectType": "library",
   ...
@@ -255,7 +256,7 @@ depends on must also be `build-base`:
     "build-base": {
       "executor": "@nrwl/angular:ng-packagr-lite",
       "outputs": [
-        "dist/libs/my-lib"
+        "{workspaceRoot}/dist/libs/my-lib"
       ],
       "options": {
         ...

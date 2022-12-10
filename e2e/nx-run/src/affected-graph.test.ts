@@ -2,23 +2,22 @@ import type { NxJsonConfiguration } from '@nrwl/devkit';
 import {
   getPackageManagerCommand,
   isNotWindows,
-  listFiles,
   newProject,
   readFile,
   readJson,
   readProjectConfig,
   cleanupProject,
-  rmDist,
   runCLI,
   runCLIAsync,
   runCommand,
   uniq,
   updateFile,
   updateProjectConfig,
-  workspaceConfigName,
   checkFilesExist,
   isWindows,
   fileExists,
+  removeFile,
+  readResolvedWorkspaceConfiguration,
 } from '@nrwl/e2e/utils';
 
 describe('Nx Affected and Graph Tests', () => {
@@ -253,11 +252,8 @@ describe('Nx Affected and Graph Tests', () => {
 
     it('should affect all projects by removing projects', () => {
       generateAll();
-      updateFile(workspaceConfigName(), (old) => {
-        const workspaceJson = JSON.parse(old);
-        delete workspaceJson.projects[mylib];
-        return JSON.stringify(workspaceJson, null, 2);
-      });
+      const root = readResolvedWorkspaceConfiguration().projects[mylib].root;
+      removeFile(root);
       expect(runCLI('affected:apps')).toContain(myapp);
       expect(runCLI('affected:apps')).toContain(myapp2);
       expect(runCLI('affected:libs')).not.toContain(mylib);
@@ -337,7 +333,7 @@ describe('Nx Affected and Graph Tests', () => {
         command: `${runNx} run ${myapp}:test`,
         outputs: [`coverage/apps/${myapp}`],
       });
-      compareTwoArrays(resWithTarget.projects, [`${myapp}-e2e`, myapp]);
+      compareTwoArrays(resWithTarget.projects, [myapp]);
 
       const resWithTargetWithSelect1 = (
         await runCLIAsync(
@@ -345,18 +341,15 @@ describe('Nx Affected and Graph Tests', () => {
           { silent: true }
         )
       ).stdout.trim();
-      compareTwoSerializedArrays(
-        resWithTargetWithSelect1,
-        `${myapp}-e2e, ${myapp}`
-      );
+      compareTwoSerializedArrays(resWithTargetWithSelect1, myapp);
 
       const resWithTargetWithSelect2 = (
         await runCLIAsync(
-          `print-affected --files=apps/${myapp}/src/app.element.spec.ts --target=test --select="tasks.target.project"`,
+          `print-affected --files=apps/${myapp}/src/app/app.element.spec.ts --target=test --select="tasks.target.project"`,
           { silent: true }
         )
       ).stdout.trim();
-      compareTwoSerializedArrays(resWithTargetWithSelect2, `${myapp}`);
+      compareTwoSerializedArrays(resWithTargetWithSelect2, myapp);
     }, 120000);
 
     function compareTwoSerializedArrays(a: string, b: string) {
@@ -596,7 +589,7 @@ describe('Nx Affected and Graph Tests', () => {
 
       const environmentJs = readFile('static/environment.js');
       const affectedProjects = environmentJs
-        .match(/"affected":\[(.*)\],/)[1]
+        .match(/"affected":\[(.*?)\]/)[1]
         ?.split(',');
 
       expect(affectedProjects).toContain(`"${myapp}"`);

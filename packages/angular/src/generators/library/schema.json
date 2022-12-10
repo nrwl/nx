@@ -4,6 +4,7 @@
   "title": "Create a library",
   "description": "Creates an Angular library.",
   "type": "object",
+
   "cli": "nx",
   "properties": {
     "name": {
@@ -44,6 +45,12 @@
     "simpleModuleName": {
       "description": "Keep the module name simple (when using `--directory`).",
       "type": "boolean",
+      "default": false,
+      "x-deprecated": "Use `simpleName` instead. It will be removed in v16."
+    },
+    "simpleName": {
+      "description": "Don't include the directory in the name of the module or standalone component entry of the library.",
+      "type": "boolean",
       "default": false
     },
     "addModuleSpec": {
@@ -55,11 +62,6 @@
       "type": "boolean",
       "default": false,
       "description": "Do not add dependencies to `package.json`."
-    },
-    "skipPostInstall": {
-      "type": "boolean",
-      "default": false,
-      "description": "Do not add or append `ngcc` to the `postinstall` script in `package.json`."
     },
     "skipTsConfig": {
       "type": "boolean",
@@ -76,10 +78,9 @@
       "default": false,
       "description": "Add `RouterModule.forChild` when set to true, and a simple array of routes when set to false."
     },
-    "parentModule": {
+    "parent": {
       "type": "string",
-      "description": "Update the router configuration of the parent module using `loadChildren` or `children`, depending on what `lazy` is set to.",
-      "alias": "parent"
+      "description": "Path to the parent route configuration using `loadChildren` or `children`, depending on what `lazy` is set to."
     },
     "tags": {
       "type": "string",
@@ -186,8 +187,14 @@
       "type": "boolean",
       "default": false,
       "description": "Specifies if the component should have a selector or not. Disclaimer: This option is only valid when `--standalone` is set to `true`."
+    },
+    "flat": {
+      "type": "boolean",
+      "default": false,
+      "description": "Ensure the generated standalone component is not placed in a subdirectory. Disclaimer: This option is only valid when `--standalone` is set to `true`."
     }
   },
   "additionalProperties": false,
-  "required": ["name"]
+  "required": ["name"],
+  "examplesFile": "../../../docs/library-examples.md"
 }

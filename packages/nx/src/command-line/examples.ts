@@ -59,6 +59,10 @@ export const examples: Record<string, Example[]> = {
       description:
         'Run tests for all the projects affected by the last commit on main',
     },
+    {
+      command: 'affected --target=build --tag=$NX_TARGET_TASK_PROJECT:latest',
+      description: 'Use the currently executing project name in your command.',
+    },
   ],
   'affected:test': [
     {
@@ -290,6 +294,11 @@ export const examples: Record<string, Example[]> = {
     {
       command: 'run-many --target=test --projects=proj1,proj2 --parallel=2',
       description: 'Test proj1 and proj2 in parallel',
+    },
+    {
+      command: 'run-many --target=test --projects=*-app --exclude excluded-app',
+      description:
+        'Test all projects ending with `*-app` except `excluded-app`',
     },
   ],
   migrate: [

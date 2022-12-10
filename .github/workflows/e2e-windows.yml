@@ -10,8 +10,12 @@ on:
         required: false
         default: false
 
+permissions: {}
 jobs:
   e2e:
+    permissions:
+      contents: read  #  to fetch code (actions/checkout)
+
     runs-on: windows-latest
     strategy:
       matrix:
@@ -40,22 +44,23 @@ jobs:
     name: ${{ matrix.packages }}
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         fetch-depth: 0
 
     - name: Use Node.js ${{ matrix.node_version }}
-      uses: actions/setup-node@v2.4.0
+      uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node_version }}
         registry-url: http://localhost:4872
 
     - name: Yarn cache directory path
       id: yarn-cache-dir-path
-      run: echo "::set-output name=dir::$(yarn cache dir)"
+      shell: bash
+      run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
 
     - name: Cache yarn
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
         key: windows-node-${{ matrix.node_version }}-yarn-${{ hashFiles('yarn.lock') }}

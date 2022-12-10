@@ -8,14 +8,14 @@ describe('Add Linting', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await libraryGenerator(tree, {
       name: 'my-lib',
       linter: Linter.None,
     });
   });
 
-  it('should add update `workspace.json` file properly when eslint is passed', () => {
+  it('should add update `project configuration` file properly when eslint is passed', () => {
     addLinting(
       tree,
       'my-lib',
@@ -27,22 +27,6 @@ describe('Add Linting', () => {
 
     expect(project.targets.lint).toBeDefined();
     expect(project.targets.lint.executor).toEqual('@nrwl/linter:eslint');
-  });
-
-  it('should add update `workspace.json` file properly when tslint is passed', () => {
-    addLinting(
-      tree,
-      'my-lib',
-      'libs/my-lib',
-      ['libs/my-lib/tsconfig.lib.json'],
-      Linter.TsLint
-    );
-    const project = readProjectConfiguration(tree, 'my-lib');
-
-    expect(project.targets.lint).toBeDefined();
-    expect(project.targets.lint.executor).toEqual(
-      '@angular-devkit/build-angular:tslint'
-    );
   });
 
   it('should not add lint target when "none" is passed', async () => {

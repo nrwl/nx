@@ -61,7 +61,9 @@ It only uses language primitives and immutable objects
 - [Hash](../../devkit/index#hash)
 - [JsonParseOptions](../../devkit/index#jsonparseoptions)
 - [JsonSerializeOptions](../../devkit/index#jsonserializeoptions)
+- [ModuleFederationConfig](../../devkit/index#modulefederationconfig)
 - [RemoteCache](../../devkit/index#remotecache)
+- [SharedLibraryConfig](../../devkit/index#sharedlibraryconfig)
 - [StringDeletion](../../devkit/index#stringdeletion)
 - [StringInsertion](../../devkit/index#stringinsertion)
 
@@ -101,7 +103,14 @@ It only uses language primitives and immutable objects
 
 ### Utils Type aliases
 
+- [AdditionalSharedConfig](../../devkit/index#additionalsharedconfig)
+- [ModuleFederationLibrary](../../devkit/index#modulefederationlibrary)
+- [Remotes](../../devkit/index#remotes)
+- [SharedFunction](../../devkit/index#sharedfunction)
+- [SharedWorkspaceLibraryConfig](../../devkit/index#sharedworkspacelibraryconfig)
 - [StringChange](../../devkit/index#stringchange)
+- [WorkspaceLibrary](../../devkit/index#workspacelibrary)
+- [WorkspaceLibrarySecondaryEntryPoint](../../devkit/index#workspacelibrarysecondaryentrypoint)
 
 ### Workspace Type aliases
 
@@ -129,16 +138,22 @@ It only uses language primitives and immutable objects
 
 - [addDependenciesToPackageJson](../../devkit/index#adddependenciestopackagejson)
 - [addProjectConfiguration](../../devkit/index#addprojectconfiguration)
+- [applyAdditionalShared](../../devkit/index#applyadditionalshared)
 - [applyChangesToString](../../devkit/index#applychangestostring)
+- [applySharedFunction](../../devkit/index#applysharedfunction)
 - [convertNxExecutor](../../devkit/index#convertnxexecutor)
 - [convertNxGenerator](../../devkit/index#convertnxgenerator)
 - [createProjectGraphAsync](../../devkit/index#createprojectgraphasync)
 - [defaultTasksRunner](../../devkit/index#defaulttasksrunner)
 - [detectPackageManager](../../devkit/index#detectpackagemanager)
 - [detectWorkspaceScope](../../devkit/index#detectworkspacescope)
+- [ensurePackage](../../devkit/index#ensurepackage)
+- [extractLayoutDirectory](../../devkit/index#extractlayoutdirectory)
 - [formatFiles](../../devkit/index#formatfiles)
 - [generateFiles](../../devkit/index#generatefiles)
+- [getDependentPackagesForProject](../../devkit/index#getdependentpackagesforproject)
 - [getImportPath](../../devkit/index#getimportpath)
+- [getNpmPackageSharedConfig](../../devkit/index#getnpmpackagesharedconfig)
 - [getOutputsForTargetAndConfiguration](../../devkit/index#getoutputsfortargetandconfiguration)
 - [getPackageManagerCommand](../../devkit/index#getpackagemanagercommand)
 - [getPackageManagerVersion](../../devkit/index#getpackagemanagerversion)
@@ -148,18 +163,22 @@ It only uses language primitives and immutable objects
 - [installPackagesTask](../../devkit/index#installpackagestask)
 - [isStandaloneProject](../../devkit/index#isstandaloneproject)
 - [joinPathFragments](../../devkit/index#joinpathfragments)
+- [mapRemotes](../../devkit/index#mapremotes)
+- [mapRemotesForSSR](../../devkit/index#mapremotesforssr)
 - [moveFilesToNewDirectory](../../devkit/index#movefilestonewdirectory)
 - [names](../../devkit/index#names)
 - [normalizePath](../../devkit/index#normalizepath)
 - [offsetFromRoot](../../devkit/index#offsetfromroot)
 - [parseJson](../../devkit/index#parsejson)
 - [parseTargetString](../../devkit/index#parsetargetstring)
+- [pruneLockFile](../../devkit/index#prunelockfile)
 - [readAllWorkspaceConfiguration](../../devkit/index#readallworkspaceconfiguration)
 - [readCachedProjectGraph](../../devkit/index#readcachedprojectgraph)
 - [readJson](../../devkit/index#readjson)
 - [readJsonFile](../../devkit/index#readjsonfile)
 - [readNxJson](../../devkit/index#readnxjson)
 - [readProjectConfiguration](../../devkit/index#readprojectconfiguration)
+- [readRootPackageJson](../../devkit/index#readrootpackagejson)
 - [readTargetOptions](../../devkit/index#readtargetoptions)
 - [readWorkspaceConfiguration](../../devkit/index#readworkspaceconfiguration)
 - [removeDependenciesFromPackageJson](../../devkit/index#removedependenciesfrompackagejson)
@@ -167,6 +186,8 @@ It only uses language primitives and immutable objects
 - [reverse](../../devkit/index#reverse)
 - [runExecutor](../../devkit/index#runexecutor)
 - [serializeJson](../../devkit/index#serializejson)
+- [sharePackages](../../devkit/index#sharepackages)
+- [shareWorkspaceLibraries](../../devkit/index#shareworkspacelibraries)
 - [stripIndents](../../devkit/index#stripindents)
 - [stripJsonComments](../../devkit/index#stripjsoncomments)
 - [targetToTargetString](../../devkit/index#targettotargetstring)
@@ -342,9 +363,21 @@ A plugin for Nx
 
 ---
 
+### ModuleFederationConfig
+
+• **ModuleFederationConfig**: `Object`
+
+---
+
 ### RemoteCache
 
 • **RemoteCache**: `Object`
+
+---
+
+### SharedLibraryConfig
+
+• **SharedLibraryConfig**: `Object`
 
 ---
 
@@ -522,9 +555,96 @@ A plugin for Nx
 
 ## Utils Type aliases
 
+### AdditionalSharedConfig
+
+Ƭ **AdditionalSharedConfig**: (`string` \| [libraryName: string, sharedConfig: SharedLibraryConfig] \| { `libraryName`: `string` ; `sharedConfig`: [`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig) })[]
+
+---
+
+### ModuleFederationLibrary
+
+Ƭ **ModuleFederationLibrary**: `Object`
+
+#### Type declaration
+
+| Name   | Type     |
+| :----- | :------- |
+| `name` | `string` |
+| `type` | `string` |
+
+---
+
+### Remotes
+
+Ƭ **Remotes**: `string`[] \| [remoteName: string, remoteUrl: string][]
+
+---
+
+### SharedFunction
+
+Ƭ **SharedFunction**: (`libraryName`: `string`, `sharedConfig`: [`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig)) => `undefined` \| `false` \| [`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig)
+
+#### Type declaration
+
+▸ (`libraryName`, `sharedConfig`): `undefined` \| `false` \| [`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig)
+
+##### Parameters
+
+| Name           | Type                                                            |
+| :------------- | :-------------------------------------------------------------- |
+| `libraryName`  | `string`                                                        |
+| `sharedConfig` | [`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig) |
+
+##### Returns
+
+`undefined` \| `false` \| [`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig)
+
+---
+
+### SharedWorkspaceLibraryConfig
+
+Ƭ **SharedWorkspaceLibraryConfig**: `Object`
+
+#### Type declaration
+
+| Name                   | Type                                                                                                          |
+| :--------------------- | :------------------------------------------------------------------------------------------------------------ |
+| `getAliases`           | () => `Record`<`string`, `string`\>                                                                           |
+| `getLibraries`         | (`eager?`: `boolean`) => `Record`<`string`, [`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig)\> |
+| `getReplacementPlugin` | () => `NormalModuleReplacementPlugin`                                                                         |
+
+---
+
 ### StringChange
 
 Ƭ **StringChange**: [`StringInsertion`](../../devkit/index#stringinsertion) \| [`StringDeletion`](../../devkit/index#stringdeletion)
+
+---
+
+### WorkspaceLibrary
+
+Ƭ **WorkspaceLibrary**: `Object`
+
+#### Type declaration
+
+| Name        | Type                    |
+| :---------- | :---------------------- |
+| `importKey` | `string` \| `undefined` |
+| `name`      | `string`                |
+| `root`      | `string`                |
+
+---
+
+### WorkspaceLibrarySecondaryEntryPoint
+
+Ƭ **WorkspaceLibrarySecondaryEntryPoint**: `Object`
+
+#### Type declaration
+
+| Name   | Type     |
+| :----- | :------- |
+| `name` | `string` |
+| `path` | `string` |
 
 ---
 
@@ -754,7 +874,7 @@ This will **add** `react` and `jest` to the dependencies and devDependencies sec
 
 [`GeneratorCallback`](../../devkit/index#generatorcallback)
 
-Callback to install dependencies only if necessary. undefined is returned if changes are not necessary.
+Callback to install dependencies only if necessary, no-op otherwise
 
 ---
 
@@ -775,6 +895,31 @@ The utility will update either files.
 | `projectName`          | `string`                                                          | unique name. Often directories are part of the name (e.g., mydir-mylib)                    |
 | `projectConfiguration` | [`ProjectConfiguration`](../../devkit/index#projectconfiguration) | project configuration                                                                      |
 | `standalone?`          | `boolean`                                                         | should the project use package.json? If false, the project config is inside workspace.json |
+
+#### Returns
+
+`void`
+
+---
+
+### applyAdditionalShared
+
+▸ **applyAdditionalShared**(`sharedConfig`, `additionalShared`, `projectGraph`): `void`
+
+Add additional dependencies to the shared package that may not have been
+discovered by the project graph.
+
+This can be useful for applications that use a Dependency Injection system
+that expects certain Singleton values to be present in the shared injection
+hierarchy.
+
+#### Parameters
+
+| Name               | Type                                                                                 | Description                        |
+| :----------------- | :----------------------------------------------------------------------------------- | :--------------------------------- |
+| `sharedConfig`     | `Record`<`string`, [`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig)\> | The original Shared Config         |
+| `additionalShared` | [`AdditionalSharedConfig`](../../devkit/index#additionalsharedconfig)                | The additional dependencies to add |
+| `projectGraph`     | [`ProjectGraph`](../../devkit/index#projectgraph)<`any`\>                            | The Nx project graph               |
 
 #### Returns
 
@@ -826,6 +971,26 @@ bootstrap({
 #### Returns
 
 `string`
+
+---
+
+### applySharedFunction
+
+▸ **applySharedFunction**(`sharedConfig`, `sharedFn`): `void`
+
+Apply a custom function provided by the user that will modify the Shared Config
+of the dependencies for the Module Federation build.
+
+#### Parameters
+
+| Name           | Type                                                                                 | Description                               |
+| :------------- | :----------------------------------------------------------------------------------- | :---------------------------------------- |
+| `sharedConfig` | `Record`<`string`, [`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig)\> | The original Shared Config to be modified |
+| `sharedFn`     | [`SharedFunction`](../../devkit/index#sharedfunction)                                | The custom function to run                |
+
+#### Returns
+
+`void`
 
 ---
 
@@ -1001,6 +1166,62 @@ Detect workspace scope from the package.json name
 
 ---
 
+### ensurePackage
+
+▸ **ensurePackage**(`tree`, `pkg`, `requiredVersion`, `options?`): `Promise`<`void`\>
+
+Ensure that dependencies and devDependencies from package.json are installed at the required versions.
+
+For example:
+
+```typescript
+ensurePackage(tree, {}, { '@nrwl/jest': nxVersion });
+```
+
+This will check that @nrwl/jest@<nxVersion> exists in devDependencies.
+If it exists then function returns, otherwise it will install the package before continuing.
+When running with --dryRun, the function will throw when dependencies are missing.
+
+#### Parameters
+
+| Name                      | Type                              | Description                                                        |
+| :------------------------ | :-------------------------------- | :----------------------------------------------------------------- |
+| `tree`                    | [`Tree`](../../devkit/index#tree) | the file system tree                                               |
+| `pkg`                     | `string`                          | the package to check (e.g. @nrwl/jest)                             |
+| `requiredVersion`         | `string`                          | the version or semver range to check (e.g. ~1.0.0, >=1.0.0 <2.0.0) |
+| `options`                 | `Object`                          |                                                                    |
+| `options.dev?`            | `boolean`                         | -                                                                  |
+| `options.throwOnMissing?` | `boolean`                         | -                                                                  |
+
+#### Returns
+
+`Promise`<`void`\>
+
+---
+
+### extractLayoutDirectory
+
+▸ **extractLayoutDirectory**(`directory`): `Object`
+
+Experimental
+
+#### Parameters
+
+| Name        | Type     |
+| :---------- | :------- |
+| `directory` | `string` |
+
+#### Returns
+
+`Object`
+
+| Name               | Type     |
+| :----------------- | :------- |
+| `layoutDirectory`  | `string` |
+| `projectDirectory` | `string` |
+
+---
+
 ### formatFiles
 
 ▸ **formatFiles**(`tree`): `Promise`<`void`\>
@@ -1060,6 +1281,28 @@ doesn't get confused about incorrect TypeScript files.
 
 ---
 
+### getDependentPackagesForProject
+
+▸ **getDependentPackagesForProject**(`projectGraph`, `name`): `Object`
+
+#### Parameters
+
+| Name           | Type                                                      |
+| :------------- | :-------------------------------------------------------- |
+| `projectGraph` | [`ProjectGraph`](../../devkit/index#projectgraph)<`any`\> |
+| `name`         | `string`                                                  |
+
+#### Returns
+
+`Object`
+
+| Name                 | Type                                                        |
+| :------------------- | :---------------------------------------------------------- |
+| `npmPackages`        | `string`[]                                                  |
+| `workspaceLibraries` | [`WorkspaceLibrary`](../../devkit/index#workspacelibrary)[] |
+
+---
+
 ### getImportPath
 
 ▸ **getImportPath**(`npmScope`, `projectDirectory`): `string`
@@ -1079,9 +1322,29 @@ Prefixes project name with npm scope
 
 ---
 
+### getNpmPackageSharedConfig
+
+▸ **getNpmPackageSharedConfig**(`pkgName`, `version`): [`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig) \| `undefined`
+
+Build the Module Federation Share Config for a specific package and the
+specified version of that package.
+
+#### Parameters
+
+| Name      | Type     | Description                                                                    |
+| :-------- | :------- | :----------------------------------------------------------------------------- |
+| `pkgName` | `string` | Name of the package to share                                                   |
+| `version` | `string` | Version of the package to require by other apps in the Module Federation setup |
+
+#### Returns
+
+[`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig) \| `undefined`
+
+---
+
 ### getOutputsForTargetAndConfiguration
 
-▸ **getOutputsForTargetAndConfiguration**(`task`, `node`): `any`
+▸ **getOutputsForTargetAndConfiguration**(`task`, `node`): `string`[]
 
 Returns the list of outputs that will be cached.
 
@@ -1089,12 +1352,12 @@ Returns the list of outputs that will be cached.
 
 | Name   | Type                                                                            | Description                                               |
 | :----- | :------------------------------------------------------------------------------ | :-------------------------------------------------------- |
-| `task` | `Pick`<[`Task`](../../devkit/index#task), `"target"` \| `"overrides"`\>         | target + overrides                                        |
+| `task` | `Pick`<[`Task`](../../devkit/index#task), `"overrides"` \| `"target"`\>         | target + overrides                                        |
 | `node` | [`ProjectGraphProjectNode`](../../devkit/index#projectgraphprojectnode)<`any`\> | ProjectGraphProjectNode object that the task runs against |
 
 #### Returns
 
-`any`
+`string`[]
 
 ---
 
@@ -1271,6 +1534,48 @@ Normalized path fragments and joins them
 
 ---
 
+### mapRemotes
+
+▸ **mapRemotes**(`remotes`, `remoteEntryExt`, `determineRemoteUrl`): `Record`<`string`, `string`\>
+
+Map remote names to a format that can be understood and used by Module
+Federation.
+
+#### Parameters
+
+| Name                 | Type                                    | Description                                              |
+| :------------------- | :-------------------------------------- | :------------------------------------------------------- |
+| `remotes`            | [`Remotes`](../../devkit/index#remotes) | The remotes to map                                       |
+| `remoteEntryExt`     | `"js"` \| `"mjs"`                       | The file extension of the remoteEntry file               |
+| `determineRemoteUrl` | (`remote`: `string`) => `string`        | The function used to lookup the URL of the served remote |
+
+#### Returns
+
+`Record`<`string`, `string`\>
+
+---
+
+### mapRemotesForSSR
+
+▸ **mapRemotesForSSR**(`remotes`, `remoteEntryExt`, `determineRemoteUrl`): `Record`<`string`, `string`\>
+
+Map remote names to a format that can be understood and used by Module
+Federation.
+
+#### Parameters
+
+| Name                 | Type                                    | Description                                              |
+| :------------------- | :-------------------------------------- | :------------------------------------------------------- |
+| `remotes`            | [`Remotes`](../../devkit/index#remotes) | The remotes to map                                       |
+| `remoteEntryExt`     | `"js"` \| `"mjs"`                       | The file extension of the remoteEntry file               |
+| `determineRemoteUrl` | (`remote`: `string`) => `string`        | The function used to lookup the URL of the served remote |
+
+#### Returns
+
+`Record`<`string`, `string`\>
+
+---
+
 ### moveFilesToNewDirectory
 
 ▸ **moveFilesToNewDirectory**(`tree`, `oldDir`, `newDir`): `void`
@@ -1420,6 +1725,26 @@ parseTargetString('proj:test:production'); // returns { project: "proj", target:
 
 ---
 
+### pruneLockFile
+
+▸ **pruneLockFile**(`projectName`, `isProduction?`, `packageManager?`): `Promise`<`string`\>
+
+Prune lock file based on the given project's dependencies and overrides in local package.json
+
+#### Parameters
+
+| Name             | Type                                                  | Default value | Description                                                        |
+| :--------------- | :---------------------------------------------------- | :------------ | :----------------------------------------------------------------- |
+| `projectName`    | `string`                                              | `undefined`   | Project to prune against                                           |
+| `isProduction`   | `boolean`                                             | `true`        | Whether to include optional and dev dependencies                   |
+| `packageManager` | [`PackageManager`](../../devkit/index#packagemanager) | `undefined`   | Package manager to use (automatically detected based on lock file) |
+
+#### Returns
+
+`Promise`<`string`\>
+
+---
+
 ### readAllWorkspaceConfiguration
 
 ▸ **readAllWorkspaceConfiguration**(): [`ProjectsConfigurations`](../../devkit/index#projectsconfigurations) & [`NxJsonConfiguration`](../../devkit/index#nxjsonconfiguration)
@@ -1530,6 +1855,21 @@ The utility will read from either file.
 #### Returns
 
 [`ProjectConfiguration`](../../devkit/index#projectconfiguration)
+
+---
+
+### readRootPackageJson
+
+▸ **readRootPackageJson**(): `Object`
+
+#### Returns
+
+`Object`
+
+| Name               | Type     |
+| :----------------- | :------- |
+| `dependencies?`    | `Object` |
+| `devDependencies?` | `Object` |
 
 ---
 
@@ -1734,6 +2074,48 @@ By default the JSON string is formatted with a 2 space intendation to be easy re
 `string`
 
 the formatted JSON representation of the object
+
+---
+
+### sharePackages
+
+▸ **sharePackages**(`packages`): `Record`<`string`, [`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig)\>
+
+Create a dictionary of packages and their Module Federation Shared Config
+from an array of package names.
+
+Lookup the versions of the packages from the root package.json file in the
+workspace.
+
+#### Parameters
+
+| Name       | Type       | Description                       |
+| :--------- | :--------- | :-------------------------------- |
+| `packages` | `string`[] | Array of package names as strings |
+
+#### Returns
+
+`Record`<`string`, [`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig)\>
+
+---
+
+### shareWorkspaceLibraries
+
+▸ **shareWorkspaceLibraries**(`libraries`, `tsConfigPath?`): [`SharedWorkspaceLibraryConfig`](../../devkit/index#sharedworkspacelibraryconfig)
+
+Build an object of functions to be used with the ModuleFederationPlugin to
+share Nx Workspace Libraries between Hosts and Remotes.
+
+#### Parameters
+
+| Name           | Type                                                        | Description                                                                  |
+| :------------- | :---------------------------------------------------------- | :--------------------------------------------------------------------------- |
+| `libraries`    | [`WorkspaceLibrary`](../../devkit/index#workspacelibrary)[] | The Nx Workspace Libraries to share                                          |
+| `tsConfigPath` | `string`                                                    | The path to TS Config File that contains the Path Mappings for the Libraries |
+
+#### Returns
+
+[`SharedWorkspaceLibraryConfig`](../../devkit/index#sharedworkspacelibraryconfig)
 
 ---
 

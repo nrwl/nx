@@ -33,6 +33,7 @@ export interface UpdatePackageJsonOption {
   outputFileExtensionForCjs?: `.${string}`;
   skipTypings?: boolean;
   generateExportsField?: boolean;
+  excludeLibsInPackageJson?: boolean;
   updateBuildableProjectDepsInPackageJson?: boolean;
   buildableProjectDepsInPackageJsonType?: 'dependencies' | 'peerDependencies';
 }
@@ -52,6 +53,10 @@ export function updatePackageJson(
   const packageJson = fileExists(pathToPackageJson)
     ? readJsonFile(pathToPackageJson)
     : { name: context.projectName };
+
+  if (options.excludeLibsInPackageJson) {
+    dependencies = dependencies.filter((dep) => dep.node.type !== 'lib');
+  }
 
   writeJsonFile(
     `${options.outputPath}/package.json`,
@@ -88,10 +93,14 @@ export function getUpdatedPackageJsonContent(
     options.projectRoot
   );
   const typingsFile = `${relativeMainFileDir}${mainFile}.d.ts`;
-  const exports = {
-    '.': {},
-    ...packageJson.exports,
-  };
+
+  const exports =
+    typeof packageJson.exports === 'string'
+      ? packageJson.exports
+      : {
+          '.': {},
+          ...packageJson.exports,
+        };
 
   const mainJsFile =
     options.outputFileName ?? `${relativeMainFileDir}${mainFile}.js`;
@@ -105,7 +114,13 @@ export function getUpdatedPackageJsonContent(
       packageJson.main ??= mainJsFile;
     }
 
-    exports['.']['import'] = mainJsFile;
+    if (typeof exports !== 'string') {
+      if (typeof exports['.'] !== 'string') {
+        exports['.']['import'] ??= mainJsFile;
+      } else if (!hasCjsFormat) {
+        exports['.'] ??= mainJsFile;
+      }
+    }
   }
 
   // CJS output may have .cjs or .js file extensions.
@@ -113,11 +128,17 @@ export function getUpdatedPackageJsonContent(
   // Bundlers/Compilers like webpack, tsc, swc do not have different file extensions.
   if (hasCjsFormat) {
     const { dir, name } = parse(mainJsFile);
-    const cjsMain = `${dir}/${name}${
+    const cjsMain = `${dir ? dir : '.'}/${name}${
       options.outputFileExtensionForCjs ?? '.js'
     }`;
     packageJson.main ??= cjsMain;
-    exports['.']['require'] = cjsMain;
+    if (typeof exports !== 'string') {
+      if (typeof exports['.'] !== 'string') {
+        exports['.']['require'] ??= cjsMain;
+      } else if (!hasEsmFormat) {
+        exports['.'] ??= cjsMain;
+      }
+    }
   }
 
   if (options.generateExportsField) {

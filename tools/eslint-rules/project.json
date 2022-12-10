@@ -1,10 +1,11 @@
 {
+  "name": "eslint-rules",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "tools/eslint-rules",
   "targets": {
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/tools/eslint-rules"],
+      "outputs": ["{workspaceRoot}/coverage/tools/eslint-rules"],
       "options": {
         "jestConfig": "tools/eslint-rules/jest.config.ts",
         "passWithNoTests": true

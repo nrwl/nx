@@ -15,10 +15,6 @@ import {
   visitNotIgnoredFiles,
 } from '@nrwl/devkit';
 import { basename, join } from 'path';
-import {
-  findStorybookAndBuildTargetsAndCompiler,
-  isTheFileAStory,
-} from '@nrwl/storybook/src/utils/utilities';
 import minimatch = require('minimatch');
 
 export interface StorybookStoriesSchema {
@@ -29,7 +25,13 @@ export interface StorybookStoriesSchema {
   ignorePaths?: string[];
 }
 
-export function projectRootPath(config: ProjectConfiguration): string {
+export async function projectRootPath(
+  tree: Tree,
+  config: ProjectConfiguration
+): Promise<string> {
+  const { findStorybookAndBuildTargetsAndCompiler } = await import(
+    '@nrwl/storybook/src/utils/utilities'
+  );
   let projectDir: string;
   if (config.projectType === 'application') {
     const { nextBuildTarget } = findStorybookAndBuildTargetsAndCompiler(
@@ -79,12 +81,16 @@ export async function createAllStories(
   cypressProject?: string,
   ignorePaths?: string[]
 ) {
+  const { isTheFileAStory } = await import(
+    '@nrwl/storybook/src/utils/utilities'
+  );
   const projects = getProjects(tree);
   const projectConfiguration = projects.get(projectName);
   const { sourceRoot, root } = projectConfiguration;
   let componentPaths: string[] = [];
 
-  visitNotIgnoredFiles(tree, projectRootPath(projectConfiguration), (path) => {
+  const projectPath = await projectRootPath(tree, projectConfiguration);
+  visitNotIgnoredFiles(tree, projectPath, (path) => {
     // Ignore private files starting with "_".
     if (basename(path).startsWith('_')) return;
 

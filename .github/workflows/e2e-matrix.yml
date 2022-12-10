@@ -10,8 +10,11 @@ on:
         required: false
         default: false
 
+permissions: {}
 jobs:
   e2e:
+    permissions:
+      contents: read  #  to fetch code (actions/checkout)
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -21,10 +24,8 @@ jobs:
         include:
           - os: ubuntu-latest
             os-name: ubuntu
-            os-cache-dir: /tmp/nx-cache
           - os: macos-latest
             os-name: osx
-            os-cache-dir: /tmp/nx-cache
         node_version:
           - '16'
         package_manager:
@@ -90,28 +91,29 @@ jobs:
     name: ${{ matrix.os-name }}/${{ matrix.package_manager }} - ${{ matrix.packages }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
       - name: Install PNPM
         if: ${{ matrix.package_manager == 'pnpm' }}
-        uses: pnpm/action-setup@v2.2.1
+        uses: pnpm/action-setup@v2
         with:
           version: 7.1.0
 
       - name: Use Node.js ${{ matrix.node_version }}
-        uses: actions/setup-node@v2.4.0
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node_version }}
           registry-url: http://localhost:4872
 
       - name: Yarn cache directory path
         id: yarn-cache-dir-path
-        run: echo "::set-output name=dir::$(yarn cache dir)"
+        shell: bash
+        run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
 
       - name: Cache yarn
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
           key: ${{ matrix.os }}-node-${{ matrix.node_version }}-yarn-${{ hashFiles('yarn.lock') }}
@@ -140,7 +142,7 @@ jobs:
 
       - name: Cache Homebrew
         if: ${{ matrix.os == 'macos-latest' }}
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ${{ steps.homebrew-cache-dir-path.outputs.dir }}
           key: brew-${{ matrix.node_version }}
@@ -169,7 +171,7 @@ jobs:
           YARN_REGISTRY: http://localhost:4872
           NX_VERBOSE_LOGGING: ${{ 'true' }}
           NX_E2E_SKIP_BUILD_CLEANUP: ${{ 'true' }}
-          NX_CACHE_DIRECTORY: ${{ matrix.os-cache-dir }}
+          NX_CACHE_DIRECTORY: ${{ 'tmp' }}
 
       - name: Setup tmate session
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled && failure() }}

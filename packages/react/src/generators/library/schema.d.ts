@@ -1,26 +1,44 @@
-import { Linter } from '@nrwl/linter';
+import type { Linter } from '@nrwl/linter';
 import { SupportedStyles } from '../../../typings/style';
 
 export interface Schema {
-  name: string;
-  directory?: string;
-  style: SupportedStyles;
-  skipTsConfig: boolean;
-  skipFormat: boolean;
-  tags?: string;
-  pascalCaseFiles?: boolean;
-  routing?: boolean;
   appProject?: string;
-  unitTestRunner: 'jest' | 'none';
-  linter: Linter;
-  component?: boolean;
-  publishable?: boolean;
   buildable?: boolean;
-  importPath?: string;
-  js?: boolean;
-  globalCss?: boolean;
-  strict?: boolean;
-  setParserOptionsProject?: boolean;
-  standaloneConfig?: boolean;
+  bundler?: 'none' | 'rollup' | 'vite';
   compiler?: 'babel' | 'swc';
+  component?: boolean;
+  directory?: string;
+  globalCss?: boolean;
+  importPath?: string;
+  inSourceTests?: boolean;
+  js?: boolean;
+  linter: Linter;
+  name: string;
+  pascalCaseFiles?: boolean;
+  publishable?: boolean;
+  routing?: boolean;
+  setParserOptionsProject?: boolean;
+  skipFormat?: boolean;
+  skipPackageJson?: boolean;
+  skipTsConfig?: boolean;
+  standaloneConfig?: boolean;
+  strict?: boolean;
+  style: SupportedStyles;
+  tags?: string;
+  unitTestRunner?: 'jest' | 'vitest' | 'none';
+  minimal?: boolean;
+}
+
+export interface NormalizedSchema extends Schema {
+  js: boolean;
+  name: string;
+  fileName: string;
+  projectRoot: string;
+  routePath: string;
+  projectDirectory: string;
+  parsedTags: string[];
+  appMain?: string;
+  appSourceRoot?: string;
+  libsDir?: string;
+  unitTestRunner: 'jest' | 'vitest' | 'none';
 }

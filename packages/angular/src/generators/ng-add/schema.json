@@ -65,5 +65,6 @@
       "description": "Do not add or append `ngcc` to the `postinstall` script in `package.json`. NOTE: only used if running the generator in an Nx workspace."
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "examplesFile": "../../../docs/ng-add-examples.md"
 }

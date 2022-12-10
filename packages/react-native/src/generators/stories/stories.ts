@@ -1,5 +1,6 @@
 import {
   convertNxGenerator,
+  ensurePackage,
   getProjects,
   Tree,
   visitNotIgnoredFiles,
@@ -11,19 +12,24 @@ import {
   containsComponentDeclaration,
   projectRootPath,
 } from '@nrwl/react/src/generators/stories/stories';
-import { isTheFileAStory } from '@nrwl/storybook/src/utils/utilities';
 import minimatch = require('minimatch');
+import { nxVersion } from '../../utils/versions';
 
 export async function createAllStories(
   tree: Tree,
   projectName: string,
   ignorePaths?: string[]
 ) {
+  await ensurePackage(tree, '@nrwl/storybook', nxVersion);
+  const { isTheFileAStory } = await import(
+    '@nrwl/storybook/src/utils/utilities'
+  );
+
   const projects = getProjects(tree);
   const projectConfiguration = projects.get(projectName);
 
-  const { sourceRoot, root } = projectConfiguration;
-  const projectPath = projectRootPath(projectConfiguration);
+  const { sourceRoot } = projectConfiguration;
+  const projectPath = await projectRootPath(tree, projectConfiguration);
 
   let componentPaths: string[] = [];
   visitNotIgnoredFiles(tree, projectPath, (path) => {

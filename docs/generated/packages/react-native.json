@@ -11,7 +11,7 @@
       "name": "Overview",
       "path": "/packages/react-native",
       "file": "shared/react-native-plugin",
-      "content": "![React Logo](/shared/react-logo.png)\n\nReact Native brings React's declarative UI framework to iOS and Android. With React Native, you use native UI controls and have full access to the native platform.\n\nThe Nx Plugin for React Native contains generators for managing React Native applications and libraries within an Nx workspace. It provides:\n\n- Integration with libraries such as Jest, Detox, and Storybook.\n- Scaffolding for creating buildable libraries that can be published to npm.\n- Utilities for automatic workspace refactoring.\n\n## Setting Up React Native\n\n### Create a New Workspace\n\nThe easiest way to create your workspace is via `npx`.\n\n```bash\nnpx create-nx-workspace your-workspace-name \\\n--preset=react-native \\\n--appName=your-app-name\n```\n\n{% callout type=\"note\" title=\"Don't know what you need?\" %}\nYou can also run the command without arguments to go through the interactive prompts.\n{% /callout %}\n\n```bash\nnpx create-nx-workspace your-workspace-name\n```\n\n### Adding React Native to an Existing Workspace\n\nFor existing Nx workspaces, install the `@nrwl/react-native` package to add React Native capabilities to it.\n\n```bash\nnpm install @nrwl/react-native --save-dev\n\n# Or with yarn\nyarn add @nrwl/react-native --dev\n```\n\n### Generating Applications\n\nTo create additional React Native apps run:\n\n```bash\nnx g @nrwl/react-native:app your-app-name\n```\n\n### Generating Libraries\n\nTo generate a new library run:\n\n```bash\nnpx nx g @nrwl/react-native:lib your-lib-name\n```\n\n### Generating Components\n\nTo generate a new component inside library run:\n\n```bash\nnpx nx g @nrwl/react-native:component your-component-name --project=your-lib-name --export\n```\n\nReplace `your-lib-name` with the app's name as defined in your `tsconfig.base.json` file or the `name` property of your `package.json`\n\n## Using React Native\n\n- [run-ios](/packages/react-native/executors/run-ios) - Builds your app and starts it on iOS simulator or device\n- [run-android](/packages/react-native/executors/run-android) - Builds your app and starts it on a connected Android emulator or device\n- [build-android](/packages/react-native/executors/build-android) - Release Build for Android\n- [start](/packages/react-native/executors/start) - Starts the server that communicates with connected devices\n- [bundle](/packages/react-native/executors/bundle) - Builds the JavaScript bundle for offline use\n- [sync-deps](/packages/react-native/executors/sync-deps) - Syncs dependencies to package.json (required for autolinking)\n- [ensure-symlink](/packages/react-native/executors/ensure-symlink) - Ensure workspace node_modules is symlink under app's node_modules folder\n\n## More Documentation\n\n- [Using Detox](/packages/detox)\n- [Using Jest](/packages/jest)\n"
+      "content": "React Native brings React's declarative UI framework to iOS and Android. With React Native, you use native UI controls and have full access to the native platform.\n\nThe Nx Plugin for React Native contains generators for managing React Native applications and libraries within an Nx workspace. It provides:\n\n- Integration with libraries such as Jest, Detox, and Storybook.\n- Scaffolding for creating buildable libraries that can be published to npm.\n- Utilities for automatic workspace refactoring.\n\n## Setting Up React Native\n\n### Create a New Workspace\n\nThe easiest way to create your workspace is via `npx`.\n\n```shell\nnpx create-nx-workspace your-workspace-name \\\n--preset=react-native \\\n--appName=your-app-name\n```\n\n{% callout type=\"note\" title=\"Don't know what you need?\" %}\nYou can also run the command without arguments to go through the interactive prompts.\n{% /callout %}\n\n```shell\nnpx create-nx-workspace your-workspace-name\n```\n\n### Adding React Native to an Existing Workspace\n\nFor existing Nx workspaces, install the `@nrwl/react-native` package to add React Native capabilities to it.\n\n```shell\nnpm install @nrwl/react-native --save-dev\n\n# Or with yarn\nyarn add @nrwl/react-native --dev\n```\n\n### Generating Applications\n\nTo create additional React Native apps run:\n\n```shell\nnx g @nrwl/react-native:app your-app-name\n```\n\n### Generating Libraries\n\nTo generate a new library run:\n\n```shell\nnpx nx g @nrwl/react-native:lib your-lib-name\n```\n\n### Generating Components\n\nTo generate a new component inside library run:\n\n```shell\nnpx nx g @nrwl/react-native:component your-component-name --project=your-lib-name --export\n```\n\nReplace `your-lib-name` with the app's name as defined in your `tsconfig.base.json` file or the `name` property of your `package.json`\n\n## Using React Native\n\n- [run-ios](/packages/react-native/executors/run-ios) - Builds your app and starts it on iOS simulator or device\n- [run-android](/packages/react-native/executors/run-android) - Builds your app and starts it on a connected Android emulator or device\n- [build-android](/packages/react-native/executors/build-android) - Release Build for Android\n- [start](/packages/react-native/executors/start) - Starts the server that communicates with connected devices\n- [bundle](/packages/react-native/executors/bundle) - Builds the JavaScript bundle for offline use\n- [sync-deps](/packages/react-native/executors/sync-deps) - Syncs dependencies to package.json (required for autolinking)\n- [ensure-symlink](/packages/react-native/executors/ensure-symlink) - Ensure workspace node_modules is symlink under app's node_modules folder\n\n## More Documentation\n\n- [Using Detox](/packages/detox)\n- [Using Jest](/packages/jest)\n"
     }
   ],
   "generators": [
@@ -47,6 +47,11 @@
             "type": "boolean",
             "default": false,
             "description": "Use JavaScript instead of TypeScript"
+          },
+          "skipPackageJson": {
+            "description": "Do not add dependencies to `package.json`.",
+            "type": "boolean",
+            "default": false
           }
         },
         "required": [],
@@ -91,8 +96,7 @@
           },
           "directory": {
             "description": "The directory of the new application.",
-            "type": "string",
-            "alias": "d"
+            "type": "string"
           },
           "skipFormat": {
             "description": "Skip formatting files",
@@ -102,7 +106,7 @@
           "linter": {
             "description": "The tool to use for running lint checks.",
             "type": "string",
-            "enum": ["eslint", "tslint"],
+            "enum": ["eslint"],
             "default": "eslint"
           },
           "unitTestRunner": {
@@ -136,6 +140,11 @@
             "type": "boolean",
             "description": "Runs `pod install` for native modules before building iOS app.",
             "default": true
+          },
+          "skipPackageJson": {
+            "description": "Do not add dependencies to `package.json`.",
+            "type": "boolean",
+            "default": false
           }
         },
         "required": [],
@@ -174,13 +183,12 @@
           },
           "directory": {
             "type": "string",
-            "description": "A directory where the lib is placed.",
-            "alias": "d"
+            "description": "A directory where the lib is placed."
           },
           "linter": {
             "description": "The tool to use for running lint checks.",
             "type": "string",
-            "enum": ["eslint", "tslint"],
+            "enum": ["eslint"],
             "default": "eslint"
           },
           "unitTestRunner": {
@@ -242,6 +250,11 @@
             "type": "boolean",
             "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
             "default": false
+          },
+          "skipPackageJson": {
+            "description": "Do not add dependencies to `package.json`.",
+            "type": "boolean",
+            "default": false
           }
         },
         "required": ["name"],
@@ -300,8 +313,7 @@
           },
           "directory": {
             "type": "string",
-            "description": "Create the component under this directory (can be nested).",
-            "alias": "d"
+            "description": "Create the component under this directory (can be nested)."
           },
           "flat": {
             "type": "boolean",
@@ -375,7 +387,7 @@
           "linter": {
             "description": "The tool to use for running lint checks.",
             "type": "string",
-            "enum": ["eslint", "tslint"],
+            "enum": ["eslint"],
             "default": "eslint"
           },
           "standaloneConfig": {
@@ -532,6 +544,8 @@
       "name": "run-android",
       "implementation": "/packages/react-native/src/executors/run-android/run-android.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "cli": "nx",
         "$id": "NxReactNativeRunAndroid",
         "$schema": "http://json-schema.org/schema",
@@ -606,7 +620,8 @@
             "description": "Run packager server in interactive mode.",
             "default": true
           }
-        }
+        },
+        "examplesFile": "`project.json`:\n\n```json\n{\n  \"name\": \"mobile\",\n  //...\n  \"targets\": {\n    //...\n    \"run-android\": {\n      \"executor\": \"@nrwl/react-native:run-android\",\n      \"options\": {}\n    }\n  }\n}\n```\n\n```bash\nnx run mobile:run-android\n```\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Run on a specific device/simulator\" %}\nTo see all the avaiable emulators, run command:\n\n```bash\nemulator -list-avds\n```\n\nThe `deviceId` option allows you to launch your android app in a specific device/simulator:\n\n```json\n    \"run-android\": {\n      \"executor\": \"@nrwl/react-native:run-android\",\n      \"options\": {\n        \"deviceId\": \"Pixel_5_API_30\"\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Run the debug/release app\" %}\nThe `variant` option allows to specify the build variant, such as `debug` or `release`.\n\n```json\n    \"run-android\": {\n      \"executor\": \"@nrwl/react-native:run-android\",\n      \"options\": {\n        \"variant\": \"release\"\n      }\n    }\n```\n\n{% /tab %}\n{% /tabs %}\n\n---\n"
       },
       "description": "Runs Android application.",
       "aliases": [],
@@ -617,6 +632,8 @@
       "name": "run-ios",
       "implementation": "/packages/react-native/src/executors/run-ios/run-ios.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "cli": "nx",
         "$id": "NxReactNativeRunIos",
         "$schema": "http://json-schema.org/schema",
@@ -650,8 +667,8 @@
           "simulator": {
             "type": "string",
             "description": "Explicitly set simulator to use. Optionally include iOS version between parenthesis at the end to match an exact version: `iPhone X (12.1)`.",
-            "default": "iPhone X",
-            "examples": ["iPhone X"]
+            "default": "iPhone 13",
+            "examples": ["iPhone 13", "iPhone X"]
           },
           "device": {
             "type": "string",
@@ -691,7 +708,8 @@
             "description": "Run packager server in interactive mode.",
             "default": true
           }
-        }
+        },
+        "examplesFile": "`project.json`:\n\n```json\n{\n  \"name\": \"mobile\",\n  //...\n  \"targets\": {\n    //...\n    \"run-ios\": {\n      \"executor\": \"@nrwl/react-native:run-ios\",\n      \"options\": {}\n    }\n  }\n}\n```\n\n```bash\nnx run mobile:run-ios\n```\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Run on a simulator\" %}\nTo see all the avaiable simulators, run command:\n\n```bash\nxcrun simctl list\n```\n\nThe `simulator` option allows you to launch your iOS app in a specific simulator:\n\n```json\n    \"run-ios\": {\n      \"executor\": \"@nrwl/react-native:run-ios\",\n      \"options\": {\n        \"simulator\": \"iPhone 13 Pro\"\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Run on a device\" %}\nThe `device` option allows you to launch your iOS app in a specific device.\n\n```json\n    \"run-ios\": {\n      \"executor\": \"@nrwl/react-native:run-ios\",\n      \"options\": {\n        \"device\": \"deviceName\"\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Run the Debug/Release app\" %}\nThe `xcodeConfiguration` option allows to specify the xcode configuartion, such as `Debug` or `Release`.\n\n```json\n    \"run-ios\": {\n      \"executor\": \"@nrwl/react-native:run-ios\",\n      \"options\": {\n        \"xcodeConfiguration\": \"Release\"\n      }\n    }\n```\n\n{% /tab %}\n{% /tabs %}\n\n---\n"
       },
       "description": "Runs iOS application.",
       "aliases": [],
@@ -702,6 +720,8 @@
       "name": "bundle",
       "implementation": "/packages/react-native/src/executors/bundle/bundle.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "cli": "nx",
         "$id": "NxReactNativeBundle",
         "$schema": "http://json-schema.org/schema",
@@ -717,6 +737,7 @@
           },
           "platform": {
             "enum": ["ios", "android"],
+            "alias": "p",
             "description": "Platform to build for."
           },
           "transformer": {
@@ -770,6 +791,7 @@
           }
         },
         "required": ["platform", "entryFile", "bundleOutput"],
+        "examplesFile": "`project.json`:\n\n```json\n{\n  \"name\": \"mobile\",\n  //...\n  \"targets\": {\n    //...\n    \"bundle-ios\": {\n      \"executor\": \"@nrwl/react-native:bundle\",\n      \"outputs\": [\"{projectRoot}/build\"],\n      \"options\": {\n        \"entryFile\": \"src/main.tsx\",\n        \"platform\": \"ios\",\n        \"bundleOutput\": \"dist/apps/mobile/ios/main.jsbundle\"\n      }\n    },\n    \"bundle-android\": {\n      \"executor\": \"@nrwl/react-native:bundle\",\n      \"options\": {\n        \"entryFile\": \"src/main.tsx\",\n        \"platform\": \"android\",\n        \"bundleOutput\": \"dist/apps/mobile/android/main.jsbundle\"\n      }\n    }\n  }\n}\n```\n\n```bash\nnx run mobile:bundle-ios\nnx run mobile:bundle-android\n```\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Bundle with sourcemap\" %}\nThe `sourcemapOutput` option allows you to specify the path of the source map relative to app folder:\n\n```json\n    \"bundle-ios\": {\n      \"executor\": \"@nrwl/react-native:bundle\",\n      \"options\": {\n        \"entryFile\": \"src/main.tsx\",\n        \"platform\": \"ios\",\n        \"bundleOutput\": \"dist/apps/mobile/ios/main.jsbundle\",\n        \"sourcemapOutput\": \"../../dist/apps/mobile/ios/main.map\",\n      }\n    },\n    \"bundle-android\": {\n      \"executor\": \"@nrwl/react-native:bundle\",\n      \"options\": {\n        \"entryFile\": \"src/main.tsx\",\n        \"platform\": \"android\",\n        \"bundleOutput\": \"dist/apps/mobile/android/main.jsbundle\",\n        \"sourcemapOutput\": \"../../dist/apps/mobile/android/main.map\",\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Create a dev/release bundle\" %}\n\nThe `dev` option determines whether to create a dev or release bundle. The default value is `true`, by setting it as `false`, warnings are disabled and the bundle is minified.\n\n```json\n    \"bundle-ios\": {\n      \"executor\": \"@nrwl/react-native:bundle\",\n      \"options\": {\n        \"entryFile\": \"src/main.tsx\",\n        \"platform\": \"ios\",\n        \"bundleOutput\": \"dist/apps/mobile/ios/main.jsbundle\",\n        \"dev\": false\n      }\n    },\n    \"bundle-android\": {\n      \"executor\": \"@nrwl/react-native:bundle\",\n      \"options\": {\n        \"entryFile\": \"src/main.tsx\",\n        \"platform\": \"android\",\n        \"bundleOutput\": \"dist/apps/mobile/android/main.jsbundle\",\n        \"dev\": false\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Create a minified bundle\" %}\n\nThe `minify` option allows you to create a minified bundle:\n\n```json\n    \"bundle-ios\": {\n      \"executor\": \"@nrwl/react-native:bundle\",\n      \"options\": {\n        \"entryFile\": \"src/main.tsx\",\n        \"platform\": \"ios\",\n        \"bundleOutput\": \"dist/apps/mobile/ios/main.jsbundle\",\n        \"minify\": true\n      }\n    },\n    \"bundle-android\": {\n      \"executor\": \"@nrwl/react-native:bundle\",\n      \"options\": {\n        \"entryFile\": \"src/main.tsx\",\n        \"platform\": \"android\",\n        \"bundleOutput\": \"dist/apps/mobile/android/main.jsbundle\",\n        \"minify\": true\n      }\n    }\n```\n\n{% /tab %}\n{% /tabs %}\n\n---\n",
         "presets": []
       },
       "description": "Builds the JavaScript bundle for offline use.",
@@ -781,6 +803,8 @@
       "name": "build-android",
       "implementation": "/packages/react-native/src/executors/build-android/build-android.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "cli": "nx",
         "$id": "NxReactNativeBuildAndroid",
         "$schema": "http://json-schema.org/schema",
@@ -802,6 +826,7 @@
           }
         },
         "required": [],
+        "examplesFile": "`project.json`:\n\n```json\n{\n  \"name\": \"mobile\",\n  //...\n  \"targets\": {\n    //...\n    \"build-android\": {\n      \"executor\": \"@nrwl/react-native:build-android\",\n      \"outputs\": [\n        \"{projectRoot}/build/outputs/bundle\",\n        \"{projectRoot}/build/outputs/apk\"\n      ],\n      \"options\": {}\n    }\n  }\n}\n```\n\n```bash\nnx run mobile:build-android\n```\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Build with custom gradleTask\" %}\nThe `gradleTask` option accepts any custom gradle task, such as `assembleDebug`, `assembleRelease`, `bundleDebug`, `bundleRelease`:\n\n```json\n    \"build-android\": {\n      \"executor\": \"@nrwl/react-native:build-android\",\n      \"outputs\": [\n        \"{projectRoot}/build/outputs/bundle\",\n        \"{projectRoot}/build/outputs/apk\"\n      ],\n      \"options\": {\n        \"gradleTask\": \"assembleDebug\"\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Create a build with apk format\" %}\n\nThe `apk` option allows you determine the format of android build. If set as true, it will create a build with `.apk` extension under apk folder; if set as false, it will create with `.aab` extension under bundle folder.\n\n```json\n    \"build-android\": {\n      \"executor\": \"@nrwl/react-native:build-android\",\n      \"outputs\": [\n        \"{projectRoot}/build/outputs/bundle\",\n        \"{projectRoot}/build/outputs/apk\"\n      ],\n      \"options\": {\n        \"apk\": true\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Build for debug/release\" %}\n\nIf set `debug` option as `true`, it will create a debug build; if set as `false`, it will create a release build.\n\n```json\n    \"build-android\": {\n      \"executor\": \"@nrwl/react-native:build-android\",\n      \"outputs\": [\n        \"{projectRoot}/build/outputs/bundle\",\n        \"{projectRoot}/build/outputs/apk\"\n      ],\n      \"options\": {\n        \"debug\": true\n      }\n    }\n```\n\n{% /tab %}\n{% /tabs %}\n\n---\n",
         "presets": []
       },
       "description": "Release Build for Android.",
@@ -813,6 +838,8 @@
       "name": "start",
       "implementation": "/packages/react-native/src/executors/start/start.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "cli": "nx",
         "$id": "NxReactNativeStart",
         "$schema": "http://json-schema.org/schema",
@@ -836,6 +863,7 @@
             "default": true
           }
         },
+        "examplesFile": "`project.json`:\n\n```json\n{\n  \"name\": \"mobile\",\n  //...\n  \"targets\": {\n    //...\n    \"start\": {\n      \"executor\": \"@nrwl/react-native:start\",\n      \"options\": {\n        \"port\": 8081\n      }\n    }\n  }\n}\n```\n\n```bash\nnx run mobile:start\n```\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Starts the server non-interactively\" %}\nThe `interactive` option allows you to specify whether to use interactive mode:\n\n```json\n    \"start\": {\n      \"executor\": \"@nrwl/react-native:start\",\n      \"options\": {\n        \"port\": 8081,\n        \"interactive\": false\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Starts the server with cache reset\" %}\n\nThe `resetCache` option allows you to remove cached files.\n\n```json\n    \"start\": {\n      \"executor\": \"@nrwl/react-native:start\",\n      \"options\": {\n        \"port\": 8081,\n        \"resetCache\": true\n      }\n    }\n```\n\n{% /tab %}\n{% /tabs %}\n\n---\n",
         "presets": []
       },
       "description": "Starts the Javascript server that communicates with connected devices.",
@@ -847,6 +875,8 @@
       "name": "sync-deps",
       "implementation": "/packages/react-native/src/executors/sync-deps/sync-deps.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "cli": "nx",
         "$id": "NxReactNativeSyncDeps",
         "$schema": "http://json-schema.org/schema",
@@ -878,6 +908,8 @@
       "name": "ensure-symlink",
       "implementation": "/packages/react-native/src/executors/ensure-symlink/ensure-symlink.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "cli": "nx",
         "$id": "NxReactNativeEnsureSymlink",
         "$schema": "http://json-schema.org/schema",
@@ -896,6 +928,8 @@
       "name": "storybook",
       "implementation": "/packages/react-native/src/executors/storybook/storybook.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "title": "React Native Storybook Load Stories",
         "cli": "nx",
         "description": "Load stories for react native.",

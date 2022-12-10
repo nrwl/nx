@@ -11,7 +11,7 @@
       "id": "overview",
       "path": "/packages/workspace",
       "file": "shared/workspace-plugin",
-      "content": "The workspace plugin contains executors and generators that are useful for any Nx workspace. It should be present in every Nx workspace and other plugins build on it.\n\n## Creating Local Generators\n\nCodifying your organization's best practices into local generators is a great way to ensure that the best practices are easy to follow and implement. Running `nx g @nrwl/nx-plugin:plugin feature` will create a local plugin with a generator which is written the same way generators are written for Nx plugins.\n\n> See more about [local generators](/recipe/local-generators)\n\n## Reorganizing Projects\n\nAfter some time of working within a workspace, projects might need to be moved or sometimes even removed.\nThe workspace plugin provides the [`@nrwl/workspace:move`](/packages/workspace/generators/move) and [`@nrwl/workspace:remove`](/packages/workspace/generators/remove) generators to help aid with this.\n\n### Moving Projects\n\nRunning `nx g @nrwl/workspace:move --projectName my-lib --destination new/location/my-lib` will move the `my-lib` library to `libs/new/location/my-lib`.\n\nMoving the files manually can be done easily but a lot of steps are often missed when projects are moved. This generator will also handle the following:\n\n1. The project's files will be moved\n2. The project will be renamed to `new-location-my-lib`\n3. The path mapping in `tsconfig.base.json` will be changed to `@npmScope/new/location/my-lib`\n4. Imports in other projects will be changed to `@npmScope/new/location/my-lib`\n5. Paths in target options such as output path will be changed\n6. Other configuration will be updated too, such as `extends` in `tsconfig.json`, the name of the project in `jest.config.js`, and the extends in `.eslintrc.json`\n\n> See more about [`@nrwl/workspace:move`](/packages/workspace/generators/move)\n\n### Removing Projects\n\nRunning `nx g @nrwl/workspace:remove my-lib` will remove the `my-lib` from the workspace. It is important to note that sometimes, projects cannot be removed if they are still depended on by other projects.\n\nLike when moving projects, some steps are often missed when removing projects. This generator will also handle the following:\n\n1. Checks if other projects depend on the project being removed. This can be ignored via the `--forceRemove` flag.\n2. The project's files will be deleted.\n3. The project's configuration will be removed.\n4. The path mapping in `tsconfig.base.json` will be removed.\n\n> See more about [`@nrwl/workspace:remove`](/packages/workspace/generators/remove)\n\n## Running custom commands\n\nExecutors provide an optimized way of running targets but unfortunately, not every target has an executor written for it. The [`nx:run-commands`](/packages/nx/executors/run-commands) executor is an executor that runs any command or multiple commands in the shell. This can be useful when integrating with other tools which do not have an executor provided. There is also a generator to help configure this executor.\n\nRunning `nx g @nrwl/workspace:run-commands printhello --project my-feature-lib --command 'echo hello'` will create a `my-feature-lib:printhello` target that executes `echo hello` in the shell.\n\n> See more about [`nx:run-commands`](/packages/nx/executors/run-commands)\n"
+      "content": "The workspace plugin contains executors and generators that are useful for any Nx workspace. It should be present in every Nx workspace and other plugins build on it.\n\n## Creating Local Generators\n\nCodifying your organization's best practices into local generators is a great way to ensure that the best practices are easy to follow and implement. Running `nx g @nrwl/nx-plugin:plugin feature` will create a local plugin with a generator which is written the same way generators are written for Nx plugins.\n\n> See more about [local generators](/recipes/generators/local-generators)\n\n## Reorganizing Projects\n\nAfter some time of working within a workspace, projects might need to be moved or sometimes even removed.\nThe workspace plugin provides the [`@nrwl/workspace:move`](/packages/workspace/generators/move) and [`@nrwl/workspace:remove`](/packages/workspace/generators/remove) generators to help aid with this.\n\n### Moving Projects\n\nRunning `nx g @nrwl/workspace:move --projectName my-lib --destination new/location/my-lib` will move the `my-lib` library to `libs/new/location/my-lib`.\n\nMoving the files manually can be done easily but a lot of steps are often missed when projects are moved. This generator will also handle the following:\n\n1. The project's files will be moved\n2. The project will be renamed to `new-location-my-lib`\n3. The path mapping in `tsconfig.base.json` will be changed to `@npmScope/new/location/my-lib`\n4. Imports in other projects will be changed to `@npmScope/new/location/my-lib`\n5. Paths in target options such as output path will be changed\n6. Other configuration will be updated too, such as `extends` in `tsconfig.json`, the name of the project in `jest.config.js`, and the extends in `.eslintrc.json`\n\n> See more about [`@nrwl/workspace:move`](/packages/workspace/generators/move)\n\n### Removing Projects\n\nRunning `nx g @nrwl/workspace:remove my-lib` will remove the `my-lib` from the workspace. It is important to note that sometimes, projects cannot be removed if they are still depended on by other projects.\n\nLike when moving projects, some steps are often missed when removing projects. This generator will also handle the following:\n\n1. Checks if other projects depend on the project being removed. This can be ignored via the `--forceRemove` flag.\n2. The project's files will be deleted.\n3. The project's configuration will be removed.\n4. The path mapping in `tsconfig.base.json` will be removed.\n\n> See more about [`@nrwl/workspace:remove`](/packages/workspace/generators/remove)\n\n## Running custom commands\n\nExecutors provide an optimized way of running targets but unfortunately, not every target has an executor written for it. The [`nx:run-commands`](/packages/nx/executors/run-commands) executor is an executor that runs any command or multiple commands in the shell. This can be useful when integrating with other tools which do not have an executor provided. There is also a generator to help configure this executor.\n\nRunning `nx g @nrwl/workspace:run-commands printhello --project my-feature-lib --command 'echo hello'` will create a `my-feature-lib:printhello` target that executes `echo hello` in the shell.\n\n> See more about [`nx:run-commands`](/packages/nx/executors/run-commands)\n"
     },
     {
       "name": "Nx, NodeJS and Typescript Versions",
@@ -21,90 +21,6 @@
     }
   ],
   "generators": [
-    {
-      "name": "workspace",
-      "factory": "./src/generators/workspace/workspace#workspaceGenerator",
-      "schema": {
-        "$schema": "http://json-schema.org/schema",
-        "$id": "SchematicsNxNgNew",
-        "cli": "nx",
-        "title": "Create an empty workspace",
-        "description": "Create an empty workspace.",
-        "type": "object",
-        "properties": {
-          "name": {
-            "description": "The name of the workspace.",
-            "type": "string",
-            "$default": { "$source": "argv", "index": 0 },
-            "x-prompt": "What name would you like to use for the workspace?"
-          },
-          "style": {
-            "description": "The file extension to be used for style files.",
-            "type": "string",
-            "default": "css",
-            "x-prompt": {
-              "message": "Which stylesheet format would you like to use?",
-              "type": "list",
-              "items": [
-                { "value": "css", "label": "CSS" },
-                {
-                  "value": "scss",
-                  "label": "SASS(.scss)  [ http://sass-lang.com   ]"
-                },
-                {
-                  "value": "styl",
-                  "label": "Stylus(.styl)[ http://stylus-lang.com ]"
-                },
-                {
-                  "value": "less",
-                  "label": "LESS         [ http://lesscss.org     ]"
-                }
-              ]
-            }
-          },
-          "directory": {
-            "type": "string",
-            "format": "path",
-            "description": "The directory name to create the workspace in.",
-            "default": ""
-          },
-          "preset": {
-            "type": "string",
-            "description": "Preset of the workspace."
-          },
-          "npmScope": {
-            "type": "string",
-            "description": "Npm scope for importing libs."
-          },
-          "defaultBase": {
-            "type": "string",
-            "description": "Default base branch for affected."
-          },
-          "skipInstall": {
-            "description": "Skip installing dependency packages.",
-            "type": "boolean",
-            "default": false
-          },
-          "packageManager": {
-            "description": "The package manager used to install dependencies.",
-            "type": "string",
-            "enum": ["npm", "yarn", "pnpm"]
-          },
-          "cli": {
-            "description": "CLI used for generating code and running tasks",
-            "type": "string",
-            "enum": ["nx", "angular"],
-            "default": "nx"
-          }
-        },
-        "presets": []
-      },
-      "description": "Create an empty workspace.",
-      "hidden": true,
-      "implementation": "/packages/workspace/src/generators/workspace/workspace#workspaceGenerator.ts",
-      "aliases": [],
-      "path": "/packages/workspace/src/generators/workspace/schema.json"
-    },
     {
       "name": "preset",
       "factory": "./src/generators/preset/preset#presetGenerator",
@@ -135,7 +51,7 @@
           "linter": {
             "description": "The tool to use for running lint checks.",
             "type": "string",
-            "enum": ["tslint", "eslint"],
+            "enum": ["eslint"],
             "default": "eslint"
           },
           "style": {
@@ -340,7 +256,7 @@
           "linter": {
             "description": "The tool to use for running lint checks.",
             "type": "string",
-            "enum": ["tslint", "eslint"],
+            "enum": ["eslint"],
             "default": "eslint"
           },
           "packageManager": {
@@ -642,14 +558,19 @@
           "ci": {
             "type": "string",
             "description": "CI provider.",
-            "enum": ["github", "circleci", "azure"],
+            "enum": ["github", "circleci", "azure", "bitbucket-pipelines"],
             "x-prompt": {
               "message": "What is your target CI provider?",
               "type": "list",
               "items": [
                 { "value": "github", "label": "Github Actions" },
                 { "value": "circleci", "label": "Circle CI" },
-                { "value": "azure", "label": "Azure DevOps" }
+                { "value": "azure", "label": "Azure DevOps" },
+                {
+                  "value": "bitbucket-pipelines",
+                  "label": "BitBucket Pipelines"
+                },
+                { "value": "gitlab", "label": "Gitlab" }
               ]
             }
           },
@@ -677,6 +598,7 @@
       "name": "run-commands",
       "implementation": "/packages/workspace/src/executors/run-commands/run-commands.impl.ts",
       "schema": {
+        "version": 2,
         "title": "Run Commands",
         "description": "Run any custom commands with Nx.",
         "type": "object",
@@ -796,7 +718,7 @@
           }
         },
         "additionalProperties": true,
-        "required": [],
+        "oneOf": [{ "required": ["commands"] }, { "required": ["command"] }],
         "examplesFile": "`workspace.json`:\n\n```json\n//...\n\"frontend\": {\n    \"targets\": {\n        //...\n        \"ls-project-root\": {\n            \"executor\": \"nx:run-commands\",\n            \"options\": {\n                \"command\": \"ls apps/frontend/src\"\n            }\n        }\n    }\n}\n```\n\n```bash\nnx run frontend:ls-project-root\n```\n\n##### Chaining commands, interpolating args and setting the cwd\n\nLet's say each of our workspace projects has some custom bash scripts in a `scripts` folder.\nWe want a simple way to create empty bash script files for a given project, that have the execute permissions already set.\n\nGiven that Nx knows our workspace structure, we should be able to give it a project and the name of our script, and it should take care of the rest.\n\nThe `commands` option accepts as many commands as you want. By default, they all run in parallel.\nYou can run them sequentially by setting `parallel: false`:\n\n```json\n\"create-script\": {\n    \"executor\": \"nx:run-commands\",\n    \"options\": {\n        \"commands\": [\n          \"mkdir -p scripts\",\n          \"touch scripts/{args.name}.sh\",\n          \"chmod +x scripts/{args.name}.sh\"\n        ],\n        \"cwd\": \"apps/frontend\",\n        \"parallel\": false\n    }\n}\n```\n\nBy setting the `cwd` option, each command will run in the `apps/frontend` folder.\n\nWe run the above with:\n\n```bash\nnx run frontend:create-script --args=\"--name=example\"\n```\n\nor simply with:\n\n```bash\nnx run frontend:create-script --name=example\n```\n\n##### Arguments forwarding\n\nWhen interpolation is not present in the command, all arguments are forwarded to the command by default.\n\nThis is useful when you need to pass raw argument strings to your command.\n\nFor example, when you run:\n\nnx run frontend:webpack --args=\"--config=example.config.js\"\n\n```json\n\"webpack\": {\n    \"executor\": \"nx:run-commands\",\n    \"options\": {\n        \"command\": \"webpack\"\n    }\n}\n```\n\nThe above command will execute: `webpack --config=example.config.js`\n\nThis functionality can be disabled by using `commands` and expanding each `command` into an object\nthat sets the `forwardAllArgs` option to `false` as shown below:\n\n```json\n\"webpack\": {\n    \"executor\": \"nx:run-commands\",\n    \"options\": {\n        \"commands\": [\n            {\n                \"command\": \"webpack\",\n                \"forwardAllArgs\": false\n            }\n        ]\n    }\n}\n```\n\n##### Custom **done** conditions\n\nNormally, `run-commands` considers the commands done when all of them have finished running. If you don't need to wait until they're all done, you can set a special string that considers the commands finished the moment the string appears in `stdout` or `stderr`:\n\n```json\n\"finish-when-ready\": {\n    \"executor\": \"nx:run-commands\",\n    \"options\": {\n        \"commands\": [\n            \"sleep 5 && echo 'FINISHED'\",\n            \"echo 'READY'\"\n        ],\n        \"readyWhen\": \"READY\",\n        \"parallel\": true\n    }\n}\n```\n\n```bash\nnx run frontend:finish-when-ready\n```\n\nThe above commands will finish immediately, instead of waiting for 5 seconds.\n\n##### Nx Affected\n\nThe true power of `run-commands` comes from the fact that it runs through `nx`, which knows about your project graph. So you can run **custom commands** only for the projects that have been affected by a change.\n\nWe can create some configurations to generate docs, and if run using `nx affected`, it will only generate documentation for the projects that have been changed:\n\n```bash\nnx affected --target=generate-docs\n```\n\n```json\n//...\n\"frontend\": {\n    \"targets\": {\n        //...\n        \"generate-docs\": {\n            \"executor\": \"nx:run-commands\",\n            \"options\": {\n                \"command\": \"npx compodoc -p apps/frontend/tsconfig.app.json\"\n            }\n        }\n    }\n},\n\"api\": {\n    \"targets\": {\n        //...\n        \"generate-docs\": {\n            \"executor\": \"nx:run-commands\",\n            \"options\": {\n                \"command\":  \"npx compodoc -p apps/api/tsconfig.app.json\"\n            }\n        }\n    }\n}\n```\n"
       },
       "description": "Run any custom commands with Nx.",
@@ -809,6 +731,7 @@
       "implementation": "/packages/workspace/src/executors/counter/counter.impl.ts",
       "batchImplementation": "./src/executors/counter/counter.impl#batchCounter",
       "schema": {
+        "version": 2,
         "title": "Counter",
         "description": "A dummy executor useful for E2E tests.",
         "type": "object",
@@ -831,6 +754,7 @@
       "name": "run-script",
       "implementation": "/packages/workspace/src/executors/run-script/run-script.impl.ts",
       "schema": {
+        "version": 2,
         "title": "Run Script",
         "description": "Run any NPM script of a project in the project's root directory.",
         "type": "object",
@@ -850,7 +774,7 @@
         },
         "additionalProperties": true,
         "required": ["script"],
-        "examplesFile": "`workspace.json`:\n\n```json\n\"frontend\": {\n    \"root\": \"packages/frontend\",\n    \"targets\": {\n        \"build\": {\n            \"executor\": \"nx:run-script\",\n            \"options\": {\n                \"script\": \"build-my-project\"\n            }\n        }\n    }\n}\n```\n\n```bash\nnx run frontend:build\n```\n\nThe `build` target is going to run `npm run build-my-project` (or `yarn build-my-project`) in the `packages/frontend` directory.\n\n#### Caching Artifacts\n\nBy default, Nx is going to cache `dist/packages/frontend`, `packages/frontend/dist`, `packages/frontend/build`, `packages/frontend/public`. If your npm script writes files to other places, you can override the list of cached outputs as follows:\n\n```json\n\"frontend\": {\n    \"root\": \"packages/frontend\",\n    \"targets\": {\n        \"build\": {\n            \"executor\": \"nx:run-script\",\n            \"outputs\": [\"packages/frontend/dist\", \"packaged/frontend/docs\"],\n            \"options\": {\n                \"script\": \"build-my-project\"\n            }\n        }\n    }\n}\n```\n",
+        "examplesFile": "`workspace.json`:\n\n```json\n\"frontend\": {\n    \"root\": \"packages/frontend\",\n    \"targets\": {\n        \"build\": {\n            \"executor\": \"nx:run-script\",\n            \"options\": {\n                \"script\": \"build-my-project\"\n            }\n        }\n    }\n}\n```\n\n```bash\nnx run frontend:build\n```\n\nThe `build` target is going to run `npm run build-my-project` (or `yarn build-my-project`) in the `packages/frontend` directory.\n\n#### Caching Artifacts\n\nBy default, Nx is going to cache `dist/packages/frontend`, `packages/frontend/dist`, `packages/frontend/build`, `packages/frontend/public`. If your npm script writes files to other places, you can override the list of cached outputs as follows:\n\n```json\n\"frontend\": {\n    \"root\": \"packages/frontend\",\n    \"targets\": {\n        \"build\": {\n            \"executor\": \"nx:run-script\",\n            \"outputs\": [\"{projectRoot}/dist\", \"{projectRoot}/docs\"],\n            \"options\": {\n                \"script\": \"build-my-project\"\n            }\n        }\n    }\n}\n```\n",
         "presets": []
       },
       "description": "Run an NPM script using Nx.",

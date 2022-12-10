@@ -1,9 +1,9 @@
 # Micro Frontend Architecture
 
-Since version 14, Nx provides out-of-the-box [Module Federation](/recipe/faster-builds) support to both React
+Since version 14, Nx provides out-of-the-box [Module Federation](/recipes/module-federation/faster-builds) support to both React
 and Angular. The Micro Frontend (MFE) architecture builds on top of Module Federation by providing _independent deployability_.
 
-If you have not read the [Module Federation guide](/recipe/faster-builds) yet, we recommend that you read it
+If you have not read the [Module Federation guide](/recipes/module-federation/faster-builds) yet, we recommend that you read it
 before continuing with this MFE guide.
 
 ## When should I use micro frontend architecture?
@@ -17,7 +17,7 @@ of MFEs and decide whether it makes sense for your own teams.
   logic that breaks compatibility with remotes.
 
 If you are looking at optimizing builds and do not need independent deployments, we recommend reading our guide on
-[Faster Builds with Module Federation](/recipe/faster-builds).
+[Faster Builds with Module Federation](/recipes/module-federation/faster-builds).
 
 If you need to use MFEs, keep reading, and we'll examine the architecture and strategies to deal with shared libraries and
 deployments.
@@ -29,7 +29,7 @@ With MFE architecture, a large application is split into:
 1. A single **Host** application that references external...
 2. **Remote** applications, which handle a single domain or feature.
 
-In a normal Module Federation setup, we [recommend setting up implicit dependencies](/recipe/faster-builds#architectural-overview)
+In a normal Module Federation setup, we [recommend setting up implicit dependencies](/recipes/module-federation/faster-builds#architectural-overview)
 from the host application to remote applications. However, in an MFE architecture you _do not_ want these dependencies
 to exist between host and remotes.
 
@@ -45,7 +45,7 @@ Keeping the applications independent allows them to be deployed on different cad
 The generator for MFEs is the same as with basic Module Federation. You can use `nx g host` to create a new host
 application, and `nx g remote` for remote applications.
 
-```bash
+```shell
 # React
 nx g @nrwl/react:host shell --remotes=shop,cart
 nx g @nrwl/react:remote about --host=shell
@@ -87,9 +87,7 @@ between applications.
 
 For example, you can create a base configuration file that only shares core libraries that _have_ to be shared.
 
-```javascript
-// module-federation.config.js
-
+```javascript {% fileName="module-federation.config.js" %}
 // Core libraries such as react, angular, redux, ngrx, etc. must be
 // singletons. Otherwise the applications will not work together.
 const coreLibraries = new Set([
@@ -116,8 +114,7 @@ module.exports = {
 
 Then, in the `shell` and remote applications, you can extend from the base configuration.
 
-```javascript
-// apps/shell/module-federation.config.js
+```javascript {% fileName="apps/shell/module-federation.config.js" %}
 const baseConfig = require('../../module-federation.config');
 
 module.exports = {

@@ -135,16 +135,11 @@ export class ProcessTasks {
                 newTask,
                 newTask.target.project,
                 configuration,
-                taskOverrides
+                overrides
               );
             }
           } else {
-            this.processTask(
-              task,
-              depProject.name,
-              configuration,
-              taskOverrides
-            );
+            this.processTask(task, depProject.name, configuration, overrides);
           }
         }
       } else {
@@ -180,7 +175,7 @@ export class ProcessTasks {
               newTask,
               newTask.target.project,
               configuration,
-              taskOverrides
+              overrides
             );
           }
         }
@@ -195,6 +190,18 @@ export class ProcessTasks {
     resolvedConfiguration: string | undefined,
     overrides: Object
   ): Task {
+    if (!project.data.targets[target]) {
+      throw new Error(
+        `Cannot find configuration for task ${project.name}:${target}`
+      );
+    }
+
+    if (!project.data.targets[target].executor) {
+      throw new Error(
+        `Target "${project.name}:${target}" does not have an executor configured`
+      );
+    }
+
     const qualifiedTarget = {
       project: project.name,
       target,

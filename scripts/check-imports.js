@@ -41,6 +41,10 @@ function check() {
     'packages/workspace/src/tasks-runner/task-orchestrator.ts',
     'packages/nest/src/generators/init/lib/add-dependencies.ts',
     'packages/nest/src/migrations/update-13-2-0/update-to-nest-8.ts',
+    // cypress v11 migration checks if the TestBed is imported by looking for the import
+    // which is @angular/core/testing. and the tests check for this
+    'packages/cypress/src/migrations/update-15-1-0/cypress-11.spec.ts',
+    'packages/cypress/src/migrations/update-15-1-0/cypress-11.ts',
   ];
 
   const files = [

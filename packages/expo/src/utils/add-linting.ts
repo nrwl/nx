@@ -3,10 +3,10 @@ import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import {
   addDependenciesToPackageJson,
   joinPathFragments,
-  updateJson,
   Tree,
+  updateJson,
 } from '@nrwl/devkit';
-import { extraEslintDependencies, createReactEslintJson } from '@nrwl/react';
+import { extendReactEslintJson, extraEslintDependencies } from '@nrwl/react';
 import type { Linter as ESLintLinter } from 'eslint';
 
 export async function addLinting(
@@ -29,20 +29,12 @@ export async function addLinting(
     skipFormat: true,
   });
 
-  if (linter === Linter.TsLint) {
-    return () => {};
-  }
-
-  const reactEslintJson = createReactEslintJson(
-    appProjectRoot,
-    setParserOptionsProject
-  );
-
   updateJson(
     host,
     joinPathFragments(appProjectRoot, '.eslintrc.json'),
     (json: ESLintLinter.Config) => {
-      json = reactEslintJson;
+      json = extendReactEslintJson(json);
+
       json.ignorePatterns = ['!**/*', '.expo', 'node_modules', 'web-build'];
 
       // Find the override that handles both TS and JS files.

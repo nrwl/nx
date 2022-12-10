@@ -6,7 +6,7 @@ The generator below shows you how to generate a library, and then scaffold out a
 
 First, you define a folder to store your static or dynamic templates used to generated files. This is commonly done in a `files` folder.
 
-```treeview
+```text
 happynrwl/
 ├── apps/
 ├── libs/
@@ -32,7 +32,7 @@ Hello, my name is <%= name %>!
 
 Next, update the `index.ts` file for the generator, and generate the new files.
 
-```typescript
+```typescript {% fileName="index.ts" %}
 import {
   Tree,
   formatFiles,
@@ -67,13 +67,13 @@ Next, run the generator:
 Use the `-d` or `--dry-run` flag to see your changes without applying them. This will let you see what the command will do to your workspace.
 {% /callout %}
 
-```bash
+```shell
 nx generate my-generator mylib
 ```
 
 The following information will be displayed.
 
-```bash
+```{% command="nx generate my-generator mylib" %}
 CREATE libs/mylib/README.md
 CREATE libs/mylib/.babelrc
 CREATE libs/mylib/src/index.ts

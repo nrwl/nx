@@ -1,4 +1,5 @@
 {
+  "name": "express",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/express",
   "projectType": "library",
@@ -9,7 +10,7 @@
         "jestConfig": "packages/express/jest.config.ts",
         "passWithNoTests": true
       },
-      "outputs": ["coverage/packages/express"]
+      "outputs": ["{workspaceRoot}/coverage/packages/express"]
     },
     "build-base": {
       "executor": "@nrwl/js:tsc",
@@ -57,7 +58,7 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["build/packages/express"],
+      "outputs": ["{workspaceRoot}/build/packages/express"],
       "options": {
         "command": "node ./scripts/copy-readme.js express"
       }

@@ -5,16 +5,6 @@
   "title": "Create a new Workspace Lint Rule",
   "description": "Create a new Workspace Lint Rule.",
   "type": "object",
-  "examples": [
-    {
-      "command": "nx g @nrwl/linter:workspace-rule my-custom-rule",
-      "description": "Create a new workspace lint rule called my-custom-rule"
-    },
-    {
-      "command": "nx g @nrwl/linter:workspace-rule --name=my-custom-rule --directory=a/b/c",
-      "description": "Create a new workspace lint rule located at `tools/eslint-rules/a/b/c/my-custom-rule.ts`"
-    }
-  ],
   "properties": {
     "name": {
       "type": "string",
@@ -31,5 +21,6 @@
       "default": "rules"
     }
   },
-  "required": ["name", "directory"]
+  "required": ["name", "directory"],
+  "examplesFile": "../../../docs/workspace-rule-examples.md"
 }

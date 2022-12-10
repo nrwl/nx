@@ -57,7 +57,7 @@ The `pr` and `main` jobs implement the CI workflow.
 
 In order to use distributed task execution, we need to start agents and set the `NX_CLOUD_DISTRIBUTED_EXECUTION` flag to `true`.
 
-Read more about the [Distributed CI setup with Nx Cloud](/recipes/ci-setup#distributed-ci-with-nx-cloud).
+Read more about the [Distributed CI setup with Nx Cloud](/recipes/ci/ci-setup#distributed-ci-with-nx-cloud).
 
 ```groovy
 pipeline {
@@ -78,9 +78,7 @@ pipeline {
                         sh "npx nx-cloud start-ci-run --stop-agents-after='build'"
                         sh "npx nx workspace-lint"
                         sh "npx nx format:check"
-                        sh "npx nx affected --base=HEAD~1 --target=lint --parallel=3"
-                        sh "npx nx affected --base=HEAD~1 --target=test --parallel=3 --ci --code-coverage"
-                        sh "npx nx affected --base=HEAD~1 --target=build --parallel=3"
+                        sh "npx nx affected --base=HEAD~1 --target=lint --parallel=3 & npx nx affected --base=HEAD~1 --target=test --parallel=3 --ci --code-coverage & npx nx affected --base=HEAD~1 --target=build --parallel=3"
                     }
                 }
                 stage('PR') {
@@ -93,9 +91,7 @@ pipeline {
                         sh "npx nx-cloud start-ci-run --stop-agents-after='build'"
                         sh "npx nx workspace-lint"
                         sh "npx nx format:check"
-                        sh "npx nx affected --base origin/${env.CHANGE_TARGET} --target=lint --parallel=3"
-                        sh "npx nx affected --base origin/${env.CHANGE_TARGET} --target=test --parallel=3 --ci --code-coverage"
-                        sh "npx nx affected --base origin/${env.CHANGE_TARGET} --target=build --parallel=3"
+                        sh "npx nx affected --base origin/${env.CHANGE_TARGET} --target=lint --parallel=3 & npx nx affected --base origin/${env.CHANGE_TARGET} --target=test --parallel=3 --ci --code-coverage & npx nx affected --base origin/${env.CHANGE_TARGET} --target=build --parallel=3"
                     }
                 }
 

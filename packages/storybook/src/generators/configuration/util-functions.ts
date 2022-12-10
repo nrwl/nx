@@ -1,8 +1,10 @@
 import {
   generateFiles,
+  getProjects,
   joinPathFragments,
   logger,
   offsetFromRoot,
+  parseTargetString,
   readJson,
   readProjectConfiguration,
   readWorkspaceConfiguration,
@@ -11,10 +13,11 @@ import {
   updateJson,
   updateProjectConfiguration,
   updateWorkspaceConfiguration,
+  workspaceRoot,
   writeJson,
 } from '@nrwl/devkit';
 import { Linter } from '@nrwl/linter';
-import { join } from 'path';
+import { join, relative } from 'path';
 import {
   dedupe,
   findStorybookAndBuildTargetsAndCompiler,
@@ -23,11 +26,15 @@ import {
 } from '../../utils/utilities';
 import { StorybookConfigureSchema } from './schema';
 import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
+import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
+
+const DEFAULT_PORT = 4400;
 
 export function addStorybookTask(
   tree: Tree,
   projectName: string,
-  uiFramework: string
+  uiFramework: string,
+  configureTestRunner: boolean
 ) {
   if (uiFramework === '@storybook/react-native') {
     return;
@@ -37,7 +44,7 @@ export function addStorybookTask(
     executor: '@nrwl/storybook:storybook',
     options: {
       uiFramework,
-      port: 4400,
+      port: DEFAULT_PORT,
       config: {
         configFolder: `${projectConfig.root}/.storybook`,
       },
@@ -48,6 +55,7 @@ export function addStorybookTask(
       },
     },
   };
+
   projectConfig.targets['build-storybook'] = {
     executor: '@nrwl/storybook:build',
     outputs: ['{options.outputPath}'],
@@ -65,10 +73,23 @@ export function addStorybookTask(
     },
   };
 
+  if (configureTestRunner === true) {
+    projectConfig.targets['test-storybook'] = {
+      executor: 'nx:run-commands',
+      options: {
+        command: `test-storybook -c ${projectConfig.root}/.storybook --url=http://localhost:${DEFAULT_PORT}`,
+      },
+    };
+  }
+
   updateProjectConfiguration(tree, projectName, projectConfig);
 }
 
-export function addAngularStorybookTask(tree: Tree, projectName: string) {
+export function addAngularStorybookTask(
+  tree: Tree,
+  projectName: string,
+  configureTestRunner: boolean
+) {
   const projectConfig = readProjectConfiguration(tree, projectName);
   const { ngBuildTarget } = findStorybookAndBuildTargetsAndCompiler(
     projectConfig.targets
@@ -89,6 +110,7 @@ export function addAngularStorybookTask(tree: Tree, projectName: string) {
       },
     },
   };
+
   projectConfig.targets['build-storybook'] = {
     executor: '@storybook/angular:build-storybook',
     outputs: ['{options.outputDir}'],
@@ -106,6 +128,15 @@ export function addAngularStorybookTask(tree: Tree, projectName: string) {
       },
     },
   };
+
+  if (configureTestRunner === true) {
+    projectConfig.targets['test-storybook'] = {
+      executor: 'nx:run-commands',
+      options: {
+        command: `test-storybook -c ${projectConfig.root}/.storybook --url=http://localhost:${DEFAULT_PORT}`,
+      },
+    };
+  }
 
   updateProjectConfiguration(tree, projectName, projectConfig);
 }
@@ -235,7 +266,7 @@ export function normalizeSchema(
 ): StorybookConfigureSchema {
   const defaults = {
     configureCypress: true,
-    linter: Linter.TsLint,
+    linter: Linter.EsLint,
     js: false,
   };
   return {
@@ -250,19 +281,21 @@ export function createRootStorybookDir(
   tsConfiguration: boolean
 ) {
   if (tree.exists('.storybook')) {
-    logger.warn(
-      `.storybook folder already exists at root! Skipping generating files in it.`
-    );
+    logger.warn(`Root Storybook configuration files already exist!`);
     return;
   }
   logger.debug(`adding .storybook folder to the root directory`);
 
+  const isInNestedWorkspace = workspaceHasRootProject(tree);
+
   const templatePath = join(
     __dirname,
-    tsConfiguration ? './root-files-ts' : './root-files'
+    `./root-files${tsConfiguration ? '-ts' : ''}`
   );
+
   generateFiles(tree, templatePath, '', {
-    rootTsConfigPath: getRootTsConfigPathInTree(tree),
+    mainName: isInNestedWorkspace ? 'main.root' : 'main',
+    tmpl: '',
   });
 
   const workspaceConfiguration = readWorkspaceConfiguration(tree);
@@ -298,6 +331,78 @@ export function createRootStorybookDir(
   }
 }
 
+export function createRootStorybookDirForRootProject(
+  tree: Tree,
+  projectName: string,
+  uiFramework: StorybookConfigureSchema['uiFramework'],
+  js: boolean,
+  tsConfiguration: boolean,
+  root: string,
+  projectType: string,
+  isNextJs?: boolean,
+  usesSwc?: boolean,
+  usesVite?: boolean
+) {
+  const rootConfigExists =
+    tree.exists('.storybook/main.root.js') ||
+    tree.exists('.storybook/main.root.ts');
+  const rootProjectConfigExists =
+    tree.exists('.storybook/main.js') || tree.exists('.storybook/main.ts');
+
+  if (!rootConfigExists) {
+    createRootStorybookDir(tree, js, tsConfiguration);
+  }
+
+  if (rootConfigExists && rootProjectConfigExists) {
+    logger.warn(
+      `Storybook configuration files already exist for ${projectName}!`
+    );
+    return;
+  }
+  if (rootConfigExists && !rootProjectConfigExists) {
+    logger.warn(
+      `Root Storybook configuration files already exist. 
+      Only the project-specific configuration file will be generated.`
+    );
+  }
+
+  logger.debug(`Creating Storybook configuration files for ${projectName}.`);
+
+  const projectDirectory =
+    projectType === 'application'
+      ? isNextJs
+        ? 'components'
+        : 'src/app'
+      : 'src/lib';
+
+  const templatePath = join(
+    __dirname,
+    `./project-files${
+      rootFileIsTs(tree, 'main.root', tsConfiguration) ? '-ts' : ''
+    }`
+  );
+
+  generateFiles(tree, templatePath, root, {
+    tmpl: '',
+    uiFramework,
+    offsetFromRoot: offsetFromRoot(root),
+    rootTsConfigPath: getRootTsConfigPathInTree(tree),
+    projectDirectory,
+    rootMainName: 'main.root',
+    existsRootWebpackConfig: tree.exists('.storybook/webpack.config.js'),
+    projectType,
+    mainDir: isNextJs && projectType === 'application' ? 'components' : 'src',
+    isNextJs: isNextJs && projectType === 'application',
+    usesSwc,
+    usesVite,
+    isRootProject: true,
+  });
+
+  if (js) {
+    toJS(tree);
+  }
+}
+
 export function createProjectStorybookDir(
   tree: Tree,
   projectName: string,
@@ -305,27 +410,9 @@ export function createProjectStorybookDir(
   js: boolean,
   tsConfiguration: boolean,
   isNextJs?: boolean,
-  usesSwc?: boolean
+  usesSwc?: boolean,
+  usesVite?: boolean
 ) {
-  // Check if root main file is .ts or .js
-  if (tree.exists('.storybook/main.ts')) {
-    logger.info(
-      `The root Storybook configuration is in TypeScript, 
-      so Nx will generate TypeScript Storybook configuration files 
-      in this project's .storybook folder as well.`
-    );
-    tsConfiguration = true;
-  } else {
-    if (tree.exists('.storybook/main.js')) {
-      logger.info(
-        `The root Storybook configuration is in JavaScript, 
-        so Nx will generate JavaScript Storybook configuration files 
-        in this project's .storybook folder as well.`
-      );
-      tsConfiguration = false;
-    }
-  }
-
   const { root, projectType } = readProjectConfiguration(tree, projectName);
 
   const projectDirectory =
@@ -339,15 +426,24 @@ export function createProjectStorybookDir(
 
   if (tree.exists(storybookRoot)) {
     logger.warn(
-      `.storybook folder already exists for ${projectName}! Skipping generating files in it.`
+      `Storybook configuration files already exist for ${projectName}!`
     );
     return;
   }
 
   logger.debug(`adding .storybook folder to your ${projectType}`);
+
+  const rootMainName =
+    tree.exists('.storybook/main.root.js') ||
+    tree.exists('.storybook/main.root.ts')
+      ? 'main.root'
+      : 'main';
+
   const templatePath = join(
     __dirname,
-    tsConfiguration ? './project-files-ts' : './project-files'
+    `./project-files${
+      rootFileIsTs(tree, rootMainName, tsConfiguration) ? '-ts' : ''
+    }`
   );
 
   generateFiles(tree, templatePath, root, {
@@ -356,14 +452,14 @@ export function createProjectStorybookDir(
     offsetFromRoot: offsetFromRoot(root),
     rootTsConfigPath: getRootTsConfigPathInTree(tree),
     projectDirectory,
-    useWebpack5:
-      uiFramework === '@storybook/angular' ||
-      uiFramework === '@storybook/react',
+    rootMainName,
     existsRootWebpackConfig: tree.exists('.storybook/webpack.config.js'),
     projectType,
     mainDir: isNextJs && projectType === 'application' ? 'components' : 'src',
     isNextJs: isNextJs && projectType === 'application',
     usesSwc,
+    usesVite,
+    isRootProject: false,
   });
 
   if (js) {
@@ -407,4 +503,64 @@ export function addBuildStorybookToCacheableOperations(tree: Tree) {
       },
     },
   }));
+}
+
+export function projectIsRootProjectInNestedWorkspace(projectRoot: string) {
+  return relative(workspaceRoot, projectRoot).length === 0;
+}
+
+export function workspaceHasRootProject(tree: Tree) {
+  return tree.exists('project.json');
+}
+
+export function rootFileIsTs(
+  tree: Tree,
+  rootFileName: string,
+  tsConfiguration: boolean
+): boolean {
+  if (tree.exists(`.storybook/${rootFileName}.ts`) && !tsConfiguration) {
+    logger.info(
+      `The root Storybook configuration is in TypeScript, 
+      so Nx will generate TypeScript Storybook configuration files 
+      in this project's .storybook folder as well.`
+    );
+    return true;
+  } else if (tree.exists(`.storybook/${rootFileName}.js`) && tsConfiguration) {
+    logger.info(
+      `The root Storybook configuration is in JavaScript, 
+        so Nx will generate JavaScript Storybook configuration files 
+        in this project's .storybook folder as well.`
+    );
+    return false;
+  } else {
+    return tsConfiguration;
+  }
+}
+
+export function getE2EProjectName(
+  tree: Tree,
+  mainProject: string
+): string | undefined {
+  let e2eProject: string;
+  forEachExecutorOptions(
+    tree,
+    '@nrwl/cypress:cypress',
+    (options, projectName) => {
+      if (e2eProject) {
+        return;
+      }
+      if (options['devServerTarget']) {
+        const { project, target } = parseTargetString(
+          options['devServerTarget']
+        );
+        if (
+          (project === mainProject && target === 'serve') ||
+          (project === mainProject && target === 'storybook')
+        ) {
+          e2eProject = projectName;
+        }
+      }
+    }
+  );
+  return e2eProject;
 }

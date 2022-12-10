@@ -12,6 +12,8 @@ import { Task, TaskGraph } from '../config/task-graph';
 import { ProjectGraph } from '../config/project-graph';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { hashTask } from '../hasher/hash-task';
+import { findAllProjectNodeDependencies } from '../utils/project-graph-utils';
+import { reverse } from '../project-graph/operators';
 
 export interface Batch {
   executorName: string;
@@ -21,7 +23,7 @@ export interface Batch {
 export class TasksSchedule {
   private notScheduledTaskGraph = this.taskGraph;
   private reverseTaskDeps = calculateReverseDeps(this.taskGraph);
-
+  private reverseProjectGraph = reverse(this.projectGraph);
   private scheduledBatches: Batch[] = [];
 
   private scheduledTasks: string[] = [];
@@ -99,7 +101,31 @@ export class TasksSchedule {
       [taskId]
     );
     this.options.lifeCycle.scheduleTask(task);
-    this.scheduledTasks.push(taskId);
+    this.scheduledTasks = this.scheduledTasks
+      .concat(taskId)
+      // NOTE: sort task by most dependent on first
+      .sort((taskId1, taskId2) => {
+        // First compare the length of task dependencies.
+        const taskDifference =
+          this.reverseTaskDeps[taskId2].length -
+          this.reverseTaskDeps[taskId1].length;
+
+        if (taskDifference !== 0) {
+          return taskDifference;
+        }
+
+        // Tie-breaker for tasks with equal number of task dependencies.
+        // Most likely tasks with no dependencies such as test
+        const project1 = this.taskGraph.tasks[taskId1].target.project;
+        const project2 = this.taskGraph.tasks[taskId2].target.project;
+
+        return (
+          findAllProjectNodeDependencies(project2, this.reverseProjectGraph)
+            .length -
+          findAllProjectNodeDependencies(project1, this.reverseProjectGraph)
+            .length
+        );
+      });
   }
 
   private scheduleBatches() {

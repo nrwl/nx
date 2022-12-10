@@ -1,4 +1,6 @@
 {
+  "version": 2,
+  "outputCapture": "direct-nodejs",
   "title": "esbuild (experimental)",
   "description": "Bundle a package for different platforms. Note: declaration (*.d.ts) file are not currently generated.",
   "cli": "nx",
@@ -30,6 +32,14 @@
       "type": "string",
       "description": "The path to package.json file."
     },
+    "additionalEntryPoints": {
+      "type": "array",
+      "description": "List of additional entry points.",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
     "format": {
       "type": "array",
       "description": "List of module formats to output. Defaults to matching format from tsconfig (e.g. CJS for CommonJS, and ESM otherwise).",
@@ -37,7 +47,8 @@
       "items": {
         "type": "string",
         "enum": ["esm", "cjs"]
-      }
+      },
+      "default": ["esm"]
     },
     "watch": {
       "type": "boolean",
@@ -65,19 +76,21 @@
         "type": "string"
       }
     },
-    "format": {
-      "type": "array",
-      "description": "Set the output format(s).",
-      "alias": "f",
-      "items": {
-        "type": "string",
-        "enum": ["esm", "cjs"]
-      },
-      "default": ["esm"]
+    "outputHashing": {
+      "type": "string",
+      "description": "Define the output filename cache-busting hashing mode.",
+      "default": "none",
+      "enum": ["none", "all"]
     },
     "metafile": {
       "type": "boolean",
       "description": "Generate a meta.json file in the output folder that includes metadata about the build. This file can be analyzed by other tools.",
+      "default": false
+    },
+    "sourcemap": {
+      "type": "boolean",
+      "alias": "sourceMap",
+      "description": "Generate sourcemap.",
       "default": false
     },
     "minify": {
@@ -101,16 +114,21 @@
       "description": "Skip type-checking via TypeScript. Skipping type-checking speeds up the build but type errors are not caught.",
       "default": false
     },
-    "updateBuildableProjectDepsInPackageJson": {
+    "thirdParty": {
       "type": "boolean",
-      "description": "Update buildable project dependencies in `package.json`.",
+      "description": "Includes third-party packages in the bundle (i.e. npm packages).",
       "default": true
     },
-    "buildableProjectDepsInPackageJsonType": {
+    "dependenciesFieldType": {
       "type": "string",
-      "description": "When `updateBuildableProjectDepsInPackageJson` is `true`, this adds dependencies to either `peerDependencies` or `dependencies`.",
+      "description": "When `bundleInternalProjectsOnly` is true, this option determines whether external packages should be in 'dependencies' or 'peerDependencies' field in the generated package.json file.",
       "enum": ["dependencies", "peerDependencies"],
-      "default": "peerDependencies"
+      "default": "dependencies"
+    },
+    "esbuildOptions": {
+      "type": "object",
+      "description": "Additional options to pass to esbuild. See https://esbuild.github.io/api/.",
+      "additionalProperties": true
     }
   },
   "required": ["tsConfig", "main", "outputPath"],
@@ -131,6 +149,13 @@
             "output": {
               "type": "string",
               "description": "Relative path within the output folder."
+            },
+            "ignore": {
+              "description": "An array of globs to ignore.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           "additionalProperties": false,
@@ -142,5 +167,6 @@
       ]
     }
   },
+  "additionalProperties": true,
   "examplesFile": "../../../docs/esbuild-examples.md"
 }

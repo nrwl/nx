@@ -1,8 +1,7 @@
-import { getPackageManagerCommand, output } from '@nrwl/devkit';
 import { execSync } from 'child_process';
-import { prompt } from 'enquirer';
 import { readModulePackageJson } from 'nx/src/utils/package-json';
-import { lt, lte, major, satisfies } from 'semver';
+import { PackageManagerCommands } from 'nx/src/utils/package-manager';
+import { gt, lt, lte, major } from 'semver';
 import { resolvePackageVersion } from './package-manager';
 import { MigrationDefinition } from './types';
 
@@ -13,11 +12,11 @@ let latestWorkspaceVersionWithMigration: string;
 const latestVersionWithOldFlag = '13.8.3';
 // map of Angular major versions to the versions of Nx that are compatible with them,
 // key is the Angular major version, value is an object with the range of supported
-// versions and the max version of the range if there's a bigger major version that
-// is already supported
-const nxAngularVersionMap: Record<number, { range: string; max?: string }> = {
-  13: { range: '>= 13.2.0 < 14.2.0', max: '~14.1.0' },
-  14: { range: '>= 14.2.0' },
+// versions
+const nxAngularVersionMap: Record<number, { min: string; max?: string }> = {
+  13: { min: '13.2.0', max: '~14.1.0' },
+  14: { min: '14.2.0', max: '~15.1.0' },
+  15: { min: '15.2.0' },
 };
 // latest major version of Angular that is compatible with Nx, based on the map above
 const latestCompatibleAngularMajorVersion = Math.max(
@@ -33,6 +32,11 @@ export async function determineMigration(
     '@nrwl/angular',
     latestWorkspaceRangeVersionWithMigration
   );
+  const latestNxCompatibleVersion =
+    await getNxVersionBasedOnInstalledAngularVersion(
+      angularVersion,
+      majorAngularVersion
+    );
 
   if (version) {
     const normalizedVersion = await normalizeVersion(version);
@@ -41,33 +45,29 @@ export async function determineMigration(
       return { packageName: '@nrwl/workspace', version: normalizedVersion };
     }
 
-    // if greater than the latest workspace version with the migration,
     // check the versions map for compatibility with Angular
     if (
       nxAngularVersionMap[majorAngularVersion] &&
-      satisfies(
-        normalizedVersion,
-        nxAngularVersionMap[majorAngularVersion].range
-      )
+      (lt(normalizedVersion, nxAngularVersionMap[majorAngularVersion].min) ||
+        (nxAngularVersionMap[majorAngularVersion].max &&
+          gt(
+            normalizedVersion,
+            await resolvePackageVersion(
+              '@nrwl/angular',
+              nxAngularVersionMap[majorAngularVersion].max
+            )
+          )))
     ) {
-      // there's a match, use @nrwl/angular:ng-add
-      return { packageName: '@nrwl/angular', version: normalizedVersion };
+      return {
+        packageName: '@nrwl/angular',
+        version: normalizedVersion,
+        angularVersion,
+        incompatibleWithAngularVersion: true,
+      };
     }
 
-    // it's not compatible with the currently installed Angular version,
-    // suggest the latest possible version to use
-    return await findAndSuggestVersionToUse(
-      angularVersion,
-      majorAngularVersion,
-      version
-    );
+    return { packageName: '@nrwl/angular', version: normalizedVersion };
   }
-
-  const latestNxCompatibleVersion =
-    await getNxVersionBasedOnInstalledAngularVersion(
-      angularVersion,
-      majorAngularVersion
-    );
 
   // should use @nrwl/workspace:ng-add if the version is less than the
   // latest workspace version that has the migration, otherwise use
@@ -83,7 +83,10 @@ export async function determineMigration(
   };
 }
 
-export function migrateWorkspace(migration: MigrationDefinition): void {
+export function migrateWorkspace(
+  migration: MigrationDefinition,
+  pmc: PackageManagerCommands
+): void {
   const preserveAngularCliLayoutFlag = lte(
     migration.version,
     latestVersionWithOldFlag
@@ -91,46 +94,9 @@ export function migrateWorkspace(migration: MigrationDefinition): void {
     ? '--preserveAngularCLILayout'
     : '--preserve-angular-cli-layout';
   execSync(
-    `${getPackageManagerCommand().exec} nx g ${
-      migration.packageName
-    }:ng-add ${preserveAngularCliLayoutFlag}`,
+    `${pmc.exec} nx g ${migration.packageName}:ng-add ${preserveAngularCliLayoutFlag}`,
     { stdio: [0, 1, 2] }
   );
-}
-
-async function findAndSuggestVersionToUse(
-  angularVersion: string,
-  majorAngularVersion: number,
-  userSpecifiedVersion: string
-): Promise<MigrationDefinition> {
-  const latestNxCompatibleVersion =
-    await getNxVersionBasedOnInstalledAngularVersion(
-      angularVersion,
-      majorAngularVersion
-    );
-  const useSuggestedVersion = await promptForVersion(latestNxCompatibleVersion);
-  if (useSuggestedVersion) {
-    // should use @nrwl/workspace:ng-add if the version is less than the
-    // latest workspace version that has the migration, otherwise use
-    // @nrwl/angular:ng-add
-    return {
-      packageName: lte(
-        latestNxCompatibleVersion,
-        latestWorkspaceVersionWithMigration
-      )
-        ? '@nrwl/workspace'
-        : '@nrwl/angular',
-      version: latestNxCompatibleVersion,
-    };
-  }
-
-  output.error({
-    title: `❌ Cannot proceed with the migration.`,
-    bodyLines: [
-      `The specified Nx version "${userSpecifiedVersion}" is not compatible with the installed Angular version "${angularVersion}".`,
-    ],
-  });
-  process.exit(1);
 }
 
 async function getNxVersionBasedOnInstalledAngularVersion(
@@ -157,19 +123,6 @@ async function getNxVersionBasedOnInstalledAngularVersion(
 
   // use latest, only the last version in the map should not contain a max
   return await resolvePackageVersion('@nrwl/angular', 'latest');
-}
-
-async function promptForVersion(version: string): Promise<boolean> {
-  const { useVersion } = await prompt<{ useVersion: boolean }>([
-    {
-      name: 'useVersion',
-      message: `The provided version of Nx is not compatible with the installed Angular CLI version. Would you like to use the recommended version "${version}" instead?`,
-      type: 'confirm',
-      initial: true,
-    },
-  ]);
-
-  return useVersion;
 }
 
 function getInstalledAngularVersion(): string {

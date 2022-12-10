@@ -6,7 +6,7 @@ describe('update-rxjs migration', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it('should update rxjs version when defined as a dev dependency and greater than 7.0.0', async () => {

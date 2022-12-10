@@ -12,13 +12,13 @@ To merge in another project, we'll essentially use the standard `git merge` comm
 
 To start we'll add a remote repository url for where the standalone app is located:
 
-```bash
+```shell
 git remote add my-standalone-app <repository url>
 ```
 
 Assuming that our main branch on this repo is called 'master', then we'll run
 
-```bash
+```shell
 git merge my-standalone-app/master --allow-unrelated-histories
 ```
 
@@ -36,4 +36,4 @@ Note that for these files, the file history of the standalone project will not b
 
 ## Using `git mv`
 
-If your standalone project was not an Nx workspace, it's likely that your migration work will also entail moving directories to match a typical Nx Workspace structure. You can find more information in the [Manual migration](/recipe/manual) page, but when migrating an existing project, you'll want to ensure that you use [`git mv`](https://git-scm.com/docs/git-mv) when moving a file or directory to ensure that file history from the old standalone repo is not lost!
+If your standalone project was not an Nx workspace, it's likely that your migration work will also entail moving directories to match a typical Nx Workspace structure. You can find more information in the [Manual migration](/recipes/adopting-nx/manual) page, but when migrating an existing project, you'll want to ensure that you use [`git mv`](https://git-scm.com/docs/git-mv) when moving a file or directory to ensure that file history from the old standalone repo is not lost!

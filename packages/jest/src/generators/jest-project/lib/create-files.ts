@@ -27,7 +27,8 @@ export function createFiles(tree: Tree, options: JestProjectSchema) {
     ...options,
     transformer,
     js: !!options.js,
-    projectRoot: projectConfig.root,
+    rootProject: options.rootProject,
+    projectRoot: options.rootProject ? options.project : projectConfig.root,
     offsetFromRoot: offsetFromRoot(projectConfig.root),
   });
 

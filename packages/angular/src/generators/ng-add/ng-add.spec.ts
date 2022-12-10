@@ -1,14 +1,14 @@
 import * as angularCliMigrator from './migrate-from-angular-cli';
 import * as initGenerator from '../init/init';
 import { ngAddGenerator } from './ng-add';
-import { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
 describe('ngAdd generator', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     jest
       .spyOn(angularCliMigrator, 'migrateFromAngularCli')
       .mockImplementation(() => Promise.resolve(() => {}));

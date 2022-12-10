@@ -7,7 +7,7 @@ describe('Change from main tag to className tag', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'products', {
       root: 'apps/products',
       sourceRoot: 'apps/products/src',

@@ -37,6 +37,9 @@ export function getBaseWebpackPartial(
   internalOptions: InternalBuildOptions,
   context?: ExecutorContext
 ): Configuration {
+  // If the function is called directly and not through `@nrwl/webpack:webpack` then this target may not be set.
+  options.target ??= 'web';
+
   const mainFields = [
     ...(internalOptions.esm ? ['es2015'] : []),
     'module',
@@ -68,7 +71,7 @@ export function getBaseWebpackPartial(
     ) ?? {};
 
   const webpackConfig: Configuration = {
-    target: options.target ?? 'web', // webpack defaults to 'browserslist' which breaks Fast Refresh
+    target: options.target,
     entry: {
       [mainEntry]: [options.main],
       ...additionalEntryPoints,
@@ -87,6 +90,7 @@ export function getBaseWebpackPartial(
       hashFunction: 'xxhash64',
       // Disabled for performance
       pathinfo: false,
+      scriptType: internalOptions.esm ? 'module' : undefined,
     },
     module: {
       // Enabled for performance
@@ -151,7 +155,7 @@ export function getBaseWebpackPartial(
     webpackConfig.node = false;
 
     // could be an object { scripts: boolean; styles: boolean }
-    if (options.optimization === true) {
+    if (internalOptions.isScriptOptimizeOn) {
       webpackConfig.optimization = {
         minimize: true,
         minimizer: [
@@ -189,6 +193,8 @@ export function getBaseWebpackPartial(
         runtimeChunk: true,
       };
     }
+    webpackConfig.optimization ??= {};
+    webpackConfig.optimization.nodeEnv = process.env.NODE_ENV ?? mode;
   }
 
   const extraPlugins: WebpackPluginInstance[] = [];
@@ -390,7 +396,7 @@ export function createLoaderFromCompiler(
           }),
         },
       };
-    default:
+    case 'babel':
       return {
         test: /\.([jt])sx?$/,
         loader: join(__dirname, 'web-babel-loader'),
@@ -408,5 +414,7 @@ export function createLoaderFromCompiler(
           cacheCompression: false,
         },
       };
+    default:
+      return null;
   }
 }

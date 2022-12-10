@@ -2,6 +2,8 @@ import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
   convertNxGenerator,
+  ensurePackage,
+  extractLayoutDirectory,
   formatFiles,
   generateFiles,
   GeneratorCallback,
@@ -17,7 +19,6 @@ import {
   writeJson,
 } from '@nrwl/devkit';
 import { getImportPath } from 'nx/src/utils/path';
-import { jestProjectGenerator } from '@nrwl/jest';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import {
@@ -29,13 +30,21 @@ import { addMinimalPublishScript } from '../../utils/minimal-publish-script';
 import { LibraryGeneratorSchema } from '../../utils/schema';
 import { addSwcConfig } from '../../utils/swc/add-swc-config';
 import { addSwcDependencies } from '../../utils/swc/add-swc-dependencies';
-import { nxVersion, typesNodeVersion } from '../../utils/versions';
+import {
+  esbuildVersion,
+  nxVersion,
+  typesNodeVersion,
+} from '../../utils/versions';
 
 export async function libraryGenerator(
   tree: Tree,
   schema: LibraryGeneratorSchema
 ) {
-  const { libsDir } = getWorkspaceLayout(tree);
+  const { layoutDirectory, projectDirectory } = extractLayoutDirectory(
+    schema.directory
+  );
+  schema.directory = projectDirectory;
+  const libsDir = layoutDirectory ?? getWorkspaceLayout(tree).libsDir;
   return projectGenerator(tree, schema, libsDir, join(__dirname, './files'));
 }
 
@@ -53,6 +62,19 @@ export async function projectGenerator(
   addProject(tree, options, destinationDir);
 
   tasks.push(addProjectDependencies(tree, options));
+
+  if (options.bundler === 'vite') {
+    await ensurePackage(tree, '@nrwl/vite', nxVersion);
+    const { viteConfigurationGenerator } = require('@nrwl/vite');
+    const viteTask = await viteConfigurationGenerator(tree, {
+      project: options.name,
+      newProject: true,
+      uiFramework: 'none',
+      includeVitest: options.unitTestRunner === 'vitest',
+      includeLib: true,
+    });
+    tasks.push(viteTask);
+  }
 
   if (!schema.skipTsConfig) {
     updateRootTsConfig(tree, options);
@@ -72,6 +94,18 @@ export async function projectGenerator(
     if (options.compiler === 'swc') {
       replaceJestConfig(tree, options, `${filesDir}/jest-config`);
     }
+  } else if (
+    options.unitTestRunner === 'vitest' &&
+    options.bundler !== 'vite' // Test would have been set up already
+  ) {
+    await ensurePackage(tree, '@nrwl/vite', nxVersion);
+    const { vitestGenerator } = require('@nrwl/vite');
+    const vitestTask = await vitestGenerator(tree, {
+      project: options.name,
+      uiFramework: 'none',
+      coverageProvider: 'c8',
+    });
+    tasks.push(vitestTask);
   }
 
   if (!options.skipFormat) {
@@ -104,7 +138,9 @@ function addProject(
   };
 
   if (options.buildable && options.config !== 'npm-scripts') {
-    const outputPath = `dist/${destinationDir}/${options.projectDirectory}`;
+    const outputPath = destinationDir
+      ? `dist/${destinationDir}/${options.projectDirectory}`
+      : `dist/${options.projectDirectory}`;
     projectConfiguration.targets.build = {
       executor: getBuildExecutor(options),
       outputs: ['{options.outputPath}'],
@@ -128,19 +164,17 @@ function addProject(
       const publishScriptPath = addMinimalPublishScript(tree);
 
       projectConfiguration.targets.publish = {
-        executor: '@nrwl/workspace:run-commands',
+        executor: 'nx:run-commands',
         options: {
           command: `node ${publishScriptPath} ${options.name} {args.ver} {args.tag}`,
         },
-        dependsOn: [{ projects: 'self', target: 'build' }],
+        dependsOn: ['build'],
       };
     }
   }
 
-  if (options.config === 'workspace') {
-    addProjectConfiguration(tree, options.name, projectConfiguration, false);
-  } else if (options.config === 'project') {
-    addProjectConfiguration(tree, options.name, projectConfiguration, true);
+  if (options.config === 'workspace' || options.config === 'project') {
+    addProjectConfiguration(tree, options.name, projectConfiguration);
   } else {
     addProjectConfiguration(
       tree,
@@ -284,6 +318,8 @@ async function addJest(
   tree: Tree,
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
+  await ensurePackage(tree, '@nrwl/jest', nxVersion);
+  const { jestProjectGenerator } = require('@nrwl/jest');
   return await jestProjectGenerator(tree, {
     ...options,
     project: options.name,
@@ -350,7 +386,9 @@ function normalizeOptions(
     ? `${names(options.directory).fileName}/${name}`
     : name;
 
-  if (!options.unitTestRunner && options.config !== 'npm-scripts') {
+  if (!options.unitTestRunner && options.bundler === 'vite') {
+    options.unitTestRunner = 'vitest';
+  } else if (!options.unitTestRunner && options.config !== 'npm-scripts') {
     options.unitTestRunner = 'jest';
   }
 
@@ -427,7 +465,11 @@ function addProjectDependencies(
     return addDependenciesToPackageJson(
       tree,
       {},
-      { '@nrwl/esbuild': nxVersion, '@types/node': typesNodeVersion }
+      {
+        '@nrwl/esbuild': nxVersion,
+        '@types/node': typesNodeVersion,
+        esbuild: esbuildVersion,
+      }
     );
   }
 

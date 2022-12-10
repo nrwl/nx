@@ -1,14 +1,18 @@
 // nx-ignore-next-line
-import type { DepGraphClientResponse } from 'nx/src/command-line/dep-graph';
+import type {
+  ProjectGraphClientResponse,
+  TaskGraphClientResponse,
+} from 'nx/src/command-line/dep-graph';
 import { AppConfig } from './app/interfaces';
-import { ExternalApi } from './app/machines/externalApi';
+import { ExternalApi } from './app/external-api';
 
 export declare global {
   export interface Window {
     exclude: string[];
     watch: boolean;
     localMode: 'serve' | 'build';
-    projectGraphResponse?: DepGraphClientResponse;
+    projectGraphResponse?: ProjectGraphClientResponse;
+    taskGraphResponse?: TaskGraphClientResponse;
     environment: 'dev' | 'watch' | 'release' | 'nx-console';
     appConfig: AppConfig;
     useXstateInspect: boolean;

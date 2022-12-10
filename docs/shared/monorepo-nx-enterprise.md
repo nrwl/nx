@@ -143,7 +143,7 @@ It's crucial for a large company with multiple teams contributing to the same re
 
 Since Nx allows us to group apps and libs in directories, those directories can become code-ownership boundaries. That's why the structure of an Nx workspace often reflects the structure of an organization. GitHub users can use the `CODEOWNERS` file for that.
 
-```bash
+```shell
 /libs/happynrwlapp          julie-happynrwlapp-lead
 /apps/happynrwlapp          julie-happynrwlapp-lead
 /libs/shared/ui             hank-the-ui-guy

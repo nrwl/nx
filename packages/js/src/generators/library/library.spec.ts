@@ -25,7 +25,9 @@ describe('lib', () => {
   };
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree.write('/apps/.gitignore', '');
+    tree.write('/libs/.gitignore', '');
   });
 
   describe('configs', () => {
@@ -51,10 +53,6 @@ describe('lib', () => {
       // unitTestRunner property is ignored.
       // It only works with our executors.
       expect(tree.exists('libs/my-lib/src/lib/my-lib.spec.ts')).toBeFalsy();
-      const workspaceJson = readJson(tree, '/workspace.json');
-      // Blocked on Craigory merging optional config PR
-      // expect(workspaceJson.projects['my-lib']).toBeUndefined();
-      // expect(tree.exists('libs/my-lib/project.json')).toBeFalsy();
     });
 
     it('should generate an empty ts lib using --config=project', async () => {
@@ -63,12 +61,8 @@ describe('lib', () => {
         name: 'my-lib',
         config: 'project',
       });
-      const workspaceJsonEntry = readJson(tree, 'workspace.json').projects[
-        'my-lib'
-      ];
       const projectConfig = readProjectConfiguration(tree, 'my-lib');
       expect(projectConfig.root).toEqual('libs/my-lib');
-      expect(workspaceJsonEntry).toEqual('libs/my-lib');
     });
 
     it('should generate an empty ts lib using --config=workspace', async () => {
@@ -77,12 +71,8 @@ describe('lib', () => {
         name: 'my-lib',
         config: 'workspace',
       });
-      const workspaceJsonEntry = readJson(tree, 'workspace.json').projects[
-        'my-lib'
-      ];
       const projectConfig = readProjectConfiguration(tree, 'my-lib');
       expect(projectConfig.root).toEqual('libs/my-lib');
-      expect(projectConfig).toMatchObject(workspaceJsonEntry);
     });
   });
 
@@ -225,16 +215,15 @@ describe('lib', () => {
         expect(tree.exists(`libs/my-dir/my-lib/package.json`)).toBeFalsy();
       });
 
-      it('should update workspace.json', async () => {
+      it('should update project configuration', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
           name: 'myLib',
           directory: 'myDir',
           config: 'workspace',
         });
-        const workspaceJson = readJson(tree, '/workspace.json');
 
-        expect(workspaceJson.projects['my-dir-my-lib'].root).toEqual(
+        expect(readProjectConfiguration(tree, 'my-dir-my-lib').root).toEqual(
           'libs/my-dir/my-lib'
         );
       });
@@ -588,14 +577,14 @@ describe('lib', () => {
         ).toBeTruthy();
       });
 
-      it('should update tsconfig.lib.json include with **/*.js glob', async () => {
+      it('should update tsconfig.lib.json include with src/**/*.js glob', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
           name: 'myLib',
           js: true,
         });
         expect(readJson(tree, 'libs/my-lib/tsconfig.lib.json').include).toEqual(
-          ['**/*.ts', '**/*.js']
+          ['src/**/*.ts', 'src/**/*.js']
         );
       });
 
@@ -855,12 +844,12 @@ describe('lib', () => {
 
         const config = readProjectConfiguration(tree, 'my-lib');
         expect(config.targets.publish).toEqual({
-          executor: '@nrwl/workspace:run-commands',
+          executor: 'nx:run-commands',
           options: {
             command:
               'node tools/scripts/publish.mjs my-lib {args.ver} {args.tag}',
           },
-          dependsOn: [{ projects: 'self', target: 'build' }],
+          dependsOn: ['build'],
         });
       });
 
@@ -988,5 +977,44 @@ describe('lib', () => {
         expect(tree.exists('libs/my-lib/.babelrc')).toBeFalsy();
       });
     });
+  });
+
+  describe('--bundler=vite', () => {
+    it('should add build and test targets with vite and vitest', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        name: 'myLib',
+        bundler: 'vite',
+        unitTestRunner: undefined,
+      });
+
+      const project = readProjectConfiguration(tree, 'my-lib');
+      expect(project.targets.build).toMatchObject({
+        executor: '@nrwl/vite:build',
+      });
+      expect(project.targets.test).toMatchObject({
+        executor: '@nrwl/vite:test',
+      });
+      expect(tree.exists('libs/my-lib/vite.config.ts')).toBeTruthy();
+    });
+
+    it.each`
+      unitTestRunner | executor
+      ${'none'}      | ${undefined}
+      ${'jest'}      | ${'@nrwl/jest:jest'}
+    `(
+      'should respect unitTestRunner if passed',
+      async ({ unitTestRunner, executor }) => {
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          name: 'myLib',
+          bundler: 'vite',
+          unitTestRunner,
+        });
+
+        const project = readProjectConfiguration(tree, 'my-lib');
+        expect(project.targets.test?.executor).toEqual(executor);
+      }
+    );
   });
 });

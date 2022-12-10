@@ -7,7 +7,7 @@ describe('Rename blacklistRE to blockList in metro.config.js for react native ap
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'products', {
       root: 'apps/products',
       sourceRoot: 'apps/products/src',

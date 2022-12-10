@@ -1,7 +1,6 @@
 import {
   addProjectConfiguration,
   generateFiles,
-  getWorkspaceLayout,
   joinPathFragments,
   offsetFromRoot,
   readProjectConfiguration,
@@ -11,9 +10,9 @@ import {
 } from '@nrwl/devkit';
 import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 import { replaceAppNameWithPath } from '@nrwl/workspace/src/utils/cli-config-utils';
-import * as path from 'path';
 import { NormalizedSchema } from './normalized-schema';
 import { updateNgPackage } from './update-ng-package';
+import { join } from 'path';
 
 export async function updateProject(
   host: Tree,
@@ -28,41 +27,48 @@ export async function updateProject(
 
 function updateFiles(host: Tree, options: NormalizedSchema['libraryOptions']) {
   const libRoot = `${options.projectRoot}/src/lib/`;
-  const serviceSpecPath = path.join(libRoot, `${options.name}.service.spec.ts`);
-  const componentSpecPath = path.join(
+  const serviceSpecPath = joinPathFragments(
+    libRoot,
+    `${options.name}.service.spec.ts`
+  );
+  const componentSpecPath = joinPathFragments(
     libRoot,
     `${options.name}.component.spec.ts`
   );
 
-  host.delete(path.join(libRoot, `${options.name}.service.ts`));
+  host.delete(joinPathFragments(libRoot, `${options.name}.service.ts`));
 
   if (host.exists(serviceSpecPath)) {
     host.delete(serviceSpecPath);
   }
 
-  host.delete(path.join(libRoot, `${options.name}.component.ts`));
+  host.delete(joinPathFragments(libRoot, `${options.name}.component.ts`));
 
   if (host.exists(componentSpecPath)) {
-    host.delete(path.join(libRoot, `${options.name}.component.spec.ts`));
+    host.delete(
+      joinPathFragments(libRoot, `${options.name}.component.spec.ts`)
+    );
   }
 
   if (!options.publishable && !options.buildable) {
-    host.delete(path.join(options.projectRoot, 'ng-package.json'));
-    host.delete(path.join(options.projectRoot, 'package.json'));
-    host.delete(path.join(options.projectRoot, 'tsconfig.lib.prod.json'));
-    host.delete(path.join(options.projectRoot, '.browserslistrc'));
+    host.delete(joinPathFragments(options.projectRoot, 'ng-package.json'));
+    host.delete(joinPathFragments(options.projectRoot, 'package.json'));
+    host.delete(
+      joinPathFragments(options.projectRoot, 'tsconfig.lib.prod.json')
+    );
+    host.delete(joinPathFragments(options.projectRoot, '.browserslistrc'));
   }
 
-  host.delete(path.join(options.projectRoot, 'karma.conf.js'));
-  host.delete(path.join(options.projectRoot, 'src/test.ts'));
-  host.delete(path.join(options.projectRoot, 'tsconfig.spec.json'));
+  host.delete(joinPathFragments(options.projectRoot, 'karma.conf.js'));
+  host.delete(joinPathFragments(options.projectRoot, 'src/test.ts'));
+  host.delete(joinPathFragments(options.projectRoot, 'tsconfig.spec.json'));
 
   if (options.name !== options.fileName) {
-    host.delete(path.join(libRoot, `${options.name}.module.ts`));
+    host.delete(joinPathFragments(libRoot, `${options.name}.module.ts`));
   }
   if (!options.skipModule && !options.standalone) {
     host.write(
-      path.join(libRoot, `${options.fileName}.module.ts`),
+      joinPathFragments(libRoot, `${options.fileName}.module.ts`),
       `
         import { NgModule } from '@angular/core';
         import { CommonModule } from '@angular/common';
@@ -78,7 +84,7 @@ function updateFiles(host: Tree, options: NormalizedSchema['libraryOptions']) {
 
     if (options.unitTestRunner !== 'none' && options.addModuleSpec) {
       host.write(
-        path.join(libRoot, `${options.fileName}.module.spec.ts`),
+        joinPathFragments(libRoot, `${options.fileName}.module.spec.ts`),
         `
     import { async, TestBed } from '@angular/core/testing';
     import { ${options.moduleName} } from './${options.fileName}.module';
@@ -117,19 +123,11 @@ function updateFiles(host: Tree, options: NormalizedSchema['libraryOptions']) {
 }
 
 function createFiles(host: Tree, options: NormalizedSchema['libraryOptions']) {
-  generateFiles(
-    host,
-    path.join(__dirname, '../files/lib'),
-    options.projectRoot,
-    {
-      ...options,
-      rootTsConfigPath: getRelativePathToRootTsConfig(
-        host,
-        options.projectRoot
-      ),
-      tpl: '',
-    }
-  );
+  generateFiles(host, join(__dirname, '../files/lib'), options.projectRoot, {
+    ...options,
+    rootTsConfigPath: getRelativePathToRootTsConfig(host, options.projectRoot),
+    tpl: '',
+  });
 }
 
 function fixProjectWorkspaceConfig(
@@ -161,13 +159,7 @@ function fixProjectWorkspaceConfig(
       executor: options.publishable
         ? '@nrwl/angular:package'
         : '@nrwl/angular:ng-packagr-lite',
-      outputs: [
-        joinPathFragments(
-          'dist',
-          getWorkspaceLayout(host).libsDir,
-          options.projectDirectory
-        ),
-      ],
+      outputs: ['{workspaceRoot}/dist/{projectRoot}'],
       ...rest,
     };
   }
@@ -202,11 +194,17 @@ function updateProjectTsConfig(
   }
   updateJson(host, `${options.projectRoot}/tsconfig.lib.json`, (json) => {
     if (options.unitTestRunner === 'jest') {
-      json.exclude = ['src/test-setup.ts', '**/*.spec.ts'];
+      json.exclude = ['src/test-setup.ts', 'src/**/*.spec.ts'];
     } else if (options.unitTestRunner === 'none') {
       json.exclude = [];
     } else {
       json.exclude = json.exclude || [];
+      json.exclude = json.exclude.map((v) => {
+        if (v.startsWith('**/*')) {
+          return v.replace('**/*', 'src/**/*');
+        }
+        return v;
+      });
     }
 
     return {

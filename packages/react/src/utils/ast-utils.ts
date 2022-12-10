@@ -1,5 +1,5 @@
 import * as ts from 'typescript';
-import { findNodes } from '@nrwl/workspace/src/utilities/typescript/find-nodes';
+import { findNodes } from 'nx/src/utils/typescript';
 import {
   ChangeType,
   logger,
@@ -452,6 +452,36 @@ export function addBrowserRouter(
   }
 }
 
+export function addStaticRouter(
+  sourcePath: string,
+  source: ts.SourceFile
+): StringChange[] {
+  const app = findElements(source, 'App')[0];
+  if (app) {
+    return [
+      ...addImport(
+        source,
+        `import { StaticRouter } from 'react-router-dom/server';`
+      ),
+      {
+        type: ChangeType.Insert,
+        index: app.getStart(),
+        text: `<StaticRouter location={req.url}>`,
+      },
+      {
+        type: ChangeType.Insert,
+        index: app.getEnd(),
+        text: `</StaticRouter>`,
+      },
+    ];
+  } else {
+    logger.warn(
+      `Could not find App component in ${sourcePath}; Skipping add <StaticRouter>`
+    );
+    return [];
+  }
+}
+
 export function addReduxStoreToMain(
   sourcePath: string,
   source: ts.SourceFile
@@ -615,7 +645,7 @@ export function getComponentPropsInterface(
       (x) => ts.isParameter(x) && (x.name as ts.Identifier).text === 'props'
     );
 
-    if (propsParam && propsParam.type) {
+    if (propsParam?.type?.['typeName']) {
       propsTypeName = (
         (propsParam.type as ts.TypeReferenceNode).typeName as ts.Identifier
       ).text;
@@ -639,7 +669,7 @@ export function getComponentPropsInterface(
       if (propsTypeExpression && propsTypeExpression.typeArguments) {
         propsTypeName = (
           propsTypeExpression.typeArguments[0] as ts.TypeReferenceNode
-        ).typeName.getText();
+        ).typeName?.getText();
       }
     }
   } else {

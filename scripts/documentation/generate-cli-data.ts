@@ -3,7 +3,6 @@ import { readFileSync } from 'fs';
 import { readJsonSync } from 'fs-extra';
 import { join } from 'path';
 import { register as registerTsConfigPaths } from 'tsconfig-paths';
-import { dedent } from 'tslint/lib/utils';
 import { examples } from '../../packages/nx/src/command-line/examples';
 import {
   formatDeprecated,
@@ -40,32 +39,28 @@ export async function generateCliDocumentation(
   );
 
   function generateMarkdown(command: ParsedCommand) {
-    let template = dedent`
+    let template = `
 ---
 title: "${command.name} - CLI command"
 description: "${command.description}"
 ---
+
 # ${command.name}
 
-${dedent`${formatDeprecated(command.description, command.deprecated)}`}
+${formatDeprecated(command.description, command.deprecated)}
 
 ## Usage
 
-\`\`\`bash
+\`\`\`terminal
 nx ${command.commandString}
 \`\`\`
 
-Install \`nx\` globally to invoke the command directly using \`nx\`, or use \`npx nx\`, \`yarn nx\`, or \`pnpx nx\`.\n`;
+Install \`nx\` globally to invoke the command directly using \`nx\`, or use \`npx nx\`, \`yarn nx\`, or \`pnpm nx\`.\n`;
 
     if (examples[command.name] && examples[command.name].length > 0) {
-      template += `\n### Examples`;
+      template += `\n### Examples\n`;
       examples[command.name].forEach((example) => {
-        template += dedent`
-              ${example.description}:
-              \`\`\`bash
-              nx ${example.command}
-              \`\`\`
-            `;
+        template += `${example.description}:\n\`\`\`terminal\n nx ${example.command}\n\`\`\`\n`;
       });
     }
 

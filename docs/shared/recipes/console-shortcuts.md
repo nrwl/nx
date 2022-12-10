@@ -10,7 +10,7 @@ If you want to rerun the last task with all the same options specified, bring up
 
 You can also set up custom tasks and assign keyboard shortcuts to them. In `.vscode/tasks.json` add a task like this:
 
-```json
+```json {% fileName=".vscode/tasks.json" %}
 {
   "label": "Test Affected",
   "type": "shell",

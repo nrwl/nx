@@ -1,6 +1,6 @@
 import { runCommand } from '../tasks-runner/run-command';
 import { splitArgsIntoNxArgsAndOverrides } from '../utils/command-line-utils';
-import { connectToNxCloudIfExplicitlyAsked } from './connect-to-nx-cloud';
+import { connectToNxCloudIfExplicitlyAsked } from './connect';
 import { performance } from 'perf_hooks';
 import {
   createProjectGraphAsync,
@@ -24,8 +24,9 @@ export async function runOne(
     string,
     (TargetDependencyConfig | string)[]
   > = {},
-  extraOptions = { excludeTaskDependencies: false } as {
+  extraOptions = { excludeTaskDependencies: false, loadDotEnvFiles: true } as {
     excludeTaskDependencies: boolean;
+    loadDotEnvFiles: boolean;
   }
 ): Promise<void> {
   performance.mark('command-execution-begins');
@@ -154,27 +155,27 @@ function parseRunOneOptions(
   return res;
 }
 
-function calculateDefaultProjectName(
+export function calculateDefaultProjectName(
   cwd: string,
   root: string,
   workspaceConfiguration: ProjectsConfigurations & NxJsonConfiguration
 ) {
   let relativeCwd = cwd.replace(/\\/g, '/').split(root.replace(/\\/g, '/'))[1];
-  if (relativeCwd) {
-    relativeCwd = relativeCwd.startsWith('/')
-      ? relativeCwd.substring(1)
-      : relativeCwd;
-    const matchingProject = Object.keys(workspaceConfiguration.projects).find(
-      (p) => {
-        const projectRoot = workspaceConfiguration.projects[p].root;
-        return (
-          relativeCwd == projectRoot ||
-          relativeCwd.startsWith(`${projectRoot}/`)
-        );
-      }
-    );
-    if (matchingProject) return matchingProject;
-  }
+
+  relativeCwd = relativeCwd.startsWith('/')
+    ? relativeCwd.substring(1)
+    : relativeCwd;
+  const matchingProject = Object.keys(workspaceConfiguration.projects).find(
+    (p) => {
+      const projectRoot = workspaceConfiguration.projects[p].root;
+      return (
+        relativeCwd == projectRoot ||
+        (relativeCwd == '' && projectRoot == '.') ||
+        relativeCwd.startsWith(`${projectRoot}/`)
+      );
+    }
+  );
+  if (matchingProject) return matchingProject;
   return (
     (workspaceConfiguration.cli as { defaultProjectName: string })
       ?.defaultProjectName || workspaceConfiguration.defaultProject

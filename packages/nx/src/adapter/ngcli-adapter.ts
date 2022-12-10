@@ -507,6 +507,9 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
     };
     const projects: [string, any][] = Object.entries(configToWrite.projects);
     for (const [project, projectConfig] of projects) {
+      if (!workspaceFileName) {
+        projectConfig.configFilePath ??= `${projectConfig.root}/project.json`;
+      }
       if (projectConfig.configFilePath) {
         if (workspaceFileName && !isNewFormat) {
           throw new Error(
@@ -515,7 +518,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
         }
         // project was read from a project.json file
         const configPath = projectConfig.configFilePath;
-        const fileConfigObject = { ...projectConfig };
+        const fileConfigObject = { name: project, ...projectConfig };
         delete fileConfigObject.root; // remove the root before writing
         delete fileConfigObject.configFilePath; // remove the configFilePath before writing
         const projectJsonWrite = super.write(
@@ -752,12 +755,7 @@ function findWorkspaceConfigFileChange(host: Tree): WorkspaceConfigFileChange {
 function findCreatedProjects(host: Tree): FileChange[] {
   return host
     .listChanges()
-    .filter(
-      (f) =>
-        f.type === 'CREATE' &&
-        (basename(f.path) === 'project.json' ||
-          basename(f.path) === 'package.json')
-    );
+    .filter((f) => f.type === 'CREATE' && basename(f.path) === 'project.json');
 }
 
 function findDeletedProjects(host: Tree): FileChange[] {
@@ -1196,7 +1194,9 @@ function saveWorkspaceConfigurationInWrappedSchematic(
   const workspaceJsonExists = host.exists(r.eventPath);
   const workspace: Omit<AngularJsonConfiguration, 'projects'> & {
     projects: {
-      [key: string]: string | { configFilePath?: string; root: string };
+      [key: string]:
+        | string
+        | ({ configFilePath?: string } & ProjectConfiguration);
     };
   } = parseJson(r.content.toString());
   for (const [project, config] of Object.entries(workspace.projects)) {
@@ -1206,9 +1206,15 @@ function saveWorkspaceConfigurationInWrappedSchematic(
     ) {
       const path = config.configFilePath || join(config.root, 'project.json');
       workspace.projects[project] = normalize(dirname(path));
-      delete config.root; // remove the root before writing
-      delete config.configFilePath;
-      host.write(path, serializeJson(config));
+      host.write(
+        path,
+        serializeJson({
+          name: project,
+          ...config,
+          root: undefined,
+          configFilePath: undefined,
+        })
+      );
     }
   }
   const nxJson: NxJsonConfiguration = parseJson(

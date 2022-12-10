@@ -1,10 +1,11 @@
 import { cypressInitGenerator } from '@nrwl/cypress';
-import { GeneratorCallback, logger, Tree } from '@nrwl/devkit';
 import {
   addDependenciesToPackageJson,
   formatFiles,
+  GeneratorCallback,
+  logger,
   readWorkspaceConfiguration,
-  updateJson,
+  Tree,
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import { jestInitGenerator } from '@nrwl/jest';
@@ -12,42 +13,50 @@ import { Linter } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import {
-  angularVersion,
   angularDevkitVersion,
-  jestPresetAngularVersion,
-  rxjsVersion,
-  tsNodeVersion,
-  tsLibVersion,
-  zoneJsVersion,
-  protractorVersion,
+  angularVersion,
   jasmineCoreVersion,
   jasmineSpecReporterVersion,
+  jestPresetAngularVersion,
+  protractorVersion,
+  rxjsVersion,
+  tsLibVersion,
+  tsNodeVersion,
   typesJasmineVersion,
   typesJasminewd2Version,
+  zoneJsVersion,
 } from '../../utils/versions';
 import { karmaGenerator } from '../karma/karma';
 import { Schema } from './schema';
+import { getGeneratorDirectoryForInstalledAngularVersion } from '../../utils/get-generator-directory-for-ng-version';
+import { join } from 'path';
 
 export async function angularInitGenerator(
-  host: Tree,
+  tree: Tree,
   rawOptions: Schema
 ): Promise<GeneratorCallback> {
-  const options = normalizeOptions(rawOptions);
-  setDefaults(host, options);
-
-  if (!options.skipPostInstall) {
-    addPostInstall(host);
+  const generatorDirectory =
+    getGeneratorDirectoryForInstalledAngularVersion(tree);
+  if (generatorDirectory) {
+    let previousGenerator = await import(
+      join(__dirname, generatorDirectory, 'init')
+    );
+    await previousGenerator.default(tree, rawOptions);
+    return;
   }
 
+  const options = normalizeOptions(rawOptions);
+  setDefaults(tree, options);
+
   const depsTask = !options.skipPackageJson
-    ? updateDependencies(host)
+    ? updateDependencies(tree)
     : () => {};
-  const unitTestTask = addUnitTestRunner(host, options);
-  const e2eTask = addE2ETestRunner(host, options);
-  addGitIgnoreEntry(host, '.angular');
+  const unitTestTask = await addUnitTestRunner(tree, options);
+  const e2eTask = addE2ETestRunner(tree, options);
+  addGitIgnoreEntry(tree, '.angular');
 
   if (!options.skipFormat) {
-    await formatFiles(host);
+    await formatFiles(tree);
   }
 
   return runTasksInSerial(depsTask, unitTestTask, e2eTask);
@@ -59,7 +68,6 @@ function normalizeOptions(options: Schema): Required<Schema> {
     linter: options.linter ?? Linter.EsLint,
     skipFormat: options.skipFormat ?? false,
     skipInstall: options.skipInstall ?? false,
-    skipPostInstall: options.skipPostInstall ?? false,
     skipPackageJson: options.skipPackageJson ?? false,
     style: options.style ?? 'css',
     unitTestRunner: options.unitTestRunner ?? UnitTestRunner.Jest,
@@ -90,19 +98,6 @@ function setDefaults(host: Tree, options: Schema) {
   updateWorkspaceConfiguration(host, workspace);
 }
 
-function addPostInstall(host: Tree) {
-  updateJson(host, 'package.json', (pkgJson) => {
-    pkgJson.scripts = pkgJson.scripts ?? {};
-    const command = 'ngcc --properties es2020 browser module main';
-    if (!pkgJson.scripts.postinstall) {
-      pkgJson.scripts.postinstall = command;
-    } else if (!pkgJson.scripts.postinstall.includes('ngcc')) {
-      pkgJson.scripts.postinstall = `${pkgJson.scripts.postinstall} && ${command}`;
-    }
-    return pkgJson;
-  });
-}
-
 function updateDependencies(host: Tree): GeneratorCallback {
   return addDependenciesToPackageJson(
     host,
@@ -128,10 +123,15 @@ function updateDependencies(host: Tree): GeneratorCallback {
   );
 }
 
-function addUnitTestRunner(host: Tree, options: Schema): GeneratorCallback {
+async function addUnitTestRunner(
+  host: Tree,
+  options: Schema
+): Promise<GeneratorCallback> {
   switch (options.unitTestRunner) {
     case UnitTestRunner.Karma:
-      return karmaGenerator(host, { skipPackageJson: options.skipPackageJson });
+      return await karmaGenerator(host, {
+        skipPackageJson: options.skipPackageJson,
+      });
     case UnitTestRunner.Jest:
       if (!options.skipPackageJson) {
         addDependenciesToPackageJson(

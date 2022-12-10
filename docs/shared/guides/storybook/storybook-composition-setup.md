@@ -51,13 +51,13 @@ In order to get get it working for you, you need to two two things:
 
 1. Make sure your "composed" Storybook instances are running. For that you can do:
 
-```bash
+```shell
 nx run-many --target=storybook --projects=one-composed,two-composed,three-composed --parallel=3
 ```
 
 2. Start your host Storybook in another tab of your terminal:
 
-```bash
+```shell
 nx storybook main-host
 ```
 
@@ -68,7 +68,7 @@ Before doing the above steps to actually compose our Storybook instances under t
 Take a look in your `project.json` file of each one of your projects (eg. for the `main-host` project, you can find it in the path `apps/main-host/project.json`).
 In your project's targets, in the `storybook` target, you will notice that the default port that Nx assigns to your projects' Storybook is always `4400`:
 
-```json
+```jsonc {% fileName="project.json" %}
 {
   ...
   "targets": {
@@ -101,7 +101,7 @@ of our projects runs on which port. The problem that this creates is that we wil
 
 Now, we need to add to our host project's `main.js` file (the path of which would be `apps/main-host/.storybook/main.js`) a `refs` object, to configure our composition. An example of such a configuration looks like this:
 
-```javascript
+```javascript {% fileName="apps/main-host/.storybook/main.js" %}
 module.exports = {
   ...,
   refs: {
@@ -123,11 +123,11 @@ module.exports = {
 
 ### Optional: use `run-commands` and create a `storybook-composition` target
 
-If you want to take advantage of the [`run-commands`](https://nx.dev/packages/workspace/executors/run-commands) functionality of Nx, you can create a custom target that will invoke the `run-parallel` command for your "composed" Storybook instances.
+If you want to take advantage of the [`run-commands`](https://nx.dev/packages/nx/executors/run-commands) functionality of Nx, you can create a custom target that will invoke the `run-parallel` command for your "composed" Storybook instances.
 
 The objective is to end up with a new target in your `main-host`'s `project.json` file (`apps/main-host/project.json`) that looks like this:
 
-```json
+```jsonc {% fileName="apps/main-host/project.json" %}
     "storybook-composition": {
       "executor": "nx:run-commands",
       "options": {
@@ -143,7 +143,7 @@ The objective is to end up with a new target in your `main-host`'s `project.json
 
 which you can then invoke like this:
 
-```bash
+```shell
 nx run main-host:storybook-composition
 ```
 
@@ -155,13 +155,13 @@ Let's first generate a new `target` called `storybook-composition` for our `main
 
 Run the following command:
 
-```bash
+```shell
 nx generate nx:run-commands storybook-composition --command='nx storybook one-composed' --project=main-host
 ```
 
 This will create a new `target` in your `apps/main-host/project.json`:
 
-```json
+```jsonc {% fileName="apps/main-host/project.json" %}
     "storybook-composition": {
       "executor": "nx:run-commands",
       "outputs": [],
@@ -173,7 +173,7 @@ This will create a new `target` in your `apps/main-host/project.json`:
 
 Now, change the `command` option to be `commands`, add the `"parallel": true` option, and add all the other "composed" Storybook commands:
 
-```json
+```jsonc {% fileName="apps/main-host/project.json" %}
     "storybook-composition": {
       "executor": "nx:run-commands",
       "options": {
@@ -189,13 +189,13 @@ Now, change the `command` option to be `commands`, add the `"parallel": true` op
 
 Now, you can start all your "composed" Storybook instances by running:
 
-```bash
+```shell
 nx run main-host:storybook-composition
 ```
 
 **After** all of your "composed" Storybook instances have started, you can run in a new terminal:
 
-```bash
+```shell
 nx storybook main-host
 ```
 

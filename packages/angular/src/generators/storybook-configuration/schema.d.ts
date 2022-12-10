@@ -4,10 +4,11 @@ export interface StorybookConfigurationOptions {
   configureCypress: boolean;
   generateCypressSpecs: boolean;
   generateStories: boolean;
-  linter: Exclude<Linter, Linter.TsLint>;
+  linter: Linter;
   name: string;
   cypressDirectory?: string;
   tsConfiguration?: boolean;
   skipFormat?: boolean;
   ignorePaths?: string[];
+  configureTestRunner?: boolean;
 }

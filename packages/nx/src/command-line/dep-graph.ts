@@ -1,4 +1,4 @@
-import { workspaceRoot } from 'nx/src/utils/workspace-root';
+import { workspaceRoot } from '../utils/workspace-root';
 import { watch } from 'chokidar';
 import { createHash } from 'crypto';
 import { existsSync, readFileSync, statSync, writeFileSync } from 'fs';
@@ -9,7 +9,7 @@ import * as open from 'open';
 import { basename, dirname, extname, isAbsolute, join, parse } from 'path';
 import { performance } from 'perf_hooks';
 import { URL, URLSearchParams } from 'url';
-import { workspaceLayout } from '../config/configuration';
+import { readNxJson, workspaceLayout } from '../config/configuration';
 import { defaultFileHasher } from '../hasher/file-hasher';
 import { output } from '../utils/output';
 import { writeJsonFile } from '../utils/fileutils';
@@ -21,8 +21,11 @@ import {
 } from '../config/project-graph';
 import { pruneExternalNodes } from '../project-graph/operators';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
+import { createTaskGraph } from '../tasks-runner/create-task-graph';
+import { TargetDefaults, TargetDependencies } from '../config/nx-json';
+import { TaskGraph } from '../config/task-graph';
 
-export interface DepGraphClientResponse {
+export interface ProjectGraphClientResponse {
   hash: string;
   projects: ProjectGraphProjectNode[];
   dependencies: Record<string, ProjectGraphDependency[]>;
@@ -31,6 +34,10 @@ export interface DepGraphClientResponse {
   focus: string;
   groupByFolder: boolean;
   exclude: string[];
+}
+
+export interface TaskGraphClientResponse {
+  taskGraphs: Record<string, TaskGraph>;
 }
 
 // maps file extention to MIME types
@@ -55,7 +62,8 @@ function buildEnvironmentJs(
   exclude: string[],
   watchMode: boolean,
   localMode: 'build' | 'serve',
-  depGraphClientResponse?: DepGraphClientResponse
+  depGraphClientResponse?: ProjectGraphClientResponse,
+  taskGraphClientResponse?: TaskGraphClientResponse
 ) {
   let environmentJs = `window.exclude = ${JSON.stringify(exclude)};
   window.watch = ${!!watchMode};
@@ -65,23 +73,31 @@ function buildEnvironmentJs(
   window.appConfig = {
     showDebugger: false,
     showExperimentalFeatures: false,
-    projectGraphs: [
+    workspaces: [
       {
         id: 'local',
         label: 'local',
-        url: 'projectGraph.json',
+        projectGraphUrl: 'project-graph.json',
+        taskGraphUrl: 'task-graph.json'
       }
     ],
-    defaultProjectGraph: 'local',
+    defaultWorkspaceId: 'local',
   };
   `;
 
   if (localMode === 'build') {
     environmentJs += `window.projectGraphResponse = ${JSON.stringify(
       depGraphClientResponse
-    )};`;
+    )};
+    `;
+
+    environmentJs += `window.taskGraphResponse = ${JSON.stringify(
+      taskGraphClientResponse
+    )};
+    `;
   } else {
     environmentJs += `window.projectGraphResponse = null;`;
+    environmentJs += `window.taskGraphResponse = null;`;
   }
 
   return environmentJs;
@@ -234,11 +250,14 @@ export async function generateGraph(
         affectedProjects
       );
 
+      const taskGraphClientResponse = await createTaskGraphClientResponse();
+
       const environmentJs = buildEnvironmentJs(
         args.exclude || [],
         args.watch,
         !!args.file && args.file.endsWith('html') ? 'build' : 'serve',
-        depGraphClientResponse
+        depGraphClientResponse,
+        taskGraphClientResponse
       );
       html = html.replace(/src="/g, 'src="static/');
       html = html.replace(/href="styles/g, 'href="static/styles');
@@ -316,7 +335,7 @@ async function startServer(
   currentDepGraphClientResponse.groupByFolder = groupByFolder;
   currentDepGraphClientResponse.exclude = exclude;
 
-  const app = http.createServer((req, res) => {
+  const app = http.createServer(async (req, res) => {
     // parse URL
     const parsedUrl = new URL(req.url, `http://${host}:${port}`);
     // extract URL path
@@ -326,9 +345,15 @@ async function startServer(
 
     const sanitizePath = basename(parsedUrl.pathname);
 
-    if (sanitizePath === 'projectGraph.json') {
+    if (sanitizePath === 'project-graph.json') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(currentDepGraphClientResponse));
+      return;
+    }
+
+    if (sanitizePath === 'task-graph.json') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(await createTaskGraphClientResponse()));
       return;
     }
 
@@ -346,15 +371,8 @@ async function startServer(
 
     let pathname = join(__dirname, '../core/graph/', sanitizePath);
 
-    if (!existsSync(pathname)) {
-      // if the file is not found, return 404
-      res.statusCode = 404;
-      res.end(`File ${pathname} not found!`);
-      return;
-    }
-
-    // if is a directory, then look for index.html
-    if (statSync(pathname).isDirectory()) {
+    // if the file is not found or is a directory, return index.html
+    if (!existsSync(pathname) || statSync(pathname).isDirectory()) {
       res.writeHead(200, { 'Content-Type': 'text/html' });
       res.end(html);
       return;
@@ -379,11 +397,11 @@ async function startServer(
   });
 
   if (openBrowser) {
-    let url = `http://${host}:${port}`;
+    let url = `http://${host}:${port}/projects`;
     let params = new URLSearchParams();
 
     if (focus) {
-      params.append('focus', focus);
+      url += `/${focus}`;
     }
 
     if (groupByFolder) {
@@ -394,7 +412,7 @@ async function startServer(
   }
 }
 
-let currentDepGraphClientResponse: DepGraphClientResponse = {
+let currentDepGraphClientResponse: ProjectGraphClientResponse = {
   hash: null,
   projects: [],
   dependencies: {},
@@ -473,7 +491,7 @@ function createFileWatcher(root: string, changeHandler: () => Promise<void>) {
 
 async function createDepGraphClientResponse(
   affected: string[] = []
-): Promise<DepGraphClientResponse> {
+): Promise<ProjectGraphClientResponse> {
   performance.mark('project graph watch calculation:start');
   await defaultFileHasher.init();
 
@@ -493,6 +511,7 @@ async function createDepGraphClientResponse(
           tags: project.data.tags,
           root: project.data.root,
           files: project.data.files,
+          targets: project.data.targets,
         },
       } as ProjectGraphProjectNode)
   );
@@ -526,4 +545,97 @@ async function createDepGraphClientResponse(
     dependencies,
     affected,
   };
+}
+
+async function createTaskGraphClientResponse(): Promise<TaskGraphClientResponse> {
+  let graph = pruneExternalNodes(
+    await createProjectGraphAsync({ exitOnError: true })
+  );
+
+  performance.mark('task graph generation:start');
+
+  const taskGraphs = getAllTaskGraphsForWorkspace(graph);
+
+  performance.mark('task graph generation:end');
+
+  performance.measure(
+    'task graph generation',
+    'task graph generation:start',
+    'task graph generation:end'
+  );
+
+  return {
+    taskGraphs,
+  };
+}
+
+function getAllTaskGraphsForWorkspace(
+  projectGraph: ProjectGraph
+): Record<string, TaskGraph> {
+  const nxJson = readNxJson();
+
+  const defaultDependencyConfigs = mapTargetDefaultsToDependencies(
+    nxJson.targetDefaults
+  );
+
+  const taskGraphs: Record<string, TaskGraph> = {};
+
+  for (const projectName in projectGraph.nodes) {
+    const project = projectGraph.nodes[projectName];
+    const targets = Object.keys(project.data.targets);
+
+    targets.forEach((target) => {
+      taskGraphs[createTaskId(projectName, target)] = createTaskGraph(
+        projectGraph,
+        defaultDependencyConfigs,
+        [projectName],
+        [target],
+        undefined,
+        {}
+      );
+
+      const configurations = Object.keys(
+        project.data.targets[target]?.configurations || {}
+      );
+
+      if (configurations.length > 0) {
+        configurations.forEach((configuration) => {
+          taskGraphs[createTaskId(projectName, target, configuration)] =
+            createTaskGraph(
+              projectGraph,
+              defaultDependencyConfigs,
+              [projectName],
+              [target],
+              configuration,
+              {}
+            );
+        });
+      }
+    });
+  }
+
+  return taskGraphs;
+}
+
+function mapTargetDefaultsToDependencies(
+  defaults: TargetDefaults
+): TargetDependencies {
+  const res = {};
+  Object.keys(defaults).forEach((k) => {
+    res[k] = defaults[k].dependsOn;
+  });
+
+  return res;
+}
+
+function createTaskId(
+  projectId: string,
+  targetId: string,
+  configurationId?: string
+) {
+  if (configurationId) {
+    return `${projectId}:${targetId}:${configurationId}`;
+  } else {
+    return `${projectId}:${targetId}`;
+  }
 }

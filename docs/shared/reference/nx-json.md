@@ -4,7 +4,7 @@ The `nx.json` file configures the Nx CLI and project defaults.
 
 The following is an expanded version showing all options. Your `nx.json` will likely be much shorter.
 
-```json
+```json {% fileName="nx.json" %}
 {
   "npmScope": "happyorg",
   "affected": {
@@ -74,38 +74,6 @@ You can add a `workspaceLayout` property to modify where libraries and apps are 
 These settings would store apps in `/demos/` and libraries in `/packages/`. The paths specified are relative to the
 workspace root.
 
-### Files & Implicit Dependencies
-
-Nx performs advanced source-code analysis to figure out the project graph of the workspace. So when you make a change,
-Nx can deduce what can be broken by this change. Some dependencies between projects and shared files cannot be inferred
-statically. You can configure those using `implicitDependencies`.
-
-```json
-{
-  "implicitDependencies": {
-    "package.json": {
-      "dependencies": "*",
-      "devDependencies": {
-        "mypackage": ["mylib"]
-      },
-      "scripts": {
-        "check:*": "*"
-      }
-    },
-    "globalFile": ["myapp"],
-    "styles/**/*.css": ["myapp"]
-  }
-}
-```
-
-In the example above:
-
-- Changing the `dependencies` property in `package.json` affects every project.
-- Changing the `mypackage` property in `package.json` only affects `mylib`.
-- Changing any of the custom check `scripts` in `package.json` affects every project.
-- Changing `globalFile` only affects `myapp`.
-- Changing any CSS file inside the `styles` directory only affects `myapp`.
-
 ### inputs & namedInputs
 
 Named inputs defined in `nx.json` are merged with the named inputs defined in each project's project.json.
@@ -126,20 +94,22 @@ like this (which applies to every project):
 }
 ```
 
-And projects can define their prod fileset, without having to redefine the inputs for the `test` target.
+And projects can define their `production` fileset, without having to redefine the inputs for the `test` target.
 
-```json title="project.json"
+```json {% fileName="project.json" %}
 {
   "namedInputs": {
-    "production": [
-      "!{projectRoot}/**/*.test.js",
-      "{workspaceRoot}/jest.config.js"
-    ]
+    "production": ["default", "!{projectRoot}/**/*.test.js"]
   }
 }
 ```
 
-In this case Nx will use the right `prod` input for each project.
+In this case Nx will use the right `production` input for each project.
+
+{% cards %}
+{% card title="Project Configuration reference" type="documentation" description="inputs and namedInputs are also described in the project configuration reference" url="/reference/project-configuration#inputs-&-namedinputs" /%}
+{% card title="Customizing inputs and namedInputs" type="documentation" description="This guide walks through a few examples of how to customize inputs and namedInputs" url="/more-concepts/customizing-inputs" /%}
+{% /cards %}
 
 ### Target Defaults
 
@@ -150,7 +120,7 @@ individual target.
 Often the same `dependsOn` configuration has to be defined for every project in the repo, and that's when
 defining `targetDefaults` in `nx.json` is helpful.
 
-```json
+```json {% fileName="nx.json" %}
 {
   "targetDefaults": {
     "build": {
@@ -162,13 +132,18 @@ defining `targetDefaults` in `nx.json` is helpful.
 
 The configuration above is identical to adding `{"dependsOn": ["^build"]}` to every build target of every project.
 
+For full documentation of the `dependsOn` property, see the [project configuration reference](/reference/project-configuration#dependson).
+{% cards %}
+{% card title="Project Configuration reference" type="documentation" description="For full documentation of the `dependsOn` property, see the project configuration reference" url="/reference/project-configuration#dependson" /%}
+{% /cards %}
+
 Another target default you can configure is `outputs`:
 
-```json
+```json {% fileName="nx.json" %}
 {
   "targetDefaults": {
     "build": {
-      "outputs": ["./custom-dist"]
+      "outputs": ["{projectRoot}/custom-dist"]
     }
   }
 }
@@ -179,7 +154,7 @@ Another target default you can configure is `outputs`:
 Default generator options are configured in `nx.json` as well. For instance, the following tells Nx to always
 pass `--buildable=true` when creating new libraries.
 
-```json
+```json {% fileName="nx.json" %}
 {
   "generators": {
     "@nrwl/js:library": {

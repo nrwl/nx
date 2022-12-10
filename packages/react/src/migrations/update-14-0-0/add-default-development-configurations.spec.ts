@@ -7,7 +7,7 @@ import update from './add-default-development-configurations';
 
 describe('React default development configuration', () => {
   it('should add development configuration if it does not exist', async () => {
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(
       tree,
       'example',
@@ -47,7 +47,7 @@ describe('React default development configuration', () => {
   });
 
   it('should add development configuration if no configurations at all', async () => {
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(
       tree,
       'example',
@@ -90,7 +90,7 @@ describe('React default development configuration', () => {
   });
 
   it('should work without targets', async () => {
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(
       tree,
       'example',
@@ -106,6 +106,7 @@ describe('React default development configuration', () => {
     const config = readProjectConfiguration(tree, 'example');
     expect(config).toEqual({
       $schema: '../../node_modules/nx/schemas/project-schema.json',
+      name: 'example',
       root: 'apps/example',
       projectType: 'application',
     });

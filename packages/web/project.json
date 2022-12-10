@@ -1,4 +1,5 @@
 {
+  "name": "web",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/web",
   "projectType": "library",
@@ -9,7 +10,7 @@
         "jestConfig": "packages/web/jest.config.ts",
         "passWithNoTests": true
       },
-      "outputs": ["coverage/packages/web"]
+      "outputs": ["{workspaceRoot}/coverage/packages/web"]
     },
     "build-base": {
       "executor": "@nrwl/js:tsc",
@@ -62,7 +63,7 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["build/packages/web"],
+      "outputs": ["{workspaceRoot}/build/packages/web"],
       "options": {
         "command": "node ./scripts/copy-readme.js web"
       }

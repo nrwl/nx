@@ -11,14 +11,14 @@
       "id": "overview",
       "path": "/packages/angular",
       "file": "shared/angular-plugin",
-      "content": "![Angular logo](/shared/angular-logo.png)\n\nThe Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides:\n\n- Integration with libraries such as Storybook, Jest, Cypress, Karma, and Protractor.\n- Generators to help scaffold code quickly, including:\n  - Micro Frontends\n  - Libraries, both internal to your codebase and publishable to npm\n  - Upgrading AngularJS applications\n  - Single Component Application Modules (SCAMs)\n- NgRx helpers.\n- Utilities for automatic workspace refactoring.\n\n{% callout type=\"note\" title=\"Currently using the Angular CLI?\" %}\nYou can easily and mostly **automatically migrate from an Angular CLI** project to Nx! Learn more [here](/recipe/migration-angular).\n{% /callout %}\n\n## Setting up the Angular plugin\n\nAdding the Angular plugin to an existing Nx workspace can be done with the following:\n\n```bash\nyarn add -D @nrwl/angular\n```\n\n```bash\nnpm install -D @nrwl/angular\n```\n\n## Using the Angular Plugin\n\n### Generating an application\n\nIt's straightforward to generate an Angular application:\n\n```bash\nnx g @nrwl/angular:app appName\n```\n\nBy default, the application will be generated with:\n\n- ESLint as the linter.\n- Jest as the unit test runner.\n- Cypress as the E2E test runner.\n\nWe can then serve, build, test, lint, and run e2e tests on the application with the following commands:\n\n```bash\nnx serve appName\nnx build appName\nnx test appName\nnx lint appName\nnx e2e appName\n```\n\n### Generating a library\n\nGenerating an Angular library is very similar to generating an application:\n\n```bash\nnx g @nrwl/angular:lib libName\n```\n\nBy default, the library will be generated with:\n\n- ESLint as the linter.\n- Jest as the unit test runner.\n\nWe can then test and lint the library with the following commands:\n\n```bash\nnx test libName\nnx lint libName\n```\n\nRead more about:\n\n- [Creating Libraries](/more-concepts/creating-libraries)\n- [Library Types](/more-concepts/library-types)\n- [Buildable and Publishable Libraries](/more-concepts/buildable-and-publishable-libraries)\n\n## More Documentation\n\n- [Angular Nx Tutorial](/angular-tutorial/01-create-application)\n- [Migrating from the Angular CLI](recipe/migration-angular)\n- [Setup Module Federation with Angular and Nx](/recipe/faster-builds)\n- [Using NgRx](/recipe/misc-ngrx)\n- [Using Data Persistence operators](/recipe/misc-data-persistence)\n- [Upgrading an AngularJS application to Angular](/recipe/migration-angularjs)\n- [Using Tailwind CSS with Angular projects](/recipe/using-tailwind-css-with-angular-projects)\n"
+      "content": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides:\n\n- Integration with libraries such as Storybook, Jest, Cypress, Karma, and Protractor.\n- Generators to help scaffold code quickly, including:\n  - Micro Frontends\n  - Libraries, both internal to your codebase and publishable to npm\n  - Upgrading AngularJS applications\n  - Single Component Application Modules (SCAMs)\n- NgRx helpers.\n- Utilities for automatic workspace refactoring.\n\n{% callout type=\"note\" title=\"Currently using the Angular CLI?\" %}\nYou can easily and mostly **automatically migrate from an Angular CLI** project to Nx! Learn more [here](/recipes/adopting-nx/migration-angular).\n{% /callout %}\n\n## Setting up the Angular plugin\n\nAdding the Angular plugin to an existing Nx workspace can be done with the following:\n\n```shell\nyarn add -D @nrwl/angular\n```\n\n```shell\nnpm install -D @nrwl/angular\n```\n\n## Using the Angular Plugin\n\n### Generating an application\n\nIt's straightforward to generate an Angular application:\n\n```shell\nnx g @nrwl/angular:app appName\n```\n\nBy default, the application will be generated with:\n\n- ESLint as the linter.\n- Jest as the unit test runner.\n- Cypress as the E2E test runner.\n\nWe can then serve, build, test, lint, and run e2e tests on the application with the following commands:\n\n```shell\nnx serve appName\nnx build appName\nnx test appName\nnx lint appName\nnx e2e appName\n```\n\n### Generating a library\n\nGenerating an Angular library is very similar to generating an application:\n\n```shell\nnx g @nrwl/angular:lib libName\n```\n\nBy default, the library will be generated with:\n\n- ESLint as the linter.\n- Jest as the unit test runner.\n\nWe can then test and lint the library with the following commands:\n\n```shell\nnx test libName\nnx lint libName\n```\n\nRead more about:\n\n- [Creating Libraries](/more-concepts/creating-libraries)\n- [Library Types](/more-concepts/library-types)\n- [Buildable and Publishable Libraries](/more-concepts/buildable-and-publishable-libraries)\n\n## More Documentation\n\n- [Angular Nx Tutorial](/angular-tutorial/1-code-generation)\n- [Migrating from the Angular CLI](recipe/migration-angular)\n- [Setup Module Federation with Angular and Nx](/recipes/module-federation/faster-builds)\n- [Using NgRx](/recipes/other/misc-ngrx)\n- [Using Data Persistence operators](/recipes/other/misc-data-persistence)\n- [Upgrading an AngularJS application to Angular](/recipes/adopting-nx/migration-angularjs)\n- [Using Tailwind CSS with Angular projects](/recipes/other/using-tailwind-css-with-angular-projects)\n"
     },
     {
       "name": "Angular and Nx Version Matrix",
       "id": "angular-nx-version-matrix",
       "file": "shared/angular-nx-version-matrix",
       "path": "/angular-nx-version-matrix",
-      "content": "# Nx and Angular Version Compatibility Matrix\n\nBelow is a reference table that matches versions of Angular to the version of Nx that is compatible with it. The table shows the version of Angular, the recommended version of Nx to use and the range of Nx versions that support the version of Angular.\n\nWe provide a recommended version, and it is usually the latest minor version of Nx in the range provided because there will have been bug fixes added since the first release in the range.\n\n| Angular Version | **Nx Version _(recommended)_** | Nx Version _(range)_ |\n| --------------- | ------------------------------ | -------------------- |\n| ^8.0.0          | **8.12.2**                     | 8.7.0 <= 8.12.2      |\n| ^9.0.0          | **9.6.0**                      | 8.12.4 <= 9.6.0      |\n| ^10.0.0         | **10.4.15**                    | 9.7.0 <= 10.4.15     |\n| ^11.0.0         | **12.2.0**                     | 11.0.0 <= 12.2.0     |\n| ^12.0.0         | **13.1.4**                     | 12.3.0 <= 13.1.4     |\n| ^13.0.0         | **14.1.9**                     | .13.2.0 <= 14.1.9    |\n| ~14.0.0         | **14.4.3**                     | 14.2.1 <= 14.4.3     |\n| ~14.1.0         | **14.5.10**                    | 14.5.0 <= 14.5.10    |\n| ~14.2.0         | **14.6.0**                     | 14.6.0 <= latest     |\n\nIf you would like to see how the supported versions of Node and Typescript for the version of Angular you are using, [Lars Gyrup Brink Nielsen](https://twitter.com/LayZeeDK) has a very good resource for that [here](https://gist.github.com/LayZeeDK/c822cc812f75bb07b7c55d07ba2719b3).\n"
+      "content": "# Nx and Angular Version Compatibility Matrix\n\nBelow is a reference table that matches versions of Angular to the version of Nx that is compatible with it. The table shows the version of Angular, the recommended version of Nx to use and the range of Nx versions that support the version of Angular.\n\nWe provide a recommended version, and it is usually the latest minor version of Nx in the range provided because there will have been bug fixes added since the first release in the range.\n\n| Angular Version | **Nx Version _(recommended)_** | Nx Version _(range)_ |\n| --------------- | ------------------------------ | -------------------- |\n| ~15.0.0         | **latest**                     | 15.2.0 <= latest     |\n| ~14.2.0         | **15.1.1**                     | 14.6.0 <= 15.1.1     |\n| ~14.1.0         | **14.5.10**                    | 14.5.0 <= 14.5.10    |\n| ~14.0.0         | **14.4.3**                     | 14.2.1 <= 14.4.3     |\n| ^13.0.0         | **14.1.9**                     | 13.2.0 <= 14.1.9     |\n| ^12.0.0         | **13.1.4**                     | 12.3.0 <= 13.1.4     |\n| ^11.0.0         | **12.2.0**                     | 11.0.0 <= 12.2.0     |\n| ^10.0.0         | **10.4.15**                    | 9.7.0 <= 10.4.15     |\n| ^9.0.0          | **9.6.0**                      | 8.12.4 <= 9.6.0      |\n| ^8.0.0          | **8.12.2**                     | 8.7.0 <= 8.12.2      |\n\nIf you would like to see how the supported versions of Node and Typescript for the version of Angular you are using, [Lars Gyrup Brink Nielsen](https://twitter.com/LayZeeDK) has a very good resource for that [here](https://gist.github.com/LayZeeDK/c822cc812f75bb07b7c55d07ba2719b3).\n"
     }
   ],
   "generators": [
@@ -32,6 +32,12 @@
         "description": "Adds linting configuration to an Angular project.",
         "cli": "nx",
         "type": "object",
+        "examples": [
+          {
+            "command": "nx g @nrwl/angular:add-linting --prefix=cool --projectName=cool-lib --projectRoot=libs/cool-lib",
+            "description": "Adds ESLint with Angular-specific rules for an existing project named `cool-lib` with the [prefix](https://angular.io/guide/styleguide#style-02-07) `cool`"
+          }
+        ],
         "properties": {
           "prefix": {
             "type": "string",
@@ -164,11 +170,6 @@
             "default": false,
             "description": "Do not add dependencies to `package.json`."
           },
-          "skipPostInstall": {
-            "type": "boolean",
-            "default": false,
-            "description": "Do not add or append `ngcc` to the `postinstall` script in `package.json`."
-          },
           "unitTestRunner": {
             "type": "string",
             "enum": ["karma", "jest", "none"],
@@ -204,39 +205,9 @@
             "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
             "type": "boolean"
           },
-          "mf": {
-            "description": "Generate a Module Federation configuration for the application",
-            "type": "boolean",
-            "default": false,
-            "x-deprecated": "Use the `host` or `remote` generators instead. Support for generating Module Federation applications using the application generator will be removed in an upcoming version."
-          },
-          "mfType": {
-            "type": "string",
-            "enum": ["host", "remote"],
-            "description": "Type of application to generate the Module Federation configuration for.",
-            "default": "remote",
-            "x-deprecated": "Use the `host` or `remote` generators instead. Support for generating Module Federation applications using the application generator will be removed in an upcoming version."
-          },
-          "federationType": {
-            "type": "string",
-            "enum": ["static", "dynamic"],
-            "description": "Use either Static or Dynamic Module Federation pattern for the application.",
-            "default": "static",
-            "x-deprecated": "Use the `host` or `remote` generators instead. Support for generating Module Federation applications using the application generator will be removed in an upcoming version."
-          },
           "port": {
             "type": "number",
             "description": "The port at which the remote application should be served."
-          },
-          "remotes": {
-            "type": "array",
-            "description": "A list of remote application names that the host application should consume.",
-            "x-deprecated": "Use the `host` or `remote` generators instead. Support for generating Module Federation applications using the application generator will be removed in an upcoming version."
-          },
-          "host": {
-            "type": "string",
-            "description": "The name of the host application that the remote application will be consumed by.",
-            "x-deprecated": "Use the `host` or `remote` generators instead. Support for generating Module Federation applications using the application generator will be removed in an upcoming version."
           },
           "setParserOptionsProject": {
             "type": "boolean",
@@ -257,10 +228,17 @@
             "description": "Generate an application that is setup to use standalone components.",
             "type": "boolean",
             "default": false
+          },
+          "rootProject": {
+            "description": "Create an application at the root of the workspace.",
+            "type": "boolean",
+            "default": false,
+            "hidden": true
           }
         },
         "additionalProperties": false,
         "required": ["name"],
+        "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Simple Application\" %}\n\nCreate an application named `my-app`:\n\n```bash\nnx g @nrwl/angular:application my-app\n```\n\n{% /tab %}\n\n{% tab label=\"Specify directory and style extension\" %}\n\nCreate an application named `my-app` in the `my-dir` directory and use `scss` for styles:\n\n```bash\nnx g @nrwl/angular:app my-app --directory=my-dir --style=scss\n```\n\n{% /tab %}\n\n{% tab label=\"Single File Components application\" %}\n\nCreate an application with Single File Components (inline styles and inline templates):\n\n```bash\nnx g @nrwl/angular:app my-app --inlineStyle --inlineTemplate\n```\n\n{% /tab %}\n\n{% tab label=\"Standalone Components application\" %}\n\nCreate an application that is setup to use standalone components:\n\n```bash\nnx g @nrwl/angular:app my-app --standalone\n```\n\n{% /tab %}\n\n{% tab label=\"Set custom prefix and tags\" %}\n\nSet the prefix to apply to generated selectors and add tags to the application (used for linting).\n\n```bash\nnx g @nrwl/angular:app my-app --prefix=admin --tags=scope:admin,type:ui\n```\n\n{% /tab %}\n{% /tabs %}\n",
         "presets": []
       },
       "aliases": ["app"],
@@ -383,6 +361,7 @@
           }
         },
         "required": ["name"],
+        "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Simple Component\" %}\n\nCreate a component named `my-component`:\n\n```bash\nnx g @nrwl/angular:component my-component\n```\n\n{% /tab %}\n\n{% tab label=\"Standalone Component\" %}\n\nCreate a standalone component named `my-component`:\n\n```bash\nnx g @nrwl/angular:component my-component --standalone\n```\n\n{% /tab %}\n\n{% tab label=\"Single File Component\" %}\n\nCreate a component named `my-component` with inline styles and inline template:\n\n```bash\nnx g @nrwl/angular:component my-component --inlineStyle --inlineTemplate\n```\n\n{% /tab %}\n\n{% tab label=\"Component with OnPush Change Detection Strategy\" %}\n\nCreate a component named `my-component` with OnPush Change Detection Strategy:\n\n```bash\nnx g @nrwl/angular:component my-component --changeDetection=OnPush\n```\n\n{% /tab %}\n",
         "presets": []
       },
       "aliases": ["c"],
@@ -448,6 +427,7 @@
           "componentPath",
           "componentFileName"
         ],
+        "examplesFile": "## Examples\n\n{% tabs %}\n\n{% tab label=\"Basic Usage\" %}\n\nCreate a cypress spec for a component that is set up with Storybook.\n\n```bash\nnx g @nrwl/angular:component-cypress-spec --componentName=MyButtonComponent --componentPath=libs/ui/src/lib/button/button.component.ts --componentFileName=button.component --projectName=ui --projectPath=libs/ui\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
         "presets": []
       },
       "description": "Creates a Cypress spec for a UI component that has a story.",
@@ -502,9 +482,9 @@
         "presets": []
       },
       "description": "Creates a stories.ts file for a component.",
+      "hidden": true,
       "implementation": "/packages/angular/src/generators/component-story/component-story.ts",
       "aliases": [],
-      "hidden": false,
       "path": "/packages/angular/src/generators/component-story/schema.json"
     },
     {
@@ -554,6 +534,7 @@
           "componentDir",
           "componentFileName"
         ],
+        "examplesFile": "{% callout type=\"caution\" title=\"Can I use component testing?\" %}\nAngular component testing with Nx requires **Cypress version 10.7.0** and up.\n\nYou can migrate with to v10 via the [migrate-to-cypress-10 generator](/packages/cypress/generators/migrate-to-cypress-10).\n\nThis generator is for Cypress based component testing.\n\nIf you're wanting to create Cypress tests for a Storybook story, then check out the [component-cypress-spec generator docs](/packages/angular/generators/component-cypress-spec)\n\nIf you're wanting to create Storybook stories for a component, then check out the [stories generator docs](/packages/angular/generators/stories) or [component-story generator docs](/packages/angular/generators/component-cypress-spec)\n{% /callout %}\n\nThis generator is used to create a Cypress component test file for a given Angular component.\n\n```shell\nnx g @nrwl/angular:component-test --project=my-cool-angular-project --componentName=CoolBtnComponent --componentDir=src/cool-btn --componentFileName=cool-btn.component\n```\n\nTest file are generated with the `.cy.ts` suffix. this is to prevent colliding with any existing `.spec.` files contained in the project.\n\nIt's currently expected the generated `.cy.ts` file will live side by side with the component. It is also assumed the project is already setup for component testing. If it isn't, then you can run the [cypress-component-project generator](/packages/angular/generators/cypress-component-configuration) to set up the project for component testing.\n",
         "presets": []
       },
       "description": "Creates a cypress component test file for a component.",
@@ -658,6 +639,7 @@
         },
         "additionalProperties": false,
         "required": ["name", "project"],
+        "examplesFile": "## Examples\n\nBelow are some examples of how to generate configuration and setup for using `ngUpgrade`'s `DowngradeModule` for your application.\n\n{% tabs %}\n\n{% tab label=\"Basic Usage\" %}\n\n```bash\nnx g @nrwl/angular:downgrade-module --name=myAngularJsModule --project=myapp\n```\n\n{% /tab %}\n\n{% tab label=\"Setup Router\" %}\n\nAllow a setup that configures routing for `DowngradeModule`.\n\n```bash\nnx g @nrwl/angular:downgrade-module --name=myAngularJsModule --project=myapp --router=true\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
         "presets": []
       },
       "description": "Sets up a Downgrade Module.",
@@ -676,6 +658,12 @@
         "title": "Init Angular Plugin",
         "description": "Initializes the `@nrwl/angular` plugin. NOTE: Does not work in the `--dry-run` mode.",
         "type": "object",
+        "examples": [
+          {
+            "command": "nx g @nrwl/angular:init --style=scss",
+            "description": "Installs angular dependencies and initializes the `@nrwl/angular` plugin with the `scss` stylesheet format."
+          }
+        ],
         "properties": {
           "unitTestRunner": {
             "type": "string",
@@ -734,11 +722,6 @@
             "type": "boolean",
             "default": false,
             "description": "Do not add dependencies to `package.json`."
-          },
-          "skipPostInstall": {
-            "type": "boolean",
-            "default": false,
-            "description": "Do not add or append `ngcc` to the `postinstall` script in `package.json`."
           }
         },
         "additionalProperties": false,
@@ -760,6 +743,12 @@
         "description": "Add Karma configuration to an Nx workspace.",
         "cli": "nx",
         "type": "object",
+        "examples": [
+          {
+            "command": "nx g @nrwl/angular:karma",
+            "description": "Add a base karma configuration to the workspace."
+          }
+        ],
         "properties": {
           "skipPackageJson": {
             "type": "boolean",
@@ -806,6 +795,7 @@
         },
         "additionalProperties": false,
         "required": ["project"],
+        "examplesFile": "## Examples\n\n{% tabs %}\n\n{% tab label=\"Basic Usage\" %}\n\nTo add karma to project, run the following command.\n\n```bash\nnx g @nrwl/angular:karma-project --project=myapp\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
         "presets": []
       },
       "description": "Adds Karma configuration to a project.",
@@ -860,6 +850,12 @@
           "simpleModuleName": {
             "description": "Keep the module name simple (when using `--directory`).",
             "type": "boolean",
+            "default": false,
+            "x-deprecated": "Use `simpleName` instead. It will be removed in v16."
+          },
+          "simpleName": {
+            "description": "Don't include the directory in the name of the module or standalone component entry of the library.",
+            "type": "boolean",
             "default": false
           },
           "addModuleSpec": {
@@ -871,11 +867,6 @@
             "type": "boolean",
             "default": false,
             "description": "Do not add dependencies to `package.json`."
-          },
-          "skipPostInstall": {
-            "type": "boolean",
-            "default": false,
-            "description": "Do not add or append `ngcc` to the `postinstall` script in `package.json`."
           },
           "skipTsConfig": {
             "type": "boolean",
@@ -892,10 +883,9 @@
             "default": false,
             "description": "Add `RouterModule.forChild` when set to true, and a simple array of routes when set to false."
           },
-          "parentModule": {
+          "parent": {
             "type": "string",
-            "description": "Update the router configuration of the parent module using `loadChildren` or `children`, depending on what `lazy` is set to.",
-            "alias": "parent"
+            "description": "Path to the parent route configuration using `loadChildren` or `children`, depending on what `lazy` is set to."
           },
           "tags": {
             "type": "string",
@@ -1002,10 +992,16 @@
             "type": "boolean",
             "default": false,
             "description": "Specifies if the component should have a selector or not. Disclaimer: This option is only valid when `--standalone` is set to `true`."
+          },
+          "flat": {
+            "type": "boolean",
+            "default": false,
+            "description": "Ensure the generated standalone component is not placed in a subdirectory. Disclaimer: This option is only valid when `--standalone` is set to `true`."
           }
         },
         "additionalProperties": false,
         "required": ["name"],
+        "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Simple Library\" %}\n\nCreates the `my-ui-lib` library with an `ui` tag:\n\n```bash\nnx g @nrwl/angular:library my-ui-lib --tags=ui\n```\n\n{% /tab %}\n\n{% tab label=\"Nested Folder & Import\"%}\nCreates the `my-lib` library in the `nested` directory and sets the import path to `@myorg/nested/my-lib`:\n\n```bash\nnx g @nrwl/angular:library --directory=nested --importPath=@myorg/nested/my-lib my-lib\n```\n\n{% /tab %}\n\n{% tab label=\"Standalone component\"%}\nCreates the `my-standalone-lib` library with a standalone component as an entry point instead of an ng-module. The component can be used via the `myorg-standalone-component` selector.\n\n```bash\nnx g @nrwl/angular:library --standalone --selector=myorg-standalone-component  my-standalone-lib\n```\n\n{% /tab %}\n",
         "presets": []
       },
       "aliases": ["lib"],
@@ -1048,6 +1044,7 @@
         },
         "additionalProperties": false,
         "required": ["name", "library"],
+        "examplesFile": "## Examples\n\n{% tabs %}\n\n{% tab label=\"Basic Usage\" %}\nCreate a secondary entrypoint named `button` in the `ui` library.\n\n```bash\nnx g @nrwl/angular:library-secondary-entry-point --library=ui --name=button\n```\n\n{% /tab %}\n\n{% tab label=\"Skip generating module\" %}\nCreate a secondary entrypoint named `button` in the `ui` library but skip creating an NgModule.\n\n```bash\nnx g @nrwl/angular:library-secondary-entry-point --library=ui --name=button --skipModule\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
         "presets": []
       },
       "aliases": ["secondary-entry-point", "entry-point"],
@@ -1204,6 +1201,11 @@
             "description": "Whether to generate a remote application with standalone components.",
             "type": "boolean",
             "default": false
+          },
+          "ssr": {
+            "description": "Whether to configure SSR for the remote application to be consumed by a host application using SSR.",
+            "type": "boolean",
+            "default": false
           }
         },
         "additionalProperties": false,
@@ -1281,6 +1283,12 @@
         "type": "object",
         "description": "Converts an old micro frontend configuration to use the new withModuleFederation helper. It will run successfully if the following conditions are met: \n - Is either a host or remote application \n - Shared npm package configurations have not been modified \n - Name used to identify the Micro Frontend application matches the project name \n\n{% callout type=\"warning\" title=\"Overrides\" %}This generator will overwrite your webpack config. If you have additional custom configuration in your config file, it will be lost!{% /callout %}.",
         "additionalProperties": false,
+        "examples": [
+          {
+            "command": "nx g @nrwl/angular:convert-to-with-mf --project mf-app",
+            "description": "Convert a Module Federation Project using legacy webpack config to use the `withModuleFederation` helper."
+          }
+        ],
         "properties": {
           "project": {
             "type": "string",
@@ -1450,6 +1458,11 @@
             "type": "boolean",
             "description": "Whether to generate a host application that uses standalone components.",
             "default": false
+          },
+          "ssr": {
+            "description": "Whether to configure SSR for the host application",
+            "type": "boolean",
+            "default": false
           }
         },
         "additionalProperties": false,
@@ -1533,6 +1546,7 @@
           }
         },
         "additionalProperties": false,
+        "examplesFile": "## Information\n\nThis generator is usually used as part of the process of migrating from an Angular CLI Workspace to Nx Workspaces using `ng add @nrwl/angular`.\n\nYou can read more about [migrating from Angular CLI to Nx here](https://nx.dev/recipes/adopting-nx/migration-angular).\n",
         "presets": []
       },
       "description": "Migrates an Angular CLI workspace to Nx or adds the Angular plugin to an Nx workspace.",
@@ -1551,6 +1565,16 @@
         "description": "Adds NgRx support to an application or library.",
         "cli": "nx",
         "type": "object",
+        "examples": [
+          {
+            "command": "nx g @nrwl/angular:ngrx --root --module=apps/my-app/src/app/app.module.ts --facade=false placeholder",
+            "description": "Add root ngrx configration to the `my-app` application"
+          },
+          {
+            "command": "nx g @nrwl/angular:ngrx --module=libs/my-lib/src/lib/my-lib.module.ts --facade=true --root=false users",
+            "description": "Add a `users` state with a facade to the `my-lib` library. It will be tracked under the default `+state` folder in the lib"
+          }
+        ],
         "properties": {
           "name": {
             "type": "string",
@@ -1600,12 +1624,6 @@
             "default": false,
             "description": "Do not update the `package.json` with NgRx dependencies."
           },
-          "useDataPersistence": {
-            "type": "boolean",
-            "default": false,
-            "description": "Generate NgRx Effects with the `DataPersistence` helper service. Set to false to use plain effects data persistence operators.",
-            "x-deprecated": "This option is deprecated and will be removed in v15. Using the individual operators is recommended."
-          },
           "barrels": {
             "type": "boolean",
             "default": false,
@@ -1649,6 +1667,7 @@
             "description": "Skip formatting the workspace after the generator completes."
           }
         },
+        "examplesFile": "## Examples\n\n{% tabs %}\n\n{% tab label=\"Basic Usage\" %}\n\nThis generator allows you to convert an Inline SCAM to a Standalone Component. It's important that the SCAM you wish to convert has it's NgModule within the same file for the generator to be able to correctly convert the component to Standalone.\n\n```bash\n\nnx g @nrwl/angular:scam-to-standalone --component=libs/mylib/src/lib/myscam/myscam.component.ts --project=mylib\n\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
         "presets": []
       },
       "description": "Convert an existing Single Component Angular Module (SCAM) to a Standalone Component.",
@@ -1666,6 +1685,12 @@
         "cli": "nx",
         "title": "SCAM Generator Options Schema",
         "type": "object",
+        "examples": [
+          {
+            "command": "nx g @nrwl/angular:scam --project=my-lib my-sample",
+            "description": "Generate a `MySampleComponent` component in the `my-lib` library."
+          }
+        ],
         "description": "Creates a new, generic Angular component definition in the given or default project.",
         "additionalProperties": false,
         "properties": {
@@ -1786,6 +1811,12 @@
         "cli": "nx",
         "title": "SCAM Directive Generator Options Schema",
         "type": "object",
+        "examples": [
+          {
+            "command": "nx g @nrwl/angular:scam-directive --project=my-lib --flat=false my-sample",
+            "description": "Generate a `MySampleDirective` directive in a `my-sample` folder in the `my-lib` library"
+          }
+        ],
         "description": "Creates a new, generic Angular directive definition in the given or default project.",
         "additionalProperties": false,
         "properties": {
@@ -1859,6 +1890,12 @@
         "cli": "nx",
         "title": "SCAM Pipe Generator Options Schema",
         "type": "object",
+        "examples": [
+          {
+            "command": "nx g @nrwl/angular:scam-pipe --project=my-lib --flat=false my-transformation",
+            "description": "Generates a `MyTransformationPipe` in a `my-transformation` folder in the `my-lib` project"
+          }
+        ],
         "description": "Creates a new, generic Angular pipe definition in the given or default project.",
         "additionalProperties": false,
         "properties": {
@@ -1985,6 +2022,7 @@
         },
         "required": ["appName", "mfType"],
         "additionalProperties": false,
+        "examplesFile": "## Examples\n\nThe `setup-mf` generator is used to add Module Federation support to existing applications.\n\n{% tabs %}\n\n{% tab label=\"Convert to Host\" %}\nTo convert an existing application to a host application, run the following\n\n```bash\nnx g setup-mf myapp --mfType=host --routing=true\n```\n\n{% /tab %}\n\n{% tab label=\"Convert to Remote\" %}\nTo convert an existing application to a remote application, run the following\n\n```bash\nnx g setup-mf myapp --mfType=remote --routing=true\n```\n\n{% /tab %}\n\n{% tab label=\"Convert to Remote and attach to a host application\" %}\nTo convert an existing application to a remote application and attach it to an existing host application name `myhostapp`, run the following\n\n```bash\nnx g setup-mf myapp --mfType=remote --routing=true --host=myhostapp\n```\n\n{% /tab %}\n\n{% tab label=\"Convert to Host and attach to existing remote applications\" %}\nTo convert an existing application to a host application and attaching existing remote applications named `remote1` and `remote2`, run the following\n\n```bash\nnx g setup-mf myapp --mfType=host --routing=true --remotes=remote1,remote2\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
         "presets": []
       },
       "description": "Generate a Module Federation configuration for a given Angular application.",
@@ -1992,6 +2030,72 @@
       "aliases": [],
       "hidden": false,
       "path": "/packages/angular/src/generators/setup-mf/schema.json"
+    },
+    {
+      "name": "setup-ssr",
+      "factory": "./src/generators/setup-ssr/setup-ssr",
+      "schema": {
+        "$schema": "http://json-schema.org/schema",
+        "$id": "GeneratorAngularUniversalSetup",
+        "cli": "nx",
+        "title": "Generate Angular Universal (SSR) setup for an Angular App",
+        "description": "Create the additional configuration required to enable SSR via Angular Universal for an Angular application.",
+        "type": "object",
+        "properties": {
+          "project": {
+            "type": "string",
+            "description": "The name of the application to generate the Angular Universal configuration for.",
+            "$default": { "$source": "argv", "index": 0 },
+            "x-prompt": "What app would you like to generate an Angular Universal configuration for?",
+            "x-dropdown": "projects"
+          },
+          "appId": {
+            "type": "string",
+            "format": "html-selector",
+            "description": "The `appId` to use with `withServerTransition`.",
+            "default": "serverApp"
+          },
+          "main": {
+            "type": "string",
+            "format": "path",
+            "description": "The name of the main entry-point file.",
+            "default": "main.server.ts"
+          },
+          "serverFileName": {
+            "type": "string",
+            "default": "server.ts",
+            "description": "The name of the Express server file."
+          },
+          "serverPort": {
+            "type": "number",
+            "default": 4000,
+            "description": "The port for the Express server."
+          },
+          "rootModuleFileName": {
+            "type": "string",
+            "format": "path",
+            "description": "The name of the root module file",
+            "default": "app.server.module.ts"
+          },
+          "rootModuleClassName": {
+            "type": "string",
+            "description": "The name of the root module class.",
+            "default": "AppServerModule"
+          },
+          "skipFormat": {
+            "type": "boolean",
+            "description": "Skip formatting the workspace after the generator completes."
+          }
+        },
+        "required": ["project"],
+        "additionalProperties": false,
+        "presets": []
+      },
+      "description": "Generate Angular Universal (SSR) setup for an Angular application.",
+      "implementation": "/packages/angular/src/generators/setup-ssr/setup-ssr.ts",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/angular/src/generators/setup-ssr/schema.json"
     },
     {
       "name": "setup-tailwind",
@@ -2031,6 +2135,7 @@
         },
         "additionalProperties": false,
         "required": ["project"],
+        "examplesFile": "## Examples\n\nThe `setup-tailwind` generator can be used to add [Tailwind](https://tailwindcss.com) configuration to apps and publishable libraries.\n\n{% tabs %}\n\n{% tab label=\"Standard Setup\" %}\n\nTo generate a standard Tailwind setup, just run the following command.\n\n```bash\nnx g @nrwl/angular:setup-tailwind myapp\n```\n\n{% /tab %}\n\n{% tab label=\"Specifying the Styles Entrypoint\" %}\n\nTo specify the styles file that should be used as the entrypoint for Tailwind, simply pass the `--stylesEntryPoint` flag, relative to workspace root.\n\n```bash\nnx g @nrwl/angular:setup-tailwind myapp --stylesEntryPoint=apps/myapp/src/styles.css\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
         "presets": []
       },
       "description": "Configures Tailwind CSS for an application or a buildable/publishable library.",
@@ -2087,6 +2192,7 @@
         },
         "additionalProperties": false,
         "required": ["name"],
+        "examplesFile": "This generator will generate stories for all your components in your project.\n\n```bash\nnx g @nrwl/angular:stories project-name\n```\n\nYou can read more about how this generator works, in the [Storybook for Angular overview page](/storybook/overview-angular#auto-generate-stories).\n\nWhen running this generator, you will be prompted to provide the following:\n\n- The `name` of the project you want to generate the configuration for.\n- Whether you want to `generateCypressSpecs`. If you choose `yes`, a test file is going to be generated in the project's Cypress e2e app for each of your components.\n\nYou must provide a `name` for the generator to work.\n\nThere are a number of other options available. Let's take a look at some examples.\n\n## Examples\n\n### Ignore certain paths when generating stories\n\n```bash\nnx g @nrwl/angular:stories ui --ignorePaths=libs/ui/src/not-stories/**,**/**/src/**/*.other.*\n```\n\nThis will generate stories for all the components in the `ui` project, except for the ones in the `libs/ui/src/not-stories` directory, and also for components that their file name is of the pattern `*.other.*`.\n\nThis is useful if you have a project that contains components that are not meant to be used in isolation, but rather as part of a larger component.\n",
         "presets": []
       },
       "description": "Creates stories/specs for all components declared in a project.",
@@ -2163,10 +2269,15 @@
               "**/**/src/**/*.other.*",
               "libs/my-lib/src/not-stories/**,**/**/src/**/*.other.*,apps/my-app/**/*.something.ts"
             ]
+          },
+          "configureTestRunner": {
+            "type": "boolean",
+            "description": "Add a Storybook Test-Runner target."
           }
         },
         "additionalProperties": false,
         "required": ["name"],
+        "examplesFile": "This generator will set up Storybook for your Angular project.\n\n```bash\nnx g @nrwl/angular:storybook-configuration project-name\n```\n\nYou can read more about how this generator works, in the [Storybook for Angular overview page](/storybook/overview-angular#generate-storybook-configuration-for-an-angular-project).\n\nWhen running this generator, you will be prompted to provide the following:\n\n- The `name` of the project you want to generate the configuration for.\n- Whether you want to `configureCypress`. If you choose `yes`, a Cypress e2e app will be created (or configured) to run against the project's Storybook instance. You can read more about this in the [Storybook for Angular - Cypress section](/storybook/overview-angular#cypress-tests-for-stories).\n- Whether you want to `generateStories` for the components in your project. If you choose `yes`, a `.stories.ts` file will be generated next to each of your components in your project.\n- Whether you want to `generateCypressSpecs`. If you choose `yes`, a test file is going to be generated in the project's Cypress e2e app for each of your components.\n- Whether you want to `configureTestRunner`. If you choose `yes`, a `test-storybook` target will be generated in your project's `project.json`, with a command to invoke the [Storybook `test-runner`](https://storybook.js.org/docs/react/writing-tests/test-runner).\n\nYou must provide a `name` for the generator to work.\n\nThere are a number of other options available. Let's take a look at some examples.\n\n## Examples\n\n### Generate Storybook configuration using TypeScript\n\n```bash\nnx g @nrwl/angular:storybook-configuration ui --tsConfiguration=true\n```\n\nThis will generate a Storybook configuration for the `ui` project using TypeScript for the Storybook configuration files (the files inside the `.storybook` directory).\n\n### Ignore certain paths when generating stories\n\n```bash\nnx g @nrwl/angular:storybook-configuration ui --generateStories=true --ignorePaths=libs/ui/src/not-stories/**,**/**/src/**/*.other.*,apps/my-app/**/*.something.ts\n```\n\nThis will generate a Storybook configuration for the `ui` project and generate stories for all components in the `libs/ui/src/lib` directory, except for the ones in the `libs/ui/src/not-stories` directory, and the ones in the `apps/my-app` directory that end with `.something.ts`, and also for components that their file name is of the pattern `*.other.*`.\n\nThis is useful if you have a project that contains components that are not meant to be used in isolation, but rather as part of a larger component.\n",
         "presets": []
       },
       "description": "Adds Storybook configuration to a project.",
@@ -2210,6 +2321,7 @@
           }
         },
         "required": ["project"],
+        "examplesFile": "{% callout type=\"caution\" title=\"Can I use component testing?\" %}\nAngular component testing with Nx requires **Cypress version 10.7.0** and up.\n\nYou can migrate with to v10 via the [migrate-to-cypress-10 generator](/packages/cypress/generators/migrate-to-cypress-10).\n\nThis generator is for Cypress based component testing.\n\nIf you want to test components via Storybook with Cypress, then check out the [storybook-configuration generator docs](/packages/angular/generators/storybook-configuration)\n{% /callout %}\n\nThis generator is designed to get your Angular project up and running with Cypress Component Testing.\n\n```shell\nnx g @nrwl/angular:cypress-component-project --project=my-cool-angular-project\n```\n\nRunning this generator, adds the required files to the specified project with a preconfigured `cypress.config.ts` designed for Nx workspaces.\n\n```ts {% fileName=\"cypress.config.ts\" %}\nimport { defineConfig } from 'cypress';\nimport { nxComponentTestingPreset } from '@nrwl/angular/plugins/component-testing';\n\nexport default defineConfig({\n  component: nxComponentTestingPreset(__filename),\n});\n```\n\nHere is an example on how to add custom options to the configuration\n\n```ts {% fileName=\"cypress.config.ts\" %}\nimport { defineConfig } from 'cypress';\nimport { nxComponentTestingPreset } from '@nrwl/angular/plugins/component-testing';\n\nexport default defineConfig({\n  component: {\n    ...nxComponentTestingPreset(__filename),\n    // extra options here\n  },\n});\n```\n\n## Specifying a Build Target\n\nComponent testing requires a _build target_ to correctly run the component test dev server. This option can be manually specified with `--build-target=some-angular-app:build`, but Nx will infer this usage from the [project graph](/concepts/mental-model#the-project-graph) if one isn't provided.\n\nFor Angular projects, the build target needs to be using the `@nrwl/angular:webpack-browser` or\n`@angular-devkit/build-angular:browser` executor.\nThe generator will throw an error if a build target can't be found and suggest passing one in manually.\n\nLetting Nx infer the build target by default\n\n```shell\nnx g @nrwl/angular:cypress-component-project --project=my-cool-angular-project\n```\n\nManually specifying the build target\n\n```shell\nnx g @nrwl/angular:cypress-component-project --project=my-cool-angular-project --build-target:some-angular-app:build --generate-tests\n```\n\n{% callout type=\"note\" title=\"Build Target with Configuration\" %}\nIf you're wanting to use a build target with a specific configuration. i.e. `my-app:build:production`,\nthen manually providing `--build-target=my-app:build:production` is the best way to do that.\n{% /callout %}\n\n## Auto Generating Tests\n\nYou can optionally use the `--generate-tests` flag to generate a test file for each component in your project.\n\n```shell\nnx g @nrwl/angular:cypress-component-project --project=my-cool-angular-project --generate-tests\n```\n\n## Running Component Tests\n\nA new `component-test` target will be added to the specified project to run your component tests.\n\n```shell\nnx g component-test my-cool-angular-project\n```\n\nHere is an example of the project configuration that is generated. The `--build-target` option is added as the `devServerTarget` which can be changed as needed.\n\n```json {% fileName=\"project.json\" %}\n{\n  \"targets\" {\n    \"component-test\": {\n      \"executor\": \"@nrwl/cypress:cypress\",\n      \"options\": {\n        \"cypressConfig\": \"<path-to-project-root>/cypress.config.ts\",\n        \"testingType\": \"component\",\n        \"devServerTarget\": \"some-angular-app:build\",\n        \"skipServe\": true\n      }\n    }\n  }\n}\n```\n\nNx also supports [React component testing](/packages/angular/generators/cypress-component-configuration).\n",
         "presets": []
       },
       "description": "Setup Cypress component testing for a project.",
@@ -2264,6 +2376,7 @@
         },
         "additionalProperties": false,
         "required": ["name", "project"],
+        "examplesFile": "## Examples\n\nBelow are some examples of how to generate configuration and setup for using `ngUpgrade`'s `UpgradeModule` for your application.\n\n{% tabs %}\n\n{% tab label=\"Basic Usage\" %}\n\n```bash\nnx g @nrwl/angular:upgrade-module --name=myAngularJsModule --project=myapp\n```\n\n{% /tab %}\n\n{% tab label=\"Setup Router\" %}\n\nAllow a setup that configures routing for `UpgradeModule`.\n\n```bash\nnx g @nrwl/angular:upgrade-module --name=myAngularJsModule --project=myapp --router=true\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
         "presets": []
       },
       "description": "Sets up an Upgrade Module.",
@@ -2312,6 +2425,7 @@
         },
         "additionalProperties": false,
         "required": ["name", "project"],
+        "examplesFile": "## Examples\n\n{% tabs %}\n\n{% tab label=\"Simple Usage\" %}\n\nThe basic usage of the `web-worker` generator is defined below. You must provide a name for the web worker and the project to assign it to.\n\n```bash\nnx g @nrwl/angular:web-worker myWebWorker --project=myapp\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
         "presets": []
       },
       "description": "Creates a Web Worker.",
@@ -2339,6 +2453,7 @@
         },
         "additionalProperties": false,
         "required": [],
+        "examplesFile": "This generator will change the `storybook` and `build-storybook` targets in all your Angular projects that are configured to use Storybook. The new target configuration will use the native Storybook builders (`@storybook/angular:build-storybook` and `@storybook/angular:start-storybook`) instead of the Nx Storybook builders (`@nrwl/storybook:build-storybook` and `@nrwl/storybook:storybook`).\n\nThis generator is usually invoked through a migrator, when you are using `nx migrate` to upgrade your workspace to Nx `14.1.8` or later.\n\nIf you are on Nx `14.1.8` or later and you did not use `nx migrate`, you can run this generator manually by running the following command:\n\n```bash\nnx g @nrwl/angular:change-storybook-targets\n```\n\nYou can read more about how this generator works, and why we are changing the Storybook targets, in the [Angular Storybook targets documentation page](/storybook/angular-storybook-targets).\n",
         "presets": []
       },
       "description": "Change storybook targets for Angular projects to use @storybook/angular executors",
@@ -2353,9 +2468,11 @@
       "name": "delegate-build",
       "implementation": "/packages/angular/src/executors/delegate-build/delegate-build.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "$schema": "http://json-schema.org/draft-07/schema",
         "title": "Schema for an executor which delegates a build.",
-        "description": "Options for delegating a build to a different target.",
+        "description": "Delegates the build to a different target while supporting incremental builds.",
         "cli": "nx",
         "type": "object",
         "properties": {
@@ -2382,6 +2499,7 @@
         },
         "additionalProperties": false,
         "required": ["buildTarget", "outputPath", "tsConfig"],
+        "examplesFile": "## Examples\n\n{% tabs %}\n\n{% tab label=\"Basic Usage\" %}\nDelegate the build of the project to a different target.\n\n```json\n{\n  \"prod-build\": {\n    \"executor\": \"@nrwl/angular:delegate-build\",\n    \"options\": {\n      \"buildTarget\": \"app:build:production\",\n      \"outputPath\": \"dist/apps/app/production\",\n      \"tsConfig\": \"apps/app/tsconfig.json\",\n      \"watch\": false\n    }\n  }\n}\n```\n\n{% /tab %}\n\n{% tab label=\"Watch for build changes\" %}\nDelegate the build of the project to a different target.\n\n```json\n{\n  \"prod-build\": {\n    \"executor\": \"@nrwl/angular:delegate-build\",\n    \"options\": {\n      \"buildTarget\": \"app:build:production\",\n      \"outputPath\": \"dist/apps/app/production\",\n      \"tsConfig\": \"apps/app/tsconfig.json\",\n      \"watch\": true\n    }\n  }\n}\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
         "presets": []
       },
       "description": "Delegates the build to a different target while supporting incremental builds.",
@@ -2393,9 +2511,11 @@
       "name": "ng-packagr-lite",
       "implementation": "/packages/angular/src/executors/ng-packagr-lite/ng-packagr-lite.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "$schema": "http://json-schema.org/schema",
         "title": "ng-packagr Target",
-        "description": "ng-packagr target options for Build Architect. Use to build library projects.",
+        "description": "Builds a library with support for incremental builds.\n\nThis executor is meant to be used with buildable libraries in an incremental build scenario. It is similar to the `@nrwl/angular:package` executor but with some key differences:\n- It doesn't run `ngcc` automatically (`ngcc` needs to be run separately beforehand if needed, this can be done in a `postinstall` hook on `package.json`).\n- It only produces ESM2020 bundles.\n- It doesn't generate package exports in the `package.json`.",
         "cli": "nx",
         "type": "object",
         "presets": [
@@ -2447,7 +2567,7 @@
         "additionalProperties": false,
         "required": ["project"]
       },
-      "description": "Builds a library with support for incremental builds.",
+      "description": "Builds a library with support for incremental builds.\nThis executor is meant to be used with buildable libraries in an incremental build scenario. It is similar to the `@nrwl/angular:package` executor but with some key differences:\n- It doesn't run `ngcc` automatically (`ngcc` needs to be run separately beforehand if needed, this can be done in a `postinstall` hook on `package.json`).\n- It only produces ESM2020 bundles.\n- It doesn't generate package exports in the `package.json`.",
       "aliases": [],
       "hidden": false,
       "path": "/packages/angular/src/executors/ng-packagr-lite/schema.json"
@@ -2456,9 +2576,11 @@
       "name": "package",
       "implementation": "/packages/angular/src/executors/package/package.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "$schema": "http://json-schema.org/schema",
         "title": "ng-packagr Target",
-        "description": "ng-packagr target options for Build Architect. Use to build and package library projects for publishing.",
+        "description": "Builds and packages an Angular library producing an output following the Angular Package Format (APF) to be distributed as an NPM package.\n\nThis executor is similar to the `@angular-devkit/build-angular:ng-packagr` with additional support for incremental builds.",
         "cli": "nx",
         "type": "object",
         "presets": [
@@ -2512,15 +2634,96 @@
         "additionalProperties": false,
         "required": ["project"]
       },
-      "description": "Builds and packages an Angular library to be distributed as an NPM package. It supports incremental builds.",
+      "description": "Builds and packages an Angular library producing an output following the Angular Package Format (APF) to be distributed as an NPM package.\nThis executor is similar to the `@angular-devkit/build-angular:ng-packagr` with additional support for incremental builds.",
       "aliases": [],
       "hidden": false,
       "path": "/packages/angular/src/executors/package/schema.json"
     },
     {
+      "name": "file-server",
+      "implementation": "/packages/angular/src/executors/file-server/file-server.impl.ts",
+      "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
+        "title": "File Server",
+        "description": "Serves a static web application from a folder.",
+        "type": "object",
+        "cli": "nx",
+        "properties": {
+          "buildTarget": {
+            "type": "string",
+            "description": "Target which builds the application."
+          },
+          "parallel": {
+            "type": "boolean",
+            "description": "Build the target in parallel.",
+            "default": true
+          },
+          "maxParallel": {
+            "type": "number",
+            "description": "Max number of parallel jobs."
+          },
+          "port": {
+            "type": "number",
+            "description": "Port to listen on.",
+            "default": 4200
+          },
+          "host": {
+            "type": "string",
+            "description": "Host to listen on.",
+            "default": "localhost"
+          },
+          "ssl": {
+            "type": "boolean",
+            "description": "Serve using `HTTPS`.",
+            "default": false
+          },
+          "sslKey": {
+            "type": "string",
+            "description": "SSL key to use for serving `HTTPS`."
+          },
+          "sslCert": {
+            "type": "string",
+            "description": "SSL certificate to use for serving `HTTPS`."
+          },
+          "proxyUrl": {
+            "type": "string",
+            "description": "URL to proxy unhandled requests to."
+          },
+          "proxyOptions": {
+            "type": "object",
+            "description": "Options for the proxy used by `http-server`.",
+            "default": {},
+            "properties": { "secure": { "type": "boolean", "default": false } },
+            "additionalProperties": true
+          },
+          "watch": {
+            "type": "boolean",
+            "description": "Watch for file changes.",
+            "default": false
+          },
+          "spa": {
+            "type": "boolean",
+            "description": "Redirect 404 errors to index.html (useful for SPA's).",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "required": ["buildTarget"],
+        "examplesFile": "## Examples\n\n{% tabs %}\n\n{% tab label=\"Serve static files with http-server\" %}\n\nSet up `http-server` to host static files on a local webserver.\n\n```json\n{\n  \"static-serve\": {\n    \"executor\": \"@nrwl/angular:file-server\",\n    \"options\": {\n      \"buildTarget\": \"app:build\",\n      \"port\": 4201\n    }\n  }\n}\n```\n\n{% /tab %}\n\n{% tab label=\"Watch for changes\" %}\n\nTo allow watching for changes, simply add the watch property.\n\n```json\n{\n  \"static-serve\": {\n    \"executor\": \"@nrwl/angular:file-server\",\n    \"options\": {\n      \"buildTarget\": \"app:build\",\n      \"port\": 4201,\n      \"watch\": true\n    }\n  }\n}\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
+        "presets": []
+      },
+      "description": "Serves a static web application from a folder.",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/angular/src/executors/file-server/schema.json"
+    },
+    {
       "name": "webpack-browser",
       "implementation": "/packages/angular/src/builders/webpack-browser/webpack-browser.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "$schema": "http://json-schema.org/draft-07/schema",
         "title": "Schema for Webpack Browser",
         "description": "The webpack-browser executor is very similar to the standard browser builder provided by the Angular Devkit. It allows you to build your Angular application to a build artifact that can be hosted online. There are some key differences:   \n- Supports Custom Webpack Configurations  \n- Supports Incremental Building",
@@ -2588,8 +2791,19 @@
             "description": "The full path for the main entry point to the app, relative to the current workspace."
           },
           "polyfills": {
-            "type": "string",
-            "description": "The full path for the polyfills file, relative to the current workspace."
+            "description": "Polyfills to be included in the build.",
+            "oneOf": [
+              {
+                "type": "array",
+                "description": "A list of polyfills to include in the build. Can be a full path for a file, relative to the current workspace or module specifier. Example: 'zone.js'.",
+                "items": { "type": "string", "uniqueItems": true },
+                "default": []
+              },
+              {
+                "type": "string",
+                "description": "The full path for the polyfills file, relative to the current workspace or a module specifier. Example: 'zone.js'."
+              }
+            ]
           },
           "tsConfig": {
             "type": "string",
@@ -3195,13 +3409,15 @@
       "path": "/packages/angular/src/builders/webpack-browser/schema.json"
     },
     {
-      "name": "webpack-server",
-      "implementation": "/packages/angular/src/builders/webpack-server/webpack-server.impl.ts",
+      "name": "webpack-dev-server",
+      "implementation": "/packages/angular/src/builders/webpack-dev-server/webpack-dev-server.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "$schema": "http://json-schema.org/draft-07/schema",
-        "title": "Schema for Webpack Server",
-        "description": "The webpack-server executor is very similar to the standard dev server builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration.",
-        "examplesFile": "##### Seving an application with a custom webpack configuration\n\nThis executor should be used along with `@nrwl/angular:webpack-browser` to serve an application using a custom webpack configuration.\n\nYour `project.json` file should contain a `build` and `serve` target that matches the following:\n\n```json\n\"build\": {\n    \"executor\": \"@nrwl/angular:webpack-browser\",\n    \"options\": {\n        ...\n        \"customWebpackConfig\": {\n          \"path\": \"apps/appName/webpack.config.js\"\n        }\n    }\n},\n\"serve\": {\n    \"executor\": \"@nrwl/angular:webpack-server\",\n    \"configurations\": {\n        \"production\": {\n            \"browserTarget\": \"appName:build:production\"\n        },\n        \"development\": {\n            \"browserTarget\": \"appName:build:development\"\n        }\n    },\n    \"defaultConfiguration\": \"development\",\n}\n```\n",
+        "title": "Schema for Webpack Dev Server",
+        "description": "The webpack-dev-server executor is very similar to the standard dev server builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration.",
+        "examplesFile": "##### Seving an application with a custom webpack configuration\n\nThis executor should be used along with `@nrwl/angular:webpack-browser` to serve an application using a custom webpack configuration.\n\nYour `project.json` file should contain a `build` and `serve` target that matches the following:\n\n```json\n\"build\": {\n    \"executor\": \"@nrwl/angular:webpack-browser\",\n    \"options\": {\n        ...\n        \"customWebpackConfig\": {\n          \"path\": \"apps/appName/webpack.config.js\"\n        }\n    }\n},\n\"serve\": {\n    \"executor\": \"@nrwl/angular:webpack-dev-server\",\n    \"configurations\": {\n        \"production\": {\n            \"browserTarget\": \"appName:build:production\"\n        },\n        \"development\": {\n            \"browserTarget\": \"appName:build:development\"\n        }\n    },\n    \"defaultConfiguration\": \"development\",\n}\n```\n",
         "type": "object",
         "presets": [
           {
@@ -3304,7 +3520,307 @@
         "additionalProperties": false,
         "required": ["browserTarget"]
       },
-      "description": "The `webpack-server` executor is very similar to the standard `dev-server` builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration.",
+      "description": "The `webpack-dev-server` executor is very similar to the standard `dev-server` builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration.",
+      "aliases": [],
+      "hidden": false,
+      "path": "/packages/angular/src/builders/webpack-dev-server/schema.json"
+    },
+    {
+      "name": "webpack-server",
+      "implementation": "/packages/angular/src/builders/webpack-server/webpack-server.impl.ts",
+      "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
+        "$schema": "http://json-schema.org/draft-07/schema",
+        "title": "Schema for Webpack Server",
+        "description": "The webpack-dev-server executor is very similar to the standard server builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration and NgUniversal for SSR.",
+        "type": "object",
+        "properties": {
+          "main": {
+            "type": "string",
+            "description": "The full path for the main entry point to the server app, relative to the current workspace."
+          },
+          "tsConfig": {
+            "type": "string",
+            "default": "tsconfig.app.json",
+            "description": "The full path for the TypeScript configuration file, relative to the current workspace."
+          },
+          "inlineStyleLanguage": {
+            "description": "The stylesheet language to use for the application's inline component styles.",
+            "type": "string",
+            "default": "css",
+            "enum": ["css", "less", "sass", "scss"]
+          },
+          "stylePreprocessorOptions": {
+            "description": "Options to pass to style preprocessors",
+            "type": "object",
+            "properties": {
+              "includePaths": {
+                "description": "Paths to include. Paths will be resolved to project root.",
+                "type": "array",
+                "items": { "type": "string" },
+                "default": []
+              }
+            },
+            "additionalProperties": false
+          },
+          "optimization": {
+            "description": "Enables optimization of the build output. Including minification of scripts and styles, tree-shaking and dead-code elimination. For more information, see https://angular.io/guide/workspace-config#optimization-configuration.",
+            "default": true,
+            "x-user-analytics": "ep.ng_optimization",
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "scripts": {
+                    "type": "boolean",
+                    "description": "Enables optimization of the scripts output.",
+                    "default": true
+                  },
+                  "styles": {
+                    "type": "boolean",
+                    "description": "Enables optimization of the styles output.",
+                    "default": true
+                  }
+                },
+                "additionalProperties": false
+              },
+              { "type": "boolean" }
+            ]
+          },
+          "fileReplacements": {
+            "description": "Replace compilation source files with other compilation source files in the build.",
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "src": {
+                      "type": "string",
+                      "pattern": "\\.(([cm]?j|t)sx?|json)$"
+                    },
+                    "replaceWith": {
+                      "type": "string",
+                      "pattern": "\\.(([cm]?j|t)sx?|json)$"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": ["src", "replaceWith"]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "replace": {
+                      "type": "string",
+                      "pattern": "\\.(([cm]?j|t)sx?|json)$"
+                    },
+                    "with": {
+                      "type": "string",
+                      "pattern": "\\.(([cm]?j|t)sx?|json)$"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": ["replace", "with"]
+                }
+              ]
+            },
+            "default": []
+          },
+          "outputPath": {
+            "type": "string",
+            "description": "The full path for the new output directory, relative to the current workspace.\n\nBy default, writes output to a folder named dist/ in the current project."
+          },
+          "resourcesOutputPath": {
+            "type": "string",
+            "description": "The path where style resources will be placed, relative to outputPath."
+          },
+          "sourceMap": {
+            "description": "Output source maps for scripts and styles. For more information, see https://angular.io/guide/workspace-config#source-map-configuration.",
+            "default": false,
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "scripts": {
+                    "type": "boolean",
+                    "description": "Output source maps for all scripts.",
+                    "default": true
+                  },
+                  "styles": {
+                    "type": "boolean",
+                    "description": "Output source maps for all styles.",
+                    "default": true
+                  },
+                  "hidden": {
+                    "type": "boolean",
+                    "description": "Output source maps used for error reporting tools.",
+                    "default": false
+                  },
+                  "vendor": {
+                    "type": "boolean",
+                    "description": "Resolve vendor packages source maps.",
+                    "default": false
+                  }
+                },
+                "additionalProperties": false
+              },
+              { "type": "boolean" }
+            ]
+          },
+          "deployUrl": {
+            "type": "string",
+            "description": "URL where files will be deployed.",
+            "x-deprecated": "Use \"baseHref\" browser builder option, \"APP_BASE_HREF\" DI token or a combination of both instead. For more information, see https://angular.io/guide/deployment#the-deploy-url."
+          },
+          "verbose": {
+            "type": "boolean",
+            "description": "Adds more details to output logging.",
+            "default": false
+          },
+          "progress": {
+            "type": "boolean",
+            "description": "Log progress to the console while building.",
+            "default": true
+          },
+          "i18nMissingTranslation": {
+            "type": "string",
+            "description": "How to handle missing translations for i18n.",
+            "enum": ["warning", "error", "ignore"],
+            "default": "warning"
+          },
+          "i18nDuplicateTranslation": {
+            "type": "string",
+            "description": "How to handle duplicate translations for i18n.",
+            "enum": ["warning", "error", "ignore"],
+            "default": "warning"
+          },
+          "localize": {
+            "description": "Translate the bundles in one or more locales.",
+            "oneOf": [
+              { "type": "boolean", "description": "Translate all locales." },
+              {
+                "type": "array",
+                "description": "List of locales ID's to translate.",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z]{2,3}(-[a-zA-Z]{4})?(-([a-zA-Z]{2}|[0-9]{3}))?(-[a-zA-Z]{5,8})?(-x(-[a-zA-Z0-9]{1,8})+)?$"
+                }
+              }
+            ]
+          },
+          "outputHashing": {
+            "type": "string",
+            "description": "Define the output filename cache-busting hashing mode.",
+            "default": "none",
+            "enum": ["none", "all", "media", "bundles"]
+          },
+          "deleteOutputPath": {
+            "type": "boolean",
+            "description": "Delete the output path before building.",
+            "default": true
+          },
+          "preserveSymlinks": {
+            "type": "boolean",
+            "description": "Do not use the real path when resolving modules. If unset then will default to `true` if NodeJS option --preserve-symlinks is set."
+          },
+          "extractLicenses": {
+            "type": "boolean",
+            "description": "Extract all licenses in a separate file, in the case of production builds only.",
+            "default": true
+          },
+          "namedChunks": {
+            "type": "boolean",
+            "description": "Use file name for lazy loaded chunks.",
+            "default": false
+          },
+          "externalDependencies": {
+            "description": "Exclude the listed external dependencies from being bundled into the bundle. Instead, the created bundle relies on these dependencies to be available during runtime.",
+            "type": "array",
+            "items": { "type": "string" },
+            "default": []
+          },
+          "bundleDependencies": {
+            "description": "Which external dependencies to bundle into the bundle. By default, all of node_modules will be bundled.",
+            "default": true,
+            "oneOf": [
+              { "type": "boolean" },
+              { "type": "string", "enum": ["none", "all"] }
+            ]
+          },
+          "statsJson": {
+            "type": "boolean",
+            "description": "Generates a 'stats.json' file which can be analyzed using tools such as 'webpack-bundle-analyzer'.",
+            "default": false
+          },
+          "watch": {
+            "type": "boolean",
+            "description": "Run build when files change.",
+            "default": false
+          },
+          "poll": {
+            "type": "number",
+            "description": "Enable and define the file watching poll time period in milliseconds."
+          },
+          "customWebpackConfig": {
+            "description": "Options for additional webpack configurations.",
+            "type": "object",
+            "properties": {
+              "path": {
+                "description": "Path to additional webpack configuration, relative to the workspace root.",
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          },
+          "buildLibsFromSource": {
+            "type": "boolean",
+            "description": "Read buildable libraries from source instead of building them separately.",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "required": ["outputPath", "main", "tsConfig"],
+        "definitions": {
+          "fileReplacement": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "src": {
+                    "type": "string",
+                    "pattern": "\\.(([cm]?j|t)sx?|json)$"
+                  },
+                  "replaceWith": {
+                    "type": "string",
+                    "pattern": "\\.(([cm]?j|t)sx?|json)$"
+                  }
+                },
+                "additionalProperties": false,
+                "required": ["src", "replaceWith"]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "replace": {
+                    "type": "string",
+                    "pattern": "\\.(([cm]?j|t)sx?|json)$"
+                  },
+                  "with": {
+                    "type": "string",
+                    "pattern": "\\.(([cm]?j|t)sx?|json)$"
+                  }
+                },
+                "additionalProperties": false,
+                "required": ["replace", "with"]
+              }
+            ]
+          }
+        },
+        "presets": []
+      },
+      "description": "The `webpack-server` executor is very similar to the standard `server` builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration and NgUniversal for SSR.",
       "aliases": [],
       "hidden": false,
       "path": "/packages/angular/src/builders/webpack-server/schema.json"
@@ -3313,6 +3829,8 @@
       "name": "module-federation-dev-server",
       "implementation": "/packages/angular/src/builders/module-federation-dev-server/module-federation-dev-server.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "$schema": "http://json-schema.org/draft-07/schema",
         "title": "Schema for Module Federation Dev Server",
         "description": "The module-federation-dev-server executor is reserved exclusively for use with host Module Federation applications. It allows the user to specify which remote applications should be served with the host.",
@@ -3414,10 +3932,16 @@
             "type": "array",
             "items": { "type": "string" },
             "description": "List of remote applications to run in development mode (i.e. using serve target)."
+          },
+          "skipRemotes": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "List of remote applications to not automatically serve, either statically or in development mode. This can be useful for multi-repository module federation setups where the host application uses a remote application from an external repository."
           }
         },
         "additionalProperties": false,
-        "required": ["browserTarget"]
+        "required": ["browserTarget"],
+        "examplesFile": "## Examples\n\n{% tabs %}\n\n{% tab label=\"Basic Usage\" %}\nThe Module Federation Dev Server will serve a host application and find the remote applications associated with the host and serve them statically also.  \nSee an example set up of it below:\n\n```json\n{\n  \"serve\": {\n    \"executor\": \"@nrwl/angular:module-federation-dev-server\",\n    \"configurations\": {\n      \"production\": {\n        \"browserTarget\": \"host:build:production\"\n      },\n      \"development\": {\n        \"browserTarget\": \"host:build:development\"\n      }\n    },\n    \"defaultConfiguration\": \"development\",\n    \"options\": {\n      \"port\": 4200,\n      \"publicHost\": \"http://localhost:4200\"\n    }\n  }\n}\n```\n\n{% /tab %}\n\n{% tab label=\"Serve host with remotes that can be live reloaded\" %}\nThe Module Federation Dev Server will serve a host application and find the remote applications associated with the host and serve a set selection with live reloading enabled also.  \nSee an example set up of it below:\n\n```json\n{\n  \"serve-with-hmr-remotes\": {\n    \"executor\": \"@nrwl/angular:module-federation-dev-server\",\n    \"configurations\": {\n      \"production\": {\n        \"browserTarget\": \"host:build:production\"\n      },\n      \"development\": {\n        \"browserTarget\": \"host:build:development\"\n      }\n    },\n    \"defaultConfiguration\": \"development\",\n    \"options\": {\n      \"port\": 4200,\n      \"publicHost\": \"http://localhost:4200\",\n      \"devRemotes\": [\"remote1\", \"remote2\"]\n    }\n  }\n}\n```\n\n{% /tab %}\n\n{% /tabs %}\n"
       },
       "description": "The module-federation-dev-server executor is reserved exclusively for use with host Module Federation applications. It allows the user to specify which remote applications should be served with the host.",
       "aliases": [],
@@ -3425,80 +3949,93 @@
       "path": "/packages/angular/src/builders/module-federation-dev-server/schema.json"
     },
     {
-      "name": "file-server",
-      "implementation": "/packages/angular/src/executors/file-server/file-server.impl.ts",
+      "name": "module-federation-dev-ssr",
+      "implementation": "/packages/angular/src/builders/module-federation-dev-ssr/module-federation-dev-ssr.impl.ts",
       "schema": {
-        "title": "File Server",
-        "description": "Serve a web application from a folder.",
+        "$schema": "http://json-schema.org/draft-07/schema",
+        "title": "Module Federation SSR Dev Server Target",
+        "description": "SSR Dev Server target options for Module Federation host applications.",
         "type": "object",
-        "cli": "nx",
         "properties": {
-          "buildTarget": {
+          "browserTarget": {
             "type": "string",
-            "description": "Target which builds the application."
+            "description": "Browser target to build.",
+            "pattern": ".+:.+(:.+)?"
           },
-          "parallel": {
-            "type": "boolean",
-            "description": "Build the target in parallel.",
-            "default": true
-          },
-          "maxParallel": {
-            "type": "number",
-            "description": "Max number of parallel jobs."
-          },
-          "port": {
-            "type": "number",
-            "description": "Port to listen on.",
-            "default": 4200
+          "serverTarget": {
+            "type": "string",
+            "description": "Server target to build.",
+            "pattern": ".+:.+(:.+)?"
           },
           "host": {
             "type": "string",
             "description": "Host to listen on.",
             "default": "localhost"
           },
+          "port": {
+            "type": "number",
+            "default": 4200,
+            "description": "Port to start the development server at. Default is 4200. Pass 0 to get a dynamically assigned port."
+          },
+          "publicHost": {
+            "type": "string",
+            "description": "The URL that the browser client should use to connect to the development server. Use for a complex dev server setup, such as one with reverse proxies."
+          },
+          "open": {
+            "type": "boolean",
+            "description": "Opens the url in default browser.",
+            "default": false,
+            "alias": "o"
+          },
+          "progress": {
+            "type": "boolean",
+            "description": "Log progress to the console while building."
+          },
+          "inspect": {
+            "type": "boolean",
+            "description": "Launch the development server in inspector mode and listen on address and port '127.0.0.1:9229'.",
+            "default": false
+          },
           "ssl": {
             "type": "boolean",
-            "description": "Serve using `HTTPS`.",
+            "description": "Serve using HTTPS.",
             "default": false
           },
           "sslKey": {
             "type": "string",
-            "description": "SSL key to use for serving `HTTPS`."
+            "description": "SSL key to use for serving HTTPS."
           },
           "sslCert": {
             "type": "string",
-            "description": "SSL certificate to use for serving `HTTPS`."
+            "description": "SSL certificate to use for serving HTTPS."
           },
-          "proxyUrl": {
+          "proxyConfig": {
             "type": "string",
-            "description": "URL to proxy unhandled requests to."
+            "description": "Proxy configuration file."
           },
-          "proxyOptions": {
-            "type": "object",
-            "description": "Options for the proxy used by `http-server`.",
-            "default": {},
-            "properties": { "secure": { "type": "boolean", "default": false } },
-            "additionalProperties": true
+          "devRemotes": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "List of remote applications to run in development mode (i.e. using serve target)."
           },
-          "watch": {
+          "skipRemotes": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "List of remote applications to not automatically serve, either statically or in development mode. This can be useful for multi-repository module federation setups where the host application uses a remote application from an external repository."
+          },
+          "verbose": {
             "type": "boolean",
-            "description": "Watch for file changes.",
-            "default": false
-          },
-          "spa": {
-            "type": "boolean",
-            "description": "Redirect 404 errors to index.html (useful for SPA's).",
-            "default": false
+            "description": "Adds more details to output logging."
           }
         },
         "additionalProperties": false,
-        "required": ["buildTarget"],
+        "required": ["browserTarget", "serverTarget"],
         "presets": []
       },
-      "description": "Serve a web application from a folder.",
+      "description": "The module-federation-dev-ssr executor is reserved exclusively for use with host Module Federation applications that use SSR. It allows the user to specify which remote applications should be served with the host.",
       "aliases": [],
       "hidden": false,
-      "path": "/packages/angular/src/executors/file-server/schema.json"
+      "path": "/packages/angular/src/builders/module-federation-dev-ssr/schema.json"
     }
   ]
 }

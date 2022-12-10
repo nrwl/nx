@@ -2,7 +2,7 @@
   "cli": "nx",
   "$id": "NxExpoInit",
   "$schema": "http://json-schema.org/schema",
-  "title": "Add Nx Expo Schematics",
+  "description": "Add Nx Expo Schematics.",
   "type": "object",
   "properties": {
     "unitTestRunner": {

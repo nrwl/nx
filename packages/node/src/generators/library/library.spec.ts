@@ -38,7 +38,7 @@ describe('lib', () => {
       });
       expect(workspaceJson.projects['my-lib'].architect.test).toEqual({
         builder: '@nrwl/jest:jest',
-        outputs: ['coverage/libs/my-lib'],
+        outputs: ['{workspaceRoot}/coverage/{projectRoot}'],
         options: {
           jestConfig: 'libs/my-lib/jest.config.ts',
           passWithNoTests: true,
@@ -118,8 +118,8 @@ describe('lib', () => {
       const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.lib.json');
       expect(tsconfigJson.exclude).toEqual([
         'jest.config.ts',
-        '**/*.spec.ts',
-        '**/*.test.ts',
+        'src/**/*.spec.ts',
+        'src/**/*.test.ts',
       ]);
     });
 
@@ -495,15 +495,15 @@ describe('lib', () => {
         allowJs: true,
       });
       expect(readJson(tree, 'libs/my-lib/tsconfig.lib.json').include).toEqual([
-        '**/*.ts',
-        '**/*.js',
+        'src/**/*.ts',
+        'src/**/*.js',
       ]);
       expect(readJson(tree, 'libs/my-lib/tsconfig.lib.json').exclude).toEqual([
         'jest.config.ts',
-        '**/*.spec.ts',
-        '**/*.test.ts',
-        '**/*.spec.js',
-        '**/*.test.js',
+        'src/**/*.spec.ts',
+        'src/**/*.test.ts',
+        'src/**/*.spec.js',
+        'src/**/*.test.js',
       ]);
     });
 

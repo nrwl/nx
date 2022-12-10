@@ -35,7 +35,6 @@ describe('Move Angular Project', () => {
 
     // just check the output
     expect(moveOutput).toContain(`DELETE apps/${app1}`);
-    expect(moveOutput).toContain(`CREATE apps/${newPath}/.browserslistrc`);
     expect(moveOutput).toContain(`CREATE apps/${newPath}/jest.config.ts`);
     expect(moveOutput).toContain(`CREATE apps/${newPath}/tsconfig.app.json`);
     expect(moveOutput).toContain(`CREATE apps/${newPath}/tsconfig.json`);
@@ -44,7 +43,6 @@ describe('Move Angular Project', () => {
     expect(moveOutput).toContain(`CREATE apps/${newPath}/src/favicon.ico`);
     expect(moveOutput).toContain(`CREATE apps/${newPath}/src/index.html`);
     expect(moveOutput).toContain(`CREATE apps/${newPath}/src/main.ts`);
-    expect(moveOutput).toContain(`CREATE apps/${newPath}/src/polyfills.ts`);
     expect(moveOutput).toContain(`CREATE apps/${newPath}/src/styles.css`);
     expect(moveOutput).toContain(`CREATE apps/${newPath}/src/test-setup.ts`);
     expect(moveOutput).toContain(
@@ -54,13 +52,6 @@ describe('Move Angular Project', () => {
       `CREATE apps/${newPath}/src/app/app.module.ts`
     );
     expect(moveOutput).toContain(`CREATE apps/${newPath}/src/assets/.gitkeep`);
-    expect(moveOutput).toContain(
-      `CREATE apps/${newPath}/src/environments/environment.prod.ts`
-    );
-    expect(moveOutput).toContain(
-      `CREATE apps/${newPath}/src/environments/environment.ts`
-    );
-    expect(moveOutput).toContain(`UPDATE workspace.json`);
   });
 
   /**

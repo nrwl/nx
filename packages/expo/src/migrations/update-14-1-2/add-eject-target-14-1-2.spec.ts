@@ -6,7 +6,7 @@ describe('add-eject-target-14-1-2', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'product', {
       root: 'apps/product',
       sourceRoot: 'apps/product/src',

@@ -15,7 +15,7 @@ describe('react-native:component-story', () => {
 
   describe('default setup', () => {
     beforeEach(async () => {
-      appTree = await createTestUILib('test-ui-lib', true);
+      appTree = await createTestUILib('test-ui-lib');
     });
 
     describe('when file does not contain a component', () => {
@@ -376,7 +376,7 @@ describe('react-native:component-story', () => {
 
   describe('using eslint', () => {
     beforeEach(async () => {
-      appTree = await createTestUILib('test-ui-lib', false);
+      appTree = await createTestUILib('test-ui-lib');
       await componentGenerator(appTree, {
         name: 'test-ui-lib',
         project: 'test-ui-lib',
@@ -404,16 +404,13 @@ describe('react-native:component-story', () => {
   });
 });
 
-export async function createTestUILib(
-  libName: string,
-  useEsLint = false
-): Promise<Tree> {
-  let appTree = createTreeWithEmptyWorkspace();
+export async function createTestUILib(libName: string): Promise<Tree> {
+  let appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   appTree.write('.gitignore', '');
 
   await libraryGenerator(appTree, {
     name: libName,
-    linter: useEsLint ? Linter.EsLint : Linter.TsLint,
+    linter: Linter.EsLint,
     skipFormat: true,
     skipTsConfig: false,
     unitTestRunner: 'jest',
@@ -425,14 +422,12 @@ export async function createTestUILib(
     export: true,
   });
 
-  if (useEsLint) {
-    const currentWorkspaceJson = getProjects(appTree);
+  const currentWorkspaceJson = getProjects(appTree);
 
-    const projectConfig = currentWorkspaceJson.get(libName);
-    projectConfig.targets.lint.options.linter = 'eslint';
+  const projectConfig = currentWorkspaceJson.get(libName);
+  projectConfig.targets.lint.options.linter = 'eslint';
 
-    updateProjectConfiguration(appTree, libName, projectConfig);
-  }
+  updateProjectConfiguration(appTree, libName, projectConfig);
 
   return appTree;
 }

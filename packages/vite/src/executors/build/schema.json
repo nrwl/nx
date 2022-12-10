@@ -1,0 +1,111 @@
+{
+  "version": 2,
+  "outputCapture": "direct-nodejs",
+  "title": "Vite Prod Builder",
+  "cli": "nx",
+  "description": "Build using Vite.",
+  "type": "object",
+  "presets": [
+    {
+      "name": "Default minimum setup",
+      "keys": []
+    }
+  ],
+  "properties": {
+    "outputPath": {
+      "type": "string",
+      "description": "The output path of the generated files.",
+      "x-completion-type": "directory"
+    },
+    "base": {
+      "type": "string",
+      "description": "Base public path when served in development or production.",
+      "alias": "baseHref"
+    },
+    "configFile": {
+      "type": "string",
+      "description": "The name of the Vite.js configuration file.",
+      "x-completion-type": "file",
+      "x-completion-glob": "vite.config.@(js|ts)"
+    },
+    "fileReplacements": {
+      "description": "Replace files with other files in the build.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "replace": {
+            "type": "string",
+            "description": "The file to be replaced.",
+            "x-completion-type": "file"
+          },
+          "with": {
+            "type": "string",
+            "description": "The file to replace with.",
+            "x-completion-type": "file"
+          }
+        },
+        "additionalProperties": false,
+        "required": ["replace", "with"]
+      },
+      "default": []
+    },
+    "sourcemap": {
+      "description": "Output sourcemaps. Use 'hidden' for use with error reporting tools without generating sourcemap comment.",
+      "oneOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "minify": {
+      "description": "Output sourcemaps. Use 'hidden' for use with error reporting tools without generating sourcemap comment.",
+      "oneOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "manifest": {
+      "description": "Output sourcemaps. Use 'hidden' for use with error reporting tools without generating sourcemap comment.",
+      "oneOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "ssrManifest": {
+      "description": "When set to true, the build will also generate an SSR manifest for determining style links and asset preload directives in production. When the value is a string, it will be used as the manifest file name.",
+      "oneOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "logLevel": {
+      "type": "string",
+      "description": "Adjust console output verbosity.",
+      "enum": ["info", "warn", "error", "silent"]
+    },
+    "mode": {
+      "type": "string",
+      "description": "Mode to run the build in.",
+      "enum": ["production", "development"]
+    }
+  },
+  "definitions": {},
+  "required": [],
+  "examplesFile": "../../../docs/build-examples.md"
+}

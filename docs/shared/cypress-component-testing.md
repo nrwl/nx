@@ -1,7 +1,7 @@
 # Cypress Component Testing
 
 > Component testing requires Cypress v10 and above.
-> See our [guide for more information](/cypress/v10-migration-guide) to migrate to Cypress v10.
+> See our [guide for more information](/cypress/v11-migration-guide) to migrate to Cypress v10.
 
 Unlike [E2E testing](/packages/cypress), component testing does not create a new project. Instead, Cypress component testing is added
 directly to a project, like [Jest](/packages/jest)
@@ -12,7 +12,7 @@ directly to a project, like [Jest](/packages/jest)
 
 Use the `cypress-component-configuration` generator from the respective plugin to add component testing to a project.
 
-```bash
+```shell
 nx g @nrwl/react:cypress-component-configuration --project=your-project
 
 nx g @nrwl/angular:cypress-component-configuration --project=your-project
@@ -22,7 +22,7 @@ You can optionally pass in `--generate-tests` to create component tests for all 
 
 Component testing leverages a build target within your workspace as the base for running the tests. The build target is usually an app within the workspace. By default, the generator attempts to find the build target for you based on the project usage, but you can manually specify the build target to use via the `--build-target` option.
 
-```bash
+```shell
 nx g @nrwl/react:cypress-component-configuration --project=your-project --build-target=my-react-app:build
 
 nx g @nrwl/angular:cypress-component-configuration --project=your-project --build-target=my-ng-app:build

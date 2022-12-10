@@ -50,6 +50,9 @@ describe('Workspaces', () => {
       vol.fromJSON(
         {
           'libs/lib1/project.json': JSON.stringify(standaloneConfig),
+          'libs/lib2/package.json': JSON.stringify({}),
+          'libs/domain/lib3/package.json': JSON.stringify({}),
+          'libs/domain/lib4/project.json': JSON.stringify({}),
           'workspace.json': JSON.stringify(config),
         },
         '/root'
@@ -76,53 +79,28 @@ describe('Workspaces', () => {
           }),
           'libs/domain/lib4/project.json': JSON.stringify(domainLibConfig),
           'libs/domain/lib4/package.json': JSON.stringify({}),
+          'workspace.json': JSON.stringify({
+            projects: { 'lib1-workspace': 'libs/lib1' },
+          }),
+          'package.json': JSON.stringify({
+            workspaces: ['**/package.json'],
+          }),
         },
         '/root'
       );
 
       const workspaces = new Workspaces('/root');
       const { projects } = workspaces.readWorkspaceConfiguration();
-      expect(projects.lib1).toEqual(lib1Config);
+      // projects got deduped so the workspace one remained
+      expect(projects['lib1-workspace']).toEqual(lib1Config);
+      expect(projects['lib1']).toBeUndefined();
       expect(projects.lib2).toEqual(lib2Config);
       expect(projects['domain-lib3']).toEqual(domainPackageConfig);
-      expect(projects['domain-lib4']).toEqual(domainLibConfig);
+      expect(projects['lib4']).toEqual(domainLibConfig);
     });
   });
 
   describe('to project name', () => {
-    it('should trim default directories from beginning', () => {
-      const appResults = toProjectName(
-        'apps/directory/my-app/project.json',
-        null
-      );
-      const libResults = toProjectName(
-        'libs/directory/my-lib/project.json',
-        null
-      );
-      expect(appResults).toEqual('directory-my-app');
-      expect(libResults).toEqual('directory-my-lib');
-    });
-
-    it('should trim custom directories from beginning', () => {
-      const nxJson: NxJsonConfiguration = {
-        npmScope: '',
-        workspaceLayout: {
-          appsDir: 'my-apps',
-          libsDir: 'packages',
-        },
-      };
-      const appResults = toProjectName(
-        'my-apps/directory/my-app/project.json',
-        nxJson
-      );
-      const libResults = toProjectName(
-        'packages/directory/my-lib/project.json',
-        nxJson
-      );
-      expect(appResults).toEqual('directory-my-app');
-      expect(libResults).toEqual('directory-my-lib');
-    });
-
     it('should lowercase names', () => {
       const nxJson: NxJsonConfiguration = {
         npmScope: '',
@@ -131,16 +109,10 @@ describe('Workspaces', () => {
           libsDir: 'packages',
         },
       };
-      const appResults = toProjectName(
-        'my-apps/directory/my-app/package.json',
-        nxJson
-      );
-      const libResults = toProjectName(
-        'packages/directory/MyLib/package.json',
-        nxJson
-      );
-      expect(appResults).toEqual('directory-my-app');
-      expect(libResults).toEqual('directory-mylib');
+      const appResults = toProjectName('my-apps/directory/my-app/package.json');
+      const libResults = toProjectName('packages/directory/MyLib/package.json');
+      expect(appResults).toEqual('my-app');
+      expect(libResults).toEqual('mylib');
     });
 
     it('should use the workspace globs in package.json', () => {

@@ -1,9 +1,11 @@
 {
+  "version": 2,
+  "outputCapture": "direct-nodejs",
   "$schema": "http://json-schema.org/schema",
   "$id": "NxExpoEasUpdate",
   "cli": "nx",
   "title": "Expo EAS Update executor",
-  "description": "Start an EAS update for your expo project",
+  "description": "Start an EAS update for your expo project.",
   "type": "object",
   "properties": {
     "branch": {

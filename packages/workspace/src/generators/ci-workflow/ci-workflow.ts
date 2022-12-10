@@ -7,12 +7,13 @@ import {
   readJson,
   NxJsonConfiguration,
   formatFiles,
+  writeJson,
 } from '@nrwl/devkit';
 import { deduceDefaultBase } from '../../utilities/default-base';
 
 export interface Schema {
   name?: string;
-  ci: 'github' | 'azure' | 'circleci';
+  ci: 'github' | 'azure' | 'circleci' | 'bitbucket-pipelines' | 'gitlab';
 }
 
 export async function ciWorkflowGenerator(host: Tree, schema: Schema) {
@@ -25,6 +26,10 @@ export async function ciWorkflowGenerator(host: Tree, schema: Schema) {
   );
   if (!nxCloudUsed) {
     throw new Error('This workspace is not connected to Nx Cloud.');
+  }
+
+  if (ci === 'bitbucket-pipelines' && defaultBranchNeedsOriginPrefix(nxJson)) {
+    writeJson(host, 'nx.json', appendOriginPrefix(nxJson));
   }
 
   generateFiles(host, joinPathFragments(__dirname, 'files', ci), '', options);
@@ -53,5 +58,21 @@ function normalizeOptions(options: Schema): Substitutes {
     packageManagerPrefix,
     mainBranch: deduceDefaultBase(),
     tmpl: '',
+  };
+}
+
+function defaultBranchNeedsOriginPrefix(nxJson: NxJsonConfiguration): boolean {
+  return !nxJson.affected?.defaultBase?.startsWith('origin/');
+}
+
+function appendOriginPrefix(nxJson: NxJsonConfiguration): NxJsonConfiguration {
+  return {
+    ...nxJson,
+    affected: {
+      ...(nxJson.affected ?? {}),
+      defaultBase: nxJson.affected?.defaultBase
+        ? `origin/${nxJson.affected.defaultBase}`
+        : 'origin/main',
+    },
   };
 }

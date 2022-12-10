@@ -1,4 +1,5 @@
 {
+  "name": "make-angular-cli-faster",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/make-angular-cli-faster/src",
   "projectType": "library",
@@ -26,7 +27,7 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["build/packages/make-angular-cli-faster"],
+      "outputs": ["{workspaceRoot}/build/packages/make-angular-cli-faster"],
       "options": {
         "commands": [
           {

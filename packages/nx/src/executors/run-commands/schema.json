@@ -1,4 +1,5 @@
 {
+  "version": 2,
   "title": "Run Commands",
   "description": "Run any custom commands with Nx.",
   "type": "object",
@@ -137,6 +138,13 @@
     }
   },
   "additionalProperties": true,
-  "required": [],
+  "oneOf": [
+    {
+      "required": ["commands"]
+    },
+    {
+      "required": ["command"]
+    }
+  ],
   "examplesFile": "../../../docs/run-commands-examples.md"
 }

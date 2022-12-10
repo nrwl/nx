@@ -1,4 +1,5 @@
 {
+  "name": "e2e-js",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "e2e/js",
   "projectType": "application",
@@ -27,7 +28,7 @@
         "passWithNoTests": true,
         "runInBand": true
       },
-      "outputs": ["coverage/e2e/js"]
+      "outputs": ["{workspaceRoot}/coverage/e2e/js"]
     }
   },
   "implicitDependencies": ["jest"]

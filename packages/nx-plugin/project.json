@@ -1,4 +1,5 @@
 {
+  "name": "nx-plugin",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/nx-plugin",
   "projectType": "library",
@@ -9,7 +10,7 @@
         "jestConfig": "packages/nx-plugin/jest.config.ts",
         "passWithNoTests": true
       },
-      "outputs": ["coverage/packages/nx-plugin"]
+      "outputs": ["{workspaceRoot}/coverage/packages/nx-plugin"]
     },
     "build-base": {
       "executor": "@nrwl/js:tsc",
@@ -57,7 +58,7 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["build/packages/nx-plugin"],
+      "outputs": ["{workspaceRoot}/build/packages/nx-plugin"],
       "options": {
         "command": "node ./scripts/copy-readme.js nx-plugin"
       }

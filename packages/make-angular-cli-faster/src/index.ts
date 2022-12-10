@@ -11,11 +11,7 @@ const args = yargsParser(process.argv, {
   boolean: ['verbose', 'useNxCloud'],
 });
 
-makeAngularCliFaster(args as Args)
-  .then(() => {
-    process.exit(0);
-  })
-  .catch((e) => {
-    console.log(e);
-    process.exit(1);
-  });
+makeAngularCliFaster(args as Args).catch((e) => {
+  console.log(e);
+  process.exit(1);
+});

@@ -1,95 +1,94 @@
 import {
-  joinPathFragments,
+  applyAdditionalShared,
+  applySharedFunction,
+  createProjectGraphAsync,
+  getDependentPackagesForProject,
+  mapRemotes,
+  mapRemotesForSSR,
+  ModuleFederationConfig,
   ProjectGraph,
-  readJsonFile,
-  workspaceRoot,
+  readCachedProjectGraph,
+  SharedLibraryConfig,
+  sharePackages,
+  shareWorkspaceLibraries,
 } from '@nrwl/devkit';
-import { existsSync } from 'fs';
-import { readTsPathMappings } from './typescript';
 
-export type WorkspaceLibrary = {
-  name: string;
-  root: string;
-  importKey: string | undefined;
-};
+export function applyDefaultEagerPackages(
+  sharedConfig: Record<string, SharedLibraryConfig>
+) {
+  const DEFAULT_PACKAGES_TO_LOAD_EAGERLY = [
+    '@angular/localize',
+    '@angular/localize/init',
+  ];
+  for (const pkg of DEFAULT_PACKAGES_TO_LOAD_EAGERLY) {
+    if (!sharedConfig[pkg]) {
+      continue;
+    }
 
-export function readRootPackageJson(): {
-  dependencies?: { [key: string]: string };
-  devDependencies?: { [key: string]: string };
-} {
-  const pkgJsonPath = joinPathFragments(workspaceRoot, 'package.json');
-  if (!existsSync(pkgJsonPath)) {
-    throw new Error(
-      'NX MF: Could not find root package.json to determine dependency versions.'
-    );
+    sharedConfig[pkg] = { ...sharedConfig[pkg], eager: true };
   }
-
-  return readJsonFile(pkgJsonPath);
 }
 
-export function getDependentPackagesForProject(
-  projectGraph: ProjectGraph,
-  name: string
-): {
-  workspaceLibraries: WorkspaceLibrary[];
-  npmPackages: string[];
-} {
-  const { npmPackages, workspaceLibraries } = collectDependencies(
+export const DEFAULT_NPM_PACKAGES_TO_AVOID = ['zone.js', '@nrwl/angular/mf'];
+export const DEFAULT_ANGULAR_PACKAGES_TO_SHARE = [
+  '@angular/animations',
+  '@angular/common',
+];
+
+export async function getModuleFederationConfig(
+  mfConfig: ModuleFederationConfig,
+  determineRemoteUrl: (remote: string) => string,
+  options: { isServer: boolean } = { isServer: false }
+) {
+  let projectGraph: ProjectGraph<any>;
+  try {
+    projectGraph = readCachedProjectGraph();
+  } catch (e) {
+    projectGraph = await createProjectGraphAsync();
+  }
+
+  const dependencies = getDependentPackagesForProject(
     projectGraph,
-    name
+    mfConfig.name
+  );
+  const sharedLibraries = shareWorkspaceLibraries(
+    dependencies.workspaceLibraries
   );
 
-  return {
-    workspaceLibraries: [...workspaceLibraries.values()],
-    npmPackages: [...npmPackages],
-  };
-}
+  const npmPackages = sharePackages(
+    Array.from(
+      new Set([
+        ...DEFAULT_ANGULAR_PACKAGES_TO_SHARE,
+        ...dependencies.npmPackages.filter(
+          (pkg) => !DEFAULT_NPM_PACKAGES_TO_AVOID.includes(pkg)
+        ),
+      ])
+    )
+  );
 
-function collectDependencies(
-  projectGraph: ProjectGraph,
-  name: string,
-  dependencies = {
-    workspaceLibraries: new Map<string, WorkspaceLibrary>(),
-    npmPackages: new Set<string>(),
-  },
-  seen: Set<string> = new Set()
-): {
-  workspaceLibraries: Map<string, WorkspaceLibrary>;
-  npmPackages: Set<string>;
-} {
-  if (seen.has(name)) {
-    return dependencies;
-  }
-  seen.add(name);
-
-  (projectGraph.dependencies[name] ?? []).forEach((dependency) => {
-    if (dependency.target.startsWith('npm:')) {
-      dependencies.npmPackages.add(dependency.target.replace('npm:', ''));
-    } else {
-      dependencies.workspaceLibraries.set(dependency.target, {
-        name: dependency.target,
-        root: projectGraph.nodes[dependency.target].data.root,
-        importKey: getLibraryImportPath(dependency.target, projectGraph),
-      });
-      collectDependencies(projectGraph, dependency.target, dependencies, seen);
+  DEFAULT_NPM_PACKAGES_TO_AVOID.forEach((pkgName) => {
+    if (pkgName in npmPackages) {
+      delete npmPackages[pkgName];
     }
   });
 
-  return dependencies;
-}
+  const sharedDependencies = {
+    ...sharedLibraries.getLibraries(),
+    ...npmPackages,
+  };
 
-function getLibraryImportPath(
-  library: string,
-  projectGraph: ProjectGraph
-): string | undefined {
-  const tsConfigPathMappings = readTsPathMappings();
+  applyDefaultEagerPackages(sharedDependencies);
+  applySharedFunction(sharedDependencies, mfConfig.shared);
+  applyAdditionalShared(
+    sharedDependencies,
+    mfConfig.additionalShared,
+    projectGraph
+  );
 
-  const sourceRoot = projectGraph.nodes[library].data.sourceRoot;
-  for (const [key, value] of Object.entries(tsConfigPathMappings)) {
-    if (value.find((path) => path.startsWith(sourceRoot))) {
-      return key;
-    }
-  }
-
-  return undefined;
+  const mapRemotesFunction = options.isServer ? mapRemotesForSSR : mapRemotes;
+  const mappedRemotes =
+    !mfConfig.remotes || mfConfig.remotes.length === 0
+      ? {}
+      : mapRemotesFunction(mfConfig.remotes, 'mjs', determineRemoteUrl);
+  return { sharedLibraries, sharedDependencies, mappedRemotes };
 }

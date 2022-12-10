@@ -1,4 +1,4 @@
-import { ProjectConfiguration } from '@nrwl/devkit';
+import type { ProjectConfiguration } from '@nrwl/devkit';
 
 export type MigrationProjectConfiguration = {
   config: ProjectConfiguration;
@@ -10,10 +10,16 @@ export type WorkspaceProjects = {
   libs: MigrationProjectConfiguration[];
 };
 
-export type WorkspaceCapabilities = {
-  karma: boolean;
-  eslint: boolean;
+export type ProjectMigrationInfo = {
+  name: string;
+  oldRoot: string;
+  oldSourceRoot: string;
+  newRoot: string;
+  newSourceRoot: string;
 };
+
+export type WorkspaceRootFileType = 'karma' | 'eslint';
+export type WorkspaceRootFileTypesInfo = Record<WorkspaceRootFileType, boolean>;
 
 export type ValidationError = {
   message?: string;

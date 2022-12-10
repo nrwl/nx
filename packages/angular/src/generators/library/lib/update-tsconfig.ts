@@ -1,11 +1,14 @@
+import type { Tree } from '@nrwl/devkit';
+import { joinPathFragments, updateJson } from '@nrwl/devkit';
 import {
-  getWorkspaceLayout,
-  joinPathFragments,
-  Tree,
-  updateJson,
-} from '@nrwl/devkit';
-import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
+  getRelativePathToRootTsConfig,
+  getRootTsConfigPathInTree,
+} from '@nrwl/workspace/src/utilities/typescript';
 import { NormalizedSchema } from './normalized-schema';
+import {
+  createTsConfig,
+  extractTsConfigBase,
+} from '../../utils/create-ts-config';
 
 function updateRootConfig(
   host: Tree,
@@ -23,11 +26,7 @@ function updateRootConfig(
     }
 
     c.paths[options.importPath] = [
-      joinPathFragments(
-        getWorkspaceLayout(host).libsDir,
-        options.projectDirectory,
-        '/src/index.ts'
-      ),
+      joinPathFragments(options.projectRoot, '/src/index.ts'),
     ];
 
     return json;
@@ -39,23 +38,26 @@ function updateProjectConfig(
   options: NormalizedSchema['libraryOptions']
 ) {
   updateJson(host, `${options.projectRoot}/tsconfig.lib.json`, (json) => {
-    json.include = ['**/*.ts'];
+    json.include = ['src/**/*.ts'];
     json.exclude = [
       ...new Set([
         ...(json.exclude || []),
         'jest.config.ts',
-        '**/*.test.ts',
-        '**/*.spec.ts',
+        'src/**/*.test.ts',
+        'src/**/*.spec.ts',
       ]),
     ];
     return json;
   });
 
   // tsconfig.json
-  updateJson(host, `${options.projectRoot}/tsconfig.json`, (json) => ({
-    ...json,
-    compilerOptions: { ...json.compilerOptions, target: 'es2020' },
-  }));
+  createTsConfig(
+    host,
+    options.projectRoot,
+    'lib',
+    options,
+    getRelativePathToRootTsConfig(host, options.projectRoot)
+  );
 }
 
 function updateProjectIvyConfig(
@@ -79,6 +81,7 @@ export function updateTsConfig(
   host: Tree,
   options: NormalizedSchema['libraryOptions']
 ) {
+  extractTsConfigBase(host);
   updateRootConfig(host, options);
   updateProjectConfig(host, options);
   updateProjectIvyConfig(host, options);

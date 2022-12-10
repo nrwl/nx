@@ -5,7 +5,7 @@ import { defaultFileHasher } from '../../hasher/file-hasher';
 import {
   ProjectGraphProcessorContext,
   ProjectGraphProjectNode,
-} from 'nx/src/config/project-graph';
+} from '../../config/project-graph';
 import { ProjectGraphBuilder } from '../project-graph-builder';
 
 jest.mock('fs', () => require('memfs').fs);

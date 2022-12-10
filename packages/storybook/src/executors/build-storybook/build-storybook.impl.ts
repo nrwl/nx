@@ -57,8 +57,10 @@ function storybookOptionMapper(
       frameworkOptions,
       context
     ),
-    mode: 'static',
-    outputDir: builderOptions.outputPath,
+    mode: builderOptions?.['mode'] ?? 'static',
+    outputDir:
+      (builderOptions?.['outputDir'] || builderOptions?.['output-dir']) ??
+      builderOptions.outputPath,
   };
 
   return storybookOptions;

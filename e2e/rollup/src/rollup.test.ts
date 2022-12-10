@@ -11,7 +11,7 @@ import {
 
 describe('Rollup Plugin', () => {
   beforeEach(() => newProject());
-  // afterEach(() => cleanupProject());
+  afterEach(() => cleanupProject());
 
   it('should be able to setup project to build node programs with rollup and different compilers', async () => {
     const myPkg = uniq('my-pkg');

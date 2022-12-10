@@ -23,8 +23,7 @@
     },
     "directory": {
       "type": "string",
-      "description": "A directory where the plugin is placed.",
-      "alias": "d"
+      "description": "A directory where the plugin is placed."
     },
     "importPath": {
       "type": "string",
@@ -33,9 +32,8 @@
     "linter": {
       "description": "The tool to use for running lint checks.",
       "type": "string",
-      "enum": ["eslint", "tslint"],
-      "default": "eslint",
-      "x-deprecated": "TSLint support is deprecated and will be removed"
+      "enum": ["eslint"],
+      "default": "eslint"
     },
     "unitTestRunner": {
       "type": "string",

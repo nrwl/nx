@@ -1,4 +1,8 @@
-import { DocumentData, DocumentMetadata } from '@nrwl/nx-dev/models-document';
+import {
+  createDocumentMetadata,
+  DocumentData,
+  DocumentMetadata,
+} from '@nrwl/nx-dev/models-document';
 import { MenuItem } from '@nrwl/nx-dev/models-menu';
 import { parseMarkdown } from '@nrwl/nx-dev/ui-markdoc';
 import { readFileSync } from 'fs';
@@ -17,6 +21,7 @@ export class DocumentsApi {
       publicDocsRoot: string;
       documentSources: DocumentMetadata[];
       addAncestor: { id: string; name: string } | null;
+      relatedSources?: DocumentsApi[];
     }
   ) {
     if (!options.publicDocsRoot) {
@@ -30,19 +35,19 @@ export class DocumentsApi {
       (x) => x.itemList
     ) as DocumentMetadata[];
 
-    this.documents = {
+    this.documents = createDocumentMetadata({
       id: 'documents',
       name: 'documents',
       itemList: !!this.options.addAncestor
         ? [
-            {
+            createDocumentMetadata({
               id: this.options.addAncestor.id,
               name: this.options.addAncestor.name,
               itemList,
-            },
+            }),
           ]
         : itemList,
-    };
+    });
     // this.allDocuments = options.allDocuments;
   }
 
@@ -70,21 +75,48 @@ export class DocumentsApi {
 
     if (!found) return null;
 
-    const cardListItems = items?.map((i) => ({
-      name: i.name,
-      path: i.path ?? '/' + path.concat(i.id).join('/'),
-    }));
+    function interpolateUrl(
+      el: { id: string; path?: string },
+      ancestorPath
+    ): string {
+      const isLinkExternal: (p: string) => boolean = (p: string) =>
+        p.startsWith('http');
+      const isLinkAbsolute: (p: string) => boolean = (p: string) =>
+        p.startsWith('/');
+
+      // Using internal path or Constructing it from id (default behaviour)
+      if (!el.path) return '/' + ancestorPath.concat(el.id).join('/');
+      // Support absolute & external paths
+      if (isLinkAbsolute(el.path) || isLinkExternal(el.path)) return el.path;
+      // Path is defined to point towards internal target, just use the value
+      return '/' + el.path;
+    }
+
+    const cardsTemplate = items
+      ?.map((i) => ({
+        title: i.name,
+        description: i.description ?? '',
+        url: interpolateUrl({ id: i.id, path: i.path }, path),
+      }))
+      .map(
+        (card) =>
+          `{% card title="${card.title}" description="${card.description}" url="${card.url}" /%}\n`
+      )
+      .join('');
 
     return {
       filePath: '',
       data: {
         title: found?.name,
       },
-      content: `# ${found?.name}\n\n ${
-        found?.description ?? ''
-      }\n\n {% card-list items="${encodeURI(
-        JSON.stringify(cardListItems)
-      )}" /%}`,
+      content: [
+        `# ${found?.name}\n\n ${found?.description ?? ''}\n\n`,
+        '{% cards %}\n',
+        cardsTemplate,
+        '{% /cards %}\n\n',
+      ].join(''),
+      relatedContent: '',
+      tags: [],
     };
   }
 
@@ -98,7 +130,7 @@ export class DocumentsApi {
     const originalContent = readFileSync(filePath, 'utf8');
     const ast = parseMarkdown(originalContent);
     const frontmatter = ast.attributes.frontmatter
-      ? yamlLoad(ast.attributes.frontmatter)
+      ? (yamlLoad(ast.attributes.frontmatter) as Record<string, any>)
       : {};
 
     // Set default title if not provided in front-matter section.
@@ -110,8 +142,9 @@ export class DocumentsApi {
     return {
       filePath,
       data: frontmatter,
-      content:
-        originalContent + '\n\n' + this.getRelatedDocumentsSection(tags, path),
+      content: originalContent,
+      relatedContent: this.getRelatedDocumentsSection(tags, path),
+      tags: tags,
     };
   }
 
@@ -214,13 +247,15 @@ export class DocumentsApi {
   /**
    * Displays a list of all concepts, recipes or reference documents that are tagged with the specified tag
    * Tags are defined in map.json
-   * @param tag
    * @returns
+   * @param tags
+   * @param path
    */
   private getRelatedDocumentsSection(tags: string[], path: string[]): string {
     let relatedConcepts: MenuItem[] = [];
     let relatedRecipes: MenuItem[] = [];
     let relatedReference: MenuItem[] = [];
+    let relatedSeeAlso: MenuItem[] = [];
     function recur(curr, acc) {
       if (curr.itemList) {
         curr.itemList.forEach((ii) => {
@@ -234,15 +269,15 @@ export class DocumentsApi {
           tags.some((tag) => curr.tags.includes(tag)) &&
           ['concepts', 'more-concepts'].some((id) => acc.includes(id))
         ) {
-          curr.path = [...acc, curr.id].join('/');
+          curr.path = curr.path || [...acc, curr.id].join('/');
           relatedConcepts.push(curr);
         }
         if (
           curr.tags &&
           tags.some((tag) => curr.tags.includes(tag)) &&
-          acc.includes('recipe')
+          acc.includes('recipes')
         ) {
-          curr.path = [...acc, curr.id].join('/');
+          curr.path = curr.path || [...acc, curr.id].join('/');
           relatedRecipes.push(curr);
         }
         if (
@@ -250,19 +285,35 @@ export class DocumentsApi {
           tags.some((tag) => curr.tags.includes(tag)) &&
           ['nx', 'workspace'].some((id) => acc.includes(id))
         ) {
-          curr.path = [...acc, curr.id].join('/');
+          curr.path = curr.path || [...acc, curr.id].join('/');
           relatedReference.push(curr);
+        }
+        if (
+          curr.tags &&
+          tags.some((tag) => curr.tags.includes(tag)) &&
+          acc.includes('see-also')
+        ) {
+          curr.path = curr.path || [...acc, curr.id].join('/');
+          relatedSeeAlso.push(curr);
         }
       }
     }
     this.documents.itemList!.forEach((item) => {
       recur(item, []);
     });
+    if (this.options.relatedSources) {
+      this.options.relatedSources.forEach((source) =>
+        source.documents.itemList.forEach((item) => {
+          recur(item, []);
+        })
+      );
+    }
 
     if (
       relatedConcepts.length === 0 &&
       relatedRecipes.length === 0 &&
-      relatedReference.length === 0
+      relatedReference.length === 0 &&
+      relatedSeeAlso.length === 0
     ) {
       return '';
     }
@@ -284,6 +335,9 @@ export class DocumentsApi {
     }
     if (relatedReference.length > 0) {
       output += '### Reference\n' + listify(relatedReference) + '\n';
+    }
+    if (relatedSeeAlso.length > 0) {
+      output += '### See Also\n' + listify(relatedSeeAlso) + '\n';
     }
 
     return output;

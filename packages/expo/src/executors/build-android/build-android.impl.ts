@@ -1,4 +1,4 @@
-import { ExecutorContext, names } from '@nrwl/devkit';
+import { ExecutorContext, logger, names } from '@nrwl/devkit';
 import { join } from 'path';
 import { ChildProcess, fork } from 'child_process';
 
@@ -20,12 +20,20 @@ export default async function* buildAndroidExecutor(
   options: ExpoBuildAndroidOptions,
   context: ExecutorContext
 ): AsyncGenerator<ReactNativeBuildOutput> {
+  logger.warn(
+    '@nrwl/expo:build-android is deprecated and will be removed in Nx 16. Please switch to expo:prebuild and expo:build.'
+  );
   const projectRoot = context.workspace.projects[context.projectName].root;
   ensureNodeModulesSymlink(context.root, projectRoot);
   if (options.sync) {
     displayNewlyAddedDepsMessage(
       context.projectName,
-      await syncDeps(context.projectName, projectRoot)
+      await syncDeps(
+        context.projectName,
+        projectRoot,
+        context.root,
+        context.projectGraph
+      )
     );
   }
 

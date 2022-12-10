@@ -432,9 +432,15 @@ export class TaskOrchestrator {
 
   private pipeOutputCapture(task: Task) {
     try {
+      const { schema } = getExecutorForTask(
+        task,
+        this.workspace,
+        this.projectGraph,
+        this.nxJson
+      );
+
       return (
-        getExecutorForTask(task, this.workspace, this.projectGraph, this.nxJson)
-          .schema.outputCapture === 'pipe' ||
+        schema.outputCapture === 'pipe' ||
         process.env.NX_STREAM_OUTPUT === 'true'
       );
     } catch (e) {

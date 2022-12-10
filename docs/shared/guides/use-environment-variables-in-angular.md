@@ -8,7 +8,7 @@ do the following.
 
 First, install `@types/node` so we can use `process.env` in our code.
 
-```bash
+```shell
 npm install --save-dev @types/node
 
 # Or with yarn
@@ -33,7 +33,7 @@ Next, update the `build` and `serve` targets (in `project.json` or `angular.json
   },
   "serve": {
     // NOTE: use dev-server that supports custom webpack config.
-    "executor": "@nrwl/angular:webpack-server"
+    "executor": "@nrwl/angular:webpack-dev-server"
     // snip
   }
 }
@@ -41,8 +41,7 @@ Next, update the `build` and `serve` targets (in `project.json` or `angular.json
 
 Then, we can use `DefinePlugin` in our custom webpack.
 
-```javascript
-// apps/myapp/webpack.config.js
+```javascript {% fileName="apps/myapp/webpack.config.js" %}
 const webpack = require('webpack');
 
 function getClientEnvironment(configuration) {
@@ -88,8 +87,7 @@ NX_API_URL=http://localhost:3333
 
 Finally, We can use environment variables in our code. For example,
 
-```typescript
-// apps/myapp/src/main.ts
+```typescript {% fileName="apps/myapp/src/main.ts" %}
 import { enableProdMode } from '@angular/core';
 import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 import { AppModule } from './app/app.module';
@@ -126,7 +124,7 @@ as `index.prod.html`, then swap it in different environments.
 
 For example in `project.json` (or `angular.json`),
 
-```json lines
+```json lines {% fileName="project.json or angular.json" %}
 {
   "build": {
     "executor": "@angular-devkit/build-angular:browser",

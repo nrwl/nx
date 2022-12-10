@@ -11,7 +11,7 @@
       "id": "overview",
       "path": "/packages/js",
       "file": "shared/js-plugin",
-      "content": "The JS plugin contains executors and generators that are useful for JavaScript/TypeScript projects in an Nx workspace.\n\n## Setting Up JS\n\n### Installation\n\nIn any Nx workspace, you can install `@nrwl/js` by running the following commands if `@nrwl/js` package is not installed:\n\n```shell\nnpm i --save-dev @nrwl/js\n```\n\n```shell\nyarn add --dev @nrwl/js\n```\n\n### `ts` Preset\n\nWhen initializing a new Nx workspace, specifying `--preset=ts` will generate a workspace with `@nrwl/js` pre-installed.\n\n```shell\nnpx create-nx-workspace my-org --preset=ts\n```\n\n```shell\nyarn create nx-workspace my-org --preset=ts\n```\n\n## Create Libraries\n\nYou can add a new JS/TS library with the following command:\n\n```shell\nnx g @nrwl/js:lib my-lib\n```\n\n## Build\n\nYou can `build` libraries that are generated with `--buildable` flag.\n\n```shell\nnx g @nrwl/js:lib my-buildable-lib --buildable\n```\n\nGenerating a library with `--buildable` will add a `build` target to the library's `project.json` file allows the library to be built.\n\n```shell\nnx build my-buildable-lib\n```\n\n## Test\n\nYou can test a library with the following command:\n\n```shell\nnx test my-lib\n```\n\n## Lint\n\nYou can lint a library with the following command:\n\n```shell\nnx lint my-lib\n```\n\n## Compiler\n\nBy default, `@nrwl/js` uses [TypeScript Compiler (TSC)](https://www.typescriptlang.org/docs/handbook/2/basic-types.html#tsc-the-typescript-compiler), via `@nrwl/js:tsc` executor, to compile your libraries. Optionally, you can switch `tsc` out for a different compiler with `--compiler` flag when executing the generators.\n\nCurrently, `@nrwl/js` supports the following compilers:\n\n- [Speedy Web Compiler (SWC)](https://swc.rs)\n\n### SWC\n\n- Create a buildable library with `swc`\n\n```shell\nnx g @nrwl/js:lib my-swc-lib --compiler=swc --buildable\n```\n\n- Convert a `tsc` library to use `swc`\n\n```shell\nnx g @nrwl/js:convert-to-swc my-buildable-lib\n```\n\nNow the `build` command will use `@nrwl/js:swc` executor to compile your libraries.\n\n> The first time you generate a `swc` library or convert a `tsc` library over to `swc`, `@nrwl/js` will install the necessary dependencies to use `swc`.\n"
+      "content": "The JS plugin contains executors and generators that are useful for JavaScript/TypeScript projects in an Nx workspace.\n\n## Setting Up JS\n\n### Installation\n\nIn any Nx workspace, you can install `@nrwl/js` by running the following commands if `@nrwl/js` package is not installed:\n\n{% tabs %}\n{%tab label=\"npm\"%}\n\n```shell\nnpm i --save-dev @nrwl/js\n```\n\n{% /tab %}\n{%tab label=\"yarn\"%}\n\n```shell\nyarn add --dev @nrwl/js\n```\n\n{% /tab %}\n{% /tabs %}\n\n### `ts` Preset\n\nWhen initializing a new Nx workspace, specifying `--preset=ts` will generate a workspace with `@nrwl/js` pre-installed.\n\n{% tabs %}\n{%tab label=\"npm\"%}\n\n```shell\nnpx create-nx-workspace my-org --preset=ts\n```\n\n{% /tab %}\n{%tab label=\"yarn\"%}\n\n```shell\nyarn create nx-workspace my-org --preset=ts\n```\n\n{% /tab %}\n{% /tabs %}\n\n## Create Libraries\n\nYou can add a new JS/TS library with the following command:\n\n```shell\nnx g @nrwl/js:lib my-lib\n```\n\n## Build\n\nYou can `build` libraries that are generated with `--buildable` flag.\n\n```shell\nnx g @nrwl/js:lib my-buildable-lib --buildable\n```\n\nGenerating a library with `--buildable` will add a `build` target to the library's `project.json` file allows the library to be built.\n\n```shell\nnx build my-buildable-lib\n```\n\n## Test\n\nYou can test a library with the following command:\n\n```shell\nnx test my-lib\n```\n\n## Lint\n\nYou can lint a library with the following command:\n\n```shell\nnx lint my-lib\n```\n\n## Compiler\n\nBy default, `@nrwl/js` uses [TypeScript Compiler (TSC)](https://www.typescriptlang.org/docs/handbook/2/basic-types.html#tsc-the-typescript-compiler), via `@nrwl/js:tsc` executor, to compile your libraries. Optionally, you can switch `tsc` out for a different compiler with `--compiler` flag when executing the generators.\n\nCurrently, `@nrwl/js` supports the following compilers:\n\n- [Speedy Web Compiler (SWC)](https://swc.rs)\n\n### SWC\n\n- Create a buildable library with `swc`\n\n```shell\nnx g @nrwl/js:lib my-swc-lib --compiler=swc --buildable\n```\n\n- Convert a `tsc` library to use `swc`\n\n```shell\nnx g @nrwl/js:convert-to-swc my-buildable-lib\n```\n\nNow the `build` command will use `@nrwl/js:swc` executor to compile your libraries.\n\n> The first time you generate a `swc` library or convert a `tsc` library over to `swc`, `@nrwl/js` will install the necessary dependencies to use `swc`.\n"
     }
   ],
   "generators": [
@@ -25,12 +25,6 @@
         "title": "Create a TypeScript Library",
         "description": "Create a TypeScript Library.",
         "type": "object",
-        "examples": [
-          {
-            "command": "nx g lib mylib --directory=myapp",
-            "description": "Generate libs/myapp/mylib"
-          }
-        ],
         "properties": {
           "name": {
             "type": "string",
@@ -51,9 +45,9 @@
           },
           "unitTestRunner": {
             "type": "string",
-            "enum": ["jest", "none"],
+            "enum": ["jest", "vitest", "none"],
             "description": "Test runner to use for unit tests.",
-            "default": "jest"
+            "x-prompt": "Which unit test runner would you like to use?"
           },
           "tags": {
             "type": "string",
@@ -128,7 +122,8 @@
           },
           "bundler": {
             "description": "The bundler to use.",
-            "enum": ["none", "esbuild", "rollup", "webpack"],
+            "type": "string",
+            "enum": ["none", "esbuild", "rollup", "vite", "webpack"],
             "default": "none"
           },
           "skipTypeCheck": {
@@ -138,6 +133,7 @@
           }
         },
         "required": ["name"],
+        "examplesFile": "## Examples\n\n{% tabs %}\n\n{% tab label=\"Using directory flag\" %}\n\nGenerate a library named `mylib` and put it under a directory named `myapp` (`libs/myapp/mylib`)\n\n```shell\nnpx nx g lib mylib --directory=myapp\n```\n\n{% /tab %}\n\n{% tab label=\"Use SWC compiler\" %}\n\nGenerate a library using [SWC](https://swc.rs) as the compiler\n\n```shell\nnpx nx g lib mylib --compiler=swc\n```\n\n{% /tab %}\n\n{% tab label=\"Minimal publishing target\" %}\n\nGenerate a **publishable** library with a minimal publishing target\n\n```shell\nnpx nx g lib mylib --publishable\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
         "presets": []
       },
       "aliases": ["lib"],
@@ -161,8 +157,8 @@
       "aliases": ["lib"],
       "x-type": "init",
       "description": "Init placeholder.",
+      "hidden": true,
       "implementation": "/packages/js/src/generators/init/init#initGenerator.ts",
-      "hidden": false,
       "path": "/packages/js/src/generators/init/schema.json"
     },
     {
@@ -212,6 +208,8 @@
       "name": "tsc",
       "implementation": "/packages/js/src/executors/tsc/tsc.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "title": "Typescript Build Target",
         "description": "Builds using TypeScript.",
         "cli": "nx",
@@ -314,6 +312,19 @@
             "description": "When `updateBuildableProjectDepsInPackageJson` is `true`, this adds dependencies to either `peerDependencies` or `dependencies`.",
             "enum": ["dependencies", "peerDependencies"],
             "default": "peerDependencies"
+          },
+          "external": {
+            "description": "A list projects to be treated as external. This feature is experimental",
+            "oneOf": [
+              { "type": "string", "enum": ["all", "none"] },
+              { "type": "array", "items": { "type": "string" } }
+            ]
+          },
+          "externalBuildTargets": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "List of target names that annotate a build target for a project",
+            "default": ["build"]
           }
         },
         "required": ["main", "outputPath", "tsConfig"],
@@ -362,6 +373,7 @@
             ]
           }
         },
+        "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Using TypeScript Transformer Plugins\" %}\n\n`@nrwl/js:tsc` can run the [TypeScript Transformers](https://github.com/madou/typescript-transformer-handbook) by using the `transformers` option.\n\n```json {% fileName=\"libs/ts-lib/project.json\" %}\n{\n  \"build\": {\n    \"executor\": \"@nrwl/js:tsc\",\n    \"options\": {\n      \"outputPath\": \"dist/libs/ts-lib\",\n      \"main\": \"libs/ts-lib/src/index.ts\",\n      \"tsConfig\": \"libs/ts-lib/tsconfig.lib.json\",\n      \"assets\": [\"libs/ts-lib/*.md\"],\n      \"transformers\": [\n        \"@nestjs/swagger/plugin\",\n        {\n          \"name\": \"@automapper/classes/transformer-plugin\",\n          \"options\": {}\n        }\n      ]\n    }\n  }\n}\n```\n\n{% /tab %}\n{% tab label=\"Inline libraries\" %}\n\n`@nrwl/js:tsc` can inline non-buildable libraries by opt-in to **Inlining** mode with `external` option.\n\n```json {% fileName=\"libs/ts-lib/project.json\" %}\n{\n  \"build\": {\n    \"executor\": \"@nrwl/js:tsc\",\n    \"options\": {\n      \"outputPath\": \"dist/libs/ts-lib\",\n      \"main\": \"libs/ts-lib/src/index.ts\",\n      \"tsConfig\": \"libs/ts-lib/tsconfig.lib.json\",\n      \"assets\": [\"libs/ts-lib/*.md\"],\n      \"external\": \"all\"\n    }\n  }\n}\n```\n\n```shell\nnpx nx build ts-lib --external=all\n```\n\n`@nrwl/js:tsc` can also inline buildable libraries by setting `external: 'none'`\n\n```json {% fileName=\"libs/ts-lib/project.json\" %}\n{\n  \"build\": {\n    \"executor\": \"@nrwl/js:tsc\",\n    \"options\": {\n      \"outputPath\": \"dist/libs/ts-lib\",\n      \"main\": \"libs/ts-lib/src/index.ts\",\n      \"tsConfig\": \"libs/ts-lib/tsconfig.lib.json\",\n      \"assets\": [\"libs/ts-lib/*.md\"],\n      \"external\": \"none\"\n    }\n  }\n}\n```\n\n```shell\nnpx nx build ts-lib --external=none\n```\n\n{% /tab %}\n{% /tabs %}\n",
         "presets": []
       },
       "description": "Build a project using TypeScript.",
@@ -373,6 +385,8 @@
       "name": "swc",
       "implementation": "/packages/js/src/executors/swc/swc.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "$schema": "http://json-schema.org/schema",
         "cli": "nx",
         "title": "Typescript Build Target",
@@ -472,6 +486,19 @@
             "description": "When `updateBuildableProjectDepsInPackageJson` is `true`, this adds dependencies to either `peerDependencies` or `dependencies`.",
             "enum": ["dependencies", "peerDependencies"],
             "default": "peerDependencies"
+          },
+          "external": {
+            "description": "A list projects to be treated as external. This feature is experimental",
+            "oneOf": [
+              { "type": "string", "enum": ["all", "none"] },
+              { "type": "array", "items": { "type": "string" } }
+            ]
+          },
+          "externalBuildTargets": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "List of target names that annotate a build target for a project",
+            "default": ["build"]
           }
         },
         "required": ["main", "outputPath", "tsConfig"],
@@ -506,6 +533,7 @@
             ]
           }
         },
+        "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Inline libraries\" %}\n\n`@nrwl/js:swc` can inline non-buildable libraries by opt-in to **Inlining** mode with `external` option.\n\n```json {% fileName=\"libs/ts-lib/project.json\" %}\n{\n  \"build\": {\n    \"executor\": \"@nrwl/js:swc\",\n    \"options\": {\n      \"outputPath\": \"dist/libs/ts-lib\",\n      \"main\": \"libs/ts-lib/src/index.ts\",\n      \"tsConfig\": \"libs/ts-lib/tsconfig.lib.json\",\n      \"assets\": [\"libs/ts-lib/*.md\"],\n      \"external\": \"all\"\n    }\n  }\n}\n```\n\n```shell\nnpx nx build ts-lib --external=all\n```\n\n`@nrwl/js:swc` can also inline buildable libraries by setting `external: 'none'`\n\n```json {% fileName=\"libs/ts-lib/project.json\" %}\n{\n  \"build\": {\n    \"executor\": \"@nrwl/js:swc\",\n    \"options\": {\n      \"outputPath\": \"dist/libs/ts-lib\",\n      \"main\": \"libs/ts-lib/src/index.ts\",\n      \"tsConfig\": \"libs/ts-lib/tsconfig.lib.json\",\n      \"assets\": [\"libs/ts-lib/*.md\"],\n      \"external\": \"none\"\n    }\n  }\n}\n```\n\n```shell\nnpx nx build ts-lib --external=none\n```\n\n{% /tab %}\n{% tab label=\"Custom swcrc\" %}\n\n`@nrwl/js:swc` can compile your code with a custom `.swcrc`\n\n```json {% fileName=\"libs/ts-lib/project.json\" %}\n{\n  \"build\": {\n    \"executor\": \"@nrwl/js:swc\",\n    \"options\": {\n      \"outputPath\": \"dist/libs/ts-lib\",\n      \"main\": \"libs/ts-lib/src/index.ts\",\n      \"tsConfig\": \"libs/ts-lib/tsconfig.lib.json\",\n      \"assets\": [\"libs/ts-lib/*.md\"],\n      \"swcrc\": \"libs/ts-lib/.dev.swcrc\"\n    },\n    \"configurations\": {\n      \"production\": {\n        \"swcrc\": \"libs/ts-lib/.prod.swcrc\"\n      }\n    }\n  }\n}\n```\n\n{% /tab %}\n{% /tabs %}\n",
         "presets": []
       },
       "description": "Build a project using SWC.",
@@ -517,6 +545,8 @@
       "name": "node",
       "implementation": "/packages/js/src/executors/node/node.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "$schema": "http://json-schema.org/schema",
         "cli": "nx",
         "title": "Node executor",

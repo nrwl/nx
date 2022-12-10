@@ -11,6 +11,11 @@ import { Linter } from '../utils/linter';
 import { findEslintFile } from '../utils/eslint-file';
 import { join } from 'path';
 import { lintInitGenerator } from '../init/init';
+import {
+  findLintTarget,
+  migrateConfigToMonorepoStyle,
+} from '../init/init-migration';
+import { readWorkspace } from 'nx/src/generators/utils/project-configuration';
 
 interface LintProjectOptions {
   project: string;
@@ -21,20 +26,7 @@ interface LintProjectOptions {
   setParserOptionsProject?: boolean;
   skipPackageJson?: boolean;
   unitTestRunner?: string;
-}
-
-function createTsLintConfiguration(
-  tree: Tree,
-  projectConfig: ProjectConfiguration
-) {
-  writeJson(tree, join(projectConfig.root, `tslint.json`), {
-    extends: `${offsetFromRoot(projectConfig.root)}tslint.json`,
-    // Include project files to be linted since the global one excludes all files.
-    linterOptions: {
-      exclude: ['!**/*'],
-    },
-    rules: {},
-  });
+  rootProject?: boolean;
 }
 
 function createEsLintConfiguration(
@@ -88,6 +80,15 @@ function createEsLintConfiguration(
   });
 }
 
+export function mapLintPattern(
+  projectRoot: string,
+  extension: string,
+  rootProject?: boolean
+) {
+  const infix = rootProject ? 'src/' : '';
+  return `${projectRoot}/${infix}**/*.${extension}`;
+}
+
 export async function lintProjectGenerator(
   tree: Tree,
   options: LintProjectOptions
@@ -96,31 +97,48 @@ export async function lintProjectGenerator(
     linter: options.linter,
     unitTestRunner: options.unitTestRunner,
     skipPackageJson: options.skipPackageJson,
+    rootProject: options.rootProject,
   });
   const projectConfig = readProjectConfiguration(tree, options.project);
 
-  if (options.linter === Linter.EsLint) {
-    projectConfig.targets['lint'] = {
-      executor: '@nrwl/linter:eslint',
-      outputs: ['{options.outputFile}'],
-      options: {
-        lintFilePatterns: options.eslintFilePatterns,
-      },
-    };
+  projectConfig.targets['lint'] = {
+    executor: '@nrwl/linter:eslint',
+    outputs: ['{options.outputFile}'],
+    options: {
+      lintFilePatterns: options.eslintFilePatterns,
+    },
+  };
+
+  // we are adding new project which is not the root project or
+  // companion e2e app so we should check if migration to
+  // monorepo style is needed
+  if (!options.rootProject) {
+    const projects = readWorkspace(tree).projects;
+    if (isMigrationToMonorepoNeeded(projects, tree)) {
+      // we only migrate project configurations that have been created
+      const filteredProjects = [];
+      Object.entries(projects).forEach(([name, project]) => {
+        if (name !== options.project) {
+          filteredProjects.push(project);
+        }
+      });
+      migrateConfigToMonorepoStyle(
+        filteredProjects,
+        tree,
+        options.unitTestRunner
+      );
+    }
+  }
+
+  // our root `.eslintrc` is already the project config, so we should not override it
+  // additionally, the companion e2e app would have `rootProject: true`
+  // so we need to check for the root path as well
+  if (!options.rootProject || projectConfig.root !== '.') {
     createEsLintConfiguration(
       tree,
       projectConfig,
       options.setParserOptionsProject
     );
-  } else {
-    projectConfig.targets['lint'] = {
-      executor: '@angular-devkit/build-angular:tslint',
-      options: {
-        tsConfig: options.tsConfigPaths,
-        exclude: ['**/node_modules/**', `!${projectConfig.root}/**/*`],
-      },
-    };
-    createTsLintConfiguration(tree, projectConfig);
   }
 
   updateProjectConfiguration(tree, options.project, projectConfig);
@@ -130,4 +148,39 @@ export async function lintProjectGenerator(
   }
 
   return installTask;
+}
+
+/**
+ * Detect based on the state of lint target configuration of the root project
+ * if we should migrate eslint configs to monorepo style
+ *
+ * @param tree
+ * @returns
+ */
+function isMigrationToMonorepoNeeded(
+  projects: Record<string, ProjectConfiguration>,
+  tree: Tree
+): boolean {
+  // the base config is already created, migration has been done
+  if (tree.exists('.eslintrc.base.json')) {
+    return false;
+  }
+
+  const configs = Object.values(projects);
+  if (configs.length === 1) {
+    return false;
+  }
+
+  // get root project
+  const rootProject = configs.find((p) => p.root === '.');
+  if (!rootProject || !rootProject.targets) {
+    return false;
+  }
+  // find if root project has lint target
+  const lintTarget = findLintTarget(rootProject);
+  if (!lintTarget) {
+    return false;
+  }
+
+  return true;
 }

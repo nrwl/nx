@@ -29,6 +29,18 @@ export default async function update(host: Tree) {
           transformers;
       }
 
+      if (
+        projectConfiguration.targets[targetName].options
+          ?.srcRootForCompilationRoot
+      ) {
+        projectConfiguration.targets[targetName].options.rootDir =
+          projectConfiguration.targets[
+            targetName
+          ].options.srcRootForCompilationRoot;
+        delete projectConfiguration.targets[targetName].options
+          .srcRootForCompilationRoot;
+      }
+
       updateProjectConfiguration(host, projectName, projectConfiguration);
     }
   );

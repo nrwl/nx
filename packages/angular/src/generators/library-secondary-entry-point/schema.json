@@ -30,5 +30,6 @@
     }
   },
   "additionalProperties": false,
-  "required": ["name", "library"]
+  "required": ["name", "library"],
+  "examplesFile": "../../../docs/library-secondary-entry-point-examples.md"
 }

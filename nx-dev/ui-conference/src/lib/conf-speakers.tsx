@@ -3,15 +3,13 @@ import { Member, MemberCard } from '@nrwl/nx-dev/ui-member-card';
 export function ConfSpeakers(): JSX.Element {
   const speakers: Array<Member> = [
     {
-      description:
-        'Jeff Cross is a co-founder and Angular consultant at nrwl.io, and is the former tech lead of the Angular Mobile Team at Google.',
+      description: 'Co-Founder/CEO of Nrwl, and collector of kunekune pigs.',
       imageUrl: '/images/conf/jeff-cross.webp',
       name: 'Jeff Cross',
       twitter: 'jeffbcross',
     },
     {
-      description:
-        'Nrwlio co-founder, ex-Googler. Work on dev tools for TS/JS. Nx and Nx Cloud creator. Calligraphy and philosophy enthusiast. Stoic.',
+      description: 'Co-Founder/CTO of Nrwl',
       imageUrl: '/images/conf/victor-savkin.webp',
       name: 'Victor Savkin',
       twitter: 'victorsavkin',
@@ -88,6 +86,34 @@ export function ConfSpeakers(): JSX.Element {
     },
     {
       description:
+        "Miro is a senior engineer at Nrwl.io and a core member of the Nx team. He's interested in the front end of things, helping companies build scalable and performant applications. He enjoys sharing with the community, speaking, contributing to open source, and organizing events. Miro is co-founder of Angular Austria and co-organizer of Angular Vienna and ViennaJS meetups.",
+      imageUrl: '/images/conf/miroslav-jonas.webp',
+      name: 'Miroslav Jonas',
+      twitter: 'meeroslav',
+    },
+    {
+      description:
+        'Zack is a Google Developer Expert in Angular, and a Senior Engineer and Engineering Manager for Nrwl, living in the desserts of San Tan Valley, Arizona. Zack particularly enjoys teaching other engineers, breaking down problems into manageable pieces, and building awesome stuff.',
+      imageUrl: '/images/conf/zack-derose.webp',
+      name: 'Zack DeRose',
+      twitter: 'zackderose',
+    },
+    {
+      description:
+        'Senior Software Engineer at Nrwl, Nx core team, open source contributor, GDE for Angular/Web Technologies/Google Maps platform, WTM Ambassador, AngularAthens meetup co-founder. Mentoring women into tech, speaking about the cool things I do, climbing mountains and serving cats for life. More at psyber.city.',
+      imageUrl: '/images/conf/katerina-skroumpelou.webp',
+      name: 'Katerina Skroumpelou',
+      twitter: 'psybercity',
+    },
+    {
+      description:
+        'Philip Fulcher is a senior engineer with Nrwl and an Nx core team member. He works with Fortune 500 clients to modernize their development practices with a monorepo approach. Philip lives in Colorado with his wife (who is much smarter than him) and two great kids.',
+      imageUrl: '/images/conf/philip-fulcher.webp',
+      name: 'Philip Fulcher',
+      twitter: 'philipjfulcher',
+    },
+    {
+      description:
         'Mike Ryan is a principal architect at LiveLoveApp, helping companies find absolute joy in shipping apps. He is a Google Developer Expert in Web Technologies and one of the co-creators of NgRx, an open-source collection of high-quality reactive extensions for Angular.',
       imageUrl: '/images/conf/mike-ryan.webp',
       name: 'Mike Ryan',
@@ -100,6 +126,12 @@ export function ConfSpeakers(): JSX.Element {
       name: 'Ryan Diehl',
       twitter: 'DiehlWithRyan',
     },
+    {
+      description: 'Senior Engineer II @ Carvana',
+      imageUrl: '/images/conf/kennie-davis.webp',
+      name: 'Kennie Davis',
+      twitter: 'kenniejaydavis',
+    },
   ];
 
   function chunkList<ITEM>(itemList: ITEM[], chunkSize: number): Array<ITEM[]> {
@@ -110,18 +142,18 @@ export function ConfSpeakers(): JSX.Element {
   }
   const rows = chunkList(speakers, 2);
   return (
-    <div className="border-t border-gray-600">
+    <div className="border-t border-slate-200 dark:border-slate-700">
       {rows.map((row, rowIndex) => (
         <div
           key={'speaker-row--' + rowIndex}
-          className="border-b border-gray-600"
+          className="border-b border-slate-200 dark:border-slate-700"
         >
-          <div className="mx-auto max-w-screen-lg text-white xl:max-w-screen-xl">
+          <div className="mx-auto max-w-screen-lg xl:max-w-screen-xl">
             <div className="grid grid-cols-1 md:grid-cols-2">
               {row.map((speaker) => (
                 <div
                   key={speaker.name}
-                  className="border-gray-600 py-8 odd:border-b md:odd:border-r md:odd:border-b-0 md:odd:pr-12 md:even:pl-12"
+                  className="border-slate-200 py-8 odd:border-b dark:border-slate-700 md:odd:border-r md:odd:border-b-0 md:odd:pr-12 md:even:pl-12"
                 >
                   <div className="px-5">
                     <MemberCard

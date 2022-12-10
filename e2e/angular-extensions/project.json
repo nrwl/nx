@@ -1,4 +1,5 @@
 {
+  "name": "e2e-angular-extensions",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "e2e/angular-extensions",
   "projectType": "application",
@@ -27,7 +28,7 @@
         "passWithNoTests": true,
         "runInBand": true
       },
-      "outputs": ["coverage/e2e/angular-extensions"]
+      "outputs": ["{workspaceRoot}/coverage/e2e/angular-extensions"]
     }
   },
   "implicitDependencies": ["angular"]

@@ -77,13 +77,13 @@ export class Hasher {
         : []
     ).map((r) => ({ runtime: r }));
 
+    if (process.env.NX_CLOUD_ENCRYPTION_KEY) {
+      legacyRuntimeInputs.push({ env: 'NX_CLOUD_ENCRYPTION_KEY' });
+    }
+
     const legacyFilesetInputs = [
       ...Object.keys(this.nxJson.implicitDependencies ?? {}),
       'nx.json',
-      //TODO: vsavkin move the special cases into explicit ts support
-      'package-lock.json',
-      'yarn.lock',
-      'pnpm-lock.yaml',
 
       // ignore files will change the set of inputs to the hasher
       '.gitignore',
@@ -235,12 +235,21 @@ class TaskHasher {
         namedInputs
       );
 
-      return this.hashSelfAndDepsInputs(
+      const selfAndInputs = await this.hashSelfAndDepsInputs(
         task.target.project,
         selfInputs,
         depsInputs,
         visited
       );
+
+      const target = this.hashTarget(task.target.project, task.target.target);
+      if (target) {
+        return {
+          value: this.hashing.hashArray([selfAndInputs.value, target.value]),
+          details: { ...selfAndInputs.details, ...target.details },
+        };
+      }
+      return selfAndInputs;
     });
   }
 
@@ -333,26 +342,53 @@ class TaskHasher {
     const n = this.projectGraph.externalNodes[projectName];
     const version = n?.data?.version;
     let hash: string;
-    if (version) {
-      hash = this.hashing.hashArray([version]);
+    if (n?.data?.hash) {
+      // we already know the hash of this dependency
+      hash = n.data.hash;
     } else {
       // unknown dependency
-      // this may occur if a file has a dependency to a npm package
-      // which is not directly registestered in package.json
-      // but only indirectly through dependencies of registered
-      // npm packages
-      // when it is at a later stage registered in package.json
-      // the cache project graph will not know this module but
-      // the new project graph will know it
-      // The actual checksum added here is of no importance as
-      // the version is unknown and may only change when some
-      // other change occurs in package.json and/or package-lock.json
+      // this may occur dependency is not an npm package
+      // but rather symlinked in node_modules or it's pointing to a remote git repo
+      // in this case we have no information about the versioning of the given package
       hash = `__${projectName}__`;
     }
     return {
       value: hash,
       details: {
         [projectName]: version || hash,
+      },
+    };
+  }
+
+  private hashTarget(projectName: string, targetName: string): PartialHash {
+    const projectNode = this.projectGraph.nodes[projectName];
+    const target = projectNode.data.targets[targetName];
+
+    if (!target) {
+      return;
+    }
+
+    // we can only vouch for @nrwl packages's executors
+    // if it's "run commands" we skip traversing since we have no info what this command depends on
+    // for everything else we take the hash of the @nrwl package dependency tree
+    if (
+      target.executor.startsWith(`@nrwl/`) &&
+      target.executor !== `@nrwl/workspace:run-commands`
+    ) {
+      const executorPackage = target.executor.split(':')[0];
+      const executorNode = `npm:${executorPackage}`;
+      if (this.projectGraph.externalNodes?.[executorNode]) {
+        return this.hashExternalDependency(executorNode);
+      }
+    }
+
+    const hash = this.hashing.hashArray([
+      JSON.stringify(this.projectGraph.externalNodes),
+    ]);
+    return {
+      value: hash,
+      details: {
+        [projectNode.name]: target.executor,
       },
     };
   }
@@ -453,13 +489,10 @@ class TaskHasher {
     if (!this.filesetHashes[mapKey]) {
       this.filesetHashes[mapKey] = new Promise(async (res) => {
         const p = this.projectGraph.nodes[projectName];
-        const filesetWithExpandedProjectRoot = filesetPatterns.map((f) =>
-          f.replace('{projectRoot}', p.data.root)
-        );
         const filteredFiles = filterUsingGlobPatterns(
           p.data.root,
           p.data.files,
-          filesetWithExpandedProjectRoot
+          filesetPatterns
         );
         const fileNames = filteredFiles.map((f) => f.file);
         const values = filteredFiles.map((f) => f.hash);
@@ -604,13 +637,22 @@ export function expandNamedInput(
 }
 
 export function filterUsingGlobPatterns(
-  projectRoot: string,
+  root: string,
   files: FileData[],
   patterns: string[]
 ): FileData[] {
+  const filesetWithExpandedProjectRoot = patterns
+    .map((f) => f.replace('{projectRoot}', root))
+    .map((r) => {
+      // handling root level projects that create './' pattern that doesn't work with minimatch
+      if (r.startsWith('./')) return r.substring(2);
+      if (r.startsWith('!./')) return '!' + r.substring(3);
+      return r;
+    });
+
   const positive = [];
   const negative = [];
-  for (const p of patterns) {
+  for (const p of filesetWithExpandedProjectRoot) {
     if (p.startsWith('!')) {
       negative.push(p);
     } else {
@@ -626,7 +668,7 @@ export function filterUsingGlobPatterns(
     let matchedPositive = false;
     if (
       positive.length === 0 ||
-      (positive.length === 1 && positive[0] === `${projectRoot}/**/*`)
+      (positive.length === 1 && positive[0] === `${root}/**/*`)
     ) {
       matchedPositive = true;
     } else {

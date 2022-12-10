@@ -1,8 +1,23 @@
 import * as depcheck from 'depcheck';
+import { join } from 'path';
 
 // Ignore packages that are defined here per package
-const IGNORE_MATCHES = {
-  '*': ['nx', '@nrwl/cli', '@nrwl/workspace', 'prettier', 'typescript', 'rxjs'],
+const IGNORE_MATCHES_IN_PACKAGE = {
+  '*': [
+    'nx',
+    'prettier',
+    'typescript',
+    'rxjs',
+    '@nrwl/cli',
+    '@nrwl/workspace',
+    // These are installed as needed and should not be added to package.json
+    '@nrwl/cypress',
+    '@nrwl/jest',
+    '@nrwl/rollup',
+    '@nrwl/storybook',
+    '@nrwl/vite',
+    '@nrwl/webpack',
+  ],
   angular: [
     '@angular-devkit/architect',
     '@angular-devkit/build-angular',
@@ -15,6 +30,7 @@ const IGNORE_MATCHES = {
     '@ngrx/router-store',
     '@ngrx/store',
     '@storybook/angular',
+    '@module-federation/node',
     'rxjs',
     'semver',
     // installed dynamically by the library generator
@@ -38,7 +54,7 @@ const IGNORE_MATCHES = {
   ],
   cli: ['nx'],
   cypress: ['cypress', '@angular-devkit/schematics', '@nrwl/cypress'],
-  devkit: ['@angular-devkit/architect', 'rxjs'],
+  devkit: ['@angular-devkit/architect', 'rxjs', 'webpack'],
   'eslint-plugin-nx': ['@angular-eslint/eslint-plugin'],
   jest: [
     'jest',
@@ -66,25 +82,30 @@ const IGNORE_MATCHES = {
     'webpack',
   ],
   react: [
-    'babel-plugin-emotion',
-    'babel-plugin-styled-components',
-    'rollup',
-    'webpack',
+    // These are brought in by the webpack, rollup, or vite packages via init generators.
+    '@babel/preset-react',
+    '@module-federation/node',
+    '@phenomnomnominal/tsquery',
+    '@pmmmwh/react-refresh-webpack-plugin',
+    '@svgr/webpack',
     '@swc/jest',
     'babel-jest',
-    '@angular-devkit/core',
-    '@angular-devkit/schematics',
-    // TODO(caleb): remove when refactoring plugin to use @nrwl/web
-    //  webpack plugins for cypress component testing dev server
     'babel-loader',
+    'babel-plugin-emotion',
+    'babel-plugin-styled-components',
     'css-loader',
     'less-loader',
+    'react-refresh',
+    'rollup',
     'sass',
     'sass-loader',
     'style-loader',
     'stylus-loader',
     'swc-loader',
     'tsconfig-paths-webpack-plugin',
+    'url-loader',
+    'webpack',
+    'webpack-merge',
   ],
   rollup: ['@swc/core'],
   storybook: [
@@ -130,6 +151,15 @@ const IGNORE_MATCHES = {
   'make-angular-cli-faster': ['@angular/core'],
 };
 
+const IGNORE_MATCHES_BY_FILE: Record<string, string[]> = {
+  '@storybook/core': [
+    join(
+      __dirname,
+      '../../packages/angular/src/migrations/update-12-3-0/update-storybook.ts'
+    ),
+  ],
+};
+
 export default async function getMissingDependencies(
   name: string,
   path: string,
@@ -169,7 +199,6 @@ export default async function getMissingDependencies(
       '.eslintrc.json',
       '*.spec*',
       'src/schematics/**/files/**',
-      'src/migrations/**',
     ],
   };
   let { missing } = await depcheck(path, {
@@ -179,8 +208,11 @@ export default async function getMissingDependencies(
 
   const packagesMissing = Object.keys(missing).filter(
     (m) =>
-      !IGNORE_MATCHES['*'].includes(m) &&
-      !(IGNORE_MATCHES[name] || []).includes(m)
+      !IGNORE_MATCHES_IN_PACKAGE['*'].includes(m) &&
+      !(IGNORE_MATCHES_IN_PACKAGE[name] || []).includes(m) &&
+      missing[m].filter(
+        (occurence) => !IGNORE_MATCHES_BY_FILE[m]?.includes(occurence)
+      ).length
   );
 
   if (verbose) {

@@ -1,6 +1,7 @@
 export {
   extraEslintDependencies,
   createReactEslintJson,
+  extendReactEslintJson,
 } from './src/utils/lint';
 export { CSS_IN_JS_DEPENDENCIES } from './src/utils/styled';
 export { assertValidStyle } from './src/utils/assertion';
@@ -16,6 +17,7 @@ export { reduxGenerator } from './src/generators/redux/redux';
 export { storiesGenerator } from './src/generators/stories/stories';
 export { storybookConfigurationGenerator } from './src/generators/storybook-configuration/configuration';
 export { hostGenerator } from './src/generators/host/host';
+export { remoteGenerator } from './src/generators/remote/remote';
 export { cypressComponentConfigGenerator } from './src/generators/cypress-component-configuration/cypress-component-configuration';
 export { componentTestGenerator } from './src/generators/component-test/component-test';
 export type { SupportedStyles } from './typings/style';

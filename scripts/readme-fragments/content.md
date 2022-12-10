@@ -34,7 +34,6 @@ The `create-nx-workspace` command will ask you to select a preset, which will co
   express           [a workspace with a single Express application]
   web components    [a workspace with a single app built using web components]
   react-native      [a workspace with a single React Native application]
-  react-express     [a workspace with a full stack application (React + Express)]
 ```
 
 Select the preset that works best for you
@@ -52,7 +51,7 @@ npx add-nx-to-monorepo@latest
 A few links to help you get started:
 
 - [Nx.Dev: Documentation, Guides, Interactive Tutorials](https://nx.dev)
-- [Tutorial: Adding Nx to an Existing Monorepo](/recipe/adding-to-monorepo)
+- [Tutorial: Adding Nx to an Existing Monorepo](/recipes/adopting-nx/adding-to-monorepo)
 - [Official Nx YouTube Channel](https://www.youtube.com/c/Nrwl_io)
 - [Blog Posts About Nx](https://blog.nrwl.io/nx/home)
 

@@ -26,13 +26,12 @@ export async function esbuildProjectGenerator(
 }
 
 function checkForTargetConflicts(tree: Tree, options: EsBuildProjectSchema) {
+  if (options.skipValidation) return;
   const project = readProjectConfiguration(tree, options.project);
-  if (project.targets.build) {
-    throw new Error(`Project "${project.name}" already has a build target.`);
-  }
-
-  if (options.devServer && project.targets.serve) {
-    throw new Error(`Project "${project.name}" already has a serve target.`);
+  if (project.targets?.build) {
+    throw new Error(
+      `Project "${options.project}" already has a build target. Pass --skipValidation to ignore this error.`
+    );
   }
 }
 
@@ -49,17 +48,22 @@ function addBuildTarget(tree: Tree, options: EsBuildProjectSchema) {
       version: '0.0.1',
     });
   }
-  const tsConfig =
-    options.tsConfig ?? joinPathFragments(project.root, 'tsconfig.lib.json');
+  const tsConfig = getTsConfigFile(tree, options);
 
   const buildOptions: EsBuildExecutorOptions = {
-    main: options.main ?? joinPathFragments(project.root, 'src/main.ts'),
+    main: getMainFile(tree, options),
     outputPath: joinPathFragments('dist', project.root),
     outputFileName: 'main.js',
     tsConfig,
     project: `${project.root}/package.json`,
     assets: [],
+    platform: options.platform,
   };
+
+  if (options.platform === 'browser') {
+    buildOptions.outputHashing = 'all';
+    buildOptions.minify = true;
+  }
 
   if (tree.exists(joinPathFragments(project.root, 'README.md'))) {
     buildOptions.assets = [
@@ -93,8 +97,32 @@ function addBuildTarget(tree: Tree, options: EsBuildProjectSchema) {
   });
 }
 
-export default esbuildProjectGenerator;
+function getMainFile(tree: Tree, options: EsBuildProjectSchema) {
+  const project = readProjectConfiguration(tree, options.project);
+  const candidates = [
+    joinPathFragments(project.root, 'src/main.ts'),
+    joinPathFragments(project.root, 'src/index.ts'),
+  ];
+  for (const file of candidates) {
+    if (tree.exists(file)) return file;
+  }
+  return options.main;
+}
+
+function getTsConfigFile(tree: Tree, options: EsBuildProjectSchema) {
+  const project = readProjectConfiguration(tree, options.project);
+  const candidates = [
+    joinPathFragments(project.root, 'tsconfig.lib.json'),
+    joinPathFragments(project.root, 'tsconfig.app.json'),
+  ];
+  for (const file of candidates) {
+    if (tree.exists(file)) return file;
+  }
+  return options.tsConfig;
+}
 
 export const esbuildProjectSchematic = convertNxGenerator(
   esbuildProjectGenerator
 );
+
+export default esbuildProjectGenerator;

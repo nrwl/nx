@@ -6,7 +6,6 @@ import { defaultFileHasher } from '../hasher/file-hasher';
 import { markDaemonAsDisabled, writeDaemonLogs } from '../daemon/tmp-dir';
 import { ProjectGraph, ProjectGraphV4 } from '../config/project-graph';
 import { stripIndents } from '../utils/strip-indents';
-import { readNxJson } from '../config/configuration';
 import {
   ProjectConfiguration,
   ProjectsConfigurations,
@@ -136,10 +135,6 @@ export async function createProjectGraphAsync(
       }
       return await daemonClient.getProjectGraph();
     } catch (e) {
-      if (!e.internalDaemonError) {
-        handleProjectGraphError(opts, e);
-      }
-
       if (e.message.indexOf('inotify_add_watch') > -1) {
         // common errors with the daemon due to OS settings (cannot watch all the files available)
         output.note({
@@ -149,7 +144,11 @@ export async function createProjectGraphAsync(
             'Nx Daemon is going to be disabled until you run "nx reset".',
           ],
         });
-      } else {
+        markDaemonAsDisabled();
+        return buildProjectGraphWithoutDaemon();
+      }
+
+      if (e.internalDaemonError) {
         const errorLogFile = writeDaemonLogs(e.message);
         output.warn({
           title: `Nx Daemon was not able to compute the project graph.`,
@@ -159,9 +158,11 @@ export async function createProjectGraphAsync(
             'Nx Daemon is going to be disabled until you run "nx reset".',
           ],
         });
+        markDaemonAsDisabled();
+        return buildProjectGraphWithoutDaemon();
       }
-      markDaemonAsDisabled();
-      return buildProjectGraphWithoutDaemon();
+
+      handleProjectGraphError(opts, e);
     }
   }
 }
@@ -182,7 +183,7 @@ export function projectGraphAdapter(
   if (sourceVersion === targetVersion) {
     return projectGraph;
   }
-  if (sourceVersion === '5.0' && targetVersion === '4.0') {
+  if (+sourceVersion >= 5 && targetVersion === '4.0') {
     return projectGraphCompat5to4(projectGraph as ProjectGraph);
   }
   throw new Error(

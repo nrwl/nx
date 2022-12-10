@@ -1,11 +1,22 @@
 {
+  "version": 2,
+  "outputCapture": "direct-nodejs",
   "cli": "nx",
   "$id": "NxExpoStart",
   "$schema": "http://json-schema.org/schema",
   "title": "Packager Server for Expo",
-  "description": "Packager Server target options",
+  "description": "Packager Server target options.",
   "type": "object",
   "properties": {
+    "forceManifestType": {
+      "type": "string",
+      "description": "Override auto detection of manifest type.",
+      "enum": ["expo-updates", "classic"]
+    },
+    "privateKeyPath": {
+      "type": "string",
+      "description": "Path to private key for code signing. Default: 'private-key.pem' in the same directory as the certificate specified by the expo-updates configuration in app.json."
+    },
     "port": {
       "type": "number",
       "description": "Port to start the native Metro bundler on (does not apply to web or tunnel)",
@@ -41,11 +52,6 @@
       "type": "string",
       "description": "Custom URI protocol to use with a development build"
     },
-    "sentTo": {
-      "type": "string",
-      "description": "An email address to send a link to",
-      "alias": "s"
-    },
     "android": {
       "type": "boolean",
       "description": "Opens your app in Expo Go on a connected Android device",
@@ -56,10 +62,15 @@
       "description": "Opens your app in Expo Go in a currently running iOS simulator on your computer",
       "alias": "i"
     },
+    "web": {
+      "type": "boolean",
+      "description": " Opens your app in a web browser",
+      "alias": "w"
+    },
     "host": {
       "type": "string",
-      "description": "lan (default), tunnel, localhost. Type of host to use. \"tunnel\" allows you to view your link on other networks",
-      "alias": "m"
+      "description": "lan (default), tunnel, localhost. Type of host to use. lan uses the local network; tunnel ues any network by tunnel through ngrok; localhost connects to the dev server over localhost.",
+      "enum": ["localhost", "lan", "tunnel"]
     },
     "tunnel": {
       "type": "boolean",
@@ -77,9 +88,16 @@
       "type": "boolean",
       "description": "Allows this command to run while offline"
     },
+    "sentTo": {
+      "type": "string",
+      "description": "An email address to send a link to",
+      "alias": "s",
+      "x-deprecated": true
+    },
     "webpack": {
       "type": "boolean",
-      "description": "Start a Webpack dev server for the web app."
+      "description": "Start a Webpack dev server for the web app.",
+      "x-deprecated": true
     }
   }
 }

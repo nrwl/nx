@@ -1,4 +1,5 @@
 {
+  "name": "nx-dev-models-menu",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "nx-dev/models-menu/src",
   "projectType": "library",
@@ -12,7 +13,7 @@
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/nx-dev/models-menu"],
+      "outputs": ["{workspaceRoot}/coverage/nx-dev/models-menu"],
       "options": {
         "jestConfig": "nx-dev/models-menu/jest.config.ts",
         "passWithNoTests": true

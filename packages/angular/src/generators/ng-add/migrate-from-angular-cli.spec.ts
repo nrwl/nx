@@ -1,11 +1,12 @@
+import type { Tree } from '@nrwl/devkit';
 import {
   readJson,
   readProjectConfiguration,
-  Tree,
   updateJson,
   writeJson,
 } from '@nrwl/devkit';
 import { createTree } from '@nrwl/devkit/testing';
+import * as prettierUtils from '@nrwl/workspace/src/utilities/prettier';
 import { migrateFromAngularCli } from './migrate-from-angular-cli';
 
 describe('workspace', () => {
@@ -174,7 +175,7 @@ describe('workspace', () => {
       );
     });
 
-    it('should remove the newProjectRoot key from configuration', async () => {
+    it('should remove the angular.json file', async () => {
       tree.write(
         '/angular.json',
         JSON.stringify({
@@ -229,9 +230,7 @@ describe('workspace', () => {
 
       await migrateFromAngularCli(tree, {});
 
-      const a = readJson(tree, '/angular.json');
-
-      expect(a.newProjectRoot).toBeUndefined();
+      expect(tree.exists('angular.json')).toBe(false);
     });
 
     it('should set the default collection to @nrwl/angular', async () => {
@@ -239,6 +238,11 @@ describe('workspace', () => {
       expect(
         readJson(tree, 'nx.json').cli?.defaultCollection
       ).not.toBeDefined();
+    });
+
+    it('should set the default project correctly', async () => {
+      await migrateFromAngularCli(tree, {});
+      expect(readJson(tree, 'nx.json').defaultProject).toBe('myApp');
     });
 
     it('should create nx.json', async () => {
@@ -263,6 +267,101 @@ describe('workspace', () => {
 
       const prettierIgnore = tree.read('/.prettierignore').toString();
       expect(prettierIgnore).toBe('# existing ignore rules');
+    });
+
+    it('should generate .gitkeep file in apps directory when there are no applications', async () => {
+      tree.write('projects/lib1/README.md', '');
+      tree.write('projects/lib1/src/public-api.ts', '');
+      writeJson(tree, 'angular.json', {
+        $schema: './node_modules/@angular/cli/lib/config/schema.json',
+        version: 1,
+        defaultProject: 'lib1',
+        newProjectRoot: 'projects',
+        projects: {
+          lib1: {
+            root: 'projects/lib1',
+            sourceRoot: 'projects/lib1/src',
+            projectType: 'library',
+            architect: {
+              build: {
+                builder: '@angular-devkit/build-angular:ng-packagr',
+                options: { tsConfig: 'projects/lib1/tsconfig.lib.json' },
+              },
+              test: {
+                builder: '@angular-devkit/build-angular:karma',
+                options: { tsConfig: 'projects/lib1/tsconfig.spec.json' },
+              },
+            },
+          },
+        },
+      });
+
+      await migrateFromAngularCli(tree, {});
+
+      expect(tree.exists('apps/.gitkeep')).toBe(true);
+    });
+
+    it('should not generate .gitkeep file in apps directory when there is at least one application', async () => {
+      await migrateFromAngularCli(tree, {});
+
+      expect(tree.exists('apps/.gitkeep')).toBe(false);
+    });
+
+    it('should generate .gitkeep file in libs directory when there are no libraries', async () => {
+      await migrateFromAngularCli(tree, {});
+
+      expect(tree.exists('libs/.gitkeep')).toBe(true);
+    });
+
+    it('should not generate .gitkeep file in libs directory when there is at least one library', async () => {
+      tree.write('projects/lib1/README.md', '');
+      tree.write('projects/lib1/src/public-api.ts', '');
+      writeJson(tree, 'angular.json', {
+        $schema: './node_modules/@angular/cli/lib/config/schema.json',
+        version: 1,
+        defaultProject: 'app1',
+        newProjectRoot: 'projects',
+        projects: {
+          app1: {
+            root: '',
+            sourceRoot: 'src',
+            projectType: 'application',
+            architect: {
+              build: {
+                builder: '@angular-devkit/build-angular:browser',
+                options: { tsConfig: 'tsconfig.app.json' },
+              },
+              test: {
+                builder: '@angular-devkit/build-angular:karma',
+                options: { tsConfig: 'tsconfig.spec.json' },
+              },
+              e2e: {
+                builder: '@angular-devkit/build-angular:protractor',
+                options: { protractorConfig: 'e2e/protractor.conf.js' },
+              },
+            },
+          },
+          lib1: {
+            root: 'projects/lib1',
+            sourceRoot: 'projects/lib1/src',
+            projectType: 'library',
+            architect: {
+              build: {
+                builder: '@angular-devkit/build-angular:ng-packagr',
+                options: { tsConfig: 'projects/lib1/tsconfig.lib.json' },
+              },
+              test: {
+                builder: '@angular-devkit/build-angular:karma',
+                options: { tsConfig: 'projects/lib1/tsconfig.spec.json' },
+              },
+            },
+          },
+        },
+      });
+
+      await migrateFromAngularCli(tree, {});
+
+      expect(tree.exists('libs/.gitkeep')).toBe(false);
     });
 
     it('should create a root eslint config', async () => {
@@ -345,15 +444,11 @@ describe('workspace', () => {
 
       await migrateFromAngularCli(tree, {});
 
-      expect(readJson(tree, 'angular.json')).toStrictEqual({
-        version: 2,
-        projects: {
-          app1: 'apps/app1',
-          'app1-e2e': 'apps/app1-e2e',
-          app2: 'apps/app2',
-          'app2-e2e': 'apps/app2-e2e',
-        },
-      });
+      expect(tree.exists('angular.json')).toBe(false);
+      expect(tree.exists('apps/app1/project.json')).toBe(true);
+      expect(tree.exists('apps/app1-e2e/project.json')).toBe(true);
+      expect(tree.exists('apps/app2/project.json')).toBe(true);
+      expect(tree.exists('apps/app2-e2e/project.json')).toBe(true);
       const app1 = readProjectConfiguration(tree, 'app1');
       expect(app1.root).toBe('apps/app1');
       expect(app1.sourceRoot).toBe('apps/app1/src');
@@ -445,15 +540,11 @@ describe('workspace', () => {
 
       await migrateFromAngularCli(tree, {});
 
-      expect(readJson(tree, 'angular.json')).toStrictEqual({
-        version: 2,
-        projects: {
-          app1: 'apps/app1',
-          'app1-e2e': 'apps/app1-e2e',
-          lib1: 'libs/lib1',
-          lib2: 'libs/lib2',
-        },
-      });
+      expect(tree.exists('angular.json')).toBe(false);
+      expect(tree.exists('apps/app1/project.json')).toBe(true);
+      expect(tree.exists('apps/app1-e2e/project.json')).toBe(true);
+      expect(tree.exists('libs/lib1/project.json')).toBe(true);
+      expect(tree.exists('libs/lib2/project.json')).toBe(true);
       const lib1 = readProjectConfiguration(tree, 'lib1');
       expect(lib1.root).toBe('libs/lib1');
       expect(lib1.sourceRoot).toBe('libs/lib1/src');
@@ -473,7 +564,10 @@ describe('workspace', () => {
         'package.json',
         JSON.stringify({ name: 'my-scope', devDependencies: {} })
       );
-      tree.write('angular.json', JSON.stringify({ projects: { myproj: {} } }));
+      tree.write(
+        'angular.json',
+        JSON.stringify({ projects: { myproj: { root: '' } } })
+      );
       tree.write('tsconfig.json', '{"compilerOptions": {}}');
     });
 
@@ -483,6 +577,7 @@ describe('workspace', () => {
       const { devDependencies } = readJson(tree, 'package.json');
       expect(devDependencies['@nrwl/workspace']).toBeDefined();
       expect(devDependencies['nx']).toBeDefined();
+      expect(devDependencies['prettier']).toBeDefined();
     });
 
     it('should create nx.json', async () => {
@@ -561,14 +656,22 @@ describe('workspace', () => {
         },
       };
       tree.write('/angular.json', JSON.stringify(angularJson));
+      jest
+        .spyOn(prettierUtils, 'resolveUserExistingPrettierConfig')
+        .mockReturnValue(Promise.resolve(null));
 
       await migrateFromAngularCli(tree, { preserveAngularCliLayout: true });
 
-      expect(readJson(tree, 'angular.json')).toStrictEqual(angularJson);
-      expect(tree.exists('/decorate-angular-cli.js')).toBe(true);
+      expect(tree.exists('angular.json')).toBe(false);
+      expect(tree.exists('decorate-angular-cli.js')).toBe(true);
+      expect(tree.exists('.prettierignore')).toBe(true);
+      expect(tree.exists('.prettierrc')).toBe(true);
       const { scripts } = readJson(tree, 'package.json');
       expect(scripts.postinstall).toBe('node ./decorate-angular-cli.js');
       expect(readJson(tree, 'nx.json')).toMatchSnapshot();
+      expect(readJson(tree, 'project.json')).toMatchSnapshot();
+      expect(readJson(tree, 'projects/app2/project.json')).toMatchSnapshot();
+      expect(readJson(tree, 'projects/lib1/project.json')).toMatchSnapshot();
     });
   });
 });

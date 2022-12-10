@@ -10,7 +10,7 @@ Make sure you have Go installed locally by following [these instructions](https:
 
 You can verify that Go is installed correctly by running:
 
-```bash
+```shell
 go version
 ```
 
@@ -29,7 +29,7 @@ Create a `project.json` file for your Go CLI.
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "go build -o='../../dist/packages/cli/' ./src/ascii.go",
+        "command": "go build -o=../../dist/packages/cli/ ./src/ascii.go",
         "cwd": "packages/cli"
       }
     },
@@ -49,7 +49,7 @@ You could have the exact same functionality with a `package.json` file with a `s
 ```json
 {
   "scripts": {
-    "build": "go build -o='../../dist/packages/cli/' ./src/ascii.go",
+    "build": "go build -o ../../dist/packages/cli/ ./src/ascii.go",
     "serve": "go run ./src/ascii.˙go"
   }
 }
@@ -101,7 +101,7 @@ func main() {
 
 `packages/cli/src/cow.txt`:
 
-```bash
+```shell
  _____
 < moo >
  -----
@@ -116,7 +116,7 @@ func main() {
 
 Now if you run `nx serve cli`, you'll see a friendly message:
 
-```bash
+```shell
 ❯ nx serve cli
 
 > nx run cli:serve

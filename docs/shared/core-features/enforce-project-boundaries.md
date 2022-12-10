@@ -10,13 +10,13 @@ Nx provides an `enforce-module-boundaries` eslint rule that enforces the public 
 
 To set up the lint rule, install these dependencies:
 
-```bash
+```shell
 npm i @nrwl/eslint-plugin-nx @nrwl/devkit
 ```
 
 And configure the rule in your root `.eslintrc.json` file:
 
-```jsonc
+```jsonc {% fileName=".eslintrc.json" %}
 {
   "plugins": ["@nrwl/nx"],
   // ...
@@ -40,8 +40,7 @@ First, use your project configuration (in `project.json` or `package.json`) to a
 {% tabs %}
 {% tab label="package.json" %}
 
-```jsonc
-// client/package.json
+```jsonc {% fileName="client/package.json" %}
 {
   // ... more project configuration here
   "nx": {
@@ -50,8 +49,7 @@ First, use your project configuration (in `project.json` or `package.json`) to a
 }
 ```
 
-```jsonc
-// admin/package.json
+```jsonc {% fileName="admin/package.json" %}
 {
   // ... more project configuration here
   "nx": {
@@ -60,8 +58,7 @@ First, use your project configuration (in `project.json` or `package.json`) to a
 }
 ```
 
-```jsonc
-// utils/package.json
+```jsonc {% fileName="utils/package.json" %}
 {
   // ... more project configuration here
   "nx": {
@@ -73,24 +70,21 @@ First, use your project configuration (in `project.json` or `package.json`) to a
 {% /tab %}
 {% tab label="project.json" %}
 
-```jsonc
-// client/project.json
+```jsonc {% fileName="client/package.json" %}
 {
   // ... more project configuration here
   "tags": ["scope:client"]
 }
 ```
 
-```jsonc
-// admin/project.json
+```jsonc {% fileName="admin/project.json" %}
 {
   // ... more project configuration here
   "tags": ["scope:admin"]
 }
 ```
 
-```jsonc
-// utils/project.json
+```jsonc {% fileName="utils/project.json" %}
 {
   // ... more project configuration here
   "tags": ["scope:shared"]
@@ -104,7 +98,7 @@ Next you should update your root lint configuration:
 
 - If you are using **ESLint** you should look for an existing rule entry in your root `.eslintrc.json` called `"@nrwl/nx/enforce-module-boundaries"` and you should update the `"depConstraints"`:
 
-```jsonc
+```jsonc {% fileName=".eslintrc.json" %}
 {
   // ... more ESLint config here
 
@@ -148,11 +142,7 @@ Projects without any tags cannot depend on any other projects. If you add the fo
 
 If you try to violate the constraints, you will get an error when linting:
 
-```bash
+```shell
 A project tagged with "scope:admin" can only depend on projects
 tagged with "scoped:shared" or "scope:admin".
 ```
-
-## See Also
-
-- [nx.json workspaceLayout property](/reference/nx-json#workspace-layout)

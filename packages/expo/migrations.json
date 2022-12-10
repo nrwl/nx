@@ -23,6 +23,18 @@
       "cli": "nx",
       "description": "Add target update for expo projects in project.json",
       "factory": "./src/migrations/update-14-5-1/add-eas-update-target"
+    },
+    "change-expo-jest-preset": {
+      "version": "15.0.3-beta.0",
+      "cli": "nx",
+      "description": "Change jest config preset tof expo projects",
+      "factory": "./src/migrations/update-15-0-3/change-jest-preset"
+    },
+    "add-new-expo-cli-targets": {
+      "version": "15.0.3-beta.0",
+      "cli": "nx",
+      "description": "Add targets for @expo/cli and replace eject target",
+      "factory": "./src/migrations/update-15-0-3/add-new-expo-cli-targets"
     }
   },
   "packageJsonUpdates": {
@@ -405,8 +417,133 @@
           "version": "13.1.0",
           "alwaysAddToPackageJson": false
         },
-        "metro": {
+        "metro-resolver": {
           "version": "0.72.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "15.0.0": {
+      "version": "15.0.0-beta.0",
+      "packages": {
+        "metro-resolver": {
+          "version": "0.72.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/react-native": {
+          "version": "11.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/jest-native": {
+          "version": "4.0.13",
+          "alwaysAddToPackageJson": false
+        },
+        "expo": {
+          "version": "46.0.13",
+          "alwaysAddToPackageJson": false
+        },
+        "expo-cli": {
+          "version": "6.0.6",
+          "alwaysAddToPackageJson": false
+        },
+        "react-native": {
+          "version": "0.69.6",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "15.0.3": {
+      "version": "15.0.3-beta.0",
+      "packages": {
+        "@testing-library/react-native": {
+          "version": "11.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/jest-native": {
+          "version": "5.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "expo": {
+          "version": "46.0.16",
+          "alwaysAddToPackageJson": false
+        },
+        "expo-cli": {
+          "version": "6.0.6",
+          "alwaysAddToPackageJson": false
+        },
+        "eas-cli": {
+          "version": "2.4.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@expo/cli": {
+          "version": "0.3.2",
+          "alwaysAddToPackageJson": false,
+          "addToPackageJson": "devDependencies"
+        }
+      }
+    },
+    "15.2.2": {
+      "version": "15.2.2-beta.0",
+      "packages": {
+        "metro-resolver": {
+          "version": "0.73.3",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "15.3.0": {
+      "version": "15.3.0-beta.0",
+      "packages": {
+        "@testing-library/react-native": {
+          "version": "11.5.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/jest-native": {
+          "version": "5.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "expo": {
+          "version": "47.0.8",
+          "alwaysAddToPackageJson": false
+        },
+        "@expo/metro-config": {
+          "version": "0.5.1",
+          "alwaysAddToPackageJson": false
+        },
+        "expo-splash-screen": {
+          "version": "~0.17.5",
+          "alwaysAddToPackageJson": false
+        },
+        "expo-cli": {
+          "version": "6.0.8",
+          "alwaysAddToPackageJson": false
+        },
+        "@expo/cli": {
+          "version": "0.4.10",
+          "alwaysAddToPackageJson": false
+        },
+        "eas-cli": {
+          "version": "2.8.0",
+          "alwaysAddToPackageJson": false
+        },
+        "babel-preset-expo": {
+          "version": "~9.2.2",
+          "alwaysAddToPackageJson": false
+        },
+        "react-native": {
+          "version": "0.70.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-native": {
+          "version": "0.70.7",
+          "alwaysAddToPackageJson": false
+        },
+        "react-native-svg": {
+          "version": "12.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@svgr/webpack": {
+          "version": "^6.5.1",
           "alwaysAddToPackageJson": false
         }
       }

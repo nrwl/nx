@@ -1,5 +1,9 @@
-<p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx.png" 
-width="100%" alt="Nx - Smart, Fast and Extensible Build System"></p>
+<p style="text-align: center;">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-dark.svg">
+    <img alt="Nx - Smart, Fast and Extensible Build System" src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-light.svg" width="100%">
+  </picture>
+</p>
 
 <div style="text-align: center;">
 
@@ -22,8 +26,8 @@ Nx is a next generation build system with first class monorepo support and power
 A few links to help you get started:
 
 - [Nx.Dev: Documentation, Guides, Interactive Tutorials](https://nx.dev)
-- [Nx.Dev: Core Tutorials](https://nx.dev/core-tutorial/01-create-blog)
-- [Recipe: Adding Nx to an Existing Monorepo](https://nx.dev/recipe/adding-to-monorepo)
+- [Nx.Dev: Core Tutorials](https://nx.dev/getting-started/intro)
+- [Recipe: Adding Nx to an Existing Monorepo](https://nx.dev/recipes/adopting-nx/adding-to-monorepo)
 - [Official Nx YouTube Channel](https://www.youtube.com/c/Nrwl_io)
 - [Blog Posts About Nx](https://blog.nrwl.io/nx/home)
 

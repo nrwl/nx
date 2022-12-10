@@ -12,6 +12,7 @@ import {
   reformattedWorkspaceJsonOrNull,
   toNewFormat,
 } from '../../config/workspaces';
+import { PackageJson } from '../../utils/package-json';
 import { joinPathFragments, normalizePath } from '../../utils/path';
 
 import type { Tree } from '../tree';
@@ -228,9 +229,11 @@ export function readProjectConfiguration(
   const workspace = readWorkspace(tree);
   if (!workspace.projects[projectName]) {
     throw new Error(
-      `Cannot find configuration for '${projectName}' in ${getWorkspacePath(
-        tree
-      )}.`
+      getWorkspacePath(tree)
+        ? `Cannot find configuration for '${projectName}' in ${getWorkspacePath(
+            tree
+          )}.`
+        : `Cannot find configuration for '${projectName}'`
     );
   }
 
@@ -351,18 +354,18 @@ function addProjectToWorkspaceJson(
     );
   }
 
-  const configFile =
+  const projectConfigFile =
     (mode === 'create' && standalone) || !workspaceConfigPath
       ? joinPathFragments(project.root, 'project.json')
       : getProjectFileLocation(tree, projectName);
   const jsonSchema =
-    configFile && mode === 'create'
+    projectConfigFile && mode === 'create'
       ? { $schema: getRelativeProjectJsonSchemaPath(tree, project) }
       : {};
 
-  if (configFile) {
+  if (projectConfigFile) {
     if (mode === 'delete') {
-      tree.delete(configFile);
+      tree.delete(projectConfigFile);
       delete workspaceJson.projects[projectName];
     } else {
       // keep real workspace up to date
@@ -371,7 +374,8 @@ function addProjectToWorkspaceJson(
       }
 
       // update the project.json file
-      writeJson(tree, configFile, {
+      writeJson(tree, projectConfigFile, {
+        name: mode === 'create' ? projectName : project.name ?? projectName,
         ...jsonSchema,
         ...project,
         root: undefined,
@@ -430,19 +434,36 @@ function inlineProjectConfigurationsWithTree(
  * the same devkit generator run show up when
  * there is no workspace.json file, as `glob`
  * cannot find them.
+ *
+ * We exclude the root `package.json` from this list unless
+ * considered a project during workspace generation
  */
 function findCreatedProjects(tree: Tree) {
-  const files = tree
-    .listChanges()
-    .filter((f) => {
-      const fileName = basename(f.path);
-      return (
-        f.type === 'CREATE' &&
-        (fileName === 'project.json' || fileName === 'package.json')
-      );
-    })
-    .map((x) => x.path);
-  return deduplicateProjectFiles(files);
+  const createdProjectFiles = [];
+
+  for (const change of tree.listChanges()) {
+    if (change.type === 'CREATE') {
+      const fileName = basename(change.path);
+      // all created project json files are created projects
+      if (fileName === 'project.json') {
+        createdProjectFiles.push(change.path);
+      } else if (fileName === 'package.json') {
+        // created package.json files are projects by default *unless* they are at the root
+        const includedByDefault = change.path === 'package.json' ? false : true;
+        // If the file should be included by default
+        if (includedByDefault) {
+          createdProjectFiles.push(change.path);
+        } else {
+          const contents: PackageJson = JSON.parse(change.content.toString());
+          // if the file should be included by the Nx property
+          if (contents.nx) {
+            createdProjectFiles.push(change.path);
+          }
+        }
+      }
+    }
+  }
+  return deduplicateProjectFiles(createdProjectFiles);
 }
 
 /**
@@ -462,6 +483,7 @@ function findDeletedProjects(tree: Tree) {
 }
 
 let staticFSWorkspace: RawProjectsConfigurations;
+let cachedTree: Tree;
 function readRawWorkspaceJson(tree: Tree): RawProjectsConfigurations {
   const path = getWorkspacePath(tree);
   if (path && tree.exists(path)) {
@@ -474,13 +496,14 @@ function readRawWorkspaceJson(tree: Tree): RawProjectsConfigurations {
       findCreatedProjects(tree),
       (file) => readJson(tree, file)
     ).projects;
-    // We already have built a cache
-    if (!staticFSWorkspace) {
+    // We already have built a cache but need to confirm it's the same tree
+    if (!staticFSWorkspace || tree !== cachedTree) {
       staticFSWorkspace = buildWorkspaceConfigurationFromGlobs(
         nxJson,
         [...globForProjectFiles(tree.root, nxJson)],
         (file) => readJson(tree, file)
       );
+      cachedTree = tree;
     }
     const projects = { ...staticFSWorkspace.projects, ...createdProjects };
     findDeletedProjects(tree).forEach((file) => {
@@ -495,10 +518,11 @@ function readRawWorkspaceJson(tree: Tree): RawProjectsConfigurations {
         delete projects[matchingStaticProject[0]];
       }
     });
-    return {
+    staticFSWorkspace = {
       ...staticFSWorkspace,
       projects,
     };
+    return staticFSWorkspace;
   }
 }
 

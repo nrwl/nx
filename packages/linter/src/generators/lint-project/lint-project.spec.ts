@@ -1,7 +1,7 @@
 import {
-  Tree,
   addProjectConfiguration,
   readProjectConfiguration,
+  Tree,
 } from '@nrwl/devkit';
 
 import { Linter } from '../utils/linter';
@@ -39,7 +39,7 @@ describe('@nrwl/linter:lint-project', () => {
         ).toMatchSnapshot();
       });
 
-      it('should configure the target in workspace.json', async () => {
+      it('should configure the target in project configuration', async () => {
         await lintProjectGenerator(tree, {
           ...defaultOptions,
           linter: Linter.EsLint,
@@ -78,48 +78,6 @@ describe('@nrwl/linter:lint-project', () => {
         expect(
           tree.read('libs/test-lib/.eslintrc.json', 'utf-8')
         ).toMatchSnapshot();
-      });
-    });
-
-    describe('tslint', () => {
-      it('should generate a tslint config', async () => {
-        await lintProjectGenerator(tree, {
-          ...defaultOptions,
-          linter: Linter.TsLint,
-          tsConfigPaths: ['tsconfig.json'],
-          project: 'test-lib',
-          setParserOptionsProject: false,
-        });
-
-        expect(
-          tree.read('libs/test-lib/tslint.json', 'utf-8')
-        ).toMatchSnapshot();
-      });
-
-      it('should configure the target in workspace.json', async () => {
-        await lintProjectGenerator(tree, {
-          ...defaultOptions,
-          linter: Linter.TsLint,
-          tsConfigPaths: ['tsconfig.json'],
-          project: 'test-lib',
-          setParserOptionsProject: false,
-        });
-
-        const projectConfig = readProjectConfiguration(tree, 'test-lib');
-        expect(projectConfig.targets.lint).toMatchInlineSnapshot(`
-          Object {
-            "executor": "@angular-devkit/build-angular:tslint",
-            "options": Object {
-              "exclude": Array [
-                "**/node_modules/**",
-                "!libs/test-lib/**/*",
-              ],
-              "tsConfig": Array [
-                "tsconfig.json",
-              ],
-            },
-          }
-        `);
       });
     });
   });

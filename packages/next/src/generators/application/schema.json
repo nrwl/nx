@@ -4,12 +4,6 @@
   "$id": "NxNextApp",
   "title": "Create a Next.js Application for Nx",
   "description": "Create a Next.js Application for Nx.",
-  "examples": [
-    {
-      "command": "nx g app myapp --directory=myorg",
-      "description": "Generate `apps/myorg/myapp` and `apps/myorg/myapp-e2e`"
-    }
-  ],
   "type": "object",
   "properties": {
     "name": {
@@ -71,7 +65,7 @@
     "linter": {
       "description": "The tool to use for running lint checks.",
       "type": "string",
-      "enum": ["eslint", "tslint"],
+      "enum": ["eslint"],
       "default": "eslint"
     },
     "skipFormat": {
@@ -126,5 +120,6 @@
       "default": false
     }
   },
-  "required": []
+  "required": [],
+  "examplesFile": "../../../docs/application-examples.md"
 }

@@ -4,9 +4,9 @@ The Nx CLI provides the `migrate` command to help you stay up to date with the l
 
 Not only does `nx migrate` update you to the latest version of Nx, but it also updates the versions of dependencies that we support and test such as Jest and Cypress. You can also use the `migrate` command to update any Nx plugin.
 
-## Migrating to the latest Nx version
+## Update to the latest Nx version
 
-Migration happens in three steps:
+Updating happens in three steps:
 
 - The installed dependencies are updated including the `package.json` (and `node_modules`).
 - The source code in the repo is updated to match the new versions of packages in `package.json`.
@@ -16,13 +16,13 @@ Migration happens in three steps:
 
 First, run the `migrate` command:
 
-```bash
+```shell
 nx migrate latest # same as nx migrate @nrwl/workspace@latest
 ```
 
 You can also specify the name of the package and the version:
 
-```bash
+```shell
 nx migrate @nrwl/workspace@version # you can also specify version
 ```
 
@@ -47,7 +47,7 @@ Each Nx plugin is able to provide a set of migrations which are relevant to part
 
 The common case is that you will simply apply all migrations from the generated JSON file, exactly as they were generated in the previous step, by running:
 
-```bash
+```shell
 nx migrate --run-migrations
 ```
 
@@ -61,4 +61,4 @@ Note: You may want to keep the `migrations.json` until every branch that was cre
 
 ## Problems?
 
-If you can't run `nx migrate --run-migrations` all in one step, try the tips in [Advanced Update Process](/recipe/advanced-update)
+If you can't run `nx migrate --run-migrations` all in one step, try the tips in [Advanced Update Process](/recipes/other/advanced-update)

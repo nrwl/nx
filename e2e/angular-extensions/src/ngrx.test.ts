@@ -27,7 +27,7 @@ describe('Angular Package', () => {
 
       // Generate root ngrx state management
       runCLI(
-        `generate @nrwl/angular:ngrx users --module=apps/${myapp}/src/app/app.module.ts --root --minimal=false --useDataPersistence=true`
+        `generate @nrwl/angular:ngrx users --module=apps/${myapp}/src/app/app.module.ts --root --minimal=false`
       );
       const packageJson = readJson('package.json');
       expect(packageJson.dependencies['@ngrx/store']).toBeDefined();

@@ -1,5 +1,9 @@
 import { WholeFileChange } from '../../file-utils';
-import { DiffType, isJsonChange, JsonChange } from '../../../utils/json-diff';
+import {
+  JsonDiffType,
+  isJsonChange,
+  JsonChange,
+} from '../../../utils/json-diff';
 import { getRootTsConfigFileName } from '../../../utils/typescript';
 import { TouchedProjectLocator } from '../affected-project-graph-models';
 import { ProjectGraphProjectNode } from '../../../config/project-graph';
@@ -33,7 +37,7 @@ export const getTouchedProjectsFromTsConfig: TouchedProjectLocator<
     }
 
     // If a path is deleted, everything is touched
-    if (change.type === DiffType.Deleted) {
+    if (change.type === JsonDiffType.Deleted) {
       return Object.keys(graph.nodes);
     }
     touched.push(

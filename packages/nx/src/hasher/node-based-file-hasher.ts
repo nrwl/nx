@@ -50,7 +50,7 @@ export class NodeBasedFileHasher extends FileHasherBase {
         }
         try {
           const s = statSync(absoluteChild);
-          if (!s.isDirectory()) {
+          if (s.isFile()) {
             this.fileHashes.set(
               normalizePath(relChild),
               this.hashFile(relChild)

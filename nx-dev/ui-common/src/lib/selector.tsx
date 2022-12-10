@@ -1,5 +1,5 @@
 import { Listbox, Transition } from '@headlessui/react';
-import { CheckIcon, SelectorIcon } from '@heroicons/react/solid';
+import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/24/solid';
 import { Fragment } from 'react';
 
 export interface SelectorProps<T> {
@@ -18,11 +18,11 @@ export function Selector<T = {}>(props: SelectorProps<T>): JSX.Element {
         {({ open }) => (
           <>
             <div className="relative mt-1">
-              <Listbox.Button className="relative w-full cursor-pointer rounded border border-gray-200 bg-white py-2 pl-3 pr-10 text-left font-medium focus:outline-none focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-blue-300 sm:text-sm">
+              <Listbox.Button className="relative w-full cursor-pointer rounded border border-slate-200 bg-white py-2 pl-3 pr-10 text-left font-medium focus:outline-none focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-blue-300 sm:text-sm">
                 <span className="block truncate">{props.selected.label}</span>
                 <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                  <SelectorIcon
-                    className="h-5 w-5 text-gray-500"
+                  <ChevronUpDownIcon
+                    className="h-5 w-5 text-slate-500"
                     aria-hidden="true"
                   />
                 </span>
@@ -48,7 +48,7 @@ export function Selector<T = {}>(props: SelectorProps<T>): JSX.Element {
                         `${
                           active
                             ? 'bg-blue-nx-base text-white'
-                            : 'text-gray-500'
+                            : 'text-slate-500'
                         }
                           relative cursor-pointer select-none py-2 pl-10 pr-4`
                       }
@@ -62,7 +62,7 @@ export function Selector<T = {}>(props: SelectorProps<T>): JSX.Element {
                           {selected || item.value === props.selected.value ? (
                             <span
                               className={`${
-                                active ? 'text-white' : 'text-gray-500'
+                                active ? 'text-white' : 'text-slate-500'
                               }
                                 absolute inset-y-0 left-0 flex items-center pl-3`}
                             >

@@ -15,7 +15,7 @@ width="100%" /%}
 
 To get started with building a Nx Plugin, run the following command:
 
-```bash
+```shell
 npx create-nx-plugin my-org --pluginName my-plugin
 ```
 
@@ -123,7 +123,7 @@ Sometimes you might want to include some assets with the plugin. This might be a
 
 To make sure that assets are copied to the dist folder, open the plugin's `project.json` file. Inside the `build` property, add additional assets. By default, all `.md` files in the root, all non-ts files in folders, and the `generators.json` and `executors.json` files are included.
 
-```json
+```jsonc {% fileName="project.json" %}
 "build": {
   "executor": "@nrwl/node:package",
   "options": {
@@ -196,13 +196,13 @@ width="100%" /%}
 At its core a preset is a generator, which we can create inside of a plugin.
 If you **don't** have an existing plugin you can create one by running
 
-```bash
+```shell
   npx create-nx-plugin my-org --pluginName my-plugin
 ```
 
 To create our preset inside of our plugin we can run
 
-```bash
+```shell
   nx generate @nrwl/nx-plugin:generator --name=preset --project=happynrwl
 ```
 
@@ -212,7 +212,7 @@ The word `preset` is required for the name of this generator
 
 You should have a similar structure to this:
 
-```treeview
+```text
 happynrwl/
 	├── e2e
 	├── jest.config.js
@@ -259,7 +259,7 @@ export default async function (tree: Tree, options: PresetGeneratorSchema) {
 }
 ```
 
-To get an in-depth guide on customizing/running or debugging your generator see [local generators](/recipe/local-generators).
+To get an in-depth guide on customizing/running or debugging your generator see [local generators](/recipes/generators/local-generators).
 
 #### Usage
 
@@ -267,6 +267,6 @@ Before you are able to use your newly created preset you must package and publis
 
 After you have published your plugin to a registry you can now use your preset when creating a new workspace
 
-```bash
+```shell
 npx create-nx-workspace my-workspace --preset=my-plugin-name
 ```

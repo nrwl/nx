@@ -67,7 +67,7 @@ The `build` and `test` jobs implement the CI workflow using `.distributed` as te
 
 In order to use distributed task execution, we need to start agents and set the `NX_CLOUD_DISTRIBUTED_EXECUTION` flag to `true`.
 
-Read more about the [Distributed CI setup with Nx Cloud](/recipes/ci-setup#distributed-ci-with-nx-cloud).
+Read more about the [Distributed CI setup with Nx Cloud](/recipes/ci/ci-setup#distributed-ci-with-nx-cloud).
 
 ```yaml
 image: node:18
@@ -120,10 +120,7 @@ nx-dte:
     - yarn nx-cloud start-ci-run --stop-agents-after="build"
     - yarn nx-cloud record -- yarn nx workspace-lint --base=$NX_BASE --head=$NX_HEAD
     - yarn nx-cloud record -- yarn nx format:check --base=$NX_BASE --head=$NX_HEAD
-    - yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint --parallel=3
-    - yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --parallel=3 --ci --code-coverage
-    - yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e --parallel=3 --ci --code-coverage
-    - yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=build --parallel=3
+    - yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint --parallel=3 & yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --parallel=3 --ci --code-coverage & yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e --parallel=3 --ci --code-coverage & yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=build --parallel=3
 
 # Create as many agents as you want
 nx-dte-agent1:

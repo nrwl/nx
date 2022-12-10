@@ -1,4 +1,5 @@
 {
+  "name": "js",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/js/src",
   "projectType": "library",
@@ -20,7 +21,7 @@
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/js"],
+      "outputs": ["{workspaceRoot}/coverage/js"],
       "options": {
         "jestConfig": "packages/js/jest.config.ts",
         "passWithNoTests": true
@@ -72,7 +73,7 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["build/packages/js"],
+      "outputs": ["{workspaceRoot}/build/packages/js"],
       "options": {
         "command": "node ./scripts/copy-readme.js js"
       }

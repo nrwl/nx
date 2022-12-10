@@ -1,0 +1,88 @@
+{
+  "name": "vite",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/vite",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "jestConfig": "packages/vite/jest.config.ts",
+        "passWithNoTests": true
+      },
+      "outputs": ["{workspaceRoot}/coverage/packages/vite"]
+    },
+    "build-base": {
+      "executor": "@nrwl/js:swc",
+      "options": {
+        "outputPath": "build/packages/vite",
+        "tsConfig": "packages/vite/tsconfig.lib.json",
+        "main": "packages/vite/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": [
+          {
+            "input": "packages/vite",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/vite",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/vite",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages/vite",
+            "glob": "**/*.js",
+            "ignore": ["**/jest.config.js"],
+            "output": "/"
+          },
+          {
+            "input": "packages/vite",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
+        ]
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/build/packages/vite"],
+      "options": {
+        "command": "node ./scripts/copy-readme.js vite"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/vite/**/*.ts",
+          "packages/vite/**/*.spec.ts",
+          "packages/vite/**/*_spec.ts",
+          "packages/vite/**/*.spec.tsx",
+          "packages/vite/**/*.spec.js",
+          "packages/vite/**/*.spec.jsx",
+          "packages/vite/**/*.d.ts",
+          "packages/vite/**/executors/**/schema.json",
+          "packages/vite/**/generators/**/schema.json",
+          "packages/vite/generators.json",
+          "packages/vite/executors.json",
+          "packages/vite/package.json",
+          "packages/vite/migrations.json"
+        ]
+      },
+      "outputs": ["{options.outputFile}"]
+    }
+  }
+}

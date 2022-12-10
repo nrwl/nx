@@ -7,7 +7,7 @@ import updateSwcrcPath from './update-swcrc-path';
 
 describe('update-swcrc-path migration', () => {
   it('should replace relative `swcrcPath` option with absolute `swcrc`', async () => {
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'test-package', {
       root: 'packages/test-package',
       targets: {

@@ -24,7 +24,7 @@ The RealWorld app is a great example of an AngularJS app, but it probably doesn�
 
 To start migrating the Real World app, create an Nx workspace:
 
-```bash
+```shell
 npx create-nx-workspace@latest nx-migrate-angularjs
 ```
 
@@ -32,7 +32,7 @@ When prompted choose the `apps` preset. The other presets use certain recommende
 
 At the next prompt, you can choose whether to use [Nx Cloud](https://nx.app) or not. By using Nx Cloud, you’ll be able to share the computation cache of operations like build, test or even your own commands with everyone working on the same project. Whether you choose to use it or not, the outcome of the migration won’t be affected and you can always change your choice later.
 
-```bash
+```shell
 ? What to create in the new workspace empty             [an empty workspace with a layout that works best for building apps]
 ? Set up distributed caching using Nx Cloud (It's free and doesn't require registration.) Yes [Faster builds, run details, GitHub integration. Learn more at https://nx.app]
 ```
@@ -41,7 +41,7 @@ At the next prompt, you can choose whether to use [Nx Cloud](https://nx.app) or 
 
 Your new workspace won’t have much in it because of the `apps` preset. You’ll need to generate an application to have some structure created. Add the Angular plugin to your workspace:
 
-```bash
+```shell
 npm install -D @nrwl/angular
 ```
 
@@ -53,13 +53,13 @@ Codebases with existing unit and e2e tests should continue to use whatever runne
 
 With the Angular capability added, generate your application:
 
-```bash
+```shell
 nx generate @nrwl/angular:application --name=realworld --unitTestRunner=karma --e2eTestRunner=protractor
 ```
 
 Accept the default options for each prompt:
 
-```bash
+```shell
 ? Which stylesheet format would you like to use? CSS
 ? Would you like to configure routing for this application? No
 ```
@@ -74,7 +74,7 @@ Copy the dependencies from the RealWorld app’s `package.json` to the `package.
 
 Your `package.json` should now look like this:
 
-```json
+```json {% fileName="package.json" %}
 {
   "name": "nx-migrate-angularjs",
   "version": "0.0.0",
@@ -219,7 +219,7 @@ During migration, you should take a small step and confirm that things work befo
 
 Copy the `gulpfile.js` over from the RealWorld app and put it in `apps/realworld`. This is where all configuration files reside for the application. Make some adjustments to this file so that your build artifacts land in a different place. In an Nx workspace, all build artifacts should be sent to an app-specific folder in the `dist` folder at the root of your workspace. Your `gulpfile.js` should look like this:
 
-```javascript
+```javascript {% fileName="gulpfile.js" %}
 var gulp = require('gulp');
 var notify = require('gulp-notify');
 var source = require('vinyl-source-stream');
@@ -318,7 +318,7 @@ gulp.task('default', ['html', 'browserify'], function () {
 
 You need to point your `build` and `serve` tasks at this gulp build process. Typically, an Angular app is built using the Angular CLI, but the Angular CLI doesn’t know how to build AngularJS projects. All of your tasks are configured in the project configuration file `apps/realworld/project.json`. Find the `build` and `serve` tasks and replace them with this code block:
 
-```json
+```jsonc {% fileName="apps/realworld/project.json" %}
 ...
         "build": {
           "executor": "nx:run-commands",
@@ -345,7 +345,7 @@ You need to point your `build` and `serve` tasks at this gulp build process. Typ
 
 This sets up the `build` and `serve` commands to use the locally installed version of gulp to run `build` and `serve`. To see the RealWorld app working, run:
 
-```bash
+```shell
 nx serve realworld
 ```
 
@@ -361,7 +361,7 @@ So far, you’ve mostly gotten already existing code and processes to work. This
 
 But migrating AngularJS code means we need to switch some of our tools to a more modern tool stack. Specifically, using webpack and babel is going to allow us to take advantage of Nx more easily. Becoming an expert in these build tools is outside the scope of this article, but I’ll address some AngularJS specific concerns. To get started, install these new dependencies:
 
-```bash
+```shell
 npm install -D @nrwl/web babel-plugin-angularjs-annotate
 ```
 
@@ -404,7 +404,7 @@ This webpack configuration is deliberately simplified for this tutorial. A real 
 
 To use webpack instead of gulp, go back to your `apps/realworld/project.json` file and modify the `build` and `serve` commands again:
 
-```json
+```jsonc {% fileName="apps/realworld/project.json" %}
 ...
 "build": {
   "executor": "@nrwl/web:webpack",
@@ -509,7 +509,7 @@ In an example like this, it’s easy enough to make this kind of change by hand.
 
 We also need to modify the `app.js` and remove the import of `config/app.templates.js`. Modify it like this:
 
-```javascript
+```javascript {% fileName="config/app.templates.js" %}
 import angular from 'angular';
 
 // Import our app config files
@@ -558,7 +558,7 @@ angular.bootstrap(document, ['app'], {
 
 Run the application the same way as before:
 
-```bash
+```shell
 nx serve realworld
 ```
 
@@ -568,7 +568,7 @@ Unit testing can be an important part of any code migration. If you migrate your
 
 You need a few dependencies for AngularJS unit testing that Nx doesn’t provide by default:
 
-```bash
+```shell
 npm install -D angular-mocks@1.5.11 karma-webpack
 ```
 
@@ -627,7 +627,7 @@ module.exports = function (config) {
 
 Next, rename the existing `apps/realworld/src/test.ts` to `apps/realworld/src/test.js` and modify its content to match the following:
 
-```javascript
+```javascript {% fileName="apps/realworld/src/test.js" %}
 import 'angular';
 import 'angular-mocks';
 import 'angular-ui-router';
@@ -676,7 +676,7 @@ This unit test does a check to make sure the component compiles and that it sets
 
 To run the unit tests:
 
-```bash
+```shell
 nx test
 ```
 
@@ -692,8 +692,7 @@ Nx created `realworld-e2e` for you when you generated your app. There is an exam
 
 You need to modify these files to account for the RealWorld app layout. Make the following modifications:
 
-```typescript
-//app.e2e-spec.ts
+```typescript {% fileName="app.e2e-spec.ts" %}
 import { AppPage } from './app.po';
 import { browser, logging } from 'protractor';
 
@@ -722,8 +721,7 @@ describe('workspace-project App', () => {
 });
 ```
 
-```typescript
-// app.po.ts
+```typescript {% fileName="app.po.ts" %}
 import { browser, by, element } from 'protractor';
 
 export class AppPage {
@@ -739,7 +737,7 @@ export class AppPage {
 
 You also need to modify the project configuration of the `realworld-e2e` app at `apps/realworld-e2e/project.json`. This will point your e2e process at the `development` configuration of the `realworld` app by default.
 
-```json
+```jsonc {% fileName="apps/realworld-e2e/project.json" %}
 {
   ...
       "e2e": {
@@ -759,7 +757,7 @@ You also need to modify the project configuration of the `realworld-e2e` app at 
 
 To run e2e tests, use the `e2e` command:
 
-```bash
+```shell
 nx e2e realworld-e2e
 ```
 

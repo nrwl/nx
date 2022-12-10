@@ -1,5 +1,6 @@
 import Editor, { useMonaco } from '@monaco-editor/react';
 import { JsonSchema } from '@nrwl/nx-dev/models-package';
+import { useTheme } from '@nrwl/nx-dev/ui-theme';
 import { useEffect } from 'react';
 
 export const SchemaEditor = ({
@@ -15,10 +16,12 @@ export const SchemaEditor = ({
   content: Record<string, any>;
   schema: JsonSchema;
 }): JSX.Element => {
+  const [theme] = useTheme();
   const monaco = useMonaco();
 
   useEffect(() => {
-    monaco?.languages.json.jsonDefaults.setDiagnosticsOptions({
+    if (!monaco) return;
+    monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
       validate: true,
       allowComments: true,
       schemas: [
@@ -29,7 +32,14 @@ export const SchemaEditor = ({
         },
       ],
     });
-  }, [monaco, schema]);
+
+    if (theme === 'system') {
+      const darkThemeMq = window.matchMedia('(prefers-color-scheme: dark)');
+      monaco.editor.setTheme(darkThemeMq.matches ? 'vs-dark' : 'vs-light');
+    } else {
+      monaco.editor.setTheme(theme === 'dark' ? 'vs-dark' : 'vs-light');
+    }
+  }, [monaco, schema, theme]);
 
   return (
     <Editor
@@ -41,7 +51,7 @@ export const SchemaEditor = ({
         JSON.stringify(content, null, 2)
       }
       path="a://b/example.json"
-      theme="vs-light"
+      theme={theme === 'dark' ? 'vs-dark' : 'vs-light'}
       options={{ scrollBeyondLastLine: false }}
       saveViewState={false}
     />

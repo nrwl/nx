@@ -36,18 +36,21 @@ export const registerTsProject = (
     // We can fall back on ts-node if its available
     const tsNodeInstalled = packageIsInstalled('ts-node/register');
     if (tsNodeInstalled) {
-      warnTsNodeUsage();
       const { register } = require('ts-node') as typeof import('ts-node');
 
       // ts-node doesn't provide a cleanup method
       registerTranspiler = () => {
-        register({
+        const service = register({
           project: tsConfigPath,
           transpileOnly: true,
           compilerOptions: {
             module: 'commonjs',
           },
         });
+        // Don't warn if a faster transpiler is enabled
+        if (!service.options.transpiler && !service.options.swc) {
+          warnTsNodeUsage();
+        }
         return () => {};
       };
     }

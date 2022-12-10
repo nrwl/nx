@@ -1,4 +1,5 @@
 {
+  "name": "next",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/next",
   "projectType": "library",
@@ -9,7 +10,7 @@
         "jestConfig": "packages/next/jest.config.ts",
         "passWithNoTests": true
       },
-      "outputs": ["coverage/packages/next"]
+      "outputs": ["{workspaceRoot}/coverage/packages/next"]
     },
     "build-base": {
       "executor": "@nrwl/js:tsc",
@@ -62,7 +63,7 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["build/packages/next"],
+      "outputs": ["{workspaceRoot}/build/packages/next"],
       "options": {
         "command": "node ./scripts/copy-readme.js next"
       }

@@ -1,20 +1,19 @@
 import { names, Tree } from '@nrwl/devkit';
 import * as ts from 'typescript';
-import { addRoute } from '../../../utils/nx-devkit/ast-utils';
 import { NormalizedSchema } from './normalized-schema';
-import { addStandaloneRoute } from '../../../utils/nx-devkit/standalone-utils';
+import { addRoute } from '../../../utils/nx-devkit/route-utils';
 
 export function addLoadChildren(
   tree: Tree,
   options: NormalizedSchema['libraryOptions']
 ) {
-  if (!tree.exists(options.parentModule)) {
-    throw new Error(`Cannot find '${options.parentModule}'`);
+  if (!tree.exists(options.parent)) {
+    throw new Error(`Cannot find '${options.parent}'`);
   }
 
-  const moduleSource = tree.read(options.parentModule)!.toString('utf-8');
+  const moduleSource = tree.read(options.parent, 'utf-8');
   const sourceFile = ts.createSourceFile(
-    options.parentModule,
+    options.parent,
     moduleSource,
     ts.ScriptTarget.Latest,
     true
@@ -24,13 +23,9 @@ export function addLoadChildren(
     names(options.fileName).fileName
   }', loadChildren: () => import('${options.importPath}').then(m => m.${
     options.standalone
-      ? `${names(options.name).className.toUpperCase()}_ROUTES`
+      ? `${names(options.name).propertyName}Routes`
       : options.moduleName
   })}`;
 
-  if (moduleSource.includes('@NgModule')) {
-    addRoute(tree, options.parentModule, sourceFile, route);
-  } else {
-    addStandaloneRoute(tree, options.parentModule, route);
-  }
+  addRoute(tree, options.parent, route);
 }

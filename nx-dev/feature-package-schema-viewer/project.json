@@ -1,4 +1,5 @@
 {
+  "name": "nx-dev-feature-package-schema-viewer",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "nx-dev/feature-package-schema-viewer/src",
   "projectType": "library",
@@ -14,7 +15,9 @@
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/nx-dev/feature-package-schema-viewer"],
+      "outputs": [
+        "{workspaceRoot}/coverage/nx-dev/feature-package-schema-viewer"
+      ],
       "options": {
         "jestConfig": "nx-dev/feature-package-schema-viewer/jest.config.ts",
         "passWithNoTests": true

@@ -1,7 +1,6 @@
 import { outputFileSync, readJsonSync } from 'fs-extra';
 import { join } from 'path';
 import { format, resolveConfig } from 'prettier';
-import { dedent } from 'tslint/lib/utils';
 
 const stripAnsi = require('strip-ansi');
 const importFresh = require('import-fresh');
@@ -184,6 +183,7 @@ export async function parseCommand(
         type: builderOptionTypes[key],
         choices: builderOptionsChoices[key],
         deprecated: builderDeprecatedOptions[key],
+        hidden: builderOptions.hiddenOptions.includes(key),
       })) || null,
   };
 }
@@ -195,26 +195,28 @@ export function generateOptionsMarkdown(command): string {
 
     command.options
       .sort((a, b) => sortAlphabeticallyFunction(a.name, b.name))
+      .filter(({ hidden }) => !hidden)
       .forEach((option) => {
-        response += dedent`
-        ### ${option.deprecated ? `~~${option.name}~~` : option.name}
-        `;
+        response += `\n### ${
+          option.deprecated ? `~~${option.name}~~` : option.name
+        }\n`;
         if (option.type !== undefined && option.type !== '') {
-          response += `Type: ${option.type}\n`;
+          response += `\nType: \`${option.type}\`\n`;
         }
         if (option.choices !== undefined) {
-          response += dedent`
-          Choices: [${option.choices
+          const choices = option.choices
             .map((c) => JSON.stringify(c).replace(/"/g, ''))
-            .join(', ')}]\n`;
+            .join(', ');
+          response += `\nChoices: [${choices}]\n`;
         }
         if (option.default !== undefined && option.default !== '') {
-          response += dedent`
-          Default: ${JSON.stringify(option.default).replace(/"/g, '')}\n`;
+          response += `\nDefault: \`${JSON.stringify(option.default).replace(
+            /"/g,
+            ''
+          )}\`\n`;
         }
-        response += dedent`
-              ${formatDeprecated(option.description, option.deprecated)}
-            `;
+        response +=
+          '\n' + formatDeprecated(option.description, option.deprecated);
       });
   }
   return response;

@@ -11,7 +11,7 @@
       "name": "Overview",
       "path": "/packages/next",
       "file": "shared/next-plugin",
-      "content": "![](/shared/nextjs-logo.png)\n\nWhen using Next.js in Nx, you get the out-of-the-box support for TypeScript, Cypress, and Jest. No need to configure anything: watch mode, source maps, and typings just work.\n\nThe Next.js plugin contains executors and generators for managing Next.js applications and libraries within an Nx workspace. It provides:\n\n- Scaffolding for creating, building, serving, linting, and testing Next.js applications.\n- Integration with building, serving, and exporting a Next.js application.\n- Integration with React libraries within the workspace.\n\n## Setting up Next.js\n\nTo create a new Nx workspace with Next.js, run `npx create-nx-workspace@latest --preset=next`.\n\nTo add Next.js to an existing Nx workspace, install the `@nrwl/next` package. Make sure to install the version that matches your `@nrwl/workspace` version.\n\n```bash\n#yarn\nyarn add --dev @nrwl/next\n```\n\n```bash\n#npm\nnpm install --save-dev @nrwl/next\n```\n\n### Creating Applications\n\nYou can add a new application with the following:\n\n```bash\nnx g @nrwl/next:app my-new-app\n```\n\n### Generating Libraries\n\nNx allows you to create libraries with just one command. Some reasons you might want to create a library include:\n\n- Share code between applications\n- Publish a package to be used outside the monorepo\n- Better visualize the architecture using `nx graph`\n\nFor more information on Nx libraries, see our documentation on [Creating Libraries](/more-concepts/creating-libraries)\nand [Library Types](/more-concepts/library-types).\n\nTo generate a new library run:\n\n```bash\nnx g @nrwl/next:lib my-new-lib\n```\n\n### Generating Pages and Components\n\nNx also provides commands to quickly generate new pages and components for your application.\n\n```bash\nnx g @nrwl/next:page my-new-page --project=my-new-app\n\nnx g @nrwl/next:component my-new-component --project=my-new-app\n```\n\nAbove commands will add a new page `my-new-page` and a component `my-new-component` to `my-new-app` project respectively.\n\nNx generates components with tests by default. For pages, you can pass the `--withTests` option to generate tests under the `specs` folder.\n\n## Using Next.js\n\n### Serving Next.js Applications\n\nYou can run `nx serve my-new-app` to serve a Next.js application called `my-new-app` for development. This will start the dev server at http://localhost:4200.\n\nTo serve a Next.js application for production, add the `--prod` flag to the serve command:\n\n```bash\nnx serve my-new-app --prod\n```\n\n### Using an Nx Library in your Application\n\nYou can import a library called `my-new-lib` in your application as follows.\n\n```typescript jsx\n// apps/my-next-app/pages/index.tsx\nimport { MyNewLib } from '@<your nx workspace name>/my-new-lib';\n\nexport function Index() {\n  return (\n    <MyNewLib>\n      <p>The main content</p>\n    </MyNewLib>\n  );\n}\n\nexport default Index;\n```\n\nThere is no need to build the library prior to using it. When you update your library, the Next.js application will automatically pick up the changes.\n\n### Publishable libraries\n\nFor libraries intended to be built and published to a registry (e.g. npm) you can use the `--publishable` and `--importPath` options.\n\n```bash\nnx g @nrwl/next:lib my-new-lib --publishable --importPath=@happynrwl/ui-components\n```\n\n### Testing Projects\n\nYou can run unit tests with:\n\n```bash\nnx test my-new-app\nnx test my-new-lib\n```\n\nReplace `my-new-app` and `my-new-lib` with the name or the project you want to test. This command works for both applications and libraries.\n\nYou can also run E2E tests for applications:\n\n```bash\nnx e2e my-new-app-e2e\n```\n\nReplace `my-new-app-e2e` with the name or your project with -e2e appended.\n\n### Linting Projects\n\nYou can lint projects with:\n\n```bash\nnx lint my-new-app\nnx lint my-new-lib\n```\n\nReplace `my-new-app` and `my-new-lib` with the name or the project you want to test. This command works for both applications and libraries.\n\n### Building Projects\n\nNext.js applications can be build with:\n\n```bash\nnx build my-new-app\n```\n\nAnd if you generated a library with --buildable, then you can build a library as well:\n\n```bash\nnx build my-new-lib\n```\n\nAfter running a build, the output will be in the `dist` folder. You can customize the output folder by setting `outputPath` in the project's `project.json` file.\n\nThe library in `dist` is publishable to npm or a private registry.\n\n### Static HTML Export\n\nNext.js applications can be statically exported with:\n\n```bash\nnx export my-new-app\n```\n\n### Deploying Next.js Applications\n\nOnce you are ready to deploy your Next.js application, you have absolute freedom to choose any hosting provider that fits your needs.\n\nYou may know that the company behind Next.js, Vercel, has a great hosting platform offering that is developed in tandem with Next.js itself to offer a great overall developer and user experience. We have detailed [how to deploy your Next.js application to Vercel in a separate guide](/recipe/deploy-nextjs-to-vercel).\n\n## More Documentation\n\nHere are other resources that you may find useful to learn more about Next.js and Nx.\n\n- **Blog post:** [Building a blog with Next.js and Nx Series](https://blog.nrwl.io/create-a-next-js-web-app-with-nx-bcf2ab54613) by Juri Strumpflohner\n- **Video tutorial:** [Typescript NX Monorepo with NextJS and Express](https://www.youtube.com/watch?v=WOfL5q2HznI) by Jack Herrington\n"
+      "content": "When using Next.js in Nx, you get the out-of-the-box support for TypeScript, Cypress, and Jest. No need to configure anything: watch mode, source maps, and typings just work.\n\nThe Next.js plugin contains executors and generators for managing Next.js applications and libraries within an Nx workspace. It provides:\n\n- Scaffolding for creating, building, serving, linting, and testing Next.js applications.\n- Integration with building, serving, and exporting a Next.js application.\n- Integration with React libraries within the workspace.\n\n## Setting up Next.js\n\nTo create a new Nx workspace with Next.js, run `npx create-nx-workspace@latest --preset=next`.\n\nTo add Next.js to an existing Nx workspace, install the `@nrwl/next` package. Make sure to install the version that matches your `@nrwl/workspace` version.\n\n```shell\n#yarn\nyarn add --dev @nrwl/next\n```\n\n```shell\n#npm\nnpm install --save-dev @nrwl/next\n```\n\n### Creating Applications\n\nYou can add a new application with the following:\n\n```shell\nnx g @nrwl/next:app my-new-app\n```\n\n### Generating Libraries\n\nNx allows you to create libraries with just one command. Some reasons you might want to create a library include:\n\n- Share code between applications\n- Publish a package to be used outside the monorepo\n- Better visualize the architecture using `nx graph`\n\nFor more information on Nx libraries, see our documentation on [Creating Libraries](/more-concepts/creating-libraries)\nand [Library Types](/more-concepts/library-types).\n\nTo generate a new library run:\n\n```shell\nnx g @nrwl/next:lib my-new-lib\n```\n\n### Generating Pages and Components\n\nNx also provides commands to quickly generate new pages and components for your application.\n\n```shell\nnx g @nrwl/next:page my-new-page --project=my-new-app\n\nnx g @nrwl/next:component my-new-component --project=my-new-app\n```\n\nAbove commands will add a new page `my-new-page` and a component `my-new-component` to `my-new-app` project respectively.\n\nNx generates components with tests by default. For pages, you can pass the `--withTests` option to generate tests under the `specs` folder.\n\n## Using Next.js\n\n### Serving Next.js Applications\n\nYou can run `nx serve my-new-app` to serve a Next.js application called `my-new-app` for development. This will start the dev server at http://localhost:4200.\n\nTo serve a Next.js application for production, add the `--prod` flag to the serve command:\n\n```shell\nnx serve my-new-app --prod\n```\n\n### Using an Nx Library in your Application\n\nYou can import a library called `my-new-lib` in your application as follows.\n\n```typescript jsx {% fileName=\"apps/my-next-app/pages/index.tsx\" %}\nimport { MyNewLib } from '@<your nx workspace name>/my-new-lib';\n\nexport function Index() {\n  return (\n    <MyNewLib>\n      <p>The main content</p>\n    </MyNewLib>\n  );\n}\n\nexport default Index;\n```\n\nThere is no need to build the library prior to using it. When you update your library, the Next.js application will automatically pick up the changes.\n\n### Publishable libraries\n\nFor libraries intended to be built and published to a registry (e.g. npm) you can use the `--publishable` and `--importPath` options.\n\n```shell\nnx g @nrwl/next:lib my-new-lib --publishable --importPath=@happynrwl/ui-components\n```\n\n### Testing Projects\n\nYou can run unit tests with:\n\n```shell\nnx test my-new-app\nnx test my-new-lib\n```\n\nReplace `my-new-app` and `my-new-lib` with the name or the project you want to test. This command works for both applications and libraries.\n\nYou can also run E2E tests for applications:\n\n```shell\nnx e2e my-new-app-e2e\n```\n\nReplace `my-new-app-e2e` with the name or your project with -e2e appended.\n\n### Linting Projects\n\nYou can lint projects with:\n\n```shell\nnx lint my-new-app\nnx lint my-new-lib\n```\n\nReplace `my-new-app` and `my-new-lib` with the name or the project you want to test. This command works for both applications and libraries.\n\n### Building Projects\n\nNext.js applications can be build with:\n\n```shell\nnx build my-new-app\n```\n\nAnd if you generated a library with --buildable, then you can build a library as well:\n\n```shell\nnx build my-new-lib\n```\n\nAfter running a build, the output will be in the `dist` folder. You can customize the output folder by setting `outputPath` in the project's `project.json` file.\n\nThe library in `dist` is publishable to npm or a private registry.\n\n### Static HTML Export\n\nNext.js applications can be statically exported with:\n\n```shell\nnx export my-new-app\n```\n\n### Deploying Next.js Applications\n\nOnce you are ready to deploy your Next.js application, you have absolute freedom to choose any hosting provider that fits your needs.\n\nYou may know that the company behind Next.js, Vercel, has a great hosting platform offering that is developed in tandem with Next.js itself to offer a great overall developer and user experience. We have detailed [how to deploy your Next.js application to Vercel in a separate guide](/recipes/other/deploy-nextjs-to-vercel).\n\n## More Documentation\n\nHere are other resources that you may find useful to learn more about Next.js and Nx.\n\n- **Blog post:** [Building a blog with Next.js and Nx Series](https://blog.nrwl.io/create-a-next-js-web-app-with-nx-bcf2ab54613) by Juri Strumpflohner\n- **Video tutorial:** [Typescript NX Monorepo with NextJS and Express](https://www.youtube.com/watch?v=WOfL5q2HznI) by Jack Herrington\n"
     }
   ],
   "generators": [
@@ -67,12 +67,6 @@
         "$id": "NxNextApp",
         "title": "Create a Next.js Application for Nx",
         "description": "Create a Next.js Application for Nx.",
-        "examples": [
-          {
-            "command": "nx g app myapp --directory=myorg",
-            "description": "Generate `apps/myorg/myapp` and `apps/myorg/myapp-e2e`"
-          }
-        ],
         "type": "object",
         "properties": {
           "name": {
@@ -131,7 +125,7 @@
           "linter": {
             "description": "The tool to use for running lint checks.",
             "type": "string",
-            "enum": ["eslint", "tslint"],
+            "enum": ["eslint"],
             "default": "eslint"
           },
           "skipFormat": {
@@ -187,6 +181,7 @@
           }
         },
         "required": [],
+        "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Create app in a directory\" %}\n\n```shell\nnx g app myapp --directory\n```\n\n{% /tab %}\n{% tab label=\"Use a custom Express server\" %}\n\n```shell\nnx g app myapp --custom-server\n```\n\n{% /tab %}\n{% tab label=\"Use plain JavaScript (not TypeScript)\" %}\n\n```shell\nnx g app myapp --js\n```\n\n{% /tab %}\n{% /tabs %}\n",
         "presets": []
       },
       "aliases": ["app"],
@@ -206,12 +201,6 @@
         "title": "Create a Page for Next",
         "description": "Create a Page for Next.",
         "type": "object",
-        "examples": [
-          {
-            "command": "nx g page my-new-page --project=my-app",
-            "description": "Generate a page in the my-app application"
-          }
-        ],
         "properties": {
           "project": {
             "type": "string",
@@ -292,6 +281,7 @@
           }
         },
         "required": ["name", "project"],
+        "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Create static page in an app\" %}\n\n```shell\nnx g page my-page --project=my-app\n```\n\n{% /tab %}\n{% tab label=\"Create dynamic page in an app\" %}\n\nThe following creates a page under `apps/my-app/pages/products/[id].tsx`.\n\n```shell\nnx g page \"[id]\" --project=my-app --directory=products\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
         "presets": []
       },
       "description": "Create a page.",
@@ -310,16 +300,6 @@
         "title": "Create a React Component for Next",
         "description": "Create a React Component for Next.",
         "type": "object",
-        "examples": [
-          {
-            "command": "nx g component my-component --project=mylib",
-            "description": "Generate a component in the `mylib` library"
-          },
-          {
-            "command": "nx g component my-component --project=mylib --classComponent",
-            "description": "Generate a class component in the `mylib` library"
-          }
-        ],
         "properties": {
           "project": {
             "type": "string",
@@ -396,9 +376,22 @@
             "type": "boolean",
             "description": "Create component at the source root rather than its own directory.",
             "default": false
+          },
+          "pascalCaseFiles": {
+            "type": "boolean",
+            "description": "Use pascal case component file name (e.g. `App.tsx`).",
+            "alias": "P",
+            "default": false
+          },
+          "pascalCaseDirectory": {
+            "type": "boolean",
+            "description": "Use pascal case directory name (e.g. `App/App.tsx`).",
+            "alias": "R",
+            "default": false
           }
         },
         "required": ["name", "project"],
+        "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Create an app component\" %}\n\n```shell\nnx g component my-cmp --project=my-app\n```\n\n{% /tab %}\n{% tab label=\"Create a component without its own folder\" %}\n\nRunning the following will create a component under `apps/my-app/components/my-cmp.tsx` rather than `apps/my-app/components/my-cmp/my-cmp.tsx`.\n\n```shell\nnx g component my-cmp --directory=foo --flat --project=my-app\n```\n\n{% /tab %}\n{% tab label=\"Create component in a custom directory\" %}\n\nRunning the following will create a component under `apps/my-app/foo/my-cmp.tsx` rather than `apps/my-app/my-cmp/my-cmp.tsx`.\n\n```shell\nnx g component my-cmp --directory=foo --flat --project=my-app\n```\n\n{% /tab %}\n{% /tabs %}\n",
         "presets": []
       },
       "description": "Create a component.",
@@ -417,16 +410,6 @@
         "title": "Create a React Library for Nx",
         "description": "Create a React Library for an Nx workspace.",
         "type": "object",
-        "examples": [
-          {
-            "command": "nx g lib mylib --directory=myapp",
-            "description": "Generate `libs/myapp/mylib`"
-          },
-          {
-            "command": "nx g lib mylib --appProject=myapp",
-            "description": "Generate a library with routes and add them to `myapp`"
-          }
-        ],
         "properties": {
           "name": {
             "type": "string",
@@ -481,7 +464,7 @@
           "linter": {
             "description": "The tool to use for running lint checks.",
             "type": "string",
-            "enum": ["eslint", "tslint"],
+            "enum": ["eslint"],
             "default": "eslint"
           },
           "unitTestRunner": {
@@ -564,6 +547,7 @@
           }
         },
         "required": ["name"],
+        "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Create a new lib\" %}\n\n```shell\nnx g lib my-lib\n```\n\n{% /tab %}\n{% tab label=\"Create a new lib under a directory\" %}\n\nThe following will create a library at `libs/shared/my-lib`.\n\n```shell\nnx g lib my-lib --directory=shared\n```\n\n{% /tab %}\n{% /tabs %}\n",
         "presets": []
       },
       "aliases": ["lib"],
@@ -582,12 +566,6 @@
         "$id": "NxNextCustomServer",
         "title": "Add custom server",
         "description": "Add a custom server to existing Next.js application.",
-        "examples": [
-          {
-            "command": "nx g custom-server my-app",
-            "description": "Add a custom server to existing Next.js app."
-          }
-        ],
         "type": "object",
         "properties": {
           "project": {
@@ -606,6 +584,7 @@
           }
         },
         "required": ["project"],
+        "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Add a custom server to existing app\" %}\n\n```shell\nnx g custom-server my-app\n```\n\n{% /tab %}\n{% /tabs %}\n",
         "presets": []
       },
       "description": "Set up a custom server.",
@@ -620,6 +599,8 @@
       "name": "build",
       "implementation": "/packages/next/src/executors/build/build.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "$schema": "http://json-schema.org/schema",
         "cli": "nx",
         "title": "Next Build",
@@ -664,6 +645,11 @@
             "type": "boolean",
             "description": "Read buildable libraries from source instead of building them separately.",
             "default": true
+          },
+          "includeDevDependenciesInPackageJson": {
+            "type": "boolean",
+            "description": "Include `devDependencies` in the generated package.json file. By default only production `dependencies` are included.",
+            "default": false
           }
         },
         "required": ["root", "outputPath"],
@@ -678,6 +664,8 @@
       "name": "server",
       "implementation": "/packages/next/src/executors/server/server.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "cli": "nx",
         "title": "Next Serve",
         "description": "Serve a Next.js app.",
@@ -743,6 +731,8 @@
       "name": "export",
       "implementation": "/packages/next/src/executors/export/export.impl.ts",
       "schema": {
+        "version": 2,
+        "outputCapture": "direct-nodejs",
         "cli": "nx",
         "title": "Next Export",
         "description": "Export a Next.js application. The exported application is located at `dist/$outputPath/exported`.",

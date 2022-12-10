@@ -18,7 +18,7 @@ Then move `cow.txt` out of the `cli` project to:
 
 `packages/ascii/assets/cow.txt`:
 
-```bash
+```shell
  _____
 < moo >
  -----
@@ -113,7 +113,7 @@ For the blog project, you'll need to add `ascii` as a `dependency` (or `devDepen
   "name": "blog",
   "description": "eleventy blog",
   "version": "1.0.0",
-  "dependency": {
+  "dependencies": {
     "ascii": "*"
   },
   "scripts": {
@@ -156,13 +156,13 @@ For the cli project, you add the implicit dependencies in the `project.json` fil
 
 You should now be able to run
 
-```bash
+```shell
 nx serve blog
 ```
 
 and
 
-```bash
+```shell
 nx serve cli
 ```
 
@@ -172,7 +172,7 @@ and get the same results as before.
 
 You can view a visual representation of the project graph by running:
 
-```bash
+```shell
 nx graph
 ```
 

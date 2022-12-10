@@ -49,16 +49,15 @@ Object {
     },
   },
   "lint": Object {
-    "builder": "@angular-devkit/build-angular:tslint",
+    "builder": "@nrwl/linter:eslint",
     "options": Object {
-      "exclude": Array [
-        "**/node_modules/**",
-        "!apps/my-dir/my-app-e2e/**/*",
-      ],
-      "tsConfig": Array [
-        "apps/my-dir/my-app-e2e/tsconfig.json",
+      "lintFilePatterns": Array [
+        "apps/my-dir/my-app-e2e/**/*.{js,ts}",
       ],
     },
+    "outputs": Array [
+      "{options.outputFile}",
+    ],
   },
 }
 `;
@@ -96,16 +95,15 @@ Object {
     },
   },
   "lint": Object {
-    "builder": "@angular-devkit/build-angular:tslint",
+    "builder": "@nrwl/linter:eslint",
     "options": Object {
-      "exclude": Array [
-        "**/node_modules/**",
-        "!apps/my-dir/my-app-e2e/**/*",
-      ],
-      "tsConfig": Array [
-        "apps/my-dir/my-app-e2e/tsconfig.json",
+      "lintFilePatterns": Array [
+        "apps/my-dir/my-app-e2e/**/*.{js,ts}",
       ],
     },
+    "outputs": Array [
+      "{options.outputFile}",
+    ],
   },
 }
 `;
@@ -122,16 +120,15 @@ Object {
     },
   },
   "lint": Object {
-    "builder": "@angular-devkit/build-angular:tslint",
+    "builder": "@nrwl/linter:eslint",
     "options": Object {
-      "exclude": Array [
-        "**/node_modules/**",
-        "!apps/my-app-e2e/**/*",
-      ],
-      "tsConfig": Array [
-        "apps/my-app-e2e/tsconfig.json",
+      "lintFilePatterns": Array [
+        "apps/my-app-e2e/**/*.{js,ts}",
       ],
     },
+    "outputs": Array [
+      "{options.outputFile}",
+    ],
   },
 }
 `;
@@ -153,16 +150,15 @@ Object {
     },
   },
   "lint": Object {
-    "builder": "@angular-devkit/build-angular:tslint",
+    "builder": "@nrwl/linter:eslint",
     "options": Object {
-      "exclude": Array [
-        "**/node_modules/**",
-        "!apps/my-app-e2e/**/*",
-      ],
-      "tsConfig": Array [
-        "apps/my-app-e2e/tsconfig.json",
+      "lintFilePatterns": Array [
+        "apps/my-app-e2e/**/*.{js,ts}",
       ],
     },
+    "outputs": Array [
+      "{options.outputFile}",
+    ],
   },
 }
 `;
@@ -184,16 +180,15 @@ Object {
     },
   },
   "lint": Object {
-    "builder": "@angular-devkit/build-angular:tslint",
+    "builder": "@nrwl/linter:eslint",
     "options": Object {
-      "exclude": Array [
-        "**/node_modules/**",
-        "!apps/my-app-e2e/**/*",
-      ],
-      "tsConfig": Array [
-        "apps/my-app-e2e/tsconfig.json",
+      "lintFilePatterns": Array [
+        "apps/my-app-e2e/**/*.{js,ts}",
       ],
     },
+    "outputs": Array [
+      "{options.outputFile}",
+    ],
   },
 }
 `;

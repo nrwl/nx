@@ -3,7 +3,7 @@ import {
   assetGlobsToFiles,
   FileInputOutput,
 } from '@nrwl/workspace/src/utilities/assets';
-import { TypeScriptCompilationOptions } from '@nrwl/workspace/src/utilities/typescript/compilation';
+import type { TypeScriptCompilationOptions } from '@nrwl/workspace/src/utilities/typescript/compilation';
 import { join, resolve } from 'path';
 import {
   CustomTransformers,
@@ -11,16 +11,21 @@ import {
   SourceFile,
   TransformerFactory,
 } from 'typescript';
+import { CopyAssetsHandler } from '../../utils/assets/copy-assets-handler';
 import { checkDependencies } from '../../utils/check-dependencies';
 import {
   getHelperDependency,
   HelperDependency,
 } from '../../utils/compiler-helper-dependency';
-import { CopyAssetsHandler } from '../../utils/assets/copy-assets-handler';
+import {
+  handleInliningBuild,
+  isInlineGraphEmpty,
+  postProcessInlinedDependencies,
+} from '../../utils/inline';
+import { updatePackageJson } from '../../utils/package-json/update-package-json';
 import { ExecutorOptions, NormalizedExecutorOptions } from '../../utils/schema';
 import { compileTypeScriptFiles } from '../../utils/typescript/compile-typescript-files';
 import { loadTsTransformers } from '../../utils/typescript/load-ts-transformers';
-import { updatePackageJson } from '../../utils/package-json/update-package-json';
 import { watchForSingleFileChanges } from '../../utils/watch-for-single-file-changes';
 
 export function normalizeOptions(
@@ -36,6 +41,20 @@ export function normalizeOptions(
 
   if (options.watch == null) {
     options.watch = false;
+  }
+
+  // TODO: put back when inlining story is more stable
+  // if (options.external == null) {
+  //   options.external = 'all';
+  // } else if (Array.isArray(options.external) && options.external.length === 0) {
+  //   options.external = 'none';
+  // }
+
+  if (Array.isArray(options.external) && options.external.length > 0) {
+    const firstItem = options.external[0];
+    if (firstItem === 'all' || firstItem === 'none') {
+      options.external = firstItem;
+    }
   }
 
   const files: FileInputOutput[] = assetGlobsToFiles(
@@ -125,30 +144,55 @@ export async function* tscExecutor(
     assets: _options.assets,
   });
 
+  const tsCompilationOptions = createTypeScriptCompilationOptions(
+    options,
+    context
+  );
+
+  const inlineProjectGraph = handleInliningBuild(
+    context,
+    options,
+    tsCompilationOptions.tsConfig
+  );
+
+  if (!isInlineGraphEmpty(inlineProjectGraph)) {
+    tsCompilationOptions.rootDir = '.';
+  }
+
+  const typescriptCompilation = compileTypeScriptFiles(
+    options,
+    tsCompilationOptions,
+    async () => {
+      await assetHandler.processAllAssetsOnce();
+      updatePackageJson(options, context, target, dependencies);
+      postProcessInlinedDependencies(
+        tsCompilationOptions.outputPath,
+        tsCompilationOptions.projectRoot,
+        inlineProjectGraph
+      );
+    }
+  );
+
   if (options.watch) {
     const disposeWatchAssetChanges =
       await assetHandler.watchAndProcessOnAssetChange();
     const disposePackageJsonChanges = await watchForSingleFileChanges(
-      join(context.root, projectRoot),
+      context.projectName,
+      options.projectRoot,
       'package.json',
       () => updatePackageJson(options, context, target, dependencies)
     );
-    const handleTermination = async () => {
-      await disposeWatchAssetChanges();
-      await disposePackageJsonChanges();
+    const handleTermination = async (exitCode: number) => {
+      await typescriptCompilation.close();
+      disposeWatchAssetChanges();
+      disposePackageJsonChanges();
+      process.exit(exitCode);
     };
-    process.on('SIGINT', () => handleTermination());
-    process.on('SIGTERM', () => handleTermination());
+    process.on('SIGINT', () => handleTermination(128 + 2));
+    process.on('SIGTERM', () => handleTermination(128 + 15));
   }
 
-  return yield* compileTypeScriptFiles(
-    options,
-    createTypeScriptCompilationOptions(options, context),
-    async () => {
-      await assetHandler.processAllAssetsOnce();
-      updatePackageJson(options, context, target, dependencies);
-    }
-  );
+  return yield* typescriptCompilation.iterator;
 }
 
 export default tscExecutor;

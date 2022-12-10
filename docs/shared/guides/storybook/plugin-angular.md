@@ -1,7 +1,5 @@
 # Set up Storybook for Angular Projects
 
-![Storybook logo](/shared/storybook-logo.png)
-
 This guide will walk you through setting up [Storybook](https://storybook.js.org) for Angular projects in your Nx workspace.
 
 {% callout type="warning" title="Set up Storybook in your workspace" %}
@@ -12,7 +10,7 @@ You first need to set up Storybook for your Nx workspace, if you haven't already
 
 You can generate Storybook configuration for an individual Angular project with this command:
 
-```bash
+```shell
 nx g @nrwl/angular:storybook-configuration project-name
 ```
 
@@ -20,7 +18,7 @@ nx g @nrwl/angular:storybook-configuration project-name
 
 The `@nrwl/angular:storybook-configuration` generator has the option to automatically generate `*.stories.ts` files for each component declared in the library.
 
-```treeview
+```text
 <some-folder>/
 ├── my.component.ts
 └── my.component.stories.ts
@@ -28,7 +26,7 @@ The `@nrwl/angular:storybook-configuration` generator has the option to automati
 
 You can re-run it at a later point using the following command:
 
-```bash
+```shell
 nx g @nrwl/angular:stories <project-name>
 ```
 
@@ -38,13 +36,13 @@ Let's take for a example a library in your workspace, under `libs/feature/ui`, c
 
 The command to generate stories for that library would be:
 
-```bash
+```shell
 nx g @nrwl/angular:stories feature-ui
 ```
 
 and the result would be the following:
 
-```treeview
+```text
 <workspace name>/
 ├── .storybook/
 ├── apps/
@@ -78,7 +76,7 @@ The `storybook-configuration` generator gives the option to set up an e2e Cypres
 
 To launch Storybook and run the Cypress tests against the iframe inside of Storybook:
 
-```bash
+```shell
 nx run project-name-e2e:e2e
 ```
 
@@ -94,9 +92,7 @@ Changing args in the url query parameters allows your Cypress tests to test diff
 
 ## Example Files
 
-**\*.component.stories.ts file**
-
-```typescript
+```typescript {% fileName="*.component.stories.ts" %}
 import { moduleMetadata, Story, Meta } from '@storybook/angular';
 import { ButtonComponent } from './button.component';
 
@@ -142,6 +138,7 @@ describe('shared-ui', () => {
 
 ## More Documentation
 
+- [Set up Compodoc for Storybook on Nx](/storybook/angular-storybook-compodoc)
 - [Information about the `storybook` targets](/storybook/angular-storybook-targets)
 - [Configuring styles and preprocessor options](/storybook/angular-configuring-styles)
 - [The `browserTarget`](/storybook/angular-browser-target)

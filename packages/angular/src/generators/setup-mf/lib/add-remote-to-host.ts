@@ -10,9 +10,8 @@ import type { Schema } from '../schema';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import * as ts from 'typescript';
 import { ArrayLiteralExpression } from 'typescript';
-import { addRoute } from '../../../utils/nx-devkit/ast-utils';
 import { insertImport } from '@nrwl/workspace/src/utilities/ast-utils';
-import { addStandaloneRoute } from '../../../utils/nx-devkit/standalone-utils';
+import { addRoute } from '../../../utils/nx-devkit/route-utils';
 
 export function checkIsCommaNeeded(mfRemoteText: string) {
   const remoteText = mfRemoteText.replace(/\s+/g, '');
@@ -24,7 +23,7 @@ export function checkIsCommaNeeded(mfRemoteText: string) {
 }
 
 export function addRemoteToHost(tree: Tree, options: Schema) {
-  if (options.mfType === 'remote' && options.host) {
+  if (options.host) {
     const hostProject = readProjectConfiguration(tree, options.host);
     const pathToMFManifest = joinPathFragments(
       hostProject.sourceRoot,
@@ -120,22 +119,14 @@ function addLazyLoadedRouteToHostAppModule(
   hostFederationType: 'dynamic' | 'static'
 ) {
   const hostAppConfig = readProjectConfiguration(tree, options.host);
-  const isHostStandalone = !tree
-    .read(joinPathFragments(hostAppConfig.sourceRoot, 'bootstrap.ts'), 'utf-8')
-    .includes('bootstrapModule');
 
-  const pathToHostRootRouting = isHostStandalone
-    ? `${hostAppConfig.sourceRoot}/bootstrap.ts`
-    : `${hostAppConfig.sourceRoot}/app/app.module.ts`;
+  const pathToHostRootRouting = `${hostAppConfig.sourceRoot}/app/app.routes.ts`;
 
   if (!tree.exists(pathToHostRootRouting)) {
     return;
   }
 
   const hostRootRoutingFile = tree.read(pathToHostRootRouting, 'utf-8');
-  if (!hostRootRoutingFile.includes('RouterModule.forRoot(')) {
-    return;
-  }
 
   let sourceFile = ts.createSourceFile(
     pathToHostRootRouting,
@@ -155,31 +146,22 @@ function addLazyLoadedRouteToHostAppModule(
   }
 
   const routePathName = options.standalone ? 'Routes' : 'Module';
+  const exportedRemote = options.standalone
+    ? 'remoteRoutes'
+    : 'RemoteEntryModule';
   const routeToAdd =
     hostFederationType === 'dynamic'
       ? `loadRemoteModule('${options.appName}', './${routePathName}')`
       : `import('${options.appName}/${routePathName}')`;
 
-  if (hostRootRoutingFile.includes('@NgModule')) {
-    sourceFile = addRoute(
-      tree,
-      pathToHostRootRouting,
-      sourceFile,
-      `{
-         path: '${options.appName}', 
-         loadChildren: () => ${routeToAdd}.then(m => m.RemoteEntryModule)
-     }`
-    );
-  } else {
-    addStandaloneRoute(
-      tree,
-      pathToHostRootRouting,
-      `{
+  addRoute(
+    tree,
+    pathToHostRootRouting,
+    `{
     path: '${options.appName}',
-    loadChildren: () => ${routeToAdd}.then(m => m.RemoteRoutes)
+    loadChildren: () => ${routeToAdd}.then(m => m.${exportedRemote})
     }`
-    );
-  }
+  );
 
   const pathToAppComponentTemplate = joinPathFragments(
     hostAppConfig.sourceRoot,

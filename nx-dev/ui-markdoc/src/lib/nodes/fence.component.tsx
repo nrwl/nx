@@ -1,7 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import {
+  ClipboardDocumentCheckIcon,
+  ClipboardDocumentIcon,
+} from '@heroicons/react/24/outline';
+import React, { ReactNode, useEffect, useState } from 'react';
 // @ts-ignore
 import { CopyToClipboard } from 'react-copy-to-clipboard';
+// @ts-ignore
 import SyntaxHighlighter from 'react-syntax-highlighter';
+import { CodeOutput } from './fences/codeOutput.component';
+import { TerminalOutput } from './fences/terminal-output.component';
 
 function resolveLanguage(lang: string) {
   switch (lang) {
@@ -14,19 +21,34 @@ function resolveLanguage(lang: string) {
   }
 }
 
-function showLineNumber(lang: string, content: string) {
-  if (['bash', 'text', 'treeview'].includes(lang)) {
-    return false;
-  }
-
-  return content.split(/\r\n|\r|\n/).length > 2;
+function CodeWrapper(options: {
+  fileName: string;
+  command: string;
+  path: string;
+}): ({ children }: { children: ReactNode }) => JSX.Element {
+  return ({ children }: { children: ReactNode }) =>
+    options.command ? (
+      <TerminalOutput
+        content={children}
+        command={options.command}
+        path={options.path}
+      />
+    ) : (
+      <CodeOutput content={children} fileName={options.fileName} />
+    );
 }
 
 export function Fence({
   children,
+  command,
+  path,
+  fileName,
   language,
 }: {
   children: string;
+  command: string;
+  path: string;
+  fileName: string;
   language: string;
 }) {
   const [copied, setCopied] = useState(false);
@@ -41,42 +63,33 @@ export function Fence({
       t && clearTimeout(t);
     };
   }, [copied]);
-
   return (
-    <div className="code-block group relative">
-      <CopyToClipboard
-        text={children}
-        onCopy={() => {
-          setCopied(true);
-        }}
-      >
-        <button
-          type="button"
-          className="not-prose absolute top-2 right-2 flex opacity-0 transition-opacity group-hover:opacity-100"
+    <div className="my-8 w-full">
+      <div className="code-block group relative inline-flex w-auto min-w-[50%] max-w-full">
+        <CopyToClipboard
+          text={children}
+          onCopy={() => {
+            setCopied(true);
+          }}
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
+          <button
+            type="button"
+            className="not-prose absolute top-0 right-0 z-10 flex rounded-tr-lg border border-slate-200 bg-slate-50/50 p-2 opacity-0 transition-opacity group-hover:opacity-100 dark:border-slate-700 dark:bg-slate-800"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-            />
-          </svg>
-          <span className="ml-1 text-sm">{copied ? 'Copied!' : 'Copy'}</span>
-        </button>
-      </CopyToClipboard>
-      <SyntaxHighlighter
-        showLineNumbers={showLineNumber(language, children)}
-        useInlineStyles={false}
-        language={resolveLanguage(language)}
-        children={children}
-      />
+            {copied ? (
+              <ClipboardDocumentCheckIcon className="h-5 w-5 text-blue-500 dark:text-sky-500" />
+            ) : (
+              <ClipboardDocumentIcon className="h-5 w-5" />
+            )}
+          </button>
+        </CopyToClipboard>
+        <SyntaxHighlighter
+          useInlineStyles={false}
+          language={resolveLanguage(language)}
+          children={children}
+          PreTag={CodeWrapper({ fileName, command, path })}
+        />
+      </div>
     </div>
   );
 }

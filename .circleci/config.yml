@@ -4,7 +4,7 @@ version: 2.1
 #        ORBS
 # -------------------------
 orbs:
-  nx: nrwl/nx@1.5.1
+  nx: nrwl/nx@1.6.1
   node: circleci/node@5.0.2
 
 # -------------------------
@@ -107,6 +107,9 @@ commands:
           steps:
             - run:
                 command: sudo apt-get install -y ca-certificates
+      - node/install:
+          # Use LTS version
+          node-version: ''
       - run-yarn-install:
           os: << parameters.os >>
       - when:
@@ -173,7 +176,7 @@ jobs:
       - run: npx nx-cloud start-ci-run --stop-agents-after="e2e"
       - run:
           name: Check Documentation
-          command: npx nx-cloud record yarn documentation
+          command: npx nx documentation --no-dte
           no_output_timeout: 20m
       - run:
           name: Run Checks/Lint/Test/Build
@@ -181,20 +184,20 @@ jobs:
           command: |
             pids=()
 
-            (npx nx-cloud record yarn check-imports &&
-            npx nx-cloud record yarn nx format:check --base=$NX_BASE --head=$NX_HEAD &&
-            npx nx-cloud record yarn check-commit &&
-            npx nx-cloud record yarn check-lock-files &&
-            npx nx-cloud record yarn nx workspace-lint &&
-            npx nx-cloud record yarn depcheck) &
+            (npx nx check-imports --no-dte &&
+            npx nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD &&
+            npx nx check-commit --no-dte &&
+            npx nx check-lock-files --no-dte &&
+            npx nx lint --no-dte &&
+            npx nx depcheck --no-dte ) &
             pids+=($!)
 
-            (yarn nx affected --target=build --base=$NX_BASE --head=$NX_HEAD --parallel=3 &&
-            npx nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --exclude=e2e-storybook,e2e-storybook-angular,e2e-react-native,e2e-detox,e2e-make-angular-cli-faster --parallel=1) &
-            pids+=($!)
             yarn nx affected --target=lint --base=$NX_BASE --head=$NX_HEAD --parallel=3 &
             pids+=($!)
             yarn nx affected --target=test --base=$NX_BASE --head=$NX_HEAD --parallel=1 &
+            pids+=($!)
+            (yarn nx affected --target=build --base=$NX_BASE --head=$NX_HEAD --parallel=3 &&
+            npx nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --exclude=e2e-storybook,e2e-storybook-angular,e2e-react-native,e2e-detox --parallel=1) &
             pids+=($!)
             for pid in "${pids[@]}"; do
               wait "$pid"
@@ -231,7 +234,7 @@ jobs:
           name: Run E2E Tests
           command: |
             if $E2E_AFFECTED; then
-              npx nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --exclude=e2e-make-angular-cli-faster,e2e-detox,e2e-js,e2e-next,e2e-workspace-create,e2e-nx-run,e2e-nx-misc,e2e-react,e2e-web,e2e-angular-extensions,e2e-angular-core,e2e-nx-plugin,e2e-cypress,e2e-node,e2e-linter,e2e-jest,e2e-add-nx-to-monorepo,nx-dev-e2e,e2e-nx-init,e2e-graph-client --parallel=1;
+              npx nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --exclude=e2e-make-angular-cli-faster,e2e-detox,e2e-js,e2e-next,e2e-workspace-create,e2e-nx-run,e2e-nx-misc,e2e-react,e2e-web,e2e-webpack,e2e-rollup,e2e-esbuild,e2e-angular-extensions,e2e-angular-core,e2e-nx-plugin,e2e-cypress,e2e-node,e2e-linter,e2e-jest,e2e-add-nx-to-monorepo,nx-dev-e2e,e2e-nx-init,e2e-graph-client,e2e-vite,e2e-cra-to-nx,e2e-storybook,e2e-storybook-angular --parallel=1;
             else
               echo "Skipping E2E tests";
             fi
