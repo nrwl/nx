@@ -177,6 +177,7 @@ function getPnpmResolver(extensions: string[]) {
       extensions: extensions.map((extension) => '.' + extension),
       useSyncFileSystemCalls: true,
       modules: [join(workspaceRoot, 'node_modules'), 'node_modules'],
+      conditionNames: ['native', 'browser', 'require', 'default'],
     });
   }
   return resolver;
