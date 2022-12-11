@@ -157,7 +157,7 @@ Here are the outputs defined for the `shared-ui` project:
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectName}"],
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
         "jestConfig": "shared/ui/jest.config.ts",
         "passWithNoTests": true

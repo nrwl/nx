@@ -71,7 +71,7 @@ exports[`@nrwl/vite:configuration transform React app to use Vite should transfo
         \\"test\\": {
           \\"builder\\": \\"@nrwl/jest:jest\\",
           \\"outputs\\": [
-            \\"{workspaceRoot}/coverage/{projectName}\\"
+            \\"{workspaceRoot}/coverage/{projectRoot}\\"
           ],
           \\"options\\": {
             \\"jestConfig\\": \\"apps/my-test-react-app/jest.config.ts\\",
@@ -148,7 +148,7 @@ exports[`@nrwl/vite:configuration transform Web app to use Vite should transform
         \\"test\\": {
           \\"builder\\": \\"@nrwl/jest:jest\\",
           \\"outputs\\": [
-            \\"{workspaceRoot}/coverage/{projectName}\\"
+            \\"{workspaceRoot}/coverage/{projectRoot}\\"
           ],
           \\"options\\": {
             \\"jestConfig\\": \\"apps/my-test-web-app/jest.config.ts\\",

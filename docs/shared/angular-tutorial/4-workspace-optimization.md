@@ -89,7 +89,7 @@ Outputs are defined for every target in your workspace:
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectName}"],
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
         "jestConfig": "libs/products/jest.config.ts",
         "passWithNoTests": true

@@ -28,7 +28,7 @@ describe('vitest generator', () => {
           "passWithNoTests": true,
         },
         "outputs": Array [
-          "{workspaceRoot}/coverage/{projectName}",
+          "{workspaceRoot}/coverage/{projectRoot}",
         ],
       }
     `);
