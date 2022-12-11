@@ -74,7 +74,7 @@ describe('jestProject', () => {
     const lib1 = readProjectConfiguration(tree, 'lib1');
     expect(lib1.targets.test).toEqual({
       executor: '@nrwl/jest:jest',
-      outputs: ['{workspaceRoot}/coverage/{projectName}'],
+      outputs: ['{workspaceRoot}/coverage/{projectRoot}'],
       options: {
         jestConfig: 'libs/lib1/jest.config.ts',
         passWithNoTests: true,

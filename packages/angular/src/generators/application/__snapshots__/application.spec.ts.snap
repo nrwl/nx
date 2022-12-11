@@ -214,7 +214,7 @@ Object {
         "passWithNoTests": true,
       },
       "outputs": Array [
-        "{workspaceRoot}/coverage/{projectName}",
+        "{workspaceRoot}/coverage/{projectRoot}",
       ],
     },
   },
@@ -385,7 +385,7 @@ Object {
         "passWithNoTests": true,
       },
       "outputs": Array [
-        "{workspaceRoot}/coverage/{projectName}",
+        "{workspaceRoot}/coverage/{projectRoot}",
       ],
     },
   },
