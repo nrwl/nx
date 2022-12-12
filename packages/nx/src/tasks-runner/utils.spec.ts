@@ -97,6 +97,25 @@ describe('utils', () => {
       ]);
     });
 
+    it('should interpolate {workspaceRoot} when {projectRoot} = . by removing the slash after it', () => {
+      const data = {
+        name: 'myapp',
+        type: 'app',
+        data: {
+          root: '.',
+          targets: {
+            build: {
+              outputs: ['{workspaceRoot}/dist'],
+            },
+          },
+          files: [],
+        },
+      };
+      expect(getOutputsForTargetAndConfiguration(task, data as any)).toEqual([
+        'dist',
+      ]);
+    });
+
     it('should throw when {projectRoot} is used not at the beginning and the value is .', () => {
       const data = {
         name: 'myapp',
