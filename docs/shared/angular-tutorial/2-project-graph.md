@@ -1,4 +1,4 @@
-# Angular Tutorial - Part 2: Project Graph
+# Angular Monorepo Tutorial - Part 2: Project Graph
 
 Run the command: `npx nx graph`. A browser should open up with the following contents:
 
@@ -33,10 +33,11 @@ import { Component, Input } from '@angular/core';
 
 @Component({
   selector: 'myorg-banner',
-  template: `<header>{{ text }}</header>`,
+  template: `<header>{{ title }}</header>`,
+  styleUrls: ['./banner.component.css'],
 })
 export class BannerComponent {
-  @Input() text = '';
+  @Input() title = '';
 }
 ```
 
@@ -48,9 +49,9 @@ Add the `Banner` component to the admin app:
 import { Component } from '@angular/core';
 
 @Component({
-  selector: 'my-app',
+  selector: 'myorg-root',
   template: `
-    <common-ui-banner title="Welcome to our admin app."> </common-ui-banner>
+    <myorg-banner title="Welcome to our admin app."> </myorg-banner>
   `,
 })
 export class AppComponent {}

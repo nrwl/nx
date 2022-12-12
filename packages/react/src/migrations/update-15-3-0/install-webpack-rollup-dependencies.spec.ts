@@ -47,7 +47,7 @@ describe('installWebpackRollupDependencies', () => {
     addProjectConfiguration(tree, 'proj', {
       root: 'proj',
       targets: {
-        build: { executor: '@nrwl/vite:vite' },
+        build: { executor: '@nrwl/vite:build' },
       },
     });
 

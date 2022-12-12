@@ -13,7 +13,7 @@ import { deduceDefaultBase } from '../../utilities/default-base';
 
 export interface Schema {
   name?: string;
-  ci: 'github' | 'azure' | 'circleci' | 'bitbucket-pipelines';
+  ci: 'github' | 'azure' | 'circleci' | 'bitbucket-pipelines' | 'gitlab';
 }
 
 export async function ciWorkflowGenerator(host: Tree, schema: Schema) {

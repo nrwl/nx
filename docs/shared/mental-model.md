@@ -40,15 +40,29 @@ graph and then executes the tasks in that graph.
 
 For instance `nx test lib` creates a task graph with a single node:
 
-![task-graph](/shared/mental-model/task-graph.svg)
+{% graph height="100px" type="task" jsonFile="shared/mental-model/single-task.json" %}
+{% /graph %}
 
 A task is an invocation of a target. If you invoke the same target twice, you create two tasks.
 
 Nx uses the [project graph](#the-project-graph), but the task graph and project graph aren’t isomorphic, meaning they
 aren’t directly connected. In the case above, `app1` and `app2` depend on `lib`, but
 running `nx run-many --target=test --projects=app1,app2,lib`, the created task graph will look like this:
+{% side-by-side %}
 
-![task-graph-creation](/shared/mental-model/task-graph-creation.svg)
+**Project Graph**
+
+**Task Graph**
+
+{% /side-by-side %}
+
+{% side-by-side %}
+{% graph height="200px" type="project" jsonFile="shared/mental-model/three-projects.json" %}
+{% /graph %}
+
+{% graph height="200px" type="task" jsonFile="shared/mental-model/disconnected-tasks.json"%}
+{% /graph %}
+{% /side-by-side %}
 
 Even though the apps depend on `lib`, testing `app1` doesn’t depend on the testing `lib`. This means that the two tasks
 can
@@ -72,7 +86,21 @@ Let’s look at the test target relying on its dependencies.
 
 With this, running the same test command creates the following task graph:
 
-![task-graph-run](/shared/mental-model/task-graph-run.svg)
+{% side-by-side %}
+
+**Project Graph**
+
+**Task Graph**
+
+{% /side-by-side %}
+
+{% side-by-side %}
+{% graph height="200px" type="project" jsonFile="shared/mental-model/three-projects.json" %}
+{% /graph %}
+
+{% graph height="200px" type="task" jsonFile="shared/mental-model/connected-tasks.json" %}
+{% /graph %}
+{% /side-by-side %}
 
 This often makes more sense for builds, where to build `app1`, you want to build `lib` first. You can also define
 similar
@@ -153,7 +181,8 @@ instance, Nx:
 
 As your workspace grows, the task graph looks more like this:
 
-![cache](/shared/mental-model/task-graph-big.svg)
+{% graph height="400px" type="task" jsonFile="shared/mental-model/large-tasks.json"%}
+{% /graph %}
 
 All of these optimizations are crucial for making Nx usable for any non-trivial workspace. Only the minimum amount of
 work happens. The rest is either left as is or restored from the cache.

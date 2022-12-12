@@ -22,25 +22,33 @@ export function setDefaults(host: Tree, options: NormalizedSchema) {
 
   const prev = { ...workspace.generators['@nrwl/react'] };
 
+  const appDefaults = {
+    style: options.style,
+    linter: options.linter,
+    bundler: options.bundler,
+    ...prev.application,
+  };
+  const componentDefaults = {
+    style: options.style,
+    ...prev.component,
+  };
+  const libDefaults = {
+    style: options.style,
+    linter: options.linter,
+    ...prev.library,
+  };
+  // Future react libs should use same test runner as the app.
+  if (options.unitTestRunner === 'vitest') {
+    // Note: We don't set bundler: 'vite' for libraries because that means they are buildable.
+    libDefaults.unitTestRunner ??= 'vitest';
+  }
   workspace.generators = {
     ...workspace.generators,
     '@nrwl/react': {
       ...prev,
-      application: {
-        style: options.style,
-        linter: options.linter,
-        bundler: options.bundler,
-        ...prev.application,
-      },
-      component: {
-        style: options.style,
-        ...prev.component,
-      },
-      library: {
-        style: options.style,
-        linter: options.linter,
-        ...prev.library,
-      },
+      application: appDefaults,
+      component: componentDefaults,
+      library: libDefaults,
     },
   };
 

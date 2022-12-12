@@ -10,28 +10,7 @@ import {
 } from '@nrwl/devkit';
 import { join } from 'path';
 import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
-
-function updateTsConfig(host: Tree, options: NormalizedSchema) {
-  updateJson(
-    host,
-    joinPathFragments(options.appProjectRoot, 'tsconfig.json'),
-    (json) => {
-      if (options.strict) {
-        json.compilerOptions = {
-          ...json.compilerOptions,
-          forceConsistentCasingInFileNames: true,
-          strict: true,
-          noImplicitOverride: true,
-          noPropertyAccessFromIndexSignature: true,
-          noImplicitReturns: true,
-          noFallthroughCasesInSwitch: true,
-        };
-      }
-
-      return json;
-    }
-  );
-}
+import { createTsConfig } from '../../../utils/create-ts-config';
 
 export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
   let styleSolutionSpecificAppFiles: string;
@@ -47,15 +26,15 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     styleSolutionSpecificAppFiles = '../files/css-module';
   }
 
+  const relativePathToRootTsConfig = getRelativePathToRootTsConfig(
+    host,
+    options.appProjectRoot
+  );
   const templateVariables = {
     ...names(options.name),
     ...options,
     tmpl: '',
     offsetFromRoot: offsetFromRoot(options.appProjectRoot),
-    rootTsConfigPath: getRelativePathToRootTsConfig(
-      host,
-      options.appProjectRoot
-    ),
   };
 
   generateFiles(
@@ -99,5 +78,11 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     toJS(host);
   }
 
-  updateTsConfig(host, options);
+  createTsConfig(
+    host,
+    options.appProjectRoot,
+    'app',
+    options,
+    relativePathToRootTsConfig
+  );
 }

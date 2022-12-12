@@ -24,7 +24,6 @@ export function installWebpackRollupDependencies(tree: Tree) {
       {
         '@babel/preset-react': '^7.14.5',
         '@pmmmwh/react-refresh-webpack-plugin': '^0.5.7',
-        '@phenomnomnominal/tsquery': '4.1.1',
         '@svgr/webpack': '^6.1.2',
         'css-loader': '^6.4.0',
         'react-refresh': '^0.10.0',

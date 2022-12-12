@@ -1,6 +1,7 @@
 import { NxJsonConfiguration } from '../../../config/nx-json';
 import { ProjectGraph } from '../../../config/project-graph';
 import { JsonDiffType } from '../../../utils/json-diff';
+import { logger } from '../../../utils/logger';
 import { WholeFileChange } from '../../file-utils';
 import { getTouchedNpmPackages } from './npm-packages';
 
@@ -302,5 +303,43 @@ describe('getTouchedNpmPackages', () => {
       }
     );
     expect(result).toEqual(['changed-test-pkg-name-1']);
+  });
+
+  it('should handle and log workspace package.json changes when the changes are not in `npmPackages` (projectGraph.externalNodes)', () => {
+    jest.spyOn(logger, 'warn');
+    expect(() => {
+      getTouchedNpmPackages(
+        [
+          {
+            file: 'package.json',
+            hash: 'some-hash',
+            getChanges: () => [
+              {
+                type: 'JsonPropertyAdded',
+                path: ['devDependencies', 'changed-test-pkg-name-1'],
+                value: { rhs: 'workspace:*' },
+              },
+              {
+                type: 'JsonPropertyAdded',
+                path: ['devDependencies', 'changed-test-pkg-name-2'],
+                value: { rhs: 'workspace:*' },
+              },
+            ],
+          },
+        ],
+        workspaceJson,
+        nxJson,
+        {
+          dependencies: {
+            'happy-nrwl': '0.0.1',
+            'awesome-nrwl': '0.0.1',
+          },
+        },
+        projectGraph
+      );
+    }).not.toThrowError();
+    expect(logger.warn).toHaveBeenCalledWith(
+      'The affected projects might have not been identified properly. The package(s) changed-test-pkg-name-1, changed-test-pkg-name-2 were not found. Please open an issue in Github including the package.json file.'
+    );
   });
 });

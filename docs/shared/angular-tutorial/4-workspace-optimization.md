@@ -1,4 +1,4 @@
-# Angular Tutorial - Part 4: Workspace Optimization
+# Angular Monorepo Tutorial - Part 4: Workspace Optimization
 
 ## Testing Affected Projects
 
@@ -13,7 +13,7 @@ git add . && git commit -m "commiting to test affected"
 Then make a change to the styles of your `common-ui` project:
 
 ```css {% fileName="libs/common-ui/src/lib/banner/banner.component.css" %}
-.container {
+header {
   color: 'blue;';
 }
 ```
@@ -37,6 +37,11 @@ npx nx affected --target=test
 This can be particularly helpful in CI pipelines for larger repos, where most commits only affect a small subset of the entire workspace.
 
 {% card title="Affected Documentation" description="Checkout Affected documentation for more details" url="/nx/affected" /%}
+
+{% callout type="warning" title="Not too fast!" %}
+Running this at this stage may result in some runtime errors being logged to the terminal.
+The apps that use `<myorg-banner></myorg-banner>` wil need to have the `TestBed.configureTestingModule` in their `app.component.spec.ts` file updated to import `CommonUiModule`.
+{% /callout %}
 
 ## Task Caching
 

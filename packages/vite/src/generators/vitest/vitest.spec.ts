@@ -10,6 +10,7 @@ describe('vitest generator', () => {
   const options: VitestGeneratorSchema = {
     project: 'my-test-react-app',
     uiFramework: 'react',
+    coverageProvider: 'c8',
   };
 
   beforeEach(async () => {
@@ -55,29 +56,29 @@ describe('vitest generator', () => {
           '{}'
       );
       expect(tsconfigSpec).toMatchInlineSnapshot(`
-              Object {
-                "compilerOptions": Object {
-                  "outDir": "../../dist/out-tsc",
-                  "types": Array [
-                    "vitest/globals",
-                    "node",
-                  ],
-                },
-                "extends": "./tsconfig.json",
-                "include": Array [
-                  "vite.config.ts",
-                  "**/*.test.ts",
-                  "**/*.spec.ts",
-                  "**/*.test.tsx",
-                  "**/*.spec.tsx",
-                  "**/*.test.js",
-                  "**/*.spec.js",
-                  "**/*.test.jsx",
-                  "**/*.spec.jsx",
-                  "**/*.d.ts",
-                ],
-              }
-          `);
+        Object {
+          "compilerOptions": Object {
+            "outDir": "../../dist/out-tsc",
+            "types": Array [
+              "vitest/globals",
+              "node",
+            ],
+          },
+          "extends": "./tsconfig.json",
+          "include": Array [
+            "vite.config.ts",
+            "src/**/*.test.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.test.tsx",
+            "src/**/*.spec.tsx",
+            "src/**/*.test.js",
+            "src/**/*.spec.js",
+            "src/**/*.test.jsx",
+            "src/**/*.spec.jsx",
+            "src/**/*.d.ts",
+          ],
+        }
+      `);
     });
 
     it('should add vitest/importMeta when inSourceTests is true', async () => {
@@ -105,7 +106,7 @@ describe('vitest generator', () => {
         /// <reference types=\\"vitest\\" />
               import { defineConfig } from 'vite';
               import react from '@vitejs/plugin-react';
-              import tsconfigPaths from 'vite-tsconfig-paths';
+              import viteTsConfigPaths from 'vite-tsconfig-paths';
               
               
               export default defineConfig({
@@ -117,15 +118,17 @@ describe('vitest generator', () => {
                 plugins: [
                   
                   react(),
-                  tsconfigPaths({
+                  viteTsConfigPaths({
                     root: '../../',
-                    projects: ['tsconfig.base.json'],
                   }),
                 ],
                 
                 
                 test: {
             globals: true,
+            cache: {
+              dir: '../../node_modules/.vitest'
+            },
             environment: 'jsdom',
             include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
             
@@ -146,7 +149,7 @@ describe('vitest generator', () => {
         /// <reference types=\\"vitest\\" />
               import { defineConfig } from 'vite';
               import react from '@vitejs/plugin-react';
-              import tsconfigPaths from 'vite-tsconfig-paths';
+              import viteTsConfigPaths from 'vite-tsconfig-paths';
               
               
               export default defineConfig({
@@ -158,9 +161,8 @@ describe('vitest generator', () => {
                 plugins: [
                   
                   react(),
-                  tsconfigPaths({
+                  viteTsConfigPaths({
                     root: '../../',
-                    projects: ['tsconfig.base.json'],
                   }),
                 ],
                 
@@ -169,6 +171,9 @@ describe('vitest generator', () => {
           },
                 test: {
             globals: true,
+            cache: {
+              dir: '../../node_modules/.vitest'
+            },
             environment: 'jsdom',
             include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
             includeSource: ['src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']

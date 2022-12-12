@@ -16,6 +16,7 @@ import {
   toJS,
   Tree,
   updateJson,
+  getProjects,
 } from '@nrwl/devkit';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
@@ -285,11 +286,26 @@ function normalizeOptions(host: Tree, options: Schema): CypressProjectSchema {
     options.directory
   );
   const appsDir = layoutDirectory ?? getWorkspaceLayout(host).appsDir;
-  let projectName, projectRoot;
+  let projectName: string;
+  let projectRoot: string;
+  let maybeRootProject: ProjectConfiguration;
+  let isRootProject = false;
 
-  if (options.rootProject) {
+  const projects = getProjects(host);
+  // nx will set the project option for generators when ran within a project.
+  // since the root project will always be set for standlone projects we can just check it here.
+  if (options.project) {
+    maybeRootProject = projects.get(options.project);
+  }
+
+  if (
+    maybeRootProject?.root === '.' ||
+    // should still check to see if we are in a standalone based workspace
+    Array.from(projects.values()).some((config) => config.root === '.')
+  ) {
     projectName = options.name;
     projectRoot = options.name;
+    isRootProject = true;
   } else {
     projectName = filePathPrefix(
       projectDirectory ? `${projectDirectory}-${options.name}` : options.name
@@ -306,6 +322,8 @@ function normalizeOptions(host: Tree, options: Schema): CypressProjectSchema {
   options.linter = options.linter || Linter.EsLint;
   return {
     ...options,
+    // other generators depend on the rootProject flag down stream
+    rootProject: isRootProject,
     projectName,
     projectRoot,
   };

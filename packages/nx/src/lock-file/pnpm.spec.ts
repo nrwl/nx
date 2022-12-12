@@ -7,10 +7,23 @@ import {
   lockFile,
   lockFileJustTypescript,
   lockFileWithInlineSpecifiers,
-  lockFileWithInlineSpecifiersAndWorkspaces,
-  lockFileWithWorkspacesAndTime,
   lockFileYargsAndDevkit,
 } from './__fixtures__/pnpm.lock';
+import {
+  pnpmLockFileWithInlineSpecifiersAndWorkspaces,
+  pnpmLockFileWithWorkspacesAndTime,
+} from './__fixtures__/workspaces.lock';
+
+const TypeScriptOnlyPackage = {
+  name: 'test',
+  version: '1.0.0',
+  dependencies: { typescript: '4.8.4' },
+};
+const YargsAndDevkitPackage = {
+  name: 'test',
+  version: '1.2.3',
+  dependencies: { '@nrwl/devkit': '15.0.13', yargs: '17.6.2' },
+};
 
 describe('pnpm LockFile utility', () => {
   describe('standard lock file', () => {
@@ -115,38 +128,39 @@ describe('pnpm LockFile utility', () => {
     it('should prune the lock file', () => {
       expect(
         Object.keys(
-          prunePnpmLockFile(parsedLockFile, ['typescript']).dependencies
+          prunePnpmLockFile(parsedLockFile, TypeScriptOnlyPackage).dependencies
         ).length
       ).toEqual(1);
       expect(
         Object.keys(
-          prunePnpmLockFile(parsedLockFile, ['yargs', '@nrwl/devkit'])
-            .dependencies
+          prunePnpmLockFile(parsedLockFile, YargsAndDevkitPackage).dependencies
         ).length
       ).toEqual(136);
     });
 
     it('should correctly prune lockfile with single package', () => {
       expect(
-        stringifyPnpmLockFile(prunePnpmLockFile(parsedLockFile, ['typescript']))
+        stringifyPnpmLockFile(
+          prunePnpmLockFile(parsedLockFile, TypeScriptOnlyPackage)
+        )
       ).toEqual(lockFileJustTypescript);
     });
 
     it('should correctly prune lockfile with multiple packages', () => {
       expect(
         stringifyPnpmLockFile(
-          prunePnpmLockFile(parsedLockFile, ['yargs', '@nrwl/devkit'])
+          prunePnpmLockFile(parsedLockFile, YargsAndDevkitPackage)
         )
       ).toEqual(lockFileYargsAndDevkit);
     });
   });
 
   it('should parse lockfile with time-based resolution and workspaces', () => {
-    const parsedLockFile = parsePnpmLockFile(lockFileWithWorkspacesAndTime);
+    const parsedLockFile = parsePnpmLockFile(pnpmLockFileWithWorkspacesAndTime);
     expect(parsedLockFile.lockFileMetadata.time).toBeDefined();
 
     expect(stringifyPnpmLockFile(parsedLockFile)).toEqual(
-      lockFileWithWorkspacesAndTime
+      pnpmLockFileWithWorkspacesAndTime
     );
   });
 
@@ -246,10 +260,10 @@ describe('pnpm LockFile utility', () => {
 
   it('should parse lockfile with inline specifiers and workspaces', () => {
     const parsedLockFile = parsePnpmLockFile(
-      lockFileWithInlineSpecifiersAndWorkspaces
+      pnpmLockFileWithInlineSpecifiersAndWorkspaces
     );
     expect(stringifyPnpmLockFile(parsedLockFile)).toEqual(
-      lockFileWithInlineSpecifiersAndWorkspaces
+      pnpmLockFileWithInlineSpecifiersAndWorkspaces
     );
   });
 });

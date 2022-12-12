@@ -1,10 +1,12 @@
-import { assertMinimumCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
+import {
+  assertMinimumCypressVersion,
+  installedCypressVersion,
+} from '@nrwl/cypress/src/utils/cypress-version';
 import {
   formatFiles,
   installPackagesTask,
   joinPathFragments,
   logger,
-  ProjectConfiguration,
   readProjectConfiguration,
   stripIndents,
   Tree,
@@ -25,6 +27,10 @@ import {
 
 export async function migrateCypressProject(tree: Tree) {
   assertMinimumCypressVersion(8);
+  if (installedCypressVersion() >= 10) {
+    logger.info('NX This workspace is already using Cypress v10+');
+    return;
+  }
   // keep history of cypress configs as some workspaces share configs
   // if we don't have the already migrated configs
   // it prevents us from being able to rename files for those projects

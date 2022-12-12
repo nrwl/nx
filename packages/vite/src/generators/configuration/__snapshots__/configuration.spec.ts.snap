@@ -1,0 +1,164 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`@nrwl/vite:configuration transform React app to use Vite should transform workspace.json project config 1`] = `
+"{
+  \\"projects\\": {
+    \\"my-test-react-app\\": {
+      \\"$schema\\": \\"../../node_modules/nx/schemas/project-schema.json\\",
+      \\"root\\": \\"apps/my-test-react-app\\",
+      \\"sourceRoot\\": \\"apps/my-test-react-app/src\\",
+      \\"projectType\\": \\"application\\",
+      \\"architect\\": {
+        \\"build\\": {
+          \\"builder\\": \\"@nrwl/vite:build\\",
+          \\"outputs\\": [
+            \\"{options.outputPath}\\"
+          ],
+          \\"defaultConfiguration\\": \\"production\\",
+          \\"options\\": {
+            \\"outputPath\\": \\"dist/apps/my-test-react-app\\"
+          },
+          \\"configurations\\": {
+            \\"development\\": {
+              \\"extractLicenses\\": false,
+              \\"optimization\\": false,
+              \\"sourceMap\\": true,
+              \\"vendorChunk\\": true
+            },
+            \\"production\\": {
+              \\"fileReplacements\\": [
+                {
+                  \\"replace\\": \\"apps/my-test-react-app/src/environments/environment.ts\\",
+                  \\"with\\": \\"apps/my-test-react-app/src/environments/environment.prod.ts\\"
+                }
+              ],
+              \\"optimization\\": true,
+              \\"outputHashing\\": \\"all\\",
+              \\"sourceMap\\": false,
+              \\"namedChunks\\": false,
+              \\"extractLicenses\\": true,
+              \\"vendorChunk\\": false
+            }
+          }
+        },
+        \\"serve\\": {
+          \\"builder\\": \\"@nrwl/vite:dev-server\\",
+          \\"defaultConfiguration\\": \\"development\\",
+          \\"options\\": {
+            \\"buildTarget\\": \\"my-test-react-app:build\\"
+          },
+          \\"configurations\\": {
+            \\"development\\": {
+              \\"buildTarget\\": \\"my-test-react-app:build:development\\"
+            },
+            \\"production\\": {
+              \\"buildTarget\\": \\"my-test-react-app:build:production\\",
+              \\"hmr\\": false
+            }
+          }
+        },
+        \\"lint\\": {
+          \\"builder\\": \\"@nrwl/linter:eslint\\",
+          \\"outputs\\": [
+            \\"{options.outputFile}\\"
+          ],
+          \\"options\\": {
+            \\"lintFilePatterns\\": [
+              \\"apps/my-test-react-app/**/*.{ts,tsx,js,jsx}\\"
+            ]
+          }
+        },
+        \\"test\\": {
+          \\"builder\\": \\"@nrwl/jest:jest\\",
+          \\"outputs\\": [
+            \\"{workspaceRoot}/coverage/{projectRoot}\\"
+          ],
+          \\"options\\": {
+            \\"jestConfig\\": \\"apps/my-test-react-app/jest.config.ts\\",
+            \\"passWithNoTests\\": true
+          }
+        }
+      },
+      \\"tags\\": []
+    }
+  },
+  \\"version\\": 1
+}
+"
+`;
+
+exports[`@nrwl/vite:configuration transform Web app to use Vite should transform workspace.json project config 1`] = `
+"{
+  \\"projects\\": {
+    \\"my-test-web-app\\": {
+      \\"$schema\\": \\"../../node_modules/nx/schemas/project-schema.json\\",
+      \\"projectType\\": \\"application\\",
+      \\"root\\": \\"apps/my-test-web-app\\",
+      \\"sourceRoot\\": \\"apps/my-test-web-app/src\\",
+      \\"tags\\": [],
+      \\"architect\\": {
+        \\"build\\": {
+          \\"builder\\": \\"@nrwl/vite:build\\",
+          \\"outputs\\": [
+            \\"{options.outputPath}\\"
+          ],
+          \\"defaultConfiguration\\": \\"production\\",
+          \\"options\\": {
+            \\"outputPath\\": \\"dist/apps/my-test-web-app\\"
+          },
+          \\"configurations\\": {
+            \\"production\\": {
+              \\"optimization\\": true,
+              \\"outputHashing\\": \\"all\\",
+              \\"sourceMap\\": false,
+              \\"namedChunks\\": false,
+              \\"extractLicenses\\": true,
+              \\"vendorChunk\\": false,
+              \\"fileReplacements\\": [
+                {
+                  \\"replace\\": \\"apps/my-test-web-app/src/environments/environment.ts\\",
+                  \\"with\\": \\"apps/my-test-web-app/src/environments/environment.prod.ts\\"
+                }
+              ]
+            }
+          }
+        },
+        \\"serve\\": {
+          \\"builder\\": \\"@nrwl/vite:dev-server\\",
+          \\"options\\": {
+            \\"buildTarget\\": \\"my-test-web-app:build\\"
+          },
+          \\"configurations\\": {
+            \\"production\\": {
+              \\"buildTarget\\": \\"my-test-web-app:build:production\\"
+            }
+          }
+        },
+        \\"lint\\": {
+          \\"builder\\": \\"@nrwl/linter:eslint\\",
+          \\"outputs\\": [
+            \\"{options.outputFile}\\"
+          ],
+          \\"options\\": {
+            \\"lintFilePatterns\\": [
+              \\"apps/my-test-web-app/**/*.ts\\"
+            ]
+          }
+        },
+        \\"test\\": {
+          \\"builder\\": \\"@nrwl/jest:jest\\",
+          \\"outputs\\": [
+            \\"{workspaceRoot}/coverage/{projectRoot}\\"
+          ],
+          \\"options\\": {
+            \\"jestConfig\\": \\"apps/my-test-web-app/jest.config.ts\\",
+            \\"passWithNoTests\\": true
+          }
+        }
+      }
+    }
+  },
+  \\"version\\": 1
+}
+"
+`;

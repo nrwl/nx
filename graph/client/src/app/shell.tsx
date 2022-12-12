@@ -3,7 +3,6 @@ import {
   ArrowLeftCircleIcon,
   InformationCircleIcon,
 } from '@heroicons/react/24/outline';
-import Tippy from '@tippyjs/react';
 import classNames from 'classnames';
 // nx-ignore-next-line
 
@@ -20,6 +19,7 @@ import RankdirPanel from './feature-projects/panels/rankdir-panel';
 import { getProjectGraphService } from './machines/get-services';
 import TooltipDisplay from './ui-tooltips/graph-tooltip-display';
 import { useSyncExternalStore } from 'use-sync-external-store/shim';
+import { Tooltip } from './ui-tooltips/tooltip';
 
 export function Shell(): JSX.Element {
   const projectGraphService = getProjectGraphService();
@@ -179,10 +179,10 @@ export function Shell(): JSX.Element {
           <div className="h-full w-full" id="cytoscape-graph"></div>
           <TooltipDisplay></TooltipDisplay>
 
-          <Tippy
+          <Tooltip
+            openAction="hover"
             content="Download Graph as PNG"
             placement="right"
-            theme={selectValueByThemeStatic('dark-nx', 'nx')}
           >
             <button
               type="button"
@@ -195,7 +195,7 @@ export function Shell(): JSX.Element {
             >
               <ArrowDownTrayIcon className="absolute top-1/2 left-1/2 -mt-3 -ml-3 h-6 w-6" />
             </button>
-          </Tippy>
+          </Tooltip>
         </div>
       </div>
     </>

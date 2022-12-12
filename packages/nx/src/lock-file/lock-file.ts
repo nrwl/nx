@@ -28,10 +28,18 @@ import {
   ProjectGraphExternalNode,
 } from '../config/project-graph';
 import { existsSync } from 'fs';
+import { createProjectGraphAsync } from '../project-graph/project-graph';
+import { createPackageJson } from '../utils/create-package-json';
+import { normalizePackageJson } from './utils/pruning';
+import { PackageJson } from '../utils/package-json';
 
-const YARN_LOCK_PATH = join(workspaceRoot, 'yarn.lock');
-const NPM_LOCK_PATH = join(workspaceRoot, 'package-lock.json');
-const PNPM_LOCK_PATH = join(workspaceRoot, 'pnpm-lock.yaml');
+const YARN_LOCK_FILE = 'yarn.lock';
+const NPM_LOCK_FILE = 'package-lock.json';
+const PNPM_LOCK_FILE = 'pnpm-lock.yaml';
+
+const YARN_LOCK_PATH = join(workspaceRoot, YARN_LOCK_FILE);
+const NPM_LOCK_PATH = join(workspaceRoot, NPM_LOCK_FILE);
+const PNPM_LOCK_PATH = join(workspaceRoot, PNPM_LOCK_FILE);
 
 /**
  * Check if lock file exists
@@ -158,24 +166,75 @@ export function writeLockFile(
   throw Error(`Unknown package manager: ${packageManager}`);
 }
 
-/**
- * Prunes {@link LockFileData} based on minimal necessary set of packages
- * Returns new {@link LockFileData}
- */
-export function pruneLockFileData(
-  lockFile: LockFileData,
-  packages: string[],
-  projectName?: string,
+export function getLockFileName(
   packageManager: PackageManager = detectPackageManager(workspaceRoot)
-): LockFileData {
+): string {
   if (packageManager === 'yarn') {
-    return pruneYarnLockFile(lockFile, packages, projectName);
+    return YARN_LOCK_FILE;
   }
   if (packageManager === 'pnpm') {
-    return prunePnpmLockFile(lockFile, packages, projectName);
+    return PNPM_LOCK_FILE;
   }
   if (packageManager === 'npm') {
-    return pruneNpmLockFile(lockFile, packages, projectName);
+    return NPM_LOCK_FILE;
+  }
+  throw Error(`Unknown package manager: ${packageManager}`);
+}
+
+/**
+ * Prune lock file based on the given project's dependencies and overrides in local package.json
+ *
+ * @param projectName Project to prune against
+ * @param isProduction Whether to include optional and dev dependencies
+ * @param packageManager Package manager to use (automatically detected based on lock file)
+ * @returns
+ */
+export async function pruneLockFile(
+  projectName: string,
+  isProduction = true,
+  packageManager: PackageManager = detectPackageManager(workspaceRoot)
+): Promise<string> {
+  const projectGraph = await createProjectGraphAsync();
+
+  if (!projectGraph.nodes[projectName]) {
+    throw Error(`Project "${projectName}" was not found.`);
+  }
+
+  const packageJson = createPackageJson(projectName, projectGraph, {});
+  return pruneLockFileFromPackageJson(
+    packageJson,
+    isProduction,
+    packageManager
+  );
+}
+
+/**
+ * Prune lock file based on the package.json
+ *
+ * @param packageJson
+ * @param isProduction
+ * @param packageManager
+ * @returns
+ */
+export function pruneLockFileFromPackageJson(
+  packageJson: PackageJson,
+  isProduction = true,
+  packageManager: PackageManager = detectPackageManager(workspaceRoot)
+): string {
+  const lockFileData = parseLockFile(packageManager);
+  const normalizedPackageJson = normalizePackageJson(packageJson, isProduction);
+
+  if (packageManager === 'yarn') {
+    const prunedData = pruneYarnLockFile(lockFileData, normalizedPackageJson);
+    return stringifyYarnLockFile(prunedData);
+  }
+  if (packageManager === 'pnpm') {
+    const prunedData = prunePnpmLockFile(lockFileData, normalizedPackageJson);
+    return stringifyPnpmLockFile(prunedData);
+  }
+  if (packageManager === 'npm') {
+    const prunedData = pruneNpmLockFile(lockFileData, normalizedPackageJson);
+    return stringifyNpmLockFile(prunedData);
   }
   throw Error(`Unknown package manager: ${packageManager}`);
 }

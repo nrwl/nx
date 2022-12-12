@@ -14,17 +14,13 @@ import { Linter } from '@nrwl/linter';
 import { UnitTestRunner } from '../../../utils/test-runners';
 import { normalizePrefix } from '../../utils/project';
 
-export function normalizeOptions(
-  host: Tree,
-  schema: Partial<Schema>
-): NormalizedSchema {
+export function normalizeOptions(host: Tree, schema: Schema): NormalizedSchema {
   // Create a schema with populated default values
   const options: Schema = {
     buildable: false,
     linter: Linter.EsLint,
-    name: '', // JSON validation will ensure this is set
     publishable: false,
-    simpleModuleName: false,
+    simpleName: false,
     skipFormat: false,
     unitTestRunner: UnitTestRunner.Jest,
     // Publishable libs cannot use `full` yet, so if its false then use the passed value or default to `full`
@@ -53,7 +49,8 @@ export function normalizeOptions(
   const projectName = fullProjectDirectory
     .replace(new RegExp('/', 'g'), '-')
     .replace(/-\d+/g, '');
-  const fileName = options.simpleModuleName ? name : projectName;
+  const fileName =
+    options.simpleName || options.simpleModuleName ? name : projectName;
   const projectRoot = joinPathFragments(libsDir, fullProjectDirectory);
 
   const moduleName = `${names(fileName).className}Module`;
@@ -114,7 +111,7 @@ export function normalizeOptions(
   return {
     libraryOptions,
     componentOptions: {
-      name: libraryOptions.name,
+      name: fileName,
       standalone: libraryOptions.standalone,
       displayBlock,
       inlineStyle,

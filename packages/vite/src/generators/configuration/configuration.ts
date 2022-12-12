@@ -26,16 +26,34 @@ export async function viteConfigurationGenerator(tree: Tree, schema: Schema) {
     tree,
     schema.project
   );
-  let buildTarget = 'build';
-  let serveTarget = 'serve';
+  let buildTargetName = 'build';
+  let serveTargetName = 'serve';
 
   schema.includeLib ??= projectType === 'library';
 
   if (!schema.newProject) {
-    buildTarget = findExistingTargets(targets).buildTarget;
-    serveTarget = findExistingTargets(targets).serveTarget;
+    const { buildTarget, serveTarget, unsuppored } =
+      findExistingTargets(targets);
+
+    /**
+     * Here, we make sure that the project has a build target
+     * and it is unsupported, before throwing the error.
+     * The reason is that the project could not have a build
+     * target at all, in which case we don't want to throw.
+     * Or the project can have multiple build targets, one of which unsupported.
+     * In that case, we convert the supported one.
+     */
+    if (!buildTarget && unsuppored) {
+      throw new Error(
+        `The project ${schema.project} cannot be converted to use the @nrwl/vite executors.`
+      );
+    }
+
+    buildTargetName = buildTarget ?? buildTargetName;
+    serveTargetName = serveTarget ?? serveTargetName;
+
     if (projectType === 'application') {
-      moveAndEditIndexHtml(tree, schema, buildTarget);
+      moveAndEditIndexHtml(tree, schema, buildTargetName);
     }
     editTsConfig(tree, schema);
   }
@@ -46,10 +64,10 @@ export async function viteConfigurationGenerator(tree: Tree, schema: Schema) {
   });
   tasks.push(initTask);
 
-  addOrChangeBuildTarget(tree, schema, buildTarget);
+  addOrChangeBuildTarget(tree, schema, buildTargetName);
 
   if (!schema.includeLib) {
-    addOrChangeServeTarget(tree, schema, serveTarget);
+    addOrChangeServeTarget(tree, schema, serveTargetName);
   }
 
   writeViteConfig(tree, schema);
@@ -59,6 +77,7 @@ export async function viteConfigurationGenerator(tree: Tree, schema: Schema) {
       project: schema.project,
       uiFramework: schema.uiFramework,
       inSourceTests: schema.inSourceTests,
+      coverageProvider: 'c8',
       skipViteConfig: true,
     });
     tasks.push(vitestTask);

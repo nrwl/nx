@@ -312,6 +312,7 @@ describe('component', () => {
         .read('libs/my-lib/src/lib/hello/hello.tsx')
         .toString();
       expect(content).toContain('<style jsx>');
+      expect(content).not.toContain("styles['container']");
     });
 
     it('should add dependencies to package.json', async () => {

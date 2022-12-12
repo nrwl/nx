@@ -8,6 +8,7 @@ import {
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import { isFramework } from '../../utils/utilities';
+
 import {
   babelCoreVersion,
   babelLoaderVersion,
@@ -21,11 +22,13 @@ import {
   urlLoaderVersion,
   viteBuilderVeresion,
   webpack5Version,
+  htmlWebpackPluginVersion,
 } from '../../utils/versions';
 import { Schema } from './schema';
 
 function checkDependenciesInstalled(host: Tree, schema: Schema) {
   const packageJson = readJson(host, 'package.json');
+
   const devDependencies = {};
   const dependencies = {};
   packageJson.dependencies = packageJson.dependencies || {};
@@ -42,6 +45,9 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
     devDependencies['@storybook/builder-webpack5'] = storybookVersion;
     devDependencies['@storybook/manager-webpack5'] = storybookVersion;
   }
+
+  // TODO(katerina): Remove this when Storybook 7.0 is added in Nx
+  devDependencies['html-webpack-plugin'] = htmlWebpackPluginVersion;
 
   if (isFramework('angular', schema)) {
     devDependencies['@storybook/angular'] = storybookVersion;

@@ -3,6 +3,7 @@ import {
   ProjectGraph,
   ProjectGraphExternalNode,
 } from '../../config/project-graph';
+import { PackageJsonDeps } from './pruning';
 
 /**
  * Apply simple hashing of the content using the default hashing implementation
@@ -13,6 +14,11 @@ export function hashString(fileContent: string): string {
   return defaultHashing.hashArray([fileContent]);
 }
 
+/**
+ * Hash partial graph's external nodes
+ * for task graph caching
+ * @param projectGraph
+ */
 export function hashExternalNodes(projectGraph: ProjectGraph) {
   Object.keys(projectGraph.externalNodes).forEach((key) => {
     if (!projectGraph.externalNodes[key].data.hash) {
@@ -24,10 +30,13 @@ export function hashExternalNodes(projectGraph: ProjectGraph) {
 
 function hashExternalNode(node: ProjectGraphExternalNode, graph: ProjectGraph) {
   const hashKey = `${node.data.packageName}@${node.data.version}`;
+
   if (!graph.dependencies[node.name]) {
     node.data.hash = hashString(hashKey);
   } else {
     const hashingInput = [hashKey];
+
+    // collect all dependencies' hashes
     traverseExternalNodesDependencies(node.name, graph, hashingInput);
     node.data.hash = defaultHashing.hashArray(hashingInput.sort());
   }
@@ -59,12 +68,8 @@ function traverseExternalNodesDependencies(
  */
 export function generatePrunnedHash(
   originalHash: string,
-  packages: string[],
-  projectName?: string
+  normalizedPackageJson: PackageJsonDeps
 ) {
-  const hashingInput = [originalHash, ...packages];
-  if (projectName) {
-    hashingInput.push(projectName);
-  }
+  const hashingInput = [originalHash, JSON.stringify(normalizedPackageJson)];
   return defaultHashing.hashArray(hashingInput);
 }

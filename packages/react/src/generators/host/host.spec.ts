@@ -54,7 +54,7 @@ describe('hostGenerator', () => {
         types: ['node'],
       },
       extends: './tsconfig.app.json',
-      include: ['src/main.server.tsx', 'server.ts'],
+      include: ['src/remotes.d.ts', 'src/main.server.tsx', 'server.ts'],
     });
   });
 });

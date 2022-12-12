@@ -34,6 +34,7 @@
     "@nrwl/devkit": "file:../devkit",
     "@nrwl/linter": "file:../linter",
     "@nrwl/workspace": "file:../workspace",
+    "@phenomnomnominal/tsquery": "4.1.1",
     "chalk": "4.1.0",
     "minimatch": "3.0.5",
     "semver": "7.3.4"

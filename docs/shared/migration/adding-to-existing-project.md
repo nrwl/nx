@@ -80,12 +80,6 @@ Here's an example of a `build` and `lint` script being wrapped by Nx:
   "devDependencies": {
     ...
     "nx": "15.3.0"
-  },
-  "nx": {
-    "includeScripts": [
-      "build",
-      "lint"
-    ]
   }
 }
 ```

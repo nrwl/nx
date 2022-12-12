@@ -1,9 +1,5 @@
 The Nx plugin for [Vite](https://vitejs.dev/) and [Vitest](https://vitest.dev/).
 
-{% callout type="warning" title="Early release plugin" %}
-This Nx plugin is in active development and may not be ready for real-world use. The planned release date for the stable plugin is December, 2022.
-{% /callout %}
-
 [Vite.js](https://vitejs.dev/) is a build tool that aims to provide a faster and leaner development experience for modern web projects.
 
 Why should you use this plugin?
@@ -182,7 +178,6 @@ export default defineConfig({
     react(),
     ViteTsConfigPathsPlugin({
       root: '../../',
-      projects: ['tsconfig.base.json'],
     }),
   ],
 });
@@ -225,7 +220,6 @@ export default mergeConfig(baseConfig, {
     react(),
     ViteTsConfigPathsPlugin({
       root: '../../',
-      projects: ['tsconfig.base.json'],
     }),
   ],
 });
