@@ -9,13 +9,15 @@ import { workspaceRoot } from './workspace-root';
  * Creates a package.json in the output directory for support to install dependencies within containers.
  *
  * If a package.json exists in the project, it will reuse that.
+ * If isProduction flag is set, it wil  remove devDependencies and optional peerDependencies
  */
 export function createPackageJson(
   projectName: string,
   graph: ProjectGraph,
   options: {
     root?: string;
-  }
+    isProduction?: boolean;
+  } = {}
 ): PackageJson {
   const npmDeps = findAllNpmDeps(projectName, graph);
   // default package.json if one does not exist
@@ -40,8 +42,11 @@ export function createPackageJson(
       !packageJson.dependencies?.[packageName] &&
       !packageJson.peerDependencies?.[packageName]
     ) {
-      packageJson.devDependencies = packageJson.devDependencies || {};
-      packageJson.devDependencies[packageName] = version;
+      // don't store dev dependencies for production
+      if (!options.isProduction) {
+        packageJson.devDependencies = packageJson.devDependencies || {};
+        packageJson.devDependencies[packageName] = version;
+      }
     } else {
       if (!packageJson.peerDependencies?.[packageName]) {
         packageJson.dependencies = packageJson.dependencies || {};
@@ -54,11 +59,22 @@ export function createPackageJson(
       packageJson.dependencies[packageName] = version;
     }
   });
+  if (options.isProduction && packageJson.peerDependencies) {
+    const mandatoryPeedDeps = filterOptionalPeerDependencies(packageJson);
+    if (mandatoryPeedDeps) {
+      packageJson.peerDependencies = mandatoryPeedDeps;
+    } else {
+      delete packageJson.peerDependencies;
+    }
+  }
 
   packageJson.devDependencies &&= sortObjectByKeys(packageJson.devDependencies);
   packageJson.dependencies &&= sortObjectByKeys(packageJson.dependencies);
   packageJson.peerDependencies &&= sortObjectByKeys(
     packageJson.peerDependencies
+  );
+  packageJson.peerDependenciesMeta &&= sortObjectByKeys(
+    packageJson.peerDependenciesMeta
   );
 
   return packageJson;
@@ -142,4 +158,17 @@ function recursivelyCollectPeerDependencies(
   } catch (e) {
     return list;
   }
+}
+
+function filterOptionalPeerDependencies(
+  packageJson: PackageJson
+): Record<string, string> {
+  let peerDependencies;
+  Object.keys(packageJson.peerDependencies).forEach((key) => {
+    if (!packageJson.peerDependenciesMeta?.[key]?.optional) {
+      peerDependencies = peerDependencies || {};
+      peerDependencies[key] = packageJson.peerDependencies[key];
+    }
+  });
+  return peerDependencies;
 }

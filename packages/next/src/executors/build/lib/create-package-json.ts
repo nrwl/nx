@@ -1,11 +1,11 @@
 import type { ExecutorContext } from '@nrwl/devkit';
-import { writeJsonFile } from '@nrwl/devkit';
-import { writeFileSync } from 'fs';
 import {
-  getLockFileName,
-  pruneLockFileFromPackageJson,
-} from 'nx/src/lock-file/lock-file';
-import { createPackageJson as generatePackageJson } from 'nx/src/utils/create-package-json';
+  writeJsonFile,
+  createPackageJson as generatePackageJson,
+  createLockFile,
+} from '@nrwl/devkit';
+import { writeFileSync } from 'fs';
+import { getLockFileName } from 'nx/src/lock-file/lock-file';
 import type { NextBuildBuilderOptions } from '../../../utils/types';
 
 export async function createPackageJson(
@@ -17,13 +17,10 @@ export async function createPackageJson(
     context.projectGraph,
     {
       root: context.root,
+      // By default we remove devDependencies since this is a production build.
+      isProduction: options.includeDevDependenciesInPackageJson,
     }
   );
-
-  // By default we remove devDependencies since this is a production build.
-  if (!options.includeDevDependenciesInPackageJson) {
-    delete packageJson.devDependencies;
-  }
 
   if (!packageJson.scripts) {
     packageJson.scripts = {};
@@ -39,10 +36,7 @@ export async function createPackageJson(
   writeJsonFile(`${options.outputPath}/package.json`, packageJson);
 
   // generate lock file
-  const prunedLockFile = pruneLockFileFromPackageJson(
-    packageJson,
-    !options.includeDevDependenciesInPackageJson
-  );
+  const prunedLockFile = createLockFile(packageJson);
   const lockFileName = getLockFileName();
   writeFileSync(`${options.outputPath}/${lockFileName}`, prunedLockFile, {
     encoding: 'utf-8',
