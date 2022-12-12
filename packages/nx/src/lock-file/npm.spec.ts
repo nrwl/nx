@@ -15,6 +15,7 @@ import {
   lockFileV2YargsAndDevkitOnly,
 } from './__fixtures__/npm.lock';
 import { vol } from 'memfs';
+import { npmLockFileWithWorkspaces } from './__fixtures__/workspaces.lock';
 
 jest.mock('fs', () => require('memfs').fs);
 
@@ -120,7 +121,9 @@ describe('npm LockFile utility', () => {
     });
 
     it('should match the original file on stringification', () => {
-      expect(stringifyNpmLockFile(parsedLockFile)).toEqual(lockFileV3);
+      expect(JSON.parse(stringifyNpmLockFile(parsedLockFile))).toEqual(
+        JSON.parse(lockFileV3)
+      );
     });
 
     it('should prune the lock file', () => {
@@ -138,18 +141,22 @@ describe('npm LockFile utility', () => {
 
     it('should correctly prune lockfile with single package', () => {
       expect(
-        stringifyNpmLockFile(
-          pruneNpmLockFile(parsedLockFile, TypeScriptOnlyPackage)
+        JSON.parse(
+          stringifyNpmLockFile(
+            pruneNpmLockFile(parsedLockFile, TypeScriptOnlyPackage)
+          )
         )
-      ).toEqual(lockFileV3JustTypescript);
+      ).toEqual(JSON.parse(lockFileV3JustTypescript));
     });
 
     it('should correctly prune lockfile with multiple packages', () => {
       expect(
-        stringifyNpmLockFile(
-          pruneNpmLockFile(parsedLockFile, YargsAndDevkitPackage)
+        JSON.parse(
+          stringifyNpmLockFile(
+            pruneNpmLockFile(parsedLockFile, YargsAndDevkitPackage)
+          )
         )
-      ).toEqual(lockFileV3YargsAndDevkitOnly);
+      ).toEqual(JSON.parse(lockFileV3YargsAndDevkitOnly));
     });
   });
 
@@ -182,6 +189,15 @@ describe('npm LockFile utility', () => {
         parsedLockFile.dependencies['@ampproject/remapping']
       ).toMatchSnapshot();
       expect(parsedLockFile.dependencies['typescript']).toMatchSnapshot();
+    });
+
+    it('should parse lockfile with workspaces correctly', () => {
+      const parsedWorkspaceLockFile = parseNpmLockFile(
+        npmLockFileWithWorkspaces
+      );
+      expect(JSON.parse(stringifyNpmLockFile(parsedWorkspaceLockFile))).toEqual(
+        JSON.parse(npmLockFileWithWorkspaces)
+      );
     });
 
     it('should map various versions of packages', () => {
@@ -234,7 +250,9 @@ describe('npm LockFile utility', () => {
     });
 
     it('should match the original file on stringification', () => {
-      expect(stringifyNpmLockFile(parsedLockFile)).toEqual(lockFileV2);
+      expect(JSON.parse(stringifyNpmLockFile(parsedLockFile))).toEqual(
+        JSON.parse(lockFileV2)
+      );
     });
 
     it('should prune the lock file', () => {
@@ -252,16 +270,18 @@ describe('npm LockFile utility', () => {
 
     it('should correctly prune lockfile with single package', () => {
       expect(
-        stringifyNpmLockFile(
-          pruneNpmLockFile(parsedLockFile, TypeScriptOnlyPackage)
+        JSON.parse(
+          stringifyNpmLockFile(
+            pruneNpmLockFile(parsedLockFile, TypeScriptOnlyPackage)
+          )
         )
-      ).toEqual(lockFileV2JustTypescript);
+      ).toEqual(JSON.parse(lockFileV2JustTypescript));
     });
 
     it('should correctly prune lockfile with multiple packages', () => {
       const pruned = pruneNpmLockFile(parsedLockFile, YargsAndDevkitPackage);
-      expect(stringifyNpmLockFile(pruned)).toEqual(
-        lockFileV2YargsAndDevkitOnly
+      expect(JSON.parse(stringifyNpmLockFile(pruned))).toEqual(
+        JSON.parse(lockFileV2YargsAndDevkitOnly)
       );
     });
   });
@@ -335,7 +355,9 @@ describe('npm LockFile utility', () => {
     });
 
     it('should match the original file on stringification', () => {
-      expect(stringifyNpmLockFile(parsedLockFile)).toEqual(lockFileV1);
+      expect(JSON.parse(stringifyNpmLockFile(parsedLockFile))).toEqual(
+        JSON.parse(lockFileV1)
+      );
     });
 
     describe('pruning', () => {
@@ -368,16 +390,18 @@ describe('npm LockFile utility', () => {
 
       it('should correctly prune lockfile with single package', () => {
         expect(
-          stringifyNpmLockFile(
-            pruneNpmLockFile(parsedLockFile, TypeScriptOnlyPackage)
+          JSON.parse(
+            stringifyNpmLockFile(
+              pruneNpmLockFile(parsedLockFile, TypeScriptOnlyPackage)
+            )
           )
-        ).toEqual(lockFileV1JustTypescript);
+        ).toEqual(JSON.parse(lockFileV1JustTypescript));
       });
 
       it('should correctly prune lockfile with multiple packages', () => {
         const pruned = pruneNpmLockFile(parsedLockFile, YargsAndDevkitPackage);
-        expect(stringifyNpmLockFile(pruned)).toEqual(
-          lockFileV1YargsAndDevkitOnly
+        expect(JSON.parse(stringifyNpmLockFile(pruned))).toEqual(
+          JSON.parse(lockFileV1YargsAndDevkitOnly)
         );
       });
     });
