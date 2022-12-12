@@ -197,7 +197,7 @@ export function interpolate(template: string, data: any): string {
   let res = template.replace('{workspaceRoot}/', '');
 
   if (data.projectRoot == '.') {
-    res = template.replace('{projectRoot}/', '');
+    res = res.replace('{projectRoot}/', '');
   }
 
   return res.replace(/{([\s\S]+?)}/g, (match: string) => {
