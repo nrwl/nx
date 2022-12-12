@@ -5,8 +5,8 @@ import { normalizePath } from '@nrwl/devkit';
 import type {
   AssetGlobPattern,
   FileReplacement,
-  WebpackExecutorOptions,
   NormalizedWebpackExecutorOptions,
+  WebpackExecutorOptions,
 } from '../schema';
 
 export function normalizeOptions(
@@ -34,11 +34,9 @@ export function normalizeOptions(
           }
         : options.optimization,
     polyfills: options.polyfills ? resolve(root, options.polyfills) : undefined,
-    es2015Polyfills: options.es2015Polyfills
-      ? resolve(root, options.es2015Polyfills)
-      : undefined,
   };
 }
+
 function normalizeFileReplacements(
   root: string,
   fileReplacements: FileReplacement[]

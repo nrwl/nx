@@ -23,7 +23,6 @@ const IGNORED_WEBPACK_WARNINGS = [
 ];
 
 export interface InternalBuildOptions {
-  esm?: boolean;
   isScriptOptimizeOn?: boolean;
   emitDecoratorMetadata?: boolean;
   configuration?: string;
@@ -40,18 +39,13 @@ export function getBaseWebpackPartial(
   // If the function is called directly and not through `@nrwl/webpack:webpack` then this target may not be set.
   options.target ??= 'web';
 
-  const mainFields = [
-    ...(internalOptions.esm ? ['es2015'] : []),
-    'module',
-    'main',
-  ];
+  const mainFields = ['es2015', 'module', 'main'];
   const hashFormat = getOutputHashFormat(options.outputHashing);
-  const suffixFormat = internalOptions.esm ? '' : '.es5';
   const filename = internalOptions.isScriptOptimizeOn
-    ? `[name]${hashFormat.script}${suffixFormat}.js`
+    ? `[name]${hashFormat.script}.js`
     : '[name].js';
   const chunkFilename = internalOptions.isScriptOptimizeOn
-    ? `[name]${hashFormat.chunk}${suffixFormat}.js`
+    ? `[name]${hashFormat.chunk}.js`
     : '[name].js';
   const mode = internalOptions.isScriptOptimizeOn
     ? 'production'
@@ -90,7 +84,7 @@ export function getBaseWebpackPartial(
       hashFunction: 'xxhash64',
       // Disabled for performance
       pathinfo: false,
-      scriptType: internalOptions.esm ? 'module' : undefined,
+      scriptType: 'module',
     },
     module: {
       // Enabled for performance
@@ -180,33 +174,39 @@ export function getBaseWebpackPartial(
     webpackConfig.plugins.push(
       new webpack.DefinePlugin(getClientEnvironment(mode).stringified)
     );
-    if (options.compiler !== 'swc' && internalOptions.isScriptOptimizeOn) {
-      webpackConfig.optimization = {
-        sideEffects: true,
-        minimizer: [
-          new TerserPlugin({
-            parallel: true,
-            terserOptions: {
-              ecma: (internalOptions.esm ? 2016 : 5) as TerserPlugin.TerserECMA,
-              safari10: true,
-              output: {
-                ascii_only: true,
-                comments: false,
-                webkit: true,
-              },
-            },
-          }),
-        ],
-        runtimeChunk: true,
-      };
-    }
     webpackConfig.optimization ??= {};
     webpackConfig.optimization.nodeEnv = process.env.NODE_ENV ?? mode;
+
+    if (internalOptions.isScriptOptimizeOn) {
+      // Always check sideEffects field in package.json for tree-shaking to work.
+      webpackConfig.optimization.sideEffects = true;
+
+      if (options.compiler !== 'swc') {
+        webpackConfig.optimization = {
+          sideEffects: true,
+          minimizer: [
+            new TerserPlugin({
+              parallel: true,
+              terserOptions: {
+                ecma: 2020,
+                safari10: true,
+                output: {
+                  ascii_only: true,
+                  comments: false,
+                  webkit: true,
+                },
+              },
+            }),
+          ],
+          runtimeChunk: true,
+        };
+      }
+    }
   }
 
   const extraPlugins: WebpackPluginInstance[] = [];
 
-  if (!internalOptions.skipTypeCheck && internalOptions.esm) {
+  if (!internalOptions.skipTypeCheck) {
     extraPlugins.push(
       new ForkTsCheckerWebpackPlugin({
         typescript: {
@@ -412,7 +412,7 @@ export function createLoaderFromCompiler(
           rootMode: 'upward',
           cwd: join(options.root, options.sourceRoot),
           emitDecoratorMetadata: extraOptions.emitDecoratorMetadata,
-          isModern: extraOptions.esm,
+          isModern: true,
           envName: extraOptions.isScriptOptimizeOn
             ? 'production'
             : extraOptions.configuration,

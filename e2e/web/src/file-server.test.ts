@@ -26,10 +26,7 @@ describe('file-server', () => {
     const p = await runCommandUntil(
       `serve ${appName} --port=${port}`,
       (output) => {
-        return (
-          output.indexOf('webpack compiled') > -1 &&
-          output.indexOf(`localhost:${port}`) > -1
-        );
+        return output.indexOf(`localhost:${port}`) > -1;
       }
     );
 
@@ -39,5 +36,5 @@ describe('file-server', () => {
     } catch {
       // ignore
     }
-  }, 1000000);
+  }, 300_000);
 });

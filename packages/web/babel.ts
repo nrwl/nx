@@ -43,7 +43,6 @@ module.exports = function (api: any, options: NxWebBabelPresetOptions = {}) {
           ? { targets: { node: 'current' }, loose: true }
           : {
               // Allow importing core-js in entrypoint and use browserlist to select polyfills.
-              // This is needed for differential loading as well.
               useBuiltIns: options.useBuiltIns ?? 'entry',
               corejs: 3,
               // Do not transform modules to CJS
