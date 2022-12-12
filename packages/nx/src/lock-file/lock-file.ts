@@ -28,8 +28,6 @@ import {
   ProjectGraphExternalNode,
 } from '../config/project-graph';
 import { existsSync } from 'fs';
-import { createProjectGraphAsync } from '../project-graph/project-graph';
-import { createPackageJson } from '../utils/create-package-json';
 import { normalizePackageJson } from './utils/pruning';
 import { PackageJson } from '../utils/package-json';
 
@@ -182,47 +180,19 @@ export function getLockFileName(
 }
 
 /**
- * Prune lock file based on the given project's dependencies and overrides in local package.json
- *
- * @param projectName Project to prune against
- * @param isProduction Whether to include optional and dev dependencies
- * @param packageManager Package manager to use (automatically detected based on lock file)
- * @returns
- */
-export async function pruneLockFile(
-  projectName: string,
-  isProduction = true,
-  packageManager: PackageManager = detectPackageManager(workspaceRoot)
-): Promise<string> {
-  const projectGraph = await createProjectGraphAsync();
-
-  if (!projectGraph.nodes[projectName]) {
-    throw Error(`Project "${projectName}" was not found.`);
-  }
-
-  const packageJson = createPackageJson(projectName, projectGraph, {});
-  return pruneLockFileFromPackageJson(
-    packageJson,
-    isProduction,
-    packageManager
-  );
-}
-
-/**
- * Prune lock file based on the package.json
+ * Create lock file based on the root level lock file and (pruned) package.json
  *
  * @param packageJson
  * @param isProduction
  * @param packageManager
  * @returns
  */
-export function pruneLockFileFromPackageJson(
+export function createLockFile(
   packageJson: PackageJson,
-  isProduction = true,
   packageManager: PackageManager = detectPackageManager(workspaceRoot)
 ): string {
   const lockFileData = parseLockFile(packageManager);
-  const normalizedPackageJson = normalizePackageJson(packageJson, isProduction);
+  const normalizedPackageJson = normalizePackageJson(packageJson);
 
   if (packageManager === 'yarn') {
     const prunedData = pruneYarnLockFile(lockFileData, normalizedPackageJson);

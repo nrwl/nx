@@ -143,6 +143,8 @@ It only uses language primitives and immutable objects
 - [applySharedFunction](../../devkit/index#applysharedfunction)
 - [convertNxExecutor](../../devkit/index#convertnxexecutor)
 - [convertNxGenerator](../../devkit/index#convertnxgenerator)
+- [createLockFile](../../devkit/index#createlockfile)
+- [createPackageJson](../../devkit/index#createpackagejson)
 - [createProjectGraphAsync](../../devkit/index#createprojectgraphasync)
 - [defaultTasksRunner](../../devkit/index#defaulttasksrunner)
 - [detectPackageManager](../../devkit/index#detectpackagemanager)
@@ -171,7 +173,6 @@ It only uses language primitives and immutable objects
 - [offsetFromRoot](../../devkit/index#offsetfromroot)
 - [parseJson](../../devkit/index#parsejson)
 - [parseTargetString](../../devkit/index#parsetargetstring)
-- [pruneLockFile](../../devkit/index#prunelockfile)
 - [readAllWorkspaceConfiguration](../../devkit/index#readallworkspaceconfiguration)
 - [readCachedProjectGraph](../../devkit/index#readcachedprojectgraph)
 - [readJson](../../devkit/index#readjson)
@@ -1064,6 +1065,50 @@ Convert an Nx Generator into an Angular Devkit Schematic.
 
 ---
 
+### createLockFile
+
+▸ **createLockFile**(`packageJson`, `packageManager?`): `string`
+
+Create lock file based on the root level lock file and (pruned) package.json
+
+#### Parameters
+
+| Name             | Type                                                  |
+| :--------------- | :---------------------------------------------------- |
+| `packageJson`    | `PackageJson`                                         |
+| `packageManager` | [`PackageManager`](../../devkit/index#packagemanager) |
+
+#### Returns
+
+`string`
+
+---
+
+### createPackageJson
+
+▸ **createPackageJson**(`projectName`, `graph`, `options?`): `PackageJson`
+
+Creates a package.json in the output directory for support to install dependencies within containers.
+
+If a package.json exists in the project, it will reuse that.
+If isProduction flag is set, it wil remove devDependencies and optional peerDependencies
+
+#### Parameters
+
+| Name                    | Type                                                      |
+| :---------------------- | :-------------------------------------------------------- |
+| `projectName`           | `string`                                                  |
+| `graph`                 | [`ProjectGraph`](../../devkit/index#projectgraph)<`any`\> |
+| `options`               | `Object`                                                  |
+| `options.isProduction?` | `boolean`                                                 |
+| `options.root?`         | `string`                                                  |
+
+#### Returns
+
+`PackageJson`
+
+---
+
 ### createProjectGraphAsync
 
 ▸ **createProjectGraphAsync**(`opts?`): `Promise`<[`ProjectGraph`](../../devkit/index#projectgraph)\>
@@ -1722,26 +1767,6 @@ parseTargetString('proj:test:production'); // returns { project: "proj", target:
 #### Returns
 
 [`Target`](../../devkit/index#target)
-
----
-
-### pruneLockFile
-
-▸ **pruneLockFile**(`projectName`, `isProduction?`, `packageManager?`): `Promise`<`string`\>
-
-Prune lock file based on the given project's dependencies and overrides in local package.json
-
-#### Parameters
-
-| Name             | Type                                                  | Default value | Description                                                        |
-| :--------------- | :---------------------------------------------------- | :------------ | :----------------------------------------------------------------- |
-| `projectName`    | `string`                                              | `undefined`   | Project to prune against                                           |
-| `isProduction`   | `boolean`                                             | `true`        | Whether to include optional and dev dependencies                   |
-| `packageManager` | [`PackageManager`](../../devkit/index#packagemanager) | `undefined`   | Package manager to use (automatically detected based on lock file) |
-
-#### Returns
-
-`Promise`<`string`\>
 
 ---
 
