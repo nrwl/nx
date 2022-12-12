@@ -1,14 +1,14 @@
 import { removeSync } from 'fs-extra';
 import { readJsonFile, writeJsonFile } from 'nx/src/utils/fileutils';
 
-export function cleanUpFiles(appName: string, isNested: boolean) {
+export function cleanUpFiles(appName: string, isStandalone: boolean) {
   // Delete targets from project since we delegate to npm scripts.
-  const projectJsonPath = isNested
+  const projectJsonPath = isStandalone
     ? 'project.json'
     : `apps/${appName}/project.json`;
   const json = readJsonFile(projectJsonPath);
   delete json.targets;
-  if (isNested) {
+  if (isStandalone) {
     if (json.sourceRoot) {
       json.sourceRoot = json.sourceRoot.replace(`apps/${appName}/`, '');
     }
@@ -22,4 +22,12 @@ export function cleanUpFiles(appName: string, isNested: boolean) {
   writeJsonFile(projectJsonPath, json);
 
   removeSync('temp-workspace');
+
+  if (isStandalone) {
+    removeSync('babel.config.json');
+    removeSync('jest.preset.js');
+    removeSync('jest.config.ts');
+    removeSync('libs');
+    removeSync('tools');
+  }
 }
