@@ -574,7 +574,6 @@ describe('Nx Affected and Graph Tests', () => {
       expect(() => checkFilesExist('project-graph.html')).not.toThrow();
       expect(() => checkFilesExist('static/styles.css')).not.toThrow();
       expect(() => checkFilesExist('static/runtime.js')).not.toThrow();
-      expect(() => checkFilesExist('static/polyfills.js')).not.toThrow();
       expect(() => checkFilesExist('static/main.js')).not.toThrow();
       expect(() => checkFilesExist('static/environment.js')).not.toThrow();
 

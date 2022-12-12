@@ -86,7 +86,6 @@ describe('app', () => {
       await applicationGenerator(appTree, schema);
 
       expect(appTree.exists('apps/my-app/.babelrc')).toBeTruthy();
-      expect(appTree.exists('apps/my-app/.browserslistrc')).toBeTruthy();
       expect(appTree.exists('apps/my-app/src/main.tsx')).toBeTruthy();
       expect(appTree.exists('apps/my-app/src/app/app.tsx')).toBeTruthy();
       expect(appTree.exists('apps/my-app/src/app/app.spec.tsx')).toBeTruthy();
@@ -325,7 +324,6 @@ describe('app', () => {
       main: 'apps/my-app/src/main.tsx',
       baseHref: '/',
       outputPath: 'dist/apps/my-app',
-      polyfills: 'apps/my-app/src/polyfills.ts',
       scripts: [],
       styles: ['apps/my-app/src/styles.css'],
       tsConfig: 'apps/my-app/tsconfig.app.json',
@@ -821,19 +819,6 @@ describe('app', () => {
     expect(
       workspaceJson.get('my-app').targets.build.options.webpackConfig
     ).toBeUndefined();
-  });
-
-  it('should add required polyfills for core-js and regenerator', async () => {
-    await applicationGenerator(appTree, {
-      ...schema,
-    });
-
-    const polyfillsSource = appTree
-      .read('apps/my-app/src/polyfills.ts')
-      .toString();
-
-    expect(polyfillsSource).toContain('regenerator');
-    expect(polyfillsSource).toContain('core-js');
   });
 
   describe('--skipWorkspaceJson', () => {

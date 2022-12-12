@@ -48,7 +48,6 @@ export interface WebpackExecutorOptions {
   crossOrigin?: CrossOriginValue;
   deleteOutputPath?: boolean;
   deployUrl?: string;
-  es2015Polyfills?: string;
   externalDependencies?: 'all' | 'none' | string[];
   extractCss?: boolean;
   extractLicenses?: boolean;

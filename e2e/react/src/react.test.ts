@@ -145,7 +145,6 @@ describe('React Applications', () => {
     const filesToCheck = [
       `dist/apps/${appName}/index.html`,
       `dist/apps/${appName}/runtime.js`,
-      `dist/apps/${appName}/polyfills.js`,
       `dist/apps/${appName}/main.js`,
     ];
 

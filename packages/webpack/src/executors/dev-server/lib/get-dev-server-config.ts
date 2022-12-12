@@ -23,7 +23,6 @@ export function getDevServerConfig(
   const webpackConfig = getWebpackConfig(
     context,
     buildOptions,
-    true,
     typeof buildOptions.optimization === 'boolean'
       ? buildOptions.optimization
       : buildOptions.optimization?.scripts
@@ -53,7 +52,6 @@ export function getDevServerConfig(
       deployUrl,
       sri: subresourceIntegrity,
       moduleEntrypoints: [],
-      noModuleEntrypoints: ['polyfills-es5'],
     })
   );
 

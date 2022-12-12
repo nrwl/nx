@@ -344,7 +344,6 @@ describe('app', () => {
       baseHref: '/',
       main: 'apps/my-app/src/main.ts',
       outputPath: 'dist/apps/my-app',
-      polyfills: 'apps/my-app/src/polyfills.ts',
       scripts: [],
       styles: ['apps/my-app/src/styles.css'],
       tsConfig: 'apps/my-app/tsconfig.app.json',

@@ -34,7 +34,6 @@ describe('Web Components Applications', () => {
     checkFilesExist(
       `dist/apps/${appName}/index.html`,
       `dist/apps/${appName}/runtime.js`,
-      `dist/apps/${appName}/polyfills.js`,
       `dist/apps/${appName}/main.js`,
       `dist/apps/${appName}/styles.css`
     );

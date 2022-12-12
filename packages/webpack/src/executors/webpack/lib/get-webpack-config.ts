@@ -1,7 +1,6 @@
 import * as path from 'path';
 import { posix, resolve } from 'path';
 import { readTsConfig } from '@nrwl/workspace/src/utilities/typescript';
-import { ScriptTarget } from 'typescript';
 import { getHashDigest, interpolateName } from 'loader-utils';
 import type { Configuration } from 'webpack';
 
@@ -34,7 +33,6 @@ interface GetWebpackConfigOverrides {
 export function getWebpackConfig(
   context: ExecutorContext,
   options: NormalizedWebpackExecutorOptions,
-  esm?: boolean,
   isScriptOptimizeOn?: boolean,
   overrides?: GetWebpackConfigOverrides
 ): Configuration {
@@ -52,19 +50,11 @@ export function getWebpackConfig(
     sourceRoot = project.sourceRoot;
   }
 
-  if (isScriptOptimizeOn) {
-    // Angular CLI uses an environment variable (NG_BUILD_DIFFERENTIAL_FULL)
-    // to determine whether to use the scriptTargetOverride
-    // or the tsConfig target
-    // We want to force the target if overridden
-    tsConfig.options.target = ScriptTarget.ES5;
-  }
   const wco: any = {
     root: workspaceRoot,
     projectRoot: resolve(workspaceRoot, projectRoot),
     sourceRoot: resolve(workspaceRoot, sourceRoot),
     buildOptions: convertBuildOptions(options),
-    esm,
     console,
     tsConfig,
     tsConfigPath: options.tsConfig,
@@ -74,18 +64,12 @@ export function getWebpackConfig(
     _getBaseWebpackPartial(
       context,
       options,
-      esm,
       isScriptOptimizeOn,
       tsConfig.options.emitDecoratorMetadata,
       overrides
     ),
     options.target === 'web'
-      ? getPolyfillsPartial(
-          options.polyfills,
-          options.es2015Polyfills,
-          esm,
-          isScriptOptimizeOn
-        )
+      ? getPolyfillsPartial(options.polyfills, isScriptOptimizeOn)
       : {},
     options.target === 'web'
       ? getStylesPartial(
@@ -104,7 +88,6 @@ export function getWebpackConfig(
 function _getBaseWebpackPartial(
   context: ExecutorContext,
   options: NormalizedWebpackExecutorOptions,
-  esm: boolean,
   isScriptOptimizeOn: boolean,
   emitDecoratorMetadata: boolean,
   overrides?: GetWebpackConfigOverrides
@@ -112,7 +95,6 @@ function _getBaseWebpackPartial(
   let partial = getBaseWebpackPartial(
     options,
     {
-      esm,
       isScriptOptimizeOn,
       emitDecoratorMetadata,
       configuration: overrides?.configuration ?? context.configurationName,
@@ -270,32 +252,22 @@ export function getStylesPartial(
 
 export function getPolyfillsPartial(
   polyfills: string,
-  es2015Polyfills: string,
-  esm: boolean,
   isScriptOptimizeOn: boolean
 ): Configuration {
   const config = {
     entry: {} as { [key: string]: string[] },
   };
 
-  if (polyfills && esm && isScriptOptimizeOn) {
+  if (polyfills && isScriptOptimizeOn) {
     // Safari 10.1 supports <script type="module"> but not <script nomodule>.
     // Need to patch it up so the browser doesn't load both sets.
     config.entry.polyfills = [
       require.resolve('@nrwl/webpack/src/utils/webpack/safari-nomodule.js'),
       ...(polyfills ? [polyfills] : []),
     ];
-  } else if (es2015Polyfills && !esm && isScriptOptimizeOn) {
-    config.entry.polyfills = [
-      es2015Polyfills,
-      ...(polyfills ? [polyfills] : []),
-    ];
   } else {
     if (polyfills) {
       config.entry.polyfills = [polyfills];
-    }
-    if (es2015Polyfills) {
-      config.entry['polyfills-es5'] = [es2015Polyfills];
     }
   }
 

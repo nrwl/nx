@@ -5,7 +5,7 @@ import { CreateWebpackConfigOptions } from '../../models';
 import CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 
 export function getBrowserConfig(wco: CreateWebpackConfigOptions) {
-  const { buildOptions, supportES2015 } = wco;
+  const { buildOptions } = wco;
   const extraPlugins = [];
 
   const stylesOptimization =
@@ -41,12 +41,7 @@ export function getBrowserConfig(wco: CreateWebpackConfigOptions) {
 
   return {
     resolve: {
-      mainFields: [
-        ...(supportES2015 ? ['es2015'] : []),
-        'browser',
-        'module',
-        'main',
-      ],
+      mainFields: ['browser', 'module', 'main'],
     },
     output: {
       crossOriginLoading: buildOptions.subresourceIntegrity

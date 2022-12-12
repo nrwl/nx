@@ -13,7 +13,6 @@ export interface IndexHtmlWebpackPluginOptions
       IndexHtmlGeneratorProcessOptions,
       'files' | 'noModuleFiles' | 'moduleFiles'
     > {
-  noModuleEntrypoints: string[];
   moduleEntrypoints: string[];
 }
 
@@ -59,7 +58,6 @@ export class IndexHtmlWebpackPlugin extends IndexHtmlGenerator {
     const callback = async (assets: Record<string, unknown>) => {
       // Get all files for selected entrypoints
       const files: FileInfo[] = [];
-      const noModuleFiles: FileInfo[] = [];
       const moduleFiles: FileInfo[] = [];
 
       try {
@@ -79,9 +77,7 @@ export class IndexHtmlWebpackPlugin extends IndexHtmlGenerator {
             continue;
           }
 
-          if (this.options.noModuleEntrypoints.includes(entryName)) {
-            noModuleFiles.push(...entryFiles);
-          } else if (this.options.moduleEntrypoints.includes(entryName)) {
+          if (this.options.moduleEntrypoints.includes(entryName)) {
             moduleFiles.push(...entryFiles);
           } else {
             files.push(...entryFiles);
@@ -90,7 +86,6 @@ export class IndexHtmlWebpackPlugin extends IndexHtmlGenerator {
 
         const { content, warnings, errors } = await this.process({
           files,
-          noModuleFiles,
           moduleFiles,
           outputPath: dirname(this.options.outputPath),
           baseHref: this.options.baseHref,

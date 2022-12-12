@@ -57,10 +57,6 @@ function createBuildTarget(options: NormalizedSchema): TargetConfiguration {
         options.appProjectRoot,
         maybeJs(options, `src/main.tsx`)
       ),
-      polyfills: joinPathFragments(
-        options.appProjectRoot,
-        maybeJs(options, 'src/polyfills.ts')
-      ),
       tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
       assets: [
         joinPathFragments(options.appProjectRoot, 'src/favicon.ico'),

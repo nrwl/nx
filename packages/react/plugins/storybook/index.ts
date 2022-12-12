@@ -1,11 +1,7 @@
 import {
-  ExecutorContext,
   joinPathFragments,
   logger,
-  ProjectGraph,
   readJsonFile,
-  readNxJson,
-  TargetConfiguration,
   workspaceRoot,
 } from '@nrwl/devkit';
 import { getBaseWebpackPartial } from '@nrwl/webpack/src/utils/config';
@@ -17,7 +13,6 @@ import { gte } from 'semver';
 import { Configuration, DefinePlugin, WebpackPluginInstance } from 'webpack';
 import * as mergeWebpack from 'webpack-merge';
 import { mergePlugins } from './merge-plugins';
-import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
 
 const reactWebpackConfig = require('../webpack');
 
@@ -119,14 +114,12 @@ export const webpack = async (
     target: 'web',
   };
 
-  const esm = true;
   const isScriptOptimizeOn = storybookWebpackConfig.mode !== 'development';
   const extractCss = storybookWebpackConfig.mode === 'production';
 
   // ESM build for modern browsers.
   const baseWebpackConfig = mergeWebpack.merge([
     getBaseWebpackPartial(builderOptions, {
-      esm,
       isScriptOptimizeOn,
       skipTypeCheck: true,
     }),

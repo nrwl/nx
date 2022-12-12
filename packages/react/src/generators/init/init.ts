@@ -52,8 +52,6 @@ function updateDependencies(host: Tree, schema: InitSchema) {
   };
 
   if (!schema.skipHelperLibs) {
-    dependencies['core-js'] = '^3.6.5';
-    dependencies['regenerator-runtime'] = '0.13.7';
     dependencies['tslib'] = tsLibVersion;
   }
 
