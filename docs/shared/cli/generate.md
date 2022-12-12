@@ -75,7 +75,7 @@ When true, disables interactive input prompts for options with a default.
 
 Default: `false`
 
-When true, disables interactive input prompts for options with a default.
+When true, preview the changes without updating files.
 
 ### force
 
