@@ -3,7 +3,7 @@ import { writeFileSync } from 'fs';
 export function writeCracoConfig(
   appName: string,
   isCRA5: boolean,
-  isNested: boolean
+  isStandalone: boolean
 ) {
   const configOverride = `
   const path = require('path');
@@ -62,7 +62,7 @@ export function writeCracoConfig(
   };
   `;
   writeFileSync(
-    isNested ? 'craco.config.js' : `apps/${appName}/craco.config.js`,
+    isStandalone ? 'craco.config.js' : `apps/${appName}/craco.config.js`,
     configOverride
   );
 }
