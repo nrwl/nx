@@ -15,7 +15,7 @@ export default function replaceFiles(replacements: FileReplacement[]) {
   return {
     name: 'rollup-plugin-replace-files',
     enforce: 'pre',
-    async transform (code, id) {
+    async transform(code, id) {
       /**
        * The reason we're using endsWith here is because the resolved id
        * will be the absolute path to the file. We want to check if the
@@ -32,7 +32,9 @@ export default function replaceFiles(replacements: FileReplacement[]) {
         );
         try {
           // return new file content
-          return fs.readFileSync(id.replace(foundReplace.replace, foundReplace.with)).toString();
+          return fs
+            .readFileSync(id.replace(foundReplace.replace, foundReplace.with))
+            .toString();
         } catch (err) {
           console.error(err);
           return code;
