@@ -24,3 +24,5 @@ export function App() {
 <% } %>
 
 export default App;
+
+<% if (inSourceTests === true) { %> <%- inSourceVitestTests %> <% } %>
