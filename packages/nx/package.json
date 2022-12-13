@@ -49,6 +49,7 @@
     "flat": "^5.0.2",
     "fs-extra": "^10.1.0",
     "glob": "7.1.4",
+    "glob-to-regexp": "^0.4.1",
     "ignore": "^5.0.4",
     "js-yaml": "4.1.0",
     "jsonc-parser": "3.2.0",
