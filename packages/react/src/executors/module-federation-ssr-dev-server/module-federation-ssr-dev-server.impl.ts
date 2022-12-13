@@ -10,6 +10,8 @@ import { join } from 'path';
 import * as chalk from 'chalk';
 import {
   combineAsyncIterableIterators,
+  createAsyncIterable,
+  mapAsyncIterable,
   tapAsyncIterable,
 } from '@nrwl/devkit/src/utils/async-iterable';
 import { execSync, fork } from 'child_process';
@@ -24,10 +26,7 @@ export default async function* moduleFederationSsrDevServer(
   options: ModuleFederationDevServerOptions,
   context: ExecutorContext
 ) {
-  let iter: AsyncGenerator<any, any, any> = ssrDevServerExecutor(
-    options,
-    context
-  );
+  let iter: any = ssrDevServerExecutor(options, context);
   const p = context.workspace.projects[context.projectName];
 
   const moduleFederationConfigPath = join(
@@ -60,9 +59,8 @@ export default async function* moduleFederationSsrDevServer(
   for (const app of knownRemotes) {
     const [appName] = Array.isArray(app) ? app : [app];
     const isDev = devServeApps.includes(appName);
-    const remoteServeIter = (async function* () {
-      if (isDev) {
-        yield await runExecutor(
+    const remoteServeIter = isDev
+      ? await runExecutor(
           {
             project: appName,
             target: 'serve',
@@ -72,33 +70,36 @@ export default async function* moduleFederationSsrDevServer(
             watch: isDev,
           },
           context
-        );
-      } else {
-        yield await new Promise((res) => {
-          const remoteProject = context.workspace.projects[appName];
-          const remoteServerOutput = join(
-            workspaceRoot,
-            remoteProject.targets.server.options.outputPath,
-            'main.js'
-          );
-          execSync(
-            `npx nx run ${appName}:server${
-              context.configurationName ? `:${context.configurationName}` : ''
-            }`,
-            { stdio: 'inherit' }
-          );
-          const child = fork(remoteServerOutput, {
-            env: { port: remoteProject.targets['serve-browser'].options.port },
-          });
+        )
+      : mapAsyncIterable(
+          createAsyncIterable(async ({ next, done }) => {
+            const remoteProject = context.workspace.projects[appName];
+            const remoteServerOutput = join(
+              workspaceRoot,
+              remoteProject.targets.server.options.outputPath,
+              'main.js'
+            );
+            execSync(
+              `npx nx run ${appName}:server${
+                context.configurationName ? `:${context.configurationName}` : ''
+              }`,
+              { stdio: 'inherit' }
+            );
+            const child = fork(remoteServerOutput, {
+              env: {
+                PORT: remoteProject.targets['serve-browser'].options.port,
+              },
+            });
 
-          child.on('message', (msg) => {
-            if (msg === 'nx.server.ready') {
-              res(true);
-            }
-          });
-        });
-      }
-    })();
+            child.on('message', (msg) => {
+              if (msg === 'nx.server.ready') {
+                next(true);
+                done();
+              }
+            });
+          }),
+          (x) => x
+        );
 
     iter = combineAsyncIterableIterators(iter, remoteServeIter);
   }
