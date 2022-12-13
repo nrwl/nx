@@ -228,6 +228,11 @@
             "description": "Generate an application that is setup to use standalone components.",
             "type": "boolean",
             "default": false
+          },
+          "addNXWelcomeComponent": {
+            "description": "Whether to add a NX welcome component to the application.",
+            "type": "boolean",
+            "default": true
           }
         },
         "additionalProperties": false,
