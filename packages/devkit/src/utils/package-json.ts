@@ -2,7 +2,7 @@ import { readJson, updateJson } from 'nx/src/generators/utils/json';
 import { installPackagesTask } from '../tasks/install-packages-task';
 import type { Tree } from 'nx/src/generators/tree';
 import { GeneratorCallback } from 'nx/src/config/misc-interfaces';
-import { coerce, gt, satisfies } from 'semver';
+import { clean, coerce, gt, satisfies } from 'semver';
 import { getPackageManagerCommand } from 'nx/src/utils/package-manager';
 import { execSync } from 'child_process';
 
@@ -27,6 +27,10 @@ function filterExistingDependencies(
     .reduce((acc, d) => ({ ...acc, [d]: dependencies[d] }), {});
 }
 
+function cleanSemver(version: string) {
+  return clean(version) ?? coerce(version);
+}
+
 function isIncomingVersionGreater(
   incomingVersion: string,
   existingVersion: string
@@ -45,7 +49,7 @@ function isIncomingVersionGreater(
     return true;
   }
 
-  return gt(coerce(incomingVersion), coerce(existingVersion));
+  return gt(cleanSemver(incomingVersion), cleanSemver(existingVersion));
 }
 
 function updateExistingDependenciesVersion(

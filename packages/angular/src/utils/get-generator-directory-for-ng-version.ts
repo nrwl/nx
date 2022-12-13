@@ -1,6 +1,6 @@
 import type { Tree } from '@nrwl/devkit';
 import { readJson } from '@nrwl/devkit';
-import { coerce, major } from 'semver';
+import { coerce, clean, major } from 'semver';
 
 export function getGeneratorDirectoryForInstalledAngularVersion(tree: Tree) {
   const pkgJson = readJson(tree, 'package.json');
@@ -15,7 +15,9 @@ export function getGeneratorDirectoryForInstalledAngularVersion(tree: Tree) {
     return null;
   }
 
-  const majorAngularVersion = major(coerce(angularVersion));
+  const majorAngularVersion = major(
+    clean(angularVersion) ?? coerce(angularVersion)
+  );
 
   const directoryDictionary = {
     14: 'angular-v14',
