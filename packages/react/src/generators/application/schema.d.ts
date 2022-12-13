@@ -29,6 +29,7 @@ export interface Schema {
   skipDefaultProject?: boolean;
   skipPackageJson?: boolean;
   rootProject?: boolean;
+  skipNxWelcomeComponent?: boolean;
 }
 
 export interface NormalizedSchema extends Schema {

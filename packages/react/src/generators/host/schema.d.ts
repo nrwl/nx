@@ -21,6 +21,7 @@ export interface Schema {
   compiler?: 'babel' | 'swc';
   devServerPort?: number;
   remotes?: string[];
+  skipNxWelcomeComponent?: boolean;
 }
 
 export interface NormalizedSchema extends Schema {

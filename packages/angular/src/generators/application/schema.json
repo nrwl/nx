@@ -152,8 +152,8 @@
       "type": "boolean",
       "default": false
     },
-    "skipNXWelcomeComponent": {
-      "description": "Whether to skip the adding of a NX welcome component to the application.",
+    "skipNxWelcomeComponent": {
+      "description": "Whether to skip the adding of a Nx welcome component to the application.",
       "type": "boolean",
       "default": false
     }

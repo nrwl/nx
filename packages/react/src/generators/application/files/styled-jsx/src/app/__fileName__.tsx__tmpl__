@@ -1,7 +1,9 @@
 <% if (classComponent) { %>
 import { Component } from 'react';
 <% } %>
+<% if (includeNxWelcomeComponent) { %>
 import NxWelcome from "./nx-welcome";
+<% } %>
 
 <% if (classComponent) { %>
 export class App extends Component {
@@ -12,7 +14,9 @@ export function App() {
   return (
     <>
       <style jsx>{`/** your style here **/`}</style>
+      <% if (includeNxWelcomeComponent) { %>
       <NxWelcome title="<%= projectName %>"/>
+      <% } %>
     </>
   );
 

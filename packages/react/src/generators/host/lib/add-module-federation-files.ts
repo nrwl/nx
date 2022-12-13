@@ -19,6 +19,7 @@ export function addModuleFederationFiles(
         port,
       };
     }),
+    includeNxWelcomeComponent: !options.skipNxWelcomeComponent
   };
 
   // Module federation requires bootstrap code to be dynamically imported.
