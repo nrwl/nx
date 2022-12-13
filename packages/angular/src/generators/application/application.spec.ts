@@ -466,6 +466,17 @@ describe('app', () => {
       ).toContain('Hello there');
     });
 
+    it('should skip Nx specific `nx-welcome.component.ts` file creation', async () => {
+      await generateApp(appTree, 'plain', { addNXWelcomeComponent: false });
+
+      expect(
+        appTree.read('apps/plain/src/app/app.module.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        appTree.exists('apps/plain/src/app/nx-welcome.component.ts')
+      ).toBeFalsy();
+    });
+
     it('should update the AppComponent spec to target Nx content', async () => {
       await generateApp(appTree, 'myApp', {
         directory: 'myDir',
