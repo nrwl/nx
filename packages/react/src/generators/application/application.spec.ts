@@ -784,10 +784,12 @@ describe('app', () => {
 
   describe('--skipNxWelcomeComponent', () => {
     it('should create default application without Nx welcome component', async () => {
-      await applicationGenerator(appTree, { ...schema, name: 'plain', skipNxWelcomeComponent: true });
-      expect(
-        appTree.exists('apps/plain/src/app/nx-welcome.tsx')
-      ).toBeFalsy();
+      await applicationGenerator(appTree, {
+        ...schema,
+        name: 'plain',
+        skipNxWelcomeComponent: true,
+      });
+      expect(appTree.exists('apps/plain/src/app/nx-welcome.tsx')).toBeFalsy();
       expect(
         appTree.read('apps/plain/src/app/app.tsx', 'utf-8')
       ).toMatchSnapshot();
