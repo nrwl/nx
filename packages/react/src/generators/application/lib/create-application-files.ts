@@ -5,8 +5,6 @@ import {
   Tree,
   toJS,
   generateFiles,
-  joinPathFragments,
-  updateJson,
 } from '@nrwl/devkit';
 import { join } from 'path';
 import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
@@ -35,7 +33,6 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     ...options,
     tmpl: '',
     offsetFromRoot: offsetFromRoot(options.appProjectRoot),
-    includeNxWelcomeComponent: !options.skipNxWelcomeComponent,
   };
 
   generateFiles(
