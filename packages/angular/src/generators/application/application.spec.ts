@@ -466,6 +466,17 @@ describe('app', () => {
       ).toContain('Hello there');
     });
 
+    it('should skip Nx specific `nx-welcome.component.ts` file creation', async () => {
+      await generateApp(appTree, 'plain', { addNXWelcomeComponent: false });
+
+      expect(
+        appTree.read('apps/plain/src/app/app.module.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        appTree.exists('apps/plain/src/app/nx-welcome.component.ts')
+      ).toBeFalsy();
+    });
+
     it('should update the AppComponent spec to target Nx content', async () => {
       await generateApp(appTree, 'myApp', {
         directory: 'myDir',
@@ -1037,24 +1048,6 @@ describe('app', () => {
         appTree.read('apps/standalone/src/app/nx-welcome.component.ts', 'utf-8')
       ).toContain('standalone: true');
     });
-  });
-
-  it('should generate correct main.ts', async () => {
-    // ACT
-    await generateApp(appTree, 'myapp');
-
-    // ASSERT
-    expect(appTree.read('apps/myapp/src/main.ts', 'utf-8'))
-      .toMatchInlineSnapshot(`
-      "import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
-
-      import { AppModule } from './app/app.module';
-
-
-      platformBrowserDynamic().bootstrapModule(AppModule)
-        .catch(err => console.error(err));
-      "
-    `);
   });
 });
 
