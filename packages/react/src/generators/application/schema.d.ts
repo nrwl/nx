@@ -40,4 +40,5 @@ export interface NormalizedSchema extends Schema {
   fileName: string;
   styledModule: null | SupportedStyles;
   hasStyles: boolean;
+  includeNxWelcomeComponent: boolean;
 }

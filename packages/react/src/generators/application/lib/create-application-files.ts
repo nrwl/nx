@@ -56,7 +56,6 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
       host,
       options.appProjectRoot
     ),
-    includeNxWelcomeComponent: !options.skipNxWelcomeComponent,
   };
 
   generateFiles(
