@@ -1006,6 +1006,12 @@
               "file": "shared/recipes/analyze-source-files"
             },
             {
+              "name": "Workspace Watching",
+              "id": "workspace-watching",
+              "tags": ["workspace-watching"],
+              "file": "shared/recipes/workspace-watching"
+            },
+            {
               "name": "Advanced Update Nx",
               "id": "advanced-update",
               "tags": ["automate-updating-dependencies"],
