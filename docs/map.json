@@ -721,6 +721,12 @@
               "file": "shared/ci-overview"
             },
             {
+              "name": "Prepare applications for deployment via CI",
+              "id": "ci-deployment",
+              "tags": ["docker", "deploy"],
+              "file": "shared/recipes/ci-deployment"
+            },
+            {
               "name": "Setting up Azure Pipelines",
               "id": "monorepo-ci-azure",
               "file": "shared/monorepo-ci-azure"
