@@ -4,7 +4,6 @@ Nx can watch your workspace and execute commands based on project or files chang
 
 Imagine the following project graph with these packages:
 
-````markdown
 {% graph height="450px" %}
 
 ```json
@@ -55,7 +54,6 @@ Imagine the following project graph with these packages:
 ```
 
 {% /graph %}
-````
 
 Traditionally, if you want to rebuild your packages whenever they change, you would have to set up an ad-hoc watching system to watch each package. Rather than setting up a watch manually, we can use Nx and allow it to execute a command whenever a package changes.
 
