@@ -92,19 +92,8 @@ async function createPreset(tree: Tree, options: Schema) {
       style: options.style,
       linter: options.linter,
       standaloneConfig: options.standaloneConfig,
+      bundler: 'vite',
     });
-    addDependenciesToPackageJson(
-      tree,
-      {},
-      {
-        '@ungap/custom-elements': '0.1.6',
-      }
-    );
-    addPolyfills(
-      tree,
-      `apps/${names(options.name).fileName}/src/polyfills.ts`,
-      ['@ungap/custom-elements']
-    );
   } else if (options.preset === Preset.Nest) {
     const { applicationGenerator: nestApplicationGenerator } = require('@nrwl' +
       '/nest');

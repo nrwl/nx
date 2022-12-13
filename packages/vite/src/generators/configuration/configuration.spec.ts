@@ -56,6 +56,10 @@ describe('@nrwl/vite:configuration', () => {
     it('should create vite.config file at the root of the app', () => {
       expect(tree.exists('apps/my-test-react-app/vite.config.ts')).toBe(true);
     });
+
+    it('should transform workspace.json project config', () => {
+      expect(tree.read('workspace.json', 'utf-8')).toMatchSnapshot();
+    });
   });
 
   describe('transform Web app to use Vite', () => {
@@ -94,6 +98,10 @@ describe('@nrwl/vite:configuration', () => {
 
     it('should create vite.config file at the root of the app', () => {
       expect(tree.exists('apps/my-test-web-app/vite.config.ts')).toBe(true);
+    });
+
+    it('should transform workspace.json project config', () => {
+      expect(tree.read('workspace.json', 'utf-8')).toMatchSnapshot();
     });
   });
 

@@ -1,5 +1,5 @@
-import { assertMinimumCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
 import {
+  ensurePackage,
   generateFiles,
   joinPathFragments,
   readProjectConfiguration,
@@ -12,12 +12,17 @@ import {
   getComponentNode,
 } from '../../utils/ast-utils';
 import { getDefaultsForComponent } from '../../utils/component-props';
+import { nxVersion } from '../../utils/versions';
 import { ComponentTestSchema } from './schema';
 
-export function componentTestGenerator(
+export async function componentTestGenerator(
   tree: Tree,
   options: ComponentTestSchema
 ) {
+  await ensurePackage(tree, '@nrwl/cypress', nxVersion);
+  const { assertMinimumCypressVersion } = await import(
+    '@nrwl/cypress/src/utils/cypress-version'
+  );
   assertMinimumCypressVersion(10);
 
   const projectConfig = readProjectConfiguration(tree, options.project);

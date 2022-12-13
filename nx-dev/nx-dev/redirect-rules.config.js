@@ -162,6 +162,7 @@ const guideUrls = {
   '/using-nx/nx-devkit': '/extending-nx/nx-devkit',
   '/structure/project-graph-plugins': '/extending-nx/project-graph-plugins',
   '/guides/lerna-and-nx': '/migration/lerna-and-nx',
+  '/cypress/v10-migration-guide': '/cypress/v11-migration-guide',
 };
 
 /**
@@ -392,6 +393,33 @@ for (const path of oldAngularTutorialPaths) {
   tutorialRedirects[path] = angularRedirectDestination;
 }
 
+const packagesIndexes = {
+  '/nx': '/packages/nx',
+  '/workspace': '/packages/workspace',
+  '/devkit': '/packages/devkit',
+  '/nx-plugin': '/packages/nx-plugin',
+  '/angular': '/packages/angular',
+  '/cypress': '/packages/cypress',
+  '/detox': '/packages/detox',
+  '/esbuild': '/packages/esbuild',
+  '/eslint-plugin-nx': '/packages/eslint',
+  '/expo': '/packages/expo',
+  '/express': '/packages/express',
+  '/jest': '/packages/jest',
+  '/js': '/packages/js',
+  '/linter': '/packages/linter',
+  '/nest': '/packages/nest',
+  '/next': '/packages/next',
+  '/node': '/packages/node',
+  '/react': '/packages/react',
+  '/react-native': '/packages/react',
+  '/rollup': '/packages/rollup',
+  '/storybook': '/packages/storybook',
+  '/vite': '/packages/vite',
+  '/web': '/packages/web',
+  '/webpack': '/packages/webpack',
+};
+
 /**
  * Public export API
  */
@@ -404,4 +432,5 @@ module.exports = {
   nxCloudUrls,
   schemaUrls,
   tutorialRedirects,
+  packagesIndexes,
 };

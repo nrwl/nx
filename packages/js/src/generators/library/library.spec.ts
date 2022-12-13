@@ -579,14 +579,14 @@ describe('lib', () => {
         ).toBeTruthy();
       });
 
-      it('should update tsconfig.lib.json include with **/*.js glob', async () => {
+      it('should update tsconfig.lib.json include with src/**/*.js glob', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
           name: 'myLib',
           js: true,
         });
         expect(readJson(tree, 'libs/my-lib/tsconfig.lib.json').include).toEqual(
-          ['**/*.ts', '**/*.js']
+          ['src/**/*.ts', 'src/**/*.js']
         );
       });
 
@@ -979,5 +979,44 @@ describe('lib', () => {
         expect(tree.exists('libs/my-lib/.babelrc')).toBeFalsy();
       });
     });
+  });
+
+  describe('--bundler=vite', () => {
+    it('should add build and test targets with vite and vitest', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        name: 'myLib',
+        bundler: 'vite',
+        unitTestRunner: undefined,
+      });
+
+      const project = readProjectConfiguration(tree, 'my-lib');
+      expect(project.targets.build).toMatchObject({
+        executor: '@nrwl/vite:build',
+      });
+      expect(project.targets.test).toMatchObject({
+        executor: '@nrwl/vite:test',
+      });
+      expect(tree.exists('libs/my-lib/vite.config.ts')).toBeTruthy();
+    });
+
+    it.each`
+      unitTestRunner | executor
+      ${'none'}      | ${undefined}
+      ${'jest'}      | ${'@nrwl/jest:jest'}
+    `(
+      'should respect unitTestRunner if passed',
+      async ({ unitTestRunner, executor }) => {
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          name: 'myLib',
+          bundler: 'vite',
+          unitTestRunner,
+        });
+
+        const project = readProjectConfiguration(tree, 'my-lib');
+        expect(project.targets.test?.executor).toEqual(executor);
+      }
+    );
   });
 });

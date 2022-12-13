@@ -4,7 +4,7 @@ import {
   TypeScriptCompilationOptions,
 } from '@nrwl/workspace/src/utilities/typescript/compilation';
 import type { Diagnostic } from 'typescript';
-import { createAsyncIterable } from '../async-iterable/create-async-iterable';
+import { createAsyncIterable } from '@nrwl/devkit/src/utils/async-iterable';
 import { NormalizedExecutorOptions } from '../schema';
 
 const TYPESCRIPT_FOUND_N_ERRORS_WATCHING_FOR_FILE_CHANGES = 6194;

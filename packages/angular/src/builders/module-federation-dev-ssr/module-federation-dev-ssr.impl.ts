@@ -97,7 +97,7 @@ export function executeModuleFederationDevSSRBuilder(
           { stdio: 'inherit' }
         );
         const child = fork(remoteServerOutput, {
-          env: remoteProject.targets['serve-ssr'].options.port,
+          env: { PORT: remoteProject.targets['serve-ssr'].options.port },
         });
         child.on('message', (msg) => {
           if (msg === 'nx.server.ready') {

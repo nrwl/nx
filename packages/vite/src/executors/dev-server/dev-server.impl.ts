@@ -16,7 +16,7 @@ export default async function* viteDevServerExecutor(
   context: ExecutorContext
 ): AsyncGenerator<{ success: boolean; baseUrl: string }> {
   const mergedOptions = {
-    ...getBuildTargetOptions(options, context),
+    ...getBuildTargetOptions(options.buildTarget, context),
     ...options,
   } as ViteDevServerExecutorOptions & ViteBuildExecutorOptions;
 

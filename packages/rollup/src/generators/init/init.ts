@@ -3,20 +3,18 @@ import {
   convertNxGenerator,
   formatFiles,
   GeneratorCallback,
-  readWorkspaceConfiguration,
   Tree,
-  updateWorkspaceConfiguration,
-  writeJson,
 } from '@nrwl/devkit';
 import { Schema } from './schema';
 import { swcCoreVersion, swcHelpersVersion } from '@nrwl/js/src/utils/versions';
 import { swcLoaderVersion, tsLibVersion } from '../../utils/versions';
+import { addBabelInputs } from '@nrwl/js/src/utils/add-babel-inputs';
 
 export async function rollupInitGenerator(tree: Tree, schema: Schema) {
   let task: GeneratorCallback;
 
   if (schema.compiler === 'babel') {
-    initRootBabelConfig(tree);
+    addBabelInputs(tree);
   }
 
   if (schema.compiler === 'swc') {
@@ -29,9 +27,7 @@ export async function rollupInitGenerator(tree: Tree, schema: Schema) {
         'swc-loader': swcLoaderVersion,
       }
     );
-  }
-
-  if (schema.compiler === 'tsc') {
+  } else {
     task = addDependenciesToPackageJson(tree, {}, { tslib: tsLibVersion });
   }
 
@@ -40,25 +36,6 @@ export async function rollupInitGenerator(tree: Tree, schema: Schema) {
   }
 
   return task;
-}
-
-function initRootBabelConfig(tree: Tree) {
-  if (tree.exists('/babel.config.json') || tree.exists('/babel.config.js')) {
-    return;
-  }
-
-  writeJson(tree, '/babel.config.json', {
-    babelrcRoots: ['*'], // Make sure .babelrc files other than root can be loaded in a monorepo
-  });
-
-  const workspaceConfiguration = readWorkspaceConfiguration(tree);
-
-  if (workspaceConfiguration.namedInputs?.sharedGlobals) {
-    workspaceConfiguration.namedInputs.sharedGlobals.push(
-      '{workspaceRoot}/babel.config.json'
-    );
-  }
-  updateWorkspaceConfiguration(tree, workspaceConfiguration);
 }
 
 export default rollupInitGenerator;

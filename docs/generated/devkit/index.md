@@ -147,6 +147,7 @@ It only uses language primitives and immutable objects
 - [defaultTasksRunner](../../devkit/index#defaulttasksrunner)
 - [detectPackageManager](../../devkit/index#detectpackagemanager)
 - [detectWorkspaceScope](../../devkit/index#detectworkspacescope)
+- [ensurePackage](../../devkit/index#ensurepackage)
 - [extractLayoutDirectory](../../devkit/index#extractlayoutdirectory)
 - [formatFiles](../../devkit/index#formatfiles)
 - [generateFiles](../../devkit/index#generatefiles)
@@ -170,6 +171,7 @@ It only uses language primitives and immutable objects
 - [offsetFromRoot](../../devkit/index#offsetfromroot)
 - [parseJson](../../devkit/index#parsejson)
 - [parseTargetString](../../devkit/index#parsetargetstring)
+- [pruneLockFile](../../devkit/index#prunelockfile)
 - [readAllWorkspaceConfiguration](../../devkit/index#readallworkspaceconfiguration)
 - [readCachedProjectGraph](../../devkit/index#readcachedprojectgraph)
 - [readJson](../../devkit/index#readjson)
@@ -1164,6 +1166,39 @@ Detect workspace scope from the package.json name
 
 ---
 
+### ensurePackage
+
+▸ **ensurePackage**(`tree`, `pkg`, `requiredVersion`, `options?`): `Promise`<`void`\>
+
+Ensure that dependencies and devDependencies from package.json are installed at the required versions.
+
+For example:
+
+```typescript
+ensurePackage(tree, {}, { '@nrwl/jest': nxVersion });
+```
+
+This will check that @nrwl/jest@<nxVersion> exists in devDependencies.
+If it exists then function returns, otherwise it will install the package before continuing.
+When running with --dryRun, the function will throw when dependencies are missing.
+
+#### Parameters
+
+| Name                      | Type                              | Description                                                        |
+| :------------------------ | :-------------------------------- | :----------------------------------------------------------------- |
+| `tree`                    | [`Tree`](../../devkit/index#tree) | the file system tree                                               |
+| `pkg`                     | `string`                          | the package to check (e.g. @nrwl/jest)                             |
+| `requiredVersion`         | `string`                          | the version or semver range to check (e.g. ~1.0.0, >=1.0.0 <2.0.0) |
+| `options`                 | `Object`                          |                                                                    |
+| `options.dev?`            | `boolean`                         | -                                                                  |
+| `options.throwOnMissing?` | `boolean`                         | -                                                                  |
+
+#### Returns
+
+`Promise`<`void`\>
+
+---
+
 ### extractLayoutDirectory
 
 ▸ **extractLayoutDirectory**(`directory`): `Object`
@@ -1687,6 +1722,26 @@ parseTargetString('proj:test:production'); // returns { project: "proj", target:
 #### Returns
 
 [`Target`](../../devkit/index#target)
+
+---
+
+### pruneLockFile
+
+▸ **pruneLockFile**(`projectName`, `isProduction?`, `packageManager?`): `Promise`<`string`\>
+
+Prune lock file based on the given project's dependencies and overrides in local package.json
+
+#### Parameters
+
+| Name             | Type                                                  | Default value | Description                                                        |
+| :--------------- | :---------------------------------------------------- | :------------ | :----------------------------------------------------------------- |
+| `projectName`    | `string`                                              | `undefined`   | Project to prune against                                           |
+| `isProduction`   | `boolean`                                             | `true`        | Whether to include optional and dev dependencies                   |
+| `packageManager` | [`PackageManager`](../../devkit/index#packagemanager) | `undefined`   | Package manager to use (automatically detected based on lock file) |
+
+#### Returns
+
+`Promise`<`string`\>
 
 ---
 

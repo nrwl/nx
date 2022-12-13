@@ -91,7 +91,7 @@
         "init",
         "cypress-project",
         "cypress-component-project",
-        "migrate-to-cypress-10"
+        "migrate-to-cypress-11"
       ]
     }
   },
@@ -289,7 +289,10 @@
     "description": "The React plugin for Nx contains executors and generators for managing React applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Jest, Cypress, and Storybook.\n\n- Generators for applications, libraries, components, hooks, and more.\n\n- Library build support for publishing packages to npm or other registries.\n\n- Utilities for automatic workspace refactoring.",
     "path": "generated/packages/react.json",
     "schemas": {
-      "executors": ["module-federation-dev-server"],
+      "executors": [
+        "module-federation-dev-server",
+        "module-federation-ssr-dev-server"
+      ],
       "generators": [
         "init",
         "application",

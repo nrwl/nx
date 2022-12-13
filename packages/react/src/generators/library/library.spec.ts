@@ -11,6 +11,7 @@ import {
   createTreeWithEmptyWorkspace,
 } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
+import { nxVersion } from '../../utils/versions';
 import applicationGenerator from '../application/application';
 import libraryGenerator from './library';
 import { Schema } from './schema';
@@ -37,6 +38,16 @@ describe('lib', () => {
   beforeEach(() => {
     mockedInstalledCypressVersion.mockReturnValue(10);
     tree = createTreeWithEmptyV1Workspace();
+    updateJson(tree, '/package.json', (json) => {
+      json.devDependencies = {
+        '@nrwl/cypress': nxVersion,
+        '@nrwl/jest': nxVersion,
+        '@nrwl/rollup': nxVersion,
+        '@nrwl/vite': nxVersion,
+        '@nrwl/webpack': nxVersion,
+      };
+      return json;
+    });
   });
 
   describe('not nested', () => {
@@ -85,12 +96,12 @@ describe('lib', () => {
       ]);
     });
 
-    it('should update root tsconfig.json when no tsconfig.base.json', async () => {
+    it('should create tsconfig.base.json out of tsconfig.json', async () => {
       tree.rename('tsconfig.base.json', 'tsconfig.json');
 
       await libraryGenerator(tree, defaultSchema);
 
-      const tsconfigJson = readJson(tree, '/tsconfig.json');
+      const tsconfigJson = readJson(tree, '/tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
         'libs/my-lib/src/index.ts',
       ]);
@@ -122,27 +133,7 @@ describe('lib', () => {
           path: './tsconfig.spec.json',
         },
       ]);
-      expect(
-        tsconfigJson.compilerOptions.forceConsistentCasingInFileNames
-      ).toEqual(true);
       expect(tsconfigJson.compilerOptions.strict).toEqual(true);
-      expect(tsconfigJson.compilerOptions.noImplicitOverride).toEqual(true);
-      expect(
-        tsconfigJson.compilerOptions.noPropertyAccessFromIndexSignature
-      ).toEqual(true);
-      expect(tsconfigJson.compilerOptions.noImplicitReturns).toEqual(true);
-      expect(tsconfigJson.compilerOptions.noFallthroughCasesInSwitch).toEqual(
-        true
-      );
-    });
-
-    it('should extend from root tsconfig.json when no tsconfig.base.json', async () => {
-      tree.rename('tsconfig.base.json', 'tsconfig.json');
-
-      await libraryGenerator(tree, defaultSchema);
-
-      const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.json');
-      expect(tsconfigJson.extends).toBe('../../tsconfig.json');
     });
 
     it('should extend the local tsconfig.json with tsconfig.spec.json', async () => {
@@ -162,14 +153,14 @@ describe('lib', () => {
       const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.lib.json');
       expect(tsconfigJson.exclude).toEqual([
         'jest.config.ts',
-        '**/*.spec.ts',
-        '**/*.test.ts',
-        '**/*.spec.tsx',
-        '**/*.test.tsx',
-        '**/*.spec.js',
-        '**/*.test.js',
-        '**/*.spec.jsx',
-        '**/*.test.jsx',
+        'src/**/*.spec.ts',
+        'src/**/*.test.ts',
+        'src/**/*.spec.tsx',
+        'src/**/*.test.tsx',
+        'src/**/*.spec.js',
+        'src/**/*.test.js',
+        'src/**/*.spec.jsx',
+        'src/**/*.test.jsx',
       ]);
     });
 
@@ -314,20 +305,6 @@ describe('lib', () => {
       ).toBeUndefined();
     });
 
-    it('should update root tsconfig.json when no tsconfig.base.json', async () => {
-      tree.rename('tsconfig.base.json', 'tsconfig.json');
-
-      await libraryGenerator(tree, { ...defaultSchema, directory: 'myDir' });
-
-      const tsconfigJson = readJson(tree, '/tsconfig.json');
-      expect(tsconfigJson.compilerOptions.paths['@proj/my-dir/my-lib']).toEqual(
-        ['libs/my-dir/my-lib/src/index.ts']
-      );
-      expect(
-        tsconfigJson.compilerOptions.paths['my-dir-my-lib/*']
-      ).toBeUndefined();
-    });
-
     it('should create a local tsconfig.json', async () => {
       await libraryGenerator(tree, { ...defaultSchema, directory: 'myDir' });
 
@@ -341,15 +318,6 @@ describe('lib', () => {
           path: './tsconfig.spec.json',
         },
       ]);
-    });
-
-    it('should extend from root tsconfig.json when no tsconfig.base.json', async () => {
-      tree.rename('tsconfig.base.json', 'tsconfig.json');
-
-      await libraryGenerator(tree, { ...defaultSchema, directory: 'myDir' });
-
-      const tsconfigJson = readJson(tree, 'libs/my-dir/my-lib/tsconfig.json');
-      expect(tsconfigJson.extends).toBe('../../../tsconfig.json');
     });
   });
 
@@ -693,18 +661,7 @@ describe('lib', () => {
       });
       const tsconfigJson = readJson(tree, '/libs/my-lib/tsconfig.json');
 
-      expect(
-        tsconfigJson.compilerOptions.forceConsistentCasingInFileNames
-      ).not.toBeDefined();
-      expect(tsconfigJson.compilerOptions.strict).not.toBeDefined();
-      expect(tsconfigJson.compilerOptions.noImplicitOverride).not.toBeDefined();
-      expect(
-        tsconfigJson.compilerOptions.noPropertyAccessFromIndexSignature
-      ).not.toBeDefined();
-      expect(tsconfigJson.compilerOptions.noImplicitReturns).not.toBeDefined();
-      expect(
-        tsconfigJson.compilerOptions.noFallthroughCasesInSwitch
-      ).not.toBeDefined();
+      expect(tsconfigJson.compilerOptions.strict).toEqual(false);
     });
   });
 
@@ -726,7 +683,6 @@ describe('lib', () => {
   describe('--skipPackageJson', () => {
     it('should not add dependencies to package.json when true', async () => {
       // ARRANGE
-      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       const packageJsonBeforeGenerator = tree.read('package.json', 'utf-8');
       // ACT
       await libraryGenerator(tree, {
@@ -759,6 +715,30 @@ describe('lib', () => {
       expect(() => {
         readJson(tree, `libs/my-lib/.babelrc`);
       }).not.toThrow();
+    }
+  );
+
+  it.each`
+    style     | pkg
+    ${'less'} | ${'less'}
+    ${'scss'} | ${'sass'}
+    ${'styl'} | ${'stylus'}
+  `(
+    'should add style preprocessor when vite is used',
+    async ({ style, pkg }) => {
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        style,
+        bundler: 'vite',
+        unitTestRunner: 'vitest',
+        name: 'myLib',
+      });
+
+      expect(readJson(tree, 'package.json')).toMatchObject({
+        devDependencies: {
+          [pkg]: expect.any(String),
+        },
+      });
     }
   );
 });

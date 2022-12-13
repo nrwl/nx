@@ -22,6 +22,7 @@ import {
   createProjectStorybookDir,
   createRootStorybookDir,
   createRootStorybookDirForRootProject,
+  getE2EProjectName,
   projectIsRootProjectInNestedWorkspace,
   updateLintConfig,
 } from './util-functions';
@@ -106,19 +107,20 @@ export async function configurationGenerator(
     );
   }
 
-  if (schema.configureCypress) {
-    if (projectType !== 'application') {
-      const cypressTask = await cypressProjectGenerator(tree, {
-        name: schema.name,
-        js: schema.js,
-        linter: schema.linter,
-        directory: schema.cypressDirectory,
-        standaloneConfig: schema.standaloneConfig,
-      });
-      tasks.push(cypressTask);
-    } else {
-      logger.warn('There is already an e2e project setup');
-    }
+  const e2eProject = getE2EProjectName(tree, schema.name);
+  if (schema.configureCypress && !e2eProject) {
+    const cypressTask = await cypressProjectGenerator(tree, {
+      name: schema.name,
+      js: schema.js,
+      linter: schema.linter,
+      directory: schema.cypressDirectory,
+      standaloneConfig: schema.standaloneConfig,
+    });
+    tasks.push(cypressTask);
+  } else {
+    logger.warn(
+      `There is already an e2e project setup for ${schema.name}, called ${e2eProject}.`
+    );
   }
 
   if (nextBuildTarget && projectType === 'application') {

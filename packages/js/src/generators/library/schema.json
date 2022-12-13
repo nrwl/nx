@@ -28,9 +28,9 @@
     },
     "unitTestRunner": {
       "type": "string",
-      "enum": ["jest", "none"],
+      "enum": ["jest", "vitest", "none"],
       "description": "Test runner to use for unit tests.",
-      "default": "jest"
+      "x-prompt": "Which unit test runner would you like to use?"
     },
     "tags": {
       "type": "string",
@@ -106,7 +106,7 @@
     "bundler": {
       "description": "The bundler to use.",
       "type": "string",
-      "enum": ["none", "esbuild", "rollup", "webpack"],
+      "enum": ["none", "esbuild", "rollup", "vite", "webpack"],
       "default": "none"
     },
     "skipTypeCheck": {

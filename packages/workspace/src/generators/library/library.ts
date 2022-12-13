@@ -1,19 +1,20 @@
 import {
-  Tree,
+  addDependenciesToPackageJson,
+  addProjectConfiguration,
   convertNxGenerator,
+  ensurePackage,
+  extractLayoutDirectory,
+  formatFiles,
+  generateFiles,
+  GeneratorCallback,
+  getWorkspaceLayout,
+  joinPathFragments,
   names,
   offsetFromRoot,
-  generateFiles,
-  toJS,
-  getWorkspaceLayout,
-  addProjectConfiguration,
-  formatFiles,
-  updateJson,
-  GeneratorCallback,
-  joinPathFragments,
   ProjectConfiguration,
-  addDependenciesToPackageJson,
-  extractLayoutDirectory,
+  toJS,
+  Tree,
+  updateJson,
 } from '@nrwl/devkit';
 import { getImportPath } from 'nx/src/utils/path';
 import { join } from 'path';
@@ -24,11 +25,6 @@ import {
 } from '../../utilities/typescript';
 import { nxVersion } from '../../utils/versions';
 import { Schema } from './schema';
-
-// nx-ignore-next-line
-const { jestProjectGenerator } = require('@nrwl/jest');
-// nx-ignore-next-line
-const { lintProjectGenerator, Linter } = require('@nrwl/linter');
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -74,10 +70,12 @@ function addProject(tree: Tree, options: NormalizedSchema) {
   );
 }
 
-export function addLint(
+export async function addLint(
   tree: Tree,
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
+  await ensurePackage(tree, '@nrwl/linter', nxVersion);
+  const { lintProjectGenerator } = require('@nrwl/linter');
   return lintProjectGenerator(tree, {
     project: options.name,
     linter: options.linter,
@@ -178,6 +176,8 @@ async function addJest(
   tree: Tree,
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
+  await ensurePackage(tree, '@nrwl/jest', nxVersion);
+  const { jestProjectGenerator } = require('@nrwl/jest');
   return await jestProjectGenerator(tree, {
     ...options,
     project: options.name,
@@ -232,7 +232,7 @@ function normalizeOptions(tree: Tree, options: Schema): NormalizedSchema {
   }
 
   if (!options.linter) {
-    options.linter = Linter.EsLint;
+    options.linter = 'eslint';
   }
 
   const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');

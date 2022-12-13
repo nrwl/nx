@@ -1,6 +1,5 @@
-import { VirtualElement } from '@popperjs/core';
+import { VirtualElement } from '@floating-ui/react-dom';
 import { ProjectNodeDataDefinition } from './util-cytoscape/project-node';
-import { EdgeDataDefinition } from './util-cytoscape/project-edge';
 import { TaskNodeDataDefinition } from './util-cytoscape/task-node';
 
 interface ProjectNodeClickEvent {

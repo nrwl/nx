@@ -39,19 +39,19 @@ export function ProjectNodeToolTip({
   }
 
   return (
-    <div>
+    <div className="text-sm text-slate-700 dark:text-slate-400">
       <h4>
         <Tag className="mr-3">{type}</Tag>
-        {id}
+        <span className="font-mono">{id}</span>
       </h4>
       {tags.length > 0 ? (
-        <p>
+        <p className="my-2">
           <strong>tags</strong>
           <br></br>
           {tags.join(', ')}
         </p>
       ) : null}
-      <div className="flex">
+      <div className="grid grid-cols-3 gap-4">
         <TooltipLinkButton to={routeConstructor(`/projects/${id}`, true)}>
           Focus
         </TooltipLinkButton>

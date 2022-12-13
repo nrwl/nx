@@ -776,6 +776,107 @@ describe('params', () => {
       ).toThrow("Required property 'a' is missing");
     });
 
+    it('should throw if none of the oneOf conditions are met', () => {
+      expect(() =>
+        validateOptsAgainstSchema(
+          {},
+
+          {
+            properties: {
+              a: {
+                type: 'boolean',
+              },
+
+              b: {
+                type: 'boolean',
+              },
+            },
+
+            oneOf: [
+              {
+                required: ['a'],
+              },
+
+              {
+                required: ['b'],
+              },
+            ],
+          }
+        )
+      ).toThrowErrorMatchingInlineSnapshot(`
+        "Options did not match schema. Please fix 1 of the following errors:
+         - Required property 'a' is missing
+         - Required property 'b' is missing"
+      `);
+    });
+
+    it('should throw if more than one of the oneOf conditions are met', () => {
+      expect(() =>
+        validateOptsAgainstSchema(
+          {
+            a: true,
+            b: false,
+          },
+
+          {
+            properties: {
+              a: {
+                type: 'boolean',
+              },
+
+              b: {
+                type: 'boolean',
+              },
+            },
+
+            oneOf: [
+              {
+                required: ['a'],
+              },
+
+              {
+                required: ['b'],
+              },
+            ],
+          }
+        )
+      ).toThrowErrorMatchingInlineSnapshot(`"Options did not match schema."`);
+    });
+
+    it('should throw if none of the anyOf conditions are met', () => {
+      expect(() =>
+        validateOptsAgainstSchema(
+          {},
+
+          {
+            properties: {
+              a: {
+                type: 'boolean',
+              },
+
+              b: {
+                type: 'boolean',
+              },
+            },
+
+            anyOf: [
+              {
+                required: ['a'],
+              },
+
+              {
+                required: ['b'],
+              },
+            ],
+          }
+        )
+      ).toThrowErrorMatchingInlineSnapshot(`
+        "Options did not match schema. Please fix any of the following errors:
+         - Required property 'a' is missing
+         - Required property 'b' is missing"
+      `);
+    });
+
     it('should throw if found an unknown property', () => {
       expect(() =>
         validateOptsAgainstSchema(

@@ -33,6 +33,7 @@ export interface PackageJson {
   // Generic Package.Json Configuration
   name: string;
   version: string;
+  license?: string;
   scripts?: Record<string, string>;
   type?: 'module' | 'commonjs';
   main?: string;
@@ -47,6 +48,7 @@ export interface PackageJson {
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
   peerDependencies?: Record<string, string>;
+  peerDependenciesMeta?: Record<string, { optional?: boolean }>;
   bin?: Record<string, string>;
   workspaces?:
     | string[]

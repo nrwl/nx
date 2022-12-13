@@ -1,4 +1,4 @@
-This generator will set up Storybook for your Angular project.
+This generator will set up Storybook for your React project.
 
 ```bash
 nx g @nrwl/react:storybook-configuration project-name

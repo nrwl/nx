@@ -9,8 +9,7 @@ import {
   Tree,
 } from '@nrwl/devkit';
 import { assertValidStyle } from '../../../utils/assertion';
-import { NormalizedSchema } from '../library';
-import { Schema } from '../schema';
+import { NormalizedSchema, Schema } from '../schema';
 
 export function normalizeOptions(
   host: Tree,
@@ -40,7 +39,9 @@ export function normalizeOptions(
   const normalized = {
     ...options,
     compiler: options.compiler ?? 'babel',
-    bundler: options.bundler ?? 'none',
+    bundler:
+      options.bundler ??
+      (options.buildable || options.publishable ? 'rollup' : 'none'),
     fileName,
     routePath: `/${name}`,
     name: projectName,

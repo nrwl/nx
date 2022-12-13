@@ -1,7 +1,7 @@
 import { cacheDir, ExecutorContext, logger } from '@nrwl/devkit';
 import { exec, execSync } from 'child_process';
 import { removeSync } from 'fs-extra';
-import { createAsyncIterable } from '../async-iterable/create-async-iterable';
+import { createAsyncIterable } from '@nrwl/devkit/src/utils/async-iterable';
 import { NormalizedSwcExecutorOptions, SwcCliOptions } from '../schema';
 import { printDiagnostics } from '../typescript/print-diagnostics';
 import { runTypeCheck, TypeCheckOptions } from '../typescript/run-type-check';

@@ -69,6 +69,13 @@ describe('lib', () => {
     );
   });
 
+  it('should generate gitlab config', async () => {
+    setNxCloud(tree);
+    await ciWorkflowGenerator(tree, { ci: 'gitlab' });
+
+    expect(tree.read('.gitlab-ci.yml', 'utf-8')).toMatchSnapshot();
+  });
+
   it('should throw error is nx cloud is not set', async () => {
     await expect(
       ciWorkflowGenerator(tree, {

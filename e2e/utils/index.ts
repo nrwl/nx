@@ -7,13 +7,7 @@ import {
   workspaceRoot,
 } from '@nrwl/devkit';
 import { angularCliVersion } from '@nrwl/workspace/src/utils/versions';
-import {
-  ChildProcess,
-  exec,
-  ExecOptions,
-  execSync,
-  ExecSyncOptions,
-} from 'child_process';
+import { ChildProcess, exec, execSync, ExecSyncOptions } from 'child_process';
 import {
   copySync,
   createFileSync,

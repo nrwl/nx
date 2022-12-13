@@ -6,7 +6,8 @@ description: In this tutorial you'll create a frontend-focused workspace with Nx
 {% callout type="check" title="Standalone Repo" %}
 This tutorial sets up a repo with a single application at the root level that breaks out its code into libraries to add structure.
 
-You can find more information on about other repo styles in [our introduction](/getting-started/intro).
+Looking for a React monorepo setup? Check our [React monorepo tutorial](/react-tutorial/1-code-generation).
+
 {% /callout %}
 
 # React Standalone Tutorial - Part 1: Code Generation
@@ -87,7 +88,7 @@ To create the `cart` and `shared/ui` libraries, use the `@nrwl/react:lib` genera
 ✔ Which bundler would you like to use to build the library? · vite
 UPDATE nx.json
 CREATE cart/project.json
-CREATE .eslintrc.store.json
+CREATE .eslintrc.base.json
 UPDATE project.json
 UPDATE .eslintrc.json
 UPDATE e2e/.eslintrc.json

@@ -4,6 +4,7 @@ import {
   checkFilesExist,
   cleanupProject,
   createFile,
+  detectPackageManager,
   expectJestTestsToPass,
   killPorts,
   newProject,
@@ -20,6 +21,7 @@ import {
 } from '@nrwl/e2e/utils';
 import { exec, execSync } from 'child_process';
 import * as http from 'http';
+import { getLockFileName } from 'nx/src/lock-file/lock-file';
 import { satisfies } from 'semver';
 
 function getData(port, path = '/api'): Promise<any> {
@@ -229,7 +231,7 @@ describe('Build Node apps', () => {
 
   afterEach(() => cleanupProject());
 
-  it('should generate a package.json with the `--generatePackageJson` flag MMM', async () => {
+  it('should generate a package.json with the `--generatePackageJson` flag', async () => {
     const scope = newProject();
     const nestapp = uniq('nestapp');
     runCLI(`generate @nrwl/nest:app ${nestapp} --linter=eslint`);
@@ -237,6 +239,11 @@ describe('Build Node apps', () => {
     await runCLIAsync(`build ${nestapp} --generatePackageJson`);
 
     checkFilesExist(`dist/apps/${nestapp}/package.json`);
+    checkFilesExist(
+      `dist/apps/${nestapp}/${getLockFileName(
+        detectPackageManager(tmpProjPath())
+      )}`
+    );
     const packageJson = JSON.parse(
       readFile(`dist/apps/${nestapp}/package.json`)
     );

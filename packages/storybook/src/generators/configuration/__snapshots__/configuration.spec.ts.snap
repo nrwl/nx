@@ -154,20 +154,10 @@ const config: StorybookConfig = {
     '../src/lib/**/*.stories.mdx',
     '../src/lib/**/*.stories.@(js|jsx|ts|tsx)'
   ],
-  addons: [...(rootMain.addons || []) , '@nrwl/react/plugins/storybook' 
+  addons: [...(rootMain.addons || []) 
     
     
-  ],
-  webpackFinal: async (config, { configType }: Options) => {
-    // apply any global webpack configs that might have been specified in .storybook/main.ts
-    if (rootMain.webpackFinal) {
-      config = await rootMain.webpackFinal(config, { configType } as Options);
-    }
-
-    // add your own webpack tweaks if needed
-
-    return config;
-  },
+  ]
 };
 
 module.exports = config;
@@ -213,20 +203,10 @@ const config: StorybookConfig = {
     '../src/lib/**/*.stories.mdx',
     '../src/lib/**/*.stories.@(js|jsx|ts|tsx)'
   ],
-  addons: [...(rootMain.addons || []) , '@nrwl/react/plugins/storybook' 
+  addons: [...(rootMain.addons || []) 
     
     
-  ],
-  webpackFinal: async (config, { configType }: Options) => {
-    // apply any global webpack configs that might have been specified in .storybook/main.ts
-    if (rootMain.webpackFinal) {
-      config = await rootMain.webpackFinal(config, { configType } as Options);
-    }
-
-    // add your own webpack tweaks if needed
-
-    return config;
-  },
+  ]
 };
 
 module.exports = config;
@@ -272,7 +252,7 @@ const config: StorybookConfig = {
     '../components/**/*.stories.mdx',
     '../components/**/*.stories.@(js|jsx|ts|tsx)'
   ],
-  addons: [...(rootMain.addons || []) , '@nrwl/react/plugins/storybook' 
+  addons: [...(rootMain.addons || []) 
     
     , 'storybook-addon-swc', 
         {
@@ -282,17 +262,7 @@ const config: StorybookConfig = {
       },
     }
      
-  ],
-  webpackFinal: async (config, { configType }: Options) => {
-    // apply any global webpack configs that might have been specified in .storybook/main.ts
-    if (rootMain.webpackFinal) {
-      config = await rootMain.webpackFinal(config, { configType } as Options);
-    }
-
-    // add your own webpack tweaks if needed
-
-    return config;
-  },
+  ]
 };
 
 module.exports = config;
@@ -338,20 +308,10 @@ const config: StorybookConfig = {
     '../src/app/**/*.stories.mdx',
     '../src/app/**/*.stories.@(js|jsx|ts|tsx)'
   ],
-  addons: [...(rootMain.addons || []) , '@nrwl/react/plugins/storybook' 
+  addons: [...(rootMain.addons || []) 
     
     
-  ],
-  webpackFinal: async (config, { configType }: Options) => {
-    // apply any global webpack configs that might have been specified in .storybook/main.ts
-    if (rootMain.webpackFinal) {
-      config = await rootMain.webpackFinal(config, { configType } as Options);
-    }
-
-    // add your own webpack tweaks if needed
-
-    return config;
-  },
+  ]
 };
 
 module.exports = config;
@@ -397,20 +357,10 @@ const config: StorybookConfig = {
     '../src/app/**/*.stories.mdx',
     '../src/app/**/*.stories.@(js|jsx|ts|tsx)'
   ],
-  addons: [...(rootMain.addons || []) , '@nrwl/react/plugins/storybook' 
+  addons: [...(rootMain.addons || []) 
     , 'storybook-addon-swc' 
     
-  ],
-  webpackFinal: async (config, { configType }: Options) => {
-    // apply any global webpack configs that might have been specified in .storybook/main.ts
-    if (rootMain.webpackFinal) {
-      config = await rootMain.webpackFinal(config, { configType } as Options);
-    }
-
-    // add your own webpack tweaks if needed
-
-    return config;
-  },
+  ]
 };
 
 module.exports = config;
@@ -456,20 +406,10 @@ const config: StorybookConfig = {
     '../src/lib/**/*.stories.mdx',
     '../src/lib/**/*.stories.@(js|jsx|ts|tsx)'
   ],
-  addons: [...(rootMain.addons || []) , '@nrwl/react/plugins/storybook' 
+  addons: [...(rootMain.addons || []) 
     
     
-  ],
-  webpackFinal: async (config, { configType }: Options) => {
-    // apply any global webpack configs that might have been specified in .storybook/main.ts
-    if (rootMain.webpackFinal) {
-      config = await rootMain.webpackFinal(config, { configType } as Options);
-    }
-
-    // add your own webpack tweaks if needed
-
-    return config;
-  },
+  ]
 };
 
 module.exports = config;
@@ -910,10 +850,10 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
   ],
   \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
   \\"include\\": [
-    \\"../src/**/*.stories.ts\\", 
-    \\"../src/**/*.stories.js\\", 
-    \\"../src/**/*.stories.jsx\\", 
-    \\"../src/**/*.stories.tsx\\", 
+    \\"../src/**/*.stories.ts\\",
+    \\"../src/**/*.stories.js\\",
+    \\"../src/**/*.stories.jsx\\",
+    \\"../src/**/*.stories.tsx\\",
     \\"../src/**/*.stories.mdx\\",
     \\"*.js\\"]
 }
@@ -968,10 +908,10 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
   ],
   \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
   \\"include\\": [
-    \\"../src/**/*.stories.ts\\", 
-    \\"../src/**/*.stories.js\\", 
-    \\"../src/**/*.stories.jsx\\", 
-    \\"../src/**/*.stories.tsx\\", 
+    \\"../src/**/*.stories.ts\\",
+    \\"../src/**/*.stories.js\\",
+    \\"../src/**/*.stories.jsx\\",
+    \\"../src/**/*.stories.tsx\\",
     \\"../src/**/*.stories.mdx\\",
     \\"*.js\\"]
 }
@@ -1033,10 +973,10 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
   ],
   \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
   \\"include\\": [
-    \\"../components/**/*.stories.ts\\", 
-    \\"../components/**/*.stories.js\\", 
-    \\"../components/**/*.stories.jsx\\", 
-    \\"../components/**/*.stories.tsx\\", 
+    \\"../components/**/*.stories.ts\\",
+    \\"../components/**/*.stories.js\\",
+    \\"../components/**/*.stories.jsx\\",
+    \\"../components/**/*.stories.tsx\\",
     \\"../components/**/*.stories.mdx\\",
     \\"*.js\\"]
 }
@@ -1091,10 +1031,10 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
   ],
   \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
   \\"include\\": [
-    \\"../src/**/*.stories.ts\\", 
-    \\"../src/**/*.stories.js\\", 
-    \\"../src/**/*.stories.jsx\\", 
-    \\"../src/**/*.stories.tsx\\", 
+    \\"../src/**/*.stories.ts\\",
+    \\"../src/**/*.stories.js\\",
+    \\"../src/**/*.stories.jsx\\",
+    \\"../src/**/*.stories.tsx\\",
     \\"../src/**/*.stories.mdx\\",
     \\"*.js\\"]
 }
@@ -1149,10 +1089,10 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
   ],
   \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
   \\"include\\": [
-    \\"../src/**/*.stories.ts\\", 
-    \\"../src/**/*.stories.js\\", 
-    \\"../src/**/*.stories.jsx\\", 
-    \\"../src/**/*.stories.tsx\\", 
+    \\"../src/**/*.stories.ts\\",
+    \\"../src/**/*.stories.js\\",
+    \\"../src/**/*.stories.jsx\\",
+    \\"../src/**/*.stories.tsx\\",
     \\"../src/**/*.stories.mdx\\",
     \\"*.js\\"]
 }
@@ -1207,10 +1147,10 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
   ],
   \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
   \\"include\\": [
-    \\"../src/**/*.stories.ts\\", 
-    \\"../src/**/*.stories.js\\", 
-    \\"../src/**/*.stories.jsx\\", 
-    \\"../src/**/*.stories.tsx\\", 
+    \\"../src/**/*.stories.ts\\",
+    \\"../src/**/*.stories.js\\",
+    \\"../src/**/*.stories.jsx\\",
+    \\"../src/**/*.stories.tsx\\",
     \\"../src/**/*.stories.mdx\\",
     \\"*.js\\"]
 }

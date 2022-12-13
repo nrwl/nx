@@ -284,19 +284,17 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     // Restore e2e directory
     runCommand('mv e2e-bak e2e');
 
-    // TODO: this functionality is currently broken, this validation doesn't exist
-    // // Remove src
-    // runCommand('mv src src-bak');
-    // expect(() => runNgAdd('@nrwl/angular', '--npm-scope projscope --skip-install')).toThrow(
-    //   'Path: src does not exist'
-    // );
+    // Remove src
+    runCommand('mv src src-bak');
+    expect(() =>
+      runNgAdd('@nrwl/angular', '--npm-scope projscope --skip-install')
+    ).toThrow('The project source root "src" could not be found.');
 
-    // // Put src back
-    // runCommand('mv src-bak src');
+    // Put src back
+    runCommand('mv src-bak src');
   });
 
-  //TODO: reenable
-  xit('should handle a workspace with cypress v9', () => {
+  it('should handle a workspace with cypress v9', () => {
     addCypress9();
 
     // Remove cypress.json
@@ -383,8 +381,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     });
   });
 
-  //TODO: reenable
-  xit('should handle a workspace with cypress v10', () => {
+  it('should handle a workspace with cypress v10', () => {
     addCypress10();
 
     // Remove cypress.config.ts

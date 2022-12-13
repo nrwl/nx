@@ -27,6 +27,17 @@ jest.mock('nx/src/utils/workspace-root', () => ({
   workspaceRoot: '/root',
 }));
 
+const TypeScriptOnlyPackage = {
+  name: 'test',
+  version: '0.0.0',
+  dependencies: { typescript: '4.8.4' },
+};
+const YargsAndDevkitPackage = {
+  name: 'test',
+  version: '0.0.0',
+  dependencies: { '@nrwl/devkit': '15.0.13', yargs: '17.6.2' },
+};
+
 describe('npm LockFile utility', () => {
   describe('v3', () => {
     const parsedLockFile = parseNpmLockFile(lockFileV3);
@@ -115,27 +126,28 @@ describe('npm LockFile utility', () => {
     it('should prune the lock file', () => {
       expect(
         Object.keys(
-          pruneNpmLockFile(parsedLockFile, ['typescript']).dependencies
+          pruneNpmLockFile(parsedLockFile, TypeScriptOnlyPackage).dependencies
         ).length
       ).toEqual(1);
       expect(
         Object.keys(
-          pruneNpmLockFile(parsedLockFile, ['yargs', '@nrwl/devkit'])
-            .dependencies
+          pruneNpmLockFile(parsedLockFile, YargsAndDevkitPackage).dependencies
         ).length
       ).toEqual(136);
     });
 
     it('should correctly prune lockfile with single package', () => {
       expect(
-        stringifyNpmLockFile(pruneNpmLockFile(parsedLockFile, ['typescript']))
+        stringifyNpmLockFile(
+          pruneNpmLockFile(parsedLockFile, TypeScriptOnlyPackage)
+        )
       ).toEqual(lockFileV3JustTypescript);
     });
 
     it('should correctly prune lockfile with multiple packages', () => {
       expect(
         stringifyNpmLockFile(
-          pruneNpmLockFile(parsedLockFile, ['yargs', '@nrwl/devkit'])
+          pruneNpmLockFile(parsedLockFile, YargsAndDevkitPackage)
         )
       ).toEqual(lockFileV3YargsAndDevkitOnly);
     });
@@ -228,28 +240,26 @@ describe('npm LockFile utility', () => {
     it('should prune the lock file', () => {
       expect(
         Object.keys(
-          pruneNpmLockFile(parsedLockFile, ['typescript']).dependencies
+          pruneNpmLockFile(parsedLockFile, TypeScriptOnlyPackage).dependencies
         ).length
       ).toEqual(1);
       expect(
         Object.keys(
-          pruneNpmLockFile(parsedLockFile, ['yargs', '@nrwl/devkit'])
-            .dependencies
+          pruneNpmLockFile(parsedLockFile, YargsAndDevkitPackage).dependencies
         ).length
       ).toEqual(136);
     });
 
     it('should correctly prune lockfile with single package', () => {
       expect(
-        stringifyNpmLockFile(pruneNpmLockFile(parsedLockFile, ['typescript']))
+        stringifyNpmLockFile(
+          pruneNpmLockFile(parsedLockFile, TypeScriptOnlyPackage)
+        )
       ).toEqual(lockFileV2JustTypescript);
     });
 
     it('should correctly prune lockfile with multiple packages', () => {
-      const pruned = pruneNpmLockFile(parsedLockFile, [
-        'yargs',
-        '@nrwl/devkit',
-      ]);
+      const pruned = pruneNpmLockFile(parsedLockFile, YargsAndDevkitPackage);
       expect(stringifyNpmLockFile(pruned)).toEqual(
         lockFileV2YargsAndDevkitOnly
       );
@@ -346,29 +356,29 @@ describe('npm LockFile utility', () => {
       it('should prune the lock file', () => {
         expect(
           Object.keys(
-            pruneNpmLockFile(parsedLockFile, ['typescript']).dependencies
+            pruneNpmLockFile(parsedLockFile, TypeScriptOnlyPackage).dependencies
           ).length
         ).toEqual(1);
         expect(
           Object.keys(
-            pruneNpmLockFile(parsedLockFile, ['yargs', '@nrwl/devkit'])
-              .dependencies
+            pruneNpmLockFile(parsedLockFile, YargsAndDevkitPackage).dependencies
           ).length
         ).toEqual(136);
       });
 
       it('should correctly prune lockfile with single package', () => {
         expect(
-          stringifyNpmLockFile(pruneNpmLockFile(parsedLockFile, ['typescript']))
+          stringifyNpmLockFile(
+            pruneNpmLockFile(parsedLockFile, TypeScriptOnlyPackage)
+          )
         ).toEqual(lockFileV1JustTypescript);
       });
 
       it('should correctly prune lockfile with multiple packages', () => {
-        expect(
-          stringifyNpmLockFile(
-            pruneNpmLockFile(parsedLockFile, ['yargs', '@nrwl/devkit'])
-          )
-        ).toEqual(lockFileV1YargsAndDevkitOnly);
+        const pruned = pruneNpmLockFile(parsedLockFile, YargsAndDevkitPackage);
+        expect(stringifyNpmLockFile(pruned)).toEqual(
+          lockFileV1YargsAndDevkitOnly
+        );
       });
     });
   });

@@ -1,7 +1,5 @@
 import Tag from '../ui-components/tag';
-import { Link, useParams } from 'react-router-dom';
-import { TooltipLinkButton } from './tooltip-button';
-import { getEnvironmentConfig } from '../hooks/use-environment-config';
+import { useParams } from 'react-router-dom';
 
 export interface TaskNodeTooltipProps {
   id: string;
@@ -16,10 +14,10 @@ export function TaskNodeTooltip({ id, executor }: TaskNodeTooltipProps) {
     ? `/${selectedWorkspaceId}/tasks/${id}`
     : `/tasks/${id}`;
   return (
-    <div>
+    <div className="text-sm text-slate-700 dark:text-slate-400">
       <h4>
         <Tag className="mr-3">{executor}</Tag>
-        {id}
+        <span className="font-mono">{id}</span>
       </h4>
     </div>
   );

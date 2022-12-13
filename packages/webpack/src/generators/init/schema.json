@@ -6,6 +6,12 @@
   "description": "Init Webpack Plugin.",
   "type": "object",
   "properties": {
+    "uiFramework": {
+      "type": "string",
+      "description": "UI Framework to use for Webpack.",
+      "enum": ["react", "none"],
+      "x-prompt": "What UI framework plugin should Webpack use?"
+    },
     "compiler": {
       "type": "string",
       "enum": ["babel", "swc", "tsc"],

@@ -1,8 +1,7 @@
 import type { FileReplacement } from '../../plugins/rollup-replace-files.plugin';
 export interface ViteBuildExecutorOptions {
   outputPath: string;
-  baseHref?: string;
-  proxyConfig?: string;
+  base?: string;
   configFile?: string;
   fileReplacements?: FileReplacement[];
   sourcemap?: boolean | 'inline' | 'hidden';
@@ -10,5 +9,5 @@ export interface ViteBuildExecutorOptions {
   manifest?: boolean | string;
   ssrManifest?: boolean | string;
   logLevel?: 'info' | 'warn' | 'error' | 'silent';
-  mode?: string;
+  mode?: 'production' | 'development';
 }

@@ -3,7 +3,6 @@ import {
   checkFilesExist,
   cleanupProject,
   createFile,
-  expectJestTestsToPass,
   killPorts,
   newProject,
   readFile,
@@ -94,6 +93,34 @@ describe('React Applications', () => {
       checkLinter: false,
       checkE2E: false,
     });
+  }, 250_000);
+
+  it('should be able to use Vite to build and test apps', async () => {
+    const appName = uniq('app');
+    const libName = uniq('lib');
+
+    runCLI(
+      `generate @nrwl/react:app ${appName} --bundler=vite --no-interactive`
+    );
+    runCLI(
+      `generate @nrwl/react:lib ${libName} --bundler=none --no-interactive`
+    );
+
+    // Library generated with Vite
+    checkFilesExist(`libs/${libName}/vite.config.ts`);
+
+    const mainPath = `apps/${appName}/src/main.tsx`;
+    updateFile(
+      mainPath,
+      `
+        import '@${proj}/${libName}';
+        ${readFile(mainPath)}
+      `
+    );
+
+    runCLI(`build ${appName}`);
+
+    checkFilesExist(`dist/apps/${appName}/index.html`);
   }, 250_000);
 
   async function testGeneratedApp(
@@ -243,9 +270,4 @@ describe('React Applications and Libs with PostCSS', () => {
     expect(buildResults.combinedOutput).toMatch(/HELLO FROM APP/);
     expect(buildResults.combinedOutput).not.toMatch(/HELLO FROM LIB/);
   }, 250_000);
-
-  it('should run default jest tests', async () => {
-    await expectJestTestsToPass('@nrwl/react:lib');
-    await expectJestTestsToPass('@nrwl/react:app');
-  }, 200000);
 });

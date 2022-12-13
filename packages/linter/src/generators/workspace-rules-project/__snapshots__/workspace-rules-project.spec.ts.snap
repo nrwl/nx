@@ -70,7 +70,10 @@ exports[`@nrwl/linter:workspace-rules-project should generate the required files
   \\"compilerOptions\\": {
     \\"outDir\\": \\"../../dist/out-tsc\\",
     \\"module\\": \\"commonjs\\",
-    \\"types\\": [\\"jest\\", \\"node\\"]
+    \\"types\\": [
+      \\"jest\\",
+      \\"node\\"
+    ]
   },
   \\"include\\": [
     \\"jest.config.ts\\",

@@ -158,8 +158,8 @@ describe('lib', () => {
       expect(tsconfigJson.extends).toEqual('./tsconfig.json');
       expect(tsconfigJson.exclude).toEqual([
         'jest.config.ts',
-        '**/*.spec.ts',
-        '**/*.test.ts',
+        'src/**/*.spec.ts',
+        'src/**/*.test.ts',
       ]);
     });
 

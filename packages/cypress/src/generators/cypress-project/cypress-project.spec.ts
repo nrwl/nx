@@ -245,6 +245,32 @@ describe('Cypress Project', () => {
         const tsConfig = readJson(tree, 'apps/my-dir/my-app-e2e/tsconfig.json');
         expect(tsConfig.extends).toBe('../../../tsconfig.json');
       });
+
+      describe('root project', () => {
+        it('should generate in option.name when root project detected', async () => {
+          addProjectConfiguration(tree, 'root', {
+            root: '.',
+          });
+          await cypressProjectGenerator(tree, {
+            ...defaultOptions,
+            name: 'e2e-tests',
+            baseUrl: 'http://localhost:1234',
+            project: 'root',
+            rootProject: true,
+          });
+          expect(tree.listChanges().map((c) => c.path)).toEqual(
+            expect.arrayContaining([
+              'e2e-tests/cypress.config.ts',
+              'e2e-tests/src/e2e/app.cy.ts',
+              'e2e-tests/src/fixtures/example.json',
+              'e2e-tests/src/support/app.po.ts',
+              'e2e-tests/src/support/commands.ts',
+              'e2e-tests/src/support/e2e.ts',
+              'e2e-tests/tsconfig.json',
+            ])
+          );
+        });
+      });
     });
 
     describe('--project', () => {

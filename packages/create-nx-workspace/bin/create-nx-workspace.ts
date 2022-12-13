@@ -447,8 +447,7 @@ function determineMonorepoStyle(): Promise<string> {
           },
           {
             name: 'react',
-            message:
-              'Standalone React app:   Nx configures Vite, ESLint and Cypress.',
+            message: 'Standalone React app:   Nx configures Vite and ESLint.',
           },
           {
             name: 'angular',
@@ -1066,9 +1065,14 @@ function pointToTutorialAndCourse(preset: Preset) {
         bodyLines: [`https://nx.dev/getting-started/nx-and-typescript`],
       });
       break;
-
-    case Preset.ReactMonorepo:
     case Preset.ReactStandalone:
+      output.addVerticalSeparator();
+      output.note({
+        title,
+        bodyLines: [`https://nx.dev/getting-started/react-standalone-tutorial`],
+      });
+      break;
+    case Preset.ReactMonorepo:
     case Preset.NextJs:
       output.addVerticalSeparator();
       output.note({
@@ -1076,8 +1080,16 @@ function pointToTutorialAndCourse(preset: Preset) {
         bodyLines: [`https://nx.dev/react-tutorial/1-code-generation`],
       });
       break;
-    case Preset.AngularMonorepo:
     case Preset.AngularStandalone:
+      output.addVerticalSeparator();
+      output.note({
+        title,
+        bodyLines: [
+          `https://nx.dev/getting-started/angular-standalone-tutorial`,
+        ],
+      });
+      break;
+    case Preset.AngularMonorepo:
       output.addVerticalSeparator();
       output.note({
         title,

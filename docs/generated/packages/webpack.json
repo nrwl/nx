@@ -18,6 +18,12 @@
         "description": "Init Webpack Plugin.",
         "type": "object",
         "properties": {
+          "uiFramework": {
+            "type": "string",
+            "description": "UI Framework to use for Webpack.",
+            "enum": ["react", "none"],
+            "x-prompt": "What UI framework plugin should Webpack use?"
+          },
           "compiler": {
             "type": "string",
             "enum": ["babel", "swc", "tsc"],
@@ -419,7 +425,7 @@
           },
           "generatePackageJson": {
             "type": "boolean",
-            "description": "Generates a `package.json` file with the project's `node_module` dependencies populated for installing in a container. If a `package.json` exists in the project's directory, it will be reused with dependencies populated.",
+            "description": "Generates a `package.json` and pruned lock file with the project's `node_module` dependencies populated for installing in a container. If a `package.json` exists in the project's directory, it will be reused with dependencies populated.",
             "default": false
           },
           "transformers": {

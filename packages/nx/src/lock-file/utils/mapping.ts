@@ -7,22 +7,6 @@ import {
   PackageVersions,
 } from './lock-file-type';
 
-/**
- * Checks whether the package is a root dependency
- * @param packageName
- * @param version
- * @returns
- */
-export function isRootVersion(packageName: string, version: string): boolean {
-  const fullPath = `${workspaceRoot}/node_modules/${packageName}/package.json`;
-  if (existsSync(fullPath)) {
-    const content = readFileSync(fullPath, 'utf-8');
-    return JSON.parse(content).version === version;
-  } else {
-    return false;
-  }
-}
-
 export type TransitiveLookupFunctionInput = {
   packageName: string;
   parentPackages: string[];
@@ -33,6 +17,23 @@ export type TransitiveLookupFunctionInput = {
 type TransitiveLookupFunction = (
   data: TransitiveLookupFunctionInput
 ) => PackageDependency;
+
+/**
+ * Checks whether the package is a root dependency
+ * @param packageName
+ * @param version
+ * @returns
+ */
+export function isRootVersion(packageName: string, version: string): boolean {
+  const fullPath = `${workspaceRoot}/node_modules/${packageName}/package.json`;
+
+  if (existsSync(fullPath)) {
+    const content = readFileSync(fullPath, 'utf-8');
+    return JSON.parse(content).version === version;
+  } else {
+    return false;
+  }
+}
 
 // Finds the maching version of each dependency of the package and
 // maps each {package}:{versionRange} pair to "npm:{package}@{version}" (when transitive) or "npm:{package}" (when root)
@@ -46,6 +47,7 @@ function mapTransitiveDependencies(
   if (!dependencies) {
     return [];
   }
+
   const result: string[] = [];
 
   Object.keys(dependencies).forEach((packageName) => {
@@ -91,7 +93,7 @@ function mapTransitiveDependencies(
 }
 
 /**
- * Returns node name depending whether it's root version or nested
+ * Returns node name depending on whether it's root version or nested
  */
 export function getNodeName(
   dep: string,
@@ -101,6 +103,14 @@ export function getNodeName(
   return rootVersion ? `npm:${dep}` : `npm:${dep}@${version}`;
 }
 
+/**
+ * Maps the lockfile data to the partial project graph
+ * using package manager specific {@link TransitiveLookupFunction}
+ *
+ * @param lockFileData
+ * @param transitiveLookupFn
+ * @returns
+ */
 export function mapExternalNodes(
   lockFileData: LockFileData,
   transitiveLookupFn: TransitiveLookupFunction
@@ -127,7 +137,8 @@ export function mapExternalNodes(
             },
           };
 
-          const combinedDependencies =
+          // combine dependencies and peerDependencies
+          const allDependencies =
             dependencies || peerDependencies
               ? {
                   ...(dependencies || {}),
@@ -135,12 +146,12 @@ export function mapExternalNodes(
                 }
               : undefined;
 
-          if (combinedDependencies) {
+          if (allDependencies) {
             const nodeDependencies = [];
             const transitiveDeps = mapTransitiveDependencies(
               [packageName],
               lockFileData.dependencies,
-              combinedDependencies,
+              allDependencies,
               versionCache,
               transitiveLookupFn
             );

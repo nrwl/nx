@@ -1,4 +1,4 @@
-import { NxJsonConfiguration, readJson, Tree } from '@nrwl/devkit';
+import { readJson, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import reactInitGenerator from './init';
 import { InitSchema } from './schema';
@@ -29,5 +29,10 @@ describe('init', () => {
   it('should not add jest config if unitTestRunner is none', async () => {
     await reactInitGenerator(tree, { ...schema, unitTestRunner: 'none' });
     expect(tree.exists('jest.config.js')).toEqual(false);
+  });
+
+  it('should not add babel.config.json if skipBabelConfig is true', async () => {
+    await reactInitGenerator(tree, { ...schema, skipBabelConfig: true });
+    expect(tree.exists('babel.config.json')).toEqual(false);
   });
 });

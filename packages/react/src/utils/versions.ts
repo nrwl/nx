@@ -3,11 +3,15 @@ export const nxVersion = require('../../package.json').version;
 export const reactVersion = '18.2.0';
 export const reactDomVersion = '18.2.0';
 export const reactIsVersion = '18.2.0';
+export const swcLoaderVersion = '0.1.15';
+export const swcCoreVersion = '^1.2.173';
 export const typesReactVersion = '18.0.25';
 export const typesReactDomVersion = '18.0.9';
 export const typesReactIsVersion = '17.0.3';
 
 export const typesNodeVersion = '18.11.9';
+
+export const babelPresetReactVersion = '^7.14.5';
 
 export const styledComponentsVersion = '5.3.6';
 export const typesStyledComponentsVersion = '5.1.26';
@@ -48,3 +52,8 @@ export const isbotVersion = '^3.6.5';
 export const corsVersion = '~2.8.5';
 export const typesCorsVersion = '~2.8.12';
 export const moduleFederationNodeVersion = '~0.9.6';
+
+// style preprocessors
+export const lessVersion = '3.12.2';
+export const sassVersion = '^1.55.0';
+export const stylusVersion = '^0.55.0';

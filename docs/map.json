@@ -29,14 +29,14 @@
               "file": "shared/npm-tutorial/integrated"
             },
             {
-              "name": "React Tutorial",
-              "id": "react-tutorial",
-              "file": "shared/react-tutorial/1-code-generation"
+              "name": "React Standalone Tutorial",
+              "id": "react-standalone-tutorial",
+              "file": "shared/react-standalone-tutorial/1-code-generation"
             },
             {
-              "name": "Angular Tutorial",
-              "id": "angular-tutorial",
-              "file": "shared/angular-tutorial/1-code-generation"
+              "name": "Angular Standalone Tutorial",
+              "id": "angular-standalone-tutorial",
+              "file": "shared/angular-standalone-tutorial/1-code-generation"
             },
             {
               "name": "Node Tutorial",
@@ -83,7 +83,7 @@
           ]
         },
         {
-          "name": "React Tutorial",
+          "name": "React Monorepo Tutorial",
           "id": "react-tutorial",
           "description": "In this tutorial you'll create a frontend-focused workspace with Nx.",
           "itemList": [
@@ -147,7 +147,7 @@
           ]
         },
         {
-          "name": "Angular Tutorial",
+          "name": "Angular Monorepo Tutorial",
           "id": "angular-tutorial",
           "description": "Learn to use Nx with this Angular tutorial where you will learn about all its main feature with a real project.",
           "itemList": [
@@ -179,7 +179,7 @@
           ]
         },
         {
-          "name": "Angular Standalon Tutorial",
+          "name": "Angular Standalone Tutorial",
           "id": "angular-standalone-tutorial",
           "description": "Learn to use Nx with this Angular tutorial where you will learn about all its main feature with a real project.",
           "itemList": [
@@ -573,6 +573,11 @@
               "name": "runtimeCacheInputs",
               "id": "runtime-cache-inputs",
               "file": "shared/deprecated/runtime-cache-inputs"
+            },
+            {
+              "name": "globalImplicitDependencies",
+              "id": "global-implicit-dependencies",
+              "file": "shared/deprecated/global-implicit-dependencies"
             }
           ]
         },
@@ -960,19 +965,23 @@
           "description": "Other recipes you will find useful.",
           "itemList": [
             {
+              "name": "Run Root-Level NPM Scripts with Nx",
+              "id": "root-level-scripts",
+              "tags": ["run-tasks"],
+              "file": "shared/recipes/root-level-scripts"
+            },
+            {
               "name": "Disable Graph Links Created from Analyzing Source Files",
               "id": "analyze-source-files",
               "tags": ["explore-graph"],
               "file": "shared/recipes/analyze-source-files"
             },
-
             {
               "name": "Advanced Update Nx",
               "id": "advanced-update",
               "tags": ["automate-updating-dependencies"],
               "file": "shared/recipes/advanced-update"
             },
-
             {
               "name": "JavaScript and TypeScript",
               "id": "js-and-ts",
@@ -1575,9 +1584,9 @@
               "file": "shared/cypress-component-testing"
             },
             {
-              "name": "v10 Migration Guide",
-              "id": "v10-migration-guide",
-              "file": "shared/guides/cypress/cypress-v10-migration"
+              "name": "v11 Migration Guide",
+              "id": "v11-migration-guide",
+              "file": "shared/guides/cypress/cypress-v11-migration"
             }
           ]
         },

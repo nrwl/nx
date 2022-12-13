@@ -125,7 +125,8 @@
     "buildable": {
       "type": "boolean",
       "default": false,
-      "description": "Generate a buildable library. If a bundler is set then the library is buildable by default."
+      "description": "Generate a buildable library that uses rollup to bundle. Use 'bundler' option instead for greater control (none, vite, rollup).",
+      "x-deprecated": true
     },
     "importPath": {
       "type": "string",
@@ -164,13 +165,14 @@
       "type": "string",
       "description": "The bundler to use. Choosing 'none' means this library is not buildable.",
       "enum": ["none", "vite", "rollup"],
+      "default": "none",
       "x-prompt": "Which bundler would you like to use to build the library? Choose 'none' to skip build setup."
     },
     "compiler": {
       "type": "string",
       "enum": ["babel", "swc"],
       "default": "babel",
-      "description": "Which compiler to use. Does not apply if bundler is set to Vite."
+      "description": "Which compiler to use. Only applies to `bundler: 'rollup'`."
     },
     "skipPackageJson": {
       "description": "Do not add dependencies to `package.json`.",

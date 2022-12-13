@@ -1,6 +1,7 @@
 import {
   checkFilesExist,
   cleanupProject,
+  detectPackageManager,
   isNotWindows,
   killPorts,
   newProject,
@@ -11,12 +12,14 @@ import {
   runCLIAsync,
   runCommandUntil,
   runCypressTests,
+  tmpProjPath,
   uniq,
   updateFile,
   updateProjectConfig,
 } from '@nrwl/e2e/utils';
 import { stringUtils } from '@nrwl/workspace';
 import * as http from 'http';
+import { getLockFileName } from 'nx/src/lock-file/lock-file';
 
 describe('Next.js Applications', () => {
   let proj: string;
@@ -242,11 +245,11 @@ describe('Next.js Applications', () => {
             if (found) throw new Error('Found SVGR plugin');
 
             console.log('NODE_ENV is', process.env.NODE_ENV);
-            
+
             return config;
           }
         };
-        
+
         module.exports = withNx(nextConfig);
       `
     );
@@ -265,7 +268,7 @@ describe('Next.js Applications', () => {
         const { withNx } = require('@nrwl/next/plugins/with-nx');
         // Not including "nx" entry should still work.
         const nextConfig = {};
-        
+
         module.exports = withNx(nextConfig);
       `
     );
@@ -446,6 +449,12 @@ async function checkApp(
   expect(packageJson.dependencies.react).toBeDefined();
   expect(packageJson.dependencies['react-dom']).toBeDefined();
   expect(packageJson.dependencies.next).toBeDefined();
+
+  checkFilesExist(
+    `dist/apps/${appName}/${getLockFileName(
+      detectPackageManager(tmpProjPath())
+    )}`
+  );
 
   if (opts.checkLint) {
     const lintResults = runCLI(`lint ${appName}`);

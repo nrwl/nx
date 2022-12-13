@@ -43,12 +43,7 @@ export function validateWorkspace(tree: Tree): void {
   - ${errors.join('\n  ')}`);
 }
 
-export function createNxJson(
-  tree: Tree,
-  options: GeneratorOptions,
-  setWorkspaceLayoutAsNewProjectRoot: boolean = false
-): void {
-  const { newProjectRoot = '' } = readJson(tree, 'angular.json');
+export function createNxJson(tree: Tree, options: GeneratorOptions): void {
   const { npmScope } = options;
 
   const targets = getWorkspaceCommonTargets(tree);
@@ -107,9 +102,6 @@ export function createNxJson(
           }
         : undefined,
     },
-    workspaceLayout: setWorkspaceLayoutAsNewProjectRoot
-      ? { appsDir: newProjectRoot, libsDir: newProjectRoot }
-      : undefined,
   });
 }
 
@@ -407,4 +399,13 @@ export function deleteAngularJson(tree: Tree): void {
     updateProjectConfiguration(tree, project, config);
   }
   tree.delete('angular.json');
+}
+
+export function deleteGitKeepFilesIfNotNeeded(tree: Tree): void {
+  if (tree.children('apps').length > 1 && tree.exists('apps/.gitkeep')) {
+    tree.delete('apps/.gitkeep');
+  }
+  if (tree.children('libs').length > 1 && tree.exists('libs/.gitkeep')) {
+    tree.delete('libs/.gitkeep');
+  }
 }

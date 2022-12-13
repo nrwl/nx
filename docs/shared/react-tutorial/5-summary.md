@@ -1,4 +1,4 @@
-# React Tutorial - Part 5: Summary
+# React Monorepo Tutorial - Part 5: Summary
 
 In this tutorial you:
 

@@ -31,32 +31,13 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@babel/core": "^7.15.0",
-    "@babel/preset-react": "^7.14.5",
-    "@nrwl/cypress": "file:../cypress",
     "@nrwl/devkit": "file:../devkit",
-    "@nrwl/jest": "file:../jest",
-    "@nrwl/js": "file:../js",
     "@nrwl/linter": "file:../linter",
-    "@nrwl/storybook": "file:../storybook",
-    "@nrwl/vite": "file:../vite",
-    "@nrwl/web": "file:../web",
-    "@nrwl/webpack": "file:../webpack",
     "@nrwl/workspace": "file:../workspace",
-    "@pmmmwh/react-refresh-webpack-plugin": "^0.5.7",
     "@phenomnomnominal/tsquery": "4.1.1",
-    "@svgr/webpack": "^6.1.2",
     "chalk": "4.1.0",
-    "css-loader": "^6.4.0",
     "minimatch": "3.0.5",
-    "react-refresh": "^0.10.0",
-    "semver": "7.3.4",
-    "style-loader": "^3.3.0",
-    "stylus": "^0.55.0",
-    "stylus-loader": "^7.1.0",
-    "url-loader": "^4.1.1",
-    "webpack": "^5.75.0",
-    "webpack-merge": "^5.8.0"
+    "semver": "7.3.4"
   },
   "publishConfig": {
     "access": "public"

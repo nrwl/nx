@@ -4,6 +4,7 @@ import {
   logger,
   parseTargetString,
   readTargetOptions,
+  Tree,
 } from '@nrwl/devkit';
 import { existsSync } from 'fs';
 import { join, relative } from 'path';
@@ -28,13 +29,13 @@ export async function getBuildAndSharedConfig(
   const projectRoot = context.workspace.projects[context.projectName].root;
 
   return mergeConfig({}, {
-    mode: options.mode,
+    mode: options.mode ?? context.configurationName,
     root: projectRoot,
-    base: options.baseHref,
+    base: options.base,
     configFile: normalizeConfigFilePath(
+      projectRoot,
       options.configFile,
-      context.root,
-      projectRoot
+      context.root
     ),
     plugins: [replaceFiles(options.fileReplacements)],
     build: getViteBuildOptions(
@@ -45,9 +46,9 @@ export async function getBuildAndSharedConfig(
 }
 
 export function normalizeConfigFilePath(
-  configFile: string,
-  workspaceRoot: string,
-  projectRoot: string
+  projectRoot: string,
+  configFile?: string,
+  workspaceRoot?: string
 ): string {
   return configFile
     ? joinPathFragments(`${workspaceRoot}/${configFile}`)
@@ -97,10 +98,10 @@ export function getServerOptions(
 }
 
 export function getBuildTargetOptions(
-  options: ViteDevServerExecutorOptions,
+  buildTarget: string,
   context: ExecutorContext
 ) {
-  const target = parseTargetString(options.buildTarget);
+  const target = parseTargetString(buildTarget);
   return readTargetOptions(target, context);
 }
 

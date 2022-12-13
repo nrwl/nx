@@ -10,8 +10,20 @@ import { pathStartsWith } from '../utils/path';
 import { exportComponentInEntryPoint } from './lib/component';
 import { normalizeOptions } from './lib/normalize-options';
 import type { NormalizedSchema, Schema } from './schema';
+import { getGeneratorDirectoryForInstalledAngularVersion } from '../../utils/get-generator-directory-for-ng-version';
+import { join } from 'path';
 
 export async function componentGenerator(tree: Tree, rawOptions: Schema) {
+  const generatorDirectory =
+    getGeneratorDirectoryForInstalledAngularVersion(tree);
+  if (generatorDirectory) {
+    let previousGenerator = await import(
+      join(__dirname, generatorDirectory, 'component')
+    );
+    await previousGenerator.default(tree, rawOptions);
+    return;
+  }
+
   const options = await normalizeOptions(tree, rawOptions);
   const { projectSourceRoot, ...schematicOptions } = options;
 

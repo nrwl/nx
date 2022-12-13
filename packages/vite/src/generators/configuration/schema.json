@@ -31,7 +31,8 @@
     "newProject": {
       "type": "boolean",
       "description": "Is this a new project?",
-      "default": false
+      "default": false,
+      "hidden": true
     }
   },
   "examplesFile": "../../../docs/configuration-examples.md"

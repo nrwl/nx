@@ -269,6 +269,101 @@ describe('workspace', () => {
       expect(prettierIgnore).toBe('# existing ignore rules');
     });
 
+    it('should generate .gitkeep file in apps directory when there are no applications', async () => {
+      tree.write('projects/lib1/README.md', '');
+      tree.write('projects/lib1/src/public-api.ts', '');
+      writeJson(tree, 'angular.json', {
+        $schema: './node_modules/@angular/cli/lib/config/schema.json',
+        version: 1,
+        defaultProject: 'lib1',
+        newProjectRoot: 'projects',
+        projects: {
+          lib1: {
+            root: 'projects/lib1',
+            sourceRoot: 'projects/lib1/src',
+            projectType: 'library',
+            architect: {
+              build: {
+                builder: '@angular-devkit/build-angular:ng-packagr',
+                options: { tsConfig: 'projects/lib1/tsconfig.lib.json' },
+              },
+              test: {
+                builder: '@angular-devkit/build-angular:karma',
+                options: { tsConfig: 'projects/lib1/tsconfig.spec.json' },
+              },
+            },
+          },
+        },
+      });
+
+      await migrateFromAngularCli(tree, {});
+
+      expect(tree.exists('apps/.gitkeep')).toBe(true);
+    });
+
+    it('should not generate .gitkeep file in apps directory when there is at least one application', async () => {
+      await migrateFromAngularCli(tree, {});
+
+      expect(tree.exists('apps/.gitkeep')).toBe(false);
+    });
+
+    it('should generate .gitkeep file in libs directory when there are no libraries', async () => {
+      await migrateFromAngularCli(tree, {});
+
+      expect(tree.exists('libs/.gitkeep')).toBe(true);
+    });
+
+    it('should not generate .gitkeep file in libs directory when there is at least one library', async () => {
+      tree.write('projects/lib1/README.md', '');
+      tree.write('projects/lib1/src/public-api.ts', '');
+      writeJson(tree, 'angular.json', {
+        $schema: './node_modules/@angular/cli/lib/config/schema.json',
+        version: 1,
+        defaultProject: 'app1',
+        newProjectRoot: 'projects',
+        projects: {
+          app1: {
+            root: '',
+            sourceRoot: 'src',
+            projectType: 'application',
+            architect: {
+              build: {
+                builder: '@angular-devkit/build-angular:browser',
+                options: { tsConfig: 'tsconfig.app.json' },
+              },
+              test: {
+                builder: '@angular-devkit/build-angular:karma',
+                options: { tsConfig: 'tsconfig.spec.json' },
+              },
+              e2e: {
+                builder: '@angular-devkit/build-angular:protractor',
+                options: { protractorConfig: 'e2e/protractor.conf.js' },
+              },
+            },
+          },
+          lib1: {
+            root: 'projects/lib1',
+            sourceRoot: 'projects/lib1/src',
+            projectType: 'library',
+            architect: {
+              build: {
+                builder: '@angular-devkit/build-angular:ng-packagr',
+                options: { tsConfig: 'projects/lib1/tsconfig.lib.json' },
+              },
+              test: {
+                builder: '@angular-devkit/build-angular:karma',
+                options: { tsConfig: 'projects/lib1/tsconfig.spec.json' },
+              },
+            },
+          },
+        },
+      });
+
+      await migrateFromAngularCli(tree, {});
+
+      expect(tree.exists('libs/.gitkeep')).toBe(false);
+    });
+
     it('should create a root eslint config', async () => {
       await migrateFromAngularCli(tree, {});
 
