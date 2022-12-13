@@ -6,15 +6,7 @@ import {
 import { NormalizedSchema } from '../schema';
 
 export function setDefaults(host: Tree, options: NormalizedSchema) {
-  if (options.skipWorkspaceJson) {
-    return;
-  }
-
   const workspace = readWorkspaceConfiguration(host);
-
-  if (!options.skipDefaultProject && !workspace.defaultProject) {
-    workspace.defaultProject = options.projectName;
-  }
 
   workspace.generators = workspace.generators || {};
   workspace.generators['@nrwl/react'] =
@@ -22,28 +14,15 @@ export function setDefaults(host: Tree, options: NormalizedSchema) {
 
   const prev = { ...workspace.generators['@nrwl/react'] };
 
-  const appDefaults = {
-    style: options.style,
-    linter: options.linter,
-    bundler: options.bundler,
-    ...prev.application,
-  };
-  const componentDefaults = {
-    style: options.style,
-    ...prev.component,
-  };
   const libDefaults = {
-    style: options.style,
-    linter: options.linter,
     ...prev.library,
+    unitTestRunner: prev.library?.unitTestRunner ?? options.unitTestRunner,
   };
 
   workspace.generators = {
     ...workspace.generators,
     '@nrwl/react': {
       ...prev,
-      application: appDefaults,
-      component: componentDefaults,
       library: libDefaults,
     },
   };

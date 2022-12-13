@@ -12,6 +12,7 @@ import {
   tmpProjPath,
   uniq,
   updateFile,
+  updateJson,
   updateProjectConfig,
 } from '@nrwl/e2e/utils';
 import { names } from '@nrwl/devkit';
@@ -64,16 +65,26 @@ describe('Build React libraries and apps', () => {
     };
 
     runCLI(`generate @nrwl/react:app ${app} `);
-
+    updateJson('nx.json', (json) => ({
+      ...json,
+      generators: {
+        ...json.generators,
+        '@nrwl/react': {
+          library: {
+            unitTestRunner: 'none',
+          },
+        },
+      },
+    }));
     // generate buildable libs
     runCLI(
-      `generate @nrwl/react:library ${parentLib} --bundler=rollup --importPath=@${proj}/${parentLib} --no-interactive `
+      `generate @nrwl/react:library ${parentLib} --bundler=rollup --importPath=@${proj}/${parentLib} --no-interactive --unitTestRunner=jest`
     );
     runCLI(
-      `generate @nrwl/react:library ${childLib} --bundler=rollup --importPath=@${proj}/${childLib} --no-interactive `
+      `generate @nrwl/react:library ${childLib} --bundler=rollup --importPath=@${proj}/${childLib} --no-interactive --unitTestRunner=jest`
     );
     runCLI(
-      `generate @nrwl/react:library ${childLib2} --bundler=rollup --importPath=@${proj}/${childLib2} --no-interactive `
+      `generate @nrwl/react:library ${childLib2} --bundler=rollup --importPath=@${proj}/${childLib2} --no-interactive --unitTestRunner=jest`
     );
 
     createDep(parentLib, [childLib, childLib2]);
@@ -178,7 +189,7 @@ export async function h() { return 'c'; }
       // Setup
       const myLib = uniq('my-lib');
       runCLI(
-        `generate @nrwl/react:library ${myLib} --bundler=rollup --publishable --importPath="@mproj/${myLib}" --no-interactive`
+        `generate @nrwl/react:library ${myLib} --bundler=rollup --publishable --importPath="@mproj/${myLib}" --no-interactive --unitTestRunner=jest`
       );
 
       /**
@@ -237,7 +248,7 @@ export async function h() { return 'c'; }
       const libName = uniq('lib');
 
       runCLI(
-        `generate @nrwl/react:lib ${libName} --bundler=rollup --importPath=@${proj}/${libName} --no-interactive`
+        `generate @nrwl/react:lib ${libName} --bundler=rollup --importPath=@${proj}/${libName} --no-interactive --unitTestRunner=jest`
       );
 
       const mainPath = `libs/${libName}/src/lib/${libName}.tsx`;
@@ -306,7 +317,7 @@ describe('Build React applications and libraries with Vite', () => {
     checkFilesExist(`dist/apps/${viteApp}/index.html`);
 
     runCLI(
-      `generate @nrwl/react:lib ${viteLib} --bundler=vite --inSourceTests --no-interactive`
+      `generate @nrwl/react:lib ${viteLib} --bundler=vite --inSourceTests --unitTestRunner=vitest --no-interactive`
     );
     expect(() => {
       checkFilesExist(`libs/${viteLib}/src/lib/${viteLib}.spec.tsx`);
@@ -346,7 +357,7 @@ describe('Build React applications and libraries with Vite', () => {
     const viteLib = uniq('vitelib');
 
     runCLI(
-      `generate @nrwl/react:lib ${viteLib} --bundler=vite --no-interactive`
+      `generate @nrwl/react:lib ${viteLib} --bundler=vite --no-interactive --unit-test-runner=none`
     );
 
     const packageJson = readJson('package.json');
@@ -365,7 +376,9 @@ describe('Build React applications and libraries with Vite', () => {
 
     // Convert non-buildable lib to buildable one
     const nonBuildableLib = uniq('nonbuildablelib');
-    runCLI(`generate @nrwl/react:lib ${nonBuildableLib} --no-interactive`);
+    runCLI(
+      `generate @nrwl/react:lib ${nonBuildableLib} --no-interactive --unitTestRunner=none`
+    );
     runCLI(
       `generate @nrwl/vite:configuration ${nonBuildableLib} --uiFramework=react --no-interactive`
     );
