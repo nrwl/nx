@@ -1,8 +1,8 @@
-import { getUpdatedPackageJsonContent } from './update-package-json';
+import { updatePackageJsonContent } from './update-package-json';
 
 describe('getUpdatedPackageJsonContent', () => {
   it('should update fields for commonjs only (default)', () => {
-    const json = getUpdatedPackageJsonContent(
+    const json = updatePackageJsonContent(
       {
         name: 'test',
         version: '0.0.1',
@@ -23,7 +23,7 @@ describe('getUpdatedPackageJsonContent', () => {
   });
 
   it('should update fields for esm only', () => {
-    const json = getUpdatedPackageJsonContent(
+    const json = updatePackageJsonContent(
       {
         name: 'test',
         version: '0.0.1',
@@ -47,7 +47,7 @@ describe('getUpdatedPackageJsonContent', () => {
   });
 
   it('should update fields for commonjs + esm', () => {
-    const json = getUpdatedPackageJsonContent(
+    const json = updatePackageJsonContent(
       {
         name: 'test',
         version: '0.0.1',
@@ -70,7 +70,7 @@ describe('getUpdatedPackageJsonContent', () => {
   });
 
   it('should support skipping types', () => {
-    const json = getUpdatedPackageJsonContent(
+    const json = updatePackageJsonContent(
       {
         name: 'test',
         version: '0.0.1',
@@ -91,7 +91,7 @@ describe('getUpdatedPackageJsonContent', () => {
   });
 
   it('should support generated exports field', () => {
-    const json = getUpdatedPackageJsonContent(
+    const json = updatePackageJsonContent(
       {
         name: 'test',
         version: '0.0.1',
@@ -119,7 +119,7 @@ describe('getUpdatedPackageJsonContent', () => {
   });
 
   it('should support different CJS file extension', () => {
-    const json = getUpdatedPackageJsonContent(
+    const json = updatePackageJsonContent(
       {
         name: 'test',
         version: '0.0.1',
@@ -147,7 +147,7 @@ describe('getUpdatedPackageJsonContent', () => {
   });
 
   it('should not set types when { skipTypings: true }', () => {
-    const json = getUpdatedPackageJsonContent(
+    const json = updatePackageJsonContent(
       {
         name: 'test',
         version: '0.0.1',
@@ -170,7 +170,7 @@ describe('getUpdatedPackageJsonContent', () => {
   it('should support different exports field shape', () => {
     // exports: string
     expect(
-      getUpdatedPackageJsonContent(
+      updatePackageJsonContent(
         {
           name: 'test',
           version: '0.0.1',
@@ -196,7 +196,7 @@ describe('getUpdatedPackageJsonContent', () => {
 
     // exports: { '.': string }
     expect(
-      getUpdatedPackageJsonContent(
+      updatePackageJsonContent(
         {
           name: 'test',
           version: '0.0.1',
@@ -226,7 +226,7 @@ describe('getUpdatedPackageJsonContent', () => {
 
     // exports: { './custom': string }
     expect(
-      getUpdatedPackageJsonContent(
+      updatePackageJsonContent(
         {
           name: 'test',
           version: '0.0.1',
