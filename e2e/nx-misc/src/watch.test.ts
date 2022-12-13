@@ -8,6 +8,7 @@ import {
   tmpProjPath,
   getStrippedEnvironmentVariables,
   updateJson,
+  isVerbose,
 } from '@nrwl/e2e/utils';
 import { exec, spawn } from 'child_process';
 
@@ -25,7 +26,9 @@ describe('Nx Commands', () => {
   afterAll(() => cleanupProject());
 
   it('should watch for project changes', async () => {
-    const getOutput = await runWatch(`${proj1} -- "echo &1"`);
+    const getOutput = await runWatch(
+      `--projects=${proj1} -- echo \\$NX_PROJECT_NAME`
+    );
     createFile(`libs/${proj1}/newfile.txt`, 'content');
     createFile(`libs/${proj2}/newfile.txt`, 'content');
     createFile(`libs/${proj1}/newfile2.txt`, 'content');
@@ -36,7 +39,7 @@ describe('Nx Commands', () => {
   });
 
   it('should watch for all projects and output the project name', async () => {
-    const getOutput = await runWatch(`--all -- "echo &1"`);
+    const getOutput = await runWatch(`--all -- echo \\$NX_PROJECT_NAME`);
     createFile(`libs/${proj1}/newfile.txt`, 'content');
     createFile(`libs/${proj2}/newfile.txt`, 'content');
     createFile(`libs/${proj1}/newfile2.txt`, 'content');
@@ -47,22 +50,20 @@ describe('Nx Commands', () => {
   });
 
   it('should watch for all project changes and output the file name changes', async () => {
-    const getOutput = await runWatch(`--all -- "echo &2"`);
+    const getOutput = await runWatch(`--all -- echo \\$NX_FILE_CHANGES`);
     createFile(`libs/${proj1}/newfile.txt`, 'content');
     createFile(`libs/${proj2}/newfile.txt`, 'content');
     createFile(`libs/${proj1}/newfile2.txt`, 'content');
     createFile(`newfile2.txt`, 'content');
 
     expect(await getOutput()).toEqual([
-      `libs/${proj1}/newfile.txt`,
-      `libs/${proj1}/newfile2.txt`,
-      `libs/${proj2}/newfile.txt`,
+      `libs/${proj1}/newfile.txt libs/${proj1}/newfile2.txt libs/${proj2}/newfile.txt`,
     ]);
   });
 
   it('should watch for global workspace file changes', async () => {
     const getOutput = await runWatch(
-      `--all --includeGlobalWorkspaceFiles -- "echo &2"`
+      `--all --includeGlobalWorkspaceFiles -- echo \\$NX_FILE_CHANGES`
     );
     createFile(`libs/${proj1}/newfile.txt`, 'content');
     createFile(`libs/${proj2}/newfile.txt`, 'content');
@@ -70,16 +71,13 @@ describe('Nx Commands', () => {
     createFile(`newfile2.txt`, 'content');
 
     expect(await getOutput()).toEqual([
-      `libs/${proj1}/newfile.txt`,
-      `libs/${proj1}/newfile2.txt`,
-      `libs/${proj2}/newfile.txt`,
-      'newfile2.txt',
+      `libs/${proj1}/newfile.txt libs/${proj1}/newfile2.txt libs/${proj2}/newfile.txt newfile2.txt`,
     ]);
   });
 
   it('should watch selected projects only', async () => {
     const getOutput = await runWatch(
-      `--projects=${proj1},${proj3} -- "echo &1"`
+      `--projects=${proj1},${proj3} -- echo \\$NX_PROJECT_NAME`
     );
     createFile(`libs/${proj1}/newfile.txt`, 'content');
     createFile(`libs/${proj2}/newfile.txt`, 'content');
@@ -97,7 +95,7 @@ describe('Nx Commands', () => {
     });
 
     const getOutput = await runWatch(
-      `${proj3} --includeDependentProjects -- "echo &1"`
+      `--projects=${proj3} --includeDependentProjects -- echo \\$NX_PROJECT_NAME`
     );
     createFile(`libs/${proj1}/newfile.txt`, 'content');
     createFile(`libs/${proj2}/newfile.txt`, 'content');
@@ -120,21 +118,24 @@ async function wait(timeout = 200) {
 async function runWatch(command: string) {
   const output = [];
   const pm = getPackageManagerCommand();
+  const [pmx, nx] = pm.runNx.split(' ');
+  const runCommand = `${pmx} -c '${nx} watch --verbose ${command}'`;
+  isVerbose() && console.log(runCommand);
   return new Promise<(timeout?: number) => Promise<string[]>>((resolve) => {
-    const p = spawn(`${pm.runNx} watch --verbose ${command}`, {
+    const p = spawn(runCommand, {
       cwd: tmpProjPath(),
       env: {
         CI: 'true',
         ...getStrippedEnvironmentVariables(),
         FORCE_COLOR: 'false',
       },
-
       shell: true,
       stdio: 'pipe',
     });
 
     p.stdout?.on('data', (data) => {
       const s = data.toString().trim();
+      isVerbose() && console.log(s);
       if (s.includes('watch process waiting')) {
         resolve(async (timeout = 6000) => {
           await wait(timeout);

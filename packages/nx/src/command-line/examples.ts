@@ -342,18 +342,21 @@ export const examples: Record<string, Example[]> = {
   ],
   watch: [
     {
-      command: 'watch app -- "echo &1; echo &2"',
+      command:
+        'watch --projects=app -- echo \\$NX_PROJECT_NAME \\$NX_FILE_CHANGES',
       description:
-        'Watch the "app" project and echo the project name and the file that changed',
+        'Watch the "app" project and echo the project name and the files that changed',
     },
     {
-      command: 'watch --projects=app1,app2 --includeDependencies -- "echo &1"',
+      command:
+        'watch --projects=app1,app2 --includeDependencies -- echo \\$NX_PROJECT_NAME',
       description:
         'Watch "app1" and "app2" and echo the project name whenever a specified project or its dependencies change',
     },
     {
-      command: 'watch --all --includeGlobalWorkspaceFiles -- "echo &1"',
-      description: 'Watch all projects and all files in the workspace',
+      command: 'watch --all -- echo \\$NX_PROJECT_NAME',
+      description:
+        'Watch all projects (including newly created projects) in the workspace',
     },
   ],
 };

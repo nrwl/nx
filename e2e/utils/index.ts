@@ -80,7 +80,7 @@ export const e2eRoot = isCI
   ? dirSync({ prefix: 'nx-e2e-' }).name
   : '/tmp/nx-e2e';
 
-function isVerbose() {
+export function isVerbose() {
   return (
     process.env.NX_VERBOSE_LOGGING === 'true' ||
     process.argv.includes('--verbose')

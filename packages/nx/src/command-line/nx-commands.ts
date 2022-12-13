@@ -383,7 +383,7 @@ export const commandsObject = yargs
     },
   })
   .command({
-    command: 'watch [project]',
+    command: 'watch',
     describe: 'Watch for changes within projects, and execute commands',
     builder: (yargs) =>
       linkToNxDevAndExamples(withWatchOptions(yargs), 'watch'),
@@ -943,10 +943,6 @@ function withWatchOptions(yargs: yargs.Argv) {
       'strip-dashed': true,
       'populate--': true,
     })
-    .positional('project', {
-      describe: 'The project to watch',
-      type: 'string',
-    })
     .option('projects', {
       type: 'array',
       string: true,
@@ -968,23 +964,31 @@ function withWatchOptions(yargs: yargs.Argv) {
       description:
         'Include global workspace files that are not part of a project. For example, the root eslint, or tsconfig file.',
       alias: 'g',
+      hidden: true,
     })
-    .option('callback', { type: 'string', hidden: true })
+    .option('command', { type: 'string', hidden: true })
     .option('verbose', {
       type: 'boolean',
       description:
         'Run watch mode in verbose mode, where commands are logged before execution.',
     })
+    .conflicts({
+      all: 'projects',
+    })
     .check((args) => {
-      if ((args.project || args.projects) && args.all) {
-        throw Error('Cannot use --all with a project or --projects');
+      if (!args.all && !args.projects) {
+        throw Error('Please specify either --all or --projects');
       }
 
       return true;
     })
     .middleware((args) => {
       const { '--': underscore } = args;
-      args.callback = underscore?.[0];
+      if (underscore && Array.isArray(underscore)) {
+        args.command = (underscore as string[]).join(' ');
+      } else {
+        throw Error('No command specified for watch mode.');
+      }
     }, true);
 }
 

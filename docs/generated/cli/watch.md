@@ -10,29 +10,29 @@ Watch for changes within projects, and execute commands
 ## Usage
 
 ```terminal
-nx watch [project]
+nx watch
 ```
 
 Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpm nx`.
 
 ### Examples
 
-Watch the "app" project and echo the project name and the file that changed:
+Watch the "app" project and echo the project name and the files that changed:
 
 ```terminal
- nx watch app -- "echo &1; echo &2"
+ nx watch --projects=app -- echo \$NX_PROJECT_NAME \$NX_FILE_CHANGES
 ```
 
 Watch "app1" and "app2" and echo the project name whenever a specified project or its dependencies change:
 
 ```terminal
- nx watch --projects=app1,app2 --includeDependencies -- "echo &1"
+ nx watch --projects=app1,app2 --includeDependencies -- echo \$NX_PROJECT_NAME
 ```
 
-Watch all projects and all files in the workspace:
+Watch all projects (including newly created projects) in the workspace:
 
 ```terminal
- nx watch --all --includeGlobalWorkspaceFiles -- "echo &1"
+ nx watch --all -- echo \$NX_PROJECT_NAME
 ```
 
 ## Options
@@ -54,18 +54,6 @@ Show help
 Type: `boolean`
 
 When watching selected projects, include dependent projects as well.
-
-### includeGlobalWorkspaceFiles
-
-Type: `boolean`
-
-Include global workspace files that are not part of a project. For example, the root eslint, or tsconfig file.
-
-### project
-
-Type: `string`
-
-The project to watch
 
 ### projects
 
