@@ -90,6 +90,9 @@ describe('app', () => {
       expect(appTree.exists('apps/my-app/.browserslistrc')).toBeTruthy();
       expect(appTree.exists('apps/my-app/src/main.tsx')).toBeTruthy();
       expect(appTree.exists('apps/my-app/src/app/app.tsx')).toBeTruthy();
+      expect(
+        appTree.read('apps/my-app/src/app/app.tsx', 'utf-8')
+      ).toMatchSnapshot();
       expect(appTree.exists('apps/my-app/src/app/app.spec.tsx')).toBeTruthy();
       expect(appTree.exists('apps/my-app/src/app/app.module.css')).toBeTruthy();
 
@@ -271,6 +274,9 @@ describe('app', () => {
       appTree.read('apps/my-dir/my-app/src/app/app.tsx').toString()
     ).toContain(`<NxWelcome title="my-dir-my-app"/>`);
     expect(
+      appTree.read('apps/my-dir/my-app/src/app/app.tsx', 'utf-8')
+    ).toMatchSnapshot();
+    expect(
       appTree.read('apps/my-dir/my-app/src/app/nx-welcome.tsx').toString()
     ).toContain('Hello there');
   });
@@ -308,14 +314,6 @@ describe('app', () => {
 
     expect(appTree.read('apps/my-app/jest.config.ts').toString()).toContain(
       `moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],`
-    );
-  });
-
-  it('should setup jest with babel-jest support', async () => {
-    await applicationGenerator(appTree, { ...schema, name: 'my-app' });
-
-    expect(appTree.read('apps/my-app/jest.config.ts').toString()).toContain(
-      "['babel-jest', { presets: ['@nrwl/react/babel'] }]"
     );
   });
 
@@ -781,6 +779,20 @@ describe('app', () => {
           style: 'styled-components',
         },
       });
+    });
+  });
+
+  describe('--skipNxWelcomeComponent', () => {
+    it('should create default application without Nx welcome component', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        name: 'plain',
+        skipNxWelcomeComponent: true,
+      });
+      expect(appTree.exists('apps/plain/src/app/nx-welcome.tsx')).toBeFalsy();
+      expect(
+        appTree.read('apps/plain/src/app/app.tsx', 'utf-8')
+      ).toMatchSnapshot();
     });
   });
 

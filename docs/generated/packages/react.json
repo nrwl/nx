@@ -234,6 +234,11 @@
             "type": "boolean",
             "default": false,
             "hidden": true
+          },
+          "skipNxWelcomeComponent": {
+            "description": "Whether to skip the adding of a Nx welcome component to the application.",
+            "type": "boolean",
+            "default": false
           }
         },
         "required": [],
@@ -1056,6 +1061,11 @@
           "devServerPort": {
             "type": "number",
             "description": "The port for the dev server of the remote app."
+          },
+          "skipNxWelcomeComponent": {
+            "description": "Whether to skip the adding of a Nx welcome component to the application.",
+            "type": "boolean",
+            "default": false
           }
         },
         "required": ["name"],
