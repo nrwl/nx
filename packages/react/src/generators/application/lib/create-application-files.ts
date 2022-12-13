@@ -1,11 +1,5 @@
 import { NormalizedSchema } from '../schema';
-import {
-  names,
-  offsetFromRoot,
-  Tree,
-  toJS,
-  generateFiles,
-} from '@nrwl/devkit';
+import { names, offsetFromRoot, Tree, toJS, generateFiles } from '@nrwl/devkit';
 import { join } from 'path';
 import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 import { createTsConfig } from '../../../utils/create-ts-config';
