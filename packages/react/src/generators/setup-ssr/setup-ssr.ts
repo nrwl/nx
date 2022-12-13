@@ -95,6 +95,7 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
   projectConfig.targets = {
     ...projectConfig.targets,
     server: {
+      dependsOn: ['build'],
       executor: '@nrwl/webpack:webpack',
       outputs: ['{options.outputPath}'],
       defaultConfiguration: 'production',

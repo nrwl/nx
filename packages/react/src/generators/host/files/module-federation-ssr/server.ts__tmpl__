@@ -8,7 +8,7 @@ const port = process.env['PORT'] || 4200;
 const app = express();
 
 const browserDist = path.join(process.cwd(), '<%= browserBuildOutputPath %>');
-const indexPath =path.join(browserDist, 'index.html');
+const indexPath = path.join(browserDist, 'index.html');
 
 app.use(cors());
 
@@ -22,7 +22,7 @@ app.get(
 app.use('*', handleRequest(indexPath));
 
 const server = app.listen(port, () => {
-  // Server has started
+  console.log(`Express server listening on http://localhost:${port}`);
 });
 
 server.on('error', console.error);

@@ -4,6 +4,7 @@ import {
   generateFiles,
   joinPathFragments,
   readProjectConfiguration,
+  updateProjectConfiguration,
 } from '@nrwl/devkit';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
@@ -27,8 +28,25 @@ export async function setupSsrForRemote(
       ...options,
       appName,
       tmpl: '',
+      browserBuildOutputPath: project.targets.build.options.outputPath,
     }
   );
+
+  // For hosts to use when running remotes in static mode.
+  const originalOutputPath = project.targets.build?.options?.outputPath;
+  project.targets['serve-static'] = {
+    dependsOn: ['build', 'server'],
+    executor: 'nx:run-commands',
+    defaultConfiguration: 'development',
+    options: {
+      command: `PORT=${options.devServerPort ?? 4200} node ${joinPathFragments(
+        originalOutputPath,
+        'server',
+        'main.js'
+      )}`,
+    },
+  };
+  updateProjectConfiguration(tree, appName, project);
 
   const installTask = addDependenciesToPackageJson(
     tree,
