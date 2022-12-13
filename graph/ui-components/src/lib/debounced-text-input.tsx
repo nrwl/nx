@@ -1,5 +1,5 @@
 import { KeyboardEvent, useEffect, useState } from 'react';
-import { useDebounce } from '../hooks/use-debounce';
+import { useDebounce } from './use-debounce';
 import { BackspaceIcon, FunnelIcon } from '@heroicons/react/24/outline';
 
 export interface DebouncedTextInputProps {
@@ -83,5 +83,3 @@ export function DebouncedTextInput({
     </form>
   );
 }
-
-export default DebouncedTextInput;

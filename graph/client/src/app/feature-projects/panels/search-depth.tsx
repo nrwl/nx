@@ -76,5 +76,3 @@ export const SearchDepth = memo(
     );
   }
 );
-
-export default SearchDepth;

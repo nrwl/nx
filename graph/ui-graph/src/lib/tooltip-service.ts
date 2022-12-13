@@ -1,10 +1,11 @@
-import { getGraphService } from '../machines/graph.service';
-
 import { VirtualElement } from '@floating-ui/react-dom';
-import { ProjectNodeToolTipProps } from './project-node-tooltip';
-import { ProjectEdgeNodeTooltipProps } from './project-edge-tooltip';
-import { GraphService } from '@nrwl/graph/ui-graph';
-import { TaskNodeTooltipProps } from './task-node-tooltip';
+import { GraphService } from './graph';
+import {
+  TaskNodeTooltipProps,
+  ProjectNodeToolTipProps,
+  ProjectEdgeNodeTooltipProps,
+} from '@nrwl/graph/ui-tooltips';
+import { TooltipEvent } from './interfaces';
 
 export class GraphTooltipService {
   private subscribers: Set<Function> = new Set();
@@ -15,11 +16,15 @@ export class GraphTooltipService {
         case 'GraphRegenerated':
           this.hideAll();
           break;
+        case 'BackgroundClick':
+          this.hideAll();
+          break;
         case 'ProjectNodeClick':
           this.openProjectNodeToolTip(event.ref, {
             id: event.data.id,
             tags: event.data.tags,
             type: event.data.type,
+            description: event.data.description,
           });
           break;
         case 'TaskNodeClick':
@@ -39,18 +44,7 @@ export class GraphTooltipService {
     });
   }
 
-  currentTooltip:
-    | {
-        ref: VirtualElement;
-        type: 'projectNode';
-        props: ProjectNodeToolTipProps;
-      }
-    | { ref: VirtualElement; type: 'taskNode'; props: TaskNodeTooltipProps }
-    | {
-        ref: VirtualElement;
-        type: 'projectEdge';
-        props: ProjectEdgeNodeTooltipProps;
-      };
+  currentTooltip: TooltipEvent;
 
   openProjectNodeToolTip(ref: VirtualElement, props: ProjectNodeToolTipProps) {
     this.currentTooltip = { type: 'projectNode', ref, props };
@@ -83,15 +77,4 @@ export class GraphTooltipService {
     this.currentTooltip = null;
     this.broadcastChange();
   }
-}
-
-let tooltipService: GraphTooltipService;
-
-export function getTooltipService(): GraphTooltipService {
-  if (!tooltipService) {
-    const graph = getGraphService();
-    tooltipService = new GraphTooltipService(graph);
-  }
-
-  return tooltipService;
 }

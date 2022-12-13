@@ -5,7 +5,7 @@ export class ParentNode {
     private config: { id: string; parentId: string; label: string }
   ) {}
 
-  getCytoscapeNodeDef(): cy.NodeDefinition {
+  getCytoscapeNodeDef(): cy.NodeDefinition & { pannable?: boolean } {
     return {
       group: 'nodes',
       classes: 'parentNode',

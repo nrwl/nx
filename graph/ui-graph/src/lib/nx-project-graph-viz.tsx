@@ -5,8 +5,18 @@ import type {
 } from 'nx/src/config/project-graph';
 import { useEffect, useRef, useState } from 'react';
 import { GraphService } from './graph';
+import { useSyncExternalStore } from 'use-sync-external-store/shim';
+import {
+  ProjectEdgeNodeTooltip,
+  ProjectNodeToolTip,
+  TaskNodeTooltip,
+  Tooltip,
+} from '@nrwl/graph/ui-tooltips';
+import { GraphTooltipService } from './tooltip-service';
+import { TooltipEvent } from './interfaces';
 
 type Theme = 'light' | 'dark' | 'system';
+
 export interface GraphUiGraphProps {
   projects: ProjectGraphProjectNode[];
   groupByFolder: boolean;
@@ -15,6 +25,7 @@ export interface GraphUiGraphProps {
   affectedProjectIds: string[];
   theme: Theme;
   height: string;
+  enableTooltips: boolean;
 }
 
 function resolveTheme(theme: Theme): 'dark' | 'light' {
@@ -25,6 +36,7 @@ function resolveTheme(theme: Theme): 'dark' | 'light' {
     return darkMedia.matches ? 'dark' : 'light';
   }
 }
+
 export function NxProjectGraphViz({
   projects,
   groupByFolder,
@@ -33,9 +45,12 @@ export function NxProjectGraphViz({
   affectedProjectIds,
   theme,
   height,
+  enableTooltips,
 }: GraphUiGraphProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [graph, setGraph] = useState<GraphService>(null);
+  const [currentTooltip, setCurrenTooltip] = useState<TooltipEvent>(null);
+
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>();
 
   const newlyResolvedTheme = resolveTheme(theme);
@@ -47,6 +62,7 @@ export function NxProjectGraphViz({
       graph.theme = newlyResolvedTheme;
     }
   }
+
   useEffect(() => {
     if (containerRef.current !== null) {
       import('./graph')
@@ -68,18 +84,48 @@ export function NxProjectGraphViz({
             collapseEdges: false,
           });
           graph.handleProjectEvent({ type: 'notifyGraphShowAllProjects' });
-          setGraph(graph);
+
+          if (enableTooltips) {
+            const tooltipService = new GraphTooltipService(graph);
+            tooltipService.subscribe((tooltip) => {
+              setCurrenTooltip(tooltip);
+            });
+          }
         });
     }
   }, []);
 
+  let tooltipToRender;
+  if (currentTooltip) {
+    switch (currentTooltip.type) {
+      case 'projectNode':
+        tooltipToRender = <ProjectNodeToolTip {...currentTooltip.props} />;
+        break;
+      case 'projectEdge':
+        tooltipToRender = <ProjectEdgeNodeTooltip {...currentTooltip.props} />;
+        break;
+      case 'taskNode':
+        tooltipToRender = <TaskNodeTooltip {...currentTooltip.props} />;
+        break;
+    }
+  }
+
   return (
-    <div
-      ref={containerRef}
-      className="w-full"
-      style={{ width: '100%', height }}
-    ></div>
+    <>
+      <div
+        ref={containerRef}
+        className="w-full"
+        style={{ width: '100%', height }}
+      ></div>
+      {tooltipToRender ? (
+        <Tooltip
+          content={tooltipToRender}
+          open={true}
+          reference={currentTooltip.ref}
+          placement="top"
+          openAction="manual"
+        ></Tooltip>
+      ) : null}
+    </>
   );
 }
-
-export default NxProjectGraphViz;

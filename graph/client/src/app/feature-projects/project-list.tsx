@@ -18,7 +18,7 @@ import {
   parseParentDirectoriesFromFilePath,
   useRouteConstructor,
 } from '../util';
-import ExperimentalFeature from '../ui-components/experimental-feature';
+import { ExperimentalFeature } from '../ui-components/experimental-feature';
 import { TracingAlgorithmType } from './machines/interfaces';
 import { getProjectGraphService } from '../machines/get-services';
 import { Link, useNavigate } from 'react-router-dom';
@@ -317,5 +317,3 @@ export function ProjectList() {
     </div>
   );
 }
-
-export default ProjectList;

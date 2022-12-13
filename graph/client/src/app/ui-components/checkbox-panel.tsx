@@ -38,5 +38,3 @@ export const CheckboxPanel = memo(
     );
   }
 );
-
-export default CheckboxPanel;

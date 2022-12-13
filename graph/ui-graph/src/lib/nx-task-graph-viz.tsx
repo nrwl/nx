@@ -2,7 +2,14 @@
 import type { ProjectGraphProjectNode } from 'nx/src/config/project-graph';
 import { useEffect, useRef, useState } from 'react';
 import { GraphService } from './graph';
-import { TaskGraphRecord } from './interfaces';
+import { TaskGraphRecord, TooltipEvent } from './interfaces';
+import {
+  ProjectEdgeNodeTooltip,
+  ProjectNodeToolTip,
+  TaskNodeTooltip,
+  Tooltip,
+} from '@nrwl/graph/ui-tooltips';
+import { GraphTooltipService } from './tooltip-service';
 
 type Theme = 'light' | 'dark' | 'system';
 
@@ -12,6 +19,7 @@ export interface TaskGraphUiGraphProps {
   taskId: string;
   theme: Theme;
   height: string;
+  enableTooltips: boolean;
 }
 
 function resolveTheme(theme: Theme): 'dark' | 'light' {
@@ -29,9 +37,12 @@ export function NxTaskGraphViz({
   taskGraphs,
   theme,
   height,
+  enableTooltips,
 }: TaskGraphUiGraphProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [graph, setGraph] = useState<GraphService>(null);
+  const [currentTooltip, setCurrenTooltip] = useState<TooltipEvent>(null);
+
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>();
 
   const newlyResolvedTheme = resolveTheme(theme);
@@ -64,17 +75,42 @@ export function NxTaskGraphViz({
             taskIds: [taskId],
           });
           setGraph(graph);
+
+          if (enableTooltips) {
+            const tooltipService = new GraphTooltipService(graph);
+            tooltipService.subscribe((tooltip) => {
+              setCurrenTooltip(tooltip);
+            });
+          }
         });
     }
   }, []);
 
+  let tooltipToRender;
+  if (currentTooltip) {
+    switch (currentTooltip.type) {
+      case 'taskNode':
+        tooltipToRender = <TaskNodeTooltip {...currentTooltip.props} />;
+        break;
+    }
+  }
+
   return (
-    <div
-      ref={containerRef}
-      className="w-full"
-      style={{ width: '100%', height }}
-    ></div>
+    <>
+      <div
+        ref={containerRef}
+        className="w-full"
+        style={{ width: '100%', height }}
+      ></div>
+      {tooltipToRender ? (
+        <Tooltip
+          content={tooltipToRender}
+          open={true}
+          reference={currentTooltip.ref}
+          placement="top"
+          openAction="manual"
+        ></Tooltip>
+      ) : null}
+    </>
   );
 }
-
-export default NxTaskGraphViz;

@@ -111,5 +111,3 @@ export const TracingPanel = memo(
     );
   }
 );
-
-export default TracingPanel;

@@ -55,12 +55,13 @@ export function Tooltip({
     ],
   });
 
-  const staticSide = {
-    top: 'bottom',
-    right: 'left',
-    bottom: 'top',
-    left: 'right',
-  }[finalPlacement.split('-')[0]];
+  const staticSide: string =
+    {
+      top: 'bottom',
+      right: 'left',
+      bottom: 'top',
+      left: 'right',
+    }[finalPlacement.split('-')[0]] || 'bottom';
 
   useLayoutEffect(() => {
     if (!!externalReference) {
