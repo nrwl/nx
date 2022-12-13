@@ -1,6 +1,6 @@
 // source: https://github.com/Myrmod/vitejs-theming/blob/master/build-plugins/rollup/replace-files.js
 
-import fs from 'fs';
+import * as fs from 'fs';
 import { resolve } from 'path';
 
 /**
