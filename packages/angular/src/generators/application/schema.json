@@ -152,10 +152,10 @@
       "type": "boolean",
       "default": false
     },
-    "addNXWelcomeComponent": {
-      "description": "Whether to add a NX welcome component to the application.",
+    "skipNXWelcomeComponent": {
+      "description": "Whether to skip the adding of a NX welcome component to the application.",
       "type": "boolean",
-      "default": true
+      "default": false
     }
   },
   "additionalProperties": false,

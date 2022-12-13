@@ -467,7 +467,7 @@ describe('app', () => {
     });
 
     it('should skip Nx specific `nx-welcome.component.ts` file creation', async () => {
-      await generateApp(appTree, 'plain', { addNXWelcomeComponent: false });
+      await generateApp(appTree, 'plain', { skipNXWelcomeComponent: true });
 
       expect(
         appTree.read('apps/plain/src/app/app.module.ts', 'utf-8')

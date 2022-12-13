@@ -26,5 +26,5 @@ export interface Schema {
   skipPackageJson?: boolean;
   skipDefaultProject?: boolean;
   standalone?: boolean;
-  addNXWelcomeComponent?: boolean;
+  skipNXWelcomeComponent?: boolean;
 }
