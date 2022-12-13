@@ -49,7 +49,14 @@ Imagine the following project graph with these packages:
     "lib2": [],
     "lib3": []
   },
-  "affectedProjectIds": []
+  "workspaceLayout": {
+    "appsDir": "apps",
+    "libsDir": "libs"
+  },
+  "affectedProjectIds": [],
+  "focus": null,
+  "groupByFolder": false,
+  "exclude": []
 }
 ```
 
