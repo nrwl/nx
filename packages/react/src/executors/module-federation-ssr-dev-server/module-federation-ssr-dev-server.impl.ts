@@ -1,4 +1,9 @@
-import { ExecutorContext, logger, runExecutor } from '@nrwl/devkit';
+import {
+  ExecutorContext,
+  logger,
+  runExecutor,
+  workspaceRoot,
+} from '@nrwl/devkit';
 import ssrDevServerExecutor from '@nrwl/webpack/src/executors/ssr-dev-server/ssr-dev-server.impl';
 import { WebSsrDevServerOptions } from '@nrwl/webpack/src/executors/ssr-dev-server/schema';
 import { join } from 'path';
@@ -7,6 +12,7 @@ import {
   combineAsyncIterableIterators,
   tapAsyncIterable,
 } from '@nrwl/devkit/src/utils/async-iterable';
+import { execSync, fork } from 'child_process';
 
 type ModuleFederationDevServerOptions = WebSsrDevServerOptions & {
   devRemotes?: string | string[];
@@ -18,7 +24,10 @@ export default async function* moduleFederationSsrDevServer(
   options: ModuleFederationDevServerOptions,
   context: ExecutorContext
 ) {
-  let iter = ssrDevServerExecutor(options, context);
+  let iter: AsyncGenerator<any, any, any> = ssrDevServerExecutor(
+    options,
+    context
+  );
   const p = context.workspace.projects[context.projectName];
 
   const moduleFederationConfigPath = join(
@@ -51,20 +60,47 @@ export default async function* moduleFederationSsrDevServer(
   for (const app of knownRemotes) {
     const [appName] = Array.isArray(app) ? app : [app];
     const isDev = devServeApps.includes(appName);
-    iter = combineAsyncIterableIterators(
-      iter,
-      await runExecutor(
-        {
-          project: appName,
-          target: isDev ? 'serve' : 'serve-server',
-          configuration: context.configurationName,
-        },
-        {
-          watch: isDev,
-        },
-        context
-      )
-    );
+    const remoteServeIter = (async function* () {
+      if (isDev) {
+        yield await runExecutor(
+          {
+            project: appName,
+            target: 'serve',
+            configuration: context.configurationName,
+          },
+          {
+            watch: isDev,
+          },
+          context
+        );
+      } else {
+        yield await new Promise((res) => {
+          const remoteProject = context.workspace.projects[appName];
+          const remoteServerOutput = join(
+            workspaceRoot,
+            remoteProject.targets.server.options.outputPath,
+            'main.js'
+          );
+          execSync(
+            `npx nx run ${appName}:server${
+              context.configurationName ? `:${context.configurationName}` : ''
+            }`,
+            { stdio: 'inherit' }
+          );
+          const child = fork(remoteServerOutput, {
+            env: { port: remoteProject.targets['serve-browser'].options.port },
+          });
+
+          child.on('message', (msg) => {
+            if (msg === 'nx.server.ready') {
+              res(true);
+            }
+          });
+        });
+      }
+    })();
+
+    iter = combineAsyncIterableIterators(iter, remoteServeIter);
   }
 
   let numAwaiting = knownRemotes.length + 1; // remotes + host
