@@ -234,6 +234,11 @@
             "type": "boolean",
             "default": false,
             "hidden": true
+          },
+          "addNXWelcomeComponent": {
+            "description": "Whether to add a NX welcome component to the application.",
+            "type": "boolean",
+            "default": true
           }
         },
         "additionalProperties": false,

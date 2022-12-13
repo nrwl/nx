@@ -33,6 +33,7 @@ describe('app', () => {
   beforeEach(() => {
     mockedInstalledCypressVersion.mockReturnValue(10);
     appTree = createTreeWithEmptyV1Workspace();
+    appTree.write('.gitignore', '');
   });
 
   describe('not nested', () => {
@@ -472,6 +473,17 @@ describe('app', () => {
           'utf-8'
         )
       ).toContain('Hello there');
+    });
+
+    it('should skip Nx specific `nx-welcome.component.ts` file creation', async () => {
+      await generateApp(appTree, 'plain', { addNXWelcomeComponent: false });
+
+      expect(
+        appTree.read('apps/plain/src/app/app.module.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        appTree.exists('apps/plain/src/app/nx-welcome.component.ts')
+      ).toBeFalsy();
     });
 
     it('should update the AppComponent spec to target Nx content', async () => {

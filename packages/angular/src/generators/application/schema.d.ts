@@ -27,4 +27,5 @@ export interface Schema {
   skipDefaultProject?: boolean;
   standalone?: boolean;
   rootProject?: boolean;
+  addNXWelcomeComponent?: boolean;
 }
