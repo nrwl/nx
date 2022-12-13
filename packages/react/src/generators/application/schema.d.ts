@@ -32,6 +32,7 @@ export interface Schema {
   rootProject?: boolean;
   bundler?: 'webpack' | 'vite';
   minimal?: boolean;
+  skipNxWelcomeComponent?: boolean;
 }
 
 export interface NormalizedSchema<T extends Schema = Schema> extends T {

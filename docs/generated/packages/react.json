@@ -262,6 +262,11 @@
             "description": "Generate a React app with a minimal setup, no separate test files.",
             "type": "boolean",
             "default": false
+          },
+          "skipNxWelcomeComponent": {
+            "description": "Whether to skip the adding of a Nx welcome component to the application.",
+            "type": "boolean",
+            "default": false
           }
         },
         "required": [],
