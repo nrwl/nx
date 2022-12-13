@@ -983,9 +983,9 @@ function withWatchOptions(yargs: yargs.Argv) {
       return true;
     })
     .middleware((args) => {
-      const { '--': underscore } = args;
-      if (underscore && Array.isArray(underscore)) {
-        args.command = (underscore as string[]).join(' ');
+      const { '--': doubledash } = args;
+      if (doubledash && Array.isArray(doubledash)) {
+        args.command = (doubledash as string[]).join(' ');
       } else {
         throw Error('No command specified for watch mode.');
       }
