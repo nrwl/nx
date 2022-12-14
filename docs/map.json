@@ -925,12 +925,29 @@
             {
               "name": "Faster Builds with Module Federation",
               "id": "faster-builds",
-              "tags": ["use-task-executors"],
+              "tags": [
+                "use-task-executors",
+                "module-federation",
+                "angular",
+                "react"
+              ],
               "file": "shared/guides/module-federation/faster-builds"
+            },
+            {
+              "name": "Setup Module Federation with SSR for Angular and React",
+              "id": "module-federation-with-ssr",
+              "tags": [
+                "use-task-executors",
+                "module-federation",
+                "angular",
+                "react"
+              ],
+              "file": "shared/recipes/module-federation-with-ssr"
             },
             {
               "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
               "id": "dynamic-module-federation-with-angular",
+              "tags": ["use-task-executors", "module-federation", "angular"],
               "file": "shared/guides/module-federation/dynamic-mfe-angular"
             },
             {
