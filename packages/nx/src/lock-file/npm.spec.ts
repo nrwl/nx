@@ -13,6 +13,9 @@ import {
   lockFileV1JustTypescript,
   lockFileV1YargsAndDevkitOnly,
   lockFileV2YargsAndDevkitOnly,
+  ssh2LockFileV2,
+  ssh2LockFileV3,
+  ssh2LockFileV1,
 } from './__fixtures__/npm.lock';
 import { vol } from 'memfs';
 import { npmLockFileWithWorkspaces } from './__fixtures__/workspaces.lock';
@@ -37,6 +40,13 @@ const YargsAndDevkitPackage = {
   name: 'test',
   version: '0.0.0',
   dependencies: { '@nrwl/devkit': '15.0.13', yargs: '17.6.2' },
+};
+const Ssh2Package = {
+  name: 'test',
+  version: '0.0.0',
+  dependencies: {
+    ssh2: '1.11.0',
+  },
 };
 
 describe('npm LockFile utility', () => {
@@ -157,6 +167,14 @@ describe('npm LockFile utility', () => {
           )
         )
       ).toEqual(JSON.parse(lockFileV3YargsAndDevkitOnly));
+    });
+
+    it('should correctly prune lockfile with package that has optional dependencies', () => {
+      expect(
+        stringifyNpmLockFile(
+          pruneNpmLockFile(parseNpmLockFile(ssh2LockFileV3), Ssh2Package)
+        )
+      ).toEqual(ssh2LockFileV3);
     });
   });
 
@@ -284,6 +302,14 @@ describe('npm LockFile utility', () => {
         JSON.parse(lockFileV2YargsAndDevkitOnly)
       );
     });
+
+    it('should correctly prune lockfile with package that has optional dependencies', () => {
+      expect(
+        stringifyNpmLockFile(
+          pruneNpmLockFile(parseNpmLockFile(ssh2LockFileV2), Ssh2Package)
+        )
+      ).toEqual(ssh2LockFileV2);
+    });
   });
 
   describe('v1', () => {
@@ -403,6 +429,14 @@ describe('npm LockFile utility', () => {
         expect(JSON.parse(stringifyNpmLockFile(pruned))).toEqual(
           JSON.parse(lockFileV1YargsAndDevkitOnly)
         );
+      });
+
+      it('should correctly prune lockfile with package that has optional dependencies', () => {
+        expect(
+          stringifyNpmLockFile(
+            pruneNpmLockFile(parseNpmLockFile(ssh2LockFileV1), Ssh2Package)
+          )
+        ).toEqual(ssh2LockFileV1);
       });
     });
   });

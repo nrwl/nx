@@ -4,11 +4,13 @@ import {
   stringifyYarnLockFile,
 } from './yarn';
 import {
-  lockFile,
   berryLockFile,
-  lockFileJustTypescript,
-  lockFileDevkitAndYargs,
   berryLockFileDevkitAndYargs,
+  berrySsh2LockFile,
+  lockFile,
+  lockFileDevkitAndYargs,
+  lockFileJustTypescript,
+  ssh2LockFile,
 } from './__fixtures__/yarn.lock';
 
 const TypeScriptOnlyPackage = {
@@ -28,6 +30,13 @@ const YargsDevkitTypescriptPackage = {
     '@nrwl/devkit': '15.0.13',
     typescript: '4.8.4',
     yargs: '17.6.2',
+  },
+};
+const Ssh2Package = {
+  name: 'test',
+  version: '0.0.0',
+  dependencies: {
+    ssh2: '1.11.0',
   },
 };
 
@@ -85,7 +94,7 @@ describe('yarn LockFile utility', () => {
       expect(stringifyYarnLockFile(parsedLockFile)).toEqual(lockFile);
     });
 
-    it('shold prune the lock file', () => {
+    it('should prune the lock file', () => {
       expect(
         Object.keys(
           pruneYarnLockFile(parsedLockFile, TypeScriptOnlyPackage).dependencies
@@ -98,7 +107,7 @@ describe('yarn LockFile utility', () => {
       ).toEqual(36);
     });
 
-    it('shold correctly prune lockfile with single package', () => {
+    it('should correctly prune lockfile with single package', () => {
       expect(
         stringifyYarnLockFile(
           pruneYarnLockFile(parsedLockFile, TypeScriptOnlyPackage)
@@ -106,12 +115,20 @@ describe('yarn LockFile utility', () => {
       ).toEqual(lockFileJustTypescript);
     });
 
-    it('shold correctly prune lockfile with multiple packages', () => {
+    it('should correctly prune lockfile with multiple packages', () => {
       expect(
         stringifyYarnLockFile(
           pruneYarnLockFile(parsedLockFile, YargsAndDevkitPackage)
         )
       ).toEqual(lockFileDevkitAndYargs);
+    });
+
+    it('should correctly prune lockfile with package that has optional dependencies', () => {
+      expect(
+        stringifyYarnLockFile(
+          pruneYarnLockFile(parseYarnLockFile(ssh2LockFile), Ssh2Package)
+        )
+      ).toEqual(ssh2LockFile);
     });
   });
 
@@ -179,7 +196,7 @@ describe('yarn LockFile utility', () => {
       expect(removeComment(result)).toEqual(removeComment(berryLockFile));
     });
 
-    it('shold prune the lock file', () => {
+    it('should prune the lock file', () => {
       expect(
         Object.keys(
           pruneYarnLockFile(parsedLockFile, YargsDevkitTypescriptPackage)
@@ -188,7 +205,7 @@ describe('yarn LockFile utility', () => {
       ).toEqual(37);
     });
 
-    it('shold correctly prune lockfile with multiple packages', () => {
+    it('should correctly prune lockfile with multiple packages', () => {
       const result = stringifyYarnLockFile(
         pruneYarnLockFile(parsedLockFile, YargsDevkitTypescriptPackage)
       );
@@ -197,7 +214,7 @@ describe('yarn LockFile utility', () => {
       );
     });
 
-    it('shold correctly prune lockfile with multiple packages and custom name', () => {
+    it('should correctly prune lockfile with multiple packages and custom name', () => {
       const result = pruneYarnLockFile(parsedLockFile, {
         ...YargsDevkitTypescriptPackage,
         name: 'custom-name',
@@ -217,6 +234,16 @@ describe('yarn LockFile utility', () => {
           },
         }
       `);
+    });
+
+    it('should correctly prune lockfile with package that has optional dependencies', () => {
+      expect(
+        removeComment(
+          stringifyYarnLockFile(
+            pruneYarnLockFile(parseYarnLockFile(berrySsh2LockFile), Ssh2Package)
+          )
+        )
+      ).toEqual(removeComment(berrySsh2LockFile));
     });
   });
 });

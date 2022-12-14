@@ -296,11 +296,10 @@ function pruneTransitiveDependencies(
   prunedDeps: LockFileData['dependencies'],
   value: PackageDependency
 ): void {
-  if (!value.dependencies) {
-    return;
-  }
-
-  Object.entries(value.dependencies).forEach(([packageName, version]) => {
+  [
+    ...Object.entries(value.dependencies ?? {}),
+    ...Object.entries(value.optionalDependencies ?? {}),
+  ].forEach(([packageName, version]) => {
     if (dependencies[packageName]) {
       // check if package with given version exists in data
       // if yes, return key, value and version expression from packageMeta
