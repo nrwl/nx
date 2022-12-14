@@ -1,4 +1,4 @@
-import { outputFileSync, readJsonSync } from 'fs-extra';
+import { outputFileSync } from 'fs-extra';
 import { join } from 'path';
 import { format, resolveConfig } from 'prettier';
 
@@ -63,31 +63,6 @@ export async function formatWithPrettier(filePath: string, content: string) {
   }
 
   return format(content, options);
-}
-
-export function getNxPackageDependencies(packageJsonPath: string): {
-  name: string;
-  dependencies: string[];
-  peerDependencies: string[];
-} {
-  const packageJson = readJsonSync(packageJsonPath);
-  if (!packageJson) {
-    console.log(`No package.json found at: ${packageJsonPath}`);
-    return null;
-  }
-  return {
-    name: packageJson.name,
-    dependencies: packageJson.dependencies
-      ? Object.keys(packageJson.dependencies).filter((item) =>
-          item.includes('@nrwl')
-        )
-      : [],
-    peerDependencies: packageJson.peerDependencies
-      ? Object.keys(packageJson.peerDependencies).filter((item) =>
-          item.includes('@nrwl')
-        )
-      : [],
-  };
 }
 
 export function formatDeprecated(
