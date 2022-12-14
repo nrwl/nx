@@ -53,7 +53,7 @@ export function Shell(): JSX.Element {
   ];
 
   function projectChange(projectGraphId: string) {
-    navigate(`/${projectGraphId}${topLevelRoute}`);
+    navigate(`/${encodeURIComponent(projectGraphId)}${topLevelRoute}`);
   }
 
   function downloadImage() {
@@ -107,7 +107,9 @@ export function Shell(): JSX.Element {
                     projectGraphService.send('deselectAll');
                     if (environment.environment === 'dev') {
                       navigate(
-                        `/${currentPath.workspace}${event.currentTarget.value}`
+                        `/${encodeURIComponent(currentPath.workspace)}${
+                          event.currentTarget.value
+                        }`
                       );
                     } else {
                       navigate(`${event.currentTarget.value}`);

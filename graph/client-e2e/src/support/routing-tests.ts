@@ -68,6 +68,27 @@ export function testProjectsRoutes(
         );
       });
 
+      it('should focus projects with special characters', () => {
+        cy.visit(
+          resolveProjectsRoute(router, `${route}/%40scoped%2Fproject-a`, '')
+        );
+
+        // wait for first graph to finish loading
+        waitForProjectGraph(router);
+
+        const dependencies = nxExamplesJson.dependencies['@scoped/project-a'];
+        const dependents = Object.keys(nxExamplesJson.dependencies).filter(
+          (key) =>
+            nxExamplesJson.dependencies[key]
+              .map((dependencies) => dependencies.target)
+              .includes('@scoped/project-a')
+        );
+        getCheckedProjectItems().should(
+          'have.length',
+          ['@scoped/project-a', ...dependencies, ...dependents].length
+        );
+      });
+
       it('should focus projects with search depth', () => {
         cy.visit(
           resolveProjectsRoute(router, `${route}/cart`, `searchDepth=2`)
