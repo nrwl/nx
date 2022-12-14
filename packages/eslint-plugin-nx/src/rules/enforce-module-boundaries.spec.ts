@@ -749,6 +749,59 @@ Violation detected in:
 
       expect(failures.length).toEqual(0);
     });
+
+    it('should report errors for combo source tags', () => {
+      const failures = runRule(
+        {
+          depConstraints: [
+            {
+              sourceTagCombo: ['impl', 'domain1'],
+              onlyDependOnLibsWithTags: ['impl'],
+            },
+            { sourceTag: 'impl', onlyDependOnLibsWithTags: ['api'] },
+          ],
+        },
+        // ['impl', 'domain1']
+        `${process.cwd()}/proj/libs/impl/src/index.ts`,
+        // ['impl', 'domain1', 'domain2']
+        `
+          import '@mycompany/api';
+          import('@mycompany/api');
+        `,
+        graph
+      );
+
+      expect(failures.length).toEqual(2);
+      expect(failures[0].message).toEqual(
+        'A project tagged with "impl" and "domain1" can only depend on libs tagged with "impl"'
+      );
+      expect(failures[1].message).toEqual(
+        'A project tagged with "impl" and "domain1" can only depend on libs tagged with "impl"'
+      );
+    });
+
+    it('should properly map combo source tags', () => {
+      const failures = runRule(
+        {
+          depConstraints: [
+            {
+              sourceTagCombo: ['impl', 'domain1'],
+              onlyDependOnLibsWithTags: ['api'],
+            },
+          ],
+        },
+        // ['impl', 'domain1']
+        `${process.cwd()}/proj/libs/impl/src/index.ts`,
+        // ['impl', 'domain1', 'domain2']
+        `
+          import '@mycompany/api';
+          import('@mycompany/api');
+        `,
+        graph
+      );
+
+      expect(failures.length).toEqual(0);
+    });
   });
 
   describe('relative imports', () => {

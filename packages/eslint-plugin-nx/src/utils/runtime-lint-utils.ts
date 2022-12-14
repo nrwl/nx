@@ -21,12 +21,21 @@ import {
 } from 'nx/src/project-graph/utils/find-project-for-path';
 
 export type Deps = { [projectName: string]: ProjectGraphDependency[] };
-export type DepConstraint = {
+type SingleSourceTagConstraint = {
   sourceTag: string;
   onlyDependOnLibsWithTags?: string[];
   notDependOnLibsWithTags?: string[];
   bannedExternalImports?: string[];
 };
+type ComboSourceTagConstraint = {
+  sourceTagCombo: string[];
+  onlyDependOnLibsWithTags?: string[];
+  notDependOnLibsWithTags?: string[];
+  bannedExternalImports?: string[];
+};
+export type DepConstraint =
+  | SingleSourceTagConstraint
+  | ComboSourceTagConstraint;
 
 export function stringifyTags(tags: string[]): string {
   return tags.map((t) => `"${t}"`).join(', ');
@@ -37,6 +46,12 @@ export function hasNoneOfTheseTags(
   tags: string[]
 ): boolean {
   return tags.filter((tag) => hasTag(proj, tag)).length === 0;
+}
+
+export function isComboDepConstraint(
+  depConstraint: DepConstraint
+): depConstraint is ComboSourceTagConstraint {
+  return !!(depConstraint as ComboSourceTagConstraint).sourceTagCombo;
 }
 
 /**
@@ -151,7 +166,13 @@ export function findConstraintsFor(
   depConstraints: DepConstraint[],
   sourceProject: ProjectGraphProjectNode
 ) {
-  return depConstraints.filter((f) => hasTag(sourceProject, f.sourceTag));
+  return depConstraints.filter((f) => {
+    if (isComboDepConstraint(f)) {
+      return f.sourceTagCombo.every((tag) => hasTag(sourceProject, tag));
+    } else {
+      return hasTag(sourceProject, f.sourceTag);
+    }
+  });
 }
 
 export function onlyLoadChildren(
@@ -201,12 +222,20 @@ export function hasBannedImport(
   depConstraints: DepConstraint[]
 ): DepConstraint | undefined {
   // return those constraints that match source project and have `bannedExternalImports` defined
-  depConstraints = depConstraints.filter(
-    (c) =>
-      (source.data.tags || []).includes(c.sourceTag) &&
+  depConstraints = depConstraints.filter((c) => {
+    let tags = [];
+    if (isComboDepConstraint(c)) {
+      tags = c.sourceTagCombo;
+    } else {
+      tags = [c.sourceTag];
+    }
+
+    return (
       c.bannedExternalImports &&
-      c.bannedExternalImports.length
-  );
+      c.bannedExternalImports.length &&
+      tags.every((t) => (source.data.tags || []).includes(t))
+    );
+  });
   return depConstraints.find((constraint) =>
     isConstraintBanningProject(target, constraint)
   );
