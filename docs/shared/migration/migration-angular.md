@@ -151,6 +151,10 @@ width="100%" /%}
 
 ## Migrating an Angular app manually
 
+{% callout type="note" title="Older Angular Versions" %}
+If you are using older versions of Angular (version 14 or lower), make sure to use the appropriate version of Nx that matches your version of Angular. See the [Nx and Angular Version Compatibility Matrix](/angular-nx-version-matrix) to find the correct version. The generated files will also be slightly different.
+{% /callout %}
+
 If you are unable to automatically transform your Angular CLI workspace to an Nx workspace using the [ng add](#transforming-an-angular-cli-workspace-to-an-nx-workspace) method, there are some manual steps you can take to move your project(s) into an Nx workspace.
 
 ### Generating a new workspace
