@@ -11,7 +11,7 @@ description: 'Print libraries affected by changes'
 
 ## Usage
 
-```terminal
+```shell
 nx affected:libs
 ```
 
@@ -21,19 +21,19 @@ Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`
 
 Print the names of all the libs affected by changing the index.ts file:
 
-```terminal
+```shell
  nx affected:libs --files=libs/mylib/src/index.ts
 ```
 
 Print the names of all the libs affected by the changes between main and HEAD (e.g., PR):
 
-```terminal
+```shell
  nx affected:libs --base=main --head=HEAD
 ```
 
 Print the names of all the libs affected by the last commit on main:
 
-```terminal
+```shell
  nx affected:libs --base=main~1 --head=main
 ```
 

@@ -9,7 +9,7 @@ Adds nx.json file and installs nx if not installed already
 
 ## Usage
 
-```terminal
+```shell
 nx init
 ```
 

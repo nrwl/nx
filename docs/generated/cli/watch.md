@@ -9,7 +9,7 @@ Watch for changes within projects, and execute commands
 
 ## Usage
 
-```terminal
+```shell
 nx watch
 ```
 
@@ -19,19 +19,19 @@ Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`
 
 Watch the "app" project and echo the project name and the files that changed:
 
-```terminal
+```shell
  nx watch --projects=app -- echo \$NX_PROJECT_NAME \$NX_FILE_CHANGES
 ```
 
 Watch "app1" and "app2" and echo the project name whenever a specified project or its dependencies change:
 
-```terminal
+```shell
  nx watch --projects=app1,app2 --includeDependencies -- echo \$NX_PROJECT_NAME
 ```
 
 Watch all projects (including newly created projects) in the workspace:
 
-```terminal
+```shell
  nx watch --all -- echo \$NX_PROJECT_NAME
 ```
 

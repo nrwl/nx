@@ -9,7 +9,7 @@ Run target for affected projects
 
 ## Usage
 
-```terminal
+```shell
 nx affected
 ```
 
@@ -19,43 +19,43 @@ Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`
 
 Run custom target for all affected projects:
 
-```terminal
+```shell
  nx affected --target=custom-target
 ```
 
 Run tests in parallel:
 
-```terminal
+```shell
  nx affected --target=test --parallel=5
 ```
 
 Run the test target for all projects:
 
-```terminal
+```shell
  nx affected --target=test --all
 ```
 
 Run tests for all the projects affected by changing the index.ts file:
 
-```terminal
+```shell
  nx affected --target=test --files=libs/mylib/src/index.ts
 ```
 
 Run tests for all the projects affected by the changes between main and HEAD (e.g., PR):
 
-```terminal
+```shell
  nx affected --target=test --base=main --head=HEAD
 ```
 
 Run tests for all the projects affected by the last commit on main:
 
-```terminal
+```shell
  nx affected --target=test --base=main~1 --head=main
 ```
 
 Use the currently executing project name in your command.:
 
-```terminal
+```shell
  nx affected --target=build --tag=$NX_TARGET_TASK_PROJECT:latest
 ```
 

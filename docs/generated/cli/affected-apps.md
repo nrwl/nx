@@ -11,7 +11,7 @@ description: 'Print applications affected by changes'
 
 ## Usage
 
-```terminal
+```shell
 nx affected:apps
 ```
 
@@ -21,19 +21,19 @@ Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`
 
 Print the names of all the apps affected by changing the index.ts file:
 
-```terminal
+```shell
  nx affected:apps --files=libs/mylib/src/index.ts
 ```
 
 Print the names of all the apps affected by the changes between main and HEAD (e.g., PR):
 
-```terminal
+```shell
  nx affected:apps --base=main --head=HEAD
 ```
 
 Print the names of all the apps affected by the last commit on main:
 
-```terminal
+```shell
  nx affected:apps --base=main~1 --head=main
 ```
 
