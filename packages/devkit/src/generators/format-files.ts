@@ -95,6 +95,11 @@ function sortWorkspaceJson(tree: Tree) {
  * correctly.
  */
 function ensurePropertiesAreInNewLocations(tree: Tree) {
+  // If nx.json doesn't exist then there is no where to move these properties to
+  if (!tree.exists('nx.json')) {
+    return;
+  }
+
   const workspacePath = getWorkspacePath(tree);
   if (!workspacePath) {
     return;
