@@ -124,6 +124,7 @@ const IGNORE_MATCHES_IN_PACKAGE = {
     '@angular-devkit/core',
     '@angular-devkit/architect',
     '@angular/cli',
+    '@nrwl/angular',
     'ts-node', // We *may* fall back on ts-node, but we want to encourage the use of @swc-node instead so we don't explicitly list ts-node as an optional dep
   ],
   web: [

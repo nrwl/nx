@@ -33,7 +33,8 @@ import { joinPathFragments } from '../utils/path';
 export function workspaceConfigName(
   root: string
 ): 'angular.json' | 'workspace.json' | null {
-  if (existsSync(path.join(root, 'angular.json'))) {
+  // If a workspace doesn't have `@nrwl/angular` it's likely they do not want projects from `angular.json` to be considered by Nx.
+  if (existsSync(path.join(root, 'angular.json')) && isNrwlAngularInstalled()) {
     return 'angular.json';
   } else if (existsSync(path.join(root, 'workspace.json'))) {
     return 'workspace.json';
@@ -428,6 +429,15 @@ function assertValidWorkspaceConfiguration(
     logger.warn(
       'NX As of Nx 13, project configuration should be moved from nx.json to workspace.json/project.json. Please run "nx format" to fix this.'
     );
+  }
+}
+
+function isNrwlAngularInstalled() {
+  try {
+    require.resolve('@nrwl/angular');
+    return true;
+  } catch {
+    return false;
   }
 }
 
