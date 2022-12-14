@@ -147,7 +147,8 @@
     },
     "devServerPort": {
       "type": "number",
-      "description": "The port for the dev server of the remote app."
+      "description": "The port for the dev server of the remote app.",
+      "default": 4200
     },
     "ssr": {
       "description": "Whether to configure SSR for the host application",

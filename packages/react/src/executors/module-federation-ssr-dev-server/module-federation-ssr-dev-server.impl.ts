@@ -9,7 +9,7 @@ import { WebSsrDevServerOptions } from '@nrwl/webpack/src/executors/ssr-dev-serv
 import { join } from 'path';
 import * as chalk from 'chalk';
 import {
-  combineAsyncIterableIterators,
+  combineAsyncIterables,
   createAsyncIterable,
   mapAsyncIterable,
   tapAsyncIterable,
@@ -101,7 +101,7 @@ export default async function* moduleFederationSsrDevServer(
           (x) => x
         );
 
-    iter = combineAsyncIterableIterators(iter, remoteServeIter);
+    iter = combineAsyncIterables(iter, remoteServeIter);
   }
 
   let numAwaiting = knownRemotes.length + 1; // remotes + host

@@ -40,6 +40,7 @@ export async function setupSsrForHost(
       }),
       appName,
       tmpl: '',
+      browserBuildOutputPath: project.targets.build.options.outputPath,
     }
   );
 

@@ -1,7 +1,22 @@
-export async function* combineAsyncIterableIterators<T = any>(
-  ...iterators: { 0: AsyncIterableIterator<T> } & AsyncIterableIterator<T>[]
+export async function* combineAsyncIterables<T = any>(
+  ..._iterators: { 0: AsyncIterable<T> } & AsyncIterable<T>[]
 ): AsyncGenerator<T> {
+  // Convert iterables into iterators with next, return, throws methods.
+  // If it's already an iterator, keep it.
+  const iterators: AsyncIterableIterator<T>[] = _iterators.map((it) => {
+    if (typeof it['next'] === 'function') {
+      return it as AsyncIterableIterator<T>;
+    } else {
+      return (async function* wrapped() {
+        for await (const val of it) {
+          yield val;
+        }
+      })();
+    }
+  });
+
   let [options] = iterators;
+
   if (typeof options.next === 'function') {
     options = Object.create(null);
   } else {
@@ -30,7 +45,7 @@ export async function* combineAsyncIterableIterators<T = any>(
       }
     } while (asyncIteratorsValues.size > 0);
   } finally {
-    await Promise.allSettled(iterators.map((it) => it.return()));
+    await Promise.allSettled(iterators.map((it) => it['return']?.()));
   }
 }
 
