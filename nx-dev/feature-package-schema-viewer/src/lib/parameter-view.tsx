@@ -24,7 +24,7 @@ export const ParameterView = (props: {
         {props.alias && (
           <span
             data-tooltip="Property alias"
-            className="relative -top-0.5 inline-flex rounded-md px-2 text-xs font-semibold uppercase leading-5 dark:bg-slate-700"
+            className="relative -top-0.5 inline-flex rounded-md px-2 text-xs font-semibold leading-5 dark:bg-slate-700"
           >
             {props.alias}
           </span>
