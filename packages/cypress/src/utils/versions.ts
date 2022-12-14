@@ -4,3 +4,4 @@ export const typesNodeVersion = '16.11.7';
 export const cypressVersion = '^11.0.0';
 export const cypressWebpackVersion = '^2.0.0';
 export const webpackHttpPluginVersion = '^5.5.0';
+export const viteVersion = '^4.0.1';

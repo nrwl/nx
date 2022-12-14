@@ -462,3 +462,38 @@ ${options.includeVitest ? '/// <reference types="vitest" />' : ''}
 
   tree.write(viteConfigPath, viteConfigContent);
 }
+
+export function normalizeViteConfigFilePathWithTree(
+  tree: Tree,
+  projectRoot: string,
+  configFile?: string
+): string {
+  return configFile && tree.exists(configFile)
+    ? configFile
+    : tree.exists(joinPathFragments(`${projectRoot}/vite.config.ts`))
+    ? joinPathFragments(`${projectRoot}/vite.config.ts`)
+    : tree.exists(joinPathFragments(`${projectRoot}/vite.config.js`))
+    ? joinPathFragments(`${projectRoot}/vite.config.js`)
+    : undefined;
+}
+
+export function getViteConfigPathForProject(
+  tree: Tree,
+  projectName: string,
+  target?: string
+) {
+  let viteConfigPath: string | undefined;
+  const { targets, root } = readProjectConfiguration(tree, projectName);
+  if (target) {
+    viteConfigPath = targets[target]?.options?.configFile;
+  } else {
+    const buildTarget = Object.entries(targets).find(
+      ([_targetName, targetConfig]) => {
+        return targetConfig.executor === '@nrwl/vite:build';
+      }
+    );
+    viteConfigPath = buildTarget?.[1]?.options?.configFile;
+  }
+
+  return normalizeViteConfigFilePathWithTree(tree, root, viteConfigPath);
+}

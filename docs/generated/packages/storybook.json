@@ -114,6 +114,7 @@
           },
           "bundler": {
             "description": "The bundler to use.",
+            "type": "string",
             "enum": ["vite", "webpack"],
             "x-prompt": "Which bundler do you want to use?",
             "default": "webpack"
@@ -196,7 +197,10 @@
           },
           "bundler": {
             "description": "The Storybook builder to use.",
-            "enum": ["vite", "webpack"]
+            "type": "string",
+            "enum": ["vite", "webpack"],
+            "x-prompt": "Which Storybook builder do you want to use?",
+            "default": "webpack"
           }
         },
         "required": ["name"],

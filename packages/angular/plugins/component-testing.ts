@@ -85,7 +85,7 @@ ${e.stack ? e.stack : e}`
   const offset = offsetFromRoot(normalizedFromWorkspaceRootPath);
   const buildContext = createExecutorContext(
     graph,
-    graph.nodes[buildTarget.project].data.targets,
+    graph.nodes[buildTarget.project]?.data.targets,
     buildTarget.project,
     buildTarget.target,
     buildTarget.configuration
@@ -117,7 +117,7 @@ ${e.stack ? e.stack : e}`
 
 function getBuildableTarget(ctContext: ExecutorContext) {
   const targets =
-    ctContext.projectGraph.nodes[ctContext.projectName].data?.targets;
+    ctContext.projectGraph.nodes[ctContext.projectName]?.data?.targets;
   const targetConfig = targets?.[ctContext.targetName];
 
   if (!targetConfig) {
@@ -232,7 +232,7 @@ function normalizeBuildTargetOptions(
     buildOptions.stylePreprocessorOptions = { includePaths: [] };
   }
   const { root, sourceRoot } =
-    buildContext.projectGraph.nodes[buildContext.projectName].data;
+    buildContext.projectGraph.nodes[buildContext.projectName]?.data;
   return {
     root: joinPathFragments(offset, root),
     sourceRoot: joinPathFragments(offset, sourceRoot),
@@ -280,7 +280,7 @@ function withSchemaDefaults(options: any): BrowserBuilderSchema {
 function getTempStylesForTailwind(ctExecutorContext: ExecutorContext) {
   const ctProjectConfig = ctExecutorContext.projectGraph.nodes[
     ctExecutorContext.projectName
-  ].data as ProjectConfiguration;
+  ]?.data as ProjectConfiguration;
   // angular only supports `tailwind.config.{js,cjs}`
   const ctProjectTailwindConfig = join(
     ctExecutorContext.root,
