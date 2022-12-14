@@ -9,7 +9,7 @@ Prints information about the Nx Daemon process or starts a daemon process
 
 ## Usage
 
-```terminal
+```shell
 nx daemon
 ```
 

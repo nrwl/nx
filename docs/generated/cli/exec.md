@@ -9,7 +9,7 @@ Executes any command as if it was a target on the project
 
 ## Usage
 
-```terminal
+```shell
 nx exec
 ```
 

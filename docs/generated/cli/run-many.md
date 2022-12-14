@@ -9,7 +9,7 @@ Run target for multiple listed projects
 
 ## Usage
 
-```terminal
+```shell
 nx run-many
 ```
 
@@ -19,25 +19,25 @@ Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`
 
 Test all projects:
 
-```terminal
+```shell
  nx run-many --target=test
 ```
 
 Test proj1 and proj2:
 
-```terminal
+```shell
  nx run-many --target=test --projects=proj1,proj2
 ```
 
 Test proj1 and proj2 in parallel:
 
-```terminal
+```shell
  nx run-many --target=test --projects=proj1,proj2 --parallel=2
 ```
 
 Test all projects ending with `*-app` except `excluded-app`:
 
-```terminal
+```shell
  nx run-many --target=test --projects=*-app --exclude excluded-app
 ```
 

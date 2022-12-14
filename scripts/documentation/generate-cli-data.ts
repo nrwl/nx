@@ -51,7 +51,7 @@ ${formatDeprecated(command.description, command.deprecated)}
 
 ## Usage
 
-\`\`\`terminal
+\`\`\`shell
 nx ${command.commandString}
 \`\`\`
 
@@ -60,7 +60,7 @@ Install \`nx\` globally to invoke the command directly using \`nx\`, or use \`np
     if (examples[command.name] && examples[command.name].length > 0) {
       template += `\n### Examples\n`;
       examples[command.name].forEach((example) => {
-        template += `${example.description}:\n\`\`\`terminal\n nx ${example.command}\n\`\`\`\n`;
+        template += `${example.description}:\n\`\`\`shell\n nx ${example.command}\n\`\`\`\n`;
       });
     }
 
