@@ -34,29 +34,39 @@ function hashExternalNode(node: ProjectGraphExternalNode, graph: ProjectGraph) {
   if (!graph.dependencies[node.name]) {
     node.data.hash = hashString(hashKey);
   } else {
-    const hashingInput = [hashKey];
-
     // collect all dependencies' hashes
-    traverseExternalNodesDependencies(node.name, graph, hashingInput);
-    node.data.hash = defaultHashing.hashArray(hashingInput.sort());
+    const externalDependencies = traverseExternalNodesDependencies(
+      node.name,
+      graph,
+      new Set([hashKey])
+    );
+    node.data.hash = defaultHashing.hashArray(
+      Array.from(externalDependencies).sort()
+    );
   }
 }
 
 function traverseExternalNodesDependencies(
   projectName: string,
   graph: ProjectGraph,
-  visited: string[]
-) {
+  visited: Set<string>
+): Set<string> {
   graph.dependencies[projectName].forEach((d) => {
     const target = graph.externalNodes[d.target];
+    if (!target) {
+      return;
+    }
+
     const targetKey = `${target.data.packageName}@${target.data.version}`;
-    if (visited.indexOf(targetKey) === -1) {
-      visited.push(targetKey);
+
+    if (!visited.has(targetKey)) {
+      visited.add(targetKey);
       if (graph.dependencies[d.target]) {
         traverseExternalNodesDependencies(d.target, graph, visited);
       }
     }
   });
+  return visited;
 }
 
 /**
