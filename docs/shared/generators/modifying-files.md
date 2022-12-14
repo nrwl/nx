@@ -36,7 +36,7 @@ Let's say we want to replace any instance of `thomasEdison` with `nikolaTesla` i
 ```typescript
 export default async function (tree: Tree, schema: any) {
   const filePath = `path/to/index.ts`;
-  const contents = tree.read(filePath);
+  const contents = tree.read(filePath).toString();
   contents.replace('thomasEdison', 'nikolaTesla');
   tree.write(filePath, contents);
 }
@@ -47,7 +47,7 @@ This works, but only replaces the first instance of `thomasEdison`. To replace t
 ```typescript
 export default async function (tree: Tree, schema: any) {
   const filePath = `path/to/index.ts`;
-  const contents = tree.read(filePath);
+  const contents = tree.read(filePath).toString();
   contents.replace(/thomasEdison/g, 'nikolaTesla');
   tree.write(filePath, contents);
 }
