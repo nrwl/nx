@@ -541,6 +541,12 @@
               "file": "",
               "path": "/packages#devkit",
               "isExternal": true
+            },
+            {
+              "name": "Glossary",
+              "id": "glossary",
+              "tags": [],
+              "file": "shared/reference/glossary"
             }
           ]
         },
