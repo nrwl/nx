@@ -238,7 +238,21 @@ describe('splitArgs', () => {
       expect(parallel).toEqual(5);
     });
 
-    it('should default to 3', () => {
+    it('should default to 3 when not specified', () => {
+      const parallel = splitArgsIntoNxArgsAndOverrides(
+        {
+          $0: '',
+          __overrides_unparsed__: [],
+        },
+        'affected',
+        {} as any,
+        {} as any
+      ).nxArgs.parallel;
+
+      expect(parallel).toEqual(3);
+    });
+
+    it('should default to 3 when used with no value specified', () => {
       const parallel = splitArgsIntoNxArgsAndOverrides(
         {
           $0: '',
