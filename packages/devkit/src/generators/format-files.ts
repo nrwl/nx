@@ -2,12 +2,7 @@ import type { Tree } from 'nx/src/generators/tree';
 import * as path from 'path';
 import type * as Prettier from 'prettier';
 import { readJson, updateJson, writeJson } from 'nx/src/generators/utils/json';
-import {
-  getWorkspacePath,
-  readWorkspaceConfiguration,
-  updateWorkspaceConfiguration,
-  WorkspaceConfiguration,
-} from 'nx/src/generators/utils/project-configuration';
+import { getWorkspacePath } from 'nx/src/generators/utils/project-configuration';
 import { sortObjectByKeys } from 'nx/src/utils/object-sort';
 
 /**
@@ -20,7 +15,6 @@ export async function formatFiles(tree: Tree): Promise<void> {
     prettier = await import('prettier');
   } catch {}
 
-  ensurePropertiesAreInNewLocations(tree);
   sortWorkspaceJson(tree);
   sortTsConfig(tree);
 
@@ -86,41 +80,6 @@ function sortWorkspaceJson(tree: Tree) {
   } catch (e) {
     // catch noop
   }
-}
-
-/**
- * `updateWorkspaceConfiguration` already handles
- * placing properties in their new locations, so
- * reading + updating it ensures that props are placed
- * correctly.
- */
-function ensurePropertiesAreInNewLocations(tree: Tree) {
-  // If nx.json doesn't exist then there is no where to move these properties to
-  if (!tree.exists('nx.json')) {
-    return;
-  }
-
-  const workspacePath = getWorkspacePath(tree);
-  if (!workspacePath) {
-    return;
-  }
-  const wc = readWorkspaceConfiguration(tree);
-  updateJson<WorkspaceConfiguration>(tree, workspacePath, (json) => {
-    wc.generators ??= json.generators ?? (json as any).schematics;
-    if (wc.cli) {
-      wc.cli.defaultCollection ??= json.cli?.defaultCollection;
-      wc.cli.packageManager ??= json.cli?.packageManager;
-    } else if (json.cli) {
-      wc.cli ??= json.cli;
-    }
-    wc.defaultProject ??= json.defaultProject;
-    delete json.cli;
-    delete json.defaultProject;
-    delete (json as any).schematics;
-    delete json.generators;
-    return json;
-  });
-  updateWorkspaceConfiguration(tree, wc);
 }
 
 function sortTsConfig(tree: Tree) {
