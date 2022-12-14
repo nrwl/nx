@@ -3,9 +3,11 @@ import {
   createPackageJson,
   ExecutorContext,
   getOutputsForTargetAndConfiguration,
+  joinPathFragments,
   normalizePath,
   ProjectGraphProjectNode,
   readJsonFile,
+  workspaceRoot,
   writeJsonFile,
 } from '@nrwl/devkit';
 import { DependentBuildableProjectNode } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
@@ -61,7 +63,12 @@ export function updatePackageJson(
     dependencies = dependencies.filter((dep) => dep.node.type !== 'lib');
   }
   if (options.updateBuildableProjectDepsInPackageJson) {
-    addMissingLibDependencies(packageJson, context, dependencies);
+    addMissingDependencies(
+      packageJson,
+      context,
+      dependencies,
+      options.buildableProjectDepsInPackageJsonType
+    );
   }
 
   writeJsonFile(`${options.outputPath}/package.json`, packageJson);
@@ -71,13 +78,32 @@ export function updatePackageJson(
   });
 }
 
-function addMissingLibDependencies(
+function addMissingDependencies(
   packageJson: PackageJson,
   { projectName, targetName, configurationName, root }: ExecutorContext,
-  dependencies: DependentBuildableProjectNode[]
+  dependencies: DependentBuildableProjectNode[],
+  propType: 'dependencies' | 'peerDependencies' = 'dependencies'
 ) {
+  const workspacePackageJson = readJsonFile(
+    joinPathFragments(workspaceRoot, 'package.json')
+  );
   dependencies.forEach((entry) => {
-    if (!isNpmProject(entry.node)) {
+    if (isNpmProject(entry.node)) {
+      const { packageName, version } = entry.node.data;
+      if (
+        packageJson.dependencies?.[packageName] ||
+        packageJson.devDependencies?.[packageName] ||
+        packageJson.peerDependencies?.[packageName]
+      ) {
+        return;
+      }
+      if (workspacePackageJson.devDependencies?.[packageName]) {
+        return;
+      }
+
+      packageJson[propType] ??= {};
+      packageJson[propType][packageName] = version;
+    } else {
       const packageName = entry.name;
       if (
         !packageJson.dependencies?.[packageName] &&
@@ -98,8 +124,8 @@ function addMissingLibDependencies(
         const depPackageJsonPath = join(root, outputs[0], 'package.json');
         const version = readJsonFile(depPackageJsonPath).version;
 
-        packageJson.dependencies ??= {};
-        packageJson.dependencies[packageName] = version;
+        packageJson[propType] ??= {};
+        packageJson[propType][packageName] = version;
       }
     }
   });
