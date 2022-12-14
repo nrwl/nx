@@ -8,14 +8,23 @@ const port = process.env['PORT'] || 4200;
 const app = express();
 
 const browserDist = path.join(process.cwd(), '<%= browserBuildOutputPath %>');
+const serverDist = path.join(process.cwd(), '<%= serverBuildOutputPath %>');
 const indexPath = path.join(browserDist, 'index.html');
 
 app.use(cors());
 
+// Client-side static bundles
 app.get(
   '*.*',
   express.static(browserDist, {
     maxAge: '1y',
+  })
+);
+
+// Static bundles for server-side module federation
+app.use('/server',
+  express.static(serverDist, {
+    maxAge: '1y'
   })
 );
 

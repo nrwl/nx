@@ -466,7 +466,7 @@ export function addStaticRouter(
       {
         type: ChangeType.Insert,
         index: app.getStart(),
-        text: `<StaticRouter location={req.url}>`,
+        text: `<StaticRouter location={req.originalUrl}>`,
       },
       {
         type: ChangeType.Insert,

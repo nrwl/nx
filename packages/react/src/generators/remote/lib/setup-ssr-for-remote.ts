@@ -29,6 +29,7 @@ export async function setupSsrForRemote(
       appName,
       tmpl: '',
       browserBuildOutputPath: project.targets.build.options.outputPath,
+      serverBuildOutputPath: project.targets.server.options.outputPath,
     }
   );
 
