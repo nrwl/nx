@@ -98,6 +98,7 @@ function addMissingLibDependencies(
         const depPackageJsonPath = join(root, outputs[0], 'package.json');
         const version = readJsonFile(depPackageJsonPath).version;
 
+        packageJson.dependencies ??= {};
         packageJson.dependencies[packageName] = version;
       }
     }
