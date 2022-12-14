@@ -7,6 +7,7 @@ import {
 } from '@nrwl/devkit';
 import { calculateProjectDependencies } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { ChildProcess, fork } from 'child_process';
+import { randomUUID } from 'crypto';
 import { HashingImpl } from 'nx/src/hasher/hashing-impl';
 import * as treeKill from 'tree-kill';
 import { promisify } from 'util';
@@ -25,16 +26,17 @@ export async function* nodeExecutor(
   options: NodeExecutorOptions,
   context: ExecutorContext
 ) {
+  const uniqueKey = randomUUID();
   process.on('SIGTERM', async () => {
-    await killCurrentProcess(options, 'SIGTERM');
+    await killCurrentProcess(uniqueKey, options, 'SIGTERM');
     process.exit(128 + 15);
   });
   process.on('SIGINT', async () => {
-    await killCurrentProcess(options, 'SIGINT');
+    await killCurrentProcess(uniqueKey, options, 'SIGINT');
     process.exit(128 + 2);
   });
   process.on('SIGHUP', async () => {
-    await killCurrentProcess(options, 'SIGHUP');
+    await killCurrentProcess(uniqueKey, options, 'SIGHUP');
     process.exit(128 + 1);
   });
 
@@ -55,7 +57,7 @@ export async function* nodeExecutor(
       logger.error('There was an error with the build. See above.');
       logger.info(`${event.outfile} was not restarted.`);
     }
-    await handleBuildEvent(event, options, mappings);
+    await handleBuildEvent(uniqueKey, event, options, mappings);
     yield event;
   }
 }
@@ -81,6 +83,7 @@ function calculateResolveMappings(
 }
 
 async function runProcess(
+  uniqueKey: string,
   event: ExecutorEvent,
   options: NodeExecutorOptions,
   mappings: { [project: string]: string }
@@ -88,7 +91,9 @@ async function runProcess(
   const execArgv = getExecArgv(options);
 
   const hashed = hasher.hashArray(execArgv.concat(options.args));
-  hashedMap.set(options.args, hashed);
+
+  const hashedKey = [uniqueKey, ...options.args];
+  hashedMap.set(hashedKey, hashed);
 
   const subProcess = fork(
     joinPathFragments(__dirname, 'node-with-require-overrides'),
@@ -138,17 +143,18 @@ function getExecArgv(options: NodeExecutorOptions) {
 }
 
 async function handleBuildEvent(
+  uniqueKey: string,
   event: ExecutorEvent,
   options: NodeExecutorOptions,
   mappings: { [project: string]: string }
 ) {
   // Don't kill previous run unless new build is successful.
   if (options.watch && event.success) {
-    await killCurrentProcess(options);
+    await killCurrentProcess(uniqueKey, options);
   }
 
   if (event.success) {
-    await runProcess(event, options, mappings);
+    await runProcess(uniqueKey, event, options, mappings);
   }
 }
 
@@ -156,10 +162,12 @@ const promisifiedTreeKill: (pid: number, signal: string) => Promise<void> =
   promisify(treeKill);
 
 async function killCurrentProcess(
+  uniqueKey: string,
   options: NodeExecutorOptions,
   signal: string = 'SIGTERM'
 ) {
-  const currentProcessKey = hashedMap.get(options.args);
+  const hashedKey = [uniqueKey, ...options.args];
+  const currentProcessKey = hashedMap.get(hashedKey);
   if (!currentProcessKey) return;
 
   const currentProcess = processMap.get(currentProcessKey);
@@ -182,7 +190,7 @@ async function killCurrentProcess(
     }
   } finally {
     processMap.delete(currentProcessKey);
-    hashedMap.delete(options.args);
+    hashedMap.delete(hashedKey);
   }
 }
 
