@@ -86,7 +86,7 @@ A script that creates or modifies your code. Generators can be found in [plugins
 
 A computer science concept that consists of nodes connected by edges. In the Nx context, there are two graphs: the [project](#project) graph which describes dependencies between projects and the [task](#task) graph which describes dependencies between tasks.
 
-> See: [Explore the Graph](/core-features/explore-the-graph)
+> See: [Explore the Graph](/core-features/explore-graph)
 
 ### Integrated Repository
 
