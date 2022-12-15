@@ -1,4 +1,4 @@
-import { Tree, writeJson } from '@nrwl/devkit';
+import { parseJson, Tree, writeJson } from '@nrwl/devkit';
 import * as reactAppConfig from './test-files/react-project.config.json';
 import * as reactViteConfig from './test-files/react-vite-project.config.json';
 import * as webAppConfig from './test-files/web-project.config.json';

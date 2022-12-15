@@ -130,11 +130,11 @@ export function addOrChangeBuildTarget(
   };
 
   if (targets[target]) {
-    buildOptions.fileReplacements = targets[target].options.fileReplacements;
+    buildOptions.fileReplacements = targets[target].options?.fileReplacements;
 
-    if (target === '@nxext/vite:build') {
-      buildOptions.base = targets[target].options.baseHref;
-      buildOptions.sourcemap = targets[target].options.sourcemaps;
+    if (targets[target].executor === '@nxext/vite:build') {
+      buildOptions.base = targets[target].options?.baseHref;
+      buildOptions.sourcemap = targets[target].options?.sourcemaps;
     }
     targets[target].options = {
       ...buildOptions,
@@ -147,8 +147,12 @@ export function addOrChangeBuildTarget(
       defaultConfiguration: 'production',
       options: buildOptions,
       configurations: {
-        development: {},
-        production: {},
+        development: {
+          mode: 'development',
+        },
+        production: {
+          mode: 'production',
+        },
       },
     };
   }
