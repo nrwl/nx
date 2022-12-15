@@ -140,6 +140,7 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
       routing: options.routing,
       js: options.js,
       pascalCaseFiles: options.pascalCaseFiles,
+      inSourceTests: options.inSourceTests,
     });
     tasks.push(componentTask);
   }

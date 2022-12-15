@@ -110,6 +110,7 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
       project: options.projectName,
       newProject: true,
       includeVitest: true,
+      inSourceTests: options.inSourceTests,
     });
     tasks.push(viteTask);
   } else if (options.bundler === 'webpack') {
