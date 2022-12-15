@@ -226,6 +226,12 @@
       "version": "15.2.0-beta.0",
       "description": "Remove no longer needed require calls in Karma builder main file.",
       "factory": "./src/migrations/update-15-2-0/update-karma-main-file"
+    },
+    "update-angular-cli-version-15-0-4": {
+      "cli": "nx",
+      "version": "15.3.4-beta.0",
+      "description": "Update the @angular/cli package version to ~15.0.4.",
+      "factory": "./src/migrations/update-15-3-4/update-angular-cli"
     }
   },
   "packageJsonUpdates": {
@@ -1701,6 +1707,55 @@
         },
         "@ngrx/component-store": {
           "version": "~15.0.0"
+        }
+      }
+    },
+    "15.3.4": {
+      "version": "15.3.4-beta.0",
+      "packages": {
+        "@angular-devkit/architect": {
+          "version": "~0.1500.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-angular": {
+          "version": "~15.0.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-webpack": {
+          "version": "~0.1500.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/core": {
+          "version": "~15.0.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/schematics": {
+          "version": "~15.0.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@schematics/angular": {
+          "version": "~15.0.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/core": {
+          "version": "~15.0.4",
+          "alwaysAddToPackageJson": true
+        },
+        "@angular/material": {
+          "version": "~15.0.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/cdk": {
+          "version": "~15.0.3",
+          "alwaysAddToPackageJson": false
+        },
+        "ng-packagr": {
+          "version": "~15.0.3",
+          "alwaysAddToPackageJson": false
+        },
+        "zone.js": {
+          "version": "~0.12.0",
+          "alwaysAddToPackageJson": false
         }
       }
     }
