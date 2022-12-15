@@ -3,6 +3,7 @@ export interface PackageDependency {
   rootVersion?: boolean;
   packageMeta: any[];
   dependencies?: Record<string, string>;
+  optionalDependencies?: Record<string, string>;
   name?: string;
   [key: string]: any;
 }

@@ -791,6 +791,8 @@ function setPackageMetaModifiers(
 
   if (parent.devDependencies?.[packageName]) {
     packageMeta.dev = true;
+  } else if (dependency.optional) {
+    packageMeta.optional = true;
   } else if (parent.optionalDependencies?.[packageName]) {
     packageMeta.optional = true;
   } else if (parent.peerDependencies?.[packageName]) {

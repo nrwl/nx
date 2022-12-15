@@ -8,6 +8,7 @@ import {
   lockFileJustTypescript,
   lockFileWithInlineSpecifiers,
   lockFileYargsAndDevkit,
+  ssh2LockFile,
 } from './__fixtures__/pnpm.lock';
 import {
   pnpmLockFileWithInlineSpecifiersAndWorkspaces,
@@ -23,6 +24,13 @@ const YargsAndDevkitPackage = {
   name: 'test',
   version: '1.2.3',
   dependencies: { '@nrwl/devkit': '15.0.13', yargs: '17.6.2' },
+};
+const Ssh2Package = {
+  name: 'test',
+  version: '0.0.0',
+  dependencies: {
+    ssh2: '1.11.0',
+  },
 };
 
 describe('pnpm LockFile utility', () => {
@@ -152,6 +160,14 @@ describe('pnpm LockFile utility', () => {
           prunePnpmLockFile(parsedLockFile, YargsAndDevkitPackage)
         )
       ).toEqual(lockFileYargsAndDevkit);
+    });
+
+    it('should correctly prune lockfile with package that has optional dependencies', () => {
+      expect(
+        stringifyPnpmLockFile(
+          prunePnpmLockFile(parsePnpmLockFile(ssh2LockFile), Ssh2Package)
+        )
+      ).toEqual(ssh2LockFile);
     });
   });
 
