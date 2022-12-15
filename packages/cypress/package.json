@@ -34,23 +34,13 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@babel/core": "^7.0.1",
-    "@babel/preset-env": "^7.0.0",
-    "@cypress/webpack-preprocessor": "^5.12.0",
     "@nrwl/devkit": "file:../devkit",
     "@nrwl/linter": "file:../linter",
     "@nrwl/workspace": "file:../workspace",
     "@phenomnomnominal/tsquery": "4.1.1",
-    "babel-loader": "^8.0.2",
     "chalk": "4.1.0",
     "dotenv": "~10.0.0",
-    "fork-ts-checker-webpack-plugin": "7.2.13",
-    "semver": "7.3.4",
-    "ts-loader": "^9.3.1",
-    "tsconfig-paths-webpack-plugin": "3.5.2",
-    "tslib": "^2.3.0",
-    "webpack": "^4 || ^5",
-    "webpack-node-externals": "^3.0.0"
+    "semver": "7.3.4"
   },
   "peerDependencies": {
     "cypress": ">= 3 < 12"
