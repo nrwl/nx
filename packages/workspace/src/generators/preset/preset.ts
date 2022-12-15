@@ -70,7 +70,7 @@ async function createPreset(tree: Tree, options: Schema) {
       standaloneConfig: options.standaloneConfig,
       rootProject: true,
       bundler: 'vite',
-      e2eTestRunner: 'none',
+      e2eTestRunner: 'cypress',
       unitTestRunner: 'vitest',
     });
   } else if (options.preset === Preset.NextJs) {
