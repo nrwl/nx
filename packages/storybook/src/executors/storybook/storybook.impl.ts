@@ -42,6 +42,25 @@ export default async function* storybookExecutor(
 function runInstance(options: StorybookExecutorOptions) {
   const env = process.env.NODE_ENV ?? 'development';
   process.env.NODE_ENV = env;
+  const originalConsoleLog = console.log;
+  console.log = function (...args) {
+    const localhostString = 'http://localhost:';
+    if (args[0].includes(localhostString)) {
+      const indexOfLocalHost = args[0].indexOf(localhostString);
+      console.info(
+        args[0].slice(
+          indexOfLocalHost + localhostString.length,
+          indexOfLocalHost + localhostString.length + 4
+        ),
+        indexOfLocalHost
+      );
+      process.env.NXPORT = args[0].slice(
+        indexOfLocalHost + localhostString.length,
+        indexOfLocalHost + localhostString.length + 4
+      );
+    }
+    originalConsoleLog.apply(console, args);
+  };
   return buildDev({
     ...options,
     configType: env.toUpperCase(),
