@@ -755,7 +755,7 @@ Violation detected in:
         {
           depConstraints: [
             {
-              sourceTagCombo: ['impl', 'domain1'],
+              allSourceTags: ['impl', 'domain1'],
               onlyDependOnLibsWithTags: ['impl'],
             },
             { sourceTag: 'impl', onlyDependOnLibsWithTags: ['api'] },
@@ -785,7 +785,7 @@ Violation detected in:
         {
           depConstraints: [
             {
-              sourceTagCombo: ['impl', 'domain1'],
+              allSourceTags: ['impl', 'domain1'],
               onlyDependOnLibsWithTags: ['api'],
             },
           ],

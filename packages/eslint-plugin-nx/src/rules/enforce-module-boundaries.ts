@@ -95,7 +95,7 @@ export default createESLintRule<Options, MessageIds>({
                 oneOf: [
                   { sourceTag: { type: 'string' } },
                   {
-                    sourceTagCombo: {
+                    allSourceTags: {
                       type: 'array',
                       items: { type: 'string' },
                       minItems: 2,
@@ -400,7 +400,7 @@ export default createESLintRule<Options, MessageIds>({
             messageId: 'bannedExternalImportsViolation',
             data: {
               sourceTag: isComboDepConstraint(constraint)
-                ? constraint.sourceTagCombo.join('" and "')
+                ? constraint.allSourceTags.join('" and "')
                 : constraint.sourceTag,
               package: targetProject.data.packageName,
             },
@@ -534,7 +534,7 @@ export default createESLintRule<Options, MessageIds>({
               messageId: 'onlyTagsConstraintViolation',
               data: {
                 sourceTag: isComboDepConstraint(constraint)
-                  ? constraint.sourceTagCombo.join('" and "')
+                  ? constraint.allSourceTags.join('" and "')
                   : constraint.sourceTag,
                 tags: stringifyTags(constraint.onlyDependOnLibsWithTags),
               },
@@ -551,7 +551,7 @@ export default createESLintRule<Options, MessageIds>({
               messageId: 'emptyOnlyTagsConstraintViolation',
               data: {
                 sourceTag: isComboDepConstraint(constraint)
-                  ? constraint.sourceTagCombo.join('" and "')
+                  ? constraint.allSourceTags.join('" and "')
                   : constraint.sourceTag,
               },
             });
@@ -572,7 +572,7 @@ export default createESLintRule<Options, MessageIds>({
                 messageId: 'notTagsConstraintViolation',
                 data: {
                   sourceTag: isComboDepConstraint(constraint)
-                    ? constraint.sourceTagCombo.join('" and "')
+                    ? constraint.allSourceTags.join('" and "')
                     : constraint.sourceTag,
                   tags: stringifyTags(constraint.notDependOnLibsWithTags),
                   projects: projectPaths
@@ -603,7 +603,7 @@ export default createESLintRule<Options, MessageIds>({
                   messageId: 'bannedExternalImportsViolation',
                   data: {
                     sourceTag: isComboDepConstraint(constraint)
-                      ? constraint.sourceTagCombo.join('" and "')
+                      ? constraint.allSourceTags.join('" and "')
                       : constraint.sourceTag,
                     childProjectName: violatingSource.name,
                     package: target.data.packageName,

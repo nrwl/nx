@@ -28,7 +28,7 @@ type SingleSourceTagConstraint = {
   bannedExternalImports?: string[];
 };
 type ComboSourceTagConstraint = {
-  sourceTagCombo: string[];
+  allSourceTags: string[];
   onlyDependOnLibsWithTags?: string[];
   notDependOnLibsWithTags?: string[];
   bannedExternalImports?: string[];
@@ -51,7 +51,7 @@ export function hasNoneOfTheseTags(
 export function isComboDepConstraint(
   depConstraint: DepConstraint
 ): depConstraint is ComboSourceTagConstraint {
-  return !!(depConstraint as ComboSourceTagConstraint).sourceTagCombo;
+  return !!(depConstraint as ComboSourceTagConstraint).allSourceTags;
 }
 
 /**
@@ -168,7 +168,7 @@ export function findConstraintsFor(
 ) {
   return depConstraints.filter((f) => {
     if (isComboDepConstraint(f)) {
-      return f.sourceTagCombo.every((tag) => hasTag(sourceProject, tag));
+      return f.allSourceTags.every((tag) => hasTag(sourceProject, tag));
     } else {
       return hasTag(sourceProject, f.sourceTag);
     }
@@ -225,7 +225,7 @@ export function hasBannedImport(
   depConstraints = depConstraints.filter((c) => {
     let tags = [];
     if (isComboDepConstraint(c)) {
-      tags = c.sourceTagCombo;
+      tags = c.allSourceTags;
     } else {
       tags = [c.sourceTag];
     }
