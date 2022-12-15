@@ -96,7 +96,7 @@ export function NxTaskGraphViz({
   }
 
   return (
-    <>
+    <div className="not-prose">
       <div
         ref={containerRef}
         className="w-full"
@@ -111,6 +111,6 @@ export function NxTaskGraphViz({
           openAction="manual"
         ></Tooltip>
       ) : null}
-    </>
+    </div>
   );
 }

@@ -111,7 +111,7 @@ export function NxProjectGraphViz({
   }
 
   return (
-    <>
+    <div className="not-prose">
       <div
         ref={containerRef}
         className="w-full"
@@ -126,6 +126,6 @@ export function NxProjectGraphViz({
           openAction="manual"
         ></Tooltip>
       ) : null}
-    </>
+    </div>
   );
 }
