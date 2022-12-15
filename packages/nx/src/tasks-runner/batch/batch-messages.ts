@@ -14,7 +14,12 @@ export interface BatchTasksMessage {
  * Results of running the batch. Mapped from task id to results
  */
 export interface BatchResults {
-  [taskId: string]: { success: boolean; terminalOutput?: string };
+  [taskId: string]: {
+    success: boolean;
+    terminalOutput?: string;
+    startTime?: number;
+    endTime?: number;
+  };
 }
 export interface BatchCompleteMessage {
   type: BatchMessageType.Complete;

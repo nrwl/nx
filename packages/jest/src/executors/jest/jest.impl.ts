@@ -15,7 +15,7 @@ import {
 } from '@nrwl/devkit';
 import { getSummary } from './summary';
 import { readFileSync } from 'fs';
-
+import type { BatchResults } from 'nx/src/tasks-runner/batch/batch-messages';
 process.env.NODE_ENV ??= 'test';
 
 export async function jestExecutor(
@@ -155,7 +155,7 @@ export async function batchJest(
   inputs: Record<string, JestExecutorOptions>,
   overrides: JestExecutorOptions,
   context: ExecutorContext
-): Promise<Record<string, { success: boolean; terminalOutput: string }>> {
+): Promise<BatchResults> {
   let configPaths: string[] = [];
   let selectedProjects: string[] = [];
   let projectsWithNoName: [string, string][] = [];
@@ -203,31 +203,28 @@ export async function batchJest(
     [workspaceRoot]
   );
   const { configs } = await readConfigs({ $0: undefined, _: [] }, configPaths);
-  const jestTaskExecutionResults: Record<
-    string,
-    { success: boolean; terminalOutput: string }
-  > = {};
+  const jestTaskExecutionResults: BatchResults = {};
 
   for (let i = 0; i < taskGraph.roots.length; i++) {
     let root = taskGraph.roots[i];
     const aggregatedResults = makeEmptyAggregatedTestResult();
     aggregatedResults.startTime = results.startTime;
-
+    let endTime: number;
     const projectRoot = join(context.root, taskGraph.tasks[root].projectRoot);
 
     let resultOutput = '';
     for (const testResult of results.testResults) {
       if (testResult.testFilePath.startsWith(projectRoot)) {
-        console.log(testResult.perfStats);
-        if (aggregatedResults.startTime) {
-          aggregatedResults.startTime = Math.min(
-            aggregatedResults.startTime,
-            testResult.perfStats.start
-          );
-        } else {
-          aggregatedResults.startTime = testResult.perfStats.start;
-        }
+        aggregatedResults.startTime = aggregatedResults.startTime
+          ? Math.min(aggregatedResults.startTime, testResult.perfStats.start)
+          : testResult.perfStats.start;
+
+        endTime = endTime
+          ? Math.max(testResult.perfStats.end, endTime)
+          : testResult.perfStats.end;
+
         addResult(aggregatedResults, testResult);
+
         resultOutput +=
           '\n\r' +
           jestReporterUtils.getResultHeader(
@@ -237,10 +234,15 @@ export async function batchJest(
           );
       }
     }
+
     aggregatedResults.numTotalTestSuites = aggregatedResults.testResults.length;
 
     jestTaskExecutionResults[root] = {
+      startTime: aggregatedResults.startTime,
+      endTime,
       success: aggregatedResults.numFailedTests === 0,
+      // TODO(caleb): getSummary assumed endTime is Date.now().
+      // might need to make own method to correctly set the endtime base on tests instead of _now_
       terminalOutput: resultOutput + '\n\r\n\r' + getSummary(aggregatedResults),
     };
   }
