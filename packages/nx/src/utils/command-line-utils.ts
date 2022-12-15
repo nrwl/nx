@@ -86,6 +86,11 @@ export function splitArgsIntoNxArgsAndOverrides(
     } else if (typeof args.projects === 'string') {
       args.projects = args.projects.split(',');
     }
+    // TODO(caleb): what is the correct locaiton to set this?
+    // this won't work if we want to 'default' batch mode on in the future
+    if (process.env.NX_BATCH_MODE === 'true') {
+      nxArgs.outputStyle = 'stream';
+    }
   }
 
   if (nxArgs.prod) {
