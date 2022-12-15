@@ -15,6 +15,7 @@ describe('normalizeOptions', () => {
       name: 'test',
       style: 'css',
       linter: Linter.None,
+      unitTestRunner: 'jest',
     });
 
     expect(options).toMatchObject({
@@ -57,6 +58,7 @@ describe('normalizeOptions', () => {
       style: 'css',
       linter: Linter.None,
       bundler: 'vite',
+      unitTestRunner: 'vitest',
     });
 
     expect(options).toMatchObject({

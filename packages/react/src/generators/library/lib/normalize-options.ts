@@ -57,10 +57,6 @@ export function normalizeOptions(
     normalized.bundler !== 'none' || options.buildable || options.publishable
   );
 
-  normalized.unitTestRunner =
-    normalized.unitTestRunner ??
-    (normalized.bundler === 'vite' ? 'vitest' : 'jest');
-
   normalized.inSourceTests === normalized.minimal || normalized.inSourceTests;
 
   if (options.appProject) {

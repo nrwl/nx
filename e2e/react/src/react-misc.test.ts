@@ -31,7 +31,9 @@ describe('React Applications: additional packages', () => {
 
     runCLI(`g @nrwl/react:app ${appName} --bundler=webpack --no-interactive`);
     runCLI(`g @nrwl/react:redux lemon --project=${appName}`);
-    runCLI(`g @nrwl/react:lib ${libName} --no-interactive`);
+    runCLI(
+      `g @nrwl/react:lib ${libName} --unit-test-runner=jest --no-interactive`
+    );
     runCLI(`g @nrwl/react:redux orange --project=${libName}`);
 
     const appTestResults = await runCLIAsync(`test ${appName}`);
