@@ -53,7 +53,7 @@ const IGNORE_MATCHES_IN_PACKAGE = {
     'tailwindcss',
   ],
   cli: ['nx'],
-  cypress: ['cypress', '@angular-devkit/schematics', '@nrwl/cypress'],
+  cypress: ['cypress', '@angular-devkit/schematics', '@nrwl/cypress', 'vite'],
   devkit: ['@angular-devkit/architect', 'rxjs', 'webpack'],
   'eslint-plugin-nx': ['@angular-eslint/eslint-plugin'],
   jest: [

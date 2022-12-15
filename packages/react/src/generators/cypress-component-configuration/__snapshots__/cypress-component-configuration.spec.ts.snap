@@ -1,5 +1,49 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`React:CypressComponentTestConfiguration should generate cypress component test config with --build-target 1`] = `
+"import { defineConfig } from 'cypress';
+import { nxComponentTestingPreset } from '@nrwl/react/plugins/component-testing';
+
+export default defineConfig({
+  component: nxComponentTestingPreset(__filename, {
+    bundler: 'vite'
+  }) as any,
+});"
+`;
+
+exports[`React:CypressComponentTestConfiguration should generate cypress component test config with project graph 1`] = `
+"import { defineConfig } from 'cypress';
+import { nxComponentTestingPreset } from '@nrwl/react/plugins/component-testing';
+
+export default defineConfig({
+  component: nxComponentTestingPreset(__filename, {
+    bundler: 'vite'
+  }) as any,
+});"
+`;
+
+exports[`React:CypressComponentTestConfiguration should generate cypress component test config with webpack 1`] = `
+"import { defineConfig } from 'cypress';
+import { nxComponentTestingPreset } from '@nrwl/react/plugins/component-testing';
+
+export default defineConfig({
+  component: nxComponentTestingPreset(__filename, {
+    bundler: 'webpack'
+  }) as any,
+});"
+`;
+
+exports[`React:CypressComponentTestConfiguration should generate cypress config with vite 1`] = `
+"import { defineConfig } from 'cypress';
+import { nxComponentTestingPreset } from '@nrwl/react/plugins/component-testing';
+
+export default defineConfig({
+  component: nxComponentTestingPreset(__filename, {
+    bundler: 'vite'
+  }) as any,
+});"
+`;
+
 exports[`React:CypressComponentTestConfiguration should generate tests for existing js components 1`] = `
 "import * as React from 'react'
 import SomeCmp from './some-cmp'

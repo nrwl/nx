@@ -14,11 +14,6 @@ import {
   Target,
   workspaceRoot,
 } from '@nrwl/devkit';
-import type { WebpackExecutorOptions } from '@nrwl/webpack/src/executors/webpack/schema';
-import { normalizeOptions } from '@nrwl/webpack/src/executors/webpack/lib/normalize-options';
-import { getWebpackConfig } from '@nrwl/webpack/src/executors/webpack/lib/get-webpack-config';
-import { resolveCustomWebpackConfig } from '@nrwl/webpack/src/utils/webpack/custom-webpack';
-import { buildBaseWebpackConfig } from './webpack-fallback';
 import {
   createExecutorContext,
   getProjectConfigByPath,
@@ -45,7 +40,29 @@ import {
 export function nxComponentTestingPreset(
   pathToConfig: string,
   options?: NxComponentTestingOptions
-) {
+): {
+  specPattern: string;
+  devServer: {
+    framework?: 'react';
+    bundler?: 'vite' | 'webpack';
+    viteConfig?: any;
+    webpackConfig?: any;
+  };
+  videosFolder: string;
+  screenshotsFolder: string;
+  video: boolean;
+  chromeWebSecurity: boolean;
+} {
+  if (options.bundler === 'vite') {
+    return {
+      ...nxBaseCypressPreset(pathToConfig),
+      specPattern: 'src/**/*.cy.{js,jsx,ts,tsx}',
+      devServer: {
+        ...({ framework: 'react', bundler: 'vite' } as const),
+      },
+    };
+  }
+
   let webpackConfig;
   try {
     const graph = readCachedProjectGraph();
@@ -88,11 +105,14 @@ export function nxComponentTestingPreset(
       Falling back to default webpack config.`
     );
     logger.warn(e);
+
+    const { buildBaseWebpackConfig } = require('./webpack-fallback');
     webpackConfig = buildBaseWebpackConfig({
       tsConfigPath: 'cypress/tsconfig.cy.json',
       compiler: 'babel',
     });
   }
+
   return {
     ...nxBaseCypressPreset(pathToConfig),
     specPattern: 'src/**/*.cy.{js,jsx,ts,tsx}',
@@ -109,11 +129,8 @@ export function nxComponentTestingPreset(
 /**
  * apply the schema.json defaults from the @nrwl/web:webpack executor to the target options
  */
-function withSchemaDefaults(
-  target: Target,
-  context: ExecutorContext
-): WebpackExecutorOptions {
-  const options = readTargetOptions<WebpackExecutorOptions>(target, context);
+function withSchemaDefaults(target: Target, context: ExecutorContext) {
+  const options = readTargetOptions(target, context);
 
   options.compiler ??= 'babel';
   options.deleteOutputPath ??= true;
@@ -160,6 +177,16 @@ function buildTargetWebpack(
     parsed.target,
     parsed.target
   );
+
+  const {
+    normalizeOptions,
+  } = require('@nrwl/webpack/src/executors/webpack/lib/normalize-options');
+  const {
+    resolveCustomWebpackConfig,
+  } = require('@nrwl/webpack/src/utils/webpack/custom-webpack');
+  const {
+    getWebpackConfig,
+  } = require('@nrwl/webpack/src/executors/webpack/lib/get-webpack-config');
 
   const options = normalizeOptions(
     withSchemaDefaults(parsed, context),

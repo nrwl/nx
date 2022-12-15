@@ -32,11 +32,7 @@ export async function getBuildAndSharedConfig(
     mode: options.mode ?? context.configurationName,
     root: projectRoot,
     base: options.base,
-    configFile: normalizeConfigFilePath(
-      projectRoot,
-      options.configFile,
-      context.root
-    ),
+    configFile: normalizeViteConfigFilePath(projectRoot, options.configFile),
     plugins: [replaceFiles(options.fileReplacements)],
     build: getViteBuildOptions(
       options as ViteDevServerExecutorOptions & ViteBuildExecutorOptions,
@@ -45,13 +41,12 @@ export async function getBuildAndSharedConfig(
   } as InlineConfig);
 }
 
-export function normalizeConfigFilePath(
+export function normalizeViteConfigFilePath(
   projectRoot: string,
-  configFile?: string,
-  workspaceRoot?: string
+  configFile?: string
 ): string {
-  return configFile
-    ? joinPathFragments(`${workspaceRoot}/${configFile}`)
+  return configFile && existsSync(joinPathFragments(configFile))
+    ? configFile
     : existsSync(joinPathFragments(`${projectRoot}/vite.config.ts`))
     ? joinPathFragments(`${projectRoot}/vite.config.ts`)
     : existsSync(joinPathFragments(`${projectRoot}/vite.config.js`))

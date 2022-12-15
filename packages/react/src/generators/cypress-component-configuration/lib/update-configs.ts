@@ -1,14 +1,20 @@
 import {
   readProjectConfiguration,
+  TargetConfiguration,
   Tree,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
 import { CypressComponentConfigurationSchema } from '../schema';
 
+export interface FoundTarget {
+  config?: TargetConfiguration;
+  target: string;
+}
+
 export async function updateProjectConfig(
   tree: Tree,
   options: CypressComponentConfigurationSchema
-) {
+): Promise<FoundTarget> {
   const { findBuildConfig } = await import(
     '@nrwl/cypress/src/utils/find-target-options'
   );
@@ -30,6 +36,8 @@ export async function updateProjectConfig(
     skipServe: true,
   };
   updateProjectConfiguration(tree, options.project, projectConfig);
+
+  return found;
 }
 
 function assetValidConfig(config: unknown) {
