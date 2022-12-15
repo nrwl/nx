@@ -9,6 +9,6 @@ export interface ViteDevServerExecutorOptions {
   open?: string | boolean;
   cors?: boolean;
   logLevel?: info | warn | error | silent;
-  mode?: 'production' | 'development';
+  mode?: string;
   clearScreen?: boolean;
 }

@@ -121,6 +121,7 @@ export function getViteBuildOptions(
     minify: options.minify,
     manifest: options.manifest,
     ssrManifest: options.ssrManifest,
+    ssr: options.ssr,
     logLevel: options.logLevel,
   };
 
