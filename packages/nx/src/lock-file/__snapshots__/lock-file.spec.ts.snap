@@ -1006,9 +1006,9 @@ Array [
 exports[`lock-file mapLockFileDataToExternalNodes yarn should map lock file data to external nodes 1`] = `
 Object {
   "data": Object {
-    "hash": "c22918aa52c9fdce78bf82451d8114e00b6d4375a8e5b1d1d96c6cf4755dbe1a",
+    "hash": "abdb9ef454702b3fae2f8002be40a8c2903514143b45592292ac8920e35cb60a",
     "packageName": "yargs",
-    "version": "17.5.1",
+    "version": "17.6.2",
   },
   "name": "npm:yargs",
   "type": "npm",
@@ -1058,9 +1058,9 @@ Array [
 exports[`lock-file mapLockFileDataToExternalNodes yarn should map successfully complex lock file 1`] = `
 Object {
   "data": Object {
-    "hash": "6562d56c136e9e359c74fb6843da8deb66890de8e61e49ee766ad9cee2be6878",
+    "hash": "40aa56160d8f45fdf5e3f0500d5f9de7fd915a3037e4793aeac84e3498f90e6b",
     "packageName": "nx",
-    "version": "14.7.5",
+    "version": "15.0.13",
   },
   "name": "npm:nx",
   "type": "npm",
@@ -1086,6 +1086,26 @@ Array [
   },
   Object {
     "source": "npm:nx",
+    "target": "npm:@yarnpkg/lockfile",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:@yarnpkg/parsers",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:@zkochan/js-yaml",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
+    "target": "npm:axios",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
     "target": "npm:chalk",
     "type": "static",
   },
@@ -1106,7 +1126,7 @@ Array [
   },
   Object {
     "source": "npm:nx",
-    "target": "npm:cliui",
+    "target": "npm:cliui@7.0.4",
     "type": "static",
   },
   Object {
@@ -1186,6 +1206,11 @@ Array [
   },
   Object {
     "source": "npm:nx",
+    "target": "npm:strong-log-transformer",
+    "type": "static",
+  },
+  Object {
+    "source": "npm:nx",
     "target": "npm:tar-stream",
     "type": "static",
   },
@@ -1201,7 +1226,7 @@ Array [
   },
   Object {
     "source": "npm:nx",
-    "target": "npm:tslib",
+    "target": "npm:tslib@2.4.1",
     "type": "static",
   },
   Object {

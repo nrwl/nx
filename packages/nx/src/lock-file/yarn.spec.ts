@@ -21,7 +21,11 @@ const TypeScriptOnlyPackage = {
 const YargsAndDevkitPackage = {
   name: 'test',
   version: '0.0.0',
-  dependencies: { '@nrwl/devkit': '15.0.13', yargs: '17.6.2' },
+  dependencies: {
+    '@nrwl/devkit': '15.0.13',
+    yargs: '17.6.2',
+    typescript: '4.8.4',
+  },
 };
 const YargsDevkitTypescriptPackage = {
   name: 'test',
@@ -46,7 +50,7 @@ describe('yarn LockFile utility', () => {
 
     it('should parse lockfile correctly', () => {
       expect(parsedLockFile.lockFileMetadata).toBeUndefined();
-      expect(Object.keys(parsedLockFile.dependencies).length).toEqual(324);
+      expect(Object.keys(parsedLockFile.dependencies).length).toEqual(339);
       expect(
         parsedLockFile.dependencies['@ampproject/remapping']
       ).toMatchSnapshot();
@@ -82,7 +86,7 @@ describe('yarn LockFile utility', () => {
 
     it('should map various instances of the same version', () => {
       const babelCoreDependency =
-        parsedLockFile.dependencies['@babel/core']['@babel/core@7.19.1'];
+        parsedLockFile.dependencies['@babel/core']['@babel/core@7.20.5'];
       expect(babelCoreDependency.packageMeta.length).toEqual(2);
       expect(babelCoreDependency.packageMeta).toEqual([
         '@babel/core@^7.11.6',
@@ -104,7 +108,7 @@ describe('yarn LockFile utility', () => {
         Object.keys(
           pruneYarnLockFile(parsedLockFile, YargsAndDevkitPackage).dependencies
         ).length
-      ).toEqual(36);
+      ).toEqual(37);
     });
 
     it('should correctly prune lockfile with single package', () => {
@@ -141,9 +145,9 @@ describe('yarn LockFile utility', () => {
         workspacePackages: {
           'test@workspace:.': {
             dependencies: {
-              '@nrwl/cli': '14.7.5',
-              '@nrwl/workspace': '14.7.5',
-              nx: '14.7.5',
+              '@nrwl/cli': '15.0.13',
+              '@nrwl/workspace': '15.0.13',
+              nx: '15.0.13',
               prettier: '^2.6.2',
               typescript: '~4.8.2',
             },
@@ -154,7 +158,7 @@ describe('yarn LockFile utility', () => {
           },
         },
       });
-      expect(Object.keys(parsedLockFile.dependencies).length).toEqual(386);
+      expect(Object.keys(parsedLockFile.dependencies).length).toEqual(401);
       expect(
         parsedLockFile.dependencies['@ampproject/remapping']
       ).toMatchSnapshot();
@@ -180,7 +184,7 @@ describe('yarn LockFile utility', () => {
 
     it('should map various instances of the same version', () => {
       const babelCoreDependency =
-        parsedLockFile.dependencies['@babel/core']['@babel/core@7.19.1'];
+        parsedLockFile.dependencies['@babel/core']['@babel/core@7.20.5'];
       expect(babelCoreDependency.packageMeta.length).toEqual(2);
       expect(babelCoreDependency.packageMeta).toEqual([
         '@babel/core@npm:^7.11.6',
@@ -202,7 +206,7 @@ describe('yarn LockFile utility', () => {
           pruneYarnLockFile(parsedLockFile, YargsDevkitTypescriptPackage)
             .dependencies
         ).length
-      ).toEqual(37);
+      ).toEqual(38);
     });
 
     it('should correctly prune lockfile with multiple packages', () => {
@@ -223,9 +227,9 @@ describe('yarn LockFile utility', () => {
         Object {
           "custom-name@workspace:^": Object {
             "dependencies": Object {
-              "@nrwl/devkit": "14.7.5",
-              "typescript": "~4.8.2",
-              "yargs": "^17.4.0",
+              "@nrwl/devkit": "15.0.13",
+              "typescript": "4.8.4",
+              "yargs": "17.6.2",
             },
             "languageName": "unknown",
             "linkType": "soft",
