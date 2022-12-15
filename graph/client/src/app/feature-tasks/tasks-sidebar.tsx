@@ -58,9 +58,15 @@ export function TasksSidebar() {
     hideAllProjects();
 
     if (params['selectedTarget']) {
-      navigate({ pathname: `../${target}`, search: searchParams.toString() });
+      navigate({
+        pathname: `../${encodeURIComponent(target)}`,
+        search: searchParams.toString(),
+      });
     } else {
-      navigate({ pathname: `${target}`, search: searchParams.toString() });
+      navigate({
+        pathname: `${encodeURIComponent(target)}`,
+        search: searchParams.toString(),
+      });
     }
   }
 

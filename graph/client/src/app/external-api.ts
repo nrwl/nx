@@ -25,7 +25,7 @@ export class ExternalApi {
   }
 
   focusProject(projectName: string) {
-    this.router.navigate(`/projects/${projectName}`);
+    this.router.navigate(`/projects/${encodeURIComponent(projectName)}`);
   }
 
   selectAllProjects() {

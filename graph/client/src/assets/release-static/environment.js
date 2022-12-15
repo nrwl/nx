@@ -22,6 +22,24 @@ window.projectGraphResponse = {
   hash: '081624f3bbc67c126e9dc313133c5a0138ae383da39f8793b26609698aea957b',
   projects: [
     {
+      name: '@scoped/project-a',
+      type: 'lib',
+      data: {
+        tags: [],
+        root: 'libs/project-a',
+        files: [],
+      },
+    },
+    {
+      name: '@scoped/project-b',
+      type: 'lib',
+      data: {
+        tags: [],
+        root: 'libs/project-a',
+        files: [],
+      },
+    },
+    {
       name: 'products-product-detail-page',
       type: 'lib',
       data: {
@@ -1651,6 +1669,13 @@ window.projectGraphResponse = {
     },
   ],
   dependencies: {
+    '@scoped/project-a': [
+      {
+        source: '@scoped/project-a',
+        target: '@scoped/project-b',
+      },
+    ],
+    '@scoped/project-b': [],
     'products-product-detail-page': [
       {
         source: 'products-product-detail-page',

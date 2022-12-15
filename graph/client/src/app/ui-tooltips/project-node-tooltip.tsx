@@ -31,11 +31,20 @@ export function ProjectNodeToolTip({
   }
 
   function onStartTrace() {
-    navigate(routeConstructor(`/projects/trace/${id}`, true));
+    navigate(
+      routeConstructor(`/projects/trace/${encodeURIComponent(id)}`, true)
+    );
   }
 
   function onEndTrace() {
-    navigate(routeConstructor(`/projects/trace/${start}/${id}`, true));
+    navigate(
+      routeConstructor(
+        `/projects/trace/${encodeURIComponent(start)}/${encodeURIComponent(
+          id
+        )}`,
+        true
+      )
+    );
   }
 
   return (
