@@ -20,6 +20,7 @@ describe('splitArgs', () => {
       base: 'sha1',
       head: 'sha2',
       skipNxCache: false,
+      parallel: 3
     });
   });
 
@@ -51,6 +52,7 @@ describe('splitArgs', () => {
     ).toEqual({
       base: 'main',
       skipNxCache: false,
+      parallel: 3
     });
   });
 
@@ -68,6 +70,7 @@ describe('splitArgs', () => {
     ).toEqual({
       base: 'develop',
       skipNxCache: false,
+      parallel: 3
     });
   });
 
@@ -85,6 +88,7 @@ describe('splitArgs', () => {
     ).toEqual({
       base: 'main',
       skipNxCache: false,
+      parallel: 3
     });
   });
 
@@ -181,6 +185,7 @@ describe('splitArgs', () => {
       base: 'envVarSha1',
       head: 'envVarSha2',
       skipNxCache: false,
+      parallel: 3
     });
 
     expect(
@@ -198,6 +203,7 @@ describe('splitArgs', () => {
       base: 'envVarSha1',
       head: 'directlyOnCommandSha1',
       skipNxCache: false,
+      parallel: 3
     });
 
     expect(
@@ -215,6 +221,7 @@ describe('splitArgs', () => {
       base: 'directlyOnCommandSha2',
       head: 'envVarSha2',
       skipNxCache: false,
+      parallel: 3
     });
 
     // Reset process data
