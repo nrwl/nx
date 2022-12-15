@@ -86,7 +86,7 @@ The Nx CLI can invoke Nx Generator or Angular Schematics directly. When the user
 
 ```shell
 nx g mygenerator params
-nx g mygenerator params  # will work exactly the same same as the line above
+nx g mygenerator params  # will work exactly the same as the line above
 ```
 
 The Nx CLI will see what type of generator `mygenerator` is and will invoke it using the right machinery. The user doesn't have to know how the generator is implemented.
