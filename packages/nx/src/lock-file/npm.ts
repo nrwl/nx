@@ -529,7 +529,11 @@ export function pruneNpmLockFile(
     isV1
   );
   const lockFileMetadata = {
-    ...lockFileData.lockFileMetadata,
+    metadata: {
+      ...lockFileData.lockFileMetadata.metadata,
+      version:
+        normalizedPackageJson.version || lockFileData.lockFileMetadata?.version,
+    },
     ...pruneRootPackage(lockFileData, normalizedPackageJson),
   };
   let prunedLockFileData: LockFileData;
@@ -543,19 +547,12 @@ export function pruneNpmLockFile(
 
 function pruneRootPackage(
   lockFileData: LockFileData,
-  { name, version, license, ...dependencyInfo }: PackageJsonDeps
+  packageJson: PackageJsonDeps
 ): Record<string, any> {
   if (lockFileData.lockFileMetadata.metadata.lockfileVersion === 1) {
     return undefined;
   }
-  const rootPackage = {
-    name: name || lockFileData.lockFileMetadata.rootPackage.name,
-    version: version || lockFileData.lockFileMetadata.rootPackage.version,
-    ...(lockFileData.lockFileMetadata.rootPackage.license && {
-      license: license || lockFileData.lockFileMetadata.rootPackage.license,
-    }),
-    ...dependencyInfo,
-  };
+  const rootPackage = packageJson;
 
   return { rootPackage };
 }
@@ -718,6 +715,18 @@ function pruneTransitiveDependencies(
           (value.peerDependencies?.[packageName] ||
             packageJSON?.peerDependencies?.[packageName])
         ) {
+          if (
+            value.peerDependencies?.[packageName] &&
+            value.peerDependenciesMeta?.[packageName]?.optional
+          ) {
+            return;
+          }
+          if (
+            packageJSON?.peerDependencies?.[packageName] &&
+            packageJSON.peerDependenciesMeta?.[packageName]?.optional
+          ) {
+            return;
+          }
           peerDependenciesToPrune[key] = peerDependenciesToPrune[key] || {
             parentPackages,
             dependency,

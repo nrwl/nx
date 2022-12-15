@@ -1,3 +1,6 @@
+import { readFileSync } from 'fs';
+import { readJsonFile } from '../utils/fileutils';
+import { joinPathFragments } from '../utils/path';
 import {
   parsePnpmLockFile,
   prunePnpmLockFile,
@@ -10,11 +13,11 @@ import {
   lockFileYargsAndDevkit,
   rxjsTslibLockFile,
   ssh2LockFile,
-} from './__fixtures__/pnpm.lock';
+} from './__fixtures__/manual/pnpm.lock';
 import {
   pnpmLockFileWithInlineSpecifiersAndWorkspaces,
   pnpmLockFileWithWorkspacesAndTime,
-} from './__fixtures__/workspaces.lock';
+} from './__fixtures__/manual/workspaces.lock';
 
 const TypeScriptOnlyPackage = {
   name: 'test',
@@ -301,5 +304,28 @@ describe('pnpm LockFile utility', () => {
     expect(stringifyPnpmLockFile(parsedLockFile)).toEqual(
       pnpmLockFileWithInlineSpecifiersAndWorkspaces
     );
+  });
+
+  describe('next.js generated', () => {
+    const rootLockFile = readFileSync(
+      joinPathFragments(__dirname, '__fixtures__/nextjs/pnpm-lock.yaml'),
+      'utf-8'
+    );
+    const projectPackageJson = readJsonFile(
+      joinPathFragments(__dirname, '__fixtures__/nextjs/app/package.json')
+    );
+
+    xit('should prune the lockfile correctly', () => {
+      const parsedLockFile = parsePnpmLockFile(rootLockFile);
+      const prunedLockFile = prunePnpmLockFile(
+        parsedLockFile,
+        projectPackageJson
+      );
+      const expectedLockFile = readFileSync(
+        joinPathFragments(__dirname, '__fixtures__/nextjs/app/pnpm-lock.yaml'),
+        'utf-8'
+      );
+      expect(stringifyPnpmLockFile(prunedLockFile)).toEqual(expectedLockFile);
+    });
   });
 });

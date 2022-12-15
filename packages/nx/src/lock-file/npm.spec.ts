@@ -19,9 +19,10 @@ import {
   ssh2LockFileV1,
   ssh2LockFileV2,
   ssh2LockFileV3,
-} from './__fixtures__/npm.lock';
+} from './__fixtures__/manual/npm.lock';
 import { vol } from 'memfs';
-import { npmLockFileWithWorkspaces } from './__fixtures__/workspaces.lock';
+import { npmLockFileWithWorkspaces } from './__fixtures__/manual/workspaces.lock';
+import { joinPathFragments } from '../utils/path';
 
 jest.mock('fs', () => require('memfs').fs);
 
@@ -37,16 +38,19 @@ jest.mock('nx/src/utils/workspace-root', () => ({
 const TypeScriptOnlyPackage = {
   name: 'test',
   version: '0.0.0',
+  license: 'MIT',
   dependencies: { typescript: '4.8.4' },
 };
 const YargsAndDevkitPackage = {
   name: 'test',
   version: '0.0.0',
+  license: 'MIT',
   dependencies: { '@nrwl/devkit': '15.0.13', yargs: '17.6.2' },
 };
 const Ssh2Package = {
   name: 'test',
   version: '0.0.0',
+  license: 'ISC',
   dependencies: {
     ssh2: '1.11.0',
   },
@@ -54,6 +58,7 @@ const Ssh2Package = {
 const RxjsTslibPackage = {
   name: 'test',
   version: '0.0.0',
+  license: 'MIT',
   dependencies: {
     rxjs: '^7.8.0',
     tslib: '^2.4.1',
@@ -482,6 +487,32 @@ describe('npm LockFile utility', () => {
           )
         ).toEqual(rxjsTslibLockFileV1);
       });
+    });
+  });
+
+  describe('next.js generated', () => {
+    const rootLockFile = require(joinPathFragments(
+      __dirname,
+      '__fixtures__/nextjs/package-lock.json'
+    ));
+    const projectPackageJson = require(joinPathFragments(
+      __dirname,
+      '__fixtures__/nextjs/app/package.json'
+    ));
+
+    xit('should prune the lockfile correctly', () => {
+      const parsedLockFile = parseNpmLockFile(JSON.stringify(rootLockFile));
+      const prunedLockFile = pruneNpmLockFile(
+        parsedLockFile,
+        projectPackageJson
+      );
+      const expectedLockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/nextjs/app/package-lock.json'
+      ));
+      expect(JSON.parse(stringifyNpmLockFile(prunedLockFile))).toEqual(
+        expectedLockFile
+      );
     });
   });
 });

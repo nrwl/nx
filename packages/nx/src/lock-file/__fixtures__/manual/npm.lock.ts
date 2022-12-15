@@ -22955,7 +22955,7 @@ export const ssh2LockFileV3 = `{
 
 export const rxjsTslibLockFileV1 = `{
   "name": "test",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "lockfileVersion": 1,
   "requires": true,
   "dependencies": {

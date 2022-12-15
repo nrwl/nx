@@ -516,6 +516,12 @@ function pruneTransitiveDependencies(
     ...parent.optionalDependencies,
   }).forEach(([packageName, version]: [string, string]) => {
     const versions = dependencies[packageName];
+    if (
+      parent.peerDependencies?.[packageName] &&
+      parent.peerDependenciesMeta?.[packageName]?.optional
+    ) {
+      return;
+    }
     if (versions) {
       const dependency = transitiveDependencyPnpmLookup({
         packageName,

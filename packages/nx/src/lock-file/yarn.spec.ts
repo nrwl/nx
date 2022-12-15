@@ -1,3 +1,6 @@
+import { readFileSync } from 'fs';
+import { readJsonFile } from '../utils/fileutils';
+import { joinPathFragments } from '../utils/path';
 import {
   parseYarnLockFile,
   pruneYarnLockFile,
@@ -13,7 +16,7 @@ import {
   lockFileJustTypescript,
   rxjsTslibLockFile,
   ssh2LockFile,
-} from './__fixtures__/yarn.lock';
+} from './__fixtures__/manual/yarn.lock';
 
 const TypeScriptOnlyPackage = {
   name: 'test',
@@ -282,6 +285,29 @@ describe('yarn LockFile utility', () => {
           )
         )
       ).toEqual(removeComment(berryRxjsTslibLockFile));
+    });
+  });
+
+  describe('next.js generated', () => {
+    const rootLockFile = readFileSync(
+      joinPathFragments(__dirname, '__fixtures__/nextjs/yarn.lock'),
+      'utf-8'
+    );
+    const projectPackageJson = readJsonFile(
+      joinPathFragments(__dirname, '__fixtures__/nextjs/app/package.json')
+    );
+
+    it('should prune the lockfile correctly', () => {
+      const parsedLockFile = parseYarnLockFile(rootLockFile);
+      const prunedLockFile = pruneYarnLockFile(
+        parsedLockFile,
+        projectPackageJson
+      );
+      const expectedLockFile = readFileSync(
+        joinPathFragments(__dirname, '__fixtures__/nextjs/app/yarn.lock'),
+        'utf-8'
+      );
+      expect(stringifyYarnLockFile(prunedLockFile)).toEqual(expectedLockFile);
     });
   });
 });
