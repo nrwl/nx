@@ -277,8 +277,8 @@ Change your app's `tsconfig.json` (eg. `apps/my-app/tsconfig.json`) `compilerOpt
   "compilerOptions": {
     "jsx": "react-jsx",
     "allowJs": false,
-    "esModuleInterop": false,
     "allowSyntheticDefaultImports": true,
+    "esModuleInterop": false,
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
@@ -300,21 +300,21 @@ Change your app's `tsconfig.json` (eg. `apps/my-app/tsconfig.json`) `compilerOpt
 ```json
 ...
   "compilerOptions": {
-    "target": "ESNext",
-    "useDefineForClassFields": true,
-    "module": "ESNext",
-    "lib": ["ESNext", "DOM"],
-    "moduleResolution": "Node",
-    "strict": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
     "esModuleInterop": true,
+    "isolatedModules": true,
+    "lib": ["DOM". "ESNext"],
+    "module": "ESNext",
+    "moduleResolution": "Node",
     "noEmit": true,
+    "noImplicitReturns": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noImplicitReturns": true,
+    "resolveJsonModule": true,
     "skipLibCheck": true,
-    "types": ["vite/client"]
+    "strict": true,
+    "target": "ESNext",
+    "types": ["vite/client"],
+    "useDefineForClassFields": true
   },
   "include": ["src"],
 ...
