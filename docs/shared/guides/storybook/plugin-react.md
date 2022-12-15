@@ -41,7 +41,7 @@ The `@nrwl/react:storybook-configuration` generator has the option to automatica
 You can re-run it at a later point using the following command:
 
 ```shell
-nx g @nrwl/react:stories <project-name>
+nx g @nrwl/react:stories --project=<project-name>
 ```
 
 {% callout type="note" title="Example" %}
@@ -51,7 +51,7 @@ Let's take for a example a library in your workspace, under `libs/feature/ui`, c
 The command to generate stories for that library would be:
 
 ```shell
-nx g @nrwl/react:stories feature-ui
+nx g @nrwl/react:stories --project=feature-ui
 ```
 
 and the result would be the following:
