@@ -147,7 +147,7 @@ Matching just a single source tag is sometimes not enough for solving complex re
           "sourceTag": "type:ui",
           "onlyDependOnLibsWithTags": ["type:ui", "type:util"]
         },
-        { // we don't want our admin ui components to depend on router or other ui libraries
+        { // we don't want our admin ui components to depend on anything except utilities, and we also want to ban router imports
           "allSourceTags": ["scope:admin", "type:ui"],
           "onlyDependOnLibsWithTags": ["type:util"],
           "bannedExternalImports": ["*router*"]
