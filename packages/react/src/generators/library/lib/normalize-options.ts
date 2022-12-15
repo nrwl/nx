@@ -4,6 +4,7 @@ import {
   getProjects,
   getWorkspaceLayout,
   joinPathFragments,
+  logger,
   names,
   normalizePath,
   Tree,
@@ -36,12 +37,27 @@ export function normalizeOptions(
   const importPath =
     options.importPath || getImportPath(npmScope, fullProjectDirectory);
 
+  let bundler = options.bundler ?? 'none';
+
+  if (bundler === 'none') {
+    if (options.publishable) {
+      logger.warn(
+        `Publishable libraries cannot be used with bundler: 'none'. Defaulting to 'rollup'.`
+      );
+      bundler = 'rollup';
+    }
+    if (options.buildable) {
+      logger.warn(
+        `Buildable libraries cannot be used with bundler: 'none'. Defaulting to 'rollup'.`
+      );
+      bundler = 'rollup';
+    }
+  }
+
   const normalized = {
     ...options,
     compiler: options.compiler ?? 'babel',
-    bundler:
-      options.bundler ??
-      (options.buildable || options.publishable ? 'rollup' : 'none'),
+    bundler,
     fileName,
     routePath: `/${name}`,
     name: projectName,
