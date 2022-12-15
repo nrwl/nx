@@ -35,6 +35,9 @@ export function addPresetDependencies(host: Tree, options: NormalizedSchema) {
 export function generatePreset(host: Tree, opts: NormalizedSchema) {
   const parsedArgs = yargsParser(process.argv, {
     boolean: ['interactive'],
+    default: {
+      interactive: true,
+    },
   });
   const spawnOptions = {
     stdio: [process.stdin, process.stdout, process.stderr],
