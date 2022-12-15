@@ -69,7 +69,7 @@ export async function applicationGenerator(
   updateConfigFiles(host, options);
   updateAppComponentTemplate(host, options);
 
-  if (!options.skipNxWelcomeComponent) {
+  if (!options.skipStarterTemplate) {
     // Create the NxWelcomeComponent
     const angularComponentSchematic = wrapAngularDevkitSchematic(
       '@schematics/angular',

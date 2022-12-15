@@ -29,7 +29,7 @@ export interface Schema {
   skipDefaultProject?: boolean;
   skipPackageJson?: boolean;
   rootProject?: boolean;
-  skipNxWelcomeComponent?: boolean;
+  skipStarterTemplate?: boolean;
 }
 
 export interface NormalizedSchema extends Schema {
@@ -40,5 +40,5 @@ export interface NormalizedSchema extends Schema {
   fileName: string;
   styledModule: null | SupportedStyles;
   hasStyles: boolean;
-  includeNxWelcomeComponent: boolean;
+  includeStarterTemplate: boolean;
 }

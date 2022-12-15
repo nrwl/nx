@@ -58,6 +58,6 @@ export function normalizeOptions(
     fileName,
     styledModule,
     hasStyles: options.style !== 'none',
-    includeNxWelcomeComponent: !options.skipNxWelcomeComponent,
+    includeStarterTemplate: !options.skipStarterTemplate,
   };
 }

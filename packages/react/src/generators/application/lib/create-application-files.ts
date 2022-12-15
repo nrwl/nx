@@ -71,7 +71,7 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     );
   }
 
-  if (!options.skipNxWelcomeComponent) {
+  if (!options.skipStarterTemplate) {
     generateFiles(
       host,
       join(__dirname, '../files/nx-welcome'),
