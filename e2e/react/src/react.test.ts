@@ -125,6 +125,10 @@ describe('React Applications', () => {
     runCLI(`build ${appName}`);
 
     checkFilesExist(`dist/apps/${appName}/index.html`);
+
+    const e2eResults = runCLI(`e2e ${appName}-e2e --no-watch`);
+    expect(e2eResults).toContain('All specs passed!');
+    expect(await killPorts()).toBeTruthy();
   }, 250_000);
 
   async function testGeneratedApp(
