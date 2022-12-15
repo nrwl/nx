@@ -1,4 +1,4 @@
-import { exec } from 'child_process';
+import { exec, spawn } from 'child_process';
 import { writeFileSync } from 'fs';
 import * as enquirer from 'enquirer';
 import * as path from 'path';
@@ -250,6 +250,10 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
       defaultBase,
     }
   );
+
+  if (!isKnownPreset(parsedArgs.preset)) {
+    await createPreset(parsedArgs, packageManager as PackageManager, directory);
+  }
 
   let nxCloudInstallRes;
   if (nxCloud) {
@@ -879,7 +883,6 @@ async function createSandbox(packageManager: PackageManager) {
 
   return tmpDir;
 }
-
 async function createApp(
   tmpDir: string,
   name: string,
@@ -937,6 +940,66 @@ async function createApp(
     workspaceSetupSpinner.stop();
   }
   return join(workingDir, getFileName(name));
+}
+
+async function createPreset(
+  parsedArgs: yargs.Arguments<Arguments>,
+  packageManager: PackageManager,
+  directory: string
+): Promise<void> {
+  const {
+    _,
+    cli,
+    skipGit,
+    ci,
+    commit,
+    allPrompts,
+    nxCloud,
+    preset,
+    ...restArgs
+  } = parsedArgs;
+
+  const args = unparse(restArgs).join(' ');
+
+  const pmc = getPackageManagerCommand(packageManager);
+
+  const workingDir = process.cwd().replace(/\\/g, '/');
+  let nxWorkspaceRoot = `"${workingDir}"`;
+
+  // If path contains spaces there is a problem in Windows for npm@6.
+  // In this case we have to escape the wrapping quotes.
+  if (
+    process.platform === 'win32' &&
+    /\s/.test(nxWorkspaceRoot) &&
+    packageManager === 'npm'
+  ) {
+    const pmVersion = +getPackageManagerVersion(packageManager).split('.')[0];
+    if (pmVersion < 7) {
+      nxWorkspaceRoot = `\\"${nxWorkspaceRoot.slice(1, -1)}\\"`;
+    }
+  }
+
+  const command = `g ${preset}:preset ${args}`;
+
+  try {
+    const [exec, ...args] = pmc.exec.split(' ');
+    args.push(
+      'nx',
+      `--nxWorkspaceRoot=${nxWorkspaceRoot}`,
+      ...command.split(' ')
+    );
+    await spawnAndWait(exec, args, directory);
+
+    output.log({
+      title: `Successfully applied preset: ${preset}.`,
+    });
+  } catch (e) {
+    output.error({
+      title: `Failed to apply preset: ${preset}`,
+      bodyLines: ['See above'],
+    });
+    process.exit(1);
+  }
 }
 
 async function setupNxCloud(name: string, packageManager: PackageManager) {
@@ -1042,6 +1105,27 @@ function execAndWait(command: string, cwd: string) {
         }
       }
     );
+  });
+}
+
+/**
+ * Use spawn only for interactive shells
+ */
+function spawnAndWait(command: string, args: string[], cwd: string) {
+  return new Promise((res, rej) => {
+    const childProcess = spawn(command, args, {
+      cwd,
+      stdio: 'inherit',
+      env: { ...process.env, NX_DAEMON: 'false' },
+    });
+
+    childProcess.on('exit', (code) => {
+      if (code !== 0) {
+        rej({ code: code });
+      } else {
+        res({ code: 0 });
+      }
+    });
   });
 }
 
