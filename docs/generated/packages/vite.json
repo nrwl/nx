@@ -192,8 +192,7 @@
           },
           "mode": {
             "type": "string",
-            "description": "Mode to run the server in.",
-            "enum": ["production", "development"]
+            "description": "Mode to run the server in."
           },
           "clearScreen": {
             "description": "Set to false to prevent Vite from clearing the terminal screen when logging certain messages.",
@@ -286,8 +285,7 @@
           },
           "mode": {
             "type": "string",
-            "description": "Mode to run the build in.",
-            "enum": ["production", "development"]
+            "description": "Mode to run the build in."
           }
         },
         "definitions": {},

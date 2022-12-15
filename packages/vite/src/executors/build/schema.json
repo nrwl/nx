@@ -112,8 +112,7 @@
     },
     "mode": {
       "type": "string",
-      "description": "Mode to run the build in.",
-      "enum": ["production", "development"]
+      "description": "Mode to run the build in."
     }
   },
   "definitions": {},
