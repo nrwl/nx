@@ -5,6 +5,12 @@
       "version": "15.3.1-beta.0",
       "description": "Remove projects property from vite-tsconfig-paths plugin in vite.config.ts files.",
       "factory": "./src/migrations/update-15-3-1/update-vite-tsconfig-paths"
+    },
+    "set-mode-in-configurations": {
+      "cli": "nx",
+      "version": "15.3.4-beta.0",
+      "description": "Set the mode in configurations to match the configurationName.",
+      "factory": "./src/migrations/update-15-3-4/set-mode-in-configuration"
     }
   },
   "packageJsonUpdates": {

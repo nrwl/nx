@@ -29,7 +29,7 @@ export async function getBuildAndSharedConfig(
   const projectRoot = context.workspace.projects[context.projectName].root;
 
   return mergeConfig({}, {
-    mode: options.mode ?? context.configurationName,
+    mode: options.mode,
     root: projectRoot,
     base: options.base,
     configFile: normalizeViteConfigFilePath(projectRoot, options.configFile),
