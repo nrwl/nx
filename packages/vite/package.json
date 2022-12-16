@@ -34,7 +34,8 @@
     "@nrwl/js": "file:../js",
     "@swc/helpers": "^0.4.11",
     "chalk": "4.1.0",
-    "dotenv": "~10.0.0"
+    "dotenv": "~10.0.0",
+    "enquirer": "~2.3.6"
   },
   "peerDependencies": {
     "vite": "^4.0.1",

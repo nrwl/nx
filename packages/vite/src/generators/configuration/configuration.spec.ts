@@ -9,7 +9,10 @@ import { nxVersion } from '../../utils/versions';
 
 import { viteConfigurationGenerator } from './configuration';
 import {
+  mockAngularAppGenerator,
   mockReactAppGenerator,
+  mockReactMixedAppGenerator,
+  mockUnknownAppGenerator,
   mockWebAppGenerator,
 } from '../../utils/test-utils';
 
@@ -19,7 +22,7 @@ describe('@nrwl/vite:configuration', () => {
   describe('transform React app to use Vite', () => {
     beforeAll(async () => {
       tree = createTreeWithEmptyV1Workspace();
-      await mockReactAppGenerator(tree);
+      mockReactAppGenerator(tree);
       const existing = 'existing';
       const existingVersion = '1.0.0';
       addDependenciesToPackageJson(
@@ -65,7 +68,7 @@ describe('@nrwl/vite:configuration', () => {
   describe('transform Web app to use Vite', () => {
     beforeAll(async () => {
       tree = createTreeWithEmptyV1Workspace();
-      await mockWebAppGenerator(tree);
+      mockWebAppGenerator(tree);
       const existing = 'existing';
       const existingVersion = '1.0.0';
       addDependenciesToPackageJson(
@@ -102,6 +105,165 @@ describe('@nrwl/vite:configuration', () => {
 
     it('should transform workspace.json project config', () => {
       expect(tree.read('workspace.json', 'utf-8')).toMatchSnapshot();
+    });
+  });
+
+  describe('do not transform Angular app to use Vite', () => {
+    beforeAll(async () => {
+      tree = createTreeWithEmptyV1Workspace();
+      mockAngularAppGenerator(tree);
+    });
+    it('should throw when trying to convert', async () => {
+      expect.assertions(2);
+
+      try {
+        await viteConfigurationGenerator(tree, {
+          uiFramework: 'none',
+          project: 'my-test-angular-app',
+        });
+      } catch (e) {
+        expect(e).toBeDefined();
+        expect(e.toString()).toContain(
+          'The project my-test-angular-app cannot be converted to use the @nrwl/vite executors'
+        );
+      }
+    });
+  });
+
+  describe('inform user of unknown targets when converting', () => {
+    beforeAll(async () => {
+      tree = createTreeWithEmptyV1Workspace();
+      mockUnknownAppGenerator(tree);
+    });
+
+    it('should throw when trying to convert something unknown', async () => {
+      const { Confirm } = require('enquirer');
+      const confirmSpy = jest.spyOn(Confirm.prototype, 'run');
+      confirmSpy.mockResolvedValue(true);
+      expect.assertions(2);
+
+      try {
+        await viteConfigurationGenerator(tree, {
+          uiFramework: 'none',
+          project: 'my-test-random-app',
+        });
+      } catch (e) {
+        expect(e).toBeDefined();
+        expect(e.toString()).toContain(
+          'Error: Cannot find apps/my-test-random-app/tsconfig.json'
+        );
+      }
+    });
+
+    it('should throw when trying to convert something unknown and user denies conversion', async () => {
+      const { Confirm } = require('enquirer');
+      const confirmSpy = jest.spyOn(Confirm.prototype, 'run');
+      confirmSpy.mockResolvedValue(false);
+
+      expect.assertions(2);
+
+      try {
+        await viteConfigurationGenerator(tree, {
+          uiFramework: 'none',
+          project: 'my-test-random-app',
+        });
+      } catch (e) {
+        expect(e).toBeDefined();
+        expect(e.toString()).toContain(
+          'Nx could not verify that the executors you are using can be converted to the @nrwl/vite executors.'
+        );
+      }
+    });
+  });
+
+  describe('transform React app to use Vite by providing custom targets', () => {
+    describe('transform React app if supported executor is provided', () => {
+      beforeEach(async () => {
+        tree = createTreeWithEmptyV1Workspace();
+        mockReactMixedAppGenerator(tree);
+        const existing = 'existing';
+        const existingVersion = '1.0.0';
+        addDependenciesToPackageJson(
+          tree,
+          { '@nrwl/vite': nxVersion, [existing]: existingVersion },
+          { [existing]: existingVersion }
+        );
+        await viteConfigurationGenerator(tree, {
+          uiFramework: 'react',
+          project: 'my-test-mixed-react-app',
+          buildTarget: 'valid-build',
+        });
+      });
+      it('should add vite packages and react-related dependencies for vite', async () => {
+        const packageJson = readJson(tree, '/package.json');
+        expect(packageJson.devDependencies).toMatchObject({
+          vite: expect.any(String),
+          '@vitejs/plugin-react': expect.any(String),
+        });
+      });
+
+      it('should create vite.config file at the root of the app', () => {
+        expect(tree.exists('apps/my-test-mixed-react-app/vite.config.ts')).toBe(
+          true
+        );
+      });
+
+      it('should transform workspace.json project config', () => {
+        expect(tree.read('workspace.json', 'utf-8')).toMatchSnapshot();
+      });
+    });
+
+    describe('do NOT transform React app if unsupported executor is provided', () => {
+      beforeEach(async () => {
+        tree = createTreeWithEmptyV1Workspace();
+        mockReactMixedAppGenerator(tree);
+        const existing = 'existing';
+        const existingVersion = '1.0.0';
+        addDependenciesToPackageJson(
+          tree,
+          { '@nrwl/vite': nxVersion, [existing]: existingVersion },
+          { [existing]: existingVersion }
+        );
+      });
+      it('should throw when trying to convert and user denies', async () => {
+        const { Confirm } = require('enquirer');
+        const confirmSpy = jest.spyOn(Confirm.prototype, 'run');
+        confirmSpy.mockResolvedValue(false);
+        expect.assertions(2);
+
+        try {
+          await viteConfigurationGenerator(tree, {
+            uiFramework: 'none',
+            project: 'my-test-mixed-react-app',
+            buildTarget: 'invalid-build',
+          });
+        } catch (e) {
+          expect(e).toBeDefined();
+          expect(e.toString()).toContain(
+            'The build target invalid-build cannot be converted to use the @nrwl/vite:build executor'
+          );
+        }
+      });
+
+      it('should NOT throw error when trying to convert and user confirms', async () => {
+        const { Confirm } = require('enquirer');
+        const confirmSpy = jest.spyOn(Confirm.prototype, 'run');
+        confirmSpy.mockResolvedValue(true);
+        expect.assertions(1);
+
+        try {
+          await viteConfigurationGenerator(tree, {
+            uiFramework: 'none',
+            project: 'my-test-mixed-react-app',
+            buildTarget: 'invalid-build',
+          });
+          expect(
+            tree.exists('apps/my-test-mixed-react-app/vite.config.ts')
+          ).toBe(true);
+        } catch (e) {
+          throw new Error('Should not throw error');
+        }
+      });
     });
   });
 

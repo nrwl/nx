@@ -5,4 +5,7 @@ export interface Schema {
   includeVitest?: boolean;
   inSourceTests?: boolean;
   includeLib?: boolean;
+  buildTarget?: string;
+  serveTarget?: string;
+  testTarget?: string;
 }
