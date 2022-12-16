@@ -28,7 +28,7 @@ export default async function viteBuildExecutor(
         outputPath: options.outputPath,
         assets: [
           {
-            input: '.',
+            input: projectRoot,
             output: '.',
             glob: 'package.json',
           },
