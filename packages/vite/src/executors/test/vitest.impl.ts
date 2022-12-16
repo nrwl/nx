@@ -52,6 +52,9 @@ export default async function* runExecutor(
     ...options,
     root: projectRoot,
     reporters: [...(options.reporters ?? []), 'default', nxReporter],
+    coverage: {
+      reportsDirectory: options.reportsDirectory,
+    },
   });
 
   let hasErrors = false;
