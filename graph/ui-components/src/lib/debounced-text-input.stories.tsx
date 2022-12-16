@@ -21,6 +21,6 @@ const Template: ComponentStory<typeof DebouncedTextInput> = (args) => (
 
 export const Primary = Template.bind({});
 Primary.args = {
-  currentText: '',
+  initialText: '',
   placeholderText: '',
 };

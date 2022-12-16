@@ -17,5 +17,3 @@ export function Tag({ className, children, ...rest }: TagProps) {
     </span>
   );
 }
-
-export default Tag;

@@ -16,5 +16,3 @@ export function Dropdown(props: DropdownProps) {
     </select>
   );
 }
-
-export default Dropdown;

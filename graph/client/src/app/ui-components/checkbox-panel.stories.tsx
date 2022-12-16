@@ -1,5 +1,5 @@
 import { ComponentMeta, ComponentStory } from '@storybook/react';
-import CheckboxPanel from './checkbox-panel';
+import { CheckboxPanel } from './checkbox-panel';
 
 export default {
   component: CheckboxPanel,

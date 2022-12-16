@@ -1,4 +1,4 @@
-import TaskList from './task-list';
+import { TaskList } from './task-list';
 import {
   useNavigate,
   useParams,
@@ -12,11 +12,10 @@ import type {
 } from 'nx/src/command-line/dep-graph';
 import { getGraphService } from '../machines/graph.service';
 import { useEffect, useState } from 'react';
-import CheckboxPanel from '../ui-components/checkbox-panel';
+import { CheckboxPanel } from '../ui-components/checkbox-panel';
 
-// nx-ignore-next-line
-import Dropdown from '../ui-components/dropdown';
-import ShowHideAll from '../ui-components/show-hide-all';
+import { Dropdown } from '@nrwl/graph/ui-components';
+import { ShowHideAll } from '../ui-components/show-hide-all';
 
 function createTaskName(
   project: string,
@@ -217,5 +216,3 @@ export function TasksSidebar() {
     </>
   );
 }
-
-export default TasksSidebar;

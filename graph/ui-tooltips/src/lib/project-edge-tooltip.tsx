@@ -1,10 +1,11 @@
-import Tag from '../ui-components/tag';
+import { Tag } from '@nrwl/graph/ui-components';
 
 export interface ProjectEdgeNodeTooltipProps {
   type: string;
   source: string;
   target: string;
   fileDependencies: Array<{ fileName: string }>;
+  description?: string;
 }
 
 export function ProjectEdgeNodeTooltip({
@@ -12,6 +13,7 @@ export function ProjectEdgeNodeTooltip({
   source,
   target,
   fileDependencies,
+  description,
 }: ProjectEdgeNodeTooltipProps) {
   return (
     <div className="text-sm text-slate-700 dark:text-slate-400">
@@ -21,7 +23,8 @@ export function ProjectEdgeNodeTooltip({
           {source} &rarr; {target}
         </span>
       </h4>
-      {type !== 'implicit' ? (
+      {description ? <p>{description}</p> : null}
+      {type !== 'implicit' && fileDependencies?.length > 0 ? (
         <div className="overflow-hidden rounded-md border border-slate-200 dark:border-slate-800">
           <div className="bg-slate-50 px-4 py-2 text-xs font-medium uppercase text-slate-500 dark:bg-slate-800 dark:text-slate-400">
             <span>Files</span>
@@ -43,5 +46,3 @@ export function ProjectEdgeNodeTooltip({
     </div>
   );
 }
-
-export default ProjectEdgeNodeTooltip;

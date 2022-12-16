@@ -3,7 +3,7 @@ import { NxProjectGraphViz } from './nx-project-graph-viz';
 
 const Story: ComponentMeta<typeof NxProjectGraphViz> = {
   component: NxProjectGraphViz,
-  title: 'NxGraphViz',
+  title: 'NxProjectGraphViz',
 };
 export default Story;
 
@@ -19,6 +19,13 @@ Primary.args = {
       name: 'app',
       data: {
         tags: ['scope:cart'],
+        description: 'This is your top-level app',
+        files: [
+          {
+            file: 'whatever.ts',
+            deps: ['lib'],
+          },
+        ],
       },
     },
     {
@@ -26,6 +33,7 @@ Primary.args = {
       name: 'lib',
       data: {
         tags: ['scope:cart'],
+        description: 'This lib implements some type of feature for your app.',
       },
     },
     {
@@ -59,4 +67,5 @@ Primary.args = {
   affectedProjectIds: [],
   theme: 'light',
   height: '450px',
+  enableTooltips: true,
 };
