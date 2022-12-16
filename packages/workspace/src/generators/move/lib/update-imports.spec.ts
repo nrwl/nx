@@ -340,6 +340,30 @@ export MyExtendedClass extends MyClass {};`
     });
   });
 
+  it('should update project ref in the root tsconfig.json when there is a comment', async () => {
+    tree.rename('tsconfig.base.json', 'tsconfig.json');
+    tree.write(
+      'tsconfig.json',
+      `// A comment\n${tree.read('tsconfig.json', 'utf-8')}`
+    );
+    await libraryGenerator(tree, {
+      name: 'my-source',
+      standaloneConfig: false,
+    });
+    const projectConfig = readProjectConfiguration(tree, 'my-source');
+
+    updateImports(
+      tree,
+      normalizeSchema(tree, schema, projectConfig),
+      projectConfig
+    );
+
+    const tsConfig = readJson(tree, '/tsconfig.json');
+    expect(tsConfig.compilerOptions.paths).toEqual({
+      '@proj/my-destination': ['libs/my-destination/src/index.ts'],
+    });
+  });
+
   it('should only update the project ref paths in the tsconfig file when --updateImportPath=false', async () => {
     await libraryGenerator(tree, {
       name: 'my-source',
