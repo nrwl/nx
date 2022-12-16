@@ -1,24 +1,18 @@
-import {
+import type {
   ProjectConfiguration,
   TargetConfiguration,
   Tree,
-  updateJson,
 } from '@nrwl/devkit';
 import {
   joinPathFragments,
   offsetFromRoot,
   readJson,
+  updateJson,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
 import { hasRulesRequiringTypeChecking } from '@nrwl/linter';
 import { dirname } from 'path';
-import type {
-  Logger,
-  ProjectMigrationInfo,
-  ValidationError,
-  ValidationResult,
-} from '../../utilities';
-import { arrayToString } from '../../utilities';
+import type { Logger, ProjectMigrationInfo } from '../../utilities';
 import { BuilderMigrator } from './builder.migrator';
 
 export class AngularEslintLintMigrator extends BuilderMigrator {
@@ -42,6 +36,10 @@ export class AngularEslintLintMigrator extends BuilderMigrator {
   }
 
   override migrate(): void {
+    if (this.skipMigration) {
+      return;
+    }
+
     for (const [name, target] of this.targets) {
       this.oldEsLintConfigPath =
         target.options?.eslintConfig ??
@@ -65,22 +63,6 @@ export class AngularEslintLintMigrator extends BuilderMigrator {
         this.moveProjectRootFile(eslintConfig);
       }
     }
-  }
-
-  override validate(): ValidationResult {
-    const errors: ValidationError[] = [];
-    // TODO(leo): keeping restriction until the full refactor is done and we start
-    // expanding what's supported.
-    if (this.targets.size > 1) {
-      errors.push({
-        message: `There is more than one target using a builder that is used to lint the project (${arrayToString(
-          [...this.targets.keys()]
-        )}).`,
-        hint: `Make sure the project only has one target with a builder that is used to lint the project.`,
-      });
-    }
-
-    return errors.length ? errors : null;
   }
 
   private async updateTargetConfiguration(
