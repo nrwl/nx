@@ -25,6 +25,8 @@ import {
 } from '../../utilities/typescript';
 import { nxVersion } from '../../utils/versions';
 import { Schema } from './schema';
+// nx-ignore-next-line
+import { Linter } from '@nrwl/linter';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -232,7 +234,7 @@ function normalizeOptions(tree: Tree, options: Schema): NormalizedSchema {
   }
 
   if (!options.linter) {
-    options.linter = 'eslint';
+    options.linter = Linter.EsLint;
   }
 
   const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
