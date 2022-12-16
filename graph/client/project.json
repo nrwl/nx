@@ -39,7 +39,7 @@
         "main": "graph/client/src/main.tsx",
         "polyfills": "graph/client/src/polyfills.ts",
         "tsConfig": "graph/client/tsconfig.app.json",
-        "styles": ["graph/client/src/styles.scss"],
+        "styles": ["graph/client/src/styles.css"],
         "scripts": [],
         "assets": [],
         "webpackConfig": "graph/client/webpack.config.js",

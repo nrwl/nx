@@ -1,4 +1,4 @@
-import '../src/styles.scss';
+import '../src/styles.css';
 
 import React from 'react';
 import { MemoryRouter } from 'react-router-dom';

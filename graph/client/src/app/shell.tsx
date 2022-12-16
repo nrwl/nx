@@ -175,7 +175,10 @@ export function Shell(): JSX.Element {
         ) : null}
 
         <div className="h-full w-full">
-          <div className="h-full w-full" id="cytoscape-graph"></div>
+          <div
+            className="h-full w-full cursor-pointer"
+            id="cytoscape-graph"
+          ></div>
           <TooltipDisplay></TooltipDisplay>
 
           <Tooltip
