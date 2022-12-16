@@ -62,7 +62,6 @@ export class GraphService {
   }
 
   broadcast(event: GraphInteractionEvents) {
-    console.log(event);
     this.listeners.forEach((callback) => callback(event));
   }
 
