@@ -366,6 +366,10 @@
             "type": "boolean",
             "default": false,
             "description": "Enable coverage report"
+          },
+          "reportsDirectory": {
+            "type": "string",
+            "description": "Directory to write coverage report to."
           }
         },
         "required": [],

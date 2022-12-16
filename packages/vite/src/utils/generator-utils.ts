@@ -183,6 +183,11 @@ export function addOrChangeTestTarget(
 
   const testOptions: VitestExecutorOptions = {
     passWithNoTests: true,
+    reportsDirectory: joinPathFragments(
+      '{workspaceRoot}',
+      'coverage',
+      '{projectRoot}'
+    ),
   };
 
   if (targets[target]) {
