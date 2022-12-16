@@ -192,8 +192,7 @@
           },
           "mode": {
             "type": "string",
-            "description": "Mode to run the server in.",
-            "enum": ["production", "development"]
+            "description": "Mode to run the server in."
           },
           "clearScreen": {
             "description": "Set to false to prevent Vite from clearing the terminal screen when logging certain messages.",
@@ -275,6 +274,10 @@
             "description": "When set to true, the build will also generate an SSR manifest for determining style links and asset preload directives in production. When the value is a string, it will be used as the manifest file name.",
             "oneOf": [{ "type": "boolean" }, { "type": "string" }]
           },
+          "ssr": {
+            "description": "Produce SSR-oriented build. The value can be a string to directly specify the SSR entry, or true, which requires specifying the SSR entry via rollupOptions.input.",
+            "oneOf": [{ "type": "boolean" }, { "type": "string" }]
+          },
           "logLevel": {
             "type": "string",
             "description": "Adjust console output verbosity.",
@@ -282,8 +285,7 @@
           },
           "mode": {
             "type": "string",
-            "description": "Mode to run the build in.",
-            "enum": ["production", "development"]
+            "description": "Mode to run the build in."
           }
         },
         "definitions": {},

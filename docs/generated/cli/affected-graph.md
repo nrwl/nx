@@ -9,7 +9,7 @@ Graph dependencies affected by changes
 
 ## Usage
 
-```terminal
+```shell
 nx affected:graph
 ```
 
@@ -19,37 +19,37 @@ Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`
 
 Open the project graph of the workspace in the browser, and highlight the projects affected by changing the index.ts file:
 
-```terminal
+```shell
  nx affected:graph --files=libs/mylib/src/index.ts
 ```
 
 Open the project graph of the workspace in the browser, and highlight the projects affected by the changes between main and HEAD (e.g., PR):
 
-```terminal
+```shell
  nx affected:graph --base=main --head=HEAD
 ```
 
 Save the project graph of the workspace in a json file, and highlight the projects affected by the changes between main and HEAD (e.g., PR):
 
-```terminal
+```shell
  nx affected:graph --base=main --head=HEAD --file=output.json
 ```
 
 Generate a static website with project graph data in an html file, highlighting the projects affected by the changes between main and HEAD (e.g., PR):
 
-```terminal
+```shell
  nx affected:graph --base=main --head=HEAD --file=output.html
 ```
 
 Open the project graph of the workspace in the browser, and highlight the projects affected by the last commit on main:
 
-```terminal
+```shell
  nx affected:graph --base=main~1 --head=main
 ```
 
 Open the project graph of the workspace in the browser, highlight the projects affected, but exclude project-one and project-two:
 
-```terminal
+```shell
  nx affected:graph --exclude=project-one,project-two
 ```
 

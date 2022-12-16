@@ -130,11 +130,11 @@ export function addOrChangeBuildTarget(
   };
 
   if (targets[target]) {
-    buildOptions.fileReplacements = targets[target].options.fileReplacements;
+    buildOptions.fileReplacements = targets[target].options?.fileReplacements;
 
-    if (target === '@nxext/vite:build') {
-      buildOptions.base = targets[target].options.baseHref;
-      buildOptions.sourcemap = targets[target].options.sourcemaps;
+    if (targets[target].executor === '@nxext/vite:build') {
+      buildOptions.base = targets[target].options?.baseHref;
+      buildOptions.sourcemap = targets[target].options?.sourcemaps;
     }
     targets[target].options = {
       ...buildOptions,
@@ -147,8 +147,12 @@ export function addOrChangeBuildTarget(
       defaultConfiguration: 'production',
       options: buildOptions,
       configurations: {
-        development: {},
-        production: {},
+        development: {
+          mode: 'development',
+        },
+        production: {
+          mode: 'production',
+        },
       },
     };
   }
@@ -461,4 +465,39 @@ ${options.includeVitest ? '/// <reference types="vitest" />' : ''}
   }
 
   tree.write(viteConfigPath, viteConfigContent);
+}
+
+export function normalizeViteConfigFilePathWithTree(
+  tree: Tree,
+  projectRoot: string,
+  configFile?: string
+): string {
+  return configFile && tree.exists(configFile)
+    ? configFile
+    : tree.exists(joinPathFragments(`${projectRoot}/vite.config.ts`))
+    ? joinPathFragments(`${projectRoot}/vite.config.ts`)
+    : tree.exists(joinPathFragments(`${projectRoot}/vite.config.js`))
+    ? joinPathFragments(`${projectRoot}/vite.config.js`)
+    : undefined;
+}
+
+export function getViteConfigPathForProject(
+  tree: Tree,
+  projectName: string,
+  target?: string
+) {
+  let viteConfigPath: string | undefined;
+  const { targets, root } = readProjectConfiguration(tree, projectName);
+  if (target) {
+    viteConfigPath = targets[target]?.options?.configFile;
+  } else {
+    const buildTarget = Object.entries(targets).find(
+      ([_targetName, targetConfig]) => {
+        return targetConfig.executor === '@nrwl/vite:build';
+      }
+    );
+    viteConfigPath = buildTarget?.[1]?.options?.configFile;
+  }
+
+  return normalizeViteConfigFilePathWithTree(tree, root, viteConfigPath);
 }

@@ -7,6 +7,8 @@ export interface ProjectNodeDataDefinition extends cy.NodeDataDefinition {
   id: string;
   type: 'app' | 'lib' | 'e2e';
   tags: string[];
+
+  description?: string;
 }
 
 export interface Ancestor {
@@ -22,9 +24,13 @@ export class ProjectNode {
   constructor(
     private project: ProjectGraphProjectNode,
     private workspaceRoot: string
-  ) {}
+  ) {
+    console.log(this.project);
+  }
 
-  getCytoscapeNodeDef(groupByFolder: boolean): cy.NodeDefinition {
+  getCytoscapeNodeDef(
+    groupByFolder: boolean
+  ): cy.NodeDefinition & { pannable: boolean } {
     return {
       group: 'nodes',
       data: this.getData(groupByFolder),
@@ -46,6 +52,7 @@ export class ProjectNode {
           : null,
       files: this.project.data.files,
       root: this.project.data.root,
+      description: this.project.data.description,
     };
   }
 

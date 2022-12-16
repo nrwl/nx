@@ -7,10 +7,13 @@ import {
   lockFile,
   lockFileJustTypescript,
   lockFileWithInlineSpecifiers,
-  lockFileWithInlineSpecifiersAndWorkspaces,
-  lockFileWithWorkspacesAndTime,
   lockFileYargsAndDevkit,
+  ssh2LockFile,
 } from './__fixtures__/pnpm.lock';
+import {
+  pnpmLockFileWithInlineSpecifiersAndWorkspaces,
+  pnpmLockFileWithWorkspacesAndTime,
+} from './__fixtures__/workspaces.lock';
 
 const TypeScriptOnlyPackage = {
   name: 'test',
@@ -21,6 +24,13 @@ const YargsAndDevkitPackage = {
   name: 'test',
   version: '1.2.3',
   dependencies: { '@nrwl/devkit': '15.0.13', yargs: '17.6.2' },
+};
+const Ssh2Package = {
+  name: 'test',
+  version: '0.0.0',
+  dependencies: {
+    ssh2: '1.11.0',
+  },
 };
 
 describe('pnpm LockFile utility', () => {
@@ -151,14 +161,22 @@ describe('pnpm LockFile utility', () => {
         )
       ).toEqual(lockFileYargsAndDevkit);
     });
+
+    it('should correctly prune lockfile with package that has optional dependencies', () => {
+      expect(
+        stringifyPnpmLockFile(
+          prunePnpmLockFile(parsePnpmLockFile(ssh2LockFile), Ssh2Package)
+        )
+      ).toEqual(ssh2LockFile);
+    });
   });
 
   it('should parse lockfile with time-based resolution and workspaces', () => {
-    const parsedLockFile = parsePnpmLockFile(lockFileWithWorkspacesAndTime);
+    const parsedLockFile = parsePnpmLockFile(pnpmLockFileWithWorkspacesAndTime);
     expect(parsedLockFile.lockFileMetadata.time).toBeDefined();
 
     expect(stringifyPnpmLockFile(parsedLockFile)).toEqual(
-      lockFileWithWorkspacesAndTime
+      pnpmLockFileWithWorkspacesAndTime
     );
   });
 
@@ -258,10 +276,10 @@ describe('pnpm LockFile utility', () => {
 
   it('should parse lockfile with inline specifiers and workspaces', () => {
     const parsedLockFile = parsePnpmLockFile(
-      lockFileWithInlineSpecifiersAndWorkspaces
+      pnpmLockFileWithInlineSpecifiersAndWorkspaces
     );
     expect(stringifyPnpmLockFile(parsedLockFile)).toEqual(
-      lockFileWithInlineSpecifiersAndWorkspaces
+      pnpmLockFileWithInlineSpecifiersAndWorkspaces
     );
   });
 });

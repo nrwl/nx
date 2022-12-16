@@ -7,7 +7,7 @@ import { workspaceRoot } from '../utils/workspace-root';
 import { LockFileData, PackageDependency } from './utils/lock-file-type';
 import { TransitiveLookupFunctionInput } from './utils/mapping';
 import { hashString, generatePrunnedHash } from './utils/hashing';
-import { PackageJsonDeps } from './utils/pruning';
+import type { PackageJsonDeps } from './utils/pruning';
 
 type PackageMeta = {
   path: string;
@@ -197,10 +197,11 @@ function mapPackageDependency(
 
     mappedPackages[packageName][key] = {
       ...(value as Omit<PackageDependency, 'packageMeta'>),
-      ...(!value.integrity && {
-        actualVersion: value.version,
-        version: value.resolved,
-      }),
+      ...(!value.integrity &&
+        value.version && {
+          actualVersion: value.version,
+          version: value.resolved,
+        }),
       ...(value.integrity &&
         dependencyValue && {
           actualVersion: value.version,
@@ -790,6 +791,8 @@ function setPackageMetaModifiers(
 
   if (parent.devDependencies?.[packageName]) {
     packageMeta.dev = true;
+  } else if (dependency.optional) {
+    packageMeta.optional = true;
   } else if (parent.optionalDependencies?.[packageName]) {
     packageMeta.optional = true;
   } else if (parent.peerDependencies?.[packageName]) {

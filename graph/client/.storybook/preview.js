@@ -3,16 +3,10 @@ import '../src/styles.scss';
 import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
 
-import { themes } from '@storybook/theming';
+import { rootParameters } from '../../.storybook/preview';
 
 export const parameters = {
-  darkMode: {
-    // Override the default dark theme
-    dark: { ...themes.dark, appContentBg: 'rgb(15, 23, 42, 1)' },
-    // Override the default light theme
-    light: themes.normal,
-    stylePreview: true,
-  },
+  ...rootParameters,
 };
 export const decorators = [
   (Story, context) => {

@@ -18,7 +18,7 @@ import {
   parseParentDirectoriesFromFilePath,
   useRouteConstructor,
 } from '../util';
-import ExperimentalFeature from '../ui-components/experimental-feature';
+import { ExperimentalFeature } from '../ui-components/experimental-feature';
 import { TracingAlgorithmType } from './machines/interfaces';
 import { getProjectGraphService } from '../machines/get-services';
 import { Link, useNavigate } from 'react-router-dom';
@@ -103,7 +103,7 @@ function ProjectListItem({
           className="mr-1 flex items-center rounded-md border-slate-300 bg-white p-1 font-medium text-slate-500 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-600 hover:dark:bg-slate-700"
           title="Focus on this library"
           to={routeConstructor(
-            `/projects/${project.projectGraphNode.name}`,
+            `/projects/${encodeURIComponent(project.projectGraphNode.name)}`,
             true
           )}
         >
@@ -317,5 +317,3 @@ export function ProjectList() {
     </div>
   );
 }
-
-export default ProjectList;

@@ -16,12 +16,29 @@ nx g @nrwl/react:cypress-component-project --project=my-cool-react-project
 
 Running this generator, adds the required files to the specified project with a preconfigured `cypress.config.ts` designed for Nx workspaces.
 
+The following file will be added to projects where the Component Testing build target is using `webpack` for bundling:
+
 ```ts {% fileName="cypress.config.ts" %}
 import { defineConfig } from 'cypress';
 import { nxComponentTestingPreset } from '@nrwl/react/plugins/component-testing';
 
 export default defineConfig({
-  component: nxComponentTestingPreset(__filename),
+  component: nxComponentTestingPreset(__filename, {
+    bundler: 'webpack',
+  }),
+});
+```
+
+The following file will be added to projects where the Component Testing build target is using `vite` for bundling:
+
+```ts {% fileName="cypress.config.ts" %}
+import { defineConfig } from 'cypress';
+import { nxComponentTestingPreset } from '@nrwl/react/plugins/component-testing';
+
+export default defineConfig({
+  component: nxComponentTestingPreset(__filename, {
+    bundler: 'vite',
+  }),
 });
 ```
 
@@ -33,11 +50,19 @@ import { nxComponentTestingPreset } from '@nrwl/react/plugins/component-testing'
 
 export default defineConfig({
   component: {
-    ...nxComponentTestingPreset(__filename),
+    ...nxComponentTestingPreset(__filename, {
+      bundler: 'webpack',
+    }),
     // extra options here
   },
 });
 ```
+
+## The `bundler` option
+
+Component testing supports two different bundlers: `webpack` and `vite`. The Nx generator will pick up the bundler used in the specified project's build target. If the build target is using `@nrwl/webpack:webpack`, then the generator will use `webpack` as the bundler. If the build target is using `@nrwl/vite:build`, then the generator will use `vite` as the bundler.
+
+You can manually set the bundler by passing `--bundler=webpack` or `--bundler=vite` to the generator, but that is not needed since the generator will pick up the correct bundler for you. However, if you want to use a different bundler than the one that is used in the build target, then you can manually set it using that flag.
 
 ## Specifying a Build Target
 

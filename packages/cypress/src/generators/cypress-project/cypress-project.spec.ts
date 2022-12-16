@@ -189,6 +189,22 @@ describe('Cypress Project', () => {
       expect(tsConfig.extends).toBe('../../tsconfig.json');
     });
 
+    describe('for bundler:vite', () => {
+      it('should pass the bundler info to nxE2EPreset in `cypress.config.ts`', async () => {
+        await cypressProjectGenerator(tree, {
+          ...defaultOptions,
+          name: 'my-app-e2e',
+          project: 'my-app',
+          bundler: 'vite',
+        });
+        const cypressConfig = tree.read(
+          'apps/my-app-e2e/cypress.config.ts',
+          'utf-8'
+        );
+        expect(cypressConfig).toMatchSnapshot();
+      });
+    });
+
     describe('nested', () => {
       it('should set right path names in `cypress.config.ts`', async () => {
         await cypressProjectGenerator(tree, {

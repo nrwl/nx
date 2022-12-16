@@ -9,7 +9,7 @@ Connect workspace to Nx Cloud
 
 ## Usage
 
-```terminal
+```shell
 nx connect
 ```
 

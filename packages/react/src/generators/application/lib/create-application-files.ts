@@ -1,16 +1,10 @@
 import { NormalizedSchema } from '../schema';
-import {
-  names,
-  offsetFromRoot,
-  Tree,
-  toJS,
-  generateFiles,
-  joinPathFragments,
-  updateJson,
-} from '@nrwl/devkit';
+import { names, offsetFromRoot, Tree, toJS, generateFiles } from '@nrwl/devkit';
 import { join } from 'path';
 import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 import { createTsConfig } from '../../../utils/create-ts-config';
+import { getInSourceVitestTestsTemplate } from '../../../utils/get-in-source-vitest-tests-template';
+import { getAppTests } from './get-app-tests';
 
 export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
   let styleSolutionSpecificAppFiles: string;
@@ -30,11 +24,14 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     host,
     options.appProjectRoot
   );
+  const appTests = getAppTests(options);
   const templateVariables = {
     ...names(options.name),
     ...options,
     tmpl: '',
     offsetFromRoot: offsetFromRoot(options.appProjectRoot),
+    appTests,
+    inSourceVitestTests: getInSourceVitestTestsTemplate(appTests),
   };
 
   generateFiles(
@@ -61,18 +58,6 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     options.appProjectRoot,
     templateVariables
   );
-
-  if (options.unitTestRunner === 'vitest' && options.inSourceTests == true) {
-    let originalAppContents = host
-      .read(`${options.appProjectRoot}/src/app/${options.fileName}.tsx`)
-      .toString();
-    originalAppContents += `
-    if (import.meta.vitest) {
-      // add tests related to your file here
-      // For more information please visit the Vitest docs site here: https://vitest.dev/guide/in-source.html
-    }
-    `;
-  }
 
   if (options.js) {
     toJS(host);

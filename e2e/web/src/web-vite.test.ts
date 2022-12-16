@@ -60,7 +60,7 @@ describe('Web Components Applications with bundler set as vite', () => {
 
     runCLI(`generate @nrwl/web:app ${appName} --bundler=vite --no-interactive`);
     runCLI(
-      `generate @nrwl/react:lib ${libName} --bundler=vite --no-interactive`
+      `generate @nrwl/react:lib ${libName} --bundler=vite --no-interactive --unitTestRunner=vitest`
     );
 
     createFile(`dist/apps/${appName}/_should_remove.txt`);

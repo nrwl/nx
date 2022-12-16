@@ -2,7 +2,7 @@
 import type { ProjectGraphDependency } from '@nrwl/devkit';
 import * as cy from 'cytoscape';
 
-export interface EdgeDataDefinition extends cy.NodeDataDefinition {
+export interface ProjectEdgeDataDefinition extends cy.NodeDataDefinition {
   id: string;
   source: string;
   target: string;
@@ -14,7 +14,7 @@ export class ProjectEdge {
 
   constructor(private dep: ProjectGraphDependency) {}
 
-  getCytosacpeNodeDef(): cy.NodeDefinition {
+  getCytoscapeNodeDef(): cy.EdgeDefinition {
     let edge: cy.EdgeDefinition;
     edge = {
       group: 'edges',

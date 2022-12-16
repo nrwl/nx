@@ -21,6 +21,7 @@ import {
   createProjectRootMappingsFromProjectConfigurations,
   findProjectForPath,
 } from '../project-graph/utils/find-project-for-path';
+import { normalizePath } from './path';
 
 export type ProjectTargetConfigurator = (
   file: string
@@ -195,7 +196,7 @@ function findNxProjectForImportPath(
 ): string | null {
   const tsConfigPaths: Record<string, string[]> = readTsConfigPaths(root);
   const possiblePaths = tsConfigPaths[importPath]?.map((p) =>
-    path.relative(root, path.join(root, p))
+    normalizePath(path.relative(root, path.join(root, p)))
   );
   if (possiblePaths?.length) {
     const projectRootMappings =

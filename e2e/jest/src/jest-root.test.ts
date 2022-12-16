@@ -53,7 +53,7 @@ describe('Jest root projects', () => {
     }, 300_000);
 
     it('should add lib project and tests should still work', async () => {
-      runCLI(`generate @nrwl/react:lib ${mylib}`);
+      runCLI(`generate @nrwl/react:lib ${mylib} --unitTestRunner=jest`);
 
       const libProjectTestResults = await runCLIAsync(`test ${mylib}`);
 

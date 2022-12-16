@@ -67,6 +67,7 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
   if (options.ssr) {
     const setupSsrTask = await setupSsrGenerator(host, {
       project: options.projectName,
+      serverPort: options.devServerPort,
     });
     tasks.push(setupSsrTask);
 

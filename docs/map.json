@@ -541,6 +541,12 @@
               "file": "",
               "path": "/packages#devkit",
               "isExternal": true
+            },
+            {
+              "name": "Glossary",
+              "id": "glossary",
+              "tags": [],
+              "file": "shared/reference/glossary"
             }
           ]
         },
@@ -719,6 +725,12 @@
               "id": "ci-setup",
               "tags": ["distribute-task-execution"],
               "file": "shared/ci-overview"
+            },
+            {
+              "name": "Prepare applications for deployment via CI",
+              "id": "ci-deployment",
+              "tags": ["docker", "deploy"],
+              "file": "shared/recipes/ci-deployment"
             },
             {
               "name": "Setting up Azure Pipelines",
@@ -919,12 +931,29 @@
             {
               "name": "Faster Builds with Module Federation",
               "id": "faster-builds",
-              "tags": ["use-task-executors"],
+              "tags": [
+                "use-task-executors",
+                "module-federation",
+                "angular",
+                "react"
+              ],
               "file": "shared/guides/module-federation/faster-builds"
+            },
+            {
+              "name": "Setup Module Federation with SSR for Angular and React",
+              "id": "module-federation-with-ssr",
+              "tags": [
+                "use-task-executors",
+                "module-federation",
+                "angular",
+                "react"
+              ],
+              "file": "shared/recipes/module-federation-with-ssr"
             },
             {
               "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
               "id": "dynamic-module-federation-with-angular",
+              "tags": ["use-task-executors", "module-federation", "angular"],
               "file": "shared/guides/module-federation/dynamic-mfe-angular"
             },
             {
@@ -1419,6 +1448,12 @@
               "name": "exec",
               "id": "exec",
               "file": "generated/cli/exec"
+            },
+            {
+              "name": "watch",
+              "id": "watch",
+              "tags": ["workspace-watching"],
+              "file": "generated/cli/watch"
             }
           ]
         },

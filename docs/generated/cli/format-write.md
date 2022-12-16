@@ -9,7 +9,7 @@ Overwrite un-formatted files
 
 ## Usage
 
-```terminal
+```shell
 nx format:write
 ```
 

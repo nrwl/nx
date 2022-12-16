@@ -61,20 +61,20 @@ const defaultTsConfigSpec = (relativePathToRoot: string) => ({
   ],
 });
 
-export function setupTsConfig(appName: string, isNested: boolean) {
-  const tsconfigPath = isNested
+export function setupTsConfig(appName: string, isStandalone: boolean) {
+  const tsconfigPath = isStandalone
     ? 'tsconfig.json'
     : `apps/${appName}/tsconfig.json`;
-  const tsconfigAppPath = isNested
+  const tsconfigAppPath = isStandalone
     ? 'tsconfig.app.json'
     : `apps/${appName}/tsconfig.app.json`;
-  const tsconfiSpecPath = isNested
+  const tsconfiSpecPath = isStandalone
     ? 'tsconfig.spec.json'
     : `apps/${appName}/tsconfig.spec.json`;
-  const tsconfigBasePath = isNested
+  const tsconfigBasePath = isStandalone
     ? './tsconfig.base.json'
     : '../../tsconfig.base.json';
-  const relativePathToRoot = isNested ? '' : '../../';
+  const relativePathToRoot = isStandalone ? '' : '../../';
   if (fileExists(tsconfigPath)) {
     const json = readJsonFile(tsconfigPath);
     json.extends = tsconfigBasePath;

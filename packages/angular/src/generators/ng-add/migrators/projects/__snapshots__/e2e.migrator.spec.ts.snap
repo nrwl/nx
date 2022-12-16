@@ -13,6 +13,15 @@ export default defineConfig({
 });"
 `;
 
+exports[`e2e migrator cypress with project root at "" cypress version >=10 should create a cypress.config.ts file when it does not exist 1`] = `
+"import { defineConfig } from 'cypress';
+import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+
+export default defineConfig({
+  e2e: nxE2EPreset(__dirname)
+});"
+`;
+
 exports[`e2e migrator cypress with project root at "" cypress version >=10 should keep paths in the e2e config when they differ from the nx preset defaults 1`] = `
 "import { defineConfig } from 'cypress';
 import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
@@ -41,11 +50,11 @@ exports[`e2e migrator cypress with project root at "" cypress version >=10 shoul
 "import { defineConfig } from 'cypress';
 import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
 
-export default defineConfig({
-  e2e: {...nxE2EPreset(__dirname),
-    baseUrl: 'http://localhost:4200'
-  },
-});"
+            export default defineConfig({
+              e2e: {...nxE2EPreset(__dirname),
+                baseUrl: 'http://localhost:4200'
+              },
+            });"
 `;
 
 exports[`e2e migrator cypress with project root at "" cypress version >=10 should update paths in the config 1`] = `
@@ -79,6 +88,15 @@ export default defineConfig({
 });"
 `;
 
+exports[`e2e migrator cypress with project root at "projects/app1" cypress version >=10 should create a cypress.config.ts file when it does not exist 1`] = `
+"import { defineConfig } from 'cypress';
+import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+
+export default defineConfig({
+  e2e: nxE2EPreset(__dirname)
+});"
+`;
+
 exports[`e2e migrator cypress with project root at "projects/app1" cypress version >=10 should keep paths in the e2e config when they differ from the nx preset defaults 1`] = `
 "import { defineConfig } from 'cypress';
 import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
@@ -107,11 +125,11 @@ exports[`e2e migrator cypress with project root at "projects/app1" cypress versi
 "import { defineConfig } from 'cypress';
 import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
 
-export default defineConfig({
-  e2e: {...nxE2EPreset(__dirname),
-    baseUrl: 'http://localhost:4200'
-  },
-});"
+            export default defineConfig({
+              e2e: {...nxE2EPreset(__dirname),
+                baseUrl: 'http://localhost:4200'
+              },
+            });"
 `;
 
 exports[`e2e migrator cypress with project root at "projects/app1" cypress version >=10 should update paths in the config 1`] = `

@@ -1,6 +1,7 @@
 import { VirtualElement } from '@floating-ui/react-dom';
 import { ProjectNodeDataDefinition } from './util-cytoscape/project-node';
 import { TaskNodeDataDefinition } from './util-cytoscape/task-node';
+import { ProjectEdgeDataDefinition } from './util-cytoscape';
 
 interface ProjectNodeClickEvent {
   type: 'ProjectNodeClick';
@@ -20,20 +21,20 @@ interface EdgeClickEvent {
   type: 'EdgeClick';
   ref: VirtualElement;
   id: string;
-  data: {
-    type: string;
-    source: string;
-    target: string;
-    fileDependencies: { fileName: string; target: string }[];
-  };
+  data: ProjectEdgeDataDefinition;
 }
 
 interface GraphRegeneratedEvent {
   type: 'GraphRegenerated';
 }
 
+interface BackgroundClickEvent {
+  type: 'BackgroundClick';
+}
+
 export type GraphInteractionEvents =
   | ProjectNodeClickEvent
   | EdgeClickEvent
   | GraphRegeneratedEvent
-  | TaskNodeClickEvent;
+  | TaskNodeClickEvent
+  | BackgroundClickEvent;

@@ -840,13 +840,8 @@ describe('e2e migrator', () => {
             'apps/app1-e2e/cypress.config.ts',
             'utf-8'
           );
-          expect(cypressConfig).toBe(`import { defineConfig } from 'cypress';
-import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
 
-export default defineConfig({
-  e2e: nxE2EPreset(__dirname)
-});
-`);
+          expect(cypressConfig).toMatchSnapshot();
         });
 
         it('should update e2e config with the nx preset', async () => {
@@ -856,11 +851,11 @@ export default defineConfig({
             joinPathFragments(root, 'cypress.config.ts'),
             `import { defineConfig } from 'cypress';
 
-export default defineConfig({
-  e2e: {
-    baseUrl: 'http://localhost:4200'
-  },
-});`
+            export default defineConfig({
+              e2e: {
+                baseUrl: 'http://localhost:4200'
+              },
+            });`
           );
           const project = addProject('app1', {
             root,

@@ -2,15 +2,14 @@ import {
   applyChangesToString,
   ChangeType,
   formatFiles,
-  joinPathFragments,
   readProjectConfiguration,
   Tree,
-  workspaceRoot,
 } from '@nrwl/devkit';
 
 import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
 import { findNodes } from 'nx/src/utils/typescript';
 import ts = require('typescript');
+import { normalizeViteConfigFilePathWithTree } from '../../utils/generator-utils';
 
 export async function removeProjectsFromViteTsConfigPaths(tree: Tree) {
   findAllProjectsWithViteConfig(tree);
@@ -22,11 +21,10 @@ export default removeProjectsFromViteTsConfigPaths;
 function findAllProjectsWithViteConfig(tree: Tree): void {
   forEachExecutorOptions(tree, '@nrwl/vite:build', (options, project) => {
     const projectConfiguration = readProjectConfiguration(tree, project);
-    const viteConfig = normalizeConfigFilePathWithTree(
+    const viteConfig = normalizeViteConfigFilePathWithTree(
       tree,
       projectConfiguration.root,
-      options?.['configFile'],
-      workspaceRoot
+      options?.['configFile']
     );
     if (viteConfig) {
       const file = getTsSourceFile(tree, viteConfig);
@@ -84,19 +82,4 @@ export function getTsSourceFile(host: Tree, path: string): ts.SourceFile {
   );
 
   return source;
-}
-
-function normalizeConfigFilePathWithTree(
-  tree: Tree,
-  projectRoot: string,
-  configFile?: string,
-  workspaceRoot?: string
-): string {
-  return configFile
-    ? joinPathFragments(`${workspaceRoot}/${configFile}`)
-    : tree.exists(joinPathFragments(`${projectRoot}/vite.config.ts`))
-    ? joinPathFragments(`${projectRoot}/vite.config.ts`)
-    : tree.exists(joinPathFragments(`${projectRoot}/vite.config.js`))
-    ? joinPathFragments(`${projectRoot}/vite.config.js`)
-    : undefined;
 }

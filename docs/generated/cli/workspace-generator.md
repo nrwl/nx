@@ -9,7 +9,7 @@ Runs a workspace generator from the tools/generators directory
 
 ## Usage
 
-```terminal
+```shell
 nx workspace-generator [name]
 ```
 

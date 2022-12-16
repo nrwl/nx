@@ -7,6 +7,7 @@ import { examples } from './examples';
 import { workspaceRoot } from '../utils/workspace-root';
 import { getPackageManagerCommand } from '../utils/package-manager';
 import { writeJsonFile } from '../utils/fileutils';
+import { WatchArguments } from './watch';
 
 // Ensure that the output takes up the available width of the terminal.
 yargs.wrap(yargs.terminalWidth());
@@ -379,6 +380,15 @@ export const commandsObject = yargs
     handler: async (args) => {
       await (await import('./exec')).nxExecCommand(withOverrides(args));
       process.exit(0);
+    },
+  })
+  .command({
+    command: 'watch',
+    describe: 'Watch for changes within projects, and execute commands',
+    builder: (yargs) =>
+      linkToNxDevAndExamples(withWatchOptions(yargs), 'watch'),
+    handler: async (args) => {
+      await import('./watch').then((m) => m.watch(args as WatchArguments));
     },
   })
   .help()
@@ -925,6 +935,61 @@ function withMigrationOptions(yargs: yargs.Argv) {
       }
       return true;
     });
+}
+
+function withWatchOptions(yargs: yargs.Argv) {
+  return yargs
+    .parserConfiguration({
+      'strip-dashed': true,
+      'populate--': true,
+    })
+    .option('projects', {
+      type: 'array',
+      string: true,
+      coerce: parseCSV,
+      description: 'Projects to watch (comma delimited).',
+    })
+    .option('all', {
+      type: 'boolean',
+      description: 'Watch all projects.',
+    })
+    .option('includeDependentProjects', {
+      type: 'boolean',
+      description:
+        'When watching selected projects, include dependent projects as well.',
+      alias: 'd',
+    })
+    .option('includeGlobalWorkspaceFiles', {
+      type: 'boolean',
+      description:
+        'Include global workspace files that are not part of a project. For example, the root eslint, or tsconfig file.',
+      alias: 'g',
+      hidden: true,
+    })
+    .option('command', { type: 'string', hidden: true })
+    .option('verbose', {
+      type: 'boolean',
+      description:
+        'Run watch mode in verbose mode, where commands are logged before execution.',
+    })
+    .conflicts({
+      all: 'projects',
+    })
+    .check((args) => {
+      if (!args.all && !args.projects) {
+        throw Error('Please specify either --all or --projects');
+      }
+
+      return true;
+    })
+    .middleware((args) => {
+      const { '--': doubledash } = args;
+      if (doubledash && Array.isArray(doubledash)) {
+        args.command = (doubledash as string[]).join(' ');
+      } else {
+        throw Error('No command specified for watch mode.');
+      }
+    }, true);
 }
 
 function parseCSV(args: string[]) {

@@ -15,7 +15,7 @@ Creates a migrations file or runs migrations from the migrations file.
 
 ## Usage
 
-```terminal
+```shell
 nx migrate [packageAndVersion]
 ```
 
@@ -25,43 +25,43 @@ Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`
 
 Update @nrwl/workspace to "next". This will update other packages and will generate migrations.json:
 
-```terminal
+```shell
  nx migrate next
 ```
 
 Update @nrwl/workspace to "9.0.0". This will update other packages and will generate migrations.json:
 
-```terminal
+```shell
  nx migrate 9.0.0
 ```
 
 Update @nrwl/workspace and generate the list of migrations starting with version 8.0.0 of @nrwl/workspace and @nrwl/node, regardless of what installed locally:
 
-```terminal
+```shell
  nx migrate @nrwl/workspace@9.0.0 --from="@nrwl/workspace@8.0.0,@nrwl/node@8.0.0"
 ```
 
 Update @nrwl/workspace to "9.0.0". If it tries to update @nrwl/react or @nrwl/angular, use version "9.0.1":
 
-```terminal
+```shell
  nx migrate @nrwl/workspace@9.0.0 --to="@nrwl/react@9.0.1,@nrwl/angular@9.0.1"
 ```
 
 Update another-package to "12.0.0". This will update other packages and will generate migrations.json file:
 
-```terminal
+```shell
  nx migrate another-package@12.0.0
 ```
 
 Run migrations from the provided migrations.json file. You can modify migrations.json and run this command many times:
 
-```terminal
+```shell
  nx migrate --run-migrations=migrations.json
 ```
 
 Create a dedicated commit for each successfully completed migration. You can customize the prefix used for each commit by additionally setting --commit-prefix="PREFIX_HERE ":
 
-```terminal
+```shell
  nx migrate --run-migrations --create-commits
 ```
 

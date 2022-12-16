@@ -1,5 +1,4 @@
-import { memo } from 'react';
-import CheckboxPanel from '../../ui-components/checkbox-panel';
+import { CheckboxPanel } from '../../ui-components/checkbox-panel';
 
 export interface DisplayOptionsPanelProps {
   groupByFolder: boolean;
@@ -20,5 +19,3 @@ export const GroupByFolderPanel = ({
     />
   );
 };
-
-export default GroupByFolderPanel;

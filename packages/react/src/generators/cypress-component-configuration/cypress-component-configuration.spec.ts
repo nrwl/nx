@@ -12,6 +12,7 @@ import { applicationGenerator } from '../application/application';
 import { componentGenerator } from '../component/component';
 import { libraryGenerator } from '../library/library';
 import { cypressComponentConfigGenerator } from './cypress-component-configuration';
+import enquirer = require('enquirer');
 
 let projectGraph: ProjectGraph;
 jest.mock('@nrwl/devkit', () => ({
@@ -29,7 +30,67 @@ describe('React:CypressComponentTestConfiguration', () => {
   > = assertMinimumCypressVersion as never;
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    jest
+      .spyOn(enquirer, 'prompt')
+      .mockReturnValue(new Promise((res) => res({ runner: 'jest' })));
   });
+
+  it('should generate cypress config with vite', async () => {
+    mockedAssertCypressVersion.mockReturnValue();
+
+    await applicationGenerator(tree, {
+      e2eTestRunner: 'none',
+      linter: Linter.EsLint,
+      skipFormat: true,
+      style: 'scss',
+      unitTestRunner: 'none',
+      name: 'my-app',
+      bundler: 'vite',
+    });
+    await libraryGenerator(tree, {
+      linter: Linter.EsLint,
+      name: 'some-lib',
+      skipFormat: true,
+      skipTsConfig: false,
+      style: 'scss',
+      unitTestRunner: 'none',
+      component: true,
+    });
+
+    projectGraph = {
+      nodes: {
+        'my-app': {
+          name: 'my-app',
+          type: 'app',
+          data: {
+            ...readProjectConfiguration(tree, 'my-app'),
+          },
+        },
+        'some-lib': {
+          name: 'some-lib',
+          type: 'lib',
+          data: {
+            ...readProjectConfiguration(tree, 'some-lib'),
+          },
+        },
+      },
+      dependencies: {
+        'my-app': [
+          { type: DependencyType.static, source: 'my-app', target: 'some-lib' },
+        ],
+      },
+    };
+
+    await cypressComponentConfigGenerator(tree, {
+      project: 'some-lib',
+      generateTests: false,
+      buildTarget: 'my-app:build',
+    });
+
+    const config = tree.read('libs/some-lib/cypress.config.ts', 'utf-8');
+    expect(config).toMatchSnapshot();
+  });
+
   it('should generate cypress component test config with --build-target', async () => {
     mockedAssertCypressVersion.mockReturnValue();
 
@@ -83,12 +144,7 @@ describe('React:CypressComponentTestConfiguration', () => {
     });
 
     const config = tree.read('libs/some-lib/cypress.config.ts', 'utf-8');
-    expect(config).toContain(
-      "import { nxComponentTestingPreset } from '@nrwl/react/plugins/component-testing"
-    );
-    expect(config).toContain(
-      'component: nxComponentTestingPreset(__filename),'
-    );
+    expect(config).toMatchSnapshot();
 
     expect(
       readProjectConfiguration(tree, 'some-lib').targets['component-test']
@@ -154,12 +210,7 @@ describe('React:CypressComponentTestConfiguration', () => {
     });
 
     const config = tree.read('libs/some-lib/cypress.config.ts', 'utf-8');
-    expect(config).toContain(
-      "import { nxComponentTestingPreset } from '@nrwl/react/plugins/component-testing"
-    );
-    expect(config).toContain(
-      'component: nxComponentTestingPreset(__filename),'
-    );
+    expect(config).toMatchSnapshot();
 
     expect(
       readProjectConfiguration(tree, 'some-lib').targets['component-test']
@@ -174,6 +225,71 @@ describe('React:CypressComponentTestConfiguration', () => {
     });
   });
 
+  it('should generate cypress component test config with webpack', async () => {
+    mockedAssertCypressVersion.mockReturnValue();
+    await applicationGenerator(tree, {
+      e2eTestRunner: 'none',
+      linter: Linter.EsLint,
+      skipFormat: true,
+      style: 'scss',
+      unitTestRunner: 'none',
+      name: 'my-app',
+      bundler: 'webpack',
+    });
+    await libraryGenerator(tree, {
+      linter: Linter.EsLint,
+      name: 'some-lib',
+      skipFormat: true,
+      skipTsConfig: false,
+      style: 'scss',
+      unitTestRunner: 'none',
+      component: true,
+    });
+
+    projectGraph = {
+      nodes: {
+        'my-app': {
+          name: 'my-app',
+          type: 'app',
+          data: {
+            ...readProjectConfiguration(tree, 'my-app'),
+          },
+        },
+        'some-lib': {
+          name: 'some-lib',
+          type: 'lib',
+          data: {
+            ...readProjectConfiguration(tree, 'some-lib'),
+          },
+        },
+      },
+      dependencies: {
+        'my-app': [
+          { type: DependencyType.static, source: 'my-app', target: 'some-lib' },
+        ],
+      },
+    };
+
+    await cypressComponentConfigGenerator(tree, {
+      project: 'some-lib',
+      generateTests: false,
+    });
+
+    const config = tree.read('libs/some-lib/cypress.config.ts', 'utf-8');
+    expect(config).toMatchSnapshot();
+
+    expect(
+      readProjectConfiguration(tree, 'some-lib').targets['component-test']
+    ).toEqual({
+      executor: '@nrwl/cypress:cypress',
+      options: {
+        cypressConfig: 'libs/some-lib/cypress.config.ts',
+        devServerTarget: 'my-app:build',
+        skipServe: true,
+        testingType: 'component',
+      },
+    });
+  });
   it('should generate tests for existing tsx components', async () => {
     mockedAssertCypressVersion.mockReturnValue();
     await applicationGenerator(tree, {

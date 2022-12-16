@@ -1,7 +1,7 @@
 import { StrictMode } from 'react';
-import * as ReactDOM from 'react-dom';
+import { render } from 'react-dom';
 import { inspect } from '@xstate/inspect';
-import App from './app/app';
+import { App } from './app/app';
 import { ExternalApi } from './app/external-api';
 
 if (window.useXstateInspect === true) {
@@ -14,7 +14,7 @@ if (window.useXstateInspect === true) {
 window.externalApi = new ExternalApi();
 
 if (!window.appConfig) {
-  ReactDOM.render(
+  render(
     <p>
       No environment could be found. Please run{' '}
       <pre>npx nx run graph-client:generate-dev-environment-js</pre>.
@@ -22,7 +22,7 @@ if (!window.appConfig) {
     document.getElementById('app')
   );
 } else {
-  ReactDOM.render(
+  render(
     <StrictMode>
       <App />
     </StrictMode>,

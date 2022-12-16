@@ -5,6 +5,7 @@ import {
   runCLI,
   uniq,
   updateFile,
+  updateJson,
   updateProjectConfig,
 } from '../../utils';
 
@@ -16,13 +17,29 @@ describe('React Cypress Component Tests', () => {
 
   beforeAll(() => {
     projectName = newProject({ name: uniq('cy-react') });
+
     runCLI(
       `generate @nrwl/react:app ${appName} --bundler=webpack --no-interactive`
     );
+
+    updateJson('nx.json', (json) => ({
+      ...json,
+      generators: {
+        ...json.generators,
+        '@nrwl/react': {
+          library: {
+            unitTestRunner: 'jest',
+          },
+        },
+      },
+    }));
+
     runCLI(
       `generate @nrwl/react:component fancy-cmp --project=${appName} --no-interactive`
     );
-    runCLI(`generate @nrwl/react:lib ${usedInAppLibName} --no-interactive`);
+    runCLI(
+      `generate @nrwl/react:lib ${usedInAppLibName} --no-interactive --unitTestRunner=jest`
+    );
     runCLI(
       `generate @nrwl/react:component btn --project=${usedInAppLibName} --export --no-interactive`
     );
@@ -83,7 +100,7 @@ export default App;`
     );
 
     runCLI(
-      `generate @nrwl/react:lib ${buildableLibName} --buildable --no-interactive`
+      `generate @nrwl/react:lib ${buildableLibName} --buildable --no-interactive --unitTestRunner=jest`
     );
     runCLI(
       `generate @nrwl/react:component input --project=${buildableLibName} --export --no-interactive`

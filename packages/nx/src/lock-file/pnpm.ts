@@ -539,7 +539,10 @@ function pruneTransitiveDependencies(
             rootVersion: false,
             packageMeta: [packageMeta],
           });
-          if (parent.optionalDependencies?.[packageName]) {
+          if (
+            parent.packageMeta[0].optional ||
+            parent.optionalDependencies?.[packageName]
+          ) {
             packageMeta.optional = true;
           }
           pruneTransitiveDependencies(

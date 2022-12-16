@@ -40,9 +40,11 @@
     "@angular/router": "~15.0.1",
     "@babel/core": "^7.15.0",
     "@babel/helper-create-regexp-features-plugin": "^7.14.5",
+    "@babel/preset-react": "^7.14.5",
     "@babel/preset-typescript": "^7.15.0",
     "@cypress/react": "^6.0.0",
     "@cypress/webpack-preprocessor": "^5.12.0",
+    "@floating-ui/react-dom": "^1.0.1",
     "@nestjs/common": "^9.0.0",
     "@nestjs/core": "^9.0.0",
     "@nestjs/platform-express": "^9.0.0",
@@ -144,7 +146,7 @@
     "eslint-config-prettier": "^8.1.0",
     "eslint-plugin-cypress": "^2.10.3",
     "eslint-plugin-import": "2.26.0",
-    "eslint-plugin-jsx-a11y": "6.5.1",
+    "eslint-plugin-jsx-a11y": "6.6.1",
     "eslint-plugin-react": "7.31.11",
     "eslint-plugin-react-hooks": "4.6.0",
     "express": "^4.18.1",
@@ -241,7 +243,7 @@
     "unzipper": "^0.10.11",
     "url-loader": "^4.1.1",
     "verdaccio": "^5.0.4",
-    "vite": "^3.2.3",
+    "vite": "^4.0.1",
     "webpack": "^5.75.0",
     "webpack-dev-server": "^4.9.3",
     "webpack-merge": "^5.8.0",
@@ -250,8 +252,7 @@
     "webpack-subresource-integrity": "^5.1.0",
     "xstate": "^4.34.0",
     "yargs": "^17.6.2",
-    "yargs-parser": "21.1.1",
-    "@floating-ui/react-dom": "^1.0.1"
+    "yargs-parser": "21.1.1"
   },
   "author": "Victor Savkin",
   "license": "MIT",
@@ -302,7 +303,7 @@
     "strong-log-transformer": "^2.1.0",
     "tailwindcss": "3.2.4",
     "tslib": "^2.3.0",
-    "vitest": "^0.25.1",
+    "vitest": "^0.25.8",
     "weak-napi": "^2.0.2"
   },
   "resolutions": {
@@ -323,4 +324,3 @@
     ]
   }
 }
-

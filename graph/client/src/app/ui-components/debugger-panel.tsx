@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { WorkspaceData, GraphPerfReport } from '../interfaces';
-import Dropdown from './dropdown';
+import { Dropdown } from '@nrwl/graph/ui-components';
 
 export interface DebuggerPanelProps {
   projects: WorkspaceData[];
@@ -49,5 +49,3 @@ export const DebuggerPanel = memo(function ({
     </div>
   );
 });
-
-export default DebuggerPanel;

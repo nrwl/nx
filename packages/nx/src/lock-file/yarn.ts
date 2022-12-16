@@ -227,7 +227,8 @@ export function pruneYarnLockFile(
 
   const prunedDependencies = pruneDependencies(
     lockFileData.dependencies,
-    normalizedPackageJson
+    normalizedPackageJson,
+    isBerry
   );
 
   const hash = generatePrunnedHash(lockFileData.hash, normalizedPackageJson);
@@ -261,7 +262,8 @@ export function pruneYarnLockFile(
 // iterate over packages to collect the affected tree of dependencies
 function pruneDependencies(
   dependencies: LockFileData['dependencies'],
-  normalizedPackageJson: PackageJsonDeps
+  normalizedPackageJson: PackageJsonDeps,
+  isBerry: boolean
 ): LockFileData['dependencies'] {
   const result: LockFileData['dependencies'] = {};
 
@@ -271,13 +273,20 @@ function pruneDependencies(
     ...normalizedPackageJson.peerDependencies,
   }).forEach((packageName) => {
     if (dependencies[packageName]) {
-      const [key, value] = Object.entries(dependencies[packageName]).find(
-        ([, v]) => v.rootVersion
-      );
+      pruneDependency(packageName, normalizedPackageJson, dependencies, result);
 
-      result[packageName] = result[packageName] || {};
-      result[packageName][key] = value;
-      pruneTransitiveDependencies(dependencies, result, value);
+      if (isBerry) {
+        const patchPackageName = `${packageName}@patch:${packageName}`;
+        if (dependencies[patchPackageName]) {
+          pruneDependency(
+            patchPackageName,
+            normalizedPackageJson,
+            dependencies,
+            result,
+            true
+          );
+        }
+      }
     } else {
       console.warn(
         `Could not find ${packageName} in the lock file. Skipping...`
@@ -288,6 +297,51 @@ function pruneDependencies(
   return result;
 }
 
+function pruneDependency(
+  packageName: string,
+  normalizedPackageJson: PackageJsonDeps,
+  dependencies: LockFileData['dependencies'],
+  result: LockFileData['dependencies'],
+  isPatch = false
+) {
+  const [key, value] = Object.entries(dependencies[packageName]).find(
+    ([, v]) => v.rootVersion
+  );
+
+  result[packageName] = result[packageName] || {};
+  if (isPatch) {
+    const originalPackageName = packageName.split('@patch:').pop();
+    const patchSuffix = value.packageMeta[0].split('#').pop();
+    value.packageMeta = [
+      `${packageName}@${getVersionFromPackageJson(
+        normalizedPackageJson,
+        originalPackageName
+      )}#${patchSuffix}`,
+    ];
+  } else {
+    value.packageMeta = [
+      value.resolution ||
+        `${packageName}@${getVersionFromPackageJson(
+          normalizedPackageJson,
+          packageName
+        )}`,
+    ];
+  }
+  result[packageName][key] = value;
+  pruneTransitiveDependencies(dependencies, result, value);
+}
+
+function getVersionFromPackageJson(
+  normalizedPackageJson: PackageJsonDeps,
+  packageName: string
+): string {
+  return (
+    normalizedPackageJson.dependencies?.[packageName] ||
+    normalizedPackageJson.devDependencies?.[packageName] ||
+    normalizedPackageJson.peerDependencies?.[packageName]
+  );
+}
+
 // find all transitive dependencies of already pruned packages
 // and adds them to the collection
 // recursively prunes their dependencies
@@ -296,11 +350,10 @@ function pruneTransitiveDependencies(
   prunedDeps: LockFileData['dependencies'],
   value: PackageDependency
 ): void {
-  if (!value.dependencies) {
-    return;
-  }
-
-  Object.entries(value.dependencies).forEach(([packageName, version]) => {
+  [
+    ...Object.entries(value.dependencies ?? {}),
+    ...Object.entries(value.optionalDependencies ?? {}),
+  ].forEach(([packageName, version]: [string, string]) => {
     if (dependencies[packageName]) {
       // check if package with given version exists in data
       // if yes, return key, value and version expression from packageMeta

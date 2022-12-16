@@ -27,6 +27,7 @@ export interface Options {
   vite: boolean;
   integrated: boolean;
 }
+
 interface NormalizedOptions extends Options {
   packageManager: string;
   pmc: PackageManagerCommands;
@@ -35,13 +36,19 @@ interface NormalizedOptions extends Options {
   isCRA5: boolean;
   npxYesFlagNeeded: boolean;
   isVite: boolean;
-  isNested: boolean;
+  isStandalone: boolean;
 }
 
 function addDependencies(pmc: PackageManagerCommands, ...deps: string[]) {
   const depsArg = deps.join(' ');
   output.log({ title: `📦 Adding dependencies: ${depsArg}` });
   execSync(`${pmc.addDev} ${depsArg}`, { stdio: [0, 1, 2] });
+}
+
+function removeDependencies(pmc: PackageManagerCommands, ...deps: string[]) {
+  const depsArg = deps.join(' ');
+  output.log({ title: `📦 Adding dependencies: ${depsArg}` });
+  execSync(`${pmc.rm} ${depsArg}`, { stdio: [0, 1, 2] });
 }
 
 export function normalizeOptions(options: Options): NormalizedOptions {
@@ -61,7 +68,7 @@ export function normalizeOptions(options: Options): NormalizedOptions {
   // Should remove this check 04/2023 once Node 14 & npm 6 reach EOL
   const npxYesFlagNeeded = !npmVersion.startsWith('6'); // npm 7 added -y flag to npx
   const isVite = options.vite;
-  const isNested = !options.integrated;
+  const isStandalone = !options.integrated;
 
   return {
     ...options,
@@ -72,7 +79,7 @@ export function normalizeOptions(options: Options): NormalizedOptions {
     isCRA5,
     npxYesFlagNeeded,
     isVite,
-    isNested,
+    isStandalone,
   };
 }
 
@@ -85,7 +92,7 @@ export async function createNxWorkspaceForReact(options: Record<string, any>) {
   output.log({ title: '✨ Nx initialization' });
 
   const normalizedOptions = normalizeOptions(options as Options);
-  reorgnizeWorkspaceStructure(normalizedOptions);
+  await reorgnizeWorkspaceStructure(normalizedOptions);
 }
 
 async function reorgnizeWorkspaceStructure(options: NormalizedOptions) {
@@ -95,9 +102,10 @@ async function reorgnizeWorkspaceStructure(options: NormalizedOptions) {
 
   await addBundler(options);
 
-  output.log({ title: '🧶  Add all node_modules to .gitignore' });
+  output.log({ title: '🧶  Updating .gitignore file' });
 
   execSync(`echo "node_modules" >> .gitignore`, { stdio: [0, 1, 2] });
+  execSync(`echo "dist" >> .gitignore`, { stdio: [0, 1, 2] });
 
   process.chdir('../');
 
@@ -121,6 +129,7 @@ async function reorgnizeWorkspaceStructure(options: NormalizedOptions) {
 
   if (options.isVite) {
     addDependencies(options.pmc, 'vite', 'vitest', '@vitejs/plugin-react');
+    removeDependencies(options.pmc, '@nrwl/jest');
   } else {
     addDependencies(options.pmc, '@craco/craco', 'cross-env', 'react-scripts');
   }
@@ -137,10 +146,10 @@ async function reorgnizeWorkspaceStructure(options: NormalizedOptions) {
   });
 
   if (options.isVite) {
-    const indexPath = options.isNested
+    const indexPath = options.isStandalone
       ? 'index.html'
       : `apps/${options.reactAppName}/index.html`;
-    const oldIndexPath = options.isNested
+    const oldIndexPath = options.isStandalone
       ? 'public/index.html'
       : `apps/${options.reactAppName}/public/index.html`;
     output.note({
@@ -191,7 +200,7 @@ function moveFilesToTempWorkspace(options: NormalizedOptions) {
 
   const requiredCraFiles = [
     'project.json',
-    options.isNested ? null : 'package.json',
+    options.isStandalone ? null : 'package.json',
     'src',
     'public',
     options.appIsJs ? null : 'tsconfig.json',
@@ -210,7 +219,7 @@ function moveFilesToTempWorkspace(options: NormalizedOptions) {
     try {
       moveSync(
         f,
-        options.isNested
+        options.isStandalone
           ? `temp-workspace/${f}`
           : `temp-workspace/apps/${options.reactAppName}/${f}`,
         {
@@ -233,18 +242,33 @@ async function addBundler(options: NormalizedOptions) {
     const { addViteCommandsToPackageScripts } = await import(
       './add-vite-commands-to-package-scripts'
     );
-    addViteCommandsToPackageScripts(options.reactAppName, options.isNested);
-    writeViteConfig(options.reactAppName, options.isNested, options.appIsJs);
-    writeViteIndexHtml(options.reactAppName, options.isNested, options.appIsJs);
-    renameJsToJsx(options.reactAppName, options.isNested);
+    addViteCommandsToPackageScripts(options.reactAppName, options.isStandalone);
+    writeViteConfig(
+      options.reactAppName,
+      options.isStandalone,
+      options.appIsJs
+    );
+    writeViteIndexHtml(
+      options.reactAppName,
+      options.isStandalone,
+      options.appIsJs
+    );
+    renameJsToJsx(options.reactAppName, options.isStandalone);
   } else {
     output.log({ title: '🧑‍🔧  Setting up craco + Webpack' });
     const { addCracoCommandsToPackageScripts } = await import(
       './add-craco-commands-to-package-scripts'
     );
-    addCracoCommandsToPackageScripts(options.reactAppName, options.isNested);
+    addCracoCommandsToPackageScripts(
+      options.reactAppName,
+      options.isStandalone
+    );
 
-    writeCracoConfig(options.reactAppName, options.isCRA5, options.isNested);
+    writeCracoConfig(
+      options.reactAppName,
+      options.isCRA5,
+      options.isStandalone
+    );
 
     output.log({
       title: '🛬 Skip CRA preflight check since Nx manages the monorepo',
@@ -265,13 +289,13 @@ function copyFromTempWorkspaceToRoot() {
 function cleanUpUnusedFilesAndAddConfigFiles(options: NormalizedOptions) {
   output.log({ title: '🧹  Cleaning up.' });
 
-  cleanUpFiles(options.reactAppName, options.isNested);
+  cleanUpFiles(options.reactAppName, options.isStandalone);
 
   output.log({ title: "📃 Extend the app's tsconfig.json from the base" });
 
-  setupTsConfig(options.reactAppName, options.isNested);
+  setupTsConfig(options.reactAppName, options.isStandalone);
 
-  if (options.e2e && !options.isNested) {
+  if (options.e2e && !options.isStandalone) {
     output.log({ title: '📃 Setup e2e tests' });
     setupE2eProject(options.reactAppName);
   } else {
@@ -279,7 +303,7 @@ function cleanUpUnusedFilesAndAddConfigFiles(options: NormalizedOptions) {
     execSync(`${options.pmc.rm} @nrwl/cypress eslint-plugin-cypress`);
   }
 
-  if (options.isNested) {
+  if (options.isStandalone) {
     removeSync('apps');
   }
 }

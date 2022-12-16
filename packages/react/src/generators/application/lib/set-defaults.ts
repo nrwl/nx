@@ -37,11 +37,7 @@ export function setDefaults(host: Tree, options: NormalizedSchema) {
     linter: options.linter,
     ...prev.library,
   };
-  // Future react libs should use same test runner as the app.
-  if (options.unitTestRunner === 'vitest') {
-    // Note: We don't set bundler: 'vite' for libraries because that means they are buildable.
-    libDefaults.unitTestRunner ??= 'vitest';
-  }
+
   workspace.generators = {
     ...workspace.generators,
     '@nrwl/react': {

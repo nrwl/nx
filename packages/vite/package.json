@@ -37,8 +37,8 @@
     "dotenv": "~10.0.0"
   },
   "peerDependencies": {
-    "vite": "^3.2.3",
-    "vitest": "^0.25.1"
+    "vite": "^4.0.1",
+    "vitest": "^0.25.8"
   },
   "publishConfig": {
     "access": "public"

@@ -6,12 +6,15 @@ export interface TaskNodeDataDefinition extends cy.NodeDataDefinition {
   id: string;
   label: string;
   executor: string;
+  description?: string;
 }
 
 export class TaskNode {
   constructor(private task: Task, private project: ProjectGraphProjectNode) {}
 
-  getCytoscapeNodeDef(groupByProject: boolean): cy.NodeDefinition {
+  getCytoscapeNodeDef(
+    groupByProject: boolean
+  ): cy.NodeDefinition & { pannable: boolean } {
     return {
       group: 'nodes',
       classes: 'taskNode',
@@ -31,6 +34,7 @@ export class TaskNode {
       label,
       executor: this.project.data.targets[this.task.target.target].executor,
       parent: groupByProject ? this.task.target.project : null,
+      description: this.project.data.description,
     };
   }
 }

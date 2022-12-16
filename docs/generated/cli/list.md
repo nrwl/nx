@@ -9,7 +9,7 @@ Lists installed plugins, capabilities of installed plugins and other available p
 
 ## Usage
 
-```terminal
+```shell
 nx list [plugin]
 ```
 
@@ -19,13 +19,13 @@ Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`
 
 List the plugins installed in the current workspace:
 
-```terminal
+```shell
  nx list
 ```
 
 List the generators and executors available in the `@nrwl/web` plugin if it is installed (If the plugin is not installed `nx` will show advice on how to add it to your workspace):
 
-```terminal
+```shell
  nx list @nrwl/web
 ```
 

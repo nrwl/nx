@@ -473,7 +473,7 @@ export function tslibC(): string {
         'plugin:@nrwl/nx/javascript',
       ]);
 
-      runCLI(`generate @nrwl/react:lib ${mylib}`);
+      runCLI(`generate @nrwl/react:lib ${mylib} --unitTestRunner=jest`);
       // should add new tslint
       expect(() => checkFilesExist(`.eslintrc.base.json`)).not.toThrow();
       const appEslint = readJson(`.eslintrc.json`);

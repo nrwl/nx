@@ -59,6 +59,19 @@
       "type": "boolean",
       "default": false,
       "description": "Do not add dependencies to `package.json`."
+    },
+    "rootProject": {
+      "description": "Create a application at the root of the workspace",
+      "type": "boolean",
+      "default": false,
+      "hidden": true
+    },
+    "bundler": {
+      "description": "The Cypress bundler to use.",
+      "type": "string",
+      "enum": ["vite", "webpack", "none"],
+      "x-prompt": "Which Cypress bundler do you want to use?",
+      "default": "webpack"
     }
   },
   "required": ["name"],

@@ -30,5 +30,3 @@ export const FocusedPanel = memo(
     );
   }
 );
-
-export default FocusedPanel;

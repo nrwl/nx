@@ -53,13 +53,3 @@ function checkDocumentation() {
 }
 
 generate().then(() => checkDocumentation());
-
-function printInfo(
-  str: string,
-  newLine: boolean = true,
-  newLineAfter: boolean = true
-) {
-  console.log(
-    `${newLine ? '\n' : ''}${chalk.blue('i')} ${str}${newLineAfter ? '\n' : ''}`
-  );
-}
