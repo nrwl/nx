@@ -6,12 +6,17 @@ import type {
 import type {
   Logger,
   ProjectMigrationInfo,
+  ValidationError,
+  ValidationResult,
   WorkspaceRootFileType,
 } from '../../utilities';
+import { arrayToString } from '../../utilities';
 import { Migrator } from '../migrator';
 
 export abstract class BuilderMigrator extends Migrator {
   targets: Map<string, TargetConfiguration> = new Map();
+
+  protected skipMigration: boolean = false;
 
   constructor(
     tree: Tree,
@@ -27,6 +32,25 @@ export abstract class BuilderMigrator extends Migrator {
     this.projectConfig = projectConfig;
 
     this.collectBuilderTargets();
+  }
+
+  override validate(): ValidationResult {
+    const errors: ValidationError[] = [];
+    // TODO(leo): keeping restriction until the full refactor is done and we start
+    // expanding what's supported.
+    if (this.targets.size > 1) {
+      errors.push({
+        message: `There is more than one target using the builder "${
+          this.builderName
+        }": ${arrayToString([
+          ...this.targets.keys(),
+        ])}. This is not currently supported by the automated migration. These targets will be skipped.`,
+        hint: 'Make sure to manually migrate their configuration and any possible associated files.',
+      });
+      this.skipMigration = true;
+    }
+
+    return errors.length ? errors : null;
   }
 
   isBuilderUsed(): boolean {

@@ -2,10 +2,8 @@ import type { Tree } from '@nrwl/devkit';
 import {
   joinPathFragments,
   normalizePath,
-  offsetFromRoot,
   visitNotIgnoredFiles,
 } from '@nrwl/devkit';
-import { dirname } from 'path';
 import type { GeneratorOptions } from '../../schema';
 import type {
   MigrationProjectConfiguration,
@@ -14,12 +12,15 @@ import type {
   ValidationResult,
   WorkspaceRootFileTypesInfo,
 } from '../../utilities';
-import { arrayToString, Logger } from '../../utilities';
-import type { BuilderMigratorClassType } from '../builders';
-import { BuilderMigrator } from '../builders';
+import {
+  arrayToString,
+  getProjectValidationResultMessage,
+  Logger,
+} from '../../utilities';
+import type { BuilderMigrator, BuilderMigratorClassType } from '../builders';
 import { Migrator } from '../migrator';
 
-export abstract class ProjectMigrator<
+export class ProjectMigrator<
   TargetType extends string = string
 > extends Migrator {
   public get projectName(): string {
@@ -27,6 +28,10 @@ export abstract class ProjectMigrator<
   }
 
   protected builderMigrators: BuilderMigrator[];
+  // TODO(leo): need to handle targets until all are converted to builder migrators,
+  // at that point, project migrators only care about skipping the whole project migration
+  // and each builder migrator will handle whether it should be skipped or not
+  protected skipMigration: boolean | TargetType[] = false;
   protected readonly targetNames: Partial<Record<TargetType, string>> = {};
 
   constructor(
@@ -70,6 +75,15 @@ export abstract class ProjectMigrator<
     return workspaceRootFileTypesInfo;
   }
 
+  override migrate(): void | Promise<void> {
+    const validationResult = this.validate();
+    if (!validationResult) {
+      return;
+    }
+
+    this.logger.warn(getProjectValidationResultMessage(validationResult));
+  }
+
   override validate(): ValidationResult {
     const errors: ValidationError[] = [];
 
@@ -80,21 +94,25 @@ export abstract class ProjectMigrator<
     ) {
       errors.push({
         message:
-          'The project root is not defined in the project configuration.',
+          'The project root is not defined in the project configuration. The project will be skipped.',
         hint:
-          `Make sure the value for "projects.${this.project.name}.root" is set ` +
-          `or remove the project if it is not valid.`,
+          'Make sure to manually migrate its configuration and files or remove the project if it is not valid. ' +
+          `Alternatively, you could revert the migration, ensure the value for "projects.${this.project.name}.root" ` +
+          'is set and run the migration again.',
       });
+      this.skipProjectMigration();
     } else if (
       this.projectConfig.root !== '' &&
       !this.tree.exists(this.projectConfig.root)
     ) {
       errors.push({
-        message: `The project root "${this.project.oldRoot}" could not be found.`,
+        message: `The project root "${this.project.oldRoot}" could not be found. The project will be skipped.`,
         hint:
-          `Make sure the value for "projects.${this.project.name}.root" is correct ` +
-          `or remove the project if it is not valid.`,
+          'Make sure to manually migrate its configuration and files or remove the project if it is not valid. ' +
+          `Alternatively, you could revert the migration, ensure the value for "projects.${this.project.name}.root" ` +
+          'is correct and run the migration again.',
       });
+      this.skipProjectMigration();
     }
 
     // check project source root
@@ -103,11 +121,13 @@ export abstract class ProjectMigrator<
       !this.tree.exists(this.projectConfig.sourceRoot)
     ) {
       errors.push({
-        message: `The project source root "${this.project.oldSourceRoot}" could not be found.`,
+        message: `The project source root "${this.project.oldSourceRoot}" could not be found. The project will be skipped.`,
         hint:
-          `Make sure the value for "projects.${this.project.name}.sourceRoot" is correct ` +
-          `or remove the project if it is not valid.`,
+          'Make sure to manually migrate its configuration and files or remove the project if it is not valid. ' +
+          `Alternatively, you could revert the migration, ensure the value for "projects.${this.project.name}.sourceRoot" ` +
+          'is correct and run the migration again.',
       });
+      this.skipProjectMigration();
     }
 
     // check for usage of unsupported builders
@@ -135,14 +155,15 @@ export abstract class ProjectMigrator<
           title: 'Unsupported builders',
           messages: unsupportedBuilders.map(
             ([target, builder]) =>
-              `The "${target}" target is using an unsupported builder "${builder}".`
+              `The "${target}" target is using a builder "${builder}" that's not currently supported by the automated migration. ` +
+              'The target will be skipped.'
           ),
         },
-        hint: `The supported builders for ${
-          this.projectConfig.projectType === 'library'
-            ? 'libraries'
-            : 'applications'
-        } are: ${arrayToString(allSupportedBuilders)}.`,
+        hint:
+          'Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could ' +
+          `revert the migration, change the builder to one of the builders supported by the automated migration (${arrayToString(
+            allSupportedBuilders
+          )}), and run the migration again.`,
       });
     }
 
@@ -177,9 +198,10 @@ export abstract class ProjectMigrator<
       errors.push({
         message: `There is more than one target using a builder that is used to ${targetType} the project (${arrayToString(
           targetsByType[targetType]
-        )}).`,
-        hint: `Make sure the project only has one target with a builder that is used to ${targetType} the project.`,
+        )}). This is not currently supported by the automated migration. These targets will be skipped.`,
+        hint: 'Make sure to manually migrate their configuration and any possible associated files.',
       });
+      this.skipTargetTypeMigration(targetType);
     });
 
     return errors.length ? errors : null;
@@ -207,6 +229,13 @@ export abstract class ProjectMigrator<
     visitNotIgnoredFiles(this.tree, from, (file) => {
       this.moveFile(file, normalizePath(file).replace(from, to), true);
     });
+  }
+
+  protected shouldSkipTargetTypeMigration(targetType: TargetType): boolean {
+    return (
+      Array.isArray(this.skipMigration) &&
+      this.skipMigration.includes(targetType)
+    );
   }
 
   private collectTargetNames(): void {
@@ -243,5 +272,21 @@ export abstract class ProjectMigrator<
           this.logger
         )
     );
+  }
+
+  private skipProjectMigration(): void {
+    this.skipMigration = true;
+  }
+
+  private skipTargetTypeMigration(targetType: TargetType): void {
+    if (this.skipMigration === true) {
+      return;
+    }
+
+    if (!Array.isArray(this.skipMigration)) {
+      this.skipMigration = [];
+    }
+
+    this.skipMigration.push(targetType);
   }
 }
