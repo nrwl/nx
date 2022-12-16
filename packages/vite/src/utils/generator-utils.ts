@@ -670,9 +670,15 @@ async function handleUnsupportedUserProvidedTargetsErrors(
 export async function handleUnknownExecutors() {
   logger.warn(
     `
-      We cound not find any targets in your project that are using the supported executors for build, serve and test.
-      However, we could not verify that the executors you are using are not supported.
-      Please make sure to commit your changes before running this generator.
+      We could not find any targets in your project that use executors which 
+      can be converted to the @nrwl/vite executors.
+
+      This either means that your project may not have a target 
+      for building, serving, or testing at all, or that your targets are 
+      using executors that are not known to Nx.
+      
+      If you still want to convert your project to use the @nrwl/vite executors,
+      please make sure to commit your changes before running this generator.
       `
   );
 
