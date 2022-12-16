@@ -377,7 +377,7 @@ describe('Build React applications and libraries with Vite', () => {
     // Convert non-buildable lib to buildable one
     const nonBuildableLib = uniq('nonbuildablelib');
     runCLI(
-      `generate @nrwl/react:lib ${nonBuildableLib} --no-interactive --unitTestRunner=none`
+      `generate @nrwl/react:lib ${nonBuildableLib} --no-interactive --unitTestRunner=jest`
     );
     runCLI(
       `generate @nrwl/vite:configuration ${nonBuildableLib} --uiFramework=react --no-interactive`
