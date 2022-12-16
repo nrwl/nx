@@ -1,7 +1,19 @@
 import { mapLockFileDataToPartialGraph } from './lock-file';
-import { parseNpmLockFile, stringifyNpmLockFile } from './npm';
-import { parsePnpmLockFile, stringifyPnpmLockFile } from './pnpm';
-import { parseYarnLockFile, stringifyYarnLockFile } from './yarn';
+import {
+  parseNpmLockFile,
+  pruneNpmLockFile,
+  stringifyNpmLockFile,
+} from './npm';
+import {
+  parsePnpmLockFile,
+  prunePnpmLockFile,
+  stringifyPnpmLockFile,
+} from './pnpm';
+import {
+  parseYarnLockFile,
+  pruneYarnLockFile,
+  stringifyYarnLockFile,
+} from './yarn';
 import {
   npmLockFileV1WithAliases,
   npmLockFileWithAliases,
@@ -247,6 +259,7 @@ describe('lock-file', () => {
       );
 
       const newPackage = createPackageJson('lib1', partialGraph, {});
+      const prunedLockFile = pruneYarnLockFile(lockFileData, newPackage);
       expect(newPackage).toMatchInlineSnapshot(`
         Object {
           "dependencies": Object {
@@ -283,6 +296,7 @@ describe('lock-file', () => {
       );
 
       const newPackage = createPackageJson('lib1', partialGraph, {});
+      const prunedLockFile = pruneNpmLockFile(lockFileData, newPackage);
       expect(newPackage).toMatchInlineSnapshot(`
         Object {
           "dependencies": Object {
@@ -317,6 +331,7 @@ describe('lock-file', () => {
       );
 
       const newPackage = createPackageJson('lib1', partialGraph, {});
+      const prunedLockFile = pruneYarnLockFile(lockFileData, newPackage);
       expect(newPackage).toMatchInlineSnapshot(`
         Object {
           "dependencies": Object {
@@ -350,6 +365,7 @@ describe('lock-file', () => {
         mapLockFileDataToPartialGraph(lockFileData, 'pnpm')
       );
       const newPackage = createPackageJson('lib1', partialGraph, {});
+      const prunedLockFile = prunePnpmLockFile(lockFileData, newPackage);
       expect(newPackage).toMatchInlineSnapshot(`
         Object {
           "dependencies": Object {

@@ -432,7 +432,9 @@ function pruneDependencies(
         dependencies[packageName]
       ).find(([_, v]) => v.rootVersion);
       result[packageName] = result[packageName] || {};
-      const metaKey = `/${packageName}/${value.version}`;
+      const metaKey = value.actualVersion
+        ? value.version
+        : `/${packageName}/${value.version}`;
       const meta = packageMeta.find((m) => m.key.startsWith(metaKey));
 
       result[packageName][key] = Object.assign(value, {
