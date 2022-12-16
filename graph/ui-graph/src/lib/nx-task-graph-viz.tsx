@@ -99,7 +99,7 @@ export function NxTaskGraphViz({
     <div className="not-prose">
       <div
         ref={containerRef}
-        className="w-full"
+        className="w-full cursor-pointer"
         style={{ width: '100%', height }}
       ></div>
       {tooltipToRender ? (
