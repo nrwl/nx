@@ -1,4 +1,4 @@
-import { exec, execSync } from 'child_process';
+import { exec } from 'child_process';
 import * as path from 'path';
 import * as yargsParser from 'yargs-parser';
 import { env as appendLocalEnv } from 'npm-run-path';
@@ -16,7 +16,7 @@ async function loadEnvVars(path?: string) {
   } else {
     try {
       (await import('dotenv')).config();
-    } catch {}
+    } catch { }
   }
 }
 
@@ -26,17 +26,17 @@ export interface RunCommandsOptions extends Json {
   command?: string;
   commands?: (
     | {
-        command: string;
-        forwardAllArgs?: boolean;
-        /**
-         * description was added to allow users to document their commands inline,
-         * it is not intended to be used as part of the execution of the command.
-         */
-        description?: string;
-        prefix?: string;
-        color?: string;
-        bgColor?: string;
-      }
+      command: string;
+      forwardAllArgs?: boolean;
+      /**
+       * description was added to allow users to document their commands inline,
+       * it is not intended to be used as part of the execution of the command.
+       */
+      description?: string;
+      prefix?: string;
+      color?: string;
+      bgColor?: string;
+    }
     | string
   )[];
   color?: boolean;
@@ -69,7 +69,7 @@ export interface NormalizedRunCommandsOptions extends RunCommandsOptions {
   parsedArgs: { [k: string]: any };
 }
 
-export default async function (
+export default async function(
   options: RunCommandsOptions,
   context: ExecutorContext
 ): Promise<{ success: boolean }> {
@@ -176,12 +176,20 @@ async function runSerially(
   context: ExecutorContext
 ) {
   for (const c of options.commands) {
-    createSyncProcess(
-      c.command,
+    const success = await createProcess(
+      c,
+      undefined,
       options.color,
       calculateCwd(options.cwd, context)
     );
+    if (!success) {
+      process.stderr.write(
+        `Warning: run-commands command "${c}" exited with non-zero status code`
+      );
+      return false;
+    }
   }
+
   return true;
 }
 
@@ -208,6 +216,7 @@ function createProcess(
     const processExitListener = () => childProcess.kill();
     process.on('exit', processExitListener);
     process.on('SIGTERM', processExitListener);
+    process.on('SIGINT', () => childProcess.kill('SIGINT'));
     childProcess.stdout.on('data', (data) => {
       process.stdout.write(addColorAndPrefix(data, commandConfig));
       if (readyWhen && data.toString().indexOf(readyWhen) > -1) {
@@ -253,15 +262,6 @@ function addColorAndPrefix(
   return out;
 }
 
-function createSyncProcess(command: string, color: boolean, cwd: string) {
-  execSync(command, {
-    env: processEnv(color),
-    stdio: ['inherit', 'inherit', 'inherit'],
-    maxBuffer: LARGE_BUFFER,
-    cwd,
-  });
-}
-
 function calculateCwd(
   cwd: string | undefined,
   context: ExecutorContext
@@ -292,9 +292,8 @@ export function interpolateArgsIntoCommand(
     const regex = /{args\.([^}]+)}/g;
     return command.replace(regex, (_, group: string) => opts.parsedArgs[group]);
   } else if (forwardAllArgs) {
-    return `${command}${
-      opts.__unparsed__.length > 0 ? ' ' + opts.__unparsed__.join(' ') : ''
-    }`;
+    return `${command}${opts.__unparsed__.length > 0 ? ' ' + opts.__unparsed__.join(' ') : ''
+      }`;
   } else {
     return command;
   }
