@@ -463,6 +463,22 @@ describe('Enforce Module Boundaries (eslint)', () => {
       expect(failures[1].message).toEqual(message);
     });
 
+    it.todo(
+      'should not error when importing npm packages matching allowed external imports'
+    );
+
+    it.todo(
+      'should error when importing npm packages not matching allowed external imports'
+    );
+
+    it.todo(
+      'should not error when importing npm packages matching allowed glob pattern'
+    );
+
+    it.todo(
+      'should error when importing npm packages not matching allowed glob pattern'
+    );
+
     it('should error when importing transitive npm packages', () => {
       const failures = runRule(
         {
