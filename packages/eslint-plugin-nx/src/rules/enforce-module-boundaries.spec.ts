@@ -463,21 +463,91 @@ describe('Enforce Module Boundaries (eslint)', () => {
       expect(failures[1].message).toEqual(message);
     });
 
-    it.todo(
-      'should not error when importing npm packages matching allowed external imports'
-    );
+    xit('🚧 should not error when importing npm packages matching allowed external imports', () => {
+      const failures = runRule(
+        {
+          depConstraints: [
+            { sourceTag: 'api', allowedExternalImports: ['@angular/core'] },
+          ],
+        },
+        `${process.cwd()}/proj/libs/api/src/index.ts`,
+        `
+          import { Component } from '@angular/core';
+          import '@angular/core';
+          import('@angular/core');
+        `,
+        graph
+      );
 
-    it.todo(
-      'should error when importing npm packages not matching allowed external imports'
-    );
+      expect(failures.length).toEqual(0);
+    });
 
-    it.todo(
-      'should not error when importing npm packages matching allowed glob pattern'
-    );
+    xit('🚧 should error when importing npm packages not matching allowed external imports', () => {
+      const failures = runRule(
+        {
+          depConstraints: [
+            { sourceTag: 'api', allowedExternalImports: ['@angular/core'] },
+          ],
+        },
+        `${process.cwd()}/proj/libs/api/src/index.ts`,
+        `
+          import { Injectable } from '@nestjs/core';
+          import '@nestjs/core';
+          import('@nestjs/core');
+        `,
+        graph
+      );
 
-    it.todo(
-      'should error when importing npm packages not matching allowed glob pattern'
-    );
+      const message =
+        'A project tagged with "api" is not allowed to import the "@nestjs/core" package';
+      expect(failures.length).toEqual(3);
+      expect(failures[0].message).toEqual(message);
+      expect(failures[1].message).toEqual(message);
+      expect(failures[2].message).toEqual(message);
+    });
+
+    xit('🚧 should not error when importing npm packages matching allowed glob pattern', () => {
+      const failures = runRule(
+        {
+          depConstraints: [
+            { sourceTag: 'api', allowedExternalImports: ['@angular/*'] },
+          ],
+        },
+        `${process.cwd()}/proj/libs/api/src/index.ts`,
+        `
+          import { Component } from '@angular/core';
+          import '@angular/core';
+          import('@angular/core');
+        `,
+        graph
+      );
+
+      expect(failures.length).toEqual(0);
+    });
+
+    xit('🚧 should error when importing npm packages not matching allowed glob pattern', () => {
+      const failures = runRule(
+        {
+          depConstraints: [
+            { sourceTag: 'api', allowedExternalImports: ['@angular/*'] },
+          ],
+        },
+        `${process.cwd()}/proj/libs/api/src/index.ts`,
+        `
+          import { Injectable } from '@nestjs/core';
+          import '@nestjs/core';
+          import('@nestjs/core');
+        `,
+        graph
+      );
+
+      const message =
+        'A project tagged with "api" is not allowed to import the "@nestjs/core" package';
+      expect(failures.length).toEqual(3);
+      expect(failures[0].message).toEqual(message);
+      expect(failures[1].message).toEqual(message);
+      expect(failures[2].message).toEqual(message);
+    });
 
     it('should error when importing transitive npm packages', () => {
       const failures = runRule(
