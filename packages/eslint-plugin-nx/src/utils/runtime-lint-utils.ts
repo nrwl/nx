@@ -25,12 +25,14 @@ type SingleSourceTagConstraint = {
   sourceTag: string;
   onlyDependOnLibsWithTags?: string[];
   notDependOnLibsWithTags?: string[];
+  allowedExternalImports?: string[];
   bannedExternalImports?: string[];
 };
 type ComboSourceTagConstraint = {
   allSourceTags: string[];
   onlyDependOnLibsWithTags?: string[];
   notDependOnLibsWithTags?: string[];
+  allowedExternalImports?: string[];
   bannedExternalImports?: string[];
 };
 export type DepConstraint =
@@ -209,9 +211,23 @@ function isConstraintBanningProject(
   externalProject: ProjectGraphExternalNode,
   constraint: DepConstraint
 ): boolean {
-  return constraint.bannedExternalImports.some((importDefinition) =>
-    parseImportWildcards(importDefinition).test(
-      externalProject.data.packageName
+  const { allowedExternalImports, bannedExternalImports } = constraint;
+  const { packageName } = externalProject.data;
+
+  /* Check if import is banned... */
+  if (
+    bannedExternalImports?.some((importDefinition) =>
+      parseImportWildcards(importDefinition).test(packageName)
+    )
+  ) {
+    return true;
+  }
+
+  /* ... then check if there is a whitelist and if there is a match in the whitelist.  */
+  return (
+    allowedExternalImports != null &&
+    !allowedExternalImports.some((importDefinition) =>
+      parseImportWildcards(importDefinition).test(packageName)
     )
   );
 }
@@ -230,11 +246,7 @@ export function hasBannedImport(
       tags = [c.sourceTag];
     }
 
-    return (
-      c.bannedExternalImports &&
-      c.bannedExternalImports.length &&
-      tags.every((t) => (source.data.tags || []).includes(t))
-    );
+    return tags.every((t) => (source.data.tags || []).includes(t));
   });
   return depConstraints.find((constraint) =>
     isConstraintBanningProject(target, constraint)

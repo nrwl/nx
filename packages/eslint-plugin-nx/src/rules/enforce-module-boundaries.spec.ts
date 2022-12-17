@@ -463,18 +463,17 @@ describe('Enforce Module Boundaries (eslint)', () => {
       expect(failures[1].message).toEqual(message);
     });
 
-    xit('🚧 should not error when importing npm packages matching allowed external imports', () => {
+    it('should not error when importing npm packages matching allowed external imports', () => {
       const failures = runRule(
         {
           depConstraints: [
-            { sourceTag: 'api', allowedExternalImports: ['@angular/core'] },
+            { sourceTag: 'api', allowedExternalImports: ['npm-package'] },
           ],
         },
         `${process.cwd()}/proj/libs/api/src/index.ts`,
         `
-          import { Component } from '@angular/core';
-          import '@angular/core';
-          import('@angular/core');
+          import 'npm-package';
+          import('npm-package');
         `,
         graph
       );
@@ -482,42 +481,39 @@ describe('Enforce Module Boundaries (eslint)', () => {
       expect(failures.length).toEqual(0);
     });
 
-    xit('🚧 should error when importing npm packages not matching allowed external imports', () => {
+    it('should error when importing npm packages not matching allowed external imports', () => {
       const failures = runRule(
         {
           depConstraints: [
-            { sourceTag: 'api', allowedExternalImports: ['@angular/core'] },
+            { sourceTag: 'api', allowedExternalImports: ['npm-package'] },
           ],
         },
         `${process.cwd()}/proj/libs/api/src/index.ts`,
         `
-          import { Injectable } from '@nestjs/core';
-          import '@nestjs/core';
-          import('@nestjs/core');
+          import 'npm-awesome-package';
+          import('npm-awesome-package');
         `,
         graph
       );
 
       const message =
-        'A project tagged with "api" is not allowed to import the "@nestjs/core" package';
-      expect(failures.length).toEqual(3);
+        'A project tagged with "api" is not allowed to import the "npm-awesome-package" package';
+      expect(failures.length).toEqual(2);
       expect(failures[0].message).toEqual(message);
       expect(failures[1].message).toEqual(message);
-      expect(failures[2].message).toEqual(message);
     });
 
-    xit('🚧 should not error when importing npm packages matching allowed glob pattern', () => {
+    it('should not error when importing npm packages matching allowed glob pattern', () => {
       const failures = runRule(
         {
           depConstraints: [
-            { sourceTag: 'api', allowedExternalImports: ['@angular/*'] },
+            { sourceTag: 'api', allowedExternalImports: ['npm-awesome-*'] },
           ],
         },
         `${process.cwd()}/proj/libs/api/src/index.ts`,
         `
-          import { Component } from '@angular/core';
-          import '@angular/core';
-          import('@angular/core');
+          import 'npm-awesome-package';
+          import('npm-awesome-package');
         `,
         graph
       );
@@ -525,28 +521,46 @@ describe('Enforce Module Boundaries (eslint)', () => {
       expect(failures.length).toEqual(0);
     });
 
-    xit('🚧 should error when importing npm packages not matching allowed glob pattern', () => {
+    it('should error when importing npm packages not matching allowed glob pattern', () => {
       const failures = runRule(
         {
           depConstraints: [
-            { sourceTag: 'api', allowedExternalImports: ['@angular/*'] },
+            { sourceTag: 'api', allowedExternalImports: ['npm-awesome-*'] },
           ],
         },
         `${process.cwd()}/proj/libs/api/src/index.ts`,
         `
-          import { Injectable } from '@nestjs/core';
-          import '@nestjs/core';
-          import('@nestjs/core');
+          import 'npm-package';
+          import('npm-package');
         `,
         graph
       );
 
       const message =
-        'A project tagged with "api" is not allowed to import the "@nestjs/core" package';
-      expect(failures.length).toEqual(3);
+        'A project tagged with "api" is not allowed to import the "npm-package" package';
+      expect(failures.length).toEqual(2);
       expect(failures[0].message).toEqual(message);
       expect(failures[1].message).toEqual(message);
-      expect(failures[2].message).toEqual(message);
+    });
+
+    it('should error when importing any npm package if none is allowed', () => {
+      const failures = runRule(
+        {
+          depConstraints: [{ sourceTag: 'api', allowedExternalImports: [] }],
+        },
+        `${process.cwd()}/proj/libs/api/src/index.ts`,
+        `
+          import 'npm-package';
+          import('npm-package');
+        `,
+        graph
+      );
+
+      const message =
+        'A project tagged with "api" is not allowed to import the "npm-package" package';
+      expect(failures.length).toEqual(2);
+      expect(failures[0].message).toEqual(message);
+      expect(failures[1].message).toEqual(message);
     });
 
     it('should error when importing transitive npm packages', () => {

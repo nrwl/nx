@@ -103,6 +103,7 @@ export default createESLintRule<Options, MessageIds>({
                   },
                 ],
                 onlyDependOnLibsWithTags: [{ type: 'string' }],
+                allowedExternalImports: [{ type: 'string' }],
                 bannedExternalImports: [{ type: 'string' }],
                 notDependOnLibsWithTags: [{ type: 'string' }],
               },
