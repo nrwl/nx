@@ -92,7 +92,7 @@ async function runProcess(
 ) {
   const execArgv = getExecArgv(options);
 
-  const hashed = hasher.hashArray(execArgv.concat(options.args));
+  const hashed = hasher.hashArray(execArgv.concat(hashedKey));
   hashedMap.set(hashedKey, hashed);
 
   const subProcess = fork(
