@@ -1,6 +1,3 @@
-import { dirname } from 'path';
-import { prompt } from 'enquirer';
-
 import {
   convertNxGenerator,
   formatFiles,
@@ -15,7 +12,9 @@ import {
   updateJson,
   writeJson,
 } from '@nrwl/devkit';
-
+import { prompt } from 'enquirer';
+import { getRelativeProjectJsonSchemaPath } from 'nx/src/generators/utils/project-configuration';
+import { dirname } from 'path';
 import { Schema } from './schema';
 import { getProjectConfigurationPath } from './utils/get-project-configuration-path';
 
@@ -68,9 +67,11 @@ To upgrade change the version number at the top of ${getWorkspacePath(
       continue;
     }
 
-    delete configuration.root;
-
-    writeJson(host, configPath, configuration);
+    writeJson(host, configPath, {
+      $schema: getRelativeProjectJsonSchemaPath(host, configuration),
+      ...configuration,
+      root: undefined,
+    });
 
     updateJson(host, getWorkspacePath(host), (value) => {
       value.projects[project] = normalizePath(dirname(configPath));
