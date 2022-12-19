@@ -4,6 +4,7 @@ export interface ViteBuildExecutorOptions {
   base?: string;
   configFile?: string;
   fileReplacements?: FileReplacement[];
+  force?: boolean;
   sourcemap?: boolean | 'inline' | 'hidden';
   minify?: boolean | 'esbuild' | 'terser';
   manifest?: boolean | string;

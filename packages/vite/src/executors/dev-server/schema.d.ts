@@ -11,4 +11,5 @@ export interface ViteDevServerExecutorOptions {
   logLevel?: info | warn | error | silent;
   mode?: string;
   clearScreen?: boolean;
+  force?: boolean;
 }
