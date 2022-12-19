@@ -1,6 +1,11 @@
 import type { Target } from 'nx/src/command-line/run';
+import { readCachedProjectGraph } from 'nx/src/project-graph/project-graph';
 import { splitTarget } from 'nx/src/utils/split-target';
 
+/**
+ * @deprecated(v17) A project graph should be passed to parseTargetString for best accuracy.
+ */
+export function parseTargetString(targetString: string): Target;
 /**
  * Parses a target string into {project, target, configuration}
  *
@@ -12,8 +17,14 @@ import { splitTarget } from 'nx/src/utils/split-target';
  *
  * @param targetString - target reference
  */
-export function parseTargetString(targetString: string): Target {
-  const [project, target, configuration] = splitTarget(targetString);
+export function parseTargetString(
+  targetString: string,
+  projectGraph = readCachedProjectGraph()
+): Target {
+  const [project, target, configuration] = splitTarget(
+    targetString,
+    projectGraph
+  );
   if (!project || !target) {
     throw new Error(`Invalid Target String: ${targetString}`);
   }
