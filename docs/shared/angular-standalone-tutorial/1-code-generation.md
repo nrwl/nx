@@ -9,6 +9,13 @@ This tutorial sets up a repo with a single application at the root level that br
 Looking for a Angular monorepo setup? Check our [Angular monorepo tutorial](/angular-tutorial/1-code-generation).
 {% /callout %}
 
+{% youtube
+src="https://www.youtube.com/embed/hacaIaXii4M"
+title="Tutorial: Standalone Angular Application"
+width="100%" /%}
+
+{% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/angular-standalone-application" /%}
+
 # Angular Standalone Tutorial - Part 1: Code Generation
 
 ## Contents

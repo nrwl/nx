@@ -9,6 +9,13 @@ There are two styles of repos: integrated and package-based. This tutorial shows
 You can find more information on the difference between the two in [our introduction](/getting-started/intro).
 {% /callout %}
 
+{% youtube
+src="https://www.youtube.com/embed/kKmZHMh6QII"
+title="Tutorial: React Standalone Application"
+width="100%" /%}
+
+{% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/react-standalone-application" /%}
+
 # React Monorepo Tutorial - Part 1: Code Generation
 
 ## Contents
