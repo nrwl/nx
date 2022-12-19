@@ -27,16 +27,18 @@ export async function* nodeExecutor(
   context: ExecutorContext
 ) {
   const uniqueKey = randomUUID();
+  const hashedKey = [uniqueKey, ...options.args];
+
   process.on('SIGTERM', async () => {
-    await killCurrentProcess(uniqueKey, options, 'SIGTERM');
+    await killCurrentProcess(hashedKey, 'SIGTERM');
     process.exit(128 + 15);
   });
   process.on('SIGINT', async () => {
-    await killCurrentProcess(uniqueKey, options, 'SIGINT');
+    await killCurrentProcess(hashedKey, 'SIGINT');
     process.exit(128 + 2);
   });
   process.on('SIGHUP', async () => {
-    await killCurrentProcess(uniqueKey, options, 'SIGHUP');
+    await killCurrentProcess(hashedKey, 'SIGHUP');
     process.exit(128 + 1);
   });
 
@@ -57,7 +59,7 @@ export async function* nodeExecutor(
       logger.error('There was an error with the build. See above.');
       logger.info(`${event.outfile} was not restarted.`);
     }
-    await handleBuildEvent(uniqueKey, event, options, mappings);
+    await handleBuildEvent(hashedKey, event, options, mappings);
     yield event;
   }
 }
@@ -83,7 +85,7 @@ function calculateResolveMappings(
 }
 
 async function runProcess(
-  uniqueKey: string,
+  hashedKey: string[],
   event: ExecutorEvent,
   options: NodeExecutorOptions,
   mappings: { [project: string]: string }
@@ -91,8 +93,6 @@ async function runProcess(
   const execArgv = getExecArgv(options);
 
   const hashed = hasher.hashArray(execArgv.concat(options.args));
-
-  const hashedKey = [uniqueKey, ...options.args];
   hashedMap.set(hashedKey, hashed);
 
   const subProcess = fork(
@@ -143,18 +143,18 @@ function getExecArgv(options: NodeExecutorOptions) {
 }
 
 async function handleBuildEvent(
-  uniqueKey: string,
+  hashedKey: string[],
   event: ExecutorEvent,
   options: NodeExecutorOptions,
   mappings: { [project: string]: string }
 ) {
   // Don't kill previous run unless new build is successful.
   if (options.watch && event.success) {
-    await killCurrentProcess(uniqueKey, options);
+    await killCurrentProcess(hashedKey);
   }
 
   if (event.success) {
-    await runProcess(uniqueKey, event, options, mappings);
+    await runProcess(hashedKey, event, options, mappings);
   }
 }
 
@@ -162,11 +162,9 @@ const promisifiedTreeKill: (pid: number, signal: string) => Promise<void> =
   promisify(treeKill);
 
 async function killCurrentProcess(
-  uniqueKey: string,
-  options: NodeExecutorOptions,
+  hashedKey: string[],
   signal: string = 'SIGTERM'
 ) {
-  const hashedKey = [uniqueKey, ...options.args];
   const currentProcessKey = hashedMap.get(hashedKey);
   if (!currentProcessKey) return;
 
