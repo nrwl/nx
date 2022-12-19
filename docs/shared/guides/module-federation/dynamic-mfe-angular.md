@@ -189,22 +189,17 @@ First, add `FormsModule` to the `imports` array in your `remote-entry/entry.modu
 
 ```ts {% fileName="remote-entry/entry.module.ts" %}
 import { NgModule } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+
 import { RemoteEntryComponent } from './entry.component';
+import { NxWelcomeComponent } from './nx-welcome.component';
+import { remoteRoutes } from './entry.routes';
+import { FormsModule } from '@angular/forms';
+
 @NgModule({
-  declarations: [RemoteEntryComponent],
-  imports: [
-    CommonModule,
-    FormsModule,
-    RouterModule.forChild([
-      {
-        path: '',
-        component: RemoteEntryComponent,
-      },
-    ]),
-  ],
+  declarations: [RemoteEntryComponent, NxWelcomeComponent],
+  imports: [CommonModule, FormsModule, RouterModule.forChild(remoteRoutes)],
   providers: [],
 })
 export class RemoteEntryModule {}
@@ -460,6 +455,8 @@ nx serve dashboard --devRemotes=login
 ```
 
 Should result in the same behaviour as before, except that our Dashboard application is waiting until runtime to find out the deployed location of our Login application.
+
+{% github-repository url="https://github.com/Coly010/nx-ng-dyn-fed" /%}
 
 In the next section, we will see how Nx’s generators can be used to automate a lot of this process for us!
 
