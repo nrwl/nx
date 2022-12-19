@@ -96,6 +96,7 @@ const IGNORE_MATCHES_IN_PACKAGE = {
     'babel-plugin-emotion',
     'babel-plugin-styled-components',
     'css-loader',
+    'file-loader',
     'less-loader',
     'react-refresh',
     'rollup',
