@@ -22952,3 +22952,104 @@ export const ssh2LockFileV3 = `{
   }
 }
 `;
+
+export const rxjsTslibLockFileV1 = `{
+  "name": "test",
+  "version": "1.0.0",
+  "lockfileVersion": 1,
+  "requires": true,
+  "dependencies": {
+    "rxjs": {
+      "version": "7.8.0",
+      "resolved": "https://registry.npmjs.org/rxjs/-/rxjs-7.8.0.tgz",
+      "integrity": "sha512-F2+gxDshqmIub1KdvZkaEfGDwLNpPvk9Fs6LD/MyQxNgMds/WH9OdDDXOmxUZpME+iSK3rQCctkL0DYyytUqMg==",
+      "requires": {
+        "tslib": "^2.1.0"
+      }
+    },
+    "tslib": {
+      "version": "2.4.1",
+      "resolved": "https://registry.npmjs.org/tslib/-/tslib-2.4.1.tgz",
+      "integrity": "sha512-tGyy4dAjRIEwI7BzsB0lynWgOpfqjUdq91XXAlIWD2OwKBH7oCl/GZG/HT4BOHrTlPMOASlMQ7veyTqpmRcrNA=="
+    }
+  }
+}
+`;
+export const rxjsTslibLockFileV2 = `{
+  "name": "test",
+  "version": "0.0.0",
+  "lockfileVersion": 2,
+  "requires": true,
+  "packages": {
+    "": {
+      "name": "test",
+      "version": "0.0.0",
+      "license": "MIT",
+      "dependencies": {
+        "rxjs": "^7.8.0",
+        "tslib": "^2.4.1"
+      }
+    },
+    "node_modules/rxjs": {
+      "version": "7.8.0",
+      "resolved": "https://registry.npmjs.org/rxjs/-/rxjs-7.8.0.tgz",
+      "integrity": "sha512-F2+gxDshqmIub1KdvZkaEfGDwLNpPvk9Fs6LD/MyQxNgMds/WH9OdDDXOmxUZpME+iSK3rQCctkL0DYyytUqMg==",
+      "dependencies": {
+        "tslib": "^2.1.0"
+      }
+    },
+    "node_modules/tslib": {
+      "version": "2.4.1",
+      "resolved": "https://registry.npmjs.org/tslib/-/tslib-2.4.1.tgz",
+      "integrity": "sha512-tGyy4dAjRIEwI7BzsB0lynWgOpfqjUdq91XXAlIWD2OwKBH7oCl/GZG/HT4BOHrTlPMOASlMQ7veyTqpmRcrNA=="
+    }
+  },
+  "dependencies": {
+    "rxjs": {
+      "version": "7.8.0",
+      "resolved": "https://registry.npmjs.org/rxjs/-/rxjs-7.8.0.tgz",
+      "integrity": "sha512-F2+gxDshqmIub1KdvZkaEfGDwLNpPvk9Fs6LD/MyQxNgMds/WH9OdDDXOmxUZpME+iSK3rQCctkL0DYyytUqMg==",
+      "requires": {
+        "tslib": "^2.1.0"
+      }
+    },
+    "tslib": {
+      "version": "2.4.1",
+      "resolved": "https://registry.npmjs.org/tslib/-/tslib-2.4.1.tgz",
+      "integrity": "sha512-tGyy4dAjRIEwI7BzsB0lynWgOpfqjUdq91XXAlIWD2OwKBH7oCl/GZG/HT4BOHrTlPMOASlMQ7veyTqpmRcrNA=="
+    }
+  }
+}
+`;
+
+export const rxjsTslibLockFileV3 = `{
+  "name": "test",
+  "version": "0.0.0",
+  "lockfileVersion": 3,
+  "requires": true,
+  "packages": {
+    "": {
+      "name": "test",
+      "version": "0.0.0",
+      "license": "MIT",
+      "dependencies": {
+        "rxjs": "^7.8.0",
+        "tslib": "^2.4.1"
+      }
+    },
+    "node_modules/rxjs": {
+      "version": "7.8.0",
+      "resolved": "https://registry.npmjs.org/rxjs/-/rxjs-7.8.0.tgz",
+      "integrity": "sha512-F2+gxDshqmIub1KdvZkaEfGDwLNpPvk9Fs6LD/MyQxNgMds/WH9OdDDXOmxUZpME+iSK3rQCctkL0DYyytUqMg==",
+      "dependencies": {
+        "tslib": "^2.1.0"
+      }
+    },
+    "node_modules/tslib": {
+      "version": "2.4.1",
+      "resolved": "https://registry.npmjs.org/tslib/-/tslib-2.4.1.tgz",
+      "integrity": "sha512-tGyy4dAjRIEwI7BzsB0lynWgOpfqjUdq91XXAlIWD2OwKBH7oCl/GZG/HT4BOHrTlPMOASlMQ7veyTqpmRcrNA=="
+    }
+  }
+}
+`;

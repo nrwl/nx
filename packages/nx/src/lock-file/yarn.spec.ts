@@ -6,10 +6,12 @@ import {
 import {
   berryLockFile,
   berryLockFileDevkitAndYargs,
+  berryRxjsTslibLockFile,
   berrySsh2LockFile,
   lockFile,
   lockFileDevkitAndYargs,
   lockFileJustTypescript,
+  rxjsTslibLockFile,
   ssh2LockFile,
 } from './__fixtures__/yarn.lock';
 
@@ -41,6 +43,14 @@ const Ssh2Package = {
   version: '0.0.0',
   dependencies: {
     ssh2: '1.11.0',
+  },
+};
+const RxjsTslibPackage = {
+  name: 'test',
+  version: '0.0.0',
+  dependencies: {
+    rxjs: '^7.8.0',
+    tslib: '^2.4.1',
   },
 };
 
@@ -133,6 +143,17 @@ describe('yarn LockFile utility', () => {
           pruneYarnLockFile(parseYarnLockFile(ssh2LockFile), Ssh2Package)
         )
       ).toEqual(ssh2LockFile);
+    });
+
+    it('should correctly prune lockfile with packages in multiple versions', () => {
+      expect(
+        stringifyYarnLockFile(
+          pruneYarnLockFile(
+            parseYarnLockFile(rxjsTslibLockFile),
+            RxjsTslibPackage
+          )
+        )
+      ).toEqual(rxjsTslibLockFile);
     });
   });
 
@@ -248,6 +269,19 @@ describe('yarn LockFile utility', () => {
           )
         )
       ).toEqual(removeComment(berrySsh2LockFile));
+    });
+
+    it('should correctly prune lockfile with packages in multiple versions', () => {
+      expect(
+        removeComment(
+          stringifyYarnLockFile(
+            pruneYarnLockFile(
+              parseYarnLockFile(berryRxjsTslibLockFile),
+              RxjsTslibPackage
+            )
+          )
+        )
+      ).toEqual(removeComment(berryRxjsTslibLockFile));
     });
   });
 });

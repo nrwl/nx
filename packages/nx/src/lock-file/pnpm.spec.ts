@@ -8,6 +8,7 @@ import {
   lockFileJustTypescript,
   lockFileWithInlineSpecifiers,
   lockFileYargsAndDevkit,
+  rxjsTslibLockFile,
   ssh2LockFile,
 } from './__fixtures__/pnpm.lock';
 import {
@@ -30,6 +31,14 @@ const Ssh2Package = {
   version: '0.0.0',
   dependencies: {
     ssh2: '1.11.0',
+  },
+};
+const RxjsTslibPackage = {
+  name: 'test',
+  version: '0.0.0',
+  dependencies: {
+    rxjs: '^7.8.0',
+    tslib: '^2.4.1',
   },
 };
 
@@ -168,6 +177,17 @@ describe('pnpm LockFile utility', () => {
           prunePnpmLockFile(parsePnpmLockFile(ssh2LockFile), Ssh2Package)
         )
       ).toEqual(ssh2LockFile);
+    });
+
+    it('should correctly prune lockfile with packages in multiple versions', () => {
+      expect(
+        stringifyPnpmLockFile(
+          prunePnpmLockFile(
+            parsePnpmLockFile(rxjsTslibLockFile),
+            RxjsTslibPackage
+          )
+        )
+      ).toEqual(rxjsTslibLockFile);
     });
   });
 

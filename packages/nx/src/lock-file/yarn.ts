@@ -5,8 +5,8 @@ import {
   PackageDependency,
   PackageVersions,
 } from './utils/lock-file-type';
-import { TransitiveLookupFunctionInput, isRootVersion } from './utils/mapping';
-import { hashString, generatePrunnedHash } from './utils/hashing';
+import { isRootVersion, TransitiveLookupFunctionInput } from './utils/mapping';
+import { generatePrunnedHash, hashString } from './utils/hashing';
 import { PackageJsonDeps } from './utils/pruning';
 import { sortObjectByKeys } from '../utils/object-sort';
 
@@ -308,26 +308,36 @@ function pruneDependency(
     ([, v]) => v.rootVersion
   );
 
-  result[packageName] = result[packageName] || {};
+  result[packageName] ??= {};
+  result[packageName][key] ??= { ...value, packageMeta: [] };
+
+  let metaVersion: string;
+
   if (isPatch) {
     const originalPackageName = packageName.split('@patch:').pop();
     const patchSuffix = value.packageMeta[0].split('#').pop();
-    value.packageMeta = [
-      `${packageName}@${getVersionFromPackageJson(
-        normalizedPackageJson,
-        originalPackageName
-      )}#${patchSuffix}`,
-    ];
+
+    metaVersion = `${packageName}@${getVersionFromPackageJson(
+      normalizedPackageJson,
+      originalPackageName
+    )}#${patchSuffix}`;
+  } else if (value.resolution) {
+    metaVersion = `${value.resolution.replace(
+      value.version,
+      ''
+    )}${getVersionFromPackageJson(normalizedPackageJson, packageName)}`;
   } else {
-    value.packageMeta = [
-      value.resolution ||
-        `${packageName}@${getVersionFromPackageJson(
-          normalizedPackageJson,
-          packageName
-        )}`,
-    ];
+    metaVersion = `${packageName}@${getVersionFromPackageJson(
+      normalizedPackageJson,
+      packageName
+    )}`;
   }
-  result[packageName][key] = value;
+
+  result[packageName][key].packageMeta = ensureMetaVersion(
+    result[packageName][key].packageMeta,
+    metaVersion
+  );
+
   pruneTransitiveDependencies(dependencies, result, value);
 }
 
@@ -370,17 +380,16 @@ function pruneTransitiveDependencies(
         }
 
         if (prunedDeps[packageName][key]) {
-          const packageMeta = prunedDeps[packageName][key].packageMeta;
-          if (packageMeta.indexOf(metaVersion) === -1) {
-            packageMeta.push(metaVersion);
-            packageMeta.sort();
-          }
+          prunedDeps[packageName][key].packageMeta = ensureMetaVersion(
+            prunedDeps[packageName][key].packageMeta,
+            metaVersion
+          );
         } else {
           prunedDeps[packageName][key] = {
             ...depValue,
             packageMeta: [metaVersion],
           };
-          // recurively collect dependencies
+          // recursively collect dependencies
           pruneTransitiveDependencies(
             dependencies,
             prunedDeps,
@@ -510,4 +519,15 @@ function findDependencyTriplet(
     }
   }
   return;
+}
+
+function ensureMetaVersion(
+  packageMeta: string[],
+  metaVersion: string
+): string[] {
+  if (packageMeta.indexOf(metaVersion) === -1) {
+    return [...packageMeta, metaVersion].sort();
+  }
+
+  return packageMeta;
 }
