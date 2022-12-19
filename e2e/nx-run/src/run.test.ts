@@ -190,11 +190,18 @@ describe('Nx Running Tests', () => {
           name: myapp,
           scripts: {
             [target]: `echo ${expectedOutput}`,
+            [`${target}:test`]: `echo ${expectedOutput}:test`,
           },
         })
       );
 
       expect(runCLI(`${target} ${myapp}`)).toContain(expectedOutput);
+      expect(runCLI(`${target}:test ${myapp}`)).toContain(
+        expectedOutput + ':test'
+      );
+      expect(runCLI(`run ${myapp}:${target}:test`)).toContain(
+        expectedOutput + ':test'
+      );
     }, 10000);
 
     it('should run targets inferred from plugin-specified project files', () => {

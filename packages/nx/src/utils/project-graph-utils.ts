@@ -40,7 +40,29 @@ export function mergeNpmScriptsWithTargets(
     // handle no scripts
     Object.keys(scripts || {}).forEach((script) => {
       if (!nx?.includedScripts || nx?.includedScripts.includes(script)) {
-        res[script] = buildTargetFromScript(script, nx);
+        const targetConfig = buildTargetFromScript(script, nx);
+
+        // Its possible for res[script] to be the base target for a script defined with a `colon`
+        res[script] = { ...res[script], ...targetConfig };
+
+        // If the script contains a colon, we add it to the project graph node twice.
+        // Once as a target itself (e.g. targets[build:prod]),
+        // and once as a configuration (e.g. targets[build].configurations[prod]).
+        // The first makes it such that we can run `nx build:dev proj` without quotes,
+        // The second makes it such that we can run `nx run proj:build:dev` without quotes,
+        if (script.includes(':')) {
+          const [base, configuration] = script.split(':');
+          res[base] ??= {
+            executor: 'nx:run-script',
+            ...targetConfig, // This ensures that any inputs or outputs defined for `script` are inherited by this target.
+            options: {},
+          };
+          res[base].configurations ??= {};
+          res[base].configurations[configuration] = {
+            options: targetConfig.options,
+            ...res[base].configurations[configuration],
+          };
+        }
       }
     });
     return { ...res, ...(targets || {}) };

@@ -123,13 +123,8 @@ describe('project graph utils', () => {
       version: '0.0.0',
       scripts: {
         build: 'echo 1',
-      },
-    };
-
-    const packageJsonBuildTarget = {
-      executor: 'nx:run-script',
-      options: {
-        script: 'build',
+        'test:web': 'jest -c jest.config.web.js',
+        'test:models': 'jest -c jest.config.models.js',
       },
     };
 
@@ -172,10 +167,7 @@ describe('project graph utils', () => {
         'apps/my-app',
         projectJsonTargets
       );
-      expect(result).toEqual({
-        ...projectJsonTargets,
-        build: packageJsonBuildTarget,
-      });
+      expect(result).toMatchInlineSnapshot();
     });
 
     it('should contain extended options from nx property in package.json', () => {
@@ -194,8 +186,10 @@ describe('project graph utils', () => {
       };
 
       const result = mergeNpmScriptsWithTargets('apps/my-other-app', null);
-      expect(result).toEqual({
-        build: { ...packageJsonBuildTarget, outputs: ['custom'] },
+      expect(result.build).toEqual({
+        executor: 'nx:run-script',
+        options: { script: 'build' },
+        outputs: ['custom'],
       });
     });
 
@@ -266,6 +260,46 @@ describe('project graph utils', () => {
         test: {
           executor: 'nx:run-script',
           options: { script: 'test' },
+        },
+      });
+    });
+
+    it('should add scripts with colons as configurations', () => {
+      const result = mergeNpmScriptsWithTargets('apps/my-app', {});
+      expect(result).toEqual({
+        build: {
+          executor: 'nx:run-script',
+          options: {
+            script: 'build',
+          },
+        },
+        test: {
+          executor: 'nx:run-script',
+          options: {},
+          configurations: {
+            models: {
+              options: {
+                script: 'test:models',
+              },
+            },
+            web: {
+              options: {
+                script: 'test:web',
+              },
+            },
+          },
+        },
+        'test:models': {
+          executor: 'nx:run-script',
+          options: {
+            script: 'test:models',
+          },
+        },
+        'test:web': {
+          executor: 'nx:run-script',
+          options: {
+            script: 'test:web',
+          },
         },
       });
     });
