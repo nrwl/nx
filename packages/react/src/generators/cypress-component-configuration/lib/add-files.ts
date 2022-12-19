@@ -5,6 +5,7 @@ import {
   logger,
   parseTargetString,
   ProjectConfiguration,
+  readCachedProjectGraph,
   readProjectConfiguration,
   Tree,
   visitNotIgnoredFiles,
@@ -81,7 +82,10 @@ function getBundler(found: FoundTarget, tree: Tree): 'vite' | 'webpack' {
     return found.config.executor === '@nrwl/vite:build' ? 'vite' : 'webpack';
   }
 
-  const { target, project } = parseTargetString(found.target);
+  const { target, project } = parseTargetString(
+    found.target,
+    readCachedProjectGraph()
+  );
   const projectConfig = readProjectConfiguration(tree, project);
   return projectConfig?.targets?.[target]?.executor === '@nrwl/vite:build'
     ? 'vite'

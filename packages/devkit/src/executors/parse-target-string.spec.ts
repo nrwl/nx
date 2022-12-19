@@ -1,5 +1,7 @@
 import { parseTargetString, targetToTargetString } from './parse-target-string';
 
+import * as splitTarget from 'nx/src/utils/split-target';
+
 const cases = [
   { input: 'one:two', expected: { project: 'one', target: 'two' } },
   {
@@ -14,7 +16,10 @@ const cases = [
 
 describe('parseTargetString', () => {
   it.each(cases)('$input -> $expected', ({ input, expected }) => {
-    expect(parseTargetString(input)).toEqual(expected);
+    jest
+      .spyOn(splitTarget, 'splitTarget')
+      .mockReturnValueOnce(Object.values(expected) as [string]);
+    expect(parseTargetString(input, null)).toEqual(expected);
   });
 });
 

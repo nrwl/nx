@@ -44,7 +44,7 @@ export default async function* serveExecutor(
   (process.env as any).PORT = options.port;
 
   const buildOptions = readTargetOptions<NextBuildBuilderOptions>(
-    parseTargetString(options.buildTarget),
+    parseTargetString(options.buildTarget, context.projectGraph),
     context
   );
   const root = resolve(context.root, buildOptions.root);
@@ -155,7 +155,7 @@ async function* runCustomServer(
   const baseUrl = `http://${options.hostname || 'localhost'}:${options.port}`;
 
   const customServerBuild = await runExecutor(
-    parseTargetString(options.customServerTarget),
+    parseTargetString(options.customServerTarget, context.projectGraph),
     {
       watch: true,
     },

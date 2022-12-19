@@ -1,10 +1,10 @@
 import {
   generateFiles,
-  getProjects,
   joinPathFragments,
   logger,
   offsetFromRoot,
   parseTargetString,
+  readCachedProjectGraph,
   readJson,
   readProjectConfiguration,
   readWorkspaceConfiguration,
@@ -551,7 +551,8 @@ export function getE2EProjectName(
       }
       if (options['devServerTarget']) {
         const { project, target } = parseTargetString(
-          options['devServerTarget']
+          options['devServerTarget'],
+          readCachedProjectGraph()
         );
         if (
           (project === mainProject && target === 'serve') ||

@@ -6,6 +6,7 @@ import {
   getProjects,
   joinPathFragments,
   parseTargetString,
+  readCachedProjectGraph,
   readJson,
   TargetConfiguration,
   Tree,
@@ -32,7 +33,10 @@ export async function updateCyMountUsage(tree: Tree) {
         return;
       }
 
-      const parsed = parseTargetString(options.devServerTarget);
+      const parsed = parseTargetString(
+        options.devServerTarget,
+        readCachedProjectGraph()
+      );
       if (!parsed?.project || !parsed?.target) {
         return;
       }

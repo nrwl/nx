@@ -8,8 +8,14 @@ const cases = [
   { input: 'project', expected: ['project'] },
   { input: 'project:target', expected: ['project', 'target'] },
   { input: 'project:target:config', expected: ['project', 'target', 'config'] },
-  { input: 'project:"target:target":config', expected: ['project', 'target:target', 'config'] },
-  { input: 'project:target:target:config', expected: ['project', 'target:target', 'config'] },
+  {
+    input: 'project:"target:target":config',
+    expected: ['project', 'target:target', 'config'],
+  },
+  {
+    input: 'project:target:target:config',
+    expected: ['project', 'target:target', 'config'],
+  },
 ];
 
 const projectGraph = new ProjectGraphBuilder()

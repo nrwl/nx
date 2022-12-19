@@ -93,7 +93,7 @@ function getBuildOptions(
   options: WebDevServerOptions,
   context: ExecutorContext
 ): WebpackExecutorOptions {
-  const target = parseTargetString(options.buildTarget);
+  const target = parseTargetString(options.buildTarget, context.projectGraph);
 
   const overrides: Partial<WebpackExecutorOptions> = {
     watch: false,

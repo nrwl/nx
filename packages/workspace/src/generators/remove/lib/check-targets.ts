@@ -1,6 +1,7 @@
 import {
   getProjects,
   parseTargetString,
+  readCachedProjectGraph,
   TargetConfiguration,
   Tree,
 } from '@nrwl/devkit';
@@ -27,7 +28,10 @@ export function checkTargets(tree: Tree, schema: Schema) {
     Object.entries(projectConfig.targets || {}).forEach(([, targetConfig]) => {
       checkIfProjectIsUsed(targetConfig, (value) => {
         try {
-          const { project } = parseTargetString(value);
+          const { project } = parseTargetString(
+            value,
+            readCachedProjectGraph()
+          );
           if (project === schema.projectName) {
             errors.push(`"${value}" is used by "${projectName}"`);
           }

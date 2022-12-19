@@ -134,7 +134,11 @@ It only uses language primitives and immutable objects
 - [output](../../devkit/documents/index#output)
 - [workspaceRoot](../../devkit/documents/index#workspaceroot)
 
-### Functions
+### Executors Functions
+
+- [parseTargetString](../../devkit/documents/index#parsetargetstring)
+
+### Other Functions
 
 - [addDependenciesToPackageJson](../../devkit/documents/index#adddependenciestopackagejson)
 - [addProjectConfiguration](../../devkit/documents/index#addprojectconfiguration)
@@ -172,7 +176,6 @@ It only uses language primitives and immutable objects
 - [normalizePath](../../devkit/documents/index#normalizepath)
 - [offsetFromRoot](../../devkit/documents/index#offsetfromroot)
 - [parseJson](../../devkit/documents/index#parsejson)
-- [parseTargetString](../../devkit/documents/index#parsetargetstring)
 - [readAllWorkspaceConfiguration](../../devkit/documents/index#readallworkspaceconfiguration)
 - [readCachedProjectGraph](../../devkit/documents/index#readcachedprojectgraph)
 - [readJson](../../devkit/documents/index#readjson)
@@ -846,7 +849,49 @@ Implementation of a target of a project that handles multiple projects to be bat
 
 • **workspaceRoot**: `string`
 
-## Functions
+## Executors Functions
+
+### parseTargetString
+
+▸ **parseTargetString**(`targetString`): [`Target`](../../devkit/documents/index#target)
+
+**`deprecated(v17)`** A project graph should be passed to parseTargetString for best accuracy.
+
+#### Parameters
+
+| Name           | Type     |
+| :------------- | :------- |
+| `targetString` | `string` |
+
+#### Returns
+
+[`Target`](../../devkit/documents/index#target)
+
+▸ **parseTargetString**(`targetString`, `projectGraph`): [`Target`](../../devkit/documents/index#target)
+
+Parses a target string into {project, target, configuration}
+
+Examples:
+
+```typescript
+parseTargetString('proj:test', graph); // returns { project: "proj", target: "test" }
+parseTargetString('proj:test:production', graph); // returns { project: "proj", target: "test", configuration: "production" }
+```
+
+#### Parameters
+
+| Name           | Type                                                                | Description      |
+| :------------- | :------------------------------------------------------------------ | :--------------- |
+| `targetString` | `string`                                                            | target reference |
+| `projectGraph` | [`ProjectGraph`](../../devkit/documents/index#projectgraph)<`any`\> | -                |
+
+#### Returns
+
+[`Target`](../../devkit/documents/index#target)
+
+---
+
+## Other Functions
 
 ### addDependenciesToPackageJson
 
@@ -1742,31 +1787,6 @@ By default javascript-style comments are allowed.
 `T`
 
 Object the JSON content represents
-
----
-
-### parseTargetString
-
-▸ **parseTargetString**(`targetString`): [`Target`](../../devkit/documents/index#target)
-
-Parses a target string into {project, target, configuration}
-
-Examples:
-
-```typescript
-parseTargetString('proj:test'); // returns { project: "proj", target: "test" }
-parseTargetString('proj:test:production'); // returns { project: "proj", target: "test", configuration: "production" }
-```
-
-#### Parameters
-
-| Name           | Type     | Description      |
-| :------------- | :------- | :--------------- |
-| `targetString` | `string` | target reference |
-
-#### Returns
-
-[`Target`](../../devkit/documents/index#target)
 
 ---
 

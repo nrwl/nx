@@ -1,4 +1,5 @@
 import type { Target } from 'nx/src/command-line/run';
+import { ProjectGraph } from 'nx/src/config/project-graph';
 import { readCachedProjectGraph } from 'nx/src/project-graph/project-graph';
 import { splitTarget } from 'nx/src/utils/split-target';
 
@@ -11,12 +12,16 @@ export function parseTargetString(targetString: string): Target;
  *
  * Examples:
  * ```typescript
- * parseTargetString("proj:test") // returns { project: "proj", target: "test" }
- * parseTargetString("proj:test:production") // returns { project: "proj", target: "test", configuration: "production" }
+ * parseTargetString("proj:test", graph) // returns { project: "proj", target: "test" }
+ * parseTargetString("proj:test:production", graph) // returns { project: "proj", target: "test", configuration: "production" }
  * ```
  *
  * @param targetString - target reference
  */
+export function parseTargetString(
+  targetString: string,
+  projectGraph: ProjectGraph
+): Target;
 export function parseTargetString(
   targetString: string,
   projectGraph = readCachedProjectGraph()

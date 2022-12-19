@@ -5,29 +5,36 @@ export function splitTarget(
   s: string,
   projectGraph: ProjectGraph<ProjectConfiguration>
 ): [project: string, target?: string, configuration?: string] {
-  const [project, ...segments] = splitByColons(s);
-  const validTargets = new Set(
-    Object.keys(projectGraph.nodes[project].data.targets)
-  );
+  let [project, ...segments] = splitByColons(s);
+  const validTargets = projectGraph.nodes[project]?.data?.targets;
+  const validTargetNames = new Set(Object.keys(validTargets ?? {}));
 
+  return [project, ...groupJointSegments(segments, validTargetNames)] as [
+    string,
+    string?,
+    string?
+  ];
+}
+
+function groupJointSegments(segments: string[], validTargetNames: Set<string>) {
   for (
     let endingSegmentIdx = segments.length;
     endingSegmentIdx > 0;
     endingSegmentIdx--
   ) {
     const potentialTargetName = segments.slice(0, endingSegmentIdx).join(':');
-    if (validTargets.has(potentialTargetName)) {
+    if (validTargetNames.has(potentialTargetName)) {
       const configurationName =
         endingSegmentIdx < segments.length
           ? segments.slice(endingSegmentIdx).join(':')
           : null;
       return configurationName
-        ? [project, potentialTargetName, configurationName]
-        : [project, potentialTargetName];
+        ? [potentialTargetName, configurationName]
+        : [potentialTargetName];
     }
   }
-
-  return [project];
+  // If we can't find a segment match, keep older behaviour
+  return segments;
 }
 
 function splitByColons(s: string) {

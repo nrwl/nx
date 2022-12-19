@@ -3,6 +3,7 @@ import {
   getProjects,
   parseTargetString,
   ProjectConfiguration,
+  readCachedProjectGraph,
   Target,
   TargetConfiguration,
   targetToTargetString,
@@ -59,7 +60,10 @@ function extractConfigurationBuildTarget(
   buildTarget: string
 ): Target {
   if (buildTarget) {
-    const buildTargetObj = parseTargetString(buildTarget);
+    const buildTargetObj = parseTargetString(
+      buildTarget,
+      readCachedProjectGraph()
+    );
     return {
       ...buildTargetObj,
       configuration: buildTargetObj.configuration ?? configuration,
@@ -77,12 +81,13 @@ function getBuildTargetNameFromOptions(
   baseOptions: any,
   configurationOptions: Map<string, any>
 ): string {
+  const pg = readCachedProjectGraph();
   if (baseOptions.buildTarget) {
-    return parseTargetString(baseOptions.buildTarget).target;
+    return parseTargetString(baseOptions.buildTarget, pg).target;
   }
   for (const [, options] of configurationOptions) {
     if (options.buildTarget) {
-      return parseTargetString(options.buildTarget).target;
+      return parseTargetString(options.buildTarget, pg).target;
     }
   }
 }
