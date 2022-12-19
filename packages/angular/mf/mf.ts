@@ -58,9 +58,14 @@ async function loadRemoteContainer(remoteName: string) {
     ? remoteUrlDefinitions[remoteName]
     : await resolveRemoteUrl(remoteName);
 
-  const containerUrl = `${remoteUrl}${
-    remoteUrl.endsWith('/') ? '' : '/'
-  }remoteEntry.mjs`;
+  const remoteEntryFileName =
+    remoteUrl.endsWith('.mjs') || remoteUrl.endsWith('.js')
+      ? remoteUrl.split('/').pop()
+      : undefined;
+
+  const containerUrl = `${remoteUrl}${remoteUrl.endsWith('/') ? '' : '/'}${
+    remoteEntryFileName ?? 'remoteEntry.mjs'
+  }`;
 
   const container = await loadModule(containerUrl);
   await container.init(__webpack_share_scopes__.default);
