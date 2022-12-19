@@ -1,6 +1,15 @@
+import type { ProjectGraph } from '@nrwl/devkit';
 import { addProjectConfiguration, writeJson } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import componentGenerator from './component';
+
+let projectGraph: ProjectGraph;
+jest.mock('@nrwl/devkit', () => {
+  return {
+    ...jest.requireActual('@nrwl/devkit'),
+    createProjectGraphAsync: jest.fn().mockImplementation(() => projectGraph),
+  };
+});
 
 describe('component Generator', () => {
   it('should create the component correctly and export it in the entry point when "export=true"', async () => {
@@ -406,6 +415,46 @@ describe('component Generator', () => {
       );
     });
 
+    it('should infer project from path and generate component correctly', async () => {
+      // ARRANGE
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      addProjectConfiguration(tree, 'lib1', {
+        projectType: 'library',
+        sourceRoot: 'libs/lib1/src',
+        root: 'libs/lib1',
+      });
+      tree.write(
+        'libs/lib1/src/lib/lib.module.ts',
+        `
+    import { NgModule } from '@angular/core';
+    
+    @NgModule({
+      declarations: [],
+      exports: []
+    })
+    export class LibModule {}`
+      );
+      projectGraph = {
+        nodes: {
+          lib1: { name: 'lib1', type: 'lib', data: { root: 'libs/lib1' } },
+        },
+        dependencies: {},
+      };
+
+      // ACT
+      await componentGenerator(tree, {
+        name: 'example',
+        path: 'libs/lib1/src/lib/mycomp',
+      });
+
+      // ASSERT
+      const componentSource = tree.read(
+        'libs/lib1/src/lib/mycomp/example/example.component.ts',
+        'utf-8'
+      );
+      expect(componentSource).toMatchSnapshot();
+    });
+
     it('should throw if the path specified is not under the project root', async () => {
       // ARRANGE
       const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
@@ -433,6 +482,36 @@ describe('component Generator', () => {
           name: 'example',
           project: 'lib1',
           path: 'apps/app1/src/mycomp',
+          export: false,
+        })
+      ).rejects.toThrow();
+    });
+
+    it('should throw when path and projects are not provided and defaultProject is not set', async () => {
+      // ARRANGE
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      addProjectConfiguration(tree, 'lib1', {
+        projectType: 'library',
+        sourceRoot: 'libs/lib1/src',
+        root: 'libs/lib1',
+      });
+      tree.write(
+        'libs/lib1/src/lib/lib.module.ts',
+        `
+    import { NgModule } from '@angular/core';
+    
+    @NgModule({
+      declarations: [],
+      exports: []
+    })
+    export class LibModule {}`
+      );
+      tree.write('libs/lib1/src/index.ts', 'export * from "./lib/lib.module";');
+
+      // ACT & ASSERT
+      await expect(
+        componentGenerator(tree, {
+          name: 'example',
           export: false,
         })
       ).rejects.toThrow();

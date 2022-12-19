@@ -42,6 +42,20 @@ export class ExampleComponent {
 "
 `;
 
+exports[`component Generator --path should infer project from path and generate component correctly 1`] = `
+"import { Component } from '@angular/core';
+
+@Component({
+  selector: 'example',
+  templateUrl: './example.component.html',
+  styleUrls: ['./example.component.css']
+})
+export class ExampleComponent {
+
+}
+"
+`;
+
 exports[`component Generator secondary entry points should create the component correctly and export it in the entry point 1`] = `
 "import { Component } from '@angular/core';
 
