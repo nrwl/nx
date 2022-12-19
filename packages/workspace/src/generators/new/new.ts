@@ -39,13 +39,19 @@ export async function newGenerator(host: Tree, options: Schema) {
   await generateWorkspaceFiles(host, { ...options, nxCloud: undefined } as any);
 
   addPresetDependencies(host, options);
+  const isCustomPreset = !Object.values(Preset).includes(options.preset as any);
   addCloudDependencies(host, options);
 
   await formatFiles(host);
 
   return async () => {
     installPackagesTask(host, false, options.directory, options.packageManager);
-    if (options.preset !== Preset.NPM && options.preset !== Preset.Core) {
+    // TODO: move all of these into create-nx-workspace
+    if (
+      options.preset !== Preset.NPM &&
+      options.preset !== Preset.Core &&
+      !isCustomPreset
+    ) {
       await generatePreset(host, options);
     }
   };
