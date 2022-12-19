@@ -113,6 +113,10 @@
     "mode": {
       "type": "string",
       "description": "Mode to run the build in."
+    },
+    "force": {
+      "description": "Force the optimizer to ignore the cache and re-bundle",
+      "type": "boolean"
     }
   },
   "definitions": {},

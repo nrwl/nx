@@ -38,6 +38,7 @@ export async function getBuildAndSharedConfig(
       options as ViteDevServerExecutorOptions & ViteBuildExecutorOptions,
       projectRoot
     ),
+    optimizeDeps: { force: options.force },
   } as InlineConfig);
 }
 

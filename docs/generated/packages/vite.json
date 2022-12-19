@@ -214,6 +214,10 @@
           "clearScreen": {
             "description": "Set to false to prevent Vite from clearing the terminal screen when logging certain messages.",
             "type": "boolean"
+          },
+          "force": {
+            "description": "Force the optimizer to ignore the cache and re-bundle",
+            "type": "boolean"
           }
         },
         "definitions": {},
@@ -303,6 +307,10 @@
           "mode": {
             "type": "string",
             "description": "Mode to run the build in."
+          },
+          "force": {
+            "description": "Force the optimizer to ignore the cache and re-bundle",
+            "type": "boolean"
           }
         },
         "definitions": {},
