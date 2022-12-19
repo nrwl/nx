@@ -9,57 +9,32 @@ import { FileMetadata } from '@nrwl/nx-dev/models-package';
 import { renderMarkdown } from '@nrwl/nx-dev/ui-markdoc';
 import Link from 'next/link';
 import React from 'react';
-import { Heading2 } from './headings';
 
-export function PackageReference({
-  executors,
-  generators,
+export function DocumentList({
   documents,
 }: {
-  executors: FileMetadata[];
-  generators: FileMetadata[];
   documents: DocumentMetadata[];
 }): JSX.Element {
   return (
     <>
-      <Heading2 title="Package reference" />
-
-      <p className="mb-16">
-        Here is a list of all the executors and generators available from this
-        package.
-      </p>
-
-      <Heading2 title={'Guides'} />
       <ul className="divide-y divide-slate-100 dark:divide-slate-800">
-        {!!documents.length &&
+        {!!documents.length ? (
           documents.map((guide) => (
             <DocumentListItem key={guide.id} document={guide} />
-          ))}
-        {!documents.length && <EmptyList type="guides" />}
-      </ul>
-
-      <div className="h-12">{/* SPACER */}</div>
-      <Heading2 title={'Executors'} />
-      <ul className="divide-y divide-slate-100 dark:divide-slate-800">
-        {executors.map((executor) => (
-          <SchemaListItem key={executor.name} file={executor} />
-        ))}
-        {executors.length === 0 && <EmptyList type="executor" />}
-      </ul>
-
-      <div className="h-12">{/* SPACER */}</div>
-      <Heading2 title={'Generators'} />
-      <ul className="divide-y divide-slate-100 dark:divide-slate-800">
-        {generators.map((generator) => (
-          <SchemaListItem key={generator.name} file={generator} />
-        ))}
-        {generators.length === 0 && <EmptyList type="generator" />}
+          ))
+        ) : (
+          <EmptyList type="document" />
+        )}
       </ul>
     </>
   );
 }
 
-function DocumentListItem({ document }: { document: DocumentMetadata }) {
+function DocumentListItem({
+  document,
+}: {
+  document: DocumentMetadata;
+}): JSX.Element {
   return (
     <li
       key={document.name}
@@ -77,6 +52,28 @@ function DocumentListItem({ document }: { document: DocumentMetadata }) {
         </p>
       </div>
     </li>
+  );
+}
+
+export function SchemaList({
+  files,
+  type,
+}: {
+  files: FileMetadata[];
+  type: 'executor' | 'generator';
+}): JSX.Element {
+  return (
+    <>
+      <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+        {!!files.length ? (
+          files.map((schema) => (
+            <SchemaListItem key={schema.name} file={schema} />
+          ))
+        ) : (
+          <EmptyList type={type} />
+        )}
+      </ul>
+    </>
   );
 }
 
@@ -121,7 +118,7 @@ function SchemaListItem({ file }: { file: FileMetadata }): JSX.Element {
 function EmptyList({
   type,
 }: {
-  type: 'executor' | 'generator' | 'guides';
+  type: 'executor' | 'generator' | 'document';
 }): JSX.Element {
   return (
     <li className="relative flex px-2 py-2 transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-slate-50 dark:focus-within:ring-sky-500 dark:hover:bg-slate-800/60">

@@ -14,9 +14,7 @@ export function Breadcrumbs({ path }: { path: string }): JSX.Element {
           ? segment.slice(0, segment.indexOf('#'))
           : segment,
         // We do not have dedicated page view for executors & generators
-        href: ['executors', 'generators'].includes(segment)
-          ? '/' + segments.slice(0, index).join('/') + '#' + segment
-          : '/' + segments.slice(0, index + 1).join('/'),
+        href: '/' + segments.slice(0, index + 1).join('/'),
         current: '/' + segments.slice(0, index + 1).join('/') === cleanedPath,
       })),
   ];
