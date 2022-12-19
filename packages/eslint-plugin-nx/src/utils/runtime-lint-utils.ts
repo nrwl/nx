@@ -224,11 +224,9 @@ function isConstraintBanningProject(
   }
 
   /* ... then check if there is a whitelist and if there is a match in the whitelist.  */
-  return (
-    allowedExternalImports != null &&
-    !allowedExternalImports.some((importDefinition) =>
-      parseImportWildcards(importDefinition).test(packageName)
-    )
+  return allowedExternalImports?.every(
+    (importDefinition) =>
+      !parseImportWildcards(importDefinition).test(packageName)
   );
 }
 
