@@ -1,0 +1,107 @@
+{
+  "name": "start",
+  "implementation": "/packages/expo/src/executors/start/start.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "cli": "nx",
+    "$id": "NxExpoStart",
+    "$schema": "http://json-schema.org/schema",
+    "title": "Packager Server for Expo",
+    "description": "Packager Server target options.",
+    "type": "object",
+    "properties": {
+      "forceManifestType": {
+        "type": "string",
+        "description": "Override auto detection of manifest type.",
+        "enum": ["expo-updates", "classic"]
+      },
+      "privateKeyPath": {
+        "type": "string",
+        "description": "Path to private key for code signing. Default: 'private-key.pem' in the same directory as the certificate specified by the expo-updates configuration in app.json."
+      },
+      "port": {
+        "type": "number",
+        "description": "Port to start the native Metro bundler on (does not apply to web or tunnel)",
+        "default": 19000,
+        "alias": "p"
+      },
+      "clear": {
+        "type": "boolean",
+        "description": "Clear the Metro bundler cache",
+        "alias": "c"
+      },
+      "maxWorkers": {
+        "type": "number",
+        "description": "Maximum number of tasks to allow Metro to spawn"
+      },
+      "dev": {
+        "type": "boolean",
+        "description": "Turn development mode on or off"
+      },
+      "devClient": {
+        "type": "boolean",
+        "description": "Experimental: Starts the bundler for use with the expo-development-client"
+      },
+      "minify": {
+        "type": "boolean",
+        "description": "Whether or not to minify code"
+      },
+      "https": {
+        "type": "boolean",
+        "description": "To start webpack with https or http protocol"
+      },
+      "scheme": {
+        "type": "string",
+        "description": "Custom URI protocol to use with a development build"
+      },
+      "android": {
+        "type": "boolean",
+        "description": "Opens your app in Expo Go on a connected Android device",
+        "alias": "a"
+      },
+      "ios": {
+        "type": "boolean",
+        "description": "Opens your app in Expo Go in a currently running iOS simulator on your computer",
+        "alias": "i"
+      },
+      "web": {
+        "type": "boolean",
+        "description": " Opens your app in a web browser",
+        "alias": "w"
+      },
+      "host": {
+        "type": "string",
+        "description": "lan (default), tunnel, localhost. Type of host to use. lan uses the local network; tunnel ues any network by tunnel through ngrok; localhost connects to the dev server over localhost.",
+        "enum": ["localhost", "lan", "tunnel"]
+      },
+      "tunnel": { "type": "boolean", "description": "Same as --host tunnel" },
+      "lan": { "type": "boolean", "description": "Same as --host lan" },
+      "localhost": {
+        "type": "boolean",
+        "description": "Same as --host localhost"
+      },
+      "offline": {
+        "type": "boolean",
+        "description": "Allows this command to run while offline"
+      },
+      "sentTo": {
+        "type": "string",
+        "description": "An email address to send a link to",
+        "alias": "s",
+        "x-deprecated": true
+      },
+      "webpack": {
+        "type": "boolean",
+        "description": "Start a Webpack dev server for the web app.",
+        "x-deprecated": true
+      }
+    },
+    "presets": []
+  },
+  "description": "Start a local dev server for the app or start a Webpack dev server for the web app",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/expo/src/executors/start/schema.json",
+  "type": "executor"
+}

@@ -1,0 +1,37 @@
+{
+  "name": "custom-server",
+  "factory": "./src/generators/custom-server/custom-server#customServerGenerator",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "cli": "nx",
+    "$id": "NxNextCustomServer",
+    "title": "Add custom server",
+    "description": "Add a custom server to existing Next.js application.",
+    "type": "object",
+    "properties": {
+      "project": {
+        "type": "string",
+        "description": "The name of the project.",
+        "alias": "p",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-dropdown": "project",
+        "x-prompt": "What is the name of the project to set up a custom server for?"
+      },
+      "compiler": {
+        "type": "string",
+        "enum": ["tsc", "swc"],
+        "default": "tsc",
+        "description": "The compiler used to build the custom server."
+      }
+    },
+    "required": ["project"],
+    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Add a custom server to existing app\" %}\n\n```shell\nnx g custom-server my-app\n```\n\n{% /tab %}\n{% /tabs %}\n",
+    "presets": []
+  },
+  "description": "Set up a custom server.",
+  "implementation": "/packages/next/src/generators/custom-server/custom-server#customServerGenerator.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/next/src/generators/custom-server/schema.json",
+  "type": "generator"
+}

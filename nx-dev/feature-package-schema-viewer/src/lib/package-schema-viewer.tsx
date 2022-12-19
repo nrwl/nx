@@ -1,14 +1,19 @@
+import {
+  ProcessedPackageMetadata,
+  SchemaMetadata,
+} from '@nrwl/nx-dev/models-package';
 import { Breadcrumbs, Footer } from '@nrwl/nx-dev/ui-common';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
 import Content from './content';
 import { getSchemaViewModel, SchemaViewModel } from './get-schema-view-model';
-import { SchemaRequest } from './schema-request.models';
 
 export function PackageSchemaViewer({
-  schemaRequest,
+  pkg,
+  schema,
 }: {
-  schemaRequest: SchemaRequest;
+  pkg: ProcessedPackageMetadata;
+  schema: SchemaMetadata;
 }): JSX.Element {
   const router = useRouter();
 
@@ -17,9 +22,9 @@ export function PackageSchemaViewer({
     seo: { title: string; description: string; url: string; imageUrl: string };
   } = {
     // Process the request and make available the needed schema information
-    schema: getSchemaViewModel(router.query, schemaRequest),
+    schema: getSchemaViewModel(router.query, pkg, schema),
     seo: {
-      title: `${schemaRequest.pkg.packageName}:${schemaRequest.schemaName} | Nx`,
+      title: `${pkg.packageName}:${schema.name} | Nx`,
       description:
         'Next generation build system with first class monorepo support and powerful integrations.',
       imageUrl: `https://nx.dev/images/open-graph/${router.asPath
@@ -29,14 +34,11 @@ export function PackageSchemaViewer({
     },
   };
 
-  // TODO@ben link up this to HTML component
-  if (!vm.schema)
-    throw new Error('Could not find schema: ' + schemaRequest.schemaName);
+  if (!vm.schema) throw new Error('Could not find schema: ' + schema.name);
 
-  // TODO@ben link up this to HTML component
   if (!vm.schema.currentSchema)
     throw new Error(
-      'Could not interpret schema data: ' + schemaRequest.schemaName
+      'Could not interpret schema data: ' + vm.schema.schemaMetadata.name
     );
 
   vm.seo.description = vm.schema.currentSchema.description;

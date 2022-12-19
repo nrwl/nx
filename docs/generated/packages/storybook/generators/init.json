@@ -1,0 +1,42 @@
+{
+  "name": "init",
+  "factory": "./src/generators/init/init",
+  "schema": {
+    "cli": "nx",
+    "title": "Add Storybook Configuration to the workspace",
+    "description": "Add Storybook Configuration to the workspace.",
+    "$id": "init-storybook-plugin",
+    "type": "object",
+    "properties": {
+      "uiFramework": {
+        "type": "string",
+        "description": "Storybook UI Framework to use.",
+        "enum": [
+          "@storybook/angular",
+          "@storybook/react",
+          "@storybook/html",
+          "@storybook/web-components",
+          "@storybook/vue",
+          "@storybook/vue3",
+          "@storybook/svelte",
+          "@storybook/react-native"
+        ],
+        "x-prompt": "What UI framework plugin should storybook use?"
+      },
+      "bundler": {
+        "description": "The bundler to use.",
+        "type": "string",
+        "enum": ["vite", "webpack"],
+        "x-prompt": "Which bundler do you want to use?",
+        "default": "webpack"
+      }
+    },
+    "presets": []
+  },
+  "description": "Add Storybook configuration to the workspace.",
+  "aliases": ["ng-add"],
+  "hidden": true,
+  "implementation": "/packages/storybook/src/generators/init/init.ts",
+  "path": "/packages/storybook/src/generators/init/schema.json",
+  "type": "generator"
+}

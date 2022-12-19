@@ -1,0 +1,25 @@
+{
+  "name": "init",
+  "factory": "./src/generators/init/init#detoxInitGenerator",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "title": "Add Detox Schematics",
+    "description": "Add Detox Schematics.",
+    "type": "object",
+    "properties": {
+      "skipFormat": {
+        "description": "Skip formatting files.",
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "required": [],
+    "presets": []
+  },
+  "description": "Initialize the `@nrwl/detox` plugin.",
+  "hidden": true,
+  "implementation": "/packages/detox/src/generators/init/init#detoxInitGenerator.ts",
+  "aliases": [],
+  "path": "/packages/detox/src/generators/init/schema.json",
+  "type": "generator"
+}

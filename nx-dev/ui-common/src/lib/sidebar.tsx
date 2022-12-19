@@ -1,5 +1,4 @@
 import { Dialog, Transition } from '@headlessui/react';
-import { AlgoliaSearch } from '@nrwl/nx-dev/feature-search';
 import { Menu, MenuItem, MenuSection } from '@nrwl/nx-dev/models-menu';
 import cx from 'classnames';
 import Link from 'next/link';
@@ -44,7 +43,7 @@ function SidebarSection({ section }: { section: MenuSection }): JSX.Element {
       <ul>
         <li className="mt-2">
           {section.itemList
-            .filter((i) => !!i.itemList?.length)
+            .filter((i) => !!i.children?.length)
             .map((item, index) => (
               <SidebarSectionItems key={item.id + '-' + index} item={item} />
             ))}
@@ -92,7 +91,7 @@ function SidebarSectionItems({ item }: { item: MenuItem }): JSX.Element {
         )}
       </h5>
       <ul className={cx('mb-6', collapsed ? 'hidden' : '')}>
-        {(item.itemList as MenuItem[]).map((subItem, index) => {
+        {(item.children as MenuItem[]).map((subItem, index) => {
           const isActiveLink = subItem.path === withoutAnchors(router?.asPath);
           if (isActiveLink && collapsed) {
             handleCollapseToggle();
@@ -104,7 +103,7 @@ function SidebarSectionItems({ item }: { item: MenuItem }): JSX.Element {
               data-testid={`section-li:${subItem.id}`}
             >
               <Link
-                href={subItem.path as string}
+                href={subItem.path}
                 passHref
                 className={cx(
                   'relative block py-1 text-slate-500 transition-colors duration-200 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-300'

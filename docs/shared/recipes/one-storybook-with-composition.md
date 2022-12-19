@@ -1,7 +1,7 @@
 # Publishing Storybook: One main Storybook instance using Storybook Composition
 
 This guide extends the
-[Using Storybook in a Nx workspace - Best practices](/storybook/best-practices) guide. In that guide, we discussed the best practices of using Storybook in a Nx workspace. We explained the main concepts and the mental model of how to best set up Storybook. In this guide, we are going to see how to put that into practice, by looking at a real-world example. We are going to see how you can publish one single Storybook for your workspace, even you are using multiple frameworks, taking advantage of [Storybook Composition](/storybook/storybook-composition-setup).
+[Using Storybook in a Nx workspace - Best practices](/packages/storybook/documents/best-practices) guide. In that guide, we discussed the best practices of using Storybook in a Nx workspace. We explained the main concepts and the mental model of how to best set up Storybook. In this guide, we are going to see how to put that into practice, by looking at a real-world example. We are going to see how you can publish one single Storybook for your workspace, even you are using multiple frameworks, taking advantage of [Storybook Composition](/packages/storybook/documents/storybook-composition-setup).
 
 In this case, we are dealing with a Nx workspace that uses multiple frameworks. Essentially, you would need to have one Storybook host for each of the frameworks, containing all the stories of that specific framework, since the Storybook builder can not handle multiple frameworks simultaneously.
 
@@ -11,7 +11,7 @@ Let’s assume that you have a structure like the one described in the previous 
 
 First of all, you have to create two Storybook host apps, one for Angular and one for React. Let’s call them `storybook-host-angular` and `storybook-host-react`, which are configured to import all the Angular stories and all the React stories accordingly.
 
-Now, we are going to combine the two Storybook host apps into one, using Storybook composition. You can read our [Storybook Composition guide](/storybook/storybook-composition-setup) for a detailed explanation for how Storybook Composition works. In a nutshell, you can have one “host” Storybook instance running, where you can link other running Storybook instances.
+Now, we are going to combine the two Storybook host apps into one, using Storybook composition. You can read our [Storybook Composition guide](/packages/storybook/documents/storybook-composition-setup) for a detailed explanation for how Storybook Composition works. In a nutshell, you can have one “host” Storybook instance running, where you can link other running Storybook instances.
 
 {% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/storybook-publishing-strategies-multiple-frameworks" /%}
 

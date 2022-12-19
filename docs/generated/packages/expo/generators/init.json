@@ -1,0 +1,38 @@
+{
+  "name": "init",
+  "factory": "./src/generators/init/init#expoInitGenerator",
+  "schema": {
+    "cli": "nx",
+    "$id": "NxExpoInit",
+    "$schema": "http://json-schema.org/schema",
+    "description": "Add Nx Expo Schematics.",
+    "type": "object",
+    "properties": {
+      "unitTestRunner": {
+        "description": "Adds the specified unit test runner",
+        "type": "string",
+        "enum": ["jest", "none"],
+        "default": "jest"
+      },
+      "skipFormat": {
+        "description": "Skip formatting files",
+        "type": "boolean",
+        "default": false
+      },
+      "e2eTestRunner": {
+        "description": "Adds the specified e2e test runner",
+        "type": "string",
+        "enum": ["detox", "none"],
+        "default": "detox"
+      }
+    },
+    "required": [],
+    "presets": []
+  },
+  "description": "Initialize the @nrwl/expo plugin",
+  "hidden": true,
+  "implementation": "/packages/expo/src/generators/init/init#expoInitGenerator.ts",
+  "aliases": [],
+  "path": "/packages/expo/src/generators/init/schema.json",
+  "type": "generator"
+}

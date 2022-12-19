@@ -1,30 +1,54 @@
-import { DocumentData } from '@nrwl/nx-dev/models-document';
+import {
+  categorizeRelatedDocuments,
+  generateRelatedDocumentsTemplate,
+  ProcessedDocument,
+  RelatedDocument,
+} from '@nrwl/nx-dev/models-document';
 import { Breadcrumbs, Footer } from '@nrwl/nx-dev/ui-common';
+import { renderMarkdown } from '@nrwl/nx-dev/ui-markdoc';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
-import { Content } from './content';
 
 export function DocViewer({
   document,
+  relatedDocuments,
 }: {
-  document: DocumentData;
-  toc: any;
+  document: ProcessedDocument;
+  relatedDocuments: RelatedDocument[];
 }): JSX.Element {
   const router = useRouter();
+
+  const { metadata, node } = renderMarkdown(document.content.toString(), {
+    filePath: document.filePath,
+  });
+
+  const vm = {
+    title: metadata['title'] ?? document.name,
+    description: metadata['description'] ?? document.description,
+    content: node,
+    relatedContent: renderMarkdown(
+      generateRelatedDocumentsTemplate(
+        categorizeRelatedDocuments(relatedDocuments)
+      ),
+      {
+        filePath: '',
+      }
+    ).node,
+  };
 
   return (
     <>
       <NextSeo
-        title={document.data.title + ' | Nx'}
+        title={vm.title + ' | Nx'}
         description={
-          document.data.description ??
+          vm.description ??
           'Next generation build system with first class monorepo support and powerful integrations.'
         }
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
-          title: document.data.title,
+          title: vm.title,
           description:
-            document.data.description ??
+            vm.description ??
             'Next generation build system with first class monorepo support and powerful integrations.',
           images: [
             {
@@ -49,7 +73,22 @@ export function DocViewer({
           <div className="mb-6 pt-8">
             <Breadcrumbs path={router.asPath} />
           </div>
-          <Content document={document} />
+          <div className="min-w-0 flex-auto pb-24 lg:pb-16">
+            {/*MAIN CONTENT*/}
+            <div
+              data-document="main"
+              className="prose prose-slate dark:prose-invert max-w-none"
+            >
+              {vm.content}
+            </div>
+            {/*RELATED CONTENT*/}
+            <div
+              data-document="related"
+              className="prose prose-slate dark:prose-invert max-w-none"
+            >
+              {vm.relatedContent}
+            </div>
+          </div>
           <div className="flex w-full items-center space-x-2 pt-24 pb-24 sm:px-6 lg:pb-16 xl:px-8">
             <div className="ml-4 flex h-0.5 w-full flex-grow rounded bg-slate-50 dark:bg-slate-800/60" />
             <div className="relative z-0 inline-flex flex-shrink-0 rounded-md shadow-sm">

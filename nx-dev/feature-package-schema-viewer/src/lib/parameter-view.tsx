@@ -61,16 +61,20 @@ export const ParameterView = (props: {
     </div>
 
     <div className="prose prose-slate dark:prose-invert">
-      {renderMarkdown(props.description, {
-        filePath: '',
-      })}
+      {
+        renderMarkdown(props.description, {
+          filePath: '',
+        }).node
+      }
     </div>
 
-    {props.deprecated && !!props.schema['x-deprecated'] && (
+    {props.deprecated && !!(props.schema as any)['x-deprecated'] && (
       <div className="prose prose-slate dark:prose-invert mt-2 rounded-md bg-red-100 px-4 text-red-800 dark:bg-red-800 dark:text-red-100">
-        {renderMarkdown((props.schema as any)['x-deprecated'].toString(), {
-          filePath: '',
-        })}
+        {
+          renderMarkdown(String((props.schema as any)['x-deprecated']), {
+            filePath: '',
+          }).node
+        }
       </div>
     )}
   </div>

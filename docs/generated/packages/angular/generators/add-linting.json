@@ -1,0 +1,57 @@
+{
+  "name": "add-linting",
+  "factory": "./src/generators/add-linting/add-linting",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "$id": "NxAngularAddLintingGenerator",
+    "title": "Add linting to an Angular project.",
+    "description": "Adds linting configuration to an Angular project.",
+    "cli": "nx",
+    "type": "object",
+    "examples": [
+      {
+        "command": "nx g @nrwl/angular:add-linting --prefix=cool --projectName=cool-lib --projectRoot=libs/cool-lib",
+        "description": "Adds ESLint with Angular-specific rules for an existing project named `cool-lib` with the [prefix](https://angular.io/guide/styleguide#style-02-07) `cool`"
+      }
+    ],
+    "properties": {
+      "prefix": {
+        "type": "string",
+        "format": "html-selector",
+        "description": "The prefix to apply to generated selectors."
+      },
+      "projectName": {
+        "type": "string",
+        "description": "The name of the project."
+      },
+      "projectRoot": {
+        "type": "string",
+        "description": "The path to the root of the selected project."
+      },
+      "setParserOptionsProject": {
+        "type": "boolean",
+        "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
+        "default": false
+      },
+      "skipFormat": {
+        "type": "boolean",
+        "description": "Skip formatting files.",
+        "default": false
+      },
+      "skipPackageJson": {
+        "type": "boolean",
+        "default": false,
+        "description": "Do not add dependencies to `package.json`."
+      }
+    },
+    "additionalProperties": false,
+    "required": ["prefix", "projectName", "projectRoot"],
+    "presets": []
+  },
+  "description": "Adds linting configuration to an Angular project.",
+  "hidden": true,
+  "implementation": "/packages/angular/src/generators/add-linting/add-linting.ts",
+  "aliases": [],
+  "path": "/packages/angular/src/generators/add-linting/schema.json",
+  "type": "generator"
+}

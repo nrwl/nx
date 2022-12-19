@@ -1,0 +1,57 @@
+{
+  "name": "component-test",
+  "factory": "./src/generators/component-test/component-test",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "$id": "NxAngularComponentTestGenerator",
+    "type": "object",
+    "cli": "nx",
+    "description": "Create a `*.cy.ts` file for Cypress component testing for an Angular component.",
+    "properties": {
+      "project": {
+        "type": "string",
+        "description": "The name of the project where the component is located.",
+        "x-dropdown": "projects",
+        "x-prompt": "What project is the component located in?"
+      },
+      "componentName": {
+        "type": "string",
+        "description": "Class name of the component to create a test for.",
+        "examples": ["MyFancyButtonComponent"],
+        "x-prompt": "What is the class name of the component to create a test for?"
+      },
+      "componentDir": {
+        "type": "string",
+        "description": "Relative path to the folder that contains the component from the project root.",
+        "examples": ["src/lib/my-fancy-button"],
+        "x-prompt": "What is the path to the component directory from the project root?"
+      },
+      "componentFileName": {
+        "type": "string",
+        "description": "File name that contains the component without the `.ts` extension.",
+        "examples": ["my-fancy-button.component"],
+        "x-prompt": "What is the file name that contains the component?"
+      },
+      "skipFormat": {
+        "description": "Skip formatting files.",
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "additionalProperties": false,
+    "required": [
+      "project",
+      "componentName",
+      "componentDir",
+      "componentFileName"
+    ],
+    "examplesFile": "{% callout type=\"caution\" title=\"Can I use component testing?\" %}\nAngular component testing with Nx requires **Cypress version 10.7.0** and up.\n\nYou can migrate with to v10 via the [migrate-to-cypress-10 generator](/packages/cypress/generators/migrate-to-cypress-10).\n\nThis generator is for Cypress based component testing.\n\nIf you're wanting to create Cypress tests for a Storybook story, then check out the [component-cypress-spec generator docs](/packages/angular/generators/component-cypress-spec)\n\nIf you're wanting to create Storybook stories for a component, then check out the [stories generator docs](/packages/angular/generators/stories) or [component-story generator docs](/packages/angular/generators/component-cypress-spec)\n{% /callout %}\n\nThis generator is used to create a Cypress component test file for a given Angular component.\n\n```shell\nnx g @nrwl/angular:component-test --project=my-cool-angular-project --componentName=CoolBtnComponent --componentDir=src/cool-btn --componentFileName=cool-btn.component\n```\n\nTest file are generated with the `.cy.ts` suffix. this is to prevent colliding with any existing `.spec.` files contained in the project.\n\nIt's currently expected the generated `.cy.ts` file will live side by side with the component. It is also assumed the project is already setup for component testing. If it isn't, then you can run the [cypress-component-project generator](/packages/angular/generators/cypress-component-configuration) to set up the project for component testing.\n",
+    "presets": []
+  },
+  "description": "Creates a cypress component test file for a component.",
+  "implementation": "/packages/angular/src/generators/component-test/component-test.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/angular/src/generators/component-test/schema.json",
+  "type": "generator"
+}

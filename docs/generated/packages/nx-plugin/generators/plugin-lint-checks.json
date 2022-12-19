@@ -1,0 +1,27 @@
+{
+  "name": "plugin-lint-checks",
+  "factory": "./src/generators/lint-checks/generator",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "cli": "nx",
+    "$id": "PluginLint",
+    "title": "",
+    "type": "object",
+    "description": "Adds linting configuration to validate common json files for nx plugins.",
+    "properties": {
+      "projectName": {
+        "type": "string",
+        "description": "Which project should be the configuration be added to?",
+        "$default": { "$source": "projectName" }
+      }
+    },
+    "required": ["projectName"],
+    "presets": []
+  },
+  "description": "Adds linting configuration to validate common json files for nx plugins.",
+  "implementation": "/packages/nx-plugin/src/generators/lint-checks/generator.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/nx-plugin/src/generators/lint-checks/schema.json",
+  "type": "generator"
+}

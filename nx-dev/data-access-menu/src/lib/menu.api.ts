@@ -1,59 +1,37 @@
-import { DocumentMetadata } from '@nrwl/nx-dev/models-document';
-import { Menu, MenuItem, MenuSection } from '@nrwl/nx-dev/models-menu';
-import { createMenuItems, getPackageApiSection } from './menu.utils';
+import { MenuItem } from '@nrwl/nx-dev/models-menu';
 
-export class MenuApi {
-  private menuCache: Menu | null = null;
+export class MenusApi {
+  private readonly cache: { id: string; menu: MenuItem[] }[];
+  constructor(private readonly menus: { id: string; menu: MenuItem[] }[]) {
+    if (!menus) {
+      throw new Error('tags property cannot be undefined');
+    }
 
-  constructor(
-    private readonly documents: DocumentMetadata,
-    private readonly packageDocuments: DocumentMetadata[] = [],
-    private readonly extractorFunctions: ((x: MenuItem[]) => MenuSection)[] = []
-  ) {}
-
-  getMenu(): Menu {
-    let menu = this.menuCache;
-
-    if (menu) return menu;
-
-    const items = createMenuItems(this.documents);
-    if (!items) throw new Error(`Cannot find any documents`);
-
-    const isAncestor: boolean = Boolean(
-      items.length === 1 && items[0].itemList && items[0].itemList.length > 1
-    );
-    menu = {
-      sections: this.extractorFunctions.map((categorizer) =>
-        categorizer(isAncestor ? (items[0].itemList as MenuItem[]) : items)
-      ),
-    };
-
-    if (!!this.packageDocuments.length)
-      menu.sections.push(
-        this.getReferenceApiMenuSection(this.packageDocuments)
-      );
-
-    this.menuCache = menu;
-
-    return menu;
+    this.cache = [...this.menus];
   }
 
-  getReferenceApiMenuSection(
-    packageDocuments: DocumentMetadata[] = this.packageDocuments
-  ): MenuSection {
-    const documents: DocumentMetadata = {
-      id: 'packages',
-      name: 'Packages',
-      itemList: packageDocuments,
-      path: '',
-      packageName: '',
-      isExternal: false,
-      description: '',
-      file: '',
-      tags: [],
-    };
+  getMenu(id: string, prefix: string = ''): MenuItem[] {
+    const target: { id: string; menu: MenuItem[] } | null =
+      this.cache.find((menu) => menu.id === id) || null;
 
-    const items = createMenuItems(documents);
-    return getPackageApiSection(items);
+    if (!target) throw new Error(`No associated items found for tag: "${id}"`);
+
+    function applyPrefix(menu: MenuItem, prefix: string): MenuItem {
+      if (menu.children.length)
+        menu.children = menu.children.map((m) => applyPrefix(m, prefix));
+
+      // We want to add prefix to the item's path only if it is a standard item.
+      if (
+        !menu.isExternal &&
+        !menu.path.startsWith('/') &&
+        !!prefix &&
+        !menu.path.startsWith(prefix)
+      )
+        menu.path = `/${prefix}/`.concat(menu.path);
+
+      return menu;
+    }
+
+    return target.menu.map((m) => applyPrefix(m, prefix));
   }
 }

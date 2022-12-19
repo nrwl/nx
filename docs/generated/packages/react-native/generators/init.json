@@ -1,0 +1,49 @@
+{
+  "name": "init",
+  "factory": "./src/generators/init/init#reactNativeInitGenerator",
+  "schema": {
+    "cli": "nx",
+    "$id": "NxReactNativeInit",
+    "$schema": "http://json-schema.org/schema",
+    "title": "Add Nx React Native Schematics",
+    "description": "Add Nx React native schematics.",
+    "type": "object",
+    "properties": {
+      "unitTestRunner": {
+        "description": "Adds the specified unit test runner.",
+        "type": "string",
+        "enum": ["jest", "none"],
+        "default": "jest"
+      },
+      "skipFormat": {
+        "description": "Skip formatting files.",
+        "type": "boolean",
+        "default": false
+      },
+      "e2eTestRunner": {
+        "description": "Adds the specified E2E test runner.",
+        "type": "string",
+        "enum": ["detox", "none"],
+        "default": "detox"
+      },
+      "js": {
+        "type": "boolean",
+        "default": false,
+        "description": "Use JavaScript instead of TypeScript"
+      },
+      "skipPackageJson": {
+        "description": "Do not add dependencies to `package.json`.",
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "required": [],
+    "presets": []
+  },
+  "description": "Initialize the `@nrwl/react-native` plugin.",
+  "hidden": true,
+  "implementation": "/packages/react-native/src/generators/init/init#reactNativeInitGenerator.ts",
+  "aliases": [],
+  "path": "/packages/react-native/src/generators/init/schema.json",
+  "type": "generator"
+}

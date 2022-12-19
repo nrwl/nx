@@ -1,0 +1,49 @@
+{
+  "name": "module-federation-ssr-dev-server",
+  "implementation": "/packages/react/src/executors/module-federation-ssr-dev-server/module-federation-ssr-dev-server.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "title": "Module Federation SSR Dev Server",
+    "description": "Serve a SSR host application along with its known remotes.",
+    "cli": "nx",
+    "type": "object",
+    "properties": {
+      "browserTarget": {
+        "type": "string",
+        "description": "Target which builds the browser application."
+      },
+      "serverTarget": {
+        "type": "string",
+        "description": "Target which builds the server application."
+      },
+      "port": {
+        "type": "number",
+        "description": "The port to be set on `process.env.PORT` for use in the server.",
+        "default": 4200
+      },
+      "devRemotes": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "List of remote applications to run in development mode (i.e. using serve target)."
+      },
+      "skipRemotes": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "List of remote applications to not automatically serve, either statically or in development mode. This can be useful for multi-repository module federation setups where the host application uses a remote application from an external repository."
+      },
+      "host": {
+        "type": "string",
+        "description": "Host to listen on.",
+        "default": "localhost"
+      }
+    },
+    "required": ["browserTarget", "serverTarget"],
+    "presets": []
+  },
+  "description": "Serve a host application along with it's known remotes.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/react/src/executors/module-federation-ssr-dev-server/schema.json",
+  "type": "executor"
+}

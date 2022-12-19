@@ -81,7 +81,7 @@ export function formatDeprecated(
     `;
 }
 
-export function getCommands(command) {
+export function getCommands(command: any) {
   return command.getInternalMethods().getCommandInstance().getCommandHandlers();
 }
 
@@ -138,7 +138,7 @@ export async function parseCommand(
   const builderOptionsChoices = builderOptions.choices;
   const builderOptionTypes = YargsTypes.reduce((acc, type) => {
     builderOptions[type].forEach(
-      (option) => (acc = { ...acc, [option]: type })
+      (option: any) => (acc = { ...acc, [option]: type })
     );
     return acc;
   }, {});
@@ -155,7 +155,7 @@ export async function parseCommand(
           ? builderDescriptions[key].replace('__yargsString__:', '')
           : '',
         default: builderDefaultOptions[key] ?? builderAutomatedOptions[key],
-        type: builderOptionTypes[key],
+        type: (<any>builderOptionTypes)[key],
         choices: builderOptionsChoices[key],
         deprecated: builderDeprecatedOptions[key],
         hidden: builderOptions.hiddenOptions.includes(key),
@@ -163,15 +163,15 @@ export async function parseCommand(
   };
 }
 
-export function generateOptionsMarkdown(command): string {
+export function generateOptionsMarkdown(command: any): string {
   let response = '';
   if (Array.isArray(command.options) && !!command.options.length) {
     response += '\n## Options\n';
 
     command.options
-      .sort((a, b) => sortAlphabeticallyFunction(a.name, b.name))
-      .filter(({ hidden }) => !hidden)
-      .forEach((option) => {
+      .sort((a: any, b: any) => sortAlphabeticallyFunction(a.name, b.name))
+      .filter(({ hidden }: any) => !hidden)
+      .forEach((option: any) => {
         response += `\n### ${
           option.deprecated ? `~~${option.name}~~` : option.name
         }\n`;
@@ -180,7 +180,7 @@ export function generateOptionsMarkdown(command): string {
         }
         if (option.choices !== undefined) {
           const choices = option.choices
-            .map((c) => JSON.stringify(c).replace(/"/g, ''))
+            .map((c: any) => JSON.stringify(c).replace(/"/g, ''))
             .join(', ');
           response += `\nChoices: [${choices}]\n`;
         }

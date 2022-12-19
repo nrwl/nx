@@ -11,7 +11,7 @@ import {
 } from '@nrwl/nx-dev/ui-community';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
-import { packagesApi } from '../lib/api';
+import { nxPackagesApi } from '../lib/packages.api';
 
 declare const fetch: any;
 
@@ -31,23 +31,21 @@ export async function getStaticProps(): Promise<{ props: CommunityProps }> {
   );
   const pluginList = await res.json();
 
-  const officialPluginList = (
-    packagesApi.getPackageDocuments().itemList ?? []
-  ).filter(
+  const officialPluginList = (nxPackagesApi.getRootPackageIndex() ?? []).filter(
     (m) =>
-      m.id !== 'add-nx-to-monorepo' &&
-      m.id !== 'cra-to-nx' &&
-      m.id !== 'create-nx-plugin' &&
-      m.id !== 'create-nx-workspace' &&
-      m.id !== 'make-angular-cli-faster' &&
-      m.id !== 'tao'
+      m.name !== 'add-nx-to-monorepo' &&
+      m.name !== 'cra-to-nx' &&
+      m.name !== 'create-nx-plugin' &&
+      m.name !== 'create-nx-workspace' &&
+      m.name !== 'make-angular-cli-faster' &&
+      m.name !== 'tao'
   );
 
   return {
     props: {
       pluginList: [
         ...officialPluginList.map((plugin) => ({
-          name: `@nrwl/${plugin.id}`,
+          name: plugin.packageName,
           description: plugin.description ?? '',
           url: plugin.path,
           isOfficial: true,

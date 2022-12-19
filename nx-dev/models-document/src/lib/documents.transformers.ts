@@ -14,7 +14,6 @@ export function createDocumentMetadata(
       file: '',
       itemList: [],
       isExternal: false,
-      packageName: '',
       path: '',
       tags: [],
     },
@@ -27,17 +26,15 @@ export function convertToDocumentMetadata(
 ): DocumentMetadata {
   if (!target.id) throw new Error('A document entry requires an "id".');
 
-  if (target.itemList)
-    target.itemList.map((item) => convertToDocumentMetadata(item));
-
   return {
     id: target.id,
     name: target.name ?? '',
     description: target.description ?? '',
     file: target.file ?? '',
-    itemList: target.itemList ?? [],
+    itemList: target.itemList
+      ? target.itemList.map((item) => convertToDocumentMetadata(item))
+      : [],
     isExternal: target.isExternal ?? false,
-    packageName: target.packageName ?? '',
     path: target.path ?? '',
     tags: target.tags ?? [],
   };

@@ -1,0 +1,34 @@
+{
+  "name": "convert-to-with-mf",
+  "factory": "./src/generators/convert-to-with-mf/convert-to-with-mf",
+  "schema": {
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "ConvertToWithMFGenerator",
+    "cli": "nx",
+    "title": "Convert to withModuleFederation Generator Options Schema",
+    "type": "object",
+    "description": "Converts an old micro frontend configuration to use the new withModuleFederation helper. It will run successfully if the following conditions are met: \n - Is either a host or remote application \n - Shared npm package configurations have not been modified \n - Name used to identify the Micro Frontend application matches the project name \n\n{% callout type=\"warning\" title=\"Overrides\" %}This generator will overwrite your webpack config. If you have additional custom configuration in your config file, it will be lost!{% /callout %}.",
+    "additionalProperties": false,
+    "examples": [
+      {
+        "command": "nx g @nrwl/angular:convert-to-with-mf --project mf-app",
+        "description": "Convert a Module Federation Project using legacy webpack config to use the `withModuleFederation` helper."
+      }
+    ],
+    "properties": {
+      "project": {
+        "type": "string",
+        "description": "The name of the micro frontend project to migrate.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "What micro frontend project would you like to migrate?"
+      }
+    },
+    "presets": []
+  },
+  "description": "Converts an old micro frontend configuration to use the new withModuleFederation helper. It will run successfully if the following conditions are met: \n - Is either a host or remote application \n - Shared npm package configurations have not been modified \n - Name used to identify the Micro Frontend application matches the project name \n\n{% callout type=\"warning\" title=\"Overrides\" %}This generator will overwrite your webpack config. If you have additional custom configuration in your config file, it will be lost!{% /callout %}",
+  "implementation": "/packages/angular/src/generators/convert-to-with-mf/convert-to-with-mf.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/angular/src/generators/convert-to-with-mf/schema.json",
+  "type": "generator"
+}

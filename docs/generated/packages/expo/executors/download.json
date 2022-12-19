@@ -1,0 +1,65 @@
+{
+  "name": "download",
+  "implementation": "/packages/expo/src/executors/download/download.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "$schema": "http://json-schema.org/schema",
+    "$id": "NxExpoDownloadEasBuild",
+    "cli": "nx",
+    "title": "Download EAS Build executor",
+    "description": "Download an EAS build.",
+    "type": "object",
+    "properties": {
+      "platform": {
+        "enum": ["ios", "android"],
+        "alias": "p",
+        "description": "The platform to build the app, example values: ios, android, all."
+      },
+      "distribution": {
+        "enum": ["store", "internal", "simulator"],
+        "description": "Distribution of EAS build"
+      },
+      "channel": { "type": "string", "description": "Channel of EAS build" },
+      "appVersion": {
+        "type": "string",
+        "description": "App version of EAS build"
+      },
+      "appBuildVersion": {
+        "type": "string",
+        "description": "App build version of EAS build"
+      },
+      "sdkVersion": {
+        "type": "string",
+        "description": "SDK version of EAS build"
+      },
+      "runtimeVersion": {
+        "type": "string",
+        "description": "Runtime version of EAS build"
+      },
+      "appIdentifier": {
+        "type": "string",
+        "description": "App identifier of EAS build"
+      },
+      "buildProfile": {
+        "type": "string",
+        "description": "Build profile of EAS build"
+      },
+      "gitCommitHash": {
+        "type": "string",
+        "description": "Git commit hash of EAS build"
+      },
+      "output": {
+        "type": "string",
+        "description": "Output directory for the download build"
+      }
+    },
+    "required": ["output"],
+    "presets": []
+  },
+  "description": "Download an EAS build",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/expo/src/executors/download/schema.json",
+  "type": "executor"
+}

@@ -1616,7 +1616,7 @@
             {
               "name": "Component Testing",
               "id": "cypress-component-testing",
-              "file": "shared/cypress-component-testing"
+              "file": "shared/guides/cypress/cypress-component-testing"
             },
             {
               "name": "v11 Migration Guide",

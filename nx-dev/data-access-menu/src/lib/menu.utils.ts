@@ -1,30 +1,6 @@
-import { DocumentMetadata } from '@nrwl/nx-dev/models-document';
 import { MenuItem, MenuSection } from '@nrwl/nx-dev/models-menu';
 
-export function createMenuItems(root: DocumentMetadata): MenuItem[] {
-  const items = root?.itemList;
-
-  const createPathMetadata = (g: DocumentMetadata, parentId = ''): MenuItem => {
-    const pathData = {
-      ...g,
-      path: g.path ?? `${parentId}/${g.id}`,
-    };
-
-    if (Array.isArray(g.itemList)) {
-      pathData.itemList = g.itemList.map((value) =>
-        createPathMetadata(value, `${parentId}/${g.id}`)
-      );
-    }
-
-    return {
-      ...pathData,
-      disableCollapsible: false,
-    } as MenuItem;
-  };
-  return items?.map((item) => createPathMetadata(item)) ?? [];
-}
-
-export function getBasicSection(items: MenuItem[]): MenuSection {
+export function getBasicNxSection(items: MenuItem[]): MenuSection {
   return {
     id: 'basic',
     name: 'Basic',
@@ -64,83 +40,23 @@ export function getBasicRecipesSection(items: MenuItem[]): MenuSection {
   };
 }
 
-export function getDeepDiveSection(items: MenuItem[]): MenuSection {
-  return {
-    id: 'deep-dive',
-    name: 'Deep Dive',
-    hideSectionHeader: false,
-    itemList: items
-      .filter(
-        (m) =>
-          m.id === 'workspace-concepts' ||
-          m.id === 'structure' ||
-          m.id === 'extending-nx' ||
-          m.id === 'generators' ||
-          m.id === 'executors' ||
-          m.id === 'ci' ||
-          m.id === 'modern-angular' ||
-          m.id === 'guides' ||
-          m.id === 'module-federation' ||
-          m.id === 'examples' ||
-          m.id === 'core-extended'
-      )
-      .map((m) => ({
-        ...m,
-        disableCollapsible: true,
-        itemList: m.itemList?.map((item) => ({
-          ...item,
-          disableCollapsible: true,
-        })),
-      })),
-  };
-}
-
-export function getPackageApiSection(items: MenuItem[]): MenuSection {
-  const getGuides = (menu: MenuItem) =>
-    menu.itemList?.filter(
-      (x) => !x.path?.includes('executors') && !x.path?.includes('generators')
-    ) || [];
-  const getExecutors = (menu: MenuItem) =>
-    menu.itemList?.filter((x) => x.path?.includes('executors')) || [];
-  const getGenerators = (menu: MenuItem) =>
-    menu.itemList?.filter((x) => x.path?.includes('generators')) || [];
-
-  return {
-    id: 'official-packages',
-    name: 'Reference',
-    hideSectionHeader: false,
-    itemList: items
-      .filter(
-        (m) =>
-          m.id !== 'add-nx-to-monorepo' &&
-          m.id !== 'cra-to-nx' &&
-          m.id !== 'create-nx-plugin' &&
-          m.id !== 'create-nx-workspace' &&
-          m.id !== 'make-angular-cli-faster' &&
-          m.id !== 'tao'
-      )
-      .map((m) => ({
-        ...m,
-        disableCollapsible: true,
-        itemList: [
-          {
-            id: m.id + '-guides',
-            name: 'Guides',
-            itemList: getGuides(m),
-          },
-          {
-            id: m.id + '-executors',
-            name: 'Executors',
-            itemList: getExecutors(m),
-          },
-          {
-            id: m.id + '-generators',
-            name: 'Generators',
-            itemList: getGenerators(m),
-          },
-        ],
-      })),
-  };
+export function getPackagesSections(items: MenuItem[]): MenuSection[] {
+  return items
+    .filter(
+      (m) =>
+        m.id !== 'add-nx-to-monorepo' &&
+        m.id !== 'cra-to-nx' &&
+        m.id !== 'create-nx-plugin' &&
+        m.id !== 'create-nx-workspace' &&
+        m.id !== 'make-angular-cli-faster' &&
+        m.id !== 'tao'
+    )
+    .map((m) => ({
+      id: m.id,
+      name: m.name,
+      itemList: m.children,
+      hideSectionHeader: false,
+    }));
 }
 
 export function getBasicNxCloudSection(items: MenuItem[]): MenuSection {
@@ -171,7 +87,7 @@ export function getDeepDiveNxCloudSection(items: MenuItem[]): MenuSection {
       .map((m) => ({
         ...m,
         disableCollapsible: true,
-        itemList: m.itemList?.map((item) => ({
+        itemList: m.children?.map((item) => ({
           ...item,
           disableCollapsible: true,
         })),

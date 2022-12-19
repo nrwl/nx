@@ -1,0 +1,68 @@
+{
+  "name": "server",
+  "implementation": "/packages/next/src/executors/server/server.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "cli": "nx",
+    "title": "Next Serve",
+    "description": "Serve a Next.js app.",
+    "type": "object",
+    "properties": {
+      "dev": {
+        "type": "boolean",
+        "description": "Serve the application in the dev mode.",
+        "default": true
+      },
+      "buildTarget": {
+        "type": "string",
+        "description": "Target which builds the application."
+      },
+      "port": {
+        "type": "number",
+        "description": "Port to listen on.",
+        "default": 4200
+      },
+      "staticMarkup": {
+        "type": "boolean",
+        "description": "Static markup.",
+        "default": false
+      },
+      "quiet": {
+        "type": "boolean",
+        "description": "Hide error messages containing server information.",
+        "default": false
+      },
+      "customServerTarget": {
+        "type": "string",
+        "description": "Target which builds the custom server."
+      },
+      "customServerPath": {
+        "type": "string",
+        "description": "Use a custom server script. (Use `customServerTarget` instead)",
+        "x-deprecated": true
+      },
+      "hostname": {
+        "type": "string",
+        "description": "Hostname on which the application is served."
+      },
+      "proxyConfig": {
+        "type": "string",
+        "description": "Path to the proxy configuration file.",
+        "x-completion-type": "file"
+      },
+      "buildLibsFromSource": {
+        "type": "boolean",
+        "description": "Read buildable libraries from source instead of building them separately.",
+        "default": true
+      }
+    },
+    "required": ["buildTarget"],
+    "presets": []
+  },
+  "description": "Serve a Next.js application.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/next/src/executors/server/schema.json",
+  "type": "executor"
+}

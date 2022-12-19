@@ -1,4 +1,3 @@
-import { DocumentData } from '@nrwl/nx-dev/models-document';
 import { join } from 'path';
 import { uriTransformer } from './uri-transformer';
 

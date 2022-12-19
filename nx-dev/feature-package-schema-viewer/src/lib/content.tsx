@@ -89,7 +89,7 @@ export function Content({
         {
           filePath: '',
         }
-      );
+      ).node;
     },
   };
 
@@ -177,7 +177,7 @@ export function Content({
       )}
 
       {/*TODO@ben: create new component*/}
-      {schemaViewModel.type === 'executors' && !schemaViewModel.subReference && (
+      {schemaViewModel.type === 'executor' && !schemaViewModel.subReference && (
         <div className="mt-8 hidden md:block">
           <Heading2 title="Options playground" />
           <p className="my-6">
@@ -220,7 +220,7 @@ export function Content({
             <SchemaEditor
               packageName={schemaViewModel.packageName}
               schemaName={schemaViewModel.schemaMetadata.name}
-              type={schemaViewModel.type.replace('s', '') as any}
+              type={schemaViewModel.type}
               content={filterWithPresets(vm.fullExample, presets)}
               schema={schemaViewModel.currentSchema}
             />
@@ -261,7 +261,7 @@ const getMarkdown = (data: {
   schemaAlias: string;
   schemaName: string;
   schema: NxSchema;
-  type: 'executors' | 'generators';
+  type: 'executor' | 'generator';
 }): string => {
   const hasExamplesFile = !!data.schema['examplesFile'];
   const executorNotice: string = `Options can be configured in \`project.json\` when defining the executor, or when invoking it. Read more about how to configure targets and executors here: [https://nx.dev/reference/project-configuration#targets](https://nx.dev/reference/project-configuration#targets).`;
@@ -271,10 +271,10 @@ const getMarkdown = (data: {
     `\n\n`,
     data.schema.description,
     '\n\n',
-    data.type === 'executors' ? executorNotice : '',
+    data.type === 'executor' ? executorNotice : '',
     `\n\n`,
     hasExamplesFile ? data.schema['examplesFile'] : '',
-    data.type === 'generators'
+    data.type === 'generator'
       ? getUsage(data.packageName, data.schemaName, data.schemaAlias)
       : '',
     !!data.schema['examples']

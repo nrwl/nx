@@ -151,7 +151,7 @@ Nx uses Prettier to ensure standard formatting across your codebase. Prettier co
 nx format:write
 ```
 
-[Learn more about formatting](/nx/format-write)
+[Learn more about formatting](/packages/nx/documents/format-write)
 
 ### Adding tasks
 

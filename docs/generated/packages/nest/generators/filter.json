@@ -1,0 +1,62 @@
+{
+  "name": "filter",
+  "factory": "./src/generators/filter/filter",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "$id": "NxNestFilterGenerator",
+    "title": "Nest Filter Options Schema",
+    "description": "Nest Filter Options Schema.",
+    "cli": "nx",
+    "type": "object",
+    "properties": {
+      "name": {
+        "description": "The name of the filter.",
+        "type": "string",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "What name would you like to use?"
+      },
+      "project": {
+        "description": "The Nest project to target.",
+        "type": "string",
+        "$default": { "$source": "projectName" },
+        "alias": "p",
+        "x-prompt": "What Nest project would you like to target?"
+      },
+      "directory": {
+        "description": "Directory where the generated files are placed.",
+        "type": "string",
+        "aliases": ["dir", "path"]
+      },
+      "skipFormat": {
+        "type": "boolean",
+        "description": "Skip formatting files.",
+        "default": false
+      },
+      "unitTestRunner": {
+        "description": "Test runner to use for unit tests.",
+        "type": "string",
+        "enum": ["jest", "none"],
+        "default": "jest"
+      },
+      "flat": {
+        "description": "Flag to indicate if a directory is created.",
+        "type": "boolean",
+        "default": true
+      },
+      "language": {
+        "description": "Nest filter language.",
+        "type": "string",
+        "enum": ["js", "ts"]
+      }
+    },
+    "additionalProperties": false,
+    "required": ["name", "project"],
+    "presets": []
+  },
+  "description": "Run the `filter` NestJS generator with Nx project support.",
+  "implementation": "/packages/nest/src/generators/filter/filter.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/nest/src/generators/filter/schema.json",
+  "type": "generator"
+}

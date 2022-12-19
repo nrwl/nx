@@ -1,0 +1,34 @@
+{
+  "name": "init",
+  "factory": "./src/generators/init/init",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "$id": "NxNestInitGenerator",
+    "title": "Init Nest Plugin",
+    "description": "Init Nest Plugin.",
+    "cli": "nx",
+    "type": "object",
+    "properties": {
+      "unitTestRunner": {
+        "description": "Adds the specified unit test runner.",
+        "type": "string",
+        "enum": ["jest", "none"],
+        "default": "jest"
+      },
+      "skipFormat": {
+        "description": "Skip formatting files.",
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "additionalProperties": false,
+    "required": [],
+    "presets": []
+  },
+  "description": "Initialize the `@nrwl/nest` plugin.",
+  "aliases": ["ng-add"],
+  "hidden": true,
+  "implementation": "/packages/nest/src/generators/init/init.ts",
+  "path": "/packages/nest/src/generators/init/schema.json",
+  "type": "generator"
+}
