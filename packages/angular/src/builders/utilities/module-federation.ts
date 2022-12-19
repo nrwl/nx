@@ -86,7 +86,10 @@ export function getStaticRemotes(
     );
   }
 
-  const remotesConfig = mfeConfig.remotes.length > 0 ? mfeConfig.remotes : [];
+  const remotesConfig =
+    Array.isArray(mfeConfig.remotes) && mfeConfig.remotes.length > 0
+      ? mfeConfig.remotes
+      : [];
   const staticRemotes = remotesConfig
     .map((remoteDefinition) =>
       Array.isArray(remoteDefinition) ? remoteDefinition[0] : remoteDefinition
