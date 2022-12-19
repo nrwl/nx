@@ -24,9 +24,7 @@ export class ProjectNode {
   constructor(
     private project: ProjectGraphProjectNode,
     private workspaceRoot: string
-  ) {
-    console.log(this.project);
-  }
+  ) {}
 
   getCytoscapeNodeDef(
     groupByFolder: boolean
