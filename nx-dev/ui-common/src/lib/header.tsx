@@ -49,6 +49,12 @@ export function Header(): JSX.Element {
         'Officials packages available for a better developer experience.',
       href: '/packages',
     },
+    {
+      name: 'Nx Cloud',
+      description:
+        'Learn everything about remote cache and distributed tasks configuration.',
+      href: '/nx-cloud/intro/what-is-nx-cloud',
+    },
   ];
   const flyoutMobileMenu = [
     {
