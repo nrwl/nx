@@ -87,6 +87,8 @@ const IGNORE_MATCHES_IN_PACKAGE = {
     '@module-federation/node',
     '@phenomnomnominal/tsquery',
     '@pmmmwh/react-refresh-webpack-plugin',
+    '@svgr/rollup',
+    '@rollup/plugin-url',
     '@svgr/webpack',
     '@swc/jest',
     'babel-jest',
