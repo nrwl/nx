@@ -3,28 +3,30 @@ import {
   ProcessedPackageMetadata,
 } from '@nrwl/nx-dev/models-package';
 import { Breadcrumbs, Footer } from '@nrwl/nx-dev/ui-common';
-import { renderMarkdown } from '@nrwl/nx-dev/ui-markdoc';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
-import React, { ReactNode } from 'react';
+import React from 'react';
 import { Heading1, Heading2 } from './ui/headings';
 import { DocumentList, SchemaList } from './ui/package-reference';
 import { TopSchemaLayout } from './ui/top.layout';
 
-export function PackageSchemaList({
-  overview,
+export function PackageSchemaSubList({
+  type,
   pkg,
 }: {
-  overview: string;
+  type: 'document' | 'executor' | 'generator';
   pkg: ProcessedPackageMetadata;
 }): JSX.Element {
   const router = useRouter();
+  const capitalize = (text: string): string =>
+    text.charAt(0).toUpperCase() + text.slice(1);
 
   const vm: {
     package: PackageMetadata;
     githubUrl: string;
     seo: { title: string; description: string; url: string; imageUrl: string };
-    markdown: ReactNode;
+    type: 'document' | 'executor' | 'generator';
+    heading: string;
   } = {
     package: {
       ...pkg,
@@ -43,9 +45,8 @@ export function PackageSchemaList({
         .replace(/\//gi, '-')}.jpg`,
       url: 'https://nx.dev' + router.asPath,
     },
-    markdown: renderMarkdown(overview, {
-      filePath: pkg.documents['overview'] ? pkg.documents['overview'].file : '',
-    }).node,
+    type,
+    heading: capitalize(type) + ' References',
   };
 
   return (
@@ -79,27 +80,29 @@ export function PackageSchemaList({
 
             <Heading1 title={vm.package.packageName} />
 
-            <div className="prose dark:prose-invert mb-16 max-w-none">
-              {vm.markdown}
-            </div>
-
-            <Heading2 title="Package reference" />
+            <Heading2 title={vm.heading} />
 
             <p className="mb-16">
-              Here is a list of all the executors and generators available from
-              this package.
+              Here is a list of all {vm.type} available for this package.
             </p>
 
-            <Heading2 title={'Guides'} />
-            <DocumentList documents={vm.package.documents} />
+            {vm.type === 'document' ? (
+              <>
+                <DocumentList documents={vm.package.documents} />
+              </>
+            ) : null}
 
-            <div className="h-12">{/* SPACER */}</div>
-            <Heading2 title={'Executors'} />
-            <SchemaList files={vm.package.executors} type={'executor'} />
+            {vm.type === 'executor' ? (
+              <>
+                <SchemaList files={vm.package.executors} type={'executor'} />
+              </>
+            ) : null}
 
-            <div className="h-12">{/* SPACER */}</div>
-            <Heading2 title={'Generators'} />
-            <SchemaList files={vm.package.generators} type={'generator'} />
+            {vm.type === 'generator' ? (
+              <>
+                <SchemaList files={vm.package.generators} type={'generator'} />
+              </>
+            ) : null}
           </div>
         </div>
       </div>
