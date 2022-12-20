@@ -11,6 +11,7 @@ import { viteConfigurationGenerator } from './configuration';
 import {
   mockAngularAppGenerator,
   mockReactAppGenerator,
+  mockReactLibNonBuildableJestTestRunnerGenerator,
   mockReactMixedAppGenerator,
   mockUnknownAppGenerator,
   mockWebAppGenerator,
@@ -46,6 +47,9 @@ describe('@nrwl/vite:configuration', () => {
     it('should move index.html to the root of the project', () => {
       expect(tree.exists('apps/my-test-react-app/src/index.html')).toBeFalsy();
       expect(tree.exists('apps/my-test-react-app/index.html')).toBeTruthy();
+      expect(
+        tree.read('apps/my-test-react-app/index.html', 'utf-8')
+      ).toMatchSnapshot();
     });
 
     it('should create correct tsconfig compilerOptions', () => {
@@ -58,6 +62,9 @@ describe('@nrwl/vite:configuration', () => {
 
     it('should create vite.config file at the root of the app', () => {
       expect(tree.exists('apps/my-test-react-app/vite.config.ts')).toBe(true);
+      expect(
+        tree.read('apps/my-test-react-app/vite.config.ts', 'utf-8')
+      ).toMatchSnapshot();
     });
 
     it('should transform workspace.json project config', () => {
@@ -92,6 +99,9 @@ describe('@nrwl/vite:configuration', () => {
     it('should move index.html to the root of the project', () => {
       expect(tree.exists('apps/my-test-web-app/src/index.html')).toBeFalsy();
       expect(tree.exists('apps/my-test-web-app/index.html')).toBeTruthy();
+      expect(
+        tree.read('apps/my-test-web-app/index.html', 'utf-8')
+      ).toMatchSnapshot();
     });
 
     it('should create correct tsconfig compilerOptions', () => {
@@ -101,6 +111,9 @@ describe('@nrwl/vite:configuration', () => {
 
     it('should create vite.config file at the root of the app', () => {
       expect(tree.exists('apps/my-test-web-app/vite.config.ts')).toBe(true);
+      expect(
+        tree.read('apps/my-test-web-app/vite.config.ts', 'utf-8')
+      ).toMatchSnapshot();
     });
 
     it('should transform workspace.json project config', () => {
@@ -289,18 +302,21 @@ describe('@nrwl/vite:configuration', () => {
         .read('apps/my-test-react-app/vite.config.ts')
         .toString();
       expect(viteConfig).toContain('test');
+      expect(
+        tree.read('apps/my-test-react-app/vite.config.ts', 'utf-8')
+      ).toMatchSnapshot();
     });
   });
 
   describe('library mode', () => {
     beforeEach(async () => {
       tree = createTreeWithEmptyV1Workspace();
-      addProjectConfiguration(tree, 'my-lib', {
-        root: 'my-lib',
-      });
     });
 
     it('should add config for building library', async () => {
+      addProjectConfiguration(tree, 'my-lib', {
+        root: 'my-lib',
+      });
       await viteConfigurationGenerator(tree, {
         uiFramework: 'react',
         includeLib: true,
@@ -312,6 +328,21 @@ describe('@nrwl/vite:configuration', () => {
 
       expect(viteConfig).toMatch('build: {');
       expect(viteConfig).toMatch("external: ['react'");
+      expect(tree.read('my-lib/vite.config.ts', 'utf-8')).toMatchSnapshot();
+    });
+
+    it('should set up non buildable library correctly', async () => {
+      mockReactLibNonBuildableJestTestRunnerGenerator(tree);
+      await viteConfigurationGenerator(tree, {
+        uiFramework: 'react',
+        project: 'react-lib-nonb-jest',
+        includeVitest: true,
+      });
+      expect(
+        tree.read('libs/react-lib-nonb-jest/vite.config.ts', 'utf-8')
+      ).toMatchSnapshot();
+
+      expect(tree.read('workspace.json', 'utf-8')).toMatchSnapshot();
     });
   });
 });

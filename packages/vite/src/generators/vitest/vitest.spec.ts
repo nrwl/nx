@@ -3,7 +3,10 @@ import { Tree, readProjectConfiguration } from '@nrwl/devkit';
 
 import generator from './vitest-generator';
 import { VitestGeneratorSchema } from './schema';
-import { mockReactAppGenerator } from '../../utils/test-utils';
+import {
+  mockReactAppGenerator,
+  mockReactLibNonBuildableJestTestRunnerGenerator,
+} from '../../utils/test-utils';
 
 describe('vitest generator', () => {
   let appTree: Tree;
@@ -13,12 +16,12 @@ describe('vitest generator', () => {
     coverageProvider: 'c8',
   };
 
-  beforeEach(async () => {
+  beforeEach(() => {
     appTree = createTreeWithEmptyWorkspace();
-    await mockReactAppGenerator(appTree);
   });
 
   it('Should add the test target', async () => {
+    mockReactAppGenerator(appTree);
     await generator(appTree, options);
     const config = readProjectConfiguration(appTree, 'my-test-react-app');
     expect(config.targets['test']).toMatchInlineSnapshot(`
@@ -36,6 +39,7 @@ describe('vitest generator', () => {
 
   describe('tsconfig', () => {
     it('should add a tsconfig.spec.json file', async () => {
+      mockReactAppGenerator(appTree);
       await generator(appTree, options);
       const tsconfig = JSON.parse(
         appTree.read('apps/my-test-react-app/tsconfig.json')?.toString() ?? '{}'
@@ -82,6 +86,7 @@ describe('vitest generator', () => {
     });
 
     it('should add vitest/importMeta when inSourceTests is true', async () => {
+      mockReactAppGenerator(appTree);
       await generator(appTree, { ...options, inSourceTests: true });
       const tsconfig = JSON.parse(
         appTree.read('apps/my-test-react-app/tsconfig.app.json')?.toString() ??
@@ -96,90 +101,30 @@ describe('vitest generator', () => {
   });
 
   describe('vite.config', () => {
-    it('should modify the vite.config.js file to include the test options', async () => {
+    it('should create correct vite.config.ts file for apps', async () => {
+      mockReactAppGenerator(appTree);
       await generator(appTree, options);
-      const viteConfig = appTree
-        .read('apps/my-test-react-app/vite.config.ts')
-        .toString();
-      expect(viteConfig).toMatchInlineSnapshot(`
-        "
-        /// <reference types=\\"vitest\\" />
-              import { defineConfig } from 'vite';
-              import react from '@vitejs/plugin-react';
-              import viteTsConfigPaths from 'vite-tsconfig-paths';
-              
-              
-              export default defineConfig({
-                
-            server:{
-              port: 4200,
-              host: 'localhost',
-            },
-                plugins: [
-                  
-                  react(),
-                  viteTsConfigPaths({
-                    root: '../../',
-                  }),
-                ],
-                
-                
-                test: {
-            globals: true,
-            cache: {
-              dir: '../../node_modules/.vitest'
-            },
-            environment: 'jsdom',
-            include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-            
-          },
-              });"
-      `);
+      expect(
+        appTree.read('apps/my-test-react-app/vite.config.ts', 'utf-8')
+      ).toMatchSnapshot();
+    });
+
+    it('should create correct vite.config.ts file for non buildable libs', async () => {
+      mockReactLibNonBuildableJestTestRunnerGenerator(appTree);
+      await generator(appTree, { ...options, project: 'react-lib-nonb-jest' });
+      expect(
+        appTree.read('libs/react-lib-nonb-jest/vite.config.ts', 'utf-8')
+      ).toMatchSnapshot();
     });
   });
 
   describe('insourceTests', () => {
     it('should add the insourceSource option in the vite config', async () => {
+      mockReactAppGenerator(appTree);
       await generator(appTree, { ...options, inSourceTests: true });
-      const viteConfig = appTree
-        .read('apps/my-test-react-app/vite.config.ts')
-        .toString();
-      expect(viteConfig).toMatchInlineSnapshot(`
-        "
-        /// <reference types=\\"vitest\\" />
-              import { defineConfig } from 'vite';
-              import react from '@vitejs/plugin-react';
-              import viteTsConfigPaths from 'vite-tsconfig-paths';
-              
-              
-              export default defineConfig({
-                
-            server:{
-              port: 4200,
-              host: 'localhost',
-            },
-                plugins: [
-                  
-                  react(),
-                  viteTsConfigPaths({
-                    root: '../../',
-                  }),
-                ],
-                
-                define: {
-            'import.meta.vitest': undefined
-          },
-                test: {
-            globals: true,
-            cache: {
-              dir: '../../node_modules/.vitest'
-            },
-            environment: 'jsdom',
-            include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-            includeSource: ['src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']
-          },
-              });"
-      `);
+      expect(
+        appTree.read('apps/my-test-react-app/vite.config.ts', 'utf-8')
+      ).toMatchSnapshot();
     });
   });
 });
