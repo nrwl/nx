@@ -1,25 +1,20 @@
 import {
   checkFilesExist,
   cleanupProject,
-  detectPackageManager,
   isNotWindows,
   killPorts,
   newProject,
   readFile,
-  readJson,
   rmDist,
   runCLI,
-  runCLIAsync,
   runCommandUntil,
-  runCypressTests,
-  tmpProjPath,
   uniq,
   updateFile,
   updateProjectConfig,
 } from '@nrwl/e2e/utils';
+import { checkApp } from './utils';
 import { stringUtils } from '@nrwl/workspace';
 import * as http from 'http';
-import { getLockFileName } from 'nx/src/lock-file/lock-file';
 
 describe('Next.js Applications', () => {
   let proj: string;
@@ -363,58 +358,6 @@ describe('Next.js Applications', () => {
       checkExport: false,
     });
   }, 300_000);
-
-  it('should support different --style options', async () => {
-    const lessApp = uniq('app');
-
-    runCLI(`generate @nrwl/next:app ${lessApp} --no-interactive --style=less`);
-
-    await checkApp(lessApp, {
-      checkUnitTest: false,
-      checkLint: false,
-      checkE2E: false,
-      checkExport: false,
-    });
-
-    const stylusApp = uniq('app');
-
-    runCLI(
-      `generate @nrwl/next:app ${stylusApp} --no-interactive --style=styl`
-    );
-
-    await checkApp(stylusApp, {
-      checkUnitTest: false,
-      checkLint: false,
-      checkE2E: false,
-      checkExport: false,
-    });
-
-    const scApp = uniq('app');
-
-    runCLI(
-      `generate @nrwl/next:app ${scApp} --no-interactive --style=styled-components`
-    );
-
-    await checkApp(scApp, {
-      checkUnitTest: true,
-      checkLint: false,
-      checkE2E: false,
-      checkExport: false,
-    });
-
-    const emotionApp = uniq('app');
-
-    runCLI(
-      `generate @nrwl/next:app ${emotionApp} --no-interactive --style=@emotion/styled`
-    );
-
-    await checkApp(emotionApp, {
-      checkUnitTest: true,
-      checkLint: false,
-      checkE2E: false,
-      checkExport: false,
-    });
-  }, 300_000);
 });
 
 function getData(port: number, path = ''): Promise<any> {
@@ -430,52 +373,4 @@ function getData(port: number, path = ''): Promise<any> {
       });
     });
   });
-}
-
-async function checkApp(
-  appName: string,
-  opts: {
-    checkUnitTest: boolean;
-    checkLint: boolean;
-    checkE2E: boolean;
-    checkExport: boolean;
-  }
-) {
-  const buildResult = runCLI(`build ${appName}`);
-  expect(buildResult).toContain(`Compiled successfully`);
-  checkFilesExist(`dist/apps/${appName}/.next/build-manifest.json`);
-
-  const packageJson = readJson(`dist/apps/${appName}/package.json`);
-  expect(packageJson.dependencies.react).toBeDefined();
-  expect(packageJson.dependencies['react-dom']).toBeDefined();
-  expect(packageJson.dependencies.next).toBeDefined();
-
-  checkFilesExist(
-    `dist/apps/${appName}/${getLockFileName(
-      detectPackageManager(tmpProjPath())
-    )}`
-  );
-
-  if (opts.checkLint) {
-    const lintResults = runCLI(`lint ${appName}`);
-    expect(lintResults).toContain('All files pass linting.');
-  }
-
-  if (opts.checkUnitTest) {
-    const testResults = await runCLIAsync(`test ${appName}`);
-    expect(testResults.combinedOutput).toContain(
-      'Test Suites: 1 passed, 1 total'
-    );
-  }
-
-  if (opts.checkE2E && runCypressTests()) {
-    const e2eResults = runCLI(`e2e ${appName}-e2e --no-watch`);
-    expect(e2eResults).toContain('All specs passed!');
-    expect(await killPorts()).toBeTruthy();
-  }
-
-  if (opts.checkExport) {
-    runCLI(`export ${appName}`);
-    checkFilesExist(`dist/apps/${appName}/exported/index.html`);
-  }
 }
