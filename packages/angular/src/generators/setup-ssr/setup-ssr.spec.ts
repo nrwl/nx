@@ -1,4 +1,5 @@
 import {
+  NxJsonConfiguration,
   readJson,
   readProjectConfiguration,
   updateProjectConfiguration,
@@ -130,6 +131,23 @@ describe('setupSSR', () => {
     for (const [dep, version] of Object.entries(devDeps)) {
       expect(packageJson.devDependencies[dep]).toEqual(version);
     }
+    const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
+    expect(nxJson.tasksRunnerOptions).toMatchInlineSnapshot(`
+      Object {
+        "default": Object {
+          "options": Object {
+            "cacheableOperations": Array [
+              "build",
+              "lint",
+              "test",
+              "e2e",
+              "server",
+            ],
+          },
+          "runner": "nx/tasks-runners/default",
+        },
+      }
+    `);
   });
 
   it('should use fileReplacements if they already exist', async () => {
