@@ -22,7 +22,7 @@
         "isExternal": false,
         "path": "angular/documents/overview",
         "tags": [],
-        "originalFilePath": "shared/angular-plugin"
+        "originalFilePath": "shared/packages/angular/angular-plugin"
       },
       {
         "id": "angular-nx-version-matrix",
@@ -33,7 +33,7 @@
         "isExternal": false,
         "path": "angular/documents/angular-nx-version-matrix",
         "tags": [],
-        "originalFilePath": "shared/angular-nx-version-matrix"
+        "originalFilePath": "shared/packages/angular/angular-nx-version-matrix"
       }
     ],
     "executors": [
@@ -460,7 +460,7 @@
         "isExternal": false,
         "path": "cypress/documents/overview",
         "tags": [],
-        "originalFilePath": "shared/cypress-plugin"
+        "originalFilePath": "shared/packages/cypress/cypress-plugin"
       },
       {
         "id": "cypress-component-testing",
@@ -471,7 +471,7 @@
         "isExternal": false,
         "path": "cypress/documents/cypress-component-testing",
         "tags": [],
-        "originalFilePath": "shared/guides/cypress/cypress-component-testing"
+        "originalFilePath": "shared/packages/cypress/cypress-component-testing"
       },
       {
         "id": "v11-migration-guide",
@@ -482,7 +482,7 @@
         "isExternal": false,
         "path": "cypress/documents/v11-migration-guide",
         "tags": [],
-        "originalFilePath": "shared/guides/cypress/cypress-v11-migration"
+        "originalFilePath": "shared/packages/cypress/cypress-v11-migration"
       }
     ],
     "executors": [
@@ -552,7 +552,7 @@
         "isExternal": false,
         "path": "detox/documents/overview",
         "tags": [],
-        "originalFilePath": "shared/detox-plugin"
+        "originalFilePath": "shared/packages/detox/detox-plugin"
       }
     ],
     "executors": [
@@ -647,7 +647,7 @@
         "isExternal": false,
         "path": "esbuild/documents/overview",
         "tags": [],
-        "originalFilePath": "shared/esbuild-plugin"
+        "originalFilePath": "shared/packages/esbuild/esbuild-plugin"
       }
     ],
     "executors": [
@@ -699,7 +699,7 @@
         "isExternal": false,
         "path": "eslint-plugin-nx/documents/overview",
         "tags": [],
-        "originalFilePath": "shared/eslint-plugin-nx"
+        "originalFilePath": "shared/packages/linter/eslint-plugin-nx"
       }
     ],
     "executors": [],
@@ -933,7 +933,7 @@
         "isExternal": false,
         "path": "express/documents/overview",
         "tags": [],
-        "originalFilePath": "shared/express-plugin"
+        "originalFilePath": "shared/packages/express/express-plugin"
       }
     ],
     "executors": [],
@@ -975,7 +975,7 @@
         "isExternal": false,
         "path": "jest/documents/overview",
         "tags": [],
-        "originalFilePath": "shared/jest-plugin"
+        "originalFilePath": "shared/packages/jest/jest-plugin"
       }
     ],
     "executors": [
@@ -1027,7 +1027,7 @@
         "isExternal": false,
         "path": "js/documents/overview",
         "tags": [],
-        "originalFilePath": "shared/js-plugin"
+        "originalFilePath": "shared/packages/js/js-plugin"
       }
     ],
     "executors": [
@@ -1106,7 +1106,7 @@
         "isExternal": false,
         "path": "linter/documents/overview",
         "tags": [],
-        "originalFilePath": "shared/linter-plugin"
+        "originalFilePath": "shared/packages/linter/linter-plugin"
       },
       {
         "id": "eslint-plugin-nx",
@@ -1117,7 +1117,7 @@
         "isExternal": false,
         "path": "linter/documents/eslint-plugin-nx",
         "tags": [],
-        "originalFilePath": "shared/eslint-plugin-nx"
+        "originalFilePath": "shared/packages/linter/eslint-plugin-nx"
       }
     ],
     "executors": [
@@ -1180,7 +1180,7 @@
         "isExternal": false,
         "path": "nest/documents/overview",
         "tags": [],
-        "originalFilePath": "shared/nest-plugin"
+        "originalFilePath": "shared/packages/nest/nest-plugin"
       }
     ],
     "executors": [],
@@ -1375,7 +1375,7 @@
         "isExternal": false,
         "path": "next/documents/overview",
         "tags": [],
-        "originalFilePath": "shared/next-plugin"
+        "originalFilePath": "shared/packages/next/next-plugin"
       }
     ],
     "executors": [
@@ -1481,7 +1481,7 @@
         "isExternal": false,
         "path": "node/documents/overview",
         "tags": [],
-        "originalFilePath": "shared/node-plugin"
+        "originalFilePath": "shared/packages/node/node-plugin"
       }
     ],
     "executors": [
@@ -1855,7 +1855,7 @@
         "isExternal": false,
         "path": "nx-plugin/documents/overview",
         "tags": [],
-        "originalFilePath": "shared/nx-plugin"
+        "originalFilePath": "shared/packages/nx-plugin/nx-plugin"
       }
     ],
     "executors": [
@@ -1943,7 +1943,7 @@
         "isExternal": false,
         "path": "react/documents/overview",
         "tags": [],
-        "originalFilePath": "shared/react-plugin"
+        "originalFilePath": "shared/packages/react/react-plugin"
       }
     ],
     "executors": [
@@ -2130,7 +2130,7 @@
         "isExternal": false,
         "path": "react-native/documents/overview",
         "tags": [],
-        "originalFilePath": "shared/react-native-plugin"
+        "originalFilePath": "shared/packages/react-native/react-native-plugin"
       }
     ],
     "executors": [
@@ -2339,7 +2339,7 @@
         "isExternal": false,
         "path": "storybook/documents/overview",
         "tags": [],
-        "originalFilePath": "shared/guides/storybook/plugin-overview"
+        "originalFilePath": "shared/packages/storybook/plugin-overview"
       },
       {
         "id": "overview-react",
@@ -2350,7 +2350,7 @@
         "isExternal": false,
         "path": "storybook/documents/overview-react",
         "tags": [],
-        "originalFilePath": "shared/guides/storybook/plugin-react"
+        "originalFilePath": "shared/packages/storybook/plugin-react"
       },
       {
         "id": "overview-angular",
@@ -2361,7 +2361,7 @@
         "isExternal": false,
         "path": "storybook/documents/overview-angular",
         "tags": [],
-        "originalFilePath": "shared/guides/storybook/plugin-angular"
+        "originalFilePath": "shared/packages/storybook/plugin-angular"
       },
       {
         "id": "best-practices",
@@ -2372,7 +2372,7 @@
         "isExternal": false,
         "path": "storybook/documents/best-practices",
         "tags": [],
-        "originalFilePath": "shared/guides/storybook/best-practices"
+        "originalFilePath": "shared/packages/storybook/best-practices"
       },
       {
         "id": "storybook-composition-setup",
@@ -2383,7 +2383,7 @@
         "isExternal": false,
         "path": "storybook/documents/storybook-composition-setup",
         "tags": [],
-        "originalFilePath": "shared/guides/storybook/storybook-composition-setup"
+        "originalFilePath": "shared/packages/storybook/storybook-composition-setup"
       },
       {
         "id": "angular-storybook-compodoc",
@@ -2394,7 +2394,7 @@
         "isExternal": false,
         "path": "storybook/documents/angular-storybook-compodoc",
         "tags": [],
-        "originalFilePath": "shared/guides/storybook/angular-storybook-compodoc"
+        "originalFilePath": "shared/packages/storybook/angular-storybook-compodoc"
       },
       {
         "id": "angular-storybook-targets",
@@ -2405,7 +2405,7 @@
         "isExternal": false,
         "path": "storybook/documents/angular-storybook-targets",
         "tags": [],
-        "originalFilePath": "shared/guides/storybook/angular-storybook-targets"
+        "originalFilePath": "shared/packages/storybook/angular-storybook-targets"
       },
       {
         "id": "angular-configuring-styles",
@@ -2416,7 +2416,7 @@
         "isExternal": false,
         "path": "storybook/documents/angular-configuring-styles",
         "tags": [],
-        "originalFilePath": "shared/guides/storybook/angular-configuring-styles"
+        "originalFilePath": "shared/packages/storybook/angular-configuring-styles"
       },
       {
         "id": "angular-browser-target",
@@ -2427,7 +2427,7 @@
         "isExternal": false,
         "path": "storybook/documents/angular-browser-target",
         "tags": [],
-        "originalFilePath": "shared/guides/storybook/angular-browser-target"
+        "originalFilePath": "shared/packages/storybook/angular-browser-target"
       },
       {
         "id": "migrate-webpack-final-angular",
@@ -2438,7 +2438,7 @@
         "isExternal": false,
         "path": "storybook/documents/migrate-webpack-final-angular",
         "tags": [],
-        "originalFilePath": "shared/guides/storybook/migrate-webpack-final-angular"
+        "originalFilePath": "shared/packages/storybook/migrate-webpack-final-angular"
       },
       {
         "id": "upgrade-storybook-v6-angular",
@@ -2449,7 +2449,7 @@
         "isExternal": false,
         "path": "storybook/documents/upgrade-storybook-v6-angular",
         "tags": [],
-        "originalFilePath": "shared/guides/storybook/storybook-v6-angular"
+        "originalFilePath": "shared/packages/storybook/storybook-v6-angular"
       },
       {
         "id": "migrate-webpack-final-react",
@@ -2460,7 +2460,7 @@
         "isExternal": false,
         "path": "storybook/documents/migrate-webpack-final-react",
         "tags": [],
-        "originalFilePath": "shared/guides/storybook/migrate-webpack-final-react"
+        "originalFilePath": "shared/packages/storybook/migrate-webpack-final-react"
       },
       {
         "id": "upgrade-storybook-v6-react",
@@ -2471,7 +2471,7 @@
         "isExternal": false,
         "path": "storybook/documents/upgrade-storybook-v6-react",
         "tags": [],
-        "originalFilePath": "shared/guides/storybook/storybook-v6-react"
+        "originalFilePath": "shared/packages/storybook/storybook-v6-react"
       }
     ],
     "executors": [
@@ -2561,7 +2561,7 @@
         "isExternal": false,
         "path": "vite/documents/overview",
         "tags": [],
-        "originalFilePath": "shared/vite-plugin"
+        "originalFilePath": "shared/packages/vite/vite-plugin"
       }
     ],
     "executors": [
@@ -2640,7 +2640,7 @@
         "isExternal": false,
         "path": "web/documents/overview",
         "tags": [],
-        "originalFilePath": "shared/web-plugin"
+        "originalFilePath": "shared/packages/web/web-plugin"
       }
     ],
     "executors": [
@@ -2777,7 +2777,7 @@
         "isExternal": false,
         "path": "workspace/documents/overview",
         "tags": [],
-        "originalFilePath": "shared/workspace-plugin"
+        "originalFilePath": "shared/packages/workspace/workspace-plugin"
       },
       {
         "id": "nx-nodejs-typescript-version-matrix",
@@ -2788,7 +2788,7 @@
         "isExternal": false,
         "path": "workspace/documents/nx-nodejs-typescript-version-matrix",
         "tags": [],
-        "originalFilePath": "shared/nx-compatibility-matrix"
+        "originalFilePath": "shared/packages/workspace/nx-compatibility-matrix"
       }
     ],
     "executors": [
