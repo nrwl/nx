@@ -1246,11 +1246,6 @@
               "file": "nx-cloud/private/get-started"
             },
             {
-              "name": "Enable Github PR Integration",
-              "id": "github",
-              "file": "nx-cloud/private/github"
-            },
-            {
               "name": "Authenticate with a Single Admin",
               "id": "auth-single-admin",
               "file": "nx-cloud/private/auth-single-admin"
