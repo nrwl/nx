@@ -1,6 +1,6 @@
 import type { Scanner } from 'typescript';
 
-let SyntaxKind;
+let SyntaxKind: typeof import('typescript').SyntaxKind;
 export function stripSourceCode(scanner: Scanner, contents: string): string {
   if (!SyntaxKind) {
     SyntaxKind = require('typescript').SyntaxKind;
@@ -68,7 +68,8 @@ export function stripSourceCode(scanner: Scanner, contents: string): string {
         }
         if (
           token === SyntaxKind.OpenBraceToken ||
-          token === SyntaxKind.AsteriskToken
+          token === SyntaxKind.AsteriskToken ||
+          token === SyntaxKind.TypeKeyword
         ) {
           start = potentialStart;
         }

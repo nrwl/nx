@@ -47,6 +47,7 @@ import('./module.ts')`;
       } from './a';
 
       export { B } from './b';
+      export type { B } from './b';
 
       export { C as D } from './c';
 
@@ -58,6 +59,7 @@ export {
         A
       } from './a'
 export { B } from './b'
+export type { B } from './b'
 export { C as D } from './c'`;
 
     expect(stripSourceCode(scanner, input)).toEqual(expected);
