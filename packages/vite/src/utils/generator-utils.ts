@@ -220,14 +220,12 @@ export function addOrChangeBuildTarget(
   target: string
 ) {
   const project = readProjectConfiguration(tree, options.project);
-
   const buildOptions: ViteBuildExecutorOptions = {
     outputPath: joinPathFragments(
       'dist',
       project.root != '.' ? project.root : options.project
     ),
   };
-
   const targets = {
     ...project.targets,
   };
@@ -436,12 +434,18 @@ export function moveAndEditIndexHtml(
   }
 }
 
-export function createOrEditViteConfig(tree: Tree, options: Schema) {
+export function createOrEditViteConfig(
+  tree: Tree,
+  options: Schema,
+  onlyVitest?: boolean
+) {
   const projectConfig = readProjectConfiguration(tree, options.project);
 
   const viteConfigPath = `${projectConfig.root}/vite.config.ts`;
 
-  const buildOption = options.includeLib
+  const buildOption = onlyVitest
+    ? ''
+    : options.includeLib
     ? `
       // Configuration for building your library.
       // See: https://vitejs.dev/guide/build.html#library-mode
@@ -532,13 +536,17 @@ export function createOrEditViteConfig(tree: Tree, options: Schema) {
   },`
     : '';
 
-  const dtsPlugin = `dts({
+  const dtsPlugin = onlyVitest
+    ? ''
+    : `dts({
       tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
       // Faster builds by skipping tests. Set this to false to enable type checking.
       skipDiagnostics: true,
     }),`;
 
-  const serverOption = options.includeLib
+  const serverOption = onlyVitest
+    ? ''
+    : options.includeLib
     ? ''
     : `
     server:{
@@ -554,7 +562,9 @@ ${options.includeVitest ? '/// <reference types="vitest" />' : ''}
       import react from '@vitejs/plugin-react';
       import viteTsConfigPaths from 'vite-tsconfig-paths';
       ${
-        options.includeLib
+        onlyVitest
+          ? ''
+          : options.includeLib
           ? `import dts from 'vite-plugin-dts';\nimport { join } from 'path';`
           : ''
       }
@@ -579,7 +589,9 @@ ${options.includeVitest ? '/// <reference types="vitest" />' : ''}
       import { defineConfig } from 'vite';
       import viteTsConfigPaths from 'vite-tsconfig-paths';
       ${
-        options.includeLib
+        onlyVitest
+          ? ''
+          : options.includeLib
           ? `import dts from 'vite-plugin-dts';\nimport { join } from 'path';`
           : ''
       }

@@ -21,6 +21,11 @@
         "description": "Add a library build option and skip the server option.",
         "hidden": true
       },
+      "includeVitest": {
+        "type": "boolean",
+        "description": "Use vitest for the test suite.",
+        "hidden": true
+      },
       "uiFramework": {
         "type": "string",
         "description": "UI Framework to use for Vite.",

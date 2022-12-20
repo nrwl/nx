@@ -5,6 +5,7 @@ import * as webAppConfig from './test-files/web-project.config.json';
 import * as angularAppConfig from './test-files/angular-project.config.json';
 import * as randomAppConfig from './test-files/unknown-project.config.json';
 import * as mixedAppConfig from './test-files/react-mixed-project.config.json';
+import * as reactLibNBJest from './test-files/react-lib-non-buildable.json';
 
 export function mockViteReactAppGenerator(tree: Tree): Tree {
   const appName = 'my-test-react-vite-app';
@@ -442,6 +443,82 @@ export function mockUnknownAppGenerator(tree: Tree): Tree {
     ...randomAppConfig,
     root: `apps/${appName}`,
     projectType: 'application',
+  });
+
+  return tree;
+}
+
+export function mockReactLibNonBuildableJestTestRunnerGenerator(
+  tree: Tree
+): Tree {
+  const libName = 'react-lib-nonb-jest';
+
+  tree.write(`libs/${libName}/src/index.ts`, ``);
+
+  tree.write(
+    `libs/${libName}/tsconfig.json`,
+    `{
+      "compilerOptions": {
+        "jsx": "react-jsx",
+        "allowJs": false,
+        "esModuleInterop": false,
+        "allowSyntheticDefaultImports": true,
+        "strict": true
+      },
+      "files": [],
+      "include": [],
+      "references": [
+        {
+          "path": "./tsconfig.lib.json"
+        },
+        {
+          "path": "./tsconfig.spec.json"
+        }
+      ],
+      "extends": "../../tsconfig.base.json"
+    }`
+  );
+  tree.write(
+    `libs/${libName}/tsconfig.lib.json`,
+    `{
+      "extends": "./tsconfig.json",
+      "compilerOptions": {
+        "outDir": "../../dist/out-tsc",
+        "types": ["node"]
+      },
+      "files": [
+        "../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
+        "../../node_modules/@nrwl/react/typings/image.d.ts"
+      ],
+      "exclude": [
+        "jest.config.ts",
+        "src/**/*.spec.ts",
+        "src/**/*.test.ts",
+        "src/**/*.spec.tsx",
+        "src/**/*.test.tsx",
+        "src/**/*.spec.js",
+        "src/**/*.test.js",
+        "src/**/*.spec.jsx",
+        "src/**/*.test.jsx"
+      ],
+      "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"]
+    }`
+  );
+
+  writeJson(tree, 'workspace.json', {
+    projects: {
+      [`${libName}`]: {
+        ...reactLibNBJest,
+        root: `libs/${libName}`,
+        projectType: 'library',
+      },
+    },
+  });
+
+  writeJson(tree, `libs/${libName}/project.json`, {
+    ...reactLibNBJest,
+    root: `libs/${libName}`,
+    projectType: 'library',
   });
 
   return tree;

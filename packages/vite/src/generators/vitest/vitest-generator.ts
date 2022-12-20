@@ -30,7 +30,10 @@ export async function vitestGenerator(
 ) {
   const tasks: GeneratorCallback[] = [];
 
-  const { targets, root } = readProjectConfiguration(tree, schema.project);
+  const { targets, root, projectType } = readProjectConfiguration(
+    tree,
+    schema.project
+  );
   let testTarget =
     schema.testTarget ??
     findExistingTargetsInProject(targets)?.validFoundTargetName?.test ??
@@ -44,10 +47,15 @@ export async function vitestGenerator(
   tasks.push(initTask);
 
   if (!schema.skipViteConfig) {
-    createOrEditViteConfig(tree, {
-      ...schema,
-      includeVitest: true,
-    });
+    createOrEditViteConfig(
+      tree,
+      {
+        ...schema,
+        includeVitest: true,
+        includeLib: projectType === 'library',
+      },
+      true
+    );
   }
 
   createFiles(tree, schema, root);
