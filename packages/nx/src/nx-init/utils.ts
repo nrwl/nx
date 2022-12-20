@@ -64,9 +64,6 @@ export function createNxJsonFile(
     }
   }
   nxJson.defaultBase = deduceDefaultBase();
-  if (defaultProject) {
-    nxJson.defaultProject = defaultProject;
-  }
   writeJsonFile(nxJsonPath, nxJson);
 }
 

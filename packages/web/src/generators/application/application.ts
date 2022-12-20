@@ -156,14 +156,6 @@ async function addProject(tree: Tree, options: NormalizedSchema) {
   if (options.bundler !== 'vite') {
     await setupBundler(tree, options);
   }
-
-  const workspace = readWorkspaceConfiguration(tree);
-
-  if (!workspace.defaultProject) {
-    workspace.defaultProject = options.projectName;
-
-    updateWorkspaceConfiguration(tree, workspace);
-  }
 }
 
 function setDefaults(tree: Tree, options: NormalizedSchema) {

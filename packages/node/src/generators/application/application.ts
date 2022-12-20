@@ -107,13 +107,6 @@ function addProject(tree: Tree, options: NormalizedSchema) {
     project,
     options.standaloneConfig
   );
-
-  const workspace = readWorkspaceConfiguration(tree);
-
-  if (!workspace.defaultProject) {
-    workspace.defaultProject = options.name;
-    updateWorkspaceConfiguration(tree, workspace);
-  }
 }
 
 function addAppFiles(tree: Tree, options: NormalizedSchema) {

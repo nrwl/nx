@@ -27,7 +27,6 @@ export interface Schema {
   compiler?: 'babel' | 'swc';
   remotes?: string[];
   devServerPort?: number;
-  skipDefaultProject?: boolean;
   skipPackageJson?: boolean;
   rootProject?: boolean;
   bundler?: 'webpack' | 'vite';

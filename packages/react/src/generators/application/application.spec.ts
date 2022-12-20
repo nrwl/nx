@@ -37,12 +37,10 @@ describe('app', () => {
     it('should update workspace.json', async () => {
       await applicationGenerator(appTree, schema);
 
-      const workspaceJson = readWorkspaceConfiguration(appTree);
       const projects = getProjects(appTree);
 
       expect(projects.get('my-app').root).toEqual('apps/my-app');
       expect(projects.get('my-app-e2e').root).toEqual('apps/my-app-e2e');
-      expect(workspaceJson.defaultProject).toEqual('my-app');
     });
 
     it('should not overwrite default project if already set', async () => {
@@ -54,17 +52,6 @@ describe('app', () => {
 
       const { defaultProject } = readWorkspaceConfiguration(appTree);
       expect(defaultProject).toBe('some-awesome-project');
-    });
-
-    it('should not set defaultProject when "--skip-default-project=true"', async () => {
-      await applicationGenerator(appTree, {
-        ...schema,
-        skipDefaultProject: true,
-      });
-
-      const { defaultProject } = readWorkspaceConfiguration(appTree);
-
-      expect(defaultProject).toBeUndefined();
     });
 
     it('should update tags and implicit dependencies', async () => {

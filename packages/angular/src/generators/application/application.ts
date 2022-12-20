@@ -2,7 +2,9 @@ import {
   formatFiles,
   installPackagesTask,
   moveFilesToNewDirectory,
+  readWorkspaceConfiguration,
   Tree,
+  updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { convertToNxProjectGenerator } from '@nrwl/workspace/generators';
@@ -20,7 +22,6 @@ import {
   enableStrictTypeChecking,
   normalizeOptions,
   setApplicationStrictDefault,
-  setDefaultProject,
   updateAppComponentTemplate,
   updateComponentSpec,
   updateConfigFiles,
@@ -121,8 +122,10 @@ export async function applicationGenerator(
   await addE2e(tree, options);
   updateEditorTsConfig(tree, options);
 
-  if (!options.skipDefaultProject) {
-    setDefaultProject(tree, options);
+  if (options.rootProject) {
+    const workspace = readWorkspaceConfiguration(tree);
+    workspace.defaultProject = options.name;
+    updateWorkspaceConfiguration(tree, workspace);
   }
 
   if (options.backendProject) {
