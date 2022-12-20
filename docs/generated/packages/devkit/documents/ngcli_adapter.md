@@ -4,13 +4,13 @@
 
 ### Ng CLI Adapter Classes
 
-- [NxScopedHost](../../devkit/ngcli_adapter#nxscopedhost)
+- [NxScopedHost](../../devkit/documents/ngcli_adapter#nxscopedhost)
 
 ### Functions
 
-- [mockSchematicsForTesting](../../devkit/ngcli_adapter#mockschematicsfortesting)
-- [overrideCollectionResolutionForTesting](../../devkit/ngcli_adapter#overridecollectionresolutionfortesting)
-- [wrapAngularDevkitSchematic](../../devkit/ngcli_adapter#wrapangulardevkitschematic)
+- [mockSchematicsForTesting](../../devkit/documents/ngcli_adapter#mockschematicsfortesting)
+- [overrideCollectionResolutionForTesting](../../devkit/documents/ngcli_adapter#overridecollectionresolutionfortesting)
+- [wrapAngularDevkitSchematic](../../devkit/documents/ngcli_adapter#wrapangulardevkitschematic)
 
 ## Ng CLI Adapter Classes
 
@@ -91,7 +91,7 @@ overrideCollectionResolutionForTesting({
 
 ### wrapAngularDevkitSchematic
 
-▸ **wrapAngularDevkitSchematic**(`collectionName`, `generatorName`): (`host`: [`Tree`](../../devkit/index#tree), `generatorOptions`: { [k: string]: `any`; }) => `Promise`<`any`\>
+▸ **wrapAngularDevkitSchematic**(`collectionName`, `generatorName`): (`host`: [`Tree`](../../devkit/documents/index#tree), `generatorOptions`: { [k: string]: `any`; }) => `Promise`<`any`\>
 
 #### Parameters
 
@@ -108,10 +108,10 @@ overrideCollectionResolutionForTesting({
 
 ##### Parameters
 
-| Name               | Type                              |
-| :----------------- | :-------------------------------- |
-| `host`             | [`Tree`](../../devkit/index#tree) |
-| `generatorOptions` | `Object`                          |
+| Name               | Type                                        |
+| :----------------- | :------------------------------------------ |
+| `host`             | [`Tree`](../../devkit/documents/index#tree) |
+| `generatorOptions` | `Object`                                    |
 
 ##### Returns
 

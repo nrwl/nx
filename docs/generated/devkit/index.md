@@ -13,194 +13,194 @@ It only uses language primitives and immutable objects
 
 ### Project Graph Enumerations
 
-- [DependencyType](../../devkit/index#dependencytype)
+- [DependencyType](../../devkit/documents/index#dependencytype)
 
 ### Utils Enumerations
 
-- [ChangeType](../../devkit/index#changetype)
+- [ChangeType](../../devkit/documents/index#changetype)
 
 ### Project Graph Classes
 
-- [ProjectGraphBuilder](../../devkit/index#projectgraphbuilder)
+- [ProjectGraphBuilder](../../devkit/documents/index#projectgraphbuilder)
 
 ### Utils Classes
 
-- [Hasher](../../devkit/index#hasher)
+- [Hasher](../../devkit/documents/index#hasher)
 
 ### Workspace Classes
 
-- [Workspaces](../../devkit/index#workspaces)
+- [Workspaces](../../devkit/documents/index#workspaces)
 
 ### Commands Interfaces
 
-- [Target](../../devkit/index#target)
+- [Target](../../devkit/documents/index#target)
 
 ### Other Interfaces
 
-- [NxPlugin](../../devkit/index#nxplugin)
+- [NxPlugin](../../devkit/documents/index#nxplugin)
 
 ### Project Graph Interfaces
 
-- [FileData](../../devkit/index#filedata)
-- [ProjectFileMap](../../devkit/index#projectfilemap)
-- [ProjectGraph](../../devkit/index#projectgraph)
-- [ProjectGraphDependency](../../devkit/index#projectgraphdependency)
-- [ProjectGraphExternalNode](../../devkit/index#projectgraphexternalnode)
-- [ProjectGraphProcessorContext](../../devkit/index#projectgraphprocessorcontext)
-- [ProjectGraphProjectNode](../../devkit/index#projectgraphprojectnode)
-- [ProjectGraphV4](../../devkit/index#projectgraphv4)
+- [FileData](../../devkit/documents/index#filedata)
+- [ProjectFileMap](../../devkit/documents/index#projectfilemap)
+- [ProjectGraph](../../devkit/documents/index#projectgraph)
+- [ProjectGraphDependency](../../devkit/documents/index#projectgraphdependency)
+- [ProjectGraphExternalNode](../../devkit/documents/index#projectgraphexternalnode)
+- [ProjectGraphProcessorContext](../../devkit/documents/index#projectgraphprocessorcontext)
+- [ProjectGraphProjectNode](../../devkit/documents/index#projectgraphprojectnode)
+- [ProjectGraphV4](../../devkit/documents/index#projectgraphv4)
 
 ### Tree Interfaces
 
-- [FileChange](../../devkit/index#filechange)
-- [Tree](../../devkit/index#tree)
+- [FileChange](../../devkit/documents/index#filechange)
+- [Tree](../../devkit/documents/index#tree)
 
 ### Utils Interfaces
 
-- [DefaultTasksRunnerOptions](../../devkit/index#defaulttasksrunneroptions)
-- [Hash](../../devkit/index#hash)
-- [JsonParseOptions](../../devkit/index#jsonparseoptions)
-- [JsonSerializeOptions](../../devkit/index#jsonserializeoptions)
-- [ModuleFederationConfig](../../devkit/index#modulefederationconfig)
-- [RemoteCache](../../devkit/index#remotecache)
-- [SharedLibraryConfig](../../devkit/index#sharedlibraryconfig)
-- [StringDeletion](../../devkit/index#stringdeletion)
-- [StringInsertion](../../devkit/index#stringinsertion)
+- [DefaultTasksRunnerOptions](../../devkit/documents/index#defaulttasksrunneroptions)
+- [Hash](../../devkit/documents/index#hash)
+- [JsonParseOptions](../../devkit/documents/index#jsonparseoptions)
+- [JsonSerializeOptions](../../devkit/documents/index#jsonserializeoptions)
+- [ModuleFederationConfig](../../devkit/documents/index#modulefederationconfig)
+- [RemoteCache](../../devkit/documents/index#remotecache)
+- [SharedLibraryConfig](../../devkit/documents/index#sharedlibraryconfig)
+- [StringDeletion](../../devkit/documents/index#stringdeletion)
+- [StringInsertion](../../devkit/documents/index#stringinsertion)
 
 ### Workspace Interfaces
 
-- [ExecutorContext](../../devkit/index#executorcontext)
-- [ExecutorsJson](../../devkit/index#executorsjson)
-- [GeneratorsJson](../../devkit/index#generatorsjson)
-- [HasherContext](../../devkit/index#hashercontext)
-- [ImplicitJsonSubsetDependency](../../devkit/index#implicitjsonsubsetdependency)
-- [MigrationsJson](../../devkit/index#migrationsjson)
-- [NxAffectedConfig](../../devkit/index#nxaffectedconfig)
-- [NxJsonConfiguration](../../devkit/index#nxjsonconfiguration)
-- [ProjectConfiguration](../../devkit/index#projectconfiguration)
-- [ProjectsConfigurations](../../devkit/index#projectsconfigurations)
-- [TargetConfiguration](../../devkit/index#targetconfiguration)
-- [TargetDependencyConfig](../../devkit/index#targetdependencyconfig)
-- [Task](../../devkit/index#task)
-- [TaskGraph](../../devkit/index#taskgraph)
-- [Workspace](../../devkit/index#workspace)
+- [ExecutorContext](../../devkit/documents/index#executorcontext)
+- [ExecutorsJson](../../devkit/documents/index#executorsjson)
+- [GeneratorsJson](../../devkit/documents/index#generatorsjson)
+- [HasherContext](../../devkit/documents/index#hashercontext)
+- [ImplicitJsonSubsetDependency](../../devkit/documents/index#implicitjsonsubsetdependency)
+- [MigrationsJson](../../devkit/documents/index#migrationsjson)
+- [NxAffectedConfig](../../devkit/documents/index#nxaffectedconfig)
+- [NxJsonConfiguration](../../devkit/documents/index#nxjsonconfiguration)
+- [ProjectConfiguration](../../devkit/documents/index#projectconfiguration)
+- [ProjectsConfigurations](../../devkit/documents/index#projectsconfigurations)
+- [TargetConfiguration](../../devkit/documents/index#targetconfiguration)
+- [TargetDependencyConfig](../../devkit/documents/index#targetdependencyconfig)
+- [Task](../../devkit/documents/index#task)
+- [TaskGraph](../../devkit/documents/index#taskgraph)
+- [Workspace](../../devkit/documents/index#workspace)
 
 ### Generators Type aliases
 
-- [WorkspaceConfiguration](../../devkit/index#workspaceconfiguration)
+- [WorkspaceConfiguration](../../devkit/documents/index#workspaceconfiguration)
 
 ### Other Type aliases
 
-- [ProjectTargetConfigurator](../../devkit/index#projecttargetconfigurator)
+- [ProjectTargetConfigurator](../../devkit/documents/index#projecttargetconfigurator)
 
 ### Package Manager Type aliases
 
-- [PackageManager](../../devkit/index#packagemanager)
+- [PackageManager](../../devkit/documents/index#packagemanager)
 
 ### Project Graph Type aliases
 
-- [ProjectGraphNode](../../devkit/index#projectgraphnode)
+- [ProjectGraphNode](../../devkit/documents/index#projectgraphnode)
 
 ### Utils Type aliases
 
-- [AdditionalSharedConfig](../../devkit/index#additionalsharedconfig)
-- [ModuleFederationLibrary](../../devkit/index#modulefederationlibrary)
-- [Remotes](../../devkit/index#remotes)
-- [SharedFunction](../../devkit/index#sharedfunction)
-- [SharedWorkspaceLibraryConfig](../../devkit/index#sharedworkspacelibraryconfig)
-- [StringChange](../../devkit/index#stringchange)
-- [WorkspaceLibrary](../../devkit/index#workspacelibrary)
-- [WorkspaceLibrarySecondaryEntryPoint](../../devkit/index#workspacelibrarysecondaryentrypoint)
+- [AdditionalSharedConfig](../../devkit/documents/index#additionalsharedconfig)
+- [ModuleFederationLibrary](../../devkit/documents/index#modulefederationlibrary)
+- [Remotes](../../devkit/documents/index#remotes)
+- [SharedFunction](../../devkit/documents/index#sharedfunction)
+- [SharedWorkspaceLibraryConfig](../../devkit/documents/index#sharedworkspacelibraryconfig)
+- [StringChange](../../devkit/documents/index#stringchange)
+- [WorkspaceLibrary](../../devkit/documents/index#workspacelibrary)
+- [WorkspaceLibrarySecondaryEntryPoint](../../devkit/documents/index#workspacelibrarysecondaryentrypoint)
 
 ### Workspace Type aliases
 
-- [CustomHasher](../../devkit/index#customhasher)
-- [Executor](../../devkit/index#executor)
-- [Generator](../../devkit/index#generator)
-- [GeneratorCallback](../../devkit/index#generatorcallback)
-- [ImplicitDependencyEntry](../../devkit/index#implicitdependencyentry)
-- [ProjectType](../../devkit/index#projecttype)
-- [TaskGraphExecutor](../../devkit/index#taskgraphexecutor)
-- [WorkspaceJsonConfiguration](../../devkit/index#workspacejsonconfiguration)
+- [CustomHasher](../../devkit/documents/index#customhasher)
+- [Executor](../../devkit/documents/index#executor)
+- [Generator](../../devkit/documents/index#generator)
+- [GeneratorCallback](../../devkit/documents/index#generatorcallback)
+- [ImplicitDependencyEntry](../../devkit/documents/index#implicitdependencyentry)
+- [ProjectType](../../devkit/documents/index#projecttype)
+- [TaskGraphExecutor](../../devkit/documents/index#taskgraphexecutor)
+- [WorkspaceJsonConfiguration](../../devkit/documents/index#workspacejsonconfiguration)
 
 ### Logger Variables
 
-- [logger](../../devkit/index#logger)
+- [logger](../../devkit/documents/index#logger)
 
 ### Utils Variables
 
-- [appRootPath](../../devkit/index#approotpath)
-- [cacheDir](../../devkit/index#cachedir)
-- [output](../../devkit/index#output)
-- [workspaceRoot](../../devkit/index#workspaceroot)
+- [appRootPath](../../devkit/documents/index#approotpath)
+- [cacheDir](../../devkit/documents/index#cachedir)
+- [output](../../devkit/documents/index#output)
+- [workspaceRoot](../../devkit/documents/index#workspaceroot)
 
 ### Functions
 
-- [addDependenciesToPackageJson](../../devkit/index#adddependenciestopackagejson)
-- [addProjectConfiguration](../../devkit/index#addprojectconfiguration)
-- [applyAdditionalShared](../../devkit/index#applyadditionalshared)
-- [applyChangesToString](../../devkit/index#applychangestostring)
-- [applySharedFunction](../../devkit/index#applysharedfunction)
-- [convertNxExecutor](../../devkit/index#convertnxexecutor)
-- [convertNxGenerator](../../devkit/index#convertnxgenerator)
-- [createLockFile](../../devkit/index#createlockfile)
-- [createPackageJson](../../devkit/index#createpackagejson)
-- [createProjectGraphAsync](../../devkit/index#createprojectgraphasync)
-- [defaultTasksRunner](../../devkit/index#defaulttasksrunner)
-- [detectPackageManager](../../devkit/index#detectpackagemanager)
-- [detectWorkspaceScope](../../devkit/index#detectworkspacescope)
-- [ensurePackage](../../devkit/index#ensurepackage)
-- [extractLayoutDirectory](../../devkit/index#extractlayoutdirectory)
-- [formatFiles](../../devkit/index#formatfiles)
-- [generateFiles](../../devkit/index#generatefiles)
-- [getDependentPackagesForProject](../../devkit/index#getdependentpackagesforproject)
-- [getImportPath](../../devkit/index#getimportpath)
-- [getNpmPackageSharedConfig](../../devkit/index#getnpmpackagesharedconfig)
-- [getOutputsForTargetAndConfiguration](../../devkit/index#getoutputsfortargetandconfiguration)
-- [getPackageManagerCommand](../../devkit/index#getpackagemanagercommand)
-- [getPackageManagerVersion](../../devkit/index#getpackagemanagerversion)
-- [getProjects](../../devkit/index#getprojects)
-- [getWorkspaceLayout](../../devkit/index#getworkspacelayout)
-- [getWorkspacePath](../../devkit/index#getworkspacepath)
-- [installPackagesTask](../../devkit/index#installpackagestask)
-- [isStandaloneProject](../../devkit/index#isstandaloneproject)
-- [joinPathFragments](../../devkit/index#joinpathfragments)
-- [mapRemotes](../../devkit/index#mapremotes)
-- [mapRemotesForSSR](../../devkit/index#mapremotesforssr)
-- [moveFilesToNewDirectory](../../devkit/index#movefilestonewdirectory)
-- [names](../../devkit/index#names)
-- [normalizePath](../../devkit/index#normalizepath)
-- [offsetFromRoot](../../devkit/index#offsetfromroot)
-- [parseJson](../../devkit/index#parsejson)
-- [parseTargetString](../../devkit/index#parsetargetstring)
-- [readAllWorkspaceConfiguration](../../devkit/index#readallworkspaceconfiguration)
-- [readCachedProjectGraph](../../devkit/index#readcachedprojectgraph)
-- [readJson](../../devkit/index#readjson)
-- [readJsonFile](../../devkit/index#readjsonfile)
-- [readNxJson](../../devkit/index#readnxjson)
-- [readProjectConfiguration](../../devkit/index#readprojectconfiguration)
-- [readRootPackageJson](../../devkit/index#readrootpackagejson)
-- [readTargetOptions](../../devkit/index#readtargetoptions)
-- [readWorkspaceConfiguration](../../devkit/index#readworkspaceconfiguration)
-- [removeDependenciesFromPackageJson](../../devkit/index#removedependenciesfrompackagejson)
-- [removeProjectConfiguration](../../devkit/index#removeprojectconfiguration)
-- [reverse](../../devkit/index#reverse)
-- [runExecutor](../../devkit/index#runexecutor)
-- [serializeJson](../../devkit/index#serializejson)
-- [sharePackages](../../devkit/index#sharepackages)
-- [shareWorkspaceLibraries](../../devkit/index#shareworkspacelibraries)
-- [stripIndents](../../devkit/index#stripindents)
-- [stripJsonComments](../../devkit/index#stripjsoncomments)
-- [targetToTargetString](../../devkit/index#targettotargetstring)
-- [toJS](../../devkit/index#tojs)
-- [updateJson](../../devkit/index#updatejson)
-- [updateProjectConfiguration](../../devkit/index#updateprojectconfiguration)
-- [updateTsConfigsToJs](../../devkit/index#updatetsconfigstojs)
-- [updateWorkspaceConfiguration](../../devkit/index#updateworkspaceconfiguration)
-- [visitNotIgnoredFiles](../../devkit/index#visitnotignoredfiles)
-- [workspaceLayout](../../devkit/index#workspacelayout)
-- [writeJson](../../devkit/index#writejson)
-- [writeJsonFile](../../devkit/index#writejsonfile)
+- [addDependenciesToPackageJson](../../devkit/documents/index#adddependenciestopackagejson)
+- [addProjectConfiguration](../../devkit/documents/index#addprojectconfiguration)
+- [applyAdditionalShared](../../devkit/documents/index#applyadditionalshared)
+- [applyChangesToString](../../devkit/documents/index#applychangestostring)
+- [applySharedFunction](../../devkit/documents/index#applysharedfunction)
+- [convertNxExecutor](../../devkit/documents/index#convertnxexecutor)
+- [convertNxGenerator](../../devkit/documents/index#convertnxgenerator)
+- [createLockFile](../../devkit/documents/index#createlockfile)
+- [createPackageJson](../../devkit/documents/index#createpackagejson)
+- [createProjectGraphAsync](../../devkit/documents/index#createprojectgraphasync)
+- [defaultTasksRunner](../../devkit/documents/index#defaulttasksrunner)
+- [detectPackageManager](../../devkit/documents/index#detectpackagemanager)
+- [detectWorkspaceScope](../../devkit/documents/index#detectworkspacescope)
+- [ensurePackage](../../devkit/documents/index#ensurepackage)
+- [extractLayoutDirectory](../../devkit/documents/index#extractlayoutdirectory)
+- [formatFiles](../../devkit/documents/index#formatfiles)
+- [generateFiles](../../devkit/documents/index#generatefiles)
+- [getDependentPackagesForProject](../../devkit/documents/index#getdependentpackagesforproject)
+- [getImportPath](../../devkit/documents/index#getimportpath)
+- [getNpmPackageSharedConfig](../../devkit/documents/index#getnpmpackagesharedconfig)
+- [getOutputsForTargetAndConfiguration](../../devkit/documents/index#getoutputsfortargetandconfiguration)
+- [getPackageManagerCommand](../../devkit/documents/index#getpackagemanagercommand)
+- [getPackageManagerVersion](../../devkit/documents/index#getpackagemanagerversion)
+- [getProjects](../../devkit/documents/index#getprojects)
+- [getWorkspaceLayout](../../devkit/documents/index#getworkspacelayout)
+- [getWorkspacePath](../../devkit/documents/index#getworkspacepath)
+- [installPackagesTask](../../devkit/documents/index#installpackagestask)
+- [isStandaloneProject](../../devkit/documents/index#isstandaloneproject)
+- [joinPathFragments](../../devkit/documents/index#joinpathfragments)
+- [mapRemotes](../../devkit/documents/index#mapremotes)
+- [mapRemotesForSSR](../../devkit/documents/index#mapremotesforssr)
+- [moveFilesToNewDirectory](../../devkit/documents/index#movefilestonewdirectory)
+- [names](../../devkit/documents/index#names)
+- [normalizePath](../../devkit/documents/index#normalizepath)
+- [offsetFromRoot](../../devkit/documents/index#offsetfromroot)
+- [parseJson](../../devkit/documents/index#parsejson)
+- [parseTargetString](../../devkit/documents/index#parsetargetstring)
+- [readAllWorkspaceConfiguration](../../devkit/documents/index#readallworkspaceconfiguration)
+- [readCachedProjectGraph](../../devkit/documents/index#readcachedprojectgraph)
+- [readJson](../../devkit/documents/index#readjson)
+- [readJsonFile](../../devkit/documents/index#readjsonfile)
+- [readNxJson](../../devkit/documents/index#readnxjson)
+- [readProjectConfiguration](../../devkit/documents/index#readprojectconfiguration)
+- [readRootPackageJson](../../devkit/documents/index#readrootpackagejson)
+- [readTargetOptions](../../devkit/documents/index#readtargetoptions)
+- [readWorkspaceConfiguration](../../devkit/documents/index#readworkspaceconfiguration)
+- [removeDependenciesFromPackageJson](../../devkit/documents/index#removedependenciesfrompackagejson)
+- [removeProjectConfiguration](../../devkit/documents/index#removeprojectconfiguration)
+- [reverse](../../devkit/documents/index#reverse)
+- [runExecutor](../../devkit/documents/index#runexecutor)
+- [serializeJson](../../devkit/documents/index#serializejson)
+- [sharePackages](../../devkit/documents/index#sharepackages)
+- [shareWorkspaceLibraries](../../devkit/documents/index#shareworkspacelibraries)
+- [stripIndents](../../devkit/documents/index#stripindents)
+- [stripJsonComments](../../devkit/documents/index#stripjsoncomments)
+- [targetToTargetString](../../devkit/documents/index#targettotargetstring)
+- [toJS](../../devkit/documents/index#tojs)
+- [updateJson](../../devkit/documents/index#updatejson)
+- [updateProjectConfiguration](../../devkit/documents/index#updateprojectconfiguration)
+- [updateTsConfigsToJs](../../devkit/documents/index#updatetsconfigstojs)
+- [updateWorkspaceConfiguration](../../devkit/documents/index#updateworkspaceconfiguration)
+- [visitNotIgnoredFiles](../../devkit/documents/index#visitnotignoredfiles)
+- [workspaceLayout](../../devkit/documents/index#workspacelayout)
+- [writeJson](../../devkit/documents/index#writejson)
+- [writeJsonFile](../../devkit/documents/index#writejsonfile)
 
 ## Project Graph Enumerations
 
@@ -506,7 +506,7 @@ A plugin for Nx
 
 ### WorkspaceConfiguration
 
-Ƭ **WorkspaceConfiguration**: `Omit`<[`ProjectsConfigurations`](../../devkit/index#projectsconfigurations), `"projects"`\> & `Partial`<[`NxJsonConfiguration`](../../devkit/index#nxjsonconfiguration)\>
+Ƭ **WorkspaceConfiguration**: `Omit`<[`ProjectsConfigurations`](../../devkit/documents/index#projectsconfigurations), `"projects"`\> & `Partial`<[`NxJsonConfiguration`](../../devkit/documents/index#nxjsonconfiguration)\>
 
 ---
 
@@ -514,11 +514,11 @@ A plugin for Nx
 
 ### ProjectTargetConfigurator
 
-Ƭ **ProjectTargetConfigurator**: (`file`: `string`) => `Record`<`string`, [`TargetConfiguration`](../../devkit/index#targetconfiguration)\>
+Ƭ **ProjectTargetConfigurator**: (`file`: `string`) => `Record`<`string`, [`TargetConfiguration`](../../devkit/documents/index#targetconfiguration)\>
 
 #### Type declaration
 
-▸ (`file`): `Record`<`string`, [`TargetConfiguration`](../../devkit/index#targetconfiguration)\>
+▸ (`file`): `Record`<`string`, [`TargetConfiguration`](../../devkit/documents/index#targetconfiguration)\>
 
 ##### Parameters
 
@@ -528,7 +528,7 @@ A plugin for Nx
 
 ##### Returns
 
-`Record`<`string`, [`TargetConfiguration`](../../devkit/index#targetconfiguration)\>
+`Record`<`string`, [`TargetConfiguration`](../../devkit/documents/index#targetconfiguration)\>
 
 ---
 
@@ -544,7 +544,7 @@ A plugin for Nx
 
 ### ProjectGraphNode
 
-Ƭ **ProjectGraphNode**<`T`\>: [`ProjectGraphProjectNode`](../../devkit/index#projectgraphprojectnode)<`T`\> \| [`ProjectGraphExternalNode`](../../devkit/index#projectgraphexternalnode)
+Ƭ **ProjectGraphNode**<`T`\>: [`ProjectGraphProjectNode`](../../devkit/documents/index#projectgraphprojectnode)<`T`\> \| [`ProjectGraphExternalNode`](../../devkit/documents/index#projectgraphexternalnode)
 
 #### Type parameters
 
@@ -558,7 +558,7 @@ A plugin for Nx
 
 ### AdditionalSharedConfig
 
-Ƭ **AdditionalSharedConfig**: (`string` \| [libraryName: string, sharedConfig: SharedLibraryConfig] \| { `libraryName`: `string` ; `sharedConfig`: [`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig) })[]
+Ƭ **AdditionalSharedConfig**: (`string` \| [libraryName: string, sharedConfig: SharedLibraryConfig] \| { `libraryName`: `string` ; `sharedConfig`: [`SharedLibraryConfig`](../../devkit/documents/index#sharedlibraryconfig) })[]
 
 ---
 
@@ -583,22 +583,22 @@ A plugin for Nx
 
 ### SharedFunction
 
-Ƭ **SharedFunction**: (`libraryName`: `string`, `sharedConfig`: [`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig)) => `undefined` \| `false` \| [`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig)
+Ƭ **SharedFunction**: (`libraryName`: `string`, `sharedConfig`: [`SharedLibraryConfig`](../../devkit/documents/index#sharedlibraryconfig)) => `undefined` \| `false` \| [`SharedLibraryConfig`](../../devkit/documents/index#sharedlibraryconfig)
 
 #### Type declaration
 
-▸ (`libraryName`, `sharedConfig`): `undefined` \| `false` \| [`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig)
+▸ (`libraryName`, `sharedConfig`): `undefined` \| `false` \| [`SharedLibraryConfig`](../../devkit/documents/index#sharedlibraryconfig)
 
 ##### Parameters
 
-| Name           | Type                                                            |
-| :------------- | :-------------------------------------------------------------- |
-| `libraryName`  | `string`                                                        |
-| `sharedConfig` | [`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig) |
+| Name           | Type                                                                      |
+| :------------- | :------------------------------------------------------------------------ |
+| `libraryName`  | `string`                                                                  |
+| `sharedConfig` | [`SharedLibraryConfig`](../../devkit/documents/index#sharedlibraryconfig) |
 
 ##### Returns
 
-`undefined` \| `false` \| [`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig)
+`undefined` \| `false` \| [`SharedLibraryConfig`](../../devkit/documents/index#sharedlibraryconfig)
 
 ---
 
@@ -608,17 +608,17 @@ A plugin for Nx
 
 #### Type declaration
 
-| Name                   | Type                                                                                                          |
-| :--------------------- | :------------------------------------------------------------------------------------------------------------ |
-| `getAliases`           | () => `Record`<`string`, `string`\>                                                                           |
-| `getLibraries`         | (`eager?`: `boolean`) => `Record`<`string`, [`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig)\> |
-| `getReplacementPlugin` | () => `NormalModuleReplacementPlugin`                                                                         |
+| Name                   | Type                                                                                                                    |
+| :--------------------- | :---------------------------------------------------------------------------------------------------------------------- |
+| `getAliases`           | () => `Record`<`string`, `string`\>                                                                                     |
+| `getLibraries`         | (`eager?`: `boolean`) => `Record`<`string`, [`SharedLibraryConfig`](../../devkit/documents/index#sharedlibraryconfig)\> |
+| `getReplacementPlugin` | () => `NormalModuleReplacementPlugin`                                                                                   |
 
 ---
 
 ### StringChange
 
-Ƭ **StringChange**: [`StringInsertion`](../../devkit/index#stringinsertion) \| [`StringDeletion`](../../devkit/index#stringdeletion)
+Ƭ **StringChange**: [`StringInsertion`](../../devkit/documents/index#stringinsertion) \| [`StringDeletion`](../../devkit/documents/index#stringdeletion)
 
 ---
 
@@ -653,28 +653,28 @@ A plugin for Nx
 
 ### CustomHasher
 
-Ƭ **CustomHasher**: (`task`: [`Task`](../../devkit/index#task), `context`: [`HasherContext`](../../devkit/index#hashercontext)) => `Promise`<[`Hash`](../../devkit/index#hash)\>
+Ƭ **CustomHasher**: (`task`: [`Task`](../../devkit/documents/index#task), `context`: [`HasherContext`](../../devkit/documents/index#hashercontext)) => `Promise`<[`Hash`](../../devkit/documents/index#hash)\>
 
 #### Type declaration
 
-▸ (`task`, `context`): `Promise`<[`Hash`](../../devkit/index#hash)\>
+▸ (`task`, `context`): `Promise`<[`Hash`](../../devkit/documents/index#hash)\>
 
 ##### Parameters
 
-| Name      | Type                                                |
-| :-------- | :-------------------------------------------------- |
-| `task`    | [`Task`](../../devkit/index#task)                   |
-| `context` | [`HasherContext`](../../devkit/index#hashercontext) |
+| Name      | Type                                                          |
+| :-------- | :------------------------------------------------------------ |
+| `task`    | [`Task`](../../devkit/documents/index#task)                   |
+| `context` | [`HasherContext`](../../devkit/documents/index#hashercontext) |
 
 ##### Returns
 
-`Promise`<[`Hash`](../../devkit/index#hash)\>
+`Promise`<[`Hash`](../../devkit/documents/index#hash)\>
 
 ---
 
 ### Executor
 
-Ƭ **Executor**<`T`\>: (`options`: `T`, `context`: [`ExecutorContext`](../../devkit/index#executorcontext)) => `Promise`<`Object`\> \| `AsyncIterableIterator`<`Object`\>
+Ƭ **Executor**<`T`\>: (`options`: `T`, `context`: [`ExecutorContext`](../../devkit/documents/index#executorcontext)) => `Promise`<`Object`\> \| `AsyncIterableIterator`<`Object`\>
 
 #### Type parameters
 
@@ -690,10 +690,10 @@ Implementation of a target of a project
 
 ##### Parameters
 
-| Name      | Type                                                    |
-| :-------- | :------------------------------------------------------ |
-| `options` | `T`                                                     |
-| `context` | [`ExecutorContext`](../../devkit/index#executorcontext) |
+| Name      | Type                                                              |
+| :-------- | :---------------------------------------------------------------- |
+| `options` | `T`                                                               |
+| `context` | [`ExecutorContext`](../../devkit/documents/index#executorcontext) |
 
 ##### Returns
 
@@ -703,7 +703,7 @@ Implementation of a target of a project
 
 ### Generator
 
-Ƭ **Generator**<`T`\>: (`tree`: `any`, `schema`: `T`) => `void` \| [`GeneratorCallback`](../../devkit/index#generatorcallback) \| `Promise`<`void` \| [`GeneratorCallback`](../../devkit/index#generatorcallback)\>
+Ƭ **Generator**<`T`\>: (`tree`: `any`, `schema`: `T`) => `void` \| [`GeneratorCallback`](../../devkit/documents/index#generatorcallback) \| `Promise`<`void` \| [`GeneratorCallback`](../../devkit/documents/index#generatorcallback)\>
 
 #### Type parameters
 
@@ -713,7 +713,7 @@ Implementation of a target of a project
 
 #### Type declaration
 
-▸ (`tree`, `schema`): `void` \| [`GeneratorCallback`](../../devkit/index#generatorcallback) \| `Promise`<`void` \| [`GeneratorCallback`](../../devkit/index#generatorcallback)\>
+▸ (`tree`, `schema`): `void` \| [`GeneratorCallback`](../../devkit/documents/index#generatorcallback) \| `Promise`<`void` \| [`GeneratorCallback`](../../devkit/documents/index#generatorcallback)\>
 
 A function that schedules updates to the filesystem to be done atomically
 
@@ -726,7 +726,7 @@ A function that schedules updates to the filesystem to be done atomically
 
 ##### Returns
 
-`void` \| [`GeneratorCallback`](../../devkit/index#generatorcallback) \| `Promise`<`void` \| [`GeneratorCallback`](../../devkit/index#generatorcallback)\>
+`void` \| [`GeneratorCallback`](../../devkit/documents/index#generatorcallback) \| `Promise`<`void` \| [`GeneratorCallback`](../../devkit/documents/index#generatorcallback)\>
 
 ---
 
@@ -758,7 +758,7 @@ A callback function that is executed after changes are made to the file system
 
 #### Index signature
 
-▪ [key: `string`]: `T` \| [`ImplicitJsonSubsetDependency`](../../devkit/index#implicitjsonsubsetdependency)<`T`\>
+▪ [key: `string`]: `T` \| [`ImplicitJsonSubsetDependency`](../../devkit/documents/index#implicitjsonsubsetdependency)<`T`\>
 
 ---
 
@@ -770,7 +770,7 @@ A callback function that is executed after changes are made to the file system
 
 ### TaskGraphExecutor
 
-Ƭ **TaskGraphExecutor**<`T`\>: (`taskGraph`: [`TaskGraph`](../../devkit/index#taskgraph), `options`: `Record`<`string`, `T`\>, `overrides`: `T`, `context`: [`ExecutorContext`](../../devkit/index#executorcontext)) => `Promise`<`Record`<`string`, `Object`\>\>
+Ƭ **TaskGraphExecutor**<`T`\>: (`taskGraph`: [`TaskGraph`](../../devkit/documents/index#taskgraph), `options`: `Record`<`string`, `T`\>, `overrides`: `T`, `context`: [`ExecutorContext`](../../devkit/documents/index#executorcontext)) => `Promise`<`Record`<`string`, `Object`\>\>
 
 #### Type parameters
 
@@ -786,12 +786,12 @@ Implementation of a target of a project that handles multiple projects to be bat
 
 ##### Parameters
 
-| Name        | Type                                                    |
-| :---------- | :------------------------------------------------------ |
-| `taskGraph` | [`TaskGraph`](../../devkit/index#taskgraph)             |
-| `options`   | `Record`<`string`, `T`\>                                |
-| `overrides` | `T`                                                     |
-| `context`   | [`ExecutorContext`](../../devkit/index#executorcontext) |
+| Name        | Type                                                              |
+| :---------- | :---------------------------------------------------------------- |
+| `taskGraph` | [`TaskGraph`](../../devkit/documents/index#taskgraph)             |
+| `options`   | `Record`<`string`, `T`\>                                          |
+| `overrides` | `T`                                                               |
+| `context`   | [`ExecutorContext`](../../devkit/documents/index#executorcontext) |
 
 ##### Returns
 
@@ -801,7 +801,7 @@ Implementation of a target of a project that handles multiple projects to be bat
 
 ### WorkspaceJsonConfiguration
 
-Ƭ **WorkspaceJsonConfiguration**: [`ProjectsConfigurations`](../../devkit/index#projectsconfigurations)
+Ƭ **WorkspaceJsonConfiguration**: [`ProjectsConfigurations`](../../devkit/documents/index#projectsconfigurations)
 
 ## Logger Variables
 
@@ -850,7 +850,7 @@ Implementation of a target of a project that handles multiple projects to be bat
 
 ### addDependenciesToPackageJson
 
-▸ **addDependenciesToPackageJson**(`tree`, `dependencies`, `devDependencies`, `packageJsonPath?`): [`GeneratorCallback`](../../devkit/index#generatorcallback)
+▸ **addDependenciesToPackageJson**(`tree`, `dependencies`, `devDependencies`, `packageJsonPath?`): [`GeneratorCallback`](../../devkit/documents/index#generatorcallback)
 
 Add Dependencies and Dev Dependencies to package.json
 
@@ -864,16 +864,16 @@ This will **add** `react` and `jest` to the dependencies and devDependencies sec
 
 #### Parameters
 
-| Name              | Type                              | Default value    | Description                                                             |
-| :---------------- | :-------------------------------- | :--------------- | :---------------------------------------------------------------------- |
-| `tree`            | [`Tree`](../../devkit/index#tree) | `undefined`      | Tree representing file system to modify                                 |
-| `dependencies`    | `Record`<`string`, `string`\>     | `undefined`      | Dependencies to be added to the dependencies section of package.json    |
-| `devDependencies` | `Record`<`string`, `string`\>     | `undefined`      | Dependencies to be added to the devDependencies section of package.json |
-| `packageJsonPath` | `string`                          | `'package.json'` | Path to package.json                                                    |
+| Name              | Type                                        | Default value    | Description                                                             |
+| :---------------- | :------------------------------------------ | :--------------- | :---------------------------------------------------------------------- |
+| `tree`            | [`Tree`](../../devkit/documents/index#tree) | `undefined`      | Tree representing file system to modify                                 |
+| `dependencies`    | `Record`<`string`, `string`\>               | `undefined`      | Dependencies to be added to the dependencies section of package.json    |
+| `devDependencies` | `Record`<`string`, `string`\>               | `undefined`      | Dependencies to be added to the devDependencies section of package.json |
+| `packageJsonPath` | `string`                                    | `'package.json'` | Path to package.json                                                    |
 
 #### Returns
 
-[`GeneratorCallback`](../../devkit/index#generatorcallback)
+[`GeneratorCallback`](../../devkit/documents/index#generatorcallback)
 
 Callback to install dependencies only if necessary, no-op otherwise
 
@@ -890,12 +890,12 @@ The utility will update either files.
 
 #### Parameters
 
-| Name                   | Type                                                              | Description                                                                                |
-| :--------------------- | :---------------------------------------------------------------- | :----------------------------------------------------------------------------------------- |
-| `tree`                 | [`Tree`](../../devkit/index#tree)                                 | the file system tree                                                                       |
-| `projectName`          | `string`                                                          | unique name. Often directories are part of the name (e.g., mydir-mylib)                    |
-| `projectConfiguration` | [`ProjectConfiguration`](../../devkit/index#projectconfiguration) | project configuration                                                                      |
-| `standalone?`          | `boolean`                                                         | should the project use package.json? If false, the project config is inside workspace.json |
+| Name                   | Type                                                                        | Description                                                                                |
+| :--------------------- | :-------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------- |
+| `tree`                 | [`Tree`](../../devkit/documents/index#tree)                                 | the file system tree                                                                       |
+| `projectName`          | `string`                                                                    | unique name. Often directories are part of the name (e.g., mydir-mylib)                    |
+| `projectConfiguration` | [`ProjectConfiguration`](../../devkit/documents/index#projectconfiguration) | project configuration                                                                      |
+| `standalone?`          | `boolean`                                                                   | should the project use package.json? If false, the project config is inside workspace.json |
 
 #### Returns
 
@@ -916,11 +916,11 @@ hierarchy.
 
 #### Parameters
 
-| Name               | Type                                                                                 | Description                        |
-| :----------------- | :----------------------------------------------------------------------------------- | :--------------------------------- |
-| `sharedConfig`     | `Record`<`string`, [`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig)\> | The original Shared Config         |
-| `additionalShared` | [`AdditionalSharedConfig`](../../devkit/index#additionalsharedconfig)                | The additional dependencies to add |
-| `projectGraph`     | [`ProjectGraph`](../../devkit/index#projectgraph)<`any`\>                            | The Nx project graph               |
+| Name               | Type                                                                                           | Description                        |
+| :----------------- | :--------------------------------------------------------------------------------------------- | :--------------------------------- |
+| `sharedConfig`     | `Record`<`string`, [`SharedLibraryConfig`](../../devkit/documents/index#sharedlibraryconfig)\> | The original Shared Config         |
+| `additionalShared` | [`AdditionalSharedConfig`](../../devkit/documents/index#additionalsharedconfig)                | The additional dependencies to add |
+| `projectGraph`     | [`ProjectGraph`](../../devkit/documents/index#projectgraph)<`any`\>                            | The Nx project graph               |
 
 #### Returns
 
@@ -964,10 +964,10 @@ bootstrap({
 
 #### Parameters
 
-| Name      | Type                                                |
-| :-------- | :-------------------------------------------------- |
-| `text`    | `string`                                            |
-| `changes` | [`StringChange`](../../devkit/index#stringchange)[] |
+| Name      | Type                                                          |
+| :-------- | :------------------------------------------------------------ |
+| `text`    | `string`                                                      |
+| `changes` | [`StringChange`](../../devkit/documents/index#stringchange)[] |
 
 #### Returns
 
@@ -984,10 +984,10 @@ of the dependencies for the Module Federation build.
 
 #### Parameters
 
-| Name           | Type                                                                                 | Description                               |
-| :------------- | :----------------------------------------------------------------------------------- | :---------------------------------------- |
-| `sharedConfig` | `Record`<`string`, [`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig)\> | The original Shared Config to be modified |
-| `sharedFn`     | [`SharedFunction`](../../devkit/index#sharedfunction)                                | The custom function to run                |
+| Name           | Type                                                                                           | Description                               |
+| :------------- | :--------------------------------------------------------------------------------------------- | :---------------------------------------- |
+| `sharedConfig` | `Record`<`string`, [`SharedLibraryConfig`](../../devkit/documents/index#sharedlibraryconfig)\> | The original Shared Config to be modified |
+| `sharedFn`     | [`SharedFunction`](../../devkit/documents/index#sharedfunction)                                | The custom function to run                |
 
 #### Returns
 
@@ -1005,9 +1005,9 @@ Use this to expose a compatible Angular Builder
 
 #### Parameters
 
-| Name       | Type                                              |
-| :--------- | :------------------------------------------------ |
-| `executor` | [`Executor`](../../devkit/index#executor)<`any`\> |
+| Name       | Type                                                        |
+| :--------- | :---------------------------------------------------------- |
+| `executor` | [`Executor`](../../devkit/documents/index#executor)<`any`\> |
 
 #### Returns
 
@@ -1029,10 +1029,10 @@ Convert an Nx Generator into an Angular Devkit Schematic.
 
 #### Parameters
 
-| Name                           | Type                                              | Default value | Description                                                                                       |
-| :----------------------------- | :------------------------------------------------ | :------------ | :------------------------------------------------------------------------------------------------ |
-| `generator`                    | [`Generator`](../../devkit/index#generator)<`T`\> | `undefined`   | The Nx generator to convert to an Angular Devkit Schematic.                                       |
-| `skipWritingConfigInOldFormat` | `boolean`                                         | `false`       | Whether to skip writing the configuration in the old format (the one used by the Angular DevKit). |
+| Name                           | Type                                                        | Default value | Description                                                                                       |
+| :----------------------------- | :---------------------------------------------------------- | :------------ | :------------------------------------------------------------------------------------------------ |
+| `generator`                    | [`Generator`](../../devkit/documents/index#generator)<`T`\> | `undefined`   | The Nx generator to convert to an Angular Devkit Schematic.                                       |
+| `skipWritingConfigInOldFormat` | `boolean`                                                   | `false`       | Whether to skip writing the configuration in the old format (the one used by the Angular DevKit). |
 
 #### Returns
 
@@ -1073,10 +1073,10 @@ Create lock file based on the root level lock file and (pruned) package.json
 
 #### Parameters
 
-| Name             | Type                                                  |
-| :--------------- | :---------------------------------------------------- |
-| `packageJson`    | `PackageJson`                                         |
-| `packageManager` | [`PackageManager`](../../devkit/index#packagemanager) |
+| Name             | Type                                                            |
+| :--------------- | :-------------------------------------------------------------- |
+| `packageJson`    | `PackageJson`                                                   |
+| `packageManager` | [`PackageManager`](../../devkit/documents/index#packagemanager) |
 
 #### Returns
 
@@ -1095,13 +1095,13 @@ If isProduction flag is set, it wil remove devDependencies and optional peerDepe
 
 #### Parameters
 
-| Name                    | Type                                                      |
-| :---------------------- | :-------------------------------------------------------- |
-| `projectName`           | `string`                                                  |
-| `graph`                 | [`ProjectGraph`](../../devkit/index#projectgraph)<`any`\> |
-| `options`               | `Object`                                                  |
-| `options.isProduction?` | `boolean`                                                 |
-| `options.root?`         | `string`                                                  |
+| Name                    | Type                                                                |
+| :---------------------- | :------------------------------------------------------------------ |
+| `projectName`           | `string`                                                            |
+| `graph`                 | [`ProjectGraph`](../../devkit/documents/index#projectgraph)<`any`\> |
+| `options`               | `Object`                                                            |
+| `options.isProduction?` | `boolean`                                                           |
+| `options.root?`         | `string`                                                            |
 
 #### Returns
 
@@ -1111,7 +1111,7 @@ If isProduction flag is set, it wil remove devDependencies and optional peerDepe
 
 ### createProjectGraphAsync
 
-▸ **createProjectGraphAsync**(`opts?`): `Promise`<[`ProjectGraph`](../../devkit/index#projectgraph)\>
+▸ **createProjectGraphAsync**(`opts?`): `Promise`<[`ProjectGraph`](../../devkit/documents/index#projectgraph)\>
 
 Computes and returns a ProjectGraph.
 
@@ -1145,7 +1145,7 @@ stored in the daemon process. To reset both run: `nx reset`.
 
 #### Returns
 
-`Promise`<[`ProjectGraph`](../../devkit/index#projectgraph)\>
+`Promise`<[`ProjectGraph`](../../devkit/documents/index#projectgraph)\>
 
 ---
 
@@ -1155,19 +1155,19 @@ stored in the daemon process. To reset both run: `nx reset`.
 
 #### Parameters
 
-| Name                         | Type                                                                                  |
-| :--------------------------- | :------------------------------------------------------------------------------------ |
-| `tasks`                      | [`Task`](../../devkit/index#task)[]                                                   |
-| `options`                    | [`DefaultTasksRunnerOptions`](../../devkit/index#defaulttasksrunneroptions)           |
-| `context?`                   | `Object`                                                                              |
-| `context.daemon?`            | `DaemonClient`                                                                        |
-| `context.hasher?`            | [`Hasher`](../../devkit/index#hasher)                                                 |
-| `context.initiatingProject?` | `string`                                                                              |
-| `context.nxArgs`             | `NxArgs`                                                                              |
-| `context.nxJson`             | [`NxJsonConfiguration`](../../devkit/index#nxjsonconfiguration)<`string`[] \| `"*"`\> |
-| `context.projectGraph`       | [`ProjectGraph`](../../devkit/index#projectgraph)<`any`\>                             |
-| `context.target?`            | `string`                                                                              |
-| `context.taskGraph?`         | [`TaskGraph`](../../devkit/index#taskgraph)                                           |
+| Name                         | Type                                                                                            |
+| :--------------------------- | :---------------------------------------------------------------------------------------------- |
+| `tasks`                      | [`Task`](../../devkit/documents/index#task)[]                                                   |
+| `options`                    | [`DefaultTasksRunnerOptions`](../../devkit/documents/index#defaulttasksrunneroptions)           |
+| `context?`                   | `Object`                                                                                        |
+| `context.daemon?`            | `DaemonClient`                                                                                  |
+| `context.hasher?`            | [`Hasher`](../../devkit/documents/index#hasher)                                                 |
+| `context.initiatingProject?` | `string`                                                                                        |
+| `context.nxArgs`             | `NxArgs`                                                                                        |
+| `context.nxJson`             | [`NxJsonConfiguration`](../../devkit/documents/index#nxjsonconfiguration)<`string`[] \| `"*"`\> |
+| `context.projectGraph`       | [`ProjectGraph`](../../devkit/documents/index#projectgraph)<`any`\>                             |
+| `context.target?`            | `string`                                                                                        |
+| `context.taskGraph?`         | [`TaskGraph`](../../devkit/documents/index#taskgraph)                                           |
 
 #### Returns
 
@@ -1177,7 +1177,7 @@ stored in the daemon process. To reset both run: `nx reset`.
 
 ### detectPackageManager
 
-▸ **detectPackageManager**(`dir?`): [`PackageManager`](../../devkit/index#packagemanager)
+▸ **detectPackageManager**(`dir?`): [`PackageManager`](../../devkit/documents/index#packagemanager)
 
 Detects which package manager is used in the workspace based on the lock file.
 
@@ -1189,7 +1189,7 @@ Detects which package manager is used in the workspace based on the lock file.
 
 #### Returns
 
-[`PackageManager`](../../devkit/index#packagemanager)
+[`PackageManager`](../../devkit/documents/index#packagemanager)
 
 ---
 
@@ -1229,14 +1229,14 @@ When running with --dryRun, the function will throw when dependencies are missin
 
 #### Parameters
 
-| Name                      | Type                              | Description                                                        |
-| :------------------------ | :-------------------------------- | :----------------------------------------------------------------- |
-| `tree`                    | [`Tree`](../../devkit/index#tree) | the file system tree                                               |
-| `pkg`                     | `string`                          | the package to check (e.g. @nrwl/jest)                             |
-| `requiredVersion`         | `string`                          | the version or semver range to check (e.g. ~1.0.0, >=1.0.0 <2.0.0) |
-| `options`                 | `Object`                          |                                                                    |
-| `options.dev?`            | `boolean`                         | -                                                                  |
-| `options.throwOnMissing?` | `boolean`                         | -                                                                  |
+| Name                      | Type                                        | Description                                                        |
+| :------------------------ | :------------------------------------------ | :----------------------------------------------------------------- |
+| `tree`                    | [`Tree`](../../devkit/documents/index#tree) | the file system tree                                               |
+| `pkg`                     | `string`                                    | the package to check (e.g. @nrwl/jest)                             |
+| `requiredVersion`         | `string`                                    | the version or semver range to check (e.g. ~1.0.0, >=1.0.0 <2.0.0) |
+| `options`                 | `Object`                                    |                                                                    |
+| `options.dev?`            | `boolean`                                   | -                                                                  |
+| `options.throwOnMissing?` | `boolean`                                   | -                                                                  |
 
 #### Returns
 
@@ -1275,9 +1275,9 @@ Formats all the created or updated files using Prettier
 
 #### Parameters
 
-| Name   | Type                              | Description          |
-| :----- | :-------------------------------- | :------------------- |
-| `tree` | [`Tree`](../../devkit/index#tree) | the file system tree |
+| Name   | Type                                        | Description          |
+| :----- | :------------------------------------------ | :------------------- |
+| `tree` | [`Tree`](../../devkit/documents/index#tree) | the file system tree |
 
 #### Returns
 
@@ -1313,12 +1313,12 @@ doesn't get confused about incorrect TypeScript files.
 
 #### Parameters
 
-| Name            | Type                              | Description                                   |
-| :-------------- | :-------------------------------- | :-------------------------------------------- |
-| `tree`          | [`Tree`](../../devkit/index#tree) | the file system tree                          |
-| `srcFolder`     | `string`                          | the source folder of files (absolute path)    |
-| `target`        | `string`                          | the target folder (relative to the tree root) |
-| `substitutions` | `Object`                          | an object of key-value pairs                  |
+| Name            | Type                                        | Description                                   |
+| :-------------- | :------------------------------------------ | :-------------------------------------------- |
+| `tree`          | [`Tree`](../../devkit/documents/index#tree) | the file system tree                          |
+| `srcFolder`     | `string`                                    | the source folder of files (absolute path)    |
+| `target`        | `string`                                    | the target folder (relative to the tree root) |
+| `substitutions` | `Object`                                    | an object of key-value pairs                  |
 
 #### Returns
 
@@ -1332,19 +1332,19 @@ doesn't get confused about incorrect TypeScript files.
 
 #### Parameters
 
-| Name           | Type                                                      |
-| :------------- | :-------------------------------------------------------- |
-| `projectGraph` | [`ProjectGraph`](../../devkit/index#projectgraph)<`any`\> |
-| `name`         | `string`                                                  |
+| Name           | Type                                                                |
+| :------------- | :------------------------------------------------------------------ |
+| `projectGraph` | [`ProjectGraph`](../../devkit/documents/index#projectgraph)<`any`\> |
+| `name`         | `string`                                                            |
 
 #### Returns
 
 `Object`
 
-| Name                 | Type                                                        |
-| :------------------- | :---------------------------------------------------------- |
-| `npmPackages`        | `string`[]                                                  |
-| `workspaceLibraries` | [`WorkspaceLibrary`](../../devkit/index#workspacelibrary)[] |
+| Name                 | Type                                                                  |
+| :------------------- | :-------------------------------------------------------------------- |
+| `npmPackages`        | `string`[]                                                            |
+| `workspaceLibraries` | [`WorkspaceLibrary`](../../devkit/documents/index#workspacelibrary)[] |
 
 ---
 
@@ -1369,7 +1369,7 @@ Prefixes project name with npm scope
 
 ### getNpmPackageSharedConfig
 
-▸ **getNpmPackageSharedConfig**(`pkgName`, `version`): [`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig) \| `undefined`
+▸ **getNpmPackageSharedConfig**(`pkgName`, `version`): [`SharedLibraryConfig`](../../devkit/documents/index#sharedlibraryconfig) \| `undefined`
 
 Build the Module Federation Share Config for a specific package and the
 specified version of that package.
@@ -1383,7 +1383,7 @@ specified version of that package.
 
 #### Returns
 
-[`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig) \| `undefined`
+[`SharedLibraryConfig`](../../devkit/documents/index#sharedlibraryconfig) \| `undefined`
 
 ---
 
@@ -1395,10 +1395,10 @@ Returns the list of outputs that will be cached.
 
 #### Parameters
 
-| Name   | Type                                                                            | Description                                               |
-| :----- | :------------------------------------------------------------------------------ | :-------------------------------------------------------- |
-| `task` | `Pick`<[`Task`](../../devkit/index#task), `"overrides"` \| `"target"`\>         | target + overrides                                        |
-| `node` | [`ProjectGraphProjectNode`](../../devkit/index#projectgraphprojectnode)<`any`\> | ProjectGraphProjectNode object that the task runs against |
+| Name   | Type                                                                                      | Description                                               |
+| :----- | :---------------------------------------------------------------------------------------- | :-------------------------------------------------------- |
+| `task` | `Pick`<[`Task`](../../devkit/documents/index#task), `"overrides"` \| `"target"`\>         | target + overrides                                        |
+| `node` | [`ProjectGraphProjectNode`](../../devkit/documents/index#projectgraphprojectnode)<`any`\> | ProjectGraphProjectNode object that the task runs against |
 
 #### Returns
 
@@ -1422,9 +1422,9 @@ execSync(`${getPackageManagerCommand().addDev} my-dev-package`);
 
 #### Parameters
 
-| Name             | Type                                                  |
-| :--------------- | :---------------------------------------------------- |
-| `packageManager` | [`PackageManager`](../../devkit/index#packagemanager) |
+| Name             | Type                                                            |
+| :--------------- | :-------------------------------------------------------------- |
+| `packageManager` | [`PackageManager`](../../devkit/documents/index#packagemanager) |
 
 #### Returns
 
@@ -1442,9 +1442,9 @@ but it can also be passed in explicitly.
 
 #### Parameters
 
-| Name             | Type                                                  |
-| :--------------- | :---------------------------------------------------- |
-| `packageManager` | [`PackageManager`](../../devkit/index#packagemanager) |
+| Name             | Type                                                            |
+| :--------------- | :-------------------------------------------------------------- |
+| `packageManager` | [`PackageManager`](../../devkit/documents/index#packagemanager) |
 
 #### Returns
 
@@ -1454,21 +1454,21 @@ but it can also be passed in explicitly.
 
 ### getProjects
 
-▸ **getProjects**(`tree`): `Map`<`string`, [`ProjectConfiguration`](../../devkit/index#projectconfiguration)\>
+▸ **getProjects**(`tree`): `Map`<`string`, [`ProjectConfiguration`](../../devkit/documents/index#projectconfiguration)\>
 
 Get a map of all projects in a workspace.
 
-Use [readProjectConfiguration](../../devkit/index#readprojectconfiguration) if only one project is needed.
+Use [readProjectConfiguration](../../devkit/documents/index#readprojectconfiguration) if only one project is needed.
 
 #### Parameters
 
-| Name   | Type                              |
-| :----- | :-------------------------------- |
-| `tree` | [`Tree`](../../devkit/index#tree) |
+| Name   | Type                                        |
+| :----- | :------------------------------------------ |
+| `tree` | [`Tree`](../../devkit/documents/index#tree) |
 
 #### Returns
 
-`Map`<`string`, [`ProjectConfiguration`](../../devkit/index#projectconfiguration)\>
+`Map`<`string`, [`ProjectConfiguration`](../../devkit/documents/index#projectconfiguration)\>
 
 ---
 
@@ -1487,9 +1487,9 @@ Example:
 
 #### Parameters
 
-| Name   | Type                              | Description      |
-| :----- | :-------------------------------- | :--------------- |
-| `tree` | [`Tree`](../../devkit/index#tree) | file system tree |
+| Name   | Type                                        | Description      |
+| :----- | :------------------------------------------ | :--------------- |
+| `tree` | [`Tree`](../../devkit/documents/index#tree) | file system tree |
 
 #### Returns
 
@@ -1510,9 +1510,9 @@ Example:
 
 #### Parameters
 
-| Name   | Type                              |
-| :----- | :-------------------------------- |
-| `tree` | [`Tree`](../../devkit/index#tree) |
+| Name   | Type                                        |
+| :----- | :------------------------------------------ |
+| `tree` | [`Tree`](../../devkit/documents/index#tree) |
 
 #### Returns
 
@@ -1529,12 +1529,12 @@ Runs `npm install` or `yarn install`. It will skip running the install if
 
 #### Parameters
 
-| Name             | Type                                                  | Default value | Description                                                   |
-| :--------------- | :---------------------------------------------------- | :------------ | :------------------------------------------------------------ |
-| `tree`           | [`Tree`](../../devkit/index#tree)                     | `undefined`   | the file system tree                                          |
-| `alwaysRun`      | `boolean`                                             | `false`       | always run the command even if `package.json` hasn't changed. |
-| `cwd`            | `string`                                              | `''`          | -                                                             |
-| `packageManager` | [`PackageManager`](../../devkit/index#packagemanager) | `undefined`   | -                                                             |
+| Name             | Type                                                            | Default value | Description                                                   |
+| :--------------- | :-------------------------------------------------------------- | :------------ | :------------------------------------------------------------ |
+| `tree`           | [`Tree`](../../devkit/documents/index#tree)                     | `undefined`   | the file system tree                                          |
+| `alwaysRun`      | `boolean`                                                       | `false`       | always run the command even if `package.json` hasn't changed. |
+| `cwd`            | `string`                                                        | `''`          | -                                                             |
+| `packageManager` | [`PackageManager`](../../devkit/documents/index#packagemanager) | `undefined`   | -                                                             |
 
 #### Returns
 
@@ -1550,10 +1550,10 @@ Returns if a project has a standalone configuration (project.json).
 
 #### Parameters
 
-| Name      | Type                              | Description          |
-| :-------- | :-------------------------------- | :------------------- |
-| `tree`    | [`Tree`](../../devkit/index#tree) | the file system tree |
-| `project` | `string`                          | the project name     |
+| Name      | Type                                        | Description          |
+| :-------- | :------------------------------------------ | :------------------- |
+| `tree`    | [`Tree`](../../devkit/documents/index#tree) | the file system tree |
+| `project` | `string`                                    | the project name     |
 
 #### Returns
 
@@ -1588,11 +1588,11 @@ Federation.
 
 #### Parameters
 
-| Name                 | Type                                    | Description                                              |
-| :------------------- | :-------------------------------------- | :------------------------------------------------------- |
-| `remotes`            | [`Remotes`](../../devkit/index#remotes) | The remotes to map                                       |
-| `remoteEntryExt`     | `"js"` \| `"mjs"`                       | The file extension of the remoteEntry file               |
-| `determineRemoteUrl` | (`remote`: `string`) => `string`        | The function used to lookup the URL of the served remote |
+| Name                 | Type                                              | Description                                              |
+| :------------------- | :------------------------------------------------ | :------------------------------------------------------- |
+| `remotes`            | [`Remotes`](../../devkit/documents/index#remotes) | The remotes to map                                       |
+| `remoteEntryExt`     | `"js"` \| `"mjs"`                                 | The file extension of the remoteEntry file               |
+| `determineRemoteUrl` | (`remote`: `string`) => `string`                  | The function used to lookup the URL of the served remote |
 
 #### Returns
 
@@ -1609,11 +1609,11 @@ Federation.
 
 #### Parameters
 
-| Name                 | Type                                    | Description                                              |
-| :------------------- | :-------------------------------------- | :------------------------------------------------------- |
-| `remotes`            | [`Remotes`](../../devkit/index#remotes) | The remotes to map                                       |
-| `remoteEntryExt`     | `"js"` \| `"mjs"`                       | The file extension of the remoteEntry file               |
-| `determineRemoteUrl` | (`remote`: `string`) => `string`        | The function used to lookup the URL of the served remote |
+| Name                 | Type                                              | Description                                              |
+| :------------------- | :------------------------------------------------ | :------------------------------------------------------- |
+| `remotes`            | [`Remotes`](../../devkit/documents/index#remotes) | The remotes to map                                       |
+| `remoteEntryExt`     | `"js"` \| `"mjs"`                                 | The file extension of the remoteEntry file               |
+| `determineRemoteUrl` | (`remote`: `string`) => `string`                  | The function used to lookup the URL of the served remote |
 
 #### Returns
 
@@ -1629,11 +1629,11 @@ Analogous to cp -r oldDir newDir
 
 #### Parameters
 
-| Name     | Type                              |
-| :------- | :-------------------------------- |
-| `tree`   | [`Tree`](../../devkit/index#tree) |
-| `oldDir` | `string`                          |
-| `newDir` | `string`                          |
+| Name     | Type                                        |
+| :------- | :------------------------------------------ |
+| `tree`   | [`Tree`](../../devkit/documents/index#tree) |
+| `oldDir` | `string`                                    |
+| `newDir` | `string`                                    |
 
 #### Returns
 
@@ -1732,10 +1732,10 @@ By default javascript-style comments are allowed.
 
 #### Parameters
 
-| Name       | Type                                                      | Description            |
-| :--------- | :-------------------------------------------------------- | :--------------------- |
-| `input`    | `string`                                                  | JSON content as string |
-| `options?` | [`JsonParseOptions`](../../devkit/index#jsonparseoptions) | JSON parse options     |
+| Name       | Type                                                                | Description            |
+| :--------- | :------------------------------------------------------------------ | :--------------------- |
+| `input`    | `string`                                                            | JSON content as string |
+| `options?` | [`JsonParseOptions`](../../devkit/documents/index#jsonparseoptions) | JSON parse options     |
 
 #### Returns
 
@@ -1747,7 +1747,7 @@ Object the JSON content represents
 
 ### parseTargetString
 
-▸ **parseTargetString**(`targetString`): [`Target`](../../devkit/index#target)
+▸ **parseTargetString**(`targetString`): [`Target`](../../devkit/documents/index#target)
 
 Parses a target string into {project, target, configuration}
 
@@ -1766,25 +1766,25 @@ parseTargetString('proj:test:production'); // returns { project: "proj", target:
 
 #### Returns
 
-[`Target`](../../devkit/index#target)
+[`Target`](../../devkit/documents/index#target)
 
 ---
 
 ### readAllWorkspaceConfiguration
 
-▸ **readAllWorkspaceConfiguration**(): [`ProjectsConfigurations`](../../devkit/index#projectsconfigurations) & [`NxJsonConfiguration`](../../devkit/index#nxjsonconfiguration)
+▸ **readAllWorkspaceConfiguration**(): [`ProjectsConfigurations`](../../devkit/documents/index#projectsconfigurations) & [`NxJsonConfiguration`](../../devkit/documents/index#nxjsonconfiguration)
 
 **`deprecated`** Use readProjectsConfigurationFromProjectGraph(await createProjectGraphAsync())
 
 #### Returns
 
-[`ProjectsConfigurations`](../../devkit/index#projectsconfigurations) & [`NxJsonConfiguration`](../../devkit/index#nxjsonconfiguration)
+[`ProjectsConfigurations`](../../devkit/documents/index#projectsconfigurations) & [`NxJsonConfiguration`](../../devkit/documents/index#nxjsonconfiguration)
 
 ---
 
 ### readCachedProjectGraph
 
-▸ **readCachedProjectGraph**(): [`ProjectGraph`](../../devkit/index#projectgraph)<[`ProjectConfiguration`](../../devkit/index#projectconfiguration)\>
+▸ **readCachedProjectGraph**(): [`ProjectGraph`](../../devkit/documents/index#projectgraph)<[`ProjectConfiguration`](../../devkit/documents/index#projectconfiguration)\>
 
 Synchronously reads the latest cached copy of the workspace's ProjectGraph.
 
@@ -1792,7 +1792,7 @@ Synchronously reads the latest cached copy of the workspace's ProjectGraph.
 
 #### Returns
 
-[`ProjectGraph`](../../devkit/index#projectgraph)<[`ProjectConfiguration`](../../devkit/index#projectconfiguration)\>
+[`ProjectGraph`](../../devkit/documents/index#projectgraph)<[`ProjectConfiguration`](../../devkit/documents/index#projectconfiguration)\>
 
 ---
 
@@ -1810,11 +1810,11 @@ Reads a json file, removes all comments and parses JSON.
 
 #### Parameters
 
-| Name       | Type                                                      | Description                 |
-| :--------- | :-------------------------------------------------------- | :-------------------------- |
-| `tree`     | [`Tree`](../../devkit/index#tree)                         | file system tree            |
-| `path`     | `string`                                                  | file path                   |
-| `options?` | [`JsonParseOptions`](../../devkit/index#jsonparseoptions) | Optional JSON Parse Options |
+| Name       | Type                                                                | Description                 |
+| :--------- | :------------------------------------------------------------------ | :-------------------------- |
+| `tree`     | [`Tree`](../../devkit/documents/index#tree)                         | file system tree            |
+| `path`     | `string`                                                            | file path                   |
+| `options?` | [`JsonParseOptions`](../../devkit/documents/index#jsonparseoptions) | Optional JSON Parse Options |
 
 #### Returns
 
@@ -1851,17 +1851,17 @@ Object the JSON content of the file represents
 
 ### readNxJson
 
-▸ **readNxJson**(): [`NxJsonConfiguration`](../../devkit/index#nxjsonconfiguration)
+▸ **readNxJson**(): [`NxJsonConfiguration`](../../devkit/documents/index#nxjsonconfiguration)
 
 #### Returns
 
-[`NxJsonConfiguration`](../../devkit/index#nxjsonconfiguration)
+[`NxJsonConfiguration`](../../devkit/documents/index#nxjsonconfiguration)
 
 ---
 
 ### readProjectConfiguration
 
-▸ **readProjectConfiguration**(`tree`, `projectName`): [`ProjectConfiguration`](../../devkit/index#projectconfiguration)
+▸ **readProjectConfiguration**(`tree`, `projectName`): [`ProjectConfiguration`](../../devkit/documents/index#projectconfiguration)
 
 Reads a project configuration.
 
@@ -1872,14 +1872,14 @@ The utility will read from either file.
 
 #### Parameters
 
-| Name          | Type                              | Description                                                             |
-| :------------ | :-------------------------------- | :---------------------------------------------------------------------- |
-| `tree`        | [`Tree`](../../devkit/index#tree) | the file system tree                                                    |
-| `projectName` | `string`                          | unique name. Often directories are part of the name (e.g., mydir-mylib) |
+| Name          | Type                                        | Description                                                             |
+| :------------ | :------------------------------------------ | :---------------------------------------------------------------------- |
+| `tree`        | [`Tree`](../../devkit/documents/index#tree) | the file system tree                                                    |
+| `projectName` | `string`                                    | unique name. Often directories are part of the name (e.g., mydir-mylib) |
 
 #### Returns
 
-[`ProjectConfiguration`](../../devkit/index#projectconfiguration)
+[`ProjectConfiguration`](../../devkit/documents/index#projectconfiguration)
 
 ---
 
@@ -1914,10 +1914,10 @@ Works as if you invoked the target yourself without passing any command lint ove
 
 #### Parameters
 
-| Name                | Type                                                    |
-| :------------------ | :------------------------------------------------------ |
-| `__namedParameters` | [`Target`](../../devkit/index#target)                   |
-| `context`           | [`ExecutorContext`](../../devkit/index#executorcontext) |
+| Name                | Type                                                              |
+| :------------------ | :---------------------------------------------------------------- |
+| `__namedParameters` | [`Target`](../../devkit/documents/index#target)                   |
+| `context`           | [`ExecutorContext`](../../devkit/documents/index#executorcontext) |
 
 #### Returns
 
@@ -1927,27 +1927,27 @@ Works as if you invoked the target yourself without passing any command lint ove
 
 ### readWorkspaceConfiguration
 
-▸ **readWorkspaceConfiguration**(`tree`): [`WorkspaceConfiguration`](../../devkit/index#workspaceconfiguration)
+▸ **readWorkspaceConfiguration**(`tree`): [`WorkspaceConfiguration`](../../devkit/documents/index#workspaceconfiguration)
 
 Read general workspace configuration such as the default project or cli settings
 
-This does _not_ provide projects configuration, use [readProjectConfiguration](../../devkit/index#readprojectconfiguration) instead.
+This does _not_ provide projects configuration, use [readProjectConfiguration](../../devkit/documents/index#readprojectconfiguration) instead.
 
 #### Parameters
 
-| Name   | Type                              |
-| :----- | :-------------------------------- |
-| `tree` | [`Tree`](../../devkit/index#tree) |
+| Name   | Type                                        |
+| :----- | :------------------------------------------ |
+| `tree` | [`Tree`](../../devkit/documents/index#tree) |
 
 #### Returns
 
-[`WorkspaceConfiguration`](../../devkit/index#workspaceconfiguration)
+[`WorkspaceConfiguration`](../../devkit/documents/index#workspaceconfiguration)
 
 ---
 
 ### removeDependenciesFromPackageJson
 
-▸ **removeDependenciesFromPackageJson**(`tree`, `dependencies`, `devDependencies`, `packageJsonPath?`): [`GeneratorCallback`](../../devkit/index#generatorcallback)
+▸ **removeDependenciesFromPackageJson**(`tree`, `dependencies`, `devDependencies`, `packageJsonPath?`): [`GeneratorCallback`](../../devkit/documents/index#generatorcallback)
 
 Remove Dependencies and Dev Dependencies from package.json
 
@@ -1961,16 +1961,16 @@ This will **remove** `react` and `jest` from the dependencies and devDependencie
 
 #### Parameters
 
-| Name              | Type                              | Default value    | Description                                                                 |
-| :---------------- | :-------------------------------- | :--------------- | :-------------------------------------------------------------------------- |
-| `tree`            | [`Tree`](../../devkit/index#tree) | `undefined`      | -                                                                           |
-| `dependencies`    | `string`[]                        | `undefined`      | Dependencies to be removed from the dependencies section of package.json    |
-| `devDependencies` | `string`[]                        | `undefined`      | Dependencies to be removed from the devDependencies section of package.json |
-| `packageJsonPath` | `string`                          | `'package.json'` | -                                                                           |
+| Name              | Type                                        | Default value    | Description                                                                 |
+| :---------------- | :------------------------------------------ | :--------------- | :-------------------------------------------------------------------------- |
+| `tree`            | [`Tree`](../../devkit/documents/index#tree) | `undefined`      | -                                                                           |
+| `dependencies`    | `string`[]                                  | `undefined`      | Dependencies to be removed from the dependencies section of package.json    |
+| `devDependencies` | `string`[]                                  | `undefined`      | Dependencies to be removed from the devDependencies section of package.json |
+| `packageJsonPath` | `string`                                    | `'package.json'` | -                                                                           |
 
 #### Returns
 
-[`GeneratorCallback`](../../devkit/index#generatorcallback)
+[`GeneratorCallback`](../../devkit/documents/index#generatorcallback)
 
 Callback to uninstall dependencies only if necessary. undefined is returned if changes are not necessary.
 
@@ -1987,10 +1987,10 @@ The utility will update either file.
 
 #### Parameters
 
-| Name          | Type                              |
-| :------------ | :-------------------------------- |
-| `tree`        | [`Tree`](../../devkit/index#tree) |
-| `projectName` | `string`                          |
+| Name          | Type                                        |
+| :------------ | :------------------------------------------ |
+| `tree`        | [`Tree`](../../devkit/documents/index#tree) |
+| `projectName` | `string`                                    |
 
 #### Returns
 
@@ -2000,7 +2000,7 @@ The utility will update either file.
 
 ### reverse
 
-▸ **reverse**(`graph`): [`ProjectGraph`](../../devkit/index#projectgraph)
+▸ **reverse**(`graph`): [`ProjectGraph`](../../devkit/documents/index#projectgraph)
 
 Returns a new project graph where all the edges are reversed.
 
@@ -2009,13 +2009,13 @@ B will depend on A.
 
 #### Parameters
 
-| Name    | Type                                                      |
-| :------ | :-------------------------------------------------------- |
-| `graph` | [`ProjectGraph`](../../devkit/index#projectgraph)<`any`\> |
+| Name    | Type                                                                |
+| :------ | :------------------------------------------------------------------ |
+| `graph` | [`ProjectGraph`](../../devkit/documents/index#projectgraph)<`any`\> |
 
 #### Returns
 
-[`ProjectGraph`](../../devkit/index#projectgraph)
+[`ProjectGraph`](../../devkit/documents/index#projectgraph)
 
 ---
 
@@ -2059,14 +2059,14 @@ Note that the return value is a promise of an iterator, so you need to await bef
 
 #### Parameters
 
-| Name                               | Type                                                    |
-| :--------------------------------- | :------------------------------------------------------ |
-| `targetDescription`                | `Object`                                                |
-| `targetDescription.configuration?` | `string`                                                |
-| `targetDescription.project`        | `string`                                                |
-| `targetDescription.target`         | `string`                                                |
-| `overrides`                        | `Object`                                                |
-| `context`                          | [`ExecutorContext`](../../devkit/index#executorcontext) |
+| Name                               | Type                                                              |
+| :--------------------------------- | :---------------------------------------------------------------- |
+| `targetDescription`                | `Object`                                                          |
+| `targetDescription.configuration?` | `string`                                                          |
+| `targetDescription.project`        | `string`                                                          |
+| `targetDescription.target`         | `string`                                                          |
+| `overrides`                        | `Object`                                                          |
+| `context`                          | [`ExecutorContext`](../../devkit/documents/index#executorcontext) |
 
 #### Returns
 
@@ -2089,10 +2089,10 @@ By default the JSON string is formatted with a 2 space intendation to be easy re
 
 #### Parameters
 
-| Name       | Type                                                              | Description                               |
-| :--------- | :---------------------------------------------------------------- | :---------------------------------------- |
-| `input`    | `T`                                                               | Object which should be serialized to JSON |
-| `options?` | [`JsonSerializeOptions`](../../devkit/index#jsonserializeoptions) | JSON serialize options                    |
+| Name       | Type                                                                        | Description                               |
+| :--------- | :-------------------------------------------------------------------------- | :---------------------------------------- |
+| `input`    | `T`                                                                         | Object which should be serialized to JSON |
+| `options?` | [`JsonSerializeOptions`](../../devkit/documents/index#jsonserializeoptions) | JSON serialize options                    |
 
 #### Returns
 
@@ -2104,7 +2104,7 @@ the formatted JSON representation of the object
 
 ### sharePackages
 
-▸ **sharePackages**(`packages`): `Record`<`string`, [`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig)\>
+▸ **sharePackages**(`packages`): `Record`<`string`, [`SharedLibraryConfig`](../../devkit/documents/index#sharedlibraryconfig)\>
 
 Create a dictionary of packages and their Module Federation Shared Config
 from an array of package names.
@@ -2120,27 +2120,27 @@ workspace.
 
 #### Returns
 
-`Record`<`string`, [`SharedLibraryConfig`](../../devkit/index#sharedlibraryconfig)\>
+`Record`<`string`, [`SharedLibraryConfig`](../../devkit/documents/index#sharedlibraryconfig)\>
 
 ---
 
 ### shareWorkspaceLibraries
 
-▸ **shareWorkspaceLibraries**(`libraries`, `tsConfigPath?`): [`SharedWorkspaceLibraryConfig`](../../devkit/index#sharedworkspacelibraryconfig)
+▸ **shareWorkspaceLibraries**(`libraries`, `tsConfigPath?`): [`SharedWorkspaceLibraryConfig`](../../devkit/documents/index#sharedworkspacelibraryconfig)
 
 Build an object of functions to be used with the ModuleFederationPlugin to
 share Nx Workspace Libraries between Hosts and Remotes.
 
 #### Parameters
 
-| Name           | Type                                                        | Description                                                                  |
-| :------------- | :---------------------------------------------------------- | :--------------------------------------------------------------------------- |
-| `libraries`    | [`WorkspaceLibrary`](../../devkit/index#workspacelibrary)[] | The Nx Workspace Libraries to share                                          |
-| `tsConfigPath` | `string`                                                    | The path to TS Config File that contains the Path Mappings for the Libraries |
+| Name           | Type                                                                  | Description                                                                  |
+| :------------- | :-------------------------------------------------------------------- | :--------------------------------------------------------------------------- |
+| `libraries`    | [`WorkspaceLibrary`](../../devkit/documents/index#workspacelibrary)[] | The Nx Workspace Libraries to share                                          |
+| `tsConfigPath` | `string`                                                              | The path to TS Config File that contains the Path Mappings for the Libraries |
 
 #### Returns
 
-[`SharedWorkspaceLibraryConfig`](../../devkit/index#sharedworkspacelibraryconfig)
+[`SharedWorkspaceLibraryConfig`](../../devkit/documents/index#sharedworkspacelibraryconfig)
 
 ---
 
@@ -2202,9 +2202,9 @@ Returns a string in the format "project:target[:configuration]" for the target
 
 #### Parameters
 
-| Name     | Type                                  | Description                                                                                                                                                                                                                                     |
-| :------- | :------------------------------------ | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `target` | [`Target`](../../devkit/index#target) | target object Examples: `typescript targetToTargetString({ project: "proj", target: "test" }) // returns "proj:test" targetToTargetString({ project: "proj", target: "test", configuration: "production" }) // returns "proj:test:production" ` |
+| Name     | Type                                            | Description                                                                                                                                                                                                                                     |
+| :------- | :---------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `target` | [`Target`](../../devkit/documents/index#target) | target object Examples: `typescript targetToTargetString({ project: "proj", target: "test" }) // returns "proj:test" targetToTargetString({ project: "proj", target: "test", configuration: "production" }) // returns "proj:test:production" ` |
 
 #### Returns
 
@@ -2220,9 +2220,9 @@ Rename and transpile any new typescript files created to javascript files
 
 #### Parameters
 
-| Name   | Type                              |
-| :----- | :-------------------------------- |
-| `tree` | [`Tree`](../../devkit/index#tree) |
+| Name   | Type                                        |
+| :----- | :------------------------------------------ |
+| `tree` | [`Tree`](../../devkit/documents/index#tree) |
 
 #### Returns
 
@@ -2245,12 +2245,12 @@ Updates a JSON value to the file system tree
 
 #### Parameters
 
-| Name       | Type                                                                                                                          | Description                                                                                          |
-| :--------- | :---------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------- |
-| `tree`     | [`Tree`](../../devkit/index#tree)                                                                                             | File system tree                                                                                     |
-| `path`     | `string`                                                                                                                      | Path of JSON file in the Tree                                                                        |
-| `updater`  | (`value`: `T`) => `U`                                                                                                         | Function that maps the current value of a JSON document to a new value to be written to the document |
-| `options?` | [`JsonParseOptions`](../../devkit/index#jsonparseoptions) & [`JsonSerializeOptions`](../../devkit/index#jsonserializeoptions) | Optional JSON Parse and Serialize Options                                                            |
+| Name       | Type                                                                                                                                              | Description                                                                                          |
+| :--------- | :------------------------------------------------------------------------------------------------------------------------------------------------ | :--------------------------------------------------------------------------------------------------- |
+| `tree`     | [`Tree`](../../devkit/documents/index#tree)                                                                                                       | File system tree                                                                                     |
+| `path`     | `string`                                                                                                                                          | Path of JSON file in the Tree                                                                        |
+| `updater`  | (`value`: `T`) => `U`                                                                                                                             | Function that maps the current value of a JSON document to a new value to be written to the document |
+| `options?` | [`JsonParseOptions`](../../devkit/documents/index#jsonparseoptions) & [`JsonSerializeOptions`](../../devkit/documents/index#jsonserializeoptions) | Optional JSON Parse and Serialize Options                                                            |
 
 #### Returns
 
@@ -2269,11 +2269,11 @@ The utility will update either files.
 
 #### Parameters
 
-| Name                   | Type                                                              | Description                                                             |
-| :--------------------- | :---------------------------------------------------------------- | :---------------------------------------------------------------------- |
-| `tree`                 | [`Tree`](../../devkit/index#tree)                                 | the file system tree                                                    |
-| `projectName`          | `string`                                                          | unique name. Often directories are part of the name (e.g., mydir-mylib) |
-| `projectConfiguration` | [`ProjectConfiguration`](../../devkit/index#projectconfiguration) | project configuration                                                   |
+| Name                   | Type                                                                        | Description                                                             |
+| :--------------------- | :-------------------------------------------------------------------------- | :---------------------------------------------------------------------- |
+| `tree`                 | [`Tree`](../../devkit/documents/index#tree)                                 | the file system tree                                                    |
+| `projectName`          | `string`                                                                    | unique name. Often directories are part of the name (e.g., mydir-mylib) |
+| `projectConfiguration` | [`ProjectConfiguration`](../../devkit/documents/index#projectconfiguration) | project configuration                                                   |
 
 #### Returns
 
@@ -2287,11 +2287,11 @@ The utility will update either files.
 
 #### Parameters
 
-| Name                  | Type                              |
-| :-------------------- | :-------------------------------- |
-| `tree`                | [`Tree`](../../devkit/index#tree) |
-| `options`             | `Object`                          |
-| `options.projectRoot` | `string`                          |
+| Name                  | Type                                        |
+| :-------------------- | :------------------------------------------ |
+| `tree`                | [`Tree`](../../devkit/documents/index#tree) |
+| `options`             | `Object`                                    |
+| `options.projectRoot` | `string`                                    |
 
 #### Returns
 
@@ -2305,14 +2305,14 @@ The utility will update either files.
 
 Update general workspace configuration such as the default project or cli settings.
 
-This does _not_ update projects configuration, use [updateProjectConfiguration](../../devkit/index#updateprojectconfiguration) or [addProjectConfiguration](../../devkit/index#addprojectconfiguration) instead.
+This does _not_ update projects configuration, use [updateProjectConfiguration](../../devkit/documents/index#updateprojectconfiguration) or [addProjectConfiguration](../../devkit/documents/index#addprojectconfiguration) instead.
 
 #### Parameters
 
-| Name              | Type                                                                  |
-| :---------------- | :-------------------------------------------------------------------- |
-| `tree`            | [`Tree`](../../devkit/index#tree)                                     |
-| `workspaceConfig` | [`WorkspaceConfiguration`](../../devkit/index#workspaceconfiguration) |
+| Name              | Type                                                                            |
+| :---------------- | :------------------------------------------------------------------------------ |
+| `tree`            | [`Tree`](../../devkit/documents/index#tree)                                     |
+| `workspaceConfig` | [`WorkspaceConfiguration`](../../devkit/documents/index#workspaceconfiguration) |
 
 #### Returns
 
@@ -2328,11 +2328,11 @@ Utility to act on all files in a tree that are not ignored by git.
 
 #### Parameters
 
-| Name      | Type                              | Default value |
-| :-------- | :-------------------------------- | :------------ |
-| `tree`    | [`Tree`](../../devkit/index#tree) | `undefined`   |
-| `dirPath` | `string`                          | `tree.root`   |
-| `visitor` | (`path`: `string`) => `void`      | `undefined`   |
+| Name      | Type                                        | Default value |
+| :-------- | :------------------------------------------ | :------------ |
+| `tree`    | [`Tree`](../../devkit/documents/index#tree) | `undefined`   |
+| `dirPath` | `string`                                    | `tree.root`   |
+| `visitor` | (`path`: `string`) => `void`                | `undefined`   |
 
 #### Returns
 
@@ -2371,12 +2371,12 @@ Writes a JSON value to the file system tree
 
 #### Parameters
 
-| Name       | Type                                                              | Description                     |
-| :--------- | :---------------------------------------------------------------- | :------------------------------ |
-| `tree`     | [`Tree`](../../devkit/index#tree)                                 | File system tree                |
-| `path`     | `string`                                                          | Path of JSON file in the Tree   |
-| `value`    | `T`                                                               | Serializable value to write     |
-| `options?` | [`JsonSerializeOptions`](../../devkit/index#jsonserializeoptions) | Optional JSON Serialize Options |
+| Name       | Type                                                                        | Description                     |
+| :--------- | :-------------------------------------------------------------------------- | :------------------------------ |
+| `tree`     | [`Tree`](../../devkit/documents/index#tree)                                 | File system tree                |
+| `path`     | `string`                                                                    | Path of JSON file in the Tree   |
+| `value`    | `T`                                                                         | Serializable value to write     |
+| `options?` | [`JsonSerializeOptions`](../../devkit/documents/index#jsonserializeoptions) | Optional JSON Serialize Options |
 
 #### Returns
 
