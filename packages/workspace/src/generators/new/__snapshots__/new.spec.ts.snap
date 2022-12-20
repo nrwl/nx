@@ -15,11 +15,8 @@ Object {
   "name": "my-workspace",
   "private": true,
   "scripts": Object {
-    "build": "nx build",
     "ng": "nx",
     "postinstall": "node ./decorate-angular-cli.js",
-    "start": "nx serve",
-    "test": "nx test",
   },
   "version": "0.0.0",
 }
@@ -37,11 +34,7 @@ Object {
   "license": "MIT",
   "name": "my-workspace",
   "private": true,
-  "scripts": Object {
-    "build": "nx build",
-    "start": "nx serve",
-    "test": "nx test",
-  },
+  "scripts": Object {},
   "version": "0.0.0",
 }
 `;
@@ -59,11 +52,7 @@ Object {
   "license": "MIT",
   "name": "my-workspace",
   "private": true,
-  "scripts": Object {
-    "build": "nx build",
-    "start": "nx serve",
-    "test": "nx test",
-  },
+  "scripts": Object {},
   "version": "0.0.0",
 }
 `;

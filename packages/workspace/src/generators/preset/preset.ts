@@ -140,12 +140,6 @@ async function createPreset(tree: Tree, options: Schema) {
   }
 }
 
-function addPolyfills(host: Tree, polyfillsPath: string, polyfills: string[]) {
-  for (const polyfill of polyfills) {
-    insertStatement(host, polyfillsPath, `import '${polyfill}';\n`);
-  }
-}
-
 function normalizeOptions(options: Schema): Schema {
   options.name = names(options.name).fileName;
   return options;
