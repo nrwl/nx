@@ -25,15 +25,13 @@ describe('Next.js Applications', () => {
   let proj: string;
   let originalEnv: string;
 
-  beforeAll(() => (proj = newProject()));
-
-  afterAll(() => cleanupProject());
-
   beforeEach(() => {
+    proj = newProject();
     originalEnv = process.env.NODE_ENV;
   });
 
   afterEach(() => {
+    cleanupProject();
     process.env.NODE_ENV = originalEnv;
   });
 
