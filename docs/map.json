@@ -1466,12 +1466,12 @@
               "name": "Overview",
               "id": "overview",
               "path": "/packages/workspace",
-              "file": "shared/workspace-plugin"
+              "file": "shared/packages/workspace/workspace-plugin"
             },
             {
               "name": "Nx, NodeJS and Typescript Versions",
               "id": "nx-nodejs-typescript-version-matrix",
-              "file": "shared/nx-compatibility-matrix"
+              "file": "shared/packages/workspace/nx-compatibility-matrix"
             }
           ]
         },
@@ -1484,7 +1484,7 @@
               "id": "overview",
               "name": "Overview",
               "path": "/packages/nx-plugin",
-              "file": "shared/nx-plugin"
+              "file": "shared/packages/nx-plugin/nx-plugin"
             }
           ]
         },
@@ -1514,7 +1514,7 @@
               "name": "Overview",
               "id": "overview",
               "path": "/packages/js",
-              "file": "shared/js-plugin"
+              "file": "shared/packages/js/js-plugin"
             }
           ]
         },
@@ -1527,7 +1527,7 @@
               "name": "Overview",
               "id": "overview",
               "path": "/packages/web",
-              "file": "shared/web-plugin"
+              "file": "shared/packages/web/web-plugin"
             }
           ]
         },
@@ -1540,7 +1540,7 @@
               "name": "Overview",
               "id": "overview",
               "path": "/packages/esbuild",
-              "file": "shared/esbuild-plugin"
+              "file": "shared/packages/esbuild/esbuild-plugin"
             }
           ]
         },
@@ -1553,7 +1553,7 @@
               "name": "Overview",
               "id": "overview",
               "path": "/packages/vite",
-              "file": "shared/vite-plugin"
+              "file": "shared/packages/vite/vite-plugin"
             }
           ]
         },
@@ -1566,12 +1566,12 @@
               "name": "Overview",
               "id": "overview",
               "path": "/packages/angular",
-              "file": "shared/angular-plugin"
+              "file": "shared/packages/angular/angular-plugin"
             },
             {
               "name": "Angular and Nx Version Matrix",
               "id": "angular-nx-version-matrix",
-              "file": "shared/angular-nx-version-matrix",
+              "file": "shared/packages/angular/angular-nx-version-matrix",
               "path": "/angular-nx-version-matrix"
             }
           ]
@@ -1585,7 +1585,7 @@
               "name": "Overview",
               "id": "overview",
               "path": "/packages/react",
-              "file": "shared/react-plugin"
+              "file": "shared/packages/react/react-plugin"
             }
           ]
         },
@@ -1598,7 +1598,7 @@
               "name": "Overview",
               "id": "overview",
               "path": "/packages/jest",
-              "file": "shared/jest-plugin"
+              "file": "shared/packages/jest/jest-plugin"
             }
           ]
         },
@@ -1611,17 +1611,17 @@
               "name": "Overview",
               "id": "overview",
               "path": "/packages/cypress",
-              "file": "shared/cypress-plugin"
+              "file": "shared/packages/cypress/cypress-plugin"
             },
             {
               "name": "Component Testing",
               "id": "cypress-component-testing",
-              "file": "shared/guides/cypress/cypress-component-testing"
+              "file": "shared/packages/cypress/cypress-component-testing"
             },
             {
               "name": "v11 Migration Guide",
               "id": "v11-migration-guide",
-              "file": "shared/guides/cypress/cypress-v11-migration"
+              "file": "shared/packages/cypress/cypress-v11-migration"
             }
           ]
         },
@@ -1634,67 +1634,67 @@
               "id": "overview",
               "name": "Overview Generic",
               "path": "/packages/storybook",
-              "file": "shared/guides/storybook/plugin-overview"
+              "file": "shared/packages/storybook/plugin-overview"
             },
             {
               "id": "overview-react",
               "name": "Set up Storybook for React Projects",
-              "file": "shared/guides/storybook/plugin-react"
+              "file": "shared/packages/storybook/plugin-react"
             },
             {
               "id": "overview-angular",
               "name": "Set up Storybook for Angular Projects",
-              "file": "shared/guides/storybook/plugin-angular"
+              "file": "shared/packages/storybook/plugin-angular"
             },
             {
               "id": "best-practices",
               "name": "Storybook best practices for making the most out of Nx",
-              "file": "shared/guides/storybook/best-practices"
+              "file": "shared/packages/storybook/best-practices"
             },
             {
               "id": "storybook-composition-setup",
               "name": "Setting up Storybook Composition with Nx",
-              "file": "shared/guides/storybook/storybook-composition-setup"
+              "file": "shared/packages/storybook/storybook-composition-setup"
             },
             {
               "id": "angular-storybook-compodoc",
               "name": "Angular: Set up Compodoc for Storybook on Nx",
-              "file": "shared/guides/storybook/angular-storybook-compodoc"
+              "file": "shared/packages/storybook/angular-storybook-compodoc"
             },
             {
               "id": "angular-storybook-targets",
               "name": "Angular: Information about the Storybook targets",
-              "file": "shared/guides/storybook/angular-storybook-targets"
+              "file": "shared/packages/storybook/angular-storybook-targets"
             },
             {
               "id": "angular-configuring-styles",
               "name": "Angular: Configuring styles and preprocessor options",
-              "file": "shared/guides/storybook/angular-configuring-styles"
+              "file": "shared/packages/storybook/angular-configuring-styles"
             },
             {
               "id": "angular-browser-target",
               "name": "Angular: The browserTarget",
-              "file": "shared/guides/storybook/angular-browser-target"
+              "file": "shared/packages/storybook/angular-browser-target"
             },
             {
               "id": "migrate-webpack-final-angular",
               "name": "Angular: Storybook Webpack Migration",
-              "file": "shared/guides/storybook/migrate-webpack-final-angular"
+              "file": "shared/packages/storybook/migrate-webpack-final-angular"
             },
             {
               "id": "upgrade-storybook-v6-angular",
               "name": "Angular: Upgrading to Storybook 6",
-              "file": "shared/guides/storybook/storybook-v6-angular"
+              "file": "shared/packages/storybook/storybook-v6-angular"
             },
             {
               "id": "migrate-webpack-final-react",
               "name": "React: Migrate to the Nrwl React Storybook Preset",
-              "file": "shared/guides/storybook/migrate-webpack-final-react"
+              "file": "shared/packages/storybook/migrate-webpack-final-react"
             },
             {
               "id": "upgrade-storybook-v6-react",
               "name": "React: Upgrading to Storybook 6",
-              "file": "shared/guides/storybook/storybook-v6-react"
+              "file": "shared/packages/storybook/storybook-v6-react"
             }
           ]
         },
@@ -1707,12 +1707,12 @@
               "id": "overview",
               "name": "Overview",
               "path": "/packages/linter",
-              "file": "shared/linter-plugin"
+              "file": "shared/packages/linter/linter-plugin"
             },
             {
               "id": "eslint-plugin-nx",
               "name": "eslint-plugin-nx",
-              "file": "shared/eslint-plugin-nx"
+              "file": "shared/packages/linter/eslint-plugin-nx"
             }
           ]
         },
@@ -1725,7 +1725,7 @@
               "id": "overview",
               "name": "Overview",
               "path": "/packages/eslint-plugin-nx",
-              "file": "shared/eslint-plugin-nx"
+              "file": "shared/packages/linter/eslint-plugin-nx"
             }
           ]
         },
@@ -1738,7 +1738,7 @@
               "id": "overview",
               "name": "Overview",
               "path": "/packages/node",
-              "file": "shared/node-plugin"
+              "file": "shared/packages/node/node-plugin"
             }
           ]
         },
@@ -1751,7 +1751,7 @@
               "id": "overview",
               "name": "Overview",
               "path": "/packages/express",
-              "file": "shared/express-plugin"
+              "file": "shared/packages/express/express-plugin"
             }
           ]
         },
@@ -1764,7 +1764,7 @@
               "id": "overview",
               "name": "Overview",
               "path": "/packages/nest",
-              "file": "shared/nest-plugin"
+              "file": "shared/packages/nest/nest-plugin"
             }
           ]
         },
@@ -1777,7 +1777,7 @@
               "id": "overview",
               "name": "Overview",
               "path": "/packages/next",
-              "file": "shared/next-plugin"
+              "file": "shared/packages/next/next-plugin"
             }
           ]
         },
@@ -1790,7 +1790,7 @@
               "id": "overview",
               "name": "Overview",
               "path": "/packages/detox",
-              "file": "shared/detox-plugin"
+              "file": "shared/packages/detox/detox-plugin"
             }
           ]
         },
@@ -1803,7 +1803,7 @@
               "id": "overview",
               "name": "Overview",
               "path": "/packages/react-native",
-              "file": "shared/react-native-plugin"
+              "file": "shared/packages/react-native/react-native-plugin"
             }
           ]
         }

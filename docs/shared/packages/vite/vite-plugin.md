@@ -168,7 +168,7 @@ If you are using React, you need to use the [`@vitejs/plugin-react` plugin](http
 Add a `vite.config.ts` file to the root of your app. If you are not using React, you can skip adding the `react` plugin, of course.
 
 ```ts
-// eg. apps/my-app/vite.config.ts
+// e.g. apps/my-app/vite.config.ts
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import ViteTsConfigPathsPlugin from 'vite-tsconfig-paths';
@@ -193,7 +193,7 @@ In that config file, you can configure Vite.js as you would normally do. For mor
 
 You can create a `vite.config.ts` file to the root of your workspace, as well as at the root of each of your applications. This file is used to configure Vite. You can read more about the configuration options in the [Vite documentation](https://vitejs.dev/config/).
 
-The root `vite.config.ts` file can be used for all applications, and you can place in there general configurations that would apply for all your apps using Vite in your workspace. The application-specific `vite.config.ts` files can be used to override the root configuration, or, for example, import framework-specific plugins (eg. the `'@vitejs/plugin-react'` for React apps). The application-specific configuration files extend (using [`mergeConfig`](https://vitejs.dev/guide/api-javascript.html#mergeconfig)) the root configuration file. You can adjust this behavior to your needs.
+The root `vite.config.ts` file can be used for all applications, and you can place in here general configurations that would apply for all your apps using Vite in your workspace. The application-specific `vite.config.ts` files can be used to override the root configuration, or, for example, import framework-specific plugins (e.g. the `'@vitejs/plugin-react'` for React apps). The application-specific configuration files extend (using [`mergeConfig`](https://vitejs.dev/guide/api-javascript.html#mergeconfig)) the root configuration file. You can adjust this behavior to your needs.
 
 So, if you are using a root `vite.config.ts` file, you should adjust your code as follows:
 
@@ -209,7 +209,7 @@ export default defineConfig({
 and then in your app's `vite.config.ts` file:
 
 ```ts
-// eg. apps/my-app/vite.config.ts
+// e.g. apps/my-app/vite.config.ts
 import { mergeConfig } from 'vite';
 import baseConfig from '../../vite.config';
 import react from '@vitejs/plugin-react';
@@ -227,7 +227,7 @@ export default mergeConfig(baseConfig, {
 
 ### 3. Move `index.html` and point it to your app's entrypoint
 
-First of all, move your `index.html` file to the root of your app (eg. from `apps/my-app/src/index.html` to `apps/my-app/index.html`).
+First of all, move your `index.html` file to the root of your app (e.g. from `apps/my-app/src/index.html` to `apps/my-app/index.html`).
 
 Then, add a module `script` tag pointing to the `main.tsx` (or `main.ts`) file of your app:
 
@@ -268,7 +268,7 @@ You can use the `public` folder to store static **assets**, such as images, font
 
 ### 5. Adjust your app's tsconfig.json
 
-Change your app's `tsconfig.json` (eg. `apps/my-app/tsconfig.json`) `compilerOptions` to the following:
+Change your app's `tsconfig.json` (e.g. `apps/my-app/tsconfig.json`) `compilerOptions` to the following:
 
 #### For React apps
 
