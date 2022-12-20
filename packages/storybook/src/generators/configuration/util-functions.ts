@@ -1,10 +1,10 @@
 import {
+  createProjectGraphAsync,
   generateFiles,
   joinPathFragments,
   logger,
   offsetFromRoot,
   parseTargetString,
-  readCachedProjectGraph,
   readJson,
   readProjectConfiguration,
   readWorkspaceConfiguration,
@@ -537,11 +537,12 @@ export function rootFileIsTs(
   }
 }
 
-export function getE2EProjectName(
+export async function getE2EProjectName(
   tree: Tree,
   mainProject: string
-): string | undefined {
+): Promise<string | undefined> {
   let e2eProject: string;
+  const graph = await createProjectGraphAsync();
   forEachExecutorOptions(
     tree,
     '@nrwl/cypress:cypress',
@@ -552,7 +553,7 @@ export function getE2EProjectName(
       if (options['devServerTarget']) {
         const { project, target } = parseTargetString(
           options['devServerTarget'],
-          readCachedProjectGraph()
+          graph
         );
         if (
           (project === mainProject && target === 'serve') ||

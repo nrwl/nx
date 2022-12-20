@@ -1,7 +1,7 @@
 import {
+  createProjectGraphAsync,
   getProjects,
   parseTargetString,
-  readCachedProjectGraph,
   TargetConfiguration,
   Tree,
 } from '@nrwl/devkit';
@@ -14,11 +14,12 @@ import { Schema } from '../schema';
  *
  * @param schema The options provided to the schematic
  */
-export function checkTargets(tree: Tree, schema: Schema) {
+export async function checkTargets(tree: Tree, schema: Schema) {
   if (schema.forceRemove) {
     return;
   }
 
+  const graph = await createProjectGraphAsync();
   const errors: string[] = [];
 
   getProjects(tree).forEach((projectConfig, projectName) => {
@@ -28,10 +29,7 @@ export function checkTargets(tree: Tree, schema: Schema) {
     Object.entries(projectConfig.targets || {}).forEach(([, targetConfig]) => {
       checkIfProjectIsUsed(targetConfig, (value) => {
         try {
-          const { project } = parseTargetString(
-            value,
-            readCachedProjectGraph()
-          );
+          const { project } = parseTargetString(value, graph);
           if (project === schema.projectName) {
             errors.push(`"${value}" is used by "${projectName}"`);
           }

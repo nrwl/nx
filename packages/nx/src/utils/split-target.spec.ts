@@ -1,5 +1,4 @@
-import { ProjectGraphProjectNode } from '@nrwl/nx-cloud/lib/core/models/run-context.model';
-import { ProjectGraph } from '../config/project-graph';
+import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { ProjectGraphBuilder } from '../project-graph/project-graph-builder';
 import { splitTarget } from './split-target';
@@ -18,22 +17,27 @@ const cases = [
   },
 ];
 
-const projectGraph = new ProjectGraphBuilder()
-  .addNode<ProjectGraphProjectNode<ProjectConfiguration>>({
-    name: 'project',
-    data: {
-      files: [],
-      root: '',
-      targets: {
-        target: {},
-        'target:target': {},
-      },
-    },
-    type: 'app',
-  })
-  .getUpdatedProjectGraph();
+let projectGraph: ProjectGraph;
 
 describe('splitTarget', () => {
+  beforeAll(() => {
+    let builder = new ProjectGraphBuilder();
+    builder.addNode<ProjectGraphProjectNode<ProjectConfiguration>>({
+      name: 'project',
+      data: {
+        files: [],
+        root: '',
+        targets: {
+          target: {},
+          'target:target': {},
+        },
+      },
+      type: 'app',
+    });
+
+    projectGraph = builder.getUpdatedProjectGraph();
+  });
+
   it.each(cases)('$input -> $expected', ({ input, expected }) => {
     expect(splitTarget(input, projectGraph)).toEqual(expected);
   });

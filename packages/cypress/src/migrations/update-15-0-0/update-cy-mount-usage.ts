@@ -2,11 +2,11 @@ import { CypressExecutorOptions } from '../../executors/cypress/cypress.impl';
 import { CY_FILE_MATCHER } from '../../utils/ct-helpers';
 import { installedCypressVersion } from '../../utils/cypress-version';
 import {
+  createProjectGraphAsync,
   formatFiles,
   getProjects,
   joinPathFragments,
   parseTargetString,
-  readCachedProjectGraph,
   readJson,
   TargetConfiguration,
   Tree,
@@ -24,6 +24,7 @@ export async function updateCyMountUsage(tree: Tree) {
   }
 
   const projects = getProjects(tree);
+  const graph = await createProjectGraphAsync();
 
   forEachExecutorOptions<CypressExecutorOptions>(
     tree,
@@ -33,10 +34,7 @@ export async function updateCyMountUsage(tree: Tree) {
         return;
       }
 
-      const parsed = parseTargetString(
-        options.devServerTarget,
-        readCachedProjectGraph()
-      );
+      const parsed = parseTargetString(options.devServerTarget, graph);
       if (!parsed?.project || !parsed?.target) {
         return;
       }

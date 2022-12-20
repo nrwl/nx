@@ -1,4 +1,5 @@
 import {
+  createProjectGraphAsync,
   ensurePackage,
   generateFiles,
   joinPathFragments,
@@ -34,7 +35,7 @@ export async function addFiles(
     tree.delete(cypressConfigPath);
   }
 
-  const actualBundler = getBundler(found, tree);
+  const actualBundler = await getBundler(found, tree);
 
   if (options.bundler && options.bundler !== actualBundler) {
     logger.warn(
@@ -77,14 +78,17 @@ export async function addFiles(
   }
 }
 
-function getBundler(found: FoundTarget, tree: Tree): 'vite' | 'webpack' {
+async function getBundler(
+  found: FoundTarget,
+  tree: Tree
+): Promise<'vite' | 'webpack'> {
   if (found.target && found.config?.executor) {
     return found.config.executor === '@nrwl/vite:build' ? 'vite' : 'webpack';
   }
 
   const { target, project } = parseTargetString(
     found.target,
-    readCachedProjectGraph()
+    await createProjectGraphAsync()
   );
   const projectConfig = readProjectConfiguration(tree, project);
   return projectConfig?.targets?.[target]?.executor === '@nrwl/vite:build'
