@@ -231,11 +231,20 @@ function normalizeBuildTargetOptions(
     buildOptions.scripts = [];
     buildOptions.stylePreprocessorOptions = { includePaths: [] };
   }
-  const { root, sourceRoot } =
+
+  const config =
     buildContext.projectGraph.nodes[buildContext.projectName]?.data;
+
+  if (!config.sourceRoot) {
+    logger.warn(stripIndents`Unable to find the 'sourceRoot' in the project configuration.
+Will set 'sourceRoot' to '${config.root}/src'
+Note: this may fail, setting the correct 'sourceRoot' for ${buildContext.projectName} in the project.json file will ensure the correct value is used.`);
+    config.sourceRoot = joinPathFragments(config.root, 'src');
+  }
+
   return {
-    root: joinPathFragments(offset, root),
-    sourceRoot: joinPathFragments(offset, sourceRoot),
+    root: joinPathFragments(offset, config.root),
+    sourceRoot: joinPathFragments(offset, config.sourceRoot),
     buildOptions,
   };
 }
