@@ -165,11 +165,6 @@
       "enum": ["babel", "swc"],
       "default": "babel"
     },
-    "skipDefaultProject": {
-      "description": "Skip setting the project as the default project. When `false` (the default), the project is set as the default project only if there is no default project already set.",
-      "type": "boolean",
-      "default": false
-    },
     "skipPackageJson": {
       "description": "Do not add dependencies to `package.json`.",
       "type": "boolean",

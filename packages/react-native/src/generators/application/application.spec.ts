@@ -25,11 +25,9 @@ describe('app', () => {
       e2eTestRunner: 'none',
       install: false,
     });
-    const workspaceJson = readWorkspaceConfiguration(appTree);
     const projects = getProjects(appTree);
 
     expect(projects.get('my-app').root).toEqual('apps/my-app');
-    expect(workspaceJson.defaultProject).toEqual('my-app');
   });
 
   it('should update nx.json', async () => {
@@ -90,10 +88,8 @@ describe('app', () => {
         install: false,
       });
 
-      const workspaceJson = readWorkspaceConfiguration(appTree);
       const projects = getProjects(appTree);
       expect(projects.get('my-dir-my-app').root).toEqual('apps/my-dir/my-app');
-      expect(workspaceJson.defaultProject).toEqual('my-dir-my-app');
 
       expect(
         appTree.exists('apps/my-dir/my-app-e2e/.detoxrc.json')
@@ -146,12 +142,9 @@ describe('app', () => {
         install: false,
       });
 
-      const workspaceJson = readWorkspaceConfiguration(appTree);
       const projects = getProjects(appTree);
       expect(projects.get('my-app').root).toEqual('apps/my-app');
-      expect(workspaceJson.defaultProject).toEqual('my-app');
 
-      expect(appTree.exists('apps/my-app-e2e/.detoxrc.json')).toBeTruthy();
       const detoxrc = appTree.read('apps/my-app-e2e/.detoxrc.json', 'utf-8');
       // Strip trailing commas
       const detoxrcJson = JSON.parse(

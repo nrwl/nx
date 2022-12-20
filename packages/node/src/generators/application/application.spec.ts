@@ -89,7 +89,6 @@ describe('app', () => {
         },
       });
       expect(workspaceJson.projects['my-node-app-e2e']).toBeUndefined();
-      expect(nxJson.defaultProject).toEqual('my-node-app');
     });
 
     it('should update tags', async () => {
@@ -215,7 +214,6 @@ describe('app', () => {
       });
 
       expect(workspaceJson.projects['my-dir-my-node-app-e2e']).toBeUndefined();
-      expect(nxJson.defaultProject).toEqual('my-dir-my-node-app');
     });
 
     it('should update tags', async () => {

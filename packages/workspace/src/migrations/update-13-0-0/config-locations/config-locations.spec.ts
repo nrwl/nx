@@ -47,7 +47,6 @@ describe('update to v13 config locations', () => {
     expect(nxJson.generators).toEqual({});
     expect(workspaceJson.projects.a.tags).toEqual(['test']);
     expect(workspaceJson.cli).not.toBeDefined();
-    expect(workspaceJson.defaultProject).not.toBeDefined();
   });
 
   describe('v1 workspace', () => {
@@ -91,7 +90,6 @@ describe('update to v13 config locations', () => {
       });
       expect(workspaceJson.projects.a.tags).toEqual(['test']);
       expect(workspaceJson.cli).not.toBeDefined();
-      expect(workspaceJson.defaultProject).not.toBeDefined();
     });
   });
 });
