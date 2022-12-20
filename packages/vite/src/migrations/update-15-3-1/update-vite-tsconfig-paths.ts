@@ -7,6 +7,7 @@ import {
 } from '@nrwl/devkit';
 
 import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
+import { tsquery } from '@phenomnomnominal/tsquery';
 import { findNodes } from 'nx/src/utils/typescript';
 import ts = require('typescript');
 import { normalizeViteConfigFilePathWithTree } from '../../utils/generator-utils';
@@ -27,33 +28,34 @@ function findAllProjectsWithViteConfig(tree: Tree): void {
       options?.['configFile']
     );
     if (viteConfig) {
-      const file = getTsSourceFile(tree, viteConfig);
       const appFileContent = tree.read(viteConfig, 'utf-8');
+      const file = tsquery.ast(appFileContent);
       let newContents = appFileContent;
-      const defineConfig = findNodes(file, [ts.SyntaxKind.CallExpression]);
+      const defineConfig = tsquery.query(
+        file,
+        'CallExpression:has(Identifier[name="defineConfig"])'
+      );
       let startOfProjects, endOfProjects;
-      defineConfig.forEach((node) => {
-        if (node.getText().startsWith('defineConfig')) {
-          node.getChildren().forEach((defineConfigContentNode) => {
-            // Make sure it's the one we are looking for
-            // We cannot assume that it's called tsConfigPaths
-            // So make sure it includes `projects` and `root`
-            if (
-              defineConfigContentNode.getText().includes('projects') &&
-              defineConfigContentNode.getText().includes('root')
-            ) {
-              findNodes(defineConfigContentNode, [
-                ts.SyntaxKind.PropertyAssignment,
-              ]).forEach((nodePA) => {
-                if (nodePA.getText().startsWith('projects')) {
-                  startOfProjects = nodePA.getStart();
-                  endOfProjects = nodePA.getEnd();
-                }
-              });
+
+      defineConfig?.[0]?.getChildren().forEach((defineConfigContentNode) => {
+        // Make sure it's the one we are looking for
+        // We cannot assume that it's called tsConfigPaths
+        // So make sure it includes `projects` and `root`
+        if (
+          defineConfigContentNode.getText().includes('projects') &&
+          defineConfigContentNode.getText().includes('root')
+        ) {
+          findNodes(defineConfigContentNode, [
+            ts.SyntaxKind.PropertyAssignment,
+          ]).forEach((nodePA) => {
+            if (nodePA.getText().startsWith('projects')) {
+              startOfProjects = nodePA.getStart();
+              endOfProjects = nodePA.getEnd();
             }
           });
         }
       });
+
       if (startOfProjects && endOfProjects) {
         newContents = applyChangesToString(newContents, [
           {
@@ -66,20 +68,4 @@ function findAllProjectsWithViteConfig(tree: Tree): void {
       }
     }
   });
-}
-
-export function getTsSourceFile(host: Tree, path: string): ts.SourceFile {
-  const buffer = host.read(path);
-  if (!buffer) {
-    throw new Error(`Could not read TS file (${path}).`);
-  }
-  const content = buffer.toString();
-  const source = ts.createSourceFile(
-    path,
-    content,
-    ts.ScriptTarget.Latest,
-    true
-  );
-
-  return source;
 }
