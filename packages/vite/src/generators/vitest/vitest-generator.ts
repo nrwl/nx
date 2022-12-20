@@ -13,7 +13,7 @@ import {
 import {
   addOrChangeTestTarget,
   findExistingTargetsInProject,
-  writeViteConfig,
+  createOrEditViteConfig,
 } from '../../utils/generator-utils';
 import { VitestGeneratorSchema } from './schema';
 
@@ -44,7 +44,7 @@ export async function vitestGenerator(
   tasks.push(initTask);
 
   if (!schema.skipViteConfig) {
-    writeViteConfig(tree, {
+    createOrEditViteConfig(tree, {
       ...schema,
       includeVitest: true,
     });

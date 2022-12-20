@@ -12,7 +12,7 @@ import {
   addOrChangeServeTarget,
   editTsConfig,
   moveAndEditIndexHtml,
-  writeViteConfig,
+  createOrEditViteConfig,
   handleUnsupportedUserProvidedTargets,
   handleUnknownExecutors,
   UserProvidedTargetName,
@@ -133,7 +133,7 @@ export async function viteConfigurationGenerator(tree: Tree, schema: Schema) {
     addOrChangeServeTarget(tree, schema, serveTargetName);
   }
 
-  writeViteConfig(tree, schema);
+  createOrEditViteConfig(tree, schema);
 
   if (schema.includeVitest) {
     const vitestTask = await vitestGenerator(tree, {
