@@ -34,10 +34,9 @@ describe('dev mode - project graph', () => {
   });
 
   afterEach(() => {
-    // clean up by hiding all projects and clearing text input
-    getDeselectAllButton().click();
-    getTextFilterInput().clear();
+    // confirm each test has cleaned up after itself
     getCheckedProjectItems().should('have.length', 0);
+    getTextFilterReset().should('not.exist');
   });
 
   describe('select projects message', () => {
@@ -50,6 +49,9 @@ describe('dev mode - project graph', () => {
       cy.get('[data-project="cart"]').should('be.visible');
       cy.get('[data-project="cart"]').click({ force: true });
       getSelectProjectsMessage().should('not.exist');
+
+      // cleanup
+      getDeselectAllButton().click({ force: true });
     });
   });
 
@@ -61,6 +63,10 @@ describe('dev mode - project graph', () => {
     it('should show clear button after typing', () => {
       getTextFilterInput().type('cart');
       getTextFilterReset().should('exist');
+
+      // clean up
+      getTextFilterReset().click();
+      getTextFilterReset().should('not.exist');
     });
 
     it('should clear selection on reset', () => {
@@ -89,6 +95,10 @@ describe('dev mode - project graph', () => {
           project.name.includes('cart')
         ).length
       );
+
+      // clean up
+      getTextFilterReset().click();
+      getTextFilterReset().should('not.exist');
     });
 
     it('should filter projects by text after debounce', () => {
@@ -99,6 +109,10 @@ describe('dev mode - project graph', () => {
           project.name.includes('cart')
         ).length
       );
+
+      // cleanup
+      getTextFilterReset().click();
+      getTextFilterReset().should('not.exist');
     });
 
     it('should include projects in path when option is checked', () => {
@@ -111,6 +125,10 @@ describe('dev mode - project graph', () => {
           project.name.includes('cart')
         ).length
       );
+
+      // cleanup
+      getTextFilterReset().click();
+      getTextFilterReset().should('not.exist');
     });
   });
 
@@ -168,6 +186,9 @@ describe('dev mode - project graph', () => {
         'have.length',
         nxExamplesJson.projects.length
       );
+
+      // cleanup
+      getDeselectAllButton().click({ force: true });
     });
   });
 
@@ -208,6 +229,9 @@ describe('dev mode - project graph', () => {
       }).as('getGraph');
       cy.get('[data-cy=project-select]').select('e2e', { force: true });
       cy.wait('@getGraph');
+
+      // clean up
+      getDeselectAllButton().click({ force: true });
     });
   });
 
@@ -219,6 +243,9 @@ describe('dev mode - project graph', () => {
       });
 
       cy.get('[data-project="cart"][data-active="true"]').should('exist');
+
+      // clean up
+      getDeselectAllButton().click({ force: true });
     });
 
     it('should deselect a project by clicking on the project name again', () => {
@@ -248,6 +275,9 @@ describe('dev mode - project graph', () => {
           force: true,
         });
       cy.get('[data-project="cart"][data-active="false"]').should('exist');
+
+      // clean up
+      getDeselectAllButton().click({ force: true });
     });
   });
 
@@ -268,11 +298,17 @@ describe('dev mode - project graph', () => {
         'have.length',
         ['cart', ...dependencies, ...dependents].length
       );
+
+      // clean up
+      getDeselectAllButton().click({ force: true });
     });
 
     it('should url encode projects with special chars', () => {
       getFocusButtonForProject('@scoped/project-a').click({ force: true });
       cy.url().should('include', '%40scoped%2Fproject-a');
+
+      // clean up
+      getDeselectAllButton().click({ force: true });
     });
   });
 
@@ -293,11 +329,17 @@ describe('dev mode - project graph', () => {
       cy.get('[data-project="shared-product-state"]').click({ force: true });
       getToggleAllButtonForFolder('shared/product').click({ force: true });
       getCheckedProjectItems().should('have.length', 4);
+
+      // clean up
+      getDeselectAllButton().click({ force: true });
     });
 
     it('should check all projects in folder if no projects checked yet', () => {
       getToggleAllButtonForFolder('shared').click({ force: true });
       getCheckedProjectItems().should('have.length', 5);
+
+      // clean up
+      getDeselectAllButton().click({ force: true });
     });
 
     it('should uncheck all projects in folder if all projects checked yet', () => {
@@ -305,6 +347,9 @@ describe('dev mode - project graph', () => {
       getCheckedProjectItems().should('have.length', 5);
       getToggleAllButtonForFolder('shared').click({ force: true });
       getCheckedProjectItems().should('have.length', 0);
+
+      // clean up
+      getDeselectAllButton().click({ force: true });
     });
   });
 
@@ -316,6 +361,9 @@ describe('dev mode - project graph', () => {
     it('should be shown when a project is selected', () => {
       cy.get('[data-project="cart"]').click({ force: true });
       getImageDownloadButton().should('not.have.class', 'opacity-0');
+
+      // clean up
+      getDeselectAllButton().click({ force: true });
     });
 
     it('should be hidden when no more projects are selected', () => {
@@ -333,6 +381,9 @@ describe('dev mode - project graph', () => {
       cy.url().should('contain', '/projects/cart');
       cy.reload();
       getUnfocusProjectButton().should('exist');
+
+      // clean up
+      getDeselectAllButton().click({ force: true });
     });
 
     it('should set group by folder', () => {
@@ -375,6 +426,9 @@ describe('dev mode - project graph', () => {
         'have.length',
         nxExamplesJson.projects.length
       );
+
+      // clean up
+      getDeselectAllButton().click({ force: true });
     });
   });
 });
