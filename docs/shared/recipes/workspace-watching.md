@@ -2,6 +2,10 @@
 
 Nx can watch your workspace and execute commands based on project or files changes.
 
+{% callout type="note" title="Nx Versioning" %}
+Workspace watching is available with Nx version 15.4.0 and higher.
+{% /callout %}
+
 Imagine the following project graph with these projects:
 
 {% graph height="450px" %}

@@ -996,6 +996,16 @@
         "tags": ["explore-graph"]
       },
       {
+        "id": "workspace-watching",
+        "name": "Workspace Watching",
+        "description": "",
+        "file": "shared/recipes/workspace-watching",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/other/workspace-watching",
+        "tags": ["workspace-watching"]
+      },
+      {
         "id": "advanced-update",
         "name": "Advanced Update Nx",
         "description": "",
@@ -1299,6 +1309,16 @@
     "isExternal": false,
     "path": "/recipes/other/analyze-source-files",
     "tags": ["explore-graph"]
+  },
+  "/recipes/other/workspace-watching": {
+    "id": "workspace-watching",
+    "name": "Workspace Watching",
+    "description": "",
+    "file": "shared/recipes/workspace-watching",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/other/workspace-watching",
+    "tags": ["workspace-watching"]
   },
   "/recipes/other/advanced-update": {
     "id": "advanced-update",

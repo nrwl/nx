@@ -2454,6 +2454,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Workspace Watching",
+            "path": "/recipes/other/workspace-watching",
+            "id": "workspace-watching",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Advanced Update Nx",
             "path": "/recipes/other/advanced-update",
             "id": "advanced-update",
@@ -2692,6 +2700,14 @@
         "name": "Disable Graph Links Created from Analyzing Source Files",
         "path": "/recipes/other/analyze-source-files",
         "id": "analyze-source-files",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Workspace Watching",
+        "path": "/recipes/other/workspace-watching",
+        "id": "workspace-watching",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
