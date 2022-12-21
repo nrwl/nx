@@ -55,6 +55,16 @@
         "isExternal": false,
         "path": "/nx-cloud/set-up/github",
         "tags": []
+      },
+      {
+        "id": "gitlab",
+        "name": "Enable GitLab MR Integration",
+        "description": "",
+        "file": "nx-cloud/set-up/gitlab",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/set-up/gitlab",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -79,6 +89,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/nx-cloud/set-up/github",
+    "tags": []
+  },
+  "/nx-cloud/set-up/gitlab": {
+    "id": "gitlab",
+    "name": "Enable GitLab MR Integration",
+    "description": "",
+    "file": "nx-cloud/set-up/gitlab",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/set-up/gitlab",
     "tags": []
   },
   "/nx-cloud/account": {

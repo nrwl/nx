@@ -2987,6 +2987,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Enable GitLab MR Integration",
+            "path": "/nx-cloud/set-up/gitlab",
+            "id": "gitlab",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -3003,6 +3011,14 @@
         "name": "Enable GitHub PR Integration",
         "path": "/nx-cloud/set-up/github",
         "id": "github",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Enable GitLab MR Integration",
+        "path": "/nx-cloud/set-up/gitlab",
+        "id": "gitlab",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
