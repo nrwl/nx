@@ -1,4 +1,3 @@
-import { ProjectGraph } from '../../config/project-graph';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { existsSync, readFileSync } from 'fs';
 import {
@@ -6,6 +5,7 @@ import {
   PackageDependency,
   PackageVersions,
 } from './lock-file-type';
+import { ProjectGraphBuilder } from '../../project-graph/project-graph-builder';
 
 export type TransitiveLookupFunctionInput = {
   packageName: string;
@@ -67,21 +67,28 @@ function mapTransitiveDependencies(
     if (versionCache[key]) {
       result.push(versionCache[key]);
     } else {
-      const matchedVersion = versions[`${packageName}@${version}`]
-        ? version
-        : transitiveLookupFn({
-            packageName,
-            parentPackages,
-            versions,
-            version,
-          })?.version;
+      let matchedVersion: string;
+      let isRootVersion: boolean;
+      if (versions[`${packageName}@${version}`]) {
+        matchedVersion = version;
+        isRootVersion = versions[`${packageName}@${version}`].rootVersion;
+      } else {
+        const transitiveLookupResult = transitiveLookupFn({
+          packageName,
+          parentPackages,
+          versions,
+          version,
+        });
+        matchedVersion = transitiveLookupResult?.version;
+        isRootVersion = transitiveLookupResult?.rootVersion;
+      }
 
       // for some peer dependencies, we won't find installed version so we'll just ignore these
       if (matchedVersion) {
         const nodeName = getNodeName(
           packageName,
           matchedVersion,
-          versions[`${packageName}@${matchedVersion}`]?.rootVersion
+          isRootVersion
         );
         result.push(nodeName);
         versionCache[key] = nodeName;
@@ -115,12 +122,11 @@ export function mapExternalNodes(
   lockFileData: LockFileData,
   transitiveLookupFn: TransitiveLookupFunction
 ) {
-  const result: ProjectGraph = {
-    dependencies: {},
-    externalNodes: {},
-    nodes: {},
-  };
+  const builder = new ProjectGraphBuilder();
+
   const versionCache: Record<string, string> = {};
+  const transitiveDepsToTraverse: [string, string, Record<string, string>][] =
+    [];
 
   Object.entries(lockFileData.dependencies).forEach(
     ([packageName, versions]) => {
@@ -128,14 +134,15 @@ export function mapExternalNodes(
         ({ version, rootVersion, dependencies, peerDependencies }) => {
           // save external node
           const nodeName = getNodeName(packageName, version, rootVersion);
-          result.externalNodes[nodeName] = {
+
+          builder.addExternalNode({
             type: 'npm',
             name: nodeName,
             data: {
               version,
               packageName,
             },
-          };
+          });
 
           // combine dependencies and peerDependencies
           const allDependencies =
@@ -147,26 +154,28 @@ export function mapExternalNodes(
               : undefined;
 
           if (allDependencies) {
-            const nodeDependencies = [];
-            const transitiveDeps = mapTransitiveDependencies(
-              [packageName],
-              lockFileData.dependencies,
+            transitiveDepsToTraverse.push([
+              packageName,
+              nodeName,
               allDependencies,
-              versionCache,
-              transitiveLookupFn
-            );
-            transitiveDeps.forEach((target) => {
-              nodeDependencies.push({
-                type: 'static',
-                source: nodeName,
-                target,
-              });
-            });
-            result.dependencies[nodeName] = nodeDependencies;
+            ]);
           }
         }
       );
     }
   );
-  return result;
+  transitiveDepsToTraverse.forEach(([packageName, nodeName, dependencies]) => {
+    const transitiveDeps = mapTransitiveDependencies(
+      [packageName],
+      lockFileData.dependencies,
+      dependencies,
+      versionCache,
+      transitiveLookupFn
+    );
+    transitiveDeps.forEach((target) => {
+      builder.addExternalNodeDependency(nodeName, target);
+    });
+  });
+
+  return builder.getUpdatedProjectGraph();
 }

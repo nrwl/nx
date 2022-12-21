@@ -53,10 +53,6 @@ function traverseExternalNodesDependencies(
 ): Set<string> {
   graph.dependencies[projectName].forEach((d) => {
     const target = graph.externalNodes[d.target];
-    if (!target) {
-      return;
-    }
-
     const targetKey = `${target.data.packageName}@${target.data.version}`;
 
     if (!visited.has(targetKey)) {
