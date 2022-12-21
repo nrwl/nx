@@ -8,6 +8,7 @@ import {
 import { writeJsonFile } from 'nx/src/utils/fileutils';
 import { PackageJson } from 'nx/src/utils/package-json';
 import { NormalizedRollupExecutorOptions } from './normalize';
+import { joinPathFragments } from 'nx/src/utils/path';
 
 export function updatePackageJson(
   options: NormalizedRollupExecutorOptions,

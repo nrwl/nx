@@ -4,13 +4,10 @@ import {
   readJsonFile,
   workspaceLayout,
   workspaceRoot,
-  createPackageJson,
-  createLockFile,
-  writeJsonFile,
 } from '@nrwl/devkit';
 import build from 'next/dist/build';
 import { join, resolve } from 'path';
-import { copySync, existsSync, mkdir, writeFileSync } from 'fs-extra';
+import { copySync, existsSync, mkdir } from 'fs-extra';
 import { gte } from 'semver';
 import { directoryExists } from '@nrwl/workspace/src/utilities/fileutils';
 import {
@@ -20,12 +17,11 @@ import {
 import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-utils';
 
 import { prepareConfig } from '../../utils/config';
-import { updatePackageJson } from './lib/update-package-json';
+import { createPackageJson } from './lib/create-package-json';
 import { createNextConfigFile } from './lib/create-next-config-file';
 import { checkPublicDirectory } from './lib/check-project';
 import { NextBuildBuilderOptions } from '../../utils/types';
 import { PHASE_PRODUCTION_BUILD } from '../../utils/constants';
-import { getLockFileName } from 'nx/src/lock-file/lock-file';
 
 export default async function buildExecutor(
   options: NextBuildBuilderOptions,
@@ -81,21 +77,7 @@ export default async function buildExecutor(
     mkdir(options.outputPath);
   }
 
-  const builtPackageJson = createPackageJson(
-    context.projectName,
-    context.projectGraph,
-    {
-      root: context.root,
-      isProduction: options.includeDevDependenciesInPackageJson, // By default we remove devDependencies since this is a production build.
-    }
-  );
-  updatePackageJson(builtPackageJson, context);
-  const lockFile = createLockFile(builtPackageJson);
-  writeJsonFile(`${options.outputPath}/package.json`, builtPackageJson);
-  writeFileSync(`${options.outputPath}/${getLockFileName()}`, lockFile, {
-    encoding: 'utf-8',
-  });
-
+  await createPackageJson(options, context);
   createNextConfigFile(options, context);
 
   copySync(join(root, 'public'), join(options.outputPath, 'public'));

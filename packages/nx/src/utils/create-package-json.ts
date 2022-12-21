@@ -44,19 +44,18 @@ export function createPackageJson(
     ) {
       // don't store dev dependencies for production
       if (!options.isProduction) {
-        packageJson.devDependencies ??= {};
+        packageJson.devDependencies = packageJson.devDependencies || {};
         packageJson.devDependencies[packageName] = version;
       }
     } else {
       if (!packageJson.peerDependencies?.[packageName]) {
-        packageJson.dependencies ??= {};
+        packageJson.dependencies = packageJson.dependencies || {};
         packageJson.dependencies[packageName] = version;
       }
     }
   });
   Object.entries(npmDeps.peerDependencies).forEach(([packageName, version]) => {
     if (!packageJson.peerDependencies?.[packageName]) {
-      packageJson.dependencies ??= {};
       packageJson.dependencies[packageName] = version;
     }
   });
