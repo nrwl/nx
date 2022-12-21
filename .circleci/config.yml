@@ -108,6 +108,8 @@ commands:
           steps:
             - run:
                 command: sudo apt-get install -y ca-certificates
+            - browser-tools/install-chrome
+            - browser-tools/install-chromedriver
       - node/install:
           # Use LTS version
           node-version: ''
@@ -174,8 +176,6 @@ jobs:
           os: linux
       - nx/set-shas:
           main-branch-name: 'master'
-      - browser-tools/install-chrome
-      - browser-tools/install-chromedriver
       - run: npx nx-cloud start-ci-run --stop-agents-after="e2e"
       - run:
           name: Check Documentation
