@@ -6,6 +6,7 @@ version: 2.1
 orbs:
   nx: nrwl/nx@1.6.1
   node: circleci/node@5.0.2
+  browser-tools: circleci/browser-tools@1.4.0
 
 # -------------------------
 #        DEFAULTS
@@ -173,6 +174,8 @@ jobs:
           os: linux
       - nx/set-shas:
           main-branch-name: 'master'
+      - browser-tools/install-chrome
+      - browser-tools/install-chromedriver
       - run: npx nx-cloud start-ci-run --stop-agents-after="e2e"
       - run:
           name: Check Documentation
