@@ -54,6 +54,7 @@ export function updatePackageJson(
 
   if (options.updateBuildableProjectDepsInPackageJson) {
     packageJson = createPackageJson(context.projectName, context.projectGraph, {
+      target: context.targetName,
       root: context.root,
       // By default we remove devDependencies since this is a production build.
       isProduction: true,

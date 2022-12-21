@@ -1,9 +1,17 @@
 import { readJsonFile } from './fileutils';
 import { sortObjectByKeys } from './object-sort';
-import { ProjectGraph } from '../config/project-graph';
+import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { PackageJson } from './package-json';
 import { existsSync } from 'fs';
 import { workspaceRoot } from './workspace-root';
+import { filterUsingGlobPatterns, getTargetInputs } from '../hasher/hasher';
+import { readNxJson } from '../config/configuration';
+
+interface NpmDeps {
+  readonly dependencies: Record<string, string>;
+  readonly peerDependencies: Record<string, string>;
+  readonly peerDependenciesMeta: Record<string, { optional: boolean }>;
+}
 
 /**
  * Creates a package.json in the output directory for support to install dependencies within containers.
@@ -15,11 +23,42 @@ export function createPackageJson(
   projectName: string,
   graph: ProjectGraph,
   options: {
+    target?: string;
     root?: string;
     isProduction?: boolean;
+    helperDependencies?: string[];
   } = {}
 ): PackageJson {
-  const npmDeps = findAllNpmDeps(projectName, graph);
+  const projectNode = graph.nodes[projectName];
+
+  const { selfInputs, dependencyInputs } = options.target
+    ? getTargetInputs(readNxJson(), projectNode, options.target)
+    : { selfInputs: [], dependencyInputs: [] };
+
+  const npmDeps: NpmDeps = {
+    dependencies: {},
+    peerDependencies: {},
+    peerDependenciesMeta: {},
+  };
+
+  const seen = new Set<string>();
+
+  options.helperDependencies?.forEach((dep) => {
+    seen.add(dep);
+    npmDeps.dependencies[graph.externalNodes[dep].data.packageName] =
+      graph.externalNodes[dep].data.version;
+    recursivelyCollectPeerDependencies(dep, graph, npmDeps, seen);
+  });
+
+  findAllNpmDeps(
+    projectNode,
+    graph,
+    npmDeps,
+    seen,
+    dependencyInputs,
+    selfInputs
+  );
+
   // default package.json if one does not exist
   let packageJson: PackageJson = {
     name: projectName,
@@ -104,64 +143,73 @@ export function createPackageJson(
 }
 
 function findAllNpmDeps(
-  projectName: string,
+  projectNode: ProjectGraphProjectNode,
   graph: ProjectGraph,
-  list: {
-    dependencies: Record<string, string>;
-    peerDependencies: Record<string, string>;
-    peerDependenciesMeta: Record<string, { optional: boolean }>;
-  } = { dependencies: {}, peerDependencies: {}, peerDependenciesMeta: {} },
-  seen = new Set<string>()
-) {
-  const node = graph.externalNodes[projectName];
+  npmDeps: NpmDeps,
+  seen: Set<string>,
+  dependencyPatterns: string[],
+  rootPatterns?: string[]
+): void {
+  if (seen.has(projectNode.name)) return;
 
-  if (seen.has(projectName)) {
-    // if it's in peerDependencies, move it to regular dependencies
-    // since this is a direct dependency of the project
-    if (node && list.peerDependencies[node.data.packageName]) {
-      list.dependencies[node.data.packageName] = node.data.version;
-      delete list.peerDependencies[node.data.packageName];
-    }
-    return list;
-  }
+  seen.add(projectNode.name);
 
-  seen.add(projectName);
+  const projectFiles = filterUsingGlobPatterns(
+    projectNode.data.root,
+    projectNode.data.files,
+    rootPatterns ?? dependencyPatterns
+  );
 
-  if (node) {
-    list.dependencies[node.data.packageName] = node.data.version;
-    recursivelyCollectPeerDependencies(node.name, graph, list, seen);
-  } else {
-    // we are not interested in the dependencies of external projects
-    graph.dependencies[projectName]?.forEach((dep) => {
-      if (dep.type === 'static' || dep.type === 'dynamic') {
-        findAllNpmDeps(dep.target, graph, list, seen);
+  const projectDependencies = new Set<string>();
+
+  projectFiles.forEach((fileData) =>
+    fileData.dependencies?.forEach((dep) => projectDependencies.add(dep.target))
+  );
+
+  for (const dep of projectDependencies) {
+    const node = graph.externalNodes[dep];
+
+    if (seen.has(dep)) {
+      // if it's in peerDependencies, move it to regular dependencies
+      // since this is a direct dependency of the project
+      if (node && npmDeps.peerDependencies[node.data.packageName]) {
+        npmDeps.dependencies[node.data.packageName] = node.data.version;
+        delete npmDeps.peerDependencies[node.data.packageName];
       }
-    });
+    } else {
+      if (node) {
+        seen.add(dep);
+        npmDeps.dependencies[node.data.packageName] = node.data.version;
+        recursivelyCollectPeerDependencies(node.name, graph, npmDeps, seen);
+      } else {
+        findAllNpmDeps(
+          graph.nodes[dep],
+          graph,
+          npmDeps,
+          seen,
+          dependencyPatterns
+        );
+      }
+    }
   }
-
-  return list;
 }
 
 function recursivelyCollectPeerDependencies(
   projectName: string,
   graph: ProjectGraph,
-  list: {
-    dependencies: Record<string, string>;
-    peerDependencies: Record<string, string>;
-    peerDependenciesMeta: Record<string, { optional: boolean }>;
-  },
-  seen = new Set<string>()
+  npmDeps: NpmDeps,
+  seen: Set<string>
 ) {
   const npmPackage = graph.externalNodes[projectName];
   if (!npmPackage) {
-    return list;
+    return npmDeps;
   }
 
   const packageName = npmPackage.data.packageName;
   try {
     const packageJson = require(`${packageName}/package.json`);
     if (!packageJson.peerDependencies) {
-      return list;
+      return npmDeps;
     }
 
     Object.keys(packageJson.peerDependencies)
@@ -171,21 +219,21 @@ function recursivelyCollectPeerDependencies(
       .forEach((node) => {
         if (!seen.has(node.name)) {
           seen.add(node.name);
-          list.peerDependencies[node.data.packageName] = node.data.version;
+          npmDeps.peerDependencies[node.data.packageName] = node.data.version;
           if (
             packageJson.peerDependenciesMeta &&
             packageJson.peerDependenciesMeta[node.data.packageName] &&
             packageJson.peerDependenciesMeta[node.data.packageName].optional
           ) {
-            list.peerDependenciesMeta[node.data.packageName] = {
+            npmDeps.peerDependenciesMeta[node.data.packageName] = {
               optional: true,
             };
           }
-          recursivelyCollectPeerDependencies(node.name, graph, list, seen);
+          recursivelyCollectPeerDependencies(node.name, graph, npmDeps, seen);
         }
       });
-    return list;
+    return npmDeps;
   } catch (e) {
-    return list;
+    return npmDeps;
   }
 }

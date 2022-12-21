@@ -84,6 +84,7 @@ export default async function buildExecutor(
     context.projectName,
     context.projectGraph,
     {
+      target: context.targetName,
       root: context.root,
       isProduction: !options.includeDevDependenciesInPackageJson, // By default we remove devDependencies since this is a production build.
     }
