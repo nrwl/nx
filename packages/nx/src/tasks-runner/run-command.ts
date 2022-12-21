@@ -129,7 +129,7 @@ export async function runCommand(
         projectGraph,
         defaultDependencyConfigs,
         projectNames,
-        [nxArgs.target],
+        nxArgs.targets,
         nxArgs.configuration,
         overrides,
         extraOptions.excludeTaskDependencies
@@ -199,7 +199,6 @@ export async function runCommand(
         {
           initiatingProject:
             nxArgs.outputStyle === 'compact' ? null : initiatingProject,
-          target: nxArgs.target,
           projectGraph,
           nxJson,
           nxArgs,

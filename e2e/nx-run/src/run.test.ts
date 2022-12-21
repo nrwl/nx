@@ -290,7 +290,7 @@ describe('Nx Running Tests', () => {
 
         const output = runCLI(`build ${myapp}`);
         expect(output).toContain(
-          `NX   Running target build for project ${myapp} and 3 task(s) it depends on`
+          `NX   Running target build for project ${myapp} and 3 tasks it depends on`
         );
         expect(output).toContain(myapp);
         expect(output).toContain(mylib1);
@@ -310,7 +310,7 @@ describe('Nx Running Tests', () => {
 
         const output = runCLI(`build ${myapp}`);
         expect(output).toContain(
-          `NX   Running target build for project ${myapp} and 2 task(s) it depends on`
+          `NX   Running target build for project ${myapp} and 2 tasks it depends on`
         );
         expect(output).toContain(myapp);
         expect(output).toContain(mylib1);
@@ -347,7 +347,7 @@ describe('Nx Running Tests', () => {
 
         const output = runCLI(`outside ${myapp}`);
         expect(output).toContain(
-          `NX   Running target outside for project ${myapp} and 1 task(s) it depends on`
+          `NX   Running target outside for project ${myapp} and 1 task it depends on`
         );
 
         removeFile(`one.txt`);
@@ -391,7 +391,7 @@ describe('Nx Running Tests', () => {
       const buildParallel = runCLI(
         `run-many --target=build --projects="${libC},${libB}"`
       );
-      expect(buildParallel).toContain(`Running target build for 2 project(s):`);
+      expect(buildParallel).toContain(`Running target build for 2 projects:`);
       expect(buildParallel).not.toContain(`- ${libA}`);
       expect(buildParallel).toContain(`- ${libB}`);
       expect(buildParallel).toContain(`- ${libC}`);
@@ -401,7 +401,7 @@ describe('Nx Running Tests', () => {
       // testing run many --all starting
       const buildAllParallel = runCLI(`run-many --target=build`);
       expect(buildAllParallel).toContain(
-        `Running target build for 4 project(s):`
+        `Running target build for 4 projects:`
       );
       expect(buildAllParallel).toContain(`- ${appA}`);
       expect(buildAllParallel).toContain(`- ${libA}`);
@@ -415,7 +415,7 @@ describe('Nx Running Tests', () => {
         `run-many --target=build --projects="${libA}"`
       );
       expect(buildWithDeps).toContain(
-        `Running target build for 1 project(s) and 1 task(s) they depend on:`
+        `Running target build for project ${libA} and 1 task it depends on:`
       );
       expect(buildWithDeps).toContain(`- ${libA}`);
       expect(buildWithDeps).toContain(`${libC}`); // build should include libC as dependency
@@ -428,7 +428,7 @@ describe('Nx Running Tests', () => {
         `run-many --target=build --projects="${appA},${libA}" --prod`
       );
       expect(buildConfig).toContain(
-        `Running target build for 2 project(s) and 1 task(s) they depend on:`
+        `Running target build for 2 projects and 1 task they depend on:`
       );
       expect(buildConfig).toContain(`run ${appA}:build:production`);
       expect(buildConfig).toContain(`run ${libA}:build`);
@@ -441,6 +441,19 @@ describe('Nx Running Tests', () => {
       });
       expect(buildWithDaemon).toContain(`Successfully ran target build`);
     }, 1000000);
+
+    it('should run multiple targets', () => {
+      const myapp1 = uniq('myapp');
+      const myapp2 = uniq('myapp');
+      runCLI(`generate @nrwl/web:app ${myapp1}`);
+      runCLI(`generate @nrwl/web:app ${myapp2}`);
+
+      let outputs = runCLI(`run-many -t build test -p ${myapp1} ${myapp2}`);
+      expect(outputs).toContain('Running targets build, test for 2 projects:');
+
+      outputs = runCLI(`run-many -t build test -p=${myapp1},${myapp2}`);
+      expect(outputs).toContain('Running targets build, test for 2 projects:');
+    });
   });
 
   describe('exec', () => {

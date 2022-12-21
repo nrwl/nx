@@ -398,7 +398,9 @@ export function tslibC(): string {
       const fixedStout = runCLI(`lint ${libC} --fix`, {
         silenceError: true,
       });
-      expect(fixedStout).toContain('Successfully ran target lint for project');
+      expect(fixedStout).toContain(
+        `Successfully ran target lint for project ${libC}`
+      );
 
       const fileContent = readFile(`libs/${libC}/src/lib/tslib-c-another.ts`);
       expect(fileContent).toContain(`import { tslibC } from './tslib-c';`);
@@ -424,7 +426,9 @@ export function tslibC(): string {
       const fixedStout = runCLI(`lint ${libB} --fix`, {
         silenceError: true,
       });
-      expect(fixedStout).toContain('Successfully ran target lint for project');
+      expect(fixedStout).toContain(
+        `Successfully ran target lint for project ${libB}`
+      );
 
       const fileContent = readFile(`libs/${libB}/src/lib/tslib-b.ts`);
       expect(fileContent).toContain(

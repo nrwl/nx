@@ -140,7 +140,7 @@ describe('js e2e', () => {
     });
 
     const output = runCLI(`build ${parentLib}`);
-    expect(output).toContain('1 task(s) it depends on');
+    expect(output).toContain('1 task it depends on');
     expect(output).toContain('Done compiling TypeScript files');
 
     updateJson(`libs/${lib}/tsconfig.json`, (json) => {
@@ -226,7 +226,7 @@ describe('js e2e', () => {
     });
 
     const output = runCLI(`build ${parentLib}`);
-    expect(output).toContain('1 task(s) it depends on');
+    expect(output).toContain('1 task it depends on');
     expect(output).toContain('Successfully compiled: 2 files with swc');
 
     updateJson(`libs/${lib}/.lib.swcrc`, (json) => {

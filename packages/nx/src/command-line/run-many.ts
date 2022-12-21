@@ -56,7 +56,7 @@ export function projectsToRun(
   projectGraph: ProjectGraph
 ): ProjectGraphProjectNode[] {
   const selectedProjects = new Map<string, ProjectGraphProjectNode>();
-  const validProjects = runnableForTarget(projectGraph.nodes, nxArgs.target);
+  const validProjects = runnableForTarget(projectGraph.nodes, nxArgs.targets);
   const validProjectNames = Array.from(validProjects.keys());
   const invalidProjects: string[] = [];
 
@@ -122,12 +122,12 @@ export function projectsToRun(
 
 function runnableForTarget(
   projects: Record<string, ProjectGraphProjectNode>,
-  target: string
+  targets: string[]
 ): Set<string> {
   const runnable = new Set<string>();
   for (let projectName in projects) {
     const project = projects[projectName];
-    if (projectHasTarget(project, target)) {
+    if (targets.find((target) => projectHasTarget(project, target))) {
       runnable.add(projectName);
     }
   }

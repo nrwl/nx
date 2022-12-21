@@ -81,11 +81,11 @@ Default: `false`
 
 Rerun the tasks even when the results are available in the cache
 
-### target
+### targets
 
-Type: `string`
+Type: `array`
 
-Task to run for affected projects
+Tasks to run for affected projects
 
 ### verbose
 
