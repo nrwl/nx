@@ -56,18 +56,28 @@ export function createPackageJson(
   });
   Object.entries(npmDeps.peerDependencies).forEach(([packageName, version]) => {
     if (!packageJson.peerDependencies?.[packageName]) {
-      packageJson.dependencies ??= {};
-      packageJson.dependencies[packageName] = version;
+      if (rootPackageJson.dependencies?.[packageName]) {
+        packageJson.dependencies ??= {};
+        packageJson.dependencies[packageName] = version;
+        return;
+      }
+
+      const isOptionalPeer =
+        npmDeps.peerDependenciesMeta[packageName]?.optional;
+      if (!isOptionalPeer) {
+        packageJson.peerDependencies ??= {};
+        packageJson.peerDependencies[packageName] = version;
+      } else if (!options.isProduction) {
+        // add peer optional dependencies if not in production
+        packageJson.peerDependencies ??= {};
+        packageJson.peerDependencies[packageName] = version;
+        packageJson.peerDependenciesMeta ??= {};
+        packageJson.peerDependenciesMeta[packageName] = {
+          optional: true,
+        };
+      }
     }
   });
-  if (options.isProduction && packageJson.peerDependencies) {
-    const mandatoryPeedDeps = filterOptionalPeerDependencies(packageJson);
-    if (mandatoryPeedDeps) {
-      packageJson.peerDependencies = mandatoryPeedDeps;
-    } else {
-      delete packageJson.peerDependencies;
-    }
-  }
 
   packageJson.devDependencies &&= sortObjectByKeys(packageJson.devDependencies);
   packageJson.dependencies &&= sortObjectByKeys(packageJson.dependencies);
@@ -87,7 +97,8 @@ function findAllNpmDeps(
   list: {
     dependencies: Record<string, string>;
     peerDependencies: Record<string, string>;
-  } = { dependencies: {}, peerDependencies: {} },
+    peerDependenciesMeta: Record<string, { optional: boolean }>;
+  } = { dependencies: {}, peerDependencies: {}, peerDependenciesMeta: {} },
   seen = new Set<string>()
 ) {
   const node = graph.externalNodes[projectName];
@@ -125,6 +136,7 @@ function recursivelyCollectPeerDependencies(
   list: {
     dependencies: Record<string, string>;
     peerDependencies: Record<string, string>;
+    peerDependenciesMeta: Record<string, { optional: boolean }>;
   },
   seen = new Set<string>()
 ) {
@@ -145,13 +157,18 @@ function recursivelyCollectPeerDependencies(
       .map((dependency) => graph.externalNodes[dependency])
       .filter(Boolean)
       .forEach((node) => {
-        if (
-          !packageJson.peerDependenciesMeta?.[node.data.packageName]
-            ?.optional &&
-          !seen.has(node.name)
-        ) {
+        if (!seen.has(node.name)) {
           seen.add(node.name);
           list.peerDependencies[node.data.packageName] = node.data.version;
+          if (
+            packageJson.peerDependenciesMeta &&
+            packageJson.peerDependenciesMeta[node.data.packageName] &&
+            packageJson.peerDependenciesMeta[node.data.packageName].optional
+          ) {
+            list.peerDependenciesMeta[node.data.packageName] = {
+              optional: true,
+            };
+          }
           recursivelyCollectPeerDependencies(node.name, graph, list, seen);
         }
       });
