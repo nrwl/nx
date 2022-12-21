@@ -86,7 +86,7 @@ export default async function buildExecutor(
     context.projectGraph,
     {
       root: context.root,
-      isProduction: !options.includeDevDependenciesInPackageJson, // By default we remove devDependencies since this is a production build.
+      isProduction: options.includeDevDependenciesInPackageJson, // By default we remove devDependencies since this is a production build.
     }
   );
   updatePackageJson(builtPackageJson, context);
