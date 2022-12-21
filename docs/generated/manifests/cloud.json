@@ -229,16 +229,6 @@
         "tags": []
       },
       {
-        "id": "github",
-        "name": "Enable Github PR Integration",
-        "description": "",
-        "file": "nx-cloud/private/github",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/nx-cloud/private-cloud/github",
-        "tags": []
-      },
-      {
         "id": "auth-single-admin",
         "name": "Authenticate with a Single Admin",
         "description": "",
@@ -321,16 +311,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/nx-cloud/private-cloud/get-started",
-    "tags": []
-  },
-  "/nx-cloud/private-cloud/github": {
-    "id": "github",
-    "name": "Enable Github PR Integration",
-    "description": "",
-    "file": "nx-cloud/private/github",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/nx-cloud/private-cloud/github",
     "tags": []
   },
   "/nx-cloud/private-cloud/auth-single-admin": {

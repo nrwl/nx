@@ -44,10 +44,6 @@ describe('nx-dev: Nx Cloud section', () => {
       path: '/nx-cloud/private-cloud/get-started',
     },
     {
-      title: 'GitHub PR Integration',
-      path: '/nx-cloud/private-cloud/github',
-    },
-    {
       title: 'Auth (Basic)',
       path: '/nx-cloud/private-cloud/auth-single-admin',
     },

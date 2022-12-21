@@ -3111,14 +3111,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Enable Github PR Integration",
-            "path": "/nx-cloud/private-cloud/github",
-            "id": "github",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Authenticate with a Single Admin",
             "path": "/nx-cloud/private-cloud/auth-single-admin",
             "id": "auth-single-admin",
@@ -3181,14 +3173,6 @@
         "name": "Get Started",
         "path": "/nx-cloud/private-cloud/get-started",
         "id": "get-started",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Enable Github PR Integration",
-        "path": "/nx-cloud/private-cloud/github",
-        "id": "github",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
