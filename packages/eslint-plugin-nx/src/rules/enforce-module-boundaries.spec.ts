@@ -463,6 +463,106 @@ describe('Enforce Module Boundaries (eslint)', () => {
       expect(failures[1].message).toEqual(message);
     });
 
+    it('should not error when importing npm packages matching allowed external imports', () => {
+      const failures = runRule(
+        {
+          depConstraints: [
+            { sourceTag: 'api', allowedExternalImports: ['npm-package'] },
+          ],
+        },
+        `${process.cwd()}/proj/libs/api/src/index.ts`,
+        `
+          import 'npm-package';
+          import('npm-package');
+        `,
+        graph
+      );
+
+      expect(failures.length).toEqual(0);
+    });
+
+    it('should error when importing npm packages not matching allowed external imports', () => {
+      const failures = runRule(
+        {
+          depConstraints: [
+            { sourceTag: 'api', allowedExternalImports: ['npm-package'] },
+          ],
+        },
+        `${process.cwd()}/proj/libs/api/src/index.ts`,
+        `
+          import 'npm-awesome-package';
+          import('npm-awesome-package');
+        `,
+        graph
+      );
+
+      const message =
+        'A project tagged with "api" is not allowed to import the "npm-awesome-package" package';
+      expect(failures.length).toEqual(2);
+      expect(failures[0].message).toEqual(message);
+      expect(failures[1].message).toEqual(message);
+    });
+
+    it('should not error when importing npm packages matching allowed glob pattern', () => {
+      const failures = runRule(
+        {
+          depConstraints: [
+            { sourceTag: 'api', allowedExternalImports: ['npm-awesome-*'] },
+          ],
+        },
+        `${process.cwd()}/proj/libs/api/src/index.ts`,
+        `
+          import 'npm-awesome-package';
+          import('npm-awesome-package');
+        `,
+        graph
+      );
+
+      expect(failures.length).toEqual(0);
+    });
+
+    it('should error when importing npm packages not matching allowed glob pattern', () => {
+      const failures = runRule(
+        {
+          depConstraints: [
+            { sourceTag: 'api', allowedExternalImports: ['npm-awesome-*'] },
+          ],
+        },
+        `${process.cwd()}/proj/libs/api/src/index.ts`,
+        `
+          import 'npm-package';
+          import('npm-package');
+        `,
+        graph
+      );
+
+      const message =
+        'A project tagged with "api" is not allowed to import the "npm-package" package';
+      expect(failures.length).toEqual(2);
+      expect(failures[0].message).toEqual(message);
+      expect(failures[1].message).toEqual(message);
+    });
+
+    it('should error when importing any npm package if none is allowed', () => {
+      const failures = runRule(
+        {
+          depConstraints: [{ sourceTag: 'api', allowedExternalImports: [] }],
+        },
+        `${process.cwd()}/proj/libs/api/src/index.ts`,
+        `
+          import 'npm-package';
+          import('npm-package');
+        `,
+        graph
+      );
+
+      const message =
+        'A project tagged with "api" is not allowed to import the "npm-package" package';
+      expect(failures.length).toEqual(2);
+      expect(failures[0].message).toEqual(message);
+      expect(failures[1].message).toEqual(message);
+    });
+
     it('should error when importing transitive npm packages', () => {
       const failures = runRule(
         {
