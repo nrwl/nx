@@ -40,6 +40,7 @@ export const packagesWeCareAbout = [
   '@nrwl/web',
   '@nrwl/webpack',
   '@nrwl/workspace',
+  '@nrwl/vite',
   'typescript',
 ];
 
