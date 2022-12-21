@@ -161,6 +161,17 @@ export function testTaskRoutes(router: 'hash' | 'browser', routes: string[]) {
 
         getSelectTargetDropdown().should('have.value', 'e2e');
       });
+
+      it('should select all', () => {
+        cy.visit(resolveTasksRoute(router, `${route}/e2e/all`, ''));
+
+        // wait for first graph to finish loading
+        waitForProjectGraph(router);
+        waitForTaskGraphs(router);
+
+        getSelectTargetDropdown().should('have.value', 'e2e');
+        getCheckedProjectItems().should('have.length', 2);
+      });
     });
   });
 }
