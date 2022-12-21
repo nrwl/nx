@@ -12,6 +12,7 @@ export interface RawNxArgs extends NxArgs {
 
 export interface NxArgs {
   target?: string;
+  targets?: string[];
   configuration?: string;
   runner?: string;
   parallel?: number;
@@ -44,6 +45,13 @@ export function splitArgsIntoNxArgsAndOverrides(
   nxArgs: NxArgs;
   overrides: Arguments & { __overrides_unparsed__: string[] };
 } {
+  // this is to lerna case when this function is invoked imperatively
+  if (args['target'] && !args['targets']) {
+    args['targets'] = [args['target']];
+  }
+  delete args['target'];
+  delete args['t'];
+
   if (!args.__overrides_unparsed__ && args._) {
     // required for backwards compatibility
     args.__overrides_unparsed__ = args._;
@@ -75,10 +83,6 @@ export function splitArgsIntoNxArgsAndOverrides(
   if (mode === 'run-many') {
     if (!nxArgs.projects) {
       nxArgs.projects = [];
-    } else {
-      nxArgs.projects = (args.projects as string)
-        .split(',')
-        .map((p: string) => p.trim());
     }
   }
 

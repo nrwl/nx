@@ -129,7 +129,7 @@ describe('Nx Affected and Graph Tests', () => {
       const build = runCLI(
         `affected:build --files="libs/${mylib}/src/index.ts" --parallel`
       );
-      expect(build).toContain(`Running target build for 3 project(s):`);
+      expect(build).toContain(`Running target build for 3 projects:`);
       expect(build).toContain(`- ${myapp}`);
       expect(build).toContain(`- ${mypublishablelib}`);
       expect(build).not.toContain('is not registered with the build command');
@@ -138,7 +138,7 @@ describe('Nx Affected and Graph Tests', () => {
       const buildExcluded = runCLI(
         `affected:build --files="libs/${mylib}/src/index.ts" --exclude ${myapp}`
       );
-      expect(buildExcluded).toContain(`Running target build for 2 project(s):`);
+      expect(buildExcluded).toContain(`Running target build for 2 projects:`);
       expect(buildExcluded).toContain(`- ${mypublishablelib}`);
 
       // test

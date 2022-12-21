@@ -26,21 +26,24 @@ export class ProcessTasks {
   ) {
     for (const projectName of projectNames) {
       for (const target of targets) {
-        const resolvedConfiguration = this.resolveConfiguration(
-          this.projectGraph.nodes[projectName],
-          target,
-          configuration
-        );
-        const id = this.getId(projectName, target, resolvedConfiguration);
-        const task = this.createTask(
-          id,
-          this.projectGraph.nodes[projectName],
-          target,
-          resolvedConfiguration,
-          overrides
-        );
-        this.tasks[task.id] = task;
-        this.dependencies[task.id] = [];
+        const project = this.projectGraph.nodes[projectName];
+        if (targets.length === 1 || project.data.targets[target]) {
+          const resolvedConfiguration = this.resolveConfiguration(
+            project,
+            target,
+            configuration
+          );
+          const id = this.getId(projectName, target, resolvedConfiguration);
+          const task = this.createTask(
+            id,
+            project,
+            target,
+            resolvedConfiguration,
+            overrides
+          );
+          this.tasks[task.id] = task;
+          this.dependencies[task.id] = [];
+        }
       }
     }
 
