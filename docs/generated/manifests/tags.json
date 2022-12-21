@@ -795,6 +795,13 @@
   ],
   "workspace-watching": [
     {
+      "description": "",
+      "file": "shared/recipes/workspace-watching",
+      "id": "workspace-watching",
+      "name": "Workspace Watching",
+      "path": "/recipes/other/workspace-watching"
+    },
+    {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
       "file": "generated/packages/generated/packages/nx/documents/watch",
       "id": "watch",
