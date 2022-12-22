@@ -24,13 +24,14 @@ export interface FileMetadata {
 export interface PackageData {
   description: string;
   documents: {
-    tags: string[];
-    id: string;
-    name: string;
-    itemList: any[];
     content: string;
+    description: string;
     file: string;
+    id: string;
+    itemList: any[];
+    name: string;
     path: string;
+    tags: string[];
   }[];
   executors: SchemaMetadata[];
   generators: SchemaMetadata[];
