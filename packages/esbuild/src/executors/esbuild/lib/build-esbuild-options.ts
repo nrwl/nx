@@ -31,7 +31,9 @@ export function buildEsbuildOptions(
     metafile: options.metafile,
     tsconfig: options.tsConfig,
     format,
-    outExtension: { '.js': getOutExtension(format) },
+    outExtension: {
+      '.js': getOutExtension(format, options),
+    },
   };
 
   if (options.platform === 'browser') {
@@ -47,8 +49,21 @@ export function buildEsbuildOptions(
   return esbuildOptions;
 }
 
-function getOutExtension(format: 'cjs' | 'esm') {
-  return format === 'esm' ? ESM_FILE_EXTENSION : CJS_FILE_EXTENSION;
+function getOutExtension(
+  format: 'cjs' | 'esm',
+  options: EsBuildExecutorOptions
+): string {
+  const userDefinedExt = options.esbuildOptions?.outExtension?.['.js'];
+  // Allow users to change the output extensions from default CJS and ESM extensions.
+  // CJS -> .js
+  // ESM -> .mjs
+  return userDefinedExt === '.js' && format === 'cjs'
+    ? '.js'
+    : userDefinedExt === '.mjs' && format === 'esm'
+    ? '.mjs'
+    : format === 'esm'
+    ? ESM_FILE_EXTENSION
+    : CJS_FILE_EXTENSION;
 }
 
 function getOutfile(
@@ -56,11 +71,11 @@ function getOutfile(
   options: EsBuildExecutorOptions,
   context: ExecutorContext
 ) {
+  const ext = getOutExtension(format, options);
   const candidate = joinPathFragments(
     context.target.options.outputPath,
     options.outputFileName
   );
-  const ext = getOutExtension(format);
   const { dir, name } = parse(candidate);
   return `${dir}/${name}${ext}`;
 }
