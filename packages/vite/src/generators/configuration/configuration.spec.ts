@@ -12,6 +12,7 @@ import {
   mockAngularAppGenerator,
   mockReactAppGenerator,
   mockReactLibNonBuildableJestTestRunnerGenerator,
+  mockReactLibNonBuildableVitestRunnerGenerator,
   mockReactMixedAppGenerator,
   mockUnknownAppGenerator,
   mockWebAppGenerator,
@@ -343,6 +344,30 @@ describe('@nrwl/vite:configuration', () => {
       ).toMatchSnapshot();
 
       expect(tree.read('workspace.json', 'utf-8')).toMatchSnapshot();
+    });
+
+    it('should set up non buildable library which already has vite.config.ts correctly', async () => {
+      const { Confirm } = require('enquirer');
+      const confirmSpy = jest.spyOn(Confirm.prototype, 'run');
+      confirmSpy.mockResolvedValue(true);
+      expect.assertions(2);
+
+      mockReactLibNonBuildableVitestRunnerGenerator(tree);
+
+      try {
+        await viteConfigurationGenerator(tree, {
+          uiFramework: 'react',
+          project: 'react-lib-nonb-vitest',
+          includeVitest: true,
+        });
+        expect(
+          tree.read('libs/react-lib-nonb-vitest/vite.config.ts', 'utf-8')
+        ).toMatchSnapshot();
+
+        expect(tree.read('workspace.json', 'utf-8')).toMatchSnapshot();
+      } catch (e) {
+        throw new Error('Should not throw error');
+      }
     });
   });
 });

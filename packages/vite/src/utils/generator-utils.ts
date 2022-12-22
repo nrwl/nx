@@ -1,6 +1,4 @@
 import {
-  applyChangesToString,
-  ChangeType,
   joinPathFragments,
   logger,
   offsetFromRoot,
@@ -11,13 +9,11 @@ import {
   updateProjectConfiguration,
   writeJson,
 } from '@nrwl/devkit';
-import { findNodes } from 'nx/src/utils/typescript';
-import ts = require('typescript');
 import { ViteBuildExecutorOptions } from '../executors/build/schema';
 import { ViteDevServerExecutorOptions } from '../executors/dev-server/schema';
 import { VitestExecutorOptions } from '../executors/test/schema';
 import { Schema } from '../generators/configuration/schema';
-import { tsquery } from '@phenomnomnominal/tsquery';
+import { ensureBuildOptionsInViteConfig } from './vite-config-edit-utils';
 
 export interface UserProvidedTargetIsUnsupported {
   build?: boolean;
@@ -182,9 +178,6 @@ export function addOrChangeTestTarget(
   target: string
 ) {
   const project = readProjectConfiguration(tree, options.project);
-  const targets = {
-    ...project.targets,
-  };
 
   const testOptions: VitestExecutorOptions = {
     passWithNoTests: true,
@@ -195,23 +188,21 @@ export function addOrChangeTestTarget(
     ),
   };
 
-  if (targets[target]) {
-    targets[target].executor = '@nrwl/vite:test';
-    delete targets[target].options.jestConfig;
+  if (project.targets?.[target]) {
+    project.targets[target].executor = '@nrwl/vite:test';
+    delete project.targets[target].options?.jestConfig;
   } else {
-    targets[target] = {
+    if (!project.targets) {
+      project.targets = {};
+    }
+    project.targets[target] = {
       executor: '@nrwl/vite:test',
       outputs: ['{projectRoot}/coverage'],
       options: testOptions,
     };
   }
 
-  updateProjectConfiguration(tree, options.project, {
-    ...project,
-    targets: {
-      ...targets,
-    },
-  });
+  updateProjectConfiguration(tree, options.project, project);
 }
 
 export function addOrChangeBuildTarget(
@@ -226,23 +217,24 @@ export function addOrChangeBuildTarget(
       project.root != '.' ? project.root : options.project
     ),
   };
-  const targets = {
-    ...project.targets,
-  };
 
-  if (targets[target]) {
-    buildOptions.fileReplacements = targets[target].options?.fileReplacements;
+  if (project.targets?.[target]) {
+    buildOptions.fileReplacements =
+      project.targets[target].options?.fileReplacements;
 
-    if (targets[target].executor === '@nxext/vite:build') {
-      buildOptions.base = targets[target].options?.baseHref;
-      buildOptions.sourcemap = targets[target].options?.sourcemaps;
+    if (project.targets[target].executor === '@nxext/vite:build') {
+      buildOptions.base = project.targets[target].options?.baseHref;
+      buildOptions.sourcemap = project.targets[target].options?.sourcemaps;
     }
-    targets[target].options = {
+    project.targets[target].options = {
       ...buildOptions,
     };
-    targets[target].executor = '@nrwl/vite:build';
+    project.targets[target].executor = '@nrwl/vite:build';
   } else {
-    targets[`${target}`] = {
+    if (!project.targets) {
+      project.targets = {};
+    }
+    project.targets[`${target}`] = {
       executor: '@nrwl/vite:build',
       outputs: ['{options.outputPath}'],
       defaultConfiguration: 'production',
@@ -258,12 +250,7 @@ export function addOrChangeBuildTarget(
     };
   }
 
-  updateProjectConfiguration(tree, options.project, {
-    ...project,
-    targets: {
-      ...targets,
-    },
-  });
+  updateProjectConfiguration(tree, options.project, project);
 }
 
 export function addOrChangeServeTarget(
@@ -277,20 +264,19 @@ export function addOrChangeServeTarget(
     buildTarget: `${options.project}:build`,
   };
 
-  const targets = {
-    ...project.targets,
-  };
-
-  if (targets[target]) {
+  if (project.targets?.[target]) {
     if (target === '@nxext/vite:dev') {
-      serveOptions.proxyConfig = targets[target].options.proxyConfig;
+      serveOptions.proxyConfig = project.targets[target].options.proxyConfig;
     }
-    targets[target].options = {
+    project.targets[target].options = {
       ...serveOptions,
     };
-    targets[target].executor = '@nrwl/vite:dev-server';
+    project.targets[target].executor = '@nrwl/vite:dev-server';
   } else {
-    targets[`${target}`] = {
+    if (!project.targets) {
+      project.targets = {};
+    }
+    project.targets[`${target}`] = {
       executor: '@nrwl/vite:dev-server',
       defaultConfiguration: 'development',
       options: {
@@ -309,12 +295,7 @@ export function addOrChangeServeTarget(
     };
   }
 
-  updateProjectConfiguration(tree, options.project, {
-    ...project,
-    targets: {
-      ...targets,
-    },
-  });
+  updateProjectConfiguration(tree, options.project, project);
 }
 
 export function editTsConfig(tree: Tree, options: Schema) {
@@ -470,47 +451,21 @@ export function createOrEditViteConfig(
       },`
     : ``;
 
-  if (tree.exists(viteConfigPath)) {
-    logger.info(
-      `vite.config.ts already exists for project ${options.project}.`
-    );
-    const buildOptionObject = {
-      lib: {
-        entry: 'src/index.ts',
-        name: options.project,
-        fileName: 'index',
-        formats: ['es', 'cjs'],
-      },
-      rollupOptions: {
-        external: [
-          options.uiFramework === 'react'
-            ? "'react', 'react-dom', 'react/jsx-runtime'"
-            : '',
-        ],
-      },
-    };
-    const changed = ensureBuildOptionsInViteConfig(
-      tree,
-      viteConfigPath,
-      buildOption,
-      buildOptionObject
-    );
+  const dtsPlugin = onlyVitest
+    ? ''
+    : options.includeLib
+    ? `dts({
+      tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
+      // Faster builds by skipping tests. Set this to false to enable type checking.
+      skipDiagnostics: true,
+    }),`
+    : '';
 
-    if (!changed) {
-      logger.warn(
-        `Make sure the following setting exists in your Vite configuration file (${viteConfigPath}):
-        
-        ${buildOption}
-        
-        `
-      );
-    } else {
-      logger.info(`
-      Vite configuration file (${viteConfigPath}) has been updated with the required settings for build.
-      `);
-    }
-    return;
-  }
+  const dtsImportLine = onlyVitest
+    ? ''
+    : options.includeLib
+    ? `import dts from 'vite-plugin-dts';\nimport { join } from 'path';`
+    : '';
 
   let viteConfigContent = '';
 
@@ -529,6 +484,9 @@ export function createOrEditViteConfig(
     }
   },`
     : '';
+  const vitestTypes = options.includeVitest
+    ? `/// <reference types="vitest" />`
+    : '';
 
   const defineOption = options.inSourceTests
     ? `define: {
@@ -536,13 +494,12 @@ export function createOrEditViteConfig(
   },`
     : '';
 
-  const dtsPlugin = onlyVitest
-    ? ''
-    : `dts({
-      tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
-      // Faster builds by skipping tests. Set this to false to enable type checking.
-      skipDiagnostics: true,
-    }),`;
+  const reactPluginImportLine =
+    options.uiFramework === 'react'
+      ? `import react from '@vitejs/plugin-react';`
+      : '';
+
+  const reactPlugin = options.uiFramework === 'react' ? `react(),` : '';
 
   const serverOption = onlyVitest
     ? ''
@@ -554,64 +511,43 @@ export function createOrEditViteConfig(
       host: 'localhost',
     },`;
 
-  switch (options.uiFramework) {
-    case 'react':
-      viteConfigContent = `
-${options.includeVitest ? '/// <reference types="vitest" />' : ''}
-      import { defineConfig } from 'vite';
-      import react from '@vitejs/plugin-react';
-      import viteTsConfigPaths from 'vite-tsconfig-paths';
-      ${
-        onlyVitest
-          ? ''
-          : options.includeLib
-          ? `import dts from 'vite-plugin-dts';\nimport { join } from 'path';`
-          : ''
-      }
-      
-      export default defineConfig({
-        ${serverOption}
-        plugins: [
-          ${options.includeLib ? dtsPlugin : ''}
-          react(),
-          viteTsConfigPaths({
-            root: '${offsetFromRoot(projectConfig.root)}',
-          }),
-        ],
-        ${buildOption}
-        ${defineOption}
-        ${testOption}
-      });`;
-      break;
-    case 'none':
-      viteConfigContent = `
-      ${options.includeVitest ? '/// <reference types="vitest" />' : ''}
-      import { defineConfig } from 'vite';
-      import viteTsConfigPaths from 'vite-tsconfig-paths';
-      ${
-        onlyVitest
-          ? ''
-          : options.includeLib
-          ? `import dts from 'vite-plugin-dts';\nimport { join } from 'path';`
-          : ''
-      }
-      
-      export default defineConfig({
-        ${serverOption}
-        plugins: [
-          ${options.includeLib ? dtsPlugin : ''}
-          viteTsConfigPaths({
-            root: '${offsetFromRoot(projectConfig.root)}',
-          }),
-        ],
-        ${buildOption}
-        ${defineOption}
-        ${testOption}
-      });`;
-      break;
-    default:
-      break;
+  const pluginOption = `
+    plugins: [
+      ${dtsPlugin}
+      ${reactPlugin}
+      viteTsConfigPaths({
+        root: '${offsetFromRoot(projectConfig.root)}',
+      }),
+    ],
+    `;
+
+  if (tree.exists(viteConfigPath)) {
+    handleViteConfigFileExists(
+      tree,
+      viteConfigPath,
+      options,
+      buildOption,
+      dtsPlugin,
+      dtsImportLine,
+      pluginOption
+    );
+    return;
   }
+
+  viteConfigContent = `
+      ${vitestTypes}
+      import { defineConfig } from 'vite';
+      ${reactPluginImportLine}
+      import viteTsConfigPaths from 'vite-tsconfig-paths';
+      ${dtsImportLine}
+      
+      export default defineConfig({
+        ${serverOption}
+        ${pluginOption}
+        ${buildOption}
+        ${defineOption}
+        ${testOption}
+      });`;
 
   tree.write(viteConfigPath, viteConfigContent);
 }
@@ -748,229 +684,52 @@ export async function handleUnknownExecutors() {
   }
 }
 
-export function ensureBuildOptionsInViteConfig(
+function handleViteConfigFileExists(
   tree: Tree,
-  path: string,
-  buildConfigContent?: string,
-  buildConfigObject?: {}
-): boolean {
-  const appFileContent = tree.read(path, 'utf-8');
-  const file = tsquery.ast(appFileContent);
-
-  const buildNode = tsquery.query(
-    file,
-    'PropertyAssignment:has(Identifier[name="build"])'
-  );
-
-  if (buildNode.length) {
-    const newContent = tsquery.replace(
-      file.getText(),
-      'PropertyAssignment:has(Identifier[name="build"])',
-      (node: ts.Node) => {
-        const found = tsquery.query(node, 'ObjectLiteralExpression');
-        return `build: {
-          ...${found?.[0].getText()},
-          ...${JSON.stringify(buildConfigObject)}
-       }`;
-      }
-    );
-    tree.write(path, newContent);
-    return true;
-  } else {
-    const foundDefineConfig = tsquery.query(
-      file,
-      'CallExpression:has(Identifier[name="defineConfig"])'
-    );
-
-    if (foundDefineConfig.length) {
-      const conditionalConfig = tsquery.query(
-        foundDefineConfig[0],
-        'ArrowFunction'
-      );
-
-      if (conditionalConfig.length) {
-        return transformConditionalConfig(
-          tree,
-          conditionalConfig,
-          appFileContent,
-          path,
-          buildConfigContent
-        );
-      } else {
-        const propertyAssignments = tsquery.query(
-          foundDefineConfig[0],
-          'PropertyAssignment'
-        );
-
-        if (propertyAssignments.length) {
-          const newContents = applyChangesToString(appFileContent, [
-            {
-              type: ChangeType.Insert,
-              index: propertyAssignments[0].getStart(),
-              text: buildConfigContent,
-            },
-          ]);
-          tree.write(path, newContents);
-          return true;
-        } else {
-          const newContents = applyChangesToString(appFileContent, [
-            {
-              type: ChangeType.Insert,
-              index: foundDefineConfig[0].getStart() + 14,
-              text: buildConfigContent,
-            },
-          ]);
-          tree.write(path, newContents);
-          return true;
-        }
-      }
-    } else {
-      // build config does not exist and defineConfig is not used
-      // could also potentially be invalid syntax, so try-catch
-      try {
-        const defaultExport = tsquery.query(file, 'ExportAssignment');
-        const found = tsquery?.query(
-          defaultExport?.[0],
-          'ObjectLiteralExpression'
-        );
-        const startOfObject = found?.[0].getStart();
-        const newContents = applyChangesToString(appFileContent, [
-          {
-            type: ChangeType.Insert,
-            index: startOfObject + 1,
-            text: buildConfigContent,
-          },
-        ]);
-        tree.write(path, newContents);
-        return true;
-      } catch {
-        return false;
-      }
-    }
-  }
-}
-
-function transformCurrentBuildObject(
-  tree: Tree,
-  index: number,
-  returnStatements: ts.ReturnStatement[],
-  appFileContent: string,
-  path: string,
-  buildConfigObject: {}
-): boolean {
-  if (!returnStatements?.[index]) {
-    return false;
-  }
-  const currentBuildObject = tsquery
-    .query(returnStatements[index], 'ObjectLiteralExpression')?.[0]
-    .getText();
-
-  const currentBuildObjectStart = returnStatements[index].getStart();
-  const currentBuildObjectEnd = returnStatements[index].getEnd();
-
-  const newReturnObject = tsquery.replace(
-    returnStatements[index].getText(),
-    'ObjectLiteralExpression',
-    (_node: ts.Node) => {
-      return `{
-      ...${currentBuildObject},
-      ...${JSON.stringify(buildConfigObject)}
-   }`;
-    }
-  );
-
-  const newContents = applyChangesToString(appFileContent, [
-    {
-      type: ChangeType.Delete,
-      start: currentBuildObjectStart,
-      length: currentBuildObjectEnd - currentBuildObjectStart,
+  viteConfigPath: string,
+  options: Schema,
+  buildOption: string,
+  dtsPlugin: string,
+  dtsImportLine: string,
+  pluginOption: string
+) {
+  logger.info(`vite.config.ts already exists for project ${options.project}.`);
+  const buildOptionObject = {
+    lib: {
+      entry: 'src/index.ts',
+      name: options.project,
+      fileName: 'index',
+      formats: ['es', 'cjs'],
     },
-    {
-      type: ChangeType.Insert,
-      index: currentBuildObjectStart,
-      text: newReturnObject,
+    rollupOptions: {
+      external: [
+        options.uiFramework === 'react'
+          ? "'react', 'react-dom', 'react/jsx-runtime'"
+          : '',
+      ],
     },
-  ]);
-
-  tree.write(path, newContents);
-  return true;
-}
-
-function transformConditionalConfig(
-  tree: Tree,
-  conditionalConfig: ts.Node[],
-  appFileContent: string,
-  path: string,
-  buildConfigObject: {}
-): boolean {
-  const functionBlock = tsquery.query(conditionalConfig[0], 'Block');
-
-  const ifStatement = tsquery.query(functionBlock?.[0], 'IfStatement');
-
-  const binaryExpressions = tsquery.query(ifStatement?.[0], 'BinaryExpression');
-
-  const buildExists = binaryExpressions?.find(
-    (binaryExpression) => binaryExpression.getText() === `command === 'build'`
+  };
+  const changed = ensureBuildOptionsInViteConfig(
+    tree,
+    viteConfigPath,
+    buildOption,
+    buildOptionObject,
+    dtsPlugin,
+    dtsImportLine,
+    pluginOption
   );
 
-  const buildExistsExpressionIndex = binaryExpressions?.findIndex(
-    (binaryExpression) => binaryExpression.getText() === `command === 'build'`
-  );
-
-  const serveExists = binaryExpressions?.find(
-    (binaryExpression) => binaryExpression.getText() === `command === 'serve'`
-  );
-
-  const elseKeywordExists = findNodes(
-    ifStatement?.[0],
-    ts.SyntaxKind.ElseKeyword
-  );
-  const returnStatements: ts.ReturnStatement[] = tsquery.query(
-    ifStatement[0],
-    'ReturnStatement'
-  );
-
-  if (!buildExists) {
-    if (serveExists && elseKeywordExists) {
-      // build options live inside the else block
-
-      return transformCurrentBuildObject(
-        tree,
-        returnStatements?.length - 1,
-        returnStatements,
-        appFileContent,
-        path,
-        buildConfigObject
-      );
-    } else {
-      // no build options exist yet
-      const functionBlockStart = functionBlock?.[0].getStart();
-      const newContents = applyChangesToString(appFileContent, [
-        {
-          type: ChangeType.Insert,
-          index: functionBlockStart + 1,
-          text: `
-          if (command === 'build') {
-            return ${JSON.stringify(buildConfigObject)}
-          }
-          `,
-        },
-      ]);
-      tree.write(path, newContents);
-      return true;
-    }
-  } else {
-    // build already exists
-    // it will be the return statement which lives
-    // at the buildExistsExpressionIndex
-
-    return transformCurrentBuildObject(
-      tree,
-      buildExistsExpressionIndex,
-      returnStatements,
-      appFileContent,
-      path,
-      buildConfigObject
+  if (!changed) {
+    logger.warn(
+      `Make sure the following setting exists in your Vite configuration file (${viteConfigPath}):
+        
+        ${buildOption}
+        
+        `
     );
+  } else {
+    logger.info(`
+      Vite configuration file (${viteConfigPath}) has been updated with the required settings for build.
+      `);
   }
 }
