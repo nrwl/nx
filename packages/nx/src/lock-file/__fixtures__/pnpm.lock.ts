@@ -5776,7 +5776,7 @@ packages:
 export const lockFileYargsAndDevkit = `lockfileVersion: 5.4
 
 specifiers:
-  '@nrwl/devkit': 15.1.0
+  '@nrwl/devkit': 15.0.13
   yargs: 17.6.2
 
 dependencies:
@@ -6801,5 +6801,28 @@ packages:
 
   /tweetnacl/0.14.5:
     resolution: {integrity: sha512-KXXFFdAbFXY4geFIwoyNK+f5Z1b7swfXABfL7HXCmoIWMKU3dmS26672A4EeQtDzLKy7SXmfBu51JolvEKwtGA==}
+    dev: false
+`;
+
+export const rxjsTslibLockFile = `lockfileVersion: 5.4
+
+specifiers:
+  rxjs: ^7.8.0
+  tslib: ^2.4.1
+
+dependencies:
+  rxjs: 7.8.0
+  tslib: 2.4.1
+
+packages:
+
+  /rxjs/7.8.0:
+    resolution: {integrity: sha512-F2+gxDshqmIub1KdvZkaEfGDwLNpPvk9Fs6LD/MyQxNgMds/WH9OdDDXOmxUZpME+iSK3rQCctkL0DYyytUqMg==}
+    dependencies:
+      tslib: 2.4.1
+    dev: false
+
+  /tslib/2.4.1:
+    resolution: {integrity: sha512-tGyy4dAjRIEwI7BzsB0lynWgOpfqjUdq91XXAlIWD2OwKBH7oCl/GZG/HT4BOHrTlPMOASlMQ7veyTqpmRcrNA==}
     dev: false
 `;

@@ -3,9 +3,9 @@ import {
   PackageDependency,
   PackageVersions,
 } from './utils/lock-file-type';
-import { load, dump } from '@zkochan/js-yaml';
-import { TransitiveLookupFunctionInput, isRootVersion } from './utils/mapping';
-import { hashString, generatePrunnedHash } from './utils/hashing';
+import { dump, load } from '@zkochan/js-yaml';
+import { isRootVersion, TransitiveLookupFunctionInput } from './utils/mapping';
+import { generatePrunnedHash, hashString } from './utils/hashing';
 import { satisfies } from 'semver';
 import { PackageJsonDeps } from './utils/pruning';
 import { sortObjectByKeys } from '../utils/object-sort';
@@ -422,11 +422,11 @@ function pruneDependencies(
 ): LockFileData['dependencies'] {
   const result: LockFileData['dependencies'] = {};
 
-  Object.keys({
+  Object.entries({
     ...normalizedPackageJson.dependencies,
     ...normalizedPackageJson.devDependencies,
     ...normalizedPackageJson.peerDependencies,
-  }).forEach((packageName) => {
+  }).forEach(([packageName, packageVersion]) => {
     if (dependencies[packageName]) {
       const [key, { packageMeta, ...value }] = Object.entries(
         dependencies[packageName]
@@ -446,7 +446,7 @@ function pruneDependencies(
             isDevDependency:
               !!normalizedPackageJson.devDependencies?.[packageName],
             key: meta.key,
-            specifier: value.version,
+            specifier: packageVersion,
             dependencyDetails: meta.dependencyDetails,
           },
         ],
