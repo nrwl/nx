@@ -2,7 +2,10 @@ import { joinPathFragments } from '../utils/path';
 import { readJsonFile, writeJsonFile } from '../utils/fileutils';
 import * as enquirer from 'enquirer';
 import { execSync } from 'child_process';
-import { getPackageManagerCommand } from '../utils/package-manager';
+import {
+  getPackageManagerCommand,
+  PackageManagerCommands,
+} from '../utils/package-manager';
 
 export function askAboutNxCloud() {
   return enquirer
@@ -110,8 +113,10 @@ export function addDepsToPackageJson(repoRoot: string, useCloud: boolean) {
   writeJsonFile(path, json);
 }
 
-export function runInstall(repoRoot: string) {
-  const pmc = getPackageManagerCommand();
+export function runInstall(
+  repoRoot: string,
+  pmc: PackageManagerCommands = getPackageManagerCommand()
+) {
   execSync(pmc.install, { stdio: [0, 1, 2], cwd: repoRoot });
 }
 
