@@ -1,4 +1,4 @@
-import { parseJson, Tree, writeJson } from '@nrwl/devkit';
+import { Tree, writeJson } from '@nrwl/devkit';
 import * as reactAppConfig from './test-files/react-project.config.json';
 import * as reactViteConfig from './test-files/react-vite-project.config.json';
 import * as webAppConfig from './test-files/web-project.config.json';
@@ -90,8 +90,7 @@ export function mockViteReactAppGenerator(tree: Tree): Tree {
 
   tree.write(
     `apps/${appName}/vite.config.ts`,
-    `/// <reference types="vitest" />
-    import { defineConfig } from 'vite';
+    `import { defineConfig } from 'vite';
     import react from '@vitejs/plugin-react';
     import tsconfigPaths from 'vite-tsconfig-paths';
     
@@ -534,9 +533,7 @@ export function mockReactLibNonBuildableVitestRunnerGenerator(
 
   tree.write(
     `libs/${libName}/vite.config.ts`,
-    `
-    /// <reference types="vitest" />
-    import { defineConfig } from 'vite';
+    `import { defineConfig } from 'vite';
     import react from '@vitejs/plugin-react';
     import viteTsConfigPaths from 'vite-tsconfig-paths';
 

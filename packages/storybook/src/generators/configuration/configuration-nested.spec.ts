@@ -36,7 +36,7 @@ describe('@nrwl/storybook:configuration for workspaces with Root project', () =>
           skipLibCheck: true,
           strict: true,
           target: 'ESNext',
-          types: ['vite/client'],
+          types: ['vite/client', 'vitest'],
           useDefineForClassFields: true,
           noImplicitOverride: true,
           noPropertyAccessFromIndexSignature: true,
