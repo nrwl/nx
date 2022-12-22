@@ -42,11 +42,8 @@ const isPackage = (
 export function generateManifests(workspace: string): Promise<void[]> {
   console.log(`${chalk.blue('i')} Generating Manifests`);
   const documentationPath = resolve(workspace, 'docs');
-  const targetFolder: string = resolve(
-    documentationPath,
-    `generated`,
-    'manifests'
-  );
+  const generatedDocumentationPath = resolve(documentationPath, 'generated');
+  const targetFolder: string = resolve(generatedDocumentationPath, 'manifests');
   const documents: Partial<DocumentMetadata>[] = readJsonSync(
     `${documentationPath}/map.json`,
     {
@@ -54,7 +51,7 @@ export function generateManifests(workspace: string): Promise<void[]> {
     }
   ).content;
   const packages: PackageMetadata[] = readJsonSync(
-    `${documentationPath}/packages-metadata.json`,
+    `${generatedDocumentationPath}/packages-metadata.json`,
     {
       encoding: 'utf8',
     }
