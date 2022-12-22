@@ -9,13 +9,15 @@ import { workspaceRoot } from './workspace-root';
  * Creates a package.json in the output directory for support to install dependencies within containers.
  *
  * If a package.json exists in the project, it will reuse that.
+ * If isProduction flag is set, it wil  remove devDependencies and optional peerDependencies
  */
 export function createPackageJson(
   projectName: string,
   graph: ProjectGraph,
   options: {
     root?: string;
-  }
+    isProduction?: boolean;
+  } = {}
 ): PackageJson {
   const npmDeps = findAllNpmDeps(projectName, graph);
   // default package.json if one does not exist
@@ -40,18 +42,40 @@ export function createPackageJson(
       !packageJson.dependencies?.[packageName] &&
       !packageJson.peerDependencies?.[packageName]
     ) {
-      packageJson.devDependencies = packageJson.devDependencies || {};
-      packageJson.devDependencies[packageName] = version;
+      // don't store dev dependencies for production
+      if (!options.isProduction) {
+        packageJson.devDependencies ??= {};
+        packageJson.devDependencies[packageName] = version;
+      }
     } else {
       if (!packageJson.peerDependencies?.[packageName]) {
-        packageJson.dependencies = packageJson.dependencies || {};
+        packageJson.dependencies ??= {};
         packageJson.dependencies[packageName] = version;
       }
     }
   });
   Object.entries(npmDeps.peerDependencies).forEach(([packageName, version]) => {
     if (!packageJson.peerDependencies?.[packageName]) {
-      packageJson.dependencies[packageName] = version;
+      if (rootPackageJson.dependencies?.[packageName]) {
+        packageJson.dependencies ??= {};
+        packageJson.dependencies[packageName] = version;
+        return;
+      }
+
+      const isOptionalPeer =
+        npmDeps.peerDependenciesMeta[packageName]?.optional;
+      if (!isOptionalPeer) {
+        packageJson.peerDependencies ??= {};
+        packageJson.peerDependencies[packageName] = version;
+      } else if (!options.isProduction) {
+        // add peer optional dependencies if not in production
+        packageJson.peerDependencies ??= {};
+        packageJson.peerDependencies[packageName] = version;
+        packageJson.peerDependenciesMeta ??= {};
+        packageJson.peerDependenciesMeta[packageName] = {
+          optional: true,
+        };
+      }
     }
   });
 
@@ -59,6 +83,9 @@ export function createPackageJson(
   packageJson.dependencies &&= sortObjectByKeys(packageJson.dependencies);
   packageJson.peerDependencies &&= sortObjectByKeys(
     packageJson.peerDependencies
+  );
+  packageJson.peerDependenciesMeta &&= sortObjectByKeys(
+    packageJson.peerDependenciesMeta
   );
 
   return packageJson;
@@ -70,7 +97,8 @@ function findAllNpmDeps(
   list: {
     dependencies: Record<string, string>;
     peerDependencies: Record<string, string>;
-  } = { dependencies: {}, peerDependencies: {} },
+    peerDependenciesMeta: Record<string, { optional: boolean }>;
+  } = { dependencies: {}, peerDependencies: {}, peerDependenciesMeta: {} },
   seen = new Set<string>()
 ) {
   const node = graph.externalNodes[projectName];
@@ -108,6 +136,7 @@ function recursivelyCollectPeerDependencies(
   list: {
     dependencies: Record<string, string>;
     peerDependencies: Record<string, string>;
+    peerDependenciesMeta: Record<string, { optional: boolean }>;
   },
   seen = new Set<string>()
 ) {
@@ -128,13 +157,18 @@ function recursivelyCollectPeerDependencies(
       .map((dependency) => graph.externalNodes[dependency])
       .filter(Boolean)
       .forEach((node) => {
-        if (
-          !packageJson.peerDependenciesMeta?.[node.data.packageName]
-            ?.optional &&
-          !seen.has(node.name)
-        ) {
+        if (!seen.has(node.name)) {
           seen.add(node.name);
           list.peerDependencies[node.data.packageName] = node.data.version;
+          if (
+            packageJson.peerDependenciesMeta &&
+            packageJson.peerDependenciesMeta[node.data.packageName] &&
+            packageJson.peerDependenciesMeta[node.data.packageName].optional
+          ) {
+            list.peerDependenciesMeta[node.data.packageName] = {
+              optional: true,
+            };
+          }
           recursivelyCollectPeerDependencies(node.name, graph, list, seen);
         }
       });
@@ -142,4 +176,17 @@ function recursivelyCollectPeerDependencies(
   } catch (e) {
     return list;
   }
+}
+
+function filterOptionalPeerDependencies(
+  packageJson: PackageJson
+): Record<string, string> {
+  let peerDependencies;
+  Object.keys(packageJson.peerDependencies).forEach((key) => {
+    if (!packageJson.peerDependenciesMeta?.[key]?.optional) {
+      peerDependencies = peerDependencies || {};
+      peerDependencies[key] = packageJson.peerDependencies[key];
+    }
+  });
+  return peerDependencies;
 }

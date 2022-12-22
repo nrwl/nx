@@ -4,6 +4,7 @@ import {
   logger,
   parseTargetString,
   readTargetOptions,
+  Tree,
 } from '@nrwl/devkit';
 import { existsSync } from 'fs';
 import { join, relative } from 'path';
@@ -28,29 +29,25 @@ export async function getBuildAndSharedConfig(
   const projectRoot = context.workspace.projects[context.projectName].root;
 
   return mergeConfig({}, {
-    mode: options.mode ?? context.configurationName,
+    mode: options.mode,
     root: projectRoot,
     base: options.base,
-    configFile: normalizeConfigFilePath(
-      options.configFile,
-      context.root,
-      projectRoot
-    ),
+    configFile: normalizeViteConfigFilePath(projectRoot, options.configFile),
     plugins: [replaceFiles(options.fileReplacements)],
     build: getViteBuildOptions(
       options as ViteDevServerExecutorOptions & ViteBuildExecutorOptions,
       projectRoot
     ),
+    optimizeDeps: { force: options.force },
   } as InlineConfig);
 }
 
-export function normalizeConfigFilePath(
-  configFile: string,
-  workspaceRoot: string,
-  projectRoot: string
+export function normalizeViteConfigFilePath(
+  projectRoot: string,
+  configFile?: string
 ): string {
-  return configFile
-    ? joinPathFragments(`${workspaceRoot}/${configFile}`)
+  return configFile && existsSync(joinPathFragments(configFile))
+    ? configFile
     : existsSync(joinPathFragments(`${projectRoot}/vite.config.ts`))
     ? joinPathFragments(`${projectRoot}/vite.config.ts`)
     : existsSync(joinPathFragments(`${projectRoot}/vite.config.js`))
@@ -125,6 +122,7 @@ export function getViteBuildOptions(
     minify: options.minify,
     manifest: options.manifest,
     ssrManifest: options.ssrManifest,
+    ssr: options.ssr,
     logLevel: options.logLevel,
   };
 

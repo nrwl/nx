@@ -102,6 +102,8 @@ export interface ProjectGraphProjectNode<T = any> {
      * Files associated to the project
      */
     files: FileData[];
+
+    description?: string;
   };
 }
 

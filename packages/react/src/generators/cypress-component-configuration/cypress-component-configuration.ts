@@ -6,7 +6,7 @@ import {
 } from '@nrwl/devkit';
 import { nxVersion } from '../../utils/versions';
 import { addFiles } from './lib/add-files';
-import { updateProjectConfig } from './lib/update-configs';
+import { FoundTarget, updateProjectConfig } from './lib/update-configs';
 import { CypressComponentConfigurationSchema } from './schema.d';
 
 /**
@@ -26,8 +26,8 @@ export async function cypressComponentConfigGenerator(
     skipFormat: true,
   });
 
-  await updateProjectConfig(tree, options);
-  await addFiles(tree, projectConfig, options);
+  const found: FoundTarget = await updateProjectConfig(tree, options);
+  await addFiles(tree, projectConfig, options, found);
   if (options.skipFormat) {
     await formatFiles(tree);
   }

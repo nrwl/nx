@@ -4,10 +4,12 @@ export interface ViteBuildExecutorOptions {
   base?: string;
   configFile?: string;
   fileReplacements?: FileReplacement[];
+  force?: boolean;
   sourcemap?: boolean | 'inline' | 'hidden';
   minify?: boolean | 'esbuild' | 'terser';
   manifest?: boolean | string;
   ssrManifest?: boolean | string;
   logLevel?: 'info' | 'warn' | 'error' | 'silent';
-  mode?: 'production' | 'development';
+  mode?: string;
+  ssr?: boolean | string;
 }

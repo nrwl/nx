@@ -30,9 +30,11 @@ describe('React Applications', () => {
     runCLI(
       `generate @nrwl/react:app ${appName} --style=css --bundler=webpack --no-interactive`
     );
-    runCLI(`generate @nrwl/react:lib ${libName} --style=css --no-interactive`);
     runCLI(
-      `generate @nrwl/react:lib ${libWithNoComponents} --no-interactive --no-component`
+      `generate @nrwl/react:lib ${libName} --style=css --no-interactive --unit-test-runner=jest`
+    );
+    runCLI(
+      `generate @nrwl/react:lib ${libWithNoComponents} --no-interactive --no-component --unit-test-runner=jest`
     );
 
     // Libs should not include package.json by default
@@ -80,7 +82,9 @@ describe('React Applications', () => {
     runCLI(
       `generate @nrwl/react:app ${appName} --bundler=webpack --no-interactive --js`
     );
-    runCLI(`generate @nrwl/react:lib ${libName} --no-interactive --js`);
+    runCLI(
+      `generate @nrwl/react:lib ${libName} --no-interactive --js --unit-test-runner=none`
+    );
 
     const mainPath = `apps/${appName}/src/main.js`;
     updateFile(
@@ -103,7 +107,7 @@ describe('React Applications', () => {
       `generate @nrwl/react:app ${appName} --bundler=vite --no-interactive`
     );
     runCLI(
-      `generate @nrwl/react:lib ${libName} --bundler=none --no-interactive`
+      `generate @nrwl/react:lib ${libName} --bundler=none --no-interactive --unit-test-runner=vitest`
     );
 
     // Library generated with Vite
@@ -121,6 +125,10 @@ describe('React Applications', () => {
     runCLI(`build ${appName}`);
 
     checkFilesExist(`dist/apps/${appName}/index.html`);
+
+    const e2eResults = runCLI(`e2e ${appName}-e2e --no-watch`);
+    expect(e2eResults).toContain('All specs passed!');
+    expect(await killPorts()).toBeTruthy();
   }, 250_000);
 
   async function testGeneratedApp(
@@ -145,7 +153,6 @@ describe('React Applications', () => {
     const filesToCheck = [
       `dist/apps/${appName}/index.html`,
       `dist/apps/${appName}/runtime.js`,
-      `dist/apps/${appName}/polyfills.js`,
       `dist/apps/${appName}/main.js`,
     ];
 
@@ -231,7 +238,9 @@ describe('React Applications and Libs with PostCSS', () => {
     const libName = uniq('lib');
 
     runCLI(`g @nrwl/react:app ${appName} --bundler=webpack --no-interactive`);
-    runCLI(`g @nrwl/react:lib ${libName} --no-interactive`);
+    runCLI(
+      `g @nrwl/react:lib ${libName} --no-interactive --unit-test-runner=none`
+    );
 
     const mainPath = `apps/${appName}/src/main.tsx`;
     updateFile(

@@ -1,0 +1,73 @@
+{
+  "name": "new",
+  "factory": "./src/generators/new/new#newGenerator",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "$id": "NxWorkspaceNew",
+    "title": "Create an empty workspace",
+    "description": "Create an empty workspace.",
+    "type": "object",
+    "cli": "nx",
+    "properties": {
+      "name": {
+        "description": "The name of the workspace.",
+        "type": "string",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "What name would you like to use for the workspace?"
+      },
+      "cli": {
+        "description": "CLI used for generating code and running tasks.",
+        "type": "string",
+        "enum": ["nx", "angular"],
+        "default": "nx"
+      },
+      "style": {
+        "description": "The file extension to be used for style files.",
+        "type": "string",
+        "default": "css"
+      },
+      "npmScope": {
+        "type": "string",
+        "description": "Npm scope for importing libs."
+      },
+      "defaultBase": {
+        "type": "string",
+        "description": "Default base branch for affected."
+      },
+      "skipInstall": {
+        "description": "Skip installing dependency packages.",
+        "type": "boolean",
+        "default": false
+      },
+      "preset": {
+        "description": "What to create in the new workspace.",
+        "type": "string"
+      },
+      "appName": { "type": "string", "description": "Application name." },
+      "nxCloud": {
+        "description": "Connect the workspace to the free tier of the distributed cache provided by Nx Cloud.",
+        "type": "boolean",
+        "default": false
+      },
+      "linter": {
+        "description": "The tool to use for running lint checks.",
+        "type": "string",
+        "enum": ["eslint"],
+        "default": "eslint"
+      },
+      "packageManager": {
+        "description": "The package manager used to install dependencies.",
+        "type": "string",
+        "enum": ["npm", "yarn", "pnpm"]
+      }
+    },
+    "additionalProperties": true,
+    "presets": []
+  },
+  "description": "Create a workspace.",
+  "hidden": true,
+  "implementation": "/packages/workspace/src/generators/new/new#newGenerator.ts",
+  "aliases": [],
+  "path": "/packages/workspace/src/generators/new/schema.json",
+  "type": "generator"
+}

@@ -1,0 +1,56 @@
+{
+  "name": "upgrade-module",
+  "factory": "./src/generators/upgrade-module/upgrade-module",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "$id": "NxUpgradeModuleGenerator",
+    "title": "Generates UpgradeModule setup.",
+    "description": "Sets up an Upgrade Module.",
+    "cli": "nx",
+    "type": "object",
+    "properties": {
+      "project": {
+        "type": "string",
+        "description": "The name of the project."
+      },
+      "name": {
+        "type": "string",
+        "description": "The name of the main AngularJS module.",
+        "$default": { "$source": "argv", "index": 0 }
+      },
+      "angularJsImport": {
+        "type": "string",
+        "description": "Import expression of the AngularJS application (e.g., `--angularJsImport=some_node_module/my_app`)."
+      },
+      "angularJsCmpSelector": {
+        "type": "string",
+        "description": "The selector of an AngularJS component (e.g., `--angularJsCmpSelector=myComponent`)."
+      },
+      "skipFormat": {
+        "type": "boolean",
+        "description": "Skip formatting files.",
+        "default": false
+      },
+      "skipPackageJson": {
+        "type": "boolean",
+        "description": "Do not add `@angular/upgrade` to `package.json` (e.g., `--skipPackageJson`).",
+        "default": false
+      },
+      "router": {
+        "type": "boolean",
+        "description": "Sets up router synchronization (e.g., `--router`).",
+        "default": false
+      }
+    },
+    "additionalProperties": false,
+    "required": ["name", "project"],
+    "examplesFile": "## Examples\n\nBelow are some examples of how to generate configuration and setup for using `ngUpgrade`'s `UpgradeModule` for your application.\n\n{% tabs %}\n\n{% tab label=\"Basic Usage\" %}\n\n```bash\nnx g @nrwl/angular:upgrade-module --name=myAngularJsModule --project=myapp\n```\n\n{% /tab %}\n\n{% tab label=\"Setup Router\" %}\n\nAllow a setup that configures routing for `UpgradeModule`.\n\n```bash\nnx g @nrwl/angular:upgrade-module --name=myAngularJsModule --project=myapp --router=true\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
+    "presets": []
+  },
+  "description": "Sets up an Upgrade Module.",
+  "implementation": "/packages/angular/src/generators/upgrade-module/upgrade-module.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/angular/src/generators/upgrade-module/schema.json",
+  "type": "generator"
+}

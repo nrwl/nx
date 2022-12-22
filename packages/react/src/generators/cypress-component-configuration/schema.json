@@ -37,6 +37,12 @@
       "type": "boolean",
       "description": "Skip formatting files",
       "default": false
+    },
+    "bundler": {
+      "description": "The bundler to use for Cypress Component Testing.",
+      "type": "string",
+      "enum": ["vite", "webpack"],
+      "hidden": true
     }
   },
   "required": ["project"],

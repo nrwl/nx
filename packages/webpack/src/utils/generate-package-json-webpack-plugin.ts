@@ -1,11 +1,11 @@
 import { type Compiler, sources, type WebpackPluginInstance } from 'webpack';
 import {
   ExecutorContext,
-  ProjectConfiguration,
   type ProjectGraph,
   serializeJson,
+  createPackageJson,
+  createLockFile,
 } from '@nrwl/devkit';
-import { createPackageJson } from 'nx/src/utils/create-package-json';
 import {
   getHelperDependenciesFromProjectGraph,
   HelperDependency,
@@ -13,6 +13,7 @@ import {
 import { readTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 
 import { NormalizedWebpackExecutorOptions } from '../executors/webpack/schema';
+import { getLockFileName } from 'nx/src/lock-file/lock-file';
 
 export class GeneratePackageJsonWebpackPlugin implements WebpackPluginInstance {
   private readonly projectGraph: ProjectGraph;
@@ -66,15 +67,17 @@ export class GeneratePackageJsonWebpackPlugin implements WebpackPluginInstance {
           const packageJson = createPackageJson(
             this.context.projectName,
             this.projectGraph,
-            { root: this.context.root }
+            { root: this.context.root, isProduction: true }
           );
           packageJson.main = packageJson.main ?? this.options.outputFileName;
-
-          delete packageJson.devDependencies;
 
           compilation.emitAsset(
             'package.json',
             new sources.RawSource(serializeJson(packageJson))
+          );
+          compilation.emitAsset(
+            getLockFileName(),
+            new sources.RawSource(createLockFile(packageJson))
           );
         }
       );

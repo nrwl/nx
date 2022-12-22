@@ -1,0 +1,39 @@
+{
+  "name": "install",
+  "implementation": "/packages/expo/src/executors/install/install.impl.ts",
+  "schema": {
+    "cli": "nx",
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "$id": "NxExpoInstall",
+    "$schema": "http://json-schema.org/schema",
+    "title": "Expo Install",
+    "description": "Install a module or other package to a project.",
+    "type": "object",
+    "properties": {
+      "packages": {
+        "type": "array",
+        "items": { "type": "string" },
+        "default": [],
+        "description": "The names of packages to install",
+        "$default": { "$source": "argv", "index": 0 }
+      },
+      "check": {
+        "type": "boolean",
+        "description": "Check which installed packages need to be updated",
+        "default": true
+      },
+      "fix": {
+        "type": "boolean",
+        "description": "Automatically update any invalid package versions",
+        "default": false
+      }
+    },
+    "presets": []
+  },
+  "description": "Install a module or other package to a project.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/expo/src/executors/install/schema.json",
+  "type": "executor"
+}

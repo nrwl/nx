@@ -23,7 +23,6 @@ import { angularDevkitVersion, nxVersion } from '../../../utils/versions';
 import type { ProjectMigrator } from '../migrators';
 import type { GeneratorOptions } from '../schema';
 import type { WorkspaceRootFileTypesInfo } from './types';
-import { workspaceMigrationErrorHeading } from './validation-logging';
 
 export function validateWorkspace(tree: Tree): void {
   const errors: string[] = [];
@@ -38,7 +37,7 @@ export function validateWorkspace(tree: Tree): void {
     return;
   }
 
-  throw new Error(`${workspaceMigrationErrorHeading}
+  throw new Error(`The workspace cannot be migrated because of the following issues:
 
   - ${errors.join('\n  ')}`);
 }

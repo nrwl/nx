@@ -30,6 +30,7 @@ import {
   matchImportWithWildcard,
   onlyLoadChildren,
   stringifyTags,
+  isComboDepConstraint,
 } from '../utils/runtime-lint-utils';
 import { AST_NODE_TYPES, TSESTree } from '@typescript-eslint/utils';
 import { TargetProjectLocator } from 'nx/src/utils/target-project-locator';
@@ -91,8 +92,18 @@ export default createESLintRule<Options, MessageIds>({
             {
               type: 'object',
               properties: {
-                sourceTag: { type: 'string' },
+                oneOf: [
+                  { sourceTag: { type: 'string' } },
+                  {
+                    allSourceTags: {
+                      type: 'array',
+                      items: { type: 'string' },
+                      minItems: 2,
+                    },
+                  },
+                ],
                 onlyDependOnLibsWithTags: [{ type: 'string' }],
+                allowedExternalImports: [{ type: 'string' }],
                 bannedExternalImports: [{ type: 'string' }],
                 notDependOnLibsWithTags: [{ type: 'string' }],
               },
@@ -389,7 +400,9 @@ export default createESLintRule<Options, MessageIds>({
             node,
             messageId: 'bannedExternalImportsViolation',
             data: {
-              sourceTag: constraint.sourceTag,
+              sourceTag: isComboDepConstraint(constraint)
+                ? constraint.allSourceTags.join('" and "')
+                : constraint.sourceTag,
               package: targetProject.data.packageName,
             },
           });
@@ -521,7 +534,9 @@ export default createESLintRule<Options, MessageIds>({
               node,
               messageId: 'onlyTagsConstraintViolation',
               data: {
-                sourceTag: constraint.sourceTag,
+                sourceTag: isComboDepConstraint(constraint)
+                  ? constraint.allSourceTags.join('" and "')
+                  : constraint.sourceTag,
                 tags: stringifyTags(constraint.onlyDependOnLibsWithTags),
               },
             });
@@ -536,7 +551,9 @@ export default createESLintRule<Options, MessageIds>({
               node,
               messageId: 'emptyOnlyTagsConstraintViolation',
               data: {
-                sourceTag: constraint.sourceTag,
+                sourceTag: isComboDepConstraint(constraint)
+                  ? constraint.allSourceTags.join('" and "')
+                  : constraint.sourceTag,
               },
             });
             return;
@@ -555,7 +572,9 @@ export default createESLintRule<Options, MessageIds>({
                 node,
                 messageId: 'notTagsConstraintViolation',
                 data: {
-                  sourceTag: constraint.sourceTag,
+                  sourceTag: isComboDepConstraint(constraint)
+                    ? constraint.allSourceTags.join('" and "')
+                    : constraint.sourceTag,
                   tags: stringifyTags(constraint.notDependOnLibsWithTags),
                   projects: projectPaths
                     .map(
@@ -584,7 +603,9 @@ export default createESLintRule<Options, MessageIds>({
                   node,
                   messageId: 'bannedExternalImportsViolation',
                   data: {
-                    sourceTag: constraint.sourceTag,
+                    sourceTag: isComboDepConstraint(constraint)
+                      ? constraint.allSourceTags.join('" and "')
+                      : constraint.sourceTag,
                     childProjectName: violatingSource.name,
                     package: target.data.packageName,
                   },

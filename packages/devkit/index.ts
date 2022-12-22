@@ -362,3 +362,9 @@ export { Hash, Hasher } from 'nx/src/hasher/hasher';
  * @category Utils
  */
 export { cacheDir } from 'nx/src/utils/cache-directory';
+
+/**
+ * @category Package Manager
+ */
+export { createLockFile } from 'nx/src/lock-file/lock-file';
+export { createPackageJson } from 'nx/src/utils/create-package-json';

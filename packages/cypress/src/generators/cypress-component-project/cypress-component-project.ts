@@ -6,19 +6,19 @@ import {
   offsetFromRoot,
   ProjectConfiguration,
   readProjectConfiguration,
+  readWorkspaceConfiguration,
   Tree,
   updateJson,
   updateProjectConfiguration,
-  NxJsonConfiguration,
-  readWorkspaceConfiguration,
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import { installedCypressVersion } from '../../utils/cypress-version';
 
 import {
   cypressVersion,
+  cypressViteDevServerVersion,
   cypressWebpackVersion,
-  webpackHttpPluginVersion,
+  htmlWebpackPluginVersion,
 } from '../../utils/versions';
 import { CypressComponentProjectSchema } from './schema';
 
@@ -35,7 +35,7 @@ export async function cypressComponentProject(
 
   const projectConfig = readProjectConfiguration(tree, options.project);
 
-  const installDepsTask = updateDeps(tree);
+  const installDepsTask = updateDeps(tree, options);
 
   addProjectFiles(tree, projectConfig, options);
   addTargetToProject(tree, projectConfig, options);
@@ -50,12 +50,17 @@ export async function cypressComponentProject(
   };
 }
 
-function updateDeps(tree: Tree) {
+function updateDeps(tree: Tree, options: CypressComponentProjectSchema) {
   const devDeps = {
-    '@cypress/webpack-dev-server': cypressWebpackVersion,
-    'html-webpack-plugin': webpackHttpPluginVersion,
     cypress: cypressVersion,
   };
+
+  if (options.bundler === 'vite') {
+    devDeps['@cypress/vite-dev-server'] = cypressViteDevServerVersion;
+  } else {
+    devDeps['@cypress/webpack-dev-server'] = cypressWebpackVersion;
+    devDeps['html-webpack-plugin'] = htmlWebpackPluginVersion;
+  }
 
   return addDependenciesToPackageJson(tree, {}, devDeps);
 }

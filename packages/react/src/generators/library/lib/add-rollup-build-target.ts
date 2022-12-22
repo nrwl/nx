@@ -1,5 +1,6 @@
 import { Tree } from 'nx/src/generators/tree';
 import {
+  addDependenciesToPackageJson,
   ensurePackage,
   getWorkspaceLayout,
   joinPathFragments,
@@ -9,7 +10,11 @@ import {
 
 import { maybeJs } from './maybe-js';
 import { NormalizedSchema } from '../schema';
-import { nxVersion } from '../../../utils/versions';
+import {
+  nxVersion,
+  rollupPluginUrlVersion,
+  svgrRollupVersion,
+} from '../../../utils/versions';
 
 export async function addRollupBuildTarget(
   host: Tree,
@@ -17,6 +22,16 @@ export async function addRollupBuildTarget(
 ) {
   await ensurePackage(host, '@nrwl/rollup', nxVersion);
   const { rollupInitGenerator } = await import('@nrwl/rollup');
+
+  // These are used in `@nrwl/react/plugins/bundle-rollup`
+  addDependenciesToPackageJson(
+    host,
+    {},
+    {
+      '@rollup/plugin-url': rollupPluginUrlVersion,
+      '@svgr/rollup': svgrRollupVersion,
+    }
+  );
 
   const { targets } = readProjectConfiguration(host, options.name);
 

@@ -1,0 +1,157 @@
+{
+  "name": "test",
+  "implementation": "/packages/detox/src/executors/test/test.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "title": "Run detox test",
+    "description": "Run detox test options.",
+    "type": "object",
+    "cli": "nx",
+    "presets": [
+      {
+        "name": "Run tests",
+        "keys": ["detoxConfiguration", "loglevel", "reuse"]
+      }
+    ],
+    "properties": {
+      "detoxConfiguration": {
+        "type": "string",
+        "description": "Select a device configuration from your defined configurations, if not supplied, and there's only one configuration, detox will default to it.",
+        "alias": "C",
+        "examples": [
+          "ios.sim.debug",
+          "ios.sim.release",
+          "android.emu.debug",
+          "android.emu.release"
+        ]
+      },
+      "buildTarget": {
+        "type": "string",
+        "description": "Target which builds the application."
+      },
+      "configPath": {
+        "type": "string",
+        "description": "Specify Detox config file path. If not supplied, detox searches for `.detoxrc[.js]` or `detox` section in package.json.",
+        "alias": "cp",
+        "x-completion-type": "file",
+        "x-completion-glob": ".detoxrc?(.js)"
+      },
+      "runnerConfig": {
+        "type": "string",
+        "description": "Test runner config file, defaults to `e2e/mocha.opts` for mocha and `e2e/config.json` for Jest.",
+        "alias": "o"
+      },
+      "deviceName": {
+        "type": "string",
+        "description": "Override the device name specified in a configuration. Useful for running a single build configuration on multiple devices.",
+        "alias": "n"
+      },
+      "loglevel": {
+        "type": "string",
+        "enum": ["fatal", "error", "warn", "info", "verbose", "trace"],
+        "description": "Log level: `fatal`, `error`, `warn`, `info`, `verbose`, `trace`.",
+        "alias": "l"
+      },
+      "debugSynchronization": {
+        "type": "boolean",
+        "description": "Customize how long an action/expectation can take to complete before Detox starts querying the app why it is busy. By default, the app status will be printed if the action takes more than 10s to complete.",
+        "alias": "d"
+      },
+      "artifactsLocation": {
+        "type": "string",
+        "description": "Artifacts (logs, screenshots, etc) root directory.",
+        "alias": "a"
+      },
+      "recordLogs": {
+        "type": "string",
+        "enum": ["failing", "all", "none"],
+        "description": "Save logs during each test to artifacts directory. Pass `failing` to save logs of failing tests only."
+      },
+      "takeScreenshots": {
+        "type": "string",
+        "enum": ["manual", "failing", "all", "none"],
+        "description": "Save screenshots before and after each test to artifacts directory. Pass `failing` to save screenshots of failing tests only. "
+      },
+      "recordVideos": {
+        "type": "string",
+        "enum": ["failing", "all", "none"],
+        "description": "Save screen recordings of each test to artifacts directory. Pass `failing` to save recordings of failing tests only."
+      },
+      "recordPerformance": {
+        "type": "string",
+        "enum": ["all", "none"],
+        "description": "[iOS Only] Save Detox Instruments performance recordings of each test to artifacts directory."
+      },
+      "recordTimeline": {
+        "type": "string",
+        "enum": ["all", "none"],
+        "description": "[Jest Only] Record tests and events timeline, for visual display on the `chrome://tracing` tool."
+      },
+      "captureViewHierarchy": {
+        "type": "string",
+        "enum": ["enabled", "disabled"],
+        "description": "[iOS Only] Capture `*.uihierarchy` snapshots on view action errors and `device.captureViewHierarchy()` calls."
+      },
+      "retries": {
+        "type": "number",
+        "description": "[Jest Circus Only] Re-spawn the test runner for individual failing suite files until they pass, or `<N>` times at least."
+      },
+      "reuse": {
+        "type": "boolean",
+        "description": "Reuse existing installed app (do not delete + reinstall) for a faster run.",
+        "default": true
+      },
+      "cleanup": {
+        "type": "boolean",
+        "description": "Shutdown simulator when test is over, useful for CI scripts, to make sure detox exists cleanly with no residue"
+      },
+      "workers": {
+        "type": "number",
+        "description": "Specifies number of workers the test runner should spawn, requires a test runner with parallel execution support (Detox CLI currently supports Jest)."
+      },
+      "jestReportSpecs": {
+        "type": "boolean",
+        "description": "[Jest Only] Whether to output logs per each running spec, in real-time. By default, disabled with multiple workers."
+      },
+      "headless": {
+        "type": "boolean",
+        "description": "Android Only] Launch Emulator in headless mode. Useful when running on CI."
+      },
+      "gpu": {
+        "type": "boolean",
+        "description": "[Android Only] Launch Emulator with the specific `-gpu [gpu mode]` parameter."
+      },
+      "deviceLaunchArgs": {
+        "type": "string",
+        "description": "A list of passthrough-arguments to use when (if) devices (Android emulator / iOS simulator) are launched by Detox."
+      },
+      "appLaunchArgs": {
+        "type": "number",
+        "description": "Custom arguments to pass (through) onto the app every time it is launched."
+      },
+      "noColor": {
+        "type": "boolean",
+        "description": "Disable colors in log output"
+      },
+      "useCustomLogger": {
+        "type": "boolean",
+        "description": "Use Detox' custom console-logging implementation, for logging Detox (non-device) logs. Disabling will fallback to Node.js / test-runner's implementation (e.g. Jest / Mocha)."
+      },
+      "forceAdbInstall": {
+        "type": "boolean",
+        "description": "Due to problems with the adb install command on Android, Detox resorts to a different scheme for install APK's. Setting true will disable that and force usage of `adb install`, instead."
+      },
+      "inspectBrk": {
+        "type": "boolean",
+        "description": "Uses node's `--inspect-brk` flag to let users debug the jest/mocha test runner"
+      }
+    },
+    "required": ["detoxConfiguration"]
+  },
+  "description": "Initiating your detox test suite.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/detox/src/executors/test/schema.json",
+  "type": "executor"
+}

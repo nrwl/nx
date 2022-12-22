@@ -24,7 +24,7 @@ export async function createStorybookTestWorkspaceForLib(
     buildable: false,
     linter: Linter.EsLint,
     publishable: false,
-    simpleModuleName: false,
+    simpleName: false,
     skipFormat: false,
     unitTestRunner: UnitTestRunner.Jest,
   });

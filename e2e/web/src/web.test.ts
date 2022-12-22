@@ -34,7 +34,6 @@ describe('Web Components Applications', () => {
     checkFilesExist(
       `dist/apps/${appName}/index.html`,
       `dist/apps/${appName}/runtime.js`,
-      `dist/apps/${appName}/polyfills.js`,
       `dist/apps/${appName}/main.js`,
       `dist/apps/${appName}/styles.css`
     );
@@ -80,7 +79,7 @@ describe('Web Components Applications', () => {
       `generate @nrwl/web:app ${appName} --bundler=webpack --no-interactive --compiler swc`
     );
     runCLI(
-      `generate @nrwl/react:lib ${libName} --bundler=rollup --no-interactive --compiler swc`
+      `generate @nrwl/react:lib ${libName} --bundler=rollup --no-interactive --compiler swc --unitTestRunner=jest`
     );
 
     createFile(`dist/apps/${appName}/_should_remove.txt`);

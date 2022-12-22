@@ -7,7 +7,7 @@ import type {
 import { TransformerEntry } from './typescript/types';
 
 export type Compiler = 'tsc' | 'swc';
-export type Bundler = 'none' | 'rollup' | 'esbuild' | 'webpack';
+export type Bundler = 'none' | 'rollup' | 'esbuild' | 'vite' | 'webpack';
 
 export interface LibraryGeneratorSchema {
   name: string;
@@ -17,7 +17,7 @@ export interface LibraryGeneratorSchema {
   simpleModuleName?: boolean;
   skipTsConfig?: boolean;
   includeBabelRc?: boolean;
-  unitTestRunner?: 'jest' | 'none';
+  unitTestRunner?: 'jest' | 'vitest' | 'none';
   linter?: Linter;
   testEnvironment?: 'jsdom' | 'node';
   importPath?: string;

@@ -1,0 +1,70 @@
+{
+  "name": "preset",
+  "factory": "./src/generators/preset/preset#presetGenerator",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "$id": "NxWorkspacePreset",
+    "cli": "nx",
+    "title": "Creates applications in a new workspace",
+    "description": "Creates applications in a new workspace.",
+    "type": "object",
+    "properties": {
+      "preset": { "description": "The name of the preset.", "type": "string" },
+      "name": {
+        "description": "The name of the application.",
+        "type": "string"
+      },
+      "npmScope": {
+        "description": "Npm scope for importing libs.",
+        "type": "string"
+      },
+      "cli": { "description": "CLI powering the workspace.", "type": "string" },
+      "linter": {
+        "description": "The tool to use for running lint checks.",
+        "type": "string",
+        "enum": ["eslint"],
+        "default": "eslint"
+      },
+      "style": {
+        "description": "The file extension to be used for style files.",
+        "type": "string",
+        "default": "css",
+        "x-prompt": {
+          "message": "Which stylesheet format would you like to use?",
+          "type": "list",
+          "items": [
+            { "value": "css", "label": "CSS" },
+            {
+              "value": "scss",
+              "label": "SASS(.scss)  [ http://sass-lang.com   ]"
+            },
+            {
+              "value": "styl",
+              "label": "Stylus(.styl)[ http://stylus-lang.com ]"
+            },
+            {
+              "value": "less",
+              "label": "LESS         [ http://lesscss.org     ]"
+            }
+          ]
+        }
+      },
+      "standaloneConfig": {
+        "description": "Split the project configurations into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
+        "type": "boolean"
+      },
+      "packageManager": {
+        "description": "The package manager used to install dependencies.",
+        "type": "string",
+        "enum": ["npm", "yarn", "pnpm"]
+      }
+    },
+    "presets": []
+  },
+  "description": "Create application in an empty workspace.",
+  "hidden": true,
+  "implementation": "/packages/workspace/src/generators/preset/preset#presetGenerator.ts",
+  "aliases": [],
+  "path": "/packages/workspace/src/generators/preset/schema.json",
+  "type": "generator"
+}

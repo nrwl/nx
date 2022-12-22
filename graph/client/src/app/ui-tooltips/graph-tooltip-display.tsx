@@ -1,9 +1,12 @@
-import ProjectNodeToolTip from './project-node-tooltip';
-import ProjectEdgeNodeTooltip from './project-edge-tooltip';
 import { useSyncExternalStore } from 'use-sync-external-store/shim';
-import { getTooltipService } from './tooltip-service';
-import TaskNodeTooltip from './task-node-tooltip';
-import { Tooltip } from './tooltip';
+import { getTooltipService } from '../machines/get-services';
+import {
+  ProjectEdgeNodeTooltip,
+  ProjectNodeToolTip,
+  TaskNodeTooltip,
+  Tooltip,
+} from '@nrwl/graph/ui-tooltips';
+import { ProjectNodeActions } from './project-node-actions';
 
 const tooltipService = getTooltipService();
 
@@ -16,7 +19,11 @@ export function TooltipDisplay() {
   if (currentTooltip) {
     switch (currentTooltip.type) {
       case 'projectNode':
-        tooltipToRender = <ProjectNodeToolTip {...currentTooltip.props} />;
+        tooltipToRender = (
+          <ProjectNodeToolTip {...currentTooltip.props}>
+            <ProjectNodeActions {...currentTooltip.props} />
+          </ProjectNodeToolTip>
+        );
         break;
       case 'projectEdge':
         tooltipToRender = <ProjectEdgeNodeTooltip {...currentTooltip.props} />;
@@ -37,5 +44,3 @@ export function TooltipDisplay() {
     ></Tooltip>
   ) : null;
 }
-
-export default TooltipDisplay;

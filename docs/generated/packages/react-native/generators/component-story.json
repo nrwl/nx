@@ -1,0 +1,36 @@
+{
+  "name": "component-story",
+  "factory": "./src/generators/component-story/component-story#componentStoryGenerator",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "cli": "nx",
+    "$id": "NxReactNativeComponentStory",
+    "title": "React native component story",
+    "description": "Generate storybook story for a react-native component.",
+    "type": "object",
+    "properties": {
+      "project": {
+        "type": "string",
+        "aliases": ["name", "projectName"],
+        "description": "The project where to add the components.",
+        "examples": ["shared-ui-component"],
+        "$default": { "$source": "projectName", "index": 0 },
+        "x-prompt": "What's the name of the project where the component lives?"
+      },
+      "componentPath": {
+        "type": "string",
+        "description": "Relative path to the component file from the library root.",
+        "examples": ["lib/components"],
+        "x-prompt": "What's path of the component relative to the project's lib root?"
+      }
+    },
+    "required": ["project", "componentPath"],
+    "presets": []
+  },
+  "description": "Generate Storybook story for a React-native component.",
+  "hidden": false,
+  "implementation": "/packages/react-native/src/generators/component-story/component-story#componentStoryGenerator.ts",
+  "aliases": [],
+  "path": "/packages/react-native/src/generators/component-story/schema.json",
+  "type": "generator"
+}

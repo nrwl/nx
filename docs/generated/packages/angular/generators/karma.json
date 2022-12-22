@@ -1,0 +1,34 @@
+{
+  "name": "karma",
+  "factory": "./src/generators/karma/karma",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "$id": "NxAngularKarmaGenerator",
+    "title": "Add Karma Configuration to the workspace.",
+    "description": "Add Karma configuration to an Nx workspace.",
+    "cli": "nx",
+    "type": "object",
+    "examples": [
+      {
+        "command": "nx g @nrwl/angular:karma",
+        "description": "Add a base karma configuration to the workspace."
+      }
+    ],
+    "properties": {
+      "skipPackageJson": {
+        "type": "boolean",
+        "default": false,
+        "description": "Do not add dependencies to `package.json`."
+      }
+    },
+    "additionalProperties": false,
+    "required": [],
+    "presets": []
+  },
+  "description": "Adds Karma configuration to a workspace.",
+  "implementation": "/packages/angular/src/generators/karma/karma.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/angular/src/generators/karma/schema.json",
+  "type": "generator"
+}

@@ -20,14 +20,6 @@ export function addProject(host: Tree, options: NormalizedSchema) {
   addProjectConfiguration(host, options.projectName, {
     ...project,
   });
-
-  const workspace = readWorkspaceConfiguration(host);
-
-  if (!workspace.defaultProject) {
-    workspace.defaultProject = options.projectName;
-
-    updateWorkspaceConfiguration(host, workspace);
-  }
 }
 
 function getTargets(options: NormalizedSchema) {

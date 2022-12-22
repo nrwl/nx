@@ -32,13 +32,15 @@
     "@nrwl/devkit": "file:../devkit",
     "@nrwl/workspace": "file:../workspace",
     "@nrwl/js": "file:../js",
+    "@phenomnomnominal/tsquery": "4.1.1",
     "@swc/helpers": "^0.4.11",
     "chalk": "4.1.0",
-    "dotenv": "~10.0.0"
+    "dotenv": "~10.0.0",
+    "enquirer": "~2.3.6"
   },
   "peerDependencies": {
-    "vite": "^3.2.3",
-    "vitest": "^0.25.1"
+    "vite": "^4.0.1",
+    "vitest": "^0.25.8"
   },
   "publishConfig": {
     "access": "public"

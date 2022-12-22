@@ -210,11 +210,8 @@ describe('@nrwl/workspace:generateWorkspaceFiles', () => {
     const { scripts } = readJson(tree, '/proj/package.json');
     expect(scripts).toMatchInlineSnapshot(`
       Object {
-        "build": "nx build",
         "ng": "nx",
         "postinstall": "node ./decorate-angular-cli.js",
-        "start": "nx serve",
-        "test": "nx test",
       }
     `);
   });
@@ -229,13 +226,7 @@ describe('@nrwl/workspace:generateWorkspaceFiles', () => {
     expect(tree.exists('/proj/decorate-angular-cli.js')).toBe(false);
 
     const { scripts } = readJson(tree, '/proj/package.json');
-    expect(scripts).toMatchInlineSnapshot(`
-      Object {
-        "build": "nx build",
-        "start": "nx serve",
-        "test": "nx test",
-      }
-    `);
+    expect(scripts).toMatchInlineSnapshot(`Object {}`);
   });
 
   it('should create a workspace using NPM preset (npm package manager)', async () => {

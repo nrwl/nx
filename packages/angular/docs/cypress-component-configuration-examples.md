@@ -11,7 +11,7 @@ If you want to test components via Storybook with Cypress, then check out the [s
 This generator is designed to get your Angular project up and running with Cypress Component Testing.
 
 ```shell
-nx g @nrwl/angular:cypress-component-project --project=my-cool-angular-project
+nx g @nrwl/angular:cypress-component-configuration --project=my-cool-angular-project
 ```
 
 Running this generator, adds the required files to the specified project with a preconfigured `cypress.config.ts` designed for Nx workspaces.
@@ -50,13 +50,13 @@ The generator will throw an error if a build target can't be found and suggest p
 Letting Nx infer the build target by default
 
 ```shell
-nx g @nrwl/angular:cypress-component-project --project=my-cool-angular-project
+nx g @nrwl/angular:cypress-component-configuration --project=my-cool-angular-project
 ```
 
 Manually specifying the build target
 
 ```shell
-nx g @nrwl/angular:cypress-component-project --project=my-cool-angular-project --build-target:some-angular-app:build --generate-tests
+nx g @nrwl/angular:cypress-component-configuration --project=my-cool-angular-project --build-target:some-angular-app:build --generate-tests
 ```
 
 {% callout type="note" title="Build Target with Configuration" %}
@@ -69,7 +69,7 @@ then manually providing `--build-target=my-app:build:production` is the best way
 You can optionally use the `--generate-tests` flag to generate a test file for each component in your project.
 
 ```shell
-nx g @nrwl/angular:cypress-component-project --project=my-cool-angular-project --generate-tests
+nx g @nrwl/angular:cypress-component-configuration --project=my-cool-angular-project --generate-tests
 ```
 
 ## Running Component Tests

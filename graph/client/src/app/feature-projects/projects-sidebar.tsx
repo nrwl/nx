@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from 'react';
-import ExperimentalFeature from '../ui-components/experimental-feature';
+import { ExperimentalFeature } from '../ui-components/experimental-feature';
 import { useProjectGraphSelector } from './hooks/use-project-graph-selector';
 import {
   collapseEdgesSelector,
@@ -11,14 +11,14 @@ import {
   searchDepthSelector,
   textFilterSelector,
 } from './machines/selectors';
-import CollapseEdgesPanel from './panels/collapse-edges-panel';
-import FocusedPanel from '../ui-components/focused-panel';
-import GroupByFolderPanel from './panels/group-by-folder-panel';
-import ProjectList from './project-list';
-import SearchDepth from './panels/search-depth';
-import ShowHideProjects from '../ui-components/show-hide-all';
-import TextFilterPanel from './panels/text-filter-panel';
-import TracingPanel from './panels/tracing-panel';
+import { CollapseEdgesPanel } from './panels/collapse-edges-panel';
+import { FocusedPanel } from '../ui-components/focused-panel';
+import { GroupByFolderPanel } from './panels/group-by-folder-panel';
+import { ProjectList } from './project-list';
+import { SearchDepth } from './panels/search-depth';
+import { ShowHideAll } from '../ui-components/show-hide-all';
+import { TextFilterPanel } from './panels/text-filter-panel';
+import { TracingPanel } from './panels/tracing-panel';
 import { useEnvironmentConfig } from '../hooks/use-environment-config';
 import { TracingAlgorithmType } from './machines/interfaces';
 import { getProjectGraphService } from '../machines/get-services';
@@ -352,13 +352,13 @@ export function ProjectsSidebar(): JSX.Element {
       ></TextFilterPanel>
 
       <div>
-        <ShowHideProjects
+        <ShowHideAll
           hideAll={hideAllProjects}
           showAll={showAllProjects}
           showAffected={showAffectedProjects}
           hasAffected={hasAffectedProjects}
           label="projects"
-        ></ShowHideProjects>
+        ></ShowHideAll>
 
         <GroupByFolderPanel
           groupByFolder={groupByFolder}
@@ -392,5 +392,3 @@ export function ProjectsSidebar(): JSX.Element {
     </>
   );
 }
-
-export default ProjectsSidebar;

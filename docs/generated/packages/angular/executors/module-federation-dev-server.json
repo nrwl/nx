@@ -1,0 +1,121 @@
+{
+  "name": "module-federation-dev-server",
+  "implementation": "/packages/angular/src/builders/module-federation-dev-server/module-federation-dev-server.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "title": "Schema for Module Federation Dev Server",
+    "description": "The module-federation-dev-server executor is reserved exclusively for use with host Module Federation applications. It allows the user to specify which remote applications should be served with the host.",
+    "type": "object",
+    "presets": [
+      { "name": "Using a Different Port", "keys": ["browserTarget", "port"] }
+    ],
+    "properties": {
+      "browserTarget": {
+        "type": "string",
+        "description": "A browser builder target to serve in the format of `project:target[:configuration]`. You can also pass in more than one configuration name as a comma-separated list. Example: `project:target:production,staging`.",
+        "pattern": "^[^:\\s]+:[^:\\s]+(:[^\\s]+)?$"
+      },
+      "port": {
+        "type": "number",
+        "description": "Port to listen on.",
+        "default": 4200
+      },
+      "host": {
+        "type": "string",
+        "description": "Host to listen on.",
+        "default": "localhost"
+      },
+      "proxyConfig": {
+        "type": "string",
+        "description": "Proxy configuration file. For more information, see https://angular.io/guide/build#proxying-to-a-backend-server."
+      },
+      "ssl": {
+        "type": "boolean",
+        "description": "Serve using HTTPS.",
+        "default": false
+      },
+      "sslKey": {
+        "type": "string",
+        "description": "SSL key to use for serving HTTPS."
+      },
+      "sslCert": {
+        "type": "string",
+        "description": "SSL certificate to use for serving HTTPS."
+      },
+      "headers": {
+        "type": "object",
+        "description": "Custom HTTP headers to be added to all responses.",
+        "propertyNames": { "pattern": "^[-_A-Za-z0-9]+$" },
+        "additionalProperties": { "type": "string" }
+      },
+      "open": {
+        "type": "boolean",
+        "description": "Opens the url in default browser.",
+        "default": false,
+        "alias": "o"
+      },
+      "verbose": {
+        "type": "boolean",
+        "description": "Adds more details to output logging."
+      },
+      "liveReload": {
+        "type": "boolean",
+        "description": "Whether to reload the page on change, using live-reload.",
+        "default": true
+      },
+      "publicHost": {
+        "type": "string",
+        "description": "The URL that the browser client (or live-reload client, if enabled) should use to connect to the development server. Use for a complex dev server setup, such as one with reverse proxies."
+      },
+      "allowedHosts": {
+        "type": "array",
+        "description": "List of hosts that are allowed to access the dev server.",
+        "default": [],
+        "items": { "type": "string" }
+      },
+      "servePath": {
+        "type": "string",
+        "description": "The pathname where the app will be served."
+      },
+      "disableHostCheck": {
+        "type": "boolean",
+        "description": "Don't verify connected clients are part of allowed hosts.",
+        "default": false
+      },
+      "hmr": {
+        "type": "boolean",
+        "description": "Enable hot module replacement.",
+        "default": false
+      },
+      "watch": {
+        "type": "boolean",
+        "description": "Rebuild on change.",
+        "default": true
+      },
+      "poll": {
+        "type": "number",
+        "description": "Enable and define the file watching poll time period in milliseconds."
+      },
+      "devRemotes": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "List of remote applications to run in development mode (i.e. using serve target)."
+      },
+      "skipRemotes": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "List of remote applications to not automatically serve, either statically or in development mode. This can be useful for multi-repository module federation setups where the host application uses a remote application from an external repository."
+      }
+    },
+    "additionalProperties": false,
+    "required": ["browserTarget"],
+    "examplesFile": "## Examples\n\n{% tabs %}\n\n{% tab label=\"Basic Usage\" %}\nThe Module Federation Dev Server will serve a host application and find the remote applications associated with the host and serve them statically also.  \nSee an example set up of it below:\n\n```json\n{\n  \"serve\": {\n    \"executor\": \"@nrwl/angular:module-federation-dev-server\",\n    \"configurations\": {\n      \"production\": {\n        \"browserTarget\": \"host:build:production\"\n      },\n      \"development\": {\n        \"browserTarget\": \"host:build:development\"\n      }\n    },\n    \"defaultConfiguration\": \"development\",\n    \"options\": {\n      \"port\": 4200,\n      \"publicHost\": \"http://localhost:4200\"\n    }\n  }\n}\n```\n\n{% /tab %}\n\n{% tab label=\"Serve host with remotes that can be live reloaded\" %}\nThe Module Federation Dev Server will serve a host application and find the remote applications associated with the host and serve a set selection with live reloading enabled also.  \nSee an example set up of it below:\n\n```json\n{\n  \"serve-with-hmr-remotes\": {\n    \"executor\": \"@nrwl/angular:module-federation-dev-server\",\n    \"configurations\": {\n      \"production\": {\n        \"browserTarget\": \"host:build:production\"\n      },\n      \"development\": {\n        \"browserTarget\": \"host:build:development\"\n      }\n    },\n    \"defaultConfiguration\": \"development\",\n    \"options\": {\n      \"port\": 4200,\n      \"publicHost\": \"http://localhost:4200\",\n      \"devRemotes\": [\"remote1\", \"remote2\"]\n    }\n  }\n}\n```\n\n{% /tab %}\n\n{% /tabs %}\n"
+  },
+  "description": "The module-federation-dev-server executor is reserved exclusively for use with host Module Federation applications. It allows the user to specify which remote applications should be served with the host.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/angular/src/builders/module-federation-dev-server/schema.json",
+  "type": "executor"
+}

@@ -193,14 +193,26 @@ Object {
 }
 `;
 
+exports[`Cypress Project > v10 for bundler:vite should pass the bundler info to nxE2EPreset in \`cypress.config.ts\` 1`] = `
+"import { defineConfig } from 'cypress';
+import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+
+export default defineConfig({
+  e2e: nxE2EPreset(__dirname, 
+  {
+    bundler: 'vite'
+  }
+  )
+});"
+`;
+
 exports[`Cypress Project > v10 nested should set right path names in \`cypress.config.ts\` 1`] = `
 "import { defineConfig } from 'cypress';
 import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
 
 export default defineConfig({
   e2e: nxE2EPreset(__dirname)
-});
-"
+});"
 `;
 
 exports[`Cypress Project > v10 nested should set right path names in \`tsconfig.e2e.json\` 1`] = `
@@ -243,8 +255,7 @@ import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
 
 export default defineConfig({
   e2e: nxE2EPreset(__dirname)
-});
-"
+});"
 `;
 
 exports[`Cypress Project > v10 should set right path names in \`tsconfig.e2e.json\` 1`] = `

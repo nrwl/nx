@@ -27,11 +27,9 @@ describe('app', () => {
       js: false,
       unitTestRunner: 'none',
     });
-    const workspace = readWorkspaceConfiguration(appTree);
     const projects = getProjects(appTree);
 
     expect(projects.get('my-app').root).toEqual('apps/my-app');
-    expect(workspace.defaultProject).toEqual('my-app');
   });
 
   it('should update nx.json', async () => {
@@ -105,7 +103,6 @@ describe('app', () => {
       const workspaceJson = readWorkspaceConfiguration(appTree);
       const projects = getProjects(appTree);
       expect(projects.get('my-dir-my-app').root).toEqual('apps/my-dir/my-app');
-      expect(workspaceJson.defaultProject).toEqual('my-dir-my-app');
 
       expect(
         appTree.exists('apps/my-dir/my-app-e2e/.detoxrc.json')
@@ -187,7 +184,6 @@ describe('app', () => {
       const workspaceJson = readWorkspaceConfiguration(appTree);
       const projects = getProjects(appTree);
       expect(projects.get('my-app').root).toEqual('apps/my-app');
-      expect(workspaceJson.defaultProject).toEqual('my-app');
 
       expect(appTree.exists('apps/my-app-e2e/.detoxrc.json')).toBeTruthy();
       const detoxrc = appTree.read('apps/my-app-e2e/.detoxrc.json', 'utf-8');
@@ -265,7 +261,6 @@ describe('app', () => {
       const workspaceJson = readWorkspaceConfiguration(appTree);
       const projects = getProjects(appTree);
       expect(projects.get('my-app').root).toEqual('apps/my-app');
-      expect(workspaceJson.defaultProject).toEqual('my-app');
 
       expect(appTree.exists('apps/my-app-e2e/.detoxrc.json')).toBeTruthy();
       const detoxrc = appTree.read('apps/my-app-e2e/.detoxrc.json', 'utf-8');

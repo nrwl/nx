@@ -95,6 +95,7 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
   projectConfig.targets = {
     ...projectConfig.targets,
     server: {
+      dependsOn: ['build'],
       executor: '@nrwl/webpack:webpack',
       outputs: ['{options.outputPath}'],
       defaultConfiguration: 'production',
@@ -167,7 +168,9 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
   const workspace = readWorkspaceConfiguration(tree);
   if (
     workspace.tasksRunnerOptions?.default &&
-    !workspace.tasksRunnerOptions.default.options.cacheableOperations['server']
+    !workspace.tasksRunnerOptions.default.options.cacheableOperations.includes(
+      'server'
+    )
   ) {
     workspace.tasksRunnerOptions.default.options.cacheableOperations = [
       ...workspace.tasksRunnerOptions.default.options.cacheableOperations,

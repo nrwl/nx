@@ -11,6 +11,7 @@ import {
   createTreeWithEmptyWorkspace,
 } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
+import enquirer = require('enquirer');
 import { nxVersion } from '../../utils/versions';
 import applicationGenerator from '../application/application';
 import libraryGenerator from './library';
@@ -370,6 +371,9 @@ describe('lib', () => {
 
   describe('--unit-test-runner none', () => {
     it('should not generate test configuration', async () => {
+      jest
+        .spyOn(enquirer, 'prompt')
+        .mockReturnValue(new Promise((res) => res({ runner: 'none' })));
       await libraryGenerator(tree, {
         ...defaultSchema,
         unitTestRunner: 'none',

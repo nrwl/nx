@@ -57,3 +57,7 @@ export const moduleFederationNodeVersion = '~0.9.6';
 export const lessVersion = '3.12.2';
 export const sassVersion = '^1.55.0';
 export const stylusVersion = '^0.55.0';
+
+// rollup plugins (if needed)
+export const rollupPluginUrlVersion = '^7.0.0';
+export const svgrRollupVersion = '^6.1.2';

@@ -1,8 +1,21 @@
 import { mapLockFileDataToPartialGraph } from './lock-file';
-import { parseNpmLockFile, stringifyNpmLockFile } from './npm';
-import { parsePnpmLockFile, stringifyPnpmLockFile } from './pnpm';
-import { parseYarnLockFile, stringifyYarnLockFile } from './yarn';
 import {
+  parseNpmLockFile,
+  pruneNpmLockFile,
+  stringifyNpmLockFile,
+} from './npm';
+import {
+  parsePnpmLockFile,
+  prunePnpmLockFile,
+  stringifyPnpmLockFile,
+} from './pnpm';
+import {
+  parseYarnLockFile,
+  pruneYarnLockFile,
+  stringifyYarnLockFile,
+} from './yarn';
+import {
+  npmLockFileV1WithAliases,
   npmLockFileWithAliases,
   pnpmLockFileWithAliases,
   yarnLockFileWithAliases,
@@ -235,16 +248,18 @@ describe('lock-file', () => {
       vol.fromJSON(fileSys, '/root');
     });
 
-    it('should properly parse, map and stringify npm', () => {
+    it('should properly parse, map and stringify npm V2/3', () => {
       const lockFileData = parseNpmLockFile(npmLockFileWithAliases);
       const lockFile = stringifyNpmLockFile(lockFileData);
 
-      expect(lockFile).toEqual(npmLockFileWithAliases);
+      expect(JSON.parse(lockFile)).toEqual(JSON.parse(npmLockFileWithAliases));
 
       const partialGraph = expandGraph(
         mapLockFileDataToPartialGraph(lockFileData, 'npm')
       );
+
       const newPackage = createPackageJson('lib1', partialGraph, {});
+      const prunedLockFile = pruneYarnLockFile(lockFileData, newPackage);
       expect(newPackage).toMatchInlineSnapshot(`
         Object {
           "dependencies": Object {
@@ -254,7 +269,57 @@ describe('lock-file', () => {
           "version": "0.0.1",
         }
       `);
+      expect(partialGraph.externalNodes['npm:eslint-plugin-disable-autofix'])
+        .toMatchInlineSnapshot(`
+        Object {
+          "data": Object {
+            "hash": "29ded3acf364abfbda0186d5ae76ec0aebe1b31662dadb4263126e272ababdf9",
+            "packageName": "eslint-plugin-disable-autofix",
+            "version": "npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0",
+          },
+          "name": "npm:eslint-plugin-disable-autofix",
+          "type": "npm",
+        }
+      `);
     });
+
+    it('should properly parse, map and stringify npm V1', () => {
+      const lockFileData = parseNpmLockFile(npmLockFileV1WithAliases);
+      const lockFile = stringifyNpmLockFile(lockFileData);
+
+      expect(JSON.parse(lockFile)).toEqual(
+        JSON.parse(npmLockFileV1WithAliases)
+      );
+
+      const partialGraph = expandGraph(
+        mapLockFileDataToPartialGraph(lockFileData, 'npm')
+      );
+
+      const newPackage = createPackageJson('lib1', partialGraph, {});
+      const prunedLockFile = pruneNpmLockFile(lockFileData, newPackage);
+      expect(newPackage).toMatchInlineSnapshot(`
+        Object {
+          "dependencies": Object {
+            "postgres": "git+ssh://git@github.com/charsleysa/postgres.git#3b1a01b2da3e2fafb1a79006f838eff11a8de3cb",
+          },
+          "name": "lib1",
+          "version": "0.0.1",
+        }
+      `);
+      expect(partialGraph.externalNodes['npm:eslint-plugin-disable-autofix'])
+        .toMatchInlineSnapshot(`
+        Object {
+          "data": Object {
+            "hash": "29ded3acf364abfbda0186d5ae76ec0aebe1b31662dadb4263126e272ababdf9",
+            "packageName": "eslint-plugin-disable-autofix",
+            "version": "npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0",
+          },
+          "name": "npm:eslint-plugin-disable-autofix",
+          "type": "npm",
+        }
+      `);
+    });
+
     it('should properly parse, map and stringify yarn', () => {
       const lockFileData = parseYarnLockFile(yarnLockFileWithAliases);
       const lockFile = stringifyYarnLockFile(lockFileData);
@@ -264,7 +329,9 @@ describe('lock-file', () => {
       const partialGraph = expandGraph(
         mapLockFileDataToPartialGraph(lockFileData, 'yarn')
       );
+
       const newPackage = createPackageJson('lib1', partialGraph, {});
+      const prunedLockFile = pruneYarnLockFile(lockFileData, newPackage);
       expect(newPackage).toMatchInlineSnapshot(`
         Object {
           "dependencies": Object {
@@ -274,7 +341,20 @@ describe('lock-file', () => {
           "version": "0.0.1",
         }
       `);
+      expect(partialGraph.externalNodes['npm:eslint-plugin-disable-autofix'])
+        .toMatchInlineSnapshot(`
+        Object {
+          "data": Object {
+            "hash": "4adf0349b24951646e5657c35e819065d283446fae842d72ce73ba2d466492bf",
+            "packageName": "eslint-plugin-disable-autofix",
+            "version": "3.0.0",
+          },
+          "name": "npm:eslint-plugin-disable-autofix",
+          "type": "npm",
+        }
+      `);
     });
+
     it('should properly parse, map and stringify pnpm', () => {
       const lockFileData = parsePnpmLockFile(pnpmLockFileWithAliases);
       const lockFile = stringifyPnpmLockFile(lockFileData);
@@ -285,6 +365,7 @@ describe('lock-file', () => {
         mapLockFileDataToPartialGraph(lockFileData, 'pnpm')
       );
       const newPackage = createPackageJson('lib1', partialGraph, {});
+      const prunedLockFile = prunePnpmLockFile(lockFileData, newPackage);
       expect(newPackage).toMatchInlineSnapshot(`
         Object {
           "dependencies": Object {
@@ -292,6 +373,18 @@ describe('lock-file', () => {
           },
           "name": "lib1",
           "version": "0.0.1",
+        }
+      `);
+      expect(partialGraph.externalNodes['npm:eslint-plugin-disable-autofix'])
+        .toMatchInlineSnapshot(`
+        Object {
+          "data": Object {
+            "hash": "308b8cb8052d8d26cf1a2be5dc197f7ba6291185a309d00f2a0c1497df9089db",
+            "packageName": "eslint-plugin-disable-autofix",
+            "version": "/@mattlewis92/eslint-plugin-disable-autofix/3.0.0",
+          },
+          "name": "npm:eslint-plugin-disable-autofix",
+          "type": "npm",
         }
       `);
     });

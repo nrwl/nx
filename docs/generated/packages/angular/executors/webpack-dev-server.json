@@ -1,0 +1,115 @@
+{
+  "name": "webpack-dev-server",
+  "implementation": "/packages/angular/src/builders/webpack-dev-server/webpack-dev-server.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "title": "Schema for Webpack Dev Server",
+    "description": "The webpack-dev-server executor is very similar to the standard dev server builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration.",
+    "examplesFile": "##### Seving an application with a custom webpack configuration\n\nThis executor should be used along with `@nrwl/angular:webpack-browser` to serve an application using a custom webpack configuration.\n\nYour `project.json` file should contain a `build` and `serve` target that matches the following:\n\n```json\n\"build\": {\n    \"executor\": \"@nrwl/angular:webpack-browser\",\n    \"options\": {\n        ...\n        \"customWebpackConfig\": {\n          \"path\": \"apps/appName/webpack.config.js\"\n        }\n    }\n},\n\"serve\": {\n    \"executor\": \"@nrwl/angular:webpack-dev-server\",\n    \"configurations\": {\n        \"production\": {\n            \"browserTarget\": \"appName:build:production\"\n        },\n        \"development\": {\n            \"browserTarget\": \"appName:build:development\"\n        }\n    },\n    \"defaultConfiguration\": \"development\",\n}\n```\n",
+    "type": "object",
+    "presets": [
+      { "name": "Using a Different Port", "keys": ["browserTarget", "port"] }
+    ],
+    "properties": {
+      "browserTarget": {
+        "type": "string",
+        "description": "A browser builder target to serve in the format of `project:target[:configuration]`. You can also pass in more than one configuration name as a comma-separated list. Example: `project:target:production,staging`.",
+        "pattern": "^[^:\\s]+:[^:\\s]+(:[^\\s]+)?$"
+      },
+      "port": {
+        "type": "number",
+        "description": "Port to listen on.",
+        "default": 4200
+      },
+      "host": {
+        "type": "string",
+        "description": "Host to listen on.",
+        "default": "localhost"
+      },
+      "proxyConfig": {
+        "type": "string",
+        "description": "Proxy configuration file. For more information, see https://angular.io/guide/build#proxying-to-a-backend-server."
+      },
+      "ssl": {
+        "type": "boolean",
+        "description": "Serve using HTTPS.",
+        "default": false
+      },
+      "sslKey": {
+        "type": "string",
+        "description": "SSL key to use for serving HTTPS."
+      },
+      "sslCert": {
+        "type": "string",
+        "description": "SSL certificate to use for serving HTTPS."
+      },
+      "headers": {
+        "type": "object",
+        "description": "Custom HTTP headers to be added to all responses.",
+        "propertyNames": { "pattern": "^[-_A-Za-z0-9]+$" },
+        "additionalProperties": { "type": "string" }
+      },
+      "open": {
+        "type": "boolean",
+        "description": "Opens the url in default browser.",
+        "default": false,
+        "alias": "o"
+      },
+      "verbose": {
+        "type": "boolean",
+        "description": "Adds more details to output logging."
+      },
+      "liveReload": {
+        "type": "boolean",
+        "description": "Whether to reload the page on change, using live-reload.",
+        "default": true
+      },
+      "publicHost": {
+        "type": "string",
+        "description": "The URL that the browser client (or live-reload client, if enabled) should use to connect to the development server. Use for a complex dev server setup, such as one with reverse proxies."
+      },
+      "allowedHosts": {
+        "type": "array",
+        "description": "List of hosts that are allowed to access the dev server.",
+        "default": [],
+        "items": { "type": "string" }
+      },
+      "servePath": {
+        "type": "string",
+        "description": "The pathname where the app will be served."
+      },
+      "disableHostCheck": {
+        "type": "boolean",
+        "description": "Don't verify connected clients are part of allowed hosts.",
+        "default": false
+      },
+      "hmr": {
+        "type": "boolean",
+        "description": "Enable hot module replacement.",
+        "default": false
+      },
+      "watch": {
+        "type": "boolean",
+        "description": "Rebuild on change.",
+        "default": true
+      },
+      "poll": {
+        "type": "number",
+        "description": "Enable and define the file watching poll time period in milliseconds."
+      },
+      "buildLibsFromSource": {
+        "type": "boolean",
+        "description": "Read buildable libraries from source instead of building them separately. If not set, it will take the value specified in the `browserTarget` options, or it will default to `true` if it's also not set in the `browserTarget` options."
+      }
+    },
+    "additionalProperties": false,
+    "required": ["browserTarget"]
+  },
+  "description": "The `webpack-dev-server` executor is very similar to the standard `dev-server` builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/angular/src/builders/webpack-dev-server/schema.json",
+  "type": "executor"
+}

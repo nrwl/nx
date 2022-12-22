@@ -4,22 +4,19 @@ import {
   InformationCircleIcon,
 } from '@heroicons/react/24/outline';
 import classNames from 'classnames';
-// nx-ignore-next-line
-
-import DebuggerPanel from './ui-components/debugger-panel';
+import { DebuggerPanel } from './ui-components/debugger-panel';
 import { useEnvironmentConfig } from './hooks/use-environment-config';
 import { getGraphService } from './machines/graph.service';
-import { selectValueByThemeStatic } from './theme-resolver';
 import { Outlet, useNavigate, useParams } from 'react-router-dom';
-import ThemePanel from './feature-projects/panels/theme-panel';
-import Dropdown from './ui-components/dropdown';
+import { ThemePanel } from './feature-projects/panels/theme-panel';
+import { Dropdown } from '@nrwl/graph/ui-components';
 import { useCurrentPath } from './hooks/use-current-path';
-import ExperimentalFeature from './ui-components/experimental-feature';
-import RankdirPanel from './feature-projects/panels/rankdir-panel';
+import { ExperimentalFeature } from './ui-components/experimental-feature';
+import { RankdirPanel } from './feature-projects/panels/rankdir-panel';
 import { getProjectGraphService } from './machines/get-services';
-import TooltipDisplay from './ui-tooltips/graph-tooltip-display';
 import { useSyncExternalStore } from 'use-sync-external-store/shim';
-import { Tooltip } from './ui-tooltips/tooltip';
+import { Tooltip } from '@nrwl/graph/ui-tooltips';
+import { TooltipDisplay } from './ui-tooltips/graph-tooltip-display';
 
 export function Shell(): JSX.Element {
   const projectGraphService = getProjectGraphService();
@@ -53,7 +50,7 @@ export function Shell(): JSX.Element {
   ];
 
   function projectChange(projectGraphId: string) {
-    navigate(`/${projectGraphId}${topLevelRoute}`);
+    navigate(`/${encodeURIComponent(projectGraphId)}${topLevelRoute}`);
   }
 
   function downloadImage() {
@@ -107,7 +104,9 @@ export function Shell(): JSX.Element {
                     projectGraphService.send('deselectAll');
                     if (environment.environment === 'dev') {
                       navigate(
-                        `/${currentPath.workspace}${event.currentTarget.value}`
+                        `/${encodeURIComponent(currentPath.workspace)}${
+                          event.currentTarget.value
+                        }`
                       );
                     } else {
                       navigate(`${event.currentTarget.value}`);
@@ -176,7 +175,10 @@ export function Shell(): JSX.Element {
         ) : null}
 
         <div className="h-full w-full">
-          <div className="h-full w-full" id="cytoscape-graph"></div>
+          <div
+            className="h-full w-full cursor-pointer"
+            id="cytoscape-graph"
+          ></div>
           <TooltipDisplay></TooltipDisplay>
 
           <Tooltip

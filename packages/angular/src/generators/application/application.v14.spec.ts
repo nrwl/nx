@@ -214,15 +214,6 @@ describe('app', () => {
       expect(appTsConfig.extends).toBe('../../tsconfig.base.json');
     });
 
-    it('should set default project', async () => {
-      // ACT
-      await generateApp(appTree);
-
-      // ASSERT
-      const { defaultProject } = readWorkspaceConfiguration(appTree);
-      expect(defaultProject).toBe('my-app');
-    });
-
     it('should not overwrite default project if already set', async () => {
       // ARRANGE
       const workspace = readWorkspaceConfiguration(appTree);
@@ -235,15 +226,6 @@ describe('app', () => {
       // ASSERT
       const { defaultProject } = readWorkspaceConfiguration(appTree);
       expect(defaultProject).toBe('some-awesome-project');
-    });
-
-    it('should not set default project when "--skip-default-project=true"', async () => {
-      // ACT
-      await generateApp(appTree, 'my-app', { skipDefaultProject: true });
-
-      // ASSERT
-      const { defaultProject } = readWorkspaceConfiguration(appTree);
-      expect(defaultProject).toBeUndefined();
     });
   });
 

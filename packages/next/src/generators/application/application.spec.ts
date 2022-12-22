@@ -19,13 +19,10 @@ describe('app', () => {
       });
 
       const workspaceJson = readJson(tree, 'workspace.json');
-      const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
-
       expect(workspaceJson.projects['my-app'].root).toEqual('apps/my-app');
       expect(workspaceJson.projects['my-app-e2e'].root).toEqual(
         'apps/my-app-e2e'
       );
-      expect(nxJson.defaultProject).toEqual('my-app');
     });
 
     it('should update tags and implicit dependencies', async () => {
@@ -422,8 +419,8 @@ describe('app', () => {
       expect(tsConfig.compilerOptions.allowJs).toEqual(true);
 
       const tsConfigApp = readJson(tree, 'apps/my-app/tsconfig.json');
-      expect(tsConfigApp.include).toContain('src/**/*.js');
-      expect(tsConfigApp.exclude).not.toContain('src/**/*.spec.js');
+      expect(tsConfigApp.include).toContain('**/*.js');
+      expect(tsConfigApp.exclude).not.toContain('**/*.spec.js');
     });
   });
 

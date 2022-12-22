@@ -3,6 +3,7 @@ import {
   ProjectGraph,
   ProjectGraphExternalNode,
 } from '../../config/project-graph';
+import { PackageJsonDeps } from './pruning';
 
 /**
  * Apply simple hashing of the content using the default hashing implementation
@@ -13,6 +14,11 @@ export function hashString(fileContent: string): string {
   return defaultHashing.hashArray([fileContent]);
 }
 
+/**
+ * Hash partial graph's external nodes
+ * for task graph caching
+ * @param projectGraph
+ */
 export function hashExternalNodes(projectGraph: ProjectGraph) {
   Object.keys(projectGraph.externalNodes).forEach((key) => {
     if (!projectGraph.externalNodes[key].data.hash) {
@@ -24,30 +30,43 @@ export function hashExternalNodes(projectGraph: ProjectGraph) {
 
 function hashExternalNode(node: ProjectGraphExternalNode, graph: ProjectGraph) {
   const hashKey = `${node.data.packageName}@${node.data.version}`;
+
   if (!graph.dependencies[node.name]) {
     node.data.hash = hashString(hashKey);
   } else {
-    const hashingInput = [hashKey];
-    traverseExternalNodesDependencies(node.name, graph, hashingInput);
-    node.data.hash = defaultHashing.hashArray(hashingInput.sort());
+    // collect all dependencies' hashes
+    const externalDependencies = traverseExternalNodesDependencies(
+      node.name,
+      graph,
+      new Set([hashKey])
+    );
+    node.data.hash = defaultHashing.hashArray(
+      Array.from(externalDependencies).sort()
+    );
   }
 }
 
 function traverseExternalNodesDependencies(
   projectName: string,
   graph: ProjectGraph,
-  visited: string[]
-) {
+  visited: Set<string>
+): Set<string> {
   graph.dependencies[projectName].forEach((d) => {
     const target = graph.externalNodes[d.target];
+    if (!target) {
+      return;
+    }
+
     const targetKey = `${target.data.packageName}@${target.data.version}`;
-    if (visited.indexOf(targetKey) === -1) {
-      visited.push(targetKey);
+
+    if (!visited.has(targetKey)) {
+      visited.add(targetKey);
       if (graph.dependencies[d.target]) {
         traverseExternalNodesDependencies(d.target, graph, visited);
       }
     }
   });
+  return visited;
 }
 
 /**
@@ -59,12 +78,8 @@ function traverseExternalNodesDependencies(
  */
 export function generatePrunnedHash(
   originalHash: string,
-  packages: string[],
-  projectName?: string
+  normalizedPackageJson: PackageJsonDeps
 ) {
-  const hashingInput = [originalHash, ...packages];
-  if (projectName) {
-    hashingInput.push(projectName);
-  }
+  const hashingInput = [originalHash, JSON.stringify(normalizedPackageJson)];
   return defaultHashing.hashArray(hashingInput);
 }

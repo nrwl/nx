@@ -44,7 +44,7 @@ describe('lib', () => {
       linter: Linter.EsLint,
       skipFormat: false,
       unitTestRunner: UnitTestRunner.Jest,
-      simpleModuleName: false,
+      simpleName: false,
       strict: true,
       ...opts,
     });
@@ -558,7 +558,7 @@ describe('lib', () => {
       await runLibraryGeneratorWithOpts({
         name: 'myLib2',
         directory: 'myDir',
-        simpleModuleName: true,
+        simpleName: true,
       });
 
       // ASSERT
@@ -693,7 +693,7 @@ describe('lib', () => {
       };
       await runLibraryGeneratorWithOpts({
         directory: 'myDir',
-        simpleModuleName: true,
+        simpleName: true,
         publishable: true,
         importPath: '@myorg/lib',
       });
@@ -766,7 +766,7 @@ describe('lib', () => {
           directory: 'myDir',
           routing: true,
           lazy: true,
-          simpleModuleName: true,
+          simpleName: true,
         });
 
         // ASSERT
@@ -811,7 +811,7 @@ describe('lib', () => {
           directory: 'myDir',
           routing: true,
           lazy: true,
-          simpleModuleName: true,
+          simpleName: true,
           parent: 'apps/myapp/src/app/app.module.ts',
         });
 
@@ -827,7 +827,7 @@ describe('lib', () => {
           directory: 'myDir',
           routing: true,
           lazy: true,
-          simpleModuleName: true,
+          simpleName: true,
           parent: 'apps/myapp/src/app/app.module.ts',
         });
 
@@ -938,7 +938,7 @@ describe('lib', () => {
         await runLibraryGeneratorWithOpts({
           name: 'myLib2',
           directory: 'myDir',
-          simpleModuleName: true,
+          simpleName: true,
           routing: true,
         });
         // ASSERT
@@ -984,7 +984,7 @@ describe('lib', () => {
         await runLibraryGeneratorWithOpts({
           name: 'myLib2',
           directory: 'myDir',
-          simpleModuleName: true,
+          simpleName: true,
           routing: true,
           parent: 'apps/myapp/src/app/app.module.ts',
         });
@@ -998,7 +998,7 @@ describe('lib', () => {
           directory: 'myDir',
           routing: true,
           parent: 'apps/myapp/src/app/app.module.ts',
-          simpleModuleName: true,
+          simpleName: true,
         });
 
         const moduleContents3 = tree
@@ -1439,6 +1439,53 @@ describe('lib', () => {
       ).toMatchSnapshot();
       expect(
         tree.read('libs/my-lib/src/lib/my-lib.component.spec.ts', 'utf-8')
+      ).toMatchSnapshot();
+    });
+
+    it('should generate a library with a standalone component in a directory', async () => {
+      await runLibraryGeneratorWithOpts({
+        standalone: true,
+        directory: 'my-dir',
+      });
+
+      expect(
+        tree.read('libs/my-dir/my-lib/src/index.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read(
+          'libs/my-dir/my-lib/src/lib/my-dir-my-lib/my-dir-my-lib.component.ts',
+          'utf-8'
+        )
+      ).toMatchSnapshot();
+      expect(
+        tree.read(
+          'libs/my-dir/my-lib/src/lib/my-dir-my-lib/my-dir-my-lib.component.spec.ts',
+          'utf-8'
+        )
+      ).toMatchSnapshot();
+    });
+
+    it('should generate a library with a standalone component in a directory with a simple name', async () => {
+      await runLibraryGeneratorWithOpts({
+        standalone: true,
+        directory: 'my-dir',
+        simpleName: true,
+      });
+
+      expect(
+        tree.read('libs/my-dir/my-lib/src/index.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read(
+          'libs/my-dir/my-lib/src/lib/my-lib/my-lib.component.ts',
+          'utf-8'
+        )
+      ).toMatchSnapshot();
+      expect(
+        tree.read(
+          'libs/my-dir/my-lib/src/lib/my-lib/my-lib.component.spec.ts',
+          'utf-8'
+        )
       ).toMatchSnapshot();
     });
 

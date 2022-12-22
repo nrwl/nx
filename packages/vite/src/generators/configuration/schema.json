@@ -14,11 +14,16 @@
       },
       "aliases": ["name", "projectName"],
       "x-dropdown": "project",
-      "x-prompt": "What is the name of the project to set up a webpack for?"
+      "x-prompt": "What is the name of the project to set up Vite for?"
     },
     "includeLib": {
       "type": "boolean",
       "description": "Add a library build option and skip the server option.",
+      "hidden": true
+    },
+    "includeVitest": {
+      "type": "boolean",
+      "description": "Use vitest for the test suite.",
       "hidden": true
     },
     "uiFramework": {
@@ -33,6 +38,18 @@
       "description": "Is this a new project?",
       "default": false,
       "hidden": true
+    },
+    "buildTarget": {
+      "type": "string",
+      "description": "The build target of the project to be transformed to use the @nrwl/vite:build executor."
+    },
+    "serveTarget": {
+      "type": "string",
+      "description": "The serve target of the project to be transformed to use the @nrwl/vite:dev-server executor."
+    },
+    "testTarget": {
+      "type": "string",
+      "description": "The test target of the project to be transformed to use the @nrwl/vite:test executor."
     }
   },
   "examplesFile": "../../../docs/configuration-examples.md"

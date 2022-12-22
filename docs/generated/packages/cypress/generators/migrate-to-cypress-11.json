@@ -1,0 +1,26 @@
+{
+  "name": "migrate-to-cypress-11",
+  "factory": "./src/generators/migrate-to-cypress-11/migrate-to-cypress-11#migrateCypressProject",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "$id": "NxCypressMigrateTo11",
+    "cli": "nx",
+    "title": "Migrate e2e project to Cypress 11",
+    "description": "Migrate Cypress e2e project from v8/v9 to Cypress v11.",
+    "type": "object",
+    "examples": [
+      {
+        "command": "nx g @nrwl/cypress:migrate-to-cypress-11",
+        "description": "Migrate existing cypress projects to Cypress v11"
+      }
+    ],
+    "properties": {},
+    "presets": []
+  },
+  "description": "Migrate existing Cypress e2e projects to Cypress v11",
+  "implementation": "/packages/cypress/src/generators/migrate-to-cypress-11/migrate-to-cypress-11#migrateCypressProject.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/cypress/src/generators/migrate-to-cypress-11/schema.json",
+  "type": "generator"
+}

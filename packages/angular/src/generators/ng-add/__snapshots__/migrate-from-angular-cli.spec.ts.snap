@@ -98,6 +98,7 @@ Object {
 
 exports[`workspace --preserve-angular-cli-layout should support multiple projects 2`] = `
 Object {
+  "$schema": "node_modules/nx/schemas/project-schema.json",
   "name": "app1",
   "sourceRoot": "src",
   "targets": Object {
@@ -125,6 +126,7 @@ Object {
 
 exports[`workspace --preserve-angular-cli-layout should support multiple projects 3`] = `
 Object {
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "app2",
   "sourceRoot": "projects/app2/src",
   "targets": Object {
@@ -152,6 +154,7 @@ Object {
 
 exports[`workspace --preserve-angular-cli-layout should support multiple projects 4`] = `
 Object {
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "lib1",
   "sourceRoot": "projects/lib1/src",
   "targets": Object {

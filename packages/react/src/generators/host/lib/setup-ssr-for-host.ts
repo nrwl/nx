@@ -5,6 +5,7 @@ import {
   joinPathFragments,
   names,
   readProjectConfiguration,
+  updateProjectConfiguration,
 } from '@nrwl/devkit';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
@@ -19,7 +20,10 @@ export async function setupSsrForHost(
   defaultRemoteManifest: { name: string; port: number }[]
 ) {
   const tasks: GeneratorCallback[] = [];
-  const project = readProjectConfiguration(tree, appName);
+  let project = readProjectConfiguration(tree, appName);
+  project.targets.serve.executor =
+    '@nrwl/react:module-federation-ssr-dev-server';
+  updateProjectConfiguration(tree, appName, project);
 
   generateFiles(
     tree,
@@ -36,6 +40,7 @@ export async function setupSsrForHost(
       }),
       appName,
       tmpl: '',
+      browserBuildOutputPath: project.targets.build.options.outputPath,
     }
   );
 

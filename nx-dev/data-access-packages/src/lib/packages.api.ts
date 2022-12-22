@@ -1,139 +1,151 @@
+import { TagsApi } from '@nrwl/nx-dev/data-access-documents/node-only';
+import { DocumentMetadata } from '@nrwl/nx-dev/models-document';
 import {
-  createDocumentMetadata,
-  DocumentMetadata,
-} from '@nrwl/nx-dev/models-document';
-import { PackageMetadata, SchemaMetadata } from '@nrwl/nx-dev/models-package';
+  FileMetadata,
+  IntrinsicPackageMetadata,
+  ProcessedPackageMetadata,
+  SchemaMetadata,
+} from '@nrwl/nx-dev/models-package';
 import { readFileSync } from 'fs';
+import { join } from 'path';
 
-export interface StaticPackagePaths {
+interface StaticDocumentPaths {
   params: { segments: string[] };
 }
 
 export class PackagesApi {
-  private database: Record<string, PackageMetadata> = {};
+  private readonly manifest: Record<string, ProcessedPackageMetadata>;
 
   constructor(
     private readonly options: {
-      publicPackagesRoot: string; // eg: nx-dev/nx-dev/public/documentation
-      // packages.json content file
-      packagesIndex: {
-        name: string;
-        packageName: string;
-        description: string;
-        path: string;
-        schemas: { executors: string[]; generators: string[] };
-      }[];
+      id: string;
+      manifest: Record<string, ProcessedPackageMetadata>;
+      prefix: string;
+      publicDocsRoot: string;
+      tagsApi: TagsApi;
     }
   ) {
-    if (!options.publicPackagesRoot) {
-      throw new Error('public packages root cannot be undefined');
+    if (!options.id) {
+      throw new Error('id cannot be undefined');
     }
-  }
-
-  getPackage(id: string): PackageMetadata {
-    const packagePath: string | null =
-      this.options.packagesIndex.find((p) => p.name === id)?.path ?? null;
-
-    if (!packagePath) throw new Error('Package name could not be found: ' + id);
-
-    // For production build, the packages files are missing so need this try-catch.
-    // TODO(jack): Look at handling this without try-catch.
-    try {
-      if (!this.database[id])
-        this.database[id] = JSON.parse(
-          readFileSync(
-            [this.options.publicPackagesRoot, packagePath].join('/'),
-            'utf-8'
-          )
-        );
-    } catch {
-      //nothing
+    if (!options.prefix) {
+      options.prefix = '';
+    }
+    if (!options.publicDocsRoot) {
+      throw new Error('public docs root cannot be undefined');
+    }
+    if (!options.manifest) {
+      throw new Error('public document sources cannot be undefined');
     }
 
-    return this.database[id];
+    this.manifest = Object.assign({}, this.options.manifest);
   }
 
-  getStaticPackagePaths(): StaticPackagePaths[] {
-    const paths: StaticPackagePaths[] = [];
+  getFilePath(path: string): string {
+    return join(this.options.publicDocsRoot, path);
+  }
 
-    this.options.packagesIndex.map((p) => {
-      paths.push({
+  /**
+   * Give a list of available segments/paths for the Nextjs app.
+   */
+  getStaticDocumentPaths(): {
+    packages: StaticDocumentPaths[];
+    documents: StaticDocumentPaths[];
+    executors: StaticDocumentPaths[];
+    generators: StaticDocumentPaths[];
+  } {
+    /**
+     * TODO: Extract this into utils, can be used by DocumentsAPI as well.
+     * Generate a Nextjs Segments Param from a path and prefix (optional)
+     * @param {string} path
+     * @param {string} prefix
+     * @returns {StaticDocumentPaths}
+     */
+    function generateSegments(
+      path: string,
+      prefix: string = ''
+    ): StaticDocumentPaths {
+      const segments = path.split('/').filter(Boolean).flat();
+      return {
         params: {
-          segments: ['packages', p.name],
+          segments: !!prefix ? [prefix].concat(segments) : segments,
         },
-      });
-      p.schemas.generators.forEach((g) => {
-        paths.push({
-          params: {
-            segments: ['packages', p.name, 'generators', g],
-          },
-        });
-      });
-      p.schemas.executors.forEach((e) => {
-        paths.push({
-          params: {
-            segments: ['packages', p.name, 'executors', e],
-          },
-        });
-      });
-    });
-    return paths;
-  }
-
-  getPackageDocuments(): DocumentMetadata {
-    // For production build, the packages files are missing so need this try-catch.
-    // TODO(jack): Look at handling this without try-catch.
-    try {
-      return createDocumentMetadata({
-        id: 'packages',
-        name: 'packages',
-        itemList: this.options.packagesIndex.map((p) =>
-          createDocumentMetadata({
-            id: p.name,
-            name: p.name.replace(/-/gi, ' '),
-            description: p.description,
-            packageName: p.packageName,
-            path: `/packages/${p.name}`,
-            itemList: this.getPackage(p.name)
-              .documentation.map((d) => ({
-                id: d.id,
-                name: d.name,
-                path: d.path,
-              }))
-              .concat(
-                p.schemas.executors.map((e) => ({
-                  id: e,
-                  name: e,
-                  path: `/packages/${p.name}/executors/${e}`,
-                }))
-              )
-              .concat(
-                p.schemas.generators.map((g) => ({
-                  id: g,
-                  name: g,
-                  path: `/packages/${p.name}/generators/${g}`,
-                }))
-              )
-              .map((x) => createDocumentMetadata(x)),
-          })
-        ),
-      });
-    } catch {
-      return createDocumentMetadata({
-        id: 'packages',
-        name: 'packages',
-        itemList: [],
-      });
+      };
     }
+
+    const packages = Object.values(this.manifest);
+    const experiment: {
+      packages: StaticDocumentPaths[];
+      documents: StaticDocumentPaths[];
+      executors: StaticDocumentPaths[];
+      generators: StaticDocumentPaths[];
+    } = {
+      packages: [],
+      documents: [],
+      executors: [],
+      generators: [],
+    };
+
+    packages.forEach((p) => {
+      experiment.packages.push(generateSegments(p.path, this.options.prefix));
+
+      Object.keys(p.documents).map((path) =>
+        experiment.documents.push(generateSegments(path, this.options.prefix))
+      );
+
+      Object.keys(p.executors).forEach((path) =>
+        experiment.executors.push(generateSegments(path, this.options.prefix))
+      );
+
+      Object.keys(p.generators).forEach((path) =>
+        experiment.generators.push(generateSegments(path, this.options.prefix))
+      );
+    });
+
+    return experiment;
   }
 
-  getPackageSchema(
-    packageName: string,
-    type: 'executors' | 'generators',
-    schemaName: string
-  ): SchemaMetadata | null {
-    const file = this.getPackage(packageName);
-    if (!file) return null;
-    return file[type].find((s) => s.name === schemaName) ?? null;
+  getPackage(path: string[]): ProcessedPackageMetadata {
+    const pkg: ProcessedPackageMetadata | null =
+      this.manifest[path.join('/')] || null;
+
+    if (!pkg)
+      throw new Error(
+        `Package not found in manifest with: "${path.join('/')}"`
+      );
+
+    return {
+      ...pkg,
+      description: pkg.documents['overview']
+        ? readFileSync(pkg.documents['overview'].file, 'utf-8')
+        : pkg.description,
+    };
+  }
+
+  getPackageDocuments(name: string): Record<string, DocumentMetadata> {
+    return this.manifest[name]['documents'];
+  }
+  getPackageFileMetadatas(
+    name: string,
+    type: 'executors' | 'generators'
+  ): Record<string, FileMetadata> {
+    return this.manifest[name][type];
+  }
+  getSchemaMetadata(fileMetadata: FileMetadata): SchemaMetadata {
+    return JSON.parse(
+      readFileSync(this.getFilePath(fileMetadata.file), 'utf-8')
+    );
+  }
+
+  getRootPackageIndex(): IntrinsicPackageMetadata[] {
+    return Object.keys(this.manifest).map((k) => ({
+      description: this.manifest[k].description,
+      githubRoot: this.manifest[k].githubRoot,
+      name: this.manifest[k].name,
+      packageName: this.manifest[k].packageName,
+      path: this.manifest[k].path,
+      root: this.manifest[k].root,
+      source: this.manifest[k].source,
+    }));
   }
 }

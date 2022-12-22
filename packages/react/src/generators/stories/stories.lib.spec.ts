@@ -4,11 +4,15 @@ import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import applicationGenerator from '../application/application';
 import { Linter } from '@nrwl/linter';
 import libraryGenerator from '../library/library';
+import enquirer = require('enquirer');
 
 describe('react:stories for libraries', () => {
   let appTree: Tree;
 
   beforeEach(async () => {
+    jest
+      .spyOn(enquirer, 'prompt')
+      .mockReturnValue(new Promise((res) => res({ runner: 'jest' })));
     appTree = await createTestUILib('test-ui-lib');
 
     // create another component

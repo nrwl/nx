@@ -32,6 +32,11 @@
       "enum": ["c8", "istanbul"],
       "default": "c8",
       "description": "Coverage provider to use."
+    },
+    "testTarget": {
+      "type": "string",
+      "description": "The test target of the project to be transformed to use the @nrwl/vite:test executor.",
+      "hidden": true
     }
   },
   "required": ["project"]

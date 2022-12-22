@@ -1,5 +1,274 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`@nrwl/vite:configuration library mode should add config for building library 1`] = `
+"
+
+      import { defineConfig } from 'vite';
+      import react from '@vitejs/plugin-react';
+      import viteTsConfigPaths from 'vite-tsconfig-paths';
+      import dts from 'vite-plugin-dts';
+import { join } from 'path';
+      
+      export default defineConfig({
+        
+        plugins: [
+          dts({
+      tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
+      // Faster builds by skipping tests. Set this to false to enable type checking.
+      skipDiagnostics: true,
+    }),
+          react(),
+          viteTsConfigPaths({
+            root: '../',
+          }),
+        ],
+        
+      // Configuration for building your library.
+      // See: https://vitejs.dev/guide/build.html#library-mode
+      build: {
+        lib: {
+          // Could also be a dictionary or array of multiple entry points.
+          entry: 'src/index.ts',
+          name: 'my-lib',
+          fileName: 'index',
+          // Change this to the formats you want to support.
+          // Don't forgot to update your package.json as well.
+          formats: ['es', 'cjs']
+        },
+        rollupOptions: {
+          // External packages that should not be bundled into your library.
+          external: ['react', 'react-dom', 'react/jsx-runtime']
+        }
+      },
+        
+        
+      });"
+`;
+
+exports[`@nrwl/vite:configuration library mode should set up non buildable library correctly 1`] = `
+"
+/// <reference types=\\"vitest\\" />
+      import { defineConfig } from 'vite';
+      import react from '@vitejs/plugin-react';
+      import viteTsConfigPaths from 'vite-tsconfig-paths';
+      import dts from 'vite-plugin-dts';
+import { join } from 'path';
+      
+      export default defineConfig({
+        
+        plugins: [
+          dts({
+      tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
+      // Faster builds by skipping tests. Set this to false to enable type checking.
+      skipDiagnostics: true,
+    }),
+          react(),
+          viteTsConfigPaths({
+            root: '../../',
+          }),
+        ],
+        
+      // Configuration for building your library.
+      // See: https://vitejs.dev/guide/build.html#library-mode
+      build: {
+        lib: {
+          // Could also be a dictionary or array of multiple entry points.
+          entry: 'src/index.ts',
+          name: 'react-lib-nonb-jest',
+          fileName: 'index',
+          // Change this to the formats you want to support.
+          // Don't forgot to update your package.json as well.
+          formats: ['es', 'cjs']
+        },
+        rollupOptions: {
+          // External packages that should not be bundled into your library.
+          external: ['react', 'react-dom', 'react/jsx-runtime']
+        }
+      },
+        
+        test: {
+    globals: true,
+    cache: {
+      dir: '../../node_modules/.vitest'
+    },
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    
+  },
+      });"
+`;
+
+exports[`@nrwl/vite:configuration library mode should set up non buildable library correctly 2`] = `
+"{
+  \\"projects\\": {
+    \\"react-lib-nonb-jest\\": {
+      \\"$schema\\": \\"../../node_modules/nx/schemas/project-schema.json\\",
+      \\"root\\": \\"libs/react-lib-nonb-jest\\",
+      \\"sourceRoot\\": \\"libs/react-lib-nonb-jest/src\\",
+      \\"projectType\\": \\"library\\",
+      \\"architect\\": {
+        \\"lint\\": {
+          \\"builder\\": \\"@nrwl/linter:eslint\\",
+          \\"outputs\\": [
+            \\"{options.outputFile}\\"
+          ],
+          \\"options\\": {
+            \\"lintFilePatterns\\": [
+              \\"libs/react-lib-nonb-jest/**/*.{ts,tsx,js,jsx}\\"
+            ]
+          }
+        },
+        \\"test\\": {
+          \\"builder\\": \\"@nrwl/vite:test\\",
+          \\"outputs\\": [
+            \\"{workspaceRoot}/coverage/{projectRoot}\\"
+          ],
+          \\"options\\": {
+            \\"passWithNoTests\\": true
+          }
+        },
+        \\"build\\": {
+          \\"builder\\": \\"@nrwl/vite:build\\",
+          \\"outputs\\": [
+            \\"{options.outputPath}\\"
+          ],
+          \\"defaultConfiguration\\": \\"production\\",
+          \\"options\\": {
+            \\"outputPath\\": \\"dist/libs/react-lib-nonb-jest\\"
+          },
+          \\"configurations\\": {
+            \\"development\\": {
+              \\"mode\\": \\"development\\"
+            },
+            \\"production\\": {
+              \\"mode\\": \\"production\\"
+            }
+          }
+        }
+      },
+      \\"tags\\": []
+    }
+  },
+  \\"version\\": 1
+}
+"
+`;
+
+exports[`@nrwl/vite:configuration transform React app to use Vite by providing custom targets transform React app if supported executor is provided should transform workspace.json project config 1`] = `
+"{
+  \\"projects\\": {
+    \\"my-test-mixed-react-app\\": {
+      \\"$schema\\": \\"../../node_modules/nx/schemas/project-schema.json\\",
+      \\"root\\": \\"apps/my-test-mixed-react-app\\",
+      \\"sourceRoot\\": \\"apps/my-test-mixed-react-app/src\\",
+      \\"projectType\\": \\"application\\",
+      \\"architect\\": {
+        \\"invalid-build\\": {
+          \\"builder\\": \\"@nrwl/js:tsc\\",
+          \\"outputs\\": [
+            \\"{options.outputPath}\\"
+          ]
+        },
+        \\"valid-build\\": {
+          \\"builder\\": \\"@nrwl/vite:build\\",
+          \\"outputs\\": [
+            \\"{options.outputPath}\\"
+          ],
+          \\"options\\": {
+            \\"outputPath\\": \\"dist/apps/my-test-mixed-react-app\\"
+          }
+        },
+        \\"serve\\": {
+          \\"builder\\": \\"@nrwl/vite:dev-server\\",
+          \\"defaultConfiguration\\": \\"development\\",
+          \\"options\\": {
+            \\"buildTarget\\": \\"my-test-mixed-react-app:build\\"
+          },
+          \\"configurations\\": {
+            \\"development\\": {
+              \\"buildTarget\\": \\"my-test-mixed-react-app:build:development\\"
+            },
+            \\"production\\": {
+              \\"buildTarget\\": \\"my-test-mixed-react-app:build:production\\",
+              \\"hmr\\": false
+            }
+          }
+        },
+        \\"lint\\": {
+          \\"builder\\": \\"@nrwl/linter:eslint\\",
+          \\"outputs\\": [
+            \\"{options.outputFile}\\"
+          ],
+          \\"options\\": {
+            \\"lintFilePatterns\\": [
+              \\"apps/my-test-mixed-react-app/**/*.{ts,tsx,js,jsx}\\"
+            ]
+          }
+        },
+        \\"test\\": {
+          \\"builder\\": \\"@nrwl/jest:jest\\",
+          \\"outputs\\": [
+            \\"{workspaceRoot}/coverage/{projectRoot}\\"
+          ],
+          \\"options\\": {
+            \\"jestConfig\\": \\"apps/my-test-mixed-react-app/jest.config.ts\\",
+            \\"passWithNoTests\\": true
+          }
+        }
+      },
+      \\"tags\\": []
+    }
+  },
+  \\"version\\": 1
+}
+"
+`;
+
+exports[`@nrwl/vite:configuration transform React app to use Vite should create vite.config file at the root of the app 1`] = `
+"
+
+      import { defineConfig } from 'vite';
+      import react from '@vitejs/plugin-react';
+      import viteTsConfigPaths from 'vite-tsconfig-paths';
+      
+      
+      export default defineConfig({
+        
+    server:{
+      port: 4200,
+      host: 'localhost',
+    },
+        plugins: [
+          
+          react(),
+          viteTsConfigPaths({
+            root: '../../',
+          }),
+        ],
+        
+        
+        
+      });"
+`;
+
+exports[`@nrwl/vite:configuration transform React app to use Vite should move index.html to the root of the project 1`] = `
+"<!DOCTYPE html>
+    <html lang=\\"en\\">
+      <head>
+        <meta charset=\\"utf-8\\" />
+        <title>My Test React App</title>
+        <base href=\\"/\\" />
+    
+        <meta name=\\"viewport\\" content=\\"width=device-width, initial-scale=1\\" />
+        <link rel=\\"icon\\" type=\\"image/x-icon\\" href=\\"favicon.ico\\" />
+      </head>
+      <body>
+        <div id=\\"root\\"></div>
+      <script type=\\"module\\" src=\\"/src/main.tsx\\"></script>
+          </body>
+    </html>"
+`;
+
 exports[`@nrwl/vite:configuration transform React app to use Vite should transform workspace.json project config 1`] = `
 "{
   \\"projects\\": {
@@ -87,6 +356,50 @@ exports[`@nrwl/vite:configuration transform React app to use Vite should transfo
 "
 `;
 
+exports[`@nrwl/vite:configuration transform Web app to use Vite should create vite.config file at the root of the app 1`] = `
+"
+      
+      import { defineConfig } from 'vite';
+      import viteTsConfigPaths from 'vite-tsconfig-paths';
+      
+      
+      export default defineConfig({
+        
+    server:{
+      port: 4200,
+      host: 'localhost',
+    },
+        plugins: [
+          
+          viteTsConfigPaths({
+            root: '../../',
+          }),
+        ],
+        
+        
+        
+      });"
+`;
+
+exports[`@nrwl/vite:configuration transform Web app to use Vite should move index.html to the root of the project 1`] = `
+"<!DOCTYPE html>
+    <html lang=\\"en\\">
+      <head>
+        <meta charset=\\"utf-8\\" />
+        <title>WebappPure</title>
+        <base href=\\"/\\" />
+    
+        <meta name=\\"viewport\\" content=\\"width=device-width, initial-scale=1\\" />
+        <link rel=\\"icon\\" type=\\"image/x-icon\\" href=\\"favicon.ico\\" />
+      </head>
+      <body>
+        <workspace-root></workspace-root>
+      <script type=\\"module\\" src=\\"/src/main.ts\\"></script>
+          </body>
+    </html>
+    "
+`;
+
 exports[`@nrwl/vite:configuration transform Web app to use Vite should transform workspace.json project config 1`] = `
 "{
   \\"projects\\": {
@@ -161,4 +474,39 @@ exports[`@nrwl/vite:configuration transform Web app to use Vite should transform
   \\"version\\": 1
 }
 "
+`;
+
+exports[`@nrwl/vite:configuration vitest should create a vitest configuration if "includeVitest" is true 1`] = `
+"
+/// <reference types=\\"vitest\\" />
+      import { defineConfig } from 'vite';
+      import react from '@vitejs/plugin-react';
+      import viteTsConfigPaths from 'vite-tsconfig-paths';
+      
+      
+      export default defineConfig({
+        
+    server:{
+      port: 4200,
+      host: 'localhost',
+    },
+        plugins: [
+          
+          react(),
+          viteTsConfigPaths({
+            root: '../../',
+          }),
+        ],
+        
+        
+        test: {
+    globals: true,
+    cache: {
+      dir: '../../node_modules/.vitest'
+    },
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    
+  },
+      });"
 `;

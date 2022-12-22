@@ -10,11 +10,11 @@ function determineRemoteUrl(remote: string) {
   if (!serveTarget) {
     throw new Error(
       `Cannot automatically determine URL of remote (${remote}). Looked for property "host" in the project's "serve" target.\n
-      You can also use the tuple syntax in your webpack config to configure your remotes. e.g. \`remotes: [['remote1', '//localhost:4201']]\``
+      You can also use the tuple syntax in your webpack config to configure your remotes. e.g. \`remotes: [['remote1', 'http://localhost:4201']]\``
     );
   }
 
-  const host = serveTarget.options?.host ?? '//localhost';
+  const host = serveTarget.options?.host ?? 'http://localhost';
   const port = serveTarget.options?.port ?? 4201;
   return `${
     host.endsWith('/') ? host.slice(0, -1) : host

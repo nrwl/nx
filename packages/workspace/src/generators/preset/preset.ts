@@ -70,7 +70,7 @@ async function createPreset(tree: Tree, options: Schema) {
       standaloneConfig: options.standaloneConfig,
       rootProject: true,
       bundler: 'vite',
-      e2eTestRunner: 'none',
+      e2eTestRunner: 'cypress',
       unitTestRunner: 'vitest',
     });
   } else if (options.preset === Preset.NextJs) {
@@ -137,12 +137,6 @@ async function createPreset(tree: Tree, options: Schema) {
     updateWorkspaceConfiguration(tree, c);
   } else {
     throw new Error(`Invalid preset ${options.preset}`);
-  }
-}
-
-function addPolyfills(host: Tree, polyfillsPath: string, polyfills: string[]) {
-  for (const polyfill of polyfills) {
-    insertStatement(host, polyfillsPath, `import '${polyfill}';\n`);
   }
 }
 

@@ -2,7 +2,9 @@ import type { Tree } from '@nrwl/devkit';
 import {
   joinPathFragments,
   readProjectConfiguration,
+  readWorkspaceConfiguration,
   updateProjectConfiguration,
+  updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import type { Schema } from '../schema';
 
@@ -72,4 +74,18 @@ export function updateProjectConfig(tree: Tree, schema: Schema) {
   };
 
   updateProjectConfiguration(tree, schema.project, projectConfig);
+
+  const workspaceConfig = readWorkspaceConfiguration(tree);
+  if (
+    workspaceConfig.tasksRunnerOptions?.default &&
+    !workspaceConfig.tasksRunnerOptions.default.options.cacheableOperations.includes(
+      'server'
+    )
+  ) {
+    workspaceConfig.tasksRunnerOptions.default.options.cacheableOperations = [
+      ...workspaceConfig.tasksRunnerOptions.default.options.cacheableOperations,
+      'server',
+    ];
+    updateWorkspaceConfiguration(tree, workspaceConfig);
+  }
 }

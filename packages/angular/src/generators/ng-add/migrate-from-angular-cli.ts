@@ -29,7 +29,6 @@ import {
   updateRootTsConfig,
   updateVsCodeRecommendedExtensions,
   updateWorkspaceConfigDefaults,
-  validateProjects,
   validateWorkspace,
 } from './utilities';
 
@@ -68,9 +67,6 @@ export async function migrateFromAngularCli(
       ...projects.apps.map((app) => new AppMigrator(tree, options, app)),
       ...projects.libs.map((lib) => new LibMigrator(tree, options, lib)),
     ];
-
-    // validate all projects
-    validateProjects(migrators);
 
     const workspaceRootFileTypesInfo = getWorkspaceRootFileTypesInfo(
       tree,

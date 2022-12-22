@@ -1,6 +1,7 @@
 import { sendPageViewEvent } from '@nrwl/nx-dev/feature-analytics';
 import { DefaultSeo } from 'next-seo';
 import { AppProps } from 'next/app';
+import Head from 'next/head';
 import { useRouter } from 'next/router';
 import Script from 'next/script';
 import { useEffect } from 'react';
@@ -45,6 +46,17 @@ export default function CustomApp({
           cardType: 'summary_large_image',
         }}
       />
+      <Head>
+        <meta name="apple-mobile-web-app-title" content="Nx" />
+        <meta name="application-name" content="Nx" />
+        <meta
+          name="msapplication-TileColor"
+          content="#DA532C"
+          key="windows-tile-color"
+        />
+        <meta name="theme-color" content="#FFFFFF" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </Head>
       <a
         id="skip-to-content-link"
         href="#main"

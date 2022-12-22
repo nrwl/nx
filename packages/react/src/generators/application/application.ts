@@ -109,7 +109,8 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
       uiFramework: 'react',
       project: options.projectName,
       newProject: true,
-      includeVitest: true,
+      includeVitest: options.unitTestRunner === 'vitest',
+      inSourceTests: options.inSourceTests,
     });
     tasks.push(viteTask);
   } else if (options.bundler === 'webpack') {

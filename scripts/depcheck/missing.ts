@@ -53,7 +53,7 @@ const IGNORE_MATCHES_IN_PACKAGE = {
     'tailwindcss',
   ],
   cli: ['nx'],
-  cypress: ['cypress', '@angular-devkit/schematics', '@nrwl/cypress'],
+  cypress: ['cypress', '@angular-devkit/schematics', '@nrwl/cypress', 'vite'],
   devkit: ['@angular-devkit/architect', 'rxjs', 'webpack'],
   'eslint-plugin-nx': ['@angular-eslint/eslint-plugin'],
   jest: [
@@ -87,6 +87,8 @@ const IGNORE_MATCHES_IN_PACKAGE = {
     '@module-federation/node',
     '@phenomnomnominal/tsquery',
     '@pmmmwh/react-refresh-webpack-plugin',
+    '@svgr/rollup',
+    '@rollup/plugin-url',
     '@svgr/webpack',
     '@swc/jest',
     'babel-jest',
@@ -94,6 +96,7 @@ const IGNORE_MATCHES_IN_PACKAGE = {
     'babel-plugin-emotion',
     'babel-plugin-styled-components',
     'css-loader',
+    'file-loader',
     'less-loader',
     'react-refresh',
     'rollup',
@@ -124,6 +127,7 @@ const IGNORE_MATCHES_IN_PACKAGE = {
     '@angular-devkit/core',
     '@angular-devkit/architect',
     '@angular/cli',
+    '@nrwl/angular',
     'ts-node', // We *may* fall back on ts-node, but we want to encourage the use of @swc-node instead so we don't explicitly list ts-node as an optional dep
   ],
   web: [

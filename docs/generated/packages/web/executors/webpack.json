@@ -1,0 +1,508 @@
+{
+  "name": "webpack",
+  "implementation": "/packages/web/src/executors/webpack/webpack.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "title": "Webpack Executor",
+    "description": "Builds web applications using webpack.",
+    "cli": "nx",
+    "type": "object",
+    "properties": {
+      "crossOrigin": {
+        "type": "string",
+        "description": "The `crossorigin` attribute to use for generated javascript script tags.  One of 'none' | 'anonymous' | 'use-credentials'."
+      },
+      "main": {
+        "type": "string",
+        "description": "The name of the main entry-point file.",
+        "x-completion-type": "file",
+        "x-completion-glob": "**/*@(.js|.ts|.tsx)"
+      },
+      "tsConfig": {
+        "type": "string",
+        "description": "The name of the Typescript configuration file.",
+        "x-completion-type": "file",
+        "x-completion-glob": "tsconfig.*.json"
+      },
+      "compiler": {
+        "type": "string",
+        "description": "The compiler to use.",
+        "enum": ["babel", "swc"],
+        "default": "babel"
+      },
+      "outputPath": {
+        "type": "string",
+        "description": "The output path of the generated files.",
+        "x-completion-type": "directory"
+      },
+      "deleteOutputPath": {
+        "type": "boolean",
+        "description": "Delete the output path before building.",
+        "default": true
+      },
+      "watch": {
+        "type": "boolean",
+        "description": "Enable re-building when files change.",
+        "default": false
+      },
+      "baseHref": {
+        "type": "string",
+        "description": "Base url for the application being built."
+      },
+      "deployUrl": {
+        "type": "string",
+        "description": "URL where the application will be deployed."
+      },
+      "vendorChunk": {
+        "type": "boolean",
+        "description": "Use a separate bundle containing only vendor libraries.",
+        "default": true
+      },
+      "commonChunk": {
+        "type": "boolean",
+        "description": "Use a separate bundle containing code used across multiple bundles.",
+        "default": true
+      },
+      "runtimeChunk": {
+        "type": "boolean",
+        "description": "Use a separate bundle containing the runtime.",
+        "default": true
+      },
+      "sourceMap": {
+        "description": "Output sourcemaps. Use 'hidden' for use with error reporting tools without generating sourcemap comment.",
+        "default": true,
+        "oneOf": [{ "type": "boolean" }, { "type": "string" }]
+      },
+      "progress": {
+        "type": "boolean",
+        "description": "Log progress to the console while building.",
+        "default": false
+      },
+      "assets": {
+        "type": "array",
+        "description": "List of static application assets.",
+        "default": [],
+        "items": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "glob": {
+                  "type": "string",
+                  "description": "The pattern to match."
+                },
+                "input": {
+                  "type": "string",
+                  "description": "The input directory path in which to apply 'glob'. Defaults to the project root."
+                },
+                "ignore": {
+                  "description": "An array of globs to ignore.",
+                  "type": "array",
+                  "items": { "type": "string" }
+                },
+                "output": {
+                  "type": "string",
+                  "description": "Absolute path within the output."
+                }
+              },
+              "additionalProperties": false,
+              "required": ["glob", "input", "output"]
+            },
+            { "type": "string" }
+          ]
+        }
+      },
+      "index": {
+        "type": "string",
+        "description": "HTML File which will be contain the application.",
+        "x-completion-type": "file",
+        "x-completion-glob": "**/*@(.html|.htm)"
+      },
+      "scripts": {
+        "type": "array",
+        "description": "External Scripts which will be included before the main application entry.",
+        "items": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "input": {
+                  "type": "string",
+                  "description": "The file to include.",
+                  "x-completion-type": "file",
+                  "x-completion-glob": "**/*@(.css|.scss|.less|.sass|.styl|.stylus)"
+                },
+                "bundleName": {
+                  "type": "string",
+                  "description": "The bundle name for this extra entry point."
+                },
+                "inject": {
+                  "type": "boolean",
+                  "description": "If the bundle will be referenced in the HTML file.",
+                  "default": true
+                }
+              },
+              "additionalProperties": false,
+              "required": ["input"]
+            },
+            {
+              "type": "string",
+              "description": "The file to include.",
+              "x-completion-type": "file",
+              "x-completion-glob": "**/*@(.css|.scss|.less|.sass|.styl|.stylus)"
+            }
+          ]
+        },
+        "default": []
+      },
+      "styles": {
+        "type": "array",
+        "description": "External Styles which will be included with the application",
+        "items": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "input": {
+                  "type": "string",
+                  "description": "The file to include.",
+                  "x-completion-type": "file",
+                  "x-completion-glob": "**/*@(.css|.scss|.less|.sass|.styl|.stylus)"
+                },
+                "bundleName": {
+                  "type": "string",
+                  "description": "The bundle name for this extra entry point."
+                },
+                "inject": {
+                  "type": "boolean",
+                  "description": "If the bundle will be referenced in the HTML file.",
+                  "default": true
+                }
+              },
+              "additionalProperties": false,
+              "required": ["input"]
+            },
+            {
+              "type": "string",
+              "description": "The file to include.",
+              "x-completion-type": "file",
+              "x-completion-glob": "**/*@(.css|.scss|.less|.sass|.styl|.stylus)"
+            }
+          ]
+        },
+        "default": []
+      },
+      "budgets": {
+        "description": "Budget thresholds to ensure parts of your application stay within boundaries which you set.",
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "The type of budget.",
+              "enum": [
+                "all",
+                "allScript",
+                "any",
+                "anyScript",
+                "bundle",
+                "initial"
+              ]
+            },
+            "name": {
+              "type": "string",
+              "description": "The name of the bundle."
+            },
+            "baseline": {
+              "type": "string",
+              "description": "The baseline size for comparison."
+            },
+            "maximumWarning": {
+              "type": "string",
+              "description": "The maximum threshold for warning relative to the baseline."
+            },
+            "maximumError": {
+              "type": "string",
+              "description": "The maximum threshold for error relative to the baseline."
+            },
+            "minimumWarning": {
+              "type": "string",
+              "description": "The minimum threshold for warning relative to the baseline."
+            },
+            "minimumError": {
+              "type": "string",
+              "description": "The minimum threshold for error relative to the baseline."
+            },
+            "warning": {
+              "type": "string",
+              "description": "The threshold for warning relative to the baseline (min & max)."
+            },
+            "error": {
+              "type": "string",
+              "description": "The threshold for error relative to the baseline (min & max)."
+            }
+          },
+          "additionalProperties": false,
+          "required": ["type"]
+        },
+        "default": []
+      },
+      "namedChunks": {
+        "type": "boolean",
+        "description": "Names the produced bundles according to their entry file.",
+        "default": true
+      },
+      "outputHashing": {
+        "type": "string",
+        "description": "Define the output filename cache-busting hashing mode.",
+        "default": "none",
+        "enum": ["none", "all", "media", "bundles"]
+      },
+      "stylePreprocessorOptions": {
+        "description": "Options to pass to style preprocessors.",
+        "type": "object",
+        "properties": {
+          "includePaths": {
+            "description": "Paths to include. Paths will be resolved to project root.",
+            "type": "array",
+            "items": { "type": "string" },
+            "default": []
+          }
+        },
+        "additionalProperties": false
+      },
+      "optimization": {
+        "description": "Enables optimization of the build output.",
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "scripts": {
+                "type": "boolean",
+                "description": "Enables optimization of the scripts output.",
+                "default": true
+              },
+              "styles": {
+                "type": "boolean",
+                "description": "Enables optimization of the styles output.",
+                "default": true
+              }
+            },
+            "additionalProperties": false
+          },
+          { "type": "boolean" }
+        ]
+      },
+      "extractCss": {
+        "type": "boolean",
+        "description": "Extract CSS into a `.css` file.",
+        "default": true
+      },
+      "es2015Polyfills": {
+        "description": "Conditional polyfills loaded in browsers which do not support `ES2015`.",
+        "type": "string"
+      },
+      "subresourceIntegrity": {
+        "type": "boolean",
+        "description": "Enables the use of subresource integrity validation.",
+        "default": false
+      },
+      "polyfills": {
+        "type": "string",
+        "description": "Polyfills to load before application",
+        "x-completion-type": "file",
+        "x-completion-glob": "**/*@(.js|.ts|.tsx)"
+      },
+      "verbose": {
+        "type": "boolean",
+        "description": "Emits verbose output",
+        "default": false
+      },
+      "statsJson": {
+        "type": "boolean",
+        "description": "Generates a 'stats.json' file which can be analyzed using tools such as: 'webpack-bundle-analyzer' or `<https://webpack.github.io/analyse>`.",
+        "default": false
+      },
+      "extractLicenses": {
+        "type": "boolean",
+        "description": "Extract all licenses in a separate file, in the case of production builds only.",
+        "default": false
+      },
+      "memoryLimit": {
+        "type": "number",
+        "description": "Memory limit for type checking service process in `MB`.",
+        "default": 2048
+      },
+      "maxWorkers": {
+        "type": "number",
+        "description": "Number of workers to use for type checking.",
+        "default": 2
+      },
+      "fileReplacements": {
+        "description": "Replace files with other files in the build.",
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "replace": {
+              "type": "string",
+              "description": "The file to be replaced.",
+              "x-completion-type": "file"
+            },
+            "with": {
+              "type": "string",
+              "description": "The file to replace with.",
+              "x-completion-type": "file"
+            }
+          },
+          "additionalProperties": false,
+          "required": ["replace", "with"]
+        },
+        "default": []
+      },
+      "buildLibsFromSource": {
+        "type": "boolean",
+        "description": "Read buildable libraries from source instead of building them separately.",
+        "default": true
+      },
+      "generateIndexHtml": {
+        "type": "boolean",
+        "description": "Generates `index.html` file to the output path. This can be turned off if using a webpack plugin to generate HTML such as `html-webpack-plugin`.",
+        "default": true
+      },
+      "postcssConfig": {
+        "type": "string",
+        "description": "Set a path to PostCSS config that applies to the app and all libs. Defaults to `undefined`, which auto-detects postcss.config.js files in each `app`/`lib` directory."
+      },
+      "webpackConfig": {
+        "type": "string",
+        "description": "Path to a function which takes a webpack config, some context and returns the resulting webpack config. See https://nx.dev/guides/customize-webpack",
+        "x-completion-type": "file",
+        "x-completion-glob": "webpack?(*)@(.js|.ts)"
+      }
+    },
+    "required": ["tsConfig", "main", "index"],
+    "definitions": {
+      "assetPattern": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "glob": {
+                "type": "string",
+                "description": "The pattern to match."
+              },
+              "input": {
+                "type": "string",
+                "description": "The input directory path in which to apply 'glob'. Defaults to the project root."
+              },
+              "ignore": {
+                "description": "An array of globs to ignore.",
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "output": {
+                "type": "string",
+                "description": "Absolute path within the output."
+              }
+            },
+            "additionalProperties": false,
+            "required": ["glob", "input", "output"]
+          },
+          { "type": "string" }
+        ]
+      },
+      "budget": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "The type of budget.",
+            "enum": [
+              "all",
+              "allScript",
+              "any",
+              "anyScript",
+              "bundle",
+              "initial"
+            ]
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the bundle."
+          },
+          "baseline": {
+            "type": "string",
+            "description": "The baseline size for comparison."
+          },
+          "maximumWarning": {
+            "type": "string",
+            "description": "The maximum threshold for warning relative to the baseline."
+          },
+          "maximumError": {
+            "type": "string",
+            "description": "The maximum threshold for error relative to the baseline."
+          },
+          "minimumWarning": {
+            "type": "string",
+            "description": "The minimum threshold for warning relative to the baseline."
+          },
+          "minimumError": {
+            "type": "string",
+            "description": "The minimum threshold for error relative to the baseline."
+          },
+          "warning": {
+            "type": "string",
+            "description": "The threshold for warning relative to the baseline (min & max)."
+          },
+          "error": {
+            "type": "string",
+            "description": "The threshold for error relative to the baseline (min & max)."
+          }
+        },
+        "additionalProperties": false,
+        "required": ["type"]
+      },
+      "extraEntryPoint": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "string",
+                "description": "The file to include.",
+                "x-completion-type": "file",
+                "x-completion-glob": "**/*@(.css|.scss|.less|.sass|.styl|.stylus)"
+              },
+              "bundleName": {
+                "type": "string",
+                "description": "The bundle name for this extra entry point."
+              },
+              "inject": {
+                "type": "boolean",
+                "description": "If the bundle will be referenced in the HTML file.",
+                "default": true
+              }
+            },
+            "additionalProperties": false,
+            "required": ["input"]
+          },
+          {
+            "type": "string",
+            "description": "The file to include.",
+            "x-completion-type": "file",
+            "x-completion-glob": "**/*@(.css|.scss|.less|.sass|.styl|.stylus)"
+          }
+        ]
+      }
+    },
+    "presets": []
+  },
+  "description": "Build an application using Webpack.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/web/src/executors/webpack/schema.json",
+  "type": "executor"
+}

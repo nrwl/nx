@@ -30,7 +30,7 @@ import { updateTsConfig } from './lib/update-tsconfig';
 import { addStandaloneComponent } from './lib/add-standalone-component';
 import { Schema } from './schema';
 
-export async function libraryGenerator(tree: Tree, schema: Partial<Schema>) {
+export async function libraryGenerator(tree: Tree, schema: Schema) {
   // Do some validation checks
   if (!schema.routing && schema.lazy) {
     throw new Error(`To use "--lazy" option, "--routing" must also be set.`);

@@ -7,13 +7,7 @@ import {
   workspaceRoot,
 } from '@nrwl/devkit';
 import { angularCliVersion } from '@nrwl/workspace/src/utils/versions';
-import {
-  ChildProcess,
-  exec,
-  ExecOptions,
-  execSync,
-  ExecSyncOptions,
-} from 'child_process';
+import { ChildProcess, exec, execSync, ExecSyncOptions } from 'child_process';
 import {
   copySync,
   createFileSync,
@@ -80,7 +74,7 @@ export const e2eRoot = isCI
   ? dirSync({ prefix: 'nx-e2e-' }).name
   : '/tmp/nx-e2e';
 
-function isVerbose() {
+export function isVerbose() {
   return (
     process.env.NX_VERBOSE_LOGGING === 'true' ||
     process.argv.includes('--verbose')
@@ -1012,7 +1006,7 @@ export async function expectJestTestsToPass(
   expect(results.combinedOutput).toContain('Test Suites: 1 passed, 1 total');
 }
 
-function getStrippedEnvironmentVariables() {
+export function getStrippedEnvironmentVariables() {
   const strippedVariables = new Set(['NX_TASK_TARGET_PROJECT']);
   return Object.fromEntries(
     Object.entries(process.env).filter(

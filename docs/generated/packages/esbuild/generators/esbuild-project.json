@@ -1,0 +1,64 @@
+{
+  "name": "esbuild-project",
+  "factory": "./src/generators/esbuild-project/esbuild-project#esbuildProjectGenerator",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "$id": "NxEsBuildProject",
+    "cli": "nx",
+    "title": "Add esbuild configuration to a project",
+    "description": "Add esbuild configuration to a project.",
+    "type": "object",
+    "properties": {
+      "project": {
+        "type": "string",
+        "description": "The name of the project.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-dropdown": "project",
+        "x-prompt": "What is the name of the project to set up a esbuild for?"
+      },
+      "main": {
+        "type": "string",
+        "description": "Path relative to the workspace root for the main entry file. Defaults to `<project-root>/src/main.ts` or `<project-root>src/index.ts`, whichever is found.",
+        "alias": "entryFile"
+      },
+      "tsConfig": {
+        "type": "string",
+        "description": "Path relative to the workspace root for the tsconfig file to build with. Defaults to `<project-root>/tsconfig.app.json` or `<project-root>/tsconfig.lib.json`, whichever is found."
+      },
+      "skipFormat": {
+        "description": "Skip formatting files.",
+        "type": "boolean",
+        "default": false
+      },
+      "skipPackageJson": {
+        "type": "boolean",
+        "default": false,
+        "description": "Do not add dependencies to `package.json`."
+      },
+      "skipValidation": {
+        "type": "boolean",
+        "default": false,
+        "description": "Do not perform any validation on existing project."
+      },
+      "importPath": {
+        "type": "string",
+        "description": "The library name used to import it, like `@myorg/my-awesome-lib`."
+      },
+      "platform": {
+        "type": "string",
+        "description": "Platform target for outputs.",
+        "enum": ["browser", "node", "neutral"],
+        "default": "node"
+      }
+    },
+    "required": [],
+    "examplesFile": "```bash\nnx g @nrwl/esbuild:esbuild-project my-package\n```\n\n{% callout type=\"note\" title=\"Overwriting existing build option\" %}\nThe `esbuild-projet` generator validates that an existing `build` target isn't already defined for the project. If you are adding esbuild to a project with an existing `build` target, pass the `--skipValidation` option.\n{% /callout %}\n\nYou may also provide a custom main entry file, or a custom tsconfig file if the defaults don't work. By default, the generator will look for a main file matching `src/index.ts` or `src/main.ts`, and a tsconfig file matching `tsconfig.app.json` or `tsconfig.lib.json`.\n\n```bash\nnx g @nrwl/esbuild:esbuild-project my-package \\\n--main=packages/my-package/src/entry.ts \\\n--tsConfig=packages/my-package/tsconfig.custom.json\n```\n",
+    "presets": []
+  },
+  "description": "Add esbuild configuration to a project.",
+  "hidden": true,
+  "implementation": "/packages/esbuild/src/generators/esbuild-project/esbuild-project#esbuildProjectGenerator.ts",
+  "aliases": [],
+  "path": "/packages/esbuild/src/generators/esbuild-project/schema.json",
+  "type": "generator"
+}

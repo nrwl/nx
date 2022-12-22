@@ -2,10 +2,10 @@ import * as fs from 'fs';
 
 export function writeViteIndexHtml(
   appName: string,
-  isNested: boolean,
+  isStandalone: boolean,
   isJs: boolean
 ) {
-  const indexPath = isNested ? 'index.html' : `apps/${appName}/index.html`;
+  const indexPath = isStandalone ? 'index.html' : `apps/${appName}/index.html`;
   if (fs.existsSync(indexPath)) {
     fs.copyFileSync(indexPath, indexPath + '.old');
   }

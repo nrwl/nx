@@ -33,6 +33,7 @@ export interface PackageJson {
   // Generic Package.Json Configuration
   name: string;
   version: string;
+  license?: string;
   scripts?: Record<string, string>;
   type?: 'module' | 'commonjs';
   main?: string;

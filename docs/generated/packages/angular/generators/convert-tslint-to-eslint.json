@@ -1,0 +1,60 @@
+{
+  "name": "convert-tslint-to-eslint",
+  "factory": "./src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint#conversionGenerator",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "$id": "NxAngularConvertTSLintToESLintGenerator",
+    "cli": "nx",
+    "title": "Convert an Angular project from TSLint to ESLint",
+    "description": "Convert an Angular project from TSLint to ESLint. NOTE: Does not work in `--dry-run mode`.",
+    "examples": [
+      {
+        "command": "nx g convert-tslint-to-eslint myapp",
+        "description": "The following will first configure the project, `myapp`, the same way a _new_ project is configured i.e. It will use Nx's new recommended ESLint config. By default, this also adds the existing TSLint configuration on top of the default ESLint config from Nx to continue checking what it checks today. This is done by migrating TSLint rules to their equivalent ESLint rules to the best of its abilities. Some TSLint rules may not have ESLint equivalents and will be reported during the conversion"
+      },
+      {
+        "command": "nx g convert-tslint-to-eslint myapp --ignoreExistingTslintConfig=true",
+        "description": "If your TSLint config isn't extremely important to you, ignoring it makes this process more deterministic. Unlike the prior example, this will discard the existing TSLint configuration, meaning that the project will only have the Nx's latest recommended ESLint configuration which may be good enough for some workspaces"
+      },
+      {
+        "command": "nx g convert-tslint-to-eslint myapp --removeTSLintIfNoMoreTSLintTargets=false",
+        "description": "By default, this process removes the TSLint related dependencies and configuration once no more projects use TSLint. This can be disabled with the following flag to keep TSLint related dependencies and configuration in the repo"
+      }
+    ],
+    "type": "object",
+    "properties": {
+      "project": {
+        "description": "The name of the Angular project to convert. Please note, if the project is an Angular app with an associated Cypress e2e project, it will also attempt to convert that.",
+        "type": "string",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "Which Angular project would you like to convert from TSLint to ESLint?"
+      },
+      "ignoreExistingTslintConfig": {
+        "type": "boolean",
+        "description": "If true, it will not use existing TSLint config as a reference, it will just reset the project with the latest recommended ESLint config.",
+        "default": false,
+        "x-prompt": "Would you like to ignore the existing TSLint config? Recommended if the TSLint config has not been altered much as it makes the new ESLint config cleaner."
+      },
+      "removeTSLintIfNoMoreTSLintTargets": {
+        "type": "boolean",
+        "description": "If this conversion leaves no more TSLint usage in the workspace, it will remove TSLint and related dependencies and configuration.",
+        "default": true,
+        "x-prompt": "Would you like to remove TSLint and its related config if there are no TSLint projects remaining after this conversion?"
+      },
+      "skipFormat": {
+        "type": "boolean",
+        "description": "Skip formatting files.",
+        "default": false
+      }
+    },
+    "additionalProperties": false,
+    "required": ["project"],
+    "presets": []
+  },
+  "description": "Converts a project from TSLint to ESLint.",
+  "implementation": "/packages/angular/src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint#conversionGenerator.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/angular/src/generators/convert-tslint-to-eslint/schema.json",
+  "type": "generator"
+}

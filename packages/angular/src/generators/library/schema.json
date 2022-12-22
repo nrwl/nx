@@ -45,6 +45,12 @@
     "simpleModuleName": {
       "description": "Keep the module name simple (when using `--directory`).",
       "type": "boolean",
+      "default": false,
+      "x-deprecated": "Use `simpleName` instead. It will be removed in v16."
+    },
+    "simpleName": {
+      "description": "Don't include the directory in the name of the module or standalone component entry of the library.",
+      "type": "boolean",
       "default": false
     },
     "addModuleSpec": {

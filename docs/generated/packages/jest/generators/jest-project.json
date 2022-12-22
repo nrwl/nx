@@ -1,0 +1,89 @@
+{
+  "name": "jest-project",
+  "factory": "./src/generators/jest-project/jest-project#jestProjectGenerator",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "$id": "NxJestProject",
+    "cli": "nx",
+    "title": "Add Jest Configuration to a project",
+    "description": "Add Jest Configuration to a project.",
+    "type": "object",
+    "properties": {
+      "project": {
+        "type": "string",
+        "description": "The name of the project.",
+        "$default": { "$source": "projectName" }
+      },
+      "skipSetupFile": {
+        "type": "boolean",
+        "description": "[Deprecated]: Skips the setup file required for angular. (Use `--setup-file`)",
+        "default": false,
+        "x-deprecated": true
+      },
+      "setupFile": {
+        "type": "string",
+        "enum": ["none", "angular", "web-components"],
+        "description": "The setup file to be generated.",
+        "default": "none"
+      },
+      "skipSerializers": {
+        "type": "boolean",
+        "description": "Skips the serializers required to snapshot angular templates.",
+        "default": false
+      },
+      "supportTsx": {
+        "type": "boolean",
+        "description": "Setup `tsx` support.",
+        "default": false
+      },
+      "testEnvironment": {
+        "type": "string",
+        "enum": ["jsdom", "node"],
+        "description": "The test environment for jest.",
+        "default": "jsdom"
+      },
+      "compiler": {
+        "type": "string",
+        "enum": ["tsc", "babel", "swc"],
+        "description": "The compiler to use for source and tests.",
+        "default": "tsc"
+      },
+      "babelJest": {
+        "type": "boolean",
+        "alias": "babel-jest",
+        "description": "Use `babel-jest` instead of `ts-jest` (Deprecated: Use `--compiler=babel` instead).",
+        "x-deprecated": true,
+        "default": false
+      },
+      "skipFormat": {
+        "description": "Skip formatting files",
+        "type": "boolean",
+        "default": false
+      },
+      "skipPackageJson": {
+        "type": "boolean",
+        "default": false,
+        "description": "Do not add dependencies to `package.json`."
+      },
+      "js": {
+        "type": "boolean",
+        "default": false,
+        "description": "Use JavaScript instead of TypeScript for config files"
+      },
+      "rootProject": {
+        "description": "Add Jest to an application at the root of the workspace",
+        "type": "boolean",
+        "default": false,
+        "hidden": true
+      }
+    },
+    "required": [],
+    "presets": []
+  },
+  "description": "Add Jest configuration to a project.",
+  "hidden": true,
+  "implementation": "/packages/jest/src/generators/jest-project/jest-project#jestProjectGenerator.ts",
+  "aliases": [],
+  "path": "/packages/jest/src/generators/jest-project/schema.json",
+  "type": "generator"
+}

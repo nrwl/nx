@@ -12,13 +12,7 @@ import {
 import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
 import { basename } from 'path';
 import { addBuildableLibrariesPostCssDependencies } from '../../../utils/dependencies';
-import type {
-  Logger,
-  ProjectMigrationInfo,
-  ValidationError,
-  ValidationResult,
-} from '../../utilities';
-import { arrayToString } from '../../utilities';
+import type { Logger, ProjectMigrationInfo } from '../../utilities';
 import { BuilderMigrator } from './builder.migrator';
 
 export class AngularDevkitNgPackagrMigrator extends BuilderMigrator {
@@ -39,6 +33,10 @@ export class AngularDevkitNgPackagrMigrator extends BuilderMigrator {
   }
 
   override migrate(): void {
+    if (this.skipMigration) {
+      return;
+    }
+
     if (!this.targets.size) {
       this.logger.warn(
         `There is no target in the project configuration using the ${this.builderName} builder. This might not be an issue. ` +
@@ -54,22 +52,6 @@ export class AngularDevkitNgPackagrMigrator extends BuilderMigrator {
       this.updateCacheableOperations([name]);
       addBuildableLibrariesPostCssDependencies(this.tree);
     }
-  }
-
-  override validate(): ValidationResult {
-    const errors: ValidationError[] = [];
-    // TODO(leo): keeping restriction until the full refactor is done and we start
-    // expanding what's supported.
-    if (this.targets.size > 1) {
-      errors.push({
-        message: `There is more than one target using a builder that is used to build the project (${arrayToString(
-          [...this.targets.keys()]
-        )}).`,
-        hint: `Make sure the project only has one target with a builder that is used to build the project.`,
-      });
-    }
-
-    return errors.length ? errors : null;
   }
 
   private updateTargetConfiguration(

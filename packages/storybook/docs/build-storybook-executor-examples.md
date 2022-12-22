@@ -114,7 +114,7 @@ This is the default configuration for Angular projects using Storybook. You can 
 {% /tab %}
 {% tab label="Changing the browserTarget" %}
 
-You can set the [`browserTarget`](/storybook/angular-browser-target) to use `build-storybook` as the builder. This is most useful in the cases where your project does not have a `build` target.
+You can set the [`browserTarget`](/packages/storybook/documents/angular-browser-target) to use `build-storybook` as the builder. This is most useful in the cases where your project does not have a `build` target.
 
 ```json
 "build-storybook": {
@@ -138,7 +138,7 @@ You can set the [`browserTarget`](/storybook/angular-browser-target) to use `bui
 
 {% tab label="Adding styles" %}
 
-You can add paths to stylesheets to be included in the Storybook build by using the `styles` array. You can also add `stylePreprocessorOptions`, much like you would do in the Angular builder. You can read more in our guide about [styles and preprocessor options for Storybook](/storybook/angular-configuring-styles).
+You can add paths to stylesheets to be included in the Storybook build by using the `styles` array. You can also add `stylePreprocessorOptions`, much like you would do in the Angular builder. You can read more in our guide about [styles and preprocessor options for Storybook](/packages/storybook/documents/angular-configuring-styles).
 
 ```json
 "build-storybook": {

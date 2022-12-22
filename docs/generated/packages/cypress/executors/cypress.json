@@ -1,0 +1,141 @@
+{
+  "name": "cypress",
+  "implementation": "/packages/cypress/src/executors/cypress/cypress.impl.ts",
+  "schema": {
+    "version": 2,
+    "title": "Cypress Target",
+    "description": "Run Cypress for e2e, integration and component testing.",
+    "type": "object",
+    "outputCapture": "pipe",
+    "cli": "nx",
+    "presets": [
+      {
+        "name": "Starting Dev Server",
+        "keys": ["cypressConfig", "devServerTarget"]
+      },
+      { "name": "Custom Base Url", "keys": ["cypressConfig", "baseUrl"] },
+      {
+        "name": "Component Testing",
+        "keys": ["cypressConfig", "devServerTarget", "testingType", "skipServe"]
+      }
+    ],
+    "properties": {
+      "cypressConfig": {
+        "type": "string",
+        "description": "The path of the Cypress configuration json file.",
+        "x-completion-type": "file",
+        "x-completion-glob": "cypress?(*)@(.js|.ts|.json)"
+      },
+      "watch": {
+        "type": "boolean",
+        "description": "Recompile and run tests when files change.",
+        "default": false
+      },
+      "tsConfig": {
+        "type": "string",
+        "description": "The path of the Cypress tsconfig configuration json file.",
+        "x-completion-type": "file",
+        "x-completion-glob": "tsconfig.*.json"
+      },
+      "devServerTarget": {
+        "type": "string",
+        "description": "Dev server target to run tests against."
+      },
+      "headed": {
+        "type": "boolean",
+        "description": "Displays the browser instead of running headlessly. Set this to `true` if your run depends on a Chrome extension being loaded.",
+        "default": false
+      },
+      "headless": {
+        "type": "boolean",
+        "description": "Hide the browser instead of running headed (default for cypress run).",
+        "default": false,
+        "x-deprecated": true
+      },
+      "exit": {
+        "type": "boolean",
+        "description": "Whether or not the Cypress Test Runner will stay open after running tests in a spec file.",
+        "default": true
+      },
+      "key": {
+        "type": "string",
+        "description": "The key cypress should use to run tests in parallel/record the run (CI only)."
+      },
+      "record": {
+        "type": "boolean",
+        "description": "Whether or not Cypress should record the results of the tests.",
+        "default": false
+      },
+      "parallel": {
+        "type": "boolean",
+        "description": "Whether or not Cypress should run its tests in parallel (CI only).",
+        "default": false
+      },
+      "baseUrl": {
+        "type": "string",
+        "description": "The address (with the port) which your application is running on."
+      },
+      "browser": {
+        "type": "string",
+        "description": "The browser to run tests in."
+      },
+      "env": {
+        "type": "object",
+        "description": "A key-value Pair of environment variables to pass to Cypress runner."
+      },
+      "spec": {
+        "type": "string",
+        "description": "A comma delimited glob string that is provided to the Cypress runner to specify which spec files to run. i.e. `**examples/**,**actions.spec**`."
+      },
+      "copyFiles": {
+        "type": "string",
+        "description": "A regex string that is used to choose what additional integration files to copy to the dist folder.",
+        "x-deprecated": true
+      },
+      "ciBuildId": {
+        "oneOf": [{ "type": "string" }, { "type": "number" }],
+        "description": "A unique identifier for a run to enable grouping or parallelization."
+      },
+      "group": {
+        "type": "string",
+        "description": "A named group for recorded runs in the Cypress dashboard."
+      },
+      "ignoreTestFiles": {
+        "type": "string",
+        "description": "A String or Array of glob patterns used to ignore test files that would otherwise be shown in your list of tests. Cypress uses minimatch with the options: `{dot: true, matchBase: true}`. We suggest using https://globster.xyz to test what files would match."
+      },
+      "reporter": {
+        "type": "string",
+        "description": "The reporter used during cypress run."
+      },
+      "reporterOptions": {
+        "type": "string",
+        "description": "The reporter options used. Supported options depend on the reporter."
+      },
+      "skipServe": {
+        "type": "boolean",
+        "description": "Skip dev-server build.",
+        "default": false
+      },
+      "testingType": {
+        "type": "string",
+        "description": "Specify the type of tests to execute.",
+        "enum": ["component", "e2e"],
+        "default": "e2e"
+      },
+      "tag": {
+        "type": "string",
+        "description": "A comma delimited list to identify a run with.",
+        "aliases": ["t"]
+      }
+    },
+    "additionalProperties": true,
+    "required": ["cypressConfig"],
+    "examplesFile": "Depending on your testing type, the Cypress executor is configured in different ways. The following are sample configurations that are created via the [cypress-project](/packages/cypress/generators/cypress-project) and [cypress-component-project](/packages/cypress/generators/cypress-component-project) generators.\n\n{% tabs %}\n{% tab label=\"E2E Testing\" %}\n\n```json\n\"targets\": {\n  \"e2e\": {\n    \"executor\": \"@nrwl/cypress:cypress\",\n    \"options\": {\n      \"cypressConfig\": \"apps/app-e2e/cypres.config.ts\",\n      \"devServerTarget\": \"my-react-app:serve\",\n      \"testingType\": \"e2e\"\n    }\n  }\n}\n```\n\n{% callout type=\"note\" title=\"API Testing\" %}\nAPI testing with Cypress is the same setup as e2e testing. Just change which `devServerTarget` is used!\n{% /callout %}\n\n### Providing a Base URL\n\nIf `devServerTarget` is provided, the url returned from started the dev server will be passed to cypress as the `baseUrl` option.\n\nDefining a `baseUrl` in the executor options will override the inferred `baseUrl` from the `devServerTarget`.\n\nThe `baseUrl` defined in the Cypress config file is the last value used if no url is found in the `devServerTarget` or executor options.\n\n### Static Serving\n\nWhen running in CI it doesn't make sense to start up a dev server since there aren't changes to watch for.\n\nYou can use [`@nrwl/web:file-server`](/packages/web/executors/file-server) to serve the pre-built static files of your frontend project.\n\nIn some _frontend_ application, add a 'static-serve' target.\n\n```json\n\"serve-static\": {\n  \"executor\": \"@nrwl/web:file-server\",\n  \"options\":{\n    \"buildTarget\": \"frontend:build\"\n  }\n}\n```\n\nIn the _e2e_ application add a configuration to change `devServerTarget` to point to the `static-serve` from the _frontend_ application\n\n```json\n\"e2e\": {\n  //...\n  \"configurations\": {\n    \"ci\": {\n      \"devServerTarget\": \"frontend:serve-static\"\n    }\n  }\n}\n```\n\n{% callout type=\"note\" title=\"What about Node projects?\" %}\nThe same can be done for backend node apps with [`@nrwl/js:node` executor](/packages/js/executors/node)\n{% /callout %}\n\n```bash\nnx e2e my-app-e2e --configuration=ci\n```\n\n{% /tab %}\n{% tab label=\"Component Testing\" %}\n\n{% callout type=\"note\" title=\"Cypress Component Testing\" %}\nWhen adding component testing to a project, it's best to use the framework specific generator, instead `cypress-component-project` directly.\n\n- [React component testing](/packages/react/generators/cypress-component-configuration)\n- [Angular component testing](/packages/angular/generators/cypress-component-configuration)\n\n{% /callout %}\n\n```json\n\"targets\": {\n  \"component-test\": {\n    \"executor\": \"@nrwl/cypress:cypress\",\n    \"options\": {\n      \"cypressConfig\": \"apps/app/cypres.config.ts\",\n      \"devServerTarget\": \"my-react-app:build\",\n      \"testingType\": \"component\",\n      \"skipServe\": true\n    }\n  }\n}\n```\n\nIt's important `skipServe` is set to true. Nx doesn't need to run the `devServerTarget`, Cypress creates its own dev server for component testing.\nInstead, Nx needs to know what build target to create the correct configuration to pass to Cypress, which is why it's still used in component testing.\n\n{% /tab %}\n{% /tabs %}\n\n### Environment Variables\n\nUsing [executor configurations](/recipe/use-executor-configurations#use-executor-configurations) offers flexibility to set environment variables\n\n```json\n\"targets\": {\n  \"e2e\": {\n    \"executor\": \"@nrwl/cypress:cypress\",\n    \"options\": {\n      \"cypressConfig\": \"apps/app-e2e/cypres.config.ts\",\n      \"devServerTarget\": \"my-react-app:serve\",\n      \"testingType\": \"e2e\"\n    },\n    \"configurations\": {\n      \"qa\": {\n        \"env\": {\n          \"API_URL\": \"https://api.qa.company.com\"\n        }\n      },\n      \"dev\": {\n        \"env\": {\n          \"API_URL\": \"http://locahost:3333/api\"\n        }\n      }\n    }\n  }\n}\n```\n\nRead more on different ways to use [environment variables for cypress executor](/packages/cypress#environment-variables)\n"
+  },
+  "description": "Run Cypress E2E tests.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/cypress/src/executors/cypress/schema.json",
+  "type": "executor"
+}

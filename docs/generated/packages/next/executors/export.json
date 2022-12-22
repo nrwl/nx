@@ -1,0 +1,39 @@
+{
+  "name": "export",
+  "implementation": "/packages/next/src/executors/export/export.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "cli": "nx",
+    "title": "Next Export",
+    "description": "Export a Next.js application. The exported application is located at `dist/$outputPath/exported`.",
+    "type": "object",
+    "properties": {
+      "buildTarget": {
+        "type": "string",
+        "description": "Target which builds the application"
+      },
+      "silent": {
+        "type": "boolean",
+        "description": "Hide progress or not (default is `false`)",
+        "default": false
+      },
+      "threads": {
+        "type": "number",
+        "description": "Number of worker threads to utilize (defaults to the number of CPUs)"
+      },
+      "buildLibsFromSource": {
+        "type": "boolean",
+        "description": "Read buildable libraries from source instead of building them separately.",
+        "default": true
+      }
+    },
+    "required": [],
+    "presets": []
+  },
+  "description": "Export a Next.js application. The exported application is located at `dist/$outputPath/exported`.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/next/src/executors/export/schema.json",
+  "type": "executor"
+}

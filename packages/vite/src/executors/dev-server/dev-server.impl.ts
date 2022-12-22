@@ -27,6 +27,10 @@ export default async function* viteDevServerExecutor(
     } as InlineConfig
   );
 
+  if (serverConfig.mode === 'production') {
+    console.warn('WARNING: serve is not meant to be run in production!');
+  }
+
   const server = await createServer(serverConfig);
 
   const baseUrl = await runViteDevServer(server);

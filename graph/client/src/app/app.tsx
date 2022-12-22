@@ -1,27 +1,11 @@
 import { themeInit } from './theme-resolver';
 import { rankDirInit } from './rankdir-resolver';
-import {
-  createBrowserRouter,
-  createHashRouter,
-  RouterProvider,
-} from 'react-router-dom';
-import { getRoutesForEnvironment } from './routes';
-import { getEnvironmentConfig } from './hooks/use-environment-config';
+import { RouterProvider } from 'react-router-dom';
+import { getRouter } from './get-router';
 
 themeInit();
 rankDirInit();
 
-const environmentConfig = getEnvironmentConfig();
-
-let routerCreate = createBrowserRouter;
-if (environmentConfig.localMode === 'build') {
-  routerCreate = createHashRouter;
-}
-
-const router = routerCreate(getRoutesForEnvironment());
-
 export function App() {
-  return <RouterProvider router={router} />;
+  return <RouterProvider router={getRouter()} />;
 }
-
-export default App;

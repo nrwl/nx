@@ -1,0 +1,55 @@
+{
+  "name": "init",
+  "factory": "./src/generators/init/init#webInitGenerator",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "$id": "NxWebInit",
+    "cli": "nx",
+    "title": "Init Web Plugin",
+    "description": "Init Web Plugin.",
+    "type": "object",
+    "properties": {
+      "bundler": {
+        "type": "string",
+        "description": "The bundler to use.",
+        "enum": ["webpack", "none", "vite"],
+        "default": "webpack"
+      },
+      "unitTestRunner": {
+        "description": "Adds the specified unit test runner",
+        "type": "string",
+        "enum": ["jest", "none"],
+        "default": "jest"
+      },
+      "e2eTestRunner": {
+        "description": "Adds the specified e2e test runner",
+        "type": "string",
+        "enum": ["cypress", "none"],
+        "default": "cypress"
+      },
+      "skipFormat": {
+        "description": "Skip formatting files",
+        "type": "boolean",
+        "default": false
+      },
+      "skipPackageJson": {
+        "description": "Do not add dependencies to `package.json`.",
+        "type": "boolean",
+        "default": false
+      },
+      "skipBabelConfig": {
+        "description": "Do not generate a root babel.config.json (if babel is not needed).",
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "required": [],
+    "presets": []
+  },
+  "description": "Add `@nrwl/web` to a project.",
+  "hidden": true,
+  "implementation": "/packages/web/src/generators/init/init#webInitGenerator.ts",
+  "aliases": [],
+  "path": "/packages/web/src/generators/init/schema.json",
+  "type": "generator"
+}

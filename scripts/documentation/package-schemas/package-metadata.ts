@@ -1,3 +1,7 @@
+import {
+  convertToDocumentMetadata,
+  DocumentMetadata,
+} from '../../../nx-dev/models-document/src';
 import { readFileSync } from 'fs';
 import { readJsonSync } from 'fs-extra';
 import { sync } from 'glob';
@@ -5,7 +9,7 @@ import { join, resolve } from 'path';
 import * as DocumentationMap from '../../../docs/map.json';
 import {
   JsonSchema1,
-  PackageMetadata,
+  PackageData,
   SchemaMetadata,
 } from '../../../nx-dev/models-package/src';
 
@@ -16,7 +20,8 @@ function createSchemaMetadata(
     absoluteRoot: string;
     folderName: string;
     root: string;
-  }
+  },
+  type: 'executor' | 'generator'
 ): SchemaMetadata {
   const path = join(paths.root, data.schema);
 
@@ -35,6 +40,7 @@ function createSchemaMetadata(
     schema: data.schema
       ? readJsonSync(join(paths.absoluteRoot, paths.root, data.schema))
       : null,
+    type,
   };
 
   if (schemaMetadata.schema && !schemaMetadata.schema.presets) {
@@ -54,6 +60,10 @@ function getSchemaList(
   collectionEntries: string[]
 ): SchemaMetadata[] {
   const targetPath = join(paths.absoluteRoot, paths.root, collectionFileName);
+  // We assume the type of the collection of schema is the name of the collection file (executors or generators)
+  const type = collectionFileName.replace('.json', '').replace('s', '') as
+    | 'executor'
+    | 'generator';
   try {
     const metadata: SchemaMetadata[] = [];
     const collectionFile = readJsonSync(targetPath, 'utf8');
@@ -66,7 +76,7 @@ function getSchemaList(
         ...Object.entries<JsonSchema1>(collectionFile[entry])
           .filter(([name]) => !metadata.find((x) => x.name === name))
           .map(([name, schema]: [string, JsonSchema1]) =>
-            createSchemaMetadata(name, schema, paths)
+            createSchemaMetadata(name, schema, paths, type)
           )
       );
     }
@@ -93,19 +103,19 @@ export function getPackageMetadataList(
   absoluteRoot: string,
   packagesDirectory: string = 'packages',
   documentationDirectory: string = 'docs'
-): PackageMetadata[] {
+): PackageData[] {
   const packagesDir = resolve(join(absoluteRoot, packagesDirectory));
 
   /**
    * Get all the custom overview information on each package if available
    */
-  const additionalApiReferences: any = DocumentationMap.content.find(
-    (data) => data.id === 'additional-api-references'
-  )!.itemList;
+  const additionalApiReferences: DocumentMetadata[] = DocumentationMap.content
+    .find((data) => data.id === 'additional-api-references')!
+    .itemList.map((item) => convertToDocumentMetadata(item));
 
   // Do not use map.json, but add a documentation property on the package.json directly that can be easily resolved
   return sync(`${packagesDir}/*`, { ignore: [`${packagesDir}/cli`] }).map(
-    (folderPath): PackageMetadata => {
+    (folderPath): PackageData => {
       const folderName = folderPath.substring(packagesDir.length + 1);
       const relativeFolderPath = folderPath.replace(absoluteRoot, '');
       const packageJson = readJsonSync(
@@ -123,7 +133,7 @@ export function getPackageMetadataList(
         description: packageJson.description,
         root: relativeFolderPath,
         source: join(relativeFolderPath, '/src'),
-        documentation: !!hasDocumentation
+        documents: !!hasDocumentation
           ? hasDocumentation.itemList.map((item) => ({
               ...item,
               path: item.path,

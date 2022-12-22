@@ -432,6 +432,26 @@ export function ${child}() {
     }, 120000);
   });
 
+  describe('bundling libs', () => {
+    it('should support esbuild and vite bundlers for building libs', () => {
+      const esbuildLib = uniq('esbuildlib');
+      const viteLib = uniq('vitelib');
+
+      runCLI(
+        `generate @nrwl/js:lib ${esbuildLib} --bundler=esbuild --no-interactive`
+      );
+      runCLI(
+        `generate @nrwl/js:lib ${viteLib} --bundler=vite --no-interactive`
+      );
+
+      runCLI(`build ${esbuildLib}`);
+      runCLI(`build ${viteLib}`);
+
+      checkFilesExist(`dist/libs/${esbuildLib}/index.js`);
+      checkFilesExist(`dist/libs/${viteLib}/index.js`);
+    });
+  });
+
   it('should not create a `.babelrc` file when creating libs with js executors (--compiler=tsc)', () => {
     const lib = uniq('lib');
     runCLI(

@@ -184,6 +184,7 @@ function createPrettierrc(tree: Tree, options: NormalizedSchema) {
     DEFAULT_NRWL_PRETTIER_CONFIG
   );
 }
+
 // ensure that pnpm install add all the missing peer deps
 
 function createNpmrc(tree: Tree, options: NormalizedSchema) {
@@ -192,6 +193,7 @@ function createNpmrc(tree: Tree, options: NormalizedSchema) {
     'strict-peer-dependencies=false\nauto-install-peers=true\n'
   );
 }
+
 // ensure that yarn (berry) install uses classic node linker
 
 function createYarnrcYml(tree: Tree, options: NormalizedSchema) {
@@ -213,9 +215,8 @@ function addNpmScripts(tree: Tree, options: NormalizedSchema) {
   }
 
   if (
-    options.preset !== Preset.TS &&
-    options.preset !== Preset.Core &&
-    options.preset !== Preset.NPM
+    options.preset === Preset.AngularStandalone ||
+    options.preset === Preset.ReactStandalone
   ) {
     updateJson(tree, join(options.directory, 'package.json'), (json) => {
       Object.assign(json.scripts, {

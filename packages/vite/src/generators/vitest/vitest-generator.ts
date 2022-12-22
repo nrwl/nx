@@ -12,8 +12,8 @@ import {
 } from '@nrwl/devkit';
 import {
   addOrChangeTestTarget,
-  findExistingTargets,
-  writeViteConfig,
+  findExistingTargetsInProject,
+  createOrEditViteConfig,
 } from '../../utils/generator-utils';
 import { VitestGeneratorSchema } from './schema';
 
@@ -30,10 +30,16 @@ export async function vitestGenerator(
 ) {
   const tasks: GeneratorCallback[] = [];
 
-  const { targets, root } = readProjectConfiguration(tree, schema.project);
-  let testTarget = findExistingTargets(targets).testTarget;
+  const { targets, root, projectType } = readProjectConfiguration(
+    tree,
+    schema.project
+  );
+  let testTarget =
+    schema.testTarget ??
+    findExistingTargetsInProject(targets)?.validFoundTargetName?.test ??
+    'test';
 
-  addOrChangeTestTarget(tree, schema, testTarget ?? 'test');
+  addOrChangeTestTarget(tree, schema, testTarget);
 
   const initTask = await initGenerator(tree, {
     uiFramework: schema.uiFramework,
@@ -41,10 +47,15 @@ export async function vitestGenerator(
   tasks.push(initTask);
 
   if (!schema.skipViteConfig) {
-    writeViteConfig(tree, {
-      ...schema,
-      includeVitest: true,
-    });
+    createOrEditViteConfig(
+      tree,
+      {
+        ...schema,
+        includeVitest: true,
+        includeLib: projectType === 'library',
+      },
+      true
+    );
   }
 
   createFiles(tree, schema, root);

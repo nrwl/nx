@@ -1,0 +1,2056 @@
+{
+  "/getting-started": {
+    "id": "getting-started",
+    "name": "Getting Started",
+    "description": "Get started with basic information, concepts and tutorials.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "intro",
+        "name": "Intro to Nx",
+        "description": "",
+        "file": "shared/getting-started/intro",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/getting-started/intro",
+        "tags": []
+      },
+      {
+        "id": "package-based-repo-tutorial",
+        "name": "Package-Based Repo Tutorial",
+        "description": "",
+        "file": "shared/npm-tutorial/package-based",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/getting-started/package-based-repo-tutorial",
+        "tags": []
+      },
+      {
+        "id": "integrated-repo-tutorial",
+        "name": "Integrated Repo Tutorial",
+        "description": "",
+        "file": "shared/npm-tutorial/integrated",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/getting-started/integrated-repo-tutorial",
+        "tags": []
+      },
+      {
+        "id": "react-standalone-tutorial",
+        "name": "React Standalone Tutorial",
+        "description": "",
+        "file": "shared/react-standalone-tutorial/1-code-generation",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/getting-started/react-standalone-tutorial",
+        "tags": []
+      },
+      {
+        "id": "angular-standalone-tutorial",
+        "name": "Angular Standalone Tutorial",
+        "description": "",
+        "file": "shared/angular-standalone-tutorial/1-code-generation",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/getting-started/angular-standalone-tutorial",
+        "tags": []
+      },
+      {
+        "id": "node-tutorial",
+        "name": "Node Tutorial",
+        "description": "",
+        "file": "shared/node-tutorial/1-code-generation",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/getting-started/node-tutorial",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/getting-started",
+    "tags": []
+  },
+  "/getting-started/intro": {
+    "id": "intro",
+    "name": "Intro to Nx",
+    "description": "",
+    "file": "shared/getting-started/intro",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/getting-started/intro",
+    "tags": []
+  },
+  "/getting-started/package-based-repo-tutorial": {
+    "id": "package-based-repo-tutorial",
+    "name": "Package-Based Repo Tutorial",
+    "description": "",
+    "file": "shared/npm-tutorial/package-based",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/getting-started/package-based-repo-tutorial",
+    "tags": []
+  },
+  "/getting-started/integrated-repo-tutorial": {
+    "id": "integrated-repo-tutorial",
+    "name": "Integrated Repo Tutorial",
+    "description": "",
+    "file": "shared/npm-tutorial/integrated",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/getting-started/integrated-repo-tutorial",
+    "tags": []
+  },
+  "/getting-started/react-standalone-tutorial": {
+    "id": "react-standalone-tutorial",
+    "name": "React Standalone Tutorial",
+    "description": "",
+    "file": "shared/react-standalone-tutorial/1-code-generation",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/getting-started/react-standalone-tutorial",
+    "tags": []
+  },
+  "/getting-started/angular-standalone-tutorial": {
+    "id": "angular-standalone-tutorial",
+    "name": "Angular Standalone Tutorial",
+    "description": "",
+    "file": "shared/angular-standalone-tutorial/1-code-generation",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/getting-started/angular-standalone-tutorial",
+    "tags": []
+  },
+  "/getting-started/node-tutorial": {
+    "id": "node-tutorial",
+    "name": "Node Tutorial",
+    "description": "",
+    "file": "shared/node-tutorial/1-code-generation",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/getting-started/node-tutorial",
+    "tags": []
+  },
+  "/core-tutorial": {
+    "id": "core-tutorial",
+    "name": "Core Tutorial",
+    "description": "Learn to use Nx with this core tutorial where you will learn about all its main feature with a real project.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "01-create-blog",
+        "name": "1 - Create Blog",
+        "description": "",
+        "file": "shared/core-tutorial/01-create-blog",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/core-tutorial/01-create-blog",
+        "tags": []
+      },
+      {
+        "id": "02-create-cli",
+        "name": "2 - Create CLI",
+        "description": "",
+        "file": "shared/core-tutorial/02-create-cli",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/core-tutorial/02-create-cli",
+        "tags": []
+      },
+      {
+        "id": "03-share-assets",
+        "name": "3 - Share Assets",
+        "description": "",
+        "file": "shared/core-tutorial/03-share-assets",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/core-tutorial/03-share-assets",
+        "tags": []
+      },
+      {
+        "id": "04-build-affected-projects",
+        "name": "4 - Build Affected Projects",
+        "description": "",
+        "file": "shared/core-tutorial/04-build-affected-projects",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/core-tutorial/04-build-affected-projects",
+        "tags": []
+      },
+      {
+        "id": "05-auto-detect-dependencies",
+        "name": "5 - Automatically Detect Dependencies",
+        "description": "",
+        "file": "shared/core-tutorial/05-auto-detect-dependencies",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/core-tutorial/05-auto-detect-dependencies",
+        "tags": []
+      },
+      {
+        "id": "06-summary",
+        "name": "6 - Summary",
+        "description": "",
+        "file": "shared/core-tutorial/06-summary",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/core-tutorial/06-summary",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/core-tutorial",
+    "tags": []
+  },
+  "/core-tutorial/01-create-blog": {
+    "id": "01-create-blog",
+    "name": "1 - Create Blog",
+    "description": "",
+    "file": "shared/core-tutorial/01-create-blog",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/core-tutorial/01-create-blog",
+    "tags": []
+  },
+  "/core-tutorial/02-create-cli": {
+    "id": "02-create-cli",
+    "name": "2 - Create CLI",
+    "description": "",
+    "file": "shared/core-tutorial/02-create-cli",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/core-tutorial/02-create-cli",
+    "tags": []
+  },
+  "/core-tutorial/03-share-assets": {
+    "id": "03-share-assets",
+    "name": "3 - Share Assets",
+    "description": "",
+    "file": "shared/core-tutorial/03-share-assets",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/core-tutorial/03-share-assets",
+    "tags": []
+  },
+  "/core-tutorial/04-build-affected-projects": {
+    "id": "04-build-affected-projects",
+    "name": "4 - Build Affected Projects",
+    "description": "",
+    "file": "shared/core-tutorial/04-build-affected-projects",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/core-tutorial/04-build-affected-projects",
+    "tags": []
+  },
+  "/core-tutorial/05-auto-detect-dependencies": {
+    "id": "05-auto-detect-dependencies",
+    "name": "5 - Automatically Detect Dependencies",
+    "description": "",
+    "file": "shared/core-tutorial/05-auto-detect-dependencies",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/core-tutorial/05-auto-detect-dependencies",
+    "tags": []
+  },
+  "/core-tutorial/06-summary": {
+    "id": "06-summary",
+    "name": "6 - Summary",
+    "description": "",
+    "file": "shared/core-tutorial/06-summary",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/core-tutorial/06-summary",
+    "tags": []
+  },
+  "/react-tutorial": {
+    "id": "react-tutorial",
+    "name": "React Monorepo Tutorial",
+    "description": "In this tutorial you'll create a frontend-focused workspace with Nx.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "1-code-generation",
+        "name": "1 - Code Generation",
+        "description": "",
+        "file": "shared/react-tutorial/1-code-generation",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/react-tutorial/1-code-generation",
+        "tags": []
+      },
+      {
+        "id": "2-project-graph",
+        "name": "2 - Project Graph",
+        "description": "",
+        "file": "shared/react-tutorial/2-project-graph",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/react-tutorial/2-project-graph",
+        "tags": []
+      },
+      {
+        "id": "3-task-running",
+        "name": "3 - Task Running",
+        "description": "",
+        "file": "shared/react-tutorial/3-task-running",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/react-tutorial/3-task-running",
+        "tags": []
+      },
+      {
+        "id": "4-workspace-optimization",
+        "name": "4 - Workspace Optimization",
+        "description": "",
+        "file": "shared/react-tutorial/4-workspace-optimization",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/react-tutorial/4-workspace-optimization",
+        "tags": []
+      },
+      {
+        "id": "5-summary",
+        "name": "5 - Summary",
+        "description": "",
+        "file": "shared/react-tutorial/5-summary",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/react-tutorial/5-summary",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/react-tutorial",
+    "tags": []
+  },
+  "/react-tutorial/1-code-generation": {
+    "id": "1-code-generation",
+    "name": "1 - Code Generation",
+    "description": "",
+    "file": "shared/react-tutorial/1-code-generation",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/react-tutorial/1-code-generation",
+    "tags": []
+  },
+  "/react-tutorial/2-project-graph": {
+    "id": "2-project-graph",
+    "name": "2 - Project Graph",
+    "description": "",
+    "file": "shared/react-tutorial/2-project-graph",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/react-tutorial/2-project-graph",
+    "tags": []
+  },
+  "/react-tutorial/3-task-running": {
+    "id": "3-task-running",
+    "name": "3 - Task Running",
+    "description": "",
+    "file": "shared/react-tutorial/3-task-running",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/react-tutorial/3-task-running",
+    "tags": []
+  },
+  "/react-tutorial/4-workspace-optimization": {
+    "id": "4-workspace-optimization",
+    "name": "4 - Workspace Optimization",
+    "description": "",
+    "file": "shared/react-tutorial/4-workspace-optimization",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/react-tutorial/4-workspace-optimization",
+    "tags": []
+  },
+  "/react-tutorial/5-summary": {
+    "id": "5-summary",
+    "name": "5 - Summary",
+    "description": "",
+    "file": "shared/react-tutorial/5-summary",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/react-tutorial/5-summary",
+    "tags": []
+  },
+  "/react-standalone-tutorial": {
+    "id": "react-standalone-tutorial",
+    "name": "React Standalone Tutorial",
+    "description": "In this tutorial you'll create a frontend-focused workspace with Nx.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "1-code-generation",
+        "name": "1 - Code Generation",
+        "description": "",
+        "file": "shared/react-standalone-tutorial/1-code-generation",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/react-standalone-tutorial/1-code-generation",
+        "tags": []
+      },
+      {
+        "id": "2-project-graph",
+        "name": "2 - Project Graph",
+        "description": "",
+        "file": "shared/react-standalone-tutorial/2-project-graph",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/react-standalone-tutorial/2-project-graph",
+        "tags": []
+      },
+      {
+        "id": "3-task-running",
+        "name": "3 - Task Running",
+        "description": "",
+        "file": "shared/react-standalone-tutorial/3-task-running",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/react-standalone-tutorial/3-task-running",
+        "tags": []
+      },
+      {
+        "id": "4-task-pipelines",
+        "name": "4 - Task Pipelines",
+        "description": "",
+        "file": "shared/react-standalone-tutorial/4-task-pipelines",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/react-standalone-tutorial/4-task-pipelines",
+        "tags": []
+      },
+      {
+        "id": "5-summary",
+        "name": "5 - Summary",
+        "description": "",
+        "file": "shared/react-standalone-tutorial/5-summary",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/react-standalone-tutorial/5-summary",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/react-standalone-tutorial",
+    "tags": []
+  },
+  "/react-standalone-tutorial/1-code-generation": {
+    "id": "1-code-generation",
+    "name": "1 - Code Generation",
+    "description": "",
+    "file": "shared/react-standalone-tutorial/1-code-generation",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/react-standalone-tutorial/1-code-generation",
+    "tags": []
+  },
+  "/react-standalone-tutorial/2-project-graph": {
+    "id": "2-project-graph",
+    "name": "2 - Project Graph",
+    "description": "",
+    "file": "shared/react-standalone-tutorial/2-project-graph",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/react-standalone-tutorial/2-project-graph",
+    "tags": []
+  },
+  "/react-standalone-tutorial/3-task-running": {
+    "id": "3-task-running",
+    "name": "3 - Task Running",
+    "description": "",
+    "file": "shared/react-standalone-tutorial/3-task-running",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/react-standalone-tutorial/3-task-running",
+    "tags": []
+  },
+  "/react-standalone-tutorial/4-task-pipelines": {
+    "id": "4-task-pipelines",
+    "name": "4 - Task Pipelines",
+    "description": "",
+    "file": "shared/react-standalone-tutorial/4-task-pipelines",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/react-standalone-tutorial/4-task-pipelines",
+    "tags": []
+  },
+  "/react-standalone-tutorial/5-summary": {
+    "id": "5-summary",
+    "name": "5 - Summary",
+    "description": "",
+    "file": "shared/react-standalone-tutorial/5-summary",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/react-standalone-tutorial/5-summary",
+    "tags": []
+  },
+  "/angular-tutorial": {
+    "id": "angular-tutorial",
+    "name": "Angular Monorepo Tutorial",
+    "description": "Learn to use Nx with this Angular tutorial where you will learn about all its main feature with a real project.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "1-code-generation",
+        "name": "1 - Code Generation",
+        "description": "",
+        "file": "shared/angular-tutorial/1-code-generation",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/angular-tutorial/1-code-generation",
+        "tags": []
+      },
+      {
+        "id": "2-project-graph",
+        "name": "2 - Project Graph",
+        "description": "",
+        "file": "shared/angular-tutorial/2-project-graph",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/angular-tutorial/2-project-graph",
+        "tags": []
+      },
+      {
+        "id": "3-task-running",
+        "name": "3 - Task Running",
+        "description": "",
+        "file": "shared/angular-tutorial/3-task-running",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/angular-tutorial/3-task-running",
+        "tags": []
+      },
+      {
+        "id": "4-workspace-optimization",
+        "name": "4 - Workspace Optimization",
+        "description": "",
+        "file": "shared/angular-tutorial/4-workspace-optimization",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/angular-tutorial/4-workspace-optimization",
+        "tags": []
+      },
+      {
+        "id": "5-summary",
+        "name": "5 - Summary",
+        "description": "",
+        "file": "shared/angular-tutorial/5-summary",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/angular-tutorial/5-summary",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/angular-tutorial",
+    "tags": []
+  },
+  "/angular-tutorial/1-code-generation": {
+    "id": "1-code-generation",
+    "name": "1 - Code Generation",
+    "description": "",
+    "file": "shared/angular-tutorial/1-code-generation",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/angular-tutorial/1-code-generation",
+    "tags": []
+  },
+  "/angular-tutorial/2-project-graph": {
+    "id": "2-project-graph",
+    "name": "2 - Project Graph",
+    "description": "",
+    "file": "shared/angular-tutorial/2-project-graph",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/angular-tutorial/2-project-graph",
+    "tags": []
+  },
+  "/angular-tutorial/3-task-running": {
+    "id": "3-task-running",
+    "name": "3 - Task Running",
+    "description": "",
+    "file": "shared/angular-tutorial/3-task-running",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/angular-tutorial/3-task-running",
+    "tags": []
+  },
+  "/angular-tutorial/4-workspace-optimization": {
+    "id": "4-workspace-optimization",
+    "name": "4 - Workspace Optimization",
+    "description": "",
+    "file": "shared/angular-tutorial/4-workspace-optimization",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/angular-tutorial/4-workspace-optimization",
+    "tags": []
+  },
+  "/angular-tutorial/5-summary": {
+    "id": "5-summary",
+    "name": "5 - Summary",
+    "description": "",
+    "file": "shared/angular-tutorial/5-summary",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/angular-tutorial/5-summary",
+    "tags": []
+  },
+  "/angular-standalone-tutorial": {
+    "id": "angular-standalone-tutorial",
+    "name": "Angular Standalone Tutorial",
+    "description": "Learn to use Nx with this Angular tutorial where you will learn about all its main feature with a real project.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "1-code-generation",
+        "name": "1 - Code Generation",
+        "description": "",
+        "file": "shared/angular-standalone-tutorial/1-code-generation",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/angular-standalone-tutorial/1-code-generation",
+        "tags": []
+      },
+      {
+        "id": "2-project-graph",
+        "name": "2 - Project Graph",
+        "description": "",
+        "file": "shared/angular-standalone-tutorial/2-project-graph",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/angular-standalone-tutorial/2-project-graph",
+        "tags": []
+      },
+      {
+        "id": "3-task-running",
+        "name": "3 - Task Running",
+        "description": "",
+        "file": "shared/angular-standalone-tutorial/3-task-running",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/angular-standalone-tutorial/3-task-running",
+        "tags": []
+      },
+      {
+        "id": "4-task-pipelines",
+        "name": "4 - Task Pipelines",
+        "description": "",
+        "file": "shared/angular-standalone-tutorial/4-task-pipelines",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/angular-standalone-tutorial/4-task-pipelines",
+        "tags": []
+      },
+      {
+        "id": "5-summary",
+        "name": "5 - Summary",
+        "description": "",
+        "file": "shared/angular-standalone-tutorial/5-summary",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/angular-standalone-tutorial/5-summary",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/angular-standalone-tutorial",
+    "tags": []
+  },
+  "/angular-standalone-tutorial/1-code-generation": {
+    "id": "1-code-generation",
+    "name": "1 - Code Generation",
+    "description": "",
+    "file": "shared/angular-standalone-tutorial/1-code-generation",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/angular-standalone-tutorial/1-code-generation",
+    "tags": []
+  },
+  "/angular-standalone-tutorial/2-project-graph": {
+    "id": "2-project-graph",
+    "name": "2 - Project Graph",
+    "description": "",
+    "file": "shared/angular-standalone-tutorial/2-project-graph",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/angular-standalone-tutorial/2-project-graph",
+    "tags": []
+  },
+  "/angular-standalone-tutorial/3-task-running": {
+    "id": "3-task-running",
+    "name": "3 - Task Running",
+    "description": "",
+    "file": "shared/angular-standalone-tutorial/3-task-running",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/angular-standalone-tutorial/3-task-running",
+    "tags": []
+  },
+  "/angular-standalone-tutorial/4-task-pipelines": {
+    "id": "4-task-pipelines",
+    "name": "4 - Task Pipelines",
+    "description": "",
+    "file": "shared/angular-standalone-tutorial/4-task-pipelines",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/angular-standalone-tutorial/4-task-pipelines",
+    "tags": []
+  },
+  "/angular-standalone-tutorial/5-summary": {
+    "id": "5-summary",
+    "name": "5 - Summary",
+    "description": "",
+    "file": "shared/angular-standalone-tutorial/5-summary",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/angular-standalone-tutorial/5-summary",
+    "tags": []
+  },
+  "/node-tutorial": {
+    "id": "node-tutorial",
+    "name": "Node Tutorial",
+    "description": "Learn to use Nx with this Node tutorial where you will learn about all its main feature with a real project.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "1-code-generation",
+        "name": "1 - Code Generation",
+        "description": "",
+        "file": "shared/node-tutorial/1-code-generation",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/node-tutorial/1-code-generation",
+        "tags": []
+      },
+      {
+        "id": "2-project-graph",
+        "name": "2 - Project Graph",
+        "description": "",
+        "file": "shared/node-tutorial/2-project-graph",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/node-tutorial/2-project-graph",
+        "tags": []
+      },
+      {
+        "id": "3-task-running",
+        "name": "3 - Task Running",
+        "description": "",
+        "file": "shared/node-tutorial/3-task-running",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/node-tutorial/3-task-running",
+        "tags": []
+      },
+      {
+        "id": "4-workspace-optimization",
+        "name": "4 - Workspace Optimization",
+        "description": "",
+        "file": "shared/node-tutorial/4-workspace-optimization",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/node-tutorial/4-workspace-optimization",
+        "tags": []
+      },
+      {
+        "id": "5-summary",
+        "name": "5 - Summary",
+        "description": "",
+        "file": "shared/node-tutorial/5-summary",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/node-tutorial/5-summary",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/node-tutorial",
+    "tags": []
+  },
+  "/node-tutorial/1-code-generation": {
+    "id": "1-code-generation",
+    "name": "1 - Code Generation",
+    "description": "",
+    "file": "shared/node-tutorial/1-code-generation",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/node-tutorial/1-code-generation",
+    "tags": []
+  },
+  "/node-tutorial/2-project-graph": {
+    "id": "2-project-graph",
+    "name": "2 - Project Graph",
+    "description": "",
+    "file": "shared/node-tutorial/2-project-graph",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/node-tutorial/2-project-graph",
+    "tags": []
+  },
+  "/node-tutorial/3-task-running": {
+    "id": "3-task-running",
+    "name": "3 - Task Running",
+    "description": "",
+    "file": "shared/node-tutorial/3-task-running",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/node-tutorial/3-task-running",
+    "tags": []
+  },
+  "/node-tutorial/4-workspace-optimization": {
+    "id": "4-workspace-optimization",
+    "name": "4 - Workspace Optimization",
+    "description": "",
+    "file": "shared/node-tutorial/4-workspace-optimization",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/node-tutorial/4-workspace-optimization",
+    "tags": []
+  },
+  "/node-tutorial/5-summary": {
+    "id": "5-summary",
+    "name": "5 - Summary",
+    "description": "",
+    "file": "shared/node-tutorial/5-summary",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/node-tutorial/5-summary",
+    "tags": []
+  },
+  "/core-features": {
+    "id": "core-features",
+    "name": "Core Features",
+    "description": "Learn the core features of Nx with in depth guides.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "run-tasks",
+        "name": "Run Tasks",
+        "description": "",
+        "file": "shared/core-features/run-tasks",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/core-features/run-tasks",
+        "tags": ["run-tasks"]
+      },
+      {
+        "id": "cache-task-results",
+        "name": "Cache Task Results",
+        "description": "",
+        "file": "shared/core-features/cache-task-results",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/core-features/cache-task-results",
+        "tags": ["cache-task-results"]
+      },
+      {
+        "id": "share-your-cache",
+        "name": "Share Your Cache",
+        "description": "",
+        "file": "shared/core-features/share-your-cache",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/core-features/share-your-cache",
+        "tags": ["share-your-cache"]
+      },
+      {
+        "id": "explore-graph",
+        "name": "Explore the Graph",
+        "description": "",
+        "file": "shared/core-features/explore-graph",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/core-features/explore-graph",
+        "tags": ["explore-graph"]
+      },
+      {
+        "id": "distribute-task-execution",
+        "name": "Distribute Task Execution",
+        "description": "",
+        "file": "shared/core-features/distribute-task-execution",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/core-features/distribute-task-execution",
+        "tags": ["distribute-task-execution"]
+      },
+      {
+        "id": "integrate-with-editors",
+        "name": "Integrate with Editors",
+        "description": "",
+        "file": "shared/core-features/integrate-with-editors",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/core-features/integrate-with-editors",
+        "tags": ["integrate-with-editors"]
+      },
+      {
+        "id": "automate-updating-dependencies",
+        "name": "Automate Updating Dependencies",
+        "description": "",
+        "file": "shared/core-features/automate-updating-dependencies",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/core-features/automate-updating-dependencies",
+        "tags": ["automate-updating-dependencies"]
+      },
+      {
+        "id": "enforce-project-boundaries",
+        "name": "Enforce Project Boundaries",
+        "description": "",
+        "file": "shared/core-features/enforce-project-boundaries",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/core-features/enforce-project-boundaries",
+        "tags": ["enforce-project-boundaries"]
+      }
+    ],
+    "isExternal": false,
+    "path": "/core-features",
+    "tags": []
+  },
+  "/core-features/run-tasks": {
+    "id": "run-tasks",
+    "name": "Run Tasks",
+    "description": "",
+    "file": "shared/core-features/run-tasks",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/core-features/run-tasks",
+    "tags": ["run-tasks"]
+  },
+  "/core-features/cache-task-results": {
+    "id": "cache-task-results",
+    "name": "Cache Task Results",
+    "description": "",
+    "file": "shared/core-features/cache-task-results",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/core-features/cache-task-results",
+    "tags": ["cache-task-results"]
+  },
+  "/core-features/share-your-cache": {
+    "id": "share-your-cache",
+    "name": "Share Your Cache",
+    "description": "",
+    "file": "shared/core-features/share-your-cache",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/core-features/share-your-cache",
+    "tags": ["share-your-cache"]
+  },
+  "/core-features/explore-graph": {
+    "id": "explore-graph",
+    "name": "Explore the Graph",
+    "description": "",
+    "file": "shared/core-features/explore-graph",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/core-features/explore-graph",
+    "tags": ["explore-graph"]
+  },
+  "/core-features/distribute-task-execution": {
+    "id": "distribute-task-execution",
+    "name": "Distribute Task Execution",
+    "description": "",
+    "file": "shared/core-features/distribute-task-execution",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/core-features/distribute-task-execution",
+    "tags": ["distribute-task-execution"]
+  },
+  "/core-features/integrate-with-editors": {
+    "id": "integrate-with-editors",
+    "name": "Integrate with Editors",
+    "description": "",
+    "file": "shared/core-features/integrate-with-editors",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/core-features/integrate-with-editors",
+    "tags": ["integrate-with-editors"]
+  },
+  "/core-features/automate-updating-dependencies": {
+    "id": "automate-updating-dependencies",
+    "name": "Automate Updating Dependencies",
+    "description": "",
+    "file": "shared/core-features/automate-updating-dependencies",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/core-features/automate-updating-dependencies",
+    "tags": ["automate-updating-dependencies"]
+  },
+  "/core-features/enforce-project-boundaries": {
+    "id": "enforce-project-boundaries",
+    "name": "Enforce Project Boundaries",
+    "description": "",
+    "file": "shared/core-features/enforce-project-boundaries",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/core-features/enforce-project-boundaries",
+    "tags": ["enforce-project-boundaries"]
+  },
+  "/plugin-features": {
+    "id": "plugin-features",
+    "name": "Plugin Features",
+    "description": "Learn what is a plugin, the different type of plugins and how to create one.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "use-task-executors",
+        "name": "Use Task Executors",
+        "description": "",
+        "file": "shared/plugin-features/use-task-executors",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/plugin-features/use-task-executors",
+        "tags": ["use-task-executors"]
+      },
+      {
+        "id": "use-code-generators",
+        "name": "Use Code Generators",
+        "description": "",
+        "file": "shared/plugin-features/use-code-generators",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/plugin-features/use-code-generators",
+        "tags": ["use-code-generators"]
+      },
+      {
+        "id": "create-your-own-plugin",
+        "name": "Create Your Own Plugin",
+        "description": "",
+        "file": "shared/plugin-features/create-your-own-plugin",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/plugin-features/create-your-own-plugin",
+        "tags": ["create-your-own-plugin"]
+      }
+    ],
+    "isExternal": false,
+    "path": "/plugin-features",
+    "tags": []
+  },
+  "/plugin-features/use-task-executors": {
+    "id": "use-task-executors",
+    "name": "Use Task Executors",
+    "description": "",
+    "file": "shared/plugin-features/use-task-executors",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/plugin-features/use-task-executors",
+    "tags": ["use-task-executors"]
+  },
+  "/plugin-features/use-code-generators": {
+    "id": "use-code-generators",
+    "name": "Use Code Generators",
+    "description": "",
+    "file": "shared/plugin-features/use-code-generators",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/plugin-features/use-code-generators",
+    "tags": ["use-code-generators"]
+  },
+  "/plugin-features/create-your-own-plugin": {
+    "id": "create-your-own-plugin",
+    "name": "Create Your Own Plugin",
+    "description": "",
+    "file": "shared/plugin-features/create-your-own-plugin",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/plugin-features/create-your-own-plugin",
+    "tags": ["create-your-own-plugin"]
+  },
+  "/concepts": {
+    "id": "concepts",
+    "name": "Concepts",
+    "description": "Learn about all the different concepts Nx uses to manage your tasks and enhance your productivity.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "integrated-vs-package-based",
+        "name": "Integrated Repos vs. Package-Based Repos",
+        "description": "",
+        "file": "shared/concepts/integrated-vs-package-based",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/integrated-vs-package-based",
+        "tags": ["intro"]
+      },
+      {
+        "id": "mental-model",
+        "name": "Mental Model",
+        "description": "",
+        "file": "shared/mental-model",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/mental-model",
+        "tags": ["intro"]
+      },
+      {
+        "id": "how-caching-works",
+        "name": "How Caching Works",
+        "description": "",
+        "file": "shared/concepts/how-caching-works",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/how-caching-works",
+        "tags": ["cache-task-results"]
+      },
+      {
+        "id": "dte",
+        "name": "Improve Worst Case CI Times",
+        "description": "",
+        "file": "shared/concepts/improve-worst-case-ci-times",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/dte",
+        "tags": ["distribute-task-execution"]
+      },
+      {
+        "id": "task-pipeline-configuration",
+        "name": "Task Pipeline Configuration",
+        "description": "",
+        "file": "shared/concepts/task-pipeline-configuration",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/task-pipeline-configuration",
+        "tags": ["run-tasks", "cache-task-results", "use-task-executors"]
+      },
+      {
+        "id": "affected",
+        "name": "Affected",
+        "description": "",
+        "file": "shared/using-nx/affected",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/affected",
+        "tags": ["run-tasks"]
+      },
+      {
+        "id": "more-concept-guides",
+        "name": "More Concept Guides »",
+        "description": "",
+        "file": "shared/concepts/more-concepts",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/more-concept-guides",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/concepts",
+    "tags": []
+  },
+  "/concepts/integrated-vs-package-based": {
+    "id": "integrated-vs-package-based",
+    "name": "Integrated Repos vs. Package-Based Repos",
+    "description": "",
+    "file": "shared/concepts/integrated-vs-package-based",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/integrated-vs-package-based",
+    "tags": ["intro"]
+  },
+  "/concepts/mental-model": {
+    "id": "mental-model",
+    "name": "Mental Model",
+    "description": "",
+    "file": "shared/mental-model",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/mental-model",
+    "tags": ["intro"]
+  },
+  "/concepts/how-caching-works": {
+    "id": "how-caching-works",
+    "name": "How Caching Works",
+    "description": "",
+    "file": "shared/concepts/how-caching-works",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/how-caching-works",
+    "tags": ["cache-task-results"]
+  },
+  "/concepts/dte": {
+    "id": "dte",
+    "name": "Improve Worst Case CI Times",
+    "description": "",
+    "file": "shared/concepts/improve-worst-case-ci-times",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/dte",
+    "tags": ["distribute-task-execution"]
+  },
+  "/concepts/task-pipeline-configuration": {
+    "id": "task-pipeline-configuration",
+    "name": "Task Pipeline Configuration",
+    "description": "",
+    "file": "shared/concepts/task-pipeline-configuration",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/task-pipeline-configuration",
+    "tags": ["run-tasks", "cache-task-results", "use-task-executors"]
+  },
+  "/concepts/affected": {
+    "id": "affected",
+    "name": "Affected",
+    "description": "",
+    "file": "shared/using-nx/affected",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/affected",
+    "tags": ["run-tasks"]
+  },
+  "/concepts/more-concept-guides": {
+    "id": "more-concept-guides",
+    "name": "More Concept Guides »",
+    "description": "",
+    "file": "shared/concepts/more-concepts",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/more-concept-guides",
+    "tags": []
+  },
+  "/more-concepts": {
+    "id": "more-concepts",
+    "name": "More Concepts",
+    "description": "Get deeper into how Nx works and its different aspects.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "customizing-inputs",
+        "name": "Customizing Inputs",
+        "description": "",
+        "file": "shared/concepts/customizing-inputs",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/more-concepts/customizing-inputs",
+        "tags": ["cache-task-results"]
+      },
+      {
+        "id": "incremental-builds",
+        "name": "Incremental Builds",
+        "description": "",
+        "file": "shared/incremental-builds",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/more-concepts/incremental-builds",
+        "tags": ["use-task-executors"]
+      },
+      {
+        "id": "illustrated-dte",
+        "name": "Illustrated Distributed Task Execution",
+        "description": "",
+        "file": "shared/concepts/illustrated-dte-guide",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/more-concepts/illustrated-dte",
+        "tags": ["distribute-task-execution"]
+      },
+      {
+        "id": "turbo-and-nx",
+        "name": "Nx and Turborepo",
+        "description": "",
+        "file": "shared/guides/turbo-and-nx",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/more-concepts/turbo-and-nx",
+        "tags": []
+      },
+      {
+        "id": "why-monorepos",
+        "name": "Monorepos",
+        "description": "",
+        "file": "shared/guides/why-monorepos",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/more-concepts/why-monorepos",
+        "tags": []
+      },
+      {
+        "id": "monorepo-nx-enterprise",
+        "name": "Using Nx at Enterprises",
+        "description": "",
+        "file": "shared/monorepo-nx-enterprise",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/more-concepts/monorepo-nx-enterprise",
+        "tags": ["enforce-project-boundaries", "use-code-generators"]
+      },
+      {
+        "id": "nx-daemon",
+        "name": "Nx Daemon",
+        "description": "",
+        "file": "shared/daemon",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/more-concepts/nx-daemon",
+        "tags": []
+      },
+      {
+        "id": "nx-and-angular",
+        "name": "Nx and the Angular CLI",
+        "description": "",
+        "file": "shared/guides/nx-and-angular-cli",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/more-concepts/nx-and-angular",
+        "tags": []
+      },
+      {
+        "id": "folder-structure",
+        "name": "Folder Structure",
+        "description": "",
+        "file": "shared/guides/integrated-repo-folder-structure",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/more-concepts/folder-structure",
+        "tags": []
+      },
+      {
+        "id": "nx-devkit-angular-devkit",
+        "name": "Nx Devkit and Angular Devkit",
+        "description": "",
+        "file": "shared/guides/nx-devkit-angular-devkit",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/more-concepts/nx-devkit-angular-devkit",
+        "tags": ["create-your-own-plugin"]
+      },
+      {
+        "id": "micro-frontend-architecture",
+        "name": "Micro Frontend Architecture",
+        "description": "",
+        "file": "shared/guides/module-federation/micro-frontend-architecture",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/more-concepts/micro-frontend-architecture",
+        "tags": []
+      },
+      {
+        "id": "applications-and-libraries",
+        "name": "Applications and Libraries",
+        "description": "",
+        "file": "shared/workspace/applications-and-libraries",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/more-concepts/applications-and-libraries",
+        "tags": ["enforce-project-boundaries"]
+      },
+      {
+        "id": "creating-libraries",
+        "name": "Creating Libraries",
+        "description": "",
+        "file": "shared/workspace/creating-libraries",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/more-concepts/creating-libraries",
+        "tags": ["enforce-project-boundaries"]
+      },
+      {
+        "id": "library-types",
+        "name": "Library Types",
+        "description": "",
+        "file": "shared/workspace/library-types",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/more-concepts/library-types",
+        "tags": ["enforce-project-boundaries"]
+      },
+      {
+        "id": "grouping-libraries",
+        "name": "Grouping Libraries",
+        "description": "",
+        "file": "shared/workspace/grouping-libraries",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/more-concepts/grouping-libraries",
+        "tags": ["enforce-project-boundaries"]
+      },
+      {
+        "id": "buildable-and-publishable-libraries",
+        "name": "Buildable and Publishable Libraries",
+        "description": "",
+        "file": "shared/workspace/buildable-and-publishable-libraries",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/more-concepts/buildable-and-publishable-libraries",
+        "tags": []
+      },
+      {
+        "id": "how-project-graph-is-built",
+        "name": "How the Project Graph is Built",
+        "description": "",
+        "file": "shared/concepts/how-project-graph-is-built",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/more-concepts/how-project-graph-is-built",
+        "tags": ["explore-graph"]
+      }
+    ],
+    "isExternal": false,
+    "path": "/more-concepts",
+    "tags": []
+  },
+  "/more-concepts/customizing-inputs": {
+    "id": "customizing-inputs",
+    "name": "Customizing Inputs",
+    "description": "",
+    "file": "shared/concepts/customizing-inputs",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/more-concepts/customizing-inputs",
+    "tags": ["cache-task-results"]
+  },
+  "/more-concepts/incremental-builds": {
+    "id": "incremental-builds",
+    "name": "Incremental Builds",
+    "description": "",
+    "file": "shared/incremental-builds",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/more-concepts/incremental-builds",
+    "tags": ["use-task-executors"]
+  },
+  "/more-concepts/illustrated-dte": {
+    "id": "illustrated-dte",
+    "name": "Illustrated Distributed Task Execution",
+    "description": "",
+    "file": "shared/concepts/illustrated-dte-guide",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/more-concepts/illustrated-dte",
+    "tags": ["distribute-task-execution"]
+  },
+  "/more-concepts/turbo-and-nx": {
+    "id": "turbo-and-nx",
+    "name": "Nx and Turborepo",
+    "description": "",
+    "file": "shared/guides/turbo-and-nx",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/more-concepts/turbo-and-nx",
+    "tags": []
+  },
+  "/more-concepts/why-monorepos": {
+    "id": "why-monorepos",
+    "name": "Monorepos",
+    "description": "",
+    "file": "shared/guides/why-monorepos",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/more-concepts/why-monorepos",
+    "tags": []
+  },
+  "/more-concepts/monorepo-nx-enterprise": {
+    "id": "monorepo-nx-enterprise",
+    "name": "Using Nx at Enterprises",
+    "description": "",
+    "file": "shared/monorepo-nx-enterprise",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/more-concepts/monorepo-nx-enterprise",
+    "tags": ["enforce-project-boundaries", "use-code-generators"]
+  },
+  "/more-concepts/nx-daemon": {
+    "id": "nx-daemon",
+    "name": "Nx Daemon",
+    "description": "",
+    "file": "shared/daemon",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/more-concepts/nx-daemon",
+    "tags": []
+  },
+  "/more-concepts/nx-and-angular": {
+    "id": "nx-and-angular",
+    "name": "Nx and the Angular CLI",
+    "description": "",
+    "file": "shared/guides/nx-and-angular-cli",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/more-concepts/nx-and-angular",
+    "tags": []
+  },
+  "/more-concepts/folder-structure": {
+    "id": "folder-structure",
+    "name": "Folder Structure",
+    "description": "",
+    "file": "shared/guides/integrated-repo-folder-structure",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/more-concepts/folder-structure",
+    "tags": []
+  },
+  "/more-concepts/nx-devkit-angular-devkit": {
+    "id": "nx-devkit-angular-devkit",
+    "name": "Nx Devkit and Angular Devkit",
+    "description": "",
+    "file": "shared/guides/nx-devkit-angular-devkit",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/more-concepts/nx-devkit-angular-devkit",
+    "tags": ["create-your-own-plugin"]
+  },
+  "/more-concepts/micro-frontend-architecture": {
+    "id": "micro-frontend-architecture",
+    "name": "Micro Frontend Architecture",
+    "description": "",
+    "file": "shared/guides/module-federation/micro-frontend-architecture",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/more-concepts/micro-frontend-architecture",
+    "tags": []
+  },
+  "/more-concepts/applications-and-libraries": {
+    "id": "applications-and-libraries",
+    "name": "Applications and Libraries",
+    "description": "",
+    "file": "shared/workspace/applications-and-libraries",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/more-concepts/applications-and-libraries",
+    "tags": ["enforce-project-boundaries"]
+  },
+  "/more-concepts/creating-libraries": {
+    "id": "creating-libraries",
+    "name": "Creating Libraries",
+    "description": "",
+    "file": "shared/workspace/creating-libraries",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/more-concepts/creating-libraries",
+    "tags": ["enforce-project-boundaries"]
+  },
+  "/more-concepts/library-types": {
+    "id": "library-types",
+    "name": "Library Types",
+    "description": "",
+    "file": "shared/workspace/library-types",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/more-concepts/library-types",
+    "tags": ["enforce-project-boundaries"]
+  },
+  "/more-concepts/grouping-libraries": {
+    "id": "grouping-libraries",
+    "name": "Grouping Libraries",
+    "description": "",
+    "file": "shared/workspace/grouping-libraries",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/more-concepts/grouping-libraries",
+    "tags": ["enforce-project-boundaries"]
+  },
+  "/more-concepts/buildable-and-publishable-libraries": {
+    "id": "buildable-and-publishable-libraries",
+    "name": "Buildable and Publishable Libraries",
+    "description": "",
+    "file": "shared/workspace/buildable-and-publishable-libraries",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/more-concepts/buildable-and-publishable-libraries",
+    "tags": []
+  },
+  "/more-concepts/how-project-graph-is-built": {
+    "id": "how-project-graph-is-built",
+    "name": "How the Project Graph is Built",
+    "description": "",
+    "file": "shared/concepts/how-project-graph-is-built",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/more-concepts/how-project-graph-is-built",
+    "tags": ["explore-graph"]
+  },
+  "/recipes": {
+    "id": "all",
+    "name": "All Recipes »",
+    "description": "",
+    "file": "",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes",
+    "tags": []
+  },
+  "/recipes/ci/ci-setup": {
+    "id": "ci-setup",
+    "name": "CI Setup",
+    "description": "",
+    "file": "",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/ci/ci-setup",
+    "tags": []
+  },
+  "/recipes/adopting-nx": {
+    "id": "adopting-nx",
+    "name": "Adopting Nx",
+    "description": "",
+    "file": "",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/adopting-nx",
+    "tags": []
+  },
+  "/reference": {
+    "id": "reference",
+    "name": "Reference",
+    "description": "Understand how to use Nx functionalities, what arguments and options are available for each component.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "commands",
+        "name": "Commands",
+        "description": "",
+        "file": "shared/reference/commands",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/reference/commands",
+        "tags": []
+      },
+      {
+        "id": "nx-json",
+        "name": "nx.json",
+        "description": "",
+        "file": "shared/reference/nx-json",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/reference/nx-json",
+        "tags": []
+      },
+      {
+        "id": "project-configuration",
+        "name": "Project Configuration",
+        "description": "",
+        "file": "shared/reference/project-configuration",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/reference/project-configuration",
+        "tags": ["use-task-executors"]
+      },
+      {
+        "id": "nxignore",
+        "name": ".nxignore",
+        "description": "",
+        "file": "shared/reference/nxignore",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/reference/nxignore",
+        "tags": ["enforce-project-boundaries"]
+      },
+      {
+        "id": "environment-variables",
+        "name": "Environment Variables",
+        "description": "",
+        "file": "shared/reference/environment-variables",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/reference/environment-variables",
+        "tags": ["environment-variables"]
+      },
+      {
+        "id": "packages",
+        "name": "Packages",
+        "description": "",
+        "file": "",
+        "itemList": [],
+        "isExternal": true,
+        "path": "/packages",
+        "tags": []
+      },
+      {
+        "id": "packages-devkit",
+        "name": "Nx Devkit",
+        "description": "",
+        "file": "",
+        "itemList": [],
+        "isExternal": true,
+        "path": "/packages#devkit",
+        "tags": ["create-your-own-plugin"]
+      },
+      {
+        "id": "glossary",
+        "name": "Glossary",
+        "description": "",
+        "file": "shared/reference/glossary",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/reference/glossary",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/reference",
+    "tags": []
+  },
+  "/reference/commands": {
+    "id": "commands",
+    "name": "Commands",
+    "description": "",
+    "file": "shared/reference/commands",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/reference/commands",
+    "tags": []
+  },
+  "/reference/nx-json": {
+    "id": "nx-json",
+    "name": "nx.json",
+    "description": "",
+    "file": "shared/reference/nx-json",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/reference/nx-json",
+    "tags": []
+  },
+  "/reference/project-configuration": {
+    "id": "project-configuration",
+    "name": "Project Configuration",
+    "description": "",
+    "file": "shared/reference/project-configuration",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/reference/project-configuration",
+    "tags": ["use-task-executors"]
+  },
+  "/reference/nxignore": {
+    "id": "nxignore",
+    "name": ".nxignore",
+    "description": "",
+    "file": "shared/reference/nxignore",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/reference/nxignore",
+    "tags": ["enforce-project-boundaries"]
+  },
+  "/reference/environment-variables": {
+    "id": "environment-variables",
+    "name": "Environment Variables",
+    "description": "",
+    "file": "shared/reference/environment-variables",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/reference/environment-variables",
+    "tags": ["environment-variables"]
+  },
+  "/packages": {
+    "id": "packages",
+    "name": "Packages",
+    "description": "",
+    "file": "",
+    "itemList": [],
+    "isExternal": true,
+    "path": "/packages",
+    "tags": []
+  },
+  "/packages#devkit": {
+    "id": "packages-devkit",
+    "name": "Nx Devkit",
+    "description": "",
+    "file": "",
+    "itemList": [],
+    "isExternal": true,
+    "path": "/packages#devkit",
+    "tags": ["create-your-own-plugin"]
+  },
+  "/reference/glossary": {
+    "id": "glossary",
+    "name": "Glossary",
+    "description": "",
+    "file": "shared/reference/glossary",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/reference/glossary",
+    "tags": []
+  },
+  "/deprecated": {
+    "id": "deprecated",
+    "name": "Deprecated",
+    "description": "Functionality that has been superseded in the current version of Nx.  Listed here for those running older versions.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "workspace-json",
+        "name": "workspace.json",
+        "description": "",
+        "file": "shared/deprecated/workspace-json",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/deprecated/workspace-json",
+        "tags": []
+      },
+      {
+        "id": "workspace-generators",
+        "name": "Workspace Generators",
+        "description": "",
+        "file": "shared/deprecated/workspace-generators",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/deprecated/workspace-generators",
+        "tags": []
+      },
+      {
+        "id": "workspace-executors",
+        "name": "Workspace Executors",
+        "description": "",
+        "file": "shared/deprecated/workspace-executors",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/deprecated/workspace-executors",
+        "tags": []
+      },
+      {
+        "id": "default-collection",
+        "name": "defaultCollection",
+        "description": "",
+        "file": "shared/deprecated/default-collection",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/deprecated/default-collection",
+        "tags": []
+      },
+      {
+        "id": "runtime-cache-inputs",
+        "name": "runtimeCacheInputs",
+        "description": "",
+        "file": "shared/deprecated/runtime-cache-inputs",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/deprecated/runtime-cache-inputs",
+        "tags": []
+      },
+      {
+        "id": "global-implicit-dependencies",
+        "name": "globalImplicitDependencies",
+        "description": "",
+        "file": "shared/deprecated/global-implicit-dependencies",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/deprecated/global-implicit-dependencies",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/deprecated",
+    "tags": []
+  },
+  "/deprecated/workspace-json": {
+    "id": "workspace-json",
+    "name": "workspace.json",
+    "description": "",
+    "file": "shared/deprecated/workspace-json",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/deprecated/workspace-json",
+    "tags": []
+  },
+  "/deprecated/workspace-generators": {
+    "id": "workspace-generators",
+    "name": "Workspace Generators",
+    "description": "",
+    "file": "shared/deprecated/workspace-generators",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/deprecated/workspace-generators",
+    "tags": []
+  },
+  "/deprecated/workspace-executors": {
+    "id": "workspace-executors",
+    "name": "Workspace Executors",
+    "description": "",
+    "file": "shared/deprecated/workspace-executors",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/deprecated/workspace-executors",
+    "tags": []
+  },
+  "/deprecated/default-collection": {
+    "id": "default-collection",
+    "name": "defaultCollection",
+    "description": "",
+    "file": "shared/deprecated/default-collection",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/deprecated/default-collection",
+    "tags": []
+  },
+  "/deprecated/runtime-cache-inputs": {
+    "id": "runtime-cache-inputs",
+    "name": "runtimeCacheInputs",
+    "description": "",
+    "file": "shared/deprecated/runtime-cache-inputs",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/deprecated/runtime-cache-inputs",
+    "tags": []
+  },
+  "/deprecated/global-implicit-dependencies": {
+    "id": "global-implicit-dependencies",
+    "name": "globalImplicitDependencies",
+    "description": "",
+    "file": "shared/deprecated/global-implicit-dependencies",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/deprecated/global-implicit-dependencies",
+    "tags": []
+  },
+  "/see-also": {
+    "id": "see-also",
+    "name": "See Also",
+    "description": "Links to other pieces of documentation",
+    "file": "",
+    "itemList": [
+      {
+        "id": "nx-cloud-documentation",
+        "name": "Nx Cloud Documentation",
+        "description": "",
+        "file": "",
+        "itemList": [],
+        "isExternal": true,
+        "path": "/nx-cloud/intro/what-is-nx-cloud",
+        "tags": ["cache-task-results", "distribute-task-execution"]
+      },
+      {
+        "id": "nx-cloud-main-site",
+        "name": "Nx Cloud Main Site",
+        "description": "",
+        "file": "",
+        "itemList": [],
+        "isExternal": true,
+        "path": "https://nx.app",
+        "tags": ["cache-task-results", "distribute-task-execution"]
+      },
+      {
+        "id": "skip-nx-cache-flag",
+        "name": "--skip-nx-cache flag",
+        "description": "",
+        "file": "",
+        "itemList": [],
+        "isExternal": true,
+        "path": "/nx/affected#skip-nx-cache",
+        "tags": ["cache-task-results"]
+      },
+      {
+        "id": "tasks-runner-options-property",
+        "name": "tasks-runner-options property",
+        "description": "",
+        "file": "",
+        "itemList": [],
+        "isExternal": true,
+        "path": "/reference/nx-json#tasks-runner-options",
+        "tags": ["cache-task-results"]
+      },
+      {
+        "id": "nxjson-inputs",
+        "name": "nx.json reference: inputs and namedInputs",
+        "description": "",
+        "file": "",
+        "itemList": [],
+        "isExternal": true,
+        "path": "/reference/nx-json#inputs-&-namedinputs",
+        "tags": ["cache-task-results"]
+      },
+      {
+        "id": "project-config-inputs",
+        "name": "Project Configuration reference: inputs and namedInputs",
+        "description": "",
+        "file": "",
+        "itemList": [],
+        "isExternal": true,
+        "path": "/reference/project-configuration#inputs-&-namedinputs",
+        "tags": ["cache-task-results"]
+      },
+      {
+        "id": "nxjson-workspaceLayout",
+        "name": "nx.json workspaceLayout property",
+        "description": "",
+        "file": "",
+        "itemList": [],
+        "isExternal": true,
+        "path": "/reference/nx-json#workspace-layout",
+        "tags": ["enforce-project-boundaries"]
+      },
+      {
+        "id": "nxjson-generator-defaults",
+        "name": "nx.json generator defaults",
+        "description": "",
+        "file": "",
+        "itemList": [],
+        "isExternal": true,
+        "path": "/reference/nx-json#generators",
+        "tags": ["use-code-generators"]
+      }
+    ],
+    "isExternal": false,
+    "path": "/see-also",
+    "tags": []
+  },
+  "/nx-cloud/intro/what-is-nx-cloud": {
+    "id": "nx-cloud-documentation",
+    "name": "Nx Cloud Documentation",
+    "description": "",
+    "file": "",
+    "itemList": [],
+    "isExternal": true,
+    "path": "/nx-cloud/intro/what-is-nx-cloud",
+    "tags": ["cache-task-results", "distribute-task-execution"]
+  },
+  "/nx/affected#skip-nx-cache": {
+    "id": "skip-nx-cache-flag",
+    "name": "--skip-nx-cache flag",
+    "description": "",
+    "file": "",
+    "itemList": [],
+    "isExternal": true,
+    "path": "/nx/affected#skip-nx-cache",
+    "tags": ["cache-task-results"]
+  },
+  "/reference/nx-json#tasks-runner-options": {
+    "id": "tasks-runner-options-property",
+    "name": "tasks-runner-options property",
+    "description": "",
+    "file": "",
+    "itemList": [],
+    "isExternal": true,
+    "path": "/reference/nx-json#tasks-runner-options",
+    "tags": ["cache-task-results"]
+  },
+  "/reference/nx-json#inputs-&-namedinputs": {
+    "id": "nxjson-inputs",
+    "name": "nx.json reference: inputs and namedInputs",
+    "description": "",
+    "file": "",
+    "itemList": [],
+    "isExternal": true,
+    "path": "/reference/nx-json#inputs-&-namedinputs",
+    "tags": ["cache-task-results"]
+  },
+  "/reference/project-configuration#inputs-&-namedinputs": {
+    "id": "project-config-inputs",
+    "name": "Project Configuration reference: inputs and namedInputs",
+    "description": "",
+    "file": "",
+    "itemList": [],
+    "isExternal": true,
+    "path": "/reference/project-configuration#inputs-&-namedinputs",
+    "tags": ["cache-task-results"]
+  },
+  "/reference/nx-json#workspace-layout": {
+    "id": "nxjson-workspaceLayout",
+    "name": "nx.json workspaceLayout property",
+    "description": "",
+    "file": "",
+    "itemList": [],
+    "isExternal": true,
+    "path": "/reference/nx-json#workspace-layout",
+    "tags": ["enforce-project-boundaries"]
+  },
+  "/reference/nx-json#generators": {
+    "id": "nxjson-generator-defaults",
+    "name": "nx.json generator defaults",
+    "description": "",
+    "file": "",
+    "itemList": [],
+    "isExternal": true,
+    "path": "/reference/nx-json#generators",
+    "tags": ["use-code-generators"]
+  }
+}

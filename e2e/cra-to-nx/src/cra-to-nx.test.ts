@@ -1,9 +1,11 @@
 import {
+  checkFilesDoNotExist,
   checkFilesExist,
   getPackageManagerCommand,
   getPublishedVersion,
   getSelectedPackageManager,
   readFile,
+  readJson,
   runCLI,
   runCommand,
   updateFile,
@@ -71,7 +73,7 @@ describe('nx init (for CRA)', () => {
     expect(unitTestsOutput).toContain('Successfully ran target test');
   });
 
-  it('should convert to a nested workspace with craco (webpack)', () => {
+  it('should convert to a standalone workspace with craco (webpack)', () => {
     const appName = 'my-app';
     createReactApp(appName);
 
@@ -87,7 +89,7 @@ describe('nx init (for CRA)', () => {
     checkFilesExist(`dist/${appName}/index.html`);
   });
 
-  it('should convert to an nested workspace with Vite', () => {
+  it('should convert to an standalone workspace with Vite', () => {
     const appName = 'my-app';
     createReactApp(appName);
 
@@ -98,6 +100,17 @@ describe('nx init (for CRA)', () => {
     );
 
     expect(craToNxOutput).toContain('🎉 Done!');
+
+    checkFilesDoNotExist(
+      'libs/.gitkeep',
+      'tools/tsconfig.tools.json',
+      'babel.config.json',
+      'jest.preset.js',
+      'jest.config.ts'
+    );
+
+    const packageJson = readJson('package.json');
+    expect(packageJson.devDependencies['@nrwl/jest']).toBeUndefined();
 
     const viteConfig = readFile(`vite.config.js`);
     expect(viteConfig).toContain('port: 4200'); // default port

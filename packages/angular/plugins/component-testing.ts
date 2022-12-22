@@ -85,7 +85,7 @@ ${e.stack ? e.stack : e}`
   const offset = offsetFromRoot(normalizedFromWorkspaceRootPath);
   const buildContext = createExecutorContext(
     graph,
-    graph.nodes[buildTarget.project].data.targets,
+    graph.nodes[buildTarget.project]?.data.targets,
     buildTarget.project,
     buildTarget.target,
     buildTarget.configuration
@@ -117,7 +117,7 @@ ${e.stack ? e.stack : e}`
 
 function getBuildableTarget(ctContext: ExecutorContext) {
   const targets =
-    ctContext.projectGraph.nodes[ctContext.projectName].data?.targets;
+    ctContext.projectGraph.nodes[ctContext.projectName]?.data?.targets;
   const targetConfig = targets?.[ctContext.targetName];
 
   if (!targetConfig) {
@@ -231,11 +231,20 @@ function normalizeBuildTargetOptions(
     buildOptions.scripts = [];
     buildOptions.stylePreprocessorOptions = { includePaths: [] };
   }
-  const { root, sourceRoot } =
-    buildContext.projectGraph.nodes[buildContext.projectName].data;
+
+  const config =
+    buildContext.projectGraph.nodes[buildContext.projectName]?.data;
+
+  if (!config.sourceRoot) {
+    logger.warn(stripIndents`Unable to find the 'sourceRoot' in the project configuration.
+Will set 'sourceRoot' to '${config.root}/src'
+Note: this may fail, setting the correct 'sourceRoot' for ${buildContext.projectName} in the project.json file will ensure the correct value is used.`);
+    config.sourceRoot = joinPathFragments(config.root, 'src');
+  }
+
   return {
-    root: joinPathFragments(offset, root),
-    sourceRoot: joinPathFragments(offset, sourceRoot),
+    root: joinPathFragments(offset, config.root),
+    sourceRoot: joinPathFragments(offset, config.sourceRoot),
     buildOptions,
   };
 }
@@ -280,7 +289,7 @@ function withSchemaDefaults(options: any): BrowserBuilderSchema {
 function getTempStylesForTailwind(ctExecutorContext: ExecutorContext) {
   const ctProjectConfig = ctExecutorContext.projectGraph.nodes[
     ctExecutorContext.projectName
-  ].data as ProjectConfiguration;
+  ]?.data as ProjectConfiguration;
   // angular only supports `tailwind.config.{js,cjs}`
   const ctProjectTailwindConfig = join(
     ctExecutorContext.root,

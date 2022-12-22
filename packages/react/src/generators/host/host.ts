@@ -60,6 +60,7 @@ export async function hostGenerator(host: Tree, schema: Schema) {
   if (options.ssr) {
     const setupSsrTask = await setupSsrGenerator(host, {
       project: options.projectName,
+      serverPort: options.devServerPort,
     });
     tasks.push(setupSsrTask);
 

@@ -1,10 +1,9 @@
 import { Dialog, Transition } from '@headlessui/react';
-import { AlgoliaSearch } from '@nrwl/nx-dev/feature-search';
 import { Menu, MenuItem, MenuSection } from '@nrwl/nx-dev/models-menu';
 import cx from 'classnames';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { Fragment, useCallback, useState } from 'react';
+import { createRef, Fragment, useCallback, useEffect, useState } from 'react';
 
 export interface SidebarProps {
   menu: Menu;
@@ -31,6 +30,22 @@ export function Sidebar({ menu }: SidebarProps): JSX.Element {
 }
 
 function SidebarSection({ section }: { section: MenuSection }): JSX.Element {
+  const router = useRouter();
+  const itemList = section.itemList.map((i) => ({
+    ...i,
+    ref: createRef<HTMLDivElement>(),
+  }));
+
+  const currentItem = itemList.find((s) => router.asPath.includes(s.path));
+
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        if (currentItem && currentItem.ref.current)
+          currentItem.ref.current.scrollIntoView({ behavior: 'smooth' });
+      }, 0);
+    });
+  }, [currentItem]);
   return (
     <>
       {section.hideSectionHeader ? null : (
@@ -43,10 +58,12 @@ function SidebarSection({ section }: { section: MenuSection }): JSX.Element {
       )}
       <ul>
         <li className="mt-2">
-          {section.itemList
-            .filter((i) => !!i.itemList?.length)
+          {itemList
+            .filter((i) => !!i.children?.length)
             .map((item, index) => (
-              <SidebarSectionItems key={item.id + '-' + index} item={item} />
+              <div key={item.id + '-' + index} ref={item.ref}>
+                <SidebarSectionItems key={item.id + '-' + index} item={item} />
+              </div>
             ))}
         </li>
       </ul>
@@ -63,7 +80,6 @@ function SidebarSectionItems({ item }: { item: MenuItem }): JSX.Element {
       setCollapsed(!collapsed);
     }
   }, [collapsed, setCollapsed, item]);
-
   function withoutAnchors(linkText: string): string {
     return linkText?.includes('#')
       ? linkText.substring(0, linkText.indexOf('#'))
@@ -82,7 +98,7 @@ function SidebarSectionItems({ item }: { item: MenuItem }): JSX.Element {
         onClick={handleCollapseToggle}
       >
         {item.disableCollapsible ? (
-          <Link href={item.path as string} passHref className="hover:underline">
+          <Link href={item.path as string} className="hover:underline">
             {item.name}
           </Link>
         ) : (
@@ -92,8 +108,8 @@ function SidebarSectionItems({ item }: { item: MenuItem }): JSX.Element {
         )}
       </h5>
       <ul className={cx('mb-6', collapsed ? 'hidden' : '')}>
-        {(item.itemList as MenuItem[]).map((subItem, index) => {
-          const isActiveLink = subItem.path === withoutAnchors(router?.asPath);
+        {(item.children as MenuItem[]).map((subItem, index) => {
+          const isActiveLink = subItem.path === withoutAnchors(router.asPath);
           if (isActiveLink && collapsed) {
             handleCollapseToggle();
           }
@@ -104,8 +120,7 @@ function SidebarSectionItems({ item }: { item: MenuItem }): JSX.Element {
               data-testid={`section-li:${subItem.id}`}
             >
               <Link
-                href={subItem.path as string}
-                passHref
+                href={subItem.path}
                 className={cx(
                   'relative block py-1 text-slate-500 transition-colors duration-200 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-300'
                 )}
@@ -208,7 +223,6 @@ export function SidebarMobile({
                   <Link
                     key={section.name}
                     href={section.href}
-                    passHref
                     className={cx(
                       section.current
                         ? 'text-blue-600 dark:text-sky-500'

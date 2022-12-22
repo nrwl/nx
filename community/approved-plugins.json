@@ -1,5 +1,10 @@
 [
   {
+    "name": "@ahryman40k/nx-vitepress",
+    "description": "Nx plugin add vitepress project to your workspace",
+    "url": "https://github.com/Ahryman40k/nx-vitepress/tree/main/packages/nx-vitepress"
+  },
+  {
     "name": "@nxkit/playwright",
     "description": "The Playwright plugin allows your workspace to use the power of Playwright end-to-end testing",
     "url": "https://github.com/nxkit/nxkit"

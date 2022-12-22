@@ -1,0 +1,66 @@
+{
+  "name": "build",
+  "implementation": "/packages/next/src/executors/build/build.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "$schema": "http://json-schema.org/schema",
+    "cli": "nx",
+    "title": "Next Build",
+    "description": "Build a Next.js app.",
+    "type": "object",
+    "properties": {
+      "root": { "description": "The source root", "type": "string" },
+      "outputPath": {
+        "type": "string",
+        "description": "The output path of the generated files.",
+        "x-completion-type": "directory"
+      },
+      "fileReplacements": {
+        "description": "Replace files with other files in the build.",
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "replace": {
+              "type": "string",
+              "description": "The file to be replaced.",
+              "x-completion-type": "file"
+            },
+            "with": {
+              "type": "string",
+              "description": "The file to replace with.",
+              "x-completion-type": "file"
+            }
+          },
+          "additionalProperties": false,
+          "required": ["replace", "with"]
+        },
+        "default": []
+      },
+      "nextConfig": {
+        "description": "Path (relative to workspace root) to a function which takes phase, config, and builder options, and returns the resulting config. This is an advanced option and should not be used with a normal Next.js config file (i.e. `next.config.js`).",
+        "type": "string",
+        "x-completion-type": "file",
+        "x-completion-glob": "next?(*).js"
+      },
+      "buildLibsFromSource": {
+        "type": "boolean",
+        "description": "Read buildable libraries from source instead of building them separately.",
+        "default": true
+      },
+      "includeDevDependenciesInPackageJson": {
+        "type": "boolean",
+        "description": "Include `devDependencies` in the generated package.json file. By default only production `dependencies` are included.",
+        "default": false
+      }
+    },
+    "required": ["root", "outputPath"],
+    "presets": []
+  },
+  "description": "Build a Next.js application.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/next/src/executors/build/schema.json",
+  "type": "executor"
+}

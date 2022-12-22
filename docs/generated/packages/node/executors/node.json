@@ -1,0 +1,73 @@
+{
+  "name": "node",
+  "implementation": "/packages/node/src/executors/node/node.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "$schema": "http://json-schema.org/schema",
+    "cli": "nx",
+    "title": "Node executor",
+    "description": "Execute Nodejs applications.",
+    "type": "object",
+    "properties": {
+      "buildTarget": {
+        "type": "string",
+        "description": "The target to run to build you the app."
+      },
+      "buildTargetOptions": {
+        "type": "object",
+        "description": "Additional options to pass into the build target.",
+        "default": {}
+      },
+      "waitUntilTargets": {
+        "type": "array",
+        "description": "The targets to run to before starting the node app.",
+        "default": [],
+        "items": { "type": "string" }
+      },
+      "host": {
+        "type": "string",
+        "default": "localhost",
+        "description": "The host to inspect the process on."
+      },
+      "port": {
+        "type": "number",
+        "default": 9229,
+        "description": "The port to inspect the process on. Setting port to 0 will assign random free ports to all forked processes."
+      },
+      "inspect": {
+        "oneOf": [
+          { "type": "string", "enum": ["inspect", "inspect-brk"] },
+          { "type": "boolean" }
+        ],
+        "description": "Ensures the app is starting with debugging.",
+        "default": "inspect"
+      },
+      "runtimeArgs": {
+        "type": "array",
+        "description": "Extra args passed to the node process.",
+        "default": [],
+        "items": { "type": "string" }
+      },
+      "args": {
+        "type": "array",
+        "description": "Extra args when starting the app.",
+        "default": [],
+        "items": { "type": "string" }
+      },
+      "watch": {
+        "type": "boolean",
+        "description": "Enable re-building when files change.",
+        "default": true
+      }
+    },
+    "additionalProperties": false,
+    "required": ["buildTarget"],
+    "presets": []
+  },
+  "description": "Execute a Node application.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/node/src/executors/node/schema.json",
+  "type": "executor"
+}
