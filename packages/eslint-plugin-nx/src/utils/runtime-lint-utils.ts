@@ -235,7 +235,7 @@ export function hasBannedImport(
   target: ProjectGraphExternalNode,
   depConstraints: DepConstraint[]
 ): DepConstraint | undefined {
-  // return those constraints that match source project and have `bannedExternalImports` defined
+  // return those constraints that match source project
   depConstraints = depConstraints.filter((c) => {
     let tags = [];
     if (isComboDepConstraint(c)) {
