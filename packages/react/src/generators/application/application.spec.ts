@@ -941,7 +941,10 @@ describe('app', () => {
 
     it('should create correct tsconfig compilerOptions', () => {
       const tsconfigJson = readJson(viteAppTree, '/apps/my-app/tsconfig.json');
-      expect(tsconfigJson.compilerOptions.types).toMatchObject(['vite/client']);
+      expect(tsconfigJson.compilerOptions.types).toMatchObject([
+        'vite/client',
+        'vitest',
+      ]);
     });
 
     it('should create index.html and vite.config file at the root of the app', () => {

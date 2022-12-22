@@ -96,6 +96,17 @@ function updateTsConfig(
         path: './tsconfig.spec.json',
       });
     }
+
+    if (!json.compilerOptions?.types?.includes('vitest')) {
+      if (json.compilerOptions?.types) {
+        json.compilerOptions.types.push('vitest');
+      } else {
+        if (!json.compilerOptions) {
+          json.compilerOptions = {};
+        }
+        json.compilerOptions.types = ['vitest'];
+      }
+    }
     return json;
   });
 

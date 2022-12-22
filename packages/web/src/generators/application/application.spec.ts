@@ -160,7 +160,10 @@ describe('app', () => {
           path: './tsconfig.spec.json',
         },
       ]);
-      expect(tsconfig.compilerOptions.types).toMatchObject(['vite/client']);
+      expect(tsconfig.compilerOptions.types).toMatchObject([
+        'vite/client',
+        'vitest',
+      ]);
 
       expect(tree.exists('apps/my-app-e2e/cypress.config.ts')).toBeTruthy();
       expect(tree.exists('apps/my-app/index.html')).toBeTruthy();
@@ -563,7 +566,10 @@ describe('app', () => {
 
     it('should create correct tsconfig compilerOptions', () => {
       const tsconfigJson = readJson(viteAppTree, '/apps/my-app/tsconfig.json');
-      expect(tsconfigJson.compilerOptions.types).toMatchObject(['vite/client']);
+      expect(tsconfigJson.compilerOptions.types).toMatchObject([
+        'vite/client',
+        'vitest',
+      ]);
     });
 
     it('should create index.html and vite.config file at the root of the app', () => {

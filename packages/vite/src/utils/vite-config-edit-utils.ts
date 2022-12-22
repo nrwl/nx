@@ -2,59 +2,77 @@ import { applyChangesToString, ChangeType, Tree } from '@nrwl/devkit';
 import { findNodes } from 'nx/src/utils/typescript';
 import ts = require('typescript');
 import { tsquery } from '@phenomnomnominal/tsquery';
+import { TargetFlags } from './generator-utils';
 
 export function ensureBuildOptionsInViteConfig(
   tree: Tree,
   path: string,
-  buildConfigContent: string,
+  buildConfigString: string,
   buildConfigObject: {},
   dtsPlugin: string,
   dtsImportLine: string,
-  pluginOption: string
+  pluginOption: string,
+  testConfigString: string,
+  testConfigObject: {},
+  projectAlreadyHasViteTargets?: TargetFlags
 ): boolean {
   const fileContent = tree.read(path, 'utf-8');
-  const file = tsquery.ast(fileContent);
-  const newContent = handlePluginNode(
-    file,
-    fileContent,
-    dtsPlugin,
-    dtsImportLine,
-    pluginOption
-  );
 
-  const buildUpdatedContent = handleBuildNode(
-    newContent ?? fileContent,
-    buildConfigContent,
-    buildConfigObject
-  );
+  let updatedContent = undefined;
 
-  if (buildUpdatedContent) {
-    tree.write(path, buildUpdatedContent);
+  if (!projectAlreadyHasViteTargets?.test && testConfigString?.length) {
+    updatedContent = handleBuildOrTestNode(
+      fileContent,
+      testConfigString,
+      testConfigObject,
+      'test'
+    );
+  }
+
+  if (!projectAlreadyHasViteTargets?.build && buildConfigString?.length) {
+    updatedContent = handlePluginNode(
+      updatedContent ?? fileContent,
+      dtsPlugin,
+      dtsImportLine,
+      pluginOption
+    );
+
+    updatedContent = handleBuildOrTestNode(
+      updatedContent ?? fileContent,
+      buildConfigString,
+      buildConfigObject,
+      'build'
+    );
+  }
+
+  if (updatedContent) {
+    tree.write(path, updatedContent);
     return true;
   } else {
     return false;
   }
 }
 
-function handleBuildNode(
+function handleBuildOrTestNode(
   updatedFileContent: string,
-  buildConfigContent: string,
-  buildConfigObject: {}
+  configContentString: string,
+  configContentObject: {},
+  name: 'build' | 'test'
 ): string | undefined {
   const buildNode = tsquery.query(
     updatedFileContent,
-    'PropertyAssignment:has(Identifier[name="build"])'
+    `PropertyAssignment:has(Identifier[name="${name}"])`
   );
 
   if (buildNode.length) {
     return tsquery.replace(
       updatedFileContent,
-      'PropertyAssignment:has(Identifier[name="build"])',
+      `PropertyAssignment:has(Identifier[name="${name}"])`,
       (node: ts.Node) => {
         const found = tsquery.query(node, 'ObjectLiteralExpression');
-        return `build: {
+        return `${name}: {
                   ...${found?.[0].getText()},
-                  ...${JSON.stringify(buildConfigObject)}
+                  ...${JSON.stringify(configContentObject)}
                }`;
       }
     );
@@ -71,11 +89,16 @@ function handleBuildNode(
       );
 
       if (conditionalConfig.length) {
-        return transformConditionalConfig(
-          conditionalConfig,
-          updatedFileContent,
-          buildConfigContent
-        );
+        if (name === 'build') {
+          return transformConditionalConfig(
+            conditionalConfig,
+            updatedFileContent,
+            configContentString
+          );
+        } else {
+          // no test config in conditional config
+          return undefined;
+        }
       } else {
         const propertyAssignments = tsquery.query(
           foundDefineConfig[0],
@@ -87,7 +110,7 @@ function handleBuildNode(
             {
               type: ChangeType.Insert,
               index: propertyAssignments[0].getStart(),
-              text: buildConfigContent,
+              text: configContentString,
             },
           ]);
         } else {
@@ -95,7 +118,7 @@ function handleBuildNode(
             {
               type: ChangeType.Insert,
               index: foundDefineConfig[0].getStart() + 14,
-              text: buildConfigContent,
+              text: configContentString,
             },
           ]);
         }
@@ -117,7 +140,7 @@ function handleBuildNode(
           {
             type: ChangeType.Insert,
             index: startOfObject + 1,
-            text: buildConfigContent,
+            text: configContentString,
           },
         ]);
       } catch {
@@ -131,7 +154,6 @@ function transformCurrentBuildObject(
   index: number,
   returnStatements: ts.ReturnStatement[],
   appFileContent: string,
-
   buildConfigObject: {}
 ): string | undefined {
   if (!returnStatements?.[index]) {
@@ -244,12 +266,12 @@ function transformConditionalConfig(
 }
 
 function handlePluginNode(
-  file: ts.SourceFile,
   appFileContent: string,
   dtsPlugin: string,
   dtsImportLine: string,
   pluginOption: string
 ): string | undefined {
+  const file = tsquery.ast(appFileContent);
   const pluginsNode = tsquery.query(
     file,
     'PropertyAssignment:has(Identifier[name="plugins"])'
@@ -341,15 +363,7 @@ function handlePluginNode(
 
   if (writeFile) {
     if (!appFileContent.includes(`import dts from 'vite-plugin-dts'`)) {
-      if (appFileContent.includes('/// <reference types="vitest" />')) {
-        return appFileContent.replace(
-          '/// <reference types="vitest" />',
-          `/// <reference types="vitest" />
-            ${dtsImportLine}\n`
-        );
-      } else {
-        return dtsImportLine + '\n' + appFileContent;
-      }
+      return dtsImportLine + '\n' + appFileContent;
     }
     return appFileContent;
   }

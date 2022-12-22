@@ -1,0 +1,254 @@
+export const noBuildOptions = `
+    import { defineConfig } from 'vite';
+    import react from '@vitejs/plugin-react';
+    import viteTsConfigPaths from 'vite-tsconfig-paths';
+
+    export default defineConfig({
+      plugins: [
+        react(),
+        viteTsConfigPaths({
+          root: '../../',
+        }),
+      ],
+
+      test: {
+        globals: true,
+        cache: {
+          dir: '../../node_modules/.vitest',
+        },
+        environment: 'jsdom',
+        include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+      },
+
+    });
+    `;
+
+export const someBuildOptions = `
+    import { defineConfig } from 'vite';
+    import react from '@vitejs/plugin-react';
+    import viteTsConfigPaths from 'vite-tsconfig-paths';
+
+    export default defineConfig({
+      plugins: [
+        react(),
+        viteTsConfigPaths({
+          root: '../../',
+        }),
+      ],
+
+      test: {
+        globals: true,
+        cache: {
+          dir: '../../node_modules/.vitest',
+        },
+        environment: 'jsdom',
+        include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+      },
+
+      build: {
+        my: 'option',
+      }
+
+    });
+    `;
+
+export const noContentDefineConfig = `
+    import { defineConfig } from 'vite';
+    import react from '@vitejs/plugin-react';
+    import viteTsConfigPaths from 'vite-tsconfig-paths';
+
+    export default defineConfig({});
+    `;
+
+export const conditionalConfig = `
+    import { defineConfig } from 'vite';
+    export default defineConfig(({ command, mode, ssrBuild }) => {
+      if (command === 'serve') {
+        return {
+          port: 4200,
+          host: 'localhost',
+        }
+      } else {
+        // command === 'build'
+        return {
+          my: 'option',
+        }
+      }
+    })
+    `;
+
+export const configNoDefineConfig = `
+    import { defineConfig } from 'vite';
+    import react from '@vitejs/plugin-react';
+    import viteTsConfigPaths from 'vite-tsconfig-paths';
+
+    export default {
+      plugins: [
+        react(),
+        viteTsConfigPaths({
+          root: '../../',
+        }),
+      ],
+    };
+    `;
+
+export const noBuildOptionsHasTestOption = `
+    import { defineConfig } from 'vite';
+    import react from '@vitejs/plugin-react';
+    import viteTsConfigPaths from 'vite-tsconfig-paths';
+
+    export default defineConfig({
+      plugins: [
+        react(),
+        viteTsConfigPaths({
+          root: '../../',
+        }),
+      ],
+
+      test: {
+        globals: true,
+        cache: {
+          dir: '../../node_modules/.vitest',
+        },
+        environment: 'jsdom',
+        include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+      },
+
+    });
+    `;
+
+export const someBuildOptionsSomeTestOption = `
+    import { defineConfig } from 'vite';
+    import react from '@vitejs/plugin-react';
+    import viteTsConfigPaths from 'vite-tsconfig-paths';
+
+    export default defineConfig({
+      plugins: [
+        react(),
+        viteTsConfigPaths({
+          root: '../../',
+        }),
+      ],
+
+      test: {
+        my: 'option',
+      },
+
+      build: {
+        my: 'option',
+      }
+
+    });
+    `;
+
+export const hasEverything = `
+    import { defineConfig } from 'vite';
+    import react from '@vitejs/plugin-react';
+    import viteTsConfigPaths from 'vite-tsconfig-paths';
+
+    export default defineConfig({
+      plugins: [
+        dts({
+          tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
+          // Faster builds by skipping tests. Set this to false to enable type checking.
+          skipDiagnostics: true,
+        }),
+        react(),
+        viteTsConfigPaths({
+          root: '../../../',
+        }),
+      ],
+    
+      // Configuration for building your library.
+      // See: https://vitejs.dev/guide/build.html#library-mode
+      build: {
+        lib: {
+          // Could also be a dictionary or array of multiple entry points.
+          entry: 'src/index.ts',
+          name: 'pure-libs-react-vite',
+          fileName: 'index',
+          // Change this to the formats you want to support.
+          // Don't forgot to update your package.json as well.
+          formats: ['es', 'cjs'],
+        },
+        rollupOptions: {
+          // External packages that should not be bundled into your library.
+          external: ['react', 'react-dom', 'react/jsx-runtime'],
+        },
+      },
+    
+      test: {
+        globals: true,
+        cache: {
+          dir: '../../../node_modules/.vitest',
+        },
+        environment: 'jsdom',
+        include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+      },
+    });
+    `;
+
+export const buildOption = `
+    // Configuration for building your library.
+    // See: https://vitejs.dev/guide/build.html#library-mode
+    build: {
+      lib: {
+        // Could also be a dictionary or array of multiple entry points.
+        entry: 'src/index.ts',
+        name: 'my-app',
+        fileName: 'index',
+        // Change this to the formats you want to support.
+        // Don't forgot to update your package.json as well.
+        formats: ['es', 'cjs']
+      },
+      rollupOptions: {
+        // External packages that should not be bundled into your library.
+        external: ["'react', 'react-dom', 'react/jsx-runtime'"]
+      }
+    },`;
+export const buildOptionObject = {
+  lib: {
+    entry: 'src/index.ts',
+    name: 'my-app',
+    fileName: 'index',
+    formats: ['es', 'cjs'],
+  },
+  rollupOptions: {
+    external: ["'react', 'react-dom', 'react/jsx-runtime'"],
+  },
+};
+
+export const testOption = `test: {
+        globals: true,
+        cache: {
+          dir: '../node_modules/.vitest'
+        },
+        environment: 'jsdom',
+        include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    },`;
+
+export const testOptionObject = {
+  globals: true,
+  cache: {
+    dir: `../node_modules/.vitest`,
+  },
+  environment: 'jsdom',
+  include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+};
+
+export const dtsPlugin = `dts({
+      tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
+      // Faster builds by skipping tests. Set this to false to enable type checking.
+      skipDiagnostics: true,
+    }),`;
+export const dtsImportLine = `import dts from 'vite-plugin-dts';\nimport { join } from 'path';`;
+
+export const pluginOption = `
+    plugins: [
+      ${dtsPlugin}
+      react(),
+      viteTsConfigPaths({
+        root: '../../',
+      }),
+    ],
+    `;
