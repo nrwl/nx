@@ -2,7 +2,7 @@
   "name": "@nrwl/vite",
   "version": "0.0.1",
   "private": false,
-  "description": "The Nx Plugin for building and testing applications using Vite (Early Release)",
+  "description": "The Nx Plugin for building and testing applications using Vite",
   "repository": {
     "type": "git",
     "url": "https://github.com/nrwl/nx.git",

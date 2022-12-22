@@ -2579,18 +2579,29 @@
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "vite",
     "packageName": "@nrwl/vite",
-    "description": "The Nx Plugin for building and testing applications using Vite (Early Release)",
+    "description": "The Nx Plugin for building and testing applications using Vite",
     "documents": {
       "/packages/vite/documents/overview": {
         "id": "overview",
         "name": "Overview",
-        "description": "The Nx Plugin for building and testing applications using Vite (Early Release)",
+        "description": "The Nx Plugin for building and testing applications using Vite",
         "file": "generated/packages/vite/documents/overview",
         "itemList": [],
         "isExternal": false,
         "path": "/packages/vite/documents/overview",
         "tags": [],
         "originalFilePath": "shared/packages/vite/vite-plugin"
+      },
+      "/packages/vite/documents/set-up-vite-manually": {
+        "id": "set-up-vite-manually",
+        "name": "Manually set up your project to use Vite.js",
+        "description": "Manually set up your project to use Vite.js",
+        "file": "generated/packages/vite/documents/set-up-vite-manually",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/packages/vite/documents/set-up-vite-manually",
+        "tags": [],
+        "originalFilePath": "shared/packages/vite/set-up-vite-manually"
       }
     },
     "root": "/packages/vite",

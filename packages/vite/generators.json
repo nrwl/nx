@@ -12,8 +12,8 @@
     "configuration": {
       "factory": "./src/generators/configuration/configuration#configurationSchematic",
       "schema": "./src/generators/configuration/schema.json",
-      "description": "Add Vite configuration to an application.",
-      "aliases": ["ng-add"],
+      "description": "Configure a project to use Vite.js.",
+      "aliases": ["config"],
       "hidden": false
     },
     "vitest": {
@@ -34,7 +34,7 @@
       "factory": "./src/generators/configuration/configuration",
       "schema": "./src/generators/configuration/schema.json",
       "description": "Add Vite configuration to an application.",
-      "aliases": ["ng-add"],
+      "aliases": ["config"],
       "hidden": false
     },
     "vitest": {
