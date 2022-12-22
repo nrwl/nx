@@ -2,7 +2,7 @@
 
 exports[`@nrwl/vite:configuration library mode should add config for building library 1`] = `
 "
-
+      
       import { defineConfig } from 'vite';
       import react from '@vitejs/plugin-react';
       import viteTsConfigPaths from 'vite-tsconfig-paths';
@@ -11,17 +11,19 @@ import { join } from 'path';
       
       export default defineConfig({
         
-        plugins: [
-          dts({
+        
+    plugins: [
+      dts({
       tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
       // Faster builds by skipping tests. Set this to false to enable type checking.
       skipDiagnostics: true,
     }),
-          react(),
-          viteTsConfigPaths({
-            root: '../',
-          }),
-        ],
+      react(),
+      viteTsConfigPaths({
+        root: '../',
+      }),
+    ],
+    
         
       // Configuration for building your library.
       // See: https://vitejs.dev/guide/build.html#library-mode
@@ -47,7 +49,7 @@ import { join } from 'path';
 
 exports[`@nrwl/vite:configuration library mode should set up non buildable library correctly 1`] = `
 "
-/// <reference types=\\"vitest\\" />
+      /// <reference types=\\"vitest\\" />
       import { defineConfig } from 'vite';
       import react from '@vitejs/plugin-react';
       import viteTsConfigPaths from 'vite-tsconfig-paths';
@@ -56,17 +58,19 @@ import { join } from 'path';
       
       export default defineConfig({
         
-        plugins: [
-          dts({
+        
+    plugins: [
+      dts({
       tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
       // Faster builds by skipping tests. Set this to false to enable type checking.
       skipDiagnostics: true,
     }),
-          react(),
-          viteTsConfigPaths({
-            root: '../../',
-          }),
-        ],
+      react(),
+      viteTsConfigPaths({
+        root: '../../',
+      }),
+    ],
+    
         
       // Configuration for building your library.
       // See: https://vitejs.dev/guide/build.html#library-mode
@@ -135,6 +139,115 @@ exports[`@nrwl/vite:configuration library mode should set up non buildable libra
           \\"defaultConfiguration\\": \\"production\\",
           \\"options\\": {
             \\"outputPath\\": \\"dist/libs/react-lib-nonb-jest\\"
+          },
+          \\"configurations\\": {
+            \\"development\\": {
+              \\"mode\\": \\"development\\"
+            },
+            \\"production\\": {
+              \\"mode\\": \\"production\\"
+            }
+          }
+        }
+      },
+      \\"tags\\": []
+    }
+  },
+  \\"version\\": 1
+}
+"
+`;
+
+exports[`@nrwl/vite:configuration library mode should set up non buildable library which already has vite.config.ts correctly 1`] = `
+"import dts from 'vite-plugin-dts';
+import { join } from 'path';
+import { defineConfig } from 'vite';
+    import react from '@vitejs/plugin-react';
+    import viteTsConfigPaths from 'vite-tsconfig-paths';
+
+    export default defineConfig({
+
+      
+      // Configuration for building your library.
+      // See: https://vitejs.dev/guide/build.html#library-mode
+      build: {
+        lib: {
+          // Could also be a dictionary or array of multiple entry points.
+          entry: 'src/index.ts',
+          name: 'react-lib-nonb-vitest',
+          fileName: 'index',
+          // Change this to the formats you want to support.
+          // Don't forgot to update your package.json as well.
+          formats: ['es', 'cjs']
+        },
+        rollupOptions: {
+          // External packages that should not be bundled into your library.
+          external: ['react', 'react-dom', 'react/jsx-runtime']
+        }
+      },plugins: [
+                    ...[
+        react(),
+        viteTsConfigPaths({
+          root: '../../',
+        }),
+      ],
+                    dts({
+      tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
+      // Faster builds by skipping tests. Set this to false to enable type checking.
+      skipDiagnostics: true,
+    }),
+                ],
+
+      test: {
+        globals: true,
+        cache: {
+          dir: '../../node_modules/.vitest',
+        },
+        environment: 'jsdom',
+        include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+      },
+    });
+  "
+`;
+
+exports[`@nrwl/vite:configuration library mode should set up non buildable library which already has vite.config.ts correctly 2`] = `
+"{
+  \\"projects\\": {
+    \\"react-lib-nonb-vitest\\": {
+      \\"$schema\\": \\"../../node_modules/nx/schemas/project-schema.json\\",
+      \\"root\\": \\"libs/react-lib-nonb-vitest\\",
+      \\"sourceRoot\\": \\"libs/react-lib-nonb-vitest/src\\",
+      \\"projectType\\": \\"library\\",
+      \\"architect\\": {
+        \\"lint\\": {
+          \\"builder\\": \\"@nrwl/linter:eslint\\",
+          \\"outputs\\": [
+            \\"{options.outputFile}\\"
+          ],
+          \\"options\\": {
+            \\"lintFilePatterns\\": [
+              \\"libs/react-lib-nonb-vitest/**/*.{ts,tsx,js,jsx}\\"
+            ]
+          }
+        },
+        \\"test\\": {
+          \\"builder\\": \\"@nrwl/vite:test\\",
+          \\"outputs\\": [
+            \\"{projectRoot}/coverage\\"
+          ],
+          \\"options\\": {
+            \\"passWithNoTests\\": true,
+            \\"reportsDirectory\\": \\"{workspaceRoot}/coverage/{projectRoot}\\"
+          }
+        },
+        \\"build\\": {
+          \\"builder\\": \\"@nrwl/vite:build\\",
+          \\"outputs\\": [
+            \\"{options.outputPath}\\"
+          ],
+          \\"defaultConfiguration\\": \\"production\\",
+          \\"options\\": {
+            \\"outputPath\\": \\"dist/libs/react-lib-nonb-vitest\\"
           },
           \\"configurations\\": {
             \\"development\\": {
@@ -226,7 +339,7 @@ exports[`@nrwl/vite:configuration transform React app to use Vite by providing c
 
 exports[`@nrwl/vite:configuration transform React app to use Vite should create vite.config file at the root of the app 1`] = `
 "
-
+      
       import { defineConfig } from 'vite';
       import react from '@vitejs/plugin-react';
       import viteTsConfigPaths from 'vite-tsconfig-paths';
@@ -238,13 +351,15 @@ exports[`@nrwl/vite:configuration transform React app to use Vite should create 
       port: 4200,
       host: 'localhost',
     },
-        plugins: [
-          
-          react(),
-          viteTsConfigPaths({
-            root: '../../',
-          }),
-        ],
+        
+    plugins: [
+      
+      react(),
+      viteTsConfigPaths({
+        root: '../../',
+      }),
+    ],
+    
         
         
         
@@ -360,6 +475,7 @@ exports[`@nrwl/vite:configuration transform Web app to use Vite should create vi
 "
       
       import { defineConfig } from 'vite';
+      
       import viteTsConfigPaths from 'vite-tsconfig-paths';
       
       
@@ -369,12 +485,15 @@ exports[`@nrwl/vite:configuration transform Web app to use Vite should create vi
       port: 4200,
       host: 'localhost',
     },
-        plugins: [
-          
-          viteTsConfigPaths({
-            root: '../../',
-          }),
-        ],
+        
+    plugins: [
+      
+      
+      viteTsConfigPaths({
+        root: '../../',
+      }),
+    ],
+    
         
         
         
@@ -478,7 +597,7 @@ exports[`@nrwl/vite:configuration transform Web app to use Vite should transform
 
 exports[`@nrwl/vite:configuration vitest should create a vitest configuration if "includeVitest" is true 1`] = `
 "
-/// <reference types=\\"vitest\\" />
+      /// <reference types=\\"vitest\\" />
       import { defineConfig } from 'vite';
       import react from '@vitejs/plugin-react';
       import viteTsConfigPaths from 'vite-tsconfig-paths';
@@ -490,13 +609,15 @@ exports[`@nrwl/vite:configuration vitest should create a vitest configuration if
       port: 4200,
       host: 'localhost',
     },
-        plugins: [
-          
-          react(),
-          viteTsConfigPaths({
-            root: '../../',
-          }),
-        ],
+        
+    plugins: [
+      
+      react(),
+      viteTsConfigPaths({
+        root: '../../',
+      }),
+    ],
+    
         
         
         test: {
