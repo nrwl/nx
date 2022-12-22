@@ -66,7 +66,7 @@ export function generatePackageSchemas(): Promise<void[]> {
       description: p.description,
       documents: p.documents.map((d) => ({
         ...createDocumentMetadata({
-          description: p.description,
+          description: d.description || p.description,
           file: ['generated', 'packages', p.name, 'documents', d.id].join('/'),
           id: d.id,
           itemList: d.itemList,
