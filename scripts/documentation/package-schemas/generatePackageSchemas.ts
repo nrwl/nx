@@ -114,8 +114,8 @@ export function generatePackageSchemas(): Promise<void[]> {
     })
   );
 
-  const outputPath: string = join(absoluteRoot, 'docs');
-  const outputPackagesPath: string = join(outputPath, 'generated', 'packages');
+  const outputPath: string = join(absoluteRoot, 'docs', 'generated');
+  const outputPackagesPath: string = join(outputPath, 'packages');
   const fileGenerationPromises = [];
 
   // Generates all documents and schemas into their own directories per packages.
