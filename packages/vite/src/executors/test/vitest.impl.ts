@@ -75,7 +75,9 @@ export default async function* runExecutor(
   }
 
   for await (const report of nxReporter) {
-    hasErrors = report.hasErrors;
+    // vitest sets the exitCode = 1 when code coverage isn't met
+    hasErrors =
+      report.hasErrors || (process.exitCode && process.exitCode !== 0);
   }
 
   return {

@@ -1,5 +1,9 @@
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { Tree, readProjectConfiguration } from '@nrwl/devkit';
+import {
+  Tree,
+  readProjectConfiguration,
+  updateProjectConfiguration,
+} from '@nrwl/devkit';
 
 import generator from './vitest-generator';
 import { VitestGeneratorSchema } from './schema';
@@ -20,7 +24,7 @@ describe('vitest generator', () => {
     appTree = createTreeWithEmptyWorkspace();
   });
 
-  it('Should add the test target', async () => {
+  it('Should add the test target to existing test target', async () => {
     mockReactAppGenerator(appTree);
     await generator(appTree, options);
     const config = readProjectConfiguration(appTree, 'my-test-react-app');
@@ -32,6 +36,30 @@ describe('vitest generator', () => {
         },
         "outputs": Array [
           "{workspaceRoot}/coverage/{projectRoot}",
+        ],
+      }
+    `);
+  });
+
+  it('should add the test target if its missing', async () => {
+    mockReactAppGenerator(appTree);
+    const projectConfig = readProjectConfiguration(
+      appTree,
+      'my-test-react-app'
+    );
+    delete projectConfig.targets.test;
+    updateProjectConfiguration(appTree, 'my-test-react-app', projectConfig);
+    await generator(appTree, options);
+    const config = readProjectConfiguration(appTree, 'my-test-react-app');
+    expect(config.targets['test']).toMatchInlineSnapshot(`
+      Object {
+        "executor": "@nrwl/vite:test",
+        "options": Object {
+          "passWithNoTests": true,
+          "reportsDirectory": "../../coverage/apps/my-test-react-app",
+        },
+        "outputs": Array [
+          "coverage/apps/my-test-react-app",
         ],
       }
     `);

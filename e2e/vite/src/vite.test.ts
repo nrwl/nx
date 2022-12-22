@@ -1,6 +1,7 @@
 import {
   cleanupProject,
   createFile,
+  directoryExists,
   exists,
   fileExists,
   killPorts,
@@ -192,7 +193,7 @@ describe('Vite Plugin', () => {
   describe('should be able to create libs that use vitest', () => {
     const lib = uniq('my-lib');
     beforeEach(() => {
-      proj = newProject();
+      proj = newProject({ name: uniq('vite-proj') });
     }),
       100_000;
 
@@ -204,6 +205,55 @@ describe('Vite Plugin', () => {
       expect(result.combinedOutput).toContain(
         `Successfully ran target test for project ${lib}`
       );
+    }, 100_000);
+
+    it('should collect coverage', () => {
+      runCLI(`generate @nrwl/react:lib ${lib} --unitTestRunner=vitest`);
+      updateFile(`libs/${lib}/vite.config.ts`, () => {
+        return `import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import viteTsConfigPaths from 'vite-tsconfig-paths';
+
+export default defineConfig({
+  server: {
+    port: 4200,
+    host: 'localhost',
+  },
+  plugins: [
+    react(),
+    viteTsConfigPaths({
+      root: './',
+    }),
+  ],
+  test: {
+    globals: true,
+    cache: {
+      dir: './node_modules/.vitest',
+    },
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    coverage: {
+      provider: "c8",
+      enabled: true,
+      lines: 100,
+      statements: 100,
+      functions: 100,
+      branches: 1000,
+    }
+  },
+});
+`;
+      });
+
+      const coverageDir = `${tmpProjPath()}/coverage/libs/${lib}`;
+
+      const results = runCLI(`test ${lib} --coverage`, { silenceError: true });
+
+      expect(results).toContain(
+        `Running target test for project ${lib} failed`
+      );
+      expect(results).toContain(`ERROR: Coverage`);
+      expect(directoryExists(coverageDir)).toBeTruthy();
     }, 100_000);
 
     it('should be able to run tests with inSourceTests set to true', async () => {
