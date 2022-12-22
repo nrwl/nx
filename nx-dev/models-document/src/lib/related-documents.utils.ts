@@ -2,10 +2,14 @@ import { RelatedDocument } from './documents.models';
 
 interface RelatedDocumentsCategory {
   id: string;
-  name: string;
+  /**
+   * Matcher that will be evaluated against a path.
+   */
   matchers: string[];
+  name: string;
   relatedDocuments: RelatedDocument[];
 }
+
 export function categorizeRelatedDocuments(
   items: RelatedDocument[]
 ): RelatedDocumentsCategory[] {
@@ -13,25 +17,25 @@ export function categorizeRelatedDocuments(
     {
       id: 'concepts',
       name: 'Concepts',
-      matchers: ['concepts', 'more-concepts'],
+      matchers: ['/concepts/', '/more-concepts/'],
       relatedDocuments: [],
     },
     {
       id: 'recipes',
       name: 'Recipes',
-      matchers: ['recipes'],
+      matchers: ['/recipes/'],
       relatedDocuments: [],
     },
     {
       id: 'reference',
       name: 'Reference',
-      matchers: ['nx', 'workspace'],
+      matchers: ['/workspace/', '/packages/'],
       relatedDocuments: [],
     },
     {
       id: 'see-also',
       name: 'See also',
-      matchers: ['see-also'],
+      matchers: ['/see-also/'],
       relatedDocuments: [],
     },
   ];

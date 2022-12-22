@@ -539,7 +539,7 @@
               "id": "packages-devkit",
               "tags": ["create-your-own-plugin"],
               "file": "",
-              "path": "/packages#devkit",
+              "path": "/packages/devkit/index",
               "isExternal": true
             },
             {
@@ -613,7 +613,7 @@
               "id": "skip-nx-cache-flag",
               "file": "",
               "tags": ["cache-task-results"],
-              "path": "/nx/affected#skip-nx-cache",
+              "path": "/packages/nx/documents/affected#skip-nx-cache",
               "isExternal": true
             },
             {
