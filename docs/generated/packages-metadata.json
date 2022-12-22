@@ -2550,18 +2550,29 @@
     "source": "/packages/tao/src"
   },
   {
-    "description": "The Nx Plugin for building and testing applications using Vite (Early Release)",
+    "description": "The Nx Plugin for building and testing applications using Vite",
     "documents": [
       {
         "id": "overview",
         "name": "Overview",
-        "description": "The Nx Plugin for building and testing applications using Vite (Early Release)",
+        "description": "The Nx Plugin for building and testing applications using Vite",
         "file": "generated/packages/vite/documents/overview",
         "itemList": [],
         "isExternal": false,
         "path": "vite/documents/overview",
         "tags": [],
         "originalFilePath": "shared/packages/vite/vite-plugin"
+      },
+      {
+        "id": "set-up-vite-manually",
+        "name": "Manually set up your project to use Vite.js",
+        "description": "Manually set up your project to use Vite.js",
+        "file": "generated/packages/vite/documents/set-up-vite-manually",
+        "itemList": [],
+        "isExternal": false,
+        "path": "vite/documents/set-up-vite-manually",
+        "tags": [],
+        "originalFilePath": "shared/packages/vite/set-up-vite-manually"
       }
     ],
     "executors": [

@@ -1555,6 +1555,12 @@
               "id": "overview",
               "path": "/packages/vite",
               "file": "shared/packages/vite/vite-plugin"
+            },
+            {
+              "name": "Manually set up your project to use Vite.js",
+              "id": "set-up-vite-manually",
+              "description": "Manually set up your project to use Vite.js",
+              "file": "shared/packages/vite/set-up-vite-manually"
             }
           ]
         },

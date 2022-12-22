@@ -5911,6 +5911,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "Manually set up your project to use Vite.js",
+                "path": "/packages/vite/documents/set-up-vite-manually",
+                "id": "set-up-vite-manually",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,
