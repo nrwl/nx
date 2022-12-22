@@ -69,4 +69,30 @@ describe('nx init', () => {
 
     expect(runCLI('echo')).toContain('123');
   });
+
+  it('should support compound scripts', () => {
+    createNonNxProjectDirectory('regular-repo', false);
+    updateFile(
+      'package.json',
+      JSON.stringify({
+        name: 'package',
+        scripts: {
+          compound: 'echo HELLO && echo COMPOUND',
+        },
+      })
+    );
+
+    runCommand(pmc.install);
+
+    runCommand(
+      `${
+        pmc.runUninstalledPackage
+      } nx@${getPublishedVersion()} init -y --cacheable=compound`
+    );
+
+    const output = runCommand('npm run compound TEST');
+    expect(output).toContain('HELLO\n');
+    expect(output).toContain('COMPOUND TEST');
+    expect(output).not.toContain('HELLO COMPOUND');
+  });
 });
