@@ -102,6 +102,7 @@
       "@nrwl/rollup",
       "@nrwl/storybook",
       "@nrwl/tao",
+      "@nrwl/vite",
       "@nrwl/web",
       "@nrwl/webpack",
       "@nrwl/workspace",
