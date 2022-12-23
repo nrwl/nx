@@ -16,7 +16,7 @@ import {
   lockFileJustTypescript,
   rxjsTslibLockFile,
   ssh2LockFile,
-} from './__fixtures__/manual/yarn.lock';
+} from './__fixtures__/yarn.lock';
 
 const TypeScriptOnlyPackage = {
   name: 'test',

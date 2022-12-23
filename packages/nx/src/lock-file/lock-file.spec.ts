@@ -19,7 +19,7 @@ import {
   npmLockFileWithAliases,
   pnpmLockFileWithAliases,
   yarnLockFileWithAliases,
-} from './__fixtures__/manual/aux.lock';
+} from './__fixtures__/aux.lock';
 import {
   lockFileV3YargsAndDevkitOnly as npmLockFileV3YargsAndDevkit,
   lockFileV2YargsAndDevkitOnly as npmLockFileV2YargsAndDevkit,
@@ -27,15 +27,15 @@ import {
   lockFileV3 as npmLockFileV3,
   lockFileV2 as npmLockFileV2,
   lockFileV1 as npmLockFileV1,
-} from './__fixtures__/manual/npm.lock';
+} from './__fixtures__/npm.lock';
 import {
   lockFileYargsAndDevkit as pnpmLockFileYargsAndDevkit,
   lockFile as pnpmLockFile,
-} from './__fixtures__/manual/pnpm.lock';
+} from './__fixtures__/pnpm.lock';
 import {
   lockFileDevkitAndYargs as yarnLockFileDevkitAndYargs,
   lockFile as yarnLockFile,
-} from './__fixtures__/manual/yarn.lock';
+} from './__fixtures__/yarn.lock';
 import { vol } from 'memfs';
 import { ProjectGraph } from '../config/project-graph';
 import { createPackageJson } from '../utils/create-package-json';

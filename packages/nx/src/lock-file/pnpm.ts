@@ -9,6 +9,7 @@ import { generatePrunnedHash, hashString } from './utils/hashing';
 import { satisfies } from 'semver';
 import { PackageJsonDeps } from './utils/pruning';
 import { sortObjectByKeys } from '../utils/object-sort';
+import { pruneLockfile } from '@pnpm/prune-lockfile';
 
 type PackageMeta = {
   key: string;
@@ -40,7 +41,14 @@ type PnpmLockFile = {
     string | { version: string; specifier: string }
   >;
   packages?: Dependencies;
-  importers?: Record<string, { specifiers: Record<string, string> }>;
+  importers: Record<
+    string,
+    {
+      specifiers: Record<string, string>;
+      dependenciesMeta?: Record<string, any>;
+      publishDirectory?: string;
+    }
+  >;
 
   time?: Record<string, string>; // e.g.   /@babel/core/7.19.6: '2022-10-20T09:03:36.074Z'
   overrides?: Record<string, string>; // js-yaml@^4.0.0: npm:@zkochan/js-yaml@0.0.6
@@ -91,6 +99,8 @@ function mapPackages(
 ): LockFileData['dependencies'] {
   const mappedPackages: LockFileData['dependencies'] = {};
 
+  const importers = {};
+
   Object.entries(packages).forEach(([key, value]) => {
     // create new key
     const { version, packageName, actualVersion } = parseVersionAndPackage(
@@ -102,7 +112,7 @@ function mapPackages(
 
     // construct packageMeta object
     const meta = mapMetaInformation(
-      { dependencies, devDependencies, specifiers },
+      { dependencies, devDependencies, specifiers, importers },
       inlineSpecifiers,
       key,
       value,
@@ -288,6 +298,7 @@ function unmapLockFile(lockFileData: LockFileData): PnpmLockFile {
     {};
   const packages: Dependencies = {};
   const specifiers: Record<string, string> = {};
+  const importers: Record<string, string> = {};
   const inlineSpecifiers = lockFileData.lockFileMetadata.lockfileVersion
     .toString()
     .endsWith('inlineSpecifiers');
@@ -368,6 +379,9 @@ function unmapLockFile(lockFileData: LockFileData): PnpmLockFile {
     ...(Object.keys(packages).length && {
       packages: sortObjectByKeys(packages),
     }),
+    ...(Object.keys(importers).length && {
+      importers: sortObjectByKeys(importers),
+    }),
     time,
   };
 }
@@ -388,6 +402,18 @@ export function transitiveDependencyPnpmLookup({
   }
   // pnpm's dependencies always point to the exact version so this block is only for insurrance
   return Object.values(versions).find((v) => satisfies(v.version, version));
+}
+
+export function prunePnpmLockFileV2(
+  lockFile: string,
+  normalizedPackageJson: PackageJsonDeps
+): PnpmLockFile {
+  // TODO: Do these two changes at all times
+  // TODO: we don't want to support all the possible lockfile versions
+  const data: PnpmLockFile = convertFromLockfileFileMutable(load(lockFile));
+
+  // TODO: revert from inline specifiers if needed
+  return pruneLockfile(data as any, normalizedPackageJson, '.');
 }
 
 /**
@@ -596,3 +622,34 @@ function findPackageMeta(
   // otherwise it's a root dependency
   return packageMeta.find((m) => !m.key.split('/').pop().includes('_'));
 }
+
+/**
+ * Reverts changes from the "forceSharedFormat" write option if necessary.
+ */
+function convertFromLockfileFileMutable(
+  lockfileFile: PnpmLockFile
+): PnpmLockFile {
+  if (typeof lockfileFile?.['importers'] === 'undefined') {
+    lockfileFile.importers = {
+      '.': {
+        specifiers: lockfileFile['specifiers'] ?? {},
+        dependenciesMeta: lockfileFile['dependenciesMeta'],
+        publishDirectory: lockfileFile['publishDirectory'],
+      },
+    };
+    delete lockfileFile.specifiers;
+    for (const depType of DEPENDENCIES_FIELDS) {
+      if (lockfileFile[depType] != null) {
+        lockfileFile.importers['.'][depType] = lockfileFile[depType];
+        delete lockfileFile[depType];
+      }
+    }
+  }
+  return lockfileFile as PnpmLockFile;
+}
+
+export const DEPENDENCIES_FIELDS = [
+  'optionalDependencies',
+  'dependencies',
+  'devDependencies',
+];

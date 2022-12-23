@@ -8,6 +8,8 @@ import { LockFileData, PackageDependency } from './utils/lock-file-type';
 import { TransitiveLookupFunctionInput } from './utils/mapping';
 import { hashString, generatePrunnedHash } from './utils/hashing';
 import type { PackageJsonDeps } from './utils/pruning';
+import { LockFileBuilder, LockFileNode } from './utils/lock-file-builder';
+import type { PackageJson } from '../utils/package-json';
 
 type PackageMeta = {
   path: string;
@@ -18,16 +20,33 @@ type PackageMeta = {
 
 type Dependencies = Record<string, Omit<PackageDependency, 'packageMeta'>>;
 
-type NpmDependency = {
+type NpmDependencyV3 = {
   version: string;
   resolved: string;
   integrity: string;
-  requires?: Record<string, string>;
-  dependencies?: Record<string, NpmDependency>;
+  dependencies?: Record<string, string>;
+  optionalDependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+  peerDependencies?: Record<string, string>;
+  peerDependenciesMeta?: Record<string, { optional: boolean }>;
   dev?: boolean;
   peer?: boolean;
   devOptional?: boolean;
   optional?: boolean;
+  name?: string;
+};
+
+type NpmDependencyV1 = {
+  version: string;
+  resolved: string;
+  integrity: string;
+  requires?: Record<string, string>;
+  dependencies?: Record<string, NpmDependencyV1>;
+  dev?: boolean;
+  peer?: boolean;
+  devOptional?: boolean;
+  optional?: boolean;
+  name?: string;
 };
 
 /**
@@ -38,10 +57,11 @@ type NpmDependency = {
  */
 type NpmLockFile = {
   name?: string;
+  version?: string;
   lockfileVersion: number;
   requires?: boolean;
-  packages?: Record<string, NpmDependency>;
-  dependencies?: Record<string, NpmDependency>;
+  packages?: Record<string, NpmDependencyV3>;
+  dependencies?: Record<string, NpmDependencyV1>;
 };
 
 /**
@@ -64,10 +84,165 @@ export function parseNpmLockFile(lockFile: string): LockFileData {
   };
 }
 
+export function parseNpmLockFileV2(lockFile: string, packageJson: PackageJson) {
+  const { name, version, lockfileVersion, ...lockFileContent } = JSON.parse(
+    lockFile
+  ) as NpmLockFile;
+
+  const builder = new LockFileBuilder(packageJson);
+
+  lockfileVersion === 1
+    ? parseV1Node(builder, builder.root, lockFileContent)
+    : parseV3Node(builder, builder.root, lockFileContent); // we will treat V2 lockfile as V3 but map it back to V2 for backwards compatibility
+
+  builder.verifyGraphConsistency();
+  return builder.getLockFileGraph();
+}
+
+function parseV1Node(
+  builder: LockFileBuilder,
+  rootNode: LockFileNode,
+  content: Omit<NpmLockFile, 'lockfileVersion'>
+) {
+  const { dependencies } = content;
+
+  const addEdge = (node, depName, depSpec, type) => {
+    if (!node.edgesOut || !node.edgesOut.has(depName)) {
+      builder.addEdgeOut(node, depName, depSpec, type);
+    }
+  };
+
+  // parse found dependencies into out edges
+  const parseDependencies = (node: LockFileNode, value: NpmDependencyV1) => {
+    if (value.requires) {
+      Object.entries(value.requires).forEach(([depName, depSpec]) => {
+        addEdge(node, depName, depSpec, 'prod'); // TODO: this has to be read from package.json unfortunately
+      });
+    }
+  };
+
+  // parse node value from lock file into `LockFileNode`
+  const processNode = (
+    name: string,
+    value: NpmDependencyV1,
+    path: string
+  ): void => {
+    let { version, resolved, peer, optional, dev, integrity } = value;
+    let packageName;
+    const devOptional = dev || optional || value.devOptional;
+    if (version?.startsWith('npm:')) {
+      packageName = version.slice(4, version.lastIndexOf('@'));
+      version = version.split('@').pop();
+    }
+    const node: LockFileNode = {
+      name,
+      ...(packageName && { packageName }),
+      ...(version && { version }),
+      ...(resolved && { resolved }),
+      path,
+      ...(dev && { dev }),
+      ...(optional && { optional }),
+      ...(devOptional && { devOptional }),
+      ...(integrity && { integrity }),
+      ...(peer && { peer }),
+      edgesIn: new Set(),
+    };
+
+    parseDependencies(node, value);
+    builder.addNode(node.path, node);
+
+    if (value.dependencies) {
+      Object.entries(value.dependencies).forEach(([depName, depValue]) => {
+        processNode(depName, depValue, `${path}/node_modules/${depName}`);
+      });
+    }
+  };
+
+  if (dependencies) {
+    Object.entries(dependencies).forEach(([packageName, value]) => {
+      processNode(packageName, value, `node_modules/${packageName}`);
+    });
+  }
+}
+
+function parseV3Node(
+  builder: LockFileBuilder,
+  rootNode: LockFileNode,
+  content: Omit<NpmLockFile, 'lockfileVersion'>
+) {
+  const { packages } = content;
+
+  const addEdge = (node, depName, depSpec, type) => {
+    if (!node.edgesOut || !node.edgesOut.has(depName)) {
+      builder.addEdgeOut(node, depName, depSpec, type);
+    }
+  };
+
+  // parse found dependencies into out edges
+  const parseDependencies = (node: LockFileNode, value: NpmDependencyV3) => {
+    if (value.peerDependencies) {
+      const peerMeta = value.peerDependenciesMeta || {};
+      Object.entries(value.peerDependencies).forEach(([depName, depSpec]) => {
+        if (peerMeta[depName]?.optional) {
+          addEdge(node, depName, depSpec, 'peerOptional');
+        } else {
+          addEdge(node, depName, depSpec, 'peer');
+        }
+      });
+    }
+    if (value.dependencies) {
+      Object.entries(value.dependencies).forEach(([depName, depSpec]) => {
+        addEdge(node, depName, depSpec, 'prod');
+      });
+    }
+    if (value.optionalDependencies) {
+      Object.entries(value.optionalDependencies).forEach(
+        ([depName, depSpec]) => {
+          addEdge(node, depName, depSpec, 'optional');
+        }
+      );
+    }
+  };
+
+  // parse node value from lock file into `LockFileNode`
+  const parseNode = (path: string, value: NpmDependencyV3): LockFileNode => {
+    const { version, resolved, peer, optional, dev, name, integrity } = value;
+    const devOptional = dev || optional || value.devOptional;
+    const packageName = path.split('node_modules/').pop();
+    const node: LockFileNode = {
+      name: packageName,
+      ...(name !== packageName && { packageName: name }),
+      ...(version && { version }),
+      ...(resolved && { resolved }),
+      path,
+      ...(dev && { dev }),
+      ...(optional && { optional }),
+      ...(devOptional && { devOptional }),
+      ...(integrity && { integrity }),
+      ...(peer && { peer }),
+      edgesIn: new Set(),
+    };
+
+    return node;
+  };
+
+  if (packages) {
+    Object.entries(packages).forEach(([path, value]) => {
+      if (path === '') {
+        return; // skip root package (it's already added
+      }
+
+      const node = parseNode(path, value);
+      parseDependencies(node, value);
+      builder.addNode(path, node);
+    });
+  }
+}
+
 // Maps /node_modules/@abc/def with version 1.2.3 => @abc/def > @abc/dev@1.2.3
 function mapPackages(
-  dependencies: Record<string, NpmDependency>,
-  packages: Record<string, NpmDependency>,
+  dependencies: Record<string, NpmDependencyV1>,
+  packages: Record<string, NpmDependencyV3>,
   lockfileVersion: number
 ): LockFileData['dependencies'] {
   const mappedPackages: LockFileData['dependencies'] = {};
@@ -154,7 +329,7 @@ function mapPackages(
 
 function prepareDependency(
   packageName: string,
-  dependency: NpmDependency,
+  dependency: NpmDependencyV1 | NpmDependencyV3,
   mappedPackages: LockFileData['dependencies'],
   pathPrefix: string = '',
   path?: string
@@ -176,10 +351,10 @@ function mapPackageDependency(
   packageName: string,
   key: string,
   packagePath: string,
-  value: NpmDependency | Omit<PackageDependency, 'packageMeta'>,
+  value: NpmDependencyV1 | Omit<PackageDependency, 'packageMeta'>,
   lockfileVersion: number,
   isRootVersion?: boolean,
-  dependencyValue?: NpmDependency
+  dependencyValue?: NpmDependencyV1
 ) {
   const { dev, peer, optional } = value;
   const packageMeta = {
@@ -226,7 +401,7 @@ function mapPackageDependency(
 
 function mapPackageDependencies(
   mappedPackages: LockFileData['dependencies'],
-  dependencies: Record<string, NpmDependency>,
+  dependencies: Record<string, NpmDependencyV1>,
   parentPath: string,
   lockfileVersion: number
 ): void {
@@ -353,7 +528,7 @@ function unmapPackage(packages: Dependencies, dependency: PackageDependency) {
 }
 
 function unmapDependencies(
-  dependencies: Record<string, NpmDependency>,
+  dependencies: Record<string, NpmDependencyV1 | NpmDependencyV3>,
   packageName: string,
   { packageMeta, ...value }: PackageDependency & { packageMeta: PackageMeta[] }
 ): void {
@@ -367,7 +542,7 @@ function unmapDependencies(
     const requires = unmapDependencyRequires(value);
     const innerDeps = getProjectNodeAndEnsureParentHierarchy(
       projectPath,
-      dependencies
+      dependencies as Record<string, NpmDependencyV1>
     );
 
     // sorting fields to match package-lock structure
@@ -390,12 +565,12 @@ function unmapDependencies(
 // returns pointer to last project in the path
 function getProjectNodeAndEnsureParentHierarchy(
   projects: string[],
-  dependencies: Record<string, NpmDependency>
+  dependencies: Record<string, NpmDependencyV1>
 ) {
   while (projects.length > 1) {
     const parentName = projects.shift().replace(/\/$/, '');
     if (!dependencies[parentName]) {
-      dependencies[parentName] = {} as NpmDependency;
+      dependencies[parentName] = {} as NpmDependencyV1;
     }
     if (!dependencies[parentName].dependencies) {
       dependencies[parentName].dependencies = {};
@@ -429,8 +604,8 @@ function unmapDependencyRequires(
 
 // recursively sort dependencies
 function sortDependencies(
-  unsortedDependencies: Record<string, NpmDependency>
-): Record<string, NpmDependency> {
+  unsortedDependencies: Record<string, NpmDependencyV1>
+): Record<string, NpmDependencyV1> {
   const dependencies = {};
   const sortedKeys = Object.keys(unsortedDependencies).sort((a, b) =>
     a.localeCompare(b)

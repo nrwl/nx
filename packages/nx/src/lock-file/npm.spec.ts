@@ -1,5 +1,6 @@
 import {
   parseNpmLockFile,
+  parseNpmLockFileV2,
   pruneNpmLockFile,
   stringifyNpmLockFile,
 } from './npm';
@@ -19,9 +20,9 @@ import {
   ssh2LockFileV1,
   ssh2LockFileV2,
   ssh2LockFileV3,
-} from './__fixtures__/manual/npm.lock';
+} from './__fixtures__/npm.lock';
 import { vol } from 'memfs';
-import { npmLockFileWithWorkspaces } from './__fixtures__/manual/workspaces.lock';
+import { npmLockFileWithWorkspaces } from './__fixtures__/workspaces.lock';
 import { joinPathFragments } from '../utils/path';
 
 jest.mock('fs', () => require('memfs').fs);
@@ -66,6 +67,731 @@ const RxjsTslibPackage = {
 };
 
 describe('npm LockFile utility', () => {
+  describe('npm repo pruning tests', () => {
+    it('no args', () => {
+      const packageJson = {
+        name: 'test-npm-ls',
+        version: '1.0.0',
+        dependencies: {
+          foo: '^1.0.0',
+          chai: '^1.0.0',
+        },
+      };
+      const lockFile = {
+        lockfileVersion: 1,
+        dependencies: {
+          foo: {
+            version: '1.0.0',
+            requires: {
+              dog: '^1.0.0',
+            },
+          },
+          dog: {
+            version: '1.0.0',
+          },
+          chai: {
+            version: '1.0.0',
+          },
+        },
+      };
+      const lockFileDate = parseNpmLockFile(JSON.stringify(lockFile));
+      const result = pruneNpmLockFile(lockFileDate, packageJson);
+      expect(JSON.parse(stringifyNpmLockFile(result))).toEqual({
+        name: 'test-npm-ls',
+        version: '1.0.0',
+        lockfileVersion: 1,
+        dependencies: {
+          foo: {
+            version: '1.0.0',
+            overridden: false,
+            dependencies: {
+              dog: {
+                version: '1.0.0',
+                overridden: false,
+              },
+            },
+          },
+          chai: {
+            version: '1.0.0',
+            overridden: false,
+          },
+        },
+      });
+    });
+
+    it('extraneous deps', () => {
+      const packageJson = {
+        name: 'test-npm-ls',
+        version: '1.0.0',
+        dependencies: {
+          foo: '^1.0.0',
+        },
+      };
+      const lockFile = {
+        dependencies: {
+          foo: {
+            version: '1.0.0',
+            requires: {
+              dog: '^1.0.0',
+            },
+          },
+          dog: {
+            version: '1.0.0',
+          },
+          chai: {
+            version: '1.0.0',
+          },
+        },
+      };
+      const lockFileDate = parseNpmLockFile(JSON.stringify(lockFile));
+      const result = pruneNpmLockFile(lockFileDate, packageJson);
+      expect(JSON.parse(stringifyNpmLockFile(result))).toEqual({
+        name: 'test-npm-ls',
+        version: '1.0.0',
+        dependencies: {
+          foo: {
+            version: '1.0.0',
+            overridden: false,
+            dependencies: {
+              dog: {
+                version: '1.0.0',
+                overridden: false,
+              },
+            },
+          },
+        },
+      });
+    });
+
+    it('missing deps --long', () => {
+      // config.long = true
+      const packageJson = {
+        name: 'test-npm-ls',
+        version: '1.0.0',
+        dependencies: {
+          foo: '^1.0.0',
+          dog: '^1.0.0',
+          chai: '^1.0.0',
+          ipsum: '^1.0.0',
+        },
+      };
+      const lockFile = {
+        dependencies: {
+          foo: {
+            version: '1.0.0',
+            requires: {
+              dog: '^1.0.0',
+            },
+          },
+          dog: {
+            version: '1.0.0',
+          },
+          chai: {
+            version: '1.0.0',
+          },
+          ipsum: {
+            version: '1.0.0',
+          },
+        },
+      };
+      const lockFileDate = parseNpmLockFile(JSON.stringify(lockFile));
+      const result = pruneNpmLockFile(lockFileDate, packageJson);
+      expect(JSON.parse(stringifyNpmLockFile(result))).toEqual({
+        name: 'test-npm-ls',
+        version: '1.0.0',
+      });
+      // config.long = false
+    });
+
+    // it('with filter arg', () => {
+    //   const packageJson = {
+    //       name: 'test-npm-ls',
+    //       version: '1.0.0',
+    //       dependencies: {
+    //         foo: '^1.0.0',
+    //         chai: '^1.0.0',
+    //       },
+    //     const lockFile = {
+    //       dependencies: {
+    //         foo: {
+    //           version: '1.0.0',
+    //           requires: {
+    //             dog: '^1.0.0',
+    //           },
+    //         },
+    //         dog: {
+    //           version: '1.0.0',
+    //         },
+    //         chai: {
+    //           version: '1.0.0',
+    //         },
+    //         ipsum: {
+    //           version: '1.0.0',
+    //         },
+    //       },
+    //     }),
+    //   })
+    //   await ls.exec(['chai'])
+    // expect(JSON.parse(stringifyNpmLockFile(result))).toEqual(
+    //     {
+    //       name: 'test-npm-ls',
+    //       version: '1.0.0',
+    //       dependencies: {
+    //         chai: {
+    //           version: '1.0.0',
+    //           overridden: false,
+    //         },
+    //       },
+    //     }
+    //   )
+    //   t.equal(process.exitCode, 0, 'should exit with error code 0')
+    // })
+
+    // it('with filter arg nested dep', () => {
+    //   const packageJson = {
+    //       name: 'test-npm-ls',
+    //       version: '1.0.0',
+    //       dependencies: {
+    //         foo: '^1.0.0',
+    //         chai: '^1.0.0',
+    //       },
+    //     const lockFile = {
+    //       dependencies: {
+    //         foo: {
+    //           version: '1.0.0',
+    //           requires: {
+    //             dog: '^1.0.0',
+    //           },
+    //         },
+    //         dog: {
+    //           version: '1.0.0',
+    //         },
+    //         chai: {
+    //           version: '1.0.0',
+    //         },
+    //         ipsum: {
+    //           version: '1.0.0',
+    //         },
+    //       },
+    //     }),
+    //   })
+    //   await ls.exec(['dog'])
+    // expect(JSON.parse(stringifyNpmLockFile(result))).toEqual(
+    //     {
+    //       name: 'test-npm-ls',
+    //       version: '1.0.0',
+    //       dependencies: {
+    //         foo: {
+    //           version: '1.0.0',
+    //           overridden: false,
+    //           dependencies: {
+    //             dog: {
+    //               version: '1.0.0',
+    //               overridden: false,
+    //             },
+    //           },
+    //         },
+    //       },
+    //     },
+    //     'should output json contaning only occurrences of filtered by package'
+    //   )
+    // })
+
+    // it('with multiple filter args', () => {
+    //   const packageJson = {
+    //       name: 'test-npm-ls',
+    //       version: '1.0.0',
+    //       dependencies: {
+    //         foo: '^1.0.0',
+    //         chai: '^1.0.0',
+    //         ipsum: '^1.0.0',
+    //       },
+    //     const lockFile = {
+    //       dependencies: {
+    //         foo: {
+    //           version: '1.0.0',
+    //           requires: {
+    //             dog: '^1.0.0',
+    //           },
+    //         },
+    //         dog: {
+    //           version: '1.0.0',
+    //         },
+    //         chai: {
+    //           version: '1.0.0',
+    //         },
+    //         ipsum: {
+    //           version: '1.0.0',
+    //         },
+    //       },
+    //     }),
+    //   })
+    //   await ls.exec(['dog@*', 'chai@1.0.0'])
+    // expect(JSON.parse(stringifyNpmLockFile(result))).toEqual(
+    //     {
+    //       version: '1.0.0',
+    //       name: 'test-npm-ls',
+    //       dependencies: {
+    //         foo: {
+    //           version: '1.0.0',
+    //           overridden: false,
+    //           dependencies: {
+    //             dog: {
+    //               version: '1.0.0',
+    //               overridden: false,
+    //             },
+    //           },
+    //         },
+    //         chai: {
+    //           version: '1.0.0',
+    //           overridden: false,
+    //         },
+    //       },
+    //     },
+    //     /* eslint-disable-next-line max-len */
+    //     'should output json contaning only occurrences of multiple filtered packages and their ancestors'
+    //   )
+    // })
+
+    // it('with missing filter arg', () => {
+    //   const packageJson = {
+    //       name: 'test-npm-ls',
+    //       version: '1.0.0',
+    //       dependencies: {
+    //         foo: '^1.0.0',
+    //         chai: '^1.0.0',
+    //       },
+    //     const lockFile = {
+    //       dependencies: {
+    //         foo: {
+    //           version: '1.0.0',
+    //           requires: {
+    //             dog: '^1.0.0',
+    //           },
+    //         },
+    //         dog: {
+    //           version: '1.0.0',
+    //         },
+    //         chai: {
+    //           version: '1.0.0',
+    //         },
+    //       },
+    //     }),
+    //   })
+    //   await ls.exec(['notadep'])
+    // expect(JSON.parse(stringifyNpmLockFile(result))).toEqual(
+    //     {
+    //       name: 'test-npm-ls',
+    //       version: '1.0.0',
+    //     },
+    //     'should output json containing no dependencies info'
+    //   )
+    //   t.equal(process.exitCode, 1, 'should exit with error code 1')
+    //   process.exitCode = 0
+    // })
+
+    // it('default --depth value should now be 0', () => {
+    //   config.all = false
+    //   config.depth = undefined
+    //   const packageJson = {
+    //       name: 'test-npm-ls',
+    //       version: '1.0.0',
+    //       dependencies: {
+    //         foo: '^1.0.0',
+    //         chai: '^1.0.0',
+    //       },
+    //     const lockFile = {
+    //       dependencies: {
+    //         foo: {
+    //           version: '1.0.0',
+    //           requires: {
+    //             dog: '^1.0.0',
+    //           },
+    //         },
+    //         dog: {
+    //           version: '1.0.0',
+    //         },
+    //         chai: {
+    //           version: '1.0.0',
+    //         },
+    //       },
+    //     }),
+    //         const lockFileDate = parseNpmLockFile(JSON.stringify(lockFile));
+    // const result = pruneNpmLockFile(lockFileDate, packageJson);
+    // expect(JSON.parse(stringifyNpmLockFile(result))).toEqual(
+    //     {
+    //       name: 'test-npm-ls',
+    //       version: '1.0.0',
+    //       dependencies: {
+    //         foo: {
+    //           version: '1.0.0',
+    //           overridden: false,
+    //         },
+    //         chai: {
+    //           version: '1.0.0',
+    //           overridden: false,
+    //         },
+    //       },
+    //     },
+    //     'should output json containing only top-level dependencies'
+    //   )
+    //   config.all = true
+    //   config.depth = Infinity
+    // })
+
+    // it('--depth=0', () => {
+    //   config.all = false
+    //   config.depth = 0
+    //   const packageJson = {
+    //       name: 'test-npm-ls',
+    //       version: '1.0.0',
+    //       dependencies: {
+    //         foo: '^1.0.0',
+    //         chai: '^1.0.0',
+    //       },
+    //     const lockFile = {
+    //       dependencies: {
+    //         foo: {
+    //           version: '1.0.0',
+    //           requires: {
+    //             dog: '^1.0.0',
+    //           },
+    //         },
+    //         dog: {
+    //           version: '1.0.0',
+    //         },
+    //         chai: {
+    //           version: '1.0.0',
+    //         },
+    //       },
+    //     }),
+    //         const lockFileDate = parseNpmLockFile(JSON.stringify(lockFile));
+    // const result = pruneNpmLockFile(lockFileDate, packageJson);
+    // expect(JSON.parse(stringifyNpmLockFile(result))).toEqual(
+    //     {
+    //       name: 'test-npm-ls',
+    //       version: '1.0.0',
+    //       dependencies: {
+    //         foo: {
+    //           version: '1.0.0',
+    //           overridden: false,
+    //         },
+    //         chai: {
+    //           version: '1.0.0',
+    //           overridden: false,
+    //         },
+    //       },
+    //     },
+    //     'should output json containing only top-level dependencies'
+    //   )
+    //   config.all = true
+    //   config.depth = Infinity
+    // })
+
+    // it('--depth=1', () => {
+    //   config.all = false
+    //   config.depth = 1
+    //   const packageJson = {
+    //       name: 'test-npm-ls',
+    //       version: '1.0.0',
+    //       dependencies: {
+    //         foo: '^1.0.0',
+    //         chai: '^1.0.0',
+    //       },
+    //     const lockFile = {
+    //       dependencies: {
+    //         foo: {
+    //           version: '1.0.0',
+    //           requires: {
+    //             dog: '^1.0.0',
+    //           },
+    //         },
+    //         dog: {
+    //           version: '1.0.0',
+    //         },
+    //         chai: {
+    //           version: '1.0.0',
+    //         },
+    //       },
+    //     }),
+    //         const lockFileDate = parseNpmLockFile(JSON.stringify(lockFile));
+    // const result = pruneNpmLockFile(lockFileDate, packageJson);
+    // expect(JSON.parse(stringifyNpmLockFile(result))).toEqual(
+    //     {
+    //       name: 'test-npm-ls',
+    //       version: '1.0.0',
+    //       dependencies: {
+    //         foo: {
+    //           version: '1.0.0',
+    //           overridden: false,
+    //           dependencies: {
+    //             dog: {
+    //               version: '1.0.0',
+    //               overridden: false,
+    //             },
+    //           },
+    //         },
+    //         chai: {
+    //           version: '1.0.0',
+    //           overridden: false,
+    //         },
+    //       },
+    //     },
+    //     'should output json containing top-level deps and their deps only'
+    //   )
+    //   config.all = true
+    //   config.depth = Infinity
+    // })
+
+    // it('missing/invalid/extraneous', () => {
+    //   const packageJson = {
+    //       name: 'test-npm-ls',
+    //       version: '1.0.0',
+    //       dependencies: {
+    //         foo: '^2.0.0',
+    //         ipsum: '^1.0.0',
+    //       },
+    //     const lockFile = {
+    //       dependencies: {
+    //         foo: {
+    //           version: '1.0.0',
+    //           requires: {
+    //             dog: '^1.0.0',
+    //           },
+    //         },
+    //         dog: {
+    //           version: '1.0.0',
+    //         },
+    //         chai: {
+    //           version: '1.0.0',
+    //         },
+    //       },
+    //     }),
+    //   })
+    //   await t.rejects(ls.exec([]), { code: 'ELSPROBLEMS' }, 'should list dep problems')
+    // expect(JSON.parse(stringifyNpmLockFile(result))).toEqual(
+    //     {
+    //       name: 'test-npm-ls',
+    //       version: '1.0.0',
+    //       problems: [
+    //         /* eslint-disable-next-line max-len */
+    //         'invalid: foo@1.0.0 {CWD}/tap-testdir-ls-ls---package-lock-only-ls---package-lock-only---json-missing-invalid-extraneous/node_modules/foo',
+    //         'missing: ipsum@^1.0.0, required by test-npm-ls@1.0.0',
+    //       ],
+    //       dependencies: {
+    //         foo: {
+    //           version: '1.0.0',
+    //           overridden: false,
+    //           invalid: '"^2.0.0" from the root project',
+    //           problems: [
+    //             /* eslint-disable-next-line max-len */
+    //             'invalid: foo@1.0.0 {CWD}/tap-testdir-ls-ls---package-lock-only-ls---package-lock-only---json-missing-invalid-extraneous/node_modules/foo',
+    //           ],
+    //           dependencies: {
+    //             dog: {
+    //               version: '1.0.0',
+    //               overridden: false,
+    //             },
+    //           },
+    //         },
+    //         ipsum: {
+    //           required: '^1.0.0',
+    //           missing: true,
+    //           problems: ['missing: ipsum@^1.0.0, required by test-npm-ls@1.0.0'],
+    //         },
+    //       },
+    //     },
+    //     'should output json containing top-level deps and their deps only'
+    //   )
+    // })
+
+    // it('from lockfile', () => {
+    //   npm.prefix = t.testdir({
+    //     'package-lock.json': JSON.stringify({
+    //       name: 'dedupe-lockfile',
+    //       version: '1.0.0',
+    //       lockfileVersion: 2,
+    //       requires: true,
+    //       packages: {
+    //         '': {
+    //           name: 'dedupe-lockfile',
+    //           version: '1.0.0',
+    //           dependencies: {
+    //             '@isaacs/dedupe-tests-a': '1.0.1',
+    //             '@isaacs/dedupe-tests-b': '1||2',
+    //           },
+    //         },
+    //         'node_modules/@isaacs/dedupe-tests-a': {
+    //           name: '@isaacs/dedupe-tests-a',
+    //           version: '1.0.1',
+    //           /* eslint-disable-next-line max-len */
+    //           resolved: 'https://registry.npmjs.org/@isaacs/dedupe-tests-a/-/dedupe-tests-a-1.0.1.tgz',
+    //           /* eslint-disable-next-line max-len */
+    //           integrity: 'sha512-8AN9lNCcBt5Xeje7fMEEpp5K3rgcAzIpTtAjYb/YMUYu8SbIVF6wz0WqACDVKvpQOUcSfNHZQNLNmue0QSwXOQ==',
+    //           dependencies: {
+    //             '@isaacs/dedupe-tests-b': '1',
+    //           },
+    //         },
+    //         'node_modules/@isaacs/dedupe-tests-a/node_modules/@isaacs/dedupe-tests-b': {
+    //           name: '@isaacs/dedupe-tests-b',
+    //           version: '1.0.0',
+    //           /* eslint-disable-next-line max-len */
+    //           resolved: 'https://registry.npmjs.org/@isaacs/dedupe-tests-b/-/dedupe-tests-b-1.0.0.tgz',
+    //           /* eslint-disable-next-line max-len */
+    //           integrity: 'sha512-3nmvzIb8QL8OXODzipwoV3U8h9OQD9g9RwOPuSBQqjqSg9JZR1CCFOWNsDUtOfmwY8HFUJV9EAZ124uhqVxq+w==',
+    //         },
+    //         'node_modules/@isaacs/dedupe-tests-b': {
+    //           name: '@isaacs/dedupe-tests-b',
+    //           version: '2.0.0',
+    //           /* eslint-disable-next-line max-len */
+    //           resolved: 'https://registry.npmjs.org/@isaacs/dedupe-tests-b/-/dedupe-tests-b-2.0.0.tgz',
+    //           /* eslint-disable-next-line max-len */
+    //           integrity: 'sha512-KTYkpRv9EzlmCg4Gsm/jpclWmRYFCXow8GZKJXjK08sIZBlElTZEa5Bw/UQxIvEfcKmWXczSqItD49Kr8Ax4UA==',
+    //         },
+    //       },
+    //       dependencies: {
+    //         '@isaacs/dedupe-tests-a': {
+    //           version: '1.0.1',
+    //           /* eslint-disable-next-line max-len */
+    //           resolved: 'https://registry.npmjs.org/@isaacs/dedupe-tests-a/-/dedupe-tests-a-1.0.1.tgz',
+    //           /* eslint-disable-next-line max-len */
+    //           integrity: 'sha512-8AN9lNCcBt5Xeje7fMEEpp5K3rgcAzIpTtAjYb/YMUYu8SbIVF6wz0WqACDVKvpQOUcSfNHZQNLNmue0QSwXOQ==',
+    //           requires: {
+    //             '@isaacs/dedupe-tests-b': '1',
+    //           },
+    //           dependencies: {
+    //             '@isaacs/dedupe-tests-b': {
+    //               version: '1.0.0',
+    //               /* eslint-disable-next-line max-len */
+    //               resolved: 'https://registry.npmjs.org/@isaacs/dedupe-tests-b/-/dedupe-tests-b-1.0.0.tgz',
+    //               /* eslint-disable-next-line max-len */
+    //               integrity: 'sha512-3nmvzIb8QL8OXODzipwoV3U8h9OQD9g9RwOPuSBQqjqSg9JZR1CCFOWNsDUtOfmwY8HFUJV9EAZ124uhqVxq+w==',
+    //             },
+    //           },
+    //         },
+    //         '@isaacs/dedupe-tests-b': {
+    //           version: '2.0.0',
+    //           /* eslint-disable-next-line max-len */
+    //           resolved: 'https://registry.npmjs.org/@isaacs/dedupe-tests-b/-/dedupe-tests-b-2.0.0.tgz',
+    //           /* eslint-disable-next-line max-len */
+    //           integrity: 'sha512-KTYkpRv9EzlmCg4Gsm/jpclWmRYFCXow8GZKJXjK08sIZBlElTZEa5Bw/UQxIvEfcKmWXczSqItD49Kr8Ax4UA==',
+    //         },
+    //       },
+    //     }),
+    //     'package.json': JSON.stringify({
+    //       name: 'dedupe-lockfile',
+    //       version: '1.0.0',
+    //       dependencies: {
+    //         '@isaacs/dedupe-tests-a': '1.0.1',
+    //         '@isaacs/dedupe-tests-b': '1||2',
+    //       },
+    //     }),
+    //         const lockFileDate = parseNpmLockFile(JSON.stringify(lockFile));
+    // const result = pruneNpmLockFile(lockFileDate, packageJson);
+    // expect(JSON.parse(stringifyNpmLockFile(result))).toEqual(
+    //     {
+    //       version: '1.0.0',
+    //       name: 'dedupe-lockfile',
+    //       dependencies: {
+    //         '@isaacs/dedupe-tests-a': {
+    //           version: '1.0.1',
+    //           overridden: false,
+    //           resolved:
+    //             'https://registry.npmjs.org/@isaacs/dedupe-tests-a/-/dedupe-tests-a-1.0.1.tgz',
+    //           dependencies: {
+    //             '@isaacs/dedupe-tests-b': {
+    //               version: '1.0.0',
+    //               overridden: false,
+    //               resolved:
+    //                 'https://registry.npmjs.org/@isaacs/dedupe-tests-b/-/dedupe-tests-b-1.0.0.tgz',
+    //             },
+    //           },
+    //         },
+    //         '@isaacs/dedupe-tests-b': {
+    //           version: '2.0.0',
+    //           overridden: false,
+    //           resolved:
+    //             'https://registry.npmjs.org/@isaacs/dedupe-tests-b/-/dedupe-tests-b-2.0.0.tgz',
+    //         },
+    //       },
+    //     },
+    //     'should output json containing only prod deps'
+    //   )
+    // })
+
+    // it('using aliases', () => {
+    //   const packageJson = {
+    //       name: 'test-npm-ls',
+    //       version: '1.0.0',
+    //       dependencies: {
+    //         a: 'npm:b@1.0.0',
+    //       },
+    //     const lockFile = {
+    //       dependencies: {
+    //         a: {
+    //           version: 'npm:b@1.0.0',
+    //           resolved: 'https://localhost:8080/abbrev/-/abbrev-1.0.0.tgz',
+    //         },
+    //       },
+    //     }),
+    //         const lockFileDate = parseNpmLockFile(JSON.stringify(lockFile));
+    // const result = pruneNpmLockFile(lockFileDate, packageJson);
+    // expect(JSON.parse(stringifyNpmLockFile(result))).toEqual(
+    //     {
+    //       name: 'test-npm-ls',
+    //       version: '1.0.0',
+    //       dependencies: {
+    //         a: {
+    //           version: '1.0.0',
+    //           overridden: false,
+    //           resolved: 'https://localhost:8080/abbrev/-/abbrev-1.0.0.tgz',
+    //         },
+    //       },
+    //     },
+    //     'should output json containing aliases'
+    //   )
+    // })
+
+    // it('resolved points to git ref', () => {
+    //   config.long = false
+    //   const packageJson = {
+    //       name: 'test-npm-ls',
+    //       version: '1.0.0',
+    //       dependencies: {
+    //         abbrev: 'git+https://github.com/isaacs/abbrev-js.git',
+    //       },
+    //     const lockFile = {
+    //       name: 'test-npm-ls',
+    //       version: '1.0.0',
+    //       lockfileVersion: 2,
+    //       requires: true,
+    //       dependencies: {
+    //         abbrev: {
+    //           /* eslint-disable-next-line max-len */
+    //           version: 'git+ssh://git@github.com/isaacs/abbrev-js.git#b8f3a2fc0c3bb8ffd8b0d0072cc6b5a3667e963c',
+    //           from: 'abbrev@git+https://github.com/isaacs/abbrev-js.git',
+    //         },
+    //       },
+    //     }),
+    //         const lockFileDate = parseNpmLockFile(JSON.stringify(lockFile));
+    // const result = pruneNpmLockFile(lockFileDate, packageJson);
+    // expect(JSON.parse(stringifyNpmLockFile(result))).toEqual(
+    //     {
+    //       name: 'test-npm-ls',
+    //       version: '1.0.0',
+    //       dependencies: {
+    //         abbrev: {
+    //           /* eslint-disable-next-line max-len */
+    //           resolved: 'git+ssh://git@github.com/isaacs/abbrev-js.git#b8f3a2fc0c3bb8ffd8b0d0072cc6b5a3667e963c',
+    //           overridden: false,
+    //         },
+    //       },
+    //     },
+    //     'should output json containing git refs'
+    //   )
+    // })
+  });
+
   describe('v3', () => {
     const parsedLockFile = parseNpmLockFile(lockFileV3);
 
@@ -500,7 +1226,7 @@ describe('npm LockFile utility', () => {
       '__fixtures__/nextjs/app/package.json'
     ));
 
-    xit('should prune the lockfile correctly', () => {
+    it('should prune the lockfile correctly', () => {
       const parsedLockFile = parseNpmLockFile(JSON.stringify(rootLockFile));
       const prunedLockFile = pruneNpmLockFile(
         parsedLockFile,
@@ -513,6 +1239,141 @@ describe('npm LockFile utility', () => {
       expect(JSON.parse(stringifyNpmLockFile(prunedLockFile))).toEqual(
         expectedLockFile
       );
+    });
+
+    it('should parse new', async () => {
+      const rootLockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/nextjs/package-lock.json'
+      ));
+      const packageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/nextjs/package.json'
+      ));
+      const result = parseNpmLockFileV2(
+        JSON.stringify(rootLockFile),
+        packageJson
+      );
+      console.log('LOCAL', result.children.size);
+      console.log('fd-slicer', result.children.get('fd-slicer'));
+
+      const Arborist = require('@npmcli/arborist');
+      const arb = new Arborist({
+        path: joinPathFragments(__dirname, '__fixtures__/nextjs'),
+      });
+      const actualTree = await arb.loadVirtual();
+      console.log('ARB', actualTree.children.size);
+      console.log('fd-slicer', actualTree.children.get('fd-slicer'));
+    });
+
+    it('should parse new V1', async () => {
+      const rootLockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/auxiliary-packages/package-lock.json'
+      ));
+      const packageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/auxiliary-packages/package.json'
+      ));
+      const result = parseNpmLockFileV2(
+        JSON.stringify(rootLockFile),
+        packageJson
+      );
+      console.log('LOCAL', result.children.size);
+      console.log(result.edgesOut);
+      console.log(
+        'eslint-plugin-disable-autofix',
+        result.children.get('eslint-plugin-disable-autofix')
+      );
+
+      const Arborist = require('@npmcli/arborist');
+      const arb = new Arborist({
+        path: joinPathFragments(__dirname, '__fixtures__/auxiliary-packages'),
+      });
+      const actualTree = await arb.loadVirtual();
+      console.log('ARB', actualTree.children.size);
+      console.log(result.edgesOut);
+      console.log(
+        'eslint-plugin-disable-autofix',
+        actualTree.children.get('eslint-plugin-disable-autofix')
+      );
+    });
+
+    it('should prune', async () => {
+      // TODO: Check what arborist loads and how are we different
+      // TODO: probably the whole structure needs to be revisited
+      const Arborist = require('@npmcli/arborist');
+      console.time('arborist');
+      const arb = new Arborist({
+        path: joinPathFragments(__dirname, '__fixtures__/nextjs'),
+      });
+      console.timeEnd('arborist');
+      console.time('load actual');
+      const actualTree = await arb.loadVirtual();
+      console.timeEnd('load actual');
+      console.log(actualTree.children.get('ansi-styles'));
+      console.log(actualTree.children.get('wrap-ansi').children);
+      // console.log(Object.keys(tree.children).length, tree.edgesOut);
+      console.time('buildIdealTree with removal');
+      const newTree = await arb.buildIdealTree({
+        // path: joinPathFragments(__dirname, '__fixtures__/nextjs/app'),
+        add: [],
+        rm: [
+          '@babel/preset-react',
+          '@nrwl/cypress',
+          '@nrwl/eslint-plugin-nx',
+          '@nrwl/jest',
+          '@nrwl/linter',
+          // '@nrwl/next',
+          '@nrwl/react',
+          '@nrwl/web',
+          '@nrwl/workspace',
+          '@testing-library/react',
+          '@types/jest',
+          '@types/node',
+          '@types/react',
+          '@types/react-dom',
+          '@typescript-eslint/eslint-plugin',
+          '@typescript-eslint/parser',
+          'babel-jest',
+          'core-js',
+          'cypress',
+          'eslint',
+          'eslint-config-next',
+          'eslint-config-prettier',
+          'eslint-plugin-cypress',
+          'eslint-plugin-import',
+          'eslint-plugin-jsx-a11y',
+          'eslint-plugin-react',
+          'eslint-plugin-react-hooks',
+          'jest',
+          'jest-environment-jsdom',
+          // 'next',
+          'nx',
+          'prettier',
+          // 'react',
+          // 'react-dom',
+          'react-test-renderer',
+          'regenerator-runtime',
+          'ts-jest',
+          'ts-node',
+          'tslib',
+          // 'typescript'
+        ],
+      });
+      console.timeEnd('buildIdealTree with removal');
+      console.time('buildIdealTree with path');
+      const newTree2 = await arb.buildIdealTree({
+        path: joinPathFragments(__dirname, '__fixtures__/nextjs/app'),
+      });
+      console.timeEnd('buildIdealTree with path');
+      console.log(newTree2.children.size);
+      // console.log(newTree.children.get('@nrwl/next'), newTree.children.size);
+      // const expectedLockFile = require(joinPathFragments(
+      //   __dirname,
+      //   '__fixtures__/nextjs/app/package-lock.json'
+      // ));
+      // console.log(Object.keys(expectedLockFile.packages).length);
     });
   });
 });

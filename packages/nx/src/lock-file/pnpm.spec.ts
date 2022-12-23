@@ -4,6 +4,7 @@ import { joinPathFragments } from '../utils/path';
 import {
   parsePnpmLockFile,
   prunePnpmLockFile,
+  prunePnpmLockFileV2,
   stringifyPnpmLockFile,
 } from './pnpm';
 import {
@@ -13,11 +14,11 @@ import {
   lockFileYargsAndDevkit,
   rxjsTslibLockFile,
   ssh2LockFile,
-} from './__fixtures__/manual/pnpm.lock';
+} from './__fixtures__/pnpm.lock';
 import {
   pnpmLockFileWithInlineSpecifiersAndWorkspaces,
   pnpmLockFileWithWorkspacesAndTime,
-} from './__fixtures__/manual/workspaces.lock';
+} from './__fixtures__/workspaces.lock';
 
 const TypeScriptOnlyPackage = {
   name: 'test',
@@ -154,6 +155,21 @@ describe('pnpm LockFile utility', () => {
       expect(
         Object.keys(
           prunePnpmLockFile(parsedLockFile, YargsAndDevkitPackage).dependencies
+        ).length
+      ).toEqual(136);
+    });
+
+    xit('should prune the lock file V2', () => {
+      const pruned = prunePnpmLockFileV2(lockFile, TypeScriptOnlyPackage);
+
+      expect(
+        Object.keys(
+          prunePnpmLockFileV2(lockFile, TypeScriptOnlyPackage).packages
+        ).length
+      ).toEqual(1);
+      expect(
+        Object.keys(
+          prunePnpmLockFileV2(lockFile, YargsAndDevkitPackage).packages
         ).length
       ).toEqual(136);
     });
@@ -315,7 +331,7 @@ describe('pnpm LockFile utility', () => {
       joinPathFragments(__dirname, '__fixtures__/nextjs/app/package.json')
     );
 
-    xit('should prune the lockfile correctly', () => {
+    it('should prune the lockfile correctly', () => {
       const parsedLockFile = parsePnpmLockFile(rootLockFile);
       const prunedLockFile = prunePnpmLockFile(
         parsedLockFile,
