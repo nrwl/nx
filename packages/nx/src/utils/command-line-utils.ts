@@ -81,8 +81,11 @@ export function splitArgsIntoNxArgsAndOverrides(
   delete (nxArgs as any).__overrides_unparsed__;
 
   if (mode === 'run-many') {
-    if (!nxArgs.projects) {
-      nxArgs.projects = [];
+    const args = nxArgs as any;
+    if (!args.projects) {
+      args.projects = [];
+    } else if (typeof args.projects === 'string') {
+      args.projects = args.projects.split(',');
     }
   }
 
