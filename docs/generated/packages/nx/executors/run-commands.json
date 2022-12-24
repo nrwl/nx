@@ -11,15 +11,7 @@
     "presets": [
       { "name": "Arguments forwarding", "keys": ["commands"] },
       { "name": "Custom done conditions", "keys": ["commands", "readyWhen"] },
-      { "name": "Setting the cwd", "keys": ["commands", "cwd"] },
-      {
-        "name": "Disable loading \".env\" file by default",
-        "keys": ["commands", "loadDotEnvFile"]
-      },
-      {
-        "name": "Explicitly attempt to load a custom env file",
-        "keys": ["commands", "envFile"]
-      }
+      { "name": "Setting the cwd", "keys": ["commands", "cwd"] }
     ],
     "properties": {
       "commands": {
