@@ -66,7 +66,7 @@ export function generatePackageSchemas(): Promise<void[]> {
       description: p.description,
       documents: p.documents.map((d) => ({
         ...createDocumentMetadata({
-          description: p.description,
+          description: d.description || p.description,
           file: ['generated', 'packages', p.name, 'documents', d.id].join('/'),
           id: d.id,
           itemList: d.itemList,
@@ -114,8 +114,8 @@ export function generatePackageSchemas(): Promise<void[]> {
     })
   );
 
-  const outputPath: string = join(absoluteRoot, 'docs');
-  const outputPackagesPath: string = join(outputPath, 'generated', 'packages');
+  const outputPath: string = join(absoluteRoot, 'docs', 'generated');
+  const outputPackagesPath: string = join(outputPath, 'packages');
   const fileGenerationPromises = [];
 
   // Generates all documents and schemas into their own directories per packages.

@@ -539,7 +539,7 @@
               "id": "packages-devkit",
               "tags": ["create-your-own-plugin"],
               "file": "",
-              "path": "/packages#devkit",
+              "path": "/packages/devkit/index",
               "isExternal": true
             },
             {
@@ -613,7 +613,7 @@
               "id": "skip-nx-cache-flag",
               "file": "",
               "tags": ["cache-task-results"],
-              "path": "/nx/affected#skip-nx-cache",
+              "path": "/packages/nx/documents/affected#skip-nx-cache",
               "isExternal": true
             },
             {
@@ -1555,6 +1555,12 @@
               "id": "overview",
               "path": "/packages/vite",
               "file": "shared/packages/vite/vite-plugin"
+            },
+            {
+              "name": "Manually set up your project to use Vite.js",
+              "id": "set-up-vite-manually",
+              "description": "Manually set up your project to use Vite.js",
+              "file": "shared/packages/vite/set-up-vite-manually"
             }
           ]
         },

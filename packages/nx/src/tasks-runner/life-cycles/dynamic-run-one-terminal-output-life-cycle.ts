@@ -6,7 +6,7 @@ import { output } from '../../utils/output';
 import type { LifeCycle } from '../life-cycle';
 import { prettyTime } from './pretty-time';
 import { Task } from '../../config/task-graph';
-import { formatFlags } from './formatting-utils';
+import { formatFlags, formatTargetsAndProjects } from './formatting-utils';
 import { viewLogsFooterRows } from './view-logs-utils';
 
 /**
@@ -272,14 +272,11 @@ export async function createRunOneDynamicOutputRenderer({
     if (totalSuccessfulTasks === totalTasks) {
       state = 'COMPLETED_SUCCESSFULLY';
 
-      let text = `Successfully ran target ${output.bold(
-        targetName
-      )} for project ${output.bold(initiatingProject)}`;
-      if (totalDependentTasks > 0) {
-        text += ` and ${output.bold(
-          totalDependentTasks
-        )} task(s) it depends on`;
-      }
+      const text = `Successfully ran ${formatTargetsAndProjects(
+        [initiatingProject],
+        [tasks[0].target.target],
+        tasks
+      )}`;
 
       const taskOverridesLines = [];
       if (Object.keys(overrides).length > 0) {
@@ -319,7 +316,7 @@ export async function createRunOneDynamicOutputRenderer({
       if (totalDependentTasks > 0) {
         text += ` and ${output.bold(
           totalDependentTasks
-        )} task(s) it depends on`;
+        )} task(s) they depend on`;
       }
 
       const taskOverridesLines = [];

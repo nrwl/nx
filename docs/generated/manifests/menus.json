@@ -1333,7 +1333,7 @@
           },
           {
             "name": "Nx Devkit",
-            "path": "/packages#devkit",
+            "path": "/packages/devkit/index",
             "id": "packages-devkit",
             "isExternal": true,
             "children": [],
@@ -1400,7 +1400,7 @@
       },
       {
         "name": "Nx Devkit",
-        "path": "/packages#devkit",
+        "path": "/packages/devkit/index",
         "id": "packages-devkit",
         "isExternal": true,
         "children": [],
@@ -1543,7 +1543,7 @@
           },
           {
             "name": "--skip-nx-cache flag",
-            "path": "/nx/affected#skip-nx-cache",
+            "path": "/packages/nx/documents/affected#skip-nx-cache",
             "id": "skip-nx-cache-flag",
             "isExternal": true,
             "children": [],
@@ -1602,7 +1602,7 @@
       },
       {
         "name": "--skip-nx-cache flag",
-        "path": "/nx/affected#skip-nx-cache",
+        "path": "/packages/nx/documents/affected#skip-nx-cache",
         "id": "skip-nx-cache-flag",
         "isExternal": true,
         "children": [],
@@ -5908,6 +5908,14 @@
                 "name": "Overview",
                 "path": "/packages/vite/documents/overview",
                 "id": "overview",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Manually set up your project to use Vite.js",
+                "path": "/packages/vite/documents/set-up-vite-manually",
+                "id": "set-up-vite-manually",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false

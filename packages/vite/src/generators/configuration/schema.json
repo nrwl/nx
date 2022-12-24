@@ -1,8 +1,8 @@
 {
   "cli": "nx",
-  "title": "Add Vite Configuration to an application.",
-  "description": "Add Vite Configuration to an application.",
-  "$id": "configure-vite-app",
+  "title": "Configure a project to use Vite.js.",
+  "description": "Configure a project to use Vite.js.",
+  "$id": "configure-vite-project",
   "type": "object",
   "properties": {
     "project": {
@@ -23,8 +23,7 @@
     },
     "includeVitest": {
       "type": "boolean",
-      "description": "Use vitest for the test suite.",
-      "hidden": true
+      "description": "Use vitest for the test suite."
     },
     "uiFramework": {
       "type": "string",

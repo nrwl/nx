@@ -6,6 +6,7 @@ version: 2.1
 orbs:
   nx: nrwl/nx@1.6.1
   node: circleci/node@5.0.2
+  browser-tools: circleci/browser-tools@1.4.0
 
 # -------------------------
 #        DEFAULTS
@@ -107,6 +108,8 @@ commands:
           steps:
             - run:
                 command: sudo apt-get install -y ca-certificates
+            - browser-tools/install-chrome
+            - browser-tools/install-chromedriver
       - node/install:
           # Use LTS version
           node-version: ''

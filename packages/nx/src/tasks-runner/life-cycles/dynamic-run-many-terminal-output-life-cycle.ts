@@ -7,7 +7,7 @@ import type { LifeCycle } from '../life-cycle';
 import type { TaskStatus } from '../tasks-runner';
 import { Task } from '../../config/task-graph';
 import { prettyTime } from './pretty-time';
-import { formatFlags } from './formatting-utils';
+import { formatFlags, formatTargetsAndProjects } from './formatting-utils';
 import { viewLogsFooterRows } from './view-logs-utils';
 
 /**
@@ -28,7 +28,7 @@ export async function createRunManyDynamicOutputRenderer({
 }: {
   projectNames: string[];
   tasks: Task[];
-  args: { target?: string; configuration?: string; parallel?: number };
+  args: { targets?: string[]; configuration?: string; parallel?: number };
   overrides: Record<string, unknown>;
 }): Promise<{ lifeCycle: LifeCycle; renderIsDone: Promise<void> }> {
   cliCursor.hide();
@@ -41,8 +41,8 @@ export async function createRunManyDynamicOutputRenderer({
   });
 
   function clearRenderInterval() {
-    if (renderProjectRowsIntervalId) {
-      clearInterval(renderProjectRowsIntervalId);
+    if (renderIntervalId) {
+      clearInterval(renderIntervalId);
     }
   }
 
@@ -57,14 +57,11 @@ export async function createRunManyDynamicOutputRenderer({
   const start = process.hrtime();
   const figures = await import('figures');
 
+  const targets = args.targets;
   const totalTasks = tasks.length;
-  const totalProjects = projectNames.length;
-  const totalDependentTasks = totalTasks - totalProjects;
-  const targetName = args.target;
-  const configuration = args.configuration;
-  const projectRows = projectNames.map((projectName) => {
+  const taskRows = tasks.map((task) => {
     return {
-      projectName,
+      task,
       status: 'pending',
     };
   });
@@ -83,8 +80,8 @@ export async function createRunManyDynamicOutputRenderer({
   let totalCachedTasks = 0;
 
   // Used to control the rendering of the spinner on each project row
-  let projectRowsCurrentFrame = 0;
-  let renderProjectRowsIntervalId: NodeJS.Timeout | undefined;
+  let currentFrame = 0;
+  let renderIntervalId: NodeJS.Timeout | undefined;
 
   const clearPinnedFooter = () => {
     for (let i = 0; i < pinnedFooterNumLines; i++) {
@@ -180,16 +177,16 @@ export async function createRunManyDynamicOutputRenderer({
 
     delete tasksToTerminalOutputs[task.id];
     renderPinnedFooter([]);
-    renderProjectRows();
+    renderRows();
   };
 
-  const renderProjectRows = () => {
+  const renderRows = () => {
     const max = dots.frames.length - 1;
-    const curr = projectRowsCurrentFrame;
-    projectRowsCurrentFrame = curr >= max ? 0 : curr + 1;
+    const curr = currentFrame;
+    currentFrame = curr >= max ? 0 : curr + 1;
 
     const additionalFooterRows: string[] = [''];
-    const runningTasks = projectRows.filter((row) => row.status === 'running');
+    const runningTasks = taskRows.filter((row) => row.status === 'running');
     const remainingTasks = totalTasks - totalCompletedTasks;
 
     if (runningTasks.length > 0) {
@@ -203,16 +200,11 @@ export async function createRunManyDynamicOutputRenderer({
         )
       );
       additionalFooterRows.push('');
-      for (const projectRow of runningTasks) {
+      for (const runningTask of runningTasks) {
         additionalFooterRows.push(
           `   ${output.dim.cyan(
-            dots.frames[projectRowsCurrentFrame]
-          )}    ${output.formatCommand(
-            projectRow.projectName +
-              ':' +
-              targetName +
-              (configuration ? ':' + configuration : '')
-          )}`
+            dots.frames[currentFrame]
+          )}    ${output.formatCommand(runningTask.task.id)}`
         );
       }
       /**
@@ -261,15 +253,11 @@ export async function createRunManyDynamicOutputRenderer({
     clearPinnedFooter();
 
     if (additionalFooterRows.length > 1) {
-      let text = `Running target ${output.bold.cyan(
-        targetName
-      )} for ${output.bold.cyan(totalProjects)} projects`;
-      if (totalDependentTasks > 0) {
-        text += ` and ${output.bold(
-          totalDependentTasks
-        )} task(s) they depend on`;
-      }
-
+      const text = `Running target ${formatTargetsAndProjects(
+        projectNames,
+        targets,
+        tasks
+      )}`;
       const taskOverridesRows = [];
       if (Object.keys(overrides).length > 0) {
         const leftPadding = `${output.X_PADDING}       `;
@@ -302,14 +290,17 @@ export async function createRunManyDynamicOutputRenderer({
   };
 
   lifeCycle.startCommand = () => {
-    if (totalProjects <= 0) {
-      let description = `with target ${output.colors.white.bold(targetName)}`;
-      if (args.configuration) {
-        description += ` that are configured for "${args.configuration}"`;
-      }
+    if (projectNames.length <= 0) {
       renderPinnedFooter([
         '',
-        output.applyNxPrefix('gray', `No projects ${description} were run`),
+        output.applyNxPrefix(
+          'gray',
+          `No projects with ${formatTargetsAndProjects(
+            projectNames,
+            targets,
+            tasks
+          )} were run`
+        ),
       ]);
       resolveRenderIsDonePromise();
       return;
@@ -323,15 +314,11 @@ export async function createRunManyDynamicOutputRenderer({
 
     clearPinnedFooter();
     if (totalSuccessfulTasks === totalTasks) {
-      let text = `Successfully ran target ${output.bold(
-        targetName
-      )} for ${output.bold(totalProjects)} projects`;
-      if (totalDependentTasks > 0) {
-        text += ` and ${output.bold(
-          totalDependentTasks
-        )} task(s) they depend on`;
-      }
-
+      const text = `Successfully ran ${formatTargetsAndProjects(
+        projectNames,
+        targets,
+        tasks
+      )}`;
       const taskOverridesRows = [];
       if (Object.keys(overrides).length > 0) {
         const leftPadding = `${output.X_PADDING}       `;
@@ -362,15 +349,11 @@ export async function createRunManyDynamicOutputRenderer({
       }
       renderPinnedFooter(pinnedFooterLines, 'green');
     } else {
-      let text = `Ran target ${output.bold(targetName)} for ${output.bold(
-        totalProjects
-      )} projects`;
-      if (totalDependentTasks > 0) {
-        text += ` and ${output.bold(
-          totalDependentTasks
-        )} task(s) they depend on`;
-      }
-
+      const text = `Ran ${formatTargetsAndProjects(
+        projectNames,
+        targets,
+        tasks
+      )}`;
       const taskOverridesRows = [];
       if (Object.keys(overrides).length > 0) {
         const leftPadding = `${output.X_PADDING}       `;
@@ -437,17 +420,13 @@ export async function createRunManyDynamicOutputRenderer({
     for (const task of tasks) {
       tasksToProcessStartTimes[task.id] = process.hrtime();
     }
-    for (const projectRow of projectRows) {
-      const matchedTask = tasks.find(
-        (t) => t.target.project === projectRow.projectName
-      );
-      if (!matchedTask) {
-        continue;
+    for (const taskRow of taskRows) {
+      if (tasks.indexOf(taskRow.task) > -1) {
+        taskRow.status = 'running';
       }
-      projectRow.status = 'running';
     }
-    if (!renderProjectRowsIntervalId) {
-      renderProjectRowsIntervalId = setInterval(renderProjectRows, 100);
+    if (!renderIntervalId) {
+      renderIntervalId = setInterval(renderRows, 100);
     }
   };
 
@@ -458,11 +437,9 @@ export async function createRunManyDynamicOutputRenderer({
   lifeCycle.endTasks = (taskResults) => {
     for (let t of taskResults) {
       totalCompletedTasks++;
-      const matchingProjectRow = projectRows.find(
-        (pr) => pr.projectName === t.task.target.project
-      );
-      if (matchingProjectRow) {
-        matchingProjectRow.status = t.status;
+      const matchingTaskRow = taskRows.find((r) => r.task === t.task);
+      if (matchingTaskRow) {
+        matchingTaskRow.status = t.status;
       }
 
       switch (t.status) {

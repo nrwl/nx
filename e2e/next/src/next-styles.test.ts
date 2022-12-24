@@ -1,21 +1,11 @@
-import {
-  cleanupProject,
-  getSelectedPackageManager,
-  newProject,
-  runCLI,
-  uniq,
-} from '@nrwl/e2e/utils';
+import { cleanupProject, newProject, runCLI, uniq } from '@nrwl/e2e/utils';
 import { checkApp } from './utils';
 
-xdescribe('Next.js apps', () => {
+describe('Next.js apps', () => {
   let originalEnv: string;
 
   beforeAll(() => {
-    // TODO(jack): figure out why this does not work with pnpm
-    const selectedPM = getSelectedPackageManager();
-    newProject({
-      packageManager: selectedPM === 'pnpm' ? 'yarn' : selectedPM,
-    });
+    newProject();
   });
 
   afterAll(() => cleanupProject());

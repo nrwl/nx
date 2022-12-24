@@ -99,11 +99,11 @@ Type: `string`
 
 Select the subset of the returned json document (e.g., --select=projects)
 
-### target
+### targets
 
-Type: `string`
+Type: `array`
 
-Task to run for affected projects
+Tasks to run for affected projects
 
 ### type
 

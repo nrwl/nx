@@ -93,7 +93,7 @@ export async function affected(
         break;
 
       case 'print-affected':
-        if (nxArgs.target) {
+        if (nxArgs.targets && nxArgs.targets.length > 0) {
           await printAffected(
             allProjectsWithTarget(projects, nxArgs),
             projectGraph,
@@ -163,7 +163,9 @@ function allProjectsWithTarget(
   projects: ProjectGraphProjectNode[],
   nxArgs: NxArgs
 ) {
-  return projects.filter((p) => projectHasTarget(p, nxArgs.target));
+  return projects.filter((p) =>
+    nxArgs.targets.find((target) => projectHasTarget(p, target))
+  );
 }
 
 function printError(e: any, verbose?: boolean) {

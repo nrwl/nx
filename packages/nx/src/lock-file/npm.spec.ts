@@ -4,18 +4,21 @@ import {
   stringifyNpmLockFile,
 } from './npm';
 import {
-  lockFileV2,
   lockFileV1,
+  lockFileV1JustTypescript,
+  lockFileV1YargsAndDevkitOnly,
+  lockFileV2,
+  lockFileV2JustTypescript,
+  lockFileV2YargsAndDevkitOnly,
   lockFileV3,
   lockFileV3JustTypescript,
   lockFileV3YargsAndDevkitOnly,
-  lockFileV2JustTypescript,
-  lockFileV1JustTypescript,
-  lockFileV1YargsAndDevkitOnly,
-  lockFileV2YargsAndDevkitOnly,
+  rxjsTslibLockFileV1,
+  rxjsTslibLockFileV2,
+  rxjsTslibLockFileV3,
+  ssh2LockFileV1,
   ssh2LockFileV2,
   ssh2LockFileV3,
-  ssh2LockFileV1,
 } from './__fixtures__/npm.lock';
 import { vol } from 'memfs';
 import { npmLockFileWithWorkspaces } from './__fixtures__/workspaces.lock';
@@ -46,6 +49,14 @@ const Ssh2Package = {
   version: '0.0.0',
   dependencies: {
     ssh2: '1.11.0',
+  },
+};
+const RxjsTslibPackage = {
+  name: 'test',
+  version: '0.0.0',
+  dependencies: {
+    rxjs: '^7.8.0',
+    tslib: '^2.4.1',
   },
 };
 
@@ -175,6 +186,17 @@ describe('npm LockFile utility', () => {
           pruneNpmLockFile(parseNpmLockFile(ssh2LockFileV3), Ssh2Package)
         )
       ).toEqual(ssh2LockFileV3);
+    });
+
+    it('should correctly prune lockfile with packages in multiple versions', () => {
+      expect(
+        stringifyNpmLockFile(
+          pruneNpmLockFile(
+            parseNpmLockFile(rxjsTslibLockFileV3),
+            RxjsTslibPackage
+          )
+        )
+      ).toEqual(rxjsTslibLockFileV3);
     });
   });
 
@@ -310,6 +332,17 @@ describe('npm LockFile utility', () => {
         )
       ).toEqual(ssh2LockFileV2);
     });
+
+    it('should correctly prune lockfile with packages in multiple versions', () => {
+      expect(
+        stringifyNpmLockFile(
+          pruneNpmLockFile(
+            parseNpmLockFile(rxjsTslibLockFileV2),
+            RxjsTslibPackage
+          )
+        )
+      ).toEqual(rxjsTslibLockFileV2);
+    });
   });
 
   describe('v1', () => {
@@ -437,6 +470,17 @@ describe('npm LockFile utility', () => {
             pruneNpmLockFile(parseNpmLockFile(ssh2LockFileV1), Ssh2Package)
           )
         ).toEqual(ssh2LockFileV1);
+      });
+
+      it('should correctly prune lockfile with packages in multiple versions', () => {
+        expect(
+          stringifyNpmLockFile(
+            pruneNpmLockFile(
+              parseNpmLockFile(rxjsTslibLockFileV1),
+              RxjsTslibPackage
+            )
+          )
+        ).toEqual(rxjsTslibLockFileV1);
       });
     });
   });

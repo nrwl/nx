@@ -91,7 +91,7 @@
       "file": "",
       "id": "skip-nx-cache-flag",
       "name": "--skip-nx-cache flag",
-      "path": "/nx/affected#skip-nx-cache"
+      "path": "/packages/nx/documents/affected#skip-nx-cache"
     },
     {
       "description": "",
@@ -620,7 +620,7 @@
       "file": "",
       "id": "packages-devkit",
       "name": "Nx Devkit",
-      "path": "/packages#devkit"
+      "path": "/packages/devkit/index"
     },
     {
       "description": "",

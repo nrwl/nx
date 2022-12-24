@@ -571,9 +571,12 @@ function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
       'populate--': true,
     })
     .option('projects', {
+      type: 'array',
+      string: true,
+      alias: 'p',
+      coerce: parseCSV,
       describe:
         'Projects to run. (comma delimited project names and/or patterns)',
-      type: 'string',
     })
     .option('all', {
       describe: '[deprecated] Run the target on all projects in the workspace',
@@ -649,10 +652,12 @@ function withTargetAndConfigurationOption(
   yargs: yargs.Argv,
   demandOption = true
 ): yargs.Argv {
-  return withConfiguration(yargs).option('target', {
-    describe: 'Task to run for affected projects',
-    type: 'string',
+  return withConfiguration(yargs).option('targets', {
+    describe: 'Tasks to run for affected projects',
+    type: 'array',
+    alias: ['target', 't'],
     requiresArg: true,
+    coerce: parseCSV,
     demandOption,
     global: false,
   });
@@ -946,6 +951,7 @@ function withWatchOptions(yargs: yargs.Argv) {
     .option('projects', {
       type: 'array',
       string: true,
+      alias: 'p',
       coerce: parseCSV,
       description: 'Projects to watch (comma delimited).',
     })

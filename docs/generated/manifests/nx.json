@@ -1663,7 +1663,7 @@
         "file": "",
         "itemList": [],
         "isExternal": true,
-        "path": "/packages#devkit",
+        "path": "/packages/devkit/index",
         "tags": ["create-your-own-plugin"]
       },
       {
@@ -1741,14 +1741,14 @@
     "path": "/packages",
     "tags": []
   },
-  "/packages#devkit": {
+  "/packages/devkit/index": {
     "id": "packages-devkit",
     "name": "Nx Devkit",
     "description": "",
     "file": "",
     "itemList": [],
     "isExternal": true,
-    "path": "/packages#devkit",
+    "path": "/packages/devkit/index",
     "tags": ["create-your-own-plugin"]
   },
   "/reference/glossary": {
@@ -1925,7 +1925,7 @@
         "file": "",
         "itemList": [],
         "isExternal": true,
-        "path": "/nx/affected#skip-nx-cache",
+        "path": "/packages/nx/documents/affected#skip-nx-cache",
         "tags": ["cache-task-results"]
       },
       {
@@ -1993,14 +1993,14 @@
     "path": "/nx-cloud/intro/what-is-nx-cloud",
     "tags": ["cache-task-results", "distribute-task-execution"]
   },
-  "/nx/affected#skip-nx-cache": {
+  "/packages/nx/documents/affected#skip-nx-cache": {
     "id": "skip-nx-cache-flag",
     "name": "--skip-nx-cache flag",
     "description": "",
     "file": "",
     "itemList": [],
     "isExternal": true,
-    "path": "/nx/affected#skip-nx-cache",
+    "path": "/packages/nx/documents/affected#skip-nx-cache",
     "tags": ["cache-task-results"]
   },
   "/reference/nx-json#tasks-runner-options": {

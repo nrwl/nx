@@ -38,7 +38,7 @@ describe('run-many', () => {
       const projects = projectsToRun(
         {
           all: true,
-          target: 'test',
+          targets: ['test'],
           projects: [],
         },
         projectGraph
@@ -50,7 +50,7 @@ describe('run-many', () => {
     it('should select a project with a target', () => {
       const projects = projectsToRun(
         {
-          target: 'test',
+          targets: ['test'],
           projects: ['proj1'],
         },
         projectGraph
@@ -62,7 +62,7 @@ describe('run-many', () => {
     it('should filter projects with a pattern', () => {
       const projects = projectsToRun(
         {
-          target: 'test',
+          targets: ['test'],
           projects: ['proj*'],
         },
         projectGraph
@@ -75,7 +75,7 @@ describe('run-many', () => {
       expect(() => {
         projectsToRun(
           {
-            target: 'test',
+            targets: ['test'],
             projects: ['nomatch*'],
           },
           projectGraph
@@ -87,7 +87,7 @@ describe('run-many', () => {
       const projects = projectsToRun(
         {
           all: true,
-          target: 'test',
+          targets: ['test'],
           projects: [],
           exclude: ['proj1'],
         },
@@ -101,7 +101,7 @@ describe('run-many', () => {
       const projects = projectsToRun(
         {
           all: true,
-          target: 'test',
+          targets: ['test'],
           projects: [],
           exclude: ['proj*'],
         },
@@ -131,7 +131,7 @@ describe('run-many', () => {
         performance.mark('start');
         projectsToRun(
           {
-            target: 'test',
+            targets: ['test'],
             projects: ['proj1*'],
             exclude: ['proj12*'],
           },

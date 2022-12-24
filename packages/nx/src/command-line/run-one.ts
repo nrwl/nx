@@ -44,7 +44,7 @@ export async function runOne(
     {
       ...opts.parsedArgs,
       configuration: opts.configuration,
-      target: opts.target,
+      targets: [opts.target],
     },
     'run-one',
     { printWarnings: true },

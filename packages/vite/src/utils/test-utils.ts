@@ -1,11 +1,12 @@
-import { parseJson, Tree, writeJson } from '@nrwl/devkit';
+import { Tree, writeJson } from '@nrwl/devkit';
 import * as reactAppConfig from './test-files/react-project.config.json';
 import * as reactViteConfig from './test-files/react-vite-project.config.json';
 import * as webAppConfig from './test-files/web-project.config.json';
 import * as angularAppConfig from './test-files/angular-project.config.json';
 import * as randomAppConfig from './test-files/unknown-project.config.json';
 import * as mixedAppConfig from './test-files/react-mixed-project.config.json';
-import * as reactLibNBJest from './test-files/react-lib-non-buildable.json';
+import * as reactLibNBJest from './test-files/react-lib-non-buildable-jest.json';
+import * as reactLibNBVitest from './test-files/react-lib-non-buildable-vitest.json';
 
 export function mockViteReactAppGenerator(tree: Tree): Tree {
   const appName = 'my-test-react-vite-app';
@@ -89,8 +90,7 @@ export function mockViteReactAppGenerator(tree: Tree): Tree {
 
   tree.write(
     `apps/${appName}/vite.config.ts`,
-    `/// <reference types="vitest" />
-    import { defineConfig } from 'vite';
+    `import { defineConfig } from 'vite';
     import react from '@vitejs/plugin-react';
     import tsconfigPaths from 'vite-tsconfig-paths';
     
@@ -517,6 +517,108 @@ export function mockReactLibNonBuildableJestTestRunnerGenerator(
 
   writeJson(tree, `libs/${libName}/project.json`, {
     ...reactLibNBJest,
+    root: `libs/${libName}`,
+    projectType: 'library',
+  });
+
+  return tree;
+}
+
+export function mockReactLibNonBuildableVitestRunnerGenerator(
+  tree: Tree
+): Tree {
+  const libName = 'react-lib-nonb-vitest';
+
+  tree.write(`libs/${libName}/src/index.ts`, ``);
+
+  tree.write(
+    `libs/${libName}/vite.config.ts`,
+    `import { defineConfig } from 'vite';
+    import react from '@vitejs/plugin-react';
+    import viteTsConfigPaths from 'vite-tsconfig-paths';
+
+    export default defineConfig({
+
+      plugins: [
+        react(),
+        viteTsConfigPaths({
+          root: '../../',
+        }),
+      ],
+
+      test: {
+        globals: true,
+        cache: {
+          dir: '../../node_modules/.vitest',
+        },
+        environment: 'jsdom',
+        include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+      },
+    });
+  `
+  );
+
+  tree.write(
+    `libs/${libName}/tsconfig.json`,
+    `{
+      "compilerOptions": {
+        "jsx": "react-jsx",
+        "allowJs": false,
+        "esModuleInterop": false,
+        "allowSyntheticDefaultImports": true,
+        "strict": true
+      },
+      "files": [],
+      "include": [],
+      "references": [
+        {
+          "path": "./tsconfig.lib.json"
+        },
+        {
+          "path": "./tsconfig.spec.json"
+        }
+      ],
+      "extends": "../../tsconfig.base.json"
+    }`
+  );
+  tree.write(
+    `libs/${libName}/tsconfig.lib.json`,
+    `{
+      "extends": "./tsconfig.json",
+      "compilerOptions": {
+        "outDir": "../../dist/out-tsc",
+        "types": ["node"]
+      },
+      "files": [
+        "../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
+        "../../node_modules/@nrwl/react/typings/image.d.ts"
+      ],
+      "exclude": [
+        "**/*.spec.ts",
+        "**/*.test.ts",
+        "**/*.spec.tsx",
+        "**/*.test.tsx",
+        "**/*.spec.js",
+        "**/*.test.js",
+        "**/*.spec.jsx",
+        "**/*.test.jsx"
+      ],
+      "include": ["**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx"]
+    }`
+  );
+
+  writeJson(tree, 'workspace.json', {
+    projects: {
+      [`${libName}`]: {
+        ...reactLibNBVitest,
+        root: `libs/${libName}`,
+        projectType: 'library',
+      },
+    },
+  });
+
+  writeJson(tree, `libs/${libName}/project.json`, {
+    ...reactLibNBVitest,
     root: `libs/${libName}`,
     projectType: 'library',
   });
