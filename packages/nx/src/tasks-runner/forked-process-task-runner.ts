@@ -30,6 +30,10 @@ export class ForkedProcessTaskRunner {
   private readonly verbose = process.env.NX_VERBOSE_LOGGING === 'true';
   private processes = new Set<ChildProcess>();
 
+  static shouldLoadDotenvFiles() {
+    return process.env.NX_LOAD_DOT_ENV_FILES === 'true';
+  }
+
   constructor(private readonly options: DefaultTasksRunnerOptions) {
     this.setupProcessEventListeners();
   }
@@ -370,15 +374,19 @@ export class ForkedProcessTaskRunner {
   }
 
   private getDotenvVariablesForForkedProcess() {
-    return {
-      ...parseEnv('.env'),
-      ...parseEnv('.local.env'),
-      ...parseEnv('.env.local'),
-    };
+    if (ForkedProcessTaskRunner.shouldLoadDotenvFiles()) {
+      return {
+        ...parseEnv('.env'),
+        ...parseEnv('.local.env'),
+        ...parseEnv('.env.local'),
+      };
+    } else {
+      return {};
+    }
   }
 
   private getDotenvVariablesForTask(task: Task) {
-    if (process.env.NX_LOAD_DOT_ENV_FILES == 'true') {
+    if (ForkedProcessTaskRunner.shouldLoadDotenvFiles()) {
       return {
         ...this.getDotenvVariablesForForkedProcess(),
         ...parseEnv(`.${task.target.target}.env`),

@@ -338,6 +338,93 @@ describe('Run Commands', () => {
       expect(readFile(f)).toEqual('https://nrwl.io/');
     });
 
+    it('should load the root .env file by default if "loadDotEnvFile" is true and process.env.NX_LOAD_DOT_ENV_FILES is not "true"', async () => {
+      let f = fileSync().name;
+      process.env.NX_LOAD_DOT_ENV_FILES = 'false';
+
+      const result = await runCommands(
+        {
+          commands: [
+            {
+              command: `echo $NRWL_SITE >> ${f}`,
+            },
+          ],
+          loadDotEnvFile: true,
+          __unparsed__: [],
+        },
+        context
+      );
+
+      delete process.env.NX_LOAD_DOT_ENV_FILES;
+
+      expect(result).toEqual(expect.objectContaining({ success: true }));
+      expect(readFile(f)).toEqual('https://nrwl.io/');
+    });
+
+    it('should NOT load the root .env file by default if option "loadDotEnvFile" is false', async () => {
+      let f = fileSync().name;
+      const result = await runCommands(
+        {
+          commands: [
+            {
+              command: `echo $NRWL_SITE >> ${f}`,
+            },
+          ],
+          loadDotEnvFile: false,
+          __unparsed__: [],
+        },
+        context
+      );
+
+      expect(result).toEqual(expect.objectContaining({ success: true }));
+      expect(readFile(f)).toEqual('');
+    });
+
+    it('should NOT load the root .env file by default if option "loadDotEnvFile" is false and process.env.NX_LOAD_DOT_ENV_FILES is "true"', async () => {
+      let f = fileSync().name;
+      process.env.NX_LOAD_DOT_ENV_FILES = 'true';
+
+      const result = await runCommands(
+        {
+          commands: [
+            {
+              command: `echo $NRWL_SITE >> ${f}`,
+            },
+          ],
+          loadDotEnvFile: false,
+          __unparsed__: [],
+        },
+        context
+      );
+
+      delete process.env.NX_LOAD_DOT_ENV_FILES;
+
+      expect(result).toEqual(expect.objectContaining({ success: true }));
+      expect(readFile(f)).toEqual('');
+    });
+
+    it('should NOT load the root .env file by default if process.env.NX_LOAD_DOT_ENV_FILES is not "true"', async () => {
+      let f = fileSync().name;
+      process.env.NX_LOAD_DOT_ENV_FILES = 'false';
+
+      const result = await runCommands(
+        {
+          commands: [
+            {
+              command: `echo $NRWL_SITE >> ${f}`,
+            },
+          ],
+          __unparsed__: [],
+        },
+        context
+      );
+
+      delete process.env.NX_LOAD_DOT_ENV_FILES;
+
+      expect(result).toEqual(expect.objectContaining({ success: true }));
+      expect(readFile(f)).toEqual('');
+    });
+
     it('should load the specified .env file instead of the root one', async () => {
       const devEnv = fileSync().name;
       writeFileSync(devEnv, 'NX_SITE=https://nx.dev/');
@@ -354,6 +441,55 @@ describe('Run Commands', () => {
         },
         context
       );
+
+      expect(result).toEqual(expect.objectContaining({ success: true }));
+      expect(readFile(f)).toEqual('https://nx.dev/');
+    });
+
+    it('should load the specified .env file instead of the root one even when option "loadDotEnvFile" is false', async () => {
+      const devEnv = fileSync().name;
+      writeFileSync(devEnv, 'NX_SITE=https://nx.dev/');
+      let f = fileSync().name;
+      const result = await runCommands(
+        {
+          commands: [
+            {
+              command: `echo $NX_SITE >> ${f} && echo $NRWL_SITE >> ${f}`,
+            },
+          ],
+          loadDotEnvFile: false,
+          envFile: devEnv,
+          __unparsed__: [],
+        },
+        context
+      );
+
+      expect(result).toEqual(expect.objectContaining({ success: true }));
+      expect(readFile(f)).toEqual('https://nx.dev/');
+    });
+
+    it('should load the specified .env file instead of the root one even when process.env.NX_LOAD_DOT_ENV_FILES is not "true"', async () => {
+      const devEnv = fileSync().name;
+      writeFileSync(devEnv, 'NX_SITE=https://nx.dev/');
+      let f = fileSync().name;
+
+      process.env.NX_LOAD_DOT_ENV_FILES = 'false';
+
+      const result = await runCommands(
+        {
+          commands: [
+            {
+              command: `echo $NX_SITE >> ${f} && echo $NRWL_SITE >> ${f}`,
+            },
+          ],
+          loadDotEnvFile: false,
+          envFile: devEnv,
+          __unparsed__: [],
+        },
+        context
+      );
+
+      delete process.env.NX_LOAD_DOT_ENV_FILES;
 
       expect(result).toEqual(expect.objectContaining({ success: true }));
       expect(readFile(f)).toEqual('https://nx.dev/');

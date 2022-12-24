@@ -24,6 +24,7 @@ export interface DefaultTasksRunnerOptions {
   lifeCycle: LifeCycle;
   captureStderr?: boolean;
   skipNxCache?: boolean;
+  loadDotEnvFiles?: boolean;
 }
 
 export const defaultTasksRunner: TasksRunner<
@@ -42,6 +43,13 @@ export const defaultTasksRunner: TasksRunner<
     daemon: DaemonClient;
   }
 ): Promise<{ [id: string]: TaskStatus }> => {
+  // Override the Nx env var NX_LOAD_DOT_ENV_FILES
+  // so that the executor can respect this env var
+  // to determine if env vars should be loaded.
+  if (options.loadDotEnvFiles === false) {
+    process.env.NX_LOAD_DOT_ENV_FILES = 'false';
+  }
+
   if (
     (options as any)['parallel'] === 'false' ||
     (options as any)['parallel'] === false
@@ -57,7 +65,11 @@ export const defaultTasksRunner: TasksRunner<
 
   options.lifeCycle.startCommand();
   try {
-    return await runAllTasks(tasks, options, context);
+    if (tasks.length) {
+      return await runAllTasks(tasks, options, context);
+    } else {
+      return {};
+    }
   } finally {
     options.lifeCycle.endCommand();
   }

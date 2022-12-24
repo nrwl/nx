@@ -7,13 +7,24 @@ import * as chalk from 'chalk';
 
 export const LARGE_BUFFER = 1024 * 1000000;
 
-async function loadEnvVars(path?: string) {
+async function loadEnvVars(options: RunCommandsOptions) {
+  const path = options.envFile;
+
   if (path) {
     const result = (await import('dotenv')).config({ path });
     if (result.error) {
       throw result.error;
     }
-  } else {
+  } else if (
+    options.loadDotEnvFile === true ||
+    (options.loadDotEnvFile !== false &&
+      process.env.NX_LOAD_DOT_ENV_FILES === 'true')
+  ) {
+    // NOTE: This is a bug? We shouldn't be loading the env file from CWD
+    // since the env file hierarchy has already been loaded by this point and all
+    // env vars are properly merged. For example, when running 'nx run proj:target'
+    // from the workspace root, this would reload the top-level .env file
+    // over top of the other env vars from the other .env files.
     try {
       (await import('dotenv')).config();
     } catch {}
@@ -42,6 +53,7 @@ export interface RunCommandsOptions extends Json {
   color?: boolean;
   parallel?: boolean;
   readyWhen?: string;
+  loadDotEnvFile?: boolean;
   cwd?: string;
   args?: string;
   envFile?: string;
@@ -73,7 +85,7 @@ export default async function (
   options: RunCommandsOptions,
   context: ExecutorContext
 ): Promise<{ success: boolean }> {
-  await loadEnvVars(options.envFile);
+  await loadEnvVars(options);
   const normalized = normalizeOptions(options);
 
   if (options.readyWhen && !options.parallel) {

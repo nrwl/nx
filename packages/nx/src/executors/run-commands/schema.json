@@ -17,6 +17,14 @@
     {
       "name": "Setting the cwd",
       "keys": ["commands", "cwd"]
+    },
+    {
+      "name": "Disable loading \".env\" file by default",
+      "keys": ["commands", "loadDotEnvFile"]
+    },
+    {
+      "name": "Explicitly attempt to load a custom env file",
+      "keys": ["commands", "envFile"]
     }
   ],
   "properties": {
@@ -101,7 +109,12 @@
     },
     "envFile": {
       "type": "string",
-      "description": "You may specify a custom .env file path."
+      "description": "A custom .env file path to explicitly attempt to load. When this option is present 'loadDotEnvFile' and the task runner option 'loadDotEnvFiles' are ignored."
+    },
+    "loadDotEnvFile": {
+      "type": "boolean",
+      "default": true,
+      "description": "Determines if by default a '.env' file is attempted to be loaded from the current working directory. This behaviour can also be prevented by setting the task runner option 'loadDotEnvFiles' to false. Any explicit value for this option takes presedence over the task runner option."
     },
     "color": {
       "type": "boolean",
