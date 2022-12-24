@@ -98,7 +98,7 @@
       "loadDotEnvFile": {
         "type": "boolean",
         "default": true,
-        "description": "Determines if by default a '.env' file is attempted to be loaded from the current working directory. This behaviour can also be prevented by setting the task runner option 'loadDotEnvFiles' to false. Any explicit value for this option takes presedence over the task runner option."
+        "description": "Determines if by default a '.env' file is attempted to be loaded from the current working directory. This behaviour can also be prevented by setting the task runner option 'loadDotEnvFiles' to false. Any explicit value for this option takes precedence over the task runner option."
       },
       "color": {
         "type": "boolean",
