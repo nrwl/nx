@@ -464,6 +464,10 @@ function withRunOptions(yargs: yargs.Argv): yargs.Argv {
       type: 'number',
       hidden: true,
     })
+    .option('loadDotEnvFiles', {
+      type: 'boolean',
+      default: true,
+    })
     .options('runner', {
       describe: 'This is the name of the tasks runner configured in nx.json',
       type: 'string',

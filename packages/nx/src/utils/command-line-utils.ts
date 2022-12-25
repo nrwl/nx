@@ -16,6 +16,7 @@ export interface NxArgs {
   configuration?: string;
   runner?: string;
   parallel?: number;
+  loadDotEnvFiles?: boolean;
   untracked?: boolean;
   uncommitted?: boolean;
   all?: boolean;

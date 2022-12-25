@@ -71,6 +71,12 @@ Type: `boolean`
 
 Show help
 
+### loadDotEnvFiles
+
+Type: `boolean`
+
+Default: `true`
+
 ### nx-bail
 
 Type: `boolean`

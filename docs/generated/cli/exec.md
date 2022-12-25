@@ -31,6 +31,12 @@ Default: `[]`
 
 Exclude certain projects from being processed
 
+### loadDotEnvFiles
+
+Type: `boolean`
+
+Default: `true`
+
 ### nx-bail
 
 Type: `boolean`
