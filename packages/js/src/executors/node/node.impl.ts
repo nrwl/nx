@@ -15,7 +15,7 @@ import { InspectType, NodeExecutorOptions } from './schema';
 
 const hasher = new HashingImpl();
 const processMap = new Map<string, ChildProcess>();
-const hashedMap = new Map<string[], string>();
+const hashedMap = new Map<string, string>();
 
 export interface ExecutorEvent {
   outfile: string;
@@ -92,7 +92,7 @@ async function runProcess(
 
   const hashed = hasher.hashArray(execArgv.concat(options.args));
 
-  const hashedKey = [uniqueKey, ...options.args];
+  const hashedKey = JSON.stringify([uniqueKey, ...options.args]);
   hashedMap.set(hashedKey, hashed);
 
   const subProcess = fork(
@@ -166,7 +166,7 @@ async function killCurrentProcess(
   options: NodeExecutorOptions,
   signal: string = 'SIGTERM'
 ) {
-  const hashedKey = [uniqueKey, ...options.args];
+  const hashedKey = JSON.stringify([uniqueKey, ...options.args]);
   const currentProcessKey = hashedMap.get(hashedKey);
   if (!currentProcessKey) return;
 
