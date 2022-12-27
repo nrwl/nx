@@ -1037,6 +1037,29 @@ describe('app', () => {
         appTree.read('apps/standalone/src/app/nx-welcome.component.ts', 'utf-8')
       ).toContain('standalone: true');
     });
+
+    it('should generate correct main.ts', async () => {
+      // ACT
+      await generateApp(appTree, 'myapp');
+
+      // ASSERT
+      expect(appTree.read('apps/myapp/src/main.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { enableProdMode } from '@angular/core';
+        import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+
+        import { AppModule } from './app/app.module';
+        import { environment } from './environments/environment';
+
+        if (environment.production) {
+          enableProdMode();
+        }
+
+        platformBrowserDynamic().bootstrapModule(AppModule)
+          .catch(err => console.error(err));
+        "
+      `);
+    });
   });
 
   describe('--skipStarterTemplate', () => {

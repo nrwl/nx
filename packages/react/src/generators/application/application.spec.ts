@@ -317,6 +317,14 @@ describe('app', () => {
     );
   });
 
+  it('should setup jest with babel-jest support', async () => {
+    await applicationGenerator(appTree, { ...schema, name: 'my-app' });
+
+    expect(appTree.read('apps/my-app/jest.config.ts').toString()).toContain(
+      "['babel-jest', { presets: ['@nrwl/react/babel'] }]"
+    );
+  });
+
   it('should setup jest without serializers', async () => {
     await applicationGenerator(appTree, { ...schema, name: 'my-app' });
 
