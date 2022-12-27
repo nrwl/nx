@@ -620,7 +620,7 @@
       "file": "",
       "id": "packages-devkit",
       "name": "Nx Devkit",
-      "path": "/packages/devkit/index"
+      "path": "/packages/devkit"
     },
     {
       "description": "",
