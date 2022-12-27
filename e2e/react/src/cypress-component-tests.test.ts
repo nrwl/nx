@@ -215,4 +215,33 @@ ${content}`;
       'All specs passed!'
     );
   }, 300_000);
+
+  it('should work with async webpack config', () => {
+    // TODO: (caleb) for whatever reason the MF webpack config + CT is running, but cypress is not starting up?
+    // are they overriding some option on top of each other causing cypress to not see it's running?
+    createFile(
+      `apps/${appName}/webpack.config.js`,
+      `module.exports = async function (configuration) {
+  await new Promise((res) => {
+    setTimeout(() => {
+      console.log('I am from the custom async Webpack config')
+      res()
+    }, 1000)
+  })
+  const defaultConfig = require("@nrwl/react/plugins/webpack")
+  return defaultConfig(configuration);
+};`
+    );
+    updateProjectConfig(appName, (config) => {
+      config.targets[
+        'build'
+      ].options.webpackConfig = `apps/${appName}/webpack.config.js`;
+
+      return config;
+    });
+
+    const results = runCLI(`component-test ${appName}`);
+    expect(results).toContain('I am from the custom async Webpack config');
+    expect(results).toContain('All specs passed!');
+  });
 });
