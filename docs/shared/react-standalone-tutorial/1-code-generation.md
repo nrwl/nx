@@ -10,6 +10,13 @@ Looking for a React monorepo setup? Check our [React monorepo tutorial](/react-t
 
 {% /callout %}
 
+{% youtube
+src="https://www.youtube.com/embed/kKmZHMh6QII"
+title="Tutorial: React Standalone Application"
+width="100%" /%}
+
+{% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/react-standalone-application" /%}
+
 # React Standalone Tutorial - Part 1: Code Generation
 
 ## Contents
