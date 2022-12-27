@@ -190,6 +190,7 @@ async function runCypress(
   baseUrl: string,
   opts: NormalizedCypressExecutorOptions
 ) {
+  const cypressVersion = installedCypressVersion();
   // Cypress expects the folder where a cypress config is present
   const projectFolderPath = dirname(opts.cypressConfig);
   const options: any = {
@@ -225,7 +226,15 @@ async function runCypress(
   options.parallel = opts.parallel;
   options.ciBuildId = opts.ciBuildId?.toString();
   options.group = opts.group;
-  options.ignoreTestFiles = opts.ignoreTestFiles;
+  // renamed in cy 10
+  if (cypressVersion >= 10) {
+    options.config ??= {};
+    options.config[opts.testingType] = {
+      excludeSpecPattern: opts.ignoreTestFiles,
+    };
+  } else {
+    options.ignoreTestFiles = opts.ignoreTestFiles;
+  }
 
   if (opts.reporter) {
     options.reporter = opts.reporter;
