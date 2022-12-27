@@ -1,6 +1,5 @@
 import {
   parseNpmLockFile,
-  parseNpmLockFileV2,
   pruneNpmLockFile,
   stringifyNpmLockFile,
 } from './npm';
@@ -67,7 +66,7 @@ const RxjsTslibPackage = {
 };
 
 describe('npm LockFile utility', () => {
-  describe('npm repo pruning tests', () => {
+  xdescribe('npm repo pruning tests', () => {
     it('no args', () => {
       const packageJson = {
         name: 'test-npm-ls',
@@ -1216,7 +1215,7 @@ describe('npm LockFile utility', () => {
     });
   });
 
-  describe('next.js generated', () => {
+  xdescribe('next.js generated', () => {
     const rootLockFile = require(joinPathFragments(
       __dirname,
       '__fixtures__/nextjs/package-lock.json'
@@ -1239,141 +1238,6 @@ describe('npm LockFile utility', () => {
       expect(JSON.parse(stringifyNpmLockFile(prunedLockFile))).toEqual(
         expectedLockFile
       );
-    });
-
-    it('should parse new', async () => {
-      const rootLockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/nextjs/package-lock.json'
-      ));
-      const packageJson = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/nextjs/package.json'
-      ));
-      const result = parseNpmLockFileV2(
-        JSON.stringify(rootLockFile),
-        packageJson
-      );
-      console.log('LOCAL', result.children.size);
-      console.log('fd-slicer', result.children.get('fd-slicer'));
-
-      const Arborist = require('@npmcli/arborist');
-      const arb = new Arborist({
-        path: joinPathFragments(__dirname, '__fixtures__/nextjs'),
-      });
-      const actualTree = await arb.loadVirtual();
-      console.log('ARB', actualTree.children.size);
-      console.log('fd-slicer', actualTree.children.get('fd-slicer'));
-    });
-
-    it('should parse new V1', async () => {
-      const rootLockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/auxiliary-packages/package-lock.json'
-      ));
-      const packageJson = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/auxiliary-packages/package.json'
-      ));
-      const result = parseNpmLockFileV2(
-        JSON.stringify(rootLockFile),
-        packageJson
-      );
-      console.log('LOCAL', result.children.size);
-      console.log(result.edgesOut);
-      console.log(
-        'eslint-plugin-disable-autofix',
-        result.children.get('eslint-plugin-disable-autofix')
-      );
-
-      const Arborist = require('@npmcli/arborist');
-      const arb = new Arborist({
-        path: joinPathFragments(__dirname, '__fixtures__/auxiliary-packages'),
-      });
-      const actualTree = await arb.loadVirtual();
-      console.log('ARB', actualTree.children.size);
-      console.log(result.edgesOut);
-      console.log(
-        'eslint-plugin-disable-autofix',
-        actualTree.children.get('eslint-plugin-disable-autofix')
-      );
-    });
-
-    it('should prune', async () => {
-      // TODO: Check what arborist loads and how are we different
-      // TODO: probably the whole structure needs to be revisited
-      const Arborist = require('@npmcli/arborist');
-      console.time('arborist');
-      const arb = new Arborist({
-        path: joinPathFragments(__dirname, '__fixtures__/nextjs'),
-      });
-      console.timeEnd('arborist');
-      console.time('load actual');
-      const actualTree = await arb.loadVirtual();
-      console.timeEnd('load actual');
-      console.log(actualTree.children.get('ansi-styles'));
-      console.log(actualTree.children.get('wrap-ansi').children);
-      // console.log(Object.keys(tree.children).length, tree.edgesOut);
-      console.time('buildIdealTree with removal');
-      const newTree = await arb.buildIdealTree({
-        // path: joinPathFragments(__dirname, '__fixtures__/nextjs/app'),
-        add: [],
-        rm: [
-          '@babel/preset-react',
-          '@nrwl/cypress',
-          '@nrwl/eslint-plugin-nx',
-          '@nrwl/jest',
-          '@nrwl/linter',
-          // '@nrwl/next',
-          '@nrwl/react',
-          '@nrwl/web',
-          '@nrwl/workspace',
-          '@testing-library/react',
-          '@types/jest',
-          '@types/node',
-          '@types/react',
-          '@types/react-dom',
-          '@typescript-eslint/eslint-plugin',
-          '@typescript-eslint/parser',
-          'babel-jest',
-          'core-js',
-          'cypress',
-          'eslint',
-          'eslint-config-next',
-          'eslint-config-prettier',
-          'eslint-plugin-cypress',
-          'eslint-plugin-import',
-          'eslint-plugin-jsx-a11y',
-          'eslint-plugin-react',
-          'eslint-plugin-react-hooks',
-          'jest',
-          'jest-environment-jsdom',
-          // 'next',
-          'nx',
-          'prettier',
-          // 'react',
-          // 'react-dom',
-          'react-test-renderer',
-          'regenerator-runtime',
-          'ts-jest',
-          'ts-node',
-          'tslib',
-          // 'typescript'
-        ],
-      });
-      console.timeEnd('buildIdealTree with removal');
-      console.time('buildIdealTree with path');
-      const newTree2 = await arb.buildIdealTree({
-        path: joinPathFragments(__dirname, '__fixtures__/nextjs/app'),
-      });
-      console.timeEnd('buildIdealTree with path');
-      console.log(newTree2.children.size);
-      // console.log(newTree.children.get('@nrwl/next'), newTree.children.size);
-      // const expectedLockFile = require(joinPathFragments(
-      //   __dirname,
-      //   '__fixtures__/nextjs/app/package-lock.json'
-      // ));
-      // console.log(Object.keys(expectedLockFile.packages).length);
     });
   });
 });

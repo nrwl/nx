@@ -1,4 +1,12 @@
 import { PackageJson } from '../../utils/package-json';
+import { generatePrunnedHash, hashString } from './hashing';
+
+export type LockFileGraph = {
+  hash: string;
+  packageJson: PackageJson;
+  root: LockFileNode;
+  nodes: Map<string, LockFileNode>;
+};
 
 export type LockFileNode = {
   name: string;
@@ -23,7 +31,9 @@ type LockFileEdgeType =
   | 'optional'
   | 'peer'
   | 'peerOptional'
-  | 'workspace';
+  | 'workspace'
+  | 'unknown';
+
 const VALID_TYPES = new Set([
   'prod',
   'dev',
@@ -39,19 +49,50 @@ export type LockFileEdge = {
   type: LockFileEdgeType;
   from: LockFileNode; // path from
   to?: LockFileNode;
-  error?: 'MISSING' | 'DETACHED';
+  error?:
+    | 'MISSING_TARGET'
+    | 'MISSING_SOURCE'
+    // | 'DETACHED'
+    | 'UNRESOLVED_TYPE';
 };
 
 // TODO 1: Check Arborist for links? Perhaps those should be workspace files
+/**
+ * A builder for a lock file graph.
+ *
+ * Constructs graph of nodes and incoming/outgoing edges
+ *
+ * Based and inspired by [NPM Arborist](https://www.npmjs.com/package/@npmcli/arborist)
+ */
 export class LockFileBuilder {
   readonly root: LockFileNode;
   readonly nodes: Map<string, LockFileNode>;
   readonly packageJson: PackageJson;
-  // private nodes: Map<string, LockFileNode>
-  // private edges: Map<string, LockFileEdge>
+  private hash: string;
 
-  constructor(packageJson: PackageJson) {
-    this.packageJson = packageJson;
+  constructor(input: LockFileGraph);
+  constructor(input: { packageJson: PackageJson; lockFileContent: string });
+  constructor(
+    input: { packageJson: PackageJson; lockFileContent: string } | LockFileGraph
+  ) {
+    this.packageJson = input.packageJson;
+
+    if ('root' in input) {
+      const { root, hash, nodes } = input;
+      this.root = root;
+      this.nodes = nodes;
+      this.hash = hash;
+    } else {
+      const { lockFileContent } = input;
+      this.nodes = new Map();
+      const node = this.makeRootNode(input.packageJson);
+      this.root = node;
+      this.nodes.set('', node);
+      this.hash = lockFileContent ? hashString(lockFileContent) : '';
+    }
+  }
+
+  private makeRootNode(packageJson: PackageJson): LockFileNode {
     const {
       name,
       version,
@@ -67,31 +108,314 @@ export class LockFileBuilder {
       path: '',
       isProjectRoot: true,
     };
+    const skipEdgeInCheck = true;
     if (dependencies) {
       Object.entries(dependencies).forEach(([name, versionSpec]) => {
-        this.addEdgeOut(node, name, versionSpec, 'prod');
+        this.addEdgeOut(node, name, versionSpec, 'prod', skipEdgeInCheck);
       });
     }
     if (devDependencies) {
       Object.entries(devDependencies).forEach(([name, versionSpec]) => {
-        this.addEdgeOut(node, name, versionSpec, 'dev');
+        this.addEdgeOut(node, name, versionSpec, 'dev', skipEdgeInCheck);
       });
     }
     if (optionalDependencies) {
       Object.entries(optionalDependencies).forEach(([name, versionSpec]) => {
-        this.addEdgeOut(node, name, versionSpec, 'optional');
+        this.addEdgeOut(node, name, versionSpec, 'optional', skipEdgeInCheck);
       });
     }
     if (peerDependencies) {
       Object.entries(peerDependencies).forEach(([name, versionSpec]) => {
-        this.addEdgeOut(node, name, versionSpec, 'peer');
+        this.addEdgeOut(node, name, versionSpec, 'peer', skipEdgeInCheck);
       });
     }
-    this.root = node;
-    this.nodes = new Map([['', node]]);
+    return node;
   }
 
   addEdgeOut(
+    node: LockFileNode,
+    name: string,
+    versionSpec: string,
+    type: LockFileEdgeType,
+    skipEdgeInCheck?: boolean
+  ) {
+    this.validateEdgeCreation(node, name, versionSpec, type);
+
+    if (!node.edgesOut) {
+      node.edgesOut = new Map();
+    }
+    // if (node.edgesOut.get(name)) {
+    //   this.detachEdge(node.edgesOut.get(name));
+    // }
+    const existingEdge = this.findEdgeIn(name, versionSpec);
+    if (existingEdge) {
+      this.setEdgeSource(existingEdge, node);
+    } else {
+      const edge: LockFileEdge = {
+        name,
+        versionSpec,
+        type,
+        from: node,
+      };
+      this.updateEdgeTypeAndError(edge);
+      node.edgesOut.set(name, edge);
+      if (!skipEdgeInCheck) {
+        this.updateEdgeIn(edge);
+      }
+    }
+  }
+
+  private findEdgeIn(name: string, versionSpec: string): LockFileEdge {
+    let counter = 0;
+    for (const node of this.nodes.values()) {
+      if (node.name === name && node.edgesIn) {
+        for (const edge of node.edgesIn.values()) {
+          if (edge.versionSpec === versionSpec) {
+            counter = 10;
+            return edge;
+          }
+        }
+      }
+    }
+    return;
+  }
+
+  private findEdgeDescendant(path: string, name: string): LockFileNode {
+    let child = this.nodes.get(`${path}node_modules/${name}`);
+    if (child) {
+      return child;
+    }
+    if (!path) {
+      return;
+    }
+    const parentPath = path.slice(0, path.lastIndexOf('node_modules'));
+    return this.findEdgeDescendant(parentPath, name);
+  }
+
+  private updateEdgeIn(edge: LockFileEdge) {
+    const to = this.findEdgeDescendant(`${edge.from.path}/`, edge.name);
+    if (to !== edge.to) {
+      // remove old edge in
+      if (edge.to) {
+        edge.to.edgesIn.delete(edge);
+      }
+      edge.to = to;
+      this.updateEdgeTypeAndError(edge);
+      if (to) {
+        if (!to.edgesIn) {
+          to.edgesIn = new Set();
+        }
+        to.edgesIn.add(edge);
+      }
+    }
+  }
+
+  addEdgeIn(
+    node: LockFileNode,
+    type: LockFileEdgeType,
+    versionSpec: string,
+    parent?: LockFileNode
+  ) {
+    this.validateEdgeCreation(node, node.name, versionSpec, type);
+
+    // TODO(meeroslav): Check if this ever happens and remove if not
+    // if (Array.from(node.edgesIn).find(edge => edge.from === parent)) {
+    //   console.warn(
+    //     `Attempting to add duplicate edge in from "${parent.name}" to "${node.name}" with "${type}"`
+    //   );
+    //   return;
+    // }
+
+    const existingEdges = this.findEdgesOut(node.name, versionSpec);
+    if (existingEdges.size > 0) {
+      existingEdges.forEach((existingEdge) => {
+        this.setEdgeTarget(existingEdge, node);
+      });
+    } else {
+      const edge: LockFileEdge = {
+        name: node.name,
+        versionSpec,
+        type,
+        from: parent,
+        to: node,
+      };
+      this.assignEdgeIn(edge);
+    }
+  }
+
+  private findEdgesOut(name: string, versionSpec: string): Set<LockFileEdge> {
+    const edges = new Set<LockFileEdge>();
+    this.nodes.forEach((node) => {
+      if (node.edgesOut?.has(name)) {
+        const edge = node.edgesOut.get(name);
+        if (edge.versionSpec === versionSpec) {
+          edges.add(edge);
+        }
+      }
+    });
+    return edges;
+  }
+
+  private assignEdgeIn(edge: LockFileEdge) {
+    this.updateEdgeTypeAndError(edge);
+    if (!edge.to) {
+      return;
+    }
+    if (!edge.to.edgesIn) {
+      edge.to.edgesIn = new Set();
+    }
+    edge.to.edgesIn.add(edge);
+  }
+
+  private setEdgeSource(edge: LockFileEdge, source: LockFileNode) {
+    // detach edge in from old target
+    if (edge.from) {
+      edge.from.edgesOut.delete(edge.name);
+    }
+    edge.from = source;
+    this.updateEdgeTypeAndError(edge);
+
+    if (!source) {
+      return;
+    }
+    if (!source.edgesOut) {
+      source.edgesOut = new Map();
+    }
+    source.edgesOut.set(edge.name, edge);
+  }
+
+  private setEdgeTarget(edge: LockFileEdge, target: LockFileNode) {
+    // detach edge in from old target
+    if (edge.to) {
+      edge.to.edgesIn.delete(edge);
+    }
+    edge.to = target;
+    this.updateEdgeTypeAndError(edge);
+
+    if (!target) {
+      return;
+    }
+    if (!target.edgesIn) {
+      target.edgesIn = new Set();
+    }
+    target.edgesIn.add(edge);
+  }
+
+  private updateEdgeTypeAndError(edge: LockFileEdge) {
+    if (edge.to && edge.type === 'unknown') {
+      edge.type = this.getValidEdgeType(edge.to);
+    }
+    if (!edge.to && edge.type !== 'optional' && edge.type !== 'peerOptional') {
+      edge.error = 'MISSING_TARGET';
+    }
+    if (!edge.from) {
+      edge.error = 'MISSING_SOURCE';
+    } else if (edge.to && edge.type === 'unknown') {
+      edge.error = 'UNRESOLVED_TYPE';
+    } else {
+      delete edge.error;
+    }
+  }
+
+  private getValidEdgeType(node: LockFileNode): LockFileEdgeType {
+    if (node.peer && node.optional) {
+      return 'peerOptional';
+    }
+    if (node.optional) {
+      return 'optional';
+    }
+    if (node.peer) {
+      return 'peer';
+    }
+    if (node.dev) {
+      return 'dev';
+    }
+    return 'prod';
+  }
+
+  // private detachEdge(edge: LockFileEdge) {
+  //   if (edge['to']) {
+  //     edge['to'].edgesIn.delete(edge);
+  //   }
+  //   edge.from.edgesOut.delete(edge.name);
+  //   edge.error = 'DETACHED';
+  //   edge.to = null;
+  //   edge.from = null;
+  // }
+
+  private getParentPath(path: string, name: string) {
+    return path.replace(new RegExp(`\/?node_modules\/${name}$`), '');
+  }
+
+  private hasUnresolvedEdgeTo(parent: LockFileNode, name: string): boolean {
+    return parent.edgesOut?.has(name) && !parent.edgesOut.get(name).to;
+  }
+
+  private isBetterEdgeMatch(parent: LockFileNode, node: LockFileNode): boolean {
+    if (!parent.edgesOut?.has(node.name)) {
+      return false;
+    }
+    const edge = parent.edgesOut.get(node.name);
+    return (
+      edge.to !== node &&
+      edge.to.path.split('node_modules').length <
+        node.path.split('node_modules').length
+    );
+  }
+
+  addNode(path: string, node: LockFileNode) {
+    if (path !== node.path) {
+      throw new TypeError(
+        `Path "${path}" does not match node path "${node.path}"`
+      );
+    }
+    this.nodes.set(path, node);
+
+    // find parents and link it
+    const parentPath = this.getParentPath(path, node.name);
+    const parent = this.nodes.get(parentPath);
+
+    if (!parent.children?.has(node.name)) {
+      this.addChild(node, parent);
+
+      if (parent.edgesOut.has(node.name)) {
+        const edge = parent.edgesOut.get(node.name);
+        this.setEdgeTarget(edge, node);
+      }
+
+      // add any unresolved parent child's edges to this node
+      this.nodes.forEach((n) => {
+        if (n.path.startsWith(parentPath)) {
+          if (
+            this.hasUnresolvedEdgeTo(n, node.name) ||
+            this.isBetterEdgeMatch(n, node)
+          ) {
+            const edge = n.edgesOut.get(node.name);
+            this.setEdgeTarget(edge, node);
+          }
+        }
+      });
+    }
+  }
+
+  isGraphConsistent() {
+    let isValid = true;
+    this.nodes.forEach((node) => {
+      if (!this.verifyNode(node)) {
+        isValid = false;
+      }
+    });
+    return isValid;
+  }
+
+  private addChild(node: LockFileNode, parentNode: LockFileNode) {
+    if (!parentNode.children) {
+      parentNode.children = new Map();
+    }
+    parentNode.children.set(node.name, node);
+  }
+
+  private validateEdgeCreation(
     node: LockFileNode,
     name: string,
     versionSpec: string,
@@ -99,9 +423,6 @@ export class LockFileBuilder {
   ) {
     if (!node) {
       throw new TypeError(`Edge must be bound to a node`);
-    }
-    if (!node.edgesOut) {
-      node.edgesOut = new Map();
     }
     if (!name) {
       throw new TypeError(`Edge must have a valid name: ${name}`);
@@ -114,170 +435,61 @@ export class LockFileBuilder {
     if (!type) {
       throw new TypeError(`Edge must have a valid type: ${type}`);
     }
-    if (!type || !VALID_TYPES.has(type)) {
+    if (!type || (!VALID_TYPES.has(type) && type !== 'unknown')) {
       throw new TypeError(
         `Edge must have a valid type: ${type}\nValid types: ${Array.from(
           VALID_TYPES
         ).join(', ')}`
       );
     }
-    if (node.edgesOut.get(name)) {
-      this.detachEdge(node.edgesOut.get(name));
-    }
-    const edge: LockFileEdge = {
-      name,
-      versionSpec,
-      type,
-      from: node,
-    };
-    node.edgesOut.set(name, edge);
-    this.updateParentEdgeIn(edge);
   }
 
-  private resolveAncestor(node: LockFileNode, name: string) {
-    const nestedChild = node.children?.get(name);
-    if (nestedChild) {
-      return nestedChild;
-    }
-    return null;
-  }
-
-  private updateParentEdgeIn(edge: LockFileEdge) {
-    const to = this.resolveAncestor(edge.from, edge.name);
-    if (to !== edge.to) {
-      if (edge.to) {
-        edge.to.edgesIn.delete(edge);
-      }
-      edge.to = to;
-      edge.error = this.checkEdgeForErrors(edge);
-      if (to) {
-        edge.to.edgesIn.add(edge);
-      }
-    }
-  }
-
-  private checkEdgeForErrors(edge: LockFileEdge): 'MISSING' | undefined {
-    if (!edge.to && edge.type !== 'optional' && edge.type !== 'peerOptional') {
-      return 'MISSING';
-    } else {
-      return;
-    }
-  }
-
-  private detachEdge(edge: LockFileEdge) {
-    if (edge['to']) {
-      edge['to'].edgesIn.delete(edge);
-    }
-    edge.from.edgesOut.delete(edge.name);
-    edge.error = 'DETACHED';
-    edge.to = null;
-    edge.from = null;
-  }
-
-  private getParentPath(path: string, name: string) {
-    return path.replace(new RegExp(`\/?node_modules\/${name}$`), '');
-  }
-
-  private hasUnresolvedEdgeTo(parent: LockFileNode, name: string) {
-    return parent.edgesOut?.has(name) && !parent.edgesOut.get(name).to;
-  }
-
-  addNode(path: string, node: LockFileNode) {
-    this.nodes.set(path, node);
-
-    // find parents and link it
-    const parentPath = this.getParentPath(path, node.name);
-    const parent = this.nodes.get(parentPath);
-
-    if (!parent.children?.has(node.name)) {
-      this.addChild(node, parent);
-
-      // if it's not empty parent path, it means it's nested package -> add edge
-      this.nodes.forEach((n) => {
-        if (this.hasUnresolvedEdgeTo(n, node.name)) {
-          const edge = n.edgesOut.get(node.name);
-          this.addEdgeIn(node, n, edge.type);
-          edge.to = node;
-          edge.error = this.checkEdgeForErrors(edge);
-        }
-      });
-    }
-
-    // find children and link them
-    node.edgesOut?.forEach((edge) => {
-      if (!edge.to) {
-        const child =
-          this.nodes.get(`${edge.from.path}/node_modules/${edge.name}`) ||
-          this.nodes.get(`node_modules/${edge.name}`);
-        if (child) {
-          this.addChild(child, node);
-          this.addEdgeIn(child, node, edge.type);
-        }
-      }
-    });
-  }
-
-  addEdgeIn(node: LockFileNode, parent: LockFileNode, type: LockFileEdgeType) {
-    // TODO: ensure there are no duplicates
-    node.edgesIn.add({
-      name: node.name,
-      versionSpec: node.version,
-      type,
-      from: parent,
-      to: node,
-    });
-  }
-
-  // TODO: children are set incorrectly for 'eslint-plugin-disable-autofix' in V1
-  // TODO: and no edge in was added to it back (edgeOut for root exists)
-  addChild(node: LockFileNode, parentNode: LockFileNode) {
-    if (!parentNode.children) {
-      parentNode.children = new Map();
-    }
-    parentNode.children.set(node.name, node);
-
-    // add node to edge out
-    if (parentNode.edgesOut.has(node.name)) {
-      const edge = parentNode.edgesOut.get(node.name);
-      edge.to = node;
-      edge.error = this.checkEdgeForErrors(edge);
-    }
-  }
-
-  verifyGraphConsistency() {
-    return this.verifyNode(this.root);
-  }
-
-  private verifyNode(node: LockFileNode, isValid = true) {
-    if (node.edgesOut) {
+  private verifyNode(node: LockFileNode) {
+    let isValid = true;
+    if (node.edgesOut && node.edgesOut.size > 0) {
       node.edgesOut.forEach((edge) => {
         if (edge.error) {
           isValid = false;
           console.warn(
-            `Edge OUT ${edge.name} from ${edge.from.name} to ${edge.to?.name} has error ${edge.error}`
+            `Edge OUT ${edge.name} from ${edge.from?.name} to ${edge.to?.name} has error ${edge.error}`
           );
         }
       });
     }
-    if (node.edgesIn) {
+    if (node.edgesIn && node.edgesIn.size > 0) {
       node.edgesIn.forEach((edge) => {
         if (edge.error) {
           isValid = false;
           console.warn(
-            `Edge IN ${edge.name} from ${edge.from.name} to ${edge.to?.name} has error ${edge.error}`
+            `Edge IN ${edge.name} from ${edge.from?.name} to ${edge.to?.name} has error ${edge.error}`
           );
         }
       });
-    }
-    if (node.children) {
-      node.children.forEach((child) => {
-        isValid ||= this.verifyNode(child, isValid);
-      });
+    } else if (!node.isProjectRoot) {
+      isValid = false;
+      console.warn(
+        `All nodes except the root node must have at least one incoming edge. Node "${node.name}" (${node.path}) has no incoming edges.`
+      );
     }
     return isValid;
   }
 
-  getLockFileGraph() {
-    return this.root;
+  private calculateHash(): string {
+    return generatePrunnedHash(this.hash, this.packageJson);
+  }
+
+  getLockFileGraph(): LockFileGraph {
+    if (!this.isGraphConsistent()) {
+      console.error(
+        `Graph is not consistent. Please report this issue via github`
+      );
+    }
+
+    return {
+      root: this.root,
+      packageJson: this.packageJson,
+      nodes: this.nodes,
+      hash: this.hash || this.calculateHash(),
+    };
   }
 }

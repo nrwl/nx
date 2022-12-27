@@ -146,6 +146,36 @@ export class ProjectGraphBuilder {
   }
 
   /**
+   * Add an explicit dependency from a file in source project to target project
+   */
+  addExternalNodeDependency(
+    sourceProjectName: string,
+    targetProjectName: string
+  ): void {
+    if (sourceProjectName === targetProjectName) {
+      return;
+    }
+    const source = this.graph.externalNodes[sourceProjectName];
+    if (!source) {
+      throw new Error(`Source project does not exist: ${sourceProjectName}`);
+    }
+
+    if (!this.graph.externalNodes[targetProjectName]) {
+      throw new Error(`Target project does not exist: ${targetProjectName}`);
+    }
+
+    if (!this.graph.dependencies[sourceProjectName]) {
+      this.graph.dependencies[sourceProjectName] = [];
+    }
+
+    this.graph.dependencies[sourceProjectName].push({
+      source: sourceProjectName,
+      target: targetProjectName,
+      type: DependencyType.static,
+    });
+  }
+
+  /**
    * Set version of the project graph
    */
   setVersion(version: string): void {
