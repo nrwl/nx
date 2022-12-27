@@ -102,6 +102,12 @@ const childRoutes: RouteObject[] = [
       {
         path: ':selectedTarget',
         element: <TasksSidebar />,
+        children: [
+          {
+            path: 'all',
+            element: <TasksSidebar />,
+          },
+        ],
       },
     ],
   },
