@@ -24,9 +24,16 @@ export function initLocal(workspace: WorkspaceTypeAndRoot) {
     }
 
     if (isKnownCommand()) {
-      commandsObject.argv;
+      const newArgs = rewriteTargetsAndProjects(process.argv);
+      const help = newArgs.indexOf('--help');
+      const split = newArgs.indexOf('--');
+      if (help > -1 && (split === -1 || split > help)) {
+        commandsObject.showHelp();
+      } else {
+        commandsObject.parse(newArgs);
+      }
     } else {
-      const newArgs = rewritePositionalArguments();
+      const newArgs = rewritePositionalArguments(process.argv);
       commandsObject.parse(newArgs);
     }
   } catch (e) {
@@ -35,18 +42,45 @@ export function initLocal(workspace: WorkspaceTypeAndRoot) {
   }
 }
 
-function rewritePositionalArguments() {
-  if (!process.argv[3] || process.argv[3].startsWith('-')) {
-    return [
-      'run',
-      `${wrapIntoQuotesIfNeeded(process.argv[2])}`,
-      ...process.argv.slice(3),
-    ];
+export function rewriteTargetsAndProjects(args: string[]) {
+  const newArgs = [args[2]];
+  let i = 3;
+  while (i < args.length) {
+    if (args[i] === '--') {
+      return [...newArgs, ...args.slice(i)];
+    } else if (
+      args[i] === '-p' ||
+      args[i] === '--projects' ||
+      args[i] === '--exclude' ||
+      args[i] === '--files' ||
+      args[i] === '-t' ||
+      args[i] === '--target' ||
+      args[i] === '--targets'
+    ) {
+      newArgs.push(args[i]);
+      i++;
+      const items = [];
+      while (i < args.length && !args[i].startsWith('-')) {
+        items.push(args[i]);
+        i++;
+      }
+      newArgs.push(items.join(','));
+    } else {
+      newArgs.push(args[i]);
+      ++i;
+    }
+  }
+  return newArgs;
+}
+
+function rewritePositionalArguments(args: string[]) {
+  if (!args[3] || args[3].startsWith('-')) {
+    return ['run', `${wrapIntoQuotesIfNeeded(args[2])}`, ...args.slice(3)];
   } else {
     return [
       'run',
-      `${process.argv[3]}:${wrapIntoQuotesIfNeeded(process.argv[2])}`,
-      ...process.argv.slice(4),
+      `${args[3]}:${wrapIntoQuotesIfNeeded(args[2])}`,
+      ...args.slice(4),
     ];
   }
 }
