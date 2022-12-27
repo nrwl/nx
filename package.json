@@ -21,7 +21,7 @@
     "documentation": "ts-node -P scripts/tsconfig.scripts.json ./scripts/documentation/generators/main.ts && yarn check-documentation-map",
     "submit-plugin": "node ./scripts/submit-plugin.js",
     "prepare": "is-ci || husky install",
-    "echo": "echo 123458",
+    "echo": "echo 1234589",
     "lint": "nx workspace-lint"
   },
   "devDependencies": {

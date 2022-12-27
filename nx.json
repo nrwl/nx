@@ -9,8 +9,8 @@
       "options": {
         "accessToken": "MjEyM2IwYWQtMTEyMS00ZGFmLThkY2UtYjg4YWRiZTNjZmI5fHJlYWQtd3JpdGU=",
         "cacheableOperations": [
-          "build",
           "lint-base",
+          "build",
           "lint",
           "build-base",
           "e2e",
