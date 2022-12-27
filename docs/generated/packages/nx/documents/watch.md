@@ -59,7 +59,7 @@ When watching selected projects, include dependent projects as well.
 
 Type: `string`
 
-Projects to watch (comma delimited).
+Projects to watch (comma/space delimited).
 
 ### verbose
 
