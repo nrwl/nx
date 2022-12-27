@@ -10,7 +10,7 @@ Looking for a Angular monorepo setup? Check our [Angular monorepo tutorial](/ang
 {% /callout %}
 
 {% youtube
-src="https://www.youtube.com/embed/hacaIaXii4M"
+src="https://www.youtube.com/embed/LYPVrWQNnEc"
 title="Tutorial: Standalone Angular Application"
 width="100%" /%}
 
