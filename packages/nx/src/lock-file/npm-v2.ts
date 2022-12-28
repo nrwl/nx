@@ -1,5 +1,9 @@
 import { PackageJson } from '../utils/package-json';
-import { LockFileBuilder, LockFileNode } from './utils/lock-file-builder';
+import {
+  LockFileBuilder,
+  LockFileGraph,
+  LockFileNode,
+} from './utils/lock-file-builder';
 
 type NpmDependencyV3 = {
   version: string;
@@ -48,7 +52,7 @@ type NpmLockFile = {
 export function parseNpmLockFile(
   lockFileContent: string,
   packageJson: PackageJson
-): LockFileNode {
+): LockFileGraph {
   const { name, version, lockfileVersion, ...packageInfo } = JSON.parse(
     lockFileContent
   ) as NpmLockFile;
@@ -59,7 +63,7 @@ export function parseNpmLockFile(
     ? parseV1LockFile(builder, packageInfo)
     : parseV3LockFile(builder, packageInfo); // we will treat V2 lockfile as V3 but map it back to V2 for backwards compatibility
 
-  return builder.getLockFileGraph().root;
+  return builder.getLockFileGraph();
 }
 
 // adds edge out to node

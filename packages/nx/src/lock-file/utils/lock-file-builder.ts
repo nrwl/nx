@@ -6,6 +6,7 @@ export type LockFileGraph = {
   packageJson: PackageJson;
   root: LockFileNode;
   nodes: Map<string, LockFileNode>;
+  isValid: boolean;
 };
 
 export type LockFileNode = {
@@ -141,13 +142,14 @@ export class LockFileBuilder {
   ) {
     this.validateEdgeCreation(node, name, versionSpec, type);
 
+    if (!this.isVersionSpecSupported(versionSpec)) {
+      return;
+    }
+
     if (!node.edgesOut) {
       node.edgesOut = new Map();
     }
-    // if (node.edgesOut.get(name)) {
-    //   this.detachEdge(node.edgesOut.get(name));
-    // }
-    const existingEdge = this.findEdgeIn(name, versionSpec);
+    const existingEdge = this.findEdgeIn(name, versionSpec, node.path);
     if (existingEdge) {
       this.setEdgeSource(existingEdge, node);
     } else {
@@ -165,14 +167,33 @@ export class LockFileBuilder {
     }
   }
 
-  private findEdgeIn(name: string, versionSpec: string): LockFileEdge {
-    let counter = 0;
+  // we don't track local files or workspace projects in the graph
+  // only exteral dependencies
+  private isVersionSpecSupported(versionSpec: string) {
+    if (versionSpec.startsWith('file:')) {
+      return false;
+    }
+    if (versionSpec.startsWith('workspace:')) {
+      return false;
+    }
+    return true;
+  }
+
+  private findEdgeIn(
+    name: string,
+    versionSpec: string,
+    fromPath: string
+  ): LockFileEdge {
     for (const node of this.nodes.values()) {
       if (node.name === name && node.edgesIn) {
         for (const edge of node.edgesIn.values()) {
-          if (edge.versionSpec === versionSpec) {
-            counter = 10;
-            return edge;
+          if (edge.versionSpec === versionSpec && !edge.from) {
+            if (
+              edge.to.path === `node_modules/${name}` ||
+              edge.to.path.startsWith(`${fromPath}/`)
+            ) {
+              return edge;
+            }
           }
         }
       }
@@ -217,14 +238,6 @@ export class LockFileBuilder {
     parent?: LockFileNode
   ) {
     this.validateEdgeCreation(node, node.name, versionSpec, type);
-
-    // TODO(meeroslav): Check if this ever happens and remove if not
-    // if (Array.from(node.edgesIn).find(edge => edge.from === parent)) {
-    //   console.warn(
-    //     `Attempting to add duplicate edge in from "${parent.name}" to "${node.name}" with "${type}"`
-    //   );
-    //   return;
-    // }
 
     const existingEdges = this.findEdgesOut(node.name, versionSpec);
     if (existingEdges.size > 0) {
@@ -384,8 +397,9 @@ export class LockFileBuilder {
       }
 
       // add any unresolved parent child's edges to this node
+      const parentPrefix = `${parentPath}/node_modules`;
       this.nodes.forEach((n) => {
-        if (n.path.startsWith(parentPath)) {
+        if (!parentPath || n.path.startsWith(parentPrefix)) {
           if (
             this.hasUnresolvedEdgeTo(n, node.name) ||
             this.isBetterEdgeMatch(n, node)
@@ -479,14 +493,17 @@ export class LockFileBuilder {
   }
 
   getLockFileGraph(): LockFileGraph {
+    let isValid = true;
     if (!this.isGraphConsistent()) {
       console.error(
         `Graph is not consistent. Please report this issue via github`
       );
+      isValid = false;
     }
 
     return {
       root: this.root,
+      isValid,
       packageJson: this.packageJson,
       nodes: this.nodes,
       hash: this.hash || this.calculateHash(),
