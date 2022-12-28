@@ -162,9 +162,6 @@ export { updateTsConfigsToJs } from './src/generators/update-ts-configs-to-js';
  */
 export { visitNotIgnoredFiles } from './src/generators/visit-not-ignored-files';
 
-/**
- * @category Executors
- */
 export {
   parseTargetString,
   targetToTargetString,

@@ -15,8 +15,14 @@ export async function* ssrDevServerExecutor(
   options: WebSsrDevServerOptions,
   context: ExecutorContext
 ) {
-  const browserTarget = parseTargetString(options.browserTarget);
-  const serverTarget = parseTargetString(options.serverTarget);
+  const browserTarget = parseTargetString(
+    options.browserTarget,
+    context.projectGraph
+  );
+  const serverTarget = parseTargetString(
+    options.serverTarget,
+    context.projectGraph
+  );
   const browserOptions = readTargetOptions<WebpackExecutorOptions>(
     browserTarget,
     context

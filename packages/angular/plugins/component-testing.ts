@@ -147,7 +147,10 @@ function getBuildableTarget(ctContext: ExecutorContext) {
     );
   }
 
-  return parseTargetString(cypressCtOptions.devServerTarget);
+  return parseTargetString(
+    cypressCtOptions.devServerTarget,
+    ctContext.projectGraph
+  );
 }
 
 function normalizeBuildTargetOptions(

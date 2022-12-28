@@ -66,7 +66,7 @@ function calculateResolveMappings(
   context: ExecutorContext,
   options: NodeExecutorOptions
 ) {
-  const parsed = parseTargetString(options.buildTarget);
+  const parsed = parseTargetString(options.buildTarget, context.projectGraph);
   const { dependencies } = calculateProjectDependencies(
     context.projectGraph,
     context.root,
@@ -198,7 +198,10 @@ async function* startBuild(
   options: NodeExecutorOptions,
   context: ExecutorContext
 ) {
-  const buildTarget = parseTargetString(options.buildTarget);
+  const buildTarget = parseTargetString(
+    options.buildTarget,
+    context.projectGraph
+  );
 
   yield* await runExecutor<ExecutorEvent>(
     buildTarget,
@@ -216,7 +219,7 @@ function runWaitUntilTargets(
 ): Promise<{ success: boolean }[]> {
   return Promise.all(
     options.waitUntilTargets.map(async (waitUntilTarget) => {
-      const target = parseTargetString(waitUntilTarget);
+      const target = parseTargetString(waitUntilTarget, context.projectGraph);
       const output = await runExecutor(target, {}, context);
       return new Promise<{ success: boolean }>(async (resolve) => {
         let event = await output.next();

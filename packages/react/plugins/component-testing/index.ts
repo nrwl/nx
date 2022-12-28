@@ -166,7 +166,7 @@ function buildTargetWebpack(
   buildTarget: string,
   componentTestingProjectName: string
 ) {
-  const parsed = parseTargetString(buildTarget);
+  const parsed = parseTargetString(buildTarget, graph);
 
   const buildableProjectConfig = graph.nodes[parsed.project]?.data;
   const ctProjectConfig = graph.nodes[componentTestingProjectName]?.data;

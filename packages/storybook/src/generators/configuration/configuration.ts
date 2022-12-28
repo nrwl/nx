@@ -107,7 +107,7 @@ export async function configurationGenerator(
     );
   }
 
-  const e2eProject = getE2EProjectName(tree, schema.name);
+  const e2eProject = await getE2EProjectName(tree, schema.name);
   if (schema.configureCypress && !e2eProject) {
     const cypressTask = await cypressProjectGenerator(tree, {
       name: schema.name,
