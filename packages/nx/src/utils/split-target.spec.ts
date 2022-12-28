@@ -1,28 +1,13 @@
-import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
-import { ProjectConfiguration } from '../config/workspace-json-project-json';
+import { ProjectGraph } from '../config/project-graph';
 import { ProjectGraphBuilder } from '../project-graph/project-graph-builder';
 import { splitTarget } from './split-target';
-
-const cases = [
-  { input: 'project', expected: ['project'] },
-  { input: 'project:target', expected: ['project', 'target'] },
-  { input: 'project:target:config', expected: ['project', 'target', 'config'] },
-  {
-    input: 'project:"target:target":config',
-    expected: ['project', 'target:target', 'config'],
-  },
-  {
-    input: 'project:target:target:config',
-    expected: ['project', 'target:target', 'config'],
-  },
-];
 
 let projectGraph: ProjectGraph;
 
 describe('splitTarget', () => {
   beforeAll(() => {
     let builder = new ProjectGraphBuilder();
-    builder.addNode<ProjectGraphProjectNode<ProjectConfiguration>>({
+    builder.addNode({
       name: 'project',
       data: {
         files: [],
@@ -38,7 +23,34 @@ describe('splitTarget', () => {
     projectGraph = builder.getUpdatedProjectGraph();
   });
 
-  it.each(cases)('$input -> $expected', ({ input, expected }) => {
-    expect(splitTarget(input, projectGraph)).toEqual(expected);
+  it('should support only project', () => {
+    expect(splitTarget('project', projectGraph)).toEqual(['project']);
+  });
+
+  it('should project:target', () => {
+    expect(splitTarget('project:target', projectGraph)).toEqual([
+      'project',
+      'target',
+    ]);
+  });
+
+  it('should project:target:configuration', () => {
+    expect(splitTarget('project:target:configuration', projectGraph)).toEqual([
+      'project',
+      'target',
+      'configuration',
+    ]);
+  });
+
+  it('should targets that contain colons when present in the graph', () => {
+    expect(
+      splitTarget('project:target:target:configuration', projectGraph)
+    ).toEqual(['project', 'target:target', 'configuration']);
+  });
+
+  it('should targets that contain colons when not present in the graph but surrounded by quotes', () => {
+    expect(
+      splitTarget('project:"other:other":configuration', projectGraph)
+    ).toEqual(['project', 'other:other', 'configuration']);
   });
 });

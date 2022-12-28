@@ -28,7 +28,7 @@ export class ProjectGraphBuilder {
   /**
    * Adds a project node to the project graph
    */
-  addNode<T extends ProjectGraphProjectNode>(node: T) {
+  addNode(node: ProjectGraphProjectNode): void {
     // Check if project with the same name already exists
     if (this.graph.nodes[node.name]) {
       // Throw if existing project is of a different type
