@@ -172,6 +172,12 @@ Object {
               "type": "anyComponentStyle",
             },
           ],
+          "fileReplacements": Array [
+            Object {
+              "replace": "apps/my-dir/my-app/src/environments/environment.ts",
+              "with": "apps/my-dir/my-app/src/environments/environment.prod.ts",
+            },
+          ],
           "outputHashing": "all",
         },
       },
@@ -184,9 +190,7 @@ Object {
         "index": "apps/my-dir/my-app/src/index.html",
         "main": "apps/my-dir/my-app/src/main.ts",
         "outputPath": "dist/apps/my-dir/my-app",
-        "polyfills": Array [
-          "zone.js",
-        ],
+        "polyfills": "apps/my-dir/my-app/src/polyfills.ts",
         "scripts": Array [],
         "styles": Array [
           "apps/my-dir/my-app/src/styles.css",
@@ -340,6 +344,12 @@ Object {
               "type": "anyComponentStyle",
             },
           ],
+          "fileReplacements": Array [
+            Object {
+              "replace": "apps/my-app/src/environments/environment.ts",
+              "with": "apps/my-app/src/environments/environment.prod.ts",
+            },
+          ],
           "outputHashing": "all",
         },
       },
@@ -352,9 +362,7 @@ Object {
         "index": "apps/my-app/src/index.html",
         "main": "apps/my-app/src/main.ts",
         "outputPath": "dist/apps/my-app",
-        "polyfills": Array [
-          "zone.js",
-        ],
+        "polyfills": "apps/my-app/src/polyfills.ts",
         "scripts": Array [],
         "styles": Array [
           "apps/my-app/src/styles.css",
