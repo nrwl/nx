@@ -6,6 +6,14 @@ Before continuing, make sure you have all your changes committed and have a clea
 
 You can migrate an E2E project to v11 by running the following command:
 
+{% callout type="note" title="Generator Naming Changes" %}
+If your nx version is below v15.3.0, this migration is called `migrate-to-cypress-10`.
+
+From v15.3.0+ this generator is called `migrate-to-cypress-11`.
+
+As of nx v15.1.0, if your project was already using Cypress v10, then your project will be migrated to Cypress v11 via the [standard nx migration process](/core-features/automate-updating-dependencies)
+{% /callout %}
+
 ```shell
 nx g @nrwl/cypress:migrate-to-cypress-11
 ```
