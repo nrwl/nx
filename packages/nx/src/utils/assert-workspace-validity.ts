@@ -10,7 +10,8 @@ export function assertWorkspaceValidity(
   workspaceJson,
   nxJson: NxJsonConfiguration
 ) {
-  const workspaceJsonProjects = Object.keys(workspaceJson.projects);
+  const projectNames = Object.keys(workspaceJson.projects);
+  const projectNameSet = new Set(projectNames);
 
   const projects = {
     ...workspaceJson.projects,
@@ -50,12 +51,14 @@ export function assertWorkspaceValidity(
         map,
         filename,
         projectNames,
-        projects
+        projects,
+        projectNames,
+        projectNameSet
       );
       return map;
     }, invalidImplicitDependencies);
 
-  workspaceJsonProjects
+  projectNames
     .filter((projectName) => {
       const project = projects[projectName];
       return !!project.implicitDependencies;
@@ -66,7 +69,9 @@ export function assertWorkspaceValidity(
         map,
         projectName,
         project.implicitDependencies,
-        projects
+        projects,
+        projectNames,
+        projectNameSet
       );
       return map;
     }, invalidImplicitDependencies);
@@ -91,17 +96,18 @@ function detectAndSetInvalidProjectGlobValues(
   map: Map<string, string[]>,
   sourceName: string,
   desiredImplicitDeps: string[],
-  validProjects: ProjectsConfigurations['projects']
+  projectConfigurations: ProjectsConfigurations['projects'],
+  projectNames: string[],
+  projectNameSet: Set<string>
 ) {
-  const validProjectNames = Object.keys(validProjects);
   const invalidProjectsOrGlobs = desiredImplicitDeps.filter((implicit) => {
     const projectName = implicit.startsWith('!')
       ? implicit.substring(1)
       : implicit;
 
     return !(
-      validProjects[projectName] ||
-      findMatchingProjects([implicit], validProjectNames).length
+      projectConfigurations[projectName] ||
+      findMatchingProjects([implicit], projectNames, projectNameSet).length
     );
   });
 

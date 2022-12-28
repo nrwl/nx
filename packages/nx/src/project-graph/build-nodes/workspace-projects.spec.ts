@@ -1,70 +1,46 @@
-import { ProjectConfiguration } from 'nx/src/config/workspace-json-project-json';
 import { normalizeImplicitDependencies } from './workspace-projects';
 
 describe('workspace-projects', () => {
+  let projectsSet: Set<string>;
+
+  beforeEach(() => {
+    projectsSet = new Set(['test-project', 'a', 'b', 'c']);
+  });
+
   describe('normalizeImplicitDependencies', () => {
     it('should expand "*" implicit dependencies', () => {
       expect(
-        normalizeImplicitDependencies('test-project', ['*'], {
-          fileMap: {},
-          filesToProcess: {},
-          workspace: {
-            version: 2,
-            projects: {
-              ...makeProject('test-project'),
-              ...makeProject('a'),
-              ...makeProject('b'),
-              ...makeProject('c'),
-            },
-          },
-        })
+        normalizeImplicitDependencies(
+          'test-project',
+          ['*'],
+          Array.from(projectsSet),
+          projectsSet
+        )
       ).toEqual(['a', 'b', 'c']);
     });
 
     it('should return [] for null implicit dependencies', () => {
       expect(
-        normalizeImplicitDependencies('test-project', null, {
-          fileMap: {},
-          filesToProcess: {},
-          workspace: {
-            version: 2,
-            projects: {
-              ...makeProject('test-project'),
-              ...makeProject('a'),
-              ...makeProject('b'),
-              ...makeProject('c'),
-            },
-          },
-        })
+        normalizeImplicitDependencies(
+          'test-project',
+          null,
+          Array.from(projectsSet),
+          projectsSet
+        )
       ).toEqual([]);
     });
 
     it('should expand glob based implicit dependencies', () => {
+      projectsSet.add('b-1');
+      projectsSet.add('b-2');
       expect(
-        normalizeImplicitDependencies('test-project', ['b*'], {
-          fileMap: {},
-          filesToProcess: {},
-          workspace: {
-            version: 2,
-            projects: {
-              ...makeProject('test-project'),
-              ...makeProject('a'),
-              ...makeProject('b'),
-              ...makeProject('b-1'),
-              ...makeProject('b-2'),
-              ...makeProject('c'),
-            },
-          },
-        })
+        normalizeImplicitDependencies(
+          'test-project',
+          ['b*'],
+          Array.from(projectsSet),
+          projectsSet
+        )
       ).toEqual(['b', 'b-1', 'b-2']);
     });
   });
 });
-
-function makeProject(name: string): Record<string, ProjectConfiguration> {
-  return {
-    [name]: {
-      root: `packages/${name}`,
-    },
-  };
-}

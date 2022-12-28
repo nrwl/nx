@@ -24,7 +24,10 @@ export function buildWorkspaceProjectNodes(
   nxJson: NxJsonConfiguration
 ) {
   const toAdd = [];
-  Object.keys(ctx.workspace.projects).forEach((key) => {
+  const projects = Object.keys(ctx.workspace.projects);
+  const projectsSet = new Set(projects);
+
+  for (const key of projects) {
     const p = ctx.workspace.projects[key];
     const projectRoot = join(workspaceRoot, p.root);
 
@@ -56,7 +59,8 @@ export function buildWorkspaceProjectNodes(
     p.implicitDependencies = normalizeImplicitDependencies(
       key,
       p.implicitDependencies,
-      ctx
+      projects,
+      projectsSet
     );
 
     p.targets = mergePluginTargetsWithNxTargets(
@@ -83,7 +87,7 @@ export function buildWorkspaceProjectNodes(
         files: ctx.fileMap[key],
       },
     });
-  });
+  }
 
   // Sort by root directory length (do we need this?)
   toAdd.sort((a, b) => {
@@ -149,12 +153,16 @@ function normalizeProjectTargets(
 export function normalizeImplicitDependencies(
   source: string,
   implicitDependencies: ProjectConfiguration['implicitDependencies'],
-  context: ProjectGraphProcessorContext
+  projectNames: string[],
+  projectsSet: Set<string>
 ) {
-  return findMatchingProjects(
-    implicitDependencies || [],
-    Object.keys(context.workspace.projects).filter(
-      (projectName) => projectName !== source
-    )
+  if (!implicitDependencies?.length) {
+    return implicitDependencies ?? [];
+  }
+  const matches = findMatchingProjects(
+    implicitDependencies,
+    projectNames,
+    projectsSet
   );
+  return matches.filter((x) => x !== source);
 }
