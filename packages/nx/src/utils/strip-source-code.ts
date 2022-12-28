@@ -58,6 +58,28 @@ export function stripSourceCode(scanner: Scanner, contents: string): string {
         break;
       }
 
+      case SyntaxKind.TemplateHead: {
+        while (true) {
+          token = scanner.scan();
+
+          if (token === SyntaxKind.SlashToken) {
+            token = scanner.reScanSlashToken();
+          }
+
+          if (token === SyntaxKind.EndOfFileToken) {
+            // either the template is unterminated, or there
+            // is some other edge case we haven't compensated for
+            break;
+          }
+
+          if (token === SyntaxKind.CloseBraceToken) {
+            token = scanner.reScanTemplateToken(false);
+            break;
+          }
+        }
+        break;
+      }
+
       case SyntaxKind.ExportKeyword: {
         token = scanner.scan();
         while (
