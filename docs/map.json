@@ -1203,6 +1203,11 @@
               "file": "nx-cloud/set-up/github"
             },
             {
+              "name": "Enable Bitbucket Cloud PR Integration",
+              "id": "bitbucket-cloud",
+              "file": "nx-cloud/set-up/bitbucket-cloud"
+            },
+            {
               "name": "Enable GitLab MR Integration",
               "id": "gitlab",
               "file": "nx-cloud/set-up/gitlab"

@@ -57,6 +57,16 @@
         "tags": []
       },
       {
+        "id": "bitbucket-cloud",
+        "name": "Enable Bitbucket Cloud PR Integration",
+        "description": "",
+        "file": "nx-cloud/set-up/bitbucket-cloud",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/set-up/bitbucket-cloud",
+        "tags": []
+      },
+      {
         "id": "gitlab",
         "name": "Enable GitLab MR Integration",
         "description": "",
@@ -89,6 +99,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/nx-cloud/set-up/github",
+    "tags": []
+  },
+  "/nx-cloud/set-up/bitbucket-cloud": {
+    "id": "bitbucket-cloud",
+    "name": "Enable Bitbucket Cloud PR Integration",
+    "description": "",
+    "file": "nx-cloud/set-up/bitbucket-cloud",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/set-up/bitbucket-cloud",
     "tags": []
   },
   "/nx-cloud/set-up/gitlab": {

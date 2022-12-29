@@ -2989,6 +2989,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Enable Bitbucket Cloud PR Integration",
+            "path": "/nx-cloud/set-up/bitbucket-cloud",
+            "id": "bitbucket-cloud",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Enable GitLab MR Integration",
             "path": "/nx-cloud/set-up/gitlab",
             "id": "gitlab",
@@ -3011,6 +3019,14 @@
         "name": "Enable GitHub PR Integration",
         "path": "/nx-cloud/set-up/github",
         "id": "github",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Enable Bitbucket Cloud PR Integration",
+        "path": "/nx-cloud/set-up/bitbucket-cloud",
+        "id": "bitbucket-cloud",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
