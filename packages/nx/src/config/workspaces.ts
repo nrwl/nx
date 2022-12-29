@@ -7,14 +7,15 @@ import { performance } from 'perf_hooks';
 
 import { workspaceRoot } from '../utils/workspace-root';
 import { readJsonFile } from '../utils/fileutils';
-import { logger, NX_PREFIX } from '../utils/logger';
+import { logger, NX_PREFIX, stripIndent } from '../utils/logger';
 import { loadNxPlugins, readPluginPackageJson } from '../utils/nx-plugin';
 import * as yaml from 'js-yaml';
 
-import type { NxJsonConfiguration } from './nx-json';
+import type { NxJsonConfiguration, TargetDefaults } from './nx-json';
 import {
   ProjectConfiguration,
   ProjectsConfigurations,
+  TargetConfiguration,
 } from './workspace-json-project-json';
 import {
   CustomHasher,
@@ -140,16 +141,19 @@ export class Workspaces {
     for (const proj of Object.values(config.projects)) {
       if (proj.targets) {
         for (const targetName of Object.keys(proj.targets)) {
-          if (nxJson.targetDefaults[targetName]) {
-            const projectTargetDefinition = proj.targets[targetName];
-            if (!projectTargetDefinition.outputs) {
-              projectTargetDefinition.outputs =
-                nxJson.targetDefaults[targetName].outputs;
-            }
-            if (!projectTargetDefinition.dependsOn) {
-              projectTargetDefinition.dependsOn =
-                nxJson.targetDefaults[targetName].dependsOn;
-            }
+          const projectTargetDefinition = proj.targets[targetName];
+          const defaults = readTargetDefaultsForTarget(
+            targetName,
+            nxJson.targetDefaults,
+            projectTargetDefinition.executor
+          );
+
+          if (defaults) {
+            proj.targets[targetName] = mergeTargetConfigurations(
+              proj,
+              targetName,
+              defaults
+            );
           }
         }
       }
@@ -926,6 +930,125 @@ export function buildWorkspaceConfigurationFromGlobs(
     version: 2,
     projects: projects,
   };
+}
+
+export function mergeTargetConfigurations(
+  projectConfiguration: ProjectConfiguration,
+  target: string,
+  targetDefaults: TargetDefaults[string]
+): TargetConfiguration {
+  const { targets, root } = projectConfiguration;
+  const targetConfiguration = targets?.[target];
+
+  if (!targetConfiguration) {
+    throw new Error(
+      `Attempted to merge targetDefaults for ${projectConfiguration.name}.${target}, which doesn't exist.`
+    );
+  }
+
+  const {
+    configurations: defaultConfigurations,
+    options: defaultOptions,
+    ...defaults
+  } = targetDefaults;
+  const result = {
+    ...defaults,
+    ...targetConfiguration,
+  };
+
+  // Target is "compatible", e.g. executor is defined only once or is the same
+  // in both places. This means that it is likely safe to merge options
+  if (
+    !targetDefaults.executor ||
+    !targetConfiguration.executor ||
+    targetDefaults.executor === targetConfiguration.executor
+  ) {
+    result.options = mergeOptions(
+      defaultOptions,
+      targetConfiguration.options ?? {},
+      root,
+      target
+    );
+    result.configurations = mergeConfigurations(
+      defaultConfigurations,
+      targetConfiguration.configurations,
+      root,
+      target
+    );
+  }
+  return result as TargetConfiguration;
+}
+
+function mergeOptions<T extends Object>(
+  defaults: T,
+  options: T,
+  projectRoot: string,
+  key: string
+): T {
+  return {
+    ...resolvePathTokensInOptions(defaults, projectRoot, key),
+    ...options,
+  };
+}
+
+function mergeConfigurations<T extends Object>(
+  defaultConfigurations: Record<string, T>,
+  projectDefinedConfigurations: Record<string, T>,
+  projectRoot: string,
+  targetName: string
+): Record<string, T> {
+  const configurations: Record<string, T> = { ...projectDefinedConfigurations };
+  for (const configuration in defaultConfigurations) {
+    configurations[configuration] = mergeOptions(
+      defaultConfigurations[configuration],
+      configurations[configuration],
+      projectRoot,
+      `${targetName}.${configuration}`
+    );
+  }
+  return configurations;
+}
+
+function resolvePathTokensInOptions<T extends Object>(
+  object: T,
+  projectRoot: string,
+  key: string
+): T {
+  for (let [opt, value] of Object.entries(object ?? {})) {
+    if (typeof value === 'string') {
+      if (value.startsWith('{workspaceRoot}/')) {
+        value = value.replace(/^\{workspaceRoot\}\//, '');
+      }
+      if (value.includes('{workspaceRoot}')) {
+        throw new Error(
+          `${NX_PREFIX} The {workspaceRoot} token is only valid at the beginning of an option. (${key})`
+        );
+      }
+      object[opt] = value.replace('{projectRoot}', projectRoot);
+    } else if (typeof value === 'object' && value) {
+      resolvePathTokensInOptions(value, projectRoot, [key, opt].join('.'));
+    }
+  }
+  return object;
+}
+
+export function readTargetDefaultsForTarget(
+  targetName: string,
+  targetDefaults: TargetDefaults,
+  executor?: string
+): TargetDefaults[string] {
+  if (executor) {
+    // If an executor is defined in project.json, defaults should be read
+    // from the most specific key that matches that executor.
+    // e.g. If executor === run-commands, and the target is named build:
+    // Use, use nx:run-commands if it is present
+    // If not, use build if it is present.
+    const key = [executor, targetName].find((x) => targetDefaults?.[x]);
+    return key ? targetDefaults?.[key] : null;
+  } else {
+    // If the executor is not defined, the only key we have is the target name.
+    return targetDefaults?.[targetName];
+  }
 }
 
 // we have to do it this way to preserve the order of properties

@@ -11,12 +11,13 @@ import { ProjectGraphBuilder } from '../project-graph-builder';
 import { PackageJson } from '../../utils/package-json';
 import { readJsonFile } from '../../utils/fileutils';
 import { NxJsonConfiguration } from '../../config/nx-json';
-import {
-  ProjectConfiguration,
-  TargetConfiguration,
-} from '../../config/workspace-json-project-json';
+import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { NX_PREFIX } from '../../utils/logger';
+import {
+  mergeTargetConfigurations,
+  readTargetDefaultsForTarget,
+} from '../../config/workspaces';
 
 export function buildWorkspaceProjectNodes(
   ctx: ProjectGraphProcessorContext,
@@ -55,7 +56,6 @@ export function buildWorkspaceProjectNodes(
       }
     }
 
-    p.targets = normalizeProjectTargets(p.targets, nxJson.targetDefaults, key);
     p.implicitDependencies = normalizeImplicitDependencies(
       key,
       p.implicitDependencies,
@@ -68,6 +68,8 @@ export function buildWorkspaceProjectNodes(
       p.targets,
       loadNxPlugins(ctx.workspace.plugins)
     );
+
+    p.targets = normalizeProjectTargets(p, nxJson.targetDefaults, key);
 
     // TODO: remove in v16
     const projectType =
@@ -109,26 +111,27 @@ export function buildWorkspaceProjectNodes(
  * Apply target defaults and normalization
  */
 function normalizeProjectTargets(
-  targets: Record<string, TargetConfiguration>,
-  defaultTargets: NxJsonConfiguration['targetDefaults'],
+  project: ProjectConfiguration,
+  targetDefaults: NxJsonConfiguration['targetDefaults'],
   projectName: string
 ) {
-  for (const targetName in defaultTargets) {
-    const target = targets?.[targetName];
-    if (!target) {
-      continue;
-    }
-    if (defaultTargets[targetName].inputs && !target.inputs) {
-      target.inputs = defaultTargets[targetName].inputs;
-    }
-    if (defaultTargets[targetName].dependsOn && !target.dependsOn) {
-      target.dependsOn = defaultTargets[targetName].dependsOn;
-    }
-    if (defaultTargets[targetName].outputs && !target.outputs) {
-      target.outputs = defaultTargets[targetName].outputs;
-    }
-  }
+  const targets = project.targets;
   for (const target in targets) {
+    const executor =
+      targets[target].executor ?? targets[target].command
+        ? 'nx:run-commands'
+        : null;
+
+    const defaults = readTargetDefaultsForTarget(
+      target,
+      targetDefaults,
+      executor
+    );
+
+    if (defaults) {
+      targets[target] = mergeTargetConfigurations(project, target, defaults);
+    }
+
     const config = targets[target];
     if (config.command) {
       if (config.executor) {
@@ -138,12 +141,13 @@ function normalizeProjectTargets(
       } else {
         targets[target] = {
           ...targets[target],
-          executor: 'nx:run-commands',
+          executor,
           options: {
             ...config.options,
             command: config.command,
           },
         };
+        delete config.command;
       }
     }
   }
