@@ -11,7 +11,11 @@ import { ProjectGraphBuilder } from '../project-graph-builder';
 import { PackageJson } from '../../utils/package-json';
 import { readJsonFile } from '../../utils/fileutils';
 import { NxJsonConfiguration } from '../../config/nx-json';
-import { TargetConfiguration } from '../../config/workspace-json-project-json';
+import {
+  ProjectConfiguration,
+  TargetConfiguration,
+} from '../../config/workspace-json-project-json';
+import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { NX_PREFIX } from '../../utils/logger';
 
 export function buildWorkspaceProjectNodes(
@@ -20,9 +24,13 @@ export function buildWorkspaceProjectNodes(
   nxJson: NxJsonConfiguration
 ) {
   const toAdd = [];
-  Object.keys(ctx.workspace.projects).forEach((key) => {
+  const projects = Object.keys(ctx.workspace.projects);
+  const projectsSet = new Set(projects);
+
+  for (const key of projects) {
     const p = ctx.workspace.projects[key];
     const projectRoot = join(workspaceRoot, p.root);
+
     if (existsSync(join(projectRoot, 'package.json'))) {
       p.targets = mergeNpmScriptsWithTargets(projectRoot, p.targets);
 
@@ -48,6 +56,12 @@ export function buildWorkspaceProjectNodes(
     }
 
     p.targets = normalizeProjectTargets(p.targets, nxJson.targetDefaults, key);
+    p.implicitDependencies = normalizeImplicitDependencies(
+      key,
+      p.implicitDependencies,
+      projects,
+      projectsSet
+    );
 
     p.targets = mergePluginTargetsWithNxTargets(
       p.root,
@@ -62,10 +76,7 @@ export function buildWorkspaceProjectNodes(
           ? 'e2e'
           : 'app'
         : 'lib';
-    const tags =
-      ctx.workspace.projects && ctx.workspace.projects[key]
-        ? ctx.workspace.projects[key].tags || []
-        : [];
+    const tags = ctx.workspace.projects?.[key]?.tags || [];
 
     toAdd.push({
       name: key,
@@ -76,7 +87,7 @@ export function buildWorkspaceProjectNodes(
         files: ctx.fileMap[key],
       },
     });
-  });
+  }
 
   // Sort by root directory length (do we need this?)
   toAdd.sort((a, b) => {
@@ -137,4 +148,21 @@ function normalizeProjectTargets(
     }
   }
   return targets;
+}
+
+export function normalizeImplicitDependencies(
+  source: string,
+  implicitDependencies: ProjectConfiguration['implicitDependencies'],
+  projectNames: string[],
+  projectsSet: Set<string>
+) {
+  if (!implicitDependencies?.length) {
+    return implicitDependencies ?? [];
+  }
+  const matches = findMatchingProjects(
+    implicitDependencies,
+    projectNames,
+    projectsSet
+  );
+  return matches.filter((x) => x !== source);
 }

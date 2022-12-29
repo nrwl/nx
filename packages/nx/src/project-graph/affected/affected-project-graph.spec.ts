@@ -4,7 +4,7 @@ import { filterAffected } from './affected-project-graph';
 import { WholeFileChange } from '../file-utils';
 import { buildProjectGraph } from '../build-project-graph';
 import { defaultFileHasher } from '../../hasher/file-hasher';
-import { WorkspaceJsonConfiguration } from '../../config/workspace-json-project-json';
+import { ProjectsConfigurations } from '../../config/workspace-json-project-json';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { stripIndents } from '../../utils/strip-indents';
 
@@ -16,7 +16,7 @@ jest.mock('nx/src/utils/workspace-root', () => ({
 describe('project graph', () => {
   let packageJson: any;
   let packageLockJson: any;
-  let workspaceJson: WorkspaceJsonConfiguration;
+  let workspaceJson: ProjectsConfigurations;
   let tsConfigJson: any;
   let nxJson: NxJsonConfiguration;
   let filesJson: any;
