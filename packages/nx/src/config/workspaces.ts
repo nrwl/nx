@@ -7,7 +7,7 @@ import { performance } from 'perf_hooks';
 
 import { workspaceRoot } from '../utils/workspace-root';
 import { readJsonFile } from '../utils/fileutils';
-import { logger, NX_PREFIX } from '../utils/logger';
+import { logger, NX_PREFIX, stripIndent } from '../utils/logger';
 import { loadNxPlugins, readPluginPackageJson } from '../utils/nx-plugin';
 import * as yaml from 'js-yaml';
 
@@ -938,7 +938,14 @@ export function mergeTargetConfigurations(
   targetDefaults: TargetDefaults[string]
 ): TargetConfiguration {
   const { targets, root } = projectConfiguration;
-  const targetConfiguration = targets?.[target] ?? {};
+  const targetConfiguration = targets?.[target];
+
+  if (!targetConfiguration) {
+    throw new Error(
+      `Attempted to merge targetDefaults for ${projectConfiguration.name}.${target}, which doesn't exist.`
+    );
+  }
+
   const {
     configurations: defaultConfigurations,
     options: defaultOptions,
@@ -949,32 +956,57 @@ export function mergeTargetConfigurations(
     ...targetConfiguration,
   };
 
-  if (
-    !targetDefaults.executor &&
-    !targetConfiguration.executor &&
-    !targetDefaults.command &&
-    !targetConfiguration.command
-  ) {
-    throw new Error('Unable to determine executor for target');
-  }
-
-  // Target is "homogenous", e.g. executor is defined only once or is the same
-  // in both places
+  // Target is "compatible", e.g. executor is defined only once or is the same
+  // in both places. This means that it is likely safe to merge options
   if (
     !targetDefaults.executor ||
     !targetConfiguration.executor ||
     targetDefaults.executor === targetConfiguration.executor
   ) {
-    result.options = {
-      ...resolvePathTokensInOptions(defaultOptions, root, target),
-      ...targetConfiguration.options,
-    };
-    result.configurations = {
-      ...defaultConfigurations,
-      ...targetConfiguration.configurations,
-    };
+    result.options = mergeOptions(
+      defaultOptions,
+      targetConfiguration.options ?? {},
+      root,
+      target
+    );
+    result.configurations = mergeConfigurations(
+      defaultConfigurations,
+      targetConfiguration.configurations,
+      root,
+      target
+    );
   }
   return result as TargetConfiguration;
+}
+
+function mergeOptions<T extends Object>(
+  defaults: T,
+  options: T,
+  projectRoot: string,
+  key: string
+): T {
+  return {
+    ...resolvePathTokensInOptions(defaults, projectRoot, key),
+    ...options,
+  };
+}
+
+function mergeConfigurations<T extends Object>(
+  defaultConfigurations: Record<string, T>,
+  projectDefinedConfigurations: Record<string, T>,
+  projectRoot: string,
+  targetName: string
+): Record<string, T> {
+  const configurations: Record<string, T> = { ...projectDefinedConfigurations };
+  for (const configuration in defaultConfigurations) {
+    configurations[configuration] = mergeOptions(
+      defaultConfigurations[configuration],
+      configurations[configuration],
+      projectRoot,
+      `${targetName}.${configuration}`
+    );
+  }
+  return configurations;
 }
 
 function resolvePathTokensInOptions<T extends Object>(
@@ -988,12 +1020,8 @@ function resolvePathTokensInOptions<T extends Object>(
         value = value.replace(/^\{workspaceRoot\}\//, '');
       }
       if (value.includes('{workspaceRoot}')) {
-        output.error({
-          title: `${NX_PREFIX}: {workspaceRoot} is only valid at the beginning of an option`,
-          bodyLines: [`Found {workspaceRoot} in property: ${key}`],
-        });
         throw new Error(
-          '{workspaceRoot} is only valid at the beginning of an option.'
+          `${NX_PREFIX} The {workspaceRoot} token is only valid at the beginning of an option. (${key})`
         );
       }
       object[opt] = value.replace('{projectRoot}', projectRoot);
@@ -1013,15 +1041,9 @@ export function readTargetDefaultsForTarget(
     // If an executor is defined in project.json, defaults should be read
     // from the most specific key that matches that executor.
     // e.g. If executor === run-commands, and the target is named build:
-    // Use build#nx:run-commands if it is present
-    // If not, use nx:run-commands if it is present
+    // Use, use nx:run-commands if it is present
     // If not, use build if it is present.
-    const separator = '#';
-    const key = [
-      `${targetName}${separator}${executor}`,
-      executor,
-      targetName,
-    ].find((x) => targetDefaults?.[x]);
+    const key = [executor, targetName].find((x) => targetDefaults?.[x]);
     return key ? targetDefaults?.[key] : null;
   } else {
     // If the executor is not defined, the only key we have is the target name.
