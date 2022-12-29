@@ -12,4 +12,5 @@ npm-debug.*
 *.mobileprovision
 *.orig.*
 web-build/
+cache/
 `;
