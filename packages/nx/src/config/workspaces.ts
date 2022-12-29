@@ -31,10 +31,19 @@ import { output } from '../utils/output';
 import { joinPathFragments } from '../utils/path';
 
 export function workspaceConfigName(
-  root: string
+  root: string,
+  opts?: {
+    includeProjectsFromAngularJson;
+  }
 ): 'angular.json' | 'workspace.json' | null {
-  // If a workspace doesn't have `@nrwl/angular` it's likely they do not want projects from `angular.json` to be considered by Nx.
-  if (existsSync(path.join(root, 'angular.json')) && isNrwlAngularInstalled()) {
+  if (
+    existsSync(path.join(root, 'angular.json')) &&
+    // Include projects from angular.json if explicitly required.
+    // e.g. when invoked from `packages/devkit/src/utils/convert-nx-executor.ts`
+    (opts?.includeProjectsFromAngularJson ||
+      // Or if a workspace has `@nrwl/angular` installed then projects from `angular.json` to be considered by Nx.
+      isNrwlAngularInstalled())
+  ) {
     return 'angular.json';
   } else if (existsSync(path.join(root, 'workspace.json'))) {
     return 'workspace.json';
@@ -72,6 +81,7 @@ export class Workspaces {
 
   readWorkspaceConfiguration(opts?: {
     _ignorePluginInference?: boolean;
+    _includeProjectsFromAngularJson?: boolean;
   }): ProjectsConfigurations & NxJsonConfiguration {
     if (
       this.cachedWorkspaceConfig &&
@@ -86,7 +96,9 @@ export class Workspaces {
       (path) => readJsonFile(join(this.root, path))
     );
 
-    const workspaceFile = workspaceConfigName(this.root);
+    const workspaceFile = workspaceConfigName(this.root, {
+      includeProjectsFromAngularJson: opts?._includeProjectsFromAngularJson,
+    });
 
     if (workspaceFile) {
       workspace.projects = this.mergeWorkspaceJsonAndGlobProjects(

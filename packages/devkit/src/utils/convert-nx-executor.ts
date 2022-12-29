@@ -16,7 +16,9 @@ import { ProjectGraph } from 'nx/src/config/project-graph';
 export function convertNxExecutor(executor: Executor) {
   const builderFunction = (options, builderContext) => {
     const workspaces = new Workspaces(builderContext.workspaceRoot);
-    const workspaceConfig = workspaces.readWorkspaceConfiguration();
+    const workspaceConfig = workspaces.readWorkspaceConfiguration({
+      _includeProjectsFromAngularJson: true,
+    });
 
     const promise = async () => {
       let projectGraph: ProjectGraph;
