@@ -115,6 +115,13 @@ export function getBaseWebpackPartial(
             fullySpecified: false,
           },
         },
+        // There's an issue when using buildable libs and .js files (instead of .ts files),
+        // where the wrong type is used (commonjs vs esm) resulting in export-imports throwing errors.
+        // See: https://github.com/nrwl/nx/issues/10990
+        {
+          test: /\.js$/,
+          type: 'javascript/auto',
+        },
         createLoaderFromCompiler(options, internalOptions),
       ].filter(Boolean),
     },
