@@ -1201,6 +1201,11 @@
               "name": "Enable GitHub PR Integration",
               "id": "github",
               "file": "nx-cloud/set-up/github"
+            },
+            {
+              "name": "Enable GitLab MR Integration",
+              "id": "gitlab",
+              "file": "nx-cloud/set-up/gitlab"
             }
           ]
         },
