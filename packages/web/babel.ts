@@ -48,7 +48,7 @@ module.exports = function (api: any, options: NxWebBabelPresetOptions = {}) {
               corejs: 3,
               // Do not transform modules to CJS
               modules: false,
-              targets: isModern ? { esmodules: true } : undefined,
+              targets: isModern ? { esmodules: 'intersect' } : undefined,
               bugfixes: true,
               // Exclude transforms that make all code slower
               exclude: ['transform-typeof-symbol'],
