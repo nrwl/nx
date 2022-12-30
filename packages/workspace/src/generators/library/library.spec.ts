@@ -10,7 +10,6 @@ import {
   createTreeWithEmptyWorkspace,
 } from '@nrwl/devkit/testing';
 
-
 import { libraryGenerator } from './library';
 import { Schema } from './schema.d';
 
