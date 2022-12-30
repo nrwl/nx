@@ -1,0 +1,89 @@
+{
+  "name": "run-ios",
+  "implementation": "/packages/react-native/src/executors/run-ios/run-ios.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "cli": "nx",
+    "$id": "NxReactNativeRunIos",
+    "$schema": "http://json-schema.org/schema",
+    "title": "Run iOS application",
+    "description": "Run iOS target options.",
+    "type": "object",
+    "presets": [
+      {
+        "name": "Run iOS without cache",
+        "keys": [
+          "xcodeConfiguration",
+          "install",
+          "sync",
+          "port",
+          "packager",
+          "resetCache"
+        ]
+      }
+    ],
+    "properties": {
+      "xcodeConfiguration": {
+        "type": "string",
+        "description": "Explicitly set the Xcode configuration to use.",
+        "default": "Debug",
+        "examples": ["Debug", "Release"]
+      },
+      "scheme": {
+        "type": "string",
+        "description": "Explicitly set the Xcode scheme to use."
+      },
+      "simulator": {
+        "type": "string",
+        "description": "Explicitly set simulator to use. Optionally include iOS version between parenthesis at the end to match an exact version: `iPhone X (12.1)`.",
+        "default": "iPhone 13",
+        "examples": ["iPhone 13", "iPhone X"]
+      },
+      "device": {
+        "type": "string",
+        "description": "Explicitly set device to use by name. The value is not required if you have a single device connected."
+      },
+      "install": {
+        "type": "boolean",
+        "description": "Runs `pod install` for native modules before building iOS app.",
+        "default": true
+      },
+      "sync": {
+        "type": "boolean",
+        "description": "Syncs npm dependencies to `package.json` (for React Native autolink). Always true when `--install` is used.",
+        "default": true
+      },
+      "port": {
+        "type": "number",
+        "description": "The port where the packager server is listening on.",
+        "default": 8081
+      },
+      "terminal": {
+        "type": "string",
+        "description": "Launches the Metro Bundler in a new window using the specified terminal path."
+      },
+      "packager": {
+        "type": "boolean",
+        "description": "Starts the packager server.",
+        "default": true
+      },
+      "resetCache": {
+        "type": "boolean",
+        "description": "Resets metro cache.",
+        "default": false
+      },
+      "interactive": {
+        "type": "boolean",
+        "description": "Run packager server in interactive mode.",
+        "default": true
+      }
+    },
+    "examplesFile": "`project.json`:\n\n```json\n{\n  \"name\": \"mobile\",\n  //...\n  \"targets\": {\n    //...\n    \"run-ios\": {\n      \"executor\": \"@nrwl/react-native:run-ios\",\n      \"options\": {}\n    }\n  }\n}\n```\n\n```bash\nnx run mobile:run-ios\n```\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Run on a simulator\" %}\nTo see all the avaiable simulators, run command:\n\n```bash\nxcrun simctl list\n```\n\nThe `simulator` option allows you to launch your iOS app in a specific simulator:\n\n```json\n    \"run-ios\": {\n      \"executor\": \"@nrwl/react-native:run-ios\",\n      \"options\": {\n        \"simulator\": \"iPhone 13 Pro\"\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Run on a device\" %}\nThe `device` option allows you to launch your iOS app in a specific device.\n\n```json\n    \"run-ios\": {\n      \"executor\": \"@nrwl/react-native:run-ios\",\n      \"options\": {\n        \"device\": \"deviceName\"\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Run the Debug/Release app\" %}\nThe `xcodeConfiguration` option allows to specify the xcode configuartion, such as `Debug` or `Release`.\n\n```json\n    \"run-ios\": {\n      \"executor\": \"@nrwl/react-native:run-ios\",\n      \"options\": {\n        \"xcodeConfiguration\": \"Release\"\n      }\n    }\n```\n\n{% /tab %}\n{% /tabs %}\n\n---\n"
+  },
+  "description": "Runs iOS application.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/react-native/src/executors/run-ios/schema.json",
+  "type": "executor"
+}

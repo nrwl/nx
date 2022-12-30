@@ -1,0 +1,53 @@
+{
+  "name": "@nrwl/vite",
+  "version": "0.0.1",
+  "private": false,
+  "description": "The Nx Plugin for building and testing applications using Vite",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/vite"
+  },
+  "keywords": [
+    "Monorepo",
+    "Vite",
+    "Web",
+    "CLI"
+  ],
+  "main": "./index.js",
+  "typings": "./index.d.ts",
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "schematics": "./generators.json",
+  "builders": "./executors.json",
+  "ng-update": {
+    "requirements": {},
+    "migrations": "./migrations.json"
+  },
+  "dependencies": {
+    "@nrwl/devkit": "file:../devkit",
+    "@nrwl/workspace": "file:../workspace",
+    "@nrwl/js": "file:../js",
+    "@phenomnomnominal/tsquery": "4.1.1",
+    "@swc/helpers": "^0.4.11",
+    "chalk": "4.1.0",
+    "dotenv": "~10.0.0",
+    "enquirer": "~2.3.6"
+  },
+  "peerDependencies": {
+    "vite": "^4.0.1",
+    "vitest": "^0.25.8"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    "./package.json": {
+      "require": "./package.json"
+    }
+  }
+}

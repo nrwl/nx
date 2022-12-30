@@ -1,0 +1,10 @@
+{
+  "generators": {
+    "split-create-tree": {
+      "cli": "nx",
+      "version": "14.2.0-beta.0",
+      "description": "Adjusts calls to createTreeWithEmptyWorkspace to reflect new API",
+      "factory": "./src/migrations/update-14-2-0/split-create-empty-tree"
+    }
+  }
+}

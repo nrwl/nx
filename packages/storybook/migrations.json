@@ -1,0 +1,238 @@
+{
+  "schematics": {
+    "update-12-1-0": {
+      "version": "12.1.0-beta.7",
+      "cli": "nx",
+      "description": "Update react storybook tsconfig to avoid VSCode errors",
+      "factory": "./src/migrations/update-12-1-0/fix-storybook-tsconfig"
+    },
+    "update-12-5-0": {
+      "version": "12.5.0-beta.5",
+      "cli": "nx",
+      "description": "Upgrade Storybook to v6.3",
+      "factory": "./src/migrations/update-12-5-0/migrate-storybook-6-3"
+    },
+    "install-addon-essentials": {
+      "version": "12.5.0-beta.5",
+      "cli": "nx",
+      "description": "Install the @storybook/addon-essentials package",
+      "factory": "./src/migrations/update-12-5-0/install-addon-essentials"
+    },
+    "update-12-5-9-beta.1": {
+      "version": "12.5.9-beta.1",
+      "cli": "nx",
+      "description": "Update Storybook React typings in tsconfig files",
+      "factory": "./src/migrations/update-12-5-9/update-storybook-react-typings"
+    },
+    "update-12-8.0": {
+      "version": "12.8.0-beta.11",
+      "cli": "nx",
+      "description": "Adjust Storybook tsconfig to add styled-jsx typings",
+      "factory": "./src/migrations/update-12-8-0/update-storybook-styled-jsx-typings"
+    },
+    "update-13.4.6": {
+      "version": "13.4.6-beta.1",
+      "cli": "nx",
+      "description": "Add projectBuildConfig option to project's Storybook config.",
+      "factory": "./src/migrations/update-13-4-6/set-project-build-config"
+    },
+    "update-14.0.0": {
+      "version": "14.0.0",
+      "cli": "nx",
+      "description": "Migrate Storybook to v6",
+      "factory": "./src/migrations/update-14-0-0/migrate-to-storybook-6"
+    },
+    "update-14.1.8": {
+      "version": "14.1.8",
+      "cli": "nx",
+      "description": "Change storybook targets for Angular projects to use @storybook/angular executors",
+      "factory": "./src/migrations/update-14-1-8/change-storybook-targets"
+    },
+    "update-15.0.8-add-storybook-inputs": {
+      "cli": "nx",
+      "version": "15.0.0-beta.0",
+      "description": "Stop hashing storybook config files and story files for build targets and dependent tasks",
+      "factory": "./src/migrations/update-15-0-0/add-storybook-inputs"
+    }
+  },
+  "packageJsonUpdates": {
+    "15.1.1": {
+      "version": "15.1.1-beta.0",
+      "packages": {
+        "@storybook/react-native": {
+          "version": "^6.0.1-beta.9",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/addon-ondevice-actions": {
+          "version": "^6.0.1-beta.9",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/addon-ondevice-backgrounds": {
+          "version": "^6.0.1-beta.9",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/addon-ondevice-controls": {
+          "version": "^6.0.1-beta.9",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/addon-ondevice-notes": {
+          "version": "^6.0.1-beta.9",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "14.3.2": {
+      "version": "14.3.2-beta.1",
+      "packages": {
+        "@storybook/core-server": {
+          "version": "~6.5.9",
+          "alwaysAddToPackageJson": true
+        },
+        "@storybook/angular": {
+          "version": "~6.5.9",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/react": {
+          "version": "~6.5.9",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/web": {
+          "version": "~6.5.9",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/addon-essentials": {
+          "version": "~6.5.9",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/builder-webpack5": {
+          "version": "~6.5.9",
+          "alwaysAddToPackageJson": true
+        },
+        "@storybook/manager-webpack5": {
+          "version": "~6.5.9",
+          "alwaysAddToPackageJson": true
+        }
+      }
+    },
+    "14.2.0": {
+      "version": "14.2.0-beta.6",
+      "packages": {
+        "@storybook/core-server": {
+          "version": "~6.5.4",
+          "alwaysAddToPackageJson": true
+        },
+        "@storybook/angular": {
+          "version": "~6.5.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/react": {
+          "version": "~6.5.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/web": {
+          "version": "~6.5.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/addon-essentials": {
+          "version": "~6.5.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/builder-webpack5": {
+          "version": "~6.5.4",
+          "alwaysAddToPackageJson": true
+        },
+        "@storybook/manager-webpack5": {
+          "version": "~6.5.4",
+          "alwaysAddToPackageJson": true
+        }
+      }
+    },
+    "13.10.0": {
+      "version": "13.10.0-beta.0",
+      "packages": {
+        "@storybook/core-server": {
+          "version": "~6.4.12",
+          "alwaysAddToPackageJson": true
+        },
+        "@storybook/react-native": {
+          "version": "^6.0.1-beta.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/addon-ondevice-actions": {
+          "version": "^6.0.1-beta.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/addon-ondevice-backgrounds": {
+          "version": "^6.0.1-beta.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/addon-ondevice-controls": {
+          "version": "^6.0.1-beta.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/addon-ondevice-notes": {
+          "version": "^6.0.1-beta.5",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "13.4.5": {
+      "version": "13.4.5-beta.1",
+      "packages": {
+        "@storybook/angular": {
+          "version": "~6.4.12",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/react": {
+          "version": "~6.4.12",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/web": {
+          "version": "~6.4.12",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/addon-essentials": {
+          "version": "~6.4.12",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/builder-webpack5": {
+          "version": "~6.4.12",
+          "alwaysAddToPackageJson": true
+        },
+        "@storybook/manager-webpack5": {
+          "version": "~6.4.12",
+          "alwaysAddToPackageJson": true
+        }
+      }
+    },
+    "13.3.0": {
+      "version": "13.3.0-beta.3",
+      "packages": {
+        "@storybook/angular": {
+          "version": "~6.4.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/react": {
+          "version": "~6.4.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/web": {
+          "version": "~6.4.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/addon-essentials": {
+          "version": "~6.4.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/builder-webpack5": {
+          "version": "~6.4.5",
+          "alwaysAddToPackageJson": true
+        },
+        "@storybook/manager-webpack5": {
+          "version": "~6.4.5",
+          "alwaysAddToPackageJson": true
+        }
+      }
+    }
+  }
+}

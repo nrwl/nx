@@ -1,0 +1,28 @@
+{
+  "$schema": "../../node_modules/ng-packagr/ng-package.schema.json",
+  "lib": {
+    "entryFile": "index.ts"
+  },
+  "allowedNonPeerDependencies": [
+    "@nrwl/",
+    "@angular-devkit",
+    "@angular-eslint/",
+    "@nguniversal/builders",
+    "@schematics",
+    "@phenomnomnominal/tsquery",
+    "@typescript-eslint/",
+    "chalk",
+    "chokidar",
+    "ignore",
+    "minimatch",
+    "rxjs-for-await",
+    "webpack-merge",
+    "ts-node",
+    "tsconfig-paths",
+    "semver",
+    "webpack",
+    "http-server",
+    "magic-string"
+  ],
+  "keepLifecycleScripts": true
+}

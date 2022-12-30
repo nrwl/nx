@@ -1,0 +1,35 @@
+{
+  "name": "cra-to-nx",
+  "version": "0.0.1",
+  "private": false,
+  "description": "This package will turn your React app into an Nx workspace. To use this package, your React app must have been generated and kept the structure of Create-React-App, with files generated either in js/jsx or ts/tsx.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/cra-to-nx"
+  },
+  "keywords": [
+    "Monorepo",
+    "React",
+    "Web",
+    "CLI"
+  ],
+  "bin": {
+    "cra-to-nx": "src/index.js"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "dependencies": {
+    "fs-extra": "^10.1.0",
+    "glob": "7.1.4",
+    "nx": "file:../nx",
+    "tslib": "^2.3.0",
+    "yargs": "^17.6.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

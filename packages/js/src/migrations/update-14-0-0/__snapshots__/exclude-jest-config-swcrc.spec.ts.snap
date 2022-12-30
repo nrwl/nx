@@ -1,0 +1,36 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`JS Migration (v14.0.0) should update the exclude pattern 1`] = `
+"{
+  \\"jsc\\": {
+    \\"target\\": \\"es2017\\",
+    \\"parser\\": {
+      \\"syntax\\": \\"typescript\\",
+      \\"decorators\\": true,
+      \\"dynamicImport\\": true
+    },
+    \\"transform\\": {
+      \\"decoratorMetadata\\": true,
+      \\"legacyDecorator\\": true
+    },
+    \\"keepClassNames\\": true,
+    \\"externalHelpers\\": true,
+    \\"loose\\": true
+  },
+  \\"module\\": {
+    \\"type\\": \\"commonjs\\",
+    \\"strict\\": true,
+    \\"noInterop\\": true
+  },
+  \\"sourceMaps\\": true,
+  \\"exclude\\": [
+    \\"jest.config.js\\",
+    \\".*.spec.tsx?$\\",
+    \\".*.test.tsx?$\\",
+    \\"./src/jest-setup.ts$\\",
+    \\"./**/jest-setup.ts$\\",
+    \\".*.js$\\"
+  ]
+}
+"
+`;

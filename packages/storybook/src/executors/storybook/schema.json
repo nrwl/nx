@@ -1,0 +1,105 @@
+{
+  "version": 2,
+  "outputCapture": "direct-nodejs",
+  "title": "Storybook Dev Builder",
+  "cli": "nx",
+  "description": "Serve up storybook in development mode.",
+  "type": "object",
+  "presets": [
+    {
+      "name": "Default minimum setup",
+      "keys": ["uiFramework", "port", "config"]
+    }
+  ],
+  "properties": {
+    "uiFramework": {
+      "type": "string",
+      "description": "Storybook framework npm package.",
+      "enum": [
+        "@storybook/react",
+        "@storybook/html",
+        "@storybook/web-components",
+        "@storybook/vue",
+        "@storybook/vue3",
+        "@storybook/svelte"
+      ],
+      "default": "@storybook/react",
+      "hidden": true
+    },
+    "port": {
+      "type": "number",
+      "description": "Port to listen on.",
+      "default": 9009
+    },
+    "host": {
+      "type": "string",
+      "description": "Host to listen on.",
+      "default": "localhost"
+    },
+    "https": {
+      "type": "boolean",
+      "description": "Serve using HTTPS.",
+      "default": false
+    },
+    "sslKey": {
+      "type": "string",
+      "description": "SSL key to use for serving HTTPS."
+    },
+    "sslCert": {
+      "type": "string",
+      "description": "SSL certificate to use for serving HTTPS."
+    },
+    "watch": {
+      "type": "boolean",
+      "description": "Watches for changes and rebuilds application.",
+      "default": true
+    },
+    "staticDir": {
+      "type": "array",
+      "description": "Directory where to load static files from, array of strings.",
+      "items": {
+        "type": "string"
+      },
+      "x-deprecated": "In Storybook 6.4 the `--static-dir` CLI flag has been replaced with the the `staticDirs` field in `.storybook/main.js`. It will be removed completely in Storybook 7.0."
+    },
+    "config": {
+      "type": "object",
+      "description": ".storybook configuration.",
+      "properties": {
+        "configFolder": {
+          "type": "string",
+          "description": "Directory where to load Storybook configurations from."
+        },
+        "pluginPath": {
+          "type": "string",
+          "description": "Path to storybook plugin.js file."
+        },
+        "configPath": {
+          "type": "string",
+          "description": "Path to storybook preview.js file."
+        },
+        "babelrcPath": {
+          "type": "string",
+          "description": "Path to storybook .babelrc file."
+        },
+        "srcRoot": {
+          "type": "string",
+          "description": "Project source path."
+        }
+      }
+    },
+    "docsMode": {
+      "type": "boolean",
+      "description": "Build a documentation-only site using addon-docs.",
+      "default": false
+    },
+    "quiet": {
+      "type": "boolean",
+      "description": "Suppress verbose build output.",
+      "default": true
+    }
+  },
+  "definitions": {},
+  "required": ["uiFramework", "config"],
+  "examplesFile": "../../../docs/storybook-executor-examples.md"
+}

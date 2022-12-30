@@ -1,0 +1,52 @@
+{
+  "generators": {
+    "14-0-6-remove-root": {
+      "cli": "nx",
+      "version": "14.0.6",
+      "description": "Remove root property from project.json files",
+      "implementation": "./src/migrations/update-14-0-6/remove-roots"
+    },
+    "14-2-0-add-json-schema": {
+      "cli": "nx",
+      "version": "14.2.0-beta.0",
+      "description": "Add JSON Schema to Nx configuration files",
+      "implementation": "./src/migrations/update-14-2-0/add-json-schema"
+    },
+    "14-2-0-remove-default-collection": {
+      "cli": "nx",
+      "version": "14.2.0-beta.0",
+      "description": "Remove default collection from configuration to switch to prompts for collection",
+      "implementation": "./src/migrations/update-14-2-0/remove-default-collection"
+    },
+    "14-2-0-replace-relative-outputs-with-absolute": {
+      "cli": "nx",
+      "version": "14.2.0-beta.5",
+      "description": "Replace all ./ and ../ in outputs with absolute paths",
+      "implementation": "./src/migrations/update-14-2-0/replace-all-relative-outputs-with-absolute"
+    },
+    "14.3.4-create-target-defaults": {
+      "cli": "nx",
+      "version": "14.3.4-beta.1",
+      "description": "Replace targetDependencies with targetDefaults",
+      "implementation": "./src/migrations/update-14-3-4/create-target-defaults"
+    },
+    "15.0.0-migrate-to-inputs": {
+      "cli": "nx",
+      "version": "15.0.0-beta.1",
+      "description": "Replace implicitDependencies with namedInputs + target inputs",
+      "implementation": "./src/migrations/update-15-0-0/migrate-to-inputs"
+    },
+    "15.0.0-prefix-outputs": {
+      "cli": "nx",
+      "version": "15.0.0-beta.1",
+      "description": "Prefix outputs with {workspaceRoot}/{projectRoot} if needed",
+      "implementation": "./src/migrations/update-15-0-0/prefix-outputs"
+    },
+    "15.1.0-set-project-names": {
+      "cli": "nx",
+      "version": "15.0.12-beta.1",
+      "description": "Set project names in project.json files",
+      "implementation": "./src/migrations/update-15-1-0/set-project-names"
+    }
+  }
+}

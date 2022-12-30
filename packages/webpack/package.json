@@ -1,0 +1,83 @@
+{
+  "name": "@nrwl/webpack",
+  "version": "0.0.1",
+  "private": false,
+  "description": "The Nx Plugin for Webpack contains executors and generators that support building applications using Webpack.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/webpack"
+  },
+  "keywords": [
+    "Monorepo",
+    "Webpack",
+    "Web",
+    "CLI"
+  ],
+  "main": "./index.js",
+  "typings": "./index.d.ts",
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "schematics": "./generators.json",
+  "builders": "./executors.json",
+  "ng-update": {
+    "requirements": {},
+    "migrations": "./migrations.json"
+  },
+  "dependencies": {
+    "@nrwl/devkit": "file:../devkit",
+    "@nrwl/js": "file:../js",
+    "@nrwl/workspace": "file:../workspace",
+    "autoprefixer": "^10.4.9",
+    "babel-loader": "^8.2.2",
+    "browserslist": "^4.21.4",
+    "caniuse-lite": "^1.0.30001394",
+    "chalk": "4.1.0",
+    "chokidar": "^3.5.1",
+    "copy-webpack-plugin": "^10.2.4",
+    "css-loader": "^6.4.0",
+    "css-minimizer-webpack-plugin": "^3.4.1",
+    "dotenv": "~10.0.0",
+    "file-loader": "^6.2.0",
+    "fork-ts-checker-webpack-plugin": "7.2.13",
+    "fs-extra": "^10.1.0",
+    "ignore": "^5.0.4",
+    "less": "3.12.2",
+    "less-loader": "^11.1.0",
+    "license-webpack-plugin": "^4.0.2",
+    "loader-utils": "^2.0.3",
+    "mini-css-extract-plugin": "~2.4.7",
+    "parse5": "4.0.0",
+    "parse5-html-rewriting-stream": "6.0.1",
+    "postcss": "^8.4.14",
+    "postcss-import": "~14.1.0",
+    "postcss-loader": "^6.1.1",
+    "raw-loader": "^4.0.2",
+    "rxjs": "^6.5.4",
+    "sass": "^1.42.1",
+    "sass-loader": "^12.2.0",
+    "source-map-loader": "^3.0.0",
+    "style-loader": "^3.3.0",
+    "stylus": "^0.55.0",
+    "stylus-loader": "^7.1.0",
+    "terser-webpack-plugin": "^5.3.3",
+    "ts-loader": "^9.3.1",
+    "ts-node": "10.9.1",
+    "tsconfig-paths": "^3.9.0",
+    "tsconfig-paths-webpack-plugin": "3.5.2",
+    "tslib": "^2.3.0",
+    "webpack": "^5.75.0",
+    "webpack-dev-server": "^4.9.3",
+    "webpack-merge": "^5.8.0",
+    "webpack-node-externals": "^3.0.0",
+    "webpack-sources": "^3.2.3",
+    "webpack-subresource-integrity": "^5.1.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

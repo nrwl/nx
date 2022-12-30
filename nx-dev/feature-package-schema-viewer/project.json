@@ -1,0 +1,28 @@
+{
+  "name": "nx-dev-feature-package-schema-viewer",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "nx-dev/feature-package-schema-viewer/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "nx-dev/feature-package-schema-viewer/**/*.{ts,tsx,js,jsx}"
+        ]
+      },
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": [
+        "{workspaceRoot}/coverage/nx-dev/feature-package-schema-viewer"
+      ],
+      "options": {
+        "jestConfig": "nx-dev/feature-package-schema-viewer/jest.config.ts",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "tags": ["scope:nx-dev", "type:feature"]
+}

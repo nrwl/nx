@@ -1,0 +1,24 @@
+{
+  "name": "nx-dev-models-package",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "nx-dev/models-package/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["nx-dev/models-package/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/nx-dev/models-package"],
+      "options": {
+        "jestConfig": "nx-dev/models-package/jest.config.ts",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "tags": ["scope:nx-dev", "type:util"]
+}

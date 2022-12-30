@@ -1,0 +1,27 @@
+{
+  "name": "build-status",
+  "implementation": "/packages/expo/src/executors/build-status/build-status.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "$schema": "http://json-schema.org/schema",
+    "$id": "NxExpoBuildStatus",
+    "cli": "nx",
+    "title": "Expo web Build executor",
+    "description": "Get the status of the latest build for the project.",
+    "type": "object",
+    "properties": {
+      "publicUrl": {
+        "type": "string",
+        "description": "The URL of an externally hosted manifest (for self-hosted apps)."
+      }
+    },
+    "required": [],
+    "presets": []
+  },
+  "description": "Get the status of the latest build for the project",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/expo/src/executors/build-status/schema.json",
+  "type": "executor"
+}

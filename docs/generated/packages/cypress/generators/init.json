@@ -1,0 +1,26 @@
+{
+  "name": "init",
+  "factory": "./src/generators/init/init#cypressInitGenerator",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "$id": "NxCypressInit",
+    "cli": "nx",
+    "title": "Add Cypress Configuration to the workspace",
+    "description": "Add Cypress Configuration to the workspace.",
+    "type": "object",
+    "properties": {
+      "skipPackageJson": {
+        "type": "boolean",
+        "default": false,
+        "description": "Do not add dependencies to `package.json`."
+      }
+    },
+    "presets": []
+  },
+  "description": "Initialize the `@nrwl/cypress` plugin.",
+  "aliases": ["ng-add"],
+  "hidden": true,
+  "implementation": "/packages/cypress/src/generators/init/init#cypressInitGenerator.ts",
+  "path": "/packages/cypress/src/generators/init/schema.json",
+  "type": "generator"
+}

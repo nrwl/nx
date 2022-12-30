@@ -1,0 +1,88 @@
+{
+  "name": "nx-plugin",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/nx-plugin",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "jestConfig": "packages/nx-plugin/jest.config.ts",
+        "passWithNoTests": true
+      },
+      "outputs": ["{workspaceRoot}/coverage/packages/nx-plugin"]
+    },
+    "build-base": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "outputPath": "build/packages/nx-plugin",
+        "tsConfig": "packages/nx-plugin/tsconfig.lib.json",
+        "main": "packages/nx-plugin/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": [
+          {
+            "input": "packages/nx-plugin",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/nx-plugin",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/nx-plugin",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages/nx-plugin",
+            "glob": "**/*.js",
+            "ignore": ["**/jest.config.js"],
+            "output": "/"
+          },
+          {
+            "input": "packages/nx-plugin",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
+        ]
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/build/packages/nx-plugin"],
+      "options": {
+        "command": "node ./scripts/copy-readme.js nx-plugin"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/nx-plugin/**/*.ts",
+          "packages/nx-plugin/**/*.spec.ts",
+          "packages/nx-plugin/**/*_spec.ts",
+          "packages/nx-plugin/**/*.spec.tsx",
+          "packages/nx-plugin/**/*.spec.js",
+          "packages/nx-plugin/**/*.spec.jsx",
+          "packages/nx-plugin/**/*.d.ts",
+          "packages/nx-plugin/**/executors/**/schema.json",
+          "packages/nx-plugin/**/generators/**/schema.json",
+          "packages/nx-plugin/generators.json",
+          "packages/nx-plugin/executors.json",
+          "packages/nx-plugin/package.json",
+          "packages/nx-plugin/migrations.json"
+        ]
+      },
+      "outputs": ["{options.outputFile}"]
+    }
+  }
+}

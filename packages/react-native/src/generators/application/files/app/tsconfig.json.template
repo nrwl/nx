@@ -1,0 +1,25 @@
+{
+  "extends": "<%= rootTsConfigPath %>",
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "jsx": "react-native",
+    "lib": ["dom", "esnext"],
+    "moduleResolution": "node",
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "composite": true,
+    "declaration": true
+  },
+  "files": [
+    "../../node_modules/@nrwl/react-native/typings/svg.d.ts"
+  ],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.app.json"
+    }
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

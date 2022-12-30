@@ -1,0 +1,117 @@
+import { Tree, readJson, readProjectConfiguration } from '@nrwl/devkit';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { overrideCollectionResolutionForTesting } from '@nrwl/devkit/ngcli-adapter';
+import { presetGenerator } from './preset';
+import * as path from 'path';
+import { Preset } from '../utils/presets';
+
+describe('preset', () => {
+  let tree: Tree;
+
+  beforeEach(() => {
+    tree = createTreeWithEmptyV1Workspace();
+    overrideCollectionResolutionForTesting({
+      '@nrwl/workspace': path.join(
+        __dirname,
+        '../../../../workspace/generators.json'
+      ),
+      '@nrwl/angular': path.join(
+        __dirname,
+        '../../../../angular/generators.json'
+      ),
+      '@nrwl/linter': path.join(
+        __dirname,
+        '../../../../linter/generators.json'
+      ),
+      '@nrwl/nest': path.join(__dirname, '../../../../nest/generators.json'),
+      '@nrwl/node': path.join(__dirname, '../../../../node/generators.json'),
+      '@nrwl/jest': path.join(__dirname, '../../../../jest/generators.json'),
+      '@nrwl/cypress': path.join(
+        __dirname,
+        '../../../../cypress/generators.json'
+      ),
+      '@nrwl/express': path.join(
+        __dirname,
+        '../../../../express/generators.json'
+      ),
+    });
+  });
+
+  afterEach(() => {
+    overrideCollectionResolutionForTesting(null);
+  });
+
+  it(`should create files (preset = ${Preset.AngularMonorepo})`, async () => {
+    await presetGenerator(tree, {
+      name: 'proj',
+      preset: Preset.AngularMonorepo,
+      cli: 'nx',
+      style: 'css',
+      linter: 'eslint',
+      standaloneConfig: false,
+    });
+    expect(tree.children('apps/proj')).toMatchSnapshot();
+    expect(tree.children('apps/proj/src/')).toMatchSnapshot();
+    expect(tree.children('apps/proj/src/app')).toMatchSnapshot();
+  }, 10000);
+
+  it(`should create files (preset = ${Preset.WebComponents})`, async () => {
+    await presetGenerator(tree, {
+      name: 'proj',
+      preset: Preset.WebComponents,
+      cli: 'nx',
+      standaloneConfig: false,
+    });
+    expect(tree.exists('/apps/proj/src/main.ts')).toBe(true);
+  });
+
+  it(`should create files (preset = ${Preset.ReactMonorepo})`, async () => {
+    await presetGenerator(tree, {
+      name: 'proj',
+      preset: Preset.ReactMonorepo,
+      style: 'css',
+      linter: 'eslint',
+      cli: 'nx',
+      standaloneConfig: false,
+    });
+    expect(tree.exists('/apps/proj/src/main.tsx')).toBe(true);
+    expect(readProjectConfiguration(tree, 'proj').targets.serve).toBeDefined();
+  });
+
+  it(`should create files (preset = ${Preset.NextJs})`, async () => {
+    await presetGenerator(tree, {
+      name: 'proj',
+      preset: Preset.NextJs,
+      style: 'css',
+      linter: 'eslint',
+      cli: 'nx',
+      standaloneConfig: false,
+    });
+    expect(tree.exists('/apps/proj/pages/index.tsx')).toBe(true);
+  });
+
+  it(`should create files (preset = ${Preset.Express})`, async () => {
+    await presetGenerator(tree, {
+      name: 'proj',
+      preset: Preset.Express,
+      linter: 'eslint',
+      cli: 'nx',
+      standaloneConfig: false,
+    });
+
+    expect(tree.exists('apps/proj/src/main.ts')).toBe(true);
+    expect(tree.exists('apps/proj/.eslintrc.json')).toBe(true);
+  });
+
+  it('should create files (preset = react-native)', async () => {
+    await presetGenerator(tree, {
+      name: 'proj',
+      preset: Preset.ReactNative,
+      linter: 'eslint',
+      cli: 'nx',
+      standaloneConfig: false,
+    });
+
+    expect(tree.exists('/apps/proj/src/app/App.tsx')).toBe(true);
+  });
+});

@@ -1,0 +1,75 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`12.3.1 - updateAngularEslintRules should add @angular-eslint/template/eqeqeq if @angular-eslint/template/no-negated-async is there 1`] = `
+"{
+  \\"rules\\": {
+    \\"existing-rule\\": \\"error\\",
+    \\"@angular-eslint/template/no-negated-async\\": \\"error\\",
+    \\"@angular-eslint/template/accessibility-label-has-associated-control\\": \\"error\\",
+    \\"@angular-eslint/template/eqeqeq\\": \\"error\\"
+  },
+  \\"overrides\\": [
+    {
+      \\"files\\": \\"**/*.ts\\",
+      \\"rules\\": {
+        \\"existing-rule\\": \\"error\\",
+        \\"@angular-eslint/template/no-negated-async\\": \\"error\\",
+        \\"@angular-eslint/template/accessibility-label-has-associated-control\\": \\"error\\",
+        \\"@angular-eslint/template/eqeqeq\\": \\"error\\"
+      }
+    }
+  ]
+}
+"
+`;
+
+exports[`12.3.1 - updateAngularEslintRules should migrate @angular-eslint/template/accessibility-label-for => @angular-eslint/template/accessibility-label-has-associated-control 1`] = `
+"{
+  \\"rules\\": {
+    \\"existing-rule\\": \\"error\\",
+    \\"@angular-eslint/template/accessibility-label-has-associated-control\\": \\"error\\"
+  },
+  \\"overrides\\": [
+    {
+      \\"files\\": \\"**/*.ts\\",
+      \\"rules\\": {
+        \\"existing-rule\\": \\"error\\",
+        \\"@angular-eslint/template/accessibility-label-has-associated-control\\": \\"error\\"
+      }
+    }
+  ]
+}
+"
+`;
+
+exports[`12.3.1 - updateAngularEslintRules should migrate to new @angular-eslint/template/accessibility-label-has-associated-control label-components config 1`] = `
+"{
+  \\"rules\\": {
+    \\"existing-rule\\": \\"error\\",
+    \\"@angular-eslint/template/accessibility-label-has-associated-control\\": \\"error\\"
+  },
+  \\"overrides\\": [
+    {
+      \\"files\\": \\"**/*.ts\\",
+      \\"rules\\": {
+        \\"existing-rule\\": \\"error\\",
+        \\"@angular-eslint/template/accessibility-label-has-associated-control\\": [
+          \\"error\\",
+          {
+            \\"controlComponents\\": \\"control-component\\",
+            \\"labelComponents\\": [
+              {
+                \\"inputs\\": [
+                  \\"label-attr\\"
+                ],
+                \\"selector\\": \\"label-component\\"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
+"
+`;

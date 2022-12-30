@@ -1,0 +1,31 @@
+import { Linter } from '@nrwl/linter';
+import { SupportedStyles } from '../../../typings';
+
+export interface Schema {
+  classComponent?: boolean;
+  compiler?: 'babel' | 'swc';
+  devServerPort?: number;
+  directory?: string;
+  e2eTestRunner: 'cypress' | 'none';
+  globalCss?: boolean;
+  js?: boolean;
+  linter: Linter;
+  name: string;
+  pascalCaseFiles?: boolean;
+  remotes?: string[];
+  setParserOptionsProject?: boolean;
+  skipFormat?: boolean;
+  skipWorkspaceJson?: boolean;
+  ssr?: boolean;
+  standaloneConfig?: boolean;
+  strict?: boolean;
+  style: SupportedStyles;
+  tags?: string;
+  unitTestRunner: 'jest' | 'vitest' | 'none';
+}
+
+export interface NormalizedSchema extends Schema {
+  appProjectRoot: string;
+  e2eProjectName: string;
+  projectName: string;
+}

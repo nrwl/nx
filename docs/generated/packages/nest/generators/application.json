@@ -1,0 +1,73 @@
+{
+  "name": "application",
+  "factory": "./src/generators/application/application",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "$id": "NxNestApplicationGenerator",
+    "title": "Nx Application Options Schema",
+    "description": "Nx Application Options Schema.",
+    "cli": "nx",
+    "type": "object",
+    "properties": {
+      "name": {
+        "description": "The name of the application.",
+        "type": "string",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "What name would you like to use for the node application?"
+      },
+      "directory": {
+        "description": "The directory of the new application.",
+        "type": "string"
+      },
+      "skipFormat": {
+        "description": "Skip formatting files.",
+        "type": "boolean",
+        "default": false
+      },
+      "skipPackageJson": {
+        "description": "Do not add dependencies to `package.json`.",
+        "type": "boolean",
+        "default": false
+      },
+      "linter": {
+        "description": "The tool to use for running lint checks.",
+        "type": "string",
+        "enum": ["eslint", "none"],
+        "default": "eslint"
+      },
+      "unitTestRunner": {
+        "description": "Test runner to use for unit tests.",
+        "type": "string",
+        "enum": ["jest", "none"],
+        "default": "jest"
+      },
+      "tags": {
+        "description": "Add tags to the application (used for linting).",
+        "type": "string"
+      },
+      "frontendProject": {
+        "description": "Frontend project that needs to access this application. This sets up proxy configuration.",
+        "type": "string"
+      },
+      "standaloneConfig": {
+        "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
+        "type": "boolean"
+      },
+      "setParserOptionsProject": {
+        "type": "boolean",
+        "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
+        "default": false
+      }
+    },
+    "additionalProperties": false,
+    "required": ["name"],
+    "presets": []
+  },
+  "aliases": ["app"],
+  "x-type": "application",
+  "description": "Create a NestJS application.",
+  "implementation": "/packages/nest/src/generators/application/application.ts",
+  "hidden": false,
+  "path": "/packages/nest/src/generators/application/schema.json",
+  "type": "generator"
+}

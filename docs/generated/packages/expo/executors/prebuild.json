@@ -1,0 +1,37 @@
+{
+  "name": "prebuild",
+  "implementation": "/packages/expo/src/executors/prebuild/prebuild.impl.ts",
+  "schema": {
+    "cli": "nx",
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "$id": "NxExpoPrebuild",
+    "$schema": "http://json-schema.org/schema",
+    "title": "Expo Prebuild",
+    "description": "Create native iOS and Android project files for building natively.",
+    "type": "object",
+    "properties": {
+      "install": {
+        "type": "boolean",
+        "description": "Installing npm packages and CocoaPods.",
+        "default": false
+      },
+      "platform": {
+        "description": "Platforms to sync",
+        "default": "all",
+        "enum": ["ios", "android", "all"],
+        "alias": "p"
+      },
+      "template": {
+        "type": "string",
+        "description": "Project template to clone from. File path pointing to a local tar file or a github repo"
+      }
+    },
+    "presets": []
+  },
+  "description": "Create native iOS and Android project files for building natively.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/expo/src/executors/prebuild/schema.json",
+  "type": "executor"
+}

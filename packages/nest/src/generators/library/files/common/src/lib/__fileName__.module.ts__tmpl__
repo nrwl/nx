@@ -1,0 +1,11 @@
+import { Module<% if(global) { %>, Global<% } %> } from '@nestjs/common';<% if(controller) { %>
+import { <%= className %>Controller } from './<%= fileName %>.controller';<% } %><% if(service) { %>
+import { <%= className %>Service } from './<%= fileName %>.service';<% } %>
+<% if(global) { %>
+@Global()<% } %>
+@Module({
+	controllers: [<% if(controller) { %><%= className %>Controller<% } %>],
+	providers: [<% if(service) { %><%= className %>Service<% } %>],
+	exports: [<% if(service) { %><%= className %>Service<% } %>],
+})
+export class <%= className %>Module {}

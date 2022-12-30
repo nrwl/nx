@@ -1,0 +1,81 @@
+// nx-ignore-next-line
+const { Linter } = require('@nrwl/linter');
+import type {
+  AssetGlob,
+  FileInputOutput,
+} from '@nrwl/workspace/src/utilities/assets';
+import { TransformerEntry } from './typescript/types';
+
+export type Compiler = 'tsc' | 'swc';
+export type Bundler = 'none' | 'rollup' | 'esbuild' | 'vite' | 'webpack';
+
+export interface LibraryGeneratorSchema {
+  name: string;
+  directory?: string;
+  skipFormat?: boolean;
+  tags?: string;
+  simpleModuleName?: boolean;
+  skipTsConfig?: boolean;
+  includeBabelRc?: boolean;
+  unitTestRunner?: 'jest' | 'vitest' | 'none';
+  linter?: Linter;
+  testEnvironment?: 'jsdom' | 'node';
+  importPath?: string;
+  js?: boolean;
+  pascalCaseFiles?: boolean;
+  strict?: boolean;
+  publishable?: boolean;
+  buildable?: boolean;
+  setParserOptionsProject?: boolean;
+  config?: 'workspace' | 'project' | 'npm-scripts';
+  compiler?: Compiler;
+  bundler?: Bundler;
+  skipTypeCheck?: boolean;
+}
+
+export interface ExecutorOptions {
+  assets: Array<AssetGlob | string>;
+  main: string;
+  rootDir?: string;
+  outputPath: string;
+  tsConfig: string;
+  swcrc?: string;
+  watch: boolean;
+  clean?: boolean;
+  transformers: TransformerEntry[];
+  updateBuildableProjectDepsInPackageJson?: boolean;
+  buildableProjectDepsInPackageJsonType?: 'dependencies' | 'peerDependencies';
+  external?: 'all' | 'none' | string[];
+  externalBuildTargets?: string[];
+}
+
+export interface NormalizedExecutorOptions extends ExecutorOptions {
+  root?: string;
+  sourceRoot?: string;
+  projectRoot: string;
+  mainOutputPath: string;
+  files: Array<FileInputOutput>;
+}
+
+export interface SwcExecutorOptions extends ExecutorOptions {
+  skipTypeCheck?: boolean;
+  /**
+   * @deprecated
+   */
+  swcExclude?: string[];
+}
+
+export interface SwcCliOptions {
+  srcPath: string;
+  destPath: string;
+  swcrcPath: string;
+  swcCwd: string;
+}
+
+export interface NormalizedSwcExecutorOptions
+  extends NormalizedExecutorOptions {
+  originalProjectRoot: string;
+  swcExclude: string[];
+  skipTypeCheck: boolean;
+  swcCliOptions: SwcCliOptions;
+}

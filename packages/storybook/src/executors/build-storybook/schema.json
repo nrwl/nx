@@ -1,0 +1,121 @@
+{
+  "version": 2,
+  "outputCapture": "direct-nodejs",
+  "title": "Storybook Builder",
+  "cli": "nx",
+  "description": "Build storybook in production mode.",
+  "type": "object",
+  "presets": [
+    {
+      "name": "Default minimum setup",
+      "keys": ["uiFramework", "outputPath", "config"]
+    }
+  ],
+  "properties": {
+    "uiFramework": {
+      "type": "string",
+      "description": "Storybook framework npm package.",
+      "enum": [
+        "@storybook/react",
+        "@storybook/html",
+        "@storybook/web-components",
+        "@storybook/vue",
+        "@storybook/vue3",
+        "@storybook/svelte"
+      ],
+      "default": "@storybook/react",
+      "hidden": true
+    },
+    "outputPath": {
+      "type": "string",
+      "description": "The output path of the generated files.",
+      "x-completion-type": "directory"
+    },
+    "styles": {
+      "type": "array",
+      "description": "Global styles to be included in the build.",
+      "items": {
+        "$ref": "#/definitions/extraEntryPoint"
+      }
+    },
+    "stylePreprocessorOptions": {
+      "type": "object",
+      "description": "Options to pass to style preprocessors.",
+      "properties": {
+        "includePaths": {
+          "type": "array",
+          "description": "The paths to include. Paths will be resolved to workspace root.",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "config": {
+      "type": "object",
+      "description": "`.storybook` file configuration",
+      "properties": {
+        "configFolder": {
+          "type": "string",
+          "description": "Directory where to load Storybook configurations from."
+        },
+        "pluginPath": {
+          "type": "string",
+          "description": "Path to storybook `plugin.js` file."
+        },
+        "configPath": {
+          "type": "string",
+          "description": "Path to storybook `preview.js` file."
+        },
+        "srcRoot": {
+          "type": "string",
+          "description": "Project source path."
+        }
+      }
+    },
+    "docsMode": {
+      "type": "boolean",
+      "description": "Build a documentation-only site using addon-docs.",
+      "default": false
+    },
+    "quiet": {
+      "type": "boolean",
+      "description": "Suppress verbose build output.",
+      "default": true
+    }
+  },
+  "definitions": {
+    "extraEntryPoint": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "input": {
+              "type": "string",
+              "description": "The file to include.",
+              "x-completion-type": "file"
+            },
+            "bundleName": {
+              "type": "string",
+              "pattern": "^[\\w\\-.]*$",
+              "description": "The bundle name for this extra entry point."
+            },
+            "inject": {
+              "type": "boolean",
+              "description": "If the bundle will be referenced in the HTML file.",
+              "default": true
+            }
+          },
+          "additionalProperties": false,
+          "required": ["input"]
+        },
+        {
+          "type": "string",
+          "description": "The file to include."
+        }
+      ]
+    }
+  },
+  "required": ["uiFramework", "config"],
+  "examplesFile": "../../../docs/build-storybook-executor-examples.md"
+}

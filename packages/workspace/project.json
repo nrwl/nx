@@ -1,0 +1,140 @@
+{
+  "name": "workspace",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/workspace/src",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "jestConfig": "packages/workspace/jest.config.ts",
+        "passWithNoTests": true
+      },
+      "outputs": ["{workspaceRoot}/coverage/packages/workspace"]
+    },
+    "build-base": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "outputPath": "build/packages/workspace",
+        "tsConfig": "packages/workspace/tsconfig.lib.json",
+        "packageJson": "packages/workspace/package.json",
+        "main": "packages/workspace/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": [
+          {
+            "input": "packages/workspace",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/workspace",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/workspace",
+            "glob": "**/files-integrated-repo/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/workspace",
+            "glob": "**/files-integrated-repo/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/workspace",
+            "glob": "**/files-package-based-repo/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/workspace",
+            "glob": "**/files-readme/**",
+            "output": "/"
+          },
+          {
+            "glob": "**/files-packaged-based-repo/**/.gitkeep",
+            "input": "packages/workspace",
+            "output": "/"
+          },
+          {
+            "input": "packages/workspace",
+            "glob": "**/files-root-app/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/workspace",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages/workspace",
+            "glob": "**/**/decorate-angular-cli.js__tmpl__",
+            "output": "/"
+          },
+          {
+            "input": "packages/workspace",
+            "glob": "**/*.{js,css,html,svg}",
+            "ignore": ["**/jest.config.js"],
+            "output": "/"
+          },
+          {
+            "input": "packages/workspace",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
+        ]
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/build/packages/workspace"],
+      "options": {
+        "commands": [
+          {
+            "command": "node ./scripts/copy-graph-client.js"
+          },
+          {
+            "command": "node ./scripts/copy-readme.js workspace"
+          },
+          {
+            "command": "node ./scripts/add-dependency-to-build.js workspace nx"
+          },
+          {
+            "command": "node ./scripts/add-dependency-to-build.js workspace @nrwl/devkit"
+          },
+          {
+            "command": "node ./scripts/add-dependency-to-build.js workspace @nrwl/linter"
+          }
+        ],
+        "parallel": false
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/workspace/**/*.ts",
+          "packages/workspace/**/*.spec.ts",
+          "packages/workspace/**/*.spec.tsx",
+          "packages/workspace/**/*.spec.js",
+          "packages/workspace/**/*.spec.jsx",
+          "packages/workspace/**/*.d.ts",
+          "packages/workspace/**/executors/**/schema.json",
+          "packages/workspace/**/generators/**/schema.json",
+          "packages/workspace/generators.json",
+          "packages/workspace/executors.json",
+          "packages/workspace/package.json",
+          "packages/workspace/migrations.json"
+        ]
+      },
+      "outputs": ["{options.outputFile}"]
+    }
+  }
+}

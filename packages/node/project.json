@@ -1,0 +1,88 @@
+{
+  "name": "node",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/node",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "jestConfig": "packages/node/jest.config.ts",
+        "passWithNoTests": true
+      },
+      "outputs": ["{workspaceRoot}/coverage/packages/node"]
+    },
+    "build-base": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "outputPath": "build/packages/node",
+        "tsConfig": "packages/node/tsconfig.lib.json",
+        "main": "packages/node/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": [
+          {
+            "input": "packages/node",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/node",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/node",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages/node",
+            "glob": "**/*.js",
+            "ignore": ["**/jest.config.js"],
+            "output": "/"
+          },
+          {
+            "input": "packages/node",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
+        ]
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/build/packages/node"],
+      "options": {
+        "command": "node ./scripts/copy-readme.js node"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/node/**/*.ts",
+          "packages/node/**/*.spec.ts",
+          "packages/node/**/*_spec.ts",
+          "packages/node/**/*.spec.tsx",
+          "packages/node/**/*.spec.js",
+          "packages/node/**/*.spec.jsx",
+          "packages/node/**/*.d.ts",
+          "packages/node/**/executors/**/schema.json",
+          "packages/node/**/generators/**/schema.json",
+          "packages/node/generators.json",
+          "packages/node/executors.json",
+          "packages/node/package.json",
+          "packages/node/migrations.json"
+        ]
+      },
+      "outputs": ["{options.outputFile}"]
+    }
+  }
+}

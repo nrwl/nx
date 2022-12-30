@@ -1,0 +1,88 @@
+{
+  "name": "webpack",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/webpack",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "jestConfig": "packages/webpack/jest.config.ts",
+        "passWithNoTests": true
+      },
+      "outputs": ["{workspaceRoot}/coverage/packages/webpack"]
+    },
+    "build-base": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "outputPath": "build/packages/webpack",
+        "tsConfig": "packages/webpack/tsconfig.lib.json",
+        "main": "packages/webpack/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": [
+          {
+            "input": "packages/webpack",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/webpack",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/webpack",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages/webpack",
+            "glob": "**/*.js",
+            "ignore": ["**/jest.config.js"],
+            "output": "/"
+          },
+          {
+            "input": "packages/webpack",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
+        ]
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/build/packages/webpack"],
+      "options": {
+        "command": "node ./scripts/copy-readme.js webpack"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/webpack/**/*.ts",
+          "packages/webpack/**/*.spec.ts",
+          "packages/webpack/**/*_spec.ts",
+          "packages/webpack/**/*.spec.tsx",
+          "packages/webpack/**/*.spec.js",
+          "packages/webpack/**/*.spec.jsx",
+          "packages/webpack/**/*.d.ts",
+          "packages/webpack/**/executors/**/schema.json",
+          "packages/webpack/**/generators/**/schema.json",
+          "packages/webpack/generators.json",
+          "packages/webpack/executors.json",
+          "packages/webpack/package.json",
+          "packages/webpack/migrations.json"
+        ]
+      },
+      "outputs": ["{options.outputFile}"]
+    }
+  }
+}

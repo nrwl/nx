@@ -1,0 +1,49 @@
+{
+  "name": "@nrwl/linter",
+  "version": "0.0.1",
+  "private": false,
+  "description": "The Linter plugin for Nx contains executors, generators and utilities used for linting JavaScript/TypeScript projects within an Nx workspace.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/linter"
+  },
+  "keywords": [
+    "Monorepo",
+    "Web",
+    "Lint",
+    "ESLint",
+    "CLI"
+  ],
+  "main": "./index.js",
+  "typings": "./index.d.ts",
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "ng-update": {
+    "requirements": {},
+    "migrations": "./migrations.json"
+  },
+  "builders": "./executors.json",
+  "schematics": "./generators.json",
+  "peerDependencies": {
+    "eslint": "^8.0.0"
+  },
+  "dependencies": {
+    "@nrwl/devkit": "file:../devkit",
+    "@phenomnomnominal/tsquery": "4.1.1",
+    "tmp": "~0.2.1",
+    "tslib": "^2.3.0"
+  },
+  "peerDependenciesMeta": {
+    "eslint": {
+      "optional": true
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

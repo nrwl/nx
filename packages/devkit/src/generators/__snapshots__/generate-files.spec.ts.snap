@@ -1,0 +1,26 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`generateFiles should copy files from a directory into a tree 1`] = `
+"file contents
+"
+`;
+
+exports[`generateFiles should copy files from a directory into the tree 1`] = `
+"file in directory contents
+"
+`;
+
+exports[`generateFiles should remove ".template" from paths 1`] = `
+"file with template suffix contents
+"
+`;
+
+exports[`generateFiles should substitute properties in directory names 1`] = `
+"file in directory foo bar contents
+"
+`;
+
+exports[`generateFiles should substitute properties in paths 1`] = `
+"file-with-property-foo-bar contents
+"
+`;

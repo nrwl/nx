@@ -1,0 +1,120 @@
+{
+  "name": "nx",
+  "version": "0.0.1",
+  "private": false,
+  "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/nx"
+  },
+  "scripts": {
+    "postinstall": "node ./bin/compute-project-graph"
+  },
+  "keywords": [
+    "Monorepo",
+    "Angular",
+    "React",
+    "Web",
+    "Node",
+    "Nest",
+    "Jest",
+    "Cypress",
+    "CLI"
+  ],
+  "bin": {
+    "nx": "./bin/nx.js"
+  },
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "dependencies": {
+    "@parcel/watcher": "2.0.4",
+    "@yarnpkg/lockfile": "^1.1.0",
+    "@yarnpkg/parsers": "^3.0.0-rc.18",
+    "@zkochan/js-yaml": "0.0.6",
+    "axios": "^1.0.0",
+    "chalk": "4.1.0",
+    "chokidar": "^3.5.1",
+    "cli-cursor": "3.1.0",
+    "cli-spinners": "2.6.1",
+    "cliui": "^7.0.2",
+    "dotenv": "~10.0.0",
+    "enquirer": "~2.3.6",
+    "fast-glob": "3.2.7",
+    "figures": "3.2.0",
+    "flat": "^5.0.2",
+    "fs-extra": "^10.1.0",
+    "glob": "7.1.4",
+    "ignore": "^5.0.4",
+    "js-yaml": "4.1.0",
+    "jsonc-parser": "3.2.0",
+    "minimatch": "3.0.5",
+    "npm-run-path": "^4.0.1",
+    "open": "^8.4.0",
+    "semver": "7.3.4",
+    "string-width": "^4.2.3",
+    "strong-log-transformer": "^2.1.0",
+    "tar-stream": "~2.2.0",
+    "tmp": "~0.2.1",
+    "tsconfig-paths": "^3.9.0",
+    "tslib": "^2.3.0",
+    "v8-compile-cache": "2.3.0",
+    "yargs": "^17.6.2",
+    "yargs-parser": "21.1.1"
+  },
+  "peerDependencies": {
+    "@swc-node/register": "^1.4.2",
+    "@swc/core": "^1.2.173"
+  },
+  "peerDependenciesMeta": {
+    "@swc-node/register": {
+      "optional": true
+    },
+    "@swc/core": {
+      "optional": true
+    }
+  },
+  "nx-migrations": {
+    "migrations": "./migrations.json",
+    "packageGroup": [
+      "@nrwl/angular",
+      "@nrwl/cli",
+      "@nrwl/cypress",
+      "@nrwl/detox",
+      "@nrwl/devkit",
+      "@nrwl/esbuild",
+      "@nrwl/eslint-plugin-nx",
+      "@nrwl/expo",
+      "@nrwl/express",
+      "@nrwl/jest",
+      "@nrwl/js",
+      "@nrwl/linter",
+      "@nrwl/nest",
+      "@nrwl/next",
+      "@nrwl/node",
+      "@nrwl/nx-plugin",
+      "@nrwl/react",
+      "@nrwl/react-native",
+      "@nrwl/rollup",
+      "@nrwl/storybook",
+      "@nrwl/tao",
+      "@nrwl/vite",
+      "@nrwl/web",
+      "@nrwl/webpack",
+      "@nrwl/workspace",
+      {
+        "package": "@nrwl/nx-cloud",
+        "version": "latest"
+      }
+    ]
+  },
+  "executors": "./executors.json",
+  "builders": "./executors.json",
+  "publishConfig": {
+    "access": "public"
+  }
+}

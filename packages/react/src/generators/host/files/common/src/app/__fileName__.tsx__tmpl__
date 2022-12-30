@@ -1,0 +1,29 @@
+import * as React from 'react';
+import NxWelcome from "./nx-welcome";
+import { Link, Route, Routes } from 'react-router-dom';
+
+<% if (remotes.length > 0) { %>
+<% remotes.forEach(function(r) { %>
+ const <%= r.className %> = React.lazy(() => import('<%= r.fileName %>/Module'));
+ <% }); %>
+<% } %>
+export function App() {
+  return (
+    <React.Suspense fallback={null}>
+     <ul>
+       <li><Link to="/">Home</Link></li>
+       <% remotes.forEach(function(r) { %>
+         <li><Link to="/<%=r.fileName%>"><%=r.className%></Link></li>
+       <% }); %>
+     </ul>
+     <Routes>
+       <Route path="/" element={<NxWelcome title="<%= projectName %>"/>} />
+       <% remotes.forEach(function(r) { %>
+         <Route path="/<%=r.fileName%>" element={<<%= r.className %>/>} />
+       <% }); %>
+     </Routes>
+    </React.Suspense>
+  );
+}
+
+export default App;

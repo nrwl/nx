@@ -1,0 +1,29 @@
+node_modules
+/.idea
+/.fleet
+/.vscode
+dist
+/build
+/coverage
+./test
+.DS_Store
+tmp
+*.log
+jest.debug.config.js
+.tool-versions
+/.nx-cache
+/.verdaccio/build/local-registry
+/graph/client/src/assets/environment.js
+/graph/client/src/assets/dev/environment.js
+/graph/client/src/assets/generated-project-graphs
+/graph/client/src/assets/generated-task-graphs
+/nx-dev/nx-dev/public/documentation
+/nx-dev/nx-dev/public/images/open-graph
+# Lerna creates this
+CHANGELOG.md
+
+# Next.js
+.next
+
+# Local dev files
+.env

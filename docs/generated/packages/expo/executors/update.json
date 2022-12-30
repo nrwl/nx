@@ -1,0 +1,68 @@
+{
+  "name": "update",
+  "implementation": "/packages/expo/src/executors/update/update.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "$schema": "http://json-schema.org/schema",
+    "$id": "NxExpoEasUpdate",
+    "cli": "nx",
+    "title": "Expo EAS Update executor",
+    "description": "Start an EAS update for your expo project.",
+    "type": "object",
+    "properties": {
+      "branch": {
+        "type": "string",
+        "description": "Branch to publish the update group on"
+      },
+      "message": {
+        "type": "string",
+        "description": "A short message describing the update"
+      },
+      "republish": {
+        "type": "boolean",
+        "description": "Enable JSON output, non-JSON messages will be printed to stderr",
+        "default": false
+      },
+      "group": { "type": "string", "description": "Update group to republish" },
+      "inputDir": { "type": "string", "description": "Location of the bundle" },
+      "skipBundler": {
+        "type": "boolean",
+        "description": "Skip running Expo CLI to bundle the app before publishing",
+        "default": false
+      },
+      "platform": {
+        "enum": ["ios", "android", "all"],
+        "alias": "p",
+        "description": "The platform to build the app, example values: ios, android, all.",
+        "default": "all"
+      },
+      "json": {
+        "type": "boolean",
+        "description": "Enable JSON output, non-JSON messages will be printed to stderr",
+        "default": false
+      },
+      "auto": {
+        "type": "boolean",
+        "description": "Use the current git branch and commit message for the EAS branch and update message",
+        "default": false
+      },
+      "privateKeyPath": {
+        "type": "string",
+        "description": "File containing the PEM-encoded private key corresponding to the certificate in expo-updates' configuration. Defaults to a file named \"private-key.pem\" in the certificate's directory."
+      },
+      "nonInteractive": {
+        "type": "boolean",
+        "description": "Run command in non-interactive mode",
+        "default": false
+      }
+    },
+    "required": [],
+    "presets": []
+  },
+  "description": "Start an EAS update for your expo project",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/expo/src/executors/update/schema.json",
+  "type": "executor"
+}

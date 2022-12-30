@@ -1,0 +1,84 @@
+{
+  "name": "expo",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/expo/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/expo/**/*.ts",
+          "packages/expo/**/*.spec.ts",
+          "packages/expo/**/*.spec.tsx",
+          "packages/expo/**/*.spec.js",
+          "packages/expo/**/*.spec.jsx",
+          "packages/expo/**/*.d.ts"
+        ]
+      },
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "jestConfig": "packages/expo/jest.config.ts",
+        "passWithNoTests": true
+      },
+      "outputs": ["{workspaceRoot}/coverage/packages/expo"]
+    },
+    "build-base": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "outputPath": "build/packages/expo",
+        "tsConfig": "packages/expo/tsconfig.lib.json",
+        "packageJson": "packages/expo/package.json",
+        "main": "packages/expo/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": [
+          "packages/expo/*.md",
+          {
+            "input": "packages/expo",
+            "glob": "**/!(*.ts)",
+            "output": "/"
+          },
+          {
+            "input": "packages/expo",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          {
+            "input": "packages/expo",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/expo",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/expo",
+            "glob": "**/files/**/.babelrc.js.template",
+            "output": "/"
+          },
+          {
+            "input": "packages/expo",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "**/project.json"],
+            "output": "/"
+          },
+          "LICENSE"
+        ]
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/build/packages/expo"],
+      "options": {
+        "command": "node ./scripts/copy-readme.js expo"
+      }
+    }
+  },
+  "tags": []
+}

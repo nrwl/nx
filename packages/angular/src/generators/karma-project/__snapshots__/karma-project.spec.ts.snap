@@ -1,0 +1,249 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`karmaProject --root-project should generate the right karma.conf.js file for a nested project in a workspace with a project at the root 1`] = `
+"// Karma configuration file, see link for more information
+// https://karma-runner.github.io/6.4/config/configuration-file.html
+
+const { join } = require('path');
+const setBaseKarmaConfig = require('../../karma.conf');
+
+module.exports = function (config) {
+  setBaseKarmaConfig(config);
+
+  config.set({
+    coverageReporter: {
+      dir: join(__dirname, '../../coverage/libs/nested-lib')
+    }
+  });
+};"
+`;
+
+exports[`karmaProject --root-project should generate the right karma.conf.js file for a nested project in a workspace with a project at the root 2`] = `
+"// Karma configuration file, see link for more information
+// https://karma-runner.github.io/6.4/config/configuration-file.html
+
+const { constants } = require('karma');
+const { join } = require('path');
+
+module.exports = (config) => {
+  config.set({
+    basePath: '',
+    frameworks: ['jasmine', '@angular-devkit/build-angular'],
+    plugins: [
+      require('karma-jasmine'),
+      require('karma-chrome-launcher'),
+      require('karma-jasmine-html-reporter'),
+      require('karma-coverage'),
+      require('@angular-devkit/build-angular/plugins/karma'),
+    ],
+    client: {
+      jasmine: {
+        // you can add configuration options for Jasmine here
+        // the possible options are listed at https://jasmine.github.io/api/edge/Configuration.html
+        // for example, you can disable the random execution with \`random: false\`
+        // or set a specific seed with \`seed: 4321\`
+      },
+      clearContext: false, // leave Jasmine Spec Runner output visible in browser
+    },
+    jasmineHtmlReporter: {
+      suppressAll: true, // removes the duplicated traces
+    },
+    coverageReporter: {
+      dir: join(__dirname, 'coverage/root-app'),
+      subdir: '.',
+      reporters: [{ type: 'html' }, { type: 'text-summary' }],
+    },
+    reporters: ['progress', 'kjhtml'],
+    port: 9876,
+    colors: true,
+    logLevel: constants.LOG_INFO,
+    autoWatch: true,
+    browsers: ['Chrome'],
+    singleRun: true,
+    restartOnFileChange: true,
+  });
+};
+"
+`;
+
+exports[`karmaProject --root-project should support a project located at the root 1`] = `
+"// Karma configuration file, see link for more information
+// https://karma-runner.github.io/6.4/config/configuration-file.html
+
+const { constants } = require('karma');
+const { join } = require('path');
+
+module.exports = (config) => {
+  config.set({
+    basePath: '',
+    frameworks: ['jasmine', '@angular-devkit/build-angular'],
+    plugins: [
+      require('karma-jasmine'),
+      require('karma-chrome-launcher'),
+      require('karma-jasmine-html-reporter'),
+      require('karma-coverage'),
+      require('@angular-devkit/build-angular/plugins/karma'),
+    ],
+    client: {
+      jasmine: {
+        // you can add configuration options for Jasmine here
+        // the possible options are listed at https://jasmine.github.io/api/edge/Configuration.html
+        // for example, you can disable the random execution with \`random: false\`
+        // or set a specific seed with \`seed: 4321\`
+      },
+      clearContext: false, // leave Jasmine Spec Runner output visible in browser
+    },
+    jasmineHtmlReporter: {
+      suppressAll: true, // removes the duplicated traces
+    },
+    coverageReporter: {
+      dir: join(__dirname, 'coverage/root-app'),
+      subdir: '.',
+      reporters: [{ type: 'html' }, { type: 'text-summary' }],
+    },
+    reporters: ['progress', 'kjhtml'],
+    port: 9876,
+    colors: true,
+    logLevel: constants.LOG_INFO,
+    autoWatch: true,
+    browsers: ['Chrome'],
+    singleRun: true,
+    restartOnFileChange: true,
+  });
+};
+"
+`;
+
+exports[`karmaProject --root-project should use get syntax when root project does not have karma conf with set syntax 1`] = `
+"// Karma configuration file, see link for more information
+// https://karma-runner.github.io/6.4/config/configuration-file.html
+
+const { join } = require('path');
+const getBaseKarmaConfig = require('../../karma.conf');
+
+module.exports = function (config) {
+  const baseConfig = getBaseKarmaConfig(config);
+
+  config.set({
+    ...baseConfig,
+    coverageReporter: {
+      ...baseConfig.coverageReporter,
+      dir: join(__dirname, '../../coverage/libs/nested-lib')
+    }
+  });
+};"
+`;
+
+exports[`karmaProject --root-project should use get syntax when root project does not have karma conf with set syntax 2`] = `
+"// Karma configuration file, see link for more information
+// https://karma-runner.github.io/1.0/config/configuration-file.html
+
+const { join } = require('path');
+const { constants } = require('karma');
+
+module.exports = () => {
+  return {
+    basePath: '',
+    frameworks: ['jasmine', '@angular-devkit/build-angular'],
+    plugins: [
+      require('karma-jasmine'),
+      require('karma-chrome-launcher'),
+      require('karma-jasmine-html-reporter'),
+      require('karma-coverage'),
+      require('@angular-devkit/build-angular/plugins/karma'),
+    ],
+    client: {
+      jasmine: {
+        // you can add configuration options for Jasmine here
+        // the possible options are listed at https://jasmine.github.io/api/edge/Configuration.html
+        // for example, you can disable the random execution with \`random: false\`
+        // or set a specific seed with \`seed: 4321\`
+      },
+      clearContext: false, // leave Jasmine Spec Runner output visible in browser
+    },
+    jasmineHtmlReporter: {
+      suppressAll: true, // removes the duplicated traces
+    },
+    coverageReporter: {
+      dir: join(__dirname, './coverage'),
+      subdir: '.',
+      reporters: [{ type: 'html' }, { type: 'text-summary' }],
+    },
+    reporters: ['progress', 'kjhtml'],
+    port: 9876,
+    colors: true,
+    logLevel: constants.LOG_INFO,
+    autoWatch: true,
+    browsers: ['Chrome'],
+    singleRun: true,
+    restartOnFileChange: true
+  };
+};
+"
+`;
+
+exports[`karmaProject should create a karma.conf.js 1`] = `
+"// Karma configuration file, see link for more information
+// https://karma-runner.github.io/6.4/config/configuration-file.html
+
+const { join } = require('path');
+const getBaseKarmaConfig = require('../../karma.conf');
+
+module.exports = function(config) {
+  const baseConfig = getBaseKarmaConfig();
+  config.set({
+    ...baseConfig,
+    coverageReporter: {
+      ...baseConfig.coverageReporter,
+      dir: join(__dirname, '../../coverage/libs/lib1')
+    }
+  });
+};
+"
+`;
+
+exports[`karmaProject should generate files 1`] = `
+"{
+  \\"extends\\": \\"./tsconfig.json\\",
+  \\"compilerOptions\\": {
+    \\"outDir\\": \\"../../dist/out-tsc\\",
+    \\"types\\": [\\"jasmine\\", \\"node\\"]
+  },
+  \\"include\\": [\\"src/**/*.spec.ts\\", \\"src/**/*.test.ts\\", \\"src/**/*.d.ts\\"]
+}
+"
+`;
+
+exports[`karmaProject should generate files and correctly add polyfills if it is using old ng style polyfills 1`] = `
+"{
+  \\"extends\\": \\"./tsconfig.json\\",
+  \\"compilerOptions\\": {
+    \\"outDir\\": \\"../../dist/out-tsc\\",
+    \\"types\\": [
+      \\"jasmine\\",
+      \\"node\\"
+    ]
+  },
+  \\"include\\": [
+    \\"src/**/*.spec.ts\\",
+    \\"src/**/*.test.ts\\",
+    \\"src/**/*.d.ts\\"
+  ],
+  \\"files\\": [
+    \\"src/polyfills.ts\\"
+  ]
+}
+"
+`;
+
+exports[`karmaProject should generate files and not add polyfills if it is using ng v15 style polyfills 1`] = `
+"{
+  \\"extends\\": \\"./tsconfig.json\\",
+  \\"compilerOptions\\": {
+    \\"outDir\\": \\"../../dist/out-tsc\\",
+    \\"types\\": [\\"jasmine\\", \\"node\\"]
+  },
+  \\"include\\": [\\"src/**/*.spec.ts\\", \\"src/**/*.test.ts\\", \\"src/**/*.d.ts\\"]
+}
+"
+`;

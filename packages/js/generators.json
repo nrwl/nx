@@ -1,0 +1,52 @@
+{
+  "name": "nx/js",
+  "version": "0.1",
+  "schematics": {
+    "library": {
+      "factory": "./src/generators/library/library#librarySchematic",
+      "schema": "./src/generators/library/schema.json",
+      "aliases": ["lib"],
+      "x-type": "library",
+      "description": "Create a library."
+    },
+    "init": {
+      "factory": "./src/generators/init/init#initSchematic",
+      "schema": "./src/generators/init/schema.json",
+      "aliases": ["lib"],
+      "x-type": "init",
+      "description": "Init placeholder.",
+      "hidden": true
+    },
+    "convert-to-swc": {
+      "factory": "./src/generators/convert-to-swc/convert-to-swc#convertToSwcSchematic",
+      "schema": "./src/generators/convert-to-swc/schema.json",
+      "aliases": ["swc"],
+      "x-type": "library",
+      "description": "Convert a TypeScript library to compile with SWC."
+    }
+  },
+  "generators": {
+    "library": {
+      "factory": "./src/generators/library/library#libraryGenerator",
+      "schema": "./src/generators/library/schema.json",
+      "aliases": ["lib"],
+      "x-type": "library",
+      "description": "Create a library"
+    },
+    "init": {
+      "factory": "./src/generators/init/init#initGenerator",
+      "schema": "./src/generators/init/schema.json",
+      "aliases": ["lib"],
+      "x-type": "init",
+      "description": "Init placeholder.",
+      "hidden": true
+    },
+    "convert-to-swc": {
+      "factory": "./src/generators/convert-to-swc/convert-to-swc#convertToSwcGenerator",
+      "schema": "./src/generators/convert-to-swc/schema.json",
+      "aliases": ["swc"],
+      "x-type": "library",
+      "description": "Convert a TypeScript library to compile with SWC."
+    }
+  }
+}

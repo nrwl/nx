@@ -1,0 +1,46 @@
+{
+  "name": "@nrwl/devkit",
+  "version": "0.0.1",
+  "private": false,
+  "description": "The Nx Devkit is used to customize Nx for different technologies and use cases. It contains many utility functions for reading and writing files, updating configuration, working with Abstract Syntax Trees(ASTs), and more.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/devkit"
+  },
+  "keywords": [
+    "Monorepo",
+    "Angular",
+    "React",
+    "Web",
+    "Node",
+    "Nest",
+    "Jest",
+    "Cypress",
+    "CLI"
+  ],
+  "main": "./index.js",
+  "typings": "./index.d.ts",
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "dependencies": {
+    "ejs": "^3.1.7",
+    "ignore": "^5.0.4",
+    "tslib": "^2.3.0",
+    "@phenomnomnominal/tsquery": "4.1.1",
+    "semver": "7.3.4"
+  },
+  "peerDependencies": {
+    "nx": ">= 14 <= 16"
+  },
+  "nx-migrations": {
+    "migrations": "./migrations.json"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

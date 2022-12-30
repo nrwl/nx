@@ -1,0 +1,68 @@
+{
+  "schematics": {
+    "update-vite-tsconfig-paths": {
+      "cli": "nx",
+      "version": "15.3.1-beta.0",
+      "description": "Remove projects property from vite-tsconfig-paths plugin in vite.config.ts files.",
+      "factory": "./src/migrations/update-15-3-1/update-vite-tsconfig-paths"
+    },
+    "set-mode-in-configurations": {
+      "cli": "nx",
+      "version": "15.3.4-beta.0",
+      "description": "Set the mode in configurations to match the configurationName.",
+      "factory": "./src/migrations/update-15-3-4/set-mode-in-configuration"
+    }
+  },
+  "packageJsonUpdates": {
+    "15.3.1-beta.0": {
+      "version": "15.3.1-beta.0",
+      "packages": {
+        "vite-tsconfig-paths": {
+          "version": "4.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "15.3.4-beta.0": {
+      "version": "15.3.4-beta.0",
+      "packages": {
+        "vite": {
+          "version": "^4.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "vite-tsconfig-paths": {
+          "version": "^4.0.2",
+          "alwaysAddToPackageJson": false
+        },
+        "vite-plugin-eslint": {
+          "version": "^1.8.1",
+          "alwaysAddToPackageJson": false
+        },
+        "vitest": {
+          "version": "^0.25.8",
+          "alwaysAddToPackageJson": false
+        },
+        "vite-plugin-dts": {
+          "version": "~1.7.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@vitejs/plugin-react": {
+          "version": "^3.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@vitest/coverage-c8": {
+          "version": "^0.25.8",
+          "alwaysAddToPackageJson": false
+        },
+        "@vitest/ui": {
+          "version": "^0.25.8",
+          "alwaysAddToPackageJson": false
+        },
+        "@vitest/coverage-istanbul": {
+          "version": "^0.25.8",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "packages": ["build/packages/*"],
+  "version": "15.4.2",
+  "granularPathspec": false,
+  "command": {
+    "publish": {
+      "graphType": "all"
+    }
+  }
+}

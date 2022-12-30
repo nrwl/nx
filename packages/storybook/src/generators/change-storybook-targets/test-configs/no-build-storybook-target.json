@@ -1,0 +1,60 @@
+{
+  "projects": {
+    "main-app": {
+      "projectType": "application",
+      "root": "apps/main-app",
+      "sourceRoot": "apps/main-app/src",
+      "prefix": "katst",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:browser",
+          "outputs": ["{options.outputPath}"]
+        },
+        "storybook": {
+          "builder": "@nrwl/storybook:storybook",
+          "options": {
+            "uiFramework": "@storybook/angular",
+            "port": 4400,
+            "config": {
+              "configFolder": "apps/main-app/.storybook"
+            },
+            "projectBuildConfig": "main-app"
+          },
+          "configurations": {
+            "ci": {
+              "quiet": true
+            }
+          }
+        }
+      }
+    },
+    "other-app": {
+      "projectType": "application",
+      "root": "apps/other-app",
+      "sourceRoot": "apps/other-app/src",
+      "prefix": "katst",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:browser",
+          "outputs": ["{options.outputPath}"]
+        },
+        "storybook": {
+          "builder": "@nrwl/storybook:storybook",
+          "options": {
+            "uiFramework": "@storybook/angular",
+            "port": 4400,
+            "config": {
+              "configFolder": "apps/other-app/.storybook"
+            },
+            "projectBuildConfig": "other-app"
+          },
+          "configurations": {
+            "ci": {
+              "quiet": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

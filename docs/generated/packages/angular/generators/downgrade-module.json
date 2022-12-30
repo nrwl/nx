@@ -1,0 +1,47 @@
+{
+  "name": "downgrade-module",
+  "factory": "./src/generators/downgrade-module/downgrade-module",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "$id": "NxDowngradeModuleGenerator",
+    "title": "Generates downgradeModule setup.",
+    "description": "Sets up a Downgrade Module for using AngularJS and Angular.",
+    "cli": "nx",
+    "type": "object",
+    "properties": {
+      "project": {
+        "type": "string",
+        "description": "The name of the project."
+      },
+      "name": {
+        "type": "string",
+        "description": "The name of the main AngularJS module.",
+        "$default": { "$source": "argv", "index": 0 }
+      },
+      "angularJsImport": {
+        "type": "string",
+        "description": "Import expression of the AngularJS application (e.g., `--angularJsImport=some_node_module/my_app`)."
+      },
+      "skipFormat": {
+        "type": "boolean",
+        "description": "Skip formatting files.",
+        "default": false
+      },
+      "skipPackageJson": {
+        "type": "boolean",
+        "description": "Do not add `@angular/upgrade` to `package.json` (e.g., `--skipPackageJson`).",
+        "default": false
+      }
+    },
+    "additionalProperties": false,
+    "required": ["name", "project"],
+    "examplesFile": "## Examples\n\nBelow are some examples of how to generate configuration and setup for using `ngUpgrade`'s `DowngradeModule` for your application.\n\n{% tabs %}\n\n{% tab label=\"Basic Usage\" %}\n\n```bash\nnx g @nrwl/angular:downgrade-module --name=myAngularJsModule --project=myapp\n```\n\n{% /tab %}\n\n{% tab label=\"Setup Router\" %}\n\nAllow a setup that configures routing for `DowngradeModule`.\n\n```bash\nnx g @nrwl/angular:downgrade-module --name=myAngularJsModule --project=myapp --router=true\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
+    "presets": []
+  },
+  "description": "Sets up a Downgrade Module.",
+  "implementation": "/packages/angular/src/generators/downgrade-module/downgrade-module.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/angular/src/generators/downgrade-module/schema.json",
+  "type": "generator"
+}

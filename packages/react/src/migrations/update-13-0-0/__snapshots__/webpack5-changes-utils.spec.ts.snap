@@ -1,0 +1,14 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`webpack5ChangesUtils should get project name and storybook configuration for all react projects 1`] = `
+Array [
+  Object {
+    "projectName": "test-one",
+    "storybookConfigPath": "libs/test-one/.storybook",
+  },
+  Object {
+    "projectName": "test-two",
+    "storybookConfigPath": "libs/test-two/.storybook",
+  },
+]
+`;

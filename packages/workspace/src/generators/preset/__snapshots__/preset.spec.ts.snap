@@ -1,0 +1,36 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`preset should create files (preset = angular-monorepo) 1`] = `
+Array [
+  "tsconfig.app.json",
+  "tsconfig.spec.json",
+  "src",
+  "tsconfig.editor.json",
+  "tsconfig.json",
+  ".eslintrc.json",
+  "jest.config.ts",
+]
+`;
+
+exports[`preset should create files (preset = angular-monorepo) 2`] = `
+Array [
+  "favicon.ico",
+  "index.html",
+  "main.ts",
+  "styles.css",
+  "assets",
+  "app",
+  "test-setup.ts",
+]
+`;
+
+exports[`preset should create files (preset = angular-monorepo) 3`] = `
+Array [
+  "app.module.ts",
+  "app.component.css",
+  "app.component.html",
+  "app.component.spec.ts",
+  "app.component.ts",
+  "nx-welcome.component.ts",
+]
+`;

@@ -1,0 +1,10 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Add remote to host should add remote correctly even in multiline 1`] = `
+"const obj = {
+            remotes: [
+                'remote1',
+                'remote2',
+            'remote3',]
+        }"
+`;

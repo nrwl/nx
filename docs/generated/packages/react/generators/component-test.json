@@ -1,0 +1,40 @@
+{
+  "name": "component-test",
+  "factory": "./src/generators/component-test/component-test#componentTestGenerator",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "cli": "nx",
+    "$id": "NxReactCypressComponentTest",
+    "title": "Add Cypress component test",
+    "description": "Add a Cypress component test for a component.",
+    "type": "object",
+    "examples": [
+      {
+        "command": "nx g @nrwl/react:component-test --project=my-react-project --component-path=src/lib/fancy-component.tsx",
+        "description": "Create a cypress component test for FancyComponent"
+      }
+    ],
+    "properties": {
+      "project": {
+        "type": "string",
+        "description": "The name of the project the component is apart of",
+        "x-dropdown": "projects",
+        "x-prompt": "What project is this component apart of?"
+      },
+      "componentPath": {
+        "type": "string",
+        "description": "Path to component, from the project source root",
+        "x-prompt": "What is the path to the component?"
+      }
+    },
+    "required": ["project", "componentPath"],
+    "examplesFile": "{% callout type=\"caution\" title=\"Can I use component testing?\" %}\nReact component testing with Nx requires **Cypress version 10** and up.\n\nYou can migrate with to v10 via the [migrate-to-cypress-10 generator](/packages/cypress/generators/migrate-to-cypress-10).\n\nThis generator is for Cypress based component testing.\n\nIf you're wanting to create Cypress tests for a Storybook story, then check out the [component-cypress-spec generator docs](/packages/react/generators/component-cypress-spec)\n\nIf you're wanting to create Storybook stories for a component, then check out the [stories generator docs](/packages/react/generators/stories) or [component-story generator docs](/packages/react/generators/component-cypress-spec)\n\n{% /callout %}\n\nThis generator is used to create a Cypress component test file for a given React component.\n\n```shell\nnx g @nrwl/react:component-test --project=my-cool-react-project --componentPath=src/my-fancy-button.tsx\n```\n\nTest file are generated with the `.cy.` suffix. this is to prevent colliding with any existing `.spec.` files contained in the project.\n\nIt's currently expected the generated `.cy.` file will live side by side with the component. It is also assumed the project is already setup for component testing. If it isn't, then you can run the [cypress-component-project generator](/packages/react/generators/cypress-component-configuration) to set up the project for component testing.\n",
+    "presets": []
+  },
+  "description": "Generate a Cypress component test for a React component",
+  "hidden": false,
+  "implementation": "/packages/react/src/generators/component-test/component-test#componentTestGenerator.ts",
+  "aliases": [],
+  "path": "/packages/react/src/generators/component-test/schema.json",
+  "type": "generator"
+}

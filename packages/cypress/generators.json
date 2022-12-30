@@ -1,0 +1,54 @@
+{
+  "name": "Nx Cypress",
+  "version": "0.1",
+  "schematics": {
+    "init": {
+      "factory": "./src/generators/init/init#cypressInitSchematic",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Initialize the `@nrwl/cypress` plugin.",
+      "aliases": ["ng-add"],
+      "hidden": true
+    },
+    "cypress-project": {
+      "factory": "./src/generators/cypress-project/cypress-project#cypressProjectSchematic",
+      "schema": "./src/generators/cypress-project/schema.json",
+      "description": "Add a Cypress E2E Project."
+    },
+    "cypress-component-project": {
+      "factory": "./src/generators/cypress-component-project/cypress-component-project#cypressComponentProject",
+      "schema": "./src/generators/cypress-component-project/schema.json",
+      "description": "Set up Cypress Component Test for a project"
+    },
+    "migrate-to-cypress-11": {
+      "factory": "./src/generators/migrate-to-cypress-11/migrate-to-cypress-11#migrateCypressProject",
+      "schema": "./src/generators/migrate-to-cypress-11/schema.json",
+      "description": "Migrate existing Cypress e2e projects to Cypress v11"
+    }
+  },
+  "generators": {
+    "init": {
+      "factory": "./src/generators/init/init#cypressInitGenerator",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Initialize the `@nrwl/cypress` plugin.",
+      "aliases": ["ng-add"],
+      "hidden": true
+    },
+    "cypress-project": {
+      "factory": "./src/generators/cypress-project/cypress-project#cypressProjectGenerator",
+      "schema": "./src/generators/cypress-project/schema.json",
+      "description": "Add a Cypress E2E Project.",
+      "hidden": true
+    },
+    "cypress-component-project": {
+      "factory": "./src/generators/cypress-component-project/cypress-component-project#cypressComponentProject",
+      "schema": "./src/generators/cypress-component-project/schema.json",
+      "description": "Set up Cypress Component Test for a project",
+      "hidden": true
+    },
+    "migrate-to-cypress-11": {
+      "factory": "./src/generators/migrate-to-cypress-11/migrate-to-cypress-11#migrateCypressProject",
+      "schema": "./src/generators/migrate-to-cypress-11/schema.json",
+      "description": "Migrate existing Cypress e2e projects to Cypress v11"
+    }
+  }
+}

@@ -1,0 +1,301 @@
+{
+  "name": "webpack-server",
+  "implementation": "/packages/angular/src/builders/webpack-server/webpack-server.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "title": "Schema for Webpack Server",
+    "description": "The webpack-dev-server executor is very similar to the standard server builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration and NgUniversal for SSR.",
+    "type": "object",
+    "properties": {
+      "main": {
+        "type": "string",
+        "description": "The full path for the main entry point to the server app, relative to the current workspace."
+      },
+      "tsConfig": {
+        "type": "string",
+        "default": "tsconfig.app.json",
+        "description": "The full path for the TypeScript configuration file, relative to the current workspace."
+      },
+      "inlineStyleLanguage": {
+        "description": "The stylesheet language to use for the application's inline component styles.",
+        "type": "string",
+        "default": "css",
+        "enum": ["css", "less", "sass", "scss"]
+      },
+      "stylePreprocessorOptions": {
+        "description": "Options to pass to style preprocessors",
+        "type": "object",
+        "properties": {
+          "includePaths": {
+            "description": "Paths to include. Paths will be resolved to project root.",
+            "type": "array",
+            "items": { "type": "string" },
+            "default": []
+          }
+        },
+        "additionalProperties": false
+      },
+      "optimization": {
+        "description": "Enables optimization of the build output. Including minification of scripts and styles, tree-shaking and dead-code elimination. For more information, see https://angular.io/guide/workspace-config#optimization-configuration.",
+        "default": true,
+        "x-user-analytics": "ep.ng_optimization",
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "scripts": {
+                "type": "boolean",
+                "description": "Enables optimization of the scripts output.",
+                "default": true
+              },
+              "styles": {
+                "type": "boolean",
+                "description": "Enables optimization of the styles output.",
+                "default": true
+              }
+            },
+            "additionalProperties": false
+          },
+          { "type": "boolean" }
+        ]
+      },
+      "fileReplacements": {
+        "description": "Replace compilation source files with other compilation source files in the build.",
+        "type": "array",
+        "items": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "src": {
+                  "type": "string",
+                  "pattern": "\\.(([cm]?j|t)sx?|json)$"
+                },
+                "replaceWith": {
+                  "type": "string",
+                  "pattern": "\\.(([cm]?j|t)sx?|json)$"
+                }
+              },
+              "additionalProperties": false,
+              "required": ["src", "replaceWith"]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "replace": {
+                  "type": "string",
+                  "pattern": "\\.(([cm]?j|t)sx?|json)$"
+                },
+                "with": {
+                  "type": "string",
+                  "pattern": "\\.(([cm]?j|t)sx?|json)$"
+                }
+              },
+              "additionalProperties": false,
+              "required": ["replace", "with"]
+            }
+          ]
+        },
+        "default": []
+      },
+      "outputPath": {
+        "type": "string",
+        "description": "The full path for the new output directory, relative to the current workspace.\n\nBy default, writes output to a folder named dist/ in the current project."
+      },
+      "resourcesOutputPath": {
+        "type": "string",
+        "description": "The path where style resources will be placed, relative to outputPath."
+      },
+      "sourceMap": {
+        "description": "Output source maps for scripts and styles. For more information, see https://angular.io/guide/workspace-config#source-map-configuration.",
+        "default": false,
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "scripts": {
+                "type": "boolean",
+                "description": "Output source maps for all scripts.",
+                "default": true
+              },
+              "styles": {
+                "type": "boolean",
+                "description": "Output source maps for all styles.",
+                "default": true
+              },
+              "hidden": {
+                "type": "boolean",
+                "description": "Output source maps used for error reporting tools.",
+                "default": false
+              },
+              "vendor": {
+                "type": "boolean",
+                "description": "Resolve vendor packages source maps.",
+                "default": false
+              }
+            },
+            "additionalProperties": false
+          },
+          { "type": "boolean" }
+        ]
+      },
+      "deployUrl": {
+        "type": "string",
+        "description": "URL where files will be deployed.",
+        "x-deprecated": "Use \"baseHref\" browser builder option, \"APP_BASE_HREF\" DI token or a combination of both instead. For more information, see https://angular.io/guide/deployment#the-deploy-url."
+      },
+      "verbose": {
+        "type": "boolean",
+        "description": "Adds more details to output logging.",
+        "default": false
+      },
+      "progress": {
+        "type": "boolean",
+        "description": "Log progress to the console while building.",
+        "default": true
+      },
+      "i18nMissingTranslation": {
+        "type": "string",
+        "description": "How to handle missing translations for i18n.",
+        "enum": ["warning", "error", "ignore"],
+        "default": "warning"
+      },
+      "i18nDuplicateTranslation": {
+        "type": "string",
+        "description": "How to handle duplicate translations for i18n.",
+        "enum": ["warning", "error", "ignore"],
+        "default": "warning"
+      },
+      "localize": {
+        "description": "Translate the bundles in one or more locales.",
+        "oneOf": [
+          { "type": "boolean", "description": "Translate all locales." },
+          {
+            "type": "array",
+            "description": "List of locales ID's to translate.",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "pattern": "^[a-zA-Z]{2,3}(-[a-zA-Z]{4})?(-([a-zA-Z]{2}|[0-9]{3}))?(-[a-zA-Z]{5,8})?(-x(-[a-zA-Z0-9]{1,8})+)?$"
+            }
+          }
+        ]
+      },
+      "outputHashing": {
+        "type": "string",
+        "description": "Define the output filename cache-busting hashing mode.",
+        "default": "none",
+        "enum": ["none", "all", "media", "bundles"]
+      },
+      "deleteOutputPath": {
+        "type": "boolean",
+        "description": "Delete the output path before building.",
+        "default": true
+      },
+      "preserveSymlinks": {
+        "type": "boolean",
+        "description": "Do not use the real path when resolving modules. If unset then will default to `true` if NodeJS option --preserve-symlinks is set."
+      },
+      "extractLicenses": {
+        "type": "boolean",
+        "description": "Extract all licenses in a separate file, in the case of production builds only.",
+        "default": true
+      },
+      "namedChunks": {
+        "type": "boolean",
+        "description": "Use file name for lazy loaded chunks.",
+        "default": false
+      },
+      "externalDependencies": {
+        "description": "Exclude the listed external dependencies from being bundled into the bundle. Instead, the created bundle relies on these dependencies to be available during runtime.",
+        "type": "array",
+        "items": { "type": "string" },
+        "default": []
+      },
+      "bundleDependencies": {
+        "description": "Which external dependencies to bundle into the bundle. By default, all of node_modules will be bundled.",
+        "default": true,
+        "oneOf": [
+          { "type": "boolean" },
+          { "type": "string", "enum": ["none", "all"] }
+        ]
+      },
+      "statsJson": {
+        "type": "boolean",
+        "description": "Generates a 'stats.json' file which can be analyzed using tools such as 'webpack-bundle-analyzer'.",
+        "default": false
+      },
+      "watch": {
+        "type": "boolean",
+        "description": "Run build when files change.",
+        "default": false
+      },
+      "poll": {
+        "type": "number",
+        "description": "Enable and define the file watching poll time period in milliseconds."
+      },
+      "customWebpackConfig": {
+        "description": "Options for additional webpack configurations.",
+        "type": "object",
+        "properties": {
+          "path": {
+            "description": "Path to additional webpack configuration, relative to the workspace root.",
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "buildLibsFromSource": {
+        "type": "boolean",
+        "description": "Read buildable libraries from source instead of building them separately.",
+        "default": true
+      }
+    },
+    "additionalProperties": false,
+    "required": ["outputPath", "main", "tsConfig"],
+    "definitions": {
+      "fileReplacement": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "src": {
+                "type": "string",
+                "pattern": "\\.(([cm]?j|t)sx?|json)$"
+              },
+              "replaceWith": {
+                "type": "string",
+                "pattern": "\\.(([cm]?j|t)sx?|json)$"
+              }
+            },
+            "additionalProperties": false,
+            "required": ["src", "replaceWith"]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "replace": {
+                "type": "string",
+                "pattern": "\\.(([cm]?j|t)sx?|json)$"
+              },
+              "with": {
+                "type": "string",
+                "pattern": "\\.(([cm]?j|t)sx?|json)$"
+              }
+            },
+            "additionalProperties": false,
+            "required": ["replace", "with"]
+          }
+        ]
+      }
+    },
+    "presets": []
+  },
+  "description": "The `webpack-server` executor is very similar to the standard `server` builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration and NgUniversal for SSR.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/angular/src/builders/webpack-server/schema.json",
+  "type": "executor"
+}

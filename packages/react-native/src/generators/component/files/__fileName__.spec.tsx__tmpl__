@@ -1,0 +1,11 @@
+import React from 'react';
+import { render } from '@testing-library/react-native';
+
+import <%= className %> from './<%= fileName %>';
+
+describe('<%= className %>', () => {
+  it('should render successfully', () => {
+    const { container } = render(< <%= className %> />);
+    expect(container).toBeTruthy();
+  });
+});

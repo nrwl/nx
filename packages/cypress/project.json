@@ -1,0 +1,87 @@
+{
+  "name": "cypress",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/cypress",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "jestConfig": "packages/cypress/jest.config.ts",
+        "passWithNoTests": true
+      },
+      "outputs": ["{workspaceRoot}/coverage/packages/cypress"]
+    },
+    "build-base": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "outputPath": "build/packages/cypress",
+        "tsConfig": "packages/cypress/tsconfig.lib.json",
+        "main": "packages/cypress/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": [
+          {
+            "input": "packages/cypress",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/cypress",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/cypress",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages/cypress",
+            "glob": "**/*.js",
+            "ignore": ["**/jest.config.js"],
+            "output": "/"
+          },
+          {
+            "input": "packages/cypress",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
+        ]
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/build/packages/cypress"],
+      "options": {
+        "command": "node ./scripts/copy-readme.js cypress"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/cypress/**/*.ts",
+          "packages/cypress/**/*.spec.ts",
+          "packages/cypress/**/*.spec.tsx",
+          "packages/cypress/**/*.spec.js",
+          "packages/cypress/**/*.spec.jsx",
+          "packages/cypress/**/*.d.ts",
+          "packages/cypress/**/executors/**/schema.json",
+          "packages/cypress/**/generators/**/schema.json",
+          "packages/cypress/generators.json",
+          "packages/cypress/executors.json",
+          "packages/cypress/package.json",
+          "packages/cypress/migrations.json"
+        ]
+      },
+      "outputs": ["{options.outputFile}"]
+    }
+  }
+}

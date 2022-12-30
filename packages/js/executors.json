@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "executors": {
+    "tsc": {
+      "implementation": "./src/executors/tsc/tsc.impl",
+      "schema": "./src/executors/tsc/schema.json",
+      "description": "Build a project using TypeScript."
+    },
+    "swc": {
+      "implementation": "./src/executors/swc/swc.impl",
+      "schema": "./src/executors/swc/schema.json",
+      "description": "Build a project using SWC."
+    },
+    "node": {
+      "implementation": "./src/executors/node/node.impl",
+      "schema": "./src/executors/node/schema.json",
+      "description": "Execute a Node application."
+    }
+  },
+  "builders": {
+    "tsc": {
+      "implementation": "./src/executors/tsc/compat",
+      "schema": "./src/executors/tsc/schema.json",
+      "description": "Build a project using TypeScript."
+    },
+    "swc": {
+      "implementation": "./src/executors/swc/compat",
+      "schema": "./src/executors/swc/schema.json",
+      "description": "Build a project using SWC."
+    },
+    "node": {
+      "implementation": "./src/executors/node/compat",
+      "schema": "./src/executors/node/schema.json",
+      "description": "Execute a Node application."
+    }
+  }
+}

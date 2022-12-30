@@ -1,0 +1,25 @@
+{
+  "name": "counter",
+  "implementation": "/packages/workspace/src/executors/counter/counter.impl.ts",
+  "batchImplementation": "./src/executors/counter/counter.impl#batchCounter",
+  "schema": {
+    "version": 2,
+    "title": "Counter",
+    "description": "A dummy executor useful for E2E tests.",
+    "type": "object",
+    "cli": "nx",
+    "outputCapture": "pipe",
+    "properties": {
+      "to": { "type": "number", "description": "Count to this number." },
+      "result": { "type": "boolean", "description": "Final result." }
+    },
+    "additionalProperties": true,
+    "required": ["to"],
+    "presets": []
+  },
+  "description": "A dummy executor useful for E2E tests.",
+  "hidden": true,
+  "aliases": [],
+  "path": "/packages/workspace/src/executors/counter/schema.json",
+  "type": "executor"
+}

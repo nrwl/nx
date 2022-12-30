@@ -1,0 +1,222 @@
+{
+  "projects": {
+    "ui-one": {
+      "projectType": "library",
+      "root": "libs/ui/one",
+      "sourceRoot": "libs/ui/one/src",
+      "targets": {
+        "storybook": {
+          "builder": "@nrwl/storybook:storybook",
+          "options": {
+            "uiFramework": "@storybook/angular",
+            "port": 4400,
+            "config": {
+              "configFolder": "libs/ui/one/.storybook"
+            },
+            "projectBuildConfig": "ui-one:build-storybook",
+            "stylePreprocessorOptions": {
+              "includePaths": [
+                "node_modules/@storybook/addon-storysource/node_modules/highlight.js/styles/github.css"
+              ]
+            },
+            "styles": ["apps/webng/src/styles.css"],
+            "compodocArgs": ["-e", "json"],
+            "docsMode": false
+          }
+        },
+        "build-storybook": {
+          "executor": "@nrwl/storybook:build",
+          "outputs": ["{options.outputPath}"],
+          "options": {
+            "uiFramework": "@storybook/angular",
+            "outputPath": "dist/storybook/ui/one",
+            "config": {
+              "configFolder": "libs/ui/one/.storybook"
+            },
+            "projectBuildConfig": "ui-one:build-storybook",
+            "stylePreprocessorOptions": {
+              "includePaths": [
+                "node_modules/@storybook/addon-storysource/node_modules/highlight.js/styles/github.css"
+              ]
+            },
+            "styles": ["apps/webng/src/styles.css"],
+            "compodocArgs": ["-e", "json"],
+            "docsMode": false,
+            "loglevel": "info"
+          },
+          "configurations": {
+            "ci": {
+              "quiet": true
+            }
+          }
+        }
+      }
+    },
+    "ui-two": {
+      "projectType": "library",
+      "root": "libs/ui/two",
+      "sourceRoot": "libs/ui/two/src",
+      "targets": {
+        "storybook": {
+          "builder": "@nrwl/storybook:storybook",
+          "options": {
+            "uiFramework": "@storybook/angular",
+            "port": 4400,
+            "config": {
+              "configFolder": "libs/ui/two/.storybook"
+            },
+            "projectBuildConfig": "ui-two:build-storybook",
+            "stylePreprocessorOptions": {
+              "includePaths": [
+                "node_modules/@storybook/addon-storysource/node_modules/highlight.js/styles/github.css"
+              ]
+            },
+            "styles": ["apps/webng/src/styles.css"],
+            "compodocArgs": ["-e", "json"],
+            "docsMode": false
+          }
+        },
+        "build-storybook": {
+          "executor": "@nrwl/storybook:build",
+          "outputs": ["{options.outputPath}"],
+          "options": {
+            "uiFramework": "@storybook/angular",
+            "outputPath": "dist/storybook/ui/two",
+            "config": {
+              "configFolder": "libs/ui/two/.storybook"
+            },
+            "projectBuildConfig": "ui-two:build-storybook",
+            "stylePreprocessorOptions": {
+              "includePaths": [
+                "node_modules/@storybook/addon-storysource/node_modules/highlight.js/styles/github.css"
+              ]
+            },
+            "styles": ["apps/webng/src/styles.css"],
+            "compodocArgs": ["-e", "json"],
+            "docsMode": false,
+            "loglevel": "info"
+          },
+          "configurations": {
+            "ci": {
+              "quiet": true
+            }
+          }
+        }
+      }
+    },
+    "ui-three": {
+      "projectType": "library",
+      "root": "libs/ui/three",
+      "sourceRoot": "libs/ui/three/src",
+      "targets": {
+        "storybook": {
+          "builder": "@nrwl/storybook:storybook",
+          "options": {
+            "uiFramework": "@storybook/angular",
+            "port": 4400,
+            "config": {
+              "configFolder": "libs/ui/three/.storybook"
+            },
+            "projectBuildConfig": "ui-three:build-storybook",
+            "stylePreprocessorOptions": {
+              "includePaths": [
+                "node_modules/@storybook/addon-storysource/node_modules/highlight.js/styles/github.css"
+              ]
+            },
+            "styles": ["apps/webng/src/styles.css"],
+            "compodocArgs": ["-e", "json"],
+            "docsMode": false
+          }
+        },
+        "build-storybook": {
+          "executor": "@nrwl/storybook:build",
+          "outputs": ["{options.outputPath}"],
+          "options": {
+            "uiFramework": "@storybook/angular",
+            "outputPath": "dist/storybook/ui/three",
+            "config": {
+              "configFolder": "libs/ui/three/.storybook"
+            },
+            "projectBuildConfig": "ui-three:build-storybook",
+            "stylePreprocessorOptions": {
+              "includePaths": [
+                "node_modules/@storybook/addon-storysource/node_modules/highlight.js/styles/github.css"
+              ]
+            },
+            "styles": ["apps/webng/src/styles.css"],
+            "compodocArgs": ["-e", "json"],
+            "docsMode": false,
+            "loglevel": "info"
+          },
+          "configurations": {
+            "ci": {
+              "quiet": true
+            }
+          }
+        }
+      }
+    },
+    "main-app": {
+      "projectType": "application",
+      "root": "apps/main-app",
+      "sourceRoot": "apps/main-app/src",
+      "prefix": "katst",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:browser",
+          "outputs": ["{options.outputPath}"]
+        },
+        "storybook": {
+          "builder": "@nrwl/storybook:storybook",
+          "options": {
+            "uiFramework": "@storybook/angular",
+            "port": 4400,
+            "config": {
+              "configFolder": "apps/main-app/.storybook"
+            },
+            "projectBuildConfig": "main-app",
+            "stylePreprocessorOptions": {
+              "includePaths": [
+                "node_modules/@storybook/addon-storysource/node_modules/highlight.js/styles/github.css"
+              ]
+            },
+            "styles": ["apps/webng/src/styles.css"],
+            "compodocArgs": ["-e", "json"],
+            "docsMode": false
+          },
+          "configurations": {
+            "ci": {
+              "quiet": true
+            }
+          }
+        },
+        "build-storybook": {
+          "builder": "@nrwl/storybook:build",
+          "outputs": ["{options.outputPath}"],
+          "options": {
+            "uiFramework": "@storybook/angular",
+            "outputPath": "dist/storybook/main-app",
+            "config": {
+              "configFolder": "apps/main-app/.storybook"
+            },
+            "projectBuildConfig": "main-app",
+            "stylePreprocessorOptions": {
+              "includePaths": [
+                "node_modules/@storybook/addon-storysource/node_modules/highlight.js/styles/github.css"
+              ]
+            },
+            "styles": ["apps/webng/src/styles.css"],
+            "compodocArgs": ["-e", "json"],
+            "docsMode": false,
+            "loglevel": "info"
+          },
+          "configurations": {
+            "ci": {
+              "quiet": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

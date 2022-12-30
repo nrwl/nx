@@ -1,0 +1,17 @@
+{
+  "name": "<%= projectName %>",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "@testing-library/jest-native": "*",
+    "@testing-library/react-native": "*",
+    "react-native": "*",
+    "expo": "*",
+    "react-native-svg": "*",
+    "react-native-web": "*"
+  },
+  "scripts": {
+    <% if (packageManager === 'npm') { %>"eas-build-pre-install": "cd <%= offsetFromRoot %> && cp <%= packageLockFile %> ./<%= appProjectRoot %>/", <% } %>
+    "postinstall": "rm -r node_modules && cd <%= offsetFromRoot %> && <%= packageManager %> install && npx nx sync-deps <%= projectName %> && npx nx ensure-symlink <%= projectName %>"
+  }
+}

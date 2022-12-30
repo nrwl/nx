@@ -1,0 +1,6 @@
+{
+  "extends": "<%= rootTsConfigPath %>",
+  "files": [],
+  "include": [],
+  "references": []
+}

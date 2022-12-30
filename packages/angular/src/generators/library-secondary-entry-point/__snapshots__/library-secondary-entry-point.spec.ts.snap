@@ -1,0 +1,15 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`librarySecondaryEntryPoint generator --skipModule should not generate a module 1`] = `
+"
+export const greeting = 'Hello World!';
+
+"
+`;
+
+exports[`librarySecondaryEntryPoint generator should generate files for the secondary entry point 1`] = `
+"
+export * from './lib/testing.module';
+
+"
+`;

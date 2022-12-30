@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxWorkspaceRemove",
+  "cli": "nx",
+  "title": "Nx Remove",
+  "description": "Remove a project from the workspace.",
+  "type": "object",
+  "examples": [
+    {
+      "command": "nx g @nrwl/workspace:remove my-feature-lib",
+      "description": "Remove `my-feature-lib` from the workspace"
+    },
+    {
+      "command": "nx g @nrwl/workspace:remove my-feature-lib --forceRemove",
+      "description": "Force removal of `my-feature-lib` from the workspace"
+    }
+  ],
+  "properties": {
+    "projectName": {
+      "type": "string",
+      "alias": "project",
+      "description": "The name of the project to remove.",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      }
+    },
+    "forceRemove": {
+      "type": "boolean",
+      "aliases": ["force-remove"],
+      "description": "When `true`, forces removal even if the project is still in use.",
+      "default": false
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "aliases": ["skip-format"],
+      "description": "Skip formatting files.",
+      "default": false
+    },
+    "importPath": {
+      "type": "string",
+      "description": "The library name used at creation time"
+    }
+  },
+  "required": ["projectName"]
+}

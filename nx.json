@@ -1,0 +1,86 @@
+{
+  "$schema": "packages/nx/schemas/nx-schema.json",
+  "affected": {
+    "defaultBase": "master"
+  },
+  "tasksRunnerOptions": {
+    "default": {
+      "runner": "@nrwl/nx-cloud",
+      "options": {
+        "accessToken": "MjEyM2IwYWQtMTEyMS00ZGFmLThkY2UtYjg4YWRiZTNjZmI5fHJlYWQtd3JpdGU=",
+        "cacheableOperations": [
+          "build",
+          "lint-base",
+          "lint",
+          "build-base",
+          "e2e",
+          "test",
+          "sitemap",
+          "build-storybook"
+        ],
+        "cacheDirectory": "/tmp/nx-cache",
+        "parallel": 1,
+        "url": "https://staging.nx.app"
+      }
+    }
+  },
+  "workspaceLayout": {
+    "appsDir": "",
+    "libsDir": ""
+  },
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*", "sharedGlobals"],
+    "production": [
+      "default",
+      "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+      "!{projectRoot}/tsconfig.spec.json",
+      "!{projectRoot}/jest.config.[jt]s",
+      "!{projectRoot}/.eslintrc.json",
+      "!{projectRoot}/.storybook/**/*",
+      "!{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)"
+    ],
+    "sharedGlobals": ["{workspaceRoot}/babel.config.json"]
+  },
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["build-base"],
+      "inputs": ["production", "^production"]
+    },
+    "build-base": {
+      "dependsOn": ["^build-base"],
+      "inputs": ["production", "^production"]
+    },
+    "test": {
+      "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"]
+    },
+    "lint": {
+      "inputs": [
+        "default",
+        "{workspaceRoot}/.eslintrc.json",
+        "{workspaceRoot}/tools/eslint-rules/**/*"
+      ]
+    },
+    "e2e": {
+      "inputs": [
+        "default",
+        "^production",
+        {
+          "env": "SELECTED_CLI"
+        },
+        {
+          "env": "NX_E2E_CI_CACHE_KEY"
+        }
+      ]
+    },
+    "e2e-base": {
+      "inputs": ["default", "^production"]
+    },
+    "run-e2e-tests": {
+      "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"]
+    },
+    "build-storybook": {
+      "inputs": ["default", "^production", "{workspaceRoot}/.storybook/**/*"]
+    }
+  },
+  "defaultProject": "@nrwl/nx-source"
+}

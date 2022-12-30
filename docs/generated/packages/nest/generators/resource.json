@@ -1,0 +1,102 @@
+{
+  "name": "resource",
+  "factory": "./src/generators/resource/resource",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "$id": "NxNestResourceGenerator",
+    "title": "Nest Resource Options Schema",
+    "description": "Nest Resource Options Schema.",
+    "cli": "nx",
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "description": "The name of the resource.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "What name would you like to use for this resource (plural, e.g., `users`)?"
+      },
+      "project": {
+        "description": "The Nest project to target.",
+        "type": "string",
+        "$default": { "$source": "projectName" },
+        "alias": "p",
+        "x-prompt": "What Nest project would you like to target?"
+      },
+      "directory": {
+        "description": "Directory where the generated files are placed.",
+        "type": "string",
+        "aliases": ["dir", "path"]
+      },
+      "skipFormat": {
+        "description": "Skip formatting files.",
+        "type": "boolean",
+        "default": false
+      },
+      "unitTestRunner": {
+        "description": "Test runner to use for unit tests.",
+        "type": "string",
+        "enum": ["jest", "none"],
+        "default": "jest"
+      },
+      "flat": {
+        "description": "Flag to indicate if a directory is created.",
+        "type": "boolean",
+        "default": false
+      },
+      "language": {
+        "description": "Nest class language.",
+        "type": "string",
+        "enum": ["js", "ts"]
+      },
+      "type": {
+        "type": "string",
+        "description": "The transport layer.",
+        "default": "rest",
+        "enum": [
+          "rest",
+          "graphql-code-first",
+          "graphql-schema-first",
+          "microservice",
+          "ws"
+        ],
+        "x-prompt": {
+          "message": "What transport layer do you use?",
+          "type": "list",
+          "items": [
+            { "value": "rest", "label": "REST API" },
+            { "value": "graphql-code-first", "label": "GraphQL (code first)" },
+            {
+              "value": "graphql-schema-first",
+              "label": "GraphQL (schema first)"
+            },
+            { "value": "microservice", "label": "Microservice (non-HTTP)" },
+            { "value": "ws", "label": "WebSockets" }
+          ]
+        }
+      },
+      "skipImport": {
+        "type": "boolean",
+        "description": "Flag to skip the module import.",
+        "default": false
+      },
+      "crud": {
+        "type": "boolean",
+        "description": "When true, CRUD entry points are generated.",
+        "default": true,
+        "x-prompt": {
+          "message": "Would you like to generate CRUD entry points?",
+          "type": "confirmation"
+        }
+      }
+    },
+    "additionalProperties": false,
+    "required": ["name", "project"],
+    "presets": []
+  },
+  "description": "Run the `resource` NestJS generator with Nx project support.",
+  "implementation": "/packages/nest/src/generators/resource/resource.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/nest/src/generators/resource/schema.json",
+  "type": "generator"
+}

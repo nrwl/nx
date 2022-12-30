@@ -1,0 +1,37 @@
+{
+  "name": "scam-to-standalone",
+  "factory": "./src/generators/scam-to-standalone/scam-to-standalone",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "$id": "GeneratorAngularScamToStandalone",
+    "cli": "nx",
+    "title": "Convert an Inline SCAM to Standalone Component",
+    "description": "Convert an Inline SCAM to a Standalone Component.",
+    "type": "object",
+    "properties": {
+      "component": {
+        "type": "string",
+        "description": "The path to the SCAM component file, relative to the root of the project containing the SCAM.",
+        "$default": { "$source": "argv", "index": 0 }
+      },
+      "project": {
+        "type": "string",
+        "description": "The project containing the SCAM.",
+        "x-prompt": "What project contains the SCAM?",
+        "x-dropdown": "projects"
+      },
+      "skipFormat": {
+        "type": "boolean",
+        "description": "Skip formatting the workspace after the generator completes."
+      }
+    },
+    "examplesFile": "## Examples\n\n{% tabs %}\n\n{% tab label=\"Basic Usage\" %}\n\nThis generator allows you to convert an Inline SCAM to a Standalone Component. It's important that the SCAM you wish to convert has it's NgModule within the same file for the generator to be able to correctly convert the component to Standalone.\n\n```bash\n\nnx g @nrwl/angular:scam-to-standalone --component=libs/mylib/src/lib/myscam/myscam.component.ts --project=mylib\n\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
+    "presets": []
+  },
+  "description": "Convert an existing Single Component Angular Module (SCAM) to a Standalone Component.",
+  "implementation": "/packages/angular/src/generators/scam-to-standalone/scam-to-standalone.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/angular/src/generators/scam-to-standalone/schema.json",
+  "type": "generator"
+}

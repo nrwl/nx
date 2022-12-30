@@ -1,0 +1,56 @@
+{
+  "name": "run-commands",
+  "factory": "./src/generators/run-commands/run-commands#runCommandsGenerator",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "$id": "SchematicsRunCommands",
+    "title": "Create a custom target to run any command",
+    "description": "Create a custom target to run any command.",
+    "type": "object",
+    "cli": "nx",
+    "examples": [
+      {
+        "command": "nx g @nrwl/workspace:run-commands printhello --project my-feature-lib --command 'echo hello'",
+        "description": "Add the `printhello` target to `my-feature-lib`"
+      }
+    ],
+    "properties": {
+      "name": {
+        "type": "string",
+        "description": "Target name.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "What name would you like to use to invoke the command?"
+      },
+      "project": {
+        "description": "Project name.",
+        "type": "string",
+        "x-prompt": "What project does the target belong to?"
+      },
+      "command": {
+        "description": "Command to run.",
+        "type": "string",
+        "x-prompt": "What command would you like to run?"
+      },
+      "cwd": {
+        "description": "Current working directory of the command.",
+        "type": "string"
+      },
+      "outputs": {
+        "description": "Allows you to specify where the build artifacts are stored. This allows Nx Cloud to pick them up correctly, in the case that the build artifacts are placed somewhere other than the top level dist folder.",
+        "type": "string"
+      },
+      "envFile": {
+        "description": "Env files to be loaded before executing the commands.",
+        "type": "string"
+      }
+    },
+    "required": ["name", "command", "project"],
+    "presets": []
+  },
+  "aliases": ["run-command", "target"],
+  "description": "Generates a target to run any command in the terminal.",
+  "implementation": "/packages/workspace/src/generators/run-commands/run-commands#runCommandsGenerator.ts",
+  "hidden": false,
+  "path": "/packages/workspace/src/generators/run-commands/schema.json",
+  "type": "generator"
+}

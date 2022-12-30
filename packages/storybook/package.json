@@ -1,0 +1,43 @@
+{
+  "name": "@nrwl/storybook",
+  "version": "0.0.1",
+  "private": false,
+  "description": "The Nx Plugin for Storybook contains executors and generators for allowing your workspace to use the powerful Storybook integration testing & documenting capabilities.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/storybook"
+  },
+  "keywords": [
+    "Angular",
+    "React",
+    "Web",
+    "Storybook",
+    "Cypress"
+  ],
+  "main": "./index.js",
+  "typings": "./index.d.ts",
+  "author": "Isaac Mann",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "schematics": "./generators.json",
+  "builders": "./executors.json",
+  "ng-update": {
+    "requirements": {},
+    "migrations": "./migrations.json"
+  },
+  "dependencies": {
+    "@nrwl/cypress": "file:../cypress",
+    "@nrwl/devkit": "file:../devkit",
+    "@nrwl/linter": "file:../linter",
+    "@nrwl/workspace": "file:../workspace",
+    "dotenv": "~10.0.0",
+    "semver": "7.3.4"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "name": "package",
+  "implementation": "/packages/angular/src/executors/package/package.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "$schema": "http://json-schema.org/schema",
+    "title": "ng-packagr Target",
+    "description": "Builds and packages an Angular library producing an output following the Angular Package Format (APF) to be distributed as an NPM package.\n\nThis executor is similar to the `@angular-devkit/build-angular:ng-packagr` with additional support for incremental builds.",
+    "cli": "nx",
+    "type": "object",
+    "presets": [
+      {
+        "name": "Publishable Library with Tailwind",
+        "keys": [
+          "project",
+          "tailwindConfig"
+        ]
+      },
+      {
+        "name": "Updating Project Dependencies for Publishable Library",
+        "keys": [
+          "project",
+          "updateBuildableProjectDepsInPackageJson",
+          "buildableProjectDepsInPackageJsonType"
+        ]
+      }
+    ],
+    "properties": {
+      "project": {
+        "type": "string",
+        "description": "The file path for the ng-packagr configuration file, relative to the workspace root."
+      },
+      "tsConfig": {
+        "type": "string",
+        "description": "The full path for the TypeScript configuration file, relative to the workspace root.",
+        "x-completion-type": "file",
+        "x-completion-glob": "tsconfig.*.json"
+      },
+      "watch": {
+        "type": "boolean",
+        "description": "Whether to run a build when any file changes.",
+        "default": false
+      },
+      "updateBuildableProjectDepsInPackageJson": {
+        "type": "boolean",
+        "description": "Whether to update the buildable project dependencies in package.json.",
+        "default": true
+      },
+      "buildableProjectDepsInPackageJsonType": {
+        "type": "string",
+        "description": "When `updateBuildableProjectDepsInPackageJson` is `true`, this adds dependencies to either `peerDependencies` or `dependencies`.",
+        "enum": [
+          "dependencies",
+          "peerDependencies"
+        ],
+        "default": "peerDependencies"
+      },
+      "tailwindConfig": {
+        "type": "string",
+        "description": "The full path for the Tailwind configuration file, relative to the workspace root. If not provided and a `tailwind.config.js` file exists in the project or workspace root, it will be used. Otherwise, Tailwind will not be configured.",
+        "x-completion-type": "file",
+        "x-completion-glob": "tailwind.config.js"
+      }
+    },
+    "additionalProperties": false,
+    "required": [
+      "project"
+    ]
+  },
+  "description": "Builds and packages an Angular library producing an output following the Angular Package Format (APF) to be distributed as an NPM package.\nThis executor is similar to the `@angular-devkit/build-angular:ng-packagr` with additional support for incremental builds.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/angular/src/executors/package/schema.json",
+  "type": "executor"
+}

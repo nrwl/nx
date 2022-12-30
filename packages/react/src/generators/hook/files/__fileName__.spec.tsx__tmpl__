@@ -1,0 +1,18 @@
+import { act, renderHook } from '@testing-library/react';
+import * as React from 'react';
+
+import <%= hookName %> from './<%= fileName %>';
+
+describe('<%= hookName %>', () => {
+  it('should render successfully', () => {
+    const { result } = renderHook(() => <%= hookName %>());
+
+    expect(result.current.count).toBe(0);
+
+    act(() => {
+      result.current.increment()
+    });
+
+    expect(result.current.count).toBe(1);
+  });
+});

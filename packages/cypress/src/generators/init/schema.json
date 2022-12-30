@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxCypressInit",
+  "cli": "nx",
+  "title": "Add Cypress Configuration to the workspace",
+  "description": "Add Cypress Configuration to the workspace.",
+  "type": "object",
+  "properties": {
+    "skipPackageJson": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not add dependencies to `package.json`."
+    }
+  }
+}

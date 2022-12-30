@@ -1,0 +1,36 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`addTypescriptEslintUtilsIfNeeded() should add @typescript-eslint/utils if plugins folder exists 1`] = `
+"{
+  \\"name\\": \\"test-name\\",
+  \\"dependencies\\": {},
+  \\"devDependencies\\": {
+    \\"@typescript-eslint/utils\\": \\"^5.36.1\\"
+  }
+}
+"
+`;
+
+exports[`addTypescriptEslintUtilsIfNeeded() should not add @typescript-eslint/utils if plugins folder or experimental-utils dont exist 1`] = `"{\\"name\\":\\"test-name\\",\\"dependencies\\":{},\\"devDependencies\\":{}}"`;
+
+exports[`addTypescriptEslintUtilsIfNeeded() should remove @typescript-eslint/experimental-utils from package.json devDependencies and add @typescript-eslint/utils 1`] = `
+"{
+  \\"name\\": \\"test-name\\",
+  \\"dependencies\\": {},
+  \\"devDependencies\\": {
+    \\"@typescript-eslint/utils\\": \\"^5.36.1\\"
+  }
+}
+"
+`;
+
+exports[`addTypescriptEslintUtilsIfNeeded() should remove @typescript-eslint/experimental-utils from package.json devDependencies and add @typescript-eslint/utils 2`] = `
+"{
+  \\"name\\": \\"test-name\\",
+  \\"dependencies\\": {},
+  \\"devDependencies\\": {
+    \\"@typescript-eslint/utils\\": \\"^5.36.1\\"
+  }
+}
+"
+`;

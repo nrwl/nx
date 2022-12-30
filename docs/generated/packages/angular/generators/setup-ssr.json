@@ -1,0 +1,67 @@
+{
+  "name": "setup-ssr",
+  "factory": "./src/generators/setup-ssr/setup-ssr",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "$id": "GeneratorAngularUniversalSetup",
+    "cli": "nx",
+    "title": "Generate Angular Universal (SSR) setup for an Angular App",
+    "description": "Create the additional configuration required to enable SSR via Angular Universal for an Angular application.",
+    "type": "object",
+    "properties": {
+      "project": {
+        "type": "string",
+        "description": "The name of the application to generate the Angular Universal configuration for.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "What app would you like to generate an Angular Universal configuration for?",
+        "x-dropdown": "projects"
+      },
+      "appId": {
+        "type": "string",
+        "format": "html-selector",
+        "description": "The `appId` to use with `withServerTransition`.",
+        "default": "serverApp"
+      },
+      "main": {
+        "type": "string",
+        "format": "path",
+        "description": "The name of the main entry-point file.",
+        "default": "main.server.ts"
+      },
+      "serverFileName": {
+        "type": "string",
+        "default": "server.ts",
+        "description": "The name of the Express server file."
+      },
+      "serverPort": {
+        "type": "number",
+        "default": 4000,
+        "description": "The port for the Express server."
+      },
+      "rootModuleFileName": {
+        "type": "string",
+        "format": "path",
+        "description": "The name of the root module file",
+        "default": "app.server.module.ts"
+      },
+      "rootModuleClassName": {
+        "type": "string",
+        "description": "The name of the root module class.",
+        "default": "AppServerModule"
+      },
+      "skipFormat": {
+        "type": "boolean",
+        "description": "Skip formatting the workspace after the generator completes."
+      }
+    },
+    "required": ["project"],
+    "additionalProperties": false,
+    "presets": []
+  },
+  "description": "Generate Angular Universal (SSR) setup for an Angular application.",
+  "implementation": "/packages/angular/src/generators/setup-ssr/setup-ssr.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/angular/src/generators/setup-ssr/schema.json",
+  "type": "generator"
+}

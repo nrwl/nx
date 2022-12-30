@@ -1,0 +1,48 @@
+{
+  "name": "@nrwl/express",
+  "version": "0.0.1",
+  "private": false,
+  "description": "The Nx Plugin for Express contains executors and generators for allowing your workspace to create powerful Express Node applications and APIs.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/express"
+  },
+  "keywords": [
+    "Monorepo",
+    "Node",
+    "Express",
+    "Jest",
+    "Cypress",
+    "CLI"
+  ],
+  "main": "./index.js",
+  "typings": "./index.d.ts",
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "schematics": "./generators.json",
+  "ng-update": {
+    "requirements": {},
+    "migrations": "./migrations.json"
+  },
+  "dependencies": {
+    "@nrwl/devkit": "file:../devkit",
+    "@nrwl/node": "file:../node",
+    "@nrwl/workspace": "file:../workspace"
+  },
+  "peerDependencies": {
+    "express": "^4.18.1"
+  },
+  "peerDependenciesMeta": {
+    "express": {
+      "optional": true
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

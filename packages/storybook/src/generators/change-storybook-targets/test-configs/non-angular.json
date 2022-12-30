@@ -1,0 +1,60 @@
+{
+  "projects": {
+    "ui-one": {
+      "projectType": "library",
+      "root": "libs/ui/one",
+      "sourceRoot": "libs/ui/one/src",
+      "targets": {
+        "storybook": {
+          "builder": "@nrwl/storybook:storybook",
+          "options": {
+            "uiFramework": "@storybook/react",
+            "port": 4400,
+            "config": {
+              "configFolder": "libs/ui/one/.storybook"
+            }
+          }
+        },
+        "build-storybook": {
+          "executor": "@nrwl/storybook:build",
+          "outputs": ["{options.outputPath}"],
+          "options": {
+            "uiFramework": "@storybook/angular",
+            "outputPath": "dist/storybook/ui/one",
+            "config": {
+              "configFolder": "libs/ui/one/.storybook"
+            }
+          },
+          "configurations": {
+            "ci": {
+              "quiet": true
+            }
+          }
+        }
+      }
+    },
+    "main-app": {
+      "projectType": "application",
+      "root": "apps/main-app",
+      "sourceRoot": "apps/main-app/src",
+      "prefix": "katst",
+      "architect": {
+        "storybook": {
+          "builder": "@nrwl/storybook:storybook",
+          "options": {
+            "uiFramework": "@storybook/react",
+            "port": 4400,
+            "config": {
+              "configFolder": "apps/main-app/.storybook"
+            }
+          },
+          "configurations": {
+            "ci": {
+              "quiet": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,188 @@
+{
+  "schematics": {
+    "add-build-target-test-13-5-0": {
+      "version": "13.5.0-beta.0",
+      "cli": "nx",
+      "description": "add buildTarget to test-ios and test-android for detox app",
+      "factory": "./src/migrations/update-13-5-0/add-build-target-test-13-5-0"
+    },
+    "remove-types-detox-13-8-2": {
+      "version": "13.8.2-beta.0",
+      "cli": "nx",
+      "description": "remove deprecated @types/detox from package.json",
+      "factory": "./src/migrations/update-13-8-2/remove-types-detox-13-8-2"
+    },
+    "add-verbose-jest-config-13-10-3": {
+      "version": "13.10.3-beta.0",
+      "cli": "nx",
+      "description": "Update jest.config.json under detox project, add key verbsoe: true",
+      "factory": "./src/migrations/update-13-10-3/add-verbose-jest-config-13-10-3"
+    }
+  },
+  "packageJsonUpdates": {
+    "12.8.0": {
+      "version": "12.8.0-beta.0",
+      "packages": {
+        "detox": {
+          "version": "18.20.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "12.10.0-beta.1": {
+      "version": "12.10.0-beta.1",
+      "packages": {
+        "detox": {
+          "version": "18.22.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "13.0.0": {
+      "version": "13.0.0-beta.1",
+      "packages": {
+        "detox": {
+          "version": "18.22.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "13.2.0": {
+      "version": "13.2.0-beta.0",
+      "packages": {
+        "detox": {
+          "version": "19.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/jest-dom": {
+          "version": "5.15.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "13.5.0": {
+      "version": "13.5.0-beta.0",
+      "packages": {
+        "detox": {
+          "version": "19.4.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/jest-dom": {
+          "version": "5.16.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "13.8.2": {
+      "version": "13.8.2-beta.0",
+      "packages": {
+        "detox": {
+          "version": "19.4.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/jest-dom": {
+          "version": "5.16.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "13.8.6": {
+      "version": "13.8.6-beta.0",
+      "packages": {
+        "detox": {
+          "version": "19.5.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "13.9.3": {
+      "version": "13.9.3-beta.0",
+      "packages": {
+        "detox": {
+          "version": "19.5.7",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "13.10.3": {
+      "version": "13.10.3-beta.0",
+      "packages": {
+        "detox": {
+          "version": "19.6.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/jest-dom": {
+          "version": "5.16.4",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "14.1.8": {
+      "version": "14.1.8-beta.0",
+      "packages": {
+        "detox": {
+          "version": "19.6.9",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "14.2.1": {
+      "version": "14.2.1-beta.0",
+      "packages": {
+        "detox": {
+          "version": "19.7.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "14.5.7": {
+      "version": "14.5.7-beta.0",
+      "packages": {
+        "detox": {
+          "version": "19.9.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/jest-dom": {
+          "version": "5.16.5",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "14.6.1": {
+      "version": "14.6.1-beta.0",
+      "packages": {
+        "detox": {
+          "version": "19.10.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "14.7.4": {
+      "version": "14.7.4-beta.0",
+      "packages": {
+        "detox": {
+          "version": "19.12.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "15.0.0": {
+      "version": "15.0.0-beta.0",
+      "packages": {
+        "detox": {
+          "version": "19.12.5",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "15.2.2": {
+      "version": "15.2.2-beta.0",
+      "packages": {
+        "detox": {
+          "version": "20.0.3",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    }
+  }
+}

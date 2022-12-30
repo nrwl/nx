@@ -1,0 +1,94 @@
+{
+  "name": "create-nx-plugin",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/create-nx-plugin",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "jestConfig": "packages/create-nx-plugin/jest.config.ts",
+        "passWithNoTests": true
+      },
+      "outputs": ["{workspaceRoot}/coverage/packages/create-nx-plugin"]
+    },
+    "build-base": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "outputPath": "build/packages/create-nx-plugin",
+        "tsConfig": "packages/create-nx-plugin/tsconfig.lib.json",
+        "main": "packages/create-nx-plugin/bin/create-nx-plugin.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": [
+          {
+            "input": "packages/create-nx-plugin",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/create-nx-plugin",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/create-nx-plugin",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages/create-nx-plugin",
+            "glob": "**/*.js",
+            "ignore": ["**/jest.config.js"],
+            "output": "/"
+          },
+          {
+            "input": "packages/create-nx-plugin",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
+        ]
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/build/packages/create-nx-plugin"],
+      "options": {
+        "commands": [
+          {
+            "command": "node ./scripts/chmod build/packages/create-nx-plugin/bin/create-nx-plugin.js"
+          },
+          {
+            "command": "node ./scripts/copy-readme.js create-nx-plugin"
+          },
+          {
+            "command": "node ./scripts/replace-versions.js build/packages/create-nx-plugin/bin/create-nx-plugin.js"
+          }
+        ],
+        "parallel": false
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/create-nx-plugin/**/*.ts",
+          "packages/create-nx-plugin/**/*.spec.ts",
+          "packages/create-nx-plugin/**/*_spec.ts",
+          "packages/create-nx-plugin/**/*.spec.tsx",
+          "packages/create-nx-plugin/**/*.spec.js",
+          "packages/create-nx-plugin/**/*.spec.jsx",
+          "packages/create-nx-plugin/**/*.d.ts"
+        ]
+      },
+      "outputs": ["{options.outputFile}"]
+    }
+  },
+  "implicitDependencies": ["nx-plugin"]
+}

@@ -1,0 +1,120 @@
+{
+  "name": "nx-dev",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "nx-dev/nx-dev",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "dependsOn": [
+        {
+          "target": "build-base",
+          "projects": "self"
+        }
+      ],
+      "executor": "nx:run-commands",
+      "options": {
+        "outputPath": "dist/nx-dev/nx-dev",
+        "commands": [
+          "nx run nx-dev:sitemap",
+          "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/internal-link-checker.ts"
+        ],
+        "parallel": false
+      }
+    },
+    "sitemap": {
+      "executor": "nx:run-commands",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/nx-dev/nx-dev/public",
+        "command": "yarn next-sitemap --config ./nx-dev/nx-dev/next-sitemap.config.js"
+      }
+    },
+    "sync-documentation": {
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/public/documentation"],
+      "options": {
+        "command": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/nx-dev-docs-latest-sync.ts"
+      }
+    },
+    "generate-og-images": {
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/public/images/open-graph"],
+      "options": {
+        "command": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/open-graph/generate-images.ts"
+      }
+    },
+    "build-base": {
+      "executor": "@nrwl/next:build",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "root": "nx-dev/nx-dev",
+        "outputPath": "dist/nx-dev/nx-dev"
+      },
+      "configurations": {
+        "development": {
+          "outputPath": "nx-dev/nx-dev"
+        },
+        "production": {}
+      }
+    },
+    "serve": {
+      "executor": "@nrwl/next:server",
+      "options": {
+        "buildTarget": "nx-dev:build-base",
+        "dev": true
+      },
+      "configurations": {
+        "production": {
+          "buildTarget": "nx-dev:build-base:production",
+          "dev": false
+        },
+        "development": {
+          "buildTarget": "nx-dev:build-base:development",
+          "dev": true
+        }
+      },
+      "defaultConfiguration": "development"
+    },
+    "deploy-build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/public/documentation"],
+      "options": {
+        "commands": [
+          {
+            "command": "nx run nx-dev:generate-og-images",
+            "description": "OG images generation"
+          },
+          {
+            "command": "nx run nx-dev:build",
+            "description": "NextJs build step"
+          }
+        ],
+        "color": true,
+        "parallel": true
+      }
+    },
+    "export": {
+      "executor": "@nrwl/next:export",
+      "options": {
+        "buildTarget": "nx-dev:build:production"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": ["nx-dev/nx-dev/**/*.{ts,tsx,js,jsx}"]
+      },
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/nx-dev/nx-dev"],
+      "options": {
+        "jestConfig": "nx-dev/nx-dev/jest.config.ts",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "tags": ["scope:nx-dev", "type:app"],
+  "implicitDependencies": ["docs"]
+}

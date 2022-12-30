@@ -1,0 +1,99 @@
+{
+  "name": "@nrwl/workspace",
+  "version": "0.0.1",
+  "private": false,
+  "description": "The Workspace plugin contains executors and generators that are useful for any Nx workspace. It should be present in every Nx workspace and other plugins build on it.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/workspace"
+  },
+  "keywords": [
+    "Monorepo",
+    "Angular",
+    "React",
+    "Web",
+    "Node",
+    "Nest",
+    "Jest",
+    "Cypress",
+    "CLI"
+  ],
+  "main": "./index.js",
+  "typings": "./index.d.ts",
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "schematics": "./generators.json",
+  "builders": "./executors.json",
+  "ng-update": {
+    "requirements": {},
+    "migrations": "./migrations.json",
+    "packageGroup": {
+      "@nrwl/angular": "*",
+      "@nrwl/cli": "*",
+      "@nrwl/cypress": "*",
+      "@nrwl/detox": "*",
+      "@nrwl/devkit": "*",
+      "@nrwl/esbuild": "*",
+      "@nrwl/eslint-plugin-nx": "*",
+      "@nrwl/expo": "*",
+      "@nrwl/express": "*",
+      "@nrwl/jest": "*",
+      "@nrwl/js": "*",
+      "@nrwl/linter": "*",
+      "@nrwl/nest": "*",
+      "@nrwl/next": "*",
+      "@nrwl/node": "*",
+      "@nrwl/nx-cloud": "latest",
+      "@nrwl/nx-plugin": "*",
+      "@nrwl/react": "*",
+      "@nrwl/react-native": "*",
+      "@nrwl/rollup": "*",
+      "@nrwl/storybook": "*",
+      "@nrwl/tao": "*",
+      "@nrwl/web": "*",
+      "@nrwl/webpack": "*",
+      "nx": "*"
+    }
+  },
+  "peerDependencies": {
+    "prettier": "^2.6.2"
+  },
+  "peerDependenciesMeta": {
+    "prettier": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "@nrwl/devkit": "file:../devkit",
+    "@parcel/watcher": "2.0.4",
+    "chalk": "4.1.0",
+    "chokidar": "^3.5.1",
+    "cli-cursor": "3.1.0",
+    "cli-spinners": "2.6.1",
+    "dotenv": "~10.0.0",
+    "enquirer": "~2.3.6",
+    "figures": "3.2.0",
+    "flat": "^5.0.2",
+    "fs-extra": "^10.1.0",
+    "glob": "7.1.4",
+    "ignore": "^5.0.4",
+    "jsonc-parser": "3.2.0",
+    "minimatch": "3.0.5",
+    "npm-run-path": "^4.0.1",
+    "open": "^8.4.0",
+    "rxjs": "^6.5.4",
+    "semver": "7.3.4",
+    "tmp": "~0.2.1",
+    "tslib": "^2.3.0",
+    "yargs": "^17.6.2",
+    "yargs-parser": "21.1.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

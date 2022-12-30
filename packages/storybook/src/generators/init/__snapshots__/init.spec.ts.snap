@@ -1,0 +1,22 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`@nrwl/storybook:init dependencies for package.json should add angular related dependencies when using Angular as uiFramework 1`] = `
+Object {
+  "dependencies": Object {
+    "existing": "1.0.0",
+  },
+  "devDependencies": Object {
+    "@angular/forms": "*",
+    "@nrwl/storybook": "~6.5.9",
+    "@storybook/addon-essentials": "~6.5.9",
+    "@storybook/angular": "~6.5.9",
+    "@storybook/builder-webpack5": "~6.5.9",
+    "@storybook/core-server": "~6.5.9",
+    "@storybook/manager-webpack5": "~6.5.9",
+    "existing": "1.0.0",
+    "html-webpack-plugin": "^5.5.0",
+    "webpack": "^5.64.0",
+  },
+  "name": "test-name",
+}
+`;

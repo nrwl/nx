@@ -1,0 +1,125 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`upgradeModule generator setup file should add component to upgrade when --angularJsCmpSelector is set 1`] = `
+"import {Component, ElementRef, Injector} from '@angular/core';
+import {setAngularJSGlobal, UpgradeComponent, downgradeComponent, UpgradeModule} from '@angular/upgrade/static';
+import {Router} from '@angular/router';
+import {setUpLocationSync} from '@angular/router/upgrade';
+import * as angular from 'angular'; // replace with const angular = (<any>window).angular; if Angular is available globally
+
+import 'legacy'; // import your application files here.
+if (! angular.module('legacy')) {
+  throw new Error('\\"legacy\\" is not loaded');
+}
+
+// all components downgraded from Angular to AngularJS go here
+import {AppComponent} from './app/app.component';
+angular.module('downgraded', []).
+  directive('appRoot', downgradeComponent({component: AppComponent}));
+
+// all components upgraded from AngularJS to Angular go here
+@Component({
+  selector: 'legacy-cmp-selector',
+  template: '',
+})
+export class LegacyComponent extends UpgradeComponent {
+  constructor(ref: ElementRef, inj: Injector) {
+    super('legacy-cmp-selector', ref, inj);
+  }
+}
+export const upgradedComponents = [LegacyComponent];
+
+// additional configuration invoked right before bootstrap
+export function configureLegacy(i: Injector) {
+  setAngularJSGlobal(angular);
+  
+  //  Insert additional configuration here
+  angular.module('downgraded').run(() => {
+    setUpLocationSync(i.get(UpgradeModule));
+    i.get(Router).initialNavigation();
+  });
+}
+"
+`;
+
+exports[`upgradeModule generator setup file should add router configuration when --router=true 1`] = `
+"import {Component, ElementRef, Injector} from '@angular/core';
+import {setAngularJSGlobal, UpgradeComponent, downgradeComponent, UpgradeModule} from '@angular/upgrade/static';
+import {Router} from '@angular/router';
+import {setUpLocationSync} from '@angular/router/upgrade';
+import * as angular from 'angular'; // replace with const angular = (<any>window).angular; if Angular is available globally
+
+import 'legacy'; // import your application files here.
+if (! angular.module('legacy')) {
+  throw new Error('\\"legacy\\" is not loaded');
+}
+
+// all components downgraded from Angular to AngularJS go here
+import {AppComponent} from './app/app.component';
+angular.module('downgraded', []).
+  directive('appRoot', downgradeComponent({component: AppComponent}));
+export const upgradedComponents = [];
+
+// additional configuration invoked right before bootstrap
+export function configureLegacy(i: Injector) {
+  setAngularJSGlobal(angular);
+  
+  //  Insert additional configuration here
+  angular.module('downgraded').run(() => {
+    setUpLocationSync(i.get(UpgradeModule));
+    i.get(Router).initialNavigation();
+  });
+}
+"
+`;
+
+exports[`upgradeModule generator setup file should generate the setup file correctly 1`] = `
+"import {Component, ElementRef, Injector} from '@angular/core';
+import {setAngularJSGlobal, UpgradeComponent, downgradeComponent, UpgradeModule} from '@angular/upgrade/static';
+import * as angular from 'angular'; // replace with const angular = (<any>window).angular; if Angular is available globally
+
+import 'legacy'; // import your application files here.
+if (! angular.module('legacy')) {
+  throw new Error('\\"legacy\\" is not loaded');
+}
+
+// all components downgraded from Angular to AngularJS go here
+import {AppComponent} from './app/app.component';
+angular.module('downgraded', []).
+  directive('appRoot', downgradeComponent({component: AppComponent}));
+export const upgradedComponents = [];
+
+// additional configuration invoked right before bootstrap
+export function configureLegacy(i: Injector) {
+  setAngularJSGlobal(angular);
+  
+  //  Insert additional configuration here
+}
+"
+`;
+
+exports[`upgradeModule generator should update module correctly 1`] = `
+"
+     import { NgModule } from '@angular/core';
+     import { BrowserModule } from '@angular/platform-browser';
+     import { RouterModule } from '@angular/router';
+     import { AppComponent } from './app.component';
+import { configureLegacy, upgradedComponents } from '../legacy-setup';
+import { UpgradeModule } from '@angular/upgrade/static';
+     @NgModule({
+       imports: [BrowserModule, RouterModule.forRoot([]), UpgradeModule],
+       declarations: [AppComponent, ...upgradedComponents],
+        entryComponents: [AppComponent]
+     })
+     export class AppModule {
+constructor(private upgrade: UpgradeModule) {}
+
+ngDoBootstrap(): void {
+
+configureLegacy(this.upgrade.injector);
+this.upgrade.bootstrap(document.body, ['downgraded', 'legacy']);
+
+}
+}
+  "
+`;

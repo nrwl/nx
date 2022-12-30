@@ -1,0 +1,84 @@
+{
+  "name": "build-list",
+  "implementation": "/packages/expo/src/executors/build-list/build-list.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "$schema": "http://json-schema.org/schema",
+    "$id": "NxExpoEasBuildList",
+    "cli": "nx",
+    "title": "Expo EAS Build List executor",
+    "description": "List all EAS builds for your Expo project.",
+    "type": "object",
+    "properties": {
+      "platform": {
+        "enum": ["ios", "android", "all"],
+        "alias": "p",
+        "description": "The platform to build the app, example values: ios, android, all."
+      },
+      "json": {
+        "type": "boolean",
+        "description": "Enable JSON output, non-JSON messages will be printed to stderr"
+      },
+      "nonInteractive": {
+        "type": "boolean",
+        "description": "Run the command in non-interactive mode."
+      },
+      "status": {
+        "enum": [
+          "new",
+          "in-queue",
+          "in-progress",
+          "errored",
+          "finished",
+          "canceled"
+        ],
+        "description": "Status of EAS build"
+      },
+      "distribution": {
+        "enum": ["store", "internal", "simulator"],
+        "description": "Distribution of EAS build"
+      },
+      "channel": { "type": "string", "description": "Channel of EAS build" },
+      "appVersion": {
+        "type": "string",
+        "description": "App version of EAS build"
+      },
+      "appBuildVersion": {
+        "type": "string",
+        "description": "App build version of EAS build"
+      },
+      "sdkVersion": {
+        "type": "string",
+        "description": "SDK version of EAS build"
+      },
+      "runtimeVersion": {
+        "type": "string",
+        "description": "Runtime version of EAS build"
+      },
+      "appIdentifier": {
+        "type": "string",
+        "description": "App identifier of EAS build"
+      },
+      "buildProfile": {
+        "type": "string",
+        "description": "Build profile of EAS build"
+      },
+      "gitCommitHash": {
+        "type": "string",
+        "description": "Git commit hash of EAS build"
+      },
+      "limit": {
+        "type": "number",
+        "description": "Limit of numbers to list EAS builds"
+      }
+    },
+    "required": [],
+    "presets": []
+  },
+  "description": "List all EAS builds for your Expo project",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/expo/src/executors/build-list/schema.json",
+  "type": "executor"
+}

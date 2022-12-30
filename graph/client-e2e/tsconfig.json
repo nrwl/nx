@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "files": [],
+  "include": [
+    "cypress.config.ts",
+    "cypress-watch-mode.config.ts",
+    "cypress-release.config.ts",
+    "cypress-release-static.config.ts"
+  ],
+  "references": [
+    {
+      "path": "./tsconfig.e2e.json"
+    }
+  ]
+}

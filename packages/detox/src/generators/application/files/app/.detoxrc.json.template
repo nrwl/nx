@@ -1,0 +1,102 @@
+{
+  "testRunner": "jest",
+  "runnerConfig": "jest.config.json",
+  "apps": {
+    "ios.debug": {
+      "type": "ios.app",
+      "build": "cd <%= offsetFromRoot %><%= appRoot %>/ios && xcodebuild -workspace <%= appClassName %>.xcworkspace -scheme <%= appClassName %> -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 13' -derivedDataPath ./build -quiet",
+      "binaryPath": "<%= offsetFromRoot %><%= appRoot %>/ios/build/Build/Products/Debug-iphonesimulator/<%= appClassName %>.app"
+    },
+    "ios.release": {
+      "type": "ios.app",
+      "build": "cd <%= offsetFromRoot %><%= appRoot %>/ios && xcodebuild -workspace <%= appClassName %>.xcworkspace -scheme <%= appClassName %> -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 13' -derivedDataPath ./build -quiet",
+      "binaryPath": "<%= offsetFromRoot %><%= appRoot %>/ios/build/Build/Products/Release-iphonesimulator/<%= appClassName %>.app"
+    },
+<% if (framework === 'expo') { %>
+    "ios.eas": {
+      "type": "ios.app",
+      "build": "<%= exec %> nx run <%= appFileName %>:download --platform ios --distribution simulator --output=<%= appRoot %>/dist/",
+      "binaryPath": "<%= offsetFromRoot %><%= appRoot %>/dist/<%= appExpoName %>.app"
+    },
+    "ios.local": {
+      "type": "ios.app",
+      "build": "<%= exec %> nx run <%= appFileName %>:build --platform ios --profile preview --wait --local --no-interactive --output=<%= appRoot %>/dist/",
+      "binaryPath": "<%= offsetFromRoot %><%= appRoot %>/dist/<%= appExpoName %>.app"
+    },
+<% } %>
+    "android.debug": {
+      "type": "android.apk",
+      "build": "cd <%= offsetFromRoot %><%= appRoot %>/android && ./gradlew assembleDebug assembleAndroidTest -DtestBuildType=debug",
+      "binaryPath": "<%= offsetFromRoot %><%= appRoot %>/android/app/build/outputs/apk/debug/app-debug.apk"
+    },
+    "android.release": {
+      "type": "android.apk",
+      "build": "cd <%= offsetFromRoot %><%= appRoot %>/android && ./gradlew assembleRelease assembleAndroidTest -DtestBuildType=release",
+      "binaryPath": "<%= offsetFromRoot %><%= appRoot %>/android/app/build/outputs/apk/release/app-release.apk"
+    },
+<% if (framework === 'expo') { %>
+    "android.eas": {
+      "type": "ios.app",
+      "build": "<%= exec %> nx run <%= appFileName %>:download --platform android --output=<%= appRoot %>/dist/",
+      "binaryPath": "<%= offsetFromRoot %><%= appRoot %>/dist/<%= appExpoName %>.apk"
+    },
+    "android.local": {
+      "type": "ios.app",
+      "build": "<%= exec %> nx run <%= appFileName %>:build --platform android --profile preview --wait --local --no-interactive --output=<%= appRoot %>/dist/",
+      "binaryPath": "<%= offsetFromRoot %><%= appRoot %>/dist/<%= appExpoName %>.apk"
+    },
+<% } %>
+  },
+  "devices": {
+    "simulator": {
+      "type": "ios.simulator",
+      "device": {
+        "type": "iPhone 13"
+      }
+    },
+    "emulator": {
+      "type": "android.emulator",
+      "device": {
+        "avdName": "Pixel_4a_API_30"
+      }
+    }
+  },
+  "configurations": {
+    "ios.sim.release": {
+      "device": "simulator",
+      "app": "ios.release"
+    },
+    "ios.sim.debug": {
+      "device": "simulator",
+      "app": "ios.debug"
+    },
+<% if (framework === 'expo') { %>
+    "ios.sim.eas": {
+      "device": "simulator",
+      "app": "ios.eas"
+    },
+    "ios.sim.local": {
+      "device": "simulator",
+      "app": "ios.local"
+    },
+<% } %>
+    "android.emu.release": {
+      "device": "emulator",
+      "app": "android.release"
+    },
+    "android.emu.debug": {
+      "device": "emulator",
+      "app": "android.debug"
+    },
+<% if (framework === 'expo') { %>
+    "android.emu.eas": {
+      "device": "simulator",
+      "app": "android.eas"
+    },
+    "android.emu.local": {
+      "device": "simulator",
+      "app": "android.local"
+    },
+<% } %>
+  }
+}

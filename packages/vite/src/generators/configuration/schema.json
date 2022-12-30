@@ -1,0 +1,55 @@
+{
+  "cli": "nx",
+  "title": "Configure a project to use Vite.js.",
+  "description": "Configure a project to use Vite.js.",
+  "$id": "configure-vite-project",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The name of the project.",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "aliases": ["name", "projectName"],
+      "x-dropdown": "project",
+      "x-prompt": "What is the name of the project to set up Vite for?"
+    },
+    "includeLib": {
+      "type": "boolean",
+      "description": "Add a library build option and skip the server option.",
+      "hidden": true
+    },
+    "includeVitest": {
+      "type": "boolean",
+      "description": "Use vitest for the test suite."
+    },
+    "uiFramework": {
+      "type": "string",
+      "description": "UI Framework to use for Vite.",
+      "enum": ["react", "none"],
+      "default": "none",
+      "x-prompt": "What UI framework plugin should Vite use?"
+    },
+    "newProject": {
+      "type": "boolean",
+      "description": "Is this a new project?",
+      "default": false,
+      "hidden": true
+    },
+    "buildTarget": {
+      "type": "string",
+      "description": "The build target of the project to be transformed to use the @nrwl/vite:build executor."
+    },
+    "serveTarget": {
+      "type": "string",
+      "description": "The serve target of the project to be transformed to use the @nrwl/vite:dev-server executor."
+    },
+    "testTarget": {
+      "type": "string",
+      "description": "The test target of the project to be transformed to use the @nrwl/vite:test executor."
+    }
+  },
+  "examplesFile": "../../../docs/configuration-examples.md"
+}

@@ -1,0 +1,56 @@
+{
+  "name": "@nrwl/cypress",
+  "version": "0.0.1",
+  "private": false,
+  "description": "The Nx Plugin for Cypress contains executors and generators allowing your workspace to use the powerful Cypress integration testing capabilities.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/cypress"
+  },
+  "keywords": [
+    "Monorepo",
+    "Angular",
+    "React",
+    "Web",
+    "Node",
+    "Nest",
+    "Jest",
+    "Cypress",
+    "CLI"
+  ],
+  "main": "./index.js",
+  "typings": "./index.d.ts",
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "schematics": "./generators.json",
+  "builders": "./executors.json",
+  "ng-update": {
+    "requirements": {},
+    "migrations": "./migrations.json"
+  },
+  "dependencies": {
+    "@nrwl/devkit": "file:../devkit",
+    "@nrwl/linter": "file:../linter",
+    "@nrwl/workspace": "file:../workspace",
+    "@phenomnomnominal/tsquery": "4.1.1",
+    "chalk": "4.1.0",
+    "dotenv": "~10.0.0",
+    "semver": "7.3.4"
+  },
+  "peerDependencies": {
+    "cypress": ">= 3 < 12"
+  },
+  "peerDependenciesMeta": {
+    "cypress": {
+      "optional": true
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

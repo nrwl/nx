@@ -1,0 +1,348 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`workspace --preserve-angular-cli-layout should create nx.json 1`] = `
+Object {
+  "affected": Object {
+    "defaultBase": "main",
+  },
+  "namedInputs": Object {
+    "default": Array [
+      "{projectRoot}/**/*",
+      "sharedGlobals",
+    ],
+    "production": Array [
+      "default",
+    ],
+    "sharedGlobals": Array [],
+  },
+  "targetDefaults": Object {
+    "build": Object {
+      "dependsOn": Array [
+        "^build",
+      ],
+      "inputs": Array [
+        "production",
+        "^production",
+      ],
+    },
+  },
+  "tasksRunnerOptions": Object {
+    "default": Object {
+      "options": Object {
+        "cacheableOperations": Array [
+          "build",
+        ],
+      },
+      "runner": "nx/tasks-runners/default",
+    },
+  },
+}
+`;
+
+exports[`workspace --preserve-angular-cli-layout should support multiple projects 1`] = `
+Object {
+  "affected": Object {
+    "defaultBase": "main",
+  },
+  "namedInputs": Object {
+    "default": Array [
+      "{projectRoot}/**/*",
+      "sharedGlobals",
+    ],
+    "production": Array [
+      "default",
+      "!{projectRoot}/tsconfig.spec.json",
+      "!{projectRoot}/**/*.spec.[jt]s",
+      "!{projectRoot}/karma.conf.js",
+    ],
+    "sharedGlobals": Array [],
+  },
+  "targetDefaults": Object {
+    "build": Object {
+      "dependsOn": Array [
+        "^build",
+      ],
+      "inputs": Array [
+        "production",
+        "^production",
+      ],
+    },
+    "e2e": Object {
+      "inputs": Array [
+        "default",
+        "^production",
+      ],
+    },
+    "test": Object {
+      "inputs": Array [
+        "default",
+        "^production",
+        "{workspaceRoot}/karma.conf.js",
+      ],
+    },
+  },
+  "tasksRunnerOptions": Object {
+    "default": Object {
+      "options": Object {
+        "cacheableOperations": Array [
+          "build",
+          "test",
+          "e2e",
+        ],
+      },
+      "runner": "nx/tasks-runners/default",
+    },
+  },
+}
+`;
+
+exports[`workspace --preserve-angular-cli-layout should support multiple projects 2`] = `
+Object {
+  "$schema": "node_modules/nx/schemas/project-schema.json",
+  "name": "app1",
+  "sourceRoot": "src",
+  "targets": Object {
+    "build": Object {
+      "executor": "@angular-devkit/build-angular:browser",
+      "options": Object {
+        "tsConfig": "tsconfig.app.json",
+      },
+    },
+    "e2e": Object {
+      "executor": "@angular-devkit/build-angular:protractor",
+      "options": Object {
+        "protractorConfig": "e2e/protractor.conf.js",
+      },
+    },
+    "test": Object {
+      "executor": "@angular-devkit/build-angular:karma",
+      "options": Object {
+        "tsConfig": "tsconfig.spec.json",
+      },
+    },
+  },
+}
+`;
+
+exports[`workspace --preserve-angular-cli-layout should support multiple projects 3`] = `
+Object {
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "app2",
+  "sourceRoot": "projects/app2/src",
+  "targets": Object {
+    "build": Object {
+      "executor": "@angular-devkit/build-angular:browser",
+      "options": Object {
+        "tsConfig": "projects/app2/tsconfig.app.json",
+      },
+    },
+    "e2e": Object {
+      "executor": "@angular-devkit/build-angular:protractor",
+      "options": Object {
+        "protractorConfig": "projects/app2/e2e/protractor.conf.js",
+      },
+    },
+    "test": Object {
+      "executor": "@angular-devkit/build-angular:karma",
+      "options": Object {
+        "tsConfig": "projects/app2/tsconfig.spec.json",
+      },
+    },
+  },
+}
+`;
+
+exports[`workspace --preserve-angular-cli-layout should support multiple projects 4`] = `
+Object {
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "lib1",
+  "sourceRoot": "projects/lib1/src",
+  "targets": Object {
+    "build": Object {
+      "executor": "@angular-devkit/build-angular:ng-packagr",
+      "options": Object {
+        "tsConfig": "projects/lib1/tsconfig.lib.json",
+      },
+    },
+    "test": Object {
+      "executor": "@angular-devkit/build-angular:karma",
+      "options": Object {
+        "tsConfig": "projects/lib1/tsconfig.spec.json",
+      },
+    },
+  },
+}
+`;
+
+exports[`workspace move to nx layout should create a root eslint config 1`] = `
+Object {
+  "ignorePatterns": Array [
+    "**/*",
+  ],
+  "overrides": Array [
+    Object {
+      "extends": Array [
+        "plugin:@angular-eslint/recommended",
+        "plugin:@angular-eslint/template/process-inline-templates",
+      ],
+      "files": Array [
+        "*.ts",
+      ],
+      "parserOptions": Object {
+        "createDefaultProgram": true,
+      },
+      "rules": Object {
+        "@angular-eslint/component-selector": Array [
+          "error",
+          Object {
+            "prefix": "app",
+            "style": "kebab-case",
+            "type": "element",
+          },
+        ],
+        "@angular-eslint/directive-selector": Array [
+          "error",
+          Object {
+            "prefix": "app",
+            "style": "camelCase",
+            "type": "attribute",
+          },
+        ],
+      },
+    },
+    Object {
+      "extends": Array [
+        "plugin:@angular-eslint/template/recommended",
+      ],
+      "files": Array [
+        "*.html",
+      ],
+      "rules": Object {},
+    },
+    Object {
+      "files": Array [
+        "*.ts",
+        "*.tsx",
+        "*.js",
+        "*.jsx",
+      ],
+      "rules": Object {
+        "@nrwl/nx/enforce-module-boundaries": Array [
+          "error",
+          Object {
+            "allow": Array [],
+            "depConstraints": Array [
+              Object {
+                "onlyDependOnLibsWithTags": Array [
+                  "*",
+                ],
+                "sourceTag": "*",
+              },
+            ],
+            "enforceBuildableLibDependency": true,
+          },
+        ],
+      },
+    },
+  ],
+  "plugins": Array [
+    "@nrwl/nx",
+  ],
+  "root": true,
+}
+`;
+
+exports[`workspace move to nx layout should create nx.json 1`] = `
+Object {
+  "affected": Object {
+    "defaultBase": "main",
+  },
+  "defaultProject": "myApp",
+  "namedInputs": Object {
+    "default": Array [
+      "{projectRoot}/**/*",
+      "sharedGlobals",
+    ],
+    "production": Array [
+      "default",
+      "!{projectRoot}/tsconfig.spec.json",
+      "!{projectRoot}/**/*.spec.[jt]s",
+      "!{projectRoot}/karma.conf.js",
+      "!{projectRoot}/.eslintrc.json",
+    ],
+    "sharedGlobals": Array [],
+  },
+  "npmScope": "my-org",
+  "targetDefaults": Object {
+    "build": Object {
+      "dependsOn": Array [
+        "^build",
+      ],
+      "inputs": Array [
+        "production",
+        "^production",
+      ],
+    },
+    "e2e": Object {
+      "inputs": Array [
+        "default",
+        "^production",
+      ],
+    },
+    "lint": Object {
+      "inputs": Array [
+        "default",
+        "{workspaceRoot}/.eslintrc.json",
+      ],
+    },
+    "test": Object {
+      "inputs": Array [
+        "default",
+        "^production",
+        "{workspaceRoot}/karma.conf.js",
+      ],
+    },
+  },
+  "tasksRunnerOptions": Object {
+    "default": Object {
+      "options": Object {
+        "cacheableOperations": Array [
+          "build",
+          "test",
+          "lint",
+          "e2e",
+        ],
+      },
+      "runner": "nx/tasks-runners/default",
+    },
+  },
+}
+`;
+
+exports[`workspace move to nx layout should update tsconfig.base.json if present 1`] = `
+Object {
+  "compilerOptions": Object {
+    "baseUrl": ".",
+    "paths": Object {},
+    "rootDir": ".",
+  },
+  "exclude": Array [
+    "node_modules",
+    "tmp",
+  ],
+}
+`;
+
+exports[`workspace move to nx layout should work if angular-cli workspace had tsconfig.base.json 1`] = `
+Object {
+  "compilerOptions": Object {
+    "baseUrl": ".",
+    "paths": Object {},
+    "rootDir": ".",
+  },
+  "exclude": Array [
+    "node_modules",
+    "tmp",
+  ],
+}
+`;

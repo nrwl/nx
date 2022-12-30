@@ -1,0 +1,100 @@
+{
+  "name": "build-ios",
+  "implementation": "/packages/expo/src/executors/build-ios/build-ios.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "$schema": "http://json-schema.org/schema",
+    "$id": "NxExpoBuildIOS",
+    "cli": "nx",
+    "title": "Expo iOS Build executor",
+    "description": "Build and sign a standalone IPA for the Apple App Store.",
+    "type": "object",
+    "properties": {
+      "clearCredentials": {
+        "type": "boolean",
+        "description": "Clear all credentials stored on Expo servers.",
+        "alias": "c"
+      },
+      "clearDistCert": {
+        "type": "boolean",
+        "description": "Remove Distribution Certificate stored on Expo servers."
+      },
+      "clearPushKey": {
+        "type": "boolean",
+        "description": "Remove Push Notifications Key stored on Expo servers."
+      },
+      "clearPushCert": {
+        "type": "boolean",
+        "description": "Remove Push Notifications Certificate stored on Expo servers. Use of Push Notifications Certificates is deprecated."
+      },
+      "clearProvisioningProfile": {
+        "type": "boolean",
+        "description": "Remove Provisioning Profile stored on Expo servers."
+      },
+      "revokeCredentials": {
+        "type": "boolean",
+        "description": "Revoke credentials on developer.apple.com, select appropriate using --clear-* options.",
+        "alias": "r"
+      },
+      "appleId": {
+        "type": "string",
+        "description": "Apple ID username (please also set the Apple ID password as EXPO_APPLE_PASSWORD environment variable)."
+      },
+      "type": {
+        "enum": ["archive", "simulator"],
+        "description": "Type of build: [archive⎮simulator].",
+        "alias": "t"
+      },
+      "releaseChannel": {
+        "type": "string",
+        "description": "Pull from specified release channel."
+      },
+      "noPublish": {
+        "type": "boolean",
+        "description": "Disable automatic publishing before building."
+      },
+      "noWait": {
+        "type": "boolean",
+        "description": "Exit immediately after scheduling build."
+      },
+      "teamId": { "type": "string", "description": "Apple Team ID." },
+      "distP12Path": {
+        "type": "string",
+        "description": "Path to your Distribution Certificate P12 (set password as EXPO_IOS_DIST_P12_PASSWORD environment variable)."
+      },
+      "pushP8Path": {
+        "type": "string",
+        "description": "Path to your Push Key .p8 file."
+      },
+      "provisioningProfilePath": {
+        "type": "string",
+        "description": "Path to your Provisioning Profile."
+      },
+      "publicUrl": {
+        "type": "string",
+        "description": "The URL of an externally hosted manifest (for self-hosted apps)."
+      },
+      "skipCredentialsCheck": {
+        "type": "boolean",
+        "description": "Skip checking credentials."
+      },
+      "skipWorkflowCheck": {
+        "type": "boolean",
+        "description": "Skip warning about build service bare workflow limitations."
+      },
+      "sync": {
+        "type": "boolean",
+        "description": "Syncs npm dependencies to package.json (for React Native autolink). Always true when --install is used.",
+        "default": true
+      }
+    },
+    "required": [],
+    "presets": []
+  },
+  "description": "Build and sign a standalone IPA for the Apple App Store",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/expo/src/executors/build-ios/schema.json",
+  "type": "executor"
+}

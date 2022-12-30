@@ -1,0 +1,31 @@
+{
+  "name": "publish-set",
+  "implementation": "/packages/expo/src/executors/publish-set/publish-set.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "cli": "nx",
+    "$id": "NxExpoPublishSet",
+    "$schema": "http://json-schema.org/schema",
+    "title": "Set Publish Channel for Expo",
+    "description": "Specify the channel to serve a published release.",
+    "type": "object",
+    "properties": {
+      "releaseChannel": {
+        "type": "string",
+        "description": "The release channel to publish to."
+      },
+      "publishId": {
+        "type": "string",
+        "description": "The id of the published release to serve from the channel."
+      }
+    },
+    "required": ["releaseChannel", "publishId"],
+    "presets": []
+  },
+  "description": "Specify the channel to serve a published release",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/expo/src/executors/publish-set/schema.json",
+  "type": "executor"
+}

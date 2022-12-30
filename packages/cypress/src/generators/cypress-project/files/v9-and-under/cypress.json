@@ -1,0 +1,12 @@
+{
+  "fileServerFolder": ".",
+  "fixturesFolder": "./src/fixtures",
+  "integrationFolder": "./src/integration",
+  "modifyObstructiveCode": false,
+  "supportFile": "./src/support/index.<%= ext %>",
+  "pluginsFile": false,
+  "video": true,
+  "videosFolder": "<%= offsetFromRoot %>dist/cypress/<%= projectRoot %>/videos",
+  "screenshotsFolder": "<%= offsetFromRoot %>dist/cypress/<%= projectRoot %>/screenshots",
+  "chromeWebSecurity": false
+}

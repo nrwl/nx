@@ -1,0 +1,99 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`new --preset angular-monorepo should generate necessary npm dependencies 1`] = `
+Object {
+  "dependencies": Object {
+    "@nrwl/angular": "0.0.1",
+  },
+  "devDependencies": Object {
+    "@nrwl/workspace": "0.0.1",
+    "nx": "0.0.1",
+    "prettier": "^2.6.2",
+    "typescript": "~4.8.2",
+  },
+  "license": "MIT",
+  "name": "my-workspace",
+  "private": true,
+  "scripts": Object {
+    "ng": "nx",
+    "postinstall": "node ./decorate-angular-cli.js",
+  },
+  "version": "0.0.0",
+}
+`;
+
+exports[`new --preset empty should generate necessary npm dependencies 1`] = `
+Object {
+  "dependencies": Object {},
+  "devDependencies": Object {
+    "@nrwl/workspace": "0.0.1",
+    "nx": "0.0.1",
+    "prettier": "^2.6.2",
+    "typescript": "~4.8.2",
+  },
+  "license": "MIT",
+  "name": "my-workspace",
+  "private": true,
+  "scripts": Object {},
+  "version": "0.0.0",
+}
+`;
+
+exports[`new --preset react-monorepo should generate necessary npm dependencies 1`] = `
+Object {
+  "dependencies": Object {},
+  "devDependencies": Object {
+    "@nrwl/react": "0.0.1",
+    "@nrwl/workspace": "0.0.1",
+    "nx": "0.0.1",
+    "prettier": "^2.6.2",
+    "typescript": "~4.8.2",
+  },
+  "license": "MIT",
+  "name": "my-workspace",
+  "private": true,
+  "scripts": Object {},
+  "version": "0.0.0",
+}
+`;
+
+exports[`new should generate an empty nx.json 1`] = `
+Object {
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "namedInputs": Object {
+    "default": Array [
+      "{projectRoot}/**/*",
+      "sharedGlobals",
+    ],
+    "production": Array [
+      "default",
+    ],
+    "sharedGlobals": Array [],
+  },
+  "npmScope": "npmScope",
+  "targetDefaults": Object {
+    "build": Object {
+      "dependsOn": Array [
+        "^build",
+      ],
+      "inputs": Array [
+        "production",
+        "^production",
+      ],
+    },
+  },
+  "tasksRunnerOptions": Object {
+    "default": Object {
+      "options": Object {
+        "cacheableOperations": Array [
+          "build",
+          "lint",
+          "test",
+          "e2e",
+        ],
+      },
+      "runner": "nx/tasks-runners/default",
+    },
+  },
+}
+`;

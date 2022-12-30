@@ -1,0 +1,323 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Cypress Component Testing Configuration should work with complex component 1`] = `
+"import { TestBed } from '@angular/core/testing';
+import { SomethingOneComponent } from './something-one.component';
+
+describe(SomethingOneComponent.name, () => {
+
+  beforeEach(() => {
+    TestBed.overrideComponent(SomethingOneComponent, {
+      add: { 
+        imports: [],
+        providers: []
+      }
+    }) 
+  })
+
+  it('renders', () => {
+     cy.mount(SomethingOneComponent,);
+  })
+
+})
+"
+`;
+
+exports[`Cypress Component Testing Configuration should work with complex component 2`] = `
+"import { TestBed } from '@angular/core/testing';
+import { SomethingTwoComponent } from './something-two.component';
+
+describe(SomethingTwoComponent.name, () => {
+
+  beforeEach(() => {
+    TestBed.overrideComponent(SomethingTwoComponent, {
+      add: { 
+        imports: [],
+        providers: []
+      }
+    }) 
+  })
+
+  it('renders', () => {
+     cy.mount(SomethingTwoComponent,);
+  })
+
+})
+"
+`;
+
+exports[`Cypress Component Testing Configuration should work with complex component 3`] = `
+"import { TestBed } from '@angular/core/testing';
+import { SomethingThreeComponent } from './something-three.component';
+
+describe(SomethingThreeComponent.name, () => {
+
+  beforeEach(() => {
+    TestBed.overrideComponent(SomethingThreeComponent, {
+      add: { 
+        imports: [],
+        providers: []
+      }
+    }) 
+  })
+
+  it('renders', () => {
+     cy.mount(SomethingThreeComponent,);
+  })
+
+})
+"
+`;
+
+exports[`Cypress Component Testing Configuration should work with complex standalone component 1`] = `
+"import { TestBed } from '@angular/core/testing';
+import { SomethingOneComponent } from './something-one.component';
+
+describe(SomethingOneComponent.name, () => {
+
+  beforeEach(() => {
+    TestBed.overrideComponent(SomethingOneComponent, {
+      add: { 
+        imports: [],
+        providers: []
+      }
+    }) 
+  })
+
+  it('renders', () => {
+     cy.mount(SomethingOneComponent,);
+  })
+
+})
+"
+`;
+
+exports[`Cypress Component Testing Configuration should work with complex standalone component 2`] = `
+"import { TestBed } from '@angular/core/testing';
+import { SomethingTwoComponent } from './something-two.component';
+
+describe(SomethingTwoComponent.name, () => {
+
+  beforeEach(() => {
+    TestBed.overrideComponent(SomethingTwoComponent, {
+      add: { 
+        imports: [],
+        providers: []
+      }
+    }) 
+  })
+
+  it('renders', () => {
+     cy.mount(SomethingTwoComponent,);
+  })
+
+})
+"
+`;
+
+exports[`Cypress Component Testing Configuration should work with complex standalone component 3`] = `
+"import { TestBed } from '@angular/core/testing';
+import { SomethingThreeComponent } from './something-three.component';
+
+describe(SomethingThreeComponent.name, () => {
+
+  beforeEach(() => {
+    TestBed.overrideComponent(SomethingThreeComponent, {
+      add: { 
+        imports: [],
+        providers: []
+      }
+    }) 
+  })
+
+  it('renders', () => {
+     cy.mount(SomethingThreeComponent,);
+  })
+
+})
+"
+`;
+
+exports[`Cypress Component Testing Configuration should work with secondary entry point libs 1`] = `
+"import { TestBed } from '@angular/core/testing';
+import { FancyButtonComponent } from './fancy-button.component';
+
+describe(FancyButtonComponent.name, () => {
+
+  beforeEach(() => {
+    TestBed.overrideComponent(FancyButtonComponent, {
+      add: { 
+        imports: [],
+        providers: []
+      }
+    }) 
+  })
+
+  it('renders', () => {
+     cy.mount(FancyButtonComponent,);
+  })
+
+})
+"
+`;
+
+exports[`Cypress Component Testing Configuration should work with secondary entry point libs 2`] = `
+"import { TestBed } from '@angular/core/testing';
+import { StandaloneFancyButtonComponent } from './standalone-fancy-button.component';
+
+describe(StandaloneFancyButtonComponent.name, () => {
+
+  beforeEach(() => {
+    TestBed.overrideComponent(StandaloneFancyButtonComponent, {
+      add: { 
+        imports: [],
+        providers: []
+      }
+    }) 
+  })
+
+  it('renders', () => {
+     cy.mount(StandaloneFancyButtonComponent,);
+  })
+
+})
+"
+`;
+
+exports[`Cypress Component Testing Configuration should work with simple components 1`] = `
+"import { TestBed } from '@angular/core/testing';
+import { SomethingOneComponent } from './something-one.component';
+
+describe(SomethingOneComponent.name, () => {
+
+  beforeEach(() => {
+    TestBed.overrideComponent(SomethingOneComponent, {
+      add: { 
+        imports: [],
+        providers: []
+      }
+    }) 
+  })
+
+  it('renders', () => {
+     cy.mount(SomethingOneComponent,);
+  })
+
+})
+"
+`;
+
+exports[`Cypress Component Testing Configuration should work with simple components 2`] = `
+"import { TestBed } from '@angular/core/testing';
+import { SomethingTwoComponent } from './something-two.component';
+
+describe(SomethingTwoComponent.name, () => {
+
+  beforeEach(() => {
+    TestBed.overrideComponent(SomethingTwoComponent, {
+      add: { 
+        imports: [],
+        providers: []
+      }
+    }) 
+  })
+
+  it('renders', () => {
+     cy.mount(SomethingTwoComponent,);
+  })
+
+})
+"
+`;
+
+exports[`Cypress Component Testing Configuration should work with simple components 3`] = `
+"import { TestBed } from '@angular/core/testing';
+import { SomethingThreeComponent } from './something-three.component';
+
+describe(SomethingThreeComponent.name, () => {
+
+  beforeEach(() => {
+    TestBed.overrideComponent(SomethingThreeComponent, {
+      add: { 
+        imports: [],
+        providers: []
+      }
+    }) 
+  })
+
+  it('renders', () => {
+     cy.mount(SomethingThreeComponent,);
+  })
+
+})
+"
+`;
+
+exports[`Cypress Component Testing Configuration should work with standalone component 1`] = `
+"import { TestBed } from '@angular/core/testing';
+import { SomethingOneComponent } from './something-one.component';
+
+describe(SomethingOneComponent.name, () => {
+
+  beforeEach(() => {
+    TestBed.overrideComponent(SomethingOneComponent, {
+      add: { 
+        imports: [],
+        providers: []
+      }
+    }) 
+  })
+
+  it('renders', () => {
+     cy.mount(SomethingOneComponent,);
+  })
+
+})
+"
+`;
+
+exports[`Cypress Component Testing Configuration should work with standalone component 2`] = `
+"import { TestBed } from '@angular/core/testing';
+import { SomethingTwoComponent } from './something-two.component';
+
+describe(SomethingTwoComponent.name, () => {
+
+  beforeEach(() => {
+    TestBed.overrideComponent(SomethingTwoComponent, {
+      add: { 
+        imports: [],
+        providers: []
+      }
+    }) 
+  })
+
+  it('renders', () => {
+     cy.mount(SomethingTwoComponent,);
+  })
+
+})
+"
+`;
+
+exports[`Cypress Component Testing Configuration should work with standalone component 3`] = `
+"import { TestBed } from '@angular/core/testing';
+import { SomethingThreeComponent } from './something-three.component';
+
+describe(SomethingThreeComponent.name, () => {
+
+  beforeEach(() => {
+    TestBed.overrideComponent(SomethingThreeComponent, {
+      add: { 
+        imports: [],
+        providers: []
+      }
+    }) 
+  })
+
+  it('renders', () => {
+     cy.mount(SomethingThreeComponent,);
+  })
+
+})
+"
+`;

@@ -1,0 +1,110 @@
+{
+  "name": "nx",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/nx",
+  "projectType": "library",
+  "implicitDependencies": ["graph-client"],
+  "targets": {
+    "build-base": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "outputPath": "build/packages/nx",
+        "tsConfig": "packages/nx/tsconfig.lib.json",
+        "packageJson": "packages/nx/package.json",
+        "main": "packages/nx/bin/nx.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": [
+          {
+            "input": "packages/nx",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/nx",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/nx",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "**/project.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages/nx",
+            "glob": "**/*.{js,css,html,svg}",
+            "ignore": ["**/jest.config.js"],
+            "output": "/"
+          },
+          {
+            "input": "packages/nx",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
+        ]
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "echo": {
+      "executor": "nx:command",
+      "options": {
+        "command": "echo hi"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/build/packages/nx"],
+      "options": {
+        "commands": [
+          {
+            "command": "node ./scripts/copy-graph-client.js"
+          },
+          {
+            "command": "node ./scripts/chmod build/packages/nx/bin/nx.js"
+          },
+          {
+            "command": "node ./scripts/copy-readme.js nx"
+          },
+          {
+            "command": "node ./scripts/add-dependency-to-build.js nx @nrwl/cli"
+          },
+          {
+            "command": "node ./scripts/add-dependency-to-build.js nx @nrwl/tao"
+          }
+        ],
+        "parallel": false
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/nx/**/*.ts",
+          "packages/nx/**/*.spec.ts",
+          "packages/nx/**/*_spec.ts",
+          "packages/nx/**/*.spec.tsx",
+          "packages/nx/**/*.spec.js",
+          "packages/nx/**/*.spec.jsx",
+          "packages/nx/**/*.d.ts",
+          "packages/nx/executors.json",
+          "packages/nx/package.json",
+          "packages/nx/migrations.json"
+        ]
+      },
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "jestConfig": "packages/nx/jest.config.ts",
+        "passWithNoTests": true
+      },
+      "outputs": ["{workspaceRoot}/coverage/packages/nx"]
+    }
+  }
+}

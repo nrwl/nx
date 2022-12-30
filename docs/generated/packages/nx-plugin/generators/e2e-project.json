@@ -1,0 +1,54 @@
+{
+  "name": "e2e-project",
+  "factory": "./src/generators/e2e-project/e2e",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "cli": "nx",
+    "$id": "NxPluginE2E",
+    "title": "Create an E2E app for a Nx Plugin",
+    "description": "Create an E2E app for a Nx Plugin.",
+    "type": "object",
+    "properties": {
+      "pluginName": {
+        "type": "string",
+        "description": "the name of the plugin to be tested."
+      },
+      "npmPackageName": {
+        "type": "string",
+        "description": "the name of the package that would be published to NPM."
+      },
+      "projectDirectory": {
+        "type": "string",
+        "description": "the directory where the plugin is placed."
+      },
+      "pluginOutputPath": {
+        "type": "string",
+        "description": "the output path of the plugin after it builds."
+      },
+      "jestConfig": { "type": "string", "description": "Jest config file." },
+      "tsSpecConfig": {
+        "type": "string",
+        "description": "Spec `tsconfig` file.",
+        "x-deprecated": true
+      },
+      "standaloneConfig": {
+        "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
+        "type": "boolean"
+      },
+      "minimal": {
+        "type": "boolean",
+        "description": "Generate the e2e project with a minimal setup. This would involve not generating tests for a default executor and generator.",
+        "default": false
+      }
+    },
+    "required": ["pluginName", "npmPackageName"],
+    "additionalProperties": false,
+    "presets": []
+  },
+  "description": "Create a E2E application for a Nx Plugin.",
+  "hidden": true,
+  "implementation": "/packages/nx-plugin/src/generators/e2e-project/e2e.ts",
+  "aliases": [],
+  "path": "/packages/nx-plugin/src/generators/e2e-project/schema.json",
+  "type": "generator"
+}

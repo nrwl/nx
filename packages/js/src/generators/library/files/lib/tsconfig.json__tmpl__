@@ -1,0 +1,14 @@
+{
+  "extends": "<%= rootTsConfigPath %>",
+  "compilerOptions": {
+    "module": "commonjs"<% if (js) { %>,
+    "allowJs": true<% } %>
+  },
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.lib.json"
+    }
+  ]
+}

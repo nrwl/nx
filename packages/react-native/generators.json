@@ -1,0 +1,109 @@
+{
+  "name": "Nx React Native",
+  "version": "0.1",
+  "extends": ["@nrwl/workspace"],
+  "schematics": {
+    "init": {
+      "factory": "./src/generators/init/init#reactNativeInitSchematic",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Initialize the `@nrwl/react-native` plugin.",
+      "hidden": true
+    },
+    "application": {
+      "factory": "./src/generators/application/application#reactNativeApplicationSchematic",
+      "schema": "./src/generators/application/schema.json",
+      "aliases": ["app"],
+      "x-type": "application",
+      "description": "Create a React Native application."
+    },
+    "library": {
+      "factory": "./src/generators/library/library#reactNativeLibrarySchematic",
+      "schema": "./src/generators/library/schema.json",
+      "aliases": ["lib"],
+      "x-type": "library",
+      "description": "Create a React Native library."
+    },
+    "component": {
+      "factory": "./src/generators/component/component#reactNativeComponentSchematic",
+      "schema": "./src/generators/component/schema.json",
+      "description": "Create a React Native component.",
+      "aliases": ["c"]
+    },
+    "storybook-configuration": {
+      "factory": "./src/generators/storybook-configuration/configuration#storybookConfigurationSchematic",
+      "schema": "./src/generators/storybook-configuration/schema.json",
+      "description": "Set up Storybook for a React-native application or library.",
+      "hidden": false
+    },
+    "component-story": {
+      "factory": "./src/generators/component-story/component-story#componentStorySchematic",
+      "schema": "./src/generators/component-story/schema.json",
+      "description": "Generate Storybook story for a React-native component.",
+      "hidden": false
+    },
+    "stories": {
+      "factory": "./src/generators/stories/stories#storiesSchematic",
+      "schema": "./src/generators/stories/schema.json",
+      "description": "Create stories for all components declared in an application or library.",
+      "hidden": false
+    },
+    "upgrade-native": {
+      "factory": "./src/generators/upgrade-native/upgrade-native#reactNativeUpgradeNativeSchematic",
+      "schema": "./src/generators/upgrade-native/schema.json",
+      "description": "Destructive command to upgrade native iOS and Android code to latest.",
+      "hidden": false
+    }
+  },
+  "generators": {
+    "init": {
+      "factory": "./src/generators/init/init#reactNativeInitGenerator",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Initialize the `@nrwl/react-native` plugin.",
+      "hidden": true
+    },
+    "application": {
+      "factory": "./src/generators/application/application#reactNativeApplicationGenerator",
+      "schema": "./src/generators/application/schema.json",
+      "aliases": ["app"],
+      "x-type": "application",
+      "description": "Create a React Native application."
+    },
+    "library": {
+      "factory": "./src/generators/library/library#reactNativeLibraryGenerator",
+      "schema": "./src/generators/library/schema.json",
+      "aliases": ["lib"],
+      "x-type": "library",
+      "description": "Create a React Native library."
+    },
+    "component": {
+      "factory": "./src/generators/component/component#reactNativeComponentGenerator",
+      "schema": "./src/generators/component/schema.json",
+      "description": "Create a React Native component.",
+      "aliases": ["c"]
+    },
+    "storybook-configuration": {
+      "factory": "./src/generators/storybook-configuration/configuration#storybookConfigurationGenerator",
+      "schema": "./src/generators/storybook-configuration/schema.json",
+      "description": "Set up Storybook for a React-native application or library.",
+      "hidden": false
+    },
+    "component-story": {
+      "factory": "./src/generators/component-story/component-story#componentStoryGenerator",
+      "schema": "./src/generators/component-story/schema.json",
+      "description": "Generate Storybook story for a React-native component.",
+      "hidden": false
+    },
+    "stories": {
+      "factory": "./src/generators/stories/stories#storiesGenerator",
+      "schema": "./src/generators/stories/schema.json",
+      "description": "Create stories/specs for all components declared in an application or library.",
+      "hidden": false
+    },
+    "upgrade-native": {
+      "factory": "./src/generators/upgrade-native/upgrade-native#reactNativeUpgradeNativeGenerator",
+      "schema": "./src/generators/upgrade-native/schema.json",
+      "description": "Destructive command to upgrade native iOS and Android code to latest.",
+      "hidden": false
+    }
+  }
+}

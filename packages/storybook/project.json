@@ -1,0 +1,113 @@
+{
+  "name": "storybook",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/storybook",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "jestConfig": "packages/storybook/jest.config.ts",
+        "passWithNoTests": true
+      },
+      "outputs": ["{workspaceRoot}/coverage/packages/storybook"]
+    },
+    "build-base": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "outputPath": "build/packages/storybook",
+        "tsConfig": "packages/storybook/tsconfig.lib.json",
+        "main": "packages/storybook/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": [
+          {
+            "input": "packages/storybook",
+            "glob": "**/project-files/.storybook/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/storybook",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/storybook",
+            "glob": "**/root-files/.storybook/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/storybook",
+            "glob": "**/project-files-ts/.storybook/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/storybook",
+            "glob": "**/root-files-ts/.storybook/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/storybook",
+            "glob": "**/root-files-nested/.storybook/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/storybook",
+            "glob": "**/root-files-nested-ts/.storybook/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/storybook",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages/storybook",
+            "glob": "**/*.js",
+            "ignore": ["**/jest.config.js"],
+            "output": "/"
+          },
+          {
+            "input": "packages/storybook",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
+        ]
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/build/packages/storybook"],
+      "options": {
+        "command": "node ./scripts/copy-readme.js storybook"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/storybook/**/*.ts",
+          "packages/storybook/**/*.spec.ts",
+          "packages/storybook/**/*_spec.ts",
+          "packages/storybook/**/*.spec.tsx",
+          "packages/storybook/**/*.spec.js",
+          "packages/storybook/**/*.spec.jsx",
+          "packages/storybook/**/*.d.ts",
+          "packages/storybook/**/executors/**/schema.json",
+          "packages/storybook/**/generators/**/schema.json",
+          "packages/storybook/generators.json",
+          "packages/storybook/executors.json",
+          "packages/storybook/package.json",
+          "packages/storybook/migrations.json"
+        ]
+      },
+      "outputs": ["{options.outputFile}"]
+    }
+  }
+}

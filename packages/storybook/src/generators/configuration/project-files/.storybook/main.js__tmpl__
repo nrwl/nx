@@ -1,0 +1,43 @@
+<% if (!isRootProject){ %>const rootMain = require('<%= offsetFromRoot %>../.storybook/<%= rootMainName %>');<% } %>
+<% if (isRootProject){ %>const rootMain = require('./main.root');<% } %>
+<% if (existsRootWebpackConfig && !usesVite){ %>const rootWebpackConfig = require('<%= offsetFromRoot %>../.storybook/webpack.config'); <% } %>
+<% if (isNextJs){ %>const path = require('path');<% } %>
+
+module.exports = {
+  ...rootMain,
+  core: { ...rootMain.core, builder: <% if (!usesVite) { %>'webpack5'<% } %><% if (usesVite) { %>'@storybook/builder-vite'<% } %> },
+  stories: [
+    ...rootMain.stories,<% if(uiFramework === '@storybook/angular' && projectType === 'library') { %>
+    '../**/*.stories.mdx',
+    '../**/*.stories.@(js|jsx|ts|tsx)' <% } else { %>
+    '../<%= projectDirectory %>/**/*.stories.mdx',
+    '../<%= projectDirectory %>/**/*.stories.@(js|jsx|ts|tsx)'
+  <% } %>],
+  addons: [...rootMain.addons <% if(uiFramework === '@storybook/react' && !usesVite) { %>, '@nrwl/react/plugins/storybook' <% } %><% if(uiFramework === '@storybook/react-native') { %>, '@storybook/addon-ondevice-actions',  '@storybook/addon-ondevice-backgrounds', '@storybook/addon-ondevice-controls', '@storybook/addon-ondevice-notes'  <% } %>
+    <% if(usesSwc && !isNextJs) { %>, 'storybook-addon-swc' <% } %>
+    <% if(isNextJs) { %>, 'storybook-addon-swc', 
+        {
+      name: 'storybook-addon-next',
+      options: {
+        nextConfigPath: path.resolve(__dirname, '../next.config.js'),
+      },
+    }
+     <% } %>
+  ]<% if (!usesVite) { %>,
+  webpackFinal: async (config, { configType }) => {
+    // apply any global webpack configs that might have been specified in .storybook/main.js
+    if (rootMain.webpackFinal) {
+      config = await rootMain.webpackFinal(config, { configType });
+    }
+    
+    <% if (existsRootWebpackConfig) { %>// for backwards compatibility call the `rootWebpackConfig`
+      // this can be removed once that one is migrated fully to
+      // use the `webpackFinal` property in the `main.js` file
+      config = rootWebpackConfig({ config });
+    <% } %>
+
+    // add your own webpack tweaks if needed
+
+    return config;
+  },<% } %>
+};

@@ -1,0 +1,63 @@
+{
+  "name": "web",
+  "$schema": "node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "./src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/vite:build",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": { "outputPath": "dist/web" },
+      "configurations": {
+        "development": {},
+        "production": {
+          "fileReplacements": [
+            {
+              "replace": "src/environments/environment.ts",
+              "with": "src/environments/environment.prod.ts"
+            }
+          ],
+          "sourceMap": false
+        }
+      }
+    },
+    "serve": {
+      "executor": "@nrwl/vite:dev-server",
+      "defaultConfiguration": "development",
+      "options": { "buildTarget": "web:build" },
+      "configurations": {
+        "development": { "buildTarget": "web:build:development" },
+        "production": { "buildTarget": "web:build:production", "hmr": false }
+      }
+    },
+    "test": {
+      "executor": "@nrwl/vite:test",
+      "outputs": ["{projectRoot}/coverage"],
+      "options": { "passWithNoTests": true }
+    },
+    "storybook": {
+      "executor": "@storybook/angular:start-storybook",
+      "options": {
+        "port": 4400,
+        "configDir": "./.storybook",
+        "browserTarget": "web:build-storybook",
+        "compodoc": false
+      },
+      "configurations": { "ci": { "quiet": true } }
+    },
+    "build-storybook": {
+      "executor": "@storybook/angular:build-storybook",
+      "outputs": ["{options.outputDir}"],
+      "options": {
+        "outputDir": "dist/storybook/web",
+        "configDir": "./.storybook",
+        "browserTarget": "web:build-storybook",
+        "compodoc": false
+      },
+      "configurations": { "ci": { "quiet": true } }
+    }
+  },
+  "tags": [],
+  "root": "."
+}
