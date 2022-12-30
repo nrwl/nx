@@ -1,6 +1,3 @@
-// nx-ignore-next-line
-import type { Linter } from '@nrwl/linter';
-
 import { Preset } from '../utils/presets';
 import { PackageManager } from '@nrwl/devkit';
 
@@ -9,7 +6,7 @@ export interface Schema {
   npmScope?: string;
   style?: string;
   cli: string;
-  linter?: Linter;
+  linter?: string;
   preset: Preset;
   standaloneConfig?: boolean;
   packageManager?: PackageManager;

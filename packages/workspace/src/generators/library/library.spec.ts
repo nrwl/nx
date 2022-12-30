@@ -9,8 +9,7 @@ import {
   createTreeWithEmptyV1Workspace,
   createTreeWithEmptyWorkspace,
 } from '@nrwl/devkit/testing';
-// nx-ignore-next-line
-import { Linter } from '@nrwl/linter';
+
 
 import { libraryGenerator } from './library';
 import { Schema } from './schema.d';
@@ -21,7 +20,7 @@ describe('lib', () => {
     skipTsConfig: false,
     unitTestRunner: 'jest',
     skipFormat: false,
-    linter: Linter.EsLint,
+    linter: 'eslint',
     simpleModuleName: false,
     testEnvironment: 'jsdom',
     js: false,

@@ -1,6 +1,3 @@
-// nx-ignore-next-line
-import type { Linter } from '@nrwl/linter';
-
 export interface Schema {
   name: string;
   directory?: string;
@@ -9,7 +6,7 @@ export interface Schema {
   tags?: string;
   simpleModuleName?: boolean;
   unitTestRunner?: 'jest' | 'none';
-  linter?: Linter;
+  linter?: 'eslint' | 'none';
   testEnvironment?: 'jsdom' | 'node';
   importPath?: string;
   js?: boolean;

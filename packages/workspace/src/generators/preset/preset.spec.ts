@@ -4,8 +4,6 @@ import { overrideCollectionResolutionForTesting } from '@nrwl/devkit/ngcli-adapt
 import { presetGenerator } from './preset';
 import * as path from 'path';
 import { Preset } from '../utils/presets';
-// nx-ignore-next-line
-import { Linter } from '@nrwl/linter';
 
 describe('preset', () => {
   let tree: Tree;
@@ -49,7 +47,7 @@ describe('preset', () => {
       preset: Preset.AngularMonorepo,
       cli: 'nx',
       style: 'css',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       standaloneConfig: false,
     });
     expect(tree.children('apps/proj')).toMatchSnapshot();
@@ -72,7 +70,7 @@ describe('preset', () => {
       name: 'proj',
       preset: Preset.ReactMonorepo,
       style: 'css',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       cli: 'nx',
       standaloneConfig: false,
     });
@@ -85,54 +83,18 @@ describe('preset', () => {
       name: 'proj',
       preset: Preset.NextJs,
       style: 'css',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       cli: 'nx',
       standaloneConfig: false,
     });
     expect(tree.exists('/apps/proj/pages/index.tsx')).toBe(true);
   });
 
-  it(`should create files (preset = ${Preset.AngularWithNest})`, async () => {
-    await presetGenerator(tree, {
-      name: 'proj',
-      preset: Preset.AngularWithNest,
-      style: 'css',
-      linter: Linter.EsLint,
-      cli: 'nx',
-      standaloneConfig: false,
-    });
-
-    expect(tree.exists('/apps/proj/src/app/app.component.ts')).toBe(true);
-    expect(tree.exists('/apps/api/src/app/app.controller.ts')).toBe(true);
-    expect(tree.exists('/libs/api-interfaces/src/lib/api-interfaces.ts')).toBe(
-      true
-    );
-  });
-
-  it(`should create files (preset = ${Preset.ReactWithExpress})`, async () => {
-    await presetGenerator(tree, {
-      name: 'proj',
-      preset: Preset.ReactWithExpress,
-      style: 'css',
-      linter: Linter.EsLint,
-      cli: 'nx',
-      standaloneConfig: false,
-    });
-
-    expect(tree.exists('/apps/proj/src/app/app.tsx')).toBe(true);
-    expect(tree.exists('/libs/api-interfaces/src/lib/api-interfaces.ts')).toBe(
-      true
-    );
-    expect(tree.exists('/apps/proj/.eslintrc.json')).toBe(true);
-    expect(tree.exists('/apps/api/.eslintrc.json')).toBe(true);
-    expect(tree.exists('/libs/api-interfaces/.eslintrc.json')).toBe(true);
-  });
-
   it(`should create files (preset = ${Preset.Express})`, async () => {
     await presetGenerator(tree, {
       name: 'proj',
       preset: Preset.Express,
-      linter: Linter.EsLint,
+      linter: 'eslint',
       cli: 'nx',
       standaloneConfig: false,
     });
@@ -145,7 +107,7 @@ describe('preset', () => {
     await presetGenerator(tree, {
       name: 'proj',
       preset: Preset.ReactNative,
-      linter: Linter.EsLint,
+      linter: 'eslint',
       cli: 'nx',
       standaloneConfig: false,
     });
