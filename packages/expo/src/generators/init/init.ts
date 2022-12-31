@@ -21,7 +21,6 @@ import {
   reactNativeSvgTransformerVersion,
   reactNativeSvgVersion,
   expoCliVersion,
-  svgrWebpackVersion,
   babelPresetExpoVersion,
   easCliVersion,
   deprecatedExpoCliVersion,
@@ -89,7 +88,6 @@ export function updateDependencies(host: Tree) {
       'expo-cli': deprecatedExpoCliVersion,
       '@expo/cli': expoCliVersion,
       'eas-cli': easCliVersion,
-      '@svgr/webpack': svgrWebpackVersion,
       'babel-preset-expo': babelPresetExpoVersion,
     }
   );
