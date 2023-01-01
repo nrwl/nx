@@ -17,8 +17,7 @@
           {
             "command": "nx run-e2e-tests e2e-web"
           }
-        ],
-        "parallel": false
+        ]
       }
     },
     "run-e2e-tests": {}

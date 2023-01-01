@@ -18,7 +18,7 @@
             "command": "nx run-e2e-tests e2e-angular-core"
           }
         ],
-        "parallel": false
+        "parallel": true
       }
     },
     "run-e2e-tests": {}
