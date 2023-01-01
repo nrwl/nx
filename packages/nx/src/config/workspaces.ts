@@ -937,8 +937,7 @@ export function mergeTargetConfigurations(
   target: string,
   targetDefaults: TargetDefaults[string]
 ): TargetConfiguration {
-  const { targets, root } = projectConfiguration;
-  const targetConfiguration = targets?.[target];
+  const targetConfiguration = projectConfiguration.targets?.[target];
 
   if (!targetConfiguration) {
     throw new Error(
@@ -966,13 +965,13 @@ export function mergeTargetConfigurations(
     result.options = mergeOptions(
       defaultOptions,
       targetConfiguration.options ?? {},
-      root,
+      projectConfiguration,
       target
     );
     result.configurations = mergeConfigurations(
       defaultConfigurations,
       targetConfiguration.configurations,
-      root,
+      projectConfiguration,
       target
     );
   }
@@ -982,11 +981,11 @@ export function mergeTargetConfigurations(
 function mergeOptions<T extends Object>(
   defaults: T,
   options: T,
-  projectRoot: string,
+  project: ProjectConfiguration,
   key: string
 ): T {
   return {
-    ...resolvePathTokensInOptions(defaults, projectRoot, key),
+    ...resolvePathTokensInOptions(defaults, project, key),
     ...options,
   };
 }
@@ -994,7 +993,7 @@ function mergeOptions<T extends Object>(
 function mergeConfigurations<T extends Object>(
   defaultConfigurations: Record<string, T>,
   projectDefinedConfigurations: Record<string, T>,
-  projectRoot: string,
+  project: ProjectConfiguration,
   targetName: string
 ): Record<string, T> {
   const configurations: Record<string, T> = { ...projectDefinedConfigurations };
@@ -1002,7 +1001,7 @@ function mergeConfigurations<T extends Object>(
     configurations[configuration] = mergeOptions(
       defaultConfigurations[configuration],
       configurations[configuration],
-      projectRoot,
+      project,
       `${targetName}.${configuration}`
     );
   }
@@ -1011,7 +1010,7 @@ function mergeConfigurations<T extends Object>(
 
 function resolvePathTokensInOptions<T extends Object | Array<unknown>>(
   object: T,
-  projectRoot: string,
+  project: ProjectConfiguration,
   key: string
 ): T {
   const result: T = Array.isArray(object) ? ([...object] as T) : { ...object };
@@ -1025,11 +1024,12 @@ function resolvePathTokensInOptions<T extends Object | Array<unknown>>(
           `${NX_PREFIX} The {workspaceRoot} token is only valid at the beginning of an option. (${key})`
         );
       }
-      result[opt] = value.replace('{projectRoot}', projectRoot);
+      value = value.replace('{projectRoot}', project.root);
+      result[opt] = value.replace('{projectName}', project.name);
     } else if (typeof value === 'object' && value) {
       result[opt] = resolvePathTokensInOptions(
         value,
-        projectRoot,
+        project,
         [key, opt].join('.')
       );
     }
