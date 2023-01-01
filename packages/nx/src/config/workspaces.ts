@@ -1009,11 +1009,12 @@ function mergeConfigurations<T extends Object>(
   return configurations;
 }
 
-function resolvePathTokensInOptions<T extends Object>(
+function resolvePathTokensInOptions<T extends Object | Array<unknown>>(
   object: T,
   projectRoot: string,
   key: string
 ): T {
+  const result: T = Array.isArray(object) ? ([...object] as T) : { ...object };
   for (let [opt, value] of Object.entries(object ?? {})) {
     if (typeof value === 'string') {
       if (value.startsWith('{workspaceRoot}/')) {
@@ -1024,12 +1025,16 @@ function resolvePathTokensInOptions<T extends Object>(
           `${NX_PREFIX} The {workspaceRoot} token is only valid at the beginning of an option. (${key})`
         );
       }
-      object[opt] = value.replace('{projectRoot}', projectRoot);
+      result[opt] = value.replace('{projectRoot}', projectRoot);
     } else if (typeof value === 'object' && value) {
-      resolvePathTokensInOptions(value, projectRoot, [key, opt].join('.'));
+      result[opt] = resolvePathTokensInOptions(
+        value,
+        projectRoot,
+        [key, opt].join('.')
+      );
     }
   }
-  return object;
+  return result;
 }
 
 export function readTargetDefaultsForTarget(
