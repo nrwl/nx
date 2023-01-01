@@ -76,7 +76,14 @@
       "inputs": ["default", "^production"]
     },
     "run-e2e-tests": {
-      "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"]
+      "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "jestConfig": "{projectRoot}/jest.config.ts",
+        "passWithNoTests": true,
+        "runInBand": true
+      },
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"]
     },
     "build-storybook": {
       "inputs": ["default", "^production", "{workspaceRoot}/.storybook/**/*"]

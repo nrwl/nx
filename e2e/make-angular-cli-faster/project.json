@@ -21,15 +21,7 @@
         "parallel": false
       }
     },
-    "run-e2e-tests": {
-      "executor": "@nrwl/jest:jest",
-      "options": {
-        "jestConfig": "e2e/make-angular-cli-faster/jest.config.ts",
-        "passWithNoTests": true,
-        "runInBand": true
-      },
-      "outputs": ["{workspaceRoot}/coverage/e2e/make-angular-cli-faster"]
-    }
+    "run-e2e-tests": {}
   },
   "implicitDependencies": ["make-angular-cli-faster"]
 }

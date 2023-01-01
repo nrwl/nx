@@ -21,15 +21,7 @@
         "parallel": false
       }
     },
-    "run-e2e-tests": {
-      "executor": "@nrwl/jest:jest",
-      "options": {
-        "jestConfig": "e2e/add-nx-to-monorepo/jest.config.ts",
-        "passWithNoTests": true,
-        "runInBand": true
-      },
-      "outputs": ["{workspaceRoot}/coverage/e2e/add-nx-to-monorepo"]
-    }
+    "run-e2e-tests": {}
   },
   "implicitDependencies": ["workspace"]
 }
