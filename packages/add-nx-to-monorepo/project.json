@@ -10,14 +10,7 @@
         "lintFilePatterns": ["packages/add-nx-to-monorepo/**/*.ts"]
       }
     },
-    "test": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/packages/add-nx-to-monorepo"],
-      "options": {
-        "jestConfig": "packages/add-nx-to-monorepo/jest.config.ts",
-        "passWithNoTests": true
-      }
-    },
+    "test": {},
     "build-base": {
       "executor": "@nrwl/js:tsc",
       "outputs": ["{options.outputPath}"],

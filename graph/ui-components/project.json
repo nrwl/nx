@@ -12,14 +12,7 @@
         "lintFilePatterns": ["graph/ui-components/**/*.{ts,tsx,js,jsx}"]
       }
     },
-    "test": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-      "options": {
-        "jestConfig": "graph/ui-components/jest.config.ts",
-        "passWithNoTests": true
-      }
-    },
+    "test": {},
     "storybook": {
       "executor": "@nrwl/storybook:storybook",
       "options": {

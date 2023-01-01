@@ -4,14 +4,7 @@
   "sourceRoot": "packages/linter",
   "projectType": "library",
   "targets": {
-    "test": {
-      "executor": "@nrwl/jest:jest",
-      "options": {
-        "jestConfig": "packages/linter/jest.config.ts",
-        "passWithNoTests": true
-      },
-      "outputs": ["{workspaceRoot}/coverage/packages/linter"]
-    },
+    "test": {},
     "build-base": {
       "executor": "@nrwl/js:tsc",
       "options": {

@@ -13,16 +13,7 @@
       },
       "outputs": ["{options.outputFile}"]
     },
-    "test": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": [
-        "{workspaceRoot}/coverage/nx-dev/feature-package-schema-viewer"
-      ],
-      "options": {
-        "jestConfig": "nx-dev/feature-package-schema-viewer/jest.config.ts",
-        "passWithNoTests": true
-      }
-    }
+    "test": {}
   },
   "tags": ["scope:nx-dev", "type:feature"]
 }

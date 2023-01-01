@@ -4,14 +4,7 @@
   "sourceRoot": "packages/nx-plugin",
   "projectType": "library",
   "targets": {
-    "test": {
-      "executor": "@nrwl/jest:jest",
-      "options": {
-        "jestConfig": "packages/nx-plugin/jest.config.ts",
-        "passWithNoTests": true
-      },
-      "outputs": ["{workspaceRoot}/coverage/packages/nx-plugin"]
-    },
+    "test": {},
     "build-base": {
       "executor": "@nrwl/js:tsc",
       "options": {

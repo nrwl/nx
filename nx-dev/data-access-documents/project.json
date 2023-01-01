@@ -11,14 +11,7 @@
       },
       "outputs": ["{options.outputFile}"]
     },
-    "test": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/nx-dev/data-access-documents"],
-      "options": {
-        "jestConfig": "nx-dev/data-access-documents/jest.config.ts",
-        "passWithNoTests": true
-      }
-    }
+    "test": {}
   },
   "tags": ["scope:nx-dev", "type:data-access"]
 }

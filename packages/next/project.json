@@ -4,14 +4,7 @@
   "sourceRoot": "packages/next",
   "projectType": "library",
   "targets": {
-    "test": {
-      "executor": "@nrwl/jest:jest",
-      "options": {
-        "jestConfig": "packages/next/jest.config.ts",
-        "passWithNoTests": true
-      },
-      "outputs": ["{workspaceRoot}/coverage/packages/next"]
-    },
+    "test": {},
     "build-base": {
       "executor": "@nrwl/js:tsc",
       "options": {

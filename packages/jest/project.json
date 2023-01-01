@@ -4,14 +4,7 @@
   "sourceRoot": "packages/jest",
   "projectType": "library",
   "targets": {
-    "test": {
-      "executor": "@nrwl/jest:jest",
-      "options": {
-        "jestConfig": "packages/jest/jest.config.ts",
-        "passWithNoTests": true
-      },
-      "outputs": ["{workspaceRoot}/coverage/packages/jest"]
-    },
+    "test": {},
     "build-base": {
       "executor": "@nrwl/js:tsc",
       "options": {

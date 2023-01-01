@@ -24,14 +24,7 @@
       },
       "outputs": ["{options.outputFile}"]
     },
-    "test": {
-      "executor": "@nrwl/jest:jest",
-      "options": {
-        "jestConfig": "packages/react-native/jest.config.ts",
-        "passWithNoTests": true
-      },
-      "outputs": ["{workspaceRoot}/coverage/packages/react-native"]
-    },
+    "test": {},
     "build-base": {
       "executor": "@nrwl/js:tsc",
       "options": {

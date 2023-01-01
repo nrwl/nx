@@ -4,14 +4,7 @@
   "sourceRoot": "packages/vite",
   "projectType": "library",
   "targets": {
-    "test": {
-      "executor": "@nrwl/jest:jest",
-      "options": {
-        "jestConfig": "packages/vite/jest.config.ts",
-        "passWithNoTests": true
-      },
-      "outputs": ["{workspaceRoot}/coverage/packages/vite"]
-    },
+    "test": {},
     "build-base": {
       "executor": "@nrwl/js:swc",
       "options": {

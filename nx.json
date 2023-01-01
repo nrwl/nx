@@ -51,7 +51,13 @@
       "inputs": ["production", "^production"]
     },
     "test": {
-      "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"]
+      "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "jestConfig": "{projectRoot}/jest.config.ts",
+        "passWithNoTests": true
+      },
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"]
     },
     "lint": {
       "inputs": [

@@ -11,14 +11,7 @@
         "lintFilePatterns": ["nx-dev/models-document/**/*.ts"]
       }
     },
-    "test": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/nx-dev/models-document"],
-      "options": {
-        "jestConfig": "nx-dev/models-document/jest.config.ts",
-        "passWithNoTests": true
-      }
-    }
+    "test": {}
   },
   "tags": ["scope:nx-dev", "type:util"]
 }

@@ -11,14 +11,7 @@
         "lintFilePatterns": ["nx-dev/data-access-packages/**/*.ts"]
       }
     },
-    "test": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/nx-dev/data-access-packages"],
-      "options": {
-        "jestConfig": "nx-dev/data-access-packages/jest.config.ts",
-        "passWithNoTests": true
-      }
-    }
+    "test": {}
   },
   "tags": ["scope:nx-dev", "type:data-access"]
 }

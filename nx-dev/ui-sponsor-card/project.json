@@ -12,13 +12,6 @@
       },
       "outputs": ["{options.outputFile}"]
     },
-    "test": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/nx-dev/ui-sponsor-card"],
-      "options": {
-        "jestConfig": "nx-dev/ui-sponsor-card/jest.config.ts",
-        "passWithNoTests": true
-      }
-    }
+    "test": {}
   }
 }

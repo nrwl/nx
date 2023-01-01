@@ -10,14 +10,7 @@
         "lintFilePatterns": ["packages/cra-to-nx/**/*.ts"]
       }
     },
-    "test": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/packages/cra-to-nx"],
-      "options": {
-        "jestConfig": "packages/cra-to-nx/jest.config.ts",
-        "passWithNoTests": true
-      }
-    },
+    "test": {},
     "build-base": {
       "executor": "@nrwl/js:tsc",
       "outputs": ["{options.outputPath}"],

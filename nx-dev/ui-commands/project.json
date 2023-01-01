@@ -12,13 +12,6 @@
         "lintFilePatterns": ["nx-dev/ui-commands/**/*.{ts,tsx,js,jsx}"]
       }
     },
-    "test": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/nx-dev/ui-commands"],
-      "options": {
-        "jestConfig": "nx-dev/ui-commands/jest.config.ts",
-        "passWithNoTests": true
-      }
-    }
+    "test": {}
   }
 }

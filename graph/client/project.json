@@ -246,14 +246,7 @@
         "lintFilePatterns": ["graph/client/**/*.{ts,tsx,js,jsx}"]
       }
     },
-    "test": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/graph/client"],
-      "options": {
-        "jestConfig": "graph/client/jest.config.ts",
-        "passWithNoTests": true
-      }
-    },
+    "test": {},
     "storybook": {
       "executor": "@nrwl/storybook:storybook",
       "options": {

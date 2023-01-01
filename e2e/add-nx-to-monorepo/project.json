@@ -18,7 +18,6 @@
             "command": "nx run-e2e-tests e2e-add-nx-to-monorepo"
           }
         ]
-        "parallel": true
       }
     },
     "run-e2e-tests": {}

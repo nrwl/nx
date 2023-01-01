@@ -19,14 +19,7 @@
         ]
       }
     },
-    "test": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/js"],
-      "options": {
-        "jestConfig": "packages/js/jest.config.ts",
-        "passWithNoTests": true
-      }
-    },
+    "test": {},
     "build-base": {
       "executor": "@nrwl/js:tsc",
       "options": {

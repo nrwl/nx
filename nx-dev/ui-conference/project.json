@@ -12,13 +12,6 @@
       },
       "outputs": ["{options.outputFile}"]
     },
-    "test": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/nx-dev/ui-conference"],
-      "options": {
-        "jestConfig": "nx-dev/ui-conference/jest.config.ts",
-        "passWithNoTests": true
-      }
-    }
+    "test": {}
   }
 }
