@@ -56,26 +56,6 @@
         "command": "node ./scripts/copy-readme.js esbuild"
       }
     },
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "lintFilePatterns": [
-          "packages/esbuild/**/*.ts",
-          "packages/esbuild/**/*.spec.ts",
-          "packages/esbuild/**/*_spec.ts",
-          "packages/esbuild/**/*.spec.tsx",
-          "packages/esbuild/**/*.spec.js",
-          "packages/esbuild/**/*.spec.jsx",
-          "packages/esbuild/**/*.d.ts",
-          "packages/esbuild/**/executors/**/schema.json",
-          "packages/esbuild/**/generators/**/schema.json",
-          "packages/esbuild/generators.json",
-          "packages/esbuild/executors.json",
-          "packages/esbuild/package.json",
-          "packages/esbuild/migrations.json"
-        ]
-      },
-      "outputs": ["{options.outputFile}"]
-    }
+    "lint": {}
   }
 }

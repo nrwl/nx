@@ -56,26 +56,6 @@
         "command": "node ./scripts/copy-readme.js nx-plugin"
       }
     },
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "lintFilePatterns": [
-          "packages/nx-plugin/**/*.ts",
-          "packages/nx-plugin/**/*.spec.ts",
-          "packages/nx-plugin/**/*_spec.ts",
-          "packages/nx-plugin/**/*.spec.tsx",
-          "packages/nx-plugin/**/*.spec.js",
-          "packages/nx-plugin/**/*.spec.jsx",
-          "packages/nx-plugin/**/*.d.ts",
-          "packages/nx-plugin/**/executors/**/schema.json",
-          "packages/nx-plugin/**/generators/**/schema.json",
-          "packages/nx-plugin/generators.json",
-          "packages/nx-plugin/executors.json",
-          "packages/nx-plugin/package.json",
-          "packages/nx-plugin/migrations.json"
-        ]
-      },
-      "outputs": ["{options.outputFile}"]
-    }
+    "lint": {}
   }
 }

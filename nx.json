@@ -64,7 +64,20 @@
         "default",
         "{workspaceRoot}/.eslintrc.json",
         "{workspaceRoot}/tools/eslint-rules/**/*"
-      ]
+      ],
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "{projectRoot}/**/*.{ts,tsx,js,jsx}",
+          "{projectRoot}/**/executors/**/schema.json",
+          "{projectRoot}/**/generators/**/schema.json",
+          "{projectRoot}/generators.json",
+          "{projectRoot}/executors.json",
+          "{projectRoot}/package.json",
+          "{projectRoot}/migrations.json"
+        ]
+      },
+      "outputs": ["{options.outputFile}"]
     },
     "e2e": {
       "inputs": [

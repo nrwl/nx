@@ -56,26 +56,6 @@
         "command": "node ./scripts/copy-readme.js rollup"
       }
     },
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "lintFilePatterns": [
-          "packages/rollup/**/*.ts",
-          "packages/rollup/**/*.spec.ts",
-          "packages/rollup/**/*_spec.ts",
-          "packages/rollup/**/*.spec.tsx",
-          "packages/rollup/**/*.spec.js",
-          "packages/rollup/**/*.spec.jsx",
-          "packages/rollup/**/*.d.ts",
-          "packages/rollup/**/executors/**/schema.json",
-          "packages/rollup/**/generators/**/schema.json",
-          "packages/rollup/generators.json",
-          "packages/rollup/executors.json",
-          "packages/rollup/package.json",
-          "packages/rollup/migrations.json"
-        ]
-      },
-      "outputs": ["{options.outputFile}"]
-    }
+    "lint": {}
   }
 }

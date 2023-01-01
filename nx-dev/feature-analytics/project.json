@@ -4,13 +4,7 @@
   "sourceRoot": "nx-dev/feature-analytics/src",
   "projectType": "library",
   "targets": {
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "lintFilePatterns": ["nx-dev/feature-analytics/**/*.{ts,tsx,js,jsx}"]
-      },
-      "outputs": ["{options.outputFile}"]
-    },
+    "lint": {},
     "test": {}
   },
   "tags": ["scope:nx-dev", "type:feature"]

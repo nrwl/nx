@@ -4,12 +4,7 @@
   "sourceRoot": "packages/cra-to-nx/src",
   "projectType": "library",
   "targets": {
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "lintFilePatterns": ["packages/cra-to-nx/**/*.ts"]
-      }
-    },
+    "lint": {},
     "test": {},
     "build-base": {
       "executor": "@nrwl/js:tsc",

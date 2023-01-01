@@ -60,13 +60,7 @@
         "parallel": false
       }
     },
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["graph/client-e2e/**/*.ts"]
-      }
-    }
+    "lint": {}
   },
   "implicitDependencies": ["graph-client"]
 }

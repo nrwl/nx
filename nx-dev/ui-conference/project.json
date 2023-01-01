@@ -5,13 +5,7 @@
   "projectType": "library",
   "tags": ["scope:nx-dev", "type:feature"],
   "targets": {
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "lintFilePatterns": ["nx-dev/ui-conference/**/*.{ts,tsx,js,jsx}"]
-      },
-      "outputs": ["{options.outputFile}"]
-    },
+    "lint": {},
     "test": {}
   }
 }

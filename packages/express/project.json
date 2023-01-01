@@ -56,26 +56,7 @@
         "command": "node ./scripts/copy-readme.js express"
       }
     },
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "lintFilePatterns": [
-          "packages/express/**/*.ts",
-          "packages/express/**/*.spec.ts",
-          "packages/express/**/*_spec.ts",
-          "packages/express/**/*.spec.tsx",
-          "packages/express/**/*.spec.js",
-          "packages/express/**/*.spec.jsx",
-          "packages/express/**/*.d.ts",
-          "packages/express/**/executors/**/schema.json",
-          "packages/express/**/generators/**/schema.json",
-          "packages/express/generators.json",
-          "packages/express/package.json",
-          "packages/express/migrations.json"
-        ]
-      },
-      "outputs": ["{options.outputFile}"]
-    }
+    "lint": {}
   },
   "implicitDependencies": ["node"]
 }

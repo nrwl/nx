@@ -4,20 +4,7 @@
   "sourceRoot": "packages/expo/src",
   "projectType": "library",
   "targets": {
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "lintFilePatterns": [
-          "packages/expo/**/*.ts",
-          "packages/expo/**/*.spec.ts",
-          "packages/expo/**/*.spec.tsx",
-          "packages/expo/**/*.spec.js",
-          "packages/expo/**/*.spec.jsx",
-          "packages/expo/**/*.d.ts"
-        ]
-      },
-      "outputs": ["{options.outputFile}"]
-    },
+    "lint": {},
     "test": {},
     "build-base": {
       "executor": "@nrwl/js:tsc",

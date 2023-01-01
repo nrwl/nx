@@ -5,13 +5,7 @@
   "projectType": "library",
   "tags": [],
   "targets": {
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["graph/ui-tooltips/**/*.{ts,tsx,js,jsx}"]
-      }
-    },
+    "lint": {},
     "test": {},
     "storybook": {
       "executor": "@nrwl/storybook:storybook",

@@ -80,24 +80,7 @@
         "parallel": false
       }
     },
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "lintFilePatterns": [
-          "packages/nx/**/*.ts",
-          "packages/nx/**/*.spec.ts",
-          "packages/nx/**/*_spec.ts",
-          "packages/nx/**/*.spec.tsx",
-          "packages/nx/**/*.spec.js",
-          "packages/nx/**/*.spec.jsx",
-          "packages/nx/**/*.d.ts",
-          "packages/nx/executors.json",
-          "packages/nx/package.json",
-          "packages/nx/migrations.json"
-        ]
-      },
-      "outputs": ["{options.outputFile}"]
-    },
+    "lint": {},
     "test": {}
   }
 }

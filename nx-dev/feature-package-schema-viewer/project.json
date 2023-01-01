@@ -4,15 +4,7 @@
   "sourceRoot": "nx-dev/feature-package-schema-viewer/src",
   "projectType": "library",
   "targets": {
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "lintFilePatterns": [
-          "nx-dev/feature-package-schema-viewer/**/*.{ts,tsx,js,jsx}"
-        ]
-      },
-      "outputs": ["{options.outputFile}"]
-    },
+    "lint": {},
     "test": {}
   },
   "tags": ["scope:nx-dev", "type:feature"]

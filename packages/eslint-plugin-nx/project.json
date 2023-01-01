@@ -56,20 +56,6 @@
         "command": "node ./scripts/copy-readme.js eslint-plugin-nx"
       }
     },
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "lintFilePatterns": [
-          "packages/eslint-plugin-nx/**/*.ts",
-          "packages/eslint-plugin-nx/**/*.spec.ts",
-          "packages/eslint-plugin-nx/**/*_spec.ts",
-          "packages/eslint-plugin-nx/**/*.spec.tsx",
-          "packages/eslint-plugin-nx/**/*.spec.js",
-          "packages/eslint-plugin-nx/**/*.spec.jsx",
-          "packages/eslint-plugin-nx/**/*.d.ts"
-        ]
-      },
-      "outputs": ["{options.outputFile}"]
-    }
+    "lint": {}
   }
 }

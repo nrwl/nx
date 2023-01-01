@@ -4,12 +4,7 @@
   "sourceRoot": "packages/add-nx-to-monorepo/src",
   "projectType": "library",
   "targets": {
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "lintFilePatterns": ["packages/add-nx-to-monorepo/**/*.ts"]
-      }
-    },
+    "lint": {},
     "test": {},
     "build-base": {
       "executor": "@nrwl/js:tsc",

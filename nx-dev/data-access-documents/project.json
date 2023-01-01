@@ -4,13 +4,7 @@
   "sourceRoot": "nx-dev/data-access-documents/src",
   "projectType": "library",
   "targets": {
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "lintFilePatterns": ["nx-dev/data-access-documents/**/*.ts"]
-      },
-      "outputs": ["{options.outputFile}"]
-    },
+    "lint": {},
     "test": {}
   },
   "tags": ["scope:nx-dev", "type:data-access"]

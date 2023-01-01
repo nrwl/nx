@@ -56,26 +56,7 @@
         "command": "node ./scripts/copy-readme.js nest"
       }
     },
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "lintFilePatterns": [
-          "packages/nest/**/*.ts",
-          "packages/nest/**/*.spec.ts",
-          "packages/nest/**/*_spec.ts",
-          "packages/nest/**/*.spec.tsx",
-          "packages/nest/**/*.spec.js",
-          "packages/nest/**/*.spec.jsx",
-          "packages/nest/**/*.d.ts",
-          "packages/nest/**/executors/**/schema.json",
-          "packages/nest/**/generators/**/schema.json",
-          "packages/nest/generators.json",
-          "packages/nest/package.json",
-          "packages/nest/migrations.json"
-        ]
-      },
-      "outputs": ["{options.outputFile}"]
-    }
+    "lint": {}
   },
   "implicitDependencies": ["node", "linter"]
 }

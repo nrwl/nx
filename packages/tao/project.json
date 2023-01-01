@@ -64,19 +64,6 @@
         "parallel": false
       }
     },
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "lintFilePatterns": [
-          "packages/tao/**/*.ts",
-          "packages/tao/**/*.spec.ts",
-          "packages/tao/**/*.spec.tsx",
-          "packages/tao/**/*.spec.js",
-          "packages/tao/**/*.spec.jsx",
-          "packages/tao/**/*.d.ts"
-        ]
-      },
-      "outputs": ["{options.outputFile}"]
-    }
+    "lint": {}
   }
 }

@@ -99,13 +99,7 @@
         "buildTarget": "nx-dev:build:production"
       }
     },
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "lintFilePatterns": ["nx-dev/nx-dev/**/*.{ts,tsx,js,jsx}"]
-      },
-      "outputs": ["{options.outputFile}"]
-    },
+    "lint": {},
     "test": {}
   },
   "tags": ["scope:nx-dev", "type:app"],

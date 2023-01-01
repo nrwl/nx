@@ -67,21 +67,7 @@
         "parallel": false
       }
     },
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "lintFilePatterns": [
-          "packages/create-nx-plugin/**/*.ts",
-          "packages/create-nx-plugin/**/*.spec.ts",
-          "packages/create-nx-plugin/**/*_spec.ts",
-          "packages/create-nx-plugin/**/*.spec.tsx",
-          "packages/create-nx-plugin/**/*.spec.js",
-          "packages/create-nx-plugin/**/*.spec.jsx",
-          "packages/create-nx-plugin/**/*.d.ts"
-        ]
-      },
-      "outputs": ["{options.outputFile}"]
-    }
+    "lint": {}
   },
   "implicitDependencies": ["nx-plugin"]
 }

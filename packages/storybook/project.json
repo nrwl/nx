@@ -81,26 +81,6 @@
         "command": "node ./scripts/copy-readme.js storybook"
       }
     },
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "lintFilePatterns": [
-          "packages/storybook/**/*.ts",
-          "packages/storybook/**/*.spec.ts",
-          "packages/storybook/**/*_spec.ts",
-          "packages/storybook/**/*.spec.tsx",
-          "packages/storybook/**/*.spec.js",
-          "packages/storybook/**/*.spec.jsx",
-          "packages/storybook/**/*.d.ts",
-          "packages/storybook/**/executors/**/schema.json",
-          "packages/storybook/**/generators/**/schema.json",
-          "packages/storybook/generators.json",
-          "packages/storybook/executors.json",
-          "packages/storybook/package.json",
-          "packages/storybook/migrations.json"
-        ]
-      },
-      "outputs": ["{options.outputFile}"]
-    }
+    "lint": {}
   }
 }

@@ -4,13 +4,7 @@
   "sourceRoot": "nx-dev/models-menu/src",
   "projectType": "library",
   "targets": {
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["nx-dev/models-menu/**/*.ts"]
-      }
-    },
+    "lint": {},
     "test": {}
   },
   "tags": ["scope:nx-dev", "type:util"]

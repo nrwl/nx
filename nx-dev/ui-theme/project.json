@@ -5,13 +5,7 @@
   "projectType": "library",
   "tags": [],
   "targets": {
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["nx-dev/ui-theme/**/*.{ts,tsx,js,jsx}"]
-      }
-    },
+    "lint": {},
     "test": {}
   }
 }

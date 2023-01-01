@@ -56,22 +56,6 @@
         "command": "node ./scripts/copy-readme.js devkit"
       }
     },
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "lintFilePatterns": [
-          "packages/devkit/**/*.ts",
-          "packages/devkit/**/*.spec.ts",
-          "packages/devkit/**/*.spec.tsx",
-          "packages/devkit/**/*.spec.js",
-          "packages/devkit/**/*.spec.jsx",
-          "packages/devkit/**/*.d.ts",
-          "packages/devkit/**/executors/**/schema.json",
-          "packages/devkit/**/generators/**/schema.json",
-          "packages/devkit/package.json"
-        ]
-      },
-      "outputs": ["{options.outputFile}"]
-    }
+    "lint": {}
   }
 }

@@ -66,26 +66,6 @@
         "command": "node ./scripts/copy-readme.js react"
       }
     },
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "lintFilePatterns": [
-          "packages/react/**/*.ts",
-          "packages/react/**/*.spec.ts",
-          "packages/react/**/*_spec.ts",
-          "packages/react/**/*.spec.tsx",
-          "packages/react/**/*.spec.js",
-          "packages/react/**/*.spec.jsx",
-          "packages/react/**/*.d.ts",
-          "packages/react/**/executors/**/schema.json",
-          "packages/react/**/generators/**/schema.json",
-          "packages/react/generators.json",
-          "packages/react/executors.json",
-          "packages/react/package.json",
-          "packages/react/migrations.json"
-        ]
-      },
-      "outputs": ["{options.outputFile}"]
-    }
+    "lint": {}
   }
 }

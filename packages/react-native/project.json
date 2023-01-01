@@ -4,26 +4,7 @@
   "sourceRoot": "packages/react-native/src",
   "projectType": "library",
   "targets": {
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "lintFilePatterns": [
-          "packages/react-native/**/*.ts",
-          "packages/react-native/**/*.spec.ts",
-          "packages/react-native/**/*.spec.tsx",
-          "packages/react-native/**/*.spec.js",
-          "packages/react-native/**/*.spec.jsx",
-          "packages/react-native/**/*.d.ts",
-          "packages/react-native/**/executors/**/schema.json",
-          "packages/react-native/**/generators/**/schema.json",
-          "packages/react-native/generators.json",
-          "packages/react-native/executors.json",
-          "packages/react-native/package.json",
-          "packages/react-native/migrations.json"
-        ]
-      },
-      "outputs": ["{options.outputFile}"]
-    },
+    "lint": {},
     "test": {},
     "build-base": {
       "executor": "@nrwl/js:tsc",

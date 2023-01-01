@@ -56,27 +56,7 @@
         "command": "node ./scripts/copy-readme.js linter"
       }
     },
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "lintFilePatterns": [
-          "packages/linter/**/*.ts",
-          "packages/linter/**/*.spec.ts",
-          "packages/linter/**/*_spec.ts",
-          "packages/linter/**/*.spec.tsx",
-          "packages/linter/**/*.spec.js",
-          "packages/linter/**/*.spec.jsx",
-          "packages/linter/**/*.d.ts",
-          "packages/linter/**/executors/**/schema.json",
-          "packages/linter/**/generators/**/schema.json",
-          "packages/linter/generators.json",
-          "packages/linter/executors.json",
-          "packages/linter/package.json",
-          "packages/linter/migrations.json"
-        ]
-      },
-      "outputs": ["{options.outputFile}"]
-    }
+    "lint": {}
   },
   "implicitDependencies": ["eslint-plugin-nx"]
 }

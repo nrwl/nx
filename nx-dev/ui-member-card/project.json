@@ -5,13 +5,7 @@
   "projectType": "library",
   "tags": ["scope:nx-dev", "type:ui"],
   "targets": {
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "lintFilePatterns": ["nx-dev/ui-member-card/**/*.{ts,tsx,js,jsx}"]
-      },
-      "outputs": ["{options.outputFile}"]
-    },
+    "lint": {},
     "test": {}
   }
 }
