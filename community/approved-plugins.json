@@ -160,6 +160,11 @@
     "url": "https://github.com/nx-go/nx-go"
   },
   {
+    "name": "@nx-golang/gin",
+    "description": "Nx plugin to use Go-Gin in a Nx workspace",
+    "url": "https://github.com/nx-golang/nx-golang"
+  },
+  {
     "name": "@angular-architects/module-federation",
     "description": "Nx plugin to use webpack module federation",
     "url": "https://github.com/angular-architects/module-federation-plugin"
