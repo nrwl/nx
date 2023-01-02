@@ -13,12 +13,10 @@ To create a new Nx workspace with Next.js, run `npx create-nx-workspace@latest -
 To add Next.js to an existing Nx workspace, install the `@nrwl/next` package. Make sure to install the version that matches your `@nrwl/workspace` version.
 
 ```shell
-#yarn
 yarn add --dev @nrwl/next
 ```
 
 ```shell
-#npm
 npm install --save-dev @nrwl/next
 ```
 
