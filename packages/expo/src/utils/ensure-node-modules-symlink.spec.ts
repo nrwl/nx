@@ -1,6 +1,6 @@
 import { tmpdir } from 'os';
 import { join } from 'path';
-import * as fs from 'fs';
+import { existsSync, mkdirSync, removeSync, writeFileSync } from 'fs-extra';
 import { ensureNodeModulesSymlink } from './ensure-node-modules-symlink';
 
 const workspaceDir = join(tmpdir(), 'nx-react-native-test');
@@ -9,19 +9,18 @@ const appDirAbsolutePath = join(workspaceDir, appDir);
 
 describe('ensureNodeModulesSymlink', () => {
   beforeEach(() => {
-    if (fs.existsSync(workspaceDir))
-      fs.rmdirSync(workspaceDir, { recursive: true });
-    fs.mkdirSync(workspaceDir);
-    fs.mkdirSync(appDirAbsolutePath, { recursive: true });
-    fs.mkdirSync(appDirAbsolutePath, { recursive: true });
-    fs.writeFileSync(
+    if (existsSync(workspaceDir)) removeSync(workspaceDir);
+    mkdirSync(workspaceDir);
+    mkdirSync(appDirAbsolutePath, { recursive: true });
+    mkdirSync(appDirAbsolutePath, { recursive: true });
+    writeFileSync(
       join(appDirAbsolutePath, 'package.json'),
       JSON.stringify({
         name: 'myapp',
         dependencies: { 'react-native': '*' },
       })
     );
-    fs.writeFileSync(
+    writeFileSync(
       join(workspaceDir, 'package.json'),
       JSON.stringify({
         name: 'workspace',
@@ -36,8 +35,7 @@ describe('ensureNodeModulesSymlink', () => {
   });
 
   afterEach(() => {
-    if (fs.existsSync(workspaceDir))
-      fs.rmdirSync(workspaceDir, { recursive: true });
+    if (existsSync(workspaceDir)) removeSync(workspaceDir);
   });
 
   it('should create symlinks', () => {
@@ -64,7 +62,7 @@ describe('ensureNodeModulesSymlink', () => {
   });
 
   it('should add packages listed in workspace package.json', () => {
-    fs.writeFileSync(
+    writeFileSync(
       join(workspaceDir, 'package.json'),
       JSON.stringify({
         name: 'workspace',
@@ -92,8 +90,8 @@ describe('ensureNodeModulesSymlink', () => {
 
   function createNpmDirectory(packageName, version) {
     const dir = join(workspaceDir, `node_modules/${packageName}`);
-    fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(
       join(dir, 'package.json'),
       JSON.stringify({ name: packageName, version: version })
     );
@@ -102,7 +100,7 @@ describe('ensureNodeModulesSymlink', () => {
 
   function expectSymlinkToExist(packageName) {
     expect(
-      fs.existsSync(
+      existsSync(
         join(appDirAbsolutePath, `node_modules/${packageName}/package.json`)
       )
     ).toBe(true);
