@@ -39,7 +39,7 @@
     "metro-resolver": "^0.73.3",
     "minimatch": "3.0.5",
     "node-fetch": "^2.6.7",
-    "tsconfig-paths": "^3.9.0"
+    "tsconfig-paths": "^4.1.2"
   },
   "peerDependencies": {
     "react-native": "^0.70.6"

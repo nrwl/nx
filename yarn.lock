@@ -4354,7 +4354,7 @@
     ignore "^5.0.4"
     semver "7.3.4"
     ts-node "10.9.1"
-    tsconfig-paths "^3.9.0"
+    tsconfig-paths "^4.1.2"
     url-loader "^4.1.1"
     webpack-merge "^5.8.0"
 
@@ -4526,7 +4526,7 @@
     terser-webpack-plugin "^5.3.3"
     ts-loader "^9.3.1"
     ts-node "10.9.1"
-    tsconfig-paths "^3.9.0"
+    tsconfig-paths "^4.1.2"
     tsconfig-paths-webpack-plugin "3.5.2"
     tslib "^2.3.0"
     webpack "^5.75.0"
@@ -18139,7 +18139,7 @@ nx@15.0.3, "nx@>=14.8.1 < 16":
     strong-log-transformer "^2.1.0"
     tar-stream "~2.2.0"
     tmp "~0.2.1"
-    tsconfig-paths "^3.9.0"
+    tsconfig-paths "^4.1.2"
     tslib "^2.3.0"
     v8-compile-cache "2.3.0"
     yargs "^17.4.0"
@@ -18180,7 +18180,7 @@ nx@15.4.0:
     strong-log-transformer "^2.1.0"
     tar-stream "~2.2.0"
     tmp "~0.2.1"
-    tsconfig-paths "^3.9.0"
+    tsconfig-paths "^4.1.2"
     tslib "^2.3.0"
     v8-compile-cache "2.3.0"
     yargs "^17.6.2"
@@ -23219,7 +23219,7 @@ tsconfig-paths-webpack-plugin@3.5.2, tsconfig-paths-webpack-plugin@^3.3.0:
   dependencies:
     chalk "^4.1.0"
     enhanced-resolve "^5.7.0"
-    tsconfig-paths "^3.9.0"
+    tsconfig-paths "^4.1.2"
 
 tsconfig-paths-webpack-plugin@4.0.0:
   version "4.0.0"
@@ -23230,7 +23230,7 @@ tsconfig-paths-webpack-plugin@4.0.0:
     enhanced-resolve "^5.7.0"
     tsconfig-paths "^4.0.0"
 
-tsconfig-paths@^3.14.1, tsconfig-paths@^3.9.0:
+tsconfig-paths@^3.14.1, tsconfig-paths@^4.1.2:
   version "3.14.1"
   resolved "https://registry.yarnpkg.com/tsconfig-paths/-/tsconfig-paths-3.14.1.tgz#ba0734599e8ea36c862798e920bcf163277b137a"
   integrity sha512-fxDhWnFSLt3VuTwtvJt5fpwxBHg5AdKWMsgcPOOIilyjymcYVZoCQF8fvFRezCNfblEXmi+PcM1eYHeOAgXCOQ==

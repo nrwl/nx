@@ -49,7 +49,7 @@
     "ignore": "^5.0.4",
     "semver": "7.3.4",
     "ts-node": "10.9.1",
-    "tsconfig-paths": "^3.9.0",
+    "tsconfig-paths": "^4.1.2",
     "url-loader": "^4.1.1",
     "webpack-merge": "^5.8.0"
   },
