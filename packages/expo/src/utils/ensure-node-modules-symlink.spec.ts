@@ -9,8 +9,7 @@ const appDirAbsolutePath = join(workspaceDir, appDir);
 
 describe('ensureNodeModulesSymlink', () => {
   beforeEach(() => {
-    if (fs.existsSync(workspaceDir))
-      fs.removeSync(workspaceDir);
+    if (fs.existsSync(workspaceDir)) fs.removeSync(workspaceDir);
     fs.mkdirSync(workspaceDir);
     fs.mkdirSync(appDirAbsolutePath, { recursive: true });
     fs.mkdirSync(appDirAbsolutePath, { recursive: true });
