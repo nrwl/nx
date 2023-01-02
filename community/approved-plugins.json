@@ -270,6 +270,16 @@
     "url": "https://github.com/tripss/nx-extend/tree/master/packages/playwright"
   },
   {
+    "name": "@nx-extend/terraform",
+    "description": "Nx plugin for deploying your resources with Terraform",
+    "url": "https://github.com/tripss/nx-extend/tree/master/packages/terraform"
+  },
+  {
+    "name": "@nx-extend/pulumi",
+    "description": "Nx plugin for deploying your resources with Pulumi",
+    "url": "https://github.com/tripss/nx-extend/tree/master/packages/pulumi"
+  },
+  {
     "name": "@nativescript/nx",
     "description": "Nx Plugin adding first class support for NativeScript in your Nx workspace",
     "url": "https://github.com/nativescript/nx"
