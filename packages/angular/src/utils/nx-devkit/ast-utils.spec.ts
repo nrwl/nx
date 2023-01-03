@@ -3,6 +3,7 @@ import {
   addImportToDirective,
   addImportToModule,
   addImportToPipe,
+  isStandalone,
 } from './ast-utils';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { createSourceFile, ScriptTarget } from 'typescript';
@@ -150,5 +151,113 @@ describe('Angular AST Utils', () => {
           export class MyPipe {}
           "
     `);
+  });
+
+  it('should allow checking if a component is standalone and return true if so', () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace();
+    const pathToFile = `my.component.ts`;
+    const originalContents = `import { Component } from '@angular/core';
+    
+    @Component({
+      standalone: true
+    })
+    export class MyComponent {}
+    `;
+
+    tree.write(pathToFile, originalContents);
+
+    const sourceText = tree.read(pathToFile, 'utf-8');
+    const tsSourceFile = createSourceFile(
+      pathToFile,
+      sourceText,
+      ScriptTarget.Latest,
+      true
+    );
+
+    // ACT
+    // ASSERT
+    expect(isStandalone(tsSourceFile, 'Component')).toBeTruthy();
+  });
+
+  it('should allow checking if a component is standalone and return false if not', () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace();
+    const pathToFile = `my.component.ts`;
+    const originalContents = `import { Component } from '@angular/core';
+    
+    @Component({
+      standalone: false
+    })
+    export class MyComponent {}
+    `;
+
+    tree.write(pathToFile, originalContents);
+
+    const sourceText = tree.read(pathToFile, 'utf-8');
+    const tsSourceFile = createSourceFile(
+      pathToFile,
+      sourceText,
+      ScriptTarget.Latest,
+      true
+    );
+
+    // ACT
+    // ASSERT
+    expect(isStandalone(tsSourceFile, 'Component')).not.toBeTruthy();
+  });
+
+  it('should allow checking if a directive is standalone and return true if so', () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace();
+    const pathToFile = `my.directive.ts`;
+    const originalContents = `import { Directive } from '@angular/core';
+    
+    @Directive({
+      standalone: true
+    })
+    export class MyDirective {}
+    `;
+
+    tree.write(pathToFile, originalContents);
+
+    const sourceText = tree.read(pathToFile, 'utf-8');
+    const tsSourceFile = createSourceFile(
+      pathToFile,
+      sourceText,
+      ScriptTarget.Latest,
+      true
+    );
+
+    // ACT
+    // ASSERT
+    expect(isStandalone(tsSourceFile, 'Directive')).toBeTruthy();
+  });
+
+  it('should allow checking if a pipe is standalone and return true if so', () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace();
+    const pathToFile = `my.pipe.ts`;
+    const originalContents = `import { Pipe } from '@angular/core';
+    
+    @Pipe({
+      standalone: true
+    })
+    export class MyPipe {}
+    `;
+
+    tree.write(pathToFile, originalContents);
+
+    const sourceText = tree.read(pathToFile, 'utf-8');
+    const tsSourceFile = createSourceFile(
+      pathToFile,
+      sourceText,
+      ScriptTarget.Latest,
+      true
+    );
+
+    // ACT
+    // ASSERT
+    expect(isStandalone(tsSourceFile, 'Pipe')).toBeTruthy();
   });
 });
