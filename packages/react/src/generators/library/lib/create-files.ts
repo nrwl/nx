@@ -5,7 +5,6 @@ import {
   names,
   offsetFromRoot,
   toJS,
-  updateJson,
 } from '@nrwl/devkit';
 import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 
