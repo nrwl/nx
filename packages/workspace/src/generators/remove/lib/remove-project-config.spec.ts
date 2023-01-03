@@ -1,9 +1,9 @@
 import {
   addProjectConfiguration,
   readProjectConfiguration,
-  readWorkspaceConfiguration,
+  readNxJson,
   Tree,
-  updateWorkspaceConfiguration,
+  updateNxJson,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 
@@ -67,9 +67,9 @@ describe('removeProjectConfig', () => {
 
   describe('defaultProject', () => {
     beforeEach(async () => {
-      const workspaceConfig = readWorkspaceConfiguration(tree);
-      updateWorkspaceConfiguration(tree, {
-        ...workspaceConfig,
+      const nxJson = readNxJson(tree);
+      updateNxJson(tree, {
+        ...nxJson,
         defaultProject: 'ng-app',
       });
     });
@@ -83,7 +83,7 @@ describe('removeProjectConfig', () => {
 
       removeProjectConfig(tree, schema);
 
-      const { defaultProject } = readWorkspaceConfiguration(tree);
+      const { defaultProject } = readNxJson(tree);
       expect(defaultProject).toBeUndefined();
     });
 
@@ -96,7 +96,7 @@ describe('removeProjectConfig', () => {
 
       removeProjectConfig(tree, schema);
 
-      const { defaultProject } = readWorkspaceConfiguration(tree);
+      const { defaultProject } = readNxJson(tree);
       expect(defaultProject).toEqual('ng-app');
     });
 

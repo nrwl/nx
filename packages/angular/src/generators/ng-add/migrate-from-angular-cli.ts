@@ -40,6 +40,8 @@ export async function migrateFromAngularCli(
   const projects = getAllProjects(tree);
   const options = normalizeOptions(tree, rawOptions, projects);
 
+  const angularJson = readJson(tree, 'angular.json') as any;
+
   if (options.preserveAngularCliLayout) {
     addDependenciesToPackageJson(
       tree,
@@ -50,7 +52,7 @@ export async function migrateFromAngularCli(
         prettier: prettierVersion,
       }
     );
-    createNxJson(tree, options);
+    createNxJson(tree, options, angularJson.defaultProject);
     decorateAngularCli(tree);
     updateVsCodeRecommendedExtensions(tree);
     await updatePrettierConfig(tree);
@@ -90,7 +92,7 @@ export async function migrateFromAngularCli(
       version: 2,
       $schema: undefined,
     }));
-    createNxJson(tree, options);
+    createNxJson(tree, options, angularJson.defaultProject);
     updateWorkspaceConfigDefaults(tree);
     updateRootTsConfig(tree);
     updatePackageJson(tree);

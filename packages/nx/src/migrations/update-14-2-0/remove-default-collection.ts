@@ -1,22 +1,19 @@
 import { Tree } from '../../generators/tree';
 import {
-  readWorkspaceConfiguration,
-  updateWorkspaceConfiguration,
+  readNxJson,
+  updateNxJson,
 } from '../../generators/utils/project-configuration';
 import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
 
 export default async function (tree: Tree) {
-  const workspaceConfiguration = readWorkspaceConfiguration(tree);
+  const nxJson = readNxJson(tree);
 
-  delete workspaceConfiguration.cli?.defaultCollection;
-  if (
-    workspaceConfiguration.cli &&
-    Object.keys(workspaceConfiguration.cli).length === 0
-  ) {
-    delete workspaceConfiguration.cli;
+  delete nxJson.cli?.defaultCollection;
+  if (nxJson.cli && Object.keys(nxJson.cli).length === 0) {
+    delete nxJson.cli;
   }
 
-  updateWorkspaceConfiguration(tree, workspaceConfiguration);
+  updateNxJson(tree, nxJson);
 
   await formatChangedFilesWithPrettierIfAvailable(tree);
 }

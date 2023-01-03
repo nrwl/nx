@@ -7,10 +7,7 @@ import {
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 
 export interface AffectedProjectGraphContext {
-  projectGraphNodes: Record<
-    string,
-    ProjectGraphProjectNode<ProjectConfiguration>
-  >;
+  projectGraphNodes: Record<string, ProjectGraphProjectNode>;
   nxJson: NxJsonConfiguration<any>;
   touchedProjects: string[];
 }
@@ -18,10 +15,7 @@ export interface AffectedProjectGraphContext {
 export interface TouchedProjectLocator<T extends Change = Change> {
   (
     fileChanges: FileChange<T>[],
-    projectGraphNodes?: Record<
-      string,
-      ProjectGraphProjectNode<ProjectConfiguration>
-    >,
+    projectGraphNodes?: Record<string, ProjectGraphProjectNode>,
     nxJson?: NxJsonConfiguration<any>,
     packageJson?: any,
     projectGraph?: ProjectGraph

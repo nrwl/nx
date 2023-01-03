@@ -173,7 +173,8 @@ export function findOrCreateConfig(
       config.srcRoot
     );
   } else {
-    const sourceRoot = context.workspace.projects[context.projectName].root;
+    const sourceRoot =
+      context.projectsConfigurations.projects[context.projectName].root;
     if (statSync(join(context.root, sourceRoot, '.storybook')).isDirectory()) {
       return join(context.root, sourceRoot, '.storybook');
     }

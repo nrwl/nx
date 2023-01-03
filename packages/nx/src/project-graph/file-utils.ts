@@ -134,8 +134,8 @@ function defaultReadFileAtRevision(
 export function readWorkspaceConfig(opts: {
   format: 'angularCli' | 'nx';
   path?: string;
-}): ProjectsConfigurations & NxJsonConfiguration {
-  let configuration: (ProjectsConfigurations & NxJsonConfiguration) | null;
+}): ProjectsConfigurations {
+  let configuration: ProjectsConfigurations | null = null;
   try {
     const projectGraph = readCachedProjectGraph();
     configuration = {
@@ -144,7 +144,7 @@ export function readWorkspaceConfig(opts: {
     };
   } catch {
     const ws = new Workspaces(opts.path || process.cwd());
-    configuration = ws.readWorkspaceConfiguration();
+    configuration = ws.readProjectsConfig();
   }
   if (opts.format === 'angularCli') {
     const formatted = toOldFormatOrNull(configuration);

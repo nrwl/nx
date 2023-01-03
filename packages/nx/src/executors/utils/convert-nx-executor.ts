@@ -19,7 +19,7 @@ import { ProjectGraph } from '../../config/project-graph';
 export function convertNxExecutor(executor: Executor) {
   const builderFunction = (options, builderContext) => {
     const workspaces = new Workspaces(builderContext.workspaceRoot);
-    const workspaceConfig = workspaces.readWorkspaceConfiguration();
+    const projectsConfigurations = workspaces.readProjectsConfig();
 
     const promise = async () => {
       let projectGraph: ProjectGraph;
@@ -28,13 +28,16 @@ export function convertNxExecutor(executor: Executor) {
       } catch {
         projectGraph = await createProjectGraphAsync();
       }
+      const nxJsonConfiguration = workspaces.readNxJson();
       const context: ExecutorContext = {
         root: builderContext.workspaceRoot,
         projectName: builderContext.target.project,
         targetName: builderContext.target.target,
         target: builderContext.target.target,
         configurationName: builderContext.target.configuration,
-        workspace: workspaceConfig,
+        projectsConfigurations,
+        nxJsonConfiguration,
+        workspace: { ...projectsConfigurations, ...nxJsonConfiguration },
         cwd: process.cwd(),
         projectGraph,
         isVerbose: false,

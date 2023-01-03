@@ -1,4 +1,4 @@
-import { readWorkspaceConfiguration } from '@nrwl/devkit';
+import { readNxJson } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
 import remote from './remote';
@@ -17,7 +17,7 @@ describe('remote generator', () => {
       unitTestRunner: 'jest',
     });
 
-    const { defaultProject } = readWorkspaceConfiguration(tree);
+    const { defaultProject } = readNxJson(tree);
     expect(defaultProject).toBeUndefined();
   });
 

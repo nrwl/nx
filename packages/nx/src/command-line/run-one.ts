@@ -100,13 +100,15 @@ const targetAliases = {
 function parseRunOneOptions(
   cwd: string,
   parsedArgs: { [k: string]: any },
-  projectGraph: ProjectGraph<ProjectConfiguration>,
+  projectGraph: ProjectGraph,
   nxJson: NxJsonConfiguration
 ): { project; target; configuration; parsedArgs } {
-  const defaultProjectName = calculateDefaultProjectName(cwd, workspaceRoot, {
-    ...readProjectsConfigurationFromProjectGraph(projectGraph),
-    ...nxJson,
-  });
+  const defaultProjectName = calculateDefaultProjectName(
+    cwd,
+    workspaceRoot,
+    readProjectsConfigurationFromProjectGraph(projectGraph),
+    nxJson
+  );
 
   let project;
   let target;
@@ -157,16 +159,17 @@ function parseRunOneOptions(
 export function calculateDefaultProjectName(
   cwd: string,
   root: string,
-  workspaceConfiguration: ProjectsConfigurations & NxJsonConfiguration
+  projectsConfigurations: ProjectsConfigurations,
+  nxJsonConfiguration: NxJsonConfiguration
 ) {
   let relativeCwd = cwd.replace(/\\/g, '/').split(root.replace(/\\/g, '/'))[1];
 
   relativeCwd = relativeCwd.startsWith('/')
     ? relativeCwd.substring(1)
     : relativeCwd;
-  const matchingProject = Object.keys(workspaceConfiguration.projects).find(
+  const matchingProject = Object.keys(projectsConfigurations.projects).find(
     (p) => {
-      const projectRoot = workspaceConfiguration.projects[p].root;
+      const projectRoot = projectsConfigurations.projects[p].root;
       return (
         relativeCwd == projectRoot ||
         (relativeCwd == '' && projectRoot == '.') ||
@@ -176,7 +179,7 @@ export function calculateDefaultProjectName(
   );
   if (matchingProject) return matchingProject;
   return (
-    (workspaceConfiguration.cli as { defaultProjectName: string })
-      ?.defaultProjectName || workspaceConfiguration.defaultProject
+    (nxJsonConfiguration.cli as { defaultProjectName: string })
+      ?.defaultProjectName || nxJsonConfiguration.defaultProject
   );
 }

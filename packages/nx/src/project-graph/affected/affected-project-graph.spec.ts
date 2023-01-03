@@ -16,7 +16,7 @@ jest.mock('nx/src/utils/workspace-root', () => ({
 describe('project graph', () => {
   let packageJson: any;
   let packageLockJson: any;
-  let workspaceJson: ProjectsConfigurations;
+  let projects: ProjectsConfigurations;
   let tsConfigJson: any;
   let nxJson: NxJsonConfiguration;
   let filesJson: any;
@@ -73,7 +73,7 @@ describe('project graph', () => {
         },
       },
     };
-    workspaceJson = {
+    projects = {
       version: 2,
       projects: {
         demo: {
@@ -151,7 +151,7 @@ describe('project graph', () => {
       './package.json': JSON.stringify(packageJson),
       './package-lock.json': JSON.stringify(packageLockJson),
       './nx.json': JSON.stringify(nxJson),
-      './workspace.json': JSON.stringify(workspaceJson),
+      './workspace.json': JSON.stringify(projects),
       './tsconfig.base.json': JSON.stringify(tsConfigJson),
     };
     vol.fromJSON(filesJson, '/root');

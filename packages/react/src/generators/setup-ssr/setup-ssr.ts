@@ -6,11 +6,11 @@ import {
   formatFiles,
   generateFiles,
   joinPathFragments,
+  readNxJson,
   readProjectConfiguration,
-  readWorkspaceConfiguration,
   Tree,
+  updateNxJson,
   updateProjectConfiguration,
-  updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import initGenerator from '../init/init';
 
@@ -165,15 +165,15 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
 
   updateProjectConfiguration(tree, options.project, projectConfig);
 
-  const workspace = readWorkspaceConfiguration(tree);
+  const nxJson = readNxJson(tree);
   if (
-    workspace.tasksRunnerOptions?.default &&
-    !workspace.tasksRunnerOptions.default.options.cacheableOperations.includes(
+    nxJson.tasksRunnerOptions?.default &&
+    !nxJson.tasksRunnerOptions.default.options.cacheableOperations.includes(
       'server'
     )
   ) {
-    workspace.tasksRunnerOptions.default.options.cacheableOperations = [
-      ...workspace.tasksRunnerOptions.default.options.cacheableOperations,
+    nxJson.tasksRunnerOptions.default.options.cacheableOperations = [
+      ...nxJson.tasksRunnerOptions.default.options.cacheableOperations,
       'server',
     ];
   }
@@ -202,7 +202,7 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
     tree.write(serverEntry, changes);
   }
 
-  updateWorkspaceConfiguration(tree, workspace);
+  updateNxJson(tree, nxJson);
 
   const installTask = addDependenciesToPackageJson(
     tree,

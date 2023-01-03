@@ -45,7 +45,7 @@ export async function* rollupExecutor(
 ) {
   process.env.NODE_ENV ??= 'production';
 
-  const project = context.workspace.projects[context.projectName];
+  const project = context.projectsConfigurations.projects[context.projectName];
   const sourceRoot = project.sourceRoot;
   const { target, dependencies } = calculateProjectDependencies(
     context.projectGraph,

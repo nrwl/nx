@@ -1,13 +1,8 @@
-import {
-  formatFiles,
-  readWorkspaceConfiguration,
-  Tree,
-  updateWorkspaceConfiguration,
-} from '@nrwl/devkit';
+import { formatFiles, readNxJson, Tree, updateNxJson } from '@nrwl/devkit';
 import { output } from '../../utilities/output';
 
 export async function setDefaultBaseIfNotSet(host: Tree) {
-  const config = readWorkspaceConfiguration(host);
+  const config = readNxJson(host);
   if (!config.affected?.defaultBase) {
     config.affected ??= {};
     config.affected.defaultBase ??= 'master';
@@ -21,7 +16,7 @@ export async function setDefaultBaseIfNotSet(host: Tree) {
       ],
     });
   }
-  updateWorkspaceConfiguration(host, config);
+  updateNxJson(host, config);
   await formatFiles(host);
 }
 

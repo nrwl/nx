@@ -214,7 +214,7 @@ describe('lock-file', () => {
         name: 'lib1',
         data: {
           root: 'libs/lib1',
-        },
+        } as any,
       };
       partialGraph.dependencies['lib1'] = [
         {

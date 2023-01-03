@@ -1,9 +1,8 @@
 import {
-  Tree,
-  readWorkspaceConfiguration,
   getProjects,
   readJson,
   readProjectConfiguration,
+  Tree,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
@@ -100,7 +99,6 @@ describe('app', () => {
         unitTestRunner: 'none',
       });
 
-      const workspaceJson = readWorkspaceConfiguration(appTree);
       const projects = getProjects(appTree);
       expect(projects.get('my-dir-my-app').root).toEqual('apps/my-dir/my-app');
 
@@ -181,7 +179,6 @@ describe('app', () => {
         unitTestRunner: 'none',
       });
 
-      const workspaceJson = readWorkspaceConfiguration(appTree);
       const projects = getProjects(appTree);
       expect(projects.get('my-app').root).toEqual('apps/my-app');
 
@@ -258,7 +255,6 @@ describe('app', () => {
         unitTestRunner: 'none',
       });
 
-      const workspaceJson = readWorkspaceConfiguration(appTree);
       const projects = getProjects(appTree);
       expect(projects.get('my-app').root).toEqual('apps/my-app');
 

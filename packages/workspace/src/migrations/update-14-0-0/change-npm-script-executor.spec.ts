@@ -1,10 +1,7 @@
 import {
   addProjectConfiguration,
-  readJson,
   readProjectConfiguration,
-  readWorkspaceConfiguration,
   Tree,
-  updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import changeNpmScriptExecutor from './change-npm-script-executor';

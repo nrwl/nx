@@ -1,7 +1,7 @@
 import {
   getProjects,
+  readNxJson,
   readProjectConfiguration,
-  readWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import host from '../host/host';
@@ -103,7 +103,7 @@ describe('MF Remote App Generator', () => {
     });
 
     // ASSERT
-    const { defaultProject } = readWorkspaceConfiguration(tree);
+    const { defaultProject } = readNxJson(tree);
     expect(defaultProject).toBeUndefined();
   });
 

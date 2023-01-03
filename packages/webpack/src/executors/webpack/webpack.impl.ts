@@ -35,7 +35,7 @@ async function getWebpackConfigs(
   options: NormalizedWebpackExecutorOptions,
   context: ExecutorContext
 ): Promise<Configuration[]> {
-  const metadata = context.workspace.projects[context.projectName];
+  const metadata = context.projectsConfigurations.projects[context.projectName];
   const projectRoot = metadata.root;
   const isScriptOptimizeOn =
     typeof options.optimization === 'boolean'
@@ -107,7 +107,7 @@ export async function* webpackExecutor(
   _options: WebpackExecutorOptions,
   context: ExecutorContext
 ): AsyncGenerator<WebpackExecutorEvent, WebpackExecutorEvent, undefined> {
-  const metadata = context.workspace.projects[context.projectName];
+  const metadata = context.projectsConfigurations.projects[context.projectName];
   const sourceRoot = metadata.sourceRoot;
   const options = normalizeOptions(_options, context.root, sourceRoot);
   const isScriptOptimizeOn =

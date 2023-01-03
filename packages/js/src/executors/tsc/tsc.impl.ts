@@ -114,7 +114,8 @@ export async function* tscExecutor(
   _options: ExecutorOptions,
   context: ExecutorContext
 ) {
-  const { sourceRoot, root } = context.workspace.projects[context.projectName];
+  const { sourceRoot, root } =
+    context.projectsConfigurations.projects[context.projectName];
   const options = normalizeOptions(_options, context.root, sourceRoot, root);
 
   const { projectRoot, tmpTsConfig, target, dependencies } = checkDependencies(

@@ -3,10 +3,10 @@ import {
   convertNxGenerator,
   ensurePackage,
   GeneratorCallback,
-  readWorkspaceConfiguration,
+  readNxJson,
   removeDependenciesFromPackageJson,
   Tree,
-  updateWorkspaceConfiguration,
+  updateNxJson,
   writeJson,
 } from '@nrwl/devkit';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
@@ -25,7 +25,7 @@ import {
 import { InitSchema } from './schema';
 
 function setDefault(host: Tree) {
-  const workspace = readWorkspaceConfiguration(host);
+  const workspace = readNxJson(host);
 
   workspace.generators = workspace.generators || {};
   const reactGenerators = workspace.generators['@nrwl/react'] || {};
@@ -40,7 +40,7 @@ function setDefault(host: Tree) {
     },
   };
 
-  updateWorkspaceConfiguration(host, { ...workspace, generators });
+  updateNxJson(host, { ...workspace, generators });
 }
 
 function updateDependencies(host: Tree, schema: InitSchema) {
@@ -78,14 +78,12 @@ function initRootBabelConfig(tree: Tree, schema: InitSchema) {
     });
   }
 
-  const workspaceConfiguration = readWorkspaceConfiguration(tree);
+  const nxJson = readNxJson(tree);
 
-  if (workspaceConfiguration.namedInputs?.sharedGlobals) {
-    workspaceConfiguration.namedInputs.sharedGlobals.push(
-      '{workspaceRoot}/babel.config.json'
-    );
+  if (nxJson.namedInputs?.sharedGlobals) {
+    nxJson.namedInputs.sharedGlobals.push('{workspaceRoot}/babel.config.json');
   }
-  updateWorkspaceConfiguration(tree, workspaceConfiguration);
+  updateNxJson(tree, nxJson);
 }
 
 export async function reactInitGenerator(host: Tree, schema: InitSchema) {

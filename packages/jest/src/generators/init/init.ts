@@ -2,14 +2,14 @@ import {
   addDependenciesToPackageJson,
   convertNxGenerator,
   GeneratorCallback,
-  readWorkspaceConfiguration,
+  getProjects,
+  readNxJson,
   removeDependenciesFromPackageJson,
   stripIndents,
   Tree,
   updateJson,
-  updateWorkspaceConfiguration,
+  updateNxJson,
   updateProjectConfiguration,
-  getProjects,
 } from '@nrwl/devkit';
 import { findRootJestConfig } from '../../utils/config/find-root-jest-files';
 import {
@@ -108,9 +108,9 @@ function createJestConfig(tree: Tree, options: NormalizedSchema) {
 }
 
 function addTestInputs(tree: Tree) {
-  const workspaceConfiguration = readWorkspaceConfiguration(tree);
+  const nxJson = readNxJson(tree);
 
-  const productionFileSet = workspaceConfiguration.namedInputs?.production;
+  const productionFileSet = nxJson.namedInputs?.production;
   if (productionFileSet) {
     // This is one of the patterns in the default jest patterns
     productionFileSet.push(
@@ -122,23 +122,19 @@ function addTestInputs(tree: Tree) {
       '!{projectRoot}/jest.config.[jt]s'
     );
     // Dedupe and set
-    workspaceConfiguration.namedInputs.production = Array.from(
-      new Set(productionFileSet)
-    );
+    nxJson.namedInputs.production = Array.from(new Set(productionFileSet));
   }
 
   // Test targets depend on all their project's sources + production sources of dependencies
-  workspaceConfiguration.targetDefaults ??= {};
-  workspaceConfiguration.targetDefaults.test ??= {};
-  workspaceConfiguration.targetDefaults.test.inputs ??= [
+  nxJson.targetDefaults ??= {};
+  nxJson.targetDefaults.test ??= {};
+  nxJson.targetDefaults.test.inputs ??= [
     'default',
     productionFileSet ? '^production' : '^default',
   ];
-  workspaceConfiguration.targetDefaults.test.inputs.push(
-    '{workspaceRoot}/jest.preset.js'
-  );
+  nxJson.targetDefaults.test.inputs.push('{workspaceRoot}/jest.preset.js');
 
-  updateWorkspaceConfiguration(tree, workspaceConfiguration);
+  updateNxJson(tree, nxJson);
 }
 
 function updateDependencies(tree: Tree, options: NormalizedSchema) {

@@ -123,7 +123,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
               root: 'libs/myapp',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [
                 createFile(`apps/myapp/src/main.ts`),
                 createFile(`apps/myapp/blah.ts`),
@@ -137,7 +137,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
               root: 'libs/mylib',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [
                 createFile(`libs/mylib/src/index.ts`),
                 createFile(`libs/mylib/src/deep.ts`),
@@ -169,7 +169,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
               root: 'libs/myapp',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [
                 createFile(`apps/myapp/src/main.ts`),
                 createFile(`apps/myapp/src/blah.ts`),
@@ -183,7 +183,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
               root: 'libs/myapp2',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [],
             },
           },
@@ -194,7 +194,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
               root: 'libs/myapp2/mylib',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [createFile('libs/myapp2/mylib/src/index.ts')],
             },
           },
@@ -216,7 +216,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
             root: 'libs/api',
             tags: ['api', 'domain1'],
             implicitDependencies: [],
-            architect: {},
+            targets: {},
             files: [createFile(`libs/api/src/index.ts`)],
           },
         },
@@ -227,7 +227,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
             root: 'libs/impl-both-domains',
             tags: ['impl', 'domain1', 'domain2'],
             implicitDependencies: [],
-            architect: {},
+            targets: {},
             files: [createFile(`libs/impl-both-domains/src/index.ts`)],
           },
         },
@@ -238,7 +238,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
             root: 'libs/impl-domain2',
             tags: ['impl', 'domain2'],
             implicitDependencies: [],
-            architect: {},
+            targets: {},
             files: [createFile(`libs/impl-domain2/src/index.ts`)],
           },
         },
@@ -249,7 +249,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
             root: 'libs/impl2',
             tags: ['impl', 'domain1'],
             implicitDependencies: [],
-            architect: {},
+            targets: {},
             files: [createFile(`libs/impl2/src/index.ts`)],
           },
         },
@@ -260,7 +260,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
             root: 'libs/impl',
             tags: ['impl', 'domain1'],
             implicitDependencies: [],
-            architect: {},
+            targets: {},
             files: [createFile(`libs/impl/src/index.ts`)],
           },
         },
@@ -271,7 +271,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
             root: 'libs/public',
             tags: ['public'],
             implicitDependencies: [],
-            architect: {},
+            targets: {},
             files: [createFile(`libs/public/src/index.ts`)],
           },
         },
@@ -282,7 +282,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
             root: 'libs/dependsOnPrivate',
             tags: [],
             implicitDependencies: [],
-            architect: {},
+            targets: {},
             files: [
               createFile(`libs/dependsOnPrivate/src/index.ts`, ['privateName']),
             ],
@@ -295,7 +295,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
             root: 'libs/dependsOnPrivate2',
             tags: [],
             implicitDependencies: [],
-            architect: {},
+            targets: {},
             files: [
               createFile(`libs/dependsOnPrivate2/src/index.ts`, [
                 'privateName',
@@ -310,7 +310,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
             root: 'libs/private',
             tags: ['private'],
             implicitDependencies: [],
-            architect: {},
+            targets: {},
             files: [
               createFile(`libs/private/src/index.ts`, [
                 'untaggedName',
@@ -326,7 +326,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
             root: 'libs/untagged',
             tags: [],
             implicitDependencies: [],
-            architect: {},
+            targets: {},
             files: [createFile(`libs/untagged/src/index.ts`)],
           },
         },
@@ -337,7 +337,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
             root: 'libs/tagged',
             tags: ['some-tag'],
             implicitDependencies: [],
-            architect: {},
+            targets: {},
             files: [createFile(`libs/tagged/src/index.ts`)],
           },
         },
@@ -922,7 +922,7 @@ Violation detected in:
                 root: 'libs/mylib',
                 tags: [],
                 implicitDependencies: [],
-                architect: {},
+                targets: {},
                 files: [
                   createFile(`libs/mylib/src/main.ts`),
                   createFile(`libs/mylib/other.ts`),
@@ -953,7 +953,7 @@ Violation detected in:
                 root: 'libs/mylib',
                 tags: [],
                 implicitDependencies: [],
-                architect: {},
+                targets: {},
                 files: [
                   createFile(`libs/mylib/src/main.ts`),
                   createFile(`libs/mylib/other/index.ts`),
@@ -984,7 +984,7 @@ Violation detected in:
                 root: 'libs/mylib',
                 tags: [],
                 implicitDependencies: [],
-                architect: {},
+                targets: {},
                 files: [createFile(`libs/mylib/src/main.ts`)],
               },
             },
@@ -995,7 +995,7 @@ Violation detected in:
                 root: 'libs/other',
                 tags: [],
                 implicitDependencies: [],
-                architect: {},
+                targets: {},
                 files: [createFile('libs/other/src/index.ts')],
               },
             },
@@ -1028,7 +1028,7 @@ Violation detected in:
                 root: 'libs/mylib',
                 tags: [],
                 implicitDependencies: [],
-                architect: {},
+                targets: {},
                 files: [createFile(`libs/mylib/src/main.ts`)],
               },
             },
@@ -1039,7 +1039,7 @@ Violation detected in:
                 root: 'libs/other',
                 tags: [],
                 implicitDependencies: [],
-                architect: {},
+                targets: {},
                 files: [createFile('libs/other/src/index.ts')],
               },
             },
@@ -1073,7 +1073,7 @@ Violation detected in:
               root: 'libs/mylib',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [
                 createFile(`libs/mylib/src/main.ts`),
                 createFile(`libs/mylib/src/other.ts`),
@@ -1109,7 +1109,7 @@ Violation detected in:
               root: 'libs/mylib',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [createFile(`libs/mylib/src/main.ts`)],
             },
           },
@@ -1120,7 +1120,7 @@ Violation detected in:
               root: 'libs/utils',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [createFile(`libs/utils/a.ts`)],
             },
           },
@@ -1154,7 +1154,7 @@ Violation detected in:
                 root: 'libs/mylib',
                 tags: [],
                 implicitDependencies: [],
-                architect: {},
+                targets: {},
                 files: [createFile(`libs/mylib/src/main.ts`)],
               },
             },
@@ -1165,7 +1165,7 @@ Violation detected in:
                 root: 'libs/other',
                 tags: [],
                 implicitDependencies: [],
-                architect: {},
+                targets: {},
                 files: [createFile(`libs/other/index.ts`)],
               },
             },
@@ -1208,7 +1208,7 @@ Violation detected in:
               root: 'libs/mylib',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [createFile(`libs/mylib/src/main.ts`)],
             },
           },
@@ -1219,7 +1219,7 @@ Violation detected in:
               root: 'apps/myapp',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [createFile(`apps/myapp/src/index.ts`)],
             },
           },
@@ -1251,7 +1251,7 @@ Violation detected in:
               root: 'libs/mylib',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [createFile(`libs/mylib/src/main.ts`)],
             },
           },
@@ -1262,7 +1262,7 @@ Violation detected in:
               root: 'apps/myapp-e2e',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [createFile(`apps/myapp-e2e/src/index.ts`)],
             },
           },
@@ -1294,7 +1294,7 @@ Violation detected in:
               root: 'libs/mylib',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [createFile(`libs/mylib/src/main.ts`)],
             },
           },
@@ -1305,7 +1305,7 @@ Violation detected in:
               root: 'libs/anotherlib',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [createFile(`libs/anotherlib/src/main.ts`)],
             },
           },
@@ -1316,7 +1316,7 @@ Violation detected in:
               root: 'apps/myapp',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [createFile(`apps/myapp/src/index.ts`)],
             },
           },
@@ -1359,7 +1359,7 @@ Violation detected in:
               root: 'libs/mylib',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [createFile(`libs/mylib/src/main.ts`)],
             },
           },
@@ -1370,7 +1370,7 @@ Violation detected in:
               root: 'libs/anotherlib',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [createFile(`libs/anotherlib/src/main.ts`)],
             },
           },
@@ -1381,7 +1381,7 @@ Violation detected in:
               root: 'apps/myapp',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [createFile(`apps/myapp/src/index.ts`)],
             },
           },
@@ -1418,7 +1418,7 @@ Violation detected in:
               root: 'libs/mylib',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [createFile(`libs/mylib/src/main.ts`, ['anotherlibName'])],
             },
           },
@@ -1429,7 +1429,7 @@ Violation detected in:
               root: 'libs/anotherlib',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [createFile(`libs/anotherlib/src/main.ts`, ['mylibName'])],
             },
           },
@@ -1440,7 +1440,7 @@ Violation detected in:
               root: 'apps/myapp',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [createFile(`apps/myapp/src/index.ts`)],
             },
           },
@@ -1484,7 +1484,7 @@ Circular file chain:
               root: 'libs/mylib',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [
                 createFile(`libs/mylib/src/main.ts`, ['badcirclelibName']),
               ],
@@ -1497,7 +1497,7 @@ Circular file chain:
               root: 'libs/anotherlib',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [
                 createFile(`libs/anotherlib/src/main.ts`, ['mylibName']),
                 createFile(`libs/anotherlib/src/index.ts`, ['mylibName']),
@@ -1511,7 +1511,7 @@ Circular file chain:
               root: 'libs/badcirclelib',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [
                 createFile(`libs/badcirclelib/src/main.ts`, ['anotherlibName']),
               ],
@@ -1524,7 +1524,7 @@ Circular file chain:
               root: 'apps/myapp',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [createFile(`apps/myapp/index.ts`)],
             },
           },
@@ -1589,10 +1589,10 @@ Circular file chain:
                 root: 'libs/buildableLib',
                 tags: [],
                 implicitDependencies: [],
-                architect: {
+                targets: {
                   build: {
                     // defines a buildable lib
-                    builder: '@angular-devkit/build-ng-packagr:build',
+                    executor: '@angular-devkit/build-ng-packagr:build',
                   },
                 },
                 files: [createFile(`libs/buildableLib/src/main.ts`)],
@@ -1605,7 +1605,7 @@ Circular file chain:
                 root: 'libs/nonBuildableLib',
                 tags: [],
                 implicitDependencies: [],
-                architect: {},
+                targets: {},
                 files: [createFile(`libs/nonBuildableLib/src/main.ts`)],
               },
             },
@@ -1687,10 +1687,10 @@ Circular file chain:
                 root: 'libs/buildableLib',
                 tags: [],
                 implicitDependencies: [],
-                architect: {
+                targets: {
                   build: {
                     // defines a buildable lib
-                    builder: '@angular-devkit/build-ng-packagr:build',
+                    executor: '@angular-devkit/build-ng-packagr:build',
                   },
                 },
                 files: [createFile(`libs/buildableLib/src/main.ts`)],
@@ -1703,10 +1703,10 @@ Circular file chain:
                 root: 'libs/anotherBuildableLib',
                 tags: [],
                 implicitDependencies: [],
-                architect: {
+                targets: {
                   build: {
                     // defines a buildable lib
-                    builder: '@angular-devkit/build-ng-packagr:build',
+                    executor: '@angular-devkit/build-ng-packagr:build',
                   },
                 },
                 files: [createFile(`libs/anotherBuildableLib/src/main.ts`)],
@@ -1826,10 +1826,10 @@ Circular file chain:
                 root: 'libs/buildableLib',
                 tags: [],
                 implicitDependencies: [],
-                architect: {
+                targets: {
                   build: {
                     // defines a buildable lib
-                    builder: '@angular-devkit/build-ng-packagr:build',
+                    executor: '@angular-devkit/build-ng-packagr:build',
                   },
                 },
                 files: [createFile(`libs/buildableLib/src/main.ts`)],
@@ -1842,10 +1842,10 @@ Circular file chain:
                 root: 'libs/anotherBuildableLib',
                 tags: [],
                 implicitDependencies: [],
-                architect: {
+                targets: {
                   build: {
                     // defines a buildable lib
-                    builder: '@angular-devkit/build-ng-packagr:build',
+                    executor: '@angular-devkit/build-ng-packagr:build',
                   },
                 },
                 files: [createFile(`libs/anotherBuildableLib/src/main.ts`)],
@@ -1925,10 +1925,10 @@ Circular file chain:
                 root: 'libs/buildableLib',
                 tags: [],
                 implicitDependencies: [],
-                architect: {
+                targets: {
                   build: {
                     // defines a buildable lib
-                    builder: '@angular-devkit/build-ng-packagr:build',
+                    executor: '@angular-devkit/build-ng-packagr:build',
                   },
                 },
                 files: [createFile(`libs/buildableLib/src/main.ts`)],
@@ -1941,10 +1941,10 @@ Circular file chain:
                 root: 'libs/anotherBuildableLib',
                 tags: [],
                 implicitDependencies: [],
-                architect: {
+                targets: {
                   build: {
                     // defines a buildable lib
-                    builder: '@angular-devkit/build-ng-packagr:build',
+                    executor: '@angular-devkit/build-ng-packagr:build',
                   },
                 },
                 files: [createFile(`libs/anotherBuildableLib/src/main.ts`)],
@@ -1976,10 +1976,10 @@ Circular file chain:
                 root: 'libs/buildableLib',
                 tags: [],
                 implicitDependencies: [],
-                architect: {
+                targets: {
                   build: {
                     // defines a buildable lib
-                    builder: '@angular-devkit/build-ng-packagr:build',
+                    executor: '@angular-devkit/build-ng-packagr:build',
                   },
                 },
                 files: [createFile(`libs/buildableLib/src/main.ts`)],
@@ -1992,10 +1992,10 @@ Circular file chain:
                 root: 'libs/anotherBuildableLib',
                 tags: [],
                 implicitDependencies: [],
-                architect: {
+                targets: {
                   build: {
                     // defines a buildable lib
-                    builder: '@angular-devkit/build-ng-packagr:build',
+                    executor: '@angular-devkit/build-ng-packagr:build',
                   },
                 },
                 files: [createFile(`libs/anotherBuildableLib/src/main.ts`)],

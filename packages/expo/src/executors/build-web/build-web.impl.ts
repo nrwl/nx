@@ -20,7 +20,8 @@ export default async function* buildWebExecutor(
     '@nrwl/expo:build-web is deprecated and will be removed in Nx 16. Please switch to expo:export --bundler webpack.'
   );
 
-  const projectRoot = context.workspace.projects[context.projectName].root;
+  const projectRoot =
+    context.projectsConfigurations.projects[context.projectName].root;
   ensureNodeModulesSymlink(context.root, projectRoot);
 
   try {

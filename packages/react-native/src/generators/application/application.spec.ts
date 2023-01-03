@@ -1,6 +1,5 @@
 import {
   Tree,
-  readWorkspaceConfiguration,
   getProjects,
   readJson,
   readProjectConfiguration,

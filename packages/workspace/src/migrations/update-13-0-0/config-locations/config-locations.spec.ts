@@ -1,10 +1,4 @@
-import {
-  Tree,
-  writeJson,
-  updateJson,
-  readWorkspaceConfiguration,
-  readJson,
-} from '@nrwl/devkit';
+import { Tree, writeJson, updateJson, readJson } from '@nrwl/devkit';
 import {
   createTreeWithEmptyV1Workspace,
   createTreeWithEmptyWorkspace,

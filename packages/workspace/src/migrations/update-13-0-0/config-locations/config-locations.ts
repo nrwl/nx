@@ -4,13 +4,12 @@ import {
   NxJsonConfiguration,
   ProjectConfiguration,
   readJson,
+  readNxJson,
   readProjectConfiguration,
-  readWorkspaceConfiguration,
   Tree,
   updateJson,
+  updateNxJson,
   updateProjectConfiguration,
-  updateWorkspaceConfiguration,
-  WorkspaceConfiguration,
   writeJson,
 } from '@nrwl/devkit';
 
@@ -23,10 +22,11 @@ export default async function update(tree: Tree) {
   };
   // updateProjectConfiguration automatically saves the project opts into workspace/project.json
   if (nxJson.projects) {
-    Object.entries(nxJson.projects).forEach(([p, nxJsonConfig]) => {
+    Object.entries(nxJson.projects).forEach(([p, nxJsonConfiguration]) => {
       const configuration = readProjectConfiguration(tree, p);
-      configuration.tags ??= nxJsonConfig.tags;
-      configuration.implicitDependencies ??= nxJsonConfig.implicitDependencies;
+      configuration.tags ??= nxJsonConfiguration.tags;
+      configuration.implicitDependencies ??=
+        nxJsonConfiguration.implicitDependencies;
       updateProjectConfiguration(tree, p, configuration);
     });
     delete nxJson.projects;
@@ -55,21 +55,21 @@ function movePropertiesAreInNewLocations(tree: Tree) {
   if (!workspacePath) {
     return;
   }
-  const wc = readWorkspaceConfiguration(tree);
-  updateJson<WorkspaceConfiguration>(tree, workspacePath, (json) => {
-    wc.generators ??= json.generators ?? (json as any).schematics;
-    if (wc.cli) {
-      wc.cli.defaultCollection ??= json.cli?.defaultCollection;
-      wc.cli.packageManager ??= json.cli?.packageManager;
+  const nxJson = readNxJson(tree);
+  updateJson<NxJsonConfiguration>(tree, workspacePath, (json) => {
+    nxJson.generators ??= json.generators ?? (json as any).schematics;
+    if (nxJson.cli) {
+      nxJson.cli.defaultCollection ??= json.cli?.defaultCollection;
+      nxJson.cli.packageManager ??= json.cli?.packageManager;
     } else if (json.cli) {
-      wc.cli ??= json.cli;
+      nxJson.cli ??= json.cli;
     }
-    wc.defaultProject ??= json.defaultProject;
+    nxJson.defaultProject ??= json.defaultProject;
     delete json.cli;
     delete json.defaultProject;
     delete (json as any).schematics;
     delete json.generators;
     return json;
   });
-  updateWorkspaceConfiguration(tree, wc);
+  updateNxJson(tree, nxJson);
 }

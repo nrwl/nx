@@ -1,10 +1,10 @@
 import type { Tree } from '@nrwl/devkit';
 import {
   joinPathFragments,
+  readNxJson,
   readProjectConfiguration,
-  readWorkspaceConfiguration,
+  updateNxJson,
   updateProjectConfiguration,
-  updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import type { Schema } from '../schema';
 
@@ -75,17 +75,17 @@ export function updateProjectConfig(tree: Tree, schema: Schema) {
 
   updateProjectConfiguration(tree, schema.project, projectConfig);
 
-  const workspaceConfig = readWorkspaceConfiguration(tree);
+  const nxJson = readNxJson(tree);
   if (
-    workspaceConfig.tasksRunnerOptions?.default &&
-    !workspaceConfig.tasksRunnerOptions.default.options.cacheableOperations.includes(
+    nxJson.tasksRunnerOptions?.default &&
+    !nxJson.tasksRunnerOptions.default.options.cacheableOperations.includes(
       'server'
     )
   ) {
-    workspaceConfig.tasksRunnerOptions.default.options.cacheableOperations = [
-      ...workspaceConfig.tasksRunnerOptions.default.options.cacheableOperations,
+    nxJson.tasksRunnerOptions.default.options.cacheableOperations = [
+      ...nxJson.tasksRunnerOptions.default.options.cacheableOperations,
       'server',
     ];
-    updateWorkspaceConfiguration(tree, workspaceConfig);
+    updateNxJson(tree, nxJson);
   }
 }

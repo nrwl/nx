@@ -2,8 +2,8 @@ import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import {
   Tree,
   addProjectConfiguration,
-  readWorkspaceConfiguration,
-  updateWorkspaceConfiguration,
+  readNxJson,
+  updateNxJson,
 } from '@nrwl/devkit';
 import addEslintInputs from './add-eslint-inputs';
 import { eslintConfigFileWhitelist } from '../../generators/utils/eslint-file';
@@ -15,8 +15,7 @@ describe('15.0.0 migration (add-eslint-inputs)', () => {
     beforeEach(() => {
       tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
-      updateWorkspaceConfiguration(tree, {
-        version: 2,
+      updateNxJson(tree, {
         namedInputs: {
           default: ['{projectRoot}/**/*', 'sharedGlobals'],
           sharedGlobals: [],
@@ -49,7 +48,7 @@ describe('15.0.0 migration (add-eslint-inputs)', () => {
 
         await addEslintInputs(tree);
 
-        const updated = readWorkspaceConfiguration(tree);
+        const updated = readNxJson(tree);
 
         expect(updated.namedInputs.production).toEqual([
           'default',
@@ -65,7 +64,7 @@ describe('15.0.0 migration (add-eslint-inputs)', () => {
 
         await addEslintInputs(tree);
 
-        const updated = readWorkspaceConfiguration(tree);
+        const updated = readNxJson(tree);
         const result = ['default', `{workspaceRoot}/${eslintConfigFilename}`];
 
         expect(updated.targetDefaults.lint.inputs).toEqual(result);
@@ -99,15 +98,11 @@ describe('15.0.0 migration (add-eslint-inputs)', () => {
     test.each(eslintConfigFileWhitelist)(
       'should not add `!{projectRoot}/%s` if `workspaceConfiguration.namedInputs` is undefined',
       async (eslintConfigFilename) => {
-        updateWorkspaceConfiguration(tree, {
-          version: 2,
-        });
-
         tree.write(eslintConfigFilename, '{}');
 
         await addEslintInputs(tree);
 
-        const updated = readWorkspaceConfiguration(tree);
+        const updated = readNxJson(tree);
 
         expect(updated.namedInputs?.production).toBeUndefined();
       }
@@ -116,8 +111,7 @@ describe('15.0.0 migration (add-eslint-inputs)', () => {
     test.each(eslintConfigFileWhitelist)(
       'should not add `!{projectRoot}/%s` if `workspaceConfiguration.namedInputs.production` is undefined',
       async (eslintConfigFilename) => {
-        updateWorkspaceConfiguration(tree, {
-          version: 2,
+        updateNxJson(tree, {
           namedInputs: {},
         });
 
@@ -125,7 +119,7 @@ describe('15.0.0 migration (add-eslint-inputs)', () => {
 
         await addEslintInputs(tree);
 
-        const updated = readWorkspaceConfiguration(tree);
+        const updated = readNxJson(tree);
 
         expect(updated.namedInputs?.production).toBeUndefined();
       }
@@ -157,8 +151,7 @@ describe('15.0.0 migration (add-eslint-inputs)', () => {
     test.each(eslintConfigFileWhitelist)(
       'should not override `targetDefaults.lint.inputs` with `%s` as there was a default target set in the workspace config',
       async (eslintConfigFilename) => {
-        updateWorkspaceConfiguration(tree, {
-          version: 2,
+        updateNxJson(tree, {
           targetDefaults: {
             lint: {
               inputs: ['{workspaceRoot}/.eslintrc.default'],
@@ -170,7 +163,7 @@ describe('15.0.0 migration (add-eslint-inputs)', () => {
 
         await addEslintInputs(tree);
 
-        const updated = readWorkspaceConfiguration(tree);
+        const updated = readNxJson(tree);
 
         expect(updated.targetDefaults.lint.inputs).toEqual([
           '{workspaceRoot}/.eslintrc.default',
@@ -183,13 +176,9 @@ describe('15.0.0 migration (add-eslint-inputs)', () => {
     );
 
     it('should return `default` if there is no globalEslintFile', async () => {
-      updateWorkspaceConfiguration(tree, {
-        version: 2,
-      });
-
       await addEslintInputs(tree);
 
-      const updated = readWorkspaceConfiguration(tree);
+      const updated = readNxJson(tree);
 
       expect(updated.targetDefaults.lint.inputs).toEqual(['default']);
       expect(updated.targetDefaults.lint2.inputs).toEqual(['default']);

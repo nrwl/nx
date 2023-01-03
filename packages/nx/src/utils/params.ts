@@ -600,17 +600,19 @@ export async function combineOptionsForGenerator(
   commandLineOpts: Options,
   collectionName: string,
   generatorName: string,
-  wc: (ProjectsConfigurations & NxJsonConfiguration) | null,
+  projectsConfigurations: ProjectsConfigurations,
+  nxJsonConfiguration: NxJsonConfiguration,
   schema: Schema,
   isInteractive: boolean,
   defaultProjectName: string | null,
   relativeCwd: string | null,
   isVerbose = false
 ) {
-  const generatorDefaults = wc
+  const generatorDefaults = projectsConfigurations
     ? getGeneratorDefaults(
         defaultProjectName,
-        wc,
+        projectsConfigurations,
+        nxJsonConfiguration,
         collectionName,
         generatorName
       )
@@ -628,7 +630,7 @@ export async function combineOptionsForGenerator(
   );
 
   if (isInteractive && isTTY()) {
-    combined = await promptForValues(combined, schema, wc);
+    combined = await promptForValues(combined, schema, projectsConfigurations);
   }
 
   warnDeprecations(combined, schema);
@@ -706,27 +708,31 @@ export function convertSmartDefaultsIntoNamedParams(
 
 function getGeneratorDefaults(
   projectName: string | null,
-  wc: (ProjectsConfigurations & NxJsonConfiguration) | null,
+  projectsConfigurations: ProjectsConfigurations,
+  nxJsonConfiguration: NxJsonConfiguration,
   collectionName: string,
   generatorName: string
 ) {
   let defaults = {};
-  if (wc?.generators) {
-    if (wc.generators[collectionName]?.[generatorName]) {
+  if (nxJsonConfiguration?.generators) {
+    if (nxJsonConfiguration.generators[collectionName]?.[generatorName]) {
       defaults = {
         ...defaults,
-        ...wc.generators[collectionName][generatorName],
+        ...nxJsonConfiguration.generators[collectionName][generatorName],
       };
     }
-    if (wc.generators[`${collectionName}:${generatorName}`]) {
+    if (nxJsonConfiguration.generators[`${collectionName}:${generatorName}`]) {
       defaults = {
         ...defaults,
-        ...wc.generators[`${collectionName}:${generatorName}`],
+        ...nxJsonConfiguration.generators[`${collectionName}:${generatorName}`],
       };
     }
   }
-  if (projectName && wc?.projects[projectName]?.generators) {
-    const g = wc.projects[projectName].generators;
+  if (
+    projectName &&
+    projectsConfigurations?.projects[projectName]?.generators
+  ) {
+    const g = projectsConfigurations.projects[projectName].generators;
     if (g[collectionName] && g[collectionName][generatorName]) {
       defaults = { ...defaults, ...g[collectionName][generatorName] };
     }
@@ -751,7 +757,7 @@ interface Prompt {
 export function getPromptsForSchema(
   opts: Options,
   schema: Schema,
-  wc: (ProjectsConfigurations & NxJsonConfiguration) | null
+  projectsConfigurations: ProjectsConfigurations
 ): Prompt[] {
   const prompts: Prompt[] = [];
   Object.entries(schema.properties).forEach(([k, v]) => {
@@ -784,10 +790,10 @@ export function getPromptsForSchema(
           k === 'project' ||
           k === 'projectName' ||
           v['x-dropdown'] === 'projects') &&
-        wc
+        projectsConfigurations
       ) {
         question.type = 'autocomplete';
-        question.choices = Object.keys(wc.projects);
+        question.choices = Object.keys(projectsConfigurations.projects);
       } else if (v.type === 'number' || v['x-prompt'].type == 'number') {
         question.message = v['x-prompt'].message;
         question.type = 'numeral';
@@ -829,12 +835,12 @@ export function getPromptsForSchema(
 async function promptForValues(
   opts: Options,
   schema: Schema,
-  wc: (ProjectsConfigurations & NxJsonConfiguration) | null
+  projectsConfigurations: ProjectsConfigurations
 ) {
   return await (
     await import('enquirer')
   )
-    .prompt(getPromptsForSchema(opts, schema, wc))
+    .prompt(getPromptsForSchema(opts, schema, projectsConfigurations))
     .then((values) => ({ ...opts, ...values }))
     .catch((e) => {
       console.error(e);

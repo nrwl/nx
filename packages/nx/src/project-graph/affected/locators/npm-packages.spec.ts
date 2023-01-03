@@ -34,14 +34,14 @@ describe('getTouchedNpmPackages', () => {
           name: 'proj1',
           data: {
             files: [],
-          },
+          } as any,
         },
         proj2: {
           type: 'lib',
           name: 'proj2',
           data: {
             files: [],
-          },
+          } as any,
         },
       },
       externalNodes: {
@@ -297,7 +297,7 @@ describe('getTouchedNpmPackages', () => {
           'any-random-name': {
             name: 'changed-test-pkg-name-1',
             type: 'lib',
-            data: {},
+            data: {} as any,
           },
         },
       }

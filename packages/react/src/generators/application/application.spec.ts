@@ -2,9 +2,9 @@ import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version
 import {
   getProjects,
   readJson,
-  readWorkspaceConfiguration,
+  readNxJson,
   Tree,
-  updateWorkspaceConfiguration,
+  updateNxJson,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
@@ -44,13 +44,13 @@ describe('app', () => {
     });
 
     it('should not overwrite default project if already set', async () => {
-      const workspace = readWorkspaceConfiguration(appTree);
-      workspace.defaultProject = 'some-awesome-project';
-      updateWorkspaceConfiguration(appTree, workspace);
+      const nxJson = readNxJson(appTree);
+      nxJson.defaultProject = 'some-awesome-project';
+      updateNxJson(appTree, nxJson);
 
       await applicationGenerator(appTree, schema);
 
-      const { defaultProject } = readWorkspaceConfiguration(appTree);
+      const { defaultProject } = readNxJson(appTree);
       expect(defaultProject).toBe('some-awesome-project');
     });
 
@@ -585,8 +585,8 @@ describe('app', () => {
     it('should set defaults when style: none', async () => {
       await applicationGenerator(appTree, { ...schema, style: 'none' });
 
-      const workspaceJson = readWorkspaceConfiguration(appTree);
-      expect(workspaceJson.generators['@nrwl/react']).toMatchObject({
+      const nxJson = readNxJson(appTree);
+      expect(nxJson.generators['@nrwl/react']).toMatchObject({
         application: {
           style: 'none',
         },
@@ -831,8 +831,8 @@ describe('app', () => {
         skipWorkspaceJson: false,
       });
 
-      const workspaceJson = readWorkspaceConfiguration(appTree);
-      expect(workspaceJson.generators['@nrwl/react']).toMatchObject({
+      const nxJson = readNxJson(appTree);
+      expect(nxJson.generators['@nrwl/react']).toMatchObject({
         application: {
           babel: true,
           style: 'styled-components',

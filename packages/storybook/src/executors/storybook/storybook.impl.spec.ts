@@ -42,7 +42,7 @@ describe('@nrwl/storybook:storybook', () => {
       cwd: rootPath,
       projectName: 'proj',
       targetName: 'storybook',
-      workspace: {
+      projectsConfigurations: {
         version: 2,
         projects: {
           proj: {
@@ -75,8 +75,8 @@ describe('@nrwl/storybook:storybook', () => {
             },
           },
         },
-        npmScope: 'test',
       },
+      nxJsonConfiguration: {},
       isVerbose: false,
     };
     jest.mock('fs', () => fsMock);

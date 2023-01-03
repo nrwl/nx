@@ -21,7 +21,7 @@ import { getTouchedProjectsFromProjectGlobChanges } from './locators/project-glo
 import { workspaceRoot } from '../../utils/workspace-root';
 
 export function filterAffected(
-  graph: ProjectGraph<ProjectConfiguration>,
+  graph: ProjectGraph,
   touchedFiles: FileChange[],
   nxJson: NxJsonConfiguration = readNxJson(),
   packageJson: any = readPackageJson()

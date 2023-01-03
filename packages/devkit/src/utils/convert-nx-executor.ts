@@ -16,7 +16,8 @@ import { ProjectGraph } from 'nx/src/config/project-graph';
 export function convertNxExecutor(executor: Executor) {
   const builderFunction = (options, builderContext) => {
     const workspaces = new Workspaces(builderContext.workspaceRoot);
-    const workspaceConfig = workspaces.readWorkspaceConfiguration({
+    const nxJsonConfiguration = workspaces.readNxJson();
+    const projectsConfigurations = workspaces.readProjectsConfig({
       _includeProjectsFromAngularJson: true,
     });
 
@@ -33,7 +34,9 @@ export function convertNxExecutor(executor: Executor) {
         targetName: builderContext.target.target,
         target: builderContext.target.target,
         configurationName: builderContext.target.configuration,
-        workspace: workspaceConfig,
+        projectsConfigurations,
+        nxJsonConfiguration,
+        workspace: { ...projectsConfigurations, ...nxJsonConfiguration },
         cwd: process.cwd(),
         projectGraph,
         isVerbose: false,

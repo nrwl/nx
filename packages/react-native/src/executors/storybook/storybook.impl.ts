@@ -16,7 +16,8 @@ export default async function* reactNatievStorybookExecutor(
   options: ReactNativeStorybookOptions,
   context: ExecutorContext
 ): AsyncGenerator<{ success: boolean }> {
-  const projectRoot = context.workspace.projects[context.projectName].root;
+  const projectRoot =
+    context.projectsConfigurations.projects[context.projectName].root;
   logger.info(
     `${chalk.bold.cyan(
       'info'

@@ -4,7 +4,7 @@ import { ExecutorContext } from 'nx/src/config/misc-interfaces';
 describe('buildEsbuildOptions', () => {
   const context: ExecutorContext = {
     projectName: 'myapp',
-    workspace: {
+    projectsConfigurations: {
       version: 2,
       projects: {
         myapp: {
@@ -12,6 +12,7 @@ describe('buildEsbuildOptions', () => {
         },
       },
     },
+    nxJsonConfiguration: {},
     isVerbose: false,
     root: '/',
     cwd: '/',

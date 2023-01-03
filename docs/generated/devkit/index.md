@@ -194,6 +194,7 @@ It only uses language primitives and immutable objects
 - [targetToTargetString](../../devkit/documents/index#targettotargetstring)
 - [toJS](../../devkit/documents/index#tojs)
 - [updateJson](../../devkit/documents/index#updatejson)
+- [updateNxJson](../../devkit/documents/index#updatenxjson)
 - [updateProjectConfiguration](../../devkit/documents/index#updateprojectconfiguration)
 - [updateTsConfigsToJs](../../devkit/documents/index#updatetsconfigstojs)
 - [updateWorkspaceConfiguration](../../devkit/documents/index#updateworkspaceconfiguration)
@@ -272,13 +273,7 @@ A plugin for Nx
 
 ### ProjectGraph
 
-• **ProjectGraph**<`T`\>: `Object`
-
-#### Type parameters
-
-| Name | Type  |
-| :--- | :---- |
-| `T`  | `any` |
+• **ProjectGraph**: `Object`
 
 ---
 
@@ -302,13 +297,7 @@ A plugin for Nx
 
 ### ProjectGraphProjectNode
 
-• **ProjectGraphProjectNode**<`T`\>: `Object`
-
-#### Type parameters
-
-| Name | Type  |
-| :--- | :---- |
-| `T`  | `any` |
+• **ProjectGraphProjectNode**: `Object`
 
 ---
 
@@ -544,13 +533,7 @@ A plugin for Nx
 
 ### ProjectGraphNode
 
-Ƭ **ProjectGraphNode**<`T`\>: [`ProjectGraphProjectNode`](../../devkit/documents/index#projectgraphprojectnode)<`T`\> \| [`ProjectGraphExternalNode`](../../devkit/documents/index#projectgraphexternalnode)
-
-#### Type parameters
-
-| Name | Type  |
-| :--- | :---- |
-| `T`  | `any` |
+Ƭ **ProjectGraphNode**: [`ProjectGraphProjectNode`](../../devkit/documents/index#projectgraphprojectnode) \| [`ProjectGraphExternalNode`](../../devkit/documents/index#projectgraphexternalnode)
 
 ---
 
@@ -920,7 +903,7 @@ hierarchy.
 | :----------------- | :--------------------------------------------------------------------------------------------- | :--------------------------------- |
 | `sharedConfig`     | `Record`<`string`, [`SharedLibraryConfig`](../../devkit/documents/index#sharedlibraryconfig)\> | The original Shared Config         |
 | `additionalShared` | [`AdditionalSharedConfig`](../../devkit/documents/index#additionalsharedconfig)                | The additional dependencies to add |
-| `projectGraph`     | [`ProjectGraph`](../../devkit/documents/index#projectgraph)<`any`\>                            | The Nx project graph               |
+| `projectGraph`     | [`ProjectGraph`](../../devkit/documents/index#projectgraph)                                    | The Nx project graph               |
 
 #### Returns
 
@@ -1095,13 +1078,13 @@ If isProduction flag is set, it wil remove devDependencies and optional peerDepe
 
 #### Parameters
 
-| Name                    | Type                                                                |
-| :---------------------- | :------------------------------------------------------------------ |
-| `projectName`           | `string`                                                            |
-| `graph`                 | [`ProjectGraph`](../../devkit/documents/index#projectgraph)<`any`\> |
-| `options`               | `Object`                                                            |
-| `options.isProduction?` | `boolean`                                                           |
-| `options.root?`         | `string`                                                            |
+| Name                    | Type                                                        |
+| :---------------------- | :---------------------------------------------------------- |
+| `projectName`           | `string`                                                    |
+| `graph`                 | [`ProjectGraph`](../../devkit/documents/index#projectgraph) |
+| `options`               | `Object`                                                    |
+| `options.isProduction?` | `boolean`                                                   |
+| `options.root?`         | `string`                                                    |
 
 #### Returns
 
@@ -1165,7 +1148,7 @@ stored in the daemon process. To reset both run: `nx reset`.
 | `context.initiatingProject?` | `string`                                                                                        |
 | `context.nxArgs`             | `NxArgs`                                                                                        |
 | `context.nxJson`             | [`NxJsonConfiguration`](../../devkit/documents/index#nxjsonconfiguration)<`string`[] \| `"*"`\> |
-| `context.projectGraph`       | [`ProjectGraph`](../../devkit/documents/index#projectgraph)<`any`\>                             |
+| `context.projectGraph`       | [`ProjectGraph`](../../devkit/documents/index#projectgraph)                                     |
 | `context.target?`            | `string`                                                                                        |
 | `context.taskGraph?`         | [`TaskGraph`](../../devkit/documents/index#taskgraph)                                           |
 
@@ -1332,10 +1315,10 @@ doesn't get confused about incorrect TypeScript files.
 
 #### Parameters
 
-| Name           | Type                                                                |
-| :------------- | :------------------------------------------------------------------ |
-| `projectGraph` | [`ProjectGraph`](../../devkit/documents/index#projectgraph)<`any`\> |
-| `name`         | `string`                                                            |
+| Name           | Type                                                        |
+| :------------- | :---------------------------------------------------------- |
+| `projectGraph` | [`ProjectGraph`](../../devkit/documents/index#projectgraph) |
+| `name`         | `string`                                                    |
 
 #### Returns
 
@@ -1395,10 +1378,10 @@ Returns the list of outputs that will be cached.
 
 #### Parameters
 
-| Name   | Type                                                                                      | Description                                               |
-| :----- | :---------------------------------------------------------------------------------------- | :-------------------------------------------------------- |
-| `task` | `Pick`<[`Task`](../../devkit/documents/index#task), `"overrides"` \| `"target"`\>         | target + overrides                                        |
-| `node` | [`ProjectGraphProjectNode`](../../devkit/documents/index#projectgraphprojectnode)<`any`\> | ProjectGraphProjectNode object that the task runs against |
+| Name   | Type                                                                              | Description                                               |
+| :----- | :-------------------------------------------------------------------------------- | :-------------------------------------------------------- |
+| `task` | `Pick`<[`Task`](../../devkit/documents/index#task), `"overrides"` \| `"target"`\> | target + overrides                                        |
+| `node` | [`ProjectGraphProjectNode`](../../devkit/documents/index#projectgraphprojectnode) | ProjectGraphProjectNode object that the task runs against |
 
 #### Returns
 
@@ -1774,10 +1757,10 @@ parseTargetString('proj:test:production', graph); // returns { project: "proj", 
 
 #### Parameters
 
-| Name           | Type                                                                | Description      |
-| :------------- | :------------------------------------------------------------------ | :--------------- |
-| `targetString` | `string`                                                            | target reference |
-| `projectGraph` | [`ProjectGraph`](../../devkit/documents/index#projectgraph)<`any`\> | -                |
+| Name           | Type                                                        | Description      |
+| :------------- | :---------------------------------------------------------- | :--------------- |
+| `targetString` | `string`                                                    | target reference |
+| `projectGraph` | [`ProjectGraph`](../../devkit/documents/index#projectgraph) | -                |
 
 #### Returns
 
@@ -1789,6 +1772,8 @@ parseTargetString('proj:test:production', graph); // returns { project: "proj", 
 
 ▸ **readAllWorkspaceConfiguration**(): [`ProjectsConfigurations`](../../devkit/documents/index#projectsconfigurations) & [`NxJsonConfiguration`](../../devkit/documents/index#nxjsonconfiguration)
 
+TODO(vsavkin): Remove after Nx 16 is out
+
 **`deprecated`** Use readProjectsConfigurationFromProjectGraph(await createProjectGraphAsync())
 
 #### Returns
@@ -1799,7 +1784,7 @@ parseTargetString('proj:test:production', graph); // returns { project: "proj", 
 
 ### readCachedProjectGraph
 
-▸ **readCachedProjectGraph**(): [`ProjectGraph`](../../devkit/documents/index#projectgraph)<[`ProjectConfiguration`](../../devkit/documents/index#projectconfiguration)\>
+▸ **readCachedProjectGraph**(): [`ProjectGraph`](../../devkit/documents/index#projectgraph)
 
 Synchronously reads the latest cached copy of the workspace's ProjectGraph.
 
@@ -1807,7 +1792,7 @@ Synchronously reads the latest cached copy of the workspace's ProjectGraph.
 
 #### Returns
 
-[`ProjectGraph`](../../devkit/documents/index#projectgraph)<[`ProjectConfiguration`](../../devkit/documents/index#projectconfiguration)\>
+[`ProjectGraph`](../../devkit/documents/index#projectgraph)
 
 ---
 
@@ -1866,11 +1851,19 @@ Object the JSON content of the file represents
 
 ### readNxJson
 
-▸ **readNxJson**(): [`NxJsonConfiguration`](../../devkit/documents/index#nxjsonconfiguration)
+▸ **readNxJson**(`tree`): [`NxJsonConfiguration`](../../devkit/documents/index#nxjsonconfiguration) \| `null`
+
+Reads nx.json
+
+#### Parameters
+
+| Name   | Type                                        |
+| :----- | :------------------------------------------ |
+| `tree` | [`Tree`](../../devkit/documents/index#tree) |
 
 #### Returns
 
-[`NxJsonConfiguration`](../../devkit/documents/index#nxjsonconfiguration)
+[`NxJsonConfiguration`](../../devkit/documents/index#nxjsonconfiguration) \| `null`
 
 ---
 
@@ -1948,6 +1941,8 @@ Read general workspace configuration such as the default project or cli settings
 
 This does _not_ provide projects configuration, use [readProjectConfiguration](../../devkit/documents/index#readprojectconfiguration) instead.
 
+**`deprecated`** use readNxJson
+
 #### Parameters
 
 | Name   | Type                                        |
@@ -2024,9 +2019,9 @@ B will depend on A.
 
 #### Parameters
 
-| Name    | Type                                                                |
-| :------ | :------------------------------------------------------------------ |
-| `graph` | [`ProjectGraph`](../../devkit/documents/index#projectgraph)<`any`\> |
+| Name    | Type                                                        |
+| :------ | :---------------------------------------------------------- |
+| `graph` | [`ProjectGraph`](../../devkit/documents/index#projectgraph) |
 
 #### Returns
 
@@ -2273,6 +2268,25 @@ Updates a JSON value to the file system tree
 
 ---
 
+### updateNxJson
+
+▸ **updateNxJson**(`tree`, `nxJson`): `void`
+
+Update nx.json
+
+#### Parameters
+
+| Name     | Type                                                                                            |
+| :------- | :---------------------------------------------------------------------------------------------- |
+| `tree`   | [`Tree`](../../devkit/documents/index#tree)                                                     |
+| `nxJson` | [`NxJsonConfiguration`](../../devkit/documents/index#nxjsonconfiguration)<`string`[] \| `"*"`\> |
+
+#### Returns
+
+`void`
+
+---
+
 ### updateProjectConfiguration
 
 ▸ **updateProjectConfiguration**(`tree`, `projectName`, `projectConfiguration`): `void`
@@ -2321,6 +2335,8 @@ The utility will update either files.
 Update general workspace configuration such as the default project or cli settings.
 
 This does _not_ update projects configuration, use [updateProjectConfiguration](../../devkit/documents/index#updateprojectconfiguration) or [addProjectConfiguration](../../devkit/documents/index#addprojectconfiguration) instead.
+
+**`deprecated`** use updateNxJson
 
 #### Parameters
 

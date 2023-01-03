@@ -8,7 +8,7 @@ import { getTouchedProjectsFromProjectGlobChanges } from './project-glob-changes
 function makeProjectGraphNode(
   name,
   configurationFile = 'project.json'
-): ProjectGraphProjectNode<ProjectConfiguration> {
+): ProjectGraphProjectNode {
   return {
     data: {
       files: [

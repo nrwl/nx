@@ -54,7 +54,7 @@ export function workspaceConfigName(
 }
 
 export class Workspaces {
-  private cachedWorkspaceConfig: ProjectsConfigurations & NxJsonConfiguration;
+  private cachedProjectsConfig: ProjectsConfigurations;
 
   constructor(private root: string) {}
 
@@ -64,12 +64,13 @@ export class Workspaces {
 
   calculateDefaultProjectName(
     cwd: string,
-    wc: ProjectsConfigurations & NxJsonConfiguration
+    projects: ProjectsConfigurations,
+    nxJson: NxJsonConfiguration
   ) {
     const relativeCwd = this.relativeCwd(cwd);
     if (relativeCwd) {
-      const matchingProject = Object.keys(wc.projects).find((p) => {
-        const projectRoot = wc.projects[p].root;
+      const matchingProject = Object.keys(projects.projects).find((p) => {
+        const projectRoot = projects.projects[p].root;
         return (
           relativeCwd == projectRoot ||
           relativeCwd.startsWith(`${projectRoot}/`)
@@ -77,18 +78,18 @@ export class Workspaces {
       });
       if (matchingProject) return matchingProject;
     }
-    return wc.defaultProject;
+    return nxJson.defaultProject;
   }
 
-  readWorkspaceConfiguration(opts?: {
+  readProjectsConfig(opts?: {
     _ignorePluginInference?: boolean;
     _includeProjectsFromAngularJson?: boolean;
-  }): ProjectsConfigurations & NxJsonConfiguration {
+  }): ProjectsConfigurations {
     if (
-      this.cachedWorkspaceConfig &&
-      process.env.NX_CACHE_WORKSPACE_CONFIG !== 'false'
+      this.cachedProjectsConfig &&
+      process.env.NX_CACHE_PROJECTS_CONFIG !== 'false'
     ) {
-      return this.cachedWorkspaceConfig;
+      return this.cachedProjectsConfig;
     }
     const nxJson = this.readNxJson();
     const workspace = buildWorkspaceConfigurationFromGlobs(
@@ -108,12 +109,23 @@ export class Workspaces {
       );
     }
 
-    assertValidWorkspaceConfiguration(nxJson);
-    this.cachedWorkspaceConfig = {
-      ...this.mergeTargetDefaultsIntoProjectDescriptions(workspace, nxJson),
-      ...nxJson,
-    };
-    return this.cachedWorkspaceConfig;
+    assertValidNxJson(nxJson);
+    this.cachedProjectsConfig = this.mergeTargetDefaultsIntoProjectDescriptions(
+      workspace,
+      nxJson
+    );
+    return this.cachedProjectsConfig;
+  }
+
+  /**
+   * Deprecated. Use readProjectsConfig
+   */
+  readWorkspaceConfiguration(opts?: {
+    _ignorePluginInference?: boolean;
+    _includeProjectsFromAngularJson?: boolean;
+  }): ProjectsConfigurations & NxJsonConfiguration {
+    const nxJson = this.readNxJson();
+    return { ...this.readProjectsConfig(opts), ...nxJson };
   }
 
   private mergeWorkspaceJsonAndGlobProjects(
@@ -260,19 +272,24 @@ export class Workspaces {
   readNxJson(): NxJsonConfiguration {
     const nxJson = path.join(this.root, 'nx.json');
     if (existsSync(nxJson)) {
-      const nxJsonConfig = readJsonFile<NxJsonConfiguration>(nxJson);
-      if (nxJsonConfig.extends) {
-        const extendedNxJsonPath = require.resolve(nxJsonConfig.extends, {
-          paths: [dirname(nxJson)],
-        });
+      const nxJsonConfiguration = readJsonFile<NxJsonConfiguration>(nxJson);
+      if (nxJsonConfiguration.extends) {
+        const extendedNxJsonPath = require.resolve(
+          nxJsonConfiguration.extends,
+          {
+            paths: [dirname(nxJson)],
+          }
+        );
         const baseNxJson =
           readJsonFile<NxJsonConfiguration>(extendedNxJsonPath);
         return this.mergeTargetDefaultsAndTargetDependencies({
           ...baseNxJson,
-          ...nxJsonConfig,
+          ...nxJsonConfiguration,
         });
       } else {
-        return this.mergeTargetDefaultsAndTargetDependencies(nxJsonConfig);
+        return this.mergeTargetDefaultsAndTargetDependencies(
+          nxJsonConfiguration
+        );
       }
     } else {
       try {
@@ -437,9 +454,7 @@ function normalizeExecutorSchema(
   };
 }
 
-function assertValidWorkspaceConfiguration(
-  nxJson: NxJsonConfiguration & { projects?: any }
-) {
+function assertValidNxJson(nxJson: NxJsonConfiguration & { projects?: any }) {
   // Assert valid workspace configuration
   if (nxJson.projects) {
     logger.warn(

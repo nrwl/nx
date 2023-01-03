@@ -5,8 +5,8 @@ import type {
 } from '@nrwl/devkit';
 import {
   readJson,
+  readNxJson,
   readProjectConfiguration,
-  readWorkspaceConfiguration,
   writeJson,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
@@ -1275,7 +1275,7 @@ describe('lib migrator', () => {
 
       await migrator.migrate();
 
-      const { tasksRunnerOptions } = readWorkspaceConfiguration(tree);
+      const { tasksRunnerOptions } = readNxJson(tree);
       expect(
         tasksRunnerOptions.default.options.cacheableOperations
       ).toStrictEqual([
@@ -1305,7 +1305,7 @@ describe('lib migrator', () => {
 
       await migrator.migrate();
 
-      const { tasksRunnerOptions } = readWorkspaceConfiguration(tree);
+      const { tasksRunnerOptions } = readNxJson(tree);
       expect(
         tasksRunnerOptions.default.options.cacheableOperations
       ).toStrictEqual(['build', 'lint', 'test', 'e2e', 'myCustomTest']);

@@ -15,7 +15,8 @@ export default async function* exportExecutor(
   options: ExportExecutorSchema,
   context: ExecutorContext
 ): AsyncGenerator<ExpoExportOutput> {
-  const projectRoot = context.workspace.projects[context.projectName].root;
+  const projectRoot =
+    context.projectsConfigurations.projects[context.projectName].root;
   ensureNodeModulesSymlink(context.root, projectRoot);
 
   try {

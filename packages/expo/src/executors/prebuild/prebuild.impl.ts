@@ -17,7 +17,8 @@ export default async function* prebuildExecutor(
   options: ExpoPrebuildOptions,
   context: ExecutorContext
 ): AsyncGenerator<ExpoPrebuildOutput> {
-  const projectRoot = context.workspace.projects[context.projectName].root;
+  const projectRoot =
+    context.projectsConfigurations.projects[context.projectName].root;
   ensureNodeModulesSymlink(context.root, projectRoot);
 
   try {

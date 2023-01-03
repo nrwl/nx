@@ -26,7 +26,8 @@ export async function getBuildAndSharedConfig(
     | ViteBuildExecutorOptions,
   context: ExecutorContext
 ): Promise<InlineConfig> {
-  const projectRoot = context.workspace.projects[context.projectName].root;
+  const projectRoot =
+    context.projectsConfigurations.projects[context.projectName].root;
 
   return mergeConfig({}, {
     mode: options.mode,
@@ -59,7 +60,8 @@ export function getServerOptions(
   options: ViteDevServerExecutorOptions,
   context: ExecutorContext
 ): ServerOptions {
-  const projectRoot = context.workspace.projects[context.projectName].root;
+  const projectRoot =
+    context.projectsConfigurations.projects[context.projectName].root;
   let serverOptions: ServerOptions & UserConfig = {};
   if (options.proxyConfig) {
     const proxyConfigPath = options.proxyConfig

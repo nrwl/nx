@@ -14,7 +14,8 @@ export default async function* detoxBuildExecutor(
   options: DetoxBuildOptions,
   context: ExecutorContext
 ): AsyncGenerator<DetoxBuildOutput> {
-  const projectRoot = context.workspace.projects[context.projectName].root;
+  const projectRoot =
+    context.projectsConfigurations.projects[context.projectName].root;
 
   try {
     await runCliBuild(context.root, projectRoot, options);

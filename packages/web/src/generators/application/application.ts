@@ -13,12 +13,12 @@ import {
   joinPathFragments,
   names,
   offsetFromRoot,
+  readNxJson,
   readProjectConfiguration,
-  readWorkspaceConfiguration,
   TargetConfiguration,
   Tree,
+  updateNxJson,
   updateProjectConfiguration,
-  updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import { jestProjectGenerator } from '@nrwl/jest';
 import { swcCoreVersion } from '@nrwl/js/src/utils/versions';
@@ -159,22 +159,22 @@ async function addProject(tree: Tree, options: NormalizedSchema) {
 }
 
 function setDefaults(tree: Tree, options: NormalizedSchema) {
-  const workspace = readWorkspaceConfiguration(tree);
-  workspace.generators = workspace.generators || {};
-  workspace.generators['@nrwl/web:application'] = {
+  const nxJson = readNxJson(tree);
+  nxJson.generators = nxJson.generators || {};
+  nxJson.generators['@nrwl/web:application'] = {
     style: options.style,
     linter: options.linter,
     unitTestRunner: options.unitTestRunner,
     e2eTestRunner: options.e2eTestRunner,
-    ...workspace.generators['@nrwl/web:application'],
+    ...nxJson.generators['@nrwl/web:application'],
   };
-  workspace.generators['@nrwl/web:library'] = {
+  nxJson.generators['@nrwl/web:library'] = {
     style: options.style,
     linter: options.linter,
     unitTestRunner: options.unitTestRunner,
-    ...workspace.generators['@nrwl/web:library'],
+    ...nxJson.generators['@nrwl/web:library'],
   };
-  updateWorkspaceConfiguration(tree, workspace);
+  updateNxJson(tree, nxJson);
 }
 
 export async function applicationGenerator(host: Tree, schema: Schema) {

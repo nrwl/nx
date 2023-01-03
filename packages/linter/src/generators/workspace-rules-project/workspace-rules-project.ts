@@ -7,11 +7,11 @@ import {
   generateFiles,
   joinPathFragments,
   offsetFromRoot,
+  readNxJson,
   readProjectConfiguration,
-  readWorkspaceConfiguration,
   Tree,
   updateJson,
-  updateWorkspaceConfiguration,
+  updateNxJson,
 } from '@nrwl/devkit';
 import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 import { join } from 'path';
@@ -53,14 +53,14 @@ export async function lintWorkspaceRulesProjectGenerator(tree: Tree) {
    * Ensure that when workspace rules are updated they cause all projects to be affected for now.
    * TODO: Explore writing a ProjectGraph plugin to make this more surgical.
    */
-  const workspaceConfig = readWorkspaceConfiguration(tree);
+  const nxJson = readNxJson(tree);
 
-  if (workspaceConfig.targetDefaults?.lint?.inputs) {
-    workspaceConfig.targetDefaults.lint.inputs.push(
+  if (nxJson.targetDefaults?.lint?.inputs) {
+    nxJson.targetDefaults.lint.inputs.push(
       `{workspaceRoot}/${WORKSPACE_PLUGIN_DIR}/**/*`
     );
 
-    updateWorkspaceConfiguration(tree, workspaceConfig);
+    updateNxJson(tree, nxJson);
   }
 
   // Add jest to the project and return installation task

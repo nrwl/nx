@@ -33,7 +33,8 @@ export default async function* downloadExecutor(
   options: ExpoEasDownloadOptions,
   context: ExecutorContext
 ): AsyncGenerator<ReactNativeDownloadOutput> {
-  const projectRoot = context.workspace.projects[context.projectName].root;
+  const projectRoot =
+    context.projectsConfigurations.projects[context.projectName].root;
   ensureNodeModulesSymlink(context.root, projectRoot);
 
   const build = getBuild(context.root, projectRoot, options);

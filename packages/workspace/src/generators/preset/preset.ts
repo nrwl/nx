@@ -1,14 +1,12 @@
 import {
-  addDependenciesToPackageJson,
   formatFiles,
   installPackagesTask,
   names,
-  readWorkspaceConfiguration,
+  readNxJson,
   Tree,
-  updateWorkspaceConfiguration,
+  updateNxJson,
 } from '@nrwl/devkit';
 import { Schema } from './schema';
-import { insertStatement } from '../utils/insert-statement';
 import { Preset } from '../utils/presets';
 
 export async function presetGenerator(tree: Tree, options: Schema) {
@@ -19,6 +17,7 @@ export async function presetGenerator(tree: Tree, options: Schema) {
     installPackagesTask(tree);
   };
 }
+
 export default presetGenerator;
 
 async function createPreset(tree: Tree, options: Schema) {
@@ -129,12 +128,12 @@ async function createPreset(tree: Tree, options: Schema) {
       e2eTestRunner: 'detox',
     });
   } else if (options.preset === Preset.TS) {
-    const c = readWorkspaceConfiguration(tree);
+    const c = readNxJson(tree);
     c.workspaceLayout = {
       appsDir: 'packages',
       libsDir: 'packages',
     };
-    updateWorkspaceConfiguration(tree, c);
+    updateNxJson(tree, c);
   } else {
     throw new Error(`Invalid preset ${options.preset}`);
   }

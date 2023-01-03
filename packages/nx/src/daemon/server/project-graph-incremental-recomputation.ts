@@ -1,5 +1,4 @@
 import { performance } from 'perf_hooks';
-import { readAllWorkspaceConfiguration } from '../../config/configuration';
 import { FileData, ProjectFileMap } from '../../config/project-graph';
 import { defaultFileHasher } from '../../hasher/file-hasher';
 import { HashingImpl } from '../../hasher/hashing-impl';
@@ -16,6 +15,8 @@ import {
 import { fileExists } from '../../utils/fileutils';
 import { notifyFileWatcherSockets } from './file-watching/file-watcher-sockets';
 import { serverLogger } from './logger';
+import { Workspaces } from '../../config/workspaces';
+import { workspaceRoot } from '../../utils/workspace-root';
 
 let cachedSerializedProjectGraphPromise: Promise<{
   error: Error | null;
@@ -117,7 +118,7 @@ async function processCollectedUpdatedAndDeletedFiles() {
       'hash-watched-changes-end'
     );
     defaultFileHasher.incrementalUpdate(updatedFiles, deletedFiles);
-    const workspaceJson = readAllWorkspaceConfiguration();
+    const workspaceJson = new Workspaces(workspaceRoot).readProjectsConfig();
     const workspaceConfigHash = computeWorkspaceConfigHash(workspaceJson);
     serverLogger.requestLog(
       `Updated file-hasher based on watched changes, recomputing project graph...`
@@ -186,7 +187,7 @@ function copyFileMap(m: ProjectFileMap) {
 async function createAndSerializeProjectGraph() {
   try {
     performance.mark('create-project-graph-start');
-    const workspaceJson = readAllWorkspaceConfiguration();
+    const workspaceJson = new Workspaces(workspaceRoot).readProjectsConfig();
     const { projectGraph, projectGraphCache } =
       await buildProjectGraphUsingProjectFileMap(
         workspaceJson,

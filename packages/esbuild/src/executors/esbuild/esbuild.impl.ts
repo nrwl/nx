@@ -58,7 +58,7 @@ export async function* esbuildExecutor(
       context.projectGraph
     );
     for (const tpd of thirdPartyDependencies) {
-      options.external.push(tpd.node.data.packageName);
+      options.external.push((tpd.node.data as any).packageName);
       externalDependencies.push(tpd);
     }
   }

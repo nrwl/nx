@@ -5,12 +5,12 @@ import {
   joinPathFragments,
   offsetFromRoot,
   ProjectConfiguration,
+  readNxJson,
   readProjectConfiguration,
-  readWorkspaceConfiguration,
   Tree,
   updateJson,
   updateProjectConfiguration,
-  updateWorkspaceConfiguration,
+  updateNxJson,
 } from '@nrwl/devkit';
 import { installedCypressVersion } from '../../utils/cypress-version';
 
@@ -39,7 +39,7 @@ export async function cypressComponentProject(
 
   addProjectFiles(tree, projectConfig, options);
   addTargetToProject(tree, projectConfig, options);
-  updateNxJson(tree);
+  updateNxJsonConfiguration(tree);
   updateTsConfigForComponentTesting(tree, projectConfig);
 
   if (!options.skipFormat) {
@@ -99,17 +99,17 @@ function addTargetToProject(
   updateProjectConfiguration(tree, options.project, projectConfig);
 }
 
-function updateNxJson(tree: Tree) {
-  const workspaceConfiguration = readWorkspaceConfiguration(tree);
-  workspaceConfiguration.tasksRunnerOptions = {
-    ...workspaceConfiguration?.tasksRunnerOptions,
+function updateNxJsonConfiguration(tree: Tree) {
+  const nxJson = readNxJson(tree);
+  nxJson.tasksRunnerOptions = {
+    ...nxJson?.tasksRunnerOptions,
     default: {
-      ...workspaceConfiguration?.tasksRunnerOptions?.default,
+      ...nxJson?.tasksRunnerOptions?.default,
       options: {
-        ...workspaceConfiguration?.tasksRunnerOptions?.default?.options,
+        ...nxJson?.tasksRunnerOptions?.default?.options,
         cacheableOperations: Array.from(
           new Set([
-            ...(workspaceConfiguration?.tasksRunnerOptions?.default?.options
+            ...(nxJson?.tasksRunnerOptions?.default?.options
               ?.cacheableOperations ?? []),
             'component-test',
           ])
@@ -118,11 +118,11 @@ function updateNxJson(tree: Tree) {
     },
   };
 
-  if (workspaceConfiguration.namedInputs) {
-    workspaceConfiguration.targetDefaults ??= {};
-    const productionFileSet = workspaceConfiguration.namedInputs?.production;
+  if (nxJson.namedInputs) {
+    nxJson.targetDefaults ??= {};
+    const productionFileSet = nxJson.namedInputs?.production;
     if (productionFileSet) {
-      workspaceConfiguration.namedInputs.production = Array.from(
+      nxJson.namedInputs.production = Array.from(
         new Set([
           ...productionFileSet,
           '!{projectRoot}/cypress/**/*',
@@ -131,13 +131,13 @@ function updateNxJson(tree: Tree) {
         ])
       );
     }
-    workspaceConfiguration.targetDefaults['component-test'] ??= {};
-    workspaceConfiguration.targetDefaults['component-test'].inputs ??= [
+    nxJson.targetDefaults['component-test'] ??= {};
+    nxJson.targetDefaults['component-test'].inputs ??= [
       'default',
       productionFileSet ? '^production' : '^default',
     ];
   }
-  updateWorkspaceConfiguration(tree, workspaceConfiguration);
+  updateNxJson(tree, nxJson);
 }
 
 export function updateTsConfigForComponentTesting(

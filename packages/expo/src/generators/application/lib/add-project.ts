@@ -2,10 +2,8 @@ import {
   addProjectConfiguration,
   offsetFromRoot,
   ProjectConfiguration,
-  readWorkspaceConfiguration,
   TargetConfiguration,
   Tree,
-  updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import { NormalizedSchema } from './normalize-options';
 

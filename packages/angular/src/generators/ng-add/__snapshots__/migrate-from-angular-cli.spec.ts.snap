@@ -44,6 +44,7 @@ Object {
   "affected": Object {
     "defaultBase": "main",
   },
+  "defaultProject": "app1",
   "namedInputs": Object {
     "default": Array [
       "{projectRoot}/**/*",

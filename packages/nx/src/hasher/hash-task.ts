@@ -39,14 +39,17 @@ export async function hashTask(
     workspaces.readNxJson(),
     projectGraph
   );
+  const projectsConfigurations =
+    readProjectsConfigurationFromProjectGraph(projectGraph);
   const { value, details } = await (customHasher
     ? customHasher(task, {
         hasher,
         projectGraph,
         taskGraph,
-        workspaceConfig:
-          readProjectsConfigurationFromProjectGraph(projectGraph),
-      })
+        workspaceConfig: projectsConfigurations, // to make the change non-breaking. Remove after v18
+        projectsConfigurations,
+        nxJsonConfiguration: workspaces.readNxJson(),
+      } as any)
     : hasher.hashTask(task));
   task.hash = value;
   task.hashDetails = details;

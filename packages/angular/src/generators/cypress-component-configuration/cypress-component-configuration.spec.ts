@@ -63,7 +63,7 @@ describe('Cypress Component Testing Configuration', () => {
               ...readProjectConfiguration(tree, 'fancy-lib'),
             },
           },
-        },
+        } as any,
         dependencies: {
           'fancy-app': [
             {
@@ -117,13 +117,13 @@ describe('Cypress Component Testing Configuration', () => {
             data: {
               ...readProjectConfiguration(tree, 'fancy-app'),
             },
-          },
+          } as any,
           'fancy-lib': {
             name: 'fancy-lib',
             type: 'lib',
             data: {
               ...readProjectConfiguration(tree, 'fancy-lib'),
-            },
+            } as any,
           },
         },
         dependencies: {
@@ -181,14 +181,14 @@ describe('Cypress Component Testing Configuration', () => {
             type: 'app',
             data: {
               ...appConfig,
-            },
+            } as any,
           },
           'fancy-lib': {
             name: 'fancy-lib',
             type: 'lib',
             data: {
               ...readProjectConfiguration(tree, 'fancy-lib'),
-            },
+            } as any,
           },
         },
         dependencies: {
@@ -230,7 +230,7 @@ describe('Cypress Component Testing Configuration', () => {
             type: 'app',
             data: {
               ...readProjectConfiguration(tree, 'fancy-app'),
-            },
+            } as any,
           },
         },
         dependencies: {},
@@ -275,14 +275,14 @@ describe('Cypress Component Testing Configuration', () => {
             type: 'app',
             data: {
               ...readProjectConfiguration(tree, 'fancy-app'),
-            },
+            } as any,
           },
           'fancy-lib': {
             name: 'fancy-lib',
             type: 'lib',
             data: {
               ...readProjectConfiguration(tree, 'fancy-lib'),
-            },
+            } as any,
           },
         },
         dependencies: {
@@ -331,14 +331,14 @@ describe('Cypress Component Testing Configuration', () => {
           type: 'app',
           data: {
             ...readProjectConfiguration(tree, 'something'),
-          },
+          } as any,
         },
         'my-lib': {
           name: 'my-lib',
           type: 'lib',
           data: {
             ...readProjectConfiguration(tree, 'my-lib'),
-          },
+          } as any,
         },
       },
       dependencies: {
@@ -383,14 +383,14 @@ describe('Cypress Component Testing Configuration', () => {
           type: 'app',
           data: {
             ...readProjectConfiguration(tree, 'something'),
-          },
+          } as any,
         },
         'my-lib-standalone': {
           name: 'my-lib-standalone',
           type: 'lib',
           data: {
             ...readProjectConfiguration(tree, 'my-lib-standalone'),
-          },
+          } as any,
         },
       },
       dependencies: {
@@ -437,14 +437,14 @@ describe('Cypress Component Testing Configuration', () => {
           type: 'app',
           data: {
             ...readProjectConfiguration(tree, 'something'),
-          },
+          } as any,
         },
         'with-inputs-cmp': {
           name: 'with-inputs-cmp',
           type: 'lib',
           data: {
             ...readProjectConfiguration(tree, 'with-inputs-cmp'),
-          },
+          } as any,
         },
       },
       dependencies: {
@@ -491,14 +491,14 @@ describe('Cypress Component Testing Configuration', () => {
           type: 'app',
           data: {
             ...readProjectConfiguration(tree, 'something'),
-          },
+          } as any,
         },
         'with-inputs-standalone-cmp': {
           name: 'with-inputs-standalone-cmp',
           type: 'lib',
           data: {
             ...readProjectConfiguration(tree, 'with-inputs-standalone-cmp'),
-          },
+          } as any,
         },
       },
       dependencies: {
@@ -558,14 +558,14 @@ describe('Cypress Component Testing Configuration', () => {
           type: 'app',
           data: {
             ...readProjectConfiguration(tree, 'my-cool-app'),
-          },
+          } as any,
         },
         secondary: {
           name: 'secondary',
           type: 'lib',
           data: {
             ...readProjectConfiguration(tree, 'secondary'),
-          },
+          } as any,
         },
       },
       dependencies: {},
@@ -615,14 +615,14 @@ describe('Cypress Component Testing Configuration', () => {
           type: 'app',
           data: {
             ...readProjectConfiguration(tree, 'abc'),
-          },
+          } as any,
         },
         'cool-lib': {
           name: 'cool-lib',
           type: 'lib',
           data: {
             ...readProjectConfiguration(tree, 'cool-lib'),
-          },
+          } as any,
         },
       },
       dependencies: {},

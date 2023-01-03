@@ -17,7 +17,8 @@ export default async function* bundleExecutor(
   options: ReactNativeBundleOptions,
   context: ExecutorContext
 ): AsyncGenerator<ReactNativeBundleOutput> {
-  const projectRoot = context.workspace.projects[context.projectName].root;
+  const projectRoot =
+    context.projectsConfigurations.projects[context.projectName].root;
 
   options.bundleOutput = join(context.root, options.bundleOutput);
 

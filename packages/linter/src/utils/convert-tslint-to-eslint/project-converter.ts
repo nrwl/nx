@@ -1,3 +1,8 @@
+import type {
+  GeneratorCallback,
+  ProjectConfiguration,
+  Tree,
+} from '@nrwl/devkit';
 import {
   getProjects,
   installPackagesTask,
@@ -5,17 +10,12 @@ import {
   logger,
   offsetFromRoot,
   readJson,
+  readNxJson,
   readProjectConfiguration,
-  readWorkspaceConfiguration,
   removeDependenciesFromPackageJson,
   updateJson,
+  updateNxJson,
   updateProjectConfiguration,
-  updateWorkspaceConfiguration,
-} from '@nrwl/devkit';
-import type {
-  Tree,
-  GeneratorCallback,
-  ProjectConfiguration,
 } from '@nrwl/devkit';
 import type { Linter } from 'eslint';
 import { removeParserOptionsProjectIfNotRequired } from '../rules-requiring-type-checking';
@@ -423,9 +423,9 @@ export class ProjectConverter {
     /**
      * Update global linter configuration defaults in project configuration
      */
-    const workspace = readWorkspaceConfiguration(this.host);
-    this.cleanUpGeneratorsConfig(workspace);
-    updateWorkspaceConfiguration(this.host, workspace);
+    const nxJson = readNxJson(this.host);
+    this.cleanUpGeneratorsConfig(nxJson);
+    updateNxJson(this.host, nxJson);
 
     /**
      * Update project-level linter configuration defaults in project configuration
@@ -539,14 +539,14 @@ export class ProjectConverter {
     collectionName: string,
     defaults: Partial<ConvertTSLintToESLintSchema>
   ) {
-    const workspace = readWorkspaceConfiguration(this.host);
+    const nxJson = readNxJson(this.host);
 
-    workspace.generators ||= {};
-    workspace.generators[collectionName] ||= {};
-    const prev = workspace.generators[collectionName];
+    nxJson.generators ||= {};
+    nxJson.generators[collectionName] ||= {};
+    const prev = nxJson.generators[collectionName];
 
-    workspace.generators = {
-      ...workspace.generators,
+    nxJson.generators = {
+      ...nxJson.generators,
       [collectionName]: {
         ...prev,
         'convert-tslint-to-eslint': {
@@ -556,6 +556,6 @@ export class ProjectConverter {
       },
     };
 
-    updateWorkspaceConfiguration(this.host, workspace);
+    updateNxJson(this.host, nxJson);
   }
 }
