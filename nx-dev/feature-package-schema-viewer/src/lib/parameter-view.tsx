@@ -60,7 +60,7 @@ export const ParameterView = (props: {
       )}
     </div>
 
-    <div className="prose prose-slate dark:prose-invert">
+    <div className="prose prose-slate dark:prose-invert max-w-none">
       {
         renderMarkdown(props.description, {
           filePath: '',
