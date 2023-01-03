@@ -192,21 +192,6 @@ export function DocumentationHeader({
         </div>
         {/*NAVIGATION*/}
         <div className="hidden flex-grow lg:flex">{/* SPACER */}</div>
-        <div className="hidden flex-grow text-xs italic lg:flex">
-          <div className="relative">
-            <span className="mr-2">State of JS survey is online!</span>
-            <Link
-              href="https://stateofjs.com/en-us/"
-              rel="noreferrer"
-              target="_blank"
-              className="text-blue-500 underline dark:text-sky-500"
-            >
-              <span className="absolute inset-0" aria-hidden="true" />
-              Give Nx a thumbs up
-              <span aria-hidden="true">&rarr;</span>
-            </Link>
-          </div>
-        </div>
         <div className="hidden flex-shrink-0 lg:flex">
           <nav
             role="accessory-nav"
