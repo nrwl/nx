@@ -1,12 +1,4 @@
 {
   "name": "<%= name %>",
-  "version": "0.0.1",
-  "main": "./index.js",
-  "module": "./index.mjs",
-  "exports": {
-    ".": {
-      "import": "./index.mjs",
-      "require": "./index.js"
-    }
-  }
+  "version": "0.0.1"
 }
