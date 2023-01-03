@@ -539,7 +539,7 @@
               "id": "packages-devkit",
               "tags": ["create-your-own-plugin"],
               "file": "",
-              "path": "/packages/devkit",
+              "path": "/packages/devkit/documents/index",
               "isExternal": true
             },
             {
