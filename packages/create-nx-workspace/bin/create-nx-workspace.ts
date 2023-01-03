@@ -94,7 +94,7 @@ const presetOptions: { name: Preset; message: string }[] = [
   {
     name: Preset.ReactNative,
     message:
-      'react-native      [a workspace with a single React Native application]',
+      'react-native      [a monorepo with a single React Native application]',
   },
 ];
 
