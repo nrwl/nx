@@ -12,5 +12,8 @@
     "jest.config.ts",
     "**/__fixtures__/*.*"
   ],
-  "include": ["**/*.ts"]
+  "include": [
+    "**/*.ts",
+    "src/lock-file/__fixtures__/auxiliary-packages/.modules.yaml.ts"
+  ]
 }

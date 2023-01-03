@@ -1,4 +1,4 @@
-lockfileVersion: 5.4
+export default `lockfileVersion: 5.4
 
 specifiers:
   '@babel/preset-react': ^7.14.5
@@ -10281,3 +10281,4 @@ packages:
   /yocto-queue/0.1.0:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
+`;

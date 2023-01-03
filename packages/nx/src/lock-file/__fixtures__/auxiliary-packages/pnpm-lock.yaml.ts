@@ -1,4 +1,4 @@
-lockfileVersion: 5.4
+export default `lockfileVersion: 5.4
 
 specifiers:
   '@nrwl/devkit': 15.0.13
@@ -1476,3 +1476,4 @@ packages:
     requiresBuild: true
     version: 3.2.4
     dev: false
+`;

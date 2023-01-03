@@ -289,10 +289,10 @@ describe('yarn LockFile utility', () => {
   });
 
   describe('next.js generated', () => {
-    const rootLockFile = readFileSync(
-      joinPathFragments(__dirname, '__fixtures__/nextjs/yarn.lock'),
-      'utf-8'
-    );
+    const rootLockFile = require(joinPathFragments(
+      __dirname,
+      '__fixtures__/nextjs/yarn.lock'
+    )).default;
     const projectPackageJson = readJsonFile(
       joinPathFragments(__dirname, '__fixtures__/nextjs/app/package.json')
     );

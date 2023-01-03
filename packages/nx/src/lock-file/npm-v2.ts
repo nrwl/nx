@@ -110,6 +110,7 @@ function processV1Node(
     packageName = version.slice(4, versionStartIndex);
     version = version.slice(versionStartIndex + 1); // we don't need `@`
   }
+
   const node: LockFileNode = {
     name,
     ...(packageName && { packageName }),
@@ -172,9 +173,16 @@ function parseV3LockFile(
 
 // parse node value from lock file into `LockFileNode`
 function parseV3Node(path: string, value: NpmDependencyV3): LockFileNode {
-  const { version, resolved, peer, optional, dev, name, integrity } = value;
+  const { resolved, peer, optional, dev, name, integrity } = value;
   const devOptional = dev || optional || value.devOptional;
   const packageName = path.split('node_modules/').pop();
+
+  let version = value.version;
+  // for tarball packages version might not exist or be useless
+  if (!version || (resolved && !resolved.includes(version))) {
+    version = resolved;
+  }
+
   const node: LockFileNode = {
     name: packageName,
     ...(name && name !== packageName && { packageName: name }),

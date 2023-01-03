@@ -9,7 +9,6 @@ import { generatePrunnedHash, hashString } from './utils/hashing';
 import { satisfies } from 'semver';
 import { PackageJsonDeps } from './utils/pruning';
 import { sortObjectByKeys } from '../utils/object-sort';
-import { pruneLockfile } from '@pnpm/prune-lockfile';
 
 type PackageMeta = {
   key: string;
@@ -404,18 +403,6 @@ export function transitiveDependencyPnpmLookup({
   return Object.values(versions).find((v) => satisfies(v.version, version));
 }
 
-export function prunePnpmLockFileV2(
-  lockFile: string,
-  normalizedPackageJson: PackageJsonDeps
-): PnpmLockFile {
-  // TODO: Do these two changes at all times
-  // TODO: we don't want to support all the possible lockfile versions
-  const data: PnpmLockFile = convertFromLockfileFileMutable(load(lockFile));
-
-  // TODO: revert from inline specifiers if needed
-  return pruneLockfile(data as any, normalizedPackageJson, '.');
-}
-
 /**
  * Prunes the lock file data based on the list of packages and their transitive dependencies
  *
@@ -622,34 +609,3 @@ function findPackageMeta(
   // otherwise it's a root dependency
   return packageMeta.find((m) => !m.key.split('/').pop().includes('_'));
 }
-
-/**
- * Reverts changes from the "forceSharedFormat" write option if necessary.
- */
-function convertFromLockfileFileMutable(
-  lockfileFile: PnpmLockFile
-): PnpmLockFile {
-  if (typeof lockfileFile?.['importers'] === 'undefined') {
-    lockfileFile.importers = {
-      '.': {
-        specifiers: lockfileFile['specifiers'] ?? {},
-        dependenciesMeta: lockfileFile['dependenciesMeta'],
-        publishDirectory: lockfileFile['publishDirectory'],
-      },
-    };
-    delete lockfileFile.specifiers;
-    for (const depType of DEPENDENCIES_FIELDS) {
-      if (lockfileFile[depType] != null) {
-        lockfileFile.importers['.'][depType] = lockfileFile[depType];
-        delete lockfileFile[depType];
-      }
-    }
-  }
-  return lockfileFile as PnpmLockFile;
-}
-
-export const DEPENDENCIES_FIELDS = [
-  'optionalDependencies',
-  'dependencies',
-  'devDependencies',
-];

@@ -1,9 +1,8 @@
 import { PackageJson } from '../../utils/package-json';
-import { generatePrunnedHash, hashString } from './hashing';
+import { hashString } from './hashing';
 
 export type LockFileGraph = {
   hash: string;
-  packageJson: PackageJson;
   root: LockFileNode;
   nodes: Map<string, LockFileNode>;
   isValid: boolean;
@@ -17,7 +16,7 @@ export type LockFileNode = {
   resolved?: string;
   integrity?: string;
   edgesOut?: Map<string, LockFileEdge>;
-  children?: Map<string, LockFileNode>;
+  children?: Map<string, LockFileNode>; // used for tracking hoisting
   edgesIn?: Set<LockFileEdge>;
   isProjectRoot?: true;
 };
@@ -34,7 +33,6 @@ export type LockFileEdge = {
   error?: 'MISSING_TARGET' | 'MISSING_SOURCE';
 };
 
-// TODO 1: Check Arborist for links? Perhaps those should be workspace files
 /**
  * A builder for a lock file graph.
  *
@@ -45,16 +43,18 @@ export type LockFileEdge = {
 export class LockFileBuilder {
   readonly root: LockFileNode;
   readonly nodes: Map<string, LockFileNode>;
-  readonly packageJson: PackageJson;
   private hash: string;
 
   constructor(input: LockFileGraph);
-  constructor(input: { packageJson: PackageJson; lockFileContent: string });
+  constructor(input: {
+    packageJson: Partial<PackageJson>;
+    lockFileContent: string;
+  });
   constructor(
-    input: { packageJson: PackageJson; lockFileContent: string } | LockFileGraph
+    input:
+      | { packageJson: Partial<PackageJson>; lockFileContent: string }
+      | LockFileGraph
   ) {
-    this.packageJson = input.packageJson;
-
     if ('root' in input) {
       const { root, hash, nodes } = input;
       this.root = root;
@@ -70,7 +70,7 @@ export class LockFileBuilder {
     }
   }
 
-  private makeRootNode(packageJson: PackageJson): LockFileNode {
+  private makeRootNode(packageJson: Partial<PackageJson>): LockFileNode {
     const {
       name,
       version,
@@ -412,7 +412,9 @@ export class LockFileBuilder {
         if (edge.error) {
           isValid = false;
           console.warn(
-            `Edge OUT ${edge.name} from ${edge.from?.name} to ${edge.to?.name} has error ${edge.error}`
+            `Outgoing edge "${edge.name}: ${edge.versionSpec}" from ${
+              edge.from?.name
+            } to ${edge.to?.name || '-'} has error: ${edge.error}`
           );
         }
       });
@@ -422,7 +424,9 @@ export class LockFileBuilder {
         if (edge.error) {
           isValid = false;
           console.warn(
-            `Edge IN ${edge.name} from ${edge.from?.name} to ${edge.to?.name} has error ${edge.error}`
+            `Incoming edge "${edge.name}: ${edge.versionSpec}" from ${
+              edge.from?.name || '-'
+            } to ${edge.to?.name} has error: ${edge.error}`
           );
         }
       });
@@ -435,25 +439,20 @@ export class LockFileBuilder {
     return isValid;
   }
 
-  private calculateHash(): string {
-    return generatePrunnedHash(this.hash, this.packageJson);
-  }
-
   getLockFileGraph(): LockFileGraph {
     let isValid = true;
-    // if (!this.isGraphConsistent()) {
-    //   console.error(
-    //     `Graph is not consistent. Please report this issue via github`
-    //   );
-    //   isValid = false;
-    // }
+    if (!this.isGraphConsistent()) {
+      console.error(
+        `Graph is not consistent. Please report this issue via github`
+      );
+      isValid = false;
+    }
 
     return {
       root: this.root,
       isValid,
-      packageJson: this.packageJson,
       nodes: this.nodes,
-      hash: this.hash || this.calculateHash(),
+      hash: this.hash,
     };
   }
 }

@@ -174,6 +174,28 @@ describe('yarn LockFile utility', () => {
     expect(resultClassic.root.children.size).toEqual(124);
     expect(resultClassic.isValid).toBeTruthy();
 
+    const classicPostgres = resultClassic.nodes.get('node_modules/postgres');
+    expect(classicPostgres.name).toEqual('postgres');
+    expect(classicPostgres.packageName).toBeUndefined();
+    expect(classicPostgres.version).toMatch(
+      '3b1a01b2da3e2fafb1a79006f838eff11a8de3cb'
+    );
+    expect(classicPostgres.edgesIn.values().next().value.versionSpec).toEqual(
+      'charsleysa/postgres#fix-errors-compiled'
+    );
+
+    const classicAlias = resultClassic.nodes.get(
+      'node_modules/eslint-plugin-disable-autofix'
+    );
+    expect(classicAlias.name).toEqual('eslint-plugin-disable-autofix');
+    expect(classicAlias.packageName).toEqual(
+      '@mattlewis92/eslint-plugin-disable-autofix'
+    );
+    expect(classicAlias.version).toEqual('3.0.0');
+    expect(classicAlias.edgesIn.values().next().value.versionSpec).toEqual(
+      'npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0'
+    );
+
     const berryLockFile = require(joinPathFragments(
       __dirname,
       '__fixtures__/auxiliary-packages/yarn-berry.lock'
@@ -181,5 +203,27 @@ describe('yarn LockFile utility', () => {
     const resultBerry = parseYarnLockFile(berryLockFile, packageJson);
     expect(resultBerry.root.children.size).toEqual(124);
     expect(resultBerry.isValid).toBeTruthy();
+
+    const berryPostgres = resultBerry.nodes.get('node_modules/postgres');
+    expect(berryPostgres.name).toEqual('postgres');
+    expect(berryPostgres.packageName).toBeUndefined();
+    expect(berryPostgres.version).toMatch(
+      '3b1a01b2da3e2fafb1a79006f838eff11a8de3cb'
+    );
+    expect(berryPostgres.edgesIn.values().next().value.versionSpec).toEqual(
+      'charsleysa/postgres#fix-errors-compiled'
+    );
+
+    const berryAlias = resultBerry.nodes.get(
+      'node_modules/eslint-plugin-disable-autofix'
+    );
+    expect(berryAlias.name).toEqual('eslint-plugin-disable-autofix');
+    expect(berryAlias.packageName).toEqual(
+      '@mattlewis92/eslint-plugin-disable-autofix'
+    );
+    expect(berryAlias.version).toEqual('3.0.0');
+    expect(berryAlias.edgesIn.values().next().value.versionSpec).toEqual(
+      'npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0'
+    );
   });
 });

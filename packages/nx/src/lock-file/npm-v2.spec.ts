@@ -38,81 +38,73 @@ describe('NPM lock file utility', () => {
     expect(resultV1.root.children.size).toEqual(202);
     expect(resultV1.isValid).toBeTruthy();
 
+    expect(resultV1.nodes.get('node_modules/postgres').name).toEqual(
+      'postgres'
+    );
+    expect(
+      resultV1.nodes.get('node_modules/postgres').packageName
+    ).toBeUndefined();
+    expect(resultV1.nodes.get('node_modules/postgres').version).toMatch(
+      '3b1a01b2da3e2fafb1a79006f838eff11a8de3cb'
+    );
+    expect(
+      resultV1.nodes.get('node_modules/postgres').edgesIn.values().next().value
+        .versionSpec
+    ).toMatch('charsleysa/postgres#fix-errors-compiled');
+
+    expect(
+      resultV1.nodes.get('node_modules/eslint-plugin-disable-autofix').name
+    ).toEqual('eslint-plugin-disable-autofix');
+    expect(
+      resultV1.nodes.get('node_modules/eslint-plugin-disable-autofix')
+        .packageName
+    ).toEqual('@mattlewis92/eslint-plugin-disable-autofix');
+    expect(
+      resultV1.nodes.get('node_modules/eslint-plugin-disable-autofix').version
+    ).toEqual('3.0.0');
+    expect(
+      resultV1.nodes
+        .get('node_modules/eslint-plugin-disable-autofix')
+        .edgesIn.values()
+        .next().value.versionSpec
+    ).toEqual('npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0');
+
     const resultV2 = parseNpmLockFile(
       JSON.stringify(rootV2LockFile),
       packageJson
     );
-    expect(resultV1.root.children.size).toEqual(resultV2.root.children.size);
+    expect(resultV2.root.children.size).toEqual(resultV2.root.children.size);
     expect(resultV2.isValid).toBeTruthy();
-  });
 
-  xit('should prune', async () => {
-    // TODO: Check what arborist loads and how are we different
-    // TODO: probably the whole structure needs to be revisited
-    const Arborist = require('@npmcli/arborist');
-    const arb = new Arborist({
-      path: joinPathFragments(__dirname, '__fixtures__/nextjs'),
-    });
-    console.time('load actual');
-    const actualTree = await arb.loadVirtual();
-    // console.log(actualTree.children.get('ansi-styles'));
-    // console.log(actualTree.children.get('wrap-ansi').children);
-    // console.log(Object.keys(tree.children).length, tree.edgesOut);
-    const newTree = await arb.buildIdealTree({
-      // path: joinPathFragments(__dirname, '__fixtures__/nextjs/app'),
-      add: [],
-      rm: [
-        '@babel/preset-react',
-        '@nrwl/cypress',
-        '@nrwl/eslint-plugin-nx',
-        '@nrwl/jest',
-        '@nrwl/linter',
-        // '@nrwl/next',
-        '@nrwl/react',
-        '@nrwl/web',
-        '@nrwl/workspace',
-        '@testing-library/react',
-        '@types/jest',
-        '@types/node',
-        '@types/react',
-        '@types/react-dom',
-        '@typescript-eslint/eslint-plugin',
-        '@typescript-eslint/parser',
-        'babel-jest',
-        'core-js',
-        'cypress',
-        'eslint',
-        'eslint-config-next',
-        'eslint-config-prettier',
-        'eslint-plugin-cypress',
-        'eslint-plugin-import',
-        'eslint-plugin-jsx-a11y',
-        'eslint-plugin-react',
-        'eslint-plugin-react-hooks',
-        'jest',
-        'jest-environment-jsdom',
-        // 'next',
-        'nx',
-        'prettier',
-        // 'react',
-        // 'react-dom',
-        'react-test-renderer',
-        'regenerator-runtime',
-        'ts-jest',
-        'ts-node',
-        'tslib',
-        // 'typescript'
-      ],
-    });
-    const newTree2 = await arb.buildIdealTree({
-      path: joinPathFragments(__dirname, '__fixtures__/nextjs/app'),
-    });
-    console.log(newTree2.children.size);
-    // console.log(newTree.children.get('@nrwl/next'), newTree.children.size);
-    // const expectedLockFile = require(joinPathFragments(
-    //   __dirname,
-    //   '__fixtures__/nextjs/app/package-lock.json'
-    // ));
-    // console.log(Object.keys(expectedLockFile.packages).length);
+    expect(resultV2.nodes.get('node_modules/postgres').name).toEqual(
+      'postgres'
+    );
+    expect(
+      resultV2.nodes.get('node_modules/postgres').packageName
+    ).toBeUndefined();
+    expect(resultV2.nodes.get('node_modules/postgres').version).toMatch(
+      '3b1a01b2da3e2fafb1a79006f838eff11a8de3cb'
+    );
+    expect(
+      resultV2.nodes.get('node_modules/postgres').edgesIn.values().next().value
+        .versionSpec
+    ).toEqual('charsleysa/postgres#fix-errors-compiled');
+
+    expect(
+      resultV2.nodes.get('node_modules/eslint-plugin-disable-autofix').name
+    ).toEqual('eslint-plugin-disable-autofix');
+    expect(
+      resultV2.nodes.get('node_modules/eslint-plugin-disable-autofix')
+        .packageName
+    ).toEqual('@mattlewis92/eslint-plugin-disable-autofix');
+    expect(
+      resultV2.nodes.get('node_modules/eslint-plugin-disable-autofix').version
+    ).toEqual('3.0.0');
+    expect(
+      resultV2.nodes
+        .get('node_modules/eslint-plugin-disable-autofix')
+        .edgesIn.values()
+        .next().value.versionSpec
+    ).toEqual('npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0');
   });
 });

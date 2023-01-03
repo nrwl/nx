@@ -240,12 +240,18 @@ function parseClassicNode(
   versionSpec: string,
   value: YarnDependency
 ): LockFileNode {
-  const { version, resolved, integrity } = value;
+  const { resolved, integrity } = value;
 
   // for alias packages, name would not match packageName
   const name = versionSpec.startsWith('npm:')
     ? versionSpec.slice(4, versionSpec.lastIndexOf('@'))
     : packageName;
+
+  let version = value.version;
+  // for tarball packages version might not exist or be useless
+  if (!version || (resolved && !resolved.includes(version))) {
+    version = resolved;
+  }
 
   const node: LockFileNode = {
     name: packageName,
@@ -264,10 +270,16 @@ function parseBerryNode(
   path: string,
   value: YarnDependency
 ): LockFileNode {
-  const { version, resolution, checksum } = value;
+  const { resolution, checksum } = value;
 
   // for alias packages, name would not match packageName
   const name = resolution.slice(0, resolution.indexOf('@', 1));
+
+  let version = value.version;
+  // for tarball packages version might not exist or be useless
+  if (!version || (resolution && !resolution.includes(version))) {
+    version = resolution.slice(resolution.indexOf('@', 1) + 1);
+  }
 
   const node: LockFileNode = {
     name: packageName,
@@ -280,18 +292,6 @@ function parseBerryNode(
 
   return node;
 }
-
-/**
- * A -> B@v1
- * B@v1
- * C -> B@v2
- * D -> E@v2 -> B@v3
- * E@v1
- *
- * D
- * E@v2
- * B@v3
- */
 
 function exhaustUnresolvedDependencies(
   builder: LockFileBuilder,
@@ -347,7 +347,7 @@ function exhaustUnresolvedDependencies(
   }
 }
 
-function getRootVersion(packageName: string): boolean {
+function getRootVersion(packageName: string): string {
   const fullPath = `${workspaceRoot}/node_modules/${packageName}/package.json`;
 
   if (existsSync(fullPath)) {

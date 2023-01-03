@@ -529,18 +529,6 @@ export function pruneNpmLockFile(
 ): LockFileData {
   const isV1 = lockFileData.lockFileMetadata.metadata.lockfileVersion === 1;
 
-  // NPM V1 does not track full dependency list in the lock file,
-  // so we can't reuse the lock file to generate a new one
-  if (isV1) {
-    output.warn({
-      title: 'Pruning v1 lock file',
-      bodyLines: [
-        `If your "node_modules" are not in sync with the lock file, you might get inaccurate results.`,
-        `Run "npm ci" to ensure your installed packages are synchronized or upgrade to NPM v7+ to benefit from the new lock file format`,
-      ],
-    });
-  }
-
   const dependencies = pruneDependencies(
     lockFileData.dependencies,
     normalizedPackageJson,

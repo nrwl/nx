@@ -5102,6 +5102,18 @@
     schema-utils "^3.0.0"
     source-map "^0.7.3"
 
+"@pnpm/lockfile-types@^4.3.6":
+  version "4.3.6"
+  resolved "https://registry.yarnpkg.com/@pnpm/lockfile-types/-/lockfile-types-4.3.6.tgz#9d81aa3547a57af9e229572d4763e48268637a83"
+  integrity sha512-5vvdV3tEVOCzzeGv2FXK4590qPUVpZ+5gdqCawFuiNTJavx+4rmmY4aDUjdVXUcKGwqkIBPVKe/SNUBA3A2rtg==
+  dependencies:
+    "@pnpm/types" "8.10.0"
+
+"@pnpm/types@8.10.0":
+  version "8.10.0"
+  resolved "https://registry.yarnpkg.com/@pnpm/types/-/types-8.10.0.tgz#29ebd095bb0653e5eab8283799c9f59fb6cf216f"
+  integrity sha512-A4pcNNvFJdkMXArEjTCOIYNL2VxD4uBynWZ6cBIELXb5qJ0tUzwKsaSz4J953I0rQFqnsFpUYqaWIquI10W1sw==
+
 "@popperjs/core@^2.0.0":
   version "2.11.6"
   resolved "https://registry.yarnpkg.com/@popperjs/core/-/core-2.11.6.tgz#cee20bd55e68a1720bdab363ecf0c821ded4cd45"
