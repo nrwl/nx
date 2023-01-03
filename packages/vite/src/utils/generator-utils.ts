@@ -559,6 +559,14 @@ export function createOrEditViteConfig(
     ],
     `;
 
+  const workerOption = `
+    // Uncomment this if you are using workers. 
+    // worker: {
+    //  viteTsConfigPaths({
+    //    root: '${offsetFromRoot(projectConfig.root)}',
+    //  }),
+    // },`;
+
   if (tree.exists(viteConfigPath)) {
     handleViteConfigFileExists(
       tree,
@@ -584,6 +592,7 @@ export function createOrEditViteConfig(
       export default defineConfig({
         ${serverOption}
         ${pluginOption}
+        ${workerOption}
         ${buildOption}
         ${defineOption}
         ${testOption}
