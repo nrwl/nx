@@ -11,7 +11,8 @@ export default async function viteBuildExecutor(
   options: ViteBuildExecutorOptions,
   context: ExecutorContext
 ) {
-  const projectRoot = context.workspace.projects[context.projectName].root;
+  const projectRoot =
+    context.projectsConfigurations.projects[context.projectName].root;
 
   await runInstance(await getBuildAndSharedConfig(options, context));
 

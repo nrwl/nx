@@ -39,7 +39,7 @@ describe('getDependentPackagesForProject', () => {
             data: { root: 'libs/lib2', sourceRoot: 'libs/lib2/src' },
             type: 'lib',
           },
-        },
+        } as any,
       },
       'shell'
     );
@@ -88,7 +88,7 @@ describe('getDependentPackagesForProject', () => {
             data: { root: 'libs/lib3', sourceRoot: 'libs/lib3/src' },
             type: 'lib',
           },
-        },
+        } as any,
       },
       'shell'
     );
@@ -141,7 +141,7 @@ describe('getDependentPackagesForProject', () => {
             data: { root: 'libs/lib3', sourceRoot: 'libs/lib3/src' },
             type: 'lib',
           },
-        },
+        } as any,
       },
       'shell'
     );

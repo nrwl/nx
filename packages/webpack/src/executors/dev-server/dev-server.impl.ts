@@ -26,7 +26,7 @@ export async function* devServerExecutor(
   context: ExecutorContext
 ) {
   const { root: projectRoot, sourceRoot } =
-    context.workspace.projects[context.projectName];
+    context.projectsConfigurations.projects[context.projectName];
   const buildOptions = normalizeOptions(
     getBuildOptions(serveOptions, context),
     context.root,

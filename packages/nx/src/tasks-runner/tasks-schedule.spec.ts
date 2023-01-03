@@ -96,7 +96,7 @@ describe('TasksSchedule', () => {
               },
             },
           },
-        },
+        } as any,
         dependencies: {
           app1: [
             {
@@ -323,7 +323,7 @@ describe('TasksSchedule', () => {
               },
             },
           },
-        },
+        } as any,
         dependencies: {
           app1: [
             {

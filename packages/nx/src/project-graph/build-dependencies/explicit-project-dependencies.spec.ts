@@ -603,7 +603,7 @@ function createVirtualWorkspace(config: VirtualWorkspaceConfig) {
       files: config.sourceProjectFiles.map(({ path }) => ({
         file: path,
       })),
-    },
+    } as any,
   });
   builder.addExternalNode({
     name: 'npm:npm-package',
@@ -629,7 +629,7 @@ function createVirtualWorkspace(config: VirtualWorkspaceConfig) {
       type: 'lib',
       data: {
         root: `libs/${projectName}`,
-        files: [{ file: `libs/${projectName}/index.ts` }],
+        files: [{ file: `libs/${projectName}/index.ts` }] as any,
       },
     });
   }

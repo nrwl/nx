@@ -1,37 +1,32 @@
 import {
   formatFiles,
   joinPathFragments,
-  readWorkspaceConfiguration,
+  readNxJson,
   Tree,
-  updateWorkspaceConfiguration,
+  updateNxJson,
 } from '@nrwl/devkit';
 import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
 import { eslintConfigFileWhitelist } from '../../generators/utils/eslint-file';
 
 export default async function addEslintInputs(tree: Tree) {
-  const workspaceConfiguration = readWorkspaceConfiguration(tree);
+  const nxJson = readNxJson(tree);
 
   const globalEslintFile = eslintConfigFileWhitelist.find((file) =>
     tree.exists(file)
   );
 
-  if (globalEslintFile && workspaceConfiguration.namedInputs?.production) {
-    const productionFileset = new Set(
-      workspaceConfiguration.namedInputs.production
-    );
+  if (globalEslintFile && nxJson.namedInputs?.production) {
+    const productionFileset = new Set(nxJson.namedInputs.production);
 
     productionFileset.add(`!{projectRoot}/${globalEslintFile}`);
 
-    workspaceConfiguration.namedInputs.production =
-      Array.from(productionFileset);
+    nxJson.namedInputs.production = Array.from(productionFileset);
   }
 
   for (const targetName of getEslintTargets(tree)) {
-    workspaceConfiguration.targetDefaults ??= {};
+    nxJson.targetDefaults ??= {};
 
-    const lintTargetDefaults = (workspaceConfiguration.targetDefaults[
-      targetName
-    ] ??= {});
+    const lintTargetDefaults = (nxJson.targetDefaults[targetName] ??= {});
 
     lintTargetDefaults.inputs ??= [
       'default',
@@ -41,7 +36,7 @@ export default async function addEslintInputs(tree: Tree) {
     ];
   }
 
-  updateWorkspaceConfiguration(tree, workspaceConfiguration);
+  updateNxJson(tree, nxJson);
 
   await formatFiles(tree);
 }

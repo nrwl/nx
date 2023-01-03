@@ -108,7 +108,7 @@ export function updateProjectConfig(
 export function readResolvedWorkspaceConfiguration() {
   process.env.NX_PROJECT_GLOB_CACHE = 'false';
   const ws = new Workspaces(tmpProjPath());
-  return ws.readWorkspaceConfiguration();
+  return ws.readProjectsConfig();
 }
 
 /**
@@ -687,7 +687,7 @@ function setMaxWorkers() {
     const ws = new Workspaces(tmpProjPath());
     const workspaceFile = workspaceConfigName();
     const workspaceFileExists = fileExists(tmpProjPath(workspaceFile));
-    const workspace = ws.readWorkspaceConfiguration();
+    const workspace = ws.readProjectsConfig();
     const rawWorkspace = workspaceFileExists ? readJson(workspaceFile) : null;
     let requireWorkspaceFileUpdate = false;
 

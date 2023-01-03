@@ -3,7 +3,7 @@ import { ProjectConfiguration } from '../config/workspace-json-project-json';
 
 export function splitTarget(
   s: string,
-  projectGraph: ProjectGraph<ProjectConfiguration>
+  projectGraph: ProjectGraph
 ): [project: string, target?: string, configuration?: string] {
   let [project, ...segments] = splitByColons(s);
   const validTargets = projectGraph.nodes[project]?.data?.targets;

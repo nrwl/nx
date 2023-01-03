@@ -101,7 +101,7 @@ export function groupProjectsByDirectory(
         ? workspaceLayout.appsDir
         : workspaceLayout.libsDir;
     const directories = parseParentDirectoriesFromFilePath(
-      project.data.root,
+      (project.data as any).root,
       workspaceRoot
     );
 

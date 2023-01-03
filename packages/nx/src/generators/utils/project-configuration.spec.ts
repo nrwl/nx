@@ -4,8 +4,8 @@ import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 
 import { createTree } from '../testing-utils/create-tree';
 import {
-  createTreeWithEmptyWorkspace,
   createTreeWithEmptyV1Workspace,
+  createTreeWithEmptyWorkspace,
 } from '../testing-utils/create-tree-with-empty-workspace';
 import { readJson, updateJson, writeJson } from '../utils/json';
 import {
@@ -13,11 +13,8 @@ import {
   getProjects,
   getWorkspacePath,
   readProjectConfiguration,
-  readWorkspaceConfiguration,
   removeProjectConfiguration,
   updateProjectConfiguration,
-  updateWorkspaceConfiguration,
-  WorkspaceConfiguration,
 } from './project-configuration';
 
 import * as projectSchema from '../../../schemas/project-schema.json';
@@ -101,69 +98,6 @@ describe('project configuration', () => {
         expect(readJson(tree, 'workspace.json').projects.test).toEqual(
           baseTestProjectConfigV1
         );
-      });
-    });
-
-    describe('readWorkspaceConfiguration', () => {
-      it('should read the workspace configuration', () => {
-        const result = readWorkspaceConfiguration(tree);
-        expect(result).toEqual({
-          affected: {
-            defaultBase: 'main',
-          },
-          npmScope: 'proj',
-          tasksRunnerOptions: {
-            default: {
-              options: {
-                cacheableOperations: ['build', 'lint', 'test', 'e2e'],
-              },
-              runner: 'nx/tasks-runners/default',
-            },
-          },
-          version: 1,
-        });
-      });
-    });
-
-    describe('updateWorkspaceConfiguration', () => {
-      let workspaceConfiguration: WorkspaceConfiguration;
-
-      beforeEach(() => {
-        workspaceConfiguration = readWorkspaceConfiguration(tree);
-      });
-
-      it('should update properties in workspace.json', () => {
-        workspaceConfiguration.version = 2;
-
-        updateWorkspaceConfiguration(tree, workspaceConfiguration);
-
-        expect(readJson(tree, 'workspace.json').version).toEqual(2);
-      });
-
-      it('should update properties in nx.json', () => {
-        workspaceConfiguration.npmScope = 'new-npmScope';
-
-        updateWorkspaceConfiguration(tree, workspaceConfiguration);
-
-        expect(readJson(tree, 'nx.json').npmScope).toEqual('new-npmScope');
-      });
-
-      it('should not update unknown properties', () => {
-        workspaceConfiguration['$schema'] = 'schema';
-
-        updateWorkspaceConfiguration(tree, workspaceConfiguration);
-
-        expect(readJson(tree, 'workspace.json').$schema).not.toBeDefined();
-        expect(readJson(tree, 'nx.json').$schema).not.toBeDefined();
-      });
-
-      it('should skip properties that are identical to the extends property', () => {
-        workspaceConfiguration['$schema'] = 'schema';
-
-        updateWorkspaceConfiguration(tree, workspaceConfiguration);
-
-        expect(readJson(tree, 'workspace.json').$schema).not.toBeDefined();
-        expect(readJson(tree, 'nx.json').$schema).not.toBeDefined();
       });
     });
 
@@ -409,73 +343,6 @@ describe('project configuration', () => {
       });
     });
 
-    describe('readWorkspaceConfiguration', () => {
-      it('should read the workspace configuration', () => {
-        const result = readWorkspaceConfiguration(tree);
-        expect(result).toEqual({
-          affected: {
-            defaultBase: 'main',
-          },
-          npmScope: 'proj',
-          tasksRunnerOptions: {
-            default: {
-              options: {
-                cacheableOperations: ['build', 'lint', 'test', 'e2e'],
-              },
-              runner: 'nx/tasks-runners/default',
-            },
-          },
-          version: 2,
-        });
-      });
-    });
-
-    describe('updateWorkspaceConfiguration', () => {
-      let workspaceConfiguration: WorkspaceConfiguration;
-
-      beforeEach(() => {
-        writeJson(tree, 'workspace.json', {
-          version: 2,
-          projects: {},
-        });
-        workspaceConfiguration = readWorkspaceConfiguration(tree);
-      });
-
-      it('should update properties in workspace.json', () => {
-        workspaceConfiguration.version = 1;
-
-        updateWorkspaceConfiguration(tree, workspaceConfiguration);
-
-        expect(readJson(tree, 'workspace.json').version).toEqual(1);
-      });
-
-      it('should update properties in nx.json', () => {
-        workspaceConfiguration.npmScope = 'new-npmScope';
-
-        updateWorkspaceConfiguration(tree, workspaceConfiguration);
-
-        expect(readJson(tree, 'nx.json').npmScope).toEqual('new-npmScope');
-      });
-
-      it('should not update unknown properties', () => {
-        workspaceConfiguration['$schema'] = 'schema';
-
-        updateWorkspaceConfiguration(tree, workspaceConfiguration);
-
-        expect(readJson(tree, 'workspace.json').$schema).not.toBeDefined();
-        expect(readJson(tree, 'nx.json').$schema).not.toBeDefined();
-      });
-
-      it('should skip properties that are identical to the extends property', () => {
-        workspaceConfiguration['$schema'] = 'schema';
-
-        updateWorkspaceConfiguration(tree, workspaceConfiguration);
-
-        expect(readJson(tree, 'workspace.json').$schema).not.toBeDefined();
-        expect(readJson(tree, 'nx.json').$schema).not.toBeDefined();
-      });
-    });
-
     describe('getProjects', () => {
       it('should get a map of projects', () => {
         addProjectConfiguration(tree, 'proj', {
@@ -653,20 +520,6 @@ describe('project configuration', () => {
   describe('for npm workspaces', () => {
     beforeEach(() => {
       tree = createTree();
-    });
-
-    describe('readWorkspaceConfiguration', () => {
-      it('should read project configuration from package.json files', () => {
-        writeJson(tree, 'proj/package.json', {
-          name: 'proj',
-        });
-
-        const workspace = readWorkspaceConfiguration(tree);
-
-        expect(workspace).toEqual({
-          version: 2,
-        });
-      });
     });
 
     describe('readProjectConfiguration', () => {

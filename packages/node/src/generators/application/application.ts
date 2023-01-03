@@ -12,13 +12,11 @@ import {
   offsetFromRoot,
   ProjectConfiguration,
   readProjectConfiguration,
-  readWorkspaceConfiguration,
   TargetConfiguration,
   toJS,
   Tree,
   updateProjectConfiguration,
   updateTsConfigsToJs,
-  updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
 
 import { join } from 'path';

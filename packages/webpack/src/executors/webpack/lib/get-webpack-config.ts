@@ -47,7 +47,8 @@ export function getWebpackConfig(
     projectRoot = overrides.root;
     sourceRoot = overrides.sourceRoot;
   } else {
-    const project = context.workspace.projects[context.projectName];
+    const project =
+      context.projectsConfigurations.projects[context.projectName];
     projectRoot = project.root;
     sourceRoot = project.sourceRoot;
   }

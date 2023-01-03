@@ -51,7 +51,7 @@ describe('updateTsconfig', () => {
           type: 'lib',
           data: {
             root: readProjectConfiguration(tree, 'my-lib').root,
-          },
+          } as any,
         },
       },
       dependencies: {},
@@ -77,7 +77,7 @@ describe('updateTsconfig', () => {
           type: 'lib',
           data: {
             root: readProjectConfiguration(tree, 'my-lib').root,
-          },
+          } as any,
         },
       },
       dependencies: {},
@@ -103,7 +103,7 @@ describe('updateTsconfig', () => {
           type: 'lib',
           data: {
             root: readProjectConfiguration(tree, 'my-lib').root,
-          },
+          } as any,
         },
       },
       dependencies: {},
@@ -129,7 +129,7 @@ describe('updateTsconfig', () => {
           type: 'lib',
           data: {
             root: readProjectConfiguration(tree, 'my-lib').root,
-          },
+          } as any,
         },
       },
       dependencies: {},
@@ -156,7 +156,7 @@ describe('updateTsconfig', () => {
           type: 'lib',
           data: {
             root: readProjectConfiguration(tree, 'my-lib').root,
-          },
+          } as any,
         },
       },
       dependencies: {},
@@ -188,14 +188,14 @@ describe('updateTsconfig', () => {
           type: 'lib',
           data: {
             root: readProjectConfiguration(tree, 'my-lib').root,
-          },
+          } as any,
         },
         'my-lib-nested-lib': {
           name: 'my-lib-nested-lib',
           type: 'lib',
           data: {
             root: readProjectConfiguration(tree, 'my-lib-nested-lib').root,
-          },
+          } as any,
         },
       },
       dependencies: {},

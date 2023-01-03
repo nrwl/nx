@@ -1,9 +1,5 @@
 import type { Tree } from '@nrwl/devkit';
-import {
-  generateFiles,
-  joinPathFragments,
-  readWorkspaceConfiguration,
-} from '@nrwl/devkit';
+import { generateFiles, joinPathFragments, readNxJson } from '@nrwl/devkit';
 import type { Schema } from '../schema';
 import { addRoute } from '../../../utils/nx-devkit/route-utils';
 
@@ -12,7 +8,7 @@ export function addRemoteEntry(
   { appName, routing, mfType, prefix, standalone }: Schema,
   appRoot: string
 ) {
-  prefix = prefix ?? readWorkspaceConfiguration(tree).npmScope;
+  prefix = prefix ?? readNxJson(tree).npmScope;
   generateFiles(
     tree,
     standalone

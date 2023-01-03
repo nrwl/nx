@@ -173,7 +173,7 @@ function registerTSTranspiler() {
 }
 
 function lookupLocalPlugin(importPath: string, root = workspaceRoot) {
-  const workspace = new Workspaces(root).readWorkspaceConfiguration({
+  const workspace = new Workspaces(root).readProjectsConfig({
     _ignorePluginInference: true,
   });
   const plugin = findNxProjectForImportPath(importPath, workspace, root);
@@ -191,7 +191,7 @@ function lookupLocalPlugin(importPath: string, root = workspaceRoot) {
 
 function findNxProjectForImportPath(
   importPath: string,
-  workspace: ProjectsConfigurations,
+  projects: ProjectsConfigurations,
   root = workspaceRoot
 ): string | null {
   const tsConfigPaths: Record<string, string[]> = readTsConfigPaths(root);
@@ -200,7 +200,7 @@ function findNxProjectForImportPath(
   );
   if (possiblePaths?.length) {
     const projectRootMappings =
-      createProjectRootMappingsFromProjectConfigurations(workspace.projects);
+      createProjectRootMappingsFromProjectConfigurations(projects.projects);
     for (const tsConfigPath of possiblePaths) {
       const nxProject = findProjectForPath(tsConfigPath, projectRootMappings);
       if (nxProject) {

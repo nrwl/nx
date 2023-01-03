@@ -16,12 +16,12 @@ describe('ProjectGraphBuilder', () => {
             file: 'source/second.ts',
           },
         ],
-      },
+      } as any,
     });
     builder.addNode({
       name: 'target',
       type: 'lib',
-      data: {},
+      data: {} as any,
     });
   });
 
@@ -118,7 +118,7 @@ describe('ProjectGraphBuilder', () => {
     builder.addNode({
       name: 'target2',
       type: 'lib',
-      data: {},
+      data: {} as any,
     });
     builder.addImplicitDependency('source', 'target');
     builder.addExplicitDependency('source', 'source/index.ts', 'target');

@@ -60,7 +60,6 @@ export { Workspaces } from 'nx/src/config/workspaces';
 
 // TODO (v16): Change this to export from 'nx/src/config/configuration'
 export {
-  readNxJson,
   readAllWorkspaceConfiguration,
   workspaceLayout,
 } from 'nx/src/project-graph/file-utils';
@@ -145,6 +144,8 @@ export {
   updateWorkspaceConfiguration,
   getProjects,
   isStandaloneProject,
+  readNxJson,
+  updateNxJson,
 } from 'nx/src/generators/utils/project-configuration';
 
 /**

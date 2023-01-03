@@ -2,8 +2,8 @@ import type { Tree } from '@nrwl/devkit';
 import {
   createProjectGraphAsync,
   joinPathFragments,
+  readNxJson,
   readProjectConfiguration,
-  readWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import type { NormalizedSchema, Schema } from '../schema';
 import {
@@ -27,7 +27,7 @@ export async function normalizeOptions(
   const project =
     options.project ??
     (await findProjectFromOptions(options)) ??
-    readWorkspaceConfiguration(tree).defaultProject;
+    readNxJson(tree).defaultProject;
 
   if (!project) {
     // path is hidden, so if not provided we don't suggest setting it

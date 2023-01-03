@@ -41,7 +41,7 @@ async function initializeNgPackagr(
     const remappedTsConfigFilePath = createTmpTsConfig(
       options.tsConfig,
       context.root,
-      context.workspace.projects[context.projectName].root,
+      context.projectsConfigurations.projects[context.projectName].root,
       projectDependencies
     );
     const tsConfig = await parseRemappedTsConfigAndMergeDefaults(

@@ -4,10 +4,10 @@ import {
   getProjects,
   joinPathFragments,
   readJson,
-  readWorkspaceConfiguration,
+  readNxJson,
   updateJson,
+  updateNxJson,
   updateProjectConfiguration,
-  updateWorkspaceConfiguration,
   writeJson,
 } from '@nrwl/devkit';
 import { Linter, lintInitGenerator } from '@nrwl/linter';
@@ -42,7 +42,11 @@ export function validateWorkspace(tree: Tree): void {
   - ${errors.join('\n  ')}`);
 }
 
-export function createNxJson(tree: Tree, options: GeneratorOptions): void {
+export function createNxJson(
+  tree: Tree,
+  options: GeneratorOptions,
+  defaultProject: string | undefined
+): void {
   const { npmScope } = options;
 
   const targets = getWorkspaceCommonTargets(tree);
@@ -101,6 +105,7 @@ export function createNxJson(tree: Tree, options: GeneratorOptions): void {
           }
         : undefined,
     },
+    defaultProject,
   });
 }
 
@@ -163,12 +168,12 @@ export function decorateAngularCli(tree: Tree): void {
 }
 
 export function updateWorkspaceConfigDefaults(tree: Tree): void {
-  const workspaceConfig = readWorkspaceConfiguration(tree);
-  delete (workspaceConfig as any).newProjectRoot;
-  if (workspaceConfig.cli) {
-    delete (workspaceConfig as any).defaultCollection;
+  const nxJson = readNxJson(tree);
+  delete (nxJson as any).newProjectRoot;
+  if (nxJson.cli) {
+    delete (nxJson as any).defaultCollection;
   }
-  updateWorkspaceConfiguration(tree, workspaceConfig);
+  updateNxJson(tree, nxJson);
 }
 
 export function updateRootTsConfig(tree: Tree): void {

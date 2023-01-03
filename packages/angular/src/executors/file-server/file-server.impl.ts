@@ -61,7 +61,8 @@ function getBuildTargetOutputPath(options: Schema, context: ExecutorContext) {
   try {
     const [project, target, config] = options.buildTarget.split(':');
 
-    const buildTarget = context.workspace.projects[project].targets[target];
+    const buildTarget =
+      context.projectsConfigurations.projects[project].targets[target];
     buildOptions = config
       ? { ...buildTarget.options, ...buildTarget.configurations[config] }
       : buildTarget.options;

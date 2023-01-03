@@ -159,20 +159,6 @@ describe('convert-to-nx-project', () => {
     expect(json.projects.lib).toEqual(config.root);
   });
 
-  it('should error in v1 schema with workspace.json', async () => {
-    const tree = createTreeWithEmptyV1Workspace();
-    await libraryGenerator(tree, {
-      name: 'lib',
-      standaloneConfig: false,
-    });
-    try {
-      await convertToNxProject(tree, { project: 'lib' });
-    } catch (ex) {
-      expect(ex).toBeDefined();
-    }
-    expect.assertions(1);
-  });
-
   it('should format files by default', async () => {
     jest.spyOn(devkit, 'formatFiles');
 

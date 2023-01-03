@@ -50,7 +50,8 @@ export function buildEsbuildOptions(
     ? [options.main, ...options.additionalEntryPoints]
     : [options.main];
   if (!options.bundle) {
-    const projectRoot = context.workspace.projects[context.projectName].root;
+    const projectRoot =
+      context.projectsConfigurations.projects[context.projectName].root;
     const tsconfig = readJsonFile(path.join(context.root, options.tsConfig));
     const matchedFiles = glob
       .sync(tsconfig.include ?? [], {

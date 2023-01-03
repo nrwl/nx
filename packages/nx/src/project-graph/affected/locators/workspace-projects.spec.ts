@@ -202,7 +202,7 @@ describe('extractGlobalFilesFromInputs', () => {
               },
             },
           },
-        },
+        } as any,
       }
     );
     expect(globalFiles).toEqual(['global1.txt', 'global2.txt', 'global3.txt']);
@@ -217,7 +217,7 @@ function buildProjectGraphNodes(
       ([name, config]): [string, ProjectGraphProjectNode] => [
         name,
         {
-          data: config,
+          data: config as any,
           name,
           type: config.projectType === 'application' ? 'app' : 'lib',
         },

@@ -1,14 +1,13 @@
 import {
-  getProjects,
+  getWorkspacePath,
   readJson,
+  readNxJson,
   readProjectConfiguration,
-  readWorkspaceConfiguration,
   Tree,
-  updateWorkspaceConfiguration,
+  updateNxJson,
   writeJson,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
-import { getWorkspacePath } from '@nrwl/devkit';
 import { npmPackageGenerator } from './npm-package';
 
 describe('@nrwl/workspace:npm-package', () => {
@@ -16,12 +15,12 @@ describe('@nrwl/workspace:npm-package', () => {
   beforeEach(() => {
     tree = createTreeWithEmptyV1Workspace();
 
-    const workspaceConfig = readWorkspaceConfiguration(tree);
-    workspaceConfig.workspaceLayout = {
+    const nxJson = readNxJson(tree);
+    nxJson.workspaceLayout = {
       appsDir: 'packages',
       libsDir: 'packages',
     };
-    updateWorkspaceConfiguration(tree, workspaceConfig);
+    updateNxJson(tree, nxJson);
   });
 
   it('should generate a minimal package', async () => {

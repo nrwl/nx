@@ -1,12 +1,7 @@
-import {
-  formatFiles,
-  readWorkspaceConfiguration,
-  Tree,
-  updateWorkspaceConfiguration,
-} from '@nrwl/devkit';
+import { formatFiles, readNxJson, Tree, updateNxJson } from '@nrwl/devkit';
 
 export async function setParallelDefault(host: Tree) {
-  const config = readWorkspaceConfiguration(host);
+  const config = readNxJson(host);
   const defaultTaskRunnerOptions =
     config.tasksRunnerOptions?.['default']?.options;
   if (defaultTaskRunnerOptions) {
@@ -17,7 +12,7 @@ export async function setParallelDefault(host: Tree) {
     } else {
       defaultTaskRunnerOptions.parallel = 1;
     }
-    updateWorkspaceConfiguration(host, config);
+    updateNxJson(host, config);
   }
   await formatFiles(host);
 }

@@ -2,8 +2,8 @@ import type { Tree } from '@nrwl/devkit';
 import {
   formatFiles,
   normalizePath,
+  readNxJson,
   readProjectConfiguration,
-  readWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { exportScam } from '../utils/export-scam';
@@ -41,8 +41,7 @@ function checkPathUnderProjectRoot(tree: Tree, options: Partial<Schema>) {
     return;
   }
 
-  const project =
-    options.project ?? readWorkspaceConfiguration(tree).defaultProject;
+  const project = options.project ?? readNxJson(tree).defaultProject;
   const { root } = readProjectConfiguration(tree, project);
 
   let pathToPipe = normalizePath(options.path);

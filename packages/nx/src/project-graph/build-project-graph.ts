@@ -35,19 +35,19 @@ import {
   ProjectConfiguration,
   ProjectsConfigurations,
 } from '../config/workspace-json-project-json';
-import {
-  readAllWorkspaceConfiguration,
-  readNxJson,
-} from '../config/configuration';
+import { readNxJson } from '../config/configuration';
 import {
   lockFileExists,
   lockFileHash,
   mapLockFileDataToPartialGraph,
   parseLockFile,
 } from '../lock-file/lock-file';
+import { Workspaces } from '../config/workspaces';
 
 export async function buildProjectGraph() {
-  const projectConfigurations = readAllWorkspaceConfiguration();
+  const projectConfigurations = new Workspaces(
+    workspaceRoot
+  ).readProjectsConfig();
   const { projectFileMap, allWorkspaceFiles } = createProjectFileMap(
     projectConfigurations,
     defaultFileHasher.allFileData()

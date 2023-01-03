@@ -14,7 +14,8 @@ export default async function* buildAndroidExecutor(
   options: ReactNativeBuildOptions,
   context: ExecutorContext
 ): AsyncGenerator<ReactNativeBuildOutput> {
-  const projectRoot = context.workspace.projects[context.projectName].root;
+  const projectRoot =
+    context.projectsConfigurations.projects[context.projectName].root;
   ensureNodeModulesSymlink(context.root, projectRoot);
   chmodSync(join(projectRoot, 'android', 'gradlew'), 0o775);
   chmodSync(join(projectRoot, 'android', 'gradlew.bat'), 0o775);

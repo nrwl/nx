@@ -1,9 +1,5 @@
 import type { Tree } from '@nrwl/devkit';
-import {
-  readWorkspaceConfiguration,
-  updateJson,
-  updateWorkspaceConfiguration,
-} from '@nrwl/devkit';
+import { readNxJson, updateJson, updateNxJson } from '@nrwl/devkit';
 import { NormalizedSchema } from './normalized-schema';
 
 /**
@@ -19,16 +15,16 @@ export function enableStrictTypeChecking(
 export function setLibraryStrictDefault(host: Tree, isStrict: boolean) {
   // set the default so future libraries use it
   // unless the user has previously set this value
-  const workspace = readWorkspaceConfiguration(host);
+  const nxJson = readNxJson(host);
 
-  workspace.generators = workspace.generators || {};
+  nxJson.generators = nxJson.generators || {};
 
-  workspace.generators['@nrwl/angular:library'] =
-    workspace.generators['@nrwl/angular:library'] || {};
+  nxJson.generators['@nrwl/angular:library'] =
+    nxJson.generators['@nrwl/angular:library'] || {};
 
-  workspace.generators['@nrwl/angular:library'].strict =
-    workspace.generators['@nrwl/angular:library'].strict ?? isStrict;
-  updateWorkspaceConfiguration(host, workspace);
+  nxJson.generators['@nrwl/angular:library'].strict =
+    nxJson.generators['@nrwl/angular:library'].strict ?? isStrict;
+  updateNxJson(host, nxJson);
 }
 
 function updateTsConfig(
@@ -36,7 +32,7 @@ function updateTsConfig(
   options: NormalizedSchema['libraryOptions']
 ) {
   // Update the settings in the tsconfig.app.json to enable strict type checking.
-  // This matches the settings defined by the Angular CLI https://angular.io/guide/strict-mode
+  // This matches the settings defined by the Angular CL https://angular.io/guide/strict-mode
   updateJson(host, `${options.projectRoot}/tsconfig.json`, (json) => {
     // update the TypeScript settings
     json.compilerOptions = {

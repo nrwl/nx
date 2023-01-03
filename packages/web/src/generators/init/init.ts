@@ -4,11 +4,8 @@ import {
   convertNxGenerator,
   formatFiles,
   GeneratorCallback,
-  readWorkspaceConfiguration,
   removeDependenciesFromPackageJson,
   Tree,
-  updateWorkspaceConfiguration,
-  writeJson,
 } from '@nrwl/devkit';
 import { jestInitGenerator } from '@nrwl/jest';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';

@@ -231,7 +231,7 @@ class TaskHasher {
         task.target.target
       ];
       const { selfInputs, depsInputs } = splitInputsIntoSelfAndDependencies(
-        targetData.inputs || targetDefaults?.inputs || DEFAULT_INPUTS,
+        targetData.inputs || targetDefaults?.inputs || (DEFAULT_INPUTS as any),
         namedInputs
       );
 

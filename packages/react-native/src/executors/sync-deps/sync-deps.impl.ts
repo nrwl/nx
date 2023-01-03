@@ -20,7 +20,8 @@ export default async function* syncDepsExecutor(
   options: ReactNativeSyncDepsOptions,
   context: ExecutorContext
 ): AsyncGenerator<ReactNativeSyncDepsOutput> {
-  const projectRoot = context.workspace.projects[context.projectName].root;
+  const projectRoot =
+    context.projectsConfigurations.projects[context.projectName].root;
   displayNewlyAddedDepsMessage(
     context.projectName,
     await syncDeps(

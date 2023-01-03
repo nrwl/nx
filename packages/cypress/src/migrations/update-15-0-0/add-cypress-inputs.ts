@@ -1,22 +1,15 @@
-import {
-  formatFiles,
-  readWorkspaceConfiguration,
-  Tree,
-  updateWorkspaceConfiguration,
-} from '@nrwl/devkit';
+import { formatFiles, readNxJson, Tree, updateNxJson } from '@nrwl/devkit';
 import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
 import { CypressExecutorOptions } from '@nrwl/cypress/src/executors/cypress/cypress.impl';
 
 export default async function (tree: Tree) {
-  const workspaceConfiguration = readWorkspaceConfiguration(tree);
+  const nxJson = readNxJson(tree);
 
   const { cypressTargets, hasComponentTesting } = getCypressTargetNames(tree);
-  const hasProductionFileset = !!workspaceConfiguration.namedInputs?.production;
+  const hasProductionFileset = !!nxJson.namedInputs?.production;
 
   if (hasComponentTesting && hasProductionFileset && cypressTargets.size > 0) {
-    const productionFileset = new Set(
-      workspaceConfiguration.namedInputs.production
-    );
+    const productionFileset = new Set(nxJson.namedInputs.production);
     for (const exclusion of [
       '!{projectRoot}/cypress/**/*',
       '!{projectRoot}/**/*.cy.[jt]s?(x)',
@@ -24,15 +17,12 @@ export default async function (tree: Tree) {
     ]) {
       productionFileset.add(exclusion);
     }
-    workspaceConfiguration.namedInputs.production =
-      Array.from(productionFileset);
+    nxJson.namedInputs.production = Array.from(productionFileset);
   }
 
   for (const targetName of cypressTargets) {
-    workspaceConfiguration.targetDefaults ??= {};
-    const cypressTargetDefaults = (workspaceConfiguration.targetDefaults[
-      targetName
-    ] ??= {});
+    nxJson.targetDefaults ??= {};
+    const cypressTargetDefaults = (nxJson.targetDefaults[targetName] ??= {});
 
     cypressTargetDefaults.inputs ??= [
       'default',
@@ -40,7 +30,7 @@ export default async function (tree: Tree) {
     ];
   }
 
-  updateWorkspaceConfiguration(tree, workspaceConfiguration);
+  updateNxJson(tree, nxJson);
 
   await formatFiles(tree);
 }

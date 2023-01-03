@@ -119,7 +119,7 @@ export function getTargetProjectBasedOnRelativeImport(
   projectGraph: ProjectGraph,
   projectRootMappings: ProjectRootMappings,
   sourceFilePath: string
-): ProjectGraphProjectNode<any> | undefined {
+): ProjectGraphProjectNode | undefined {
   if (!isRelative(imp)) {
     return undefined;
   }

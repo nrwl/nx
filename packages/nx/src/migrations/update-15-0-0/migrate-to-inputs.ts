@@ -2,9 +2,9 @@ import { Tree } from '../../generators/tree';
 import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
 import {
   getProjects,
-  readWorkspaceConfiguration,
+  readNxJson,
+  updateNxJson,
   updateProjectConfiguration,
-  updateWorkspaceConfiguration,
 } from '../../generators/utils/project-configuration';
 import { joinPathFragments } from '../../utils/path';
 import { join } from 'path';
@@ -28,47 +28,41 @@ export default async function (tree: Tree) {
     return;
   }
 
-  const workspaceConfiguration = readWorkspaceConfiguration(tree);
+  const nxJson = readNxJson(tree);
 
   // If this is a npm workspace, don't make any changes
-  if (workspaceConfiguration.extends === 'nx/presets/npm.json') {
+  if (nxJson.extends === 'nx/presets/npm.json') {
     return;
   }
 
-  workspaceConfiguration.namedInputs ??= {
+  nxJson.namedInputs ??= {
     default: ['{projectRoot}/**/*', 'sharedGlobals'],
     sharedGlobals: [],
     production: ['default'],
   };
 
   if (isBuildATarget(tree)) {
-    workspaceConfiguration.targetDefaults ??= {};
-    workspaceConfiguration.targetDefaults.build ??= {};
-    workspaceConfiguration.targetDefaults.build.inputs ??= [
-      'production',
-      '^production',
-    ];
+    nxJson.targetDefaults ??= {};
+    nxJson.targetDefaults.build ??= {};
+    nxJson.targetDefaults.build.inputs ??= ['production', '^production'];
   }
 
-  if (workspaceConfiguration.implicitDependencies) {
+  if (nxJson.implicitDependencies) {
     const projects = getProjects(tree);
 
     for (const [files, dependents] of Object.entries(
-      workspaceConfiguration.implicitDependencies
+      nxJson.implicitDependencies
     )) {
       // Skip these because other plugins take care of them
       if (skippedFiles.includes(files)) {
         continue;
       } else if (Array.isArray(dependents)) {
-        workspaceConfiguration.namedInputs.projectSpecificFiles = [];
+        nxJson.namedInputs.projectSpecificFiles = [];
         const defaultFileset = new Set(
-          workspaceConfiguration.namedInputs.default ?? [
-            '{projectRoot}/**/*',
-            'sharedGlobals',
-          ]
+          nxJson.namedInputs.default ?? ['{projectRoot}/**/*', 'sharedGlobals']
         );
         defaultFileset.add('projectSpecificFiles');
-        workspaceConfiguration.namedInputs.default = Array.from(defaultFileset);
+        nxJson.namedInputs.default = Array.from(defaultFileset);
 
         for (const dependent of dependents) {
           const project = projects.get(dependent);
@@ -103,15 +97,15 @@ export default async function (tree: Tree) {
           }
         }
       } else {
-        workspaceConfiguration.namedInputs.sharedGlobals.push(
+        nxJson.namedInputs.sharedGlobals.push(
           joinPathFragments('{workspaceRoot}', files)
         );
       }
     }
-    delete workspaceConfiguration.implicitDependencies;
+    delete nxJson.implicitDependencies;
   }
 
-  updateWorkspaceConfiguration(tree, workspaceConfiguration);
+  updateNxJson(tree, nxJson);
 
   await formatChangedFilesWithPrettierIfAvailable(tree);
 }

@@ -137,7 +137,7 @@ export default createESLintRule<Options, MessageIds>({
 });
 
 function normalizeOptions(
-  sourceProject: ProjectGraphProjectNode<{}>,
+  sourceProject: ProjectGraphProjectNode,
   options: Options[0]
 ): Options[0] {
   const base = { ...DEFAULT_OPTIONS, ...options };

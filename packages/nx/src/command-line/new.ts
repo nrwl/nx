@@ -23,6 +23,7 @@ export async function newWorkspace(cwd: string, args: { [k: string]: any }) {
       '@nrwl/workspace/generators.json',
       normalizedGeneratorName,
       null,
+      null,
       schema,
       isInteractive,
       null,

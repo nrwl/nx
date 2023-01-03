@@ -43,7 +43,7 @@ describe('Build storybook', () => {
       cwd: '/root',
       projectName: 'proj',
       targetName: 'storybook',
-      workspace: {
+      projectsConfigurations: {
         version: 2,
         projects: {
           proj: {
@@ -76,6 +76,8 @@ describe('Build storybook', () => {
             },
           },
         },
+      },
+      nxJsonConfiguration: {
         npmScope: 'test',
       },
       isVerbose: false,

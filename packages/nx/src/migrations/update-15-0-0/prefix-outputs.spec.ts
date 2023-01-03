@@ -5,9 +5,9 @@ import {
 import type { Tree } from '../../generators/tree';
 import {
   addProjectConfiguration,
+  readNxJson,
   readProjectConfiguration,
-  readWorkspaceConfiguration,
-  updateWorkspaceConfiguration,
+  updateNxJson,
 } from '../../generators/utils/project-configuration';
 import { readJson, writeJson } from '../../generators/utils/json';
 import prefixOutputs from './prefix-outputs';
@@ -58,9 +58,9 @@ describe('15.0.0 migration (prefix-outputs)', () => {
   });
 
   it('should prefix target default outputs', async () => {
-    const workspace = readWorkspaceConfiguration(tree);
-    updateWorkspaceConfiguration(tree, {
-      ...workspace,
+    const nxJson = readNxJson(tree);
+    updateNxJson(tree, {
+      ...nxJson,
       targetDefaults: {
         build: {
           outputs: ['dist', '{projectRoot}/build', '{options.outputPath}'],
@@ -70,7 +70,7 @@ describe('15.0.0 migration (prefix-outputs)', () => {
 
     await prefixOutputs(tree);
 
-    const updated = readWorkspaceConfiguration(tree);
+    const updated = readNxJson(tree);
 
     expect(updated.targetDefaults).toMatchInlineSnapshot(`
       Object {

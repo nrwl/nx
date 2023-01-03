@@ -12,6 +12,7 @@ import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
 } from '../../project-graph/project-graph';
+import { readNxJson } from '../../config/configuration';
 
 function getBatchExecutor(executorName: string) {
   const workspace = new Workspaces(workspaceRoot);
@@ -22,19 +23,23 @@ function getBatchExecutor(executorName: string) {
 async function runTasks(executorName: string, taskGraph: TaskGraph) {
   const input: Record<string, any> = {};
   const projectGraph = await createProjectGraphAsync();
-  const workspaceConfig =
+  const projectsConfigurations =
     readProjectsConfigurationFromProjectGraph(projectGraph);
+  const nxJsonConfiguration = readNxJson();
   const batchExecutor = getBatchExecutor(executorName);
   const tasks = Object.values(taskGraph.tasks);
   const context: ExecutorContext = {
     root: workspaceRoot,
     cwd: process.cwd(),
-    workspace: workspaceConfig,
+    projectsConfigurations,
+    nxJsonConfiguration,
+    workspace: { ...projectsConfigurations, ...nxJsonConfiguration },
     isVerbose: false,
     projectGraph,
   };
   for (const task of tasks) {
-    const projectConfiguration = workspaceConfig.projects[task.target.project];
+    const projectConfiguration =
+      projectsConfigurations.projects[task.target.project];
     const targetConfiguration =
       projectConfiguration.targets[task.target.target];
     input[task.id] = combineOptionsForExecutor(

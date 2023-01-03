@@ -107,7 +107,9 @@ export function TaskList({
   children,
 }: TaskListProps) {
   const filteredProjects = projects
-    .filter((project) => project.data.targets.hasOwnProperty(selectedTarget))
+    .filter((project) =>
+      (project.data as any).targets.hasOwnProperty(selectedTarget)
+    )
     .sort((a, b) => a.name.localeCompare(b.name));
 
   const appProjects = getProjectsByType('app', filteredProjects);

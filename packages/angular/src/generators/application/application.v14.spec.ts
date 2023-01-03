@@ -5,8 +5,8 @@ import {
   NxJsonConfiguration,
   parseJson,
   readJson,
+  readNxJson,
   readProjectConfiguration,
-  readWorkspaceConfiguration,
   updateJson,
 } from '@nrwl/devkit';
 import {
@@ -216,15 +216,15 @@ describe('app', () => {
 
     it('should not overwrite default project if already set', async () => {
       // ARRANGE
-      const workspace = readWorkspaceConfiguration(appTree);
-      workspace.defaultProject = 'some-awesome-project';
-      devkit.updateWorkspaceConfiguration(appTree, workspace);
+      const nxJson = readNxJson(appTree);
+      nxJson.defaultProject = 'some-awesome-project';
+      devkit.updateNxJson(appTree, nxJson);
 
       // ACT
       await generateApp(appTree);
 
       // ASSERT
-      const { defaultProject } = readWorkspaceConfiguration(appTree);
+      const { defaultProject } = readNxJson(appTree);
       expect(defaultProject).toBe('some-awesome-project');
     });
   });

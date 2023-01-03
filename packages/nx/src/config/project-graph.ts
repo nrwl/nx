@@ -1,5 +1,5 @@
 import type {
-  TargetConfiguration,
+  ProjectConfiguration,
   Workspace,
 } from './workspace-json-project-json';
 import { InputDefinition } from './workspace-json-project-json';
@@ -25,8 +25,8 @@ export interface ProjectFileMap {
 /**
  * A Graph of projects in the workspace and dependencies between them
  */
-export interface ProjectGraph<T = any> {
-  nodes: Record<string, ProjectGraphProjectNode<T>>;
+export interface ProjectGraph {
+  nodes: Record<string, ProjectGraphProjectNode>;
   externalNodes?: Record<string, ProjectGraphExternalNode>;
   dependencies: Record<string, ProjectGraphDependency[]>;
   // this is optional otherwise it might break folks who use project graph creation
@@ -35,7 +35,7 @@ export interface ProjectGraph<T = any> {
 }
 
 export interface ProjectGraphV4<T = any> {
-  nodes: Record<string, ProjectGraphNode<T>>;
+  nodes: Record<string, ProjectGraphNode>;
   dependencies: Record<string, ProjectGraphDependency[]>;
   // this is optional otherwise it might break folks who use project graph creation
   allWorkspaceFiles?: FileData[];
@@ -63,41 +63,20 @@ export enum DependencyType {
 /**
  * A node describing a project or an external node in a workspace
  */
-export type ProjectGraphNode<T = any> =
-  | ProjectGraphProjectNode<T>
+export type ProjectGraphNode =
+  | ProjectGraphProjectNode
   | ProjectGraphExternalNode;
 
 /**
  * A node describing a project in a workspace
  */
-export interface ProjectGraphProjectNode<T = any> {
+export interface ProjectGraphProjectNode {
   type: 'app' | 'e2e' | 'lib';
   name: string;
   /**
    * Additional metadata about a project
    */
-  data: T & {
-    /**
-     * The project's root directory
-     */
-    root: string;
-    sourceRoot?: string;
-    /**
-     * Named inputs associated with a project
-     */
-    namedInputs?: { [inputName: string]: (string | InputDefinition)[] };
-    /**
-     * Targets associated to the project
-     */
-    targets?: { [targetName: string]: TargetConfiguration };
-    /**
-     * Project's tags used for enforcing module boundaries
-     */
-    tags?: string[];
-    /**
-     * Projects on which this node implicitly depends on
-     */
-    implicitDependencies?: string[];
+  data: ProjectConfiguration & {
     /**
      * Files associated to the project
      */

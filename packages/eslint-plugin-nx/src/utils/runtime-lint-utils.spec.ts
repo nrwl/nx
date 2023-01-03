@@ -17,7 +17,7 @@ describe('hasBannedImport', () => {
     name: 'aLib',
     data: {
       tags: ['a'],
-    },
+    } as any,
   };
 
   const target: ProjectGraphExternalNode = {
@@ -104,7 +104,7 @@ describe('dependentsHaveBannedImport + findTransitiveExternalDependencies', () =
     name: 'aLib',
     data: {
       tags: ['a'],
-    },
+    } as any,
   };
 
   const target: ProjectGraphProjectNode = {
@@ -112,7 +112,7 @@ describe('dependentsHaveBannedImport + findTransitiveExternalDependencies', () =
     name: 'bLib',
     data: {
       tags: ['b'],
-    },
+    } as any,
   };
 
   const c: ProjectGraphProjectNode = {
@@ -120,7 +120,7 @@ describe('dependentsHaveBannedImport + findTransitiveExternalDependencies', () =
     name: 'cLib',
     data: {
       tags: ['c'],
-    },
+    } as any,
   };
 
   const d: ProjectGraphProjectNode = {
@@ -128,7 +128,7 @@ describe('dependentsHaveBannedImport + findTransitiveExternalDependencies', () =
     name: 'dLib',
     data: {
       tags: ['d'],
-    },
+    } as any,
   };
 
   const bannedTarget: ProjectGraphExternalNode = {

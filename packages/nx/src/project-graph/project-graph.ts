@@ -16,7 +16,7 @@ import { daemonClient } from '../daemon/client/client';
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
  * @throws {Error} if there is no cached ProjectGraph to read from
  */
-export function readCachedProjectGraph(): ProjectGraph<ProjectConfiguration> {
+export function readCachedProjectGraph(): ProjectGraph {
   const projectGraphCache: ProjectGraphCache | false = readCache();
   const angularSpecificError =
     workspaceFileName() === 'angular.json'
@@ -61,7 +61,7 @@ export function readCachedProjectConfiguration(
 }
 
 export function readProjectsConfigurationFromProjectGraph(
-  projectGraph: ProjectGraph<ProjectConfiguration>
+  projectGraph: ProjectGraph
 ): ProjectsConfigurations {
   return {
     projects: Object.fromEntries(

@@ -79,7 +79,7 @@ function readScriptArgV(args: Record<string, string[]>) {
 }
 
 function getScriptDefinition(
-  project: ProjectGraphProjectNode<ProjectConfiguration>,
+  project: ProjectGraphProjectNode,
   targetName: string
 ): PackageJson['scripts'][string] {
   const scriptDefinition = readJsonFile<PackageJson>(
@@ -100,10 +100,7 @@ function getScriptDefinition(
   return scriptDefinition;
 }
 
-function ensureNxTarget(
-  project: ProjectGraphProjectNode<ProjectConfiguration>,
-  targetName: string
-) {
+function ensureNxTarget(project: ProjectGraphProjectNode, targetName: string) {
   if (!project.data.targets[targetName]) {
     output.error({
       title: `Nx cannot find a target called "${targetName}" for ${project.name}`,
@@ -119,7 +116,8 @@ function getProject(projectGraph: ProjectGraph) {
   const projectName = calculateDefaultProjectName(
     process.cwd(),
     workspaceRoot,
-    readProjectsConfigurationFromProjectGraph(projectGraph)
+    readProjectsConfigurationFromProjectGraph(projectGraph),
+    readNxJson()
   );
 
   if (!projectName) {
@@ -133,8 +131,7 @@ function getProject(projectGraph: ProjectGraph) {
     process.exit(1);
   }
 
-  const project: ProjectGraphProjectNode<ProjectConfiguration> =
-    projectGraph.nodes[projectName];
+  const project: ProjectGraphProjectNode = projectGraph.nodes[projectName];
 
   return { projectName, project };
 }

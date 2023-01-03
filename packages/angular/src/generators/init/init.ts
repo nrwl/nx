@@ -4,9 +4,9 @@ import {
   formatFiles,
   GeneratorCallback,
   logger,
-  readWorkspaceConfiguration,
+  readNxJson,
   Tree,
-  updateWorkspaceConfiguration,
+  updateNxJson,
 } from '@nrwl/devkit';
 import { jestInitGenerator } from '@nrwl/jest';
 import { Linter } from '@nrwl/linter';
@@ -75,27 +75,27 @@ function normalizeOptions(options: Schema): Required<Schema> {
 }
 
 function setDefaults(host: Tree, options: Schema) {
-  const workspace = readWorkspaceConfiguration(host);
+  const nxJson = readNxJson(host);
 
-  workspace.generators = workspace.generators || {};
-  workspace.generators['@nrwl/angular:application'] = {
+  nxJson.generators = nxJson.generators || {};
+  nxJson.generators['@nrwl/angular:application'] = {
     style: options.style,
     linter: options.linter,
     unitTestRunner: options.unitTestRunner,
     e2eTestRunner: options.e2eTestRunner,
-    ...(workspace.generators['@nrwl/angular:application'] || {}),
+    ...(nxJson.generators['@nrwl/angular:application'] || {}),
   };
-  workspace.generators['@nrwl/angular:library'] = {
+  nxJson.generators['@nrwl/angular:library'] = {
     linter: options.linter,
     unitTestRunner: options.unitTestRunner,
-    ...(workspace.generators['@nrwl/angular:library'] || {}),
+    ...(nxJson.generators['@nrwl/angular:library'] || {}),
   };
-  workspace.generators['@nrwl/angular:component'] = {
+  nxJson.generators['@nrwl/angular:component'] = {
     style: options.style,
-    ...(workspace.generators['@nrwl/angular:component'] || {}),
+    ...(nxJson.generators['@nrwl/angular:component'] || {}),
   };
 
-  updateWorkspaceConfiguration(host, workspace);
+  updateNxJson(host, nxJson);
 }
 
 function updateDependencies(host: Tree): GeneratorCallback {

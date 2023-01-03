@@ -1,11 +1,8 @@
 import {
   formatFiles,
   readProjectConfiguration,
-  readWorkspaceConfiguration,
-  TargetConfiguration,
   Tree,
   updateProjectConfiguration,
-  updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
 

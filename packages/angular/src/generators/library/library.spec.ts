@@ -1408,7 +1408,7 @@ describe('lib', () => {
             type: 'lib',
             data: {
               root: 'libs/my-lib',
-            },
+            } as any,
           },
         },
         dependencies: {},

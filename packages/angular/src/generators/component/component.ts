@@ -2,8 +2,8 @@ import type { Tree } from '@nrwl/devkit';
 import {
   formatFiles,
   normalizePath,
+  readNxJson,
   readProjectConfiguration,
-  readWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { pathStartsWith } from '../utils/path';
@@ -33,8 +33,7 @@ function checkPathUnderProjectRoot(tree: Tree, schema: NormalizedSchema): void {
     return;
   }
 
-  const project =
-    schema.project ?? readWorkspaceConfiguration(tree).defaultProject;
+  const project = schema.project ?? readNxJson(tree).defaultProject;
   const { root } = readProjectConfiguration(tree, project);
 
   let pathToComponent = normalizePath(schema.path);

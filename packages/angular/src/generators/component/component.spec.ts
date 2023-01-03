@@ -436,7 +436,11 @@ describe('component Generator', () => {
       );
       projectGraph = {
         nodes: {
-          lib1: { name: 'lib1', type: 'lib', data: { root: 'libs/lib1' } },
+          lib1: {
+            name: 'lib1',
+            type: 'lib',
+            data: { root: 'libs/lib1' } as any,
+          },
         },
         dependencies: {},
       };

@@ -5,13 +5,13 @@ import {
 import type { Tree } from '../../generators/tree';
 import {
   addProjectConfiguration,
+  readNxJson,
   readProjectConfiguration,
-  readWorkspaceConfiguration,
-  updateWorkspaceConfiguration,
-  WorkspaceConfiguration,
+  updateNxJson,
 } from '../../generators/utils/project-configuration';
 import { readJson, writeJson } from '../../generators/utils/json';
 import migrateToInputs from './migrate-to-inputs';
+import { NxJsonConfiguration } from 'nx/src/config/nx-json';
 
 describe('15.0.0 migration (migrate-to-inputs)', () => {
   let tree: Tree;
@@ -21,8 +21,7 @@ describe('15.0.0 migration (migrate-to-inputs)', () => {
   });
 
   it('should add build inputs configuration to inputs', async () => {
-    updateWorkspaceConfiguration(tree, {
-      version: 2,
+    updateNxJson(tree, {
       targetDefaults: {
         build: {
           dependsOn: ['^build'],
@@ -43,7 +42,7 @@ describe('15.0.0 migration (migrate-to-inputs)', () => {
     });
     await migrateToInputs(tree);
 
-    const updated = readWorkspaceConfiguration(tree);
+    const updated = readNxJson(tree);
 
     expect(updated.implicitDependencies).toBeUndefined();
     expect(updated).toMatchInlineSnapshot(`
@@ -69,14 +68,12 @@ describe('15.0.0 migration (migrate-to-inputs)', () => {
             ],
           },
         },
-        "version": 2,
       }
     `);
   });
 
   it('should not add build inputs configuration to inputs', async () => {
-    updateWorkspaceConfiguration(tree, {
-      version: 2,
+    updateNxJson(tree, {
       targetDefaults: {
         prepare: {
           dependsOn: ['^prepare'],
@@ -97,7 +94,7 @@ describe('15.0.0 migration (migrate-to-inputs)', () => {
     });
     await migrateToInputs(tree);
 
-    const updated = readWorkspaceConfiguration(tree);
+    const updated = readNxJson(tree);
 
     expect(updated.implicitDependencies).toBeUndefined();
     expect(updated).toMatchInlineSnapshot(`
@@ -119,21 +116,19 @@ describe('15.0.0 migration (migrate-to-inputs)', () => {
             ],
           },
         },
-        "version": 2,
       }
     `);
   });
 
   it('should add implicitDependencies that affect all projects to sharedGlobals', async () => {
-    updateWorkspaceConfiguration(tree, {
-      version: 2,
+    updateNxJson(tree, {
       implicitDependencies: {
         Jenkinsfile: '*',
       },
     });
     await migrateToInputs(tree);
 
-    const updated = readWorkspaceConfiguration(tree);
+    const updated = readNxJson(tree);
 
     expect(updated.implicitDependencies).toBeUndefined();
     expect(updated.namedInputs.sharedGlobals).toContain(
@@ -142,8 +137,7 @@ describe('15.0.0 migration (migrate-to-inputs)', () => {
   });
 
   it('should not add package.json to filesets', async () => {
-    updateWorkspaceConfiguration(tree, {
-      version: 2,
+    updateNxJson(tree, {
       implicitDependencies: {
         'package.json': {
           dependencies: '*',
@@ -153,15 +147,14 @@ describe('15.0.0 migration (migrate-to-inputs)', () => {
     });
     await migrateToInputs(tree);
 
-    const updated = readWorkspaceConfiguration(tree);
+    const updated = readNxJson(tree);
 
     expect(updated.implicitDependencies).toBeUndefined();
     expect(updated.namedInputs.sharedGlobals).toEqual([]);
   });
 
   it('should handle other .json files', async () => {
-    updateWorkspaceConfiguration(tree, {
-      version: 2,
+    updateNxJson(tree, {
       implicitDependencies: {
         'config.json': {
           important: '*',
@@ -170,7 +163,7 @@ describe('15.0.0 migration (migrate-to-inputs)', () => {
     });
     await migrateToInputs(tree);
 
-    const updated = readWorkspaceConfiguration(tree);
+    const updated = readNxJson(tree);
 
     expect(updated.implicitDependencies).toBeUndefined();
     expect(updated.namedInputs.sharedGlobals).toContain(
@@ -179,8 +172,7 @@ describe('15.0.0 migration (migrate-to-inputs)', () => {
   });
 
   it('should add project specific implicit dependencies to project namedInputs', async () => {
-    updateWorkspaceConfiguration(tree, {
-      version: 2,
+    updateNxJson(tree, {
       implicitDependencies: {
         'tools/scripts/build-app.js': ['app1', 'app2'],
       },
@@ -197,7 +189,7 @@ describe('15.0.0 migration (migrate-to-inputs)', () => {
 
     await migrateToInputs(tree);
 
-    const updated = readWorkspaceConfiguration(tree);
+    const updated = readNxJson(tree);
     expect(updated.implicitDependencies).toBeUndefined();
     expect(updated.namedInputs.projectSpecificFiles).toEqual([]);
     expect(updated.namedInputs.default).toContain('projectSpecificFiles');
@@ -216,8 +208,7 @@ describe('15.0.0 migration (migrate-to-inputs)', () => {
   });
 
   it('should add project specific implicit dependencies to projects with package.json', async () => {
-    updateWorkspaceConfiguration(tree, {
-      version: 2,
+    updateNxJson(tree, {
       implicitDependencies: {
         'tools/scripts/build-app.js': ['app1', 'app2'],
       },
@@ -236,7 +227,7 @@ describe('15.0.0 migration (migrate-to-inputs)', () => {
 
     await migrateToInputs(tree);
 
-    const updated = readWorkspaceConfiguration(tree);
+    const updated = readNxJson(tree);
     expect(updated.implicitDependencies).toBeUndefined();
     expect(updated.namedInputs.projectSpecificFiles).toEqual([]);
     expect(updated.namedInputs.default).toContain('projectSpecificFiles');
@@ -255,8 +246,7 @@ describe('15.0.0 migration (migrate-to-inputs)', () => {
   });
 
   it('should do nothing if there are no implicitDependencies', async () => {
-    const workspace: WorkspaceConfiguration = {
-      version: 2,
+    const nxJson: NxJsonConfiguration = {
       namedInputs: {
         default: ['{projectRoot}/**/*'],
         production: ['default'],
@@ -269,13 +259,13 @@ describe('15.0.0 migration (migrate-to-inputs)', () => {
         },
       },
     };
-    updateWorkspaceConfiguration(tree, workspace);
+    updateNxJson(tree, nxJson);
 
     await migrateToInputs(tree);
 
-    const updated = readWorkspaceConfiguration(tree);
+    const updated = readNxJson(tree);
     expect(updated.implicitDependencies).toBeUndefined();
-    expect(updated).toEqual(workspace);
+    expect(updated).toEqual(nxJson);
   });
 
   it('should not make any changes if there is no nx.json', async () => {
@@ -287,13 +277,13 @@ describe('15.0.0 migration (migrate-to-inputs)', () => {
   });
 
   it('should not make any changes if the workspace extends npm.json', async () => {
-    const workspace = readWorkspaceConfiguration(tree);
+    const workspace = readNxJson(tree);
     workspace.extends = 'nx/presets/npm.json';
-    updateWorkspaceConfiguration(tree, workspace);
+    updateNxJson(tree, workspace);
 
     await migrateToInputs(tree);
 
-    const updatedWorkspace = readWorkspaceConfiguration(tree);
+    const updatedWorkspace = readNxJson(tree);
     expect(updatedWorkspace.namedInputs).not.toBeDefined();
   });
 });
@@ -306,8 +296,7 @@ describe('15.0.0 migration (migrate-to-inputs) (v1)', () => {
   });
 
   it('should add project specific implicit dependencies to project namedInputs', async () => {
-    updateWorkspaceConfiguration(tree, {
-      version: 2,
+    updateNxJson(tree, {
       implicitDependencies: {
         'tools/scripts/build-app.js': ['app1', 'app2'],
       },
@@ -324,7 +313,7 @@ describe('15.0.0 migration (migrate-to-inputs) (v1)', () => {
 
     await migrateToInputs(tree);
 
-    const updated = readWorkspaceConfiguration(tree);
+    const updated = readNxJson(tree);
     expect(updated.implicitDependencies).toBeUndefined();
     expect(updated.namedInputs.projectSpecificFiles).toEqual([]);
     expect(updated.namedInputs.default).toContain('projectSpecificFiles');

@@ -244,6 +244,7 @@ function throwInvalidInvocation(availableGenerators: string[]) {
 function readDefaultCollection(nxConfig: NxJsonConfiguration) {
   return nxConfig.cli ? nxConfig.cli.defaultCollection : null;
 }
+
 export function printGenHelp(
   opts: GenerateOptions,
   schema: Schema,
@@ -272,22 +273,18 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
   const verbose = process.env.NX_VERBOSE_LOGGING === 'true';
 
   const ws = new Workspaces(workspaceRoot);
-  const nxJson = readNxJson();
+  const nxJsonConfiguration = readNxJson();
   const projectGraph = await createProjectGraphAsync({ exitOnError: true });
-  const projectsConfiguration =
+  const projectsConfigurations =
     readProjectsConfigurationFromProjectGraph(projectGraph);
 
-  const workspaceConfiguration = {
-    ...nxJson,
-    ...projectsConfiguration,
-  };
   return handleErrors(verbose, async () => {
     const opts = await convertToGenerateOptions(
       args,
       ws,
-      readDefaultCollection(nxJson),
+      readDefaultCollection(nxJsonConfiguration),
       'generate',
-      projectsConfiguration
+      projectsConfigurations
     );
     if (opts.dryRun) {
       process.env.NX_DRY_RUN = 'true';
@@ -308,10 +305,15 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
       opts.generatorOptions,
       opts.collectionName,
       normalizedGeneratorName,
-      workspaceConfiguration,
+      projectsConfigurations,
+      nxJsonConfiguration,
       schema,
       opts.interactive,
-      ws.calculateDefaultProjectName(cwd, workspaceConfiguration),
+      ws.calculateDefaultProjectName(
+        cwd,
+        projectsConfigurations,
+        nxJsonConfiguration
+      ),
       ws.relativeCwd(cwd),
       verbose
     );

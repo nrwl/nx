@@ -2,9 +2,9 @@ import {
   formatFiles,
   installPackagesTask,
   moveFilesToNewDirectory,
-  readWorkspaceConfiguration,
+  readNxJson,
   Tree,
-  updateWorkspaceConfiguration,
+  updateNxJson,
 } from '@nrwl/devkit';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { convertToNxProjectGenerator } from '@nrwl/workspace/generators';
@@ -123,9 +123,9 @@ export async function applicationGenerator(
   updateEditorTsConfig(tree, options);
 
   if (options.rootProject) {
-    const workspace = readWorkspaceConfiguration(tree);
-    workspace.defaultProject = options.name;
-    updateWorkspaceConfiguration(tree, workspace);
+    const nxJson = readNxJson(tree);
+    nxJson.defaultProject = options.name;
+    updateNxJson(tree, nxJson);
   }
 
   if (options.backendProject) {

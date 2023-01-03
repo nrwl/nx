@@ -18,7 +18,7 @@ export default async function* moduleFederationDevServer(
   context: ExecutorContext
 ) {
   let iter = devServerExecutor(options, context);
-  const p = context.workspace.projects[context.projectName];
+  const p = context.projectsConfigurations.projects[context.projectName];
 
   const moduleFederationConfigPath = join(
     context.root,

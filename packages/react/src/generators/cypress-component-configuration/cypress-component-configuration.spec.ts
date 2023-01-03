@@ -64,14 +64,14 @@ describe('React:CypressComponentTestConfiguration', () => {
           type: 'app',
           data: {
             ...readProjectConfiguration(tree, 'my-app'),
-          },
+          } as any,
         },
         'some-lib': {
           name: 'some-lib',
           type: 'lib',
           data: {
             ...readProjectConfiguration(tree, 'some-lib'),
-          },
+          } as any,
         },
       },
       dependencies: {
@@ -120,14 +120,14 @@ describe('React:CypressComponentTestConfiguration', () => {
           type: 'app',
           data: {
             ...readProjectConfiguration(tree, 'my-app'),
-          },
+          } as any,
         },
         'some-lib': {
           name: 'some-lib',
           type: 'lib',
           data: {
             ...readProjectConfiguration(tree, 'some-lib'),
-          },
+          } as any,
         },
       },
       dependencies: {
@@ -187,14 +187,14 @@ describe('React:CypressComponentTestConfiguration', () => {
           type: 'app',
           data: {
             ...readProjectConfiguration(tree, 'my-app'),
-          },
+          } as any,
         },
         'some-lib': {
           name: 'some-lib',
           type: 'lib',
           data: {
             ...readProjectConfiguration(tree, 'some-lib'),
-          },
+          } as any,
         },
       },
       dependencies: {
@@ -253,14 +253,14 @@ describe('React:CypressComponentTestConfiguration', () => {
           type: 'app',
           data: {
             ...readProjectConfiguration(tree, 'my-app'),
-          },
+          } as any,
         },
         'some-lib': {
           name: 'some-lib',
           type: 'lib',
           data: {
             ...readProjectConfiguration(tree, 'some-lib'),
-          },
+          } as any,
         },
       },
       dependencies: {
@@ -422,14 +422,14 @@ describe('React:CypressComponentTestConfiguration', () => {
           type: 'app',
           data: {
             ...appConfig,
-          },
+          } as any,
         },
         'some-lib': {
           name: 'some-lib',
           type: 'lib',
           data: {
             ...readProjectConfiguration(tree, 'some-lib'),
-          },
+          } as any,
         },
       },
       dependencies: {},

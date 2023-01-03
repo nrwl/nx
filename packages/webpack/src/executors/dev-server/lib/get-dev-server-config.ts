@@ -19,7 +19,7 @@ export function getDevServerConfig(
 ): Partial<WebpackConfiguration> {
   const workspaceRoot = context.root;
   const { root: projectRoot, sourceRoot } =
-    context.workspace.projects[context.projectName];
+    context.projectsConfigurations.projects[context.projectName];
   const webpackConfig = getWebpackConfig(
     context,
     buildOptions,

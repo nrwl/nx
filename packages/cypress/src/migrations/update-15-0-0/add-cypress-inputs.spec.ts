@@ -1,9 +1,9 @@
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import {
-  Tree,
   addProjectConfiguration,
-  readWorkspaceConfiguration,
-  updateWorkspaceConfiguration,
+  readNxJson,
+  Tree,
+  updateNxJson,
 } from '@nrwl/devkit';
 import addCypressInputs from './add-cypress-inputs';
 
@@ -15,8 +15,7 @@ describe('15.0.0 migration (add-cypress-inputs)', () => {
   });
 
   it('should add inputs configuration for cypress targets', async () => {
-    updateWorkspaceConfiguration(tree, {
-      version: 2,
+    updateNxJson(tree, {
       namedInputs: {
         default: ['{projectRoot}/**/*', 'sharedGlobals'],
         sharedGlobals: [],
@@ -43,7 +42,7 @@ describe('15.0.0 migration (add-cypress-inputs)', () => {
 
     await addCypressInputs(tree);
 
-    const updated = readWorkspaceConfiguration(tree);
+    const updated = readNxJson(tree);
     expect(updated).toMatchInlineSnapshot(`
       Object {
         "namedInputs": Object {
@@ -70,14 +69,12 @@ describe('15.0.0 migration (add-cypress-inputs)', () => {
             ],
           },
         },
-        "version": 2,
       }
     `);
   });
 
   it('should inputs configuration for cypress component testing targets', async () => {
-    updateWorkspaceConfiguration(tree, {
-      version: 2,
+    updateNxJson(tree, {
       namedInputs: {
         default: ['{projectRoot}/**/*', 'sharedGlobals'],
         sharedGlobals: [],
@@ -108,7 +105,7 @@ describe('15.0.0 migration (add-cypress-inputs)', () => {
 
     await addCypressInputs(tree);
 
-    const updated = readWorkspaceConfiguration(tree);
+    const updated = readNxJson(tree);
     expect(updated).toMatchInlineSnapshot(`
       Object {
         "namedInputs": Object {
@@ -138,7 +135,6 @@ describe('15.0.0 migration (add-cypress-inputs)', () => {
             ],
           },
         },
-        "version": 2,
       }
     `);
   });
