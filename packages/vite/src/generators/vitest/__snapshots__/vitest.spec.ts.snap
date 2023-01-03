@@ -19,6 +19,13 @@ exports[`vitest generator insourceTests should add the insourceSource option in 
     ],
     
         
+    // Uncomment this if you are using workers. 
+    // worker: {
+    //  viteTsConfigPaths({
+    //    root: '../../',
+    //  }),
+    // },
+        
         define: {
     'import.meta.vitest': undefined
   },
@@ -53,6 +60,13 @@ exports[`vitest generator vite.config should create correct vite.config.ts file 
     ],
     
         
+    // Uncomment this if you are using workers. 
+    // worker: {
+    //  viteTsConfigPaths({
+    //    root: '../../',
+    //  }),
+    // },
+        
         
         test: {
     globals: true,
@@ -84,6 +98,13 @@ exports[`vitest generator vite.config should create correct vite.config.ts file 
       }),
     ],
     
+        
+    // Uncomment this if you are using workers. 
+    // worker: {
+    //  viteTsConfigPaths({
+    //    root: '../../',
+    //  }),
+    // },
         
         
         test: {
