@@ -48,14 +48,22 @@ export default async function* runExecutor(
   const projectRoot = context.projectGraph.nodes[context.projectName].data.root;
 
   const nxReporter = new NxReporter(options.watch);
-  const ctx = await startVitest(options.mode, [], {
+  const settings = {
     ...options,
     root: projectRoot,
     reporters: [...(options.reporters ?? []), 'default', nxReporter],
-    coverage: {
-      reportsDirectory: options.reportsDirectory,
-    },
-  });
+    // if reportsDirectory is not provides vitest will remove all files in the project root
+    // when coverage is enabled in the vite.config.ts
+    ...(options.reportsDirectory
+      ? {
+          coverage: {
+            reportsDirectory: options.reportsDirectory,
+          },
+        }
+      : {}),
+  };
+
+  const ctx = await startVitest(options.mode, [], settings);
 
   let hasErrors = false;
 

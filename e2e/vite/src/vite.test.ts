@@ -256,6 +256,56 @@ export default defineConfig({
       expect(directoryExists(coverageDir)).toBeTruthy();
     }, 100_000);
 
+    it('should not delete the project directory when coverage is enabled', () => {
+      // when coverage is enabled in the vite.config.ts but reportsDirectory is removed
+      // from the @nrwl/vite:test executor options, vite will delete the project root directory
+      runCLI(`generate @nrwl/react:lib ${lib} --unitTestRunner=vitest`);
+      updateFile(`libs/${lib}/vite.config.ts`, () => {
+        return `import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import viteTsConfigPaths from 'vite-tsconfig-paths';
+
+export default defineConfig({
+  server: {
+    port: 4200,
+    host: 'localhost',
+  },
+  plugins: [
+    react(),
+    viteTsConfigPaths({
+      root: './',
+    }),
+  ],
+  test: {
+    globals: true,
+    cache: {
+      dir: './node_modules/.vitest',
+    },
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    coverage: {
+      enabled: true,
+      reportsDirectory: 'coverage',
+    }
+  },
+});
+`;
+      });
+      updateProjectConfig(lib, (config) => {
+        delete config.targets.test.options.reportsDirectory;
+        return config;
+      });
+
+      const projectRoot = `${tmpProjPath()}/libs/${lib}`;
+
+      const results = runCLI(`test ${lib}`);
+
+      expect(directoryExists(projectRoot)).toBeTruthy();
+      expect(results).toContain(
+        `Successfully ran target test for project ${lib}`
+      );
+    }, 100_000);
+
     it('should be able to run tests with inSourceTests set to true', async () => {
       runCLI(
         `generate @nrwl/react:lib ${lib} --unitTestRunner=vitest --inSourceTests`
