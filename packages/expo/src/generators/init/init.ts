@@ -24,6 +24,7 @@ import {
   babelPresetExpoVersion,
   easCliVersion,
   deprecatedExpoCliVersion,
+  expoWebpackConfig,
 } from '../../utils/versions';
 
 import {
@@ -74,6 +75,7 @@ export function updateDependencies(host: Tree) {
       'expo-status-bar': expoStatusBarVersion,
       'react-native-web': reactNativeWebVersion,
       '@expo/metro-config': expoMetroConfigVersion,
+      '@expo/webpack-config': expoWebpackConfig,
       'react-native-svg-transformer': reactNativeSvgTransformerVersion,
       'react-native-svg': reactNativeSvgVersion,
     },
