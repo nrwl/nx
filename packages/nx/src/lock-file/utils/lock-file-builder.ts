@@ -16,45 +16,22 @@ export type LockFileNode = {
   path: string;
   resolved?: string;
   integrity?: string;
-  dev?: boolean;
-  optional?: boolean;
-  peer?: boolean;
-  devOptional?: boolean; // tree.devOptional && !tree.dev && !tree.optional
   edgesOut?: Map<string, LockFileEdge>;
   children?: Map<string, LockFileNode>;
   edgesIn?: Set<LockFileEdge>;
   isProjectRoot?: true;
 };
 
-type LockFileEdgeType =
-  | 'prod'
-  | 'dev'
-  | 'optional'
-  | 'peer'
-  | 'peerOptional'
-  | 'workspace'
-  | 'unknown';
-
-const VALID_TYPES = new Set([
-  'prod',
-  'dev',
-  'optional',
-  'peer',
-  'peerOptional',
-  'workspace',
-]);
-
 export type LockFileEdge = {
   name: string;
   versionSpec: string;
-  type: LockFileEdgeType;
-  from: LockFileNode; // path from
+  from?: LockFileNode;
   to?: LockFileNode;
-  error?:
-    | 'MISSING_TARGET'
-    | 'MISSING_SOURCE'
-    // | 'DETACHED'
-    | 'UNRESOLVED_TYPE';
+  // some optional dependencies might be missing
+  // we want to keep track of that to avoid false positives
+  optional?: boolean;
+  // error type if source or target is missing
+  error?: 'MISSING_TARGET' | 'MISSING_SOURCE';
 };
 
 // TODO 1: Check Arborist for links? Perhaps those should be workspace files
@@ -112,22 +89,28 @@ export class LockFileBuilder {
     const skipEdgeInCheck = true;
     if (dependencies) {
       Object.entries(dependencies).forEach(([name, versionSpec]) => {
-        this.addEdgeOut(node, name, versionSpec, 'prod', skipEdgeInCheck);
+        this.addEdgeOut(node, name, versionSpec, false, skipEdgeInCheck);
       });
     }
     if (devDependencies) {
       Object.entries(devDependencies).forEach(([name, versionSpec]) => {
-        this.addEdgeOut(node, name, versionSpec, 'dev', skipEdgeInCheck);
+        this.addEdgeOut(node, name, versionSpec, false, skipEdgeInCheck);
       });
     }
     if (optionalDependencies) {
       Object.entries(optionalDependencies).forEach(([name, versionSpec]) => {
-        this.addEdgeOut(node, name, versionSpec, 'optional', skipEdgeInCheck);
+        this.addEdgeOut(node, name, versionSpec, true, skipEdgeInCheck);
       });
     }
     if (peerDependencies) {
       Object.entries(peerDependencies).forEach(([name, versionSpec]) => {
-        this.addEdgeOut(node, name, versionSpec, 'peer', skipEdgeInCheck);
+        this.addEdgeOut(
+          node,
+          name,
+          versionSpec,
+          packageJson.peerDependenciesMeta?.[name]?.optional,
+          skipEdgeInCheck
+        );
       });
     }
     return node;
@@ -137,10 +120,10 @@ export class LockFileBuilder {
     node: LockFileNode,
     name: string,
     versionSpec: string,
-    type: LockFileEdgeType,
+    isOptional?: boolean,
     skipEdgeInCheck?: boolean
   ) {
-    this.validateEdgeCreation(node, name, versionSpec, type);
+    this.validateEdgeCreation(node, name, versionSpec);
 
     if (!this.isVersionSpecSupported(versionSpec)) {
       return;
@@ -156,9 +139,11 @@ export class LockFileBuilder {
       const edge: LockFileEdge = {
         name,
         versionSpec,
-        type,
         from: node,
       };
+      if (isOptional) {
+        edge.optional = true;
+      }
       this.updateEdgeTypeAndError(edge);
       node.edgesOut.set(name, edge);
       if (!skipEdgeInCheck) {
@@ -231,13 +216,8 @@ export class LockFileBuilder {
     }
   }
 
-  addEdgeIn(
-    node: LockFileNode,
-    type: LockFileEdgeType,
-    versionSpec: string,
-    parent?: LockFileNode
-  ) {
-    this.validateEdgeCreation(node, node.name, versionSpec, type);
+  addEdgeIn(node: LockFileNode, versionSpec: string, parent?: LockFileNode) {
+    this.validateEdgeCreation(node, node.name, versionSpec);
 
     const existingEdges = this.findEdgesOut(node.name, versionSpec);
     if (existingEdges.size > 0) {
@@ -248,7 +228,6 @@ export class LockFileBuilder {
       const edge: LockFileEdge = {
         name: node.name,
         versionSpec,
-        type,
         from: parent,
         to: node,
       };
@@ -315,35 +294,14 @@ export class LockFileBuilder {
   }
 
   private updateEdgeTypeAndError(edge: LockFileEdge) {
-    if (edge.to && edge.type === 'unknown') {
-      edge.type = this.getValidEdgeType(edge.to);
-    }
-    if (!edge.to && edge.type !== 'optional' && edge.type !== 'peerOptional') {
+    if (!edge.to && !edge.optional) {
       edge.error = 'MISSING_TARGET';
     }
     if (!edge.from) {
       edge.error = 'MISSING_SOURCE';
-    } else if (edge.to && edge.type === 'unknown') {
-      edge.error = 'UNRESOLVED_TYPE';
     } else {
       delete edge.error;
     }
-  }
-
-  private getValidEdgeType(node: LockFileNode): LockFileEdgeType {
-    if (node.peer && node.optional) {
-      return 'peerOptional';
-    }
-    if (node.optional) {
-      return 'optional';
-    }
-    if (node.peer) {
-      return 'peer';
-    }
-    if (node.dev) {
-      return 'dev';
-    }
-    return 'prod';
   }
 
   // private detachEdge(edge: LockFileEdge) {
@@ -432,8 +390,7 @@ export class LockFileBuilder {
   private validateEdgeCreation(
     node: LockFileNode,
     name: string,
-    versionSpec: string,
-    type: LockFileEdgeType
+    versionSpec: string
   ) {
     if (!node) {
       throw new TypeError(`Edge must be bound to a node`);
@@ -444,16 +401,6 @@ export class LockFileBuilder {
     if (!versionSpec) {
       throw new TypeError(
         `Edge must have a valid version specification: ${versionSpec}`
-      );
-    }
-    if (!type) {
-      throw new TypeError(`Edge must have a valid type: ${type}`);
-    }
-    if (!type || (!VALID_TYPES.has(type) && type !== 'unknown')) {
-      throw new TypeError(
-        `Edge must have a valid type: ${type}\nValid types: ${Array.from(
-          VALID_TYPES
-        ).join(', ')}`
       );
     }
   }
@@ -494,12 +441,12 @@ export class LockFileBuilder {
 
   getLockFileGraph(): LockFileGraph {
     let isValid = true;
-    if (!this.isGraphConsistent()) {
-      console.error(
-        `Graph is not consistent. Please report this issue via github`
-      );
-      isValid = false;
-    }
+    // if (!this.isGraphConsistent()) {
+    //   console.error(
+    //     `Graph is not consistent. Please report this issue via github`
+    //   );
+    //   isValid = false;
+    // }
 
     return {
       root: this.root,

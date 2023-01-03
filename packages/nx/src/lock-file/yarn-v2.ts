@@ -5,7 +5,8 @@ import {
   LockFileGraph,
   LockFileNode,
 } from './utils/lock-file-builder';
-import { getRootVersion } from './utils/parsing';
+import { workspaceRoot } from '../utils/workspace-root';
+import { existsSync, readFileSync } from 'fs';
 
 type YarnDependency = {
   version: string;
@@ -106,34 +107,41 @@ function parseClassicLockFile(
       rootVersion = getRootVersion(packageName);
     }
     versionMap.forEach((valueSet) => {
-      const [key, value]: [string, YarnDependency] = valueSet
+      const [key, dependency]: [string, YarnDependency] = valueSet
         .values()
         .next().value;
       const versionSpec = key.slice(packageName.length + 1);
 
-      if (value.version === rootVersion) {
+      if (dependency.version === rootVersion) {
         const path = `node_modules/${packageName}`;
-        const node = parseClassicNode(packageName, path, versionSpec, value);
+        const node = parseClassicNode(
+          packageName,
+          path,
+          versionSpec,
+          dependency
+        );
         builder.addNode(path, node);
         valueSet.forEach(([newKey]) => {
           const newSpec = newKey.slice(packageName.length + 1);
-          builder.addEdgeIn(node, 'unknown', newSpec);
+          builder.addEdgeIn(node, newSpec);
         });
-        if (value.dependencies) {
-          Object.entries(value.dependencies).forEach(([depName, depSpec]) => {
-            builder.addEdgeOut(node, depName, depSpec, 'prod');
-          });
-        }
-        if (value.optionalDependencies) {
-          Object.entries(value.optionalDependencies).forEach(
+        if (dependency.dependencies) {
+          Object.entries(dependency.dependencies).forEach(
             ([depName, depSpec]) => {
-              builder.addEdgeOut(node, depName, depSpec, 'optional');
+              builder.addEdgeOut(node, depName, depSpec);
+            }
+          );
+        }
+        if (dependency.optionalDependencies) {
+          Object.entries(dependency.optionalDependencies).forEach(
+            ([depName, depSpec]) => {
+              builder.addEdgeOut(node, depName, depSpec, true);
             }
           );
         }
       } else {
         // we don't know the path yet, so we need to resolve non-root deps later
-        unresolvedDependencies.add([packageName, versionSpec, value]);
+        unresolvedDependencies.add([packageName, versionSpec, dependency]);
       }
     });
   });
@@ -195,12 +203,12 @@ function parseBerryLockFile(
         builder.addNode(path, node);
         valueSet.forEach(([newKey]) => {
           const versionSpec = parseBerryVersionSpec(newKey, packageName);
-          builder.addEdgeIn(node, 'unknown', versionSpec);
+          builder.addEdgeIn(node, versionSpec);
         });
         if (value.dependencies) {
           // Yarn keeps no notion of dev/peer/optional dependencies
           Object.entries(value.dependencies).forEach(([depName, depSpec]) => {
-            builder.addEdgeOut(node, depName, depSpec, 'prod');
+            builder.addEdgeOut(node, depName, depSpec);
           });
         }
       } else {
@@ -273,6 +281,18 @@ function parseBerryNode(
   return node;
 }
 
+/**
+ * A -> B@v1
+ * B@v1
+ * C -> B@v2
+ * D -> E@v2 -> B@v3
+ * E@v1
+ *
+ * D
+ * E@v2
+ * B@v3
+ */
+
 function exhaustUnresolvedDependencies(
   builder: LockFileBuilder,
   {
@@ -302,7 +322,7 @@ function exhaustUnresolvedDependencies(
           if (value.dependencies) {
             // Yarn classic keeps no notion of dev/peer/optional dependencies
             Object.entries(value.dependencies).forEach(([depName, depSpec]) => {
-              builder.addEdgeOut(node, depName, depSpec, 'prod');
+              builder.addEdgeOut(node, depName, depSpec);
             });
           }
           unresolvedDependencies.delete(unresolvedSet);
@@ -324,5 +344,18 @@ function exhaustUnresolvedDependencies(
   }
   if (unresolvedDependencies.size > 0) {
     exhaustUnresolvedDependencies(builder, { unresolvedDependencies, isBerry });
+  }
+}
+
+function getRootVersion(packageName: string): boolean {
+  const fullPath = `${workspaceRoot}/node_modules/${packageName}/package.json`;
+
+  if (existsSync(fullPath)) {
+    const content = readFileSync(fullPath, 'utf-8');
+    return JSON.parse(content).version;
+  } else {
+    throw new Error(
+      `Could not find package.json for "${packageName}" at "${fullPath}"`
+    );
   }
 }

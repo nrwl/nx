@@ -67,9 +67,15 @@ export function parseNpmLockFile(
 }
 
 // adds edge out to node
-function addEdge(builder, node, depName, depSpec, type) {
+function addEdge(
+  builder: LockFileBuilder,
+  node,
+  depName,
+  depSpec,
+  isOptional?: boolean
+) {
   if (!node.edgesOut || !node.edgesOut.has(depName)) {
-    builder.addEdgeOut(node, depName, depSpec, type);
+    builder.addEdgeOut(node, depName, depSpec, isOptional);
   }
 }
 
@@ -140,7 +146,7 @@ function parseV1Dependencies(
 ) {
   if (value.requires) {
     Object.entries(value.requires).forEach(([depName, depSpec]) => {
-      addEdge(builder, node, depName, depSpec, 'unknown');
+      addEdge(builder, node, depName, depSpec);
     });
   }
 }
@@ -194,21 +200,17 @@ function parseV3Dependencies(
   if (value.peerDependencies) {
     const peerMeta = value.peerDependenciesMeta || {};
     Object.entries(value.peerDependencies).forEach(([depName, depSpec]) => {
-      if (peerMeta[depName]?.optional) {
-        addEdge(builder, node, depName, depSpec, 'peerOptional');
-      } else {
-        addEdge(builder, node, depName, depSpec, 'peer');
-      }
+      addEdge(builder, node, depName, depSpec, peerMeta[depName]?.optional);
     });
   }
   if (value.dependencies) {
     Object.entries(value.dependencies).forEach(([depName, depSpec]) => {
-      addEdge(builder, node, depName, depSpec, 'prod');
+      addEdge(builder, node, depName, depSpec);
     });
   }
   if (value.optionalDependencies) {
     Object.entries(value.optionalDependencies).forEach(([depName, depSpec]) => {
-      addEdge(builder, node, depName, depSpec, 'optional');
+      addEdge(builder, node, depName, depSpec, true);
     });
   }
 }
