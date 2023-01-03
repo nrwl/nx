@@ -117,4 +117,22 @@ describe('EsBuild Plugin', () => {
     expect(runResult).toMatch(/Hello world/);
     expect(runResult).toMatch(/Hello from child lib/);
   }, 300_000);
+
+  it('should support non-bundle builds', () => {
+    const myPkg = uniq('my-pkg');
+    runCLI(`generate @nrwl/js:lib ${myPkg} --bundler=esbuild`);
+    updateFile(`libs/${myPkg}/src/lib/${myPkg}.ts`, `console.log('Hello');\n`);
+    updateFile(`libs/${myPkg}/src/index.ts`, `import './lib/${myPkg}.js';\n`);
+
+    runCLI(`build ${myPkg} --bundle=false`);
+
+    checkFilesExist(
+      `dist/libs/${myPkg}/lib/${myPkg}.js`,
+      `dist/libs/${myPkg}/index.js`
+    );
+    // Test files are excluded in tsconfig (e.g. tsconfig.lib.json)
+    checkFilesDoNotExist(`dist/libs/${myPkg}/lib/${myPkg}.spec.js`);
+    // Can run package (package.json fields are correctly generated)
+    expect(runCommand(`node dist/libs/${myPkg}`)).toMatch(/Hello/);
+  }, 300_000);
 });

@@ -1,4 +1,7 @@
 import * as esbuild from 'esbuild';
+import * as path from 'path';
+import { parse } from 'path';
+import * as glob from 'fast-glob';
 import { getClientEnvironment } from '../../../utils/environment-variables';
 import {
   EsBuildExecutorOptions,
@@ -6,7 +9,7 @@ import {
 } from '../schema';
 import { ExecutorContext } from 'nx/src/config/misc-interfaces';
 import { joinPathFragments } from 'nx/src/utils/path';
-import { parse } from 'path';
+import { readJsonFile } from 'nx/src/utils/fileutils';
 
 const ESM_FILE_EXTENSION = '.js';
 const CJS_FILE_EXTENSION = '.cjs';
@@ -18,12 +21,9 @@ export function buildEsbuildOptions(
 ): esbuild.BuildOptions {
   const esbuildOptions: esbuild.BuildOptions = {
     ...options.esbuildOptions,
-    entryPoints: options.additionalEntryPoints
-      ? [options.main, ...options.additionalEntryPoints]
-      : [options.main],
     entryNames:
       options.outputHashing === 'all' ? '[dir]/[name].[hash]' : '[dir]/[name]',
-    bundle: true, // TODO(jack): support non-bundled builds
+    bundle: options.bundle,
     external: options.external,
     minify: options.minify,
     platform: options.platform,
@@ -40,11 +40,28 @@ export function buildEsbuildOptions(
     esbuildOptions.define = getClientEnvironment();
   }
 
-  if (options.singleEntry) {
+  if (options.singleEntry && options.bundle) {
     esbuildOptions.outfile = getOutfile(format, options, context);
   } else {
     esbuildOptions.outdir = options.outputPath;
   }
+
+  const entryPoints = options.additionalEntryPoints
+    ? [options.main, ...options.additionalEntryPoints]
+    : [options.main];
+  if (!options.bundle) {
+    const projectRoot = context.workspace.projects[context.projectName].root;
+    const tsconfig = readJsonFile(path.join(context.root, options.tsConfig));
+    const matchedFiles = glob
+      .sync(tsconfig.include ?? [], {
+        cwd: projectRoot,
+        ignore: (tsconfig.exclude ?? []).concat([options.main]),
+      })
+      .map((f) => path.join(projectRoot, f))
+      .filter((f) => !entryPoints.includes(f));
+    entryPoints.push(...matchedFiles);
+  }
+  esbuildOptions.entryPoints = entryPoints;
 
   return esbuildOptions;
 }

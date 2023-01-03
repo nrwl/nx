@@ -40,6 +40,11 @@
       },
       "default": []
     },
+    "bundle": {
+      "type": "boolean",
+      "description": "Whether to bundle the main entry point and additional entry points. Set to false to keep individual output files.",
+      "default": true
+    },
     "format": {
       "type": "array",
       "description": "List of module formats to output. Defaults to matching format from tsconfig (e.g. CJS for CommonJS, and ESM otherwise).",

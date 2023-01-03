@@ -34,6 +34,7 @@
     "@nrwl/workspace": "file:../workspace",
     "chalk": "4.1.0",
     "dotenv": "~10.0.0",
+    "fast-glob": "3.2.7",
     "fs-extra": "^10.1.0",
     "tslib": "^2.3.0"
   },
