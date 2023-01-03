@@ -7,16 +7,16 @@ import {
   addImportToModule,
   addProviderToModule,
 } from '../../../utils/nx-devkit/ast-utils';
-import type { NgRxGeneratorOptions } from '../schema';
+import type { NormalizedNgRxGeneratorOptions } from './normalize-options';
 
 export function addImportsToModule(
   tree: Tree,
-  options: NgRxGeneratorOptions
+  options: NormalizedNgRxGeneratorOptions
 ): void {
-  const modulePath = options.module;
-  const sourceText = tree.read(modulePath, 'utf-8');
+  const parentPath = options.module ?? options.parent;
+  const sourceText = tree.read(parentPath, 'utf-8');
   let sourceFile = createSourceFile(
-    modulePath,
+    parentPath,
     sourceText,
     ScriptTarget.Latest,
     true
@@ -30,7 +30,7 @@ export function addImportsToModule(
     return insertImport(
       tree,
       source,
-      modulePath,
+      parentPath,
       symbolName,
       fileName,
       isDefault
@@ -72,11 +72,11 @@ export function addImportsToModule(
   sourceFile = addImport(sourceFile, 'EffectsModule', '@ngrx/effects');
 
   if (options.minimal && options.root) {
-    sourceFile = addImportToModule(tree, sourceFile, modulePath, storeForRoot);
+    sourceFile = addImportToModule(tree, sourceFile, parentPath, storeForRoot);
     sourceFile = addImportToModule(
       tree,
       sourceFile,
-      modulePath,
+      parentPath,
       effectsForEmptyRoot
     );
 
@@ -89,7 +89,7 @@ export function addImportsToModule(
       sourceFile = addImportToModule(
         tree,
         sourceFile,
-        modulePath,
+        parentPath,
         storeRouterModule
       );
     }
@@ -103,7 +103,7 @@ export function addImportsToModule(
         sourceFile = addProviderToModule(
           tree,
           sourceFile,
-          modulePath,
+          parentPath,
           facadeName
         );
       }
@@ -117,13 +117,13 @@ export function addImportsToModule(
       sourceFile = addImportToModule(
         tree,
         sourceFile,
-        modulePath,
+        parentPath,
         storeForRoot
       );
       sourceFile = addImportToModule(
         tree,
         sourceFile,
-        modulePath,
+        parentPath,
         effectsForRoot
       );
 
@@ -136,7 +136,7 @@ export function addImportsToModule(
         sourceFile = addImportToModule(
           tree,
           sourceFile,
-          modulePath,
+          parentPath,
           storeRouterModule
         );
       }
@@ -144,7 +144,7 @@ export function addImportsToModule(
       sourceFile = addImportToModule(
         tree,
         sourceFile,
-        modulePath,
+        parentPath,
         storeForFeature
       );
     } else {
@@ -153,13 +153,13 @@ export function addImportsToModule(
       sourceFile = addImportToModule(
         tree,
         sourceFile,
-        modulePath,
+        parentPath,
         storeForFeature
       );
       sourceFile = addImportToModule(
         tree,
         sourceFile,
-        modulePath,
+        parentPath,
         effectsForFeature
       );
     }

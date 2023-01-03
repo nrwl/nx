@@ -11,29 +11,37 @@ import type { NgRxGeneratorOptions } from './schema';
 
 export async function ngrxGenerator(
   tree: Tree,
-  options: NgRxGeneratorOptions
+  schema: NgRxGeneratorOptions
 ): Promise<GeneratorCallback> {
-  const normalizedOptions = normalizeOptions(options);
-
-  if (!tree.exists(normalizedOptions.module)) {
-    throw new Error(`Module does not exist: ${normalizedOptions.module}.`);
+  if (!schema.module && !schema.parent) {
+    throw new Error('Please provide a value for `--parent`!');
   }
 
-  if (!normalizedOptions.minimal || !normalizedOptions.root) {
-    generateNgrxFilesFromTemplates(tree, normalizedOptions);
+  if (schema.module && !tree.exists(schema.module)) {
+    throw new Error(`Module does not exist: ${schema.module}.`);
   }
 
-  if (!normalizedOptions.skipImport) {
-    addImportsToModule(tree, normalizedOptions);
-    addExportsToBarrel(tree, normalizedOptions);
+  if (schema.parent && !tree.exists(schema.parent)) {
+    throw new Error(`Parent does not exist: ${schema.parent}.`);
+  }
+
+  const options = normalizeOptions(schema);
+
+  if (!options.minimal || !options.root) {
+    generateNgrxFilesFromTemplates(tree, options);
+  }
+
+  if (!options.skipImport) {
+    addImportsToModule(tree, options);
+    addExportsToBarrel(tree, options);
   }
 
   let packageInstallationTask: GeneratorCallback = () => {};
-  if (!normalizedOptions.skipPackageJson) {
+  if (!options.skipPackageJson) {
     packageInstallationTask = addNgRxToPackageJson(tree);
   }
 
-  if (!normalizedOptions.skipFormat) {
+  if (!options.skipFormat) {
     await formatFiles(tree);
   }
 

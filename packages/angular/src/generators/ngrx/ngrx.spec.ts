@@ -21,6 +21,13 @@ describe('ngrx', () => {
   const defaultOptions: NgRxGeneratorOptions = {
     directory: '+state',
     minimal: true,
+    parent: 'apps/myapp/src/app/app.module.ts',
+    name: 'users',
+  };
+
+  const defaultModuleOptions: NgRxGeneratorOptions = {
+    directory: '+state',
+    minimal: true,
     module: 'apps/myapp/src/app/app.module.ts',
     name: 'users',
   };
@@ -39,6 +46,17 @@ describe('ngrx', () => {
   });
 
   it('should error when the module could not be found', async () => {
+    const modulePath = 'not-existing.module.ts';
+
+    await expect(
+      ngrxGenerator(tree, {
+        ...defaultOptions,
+        module: modulePath,
+      })
+    ).rejects.toThrowError(`Module does not exist: ${modulePath}.`);
+  });
+
+  it('should error when the module could not be found using --module', async () => {
     const modulePath = 'not-existing.module.ts';
 
     await expect(
@@ -91,6 +109,18 @@ describe('ngrx', () => {
   it('should add a root module with feature module when minimal is set to false', async () => {
     await ngrxGenerator(tree, {
       ...defaultOptions,
+      root: true,
+      minimal: false,
+    });
+
+    expect(
+      tree.read('/apps/myapp/src/app/app.module.ts', 'utf-8')
+    ).toMatchSnapshot();
+  });
+
+  it('should add a root module with feature module when minimal is set to false using --module', async () => {
+    await ngrxGenerator(tree, {
+      ...defaultModuleOptions,
       root: true,
       minimal: false,
     });
