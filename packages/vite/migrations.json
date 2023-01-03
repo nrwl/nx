@@ -11,6 +11,12 @@
       "version": "15.3.4-beta.0",
       "description": "Set the mode in configurations to match the configurationName.",
       "factory": "./src/migrations/update-15-3-4/set-mode-in-configuration"
+    },
+    "update-test-path-placeholder-vars": {
+      "cli": "nx",
+      "version": "15.4.3-beta.0",
+      "description": "Update @nrwl/vite:test reportsDirectory and outputs properties to point to correct paths.",
+      "factory": "./src/migrations/update-15-4-3/update-report-directory"
     }
   },
   "packageJsonUpdates": {

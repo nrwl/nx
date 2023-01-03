@@ -208,12 +208,16 @@ export function addOrChangeTestTarget(
 ) {
   const project = readProjectConfiguration(tree, options.project);
 
+  const coveragePath = joinPathFragments(
+    'coverage',
+    project.root === '.' ? options.project : project.root
+  );
   const testOptions: VitestExecutorOptions = {
     passWithNoTests: true,
+    // vitest runs in the project root so we have to offset to the workspaceRoot
     reportsDirectory: joinPathFragments(
-      '{workspaceRoot}',
-      'coverage',
-      '{projectRoot}'
+      offsetFromRoot(project.root),
+      coveragePath
     ),
   };
 
@@ -226,7 +230,7 @@ export function addOrChangeTestTarget(
     }
     project.targets[target] = {
       executor: '@nrwl/vite:test',
-      outputs: ['{projectRoot}/coverage'],
+      outputs: [coveragePath],
       options: testOptions,
     };
   }

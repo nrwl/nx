@@ -16,7 +16,6 @@ import {
   createOrEditViteConfig,
 } from '../../utils/generator-utils';
 import { VitestGeneratorSchema } from './schema';
-
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import initGenerator from '../init/init';
 import {
@@ -41,7 +40,7 @@ export async function vitestGenerator(
 
   addOrChangeTestTarget(tree, schema, testTarget);
 
-  const initTask = await initGenerator(tree, {
+  const initTask = initGenerator(tree, {
     uiFramework: schema.uiFramework,
   });
   tasks.push(initTask);
