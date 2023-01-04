@@ -10,6 +10,8 @@ import {
   replaceChange,
 } from '@nrwl/workspace/src/utilities/ast-utils';
 
+type DecoratorName = 'Component' | 'Directive' | 'NgModule' | 'Pipe';
+
 function _angularImportsFromNode(
   node: ts.ImportDeclaration,
   _sourceFile: ts.SourceFile
@@ -60,6 +62,20 @@ function _angularImportsFromNode(
     // This is of the form `import 'path';`. Nothing to do.
     return {};
   }
+}
+
+export function isStandalone(
+  sourceFile: ts.SourceFile,
+  decoratorName: DecoratorName
+) {
+  const decoratorMetadata = getDecoratorMetadata(
+    sourceFile,
+    decoratorName,
+    '@angular/core'
+  );
+  return decoratorMetadata.some((node) =>
+    node.getText().includes('standalone: true')
+  );
 }
 
 export function getDecoratorMetadata(
@@ -134,7 +150,7 @@ function _addSymbolToDecoratorMetadata(
   filePath: string,
   metadataField: string,
   expression: string,
-  decoratorName: 'Component' | 'Directive' | 'NgModule' | 'Pipe'
+  decoratorName: DecoratorName
 ): ts.SourceFile {
   const nodes = getDecoratorMetadata(source, decoratorName, '@angular/core');
   let node: any = nodes[0]; // tslint:disable-line:no-any
