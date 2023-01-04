@@ -1333,7 +1333,7 @@
           },
           {
             "name": "Nx Devkit",
-            "path": "/packages/devkit/index",
+            "path": "/packages/devkit/documents/index",
             "id": "packages-devkit",
             "isExternal": true,
             "children": [],
@@ -1400,7 +1400,7 @@
       },
       {
         "name": "Nx Devkit",
-        "path": "/packages/devkit/index",
+        "path": "/packages/devkit/documents/index",
         "id": "packages-devkit",
         "isExternal": true,
         "children": [],
