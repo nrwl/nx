@@ -1663,7 +1663,7 @@
         "file": "",
         "itemList": [],
         "isExternal": true,
-        "path": "/packages/devkit",
+        "path": "/packages/devkit/documents/index",
         "tags": ["create-your-own-plugin"]
       },
       {
@@ -1741,14 +1741,14 @@
     "path": "/packages",
     "tags": []
   },
-  "/packages/devkit": {
+  "/packages/devkit/documents/index": {
     "id": "packages-devkit",
     "name": "Nx Devkit",
     "description": "",
     "file": "",
     "itemList": [],
     "isExternal": true,
-    "path": "/packages/devkit",
+    "path": "/packages/devkit/documents/index",
     "tags": ["create-your-own-plugin"]
   },
   "/reference/glossary": {
