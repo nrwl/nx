@@ -80,6 +80,7 @@
       "outputs": ["{options.outputFile}"]
     },
     "e2e": {
+      "executor": "nx:run-commands",
       "inputs": [
         "default",
         "^production",
@@ -91,6 +92,17 @@
         }
       ],
       "options": {
+        "commands": [
+          {
+            "command": "yarn e2e-start-local-registry"
+          },
+          {
+            "command": "yarn e2e-build-package-publish"
+          },
+          {
+            "command": "nx run-e2e-tests {projectName}"
+          }
+        ],
         "parallel": false
       }
     },

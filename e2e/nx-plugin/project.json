@@ -4,22 +4,7 @@
   "sourceRoot": "e2e/nx-plugin",
   "projectType": "application",
   "targets": {
-    "e2e": {
-      "executor": "nx:run-commands",
-      "options": {
-        "commands": [
-          {
-            "command": "yarn e2e-start-local-registry"
-          },
-          {
-            "command": "yarn e2e-build-package-publish"
-          },
-          {
-            "command": "nx run-e2e-tests e2e-nx-plugin"
-          }
-        ]
-      }
-    },
+    "e2e": {},
     "run-e2e-tests": {}
   },
   "implicitDependencies": ["create-nx-plugin"]
