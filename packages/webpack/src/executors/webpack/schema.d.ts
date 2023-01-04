@@ -41,7 +41,6 @@ export interface WebpackExecutorOptions {
   additionalEntryPoints?: AdditionalEntryPoint[];
   assets?: Array<AssetGlob | string>;
   baseHref?: string;
-  budgets?: any[];
   buildLibsFromSource?: boolean;
   commonChunk?: boolean;
   compiler?: 'babel' | 'swc' | 'tsc';
@@ -57,7 +56,6 @@ export interface WebpackExecutorOptions {
   generatePackageJson?: boolean;
   index?: string;
   main: string;
-  maxWorkers?: number;
   memoryLimit?: number;
   namedChunks?: boolean;
   optimization?: boolean | OptimizationOptions;
