@@ -6,6 +6,7 @@ export interface EsBuildExecutorOptions {
   additionalEntryPoints?: string[];
   assets: AssetGlob[];
   buildableProjectDepsInPackageJsonType?: 'dependencies' | 'peerDependencies';
+  bundle?: boolean;
   deleteOutputPath?: boolean;
   dependenciesFieldType?: boolean;
   esbuildOptions?: Record<string, any>;
