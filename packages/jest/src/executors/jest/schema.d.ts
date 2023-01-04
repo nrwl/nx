@@ -6,6 +6,9 @@ export interface JestExecutorOptions {
   detectLeaks?: boolean;
   jestConfig: string;
   testFile?: string;
+  /**
+   * @deprecated set in the jest config file instead
+   **/
   setupFile?: string;
   bail?: boolean | number;
   ci?: boolean;

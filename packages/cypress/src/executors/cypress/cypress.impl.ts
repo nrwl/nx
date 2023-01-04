@@ -22,6 +22,9 @@ export interface CypressExecutorOptions extends Json {
   tsConfig?: string;
   devServerTarget?: string;
   headed?: boolean;
+  /**
+   * @deprecated use watch instead
+   **/
   headless?: boolean;
   exit?: boolean;
   key?: string;
@@ -31,6 +34,9 @@ export interface CypressExecutorOptions extends Json {
   browser?: string;
   env?: Record<string, string>;
   spec?: string;
+  /**
+   * @deprecated no longer used since cypress supports typescript out of the box
+   **/
   copyFiles?: string;
   ciBuildId?: string | number;
   group?: string;
