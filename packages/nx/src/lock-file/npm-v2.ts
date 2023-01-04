@@ -84,10 +84,17 @@ function parseV1LockFile(
   content: Omit<NpmLockFile, 'lockfileVersion'>
 ) {
   const { dependencies } = content;
+  const isHoisted = true;
 
   if (dependencies) {
     Object.entries(dependencies).forEach(([packageName, value]) => {
-      processV1Node(builder, packageName, value, `node_modules/${packageName}`);
+      processV1Node(
+        builder,
+        packageName,
+        value,
+        `node_modules/${packageName}`,
+        isHoisted
+      );
     });
   }
 }
@@ -97,11 +104,11 @@ function processV1Node(
   builder: LockFileBuilder,
   name: string,
   value: NpmDependencyV1,
-  path: string
+  path: string,
+  isHoisted = false
 ): void {
-  let { version, resolved, peer, optional, dev, integrity } = value;
+  let { version, integrity } = value;
   let packageName;
-  const devOptional = dev || optional || value.devOptional;
 
   // alias packages have versions in the form of `npm:packageName@version`
   // the name from the node_modules would not match the actual package name
@@ -115,13 +122,9 @@ function processV1Node(
     name,
     ...(packageName && { packageName }),
     ...(version && { version }),
-    ...(resolved && { resolved }),
-    path,
-    ...(dev && { dev }),
-    ...(optional && { optional }),
-    ...(devOptional && { devOptional }),
     ...(integrity && { integrity }),
-    ...(peer && { peer }),
+    path,
+    isHoisted,
   };
 
   parseV1Dependencies(builder, node, value);
@@ -173,8 +176,7 @@ function parseV3LockFile(
 
 // parse node value from lock file into `LockFileNode`
 function parseV3Node(path: string, value: NpmDependencyV3): LockFileNode {
-  const { resolved, peer, optional, dev, name, integrity } = value;
-  const devOptional = dev || optional || value.devOptional;
+  const { resolved, name, integrity } = value;
   const packageName = path.split('node_modules/').pop();
 
   let version = value.version;
@@ -183,17 +185,15 @@ function parseV3Node(path: string, value: NpmDependencyV3): LockFileNode {
     version = resolved;
   }
 
+  const isHoisted = !path.includes('/node_modules/');
+
   const node: LockFileNode = {
     name: packageName,
     ...(name && name !== packageName && { packageName: name }),
     ...(version && { version }),
-    ...(resolved && { resolved }),
-    path,
-    ...(dev && { dev }),
-    ...(optional && { optional }),
-    ...(devOptional && { devOptional }),
     ...(integrity && { integrity }),
-    ...(peer && { peer }),
+    path,
+    isHoisted,
   };
 
   return node;

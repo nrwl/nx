@@ -45,9 +45,7 @@ export function mapLockFileGraphToProjectGraph(
 }
 
 function getExternalNodeName(node: LockFileNode): `npm:${string}` {
-  const rootVersion = node.path === `node_modules/${node.name}`;
-
-  if (rootVersion) {
+  if (node.isHoisted) {
     return `npm:${node.name}`;
   }
   if (node.packageName) {

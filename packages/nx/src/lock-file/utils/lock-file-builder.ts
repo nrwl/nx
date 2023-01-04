@@ -13,11 +13,11 @@ export type LockFileNode = {
   packageName?: string;
   version?: string;
   path: string;
-  resolved?: string;
   integrity?: string;
   edgesOut?: Map<string, LockFileEdge>;
   children?: Map<string, LockFileNode>; // used for tracking hoisting
   edgesIn?: Set<LockFileEdge>;
+  isHoisted: boolean;
   isProjectRoot?: true;
 };
 
@@ -84,6 +84,7 @@ export class LockFileBuilder {
       name,
       version,
       path: '',
+      isHoisted: true,
       isProjectRoot: true,
     };
     const skipEdgeInCheck = true;

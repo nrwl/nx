@@ -96,6 +96,8 @@ function parseClassicLockFile(
   // Map[packageName, specKey, YarnDependency]
   const unresolvedDependencies = new Set<[string, string, YarnDependency]>();
 
+  const isHoisted = true;
+
   groupedDependencies.forEach((versionMap, packageName) => {
     let rootVersion;
     if (versionMap.size === 1) {
@@ -118,7 +120,8 @@ function parseClassicLockFile(
           packageName,
           path,
           versionSpec,
-          dependency
+          dependency,
+          isHoisted
         );
         builder.addNode(path, node);
         valueSet.forEach(([newKey]) => {
@@ -181,6 +184,8 @@ function parseBerryLockFile(
   // Map[packageName, specKey, YarnDependency]
   const unresolvedDependencies = new Set<[string, string, YarnDependency]>();
 
+  const isHoisted = true;
+
   groupedDependencies.forEach((versionMap, packageName) => {
     let rootVersion;
     if (versionMap.size === 1) {
@@ -199,7 +204,7 @@ function parseBerryLockFile(
 
       if (value.version === rootVersion) {
         const path = `node_modules/${packageName}`;
-        const node = parseBerryNode(packageName, path, value);
+        const node = parseBerryNode(packageName, path, value, isHoisted);
         builder.addNode(path, node);
         valueSet.forEach(([newKey]) => {
           const versionSpec = parseBerryVersionSpec(newKey, packageName);
@@ -238,7 +243,8 @@ function parseClassicNode(
   packageName: string,
   path: string,
   versionSpec: string,
-  value: YarnDependency
+  value: YarnDependency,
+  isHoisted = false
 ): LockFileNode {
   const { resolved, integrity } = value;
 
@@ -257,9 +263,9 @@ function parseClassicNode(
     name: packageName,
     ...(name !== packageName && { packageName: name }),
     ...(version && { version }),
-    ...(resolved && { resolved }),
-    path,
     ...(integrity && { integrity }),
+    path,
+    isHoisted,
   };
 
   return node;
@@ -268,7 +274,8 @@ function parseClassicNode(
 function parseBerryNode(
   packageName: string,
   path: string,
-  value: YarnDependency
+  value: YarnDependency,
+  isHoisted = false
 ): LockFileNode {
   const { resolution, checksum } = value;
 
@@ -285,9 +292,9 @@ function parseBerryNode(
     name: packageName,
     ...(name !== packageName && { packageName: name }),
     ...(version && { version }),
-    ...(resolution && { resolved: resolution }),
-    path,
     ...(checksum && { integrity: checksum }),
+    path,
+    isHoisted,
   };
 
   return node;

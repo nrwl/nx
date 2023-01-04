@@ -53,7 +53,13 @@ export function parsePnpmLockFile(
 
       if (isRootVersion) {
         const path = `node_modules/${packageName}`;
-        const node = parseNode(packageName, path, specKey, packageSnapshot);
+        const node = parseNode(
+          packageName,
+          path,
+          specKey,
+          packageSnapshot,
+          true
+        );
         builder.addNode(path, node);
 
         builder.addEdgeIn(node, specKey);
@@ -98,7 +104,8 @@ function parseNode(
   packageName: string,
   path: string,
   versionSpec: string,
-  snapshot: PackageSnapshot
+  snapshot: PackageSnapshot,
+  isHoisted: boolean
 ): LockFileNode {
   const resolution = snapshot.resolution;
 
@@ -110,6 +117,7 @@ function parseNode(
     name: name || packageName,
     ...(version && { version }),
     path,
+    isHoisted,
     ...(resolution && {
       integrity: resolution['integrity'] || resolution['tarball'],
     }),
@@ -242,7 +250,8 @@ function exhaustUnresolvedDependencies(
             packageName,
             path,
             versionSpec,
-            packageSnapshot
+            packageSnapshot,
+            false
           );
           builder.addNode(path, node);
           if (packageSnapshot.dependencies) {
