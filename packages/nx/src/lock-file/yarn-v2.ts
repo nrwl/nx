@@ -371,8 +371,11 @@ function getRootVersion(packageName: string): string {
     const content = readFileSync(fullPath, 'utf-8');
     return JSON.parse(content).version;
   } else {
-    throw new Error(
-      `Could not find package.json for "${packageName}" at "${fullPath}"`
-    );
+    if (process.env.NX_VERBOSE_LOGGING === 'true') {
+      console.warn(
+        `Could not find package.json for "${packageName}" at "${fullPath}"`
+      );
+    }
+    return 'n/a';
   }
 }

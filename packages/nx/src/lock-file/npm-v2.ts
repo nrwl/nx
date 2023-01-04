@@ -1,4 +1,6 @@
+import { existsSync, readFileSync } from 'fs';
 import { PackageJson } from '../utils/package-json';
+import { workspaceRoot } from '../utils/workspace-root';
 import {
   LockFileBuilder,
   LockFileGraph,
@@ -153,6 +155,18 @@ function parseV1Dependencies(
       addEdge(builder, node, depName, depSpec);
     });
   }
+  const { peerDependencies, peerDependenciesMeta } = getPeerDependencies(node);
+  if (peerDependencies) {
+    Object.entries(peerDependencies).forEach(([depName, depSpec]) => {
+      addEdge(
+        builder,
+        node,
+        depName,
+        depSpec,
+        peerDependenciesMeta?.[depName]?.optional
+      );
+    });
+  }
 }
 
 function parseV3LockFile(
@@ -220,5 +234,28 @@ function parseV3Dependencies(
     Object.entries(value.optionalDependencies).forEach(([depName, depSpec]) => {
       addEdge(builder, node, depName, depSpec, true);
     });
+  }
+}
+
+function getPeerDependencies(node: LockFileNode): {
+  peerDependencies?: Record<string, string>;
+  peerDependenciesMeta?: Record<string, { optional: boolean }>;
+} {
+  const fullPath = `${workspaceRoot}/${node.path}/package.json`;
+
+  if (existsSync(fullPath)) {
+    const content = readFileSync(fullPath, 'utf-8');
+    const { peerDependencies, peerDependenciesMeta } = JSON.parse(content);
+    return {
+      ...(peerDependencies && { peerDependencies }),
+      ...(peerDependenciesMeta && { peerDependenciesMeta }),
+    };
+  } else {
+    if (process.env.NX_VERBOSE_LOGGING === 'true') {
+      console.warn(
+        `Could not find package.json for "${node.name}" at "${fullPath}"`
+      );
+    }
+    return {};
   }
 }

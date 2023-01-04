@@ -10,10 +10,7 @@
     "**/*.spec.ts",
     "**/*_spec.ts",
     "jest.config.ts",
-    "**/__fixtures__/*.*"
+    "**/__fixtures__/**/*.*"
   ],
-  "include": [
-    "**/*.ts",
-    "src/lock-file/__fixtures__/auxiliary-packages/.modules.yaml.ts"
-  ]
+  "include": ["**/*.ts"]
 }

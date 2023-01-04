@@ -1,7 +1,23 @@
 import { joinPathFragments } from '../utils/path';
 import { parseNpmLockFile } from './npm-v2';
+import { vol } from 'memfs';
+
+jest.mock('fs', () => require('memfs').fs);
+
+jest.mock('@nrwl/devkit', () => ({
+  ...jest.requireActual<any>('@nrwl/devkit'),
+  workspaceRoot: '/root',
+}));
+
+jest.mock('nx/src/utils/workspace-root', () => ({
+  workspaceRoot: '/root',
+}));
 
 describe('NPM lock file utility', () => {
+  afterEach(() => {
+    vol.reset();
+  });
+
   describe('next.js generated', () => {
     const rootLockFile = require(joinPathFragments(
       __dirname,
@@ -23,6 +39,30 @@ describe('NPM lock file utility', () => {
   });
 
   describe('auxiliary packages', () => {
+    beforeEach(() => {
+      const fileSys = {
+        'node_modules/@nrwl/devkit/package.json':
+          '{"peerDependencies":{"nx":">= 14 <= 16"}}',
+        'node_modules/@phenomnomnominal/tsquery/package.json':
+          '{"peerDependencies":{"typescript":"^3 || ^4"}}',
+        'node_modules/@yarnpkg/parsers/node_modules/argparse/package.json':
+          '{}',
+        'node_modules/@yarnpkg/parsers/node_modules/js-yaml/package.json': '{}',
+        'node_modules/acorn-jsx/package.json':
+          '{"peerDependencies":{"acorn":"^6.0.0 || ^7.0.0 || ^8.0.0"}}',
+        'node_modules/debug/package.json':
+          '{"peerDependenciesMeta":{"supports-color":{"optional":true}}}',
+        'node_modules/eslint-utils/package.json':
+          '{"peerDependencies":{"eslint":">=5"}}',
+        'node_modules/follow-redirects/package.json':
+          '{"peerDependenciesMeta":{"debug":{"optional":true}}}',
+        'node_modules/json-stable-stringify-without-jsonify/package.json': '{}',
+        'node_modules/nx/package.json':
+          '{"peerDependencies":{"@swc-node/register":"^1.4.2","@swc/core":"^1.2.173"},"peerDependenciesMeta":{"@swc-node/register":{"optional":true},"@swc/core":{"optional":true}}}',
+      };
+      vol.fromJSON(fileSys, '/root');
+    });
+
     const packageJson = require(joinPathFragments(
       __dirname,
       '__fixtures__/auxiliary-packages/package.json'
@@ -121,6 +161,72 @@ describe('NPM lock file utility', () => {
   });
 
   describe('duplicate packages', () => {
+    beforeEach(() => {
+      const fileSys = {
+        'node_modules/@babel/helper-compilation-targets/package.json':
+          '{"peerDependencies":{"@babel/core":"^7.0.0"}}',
+        'node_modules/@babel/plugin-syntax-async-generators/package.json':
+          '{"peerDependencies":{"@babel/core":"^7.0.0-0"}}',
+        'node_modules/@babel/plugin-syntax-bigint/package.json':
+          '{"peerDependencies":{"@babel/core":"^7.0.0-0"}}',
+        'node_modules/@babel/plugin-syntax-class-properties/package.json':
+          '{"peerDependencies":{"@babel/core":"^7.0.0-0"}}',
+        'node_modules/@babel/plugin-syntax-import-meta/package.json':
+          '{"peerDependencies":{"@babel/core":"^7.0.0-0"}}',
+        'node_modules/@babel/plugin-syntax-json-strings/package.json':
+          '{"peerDependencies":{"@babel/core":"^7.0.0-0"}}',
+        'node_modules/@babel/plugin-syntax-logical-assignment-operators/package.json':
+          '{"peerDependencies":{"@babel/core":"^7.0.0-0"}}',
+        'node_modules/@babel/plugin-syntax-nullish-coalescing-operator/package.json':
+          '{"peerDependencies":{"@babel/core":"^7.0.0-0"}}',
+        'node_modules/@babel/plugin-syntax-numeric-separator/package.json':
+          '{"peerDependencies":{"@babel/core":"^7.0.0-0"}}',
+        'node_modules/@babel/plugin-syntax-object-rest-spread/package.json':
+          '{"peerDependencies":{"@babel/core":"^7.0.0-0"}}',
+        'node_modules/@babel/plugin-syntax-optional-catch-binding/package.json':
+          '{"peerDependencies":{"@babel/core":"^7.0.0-0"}}',
+        'node_modules/@babel/plugin-syntax-optional-chaining/package.json':
+          '{"peerDependencies":{"@babel/core":"^7.0.0-0"}}',
+        'node_modules/@babel/plugin-syntax-top-level-await/package.json':
+          '{"peerDependencies":{"@babel/core":"^7.0.0-0"}}',
+        'node_modules/@babel/plugin-syntax-typescript/package.json':
+          '{"peerDependencies":{"@babel/core":"^7.0.0-0"}}',
+        'node_modules/@jest/reporters/package.json':
+          '{"peerDependencies":{"node-notifier":"^8.0.1 || ^9.0.0 || ^10.0.0"},"peerDependenciesMeta":{"node-notifier":{"optional":true}}}',
+        'node_modules/@nrwl/devkit/package.json':
+          '{"peerDependencies":{"nx":">= 13.10 <= 15"}}',
+        'node_modules/@nrwl/linter/package.json':
+          '{"peerDependencies":{"eslint":"^8.0.0"},"peerDependenciesMeta":{"eslint":{"optional":true}}}',
+        'node_modules/@nrwl/linter/node_modules/nx/package.json':
+          '{"peerDependencies":{"@swc-node/register":"^1.4.2","@swc/core":"^1.2.173"},"peerDependenciesMeta":{"@swc-node/register":{"optional":true},"@swc/core":{"optional":true}}}',
+        'node_modules/@nrwl/workspace/package.json':
+          '{"peerDependencies":{"prettier":"^2.6.2"},"peerDependenciesMeta":{"prettier":{"optional":true}}}',
+        'node_modules/@nrwl/workspace/node_modules/nx/package.json':
+          '{"peerDependencies":{"@swc-node/register":"^1.4.2","@swc/core":"^1.2.173"},"peerDependenciesMeta":{"@swc-node/register":{"optional":true},"@swc/core":{"optional":true}}}',
+        'node_modules/@phenomnomnominal/tsquery/package.json':
+          '{"peerDependencies":{"typescript":"^3 || ^4"}}',
+        'node_modules/babel-jest/package.json':
+          '{"peerDependencies":{"@babel/core":"^7.8.0"}}',
+        'node_modules/babel-preset-current-node-syntax/package.json':
+          '{"peerDependencies":{"@babel/core":"^7.0.0"}}',
+        'node_modules/babel-preset-jest/package.json':
+          '{"peerDependencies":{"@babel/core":"^7.0.0"}}',
+        'node_modules/debug/package.json':
+          '{"peerDependenciesMeta":{"supports-color":{"optional":true}}}',
+        'node_modules/follow-redirects/package.json':
+          '{"peerDependenciesMeta":{"debug":{"optional":true}}}',
+        'node_modules/jest-config/package.json':
+          '{"peerDependencies":{"@types/node":"*","ts-node":">=9.0.0"},"peerDependenciesMeta":{"@types/node":{"optional":true},"ts-node":{"optional":true}}}',
+        'node_modules/jest-pnp-resolver/package.json':
+          '{"peerDependencies":{"jest-resolve":"*"},"peerDependenciesMeta":{"jest-resolve":{"optional":true}}}',
+        'node_modules/nx/package.json':
+          '{"peerDependencies":{"@swc-node/register":"^1.4.2","@swc/core":"^1.2.173"},"peerDependenciesMeta":{"@swc-node/register":{"optional":true},"@swc/core":{"optional":true}}}',
+        'node_modules/update-browserslist-db/package.json':
+          '{"peerDependencies":{"browserslist":">= 4.21.0"}}',
+      };
+      vol.fromJSON(fileSys, '/root');
+    });
+
     const packageJson = require(joinPathFragments(
       __dirname,
       '__fixtures__/duplicate-package/package.json'
