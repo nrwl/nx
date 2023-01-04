@@ -2684,6 +2684,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Identify Dependencies Between Folders",
+            "path": "/recipes/other/identify-dependencies-between-folders",
+            "id": "identify-dependencies-between-folders",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -2932,6 +2940,14 @@
         "name": "Include All package.json Files as Projects",
         "path": "/recipes/other/include-all-packagejson",
         "id": "include-all-packagejson",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Identify Dependencies Between Folders",
+        "path": "/recipes/other/identify-dependencies-between-folders",
+        "id": "identify-dependencies-between-folders",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
