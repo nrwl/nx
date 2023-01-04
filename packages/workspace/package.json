@@ -50,11 +50,12 @@
       "@nrwl/node": "*",
       "@nrwl/nx-cloud": "latest",
       "@nrwl/nx-plugin": "*",
-      "@nrwl/react": "*",
       "@nrwl/react-native": "*",
+      "@nrwl/react": "*",
       "@nrwl/rollup": "*",
       "@nrwl/storybook": "*",
       "@nrwl/tao": "*",
+      "@nrwl/vite": "*",
       "@nrwl/web": "*",
       "@nrwl/webpack": "*",
       "nx": "*"
