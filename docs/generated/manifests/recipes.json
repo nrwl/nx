@@ -1284,6 +1284,16 @@
         "isExternal": false,
         "path": "/recipes/other/include-all-packagejson",
         "tags": []
+      },
+      {
+        "id": "identify-dependencies-between-folders",
+        "name": "Identify Dependencies Between Folders",
+        "description": "",
+        "file": "shared/recipes/identify-dependencies-between-folders",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/other/identify-dependencies-between-folders",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -1598,6 +1608,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/other/include-all-packagejson",
+    "tags": []
+  },
+  "/recipes/other/identify-dependencies-between-folders": {
+    "id": "identify-dependencies-between-folders",
+    "name": "Identify Dependencies Between Folders",
+    "description": "",
+    "file": "shared/recipes/identify-dependencies-between-folders",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/other/identify-dependencies-between-folders",
     "tags": []
   }
 }

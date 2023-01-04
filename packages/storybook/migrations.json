@@ -88,7 +88,7 @@
           "alwaysAddToPackageJson": false
         },
         "@storybook/builder-vite": {
-          "version": "^6.5.15",
+          "version": "^0.2.6",
           "alwaysAddToPackageJson": false
         }
       }
