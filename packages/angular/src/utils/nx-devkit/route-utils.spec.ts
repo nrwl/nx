@@ -1,5 +1,5 @@
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { addRoute } from './route-utils';
+import { addProviderToRoute, addRoute } from './route-utils';
 
 describe.each([
   ['Route[]', 'Route'],
@@ -46,14 +46,68 @@ describe.each([
     addRoute(
       tree,
       'routes-file.ts',
-      "{path: 'test', , loadChildren: () => import('@proj/lib').then(m => m.ROUTES) }"
+      "{path: 'test', loadChildren: () => import('@proj/lib').then(m => m.ROUTES) }"
     );
 
     // ASSERT
     expect(tree.read('routes-file.ts', 'utf-8')).toMatchInlineSnapshot(`
       "import { ${routeType} } from '@angular/router';
             export const ROUTES: ${routes} = [
-          {path: 'test', , loadChildren: () => import('@proj/lib').then(m => m.ROUTES) },]"
+          {path: 'test', loadChildren: () => import('@proj/lib').then(m => m.ROUTES) },]"
     `);
+  });
+
+  it('should add provider along with providers array to the route when providers do not exist', () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree.write(
+      'routes-file.ts',
+      `import { ${routeType} } from '@angular/router';
+      export const ROUTES: ${routes} = [{path: 'test', loadChildren: () => import('@proj/lib').then(m => m.ROUTES) }];`
+    );
+
+    // ACT
+    addProviderToRoute(tree, 'routes-file.ts', 'test', 'provideStore()');
+
+    // ASSERT
+    expect(tree.read('routes-file.ts', 'utf-8'))
+      .toEqual(`import { ${routeType} } from '@angular/router';
+      export const ROUTES: ${routes} = [{path: 'test', loadChildren: () => import('@proj/lib').then(m => m.ROUTES) , providers: [provideStore()]}];`);
+  });
+
+  it('should add provider to the providers array to the route', () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree.write(
+      'routes-file.ts',
+      `import { ${routeType} } from '@angular/router';
+      export const ROUTES: ${routes} = [{path: 'test', providers: [provideState()], loadChildren: () => import('@proj/lib').then(m => m.ROUTES) }];`
+    );
+
+    // ACT
+    addProviderToRoute(tree, 'routes-file.ts', 'test', 'provideStore()');
+
+    // ASSERT
+    expect(tree.read('routes-file.ts', 'utf-8'))
+      .toEqual(`import { ${routeType} } from '@angular/router';
+      export const ROUTES: ${routes} = [{path: 'test', providers: [provideState(), provideStore()], loadChildren: () => import('@proj/lib').then(m => m.ROUTES) }];`);
+  });
+
+  it('should add provider to the providers array of a nested route', () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree.write(
+      'routes-file.ts',
+      `import { ${routeType} } from '@angular/router';
+      export const ROUTES: ${routes} = [{path: '', providers: [provideState()], children: [{ path: 'test' }]}];`
+    );
+
+    // ACT
+    addProviderToRoute(tree, 'routes-file.ts', 'test', 'provideStore()');
+
+    // ASSERT
+    expect(tree.read('routes-file.ts', 'utf-8'))
+      .toEqual(`import { ${routeType} } from '@angular/router';
+      export const ROUTES: ${routes} = [{path: '', providers: [provideState()], children: [{ path: 'test' , providers: [provideStore()]}]}];`);
   });
 });
