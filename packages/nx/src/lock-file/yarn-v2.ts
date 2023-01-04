@@ -112,10 +112,10 @@ function parseClassicLockFile(
       const [key, dependency]: [string, YarnDependency] = valueSet
         .values()
         .next().value;
-      const versionSpec = key.slice(packageName.length + 1);
 
       if (dependency.version === rootVersion) {
         const path = `node_modules/${packageName}`;
+        const versionSpec = key.slice(packageName.length + 1);
         const node = parseClassicNode(
           packageName,
           path,
@@ -143,8 +143,11 @@ function parseClassicLockFile(
           );
         }
       } else {
-        // we don't know the path yet, so we need to resolve non-root deps later
-        unresolvedDependencies.add([packageName, versionSpec, dependency]);
+        valueSet.forEach(([newKey]) => {
+          const versionSpec = newKey.slice(packageName.length + 1);
+          // we don't know the path yet, so we need to resolve non-root deps later
+          unresolvedDependencies.add([packageName, versionSpec, dependency]);
+        });
       }
     });
   });
@@ -198,7 +201,7 @@ function parseBerryLockFile(
     }
 
     versionMap.forEach((valueSet) => {
-      const [key, value]: [string, YarnDependency] = valueSet
+      const [_, value]: [string, YarnDependency] = valueSet
         .values()
         .next().value;
 
@@ -206,8 +209,8 @@ function parseBerryLockFile(
         const path = `node_modules/${packageName}`;
         const node = parseBerryNode(packageName, path, value, isHoisted);
         builder.addNode(path, node);
-        valueSet.forEach(([newKey]) => {
-          const versionSpec = parseBerryVersionSpec(newKey, packageName);
+        valueSet.forEach(([key]) => {
+          const versionSpec = parseBerryVersionSpec(key, packageName);
           builder.addEdgeIn(node, versionSpec);
         });
         if (value.dependencies) {
@@ -217,9 +220,11 @@ function parseBerryLockFile(
           });
         }
       } else {
-        const versionSpec = parseBerryVersionSpec(key, packageName);
-        // we don't know the path yet, so we need to resolve non-root deps later
-        unresolvedDependencies.add([packageName, versionSpec, value]);
+        valueSet.forEach(([key]) => {
+          const versionSpec = parseBerryVersionSpec(key, packageName);
+          // we don't know the path yet, so we need to resolve non-root deps later
+          unresolvedDependencies.add([packageName, versionSpec, value]);
+        });
       }
     });
   });
@@ -321,16 +326,21 @@ function exhaustUnresolvedDependencies(
         if (edge.versionSpec === versionSpec) {
           const parentPath = findTopParentPath(builder, n, packageName);
           const path = `${parentPath}/node_modules/${packageName}`;
-          const node = isBerry
-            ? parseBerryNode(packageName, path, value)
-            : parseClassicNode(packageName, path, versionSpec, value);
+          // we might have added the node already
+          if (!builder.nodes.has(path)) {
+            const node = isBerry
+              ? parseBerryNode(packageName, path, value)
+              : parseClassicNode(packageName, path, versionSpec, value);
 
-          builder.addNode(path, node);
-          if (value.dependencies) {
-            // Yarn classic keeps no notion of dev/peer/optional dependencies
-            Object.entries(value.dependencies).forEach(([depName, depSpec]) => {
-              builder.addEdgeOut(node, depName, depSpec);
-            });
+            builder.addNode(path, node);
+            if (value.dependencies) {
+              // Yarn classic keeps no notion of dev/peer/optional dependencies
+              Object.entries(value.dependencies).forEach(
+                ([depName, depSpec]) => {
+                  builder.addEdgeOut(node, depName, depSpec);
+                }
+              );
+            }
           }
           unresolvedDependencies.delete(unresolvedSet);
           return;
