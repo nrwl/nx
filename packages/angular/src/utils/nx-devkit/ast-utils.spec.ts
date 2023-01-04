@@ -3,6 +3,7 @@ import {
   addImportToDirective,
   addImportToModule,
   addImportToPipe,
+  addProviderToBootstrapApplication,
   isStandalone,
 } from './ast-utils';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
@@ -259,5 +260,46 @@ describe('Angular AST Utils', () => {
     // ACT
     // ASSERT
     expect(isStandalone(tsSourceFile, 'Pipe')).toBeTruthy();
+  });
+
+  it('should add a provider to the bootstrapApplication call', () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace();
+    tree.write(
+      'main.ts',
+      `import { bootstrapApplication } from '@angular/platform-browser';
+import {
+  provideRouter,
+  withEnabledBlockingInitialNavigation,
+} from '@angular/router';
+import { AppComponent } from './app/app.component';
+import { appRoutes } from './app/app.routes';
+
+bootstrapApplication(AppComponent, {
+  providers: [
+    provideRouter(appRoutes, withEnabledBlockingInitialNavigation()),
+  ],
+}).catch((err) => console.error(err));`
+    );
+
+    // ACT
+    addProviderToBootstrapApplication(tree, 'main.ts', 'provideStore()');
+
+    // ASSERT
+    expect(tree.read('main.ts', 'utf-8')).toMatchInlineSnapshot(`
+      "import { bootstrapApplication } from '@angular/platform-browser';
+      import {
+        provideRouter,
+        withEnabledBlockingInitialNavigation,
+      } from '@angular/router';
+      import { AppComponent } from './app/app.component';
+      import { appRoutes } from './app/app.routes';
+
+      bootstrapApplication(AppComponent, {
+        providers: [provideStore(),
+          provideRouter(appRoutes, withEnabledBlockingInitialNavigation()),
+        ],
+      }).catch((err) => console.error(err));"
+    `);
   });
 });
