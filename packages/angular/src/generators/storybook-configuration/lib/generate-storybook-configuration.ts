@@ -15,5 +15,6 @@ export async function generateStorybookConfiguration(
     linter: options.linter,
     cypressDirectory: options.cypressDirectory,
     tsConfiguration: options.tsConfiguration,
+    configureTestRunner: options.configureTestRunner,
   });
 }

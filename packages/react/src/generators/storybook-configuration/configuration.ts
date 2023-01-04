@@ -99,6 +99,7 @@ export async function storybookConfigurationGenerator(
     cypressDirectory: schema.cypressDirectory,
     standaloneConfig: schema.standaloneConfig,
     tsConfiguration: schema.tsConfiguration,
+    configureTestRunner: schema.configureTestRunner,
     bundler,
   });
 
