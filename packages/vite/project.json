@@ -4,7 +4,14 @@
   "sourceRoot": "packages/vite",
   "projectType": "library",
   "targets": {
-    "test": {},
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "jestConfig": "packages/vite/jest.config.ts",
+        "passWithNoTests": true
+      },
+      "outputs": ["{workspaceRoot}/coverage/packages/vite"]
+    },
     "build-base": {
       "executor": "@nrwl/js:swc",
       "options": {
@@ -56,6 +63,26 @@
         "command": "node ./scripts/copy-readme.js vite"
       }
     },
-    "lint": {}
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/vite/**/*.ts",
+          "packages/vite/**/*.spec.ts",
+          "packages/vite/**/*_spec.ts",
+          "packages/vite/**/*.spec.tsx",
+          "packages/vite/**/*.spec.js",
+          "packages/vite/**/*.spec.jsx",
+          "packages/vite/**/*.d.ts",
+          "packages/vite/**/executors/**/schema.json",
+          "packages/vite/**/generators/**/schema.json",
+          "packages/vite/generators.json",
+          "packages/vite/executors.json",
+          "packages/vite/package.json",
+          "packages/vite/migrations.json"
+        ]
+      },
+      "outputs": ["{options.outputFile}"]
+    }
   }
 }

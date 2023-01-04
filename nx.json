@@ -48,7 +48,15 @@
     },
     "build-base": {
       "dependsOn": ["^build-base"],
-      "inputs": ["production", "^production"]
+      "inputs": ["production", "^production"],
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "outputPath": "build/{projectRoot}",
+        "tsConfig": "{projectRoot}/tsconfig.lib.json",
+        "main": "{projectRoot}/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false
+      },
+      "outputs": ["{options.outputPath}"]
     },
     "test": {
       "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],

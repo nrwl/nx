@@ -8,10 +8,6 @@
     "build-base": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "outputPath": "build/packages/nx-plugin",
-        "tsConfig": "packages/nx-plugin/tsconfig.lib.json",
-        "main": "packages/nx-plugin/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/nx-plugin",
@@ -46,8 +42,7 @@
             "output": "/"
           }
         ]
-      },
-      "outputs": ["{options.outputPath}"]
+      }
     },
     "build": {
       "executor": "nx:run-commands",

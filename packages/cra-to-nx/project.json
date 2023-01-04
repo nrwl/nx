@@ -8,13 +8,8 @@
     "test": {},
     "build-base": {
       "executor": "@nrwl/js:tsc",
-      "outputs": ["{options.outputPath}"],
       "options": {
-        "outputPath": "build/packages/cra-to-nx",
-        "tsConfig": "packages/cra-to-nx/tsconfig.lib.json",
-        "packageJson": "packages/cra-to-nx/package.json",
         "main": "packages/cra-to-nx/src/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           "packages/cra-to-nx/*.md",
           "packages/cra-to-nx/package.json",

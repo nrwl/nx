@@ -8,7 +8,6 @@
     "test": {},
     "build-base": {
       "executor": "@nrwl/js:tsc",
-      "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "build/packages/add-nx-to-monorepo",
         "tsConfig": "packages/add-nx-to-monorepo/tsconfig.lib.json",

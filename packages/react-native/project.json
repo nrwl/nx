@@ -9,10 +9,6 @@
     "build-base": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "outputPath": "build/packages/react-native",
-        "tsConfig": "packages/react-native/tsconfig.lib.json",
-        "main": "packages/react-native/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           "packages/react-native/*.md",
           {
@@ -52,8 +48,7 @@
             "output": "/"
           }
         ]
-      },
-      "outputs": ["{options.outputPath}"]
+      }
     },
     "build": {
       "executor": "nx:run-commands",
