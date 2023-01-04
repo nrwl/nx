@@ -4,21 +4,10 @@
   "sourceRoot": "packages/next",
   "projectType": "library",
   "targets": {
-    "test": {
-      "executor": "@nrwl/jest:jest",
-      "options": {
-        "jestConfig": "packages/next/jest.config.ts",
-        "passWithNoTests": true
-      },
-      "outputs": ["{workspaceRoot}/coverage/packages/next"]
-    },
+    "test": {},
     "build-base": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "outputPath": "build/packages/next",
-        "tsConfig": "packages/next/tsconfig.lib.json",
-        "main": "packages/next/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/next",
@@ -58,8 +47,7 @@
             "output": "/"
           }
         ]
-      },
-      "outputs": ["{options.outputPath}"]
+      }
     },
     "build": {
       "executor": "nx:run-commands",
@@ -68,26 +56,6 @@
         "command": "node ./scripts/copy-readme.js next"
       }
     },
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "lintFilePatterns": [
-          "packages/next/**/*.ts",
-          "packages/next/**/*.spec.ts",
-          "packages/next/**/*_spec.ts",
-          "packages/next/**/*.spec.tsx",
-          "packages/next/**/*.spec.js",
-          "packages/next/**/*.spec.jsx",
-          "packages/next/**/*.d.ts",
-          "packages/next/**/executors/**/schema.json",
-          "packages/next/**/generators/**/schema.json",
-          "packages/next/generators.json",
-          "packages/next/executors.json",
-          "packages/next/package.json",
-          "packages/next/migrations.json"
-        ]
-      },
-      "outputs": ["{options.outputFile}"]
-    }
+    "lint": {}
   }
 }

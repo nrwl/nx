@@ -48,19 +48,47 @@
     },
     "build-base": {
       "dependsOn": ["^build-base"],
-      "inputs": ["production", "^production"]
+      "inputs": ["production", "^production"],
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "outputPath": "build/{projectRoot}",
+        "tsConfig": "{projectRoot}/tsconfig.lib.json",
+        "main": "{projectRoot}/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false
+      },
+      "outputs": ["{options.outputPath}"]
     },
     "test": {
-      "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"]
+      "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "jestConfig": "{projectRoot}/jest.config.ts",
+        "passWithNoTests": true
+      },
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"]
     },
     "lint": {
       "inputs": [
         "default",
         "{workspaceRoot}/.eslintrc.json",
         "{workspaceRoot}/tools/eslint-rules/**/*"
-      ]
+      ],
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "{projectRoot}/**/*.{ts,tsx,js,jsx}",
+          "{projectRoot}/**/executors/**/schema.json",
+          "{projectRoot}/**/generators/**/schema.json",
+          "{projectRoot}/generators.json",
+          "{projectRoot}/executors.json",
+          "{projectRoot}/package.json",
+          "{projectRoot}/migrations.json"
+        ]
+      },
+      "outputs": ["{options.outputFile}"]
     },
     "e2e": {
+      "executor": "nx:run-commands",
       "inputs": [
         "default",
         "^production",
@@ -70,13 +98,34 @@
         {
           "env": "NX_E2E_CI_CACHE_KEY"
         }
-      ]
+      ],
+      "options": {
+        "commands": [
+          {
+            "command": "yarn e2e-start-local-registry"
+          },
+          {
+            "command": "yarn e2e-build-package-publish"
+          },
+          {
+            "command": "nx run-e2e-tests {projectName}"
+          }
+        ],
+        "parallel": false
+      }
     },
     "e2e-base": {
       "inputs": ["default", "^production"]
     },
     "run-e2e-tests": {
-      "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"]
+      "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "jestConfig": "{projectRoot}/jest.config.ts",
+        "passWithNoTests": true,
+        "runInBand": true
+      },
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"]
     },
     "build-storybook": {
       "inputs": ["default", "^production", "{workspaceRoot}/.storybook/**/*"]

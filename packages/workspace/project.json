@@ -4,22 +4,10 @@
   "sourceRoot": "packages/workspace/src",
   "projectType": "library",
   "targets": {
-    "test": {
-      "executor": "@nrwl/jest:jest",
-      "options": {
-        "jestConfig": "packages/workspace/jest.config.ts",
-        "passWithNoTests": true
-      },
-      "outputs": ["{workspaceRoot}/coverage/packages/workspace"]
-    },
+    "test": {},
     "build-base": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "outputPath": "build/packages/workspace",
-        "tsConfig": "packages/workspace/tsconfig.lib.json",
-        "packageJson": "packages/workspace/package.json",
-        "main": "packages/workspace/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/workspace",
@@ -89,8 +77,7 @@
             "output": "/"
           }
         ]
-      },
-      "outputs": ["{options.outputPath}"]
+      }
     },
     "build": {
       "executor": "nx:run-commands",
@@ -116,25 +103,6 @@
         "parallel": false
       }
     },
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "lintFilePatterns": [
-          "packages/workspace/**/*.ts",
-          "packages/workspace/**/*.spec.ts",
-          "packages/workspace/**/*.spec.tsx",
-          "packages/workspace/**/*.spec.js",
-          "packages/workspace/**/*.spec.jsx",
-          "packages/workspace/**/*.d.ts",
-          "packages/workspace/**/executors/**/schema.json",
-          "packages/workspace/**/generators/**/schema.json",
-          "packages/workspace/generators.json",
-          "packages/workspace/executors.json",
-          "packages/workspace/package.json",
-          "packages/workspace/migrations.json"
-        ]
-      },
-      "outputs": ["{options.outputFile}"]
-    }
+    "lint": {}
   }
 }

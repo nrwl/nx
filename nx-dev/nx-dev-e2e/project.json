@@ -18,13 +18,7 @@
         "testingType": "e2e"
       }
     },
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "lintFilePatterns": ["nx-dev/nx-dev-e2e/**/*.{js,ts}"]
-      },
-      "outputs": ["{options.outputFile}"]
-    }
+    "lint": {}
   },
   "tags": ["scope:nx-dev", "type:e2e"],
   "implicitDependencies": ["nx-dev"]

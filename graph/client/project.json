@@ -239,21 +239,8 @@
       },
       "defaultConfiguration": "dev"
     },
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["graph/client/**/*.{ts,tsx,js,jsx}"]
-      }
-    },
-    "test": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/graph/client"],
-      "options": {
-        "jestConfig": "graph/client/jest.config.ts",
-        "passWithNoTests": true
-      }
-    },
+    "lint": {},
+    "test": {},
     "storybook": {
       "executor": "@nrwl/storybook:storybook",
       "options": {

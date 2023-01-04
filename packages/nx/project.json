@@ -8,11 +8,7 @@
     "build-base": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "outputPath": "build/packages/nx",
-        "tsConfig": "packages/nx/tsconfig.lib.json",
-        "packageJson": "packages/nx/package.json",
         "main": "packages/nx/bin/nx.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/nx",
@@ -47,8 +43,7 @@
             "output": "/"
           }
         ]
-      },
-      "outputs": ["{options.outputPath}"]
+      }
     },
     "echo": {
       "executor": "nx:command",
@@ -80,31 +75,7 @@
         "parallel": false
       }
     },
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "lintFilePatterns": [
-          "packages/nx/**/*.ts",
-          "packages/nx/**/*.spec.ts",
-          "packages/nx/**/*_spec.ts",
-          "packages/nx/**/*.spec.tsx",
-          "packages/nx/**/*.spec.js",
-          "packages/nx/**/*.spec.jsx",
-          "packages/nx/**/*.d.ts",
-          "packages/nx/executors.json",
-          "packages/nx/package.json",
-          "packages/nx/migrations.json"
-        ]
-      },
-      "outputs": ["{options.outputFile}"]
-    },
-    "test": {
-      "executor": "@nrwl/jest:jest",
-      "options": {
-        "jestConfig": "packages/nx/jest.config.ts",
-        "passWithNoTests": true
-      },
-      "outputs": ["{workspaceRoot}/coverage/packages/nx"]
-    }
+    "lint": {},
+    "test": {}
   }
 }

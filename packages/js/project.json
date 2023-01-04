@@ -4,36 +4,12 @@
   "sourceRoot": "packages/js/src",
   "projectType": "library",
   "targets": {
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": [
-          "packages/js/**/*.ts",
-          "packages/js/**/executors/**/schema.json",
-          "packages/js/**/generators/**/schema.json",
-          "packages/js/generators.json",
-          "packages/js/executors.json",
-          "packages/js/package.json",
-          "packages/js/migrations.json"
-        ]
-      }
-    },
-    "test": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/js"],
-      "options": {
-        "jestConfig": "packages/js/jest.config.ts",
-        "passWithNoTests": true
-      }
-    },
+    "lint": {},
+    "test": {},
     "build-base": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "outputPath": "build/packages/js",
-        "tsConfig": "packages/js/tsconfig.lib.json",
         "main": "packages/js/src/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/js",
@@ -68,8 +44,7 @@
             "output": "/"
           }
         ]
-      },
-      "outputs": ["{options.outputPath}"]
+      }
     },
     "build": {
       "executor": "nx:run-commands",
