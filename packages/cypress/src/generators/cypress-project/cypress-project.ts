@@ -316,7 +316,8 @@ function normalizeOptions(host: Tree, options: Schema): CypressProjectSchema {
   if (
     maybeRootProject?.root === '.' ||
     // should still check to see if we are in a standalone based workspace
-    Array.from(projects.values()).some((config) => config.root === '.')
+    (!maybeRootProject &&
+      Array.from(projects.values()).some((config) => config.root === '.'))
   ) {
     projectName = options.name;
     projectRoot = options.name;

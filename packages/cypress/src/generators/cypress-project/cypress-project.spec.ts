@@ -286,6 +286,32 @@ describe('Cypress Project', () => {
             ])
           );
         });
+
+        it('should not generate a root project when the passed in project is not the root project', async () => {
+          addProjectConfiguration(tree, 'root', {
+            root: '.',
+          });
+          addProjectConfiguration(tree, 'my-cool-app', {
+            root: 'apps/my-app',
+          });
+          await cypressProjectGenerator(tree, {
+            ...defaultOptions,
+            name: 'e2e-tests',
+            baseUrl: 'http://localhost:1234',
+            project: 'my-app',
+          });
+          expect(tree.listChanges().map((c) => c.path)).toEqual(
+            expect.arrayContaining([
+              'apps/e2e-tests/cypress.config.ts',
+              'apps/e2e-tests/src/e2e/app.cy.ts',
+              'apps/e2e-tests/src/fixtures/example.json',
+              'apps/e2e-tests/src/support/app.po.ts',
+              'apps/e2e-tests/src/support/commands.ts',
+              'apps/e2e-tests/src/support/e2e.ts',
+              'apps/e2e-tests/tsconfig.json',
+            ])
+          );
+        });
       });
     });
 
