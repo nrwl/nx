@@ -131,12 +131,18 @@ export function addProviderToRoute(
       }
     );
 
-    const routeText = selectedRouteNode.getText();
     if (routeProivdersNodes.length === 0) {
       const newFileContents = `${routesFileContents.slice(
         0,
         selectedRouteNode.getEnd() - 1
-      )}, providers: [${providerToAdd}]${routesFileContents.slice(
+      )}${
+        routesFileContents
+          .slice(0, selectedRouteNode.getEnd() - 1)
+          .trim()
+          .endsWith(',')
+          ? ''
+          : ', '
+      }providers: [${providerToAdd}]${routesFileContents.slice(
         selectedRouteNode.getEnd() - 1,
         routesFileContents.length
       )}`;

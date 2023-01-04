@@ -9,6 +9,7 @@ import {
   removeChange,
   replaceChange,
 } from '@nrwl/workspace/src/utilities/ast-utils';
+import { tsquery } from '@phenomnomnominal/tsquery';
 
 type DecoratorName = 'Component' | 'Directive' | 'NgModule' | 'Pipe';
 
@@ -603,6 +604,38 @@ function getListOfRoutes(
     }
   }
   return null;
+}
+
+export function addProviderToBootstrapApplication(
+  tree: Tree,
+  filePath: string,
+  providerToAdd: string
+) {
+  const PROVIDERS_ARRAY_SELECTOR =
+    'CallExpression:has(Identifier[name=bootstrapApplication]) ObjectLiteralExpression > PropertyAssignment:has(Identifier[name=providers]) > ArrayLiteralExpression';
+
+  const fileContents = tree.read(filePath, 'utf-8');
+  const ast = tsquery.ast(fileContents);
+  const providersArrayNodes = tsquery(ast, PROVIDERS_ARRAY_SELECTOR, {
+    visitAllChildren: true,
+  });
+  if (providersArrayNodes.length === 0) {
+    throw new Error(
+      `Providers does not exist in the bootstrapApplication call within ${filePath}.`
+    );
+  }
+
+  const arrayNode = providersArrayNodes[0];
+
+  const newFileContents = `${fileContents.slice(
+    0,
+    arrayNode.getStart() + 1
+  )}${providerToAdd},${fileContents.slice(
+    arrayNode.getStart() + 1,
+    fileContents.length
+  )}`;
+
+  tree.write(filePath, newFileContents);
 }
 
 export function addProviderToModule(
