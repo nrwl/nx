@@ -1165,6 +1165,12 @@
               "id": "include-all-packagejson",
               "tags": [],
               "file": "shared/recipes/include-all-packagejson"
+            },
+            {
+              "name": "Identify Dependencies Between Folders",
+              "id": "identify-dependencies-between-folders",
+              "tags": [],
+              "file": "shared/recipes/identify-dependencies-between-folders"
             }
           ]
         }
