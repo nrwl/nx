@@ -48,7 +48,7 @@
       },
       "headless": {
         "type": "boolean",
-        "description": "[Deprecated]: Hide the browser instead of running headed (Use --watch instead).",
+        "description": "Hide the browser instead of running headed.",
         "default": false,
         "x-deprecated": "Cypress runs headless by default. Use the --watch flag to control head/headless behavior instead."
       },
@@ -89,7 +89,7 @@
       },
       "copyFiles": {
         "type": "string",
-        "description": "[Deprecated]: A regex string that is used to choose what additional integration files to copy to the dist folder. (Option is ignored)",
+        "description": "A regex string that is used to choose what additional integration files to copy to the dist folder.",
         "x-deprecated": "No longer used since cypress supports typescript out of the box. If specified, it will be ignored."
       },
       "ciBuildId": {

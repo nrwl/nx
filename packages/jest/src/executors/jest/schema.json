@@ -56,12 +56,12 @@
       "type": "string"
     },
     "tsConfig": {
-      "description": "[Deprecated]: The name of the Typescript configuration file. (Use the jest config instead)",
+      "description": "The name of the Typescript configuration file.",
       "type": "string",
       "x-deprecated": "Use the ts-jest configuration options in the jest config file instead."
     },
     "setupFile": {
-      "description": "[Deprecated]: The name of a setup file used by Jest. (use jest config instead)",
+      "description": "The name of a setup file used by Jest.",
       "type": "string",
       "x-deprecated": "Use the setupFilesAfterEnv option in the jest config file. https://jestjs.io/docs/en/configuration#setupfilesafterenv-array"
     },

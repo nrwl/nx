@@ -15,7 +15,7 @@
     },
     "skipSetupFile": {
       "type": "boolean",
-      "description": "[Deprecated]: Skips the setup file required for angular. (Use `--setup-file`)",
+      "description": "Skips the setup file required for angular.",
       "default": false,
       "x-deprecated": "Use `--setup-file` instead."
     },
@@ -50,7 +50,7 @@
     "babelJest": {
       "type": "boolean",
       "alias": "babel-jest",
-      "description": "[Deprecated]: Use `babel-jest` instead of `ts-jest` (Use `--compiler=babel`).",
+      "description": "Use `babel-jest` instead of `ts-jest`.",
       "x-deprecated": "Use `--compiler=babel` instead.",
       "default": false
     },
