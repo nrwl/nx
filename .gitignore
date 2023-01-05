@@ -27,3 +27,5 @@ CHANGELOG.md
 
 # Local dev files
 .env
+
+*.node

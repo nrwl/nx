@@ -1,0 +1,31 @@
+{
+  "name": "native-extensions",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "native-extensions/src",
+  "targets": {
+    "build": {
+      "executor": "@monodon/rust:napi",
+      "options": {
+        "dist": "packages/native-extensions",
+        "jsFile": "packages/native-extensions/index.js"
+      },
+      "configurations": {
+        "production": {
+          "dist": "build/packages/native-extensions",
+          "release": true
+        }
+      }
+    },
+
+    "test": {},
+    "lint": {
+      "executor": "@monodon/rust:lint",
+      "outputs": ["{options.target-dir}"],
+      "options": {
+        "target-dir": "build/target/native-extensions"
+      }
+    }
+  },
+  "tags": []
+}

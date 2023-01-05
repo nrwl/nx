@@ -1,0 +1,17 @@
+{
+  "name": "@nrwl/native-extensions-linux-arm-gnueabihf",
+  "version": "0.0.0",
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "arm"
+  ],
+  "main": "native-extensions.linux-arm-gnueabihf.node",
+  "files": [
+    "native-extensions.linux-arm-gnueabihf.node"
+  ],
+  "engines": {
+    "node": ">= 10"
+  }
+}

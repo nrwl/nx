@@ -1,0 +1,17 @@
+{
+  "name": "@nrwl/native-extensions-darwin-x64",
+  "version": "0.0.0",
+  "os": [
+    "darwin"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "main": "native-extensions.darwin-x64.node",
+  "files": [
+    "native-extensions.darwin-x64.node"
+  ],
+  "engines": {
+    "node": ">= 10"
+  }
+}

@@ -1184,6 +1184,17 @@
     "generators": {},
     "path": "/packages/make-angular-cli-faster"
   },
+  "native-extensions": {
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "native-extensions",
+    "packageName": "@nrwl/native-extensions",
+    "documents": {},
+    "root": "/packages/native-extensions",
+    "source": "/packages/native-extensions/src",
+    "executors": {},
+    "generators": {},
+    "path": "/packages/native-extensions"
+  },
   "nest": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "nest",

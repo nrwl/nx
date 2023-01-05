@@ -46,10 +46,7 @@
       }
     },
     "echo": {
-      "executor": "nx:command",
-      "options": {
-        "command": "echo hi"
-      }
+      "command": "echo hi"
     },
     "build": {
       "executor": "nx:run-commands",

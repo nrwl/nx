@@ -1,0 +1,6 @@
+
+[workspace]
+members = ['packages/native-extensions']
+
+[profile.release]
+lto = true
