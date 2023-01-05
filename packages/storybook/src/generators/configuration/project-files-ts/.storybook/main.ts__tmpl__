@@ -2,6 +2,8 @@
 <% if (isRootProject){ %>import { rootMain } from './main.root';<% } %>
 import type { StorybookConfig, Options } from '@storybook/core-common';
 <% if (isNextJs){ %>import path from 'path';<% } %>
+<% if (usesVite){ %>import { mergeConfig } from 'vite';<% } %>
+<% if (usesVite){ %>import viteTsConfigPaths from 'vite-tsconfig-paths';<% } %>
 
 const config: StorybookConfig = {
   ...rootMain,
@@ -23,7 +25,16 @@ const config: StorybookConfig = {
       },
     }
      <% } %>
-  ]<% if (!usesVite) { %>,
+  ]<% if (usesVite) { %>,
+  async viteFinal(config: any) {
+    return mergeConfig(config, {
+      plugins: [
+        viteTsConfigPaths({
+          root: '<%= offsetFromRoot %>../',
+        }),
+      ],
+    });
+  },<% } %><% if (!usesVite) { %>,
   webpackFinal: async (config, { configType }: Options) => {
     // apply any global webpack configs that might have been specified in .storybook/main.ts
     if (rootMain.webpackFinal) {

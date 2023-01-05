@@ -6,6 +6,8 @@ exports[`StorybookConfiguration generator should configure storybook to use webp
 
 
 
+
+
 module.exports = {
   ...rootMain,
   core: { ...rootMain.core, builder: 'webpack5' },
