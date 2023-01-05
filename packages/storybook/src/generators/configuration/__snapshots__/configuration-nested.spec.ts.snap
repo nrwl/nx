@@ -5,6 +5,8 @@ exports[`@nrwl/storybook:configuration for workspaces with Root project basic fu
 import { rootMain } from './main.root';
 import type { StorybookConfig, Options } from '@storybook/core-common';
 
+import { mergeConfig } from 'vite';
+import viteTsConfigPaths from 'vite-tsconfig-paths';
 
 const config: StorybookConfig = {
   ...rootMain,
@@ -17,7 +19,16 @@ const config: StorybookConfig = {
   addons: [...(rootMain.addons || []) 
     
     
-  ]
+  ],
+  async viteFinal(config: any) {
+    return mergeConfig(config, {
+      plugins: [
+        viteTsConfigPaths({
+          root: './../',
+        }),
+      ],
+    });
+  },
 };
 
 module.exports = config;
@@ -71,6 +82,8 @@ exports[`@nrwl/storybook:configuration for workspaces with Root project basic fu
 "import { rootMain } from '../../../.storybook/main.root';
 
 import type { StorybookConfig, Options } from '@storybook/core-common';
+
+
 
 
 const config: StorybookConfig = {

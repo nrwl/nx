@@ -1,5 +1,7 @@
 <% if (!isRootProject){ %>const rootMain = require('<%= offsetFromRoot %>../.storybook/<%= rootMainName %>');<% } %>
 <% if (isRootProject){ %>const rootMain = require('./main.root');<% } %>
+<% if (usesVite){ %>const { mergeConfig } = require('vite');<% } %>
+<% if (usesVite){ %>const viteTsConfigPaths = require('vite-tsconfig-paths').default;<% } %>
 <% if (existsRootWebpackConfig && !usesVite){ %>const rootWebpackConfig = require('<%= offsetFromRoot %>../.storybook/webpack.config'); <% } %>
 <% if (isNextJs){ %>const path = require('path');<% } %>
 
@@ -23,7 +25,16 @@ module.exports = {
       },
     }
      <% } %>
-  ]<% if (!usesVite) { %>,
+  ]<% if (usesVite) { %>,
+  async viteFinal(config, { configType }) {
+    return mergeConfig(config, {
+      plugins: [
+        viteTsConfigPaths({
+          root: '<%= offsetFromRoot %>../',
+        }),
+      ],
+    });
+  },<% } %><% if (!usesVite) { %>,
   webpackFinal: async (config, { configType }) => {
     // apply any global webpack configs that might have been specified in .storybook/main.js
     if (rootMain.webpackFinal) {

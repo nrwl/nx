@@ -6,6 +6,8 @@ exports[`@nrwl/storybook:configuration basic functionalities should generate a w
 
 
 
+
+
 module.exports = {
   ...rootMain,
   core: { ...rootMain.core, builder: 'webpack5' },
@@ -106,6 +108,8 @@ Array [
 exports[`@nrwl/storybook:configuration basic functionalities should reference the "old" webpack.config.js if there - for backwards compatibility 1`] = `
 "const rootMain = require('../../../.storybook/main');
 
+
+
 const rootWebpackConfig = require('../../../.storybook/webpack.config'); 
 
 
@@ -145,6 +149,8 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 
 import type { StorybookConfig, Options } from '@storybook/core-common';
 
+import { mergeConfig } from 'vite';
+import viteTsConfigPaths from 'vite-tsconfig-paths';
 
 const config: StorybookConfig = {
   ...rootMain,
@@ -157,7 +163,16 @@ const config: StorybookConfig = {
   addons: [...(rootMain.addons || []) 
     
     
-  ]
+  ],
+  async viteFinal(config: any) {
+    return mergeConfig(config, {
+      plugins: [
+        viteTsConfigPaths({
+          root: '../../../',
+        }),
+      ],
+    });
+  },
 };
 
 module.exports = config;
@@ -194,6 +209,8 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 
 import type { StorybookConfig, Options } from '@storybook/core-common';
 
+import { mergeConfig } from 'vite';
+import viteTsConfigPaths from 'vite-tsconfig-paths';
 
 const config: StorybookConfig = {
   ...rootMain,
@@ -206,7 +223,16 @@ const config: StorybookConfig = {
   addons: [...(rootMain.addons || []) 
     
     
-  ]
+  ],
+  async viteFinal(config: any) {
+    return mergeConfig(config, {
+      plugins: [
+        viteTsConfigPaths({
+          root: '../../../',
+        }),
+      ],
+    });
+  },
 };
 
 module.exports = config;
@@ -243,6 +269,8 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 
 import type { StorybookConfig, Options } from '@storybook/core-common';
 import path from 'path';
+import { mergeConfig } from 'vite';
+import viteTsConfigPaths from 'vite-tsconfig-paths';
 
 const config: StorybookConfig = {
   ...rootMain,
@@ -262,7 +290,16 @@ const config: StorybookConfig = {
       },
     }
      
-  ]
+  ],
+  async viteFinal(config: any) {
+    return mergeConfig(config, {
+      plugins: [
+        viteTsConfigPaths({
+          root: '../../../',
+        }),
+      ],
+    });
+  },
 };
 
 module.exports = config;
@@ -299,6 +336,8 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 
 import type { StorybookConfig, Options } from '@storybook/core-common';
 
+import { mergeConfig } from 'vite';
+import viteTsConfigPaths from 'vite-tsconfig-paths';
 
 const config: StorybookConfig = {
   ...rootMain,
@@ -311,7 +350,16 @@ const config: StorybookConfig = {
   addons: [...(rootMain.addons || []) 
     
     
-  ]
+  ],
+  async viteFinal(config: any) {
+    return mergeConfig(config, {
+      plugins: [
+        viteTsConfigPaths({
+          root: '../../../',
+        }),
+      ],
+    });
+  },
 };
 
 module.exports = config;
@@ -348,6 +396,8 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 
 import type { StorybookConfig, Options } from '@storybook/core-common';
 
+import { mergeConfig } from 'vite';
+import viteTsConfigPaths from 'vite-tsconfig-paths';
 
 const config: StorybookConfig = {
   ...rootMain,
@@ -360,7 +410,16 @@ const config: StorybookConfig = {
   addons: [...(rootMain.addons || []) 
     , 'storybook-addon-swc' 
     
-  ]
+  ],
+  async viteFinal(config: any) {
+    return mergeConfig(config, {
+      plugins: [
+        viteTsConfigPaths({
+          root: '../../../',
+        }),
+      ],
+    });
+  },
 };
 
 module.exports = config;
@@ -397,6 +456,8 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 
 import type { StorybookConfig, Options } from '@storybook/core-common';
 
+import { mergeConfig } from 'vite';
+import viteTsConfigPaths from 'vite-tsconfig-paths';
 
 const config: StorybookConfig = {
   ...rootMain,
@@ -409,7 +470,16 @@ const config: StorybookConfig = {
   addons: [...(rootMain.addons || []) 
     
     
-  ]
+  ],
+  async viteFinal(config: any) {
+    return mergeConfig(config, {
+      plugins: [
+        viteTsConfigPaths({
+          root: '../../../',
+        }),
+      ],
+    });
+  },
 };
 
 module.exports = config;
@@ -445,6 +515,8 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "import { rootMain } from '../../../.storybook/main';
 
 import type { StorybookConfig, Options } from '@storybook/core-common';
+
+
 
 
 const config: StorybookConfig = {
@@ -506,6 +578,8 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 import type { StorybookConfig, Options } from '@storybook/core-common';
 
 
+
+
 const config: StorybookConfig = {
   ...rootMain,
   core: { ...rootMain.core, builder: 'webpack5' },
@@ -564,6 +638,8 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 
 import type { StorybookConfig, Options } from '@storybook/core-common';
 import path from 'path';
+
+
 
 const config: StorybookConfig = {
   ...rootMain,
@@ -631,6 +707,8 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 import type { StorybookConfig, Options } from '@storybook/core-common';
 
 
+
+
 const config: StorybookConfig = {
   ...rootMain,
   core: { ...rootMain.core, builder: 'webpack5' },
@@ -688,6 +766,8 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "import { rootMain } from '../../../.storybook/main';
 
 import type { StorybookConfig, Options } from '@storybook/core-common';
+
+
 
 
 const config: StorybookConfig = {
@@ -749,6 +829,8 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 import type { StorybookConfig, Options } from '@storybook/core-common';
 
 
+
+
 const config: StorybookConfig = {
   ...rootMain,
   core: { ...rootMain.core, builder: 'webpack5' },
@@ -804,6 +886,8 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for NextJS buildable libs 1`] = `
 "const rootMain = require('../../../.storybook/main');
+
+
 
 
 
@@ -866,6 +950,8 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 
 
 
+
+
 module.exports = {
   ...rootMain,
   core: { ...rootMain.core, builder: 'webpack5' },
@@ -920,6 +1006,8 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for NextJs apps 1`] = `
 "const rootMain = require('../../../.storybook/main');
+
+
 
 
 const path = require('path');
@@ -989,6 +1077,8 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 
 
 
+
+
 module.exports = {
   ...rootMain,
   core: { ...rootMain.core, builder: 'webpack5' },
@@ -1047,6 +1137,8 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 
 
 
+
+
 module.exports = {
   ...rootMain,
   core: { ...rootMain.core, builder: 'webpack5' },
@@ -1101,6 +1193,8 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for js Storybook configurations should create correct main.js and tsconfig.json for React buildable libs 1`] = `
 "const rootMain = require('../../../.storybook/main');
+
+
 
 
 
