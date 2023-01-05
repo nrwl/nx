@@ -37,9 +37,10 @@ export default async function* moduleFederationDevServer(
   }
 
   const remotesToSkip = new Set(options.skipRemotes ?? []);
-  const knownRemotes = (moduleFederationConfig.remotes ?? []).filter(
-    (r) => !remotesToSkip.has(r)
-  );
+  const knownRemotes = (moduleFederationConfig.remotes ?? []).filter((r) => {
+    const validRemote = Array.isArray(r) ? r[0] : r;
+    return !remotesToSkip.has(validRemote);
+  });
 
   const devServeApps = !options.devRemotes
     ? []
