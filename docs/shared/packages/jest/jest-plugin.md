@@ -94,7 +94,7 @@ This is because each [jest process creates a workers based on system resources](
 
 ### Jest
 
-Primary configurations for Jest will be via the `jest.config.js` file that generated for your project. This file will extend the root `jest.config.js` file. Learn more about [Jest configurations](https://jestjs.io/docs/configuration#options).
+Primary configurations for Jest will be via the `jest.config.ts` file that generated for your project. This file will extend the root `jest.preset.js` file. Learn more about [Jest configurations](https://jestjs.io/docs/configuration#options).
 
 ### Nx
 
@@ -119,7 +119,7 @@ By default, coverage reports will be generated in the `coverage/` directory unde
 In order to use Jest's global setup/teardown functions that reference nx libraries, you'll need to register the TS path for jest to resolve the libraries.
 Nx provides a helper function that you can import within your setup/teardown file.
 
-```typescript
+```typescript {% fileName="global-setup.ts" %}
 import { registerTsProject } from 'nx/src/utils/register';
 const cleanupRegisteredPaths = registerTsProject('.', 'tsconfig.base.json');
 
@@ -130,6 +130,23 @@ export default async function () {
 // make sure to run the clean up!
 cleanupRegisteredPaths();
 ```
+
+{% callout type="note" title="@swc/jest & global scripts" %}
+When using @swc/jest and a global setup/teardown file,
+You'll have to set the global setup/teardown file to be transformed with ts-jest.
+For example, if your files are named `global-setup.ts` and `global-teardown.ts`,
+then you would need to add to your _project level `jest.config.ts`_ a new entry in the transformers object
+
+```typescript {% fileName="apps/<your-project>/jest.config.ts" %}
+export default {
+  transform: {
+    'global-(setup|teardown).ts': 'ts-jest',
+    // resest of the transformers
+  },
+};
+```
+
+{% /callout %}
 
 ## Debugging Failing Tests
 

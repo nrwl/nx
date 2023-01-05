@@ -4,7 +4,11 @@ import {
   executeDevServerBuilder,
 } from '@angular-devkit/build-angular';
 import { JsonObject } from '@angular-devkit/core';
-import { joinPathFragments, parseTargetString } from '@nrwl/devkit';
+import {
+  joinPathFragments,
+  parseTargetString,
+  readCachedProjectGraph,
+} from '@nrwl/devkit';
 import { WebpackNxBuildCoordinationPlugin } from '@nrwl/webpack/src/plugins/webpack-nx-build-coordination-plugin';
 import { DependentBuildableProjectNode } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
@@ -26,7 +30,10 @@ export function executeWebpackDevServerBuilder(
 
   const options = normalizeOptions(rawOptions);
 
-  const parsedBrowserTarget = parseTargetString(options.browserTarget);
+  const parsedBrowserTarget = parseTargetString(
+    options.browserTarget,
+    readCachedProjectGraph()
+  );
   const browserTargetProjectConfiguration = readCachedProjectConfiguration(
     parsedBrowserTarget.project
   );

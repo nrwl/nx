@@ -97,7 +97,7 @@ export function getBuildTargetOptions(
   buildTarget: string,
   context: ExecutorContext
 ) {
-  const target = parseTargetString(buildTarget);
+  const target = parseTargetString(buildTarget, context.projectGraph);
   return readTargetOptions(target, context);
 }
 

@@ -59,9 +59,7 @@ This is the configuration to use when performing tasks on projects
 
 ### exclude
 
-Type: `array`
-
-Default: `[]`
+Type: `string`
 
 Exclude certain projects from being processed
 
@@ -105,7 +103,7 @@ Max number of parallel processes [default is 3]
 
 Type: `string`
 
-Projects to run. (comma delimited project names and/or patterns)
+Projects to run. (comma/space delimited project names and/or patterns)
 
 ### runner
 
@@ -123,7 +121,7 @@ Rerun the tasks even when the results are available in the cache
 
 ### targets
 
-Type: `array`
+Type: `string`
 
 Tasks to run for affected projects
 

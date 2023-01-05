@@ -20,7 +20,7 @@ import {
   storybookVersion,
   svgrVersion,
   urlLoaderVersion,
-  viteBuilderVeresion,
+  viteBuilderVersion,
   webpack5Version,
   htmlWebpackPluginVersion,
 } from '../../utils/versions';
@@ -40,7 +40,7 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
   devDependencies['@storybook/addon-essentials'] = storybookVersion;
 
   if (schema.bundler === 'vite') {
-    devDependencies['@storybook/builder-vite'] = viteBuilderVeresion;
+    devDependencies['@storybook/builder-vite'] = viteBuilderVersion;
   } else {
     devDependencies['@storybook/builder-webpack5'] = storybookVersion;
     devDependencies['@storybook/manager-webpack5'] = storybookVersion;

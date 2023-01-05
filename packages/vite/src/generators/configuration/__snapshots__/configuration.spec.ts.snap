@@ -24,6 +24,15 @@ import { join } from 'path';
     ],
     
         
+    // Uncomment this if you are using workers. 
+    // worker: {
+    //  plugins: [
+    //    viteTsConfigPaths({
+    //      root: '../',
+    //    }),
+    //  ],
+    // },
+        
       // Configuration for building your library.
       // See: https://vitejs.dev/guide/build.html#library-mode
       build: {
@@ -69,6 +78,15 @@ import { join } from 'path';
       }),
     ],
     
+        
+    // Uncomment this if you are using workers. 
+    // worker: {
+    //  plugins: [
+    //    viteTsConfigPaths({
+    //      root: '../../',
+    //    }),
+    //  ],
+    // },
         
       // Configuration for building your library.
       // See: https://vitejs.dev/guide/build.html#library-mode
@@ -359,6 +377,15 @@ exports[`@nrwl/vite:configuration transform React app to use Vite should create 
     ],
     
         
+    // Uncomment this if you are using workers. 
+    // worker: {
+    //  plugins: [
+    //    viteTsConfigPaths({
+    //      root: '../../',
+    //    }),
+    //  ],
+    // },
+        
         
         
       });"
@@ -493,6 +520,15 @@ exports[`@nrwl/vite:configuration transform Web app to use Vite should create vi
     ],
     
         
+    // Uncomment this if you are using workers. 
+    // worker: {
+    //  plugins: [
+    //    viteTsConfigPaths({
+    //      root: '../../',
+    //    }),
+    //  ],
+    // },
+        
         
         
       });"
@@ -615,6 +651,15 @@ exports[`@nrwl/vite:configuration vitest should create a vitest configuration if
       }),
     ],
     
+        
+    // Uncomment this if you are using workers. 
+    // worker: {
+    //  plugins: [
+    //    viteTsConfigPaths({
+    //      root: '../../',
+    //    }),
+    //  ],
+    // },
         
         
         test: {

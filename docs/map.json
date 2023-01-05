@@ -539,7 +539,7 @@
               "id": "packages-devkit",
               "tags": ["create-your-own-plugin"],
               "file": "",
-              "path": "/packages/devkit/index",
+              "path": "/packages/devkit/documents/index",
               "isExternal": true
             },
             {
@@ -1165,6 +1165,12 @@
               "id": "include-all-packagejson",
               "tags": [],
               "file": "shared/recipes/include-all-packagejson"
+            },
+            {
+              "name": "Identify Dependencies Between Folders",
+              "id": "identify-dependencies-between-folders",
+              "tags": [],
+              "file": "shared/recipes/identify-dependencies-between-folders"
             }
           ]
         }
@@ -1201,6 +1207,16 @@
               "name": "Enable GitHub PR Integration",
               "id": "github",
               "file": "nx-cloud/set-up/github"
+            },
+            {
+              "name": "Enable Bitbucket Cloud PR Integration",
+              "id": "bitbucket-cloud",
+              "file": "nx-cloud/set-up/bitbucket-cloud"
+            },
+            {
+              "name": "Enable GitLab MR Integration",
+              "id": "gitlab",
+              "file": "nx-cloud/set-up/gitlab"
             }
           ]
         },

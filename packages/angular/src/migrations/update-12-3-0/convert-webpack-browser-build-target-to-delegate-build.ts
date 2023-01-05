@@ -1,4 +1,5 @@
 import {
+  createProjectGraphAsync,
   formatFiles,
   getProjects,
   parseTargetString,
@@ -21,14 +22,14 @@ export default async function convertWebpackBrowserBuildTargetToDelegateBuild(
     );
     for (const target of webpackBrowserTargets) {
       const configurationOptions = getTargetConfigurationOptions(target);
-      const buildTargetName = getBuildTargetNameFromOptions(
+      const buildTargetName = await getBuildTargetNameFromOptions(
         target.options,
         configurationOptions
       );
       if (buildTargetName) {
         target.executor = '@nrwl/angular:delegate-build';
         updateTargetsOptions(project, target, buildTargetName);
-        updateTargetsConfigurations(
+        await updateTargetsConfigurations(
           project,
           projectName,
           target,
@@ -52,14 +53,17 @@ function cleanupBuildTargetProperties(options: {
   delete options.outputPath;
 }
 
-function extractConfigurationBuildTarget(
+async function extractConfigurationBuildTarget(
   project: string,
   target: string,
   configuration: string,
   buildTarget: string
-): Target {
+): Promise<Target> {
   if (buildTarget) {
-    const buildTargetObj = parseTargetString(buildTarget);
+    const buildTargetObj = parseTargetString(
+      buildTarget,
+      await createProjectGraphAsync()
+    );
     return {
       ...buildTargetObj,
       configuration: buildTargetObj.configuration ?? configuration,
@@ -73,16 +77,17 @@ function extractConfigurationBuildTarget(
   };
 }
 
-function getBuildTargetNameFromOptions(
+async function getBuildTargetNameFromOptions(
   baseOptions: any,
   configurationOptions: Map<string, any>
-): string {
+): Promise<string> {
+  const pg = await createProjectGraphAsync();
   if (baseOptions.buildTarget) {
-    return parseTargetString(baseOptions.buildTarget).target;
+    return parseTargetString(baseOptions.buildTarget, pg).target;
   }
   for (const [, options] of configurationOptions) {
     if (options.buildTarget) {
-      return parseTargetString(options.buildTarget).target;
+      return parseTargetString(options.buildTarget, pg).target;
     }
   }
 }
@@ -102,7 +107,7 @@ function getTargetConfigurationOptions(
   return targets;
 }
 
-function updateTargetsConfigurations(
+async function updateTargetsConfigurations(
   project: ProjectConfiguration,
   projectName: string,
   target: TargetConfiguration,
@@ -113,7 +118,7 @@ function updateTargetsConfigurations(
     const { buildTarget, tsConfig, outputPath, ...delegateTargetOptions } =
       options;
 
-    const configurationBuildTarget = extractConfigurationBuildTarget(
+    const configurationBuildTarget = await extractConfigurationBuildTarget(
       projectName,
       buildTargetName,
       configurationName,

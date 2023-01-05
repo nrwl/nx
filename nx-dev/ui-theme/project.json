@@ -5,20 +5,7 @@
   "projectType": "library",
   "tags": [],
   "targets": {
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["nx-dev/ui-theme/**/*.{ts,tsx,js,jsx}"]
-      }
-    },
-    "test": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/nx-dev/ui-theme"],
-      "options": {
-        "jestConfig": "nx-dev/ui-theme/jest.config.ts",
-        "passWithNoTests": true
-      }
-    }
+    "lint": {},
+    "test": {}
   }
 }

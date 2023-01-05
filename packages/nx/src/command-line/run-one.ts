@@ -12,6 +12,7 @@ import { workspaceRoot } from '../utils/workspace-root';
 import { splitTarget } from '../utils/split-target';
 import { output } from '../utils/output';
 import {
+  ProjectConfiguration,
   ProjectsConfigurations,
   TargetDependencyConfig,
 } from '../config/workspace-json-project-json';
@@ -35,10 +36,7 @@ export async function runOne(
   const nxJson = readNxJson();
   const projectGraph = await createProjectGraphAsync({ exitOnError: true });
 
-  const opts = parseRunOneOptions(cwd, args, {
-    ...readProjectsConfigurationFromProjectGraph(projectGraph),
-    ...nxJson,
-  });
+  const opts = parseRunOneOptions(cwd, args, projectGraph, nxJson);
 
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
     {
@@ -102,13 +100,13 @@ const targetAliases = {
 function parseRunOneOptions(
   cwd: string,
   parsedArgs: { [k: string]: any },
-  workspaceConfiguration: ProjectsConfigurations & NxJsonConfiguration
+  projectGraph: ProjectGraph<ProjectConfiguration>,
+  nxJson: NxJsonConfiguration
 ): { project; target; configuration; parsedArgs } {
-  const defaultProjectName = calculateDefaultProjectName(
-    cwd,
-    workspaceRoot,
-    workspaceConfiguration
-  );
+  const defaultProjectName = calculateDefaultProjectName(cwd, workspaceRoot, {
+    ...readProjectsConfigurationFromProjectGraph(projectGraph),
+    ...nxJson,
+  });
 
   let project;
   let target;
@@ -117,7 +115,8 @@ function parseRunOneOptions(
   if (parsedArgs['project:target:configuration'].indexOf(':') > -1) {
     // run case
     [project, target, configuration] = splitTarget(
-      parsedArgs['project:target:configuration']
+      parsedArgs['project:target:configuration'],
+      projectGraph
     );
     // this is to account for "nx npmsript:dev"
     if (project && !target && defaultProjectName) {

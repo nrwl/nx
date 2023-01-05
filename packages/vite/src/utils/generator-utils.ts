@@ -73,14 +73,17 @@ export function findExistingTargetsInProject(
 
   const arrayofUnsupportedExecutors = [
     '@nrwl/angular:ng-packagr-lite',
-    '@angular-devkit/build-angular:browser',
     '@nrwl/angular:package',
     '@nrwl/angular:webpack-browser',
     '@angular-devkit/build-angular:browser',
     '@angular-devkit/build-angular:dev-server',
-    '@nrwl/angular:ng-packagr-lite',
     '@nrwl/esbuild:esbuild',
+    '@nrwl/react-native:run-ios',
     '@nrwl/react-native:start',
+    '@nrwl/react-native:run-android',
+    '@nrwl/react-native:bundle',
+    '@nrwl/react-native:build-android',
+    '@nrwl/react-native:bundle',
     '@nrwl/next:build',
     '@nrwl/next:server',
     '@nrwl/js:tsc',
@@ -208,12 +211,16 @@ export function addOrChangeTestTarget(
 ) {
   const project = readProjectConfiguration(tree, options.project);
 
+  const coveragePath = joinPathFragments(
+    'coverage',
+    project.root === '.' ? options.project : project.root
+  );
   const testOptions: VitestExecutorOptions = {
     passWithNoTests: true,
+    // vitest runs in the project root so we have to offset to the workspaceRoot
     reportsDirectory: joinPathFragments(
-      '{workspaceRoot}',
-      'coverage',
-      '{projectRoot}'
+      offsetFromRoot(project.root),
+      coveragePath
     ),
   };
 
@@ -226,7 +233,7 @@ export function addOrChangeTestTarget(
     }
     project.targets[target] = {
       executor: '@nrwl/vite:test',
-      outputs: ['{projectRoot}/coverage'],
+      outputs: [coveragePath],
       options: testOptions,
     };
   }
@@ -555,6 +562,16 @@ export function createOrEditViteConfig(
     ],
     `;
 
+  const workerOption = `
+    // Uncomment this if you are using workers. 
+    // worker: {
+    //  plugins: [
+    //    viteTsConfigPaths({
+    //      root: '${offsetFromRoot(projectConfig.root)}',
+    //    }),
+    //  ],
+    // },`;
+
   if (tree.exists(viteConfigPath)) {
     handleViteConfigFileExists(
       tree,
@@ -580,6 +597,7 @@ export function createOrEditViteConfig(
       export default defineConfig({
         ${serverOption}
         ${pluginOption}
+        ${workerOption}
         ${buildOption}
         ${defineOption}
         ${testOption}

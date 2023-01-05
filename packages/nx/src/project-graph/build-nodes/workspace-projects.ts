@@ -11,8 +11,13 @@ import { ProjectGraphBuilder } from '../project-graph-builder';
 import { PackageJson } from '../../utils/package-json';
 import { readJsonFile } from '../../utils/fileutils';
 import { NxJsonConfiguration } from '../../config/nx-json';
-import { TargetConfiguration } from '../../config/workspace-json-project-json';
+import { ProjectConfiguration } from '../../config/workspace-json-project-json';
+import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { NX_PREFIX } from '../../utils/logger';
+import {
+  mergeTargetConfigurations,
+  readTargetDefaultsForTarget,
+} from '../../config/workspaces';
 
 export function buildWorkspaceProjectNodes(
   ctx: ProjectGraphProcessorContext,
@@ -20,9 +25,13 @@ export function buildWorkspaceProjectNodes(
   nxJson: NxJsonConfiguration
 ) {
   const toAdd = [];
-  Object.keys(ctx.workspace.projects).forEach((key) => {
+  const projects = Object.keys(ctx.workspace.projects);
+  const projectsSet = new Set(projects);
+
+  for (const key of projects) {
     const p = ctx.workspace.projects[key];
     const projectRoot = join(workspaceRoot, p.root);
+
     if (existsSync(join(projectRoot, 'package.json'))) {
       p.targets = mergeNpmScriptsWithTargets(projectRoot, p.targets);
 
@@ -47,13 +56,20 @@ export function buildWorkspaceProjectNodes(
       }
     }
 
-    p.targets = normalizeProjectTargets(p.targets, nxJson.targetDefaults, key);
+    p.implicitDependencies = normalizeImplicitDependencies(
+      key,
+      p.implicitDependencies,
+      projects,
+      projectsSet
+    );
 
     p.targets = mergePluginTargetsWithNxTargets(
       p.root,
       p.targets,
       loadNxPlugins(ctx.workspace.plugins)
     );
+
+    p.targets = normalizeProjectTargets(p, nxJson.targetDefaults, key);
 
     // TODO: remove in v16
     const projectType =
@@ -62,10 +78,7 @@ export function buildWorkspaceProjectNodes(
           ? 'e2e'
           : 'app'
         : 'lib';
-    const tags =
-      ctx.workspace.projects && ctx.workspace.projects[key]
-        ? ctx.workspace.projects[key].tags || []
-        : [];
+    const tags = ctx.workspace.projects?.[key]?.tags || [];
 
     toAdd.push({
       name: key,
@@ -76,7 +89,7 @@ export function buildWorkspaceProjectNodes(
         files: ctx.fileMap[key],
       },
     });
-  });
+  }
 
   // Sort by root directory length (do we need this?)
   toAdd.sort((a, b) => {
@@ -98,26 +111,27 @@ export function buildWorkspaceProjectNodes(
  * Apply target defaults and normalization
  */
 function normalizeProjectTargets(
-  targets: Record<string, TargetConfiguration>,
-  defaultTargets: NxJsonConfiguration['targetDefaults'],
+  project: ProjectConfiguration,
+  targetDefaults: NxJsonConfiguration['targetDefaults'],
   projectName: string
 ) {
-  for (const targetName in defaultTargets) {
-    const target = targets?.[targetName];
-    if (!target) {
-      continue;
-    }
-    if (defaultTargets[targetName].inputs && !target.inputs) {
-      target.inputs = defaultTargets[targetName].inputs;
-    }
-    if (defaultTargets[targetName].dependsOn && !target.dependsOn) {
-      target.dependsOn = defaultTargets[targetName].dependsOn;
-    }
-    if (defaultTargets[targetName].outputs && !target.outputs) {
-      target.outputs = defaultTargets[targetName].outputs;
-    }
-  }
+  const targets = project.targets;
   for (const target in targets) {
+    const executor =
+      targets[target].executor ?? targets[target].command
+        ? 'nx:run-commands'
+        : null;
+
+    const defaults = readTargetDefaultsForTarget(
+      target,
+      targetDefaults,
+      executor
+    );
+
+    if (defaults) {
+      targets[target] = mergeTargetConfigurations(project, target, defaults);
+    }
+
     const config = targets[target];
     if (config.command) {
       if (config.executor) {
@@ -127,14 +141,32 @@ function normalizeProjectTargets(
       } else {
         targets[target] = {
           ...targets[target],
-          executor: 'nx:run-commands',
+          executor,
           options: {
             ...config.options,
             command: config.command,
           },
         };
+        delete config.command;
       }
     }
   }
   return targets;
+}
+
+export function normalizeImplicitDependencies(
+  source: string,
+  implicitDependencies: ProjectConfiguration['implicitDependencies'],
+  projectNames: string[],
+  projectsSet: Set<string>
+) {
+  if (!implicitDependencies?.length) {
+    return implicitDependencies ?? [];
+  }
+  const matches = findMatchingProjects(
+    implicitDependencies,
+    projectNames,
+    projectsSet
+  );
+  return matches.filter((x) => x !== source);
 }

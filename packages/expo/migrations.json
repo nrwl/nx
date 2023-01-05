@@ -547,6 +547,36 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "15.4.3": {
+      "version": "15.4.3-beta.0",
+      "packages": {
+        "expo": {
+          "version": "47.0.9",
+          "alwaysAddToPackageJson": false
+        },
+        "@expo/metro-config": {
+          "version": "0.5.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@expo/webpack-config": {
+          "version": "~0.17.3",
+          "alwaysAddToPackageJson": false,
+          "addToPackageJson": "dependencies"
+        },
+        "eas-cli": {
+          "version": "3.1.1",
+          "alwaysAddToPackageJson": false
+        },
+        "react-native-web": {
+          "version": "~0.18.10",
+          "alwaysAddToPackageJson": false
+        },
+        "react-native-svg": {
+          "version": "13.4.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

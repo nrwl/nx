@@ -47,7 +47,7 @@
     "rollup-plugin-copy": "^3.4.0",
     "rollup-plugin-peer-deps-external": "^2.2.4",
     "rollup-plugin-postcss": "^4.0.1",
-    "rollup-plugin-typescript2": "^0.31.1",
+    "rollup-plugin-typescript2": "0.34.1",
     "rxjs": "^6.5.4",
     "tslib": "^2.3.0"
   },

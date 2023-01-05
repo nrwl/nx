@@ -160,6 +160,11 @@
     "url": "https://github.com/nx-go/nx-go"
   },
   {
+    "name": "@nx-golang/gin",
+    "description": "Nx plugin to use Go-Gin in a Nx workspace",
+    "url": "https://github.com/nx-golang/nx-golang"
+  },
+  {
     "name": "@angular-architects/module-federation",
     "description": "Nx plugin to use webpack module federation",
     "url": "https://github.com/angular-architects/module-federation-plugin"
@@ -268,6 +273,16 @@
     "name": "@nx-extend/playwright",
     "description": "Nx plugin to run playwright e2e tests in an Nx workspace",
     "url": "https://github.com/tripss/nx-extend/tree/master/packages/playwright"
+  },
+  {
+    "name": "@nx-extend/terraform",
+    "description": "Nx plugin for deploying your resources with Terraform",
+    "url": "https://github.com/tripss/nx-extend/tree/master/packages/terraform"
+  },
+  {
+    "name": "@nx-extend/pulumi",
+    "description": "Nx plugin for deploying your resources with Pulumi",
+    "url": "https://github.com/tripss/nx-extend/tree/master/packages/pulumi"
   },
   {
     "name": "@nativescript/nx",

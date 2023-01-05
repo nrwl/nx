@@ -1333,7 +1333,7 @@
           },
           {
             "name": "Nx Devkit",
-            "path": "/packages/devkit/index",
+            "path": "/packages/devkit/documents/index",
             "id": "packages-devkit",
             "isExternal": true,
             "children": [],
@@ -1400,7 +1400,7 @@
       },
       {
         "name": "Nx Devkit",
-        "path": "/packages/devkit/index",
+        "path": "/packages/devkit/documents/index",
         "id": "packages-devkit",
         "isExternal": true,
         "children": [],
@@ -2684,6 +2684,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Identify Dependencies Between Folders",
+            "path": "/recipes/other/identify-dependencies-between-folders",
+            "id": "identify-dependencies-between-folders",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -2935,6 +2943,14 @@
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
+      },
+      {
+        "name": "Identify Dependencies Between Folders",
+        "path": "/recipes/other/identify-dependencies-between-folders",
+        "id": "identify-dependencies-between-folders",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
       }
     ]
   },
@@ -2987,6 +3003,22 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Enable Bitbucket Cloud PR Integration",
+            "path": "/nx-cloud/set-up/bitbucket-cloud",
+            "id": "bitbucket-cloud",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Enable GitLab MR Integration",
+            "path": "/nx-cloud/set-up/gitlab",
+            "id": "gitlab",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -3003,6 +3035,22 @@
         "name": "Enable GitHub PR Integration",
         "path": "/nx-cloud/set-up/github",
         "id": "github",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Enable Bitbucket Cloud PR Integration",
+        "path": "/nx-cloud/set-up/bitbucket-cloud",
+        "id": "bitbucket-cloud",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Enable GitLab MR Integration",
+        "path": "/nx-cloud/set-up/gitlab",
+        "id": "gitlab",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

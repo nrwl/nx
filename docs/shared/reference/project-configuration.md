@@ -336,8 +336,7 @@ belonging to `myteam` are not depended on by libraries belong to `theirteam`.
 
 ### implicitDependencies
 
-Nx uses powerful source-code analysis to figure out your workspace's project graph. Some dependencies cannot be deduced
-statically, so you can set them manually like this:
+Nx uses powerful source-code analysis to figure out your workspace's project graph. Some dependencies cannot be deduced statically, so you can set them manually like this:
 
 {% tabs %}
 {% tab label="package.json" %}
@@ -390,6 +389,35 @@ You can also remove a dependency as follows:
 
 {% /tab %}
 {% /tabs %}
+
+An implicit dependency could also be a glob pattern:
+
+{% tabs %}
+{% tab label="package.json" %}
+
+```jsonc {% fileName="package.json" %}
+{
+  "name": "mylib",
+  "nx": {
+    "implicitDependencies": ["shop-*"] # regardless of what Nx thinks, "mylib" doesn't depend on "anotherlib"
+  }
+}
+```
+
+{% /tab %}
+{% tab label="project.json" %}
+
+```jsonc {% fileName="project.json" %}
+{
+  "root": "/libs/mylib",
+  "implicitDependencies": ["shop-*"] # regardless of what Nx thinks, "mylib" doesn't depend on "anotherlib"
+}
+```
+
+{% /tab %}
+{% /tabs %}
+
+In this example, mylib would implicitly depend on any project that's name started with `shop-`.
 
 ### Including package.json files as projects in the graph
 

@@ -33,18 +33,17 @@
     "@nrwl/react": "file:../react",
     "@nrwl/webpack": "file:../webpack",
     "@nrwl/workspace": "file:../workspace",
-    "@svgr/webpack": "^6.1.2",
     "chalk": "^4.1.0",
     "enhanced-resolve": "^5.8.3",
     "fs-extra": "^10.1.0",
     "metro-resolver": "^0.73.3",
     "node-fetch": "^2.6.7",
     "tar-fs": "^2.1.1",
-    "tsconfig-paths": "^3.9.0",
-    "tsconfig-paths-webpack-plugin": "^3.5.2"
+    "tsconfig-paths": "^4.1.2",
+    "tsconfig-paths-webpack-plugin": "^4.0.0"
   },
   "peerDependencies": {
-    "expo": "^47.0.8"
+    "expo": "^47.0.9"
   },
   "builders": "./executors.json",
   "ng-update": {

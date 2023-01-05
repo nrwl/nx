@@ -4,21 +4,10 @@
   "sourceRoot": "packages/esbuild",
   "projectType": "library",
   "targets": {
-    "test": {
-      "executor": "@nrwl/jest:jest",
-      "options": {
-        "jestConfig": "packages/esbuild/jest.config.ts",
-        "passWithNoTests": true
-      },
-      "outputs": ["{workspaceRoot}/coverage/packages/esbuild"]
-    },
+    "test": {},
     "build-base": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "outputPath": "build/packages/esbuild",
-        "tsConfig": "packages/esbuild/tsconfig.lib.json",
-        "main": "packages/esbuild/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/esbuild",
@@ -53,8 +42,7 @@
             "output": "/"
           }
         ]
-      },
-      "outputs": ["{options.outputPath}"]
+      }
     },
     "build": {
       "executor": "nx:run-commands",
@@ -63,26 +51,6 @@
         "command": "node ./scripts/copy-readme.js esbuild"
       }
     },
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "lintFilePatterns": [
-          "packages/esbuild/**/*.ts",
-          "packages/esbuild/**/*.spec.ts",
-          "packages/esbuild/**/*_spec.ts",
-          "packages/esbuild/**/*.spec.tsx",
-          "packages/esbuild/**/*.spec.js",
-          "packages/esbuild/**/*.spec.jsx",
-          "packages/esbuild/**/*.d.ts",
-          "packages/esbuild/**/executors/**/schema.json",
-          "packages/esbuild/**/generators/**/schema.json",
-          "packages/esbuild/generators.json",
-          "packages/esbuild/executors.json",
-          "packages/esbuild/package.json",
-          "packages/esbuild/migrations.json"
-        ]
-      },
-      "outputs": ["{options.outputFile}"]
-    }
+    "lint": {}
   }
 }

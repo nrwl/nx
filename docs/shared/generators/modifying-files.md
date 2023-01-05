@@ -37,8 +37,8 @@ Let's say we want to replace any instance of `thomasEdison` with `nikolaTesla` i
 export default async function (tree: Tree, schema: any) {
   const filePath = `path/to/index.ts`;
   const contents = tree.read(filePath).toString();
-  contents.replace('thomasEdison', 'nikolaTesla');
-  tree.write(filePath, contents);
+  const newContents = contents.replace('thomasEdison', 'nikolaTesla');
+  tree.write(filePath, newContents);
 }
 ```
 
@@ -48,8 +48,8 @@ This works, but only replaces the first instance of `thomasEdison`. To replace t
 export default async function (tree: Tree, schema: any) {
   const filePath = `path/to/index.ts`;
   const contents = tree.read(filePath).toString();
-  contents.replace(/thomasEdison/g, 'nikolaTesla');
-  tree.write(filePath, contents);
+  const newContents = contents.replace(/thomasEdison/g, 'nikolaTesla');
+  tree.write(filePath, newContents);
 }
 ```
 

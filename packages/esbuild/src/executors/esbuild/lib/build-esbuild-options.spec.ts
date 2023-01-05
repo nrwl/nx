@@ -3,6 +3,7 @@ import { ExecutorContext } from 'nx/src/config/misc-interfaces';
 
 describe('buildEsbuildOptions', () => {
   const context: ExecutorContext = {
+    projectName: 'myapp',
     workspace: {
       version: 2,
       projects: {
@@ -27,6 +28,7 @@ describe('buildEsbuildOptions', () => {
       buildEsbuildOptions(
         'esm',
         {
+          bundle: true,
           platform: 'browser',
           main: 'apps/myapp/src/index.ts',
           outputPath: 'dist/apps/myapp',
@@ -62,6 +64,7 @@ describe('buildEsbuildOptions', () => {
       buildEsbuildOptions(
         'esm',
         {
+          bundle: true,
           platform: 'browser',
           main: 'apps/myapp/src/index.ts',
           additionalEntryPoints: ['apps/myapp/src/extra-entry.ts'],
@@ -98,6 +101,7 @@ describe('buildEsbuildOptions', () => {
       buildEsbuildOptions(
         'cjs',
         {
+          bundle: true,
           platform: 'browser',
           main: 'apps/myapp/src/index.ts',
           outputPath: 'dist/apps/myapp',
@@ -133,6 +137,7 @@ describe('buildEsbuildOptions', () => {
       buildEsbuildOptions(
         'cjs',
         {
+          bundle: true,
           platform: 'node',
           main: 'apps/myapp/src/index.ts',
           outputPath: 'dist/apps/myapp',
@@ -165,6 +170,7 @@ describe('buildEsbuildOptions', () => {
       buildEsbuildOptions(
         'esm',
         {
+          bundle: true,
           platform: 'node',
           main: 'apps/myapp/src/index.ts',
           outputPath: 'dist/apps/myapp',
@@ -200,6 +206,7 @@ describe('buildEsbuildOptions', () => {
       buildEsbuildOptions(
         'cjs',
         {
+          bundle: true,
           platform: 'node',
           main: 'apps/myapp/src/index.ts',
           outputPath: 'dist/apps/myapp',
@@ -236,6 +243,7 @@ describe('buildEsbuildOptions', () => {
       buildEsbuildOptions(
         'esm',
         {
+          bundle: true,
           platform: 'node',
           main: 'apps/myapp/src/index.ts',
           outputPath: 'dist/apps/myapp',

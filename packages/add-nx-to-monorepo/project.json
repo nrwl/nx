@@ -4,23 +4,10 @@
   "sourceRoot": "packages/add-nx-to-monorepo/src",
   "projectType": "library",
   "targets": {
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "lintFilePatterns": ["packages/add-nx-to-monorepo/**/*.ts"]
-      }
-    },
-    "test": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/packages/add-nx-to-monorepo"],
-      "options": {
-        "jestConfig": "packages/add-nx-to-monorepo/jest.config.ts",
-        "passWithNoTests": true
-      }
-    },
+    "lint": {},
+    "test": {},
     "build-base": {
       "executor": "@nrwl/js:tsc",
-      "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "build/packages/add-nx-to-monorepo",
         "tsConfig": "packages/add-nx-to-monorepo/tsconfig.lib.json",

@@ -25,9 +25,7 @@ This is the configuration to use when performing tasks on projects
 
 ### exclude
 
-Type: `array`
-
-Default: `[]`
+Type: `string`
 
 Exclude certain projects from being processed
 
@@ -83,7 +81,7 @@ Rerun the tasks even when the results are available in the cache
 
 ### targets
 
-Type: `array`
+Type: `string`
 
 Tasks to run for affected projects
 

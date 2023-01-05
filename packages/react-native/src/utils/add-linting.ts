@@ -42,16 +42,12 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     (json: ESLintLinter.Config) => {
       json = extendReactEslintJson(json);
 
-      json.ignorePatterns = ['!**/*', 'public', '.cache', 'node_modules'];
-
-      // Find the override that handles both TS and JS files.
-      const commonOverride = json.overrides?.find((o) =>
-        ['*.ts', '*.tsx', '*.js', '*.jsx'].every((ext) => o.files.includes(ext))
-      );
-      if (commonOverride) {
-        commonOverride.rules = commonOverride.rules || {};
-        commonOverride.rules['@typescript-eslint/ban-ts-comment'] = 'off';
-      }
+      json.ignorePatterns = [
+        ...json.ignorePatterns,
+        'public',
+        '.cache',
+        'node_modules',
+      ];
 
       return json;
     }

@@ -4,21 +4,8 @@
   "sourceRoot": "nx-dev/models-document/src",
   "projectType": "library",
   "targets": {
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["nx-dev/models-document/**/*.ts"]
-      }
-    },
-    "test": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/nx-dev/models-document"],
-      "options": {
-        "jestConfig": "nx-dev/models-document/jest.config.ts",
-        "passWithNoTests": true
-      }
-    }
+    "lint": {},
+    "test": {}
   },
   "tags": ["scope:nx-dev", "type:util"]
 }

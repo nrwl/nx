@@ -3,6 +3,7 @@ import storiesGenerator from '../stories/stories';
 import {
   convertNxGenerator,
   ensurePackage,
+  joinPathFragments,
   logger,
   readProjectConfiguration,
   Tree,
@@ -53,6 +54,42 @@ export async function storybookConfigurationGenerator(
     }
   }
 
+  /**
+   * If it's library and there's no .babelrc file,
+   * we need to generate one if it's not using vite.
+   *
+   * The reason is that it will be using webpack for Storybook,
+   * and webpack needs the babelrc file to be present.
+   *
+   * The reason the babelrc file is not there in the first place,
+   * is because the vitest generator deletes it, since it
+   * does not need it.
+   * See:
+   * packages/react/src/generators/library/lib/create-files.ts#L42
+   */
+
+  if (
+    bundler !== 'vite' &&
+    projectConfig.projectType === 'library' &&
+    !host.exists(joinPathFragments(projectConfig.root, '.babelrc'))
+  ) {
+    host.write(
+      joinPathFragments(projectConfig.root, '.babelrc'),
+      JSON.stringify({
+        presets: [
+          [
+            '@nrwl/react/babel',
+            {
+              runtime: 'automatic',
+              useBuiltIns: 'usage',
+            },
+          ],
+        ],
+        plugins: [],
+      })
+    );
+  }
+
   const installTask = await configurationGenerator(host, {
     name: schema.name,
     uiFramework: '@storybook/react',
@@ -62,6 +99,7 @@ export async function storybookConfigurationGenerator(
     cypressDirectory: schema.cypressDirectory,
     standaloneConfig: schema.standaloneConfig,
     tsConfiguration: schema.tsConfiguration,
+    configureTestRunner: schema.configureTestRunner,
     bundler,
   });
 

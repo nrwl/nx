@@ -1,14 +1,17 @@
+import { ProjectsConfigurations } from '../config/workspace-json-project-json';
 import {
   ImplicitJsonSubsetDependency,
   NxJsonConfiguration,
 } from '../config/nx-json';
+import { findMatchingProjects } from './find-matching-projects';
 import { stripIndents } from './strip-indents';
 
 export function assertWorkspaceValidity(
   workspaceJson,
   nxJson: NxJsonConfiguration
 ) {
-  const workspaceJsonProjects = Object.keys(workspaceJson.projects);
+  const projectNames = Object.keys(workspaceJson.projects);
+  const projectNameSet = new Set(projectNames);
 
   const projects = {
     ...workspaceJson.projects,
@@ -44,22 +47,31 @@ export function assertWorkspaceValidity(
       return acc;
     }, [])
     .reduce((map, [filename, projectNames]: [string, string[]]) => {
-      detectAndSetInvalidProjectValues(map, filename, projectNames, projects);
+      detectAndSetInvalidProjectGlobValues(
+        map,
+        filename,
+        projectNames,
+        projects,
+        projectNames,
+        projectNameSet
+      );
       return map;
     }, invalidImplicitDependencies);
 
-  workspaceJsonProjects
+  projectNames
     .filter((projectName) => {
       const project = projects[projectName];
       return !!project.implicitDependencies;
     })
     .reduce((map, projectName) => {
       const project = projects[projectName];
-      detectAndSetInvalidProjectValues(
+      detectAndSetInvalidProjectGlobValues(
         map,
         projectName,
         project.implicitDependencies,
-        projects
+        projects,
+        projectNames,
+        projectNameSet
       );
       return map;
     }, invalidImplicitDependencies);
@@ -80,20 +92,26 @@ export function assertWorkspaceValidity(
   throw new Error(`Configuration Error\n${message}`);
 }
 
-function detectAndSetInvalidProjectValues(
+function detectAndSetInvalidProjectGlobValues(
   map: Map<string, string[]>,
   sourceName: string,
   desiredImplicitDeps: string[],
-  validProjects: any
+  projectConfigurations: ProjectsConfigurations['projects'],
+  projectNames: string[],
+  projectNameSet: Set<string>
 ) {
-  const invalidProjects = desiredImplicitDeps.filter((implicit) => {
+  const invalidProjectsOrGlobs = desiredImplicitDeps.filter((implicit) => {
     const projectName = implicit.startsWith('!')
       ? implicit.substring(1)
       : implicit;
-    return !validProjects[projectName];
+
+    return !(
+      projectConfigurations[projectName] ||
+      findMatchingProjects([implicit], projectNames, projectNameSet).length
+    );
   });
 
-  if (invalidProjects.length > 0) {
-    map.set(sourceName, invalidProjects);
+  if (invalidProjectsOrGlobs.length > 0) {
+    map.set(sourceName, invalidProjectsOrGlobs);
   }
 }

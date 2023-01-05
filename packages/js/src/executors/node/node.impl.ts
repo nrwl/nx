@@ -15,7 +15,7 @@ import { InspectType, NodeExecutorOptions } from './schema';
 
 const hasher = new HashingImpl();
 const processMap = new Map<string, ChildProcess>();
-const hashedMap = new Map<string[], string>();
+const hashedMap = new Map<string, string>();
 
 export interface ExecutorEvent {
   outfile: string;
@@ -66,7 +66,7 @@ function calculateResolveMappings(
   context: ExecutorContext,
   options: NodeExecutorOptions
 ) {
-  const parsed = parseTargetString(options.buildTarget);
+  const parsed = parseTargetString(options.buildTarget, context.projectGraph);
   const { dependencies } = calculateProjectDependencies(
     context.projectGraph,
     context.root,
@@ -92,7 +92,7 @@ async function runProcess(
 
   const hashed = hasher.hashArray(execArgv.concat(options.args));
 
-  const hashedKey = [uniqueKey, ...options.args];
+  const hashedKey = JSON.stringify([uniqueKey, ...options.args]);
   hashedMap.set(hashedKey, hashed);
 
   const subProcess = fork(
@@ -166,7 +166,7 @@ async function killCurrentProcess(
   options: NodeExecutorOptions,
   signal: string = 'SIGTERM'
 ) {
-  const hashedKey = [uniqueKey, ...options.args];
+  const hashedKey = JSON.stringify([uniqueKey, ...options.args]);
   const currentProcessKey = hashedMap.get(hashedKey);
   if (!currentProcessKey) return;
 
@@ -198,7 +198,10 @@ async function* startBuild(
   options: NodeExecutorOptions,
   context: ExecutorContext
 ) {
-  const buildTarget = parseTargetString(options.buildTarget);
+  const buildTarget = parseTargetString(
+    options.buildTarget,
+    context.projectGraph
+  );
 
   yield* await runExecutor<ExecutorEvent>(
     buildTarget,
@@ -216,7 +219,7 @@ function runWaitUntilTargets(
 ): Promise<{ success: boolean }[]> {
   return Promise.all(
     options.waitUntilTargets.map(async (waitUntilTarget) => {
-      const target = parseTargetString(waitUntilTarget);
+      const target = parseTargetString(waitUntilTarget, context.projectGraph);
       const output = await runExecutor(target, {}, context);
       return new Promise<{ success: boolean }>(async (resolve) => {
         let event = await output.next();

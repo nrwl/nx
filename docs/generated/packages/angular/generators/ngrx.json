@@ -28,6 +28,12 @@
       "module": {
         "type": "string",
         "description": "The path to the `NgModule` where the feature state will be registered. The host directory will create/use the new state directory.",
+        "x-prompt": "What is the path to the module where this NgRx state should be registered?",
+        "x-deprecated": "This option will be removed in a future version of Nx. Please switch to using --parent instead."
+      },
+      "parent": {
+        "type": "string",
+        "description": "The path to the `NgModule` where the feature state will be registered. The host directory will create/use the new state directory.",
         "x-prompt": "What is the path to the module where this NgRx state should be registered?"
       },
       "directory": {
@@ -74,7 +80,7 @@
       }
     },
     "additionalProperties": false,
-    "required": ["module", "name"],
+    "required": ["name"],
     "presets": []
   },
   "description": "Adds NgRx support to an application or library.",

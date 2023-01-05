@@ -60,7 +60,7 @@ export const ParameterView = (props: {
       )}
     </div>
 
-    <div className="prose prose-slate dark:prose-invert">
+    <div className="prose prose-slate dark:prose-invert max-w-none">
       {
         renderMarkdown(props.description, {
           filePath: '',
@@ -68,7 +68,8 @@ export const ParameterView = (props: {
       }
     </div>
 
-    {props.deprecated && !!(props.schema as any)['x-deprecated'] && (
+    {props.deprecated &&
+    typeof (props.schema as any)['x-deprecated'] === 'string' ? (
       <div className="prose prose-slate dark:prose-invert mt-2 rounded-md bg-red-100 px-4 text-red-800 dark:bg-red-800 dark:text-red-100">
         {
           renderMarkdown(String((props.schema as any)['x-deprecated']), {
@@ -76,7 +77,7 @@ export const ParameterView = (props: {
           }).node
         }
       </div>
-    )}
+    ) : null}
   </div>
 );
 

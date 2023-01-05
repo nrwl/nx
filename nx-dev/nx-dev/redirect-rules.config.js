@@ -163,6 +163,8 @@ const guideUrls = {
   '/structure/project-graph-plugins': '/extending-nx/project-graph-plugins',
   '/guides/lerna-and-nx': '/migration/lerna-and-nx',
   '/cypress/v10-migration-guide': '/cypress/v11-migration-guide',
+  '/cypress/generators/migrate-to-cypress-10':
+    '/cypress/generators/migrate-to-cypress-11',
 };
 
 /**

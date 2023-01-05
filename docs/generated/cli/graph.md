@@ -69,7 +69,7 @@ Watch for changes to project graph and update in-browser:
 
 ### exclude
 
-Type: `array`
+Type: `string`
 
 List of projects delimited by commas to exclude from the project graph.
 

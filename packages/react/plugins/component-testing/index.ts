@@ -19,6 +19,18 @@ import {
   getProjectConfigByPath,
 } from '@nrwl/cypress/src/utils/ct-helpers';
 
+import type { Configuration } from 'webpack';
+type ViteDevServer = {
+  framework: 'react';
+  bundler: 'vite';
+  viteConfig?: any;
+};
+
+type WebpackDevServer = {
+  framework: 'react';
+  bundler: 'webpack';
+  webpackConfig?: any;
+};
 /**
  * React nx preset for Cypress Component Testing
  *
@@ -42,18 +54,13 @@ export function nxComponentTestingPreset(
   options?: NxComponentTestingOptions
 ): {
   specPattern: string;
-  devServer: {
-    framework?: 'react';
-    bundler?: 'vite' | 'webpack';
-    viteConfig?: any;
-    webpackConfig?: any;
-  };
+  devServer: ViteDevServer | WebpackDevServer;
   videosFolder: string;
   screenshotsFolder: string;
   video: boolean;
   chromeWebSecurity: boolean;
 } {
-  if (options.bundler === 'vite') {
+  if (options?.bundler === 'vite') {
     return {
       ...nxBaseCypressPreset(pathToConfig),
       specPattern: 'src/**/*.cy.{js,jsx,ts,tsx}',
@@ -63,7 +70,7 @@ export function nxComponentTestingPreset(
     };
   }
 
-  let webpackConfig;
+  let webpackConfig: any;
   try {
     const graph = readCachedProjectGraph();
     const { targets: ctTargets, name: ctProjectName } = getProjectConfigByPath(
@@ -119,10 +126,11 @@ export function nxComponentTestingPreset(
     devServer: {
       // cypress uses string union type,
       // need to use const to prevent typing to string
-      framework: 'react',
-      bundler: 'webpack',
+      // but don't want to use as const on webpackConfig
+      // so it is still user modifiable
+      ...({ framework: 'react', bundler: 'webpack' } as const),
       webpackConfig,
-    } as const,
+    },
   };
 }
 
@@ -158,7 +166,7 @@ function buildTargetWebpack(
   buildTarget: string,
   componentTestingProjectName: string
 ) {
-  const parsed = parseTargetString(buildTarget);
+  const parsed = parseTargetString(buildTarget, graph);
 
   const buildableProjectConfig = graph.nodes[parsed.project]?.data;
   const ctProjectConfig = graph.nodes[componentTestingProjectName]?.data;
@@ -194,47 +202,43 @@ function buildTargetWebpack(
     buildableProjectConfig.sourceRoot!
   );
 
-  const isScriptOptimizeOn =
-    typeof options.optimization === 'boolean'
-      ? options.optimization
-      : options.optimization && options.optimization.scripts
-      ? options.optimization.scripts
-      : false;
-
-  let customWebpack;
   if (options.webpackConfig) {
+    let customWebpack: any;
+
+    const isScriptOptimizeOn =
+      typeof options.optimization === 'boolean'
+        ? options.optimization
+        : options.optimization && options.optimization.scripts
+        ? options.optimization.scripts
+        : false;
+
     customWebpack = resolveCustomWebpackConfig(
       options.webpackConfig,
       options.tsConfig
     );
 
-    if (typeof customWebpack.then === 'function') {
-      // cypress configs have to be sync.
-      // TODO(caleb): there might be a workaround with setUpNodeEvents preprocessor?
-      logger.warn(stripIndents`Nx React Component Testing Preset currently doesn't support custom async webpack configs. 
-      Skipping the custom webpack config option '${options.webpackConfig}'`);
-      customWebpack = null;
-    }
-  }
+    return async () => {
+      customWebpack = await customWebpack;
+      const defaultWebpack = getWebpackConfig(
+        context,
+        options,
+        true,
+        isScriptOptimizeOn,
+        {
+          root: ctProjectConfig.root,
+          sourceRoot: ctProjectConfig.sourceRoot,
+          configuration: parsed.configuration,
+        }
+      );
 
-  const defaultWebpack = getWebpackConfig(
-    context,
-    options,
-    true,
-    isScriptOptimizeOn,
-    {
-      root: ctProjectConfig.root,
-      sourceRoot: ctProjectConfig.sourceRoot,
-      configuration: parsed.configuration,
-    }
-  );
-
-  if (customWebpack) {
-    return customWebpack(defaultWebpack, {
-      options,
-      context,
-      configuration: parsed.configuration,
-    });
+      if (customWebpack) {
+        return await customWebpack(defaultWebpack, {
+          options,
+          context,
+          configuration: parsed.configuration,
+        });
+      }
+      return defaultWebpack;
+    };
   }
-  return defaultWebpack;
 }

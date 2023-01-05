@@ -56,6 +56,43 @@
     }
   },
   "packageJsonUpdates": {
+    "15.4.3": {
+      "version": "15.4.3-beta.1",
+      "packages": {
+        "@storybook/core-server": {
+          "version": "^6.5.15",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/angular": {
+          "version": "^6.5.15",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/react": {
+          "version": "^6.5.15",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/web": {
+          "version": "^6.5.15",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/addon-essentials": {
+          "version": "^6.5.15",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/builder-webpack5": {
+          "version": "^6.5.15",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/manager-webpack5": {
+          "version": "^6.5.15",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/builder-vite": {
+          "version": "^0.2.6",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
     "15.1.1": {
       "version": "15.1.1-beta.0",
       "packages": {

@@ -47,6 +47,7 @@ import('./module.ts')`;
       } from './a';
 
       export { B } from './b';
+      export type { B } from './b';
 
       export { C as D } from './c';
 
@@ -58,6 +59,7 @@ export {
         A
       } from './a'
 export { B } from './b'
+export type { B } from './b'
 export { C as D } from './c'`;
 
     expect(stripSourceCode(scanner, input)).toEqual(expected);
@@ -239,6 +241,44 @@ export { C as D } from './c'`;
     const expected = `require('./a')
 require('./b')
 require('./c')`;
+
+    expect(stripSourceCode(scanner, input)).toEqual(expected);
+  });
+
+  it('should find an import after a template literal with a variable in it', () => {
+    const input = `
+      const a = 1;
+      const b = \`a: $\{a}\`
+      const c = await import('./c')
+      const d = require('./d')
+    `;
+    const expected = `import('./c')
+require('./d')`;
+
+    expect(stripSourceCode(scanner, input)).toEqual(expected);
+  });
+
+  it('finds imports after an escaped character', () => {
+    const input = `
+      const b = unquotedLiteral.replace(/"/g, '\\\\"')
+      const c = await import('./c')
+      const d = require('./d')
+    `;
+    const expected = `import('./c')
+require('./d')`;
+
+    expect(stripSourceCode(scanner, input)).toEqual(expected);
+  });
+
+  it('finds imports after template literals with a regex inside', () => {
+    const input = `
+      const a = 1;
+      const b = \`"$\{unquotedLiteral.replace(/"/g, '\\\\"')}"\`
+      const c = await import('./c')
+      const d = require('./d')
+    `;
+    const expected = `import('./c')
+require('./d')`;
 
     expect(stripSourceCode(scanner, input)).toEqual(expected);
   });

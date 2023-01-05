@@ -404,8 +404,8 @@ function withFormatOptions(yargs: yargs.Argv): yargs.Argv {
       type: 'boolean',
     })
     .option('projects', {
-      describe: 'Projects to format (comma delimited)',
-      type: 'array',
+      describe: 'Projects to format (comma/space delimited)',
+      type: 'string',
       coerce: parseCSV,
     })
     .conflicts({
@@ -448,9 +448,9 @@ function withPlainOption(yargs: yargs.Argv): yargs.Argv {
 function withExcludeOption(yargs: yargs.Argv): yargs.Argv {
   return yargs.option('exclude', {
     describe: 'Exclude certain projects from being processed',
-    type: 'array',
+    type: 'string',
     coerce: parseCSV,
-    default: [],
+    default: '',
   });
 }
 
@@ -515,8 +515,8 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
     })
     .option('files', {
       describe:
-        'Change the way Nx is calculating the affected command by providing directly changed files, list of files delimited by commas',
-      type: 'array',
+        'Change the way Nx is calculating the affected command by providing directly changed files, list of files delimited by commas or spaces',
+      type: 'string',
       requiresArg: true,
       coerce: parseCSV,
     })
@@ -571,12 +571,11 @@ function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
       'populate--': true,
     })
     .option('projects', {
-      type: 'array',
-      string: true,
+      type: 'string',
       alias: 'p',
       coerce: parseCSV,
       describe:
-        'Projects to run. (comma delimited project names and/or patterns)',
+        'Projects to run. (comma/space delimited project names and/or patterns)',
     })
     .option('all', {
       describe: '[deprecated] Run the target on all projects in the workspace',
@@ -600,7 +599,7 @@ function withDepGraphOptions(yargs: yargs.Argv): yargs.Argv {
     .option('exclude', {
       describe:
         'List of projects delimited by commas to exclude from the project graph.',
-      type: 'array',
+      type: 'string',
       coerce: parseCSV,
     })
 
@@ -654,7 +653,7 @@ function withTargetAndConfigurationOption(
 ): yargs.Argv {
   return withConfiguration(yargs).option('targets', {
     describe: 'Tasks to run for affected projects',
-    type: 'array',
+    type: 'string',
     alias: ['target', 't'],
     requiresArg: true,
     coerce: parseCSV,
@@ -949,11 +948,10 @@ function withWatchOptions(yargs: yargs.Argv) {
       'populate--': true,
     })
     .option('projects', {
-      type: 'array',
-      string: true,
+      type: 'string',
       alias: 'p',
       coerce: parseCSV,
-      description: 'Projects to watch (comma delimited).',
+      description: 'Projects to watch (comma/space delimited).',
     })
     .option('all', {
       type: 'boolean',
@@ -998,15 +996,11 @@ function withWatchOptions(yargs: yargs.Argv) {
     }, true);
 }
 
-function parseCSV(args: string[]) {
+function parseCSV(args: string) {
   if (!args) {
     return args;
   }
-  return args
-    .map((arg) => arg.split(','))
-    .reduce((acc, value) => {
-      return [...acc, ...value];
-    }, [] as string[]);
+  return args.split(',');
 }
 
 function linkToNxDevAndExamples(yargs: yargs.Argv, command: string) {

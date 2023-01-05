@@ -9,6 +9,9 @@ import {
   removeChange,
   replaceChange,
 } from '@nrwl/workspace/src/utilities/ast-utils';
+import { tsquery } from '@phenomnomnominal/tsquery';
+
+type DecoratorName = 'Component' | 'Directive' | 'NgModule' | 'Pipe';
 
 function _angularImportsFromNode(
   node: ts.ImportDeclaration,
@@ -60,6 +63,20 @@ function _angularImportsFromNode(
     // This is of the form `import 'path';`. Nothing to do.
     return {};
   }
+}
+
+export function isStandalone(
+  sourceFile: ts.SourceFile,
+  decoratorName: DecoratorName
+) {
+  const decoratorMetadata = getDecoratorMetadata(
+    sourceFile,
+    decoratorName,
+    '@angular/core'
+  );
+  return decoratorMetadata.some((node) =>
+    node.getText().includes('standalone: true')
+  );
 }
 
 export function getDecoratorMetadata(
@@ -128,14 +145,15 @@ export function getDecoratorMetadata(
     .map((expr) => expr.arguments[0] as ts.ObjectLiteralExpression);
 }
 
-function _addSymbolToNgModuleMetadata(
+function _addSymbolToDecoratorMetadata(
   host: Tree,
   source: ts.SourceFile,
-  ngModulePath: string,
+  filePath: string,
   metadataField: string,
-  expression: string
+  expression: string,
+  decoratorName: DecoratorName
 ): ts.SourceFile {
-  const nodes = getDecoratorMetadata(source, 'NgModule', '@angular/core');
+  const nodes = getDecoratorMetadata(source, decoratorName, '@angular/core');
   let node: any = nodes[0]; // tslint:disable-line:no-any
 
   // Find the decorator declaration.
@@ -187,7 +205,7 @@ function _addSymbolToNgModuleMetadata(
       }
     }
 
-    return insertChange(host, source, ngModulePath, position, toInsert);
+    return insertChange(host, source, filePath, position, toInsert);
   }
 
   const assignment = matchingProperties[0] as ts.PropertyAssignment;
@@ -259,7 +277,24 @@ function _addSymbolToNgModuleMetadata(
       toInsert = `, ${expression}`;
     }
   }
-  return insertChange(host, source, ngModulePath, position, toInsert);
+  return insertChange(host, source, filePath, position, toInsert);
+}
+
+function _addSymbolToNgModuleMetadata(
+  host: Tree,
+  source: ts.SourceFile,
+  ngModulePath: string,
+  metadataField: string,
+  expression: string
+): ts.SourceFile {
+  return _addSymbolToDecoratorMetadata(
+    host,
+    source,
+    ngModulePath,
+    metadataField,
+    expression,
+    'NgModule'
+  );
 }
 
 export function removeFromNgModule(
@@ -292,6 +327,54 @@ export function removeFromNgModule(
       matchingProperty.getFullText(source)
     );
   }
+}
+
+export function addImportToComponent(
+  host: Tree,
+  source: ts.SourceFile,
+  componentPath: string,
+  symbolName: string
+): ts.SourceFile {
+  return _addSymbolToDecoratorMetadata(
+    host,
+    source,
+    componentPath,
+    'imports',
+    symbolName,
+    'Component'
+  );
+}
+
+export function addImportToDirective(
+  host: Tree,
+  source: ts.SourceFile,
+  directivePath: string,
+  symbolName: string
+): ts.SourceFile {
+  return _addSymbolToDecoratorMetadata(
+    host,
+    source,
+    directivePath,
+    'imports',
+    symbolName,
+    'Directive'
+  );
+}
+
+export function addImportToPipe(
+  host: Tree,
+  source: ts.SourceFile,
+  pipePath: string,
+  symbolName: string
+): ts.SourceFile {
+  return _addSymbolToDecoratorMetadata(
+    host,
+    source,
+    pipePath,
+    'imports',
+    symbolName,
+    'Pipe'
+  );
 }
 
 export function addImportToModule(
@@ -521,6 +604,38 @@ function getListOfRoutes(
     }
   }
   return null;
+}
+
+export function addProviderToBootstrapApplication(
+  tree: Tree,
+  filePath: string,
+  providerToAdd: string
+) {
+  const PROVIDERS_ARRAY_SELECTOR =
+    'CallExpression:has(Identifier[name=bootstrapApplication]) ObjectLiteralExpression > PropertyAssignment:has(Identifier[name=providers]) > ArrayLiteralExpression';
+
+  const fileContents = tree.read(filePath, 'utf-8');
+  const ast = tsquery.ast(fileContents);
+  const providersArrayNodes = tsquery(ast, PROVIDERS_ARRAY_SELECTOR, {
+    visitAllChildren: true,
+  });
+  if (providersArrayNodes.length === 0) {
+    throw new Error(
+      `Providers does not exist in the bootstrapApplication call within ${filePath}.`
+    );
+  }
+
+  const arrayNode = providersArrayNodes[0];
+
+  const newFileContents = `${fileContents.slice(
+    0,
+    arrayNode.getStart() + 1
+  )}${providerToAdd},${fileContents.slice(
+    arrayNode.getStart() + 1,
+    fileContents.length
+  )}`;
+
+  tree.write(filePath, newFileContents);
 }
 
 export function addProviderToModule(

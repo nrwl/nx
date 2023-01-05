@@ -53,17 +53,15 @@ Base of the current branch (usually main)
 
 ### exclude
 
-Type: `array`
-
-Default: `[]`
+Type: `string`
 
 Exclude certain projects from being processed
 
 ### files
 
-Type: `array`
+Type: `string`
 
-Change the way Nx is calculating the affected command by providing directly changed files, list of files delimited by commas
+Change the way Nx is calculating the affected command by providing directly changed files, list of files delimited by commas or spaces
 
 ### head
 

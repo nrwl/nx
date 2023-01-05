@@ -254,6 +254,69 @@ describe('Nx Running Tests', () => {
       );
     }, 10000);
 
+    describe('target defaults + executor specifications', () => {
+      it('should be able to run targets with unspecified executor given an appropriate targetDefaults entry', () => {
+        const target = uniq('target');
+        const lib = uniq('lib');
+
+        updateJson('nx.json', (nxJson) => {
+          nxJson.targetDefaults ??= {};
+          nxJson.targetDefaults[target] = {
+            executor: 'nx:run-commands',
+            options: {
+              command: `echo Hello from ${target}`,
+            },
+          };
+          return nxJson;
+        });
+
+        updateFile(
+          `libs/${lib}/project.json`,
+          JSON.stringify({
+            name: lib,
+            targets: {
+              [target]: {},
+            },
+          })
+        );
+
+        expect(runCLI(`${target} ${lib} --verbose`)).toContain(
+          `Hello from ${target}`
+        );
+      });
+
+      it('should be able to pull options from targetDefaults based on executor', () => {
+        const target = uniq('target');
+        const lib = uniq('lib');
+
+        updateJson('nx.json', (nxJson) => {
+          nxJson.targetDefaults ??= {};
+          nxJson.targetDefaults[`nx:run-commands`] = {
+            options: {
+              command: `echo Hello from ${target}`,
+            },
+          };
+          return nxJson;
+        });
+
+        updateFile(
+          `libs/${lib}/project.json`,
+          JSON.stringify({
+            name: lib,
+            targets: {
+              [target]: {
+                executor: 'nx:run-commands',
+              },
+            },
+          })
+        );
+
+        expect(runCLI(`${target} ${lib} --verbose`)).toContain(
+          `Hello from ${target}`
+        );
+      });
+    });
+
     describe('target dependencies', () => {
       let myapp;
       let mylib1;
@@ -448,7 +511,9 @@ describe('Nx Running Tests', () => {
       runCLI(`generate @nrwl/web:app ${myapp1}`);
       runCLI(`generate @nrwl/web:app ${myapp2}`);
 
-      let outputs = runCLI(`run-many -t build test -p ${myapp1} ${myapp2}`);
+      let outputs = runCLI(
+        `run-many -t build test -p ${myapp1} ${myapp2} --ci`
+      );
       expect(outputs).toContain('Running targets build, test for 2 projects:');
 
       outputs = runCLI(`run-many -t build test -p=${myapp1},${myapp2}`);

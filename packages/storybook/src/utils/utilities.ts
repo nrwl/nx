@@ -211,21 +211,6 @@ export function dedupe(arr: string[]) {
   return Array.from(new Set(arr));
 }
 
-/**
- * This function is used to find the build targets for Storybook
- * and the project (if it's buildable).
- *
- * The reason this function exists is because we cannot assume
- * that the user has not created a custom build target for the project,
- * or that they have not changed the name of the build target
- * from build to anything else.
- *
- * So, in order to find the correct name of the target,
- * we have to look into all the targets, check the executor
- * they are using, and infer from the executor that the target
- * is a build target.
- */
-
 export function findStorybookAndBuildTargetsAndCompiler(targets: {
   [targetName: string]: TargetConfiguration;
 }): {
@@ -247,28 +232,37 @@ export function findStorybookAndBuildTargetsAndCompiler(targets: {
     compiler?: string;
   } = {};
 
-  Object.entries(targets).forEach(([target, targetConfig]) => {
-    switch (targetConfig.executor) {
-      case '@storybook/angular:start-storybook':
-        returnObject.storybookTarget = target;
-        break;
-      case '@storybook/angular:build-storybook':
-        returnObject.storybookBuildTarget = target;
-        break;
-      // If it's a non-angular project, these will be the executors
-      case '@nrwl/storybook:storybook':
-        returnObject.storybookTarget = target;
-        break;
-      case '@nrwl/storybook:build':
-        returnObject.storybookBuildTarget = target;
-        break;
-      case '@angular-devkit/build-angular:browser':
+  const arrayOfBuilders = [
+    '@nxext/vite:build',
+    '@nrwl/js:babel',
+    '@nrwl/js:swc',
+    '@nrwl/js:tsc',
+    '@nrwl/webpack:webpack',
+    '@nrwl/rollup:rollup',
+    '@nrwl/web:rollup',
+    '@nrwl/vite:build',
+    '@nrwl/angular:ng-packagr-lite',
+    '@nrwl/angular:package',
+    '@nrwl/angular:webpack-browser',
+    '@angular-devkit/build-angular:browser',
+    '@nrwl/esbuild:esbuild',
+    '@nrwl/next:build',
+    '@nrwl/react-native:bundle',
+    '@nrwl/react-native:build-android',
+    '@nrwl/react-native:bundle',
+  ];
+
+  for (const target in targets) {
+    if (arrayOfBuilders.includes(targets[target].executor)) {
+      if (
+        targets[target].executor === '@angular-devkit/build-angular:browser'
+      ) {
         /**
          * Not looking for '@nrwl/angular:ng-packagr-lite' or any other
-         * angular executors.
+         * @nrwl/angular:* executors.
          * Only looking for '@angular-devkit/build-angular:browser'
          * because the '@nrwl/angular:ng-packagr-lite' executor
-         * (and maybe the other custom exeucutors)
+         * (and maybe the other custom executors)
          * does not support styles and extra options, so the user
          * will be forced to switch to build-storybook to add extra options.
          *
@@ -276,30 +270,29 @@ export function findStorybookAndBuildTargetsAndCompiler(targets: {
          * avoid any errors.
          */
         returnObject.ngBuildTarget = target;
-        returnObject.compiler = targetConfig?.options?.compiler;
-        break;
-      case '@nrwl/vite:build':
+      } else if (targets[target].executor.includes('vite')) {
         returnObject.viteBuildTarget = target;
-        break;
-      case '@nrwl/next:build':
+      } else if (targets[target].executor.includes('next')) {
         returnObject.nextBuildTarget = target;
-        returnObject.compiler = targetConfig?.options?.compiler;
-        break;
-      case '@nrwl/web:webpack':
-      case '@nrwl/web:rollup':
-      case '@nrwl/js:tsc':
-      case '@nrwl/angular:ng-packagr-lite':
+      } else {
         returnObject.otherBuildTarget = target;
-        returnObject.compiler = targetConfig?.options?.compiler;
-        break;
-      default:
-        if (targetConfig.options?.compiler) {
-          returnObject.otherBuildTarget = target;
-          returnObject.compiler = targetConfig?.options?.compiler;
-        }
-        break;
+      }
+      returnObject.compiler = targets[target].options?.compiler;
+    } else if (
+      targets[target].executor === '@storybook/angular:start-storybook' ||
+      targets[target].executor === '@nrwl/storybook:storybook'
+    ) {
+      returnObject.storybookTarget = target;
+    } else if (
+      targets[target].executor === '@storybook/angular:build-storybook' ||
+      targets[target].executor === '@nrwl/storybook:build'
+    ) {
+      returnObject.storybookBuildTarget = target;
+    } else if (targets[target].options?.compiler) {
+      returnObject.otherBuildTarget = target;
+      returnObject.compiler = targets[target].options?.compiler;
     }
-  });
+  }
 
   return returnObject;
 }

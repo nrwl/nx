@@ -4,21 +4,10 @@
   "sourceRoot": "packages/storybook",
   "projectType": "library",
   "targets": {
-    "test": {
-      "executor": "@nrwl/jest:jest",
-      "options": {
-        "jestConfig": "packages/storybook/jest.config.ts",
-        "passWithNoTests": true
-      },
-      "outputs": ["{workspaceRoot}/coverage/packages/storybook"]
-    },
+    "test": {},
     "build-base": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "outputPath": "build/packages/storybook",
-        "tsConfig": "packages/storybook/tsconfig.lib.json",
-        "main": "packages/storybook/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/storybook",
@@ -78,8 +67,7 @@
             "output": "/"
           }
         ]
-      },
-      "outputs": ["{options.outputPath}"]
+      }
     },
     "build": {
       "executor": "nx:run-commands",
@@ -88,26 +76,6 @@
         "command": "node ./scripts/copy-readme.js storybook"
       }
     },
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "lintFilePatterns": [
-          "packages/storybook/**/*.ts",
-          "packages/storybook/**/*.spec.ts",
-          "packages/storybook/**/*_spec.ts",
-          "packages/storybook/**/*.spec.tsx",
-          "packages/storybook/**/*.spec.js",
-          "packages/storybook/**/*.spec.jsx",
-          "packages/storybook/**/*.d.ts",
-          "packages/storybook/**/executors/**/schema.json",
-          "packages/storybook/**/generators/**/schema.json",
-          "packages/storybook/generators.json",
-          "packages/storybook/executors.json",
-          "packages/storybook/package.json",
-          "packages/storybook/migrations.json"
-        ]
-      },
-      "outputs": ["{options.outputFile}"]
-    }
+    "lint": {}
   }
 }

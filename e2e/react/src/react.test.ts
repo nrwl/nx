@@ -78,6 +78,7 @@ describe('React Applications', () => {
   it('should be able to use JS and JSX', async () => {
     const appName = uniq('app');
     const libName = uniq('lib');
+    const plainJsLib = uniq('jslib');
 
     runCLI(
       `generate @nrwl/react:app ${appName} --bundler=webpack --no-interactive --js`
@@ -85,11 +86,18 @@ describe('React Applications', () => {
     runCLI(
       `generate @nrwl/react:lib ${libName} --no-interactive --js --unit-test-runner=none`
     );
+    // Make sure plain JS libs can be imported as well.
+    // There was an issue previously: https://github.com/nrwl/nx/issues/10990
+    runCLI(
+      `generate @nrwl/js:lib ${plainJsLib} --js --unit-test-runner=none --bundler=none --compiler=tsc --no-interactive`
+    );
 
     const mainPath = `apps/${appName}/src/main.js`;
     updateFile(
       mainPath,
-      `import '@${proj}/${libName}';\n${readFile(mainPath)}`
+      `import '@${proj}/${libName}';\nimport '@${proj}/${plainJsLib}';\n${readFile(
+        mainPath
+      )}`
     );
 
     await testGeneratedApp(appName, {
