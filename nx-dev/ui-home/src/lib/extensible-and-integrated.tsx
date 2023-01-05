@@ -1,5 +1,5 @@
 import { Tab } from '@headlessui/react';
-import cx from 'classnames';
+import { Button } from '@nrwl/nx-dev/ui-common';
 import { AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { Fragment } from 'react';
@@ -74,20 +74,16 @@ export function ExtensibleAndIntegrated(): JSX.Element {
       <div className="relative mx-auto max-w-7xl px-4 pt-6 pb-12 sm:px-6 lg:px-8 lg:pb-4 lg:pt-6">
         <Tab.Group>
           <Tab.List>
-            <div className="flex justify-between md:justify-start">
+            <div className="flex justify-between space-x-4 md:justify-start">
               {tabs.map((tab) => (
                 <Tab as={Fragment} key={'tab-' + tab.title}>
                   {({ selected }) => (
-                    <button
-                      className={cx(
-                        'rounded-md px-3 py-2 text-sm font-medium',
-                        selected
-                          ? 'bg-blue-500 text-white dark:bg-sky-500'
-                          : 'text-slate-700 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-300'
-                      )}
+                    <Button
+                      variant={selected ? 'primary' : 'secondary'}
+                      size="small"
                     >
                       {tab.title}
-                    </button>
+                    </Button>
                   )}
                 </Tab>
               ))}
