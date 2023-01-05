@@ -58,7 +58,7 @@ export function notifyFileWatcherSockets(
           const watchedProjects = [...config.watchProjects];
 
           if (config.includeDependentProjects) {
-            for (const project of watchedProjects) {
+            for (const project of config.watchProjects) {
               watchedProjects.push(
                 ...findAllProjectNodeDependencies(
                   project,
