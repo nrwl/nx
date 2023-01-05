@@ -98,9 +98,6 @@ function getBuildOptions(
   const overrides: Partial<WebpackExecutorOptions> = {
     watch: false,
   };
-  if (options.maxWorkers) {
-    overrides.maxWorkers = options.maxWorkers;
-  }
   if (options.memoryLimit) {
     overrides.memoryLimit = options.memoryLimit;
   }

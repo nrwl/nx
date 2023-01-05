@@ -65,10 +65,6 @@
       "type": "number",
       "description": "Memory limit for type checking service process in `MB`."
     },
-    "maxWorkers": {
-      "type": "number",
-      "description": "Number of workers to use for type checking."
-    },
     "baseHref": {
       "type": "string",
       "description": "Base url for the application being built."

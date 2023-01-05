@@ -120,14 +120,6 @@
       },
       "default": []
     },
-    "budgets": {
-      "description": "Budget thresholds to ensure parts of your application stay within boundaries which you set.",
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/budget"
-      },
-      "default": []
-    },
     "namedChunks": {
       "type": "boolean",
       "description": "Names the produced bundles according to their entry file.",
@@ -271,11 +263,6 @@
       "description": "Memory limit for type checking service process in `MB`.",
       "default": 2048
     },
-    "maxWorkers": {
-      "type": "number",
-      "description": "Number of workers to use for type checking.",
-      "default": 2
-    },
     "fileReplacements": {
       "description": "Replace files with other files in the build.",
       "type": "array",
@@ -353,50 +340,6 @@
           "type": "string"
         }
       ]
-    },
-    "budget": {
-      "type": "object",
-      "properties": {
-        "type": {
-          "type": "string",
-          "description": "The type of budget.",
-          "enum": ["all", "allScript", "any", "anyScript", "bundle", "initial"]
-        },
-        "name": {
-          "type": "string",
-          "description": "The name of the bundle."
-        },
-        "baseline": {
-          "type": "string",
-          "description": "The baseline size for comparison."
-        },
-        "maximumWarning": {
-          "type": "string",
-          "description": "The maximum threshold for warning relative to the baseline."
-        },
-        "maximumError": {
-          "type": "string",
-          "description": "The maximum threshold for error relative to the baseline."
-        },
-        "minimumWarning": {
-          "type": "string",
-          "description": "The minimum threshold for warning relative to the baseline."
-        },
-        "minimumError": {
-          "type": "string",
-          "description": "The minimum threshold for error relative to the baseline."
-        },
-        "warning": {
-          "type": "string",
-          "description": "The threshold for warning relative to the baseline (min & max)."
-        },
-        "error": {
-          "type": "string",
-          "description": "The threshold for error relative to the baseline (min & max)."
-        }
-      },
-      "additionalProperties": false,
-      "required": ["type"]
     },
     "extraEntryPoint": {
       "oneOf": [
