@@ -4,6 +4,7 @@ import {
   LockFileBuilder,
   LockFileGraph,
   LockFileNode,
+  nodeKey,
 } from './utils/lock-file-builder';
 import { workspaceRoot } from '../utils/workspace-root';
 import { existsSync, readFileSync } from 'fs';
@@ -114,16 +115,14 @@ function parseClassicLockFile(
         .next().value;
 
       if (dependency.version === rootVersion) {
-        const path = `node_modules/${packageName}`;
         const versionSpec = key.slice(packageName.length + 1);
         const node = parseClassicNode(
           packageName,
-          path,
           versionSpec,
           dependency,
           isHoisted
         );
-        builder.addNode(path, node);
+        builder.addNode(node);
         valueSet.forEach(([newKey]) => {
           const newSpec = newKey.slice(packageName.length + 1);
           builder.addEdgeIn(node, newSpec);
@@ -160,25 +159,6 @@ function parseClassicLockFile(
   });
 }
 
-// find the top-most parent node that doesn't have the dependency
-function findTopParentPath(
-  builder: LockFileBuilder,
-  parentNode: LockFileNode,
-  packageName: string
-): string {
-  let path;
-  while (!parentNode.children?.has(packageName)) {
-    path = parentNode.path;
-    const searchPath = `node_modules/${parentNode.name}`;
-    if (path === searchPath) {
-      parentNode = builder.nodes.get('');
-    } else {
-      parentNode = builder.nodes.get(path.slice(0, -(searchPath.length + 1)));
-    }
-  }
-  return path;
-}
-
 function parseBerryLockFile(
   builder: LockFileBuilder,
   groupedDependencies: Map<string, Map<string, Set<[string, YarnDependency]>>>
@@ -206,9 +186,8 @@ function parseBerryLockFile(
         .next().value;
 
       if (value.version === rootVersion) {
-        const path = `node_modules/${packageName}`;
-        const node = parseBerryNode(packageName, path, value, isHoisted);
-        builder.addNode(path, node);
+        const node = parseBerryNode(packageName, value, isHoisted);
+        builder.addNode(node);
         valueSet.forEach(([key]) => {
           const versionSpec = parseBerryVersionSpec(key, packageName);
           builder.addEdgeIn(node, versionSpec);
@@ -246,7 +225,6 @@ function parseBerryVersionSpec(key: string, packageName: string) {
 
 function parseClassicNode(
   packageName: string,
-  path: string,
   versionSpec: string,
   value: YarnDependency,
   isHoisted = false
@@ -269,7 +247,6 @@ function parseClassicNode(
     ...(name !== packageName && { packageName: name }),
     ...(version && { version }),
     ...(integrity && { integrity }),
-    path,
     isHoisted,
   };
 
@@ -278,7 +255,6 @@ function parseClassicNode(
 
 function parseBerryNode(
   packageName: string,
-  path: string,
   value: YarnDependency,
   isHoisted = false
 ): LockFileNode {
@@ -298,7 +274,6 @@ function parseBerryNode(
     ...(name !== packageName && { packageName: name }),
     ...(version && { version }),
     ...(checksum && { integrity: checksum }),
-    path,
     isHoisted,
   };
 
@@ -324,15 +299,14 @@ function exhaustUnresolvedDependencies(
         const edge = n.edgesOut.get(packageName);
 
         if (edge.versionSpec === versionSpec) {
-          const parentPath = findTopParentPath(builder, n, packageName);
-          const path = `${parentPath}/node_modules/${packageName}`;
-          // we might have added the node already
-          if (!builder.nodes.has(path)) {
-            const node = isBerry
-              ? parseBerryNode(packageName, path, value)
-              : parseClassicNode(packageName, path, versionSpec, value);
+          const node = isBerry
+            ? parseBerryNode(packageName, value)
+            : parseClassicNode(packageName, versionSpec, value);
 
-            builder.addNode(path, node);
+          // we might have added the node already
+          if (!builder.nodes.has(nodeKey(node))) {
+            builder.addNode(node);
+            builder.addEdgeIn(node, versionSpec);
             if (value.dependencies) {
               // Yarn classic keeps no notion of dev/peer/optional dependencies
               Object.entries(value.dependencies).forEach(

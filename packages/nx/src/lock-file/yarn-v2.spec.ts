@@ -159,7 +159,7 @@ describe('yarn LockFile utility', () => {
         '__fixtures__/nextjs/yarn.lock'
       )).default;
       const result = parseYarnLockFile(lockFile, packageJson);
-      expect(result.root.children.size).toEqual(1104);
+      expect(result.nodes.size).toEqual(1245); // 1104
       expect(result.isValid).toBeTruthy();
     });
   });
@@ -186,10 +186,12 @@ describe('yarn LockFile utility', () => {
         '__fixtures__/auxiliary-packages/yarn.lock'
       )).default;
       const resultClassic = parseYarnLockFile(classicLockFile, packageJson);
-      expect(resultClassic.root.children.size).toEqual(124);
+      expect(resultClassic.nodes.size).toEqual(128); // 124 hoisted
       expect(resultClassic.isValid).toBeTruthy();
 
-      const classicPostgres = resultClassic.nodes.get('node_modules/postgres');
+      const classicPostgres = resultClassic.nodes.get(
+        'postgres@https://codeload.github.com/charsleysa/postgres/tar.gz/3b1a01b2da3e2fafb1a79006f838eff11a8de3cb'
+      );
       expect(classicPostgres.name).toEqual('postgres');
       expect(classicPostgres.packageName).toBeUndefined();
       expect(classicPostgres.version).toMatch(
@@ -200,7 +202,7 @@ describe('yarn LockFile utility', () => {
       );
 
       const classicAlias = resultClassic.nodes.get(
-        'node_modules/eslint-plugin-disable-autofix'
+        'eslint-plugin-disable-autofix@npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0'
       );
       expect(classicAlias.name).toEqual('eslint-plugin-disable-autofix');
       expect(classicAlias.packageName).toEqual(
@@ -218,10 +220,12 @@ describe('yarn LockFile utility', () => {
         '__fixtures__/auxiliary-packages/yarn-berry.lock'
       )).default;
       const resultBerry = parseYarnLockFile(berryLockFile, packageJson);
-      expect(resultBerry.root.children.size).toEqual(124);
+      expect(resultBerry.nodes.size).toEqual(129); //124 hoisted
       expect(resultBerry.isValid).toBeTruthy();
 
-      const berryPostgres = resultBerry.nodes.get('node_modules/postgres');
+      const berryPostgres = resultBerry.nodes.get(
+        'postgres@https://github.com/charsleysa/postgres.git#commit=3b1a01b2da3e2fafb1a79006f838eff11a8de3cb'
+      );
       expect(berryPostgres.name).toEqual('postgres');
       expect(berryPostgres.packageName).toBeUndefined();
       expect(berryPostgres.version).toMatch(
@@ -232,7 +236,7 @@ describe('yarn LockFile utility', () => {
       );
 
       const berryAlias = resultBerry.nodes.get(
-        'node_modules/eslint-plugin-disable-autofix'
+        'eslint-plugin-disable-autofix@npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0'
       );
       expect(berryAlias.name).toEqual('eslint-plugin-disable-autofix');
       expect(berryAlias.packageName).toEqual(
@@ -294,7 +298,7 @@ describe('yarn LockFile utility', () => {
         '__fixtures__/duplicate-package/yarn.lock'
       )).default;
       const resultClassic = parseYarnLockFile(classicLockFile, packageJson);
-      expect(resultClassic.root.children.size).toEqual(337);
+      expect(resultClassic.nodes.size).toEqual(372); //337 hoisted
       expect(resultClassic.isValid).toBeTruthy();
     });
   });

@@ -33,7 +33,7 @@ describe('NPM lock file utility', () => {
         JSON.stringify(rootLockFile),
         packageJson
       );
-      expect(result.root.children.size).toEqual(1143);
+      expect(result.nodes.size).toEqual(1279); // 1143
       expect(result.isValid).toBeTruthy();
     });
   });
@@ -79,39 +79,32 @@ describe('NPM lock file utility', () => {
         packageJson
       );
 
-      expect(resultV1.root.children.size).toEqual(202);
+      expect(resultV1.nodes.size).toEqual(213); // 202
       expect(resultV1.isValid).toBeTruthy();
 
-      expect(resultV1.nodes.get('node_modules/postgres').name).toEqual(
-        'postgres'
+      const postgres = resultV1.nodes.get(
+        'postgres@git+ssh://git@github.com/charsleysa/postgres.git#3b1a01b2da3e2fafb1a79006f838eff11a8de3cb'
       );
-      expect(
-        resultV1.nodes.get('node_modules/postgres').packageName
-      ).toBeUndefined();
-      expect(resultV1.nodes.get('node_modules/postgres').version).toMatch(
+      expect(postgres.name).toEqual('postgres');
+      expect(postgres.packageName).toBeUndefined();
+      expect(postgres.version).toMatch(
         '3b1a01b2da3e2fafb1a79006f838eff11a8de3cb'
       );
-      expect(
-        resultV1.nodes.get('node_modules/postgres').edgesIn.values().next()
-          .value.versionSpec
-      ).toMatch('charsleysa/postgres#fix-errors-compiled');
+      expect(postgres.edgesIn.values().next().value.versionSpec).toMatch(
+        'git+ssh://git@github.com/charsleysa/postgres.git#3b1a01b2da3e2fafb1a79006f838eff11a8de3cb'
+      );
 
-      expect(
-        resultV1.nodes.get('node_modules/eslint-plugin-disable-autofix').name
-      ).toEqual('eslint-plugin-disable-autofix');
-      expect(
-        resultV1.nodes.get('node_modules/eslint-plugin-disable-autofix')
-          .packageName
-      ).toEqual('@mattlewis92/eslint-plugin-disable-autofix');
-      expect(
-        resultV1.nodes.get('node_modules/eslint-plugin-disable-autofix').version
-      ).toEqual('3.0.0');
-      expect(
-        resultV1.nodes
-          .get('node_modules/eslint-plugin-disable-autofix')
-          .edgesIn.values()
-          .next().value.versionSpec
-      ).toEqual('npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0');
+      const eslintPlugin = resultV1.nodes.get(
+        'eslint-plugin-disable-autofix@npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0'
+      );
+      expect(eslintPlugin.name).toEqual('eslint-plugin-disable-autofix');
+      expect(eslintPlugin.packageName).toEqual(
+        '@mattlewis92/eslint-plugin-disable-autofix'
+      );
+      expect(eslintPlugin.version).toEqual('3.0.0');
+      expect(eslintPlugin.edgesIn.values().next().value.versionSpec).toEqual(
+        'npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0'
+      );
     });
 
     it('should parse v3', async () => {
@@ -124,39 +117,32 @@ describe('NPM lock file utility', () => {
         JSON.stringify(rootV2LockFile),
         packageJson
       );
-      expect(resultV2.root.children.size).toEqual(resultV2.root.children.size);
+      expect(resultV2.nodes.size).toEqual(213); // 202
       expect(resultV2.isValid).toBeTruthy();
 
-      expect(resultV2.nodes.get('node_modules/postgres').name).toEqual(
-        'postgres'
+      const postgres = resultV2.nodes.get(
+        'postgres@git+ssh://git@github.com/charsleysa/postgres.git#3b1a01b2da3e2fafb1a79006f838eff11a8de3cb'
       );
-      expect(
-        resultV2.nodes.get('node_modules/postgres').packageName
-      ).toBeUndefined();
-      expect(resultV2.nodes.get('node_modules/postgres').version).toMatch(
+      expect(postgres.name).toEqual('postgres');
+      expect(postgres.packageName).toBeUndefined();
+      expect(postgres.version).toMatch(
         '3b1a01b2da3e2fafb1a79006f838eff11a8de3cb'
       );
-      expect(
-        resultV2.nodes.get('node_modules/postgres').edgesIn.values().next()
-          .value.versionSpec
-      ).toEqual('charsleysa/postgres#fix-errors-compiled');
+      expect(postgres.edgesIn.values().next().value.versionSpec).toEqual(
+        'git+ssh://git@github.com/charsleysa/postgres.git#3b1a01b2da3e2fafb1a79006f838eff11a8de3cb'
+      );
 
-      expect(
-        resultV2.nodes.get('node_modules/eslint-plugin-disable-autofix').name
-      ).toEqual('eslint-plugin-disable-autofix');
-      expect(
-        resultV2.nodes.get('node_modules/eslint-plugin-disable-autofix')
-          .packageName
-      ).toEqual('@mattlewis92/eslint-plugin-disable-autofix');
-      expect(
-        resultV2.nodes.get('node_modules/eslint-plugin-disable-autofix').version
-      ).toEqual('3.0.0');
-      expect(
-        resultV2.nodes
-          .get('node_modules/eslint-plugin-disable-autofix')
-          .edgesIn.values()
-          .next().value.versionSpec
-      ).toEqual('npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0');
+      const eslintPlugin = resultV2.nodes.get(
+        'eslint-plugin-disable-autofix@npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0'
+      );
+      expect(eslintPlugin.name).toEqual('eslint-plugin-disable-autofix');
+      expect(eslintPlugin.packageName).toEqual(
+        '@mattlewis92/eslint-plugin-disable-autofix'
+      );
+      expect(eslintPlugin.version).toEqual('3.0.0');
+      expect(eslintPlugin.edgesIn.values().next().value.versionSpec).toEqual(
+        'npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0'
+      );
     });
   });
 
@@ -242,7 +228,7 @@ describe('NPM lock file utility', () => {
         JSON.stringify(rootLockFile),
         packageJson
       );
-      expect(result.root.children.size).toEqual(338);
+      expect(result.nodes.size).toEqual(370); // 338
       expect(result.isValid).toBeTruthy();
     });
     it('should parse v3', async () => {
@@ -255,7 +241,7 @@ describe('NPM lock file utility', () => {
         JSON.stringify(rootLockFile),
         packageJson
       );
-      expect(result.root.children.size).toEqual(338);
+      expect(result.nodes.size).toEqual(370); //338
       expect(result.isValid).toBeTruthy();
     });
   });

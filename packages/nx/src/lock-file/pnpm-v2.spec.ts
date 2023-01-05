@@ -13,37 +13,6 @@ jest.mock('nx/src/utils/workspace-root', () => ({
   workspaceRoot: '/root',
 }));
 
-/**
- * Utility to generate the fileSys report of the versions in the node_modules folder
- */
-// const readFileSync = require('fs').readFileSync;
-// const readdirSync = require('fs').readdirSync;
-// const existsSync = require('fs').existsSync;
-
-// let report = '';
-
-// const packageNames = [];
-// readdirSync('node_modules').forEach(folder => {
-//   if (folder.startsWith('@')) {
-//     readdirSync(`node_modules/${folder}`).forEach(subfolder => {
-//       packageNames.push(`${folder}/${subfolder}`);
-//     });
-//   } else {
-//     packageNames.push(folder);
-//   }
-// });
-
-// packageNames.forEach(packageName => {
-//   const path = `node_modules/${packageName}/package.json`;
-//   if (existsSync(path)) {
-//     const content = readFileSync(path, 'utf-8');
-//     const version = JSON.parse(content).version;
-//     report += `'${path}': '{"version": "${version}"}',\n`;
-//   }
-// });
-
-// console.log(report);
-
 describe('pnpm LockFile utility', () => {
   afterEach(() => {
     vol.reset();
@@ -152,7 +121,7 @@ describe('pnpm LockFile utility', () => {
         '__fixtures__/nextjs/package.json'
       ));
       const result = parsePnpmLockFile(lockFile, packageJson);
-      expect(result.root.children.size).toEqual(1143);
+      expect(result.nodes.size).toEqual(1281); ///1143
       expect(result.isValid).toBeTruthy();
     });
   });
@@ -193,10 +162,12 @@ describe('pnpm LockFile utility', () => {
         '__fixtures__/auxiliary-packages/pnpm-lock.yaml'
       )).default;
       const result = parsePnpmLockFile(lockFile, packageJson);
-      expect(result.root.children.size).toEqual(202);
+      expect(result.nodes.size).toEqual(214); //202
       expect(result.isValid).toBeTruthy();
 
-      const postgres = result.nodes.get('node_modules/postgres');
+      const postgres = result.nodes.get(
+        'postgres@https://codeload.github.com/charsleysa/postgres/tar.gz/3b1a01b2da3e2fafb1a79006f838eff11a8de3cb'
+      );
       expect(postgres.name).toEqual('postgres');
       expect(postgres.packageName).toBeUndefined();
       expect(postgres.version).toMatch(
@@ -207,7 +178,7 @@ describe('pnpm LockFile utility', () => {
       );
 
       const alias = result.nodes.get(
-        'node_modules/eslint-plugin-disable-autofix'
+        'eslint-plugin-disable-autofix@npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0'
       );
       expect(alias.name).toEqual('eslint-plugin-disable-autofix');
       expect(alias.packageName).toEqual(
@@ -245,7 +216,7 @@ describe('pnpm LockFile utility', () => {
         '__fixtures__/duplicate-package/package.json'
       ));
       const result = parsePnpmLockFile(lockFile, packageJson);
-      expect(result.root.children.size).toEqual(337);
+      expect(result.nodes.size).toEqual(371); //337
       expect(result.isValid).toBeTruthy();
     });
   });

@@ -6,6 +6,7 @@ import {
   LockFileGraph,
   LockFileNode,
 } from './utils/lock-file-builder';
+import { satisfies } from 'semver';
 
 type NpmDependencyV3 = {
   version: string;
@@ -55,15 +56,22 @@ export function parseNpmLockFile(
   lockFileContent: string,
   packageJson: PackageJson
 ): LockFileGraph {
-  const { name, version, lockfileVersion, ...packageInfo } = JSON.parse(
-    lockFileContent
-  ) as NpmLockFile;
+  const data = JSON.parse(lockFileContent) as NpmLockFile;
 
-  const builder = new LockFileBuilder({ packageJson, lockFileContent });
+  const isLockFileV1 = data.lockfileVersion === 1;
 
-  lockfileVersion === 1
-    ? parseV1LockFile(builder, packageInfo)
-    : parseV3LockFile(builder, packageInfo); // we will treat V2 lockfile as V3 but map it back to V2 for backwards compatibility
+  const normalizedPackageJson = isLockFileV1
+    ? normalizeV1PackageJson(packageJson, data.dependencies)
+    : normalizeV3PackageJson(packageJson, data.packages);
+
+  const builder = new LockFileBuilder({
+    packageJson: normalizedPackageJson,
+    lockFileContent,
+  });
+
+  isLockFileV1
+    ? parseV1LockFile(builder, data.dependencies)
+    : parseV3LockFile(builder, data.packages); // we will treat V2 lockfile as V3 but map it back to V2 for backwards compatibility
 
   return builder.getLockFileGraph();
 }
@@ -81,34 +89,145 @@ function addEdge(
   }
 }
 
+/**********************************************
+ * V3 lock file related logic
+ *********************************************/
+
+function normalizeV1PackageJson(
+  packageJson: PackageJson,
+  packages: Record<string, NpmDependencyV1>
+): Partial<PackageJson> {
+  const {
+    dependencies,
+    devDependencies,
+    peerDependencies,
+    peerDependenciesMeta,
+  } = packageJson;
+
+  const normalizeDependencySection = (
+    section: Record<string, string>
+  ): Record<string, string> => {
+    const normalizedSection: Record<string, string> = {};
+    Object.keys(section).forEach((depName) => {
+      normalizedSection[depName] = packages[depName].version;
+    });
+    return normalizedSection;
+  };
+
+  return {
+    ...(dependencies && {
+      dependencies: normalizeDependencySection(dependencies),
+    }),
+    ...(devDependencies && {
+      devDependencies: normalizeDependencySection(devDependencies),
+    }),
+    ...(peerDependencies && {
+      peerDependencies: normalizeDependencySection(peerDependencies),
+    }),
+    ...(peerDependenciesMeta && { peerDependenciesMeta }),
+  };
+}
+
 function parseV1LockFile(
   builder: LockFileBuilder,
-  content: Omit<NpmLockFile, 'lockfileVersion'>
+  dependencies: Record<string, NpmDependencyV1>
 ) {
-  const { dependencies } = content;
-  const isHoisted = true;
-
   if (dependencies) {
     Object.entries(dependencies).forEach(([packageName, value]) => {
-      processV1Node(
-        builder,
-        packageName,
-        value,
-        `node_modules/${packageName}`,
-        isHoisted
-      );
+      parseV1Dependency(dependencies, packageName, value, builder);
     });
   }
 }
 
-// parse node value from lock file into `LockFileNode`
-function processV1Node(
+function parseV1Dependency(
+  dependencies: Record<string, NpmDependencyV1>,
+  packageName: string,
+  value: NpmDependencyV1,
   builder: LockFileBuilder,
+  { isHoisted, parents }: { isHoisted: boolean; parents: string[] } = {
+    isHoisted: true,
+    parents: [],
+  }
+) {
+  const node = parseV1Node(packageName, value, isHoisted);
+  builder.addNode(node);
+  builder.addEdgeIn(node, value.version);
+
+  const pathSegments = [...parents, packageName];
+  if (value.requires) {
+    Object.entries(value.requires).forEach(([depName, depSpec]) => {
+      const matchedVersion = findV1EdgeVersion(
+        dependencies,
+        pathSegments,
+        depName,
+        depSpec
+      );
+      builder.addEdgeOut(node, depName, matchedVersion);
+    });
+  }
+  const { peerDependencies, peerDependenciesMeta } = getPeerDependencies(
+    `node_modules/${pathSegments.join('/node_modules/')}`
+  );
+  if (peerDependencies) {
+    Object.entries(peerDependencies).forEach(([depName, depSpec]) => {
+      if (!node.edgesOut?.has(depName)) {
+        const isOptional = peerDependenciesMeta?.[depName]?.optional;
+        let matchedVersion = findV1EdgeVersion(
+          dependencies,
+          pathSegments,
+          depName,
+          depSpec
+        );
+        if (!matchedVersion && isOptional) {
+          matchedVersion = depSpec;
+        }
+        builder.addEdgeOut(node, depName, matchedVersion, isOptional);
+      }
+    });
+  }
+
+  if (value.dependencies) {
+    Object.entries(value.dependencies).forEach(([depPackageName, depValue]) => {
+      parseV1Dependency(dependencies, depPackageName, depValue, builder, {
+        isHoisted: false,
+        parents: pathSegments,
+      });
+    });
+  }
+}
+
+function findV1EdgeVersion(
+  dependencies: Record<string, NpmDependencyV1>,
+  pathSegments: string[],
+  name: string,
+  versionSpec: string
+): string {
+  if (!dependencies && !pathSegments.length) {
+    return;
+  }
+  let version;
+  const depVersion = dependencies[name]?.version;
+  if (depVersion && satisfies(depVersion, versionSpec)) {
+    version = depVersion;
+  }
+  if (!pathSegments.length) {
+    return version;
+  }
+  return (
+    findV1EdgeVersion(
+      dependencies[pathSegments[0]].dependencies,
+      pathSegments.slice(1),
+      name,
+      versionSpec
+    ) || version
+  );
+}
+
+function parseV1Node(
   name: string,
   value: NpmDependencyV1,
-  path: string,
   isHoisted = false
-): void {
+): LockFileNode {
   let { version, integrity } = value;
   let packageName;
 
@@ -125,56 +244,83 @@ function processV1Node(
     ...(packageName && { packageName }),
     ...(version && { version }),
     ...(integrity && { integrity }),
-    path,
     isHoisted,
   };
+  return node;
+}
 
-  parseV1Dependencies(builder, node, value);
-  builder.addNode(node.path, node);
+// NPM V1 does not track the peer dependencies in the lock file
+// so we need to parse them directly from the package.json
+function getPeerDependencies(path: string): {
+  peerDependencies?: Record<string, string>;
+  peerDependenciesMeta?: Record<string, { optional: boolean }>;
+} {
+  const fullPath = `${workspaceRoot}/${path}/package.json`;
 
-  if (value.dependencies) {
-    Object.entries(value.dependencies).forEach(([depName, depValue]) => {
-      processV1Node(
-        builder,
-        depName,
-        depValue,
-        `${path}/node_modules/${depName}`
-      );
-    });
+  if (existsSync(fullPath)) {
+    const content = readFileSync(fullPath, 'utf-8');
+    const { peerDependencies, peerDependenciesMeta } = JSON.parse(content);
+    return {
+      ...(peerDependencies && { peerDependencies }),
+      ...(peerDependenciesMeta && { peerDependenciesMeta }),
+    };
+  } else {
+    if (process.env.NX_VERBOSE_LOGGING === 'true') {
+      console.warn(`Could not find package.json at "${path}"`);
+    }
+    return {};
   }
 }
 
-// parse found dependencies into out edges
-function parseV1Dependencies(
-  builder: LockFileBuilder,
-  node: LockFileNode,
-  value: NpmDependencyV1
-) {
-  if (value.requires) {
-    Object.entries(value.requires).forEach(([depName, depSpec]) => {
-      addEdge(builder, node, depName, depSpec);
+/**********************************************
+ * V3 lock file related logic
+ *********************************************/
+
+function normalizeV3PackageJson(
+  packageJson: PackageJson,
+  packages: Record<string, NpmDependencyV3>
+): Partial<PackageJson> {
+  const {
+    dependencies,
+    devDependencies,
+    peerDependencies,
+    peerDependenciesMeta,
+  } = packageJson;
+
+  const normalizeDependencySection = (
+    section: Record<string, string>
+  ): Record<string, string> => {
+    const normalizedSection: Record<string, string> = {};
+    Object.keys(section).forEach((depName) => {
+      let { resolved, version, name } = packages[`node_modules/${depName}`];
+      if (!version || (resolved && !resolved.includes(version))) {
+        version = resolved;
+      } else if (name) {
+        version = `npm:${name}@${version}`;
+      }
+      normalizedSection[depName] = version;
     });
-  }
-  const { peerDependencies, peerDependenciesMeta } = getPeerDependencies(node);
-  if (peerDependencies) {
-    Object.entries(peerDependencies).forEach(([depName, depSpec]) => {
-      addEdge(
-        builder,
-        node,
-        depName,
-        depSpec,
-        peerDependenciesMeta?.[depName]?.optional
-      );
-    });
-  }
+    return normalizedSection;
+  };
+
+  return {
+    ...(dependencies && {
+      dependencies: normalizeDependencySection(dependencies),
+    }),
+    ...(devDependencies && {
+      devDependencies: normalizeDependencySection(devDependencies),
+    }),
+    ...(peerDependencies && {
+      peerDependencies: normalizeDependencySection(peerDependencies),
+    }),
+    ...(peerDependenciesMeta && { peerDependenciesMeta }),
+  };
 }
 
 function parseV3LockFile(
   builder: LockFileBuilder,
-  content: Omit<NpmLockFile, 'lockfileVersion'>
+  packages: Record<string, NpmDependencyV3>
 ) {
-  const { packages } = content;
-
   if (packages) {
     Object.entries(packages).forEach(([path, value]) => {
       if (path === '') {
@@ -182,10 +328,79 @@ function parseV3LockFile(
       }
 
       const node = parseV3Node(path, value);
-      parseV3Dependencies(builder, node, value);
-      builder.addNode(path, node);
+      builder.addNode(node);
+      builder.addEdgeIn(
+        node,
+        node.packageName
+          ? `npm:${node.packageName}@${node.version}`
+          : node.version
+      );
+      if (value.peerDependencies) {
+        const peerMeta = value.peerDependenciesMeta || {};
+        Object.entries(value.peerDependencies).forEach(([depName, depSpec]) => {
+          builder.addEdgeOut(
+            node,
+            depName,
+            findV3EdgeVersion(
+              packages,
+              path,
+              depName,
+              depSpec,
+              peerMeta[depName]?.optional
+            ),
+            peerMeta[depName]?.optional
+          );
+        });
+      }
+      if (value.dependencies) {
+        Object.entries(value.dependencies).forEach(([depName, depSpec]) => {
+          addEdge(
+            builder,
+            node,
+            depName,
+            findV3EdgeVersion(packages, path, depName, depSpec)
+          );
+        });
+      }
+      if (value.optionalDependencies) {
+        Object.entries(value.optionalDependencies).forEach(
+          ([depName, depSpec]) => {
+            addEdge(
+              builder,
+              node,
+              depName,
+              findV3EdgeVersion(packages, path, depName, depSpec),
+              true
+            );
+          }
+        );
+      }
     });
   }
+}
+
+function findV3EdgeVersion(
+  packages: Record<string, NpmDependencyV3>,
+  path: string,
+  name: string,
+  versionSpec: string,
+  optional?: boolean
+): string {
+  if (path && !path.endsWith('/')) {
+    path = path + '/';
+  }
+  let child = packages[`${path}node_modules/${name}`];
+  if (child && satisfies(child.version, versionSpec)) {
+    return child.version;
+  }
+  if (!path) {
+    if (!optional) {
+      throw `Could not find version for ${name} with spec ${versionSpec} in the lock file`;
+    }
+    return versionSpec;
+  }
+  const parentPath = path.slice(0, path.lastIndexOf('node_modules'));
+  return findV3EdgeVersion(packages, parentPath, name, versionSpec, optional);
 }
 
 // parse node value from lock file into `LockFileNode`
@@ -206,56 +421,8 @@ function parseV3Node(path: string, value: NpmDependencyV3): LockFileNode {
     ...(name && name !== packageName && { packageName: name }),
     ...(version && { version }),
     ...(integrity && { integrity }),
-    path,
     isHoisted,
   };
 
   return node;
-}
-
-// parse found dependencies into out edges in V3/V2 lockfile
-function parseV3Dependencies(
-  builder: LockFileBuilder,
-  node: LockFileNode,
-  value: NpmDependencyV3
-) {
-  if (value.peerDependencies) {
-    const peerMeta = value.peerDependenciesMeta || {};
-    Object.entries(value.peerDependencies).forEach(([depName, depSpec]) => {
-      addEdge(builder, node, depName, depSpec, peerMeta[depName]?.optional);
-    });
-  }
-  if (value.dependencies) {
-    Object.entries(value.dependencies).forEach(([depName, depSpec]) => {
-      addEdge(builder, node, depName, depSpec);
-    });
-  }
-  if (value.optionalDependencies) {
-    Object.entries(value.optionalDependencies).forEach(([depName, depSpec]) => {
-      addEdge(builder, node, depName, depSpec, true);
-    });
-  }
-}
-
-function getPeerDependencies(node: LockFileNode): {
-  peerDependencies?: Record<string, string>;
-  peerDependenciesMeta?: Record<string, { optional: boolean }>;
-} {
-  const fullPath = `${workspaceRoot}/${node.path}/package.json`;
-
-  if (existsSync(fullPath)) {
-    const content = readFileSync(fullPath, 'utf-8');
-    const { peerDependencies, peerDependenciesMeta } = JSON.parse(content);
-    return {
-      ...(peerDependencies && { peerDependencies }),
-      ...(peerDependenciesMeta && { peerDependenciesMeta }),
-    };
-  } else {
-    if (process.env.NX_VERBOSE_LOGGING === 'true') {
-      console.warn(
-        `Could not find package.json for "${node.name}" at "${fullPath}"`
-      );
-    }
-    return {};
-  }
 }

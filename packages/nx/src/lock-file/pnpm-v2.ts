@@ -52,16 +52,8 @@ export function parsePnpmLockFile(
       }
 
       if (isRootVersion) {
-        const path = `node_modules/${packageName}`;
-        const node = parseNode(
-          packageName,
-          path,
-          specKey,
-          packageSnapshot,
-          true
-        );
-        builder.addNode(path, node);
-
+        const node = parseNode(packageName, specKey, packageSnapshot, true);
+        builder.addNode(node);
         builder.addEdgeIn(node, specKey);
         if (packageSnapshot.dependencies) {
           Object.entries(packageSnapshot.dependencies).forEach(
@@ -80,7 +72,6 @@ export function parsePnpmLockFile(
             }
           );
         }
-        // TODO: what does transitivePeerDependencies represents?
       } else {
         unresolvedDependencies.add([packageName, specKey, packageSnapshot]);
       }
@@ -102,7 +93,6 @@ function parseVersionSpec(key: string, packageName: string): string {
 
 function parseNode(
   packageName: string,
-  path: string,
   versionSpec: string,
   snapshot: PackageSnapshot,
   isHoisted: boolean
@@ -116,7 +106,6 @@ function parseNode(
   const node: LockFileNode = {
     name: name || packageName,
     ...(version && { version }),
-    path,
     isHoisted,
     ...(resolution && {
       integrity: resolution['integrity'] || resolution['tarball'],
@@ -209,28 +198,6 @@ function findPackageName(
   return key.startsWith('/') ? key.slice(1, key.lastIndexOf('/')) : key;
 }
 
-// find the top-most parent node that doesn't have the dependency
-function findTopParentPath(
-  builder: LockFileBuilder,
-  parentNode: LockFileNode,
-  packageName: string
-): string {
-  let path;
-
-  while (!parentNode.children?.has(packageName)) {
-    path = parentNode.path;
-    const searchPath = `node_modules/${parentNode.name}`;
-
-    if (path === searchPath) {
-      parentNode = builder.nodes.get('');
-    } else {
-      parentNode = builder.nodes.get(path.slice(0, -(searchPath.length + 1)));
-    }
-  }
-
-  return path;
-}
-
 function exhaustUnresolvedDependencies(
   builder: LockFileBuilder,
   unresolvedDependencies: Set<[string, string, PackageSnapshot]>
@@ -244,16 +211,14 @@ function exhaustUnresolvedDependencies(
         const edge = n.edgesOut.get(packageName);
 
         if (edge.versionSpec === versionSpec) {
-          const parentPath = findTopParentPath(builder, n, packageName);
-          const path = `${parentPath}/node_modules/${packageName}`;
           const node = parseNode(
             packageName,
-            path,
             versionSpec,
             packageSnapshot,
             false
           );
-          builder.addNode(path, node);
+          builder.addNode(node);
+          builder.addEdgeIn(node, versionSpec);
           if (packageSnapshot.dependencies) {
             Object.entries(packageSnapshot.dependencies).forEach(
               ([depName, depSpec]) => {
