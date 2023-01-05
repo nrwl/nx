@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ngrx generated unit tests should generate specs for the ngrx effects 1`] = `
+exports[`ngrx NgModule Syntax generated unit tests should generate specs for the ngrx effects 1`] = `
 "import { TestBed } from '@angular/core/testing';
 import { provideMockActions } from '@ngrx/effects/testing';
 import { Action } from '@ngrx/store';
@@ -41,7 +41,7 @@ describe('SuperUsersEffects', () => {
 "
 `;
 
-exports[`ngrx generated unit tests should generate specs for the ngrx facade 1`] = `
+exports[`ngrx NgModule Syntax generated unit tests should generate specs for the ngrx facade 1`] = `
 "import { NgModule } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { EffectsModule } from '@ngrx/effects';
@@ -144,7 +144,7 @@ describe('SuperUsersFacade', () => {
 "
 `;
 
-exports[`ngrx generated unit tests should generate specs for the ngrx reducer 1`] = `
+exports[`ngrx NgModule Syntax generated unit tests should generate specs for the ngrx reducer 1`] = `
 "import { Action } from '@ngrx/store';
 
 import * as SuperUsersActions from './super-users.actions';
@@ -185,7 +185,7 @@ describe('SuperUsers Reducer', () => {
 "
 `;
 
-exports[`ngrx generated unit tests should generate specs for the ngrx selectors 1`] = `
+exports[`ngrx NgModule Syntax generated unit tests should generate specs for the ngrx selectors 1`] = `
 "import { SuperUsersEntity } from './super-users.models';
 import { superUsersAdapter, SuperUsersPartialState, initialSuperUsersState } from './super-users.reducer';
 import * as SuperUsersSelectors from './super-users.selectors';
@@ -247,7 +247,7 @@ describe('SuperUsers Selectors', () => {
 "
 `;
 
-exports[`ngrx should add a root module with feature module when minimal is set to false 1`] = `
+exports[`ngrx NgModule Syntax should add a root module with feature module when minimal is set to false 1`] = `
 "
      import { NgModule } from '@angular/core';
      import { BrowserModule } from '@angular/platform-browser';
@@ -273,7 +273,7 @@ import { StoreRouterConnectingModule } from '@ngrx/router-store';
   "
 `;
 
-exports[`ngrx should add a root module with feature module when minimal is set to false using --module 1`] = `
+exports[`ngrx NgModule Syntax should add a root module with feature module when minimal is set to false using --module 1`] = `
 "
      import { NgModule } from '@angular/core';
      import { BrowserModule } from '@angular/platform-browser';
@@ -299,7 +299,7 @@ import { StoreRouterConnectingModule } from '@ngrx/router-store';
   "
 `;
 
-exports[`ngrx should add an empty root module when minimal and root are set to true 1`] = `
+exports[`ngrx NgModule Syntax should add an empty root module when minimal and root are set to true 1`] = `
 "
      import { NgModule } from '@angular/core';
      import { BrowserModule } from '@angular/platform-browser';
@@ -323,7 +323,7 @@ import { StoreRouterConnectingModule } from '@ngrx/router-store';
   "
 `;
 
-exports[`ngrx should generate a models file for the feature 1`] = `
+exports[`ngrx NgModule Syntax should generate a models file for the feature 1`] = `
 "/**
  * Interface for the 'Users' data
  */
@@ -333,7 +333,7 @@ export interface UsersEntity {
 };"
 `;
 
-exports[`ngrx should generate the ngrx actions 1`] = `
+exports[`ngrx NgModule Syntax should generate the ngrx actions 1`] = `
 "import { createAction, props } from '@ngrx/store';
 import { UsersEntity } from './users.models';
 
@@ -353,13 +353,14 @@ export const loadUsersFailure = createAction(
 "
 `;
 
-exports[`ngrx should generate the ngrx effects 1`] = `
+exports[`ngrx NgModule Syntax should generate the ngrx effects 1`] = `
 "import { Injectable, inject } from '@angular/core';
 import { createEffect, Actions, ofType } from '@ngrx/effects';
-import { fetch } from '@nrwl/angular';
 
 import * as UsersActions from './users.actions';
 import * as UsersFeature from './users.reducer';
+
+import {switchMap, catchError, of} from 'rxjs';
 
 @Injectable()
 export class UsersEffects {
@@ -367,22 +368,18 @@ export class UsersEffects {
 
   init$ = createEffect(() => this.actions$.pipe(
     ofType(UsersActions.initUsers),
-    fetch({
-      run: (action) => {
-        // Your custom service 'load' logic goes here. For now just return a success action...
-        return UsersActions.loadUsersSuccess({ users: [] });
-      },
-      onError: (action, error) => {
+    switchMap(() => of(UsersActions.loadUsersSuccess({ users: [] }))),
+    catchError((error) => {
         console.error('Error', error);
-        return UsersActions.loadUsersFailure({ error });
+        return of(UsersActions.loadUsersFailure({ error }));
       }
-    })
+    )
   ));
 }
 "
 `;
 
-exports[`ngrx should generate the ngrx facade 1`] = `
+exports[`ngrx NgModule Syntax should generate the ngrx facade 1`] = `
 "import { Injectable, inject } from '@angular/core';
 import { select, Store, Action } from '@ngrx/store';
 
@@ -413,7 +410,7 @@ export class UsersFacade {
 "
 `;
 
-exports[`ngrx should generate the ngrx reducer 1`] = `
+exports[`ngrx NgModule Syntax should generate the ngrx reducer 1`] = `
 "import { EntityState, EntityAdapter, createEntityAdapter } from '@ngrx/entity';
 import { createReducer, on, Action } from '@ngrx/store';
 
@@ -458,7 +455,7 @@ export function usersReducer(state: UsersState | undefined, action: Action) {
 "
 `;
 
-exports[`ngrx should generate the ngrx selectors 1`] = `
+exports[`ngrx NgModule Syntax should generate the ngrx selectors 1`] = `
 "import { createFeatureSelector, createSelector } from '@ngrx/store';
 import { USERS_FEATURE_KEY, UsersState, usersAdapter } from './users.reducer';
 
@@ -500,7 +497,7 @@ export const selectEntity = createSelector(
 "
 `;
 
-exports[`ngrx should not generate imports when skipImport is true 1`] = `
+exports[`ngrx NgModule Syntax should not generate imports when skipImport is true 1`] = `
 "
      import { NgModule } from '@angular/core';
      import { BrowserModule } from '@angular/platform-browser';
@@ -515,7 +512,7 @@ exports[`ngrx should not generate imports when skipImport is true 1`] = `
   "
 `;
 
-exports[`ngrx should update the entry point file correctly when barrels is true 1`] = `
+exports[`ngrx NgModule Syntax should update the entry point file correctly when barrels is true 1`] = `
 "import * as SuperUsersActions from './lib/+state/super-users.actions';
 
 import * as SuperUsersFeature from './lib/+state/super-users.reducer';
@@ -532,7 +529,7 @@ export { SuperUsersActions, SuperUsersFeature, SuperUsersSelectors };
   "
 `;
 
-exports[`ngrx should update the entry point file with no facade 1`] = `
+exports[`ngrx NgModule Syntax should update the entry point file with no facade 1`] = `
 "export * from './lib/+state/super-users.models';
 export * from './lib/+state/super-users.selectors';
 export * from './lib/+state/super-users.reducer';
@@ -542,7 +539,7 @@ export * from './lib/+state/super-users.actions';
   "
 `;
 
-exports[`ngrx should update the entry point file with the right exports 1`] = `
+exports[`ngrx NgModule Syntax should update the entry point file with the right exports 1`] = `
 "export * from './lib/+state/super-users.facade';
 export * from './lib/+state/super-users.models';
 export * from './lib/+state/super-users.selectors';
@@ -551,4 +548,59 @@ export * from './lib/+state/super-users.actions';
 
     export * from './lib/flights.module';
   "
+`;
+
+exports[`ngrx Standalone APIs should add a root module with feature module when minimal is set to false 1`] = `
+"import { bootstrapApplication } from '@angular/platform-browser';
+import { provideRouter, withEnabledBlockingInitialNavigation } from '@angular/router';
+import { AppComponent } from './app/app.component';
+import { appRoutes } from './app/app.routes';
+import { provideStore, provideState } from '@ngrx/store';
+import { provideEffects } from '@ngrx/effects';
+import * as fromUsers from './+state/users.reducer';
+import { UsersEffects } from './+state/users.effects';
+
+bootstrapApplication(AppComponent, {
+  providers: [provideEffects(UsersEffects),provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),provideEffects(),provideStore(),provideRouter(appRoutes, withEnabledBlockingInitialNavigation())],
+}).catch((err) => console.error(err));"
+`;
+
+exports[`ngrx Standalone APIs should add an empty provideStore when minimal and root are set to true 1`] = `
+"import { bootstrapApplication } from '@angular/platform-browser';
+import { provideRouter, withEnabledBlockingInitialNavigation } from '@angular/router';
+import { AppComponent } from './app/app.component';
+import { appRoutes } from './app/app.routes';
+import { provideStore, provideState } from '@ngrx/store';
+import { provideEffects } from '@ngrx/effects';
+
+bootstrapApplication(AppComponent, {
+  providers: [provideEffects(),provideStore(),provideRouter(appRoutes, withEnabledBlockingInitialNavigation())],
+}).catch((err) => console.error(err));"
+`;
+
+exports[`ngrx Standalone APIs should add facade provider when facade is true 1`] = `
+"import { bootstrapApplication } from '@angular/platform-browser';
+import { provideRouter, withEnabledBlockingInitialNavigation } from '@angular/router';
+import { AppComponent } from './app/app.component';
+import { appRoutes } from './app/app.routes';
+import { provideStore, provideState } from '@ngrx/store';
+import { provideEffects } from '@ngrx/effects';
+import * as fromUsers from './+state/users.reducer';
+import { UsersEffects } from './+state/users.effects';
+import { UsersFacade } from './+state/users.facade';
+
+bootstrapApplication(AppComponent, {
+  providers: [provideEffects(UsersEffects),provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),provideEffects(),provideStore(),UsersFacade,provideRouter(appRoutes, withEnabledBlockingInitialNavigation())],
+}).catch((err) => console.error(err));"
+`;
+
+exports[`ngrx Standalone APIs should add facade provider when facade is true and --root is false 1`] = `
+"import { Routes } from '@angular/router';
+        import { NxWelcomeComponent } from './nx-welcome.component';
+import { provideStore, provideState } from '@ngrx/store';
+import { provideEffects } from '@ngrx/effects';
+import * as fromUsers from './+state/users.reducer';
+import { UsersEffects } from './+state/users.effects';
+import { UsersFacade } from './+state/users.facade'; 
+      export const appRoutes: Routes = [{ path: '', component: NxWelcomeComponent , providers: [UsersFacade, provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer), provideEffects(UsersEffects)]}];"
 `;

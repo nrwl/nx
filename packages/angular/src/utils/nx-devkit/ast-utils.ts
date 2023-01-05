@@ -653,6 +653,22 @@ export function addProviderToModule(
   );
 }
 
+export function addProviderToComponent(
+  host: Tree,
+  source: ts.SourceFile,
+  componentPath: string,
+  symbolName: string
+): ts.SourceFile {
+  return _addSymbolToDecoratorMetadata(
+    host,
+    source,
+    componentPath,
+    'providers',
+    symbolName,
+    'Component'
+  );
+}
+
 export function addDeclarationToModule(
   host: Tree,
   source: ts.SourceFile,
