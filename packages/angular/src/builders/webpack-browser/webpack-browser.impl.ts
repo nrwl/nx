@@ -1,28 +1,22 @@
-import {
-  BuilderContext,
-  BuilderOutput,
-  createBuilder,
-} from '@angular-devkit/architect';
-import { executeBrowserBuilder } from '@angular-devkit/build-angular';
-import { Schema } from '@angular-devkit/build-angular/src/builders/browser/schema';
-import { JsonObject } from '@angular-devkit/core';
 import { joinPathFragments } from '@nrwl/devkit';
 import { existsSync } from 'fs';
-import { Observable } from 'rxjs';
+import { from, Observable } from 'rxjs';
 import { mergeCustomWebpackConfig } from '../utilities/webpack';
 import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
+import { switchMap } from 'rxjs/operators';
 
-export type BrowserBuilderSchema = Schema & {
-  customWebpackConfig?: {
-    path: string;
+export type BrowserBuilderSchema =
+  import('@angular-devkit/build-angular/src/builders/browser/schema').Schema & {
+    customWebpackConfig?: {
+      path: string;
+    };
+    buildLibsFromSource?: boolean;
   };
-  buildLibsFromSource?: boolean;
-};
 
 function buildApp(
   options: BrowserBuilderSchema,
-  context: BuilderContext
-): Observable<BuilderOutput> {
+  context: import('@angular-devkit/architect').BuilderContext
+): Observable<import('@angular-devkit/architect').BuilderOutput> {
   const { buildLibsFromSource, customWebpackConfig, ...delegateOptions } =
     options;
   // If there is a path to custom webpack config
@@ -46,29 +40,37 @@ function buildApp(
     }
   }
 
-  return executeBrowserBuilder(delegateOptions, context);
+  return from(import('@angular-devkit/build-angular')).pipe(
+    switchMap(({ executeBrowserBuilder }) =>
+      executeBrowserBuilder(delegateOptions, context)
+    )
+  );
 }
 
 function buildAppWithCustomWebpackConfiguration(
-  options: Schema,
-  context: BuilderContext,
+  options: import('@angular-devkit/build-angular/src/builders/browser/schema').Schema,
+  context: import('@angular-devkit/architect').BuilderContext,
   pathToWebpackConfig: string
 ) {
-  return executeBrowserBuilder(options, context as any, {
-    webpackConfiguration: (baseWebpackConfig) =>
-      mergeCustomWebpackConfig(
-        baseWebpackConfig,
-        pathToWebpackConfig,
-        options,
-        context.target
-      ),
-  });
+  return from(import('@angular-devkit/build-angular')).pipe(
+    switchMap(({ executeBrowserBuilder }) =>
+      executeBrowserBuilder(options, context as any, {
+        webpackConfiguration: (baseWebpackConfig) =>
+          mergeCustomWebpackConfig(
+            baseWebpackConfig,
+            pathToWebpackConfig,
+            options,
+            context.target
+          ),
+      })
+    )
+  );
 }
 
 export function executeWebpackBrowserBuilder(
   options: BrowserBuilderSchema,
-  context: BuilderContext
-): Observable<BuilderOutput> {
+  context: import('@angular-devkit/architect').BuilderContext
+): Observable<import('@angular-devkit/architect').BuilderOutput> {
   options.buildLibsFromSource ??= true;
 
   if (!options.buildLibsFromSource) {
@@ -82,6 +84,6 @@ export function executeWebpackBrowserBuilder(
   return buildApp(options, context);
 }
 
-export default createBuilder<JsonObject & BrowserBuilderSchema>(
+export default require('@angular-devkit/architect').createBuilder(
   executeWebpackBrowserBuilder
 ) as any;
