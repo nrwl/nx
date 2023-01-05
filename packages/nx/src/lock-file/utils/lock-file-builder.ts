@@ -3,7 +3,6 @@ import { hashString } from './hashing';
 
 export type LockFileGraph = {
   hash: string;
-  root: LockFileNode;
   nodes: Map<string, LockFileNode>;
   isValid: boolean;
 };
@@ -16,7 +15,6 @@ export type LockFileNode = {
   edgesOut?: Map<string, LockFileEdge>;
   edgesIn?: Set<LockFileEdge>;
   isHoisted: boolean;
-  isProjectRoot?: true;
 };
 
 export type LockFileEdge = {
@@ -27,6 +25,8 @@ export type LockFileEdge = {
   // some optional dependencies might be missing
   // we want to keep track of that to avoid false positives
   optional?: boolean;
+  // incoming edges don't have a source
+  incoming?: boolean;
   // error type if source or target is missing
   error?: 'MISSING_TARGET' | 'MISSING_SOURCE';
 };
@@ -42,13 +42,15 @@ export function nodeKey(node: LockFileNode): string {
  * A builder for a lock file graph.
  *
  * Constructs graph of nodes and incoming/outgoing edges
- *
- * Based and inspired by [NPM Arborist](https://www.npmjs.com/package/@npmcli/arborist)
+ * Inspired by [NPM Arborist](https://www.npmjs.com/package/@npmcli/arborist)
  */
 export class LockFileBuilder {
-  readonly root: LockFileNode;
   readonly nodes: Map<string, LockFileNode>;
   private hash: string;
+
+  // we need to keep track of incoming edges when parsing the lock file
+  // so we can mark their in edges as incoming
+  private incomingEdges = new Map<string, string>();
 
   constructor(input: LockFileGraph);
   constructor(input: {
@@ -60,63 +62,46 @@ export class LockFileBuilder {
       | { packageJson: Partial<PackageJson>; lockFileContent: string }
       | LockFileGraph
   ) {
-    if ('root' in input) {
-      const { root, hash, nodes } = input;
-      this.root = root;
+    if ('nodes' in input) {
+      const { hash, nodes } = input;
       this.nodes = nodes;
       this.hash = hash;
     } else {
       const { lockFileContent } = input;
       this.nodes = new Map();
-      const node = this.makeRootNode(input.packageJson);
-      this.root = node;
-      this.nodes.set('', node);
+      this.setIncomingEdges(input.packageJson);
       this.hash = lockFileContent ? hashString(lockFileContent) : '';
     }
   }
 
-  private makeRootNode(packageJson: Partial<PackageJson>): LockFileNode {
+  private setIncomingEdges(packageJson: Partial<PackageJson>) {
     const {
-      name,
-      version,
       dependencies,
       devDependencies,
       optionalDependencies,
       peerDependencies,
     } = packageJson;
 
-    const node: LockFileNode = {
-      name,
-      version,
-      isHoisted: true,
-      isProjectRoot: true,
-    };
     if (dependencies) {
       Object.entries(dependencies).forEach(([name, versionSpec]) => {
-        this.addEdgeOut(node, name, versionSpec, false);
+        this.incomingEdges.set(name, versionSpec);
       });
     }
     if (devDependencies) {
       Object.entries(devDependencies).forEach(([name, versionSpec]) => {
-        this.addEdgeOut(node, name, versionSpec, false);
+        this.incomingEdges.set(name, versionSpec);
       });
     }
     if (optionalDependencies) {
       Object.entries(optionalDependencies).forEach(([name, versionSpec]) => {
-        this.addEdgeOut(node, name, versionSpec, true);
+        this.incomingEdges.set(name, versionSpec);
       });
     }
     if (peerDependencies) {
       Object.entries(peerDependencies).forEach(([name, versionSpec]) => {
-        this.addEdgeOut(
-          node,
-          name,
-          versionSpec,
-          packageJson.peerDependenciesMeta?.[name]?.optional
-        );
+        this.incomingEdges.set(name, versionSpec);
       });
     }
-    return node;
   }
 
   addEdgeOut(
@@ -176,25 +161,7 @@ export class LockFileBuilder {
     return;
   }
 
-  // private updateEdgeIn(edge: LockFileEdge) {
-  //   const to = this.findEdgeDescendant(`${edge.from.path}/`, edge.name);
-  //   if (to !== edge.to) {
-  //     // remove old edge in
-  //     if (edge.to) {
-  //       edge.to.edgesIn.delete(edge);
-  //     }
-  //     edge.to = to;
-  //     this.updateEdgeError(edge);
-  //     if (to) {
-  //       if (!to.edgesIn) {
-  //         to.edgesIn = new Set();
-  //       }
-  //       to.edgesIn.add(edge);
-  //     }
-  //   }
-  // }
-
-  addEdgeIn(node: LockFileNode, versionSpec: string, parent?: LockFileNode) {
+  addEdgeIn(node: LockFileNode, versionSpec: string) {
     this.validateEdgeCreation(node, node.name, versionSpec);
 
     const existingEdges = this.findMatchingEdgesOut(node.name, versionSpec);
@@ -203,11 +170,14 @@ export class LockFileBuilder {
         this.setEdgeTarget(existingEdge, node);
       });
     } else {
+      const incoming =
+        this.incomingEdges.has(node.name) &&
+        this.incomingEdges.get(node.name) === versionSpec;
       const edge: LockFileEdge = {
         name: node.name,
         versionSpec,
-        from: parent,
         to: node,
+        incoming,
       };
       this.updateEdgeError(edge);
       edge.to.edgesIn.add(edge);
@@ -261,7 +231,7 @@ export class LockFileBuilder {
     if (!edge.to && !edge.optional) {
       edge.error = 'MISSING_TARGET';
     }
-    if (!edge.from) {
+    if (!edge.from && !edge.incoming) {
       edge.error = 'MISSING_SOURCE';
     } else {
       delete edge.error;
@@ -327,10 +297,10 @@ export class LockFileBuilder {
           );
         }
       });
-    } else if (!node.isProjectRoot) {
+    } else {
       isValid = false;
       console.warn(
-        `All nodes except the root node must have at least one incoming edge. Node "${node.name}@${node.version}" has no incoming edges.`
+        `All nodes must have at least one incoming edge. Node "${node.name}@${node.version}" has no incoming edges.`
       );
     }
     return isValid;
@@ -346,7 +316,6 @@ export class LockFileBuilder {
     }
 
     return {
-      root: this.root,
       isValid,
       nodes: this.nodes,
       hash: this.hash,

@@ -16,9 +16,6 @@ export function mapLockFileGraphToProjectGraph(
 
   // add nodes
   lockFileGraph.nodes.forEach((node) => {
-    if (node.isProjectRoot) {
-      return;
-    }
     const nodeName = getExternalNodeName(node);
     nodeNames.set(node, nodeName);
 

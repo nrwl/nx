@@ -159,7 +159,7 @@ describe('yarn LockFile utility', () => {
         '__fixtures__/nextjs/yarn.lock'
       )).default;
       const result = parseYarnLockFile(lockFile, packageJson);
-      expect(result.nodes.size).toEqual(1245); // 1104
+      expect(result.nodes.size).toEqual(1244); // 1104
       expect(result.isValid).toBeTruthy();
     });
   });
@@ -186,7 +186,7 @@ describe('yarn LockFile utility', () => {
         '__fixtures__/auxiliary-packages/yarn.lock'
       )).default;
       const resultClassic = parseYarnLockFile(classicLockFile, packageJson);
-      expect(resultClassic.nodes.size).toEqual(128); // 124 hoisted
+      expect(resultClassic.nodes.size).toEqual(127); // 124 hoisted
       expect(resultClassic.isValid).toBeTruthy();
 
       const classicPostgres = resultClassic.nodes.get(
@@ -220,7 +220,7 @@ describe('yarn LockFile utility', () => {
         '__fixtures__/auxiliary-packages/yarn-berry.lock'
       )).default;
       const resultBerry = parseYarnLockFile(berryLockFile, packageJson);
-      expect(resultBerry.nodes.size).toEqual(129); //124 hoisted
+      expect(resultBerry.nodes.size).toEqual(128); //124 hoisted
       expect(resultBerry.isValid).toBeTruthy();
 
       const berryPostgres = resultBerry.nodes.get(
@@ -298,7 +298,7 @@ describe('yarn LockFile utility', () => {
         '__fixtures__/duplicate-package/yarn.lock'
       )).default;
       const resultClassic = parseYarnLockFile(classicLockFile, packageJson);
-      expect(resultClassic.nodes.size).toEqual(372); //337 hoisted
+      expect(resultClassic.nodes.size).toEqual(371); //337 hoisted
       expect(resultClassic.isValid).toBeTruthy();
     });
   });

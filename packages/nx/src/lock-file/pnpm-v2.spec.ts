@@ -121,7 +121,7 @@ describe('pnpm LockFile utility', () => {
         '__fixtures__/nextjs/package.json'
       ));
       const result = parsePnpmLockFile(lockFile, packageJson);
-      expect(result.nodes.size).toEqual(1281); ///1143
+      expect(result.nodes.size).toEqual(1280); ///1143
       expect(result.isValid).toBeTruthy();
     });
   });
@@ -162,7 +162,7 @@ describe('pnpm LockFile utility', () => {
         '__fixtures__/auxiliary-packages/pnpm-lock.yaml'
       )).default;
       const result = parsePnpmLockFile(lockFile, packageJson);
-      expect(result.nodes.size).toEqual(214); //202
+      expect(result.nodes.size).toEqual(213); //202
       expect(result.isValid).toBeTruthy();
 
       const postgres = result.nodes.get(
@@ -216,7 +216,7 @@ describe('pnpm LockFile utility', () => {
         '__fixtures__/duplicate-package/package.json'
       ));
       const result = parsePnpmLockFile(lockFile, packageJson);
-      expect(result.nodes.size).toEqual(371); //337
+      expect(result.nodes.size).toEqual(370); //337
       expect(result.isValid).toBeTruthy();
     });
   });

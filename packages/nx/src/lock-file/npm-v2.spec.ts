@@ -33,7 +33,7 @@ describe('NPM lock file utility', () => {
         JSON.stringify(rootLockFile),
         packageJson
       );
-      expect(result.nodes.size).toEqual(1279); // 1143
+      expect(result.nodes.size).toEqual(1278); // 1143
       expect(result.isValid).toBeTruthy();
     });
   });
@@ -79,7 +79,7 @@ describe('NPM lock file utility', () => {
         packageJson
       );
 
-      expect(resultV1.nodes.size).toEqual(213); // 202
+      expect(resultV1.nodes.size).toEqual(212); // 202
       expect(resultV1.isValid).toBeTruthy();
 
       const postgres = resultV1.nodes.get(
@@ -117,7 +117,7 @@ describe('NPM lock file utility', () => {
         JSON.stringify(rootV2LockFile),
         packageJson
       );
-      expect(resultV2.nodes.size).toEqual(213); // 202
+      expect(resultV2.nodes.size).toEqual(212); // 202
       expect(resultV2.isValid).toBeTruthy();
 
       const postgres = resultV2.nodes.get(
@@ -228,7 +228,7 @@ describe('NPM lock file utility', () => {
         JSON.stringify(rootLockFile),
         packageJson
       );
-      expect(result.nodes.size).toEqual(370); // 338
+      expect(result.nodes.size).toEqual(369); // 338
       expect(result.isValid).toBeTruthy();
     });
     it('should parse v3', async () => {
@@ -241,7 +241,7 @@ describe('NPM lock file utility', () => {
         JSON.stringify(rootLockFile),
         packageJson
       );
-      expect(result.nodes.size).toEqual(370); //338
+      expect(result.nodes.size).toEqual(369); //338
       expect(result.isValid).toBeTruthy();
     });
   });
