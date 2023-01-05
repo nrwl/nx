@@ -1,3 +1,4 @@
+import { ButtonLink } from '@nrwl/nx-dev/ui-common';
 import Link from 'next/link';
 
 export function MonorepoStyles(): JSX.Element {
@@ -44,13 +45,14 @@ export function MonorepoStyles(): JSX.Element {
             </p>
           </div>
           <div className="action mt-6 flex">
-            <Link
+            <ButtonLink
+              variant="primary"
+              size="default"
               href="/concepts/integrated-vs-package-based"
               title="Read more about affected command"
-              className="rounded-full border border-transparent bg-blue-500 py-1 px-3 font-semibold text-white transition hover:bg-blue-600 hover:text-slate-50 focus:ring-2 focus:ring-offset-2 focus:ring-offset-white dark:bg-sky-500 dark:hover:bg-sky-400"
             >
               Read about different monorepo styles
-            </Link>
+            </ButtonLink>
           </div>
         </div>
         <div

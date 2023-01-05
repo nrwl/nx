@@ -3,6 +3,7 @@ import {
   ClipboardDocumentCheckIcon,
   ClipboardDocumentIcon,
 } from '@heroicons/react/24/outline';
+import { ButtonLink } from '@nrwl/nx-dev/ui-common';
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 // @ts-ignore
@@ -52,13 +53,14 @@ export function Hero(): JSX.Element {
               powerful integrations.
             </h2>
             <div className="flex flex-wrap space-y-4 sm:space-y-0 sm:space-x-4">
-              <Link
+              <ButtonLink
                 href="/getting-started/intro"
+                variant="primary"
+                size="large"
                 title="Start using Nx by creating a workspace"
-                className="w-full flex-none rounded-full border border-transparent bg-blue-500 py-3 px-6 text-lg font-semibold leading-6 text-white transition hover:bg-blue-600 hover:text-slate-50 focus:ring-2 focus:ring-offset-2 focus:ring-offset-white dark:bg-sky-500 dark:text-white dark:hover:bg-sky-400 sm:w-auto"
               >
                 Get started
-              </Link>
+              </ButtonLink>
 
               <CopyToClipboard
                 text="npx create-nx-workspace"
