@@ -1,9 +1,3 @@
-import { BuilderContext, createBuilder } from '@angular-devkit/architect';
-import {
-  DevServerBuilderOptions,
-  executeDevServerBuilder,
-} from '@angular-devkit/build-angular';
-import { JsonObject } from '@angular-devkit/core';
 import {
   joinPathFragments,
   parseTargetString,
@@ -18,10 +12,12 @@ import { mergeCustomWebpackConfig } from '../utilities/webpack';
 import { normalizeOptions } from './lib';
 import type { Schema } from './schema';
 import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
+import { from } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 
 export function executeWebpackDevServerBuilder(
   rawOptions: Schema,
-  context: BuilderContext
+  context: import('@angular-devkit/architect').BuilderContext
 ) {
   process.env.NX_TSCONFIG_PATH = joinPathFragments(
     context.workspaceRoot,
@@ -103,41 +99,45 @@ export function executeWebpackDevServerBuilder(
     buildTargetConfiguration.tsConfig = tsConfigPath;
   }
 
-  return executeDevServerBuilder(options as DevServerBuilderOptions, context, {
-    webpackConfiguration: async (baseWebpackConfig) => {
-      if (!buildLibsFromSource) {
-        const workspaceDependencies = dependencies
-          .filter((dep) => !isNpmProject(dep.node))
-          .map((dep) => dep.node.name);
-        // default for `nx run-many` is --all projects
-        // by passing an empty string for --projects, run-many will default to
-        // run the target for all projects.
-        // This will occur when workspaceDependencies = []
-        if (workspaceDependencies.length > 0) {
-          baseWebpackConfig.plugins.push(
-            new WebpackNxBuildCoordinationPlugin(
-              `nx run-many --target=${
-                parsedBrowserTarget.target
-              } --projects=${workspaceDependencies.join(',')}`
-            )
+  return from(import('@angular-devkit/build-angular')).pipe(
+    switchMap(({ executeDevServerBuilder }) =>
+      executeDevServerBuilder(options, context, {
+        webpackConfiguration: async (baseWebpackConfig) => {
+          if (!buildLibsFromSource) {
+            const workspaceDependencies = dependencies
+              .filter((dep) => !isNpmProject(dep.node))
+              .map((dep) => dep.node.name);
+            // default for `nx run-many` is --all projects
+            // by passing an empty string for --projects, run-many will default to
+            // run the target for all projects.
+            // This will occur when workspaceDependencies = []
+            if (workspaceDependencies.length > 0) {
+              baseWebpackConfig.plugins.push(
+                new WebpackNxBuildCoordinationPlugin(
+                  `nx run-many --target=${
+                    parsedBrowserTarget.target
+                  } --projects=${workspaceDependencies.join(',')}`
+                )
+              );
+            }
+          }
+
+          if (!pathToWebpackConfig) {
+            return baseWebpackConfig;
+          }
+
+          return mergeCustomWebpackConfig(
+            baseWebpackConfig,
+            pathToWebpackConfig,
+            buildTargetConfiguration,
+            context.target
           );
-        }
-      }
-
-      if (!pathToWebpackConfig) {
-        return baseWebpackConfig;
-      }
-
-      return mergeCustomWebpackConfig(
-        baseWebpackConfig,
-        pathToWebpackConfig,
-        buildTargetConfiguration,
-        context.target
-      );
-    },
-  });
+        },
+      })
+    )
+  );
 }
 
-export default createBuilder<JsonObject & Schema>(
+export default require('@angular-devkit/architect').createBuilder(
   executeWebpackDevServerBuilder
 ) as any;
