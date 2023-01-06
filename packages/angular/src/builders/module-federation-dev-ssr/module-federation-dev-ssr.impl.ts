@@ -1,8 +1,4 @@
 import type { Schema } from './schema';
-import type { BuilderContext } from '@angular-devkit/architect';
-import { createBuilder } from '@angular-devkit/architect';
-import type { JsonObject } from '@angular-devkit/core';
-import { executeSSRDevServerBuilder } from '@nguniversal/builders';
 import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
 import {
   readCachedProjectGraph,
@@ -22,7 +18,7 @@ import { scheduleTarget } from 'nx/src/adapter/ngcli-adapter';
 
 export function executeModuleFederationDevSSRBuilder(
   schema: Schema,
-  context: BuilderContext
+  context: import('@angular-devkit/architect').BuilderContext
 ) {
   const { ...options } = schema;
   const projectGraph = readCachedProjectGraph();
@@ -132,10 +128,13 @@ export function executeModuleFederationDevSSRBuilder(
   }
 
   return from(Promise.all(remoteProcessPromises)).pipe(
-    switchMap(() => executeSSRDevServerBuilder(options, context))
+    switchMap(() => from(import('@nguniversal/builders'))),
+    switchMap(({ executeSSRDevServerBuilder }) =>
+      executeSSRDevServerBuilder(options, context)
+    )
   );
 }
 
-export default createBuilder<JsonObject & Schema>(
+export default require('@angular-devkit/architect').createBuilder(
   executeModuleFederationDevSSRBuilder
 );
