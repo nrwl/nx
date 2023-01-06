@@ -3,7 +3,7 @@ import { readFileSync, writeFileSync } from 'fs';
 import { interpolateEnvironmentVariablesToIndex } from './interpolate-env-variables-to-index';
 import { generateEntryPoints } from './package-chunk-sort';
 import { createHash } from 'crypto';
-import { RawSource, ReplaceSource } from 'webpack-sources';
+import * as webpack from 'webpack';
 
 import type { EmittedFile, ExtraEntryPoint } from '../models';
 
@@ -138,8 +138,8 @@ export function augmentIndexHtml(params: AugmentIndexHtmlOptions): string {
   }
 
   // Inject into the html
-  const indexSource = new ReplaceSource(
-    new RawSource(params.inputContent),
+  const indexSource = new webpack.sources.ReplaceSource(
+    new webpack.sources.RawSource(params.inputContent),
     params.input
   );
 
@@ -260,7 +260,7 @@ export function augmentIndexHtml(params: AugmentIndexHtmlOptions): string {
     parse5.serialize(styleElements, { treeAdapter })
   );
 
-  return indexSource.source();
+  return indexSource.source().toString();
 }
 
 function _generateSriAttributes(content: string) {

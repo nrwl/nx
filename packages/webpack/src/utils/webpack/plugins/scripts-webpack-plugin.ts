@@ -1,13 +1,6 @@
 import { interpolateName } from 'loader-utils';
 import * as path from 'path';
-import { Compiler } from 'webpack';
-import {
-  CachedSource,
-  ConcatSource,
-  OriginalSource,
-  RawSource,
-  Source,
-} from 'webpack-sources';
+import * as webpack from 'webpack';
 
 const Chunk = require('webpack/lib/Chunk');
 const EntryPoint = require('webpack/lib/Entrypoint');
@@ -22,7 +15,7 @@ export interface ScriptsWebpackPluginOptions {
 
 interface ScriptOutput {
   filename: string;
-  source: Source;
+  source: webpack.sources.Source;
 }
 
 function addDependencies(compilation: any, scripts: string[]): void {
@@ -99,7 +92,7 @@ export class ScriptsWebpackPlugin {
     compilation.assets[filename] = source;
   }
 
-  apply(compiler: Compiler): void {
+  apply(compiler: webpack.Compiler): void {
     if (!this.options.scripts || this.options.scripts.length === 0) {
       return;
     }
@@ -121,7 +114,7 @@ export class ScriptsWebpackPlugin {
       }
 
       const sourceGetters = scripts.map((fullPath) => {
-        return new Promise<Source>((resolve, reject) => {
+        return new Promise<webpack.sources.Source>((resolve, reject) => {
           compilation.inputFileSystem.readFile(
             fullPath,
             (err: Error, data: Buffer) => {
@@ -140,9 +133,12 @@ export class ScriptsWebpackPlugin {
                 if (this.options.basePath) {
                   adjustedPath = path.relative(this.options.basePath, fullPath);
                 }
-                source = new OriginalSource(content, adjustedPath);
+                source = new webpack.sources.OriginalSource(
+                  content,
+                  adjustedPath
+                );
               } else {
-                source = new RawSource(content);
+                source = new webpack.sources.RawSource(content);
               }
 
               resolve(source);
@@ -153,13 +149,13 @@ export class ScriptsWebpackPlugin {
 
       Promise.all(sourceGetters)
         .then((sources) => {
-          const concatSource = new ConcatSource();
+          const concatSource = new webpack.sources.ConcatSource();
           sources.forEach((source) => {
             concatSource.add(source);
             concatSource.add('\n;');
           });
 
-          const combinedSource = new CachedSource(concatSource);
+          const combinedSource = new webpack.sources.CachedSource(concatSource);
           const filename = interpolateName(
             { resourcePath: 'scripts.js' },
             this.options.filename as string,
