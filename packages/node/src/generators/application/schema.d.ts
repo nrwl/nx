@@ -14,4 +14,9 @@ export interface Schema {
   pascalCaseFiles?: boolean;
   setParserOptionsProject?: boolean;
   standaloneConfig?: boolean;
+  bundler?: 'esbuild' | 'webpack';
+  framework?: NodeJsFrameWorks;
+  port?: number;
 }
+
+export type NodeJsFrameWorks = 'express' | 'koa' | 'fastify' | 'connect';

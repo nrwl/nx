@@ -1,4 +1,5 @@
 import {
+  addDependenciesToPackageJson,
   addProjectConfiguration,
   convertNxGenerator,
   extractLayoutDirectory,
@@ -15,6 +16,7 @@ import {
   TargetConfiguration,
   toJS,
   Tree,
+  updateJson,
   updateProjectConfiguration,
   updateTsConfigsToJs,
 } from '@nrwl/devkit';
@@ -28,18 +30,30 @@ import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-ser
 import { Schema } from './schema';
 import { initGenerator } from '../init/init';
 import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
+import {
+  connectTypingsVersion,
+  connectVersion,
+  esbuildVersion,
+  expressTypingsVersion,
+  expressVersion,
+  fastifyVersion,
+  koaTypingsVersion,
+  koaVersion,
+  nxVersion,
+} from '../../utils/versions';
+import { prompt } from 'enquirer';
 
 export interface NormalizedSchema extends Schema {
   appProjectRoot: string;
   parsedTags: string[];
 }
 
-function getBuildConfig(
+function getWebpackBuildConfig(
   project: ProjectConfiguration,
   options: NormalizedSchema
 ): TargetConfiguration {
   return {
-    executor: '@nrwl/webpack:webpack',
+    executor: `@nrwl/webpack:webpack`,
     outputs: ['{options.outputPath}'],
     options: {
       target: 'node',
@@ -57,19 +71,27 @@ function getBuildConfig(
         optimization: true,
         extractLicenses: true,
         inspect: false,
-        fileReplacements: [
-          {
-            replace: joinPathFragments(
-              project.sourceRoot,
-              'environments/environment' + (options.js ? '.js' : '.ts')
-            ),
-            with: joinPathFragments(
-              project.sourceRoot,
-              'environments/environment.prod' + (options.js ? '.js' : '.ts')
-            ),
-          },
-        ],
       },
+    },
+  };
+}
+
+function getEsBuildConfig(
+  project: ProjectConfiguration,
+  options: NormalizedSchema
+): TargetConfiguration {
+  return {
+    executor: '@nrwl/esbuild:esbuild',
+    outputs: ['{options.outputPath}'],
+    options: {
+      outputPath: joinPathFragments('dist', options.appProjectRoot),
+      format: ['cjs'],
+      main: joinPathFragments(
+        project.sourceRoot,
+        'main' + (options.js ? '.js' : '.ts')
+      ),
+      tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
+      assets: [joinPathFragments(project.sourceRoot, 'assets')],
     },
   };
 }
@@ -96,7 +118,10 @@ function addProject(tree: Tree, options: NormalizedSchema) {
     targets: {},
     tags: options.parsedTags,
   };
-  project.targets.build = getBuildConfig(project, options);
+  project.targets.build =
+    options.bundler === 'esbuild'
+      ? getEsBuildConfig(project, options)
+      : getWebpackBuildConfig(project, options);
   project.targets.serve = getServeConfig(options);
 
   addProjectConfiguration(
@@ -108,16 +133,41 @@ function addProject(tree: Tree, options: NormalizedSchema) {
 }
 
 function addAppFiles(tree: Tree, options: NormalizedSchema) {
-  generateFiles(tree, join(__dirname, './files/app'), options.appProjectRoot, {
-    tmpl: '',
-    name: options.name,
-    root: options.appProjectRoot,
-    offset: offsetFromRoot(options.appProjectRoot),
-    rootTsConfigPath: getRelativePathToRootTsConfig(
+  generateFiles(
+    tree,
+    join(__dirname, './files/common'),
+    options.appProjectRoot,
+    {
+      ...options,
+      tmpl: '',
+      name: options.name,
+      root: options.appProjectRoot,
+      offset: offsetFromRoot(options.appProjectRoot),
+      rootTsConfigPath: getRelativePathToRootTsConfig(
+        tree,
+        options.appProjectRoot
+      ),
+    }
+  );
+
+  if (options.framework) {
+    generateFiles(
       tree,
-      options.appProjectRoot
-    ),
-  });
+      join(__dirname, `./files/${options.framework}`),
+      options.appProjectRoot,
+      {
+        ...options,
+        tmpl: '',
+        name: options.name,
+        root: options.appProjectRoot,
+        offset: offsetFromRoot(options.appProjectRoot),
+        rootTsConfigPath: getRelativePathToRootTsConfig(
+          tree,
+          options.appProjectRoot
+        ),
+      }
+    );
+  }
   if (options.js) {
     toJS(tree);
   }
@@ -189,7 +239,73 @@ export async function addLintingToApplication(
   return lintTask;
 }
 
+function addProjectDependencies(
+  tree: Tree,
+  options: NormalizedSchema
+): GeneratorCallback {
+  const bundlers = {
+    webpack: {
+      '@nrwl/webpack': nxVersion,
+    },
+    esbuild: {
+      '@nrwl/esbuild': nxVersion,
+      esbuild: esbuildVersion,
+    },
+  };
+
+  const frameworkDependencies = {
+    express: {
+      express: expressVersion,
+      '@types/express': expressTypingsVersion,
+    },
+    koa: {
+      koa: koaVersion,
+      '@types/koa': koaTypingsVersion,
+    },
+    fastify: {
+      fastify: fastifyVersion,
+    },
+    connect: {
+      connect: connectVersion,
+      '@types/connect': connectTypingsVersion,
+    },
+  };
+  return addDependenciesToPackageJson(
+    tree,
+    {},
+    {
+      ...frameworkDependencies[options.framework],
+      ...bundlers[options.bundler],
+    }
+  );
+}
+
+function updateTsConfigOptions(tree: Tree, options: NormalizedSchema) {
+  // updatae tsconfig.app.json to typecheck default exports  https://www.typescriptlang.org/tsconfig#esModuleInterop
+  updateJson(tree, `${options.appProjectRoot}/tsconfig.app.json`, (json) => ({
+    ...json,
+    compilerOptions: {
+      ...json.compilerOptions,
+      esModuleInterop: true,
+    },
+  }));
+}
+
 export async function applicationGenerator(tree: Tree, schema: Schema) {
+  // Prompt for bundler webpack / esbuild
+  if (schema.framework) {
+    schema.bundler = (
+      await prompt<{ bundler: 'esbuild' | 'webpack' }>([
+        {
+          message: 'What bundler would you like to use?',
+          type: 'select',
+          name: 'bundler',
+          choices: ['esbuild', 'webpack'],
+        },
+      ])
+    ).bundler;
+  }
+
   const options = normalizeOptions(tree, schema);
 
   const tasks: GeneratorCallback[] = [];
@@ -199,8 +315,12 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
   });
   tasks.push(initTask);
 
+  addProjectDependencies(tree, options);
   addAppFiles(tree, options);
   addProject(tree, options);
+  if (options.framework && options?.bundler === 'esbuild') {
+    updateTsConfigOptions(tree, options);
+  }
 
   if (options.linter !== Linter.None) {
     const lintTask = await addLintingToApplication(tree, {
@@ -251,6 +371,11 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const appProjectName = appDirectory.replace(new RegExp('/', 'g'), '-');
 
   const appProjectRoot = joinPathFragments(appsDir, appDirectory);
+  if (options.framework) {
+    options.bundler = options.bundler ?? 'esbuild';
+  } else {
+    options.bundler = 'webpack';
+  }
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
@@ -266,6 +391,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     parsedTags,
     linter: options.linter ?? Linter.EsLint,
     unitTestRunner: options.unitTestRunner ?? 'jest',
+    port: options.port ?? 3000,
   };
 }
 

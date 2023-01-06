@@ -73,6 +73,22 @@
     "standaloneConfig": {
       "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
       "type": "boolean"
+    },
+    "bundler": {
+      "description": "Bundler which is used to package the application",
+      "type": "string",
+      "enum": ["esbuild", "webpack"],
+      "default": "esbuild"
+    },
+    "framework": {
+      "description": "Generate the node application using a framework",
+      "type": "string",
+      "enum": ["express", "koa", "fastify", "connect"]
+    },
+    "port": {
+      "description": "The port which the server will be run on",
+      "type": "number",
+      "default": 3000
     }
   },
   "required": []
