@@ -1,0 +1,11 @@
+import express from 'express';
+const app = express();
+
+
+app.get('/', (req, res) => {
+    res.send('Hello from Nrwl 🐳 API');
+});
+
+app.listen(<%= port %>, () => {
+    // Server is running
+});

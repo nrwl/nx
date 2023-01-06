@@ -59,12 +59,6 @@ describe('app', () => {
                 optimization: true,
                 extractLicenses: true,
                 inspect: false,
-                fileReplacements: [
-                  {
-                    replace: 'apps/my-node-app/src/environments/environment.ts',
-                    with: 'apps/my-node-app/src/environments/environment.prod.ts',
-                  },
-                ],
               },
             },
           },
@@ -434,12 +428,6 @@ describe('app', () => {
       const buildTarget = project.architect.build;
 
       expect(buildTarget.options.main).toEqual('apps/my-node-app/src/main.js');
-      expect(buildTarget.configurations.production.fileReplacements).toEqual([
-        {
-          replace: 'apps/my-node-app/src/environments/environment.js',
-          with: 'apps/my-node-app/src/environments/environment.prod.js',
-        },
-      ]);
     });
 
     it('should generate js files for nested libs as well', async () => {
