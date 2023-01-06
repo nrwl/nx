@@ -10,6 +10,8 @@ Cypress is a test runner built for the modern web. It has a lot of great feature
 ## Setting Up Cypress
 
 > Info about [Cypress Component Testing can be found here](/packages/cypress/documents/cypress-component-testing)
+>
+> Info about [using Cypress and Storybook can be found here](/packages/storybook/documents/overview-react#cypress-tests-for-storiesbook)
 
 If the `@nrwl/cypress` package is not installed, install the version that matches your `nx` package version.
 
@@ -54,6 +56,20 @@ You can run your e2e test against a production build by using the `production` [
 ```shell
 nx e2e frontend-e2e --configuration=production
 ```
+
+{% callout type="note" title="Selecting Specific Specs" %}
+
+You can use the `--spec` flag to glob for test files
+
+```bash
+# run the tests in the smoke/ directory
+nx e2e frontend-e2e --spec=**smoke/**
+
+# run the tests in smoke/ directory and with dashboard in the file name
+nx e2e frontend-e2e --spec=**smoke/**,**dashboard.cy**
+```
+
+{% /callout %}
 
 By default, Cypress will run in headless mode. You will have the result of all the tests and errors (if any) in your
 terminal. Screenshots and videos will be accessible in `dist/cypress/apps/frontend/screenshots` and `dist/cypress/apps/frontend/videos`.
