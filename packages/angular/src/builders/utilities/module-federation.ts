@@ -1,12 +1,11 @@
 import { ProjectConfiguration } from 'nx/src/config/workspace-json-project-json';
-import { BuilderContext } from '@angular-devkit/architect';
 import { join } from 'path';
 import { existsSync, readFileSync } from 'fs';
 import { Remotes } from '@nrwl/devkit';
 
 export function getDynamicRemotes(
   project: ProjectConfiguration,
-  context: BuilderContext,
+  context: import('@angular-devkit/architect').BuilderContext,
   workspaceProjects: Record<string, ProjectConfiguration>,
   remotesToSkip: Set<string>
 ): string[] {
@@ -67,7 +66,7 @@ export function getDynamicRemotes(
 
 export function getStaticRemotes(
   project: ProjectConfiguration,
-  context: BuilderContext,
+  context: import('@angular-devkit/architect').BuilderContext,
   workspaceProjects: Record<string, ProjectConfiguration>,
   remotesToSkip: Set<string>
 ): string[] {
