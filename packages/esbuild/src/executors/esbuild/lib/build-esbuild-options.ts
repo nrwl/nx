@@ -84,7 +84,7 @@ function getOutExtension(
     : CJS_FILE_EXTENSION;
 }
 
-function getOutfile(
+export function getOutfile(
   format: 'cjs' | 'esm',
   options: EsBuildExecutorOptions,
   context: ExecutorContext

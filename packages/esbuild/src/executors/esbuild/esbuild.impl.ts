@@ -16,9 +16,10 @@ import { normalizeOptions } from './lib/normalize';
 import { EsBuildExecutorOptions } from './schema';
 import { removeSync, writeJsonSync } from 'fs-extra';
 import { createAsyncIterable } from '@nrwl/devkit/src/utils/async-iterable';
-import { buildEsbuildOptions } from './lib/build-esbuild-options';
+import { buildEsbuildOptions, getOutfile } from './lib/build-esbuild-options';
 import { getExtraDependencies } from './lib/get-extra-dependencies';
 import { DependentBuildableProjectNode } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+import { join } from 'path';
 
 const CJS_FILE_EXTENSION = '.cjs' as const;
 
@@ -115,7 +116,11 @@ export async function* esbuildExecutor(
 
                       next({
                         success: !!error && !hasTypeErrors,
-                        outfile: esbuildOptions.outfile,
+                        // Need to call getOutfile directly in the case of bundle=false and outfile is not set for esbuild.
+                        outfile: join(
+                          context.root,
+                          getOutfile(format, options, context)
+                        ),
                       });
                     },
                   }
@@ -125,7 +130,11 @@ export async function* esbuildExecutor(
 
               next({
                 success: true,
-                outfile: esbuildOptions.outfile,
+                // Need to call getOutfile directly in the case of bundle=false and outfile is not set for esbuild.
+                outfile: join(
+                  context.root,
+                  getOutfile(format, options, context)
+                ),
               });
 
               return result;
@@ -164,33 +173,38 @@ export async function* esbuildExecutor(
       }
     );
   } else {
-    const buildResults = await Promise.all(
-      options.format.map((format) =>
-        esbuild.build(buildEsbuildOptions(format, options, context))
-      )
-    );
-    const buildSuccess = buildResults.every((r) => r.errors?.length === 0);
-
-    let hasTypeErrors = false;
+    // Run type-checks first and bail if they don't pass.
     if (!options.skipTypeCheck) {
       const { errors } = await runTypeCheck(options, context);
-      hasTypeErrors = errors.length > 0;
+      if (errors.length > 0) {
+        yield { success: false };
+        return;
+      }
     }
 
-    if (options.metafile) {
-      buildResults.forEach((r, idx) => {
+    // Emit a build event for each file format.
+    for (let i = 0; i < options.format.length; i++) {
+      const format = options.format[i];
+      const esbuildOptions = buildEsbuildOptions(format, options, context);
+      const buildResult = await esbuild.build(esbuildOptions);
+
+      if (options.metafile) {
         const filename =
           options.format.length === 1
             ? 'meta.json'
-            : `meta.${options.format[idx]}.json`;
+            : `meta.${options.format[i]}.json`;
         writeJsonSync(
           joinPathFragments(options.outputPath, filename),
-          r.metafile
+          buildResult.metafile
         );
-      });
-    }
+      }
 
-    return { success: buildSuccess && !hasTypeErrors };
+      yield {
+        success: buildResult.errors.length === 0,
+        // Need to call getOutfile directly in the case of bundle=false and outfile is not set for esbuild.
+        outfile: join(context.root, getOutfile(format, options, context)),
+      };
+    }
   }
 }
 
