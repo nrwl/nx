@@ -74,7 +74,6 @@
     "webpack-dev-server": "^4.9.3",
     "webpack-merge": "^5.8.0",
     "webpack-node-externals": "^3.0.0",
-    "webpack-sources": "^3.2.3",
     "webpack-subresource-integrity": "^5.1.0"
   },
   "publishConfig": {
