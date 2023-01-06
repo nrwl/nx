@@ -1,4 +1,4 @@
-import { TestimonialCard } from '@nrwl/nx-dev/ui-common';
+import { SectionHeading, TestimonialCard } from '@nrwl/nx-dev/ui-common';
 
 export function Testimonials(): JSX.Element {
   const column1 = [
@@ -81,12 +81,17 @@ export function Testimonials(): JSX.Element {
       <div className="mx-auto max-w-7xl items-stretch py-12 px-4 sm:grid sm:grid-cols-1 sm:gap-8 sm:px-6 md:grid-cols-3 lg:py-16 lg:px-8">
         <div className="md:col-span-2">
           <header>
-            <h1 className="text-lg font-semibold tracking-tight text-blue-500 dark:text-sky-500">
+            <SectionHeading as="h1" variant="title" id="testimonials">
               They use Nx every day
-            </h1>
-            <p className="mt-4 text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 sm:text-5xl">
+            </SectionHeading>
+            <SectionHeading
+              as="p"
+              variant="display"
+              id="nx-is-fast"
+              className="mt-4"
+            >
               Devs & CEOs, Startups & big companies are loving Nx
-            </p>
+            </SectionHeading>
           </header>
           <div className="mt-8 flex gap-16 font-normal">
             <p className="max-w-xl text-lg text-slate-700 dark:text-slate-400">

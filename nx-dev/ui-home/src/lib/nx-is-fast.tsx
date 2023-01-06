@@ -7,6 +7,7 @@ import {
   ServerStackIcon,
 } from '@heroicons/react/24/outline';
 import { CogIcon } from '@heroicons/react/24/solid';
+import { SectionHeading } from '@nrwl/nx-dev/ui-common';
 import {
   animate,
   motion,
@@ -77,12 +78,17 @@ export function NxIsFast(): JSX.Element {
       >
         <div>
           <header>
-            <h1 className="text-lg font-semibold tracking-tight text-blue-500 dark:text-sky-500">
+            <SectionHeading as="h1" variant="title" id="nx-is-fast">
               Nx is fast
-            </h1>
-            <p className="mt-4 text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 sm:text-5xl">
+            </SectionHeading>
+            <SectionHeading
+              as="p"
+              variant="display"
+              id="nx-is-fast"
+              className="mt-4"
+            >
               Don't waste your time
-            </p>
+            </SectionHeading>
           </header>
           <div className="mt-8 flex gap-16 font-normal">
             <p className="max-w-xl text-lg text-slate-700 dark:text-slate-400">

@@ -3,7 +3,7 @@ import {
   ChatBubbleLeftEllipsisIcon,
   ClipboardIcon,
 } from '@heroicons/react/24/solid';
-import { Footer, Header } from '@nrwl/nx-dev/ui-common';
+import { Footer, Header, SectionHeading } from '@nrwl/nx-dev/ui-common';
 import {
   ConnectWithUs,
   CreateNxPlugin,
@@ -94,13 +94,13 @@ export default function Community(props: CommunityProps): JSX.Element {
           >
             <header className="mx-auto max-w-prose px-4 text-center sm:max-w-3xl sm:px-6 lg:px-8">
               <div>
-                <h1 className="text-lg font-semibold tracking-tight text-blue-500 dark:text-sky-500">
+                <SectionHeading as="h1" variant="title" id="community">
                   <span className="sr-only">Nx has </span> A strong and dynamic
                   community
-                </h1>
-                <p className="mt-4 text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 sm:text-5xl">
+                </SectionHeading>
+                <SectionHeading as="p" variant="display" className="mt-4">
                   It's always better when we're together.
-                </p>
+                </SectionHeading>
               </div>
             </header>
 

@@ -1,5 +1,5 @@
 import { Tab } from '@headlessui/react';
-import { Button } from '@nrwl/nx-dev/ui-common';
+import { Button, SectionHeading } from '@nrwl/nx-dev/ui-common';
 import { AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { Fragment } from 'react';
@@ -13,12 +13,21 @@ export function ExtensibleAndIntegrated(): JSX.Element {
     >
       <div className="mx-auto max-w-7xl py-12 px-4 sm:px-6 lg:py-16 lg:px-8">
         <header className="max-w-2xl">
-          <h1 className="text-lg font-semibold tracking-tight text-blue-500 dark:text-sky-500">
+          <SectionHeading
+            as="h1"
+            variant="title"
+            id="extensible-and-integrated"
+          >
             Integrated developer experience
-          </h1>
-          <p className="mt-4 text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 sm:text-5xl">
+          </SectionHeading>
+          <SectionHeading
+            as="p"
+            variant="display"
+            id="nx-is-fast"
+            className="mt-4"
+          >
             Everything is just a click away
-          </p>
+          </SectionHeading>
         </header>
         <div className="mt-8 flex flex-col gap-16 font-normal md:flex-row">
           <p className="max-w-xl text-lg text-slate-700 dark:text-slate-400">

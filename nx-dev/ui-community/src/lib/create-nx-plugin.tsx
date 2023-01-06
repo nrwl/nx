@@ -3,6 +3,7 @@ import {
   DocumentPlusIcon,
   ShareIcon,
 } from '@heroicons/react/24/solid';
+import { SectionHeading } from '@nrwl/nx-dev/ui-common';
 import Link from 'next/link';
 
 export function CreateNxPlugin(): JSX.Element {
@@ -12,9 +13,9 @@ export function CreateNxPlugin(): JSX.Element {
       className="items-center p-4 lg:mx-auto lg:grid lg:max-w-7xl lg:grid-flow-col-dense lg:grid-cols-2 lg:gap-24 lg:px-8"
     >
       <header className="mx-auto max-w-xl lg:col-start-1 lg:mx-0 lg:max-w-none">
-        <h1 className="mt-4 text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 sm:text-5xl">
+        <SectionHeading as="h1" variant="display" id="community-plugins">
           <span className="sr-only">Nx </span>Community Plugins
-        </h1>
+        </SectionHeading>
         <p className="mt-8">
           Official Nx plugins are created and maintained by the Nx team at Nrwl.
           You can see all the available plugins when you run the{' '}
