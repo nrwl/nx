@@ -248,7 +248,6 @@ const diataxis = {
   '/guides/browser-support': '/recipes/other/browser-support',
   '/guides/react-native': '/recipes/other/react-native',
   '/guides/deploy-nextjs-to-vercel': '/recipes/other/deploy-nextjs-to-vercel',
-  '/guides/webpack-5': '/recipes/other/webpack-5',
   '/guides/using-tailwind-css-in-react':
     '/recipes/other/using-tailwind-css-in-react',
   '/guides/react-18': '/recipes/other/react-18',
