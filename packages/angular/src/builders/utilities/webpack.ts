@@ -1,11 +1,10 @@
-import type { Target } from '@angular-devkit/architect';
 import { merge } from 'webpack-merge';
 
 export async function mergeCustomWebpackConfig(
   baseWebpackConfig: any,
   pathToWebpackConfig: string,
   options: { tsConfig: string; [k: string]: any },
-  target: Target
+  target: import('@angular-devkit/architect').Target
 ) {
   const customWebpackConfiguration = resolveCustomWebpackConfig(
     pathToWebpackConfig,
