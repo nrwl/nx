@@ -90,11 +90,14 @@ export default async function buildExecutor(
     }
   );
   updatePackageJson(builtPackageJson, context);
-  const lockFile = createLockFile(builtPackageJson);
   writeJsonFile(`${options.outputPath}/package.json`, builtPackageJson);
-  writeFileSync(`${options.outputPath}/${getLockFileName()}`, lockFile, {
-    encoding: 'utf-8',
-  });
+
+  if (options.generateLockfile) {
+    const lockFile = createLockFile(builtPackageJson);
+    writeFileSync(`${options.outputPath}/${getLockFileName()}`, lockFile, {
+      encoding: 'utf-8',
+    });
+  }
 
   createNextConfigFile(options, context);
 
