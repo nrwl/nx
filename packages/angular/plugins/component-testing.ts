@@ -12,7 +12,6 @@ import {
   ExecutorContext,
   joinPathFragments,
   logger,
-  offsetFromRoot,
   parseTargetString,
   ProjectConfiguration,
   ProjectGraph,
@@ -21,8 +20,8 @@ import {
   stripIndents,
   workspaceRoot,
 } from '@nrwl/devkit';
-import { existsSync, lstatSync, mkdirSync, writeFileSync } from 'fs';
-import { dirname, join, relative } from 'path';
+import { existsSync, mkdirSync, writeFileSync } from 'fs';
+import { dirname, join } from 'path';
 import type { BrowserBuilderSchema } from '../src/builders/webpack-browser/webpack-browser.impl';
 
 /**
@@ -78,11 +77,6 @@ ${e.stack ? e.stack : e}`
     Has project config? ${!!graph.nodes?.[buildTarget.project]?.data}`);
   }
 
-  const fromWorkspaceRoot = relative(workspaceRoot, pathToConfig);
-  const normalizedFromWorkspaceRootPath = lstatSync(pathToConfig).isFile()
-    ? dirname(fromWorkspaceRoot)
-    : fromWorkspaceRoot;
-  const offset = offsetFromRoot(normalizedFromWorkspaceRootPath);
   const buildContext = createExecutorContext(
     graph,
     graph.nodes[buildTarget.project]?.data.targets,
@@ -93,14 +87,22 @@ ${e.stack ? e.stack : e}`
 
   const buildableProjectConfig = normalizeBuildTargetOptions(
     buildContext,
-    ctContext,
-    offset
+    ctContext
   );
 
   return {
     ...nxBaseCypressPreset(pathToConfig),
     // NOTE: cannot use a glob pattern since it will break cypress generated tsconfig.
     specPattern: ['src/**/*.cy.ts', 'src/**/*.cy.js'],
+    // need to set as cypress defaults to a relative path from the workspaceRoot instead of projectRoot
+    // set as absolute path incase this changes internally to cypress, this path isn't OS dependant
+    indexHtmlFile: joinPathFragments(
+      workspaceRoot,
+      ctProjectConfig.root,
+      'cypress',
+      'support',
+      'component-index.html'
+    ),
     devServer: {
       // cypress uses string union type,
       // need to use const to prevent typing to string
@@ -155,9 +157,12 @@ function getBuildableTarget(ctContext: ExecutorContext) {
 
 function normalizeBuildTargetOptions(
   buildContext: ExecutorContext,
-  ctContext: ExecutorContext,
-  offset: string
-): { root: string; sourceRoot: string; buildOptions: BrowserBuilderSchema } {
+  ctContext: ExecutorContext
+): {
+  root: string;
+  sourceRoot: string;
+  buildOptions: BrowserBuilderSchema & { workspaceRoot: string };
+} {
   const options = readTargetOptions<BrowserBuilderSchema>(
     {
       project: buildContext.projectName,
@@ -168,73 +173,26 @@ function normalizeBuildTargetOptions(
   );
   const buildOptions = withSchemaDefaults(options);
 
-  // paths need to be unix paths for angular devkit
-  buildOptions.polyfills =
-    Array.isArray(buildOptions.polyfills) && buildOptions.polyfills.length > 0
-      ? (buildOptions.polyfills as string[]).map((p) =>
-          joinPathFragments(offset, p)
-        )
-      : joinPathFragments(offset, buildOptions.polyfills as string);
-  buildOptions.main = joinPathFragments(offset, buildOptions.main);
-  buildOptions.index =
-    typeof buildOptions.index === 'string'
-      ? joinPathFragments(offset, buildOptions.index)
-      : {
-          ...buildOptions.index,
-          input: joinPathFragments(offset, buildOptions.index.input),
-        };
   // cypress creates a tsconfig if one isn't preset
   // that contains all the support required for angular and component tests
   delete buildOptions.tsConfig;
-
-  buildOptions.fileReplacements = buildOptions.fileReplacements.map((fr) => {
-    fr.replace = joinPathFragments(offset, fr.replace);
-    fr.with = joinPathFragments(offset, fr.with);
-    return fr;
-  });
 
   // if the ct project isn't being used in the build project
   // then we don't want to have the assets/scripts/styles be included to
   // prevent inclusion of unintended stuff like tailwind
   if (
-    isCtProjectUsingBuildProject(
+    !isCtProjectUsingBuildProject(
       ctContext.projectGraph,
       buildContext.projectName,
       ctContext.projectName
     )
   ) {
-    buildOptions.assets = buildOptions.assets.map((asset) => {
-      return typeof asset === 'string'
-        ? joinPathFragments(offset, asset)
-        : { ...asset, input: joinPathFragments(offset, asset.input) };
-    });
-    buildOptions.styles = buildOptions.styles.map((style) => {
-      return typeof style === 'string'
-        ? joinPathFragments(offset, style)
-        : { ...style, input: joinPathFragments(offset, style.input) };
-    });
-    buildOptions.scripts = buildOptions.scripts.map((script) => {
-      return typeof script === 'string'
-        ? joinPathFragments(offset, script)
-        : { ...script, input: joinPathFragments(offset, script.input) };
-    });
-    if (buildOptions.stylePreprocessorOptions?.includePaths.length > 0) {
-      buildOptions.stylePreprocessorOptions = {
-        includePaths: buildOptions.stylePreprocessorOptions.includePaths.map(
-          (path) => {
-            return joinPathFragments(offset, path);
-          }
-        ),
-      };
-    }
-  } else {
     const stylePath = getTempStylesForTailwind(ctContext);
     buildOptions.styles = stylePath ? [stylePath] : [];
     buildOptions.assets = [];
     buildOptions.scripts = [];
     buildOptions.stylePreprocessorOptions = { includePaths: [] };
   }
-
   const config =
     buildContext.projectGraph.nodes[buildContext.projectName]?.data;
 
@@ -246,9 +204,14 @@ Note: this may fail, setting the correct 'sourceRoot' for ${buildContext.project
   }
 
   return {
-    root: joinPathFragments(offset, config.root),
-    sourceRoot: joinPathFragments(offset, config.sourceRoot),
-    buildOptions,
+    root: config.root,
+    sourceRoot: config.sourceRoot,
+    buildOptions: {
+      ...buildOptions,
+      // provide a custom workspaceRoot for cypress to use
+      // so assets correct are resolved
+      workspaceRoot: workspaceRoot,
+    },
   };
 }
 
