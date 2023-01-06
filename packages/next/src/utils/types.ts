@@ -37,6 +37,7 @@ export interface NextBuildBuilderOptions {
   nextConfig?: string;
   buildLibsFromSource?: boolean;
   includeDevDependenciesInPackageJson?: boolean;
+  generateLockfile?: boolean;
   watch?: boolean;
 }
 

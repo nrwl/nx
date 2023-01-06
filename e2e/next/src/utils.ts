@@ -1,14 +1,11 @@
 import {
   checkFilesExist,
-  detectPackageManager,
   killPorts,
   readJson,
   runCLI,
   runCLIAsync,
   runCypressTests,
-  tmpProjPath,
 } from '../../utils';
-import { getLockFileName } from '../../../packages/nx/src/lock-file/lock-file';
 
 export async function checkApp(
   appName: string,
@@ -27,12 +24,6 @@ export async function checkApp(
   expect(packageJson.dependencies.react).toBeDefined();
   expect(packageJson.dependencies['react-dom']).toBeDefined();
   expect(packageJson.dependencies.next).toBeDefined();
-
-  checkFilesExist(
-    `dist/apps/${appName}/${getLockFileName(
-      detectPackageManager(tmpProjPath())
-    )}`
-  );
 
   if (opts.checkLint) {
     const lintResults = runCLI(`lint ${appName}`);

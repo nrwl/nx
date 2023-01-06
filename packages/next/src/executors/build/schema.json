@@ -53,6 +53,11 @@
       "type": "boolean",
       "description": "Include `devDependencies` in the generated package.json file. By default only production `dependencies` are included.",
       "default": false
+    },
+    "generateLockfile": {
+      "type": "boolean",
+      "description": "Generate a lockfile (e.g. yarn.lock) that matches the workspace lockfile to ensure package versions match.",
+      "default": false
     }
   },
   "required": ["root", "outputPath"]

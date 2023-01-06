@@ -12,9 +12,9 @@ import {
   updateFile,
   updateProjectConfig,
 } from '@nrwl/e2e/utils';
-import { checkApp } from './utils';
 import { stringUtils } from '@nrwl/workspace';
 import * as http from 'http';
+import { checkApp } from './utils';
 
 describe('Next.js Applications', () => {
   let proj: string;
