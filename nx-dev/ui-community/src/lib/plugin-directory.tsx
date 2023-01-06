@@ -1,5 +1,5 @@
 import { MagnifyingGlassIcon } from '@heroicons/react/24/solid';
-import { PluginCard } from '@nrwl/nx-dev/ui-common';
+import { PluginCard, SectionHeading } from '@nrwl/nx-dev/ui-common';
 import { useState } from 'react';
 
 interface Plugin {
@@ -21,9 +21,9 @@ export function PluginDirectory({
       className="max-w-screen mx-auto p-4 lg:max-w-7xl lg:px-8"
     >
       <div className="flex w-full flex-col justify-between gap-8 md:flex-row ">
-        <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">
-          Nx Plugin Directory
-        </h2>
+        <SectionHeading as="h2" variant="display" id="plugins-registry">
+          Nx Plugins Registry
+        </SectionHeading>
         <div>
           <label htmlFor="search" className="sr-only">
             Quick search

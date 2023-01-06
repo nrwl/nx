@@ -1,4 +1,4 @@
-import { ButtonLink } from '@nrwl/nx-dev/ui-common';
+import { ButtonLink, SectionHeading } from '@nrwl/nx-dev/ui-common';
 import Link from 'next/link';
 
 export function MigrationsAndCodeGeneration(): JSX.Element {
@@ -10,12 +10,17 @@ export function MigrationsAndCodeGeneration(): JSX.Element {
       <div className="mx-auto max-w-7xl py-12 px-4 sm:grid sm:grid-cols-2 sm:gap-8 sm:px-6 lg:py-16 lg:px-8">
         <div>
           <header>
-            <h1 className="text-lg font-semibold tracking-tight text-blue-500 dark:text-sky-500">
+            <SectionHeading as="h1" variant="title" id="evergreen-setup">
               Evergreen setup
-            </h1>
-            <p className="mt-4 text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 sm:text-5xl">
+            </SectionHeading>
+            <SectionHeading
+              as="p"
+              variant="display"
+              id="nx-is-fast"
+              className="mt-4"
+            >
               Stay up to date, without effort
-            </p>
+            </SectionHeading>
           </header>
           <div className="mt-8 flex gap-16 font-normal">
             <p className="max-w-xl text-lg text-slate-700 dark:text-slate-400">

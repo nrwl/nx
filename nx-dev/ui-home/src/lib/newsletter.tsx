@@ -1,3 +1,5 @@
+import { SectionHeading } from '@nrwl/nx-dev/ui-common';
+
 export function Newsletter(): JSX.Element {
   const communityLinks = [
     {
@@ -72,12 +74,17 @@ export function Newsletter(): JSX.Element {
     <div className="bg-slate-50 pt-28 dark:bg-slate-800/40">
       <div className="mx-auto max-w-7xl py-16 px-4 sm:px-6 lg:flex lg:items-center lg:py-24 lg:px-8">
         <div className="lg:w-0 lg:flex-1">
-          <h1 className="text-lg font-semibold tracking-tight text-blue-500 dark:text-sky-500">
+          <SectionHeading as="h1" variant="title" id="stay-informed">
             Stay up to date
-          </h1>
-          <h2 className="mt-4 text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 sm:text-5xl">
+          </SectionHeading>
+          <SectionHeading
+            as="p"
+            variant="display"
+            id="nx-is-fast"
+            className="mt-4"
+          >
             Nx is growing fast, stay in the loop!
-          </h2>
+          </SectionHeading>
           <p className="mt-4 text-lg text-slate-700 dark:text-slate-400">
             Join the Nx community and stay updated on new releases and features,
             guides and recipes, events and fresh video tutorials.
