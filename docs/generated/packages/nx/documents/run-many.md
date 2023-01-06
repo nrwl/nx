@@ -41,6 +41,12 @@ Test all projects ending with `*-app` except `excluded-app`:
  nx run-many --target=test --projects=*-app --exclude excluded-app
 ```
 
+Run lint, test, and build targets for all projects. Requires Nx v15.4+:
+
+```shell
+ nx run-many --targets=lint,test,build --all
+```
+
 ## Options
 
 ### all

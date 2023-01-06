@@ -35,6 +35,12 @@ Run the test target for all projects:
  nx affected --target=test --all
 ```
 
+Run lint, test, and build targets for affected projects. Requires Nx v15.4+:
+
+```shell
+ nx affected --targets=lint,test,build
+```
+
 Run tests for all the projects affected by changing the index.ts file:
 
 ```shell
