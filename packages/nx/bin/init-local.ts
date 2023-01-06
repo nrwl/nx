@@ -23,7 +23,10 @@ export function initLocal(workspace: WorkspaceTypeAndRoot) {
       return;
     }
 
-    if (isKnownCommand()) {
+    const command = process.argv[2];
+    if (command === 'run' || command === 'g' || command === 'generate') {
+      commandsObject.parse(process.argv.slice(2));
+    } else if (isKnownCommand(command)) {
       const newArgs = rewriteTargetsAndProjects(process.argv);
       const help = newArgs.indexOf('--help');
       const split = newArgs.indexOf('--');
@@ -89,7 +92,7 @@ function wrapIntoQuotesIfNeeded(arg: string) {
   return arg.indexOf(':') > -1 ? `"${arg}"` : arg;
 }
 
-function isKnownCommand() {
+function isKnownCommand(command: string) {
   const commands = [
     ...Object.keys(
       (commandsObject as any)
@@ -106,11 +109,7 @@ function isKnownCommand() {
     'clear-cache',
     'help',
   ];
-  return (
-    !process.argv[2] ||
-    process.argv[2].startsWith('-') ||
-    commands.indexOf(process.argv[2]) > -1
-  );
+  return !command || command.startsWith('-') || commands.indexOf(command) > -1;
 }
 
 function shouldDelegateToAngularCLI() {
