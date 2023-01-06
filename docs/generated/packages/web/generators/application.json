@@ -71,8 +71,7 @@
       "unitTestRunner": {
         "type": "string",
         "enum": ["jest", "vitest", "none"],
-        "description": "Test runner to use for unit tests",
-        "default": "jest"
+        "description": "Test runner to use for unit tests. Default value is 'jest' when using 'webpack' or 'none' as the bundler and 'vitest' when using 'vite' as the bundler"
       },
       "inSourceTests": {
         "type": "boolean",
