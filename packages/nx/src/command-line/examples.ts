@@ -45,6 +45,11 @@ export const examples: Record<string, Example[]> = {
       description: 'Run the test target for all projects',
     },
     {
+      command: 'affected --targets=lint,test,build',
+      description:
+        'Run lint, test, and build targets for affected projects. Requires Nx v15.4+',
+    },
+    {
       command: 'affected --target=test --files=libs/mylib/src/index.ts',
       description:
         'Run tests for all the projects affected by changing the index.ts file',
@@ -299,6 +304,11 @@ export const examples: Record<string, Example[]> = {
       command: 'run-many --target=test --projects=*-app --exclude excluded-app',
       description:
         'Test all projects ending with `*-app` except `excluded-app`',
+    },
+    {
+      command: 'run-many --targets=lint,test,build --all',
+      description:
+        'Run lint, test, and build targets for all projects. Requires Nx v15.4+',
     },
   ],
   migrate: [
