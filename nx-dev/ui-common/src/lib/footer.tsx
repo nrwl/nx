@@ -254,7 +254,7 @@ export function Footer(): JSX.Element {
         </div>
         <div className="mt-12 border-t border-slate-200 pt-2 dark:border-slate-800">
           <p className="text-sm text-slate-400 xl:text-center">
-            &copy; 2022 made with{' '}
+            &copy; 2023 made with{' '}
             <HeartIcon className="-mt-0.5 inline h-4 w-4" /> by{' '}
             <Link
               href="https://nrwl.io/?utm_source=nx.dev"
