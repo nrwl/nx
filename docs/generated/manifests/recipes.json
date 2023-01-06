@@ -1096,16 +1096,6 @@
         "tags": []
       },
       {
-        "id": "webpack-5",
-        "name": "Webpack 5 Migration",
-        "description": "",
-        "file": "shared/guides/webpack-5",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/other/webpack-5",
-        "tags": []
-      },
-      {
         "id": "using-tailwind-css-in-react",
         "name": "Using Tailwind CSS in React",
         "description": "",
@@ -1418,16 +1408,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/other/deploy-nextjs-to-vercel",
-    "tags": []
-  },
-  "/recipes/other/webpack-5": {
-    "id": "webpack-5",
-    "name": "Webpack 5 Migration",
-    "description": "",
-    "file": "shared/guides/webpack-5",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/webpack-5",
     "tags": []
   },
   "/recipes/other/using-tailwind-css-in-react": {
