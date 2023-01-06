@@ -1,5 +1,9 @@
 import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
-import type { NxJsonConfiguration, Tree } from '@nrwl/devkit';
+import {
+  NxJsonConfiguration,
+  readProjectConfiguration,
+  Tree,
+} from '@nrwl/devkit';
 import { getProjects, readJson } from '@nrwl/devkit';
 import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 
@@ -444,8 +448,8 @@ describe('app', () => {
     });
   });
 
-  describe('--unit-test-runner none', () => {
-    it('should not generate test configuration', async () => {
+  describe('--unit-test-runner', () => {
+    it('--unit-test-runner=none', async () => {
       await applicationGenerator(tree, {
         name: 'myApp',
         unitTestRunner: 'none',
@@ -473,6 +477,76 @@ describe('app', () => {
           ],
         }
       `);
+    });
+
+    it('--bundler=none should use jest as the default', async () => {
+      await applicationGenerator(tree, {
+        name: 'my-cool-app',
+        standaloneConfig: false,
+        bundler: 'none',
+      });
+      expect(tree.exists('apps/my-cool-app/jest.config.ts')).toBeTruthy();
+      expect(
+        readJson(tree, 'apps/my-cool-app/tsconfig.spec.json').compilerOptions
+          .types
+      ).toMatchInlineSnapshot(`
+        Array [
+          "jest",
+          "node",
+        ]
+      `);
+      expect(
+        readProjectConfiguration(tree, 'my-cool-app').targets.test.executor
+      ).toEqual('@nrwl/jest:jest');
+    });
+
+    it('--bundler=vite --unitTestRunner=jest', async () => {
+      await applicationGenerator(tree, {
+        name: 'my-vite-app',
+        standaloneConfig: false,
+        bundler: 'vite',
+        unitTestRunner: 'jest',
+      });
+      expect(tree.exists('apps/my-vite-app/vite.config.ts')).toBeTruthy();
+      expect(
+        tree.read('apps/my-vite-app/vite.config.ts', 'utf-8')
+      ).not.toContain('test: {');
+      expect(tree.exists('apps/my-vite-app/jest.config.ts')).toBeTruthy();
+      expect(
+        readJson(tree, 'apps/my-vite-app/tsconfig.spec.json').compilerOptions
+          .types
+      ).toMatchInlineSnapshot(`
+        Array [
+          "jest",
+          "node",
+        ]
+      `);
+      expect(
+        readProjectConfiguration(tree, 'my-vite-app').targets.test.executor
+      ).toEqual('@nrwl/jest:jest');
+    });
+
+    it('--bundler=webpack --unitTestRunner=vitest', async () => {
+      await applicationGenerator(tree, {
+        name: 'my-webpack-app',
+        standaloneConfig: false,
+        bundler: 'webpack',
+        unitTestRunner: 'vitest',
+      });
+      expect(tree.exists('apps/my-webpack-app/vite.config.ts')).toBeTruthy();
+      expect(tree.exists('apps/my-webpack-app/jest.config.ts')).toBeFalsy();
+      expect(
+        readJson(tree, 'apps/my-webpack-app/tsconfig.spec.json').compilerOptions
+          .types
+      ).toMatchInlineSnapshot(`
+        Array [
+          "vitest/globals",
+          "node",
+        ]
+      `);
+      expect(
+        readProjectConfiguration(tree, 'my-webpack-app').targets.test.executor
+      ).toEqual('@nrwl/vite:test');
     });
   });
 

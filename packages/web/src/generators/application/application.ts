@@ -202,7 +202,7 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
       uiFramework: 'none',
       project: options.projectName,
       newProject: true,
-      includeVitest: true,
+      includeVitest: options.unitTestRunner === 'vitest',
       inSourceTests: options.inSourceTests,
     });
     tasks.push(viteTask);
@@ -298,7 +298,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
-  if (options.bundler === 'vite') {
+  if (options.bundler === 'vite' && !options.unitTestRunner) {
     options.unitTestRunner = 'vitest';
   }
 
