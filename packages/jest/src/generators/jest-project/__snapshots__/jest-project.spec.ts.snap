@@ -111,6 +111,12 @@ export default {
 
 exports[`jestProject should use jest.config.js in project config with --js flag 1`] = `
 Object {
+  "configurations": Object {
+    "ci": Object {
+      "ci": true,
+      "codeCoverage": true,
+    },
+  },
   "executor": "@nrwl/jest:jest",
   "options": Object {
     "jestConfig": "libs/lib1/jest.config.js",

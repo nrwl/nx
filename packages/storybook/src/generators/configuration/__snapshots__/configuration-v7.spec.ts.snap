@@ -83,6 +83,12 @@ Object {
       },
     },
     "test": Object {
+      "configurations": Object {
+        "ci": Object {
+          "ci": true,
+          "codeCoverage": true,
+        },
+      },
       "executor": "@nrwl/jest:jest",
       "options": Object {
         "jestConfig": "libs/test-ui-lib/jest.config.ts",
