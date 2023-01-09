@@ -342,49 +342,42 @@ export function editTsConfig(tree: Tree, options: Schema) {
 
   const config = readJson(tree, `${projectConfig.root}/tsconfig.json`);
 
+  const commonCompilerOptions = {
+    target: 'ESNext',
+    useDefineForClassFields: true,
+    module: 'ESNext',
+    strict: true,
+    moduleResolution: 'Node',
+    resolveJsonModule: true,
+    isolatedModules: true,
+    types: ['vite/client'],
+    noEmit: true,
+  };
+
   switch (options.uiFramework) {
     case 'react':
       config.compilerOptions = {
-        target: 'ESNext',
-        useDefineForClassFields: true,
-        module: 'ESNext',
+        ...commonCompilerOptions,
         lib: ['DOM', 'DOM.Iterable', 'ESNext'],
         allowJs: false,
-        skipLibCheck: true,
         esModuleInterop: false,
+        skipLibCheck: true,
         allowSyntheticDefaultImports: true,
-        strict: true,
         forceConsistentCasingInFileNames: true,
-        moduleResolution: 'Node',
-        resolveJsonModule: true,
-        isolatedModules: true,
-        noEmit: true,
         jsx: 'react-jsx',
-        types: options.includeVitest
-          ? ['vite/client', 'vitest']
-          : ['vite/client'],
       };
       config.include = [...config.include, 'src'];
       break;
     case 'none':
       config.compilerOptions = {
-        target: 'ESNext',
-        useDefineForClassFields: true,
-        module: 'ESNext',
+        ...commonCompilerOptions,
         lib: ['ESNext', 'DOM'],
         skipLibCheck: true,
         esModuleInterop: true,
         strict: true,
-        moduleResolution: 'Node',
-        resolveJsonModule: true,
-        isolatedModules: true,
-        noEmit: true,
         noUnusedLocals: true,
         noUnusedParameters: true,
         noImplicitReturns: true,
-        types: options.includeVitest
-          ? ['vite/client', 'vitest']
-          : ['vite/client'],
       };
       config.include = [...config.include, 'src'];
       break;
