@@ -94,11 +94,14 @@ export const getStaticProps: GetStaticProps = async ({
   params: { segments: string[] };
 }) => {
   try {
-    const document = nxRecipesApi.getDocument(['recipes', ...params.segments]);
+    const segments = ['recipes', ...params.segments];
+    const document = nxRecipesApi.getDocument(segments);
     return {
       props: {
         document,
-        relatedDocuments: tagsApi.getAssociatedItemsFromTags(document.tags),
+        relatedDocuments: tagsApi
+          .getAssociatedItemsFromTags(document.tags)
+          .filter((item) => item.path !== '/' + segments.join('/')), // Remove currently displayed item
         menu: menusApi.getMenu('recipes', ''),
       },
     };

@@ -103,7 +103,9 @@ export const getStaticProps: GetStaticProps = async ({
     return {
       props: {
         document,
-        relatedDocuments: tagsApi.getAssociatedItemsFromTags(document.tags),
+        relatedDocuments: tagsApi
+          .getAssociatedItemsFromTags(document.tags)
+          .filter((item) => item.path !== '/' + params.segments.join('/')), // Remove currently displayed item
         menu: menusApi.getMenu('nx', ''),
       },
     };

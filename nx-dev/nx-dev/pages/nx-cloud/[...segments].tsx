@@ -97,11 +97,14 @@ export const getStaticProps: GetStaticProps = async ({
   params: { segments: string[] };
 }) => {
   try {
-    const document = nxCloudApi.getDocument(['nx-cloud', ...params.segments]);
+    const segments = ['nx-cloud', ...params.segments];
+    const document = nxCloudApi.getDocument(segments);
     return {
       props: {
         document,
-        relatedDocuments: tagsApi.getAssociatedItemsFromTags(document.tags),
+        relatedDocuments: tagsApi
+          .getAssociatedItemsFromTags(document.tags)
+          .filter((item) => item.path !== '/' + segments.join('/')), // Remove currently displayed item
         menu: menusApi.getMenu('cloud', ''),
       },
     };
