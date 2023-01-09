@@ -1,7 +1,10 @@
 import 'dotenv/config';
 import { ExecutorContext, logger } from '@nrwl/devkit';
-import { build, InlineConfig } from 'vite';
-import { getBuildAndSharedConfig } from '../../utils/options-utils';
+import { build, InlineConfig, mergeConfig } from 'vite';
+import {
+  getViteBuildOptions,
+  getViteSharedConfig,
+} from '../../utils/options-utils';
 import { ViteBuildExecutorOptions } from './schema';
 import { copyAssets } from '@nrwl/js';
 import { existsSync } from 'fs';
@@ -14,7 +17,14 @@ export default async function viteBuildExecutor(
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
 
-  await runInstance(await getBuildAndSharedConfig(options, context));
+  const buildConfig = mergeConfig(
+    getViteSharedConfig(options, false, context),
+    {
+      build: getViteBuildOptions(options, context),
+    }
+  );
+
+  await runInstance(buildConfig);
 
   const libraryPackageJson = resolve(projectRoot, 'package.json');
   const rootPackageJson = resolve(context.root, 'package.json');

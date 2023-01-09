@@ -4,43 +4,37 @@ import {
   logger,
   parseTargetString,
   readTargetOptions,
-  Tree,
 } from '@nrwl/devkit';
 import { existsSync } from 'fs';
 import { join, relative } from 'path';
 import {
   BuildOptions,
   InlineConfig,
-  mergeConfig,
+  PluginOption,
   searchForWorkspaceRoot,
   ServerOptions,
-  UserConfig,
 } from 'vite';
 import { ViteDevServerExecutorOptions } from '../executors/dev-server/schema';
 import replaceFiles from '../../plugins/rollup-replace-files.plugin';
 import { ViteBuildExecutorOptions } from '../executors/build/schema';
 
-export async function getBuildAndSharedConfig(
-  options:
-    | (ViteDevServerExecutorOptions & ViteBuildExecutorOptions)
-    | ViteBuildExecutorOptions,
+export function getViteSharedConfig(
+  options: ViteBuildExecutorOptions,
+  clearScreen: boolean | undefined,
   context: ExecutorContext
-): Promise<InlineConfig> {
-  const projectRoot =
-    context.projectsConfigurations.projects[context.projectName].root;
+): InlineConfig {
+  const projectRoot = context.workspace.projects[context.projectName].root;
 
-  return mergeConfig({}, {
+  return {
     mode: options.mode,
     root: projectRoot,
     base: options.base,
     configFile: normalizeViteConfigFilePath(projectRoot, options.configFile),
-    plugins: [replaceFiles(options.fileReplacements)],
-    build: getViteBuildOptions(
-      options as ViteDevServerExecutorOptions & ViteBuildExecutorOptions,
-      projectRoot
-    ),
+    plugins: [replaceFiles(options.fileReplacements) as PluginOption],
     optimizeDeps: { force: options.force },
-  } as InlineConfig);
+    clearScreen: clearScreen,
+    logLevel: options.logLevel,
+  };
 }
 
 export function normalizeViteConfigFilePath(
@@ -56,13 +50,20 @@ export function normalizeViteConfigFilePath(
     : undefined;
 }
 
-export function getServerOptions(
+export function getViteServerOptions(
   options: ViteDevServerExecutorOptions,
   context: ExecutorContext
 ): ServerOptions {
-  const projectRoot =
-    context.projectsConfigurations.projects[context.projectName].root;
-  let serverOptions: ServerOptions & UserConfig = {};
+  const projectRoot = context.workspace.projects[context.projectName].root;
+  const serverOptions: ServerOptions = {
+    host: options.host,
+    port: options.port,
+    https: options.https,
+    hmr: options.hmr,
+    open: options.open,
+    cors: options.cors,
+  };
+
   if (options.proxyConfig) {
     const proxyConfigPath = options.proxyConfig
       ? join(context.root, options.proxyConfig)
@@ -80,34 +81,21 @@ export function getServerOptions(
     }
   }
 
-  serverOptions = {
-    ...serverOptions,
-    host: options.host,
-    port: options.port,
-    https: options.https,
-    hmr: options.hmr,
-    open: options.open,
-    cors: options.cors,
-    logLevel: options.logLevel,
-    clearScreen: options.clearScreen,
-  };
-
   return serverOptions;
 }
 
-export function getBuildTargetOptions(
-  buildTarget: string,
-  context: ExecutorContext
-) {
-  const target = parseTargetString(buildTarget, context.projectGraph);
-  return readTargetOptions(target, context);
+export function getNxTargetOptions(target: string, context: ExecutorContext) {
+  const targetObj = parseTargetString(target, context.projectGraph);
+  return readTargetOptions(targetObj, context);
 }
 
 export function getViteBuildOptions(
-  options: ViteDevServerExecutorOptions & ViteBuildExecutorOptions,
-  projectRoot: string
+  options: ViteBuildExecutorOptions,
+  context: ExecutorContext
 ): BuildOptions {
-  let buildOptions: BuildOptions & UserConfig = {
+  const projectRoot = context.workspace.projects[context.projectName].root;
+
+  return {
     outDir: relative(projectRoot, options.outputPath),
     emptyOutDir: true,
     reportCompressedSize: true,
@@ -116,17 +104,10 @@ export function getViteBuildOptions(
     commonjsOptions: {
       transformMixedEsModules: true,
     },
-  };
-
-  buildOptions = {
-    ...buildOptions,
     sourcemap: options.sourcemap,
     minify: options.minify,
     manifest: options.manifest,
     ssrManifest: options.ssrManifest,
     ssr: options.ssr,
-    logLevel: options.logLevel,
   };
-
-  return buildOptions;
 }
