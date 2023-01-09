@@ -23,7 +23,7 @@
   },
   "homepage": "https://nx.dev",
   "dependencies": {
-    "fs-extra": "^10.1.0",
+    "fs-extra": "^11.1.0",
     "glob": "7.1.4",
     "nx": "file:../nx",
     "tslib": "^2.3.0",
