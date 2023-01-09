@@ -10,6 +10,11 @@ export const expoCliVersion = '0.4.10'; // @expo/cli
 export const easCliVersion = '3.1.1';
 export const babelPresetExpoVersion = '~9.2.2';
 
+export const reactVersion = '18.1.0';
+export const reactDomVersion = '18.1.0';
+export const reactTestRendererVersion = '18.1.0';
+export const typesReactVersion = '18.0.26';
+
 export const reactNativeVersion = '0.70.5';
 export const typesReactNativeVersion = '0.70.7';
 export const reactNativeWebVersion = '~0.18.10';

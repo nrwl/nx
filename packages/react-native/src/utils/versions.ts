@@ -11,6 +11,11 @@ export const reactNativeCommunityCli = '9.3.2';
 export const reactNativeCommunityCliIos = '9.3.0';
 export const reactNativeCommunityCliAndroid = '9.3.1';
 
+export const reactVersion = '18.1.0';
+export const reactDomVersion = '18.1.0';
+export const reactTestRendererVersion = '18.1.0';
+export const typesReactVersion = '18.0.26';
+
 export const reactNativeConfigVersion = '1.4.11';
 export const reactNativeAsyncStorageAsyncStorageVersion = '1.17.11';
 

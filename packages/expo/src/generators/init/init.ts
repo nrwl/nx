@@ -25,14 +25,12 @@ import {
   easCliVersion,
   deprecatedExpoCliVersion,
   expoWebpackConfig,
-} from '../../utils/versions';
-
-import {
-  reactDomVersion,
   reactVersion,
   reactTestRendererVersion,
   typesReactVersion,
-} from '@nrwl/react/src/utils/versions';
+  reactDomVersion,
+} from '../../utils/versions';
+
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { jestInitGenerator } from '@nrwl/jest';
 import { detoxInitGenerator } from '@nrwl/detox';
