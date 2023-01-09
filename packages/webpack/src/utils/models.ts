@@ -25,5 +25,4 @@ export interface CreateWebpackConfigOptions<T = any> {
   buildOptions: T;
   tsConfig: any;
   tsConfigPath: string;
-  supportES2015: boolean;
 }

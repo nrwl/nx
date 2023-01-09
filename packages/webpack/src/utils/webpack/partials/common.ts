@@ -1,19 +1,17 @@
-import { basename, join, resolve } from 'path';
+import { basename, resolve } from 'path';
 import type { Compiler, Configuration } from 'webpack';
-import { ids, ProgressPlugin, sources } from 'webpack';
-import { ScriptTarget } from 'typescript';
+import { ProgressPlugin, sources } from 'webpack';
 
 import { normalizeExtraEntryPoints } from '../normalize-entry';
 import { ScriptsWebpackPlugin } from '../plugins/scripts-webpack-plugin';
-import { BuildBrowserFeatures } from '../build-browser-features';
 import { getOutputHashFormat } from '../../hash-format';
 import { findAllNodeModules, findUp } from '../../fs';
-import type { CreateWebpackConfigOptions, ExtraEntryPoint } from '../../models';
+import type { CreateWebpackConfigOptions } from '../../models';
 
 export function getCommonConfig(
   wco: CreateWebpackConfigOptions
 ): Configuration {
-  const { root, projectRoot, sourceRoot, buildOptions, tsConfig } = wco;
+  const { root, projectRoot, sourceRoot, buildOptions } = wco;
 
   let stylesOptimization: boolean;
   let scriptsOptimization: boolean;
@@ -35,48 +33,6 @@ export function getCommonConfig(
 
   if (buildOptions.main) {
     entryPoints['main'] = [resolve(root, buildOptions.main)];
-  }
-
-  const buildBrowserFeatures = new BuildBrowserFeatures(
-    projectRoot,
-    tsConfig.options.target || ScriptTarget.ES5
-  );
-
-  const differentialLoadingNeeded =
-    buildBrowserFeatures.isDifferentialLoadingNeeded();
-
-  if (tsConfig.options.target === ScriptTarget.ES5) {
-    if (buildBrowserFeatures.isEs5SupportNeeded()) {
-      // The nomodule polyfill needs to be inject prior to any script and be
-      // outside of webpack compilation because otherwise webpack will cause the
-      // script to be wrapped in window["webpackJsonp"] which causes this to fail.
-      if (buildBrowserFeatures.isNoModulePolyfillNeeded()) {
-        const noModuleScript: ExtraEntryPoint = {
-          bundleName: 'polyfills-nomodule-es5',
-          input: join(__dirname, '..', 'safari-nomodule.js'),
-        };
-        buildOptions.scripts = buildOptions.scripts
-          ? [...buildOptions.scripts, noModuleScript]
-          : [noModuleScript];
-      }
-
-      // For full build differential loading we don't need to generate a seperate polyfill file
-      // because they will be loaded exclusivly based on module and nomodule
-      const polyfillsChunkName = differentialLoadingNeeded
-        ? 'polyfills'
-        : 'polyfills-es5';
-
-      entryPoints[polyfillsChunkName] = [
-        join(__dirname, '..', 'es5-polyfills.js'),
-      ];
-
-      // If not performing a full differential build the polyfills need to be added to ES5 bundle
-      if (buildOptions.polyfills) {
-        entryPoints[polyfillsChunkName].push(
-          resolve(root, buildOptions.polyfills)
-        );
-      }
-    }
   }
 
   if (buildOptions.polyfills) {
@@ -179,26 +135,12 @@ export function getCommonConfig(
   const loaderNodeModules = findAllNodeModules(__dirname, projectRoot);
   loaderNodeModules.unshift('node_modules');
 
-  // Load rxjs path aliases.
-  // https://github.com/ReactiveX/rxjs/blob/master/doc/pipeable-operators.md#build-and-treeshaking
-  let alias = {};
-  try {
-    const rxjsPathMappingImport = wco.supportES2015
-      ? 'rxjs/_esm2015/path-mapping'
-      : 'rxjs/_esm5/path-mapping';
-    const rxPaths = require(require.resolve(rxjsPathMappingImport, {
-      paths: [projectRoot],
-    }));
-    alias = rxPaths(nodeModules);
-  } catch {}
-
   return {
     profile: buildOptions.statsJson,
     resolve: {
       extensions: ['.ts', '.tsx', '.mjs', '.js'],
       symlinks: true,
       modules: [wco.tsConfig.options.baseUrl || projectRoot, 'node_modules'],
-      alias,
     },
     resolveLoader: {
       modules: loaderNodeModules,

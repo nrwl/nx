@@ -228,10 +228,6 @@
       "description": "Extract CSS into a `.css` file.",
       "default": true
     },
-    "es2015Polyfills": {
-      "description": "Conditional polyfills loaded in browsers which do not support `ES2015`.",
-      "type": "string"
-    },
     "subresourceIntegrity": {
       "type": "boolean",
       "description": "Enables the use of subresource integrity validation.",

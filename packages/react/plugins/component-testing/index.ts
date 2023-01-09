@@ -222,7 +222,6 @@ function buildTargetWebpack(
       const defaultWebpack = getWebpackConfig(
         context,
         options,
-        true,
         isScriptOptimizeOn,
         {
           root: ctProjectConfig.root,

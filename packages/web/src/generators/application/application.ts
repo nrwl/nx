@@ -91,10 +91,6 @@ async function setupBundler(tree: Tree, options: NormalizedSchema) {
       'src/index.html'
     );
     buildOptions.baseHref = '/';
-    buildOptions.polyfills = joinPathFragments(
-      options.appProjectRoot,
-      'src/polyfills.ts'
-    );
     buildOptions.styles = [
       joinPathFragments(options.appProjectRoot, `src/styles.${options.style}`),
     ];

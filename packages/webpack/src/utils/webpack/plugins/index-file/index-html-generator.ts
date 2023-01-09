@@ -21,7 +21,6 @@ export interface IndexHtmlGeneratorProcessOptions {
   baseHref?: string | undefined;
   outputPath: string;
   files: FileInfo[];
-  noModuleFiles: FileInfo[];
   moduleFiles: FileInfo[];
 }
 
@@ -111,14 +110,7 @@ function augmentIndexHtmlPlugin(
   } = generator.options;
 
   return async (html, options) => {
-    const {
-      lang,
-      baseHref,
-      outputPath = '',
-      noModuleFiles,
-      files,
-      moduleFiles,
-    } = options;
+    const { lang, baseHref, outputPath = '', files, moduleFiles } = options;
 
     return augmentIndexHtml({
       html,
@@ -130,7 +122,6 @@ function augmentIndexHtmlPlugin(
       entrypoints,
       loadOutputFile: (filePath) =>
         generator.readAsset(join(outputPath, filePath)),
-      noModuleFiles,
       moduleFiles,
       files,
     });

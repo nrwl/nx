@@ -112,23 +112,6 @@ describe('Web Components Applications', () => {
     checkFilesExist(`dist/libs/${libName}/_should_keep.txt`);
   }, 120000);
 
-  it('should do another build if differential loading is needed', async () => {
-    const appName = uniq('app');
-
-    runCLI(
-      `generate @nrwl/web:app ${appName} --bundler=webpack --no-interactive`
-    );
-
-    updateFile(`apps/${appName}/browserslist`, `IE 9-11`);
-
-    runCLI(`build ${appName} --outputHashing=none`);
-
-    checkFilesExist(
-      `dist/apps/${appName}/main.js`,
-      `dist/apps/${appName}/main.es5.js`
-    );
-  }, 120000);
-
   it('should emit decorator metadata when it is enabled in tsconfig', async () => {
     const appName = uniq('app');
     runCLI(
