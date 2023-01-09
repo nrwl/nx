@@ -109,6 +109,7 @@ export async function getStaticProps({
   params: { name: string; segments: string[] };
 }) {
   try {
+    const segments = ['packages', params.name, 'documents', ...params.segments];
     const documents = new DocumentsApi({
       id: [params.name, 'documents'].join('-'),
       manifest: nxPackagesApi.getPackageDocuments(params.name),
@@ -116,18 +117,15 @@ export async function getStaticProps({
       publicDocsRoot: 'nx-dev/nx-dev/public/documentation',
       tagsApi,
     });
-    const document = documents.getDocument([
-      'packages',
-      params.name,
-      'documents',
-      ...params.segments,
-    ]);
+    const document = documents.getDocument(segments);
 
     return {
       props: {
         pkg: nxPackagesApi.getPackage([params.name]),
         document,
-        relatedDocuments: tagsApi.getAssociatedItemsFromTags(document.tags),
+        relatedDocuments: tagsApi
+          .getAssociatedItemsFromTags(document.tags)
+          .filter((item) => item.path !== '/' + segments.join('/')), // Remove currently displayed item
         menu: menusApi.getMenu('packages', ''),
       },
     };
