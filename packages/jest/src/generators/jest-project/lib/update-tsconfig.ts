@@ -13,7 +13,10 @@ export function updateTsConfig(host: Tree, options: JestProjectSchema) {
     );
   }
   updateJson(host, join(projectConfig.root, 'tsconfig.json'), (json) => {
-    if (json.references) {
+    if (
+      json.references &&
+      !json.references.some((r) => r.path === './tsconfig.spec.json')
+    ) {
       json.references.push({
         path: './tsconfig.spec.json',
       });
