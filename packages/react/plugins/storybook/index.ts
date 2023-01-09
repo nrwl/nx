@@ -4,17 +4,19 @@ import {
   readJsonFile,
   workspaceRoot,
 } from '@nrwl/devkit';
-import { getBaseWebpackPartial } from '@nrwl/webpack/src/utils/config';
+import {
+  composePlugins,
+  getBaseWebpackPartial,
+} from '@nrwl/webpack/src/utils/config';
 import { NormalizedWebpackExecutorOptions } from '@nrwl/webpack/src/executors/webpack/schema';
-import { getStylesPartial } from '@nrwl/webpack/src/executors/webpack/lib/get-webpack-config';
 import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-utils';
 import { join } from 'path';
 import { gte } from 'semver';
 import { Configuration, DefinePlugin, WebpackPluginInstance } from 'webpack';
 import * as mergeWebpack from 'webpack-merge';
 import { mergePlugins } from './merge-plugins';
-
-const reactWebpackConfig = require('../webpack');
+import { withReact } from '../webpack';
+import { withNx, withWeb } from '@nrwl/webpack';
 
 // This is shamelessly taken from CRA and modified for NX use
 // https://github.com/facebook/create-react-app/blob/4784997f0682e75eb32a897b4ffe34d735912e6c/packages/react-scripts/config/env.js#L71
@@ -99,6 +101,8 @@ export const webpack = async (
   const builderOptions: NormalizedWebpackExecutorOptions = {
     ...options,
     root: options.configDir,
+    // These are blank because root is the absolute path to .storybook folder
+    projectRoot: '',
     sourceRoot: '',
     fileReplacements: [],
     sourceMap: {
@@ -118,21 +122,13 @@ export const webpack = async (
   const extractCss = storybookWebpackConfig.mode === 'production';
 
   // ESM build for modern browsers.
-  const baseWebpackConfig = mergeWebpack.merge([
-    getBaseWebpackPartial(builderOptions, {
-      isScriptOptimizeOn,
-      skipTypeCheck: true,
-    }),
-    getStylesPartial(
-      options.workspaceRoot,
-      options.configDir,
-      builderOptions,
-      extractCss
-    ),
-  ]);
-
-  // run it through the React customizations
-  const finalConfig = reactWebpackConfig(baseWebpackConfig);
+  let baseWebpackConfig: Configuration = {};
+  const configure = composePlugins(
+    withNx({ skipTypeChecking: true }),
+    withWeb(),
+    withReact()
+  );
+  const finalConfig = configure(baseWebpackConfig, { options: builderOptions });
 
   // Check whether the project .babelrc uses @emotion/babel-plugin. There's currently
   // a Storybook issue (https://github.com/storybookjs/storybook/issues/13277) which apparently
@@ -197,7 +193,8 @@ export const webpack = async (
         plugins: mergePlugins(
           ...((storybookWebpackConfig.resolve.plugins ??
             []) as unknown as WebpackPluginInstance[]),
-          ...(finalConfig.resolve.plugins ?? [])
+          ...((finalConfig.resolve
+            .plugins as unknown as WebpackPluginInstance[]) ?? [])
         ),
       },
       plugins: mergePlugins(

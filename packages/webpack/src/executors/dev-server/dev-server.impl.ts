@@ -30,6 +30,7 @@ export async function* devServerExecutor(
   const buildOptions = normalizeOptions(
     getBuildOptions(serveOptions, context),
     context.root,
+    projectRoot,
     sourceRoot
   );
 

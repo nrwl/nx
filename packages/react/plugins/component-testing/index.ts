@@ -199,18 +199,12 @@ function buildTargetWebpack(
   const options = normalizeOptions(
     withSchemaDefaults(parsed, context),
     workspaceRoot,
+    buildableProjectConfig.root!,
     buildableProjectConfig.sourceRoot!
   );
 
   if (options.webpackConfig) {
     let customWebpack: any;
-
-    const isScriptOptimizeOn =
-      typeof options.optimization === 'boolean'
-        ? options.optimization
-        : options.optimization && options.optimization.scripts
-        ? options.optimization.scripts
-        : false;
 
     customWebpack = resolveCustomWebpackConfig(
       options.webpackConfig,
@@ -219,16 +213,13 @@ function buildTargetWebpack(
 
     return async () => {
       customWebpack = await customWebpack;
-      const defaultWebpack = getWebpackConfig(
-        context,
-        options,
-        isScriptOptimizeOn,
-        {
-          root: ctProjectConfig.root,
-          sourceRoot: ctProjectConfig.sourceRoot,
-          configuration: parsed.configuration,
-        }
-      );
+      // TODO(jack): Once webpackConfig is always set in @nrwl/webpack:webpack, we no longer need this default.
+      const defaultWebpack = getWebpackConfig(context, {
+        ...options,
+        root: workspaceRoot,
+        projectRoot: ctProjectConfig.root,
+        sourceRoot: ctProjectConfig.sourceRoot,
+      });
 
       if (customWebpack) {
         return await customWebpack(defaultWebpack, {

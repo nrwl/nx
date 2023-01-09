@@ -1,6 +1,6 @@
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { Configuration } from 'webpack';
-import { getCSSModuleLocalIdent } from '@nrwl/webpack/src/executors/webpack/lib/get-webpack-config';
+import { getCSSModuleLocalIdent } from '@nrwl/webpack';
 
 export function buildBaseWebpackConfig({
   tsConfigPath = 'tsconfig.cy.json',
