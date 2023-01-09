@@ -57,11 +57,6 @@
           },
           {
             "input": "packages/workspace",
-            "glob": "**/**/decorate-angular-cli.js__tmpl__",
-            "output": "/"
-          },
-          {
-            "input": "packages/workspace",
             "glob": "**/*.{js,css,html,svg}",
             "ignore": ["**/jest.config.js"],
             "output": "/"

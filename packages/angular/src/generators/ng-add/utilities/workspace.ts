@@ -16,9 +16,6 @@ import { deduceDefaultBase } from '@nrwl/workspace/src/utilities/default-base';
 import { resolveUserExistingPrettierConfig } from '@nrwl/workspace/src/utilities/prettier';
 import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
 import { prettierVersion } from '@nrwl/workspace/src/utils/versions';
-import { readFileSync } from 'fs';
-import { readModulePackageJson } from 'nx/src/utils/package-json';
-import { dirname, join } from 'path';
 import { angularDevkitVersion, nxVersion } from '../../../utils/versions';
 import type { ProjectMigrator } from '../migrators';
 import type { GeneratorOptions } from '../schema';
@@ -134,37 +131,6 @@ function getWorkspaceCommonTargets(tree: Tree): {
   }
 
   return targets;
-}
-
-export function decorateAngularCli(tree: Tree): void {
-  const nrwlWorkspacePath = readModulePackageJson('@nrwl/workspace').path;
-  const decorateCli = readFileSync(
-    join(
-      dirname(nrwlWorkspacePath),
-      'src/generators/utils/decorate-angular-cli.js__tmpl__'
-    ),
-    'utf-8'
-  );
-  tree.write('decorate-angular-cli.js', decorateCli);
-
-  updateJson(tree, 'package.json', (json) => {
-    if (
-      json.scripts &&
-      json.scripts.postinstall &&
-      !json.scripts.postinstall.includes('decorate-angular-cli.js')
-    ) {
-      // if exists, add execution of this script
-      json.scripts.postinstall += ' && node ./decorate-angular-cli.js';
-    } else {
-      json.scripts ??= {};
-      // if doesn't exist, set to execute this script
-      json.scripts.postinstall = 'node ./decorate-angular-cli.js';
-    }
-    if (json.scripts.ng) {
-      json.scripts.ng = 'nx';
-    }
-    return json;
-  });
 }
 
 export function updateWorkspaceConfigDefaults(tree: Tree): void {

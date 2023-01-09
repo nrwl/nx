@@ -15,7 +15,6 @@ import {
   prettierVersion,
   typescriptVersion,
 } from '../../utils/versions';
-import { readFileSync } from 'fs';
 import { join, join as pathJoin } from 'path';
 import { Preset } from '../utils/presets';
 import { deduceDefaultBase } from '../../utilities/default-base';
@@ -37,9 +36,7 @@ export async function generateWorkspaceFiles(
   createFiles(tree, options);
   createNxJson(tree, options);
   createPrettierrc(tree, options);
-  if (options.preset === Preset.AngularMonorepo) {
-    decorateAngularClI(tree, options);
-  }
+
   const [packageMajor] = getPackageManagerVersion(
     options.packageManager as PackageManager
   ).split('.');
@@ -54,13 +51,6 @@ export async function generateWorkspaceFiles(
   setUpWorkspacesInPackageJson(tree, options);
 
   await formatFiles(tree);
-}
-
-function decorateAngularClI(tree: Tree, options: NormalizedSchema) {
-  const decorateCli = readFileSync(
-    pathJoin(__dirname as any, '..', 'utils', 'decorate-angular-cli.js__tmpl__')
-  ).toString();
-  tree.write(join(options.directory, 'decorate-angular-cli.js'), decorateCli);
 }
 
 function setPresetProperty(tree: Tree, options: NormalizedSchema) {
@@ -204,16 +194,6 @@ function createYarnrcYml(tree: Tree, options: NormalizedSchema) {
 }
 
 function addNpmScripts(tree: Tree, options: NormalizedSchema) {
-  if (options.preset === Preset.AngularMonorepo) {
-    updateJson(tree, join(options.directory, 'package.json'), (json) => {
-      Object.assign(json.scripts, {
-        ng: 'nx',
-        postinstall: 'node ./decorate-angular-cli.js',
-      });
-      return json;
-    });
-  }
-
   if (
     options.preset === Preset.AngularStandalone ||
     options.preset === Preset.ReactStandalone

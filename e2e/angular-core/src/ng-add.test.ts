@@ -129,12 +129,11 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     const updatedPackageJson = readJson('package.json');
     expect(updatedPackageJson.description).toEqual('some description');
     expect(updatedPackageJson.scripts).toEqual({
-      ng: 'nx',
+      ng: 'ng',
       start: 'nx serve',
       build: 'nx build',
       watch: 'nx build --watch --configuration development',
       test: 'nx test',
-      postinstall: 'node ./decorate-angular-cli.js',
     });
     expect(updatedPackageJson.devDependencies['@nrwl/workspace']).toBeDefined();
     expect(updatedPackageJson.devDependencies['@angular/cli']).toBeDefined();

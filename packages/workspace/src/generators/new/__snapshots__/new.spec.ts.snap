@@ -14,10 +14,7 @@ Object {
   "license": "MIT",
   "name": "my-workspace",
   "private": true,
-  "scripts": Object {
-    "ng": "nx",
-    "postinstall": "node ./decorate-angular-cli.js",
-  },
+  "scripts": Object {},
   "version": "0.0.0",
 }
 `;
