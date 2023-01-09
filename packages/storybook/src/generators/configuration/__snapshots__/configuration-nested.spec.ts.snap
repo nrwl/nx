@@ -47,13 +47,9 @@ exports[`@nrwl/storybook:configuration for workspaces with Root project basic fu
     \\"../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [\\"../**/*.spec.{ts,tsx,js,jsx}\\", \\"../**/*.test.{ts,tsx,js,jsx}\\"],
   \\"include\\": [
-    \\"../src/**/*.stories.ts\\",
-    \\"../src/**/*.stories.js\\",
-    \\"../src/**/*.stories.jsx\\",
-    \\"../src/**/*.stories.tsx\\",
-    \\"../src/**/*.stories.mdx\\",
+    \\"../src/**/*.stories.{ts,tsx,js,jsx,mdx}\\",
     \\"*.ts\\",
     \\"*.js\\"]
 }
@@ -126,13 +122,9 @@ exports[`@nrwl/storybook:configuration for workspaces with Root project basic fu
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [\\"../**/*.spec.{ts,tsx,js,jsx}\\", \\"../**/*.test.{ts,tsx,js,jsx}\\"],
   \\"include\\": [
-    \\"../src/**/*.stories.ts\\",
-    \\"../src/**/*.stories.js\\",
-    \\"../src/**/*.stories.jsx\\",
-    \\"../src/**/*.stories.tsx\\",
-    \\"../src/**/*.stories.mdx\\",
+    \\"../src/**/*.stories.{ts,tsx,js,jsx,mdx}\\",
     \\"*.ts\\",
     \\"*.js\\"]
 }

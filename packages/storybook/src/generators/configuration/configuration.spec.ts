@@ -61,17 +61,8 @@ describe('@nrwl/storybook:configuration', () => {
       );
 
       expect(
-        storybookTsconfigJson.exclude.includes('../**/*.spec.ts')
+        storybookTsconfigJson.exclude.includes('../**/*.spec.{ts,tsx,js,jsx}')
       ).toBeTruthy();
-      expect(
-        storybookTsconfigJson.exclude.includes('../**/*.spec.tsx')
-      ).toBeFalsy();
-      expect(
-        storybookTsconfigJson.exclude.includes('../**/*.spec.js')
-      ).toBeFalsy();
-      expect(
-        storybookTsconfigJson.exclude.includes('../**/*.spec.jsx')
-      ).toBeFalsy();
       expect(readJson(tree, 'nx.json')).toMatchSnapshot();
     });
 
@@ -257,7 +248,7 @@ describe('@nrwl/storybook:configuration', () => {
       });
     });
 
-    it('should update `tsconfig.lib.json` file', async () => {
+    it('should update tsconfig.lib.json file', async () => {
       await configurationGenerator(tree, {
         name: 'test-ui-lib',
         uiFramework: '@storybook/react',
@@ -268,10 +259,9 @@ describe('@nrwl/storybook:configuration', () => {
         'libs/test-ui-lib/tsconfig.lib.json'
       ) as Required<TsConfig>;
 
-      expect(tsconfigJson.exclude).toContain('**/*.stories.ts');
-      expect(tsconfigJson.exclude).toContain('**/*.stories.js');
-      expect(tsconfigJson.exclude).toContain('**/*.stories.jsx');
-      expect(tsconfigJson.exclude).toContain('**/*.stories.tsx');
+      expect(tsconfigJson.exclude).toContain(
+        '**/*.stories.{ts,tsx,jsx,js,mdx}'
+      );
     });
 
     it('should update `tsconfig.json` file', async () => {

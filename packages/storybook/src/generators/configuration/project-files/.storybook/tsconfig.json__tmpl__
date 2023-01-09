@@ -9,18 +9,10 @@
     "<% if(!isRootProject) { %><%= offsetFromRoot %><% } %>../node_modules/@nrwl/react/typings/cssmodule.d.ts",
     "<% if(!isRootProject) { %><%= offsetFromRoot %><% } %>../node_modules/@nrwl/react/typings/image.d.ts"
   ],<% } %>
-  "exclude": ["../**/*.spec.ts" <% if(uiFramework === '@storybook/react') { %>, "../**/*.spec.js", "../**/*.spec.tsx", "../**/*.spec.jsx"<% } %>],
+  "exclude": ["../**/*.spec.{ts,tsx,js,jsx}", "../**/*.test.{ts,tsx,js,jsx}"],
   "include": [<% if(uiFramework === '@storybook/angular' && projectType === 'library') { %>
-    "../src/**/*.stories.ts",
-    "../src/**/*.stories.js",
-    "../src/**/*.stories.jsx",
-    "../src/**/*.stories.tsx",
-    "../src/**/*.stories.mdx",
+    "../src/**/*.stories.{ts,tsx,js,jsx,mdx}",
     "*.js"<% } else { %>
-    "../<%= mainDir %>/**/*.stories.ts",
-    "../<%= mainDir %>/**/*.stories.js",
-    "../<%= mainDir %>/**/*.stories.jsx",
-    "../<%= mainDir %>/**/*.stories.tsx",
-    "../<%= mainDir %>/**/*.stories.mdx",
+    "../<%= mainDir %>/**/*.stories.{ts,tsx,js,jsx,mdx}",
     "*.js"<% if(uiFramework === '@storybook/react-native') { %>, "*.ts", "*.tsx"<% } %><% } %>]
 }

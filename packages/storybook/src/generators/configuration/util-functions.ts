@@ -164,19 +164,14 @@ export function configureTsProjectConfig(
     tsConfigContent = readJson<TsConfig>(tree, tsConfigPath);
   }
 
-  if (
-    !tsConfigContent?.exclude?.includes('**/*.stories.ts') &&
-    !tsConfigContent?.exclude?.includes('**/*.stories.js')
-  ) {
-    tsConfigContent.exclude = [
-      ...(tsConfigContent.exclude || []),
-      '**/*.stories.ts',
-      '**/*.stories.js',
-      ...(isFramework('react', schema) || isFramework('react-native', schema)
-        ? ['**/*.stories.jsx', '**/*.stories.tsx']
-        : []),
-    ];
-  }
+  const extensions =
+    isFramework('react', schema) || isFramework('react-native', schema)
+      ? ['ts', 'tsx', 'jsx', 'js', 'mdx']
+      : ['ts', 'js', 'mdx'];
+  tsConfigContent.exclude = dedupe([
+    ...(tsConfigContent.exclude || []),
+    `**/*.stories.{${extensions.join(',')}}`,
+  ]);
 
   writeJson(tree, tsConfigPath, tsConfigContent);
 }
@@ -489,13 +484,11 @@ export function addBuildStorybookToCacheableOperations(tree: Tree) {
         ...(json.tasksRunnerOptions?.default ?? {}),
         options: {
           ...(json.tasksRunnerOptions?.default?.options ?? {}),
-          cacheableOperations: Array.from(
-            new Set([
-              ...(json.tasksRunnerOptions?.default?.options
-                ?.cacheableOperations ?? []),
-              'build-storybook',
-            ])
-          ),
+          cacheableOperations: dedupe([
+            ...(json.tasksRunnerOptions?.default?.options
+              ?.cacheableOperations ?? []),
+            'build-storybook',
+          ]),
         },
       },
     },

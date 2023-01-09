@@ -13,8 +13,7 @@ module.exports = {
   core: { ...rootMain.core, builder: 'webpack5' },
   stories: [
     ...rootMain.stories,
-    '../**/*.stories.mdx',
-    '../**/*.stories.@(js|jsx|ts|tsx)' ],
+    '../**/*.stories.@(js|jsx|ts|tsx|mdx)' ],
   addons: [...rootMain.addons 
     
     
@@ -118,8 +117,7 @@ module.exports = {
   core: { ...rootMain.core, builder: 'webpack5' },
   stories: [
     ...rootMain.stories,
-    '../**/*.stories.mdx',
-    '../**/*.stories.@(js|jsx|ts|tsx)' ],
+    '../**/*.stories.@(js|jsx|ts|tsx|mdx)' ],
   addons: [...rootMain.addons 
     
     
@@ -191,13 +189,9 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [\\"../**/*.spec.{ts,tsx,js,jsx}\\", \\"../**/*.test.{ts,tsx,js,jsx}\\"],
   \\"include\\": [
-    \\"../src/**/*.stories.ts\\",
-    \\"../src/**/*.stories.js\\",
-    \\"../src/**/*.stories.jsx\\",
-    \\"../src/**/*.stories.tsx\\",
-    \\"../src/**/*.stories.mdx\\",
+    \\"../src/**/*.stories.{ts,tsx,js,jsx,mdx}\\",
     \\"*.ts\\",
     \\"*.js\\"]
 }
@@ -251,13 +245,9 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [\\"../**/*.spec.{ts,tsx,js,jsx}\\", \\"../**/*.test.{ts,tsx,js,jsx}\\"],
   \\"include\\": [
-    \\"../src/**/*.stories.ts\\",
-    \\"../src/**/*.stories.js\\",
-    \\"../src/**/*.stories.jsx\\",
-    \\"../src/**/*.stories.tsx\\",
-    \\"../src/**/*.stories.mdx\\",
+    \\"../src/**/*.stories.{ts,tsx,js,jsx,mdx}\\",
     \\"*.ts\\",
     \\"*.js\\"]
 }
@@ -318,13 +308,9 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [\\"../**/*.spec.{ts,tsx,js,jsx}\\", \\"../**/*.test.{ts,tsx,js,jsx}\\"],
   \\"include\\": [
-    \\"../components/**/*.stories.ts\\",
-    \\"../components/**/*.stories.js\\",
-    \\"../components/**/*.stories.jsx\\",
-    \\"../components/**/*.stories.tsx\\",
-    \\"../components/**/*.stories.mdx\\",
+    \\"../components/**/*.stories.{ts,tsx,js,jsx,mdx}\\",
     \\"*.ts\\",
     \\"*.js\\"]
 }
@@ -378,13 +364,9 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [\\"../**/*.spec.{ts,tsx,js,jsx}\\", \\"../**/*.test.{ts,tsx,js,jsx}\\"],
   \\"include\\": [
-    \\"../src/**/*.stories.ts\\",
-    \\"../src/**/*.stories.js\\",
-    \\"../src/**/*.stories.jsx\\",
-    \\"../src/**/*.stories.tsx\\",
-    \\"../src/**/*.stories.mdx\\",
+    \\"../src/**/*.stories.{ts,tsx,js,jsx,mdx}\\",
     \\"*.ts\\",
     \\"*.js\\"]
 }
@@ -438,13 +420,9 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [\\"../**/*.spec.{ts,tsx,js,jsx}\\", \\"../**/*.test.{ts,tsx,js,jsx}\\"],
   \\"include\\": [
-    \\"../src/**/*.stories.ts\\",
-    \\"../src/**/*.stories.js\\",
-    \\"../src/**/*.stories.jsx\\",
-    \\"../src/**/*.stories.tsx\\",
-    \\"../src/**/*.stories.mdx\\",
+    \\"../src/**/*.stories.{ts,tsx,js,jsx,mdx}\\",
     \\"*.ts\\",
     \\"*.js\\"]
 }
@@ -498,13 +476,9 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [\\"../**/*.spec.{ts,tsx,js,jsx}\\", \\"../**/*.test.{ts,tsx,js,jsx}\\"],
   \\"include\\": [
-    \\"../src/**/*.stories.ts\\",
-    \\"../src/**/*.stories.js\\",
-    \\"../src/**/*.stories.jsx\\",
-    \\"../src/**/*.stories.tsx\\",
-    \\"../src/**/*.stories.mdx\\",
+    \\"../src/**/*.stories.{ts,tsx,js,jsx,mdx}\\",
     \\"*.ts\\",
     \\"*.js\\"]
 }
@@ -559,13 +533,9 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [\\"../**/*.spec.{ts,tsx,js,jsx}\\", \\"../**/*.test.{ts,tsx,js,jsx}\\"],
   \\"include\\": [
-    \\"../src/**/*.stories.ts\\",
-    \\"../src/**/*.stories.js\\",
-    \\"../src/**/*.stories.jsx\\",
-    \\"../src/**/*.stories.tsx\\",
-    \\"../src/**/*.stories.mdx\\",
+    \\"../src/**/*.stories.{ts,tsx,js,jsx,mdx}\\",
     \\"*.ts\\",
     \\"*.js\\"]
 }
@@ -620,13 +590,9 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [\\"../**/*.spec.{ts,tsx,js,jsx}\\", \\"../**/*.test.{ts,tsx,js,jsx}\\"],
   \\"include\\": [
-    \\"../src/**/*.stories.ts\\",
-    \\"../src/**/*.stories.js\\",
-    \\"../src/**/*.stories.jsx\\",
-    \\"../src/**/*.stories.tsx\\",
-    \\"../src/**/*.stories.mdx\\",
+    \\"../src/**/*.stories.{ts,tsx,js,jsx,mdx}\\",
     \\"*.ts\\",
     \\"*.js\\"]
 }
@@ -688,13 +654,9 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [\\"../**/*.spec.{ts,tsx,js,jsx}\\", \\"../**/*.test.{ts,tsx,js,jsx}\\"],
   \\"include\\": [
-    \\"../components/**/*.stories.ts\\",
-    \\"../components/**/*.stories.js\\",
-    \\"../components/**/*.stories.jsx\\",
-    \\"../components/**/*.stories.tsx\\",
-    \\"../components/**/*.stories.mdx\\",
+    \\"../components/**/*.stories.{ts,tsx,js,jsx,mdx}\\",
     \\"*.ts\\",
     \\"*.js\\"]
 }
@@ -749,13 +711,9 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [\\"../**/*.spec.{ts,tsx,js,jsx}\\", \\"../**/*.test.{ts,tsx,js,jsx}\\"],
   \\"include\\": [
-    \\"../src/**/*.stories.ts\\",
-    \\"../src/**/*.stories.js\\",
-    \\"../src/**/*.stories.jsx\\",
-    \\"../src/**/*.stories.tsx\\",
-    \\"../src/**/*.stories.mdx\\",
+    \\"../src/**/*.stories.{ts,tsx,js,jsx,mdx}\\",
     \\"*.ts\\",
     \\"*.js\\"]
 }
@@ -810,13 +768,9 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [\\"../**/*.spec.{ts,tsx,js,jsx}\\", \\"../**/*.test.{ts,tsx,js,jsx}\\"],
   \\"include\\": [
-    \\"../src/**/*.stories.ts\\",
-    \\"../src/**/*.stories.js\\",
-    \\"../src/**/*.stories.jsx\\",
-    \\"../src/**/*.stories.tsx\\",
-    \\"../src/**/*.stories.mdx\\",
+    \\"../src/**/*.stories.{ts,tsx,js,jsx,mdx}\\",
     \\"*.ts\\",
     \\"*.js\\"]
 }
@@ -871,13 +825,9 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [\\"../**/*.spec.{ts,tsx,js,jsx}\\", \\"../**/*.test.{ts,tsx,js,jsx}\\"],
   \\"include\\": [
-    \\"../src/**/*.stories.ts\\",
-    \\"../src/**/*.stories.js\\",
-    \\"../src/**/*.stories.jsx\\",
-    \\"../src/**/*.stories.tsx\\",
-    \\"../src/**/*.stories.mdx\\",
+    \\"../src/**/*.stories.{ts,tsx,js,jsx,mdx}\\",
     \\"*.ts\\",
     \\"*.js\\"]
 }
@@ -897,8 +847,7 @@ module.exports = {
   core: { ...rootMain.core, builder: 'webpack5' },
   stories: [
     ...rootMain.stories,
-    '../src/lib/**/*.stories.mdx',
-    '../src/lib/**/*.stories.@(js|jsx|ts|tsx)'
+    '../src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)'
   ],
   addons: [...rootMain.addons , '@nrwl/react/plugins/storybook' 
     
@@ -932,13 +881,9 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [\\"../**/*.spec.{ts,tsx,js,jsx}\\", \\"../**/*.test.{ts,tsx,js,jsx}\\"],
   \\"include\\": [
-    \\"../src/**/*.stories.ts\\",
-    \\"../src/**/*.stories.js\\",
-    \\"../src/**/*.stories.jsx\\",
-    \\"../src/**/*.stories.tsx\\",
-    \\"../src/**/*.stories.mdx\\",
+    \\"../src/**/*.stories.{ts,tsx,js,jsx,mdx}\\",
     \\"*.js\\"]
 }
 "
@@ -957,8 +902,7 @@ module.exports = {
   core: { ...rootMain.core, builder: 'webpack5' },
   stories: [
     ...rootMain.stories,
-    '../src/lib/**/*.stories.mdx',
-    '../src/lib/**/*.stories.@(js|jsx|ts|tsx)'
+    '../src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)'
   ],
   addons: [...rootMain.addons , '@nrwl/react/plugins/storybook' 
     
@@ -992,13 +936,9 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [\\"../**/*.spec.{ts,tsx,js,jsx}\\", \\"../**/*.test.{ts,tsx,js,jsx}\\"],
   \\"include\\": [
-    \\"../src/**/*.stories.ts\\",
-    \\"../src/**/*.stories.js\\",
-    \\"../src/**/*.stories.jsx\\",
-    \\"../src/**/*.stories.tsx\\",
-    \\"../src/**/*.stories.mdx\\",
+    \\"../src/**/*.stories.{ts,tsx,js,jsx,mdx}\\",
     \\"*.js\\"]
 }
 "
@@ -1017,8 +957,7 @@ module.exports = {
   core: { ...rootMain.core, builder: 'webpack5' },
   stories: [
     ...rootMain.stories,
-    '../components/**/*.stories.mdx',
-    '../components/**/*.stories.@(js|jsx|ts|tsx)'
+    '../components/**/*.stories.@(js|jsx|ts|tsx|mdx)'
   ],
   addons: [...rootMain.addons , '@nrwl/react/plugins/storybook' 
     
@@ -1059,13 +998,9 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [\\"../**/*.spec.{ts,tsx,js,jsx}\\", \\"../**/*.test.{ts,tsx,js,jsx}\\"],
   \\"include\\": [
-    \\"../components/**/*.stories.ts\\",
-    \\"../components/**/*.stories.js\\",
-    \\"../components/**/*.stories.jsx\\",
-    \\"../components/**/*.stories.tsx\\",
-    \\"../components/**/*.stories.mdx\\",
+    \\"../components/**/*.stories.{ts,tsx,js,jsx,mdx}\\",
     \\"*.js\\"]
 }
 "
@@ -1084,8 +1019,7 @@ module.exports = {
   core: { ...rootMain.core, builder: 'webpack5' },
   stories: [
     ...rootMain.stories,
-    '../src/app/**/*.stories.mdx',
-    '../src/app/**/*.stories.@(js|jsx|ts|tsx)'
+    '../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'
   ],
   addons: [...rootMain.addons , '@nrwl/react/plugins/storybook' 
     
@@ -1119,13 +1053,9 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [\\"../**/*.spec.{ts,tsx,js,jsx}\\", \\"../**/*.test.{ts,tsx,js,jsx}\\"],
   \\"include\\": [
-    \\"../src/**/*.stories.ts\\",
-    \\"../src/**/*.stories.js\\",
-    \\"../src/**/*.stories.jsx\\",
-    \\"../src/**/*.stories.tsx\\",
-    \\"../src/**/*.stories.mdx\\",
+    \\"../src/**/*.stories.{ts,tsx,js,jsx,mdx}\\",
     \\"*.js\\"]
 }
 "
@@ -1144,8 +1074,7 @@ module.exports = {
   core: { ...rootMain.core, builder: 'webpack5' },
   stories: [
     ...rootMain.stories,
-    '../src/app/**/*.stories.mdx',
-    '../src/app/**/*.stories.@(js|jsx|ts|tsx)'
+    '../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'
   ],
   addons: [...rootMain.addons , '@nrwl/react/plugins/storybook' 
     , 'storybook-addon-swc' 
@@ -1179,13 +1108,9 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [\\"../**/*.spec.{ts,tsx,js,jsx}\\", \\"../**/*.test.{ts,tsx,js,jsx}\\"],
   \\"include\\": [
-    \\"../src/**/*.stories.ts\\",
-    \\"../src/**/*.stories.js\\",
-    \\"../src/**/*.stories.jsx\\",
-    \\"../src/**/*.stories.tsx\\",
-    \\"../src/**/*.stories.mdx\\",
+    \\"../src/**/*.stories.{ts,tsx,js,jsx,mdx}\\",
     \\"*.js\\"]
 }
 "
@@ -1204,8 +1129,7 @@ module.exports = {
   core: { ...rootMain.core, builder: 'webpack5' },
   stories: [
     ...rootMain.stories,
-    '../src/lib/**/*.stories.mdx',
-    '../src/lib/**/*.stories.@(js|jsx|ts|tsx)'
+    '../src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)'
   ],
   addons: [...rootMain.addons , '@nrwl/react/plugins/storybook' 
     
@@ -1239,13 +1163,9 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
     \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
     \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
   ],
-  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"exclude\\": [\\"../**/*.spec.{ts,tsx,js,jsx}\\", \\"../**/*.test.{ts,tsx,js,jsx}\\"],
   \\"include\\": [
-    \\"../src/**/*.stories.ts\\",
-    \\"../src/**/*.stories.js\\",
-    \\"../src/**/*.stories.jsx\\",
-    \\"../src/**/*.stories.tsx\\",
-    \\"../src/**/*.stories.mdx\\",
+    \\"../src/**/*.stories.{ts,tsx,js,jsx,mdx}\\",
     \\"*.js\\"]
 }
 "
