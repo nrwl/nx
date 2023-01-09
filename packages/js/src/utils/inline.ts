@@ -76,10 +76,7 @@ export function postProcessInlinedDependencies(
       const isBuildable = !!inlineDependency.buildOutputPath;
 
       if (isBuildable) {
-        copySync(depOutputPath, destDepOutputPath, {
-          overwrite: true,
-          recursive: true,
-        });
+        copySync(depOutputPath, destDepOutputPath, { overwrite: true });
       } else {
         movePackage(depOutputPath, destDepOutputPath);
       }
@@ -248,7 +245,7 @@ function buildInlineGraphExternals(
 }
 
 function movePackage(from: string, to: string) {
-  copySync(from, to, { overwrite: true, recursive: true });
+  copySync(from, to, { overwrite: true });
   removeSync(from);
 }
 
