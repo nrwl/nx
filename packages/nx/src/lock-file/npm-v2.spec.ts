@@ -1,6 +1,8 @@
 import { joinPathFragments } from '../utils/path';
 import { parseNpmLockFile } from './npm-v2';
 import { vol } from 'memfs';
+import { LockFileBuilder } from './utils/lock-file-builder';
+import { LockFileGraph } from './utils/types';
 
 jest.mock('fs', () => require('memfs').fs);
 
@@ -28,13 +30,45 @@ describe('NPM lock file utility', () => {
       '__fixtures__/nextjs/package.json'
     ));
 
+    let rootResult: LockFileGraph;
+
+    beforeEach(() => {
+      rootResult = parseNpmLockFile(JSON.stringify(rootLockFile), packageJson);
+    });
+
     it('should parse root lock file', async () => {
-      const result = parseNpmLockFile(
-        JSON.stringify(rootLockFile),
-        packageJson
+      expect(rootResult.nodes.size).toEqual(1285); // 1143
+      expect(rootResult.isValid).toBeTruthy();
+    });
+
+    it('should prune lock file', async () => {
+      const appPackageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/nextjs/app/package.json'
+      ));
+      const appLockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/nextjs/app/package-lock.json'
+      ));
+
+      // this is original generated lock file
+      const appResult = parseNpmLockFile(
+        JSON.stringify(appLockFile),
+        appPackageJson
       );
-      expect(result.nodes.size).toEqual(1278); // 1143
-      expect(result.isValid).toBeTruthy();
+      expect(appResult.nodes.size).toEqual(984);
+      expect(appResult.isValid).toBeTruthy();
+
+      // this is our pruned lock file structure
+      const builder = new LockFileBuilder(rootResult, {
+        includeOptional: true,
+      });
+      const pruned = builder.prune(appPackageJson);
+      expect(pruned.size).toEqual(appResult.nodes.size);
+
+      const keys = new Set(builder.nodes.keys());
+      const originalKeys = new Set(appResult.nodes.keys());
+      expect(keys).toEqual(originalKeys);
     });
   });
 

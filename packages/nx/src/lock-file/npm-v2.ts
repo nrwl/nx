@@ -1,56 +1,15 @@
 import { existsSync, readFileSync } from 'fs';
 import { PackageJson } from '../utils/package-json';
 import { workspaceRoot } from '../utils/workspace-root';
+import { LockFileBuilder } from './utils/lock-file-builder';
 import {
-  LockFileBuilder,
   LockFileGraph,
   LockFileNode,
-} from './utils/lock-file-builder';
+  NpmDependencyV1,
+  NpmDependencyV3,
+  NpmLockFile,
+} from './utils/types';
 import { satisfies } from 'semver';
-
-type NpmDependencyV3 = {
-  version: string;
-  resolved: string;
-  integrity: string;
-  dependencies?: Record<string, string>;
-  optionalDependencies?: Record<string, string>;
-  devDependencies?: Record<string, string>;
-  peerDependencies?: Record<string, string>;
-  peerDependenciesMeta?: Record<string, { optional: boolean }>;
-  dev?: boolean;
-  peer?: boolean;
-  devOptional?: boolean;
-  optional?: boolean;
-  name?: string;
-};
-
-type NpmDependencyV1 = {
-  version: string;
-  resolved: string;
-  integrity: string;
-  requires?: Record<string, string>;
-  dependencies?: Record<string, NpmDependencyV1>;
-  dev?: boolean;
-  peer?: boolean;
-  devOptional?: boolean;
-  optional?: boolean;
-  name?: string;
-};
-
-/**
- * Lock file version differences:
- * - v1 has only dependencies
- * - v2 has dependencies and packages for backwards compatibility
- * - v3 has only packages
- */
-type NpmLockFile = {
-  name?: string;
-  version?: string;
-  lockfileVersion: number;
-  requires?: boolean;
-  packages?: Record<string, NpmDependencyV3>;
-  dependencies?: Record<string, NpmDependencyV1>;
-};
 
 export function parseNpmLockFile(
   lockFileContent: string,
@@ -64,29 +23,19 @@ export function parseNpmLockFile(
     ? normalizeV1PackageJson(packageJson, data.dependencies)
     : normalizeV3PackageJson(packageJson, data.packages);
 
-  const builder = new LockFileBuilder({
-    packageJson: normalizedPackageJson,
-    lockFileContent,
-  });
+  const builder = new LockFileBuilder(
+    {
+      packageJson: normalizedPackageJson,
+      lockFileContent,
+    },
+    { includeOptional: true }
+  );
 
   isLockFileV1
     ? parseV1LockFile(builder, data.dependencies)
     : parseV3LockFile(builder, data.packages); // we will treat V2 lockfile as V3 but map it back to V2 for backwards compatibility
 
   return builder.getLockFileGraph();
-}
-
-// adds edge out to node
-function addEdge(
-  builder: LockFileBuilder,
-  node,
-  depName,
-  depSpec,
-  isOptional?: boolean
-) {
-  if (!node.edgesOut || !node.edgesOut.has(depName)) {
-    builder.addEdgeOut(node, depName, depSpec, isOptional);
-  }
 }
 
 /**********************************************
@@ -228,7 +177,7 @@ function parseV1Node(
   value: NpmDependencyV1,
   isHoisted = false
 ): LockFileNode {
-  let { version, integrity } = value;
+  let version = value.version;
   let packageName;
 
   // alias packages have versions in the form of `npm:packageName@version`
@@ -243,7 +192,6 @@ function parseV1Node(
     name,
     ...(packageName && { packageName }),
     ...(version && { version }),
-    ...(integrity && { integrity }),
     isHoisted,
   };
   return node;
@@ -354,8 +302,7 @@ function parseV3LockFile(
       }
       if (value.dependencies) {
         Object.entries(value.dependencies).forEach(([depName, depSpec]) => {
-          addEdge(
-            builder,
+          builder.addEdgeOut(
             node,
             depName,
             findV3EdgeVersion(packages, path, depName, depSpec)
@@ -365,12 +312,10 @@ function parseV3LockFile(
       if (value.optionalDependencies) {
         Object.entries(value.optionalDependencies).forEach(
           ([depName, depSpec]) => {
-            addEdge(
-              builder,
+            builder.addEdgeOut(
               node,
               depName,
-              findV3EdgeVersion(packages, path, depName, depSpec),
-              true
+              findV3EdgeVersion(packages, path, depName, depSpec)
             );
           }
         );
@@ -405,7 +350,7 @@ function findV3EdgeVersion(
 
 // parse node value from lock file into `LockFileNode`
 function parseV3Node(path: string, value: NpmDependencyV3): LockFileNode {
-  const { resolved, name, integrity } = value;
+  const { resolved, name } = value;
   const packageName = path.split('node_modules/').pop();
 
   let version = value.version;
@@ -420,7 +365,6 @@ function parseV3Node(path: string, value: NpmDependencyV3): LockFileNode {
     name: packageName,
     ...(name && name !== packageName && { packageName: name }),
     ...(version && { version }),
-    ...(integrity && { integrity }),
     isHoisted,
   };
 

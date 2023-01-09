@@ -1,30 +1,9 @@
 import { parseSyml } from '@yarnpkg/parsers';
 import { PackageJson } from '../utils/package-json';
-import {
-  LockFileBuilder,
-  LockFileGraph,
-  LockFileNode,
-  nodeKey,
-} from './utils/lock-file-builder';
+import { LockFileBuilder, nodeKey } from './utils/lock-file-builder';
+import { LockFileGraph, LockFileNode, YarnDependency } from './utils/types';
 import { workspaceRoot } from '../utils/workspace-root';
 import { existsSync, readFileSync } from 'fs';
-
-type YarnDependency = {
-  version: string;
-  dependencies?: Record<string, string>;
-  optionalDependencies?: Record<string, string>;
-  peerDependencies?: Record<string, string>;
-
-  // classic specific
-  resolved?: string;
-  integrity?: string;
-
-  // berry specific
-  resolution?: string;
-  checksum?: string;
-  languageName?: string;
-  linkType?: 'soft' | 'hard';
-};
 
 export function parseYarnLockFile(
   lockFileContent: string,
@@ -33,7 +12,10 @@ export function parseYarnLockFile(
   const { __metadata, ...dependencies } = parseSyml(lockFileContent);
   const isBerry = !!__metadata;
 
-  const builder = new LockFileBuilder({ packageJson, lockFileContent });
+  const builder = new LockFileBuilder(
+    { packageJson, lockFileContent },
+    { includeOptional: true }
+  );
 
   const groupedDependencies = groupDependencies(dependencies);
   isBerry
@@ -193,10 +175,17 @@ function parseBerryLockFile(
           builder.addEdgeIn(node, versionSpec);
         });
         if (value.dependencies) {
-          // Yarn keeps no notion of dev/peer/optional dependencies
+          // Yarn berry keeps no notion of dev/peer dependencies
           Object.entries(value.dependencies).forEach(([depName, depSpec]) => {
             builder.addEdgeOut(node, depName, depSpec);
           });
+        }
+        if (value.optionalDependencies) {
+          Object.entries(value.optionalDependencies).forEach(
+            ([depName, depSpec]) => {
+              builder.addEdgeOut(node, depName, depSpec, true);
+            }
+          );
         }
       } else {
         valueSet.forEach(([key]) => {
@@ -229,8 +218,6 @@ function parseClassicNode(
   value: YarnDependency,
   isHoisted = false
 ): LockFileNode {
-  const { resolved, integrity } = value;
-
   // for alias packages, name would not match packageName
   const name = versionSpec.startsWith('npm:')
     ? versionSpec.slice(4, versionSpec.lastIndexOf('@'))
@@ -238,6 +225,7 @@ function parseClassicNode(
 
   let version = value.version;
   // for tarball packages version might not exist or be useless
+  const resolved = value.resolved;
   if (!version || (resolved && !resolved.includes(version))) {
     version = resolved;
   }
@@ -246,7 +234,6 @@ function parseClassicNode(
     name: packageName,
     ...(name !== packageName && { packageName: name }),
     ...(version && { version }),
-    ...(integrity && { integrity }),
     isHoisted,
   };
 
@@ -258,7 +245,7 @@ function parseBerryNode(
   value: YarnDependency,
   isHoisted = false
 ): LockFileNode {
-  const { resolution, checksum } = value;
+  const resolution = value.resolution;
 
   // for alias packages, name would not match packageName
   const name = resolution.slice(0, resolution.indexOf('@', 1));
@@ -273,7 +260,6 @@ function parseBerryNode(
     name: packageName,
     ...(name !== packageName && { packageName: name }),
     ...(version && { version }),
-    ...(checksum && { integrity: checksum }),
     isHoisted,
   };
 
@@ -308,10 +294,16 @@ function exhaustUnresolvedDependencies(
             builder.addNode(node);
             builder.addEdgeIn(node, versionSpec);
             if (value.dependencies) {
-              // Yarn classic keeps no notion of dev/peer/optional dependencies
               Object.entries(value.dependencies).forEach(
                 ([depName, depSpec]) => {
                   builder.addEdgeOut(node, depName, depSpec);
+                }
+              );
+            }
+            if (value.optionalDependencies) {
+              Object.entries(value.optionalDependencies).forEach(
+                ([depName, depSpec]) => {
+                  builder.addEdgeOut(node, depName, depSpec, true);
                 }
               );
             }
@@ -347,12 +339,6 @@ function getRootVersion(packageName: string): string {
   if (existsSync(fullPath)) {
     const content = readFileSync(fullPath, 'utf-8');
     return JSON.parse(content).version;
-  } else {
-    if (process.env.NX_VERBOSE_LOGGING === 'true') {
-      console.warn(
-        `Could not find package.json for "${packageName}" at "${fullPath}"`
-      );
-    }
-    return 'n/a';
   }
+  return;
 }

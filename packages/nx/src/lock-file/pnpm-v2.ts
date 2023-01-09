@@ -1,10 +1,6 @@
 import { PackageJson } from '../utils/package-json';
-import {
-  LockFileBuilder,
-  LockFileGraph,
-  LockFileNode,
-  nodeKey,
-} from './utils/lock-file-builder';
+import { LockFileBuilder, nodeKey } from './utils/lock-file-builder';
+import { LockFileGraph, LockFileNode } from './utils/types';
 import {
   PackageSnapshot,
   Lockfile,
@@ -51,24 +47,29 @@ export function parsePnpmLockFile(
 
       if (isRootVersion) {
         const node = parseNode(packageName, specKey, packageSnapshot, true);
-        builder.addNode(node);
-        builder.addEdgeIn(node, specKey);
-        if (packageSnapshot.dependencies) {
-          Object.entries(packageSnapshot.dependencies).forEach(
-            ([depName, depSpec]) => {
-              // for pnpm, peerDependencies are always doubled in the dependencies if installed
-              const isOptional =
-                packageSnapshot.peerDependenciesMeta?.[depName]?.optional;
-              builder.addEdgeOut(node, depName, depSpec, isOptional);
-            }
-          );
-        }
-        if (packageSnapshot.optionalDependencies) {
-          Object.entries(packageSnapshot.optionalDependencies).forEach(
-            ([depName, depSpec]) => {
-              builder.addEdgeOut(node, depName, depSpec, true);
-            }
-          );
+        if (!builder.nodes.has(nodeKey(node))) {
+          builder.addNode(node);
+          builder.addEdgeIn(node, specKey);
+          if (packageSnapshot.dependencies) {
+            Object.entries(packageSnapshot.dependencies).forEach(
+              ([depName, depSpec]) => {
+                // for pnpm, peerDependencies are always doubled in the dependencies if installed
+                const isOptional =
+                  packageSnapshot.peerDependenciesMeta?.[depName]?.optional;
+                builder.addEdgeOut(node, depName, depSpec, isOptional);
+              }
+            );
+          }
+          if (packageSnapshot.optionalDependencies) {
+            Object.entries(packageSnapshot.optionalDependencies).forEach(
+              ([depName, depSpec]) => {
+                builder.addEdgeOut(node, depName, depSpec);
+              }
+            );
+          }
+        } else {
+          const existingEdge = builder.nodes.get(nodeKey(node));
+          builder.addEdgeIn(existingEdge, specKey);
         }
       } else {
         unresolvedDependencies.add([packageName, specKey, packageSnapshot]);
@@ -142,9 +143,6 @@ function parseNode(
     name: name || packageName,
     ...(version && { version }),
     isHoisted,
-    ...(resolution && {
-      integrity: resolution['integrity'] || resolution['tarball'],
-    }),
   };
 
   if (!name && versionSpec.startsWith('/')) {
@@ -270,7 +268,7 @@ function exhaustUnresolvedDependencies(
             if (packageSnapshot.optionalDependencies) {
               Object.entries(packageSnapshot.optionalDependencies).forEach(
                 ([depName, depSpec]) => {
-                  builder.addEdgeOut(node, depName, depSpec, true);
+                  builder.addEdgeOut(node, depName, depSpec);
                 }
               );
             }

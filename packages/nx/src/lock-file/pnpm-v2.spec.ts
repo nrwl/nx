@@ -1,6 +1,8 @@
 import { joinPathFragments } from '../utils/path';
 import { parsePnpmLockFile } from './pnpm-v2';
 import { vol } from 'memfs';
+import { LockFileBuilder } from './utils/lock-file-builder';
+import { LockFileGraph } from './utils/types';
 
 jest.mock('fs', () => require('memfs').fs);
 
@@ -111,18 +113,55 @@ describe('pnpm LockFile utility', () => {
       vol.fromJSON(fileSys, '/root');
     });
 
-    it('should parse root lock file', async () => {
+    const packageJson = require(joinPathFragments(
+      __dirname,
+      '__fixtures__/nextjs/package.json'
+    ));
+
+    let rootResult: LockFileGraph;
+
+    beforeEach(() => {
       const lockFile = require(joinPathFragments(
         __dirname,
         '__fixtures__/nextjs/pnpm-lock.yaml'
       )).default;
-      const packageJson = require(joinPathFragments(
+      rootResult = parsePnpmLockFile(lockFile, packageJson);
+    });
+
+    it('should parse root lock file', async () => {
+      expect(rootResult.nodes.size).toEqual(1280); ///1143
+      expect(rootResult.isValid).toBeTruthy();
+    });
+
+    it('should prune lock file', async () => {
+      const appPackageJson = require(joinPathFragments(
         __dirname,
-        '__fixtures__/nextjs/package.json'
+        '__fixtures__/nextjs/app/package.json'
       ));
-      const result = parsePnpmLockFile(lockFile, packageJson);
-      expect(result.nodes.size).toEqual(1280); ///1143
-      expect(result.isValid).toBeTruthy();
+      const appLockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/nextjs/app/pnpm-lock.yaml'
+      )).default;
+
+      // this is original generated lock file
+      const appResult = parsePnpmLockFile(appLockFile, appPackageJson);
+      expect(appResult.nodes.size).toEqual(863);
+      expect(appResult.isValid).toBeTruthy();
+
+      // this is our pruned lock file structure
+      const builder = new LockFileBuilder(rootResult);
+      const pruned = builder.prune(appPackageJson);
+      expect(pruned.size).toEqual(appResult.nodes.size);
+
+      const keys = new Set(builder.nodes.keys());
+      const originalKeys = new Set(appResult.nodes.keys());
+      //TODO: this does not match, it gets resolved to latest version + signatures are different
+      //  perhaps it's still possible to run `pnpm install --frozen-lockfile` on it?
+      // -   "@types/node@18.11.15",
+      // +   "@types/node@18.11.9",
+      // -   "babel-jest@28.1.3",
+      // +   "babel-jest@28.1.1",
+      // expect(keys).toEqual(originalKeys);
     });
   });
 

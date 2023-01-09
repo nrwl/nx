@@ -303,10 +303,10 @@ describe('yarn LockFile utility', () => {
         parsedLockFile,
         projectPackageJson
       );
-      const expectedLockFile = readFileSync(
-        joinPathFragments(__dirname, '__fixtures__/nextjs/app/yarn.lock'),
-        'utf-8'
-      );
+      const expectedLockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/nextjs/app/yarn.lock'
+      )).default;
       expect(stringifyYarnLockFile(prunedLockFile)).toEqual(expectedLockFile);
     });
   });

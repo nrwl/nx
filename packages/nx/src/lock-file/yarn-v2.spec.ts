@@ -1,6 +1,8 @@
 import { joinPathFragments } from '../utils/path';
 import { parseYarnLockFile } from './yarn-v2';
 import { vol } from 'memfs';
+import { LockFileBuilder } from './utils/lock-file-builder';
+import { LockFileGraph } from './utils/types';
 
 jest.mock('fs', () => require('memfs').fs);
 
@@ -153,14 +155,46 @@ describe('yarn LockFile utility', () => {
       '__fixtures__/nextjs/package.json'
     ));
 
-    it('should parse root lock file', async () => {
+    let rootResult: LockFileGraph;
+
+    beforeEach(() => {
       const lockFile = require(joinPathFragments(
         __dirname,
         '__fixtures__/nextjs/yarn.lock'
       )).default;
-      const result = parseYarnLockFile(lockFile, packageJson);
-      expect(result.nodes.size).toEqual(1244); // 1104
-      expect(result.isValid).toBeTruthy();
+      rootResult = parseYarnLockFile(lockFile, packageJson);
+    });
+
+    it('should parse root lock file', async () => {
+      expect(rootResult.nodes.size).toEqual(1244); // 1104
+      expect(rootResult.isValid).toBeTruthy();
+    });
+
+    it('should prune lock file', async () => {
+      const appPackageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/nextjs/app/package.json'
+      ));
+      const appLockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/nextjs/app/yarn.lock'
+      )).default;
+
+      // this is original generated lock file
+      const appResult = parseYarnLockFile(appLockFile, appPackageJson);
+      expect(appResult.nodes.size).toEqual(864);
+      expect(appResult.isValid).toBeTruthy();
+
+      // this is our pruned lock file structure
+      const builder = new LockFileBuilder(rootResult, {
+        includeOptional: true,
+      });
+      const pruned = builder.prune(appPackageJson);
+      expect(pruned.size).toEqual(appResult.nodes.size);
+
+      const keys = new Set(builder.nodes.keys());
+      const originalKeys = new Set(appResult.nodes.keys());
+      expect(keys).toEqual(originalKeys);
     });
   });
 
