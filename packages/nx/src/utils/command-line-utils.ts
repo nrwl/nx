@@ -11,7 +11,6 @@ export interface RawNxArgs extends NxArgs {
 }
 
 export interface NxArgs {
-  target?: string;
   targets?: string[];
   configuration?: string;
   runner?: string;

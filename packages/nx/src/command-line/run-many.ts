@@ -82,14 +82,12 @@ export function projectsToRun(
 
     if (invalidProjects.length > 0) {
       output.warn({
-        title: `the following do not have configuration for "${nxArgs.target}"`,
+        title: `The following projects do not have a configuration for any of the provided targets ("${nxArgs.targets.join(
+          ', '
+        )}")`,
         bodyLines: invalidProjects.map((name) => `- ${name}`),
       });
     }
-  }
-
-  if (selectedProjects.size === 0) {
-    throw new Error(`No projects found for project patterns`);
   }
 
   const excludedProjects = findMatchingProjects(
