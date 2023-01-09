@@ -1,0 +1,11 @@
+import koa from 'koa';
+
+const app = new koa();
+
+app.use(async ctx =>{
+    ctx.body = { 'message': 'Hello API'};
+});
+
+app.listen(<%= port %>, () => {
+    // Server is running
+});

@@ -3,7 +3,7 @@ const app = express();
 
 
 app.get('/', (req, res) => {
-    res.send('Hello from Nrwl 🐳 API');
+    res.send({ 'message': 'Hello API'});
 });
 
 app.listen(<%= port %>, () => {

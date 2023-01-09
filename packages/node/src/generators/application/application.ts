@@ -118,6 +118,7 @@ function addProject(tree: Tree, options: NormalizedSchema) {
     targets: {},
     tags: options.parsedTags,
   };
+
   project.targets.build =
     options.bundler === 'esbuild'
       ? getEsBuildConfig(project, options)
@@ -292,20 +293,6 @@ function updateTsConfigOptions(tree: Tree, options: NormalizedSchema) {
 }
 
 export async function applicationGenerator(tree: Tree, schema: Schema) {
-  // Prompt for bundler webpack / esbuild
-  if (schema.framework) {
-    schema.bundler = (
-      await prompt<{ bundler: 'esbuild' | 'webpack' }>([
-        {
-          message: 'What bundler would you like to use?',
-          type: 'select',
-          name: 'bundler',
-          choices: ['esbuild', 'webpack'],
-        },
-      ])
-    ).bundler;
-  }
-
   const options = normalizeOptions(tree, schema);
 
   const tasks: GeneratorCallback[] = [];
