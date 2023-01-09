@@ -3,8 +3,13 @@ import {
   LockFileBuilder,
   LockFileGraph,
   LockFileNode,
+  nodeKey,
 } from './utils/lock-file-builder';
-import { PackageSnapshot, Lockfile } from '@pnpm/lockfile-types';
+import {
+  PackageSnapshot,
+  Lockfile,
+  ProjectSnapshot,
+} from '@pnpm/lockfile-types';
 import {
   loadPnpmHoistedDepsDefinition,
   parseAndNormalizePnpmLockfile,
@@ -35,21 +40,14 @@ export function parsePnpmLockFile(
 
   groupedDependencies.forEach((versionSet, packageName) => {
     versionSet.forEach(([specKey, originalKey, packageSnapshot]) => {
-      // If there is only one version, it is the root version
-      // otherwise we consult hoistedDependencies to see if it is a root version
-      let isRootVersion;
-      if (versionSet.size === 1) {
-        isRootVersion = true;
-      } else {
-        // some hoisted dependencies are in node_modules/{packageName} while others are in node_modules/.pnpm/{packageName}@{version}
-        const rootVersion = getRootVersion(packageName);
-
-        if (rootVersion) {
-          isRootVersion = packageSnapshot.version === rootVersion;
-        } else {
-          isRootVersion = !!hoistedDependencies[originalKey];
-        }
-      }
+      const isRootVersion = isVersionHoisted(
+        versionSet,
+        data.importers,
+        hoistedDependencies,
+        packageName,
+        originalKey,
+        packageSnapshot
+      );
 
       if (isRootVersion) {
         const node = parseNode(packageName, specKey, packageSnapshot, true);
@@ -81,6 +79,43 @@ export function parsePnpmLockFile(
   exhaustUnresolvedDependencies(builder, unresolvedDependencies);
 
   return builder.getLockFileGraph();
+}
+
+function isVersionHoisted(
+  versionSet: Set<[string, string, VersionedPackageSnapshot]>,
+  importers: Record<string, ProjectSnapshot>,
+  hoistedDependencies: Record<string, any>,
+  packageName: string,
+  key: string,
+  packageSnapshot: PackageSnapshot
+): boolean {
+  // if there's only one version, it's automatically hoisted
+  if (versionSet.size === 1) {
+    return true;
+  }
+  // if dependency is defined in importers that has priority
+  if (importers['.'].dependencies?.[packageName]) {
+    return (
+      importers['.'].dependencies[packageName] ===
+      key.slice(key.lastIndexOf('/') + 1)
+    );
+  }
+  if (importers['.'].devDependencies?.[packageName]) {
+    return (
+      importers['.'].devDependencies[packageName] ===
+      key.slice(key.lastIndexOf('/') + 1)
+    );
+  }
+  // some hoisted dependencies are in node_modules/{packageName} while others are in node_modules/.pnpm/{packageName}@{version}
+  // modules.yaml provides better specificity than node_modules/{packageName}
+  const nonVersionedKey = key.split('_')[0];
+  if (
+    Object.keys(hoistedDependencies).some((k) => k.startsWith(nonVersionedKey))
+  ) {
+    return !!hoistedDependencies[key];
+  }
+  const rootVersion = getRootVersion(packageName);
+  return packageSnapshot.version === rootVersion;
 }
 
 function parseVersionSpec(key: string, packageName: string): string {
@@ -217,24 +252,31 @@ function exhaustUnresolvedDependencies(
             packageSnapshot,
             false
           );
-          builder.addNode(node);
-          builder.addEdgeIn(node, versionSpec);
-          if (packageSnapshot.dependencies) {
-            Object.entries(packageSnapshot.dependencies).forEach(
-              ([depName, depSpec]) => {
-                // for pnpm, peerDependencies are always doubled in the dependencies if installed
-                const isOptional =
-                  packageSnapshot.peerDependenciesMeta?.[depName]?.optional;
-                builder.addEdgeOut(node, depName, depSpec, isOptional);
-              }
-            );
-          }
-          if (packageSnapshot.optionalDependencies) {
-            Object.entries(packageSnapshot.optionalDependencies).forEach(
-              ([depName, depSpec]) => {
-                builder.addEdgeOut(node, depName, depSpec, true);
-              }
-            );
+
+          // we might have added the node already
+          if (!builder.nodes.has(nodeKey(node))) {
+            builder.addNode(node);
+            builder.addEdgeIn(node, versionSpec);
+            if (packageSnapshot.dependencies) {
+              Object.entries(packageSnapshot.dependencies).forEach(
+                ([depName, depSpec]) => {
+                  // for pnpm, peerDependencies are always doubled in the dependencies if installed
+                  const isOptional =
+                    packageSnapshot.peerDependenciesMeta?.[depName]?.optional;
+                  builder.addEdgeOut(node, depName, depSpec, isOptional);
+                }
+              );
+            }
+            if (packageSnapshot.optionalDependencies) {
+              Object.entries(packageSnapshot.optionalDependencies).forEach(
+                ([depName, depSpec]) => {
+                  builder.addEdgeOut(node, depName, depSpec, true);
+                }
+              );
+            }
+          } else {
+            const existingNode = builder.nodes.get(nodeKey(node));
+            builder.addEdgeIn(existingNode, versionSpec);
           }
           unresolvedDependencies.delete(unresolvedSet);
           return;
@@ -244,15 +286,25 @@ function exhaustUnresolvedDependencies(
   });
 
   if (initialSize === unresolvedDependencies.size) {
-    throw new Error(
-      `Could not resolve following dependencies\n` +
-        Array.from(unresolvedDependencies)
-          .map(
-            ([packageName, versionSpec]) => `- ${packageName}@${versionSpec}\n`
-          )
-          .join('') +
-        `Breaking out of the parsing to avoid infinite loop.`
-    );
+    // ignore packages that were parsed already with different hashmap
+    unresolvedDependencies.forEach((unresolvedDependency) => {
+      const [packageName, versionSpec] = unresolvedDependency;
+      if (builder.nodes.has(`${packageName}@${versionSpec.split('_')[0]}`)) {
+        unresolvedDependencies.delete(unresolvedDependency);
+      }
+    });
+    if (unresolvedDependencies.size > 0) {
+      throw new Error(
+        `Could not resolve following dependencies\n` +
+          Array.from(unresolvedDependencies)
+            .map(
+              ([packageName, versionSpec]) =>
+                `- ${packageName}@${versionSpec}\n`
+            )
+            .join('') +
+          `Breaking out of the parsing to avoid infinite loop.`
+      );
+    }
   }
   if (unresolvedDependencies.size > 0) {
     exhaustUnresolvedDependencies(builder, unresolvedDependencies);

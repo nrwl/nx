@@ -1,3 +1,4 @@
+import { output } from '../../utils/output';
 import { PackageJson } from '../../utils/package-json';
 import { hashString } from './hashing';
 
@@ -119,6 +120,11 @@ export class LockFileBuilder {
     if (!node.edgesOut) {
       node.edgesOut = new Map();
     }
+
+    // if (name === 'eslint-module-utils' && versionSpec.startsWith('2.7.4')) {
+    //   console.log('EDGE OUT', node.name, versionSpec);
+    // }
+
     const existingEdge = this.findMatchingEdgeIn(name, versionSpec);
     if (existingEdge) {
       this.setEdgeSource(existingEdge, node);
@@ -127,6 +133,7 @@ export class LockFileBuilder {
         name,
         versionSpec,
         from: node,
+        to: this.findMatchingNode(name, versionSpec),
       };
       if (isOptional) {
         edge.optional = true;
@@ -149,13 +156,39 @@ export class LockFileBuilder {
   }
 
   private findMatchingEdgeIn(name: string, versionSpec: string): LockFileEdge {
+    let matchedNode: LockFileNode;
     for (const node of this.nodes.values()) {
       if (node.name === name && node.edgesIn) {
         for (const edge of node.edgesIn.values()) {
-          if (edge.versionSpec === versionSpec && !edge.from) {
-            return edge;
+          if (edge.versionSpec === versionSpec) {
+            if (!edge.from) {
+              return edge;
+            } else {
+              // one edge in spec can match several edges out
+              // so we need to make a duplicate
+              matchedNode = edge.from;
+            }
           }
         }
+      }
+    }
+    if (matchedNode) {
+      // make a duplicate node, attach to child and return it
+      const edge: LockFileEdge = {
+        name,
+        versionSpec,
+        to: matchedNode,
+      };
+      matchedNode.edgesIn.add(edge);
+      return edge;
+    }
+    return;
+  }
+
+  private findMatchingNode(name: string, versionSpec: string): LockFileNode {
+    for (const node of this.nodes.values()) {
+      if (node.name === name && node.version === versionSpec) {
+        return node;
       }
     }
     return;
@@ -165,6 +198,9 @@ export class LockFileBuilder {
     this.validateEdgeCreation(node, node.name, versionSpec);
 
     const existingEdges = this.findMatchingEdgesOut(node.name, versionSpec);
+    // if (node.name === 'eslint-module-utils' && versionSpec.startsWith('2.7.4')) {
+    //   console.log('EDGE IN', versionSpec, existingEdges);
+    // }
     if (existingEdges.size > 0) {
       existingEdges.forEach((existingEdge) => {
         this.setEdgeTarget(existingEdge, node);
@@ -230,8 +266,7 @@ export class LockFileBuilder {
   private updateEdgeError(edge: LockFileEdge) {
     if (!edge.to && !edge.optional) {
       edge.error = 'MISSING_TARGET';
-    }
-    if (!edge.from && !edge.incoming) {
+    } else if (!edge.from && !edge.incoming) {
       edge.error = 'MISSING_SOURCE';
     } else {
       delete edge.error;
@@ -242,16 +277,30 @@ export class LockFileBuilder {
     this.nodes.set(nodeKey(node), node);
 
     node.edgesIn = node.edgesIn || new Set<LockFileEdge>();
+
+    // if ((node.name === 'eslint-module-utils' || node.name === 'eslint-module-utils')) {
+    //   console.log('NODE', node);
+    // }
+
+    // this.nodes.forEach(node => {
+    //   if (node.edgesOut && node.edgesOut.has(node.name)) {
+    //     const edge = node.edgesOut.get(node.name);
+    //     if (edge.versionSpec === node.version && !edge.to) {
+    //       this.setEdgeTarget(edge, node);
+    //     }
+    //   }
+    // })
   }
 
-  isGraphConsistent() {
+  isGraphConsistent(): { isValid: boolean; errors: string[] } {
     let isValid = true;
+    const errors = [];
     this.nodes.forEach((node) => {
-      if (!this.verifyNode(node)) {
-        isValid = false;
-      }
+      const result = this.verifyNode(node);
+      isValid = isValid && result.isValid;
+      errors.push(...result.errors);
     });
-    return isValid;
+    return { isValid, errors };
   }
 
   private validateEdgeCreation(
@@ -272,17 +321,25 @@ export class LockFileBuilder {
     }
   }
 
-  private verifyNode(node: LockFileNode) {
+  private verifyNode(node: LockFileNode): {
+    isValid: boolean;
+    errors: string[];
+  } {
     let isValid = true;
+    const errors = [];
     if (node.edgesOut && node.edgesOut.size > 0) {
       node.edgesOut.forEach((edge) => {
         if (edge.error) {
           isValid = false;
-          console.warn(
-            `Outgoing edge "${edge.name}: ${edge.versionSpec}" from ${
-              edge.from?.name
-            } to ${edge.to?.name || '-'} has error: ${edge.error}`
-          );
+          if (process.env.NX_VERBOSE_LOGGING === 'true') {
+            errors.push(
+              `Outgoing edge "${edge.name}: ${edge.versionSpec}" from "${
+                edge.from.name
+              }: ${edge.versionSpec}" to ${edge.to?.name || '-'} has error: ${
+                edge.error
+              }`
+            );
+          }
         }
       });
     }
@@ -290,29 +347,30 @@ export class LockFileBuilder {
       node.edgesIn.forEach((edge) => {
         if (edge.error) {
           isValid = false;
-          console.warn(
-            `Incoming edge "${edge.name}: ${edge.versionSpec}" from ${
-              edge.from?.name || '-'
-            } to ${edge.to?.name} has error: ${edge.error}`
-          );
+          if (process.env.NX_VERBOSE_LOGGING === 'true') {
+            errors.push(
+              `Incoming edge "${edge.name}: ${edge.versionSpec}" from ${
+                edge.from?.name || '-'
+              } to ${edge.to?.name} has error: ${edge.error}`
+            );
+          }
         }
       });
     } else {
       isValid = false;
-      console.warn(
-        `All nodes must have at least one incoming edge. Node "${node.name}@${node.version}" has no incoming edges.`
-      );
+      if (process.env.NX_VERBOSE_LOGGING === 'true') {
+        errors.push(
+          `All nodes must have at least one incoming edge. Node "${node.name}@${node.version}" has no incoming edges.`
+        );
+      }
     }
-    return isValid;
+    return { isValid, errors };
   }
 
   getLockFileGraph(): LockFileGraph {
-    let isValid = true;
-    if (!this.isGraphConsistent()) {
-      console.error(
-        `Graph is not consistent. Please report this issue via github`
-      );
-      isValid = false;
+    const { isValid, errors } = this.isGraphConsistent();
+    if (!isValid) {
+      output.error({ title: 'Graph is not consistent', bodyLines: errors });
     }
 
     return {

@@ -315,6 +315,9 @@ function exhaustUnresolvedDependencies(
                 }
               );
             }
+          } else {
+            const existingNode = builder.nodes.get(nodeKey(node));
+            builder.addEdgeIn(existingNode, versionSpec);
           }
           unresolvedDependencies.delete(unresolvedSet);
           return;
