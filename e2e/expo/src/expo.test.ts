@@ -1,4 +1,5 @@
 import {
+  checkFilesExist,
   cleanupProject,
   expectTestsPass,
   newProject,
@@ -47,4 +48,21 @@ describe('expo', () => {
       'Export was successful. Your exported files can be found'
     );
   }, 1000000);
+
+  it('should build publishable library', async () => {
+    const libName = uniq('lib');
+    const componentName = uniq('component');
+
+    runCLI(
+      `generate @nrwl/expo:library ${libName} --buildable --publishable --importPath=${proj}/${libName}`
+    );
+    runCLI(
+      `generate @nrwl/expo:component ${componentName} --project=${libName} --export`
+    );
+    expect(() => {
+      runCLI(`build ${libName}`);
+      checkFilesExist(`dist/libs/${libName}/index.js`);
+      checkFilesExist(`dist/libs/${libName}/src/index.d.ts`);
+    }).not.toThrow();
+  });
 });
