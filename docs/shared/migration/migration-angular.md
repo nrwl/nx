@@ -16,7 +16,6 @@ This will enable you to use the Nx CLI in your existing Angular CLI workspace wh
 
 - The `nx`, `@nrwl/workspace` and `prettier` packages will be installed.
 - An `nx.json` file will be created in the root of your workspace.
-- A `decorate-angular-cli.js` file will be added to the root of your workspace, and a `postinstall` script will be added to your `package.json` to run this script when your dependencies are updated. (The script forwards the `ng` commands to the Nx CLI (`nx`) to enable features such as [Computation Caching](/concepts/how-caching-works).)
 - For an Angular 15+ repo, the `angular.json` file is split into separate `project.json` files for each project.
 
 After the process completes, you can continue using the same `serve/build/lint/test` commands you are used to.
@@ -104,7 +103,6 @@ After the changes are applied, your workspace file structure should look similar
 ├── .gitignore
 ├── .prettierignore
 ├── .prettierrc
-├── decorate-angular-cli.js
 ├── karma.conf.js
 ├── nx.json
 ├── package.json
@@ -359,7 +357,6 @@ The script will make the following changes:
   - If you opted into Nx Cloud, `@nrwl/nx-cloud` will be installed as well.
   - If your project's Angular version is greater than or equal to version 13, then the `@nrwl/angular` package will be installed as well.
 - Creates an `nx.json` file in the root of your workspace.
-- Adds a `decorate-angular-cli.js` to the root of your workspace, and a `postinstall` script in your `package.json` to run the script when your dependencies are updated. The script forwards the `ng` commands to the Nx CLI (`nx`) to enable features such as [Computation Caching](/concepts/how-caching-works).
 
 By running this command and accepting Nx Cloud, Nx distributed caching is now enabled.
 

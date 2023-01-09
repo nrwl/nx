@@ -16,7 +16,6 @@ import {
   createNxJson,
   createRootKarmaConfig,
   createWorkspaceFiles,
-  decorateAngularCli,
   deleteAngularJson,
   deleteGitKeepFilesIfNotNeeded,
   formatFilesTask,
@@ -53,7 +52,6 @@ export async function migrateFromAngularCli(
       }
     );
     createNxJson(tree, options, angularJson.defaultProject);
-    decorateAngularCli(tree);
     updateVsCodeRecommendedExtensions(tree);
     await updatePrettierConfig(tree);
 
@@ -96,7 +94,6 @@ export async function migrateFromAngularCli(
     updateWorkspaceConfigDefaults(tree);
     updateRootTsConfig(tree);
     updatePackageJson(tree);
-    decorateAngularCli(tree);
     await createWorkspaceFiles(tree);
 
     // migrate all projects

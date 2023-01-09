@@ -148,31 +148,12 @@ describe('workspace', () => {
       await migrateFromAngularCli(tree, {});
 
       expect(readJson(tree, 'package.json').scripts).toStrictEqual({
-        ng: 'nx',
+        ng: 'ng',
         start: 'nx serve',
         build: 'nx build',
         watch: 'nx build --watch --configuration development',
         test: 'nx test',
-        postinstall: 'node ./decorate-angular-cli.js',
       });
-    });
-
-    it('should handle existing postinstall script', async () => {
-      tree.write(
-        'package.json',
-        JSON.stringify({
-          name: '@my-org/my-monorepo',
-          scripts: {
-            postinstall: 'node some-awesome-script.js',
-          },
-        })
-      );
-
-      await migrateFromAngularCli(tree, {});
-
-      expect(readJson(tree, 'package.json').scripts.postinstall).toEqual(
-        'node some-awesome-script.js && node ./decorate-angular-cli.js'
-      );
     });
 
     it('should remove the angular.json file', async () => {
@@ -586,14 +567,6 @@ describe('workspace', () => {
       expect(readJson(tree, 'nx.json')).toMatchSnapshot();
     });
 
-    it('should create decorate-angular-cli.js', async () => {
-      await migrateFromAngularCli(tree, { preserveAngularCliLayout: true });
-
-      expect(tree.exists('/decorate-angular-cli.js')).toBe(true);
-      const { scripts } = readJson(tree, 'package.json');
-      expect(scripts.postinstall).toBe('node ./decorate-angular-cli.js');
-    });
-
     it('should support multiple projects', async () => {
       const angularJson = {
         $schema: './node_modules/@angular/cli/lib/config/schema.json',
@@ -663,11 +636,9 @@ describe('workspace', () => {
       await migrateFromAngularCli(tree, { preserveAngularCliLayout: true });
 
       expect(tree.exists('angular.json')).toBe(false);
-      expect(tree.exists('decorate-angular-cli.js')).toBe(true);
       expect(tree.exists('.prettierignore')).toBe(true);
       expect(tree.exists('.prettierrc')).toBe(true);
       const { scripts } = readJson(tree, 'package.json');
-      expect(scripts.postinstall).toBe('node ./decorate-angular-cli.js');
       expect(readJson(tree, 'nx.json')).toMatchSnapshot();
       expect(readJson(tree, 'project.json')).toMatchSnapshot();
       expect(readJson(tree, 'projects/app2/project.json')).toMatchSnapshot();

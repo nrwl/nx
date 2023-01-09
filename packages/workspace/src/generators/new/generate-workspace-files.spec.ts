@@ -198,37 +198,6 @@ describe('@nrwl/workspace:generateWorkspaceFiles', () => {
     expect(recommendations).toMatchSnapshot();
   });
 
-  it('should add decorate-angular-cli when used with angular cli', async () => {
-    await generateWorkspaceFiles(tree, {
-      name: 'proj',
-      directory: 'proj',
-      preset: Preset.AngularMonorepo,
-      defaultBase: 'main',
-    });
-    expect(tree.exists('/proj/decorate-angular-cli.js')).toBe(true);
-
-    const { scripts } = readJson(tree, '/proj/package.json');
-    expect(scripts).toMatchInlineSnapshot(`
-      Object {
-        "ng": "nx",
-        "postinstall": "node ./decorate-angular-cli.js",
-      }
-    `);
-  });
-
-  it('should not add decorate-angular-cli when used with nx cli', async () => {
-    await generateWorkspaceFiles(tree, {
-      name: 'proj',
-      directory: 'proj',
-      preset: Preset.Empty,
-      defaultBase: 'main',
-    });
-    expect(tree.exists('/proj/decorate-angular-cli.js')).toBe(false);
-
-    const { scripts } = readJson(tree, '/proj/package.json');
-    expect(scripts).toMatchInlineSnapshot(`Object {}`);
-  });
-
   it('should create a workspace using NPM preset (npm package manager)', async () => {
     tree.write('/proj/package.json', JSON.stringify({}));
     await generateWorkspaceFiles(tree, {
