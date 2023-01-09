@@ -25,7 +25,7 @@ By default, the `@nrwl/vite:configuration` generator will search your project's 
 
 Your targets for building, serving and testing may not be named `build`, `serve` and `test`. Nx will try to infer the correct targets to convert, and it will attempt to convert the first one it finds for each of these actions if you have more than one. If you have more than one target for serving, building, or testing your project, you can pass the `--serveTarget`, `--buildTarget`, and `--testTarget` flags to the generator, to tell Nx specifically which targets to convert.
 
-Nx will determine if the targets you provided (or the ones it infered) are valid and can be converted to use the `@nrwl/vite` executors. If the targets are not valid, the generator will fail. If no targets are found - or recognized to be either supported or unsupported - Nx will ask you whether you want to convert your project anyway. If you choose to do so, Nx will configure your project to use Vite.js, creating new targets for you, and creating or modifying your `vite.config.ts` file. You can then test on your own if the result works or not, and modify the configuration as needed. It's suggested that if Nx does not recognize your targets automatically, you commit your changes before running the generator, so you can revert the changes if needed.
+Nx will determine if the targets you provided (or the ones it inferred) are valid and can be converted to use the `@nrwl/vite` executors. If the targets are not valid, the generator will fail. If no targets are found - or recognized to be either supported or unsupported - Nx will ask you whether you want to convert your project anyway. If you choose to do so, Nx will configure your project to use Vite.js, creating new targets for you, and creating or modifying your `vite.config.ts` file. You can then test on your own if the result works or not, and modify the configuration as needed. It's suggested that if Nx does not recognize your targets automatically, you commit your changes before running the generator, so you can revert the changes if needed.
 
 ## Projects that can be converted to use the `@nrwl/vite` executors
 
@@ -42,7 +42,7 @@ The list of executors for building, testing and serving that can be converted to
 - `@nrwl/rollup:rollup`
 - `@nrwl/web:rollup`
 
-### Supported `serve` exeutors
+### Supported `serve` executors
 
 - `@nxext/vite:dev`
 - `@nrwl/webpack:dev-server`

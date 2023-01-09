@@ -15,7 +15,7 @@
     "properties": {
       "buildTarget": {
         "type": "string",
-        "description": "Target which builds the application."
+        "description": "Target which builds the application. Only used to retrieve the configuration as the dev-server does not build the code."
       },
       "proxyConfig": {
         "type": "string",
