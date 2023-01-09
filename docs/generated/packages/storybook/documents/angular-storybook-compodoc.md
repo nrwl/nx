@@ -26,11 +26,11 @@ Let's take for example an Angular component - a button - that has an `@Input` fo
 
 This comment would result in the following documentation in Compodoc:
 
-![Button size `@Input` generated documentation](/shared/guides/storybook/button-size-input.png)
+![Button size `@Input` generated documentation](/shared/packages/storybook/button-size-input.png)
 
 If we add a description and a default value to each of our component `@Input`s, we will end up with a full documentation page. See a full example of the button component [here](https://github.com/nrwl/nx-recipes/tree/main/storybook-compodoc-angular/apps/web/src/app/butn/butn.component.ts). The generated documentation of this example will look like this:
 
-![Generated Docs page for the Button](/shared/guides/storybook/button-docs.png)
+![Generated Docs page for the Button](/shared/packages/storybook/button-docs.png)
 
 When you run Compodoc, it will generate a `documentation.json` file. Storybook will then use that file to render the documentation in the `Docs` tab.
 
