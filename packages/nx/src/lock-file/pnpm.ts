@@ -27,7 +27,7 @@ export function prunePnpmLockFile(
   const builder = buildLockFileGraph(rootLockFileContent);
   builder.prune(prunedPackageJson);
 
-  return 'not implemented yet';
+  return rootLockFileContent;
 }
 
 function buildLockFileGraph(content: string): LockFileBuilder {

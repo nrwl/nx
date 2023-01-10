@@ -1,5 +1,5 @@
 import { joinPathFragments } from '../utils/path';
-import { parseYarnLockFile } from './yarn';
+import { parseYarnLockFile, pruneYarnLockFile } from './yarn';
 import { vol } from 'memfs';
 import { LockFileBuilder } from './utils/lock-file-builder';
 import { LockFileGraph } from './utils/types';
@@ -151,15 +151,17 @@ describe('yarn LockFile utility', () => {
       vol.fromJSON(fileSys, '/root');
     });
 
-    const packageJson = require(joinPathFragments(
-      __dirname,
-      '__fixtures__/nextjs/package.json'
-    ));
+    let packageJson;
+    let lockFile;
 
     let rootResult: LockFileGraph;
 
     beforeEach(() => {
-      const lockFile = require(joinPathFragments(
+      packageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/nextjs/package.json'
+      ));
+      lockFile = require(joinPathFragments(
         __dirname,
         '__fixtures__/nextjs/yarn.lock'
       )).default;
@@ -196,6 +198,20 @@ describe('yarn LockFile utility', () => {
       const keys = new Set(builder.nodes.keys());
       const originalKeys = new Set(appResult.nodes.keys());
       expect(keys).toEqual(originalKeys);
+    });
+
+    xit('should match pruned lock file', () => {
+      const appPackageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/nextjs/app/package.json'
+      ));
+      const result = pruneYarnLockFile(lockFile, packageJson, appPackageJson);
+      expect(result).toEqual(
+        require(joinPathFragments(
+          __dirname,
+          '__fixtures__/nextjs/app/yarn.lock'
+        )).default
+      );
     });
   });
 
@@ -431,7 +447,13 @@ describe('yarn LockFile utility', () => {
   describe('optional packages', () => {
     beforeEach(() => {
       const fileSys = {
-        'node_modules/ssh2/package.json': '{"version": "1.11.6"}',
+        'node_modules/brace-expansion/package.json': '{"version": "1.1.11"}',
+        'node_modules/glob/package.json': '{"version": "7.2.3"}',
+        'node_modules/lru-cache/package.json': '{"version": "7.14.1"}',
+        'node_modules/minimatch/package.json': '{"version": "3.1.2"}',
+        'node_modules/minipass/package.json': '{"version": "3.3.6"}',
+        'node_modules/ms/package.json': '{"version": "2.1.3"}',
+        'node_modules/ssh2/package.json': '{"version": "1.11.0"}',
       };
       vol.fromJSON(fileSys, '/root');
     });
@@ -453,6 +475,91 @@ describe('yarn LockFile utility', () => {
       builder.prune(packageJson);
       expect(builder.nodes.size).toEqual(103);
       expect(builder.isGraphConsistent().isValid).toBeTruthy();
+    });
+  });
+
+  describe('pruning', () => {
+    beforeEach(() => {
+      const fileSys = {
+        'node_modules/@jest/test-result/package.json': '{"version": "28.1.3"}',
+        'node_modules/@jridgewell/gen-mapping/package.json':
+          '{"version": "0.1.1"}',
+        'node_modules/ansi-styles/package.json': '{"version": "4.3.0"}',
+        'node_modules/argparse/package.json': '{"version": "2.0.1"}',
+        'node_modules/brace-expansion/package.json': '{"version": "1.1.11"}',
+        'node_modules/camelcase/package.json': '{"version": "6.3.0"}',
+        'node_modules/chalk/package.json': '{"version": "4.1.2"}',
+        'node_modules/cliui/package.json': '{"version": "7.0.4"}',
+        'node_modules/color-convert/package.json': '{"version": "2.0.1"}',
+        'node_modules/color-name/package.json': '{"version": "1.1.4"}',
+        'node_modules/escape-string-regexp/package.json':
+          '{"version": "1.0.5"}',
+        'node_modules/glob/package.json': '{"version": "7.2.3"}',
+        'node_modules/has-flag/package.json': '{"version": "4.0.0"}',
+        'node_modules/jest-resolve/package.json': '{"version": "28.1.3"}',
+        'node_modules/jest-util/package.json': '{"version": "28.1.3"}',
+        'node_modules/js-yaml/package.json': '{"version": "3.14.1"}',
+        'node_modules/json5/package.json': '{"version": "1.0.2"}',
+        'node_modules/lru-cache/package.json': '{"version": "6.0.0"}',
+        'node_modules/minimatch/package.json': '{"version": "3.1.2"}',
+        'node_modules/p-limit/package.json': '{"version": "3.1.0"}',
+        'node_modules/semver/package.json': '{"version": "6.3.0"}',
+        'node_modules/strip-bom/package.json': '{"version": "3.0.0"}',
+        'node_modules/supports-color/package.json': '{"version": "7.2.0"}',
+        'node_modules/tslib/package.json': '{"version": "2.4.1"}',
+        'node_modules/yallist/package.json': '{"version": "4.0.0"}',
+      };
+      vol.fromJSON(fileSys, '/root');
+    });
+
+    it('should prune single package', () => {
+      const lockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/pruning/yarn.lock'
+      )).default;
+      const packageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/pruning/package.json'
+      ));
+
+      const typescriptPackageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/pruning/typescript/package.json'
+      ));
+      const result = pruneYarnLockFile(
+        lockFile,
+        packageJson,
+        typescriptPackageJson
+      );
+      expect(result).toEqual(
+        require(joinPathFragments(
+          __dirname,
+          '__fixtures__/pruning/typescript/yarn.lock'
+        )).default
+      );
+    });
+
+    it('should prune multi packages', () => {
+      const lockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/pruning/yarn.lock'
+      )).default;
+      const packageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/pruning/package.json'
+      ));
+
+      const multiPackageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/pruning/devkit-yargs/package.json'
+      ));
+      const result = pruneYarnLockFile(lockFile, packageJson, multiPackageJson);
+      expect(result).toEqual(
+        require(joinPathFragments(
+          __dirname,
+          '__fixtures__/pruning/devkit-yargs/yarn.lock'
+        )).default
+      );
     });
   });
 });

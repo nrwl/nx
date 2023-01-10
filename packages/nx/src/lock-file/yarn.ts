@@ -1,15 +1,25 @@
-import { parseSyml } from '@yarnpkg/parsers';
+import { parseSyml, stringifySyml } from '@yarnpkg/parsers';
+import { stringify } from '@yarnpkg/lockfile';
 import { PackageJson } from '../utils/package-json';
 import { LockFileBuilder, nodeKey } from './utils/lock-file-builder';
 import { LockFileGraph, LockFileNode, YarnDependency } from './utils/types';
 import { workspaceRoot } from '../utils/workspace-root';
 import { existsSync, readFileSync } from 'fs';
+import { sortObjectByKeys } from '../utils/object-sort';
+import {
+  BERRY_LOCK_FILE_DISCLAIMER,
+  generateRootWorkspacePackage,
+} from './utils/yarn-helpers';
 
 export function parseYarnLockFile(
   lockFileContent: string,
   packageJson: PackageJson
 ): LockFileGraph {
-  const builder = buildLockFileGraph(lockFileContent, packageJson);
+  const { __metadata, ...dependencies } = parseSyml(lockFileContent);
+  const isBerry = !!__metadata;
+  const groupedDependencies = groupDependencies(dependencies);
+
+  const builder = buildLockFileGraph(groupedDependencies, packageJson, isBerry);
 
   return builder.getLockFileGraph();
 }
@@ -19,22 +29,75 @@ export function pruneYarnLockFile(
   packageJson: PackageJson,
   prunedPackageJson: PackageJson
 ): string {
-  const builder = buildLockFileGraph(rootLockFileContent, packageJson);
+  const { __metadata, ...dependencies } = parseSyml(rootLockFileContent);
+  const isBerry = !!__metadata;
+  const groupedDependencies = groupDependencies(dependencies);
+
+  const builder = buildLockFileGraph(groupedDependencies, packageJson, isBerry);
   builder.prune(prunedPackageJson);
 
-  return 'not implemented yet';
+  const output: Record<string, YarnDependency> = {};
+  builder.nodes.forEach((node) => {
+    const value = groupedDependencies
+      .get(node.name)
+      .get(node.version)
+      .values()
+      .next().value[1];
+    const keys = new Set<string>();
+    node.edgesIn.forEach((edge) => {
+      const version =
+        isBerry &&
+        !isAliasDependency(edge.versionSpec) &&
+        !isTarballDependency(value)
+          ? `npm:${edge.versionSpec}`
+          : edge.versionSpec;
+      keys.add(`${node.name}@${version}`);
+    });
+    const sortedKeys = Array.from(keys).sort();
+    if (isBerry) {
+      output[Array.from(keys).sort().join(', ')] = value;
+    } else {
+      sortedKeys.forEach((key) => {
+        output[key] = value;
+      });
+    }
+  });
+
+  if (isBerry) {
+    // add root workspace package
+    const workspacePackage = generateRootWorkspacePackage(prunedPackageJson);
+    output[workspacePackage.resolution] = workspacePackage;
+
+    return (
+      BERRY_LOCK_FILE_DISCLAIMER +
+      stringifySyml({
+        __metadata,
+        dependencies: sortObjectByKeys(output),
+      })
+    );
+  } else {
+    return stringify(sortObjectByKeys(output));
+  }
+}
+
+function isTarballDependency({ version, resolution }: YarnDependency): boolean {
+  // for tarball packages version might not exist or be useless
+  if (!version || (resolution && !resolution.includes(version))) {
+    return true;
+  }
+}
+
+function isAliasDependency(version: string): boolean {
+  return version.startsWith('npm:');
 }
 
 function buildLockFileGraph(
-  content: string,
-  packageJson: PackageJson
+  groupedDependencies: Map<string, Map<string, Set<[string, YarnDependency]>>>,
+  packageJson: PackageJson,
+  isBerry: boolean
 ): LockFileBuilder {
-  const { __metadata, ...dependencies } = parseSyml(content);
-  const isBerry = !!__metadata;
-
   const builder = new LockFileBuilder(packageJson, { includeOptional: true });
 
-  const groupedDependencies = groupDependencies(dependencies);
   isBerry
     ? parseBerryLockFile(builder, groupedDependencies)
     : parseClassicLockFile(builder, groupedDependencies);
@@ -357,5 +420,6 @@ function getRootVersion(packageName: string): string {
     const content = readFileSync(fullPath, 'utf-8');
     return JSON.parse(content).version;
   }
+  throw new Error(`Could not find ${fullPath}`);
   return;
 }

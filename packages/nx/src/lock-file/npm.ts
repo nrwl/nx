@@ -27,7 +27,7 @@ export function pruneNpmLockFile(
   const builder = buildLockFileGraph(rootLockFileContent, packageJson);
   builder.prune(prunedPackageJson);
 
-  return 'not implemented yet';
+  return rootLockFileContent;
 }
 
 function buildLockFileGraph(

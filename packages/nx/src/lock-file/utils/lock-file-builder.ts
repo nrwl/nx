@@ -269,7 +269,7 @@ export class LockFileBuilder {
   }
 
   prune(packageJson: Partial<PackageJson>) {
-    // TODO: 0. normalize packageJson to ensure correct version (done via helper)
+    // TODO: 0. normalize packageJson to ensure correct version (via helper)
 
     // prune the nodes
     const prunedNodes = new Set<string>();
@@ -308,6 +308,12 @@ export class LockFileBuilder {
           }
         }
         this.nodes.delete(key);
+      } else {
+        node.edgesIn.forEach((edge) => {
+          if (edge.from && !prunedNodes.has(nodeKey(edge.from))) {
+            node.edgesIn.delete(edge);
+          }
+        });
       }
     });
 
