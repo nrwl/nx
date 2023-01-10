@@ -18,7 +18,8 @@
       },
       "directory": {
         "type": "string",
-        "description": "A directory where the lib is placed."
+        "description": "A directory where the lib is placed.",
+        "x-priority": "important"
       },
       "linter": {
         "description": "The tool to use for running lint checks.",
@@ -39,12 +40,14 @@
       "skipFormat": {
         "description": "Skip formatting files.",
         "type": "boolean",
-        "default": false
+        "default": false,
+        "x-priority": "internal"
       },
       "skipTsConfig": {
         "type": "boolean",
         "description": "Do not update tsconfig.json for development experience.",
-        "default": false
+        "default": false,
+        "x-priority": "internal"
       },
       "includeBabelRc": {
         "type": "boolean",
@@ -79,12 +82,14 @@
       "publishable": {
         "type": "boolean",
         "default": false,
-        "description": "Generate a publishable library."
+        "description": "Generate a publishable library.",
+        "x-priority": "important"
       },
       "buildable": {
         "type": "boolean",
         "default": true,
-        "description": "Generate a buildable library."
+        "description": "Generate a buildable library.",
+        "x-priority": "important"
       },
       "setParserOptionsProject": {
         "type": "boolean",
@@ -95,19 +100,22 @@
         "type": "string",
         "enum": ["workspace", "project", "npm-scripts"],
         "default": "project",
-        "description": "Determines whether the project's executors should be configured in `workspace.json`, `project.json` or as npm scripts."
+        "description": "Determines whether the project's executors should be configured in `workspace.json`, `project.json` or as npm scripts.",
+        "x-priority": "internal"
       },
       "compiler": {
         "type": "string",
         "enum": ["tsc", "swc"],
         "default": "tsc",
-        "description": "The compiler used by the build and test targets"
+        "description": "The compiler used by the build and test targets",
+        "x-priority": "important"
       },
       "bundler": {
         "description": "The bundler to use.",
         "type": "string",
         "enum": ["none", "esbuild", "rollup", "vite", "webpack"],
-        "default": "none"
+        "default": "none",
+        "x-priority": "important"
       },
       "skipTypeCheck": {
         "type": "boolean",

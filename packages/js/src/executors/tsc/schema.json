@@ -51,7 +51,8 @@
       "default": [],
       "items": {
         "$ref": "#/definitions/transformerPattern"
-      }
+      },
+      "x-priority": "important"
     },
     "updateBuildableProjectDepsInPackageJson": {
       "type": "boolean",
