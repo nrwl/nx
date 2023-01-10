@@ -277,7 +277,7 @@ export class LockFileBuilder {
     // TODO: 0. normalize packageJson to ensure correct version (done via helper)
 
     // prune the nodes
-    const prunedNodes = new Map<string, LockFileNode>();
+    const prunedNodes = new Set<string>();
     this.parseIncomingEdges(packageJson).forEach((version, name) => {
       const key = `${name}@${version}`;
       if (this.nodes.has(key)) {
@@ -316,36 +316,49 @@ export class LockFileBuilder {
       }
     });
 
-    // set new hoisted packages
-    packagesToRehoist.forEach((nestedVersions, name) => {
+    // mark new hoisted packages
+    packagesToRehoist.forEach((nestedVersions) => {
       if (nestedVersions.size === 1) {
         const node = nestedVersions.values().next().value;
         node.isHoisted = true;
       } else {
-        console.warn(`We need to find hoisted package: ${name}`);
-        // TODO: how to find hoisted packages when there are multiple matches?
+        let minDistance = Infinity;
+        let closest;
+        nestedVersions.forEach((node) => {
+          const distance = this.pathLengthToIncoming(node);
+          if (distance < minDistance) {
+            minDistance = distance;
+            closest = node;
+          }
+        });
+        closest.isHoisted = true;
       }
     });
-
-    // TODO: 3. stringify & calculate hash
-
-    return prunedNodes;
   }
 
-  private pathLengthToIncoming(
-    incoming: Map<string, string>,
-    node: LockFileNode,
-    distance = 0,
-    visited: Set<LockFileNode> = new Set(),
-    queue: LockFileNode[] = []
-  ): number {
-    // TODO: use BFS to calculate the shortest path in graph
-    return distance;
+  // use BFS to calculate the shortest path to an incoming edge
+  private pathLengthToIncoming(node: LockFileNode): number {
+    const visited = new Set<LockFileNode>([node]);
+    const queue: Array<[LockFileNode, number]> = [[node, 0]];
+
+    while (queue.length > 0) {
+      const [current, distance] = queue.shift();
+
+      for (let edge of current.edgesIn) {
+        if (edge.incoming) {
+          return distance;
+        }
+        if (!visited.has(edge.from)) {
+          visited.add(edge.from);
+          queue.push([edge.from, distance + 1]);
+        }
+      }
+    }
   }
 
   private collectNestedVersions(
     name: string,
-    prunedNodes: Map<string, LockFileNode>
+    prunedNodes: Set<string>
   ): Set<LockFileNode> {
     const nestedVersions = new Set<LockFileNode>();
     for (const [key, node] of this.nodes.entries()) {
@@ -357,12 +370,12 @@ export class LockFileBuilder {
   }
 
   private traverseNode(
-    prunedNodes: Map<string, LockFileNode>,
+    prunedNodes: Set<string>,
     node: LockFileNode,
     incomingVersion?: string
   ): void {
     if (!prunedNodes.has(nodeKey(node))) {
-      prunedNodes.set(nodeKey(node), node);
+      prunedNodes.add(nodeKey(node));
 
       // remove incoming edges
       node.edgesIn.forEach((edge) => {
