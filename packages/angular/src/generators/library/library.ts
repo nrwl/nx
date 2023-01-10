@@ -12,7 +12,11 @@ import { Linter } from '@nrwl/linter';
 import { convertToNxProjectGenerator } from '@nrwl/workspace/generators';
 import init from '../../generators/init/init';
 import { E2eTestRunner } from '../../utils/test-runners';
-import { ngPackagrVersion } from '../../utils/versions';
+import {
+  angularVersion,
+  ngPackagrVersion,
+  versions,
+} from '../../utils/versions';
 import addLintingGenerator from '../add-linting/add-linting';
 import karmaProjectGenerator from '../karma-project/karma-project';
 import setupTailwindGenerator from '../setup-tailwind/setup-tailwind';
@@ -29,6 +33,8 @@ import { updateProject } from './lib/update-project';
 import { updateTsConfig } from './lib/update-tsconfig';
 import { addStandaloneComponent } from './lib/add-standalone-component';
 import { Schema } from './schema';
+import { getUserInstalledAngularVersionInfo } from '../../utils/user-installed-angular-versions';
+import { coerce, lt, major } from 'semver';
 
 export async function libraryGenerator(tree: Tree, schema: Schema) {
   // Do some validation checks
@@ -45,6 +51,16 @@ export async function libraryGenerator(tree: Tree, schema: Schema) {
   if (schema.addTailwind && !schema.buildable && !schema.publishable) {
     throw new Error(
       `To use "--addTailwind" option, you have to set either "--buildable" or "--publishable".`
+    );
+  }
+
+  const userInstalledAngularVersion = getUserInstalledAngularVersionInfo(tree);
+  if (
+    lt(userInstalledAngularVersion.cleanedVersion, '14.1.0') &&
+    schema.standalone
+  ) {
+    throw new Error(
+      `The "--standalone" option is not supported in Angular versions < 14.1.0.`
     );
   }
 
@@ -105,7 +121,11 @@ export async function libraryGenerator(tree: Tree, schema: Schema) {
       tree,
       {},
       {
-        'ng-packagr': ngPackagrVersion,
+        'ng-packagr':
+          userInstalledAngularVersion.major < major(coerce(angularVersion))
+            ? versions[`angularV${userInstalledAngularVersion.major}`]
+                ?.ngPackagrVersion ?? ngPackagrVersion
+            : ngPackagrVersion,
       }
     );
     addBuildableLibrariesPostCssDependencies(tree);

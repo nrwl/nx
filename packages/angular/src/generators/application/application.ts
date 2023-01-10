@@ -29,7 +29,7 @@ import {
   updateNxComponentTemplate,
 } from './lib';
 import type { Schema } from './schema';
-import { getGeneratorDirectoryForInstalledAngularVersion } from '../../utils/get-generator-directory-for-ng-version';
+import { getGeneratorDirectoryForInstalledAngularVersion } from '../../utils/user-installed-angular-versions';
 import { join } from 'path';
 
 export async function applicationGenerator(

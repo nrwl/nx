@@ -1,6 +1,8 @@
 import { Tree } from 'nx/src/generators/tree';
 import { tsConfigBaseOptions } from '@nrwl/workspace/src/utils/create-ts-config';
 import { writeJson } from 'nx/src/generators/utils/json';
+import { getUserInstalledAngularMajorVersion } from '../../utils/user-installed-angular-versions';
+
 export { extractTsConfigBase } from '@nrwl/workspace/src/utils/create-ts-config';
 
 export function createTsConfig(
@@ -15,9 +17,11 @@ export function createTsConfig(
   },
   relativePathToRootTsConfig: string
 ) {
+  let majorAngularVersion = getUserInstalledAngularMajorVersion(host);
+
   const json = {
     compilerOptions: {
-      target: 'es2022',
+      target: majorAngularVersion === 14 ? 'es2020' : 'es2022',
       useDefineForClassFields: false,
     },
     files: [],
