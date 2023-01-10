@@ -5,6 +5,7 @@ import { execSync } from 'child_process';
 
 import { commandsObject } from '../src/command-line/nx-commands';
 import { WorkspaceTypeAndRoot } from '../src/utils/find-workspace-root';
+import { stripIndents } from '../src/utils/strip-indents';
 
 /**
  * Nx is being run inside a workspace.
@@ -19,6 +20,10 @@ export function initLocal(workspace: WorkspaceTypeAndRoot) {
     require('nx/src/utils/perf-logging');
 
     if (workspace.type !== 'nx' && shouldDelegateToAngularCLI()) {
+      console.warn(
+        stripIndents`Using Nx to run Angular CLI commands is deprecated and will be removed in a future version.
+        To run Angular CLI commands, use \`ng\`.`
+      );
       handleAngularCLIFallbacks(workspace);
       return;
     }
