@@ -11,7 +11,7 @@ Looking for a React monorepo setup? Check our [React monorepo tutorial](/react-t
 {% /callout %}
 
 {% youtube
-src="https://www.youtube.com/embed/Q1WxHhmd7BU"
+src="https://www.youtube.com/embed/dqCZteGFP4k"
 title="Tutorial: React Standalone Application"
 width="100%" /%}
 
