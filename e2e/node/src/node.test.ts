@@ -11,6 +11,7 @@ import {
   packageInstall,
   promisifiedTreeKill,
   readFile,
+  readJson,
   runCLI,
   runCLIAsync,
   runCommandUntil,
@@ -22,7 +23,6 @@ import {
 import { exec, execSync } from 'child_process';
 import * as http from 'http';
 import { getLockFileName } from 'nx/src/lock-file/lock-file';
-import { satisfies } from 'semver';
 
 function getData(port, path = '/api'): Promise<any> {
   return new Promise((resolve) => {
@@ -246,6 +246,7 @@ describe('Build Node apps', () => {
         detectPackageManager(tmpProjPath())
       )}`
     );
+    const rootPackageJson = JSON.parse(readFile(`package.json`));
     const packageJson = JSON.parse(
       readFile(`dist/apps/${nestapp}/package.json`)
     );
@@ -256,17 +257,22 @@ describe('Build Node apps', () => {
         version: '0.0.1',
       })
     );
-    expect(
-      satisfies(packageJson.dependencies['@nestjs/common'], '^9.0.0')
-    ).toBeTruthy();
-    expect(
-      satisfies(packageJson.dependencies['@nestjs/core'], '^9.0.0')
-    ).toBeTruthy();
-    expect(
-      satisfies(packageJson.dependencies['reflect-metadata'], '^0.1.13')
-    ).toBeTruthy();
-    expect(satisfies(packageJson.dependencies['rxjs'], '^7.0.0')).toBeTruthy();
-    expect(satisfies(packageJson.dependencies['tslib'], '^2.3.0')).toBeTruthy();
+
+    expect(packageJson.dependencies['@nestjs/common']).toEqual(
+      rootPackageJson.dependencies['@nestjs/common']
+    );
+    expect(packageJson.dependencies['@nestjs/core']).toEqual(
+      rootPackageJson.dependencies['@nestjs/core']
+    );
+    expect(packageJson.dependencies['reflect-metadata']).toEqual(
+      rootPackageJson.dependencies['reflect-metadata']
+    );
+    expect(packageJson.dependencies['rxjs']).toEqual(
+      rootPackageJson.dependencies['rxjs']
+    );
+    expect(packageJson.dependencies['tslib']).toEqual(
+      rootPackageJson.dependencies['tslib']
+    );
 
     const nodeapp = uniq('nodeapp');
     runCLI(`generate @nrwl/node:app ${nodeapp} --bundler=webpack`);
