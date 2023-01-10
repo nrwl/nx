@@ -540,7 +540,6 @@ function ensureMetaVersion(
  * A function equivalent to isRootVersion, but for yarn berry
  * @param packageName name of the package
  * @param version version of the package to check
- * @returns a boolean indicating if the package of given version is installed in the root of the project
  */
 function isRootVersionBerry(packageName: string, version: string): boolean {
   const pmc = getPackageManagerCommand();
