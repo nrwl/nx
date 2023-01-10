@@ -39,7 +39,7 @@ export async function createRunOneDynamicOutputRenderer({
 }: {
   initiatingProject: string;
   tasks: Task[];
-  args: { target?: string; configuration?: string; parallel?: number };
+  args: { configuration?: string; parallel?: number };
   overrides: Record<string, unknown>;
 }): Promise<{ lifeCycle: LifeCycle; renderIsDone: Promise<void> }> {
   cliCursor.hide();
@@ -79,7 +79,7 @@ export async function createRunOneDynamicOutputRenderer({
   const totalDependentTasksNotFromInitiatingProject =
     totalTasks - totalTasksFromInitiatingProject;
 
-  const targetName = args.target;
+  const targetName = tasks[0].target.target;
 
   let dependentTargetsNumLines = 0;
   let totalCompletedTasks = 0;
@@ -274,7 +274,7 @@ export async function createRunOneDynamicOutputRenderer({
 
       const text = `Successfully ran ${formatTargetsAndProjects(
         [initiatingProject],
-        [tasks[0].target.target],
+        [targetName],
         tasks
       )}`;
 

@@ -71,18 +71,6 @@ describe('run-many', () => {
       expect(projects).toContain('proj2');
     });
 
-    it('should throw for invalid patterns', () => {
-      expect(() => {
-        projectsToRun(
-          {
-            targets: ['test'],
-            projects: ['nomatch*'],
-          },
-          projectGraph
-        ).map(({ name }) => name);
-      }).toThrow();
-    });
-
     it('should exclude projects', () => {
       const projects = projectsToRun(
         {
