@@ -9,20 +9,37 @@ export function parseYarnLockFile(
   lockFileContent: string,
   packageJson: PackageJson
 ): LockFileGraph {
-  const { __metadata, ...dependencies } = parseSyml(lockFileContent);
+  const builder = buildLockFileGraph(lockFileContent, packageJson);
+
+  return builder.getLockFileGraph();
+}
+
+export function pruneYarnLockFile(
+  rootLockFileContent: string,
+  packageJson: PackageJson,
+  prunedPackageJson: PackageJson
+): string {
+  const builder = buildLockFileGraph(rootLockFileContent, packageJson);
+  builder.prune(prunedPackageJson);
+
+  return 'not implemented yet';
+}
+
+function buildLockFileGraph(
+  content: string,
+  packageJson: PackageJson
+): LockFileBuilder {
+  const { __metadata, ...dependencies } = parseSyml(content);
   const isBerry = !!__metadata;
 
-  const builder = new LockFileBuilder(
-    { packageJson, lockFileContent },
-    { includeOptional: true }
-  );
+  const builder = new LockFileBuilder(packageJson, { includeOptional: true });
 
   const groupedDependencies = groupDependencies(dependencies);
   isBerry
     ? parseBerryLockFile(builder, groupedDependencies)
     : parseClassicLockFile(builder, groupedDependencies);
 
-  return builder.getLockFileGraph();
+  return builder;
 }
 
 // Map Record<string, YarnDependency> to

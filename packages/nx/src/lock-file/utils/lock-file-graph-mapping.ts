@@ -27,8 +27,10 @@ export function mapLockFileGraphToProjectGraph(
     // collect edges for dependencies
     // we need to add them after all nodes are added
     // to avoid graph errors
-    node.edgesOut.forEach((edge) => {
-      edges.add(edge);
+    node.edgesOut?.forEach((edge) => {
+      if (edge.to) {
+        edges.add(edge);
+      }
     });
   });
 

@@ -1,6 +1,6 @@
 ## Get packages' peer dependencies for NPM V1 mocks:
 
-Renders only those packages that have `peerDependencies`.
+Renders only those packages that have peer dependencies.
 
 ```js
 const readFileSync = require('fs').readFileSync;

@@ -3,6 +3,7 @@ import { parsePnpmLockFile } from './pnpm-v2';
 import { vol } from 'memfs';
 import { LockFileBuilder } from './utils/lock-file-builder';
 import { LockFileGraph } from './utils/types';
+import { mapLockFileGraphToProjectGraph } from './utils/lock-file-graph-mapping';
 
 jest.mock('fs', () => require('memfs').fs);
 
@@ -113,11 +114,6 @@ describe('pnpm LockFile utility', () => {
       vol.fromJSON(fileSys, '/root');
     });
 
-    const packageJson = require(joinPathFragments(
-      __dirname,
-      '__fixtures__/nextjs/package.json'
-    ));
-
     let rootResult: LockFileGraph;
 
     beforeEach(() => {
@@ -125,7 +121,7 @@ describe('pnpm LockFile utility', () => {
         __dirname,
         '__fixtures__/nextjs/pnpm-lock.yaml'
       )).default;
-      rootResult = parsePnpmLockFile(lockFile, packageJson);
+      rootResult = parsePnpmLockFile(lockFile);
     });
 
     it('should parse root lock file', async () => {
@@ -144,14 +140,14 @@ describe('pnpm LockFile utility', () => {
       )).default;
 
       // this is original generated lock file
-      const appResult = parsePnpmLockFile(appLockFile, appPackageJson);
+      const appResult = parsePnpmLockFile(appLockFile);
       expect(appResult.nodes.size).toEqual(863);
       expect(appResult.isValid).toBeTruthy();
 
       // this is our pruned lock file structure
       const builder = new LockFileBuilder(rootResult);
-      const pruned = builder.prune(appPackageJson);
-      expect(pruned.size).toEqual(appResult.nodes.size);
+      builder.prune(appPackageJson);
+      expect(builder.nodes.size).toEqual(appResult.nodes.size);
 
       const keys = new Set(builder.nodes.keys());
       const originalKeys = new Set(appResult.nodes.keys());
@@ -191,16 +187,11 @@ describe('pnpm LockFile utility', () => {
     });
 
     it('should parse root lock file', async () => {
-      const packageJson = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/auxiliary-packages/package.json'
-      ));
-
       const lockFile = require(joinPathFragments(
         __dirname,
         '__fixtures__/auxiliary-packages/pnpm-lock.yaml'
       )).default;
-      const result = parsePnpmLockFile(lockFile, packageJson);
+      const result = parsePnpmLockFile(lockFile);
       expect(result.nodes.size).toEqual(213); //202
       expect(result.isValid).toBeTruthy();
 
@@ -227,6 +218,51 @@ describe('pnpm LockFile utility', () => {
       expect(alias.edgesIn.values().next().value.versionSpec).toEqual(
         '/@mattlewis92/eslint-plugin-disable-autofix/3.0.0'
       );
+
+      const projectGraph = mapLockFileGraphToProjectGraph(result);
+      expect(projectGraph.externalNodes['npm:minimatch'])
+        .toMatchInlineSnapshot(`
+        Object {
+          "data": Object {
+            "packageName": "minimatch",
+            "version": "3.1.2",
+          },
+          "name": "npm:minimatch",
+          "type": "npm",
+        }
+      `);
+      expect(projectGraph.externalNodes['npm:minimatch@5.1.1'])
+        .toMatchInlineSnapshot(`
+        Object {
+          "data": Object {
+            "packageName": "minimatch",
+            "version": "5.1.1",
+          },
+          "name": "npm:minimatch@5.1.1",
+          "type": "npm",
+        }
+      `);
+      expect(projectGraph.externalNodes['npm:postgres']).toMatchInlineSnapshot(`
+        Object {
+          "data": Object {
+            "packageName": "postgres",
+            "version": "https://codeload.github.com/charsleysa/postgres/tar.gz/3b1a01b2da3e2fafb1a79006f838eff11a8de3cb",
+          },
+          "name": "npm:postgres",
+          "type": "npm",
+        }
+      `);
+      expect(projectGraph.externalNodes['npm:eslint-plugin-disable-autofix'])
+        .toMatchInlineSnapshot(`
+        Object {
+          "data": Object {
+            "packageName": "@mattlewis92/eslint-plugin-disable-autofix",
+            "version": "3.0.0",
+          },
+          "name": "npm:eslint-plugin-disable-autofix",
+          "type": "npm",
+        }
+      `);
     });
   });
 
@@ -250,13 +286,41 @@ describe('pnpm LockFile utility', () => {
         __dirname,
         '__fixtures__/duplicate-package/pnpm-lock.yaml'
       )).default;
-      const packageJson = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/duplicate-package/package.json'
-      ));
-      const result = parsePnpmLockFile(lockFile, packageJson);
+      const result = parsePnpmLockFile(lockFile);
       expect(result.nodes.size).toEqual(370); //337
       expect(result.isValid).toBeTruthy();
+    });
+  });
+
+  describe('optional packages', () => {
+    beforeEach(() => {
+      const fileSys = {
+        'node_modules/ssh2/package.json': '{"version": "1.11.6"}',
+        'node_modules/.modules.yaml': require(joinPathFragments(
+          __dirname,
+          '__fixtures__/optional/.modules.yaml'
+        )).default,
+      };
+      vol.fromJSON(fileSys, '/root');
+    });
+
+    it('should match parsed and pruned graph', async () => {
+      const lockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/optional/pnpm-lock.yaml'
+      )).default;
+      const result = parsePnpmLockFile(lockFile);
+      expect(result.nodes.size).toEqual(8);
+      expect(result.isValid).toBeTruthy();
+
+      const packageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/optional/package.json'
+      ));
+      const builder = new LockFileBuilder(result);
+      builder.prune(packageJson);
+      expect(builder.nodes.size).toEqual(8);
+      expect(builder.isGraphConsistent().isValid).toBeTruthy();
     });
   });
 });

@@ -39,10 +39,10 @@ import { readNxJson } from '../config/configuration';
 import {
   lockFileExists,
   lockFileHash,
-  mapLockFileDataToPartialGraph,
   parseLockFile,
 } from '../lock-file/lock-file';
 import { Workspaces } from '../config/workspaces';
+import { mapLockFileGraphToProjectGraph } from '../lock-file/utils/lock-file-graph-mapping';
 
 export async function buildProjectGraph() {
   const projectConfigurations = new Workspaces(
@@ -109,7 +109,7 @@ export async function buildProjectGraphUsingProjectFileMap(
     if (cache && cache.lockFileHash === lockHash) {
       partialGraph = isolatePartialGraphFromCache(cache);
     } else {
-      partialGraph = mapLockFileDataToPartialGraph(parseLockFile());
+      partialGraph = mapLockFileGraphToProjectGraph(parseLockFile());
     }
   }
   const context = createContext(

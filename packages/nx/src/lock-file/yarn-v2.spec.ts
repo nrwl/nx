@@ -3,6 +3,7 @@ import { parseYarnLockFile } from './yarn-v2';
 import { vol } from 'memfs';
 import { LockFileBuilder } from './utils/lock-file-builder';
 import { LockFileGraph } from './utils/types';
+import { mapLockFileGraphToProjectGraph } from './utils/lock-file-graph-mapping';
 
 jest.mock('fs', () => require('memfs').fs);
 
@@ -189,8 +190,8 @@ describe('yarn LockFile utility', () => {
       const builder = new LockFileBuilder(rootResult, {
         includeOptional: true,
       });
-      const pruned = builder.prune(appPackageJson);
-      expect(pruned.size).toEqual(appResult.nodes.size);
+      builder.prune(appPackageJson);
+      expect(builder.nodes.size).toEqual(appResult.nodes.size);
 
       const keys = new Set(builder.nodes.keys());
       const originalKeys = new Set(appResult.nodes.keys());
@@ -246,6 +247,51 @@ describe('yarn LockFile utility', () => {
       expect(classicAlias.edgesIn.values().next().value.versionSpec).toEqual(
         'npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0'
       );
+
+      const projectGraph = mapLockFileGraphToProjectGraph(resultClassic);
+      expect(projectGraph.externalNodes['npm:minimatch'])
+        .toMatchInlineSnapshot(`
+        Object {
+          "data": Object {
+            "packageName": "minimatch",
+            "version": "3.1.2",
+          },
+          "name": "npm:minimatch",
+          "type": "npm",
+        }
+      `);
+      expect(projectGraph.externalNodes['npm:minimatch@5.1.1'])
+        .toMatchInlineSnapshot(`
+        Object {
+          "data": Object {
+            "packageName": "minimatch",
+            "version": "5.1.1",
+          },
+          "name": "npm:minimatch@5.1.1",
+          "type": "npm",
+        }
+      `);
+      expect(projectGraph.externalNodes['npm:postgres']).toMatchInlineSnapshot(`
+        Object {
+          "data": Object {
+            "packageName": "postgres",
+            "version": "https://codeload.github.com/charsleysa/postgres/tar.gz/3b1a01b2da3e2fafb1a79006f838eff11a8de3cb",
+          },
+          "name": "npm:postgres",
+          "type": "npm",
+        }
+      `);
+      expect(projectGraph.externalNodes['npm:eslint-plugin-disable-autofix'])
+        .toMatchInlineSnapshot(`
+        Object {
+          "data": Object {
+            "packageName": "@mattlewis92/eslint-plugin-disable-autofix",
+            "version": "3.0.0",
+          },
+          "name": "npm:eslint-plugin-disable-autofix",
+          "type": "npm",
+        }
+      `);
     });
 
     it('should parse yarn berry', async () => {
@@ -280,6 +326,51 @@ describe('yarn LockFile utility', () => {
       expect(berryAlias.edgesIn.values().next().value.versionSpec).toEqual(
         'npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0'
       );
+
+      const projectGraph = mapLockFileGraphToProjectGraph(resultBerry);
+      expect(projectGraph.externalNodes['npm:minimatch'])
+        .toMatchInlineSnapshot(`
+        Object {
+          "data": Object {
+            "packageName": "minimatch",
+            "version": "3.1.2",
+          },
+          "name": "npm:minimatch",
+          "type": "npm",
+        }
+      `);
+      expect(projectGraph.externalNodes['npm:minimatch@5.1.1'])
+        .toMatchInlineSnapshot(`
+        Object {
+          "data": Object {
+            "packageName": "minimatch",
+            "version": "5.1.1",
+          },
+          "name": "npm:minimatch@5.1.1",
+          "type": "npm",
+        }
+      `);
+      expect(projectGraph.externalNodes['npm:postgres']).toMatchInlineSnapshot(`
+        Object {
+          "data": Object {
+            "packageName": "postgres",
+            "version": "https://github.com/charsleysa/postgres.git#commit=3b1a01b2da3e2fafb1a79006f838eff11a8de3cb",
+          },
+          "name": "npm:postgres",
+          "type": "npm",
+        }
+      `);
+      expect(projectGraph.externalNodes['npm:eslint-plugin-disable-autofix'])
+        .toMatchInlineSnapshot(`
+        Object {
+          "data": Object {
+            "packageName": "@mattlewis92/eslint-plugin-disable-autofix",
+            "version": "3.0.0",
+          },
+          "name": "npm:eslint-plugin-disable-autofix",
+          "type": "npm",
+        }
+      `);
     });
   });
 
@@ -334,6 +425,34 @@ describe('yarn LockFile utility', () => {
       const resultClassic = parseYarnLockFile(classicLockFile, packageJson);
       expect(resultClassic.nodes.size).toEqual(371); //337 hoisted
       expect(resultClassic.isValid).toBeTruthy();
+    });
+  });
+
+  describe('optional packages', () => {
+    beforeEach(() => {
+      const fileSys = {
+        'node_modules/ssh2/package.json': '{"version": "1.11.6"}',
+      };
+      vol.fromJSON(fileSys, '/root');
+    });
+
+    it('should match parsed and pruned graph', async () => {
+      const lockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/optional/yarn.lock'
+      )).default;
+      const packageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/optional/package.json'
+      ));
+      const result = parseYarnLockFile(lockFile, packageJson);
+      expect(result.nodes.size).toEqual(103);
+      expect(result.isValid).toBeTruthy();
+
+      const builder = new LockFileBuilder(result, packageJson);
+      builder.prune(packageJson);
+      expect(builder.nodes.size).toEqual(103);
+      expect(builder.isGraphConsistent().isValid).toBeTruthy();
     });
   });
 });

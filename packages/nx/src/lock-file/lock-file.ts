@@ -1,35 +1,18 @@
-import { readFileSync, writeFileSync } from 'fs-extra';
+import { readFileSync } from 'fs-extra';
 import { detectPackageManager, PackageManager } from '../utils/package-manager';
-import {
-  parseYarnLockFile,
-  pruneYarnLockFile,
-  stringifyYarnLockFile,
-  transitiveDependencyYarnLookup,
-} from './yarn';
-import {
-  parseNpmLockFile,
-  pruneNpmLockFile,
-  stringifyNpmLockFile,
-  transitiveDependencyNpmLookup,
-} from './npm';
-import {
-  parsePnpmLockFile,
-  prunePnpmLockFile,
-  stringifyPnpmLockFile,
-  transitiveDependencyPnpmLookup,
-} from './pnpm';
-import { LockFileData } from './utils/lock-file-type';
+
+import { parseNpmLockFile, pruneNpmLockFile } from './npm-v2';
+import { parsePnpmLockFile, prunePnpmLockFile } from './pnpm-v2';
+import { parseYarnLockFile, pruneYarnLockFile } from './yarn-v2';
+
 import { workspaceRoot } from '../utils/workspace-root';
 import { join } from 'path';
-import { mapExternalNodes } from './utils/mapping';
-import { hashExternalNodes, hashString } from './utils/hashing';
-import {
-  ProjectGraph,
-  ProjectGraphExternalNode,
-} from '../config/project-graph';
 import { existsSync } from 'fs';
 import { normalizePackageJson } from './utils/pruning';
 import { PackageJson } from '../utils/package-json';
+import { readJsonFile } from '../utils/fileutils';
+import { LockFileGraph } from './utils/types';
+import { defaultHashing } from '../hasher/hashing-impl';
 
 const YARN_LOCK_FILE = 'yarn.lock';
 const NPM_LOCK_FILE = 'package-lock.json';
@@ -83,87 +66,32 @@ export function lockFileHash(
 }
 
 /**
- * Parses lock file and maps dependencies and metadata to {@link LockFileData}
+ * Parses lock file and maps dependencies and metadata to {@link LockFileGraph}
  */
 export function parseLockFile(
   packageManager: PackageManager = detectPackageManager(workspaceRoot)
-): LockFileData {
+): LockFileGraph {
+  const packageJson = readJsonFile(join(workspaceRoot, 'package.json'));
   if (packageManager === 'yarn') {
-    const file = readFileSync(YARN_LOCK_PATH, 'utf8');
-    return parseYarnLockFile(file);
+    const content = readFileSync(YARN_LOCK_PATH, 'utf8');
+    return parseYarnLockFile(content, packageJson);
   }
   if (packageManager === 'pnpm') {
-    const file = readFileSync(PNPM_LOCK_PATH, 'utf8');
-    return parsePnpmLockFile(file);
+    const content = readFileSync(PNPM_LOCK_PATH, 'utf8');
+    return parsePnpmLockFile(content);
   }
   if (packageManager === 'npm') {
-    const file = readFileSync(NPM_LOCK_PATH, 'utf8');
-    return parseNpmLockFile(file);
+    const content = readFileSync(NPM_LOCK_PATH, 'utf8');
+    return parseNpmLockFile(content, packageJson);
   }
   throw Error(`Unknown package manager: ${packageManager}`);
 }
 
 /**
- * Maps lock file data to {@link ProjectGraphExternalNode} hash map
- * @param lockFileData
+ * Returns lock file name based on the detected package manager in the root
+ * @param packageManager
  * @returns
  */
-export function mapLockFileDataToPartialGraph(
-  lockFileData: LockFileData,
-  packageManager: PackageManager = detectPackageManager(workspaceRoot)
-): ProjectGraph {
-  let externalNodes;
-
-  if (packageManager === 'yarn') {
-    externalNodes = mapExternalNodes(
-      lockFileData,
-      transitiveDependencyYarnLookup
-    );
-  }
-  if (packageManager === 'pnpm') {
-    externalNodes = mapExternalNodes(
-      lockFileData,
-      transitiveDependencyPnpmLookup
-    );
-  }
-  if (packageManager === 'npm') {
-    externalNodes = mapExternalNodes(
-      lockFileData,
-      transitiveDependencyNpmLookup
-    );
-  }
-  if (externalNodes) {
-    hashExternalNodes(externalNodes);
-    return externalNodes;
-  }
-  throw Error(`Unknown package manager: ${packageManager}`);
-}
-
-/**
- * Stringifies {@link LockFileData} content and writes it to lock file
- */
-export function writeLockFile(
-  lockFile: LockFileData,
-  packageManager: PackageManager = detectPackageManager(workspaceRoot)
-): void {
-  if (packageManager === 'yarn') {
-    const content = stringifyYarnLockFile(lockFile);
-    writeFileSync(YARN_LOCK_PATH, content);
-    return;
-  }
-  if (packageManager === 'pnpm') {
-    const content = stringifyPnpmLockFile(lockFile);
-    writeFileSync(PNPM_LOCK_PATH, content);
-    return;
-  }
-  if (packageManager === 'npm') {
-    const content = stringifyNpmLockFile(lockFile);
-    writeFileSync(NPM_LOCK_PATH, content);
-    return;
-  }
-  throw Error(`Unknown package manager: ${packageManager}`);
-}
-
 export function getLockFileName(
   packageManager: PackageManager = detectPackageManager(workspaceRoot)
 ): string {
@@ -191,20 +119,24 @@ export function createLockFile(
   packageJson: PackageJson,
   packageManager: PackageManager = detectPackageManager(workspaceRoot)
 ): string {
-  const lockFileData = parseLockFile(packageManager);
+  const rootPackageJson = readJsonFile(join(workspaceRoot, 'package.json'));
   const normalizedPackageJson = normalizePackageJson(packageJson);
 
   if (packageManager === 'yarn') {
-    const prunedData = pruneYarnLockFile(lockFileData, normalizedPackageJson);
-    return stringifyYarnLockFile(prunedData);
+    const content = readFileSync(YARN_LOCK_PATH, 'utf8');
+    return pruneYarnLockFile(content, rootPackageJson, normalizedPackageJson);
   }
   if (packageManager === 'pnpm') {
-    const prunedData = prunePnpmLockFile(lockFileData, normalizedPackageJson);
-    return stringifyPnpmLockFile(prunedData);
+    const content = readFileSync(PNPM_LOCK_FILE, 'utf8');
+    return prunePnpmLockFile(content, normalizedPackageJson);
   }
   if (packageManager === 'npm') {
-    const prunedData = pruneNpmLockFile(lockFileData, normalizedPackageJson);
-    return stringifyNpmLockFile(prunedData);
+    const content = readFileSync(NPM_LOCK_FILE, 'utf8');
+    return pruneNpmLockFile(content, rootPackageJson, normalizedPackageJson);
   }
   throw Error(`Unknown package manager: ${packageManager}`);
+}
+
+function hashString(fileContent: string): string {
+  return defaultHashing.hashArray([fileContent]);
 }

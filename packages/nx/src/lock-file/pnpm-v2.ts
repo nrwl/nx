@@ -15,18 +15,27 @@ import { existsSync, readFileSync } from 'fs';
 
 type VersionedPackageSnapshot = PackageSnapshot & { version?: string };
 
-export function parsePnpmLockFile(
-  lockFileContent: string,
-  packageJson: PackageJson
-): LockFileGraph {
-  const data = parseAndNormalizePnpmLockfile(lockFileContent);
+export function parsePnpmLockFile(lockFileContent: string): LockFileGraph {
+  const builder = buildLockFileGraph(lockFileContent);
+  return builder.getLockFileGraph();
+}
+
+export function prunePnpmLockFile(
+  rootLockFileContent: string,
+  prunedPackageJson: PackageJson
+): string {
+  const builder = buildLockFileGraph(rootLockFileContent);
+  builder.prune(prunedPackageJson);
+
+  return 'not implemented yet';
+}
+
+function buildLockFileGraph(content: string): LockFileBuilder {
+  const data = parseAndNormalizePnpmLockfile(content);
   const hoistedDependencies = loadPnpmHoistedDepsDefinition();
   const groupedDependencies = groupDependencies(data);
 
-  const builder = new LockFileBuilder({
-    packageJson: data.importers['.'],
-    lockFileContent,
-  });
+  const builder = new LockFileBuilder(data.importers['.']);
 
   // Non-root dependencies that need to be resolved later
   // Map[packageName, specKey, PackageSnapshot]
@@ -79,7 +88,7 @@ export function parsePnpmLockFile(
 
   exhaustUnresolvedDependencies(builder, unresolvedDependencies);
 
-  return builder.getLockFileGraph();
+  return builder;
 }
 
 function isVersionHoisted(

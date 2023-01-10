@@ -29,16 +29,11 @@ export class LockFileBuilder {
 
   constructor(input: LockFileGraph, config?: LockFileBuilderConfig);
   constructor(
-    input: {
-      packageJson: Partial<PackageJson>;
-      lockFileContent: string;
-    },
+    packageJson: Partial<PackageJson>,
     config?: LockFileBuilderConfig
   );
   constructor(
-    input:
-      | { packageJson: Partial<PackageJson>; lockFileContent: string }
-      | LockFileGraph,
+    input: Partial<PackageJson> | LockFileGraph,
     config?: LockFileBuilderConfig
   ) {
     if ('nodes' in input) {
@@ -46,7 +41,7 @@ export class LockFileBuilder {
       this.nodes = nodes;
     } else {
       this.nodes = new Map();
-      this.incomingEdges = this.parseIncomingEdges(input.packageJson);
+      this.incomingEdges = this.parseIncomingEdges(input);
     }
     this.config = config || {};
   }

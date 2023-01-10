@@ -15,6 +15,25 @@ export function parseNpmLockFile(
   lockFileContent: string,
   packageJson: PackageJson
 ): LockFileGraph {
+  const builder = buildLockFileGraph(lockFileContent, packageJson);
+  return builder.getLockFileGraph();
+}
+
+export function pruneNpmLockFile(
+  rootLockFileContent: string,
+  packageJson: PackageJson,
+  prunedPackageJson: PackageJson
+): string {
+  const builder = buildLockFileGraph(rootLockFileContent, packageJson);
+  builder.prune(prunedPackageJson);
+
+  return 'not implemented yet';
+}
+
+function buildLockFileGraph(
+  lockFileContent: string,
+  packageJson: PackageJson
+): LockFileBuilder {
   const data = JSON.parse(lockFileContent) as NpmLockFile;
 
   const isLockFileV1 = data.lockfileVersion === 1;
@@ -23,19 +42,15 @@ export function parseNpmLockFile(
     ? normalizeV1PackageJson(packageJson, data.dependencies)
     : normalizeV3PackageJson(packageJson, data.packages);
 
-  const builder = new LockFileBuilder(
-    {
-      packageJson: normalizedPackageJson,
-      lockFileContent,
-    },
-    { includeOptional: true }
-  );
+  const builder = new LockFileBuilder(normalizedPackageJson, {
+    includeOptional: true,
+  });
 
   isLockFileV1
     ? parseV1LockFile(builder, data.dependencies)
     : parseV3LockFile(builder, data.packages); // we will treat V2 lockfile as V3 but map it back to V2 for backwards compatibility
 
-  return builder.getLockFileGraph();
+  return builder;
 }
 
 /**********************************************
