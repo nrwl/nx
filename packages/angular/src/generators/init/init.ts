@@ -28,7 +28,7 @@ import {
 } from '../../utils/versions';
 import { karmaGenerator } from '../karma/karma';
 import { Schema } from './schema';
-import { getGeneratorDirectoryForInstalledAngularVersion } from '../../utils/get-generator-directory-for-ng-version';
+import { getGeneratorDirectoryForInstalledAngularVersion } from '../../utils/user-installed-angular-versions';
 import { join } from 'path';
 
 export async function angularInitGenerator(

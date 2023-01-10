@@ -10,7 +10,7 @@ import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-ser
 import { addAngularEsLintDependencies } from './lib/add-angular-eslint-dependencies';
 import { extendAngularEslintJson } from './lib/create-eslint-configuration';
 import type { AddLintingGeneratorSchema } from './schema';
-import { getGeneratorDirectoryForInstalledAngularVersion } from '../../utils/get-generator-directory-for-ng-version';
+import { getGeneratorDirectoryForInstalledAngularVersion } from '../../utils/user-installed-angular-versions';
 import { join } from 'path';
 
 export async function addLintingGenerator(

@@ -19,7 +19,7 @@ import {
   typesNodeVersion,
 } from '../../utils/versions';
 import { GeneratorOptions } from './schema';
-import { getGeneratorDirectoryForInstalledAngularVersion } from '../../utils/get-generator-directory-for-ng-version';
+import { getGeneratorDirectoryForInstalledAngularVersion } from '../../utils/user-installed-angular-versions';
 import { join } from 'path';
 
 function addTestInputs(tree: Tree) {
