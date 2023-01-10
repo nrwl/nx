@@ -223,7 +223,6 @@
     "source-map-loader": "^3.0.0",
     "source-map-support": "0.5.19",
     "storybook-dark-mode": "^1.1.2",
-    "strip-bom": "^5.0.0",
     "style-loader": "^3.3.0",
     "styled-components": "5.3.6",
     "stylus": "^0.55.0",

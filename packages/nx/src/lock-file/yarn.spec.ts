@@ -1,5 +1,5 @@
 import { joinPathFragments } from '../utils/path';
-import { parseYarnLockFile } from './yarn-v2';
+import { parseYarnLockFile } from './yarn';
 import { vol } from 'memfs';
 import { LockFileBuilder } from './utils/lock-file-builder';
 import { LockFileGraph } from './utils/types';

@@ -1,5 +1,5 @@
 import { joinPathFragments } from '../utils/path';
-import { parsePnpmLockFile } from './pnpm-v2';
+import { parsePnpmLockFile } from './pnpm';
 import { vol } from 'memfs';
 import { LockFileBuilder } from './utils/lock-file-builder';
 import { LockFileGraph } from './utils/types';

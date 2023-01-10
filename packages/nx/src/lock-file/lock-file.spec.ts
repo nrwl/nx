@@ -10,5 +10,5 @@ jest.mock('nx/src/utils/workspace-root', () => ({
 }));
 
 describe('lock-file', () => {
-  it('should do nothing', () => { });
+  it('should do nothing', () => {});
 });

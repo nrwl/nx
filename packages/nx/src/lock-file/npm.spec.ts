@@ -1,5 +1,5 @@
 import { joinPathFragments } from '../utils/path';
-import { parseNpmLockFile } from './npm-v2';
+import { parseNpmLockFile } from './npm';
 import { vol } from 'memfs';
 import { LockFileBuilder } from './utils/lock-file-builder';
 import { LockFileGraph } from './utils/types';
