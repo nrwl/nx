@@ -29,8 +29,6 @@ export default async function* viteDevServerExecutor(
     ...options,
   };
 
-  const projectRoot = context.workspace.projects[context.projectName].root;
-
   // Add the server specific configuration.
   const serverConfig: InlineConfig = mergeConfig(
     getViteSharedConfig(mergedOptions, options.clearScreen, context),

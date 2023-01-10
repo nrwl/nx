@@ -23,7 +23,8 @@ export function getViteSharedConfig(
   clearScreen: boolean | undefined,
   context: ExecutorContext
 ): InlineConfig {
-  const projectRoot = context.workspace.projects[context.projectName].root;
+  const projectRoot =
+    context.projectsConfigurations.projects[context.projectName].root;
 
   return {
     mode: options.mode,
@@ -54,7 +55,8 @@ export function getViteServerOptions(
   options: ViteDevServerExecutorOptions,
   context: ExecutorContext
 ): ServerOptions {
-  const projectRoot = context.workspace.projects[context.projectName].root;
+  const projectRoot =
+    context.projectsConfigurations.projects[context.projectName].root;
   const serverOptions: ServerOptions = {
     host: options.host,
     port: options.port,
@@ -93,7 +95,8 @@ export function getViteBuildOptions(
   options: ViteBuildExecutorOptions,
   context: ExecutorContext
 ): BuildOptions {
-  const projectRoot = context.workspace.projects[context.projectName].root;
+  const projectRoot =
+    context.projectsConfigurations.projects[context.projectName].root;
 
   return {
     outDir: relative(projectRoot, options.outputPath),
