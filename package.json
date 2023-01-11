@@ -124,7 +124,7 @@
     "babel-jest": "28.1.3",
     "babel-loader": "^8.2.2",
     "browserslist": "^4.21.4",
-    "chalk": "4.1.0",
+    "chalk": "^4.1.0",
     "chokidar": "^3.5.1",
     "confusing-browser-globals": "^1.0.9",
     "conventional-changelog-cli": "^2.0.23",

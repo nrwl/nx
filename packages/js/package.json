@@ -35,7 +35,7 @@
     "@nrwl/devkit": "file:../devkit",
     "@nrwl/linter": "file:../linter",
     "@nrwl/workspace": "file:../workspace",
-    "chalk": "4.1.0",
+    "chalk": "^4.1.0",
     "fast-glob": "3.2.7",
     "fs-extra": "^11.1.0",
     "ignore": "^5.0.4",
