@@ -114,7 +114,32 @@ export async function runCommand(
   extraTargetDependencies: Record<string, (TargetDependencyConfig | string)[]>,
   extraOptions: { excludeTaskDependencies: boolean; loadDotEnvFiles: boolean }
 ) {
-  const status = await handleErrors(
+  const status = await runCommandWithoutExit(
+    nxArgs,
+    nxJson,
+    extraTargetDependencies,
+    projectsToRun,
+    projectGraph,
+    overrides,
+    extraOptions,
+    initiatingProject
+  );
+  // fix for https://github.com/nrwl/nx/issues/1666
+  if (process.stdin['unref']) (process.stdin as any).unref();
+  process.exit(status);
+}
+
+export async function runCommandWithoutExit(
+  nxArgs: NxArgs,
+  nxJson: NxJsonConfiguration<string[] | '*'>,
+  extraTargetDependencies: Record<string, (string | TargetDependencyConfig)[]>,
+  projectsToRun: ProjectGraphProjectNode[],
+  projectGraph: ProjectGraph,
+  overrides: any,
+  extraOptions: { excludeTaskDependencies: boolean; loadDotEnvFiles: boolean },
+  initiatingProject: string
+) {
+  return await handleErrors(
     process.env.NX_VERBOSE_LOGGING === 'true',
     async () => {
       const { tasksRunner, runnerOptions } = getRunner(nxArgs, nxJson);
@@ -156,7 +181,7 @@ export async function runCommand(
             title: `Could not execute command because the task graph has a circular dependency`,
             bodyLines: [`${cycle.join(' --> ')}`],
           });
-          process.exit(1);
+          return 1;
         }
       }
 
@@ -218,9 +243,6 @@ export async function runCommand(
       return anyFailures ? 1 : 0;
     }
   );
-  // fix for https://github.com/nrwl/nx/issues/1666
-  if (process.stdin['unref']) (process.stdin as any).unref();
-  process.exit(status);
 }
 
 function mergeTargetDependencies(
