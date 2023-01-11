@@ -33,7 +33,7 @@ import { updateProject } from './lib/update-project';
 import { updateTsConfig } from './lib/update-tsconfig';
 import { addStandaloneComponent } from './lib/add-standalone-component';
 import { Schema } from './schema';
-import { getUserInstalledAngularVersionInfo } from '../../utils/user-installed-angular-versions';
+import { getInstalledAngularVersionInfo } from '../utils/angular-version-utils';
 import { coerce, lt, major } from 'semver';
 
 export async function libraryGenerator(tree: Tree, schema: Schema) {
@@ -54,11 +54,8 @@ export async function libraryGenerator(tree: Tree, schema: Schema) {
     );
   }
 
-  const userInstalledAngularVersion = getUserInstalledAngularVersionInfo(tree);
-  if (
-    lt(userInstalledAngularVersion.cleanedVersion, '14.1.0') &&
-    schema.standalone
-  ) {
+  const userInstalledAngularVersion = getInstalledAngularVersionInfo(tree);
+  if (lt(userInstalledAngularVersion.version, '14.1.0') && schema.standalone) {
     throw new Error(
       `The "--standalone" option is not supported in Angular versions < 14.1.0.`
     );

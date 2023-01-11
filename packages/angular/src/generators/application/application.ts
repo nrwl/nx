@@ -8,9 +8,11 @@ import {
 } from '@nrwl/devkit';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { convertToNxProjectGenerator } from '@nrwl/workspace/generators';
+import { join } from 'path';
 import { UnitTestRunner } from '../../utils/test-runners';
 import { angularInitGenerator } from '../init/init';
 import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
+import { getGeneratorDirectoryForInstalledAngularVersion } from '../utils/angular-version-utils';
 import {
   addE2e,
   addLinting,
@@ -29,8 +31,6 @@ import {
   updateNxComponentTemplate,
 } from './lib';
 import type { Schema } from './schema';
-import { getGeneratorDirectoryForInstalledAngularVersion } from '../../utils/user-installed-angular-versions';
-import { join } from 'path';
 
 export async function applicationGenerator(
   tree: Tree,

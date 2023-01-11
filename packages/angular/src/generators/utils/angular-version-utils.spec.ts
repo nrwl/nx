@@ -2,11 +2,11 @@ import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { updateJson } from '@nrwl/devkit';
 import {
   getGeneratorDirectoryForInstalledAngularVersion,
-  getUserInstalledAngularMajorVersion,
-  getUserInstalledAngularVersion,
-} from './user-installed-angular-versions';
+  getInstalledAngularMajorVersion,
+  getInstalledAngularVersion,
+} from './angular-version-utils';
 
-describe('userInstalledAngularVersions', () => {
+describe('angularVersionUtils', () => {
   test.each(['14.0.0', '~14.1.0', '^14.2.0', '~14.3.0-beta.0'])(
     'should return correct directory name for v14',
     (ngVersion) => {
@@ -41,7 +41,7 @@ describe('userInstalledAngularVersions', () => {
       }));
 
       // ACT
-      const angularVersion = getUserInstalledAngularMajorVersion(tree);
+      const angularVersion = getInstalledAngularMajorVersion(tree);
 
       // ASSERT
       expect(angularVersion).toBe(14);
@@ -64,7 +64,7 @@ describe('userInstalledAngularVersions', () => {
     }));
 
     // ACT
-    const angularVersion = getUserInstalledAngularVersion(tree);
+    const angularVersion = getInstalledAngularVersion(tree);
 
     // ASSERT
     expect(angularVersion).toEqual(expectedVersion);

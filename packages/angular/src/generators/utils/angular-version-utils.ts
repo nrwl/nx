@@ -1,10 +1,12 @@
 import type { Tree } from '@nrwl/devkit';
 import { readJson } from '@nrwl/devkit';
 import { clean, coerce, major } from 'semver';
-import { angularVersion } from './versions';
+import { angularVersion } from '../../utils/versions';
 
-export function getGeneratorDirectoryForInstalledAngularVersion(tree: Tree) {
-  const majorAngularVersion = getUserInstalledAngularMajorVersion(tree);
+export function getGeneratorDirectoryForInstalledAngularVersion(
+  tree: Tree
+): string | null {
+  const majorAngularVersion = getInstalledAngularMajorVersion(tree);
 
   const directoryDictionary = {
     14: 'angular-v14',
@@ -13,7 +15,7 @@ export function getGeneratorDirectoryForInstalledAngularVersion(tree: Tree) {
   return directoryDictionary[majorAngularVersion] ?? null;
 }
 
-export function getUserInstalledAngularVersion(tree: Tree) {
+export function getInstalledAngularVersion(tree: Tree): string {
   const pkgJson = readJson(tree, 'package.json');
   const installedAngularVersion =
     pkgJson.dependencies && pkgJson.dependencies['@angular/core'];
@@ -31,14 +33,15 @@ export function getUserInstalledAngularVersion(tree: Tree) {
   );
 }
 
-export function getUserInstalledAngularMajorVersion(tree: Tree): number {
-  return major(getUserInstalledAngularVersion(tree));
+export function getInstalledAngularMajorVersion(tree: Tree): number {
+  return major(getInstalledAngularVersion(tree));
 }
 
-export function getUserInstalledAngularVersionInfo(tree: Tree) {
-  const installedVersion = getUserInstalledAngularVersion(tree);
+export function getInstalledAngularVersionInfo(tree: Tree) {
+  const installedVersion = getInstalledAngularVersion(tree);
+
   return {
-    cleanedVersion: installedVersion,
+    version: installedVersion,
     major: major(installedVersion),
   };
 }
