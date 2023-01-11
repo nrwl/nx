@@ -152,6 +152,11 @@
       "type": "boolean",
       "default": false,
       "hidden": true
+    },
+    "skipStarterTemplate": {
+      "description": "Whether to skip the adding of a Nx starter template to the application.",
+      "type": "boolean",
+      "default": false
     }
   },
   "additionalProperties": false,

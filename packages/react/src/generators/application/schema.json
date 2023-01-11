@@ -187,6 +187,11 @@
       "description": "Generate a React app with a minimal setup, no separate test files.",
       "type": "boolean",
       "default": false
+    },
+    "skipStarterTemplate": {
+      "description": "Whether to skip the adding of a Nx starter template to the application.",
+      "type": "boolean",
+      "default": false
     }
   },
   "required": [],

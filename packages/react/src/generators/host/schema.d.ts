@@ -22,6 +22,7 @@ export interface Schema {
   style: SupportedStyles;
   tags?: string;
   unitTestRunner: 'jest' | 'vitest' | 'none';
+  skipStarterTemplate?: boolean;
 }
 
 export interface NormalizedSchema extends Schema {

@@ -52,6 +52,16 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
       `${options.appProjectRoot}/src/app/${options.fileName}.spec.tsx`
     );
   }
+
+  if (!options.skipStarterTemplate) {
+    generateFiles(
+      host,
+      join(__dirname, '../files/nx-welcome'),
+      options.appProjectRoot,
+      templateVariables
+    );
+  }
+
   generateFiles(
     host,
     join(__dirname, styleSolutionSpecificAppFiles),

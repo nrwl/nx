@@ -19,6 +19,7 @@ export function addModuleFederationFiles(
         port,
       };
     }),
+    includeStarterTemplate: !options.skipStarterTemplate,
   };
 
   // Module federation requires bootstrap code to be dynamically imported.

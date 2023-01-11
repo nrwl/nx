@@ -2,7 +2,9 @@
 import { Component } from 'react';
 <% } %>
 import styled from '<%= styledModule %>';
+<% if (includeStarterTemplate) { %>
 import NxWelcome from "./nx-welcome";
+<% } %>
 
 const StyledApp = styled.div`
     // Your style here
@@ -16,7 +18,9 @@ export function App() {
 <% } %>
   return (
       <StyledApp>
+        <% if (includeStarterTemplate) { %>
         <NxWelcome title="<%= projectName %>"/>
+        <% } %>
       </StyledApp>
   );
 <% if (classComponent) { %>

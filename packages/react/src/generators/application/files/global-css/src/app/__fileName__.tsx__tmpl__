@@ -2,7 +2,9 @@
 import { Component } from 'react';
 <% } %>
 import './<%= fileName %>.<%= style %>';
+<% if (includeStarterTemplate) { %>
 import NxWelcome from "./nx-welcome";
+<% } %>
 
 <% if (classComponent) { %>
 export class App extends Component {
@@ -12,7 +14,9 @@ export function App() {
 <% } %>
   return (
   <>
+    <% if (includeStarterTemplate) { %>
     <NxWelcome title="<%= projectName %>"/>
+    <% } %>
     <div />
   </>);
 <% if (classComponent) { %>

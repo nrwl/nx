@@ -1069,6 +1069,19 @@ describe('app', () => {
       expect(project.targets.build.options['outputPath']).toBe('dist/my-app');
     });
   });
+
+  describe('--skipStarterTemplate', () => {
+    it('should skip Nx specific `nx-welcome.component.ts` file creation', async () => {
+      await generateApp(appTree, 'plain', { skipStarterTemplate: true });
+
+      expect(
+        appTree.read('apps/plain/src/app/app.module.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        appTree.exists('apps/plain/src/app/nx-welcome.component.ts')
+      ).toBeFalsy();
+    });
+  });
 });
 
 async function generateApp(

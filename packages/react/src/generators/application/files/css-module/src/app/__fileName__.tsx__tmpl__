@@ -3,7 +3,9 @@ import { Component } from 'react';
 <% } %>
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import styles from './<%= fileName %>.module.<%= style %>';
+<% if (includeStarterTemplate) { %>
 import NxWelcome from "./nx-welcome";
+<% } %>
 
 <% if (classComponent) { %>
 export class App extends Component {
@@ -13,7 +15,9 @@ export function App() {
 <% } %>
   return (
     <>
+      <% if (includeStarterTemplate) { %>
       <NxWelcome title="<%= projectName %>"/>
+      <% } %>
       <div />
     </>);
 <% if (classComponent) { %>
