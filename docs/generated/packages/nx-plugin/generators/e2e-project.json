@@ -26,11 +26,6 @@
         "description": "the output path of the plugin after it builds."
       },
       "jestConfig": { "type": "string", "description": "Jest config file." },
-      "tsSpecConfig": {
-        "type": "string",
-        "description": "Spec `tsconfig` file.",
-        "x-deprecated": true
-      },
       "standaloneConfig": {
         "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
         "type": "boolean"

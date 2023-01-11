@@ -57,12 +57,12 @@
     "tsConfig": {
       "description": "The name of the Typescript configuration file. Set the tsconfig option in the jest config file. ",
       "type": "string",
-      "x-deprecated": true
+      "x-deprecated": "Use the ts-jest configuration options in the jest config file instead."
     },
     "setupFile": {
       "description": "The name of a setup file used by Jest. (use Jest config file https://jestjs.io/docs/en/configuration#setupfilesafterenv-array)",
       "type": "string",
-      "x-deprecated": true
+      "x-deprecated": "Use the setupFilesAfterEnv option in the jest config file. https://jestjs.io/docs/en/configuration#setupfilesafterenv-array"
     },
     "bail": {
       "alias": "b",
