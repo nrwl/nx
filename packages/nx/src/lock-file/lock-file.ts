@@ -1,9 +1,9 @@
 import { readFileSync } from 'fs-extra';
 import { detectPackageManager, PackageManager } from '../utils/package-manager';
 
-import { parseNpmLockFile, pruneNpmLockFile } from './npm';
-import { parsePnpmLockFile, prunePnpmLockFile } from './pnpm';
-import { parseYarnLockFile, pruneYarnLockFile } from './yarn';
+import { parseNpmLockFile, pruneNpmLockFile } from './npm-parser';
+import { parsePnpmLockFile, prunePnpmLockFile } from './pnpm-parser';
+import { parseYarnLockFile, pruneYarnLockFile } from './yarn-parser';
 
 import { workspaceRoot } from '../utils/workspace-root';
 import { join } from 'path';
