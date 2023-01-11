@@ -55,11 +55,10 @@ export function notifyFileWatcherSockets(
             changedFiles.push(...projectFiles);
           }
         } else {
-          const watchedProjects = new Set<string>();
+          const watchedProjects = new Set<string>(config.watchProjects);
 
           if (config.includeDependentProjects) {
             for (const project of config.watchProjects) {
-              watchedProjects.add(project);
               for (const dep of findAllProjectNodeDependencies(
                 project,
                 currentProjectGraphCache as ProjectGraph
