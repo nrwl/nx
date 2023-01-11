@@ -16,8 +16,17 @@ import {
   updateHostAppRoutes,
   updateTsConfigTarget,
 } from './lib';
+import { getInstalledAngularVersionInfo } from '../utils/angular-version-utils';
+import { lt } from 'semver';
 
 export async function setupMf(tree: Tree, options: Schema) {
+  const installedAngularInfo = getInstalledAngularVersionInfo(tree);
+
+  if (lt(installedAngularInfo.version, '14.1.0') && options.standalone) {
+    throw new Error(
+      `The --standalone flag is not supported in your current version of Angular (${installedAngularInfo.version}). Please update to a version of Angular that supports Standalone Components (>= 14.1.0).`
+    );
+  }
   const projectConfig = readProjectConfiguration(tree, options.appName);
 
   options.federationType = options.federationType ?? 'static';
