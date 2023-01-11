@@ -1,19 +1,32 @@
 import { ExecutorContext, joinPathFragments, logger } from '@nrwl/devkit';
 import { findNodes } from 'nx/src/utils/typescript';
 import 'dotenv/config';
-import { existsSync, readFileSync } from 'fs';
-import { join } from 'path';
+import {
+  constants,
+  copyFileSync,
+  existsSync,
+  readFileSync,
+  mkdtempSync,
+  statSync,
+} from 'fs';
+import { tmpdir } from 'os';
+import { basename, join, sep } from 'path';
 import { gte } from 'semver';
 import ts = require('typescript');
-import { findOrCreateConfig } from '../utils/utilities';
-import { CommonNxStorybookConfig } from './models';
+import {
+  CommonNxStorybookConfig,
+  StorybookConfig,
+  UiFramework,
+} from './models';
+import { storybookConfigExists } from '../utils/utilities';
 
 export interface NodePackage {
   name: string;
   version: string;
 }
 
-export function getStorybookFrameworkPath(uiFramework) {
+// TODO (katerina): Remove when Storybook 7
+export function getStorybookFrameworkPath(uiFramework: UiFramework) {
   const serverOptionsPaths = {
     '@storybook/react': '@storybook/react/dist/cjs/server/options',
     '@storybook/html': '@storybook/html/dist/cjs/server/options',
@@ -31,7 +44,8 @@ export function getStorybookFrameworkPath(uiFramework) {
   }
 }
 
-function isStorybookV62onwards(uiFramework) {
+// TODO (katerina): Remove when Storybook 7
+function isStorybookV62onwards(uiFramework: string) {
   const storybookPackageVersion = require(join(
     uiFramework,
     'package.json'
@@ -40,11 +54,21 @@ function isStorybookV62onwards(uiFramework) {
   return gte(storybookPackageVersion, '6.2.0-rc.4');
 }
 
+export function isStorybookV7() {
+  const storybookPackageVersion = require(join(
+    '@storybook/core-server',
+    'package.json'
+  )).version;
+  return gte(storybookPackageVersion, '7.0.0-alpha.0');
+}
+
+// TODO (katerina): Remove when Storybook 7
 export function runStorybookSetupCheck(options: CommonNxStorybookConfig) {
   webpackFinalPropertyCheck(options);
   reactWebpack5Check(options);
 }
 
+// TODO (katerina): Remove when Storybook 7
 function reactWebpack5Check(options: CommonNxStorybookConfig) {
   if (options.uiFramework === '@storybook/react') {
     const source = mainJsTsFileContent(options.config.configFolder);
@@ -66,6 +90,7 @@ function reactWebpack5Check(options: CommonNxStorybookConfig) {
   }
 }
 
+// TODO (katerina): Remove when Storybook 7
 function mainJsTsFileContent(configFolder: string): ts.SourceFile {
   let storybookConfigFilePath = joinPathFragments(configFolder, 'main.js');
 
@@ -90,6 +115,7 @@ function mainJsTsFileContent(configFolder: string): ts.SourceFile {
   );
 }
 
+// TODO (katerina): Remove when Storybook 7
 function webpackFinalPropertyCheck(options: CommonNxStorybookConfig) {
   let placesToCheck = [
     {
@@ -128,6 +154,7 @@ function webpackFinalPropertyCheck(options: CommonNxStorybookConfig) {
   }
 }
 
+// TODO (katerina): Remove when Storybook 7
 export function resolveCommonStorybookOptionMapper(
   builderOptions: CommonNxStorybookConfig,
   frameworkOptions: any,
@@ -145,6 +172,61 @@ export function resolveCommonStorybookOptionMapper(
   return storybookOptions;
 }
 
+// TODO (katerina): Remove when Storybook 7
+function findOrCreateConfig(
+  config: StorybookConfig,
+  context: ExecutorContext
+): string {
+  if (storybookConfigExists(config, context.projectName)) {
+    return config.configFolder;
+  } else if (
+    statSync(config.configPath).isFile() &&
+    statSync(config.pluginPath).isFile() &&
+    statSync(config.srcRoot).isFile()
+  ) {
+    return createStorybookConfig(
+      config.configPath,
+      config.pluginPath,
+      config.srcRoot
+    );
+  } else {
+    const sourceRoot =
+      context.projectsConfigurations.projects[context.projectName].root;
+    if (statSync(join(context.root, sourceRoot, '.storybook')).isDirectory()) {
+      return join(context.root, sourceRoot, '.storybook');
+    }
+  }
+  throw new Error('No configuration settings');
+}
+
+// TODO (katerina): Remove when Storybook 7
+function createStorybookConfig(
+  configPath: string,
+  pluginPath: string,
+  srcRoot: string
+): string {
+  const tmpDir = tmpdir();
+  const tmpFolder = `${tmpDir}${sep}`;
+  mkdtempSync(tmpFolder);
+  copyFileSync(
+    configPath,
+    `${tmpFolder}/${basename(configPath)}`,
+    constants.COPYFILE_EXCL
+  );
+  copyFileSync(
+    pluginPath,
+    `${tmpFolder}/${basename(pluginPath)}`,
+    constants.COPYFILE_EXCL
+  );
+  copyFileSync(
+    srcRoot,
+    `${tmpFolder}/${basename(srcRoot)}`,
+    constants.COPYFILE_EXCL
+  );
+  return tmpFolder;
+}
+
+// TODO (katerina): Remove when Storybook 7
 export function builderIsWebpackButNotWebpack5(
   storybookConfig: ts.SourceFile
 ): boolean {
