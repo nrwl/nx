@@ -12,11 +12,13 @@ import type {
 export function normalizeOptions(
   options: WebpackExecutorOptions,
   root: string,
+  projectRoot: string,
   sourceRoot: string
 ): NormalizedWebpackExecutorOptions {
   return {
     ...options,
     root,
+    projectRoot,
     sourceRoot,
     target: options.target ?? 'web',
     main: resolve(root, options.main),

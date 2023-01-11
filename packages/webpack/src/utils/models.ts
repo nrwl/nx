@@ -4,10 +4,9 @@ export interface ExtraEntryPointClass {
   bundleName?: string;
   inject?: boolean;
   input: string;
-  lazy?: boolean;
 }
 
-export type NormalizedEntryPoint = Required<Omit<ExtraEntryPointClass, 'lazy'>>;
+export type NormalizedEntryPoint = Required<ExtraEntryPointClass>;
 
 export interface EmittedFile {
   id?: string;

@@ -49,7 +49,7 @@ async function getWebpackConfigs(
     }
   }
 
-  const config = getWebpackConfig(context, options, isScriptOptimizeOn);
+  const config = getWebpackConfig(context, options);
 
   if (customWebpack) {
     return await customWebpack(config, {
@@ -81,7 +81,12 @@ export async function* webpackExecutor(
 ): AsyncGenerator<WebpackExecutorEvent, WebpackExecutorEvent, undefined> {
   const metadata = context.projectsConfigurations.projects[context.projectName];
   const sourceRoot = metadata.sourceRoot;
-  const options = normalizeOptions(_options, context.root, sourceRoot);
+  const options = normalizeOptions(
+    _options,
+    context.root,
+    metadata.root,
+    sourceRoot
+  );
   const isScriptOptimizeOn =
     typeof options.optimization === 'boolean'
       ? options.optimization

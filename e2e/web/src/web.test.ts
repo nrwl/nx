@@ -311,7 +311,7 @@ describe('CLI - Environment Variables', () => {
 
     updateFile(main2, `${newCode2}\n${content2}`);
 
-    runCLI(`run-many --target build --all --no-optimization`, {
+    runCLI(`run-many --target build --all --outputHashing=none`, {
       env: {
         ...process.env,
         NODE_ENV: 'test',

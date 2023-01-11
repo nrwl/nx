@@ -20,13 +20,7 @@ export function getDevServerConfig(
   const workspaceRoot = context.root;
   const { root: projectRoot, sourceRoot } =
     context.projectsConfigurations.projects[context.projectName];
-  const webpackConfig = getWebpackConfig(
-    context,
-    buildOptions,
-    typeof buildOptions.optimization === 'boolean'
-      ? buildOptions.optimization
-      : buildOptions.optimization?.scripts
-  );
+  const webpackConfig = getWebpackConfig(context, buildOptions);
 
   (webpackConfig as any).devServer = getDevServerPartial(
     workspaceRoot,
