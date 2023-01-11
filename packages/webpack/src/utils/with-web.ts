@@ -13,14 +13,12 @@ import { normalizeExtraEntryPoints } from '@nrwl/webpack/src/utils/webpack/norma
 
 import { NormalizedWebpackExecutorOptions } from '../executors/webpack/schema';
 import { getClientEnvironment } from './get-client-environment';
-import { RemoveHashPlugin } from './webpack/plugins/remove-hash-plugin';
 import { ScriptsWebpackPlugin } from './webpack/plugins/scripts-webpack-plugin';
 import { getCSSModuleLocalIdent } from './get-css-module-local-ident';
 import CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 import MiniCssExtractPlugin = require('mini-css-extract-plugin');
 import autoprefixer = require('autoprefixer');
 import postcssImports = require('postcss-import');
-import { Postcss } from 'postcss';
 import { basename } from 'path';
 
 interface PostcssOptions {
@@ -89,7 +87,6 @@ export function withWeb() {
 
     // Process global styles.
     if (options.styles.length > 0) {
-      const chunkNames: string[] = [];
       normalizeExtraEntryPoints(options.styles, 'styles').forEach((style) => {
         const resolvedPath = path.resolve(options.root, style.input);
         // Add style entry points.
@@ -102,11 +99,6 @@ export function withWeb() {
         // Add global css paths.
         globalStylePaths.push(resolvedPath);
       });
-
-      if (chunkNames.length > 0) {
-        // Add plugin to remove hashes from lazy styles.
-        plugins.push(new RemoveHashPlugin({ chunkNames, hashFormat }));
-      }
     }
 
     const cssModuleRules: RuleSetRule[] = [
