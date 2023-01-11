@@ -1,9 +1,9 @@
 import { joinPathFragments } from '../utils/path';
-import { parseNpmLockFile } from './npm';
+import { parseNpmLockFile, pruneNpmLockFile } from './npm';
 import { vol } from 'memfs';
-import { LockFileBuilder } from './utils/lock-file-builder';
+import { LockFileBuilder } from './lock-file-builder';
 import { LockFileGraph } from './utils/types';
-import { mapLockFileGraphToProjectGraph } from './utils/lock-file-graph-mapping';
+import { mapLockFileGraphToProjectGraph } from './lock-file-graph-mapping';
 
 jest.mock('fs', () => require('memfs').fs);
 
@@ -378,6 +378,65 @@ describe('NPM lock file utility', () => {
       builder.prune(packageJson);
       expect(builder.nodes.size).toEqual(8);
       expect(builder.isGraphConsistent().isValid).toBeTruthy();
+    });
+  });
+
+  describe('pruning', () => {
+    let rootLockFile, packageJson;
+
+    beforeAll(() => {
+      rootLockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/pruning/package-lock.json'
+      ));
+      packageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/pruning/package.json'
+      ));
+    });
+
+    it('should prune single package', () => {
+      const typescriptPackageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/pruning/typescript/package.json'
+      ));
+      const result = pruneNpmLockFile(
+        JSON.stringify(rootLockFile),
+        packageJson,
+        typescriptPackageJson
+      );
+      expect(result).toEqual(
+        JSON.stringify(
+          require(joinPathFragments(
+            __dirname,
+            '__fixtures__/pruning/typescript/package-lock.json'
+          )),
+          null,
+          2
+        )
+      );
+    });
+
+    it('should prune multi packages', () => {
+      const multiPackageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/pruning/devkit-yargs/package.json'
+      ));
+      const result = pruneNpmLockFile(
+        JSON.stringify(rootLockFile),
+        packageJson,
+        multiPackageJson
+      );
+      expect(result).toEqual(
+        JSON.stringify(
+          require(joinPathFragments(
+            __dirname,
+            '__fixtures__/pruning/devkit-yargs/package-lock.json'
+          )),
+          null,
+          2
+        )
+      );
     });
   });
 });

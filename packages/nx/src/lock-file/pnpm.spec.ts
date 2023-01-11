@@ -1,9 +1,9 @@
 import { joinPathFragments } from '../utils/path';
 import { parsePnpmLockFile } from './pnpm';
 import { vol } from 'memfs';
-import { LockFileBuilder } from './utils/lock-file-builder';
+import { LockFileBuilder } from './lock-file-builder';
 import { LockFileGraph } from './utils/types';
-import { mapLockFileGraphToProjectGraph } from './utils/lock-file-graph-mapping';
+import { mapLockFileGraphToProjectGraph } from './lock-file-graph-mapping';
 
 jest.mock('fs', () => require('memfs').fs);
 

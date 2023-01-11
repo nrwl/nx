@@ -1,7 +1,7 @@
 import { nodeKey } from './lock-file-builder';
-import { LockFileEdge, LockFileGraph, LockFileNode } from './types';
-import { ProjectGraph } from '../../config/project-graph';
-import { ProjectGraphBuilder } from '../../project-graph/project-graph-builder';
+import { LockFileEdge, LockFileGraph, LockFileNode } from './utils/types';
+import { ProjectGraph } from '../config/project-graph';
+import { ProjectGraphBuilder } from '../project-graph/project-graph-builder';
 
 export function mapLockFileGraphToProjectGraph(
   lockFileGraph: LockFileGraph

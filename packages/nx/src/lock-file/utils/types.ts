@@ -1,3 +1,5 @@
+import { PackageSnapshot } from '@pnpm/lockfile-types';
+
 export type LockFileGraph = {
   nodes: Map<string, LockFileNode>;
   isValid: boolean;
@@ -49,8 +51,8 @@ export type YarnDependency = {
 
 export type NpmDependencyV3 = {
   version: string;
-  resolved: string;
-  integrity: string;
+  resolved?: string;
+  integrity?: string;
   dependencies?: Record<string, string>;
   optionalDependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
@@ -90,3 +92,7 @@ export type NpmLockFile = {
   packages?: Record<string, NpmDependencyV3>;
   dependencies?: Record<string, NpmDependencyV1>;
 };
+
+// PNPM
+
+export type VersionedPackageSnapshot = PackageSnapshot & { version?: string };

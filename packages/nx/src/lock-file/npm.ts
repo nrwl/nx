@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'fs';
 import { PackageJson } from '../utils/package-json';
 import { workspaceRoot } from '../utils/workspace-root';
-import { LockFileBuilder } from './utils/lock-file-builder';
+import { LockFileBuilder } from './lock-file-builder';
 import {
   LockFileGraph,
   LockFileNode,
@@ -10,37 +10,282 @@ import {
   NpmLockFile,
 } from './utils/types';
 import { satisfies } from 'semver';
+import { NormalizedPackageJson } from './utils/pruning-utils';
+import { normalizeNpmPackageJson } from './utils/npm-utils';
+import { addEdgeOuts } from './utils/parsing-utils';
 
 export function parseNpmLockFile(
   lockFileContent: string,
   packageJson: PackageJson
 ): LockFileGraph {
-  const builder = buildLockFileGraph(lockFileContent, packageJson);
+  const rootLockFile = JSON.parse(lockFileContent) as NpmLockFile;
+  const builder = buildLockFileGraph(rootLockFile, packageJson);
   return builder.getLockFileGraph();
 }
 
 export function pruneNpmLockFile(
   rootLockFileContent: string,
   packageJson: PackageJson,
-  prunedPackageJson: PackageJson
+  prunedPackageJson: NormalizedPackageJson
 ): string {
-  const builder = buildLockFileGraph(rootLockFileContent, packageJson);
+  const rootLockFile = JSON.parse(rootLockFileContent) as NpmLockFile;
+  const builder = buildLockFileGraph(rootLockFile, packageJson);
   builder.prune(prunedPackageJson);
 
-  return rootLockFileContent;
+  const mappedPackages = remapPackages(
+    rootLockFile,
+    builder.nodes,
+    rootLockFile.lockfileVersion
+  );
+
+  const prunedLockFile: NpmLockFile = {
+    name: prunedPackageJson.name,
+    version: prunedPackageJson.version,
+    lockfileVersion: rootLockFile.lockfileVersion,
+    requires: true,
+  };
+  if (rootLockFile.lockfileVersion > 1) {
+    prunedLockFile.packages = {
+      '': prunedPackageJson,
+    };
+    mappedPackages.forEach((p) => {
+      prunedLockFile.packages[p.path] = p.valueV3;
+    });
+  }
+  if (rootLockFile.lockfileVersion < 3) {
+    prunedLockFile.dependencies = {};
+    mappedPackages.forEach((p) => {
+      getDependencyParent(p.path, prunedLockFile.dependencies)[p.name] =
+        p.valueV1;
+    });
+  }
+
+  return JSON.stringify(prunedLockFile, null, 2);
+}
+
+function getDependencyParent(
+  path: string,
+  packages: Record<string, NpmDependencyV1>
+): Record<string, NpmDependencyV1> {
+  const segments = path.split(/\/?node_modules\//).slice(1, -1);
+
+  if (!segments.length) {
+    return packages;
+  }
+
+  let parent = packages[segments.shift()];
+  if (!parent.dependencies) {
+    parent.dependencies = {};
+  }
+  while (segments.length) {
+    parent = parent.dependencies[segments.shift()];
+    if (!parent.dependencies) {
+      parent.dependencies = {};
+    }
+  }
+  return parent.dependencies;
+}
+
+type RemappedPackage = {
+  path: string;
+  name: string;
+  valueV3?: NpmDependencyV3 | NormalizedPackageJson;
+  valueV1?: NpmDependencyV1;
+};
+
+function remapPackages(
+  rootLockFile: NpmLockFile,
+  nodes: Map<string, LockFileNode>,
+  lockfileVersion: number
+): RemappedPackage[] {
+  const nestedNodes = new Set<LockFileNode>();
+  const visitedNodes = new Map<LockFileNode, Set<string>>();
+  const visitedPaths = new Set<string>();
+
+  const result: RemappedPackage[] = [];
+
+  // add first level children
+  nodes.forEach((node) => {
+    if (node.isHoisted) {
+      const mappedPackage = remapPackage(
+        lockfileVersion,
+        rootLockFile,
+        node.name,
+        node.version
+      );
+      result.push(mappedPackage);
+      visitedNodes.set(node, new Set([mappedPackage.path]));
+      visitedPaths.add(mappedPackage.path);
+    } else {
+      nestedNodes.add(node);
+    }
+  });
+
+  exhaustRemappedPackages(
+    result,
+    nestedNodes,
+    visitedNodes,
+    visitedPaths,
+    lockfileVersion,
+    rootLockFile
+  );
+
+  return result.sort((a, b) => a.path.localeCompare(b.path));
+}
+
+function remapPackage(
+  lockfileVersion: number,
+  rootLockFile: NpmLockFile,
+  name: string,
+  version: string,
+  parentPath = ''
+): RemappedPackage {
+  const path = parentPath + `node_modules/${name}`;
+  let valueV3, valueV1;
+  if (lockfileVersion < 3) {
+    valueV1 = findMatchingPackage(rootLockFile.dependencies, name, version);
+  }
+  if (lockfileVersion > 1) {
+    valueV3 = findMatchingPackageV3(rootLockFile.packages, name, version);
+  }
+
+  return {
+    path,
+    name,
+    valueV1,
+    valueV3,
+  };
+}
+
+function exhaustRemappedPackages(
+  result: RemappedPackage[],
+  nestedNodes: Set<LockFileNode>,
+  visitedNodes: Map<LockFileNode, Set<string>>,
+  visitedPaths: Set<string>,
+  lockfileVersion: number,
+  rootLockFile: NpmLockFile
+) {
+  const initialSize = nestedNodes.size;
+
+  if (!initialSize) {
+    return;
+  }
+
+  nestedNodes.forEach((node) => {
+    if (node.edgesIn.size === 1) {
+      let found = false;
+      node.edgesIn.forEach((edge) => {
+        if (visitedNodes.has(edge.from)) {
+          found = true;
+          findParentPaths(
+            visitedNodes.get(edge.from),
+            visitedPaths,
+            node.name
+          ).forEach((parentPath) => {
+            const mappedPackage = remapPackage(
+              lockfileVersion,
+              rootLockFile,
+              node.name,
+              node.version,
+              parentPath + '/'
+            );
+            result.push(mappedPackage);
+            if (visitedNodes.has(node)) {
+              visitedNodes.get(node).add(mappedPackage.path);
+            } else {
+              visitedNodes.set(node, new Set([mappedPackage.path]));
+            }
+            visitedPaths.add(mappedPackage.path);
+          });
+        }
+      });
+      if (found) {
+        nestedNodes.delete(node);
+      }
+    }
+  });
+
+  if (initialSize === nestedNodes.size) {
+    throw Error('Loop detected while pruning');
+  } else {
+    exhaustRemappedPackages(
+      result,
+      nestedNodes,
+      visitedNodes,
+      visitedPaths,
+      lockfileVersion,
+      rootLockFile
+    );
+  }
+}
+
+function findParentPaths(
+  paths: Set<string>,
+  visitedPaths: Set<string>,
+  name: string
+): Set<string> {
+  const suffix = `node_modules/${name}`;
+  const results = new Set<string>();
+  paths.forEach((path) => {
+    const segments = path.split(/\/node_modules\//);
+    while (
+      segments.length
+        ? !visitedPaths.has(segments.join('/node_modules/') + '/' + suffix)
+        : !visitedPaths.has(suffix)
+    ) {
+      path = segments.join('/node_modules/');
+      segments.pop();
+    }
+    results.add(path);
+  });
+  return results;
+}
+
+function findMatchingPackageV3(
+  packages: Record<string, NpmDependencyV3>,
+  name: string,
+  version: string
+) {
+  const keys = Object.keys(packages);
+  for (let i = 0; i < keys.length; i++) {
+    const { dev, peer, ...value } = packages[keys[i]];
+    if (keys[i].endsWith(`node_modules/${name}`) && value.version === version) {
+      return value;
+    }
+  }
+}
+
+function findMatchingPackage(
+  packages: Record<string, NpmDependencyV1>,
+  name: string,
+  version: string
+) {
+  const keys = Object.keys(packages);
+  for (let i = 0; i < keys.length; i++) {
+    const { dependencies, dev, peer, ...value } = packages[keys[i]];
+    if (keys[i] === name && value.version === version) {
+      return value;
+    }
+    if (dependencies) {
+      const found = findMatchingPackage(dependencies, name, version);
+      if (found) {
+        return found;
+      }
+    }
+  }
 }
 
 function buildLockFileGraph(
-  lockFileContent: string,
+  data: NpmLockFile,
   packageJson: PackageJson
 ): LockFileBuilder {
-  const data = JSON.parse(lockFileContent) as NpmLockFile;
-
   const isLockFileV1 = data.lockfileVersion === 1;
 
-  const normalizedPackageJson = isLockFileV1
-    ? normalizeV1PackageJson(packageJson, data.dependencies)
-    : normalizeV3PackageJson(packageJson, data.packages);
+  const normalizedPackageJson = normalizeNpmPackageJson(
+    packageJson,
+    isLockFileV1 ? data.dependencies : data.packages,
+    isLockFileV1
+  );
 
   const builder = new LockFileBuilder(normalizedPackageJson, {
     includeOptional: true,
@@ -56,41 +301,6 @@ function buildLockFileGraph(
 /**********************************************
  * V3 lock file related logic
  *********************************************/
-
-function normalizeV1PackageJson(
-  packageJson: PackageJson,
-  packages: Record<string, NpmDependencyV1>
-): Partial<PackageJson> {
-  const {
-    dependencies,
-    devDependencies,
-    peerDependencies,
-    peerDependenciesMeta,
-  } = packageJson;
-
-  const normalizeDependencySection = (
-    section: Record<string, string>
-  ): Record<string, string> => {
-    const normalizedSection: Record<string, string> = {};
-    Object.keys(section).forEach((depName) => {
-      normalizedSection[depName] = packages[depName].version;
-    });
-    return normalizedSection;
-  };
-
-  return {
-    ...(dependencies && {
-      dependencies: normalizeDependencySection(dependencies),
-    }),
-    ...(devDependencies && {
-      devDependencies: normalizeDependencySection(devDependencies),
-    }),
-    ...(peerDependencies && {
-      peerDependencies: normalizeDependencySection(peerDependencies),
-    }),
-    ...(peerDependenciesMeta && { peerDependenciesMeta }),
-  };
-}
 
 function parseV1LockFile(
   builder: LockFileBuilder,
@@ -239,47 +449,6 @@ function getPeerDependencies(path: string): {
  * V3 lock file related logic
  *********************************************/
 
-function normalizeV3PackageJson(
-  packageJson: PackageJson,
-  packages: Record<string, NpmDependencyV3>
-): Partial<PackageJson> {
-  const {
-    dependencies,
-    devDependencies,
-    peerDependencies,
-    peerDependenciesMeta,
-  } = packageJson;
-
-  const normalizeDependencySection = (
-    section: Record<string, string>
-  ): Record<string, string> => {
-    const normalizedSection: Record<string, string> = {};
-    Object.keys(section).forEach((depName) => {
-      let { resolved, version, name } = packages[`node_modules/${depName}`];
-      if (!version || (resolved && !resolved.includes(version))) {
-        version = resolved;
-      } else if (name) {
-        version = `npm:${name}@${version}`;
-      }
-      normalizedSection[depName] = version;
-    });
-    return normalizedSection;
-  };
-
-  return {
-    ...(dependencies && {
-      dependencies: normalizeDependencySection(dependencies),
-    }),
-    ...(devDependencies && {
-      devDependencies: normalizeDependencySection(devDependencies),
-    }),
-    ...(peerDependencies && {
-      peerDependencies: normalizeDependencySection(peerDependencies),
-    }),
-    ...(peerDependenciesMeta && { peerDependenciesMeta }),
-  };
-}
-
 function parseV3LockFile(
   builder: LockFileBuilder,
   packages: Record<string, NpmDependencyV3>
@@ -290,7 +459,8 @@ function parseV3LockFile(
         return; // skip root package (it's already added
       }
 
-      const node = parseV3Node(path, value);
+      const isHoisted = !path.includes('/node_modules/');
+      const node = parseV3Node(path, value, isHoisted);
       builder.addNode(node);
       builder.addEdgeIn(
         node,
@@ -315,26 +485,20 @@ function parseV3LockFile(
           );
         });
       }
-      if (value.dependencies) {
-        Object.entries(value.dependencies).forEach(([depName, depSpec]) => {
-          builder.addEdgeOut(
-            node,
-            depName,
-            findV3EdgeVersion(packages, path, depName, depSpec)
-          );
-        });
-      }
-      if (value.optionalDependencies) {
-        Object.entries(value.optionalDependencies).forEach(
-          ([depName, depSpec]) => {
-            builder.addEdgeOut(
-              node,
-              depName,
-              findV3EdgeVersion(packages, path, depName, depSpec)
-            );
-          }
-        );
-      }
+      addEdgeOuts({
+        builder,
+        node,
+        section: value.dependencies,
+        depSpecFunc: (depName, depSpec) =>
+          findV3EdgeVersion(packages, path, depName, depSpec),
+      });
+      addEdgeOuts({
+        builder,
+        node,
+        section: value.optionalDependencies,
+        depSpecFunc: (depName, depSpec) =>
+          findV3EdgeVersion(packages, path, depName, depSpec),
+      });
     });
   }
 }
@@ -364,21 +528,26 @@ function findV3EdgeVersion(
 }
 
 // parse node value from lock file into `LockFileNode`
-function parseV3Node(path: string, value: NpmDependencyV3): LockFileNode {
-  const { resolved, name } = value;
-  const packageName = path.split('node_modules/').pop();
-
+function parseV3Node(
+  path: string,
+  value: NpmDependencyV3,
+  isHoisted: boolean
+): LockFileNode {
+  const name = path.split('node_modules/').pop();
   let version = value.version;
+  let packageName;
+
+  const resolved = value.resolved;
   // for tarball packages version might not exist or be useless
   if (!version || (resolved && !resolved.includes(version))) {
     version = resolved;
   }
-
-  const isHoisted = !path.includes('/node_modules/');
+  // for alias packages name is set
+  packageName = value.name && value.name !== name ? value.name : undefined;
 
   const node: LockFileNode = {
-    name: packageName,
-    ...(name && name !== packageName && { packageName: name }),
+    name,
+    ...(packageName && { packageName }),
     ...(version && { version }),
     isHoisted,
   };

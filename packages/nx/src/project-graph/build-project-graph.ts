@@ -42,7 +42,7 @@ import {
   parseLockFile,
 } from '../lock-file/lock-file';
 import { Workspaces } from '../config/workspaces';
-import { mapLockFileGraphToProjectGraph } from '../lock-file/utils/lock-file-graph-mapping';
+import { mapLockFileGraphToProjectGraph } from '../lock-file/lock-file-graph-mapping';
 
 export async function buildProjectGraph() {
   const projectConfigurations = new Workspaces(

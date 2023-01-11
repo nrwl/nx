@@ -1,6 +1,6 @@
 import { PackageJson } from '../../utils/package-json';
 
-export type PackageJsonDeps = Pick<
+export type NormalizedPackageJson = Pick<
   PackageJson,
   | 'name'
   | 'version'
@@ -21,7 +21,7 @@ export type PackageJsonDeps = Pick<
  */
 export function normalizePackageJson(
   packageJson: PackageJson
-): PackageJsonDeps {
+): NormalizedPackageJson {
   const {
     name,
     version,

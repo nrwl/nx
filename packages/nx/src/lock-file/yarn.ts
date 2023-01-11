@@ -1,15 +1,21 @@
 import { parseSyml, stringifySyml } from '@yarnpkg/parsers';
 import { stringify } from '@yarnpkg/lockfile';
 import { PackageJson } from '../utils/package-json';
-import { LockFileBuilder, nodeKey } from './utils/lock-file-builder';
+import { LockFileBuilder, nodeKey } from './lock-file-builder';
 import { LockFileGraph, LockFileNode, YarnDependency } from './utils/types';
-import { workspaceRoot } from '../utils/workspace-root';
-import { existsSync, readFileSync } from 'fs';
 import { sortObjectByKeys } from '../utils/object-sort';
 import {
   BERRY_LOCK_FILE_DISCLAIMER,
   generateRootWorkspacePackage,
-} from './utils/yarn-helpers';
+  isAliasDependency,
+  isTarballDependency,
+} from './utils/yarn-utils';
+import {
+  addEdgeOuts,
+  getRootVersion,
+  reportUnresolvedDependencies,
+  UnresolvedDependencies,
+} from './utils/parsing-utils';
 
 export function parseYarnLockFile(
   lockFileContent: string,
@@ -43,6 +49,7 @@ export function pruneYarnLockFile(
       .get(node.version)
       .values()
       .next().value[1];
+
     const keys = new Set<string>();
     node.edgesIn.forEach((edge) => {
       const version =
@@ -53,7 +60,9 @@ export function pruneYarnLockFile(
           : edge.versionSpec;
       keys.add(`${node.name}@${version}`);
     });
+
     const sortedKeys = Array.from(keys).sort();
+
     if (isBerry) {
       output[Array.from(keys).sort().join(', ')] = value;
     } else {
@@ -78,17 +87,6 @@ export function pruneYarnLockFile(
   } else {
     return stringify(sortObjectByKeys(output));
   }
-}
-
-function isTarballDependency({ version, resolution }: YarnDependency): boolean {
-  // for tarball packages version might not exist or be useless
-  if (!version || (resolution && !resolution.includes(version))) {
-    return true;
-  }
-}
-
-function isAliasDependency(version: string): boolean {
-  return version.startsWith('npm:');
 }
 
 function buildLockFileGraph(
@@ -254,19 +252,13 @@ function parseBerryLockFile(
           const versionSpec = parseBerryVersionSpec(key, packageName);
           builder.addEdgeIn(node, versionSpec);
         });
-        if (value.dependencies) {
-          // Yarn berry keeps no notion of dev/peer dependencies
-          Object.entries(value.dependencies).forEach(([depName, depSpec]) => {
-            builder.addEdgeOut(node, depName, depSpec);
-          });
-        }
-        if (value.optionalDependencies) {
-          Object.entries(value.optionalDependencies).forEach(
-            ([depName, depSpec]) => {
-              builder.addEdgeOut(node, depName, depSpec, true);
-            }
-          );
-        }
+        addEdgeOuts({ builder, node, section: value.dependencies });
+        addEdgeOuts({
+          builder,
+          node,
+          section: value.optionalDependencies,
+          isOptional: true,
+        });
       } else {
         valueSet.forEach(([key]) => {
           const versionSpec = parseBerryVersionSpec(key, packageName);
@@ -352,11 +344,15 @@ function exhaustUnresolvedDependencies(
     unresolvedDependencies,
     isBerry,
   }: {
-    unresolvedDependencies: Set<[string, string, YarnDependency]>;
+    unresolvedDependencies: UnresolvedDependencies<YarnDependency>;
     isBerry: boolean;
   }
 ) {
   const initialSize = unresolvedDependencies.size;
+  if (!initialSize) {
+    return;
+  }
+
   unresolvedDependencies.forEach((unresolvedSet) => {
     const [packageName, versionSpec, value] = unresolvedSet;
 
@@ -373,20 +369,13 @@ function exhaustUnresolvedDependencies(
           if (!builder.nodes.has(nodeKey(node))) {
             builder.addNode(node);
             builder.addEdgeIn(node, versionSpec);
-            if (value.dependencies) {
-              Object.entries(value.dependencies).forEach(
-                ([depName, depSpec]) => {
-                  builder.addEdgeOut(node, depName, depSpec);
-                }
-              );
-            }
-            if (value.optionalDependencies) {
-              Object.entries(value.optionalDependencies).forEach(
-                ([depName, depSpec]) => {
-                  builder.addEdgeOut(node, depName, depSpec, true);
-                }
-              );
-            }
+            addEdgeOuts({ builder, node, section: value.dependencies });
+            addEdgeOuts({
+              builder,
+              node,
+              section: value.optionalDependencies,
+              isOptional: true,
+            });
           } else {
             const existingNode = builder.nodes.get(nodeKey(node));
             builder.addEdgeIn(existingNode, versionSpec);
@@ -398,28 +387,8 @@ function exhaustUnresolvedDependencies(
     }
   });
   if (initialSize === unresolvedDependencies.size) {
-    throw new Error(
-      `Could not resolve following dependencies\n` +
-        Array.from(unresolvedDependencies)
-          .map(
-            ([packageName, versionSpec]) => `- ${packageName}@${versionSpec}\n`
-          )
-          .join('') +
-        `Breaking out of the parsing to avoid infinite loop.`
-    );
-  }
-  if (unresolvedDependencies.size > 0) {
+    reportUnresolvedDependencies(unresolvedDependencies);
+  } else if (unresolvedDependencies.size > 0) {
     exhaustUnresolvedDependencies(builder, { unresolvedDependencies, isBerry });
   }
-}
-
-function getRootVersion(packageName: string): string {
-  const fullPath = `${workspaceRoot}/node_modules/${packageName}/package.json`;
-
-  if (existsSync(fullPath)) {
-    const content = readFileSync(fullPath, 'utf-8');
-    return JSON.parse(content).version;
-  }
-  throw new Error(`Could not find ${fullPath}`);
-  return;
 }

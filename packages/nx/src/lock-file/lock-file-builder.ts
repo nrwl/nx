@@ -1,6 +1,6 @@
-import { output } from '../../utils/output';
-import { PackageJson } from '../../utils/package-json';
-import { LockFileEdge, LockFileGraph, LockFileNode } from './types';
+import { output } from '../utils/output';
+import { PackageJson } from '../utils/package-json';
+import { LockFileEdge, LockFileGraph, LockFileNode } from './utils/types';
 
 export function nodeKey(node: LockFileNode): string {
   if (node.packageName) {

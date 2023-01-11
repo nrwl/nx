@@ -8,7 +8,7 @@ import { parseYarnLockFile, pruneYarnLockFile } from './yarn';
 import { workspaceRoot } from '../utils/workspace-root';
 import { join } from 'path';
 import { existsSync } from 'fs';
-import { normalizePackageJson } from './utils/pruning';
+import { normalizePackageJson } from './utils/pruning-utils';
 import { PackageJson } from '../utils/package-json';
 import { readJsonFile } from '../utils/fileutils';
 import { LockFileGraph } from './utils/types';

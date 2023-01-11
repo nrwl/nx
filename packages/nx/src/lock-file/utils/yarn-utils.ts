@@ -23,3 +23,17 @@ export function generateRootWorkspacePackage(
     linkType: 'soft',
   };
 }
+
+export function isTarballDependency({
+  version,
+  resolution,
+}: YarnDependency): boolean {
+  // for tarball packages version might not exist or be useless
+  if (!version || (resolution && !resolution.includes(version))) {
+    return true;
+  }
+}
+
+export function isAliasDependency(version: string): boolean {
+  return version.startsWith('npm:');
+}

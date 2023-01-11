@@ -1,6 +1,10 @@
 import { PackageJson } from '../utils/package-json';
-import { LockFileBuilder, nodeKey } from './utils/lock-file-builder';
-import { LockFileGraph, LockFileNode } from './utils/types';
+import { LockFileBuilder, nodeKey } from './lock-file-builder';
+import {
+  LockFileGraph,
+  LockFileNode,
+  VersionedPackageSnapshot,
+} from './utils/types';
 import {
   PackageSnapshot,
   Lockfile,
@@ -9,11 +13,13 @@ import {
 import {
   loadPnpmHoistedDepsDefinition,
   parseAndNormalizePnpmLockfile,
-} from './utils/pnpm-helpers';
-import { workspaceRoot } from '../utils/workspace-root';
-import { existsSync, readFileSync } from 'fs';
-
-type VersionedPackageSnapshot = PackageSnapshot & { version?: string };
+} from './utils/pnpm-utils';
+import {
+  addEdgeOuts,
+  getRootVersion,
+  reportUnresolvedDependencies,
+  UnresolvedDependencies,
+} from './utils/parsing-utils';
 
 export function parsePnpmLockFile(lockFileContent: string): LockFileGraph {
   const builder = buildLockFileGraph(lockFileContent);
@@ -39,9 +45,8 @@ function buildLockFileGraph(content: string): LockFileBuilder {
 
   // Non-root dependencies that need to be resolved later
   // Map[packageName, specKey, PackageSnapshot]
-  const unresolvedDependencies = new Set<
-    [string, string, VersionedPackageSnapshot]
-  >();
+  const unresolvedDependencies: UnresolvedDependencies<VersionedPackageSnapshot> =
+    new Set<[string, string, VersionedPackageSnapshot]>();
 
   groupedDependencies.forEach((versionSet, packageName) => {
     versionSet.forEach(([specKey, originalKey, packageSnapshot]) => {
@@ -59,23 +64,28 @@ function buildLockFileGraph(content: string): LockFileBuilder {
         if (!builder.nodes.has(nodeKey(node))) {
           builder.addNode(node);
           builder.addEdgeIn(node, specKey);
-          if (packageSnapshot.dependencies) {
-            Object.entries(packageSnapshot.dependencies).forEach(
-              ([depName, depSpec]) => {
-                // for pnpm, peerDependencies are always doubled in the dependencies if installed
-                const isOptional =
-                  packageSnapshot.peerDependenciesMeta?.[depName]?.optional;
-                builder.addEdgeOut(node, depName, depSpec, isOptional);
-              }
-            );
+
+          if (packageSnapshot.peerDependenciesMeta) {
+            // for pnpm, peerDependencies are always doubled in the dependencies if installed
+            addEdgeOuts({
+              builder,
+              node,
+              section: packageSnapshot.dependencies,
+              isOptionalFunc: (depName) =>
+                packageSnapshot.peerDependenciesMeta[depName]?.optional,
+            });
+          } else {
+            addEdgeOuts({
+              builder,
+              node,
+              section: packageSnapshot.dependencies,
+            });
           }
-          if (packageSnapshot.optionalDependencies) {
-            Object.entries(packageSnapshot.optionalDependencies).forEach(
-              ([depName, depSpec]) => {
-                builder.addEdgeOut(node, depName, depSpec);
-              }
-            );
-          }
+          addEdgeOuts({
+            builder,
+            node,
+            section: packageSnapshot.optionalDependencies,
+          });
         } else {
           const existingEdge = builder.nodes.get(nodeKey(node));
           builder.addEdgeIn(existingEdge, specKey);
@@ -242,9 +252,13 @@ function findPackageName(
 
 function exhaustUnresolvedDependencies(
   builder: LockFileBuilder,
-  unresolvedDependencies: Set<[string, string, PackageSnapshot]>
+  unresolvedDependencies: UnresolvedDependencies<PackageSnapshot>
 ) {
   const initialSize = unresolvedDependencies.size;
+  if (!initialSize) {
+    return;
+  }
+
   unresolvedDependencies.forEach((unresolvedSet) => {
     const [packageName, versionSpec, packageSnapshot] = unresolvedSet;
 
@@ -264,23 +278,26 @@ function exhaustUnresolvedDependencies(
           if (!builder.nodes.has(nodeKey(node))) {
             builder.addNode(node);
             builder.addEdgeIn(node, versionSpec);
-            if (packageSnapshot.dependencies) {
-              Object.entries(packageSnapshot.dependencies).forEach(
-                ([depName, depSpec]) => {
-                  // for pnpm, peerDependencies are always doubled in the dependencies if installed
-                  const isOptional =
-                    packageSnapshot.peerDependenciesMeta?.[depName]?.optional;
-                  builder.addEdgeOut(node, depName, depSpec, isOptional);
-                }
-              );
+            if (packageSnapshot.peerDependenciesMeta) {
+              addEdgeOuts({
+                builder,
+                node,
+                section: packageSnapshot.dependencies,
+                isOptionalFunc: (depName) =>
+                  packageSnapshot.peerDependenciesMeta[depName]?.optional,
+              });
+            } else {
+              addEdgeOuts({
+                builder,
+                node,
+                section: packageSnapshot.dependencies,
+              });
             }
-            if (packageSnapshot.optionalDependencies) {
-              Object.entries(packageSnapshot.optionalDependencies).forEach(
-                ([depName, depSpec]) => {
-                  builder.addEdgeOut(node, depName, depSpec);
-                }
-              );
-            }
+            addEdgeOuts({
+              builder,
+              node,
+              section: packageSnapshot.optionalDependencies,
+            });
           } else {
             const existingNode = builder.nodes.get(nodeKey(node));
             builder.addEdgeIn(existingNode, versionSpec);
@@ -300,31 +317,11 @@ function exhaustUnresolvedDependencies(
         unresolvedDependencies.delete(unresolvedDependency);
       }
     });
-    if (unresolvedDependencies.size > 0) {
-      throw new Error(
-        `Could not resolve following dependencies\n` +
-          Array.from(unresolvedDependencies)
-            .map(
-              ([packageName, versionSpec]) =>
-                `- ${packageName}@${versionSpec}\n`
-            )
-            .join('') +
-          `Breaking out of the parsing to avoid infinite loop.`
-      );
-    }
   }
-  if (unresolvedDependencies.size > 0) {
+
+  if (initialSize === unresolvedDependencies.size) {
+    reportUnresolvedDependencies(unresolvedDependencies);
+  } else if (unresolvedDependencies.size > 0) {
     exhaustUnresolvedDependencies(builder, unresolvedDependencies);
-  }
-}
-
-function getRootVersion(packageName: string): string {
-  const fullPath = `${workspaceRoot}/node_modules/${packageName}/package.json`;
-
-  if (existsSync(fullPath)) {
-    const content = readFileSync(fullPath, 'utf-8');
-    return JSON.parse(content).version;
-  } else {
-    return;
   }
 }

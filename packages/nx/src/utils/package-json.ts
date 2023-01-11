@@ -51,7 +51,7 @@ export interface PackageJson {
   devDependencies?: Record<string, string>;
   optionalDependencies?: Record<string, string>;
   peerDependencies?: Record<string, string>;
-  peerDependenciesMeta?: Record<string, { optional?: boolean }>;
+  peerDependenciesMeta?: Record<string, { optional: boolean }>;
   resolutions?: Record<string, string>;
   overrides?: PackageOverride;
   bin?: Record<string, string>;
