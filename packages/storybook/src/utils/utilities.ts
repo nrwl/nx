@@ -1,5 +1,4 @@
 import {
-  ExecutorContext,
   readJson,
   readJsonFile,
   TargetConfiguration,
@@ -8,9 +7,7 @@ import {
 import { CompilerOptions } from 'typescript';
 import { storybookVersion } from './versions';
 import { StorybookConfig } from '../executors/models';
-import { constants, copyFileSync, mkdtempSync, statSync } from 'fs';
-import { tmpdir } from 'os';
-import { basename, join, sep } from 'path';
+import { statSync } from 'fs';
 import { findNodes } from 'nx/src/utils/typescript';
 import ts = require('typescript');
 
@@ -156,56 +153,25 @@ export type TsConfig = {
   references?: Array<{ path: string }>;
 };
 
-export function findOrCreateConfig(
+export function storybookConfigExists(
   config: StorybookConfig,
-  context: ExecutorContext
-): string {
-  if (config?.configFolder && statSync(config.configFolder).isDirectory()) {
-    return config.configFolder;
-  } else if (
-    statSync(config.configPath).isFile() &&
-    statSync(config.pluginPath).isFile() &&
-    statSync(config.srcRoot).isFile()
-  ) {
-    return createStorybookConfig(
-      config.configPath,
-      config.pluginPath,
-      config.srcRoot
-    );
-  } else {
-    const sourceRoot =
-      context.projectsConfigurations.projects[context.projectName].root;
-    if (statSync(join(context.root, sourceRoot, '.storybook')).isDirectory()) {
-      return join(context.root, sourceRoot, '.storybook');
-    }
-  }
-  throw new Error('No configuration settings');
-}
+  projectName: string
+): boolean {
+  const exists = !!(
+    config?.configFolder && statSync(config.configFolder).isDirectory()
+  );
 
-function createStorybookConfig(
-  configPath: string,
-  pluginPath: string,
-  srcRoot: string
-): string {
-  const tmpDir = tmpdir();
-  const tmpFolder = `${tmpDir}${sep}`;
-  mkdtempSync(tmpFolder);
-  copyFileSync(
-    configPath,
-    `${tmpFolder}/${basename(configPath)}`,
-    constants.COPYFILE_EXCL
-  );
-  copyFileSync(
-    pluginPath,
-    `${tmpFolder}/${basename(pluginPath)}`,
-    constants.COPYFILE_EXCL
-  );
-  copyFileSync(
-    srcRoot,
-    `${tmpFolder}/${basename(srcRoot)}`,
-    constants.COPYFILE_EXCL
-  );
-  return tmpFolder;
+  if (!exists) {
+    throw new Error(
+      `Could not find Storybook configuration for project ${projectName}.
+      Please generate Storybook configuration using the following command:
+
+      nx g @nrwl/storybook:configuration --name=${projectName}
+      `
+    );
+  }
+
+  return exists;
 }
 
 export function dedupe(arr: string[]) {

@@ -119,6 +119,7 @@ const IGNORE_MATCHES_IN_PACKAGE = {
     '@storybook/addon-essentials',
     '@storybook/core',
     '@storybook/core-server',
+    '@storybook/types',
     'rxjs',
   ],
   nx: [

@@ -82,6 +82,7 @@
     "@storybook/core-server": "^6.5.15",
     "@storybook/manager-webpack5": "^6.5.15",
     "@storybook/react": "^6.5.15",
+    "@storybook/types": "^7.0.0-alpha.44",
     "@svgr/rollup": "^6.1.2",
     "@svgr/webpack": "^6.1.2",
     "@swc-node/register": "^1.4.2",
