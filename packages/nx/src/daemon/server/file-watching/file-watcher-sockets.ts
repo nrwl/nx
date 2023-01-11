@@ -55,20 +55,20 @@ export function notifyFileWatcherSockets(
             changedFiles.push(...projectFiles);
           }
         } else {
-          const watchedProjects = [...config.watchProjects];
+          const watchedProjects = new Set<string>(config.watchProjects);
 
           if (config.includeDependentProjects) {
-            for (const project of watchedProjects) {
-              watchedProjects.push(
-                ...findAllProjectNodeDependencies(
-                  project,
-                  currentProjectGraphCache as ProjectGraph
-                )
-              );
+            for (const project of config.watchProjects) {
+              for (const dep of findAllProjectNodeDependencies(
+                project,
+                currentProjectGraphCache as ProjectGraph
+              )) {
+                watchedProjects.add(dep);
+              }
             }
           }
 
-          for (const watchedProject of new Set(watchedProjects)) {
+          for (const watchedProject of watchedProjects) {
             if (!!projectAndGlobalChanges.projects[watchedProject]) {
               changedProjects.push(watchedProject);
 
