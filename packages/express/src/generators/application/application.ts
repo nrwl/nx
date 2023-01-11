@@ -66,6 +66,7 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
   const initTask = await initGenerator(tree, { ...options, skipFormat: true });
   const applicationTask = await nodeApplicationGenerator(tree, {
     ...schema,
+    bundler: 'webpack',
     skipFormat: true,
   });
   addMainFile(tree, options);

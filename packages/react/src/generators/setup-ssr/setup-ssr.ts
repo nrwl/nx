@@ -107,7 +107,7 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
         compiler: 'babel',
         externalDependencies: 'all',
         outputHashing: 'none',
-        webpackConfig: '@nrwl/react/plugins/webpack',
+        webpackConfig: joinPathFragments(projectRoot, 'webpack.config.js'),
       },
       configurations: {
         development: {

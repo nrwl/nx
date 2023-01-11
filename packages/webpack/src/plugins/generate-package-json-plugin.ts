@@ -1,37 +1,35 @@
 import { type Compiler, sources, type WebpackPluginInstance } from 'webpack';
 import {
+  createLockFile,
+  createPackageJson,
   ExecutorContext,
   type ProjectGraph,
   serializeJson,
-  createPackageJson,
-  createLockFile,
 } from '@nrwl/devkit';
 import {
   getHelperDependenciesFromProjectGraph,
   HelperDependency,
 } from '@nrwl/js/src/utils/compiler-helper-dependency';
 import { readTsConfig } from '@nrwl/workspace/src/utilities/typescript';
-
-import { NormalizedWebpackExecutorOptions } from '../executors/webpack/schema';
 import { getLockFileName } from 'nx/src/lock-file/lock-file';
 
-export class GeneratePackageJsonWebpackPlugin implements WebpackPluginInstance {
+const pluginName = 'GeneratePackageJsonPlugin';
+
+export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
   private readonly projectGraph: ProjectGraph;
 
   constructor(
-    private readonly context: ExecutorContext,
-    private readonly options: NormalizedWebpackExecutorOptions
+    private readonly options: { tsConfig: string; outputFileName: string },
+    private readonly context: ExecutorContext
   ) {
     this.projectGraph = context.projectGraph;
   }
 
   apply(compiler: Compiler): void {
-    const pluginName = this.constructor.name;
-
     compiler.hooks.thisCompilation.tap(pluginName, (compilation) => {
       compilation.hooks.processAssets.tap(
         {
-          name: 'nx-generate-package-json-plugin',
+          name: pluginName,
           stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
         },
         () => {

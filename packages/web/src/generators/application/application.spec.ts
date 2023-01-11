@@ -351,6 +351,7 @@ describe('app', () => {
       scripts: [],
       styles: ['apps/my-app/src/styles.css'],
       tsConfig: 'apps/my-app/tsconfig.app.json',
+      webpackConfig: 'apps/my-app/webpack.config.js',
     });
     expect(architectConfig.build.configurations.production).toEqual({
       optimization: true,
