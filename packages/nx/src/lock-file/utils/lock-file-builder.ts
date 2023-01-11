@@ -154,7 +154,7 @@ export class LockFileBuilder {
       if (node.name === name && node.edgesIn) {
         for (const edge of node.edgesIn.values()) {
           if (edge.versionSpec === versionSpec) {
-            if (!edge.from) {
+            if (!edge.from && !edge.incoming) {
               return edge;
             } else {
               // one edge in spec can match several edges out
@@ -269,7 +269,7 @@ export class LockFileBuilder {
   }
 
   prune(packageJson: Partial<PackageJson>) {
-    // TODO: 0. normalize packageJson to ensure correct version (via helper)
+    // TODO: 0. normalize packageJson to ensure correct version (replace version e.g. ^1.0.0 with matching 1.2.3) (happens only with manually modified package.json)
 
     // prune the nodes
     const prunedNodes = new Set<string>();
@@ -335,6 +335,16 @@ export class LockFileBuilder {
         closest.isHoisted = true;
       }
     });
+
+    const { isValid, errors } = this.isGraphConsistent();
+    if (!isValid) {
+      const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
+      output.warn({
+        title:
+          'Graph is not consistent after pruning. Use --verbose to see details.',
+        bodyLines: isVerbose ? errors : [],
+      });
+    }
   }
 
   // use BFS to calculate the shortest path to an incoming edge

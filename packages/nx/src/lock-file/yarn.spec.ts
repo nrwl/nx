@@ -200,7 +200,7 @@ describe('yarn LockFile utility', () => {
       expect(keys).toEqual(originalKeys);
     });
 
-    xit('should match pruned lock file', () => {
+    it('should match pruned lock file', () => {
       const appPackageJson = require(joinPathFragments(
         __dirname,
         '__fixtures__/nextjs/app/package.json'
