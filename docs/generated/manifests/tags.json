@@ -677,7 +677,7 @@
       "description": "",
       "file": "shared/concepts/integrated-vs-package-based",
       "id": "integrated-vs-package-based",
-      "name": "Integrated Repos vs. Package-Based Repos",
+      "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
       "path": "/concepts/integrated-vs-package-based"
     },
     {
