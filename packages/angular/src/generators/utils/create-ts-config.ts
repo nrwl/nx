@@ -1,7 +1,7 @@
-import { Tree } from 'nx/src/generators/tree';
+import type { Tree } from '@nrwl/devkit';
+import { writeJson } from '@nrwl/devkit';
 import { tsConfigBaseOptions } from '@nrwl/workspace/src/utils/create-ts-config';
-import { writeJson } from 'nx/src/generators/utils/json';
-import { getUserInstalledAngularMajorVersion } from '../../utils/user-installed-angular-versions';
+import { getInstalledAngularMajorVersion } from './angular-version-utils';
 
 export { extractTsConfigBase } from '@nrwl/workspace/src/utils/create-ts-config';
 
@@ -17,7 +17,7 @@ export function createTsConfig(
   },
   relativePathToRootTsConfig: string
 ) {
-  let majorAngularVersion = getUserInstalledAngularMajorVersion(host);
+  const majorAngularVersion = getInstalledAngularMajorVersion(host);
 
   const json = {
     compilerOptions: {

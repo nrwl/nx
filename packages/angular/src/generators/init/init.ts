@@ -11,6 +11,7 @@ import {
 import { jestInitGenerator } from '@nrwl/jest';
 import { Linter } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+import { join } from 'path';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import {
   angularDevkitVersion,
@@ -27,9 +28,8 @@ import {
   zoneJsVersion,
 } from '../../utils/versions';
 import { karmaGenerator } from '../karma/karma';
+import { getGeneratorDirectoryForInstalledAngularVersion } from '../utils/angular-version-utils';
 import { Schema } from './schema';
-import { getGeneratorDirectoryForInstalledAngularVersion } from '../../utils/user-installed-angular-versions';
-import { join } from 'path';
 
 export async function angularInitGenerator(
   tree: Tree,
