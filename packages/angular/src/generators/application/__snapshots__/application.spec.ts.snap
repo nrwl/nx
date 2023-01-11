@@ -1,5 +1,25 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`app --skipStarterTemplate should skip Nx specific \`nx-welcome.component.ts\` file creation 1`] = `
+"import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+
+import { AppComponent } from './app.component';
+
+@NgModule({
+  declarations: [
+    AppComponent
+  ],
+  imports: [
+    BrowserModule
+  ],
+  providers: [],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
+"
+`;
+
 exports[`app --standalone should generate a standalone app correctly with routing 1`] = `
 "import { bootstrapApplication } from '@angular/platform-browser';
 import { provideRouter, withEnabledBlockingInitialNavigation } from '@angular/router';
