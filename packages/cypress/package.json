@@ -43,7 +43,7 @@
     "semver": "7.3.4"
   },
   "peerDependencies": {
-    "cypress": ">= 3 < 12"
+    "cypress": ">= 3 < 13"
   },
   "peerDependenciesMeta": {
     "cypress": {
