@@ -5984,6 +5984,14 @@
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
+              },
+              {
+                "id": "preview-server",
+                "path": "/packages/vite/executors/preview-server",
+                "name": "preview-server",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,

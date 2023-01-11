@@ -2602,6 +2602,15 @@
         "originalFilePath": "/packages/vite/src/executors/test/schema.json",
         "path": "vite/executors/test",
         "type": "executor"
+      },
+      {
+        "description": "Vite preview server",
+        "file": "generated/packages/vite/executors/preview-server.json",
+        "hidden": false,
+        "name": "preview-server",
+        "originalFilePath": "/packages/vite/src/executors/preview-server/schema.json",
+        "path": "vite/executors/preview-server",
+        "type": "executor"
       }
     ],
     "generators": [

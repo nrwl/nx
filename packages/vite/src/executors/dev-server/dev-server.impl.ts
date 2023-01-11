@@ -63,7 +63,7 @@ export default async function* viteDevServerExecutor(
   }
 
   // This Promise intentionally never resolves, leaving the process running
-  await new Promise<{ success: boolean }>(() => {});
+  await new Promise(() => {});
 }
 
 async function runViteDevServer(server: ViteDevServer): Promise<void> {
