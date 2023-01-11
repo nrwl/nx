@@ -66,7 +66,8 @@
     "spa": {
       "type": "boolean",
       "description": "Redirect 404 errors to index.html (useful for SPA's)",
-      "default": false
+      "default": false,
+      "x-priority": "important"
     },
     "staticFilePath": {
       "type": "string",
