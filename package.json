@@ -25,19 +25,19 @@
     "root-lint": "nx workspace-lint"
   },
   "devDependencies": {
-    "@angular-devkit/architect": "~0.1500.1",
-    "@angular-devkit/build-angular": "~15.0.1",
-    "@angular-devkit/core": "~15.0.1",
-    "@angular-devkit/schematics": "~15.0.1",
+    "@angular-devkit/architect": "~0.1501.0",
+    "@angular-devkit/build-angular": "~15.1.0",
+    "@angular-devkit/core": "~15.1.0",
+    "@angular-devkit/schematics": "~15.1.0",
     "@angular-eslint/eslint-plugin": "~15.0.0",
     "@angular-eslint/eslint-plugin-template": "~15.0.0",
     "@angular-eslint/template-parser": "~15.0.0",
-    "@angular/cli": "~15.0.1",
-    "@angular/common": "~15.0.1",
-    "@angular/compiler": "~15.0.1",
-    "@angular/compiler-cli": "~15.0.1",
-    "@angular/core": "~15.0.1",
-    "@angular/router": "~15.0.1",
+    "@angular/cli": "~15.1.0",
+    "@angular/common": "~15.1.0",
+    "@angular/compiler": "~15.1.0",
+    "@angular/compiler-cli": "~15.1.0",
+    "@angular/core": "~15.1.0",
+    "@angular/router": "~15.1.0",
     "@babel/core": "^7.15.0",
     "@babel/helper-create-regexp-features-plugin": "^7.14.5",
     "@babel/preset-react": "^7.14.5",
@@ -75,7 +75,7 @@
     "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^13.0.4",
     "@rollup/plugin-url": "^7.0.0",
-    "@schematics/angular": "~15.0.1",
+    "@schematics/angular": "~15.1.0",
     "@storybook/addon-essentials": "^6.5.15",
     "@storybook/angular": "^6.5.15",
     "@storybook/builder-webpack5": "^6.5.15",
@@ -187,7 +187,7 @@
     "mini-css-extract-plugin": "~2.4.7",
     "minimatch": "3.0.5",
     "next-sitemap": "^3.1.10",
-    "ng-packagr": "~15.0.0",
+    "ng-packagr": "~15.1.0",
     "node-fetch": "^2.6.7",
     "nx": "15.4.5-beta.1",
     "open": "^8.4.0",
@@ -310,7 +310,8 @@
   "resolutions": {
     "**/xmlhttprequest-ssl": "~1.6.2",
     "minimist": "^1.2.6",
-    "underscore": "^1.12.1"
+    "underscore": "^1.12.1",
+    "@nguniversal/builders/@angular-devkit/architect": "~0.1501.0"
   },
   "nx": {
     "includedScripts": [
