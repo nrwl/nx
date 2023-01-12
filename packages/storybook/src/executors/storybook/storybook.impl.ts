@@ -13,7 +13,10 @@ import { CommonNxStorybookConfig } from '../models';
 export default async function* storybookExecutor(
   options: CLIOptions & CommonNxStorybookConfig,
   context: ExecutorContext
-): AsyncGenerator<{ success: boolean; info?: { port: number } }> {
+): AsyncGenerator<{
+  success: boolean;
+  info?: { port: number; baseUrl?: string };
+}> {
   const storybook7 = isStorybookV7();
   storybookConfigExistsCheck(options.configDir, context.projectName);
   if (storybook7) {
@@ -22,7 +25,15 @@ export default async function* storybookExecutor(
       buildOptions,
       storybook7
     );
-    yield { success: true, info: { port: result.port } };
+    yield {
+      success: true,
+      info: {
+        port: result.port,
+        baseUrl: `${options.https ? 'https' : 'http'}://${
+          options.host ?? 'localhost'
+        }:${result.port}`,
+      },
+    };
     await new Promise<{ success: boolean }>(() => {});
   } else {
     // TODO (katerina): Remove when Storybook 7
