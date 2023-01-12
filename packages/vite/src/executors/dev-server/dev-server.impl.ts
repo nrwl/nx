@@ -76,6 +76,6 @@ async function runViteDevServer(server: ViteDevServer): Promise<string> {
   process.on('SIGTERM', processOnExit);
   process.on('exit', processOnExit);
   return `${server.config.server.https ? 'https' : 'http'}://${
-    server.config.server.host
+    server.config.server.host ?? 'localhost'
   }:${server.config.server.port}`;
 }
