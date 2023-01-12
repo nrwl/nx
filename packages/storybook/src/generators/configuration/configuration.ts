@@ -32,6 +32,7 @@ import {
   storybookNextAddonVersion,
   storybookSwcAddonVersion,
   storybookTestRunnerVersion,
+  storybookVersion,
 } from '../../utils/versions';
 
 export async function configurationGenerator(
@@ -120,6 +121,18 @@ export async function configurationGenerator(
   } else {
     logger.warn(
       `There is already an e2e project setup for ${schema.name}, called ${e2eProject}.`
+    );
+  }
+
+  if (schema.tsConfiguration) {
+    tasks.push(
+      addDependenciesToPackageJson(
+        tree,
+        {},
+        {
+          ['@storybook/core-common']: storybookVersion,
+        }
+      )
     );
   }
 
