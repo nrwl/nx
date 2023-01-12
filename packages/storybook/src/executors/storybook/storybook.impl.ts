@@ -13,13 +13,16 @@ import { CommonNxStorybookConfig } from '../models';
 export default async function* storybookExecutor(
   options: CLIOptions & CommonNxStorybookConfig,
   context: ExecutorContext
-): AsyncGenerator<{ success: boolean }> {
+): AsyncGenerator<{ success: boolean; info?: { port: number } }> {
   const storybook7 = isStorybookV7();
   storybookConfigExistsCheck(options.configDir, context.projectName);
   if (storybook7) {
     const buildOptions: CLIOptions = options;
-    await runInstance(buildOptions, storybook7);
-    yield { success: true };
+    const result: { port: number } = await runInstance(
+      buildOptions,
+      storybook7
+    );
+    yield { success: true, info: { port: result.port } };
     await new Promise<{ success: boolean }>(() => {});
   } else {
     // TODO (katerina): Remove when Storybook 7
