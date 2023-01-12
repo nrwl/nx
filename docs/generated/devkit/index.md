@@ -1705,7 +1705,7 @@ offsetFromRoot('apps/mydir/myapp/'); // returns "../../../"
 ▸ **parseJson**<`T`\>(`input`, `options?`): `T`
 
 Parses the given JSON string and returns the object the JSON content represents.
-By default javascript-style comments are allowed.
+By default javascript-style comments and trailing commas are allowed.
 
 #### Type parameters
 

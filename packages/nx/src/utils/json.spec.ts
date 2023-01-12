@@ -100,7 +100,22 @@ describe('parseJson', () => {
     `);
   });
 
-  it('should throw when JSON has trailing commas', () => {
+  it('should allow trailing commas by default', () => {
+    expect(() =>
+      parseJson(
+        `{
+      "test": 123,
+      "nested": {
+          "test": 123,
+          "more": 456,
+     },
+      "array": [1, 2, 3,]
+  }`
+      )
+    ).not.toThrow();
+  });
+
+  it('should throw when JSON has trailing commas if disabled', () => {
     expect(() =>
       parseJson(
         `{
@@ -111,7 +126,7 @@ describe('parseJson', () => {
      },
       "array": [1, 2, 3,]
   }`,
-        { disallowComments: true, expectComments: true }
+        { allowTrailingComma: false }
       )
     ).toThrowErrorMatchingInlineSnapshot(`
       "PropertyNameExpected in JSON at 6:6

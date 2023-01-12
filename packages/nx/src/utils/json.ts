@@ -32,7 +32,7 @@ export interface JsonSerializeOptions {
 
 /**
  * Parses the given JSON string and returns the object the JSON content represents.
- * By default javascript-style comments are allowed.
+ * By default javascript-style comments and trailing commas are allowed.
  *
  * @param input JSON content as string
  * @param options JSON parse options
@@ -45,6 +45,8 @@ export function parseJson<T extends object = any>(
   try {
     return JSON.parse(input);
   } catch {}
+
+  options = { allowTrailingComma: true, ...options };
 
   const errors: ParseError[] = [];
   const result: T = parse(input, errors, options);
