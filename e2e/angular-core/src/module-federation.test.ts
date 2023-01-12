@@ -188,8 +188,7 @@ describe('Angular Projects', () => {
     }
   }, 10_000_000);
 
-  // TODO(Coly010): re-enable this when a fix is found
-  xit('should scaffold a ssr MF setup successfully', async () => {
+  it('should scaffold a ssr MF setup successfully', async () => {
     // ARRANGE
     const remoteApp1 = uniq('remote1');
     const remoteApp2 = uniq('remote2');
