@@ -39,8 +39,8 @@
       },
       "customServerPath": {
         "type": "string",
-        "description": "Use a custom server script. (Use `customServerTarget` instead)",
-        "x-deprecated": true
+        "description": "Use a custom server script.",
+        "x-deprecated": "Use `customServerTarget` instead."
       },
       "hostname": {
         "type": "string",
