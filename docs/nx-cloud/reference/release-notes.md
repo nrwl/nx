@@ -92,6 +92,10 @@ Cleanup: Handle issues with the network and the api in a consistent fashion.
 
 # Docker Containers
 
+## 05-01-2023T17-53-45
+
+- Misc: This release contains small bug fixes and UI improvements.
+
 ## 14-12-2022T19-43-44
 
 - Feat: IAM Role Auth. We have now deprecated "aws_access_key_id" and "aws_access_key_secret" in favor of service accounts and IAM roles for accessing AWS resources. See the [new guide here](https://github.com/nrwl/nx-cloud-helm/blob/main/aws-guide/AWS-GUIDE.md) for details.
