@@ -311,6 +311,7 @@ The scope must be one of the following:
 - repo - anything related to managing the Nx repo itself
 - storybook - anything Storybook specific
 - testing - anything testing specific (e.g., Jest or Cypress)
+- vite - anything Vite specific
 - web - anything Web specific
 - webpack - anything Webpack specific
 - misc - misc stuff
