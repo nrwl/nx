@@ -14,7 +14,8 @@
         "index": 0
       },
       "x-prompt": "What app would you like to generate an Angular Universal configuration for?",
-      "x-dropdown": "projects"
+      "x-dropdown": "projects",
+      "x-priority": "important"
     },
     "appId": {
       "type": "string",
@@ -51,7 +52,8 @@
     },
     "skipFormat": {
       "type": "boolean",
-      "description": "Skip formatting the workspace after the generator completes."
+      "description": "Skip formatting the workspace after the generator completes.",
+      "x-priority": "internal"
     }
   },
   "required": ["project"],
