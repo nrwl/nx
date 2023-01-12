@@ -22,7 +22,8 @@
     "project": {
       "type": "string",
       "description": "The name of the project.",
-      "x-dropdown": "projects"
+      "x-dropdown": "projects",
+      "x-priority": "important"
     },
     "name": {
       "type": "string",
@@ -31,7 +32,8 @@
         "$source": "argv",
         "index": 0
       },
-      "x-prompt": "What name would you like to use for the component?"
+      "x-prompt": "What name would you like to use for the component?",
+      "x-priority": "important"
     },
     "displayBlock": {
       "description": "Specifies if the style will contain `:host { display: block; }`.",
@@ -68,7 +70,8 @@
       "description": "The file extension or preprocessor to use for style files, or 'none' to skip generating the style file.",
       "type": "string",
       "default": "css",
-      "enum": ["css", "scss", "sass", "less", "none"]
+      "enum": ["css", "scss", "sass", "less", "none"],
+      "x-priority": "important"
     },
     "skipTests": {
       "type": "boolean",
@@ -78,7 +81,8 @@
     "inlineScam": {
       "type": "boolean",
       "description": "Create the `NgModule` in the same file as the component.",
-      "default": true
+      "default": true,
+      "x-priority": "important"
     },
     "flat": {
       "type": "boolean",
@@ -117,7 +121,8 @@
     "export": {
       "type": "boolean",
       "description": "Specifies if the SCAM should be exported from the project's entry point (normally `index.ts`). It only applies to libraries.",
-      "default": true
+      "default": true,
+      "x-priority": "important"
     }
   },
   "required": ["name"]
