@@ -9,7 +9,6 @@ import { isRootVersion, TransitiveLookupFunctionInput } from './utils/mapping';
 import { generatePrunnedHash, hashString } from './utils/hashing';
 import { PackageJsonDeps } from './utils/pruning';
 import { sortObjectByKeys } from '../utils/object-sort';
-import { getPackageManagerCommand } from '@nrwl/devkit';
 import { execSync } from 'child_process';
 
 type LockFileDependencies = Record<
