@@ -246,9 +246,7 @@
       "options": {
         "uiFramework": "@storybook/react",
         "port": 4400,
-        "config": {
-          "configFolder": "graph/client/.storybook"
-        }
+        "configDir": "graph/client/.storybook"
       },
       "configurations": {
         "ci": {
@@ -258,13 +256,11 @@
     },
     "build-storybook": {
       "executor": "@nrwl/storybook:build",
-      "outputs": ["{options.outputPath}"],
+      "outputs": ["{options.outputDir}"],
       "options": {
         "uiFramework": "@storybook/react",
-        "outputPath": "dist/storybook/graph-client",
-        "config": {
-          "configFolder": "graph/client/.storybook"
-        }
+        "configDir": "graph/client/.storybook",
+        "outputDir": "dist/storybook/graph-client"
       },
       "configurations": {
         "ci": {
