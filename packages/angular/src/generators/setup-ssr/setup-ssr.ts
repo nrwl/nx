@@ -11,7 +11,13 @@ import {
   updateAppModule,
   updateProjectConfig,
 } from './lib';
-import { angularVersion, ngUniversalVersion } from '../../utils/versions';
+import {
+  angularVersion,
+  ngUniversalVersion,
+  versions,
+} from '../../utils/versions';
+import { getInstalledAngularVersionInfo } from '../utils/angular-version-utils';
+import { coerce, major } from 'semver';
 
 export async function setupSsr(tree: Tree, schema: Schema) {
   const options = normalizeOptions(tree, schema);
@@ -20,14 +26,27 @@ export async function setupSsr(tree: Tree, schema: Schema) {
   updateAppModule(tree, options);
   updateProjectConfig(tree, options);
 
+  const installedAngularVersion = getInstalledAngularVersionInfo(tree);
+  const ngUniversalVersionToUse =
+    installedAngularVersion.major < major(coerce(angularVersion))
+      ? versions[`angularV${installedAngularVersion.major}`]
+          ?.ngUniversalVersion ?? ngUniversalVersion
+      : ngUniversalVersion;
+
+  const ngPlatformServerVersionToUse =
+    installedAngularVersion.major < major(coerce(angularVersion))
+      ? versions[`angularV${installedAngularVersion.major}`]?.angularVersion ??
+        angularVersion
+      : angularVersion;
+
   addDependenciesToPackageJson(
     tree,
     {
-      '@nguniversal/express-engine': ngUniversalVersion,
-      '@angular/platform-server': angularVersion,
+      '@nguniversal/express-engine': ngUniversalVersionToUse,
+      '@angular/platform-server': ngPlatformServerVersionToUse,
     },
     {
-      '@nguniversal/builders': ngUniversalVersion,
+      '@nguniversal/builders': ngUniversalVersionToUse,
     }
   );
 
