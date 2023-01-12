@@ -2089,7 +2089,7 @@ Note that the return value is a promise of an iterator, so you need to await bef
 ▸ **serializeJson**<`T`\>(`input`, `options?`): `string`
 
 Serializes the given data to a JSON string.
-By default the JSON string is formatted with a 2 space intendation to be easy readable.
+By default the JSON string is formatted with a 2 space indentation to be easy readable.
 
 #### Type parameters
 
