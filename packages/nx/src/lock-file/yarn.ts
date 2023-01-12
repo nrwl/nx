@@ -9,6 +9,8 @@ import { isRootVersion, TransitiveLookupFunctionInput } from './utils/mapping';
 import { generatePrunnedHash, hashString } from './utils/hashing';
 import { PackageJsonDeps } from './utils/pruning';
 import { sortObjectByKeys } from '../utils/object-sort';
+import { getPackageManagerCommand } from '@nrwl/devkit';
+import { execSync } from 'child_process';
 
 type LockFileDependencies = Record<
   string,
@@ -118,7 +120,14 @@ function mapPackages(
       versions[versionKeys[0]].rootVersion = true;
     } else {
       const rootVersionKey = versionKeys.find((v) =>
-        isRootVersion(packageName, versions[v].version)
+        isBerry
+          ? isRootVersionBerry(
+              v,
+              versions[v].version,
+              workspacePackages,
+              mappedPackages
+            )
+          : isRootVersion(v, versions[v].version)
       );
 
       // this should never happen, but just in case
@@ -530,4 +539,53 @@ function ensureMetaVersion(
   }
 
   return packageMeta;
+}
+
+/**
+ * A function equivalent to isRootVersion, but for yarn berry
+ * @param packageName name of the package
+ * @param version version of the package to check
+ */
+function isRootVersionBerry(
+  packageName: string,
+  version: string,
+  workspacePackages: LockFileDependencies,
+  mappedPackages: Record<string, PackageVersions>
+): boolean {
+  const rootVersionString = getRootVersionStringBerry(
+    packageName,
+    workspacePackages
+  );
+
+  if (!rootVersionString) {
+    return false;
+  }
+
+  const packageMeta =
+    mappedPackages[packageName]?.[`${packageName}@${version}`]?.packageMeta ||
+    [];
+
+  return packageMeta.some(
+    (v: string) =>
+      v.startsWith(`${packageName}@`) && v.endsWith(rootVersionString)
+  );
+}
+
+function getRootVersionStringBerry(
+  packageName: string,
+  workspacePackages: LockFileDependencies
+) {
+  for (const workspacePackageName in workspacePackages) {
+    if (
+      workspacePackages[workspacePackageName].resolution.endsWith(
+        '@workspace:.' // this is the root package
+      )
+    ) {
+      const { dependencies } = workspacePackages[packageName];
+
+      return dependencies[packageName];
+    }
+  }
+
+  return null;
 }
