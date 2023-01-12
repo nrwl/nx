@@ -1,16 +1,18 @@
 export default `lockfileVersion: 5.4
 
-specifiers:
-  '@nrwl/devkit': 15.4.5
-  nx: 15.4.5
-  typescript: 4.8.4
-  yargs: 17.6.2
+importers:
 
-dependencies:
-  '@nrwl/devkit': 15.4.5_nx@15.4.5+typescript@4.8.4
-  nx: 15.4.5
-  typescript: 4.8.4
-  yargs: 17.6.2
+  .:
+    specifiers:
+      '@nrwl/devkit': 15.4.5
+      nx: 15.4.5
+      typescript: 4.8.4
+      yargs: 17.6.2
+    dependencies:
+      '@nrwl/devkit': 15.4.5_nx@15.4.5+typescript@4.8.4
+      nx: 15.4.5
+      typescript: 4.8.4
+      yargs: 17.6.2
 
 packages:
 
@@ -211,14 +213,6 @@ packages:
 
   /chalk/4.1.0:
     resolution: {integrity: sha512-qwx12AxXe2Q5xQ43Ac//I6v5aXTipYrSESdOgzrN+9XjgEpyjpKuvSGaN4qE93f7TQTlerQQ8S+EQ0EyDoVL1A==}
-    engines: {node: '>=10'}
-    dependencies:
-      ansi-styles: 4.3.0
-      supports-color: 7.2.0
-    dev: false
-
-  /chalk/4.1.2:
-    resolution: {integrity: sha512-oKnbhFyRIXpUuez8iBMmyEa4nbj4IOQyuhc/wy9kY7/WVPcwIO9VA668Pu8RkO7+0G76SLROeyw9CpQ061i4mA==}
     engines: {node: '>=10'}
     dependencies:
       ansi-styles: 4.3.0
@@ -467,7 +461,7 @@ packages:
       fs.realpath: 1.0.0
       inflight: 1.0.6
       inherits: 2.0.4
-      minimatch: 3.1.2
+      minimatch: 3.0.5
       once: 1.4.0
       path-is-absolute: 1.0.1
     dev: false
@@ -549,9 +543,9 @@ packages:
     hasBin: true
     dependencies:
       async: 3.2.4
-      chalk: 4.1.2
+      chalk: 4.1.0
       filelist: 1.0.4
-      minimatch: 3.1.2
+      minimatch: 3.0.5
     dev: false
 
   /js-yaml/3.14.1:
@@ -626,12 +620,6 @@ packages:
 
   /minimatch/3.0.5:
     resolution: {integrity: sha512-tUpxzX0VAzJHjLu0xUfFv1gwVp9ba3IOuRAVH2EGuRW8a5emA2FlACLqiT/lDVtS1W+TGNwqz3sWaNyLgDJWuw==}
-    dependencies:
-      brace-expansion: 1.1.11
-    dev: false
-
-  /minimatch/3.1.2:
-    resolution: {integrity: sha512-J7p63hRiAjw1NDEww1W7i37+ByIrOWO5XQQAzZ3VOcL0PNybwpfmV/N05zFAzwQ9USyEcX6t3UO+K5aqBQOIHw==}
     dependencies:
       brace-expansion: 1.1.11
     dev: false

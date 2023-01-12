@@ -1,5 +1,5 @@
 import { joinPathFragments } from '../utils/path';
-import { parsePnpmLockFile } from './pnpm-parser';
+import { parsePnpmLockFile, prunePnpmLockFile } from './pnpm-parser';
 import { vol } from 'memfs';
 import { LockFileBuilder } from './lock-file-builder';
 import { LockFileGraph } from './utils/types';
@@ -321,6 +321,61 @@ describe('pnpm LockFile utility', () => {
       builder.prune(packageJson);
       expect(builder.nodes.size).toEqual(8);
       expect(builder.isGraphConsistent().isValid).toBeTruthy();
+    });
+  });
+
+  describe('pruning', () => {
+    beforeEach(() => {
+      const fileSys = {
+        'node_modules/argparse/package.json': '{"version": "2.0.1"}',
+        'node_modules/brace-expansion/package.json': '{"version": "1.1.11"}',
+        'node_modules/cliui/package.json': '{"version": "7.0.4"}',
+        'node_modules/js-yaml/package.json': '{"version": "4.1.0"}',
+        'node_modules/minimatch/package.json': '{"version": "3.0.5"}',
+        'node_modules/tslib/package.json': '{"version": "2.4.1"}',
+        'node_modules/.modules.yaml': require(joinPathFragments(
+          __dirname,
+          '__fixtures__/pruning/.modules.yaml'
+        )).default,
+      };
+      vol.fromJSON(fileSys, '/root');
+    });
+
+    it('should prune single package', () => {
+      const lockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/pruning/pnpm-lock.yaml'
+      )).default;
+      const typescriptPackageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/pruning/typescript/package.json'
+      ));
+      const result = prunePnpmLockFile(lockFile, typescriptPackageJson);
+      expect(result).toEqual(
+        require(joinPathFragments(
+          __dirname,
+          '__fixtures__/pruning/typescript/pnpm-lock.yaml'
+        )).default
+      );
+    });
+
+    it('should prune multi packages', () => {
+      const lockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/pruning/pnpm-lock.yaml'
+      )).default;
+
+      const multiPackageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/pruning/devkit-yargs/package.json'
+      ));
+      const result = prunePnpmLockFile(lockFile, multiPackageJson);
+      expect(result).toEqual(
+        require(joinPathFragments(
+          __dirname,
+          '__fixtures__/pruning/devkit-yargs/pnpm-lock.yaml'
+        )).default
+      );
     });
   });
 });

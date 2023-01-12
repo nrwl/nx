@@ -7,6 +7,18 @@ import { dump, load } from '@zkochan/js-yaml';
 import { existsSync, readFileSync } from 'fs';
 import { workspaceRoot } from '../../utils/workspace-root';
 
+const LOCKFILE_YAML_FORMAT = {
+  blankLines: true,
+  lineWidth: 1000,
+  noCompatMode: true,
+  noRefs: true,
+  sortKeys: false,
+};
+
+export function stringifyPnpmLockFile(lockfile: Lockfile): string {
+  return dump(lockfile, LOCKFILE_YAML_FORMAT);
+}
+
 export function parseAndNormalizePnpmLockfile(content: string): Lockfile {
   const lockFileData = load(content);
   return revertFromInlineSpecifiersFormatIfNecessary(

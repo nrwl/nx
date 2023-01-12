@@ -1,6 +1,6 @@
-import { PackageJson } from '../utils/package-json';
 import { LockFileBuilder, nodeKey } from './lock-file-builder';
 import {
+  LockFileEdge,
   LockFileGraph,
   LockFileNode,
   VersionedPackageSnapshot,
@@ -9,10 +9,12 @@ import {
   PackageSnapshot,
   Lockfile,
   ProjectSnapshot,
+  PackageSnapshots,
 } from '@pnpm/lockfile-types';
 import {
   loadPnpmHoistedDepsDefinition,
   parseAndNormalizePnpmLockfile,
+  stringifyPnpmLockFile,
 } from './utils/pnpm-utils';
 import {
   addEdgeOuts,
@@ -20,28 +22,134 @@ import {
   reportUnresolvedDependencies,
   UnresolvedDependencies,
 } from './utils/parsing-utils';
+import { NormalizedPackageJson } from './utils/pruning-utils';
+import { sortObjectByKeys } from '../utils/object-sort';
 
 export function parsePnpmLockFile(lockFileContent: string): LockFileGraph {
-  const builder = buildLockFileGraph(lockFileContent);
+  const data = parseAndNormalizePnpmLockfile(lockFileContent);
+  const groupedDependencies = groupDependencies(data);
+
+  const builder = buildLockFileGraph(groupedDependencies, data.importers['.']);
   return builder.getLockFileGraph();
 }
 
 export function prunePnpmLockFile(
   rootLockFileContent: string,
-  prunedPackageJson: PackageJson
+  prunedPackageJson: NormalizedPackageJson
 ): string {
-  const builder = buildLockFileGraph(rootLockFileContent);
-  builder.prune(prunedPackageJson);
-
-  return rootLockFileContent;
-}
-
-function buildLockFileGraph(content: string): LockFileBuilder {
-  const data = parseAndNormalizePnpmLockfile(content);
-  const hoistedDependencies = loadPnpmHoistedDepsDefinition();
+  const data = parseAndNormalizePnpmLockfile(rootLockFileContent);
   const groupedDependencies = groupDependencies(data);
 
-  const builder = new LockFileBuilder(data.importers['.']);
+  const builder = buildLockFileGraph(groupedDependencies, data.importers['.']);
+  builder.prune(prunedPackageJson);
+
+  const output: Lockfile = {
+    lockfileVersion: data.lockfileVersion,
+    importers: {
+      '.': mapRootSnapshot(prunedPackageJson, data.packages, builder.nodes),
+    },
+    packages: sortObjectByKeys(mapNodes(data.packages, builder.nodes)),
+  };
+
+  return stringifyPnpmLockFile(output);
+}
+
+function mapNodes(
+  packages: PackageSnapshots,
+  nodes: Map<string, LockFileNode>
+): PackageSnapshots {
+  const result: PackageSnapshots = {};
+  for (const node of nodes.values()) {
+    const { version, name, packageName } = node;
+    const key = findKey(packages, name, {
+      version,
+      packageName,
+      returnFullKey: true,
+    });
+    const value = packages[key];
+    // TODO: this has to be checked later, but it's not a deal breaker
+    value.dev = false;
+    result[key] = value;
+  }
+  return result;
+}
+
+function findKey(
+  packages: PackageSnapshots,
+  name: string,
+  {
+    version,
+    packageName,
+    returnFullKey,
+  }: { version: string; packageName?: string; returnFullKey?: boolean }
+): string {
+  for (const key of Object.keys(packages)) {
+    // standard package
+    if (key.startsWith(`/${name}/${version}`)) {
+      return returnFullKey ? key : key.split('/').pop();
+    }
+    // tarball package
+    if (key === version) {
+      return key;
+    }
+    // alias package
+    if (packageName && key.startsWith(`/${packageName}/${version}`)) {
+      return key;
+    }
+  }
+}
+
+function mapRootSnapshot(
+  packageJson: NormalizedPackageJson,
+  packages: PackageSnapshots,
+  nodes: Map<string, LockFileNode>
+): ProjectSnapshot {
+  const findVersion = (
+    packageName: string,
+    specKey: string
+  ): { version: string; packageName?: string } => {
+    for (const node of nodes.values()) {
+      if (
+        node.name === packageName &&
+        Array.from(node.edgesIn).some(
+          (edge: LockFileEdge) => edge.versionSpec === specKey
+        )
+      ) {
+        return { version: node.version, packageName: node.packageName };
+      }
+    }
+  };
+
+  const snapshot: ProjectSnapshot = { specifiers: {} };
+  ['dependencies', 'optionalDependencies', 'devDependencies'].forEach(
+    (depType) => {
+      if (packageJson[depType]) {
+        Object.keys(packageJson[depType]).forEach((packageName) => {
+          const spec = packageJson[depType][packageName];
+          snapshot.specifiers[packageName] = spec;
+          snapshot[depType] = snapshot[depType] || {};
+          snapshot[depType][packageName] = findKey(
+            packages,
+            packageName,
+            findVersion(packageName, spec)
+          );
+        });
+      }
+    }
+  );
+
+  return snapshot;
+}
+
+function buildLockFileGraph(
+  groupedDependencies: Map<
+    string,
+    Set<[string, string, VersionedPackageSnapshot]>
+  >,
+  rootSnapshot: ProjectSnapshot
+): LockFileBuilder {
+  const hoistedDependencies = loadPnpmHoistedDepsDefinition();
+  const builder = new LockFileBuilder(rootSnapshot);
 
   // Non-root dependencies that need to be resolved later
   // Map[packageName, specKey, PackageSnapshot]
@@ -52,7 +160,7 @@ function buildLockFileGraph(content: string): LockFileBuilder {
     versionSet.forEach(([specKey, originalKey, packageSnapshot]) => {
       const isRootVersion = isVersionHoisted(
         versionSet,
-        data.importers,
+        rootSnapshot,
         hoistedDependencies,
         packageName,
         originalKey,
@@ -103,7 +211,7 @@ function buildLockFileGraph(content: string): LockFileBuilder {
 
 function isVersionHoisted(
   versionSet: Set<[string, string, VersionedPackageSnapshot]>,
-  importers: Record<string, ProjectSnapshot>,
+  rootSnapshot: ProjectSnapshot,
   hoistedDependencies: Record<string, any>,
   packageName: string,
   key: string,
@@ -114,15 +222,15 @@ function isVersionHoisted(
     return true;
   }
   // if dependency is defined in importers that has priority
-  if (importers['.'].dependencies?.[packageName]) {
+  if (rootSnapshot.dependencies?.[packageName]) {
     return (
-      importers['.'].dependencies[packageName] ===
+      rootSnapshot.dependencies[packageName] ===
       key.slice(key.lastIndexOf('/') + 1)
     );
   }
-  if (importers['.'].devDependencies?.[packageName]) {
+  if (rootSnapshot.devDependencies?.[packageName]) {
     return (
-      importers['.'].devDependencies[packageName] ===
+      rootSnapshot.devDependencies[packageName] ===
       key.slice(key.lastIndexOf('/') + 1)
     );
   }
