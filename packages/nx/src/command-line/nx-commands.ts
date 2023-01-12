@@ -731,7 +731,7 @@ function withRunOneOptions(yargs: yargs.Argv) {
   );
 
   const res = withRunOptions(
-    withOutputStyleOption(withTargetAndConfigurationOption(yargs, false), [
+    withOutputStyleOption(withConfiguration(yargs), [
       'dynamic',
       'static',
       'stream',
