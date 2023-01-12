@@ -758,4 +758,41 @@ describe('yarn LockFile utility', () => {
       );
     });
   });
+
+  describe('workspaces', () => {
+    let lockFile, packageJson;
+
+    beforeAll(() => {
+      const fileSys = {
+        'packages/package-a/package.json':
+          '{"name": "package-a", "version": "0.0.1", "dependencies": { "react": "18" } }',
+        'node_modules/react/package.json': '{"version": "17.0.2"}',
+      };
+      vol.fromJSON(fileSys, '/root');
+      packageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/workspaces/package.json'
+      ));
+    });
+
+    it('should parse classic lock file', async () => {
+      lockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/workspaces/yarn.lock'
+      )).default;
+      const result = parseYarnLockFile(lockFile, packageJson);
+      expect(result.nodes.size).toEqual(5);
+      expect(result.isValid).toBeTruthy();
+    });
+
+    it('should parse berry lock file', async () => {
+      lockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/workspaces/yarn.lock.berry'
+      )).default;
+      const result = parseYarnLockFile(lockFile, packageJson);
+      expect(result.nodes.size).toEqual(5);
+      expect(result.isValid).toBeTruthy();
+    });
+  });
 });

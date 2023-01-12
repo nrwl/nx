@@ -1,0 +1,12 @@
+{
+  "name": "package-a",
+  "version": "0.0.1",
+  "scripts": {
+    "serve": "some serve",
+    "build": "some build",
+    "test": "some test"
+  },
+  "dependencies": {
+    "react": "18"
+  }
+}

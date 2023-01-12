@@ -416,4 +416,30 @@ describe('pnpm LockFile utility', () => {
       );
     });
   });
+
+  describe('workspaces', () => {
+    let lockFile;
+
+    beforeAll(() => {
+      const fileSys = {
+        'node_modules/react/package.json': '{"version": "17.0.2"}',
+        'node_modules/.modules.yaml': require(joinPathFragments(
+          __dirname,
+          '__fixtures__/workspaces/.modules.yaml'
+        )).default,
+      };
+      vol.fromJSON(fileSys, '/root');
+
+      lockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/workspaces/pnpm-lock.yaml'
+      )).default;
+    });
+
+    it('should parse lock file', async () => {
+      const result = parsePnpmLockFile(lockFile);
+      expect(result.nodes.size).toEqual(5);
+      expect(result.isValid).toBeTruthy();
+    });
+  });
 });

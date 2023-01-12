@@ -24,7 +24,7 @@ export class LockFileBuilder {
 
   // we need to keep track of incoming edges when parsing the lock file
   // so we can mark their in edges as incoming
-  private incomingEdges = new Map<string, string>();
+  private incomingEdges = new Map<string, Set<string>>();
   private config: LockFileBuilderConfig;
 
   constructor(input: LockFileGraph, config?: LockFileBuilderConfig);
@@ -46,9 +46,45 @@ export class LockFileBuilder {
     this.config = config || {};
   }
 
+  private setIncomingSetValue(
+    incomingEdges: Map<string, Set<string>>,
+    name: string,
+    version: string
+  ) {
+    if (incomingEdges.has(name)) {
+      incomingEdges.get(name).add(version);
+    } else {
+      incomingEdges.set(name, new Set([version]));
+    }
+  }
+
+  addWorkspaceIncomingEdges(packageJson: Partial<PackageJson>) {
+    const {
+      dependencies,
+      devDependencies,
+      optionalDependencies,
+      peerDependencies,
+    } = packageJson;
+
+    Object.entries({
+      ...dependencies,
+      ...devDependencies,
+      ...optionalDependencies,
+      ...peerDependencies,
+    }).forEach(([name, versionSpec]) => {
+      this.setIncomingSetValue(this.incomingEdges, name, versionSpec);
+    });
+  }
+
+  isIncomingPackage(name: string, version: string): boolean {
+    return (
+      this.incomingEdges.has(name) && this.incomingEdges.get(name).has(version)
+    );
+  }
+
   private parseIncomingEdges(packageJson: Partial<PackageJson>) {
     // reset incoming edges
-    const incomingEdges = new Map<string, string>();
+    const incomingEdges = new Map<string, Set<string>>();
     const {
       dependencies,
       devDependencies,
@@ -58,26 +94,15 @@ export class LockFileBuilder {
       overrides,
     } = packageJson;
 
-    if (dependencies) {
-      Object.entries(dependencies).forEach(([name, versionSpec]) => {
-        incomingEdges.set(name, versionSpec);
-      });
-    }
-    if (devDependencies) {
-      Object.entries(devDependencies).forEach(([name, versionSpec]) => {
-        incomingEdges.set(name, versionSpec);
-      });
-    }
-    if (optionalDependencies) {
-      Object.entries(optionalDependencies).forEach(([name, versionSpec]) => {
-        incomingEdges.set(name, versionSpec);
-      });
-    }
-    if (peerDependencies) {
-      Object.entries(peerDependencies).forEach(([name, versionSpec]) => {
-        incomingEdges.set(name, versionSpec);
-      });
-    }
+    Object.entries({
+      ...dependencies,
+      ...devDependencies,
+      ...optionalDependencies,
+      ...peerDependencies,
+    }).forEach(([name, versionSpec]) => {
+      this.setIncomingSetValue(incomingEdges, name, versionSpec);
+    });
+
     if (resolutions) {
       Object.entries(resolutions).forEach(([name, versionSpec]) => {
         const resolutionChunks = name.split('/');
@@ -88,14 +113,14 @@ export class LockFileBuilder {
             name = resolutionChunks[resolutionChunks.length - 1];
           }
         }
-        incomingEdges.set(name, versionSpec);
+        this.setIncomingSetValue(incomingEdges, name, versionSpec);
       });
     }
     if (overrides) {
       Object.entries(overrides).forEach(([name, versionSpec]) => {
         // TODO: we do not support nested overrides yet
         if (typeof versionSpec === 'string') {
-          incomingEdges.set(name, versionSpec);
+          this.setIncomingSetValue(incomingEdges, name, versionSpec);
         }
       });
     }
@@ -196,14 +221,11 @@ export class LockFileBuilder {
         this.setEdgeTarget(existingEdge, node);
       });
     } else {
-      const incoming =
-        this.incomingEdges.has(node.name) &&
-        this.incomingEdges.get(node.name) === versionSpec;
       const edge: LockFileEdge = {
         name: node.name,
         versionSpec,
         to: node,
-        incoming,
+        incoming: this.isIncomingPackage(node.name, versionSpec),
       };
       this.updateEdgeError(edge);
       edge.to.edgesIn.add(edge);
@@ -273,25 +295,27 @@ export class LockFileBuilder {
 
     // prune the nodes
     const prunedNodes = new Set<string>();
-    this.parseIncomingEdges(packageJson).forEach((version, name) => {
-      const key = `${name}@${version}`;
-      if (this.nodes.has(key)) {
-        const node = this.nodes.get(key);
-        if (!prunedNodes.has(key)) {
-          this.traverseNode(prunedNodes, node, version);
+    this.parseIncomingEdges(packageJson).forEach((versions, name) => {
+      versions.forEach((version) => {
+        const key = `${name}@${version}`;
+        if (this.nodes.has(key)) {
+          const node = this.nodes.get(key);
+          if (!prunedNodes.has(key)) {
+            this.traverseNode(prunedNodes, node, version);
+          } else {
+            node.edgesIn.add({
+              name,
+              to: node,
+              versionSpec: version,
+              incoming: true,
+            });
+          }
         } else {
-          node.edgesIn.add({
-            name,
-            to: node,
-            versionSpec: version,
-            incoming: true,
-          });
+          throw new Error(
+            `Pruning failed. Check if all your packages have been installed. Missing node: ${name}@${version}`
+          );
         }
-      } else {
-        throw new Error(
-          `Pruning failed. Check if all your packages have been installed. Missing node: ${name}@${version}`
-        );
-      }
+      });
     });
 
     // cleanup nodes and collect packages for rehoisting

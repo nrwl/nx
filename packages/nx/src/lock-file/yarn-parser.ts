@@ -12,7 +12,9 @@ import {
 } from './utils/yarn-utils';
 import {
   addEdgeOuts,
+  getPackageJson,
   getRootVersion,
+  getSubfolders,
   reportUnresolvedDependencies,
   UnresolvedDependencies,
 } from './utils/parsing-utils';
@@ -23,9 +25,19 @@ export function parseYarnLockFile(
 ): LockFileGraph {
   const { __metadata, ...dependencies } = parseSyml(lockFileContent);
   const isBerry = !!__metadata;
-  const groupedDependencies = groupDependencies(dependencies);
+  const [groupedDependencies, workspaceProjects] = groupDependencies(
+    dependencies,
+    isBerry,
+    packageJson
+  );
 
-  const builder = buildLockFileGraph(groupedDependencies, packageJson, isBerry);
+  const builder = new LockFileBuilder(packageJson, { includeOptional: true });
+  // parse workspace dependencies as incoming dependencies
+  workspaceProjects.forEach((project) => {
+    builder.addWorkspaceIncomingEdges(project);
+  });
+
+  buildLockFileGraph(builder, groupedDependencies, isBerry);
 
   return builder.getLockFileGraph();
 }
@@ -37,9 +49,10 @@ export function pruneYarnLockFile(
 ): string {
   const { __metadata, ...dependencies } = parseSyml(rootLockFileContent);
   const isBerry = !!__metadata;
-  const groupedDependencies = groupDependencies(dependencies);
+  const [groupedDependencies] = groupDependencies(dependencies);
 
-  const builder = buildLockFileGraph(groupedDependencies, packageJson, isBerry);
+  const builder = new LockFileBuilder(packageJson, { includeOptional: true });
+  buildLockFileGraph(builder, groupedDependencies, isBerry);
   builder.prune(prunedPackageJson);
 
   const output: Record<string, YarnDependency> = {};
@@ -105,12 +118,10 @@ export function pruneYarnLockFile(
 }
 
 function buildLockFileGraph(
+  builder: LockFileBuilder,
   groupedDependencies: Map<string, Map<string, Set<[string, YarnDependency]>>>,
-  packageJson: PackageJson,
   isBerry: boolean
 ): LockFileBuilder {
-  const builder = new LockFileBuilder(packageJson, { includeOptional: true });
-
   isBerry
     ? parseBerryLockFile(builder, groupedDependencies)
     : parseClassicLockFile(builder, groupedDependencies);
@@ -121,12 +132,18 @@ function buildLockFileGraph(
 // Map Record<string, YarnDependency> to
 // Map[packageName] -> Map[version] -> Set[key, YarnDependency]
 function groupDependencies(
-  dependencies: Record<string, YarnDependency>
-): Map<string, Map<string, Set<[string, YarnDependency]>>> {
+  dependencies: Record<string, YarnDependency>,
+  isBerry?: boolean,
+  packageJson?: PackageJson
+): [
+  Map<string, Map<string, Set<[string, YarnDependency]>>>,
+  Set<YarnDependency>
+] {
   const groupedDependencies = new Map<
     string,
     Map<string, Set<[string, YarnDependency]>>
   >();
+  const workspaceProjects = new Set<YarnDependency>();
 
   Object.entries(dependencies).forEach(([keyExp, value]) => {
     // Berry's parsed yaml keeps multiple version spec for the same version together
@@ -139,9 +156,14 @@ function groupDependencies(
       if (key.startsWith(`${packageName}@patch:${packageName}`)) {
         return;
       }
-      // we don't track workspace projects (this is berry specific)
-      if (value.linkType === 'soft' || key.includes('@workspace:')) {
-        return;
+      // we don't track root workspace project (this is berry specific)
+      if (value.linkType === 'soft') {
+        if (key.includes('@workspace:.')) {
+          return;
+        } else {
+          workspaceProjects.add(value);
+          return;
+        }
       }
 
       const valueSet = new Set<[string, YarnDependency]>().add([key, value]);
@@ -161,7 +183,35 @@ function groupDependencies(
     });
   });
 
-  return groupedDependencies;
+  if (!isBerry && packageJson && packageJson.workspaces) {
+    getClassicWorkspacesDependencies(workspaceProjects, packageJson.workspaces);
+  }
+
+  return [groupedDependencies, workspaceProjects];
+}
+
+function getClassicWorkspacesDependencies(
+  workspaceConfigs: Set<YarnDependency>,
+  workspaces: string[] | { packages: string[] }
+) {
+  const workspacesPackages = Array.isArray(workspaces)
+    ? workspaces
+    : workspaces.packages;
+  workspacesPackages.forEach((workspace) => {
+    if (workspace.endsWith('*')) {
+      getSubfolders(workspace.replace('/*', '')).forEach((folder) => {
+        const packageJson = getPackageJson(folder);
+        if (packageJson) {
+          workspaceConfigs.add(packageJson);
+        }
+      });
+    } else {
+      const packageJson = getPackageJson(workspace);
+      if (packageJson) {
+        workspaceConfigs.add(packageJson);
+      }
+    }
+  });
 }
 
 function parseClassicLockFile(
@@ -175,6 +225,7 @@ function parseClassicLockFile(
   const isHoisted = true;
 
   groupedDependencies.forEach((versionMap, packageName) => {
+    // use root packages t
     let rootVersion;
     if (versionMap.size === 1) {
       // If there is only one version, it is the root version
@@ -398,6 +449,23 @@ function exhaustUnresolvedDependencies(
           unresolvedDependencies.delete(unresolvedSet);
           return;
         }
+      }
+      if (builder.isIncomingPackage(packageName, versionSpec)) {
+        const node = isBerry
+          ? parseBerryNode(packageName, value)
+          : parseClassicNode(packageName, versionSpec, value);
+
+        builder.addNode(node);
+        builder.addEdgeIn(node, versionSpec);
+        addEdgeOuts({ builder, node, section: value.dependencies });
+        addEdgeOuts({
+          builder,
+          node,
+          section: value.optionalDependencies,
+          isOptional: true,
+        });
+        unresolvedDependencies.delete(unresolvedSet);
+        return;
       }
     }
   });

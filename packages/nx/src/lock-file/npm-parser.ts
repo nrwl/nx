@@ -307,12 +307,41 @@ function buildLockFileGraph(
   const normalizedPackageJson = normalizeNpmPackageJson(
     packageJson,
     isLockFileV1 ? data.dependencies : data.packages,
-    isLockFileV1
+    { isLockFileV1 }
   );
 
   const builder = new LockFileBuilder(normalizedPackageJson, {
     includeOptional: true,
   });
+  // parse workspace dependencies as incoming dependencies
+  if (packageJson.workspaces) {
+    if (isLockFileV1) {
+      Object.keys(data.dependencies).forEach((key) => {
+        if (
+          data.dependencies[key].version.startsWith('file:') &&
+          data.dependencies[key].requires
+        ) {
+          const normalizedJson = normalizeNpmPackageJson(
+            { dependencies: data.dependencies[key].requires } as PackageJson,
+            data.dependencies,
+            { isLockFileV1, parentPath: key }
+          );
+          builder.addWorkspaceIncomingEdges(normalizedJson);
+        }
+      });
+    } else {
+      Object.keys(data.packages).forEach((key) => {
+        if (key && !key.includes('node_modules')) {
+          const normalizedJson = normalizeNpmPackageJson(
+            data.packages[key] as PackageJson,
+            data.packages,
+            { isLockFileV1, parentPath: key }
+          );
+          builder.addWorkspaceIncomingEdges(normalizedJson);
+        }
+      });
+    }
+  }
 
   isLockFileV1
     ? parseV1LockFile(builder, data.dependencies)
@@ -346,41 +375,44 @@ function parseV1Dependency(
     parents: [],
   }
 ) {
-  const node = parseV1Node(packageName, value, isHoisted);
-  builder.addNode(node);
-  builder.addEdgeIn(node, value.version);
+  let pathSegments = [...parents];
+  if (!value.version.startsWith('file:')) {
+    const node = parseV1Node(packageName, value, isHoisted);
+    builder.addNode(node);
+    builder.addEdgeIn(node, value.version);
 
-  const pathSegments = [...parents, packageName];
-  if (value.requires) {
-    Object.entries(value.requires).forEach(([depName, depSpec]) => {
-      const matchedVersion = findV1EdgeVersion(
-        dependencies,
-        pathSegments,
-        depName,
-        depSpec
-      );
-      builder.addEdgeOut(node, depName, matchedVersion);
-    });
-  }
-  const { peerDependencies, peerDependenciesMeta } = getPeerDependencies(
-    `node_modules/${pathSegments.join('/node_modules/')}`
-  );
-  if (peerDependencies) {
-    Object.entries(peerDependencies).forEach(([depName, depSpec]) => {
-      if (!node.edgesOut?.has(depName)) {
-        const isOptional = peerDependenciesMeta?.[depName]?.optional;
-        let matchedVersion = findV1EdgeVersion(
+    pathSegments.push(packageName);
+    if (value.requires) {
+      Object.entries(value.requires).forEach(([depName, depSpec]) => {
+        const matchedVersion = findV1EdgeVersion(
           dependencies,
           pathSegments,
           depName,
           depSpec
         );
-        if (!matchedVersion && isOptional) {
-          matchedVersion = depSpec;
+        builder.addEdgeOut(node, depName, matchedVersion);
+      });
+    }
+    const { peerDependencies, peerDependenciesMeta } = getPeerDependencies(
+      `node_modules/${pathSegments.join('/node_modules/')}`
+    );
+    if (peerDependencies) {
+      Object.entries(peerDependencies).forEach(([depName, depSpec]) => {
+        if (!node.edgesOut?.has(depName)) {
+          const isOptional = peerDependenciesMeta?.[depName]?.optional;
+          let matchedVersion = findV1EdgeVersion(
+            dependencies,
+            pathSegments,
+            depName,
+            depSpec
+          );
+          if (!matchedVersion && isOptional) {
+            matchedVersion = depSpec;
+          }
+          builder.addEdgeOut(node, depName, matchedVersion, isOptional);
         }
-        builder.addEdgeOut(node, depName, matchedVersion, isOptional);
-      }
-    });
+      });
+    }
   }
 
   if (value.dependencies) {
@@ -478,8 +510,8 @@ function parseV3LockFile(
 ) {
   if (packages) {
     Object.entries(packages).forEach(([path, value]) => {
-      if (path === '') {
-        return; // skip root package (it's already added
+      if (path === '' || !path.includes('node_modules') || value.link) {
+        return; // skip workspaces packages
       }
 
       const isHoisted = !path.includes('/node_modules/');
@@ -542,7 +574,11 @@ function findV3EdgeVersion(
     }
     return versionSpec;
   }
-  const parentPath = path.slice(0, path.lastIndexOf('node_modules'));
+  let parentPath = path.slice(0, path.lastIndexOf('node_modules'));
+  // workspace packages do not start with node_modules
+  if (parentPath === path || parentPath + '/' === path) {
+    parentPath = '';
+  }
   return findV3EdgeVersion(
     packages,
     parentPath,

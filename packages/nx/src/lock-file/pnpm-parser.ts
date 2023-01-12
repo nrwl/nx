@@ -29,7 +29,7 @@ export function parsePnpmLockFile(lockFileContent: string): LockFileGraph {
   const data = parseAndNormalizePnpmLockfile(lockFileContent);
   const groupedDependencies = groupDependencies(data);
 
-  const builder = buildLockFileGraph(groupedDependencies, data.importers['.']);
+  const builder = buildLockFileGraph(groupedDependencies, data.importers);
   return builder.getLockFileGraph();
 }
 
@@ -40,7 +40,7 @@ export function prunePnpmLockFile(
   const data = parseAndNormalizePnpmLockfile(rootLockFileContent);
   const groupedDependencies = groupDependencies(data);
 
-  const builder = buildLockFileGraph(groupedDependencies, data.importers['.']);
+  const builder = buildLockFileGraph(groupedDependencies, data.importers);
   builder.prune(prunedPackageJson);
 
   const output: Lockfile = {
@@ -167,10 +167,16 @@ function buildLockFileGraph(
     string,
     Set<[string, string, VersionedPackageSnapshot]>
   >,
-  rootSnapshot: ProjectSnapshot
+  rootSnapshots: Record<string, ProjectSnapshot>
 ): LockFileBuilder {
   const hoistedDependencies = loadPnpmHoistedDepsDefinition();
-  const builder = new LockFileBuilder(rootSnapshot);
+  const builder = new LockFileBuilder(rootSnapshots['.']);
+  // parse workspace dependencies as incoming dependencies
+  Object.keys(rootSnapshots).forEach((key) => {
+    if (key !== '.') {
+      builder.addWorkspaceIncomingEdges(rootSnapshots[key]);
+    }
+  });
 
   // Non-root dependencies that need to be resolved later
   // Map[packageName, specKey, PackageSnapshot]
@@ -181,7 +187,7 @@ function buildLockFileGraph(
     versionSet.forEach(([specKey, originalKey, packageSnapshot]) => {
       const isRootVersion = isVersionHoisted(
         versionSet,
-        rootSnapshot,
+        rootSnapshots['.'],
         hoistedDependencies,
         packageName,
         originalKey,
@@ -191,30 +197,7 @@ function buildLockFileGraph(
       if (isRootVersion) {
         const node = parseNode(packageName, specKey, packageSnapshot, true);
         if (!builder.nodes.has(nodeKey(node))) {
-          builder.addNode(node);
-          builder.addEdgeIn(node, specKey);
-
-          if (packageSnapshot.peerDependenciesMeta) {
-            // for pnpm, peerDependencies are always doubled in the dependencies if installed
-            addEdgeOuts({
-              builder,
-              node,
-              section: packageSnapshot.dependencies,
-              isOptionalFunc: (depName) =>
-                packageSnapshot.peerDependenciesMeta[depName]?.optional,
-            });
-          } else {
-            addEdgeOuts({
-              builder,
-              node,
-              section: packageSnapshot.dependencies,
-            });
-          }
-          addEdgeOuts({
-            builder,
-            node,
-            section: packageSnapshot.optionalDependencies,
-          });
+          appendNodeAndEdges(builder, node, packageSnapshot, specKey);
         } else {
           const existingEdge = builder.nodes.get(nodeKey(node));
           builder.addEdgeIn(existingEdge, specKey);
@@ -228,6 +211,38 @@ function buildLockFileGraph(
   exhaustUnresolvedDependencies(builder, unresolvedDependencies);
 
   return builder;
+}
+
+function appendNodeAndEdges(
+  builder: LockFileBuilder,
+  node: LockFileNode,
+  packageSnapshot: PackageSnapshot,
+  version: string
+) {
+  builder.addNode(node);
+  builder.addEdgeIn(node, version);
+
+  if (packageSnapshot.peerDependenciesMeta) {
+    // for pnpm, peerDependencies are always doubled in the dependencies if installed
+    addEdgeOuts({
+      builder,
+      node,
+      section: packageSnapshot.dependencies,
+      isOptionalFunc: (depName) =>
+        packageSnapshot.peerDependenciesMeta[depName]?.optional,
+    });
+  } else {
+    addEdgeOuts({
+      builder,
+      node,
+      section: packageSnapshot.dependencies,
+    });
+  }
+  addEdgeOuts({
+    builder,
+    node,
+    section: packageSnapshot.optionalDependencies,
+  });
 }
 
 function isVersionHoisted(
@@ -405,28 +420,7 @@ function exhaustUnresolvedDependencies(
 
           // we might have added the node already
           if (!builder.nodes.has(nodeKey(node))) {
-            builder.addNode(node);
-            builder.addEdgeIn(node, versionSpec);
-            if (packageSnapshot.peerDependenciesMeta) {
-              addEdgeOuts({
-                builder,
-                node,
-                section: packageSnapshot.dependencies,
-                isOptionalFunc: (depName) =>
-                  packageSnapshot.peerDependenciesMeta[depName]?.optional,
-              });
-            } else {
-              addEdgeOuts({
-                builder,
-                node,
-                section: packageSnapshot.dependencies,
-              });
-            }
-            addEdgeOuts({
-              builder,
-              node,
-              section: packageSnapshot.optionalDependencies,
-            });
+            appendNodeAndEdges(builder, node, packageSnapshot, versionSpec);
           } else {
             const existingNode = builder.nodes.get(nodeKey(node));
             builder.addEdgeIn(existingNode, versionSpec);
@@ -434,6 +428,17 @@ function exhaustUnresolvedDependencies(
           unresolvedDependencies.delete(unresolvedSet);
           return;
         }
+      }
+      if (builder.isIncomingPackage(packageName, versionSpec)) {
+        const node = parseNode(
+          packageName,
+          versionSpec,
+          packageSnapshot,
+          false
+        );
+        appendNodeAndEdges(builder, node, packageSnapshot, versionSpec);
+        unresolvedDependencies.delete(unresolvedSet);
+        return;
       }
     }
   });

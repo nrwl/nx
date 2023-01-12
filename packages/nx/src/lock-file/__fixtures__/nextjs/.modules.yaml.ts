@@ -2256,6 +2256,6 @@ skipped:
   - /esbuild-windows-32/0.15.18
   - /esbuild-windows-64/0.15.18
   - /esbuild-windows-arm64/0.15.18
-storeDir: /Users/miro/Library/pnpm/store/v3
+storeDir: /Users/jdoe/Library/pnpm/store/v3
 virtualStoreDir: .pnpm
 `;

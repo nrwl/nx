@@ -403,17 +403,6 @@ describe('NPM lock file utility', () => {
   });
 
   describe('optional packages', () => {
-    beforeEach(() => {
-      const fileSys = {
-        'node_modules/ssh2/package.json': '{"version": "1.11.6"}',
-        'node_modules/.modules.yaml': require(joinPathFragments(
-          __dirname,
-          '__fixtures__/optional/.modules.yaml'
-        )).default,
-      };
-      vol.fromJSON(fileSys, '/root');
-    });
-
     it('should match parsed and pruned graph', async () => {
       const lockFile = require(joinPathFragments(
         __dirname,
@@ -490,6 +479,37 @@ describe('NPM lock file utility', () => {
           2
         )
       );
+    });
+  });
+
+  describe('workspaces', () => {
+    let lockFile, packageJson;
+
+    beforeAll(() => {
+      packageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/workspaces/package.json'
+      ));
+    });
+
+    it('should parse v2 lock file', async () => {
+      lockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/workspaces/package-lock.json'
+      ));
+      const result = parseNpmLockFile(JSON.stringify(lockFile), packageJson);
+      expect(result.nodes.size).toEqual(5);
+      expect(result.isValid).toBeTruthy();
+    });
+
+    it('should parse v1 lock file', async () => {
+      lockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/workspaces/package-lock.v1.json'
+      ));
+      const result = parseNpmLockFile(JSON.stringify(lockFile), packageJson);
+      expect(result.nodes.size).toEqual(5);
+      expect(result.isValid).toBeTruthy();
     });
   });
 });

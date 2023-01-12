@@ -63,6 +63,7 @@ export type NpmDependencyV3 = {
   devOptional?: boolean;
   optional?: boolean;
   name?: string;
+  link?: boolean;
 };
 
 export type NpmDependencyV1 = {
