@@ -37,7 +37,9 @@ export function lockFileExists(
   if (packageManager === 'npm') {
     return existsSync(NPM_LOCK_PATH);
   }
-  throw Error(`Unknown package manager ${packageManager} or lock file missing`);
+  throw new Error(
+    `Unknown package manager ${packageManager} or lock file missing`
+  );
 }
 
 /**
@@ -59,7 +61,7 @@ export function lockFileHash(
   if (file) {
     return hashString(file);
   } else {
-    throw Error(
+    throw new Error(
       `Unknown package manager ${packageManager} or lock file missing`
     );
   }
@@ -84,7 +86,7 @@ export function parseLockFile(
     const content = readFileSync(NPM_LOCK_PATH, 'utf8');
     return parseNpmLockFile(content, packageJson);
   }
-  throw Error(`Unknown package manager: ${packageManager}`);
+  throw new Error(`Unknown package manager: ${packageManager}`);
 }
 
 /**
@@ -104,7 +106,7 @@ export function getLockFileName(
   if (packageManager === 'npm') {
     return NPM_LOCK_FILE;
   }
-  throw Error(`Unknown package manager: ${packageManager}`);
+  throw new Error(`Unknown package manager: ${packageManager}`);
 }
 
 /**
@@ -134,7 +136,7 @@ export function createLockFile(
     const content = readFileSync(NPM_LOCK_FILE, 'utf8');
     return pruneNpmLockFile(content, rootPackageJson, normalizedPackageJson);
   }
-  throw Error(`Unknown package manager: ${packageManager}`);
+  throw new Error(`Unknown package manager: ${packageManager}`);
 }
 
 function hashString(fileContent: string): string {

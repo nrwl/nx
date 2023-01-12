@@ -474,13 +474,7 @@ function parseV3LockFile(
           builder.addEdgeOut(
             node,
             depName,
-            findV3EdgeVersion(
-              packages,
-              path,
-              depName,
-              depSpec,
-              peerMeta[depName]?.optional
-            ),
+            findV3EdgeVersion(packages, path, depName, depSpec, true),
             peerMeta[depName]?.optional
           );
         });
@@ -508,7 +502,7 @@ function findV3EdgeVersion(
   path: string,
   name: string,
   versionSpec: string,
-  optional?: boolean
+  optionalOrPeer?: boolean // depending on installation, not all peer deps will be installed
 ): string {
   if (path && !path.endsWith('/')) {
     path = path + '/';
@@ -518,13 +512,21 @@ function findV3EdgeVersion(
     return child.version;
   }
   if (!path) {
-    if (!optional) {
-      throw `Could not find version for ${name} with spec ${versionSpec} in the lock file`;
+    if (!optionalOrPeer) {
+      throw new Error(
+        `Could not find version for ${name} with spec ${versionSpec} in the lock file`
+      );
     }
     return versionSpec;
   }
   const parentPath = path.slice(0, path.lastIndexOf('node_modules'));
-  return findV3EdgeVersion(packages, parentPath, name, versionSpec, optional);
+  return findV3EdgeVersion(
+    packages,
+    parentPath,
+    name,
+    versionSpec,
+    optionalOrPeer
+  );
 }
 
 // parse node value from lock file into `LockFileNode`
