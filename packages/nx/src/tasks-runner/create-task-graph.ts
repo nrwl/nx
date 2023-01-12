@@ -209,6 +209,7 @@ export class ProcessTasks {
       project: project.name,
       target,
       configuration: resolvedConfiguration,
+      type: project.type,
     };
 
     return {
