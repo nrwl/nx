@@ -1,24 +1,13 @@
 import { ExecutorContext, joinPathFragments, logger } from '@nrwl/devkit';
 import { findNodes } from 'nx/src/utils/typescript';
 import 'dotenv/config';
-import {
-  constants,
-  copyFileSync,
-  existsSync,
-  readFileSync,
-  mkdtempSync,
-  statSync,
-} from 'fs';
-import { tmpdir } from 'os';
-import { basename, join, sep } from 'path';
+import { existsSync, readFileSync } from 'fs';
+import { join } from 'path';
 import { gte } from 'semver';
 import ts = require('typescript');
-import {
-  CommonNxStorybookConfig,
-  StorybookConfig,
-  UiFramework,
-} from './models';
-import { storybookConfigExists } from '../utils/utilities';
+import { CommonNxStorybookConfig, UiFramework } from './models';
+import { storybookConfigExistsCheck } from '../utils/utilities';
+import { CLIOptions } from '@storybook/types';
 
 export interface NodePackage {
   name: string;
@@ -63,15 +52,17 @@ export function isStorybookV7() {
 }
 
 // TODO (katerina): Remove when Storybook 7
-export function runStorybookSetupCheck(options: CommonNxStorybookConfig) {
+export function runStorybookSetupCheck(
+  options: CLIOptions & CommonNxStorybookConfig
+) {
   webpackFinalPropertyCheck(options);
   reactWebpack5Check(options);
 }
 
 // TODO (katerina): Remove when Storybook 7
-function reactWebpack5Check(options: CommonNxStorybookConfig) {
+function reactWebpack5Check(options: CLIOptions & CommonNxStorybookConfig) {
   if (options.uiFramework === '@storybook/react') {
-    const source = mainJsTsFileContent(options.config.configFolder);
+    const source = mainJsTsFileContent(options.configDir);
     const rootSource = mainJsTsFileContent('.storybook');
     // check whether the current Storybook configuration has the webpack 5 builder enabled
     if (
@@ -116,14 +107,16 @@ function mainJsTsFileContent(configFolder: string): ts.SourceFile {
 }
 
 // TODO (katerina): Remove when Storybook 7
-function webpackFinalPropertyCheck(options: CommonNxStorybookConfig) {
+function webpackFinalPropertyCheck(
+  options: CLIOptions & CommonNxStorybookConfig
+) {
   let placesToCheck = [
     {
       path: joinPathFragments('.storybook', 'webpack.config.js'),
       result: false,
     },
     {
-      path: joinPathFragments(options.config.configFolder, 'webpack.config.js'),
+      path: joinPathFragments(options.configDir, 'webpack.config.js'),
       result: false,
     },
   ];
@@ -152,78 +145,6 @@ function webpackFinalPropertyCheck(options: CommonNxStorybookConfig) {
     `
     );
   }
-}
-
-// TODO (katerina): Remove when Storybook 7
-export function resolveCommonStorybookOptionMapper(
-  builderOptions: CommonNxStorybookConfig,
-  frameworkOptions: any,
-  context: ExecutorContext
-) {
-  const storybookConfig = findOrCreateConfig(builderOptions.config, context);
-  const storybookOptions = {
-    workspaceRoot: context.root,
-    configDir: storybookConfig,
-    ...frameworkOptions,
-    frameworkPresets: [...(frameworkOptions.frameworkPresets || [])],
-    watch: false,
-  };
-
-  return storybookOptions;
-}
-
-// TODO (katerina): Remove when Storybook 7
-function findOrCreateConfig(
-  config: StorybookConfig,
-  context: ExecutorContext
-): string {
-  if (storybookConfigExists(config, context.projectName)) {
-    return config.configFolder;
-  } else if (
-    statSync(config.configPath).isFile() &&
-    statSync(config.pluginPath).isFile() &&
-    statSync(config.srcRoot).isFile()
-  ) {
-    return createStorybookConfig(
-      config.configPath,
-      config.pluginPath,
-      config.srcRoot
-    );
-  } else {
-    const sourceRoot =
-      context.projectsConfigurations.projects[context.projectName].root;
-    if (statSync(join(context.root, sourceRoot, '.storybook')).isDirectory()) {
-      return join(context.root, sourceRoot, '.storybook');
-    }
-  }
-  throw new Error('No configuration settings');
-}
-
-// TODO (katerina): Remove when Storybook 7
-function createStorybookConfig(
-  configPath: string,
-  pluginPath: string,
-  srcRoot: string
-): string {
-  const tmpDir = tmpdir();
-  const tmpFolder = `${tmpDir}${sep}`;
-  mkdtempSync(tmpFolder);
-  copyFileSync(
-    configPath,
-    `${tmpFolder}/${basename(configPath)}`,
-    constants.COPYFILE_EXCL
-  );
-  copyFileSync(
-    pluginPath,
-    `${tmpFolder}/${basename(pluginPath)}`,
-    constants.COPYFILE_EXCL
-  );
-  copyFileSync(
-    srcRoot,
-    `${tmpFolder}/${basename(srcRoot)}`,
-    constants.COPYFILE_EXCL
-  );
-  return tmpFolder;
 }
 
 // TODO (katerina): Remove when Storybook 7

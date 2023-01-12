@@ -12,7 +12,6 @@ import {
 import { lte } from 'semver';
 import { join } from 'path';
 import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-utils';
-import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
 import { storybookVersion } from '../../../utils/versions';
 import { createProjectStorybookDir } from '../../../generators/configuration/util-functions';
 import { StorybookConfigureSchema } from '../../../generators/configuration/schema';

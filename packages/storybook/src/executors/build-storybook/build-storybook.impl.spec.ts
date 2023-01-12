@@ -1,41 +1,31 @@
 import { ExecutorContext, logger } from '@nrwl/devkit';
 import { join } from 'path';
-import storybookBuilder, {
-  StorybookBuilderOptions,
-} from './build-storybook.impl';
+import storybookBuilder from './build-storybook.impl';
 import * as executorContext from '../../utils/test-configs/executor-context.json';
 jest.mock('@storybook/core-server', () => {
   const buildStaticStandalone = jest
     .fn()
     .mockImplementation(() => Promise.resolve());
+  const build = jest.fn().mockImplementation(() => Promise.resolve());
   return {
     buildStaticStandalone,
+    build,
   };
 });
 import * as build from '@storybook/core-server';
+import { CLIOptions } from '@storybook/types';
+import { CommonNxStorybookConfig } from '../models';
 
+// TODO (katerina): Update when Storybook 7
 describe('Build storybook', () => {
   let context: ExecutorContext;
-  let options: StorybookBuilderOptions;
-  let uiFramework: StorybookBuilderOptions['uiFramework'];
-  let outputPath: StorybookBuilderOptions['outputPath'];
-  let config: StorybookBuilderOptions['config'];
+  let options: CLIOptions & CommonNxStorybookConfig;
 
   beforeEach(async () => {
-    config = {
-      pluginPath: join(
-        __dirname,
-        `/../../utils/test-configs/.storybook/main.js`
-      ),
-      configFolder: join(__dirname, `/../../utils/test-configs/.storybook`),
-      srcRoot: join(
-        __dirname,
-        `/../../utils/test-configs/.storybook/tsconfig.json`
-      ),
-    };
     options = {
-      config,
+      configDir: join(__dirname, `/../../utils/test-configs/.storybook`),
       uiFramework: '@storybook/react',
+      outputDir: `/root/dist/storybook`,
     };
 
     context = executorContext as ExecutorContext;
@@ -51,10 +41,10 @@ describe('Build storybook', () => {
     const result = await storybookBuilder(options, context);
 
     expect(standaloneSpy).toHaveBeenCalled();
-    expect(loggerSpy).toHaveBeenCalledWith(
-      `NX Storybook files available in ${outputPath}`
-    );
     expect(loggerSpy).toHaveBeenCalledWith(`NX ui framework: @storybook/react`);
+    expect(loggerSpy).toHaveBeenCalledWith(
+      `NX Storybook files available in /root/dist/storybook`
+    );
     expect(result.success).toBeTruthy();
   });
 });

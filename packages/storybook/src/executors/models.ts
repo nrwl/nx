@@ -8,7 +8,6 @@ export interface StorybookConfig {
 export interface CommonNxStorybookConfig {
   uiFramework?: UiFramework;
   uiFramework7?: UiFramework7;
-  config: StorybookConfig;
 }
 
 export type UiFramework7 =

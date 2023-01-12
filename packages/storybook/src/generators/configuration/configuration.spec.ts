@@ -167,9 +167,7 @@ describe('@nrwl/storybook:configuration', () => {
         options: {
           port: 4400,
           uiFramework: '@storybook/react',
-          config: {
-            configFolder: 'libs/test-ui-lib/.storybook',
-          },
+          configDir: 'libs/test-ui-lib/.storybook',
         },
       });
 
