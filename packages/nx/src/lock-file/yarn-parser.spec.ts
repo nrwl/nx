@@ -226,12 +226,11 @@ describe('yarn LockFile utility', () => {
       vol.fromJSON(fileSys, '/root');
     });
 
-    const packageJson = require(joinPathFragments(
-      __dirname,
-      '__fixtures__/auxiliary-packages/package.json'
-    ));
-
     it('should parse yarn classic', async () => {
+      const packageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/auxiliary-packages/package.json'
+      ));
       const classicLockFile = require(joinPathFragments(
         __dirname,
         '__fixtures__/auxiliary-packages/yarn.lock'
@@ -310,7 +309,44 @@ describe('yarn LockFile utility', () => {
       `);
     });
 
+    it('should prune yarn classic', () => {
+      const lockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/auxiliary-packages/yarn.lock'
+      )).default;
+      const packageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/auxiliary-packages/package.json'
+      ));
+      const prunedLockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/auxiliary-packages/yarn.lock.pruned'
+      )).default;
+
+      const result = pruneYarnLockFile(lockFile, packageJson, {
+        name: 'test',
+        version: '0.0.0',
+        license: 'MIT',
+        dependencies: {
+          '@nrwl/devkit': '15.0.13',
+          'eslint-plugin-disable-autofix':
+            'npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0',
+          postgres:
+            'https://codeload.github.com/charsleysa/postgres/tar.gz/3b1a01b2da3e2fafb1a79006f838eff11a8de3cb',
+          yargs: '17.6.2',
+        },
+        devDependencies: {
+          react: '18.2.0',
+        },
+      });
+      expect(result).toEqual(prunedLockFile);
+    });
+
     it('should parse yarn berry', async () => {
+      const packageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/auxiliary-packages/package.json'
+      ));
       const berryLockFile = require(joinPathFragments(
         __dirname,
         '__fixtures__/auxiliary-packages/yarn-berry.lock'
@@ -387,6 +423,41 @@ describe('yarn LockFile utility', () => {
           "type": "npm",
         }
       `);
+    });
+
+    it('should prune yarn berry', () => {
+      const lockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/auxiliary-packages/yarn-berry.lock'
+      )).default;
+      const packageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/auxiliary-packages/package.json'
+      ));
+      const prunedLockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/auxiliary-packages/yarn-berry.lock.pruned'
+      )).default;
+
+      const result = pruneYarnLockFile(lockFile, packageJson, {
+        name: 'test',
+        version: '0.0.0',
+        license: 'MIT',
+        dependencies: {
+          '@nrwl/devkit': '15.0.13',
+          'eslint-plugin-disable-autofix':
+            'npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0',
+          postgres:
+            'https://github.com/charsleysa/postgres.git#commit=3b1a01b2da3e2fafb1a79006f838eff11a8de3cb',
+          yargs: '17.6.2',
+        },
+        devDependencies: {
+          react: '18.2.0',
+        },
+      });
+      expect(result.split('\n').slice(2)).toEqual(
+        prunedLockFile.split('\n').slice(2)
+      );
     });
   });
 

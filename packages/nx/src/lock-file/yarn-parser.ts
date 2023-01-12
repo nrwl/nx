@@ -44,12 +44,27 @@ export function pruneYarnLockFile(
 
   const output: Record<string, YarnDependency> = {};
   builder.nodes.forEach((node) => {
-    const value = groupedDependencies
-      .get(node.name)
-      .get(node.version)
-      .values()
-      .next().value[1];
+    const packageGroup = groupedDependencies.get(node.name);
 
+    let versionSet;
+    if (packageGroup.has(node.version)) {
+      versionSet = packageGroup.get(node.version);
+    } else {
+      // for alias, version in the original groupedDependencies might be different
+      for (let set of packageGroup.values()) {
+        if (
+          set.values().next().value[1].resolved === node.version ||
+          set.values().next().value[1].resolution ===
+            `${node.name}@${node.version}`
+        ) {
+          // for berry resolution contains project name
+          versionSet = set;
+          break;
+        }
+      }
+    }
+
+    const value = versionSet.values().next().value[1];
     const keys = new Set<string>();
     node.edgesIn.forEach((edge) => {
       const version =
@@ -81,7 +96,7 @@ export function pruneYarnLockFile(
       BERRY_LOCK_FILE_DISCLAIMER +
       stringifySyml({
         __metadata,
-        dependencies: sortObjectByKeys(output),
+        ...sortObjectByKeys(output),
       })
     );
   } else {

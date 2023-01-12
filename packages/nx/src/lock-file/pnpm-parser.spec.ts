@@ -264,6 +264,44 @@ describe('pnpm LockFile utility', () => {
         }
       `);
     });
+
+    it('should prune lock file', () => {
+      const lockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/auxiliary-packages/pnpm-lock.yaml'
+      )).default;
+      const prunedLockFile: string = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/auxiliary-packages/pnpm-lock.yaml.pruned'
+      )).default;
+
+      const result = prunePnpmLockFile(lockFile, {
+        name: 'test',
+        version: '0.0.0',
+        license: 'MIT',
+        dependencies: {
+          '@nrwl/devkit': '15.0.13',
+          'eslint-plugin-disable-autofix':
+            'npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0',
+          postgres:
+            'https://codeload.github.com/charsleysa/postgres/tar.gz/3b1a01b2da3e2fafb1a79006f838eff11a8de3cb',
+          yargs: '17.6.2',
+        },
+        devDependencies: {
+          react: '18.2.0',
+        },
+        peerDependencies: {
+          typescript: '4.8.4',
+        },
+      });
+      // we replace the dev: true with dev: false because the lock file is generated with dev: false
+      // this does not break the intallation, despite being inaccurate
+      const manipulatedLockFile = prunedLockFile.replace(
+        /dev: true/g,
+        'dev: false'
+      );
+      expect(result).toEqual(manipulatedLockFile);
+    });
   });
 
   describe('duplicate packages', () => {

@@ -111,7 +111,8 @@ function remapPackages(
         lockfileVersion,
         rootLockFile,
         node.name,
-        node.version
+        node.version,
+        node.packageName
       );
       result.push(mappedPackage);
       visitedNodes.set(node, new Set([mappedPackage.path]));
@@ -138,12 +139,18 @@ function remapPackage(
   rootLockFile: NpmLockFile,
   name: string,
   version: string,
+  packageName: string,
   parentPath = ''
 ): RemappedPackage {
   const path = parentPath + `node_modules/${name}`;
   let valueV3, valueV1;
   if (lockfileVersion < 3) {
-    valueV1 = findMatchingPackage(rootLockFile.dependencies, name, version);
+    valueV1 = findMatchingPackageV1(
+      rootLockFile.dependencies,
+      name,
+      version,
+      packageName
+    );
   }
   if (lockfileVersion > 1) {
     valueV3 = findMatchingPackageV3(rootLockFile.packages, name, version);
@@ -187,6 +194,7 @@ function exhaustRemappedPackages(
               rootLockFile,
               node.name,
               node.version,
+              node.packageName,
               parentPath + '/'
             );
             result.push(mappedPackage);
@@ -249,25 +257,40 @@ function findMatchingPackageV3(
   const keys = Object.keys(packages);
   for (let i = 0; i < keys.length; i++) {
     const { dev, peer, ...value } = packages[keys[i]];
-    if (keys[i].endsWith(`node_modules/${name}`) && value.version === version) {
+    if (
+      keys[i].endsWith(`node_modules/${name}`) &&
+      (value.version === version || value.resolved === version)
+    ) {
       return value;
     }
   }
 }
 
-function findMatchingPackage(
+function findMatchingPackageV1(
   packages: Record<string, NpmDependencyV1>,
   name: string,
-  version: string
+  version: string,
+  packageName: string
 ) {
   const keys = Object.keys(packages);
   for (let i = 0; i < keys.length; i++) {
     const { dependencies, dev, peer, ...value } = packages[keys[i]];
-    if (keys[i] === name && value.version === version) {
-      return value;
+    if (keys[i] === name) {
+      if (value.version === version) {
+        return value;
+      }
+      // for alias packages we need to check if version has packageName as well
+      if (packageName && value.version.endsWith(`${packageName}@${version}`)) {
+        return value;
+      }
     }
     if (dependencies) {
-      const found = findMatchingPackage(dependencies, name, version);
+      const found = findMatchingPackageV1(
+        dependencies,
+        name,
+        version,
+        packageName
+      );
       if (found) {
         return found;
       }

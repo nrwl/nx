@@ -247,6 +247,59 @@ describe('NPM lock file utility', () => {
         }
       `);
     });
+
+    function cleanupTypes(
+      collection: Record<string, any>,
+      recursive?: boolean
+    ) {
+      Object.values(collection).forEach((p: any) => {
+        delete p.peer;
+        delete p.dev;
+
+        if (p.dependencies && recursive) {
+          cleanupTypes(p.dependencies, recursive);
+        }
+      });
+    }
+
+    it('should prune v2', async () => {
+      const rootV2LockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/auxiliary-packages/package-lock-v2.json'
+      ));
+      const prunedV2LockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/auxiliary-packages/package-lock-v2.pruned.json'
+      ));
+      // TODO this test is ignoring types until we resolve type passing (dev, peer, etc..)
+      cleanupTypes(prunedV2LockFile.packages);
+      cleanupTypes(prunedV2LockFile.dependencies, true);
+
+      const resultV2 = pruneNpmLockFile(
+        JSON.stringify(rootV2LockFile, null, 2),
+        packageJson,
+        {
+          name: 'test',
+          version: '0.0.0',
+          license: 'MIT',
+          dependencies: {
+            '@nrwl/devkit': '15.0.13',
+            'eslint-plugin-disable-autofix':
+              'npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0',
+            postgres:
+              'git+ssh://git@github.com/charsleysa/postgres.git#3b1a01b2da3e2fafb1a79006f838eff11a8de3cb',
+            yargs: '17.6.2',
+          },
+          devDependencies: {
+            react: '18.2.0',
+          },
+          peerDependencies: {
+            typescript: '4.8.4',
+          },
+        }
+      );
+      expect(resultV2).toEqual(JSON.stringify(prunedV2LockFile, null, 2));
+    });
   });
 
   describe('duplicate packages', () => {

@@ -61,15 +61,14 @@ function mapNodes(
   const result: PackageSnapshots = {};
   for (const node of nodes.values()) {
     const { version, name, packageName } = node;
-    const key = findKey(packages, name, {
+    const [key, snapshot] = findKey(packages, name, {
       version,
       packageName,
       returnFullKey: true,
     });
-    const value = packages[key];
     // TODO: this has to be checked later, but it's not a deal breaker
-    value.dev = false;
-    result[key] = value;
+    snapshot.dev = false;
+    result[key] = snapshot;
   }
   return result;
 }
@@ -82,19 +81,24 @@ function findKey(
     packageName,
     returnFullKey,
   }: { version: string; packageName?: string; returnFullKey?: boolean }
-): string {
+): [string, PackageSnapshot] {
   for (const key of Object.keys(packages)) {
+    const snapshot = packages[key];
     // standard package
     if (key.startsWith(`/${name}/${version}`)) {
-      return returnFullKey ? key : key.split('/').pop();
+      return [returnFullKey ? key : key.split('/').pop(), snapshot];
     }
     // tarball package
     if (key === version) {
-      return key;
+      return [version, snapshot];
+    }
+    // tarball package variant 2
+    if (snapshot.resolution?.['tarball'] === version) {
+      return [snapshot.resolution['tarball'], snapshot];
     }
     // alias package
     if (packageName && key.startsWith(`/${packageName}/${version}`)) {
-      return key;
+      return [key, snapshot];
     }
   }
 }
@@ -132,11 +136,28 @@ function mapRootSnapshot(
             packages,
             packageName,
             findVersion(packageName, spec)
-          );
+          )[0];
         });
       }
     }
   );
+  // peer dependencies are mapped to dependencies
+  if (packageJson.peerDependencies) {
+    Object.keys(packageJson.peerDependencies).forEach((packageName) => {
+      const spec = packageJson.peerDependencies[packageName];
+      snapshot.specifiers[packageName] = spec;
+      snapshot.dependencies = snapshot.dependencies || {};
+      snapshot.dependencies[packageName] = findKey(
+        packages,
+        packageName,
+        findVersion(packageName, spec)
+      )[0];
+    });
+  }
+
+  Object.keys(snapshot).forEach((key) => {
+    snapshot[key] = sortObjectByKeys(snapshot[key]);
+  });
 
   return snapshot;
 }
