@@ -18,12 +18,14 @@
       "name": {
         "type": "string",
         "description": "The name to give to the remote Angular app.",
-        "$default": { "$source": "argv", "index": 0 }
+        "$default": { "$source": "argv", "index": 0 },
+        "x-priority": "important"
       },
       "host": {
         "type": "string",
         "description": "The name of the host app to attach this remote app to.",
-        "x-dropdown": "projects"
+        "x-dropdown": "projects",
+        "x-priority": "important"
       },
       "port": {
         "type": "number",
@@ -56,7 +58,8 @@
               "label": "LESS         [ http://lesscss.org     ]"
             }
           ]
-        }
+        },
+        "x-priority": "important"
       },
       "inlineStyle": {
         "description": "Specifies if the style will be in the ts file.",
@@ -90,7 +93,8 @@
       "skipPackageJson": {
         "type": "boolean",
         "default": false,
-        "description": "Do not add dependencies to `package.json`."
+        "description": "Do not add dependencies to `package.json`.",
+        "x-priority": "internal"
       },
       "unitTestRunner": {
         "type": "string",
@@ -140,7 +144,8 @@
       "skipFormat": {
         "description": "Skip formatting files.",
         "type": "boolean",
-        "default": false
+        "default": false,
+        "x-priority": "internal"
       },
       "standalone": {
         "description": "Whether to generate a remote application with standalone components. _Note: This is only supported in Angular versions >= 14.1.0_",
