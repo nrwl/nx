@@ -222,6 +222,10 @@
             "type": "string"
           }
         },
+        "defaultConfiguration": {
+          "type": "string",
+          "description": "The name of a configuration to use as the default if a configuration is not provided"
+        },
         "configurations": {
           "type": "object",
           "description": "provides extra sets of values that will be merged into the options map",

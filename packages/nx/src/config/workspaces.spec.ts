@@ -455,5 +455,97 @@ describe('Workspaces', () => {
         });
       });
     });
+
+    describe('defaultConfiguration', () => {
+      const projectDefaultConfiguration: TargetConfiguration['defaultConfiguration'] =
+        'dev';
+      const defaultDefaultConfiguration: TargetConfiguration['defaultConfiguration'] =
+        'prod';
+
+      const merged: TargetConfiguration['defaultConfiguration'] =
+        projectDefaultConfiguration;
+
+      it('should merge defaultConfiguration if executor matches', () => {
+        expect(
+          mergeTargetConfigurations(
+            {
+              root: '.',
+              targets: {
+                build: {
+                  executor: 'target',
+                  defaultConfiguration: projectDefaultConfiguration,
+                },
+              },
+            },
+            'build',
+            {
+              executor: 'target',
+              defaultConfiguration: defaultDefaultConfiguration,
+            }
+          ).defaultConfiguration
+        ).toEqual(merged);
+      });
+
+      it('should merge if executor is only provided on the project', () => {
+        expect(
+          mergeTargetConfigurations(
+            {
+              root: '.',
+              targets: {
+                build: {
+                  executor: 'target',
+                  defaultConfiguration: projectDefaultConfiguration,
+                },
+              },
+            },
+            'build',
+            {
+              defaultConfiguration: defaultDefaultConfiguration,
+            }
+          ).defaultConfiguration
+        ).toEqual(merged);
+      });
+
+      it('should merge if executor is only provided in the defaults', () => {
+        expect(
+          mergeTargetConfigurations(
+            {
+              root: '.',
+              targets: {
+                build: {
+                  defaultConfiguration: projectDefaultConfiguration,
+                },
+              },
+            },
+            'build',
+            {
+              executor: 'target',
+              defaultConfiguration: defaultDefaultConfiguration,
+            }
+          ).defaultConfiguration
+        ).toEqual(merged);
+      });
+
+      it('should not merge if executor doesnt match', () => {
+        expect(
+          mergeTargetConfigurations(
+            {
+              root: '',
+              targets: {
+                build: {
+                  executor: 'other',
+                  defaultConfiguration: projectDefaultConfiguration,
+                },
+              },
+            },
+            'build',
+            {
+              executor: 'target',
+              defaultConfiguration: defaultDefaultConfiguration,
+            }
+          ).defaultConfiguration
+        ).toEqual(projectDefaultConfiguration);
+      });
+    });
   });
 });
