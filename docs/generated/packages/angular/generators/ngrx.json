@@ -23,7 +23,8 @@
         "type": "string",
         "description": "Name of the NgRx feature state, such as `products` or `users`. Recommended to use the plural form of the name.",
         "$default": { "$source": "argv", "index": 0 },
-        "x-prompt": "What name would you like to use for the NgRx feature state? An example would be `users`."
+        "x-prompt": "What name would you like to use for the NgRx feature state? An example would be `users`.",
+        "x-priority": "important"
       },
       "module": {
         "type": "string",
@@ -33,7 +34,8 @@
       "parent": {
         "type": "string",
         "description": "The path to the `NgModule` or the `Routes` definition file (for Standalone API usage) where the feature state will be registered. _Note: The Standalone API usage is only supported in Angular versions >= 14.1.0_.",
-        "x-prompt": "What is the path to the module or Routes definition where this NgRx state should be registered?"
+        "x-prompt": "What is the path to the module or Routes definition where this NgRx state should be registered?",
+        "x-priority": "important"
       },
       "route": {
         "type": "string",
@@ -49,7 +51,8 @@
         "type": "boolean",
         "default": false,
         "description": "Setup root or feature state management with NgRx.",
-        "x-prompt": "Is this the root state of the application?"
+        "x-prompt": "Is this the root state of the application?",
+        "x-priority": "important"
       },
       "facade": {
         "type": "boolean",
@@ -70,12 +73,14 @@
       "skipFormat": {
         "description": "Skip formatting files.",
         "type": "boolean",
-        "default": false
+        "default": false,
+        "x-priority": "internal"
       },
       "skipPackageJson": {
         "type": "boolean",
         "default": false,
-        "description": "Do not update the `package.json` with NgRx dependencies."
+        "description": "Do not update the `package.json` with NgRx dependencies.",
+        "x-priority": "internal"
       },
       "barrels": {
         "type": "boolean",
