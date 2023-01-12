@@ -125,8 +125,8 @@
     "buildable": {
       "type": "boolean",
       "default": false,
-      "description": "Generate a buildable library that uses rollup to bundle. Use 'bundler' option instead for greater control (none, vite, rollup).",
-      "x-deprecated": true
+      "description": "Generate a buildable library that uses rollup to bundle.",
+      "x-deprecated": "Use the `bundler` option for greater control (none, vite, rollup)."
     },
     "importPath": {
       "type": "string",
