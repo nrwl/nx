@@ -33,7 +33,7 @@
     "@nrwl/js": "file:../js",
     "@nrwl/linter": "file:../linter",
     "dotenv": "~10.0.0",
-    "fs-extra": "^10.1.0",
+    "fs-extra": "^11.1.0",
     "tslib": "^2.3.0"
   },
   "publishConfig": {
