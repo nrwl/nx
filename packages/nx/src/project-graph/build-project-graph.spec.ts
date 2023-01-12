@@ -192,9 +192,12 @@ describe('project graph', () => {
       await buildProjectGraph();
       fail('Invalid tsconfigs should cause project graph to throw error');
     } catch (e) {
-      expect(e.message).toMatchInlineSnapshot(
-        `"InvalidSymbol in /root/tsconfig.base.json at position 247"`
-      );
+      expect(e.message).toMatchInlineSnapshot(`
+        "InvalidSymbol in /root/tsconfig.base.json at 1:248
+        1: {\\"compilerOptions\\":{\\"baseUrl\\":\\".\\",\\"paths\\":{\\"@nrwl/shared/util\\":[\\"libs/shared/util/src/index.ts\\"],\\"@nrwl/shared-util-data\\":[\\"libs/shared/util/data/src/index.ts\\"],\\"@nrwl/ui\\":[\\"libs/ui/src/index.ts\\"],\\"@nrwl/lazy-lib\\":[\\"libs/lazy-lib/src/index.ts\\"]}}}invalid
+                                                                                                                                                                                                                                                                  ^^^^^^^ InvalidSymbol
+        "
+      `);
     }
   });
 
