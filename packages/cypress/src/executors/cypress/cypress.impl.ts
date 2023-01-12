@@ -173,6 +173,7 @@ async function* startDevServer(
   for await (const output of await runExecutor<{
     success: boolean;
     baseUrl?: string;
+    info?: { port: number; baseUrl?: string };
   }>(
     { project, target, configuration },
     // @NOTE: Do not forward watch option if not supported by the target dev server,
@@ -183,7 +184,15 @@ async function* startDevServer(
   )) {
     if (!output.success && !opts.watch)
       throw new Error('Could not compile application files');
-    yield opts.baseUrl || (output.baseUrl as string);
+    if (
+      !opts.baseUrl &&
+      !output.baseUrl &&
+      !output.info.baseUrl &&
+      output.info.port
+    ) {
+      output.baseUrl = `http://localhost:${output.info.port}`;
+    }
+    yield opts.baseUrl || output.baseUrl || output.info.baseUrl;
   }
 }
 
