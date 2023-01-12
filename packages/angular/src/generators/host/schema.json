@@ -18,11 +18,13 @@
       "$default": {
         "$source": "argv",
         "index": 0
-      }
+      },
+      "x-priority": "important"
     },
     "remotes": {
       "type": "array",
-      "description": "The names of the remote applications to add to the host."
+      "description": "The names of the remote applications to add to the host.",
+      "x-priority": "important"
     },
     "dynamic": {
       "type": "boolean",
@@ -59,7 +61,8 @@
             "label": "LESS         [ http://lesscss.org     ]"
           }
         ]
-      }
+      },
+      "x-priority": "important"
     },
     "inlineStyle": {
       "description": "Specifies if the style will be in the ts file.",
@@ -93,12 +96,14 @@
     "skipPackageJson": {
       "type": "boolean",
       "default": false,
-      "description": "Do not add dependencies to `package.json`."
+      "description": "Do not add dependencies to `package.json`.",
+      "x-priority": "internal"
     },
     "skipPostInstall": {
       "type": "boolean",
       "default": false,
-      "description": "Do not add or append `ngcc` to the `postinstall` script in `package.json`."
+      "description": "Do not add or append `ngcc` to the `postinstall` script in `package.json`.",
+      "x-priority": "internal"
     },
     "unitTestRunner": {
       "type": "string",
@@ -148,7 +153,8 @@
     "skipFormat": {
       "description": "Skip formatting files.",
       "type": "boolean",
-      "default": false
+      "default": false,
+      "x-priority": "internal"
     },
     "standalone": {
       "type": "boolean",
@@ -158,7 +164,8 @@
     "ssr": {
       "description": "Whether to configure SSR for the host application",
       "type": "boolean",
-      "default": false
+      "default": false,
+      "x-priority": "important"
     }
   },
   "additionalProperties": false,
