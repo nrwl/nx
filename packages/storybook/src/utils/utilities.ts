@@ -153,13 +153,11 @@ export type TsConfig = {
   references?: Array<{ path: string }>;
 };
 
-export function storybookConfigExists(
-  config: StorybookConfig,
+export function storybookConfigExistsCheck(
+  config: string,
   projectName: string
-): boolean {
-  const exists = !!(
-    config?.configFolder && statSync(config.configFolder).isDirectory()
-  );
+): void {
+  const exists = !!(config && statSync(config).isDirectory());
 
   if (!exists) {
     throw new Error(
@@ -170,8 +168,6 @@ export function storybookConfigExists(
       `
     );
   }
-
-  return exists;
 }
 
 export function dedupe(arr: string[]) {

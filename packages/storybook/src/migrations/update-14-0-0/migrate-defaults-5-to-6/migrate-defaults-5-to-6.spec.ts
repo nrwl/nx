@@ -1,4 +1,10 @@
-import { readJson, Tree, updateJson } from '@nrwl/devkit';
+import {
+  readJson,
+  readProjectConfiguration,
+  Tree,
+  updateJson,
+  updateProjectConfiguration,
+} from '@nrwl/devkit';
 import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { storybookVersion } from '../../../utils/versions';
 import configurationGenerator from '../../../generators/configuration/configuration';
@@ -35,6 +41,25 @@ describe('migrate-defaults-5-to-6 Generator', () => {
       uiFramework: '@storybook/react',
     });
 
+    const lib1Configuration = readProjectConfiguration(appTree, 'test-ui-lib1');
+
+    updateProjectConfiguration(appTree, 'test-ui-lib1', {
+      ...lib1Configuration,
+      targets: {
+        ...lib1Configuration.targets,
+        storybook: {
+          ...lib1Configuration.targets.storybook,
+          options: {
+            ...lib1Configuration.targets.storybook.options,
+            config: {
+              configFolder:
+                lib1Configuration.targets.storybook.options.configDir,
+            },
+          },
+        },
+      },
+    });
+
     appTree = deleteNewConfigurationAndCreateNew(
       appTree,
       'libs/test-ui-lib1/.storybook'
@@ -43,6 +68,25 @@ describe('migrate-defaults-5-to-6 Generator', () => {
     await configurationGenerator(appTree, {
       name: 'test-ui-lib2',
       uiFramework: '@storybook/react',
+    });
+
+    const lib2Configuration = readProjectConfiguration(appTree, 'test-ui-lib2');
+
+    updateProjectConfiguration(appTree, 'test-ui-lib2', {
+      ...lib2Configuration,
+      targets: {
+        ...lib2Configuration.targets,
+        storybook: {
+          ...lib2Configuration.targets.storybook,
+          options: {
+            ...lib2Configuration.targets.storybook.options,
+            config: {
+              configFolder:
+                lib2Configuration.targets.storybook.options.configDir,
+            },
+          },
+        },
+      },
     });
 
     appTree = deleteNewConfigurationAndCreateNew(

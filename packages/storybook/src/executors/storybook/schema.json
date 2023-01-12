@@ -31,28 +31,14 @@
       "description": "Port to listen on.",
       "default": 9009
     },
+    "previewUrl": {
+      "type": "string",
+      "description": "Preview URL."
+    },
     "host": {
       "type": "string",
       "description": "Host to listen on.",
       "default": "localhost"
-    },
-    "https": {
-      "type": "boolean",
-      "description": "Serve using HTTPS.",
-      "default": false
-    },
-    "sslKey": {
-      "type": "string",
-      "description": "SSL key to use for serving HTTPS."
-    },
-    "sslCert": {
-      "type": "string",
-      "description": "SSL certificate to use for serving HTTPS."
-    },
-    "watch": {
-      "type": "boolean",
-      "description": "Watches for changes and rebuilds application.",
-      "default": true
     },
     "staticDir": {
       "type": "array",
@@ -61,6 +47,40 @@
         "type": "string"
       },
       "x-deprecated": "In Storybook 6.4 the `--static-dir` CLI flag has been replaced with the the `staticDirs` field in `.storybook/main.js`. It will be removed completely in Storybook 7.0."
+    },
+    "configDir": {
+      "type": "string",
+      "description": "Directory where to load Storybook configurations from.",
+      "x-completion-type": "directory"
+    },
+    "https": {
+      "type": "boolean",
+      "description": "Serve Storybook over HTTPS. Note: You must provide your own certificate information.",
+      "default": false
+    },
+    "open": {
+      "type": "boolean",
+      "description": "Open browser window automatically."
+    },
+    "ci": {
+      "type": "boolean",
+      "description": "CI mode (skip interactive prompts, don't open browser).",
+      "default": false
+    },
+    "loglevel": {
+      "type": "string",
+      "description": "Controls level of logging during build. Can be one of: [silly, verbose, info (default), warn, error, silent].",
+      "pattern": "(silly|verbose|info|warn|silent)"
+    },
+    "quiet": {
+      "type": "boolean",
+      "description": "Suppress verbose build output.",
+      "default": false
+    },
+    "docs": {
+      "type": "boolean",
+      "description": "Starts Storybook in documentation mode. Learn more about it : https://storybook.js.org/docs/react/writing-docs/build-documentation#preview-storybooks-documentation.",
+      "default": false
     },
     "config": {
       "type": "object",
@@ -86,20 +106,17 @@
           "type": "string",
           "description": "Project source path."
         }
-      }
+      },
+      "x-deprecated": "Prefer to use configDir to set the Storybook configuration directory."
     },
     "docsMode": {
       "type": "boolean",
-      "description": "Build a documentation-only site using addon-docs.",
+      "description": "Starts Storybook in documentation mode. Learn more about it : https://storybook.js.org/docs/react/writing-docs/build-documentation#preview-storybooks-documentation.",
       "default": false
-    },
-    "quiet": {
-      "type": "boolean",
-      "description": "Suppress verbose build output.",
-      "default": true
     }
   },
+  "additionalProperties": true,
   "definitions": {},
-  "required": ["uiFramework", "config"],
+  "required": ["uiFramework", "configDir"],
   "examplesFile": "../../../docs/storybook-executor-examples.md"
 }

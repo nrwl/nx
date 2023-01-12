@@ -26,9 +26,9 @@
       "default": "@storybook/react",
       "hidden": true
     },
-    "outputPath": {
+    "outputDir": {
       "type": "string",
-      "description": "The output path of the generated files.",
+      "description": "Directory where to store built files.",
       "x-completion-type": "directory"
     },
     "styles": {
@@ -71,17 +71,41 @@
           "type": "string",
           "description": "Project source path."
         }
-      }
+      },
+      "x-deprecated": "Prefer to use configDir to set the Storybook configuration directory."
     },
     "docsMode": {
       "type": "boolean",
       "description": "Build a documentation-only site using addon-docs.",
       "default": false
     },
+    "staticDir": {
+      "type": "array",
+      "description": "Directory where to load static files from, array of strings.",
+      "items": {
+        "type": "string"
+      },
+      "x-deprecated": "In Storybook 6.4 the `--static-dir` CLI flag has been replaced with the the `staticDirs` field in `.storybook/main.js`. It will be removed completely in Storybook 7.0."
+    },
+    "configDir": {
+      "type": "string",
+      "description": "Directory where to load Storybook configurations from.",
+      "x-completion-type": "directory"
+    },
+    "loglevel": {
+      "type": "string",
+      "description": "Controls level of logging during build. Can be one of: [silly, verbose, info (default), warn, error, silent].",
+      "pattern": "(silly|verbose|info|warn|silent)"
+    },
     "quiet": {
       "type": "boolean",
       "description": "Suppress verbose build output.",
-      "default": true
+      "default": false
+    },
+    "docs": {
+      "type": "boolean",
+      "description": "Starts Storybook in documentation mode. Learn more about it : https://storybook.js.org/docs/react/writing-docs/build-documentation#preview-storybooks-documentation.",
+      "default": false
     }
   },
   "definitions": {
@@ -116,6 +140,7 @@
       ]
     }
   },
-  "required": ["uiFramework", "config"],
+  "additionalProperties": true,
+  "required": ["uiFramework", "configDir"],
   "examplesFile": "../../../docs/build-storybook-executor-examples.md"
 }

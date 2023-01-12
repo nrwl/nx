@@ -45,9 +45,7 @@ export function addStorybookTask(
     options: {
       uiFramework,
       port: DEFAULT_PORT,
-      config: {
-        configFolder: `${projectConfig.root}/.storybook`,
-      },
+      configDir: `${projectConfig.root}/.storybook`,
     },
     configurations: {
       ci: {
@@ -58,13 +56,11 @@ export function addStorybookTask(
 
   projectConfig.targets['build-storybook'] = {
     executor: '@nrwl/storybook:build',
-    outputs: ['{options.outputPath}'],
+    outputs: ['{options.outputDir}'],
     options: {
       uiFramework,
-      outputPath: joinPathFragments('dist/storybook', projectName),
-      config: {
-        configFolder: `${projectConfig.root}/.storybook`,
-      },
+      outputDir: joinPathFragments('dist/storybook', projectName),
+      configDir: `${projectConfig.root}/.storybook`,
     },
     configurations: {
       ci: {
