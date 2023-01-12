@@ -19,6 +19,10 @@ export interface Task {
      */
     target: string;
     /**
+     * The type (i.e., 'app', 'lib', or 'e2e') the project belongs to
+     */
+    type: string;
+    /**
      * The configuration of the target which the task invokes
      */
     configuration?: string;
