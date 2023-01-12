@@ -79,12 +79,6 @@ Default: `false`
 
 Rerun the tasks even when the results are available in the cache
 
-### targets
-
-Type: `string`
-
-Tasks to run for affected projects
-
 ### verbose
 
 Type: `boolean`
