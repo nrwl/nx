@@ -126,9 +126,9 @@ describe('Node Applications', () => {
 
   it('should be able to generate an express application', async () => {
     const nodeapp = uniq('nodeapp');
-    const originalEnvPort = process.env.port;
+    const originalEnvPort = process.env.PORT;
     const port = 3333;
-    process.env.port = `${port}`;
+    process.env.PORT = `${port}`;
 
     runCLI(`generate @nrwl/express:app ${nodeapp} --linter=eslint`);
     const lintResults = runCLI(`lint ${nodeapp}`);

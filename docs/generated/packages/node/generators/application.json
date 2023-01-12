@@ -89,6 +89,12 @@
         "description": "The port which the server will be run on",
         "type": "number",
         "default": 3000
+      },
+      "rootProject": {
+        "description": "Create node application at the root of the workspace",
+        "type": "boolean",
+        "default": false,
+        "hidden": true
       }
     },
     "required": [],

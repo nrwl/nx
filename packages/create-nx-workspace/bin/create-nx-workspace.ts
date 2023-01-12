@@ -31,6 +31,7 @@ type Arguments = {
   appName: string;
   cli: string;
   style: string;
+  framework: string;
   nxCloud: boolean;
   allPrompts: boolean;
   packageManager: PackageManager;
@@ -62,6 +63,7 @@ enum Preset {
   Express = 'express',
   React = 'react',
   Angular = 'angular',
+  NodeServer = 'node-server',
 }
 
 const presetOptions: { name: Preset; message: string }[] = [
@@ -95,6 +97,11 @@ const presetOptions: { name: Preset; message: string }[] = [
     name: Preset.ReactNative,
     message:
       'react-native      [a monorepo with a single React Native application]',
+  },
+  {
+    name: Preset.NodeServer,
+    message:
+      'node              [a standalone repo with a single Node Server e.g. Express]',
   },
 ];
 
@@ -143,6 +150,10 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
         })
         .option('style', {
           describe: chalk.dim`Style option to be used when a preset with pregenerated app is selected`,
+          type: 'string',
+        })
+        .option('framework', {
+          describe: chalk.dim`Framework option to be used when the node-server preset is selected`,
           type: 'string',
         })
         .option('nxCloud', {
@@ -224,6 +235,7 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
     ci,
     skipGit,
     commit,
+    framework,
   } = parsedArgs;
 
   output.log({
@@ -248,6 +260,7 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
       style,
       nxCloud,
       defaultBase,
+      framework,
     }
   );
 
@@ -300,7 +313,7 @@ async function getConfiguration(
   argv: yargs.Arguments<Arguments>
 ): Promise<void> {
   try {
-    let name, appName, style, preset;
+    let name, appName, style, preset, framework;
 
     output.log({
       title:
@@ -343,6 +356,9 @@ async function getConfiguration(
       } else {
         name = await determineRepoName(argv);
         appName = await determineAppName(preset, argv);
+        if (preset === Preset.NodeServer) {
+          framework = await determineFramework(preset, argv);
+        }
       }
       style = await determineStyle(preset, argv);
     }
@@ -358,6 +374,7 @@ async function getConfiguration(
       preset,
       appName,
       style,
+      framework,
       cli,
       nxCloud,
       packageManager,
@@ -643,6 +660,47 @@ async function determineAppName(
     });
 }
 
+async function determineFramework(
+  preset: Preset,
+  parsedArgs: yargs.Arguments<Arguments>
+): Promise<string> {
+  if (preset !== Preset.NodeServer) {
+    return Promise.resolve('');
+  }
+
+  const frameworkChoices = ['express', 'koa', 'fastify', 'connect'];
+
+  if (!parsedArgs.framework) {
+    return enquirer
+      .prompt([
+        {
+          message: 'What framework should be used?',
+          type: 'select',
+          name: 'framework',
+          choices: frameworkChoices,
+        },
+      ])
+      .then((a: { framework: string }) => a.framework);
+  }
+
+  const foundFramework = frameworkChoices.indexOf(parsedArgs.framework);
+
+  if (foundFramework < 0) {
+    output.error({
+      title: 'Invalid framwork',
+      bodyLines: [
+        `It must be one of the following:`,
+        '',
+        ...frameworkChoices.map((choice) => choice),
+      ],
+    });
+
+    process.exit(1);
+  }
+
+  return Promise.resolve(parsedArgs.framework);
+}
+
 function isValidCli(cli: string): cli is 'angular' | 'nx' {
   return ['nx', 'angular'].indexOf(cli) !== -1;
 }
@@ -685,7 +743,8 @@ async function determineStyle(
     preset === Preset.Nest ||
     preset === Preset.Express ||
     preset === Preset.ReactNative ||
-    preset === Preset.Expo
+    preset === Preset.Expo ||
+    preset === Preset.NodeServer
   ) {
     return Promise.resolve(null);
   }
@@ -1182,6 +1241,7 @@ function pointToTutorialAndCourse(preset: Preset) {
       });
       break;
     case Preset.Express:
+    case Preset.NodeServer:
       output.addVerticalSeparator();
       output.note({
         title,
