@@ -373,5 +373,10 @@
     "name": "@nx-tools/nx-container",
     "description": "Nx plugin to build OCI containers with Docker, Podman or Kaniko.",
     "url": "https://github.com/gperdomor/nx-tools/tree/main/packages/nx-container"
+  },
+  {
+    "name": "@nxrocks/nx-melos",
+    "description": "Nx plugin adding first class support for Melos in your Nx workspace",
+    "url": "https://github.com/tinesoft/nxrocks/tree/master/packages/nx-melos"
   }
 ]
