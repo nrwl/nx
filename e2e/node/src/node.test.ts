@@ -59,8 +59,8 @@ describe('Node Applications', () => {
     updateFile(`apps/${nodeapp}/src/main.ts`, `console.log('Hello World!');`);
     await runCLIAsync(`build ${nodeapp}`);
 
-    checkFilesExist(`dist/apps/${nodeapp}/main.js`);
-    const result = execSync(`node dist/apps/${nodeapp}/main.js`, {
+    checkFilesExist(`dist/apps/${nodeapp}/main.cjs`);
+    const result = execSync(`node dist/apps/${nodeapp}/main.cjs`, {
       cwd: tmpProjPath(),
     }).toString();
     expect(result).toContain('Hello World!');
@@ -76,13 +76,15 @@ describe('Node Applications', () => {
     });
 
     await runCLIAsync(`build ${nodeapp}`);
-    checkFilesExist(`dist/apps/${nodeapp}/index.js`);
+    checkFilesExist(`dist/apps/${nodeapp}/index.cjs`);
   }, 300000);
 
   it('should be able to generate an empty application with additional entries', async () => {
     const nodeapp = uniq('nodeapp');
 
-    runCLI(`generate @nrwl/node:app ${nodeapp} --linter=eslint`);
+    runCLI(
+      `generate @nrwl/node:app ${nodeapp} --linter=eslint --bundler=webpack`
+    );
 
     const lintResults = runCLI(`lint ${nodeapp}`);
     expect(lintResults).toContain('All files pass linting.');
@@ -267,7 +269,7 @@ describe('Build Node apps', () => {
     expect(satisfies(packageJson.dependencies['tslib'], '^2.3.0')).toBeTruthy();
 
     const nodeapp = uniq('nodeapp');
-    runCLI(`generate @nrwl/node:app ${nodeapp}`);
+    runCLI(`generate @nrwl/node:app ${nodeapp} --bundler=webpack`);
 
     const jslib = uniq('jslib');
     runCLI(`generate @nrwl/js:lib ${jslib} --buildable`);

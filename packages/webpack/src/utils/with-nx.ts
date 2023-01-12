@@ -11,7 +11,7 @@ import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 import { NormalizedWebpackExecutorOptions } from '../executors/webpack/schema';
 import { StatsJsonPlugin } from '../plugins/stats-json-plugin';
 import { createCopyPlugin } from './create-copy-plugin';
-import { GeneratePackageJsonWebpackPlugin } from '../plugins/generate-package-json-webpack-plugin';
+import { GeneratePackageJsonPlugin } from '../plugins/generate-package-json-plugin';
 import { getOutputHashFormat } from './hash-format';
 
 const IGNORED_WEBPACK_WARNINGS = [
@@ -21,6 +21,8 @@ const IGNORED_WEBPACK_WARNINGS = [
 
 const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
 const mainFields = ['main', 'module'];
+
+const processed = new Set();
 
 export function withNx(opts?: { skipTypeChecking?: boolean }) {
   return function configure(
@@ -33,7 +35,10 @@ export function withNx(opts?: { skipTypeChecking?: boolean }) {
       context: ExecutorContext;
     }
   ): Configuration {
+    if (processed.has(config)) return config;
+
     const plugins: WebpackPluginInstance[] = [];
+
     if (!opts?.skipTypeChecking) {
       plugins.push(
         new ForkTsCheckerWebpackPlugin({
@@ -88,7 +93,7 @@ export function withNx(opts?: { skipTypeChecking?: boolean }) {
     }
 
     if (options.generatePackageJson && context) {
-      plugins.push(new GeneratePackageJsonWebpackPlugin(context, options));
+      plugins.push(new GeneratePackageJsonPlugin(options, context));
     }
 
     if (options.statsJson) {
@@ -118,7 +123,7 @@ export function withNx(opts?: { skipTypeChecking?: boolean }) {
       ? `[name]${hashFormat.chunk}.js`
       : '[name].js';
 
-    return {
+    const updated = {
       ...config,
       target: options.target,
       node: false as const,
@@ -132,14 +137,14 @@ export function withNx(opts?: { skipTypeChecking?: boolean }) {
       mode:
         process.env.NODE_ENV === 'development' ||
         process.env.NODE_ENV === 'production'
-          ? process.env.NODE_ENV
-          : 'none',
+          ? (process.env.NODE_ENV as 'development' | 'production')
+          : ('none' as const),
       devtool:
         options.sourceMap === 'hidden'
           ? 'hidden-source-map'
           : options.sourceMap
           ? 'source-map'
-          : false,
+          : (false as const),
       entry,
       output: {
         ...config.output,
@@ -150,7 +155,7 @@ export function withNx(opts?: { skipTypeChecking?: boolean }) {
         hashFunction: 'xxhash64',
         // Disabled for performance
         pathinfo: false,
-        scriptType: 'module',
+        scriptType: 'module' as const,
       },
       watch: options.watch,
       watchOptions: {
@@ -186,6 +191,7 @@ export function withNx(opts?: { skipTypeChecking?: boolean }) {
             ? new TerserPlugin({
                 parallel: true,
                 terserOptions: {
+                  keep_classnames: true,
                   ecma: 2020,
                   safari10: true,
                   output: {
@@ -208,7 +214,7 @@ export function withNx(opts?: { skipTypeChecking?: boolean }) {
       },
       performance: {
         ...config.performance,
-        hints: false,
+        hints: false as const,
       },
       experiments: { ...config.experiments, cacheUnaffected: true },
       ignoreWarnings: [
@@ -269,6 +275,9 @@ export function withNx(opts?: { skipTypeChecking?: boolean }) {
         usedExports: !!options.verbose,
       },
     };
+
+    processed.add(updated);
+    return updated;
   };
 }
 

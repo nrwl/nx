@@ -7,6 +7,7 @@ import {
 } from 'webpack';
 import { SubresourceIntegrityPlugin } from 'webpack-subresource-integrity';
 import * as path from 'path';
+import { basename } from 'path';
 import { getOutputHashFormat } from '@nrwl/webpack/src/utils/hash-format';
 import { PostcssCliResources } from '@nrwl/webpack/src/utils/webpack/plugins/postcss-cli-resources';
 import { normalizeExtraEntryPoints } from '@nrwl/webpack/src/utils/webpack/normalize-entry';
@@ -19,7 +20,6 @@ import CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 import MiniCssExtractPlugin = require('mini-css-extract-plugin');
 import autoprefixer = require('autoprefixer');
 import postcssImports = require('postcss-import');
-import { basename } from 'path';
 
 interface PostcssOptions {
   (loader: any): any;
@@ -27,11 +27,15 @@ interface PostcssOptions {
   config?: string;
 }
 
+const processed = new Set();
+
 export function withWeb() {
   return function configure(
     config: Configuration,
     { options }: { options: NormalizedWebpackExecutorOptions }
   ): Configuration {
+    if (processed.has(config)) return config;
+
     const plugins = [];
 
     const stylesOptimization =
@@ -246,9 +250,6 @@ export function withWeb() {
       })
     );
 
-    // context needs to be set for babel to pick up correct babelrc
-    config.context = path.join(options.root, options.projectRoot);
-
     config.output = {
       ...config.output,
       crossOriginLoading: options.subresourceIntegrity
@@ -303,7 +304,7 @@ export function withWeb() {
     config.module = {
       ...config.module,
       rules: [
-        ...config.module.rules,
+        ...(config.module.rules ?? []),
         ...rules,
         {
           test: /\.(bmp|png|jpe?g|gif|webp|avif)$/,
@@ -323,6 +324,7 @@ export function withWeb() {
         },
       ],
     };
+    processed.add(config);
     return config;
   };
 }

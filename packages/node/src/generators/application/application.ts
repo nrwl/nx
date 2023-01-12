@@ -65,6 +65,10 @@ function getWebpackBuildConfig(
       ),
       tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
       assets: [joinPathFragments(project.sourceRoot, 'assets')],
+      webpackConfig: joinPathFragments(
+        options.appProjectRoot,
+        'webpack.config.js'
+      ),
     },
     configurations: {
       production: {
@@ -150,6 +154,10 @@ function addAppFiles(tree: Tree, options: NormalizedSchema) {
       ),
     }
   );
+
+  if (options.bundler !== 'webpack') {
+    tree.delete(joinPathFragments(options.appProjectRoot, 'webpack.config.js'));
+  }
 
   if (options.framework) {
     generateFiles(
@@ -358,11 +366,6 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const appProjectName = appDirectory.replace(new RegExp('/', 'g'), '-');
 
   const appProjectRoot = joinPathFragments(appsDir, appDirectory);
-  if (options.framework) {
-    options.bundler = options.bundler ?? 'esbuild';
-  } else {
-    options.bundler = 'webpack';
-  }
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())

@@ -83,6 +83,7 @@ export interface WebpackExecutorOptions {
 
 export interface NormalizedWebpackExecutorOptions
   extends WebpackExecutorOptions {
+  outputFileName: string;
   assets?: AssetGlobPattern[];
   root?: string;
   projectRoot?: string;

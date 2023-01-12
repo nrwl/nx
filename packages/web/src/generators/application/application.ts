@@ -44,7 +44,7 @@ function createApplicationFiles(tree: Tree, options: NormalizedSchema) {
     tree,
     join(
       __dirname,
-      options.bundler === 'vite' ? './files/app-vite' : './files/app'
+      options.bundler === 'vite' ? './files/app-vite' : './files/app-webpack'
     ),
     options.appProjectRoot,
     {
@@ -81,6 +81,10 @@ async function setupBundler(tree: Tree, options: NormalizedSchema) {
       tsConfig,
       compiler: options.compiler ?? 'babel',
       devServer: true,
+      webpackConfig: joinPathFragments(
+        options.appProjectRoot,
+        'webpack.config.js'
+      ),
     });
     const project = readProjectConfiguration(tree, options.projectName);
     const prodConfig = project.targets.build.configurations.production;

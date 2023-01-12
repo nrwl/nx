@@ -1,4 +1,5 @@
 import {
+  ExecutorContext,
   joinPathFragments,
   logger,
   readJsonFile,
@@ -15,7 +16,7 @@ import { gte } from 'semver';
 import { Configuration, DefinePlugin, WebpackPluginInstance } from 'webpack';
 import * as mergeWebpack from 'webpack-merge';
 import { mergePlugins } from './merge-plugins';
-import { withReact } from '../webpack';
+import { withReact } from '../with-react';
 import { withNx, withWeb } from '@nrwl/webpack';
 
 // This is shamelessly taken from CRA and modified for NX use
@@ -128,7 +129,10 @@ export const webpack = async (
     withWeb(),
     withReact()
   );
-  const finalConfig = configure(baseWebpackConfig, { options: builderOptions });
+  const finalConfig = configure(baseWebpackConfig, {
+    options: builderOptions,
+    context: {} as ExecutorContext, // The context is not used here.
+  });
 
   // Check whether the project .babelrc uses @emotion/babel-plugin. There's currently
   // a Storybook issue (https://github.com/storybookjs/storybook/issues/13277) which apparently
