@@ -44,11 +44,15 @@ export default async function* viteDevServerExecutor(
 
   try {
     const server = await createServer(serverConfig);
-    const baseUrl = await runViteDevServer(server);
+    await runViteDevServer(server);
+    const resolvedUrls = [
+      ...server.resolvedUrls.local,
+      ...server.resolvedUrls.network,
+    ];
 
     yield {
       success: true,
-      baseUrl,
+      baseUrl: resolvedUrls[0] ?? '',
     };
   } catch (e) {
     console.error(e);
@@ -62,11 +66,12 @@ export default async function* viteDevServerExecutor(
   await new Promise<{ success: boolean }>(() => {});
 }
 
-async function runViteDevServer(server: ViteDevServer): Promise<string> {
+async function runViteDevServer(server: ViteDevServer): Promise<void> {
   await server.listen();
   server.printUrls();
 
-  const processOnExit = () => {
+  const processOnExit = async () => {
+    await server.close();
     process.off('SIGINT', processOnExit);
     process.off('SIGTERM', processOnExit);
     process.off('exit', processOnExit);
@@ -75,7 +80,4 @@ async function runViteDevServer(server: ViteDevServer): Promise<string> {
   process.on('SIGINT', processOnExit);
   process.on('SIGTERM', processOnExit);
   process.on('exit', processOnExit);
-  return `${server.config.server.https ? 'https' : 'http'}://${
-    server.config.server.host ?? 'localhost'
-  }:${server.config.server.port}`;
 }
