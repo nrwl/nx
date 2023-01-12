@@ -50,6 +50,17 @@ describe('React Applications', () => {
       `
     );
 
+    // Make sure global stylesheets are properly processed.
+    const stylesPath = `apps/${appName}/src/styles.css`;
+    updateFile(
+      stylesPath,
+      `
+        .foobar {
+          background-image: url('/bg.png');
+        }
+      `
+    );
+
     const libTestResults = await runCLIAsync(`test ${libName}`);
     expect(libTestResults.combinedOutput).toContain(
       'Test Suites: 1 passed, 1 total'
