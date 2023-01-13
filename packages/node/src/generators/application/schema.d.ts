@@ -20,4 +20,9 @@ export interface Schema {
   rootProject?: boolean;
 }
 
-export type NodeJsFrameWorks = 'express' | 'koa' | 'fastify' | 'connect';
+export type NodeJsFrameWorks =
+  | 'express'
+  | 'koa'
+  | 'fastify'
+  | 'connect'
+  | 'none';
