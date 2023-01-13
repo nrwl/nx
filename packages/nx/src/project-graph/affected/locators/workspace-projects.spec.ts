@@ -107,6 +107,44 @@ describe('getImplicitlyTouchedProjects', () => {
     ]);
   });
 
+  it('should return projects which have touched files in their named inputs', () => {
+    const graph = buildProjectGraphNodes({
+      a: {
+        root: 'a',
+        namedInputs: {
+          projectSpecificFiles: ['{workspaceRoot}/a.txt'],
+        },
+      },
+      b: {
+        root: 'b',
+      },
+    });
+    let fileChanges = getFileChanges(['a.txt']);
+    expect(getImplicitlyTouchedProjects(fileChanges, graph, nxJson)).toEqual([
+      'a',
+    ]);
+  });
+
+  it('should return projects which have touched files in their target inputs', () => {
+    const graph = buildProjectGraphNodes({
+      a: {
+        root: 'a',
+        targets: {
+          build: {
+            inputs: ['{workspaceRoot}/a.txt'],
+          },
+        },
+      },
+      b: {
+        root: 'b',
+      },
+    });
+    let fileChanges = getFileChanges(['a.txt']);
+    expect(getImplicitlyTouchedProjects(fileChanges, graph, nxJson)).toEqual([
+      'a',
+    ]);
+  });
+
   it('should return a list of unique projects', () => {
     const fileChanges = getFileChanges([
       'styles/file2.css',
@@ -161,50 +199,20 @@ describe('getImplicitlyTouchedProjects', () => {
 
 describe('extractGlobalFilesFromInputs', () => {
   it('should return list of global files from nx.json', () => {
-    const globalFiles = extractGlobalFilesFromInputs(
-      {
-        namedInputs: {
-          one: [
-            '{workspaceRoot}/global1.txt',
-            { fileset: '{workspaceRoot}/global2.txt' },
-            '{projectRoot}/local.txt',
-          ],
-        },
-        targetDefaults: {
-          build: {
-            inputs: ['{workspaceRoot}/global3.txt'],
-          },
+    const globalFiles = extractGlobalFilesFromInputs({
+      namedInputs: {
+        one: [
+          '{workspaceRoot}/global1.txt',
+          { fileset: '{workspaceRoot}/global2.txt' },
+          '{projectRoot}/local.txt',
+        ],
+      },
+      targetDefaults: {
+        build: {
+          inputs: ['{workspaceRoot}/global3.txt'],
         },
       },
-      {}
-    );
-    expect(globalFiles).toEqual(['global1.txt', 'global2.txt', 'global3.txt']);
-  });
-
-  it('should return list of global files from project configuration', () => {
-    const globalFiles = extractGlobalFilesFromInputs(
-      {},
-      {
-        one: {
-          name: 'one',
-          type: 'lib',
-          data: {
-            namedInputs: {
-              one: [
-                '{workspaceRoot}/global1.txt',
-                { fileset: '{workspaceRoot}/global2.txt' },
-                '{projectRoot}/local.txt',
-              ],
-            },
-            targets: {
-              build: {
-                inputs: ['{workspaceRoot}/global3.txt'],
-              },
-            },
-          },
-        } as any,
-      }
-    );
+    });
     expect(globalFiles).toEqual(['global1.txt', 'global2.txt', 'global3.txt']);
   });
 });
