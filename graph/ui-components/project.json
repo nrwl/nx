@@ -12,9 +12,7 @@
       "options": {
         "uiFramework": "@storybook/react",
         "port": 4400,
-        "config": {
-          "configFolder": "graph/ui-components/.storybook"
-        }
+        "configDir": "graph/ui-components/.storybook"
       },
       "configurations": {
         "ci": {
@@ -24,13 +22,11 @@
     },
     "build-storybook": {
       "executor": "@nrwl/storybook:build",
-      "outputs": ["{options.outputPath}"],
+      "outputs": ["{options.outputDir}"],
       "options": {
         "uiFramework": "@storybook/react",
-        "outputPath": "dist/storybook/graph-ui-components",
-        "config": {
-          "configFolder": "graph/ui-components/.storybook"
-        }
+        "configDir": "graph/ui-components/.storybook",
+        "outputDir": "dist/storybook/graph-ui-components"
       },
       "configurations": {
         "ci": {
