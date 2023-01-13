@@ -53,9 +53,18 @@ export async function configurationGenerator(
   const { nextBuildTarget, compiler, viteBuildTarget } =
     findStorybookAndBuildTargetsAndCompiler(targets);
 
-  const storybook7 = isStorybookV7();
+  /**
+   * Make sure someone is not trying to configure Storybook
+   * with the wrong version.
+   */
+  let storybook7;
+  try {
+    storybook7 = isStorybookV7();
+  } catch (e) {
+    storybook7 = schema.storybook7betaConfiguration;
+  }
 
-  if (storybook7) {
+  if (storybook7 && !schema.storybook7betaConfiguration) {
     schema.storybook7betaConfiguration = true;
     logger.info(
       `You are using Storybook version 7. 

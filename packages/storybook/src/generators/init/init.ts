@@ -82,7 +82,6 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
       devDependencies[schema.uiFramework] = storybookVersion;
     }
 
-    devDependencies[schema.uiFramework] = storybookVersion;
     devDependencies['@storybook/core-server'] = storybookVersion;
     devDependencies['@storybook/addon-essentials'] = storybookVersion;
 
