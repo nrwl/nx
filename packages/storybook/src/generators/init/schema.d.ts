@@ -1,12 +1,7 @@
+import { UiFramework, UiFramework7 } from '../../utils/models';
+
 export interface Schema {
-  uiFramework:
-    | '@storybook/angular'
-    | '@storybook/react'
-    | '@storybook/html'
-    | '@storybook/web-components'
-    | '@storybook/vue'
-    | '@storybook/vue3'
-    | '@storybook/svelte'
-    | '@storybook/react-native';
-  bundler?: 'webpack' | 'vite';
+  uiFramework: UiFramework | UiFramework7;
+  bundler?: 'webpack' | 'vite'; // TODO(katerina): Remove when Storybook 7
+  storybook7betaConfiguration?: boolean;
 }

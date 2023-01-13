@@ -6,10 +6,11 @@ import {
 } from '@nrwl/devkit';
 import { CompilerOptions } from 'typescript';
 import { storybookVersion } from './versions';
-import { StorybookConfig } from '../executors/models';
 import { statSync } from 'fs';
 import { findNodes } from 'nx/src/utils/typescript';
 import ts = require('typescript');
+import { gte } from 'semver';
+import { join } from 'path';
 
 export const Constants = {
   addonDependencies: ['@storybook/addons'],
@@ -29,6 +30,24 @@ export const Constants = {
     svelte: '@storybook/svelte',
     'react-native': '@storybook/react-native',
   } as const,
+  uiFrameworks7: [
+    '@storybook/angular',
+    '@storybook/html-webpack5',
+    '@storybook/nextjs',
+    '@storybook/preact-webpack5',
+    '@storybook/react-webpack5',
+    '@storybook/react-vite',
+    '@storybook/server-webpack5',
+    '@storybook/svelte-webpack5',
+    '@storybook/svelte-vite',
+    '@storybook/sveltekit',
+    '@storybook/vue-webpack5',
+    '@storybook/vue-vite',
+    '@storybook/vue3-webpack5',
+    '@storybook/vue3-vite',
+    '@storybook/web-components-webpack5',
+    '@storybook/web-components-vite',
+  ],
 };
 type Constants = typeof Constants;
 
@@ -36,47 +55,13 @@ type Framework = {
   type: keyof Constants['uiFrameworks'];
   uiFramework: Constants['uiFrameworks'][keyof Constants['uiFrameworks']];
 };
-export function isFramework(
-  type: Framework['type'],
-  schema: Pick<Framework, 'uiFramework'>
-) {
-  if (type === 'angular' && schema.uiFramework === '@storybook/angular') {
-    return true;
-  }
-  if (type === 'react' && schema.uiFramework === '@storybook/react') {
-    return true;
-  }
-  if (type === 'html' && schema.uiFramework === '@storybook/html') {
-    return true;
-  }
 
-  if (
-    type === 'web-components' &&
-    schema.uiFramework === '@storybook/web-components'
-  ) {
-    return true;
-  }
-
-  if (type === 'vue' && schema.uiFramework === '@storybook/vue') {
-    return true;
-  }
-
-  if (type === 'vue3' && schema.uiFramework === '@storybook/vue3') {
-    return true;
-  }
-
-  if (type === 'svelte' && schema.uiFramework === '@storybook/svelte') {
-    return true;
-  }
-
-  if (
-    type === 'react-native' &&
-    schema.uiFramework === '@storybook/react-native'
-  ) {
-    return true;
-  }
-
-  return false;
+export function isStorybookV7() {
+  const storybookPackageVersion = require(join(
+    '@storybook/core-server',
+    'package.json'
+  )).version;
+  return gte(storybookPackageVersion, '7.0.0-alpha.0');
 }
 
 export function safeFileDelete(tree: Tree, path: string): boolean {

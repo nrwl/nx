@@ -1,14 +1,13 @@
 import { ExecutorContext, logger } from '@nrwl/devkit';
 import * as build from '@storybook/core-server';
-import { CLIOptions } from '@storybook/types'; // TODO (katerina): Remove when Storybook 7
+import { CLIOptions } from '@storybook/types'; // TODO(katerina): Remove when Storybook 7
 import 'dotenv/config';
-import { storybookConfigExistsCheck } from '../../utils/utilities';
-import { CommonNxStorybookConfig } from '../models';
 import {
-  getStorybookFrameworkPath,
   isStorybookV7,
-  runStorybookSetupCheck,
-} from '../utils';
+  storybookConfigExistsCheck,
+} from '../../utils/utilities';
+import { CommonNxStorybookConfig } from '../../utils/models';
+import { getStorybookFrameworkPath, runStorybookSetupCheck } from '../utils';
 
 export default async function buildStorybookExecutor(
   options: CLIOptions & CommonNxStorybookConfig,
@@ -24,7 +23,7 @@ export default async function buildStorybookExecutor(
     logger.info(`NX Storybook files available in ${buildOptions.outputDir}`);
     return { success: true };
   } else {
-    // TODO (katerina): Remove when Storybook 7
+    // TODO(katerina): Remove when Storybook 7
     // print warnings
     runStorybookSetupCheck(options);
 
@@ -55,11 +54,11 @@ function runInstance(options: CLIOptions, storybook7: boolean): Promise<void> {
     return build['build']({
       ...options,
       mode: 'static',
-    } as any); // TODO (katerina): Change to actual types when Storybook 7
+    } as any); // TODO(katerina): Change to actual types when Storybook 7
   } else {
     return build.buildStaticStandalone({
       ...options,
       ci: true,
-    } as any); // TODO (katerina): Remove when Storybook 7
+    } as any); // TODO(katerina): Remove when Storybook 7
   }
 }

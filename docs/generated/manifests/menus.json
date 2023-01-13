@@ -5765,6 +5765,22 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Storybook 7 setup guide",
+                "path": "/packages/storybook/documents/storybook-7-setup",
+                "id": "storybook-7-setup",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Migrate Storybook to version 7",
+                "path": "/packages/storybook/documents/migrate-storybook-7",
+                "id": "migrate-storybook-7",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Storybook best practices for making the most out of Nx",
                 "path": "/packages/storybook/documents/best-practices",
                 "id": "best-practices",

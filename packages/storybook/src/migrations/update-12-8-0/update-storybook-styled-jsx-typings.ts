@@ -9,7 +9,7 @@ import {
   writeJson,
 } from '@nrwl/devkit';
 import * as path from 'path';
-import { isFramework, TsConfig } from '../../utils/utilities';
+import { TsConfig } from '../../utils/utilities';
 
 export default async function addStyledJsxTypings(tree: Tree) {
   let changesMade = false;
@@ -42,10 +42,8 @@ export default async function addStyledJsxTypings(tree: Tree) {
       return;
     }
 
-    const isReactProject = isFramework('react', {
-      uiFramework: targets[storybookExecutor].options
-        ?.uiFramework as Parameters<typeof isFramework>[1]['uiFramework'],
-    });
+    const isReactProject =
+      targets[storybookExecutor].options?.uiFramework === '@storybook/react';
 
     if (isReactProject) {
       const tsConfig = {
