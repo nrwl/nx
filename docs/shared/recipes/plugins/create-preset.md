@@ -1,6 +1,8 @@
 ## Preset
 
-A Preset is a customization option which you provide when creating a new workspace. TS, Node, React are some internal presets that Nx provides by default.
+When you create a new nx workspace, you run the command: [`npx create-nx-workspace`](/packages/nx/documents/create-nx-workspace).
+This command accepts a `--preset` option, for example: `npx create-nx-workspace --preset=react-standalone`.
+This preset option is pointing to a special generator function (remember, a generator is a function that simplifies an entire code generation script into a single function) that Nx will call when this `npx create-nx-workspace` command is run, that will generate your initial workspace.
 
 {% youtube
 src="https://www.youtube.com/embed/yGUrF0-uqaU"
@@ -10,6 +12,17 @@ width="100%" /%}
 ### Custom Preset
 
 At its core a preset is a generator, which we can create inside of a plugin.
+
+All first-party Nx presets are built into nx itself, but you can [create your own plugin](/plugin-features/create-your-own-plugin) and create a generator with the magic name: `preset`. Once you've [published your plugin](/recipes/advanced-plugins/share-your-plugin) on npm, you can now run. the create-nx-workspace command with the preset option set to the name of your published package.
+
+For example, take
+
+```shell
+npx create-nx-workspace --preset=qwik-nx
+```
+
+This command will create a new Qwik preset based on the [published npm package: `qwik-nx`](https://www.npmjs.com/package/qwik-nx). If we check this package's source code, we can see that it has a [generator named `preset`](https://github.com/qwikifiers/qwik-nx/tree/main/packages/qwik-nx/src/generators/preset).
+
 If you **don't** have an existing plugin you can create one by running
 
 ```shell

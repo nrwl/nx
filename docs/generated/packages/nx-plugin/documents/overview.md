@@ -1,4 +1,6 @@
-Nx plugins are npm packages that contain generators and executors to extend a Nx workspace. Generators are blueprints to create new files from templates, and executors run those files. These plugins also update the `nx.json` when generating new libs or apps.
+Nx plugins are npm packages that contain [generators](/plugin-features/use-code-generators) and [executors](/plugin-features/use-task-executors) to extend a Nx workspace.
+
+At its core, a generator is a function that creates or modifies code and an executor is a function that processes code. Nx makes it easier to call those functions from the terminal or through the [Nx Console UI](/core-features/integrate-with-editors). And you can use helper utils in the [Nx Devkit](/packages/devkit) to help build your generator or executor.
 
 > A list of plugins that is maintained by Nrwl is found in the [Nrwl/nx repo](https://github.com/nrwl/nx/tree/master/packages). \
 > A list of custom plugins created by the community is found in the [Community](/community) section.
@@ -21,7 +23,7 @@ npx create-nx-plugin my-org --pluginName my-plugin
 
 This command creates a brand-new workspace, and sets up a pre-configured plugin with the specified name.
 
-> Note, the command above will create a plugin the package name set to `@my-org/my-plugin`. You can pass `--importPath` to provide a different package name.
+> Note, the command above will create a plugin with the package name set to `@my-org/my-plugin`. You can pass `--importPath` to provide a different package name.
 
 > If you do not want to create a new workspace, install the `@nrwl/nx-plugin` dependency in an already existing workspace with npm or yarn. Then run `nx g @nrwl/nx-plugin:plugin [pluginName]`.
 
