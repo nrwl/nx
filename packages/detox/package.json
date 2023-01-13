@@ -29,8 +29,7 @@
     "@nrwl/jest": "file:../jest",
     "@nrwl/linter": "file:../linter",
     "@nrwl/react": "file:../react",
-    "@nrwl/workspace": "file:../workspace",
-    "chalk": "^4.1.0"
+    "@nrwl/workspace": "file:../workspace"
   },
   "peerDependencies": {
     "detox": "^20.0.3"

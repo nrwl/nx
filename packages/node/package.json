@@ -37,7 +37,6 @@
     "@nrwl/linter": "file:../linter",
     "@nrwl/webpack": "file:../webpack",
     "@nrwl/workspace": "file:../workspace",
-    "chalk": "4.1.0",
     "enquirer": "~2.3.6",
     "tslib": "^2.3.0"
   },
