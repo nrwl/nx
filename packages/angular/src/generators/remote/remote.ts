@@ -1,4 +1,4 @@
-import { formatFiles, getProjects, Tree } from '@nrwl/devkit';
+import { formatFiles, getProjects, stripIndents, Tree } from '@nrwl/devkit';
 import type { Schema } from './schema';
 import applicationGenerator from '../application/application';
 import { normalizeProjectName } from '../utils/project';
@@ -6,8 +6,17 @@ import { setupMf } from '../setup-mf/setup-mf';
 import { E2eTestRunner } from '../../utils/test-runners';
 import { addSsr, findNextAvailablePort } from './lib';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+import { getInstalledAngularVersionInfo } from '../utils/angular-version-utils';
+import { lt } from 'semver';
 
 export async function remote(tree: Tree, options: Schema) {
+  const installedAngularVersionInfo = getInstalledAngularVersionInfo(tree);
+
+  if (lt(installedAngularVersionInfo.version, '14.1.0') && options.standalone) {
+    throw new Error(stripIndents`The "standalone" option is only supported in Angular >= 14.1.0. You are currently using ${installedAngularVersionInfo.version}.
+    You can resolve this error by removing the "standalone" option or by migrating to Angular 14.1.0.`);
+  }
+
   const projects = getProjects(tree);
   if (options.host && !projects.has(options.host)) {
     throw new Error(
