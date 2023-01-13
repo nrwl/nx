@@ -5,7 +5,7 @@ const path = require('path');
 const redirectRules = require('./redirect-rules.config');
 
 /**
- * TODO@ben: Temporary solution before Nextjs' assets management tasks is up and running
+ * TODO@ben: Use watch method instead.
  */
 copySync(
   path.resolve(__dirname + '/../../docs'),
@@ -43,27 +43,10 @@ module.exports = withNx({
     const rules = [];
 
     // Tutorials
-    rules.push({
-      source: '/(l|latest)/(r|react)/tutorial/1-code-generation',
-      destination: '/react-tutorial/1-code-generation',
-      permanent: true,
-    });
-    rules.push({
-      source: '/(l|latest)/(a|angular)/tutorial/1-code-generation',
-      destination: '/angular-tutorial/1-code-generation',
-      permanent: true,
-    });
-    rules.push({
-      source: '/(l|latest)/(n|node)/tutorial/1-code-generation',
-      destination: '/node-tutorial/1-code-generation',
-      permanent: true,
-    });
-    for (const [source, destination] of Object.entries(
-      redirectRules.tutorialRedirects
-    )) {
+    for (let s of Object.keys(redirectRules.tutorialRedirects)) {
       rules.push({
-        source,
-        destination,
+        source: s,
+        destination: redirectRules.tutorialRedirects[s],
         permanent: true,
       });
     }
