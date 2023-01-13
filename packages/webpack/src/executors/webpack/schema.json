@@ -14,13 +14,15 @@
       "type": "string",
       "description": "The name of the main entry-point file.",
       "x-completion-type": "file",
-      "x-completion-glob": "**/*@(.js|.ts|.tsx)"
+      "x-completion-glob": "**/*@(.js|.ts|.tsx)",
+      "x-priority": "important"
     },
     "tsConfig": {
       "type": "string",
       "description": "The name of the Typescript configuration file.",
       "x-completion-type": "file",
-      "x-completion-glob": "tsconfig.*.json"
+      "x-completion-glob": "tsconfig.*.json",
+      "x-priority": "important"
     },
     "compiler": {
       "type": "string",
@@ -31,7 +33,8 @@
     "outputPath": {
       "type": "string",
       "description": "The output path of the generated files.",
-      "x-completion-type": "directory"
+      "x-completion-type": "directory",
+      "x-priority": "important"
     },
     "target": {
       "type": "string",
@@ -299,7 +302,8 @@
       "type": "string",
       "description": "Path to a function which takes a webpack config, some context and returns the resulting webpack config. See https://nx.dev/guides/customize-webpack",
       "x-completion-type": "file",
-      "x-completion-glob": "webpack?(*)@(.js|.ts)"
+      "x-completion-glob": "webpack?(*)@(.js|.ts)",
+      "x-priority": "important"
     }
   },
   "required": ["tsConfig", "main"],

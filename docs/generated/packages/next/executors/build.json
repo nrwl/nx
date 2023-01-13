@@ -10,11 +10,16 @@
     "description": "Build a Next.js app.",
     "type": "object",
     "properties": {
-      "root": { "description": "The source root", "type": "string" },
+      "root": {
+        "description": "The source root",
+        "type": "string",
+        "x-priority": "important"
+      },
       "outputPath": {
         "type": "string",
         "description": "The output path of the generated files.",
-        "x-completion-type": "directory"
+        "x-completion-type": "directory",
+        "x-priority": "important"
       },
       "fileReplacements": {
         "description": "Replace files with other files in the build.",
@@ -42,7 +47,8 @@
         "description": "Path (relative to workspace root) to a function which takes phase, config, and builder options, and returns the resulting config. This is an advanced option and should not be used with a normal Next.js config file (i.e. `next.config.js`).",
         "type": "string",
         "x-completion-type": "file",
-        "x-completion-glob": "next?(*).js"
+        "x-completion-glob": "next?(*).js",
+        "x-priority": "important"
       },
       "buildLibsFromSource": {
         "type": "boolean",
@@ -57,7 +63,8 @@
       "generateLockfile": {
         "type": "boolean",
         "description": "Generate a lockfile (e.g. yarn.lock) that matches the workspace lockfile to ensure package versions match.",
-        "default": false
+        "default": false,
+        "x-priority": "internal"
       }
     },
     "required": ["root", "outputPath"],

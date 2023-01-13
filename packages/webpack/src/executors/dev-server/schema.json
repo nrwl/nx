@@ -8,12 +8,14 @@
   "properties": {
     "buildTarget": {
       "type": "string",
-      "description": "Target which builds the application."
+      "description": "Target which builds the application.",
+      "x-priority": "important"
     },
     "port": {
       "type": "number",
       "description": "Port to listen on.",
-      "default": 4200
+      "default": 4200,
+      "x-priority": "important"
     },
     "host": {
       "type": "string",
@@ -55,7 +57,8 @@
     "open": {
       "type": "boolean",
       "description": "Open the application in the browser.",
-      "default": false
+      "default": false,
+      "x-priority": "important"
     },
     "allowedHosts": {
       "type": "string",
