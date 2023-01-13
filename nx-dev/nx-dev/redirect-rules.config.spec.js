@@ -37,7 +37,7 @@ describe('Redirect rules configuration', () => {
 
       for (const url of oldReactUrls) {
         expect(redirectRules.tutorialRedirects[url]).toEqual(
-          '/getting-started/react-standalone-tutorial'
+          '/react-tutorial/1-code-generation'
         );
       }
     });
@@ -60,7 +60,7 @@ describe('Redirect rules configuration', () => {
 
       for (const url of oldAngularUrls) {
         expect(redirectRules.tutorialRedirects[url]).toEqual(
-          '/getting-started/angular-standalone-tutorial'
+          '/angular-tutorial/1-code-generation'
         );
       }
     });
