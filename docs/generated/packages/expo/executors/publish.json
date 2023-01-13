@@ -32,7 +32,8 @@
         "enum": ["managed", "bare"],
         "default": "managed",
         "description": "Target environment for which this publish is intended. Options are managed or bare.",
-        "alias": "t"
+        "alias": "t",
+        "x-priority": "important"
       },
       "maxWorkers": {
         "type": "number",

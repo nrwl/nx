@@ -14,7 +14,8 @@
       "platform": {
         "description": "Choose the platform to compile for",
         "enum": ["ios", "android", "all", "web"],
-        "alias": "p"
+        "alias": "p",
+        "x-priority": "important"
       },
       "dev": {
         "type": "boolean",
@@ -46,7 +47,7 @@
         "default": "metro"
       }
     },
-    "required": ["bundler"],
+    "required": [],
     "presets": []
   },
   "description": "Export the JavaScript and assets for your app using Metro/webpack bundler",
