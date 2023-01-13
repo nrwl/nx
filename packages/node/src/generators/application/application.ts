@@ -161,7 +161,7 @@ function addAppFiles(tree: Tree, options: NormalizedSchema) {
     tree.delete(joinPathFragments(options.appProjectRoot, 'webpack.config.js'));
   }
 
-  if (options.framework) {
+  if (options.framework && options.framework !== 'none') {
     generateFiles(
       tree,
       join(__dirname, `./files/${options.framework}`),
