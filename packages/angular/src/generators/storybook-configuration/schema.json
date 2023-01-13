@@ -15,25 +15,29 @@
         "index": 0
       },
       "x-prompt": "For which project do you want to generate Storybook configuration?",
-      "x-dropdown": "projects"
+      "x-dropdown": "projects",
+      "x-priority": "important"
     },
     "configureCypress": {
       "type": "boolean",
       "description": "Specifies whether to configure Cypress or not.",
       "x-prompt": "Configure a Cypress e2e app to run against the storybook instance?",
-      "default": true
+      "default": true,
+      "x-priority": "important"
     },
     "generateStories": {
       "type": "boolean",
       "description": "Specifies whether to automatically generate `*.stories.ts` files for components declared in this project or not.",
       "x-prompt": "Automatically generate *.stories.ts files for components declared in this project?",
-      "default": true
+      "default": true,
+      "x-priority": "important"
     },
     "generateCypressSpecs": {
       "type": "boolean",
       "description": "Specifies whether to automatically generate test files in the generated Cypress e2e app.",
       "x-prompt": "Automatically generate test files in the generated Cypress e2e app?",
-      "default": true
+      "default": true,
+      "x-priority": "important"
     },
     "cypressDirectory": {
       "type": "string",
@@ -48,7 +52,8 @@
     "tsConfiguration": {
       "type": "boolean",
       "description": "Configure your project with TypeScript. Generate main.ts and preview.ts files, instead of main.js and preview.js.",
-      "default": false
+      "default": false,
+      "x-priority": "important"
     },
     "skipFormat": {
       "description": "Skip formatting files.",

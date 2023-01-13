@@ -8,7 +8,7 @@
   "presets": [
     {
       "name": "Default minimum setup",
-      "keys": ["uiFramework", "outputPath", "config"]
+      "keys": ["uiFramework", "outputDir", "configDir"]
     }
   ],
   "properties": {
@@ -24,7 +24,7 @@
         "@storybook/svelte"
       ],
       "default": "@storybook/react",
-      "hidden": true
+      "x-priority": "important"
     },
     "outputDir": {
       "type": "string",
@@ -51,29 +51,6 @@
         }
       }
     },
-    "config": {
-      "type": "object",
-      "description": "`.storybook` file configuration",
-      "properties": {
-        "configFolder": {
-          "type": "string",
-          "description": "Directory where to load Storybook configurations from."
-        },
-        "pluginPath": {
-          "type": "string",
-          "description": "Path to storybook `plugin.js` file."
-        },
-        "configPath": {
-          "type": "string",
-          "description": "Path to storybook `preview.js` file."
-        },
-        "srcRoot": {
-          "type": "string",
-          "description": "Project source path."
-        }
-      },
-      "x-deprecated": "Prefer to use configDir to set the Storybook configuration directory."
-    },
     "docsMode": {
       "type": "boolean",
       "description": "Build a documentation-only site using addon-docs.",
@@ -90,7 +67,8 @@
     "configDir": {
       "type": "string",
       "description": "Directory where to load Storybook configurations from.",
-      "x-completion-type": "directory"
+      "x-completion-type": "directory",
+      "x-priority": "important"
     },
     "loglevel": {
       "type": "string",

@@ -15,7 +15,8 @@
         "index": 0
       },
       "x-prompt": "For which project do you want to generate the Cypress E2E app?",
-      "x-dropdown": "projects"
+      "x-dropdown": "projects",
+      "x-priority": "important"
     },
     "js": {
       "type": "boolean",

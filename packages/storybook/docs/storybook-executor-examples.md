@@ -10,9 +10,7 @@
             "options": {
                 "uiFramework": "@storybook/react",
                 "port": 4400,
-                "config": {
-                    "configFolder": "libs/ui/.storybook"
-                }
+                "configDir": "libs/ui/.storybook"
             },
             "configurations": {
                 "ci": {
@@ -43,9 +41,7 @@ You can change the `uiFramework` option, to correspond to the framework you are 
     "options": {
         "uiFramework": "@storybook/web-components",
         "port": 4400,
-        "config": {
-            "configFolder": "libs/ui/.storybook"
-        }
+        "configDir":  "libs/ui/.storybook"
     },
     "configurations": {
         "ci": {
@@ -68,9 +64,7 @@ Read more on the [Storybook documentation page for `addon-docs`](https://storybo
     "options": {
         "uiFramework": "@storybook/react",
         "port": 4400,
-        "config": {
-            "configFolder": "libs/ui/.storybook"
-        },
+        "configDir": "libs/ui/.storybook",
         "docsMode": true
     },
     "configurations": {

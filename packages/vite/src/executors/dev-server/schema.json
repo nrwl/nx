@@ -18,7 +18,8 @@
   "properties": {
     "buildTarget": {
       "type": "string",
-      "description": "Target which builds the application. Only used to retrieve the configuration as the dev-server does not build the code."
+      "description": "Target which builds the application. Only used to retrieve the configuration as the dev-server does not build the code.",
+      "x-priority": "important"
     },
     "proxyConfig": {
       "type": "string",
@@ -27,7 +28,8 @@
     },
     "port": {
       "type": "number",
-      "description": "Port to listen on."
+      "description": "Port to listen on.",
+      "x-priority": "important"
     },
     "host": {
       "description": "Specify which IP addresses the server should listen on.",

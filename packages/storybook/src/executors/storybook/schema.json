@@ -8,7 +8,7 @@
   "presets": [
     {
       "name": "Default minimum setup",
-      "keys": ["uiFramework", "port", "config"]
+      "keys": ["uiFramework", "port", "configDir"]
     }
   ],
   "properties": {
@@ -24,7 +24,7 @@
         "@storybook/svelte"
       ],
       "default": "@storybook/react",
-      "hidden": true
+      "x-priority": "important"
     },
     "port": {
       "type": "number",
@@ -51,7 +51,8 @@
     "configDir": {
       "type": "string",
       "description": "Directory where to load Storybook configurations from.",
-      "x-completion-type": "directory"
+      "x-completion-type": "directory",
+      "x-priority": "important"
     },
     "https": {
       "type": "boolean",
@@ -81,33 +82,6 @@
       "type": "boolean",
       "description": "Starts Storybook in documentation mode. Learn more about it : https://storybook.js.org/docs/react/writing-docs/build-documentation#preview-storybooks-documentation.",
       "default": false
-    },
-    "config": {
-      "type": "object",
-      "description": ".storybook configuration.",
-      "properties": {
-        "configFolder": {
-          "type": "string",
-          "description": "Directory where to load Storybook configurations from."
-        },
-        "pluginPath": {
-          "type": "string",
-          "description": "Path to storybook plugin.js file."
-        },
-        "configPath": {
-          "type": "string",
-          "description": "Path to storybook preview.js file."
-        },
-        "babelrcPath": {
-          "type": "string",
-          "description": "Path to storybook .babelrc file."
-        },
-        "srcRoot": {
-          "type": "string",
-          "description": "Project source path."
-        }
-      },
-      "x-deprecated": "Prefer to use configDir to set the Storybook configuration directory."
     },
     "docsMode": {
       "type": "boolean",
