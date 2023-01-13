@@ -11,12 +11,17 @@
         "assets": [
           {
             "input": "packages/storybook",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/storybook",
             "glob": "**/project-files/.storybook/**",
             "output": "/"
           },
           {
             "input": "packages/storybook",
-            "glob": "**/files/**",
+            "glob": "**/project-files-7/.storybook/**",
             "output": "/"
           },
           {
@@ -31,23 +36,23 @@
           },
           {
             "input": "packages/storybook",
+            "glob": "**/project-files-7-ts/.storybook/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/storybook",
             "glob": "**/root-files-ts/.storybook/**",
             "output": "/"
           },
           {
             "input": "packages/storybook",
-            "glob": "**/root-files-nested/.storybook/**",
-            "output": "/"
-          },
-          {
-            "input": "packages/storybook",
-            "glob": "**/root-files-nested-ts/.storybook/**",
-            "output": "/"
-          },
-          {
-            "input": "packages/storybook",
             "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
+            "ignore": [
+              "**/tsconfig*.json",
+              "project.json",
+              ".eslintrc.json",
+              "**/test-configs/**"
+            ],
             "output": "/"
           },
           {

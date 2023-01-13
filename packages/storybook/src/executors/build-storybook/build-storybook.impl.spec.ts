@@ -14,9 +14,9 @@ jest.mock('@storybook/core-server', () => {
 });
 import * as build from '@storybook/core-server';
 import { CLIOptions } from '@storybook/types';
-import { CommonNxStorybookConfig } from '../models';
+import { CommonNxStorybookConfig } from '../../utils/models';
 
-// TODO (katerina): Update when Storybook 7
+// TODO(katerina): Update when Storybook 7
 describe('Build storybook', () => {
   let context: ExecutorContext;
   let options: CLIOptions & CommonNxStorybookConfig;

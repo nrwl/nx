@@ -1,19 +1,11 @@
-export interface StorybookConfig {
-  configFolder?: string;
-  configPath?: string;
-  pluginPath?: string;
-  srcRoot?: string;
-}
-
 export interface CommonNxStorybookConfig {
-  uiFramework?: UiFramework;
-  uiFramework7?: UiFramework7;
+  uiFramework?: UiFramework; // TODO(katerina): Remove when Storybook 7
 }
 
 export type UiFramework7 =
   | '@storybook/angular'
   | '@storybook/html-webpack5'
-  | '@storybook/next'
+  | '@storybook/nextjs'
   | '@storybook/preact-webpack5'
   | '@storybook/react-webpack5'
   | '@storybook/react-vite'

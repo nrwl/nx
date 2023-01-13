@@ -1665,6 +1665,16 @@
               "file": "shared/packages/storybook/plugin-angular"
             },
             {
+              "id": "storybook-7-setup",
+              "name": "Storybook 7 setup guide",
+              "file": "shared/packages/storybook/storybook-7-setup"
+            },
+            {
+              "id": "migrate-storybook-7",
+              "name": "Migrate Storybook to version 7",
+              "file": "shared/packages/storybook/migrate-storybook-7"
+            },
+            {
               "id": "best-practices",
               "name": "Storybook best practices for making the most out of Nx",
               "file": "shared/packages/storybook/best-practices"

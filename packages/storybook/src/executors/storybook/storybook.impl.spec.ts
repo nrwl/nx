@@ -13,9 +13,9 @@ import storybookExecutor from './storybook.impl';
 import { join } from 'path';
 import { readFileSync } from 'fs-extra';
 import { CLIOptions } from '@storybook/types';
-import { CommonNxStorybookConfig } from '../models';
+import { CommonNxStorybookConfig } from '../../utils/models';
 
-// TODO (katerina): Update when Storybook 7
+// TODO(katerina): Update when Storybook 7
 
 describe('@nrwl/storybook:storybook', () => {
   let context: ExecutorContext;

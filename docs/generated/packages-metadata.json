@@ -2364,6 +2364,28 @@
         "originalFilePath": "shared/packages/storybook/plugin-angular"
       },
       {
+        "id": "storybook-7-setup",
+        "name": "Storybook 7 setup guide",
+        "description": "The Nx Plugin for Storybook contains executors and generators for allowing your workspace to use the powerful Storybook integration testing & documenting capabilities.",
+        "file": "generated/packages/storybook/documents/storybook-7-setup",
+        "itemList": [],
+        "isExternal": false,
+        "path": "storybook/documents/storybook-7-setup",
+        "tags": [],
+        "originalFilePath": "shared/packages/storybook/storybook-7-setup"
+      },
+      {
+        "id": "migrate-storybook-7",
+        "name": "Migrate Storybook to version 7",
+        "description": "The Nx Plugin for Storybook contains executors and generators for allowing your workspace to use the powerful Storybook integration testing & documenting capabilities.",
+        "file": "generated/packages/storybook/documents/migrate-storybook-7",
+        "itemList": [],
+        "isExternal": false,
+        "path": "storybook/documents/migrate-storybook-7",
+        "tags": [],
+        "originalFilePath": "shared/packages/storybook/migrate-storybook-7"
+      },
+      {
         "id": "best-practices",
         "name": "Storybook best practices for making the most out of Nx",
         "description": "The Nx Plugin for Storybook contains executors and generators for allowing your workspace to use the powerful Storybook integration testing & documenting capabilities.",
