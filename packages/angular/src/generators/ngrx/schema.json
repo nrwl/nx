@@ -32,12 +32,12 @@
     },
     "parent": {
       "type": "string",
-      "description": "The path to the `NgModule` or the `Routes` definition file (for Standalone API usage) where the feature state will be registered. The host directory will create/use the new state directory.",
+      "description": "The path to the `NgModule` or the `Routes` definition file (for Standalone API usage) where the feature state will be registered. _Note: The Standalone API usage is only supported in Angular versions >= 14.1.0_.",
       "x-prompt": "What is the path to the module or Routes definition where this NgRx state should be registered?"
     },
     "route": {
       "type": "string",
-      "description": "The route that the Standalone NgRx Providers should be added to.",
+      "description": "The route that the Standalone NgRx Providers should be added to. _Note: This is only supported in Angular versions >= 14.1.0_.",
       "default": "''"
     },
     "directory": {

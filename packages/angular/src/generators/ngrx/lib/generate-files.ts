@@ -1,5 +1,7 @@
 import type { Tree } from '@nrwl/devkit';
 import { generateFiles, joinPathFragments, names } from '@nrwl/devkit';
+import { lt } from 'semver';
+import { getInstalledAngularVersion } from '../../utils/angular-version-utils';
 import { NormalizedNgRxGeneratorOptions } from './normalize-options';
 
 /**
@@ -14,7 +16,7 @@ export function generateNgrxFilesFromTemplates(
 
   generateFiles(
     tree,
-    joinPathFragments(__dirname, '..', 'files'),
+    joinPathFragments(__dirname, '..', 'files', 'latest'),
     options.parentDirectory,
     {
       ...options,
@@ -22,6 +24,20 @@ export function generateNgrxFilesFromTemplates(
       tmpl: '',
     }
   );
+
+  const angularVersion = getInstalledAngularVersion(tree);
+  if (lt(angularVersion, '14.1.0')) {
+    generateFiles(
+      tree,
+      joinPathFragments(__dirname, '..', 'files', 'no-inject'),
+      options.parentDirectory,
+      {
+        ...options,
+        ...projectNames,
+        tmpl: '',
+      }
+    );
+  }
 
   if (!options.facade) {
     tree.delete(
