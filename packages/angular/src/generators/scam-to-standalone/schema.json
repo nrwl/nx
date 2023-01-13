@@ -3,7 +3,7 @@
   "$id": "GeneratorAngularScamToStandalone",
   "cli": "nx",
   "title": "Convert an Inline SCAM to Standalone Component",
-  "description": "Convert an Inline SCAM to a Standalone Component.",
+  "description": "Convert an Inline SCAM to a Standalone Component. _Note: This generator is only supported with Angular versions >= 14.1.0_.",
   "type": "object",
   "properties": {
     "component": {
