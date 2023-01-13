@@ -333,8 +333,21 @@ const nxCloudUrls = {
 };
 
 /**
- * Tutorial Updates
+ * Tutorial Updates (updated 2023-01-13)
  */
+const tutorialBaseUrls = {
+  '/(l|latest)/(a|angular)/tutorial/1-code-generation':
+    '/getting-started/angular-standalone-tutorial',
+  '/(l|latest)/(a|node)/tutorial/1-code-generation':
+    '/getting-started/node-tutorial',
+  '/(l|latest)/(r|react)/tutorial/1-code-generation':
+    '/getting-started/react-standalone-tutorial',
+  '/angular-tutorial/1-code-generation':
+    '/getting-started/angular-standalone-tutorial',
+  '/node-tutorial/1-code-generation': '/getting-started/node-tutorial',
+  '/react-tutorial/1-code-generation':
+    '/getting-started/react-standalone-tutorial',
+};
 const oldReactTutorialPaths = [
   '/react-tutorial/01-create-application',
   '/react-tutorial/02-add-e2e-test',
@@ -349,7 +362,7 @@ const oldReactTutorialPaths = [
   '/react-tutorial/11-test-affected-projects',
   '/react-tutorial/12-summary',
 ];
-const reactRedirectDestination = '/react-tutorial/1-code-generation';
+const reactRedirectDestination = '/getting-started/react-standalone-tutorial';
 const reactTutorialRedirects = oldReactTutorialPaths.reduce((acc, path) => {
   acc[path] = reactRedirectDestination;
   return acc;
@@ -364,12 +377,13 @@ const oldNodeTutorialPaths = [
   '/node-tutorial/07-test-affected-projects',
   '/node-tutorial/08-summary',
 ];
-const nodeRedirectDestination = '/node-tutorial/1-code-generation';
+const nodeRedirectDestination = '/getting-started/node-tutorial';
 const nodeTutorialRedirects = oldNodeTutorialPaths.reduce((acc, path) => {
   acc[path] = nodeRedirectDestination;
   return acc;
 }, {});
 const tutorialRedirects = Object.assign(
+  tutorialBaseUrls,
   reactTutorialRedirects,
   nodeTutorialRedirects
 );
@@ -389,7 +403,8 @@ const oldAngularTutorialPaths = [
   '/angular-tutorial/12-summary',
 ];
 
-const angularRedirectDestination = '/angular-tutorial/1-code-generation';
+const angularRedirectDestination =
+  '/getting-started/angular-standalone-tutorial';
 for (const path of oldAngularTutorialPaths) {
   tutorialRedirects[path] = angularRedirectDestination;
 }
