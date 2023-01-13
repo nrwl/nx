@@ -24,12 +24,14 @@
         "description": "Library name",
         "$default": { "$source": "argv", "index": 0 },
         "x-prompt": "What name would you like to use for the library?",
-        "pattern": "^[a-zA-Z].*$"
+        "pattern": "^[a-zA-Z].*$",
+        "x-priority": "important"
       },
       "directory": {
         "type": "string",
         "description": "A directory where the lib is placed.",
-        "alias": "dir"
+        "alias": "dir",
+        "x-priority": "important"
       },
       "style": {
         "description": "The file extension to be used for style files.",
@@ -93,12 +95,14 @@
       "skipFormat": {
         "description": "Skip formatting files.",
         "type": "boolean",
-        "default": false
+        "default": false,
+        "x-priority": "internal"
       },
       "skipTsConfig": {
         "type": "boolean",
         "default": false,
-        "description": "Do not update `tsconfig.json` for development experience."
+        "description": "Do not update `tsconfig.json` for development experience.",
+        "x-priority": "internal"
       },
       "pascalCaseFiles": {
         "type": "boolean",
@@ -163,7 +167,8 @@
         "description": "The bundler to use. Choosing 'none' means this library is not buildable.",
         "enum": ["none", "vite", "rollup"],
         "default": "none",
-        "x-prompt": "Which bundler would you like to use to build the library? Choose 'none' to skip build setup."
+        "x-prompt": "Which bundler would you like to use to build the library? Choose 'none' to skip build setup.",
+        "x-priority": "important"
       },
       "compiler": {
         "type": "string",
@@ -174,7 +179,8 @@
       "skipPackageJson": {
         "description": "Do not add dependencies to `package.json`.",
         "type": "boolean",
-        "default": false
+        "default": false,
+        "x-priority": "internal"
       },
       "minimal": {
         "description": "Create a React library with a minimal setup, no separate test files.",

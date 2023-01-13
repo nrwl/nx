@@ -14,18 +14,21 @@
         "description": "The name of the project.",
         "alias": "p",
         "$default": { "$source": "projectName" },
-        "x-prompt": "What is the name of the project for this component?"
+        "x-prompt": "What is the name of the project for this component?",
+        "x-priority": "important"
       },
       "name": {
         "type": "string",
         "description": "The name of the component.",
         "$default": { "$source": "argv", "index": 0 },
-        "x-prompt": "What name would you like to use for the component?"
+        "x-prompt": "What name would you like to use for the component?",
+        "x-priority": "important"
       },
       "directory": {
         "type": "string",
         "description": "Create the page under this directory (can be nested). Will be created under `pages/`.",
-        "alias": "dir"
+        "alias": "dir",
+        "x-priority": "important"
       },
       "style": {
         "description": "The file extension to be used for style files.",
@@ -63,7 +66,8 @@
             },
             { "value": "none", "label": "None" }
           ]
-        }
+        },
+        "x-priority": "important"
       },
       "withTests": {
         "type": "boolean",

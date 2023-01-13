@@ -16,12 +16,14 @@
       },
       "buildTarget": {
         "type": "string",
-        "description": "Target which builds the application."
+        "description": "Target which builds the application.",
+        "x-priority": "important"
       },
       "port": {
         "type": "number",
         "description": "Port to listen on.",
-        "default": 4200
+        "default": 4200,
+        "x-priority": "important"
       },
       "staticMarkup": {
         "type": "boolean",
