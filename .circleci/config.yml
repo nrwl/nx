@@ -148,6 +148,11 @@ jobs:
       NX_VERBOSE_LOGGING: 'false'
     steps:
       - run:
+          name: Configure git metadata (needed for lerna smoke tests)
+          command: |
+            git config --global user.email test@test.com
+            git config --global user.name "Test Test"
+      - run:
           name: Set dynamic nx run variable
           command: |
             echo "export NX_RUN_GROUP=\"run-group-<< parameters.os >>-$CIRCLE_WORKFLOW_ID\";" >> $BASH_ENV
