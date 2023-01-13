@@ -134,6 +134,16 @@ async function createPreset(tree: Tree, options: Schema) {
       libsDir: 'packages',
     };
     updateNxJson(tree, c);
+  } else if (options.preset === Preset.NodeServer) {
+    const { applicationGenerator: nodeApplicationGenerator } = require('@nrwl' +
+      '/node');
+    await nodeApplicationGenerator(tree, {
+      name: options.name,
+      linter: options.linter,
+      standaloneConfig: options.standaloneConfig,
+      framework: options.framework,
+      rootProject: true,
+    });
   } else {
     throw new Error(`Invalid preset ${options.preset}`);
   }

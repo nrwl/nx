@@ -41,6 +41,7 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'myNodeApp',
         standaloneConfig: false,
+        bundler: 'webpack',
       });
       const project = readProjectConfiguration(tree, 'my-node-app');
       expect(project.root).toEqual('my-node-app');
@@ -116,6 +117,9 @@ describe('app', () => {
       const tsconfig = readJson(tree, 'my-node-app/tsconfig.json');
       expect(tsconfig).toMatchInlineSnapshot(`
         Object {
+          "compilerOptions": Object {
+            "esModuleInterop": true,
+          },
           "extends": "../tsconfig.base.json",
           "files": Array [],
           "include": Array [],
@@ -401,6 +405,7 @@ describe('app', () => {
       const tsConfig = readJson(tree, 'my-node-app/tsconfig.json');
       expect(tsConfig.compilerOptions).toEqual({
         allowJs: true,
+        esModuleInterop: true,
       });
 
       const tsConfigApp = readJson(tree, 'my-node-app/tsconfig.app.json');

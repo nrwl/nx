@@ -9,5 +9,6 @@ export interface Schema {
   linter?: string;
   preset: Preset;
   standaloneConfig?: boolean;
+  framework?: string;
   packageManager?: PackageManager;
 }

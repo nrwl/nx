@@ -24,6 +24,7 @@ interface Schema {
   nxCloud?: boolean;
   preset: string;
   defaultBase: string;
+  framework?: string;
   linter?: Linter;
   packageManager?: PackageManager;
 }
@@ -72,6 +73,12 @@ function validateOptions(options: Schema, host: Tree) {
   }
   if (options.skipInstall && options.nxCloud) {
     throw new Error(`Cannot select nxCloud when skipInstall is set to true.`);
+  }
+
+  if (options.preset === Preset.NodeServer && !options.framework) {
+    throw new Error(
+      `Cannot generate ${options.preset} without selecting a framework`
+    );
   }
 
   if (devkitGetWorkspacePath(host)) {
