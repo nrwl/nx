@@ -13,7 +13,8 @@
       "outputPath": {
         "type": "string",
         "description": "The output path of the generated files.",
-        "x-completion-type": "directory"
+        "x-completion-type": "directory",
+        "x-priority": "important"
       },
       "base": {
         "type": "string",

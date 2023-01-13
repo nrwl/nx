@@ -25,7 +25,8 @@
       "type": "string",
       "enum": ["test", "benchmark", "typecheck"],
       "default": "test",
-      "description": "The mode that vitest will run on"
+      "description": "The mode that vitest will run on",
+      "x-priority": "important"
     },
     "watch": {
       "type": "boolean",
@@ -43,12 +44,14 @@
       "type": "boolean",
       "default": false,
       "alias": "u",
-      "description": "Update snapshots"
+      "description": "Update snapshots",
+      "x-priority": "important"
     },
     "coverage": {
       "type": "boolean",
       "default": false,
-      "description": "Enable coverage report"
+      "description": "Enable coverage report",
+      "x-priority": "important"
     },
     "reportsDirectory": {
       "type": "string",

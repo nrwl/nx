@@ -7,13 +7,11 @@
         //...
         "build-storybook": {
             "executor": "@nrwl/storybook:build",
-            "outputs": ["{options.outputPath}"],
+            "outputs": ["{options.outputDir}"],
             "options": {
                 "uiFramework": "@storybook/react",
-                "outputPath": "dist/storybook/ui",
-                "config": {
-                    "configFolder": "libs/ui/.storybook"
-                }
+                "outputDir": "dist/storybook/ui",
+                "configDir": "libs/ui/.storybook"
             },
             "configurations": {
                 "ci": {
@@ -40,13 +38,11 @@ You can change the `uiFramework` option, to correspond to the framework you are 
 ```json
 "build-storybook": {
     "executor": "@nrwl/storybook:build",
-    "outputs": ["{options.outputPath}"],
+    "outputs": ["{options.outputDir}"],
     "options": {
         "uiFramework": "@storybook/web-components",
-        "outputPath": "dist/storybook/ui",
-        "config": {
-            "configFolder": "libs/ui/.storybook"
-        }
+        "outputDir": "dist/storybook/ui",
+        "configDir": "libs/ui/.storybook"
     },
     "configurations": {
         "ci": {
@@ -69,9 +65,7 @@ Read more on the [Storybook documentation page for `addon-docs`](https://storybo
     "options": {
         "uiFramework": "@storybook/react",
         "port": 4400,
-        "config": {
-            "configFolder": "libs/ui/.storybook"
-        },
+        "configDir": "libs/ui/.storybook",
         "docsMode": true
     },
     "configurations": {

@@ -15,7 +15,8 @@
         "description": "Project for which to generate Storybook configuration.",
         "$default": { "$source": "argv", "index": 0 },
         "x-prompt": "For which project do you want to generate Storybook configuration?",
-        "x-dropdown": "projects"
+        "x-dropdown": "projects",
+        "x-priority": "important"
       },
       "uiFramework": {
         "type": "string",
@@ -30,12 +31,14 @@
           "@storybook/vue3",
           "@storybook/svelte"
         ],
-        "x-prompt": "What UI framework plugin should storybook use?"
+        "x-prompt": "What UI framework plugin should storybook use?",
+        "x-priority": "important"
       },
       "configureCypress": {
         "type": "boolean",
         "description": "Run the cypress-configure generator.",
-        "x-prompt": "Configure a cypress e2e app to run against the storybook instance?"
+        "x-prompt": "Configure a cypress e2e app to run against the storybook instance?",
+        "x-priority": "important"
       },
       "cypressDirectory": {
         "type": "string",
@@ -55,7 +58,8 @@
       "tsConfiguration": {
         "type": "boolean",
         "description": "Configure your project with TypeScript. Generate main.ts and preview.ts files, instead of main.js and preview.js.",
-        "default": false
+        "default": false,
+        "x-priority": "important"
       },
       "standaloneConfig": {
         "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
@@ -70,7 +74,8 @@
         "type": "string",
         "enum": ["vite", "webpack"],
         "x-prompt": "Which Storybook builder do you want to use?",
-        "default": "webpack"
+        "default": "webpack",
+        "x-priority": "important"
       }
     },
     "required": ["name"],
