@@ -27,6 +27,11 @@ export type TargetDependencies = Record<
   (TargetDependencyConfig | string)[]
 >;
 
+export interface NrwlJsPluginConfig {
+  analyzeSourceFiles?: boolean;
+  analyzePackageJson?: boolean;
+}
+
 /**
  * Nx.json configuration
  *

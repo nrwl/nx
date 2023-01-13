@@ -46,6 +46,7 @@
     "@floating-ui/react-dom": "^1.0.1",
     "@nestjs/common": "^9.0.0",
     "@nestjs/core": "^9.0.0",
+    "@nestjs/cli": "^9.0.0",
     "@nestjs/platform-express": "^9.0.0",
     "@nestjs/schematics": "^9.0.0",
     "@nestjs/swagger": "^6.0.0",
