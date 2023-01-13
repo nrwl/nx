@@ -50,7 +50,8 @@
       "storybook7betaConfiguration": {
         "description": "Configure your workspace to use Storybook 7, even though Storybook v7 is still in beta.",
         "type": "boolean",
-        "default": false
+        "default": false,
+        "x-priority": "important"
       }
     },
     "presets": []

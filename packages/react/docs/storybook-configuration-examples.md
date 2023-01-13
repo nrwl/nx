@@ -1,4 +1,4 @@
-This generator will set up Storybook for your React project.
+This generator will set up Storybook for your **React** project. You can also use this generator to generate Storybook configuration for your **Next.js** project.
 
 ```bash
 nx g @nrwl/react:storybook-configuration project-name
