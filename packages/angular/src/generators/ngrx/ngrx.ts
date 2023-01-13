@@ -6,6 +6,7 @@ import {
   addNgRxToPackageJson,
   generateNgrxFilesFromTemplates,
   normalizeOptions,
+  validateOptions,
 } from './lib';
 import type { NgRxGeneratorOptions } from './schema';
 
@@ -13,18 +14,7 @@ export async function ngrxGenerator(
   tree: Tree,
   schema: NgRxGeneratorOptions
 ): Promise<GeneratorCallback> {
-  if (!schema.module && !schema.parent) {
-    throw new Error('Please provide a value for `--parent`!');
-  }
-
-  if (schema.module && !tree.exists(schema.module)) {
-    throw new Error(`Module does not exist: ${schema.module}.`);
-  }
-
-  if (schema.parent && !tree.exists(schema.parent)) {
-    throw new Error(`Parent does not exist: ${schema.parent}.`);
-  }
-
+  validateOptions(tree, schema);
   const options = normalizeOptions(schema);
 
   if (!options.minimal || !options.root) {

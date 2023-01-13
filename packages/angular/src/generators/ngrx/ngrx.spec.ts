@@ -9,7 +9,7 @@ import {
   getAppConfig,
   getLibConfig,
 } from '../../utils/nx-devkit/testing';
-import { ngrxVersion } from '../../utils/versions';
+import { ngrxVersion, versions } from '../../utils/versions';
 import { ngrxGenerator } from './ngrx';
 import applicationGenerator from '../application/application';
 import type { NgRxGeneratorOptions } from './schema';
@@ -586,6 +586,117 @@ describe('ngrx', () => {
       expect(
         tree.read('/apps/my-app/src/app/app.routes.ts', 'utf-8')
       ).toMatchSnapshot();
+    });
+  });
+
+  describe('angular v14 support', () => {
+    beforeEach(async () => {
+      jest.clearAllMocks();
+      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      await applicationGenerator(tree, { name: 'myapp' });
+      devkit.updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '14.0.0',
+        },
+      }));
+    });
+
+    it('should install the ngrx 14 packages', async () => {
+      await ngrxGenerator(tree, defaultOptions);
+
+      const packageJson = devkit.readJson(tree, 'package.json');
+      expect(packageJson.dependencies['@ngrx/store']).toEqual(
+        versions.angularV14.ngrxVersion
+      );
+      expect(packageJson.dependencies['@ngrx/effects']).toEqual(
+        versions.angularV14.ngrxVersion
+      );
+      expect(packageJson.dependencies['@ngrx/entity']).toEqual(
+        versions.angularV14.ngrxVersion
+      );
+      expect(packageJson.dependencies['@ngrx/router-store']).toEqual(
+        versions.angularV14.ngrxVersion
+      );
+      expect(packageJson.dependencies['@ngrx/component-store']).toEqual(
+        versions.angularV14.ngrxVersion
+      );
+      expect(packageJson.devDependencies['@ngrx/schematics']).toEqual(
+        versions.angularV14.ngrxVersion
+      );
+      expect(packageJson.devDependencies['@ngrx/store-devtools']).toEqual(
+        versions.angularV14.ngrxVersion
+      );
+      expect(packageJson.devDependencies['jasmine-marbles']).toBeDefined();
+    });
+
+    it('should generate the ngrx effects with no usage of "inject"', async () => {
+      await ngrxGenerator(tree, defaultOptions);
+
+      expect(
+        tree.read('apps/myapp/src/app/+state/users.effects.ts', 'utf-8')
+      ).toMatchSnapshot();
+    });
+
+    it('should generate the ngrx effects using "inject" for versions >= 14.1.0', async () => {
+      devkit.updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '14.1.0',
+        },
+      }));
+
+      await ngrxGenerator(tree, defaultOptions);
+
+      expect(
+        tree.read('apps/myapp/src/app/+state/users.effects.ts', 'utf-8')
+      ).toMatchSnapshot();
+    });
+
+    it('should generate the ngrx facade with no usage of "inject"', async () => {
+      await ngrxGenerator(tree, { ...defaultOptions, facade: true });
+
+      expect(
+        tree.read('apps/myapp/src/app/+state/users.facade.ts', 'utf-8')
+      ).toMatchSnapshot();
+    });
+
+    it('should generate the ngrx facade using "inject" for versions >= 14.1.0', async () => {
+      devkit.updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '14.1.0',
+        },
+      }));
+
+      await ngrxGenerator(tree, { ...defaultOptions, facade: true });
+
+      expect(
+        tree.read('apps/myapp/src/app/+state/users.facade.ts', 'utf-8')
+      ).toMatchSnapshot();
+    });
+
+    it('should throw when the provided parent does not have an NgModule', async () => {
+      const parentPath = 'apps/myapp/src/app/app.routes.ts';
+      tree.write(
+        parentPath,
+        `import { Routes } from '@angular/router';
+        import { NxWelcomeComponent } from './nx-welcome.component'; 
+        export const appRoutes: Routes = [{ path: '', component: NxWelcomeComponent }];`
+      );
+
+      // ACT & ASSERT
+      await expect(
+        ngrxGenerator(tree, {
+          ...defaultStandaloneOptions,
+          parent: parentPath,
+        })
+      ).rejects.toThrowError(
+        `The provided parent path "${parentPath}" does not contain an "NgModule".`
+      );
     });
   });
 });
