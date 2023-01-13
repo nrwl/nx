@@ -23,7 +23,7 @@ import {
   getRelativePathToRootTsConfig,
   getRootTsConfigPathInTree,
 } from '../../utilities/typescript';
-import { nxVersion } from '../../utils/versions';
+import { nxVersion, typescriptVersion } from '../../utils/versions';
 import { Schema } from './schema';
 
 export interface NormalizedSchema extends Schema {
@@ -190,9 +190,27 @@ async function addJest(
   });
 }
 
+function addTypescriptDependency(host: Tree) {
+  return addDependenciesToPackageJson(
+    host,
+    {},
+    {
+      typescript: typescriptVersion,
+    }
+  );
+}
+
+function addTsConfigBase(tree: Tree, options: NormalizedSchema) {
+  // add tsconfig.base.json
+  if (!options.skipTsConfig && tree.exists('tsconfig.base.json`')) {
+    generateFiles(tree, joinPathFragments(__dirname, './files/root'), '.', {});
+  }
+}
+
 export async function libraryGenerator(tree: Tree, schema: Schema) {
   const options = normalizeOptions(tree, schema);
 
+  addTsConfigBase(tree, options);
   createFiles(tree, options);
 
   if (!options.skipTsConfig) {
@@ -200,7 +218,7 @@ export async function libraryGenerator(tree: Tree, schema: Schema) {
   }
   addProject(tree, options);
 
-  const tasks: GeneratorCallback[] = [];
+  const tasks: GeneratorCallback[] = [addTypescriptDependency(tree)];
 
   if (options.linter !== 'none') {
     const lintCallback = await addLint(tree, options);

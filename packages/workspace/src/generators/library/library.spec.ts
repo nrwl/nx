@@ -130,7 +130,11 @@ describe('lib', () => {
     it('should extend from root tsconfig.json when no tsconfig.base.json', async () => {
       tree.rename('tsconfig.base.json', 'tsconfig.json');
 
-      await libraryGenerator(tree, { ...defaultOptions, name: 'myLib' });
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        name: 'myLib',
+        skipTsConfig: true,
+      });
 
       const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.json');
       expect(tsconfigJson.extends).toBe('../../tsconfig.json');
@@ -342,6 +346,7 @@ describe('lib', () => {
         ...defaultOptions,
         name: 'myLib',
         directory: 'myDir',
+        skipTsConfig: true,
       });
 
       const tsconfigJson = readJson(tree, 'libs/my-dir/my-lib/tsconfig.json');

@@ -31,6 +31,7 @@ export interface LibraryGeneratorSchema {
   compiler?: Compiler;
   bundler?: Bundler;
   skipTypeCheck?: boolean;
+  skipPackageJson?: boolean;
 }
 
 export interface ExecutorOptions {

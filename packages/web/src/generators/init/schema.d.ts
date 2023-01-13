@@ -5,4 +5,5 @@ export interface Schema {
   skipFormat?: boolean;
   skipPackageJson?: boolean;
   skipBabelConfig?: boolean;
+  skipTsConfig?: boolean;
 }

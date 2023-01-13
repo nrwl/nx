@@ -134,11 +134,7 @@ function createNxJson(
 function createFiles(tree: Tree, options: NormalizedSchema) {
   const formattedNames = names(options.name);
   const filesDirName =
-    options.preset === Preset.AngularStandalone ||
-    options.preset === Preset.ReactStandalone ||
-    options.preset === Preset.NodeServer
-      ? './files-root-app'
-      : options.preset === Preset.NPM || options.preset === Preset.Core
+    options.preset === Preset.NPM || options.preset === Preset.Core
       ? './files-package-based-repo'
       : './files-integrated-repo';
   generateFiles(tree, pathJoin(__dirname, filesDirName), options.directory, {

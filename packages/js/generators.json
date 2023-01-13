@@ -10,11 +10,11 @@
       "description": "Create a library."
     },
     "init": {
-      "factory": "./src/generators/init/init#initSchematic",
+      "factory": "./src/generators/init/init#jsInitSchematic",
       "schema": "./src/generators/init/schema.json",
       "aliases": ["lib"],
       "x-type": "init",
-      "description": "Init placeholder.",
+      "description": "Initial a TS/JS workspace.",
       "hidden": true
     },
     "convert-to-swc": {
@@ -34,11 +34,11 @@
       "description": "Create a library"
     },
     "init": {
-      "factory": "./src/generators/init/init#initGenerator",
+      "factory": "./src/generators/init/init#jsInitGenerator",
       "schema": "./src/generators/init/schema.json",
       "aliases": ["lib"],
       "x-type": "init",
-      "description": "Init placeholder.",
+      "description": "Initial a TS/JS workspace.",
       "hidden": true
     },
     "convert-to-swc": {

@@ -186,6 +186,7 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'myApp',
         standaloneConfig: false,
+        skipTsConfig: true,
       });
 
       const tsconfig = readJson(tree, 'apps/my-app/tsconfig.json');
@@ -289,6 +290,7 @@ describe('app', () => {
         name: 'myApp',
         directory: 'myDir',
         standaloneConfig: false,
+        skipTsConfig: true,
       });
 
       const tsconfig = readJson(tree, 'apps/my-dir/my-app/tsconfig.json');

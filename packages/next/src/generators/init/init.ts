@@ -17,6 +17,7 @@ import {
 } from '../../utils/versions';
 import { InitSchema } from './schema';
 import { addGitIgnoreEntry } from '../../utils/add-gitignore-entry';
+import { jsInitGenerator } from '@nrwl/js';
 
 function updateDependencies(host: Tree) {
   return addDependenciesToPackageJson(
@@ -35,7 +36,12 @@ function updateDependencies(host: Tree) {
 }
 
 export async function nextInitGenerator(host: Tree, schema: InitSchema) {
-  const tasks: GeneratorCallback[] = [];
+  const tasks: GeneratorCallback[] = [
+    jsInitGenerator(host, {
+      skipPackageJson: schema.skipPackageJson,
+      skipTsConfig: schema.skipTsConfig,
+    }),
+  ];
 
   if (!schema.unitTestRunner || schema.unitTestRunner === 'jest') {
     const jestTask = jestInitGenerator(host, schema);
@@ -49,8 +55,10 @@ export async function nextInitGenerator(host: Tree, schema: InitSchema) {
   const reactTask = await reactInitGenerator(host, schema);
   tasks.push(reactTask);
 
-  const installTask = updateDependencies(host);
-  tasks.push(installTask);
+  if (!schema.skipPackageJson) {
+    const installTask = updateDependencies(host);
+    tasks.push(installTask);
+  }
 
   addGitIgnoreEntry(host);
 

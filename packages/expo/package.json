@@ -29,6 +29,7 @@
     "@nrwl/detox": "file:../detox",
     "@nrwl/devkit": "file:../devkit",
     "@nrwl/jest": "file:../jest",
+    "@nrwl/js": "file:../js",
     "@nrwl/linter": "file:../linter",
     "@nrwl/react": "file:../react",
     "@nrwl/webpack": "file:../webpack",

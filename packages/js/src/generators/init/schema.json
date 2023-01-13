@@ -3,5 +3,19 @@
   "$id": "NxTypescriptInit",
   "cli": "nx",
   "title": "Init nrwl/js",
-  "description": "Init generator placeholder for nrwl/js."
+  "description": "Init generator placeholder for nrwl/js.",
+  "properties": {
+    "skipPackageJson": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not add dependencies to `package.json`.",
+      "x-priority": "internal"
+    },
+    "skipTsConfig": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not update `tsconfig.json` for development experience.",
+      "x-priority": "internal"
+    }
+  }
 }

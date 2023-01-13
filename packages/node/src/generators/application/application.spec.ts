@@ -186,6 +186,7 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'myNodeApp',
         standaloneConfig: false,
+        skipTsConfig: true,
       });
 
       const tsconfig = readJson(tree, 'my-node-app/tsconfig.json');

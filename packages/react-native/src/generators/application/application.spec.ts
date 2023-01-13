@@ -71,6 +71,7 @@ describe('app', () => {
       linter: Linter.EsLint,
       e2eTestRunner: 'none',
       install: false,
+      skipTsConfig: true,
     });
 
     const tsconfig = readJson(appTree, 'apps/my-app/tsconfig.json');

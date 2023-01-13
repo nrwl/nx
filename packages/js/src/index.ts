@@ -5,3 +5,4 @@ export * from './utils/package-json';
 export * from './utils/assets';
 export * from './utils/package-json/update-package-json';
 export { libraryGenerator } from './generators/library/library';
+export { jsInitGenerator } from './generators/init/init';

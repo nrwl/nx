@@ -110,6 +110,12 @@
       "enum": ["jest", "none"],
       "description": "Test runner to use for end to end (e2e) tests",
       "default": "jest"
+    },
+    "skipTsConfig": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not update `tsconfig.json` for development experience.",
+      "x-priority": "internal"
     }
   },
   "required": []

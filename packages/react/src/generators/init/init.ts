@@ -10,6 +10,7 @@ import {
   writeJson,
 } from '@nrwl/devkit';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+import { jsInitGenerator } from '@nrwl/js';
 import {
   babelPresetReactVersion,
   nxVersion,
@@ -85,7 +86,12 @@ function initRootBabelConfig(tree: Tree, schema: InitSchema) {
 }
 
 export async function reactInitGenerator(host: Tree, schema: InitSchema) {
-  const tasks: GeneratorCallback[] = [];
+  const tasks: GeneratorCallback[] = [
+    jsInitGenerator(host, {
+      skipPackageJson: schema.skipPackageJson,
+      skipTsConfig: schema.skipTsConfig,
+    }),
+  ];
 
   setDefault(host);
 
