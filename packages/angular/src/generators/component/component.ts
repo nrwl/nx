@@ -4,14 +4,27 @@ import {
   normalizePath,
   readNxJson,
   readProjectConfiguration,
+  stripIndents,
 } from '@nrwl/devkit';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { pathStartsWith } from '../utils/path';
 import { exportComponentInEntryPoint } from './lib/component';
 import { normalizeOptions } from './lib/normalize-options';
 import type { NormalizedSchema, Schema } from './schema';
+import { getInstalledAngularVersionInfo } from '../utils/angular-version-utils';
+import { lt } from 'semver';
 
 export async function componentGenerator(tree: Tree, rawOptions: Schema) {
+  const installedAngularVersionInfo = getInstalledAngularVersionInfo(tree);
+
+  if (
+    lt(installedAngularVersionInfo.version, '14.1.0') &&
+    rawOptions.standalone
+  ) {
+    throw new Error(stripIndents`The "standalone" option is only supported in Angular >= 14.1.0. You are currently using ${installedAngularVersionInfo.version}.
+    You can resolve this error by removing the "standalone" option or by migrating to Angular 14.1.0.`);
+  }
+
   const options = await normalizeOptions(tree, rawOptions);
   const { projectSourceRoot, ...schematicOptions } = options;
 

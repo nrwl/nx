@@ -1,5 +1,10 @@
 import type { ProjectGraph } from '@nrwl/devkit';
-import { addProjectConfiguration, writeJson } from '@nrwl/devkit';
+import {
+  addProjectConfiguration,
+  stripIndents,
+  updateJson,
+  writeJson,
+} from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import componentGenerator from './component';
 
@@ -736,5 +741,33 @@ describe('component Generator', () => {
       );
       expect(indexSource).toBe('');
     });
+  });
+
+  it('should error correctly when Angular version does not support standalone', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: {
+        '@angular/core': '14.0.0',
+      },
+    }));
+
+    addProjectConfiguration(tree, 'lib1', {
+      projectType: 'library',
+      sourceRoot: 'libs/lib1/src',
+      root: 'libs/lib1',
+    });
+
+    // ACT & ASSERT
+    await expect(
+      componentGenerator(tree, {
+        name: 'example',
+        project: 'lib1',
+        standalone: true,
+      })
+    ).rejects
+      .toThrow(stripIndents`The "standalone" option is only supported in Angular >= 14.1.0. You are currently using 14.0.0.
+    You can resolve this error by removing the "standalone" option or by migrating to Angular 14.1.0.`);
   });
 });

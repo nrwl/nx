@@ -46,7 +46,7 @@
         "alias": "t"
       },
       "standalone": {
-        "description": "Whether the generated component is standalone.",
+        "description": "Whether the generated component is standalone. _Note: This is only supported in Angular versions >= 14.1.0_",
         "type": "boolean",
         "default": false
       },
