@@ -337,16 +337,11 @@ const nxCloudUrls = {
  */
 const tutorialBaseUrls = {
   '/(l|latest)/(a|angular)/tutorial/1-code-generation':
-    '/getting-started/angular-standalone-tutorial',
+    '/angular-tutorial/1-code-generation',
   '/(l|latest)/(a|node)/tutorial/1-code-generation':
     '/getting-started/node-tutorial',
   '/(l|latest)/(r|react)/tutorial/1-code-generation':
-    '/getting-started/react-standalone-tutorial',
-  '/angular-tutorial/1-code-generation':
-    '/getting-started/angular-standalone-tutorial',
-  '/node-tutorial/1-code-generation': '/getting-started/node-tutorial',
-  '/react-tutorial/1-code-generation':
-    '/getting-started/react-standalone-tutorial',
+    '/react-tutorial/1-code-generation',
 };
 const oldReactTutorialPaths = [
   '/react-tutorial/01-create-application',
@@ -362,7 +357,7 @@ const oldReactTutorialPaths = [
   '/react-tutorial/11-test-affected-projects',
   '/react-tutorial/12-summary',
 ];
-const reactRedirectDestination = '/getting-started/react-standalone-tutorial';
+const reactRedirectDestination = '/react-tutorial/1-code-generation';
 const reactTutorialRedirects = oldReactTutorialPaths.reduce((acc, path) => {
   acc[path] = reactRedirectDestination;
   return acc;
@@ -403,8 +398,7 @@ const oldAngularTutorialPaths = [
   '/angular-tutorial/12-summary',
 ];
 
-const angularRedirectDestination =
-  '/getting-started/angular-standalone-tutorial';
+const angularRedirectDestination = '/angular-tutorial/1-code-generation';
 for (const path of oldAngularTutorialPaths) {
   tutorialRedirects[path] = angularRedirectDestination;
 }
