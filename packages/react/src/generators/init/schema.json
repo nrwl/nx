@@ -26,7 +26,14 @@
     "skipPackageJson": {
       "description": "Do not add dependencies to `package.json`.",
       "type": "boolean",
-      "default": false
+      "default": false,
+      "x-priority": "internal"
+    },
+    "skipTsConfig": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not update `tsconfig.json` for development experience.",
+      "x-priority": "internal"
     },
     "skipBabelConfig": {
       "description": "Do not generate a root babel.config.json (if babel is not needed).",

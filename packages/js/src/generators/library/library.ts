@@ -35,6 +35,7 @@ import {
   nxVersion,
   typesNodeVersion,
 } from '../../utils/versions';
+import jsInitGenerator from '../init/init';
 
 export async function libraryGenerator(
   tree: Tree,
@@ -54,7 +55,12 @@ export async function projectGenerator(
   destinationDir: string,
   filesDir: string
 ) {
-  const tasks: GeneratorCallback[] = [];
+  const tasks: GeneratorCallback[] = [
+    jsInitGenerator(tree, {
+      skipPackageJson: schema.skipPackageJson,
+      skipTsConfig: schema.skipTsConfig,
+    }),
+  ];
   const options = normalizeOptions(tree, schema, destinationDir);
 
   createFiles(tree, options, `${filesDir}/lib`);

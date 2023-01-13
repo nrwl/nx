@@ -43,6 +43,7 @@
     "@nrwl/cypress": "file:../cypress",
     "@nrwl/devkit": "file:../devkit",
     "@nrwl/jest": "file:../jest",
+    "@nrwl/js": "file:../js",
     "@nrwl/linter": "file:../linter",
     "@nrwl/webpack": "file:../webpack",
     "@nrwl/workspace": "file:../workspace",

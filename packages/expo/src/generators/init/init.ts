@@ -34,6 +34,7 @@ import {
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { jestInitGenerator } from '@nrwl/jest';
 import { detoxInitGenerator } from '@nrwl/detox';
+import { jsInitGenerator } from '@nrwl/js';
 
 import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
 import { initRootBabelConfig } from './lib/init-root-babel-config';
@@ -42,7 +43,17 @@ export async function expoInitGenerator(host: Tree, schema: Schema) {
   addGitIgnoreEntry(host);
   initRootBabelConfig(host);
 
-  const tasks = [moveDependency(host), updateDependencies(host)];
+  const tasks = [
+    moveDependency(host),
+    jsInitGenerator(host, {
+      skipPackageJson: schema.skipPackageJson,
+      skipTsConfig: schema.skipTsConfig,
+    }),
+  ];
+
+  if (!schema.skipPackageJson) {
+    tasks.push(updateDependencies(host));
+  }
 
   if (!schema.unitTestRunner || schema.unitTestRunner === 'jest') {
     const jestTask = jestInitGenerator(host, {});

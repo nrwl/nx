@@ -76,6 +76,7 @@ describe('app', () => {
         name: 'myApp',
         style: 'css',
         standaloneConfig: false,
+        skipTsConfig: true,
       });
 
       const tsConfig = readJson(tree, 'apps/my-app/tsconfig.json');

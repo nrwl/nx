@@ -5690,22 +5690,6 @@
             "hash": "2a6b2eb20fe9cd8dbc25a9b6ab029193feab7ca2"
           },
           {
-            "file": "packages/workspace/src/generators/new/files-root-app/__dot__gitignore",
-            "hash": "51b9af5269c1df38f3252250d5b46665822374cc"
-          },
-          {
-            "file": "packages/workspace/src/generators/new/files-root-app/__dot__prettierignore",
-            "hash": "d0b804da2a462044bb1c63364440b2c2164e86ad"
-          },
-          {
-            "file": "packages/workspace/src/generators/new/files-root-app/__dot__vscode/extensions.json__tmpl__",
-            "hash": "aaf47be3eb9d9766b877ee73730fd5073a263321"
-          },
-          {
-            "file": "packages/workspace/src/generators/new/files-root-app/package.json__tmpl__",
-            "hash": "8a64a50fdfe1ab69c4e61b921c011b3a0832e99d"
-          },
-          {
             "file": "packages/workspace/src/generators/new/generate-preset.ts",
             "hash": "b3e6e05a152b87ed121f289aa5ab9ec768612c35",
             "deps": ["devkit", "npm:yargs-parser"]
@@ -6541,11 +6525,6 @@
                 {
                   "glob": "**/files-packaged-based-repo/**/.gitkeep",
                   "input": "packages/workspace",
-                  "output": "/"
-                },
-                {
-                  "input": "packages/workspace",
-                  "glob": "**/files-root-app/**",
                   "output": "/"
                 },
                 {

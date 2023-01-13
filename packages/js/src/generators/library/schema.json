@@ -113,6 +113,12 @@
       "type": "boolean",
       "description": "Whether to skip TypeScript type checking for SWC compiler.",
       "default": false
+    },
+    "skipPackageJson": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not add dependencies to `package.json`.",
+      "x-priority": "internal"
     }
   },
   "required": ["name"],

@@ -15,4 +15,5 @@ export interface Schema {
   setParserOptionsProject?: boolean; // default is false
   e2eTestRunner: 'detox' | 'none'; // default is detox
   standaloneConfig?: boolean;
+  skipPackageJson?: boolean;
 }

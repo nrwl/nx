@@ -10,6 +10,7 @@ import {
 } from '@nrwl/devkit';
 import { jestInitGenerator } from '@nrwl/jest';
 import { Linter } from '@nrwl/linter';
+import { jsInitGenerator } from '@nrwl/js';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { join } from 'path';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
@@ -53,13 +54,17 @@ export async function angularInitGenerator(
     : () => {};
   const unitTestTask = await addUnitTestRunner(tree, options);
   const e2eTask = addE2ETestRunner(tree, options);
+  const jsInitTask = jsInitGenerator(tree, {
+    skipPackageJson: options.skipPackageJson,
+    skipTsConfig: options.skipTsConfig,
+  });
   addGitIgnoreEntry(tree, '.angular');
 
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
 
-  return runTasksInSerial(depsTask, unitTestTask, e2eTask);
+  return runTasksInSerial(depsTask, unitTestTask, e2eTask, jsInitTask);
 }
 
 function normalizeOptions(options: Schema): Required<Schema> {
@@ -71,6 +76,7 @@ function normalizeOptions(options: Schema): Required<Schema> {
     skipPackageJson: options.skipPackageJson ?? false,
     style: options.style ?? 'css',
     unitTestRunner: options.unitTestRunner ?? UnitTestRunner.Jest,
+    skipTsConfig: options.skipTsConfig,
   };
 }
 

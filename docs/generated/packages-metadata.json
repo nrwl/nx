@@ -1070,7 +1070,7 @@
         "type": "generator"
       },
       {
-        "description": "Init placeholder.",
+        "description": "Initial a TS/JS workspace.",
         "file": "generated/packages/js/generators/init.json",
         "hidden": true,
         "name": "init",

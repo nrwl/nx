@@ -46,11 +46,6 @@
           },
           {
             "input": "packages/workspace",
-            "glob": "**/files-root-app/**",
-            "output": "/"
-          },
-          {
-            "input": "packages/workspace",
             "glob": "**/*.json",
             "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
             "output": "/"

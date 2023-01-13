@@ -95,7 +95,8 @@
     "skipPackageJson": {
       "description": "Do not add dependencies to `package.json`.",
       "type": "boolean",
-      "default": false
+      "default": false,
+      "x-priority": "internal"
     }
   },
   "required": ["name"]

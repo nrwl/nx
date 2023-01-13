@@ -10,4 +10,5 @@ export interface Schema {
   style?: Styles;
   linter?: Linter;
   skipPackageJson?: boolean;
+  skipTsConfig?: boolean;
 }

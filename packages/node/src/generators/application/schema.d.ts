@@ -19,6 +19,7 @@ export interface Schema {
   framework?: NodeJsFrameWorks;
   port?: number;
   rootProject?: boolean;
+  skipTsConfig?: boolean;
 }
 
 export type NodeJsFrameWorks =

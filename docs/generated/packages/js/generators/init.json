@@ -1,19 +1,33 @@
 {
   "name": "init",
-  "factory": "./src/generators/init/init#initGenerator",
+  "factory": "./src/generators/init/init#jsInitGenerator",
   "schema": {
     "$schema": "http://json-schema.org/schema",
     "$id": "NxTypescriptInit",
     "cli": "nx",
     "title": "Init nrwl/js",
     "description": "Init generator placeholder for nrwl/js.",
+    "properties": {
+      "skipPackageJson": {
+        "type": "boolean",
+        "default": false,
+        "description": "Do not add dependencies to `package.json`.",
+        "x-priority": "internal"
+      },
+      "skipTsConfig": {
+        "type": "boolean",
+        "default": false,
+        "description": "Do not update `tsconfig.json` for development experience.",
+        "x-priority": "internal"
+      }
+    },
     "presets": []
   },
   "aliases": ["lib"],
   "x-type": "init",
-  "description": "Init placeholder.",
+  "description": "Initial a TS/JS workspace.",
   "hidden": true,
-  "implementation": "/packages/js/src/generators/init/init#initGenerator.ts",
+  "implementation": "/packages/js/src/generators/init/init#jsInitGenerator.ts",
   "path": "/packages/js/src/generators/init/schema.json",
   "type": "generator"
 }

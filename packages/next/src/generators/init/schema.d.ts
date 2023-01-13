@@ -3,4 +3,6 @@ export interface InitSchema {
   e2eTestRunner?: 'cypress' | 'none';
   skipFormat?: boolean;
   js?: boolean;
+  skipPackageJson?: boolean;
+  skipTsConfig?: boolean;
 }
