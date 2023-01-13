@@ -2,7 +2,11 @@ import { output } from '../utils/output';
 import { getPackageManagerCommand } from '../utils/package-manager';
 import { execSync } from 'child_process';
 import { readNxJson } from '../config/configuration';
-import { isNxCloudUsed } from '../utils/nx-cloud-utils';
+import {
+  getNxCloudToken,
+  getNxCloudUrl,
+  isNxCloudUsed,
+} from '../utils/nx-cloud-utils';
 
 export async function connectToNxCloudIfExplicitlyAsked(opts: {
   [k: string]: any;
@@ -33,7 +37,14 @@ export async function connectToNxCloudCommand(
 ): Promise<boolean> {
   if (isNxCloudUsed()) {
     output.log({
-      title: 'This workspace is already connected to Nx Cloud.',
+      title: '✅ This workspace is already connected to Nx Cloud.',
+      bodyLines: [
+        'This means your workspace can use computation caching, distributed task execution, and show you run analytics.',
+        'Go to https://nx.app to learn more.',
+        ' ',
+        'If you have not done so already, please claim this workspace:',
+        `${getNxCloudUrl()}'/orgs/workspace-setup?accessToken=${getNxCloudToken()}`,
+      ],
     });
     return false;
   }
