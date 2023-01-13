@@ -831,14 +831,14 @@
             {
               "name": "Local Executors",
               "id": "creating-custom-executors",
-              "tags": ["use-task-executors"],
-              "file": "shared/recipes/local-executors"
+              "tags": ["use-task-executors", "create-your-own-plugin"],
+              "file": "shared/recipes/plugins/local-executors"
             },
             {
               "name": "Compose Executors",
               "id": "compose-executors",
               "tags": ["use-task-executors"],
-              "file": "shared/recipes/compose-executors"
+              "file": "shared/recipes/plugins/compose-executors"
             }
           ]
         },
@@ -850,32 +850,32 @@
             {
               "name": "Local Generators",
               "id": "local-generators",
-              "tags": ["use-code-generators"],
-              "file": "shared/recipes/local-generators"
+              "tags": ["use-code-generators", "create-your-own-plugin"],
+              "file": "shared/recipes/generators/local-generators"
             },
             {
               "name": "Composing Generators",
               "id": "composing-generators",
               "tags": ["use-code-generators"],
-              "file": "shared/generators/composing-generators"
+              "file": "shared/recipes/generators/composing-generators"
             },
             {
               "name": "Generator Options",
               "id": "generator-options",
               "tags": ["use-code-generators"],
-              "file": "shared/generators/generator-options"
+              "file": "shared/recipes/generators/generator-options"
             },
             {
               "name": "Creating Files",
               "id": "creating-files",
               "tags": ["use-code-generators"],
-              "file": "shared/generators/creating-files"
+              "file": "shared/recipes/generators/creating-files"
             },
             {
               "name": "Modifying Files",
               "id": "modifying-files",
               "tags": ["use-code-generators"],
-              "file": "shared/generators/modifying-files"
+              "file": "shared/recipes/generators/modifying-files"
             }
           ]
         },
@@ -885,16 +885,34 @@
           "description": "Learn more about creating your own plugin, extending Nx.",
           "itemList": [
             {
-              "name": "Project Inference Plugins",
-              "id": "project-inference-plugins",
+              "name": "Share Your Plugin",
+              "id": "share-your-plugin",
               "tags": ["create-your-own-plugin"],
-              "file": "shared/extending-nx/project-inference-plugins"
+              "file": "shared/recipes/plugins/share-your-plugin"
+            },
+            {
+              "name": "Create a Preset",
+              "id": "create-preset",
+              "tags": ["create-your-own-plugin"],
+              "file": "shared/recipes/plugins/create-preset"
+            },
+            {
+              "name": "Migration Generators",
+              "id": "migration-generators",
+              "tags": ["create-your-own-plugin"],
+              "file": "shared/recipes/plugins/migration-generators"
             },
             {
               "name": "Project Graph Plugins",
               "id": "project-graph-plugins",
               "tags": ["create-your-own-plugin", "explore-graph"],
-              "file": "shared/extending-nx/project-graph-plugins"
+              "file": "shared/recipes/plugins/project-graph-plugins"
+            },
+            {
+              "name": "Project Inference Plugins",
+              "id": "project-inference-plugins",
+              "tags": ["create-your-own-plugin"],
+              "file": "shared/recipes/plugins/project-inference-plugins"
             }
           ]
         },
