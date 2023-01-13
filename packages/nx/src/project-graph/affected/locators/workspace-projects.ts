@@ -1,7 +1,6 @@
 import * as minimatch from 'minimatch';
 import { TouchedProjectLocator } from '../affected-project-graph-models';
 import { NxJsonConfiguration } from '../../../config/nx-json';
-import { ProjectGraphProjectNode } from '../../../config/project-graph';
 import {
   createProjectRootMappings,
   findProjectForPath,
@@ -29,7 +28,7 @@ export const getImplicitlyTouchedProjects: TouchedProjectLocator = (
 ): string[] => {
   const implicits = { ...nxJson.implicitDependencies };
   const globalFiles = [
-    ...extractGlobalFilesFromInputs(nxJson, projectGraphNodes),
+    ...extractGlobalFilesFromInputs(nxJson),
     'nx.json',
     'package-lock.json',
     'yarn.lock',
@@ -38,6 +37,19 @@ export const getImplicitlyTouchedProjects: TouchedProjectLocator = (
   ];
   globalFiles.forEach((file) => {
     implicits[file] = '*' as any;
+  });
+
+  Object.values(projectGraphNodes || {}).forEach((node) => {
+    [
+      ...extractFilesFromNamedInputs(node.data.namedInputs),
+      ...extractFilesFromTargetInputs(node.data.targets),
+    ].forEach((input) => {
+      implicits[input] ??= [];
+
+      if (Array.isArray(implicits[input])) {
+        implicits[input].push(node.name);
+      }
+    });
   });
 
   const touched = new Set<string>();
@@ -61,41 +73,32 @@ export const getImplicitlyTouchedProjects: TouchedProjectLocator = (
   return Array.from(touched);
 };
 
-export function extractGlobalFilesFromInputs(
-  nxJson: NxJsonConfiguration,
-  projectGraphNodes: Record<string, ProjectGraphProjectNode>
-) {
+export function extractGlobalFilesFromInputs(nxJson: NxJsonConfiguration) {
   const globalFiles = [];
-  globalFiles.push(...extractGlobalFilesFromNamedInputs(nxJson.namedInputs));
-  globalFiles.push(...extractGlobalFilesFromTargets(nxJson.targetDefaults));
-  Object.values(projectGraphNodes || {}).forEach((node) => {
-    globalFiles.push(
-      ...extractGlobalFilesFromNamedInputs(node.data.namedInputs)
-    );
-    globalFiles.push(...extractGlobalFilesFromTargets(node.data.targets));
-  });
+  globalFiles.push(...extractFilesFromNamedInputs(nxJson.namedInputs));
+  globalFiles.push(...extractFilesFromTargetInputs(nxJson.targetDefaults));
   return globalFiles;
 }
 
-function extractGlobalFilesFromNamedInputs(namedInputs: any) {
-  const globalFiles = [];
+function extractFilesFromNamedInputs(namedInputs: any) {
+  const files = [];
   for (const inputs of Object.values(namedInputs || {})) {
-    globalFiles.push(...extractGlobalFiles(inputs));
+    files.push(...extractFilesFromInputs(inputs));
   }
-  return globalFiles;
+  return files;
 }
 
-function extractGlobalFilesFromTargets(targets: any) {
+function extractFilesFromTargetInputs(targets: any) {
   const globalFiles = [];
   for (const target of Object.values(targets || {})) {
     if ((target as any).inputs) {
-      globalFiles.push(...extractGlobalFiles((target as any).inputs));
+      globalFiles.push(...extractFilesFromInputs((target as any).inputs));
     }
   }
   return globalFiles;
 }
 
-function extractGlobalFiles(inputs: any) {
+function extractFilesFromInputs(inputs: any) {
   const globalFiles = [];
   for (const input of inputs) {
     if (typeof input === 'string' && input.startsWith('{workspaceRoot}/')) {
