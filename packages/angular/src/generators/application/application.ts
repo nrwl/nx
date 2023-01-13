@@ -3,6 +3,7 @@ import {
   installPackagesTask,
   moveFilesToNewDirectory,
   readNxJson,
+  stripIndents,
   Tree,
   updateNxJson,
 } from '@nrwl/devkit';
@@ -12,7 +13,10 @@ import { join } from 'path';
 import { UnitTestRunner } from '../../utils/test-runners';
 import { angularInitGenerator } from '../init/init';
 import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
-import { getGeneratorDirectoryForInstalledAngularVersion } from '../utils/angular-version-utils';
+import {
+  getGeneratorDirectoryForInstalledAngularVersion,
+  getInstalledAngularVersionInfo,
+} from '../utils/angular-version-utils';
 import {
   addE2e,
   addLinting,
@@ -31,11 +35,19 @@ import {
   updateNxComponentTemplate,
 } from './lib';
 import type { Schema } from './schema';
+import { lt } from 'semver';
 
 export async function applicationGenerator(
   tree: Tree,
   schema: Partial<Schema>
 ) {
+  const installedAngularVersionInfo = getInstalledAngularVersionInfo(tree);
+
+  if (lt(installedAngularVersionInfo.version, '14.1.0') && schema.standalone) {
+    throw new Error(stripIndents`The "standalone" option is only supported in Angular >= 14.1.0. You are currently using ${installedAngularVersionInfo.version}.
+    You can resolve this error by removing the "standalone" option or by migrating to Angular 14.1.0.`);
+  }
+
   const generatorDirectory =
     getGeneratorDirectoryForInstalledAngularVersion(tree);
   if (generatorDirectory) {
