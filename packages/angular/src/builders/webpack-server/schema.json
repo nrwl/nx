@@ -8,7 +8,7 @@
   "properties": {
     "assets": {
       "type": "array",
-      "description": "List of static application assets.",
+      "description": "List of static application assets. _Note: only supported in Angular versions >= 15.1.0_",
       "default": [],
       "items": {
         "$ref": "#/definitions/assetPattern"
