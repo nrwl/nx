@@ -400,7 +400,7 @@ function buildExplicitDependenciesUsingWorkers(
 function getNumberOfWorkers(): number {
   return process.env.NX_PROJECT_GRAPH_MAX_WORKERS
     ? +process.env.NX_PROJECT_GRAPH_MAX_WORKERS
-    : os.cpus().length - 1;
+    : Math.min(os.cpus().length - 1, 8); // This is capped for cases in CI where `os.cpus()` returns way more CPUs than the resources that are allocated
 }
 
 function createContext(
