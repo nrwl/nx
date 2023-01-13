@@ -13,7 +13,6 @@ import {
   angularCliVersion,
   nxVersion,
   prettierVersion,
-  typescriptVersion,
 } from '../../utils/versions';
 import { join, join as pathJoin } from 'path';
 import { Preset } from '../utils/presets';
@@ -147,7 +146,6 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
     tmpl: '',
     cliCommand: options.preset === Preset.AngularMonorepo ? 'ng' : 'nx',
     nxCli: false,
-    typescriptVersion,
     prettierVersion,
     // angular cli is used only when workspace schematics is added to angular cli
     angularCliVersion,

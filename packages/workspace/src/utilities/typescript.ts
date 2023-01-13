@@ -1,8 +1,8 @@
-import { offsetFromRoot, Tree } from '@nrwl/devkit';
-import { workspaceRoot } from '@nrwl/devkit';
+import { offsetFromRoot, Tree, workspaceRoot } from '@nrwl/devkit';
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
 import type * as ts from 'typescript';
+
 export { compileTypeScript } from './typescript/compilation';
 export type { TypeScriptCompilationOptions } from './typescript/compilation';
 export { findNodes } from './typescript/find-nodes'; // TODO(v16): remove this

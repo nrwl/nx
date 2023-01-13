@@ -6,7 +6,9 @@ import {
   expectNoAngularDevkit,
   expectNoTsJestInJestConfig,
   getSelectedPackageManager,
+  packageInstall,
   packageManagerLockFile,
+  runCLI,
   runCreateWorkspace,
   uniq,
 } from '@nrwl/e2e/utils';
@@ -69,16 +71,6 @@ describe('create-nx-workspace', () => {
 
   it('should be able to create an empty workspace with npm capabilities', () => {
     const wsName = uniq('npm');
-    runCreateWorkspace(wsName, {
-      preset: 'npm',
-      packageManager,
-    });
-
-    expectNoAngularDevkit();
-  });
-
-  it('should be able to create an empty workspace with ts/js capabilities', () => {
-    const wsName = uniq('ts');
     runCreateWorkspace(wsName, {
       preset: 'npm',
       packageManager,
@@ -271,6 +263,89 @@ describe('create-nx-workspace', () => {
     });
     checkFilesExist('package.json');
     checkFilesDoNotExist('.circleci/config.yml');
+  });
+
+  describe('Start with package-based repo', () => {
+    const wsName = uniq('npm');
+
+    beforeEach(() => {
+      runCreateWorkspace(wsName, {
+        preset: 'npm',
+        packageManager,
+      });
+    });
+
+    it('should not generate tsconfig.base.json', () => {
+      checkFilesDoNotExist('tsconfig.base.json');
+    });
+
+    it('should add js library', () => {
+      const libName = uniq('lib');
+      packageInstall('@nrwl/js', wsName);
+
+      expect(() =>
+        runCLI(`generate @nrwl/js:library ${libName} --no-interactive`)
+      ).not.toThrowError();
+      checkFilesExist('tsconfig.base.json');
+    });
+
+    it('should add web library', () => {
+      const libName = uniq('lib');
+      packageInstall('@nrwl/web', wsName);
+
+      expect(() =>
+        runCLI(`generate @nrwl/web:library ${libName} --no-interactive`)
+      ).not.toThrowError();
+      checkFilesExist('tsconfig.base.json');
+    });
+
+    it('should add angular application and library', () => {
+      const appName = uniq('my-app');
+      const libName = uniq('lib');
+      packageInstall('@nrwl/angular', wsName);
+
+      expect(() => {
+        runCLI(`generate @nrwl/angular:app ${appName} --no-interactive`);
+        runCLI(`generate @nrwl/angular:lib ${libName} --no-interactive`);
+      }).not.toThrowError();
+      checkFilesExist('tsconfig.base.json');
+    });
+
+    it('should add react application and library', () => {
+      const appName = uniq('my-app');
+      const libName = uniq('lib');
+      packageInstall('@nrwl/react', wsName);
+
+      expect(() => {
+        runCLI(`generate @nrwl/react:app ${appName} --no-interactive`);
+        runCLI(`generate @nrwl/react:lib ${libName} --no-interactive`);
+      }).not.toThrowError();
+      checkFilesExist('tsconfig.base.json');
+    });
+
+    it('should add react-native application and library', () => {
+      const appName = uniq('my-app');
+      const libName = uniq('lib');
+      packageInstall('@nrwl/react-native', wsName);
+
+      expect(() => {
+        runCLI(`generate @nrwl/react-native:app ${appName} --no-interactive`);
+        runCLI(`generate @nrwl/react-native:lib ${libName} --no-interactive`);
+      }).not.toThrowError();
+      checkFilesExist('tsconfig.base.json');
+    });
+
+    it('should add expo application and library', () => {
+      const appName = uniq('my-app');
+      const libName = uniq('lib');
+      packageInstall('@nrwl/expo', wsName);
+
+      expect(() => {
+        runCLI(`generate @nrwl/expo:app ${appName} --no-interactive`);
+        runCLI(`generate @nrwl/expo:lib ${libName} --no-interactive`);
+      }).not.toThrowError();
+      checkFilesExist('tsconfig.base.json');
+    });
   });
 
   describe('Use detected package manager', () => {

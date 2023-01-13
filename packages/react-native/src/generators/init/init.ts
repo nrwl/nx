@@ -38,12 +38,17 @@ import {
 } from '../../utils/versions';
 
 import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
+import { jsInitGenerator } from '@nrwl/js';
 
 export async function reactNativeInitGenerator(host: Tree, schema: Schema) {
   addGitIgnoreEntry(host);
   addBabelInputs(host);
 
-  const tasks: GeneratorCallback[] = [];
+  const tasks: GeneratorCallback[] = [
+    await jsInitGenerator(host, {
+      skipPackageJson: schema.skipPackageJson,
+    }),
+  ];
 
   if (!schema.skipPackageJson) {
     const installTask = updateDependencies(host);

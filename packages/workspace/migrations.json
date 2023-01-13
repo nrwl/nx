@@ -50,7 +50,7 @@
     },
     "13-10-0-update-tasks-runner": {
       "version": "13.10.0-beta.0",
-      "description": "Update the tasks runner property to import it from the nx package instead of @nrwl/worksapce",
+      "description": "Update the tasks runner property to import it from the nx package instead of @nrwl/workspace",
       "cli": "nx",
       "implementation": "./src/migrations/update-13-10-0/update-tasks-runner"
     },
