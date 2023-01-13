@@ -17,7 +17,8 @@ expect.addSnapshotSerializer({
       str
         // Not all package managers print the package.json path in the output
         .replace(tmpProjPath(), '')
-        .replace(' /private/packages/package-1', '')
+        .replace('/private', '')
+        .replace('/packages/package-1', '')
         // We trim each line to reduce the chances of snapshot flakiness
         .split('\n')
         .map((r) => r.trim())
