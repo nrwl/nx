@@ -96,6 +96,9 @@
           "env": "SELECTED_CLI"
         },
         {
+          "env": "SELECTED_PM"
+        },
+        {
           "env": "NX_E2E_CI_CACHE_KEY"
         }
       ],
