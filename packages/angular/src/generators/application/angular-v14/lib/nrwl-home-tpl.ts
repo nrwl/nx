@@ -566,7 +566,7 @@ export const nrwlHomeTemplate = {
                 />
               </svg>
             </a>
-            <a href="https://nx.dev/angular-tutorial/1-code-generation?utm_source=nx-project" target="_blank" rel="noreferrer" class="list-item-link">
+            <a href="https://nx.dev/getting-started/angular-standalone-tutorial?utm_source=nx-project" target="_blank" rel="noreferrer" class="list-item-link">
               <svg
                 fill="none"
                 stroke="currentColor"

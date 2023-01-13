@@ -1178,14 +1178,18 @@ function pointToTutorialAndCourse(preset: Preset) {
       output.addVerticalSeparator();
       output.note({
         title,
-        bodyLines: [`https://nx.dev/angular-tutorial/1-code-generation`],
+        bodyLines: [
+          `https://nx.dev/getting-started/angular-standalone-tutorial`,
+        ],
       });
       break;
     case Preset.Express:
       output.addVerticalSeparator();
       output.note({
         title,
-        bodyLines: [`https://nx.dev/node-tutorial/1-code-generation`],
+        bodyLines: [
+          `https://nx.dev/getting-started/angular-standalone-tutorial`,
+        ],
       });
       break;
   }
