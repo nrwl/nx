@@ -16,7 +16,7 @@ async function loadEnvVars(path?: string) {
   } else {
     try {
       (await import('dotenv')).config();
-    } catch { }
+    } catch {}
   }
 }
 
@@ -26,17 +26,17 @@ export interface RunCommandsOptions extends Json {
   command?: string;
   commands?: (
     | {
-      command: string;
-      forwardAllArgs?: boolean;
-      /**
-       * description was added to allow users to document their commands inline,
-       * it is not intended to be used as part of the execution of the command.
-       */
-      description?: string;
-      prefix?: string;
-      color?: string;
-      bgColor?: string;
-    }
+        command: string;
+        forwardAllArgs?: boolean;
+        /**
+         * description was added to allow users to document their commands inline,
+         * it is not intended to be used as part of the execution of the command.
+         */
+        description?: string;
+        prefix?: string;
+        color?: string;
+        bgColor?: string;
+      }
     | string
   )[];
   color?: boolean;
@@ -69,7 +69,7 @@ export interface NormalizedRunCommandsOptions extends RunCommandsOptions {
   parsedArgs: { [k: string]: any };
 }
 
-export default async function(
+export default async function (
   options: RunCommandsOptions,
   context: ExecutorContext
 ): Promise<{ success: boolean }> {
@@ -213,10 +213,14 @@ function createProcess(
     /**
      * Ensure the child process is killed when the parent exits
      */
-    const processExitListener = () => childProcess.kill();
+    const processExitListener = (signal?: number | NodeJS.Signals) => () =>
+      childProcess.kill(signal);
+
     process.on('exit', processExitListener);
     process.on('SIGTERM', processExitListener);
-    process.on('SIGINT', () => childProcess.kill('SIGINT'));
+    process.on('SIGINT', processExitListener);
+    process.on('SIGQUIT', processExitListener);
+
     childProcess.stdout.on('data', (data) => {
       process.stdout.write(addColorAndPrefix(data, commandConfig));
       if (readyWhen && data.toString().indexOf(readyWhen) > -1) {
@@ -292,8 +296,9 @@ export function interpolateArgsIntoCommand(
     const regex = /{args\.([^}]+)}/g;
     return command.replace(regex, (_, group: string) => opts.parsedArgs[group]);
   } else if (forwardAllArgs) {
-    return `${command}${opts.__unparsed__.length > 0 ? ' ' + opts.__unparsed__.join(' ') : ''
-      }`;
+    return `${command}${
+      opts.__unparsed__.length > 0 ? ' ' + opts.__unparsed__.join(' ') : ''
+    }`;
   } else {
     return command;
   }
