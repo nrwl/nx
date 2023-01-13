@@ -146,7 +146,7 @@
       "default": false
     },
     "standalone": {
-      "description": "Whether to generate a remote application with standalone components.",
+      "description": "Whether to generate a remote application with standalone components. _Note: This is only supported in Angular versions >= 14.1.0_",
       "type": "boolean",
       "default": false
     },
