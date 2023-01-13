@@ -67,11 +67,16 @@ If you just need to change dependency versions, you can add some configuration o
 ```json {% fileName="migrations.json" %}
 {
   "packageJsonUpdates": {
+    // this can be any name
     "12.10.0": {
+      // this is version at which the change will be applied
       "version": "12.10.0-beta.2",
       "packages": {
+        // the name of the dependency to update
         "@testing-library/react": {
+          // the version to set the dependency to
           "version": "11.2.6",
+          // When true, the dependency will be added if it isn't there.  When false, the dependency is skipped if it isn't already present.
           "alwaysAddToPackageJson": false
         }
       }
