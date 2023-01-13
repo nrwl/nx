@@ -101,6 +101,11 @@ export async function storybookConfigurationGenerator(
     tsConfiguration: schema.tsConfiguration,
     configureTestRunner: schema.configureTestRunner,
     bundler,
+    storybook7betaConfiguration: schema.storybook7betaConfiguration,
+    storybook7UiFramework:
+      bundler === 'vite'
+        ? '@storybook/react-vite'
+        : '@storybook/react-webpack5',
   });
 
   if (schema.generateStories) {

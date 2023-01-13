@@ -83,6 +83,12 @@
         "description": "The Storybook builder to use.",
         "enum": ["vite", "webpack"],
         "x-priority": "important"
+      },
+      "storybook7betaConfiguration": {
+        "description": "Configure your workspace to use Storybook 7, even though Storybook v7 is still in beta.",
+        "type": "boolean",
+        "default": false,
+        "x-priority": "important"
       }
     },
     "required": ["name"],

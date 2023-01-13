@@ -1,14 +1,13 @@
 import { ExecutorContext } from '@nrwl/devkit';
 import * as build from '@storybook/core-server';
 import 'dotenv/config';
-import { storybookConfigExistsCheck } from '../../utils/utilities';
 import {
-  getStorybookFrameworkPath,
-  runStorybookSetupCheck,
   isStorybookV7,
-} from '../utils';
-import { CLIOptions } from '@storybook/types'; // TODO (katerina): Remove when Storybook 7
-import { CommonNxStorybookConfig } from '../models';
+  storybookConfigExistsCheck,
+} from '../../utils/utilities';
+import { getStorybookFrameworkPath, runStorybookSetupCheck } from '../utils';
+import { CLIOptions } from '@storybook/types'; // TODO(katerina): Remove when Storybook 7
+import { CommonNxStorybookConfig } from '../../utils/models';
 
 export default async function* storybookExecutor(
   options: CLIOptions & CommonNxStorybookConfig,
@@ -28,15 +27,15 @@ export default async function* storybookExecutor(
     yield {
       success: true,
       info: {
-        port: result.port,
+        port: result?.port,
         baseUrl: `${options.https ? 'https' : 'http'}://${
           options.host ?? 'localhost'
-        }:${result.port}`,
+        }:${result?.port}`,
       },
     };
     await new Promise<{ success: boolean }>(() => {});
   } else {
-    // TODO (katerina): Remove when Storybook 7
+    // TODO(katerina): Remove when Storybook 7
     // print warnings
     runStorybookSetupCheck(options);
 
@@ -62,9 +61,9 @@ function runInstance(options: CLIOptions, storybook7: boolean) {
     return build['build']({
       ...options,
       mode: 'dev',
-    } as any); // TODO (katerina): Change to actual types when Storybook 7
+    } as any); // TODO(katerina): Change to actual types when Storybook 7
   } else {
-    // TODO (katerina): Remove when Storybook 7
+    // TODO(katerina): Remove when Storybook 7
     return build.buildDev({
       ...options,
       configType: env.toUpperCase(),
