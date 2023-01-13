@@ -1,6 +1,6 @@
 Nx plugins are npm packages that contain [generators](/plugin-features/use-code-generators) and [executors](/plugin-features/use-task-executors) to extend a Nx workspace.
 
-At its core, a generator is a function that creates or modifies code and an executor is a function that processes code.  Nx makes it easier to call those functions from the terminal or through the [Nx Console UI](/core-features/integrate-with-editors).  And you can use helper utils in the [Nx Devkit](/packages/devkit) to help build your generator or executor.
+At its core, a generator is a function that creates or modifies code and an executor is a function that processes code. Nx makes it easier to call those functions from the terminal or through the [Nx Console UI](/core-features/integrate-with-editors). And you can use helper utils in the [Nx Devkit](/packages/devkit) to help build your generator or executor.
 
 > A list of plugins that is maintained by Nrwl is found in the [Nrwl/nx repo](https://github.com/nrwl/nx/tree/master/packages). \
 > A list of custom plugins created by the community is found in the [Community](/community) section.
