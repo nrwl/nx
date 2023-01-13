@@ -152,7 +152,7 @@
     },
     "standalone": {
       "type": "boolean",
-      "description": "Whether to generate a host application that uses standalone components.",
+      "description": "Whether to generate a host application that uses standalone components. _Note: This is only supported in Angular versions >= 14.1.0_",
       "default": false
     },
     "ssr": {
