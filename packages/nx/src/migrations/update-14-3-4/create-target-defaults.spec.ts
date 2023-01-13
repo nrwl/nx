@@ -35,4 +35,9 @@ describe('createTargetDefaults', () => {
     });
     expect(updated.targetDependencies).toBeUndefined();
   });
+
+  it('should not error when nxJson does not exist', async () => {
+    tree.delete('nx.json');
+    await expect(createTargetDefaults(tree)).resolves.not.toThrow();
+  });
 });

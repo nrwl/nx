@@ -1,10 +1,10 @@
 import { createTreeWithEmptyWorkspace } from '../../generators/testing-utils/create-tree-with-empty-workspace';
 import type { Tree } from '../../generators/tree';
-import removeDefaultCollection from './remove-default-collection';
 import {
   readNxJson,
   updateNxJson,
 } from '../../generators/utils/project-configuration';
+import removeDefaultCollection from './remove-default-collection';
 
 describe('remove-default-collection', () => {
   let tree: Tree;
@@ -45,6 +45,11 @@ describe('remove-default-collection', () => {
     delete config.cli;
     updateNxJson(tree, config);
 
+    await expect(removeDefaultCollection(tree)).resolves.not.toThrow();
+  });
+
+  it('should not error when nxJson does not exist', async () => {
+    tree.delete('nx.json');
     await expect(removeDefaultCollection(tree)).resolves.not.toThrow();
   });
 });
