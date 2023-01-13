@@ -40,7 +40,6 @@
   },
   "dependencies": {
     "@angular-devkit/schematics": "~15.1.0",
-    "@nguniversal/builders": "~15.0.0",
     "@nrwl/cypress": "file:../cypress",
     "@nrwl/devkit": "file:../devkit",
     "@nrwl/jest": "file:../jest",
@@ -60,6 +59,15 @@
     "tsconfig-paths": "^4.1.2",
     "webpack": "^5.75.0",
     "webpack-merge": "5.7.3"
+  },
+  "peerDependencies": {
+    "@nguniversal/builders": "~15.0.0",
+    "rxjs": "^6.5.3 || ^7.5.0"
+  },
+  "peerDependenciesMeta": {
+    "@nguniversal/builders": {
+      "optional": true
+    }
   },
   "publishConfig": {
     "access": "public"

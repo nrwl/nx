@@ -3,3 +3,4 @@ export { addImportsToModule } from './add-imports-to-module';
 export { addNgRxToPackageJson } from './add-ngrx-to-package-json';
 export { generateNgrxFilesFromTemplates } from './generate-files';
 export { normalizeOptions } from './normalize-options';
+export { validateOptions } from './validate-options';
