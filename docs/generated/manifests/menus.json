@@ -2210,9 +2210,25 @@
         "isExternal": false,
         "children": [
           {
-            "name": "Project Inference Plugins",
-            "path": "/recipes/advanced-plugins/project-inference-plugins",
-            "id": "project-inference-plugins",
+            "name": "Share Your Plugin",
+            "path": "/recipes/advanced-plugins/share-your-plugin",
+            "id": "share-your-plugin",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Create a Preset",
+            "path": "/recipes/advanced-plugins/create-preset",
+            "id": "create-preset",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Migration Generators",
+            "path": "/recipes/advanced-plugins/migration-generators",
+            "id": "migration-generators",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -2224,14 +2240,38 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Project Inference Plugins",
+            "path": "/recipes/advanced-plugins/project-inference-plugins",
+            "id": "project-inference-plugins",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
       },
       {
-        "name": "Project Inference Plugins",
-        "path": "/recipes/advanced-plugins/project-inference-plugins",
-        "id": "project-inference-plugins",
+        "name": "Share Your Plugin",
+        "path": "/recipes/advanced-plugins/share-your-plugin",
+        "id": "share-your-plugin",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Create a Preset",
+        "path": "/recipes/advanced-plugins/create-preset",
+        "id": "create-preset",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Migration Generators",
+        "path": "/recipes/advanced-plugins/migration-generators",
+        "id": "migration-generators",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -2240,6 +2280,14 @@
         "name": "Project Graph Plugins",
         "path": "/recipes/advanced-plugins/project-graph-plugins",
         "id": "project-graph-plugins",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Project Inference Plugins",
+        "path": "/recipes/advanced-plugins/project-inference-plugins",
+        "id": "project-inference-plugins",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
