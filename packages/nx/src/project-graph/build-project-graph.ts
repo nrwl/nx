@@ -28,7 +28,7 @@ import {
   ProjectGraphProcessorContext,
 } from '../config/project-graph';
 import { readJsonFile } from '../utils/fileutils';
-import { NxJsonConfiguration } from '../config/nx-json';
+import { NrwlJsPluginConfig, NxJsonConfiguration } from '../config/nx-json';
 import { logger } from '../utils/logger';
 import { ProjectGraphBuilder } from './project-graph-builder';
 import {
@@ -209,11 +209,6 @@ async function buildProjectGraphUsingContext(
   );
 
   return r;
-}
-
-interface NrwlJsPluginConfig {
-  analyzeSourceFiles?: boolean;
-  analyzePackageJson?: boolean;
 }
 
 function jsPluginConfig(

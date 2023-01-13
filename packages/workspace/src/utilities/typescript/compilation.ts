@@ -1,4 +1,4 @@
-import { logger } from '@nrwl/devkit';
+import { joinPathFragments, logger } from '@nrwl/devkit';
 import { removeSync } from 'fs-extra';
 import * as ts from 'typescript';
 import type { CustomTransformers, Diagnostic, Program } from 'typescript';
@@ -140,6 +140,12 @@ function getNormalizedTsConfig(options: TypeScriptCompilationOptions) {
   tsConfig.options.outDir = options.outputPath;
   tsConfig.options.noEmitOnError = true;
   tsConfig.options.rootDir = options.rootDir;
+  if (tsConfig.options.incremental && !tsConfig.options.tsBuildInfoFile) {
+    tsConfig.options.tsBuildInfoFile = joinPathFragments(
+      options.outputPath,
+      'tsconfig.tsbuildinfo'
+    );
+  }
   return tsConfig;
 }
 
