@@ -14,9 +14,6 @@ copySync(
 );
 
 module.exports = withNx({
-  experimental: {
-    nextScriptWorkers: true, // Enable PartyTown offloading script strategy
-  },
   // For both client and server
   env: {
     VERCEL: process.env.VERCEL,

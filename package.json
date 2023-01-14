@@ -44,9 +44,9 @@
     "@babel/preset-typescript": "^7.15.0",
     "@cypress/react": "^6.0.0",
     "@floating-ui/react-dom": "^1.0.1",
+    "@nestjs/cli": "^9.0.0",
     "@nestjs/common": "^9.0.0",
     "@nestjs/core": "^9.0.0",
-    "@nestjs/cli": "^9.0.0",
     "@nestjs/platform-express": "^9.0.0",
     "@nestjs/schematics": "^9.0.0",
     "@nestjs/swagger": "^6.0.0",
@@ -264,7 +264,6 @@
     }
   },
   "dependencies": {
-    "@builder.io/partytown": "^0.6.1",
     "@docsearch/react": "^3.3.0",
     "@headlessui/react": "^1.7.3",
     "@heroicons/react": "^2.0.12",
@@ -327,4 +326,3 @@
     ]
   }
 }
-

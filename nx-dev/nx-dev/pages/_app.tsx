@@ -89,7 +89,7 @@ export default function CustomApp({
       {/* HubSpot Analytics */}
       <Script
         id="hs-script-loader"
-        strategy="worker"
+        strategy="afterInteractive"
         src="https://js.hs-scripts.com/2757427.js"
       />
       {/* Hotjar Analytics */}
