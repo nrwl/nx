@@ -14,7 +14,7 @@ src="https://www.youtube.com/embed/LYPVrWQNnEc"
 title="Tutorial: Standalone Angular Application"
 width="100%" /%}
 
-{% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/angular-standalone-application" /%}
+{% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/standalone-angular-app" /%}
 
 # Angular Standalone Tutorial - Part 1: Code Generation
 
