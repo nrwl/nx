@@ -225,7 +225,7 @@ export function addOrChangeServeTarget(
   };
 
   if (project.targets?.[target]) {
-    if (target === '@nxext/vite:dev') {
+    if (project.targets[target].executor === '@nxext/vite:dev') {
       serveOptions.proxyConfig = project.targets[target].options.proxyConfig;
     }
     project.targets[target].options = {
@@ -240,9 +240,7 @@ export function addOrChangeServeTarget(
     project.targets[target] = {
       executor: '@nrwl/vite:dev-server',
       defaultConfiguration: 'development',
-      options: {
-        buildTarget: `${options.project}:build`,
-      },
+      options: serveOptions,
       configurations: {
         development: {
           buildTarget: `${options.project}:build:development`,
