@@ -34,6 +34,7 @@ function readTsConfigOptions(tsConfigPath: string) {
   // we don't need to scan the files, we only care about options
   const host = {
     readDirectory: () => [],
+    readFile: () => '',
     fileExists: tsModule.sys.fileExists,
   };
   return tsModule.parseJsonConfigFileContent(
