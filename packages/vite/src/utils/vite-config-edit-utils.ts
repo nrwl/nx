@@ -131,7 +131,7 @@ function handleBuildOrTestNode(
           updatedFileContent,
           'ExportAssignment'
         );
-        const found = tsquery?.query(
+        const found = tsquery.query(
           defaultExport?.[0],
           'ObjectLiteralExpression'
         );

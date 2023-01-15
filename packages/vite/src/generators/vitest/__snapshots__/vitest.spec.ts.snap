@@ -10,6 +10,7 @@ exports[`vitest generator insourceTests should add the insourceSource option in 
       export default defineConfig({
         
         
+        
     plugins: [
       
       react(),
@@ -53,6 +54,7 @@ exports[`vitest generator vite.config should create correct vite.config.ts file 
       export default defineConfig({
         
         
+        
     plugins: [
       
       react(),
@@ -92,6 +94,7 @@ exports[`vitest generator vite.config should create correct vite.config.ts file 
       
       
       export default defineConfig({
+        
         
         
     plugins: [

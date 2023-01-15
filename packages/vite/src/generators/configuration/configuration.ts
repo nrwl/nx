@@ -17,6 +17,7 @@ import {
   handleUnknownExecutors,
   UserProvidedTargetName,
   TargetFlags,
+  addPreviewTarget,
 } from '../../utils/generator-utils';
 
 import initGenerator from '../init/init';
@@ -41,7 +42,7 @@ export async function viteConfigurationGenerator(tree: Tree, schema: Schema) {
    * to use the vite executors.
    */
   let projectAlreadyHasViteTargets: TargetFlags = {};
-  
+
   if (!schema.newProject) {
     const userProvidedTargetName: UserProvidedTargetName = {
       build: schema.buildTarget,
@@ -146,8 +147,13 @@ export async function viteConfigurationGenerator(tree: Tree, schema: Schema) {
     addOrChangeBuildTarget(tree, schema, buildTargetName);
   }
 
-  if (!schema.includeLib && !projectAlreadyHasViteTargets.serve) {
-    addOrChangeServeTarget(tree, schema, serveTargetName);
+  if (!schema.includeLib) {
+    if (!projectAlreadyHasViteTargets.serve) {
+      addOrChangeServeTarget(tree, schema, serveTargetName);
+    }
+    if (!projectAlreadyHasViteTargets.preview) {
+      addPreviewTarget(tree, schema, serveTargetName);
+    }
   }
 
   createOrEditViteConfig(tree, schema, false, projectAlreadyHasViteTargets);

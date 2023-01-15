@@ -11,11 +11,12 @@ import {
 } from '@nrwl/devkit';
 import { ViteBuildExecutorOptions } from '../executors/build/schema';
 import { ViteDevServerExecutorOptions } from '../executors/dev-server/schema';
+import { VitePreviewServerExecutorOptions } from '../executors/preview-server/schema';
 import { VitestExecutorOptions } from '../executors/test/schema';
 import { Schema } from '../generators/configuration/schema';
 import { ensureBuildOptionsInViteConfig } from './vite-config-edit-utils';
 
-export type Target = 'build' | 'serve' | 'test';
+export type Target = 'build' | 'serve' | 'test' | 'preview';
 export type TargetFlags = Partial<Record<Target, boolean>>;
 export type UserProvidedTargetName = Partial<Record<Target, string>>;
 export type ValidFoundTargetName = Partial<Record<Target, string>>;
@@ -109,6 +110,7 @@ export function findExistingTargetsInProject(
     hasViteTargets.build ||= executorName === '@nrwl/vite:build';
     hasViteTargets.serve ||= executorName === '@nrwl/vite:dev-server';
     hasViteTargets.test ||= executorName === '@nrwl/vite:test';
+    hasViteTargets.preview ||= executorName === '@nrwl/vite:preview-server';
 
     const foundTargets = output.validFoundTargetName;
     if (
@@ -154,11 +156,12 @@ export function addOrChangeTestTarget(
     ),
   };
 
-  if (project.targets?.[target]) {
+  project.targets ??= {};
+
+  if (project.targets[target]) {
     project.targets[target].executor = '@nrwl/vite:test';
     delete project.targets[target].options?.jestConfig;
   } else {
-    project.targets ??= {};
     project.targets[target] = {
       executor: '@nrwl/vite:test',
       outputs: [coveragePath],
@@ -182,7 +185,9 @@ export function addOrChangeBuildTarget(
     ),
   };
 
-  if (project.targets?.[target]) {
+  project.targets ??= {};
+
+  if (project.targets[target]) {
     buildOptions.fileReplacements =
       project.targets[target].options?.fileReplacements;
 
@@ -193,7 +198,6 @@ export function addOrChangeBuildTarget(
     project.targets[target].options = { ...buildOptions };
     project.targets[target].executor = '@nrwl/vite:build';
   } else {
-    project.targets ??= {};
     project.targets[target] = {
       executor: '@nrwl/vite:build',
       outputs: ['{options.outputPath}'],
@@ -220,27 +224,28 @@ export function addOrChangeServeTarget(
 ) {
   const project = readProjectConfiguration(tree, options.project);
 
-  const serveOptions: ViteDevServerExecutorOptions = {
-    buildTarget: `${options.project}:build`,
-  };
+  project.targets ??= {};
 
-  if (project.targets?.[target]) {
-    if (project.targets[target].executor === '@nxext/vite:dev') {
-      serveOptions.proxyConfig = project.targets[target].options.proxyConfig;
-    }
-    project.targets[target].options = {
-      ...serveOptions,
+  if (project.targets[target]) {
+    const serveTarget = project.targets[target];
+    const serveOptions: ViteDevServerExecutorOptions = {
+      buildTarget: `${options.project}:build`,
       https: project.targets[target].options?.https,
       hmr: project.targets[target].options?.hmr,
       open: project.targets[target].options?.open,
     };
-    project.targets[target].executor = '@nrwl/vite:dev-server';
+    if (serveTarget.executor === '@nxext/vite:dev') {
+      serveOptions.proxyConfig = project.targets[target].options.proxyConfig;
+    }
+    serveTarget.executor = '@nrwl/vite:dev-server';
+    serveTarget.options = serveOptions;
   } else {
-    project.targets ??= {};
     project.targets[target] = {
       executor: '@nrwl/vite:dev-server',
       defaultConfiguration: 'development',
-      options: serveOptions,
+      options: {
+        buildTarget: `${options.project}:build`,
+      },
       configurations: {
         development: {
           buildTarget: `${options.project}:build:development`,
@@ -253,6 +258,55 @@ export function addOrChangeServeTarget(
       },
     };
   }
+
+  updateProjectConfiguration(tree, options.project, project);
+}
+
+/**
+ * Adds a target for the preview server.
+ *
+ * @param tree
+ * @param options
+ * @param serveTarget An existing serve target.
+ * @param previewTarget  The preview target to create.
+ */
+export function addPreviewTarget(
+  tree: Tree,
+  options: Schema,
+  serveTarget: string
+) {
+  const project = readProjectConfiguration(tree, options.project);
+
+  const previewOptions: VitePreviewServerExecutorOptions = {
+    buildTarget: `${options.project}:build`,
+  };
+
+  project.targets ??= {};
+
+  // Update the options from the passed serve target.
+  if (project.targets[serveTarget]) {
+    const target = project.targets[serveTarget];
+    if (target.executor === '@nxext/vite:dev') {
+      previewOptions.proxyConfig = target.options.proxyConfig;
+    }
+    previewOptions.https = target.options?.https;
+    previewOptions.open = target.options?.open;
+  }
+
+  // Adds a preview target.
+  project.targets.preview = {
+    executor: '@nrwl/vite:preview-server',
+    defaultConfiguration: 'development',
+    options: previewOptions,
+    configurations: {
+      development: {
+        buildTarget: `${options.project}:build:development`,
+      },
+      production: {
+        buildTarget: `${options.project}:build:production`,
+      },
+    },
+  };
 
   updateProjectConfiguration(tree, options.project, project);
 }
@@ -456,13 +510,23 @@ export function createOrEditViteConfig(
 
   const reactPlugin = options.uiFramework === 'react' ? `react(),` : '';
 
-  const serverOption = onlyVitest
+  const devServerOption = onlyVitest
     ? ''
     : options.includeLib
     ? ''
     : `
     server:{
       port: 4200,
+      host: 'localhost',
+    },`;
+
+  const previewServerOption = onlyVitest
+    ? ''
+    : options.includeLib
+    ? ''
+    : `
+    preview:{
+      port: 4300,
       host: 'localhost',
     },`;
 
@@ -509,7 +573,8 @@ export function createOrEditViteConfig(
       ${dtsImportLine}
       
       export default defineConfig({
-        ${serverOption}
+        ${devServerOption}
+        ${previewServerOption}
         ${pluginOption}
         ${workerOption}
         ${buildOption}
@@ -544,10 +609,10 @@ export function getViteConfigPathForProject(
   if (target) {
     viteConfigPath = targets[target]?.options?.configFile;
   } else {
-    const buildTarget = Object.entries(targets).find(
-      ([_name, config]) => config.executor === '@nrwl/vite:build'
+    const config = Object.values(targets).find(
+      (config) => config.executor === '@nrwl/vite:build'
     );
-    viteConfigPath = buildTarget?.[1]?.options?.configFile;
+    viteConfigPath = config?.options?.configFile;
   }
 
   return normalizeViteConfigFilePathWithTree(tree, root, viteConfigPath);
