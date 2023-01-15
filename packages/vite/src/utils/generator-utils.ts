@@ -15,23 +15,10 @@ import { VitestExecutorOptions } from '../executors/test/schema';
 import { Schema } from '../generators/configuration/schema';
 import { ensureBuildOptionsInViteConfig } from './vite-config-edit-utils';
 
-export interface TargetFlags {
-  build?: boolean;
-  serve?: boolean;
-  test?: boolean;
-}
-
-export interface UserProvidedTargetName {
-  build?: string;
-  serve?: string;
-  test?: string;
-}
-
-export interface ValidFoundTargetName {
-  build?: string;
-  serve?: string;
-  test?: string;
-}
+export type Target = 'build' | 'serve' | 'test';
+export type TargetFlags = Partial<Record<Target, boolean>>;
+export type UserProvidedTargetName = Partial<Record<Target, string>>;
+export type ValidFoundTargetName = Partial<Record<Target, string>>;
 
 export function findExistingTargetsInProject(
   targets: {
@@ -40,22 +27,18 @@ export function findExistingTargetsInProject(
   userProvidedTargets?: UserProvidedTargetName
 ): {
   validFoundTargetName: ValidFoundTargetName;
-  projectContainsUnsupportedExecutor?: boolean;
-  userProvidedTargetIsUnsupported?: TargetFlags;
-  alreadyHasNxViteTargets?: TargetFlags;
+  projectContainsUnsupportedExecutor: boolean;
+  userProvidedTargetIsUnsupported: TargetFlags;
+  alreadyHasNxViteTargets: TargetFlags;
 } {
-  let validFoundBuildTarget: string | undefined,
-    validFoundServeTarget: string | undefined,
-    validFoundTestTarget: string | undefined,
-    projectContainsUnsupportedExecutor: boolean | undefined,
-    unsupportedUserProvidedTargetBuild: boolean | undefined,
-    unsupportedUserProvidedTargetServe: boolean | undefined,
-    unsupportedUserProvidedTargetTest: boolean | undefined,
-    alreadyHasNxViteTargetBuild: boolean | undefined,
-    alreadyHasNxViteTargetServe: boolean | undefined,
-    alreadyHasNxViteTargetTest: boolean | undefined;
+  const output: ReturnType<typeof findExistingTargetsInProject> = {
+    validFoundTargetName: {},
+    projectContainsUnsupportedExecutor: false,
+    userProvidedTargetIsUnsupported: {},
+    alreadyHasNxViteTargets: {},
+  };
 
-  const arrayOfSupportedBuilders = [
+  const supportedBuilders = [
     '@nxext/vite:build',
     '@nrwl/js:babel',
     '@nrwl/js:swc',
@@ -64,14 +47,11 @@ export function findExistingTargetsInProject(
     '@nrwl/web:rollup',
   ];
 
-  const arrayOfSupportedServers = [
-    '@nxext/vite:dev',
-    '@nrwl/webpack:dev-server',
-  ];
+  const supportedServers = ['@nxext/vite:dev', '@nrwl/webpack:dev-server'];
 
-  const arrayOfSupportedTesters = ['@nrwl/jest:jest', '@nxext/vitest:vitest'];
+  const supportedTesters = ['@nrwl/jest:jest', '@nxext/vitest:vitest'];
 
-  const arrayofUnsupportedExecutors = [
+  const unsupportedExecutors = [
     '@nrwl/angular:ng-packagr-lite',
     '@nrwl/angular:package',
     '@nrwl/angular:webpack-browser',
@@ -89,119 +69,59 @@ export function findExistingTargetsInProject(
     '@nrwl/js:tsc',
   ];
 
-  const arrayOfNxViteExecutors = [
-    '@nrwl/vite:build',
-    '@nrwl/vite:dev-server',
-    '@nrwl/vite:test',
-  ];
-
   // First, we check if the user has provided a target
   // If they have, we check if the executor the target is using is supported
   // If it's not supported, then we set the unsupported flag to true for that target
 
-  if (userProvidedTargets?.build) {
-    if (
-      arrayOfSupportedBuilders.includes(
-        targets[userProvidedTargets.build]?.executor
-      )
-    ) {
-      validFoundBuildTarget = userProvidedTargets.build;
-    } else {
-      unsupportedUserProvidedTargetBuild = true;
+  function checkUserProvidedTarget(target: string, executors: string[]) {
+    if (userProvidedTargets?.[target]) {
+      if (executors.includes(targets[userProvidedTargets[target]]?.executor)) {
+        output.validFoundTargetName[target] = userProvidedTargets[target];
+      } else {
+        output.userProvidedTargetIsUnsupported[target] = true;
+      }
     }
   }
 
-  if (userProvidedTargets?.serve) {
-    if (
-      arrayOfSupportedServers.includes(
-        targets[userProvidedTargets.serve]?.executor
-      )
-    ) {
-      validFoundServeTarget = userProvidedTargets.serve;
-    } else {
-      unsupportedUserProvidedTargetServe = true;
-    }
+  checkUserProvidedTarget('build', supportedBuilders);
+  checkUserProvidedTarget('serve', supportedServers);
+  checkUserProvidedTarget('test', supportedTesters);
+
+  // Returns early when we have a build, serve, and test targets.
+  if (
+    output.validFoundTargetName.build &&
+    output.validFoundTargetName.serve &&
+    output.validFoundTargetName.test
+  ) {
+    return output;
   }
 
-  if (userProvidedTargets?.test) {
-    if (
-      arrayOfSupportedServers.includes(
-        targets[userProvidedTargets.test]?.executor
-      )
-    ) {
-      validFoundTestTarget = userProvidedTargets.test;
-    } else {
-      unsupportedUserProvidedTargetTest = true;
-    }
-  }
-
-  // Then, we try to find the targets that are using the supported executors
+  // We try to find the targets that are using the supported executors
   // for build, serve and test, since these are the ones we will be converting
-
   for (const target in targets) {
-    // If we have a value for each one of the targets, we can break out of the loop
-    if (
-      validFoundBuildTarget &&
-      validFoundServeTarget &&
-      validFoundTestTarget
-    ) {
-      break;
+    const executorName = targets[target].executor;
+
+    const hasViteTargets = output.alreadyHasNxViteTargets;
+    hasViteTargets.build ||= executorName === '@nrwl/vite:build';
+    hasViteTargets.serve ||= executorName === '@nrwl/vite:dev-server';
+    hasViteTargets.test ||= executorName === '@nrwl/vite:test';
+
+    const foundTargets = output.validFoundTargetName;
+    if (!foundTargets.build && supportedBuilders.includes(executorName)) {
+      foundTargets.build = target;
+    }
+    if (!foundTargets.serve && supportedServers.includes(executorName)) {
+      foundTargets.serve = target;
+    }
+    if (!foundTargets.test && supportedTesters.includes(executorName)) {
+      foundTargets.test = target;
     }
 
-    if (targets[target].executor === '@nrwl/vite:build') {
-      alreadyHasNxViteTargetBuild = true;
-    }
-    if (targets[target].executor === '@nrwl/vite:dev-server') {
-      alreadyHasNxViteTargetServe = true;
-    }
-    if (targets[target].executor === '@nrwl/vite:test') {
-      alreadyHasNxViteTargetTest = true;
-    }
-
-    if (
-      !validFoundBuildTarget &&
-      arrayOfSupportedBuilders.includes(targets[target].executor)
-    ) {
-      validFoundBuildTarget = target;
-    }
-    if (
-      !validFoundServeTarget &&
-      arrayOfSupportedServers.includes(targets[target].executor)
-    ) {
-      validFoundServeTarget = target;
-    }
-    if (
-      !validFoundTestTarget &&
-      arrayOfSupportedTesters.includes(targets[target].executor)
-    ) {
-      validFoundTestTarget = target;
-    }
-    if (
-      !arrayOfNxViteExecutors.includes(targets[target].executor) &&
-      arrayofUnsupportedExecutors.includes(targets[target].executor)
-    ) {
-      projectContainsUnsupportedExecutor = true;
-    }
+    output.projectContainsUnsupportedExecutor ||=
+      unsupportedExecutors.includes(executorName);
   }
 
-  return {
-    validFoundTargetName: {
-      build: validFoundBuildTarget,
-      serve: validFoundServeTarget,
-      test: validFoundTestTarget,
-    },
-    projectContainsUnsupportedExecutor,
-    userProvidedTargetIsUnsupported: {
-      build: unsupportedUserProvidedTargetBuild,
-      serve: unsupportedUserProvidedTargetServe,
-      test: unsupportedUserProvidedTargetTest,
-    },
-    alreadyHasNxViteTargets: {
-      build: alreadyHasNxViteTargetBuild,
-      serve: alreadyHasNxViteTargetServe,
-      test: alreadyHasNxViteTargetTest,
-    },
-  };
+  return output;
 }
 
 export function addOrChangeTestTarget(
@@ -228,9 +148,7 @@ export function addOrChangeTestTarget(
     project.targets[target].executor = '@nrwl/vite:test';
     delete project.targets[target].options?.jestConfig;
   } else {
-    if (!project.targets) {
-      project.targets = {};
-    }
+    project.targets ??= {};
     project.targets[target] = {
       executor: '@nrwl/vite:test',
       outputs: [coveragePath],
@@ -262,15 +180,11 @@ export function addOrChangeBuildTarget(
       buildOptions.base = project.targets[target].options?.baseHref;
       buildOptions.sourcemap = project.targets[target].options?.sourcemaps;
     }
-    project.targets[target].options = {
-      ...buildOptions,
-    };
+    project.targets[target].options = { ...buildOptions };
     project.targets[target].executor = '@nrwl/vite:build';
   } else {
-    if (!project.targets) {
-      project.targets = {};
-    }
-    project.targets[`${target}`] = {
+    project.targets ??= {};
+    project.targets[target] = {
       executor: '@nrwl/vite:build',
       outputs: ['{options.outputPath}'],
       defaultConfiguration: 'production',
@@ -312,10 +226,8 @@ export function addOrChangeServeTarget(
     };
     project.targets[target].executor = '@nrwl/vite:dev-server';
   } else {
-    if (!project.targets) {
-      project.targets = {};
-    }
-    project.targets[`${target}`] = {
+    project.targets ??= {};
+    project.targets[target] = {
       executor: '@nrwl/vite:dev-server',
       defaultConfiguration: 'development',
       options: {
@@ -428,8 +340,9 @@ export function moveAndEditIndexHtml(
         )
       );
 
-      if (tree.exists(`${projectConfig.root}/src/index.html`))
+      if (tree.exists(`${projectConfig.root}/src/index.html`)) {
         tree.delete(`${projectConfig.root}/src/index.html`);
+      }
     }
   } else {
     tree.write(
@@ -454,7 +367,7 @@ export function moveAndEditIndexHtml(
 export function createOrEditViteConfig(
   tree: Tree,
   options: Schema,
-  onlyVitest?: boolean,
+  onlyVitest: boolean,
   projectAlreadyHasViteTargets?: TargetFlags
 ) {
   const projectConfig = readProjectConfiguration(tree, options.project);
@@ -624,9 +537,7 @@ export function getViteConfigPathForProject(
     viteConfigPath = targets[target]?.options?.configFile;
   } else {
     const buildTarget = Object.entries(targets).find(
-      ([_targetName, targetConfig]) => {
-        return targetConfig.executor === '@nrwl/vite:build';
-      }
+      ([_name, config]) => config.executor === '@nrwl/vite:build'
     );
     viteConfigPath = buildTarget?.[1]?.options?.configFile;
   }
@@ -670,12 +581,12 @@ export async function handleUnsupportedUserProvidedTargets(
 async function handleUnsupportedUserProvidedTargetsErrors(
   userProvidedTargetName: string,
   validFoundTargetName: string,
-  action: 'build' | 'serve' | 'test',
+  target: Target,
   executor: 'build' | 'dev-server' | 'test'
 ) {
   logger.warn(
-    `The custom ${action} target you provided (${userProvidedTargetName}) cannot be converted to use the @nrwl/vite:${executor} executor.
-     However, we found the following ${action} target in your project that can be converted: ${validFoundTargetName}
+    `The custom ${target} target you provided (${userProvidedTargetName}) cannot be converted to use the @nrwl/vite:${executor} executor.
+     However, we found the following ${target} target in your project that can be converted: ${validFoundTargetName}
 
      Please note that converting a potentially non-compatible project to use Vite.js may result in unexpected behavior. Always commit
      your changes before converting a project to use Vite.js, and test the converted project thoroughly before deploying it.
@@ -690,8 +601,8 @@ async function handleUnsupportedUserProvidedTargetsErrors(
   const shouldConvert = await prompt.run();
   if (!shouldConvert) {
     throw new Error(
-      `The ${action} target ${userProvidedTargetName} cannot be converted to use the @nrwl/vite:${executor} executor.
-      Please try again, either by providing a different ${action} target or by not providing a target at all (Nx will
+      `The ${target} target ${userProvidedTargetName} cannot be converted to use the @nrwl/vite:${executor} executor.
+      Please try again, either by providing a different ${target} target or by not providing a target at all (Nx will
         convert the first one it finds, most probably this one: ${validFoundTargetName})
 
       Please note that converting a potentially non-compatible project to use Vite.js may result in unexpected behavior. Always commit
@@ -756,11 +667,10 @@ function handleViteConfigFileExists(
       formats: ['es', 'cjs'],
     },
     rollupOptions: {
-      external: [
+      external:
         options.uiFramework === 'react'
-          ? "'react', 'react-dom', 'react/jsx-runtime'"
-          : '',
-      ],
+          ? ['react', 'react-dom', 'react/jsx-runtime']
+          : [],
     },
   };
 

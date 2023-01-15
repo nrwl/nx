@@ -37,10 +37,10 @@ export async function viteConfigurationGenerator(tree: Tree, schema: Schema) {
   schema.includeLib ??= projectType === 'library';
 
   /**
-   * This is for when we are convering an existing project
+   * This is for when we are converting an existing project
    * to use the vite executors.
-   *  */
-  let projectAlreadyHasViteTargets: TargetFlags;
+   */
+  let projectAlreadyHasViteTargets: TargetFlags = {};
   if (!schema.newProject) {
     const userProvidedTargetName: UserProvidedTargetName = {
       build: schema.buildTarget,
@@ -63,8 +63,7 @@ export async function viteConfigurationGenerator(tree: Tree, schema: Schema) {
      * a build target at all, so we can create a new one.
      *
      * So we only throw if we found a target, but it is unsupported.
-     *
-     * */
+     */
     if (!validFoundTargetName.build && projectContainsUnsupportedExecutor) {
       throw new Error(
         `The project ${schema.project} cannot be converted to use the @nrwl/vite executors.`
@@ -144,11 +143,11 @@ export async function viteConfigurationGenerator(tree: Tree, schema: Schema) {
   });
   tasks.push(initTask);
 
-  if (!projectAlreadyHasViteTargets?.build) {
+  if (!projectAlreadyHasViteTargets.build) {
     addOrChangeBuildTarget(tree, schema, buildTargetName);
   }
 
-  if (!schema.includeLib && !projectAlreadyHasViteTargets?.serve) {
+  if (!schema.includeLib && !projectAlreadyHasViteTargets.serve) {
     addOrChangeServeTarget(tree, schema, serveTargetName);
   }
 

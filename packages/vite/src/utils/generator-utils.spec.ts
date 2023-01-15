@@ -104,17 +104,13 @@ describe('generator utils', () => {
 
       const existingTargets = findExistingTargetsInProject(targets);
       expect(existingTargets).toMatchObject({
-        userProvidedTargetIsUnsupported: {
-          build: undefined,
-          serve: undefined,
-          test: undefined,
-        },
+        userProvidedTargetIsUnsupported: {},
         validFoundTargetName: {
           build: 'build',
           serve: 'serve',
           test: 'test',
         },
-        projectContainsUnsupportedExecutor: undefined,
+        projectContainsUnsupportedExecutor: false,
       });
     });
 
@@ -123,14 +119,8 @@ describe('generator utils', () => {
       const { targets } = readProjectConfiguration(tree, 'my-test-angular-app');
       const existingTargets = findExistingTargetsInProject(targets);
       expect(existingTargets).toMatchObject({
-        userProvidedTargetIsUnsupported: {
-          build: undefined,
-          serve: undefined,
-          test: undefined,
-        },
+        userProvidedTargetIsUnsupported: {},
         validFoundTargetName: {
-          build: undefined,
-          serve: undefined,
           test: 'test',
         },
         projectContainsUnsupportedExecutor: true,
@@ -146,7 +136,6 @@ describe('generator utils', () => {
       const { Confirm } = require('enquirer');
       const confirmSpy = jest.spyOn(Confirm.prototype, 'run');
       confirmSpy.mockResolvedValueOnce(false);
-      expect.assertions(2);
       const object = {
         unsupportedUserProvidedTarget: {
           build: true,
@@ -163,26 +152,27 @@ describe('generator utils', () => {
         },
       };
 
-      try {
+      expect(async () => {
         await handleUnsupportedUserProvidedTargets(
           object.unsupportedUserProvidedTarget,
           object.userProvidedTargets,
           object.targets
         );
-        throw new Error('should not reach here');
-      } catch (e) {
-        expect(e).toBeDefined();
-        expect(e.toString()).toContain(
-          'The build target my-build cannot be converted to use the @nrwl/vite:build executor'
-        );
-      }
+      }).rejects.toThrowErrorMatchingInlineSnapshot(`
+        "The build target my-build cannot be converted to use the @nrwl/vite:build executor.
+              Please try again, either by providing a different build target or by not providing a target at all (Nx will
+                convert the first one it finds, most probably this one: build)
+
+              Please note that converting a potentially non-compatible project to use Vite.js may result in unexpected behavior. Always commit
+              your changes before converting a project to use Vite.js, and test the converted project thoroughly before deploying it.
+              "
+      `);
     });
 
     it('should NOT throw error if unsupported and user confirms', async () => {
       const { Confirm } = require('enquirer');
       const confirmSpy = jest.spyOn(Confirm.prototype, 'run');
       confirmSpy.mockResolvedValue(true);
-      expect.assertions(2);
       const object = {
         unsupportedUserProvidedTarget: {
           build: true,
@@ -199,20 +189,13 @@ describe('generator utils', () => {
         },
       };
 
-      expect(
-        handleUnsupportedUserProvidedTargets(
+      expect(async () => {
+        await handleUnsupportedUserProvidedTargets(
           object.unsupportedUserProvidedTarget,
           object.userProvidedTargets,
           object.targets
-        )
-      ).resolves.toBeUndefined();
-
-      const response = await handleUnsupportedUserProvidedTargets(
-        object.unsupportedUserProvidedTarget,
-        object.userProvidedTargets,
-        object.targets
-      );
-      expect(response).toBeUndefined();
+        );
+      }).not.toThrow();
     });
   });
 });
