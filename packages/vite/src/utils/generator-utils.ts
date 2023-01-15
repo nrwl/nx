@@ -38,18 +38,18 @@ export function findExistingTargetsInProject(
     alreadyHasNxViteTargets: {},
   };
 
-  const supportedBuilders = [
-    '@nxext/vite:build',
-    '@nrwl/js:babel',
-    '@nrwl/js:swc',
-    '@nrwl/webpack:webpack',
-    '@nrwl/rollup:rollup',
-    '@nrwl/web:rollup',
-  ];
-
-  const supportedServers = ['@nxext/vite:dev', '@nrwl/webpack:dev-server'];
-
-  const supportedTesters = ['@nrwl/jest:jest', '@nxext/vitest:vitest'];
+  const supportedExecutors = {
+    build: [
+      '@nxext/vite:build',
+      '@nrwl/js:babel',
+      '@nrwl/js:swc',
+      '@nrwl/webpack:webpack',
+      '@nrwl/rollup:rollup',
+      '@nrwl/web:rollup',
+    ],
+    serve: ['@nxext/vite:dev', '@nrwl/webpack:dev-server'],
+    test: ['@nrwl/jest:jest', '@nxext/vitest:vitest'],
+  };
 
   const unsupportedExecutors = [
     '@nrwl/angular:ng-packagr-lite',
@@ -73,9 +73,13 @@ export function findExistingTargetsInProject(
   // If they have, we check if the executor the target is using is supported
   // If it's not supported, then we set the unsupported flag to true for that target
 
-  function checkUserProvidedTarget(target: string, executors: string[]) {
+  function checkUserProvidedTarget(target: Target) {
     if (userProvidedTargets?.[target]) {
-      if (executors.includes(targets[userProvidedTargets[target]]?.executor)) {
+      if (
+        supportedExecutors[target].includes(
+          targets[userProvidedTargets[target]]?.executor
+        )
+      ) {
         output.validFoundTargetName[target] = userProvidedTargets[target];
       } else {
         output.userProvidedTargetIsUnsupported[target] = true;
@@ -83,9 +87,9 @@ export function findExistingTargetsInProject(
     }
   }
 
-  checkUserProvidedTarget('build', supportedBuilders);
-  checkUserProvidedTarget('serve', supportedServers);
-  checkUserProvidedTarget('test', supportedTesters);
+  checkUserProvidedTarget('build');
+  checkUserProvidedTarget('serve');
+  checkUserProvidedTarget('test');
 
   // Returns early when we have a build, serve, and test targets.
   if (
@@ -107,13 +111,19 @@ export function findExistingTargetsInProject(
     hasViteTargets.test ||= executorName === '@nrwl/vite:test';
 
     const foundTargets = output.validFoundTargetName;
-    if (!foundTargets.build && supportedBuilders.includes(executorName)) {
+    if (
+      !foundTargets.build &&
+      supportedExecutors.build.includes(executorName)
+    ) {
       foundTargets.build = target;
     }
-    if (!foundTargets.serve && supportedServers.includes(executorName)) {
+    if (
+      !foundTargets.serve &&
+      supportedExecutors.serve.includes(executorName)
+    ) {
       foundTargets.serve = target;
     }
-    if (!foundTargets.test && supportedTesters.includes(executorName)) {
+    if (!foundTargets.test && supportedExecutors.test.includes(executorName)) {
       foundTargets.test = target;
     }
 

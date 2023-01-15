@@ -41,6 +41,7 @@ export async function viteConfigurationGenerator(tree: Tree, schema: Schema) {
    * to use the vite executors.
    */
   let projectAlreadyHasViteTargets: TargetFlags = {};
+  
   if (!schema.newProject) {
     const userProvidedTargetName: UserProvidedTargetName = {
       build: schema.buildTarget,
@@ -72,12 +73,11 @@ export async function viteConfigurationGenerator(tree: Tree, schema: Schema) {
 
     if (
       alreadyHasNxViteTargets.build &&
-      (alreadyHasNxViteTargets.serve ||
-        (!alreadyHasNxViteTargets.serve && projectType === 'library')) &&
+      (alreadyHasNxViteTargets.serve || projectType === 'library') &&
       alreadyHasNxViteTargets.test
     ) {
       throw new Error(
-        `The project ${schema.project} is aready configured to use the @nrwl/vite executors.
+        `The project ${schema.project} is already configured to use the @nrwl/vite executors.
         Please try a different project, or remove the existing targets 
         and re-run this generator to reset the existing Vite Configuration.
         `
@@ -114,9 +114,8 @@ export async function viteConfigurationGenerator(tree: Tree, schema: Schema) {
      * We also keep track of the targets that we found in the project,
      * through the findExistingTargetsInProject function, which returns
      * targets for build/serve/test that use supported executors, and
-     * can be coverted to use the vite executors. These are the
+     * can be converted to use the vite executors. These are the
      * kept in the validFoundTargetName object.
-     *
      */
     await handleUnsupportedUserProvidedTargets(
       userProvidedTargetIsUnsupported,
