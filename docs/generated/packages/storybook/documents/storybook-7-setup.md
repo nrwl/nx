@@ -1,14 +1,18 @@
 # Storybook 7 is here - and Nx is ready
 
-{% callout type="warning" title="Storybook 7 is in beta" %}
-[Storybook version 7 is still in beta](https://storybook.js.org/blog/7-0-beta/). Things are evolving dynamically, so it would be better to _avoid using in production_. If you want to use the stable, [6.5 version](https://storybook.js.org/releases/6.5), please go to the [Storybook plugin overview guide](/packages/storybook) to get started.
+{% callout type="info" title="Available on Nx v15.6" %}
+This is a new feature available on Nx v15.6.0. If you are using an older version of Nx, please [upgrade](/packages/nx/documents/migrate).
 {% /callout %}
 
-Storybook 7 is a major release that brings a lot of new features and improvements. You can read more about it in the [Storybook 7 beta announcement blog post](https://storybook.js.org/blog/7-0-beta/). Apart from the new features and improvements it introduces, it also brings some breaking changes. You can read more about them in the [Storybook 7 migration docs](https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#from-version-65x-to-700) and the [Storybook 7 migration guide](https://chromatic-ui.notion.site/Storybook-7-migration-guide-dbf41fa347304eb2a5e9c69b34503937). Do note that _version 7 is still in beta_, and things are evolving dynamically, so it would be better to _avoid using in production_.
+{% callout type="warning" title="Storybook 7 is in beta" %}
+[Storybook version 7 is still in beta](https://storybook.js.org/blog/7-0-beta/), and so is the Nx support for it. Things are evolving dynamically, so it would be better to _avoid using in production_ on Nx. If you want to use the stable, [6.5 version](https://storybook.js.org/releases/6.5), please go to the [Storybook plugin overview guide](/packages/storybook) to get started.
+{% /callout %}
 
-Nx provides new generators that allow you to generate Storybook 7 configuration for your projects, by installing the correct dependencies, and creating the corresponding version 7 configuration files.
+Storybook 7 is a major release that brings a lot of new features and improvements. You can read more about it in the [Storybook 7 beta announcement blog post](https://storybook.js.org/blog/7-0-beta/). Apart from the new features and improvements it introduces, it also brings some breaking changes. You can read more about them in the [Storybook 7 migration docs](https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#from-version-65x-to-700) and the [Storybook 7 migration guide](https://chromatic-ui.notion.site/Storybook-7-migration-guide-dbf41fa347304eb2a5e9c69b34503937). Do note that _version 7 is still in beta_, and so is the Nx support for it. Things are evolving dynamically, so it would be better to _avoid using in production_ on Nx.
 
-So, let's see how to get started with Storybook 7 and Nx.
+Nx provides new generators that allow you to generate Storybook 7 configuration for your projects, by installing the correct dependencies and creating the corresponding version 7 configuration files.
+
+So, let's see how to get started with Storybook 7 on Nx workspaces.
 
 ## Setting Up Storybook 7 in a _new_ Nx Workspace
 

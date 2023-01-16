@@ -5907,6 +5907,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "Custom configurations for Webpack and Vite",
+                "path": "/packages/storybook/documents/custom-builder-configs",
+                "id": "custom-builder-configs",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,
