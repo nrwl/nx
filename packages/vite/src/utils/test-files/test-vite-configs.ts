@@ -1,4 +1,5 @@
 export const noBuildOptions = `
+    /// <reference types="vitest" />
     import { defineConfig } from 'vite';
     import react from '@vitejs/plugin-react';
     import viteTsConfigPaths from 'vite-tsconfig-paths';
@@ -24,6 +25,7 @@ export const noBuildOptions = `
     `;
 
 export const someBuildOptions = `
+    /// <reference types="vitest" />
     import { defineConfig } from 'vite';
     import react from '@vitejs/plugin-react';
     import viteTsConfigPaths from 'vite-tsconfig-paths';
@@ -53,6 +55,7 @@ export const someBuildOptions = `
     `;
 
 export const noContentDefineConfig = `
+    /// <reference types="vitest" />
     import { defineConfig } from 'vite';
     import react from '@vitejs/plugin-react';
     import viteTsConfigPaths from 'vite-tsconfig-paths';
@@ -61,6 +64,7 @@ export const noContentDefineConfig = `
     `;
 
 export const conditionalConfig = `
+    /// <reference types="vitest" />
     import { defineConfig } from 'vite';
     export default defineConfig(({ command, mode, ssrBuild }) => {
       if (command === 'serve') {
@@ -78,6 +82,7 @@ export const conditionalConfig = `
     `;
 
 export const configNoDefineConfig = `
+    /// <reference types="vitest" />
     import { defineConfig } from 'vite';
     import react from '@vitejs/plugin-react';
     import viteTsConfigPaths from 'vite-tsconfig-paths';
@@ -93,6 +98,7 @@ export const configNoDefineConfig = `
     `;
 
 export const noBuildOptionsHasTestOption = `
+    /// <reference types="vitest" />
     import { defineConfig } from 'vite';
     import react from '@vitejs/plugin-react';
     import viteTsConfigPaths from 'vite-tsconfig-paths';
@@ -118,6 +124,7 @@ export const noBuildOptionsHasTestOption = `
     `;
 
 export const someBuildOptionsSomeTestOption = `
+    /// <reference types="vitest" />
     import { defineConfig } from 'vite';
     import react from '@vitejs/plugin-react';
     import viteTsConfigPaths from 'vite-tsconfig-paths';
@@ -142,6 +149,7 @@ export const someBuildOptionsSomeTestOption = `
     `;
 
 export const hasEverything = `
+    /// <reference types="vitest" />
     import { defineConfig } from 'vite';
     import react from '@vitejs/plugin-react';
     import viteTsConfigPaths from 'vite-tsconfig-paths';

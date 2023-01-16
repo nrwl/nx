@@ -4,6 +4,7 @@ exports[`ensureBuildOptionsInViteConfig should add build and test options if def
 "import dts from 'vite-plugin-dts';
 import { join } from 'path';
 
+    /// <reference types=\\"vitest\\" />
     import { defineConfig } from 'vite';
     import react from '@vitejs/plugin-react';
     import viteTsConfigPaths from 'vite-tsconfig-paths';
@@ -203,6 +204,7 @@ import { defineConfig } from 'vite';
 
 exports[`ensureBuildOptionsInViteConfig should add build options if it is using conditional config - do nothing for test 1`] = `
 "
+    /// <reference types=\\"vitest\\" />
     import { defineConfig } from 'vite';
     export default defineConfig(({ command, mode, ssrBuild }) => {
       if (command === 'serve') {
@@ -269,6 +271,7 @@ exports[`ensureBuildOptionsInViteConfig should not do anything if cannot underst
 
 exports[`ensureBuildOptionsInViteConfig should not do anything if project has everything setup already 1`] = `
 "
+    /// <reference types=\\"vitest\\" />
     import { defineConfig } from 'vite';
     import react from '@vitejs/plugin-react';
     import viteTsConfigPaths from 'vite-tsconfig-paths';

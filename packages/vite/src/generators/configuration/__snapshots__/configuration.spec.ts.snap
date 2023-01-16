@@ -2,6 +2,7 @@
 
 exports[`@nrwl/vite:configuration library mode should add config for building library 1`] = `
 "
+      /// <reference types=\\"vitest\\" />
       import { defineConfig } from 'vite';
       import react from '@vitejs/plugin-react';
       import viteTsConfigPaths from 'vite-tsconfig-paths';
@@ -58,6 +59,7 @@ import { join } from 'path';
 
 exports[`@nrwl/vite:configuration library mode should set up non buildable library correctly 1`] = `
 "
+      /// <reference types=\\"vitest\\" />
       import { defineConfig } from 'vite';
       import react from '@vitejs/plugin-react';
       import viteTsConfigPaths from 'vite-tsconfig-paths';
@@ -373,6 +375,7 @@ exports[`@nrwl/vite:configuration transform React app to use Vite by providing c
 
 exports[`@nrwl/vite:configuration transform React app to use Vite should create vite.config file at the root of the app 1`] = `
 "
+      /// <reference types=\\"vitest\\" />
       import { defineConfig } from 'vite';
       import react from '@vitejs/plugin-react';
       import viteTsConfigPaths from 'vite-tsconfig-paths';
@@ -536,6 +539,7 @@ exports[`@nrwl/vite:configuration transform React app to use Vite should transfo
 
 exports[`@nrwl/vite:configuration transform Web app to use Vite should create vite.config file at the root of the app 1`] = `
 "
+      /// <reference types=\\"vitest\\" />
       import { defineConfig } from 'vite';
       
       import viteTsConfigPaths from 'vite-tsconfig-paths';
@@ -688,6 +692,7 @@ exports[`@nrwl/vite:configuration transform Web app to use Vite should transform
 
 exports[`@nrwl/vite:configuration vitest should create a vitest configuration if "includeVitest" is true 1`] = `
 "
+      /// <reference types=\\"vitest\\" />
       import { defineConfig } from 'vite';
       import react from '@vitejs/plugin-react';
       import viteTsConfigPaths from 'vite-tsconfig-paths';
