@@ -10,9 +10,9 @@ import {
 import { Schema } from './schema';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { addBabelInputs } from '@nrwl/js/src/utils/add-babel-inputs';
-
 import { jestInitGenerator } from '@nrwl/jest';
 import { detoxInitGenerator } from '@nrwl/detox';
+import { babelPresetReactVersion } from '@nrwl/react/src/utils/versions';
 
 import {
   babelRuntimeVersion,
@@ -101,6 +101,7 @@ export function updateDependencies(host: Tree) {
       'react-native-config': reactNativeConfigVersion,
       '@react-native-async-storage/async-storage':
         reactNativeAsyncStorageAsyncStorageVersion,
+      '@babel/preset-react': babelPresetReactVersion,
       ...(isPnpm
         ? {
             'metro-config': metroVersion, // metro-config is used by metro.config.js

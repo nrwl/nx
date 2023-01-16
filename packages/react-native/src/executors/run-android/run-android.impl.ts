@@ -10,6 +10,7 @@ import {
 import { chmodSync } from 'fs';
 import { ReactNativeRunAndroidOptions } from './schema';
 import { runCliStart } from '../start/start.impl';
+import { chmodAndroidGradlewFiles } from '../../utils/chmod-android-gradle-files';
 
 export interface ReactNativeRunAndroidOutput {
   success: boolean;
@@ -24,8 +25,7 @@ export default async function* runAndroidExecutor(
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
   ensureNodeModulesSymlink(context.root, projectRoot);
-  chmodSync(join(context.root, projectRoot, 'android', 'gradlew'), 0o775);
-  chmodSync(join(context.root, projectRoot, 'android', 'gradlew.bat'), 0o775);
+  chmodAndroidGradlewFiles(join(projectRoot, 'android'));
 
   if (options.sync) {
     displayNewlyAddedDepsMessage(

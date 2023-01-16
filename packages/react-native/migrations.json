@@ -1109,6 +1109,83 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "15.6.2": {
+      "version": "15.6.2-beta.0",
+      "packages": {
+        "react-native": {
+          "version": "0.71.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-native": {
+          "version": "0.71.0",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-resolver": {
+          "version": "0.74.1",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-babel-register": {
+          "version": "0.74.1",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-config": {
+          "version": "0.74.1",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-react-native-babel-preset": {
+          "version": "0.74.1",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-react-native-babel-transformer": {
+          "version": "0.74.1",
+          "alwaysAddToPackageJson": false
+        },
+        "react-native-config": {
+          "version": "1.4.12",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/jest-native": {
+          "version": "5.4.1",
+          "alwaysAddToPackageJson": false
+        },
+        "react-native-svg": {
+          "version": "13.7.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@babel/runtime": {
+          "version": "7.20.7",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-native-community/cli": {
+          "version": "10.1.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-native-community/cli-platform-android": {
+          "version": "10.1.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-native-community/cli-platform-ios": {
+          "version": "10.1.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/node": {
+          "version": "18.11.18",
+          "alwaysAddToPackageJson": false
+        },
+        "react": {
+          "version": "18.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "react-dom": {
+          "version": "18.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "react-test-renderer": {
+          "version": "18.2.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
