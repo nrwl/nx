@@ -87,9 +87,9 @@ describe('app', () => {
           lintFilePatterns: ['my-node-app/**/*.ts'],
         },
       });
-      expect(() => readProjectConfiguration(tree, 'my-node-app-e2e')).toThrow(
-        /Cannot find/
-      );
+      expect(() =>
+        readProjectConfiguration(tree, 'my-node-app-e2e')
+      ).not.toThrow();
     });
 
     it('should update tags', async () => {
