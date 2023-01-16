@@ -4,20 +4,15 @@ import {
   formatFiles,
   installPackagesTask,
 } from '@nrwl/devkit';
-import type { Schema } from './schema';
+import { getPkgVersionsForAngularMajorVersion } from '../../utils/version-utils';
+import { getInstalledAngularVersionInfo } from '../utils/angular-version-utils';
 import {
   generateSSRFiles,
   normalizeOptions,
   updateAppModule,
   updateProjectConfig,
 } from './lib';
-import {
-  angularVersion,
-  ngUniversalVersion,
-  versions,
-} from '../../utils/versions';
-import { getInstalledAngularVersionInfo } from '../utils/angular-version-utils';
-import { coerce, major } from 'semver';
+import type { Schema } from './schema';
 
 export async function setupSsr(tree: Tree, schema: Schema) {
   const options = normalizeOptions(tree, schema);
@@ -27,26 +22,17 @@ export async function setupSsr(tree: Tree, schema: Schema) {
   updateProjectConfig(tree, options);
 
   const installedAngularVersion = getInstalledAngularVersionInfo(tree);
-  const ngUniversalVersionToUse =
-    installedAngularVersion.major < major(coerce(angularVersion))
-      ? versions[`angularV${installedAngularVersion.major}`]
-          ?.ngUniversalVersion ?? ngUniversalVersion
-      : ngUniversalVersion;
-
-  const ngPlatformServerVersionToUse =
-    installedAngularVersion.major < major(coerce(angularVersion))
-      ? versions[`angularV${installedAngularVersion.major}`]?.angularVersion ??
-        angularVersion
-      : angularVersion;
+  const { angularVersion: ngPlatformServerVersion, ngUniversalVersion } =
+    getPkgVersionsForAngularMajorVersion(installedAngularVersion.major);
 
   addDependenciesToPackageJson(
     tree,
     {
-      '@nguniversal/express-engine': ngUniversalVersionToUse,
-      '@angular/platform-server': ngPlatformServerVersionToUse,
+      '@nguniversal/express-engine': ngUniversalVersion,
+      '@angular/platform-server': ngPlatformServerVersion,
     },
     {
-      '@nguniversal/builders': ngUniversalVersionToUse,
+      '@nguniversal/builders': ngUniversalVersion,
     }
   );
 

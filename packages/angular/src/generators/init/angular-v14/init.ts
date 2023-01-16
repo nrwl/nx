@@ -11,10 +11,10 @@ import {
 import { jestInitGenerator } from '@nrwl/jest';
 import { Linter } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+import { backwardCompatibleVersions } from '../../../utils/backward-compatible-versions';
 import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
 import { karmaGenerator } from '../../karma/karma';
 import { Schema } from './schema';
-import { versions } from '../../../utils/versions';
 
 export async function angularInitGenerator(
   host: Tree,
@@ -77,23 +77,30 @@ function updateDependencies(host: Tree): GeneratorCallback {
   return addDependenciesToPackageJson(
     host,
     {
-      '@angular/animations': versions.angularV14.angularVersion,
-      '@angular/common': versions.angularV14.angularVersion,
-      '@angular/compiler': versions.angularV14.angularVersion,
-      '@angular/core': versions.angularV14.angularVersion,
-      '@angular/forms': versions.angularV14.angularVersion,
-      '@angular/platform-browser': versions.angularV14.angularVersion,
-      '@angular/platform-browser-dynamic': versions.angularV14.angularVersion,
-      '@angular/router': versions.angularV14.angularVersion,
-      rxjs: versions.angularV14.rxjsVersion,
-      tslib: versions.angularV14.tsLibVersion,
-      'zone.js': versions.angularV14.zoneJsVersion,
+      '@angular/animations':
+        backwardCompatibleVersions.angularV14.angularVersion,
+      '@angular/common': backwardCompatibleVersions.angularV14.angularVersion,
+      '@angular/compiler': backwardCompatibleVersions.angularV14.angularVersion,
+      '@angular/core': backwardCompatibleVersions.angularV14.angularVersion,
+      '@angular/forms': backwardCompatibleVersions.angularV14.angularVersion,
+      '@angular/platform-browser':
+        backwardCompatibleVersions.angularV14.angularVersion,
+      '@angular/platform-browser-dynamic':
+        backwardCompatibleVersions.angularV14.angularVersion,
+      '@angular/router': backwardCompatibleVersions.angularV14.angularVersion,
+      rxjs: backwardCompatibleVersions.angularV14.rxjsVersion,
+      tslib: backwardCompatibleVersions.angularV14.tsLibVersion,
+      'zone.js': backwardCompatibleVersions.angularV14.zoneJsVersion,
     },
     {
-      '@angular/cli': versions.angularV14.angularDevkitVersion,
-      '@angular/compiler-cli': versions.angularV14.angularVersion,
-      '@angular/language-service': versions.angularV14.angularVersion,
-      '@angular-devkit/build-angular': versions.angularV14.angularDevkitVersion,
+      '@angular/cli':
+        backwardCompatibleVersions.angularV14.angularDevkitVersion,
+      '@angular/compiler-cli':
+        backwardCompatibleVersions.angularV14.angularVersion,
+      '@angular/language-service':
+        backwardCompatibleVersions.angularV14.angularVersion,
+      '@angular-devkit/build-angular':
+        backwardCompatibleVersions.angularV14.angularDevkitVersion,
     }
   );
 }
@@ -113,7 +120,8 @@ async function addUnitTestRunner(
           host,
           {},
           {
-            'jest-preset-angular': versions.angularV14.jestPresetAngularVersion,
+            'jest-preset-angular':
+              backwardCompatibleVersions.angularV14.jestPresetAngularVersion,
           }
         );
       }
@@ -134,13 +142,18 @@ function addE2ETestRunner(host: Tree, options: Schema): GeneratorCallback {
             host,
             {},
             {
-              protractor: versions.angularV14.protractorVersion,
-              'jasmine-core': versions.angularV14.jasmineCoreVersion,
+              protractor:
+                backwardCompatibleVersions.angularV14.protractorVersion,
+              'jasmine-core':
+                backwardCompatibleVersions.angularV14.jasmineCoreVersion,
               'jasmine-spec-reporter':
-                versions.angularV14.jasmineSpecReporterVersion,
-              'ts-node': versions.angularV14.tsNodeVersion,
-              '@types/jasmine': versions.angularV14.typesJasmineVersion,
-              '@types/jasminewd2': versions.angularV14.typesJasminewd2Version,
+                backwardCompatibleVersions.angularV14
+                  .jasmineSpecReporterVersion,
+              'ts-node': backwardCompatibleVersions.angularV14.tsNodeVersion,
+              '@types/jasmine':
+                backwardCompatibleVersions.angularV14.typesJasmineVersion,
+              '@types/jasminewd2':
+                backwardCompatibleVersions.angularV14.typesJasminewd2Version,
             }
           )
         : () => {};
