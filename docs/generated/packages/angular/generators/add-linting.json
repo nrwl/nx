@@ -18,15 +18,18 @@
       "prefix": {
         "type": "string",
         "format": "html-selector",
-        "description": "The prefix to apply to generated selectors."
+        "description": "The prefix to apply to generated selectors.",
+        "x-priority": "important"
       },
       "projectName": {
         "type": "string",
-        "description": "The name of the project."
+        "description": "The name of the project.",
+        "x-priority": "important"
       },
       "projectRoot": {
         "type": "string",
-        "description": "The path to the root of the selected project."
+        "description": "The path to the root of the selected project.",
+        "x-priority": "important"
       },
       "setParserOptionsProject": {
         "type": "boolean",
@@ -36,12 +39,14 @@
       "skipFormat": {
         "type": "boolean",
         "description": "Skip formatting files.",
-        "default": false
+        "default": false,
+        "x-priority": "internal"
       },
       "skipPackageJson": {
         "type": "boolean",
         "default": false,
-        "description": "Do not add dependencies to `package.json`."
+        "description": "Do not add dependencies to `package.json`.",
+        "x-priority": "internal"
       }
     },
     "additionalProperties": false,

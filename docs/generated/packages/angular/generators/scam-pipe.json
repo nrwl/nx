@@ -25,13 +25,15 @@
       "project": {
         "type": "string",
         "description": "The name of the project.",
-        "x-dropdown": "projects"
+        "x-dropdown": "projects",
+        "x-priority": "important"
       },
       "name": {
         "type": "string",
         "description": "The name of the pipe.",
         "$default": { "$source": "argv", "index": 0 },
-        "x-prompt": "What name would you like to use for the pipe?"
+        "x-prompt": "What name would you like to use for the pipe?",
+        "x-priority": "important"
       },
       "skipTests": {
         "type": "boolean",
@@ -41,7 +43,8 @@
       "inlineScam": {
         "type": "boolean",
         "description": "Create the NgModule in the same file as the Pipe.",
-        "default": true
+        "default": true,
+        "x-priority": "important"
       },
       "flat": {
         "type": "boolean",
@@ -51,7 +54,8 @@
       "export": {
         "type": "boolean",
         "description": "Specifies if the SCAM should be exported from the project's entry point (normally `index.ts`). It only applies to libraries.",
-        "default": true
+        "default": true,
+        "x-priority": "important"
       }
     },
     "required": ["name"],

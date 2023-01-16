@@ -13,7 +13,8 @@
         "type": "string",
         "description": "The name of the project to add cypress component testing configuration to",
         "x-dropdown": "projects",
-        "x-prompt": "What project should we add Cypress component testing to?"
+        "x-prompt": "What project should we add Cypress component testing to?",
+        "x-priority": "important"
       },
       "generateTests": {
         "type": "boolean",
@@ -24,12 +25,14 @@
       "buildTarget": {
         "type": "string",
         "description": "A build target used to configure Cypress component testing in the format of `project:target[:configuration]`. The build target should be an angular app. If not provided we will try to infer it from your projects usage.",
-        "pattern": "^[^:\\s]+:[^:\\s]+(:\\S+)?$"
+        "pattern": "^[^:\\s]+:[^:\\s]+(:\\S+)?$",
+        "x-priority": "important"
       },
       "skipFormat": {
         "type": "boolean",
         "description": "Skip formatting files",
-        "default": false
+        "default": false,
+        "x-priority": "internal"
       }
     },
     "required": ["project"],
