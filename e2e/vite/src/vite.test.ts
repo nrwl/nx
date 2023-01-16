@@ -210,7 +210,8 @@ describe('Vite Plugin', () => {
     it('should collect coverage', () => {
       runCLI(`generate @nrwl/react:lib ${lib} --unitTestRunner=vitest`);
       updateFile(`libs/${lib}/vite.config.ts`, () => {
-        return `import { defineConfig } from 'vite';
+        return `/// <reference types="vitest" />
+        import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import viteTsConfigPaths from 'vite-tsconfig-paths';
 
