@@ -582,6 +582,7 @@ export function createOrEditViteConfig(
   }
 
   viteConfigContent = `
+      /// <reference types="vitest" />
       import { defineConfig } from 'vite';
       ${reactPluginImportLine}
       import viteTsConfigPaths from 'vite-tsconfig-paths';

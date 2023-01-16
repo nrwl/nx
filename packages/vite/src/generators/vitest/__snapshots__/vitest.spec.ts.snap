@@ -2,6 +2,7 @@
 
 exports[`vitest generator insourceTests should add the insourceSource option in the vite config 1`] = `
 "
+      /// <reference types=\\"vitest\\" />
       import { defineConfig } from 'vite';
       import react from '@vitejs/plugin-react';
       import viteTsConfigPaths from 'vite-tsconfig-paths';
@@ -45,6 +46,7 @@ exports[`vitest generator insourceTests should add the insourceSource option in 
 
 exports[`vitest generator vite.config should create correct vite.config.ts file for apps 1`] = `
 "
+      /// <reference types=\\"vitest\\" />
       import { defineConfig } from 'vite';
       import react from '@vitejs/plugin-react';
       import viteTsConfigPaths from 'vite-tsconfig-paths';
@@ -86,6 +88,7 @@ exports[`vitest generator vite.config should create correct vite.config.ts file 
 
 exports[`vitest generator vite.config should create correct vite.config.ts file for non buildable libs 1`] = `
 "
+      /// <reference types=\\"vitest\\" />
       import { defineConfig } from 'vite';
       import react from '@vitejs/plugin-react';
       import viteTsConfigPaths from 'vite-tsconfig-paths';
