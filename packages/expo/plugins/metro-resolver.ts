@@ -26,6 +26,7 @@ export function getResolveRequest(extensions: string[]) {
     const { resolveRequest, ...context } = _context;
 
     const resolvedPath =
+      resolveRequest(_context, realModuleName, platform) ||
       defaultMetroResolver(context, realModuleName, platform, debug) ||
       tsconfigPathsResolver(
         context,

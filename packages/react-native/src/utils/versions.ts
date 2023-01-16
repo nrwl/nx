@@ -5,7 +5,7 @@ export const typesReactNativeVersion = '0.70.6';
 
 export const typesNodeVersion = '16.11.7';
 
-export const metroVersion = '0.73.3';
+export const metroVersion = '0.74.0';
 
 export const reactNativeCommunityCli = '9.3.2';
 export const reactNativeCommunityCliIos = '9.3.0';
