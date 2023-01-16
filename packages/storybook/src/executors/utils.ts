@@ -34,12 +34,29 @@ export function getStorybookFrameworkPath(uiFramework: UiFramework) {
 
 // TODO(katerina): Remove when Storybook 7
 function isStorybookV62onwards(uiFramework: string) {
-  const storybookPackageVersion = require(join(
-    uiFramework,
-    'package.json'
-  )).version;
-
-  return gte(storybookPackageVersion, '6.2.0-rc.4');
+  try {
+    const storybookPackageVersion = require(join(
+      uiFramework,
+      'package.json'
+    )).version;
+    return gte(storybookPackageVersion, '6.2.0-rc.4');
+  } catch (e) {
+    try {
+      const storybookPackageVersion = require(join(
+        '@storybook/core-server',
+        'package.json'
+      )).version;
+      return gte(storybookPackageVersion, '6.2.0-rc.4');
+    } catch (e) {
+      throw new Error(
+        `Error: ${e}
+        
+        It looks like you don\'t have Storybook installed. 
+        Please run the @nrwl/storybook:configuration generator, 
+        or run "npm/yarn" again to install your dependencies.`
+      );
+    }
+  }
 }
 
 // TODO(katerina): Remove when Storybook 7
