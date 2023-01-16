@@ -236,6 +236,7 @@ export function Content({
             lookup={schemaViewModel.lookup}
             reference="#"
             stage={'both'}
+            type={schemaViewModel.type}
           />
         )}
         {schemaViewModel.subReference && (
@@ -249,6 +250,7 @@ export function Content({
             lookup={schemaViewModel.lookup}
             reference={schemaViewModel.subReference}
             stage={'both'}
+            type={schemaViewModel.type}
           />
         )}
       </div>

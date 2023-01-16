@@ -2,55 +2,114 @@ import {
   getDescriptionForSchema,
   getSchemaFromResult,
   Lookup,
+  LookupResult,
 } from '@nrwl/nx-dev/data-access-packages';
 import { JsonSchema, JsonSchema1 } from '@nrwl/nx-dev/models-package';
 import { ParameterView } from './parameter-view';
 import { shouldShowInStage, Stage } from './stage';
 import { Type } from './types/type';
 
-export function SchemaViewer({
-  schema,
-  reference,
-  lookup,
-  stage,
-}: {
-  schema: JsonSchema1;
-  reference: string;
-  lookup: Lookup;
-  stage: Stage;
-}): JSX.Element {
-  const properties = schema.properties || {};
-  const isDeprecated = (schema: JsonSchema): boolean =>
-    typeof schema === 'boolean' ? false : !!schema['x-deprecated'];
-  const getAlias = (schema: JsonSchema): string =>
-    typeof schema === 'boolean' ? '' : (schema['alias'] as string);
+interface PropertySchema extends JsonSchema1 {
+  alias?: string;
+  'x-deprecated'?: boolean;
+  'x-priority'?: 'important' | 'internal';
+}
 
-  const renderedProps = Object.keys(properties)
+interface PropertyModel {
+  alias: string;
+  initialSchema: PropertySchema;
+  isRequired: boolean;
+  lookupResult: LookupResult;
+  propertyName: string;
+  propertyReference: string;
+}
+
+const isPropertyDeprecated = (schema: PropertySchema | JsonSchema): boolean =>
+  typeof schema === 'boolean' ? false : !!schema['x-deprecated'];
+const getPropertyAlias = (schema: PropertySchema | JsonSchema): string => {
+  if (typeof schema === 'boolean' || schema.alias === undefined) return '';
+  return String(schema.alias);
+};
+
+function getViewModel(
+  schema: JsonSchema1,
+  lookup: Lookup,
+  reference: string
+): PropertyModel[] {
+  const properties = schema.properties || {};
+  return Object.keys(properties)
     .sort((a, b) => a[0].localeCompare(b[0])) // Sort properties alphabetically
     .map((propertyName) => {
-      const propertySchema = properties[propertyName];
+      const propertySchema = properties[propertyName] as PropertySchema;
       const lookupResult = lookup.getSchema(propertySchema);
       return {
         propertyName,
-        alias: ((properties[propertyName] as any)['alias'] as string) ?? '',
+        alias: propertySchema['alias'] ?? '',
         initialSchema: propertySchema,
+        isRequired:
+          typeof schema.required !== 'undefined' &&
+          !!schema.required.find((n) => n === propertyName),
         lookupResult,
         propertyReference:
           lookupResult?.baseReference ||
           `${reference}/properties/${propertyName}`,
       };
-    })
-    .filter((p) => {
-      if (p.lookupResult === undefined) {
-        return true;
-      }
-      return shouldShowInStage(stage, p.lookupResult.schema);
-    })
-    .map((p) => {
-      const isRequired =
-        typeof schema.required !== 'undefined' &&
-        !!schema.required.find((n) => n === p.propertyName);
+    });
+}
 
+function extractPropertiesByImportance(properties: PropertyModel[]): {
+  required: PropertyModel[];
+  important: PropertyModel[];
+  internal: PropertyModel[];
+  rest: PropertyModel[];
+} {
+  return {
+    required: properties.filter((schema) => schema.isRequired),
+    important: properties.filter(
+      (schema) =>
+        schema.initialSchema['x-priority'] &&
+        schema.initialSchema['x-priority'] === 'important'
+    ),
+    internal: properties.filter(
+      (schema) =>
+        schema.initialSchema['x-priority'] &&
+        schema.initialSchema['x-priority'] === 'internal'
+    ),
+    get rest() {
+      return properties.filter(
+        (schema) =>
+          !this.required.includes(schema) &&
+          !this.important.includes(schema) &&
+          !this.internal.includes(schema)
+      );
+    },
+  };
+}
+
+export function SchemaViewer({
+  schema,
+  reference,
+  lookup,
+  stage,
+  type,
+}: {
+  schema: JsonSchema1;
+  reference: string;
+  lookup: Lookup;
+  stage: Stage;
+  type: 'executor' | 'generator';
+}): JSX.Element {
+  const properties = getViewModel(schema, lookup, reference).filter((p) => {
+    if (p.lookupResult === undefined) {
+      return true;
+    }
+    return shouldShowInStage(stage, p.lookupResult.schema);
+  });
+
+  const categorizedProperties = extractPropertiesByImportance(properties);
+
+  function renderProps(properties: any[]): JSX.Element[] {
+    return properties.map((p) => {
       if (p.lookupResult) {
         return (
           <ParameterView
@@ -58,8 +117,8 @@ export function SchemaViewer({
             alias={p.alias}
             name={p.propertyName}
             description={getDescriptionForSchema(p.lookupResult.schema)}
-            required={isRequired}
-            deprecated={isDeprecated(p.lookupResult.schema)}
+            required={p.isRequired}
+            deprecated={isPropertyDeprecated(p.lookupResult.schema)}
             schema={p.lookupResult.schema}
             reference={p.propertyReference}
             lookup={lookup}
@@ -70,10 +129,10 @@ export function SchemaViewer({
           <ParameterView
             key={p.propertyName}
             alias={p.alias}
-            deprecated={isDeprecated(p.initialSchema)}
+            deprecated={isPropertyDeprecated(p.initialSchema)}
             name={p.propertyName}
             description={getDescriptionForSchema(p.initialSchema)}
-            required={isRequired}
+            required={p.isRequired}
             schema={p.initialSchema}
             reference={p.propertyReference}
             lookup={lookup}
@@ -81,6 +140,14 @@ export function SchemaViewer({
         );
       }
     });
+  }
+
+  const renderedProps = renderProps([
+    ...categorizedProperties.required,
+    ...categorizedProperties.important,
+    ...categorizedProperties.rest,
+    ...categorizedProperties.internal,
+  ]);
 
   const additionalProperties = new Array<JSX.Element>();
   if (typeof schema.additionalProperties === 'boolean') {
@@ -113,8 +180,8 @@ export function SchemaViewer({
           name="Additional Properties"
           description={getDescriptionForSchema(additionalPropertiesResult)}
           required={false}
-          alias={getAlias(additionalPropertiesResult.schema)}
-          deprecated={isDeprecated(additionalPropertiesResult.schema)}
+          alias={getPropertyAlias(additionalPropertiesResult.schema)}
+          deprecated={isPropertyDeprecated(additionalPropertiesResult.schema)}
           schema={additionalPropertiesResult.schema}
           reference={resolvedReference}
           lookup={lookup}
@@ -133,8 +200,8 @@ export function SchemaViewer({
         <ParameterView
           key={`pattern-properties-${i}`}
           name={`/${pattern}/ (keys of pattern)`}
-          alias={getAlias(currentSchema)}
-          deprecated={isDeprecated(currentSchema)}
+          alias={getPropertyAlias(currentSchema)}
+          deprecated={isPropertyDeprecated(currentSchema)}
           description={getDescriptionForSchema(schema)}
           required={false}
           schema={currentSchema}
