@@ -14,7 +14,9 @@ import { EntryPointNode, fileUrl } from 'ng-packagr/lib/ng-package/nodes';
 import { ensureUnixPath } from 'ng-packagr/lib/utils/path';
 import { NgPackageConfig } from 'ng-packagr/ng-package.schema';
 import * as path from 'path';
+import { gte } from 'semver';
 import * as ts from 'typescript';
+import { getInstalledPackageVersionInfo } from '../../../utilities/angular-version-utils';
 import { StylesheetProcessor } from '../styles/stylesheet-processor';
 
 export function cacheCompilerHost(
@@ -27,6 +29,8 @@ export function cacheCompilerHost(
   sourcesFileCache: FileCache = entryPoint.cache.sourcesFileCache
 ): CompilerHost {
   const compilerHost = ts.createIncrementalCompilerHost(compilerOptions);
+  const { version: ngPackagrVersion } =
+    getInstalledPackageVersionInfo('ng-packagr');
 
   const getNode = (fileName: string) => {
     const nodeUri = fileUrl(ensureUnixPath(fileName));
@@ -114,10 +118,30 @@ export function cacheCompilerHost(
         fileName = fileName.replace(/\.js(\.map)?$/, '.mjs$1');
         const outputCache = entryPoint.cache.outputCache;
 
-        outputCache.set(fileName, {
-          content: data,
-          version: createHash('sha256').update(data).digest('hex'),
-        });
+        // added in https://github.com/ng-packagr/ng-packagr/pull/2502, first released in 15.0.2
+        if (gte(ngPackagrVersion, '15.0.2')) {
+          // Extract inline sourcemap which will later be used by rollup.
+          const version = createHash('sha256').update(data).digest('hex');
+          let map = undefined;
+          if (fileName.endsWith('.mjs')) {
+            const cachedData = outputCache.get(fileName);
+            map =
+              cachedData?.version === version
+                ? cachedData.map
+                : require('convert-source-map').fromComment(data).toJSON();
+          }
+
+          outputCache.set(fileName, {
+            content: data,
+            version,
+            map,
+          });
+        } else {
+          outputCache.set(fileName, {
+            content: data,
+            version: createHash('sha256').update(data).digest('hex'),
+          });
+        }
       }
 
       compilerHost.writeFile.call(

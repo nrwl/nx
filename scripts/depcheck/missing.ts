@@ -44,6 +44,7 @@ const IGNORE_MATCHES_IN_PACKAGE = {
     'node-sass',
     'node-sass-tilde-importer',
     'ora',
+    'convert-source-map',
     'postcss',
     'postcss-import',
     'postcss-preset-env',
