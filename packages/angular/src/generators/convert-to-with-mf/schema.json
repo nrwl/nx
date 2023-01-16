@@ -20,7 +20,8 @@
         "$source": "argv",
         "index": 0
       },
-      "x-prompt": "What micro frontend project would you like to migrate?"
+      "x-prompt": "What micro frontend project would you like to migrate?",
+      "x-priority": "important"
     }
   }
 }

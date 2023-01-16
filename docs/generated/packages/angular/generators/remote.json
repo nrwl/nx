@@ -23,7 +23,8 @@
       "host": {
         "type": "string",
         "description": "The name of the host app to attach this remote app to.",
-        "x-dropdown": "projects"
+        "x-dropdown": "projects",
+        "x-priority": "important"
       },
       "port": {
         "type": "number",
@@ -90,7 +91,8 @@
       "skipPackageJson": {
         "type": "boolean",
         "default": false,
-        "description": "Do not add dependencies to `package.json`."
+        "description": "Do not add dependencies to `package.json`.",
+        "x-priority": "internal"
       },
       "unitTestRunner": {
         "type": "string",
@@ -140,7 +142,8 @@
       "skipFormat": {
         "description": "Skip formatting files.",
         "type": "boolean",
-        "default": false
+        "default": false,
+        "x-priority": "internal"
       },
       "standalone": {
         "description": "Whether to generate a remote application with standalone components. _Note: This is only supported in Angular versions >= 14.1.0_",
