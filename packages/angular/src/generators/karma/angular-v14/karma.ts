@@ -7,7 +7,7 @@ import {
   readNxJson,
   updateNxJson,
 } from '@nrwl/devkit';
-import { versions } from '../../../utils/versions';
+import { backwardCompatibleVersions } from '../../../utils/backward-compatible-versions';
 import { GeneratorOptions } from './schema';
 
 function addTestInputs(tree: Tree) {
@@ -58,16 +58,21 @@ export function karmaGenerator(tree: Tree, options: GeneratorOptions) {
     tree,
     {},
     {
-      karma: versions.angularV14.karmaVersion,
-      'karma-chrome-launcher': versions.angularV14.karmaChromeLauncherVersion,
-      'karma-coverage': versions.angularV14.karmaCoverageVersion,
-      'karma-jasmine': versions.angularV14.karmaJasmineVersion,
+      karma: backwardCompatibleVersions.angularV14.karmaVersion,
+      'karma-chrome-launcher':
+        backwardCompatibleVersions.angularV14.karmaChromeLauncherVersion,
+      'karma-coverage':
+        backwardCompatibleVersions.angularV14.karmaCoverageVersion,
+      'karma-jasmine':
+        backwardCompatibleVersions.angularV14.karmaJasmineVersion,
       'karma-jasmine-html-reporter':
-        versions.angularV14.karmaJasmineHtmlReporterVersion,
-      'jasmine-core': versions.angularV14.jasmineCoreVersion,
-      'jasmine-spec-reporter': versions.angularV14.jasmineSpecReporterVersion,
-      '@types/jasmine': versions.angularV14.typesJasmineVersion,
-      '@types/node': versions.angularV14.typesNodeVersion,
+        backwardCompatibleVersions.angularV14.karmaJasmineHtmlReporterVersion,
+      'jasmine-core': backwardCompatibleVersions.angularV14.jasmineCoreVersion,
+      'jasmine-spec-reporter':
+        backwardCompatibleVersions.angularV14.jasmineSpecReporterVersion,
+      '@types/jasmine':
+        backwardCompatibleVersions.angularV14.typesJasmineVersion,
+      '@types/node': backwardCompatibleVersions.angularV14.typesNodeVersion,
     }
   );
 }

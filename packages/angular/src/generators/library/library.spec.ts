@@ -14,17 +14,17 @@ import {
 } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
 import { toNewFormat } from 'nx/src/config/workspaces';
+import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
 import { createApp } from '../../utils/nx-devkit/testing';
 import { UnitTestRunner } from '../../utils/test-runners';
 import {
   autoprefixerVersion,
   postcssVersion,
   tailwindVersion,
-  versions,
 } from '../../utils/versions';
+import applicationGenerator from '../application/application';
 import libraryGenerator from './library';
 import { Schema } from './schema';
-import applicationGenerator from '../application/application';
 
 let projectGraph: ProjectGraph;
 jest.mock('@nrwl/devkit', () => {
@@ -1825,7 +1825,7 @@ describe('lib', () => {
       // ASSERT
       const packageJson = readJson(tree, '/package.json');
       expect(packageJson.devDependencies['ng-packagr']).toEqual(
-        versions.angularV14.ngPackagrVersion
+        backwardCompatibleVersions.angularV14.ngPackagrVersion
       );
       expect(packageJson.devDependencies['postcss']).toBeDefined();
       expect(packageJson.devDependencies['postcss-import']).toBeDefined();
