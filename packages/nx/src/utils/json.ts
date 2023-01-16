@@ -1,6 +1,6 @@
 import { parse, printParseErrorCode, stripComments } from 'jsonc-parser';
 import type { ParseError, ParseOptions } from 'jsonc-parser';
-import LinesAndColumn from 'lines-and-columns';
+import { LinesAndColumns } from 'lines-and-columns';
 
 export { stripComments as stripJsonComments };
 
@@ -72,7 +72,7 @@ function formatParseError(
   numContextLine: number
 ) {
   const { error, offset, length } = parseError;
-  const { line, column } = new LinesAndColumn(input).locationForIndex(offset);
+  const { line, column } = new LinesAndColumns(input).locationForIndex(offset);
 
   const errorLines = [
     `${printParseErrorCode(error)} in JSON at ${line + 1}:${column + 1}`,
