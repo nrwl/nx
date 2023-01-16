@@ -6,6 +6,7 @@ import {
   getProjects,
   readProjectConfiguration,
 } from 'nx/src/generators/utils/project-configuration';
+import { stripIndents, updateJson } from '@nrwl/devkit';
 
 describe('Host App Generator', () => {
   it('should generate a host app with no remotes', async () => {
@@ -227,5 +228,26 @@ describe('Host App Generator', () => {
       expect(project.targets.server).toMatchSnapshot();
       expect(project.targets['serve-ssr']).toMatchSnapshot();
     });
+  });
+
+  it('should error correctly when Angular version does not support standalone', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: {
+        '@angular/core': '14.0.0',
+      },
+    }));
+
+    // ACT & ASSERT
+    await expect(
+      host(tree, {
+        name: 'test',
+        standalone: true,
+      })
+    ).rejects
+      .toThrow(stripIndents`The "standalone" option is only supported in Angular >= 14.1.0. You are currently using 14.0.0.
+    You can resolve this error by removing the "standalone" option or by migrating to Angular 14.1.0.`);
   });
 });

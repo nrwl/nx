@@ -14,4 +14,5 @@ export enum Preset {
   NextJs = 'next',
   Nest = 'nest',
   Express = 'express',
+  NodeServer = 'node-server',
 }

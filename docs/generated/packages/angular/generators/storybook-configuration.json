@@ -15,25 +15,29 @@
         "description": "Project for which to generate Storybook configuration.",
         "$default": { "$source": "argv", "index": 0 },
         "x-prompt": "For which project do you want to generate Storybook configuration?",
-        "x-dropdown": "projects"
+        "x-dropdown": "projects",
+        "x-priority": "important"
       },
       "configureCypress": {
         "type": "boolean",
         "description": "Specifies whether to configure Cypress or not.",
         "x-prompt": "Configure a Cypress e2e app to run against the storybook instance?",
-        "default": true
+        "default": true,
+        "x-priority": "important"
       },
       "generateStories": {
         "type": "boolean",
         "description": "Specifies whether to automatically generate `*.stories.ts` files for components declared in this project or not.",
         "x-prompt": "Automatically generate *.stories.ts files for components declared in this project?",
-        "default": true
+        "default": true,
+        "x-priority": "important"
       },
       "generateCypressSpecs": {
         "type": "boolean",
         "description": "Specifies whether to automatically generate test files in the generated Cypress e2e app.",
         "x-prompt": "Automatically generate test files in the generated Cypress e2e app?",
-        "default": true
+        "default": true,
+        "x-priority": "important"
       },
       "cypressDirectory": {
         "type": "string",
@@ -48,7 +52,8 @@
       "tsConfiguration": {
         "type": "boolean",
         "description": "Configure your project with TypeScript. Generate main.ts and preview.ts files, instead of main.js and preview.js.",
-        "default": false
+        "default": false,
+        "x-priority": "important"
       },
       "skipFormat": {
         "description": "Skip formatting files.",
@@ -70,11 +75,16 @@
       "configureTestRunner": {
         "type": "boolean",
         "description": "Add a Storybook Test-Runner target."
+      },
+      "storybook7betaConfiguration": {
+        "description": "Configure your workspace to use Storybook 7, even though Storybook v7 is still in beta.",
+        "type": "boolean",
+        "default": false
       }
     },
     "additionalProperties": false,
     "required": ["name"],
-    "examplesFile": "This generator will set up Storybook for your Angular project.\n\n```bash\nnx g @nrwl/angular:storybook-configuration project-name\n```\n\nYou can read more about how this generator works, in the [Storybook for Angular overview page](/packages/storybook/documents/overview-angular#generate-storybook-configuration-for-an-angular-project).\n\nWhen running this generator, you will be prompted to provide the following:\n\n- The `name` of the project you want to generate the configuration for.\n- Whether you want to `configureCypress`. If you choose `yes`, a Cypress e2e app will be created (or configured) to run against the project's Storybook instance. You can read more about this in the [Storybook for Angular - Cypress section](/packages/storybook/documents/overview-angular#cypress-tests-for-stories).\n- Whether you want to `generateStories` for the components in your project. If you choose `yes`, a `.stories.ts` file will be generated next to each of your components in your project.\n- Whether you want to `generateCypressSpecs`. If you choose `yes`, a test file is going to be generated in the project's Cypress e2e app for each of your components.\n- Whether you want to `configureTestRunner`. If you choose `yes`, a `test-storybook` target will be generated in your project's `project.json`, with a command to invoke the [Storybook `test-runner`](https://storybook.js.org/docs/react/writing-tests/test-runner).\n\nYou must provide a `name` for the generator to work.\n\nThere are a number of other options available. Let's take a look at some examples.\n\n## Examples\n\n### Generate Storybook configuration using TypeScript\n\n```bash\nnx g @nrwl/angular:storybook-configuration ui --tsConfiguration=true\n```\n\nThis will generate a Storybook configuration for the `ui` project using TypeScript for the Storybook configuration files (the files inside the `.storybook` directory).\n\n### Ignore certain paths when generating stories\n\n```bash\nnx g @nrwl/angular:storybook-configuration ui --generateStories=true --ignorePaths=libs/ui/src/not-stories/**,**/**/src/**/*.other.*,apps/my-app/**/*.something.ts\n```\n\nThis will generate a Storybook configuration for the `ui` project and generate stories for all components in the `libs/ui/src/lib` directory, except for the ones in the `libs/ui/src/not-stories` directory, and the ones in the `apps/my-app` directory that end with `.something.ts`, and also for components that their file name is of the pattern `*.other.*`.\n\nThis is useful if you have a project that contains components that are not meant to be used in isolation, but rather as part of a larger component.\n",
+    "examplesFile": "This generator will set up Storybook for your Angular project.\n\n```bash\nnx g @nrwl/angular:storybook-configuration project-name\n```\n\nYou can read more about how this generator works, in the [Storybook for Angular overview page](/packages/storybook/documents/overview-angular#generate-storybook-configuration-for-an-angular-project).\n\nWhen running this generator, you will be prompted to provide the following:\n\n- The `name` of the project you want to generate the configuration for.\n- Whether you want to `configureCypress`. If you choose `yes`, a Cypress e2e app will be created (or configured) to run against the project's Storybook instance. You can read more about this in the [Storybook for Angular - Cypress section](/packages/storybook/documents/overview-angular#cypress-tests-for-stories).\n- Whether you want to `generateStories` for the components in your project. If you choose `yes`, a `.stories.ts` file will be generated next to each of your components in your project.\n- Whether you want to `generateCypressSpecs`. If you choose `yes`, a test file is going to be generated in the project's Cypress e2e app for each of your components.\n- Whether you want to `configureTestRunner`. If you choose `yes`, a `test-storybook` target will be generated in your project's `project.json`, with a command to invoke the [Storybook `test-runner`](https://storybook.js.org/docs/react/writing-tests/test-runner).\n\nYou must provide a `name` for the generator to work.\n\nThere are a number of other options available. Let's take a look at some examples.\n\n## Examples\n\n### Generate Storybook configuration using TypeScript\n\n```bash\nnx g @nrwl/angular:storybook-configuration ui --tsConfiguration=true\n```\n\nThis will generate a Storybook configuration for the `ui` project using TypeScript for the Storybook configuration files (the files inside the `.storybook` directory).\n\n### Ignore certain paths when generating stories\n\n```bash\nnx g @nrwl/angular:storybook-configuration ui --generateStories=true --ignorePaths=libs/ui/src/not-stories/**,**/**/src/**/*.other.*,apps/my-app/**/*.something.ts\n```\n\nThis will generate a Storybook configuration for the `ui` project and generate stories for all components in the `libs/ui/src/lib` directory, except for the ones in the `libs/ui/src/not-stories` directory, and the ones in the `apps/my-app` directory that end with `.something.ts`, and also for components that their file name is of the pattern `*.other.*`.\n\nThis is useful if you have a project that contains components that are not meant to be used in isolation, but rather as part of a larger component.\n\n### Generate Storybook configuration for Storybook version 7\n\n```bash\nnx g @nrwl/angular:storybook-configuration ui --storybook7betaConfiguration=true\n```\n\nThis will generate a Storybook configuration for the `ui` project using Storybook version 7. It will install the Storybook version 7 dependencies and configure the Storybook configuration files (the files inside the `.storybook` directory) to use Storybook version 7. You can read more about Storybook 7 Nx support in the [Storybook 7 setup guide](/packages/storybook/documents/storybook-7-setup).\n",
     "presets": []
   },
   "description": "Adds Storybook configuration to a project.",

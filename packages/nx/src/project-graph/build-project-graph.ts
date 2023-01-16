@@ -28,7 +28,7 @@ import {
   ProjectGraphProcessorContext,
 } from '../config/project-graph';
 import { readJsonFile } from '../utils/fileutils';
-import { NxJsonConfiguration } from '../config/nx-json';
+import { NrwlJsPluginConfig, NxJsonConfiguration } from '../config/nx-json';
 import { logger } from '../utils/logger';
 import { ProjectGraphBuilder } from './project-graph-builder';
 import {
@@ -209,11 +209,6 @@ async function buildProjectGraphUsingContext(
   );
 
   return r;
-}
-
-interface NrwlJsPluginConfig {
-  analyzeSourceFiles?: boolean;
-  analyzePackageJson?: boolean;
 }
 
 function jsPluginConfig(
@@ -405,7 +400,7 @@ function buildExplicitDependenciesUsingWorkers(
 function getNumberOfWorkers(): number {
   return process.env.NX_PROJECT_GRAPH_MAX_WORKERS
     ? +process.env.NX_PROJECT_GRAPH_MAX_WORKERS
-    : os.cpus().length - 1;
+    : Math.min(os.cpus().length - 1, 8); // This is capped for cases in CI where `os.cpus()` returns way more CPUs than the resources that are allocated
 }
 
 function createContext(

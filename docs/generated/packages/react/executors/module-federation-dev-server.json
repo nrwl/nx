@@ -12,21 +12,25 @@
       "devRemotes": {
         "type": "array",
         "items": { "type": "string" },
-        "description": "List of remote applications to run in development mode (i.e. using serve target)."
+        "description": "List of remote applications to run in development mode (i.e. using serve target).",
+        "x-priority": "important"
       },
       "skipRemotes": {
         "type": "array",
         "items": { "type": "string" },
-        "description": "List of remote applications to not automatically serve, either statically or in development mode. This can be useful for multi-repository module federation setups where the host application uses a remote application from an external repository."
+        "description": "List of remote applications to not automatically serve, either statically or in development mode. This can be useful for multi-repository module federation setups where the host application uses a remote application from an external repository.",
+        "x-priority": "important"
       },
       "buildTarget": {
         "type": "string",
-        "description": "Target which builds the application."
+        "description": "Target which builds the application.",
+        "x-priority": "important"
       },
       "port": {
         "type": "number",
         "description": "Port to listen on.",
-        "default": 4200
+        "default": 4200,
+        "x-priority": "important"
       },
       "host": {
         "type": "string",
@@ -68,7 +72,8 @@
       "open": {
         "type": "boolean",
         "description": "Open the application in the browser.",
-        "default": false
+        "default": false,
+        "x-priority": "important"
       },
       "allowedHosts": {
         "type": "string",

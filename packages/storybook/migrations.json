@@ -53,6 +53,12 @@
       "version": "15.0.0-beta.0",
       "description": "Stop hashing storybook config files and story files for build targets and dependent tasks",
       "factory": "./src/migrations/update-15-0-0/add-storybook-inputs"
+    },
+    "update-15.4.6": {
+      "cli": "nx",
+      "version": "15.4.6-beta.0",
+      "description": "Refactor the Storybook target options",
+      "factory": "./src/migrations/update-15-4-6/refactor-executor-options"
     }
   },
   "packageJsonUpdates": {

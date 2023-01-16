@@ -76,7 +76,8 @@ function createAppsAndLibsFolders(tree: Tree, options: NormalizedSchema) {
     tree.write(join(options.directory, 'packages/.gitkeep'), '');
   } else if (
     options.preset === Preset.AngularStandalone ||
-    options.preset === Preset.ReactStandalone
+    options.preset === Preset.ReactStandalone ||
+    options.preset === Preset.NodeServer
   ) {
     // don't generate any folders
   } else {
@@ -134,7 +135,8 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
   const formattedNames = names(options.name);
   const filesDirName =
     options.preset === Preset.AngularStandalone ||
-    options.preset === Preset.ReactStandalone
+    options.preset === Preset.ReactStandalone ||
+    options.preset === Preset.NodeServer
       ? './files-root-app'
       : options.preset === Preset.NPM || options.preset === Preset.Core
       ? './files-package-based-repo'
@@ -196,7 +198,8 @@ function createYarnrcYml(tree: Tree, options: NormalizedSchema) {
 function addNpmScripts(tree: Tree, options: NormalizedSchema) {
   if (
     options.preset === Preset.AngularStandalone ||
-    options.preset === Preset.ReactStandalone
+    options.preset === Preset.ReactStandalone ||
+    options.preset === Preset.NodeServer
   ) {
     updateJson(tree, join(options.directory, 'package.json'), (json) => {
       Object.assign(json.scripts, {

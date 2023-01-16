@@ -14,12 +14,14 @@
         "description": "Library name",
         "$default": { "$source": "argv", "index": 0 },
         "x-prompt": "What name would you like to use for the library?",
-        "pattern": "^[a-zA-Z].*$"
+        "pattern": "^[a-zA-Z].*$",
+        "x-priority": "important"
       },
       "directory": {
         "type": "string",
         "description": "A directory where the lib is placed.",
-        "alias": "dir"
+        "alias": "dir",
+        "x-priority": "important"
       },
       "style": {
         "description": "The file extension to be used for style files.",

@@ -317,7 +317,7 @@ describe('app', () => {
       scripts: [],
       styles: ['apps/my-app/src/styles.css'],
       tsConfig: 'apps/my-app/tsconfig.app.json',
-      webpackConfig: '@nrwl/react/plugins/webpack',
+      webpackConfig: 'apps/my-app/webpack.config.js',
     });
     expect(targetConfig.build.configurations.production).toEqual({
       optimization: true,
@@ -795,7 +795,7 @@ describe('app', () => {
 
     expect(
       workspaceJson.get('my-app').targets.build.options.webpackConfig
-    ).toEqual('@nrwl/react/plugins/webpack');
+    ).toEqual('apps/my-app/webpack.config.js');
   });
 
   it('should NOT add custom webpack config if bundler is vite', async () => {

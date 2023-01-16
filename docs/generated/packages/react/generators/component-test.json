@@ -19,12 +19,14 @@
         "type": "string",
         "description": "The name of the project the component is apart of",
         "x-dropdown": "projects",
-        "x-prompt": "What project is this component apart of?"
+        "x-prompt": "What project is this component apart of?",
+        "x-priority": "important"
       },
       "componentPath": {
         "type": "string",
         "description": "Path to component, from the project source root",
-        "x-prompt": "What is the path to the component?"
+        "x-prompt": "What is the path to the component?",
+        "x-priority": "important"
       }
     },
     "required": ["project", "componentPath"],

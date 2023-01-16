@@ -19,7 +19,8 @@
       "$default": {
         "$source": "projectName"
       },
-      "x-prompt": "What is the name of the project for this hook?"
+      "x-prompt": "What is the name of the project for this hook?",
+      "x-priority": "important"
     },
     "name": {
       "type": "string",
@@ -28,7 +29,8 @@
         "$source": "argv",
         "index": 0
       },
-      "x-prompt": "What name would you like to use for the hook?"
+      "x-prompt": "What name would you like to use for the hook?",
+      "x-priority": "important"
     },
     "js": {
       "type": "boolean",
@@ -38,11 +40,13 @@
     "skipTests": {
       "type": "boolean",
       "description": "When true, does not create `spec.ts` test files for the new hook.",
-      "default": false
+      "default": false,
+      "x-priority": "internal"
     },
     "directory": {
       "type": "string",
-      "description": "Create the hook under this directory (can be nested)."
+      "description": "Create the hook under this directory (can be nested).",
+      "x-priority": "important"
     },
     "flat": {
       "type": "boolean",

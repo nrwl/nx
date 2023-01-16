@@ -7,6 +7,7 @@ import {
   readJson,
   readNxJson,
   readProjectConfiguration,
+  stripIndents,
   updateJson,
 } from '@nrwl/devkit';
 import {
@@ -1068,6 +1069,26 @@ describe('app', () => {
       const project = readProjectConfiguration(appTree, 'my-app');
       expect(project.targets.build.options['outputPath']).toBe('dist/my-app');
     });
+  });
+
+  it('should error correctly when Angular version does not support standalone', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: {
+        '@angular/core': '14.0.0',
+      },
+    }));
+
+    // ACT & ASSERT
+    await expect(
+      generateApp(tree, 'my-app', {
+        standalone: true,
+      })
+    ).rejects
+      .toThrow(stripIndents`The "standalone" option is only supported in Angular >= 14.1.0. You are currently using 14.0.0.
+    You can resolve this error by removing the "standalone" option or by migrating to Angular 14.1.0.`);
   });
 
   describe('--skipStarterTemplate', () => {

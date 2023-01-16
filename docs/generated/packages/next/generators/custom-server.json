@@ -15,7 +15,8 @@
         "alias": "p",
         "$default": { "$source": "argv", "index": 0 },
         "x-dropdown": "project",
-        "x-prompt": "What is the name of the project to set up a custom server for?"
+        "x-prompt": "What is the name of the project to set up a custom server for?",
+        "x-priority": "important"
       },
       "compiler": {
         "type": "string",

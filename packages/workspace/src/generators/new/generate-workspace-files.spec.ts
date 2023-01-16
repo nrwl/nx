@@ -42,6 +42,7 @@ describe('@nrwl/workspace:generateWorkspaceFiles', () => {
             Preset.NextJs,
             Preset.WebComponents,
             Preset.Express,
+            Preset.NodeServer,
           ].includes(Preset[preset])
         ) {
           appName = 'app1';

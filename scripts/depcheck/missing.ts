@@ -119,6 +119,7 @@ const IGNORE_MATCHES_IN_PACKAGE = {
     '@storybook/addon-essentials',
     '@storybook/core',
     '@storybook/core-server',
+    '@storybook/types',
     'rxjs',
   ],
   nx: [
@@ -128,6 +129,7 @@ const IGNORE_MATCHES_IN_PACKAGE = {
     '@angular-devkit/architect',
     '@angular/cli',
     '@nrwl/angular',
+    '@nestjs/cli', // nx init nest makes use of nestjs cli (which should be available in NestJS CLI app) to parse the nest-cli.json file
     'ts-node', // We *may* fall back on ts-node, but we want to encourage the use of @swc-node instead so we don't explicitly list ts-node as an optional dep
   ],
   web: [

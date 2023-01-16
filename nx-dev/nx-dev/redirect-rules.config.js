@@ -333,8 +333,16 @@ const nxCloudUrls = {
 };
 
 /**
- * Tutorial Updates
+ * Tutorial Updates (updated 2023-01-13)
  */
+const tutorialBaseUrls = {
+  '/(l|latest)/(a|angular)/tutorial/1-code-generation':
+    '/angular-tutorial/1-code-generation',
+  '/(l|latest)/(a|node)/tutorial/1-code-generation':
+    '/getting-started/node-tutorial',
+  '/(l|latest)/(r|react)/tutorial/1-code-generation':
+    '/react-tutorial/1-code-generation',
+};
 const oldReactTutorialPaths = [
   '/react-tutorial/01-create-application',
   '/react-tutorial/02-add-e2e-test',
@@ -364,12 +372,13 @@ const oldNodeTutorialPaths = [
   '/node-tutorial/07-test-affected-projects',
   '/node-tutorial/08-summary',
 ];
-const nodeRedirectDestination = '/node-tutorial/1-code-generation';
+const nodeRedirectDestination = '/getting-started/node-tutorial';
 const nodeTutorialRedirects = oldNodeTutorialPaths.reduce((acc, path) => {
   acc[path] = nodeRedirectDestination;
   return acc;
 }, {});
 const tutorialRedirects = Object.assign(
+  tutorialBaseUrls,
   reactTutorialRedirects,
   nodeTutorialRedirects
 );

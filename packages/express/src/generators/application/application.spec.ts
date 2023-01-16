@@ -16,11 +16,14 @@ describe('app', () => {
     } as Schema);
 
     const mainFile = appTree.read('apps/my-node-app/src/main.ts').toString();
-    expect(mainFile).toContain(`import * as express from 'express';`);
+    expect(mainFile).toContain(`import express from 'express';`);
 
     const tsconfig = readJson(appTree, 'apps/my-node-app/tsconfig.json');
     expect(tsconfig).toMatchInlineSnapshot(`
       Object {
+        "compilerOptions": Object {
+          "esModuleInterop": true,
+        },
         "extends": "../../tsconfig.base.json",
         "files": Array [],
         "include": Array [],
@@ -111,12 +114,13 @@ Object {
 
       expect(appTree.exists('apps/my-node-app/src/main.js')).toBeTruthy();
       expect(appTree.read('apps/my-node-app/src/main.js').toString()).toContain(
-        `import * as express from 'express';`
+        `import express from 'express';`
       );
 
       const tsConfig = readJson(appTree, 'apps/my-node-app/tsconfig.json');
       expect(tsConfig.compilerOptions).toEqual({
         allowJs: true,
+        esModuleInterop: true,
       });
 
       const tsConfigApp = readJson(

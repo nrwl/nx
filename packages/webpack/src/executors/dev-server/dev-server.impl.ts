@@ -56,7 +56,7 @@ export async function* devServerExecutor(
     );
   }
 
-  let webpackConfig = getDevServerConfig(context, buildOptions, serveOptions);
+  let config = getDevServerConfig(context, buildOptions, serveOptions);
 
   if (buildOptions.webpackConfig) {
     let customWebpack = resolveCustomWebpackConfig(
@@ -68,16 +68,17 @@ export async function* devServerExecutor(
       customWebpack = await customWebpack;
     }
 
-    webpackConfig = await customWebpack(webpackConfig, {
-      buildOptions,
+    config = await customWebpack(config, {
+      options: buildOptions,
+      context,
       configuration: serveOptions.buildTarget.split(':')[2],
     });
   }
 
   return yield* eachValueFrom(
-    runWebpackDevServer(webpackConfig, webpack, WebpackDevServer).pipe(
+    runWebpackDevServer(config, webpack, WebpackDevServer).pipe(
       tap(({ stats }) => {
-        console.info(stats.toString((webpackConfig as any).stats));
+        console.info(stats.toString((config as any).stats));
       }),
       map(({ baseUrl, stats }) => {
         return {

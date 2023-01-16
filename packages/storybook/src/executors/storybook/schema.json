@@ -8,7 +8,7 @@
   "presets": [
     {
       "name": "Default minimum setup",
-      "keys": ["uiFramework", "port", "config"]
+      "keys": ["uiFramework", "port", "configDir"]
     }
   ],
   "properties": {
@@ -24,35 +24,21 @@
         "@storybook/svelte"
       ],
       "default": "@storybook/react",
-      "hidden": true
+      "x-priority": "important"
     },
     "port": {
       "type": "number",
       "description": "Port to listen on.",
       "default": 9009
     },
+    "previewUrl": {
+      "type": "string",
+      "description": "Preview URL."
+    },
     "host": {
       "type": "string",
       "description": "Host to listen on.",
       "default": "localhost"
-    },
-    "https": {
-      "type": "boolean",
-      "description": "Serve using HTTPS.",
-      "default": false
-    },
-    "sslKey": {
-      "type": "string",
-      "description": "SSL key to use for serving HTTPS."
-    },
-    "sslCert": {
-      "type": "string",
-      "description": "SSL certificate to use for serving HTTPS."
-    },
-    "watch": {
-      "type": "boolean",
-      "description": "Watches for changes and rebuilds application.",
-      "default": true
     },
     "staticDir": {
       "type": "array",
@@ -62,44 +48,49 @@
       },
       "x-deprecated": "In Storybook 6.4 the `--static-dir` CLI flag has been replaced with the the `staticDirs` field in `.storybook/main.js`. It will be removed completely in Storybook 7.0."
     },
-    "config": {
-      "type": "object",
-      "description": ".storybook configuration.",
-      "properties": {
-        "configFolder": {
-          "type": "string",
-          "description": "Directory where to load Storybook configurations from."
-        },
-        "pluginPath": {
-          "type": "string",
-          "description": "Path to storybook plugin.js file."
-        },
-        "configPath": {
-          "type": "string",
-          "description": "Path to storybook preview.js file."
-        },
-        "babelrcPath": {
-          "type": "string",
-          "description": "Path to storybook .babelrc file."
-        },
-        "srcRoot": {
-          "type": "string",
-          "description": "Project source path."
-        }
-      }
+    "configDir": {
+      "type": "string",
+      "description": "Directory where to load Storybook configurations from.",
+      "x-completion-type": "directory",
+      "x-priority": "important"
     },
-    "docsMode": {
+    "https": {
       "type": "boolean",
-      "description": "Build a documentation-only site using addon-docs.",
+      "description": "Serve Storybook over HTTPS. Note: You must provide your own certificate information.",
       "default": false
+    },
+    "open": {
+      "type": "boolean",
+      "description": "Open browser window automatically."
+    },
+    "ci": {
+      "type": "boolean",
+      "description": "CI mode (skip interactive prompts, don't open browser).",
+      "default": false
+    },
+    "loglevel": {
+      "type": "string",
+      "description": "Controls level of logging during build. Can be one of: [silly, verbose, info (default), warn, error, silent].",
+      "pattern": "(silly|verbose|info|warn|silent)"
     },
     "quiet": {
       "type": "boolean",
       "description": "Suppress verbose build output.",
-      "default": true
+      "default": false
+    },
+    "docs": {
+      "type": "boolean",
+      "description": "Starts Storybook in documentation mode. Learn more about it : https://storybook.js.org/docs/react/writing-docs/build-documentation#preview-storybooks-documentation.",
+      "default": false
+    },
+    "docsMode": {
+      "type": "boolean",
+      "description": "Starts Storybook in documentation mode. Learn more about it : https://storybook.js.org/docs/react/writing-docs/build-documentation#preview-storybooks-documentation.",
+      "default": false
     }
   },
+  "additionalProperties": true,
   "definitions": {},
-  "required": ["uiFramework", "config"],
+  "required": ["uiFramework", "configDir"],
   "examplesFile": "../../../docs/storybook-executor-examples.md"
 }

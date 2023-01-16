@@ -1,5 +1,4 @@
 import { workspaceRoot } from '../utils/workspace-root';
-import { watch } from 'chokidar';
 import { createHash } from 'crypto';
 import { existsSync, readFileSync, statSync, writeFileSync } from 'fs';
 import { copySync, ensureDirSync } from 'fs-extra';
@@ -13,7 +12,6 @@ import { readNxJson, workspaceLayout } from '../config/configuration';
 import { defaultFileHasher } from '../hasher/file-hasher';
 import { output } from '../utils/output';
 import { writeJsonFile } from '../utils/fileutils';
-import { joinPathFragments } from '../utils/path';
 import {
   ProjectGraph,
   ProjectGraphDependency,
@@ -24,6 +22,7 @@ import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { createTaskGraph } from '../tasks-runner/create-task-graph';
 import { TargetDefaults, TargetDependencies } from '../config/nx-json';
 import { TaskGraph } from '../config/task-graph';
+import { daemonClient } from '../daemon/client/client';
 
 export interface ProjectGraphClientResponse {
   hash: string;
@@ -326,8 +325,9 @@ async function startServer(
   exclude: string[] = [],
   openBrowser: boolean = true
 ) {
+  let unregisterFileWatcher: (() => void) | undefined;
   if (watchForchanges) {
-    startWatcher();
+    unregisterFileWatcher = await createFileWatcher();
   }
 
   currentDepGraphClientResponse = await createDepGraphClientResponse(affected);
@@ -410,6 +410,15 @@ async function startServer(
 
     open(`${url}?${params.toString()}`);
   }
+
+  const handleTermination = async (exitCode: number) => {
+    if (unregisterFileWatcher) {
+      unregisterFileWatcher();
+    }
+    process.exit(exitCode);
+  };
+  process.on('SIGINT', () => handleTermination(128 + 2));
+  process.on('SIGTERM', () => handleTermination(128 + 15));
 }
 
 let currentDepGraphClientResponse: ProjectGraphClientResponse = {
@@ -437,22 +446,6 @@ function getIgnoredGlobs(root: string) {
   return ig;
 }
 
-function startWatcher() {
-  createFileWatcher(workspaceRoot, async () => {
-    output.note({ title: 'Recalculating project graph...' });
-
-    const newGraphClientResponse = await createDepGraphClientResponse();
-
-    if (newGraphClientResponse.hash !== currentDepGraphClientResponse.hash) {
-      output.note({ title: 'Graph changes updated.' });
-
-      currentDepGraphClientResponse = newGraphClientResponse;
-    } else {
-      output.note({ title: 'No graph changes found.' });
-    }
-  });
-}
-
 function debounce(fn: (...args) => void, time: number) {
   let timeout: NodeJS.Timeout;
 
@@ -465,28 +458,32 @@ function debounce(fn: (...args) => void, time: number) {
   };
 }
 
-function createFileWatcher(root: string, changeHandler: () => Promise<void>) {
-  const ignoredGlobs = getIgnoredGlobs(root);
-  const layout = workspaceLayout();
+function createFileWatcher() {
+  return daemonClient.registerFileWatcher(
+    { watchProjects: 'all', includeGlobalWorkspaceFiles: true },
+    debounce(async (error, { changedFiles }) => {
+      if (error === 'closed') {
+        output.error({ title: `Watch error: Daemon closed the connection` });
+        process.exit(1);
+      } else if (error) {
+        output.error({ title: `Watch error: ${error?.message ?? 'Unknown'}` });
+      } else if (changedFiles.length > 0) {
+        output.note({ title: 'Recalculating project graph...' });
 
-  const watcher = watch(
-    [
-      joinPathFragments(layout.appsDir, '**'),
-      joinPathFragments(layout.libsDir, '**'),
-    ],
-    {
-      cwd: root,
-      ignoreInitial: true,
-    }
-  );
-  watcher.on(
-    'all',
-    debounce(async (event: string, path: string) => {
-      if (ignoredGlobs.ignores(path)) return;
-      await changeHandler();
+        const newGraphClientResponse = await createDepGraphClientResponse();
+
+        if (
+          newGraphClientResponse.hash !== currentDepGraphClientResponse.hash
+        ) {
+          output.note({ title: 'Graph changes updated.' });
+
+          currentDepGraphClientResponse = newGraphClientResponse;
+        } else {
+          output.note({ title: 'No graph changes found.' });
+        }
+      }
     }, 500)
   );
-  return { close: () => watcher.close() };
 }
 
 async function createDepGraphClientResponse(

@@ -7,6 +7,7 @@ import {
   readNxJson,
   updateNxJson,
 } from '@nrwl/devkit';
+import { join } from 'path';
 import {
   jasmineCoreVersion,
   jasmineSpecReporterVersion,
@@ -18,9 +19,8 @@ import {
   typesJasmineVersion,
   typesNodeVersion,
 } from '../../utils/versions';
+import { getGeneratorDirectoryForInstalledAngularVersion } from '../utils/angular-version-utils';
 import { GeneratorOptions } from './schema';
-import { getGeneratorDirectoryForInstalledAngularVersion } from '../../utils/user-installed-angular-versions';
-import { join } from 'path';
 
 function addTestInputs(tree: Tree) {
   const nxJson = readNxJson(tree);

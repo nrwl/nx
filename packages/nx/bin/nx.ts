@@ -64,24 +64,6 @@ if (
   if (localNx === resolveNx(null)) {
     initLocal(workspace);
   } else {
-    const packageManager = detectPackageManager();
-    if (packageManager === 'pnpm') {
-      const tip =
-        process.platform === 'win32'
-          ? 'doskey pnx=pnpm nx -- $*'
-          : `alias pnx="pnpm nx --"`;
-      output.warn({
-        title: `Running global Nx CLI with PNPM may have issues.`,
-        bodyLines: [
-          `Prefer to use "pnpm" (https://pnpm.io/cli/exec) to execute commands in this workspace.`,
-          `${chalk.reset.inverse.bold.cyan(
-            ' TIP '
-          )} create a shortcut such as: ${chalk.bold.white(tip)}`,
-          ``,
-        ],
-      });
-    }
-
     // Nx is being run from globally installed CLI - hand off to the local
     require(localNx);
   }

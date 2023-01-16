@@ -8,7 +8,6 @@ import {
 import { lt } from 'semver';
 import { join } from 'path';
 import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
-import type { StorybookExecutorOptions } from '@nrwl/storybook/src/executors/storybook/storybook.impl';
 
 export default async function (tree: Tree) {
   let storybookVersion;
@@ -33,40 +32,36 @@ export default async function (tree: Tree) {
   }
 
   let updated;
-  forEachExecutorOptions<StorybookExecutorOptions>(
-    tree,
-    '@nrwl/storybook:storybook',
-    (options) => {
-      if (options.uiFramework !== '@storybook/angular') {
-        return;
-      }
-
-      const configFolder = options?.config?.configFolder;
-
-      if (!configFolder) {
-        return;
-      }
-
-      const configPath = join(configFolder, 'main.js');
-
-      if (!tree.exists(configPath)) {
-        logger.warn(
-          `Could not migrate ${configPath} to use webpack 5. The config.core.builder should be set to "webpack5". See https://gist.github.com/shilman/8856ea1786dcd247139b47b270912324#upgrade`
-        );
-        return;
-      }
-
-      updated = true;
-      const originalContents = tree.read(configPath).toString();
-      const configureWebpack5 = `module.exports.core = { ...module.exports.core, builder: 'webpack5' };`;
-      try {
-        const config = require(join(tree.root, configPath));
-        if (config?.core?.builder !== 'webpack5') {
-          tree.write(configPath, originalContents + '\n' + configureWebpack5);
-        }
-      } catch {}
+  forEachExecutorOptions(tree, '@nrwl/storybook:storybook', (options) => {
+    if (options['uiFramework'] !== '@storybook/angular') {
+      return;
     }
-  );
+
+    const configFolder = options?.['config']?.configFolder;
+
+    if (!configFolder) {
+      return;
+    }
+
+    const configPath = join(configFolder, 'main.js');
+
+    if (!tree.exists(configPath)) {
+      logger.warn(
+        `Could not migrate ${configPath} to use webpack 5. The config.core.builder should be set to "webpack5". See https://gist.github.com/shilman/8856ea1786dcd247139b47b270912324#upgrade`
+      );
+      return;
+    }
+
+    updated = true;
+    const originalContents = tree.read(configPath).toString();
+    const configureWebpack5 = `module.exports.core = { ...module.exports.core, builder: 'webpack5' };`;
+    try {
+      const config = require(join(tree.root, configPath));
+      if (config?.core?.builder !== 'webpack5') {
+        tree.write(configPath, originalContents + '\n' + configureWebpack5);
+      }
+    } catch {}
+  });
 
   const installTask = updated
     ? addDependenciesToPackageJson(

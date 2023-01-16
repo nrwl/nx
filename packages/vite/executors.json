@@ -14,6 +14,11 @@
       "implementation": "./src/executors/test/compat",
       "schema": "./src/executors/test/schema.json",
       "description": "Test with Vitest"
+    },
+    "preview-server": {
+      "implementation": "./src/executors/preview-server/compat",
+      "schema": "./src/executors/preview-server/schema.json",
+      "description": "Vite preview server"
     }
   },
   "executors": {
@@ -31,6 +36,11 @@
       "implementation": "./src/executors/test/vitest.impl",
       "schema": "./src/executors/test/schema.json",
       "description": "Test with Vitest"
+    },
+    "preview-server": {
+      "implementation": "./src/executors/preview-server/preview-server.impl",
+      "schema": "./src/executors/preview-server/schema.json",
+      "description": "Vite preview server"
     }
   }
 }

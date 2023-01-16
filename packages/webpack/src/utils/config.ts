@@ -17,18 +17,18 @@ export function getBaseWebpackPartial(
 
 export type NxWebpackPlugin = (
   config: Configuration,
-  ctx?: {
+  ctx: {
     options: NormalizedWebpackExecutorOptions;
-    context?: ExecutorContext;
+    context: ExecutorContext;
   }
 ) => Configuration;
 
 export function composePlugins(...plugins: NxWebpackPlugin[]) {
   return function combined(
     config: Configuration,
-    ctx?: {
+    ctx: {
       options: NormalizedWebpackExecutorOptions;
-      context?: ExecutorContext;
+      context: ExecutorContext;
     }
   ): Configuration {
     for (const plugin of plugins) {

@@ -162,7 +162,7 @@
     },
     {
       "description": "",
-      "file": "shared/extending-nx/project-graph-plugins",
+      "file": "shared/recipes/plugins/project-graph-plugins",
       "id": "project-graph-plugins",
       "name": "Project Graph Plugins",
       "path": "/recipes/advanced-plugins/project-graph-plugins"
@@ -466,14 +466,14 @@
     },
     {
       "description": "",
-      "file": "shared/recipes/local-executors",
+      "file": "shared/recipes/plugins/local-executors",
       "id": "creating-custom-executors",
       "name": "Local Executors",
       "path": "/recipes/executors/creating-custom-executors"
     },
     {
       "description": "",
-      "file": "shared/recipes/compose-executors",
+      "file": "shared/recipes/plugins/compose-executors",
       "id": "compose-executors",
       "name": "Compose Executors",
       "path": "/recipes/executors/compose-executors"
@@ -559,35 +559,35 @@
     },
     {
       "description": "",
-      "file": "shared/recipes/local-generators",
+      "file": "shared/recipes/generators/local-generators",
       "id": "local-generators",
       "name": "Local Generators",
       "path": "/recipes/generators/local-generators"
     },
     {
       "description": "",
-      "file": "shared/generators/composing-generators",
+      "file": "shared/recipes/generators/composing-generators",
       "id": "composing-generators",
       "name": "Composing Generators",
       "path": "/recipes/generators/composing-generators"
     },
     {
       "description": "",
-      "file": "shared/generators/generator-options",
+      "file": "shared/recipes/generators/generator-options",
       "id": "generator-options",
       "name": "Generator Options",
       "path": "/recipes/generators/generator-options"
     },
     {
       "description": "",
-      "file": "shared/generators/creating-files",
+      "file": "shared/recipes/generators/creating-files",
       "id": "creating-files",
       "name": "Creating Files",
       "path": "/recipes/generators/creating-files"
     },
     {
       "description": "",
-      "file": "shared/generators/modifying-files",
+      "file": "shared/recipes/generators/modifying-files",
       "id": "modifying-files",
       "name": "Modifying Files",
       "path": "/recipes/generators/modifying-files"
@@ -624,17 +624,52 @@
     },
     {
       "description": "",
-      "file": "shared/extending-nx/project-inference-plugins",
-      "id": "project-inference-plugins",
-      "name": "Project Inference Plugins",
-      "path": "/recipes/advanced-plugins/project-inference-plugins"
+      "file": "shared/recipes/plugins/local-executors",
+      "id": "creating-custom-executors",
+      "name": "Local Executors",
+      "path": "/recipes/executors/creating-custom-executors"
     },
     {
       "description": "",
-      "file": "shared/extending-nx/project-graph-plugins",
+      "file": "shared/recipes/generators/local-generators",
+      "id": "local-generators",
+      "name": "Local Generators",
+      "path": "/recipes/generators/local-generators"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/plugins/share-your-plugin",
+      "id": "share-your-plugin",
+      "name": "Share Your Plugin",
+      "path": "/recipes/advanced-plugins/share-your-plugin"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/plugins/create-preset",
+      "id": "create-preset",
+      "name": "Create a Preset",
+      "path": "/recipes/advanced-plugins/create-preset"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/plugins/migration-generators",
+      "id": "migration-generators",
+      "name": "Migration Generators",
+      "path": "/recipes/advanced-plugins/migration-generators"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/plugins/project-graph-plugins",
       "id": "project-graph-plugins",
       "name": "Project Graph Plugins",
       "path": "/recipes/advanced-plugins/project-graph-plugins"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/plugins/project-inference-plugins",
+      "id": "project-inference-plugins",
+      "name": "Project Inference Plugins",
+      "path": "/recipes/advanced-plugins/project-inference-plugins"
     }
   ],
   "intro": [

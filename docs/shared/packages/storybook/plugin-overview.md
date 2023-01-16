@@ -2,13 +2,30 @@
 
 This guide will briefly walk you through using Storybook within an Nx workspace.
 
+{% callout type="info" title="Try out Storybook 7 beta" %}
+[Storybook version 7 is still in beta](https://storybook.js.org/blog/7-0-beta/). However, you can try it out with Nx by following the instructions in the [Storybook 7 setup](/packages/storybook/documents/storybook-7-setup) guide.
+{% /callout %}
+
 ## Setting Up Storybook
 
 ### Add the Storybook plugin
 
+{% tabs %}
+{% tab label="yarn" %}
+
 ```shell
-yarn add --dev @nrwl/storybook
+yarn add -D @nrwl/storybook
 ```
+
+{% /tab %}
+{% tab label="npm" %}
+
+```shell
+npm install -D @nrwl/storybook
+```
+
+{% /tab %}
+{% /tabs %}
 
 ## Using Storybook
 

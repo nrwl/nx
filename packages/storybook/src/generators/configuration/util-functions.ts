@@ -21,12 +21,12 @@ import { join, relative } from 'path';
 import {
   dedupe,
   findStorybookAndBuildTargetsAndCompiler,
-  isFramework,
   TsConfig,
 } from '../../utils/utilities';
 import { StorybookConfigureSchema } from './schema';
 import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
 import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
+import { UiFramework, UiFramework7 } from '../../utils/models';
 
 const DEFAULT_PORT = 4400;
 
@@ -34,7 +34,8 @@ export function addStorybookTask(
   tree: Tree,
   projectName: string,
   uiFramework: string,
-  configureTestRunner: boolean
+  configureTestRunner: boolean,
+  usesV7?: boolean
 ) {
   if (uiFramework === '@storybook/react-native') {
     return;
@@ -45,9 +46,7 @@ export function addStorybookTask(
     options: {
       uiFramework,
       port: DEFAULT_PORT,
-      config: {
-        configFolder: `${projectConfig.root}/.storybook`,
-      },
+      configDir: `${projectConfig.root}/.storybook`,
     },
     configurations: {
       ci: {
@@ -58,13 +57,11 @@ export function addStorybookTask(
 
   projectConfig.targets['build-storybook'] = {
     executor: '@nrwl/storybook:build',
-    outputs: ['{options.outputPath}'],
+    outputs: ['{options.outputDir}'],
     options: {
       uiFramework,
-      outputPath: joinPathFragments('dist/storybook', projectName),
-      config: {
-        configFolder: `${projectConfig.root}/.storybook`,
-      },
+      outputDir: joinPathFragments('dist/storybook', projectName),
+      configDir: `${projectConfig.root}/.storybook`,
     },
     configurations: {
       ci: {
@@ -72,6 +69,11 @@ export function addStorybookTask(
       },
     },
   };
+
+  if (usesV7) {
+    delete projectConfig.targets['storybook'].options.uiFramework;
+    delete projectConfig.targets['build-storybook'].options.uiFramework;
+  }
 
   if (configureTestRunner === true) {
     projectConfig.targets['test-storybook'] = {
@@ -172,7 +174,8 @@ export function configureTsProjectConfig(
       ...(tsConfigContent.exclude || []),
       '**/*.stories.ts',
       '**/*.stories.js',
-      ...(isFramework('react', schema) || isFramework('react-native', schema)
+      ...(schema.uiFramework === '@storybook/react' ||
+      schema.uiFramework === '@storybook/react-native'
         ? ['**/*.stories.jsx', '**/*.stories.tsx']
         : []),
     ];
@@ -331,14 +334,15 @@ export function createRootStorybookDir(
 export function createRootStorybookDirForRootProject(
   tree: Tree,
   projectName: string,
-  uiFramework: StorybookConfigureSchema['uiFramework'],
+  uiFramework: UiFramework | UiFramework7,
   js: boolean,
   tsConfiguration: boolean,
   root: string,
   projectType: string,
   isNextJs?: boolean,
   usesSwc?: boolean,
-  usesVite?: boolean
+  usesVite?: boolean,
+  usesV7?: boolean
 ) {
   const rootConfigExists =
     tree.exists('.storybook/main.root.js') ||
@@ -374,7 +378,7 @@ export function createRootStorybookDirForRootProject(
 
   const templatePath = join(
     __dirname,
-    `./project-files${
+    `./project-files${usesV7 ? '-7' : ''}${
       rootFileIsTs(tree, 'main.root', tsConfiguration) ? '-ts' : ''
     }`
   );
@@ -403,12 +407,13 @@ export function createRootStorybookDirForRootProject(
 export function createProjectStorybookDir(
   tree: Tree,
   projectName: string,
-  uiFramework: StorybookConfigureSchema['uiFramework'],
+  uiFramework: UiFramework | UiFramework7,
   js: boolean,
   tsConfiguration: boolean,
   isNextJs?: boolean,
   usesSwc?: boolean,
-  usesVite?: boolean
+  usesVite?: boolean,
+  usesV7?: boolean
 ) {
   const { root, projectType } = readProjectConfiguration(tree, projectName);
 
@@ -438,7 +443,7 @@ export function createProjectStorybookDir(
 
   const templatePath = join(
     __dirname,
-    `./project-files${
+    `./project-files${usesV7 ? '-7' : ''}${
       rootFileIsTs(tree, rootMainName, tsConfiguration) ? '-ts' : ''
     }`
   );

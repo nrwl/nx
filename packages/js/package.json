@@ -35,14 +35,15 @@
     "@nrwl/devkit": "file:../devkit",
     "@nrwl/linter": "file:../linter",
     "@nrwl/workspace": "file:../workspace",
-    "chalk": "4.1.0",
+    "chalk": "^4.1.0",
     "fast-glob": "3.2.7",
-    "fs-extra": "^10.1.0",
+    "fs-extra": "^11.1.0",
     "ignore": "^5.0.4",
     "js-tokens": "^4.0.0",
     "minimatch": "3.0.5",
     "source-map-support": "0.5.19",
-    "tree-kill": "1.2.2"
+    "tree-kill": "1.2.2",
+    "tslib": "^2.3.0"
   },
   "publishConfig": {
     "access": "public"

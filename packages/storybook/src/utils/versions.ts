@@ -14,3 +14,5 @@ export const storybookNextAddonVersion = '^1.6.6';
 export const storybookTestRunnerVersion = '^0.7.2';
 export const litHtmlVersion = '^2.3.1';
 export const htmlWebpackPluginVersion = '^5.5.0';
+
+export const storybook7Version = '^7.0.0-beta.25';

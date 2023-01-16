@@ -1,4 +1,9 @@
-import { readJson, readProjectConfiguration, Tree } from '@nrwl/devkit';
+import {
+  readJson,
+  readProjectConfiguration,
+  Tree,
+  updateJson,
+} from '@nrwl/devkit';
 import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 
 import { setupMf } from './setup-mf';
@@ -342,5 +347,27 @@ describe('Init MF', () => {
     expect(
       tree.read('apps/app1/src/app/app.routes.ts', 'utf-8')
     ).toMatchSnapshot();
+  });
+
+  it('should throw an error when installed version of angular < 14.1.0 and --standalone is used', async () => {
+    // ARRANGE
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: {
+        ...json.dependencies,
+        '@angular/core': '14.0.0',
+      },
+    }));
+
+    // ACT & ASSERT
+    await expect(
+      setupMf(tree, {
+        appName: 'app1',
+        mfType: 'host',
+        standalone: true,
+      })
+    ).rejects.toThrow(
+      'The --standalone flag is not supported in your current version of Angular (14.0.0). Please update to a version of Angular that supports Standalone Components (>= 14.1.0).'
+    );
   });
 });

@@ -20,8 +20,8 @@ export function Footer(): JSX.Element {
       },
       { name: 'Nrwl', href: 'https://nrwl.io/?utm_source=nx.dev' },
       {
-        name: 'Press kit',
-        href: 'https://nrwl.io/pages/brands?utm_source=nx.dev',
+        name: 'Brands & Guidelines',
+        href: 'https://nx.app/brands?utm_source=nx.dev',
       },
     ],
     community: [

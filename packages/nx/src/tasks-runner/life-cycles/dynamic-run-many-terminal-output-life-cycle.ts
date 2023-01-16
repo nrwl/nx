@@ -253,7 +253,7 @@ export async function createRunManyDynamicOutputRenderer({
     clearPinnedFooter();
 
     if (additionalFooterRows.length > 1) {
-      const text = `Running target ${formatTargetsAndProjects(
+      const text = `Running ${formatTargetsAndProjects(
         projectNames,
         targets,
         tasks

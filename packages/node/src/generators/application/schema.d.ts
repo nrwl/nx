@@ -17,6 +17,12 @@ export interface Schema {
   bundler?: 'esbuild' | 'webpack';
   framework?: NodeJsFrameWorks;
   port?: number;
+  rootProject?: boolean;
 }
 
-export type NodeJsFrameWorks = 'express' | 'koa' | 'fastify' | 'connect';
+export type NodeJsFrameWorks =
+  | 'express'
+  | 'koa'
+  | 'fastify'
+  | 'connect'
+  | 'none';

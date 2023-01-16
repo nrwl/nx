@@ -5,16 +5,21 @@ import { ExecutorContext } from '@nrwl/devkit';
 
 jest.mock('@storybook/core-server', () => ({
   buildDev: jest.fn().mockImplementation(() => Promise.resolve()),
+  build: jest.fn().mockImplementation(() => Promise.resolve()),
 }));
 import { buildDev } from '@storybook/core-server';
 
-import storybookExecutor, { StorybookExecutorOptions } from './storybook.impl';
+import storybookExecutor from './storybook.impl';
 import { join } from 'path';
 import { readFileSync } from 'fs-extra';
+import { CLIOptions } from '@storybook/types';
+import { CommonNxStorybookConfig } from '../../utils/models';
+
+// TODO(katerina): Update when Storybook 7
 
 describe('@nrwl/storybook:storybook', () => {
   let context: ExecutorContext;
-  let options: StorybookExecutorOptions;
+  let options: CLIOptions & CommonNxStorybookConfig;
   beforeEach(() => {
     // preserve original package.json file to memory
     const rootPath = join(__dirname, `../../../../../`);
@@ -27,9 +32,7 @@ describe('@nrwl/storybook:storybook', () => {
     options = {
       uiFramework: '@storybook/react',
       port: 4400,
-      config: {
-        configFolder: storybookPath,
-      },
+      configDir: storybookPath,
     };
     vol.fromJSON({
       [packageJsonPath]: readFileSync(packageJsonPath).toString(),

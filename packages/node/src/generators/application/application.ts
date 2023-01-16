@@ -27,7 +27,7 @@ import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { jestProjectGenerator } from '@nrwl/jest';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
-import { Schema } from './schema';
+import { NodeJsFrameWorks, Schema } from './schema';
 import { initGenerator } from '../init/init';
 import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 import {
@@ -42,6 +42,8 @@ import {
   nxVersion,
 } from '../../utils/versions';
 import { prompt } from 'enquirer';
+
+import * as shared from '@nrwl/workspace/src/utils/create-ts-config';
 
 export interface NormalizedSchema extends Schema {
   appProjectRoot: string;
@@ -65,6 +67,10 @@ function getWebpackBuildConfig(
       ),
       tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
       assets: [joinPathFragments(project.sourceRoot, 'assets')],
+      webpackConfig: joinPathFragments(
+        options.appProjectRoot,
+        'webpack.config.js'
+      ),
     },
     configurations: {
       production: {
@@ -151,7 +157,11 @@ function addAppFiles(tree: Tree, options: NormalizedSchema) {
     }
   );
 
-  if (options.framework) {
+  if (options.bundler !== 'webpack') {
+    tree.delete(joinPathFragments(options.appProjectRoot, 'webpack.config.js'));
+  }
+
+  if (options.framework && options.framework !== 'none') {
     generateFiles(
       tree,
       join(__dirname, `./files/${options.framework}`),
@@ -282,14 +292,27 @@ function addProjectDependencies(
 }
 
 function updateTsConfigOptions(tree: Tree, options: NormalizedSchema) {
-  // updatae tsconfig.app.json to typecheck default exports  https://www.typescriptlang.org/tsconfig#esModuleInterop
-  updateJson(tree, `${options.appProjectRoot}/tsconfig.app.json`, (json) => ({
-    ...json,
-    compilerOptions: {
-      ...json.compilerOptions,
-      esModuleInterop: true,
-    },
-  }));
+  updateJson(tree, `${options.appProjectRoot}/tsconfig.json`, (json) => {
+    if (options.rootProject) {
+      return {
+        compilerOptions: {
+          ...shared.tsConfigBaseOptions,
+          ...json.compilerOptions,
+        },
+        ...json,
+        extends: undefined,
+        exclude: ['node_modules', 'tmp'],
+      };
+    } else {
+      return {
+        ...json,
+        compilerOptions: {
+          ...json.compilerOptions,
+          esModuleInterop: true,
+        },
+      };
+    }
+  });
 }
 
 export async function applicationGenerator(tree: Tree, schema: Schema) {
@@ -305,9 +328,8 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
   addProjectDependencies(tree, options);
   addAppFiles(tree, options);
   addProject(tree, options);
-  if (options.framework && options?.bundler === 'esbuild') {
-    updateTsConfigOptions(tree, options);
-  }
+
+  updateTsConfigOptions(tree, options);
 
   if (options.linter !== Linter.None) {
     const lintTask = await addLintingToApplication(tree, {
@@ -357,12 +379,11 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
 
   const appProjectName = appDirectory.replace(new RegExp('/', 'g'), '-');
 
-  const appProjectRoot = joinPathFragments(appsDir, appDirectory);
-  if (options.framework) {
-    options.bundler = options.bundler ?? 'esbuild';
-  } else {
-    options.bundler = 'webpack';
-  }
+  const appProjectRoot = options.rootProject
+    ? '.'
+    : joinPathFragments(appsDir, appDirectory);
+
+  options.bundler = options.bundler ?? 'esbuild';
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())

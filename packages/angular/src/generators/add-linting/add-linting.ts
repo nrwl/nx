@@ -7,11 +7,11 @@ import {
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { mapLintPattern } from '@nrwl/linter/src/generators/lint-project/lint-project';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+import { join } from 'path';
+import { getGeneratorDirectoryForInstalledAngularVersion } from '../utils/angular-version-utils';
 import { addAngularEsLintDependencies } from './lib/add-angular-eslint-dependencies';
 import { extendAngularEslintJson } from './lib/create-eslint-configuration';
 import type { AddLintingGeneratorSchema } from './schema';
-import { getGeneratorDirectoryForInstalledAngularVersion } from '../../utils/user-installed-angular-versions';
-import { join } from 'path';
 
 export async function addLintingGenerator(
   tree: Tree,

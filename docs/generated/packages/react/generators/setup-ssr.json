@@ -14,7 +14,8 @@
         "description": "The name of the application to add SSR support to.",
         "$default": { "$source": "argv", "index": 0 },
         "x-prompt": "What app would you like to add SSR support to?",
-        "x-dropdown": "projects"
+        "x-dropdown": "projects",
+        "x-priority": "important"
       },
       "appComponentImportPath": {
         "type": "string",
@@ -24,11 +25,13 @@
       "serverPort": {
         "type": "number",
         "default": 4200,
-        "description": "The port for the Express server."
+        "description": "The port for the Express server.",
+        "x-priority": "important"
       },
       "skipFormat": {
         "type": "boolean",
-        "description": "Skip formatting the workspace after the generator completes."
+        "description": "Skip formatting the workspace after the generator completes.",
+        "x-priority": "internal"
       },
       "extraInclude": {
         "type": "array",

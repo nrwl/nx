@@ -14,67 +14,50 @@ Many organizations use Nx without any plugins. If you are mainly interested in m
 
 ## Nx plugins
 
-Nx plugins are npm packages that contain generators and executors to extend the capabilities of an Nx workspace.
+Nx plugins contain [executors](/plugin-features/use-task-executors) and [generators](/plugin-features/use-code-generators) to extend the capabilities of an Nx workspace. They can be shared as npm packages or referenced directly within a single repo.
 
-Plugins have:
+{% personas %}
 
-- **Generators**
+{% persona type="browse" title="Browse Existing Plugins" url="/community#plugin-directory" %}
 
-  - Generators automate making changes to the file system.
-  - Anytime you run `nx generate ...`, you invoke a generator.
-  - They are used to create/update applications, libraries, components, and more.
+Browse through plugins built by Nx and the community.
 
-- **Executors**
+- [Plugin Directory](/community#plugin-directory)
 
-  - Executors define how to perform an action on a project.
-  - You invoke an executor with `nx run ...` (or `nx test`, `nx build`).
-  - They are used to build applications and libraries, test them, lint them, and more.
+{% /persona %}
 
-- **Project Graph Extensions**
+{% persona type="create" title="Build a Plugin" url="/packages/nx-plugin" %}
 
-  - Plugins can provide a function `processProjectGraph` to add extra edges to the project graph.
-  - This allows plugins to influence the behavior of `nx affected` and the project graph visualization.
-  - See [project graph plugins](/recipes/advanced-plugins/project-graph-plugins) for more information.
+Build a plugin for use in your own repo or to share with others.
 
-- **Project Inference Extensions**
+- [Build a plugin](/packages/nx-plugin)
 
-  - Plugins can provide an array of glob patterns, `projectFilePatterns` that are used to infer project information.
-  - Plugins can provide a function `registerProjectTargets` that takes in one of the matched project files, and
-    returns an object containing inferred targets from the file.
-  - This allows plugins to add new projects to the workspace that aren't identified by `project.json` or `package.json` files, and infer extra
-    targets without adding them into project configuration.
+{% /persona %}
 
-All the core plugins are written using Nx Devkit, and you can use the same utilities to write your own generators and
+{% persona type="share" title="Share Your Plugin" url="/recipes/advanced-plugins/share-your-plugin" %}
+
+Publish your plugin to npm and keep your plugin users up to date with migration generators.
+
+- [Share your plugin](/recipes/advanced-plugins/share-your-plugin)
+
+{% /persona %}
+
+{% persona type="extend" title="Extend Core Nx Functionality" url="/recipes/advanced-plugins/project-graph-plugins" %}
+
+Extend the Nx graph logic to understand other languages and custom setups.
+
+- [Extend Core Nx Functionality](/recipes/advanced-plugins/project-graph-plugins)
+
+{% /persona %}
+
+{% /personas %}
+
+All the core plugins are written using [Nx Devkit](/packages/devkit), and you can use the same utilities to write your own generators and
 executors.
 
 {% callout type="check" title="Plugins!" %}
-The Nx team maintains a core set of plugins for many application and tooling frameworks. You can write [custom generators](/recipes/generators/local-generators) and [executors](/recipes/executors/creating-custom-executors) for your own workspace. You can also write your own plugin and share it with the community. The [Nx Plugin](/packages/nx-plugin) plugin provides guidance on how you can build your own custom plugins.
+The Nx team maintains a core set of plugins for many application and tooling frameworks. You can write [generators](/recipes/generators/local-generators) and [executors](/recipes/executors/creating-custom-executors) in a plugin to use in your own repo or share it with the community. The [Nx Plugin](/packages/nx-plugin) plugin provides guidance on how you can build your own custom plugins.
 {% /callout %}
-
-### Local workspace plugins
-
-Nx plugins can also be used in the workspace they are generated inside of. For example, if you generate a plugin with `nx g @nrwl/nx-plugin:plugin my-plugin --importPath @my-org/my-plugin`, you will be able to immediately make use of generators and executors within it. This would look like `nx g @my-org/my-plugin:lib` for generators or `"executor": "@my-org/my-plugin:build"` for executors.
-
-If you are only planning on making use of generators, Nx provides workspace generators which can be used rather than whole plugins.
-
-Generating a full plugin allows you to take advantage of all of the capabilities above, including project inference and graph extension, which is not possible when solely using workspace generators.
-
-Additionally, your local plugin could be set as the default collection in `nx.json`, such that running `nx g lib` would call your workspace plugin's lib generator.
-
-### Listing Nx plugins
-
-Nx provides a list of installed and available plugins from Nrwl and community maintainers. Plugins maintained by Nrwl
-maintained are scoped under the `@nrwl` organization.
-
-Use the `nx list` command to display all registered plugins.
-
-Using the `nx list [plugin]` command displays the generators and executors provided by that package.
-
-## Nx Devkit
-
-The Nx Devkit is the underlying technology used to customize Nx to support different technologies and custom use-cases.
-It contains many utility functions for reading and writing files, updating configuration, working with Abstract Syntax
-Trees (ASTs), and more.
 
 ### Pay as you go
 

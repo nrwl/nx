@@ -1,5 +1,9 @@
 export function tsNodeRegister(file: string = '', tsConfig?: string) {
   if (!file?.endsWith('.ts')) return;
+
+  // Avoid double-registering which can lead to issues type-checking already transformed files.
+  if (isRegistered()) return;
+
   // Register TS compiler lazily
   require('ts-node').register({
     project: tsConfig,
@@ -28,4 +32,10 @@ export function resolveCustomWebpackConfig(path: string, tsConfig: string) {
   // `export default { ... }`. The ESM format is compiled into:
   // `{ default: { ... } }`
   return customWebpackConfig.default || customWebpackConfig;
+}
+export function isRegistered() {
+  return (
+    require.extensions['.ts'] != undefined ||
+    require.extensions['.tsx'] != undefined
+  );
 }

@@ -6,6 +6,14 @@
   "description": "The webpack-dev-server executor is very similar to the standard server builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration and NgUniversal for SSR.",
   "type": "object",
   "properties": {
+    "assets": {
+      "type": "array",
+      "description": "List of static application assets. _Note: only supported in Angular versions >= 15.1.0_",
+      "default": [],
+      "items": {
+        "$ref": "#/definitions/assetPattern"
+      }
+    },
     "main": {
       "type": "string",
       "description": "The full path for the main entry point to the server app, relative to the current workspace."
@@ -238,6 +246,44 @@
   "additionalProperties": false,
   "required": ["outputPath", "main", "tsConfig"],
   "definitions": {
+    "assetPattern": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "followSymlinks": {
+              "type": "boolean",
+              "default": false,
+              "description": "Allow glob patterns to follow symlink directories. This allows subdirectories of the symlink to be searched."
+            },
+            "glob": {
+              "type": "string",
+              "description": "The pattern to match."
+            },
+            "input": {
+              "type": "string",
+              "description": "The input directory path in which to apply 'glob'. Defaults to the project root."
+            },
+            "ignore": {
+              "description": "An array of globs to ignore.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "output": {
+              "type": "string",
+              "description": "Absolute path within the output."
+            }
+          },
+          "additionalProperties": false,
+          "required": ["glob", "input", "output"]
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
     "fileReplacement": {
       "oneOf": [
         {

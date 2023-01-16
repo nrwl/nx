@@ -11,19 +11,22 @@
     "properties": {
       "project": {
         "type": "string",
-        "description": "The path to package.json file."
+        "description": "The path to package.json file.",
+        "x-priority": "important"
       },
       "main": {
         "type": "string",
         "description": "The path to the entry file, relative to project.",
         "alias": "entryFile",
         "x-completion-type": "file",
-        "x-completion-glob": "**/*@(.js|.ts)"
+        "x-completion-glob": "**/*@(.js|.ts)",
+        "x-priority": "important"
       },
       "outputPath": {
         "type": "string",
         "description": "The output path of the generated files.",
-        "x-completion-type": "directory"
+        "x-completion-type": "directory",
+        "x-priority": "important"
       },
       "outputFileName": {
         "type": "string",
@@ -38,7 +41,8 @@
         "type": "string",
         "description": "The path to tsconfig file.",
         "x-completion-type": "file",
-        "x-completion-glob": "tsconfig.*.json"
+        "x-completion-glob": "tsconfig.*.json",
+        "x-priority": "important"
       },
       "format": {
         "type": "array",

@@ -7,21 +7,19 @@ import {
 } from 'webpack';
 import { SubresourceIntegrityPlugin } from 'webpack-subresource-integrity';
 import * as path from 'path';
+import { basename } from 'path';
 import { getOutputHashFormat } from '@nrwl/webpack/src/utils/hash-format';
 import { PostcssCliResources } from '@nrwl/webpack/src/utils/webpack/plugins/postcss-cli-resources';
 import { normalizeExtraEntryPoints } from '@nrwl/webpack/src/utils/webpack/normalize-entry';
 
 import { NormalizedWebpackExecutorOptions } from '../executors/webpack/schema';
 import { getClientEnvironment } from './get-client-environment';
-import { RemoveHashPlugin } from './webpack/plugins/remove-hash-plugin';
 import { ScriptsWebpackPlugin } from './webpack/plugins/scripts-webpack-plugin';
 import { getCSSModuleLocalIdent } from './get-css-module-local-ident';
 import CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 import MiniCssExtractPlugin = require('mini-css-extract-plugin');
 import autoprefixer = require('autoprefixer');
 import postcssImports = require('postcss-import');
-import { Postcss } from 'postcss';
-import { basename } from 'path';
 
 interface PostcssOptions {
   (loader: any): any;
@@ -29,11 +27,15 @@ interface PostcssOptions {
   config?: string;
 }
 
+const processed = new Set();
+
 export function withWeb() {
   return function configure(
     config: Configuration,
     { options }: { options: NormalizedWebpackExecutorOptions }
   ): Configuration {
+    if (processed.has(config)) return config;
+
     const plugins = [];
 
     const stylesOptimization =
@@ -89,7 +91,6 @@ export function withWeb() {
 
     // Process global styles.
     if (options.styles.length > 0) {
-      const chunkNames: string[] = [];
       normalizeExtraEntryPoints(options.styles, 'styles').forEach((style) => {
         const resolvedPath = path.resolve(options.root, style.input);
         // Add style entry points.
@@ -102,20 +103,17 @@ export function withWeb() {
         // Add global css paths.
         globalStylePaths.push(resolvedPath);
       });
-
-      if (chunkNames.length > 0) {
-        // Add plugin to remove hashes from lazy styles.
-        plugins.push(new RemoveHashPlugin({ chunkNames, hashFormat }));
-      }
     }
 
     const cssModuleRules: RuleSetRule[] = [
       {
         test: /\.module\.css$/,
+        exclude: globalStylePaths,
         use: getCommonLoadersForCssModules(options, includePaths),
       },
       {
         test: /\.module\.(scss|sass)$/,
+        exclude: globalStylePaths,
         use: [
           ...getCommonLoadersForCssModules(options, includePaths),
           {
@@ -133,6 +131,7 @@ export function withWeb() {
       },
       {
         test: /\.module\.less$/,
+        exclude: globalStylePaths,
         use: [
           ...getCommonLoadersForCssModules(options, includePaths),
           {
@@ -147,6 +146,7 @@ export function withWeb() {
       },
       {
         test: /\.module\.styl$/,
+        exclude: globalStylePaths,
         use: [
           ...getCommonLoadersForCssModules(options, includePaths),
           {
@@ -164,10 +164,12 @@ export function withWeb() {
     const globalCssRules: RuleSetRule[] = [
       {
         test: /\.css$/,
+        exclude: globalStylePaths,
         use: getCommonLoadersForGlobalCss(options, includePaths),
       },
       {
         test: /\.scss$|\.sass$/,
+        exclude: globalStylePaths,
         use: [
           ...getCommonLoadersForGlobalCss(options, includePaths),
           {
@@ -187,6 +189,7 @@ export function withWeb() {
       },
       {
         test: /\.less$/,
+        exclude: globalStylePaths,
         use: [
           ...getCommonLoadersForGlobalCss(options, includePaths),
           {
@@ -203,8 +206,70 @@ export function withWeb() {
       },
       {
         test: /\.styl$/,
+        exclude: globalStylePaths,
         use: [
           ...getCommonLoadersForGlobalCss(options, includePaths),
+          {
+            loader: require.resolve('stylus-loader'),
+            options: {
+              sourceMap: options.sourceMap,
+              stylusOptions: {
+                include: includePaths,
+              },
+            },
+          },
+        ],
+      },
+    ];
+
+    const globalStyleRules: RuleSetRule[] = [
+      {
+        test: /\.css$/,
+        include: globalStylePaths,
+        use: getCommonLoadersForGlobalStyle(options, includePaths),
+      },
+      {
+        test: /\.scss$|\.sass$/,
+        include: globalStylePaths,
+        use: [
+          ...getCommonLoadersForGlobalStyle(options, includePaths),
+          {
+            loader: require.resolve('sass-loader'),
+            options: {
+              implementation: require('sass'),
+              sourceMap: options.sourceMap,
+              sassOptions: {
+                fiber: false,
+                // bootstrap-sass requires a minimum precision of 8
+                precision: 8,
+                includePaths,
+              },
+            },
+          },
+        ],
+      },
+      {
+        test: /\.less$/,
+        include: globalStylePaths,
+        use: [
+          ...getCommonLoadersForGlobalStyle(options, includePaths),
+          {
+            loader: require.resolve('less-loader'),
+            options: {
+              sourceMap: options.sourceMap,
+              lessOptions: {
+                javascriptEnabled: true,
+                ...lessPathOptions,
+              },
+            },
+          },
+        ],
+      },
+      {
+        test: /\.styl$/,
+        include: globalStylePaths,
+        use: [
+          ...getCommonLoadersForGlobalStyle(options, includePaths),
           {
             loader: require.resolve('stylus-loader'),
             options: {
@@ -221,29 +286,7 @@ export function withWeb() {
     const rules: RuleSetRule[] = [
       {
         test: /\.css$|\.scss$|\.sass$|\.less$|\.styl$/,
-        oneOf: [
-          ...cssModuleRules,
-          ...globalCssRules,
-          // load global css as css files
-          {
-            test: /\.css$|\.scss$|\.sass$|\.less$|\.styl$/,
-            include: globalStylePaths,
-            use: [
-              {
-                loader: MiniCssExtractPlugin.loader,
-                options: { esModule: true },
-              },
-              { loader: require.resolve('css-loader') },
-              {
-                loader: require.resolve('postcss-loader'),
-                options: {
-                  implementation: require('postcss'),
-                  postcssOptions: postcssOptionsCreator(options, includePaths),
-                },
-              },
-            ],
-          },
-        ],
+        oneOf: [...cssModuleRules, ...globalCssRules, ...globalStyleRules],
       },
     ];
 
@@ -253,9 +296,6 @@ export function withWeb() {
         filename: `[name]${hashFormat.extract}.css`,
       })
     );
-
-    // context needs to be set for babel to pick up correct babelrc
-    config.context = path.join(options.root, options.projectRoot);
 
     config.output = {
       ...config.output,
@@ -311,8 +351,7 @@ export function withWeb() {
     config.module = {
       ...config.module,
       rules: [
-        ...config.module.rules,
-        ...rules,
+        ...(config.module.rules ?? []),
         {
           test: /\.(bmp|png|jpe?g|gif|webp|avif)$/,
           type: 'asset',
@@ -329,8 +368,10 @@ export function withWeb() {
             name: `[name]${hashFormat.file}.[ext]`,
           },
         },
+        ...rules,
       ],
     };
+    processed.add(config);
     return config;
   };
 }
@@ -427,7 +468,27 @@ function getCommonLoadersForGlobalCss(
         ? MiniCssExtractPlugin.loader
         : require.resolve('style-loader'),
     },
-    { loader: require.resolve('css-loader') },
+    { loader: require.resolve('css-loader'), options: { url: false } },
+    {
+      loader: require.resolve('postcss-loader'),
+      options: {
+        implementation: require('postcss'),
+        postcssOptions: postcssOptionsCreator(options, includePaths),
+      },
+    },
+  ];
+}
+
+function getCommonLoadersForGlobalStyle(
+  options: NormalizedWebpackExecutorOptions,
+  includePaths: string[]
+) {
+  return [
+    {
+      loader: MiniCssExtractPlugin.loader,
+      options: { esModule: true },
+    },
+    { loader: require.resolve('css-loader'), options: { url: false } },
     {
       loader: require.resolve('postcss-loader'),
       options: {

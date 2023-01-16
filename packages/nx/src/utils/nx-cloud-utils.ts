@@ -6,3 +6,14 @@ export function isNxCloudUsed() {
     (r) => r.runner == '@nrwl/nx-cloud'
   );
 }
+
+export function getNxCloudUrl(): string {
+  const taskRunner = isNxCloudUsed();
+  if (!taskRunner) throw new Error('@nrwl/nx-cloud runner not find in nx.json');
+  return taskRunner.options.url || 'https://nx.app';
+}
+export function getNxCloudToken(): string {
+  const taskRunner = isNxCloudUsed();
+  if (!taskRunner) throw new Error('@nrwl/nx-cloud runner not find in nx.json');
+  return taskRunner.options.accessToken;
+}
