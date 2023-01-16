@@ -1,4 +1,5 @@
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
+import { joinPathFragments } from '@nrwl/devkit';
 import {
   checkFilesDoNotExist,
   checkFilesExist,
@@ -6,13 +7,16 @@ import {
   createFile,
   detectPackageManager,
   expectJestTestsToPass,
+  getPackageManagerCommand,
   killPorts,
   newProject,
   packageInstall,
+  packageManagerLockFile,
   promisifiedTreeKill,
   readFile,
   runCLI,
   runCLIAsync,
+  runCommand,
   runCommandUntil,
   tmpProjPath,
   uniq,
@@ -235,10 +239,14 @@ describe('Build Node apps', () => {
 
   it('should generate a package.json with the `--generatePackageJson` flag', async () => {
     const scope = newProject();
+    const packageManager = detectPackageManager(tmpProjPath());
     const nestapp = uniq('nestapp');
     runCLI(`generate @nrwl/nest:app ${nestapp} --linter=eslint`);
 
-    await runCLIAsync(`build ${nestapp} --generatePackageJson`);
+    const { combinedOutput: nestCombinedOutput } = await runCLIAsync(
+      `build ${nestapp} --generatePackageJson`
+    );
+    expect(nestCombinedOutput).not.toMatch(/Graph is not consistent/);
 
     checkFilesExist(`dist/apps/${nestapp}/package.json`);
     checkFilesExist(
@@ -268,6 +276,13 @@ describe('Build Node apps', () => {
     expect(satisfies(packageJson.dependencies['rxjs'], '^7.0.0')).toBeTruthy();
     expect(satisfies(packageJson.dependencies['tslib'], '^2.3.0')).toBeTruthy();
 
+    checkFilesExist(
+      `dist/apps/${nestapp}/${packageManagerLockFile[packageManager]}`
+    );
+    runCommand(`${getPackageManagerCommand().ciInstall}`, {
+      cwd: joinPathFragments(tmpProjPath(), 'dist/apps', nestapp),
+    });
+
     const nodeapp = uniq('nodeapp');
     runCLI(`generate @nrwl/node:app ${nodeapp} --bundler=webpack`);
 
@@ -283,14 +298,28 @@ ${jslib}();
 `
     );
 
-    await runCLIAsync(`build ${nodeapp} --generate-package-json`);
-    checkFilesExist(`dist/apps/${nestapp}/package.json`);
+    const { combinedOutput: nodeCombinedOutput } = await runCLIAsync(
+      `build ${nodeapp} --generate-package-json`
+    );
+    expect(nodeCombinedOutput).not.toMatch(/Graph is not consistent/);
+    checkFilesExist(`dist/apps/${nodeapp}/package.json`);
+    checkFilesExist(
+      `dist/apps/${nodeapp}/${packageManagerLockFile[packageManager]}`
+    );
     const nodeAppPackageJson = JSON.parse(
       readFile(`dist/apps/${nodeapp}/package.json`)
     );
 
     expect(nodeAppPackageJson['dependencies']['tslib']).toBeTruthy();
-  }, 300000);
+
+    runCommand(`${getPackageManagerCommand().ciInstall}`, {
+      cwd: joinPathFragments(tmpProjPath(), 'dist/apps', nestapp),
+    });
+
+    runCommand(`${getPackageManagerCommand().ciInstall}`, {
+      cwd: joinPathFragments(tmpProjPath(), 'dist/apps', nodeapp),
+    });
+  }, 1_000_000);
 
   it('should remove previous output before building with the --deleteOutputPath option set', async () => {
     const appName = uniq('app');

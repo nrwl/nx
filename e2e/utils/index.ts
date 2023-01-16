@@ -879,6 +879,7 @@ export function getPackageManagerCommand({
   runNxSilent: string;
   runUninstalledPackage: string;
   install: string;
+  ciInstall: string;
   addProd: string;
   addDev: string;
   list: string;
@@ -896,6 +897,7 @@ export function getPackageManagerCommand({
       runNxSilent: `npx nx`,
       runUninstalledPackage: `npx --yes`,
       install: 'npm install',
+      ciInstall: 'npm ci',
       addProd: `npm install --legacy-peer-deps`,
       addDev: `npm install --legacy-peer-deps -D`,
       list: 'npm ls --depth 10',
@@ -908,6 +910,7 @@ export function getPackageManagerCommand({
       runNxSilent: `yarn --silent nx`,
       runUninstalledPackage: 'npx --yes',
       install: 'yarn',
+      ciInstall: 'yarn --frozen-lockfile',
       addProd: `yarn add`,
       addDev: `yarn add -D`,
       list: 'npm ls --depth 10',
@@ -920,6 +923,7 @@ export function getPackageManagerCommand({
       runNxSilent: `pnpm exec nx`,
       runUninstalledPackage: 'pnpm dlx',
       install: 'pnpm i',
+      ciInstall: 'pnpm install --frozen-lockfile',
       addProd: `pnpm add`,
       addDev: `pnpm add -D`,
       list: 'npm ls --depth 10',

@@ -523,17 +523,14 @@ function parseV3LockFile(
           ? `npm:${node.packageName}@${node.version}`
           : node.version
       );
-      if (value.peerDependencies) {
-        const peerMeta = value.peerDependenciesMeta || {};
-        Object.entries(value.peerDependencies).forEach(([depName, depSpec]) => {
-          builder.addEdgeOut(
-            node,
-            depName,
-            findV3EdgeVersion(packages, path, depName, depSpec, true),
-            peerMeta[depName]?.optional
-          );
-        });
-      }
+      addEdgeOuts({
+        builder,
+        node,
+        section: value.peerDependencies,
+        isOptional: true,
+        depSpecFunc: (depName, depSpec) =>
+          findV3EdgeVersion(packages, path, depName, depSpec, true),
+      });
       addEdgeOuts({
         builder,
         node,
