@@ -18,8 +18,7 @@
       "$default": {
         "$source": "argv",
         "index": 0
-      },
-      "x-priority": "important"
+      }
     },
     "remotes": {
       "type": "array",
@@ -61,8 +60,7 @@
             "label": "LESS         [ http://lesscss.org     ]"
           }
         ]
-      },
-      "x-priority": "important"
+      }
     },
     "inlineStyle": {
       "description": "Specifies if the style will be in the ts file.",

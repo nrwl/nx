@@ -14,15 +14,13 @@
         "index": 0
       },
       "x-prompt": "What app would you like to generate a Module Federation configuration for?",
-      "x-dropdown": "projects",
-      "x-priority": "important"
+      "x-dropdown": "projects"
     },
     "mfType": {
       "type": "string",
       "enum": ["host", "remote"],
       "description": "Type of application to generate the Module Federation configuration for.",
-      "default": "remote",
-      "x-priority": "important"
+      "default": "remote"
     },
     "federationType": {
       "type": "string",

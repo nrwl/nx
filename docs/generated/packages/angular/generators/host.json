@@ -18,8 +18,7 @@
       "name": {
         "type": "string",
         "description": "The name to give to the host Angular application.",
-        "$default": { "$source": "argv", "index": 0 },
-        "x-priority": "important"
+        "$default": { "$source": "argv", "index": 0 }
       },
       "remotes": {
         "type": "array",
@@ -58,8 +57,7 @@
               "label": "LESS         [ http://lesscss.org     ]"
             }
           ]
-        },
-        "x-priority": "important"
+        }
       },
       "inlineStyle": {
         "description": "Specifies if the style will be in the ts file.",

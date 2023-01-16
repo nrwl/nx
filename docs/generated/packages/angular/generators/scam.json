@@ -32,8 +32,7 @@
         "type": "string",
         "description": "The name of the component.",
         "$default": { "$source": "argv", "index": 0 },
-        "x-prompt": "What name would you like to use for the component?",
-        "x-priority": "important"
+        "x-prompt": "What name would you like to use for the component?"
       },
       "displayBlock": {
         "description": "Specifies if the style will contain `:host { display: block; }`.",
@@ -70,8 +69,7 @@
         "description": "The file extension or preprocessor to use for style files, or 'none' to skip generating the style file.",
         "type": "string",
         "default": "css",
-        "enum": ["css", "scss", "sass", "less", "none"],
-        "x-priority": "important"
+        "enum": ["css", "scss", "sass", "less", "none"]
       },
       "skipTests": {
         "type": "boolean",

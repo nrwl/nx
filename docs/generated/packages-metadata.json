@@ -119,7 +119,296 @@
         "type": "executor"
       }
     ],
-    "generators": [],
+    "generators": [
+      {
+        "description": "Adds linting configuration to an Angular project.",
+        "file": "generated/packages/angular/generators/add-linting.json",
+        "hidden": true,
+        "name": "add-linting",
+        "originalFilePath": "/packages/angular/src/generators/add-linting/schema.json",
+        "path": "angular/generators/add-linting",
+        "type": "generator"
+      },
+      {
+        "description": "Creates an Angular application.",
+        "file": "generated/packages/angular/generators/application.json",
+        "hidden": false,
+        "name": "application",
+        "originalFilePath": "/packages/angular/src/generators/application/schema.json",
+        "path": "angular/generators/application",
+        "type": "generator"
+      },
+      {
+        "description": "Generate an Angular Component.",
+        "file": "generated/packages/angular/generators/component.json",
+        "hidden": false,
+        "name": "component",
+        "originalFilePath": "/packages/angular/src/generators/component/schema.json",
+        "path": "angular/generators/component",
+        "type": "generator"
+      },
+      {
+        "description": "Creates a Cypress spec for a UI component that has a story.",
+        "file": "generated/packages/angular/generators/component-cypress-spec.json",
+        "hidden": true,
+        "name": "component-cypress-spec",
+        "originalFilePath": "/packages/angular/src/generators/component-cypress-spec/schema.json",
+        "path": "angular/generators/component-cypress-spec",
+        "type": "generator"
+      },
+      {
+        "description": "Creates a stories.ts file for a component.",
+        "file": "generated/packages/angular/generators/component-story.json",
+        "hidden": true,
+        "name": "component-story",
+        "originalFilePath": "/packages/angular/src/generators/component-story/schema.json",
+        "path": "angular/generators/component-story",
+        "type": "generator"
+      },
+      {
+        "description": "Creates a cypress component test file for a component.",
+        "file": "generated/packages/angular/generators/component-test.json",
+        "hidden": false,
+        "name": "component-test",
+        "originalFilePath": "/packages/angular/src/generators/component-test/schema.json",
+        "path": "angular/generators/component-test",
+        "type": "generator"
+      },
+      {
+        "description": "Converts a project from TSLint to ESLint.",
+        "file": "generated/packages/angular/generators/convert-tslint-to-eslint.json",
+        "hidden": false,
+        "name": "convert-tslint-to-eslint",
+        "originalFilePath": "/packages/angular/src/generators/convert-tslint-to-eslint/schema.json",
+        "path": "angular/generators/convert-tslint-to-eslint",
+        "type": "generator"
+      },
+      {
+        "description": "Sets up a Downgrade Module.",
+        "file": "generated/packages/angular/generators/downgrade-module.json",
+        "hidden": false,
+        "name": "downgrade-module",
+        "originalFilePath": "/packages/angular/src/generators/downgrade-module/schema.json",
+        "path": "angular/generators/downgrade-module",
+        "type": "generator"
+      },
+      {
+        "description": "Initializes the `@nrwl/angular` plugin.",
+        "file": "generated/packages/angular/generators/init.json",
+        "hidden": true,
+        "name": "init",
+        "originalFilePath": "/packages/angular/src/generators/init/schema.json",
+        "path": "angular/generators/init",
+        "type": "generator"
+      },
+      {
+        "description": "Adds Karma configuration to a workspace.",
+        "file": "generated/packages/angular/generators/karma.json",
+        "hidden": false,
+        "name": "karma",
+        "originalFilePath": "/packages/angular/src/generators/karma/schema.json",
+        "path": "angular/generators/karma",
+        "type": "generator"
+      },
+      {
+        "description": "Adds Karma configuration to a project.",
+        "file": "generated/packages/angular/generators/karma-project.json",
+        "hidden": false,
+        "name": "karma-project",
+        "originalFilePath": "/packages/angular/src/generators/karma-project/schema.json",
+        "path": "angular/generators/karma-project",
+        "type": "generator"
+      },
+      {
+        "description": "Creates an Angular library.",
+        "file": "generated/packages/angular/generators/library.json",
+        "hidden": false,
+        "name": "library",
+        "originalFilePath": "/packages/angular/src/generators/library/schema.json",
+        "path": "angular/generators/library",
+        "type": "generator"
+      },
+      {
+        "description": "Creates a secondary entry point for an Angular publishable library.",
+        "file": "generated/packages/angular/generators/library-secondary-entry-point.json",
+        "hidden": false,
+        "name": "library-secondary-entry-point",
+        "originalFilePath": "/packages/angular/src/generators/library-secondary-entry-point/schema.json",
+        "path": "angular/generators/library-secondary-entry-point",
+        "type": "generator"
+      },
+      {
+        "description": "Generate a Remote Angular Module Federation Application.",
+        "file": "generated/packages/angular/generators/remote.json",
+        "hidden": false,
+        "name": "remote",
+        "originalFilePath": "/packages/angular/src/generators/remote/schema.json",
+        "path": "angular/generators/remote",
+        "type": "generator"
+      },
+      {
+        "description": "Moves an Angular application or library to another folder within the workspace and updates the project configuration.",
+        "file": "generated/packages/angular/generators/move.json",
+        "hidden": false,
+        "name": "move",
+        "originalFilePath": "/packages/angular/src/generators/move/schema.json",
+        "path": "angular/generators/move",
+        "type": "generator"
+      },
+      {
+        "description": "Converts an old micro frontend configuration to use the new withModuleFederation helper. It will run successfully if the following conditions are met: \n - Is either a host or remote application \n - Shared npm package configurations have not been modified \n - Name used to identify the Micro Frontend application matches the project name \n\n{% callout type=\"warning\" title=\"Overrides\" %}This generator will overwrite your webpack config. If you have additional custom configuration in your config file, it will be lost!{% /callout %}",
+        "file": "generated/packages/angular/generators/convert-to-with-mf.json",
+        "hidden": false,
+        "name": "convert-to-with-mf",
+        "originalFilePath": "/packages/angular/src/generators/convert-to-with-mf/schema.json",
+        "path": "angular/generators/convert-to-with-mf",
+        "type": "generator"
+      },
+      {
+        "description": "Generate a Host Angular Module Federation Application.",
+        "file": "generated/packages/angular/generators/host.json",
+        "hidden": false,
+        "name": "host",
+        "originalFilePath": "/packages/angular/src/generators/host/schema.json",
+        "path": "angular/generators/host",
+        "type": "generator"
+      },
+      {
+        "description": "Migrates an Angular CLI workspace to Nx or adds the Angular plugin to an Nx workspace.",
+        "file": "generated/packages/angular/generators/ng-add.json",
+        "hidden": true,
+        "name": "ng-add",
+        "originalFilePath": "/packages/angular/src/generators/ng-add/schema.json",
+        "path": "angular/generators/ng-add",
+        "type": "generator"
+      },
+      {
+        "description": "Adds NgRx support to an application or library.",
+        "file": "generated/packages/angular/generators/ngrx.json",
+        "hidden": false,
+        "name": "ngrx",
+        "originalFilePath": "/packages/angular/src/generators/ngrx/schema.json",
+        "path": "angular/generators/ngrx",
+        "type": "generator"
+      },
+      {
+        "description": "Convert an existing Single Component Angular Module (SCAM) to a Standalone Component.",
+        "file": "generated/packages/angular/generators/scam-to-standalone.json",
+        "hidden": false,
+        "name": "scam-to-standalone",
+        "originalFilePath": "/packages/angular/src/generators/scam-to-standalone/schema.json",
+        "path": "angular/generators/scam-to-standalone",
+        "type": "generator"
+      },
+      {
+        "description": "Generate a component with an accompanying Single Component Angular Module (SCAM).",
+        "file": "generated/packages/angular/generators/scam.json",
+        "hidden": false,
+        "name": "scam",
+        "originalFilePath": "/packages/angular/src/generators/scam/schema.json",
+        "path": "angular/generators/scam",
+        "type": "generator"
+      },
+      {
+        "description": "Generate a directive with an accompanying Single Component Angular Module (SCAM).",
+        "file": "generated/packages/angular/generators/scam-directive.json",
+        "hidden": false,
+        "name": "scam-directive",
+        "originalFilePath": "/packages/angular/src/generators/scam-directive/schema.json",
+        "path": "angular/generators/scam-directive",
+        "type": "generator"
+      },
+      {
+        "description": "Generate a pipe with an accompanying Single Component Angular Module (SCAM).",
+        "file": "generated/packages/angular/generators/scam-pipe.json",
+        "hidden": false,
+        "name": "scam-pipe",
+        "originalFilePath": "/packages/angular/src/generators/scam-pipe/schema.json",
+        "path": "angular/generators/scam-pipe",
+        "type": "generator"
+      },
+      {
+        "description": "Generate a Module Federation configuration for a given Angular application.",
+        "file": "generated/packages/angular/generators/setup-mf.json",
+        "hidden": false,
+        "name": "setup-mf",
+        "originalFilePath": "/packages/angular/src/generators/setup-mf/schema.json",
+        "path": "angular/generators/setup-mf",
+        "type": "generator"
+      },
+      {
+        "description": "Generate Angular Universal (SSR) setup for an Angular application.",
+        "file": "generated/packages/angular/generators/setup-ssr.json",
+        "hidden": false,
+        "name": "setup-ssr",
+        "originalFilePath": "/packages/angular/src/generators/setup-ssr/schema.json",
+        "path": "angular/generators/setup-ssr",
+        "type": "generator"
+      },
+      {
+        "description": "Configures Tailwind CSS for an application or a buildable/publishable library.",
+        "file": "generated/packages/angular/generators/setup-tailwind.json",
+        "hidden": false,
+        "name": "setup-tailwind",
+        "originalFilePath": "/packages/angular/src/generators/setup-tailwind/schema.json",
+        "path": "angular/generators/setup-tailwind",
+        "type": "generator"
+      },
+      {
+        "description": "Creates stories/specs for all components declared in a project.",
+        "file": "generated/packages/angular/generators/stories.json",
+        "hidden": false,
+        "name": "stories",
+        "originalFilePath": "/packages/angular/src/generators/stories/schema.json",
+        "path": "angular/generators/stories",
+        "type": "generator"
+      },
+      {
+        "description": "Adds Storybook configuration to a project.",
+        "file": "generated/packages/angular/generators/storybook-configuration.json",
+        "hidden": false,
+        "name": "storybook-configuration",
+        "originalFilePath": "/packages/angular/src/generators/storybook-configuration/schema.json",
+        "path": "angular/generators/storybook-configuration",
+        "type": "generator"
+      },
+      {
+        "description": "Setup Cypress component testing for a project.",
+        "file": "generated/packages/angular/generators/cypress-component-configuration.json",
+        "hidden": false,
+        "name": "cypress-component-configuration",
+        "originalFilePath": "/packages/angular/src/generators/cypress-component-configuration/schema.json",
+        "path": "angular/generators/cypress-component-configuration",
+        "type": "generator"
+      },
+      {
+        "description": "Sets up an Upgrade Module.",
+        "file": "generated/packages/angular/generators/upgrade-module.json",
+        "hidden": false,
+        "name": "upgrade-module",
+        "originalFilePath": "/packages/angular/src/generators/upgrade-module/schema.json",
+        "path": "angular/generators/upgrade-module",
+        "type": "generator"
+      },
+      {
+        "description": "Creates a Web Worker.",
+        "file": "generated/packages/angular/generators/web-worker.json",
+        "hidden": false,
+        "name": "web-worker",
+        "originalFilePath": "/packages/angular/src/generators/web-worker/schema.json",
+        "path": "angular/generators/web-worker",
+        "type": "generator"
+      },
+      {
+        "description": "Change storybook targets for Angular projects to use @storybook/angular executors",
+        "file": "generated/packages/angular/generators/change-storybook-targets.json",
+        "hidden": false,
+        "name": "change-storybook-targets",
+        "originalFilePath": "/packages/angular/src/generators/change-storybook-targets/schema.json",
+        "path": "angular/generators/change-storybook-targets",
+        "type": "generator"
+      }
+    ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "angular",
     "packageName": "@nrwl/angular",

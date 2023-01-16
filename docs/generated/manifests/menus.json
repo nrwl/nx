@@ -3541,6 +3541,271 @@
             ],
             "isExternal": false,
             "disableCollapsible": false
+          },
+          {
+            "id": "generators",
+            "path": "/packages/angular/generators",
+            "name": "generators",
+            "children": [
+              {
+                "id": "add-linting",
+                "path": "/packages/angular/generators/add-linting",
+                "name": "add-linting",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "application",
+                "path": "/packages/angular/generators/application",
+                "name": "application",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "component",
+                "path": "/packages/angular/generators/component",
+                "name": "component",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "component-cypress-spec",
+                "path": "/packages/angular/generators/component-cypress-spec",
+                "name": "component-cypress-spec",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "component-story",
+                "path": "/packages/angular/generators/component-story",
+                "name": "component-story",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "component-test",
+                "path": "/packages/angular/generators/component-test",
+                "name": "component-test",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "convert-tslint-to-eslint",
+                "path": "/packages/angular/generators/convert-tslint-to-eslint",
+                "name": "convert-tslint-to-eslint",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "downgrade-module",
+                "path": "/packages/angular/generators/downgrade-module",
+                "name": "downgrade-module",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "init",
+                "path": "/packages/angular/generators/init",
+                "name": "init",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "karma",
+                "path": "/packages/angular/generators/karma",
+                "name": "karma",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "karma-project",
+                "path": "/packages/angular/generators/karma-project",
+                "name": "karma-project",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "library",
+                "path": "/packages/angular/generators/library",
+                "name": "library",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "library-secondary-entry-point",
+                "path": "/packages/angular/generators/library-secondary-entry-point",
+                "name": "library-secondary-entry-point",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "remote",
+                "path": "/packages/angular/generators/remote",
+                "name": "remote",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "move",
+                "path": "/packages/angular/generators/move",
+                "name": "move",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "convert-to-with-mf",
+                "path": "/packages/angular/generators/convert-to-with-mf",
+                "name": "convert-to-with-mf",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "host",
+                "path": "/packages/angular/generators/host",
+                "name": "host",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "ng-add",
+                "path": "/packages/angular/generators/ng-add",
+                "name": "ng-add",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "ngrx",
+                "path": "/packages/angular/generators/ngrx",
+                "name": "ngrx",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "scam-to-standalone",
+                "path": "/packages/angular/generators/scam-to-standalone",
+                "name": "scam-to-standalone",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "scam",
+                "path": "/packages/angular/generators/scam",
+                "name": "scam",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "scam-directive",
+                "path": "/packages/angular/generators/scam-directive",
+                "name": "scam-directive",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "scam-pipe",
+                "path": "/packages/angular/generators/scam-pipe",
+                "name": "scam-pipe",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "setup-mf",
+                "path": "/packages/angular/generators/setup-mf",
+                "name": "setup-mf",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "setup-ssr",
+                "path": "/packages/angular/generators/setup-ssr",
+                "name": "setup-ssr",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "setup-tailwind",
+                "path": "/packages/angular/generators/setup-tailwind",
+                "name": "setup-tailwind",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "stories",
+                "path": "/packages/angular/generators/stories",
+                "name": "stories",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "storybook-configuration",
+                "path": "/packages/angular/generators/storybook-configuration",
+                "name": "storybook-configuration",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "cypress-component-configuration",
+                "path": "/packages/angular/generators/cypress-component-configuration",
+                "name": "cypress-component-configuration",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "upgrade-module",
+                "path": "/packages/angular/generators/upgrade-module",
+                "name": "upgrade-module",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "web-worker",
+                "path": "/packages/angular/generators/web-worker",
+                "name": "web-worker",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "change-storybook-targets",
+                "path": "/packages/angular/generators/change-storybook-targets",
+                "name": "change-storybook-targets",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
           }
         ],
         "isExternal": false,

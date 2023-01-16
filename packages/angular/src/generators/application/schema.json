@@ -14,8 +14,7 @@
         "index": 0
       },
       "x-prompt": "What name would you like to use for the application?",
-      "pattern": "^[a-zA-Z].*$",
-      "x-priority": "important"
+      "pattern": "^[a-zA-Z].*$"
     },
     "directory": {
       "description": "The directory of the new application.",
@@ -48,8 +47,7 @@
             "label": "LESS         [ http://lesscss.org     ]"
           }
         ]
-      },
-      "x-priority": "important"
+      }
     },
     "routing": {
       "type": "boolean",

@@ -71,8 +71,7 @@
             "label": "LESS         [ http://lesscss.org     ]"
           }
         ]
-      },
-      "x-priority": "important"
+      }
     },
     "skipPackageJson": {
       "type": "boolean",

@@ -14,8 +14,7 @@
         "description": "The name of the library.",
         "$default": { "$source": "argv", "index": 0 },
         "x-prompt": "What name would you like to use for the library?",
-        "pattern": "^[a-zA-Z].*$",
-        "x-priority": "important"
+        "pattern": "^[a-zA-Z].*$"
       },
       "directory": {
         "type": "string",

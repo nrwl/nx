@@ -13,8 +13,7 @@
         "$source": "argv",
         "index": 0
       },
-      "x-prompt": "What project would you like to add the Tailwind CSS setup?",
-      "x-priority": "important"
+      "x-prompt": "What project would you like to add the Tailwind CSS setup?"
     },
     "buildTarget": {
       "type": "string",

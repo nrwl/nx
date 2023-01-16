@@ -14,8 +14,7 @@
         "index": 0
       },
       "x-prompt": "What app would you like to generate an Angular Universal configuration for?",
-      "x-dropdown": "projects",
-      "x-priority": "important"
+      "x-dropdown": "projects"
     },
     "appId": {
       "type": "string",
