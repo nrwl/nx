@@ -44,7 +44,7 @@
       },
       "serveTarget": {
         "type": "string",
-        "description": "The serve target of the project to be transformed to use the @nrwl/vite:dev-server executor."
+        "description": "The serve target of the project to be transformed to use the @nrwl/vite:dev-server and @nrwl/vite:preview-server executors."
       },
       "testTarget": {
         "type": "string",

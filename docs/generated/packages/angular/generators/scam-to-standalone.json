@@ -12,17 +12,20 @@
       "component": {
         "type": "string",
         "description": "The path to the SCAM component file, relative to the root of the project containing the SCAM.",
-        "$default": { "$source": "argv", "index": 0 }
+        "$default": { "$source": "argv", "index": 0 },
+        "x-priority": "important"
       },
       "project": {
         "type": "string",
         "description": "The project containing the SCAM.",
         "x-prompt": "What project contains the SCAM?",
-        "x-dropdown": "projects"
+        "x-dropdown": "projects",
+        "x-priority": "important"
       },
       "skipFormat": {
         "type": "boolean",
-        "description": "Skip formatting the workspace after the generator completes."
+        "description": "Skip formatting the workspace after the generator completes.",
+        "x-priority": "internal"
       }
     },
     "examplesFile": "## Examples\n\n{% tabs %}\n\n{% tab label=\"Basic Usage\" %}\n\nThis generator allows you to convert an Inline SCAM to a Standalone Component. It's important that the SCAM you wish to convert has it's NgModule within the same file for the generator to be able to correctly convert the component to Standalone.\n\n```bash\n\nnx g @nrwl/angular:scam-to-standalone --component=libs/mylib/src/lib/myscam/myscam.component.ts --project=mylib\n\n```\n\n{% /tab %}\n\n{% /tabs %}\n",

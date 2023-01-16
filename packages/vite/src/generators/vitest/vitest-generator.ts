@@ -35,7 +35,7 @@ export async function vitestGenerator(
   );
   let testTarget =
     schema.testTarget ??
-    findExistingTargetsInProject(targets)?.validFoundTargetName?.test ??
+    findExistingTargetsInProject(targets).validFoundTargetName.test ??
     'test';
 
   addOrChangeTestTarget(tree, schema, testTarget);
@@ -73,9 +73,6 @@ export async function vitestGenerator(
   );
   tasks.push(installCoverageProviderTask);
 
-  if (schema.coverageProvider === 'istanbul') {
-  }
-
   await formatFiles(tree);
 
   return runTasksInSerial(...tasks);
@@ -100,9 +97,7 @@ function updateTsConfig(
       if (json.compilerOptions?.types) {
         json.compilerOptions.types.push('vitest');
       } else {
-        if (!json.compilerOptions) {
-          json.compilerOptions = {};
-        }
+        json.compilerOptions ??= {};
         json.compilerOptions.types = ['vitest'];
       }
     }

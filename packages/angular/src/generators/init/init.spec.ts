@@ -4,10 +4,9 @@ import {
   createTreeWithEmptyWorkspace,
 } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
-
-import init from './init';
+import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
-import { versions } from '../../utils/versions';
+import init from './init';
 
 describe('init', () => {
   let host: Tree;
@@ -329,41 +328,43 @@ bar
       const { dependencies, devDependencies } = readJson(tree, 'package.json');
 
       expect(dependencies['@angular/animations']).toEqual(
-        versions.angularV14.angularVersion
+        backwardCompatibleVersions.angularV14.angularVersion
       );
       expect(dependencies['@angular/common']).toEqual(
-        versions.angularV14.angularVersion
+        backwardCompatibleVersions.angularV14.angularVersion
       );
       expect(dependencies['@angular/compiler']).toEqual(
-        versions.angularV14.angularVersion
+        backwardCompatibleVersions.angularV14.angularVersion
       );
       expect(dependencies['@angular/core']).toEqual(
-        versions.angularV14.angularVersion
+        backwardCompatibleVersions.angularV14.angularVersion
       );
       expect(dependencies['@angular/platform-browser']).toEqual(
-        versions.angularV14.angularVersion
+        backwardCompatibleVersions.angularV14.angularVersion
       );
       expect(dependencies['@angular/platform-browser-dynamic']).toEqual(
-        versions.angularV14.angularVersion
+        backwardCompatibleVersions.angularV14.angularVersion
       );
       expect(dependencies['@angular/router']).toEqual(
-        versions.angularV14.angularVersion
+        backwardCompatibleVersions.angularV14.angularVersion
       );
-      expect(dependencies['rxjs']).toEqual(versions.angularV14.rxjsVersion);
+      expect(dependencies['rxjs']).toEqual(
+        backwardCompatibleVersions.angularV14.rxjsVersion
+      );
       expect(dependencies['zone.js']).toEqual(
-        versions.angularV14.zoneJsVersion
+        backwardCompatibleVersions.angularV14.zoneJsVersion
       );
       expect(devDependencies['@angular/cli']).toEqual(
-        versions.angularV14.angularDevkitVersion
+        backwardCompatibleVersions.angularV14.angularDevkitVersion
       );
       expect(devDependencies['@angular/compiler-cli']).toEqual(
-        versions.angularV14.angularDevkitVersion
+        backwardCompatibleVersions.angularV14.angularDevkitVersion
       );
       expect(devDependencies['@angular/language-service']).toEqual(
-        versions.angularV14.angularVersion
+        backwardCompatibleVersions.angularV14.angularVersion
       );
       expect(devDependencies['@angular-devkit/build-angular']).toEqual(
-        versions.angularV14.angularDevkitVersion
+        backwardCompatibleVersions.angularV14.angularDevkitVersion
       );
 
       // codelyzer should no longer be there by default
@@ -384,28 +385,29 @@ bar
 
           // ASSERT
           expect(devDependencies['karma']).toEqual(
-            versions.angularV14.karmaVersion
+            backwardCompatibleVersions.angularV14.karmaVersion
           );
           expect(devDependencies['karma-chrome-launcher']).toEqual(
-            versions.angularV14.karmaChromeLauncherVersion
+            backwardCompatibleVersions.angularV14.karmaChromeLauncherVersion
           );
           expect(devDependencies['karma-coverage']).toEqual(
-            versions.angularV14.karmaCoverageVersion
+            backwardCompatibleVersions.angularV14.karmaCoverageVersion
           );
           expect(devDependencies['karma-jasmine']).toEqual(
-            versions.angularV14.karmaJasmineVersion
+            backwardCompatibleVersions.angularV14.karmaJasmineVersion
           );
           expect(devDependencies['karma-jasmine-html-reporter']).toEqual(
-            versions.angularV14.karmaJasmineHtmlReporterVersion
+            backwardCompatibleVersions.angularV14
+              .karmaJasmineHtmlReporterVersion
           );
           expect(devDependencies['jasmine-core']).toEqual(
-            versions.angularV14.jasmineCoreVersion
+            backwardCompatibleVersions.angularV14.jasmineCoreVersion
           );
           expect(devDependencies['jasmine-spec-reporter']).toEqual(
-            versions.angularV14.jasmineSpecReporterVersion
+            backwardCompatibleVersions.angularV14.jasmineSpecReporterVersion
           );
           expect(devDependencies['@types/jasmine']).toEqual(
-            versions.angularV14.typesJasmineVersion
+            backwardCompatibleVersions.angularV14.typesJasmineVersion
           );
         });
 
@@ -458,7 +460,7 @@ bar
           expect(devDependencies['@nrwl/jest']).toBeDefined();
           expect(devDependencies['jest']).toBeDefined();
           expect(devDependencies['jest-preset-angular']).toEqual(
-            versions.angularV14.jestPresetAngularVersion
+            backwardCompatibleVersions.angularV14.jestPresetAngularVersion
           );
         });
 
@@ -547,19 +549,19 @@ bar
 
           // ASSERT
           expect(devDependencies['protractor']).toEqual(
-            versions.angularV14.protractorVersion
+            backwardCompatibleVersions.angularV14.protractorVersion
           );
           expect(devDependencies['jasmine-core']).toEqual(
-            versions.angularV14.jasmineCoreVersion
+            backwardCompatibleVersions.angularV14.jasmineCoreVersion
           );
           expect(devDependencies['jasmine-spec-reporter']).toEqual(
-            versions.angularV14.jasmineSpecReporterVersion
+            backwardCompatibleVersions.angularV14.jasmineSpecReporterVersion
           );
           expect(devDependencies['@types/jasmine']).toEqual(
-            versions.angularV14.typesJasmineVersion
+            backwardCompatibleVersions.angularV14.typesJasmineVersion
           );
           expect(devDependencies['@types/jasminewd2']).toEqual(
-            versions.angularV14.typesJasminewd2Version
+            backwardCompatibleVersions.angularV14.typesJasminewd2Version
           );
         });
 

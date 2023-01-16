@@ -20,7 +20,8 @@
         "type": "string",
         "description": "The name of the micro frontend project to migrate.",
         "$default": { "$source": "argv", "index": 0 },
-        "x-prompt": "What micro frontend project would you like to migrate?"
+        "x-prompt": "What micro frontend project would you like to migrate?",
+        "x-priority": "important"
       }
     },
     "presets": []

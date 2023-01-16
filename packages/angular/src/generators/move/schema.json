@@ -16,7 +16,8 @@
       "type": "string",
       "alias": "project",
       "description": "The name of the Angular project to move.",
-      "x-dropdown": "projects"
+      "x-dropdown": "projects",
+      "x-priority": "important"
     },
     "destination": {
       "type": "string",
@@ -24,7 +25,8 @@
       "$default": {
         "$source": "argv",
         "index": 0
-      }
+      },
+      "x-priority": "important"
     },
     "importPath": {
       "type": "string",
@@ -39,7 +41,8 @@
       "type": "boolean",
       "aliases": ["skip-format"],
       "description": "Skip formatting files.",
-      "default": false
+      "default": false,
+      "x-priority": "internal"
     }
   },
   "required": ["projectName", "destination"]

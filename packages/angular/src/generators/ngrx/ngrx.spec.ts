@@ -9,10 +9,11 @@ import {
   getAppConfig,
   getLibConfig,
 } from '../../utils/nx-devkit/testing';
-import { ngrxVersion, versions } from '../../utils/versions';
+import { ngrxVersion } from '../../utils/versions';
 import { ngrxGenerator } from './ngrx';
 import applicationGenerator from '../application/application';
 import type { NgRxGeneratorOptions } from './schema';
+import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
 
 describe('ngrx', () => {
   let appConfig: AppConfig;
@@ -608,25 +609,25 @@ describe('ngrx', () => {
 
       const packageJson = devkit.readJson(tree, 'package.json');
       expect(packageJson.dependencies['@ngrx/store']).toEqual(
-        versions.angularV14.ngrxVersion
+        backwardCompatibleVersions.angularV14.ngrxVersion
       );
       expect(packageJson.dependencies['@ngrx/effects']).toEqual(
-        versions.angularV14.ngrxVersion
+        backwardCompatibleVersions.angularV14.ngrxVersion
       );
       expect(packageJson.dependencies['@ngrx/entity']).toEqual(
-        versions.angularV14.ngrxVersion
+        backwardCompatibleVersions.angularV14.ngrxVersion
       );
       expect(packageJson.dependencies['@ngrx/router-store']).toEqual(
-        versions.angularV14.ngrxVersion
+        backwardCompatibleVersions.angularV14.ngrxVersion
       );
       expect(packageJson.dependencies['@ngrx/component-store']).toEqual(
-        versions.angularV14.ngrxVersion
+        backwardCompatibleVersions.angularV14.ngrxVersion
       );
       expect(packageJson.devDependencies['@ngrx/schematics']).toEqual(
-        versions.angularV14.ngrxVersion
+        backwardCompatibleVersions.angularV14.ngrxVersion
       );
       expect(packageJson.devDependencies['@ngrx/store-devtools']).toEqual(
-        versions.angularV14.ngrxVersion
+        backwardCompatibleVersions.angularV14.ngrxVersion
       );
       expect(packageJson.devDependencies['jasmine-marbles']).toBeDefined();
     });

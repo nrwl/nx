@@ -16,7 +16,8 @@
     "project": {
       "type": "string",
       "description": "The name of the project.",
-      "x-dropdown": "projects"
+      "x-dropdown": "projects",
+      "x-priority": "important"
     },
     "name": {
       "type": "string",
@@ -48,7 +49,8 @@
     "standalone": {
       "description": "Whether the generated component is standalone. _Note: This is only supported in Angular versions >= 14.1.0_",
       "type": "boolean",
-      "default": false
+      "default": false,
+      "x-priority": "important"
     },
     "viewEncapsulation": {
       "description": "The view encapsulation strategy to use in the new component.",
@@ -107,7 +109,8 @@
     "export": {
       "type": "boolean",
       "description": "Specifies if the component should be exported in the declaring `NgModule`. Additionally, if the project is a library, the component will be exported from the project's entry point (normally `index.ts`) if the module it belongs to is also exported or if the component is standalone.",
-      "default": false
+      "default": false,
+      "x-priority": "important"
     }
   },
   "required": ["name"],
