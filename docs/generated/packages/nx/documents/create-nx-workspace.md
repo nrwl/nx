@@ -35,7 +35,7 @@ The name of the application when a preset with pregenerated app is selected
 
 Type: `string`
 
-Choices: [github, circleci, azure]
+Choices: [github, circleci, azure, bitbucket-pipelines, gitlab]
 
 Generate a CI workflow file
 
