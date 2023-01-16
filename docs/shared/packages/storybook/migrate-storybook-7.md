@@ -1,25 +1,29 @@
-# Migrate to Storybook to version 7
+# Migrate your Nx workspace to Storybook version 7
+
+{% callout type="info" title="Available on Nx v15.5" %}
+This is a new feature available on Nx v15.5.0. If you are using an older version of Nx, please [upgrade](/packages/nx/documents/migrate).
+{% /callout %}
 
 {% callout type="warning" title="Storybook 7 is in beta" %}
-[Storybook version 7 is still in beta](https://storybook.js.org/blog/7-0-beta/). Things are evolving dynamically, so it would be better to _avoid using in production_. If you want to use the stable, [6.5 version](https://storybook.js.org/releases/6.5), please go to the [Storybook plugin overview guide](/packages/storybook) to get started.
+[Storybook version 7 is still in beta](https://storybook.js.org/blog/7-0-beta/), and so is the Nx support for it. Things are evolving dynamically, so it would be better to _avoid using in production_ on Nx. If you want to use the stable, [6.5 version](https://storybook.js.org/releases/6.5), please go to the [Storybook plugin overview guide](/packages/storybook) to get started.
 {% /callout %}
 
 {% callout type="info" title="Setting up Storybook 7 in a new workspace" %}
-For settin up Storybook version 7 in a new Nx workspace, or a workspace that does NOT already have Storybook configured already, please refer to our [Storybook 7 setup guide](/packages/storybook/documents/storybook-7-setup).
+For setting up Storybook version 7 in a new Nx workspace, or a workspace that does NOT already have Storybook configured already, please refer to our [Storybook 7 setup guide](/packages/storybook/documents/storybook-7-setup).
 {% /callout %}
 
-Storybook 7 is a major release that brings a lot of new features and improvements. You can read more about it in the [Storybook 7 beta announcement blog post](https://storybook.js.org/blog/7-0-beta/). Apart from the new features and improvements it introduces, it also brings some breaking changes. You can read more about them in the [Storybook 7 migration docs](https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#from-version-65x-to-700) and the [Storybook 7 migration guide](https://chromatic-ui.notion.site/Storybook-7-migration-guide-dbf41fa347304eb2a5e9c69b34503937). Do note that _version 7 is still in beta_, and things are evolving dynamically, so it would be better to _avoid using in production_.
+Storybook 7 is a major release that brings a lot of new features and improvements. You can read more about it in the [Storybook 7 beta announcement blog post](https://storybook.js.org/blog/7-0-beta/). Apart from the new features and improvements it introduces, it also brings some breaking changes. You can read more about them in the [Storybook 7 migration docs](https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#from-version-65x-to-700) and the [Storybook 7 migration guide](https://chromatic-ui.notion.site/Storybook-7-migration-guide-dbf41fa347304eb2a5e9c69b34503937). Do note that _version 7 is still in beta_, and so is the Nx support for it. Things are evolving dynamically, so it would be better to _avoid using in production_ on Nx.
 
 You can now migrate your existing Nx workspace with Storybook configuration to use Storybook version 7. This guide will show you how to do that.
 
 ## Use the Storybook CLI to upgrade
 
-You can take advantage of the Storybook CLI to automatically migrate some settings of your Storybook setup. For a full guide to migration using the Storybook CLI, please refer to the [Storybook 7 migration guide](https://chromatic-ui.notion.site/Storybook-7-migration-guide-dbf41fa347304eb2a5e9c69b34503937).
+You can take advantage of the Storybook CLI to automatically migrate some settings of your Storybook setup on your Nx workspace. For a full guide to migration using the Storybook CLI, please refer to the [Storybook 7 migration guide](https://chromatic-ui.notion.site/Storybook-7-migration-guide-dbf41fa347304eb2a5e9c69b34503937).
 
-The Storybook migration scripts do not work perfectly with Nx, however we can use them to get the latest beta versions of our packages, remove some unused packages, and get a hint of some settings that we will need to change manually, eventually.
+The Storybook migration scripts do not work perfectly on Nx workspaces, however we can use them to get the latest beta versions of our packages, remove some unused packages and get a hint of some settings that we will need to change manually, eventually.
 
 {% callout type="warning" title="Don't use in production" %}
-Please take extra care when migrating your existing Storybook setup to version 7. Do not use in production, since it's still in beta.
+Please take extra care when migrating your existing Storybook setup to version 7 on your Nx workspace. Do not use in production, since it's still in beta, and the Nx support is not stable yet.
 {% /callout %}
 
 Let's see the steps we can make to migrate our Storybook setup to version 7.
@@ -37,24 +41,24 @@ This will:
 
 For more info, see [here](https://chromatic-ui.notion.site/Storybook-7-migration-guide-dbf41fa347304eb2a5e9c69b34503937).
 
-### 2. Click yes to the automigration prompts
+### 2. Say `yes` to the automigration prompts
 
 The Storybook CLI will prompt you to run some code generators and modifiers.
 
-Click `yes` to the following:
+Say `yes` to the following:
 
 - `mainjsFramework`: It will add the `framework` field in your root `.storybook/main.js|ts` file. We are going to delete it since it's not needed in the root file, but it's handy to have it ready to copy. Also, it shows you an indication of what it looks like.
 - `eslintPlugin`: installs the `eslint-plugin-storybook`
 - `storybook-binary`: installs Storybook's `storybook` binary
-- `newFrameworks`: removed unused dependencies (eg. `@storybook/builder-webpack5`, `@storybook/manager-webpack5`, `@storybook/builder-vite`)
+- `newFrameworks`: removes unused dependencies (eg. `@storybook/builder-webpack5`, `@storybook/manager-webpack5`, `@storybook/builder-vite`)
 
-Click `no` to the following:
+Say `no` to the following:
 
-- `autodocsTrue`: we don't need it and it can potentially cause issues with missing dependencies
+- `autodocsTrue`: we don't need it and it can potentially cause issues with missing dependencies on your Nx workspace
 
 ### 3. Restore the root `.storybook/main.js|ts` file
 
-You will have noticed that the Storybook automigrator added the `framework` option to your root `.storybook/main.js|ts` file. Let's remove that, along with the `autodocs` option.
+You will have noticed that the Storybook automigrator added the `framework` option to your root `.storybook/main.js|ts` file. Let's remove that.
 
 So, remove:
 
@@ -176,9 +180,11 @@ You can easily find the correct framework by looking at the `builder` option in 
 
 #### Resulting project-level `.storybook/main.js|ts` file
 
-Here is an example of a project-level `.storybook/main.js|ts` file:
+Here is an example of a project-level `.storybook/main.js|ts` file for an Angular project:
 
 ```ts
+// apps/my-angular-app/.storybook/main.js|ts
+
 const rootMain = require('../../../.storybook/main');
 
 module.exports = {
@@ -198,7 +204,7 @@ module.exports = {
 
 ### 4. For Vite.js projects
 
-Make sure to add the `viteFinal` option to your project-level `.storybook/main.js|ts` files.
+Make sure to add the `viteFinal` option to your project-level `.storybook/main.js|ts` files on projects that use Vite.js.
 
 ```ts
   async viteFinal(config, { configType }) {
@@ -214,9 +220,11 @@ Make sure to add the `viteFinal` option to your project-level `.storybook/main.j
 
 This will take care of any path resolution issues.
 
-An example of a project-level `.storybook/main.js|ts` file for a Vite.js project:
+An example of a project-level `.storybook/main.js|ts` file for a React project that uses Vite.js:
 
 ```ts
+// apps/my-react-vite-app/.storybook/main.js|ts
+
 const { mergeConfig } = require('vite');
 const viteTsConfigPaths = require('vite-tsconfig-paths').default;
 const rootMain = require('../../../.storybook/main');
@@ -261,4 +269,4 @@ npx nx storybook PROJECT_NAME
 
 ## Report any issues and bugs
 
-Since this is a beta version, there are bound to be some issues and bugs. Please report any issues and bugs you find [on the Nx GitHub page](https://github.com/nrwl/nx/issues/new/choose) or on the [Storybook GitHub page](https://github.com/storybookjs/storybook/issues/new/choose).
+Since this is a beta version, and the Nx support is still evolving, there are bound to be some issues and bugs. Please report any issues and bugs you find [on the Nx GitHub page](https://github.com/nrwl/nx/issues/new/choose) or on the [Storybook GitHub page](https://github.com/storybookjs/storybook/issues/new/choose).
