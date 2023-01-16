@@ -85,6 +85,26 @@
             "description": "OG images generation"
           },
           {
+            "command": "nx run graph-client:build-base:release",
+            "description": "Old step 1"
+          },
+          {
+            "command": "nx run nx:build-base",
+            "description": "Old step 2"
+          },
+          {
+            "command": "nx run devkit:build-base",
+            "description": "Old step 3"
+          },
+          {
+            "command": "nx run workspace:build-base",
+            "description": "Old step 4"
+          },
+          {
+            "command": "nx run jest:build-base",
+            "description": "Old step 5"
+          },
+          {
             "command": "nx run nx-dev:build",
             "description": "NextJs build step"
           }

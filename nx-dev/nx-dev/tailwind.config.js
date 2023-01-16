@@ -3,7 +3,7 @@ const { createGlobPatternsForDependencies } = require('@nrwl/next/tailwind');
 
 module.exports = {
   experimental: {
-    optimizeUniversalDefaults: false,
+    optimizeUniversalDefaults: true,
   },
   mode: 'jit',
   darkMode: 'class',
