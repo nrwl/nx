@@ -1,6 +1,6 @@
 export const nxVersion = require('../../package.json').version;
 
-export const expoVersion = '47.0.9';
+export const expoVersion = '47.0.13';
 export const expoMetroConfigVersion = '0.5.2';
 export const expoWebpackConfig = '~0.17.3';
 export const expoSplashScreenVersion = '~0.17.5';
