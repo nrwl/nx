@@ -53,7 +53,7 @@
     "@ngrx/effects": "~15.0.0",
     "@ngrx/router-store": "~15.0.0",
     "@ngrx/store": "~15.0.0",
-    "@nguniversal/builders": "~15.0.0",
+    "@nguniversal/builders": "~15.1.0",
     "@nrwl/cypress": "15.5.0-beta.1",
     "@nrwl/devkit": "15.5.0-beta.1",
     "@nrwl/eslint-plugin-nx": "15.5.0-beta.1",
@@ -310,8 +310,7 @@
   "resolutions": {
     "**/xmlhttprequest-ssl": "~1.6.2",
     "minimist": "^1.2.6",
-    "underscore": "^1.12.1",
-    "@nguniversal/builders/@angular-devkit/architect": "~0.1501.0"
+    "underscore": "^1.12.1"
   },
   "nx": {
     "includedScripts": [

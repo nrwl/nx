@@ -1757,6 +1757,19 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "15.5.2": {
+      "version": "15.5.2-beta.0",
+      "packages": {
+        "@nguniversal/builders": {
+          "version": "~15.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nguniversal/express-engine": {
+          "version": "~15.1.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
