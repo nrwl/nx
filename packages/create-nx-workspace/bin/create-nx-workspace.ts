@@ -335,6 +335,8 @@ async function getConfiguration(
           preset = Preset.ReactStandalone;
         } else if (monorepoStyle === 'angular') {
           preset = Preset.AngularStandalone;
+        } else if (monorepoStyle === 'node-server') {
+          preset = Preset.NodeServer;
         } else {
           preset = await determinePreset(argv);
         }
@@ -348,17 +350,19 @@ async function getConfiguration(
 
       if (
         preset === Preset.ReactStandalone ||
-        preset === Preset.AngularStandalone
+        preset === Preset.AngularStandalone ||
+        preset === Preset.NodeServer
       ) {
         appName =
           argv.appName ?? argv.name ?? (await determineAppName(preset, argv));
         name = argv.name ?? appName;
-      } else {
-        name = await determineRepoName(argv);
-        appName = await determineAppName(preset, argv);
+
         if (preset === Preset.NodeServer) {
           framework = await determineFramework(preset, argv);
         }
+      } else {
+        name = await determineRepoName(argv);
+        appName = await determineAppName(preset, argv);
       }
       style = await determineStyle(preset, argv);
     }
@@ -459,22 +463,27 @@ function determineMonorepoStyle(): Promise<string> {
           {
             name: 'package-based',
             message:
-              'Package-based monorepo: Nx makes it fast, but lets you run things your way.',
+              'Package-based monorepo:     Nx makes it fast, but lets you run things your way.',
           },
           {
             name: 'integrated',
             message:
-              'Integrated monorepo:    Nx configures your favorite frameworks and lets you focus on shipping features.',
+              'Integrated monorepo:        Nx configures your favorite frameworks and lets you focus on shipping features.',
           },
           {
             name: 'react',
             message:
-              'Standalone React app:   Nx configures Vite, Vitest, ESLint, and Cypress.',
+              'Standalone React app:       Nx configures Vite, Vitest, ESLint, and Cypress.',
           },
           {
             name: 'angular',
             message:
-              'Standalone Angular app: Nx configures Jest, ESLint and Cypress.',
+              'Standalone Angular app:     Nx configures Jest, ESLint and Cypress.',
+          },
+          {
+            name: 'node-server',
+            message:
+              'Standalone Node Server app: Nx configures your framework of choice (e.g. Express) along with esbuild, Eslint and Jest.',
           },
         ],
       },
