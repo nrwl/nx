@@ -7,6 +7,7 @@ import {
   workspaceRoot,
 } from '@nrwl/devkit';
 import { angularCliVersion } from '@nrwl/workspace/src/utils/versions';
+import { dump } from '@zkochan/js-yaml';
 import { ChildProcess, exec, execSync, ExecSyncOptions } from 'child_process';
 import {
   copySync,
@@ -46,7 +47,8 @@ export function getPublishedVersion(): string {
 export function detectPackageManager(dir: string = ''): PackageManager {
   return existsSync(join(dir, 'yarn.lock'))
     ? 'yarn'
-    : existsSync(join(dir, 'pnpm-lock.yaml'))
+    : existsSync(join(dir, 'pnpm-lock.yaml')) ||
+      existsSync(join(dir, 'pnpm-workspace.yaml'))
     ? 'pnpm'
     : 'npm';
 }
@@ -374,6 +376,106 @@ export function newProject({
   }
 }
 
+export function newLernaWorkspace({
+  name = uniq('lerna-proj'),
+  packageManager = getSelectedPackageManager(),
+} = {}): string {
+  try {
+    const projScope = name;
+    projName = name;
+
+    const pm = getPackageManagerCommand({ packageManager });
+
+    createNonNxProjectDirectory(projScope, packageManager !== 'pnpm');
+
+    if (packageManager === 'pnpm') {
+      updateFile(
+        'pnpm-workspace.yaml',
+        dump({
+          packages: ['packages/*'],
+        })
+      );
+      updateFile(
+        '.npmrc',
+        'prefer-frozen-lockfile=false\nstrict-peer-dependencies=false\nauto-install-peers=true'
+      );
+    }
+
+    if (process.env.NX_VERBOSE_LOGGING == 'true') {
+      logInfo(`NX`, `E2E test has created a lerna workspace: ${tmpProjPath()}`);
+    }
+
+    // We need to force the real latest version of lerna to depend on our locally published version of nx
+    updateJson(`package.json`, (json) => {
+      // yarn workspaces can only be enabled in private projects
+      json.private = true;
+
+      const nxVersion = getPublishedVersion();
+      const overrides = {
+        ...json.overrides,
+        nx: nxVersion,
+        '@nrwl/devkit': nxVersion,
+      };
+      if (packageManager === 'pnpm') {
+        json.pnpm = {
+          ...json.pnpm,
+          overrides: {
+            ...json.pnpm?.overrides,
+            ...overrides,
+          },
+        };
+      } else if (packageManager === 'yarn') {
+        json.resolutions = {
+          ...json.resolutions,
+          ...overrides,
+        };
+      } else {
+        json.overrides = overrides;
+      }
+      return json;
+    });
+
+    /**
+     * Again, in order to ensure we override the required version relationships, we first install lerna as a devDep
+     * before running `lerna init`.
+     */
+    execSync(
+      `${pm.addDev} lerna@${getLatestLernaVersion()}${
+        packageManager === 'pnpm'
+          ? ' --workspace-root'
+          : packageManager === 'yarn'
+          ? ' -W'
+          : ''
+      }`,
+      {
+        cwd: tmpProjPath(),
+        stdio: isVerbose() ? 'inherit' : 'pipe',
+        env: { CI: 'true', ...process.env },
+        encoding: 'utf-8',
+      }
+    );
+
+    execSync(`${pm.runLerna} init`, {
+      cwd: tmpProjPath(),
+      stdio: isVerbose() ? 'inherit' : 'pipe',
+      env: { CI: 'true', ...process.env },
+      encoding: 'utf-8',
+    });
+
+    execSync(pm.install, {
+      cwd: tmpProjPath(),
+      stdio: isVerbose() ? 'inherit' : 'pipe',
+      env: { CI: 'true', ...process.env },
+      encoding: 'utf-8',
+    });
+
+    return projScope;
+  } catch (e) {
+    logError(`Failed to set up lerna workspace for e2e tests.`, e.message);
+    throw e;
+  }
+}
+
 const KILL_PORT_DELAY = 5000;
 
 export async function killPort(port: number): Promise<boolean> {
@@ -410,6 +512,14 @@ export async function cleanupProject(opts?: RunCmdOpts) {
   if (isCI) {
     // Stopping the daemon is not required for tests to pass, but it cleans up background processes
     runCLI('reset', opts);
+    try {
+      removeSync(tmpProjPath());
+    } catch (e) {}
+  }
+}
+
+export function cleanupLernaWorkspace() {
+  if (isCI) {
     try {
       removeSync(tmpProjPath());
     } catch (e) {}
@@ -613,6 +723,42 @@ export function runCLI(
     const needsMaxWorkers = /g.*(express|nest|node|web|react):app.*/;
     if (needsMaxWorkers.test(command)) {
       setMaxWorkers();
+    }
+
+    return r;
+  } catch (e) {
+    if (opts.silenceError) {
+      return stripConsoleColors(e.stdout?.toString() + e.stderr?.toString());
+    } else {
+      logError(
+        `Original command: ${command}`,
+        `${e.stdout?.toString()}\n\n${e.stderr?.toString()}`
+      );
+      throw e;
+    }
+  }
+}
+
+export function runLernaCLI(
+  command: string,
+  opts: RunCmdOpts = {
+    silenceError: false,
+    env: undefined,
+  }
+): string {
+  try {
+    const pm = getPackageManagerCommand();
+    const logs = execSync(`${pm.runLerna} ${command}`, {
+      cwd: opts.cwd || tmpProjPath(),
+      env: { CI: 'true', ...(opts.env || getStrippedEnvironmentVariables()) },
+      encoding: 'utf-8',
+      stdio: 'pipe',
+      maxBuffer: 50 * 1024 * 1024,
+    });
+    const r = stripConsoleColors(logs);
+
+    if (isVerbose()) {
+      console.log(logs);
     }
 
     return r;
@@ -882,6 +1028,7 @@ export function getPackageManagerCommand({
   addProd: string;
   addDev: string;
   list: string;
+  runLerna: string;
 } {
   const npmMajorVersion = getNpmMajorVersion();
   const publishedVersion = getPublishedVersion();
@@ -899,6 +1046,7 @@ export function getPackageManagerCommand({
       addProd: `npm install --legacy-peer-deps`,
       addDev: `npm install --legacy-peer-deps -D`,
       list: 'npm ls --depth 10',
+      runLerna: `npx lerna`,
     },
     yarn: {
       // `yarn create nx-workspace` is failing due to wrong global path
@@ -911,6 +1059,7 @@ export function getPackageManagerCommand({
       addProd: `yarn add`,
       addDev: `yarn add -D`,
       list: 'npm ls --depth 10',
+      runLerna: `yarn lerna`,
     },
     // Pnpm 3.5+ adds nx to
     pnpm: {
@@ -923,6 +1072,7 @@ export function getPackageManagerCommand({
       addProd: `pnpm add`,
       addDev: `pnpm add -D`,
       list: 'npm ls --depth 10',
+      runLerna: `pnpm exec lerna`,
     },
   }[packageManager.trim() as PackageManager];
 }
@@ -930,6 +1080,11 @@ export function getPackageManagerCommand({
 function getNpmMajorVersion(): string {
   const [npmMajorVersion] = execSync(`npm -v`).toString().split('.');
   return npmMajorVersion;
+}
+
+function getLatestLernaVersion(): string {
+  const lernaVersion = execSync(`npm view lerna version`).toString().trim();
+  return lernaVersion;
 }
 
 export const packageManagerLockFile = {
