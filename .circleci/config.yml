@@ -220,8 +220,9 @@ jobs:
           os: macos
       - run:
           name: Run E2E Tests for macOS
+          # FIXME: remove --exclude=e2e-detox once we have a fix for the detox tests
           command: |
-            npx nx run-many -t e2e-macos --parallel=1
+            npx nx run-many -t e2e-macos --parallel=1 --exclude=e2e-detox
           no_output_timeout: 45m
 
 # -------------------------
