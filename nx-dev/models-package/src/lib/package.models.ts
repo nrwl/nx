@@ -79,9 +79,7 @@ export interface SchemaMetadata {
 }
 
 export interface NxSchema extends JsonSchema1 {
-  title: string;
   description: string;
-  presets: { name: string; keys: string[] }[];
   examplesFile: string;
   hidden: boolean;
 }
