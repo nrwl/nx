@@ -117,6 +117,36 @@
         "parallel": false
       }
     },
+    "e2e-macos": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "default",
+        "^production",
+        {
+          "env": "SELECTED_CLI"
+        },
+        {
+          "env": "SELECTED_PM"
+        },
+        {
+          "env": "NX_E2E_CI_CACHE_KEY"
+        }
+      ],
+      "options": {
+        "commands": [
+          {
+            "command": "yarn e2e-start-local-registry"
+          },
+          {
+            "command": "yarn e2e-build-package-publish"
+          },
+          {
+            "command": "nx run-e2e-tests {projectName}"
+          }
+        ],
+        "parallel": false
+      }
+    },
     "e2e-base": {
       "inputs": ["default", "^production"]
     },
