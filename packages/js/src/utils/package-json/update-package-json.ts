@@ -41,6 +41,7 @@ export interface UpdatePackageJsonOption {
   excludeLibsInPackageJson?: boolean;
   updateBuildableProjectDepsInPackageJson?: boolean;
   buildableProjectDepsInPackageJsonType?: 'dependencies' | 'peerDependencies';
+  generateLockfile?: boolean;
 }
 
 export function updatePackageJson(
@@ -84,10 +85,13 @@ export function updatePackageJson(
 
   // save files
   writeJsonFile(`${options.outputPath}/package.json`, packageJson);
-  const lockFile = createLockFile(packageJson);
-  writeFileSync(`${options.outputPath}/${getLockFileName()}`, lockFile, {
-    encoding: 'utf-8',
-  });
+
+  if (options.generateLockfile) {
+    const lockFile = createLockFile(packageJson);
+    writeFileSync(`${options.outputPath}/${getLockFileName()}`, lockFile, {
+      encoding: 'utf-8',
+    });
+  }
 }
 
 function addMissingDependencies(
