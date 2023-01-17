@@ -393,5 +393,10 @@
     "name": "@monodon/rust",
     "description": "Adds Cargo and Rust support",
     "url": "https://github.com/cammisuli/monodon/tree/main/packages/rust"
+  },
+  {
+    "name": "nx-mesh",
+    "description": "GraphQL Mesh support for Nx",
+    "url": "https://github.com/domjtalbot/nx-mesh"
   }
 ]
