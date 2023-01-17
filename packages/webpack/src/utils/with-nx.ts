@@ -39,6 +39,11 @@ export function withNx(opts?: { skipTypeChecking?: boolean }) {
 
     const plugins: WebpackPluginInstance[] = [];
 
+    const scriptsOptimization =
+      typeof options.optimization === 'object'
+        ? options.optimization.scripts
+        : options.optimization;
+
     if (!opts?.skipTypeChecking) {
       plugins.push(
         new ForkTsCheckerWebpackPlugin({
@@ -185,7 +190,7 @@ export function withNx(opts?: { skipTypeChecking?: boolean }) {
       optimization: {
         ...config.optimization,
         sideEffects: true,
-        minimize: !!options.optimization,
+        minimize: scriptsOptimization,
         minimizer: [
           options.compiler !== 'swc'
             ? new TerserPlugin({
