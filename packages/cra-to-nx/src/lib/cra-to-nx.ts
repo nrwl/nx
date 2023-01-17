@@ -131,7 +131,13 @@ async function reorgnizeWorkspaceStructure(options: NormalizedOptions) {
     addDependencies(options.pmc, 'vite', 'vitest', '@vitejs/plugin-react');
     removeDependencies(options.pmc, '@nrwl/jest');
   } else {
-    addDependencies(options.pmc, '@craco/craco', 'cross-env', 'react-scripts');
+    addDependencies(
+      options.pmc,
+      '@craco/craco',
+      'cross-env',
+      'react-scripts',
+      'tsconfig-paths-webpack-plugin'
+    );
   }
 
   output.log({ title: '🎉 Done!' });
