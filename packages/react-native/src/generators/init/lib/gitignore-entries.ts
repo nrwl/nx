@@ -1,5 +1,10 @@
+// template from https://github.com/facebook/react-native/blob/main/template/_gitignore
 export const gitIgnoreEntriesForReactNative = `
 # React Native
+
+# OSX
+#
+.DS_Store
 
 # Xcode
 #
@@ -19,7 +24,7 @@ DerivedData
 *.hmap
 *.ipa
 *.xcuserstate
-**/ios/.xcode.env.local
+ios/.xcode.env.local
 
 # Android/IntelliJ
 #
@@ -29,19 +34,15 @@ build/
 local.properties
 *.iml
 *.hprof
+.cxx/
+*.keystore
+!debug.keystore
 
 # node.js
 #
-.yarn/
 node_modules/
 npm-debug.log
 yarn-error.log
-
-# BUCK
-buck-out/
-\.buckd/
-*.keystore
-!debug.keystore
 
 # fastlane
 #
@@ -59,6 +60,12 @@ buck-out/
 *.jsbundle
 
 # Ruby / CocoaPods
-**/ios/Pods/
-**/vendor/bundle/
+/ios/Pods/
+/vendor/bundle/
+
+# Temporary files created by Metro to check the health of the file watcher
+.metro-health-check*
+
+# testing
+/coverage
 `;

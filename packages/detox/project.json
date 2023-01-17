@@ -7,6 +7,7 @@
     "lint": {},
     "test": {},
     "build-base": {
+      "main": "packages/detox/index.ts",
       "executor": "@nrwl/js:tsc",
       "options": {
         "assets": [
