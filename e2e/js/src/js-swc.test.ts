@@ -3,10 +3,13 @@ import {
   checkFilesDoNotExist,
   checkFilesExist,
   cleanupProject,
+  detectPackageManager,
   newProject,
+  packageManagerLockFile,
   readJson,
   runCLI,
   runCLIAsync,
+  tmpProjPath,
   uniq,
   updateFile,
   updateJson,
@@ -79,6 +82,14 @@ describe('js e2e', () => {
     const output = runCLI(`build ${parentLib}`);
     expect(output).toContain('1 task it depends on');
     expect(output).toContain('Successfully compiled: 2 files with swc');
+
+    runCLI(`build ${parentLib} --generateLockfile=true`);
+    checkFilesExist(
+      `dist/libs/${parentLib}/package.json`,
+      `dist/libs/${parentLib}/${
+        packageManagerLockFile[detectPackageManager(tmpProjPath())]
+      }`
+    );
 
     updateJson(`libs/${lib}/.lib.swcrc`, (json) => {
       json.jsc.externalHelpers = true;
