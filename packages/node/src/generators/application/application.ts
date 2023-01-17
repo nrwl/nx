@@ -27,7 +27,7 @@ import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { jestProjectGenerator } from '@nrwl/jest';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
-import { NodeJsFrameWorks, Schema } from './schema';
+import { Schema } from './schema';
 import { initGenerator } from '../init/init';
 import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 import {
@@ -41,9 +41,9 @@ import {
   koaVersion,
   nxVersion,
 } from '../../utils/versions';
-import { prompt } from 'enquirer';
 
 import * as shared from '@nrwl/workspace/src/utils/create-ts-config';
+import { e2eProjectGenerator } from '../e2e-project/e2e-project';
 
 export interface NormalizedSchema extends Schema {
   appProjectRoot: string;
@@ -318,15 +318,16 @@ function updateTsConfigOptions(tree: Tree, options: NormalizedSchema) {
 
 export async function applicationGenerator(tree: Tree, schema: Schema) {
   const options = normalizeOptions(tree, schema);
-
   const tasks: GeneratorCallback[] = [];
+
   const initTask = await initGenerator(tree, {
     ...options,
     skipFormat: true,
   });
   tasks.push(initTask);
 
-  addProjectDependencies(tree, options);
+  const installTask = addProjectDependencies(tree, options);
+  tasks.push(installTask);
   addAppFiles(tree, options);
   addProject(tree, options);
 
@@ -347,12 +348,24 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
       setupFile: 'none',
       skipSerializers: true,
       supportTsx: options.js,
-      babelJest: options.babelJest,
       testEnvironment: 'node',
+      compiler: 'tsc',
       skipFormat: true,
     });
     tasks.push(jestTask);
   }
+
+  if (options.e2eTestRunner === 'jest') {
+    const e2eTask = await e2eProjectGenerator(tree, {
+      ...options,
+      projectType: options.framework === 'none' ? 'cli' : 'server',
+      name: options.rootProject ? 'e2e' : `${options.name}-e2e`,
+      project: options.name,
+      port: options.port,
+    });
+    tasks.push(e2eTask);
+  }
+
   if (options.js) {
     updateTsConfigsToJs(tree, { projectRoot: options.appProjectRoot });
   }
@@ -385,6 +398,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     : joinPathFragments(appsDir, appDirectory);
 
   options.bundler = options.bundler ?? 'esbuild';
+  options.e2eTestRunner = options.e2eTestRunner ?? 'jest';
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
@@ -400,6 +414,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     parsedTags,
     linter: options.linter ?? Linter.EsLint,
     unitTestRunner: options.unitTestRunner ?? 'jest',
+    rootProject: options.rootProject ?? false,
     port: options.port ?? 3000,
   };
 }

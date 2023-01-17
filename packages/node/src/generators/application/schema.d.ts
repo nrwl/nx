@@ -6,6 +6,7 @@ export interface Schema {
   skipPackageJson?: boolean;
   directory?: string;
   unitTestRunner?: 'jest' | 'none';
+  e2eTestRunner?: 'jest' | 'none';
   linter?: Linter;
   tags?: string;
   frontendProject?: string;
