@@ -1,4 +1,3 @@
-import { readFileSync, writeFileSync } from 'fs-extra';
 import { detectPackageManager, PackageManager } from '../utils/package-manager';
 import {
   parseYarnLockFile,
@@ -27,7 +26,7 @@ import {
   ProjectGraph,
   ProjectGraphExternalNode,
 } from '../config/project-graph';
-import { existsSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { normalizePackageJson } from './utils/pruning';
 import { PackageJson } from '../utils/package-json';
 

@@ -1,6 +1,6 @@
 import { Tree } from '@nrwl/devkit';
 import storiesGenerator from './stories';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import applicationGenerator from '../application/application';
 import { Linter } from '@nrwl/linter';
 import libraryGenerator from '../library/library';
@@ -224,7 +224,7 @@ export async function createTestUILib(
   libName: string,
   plainJS = false
 ): Promise<Tree> {
-  let appTree = createTreeWithEmptyV1Workspace();
+  let appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
   await libraryGenerator(appTree, {
     linter: Linter.EsLint,
@@ -234,7 +234,6 @@ export async function createTestUILib(
     style: 'css',
     unitTestRunner: 'none',
     name: libName,
-    standaloneConfig: false,
   });
 
   // create some Nx app that we'll use to generate the cypress
@@ -248,7 +247,6 @@ export async function createTestUILib(
     unitTestRunner: 'none',
     name: `${libName}-e2e`,
     js: plainJS,
-    standaloneConfig: false,
   });
   return appTree;
 }

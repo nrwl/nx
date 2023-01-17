@@ -8,13 +8,9 @@ import {
   Tree,
   updateJson,
 } from '@nrwl/devkit';
-import {
-  createTreeWithEmptyV1Workspace,
-  createTreeWithEmptyWorkspace,
-} from '@nrwl/devkit/testing';
-import { Linter } from '@nrwl/linter';
-import { toNewFormat } from 'nx/src/config/workspaces';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
+import { Linter } from '@nrwl/linter';
 import { createApp } from '../../utils/nx-devkit/testing';
 import { UnitTestRunner } from '../../utils/test-runners';
 import {
@@ -52,7 +48,7 @@ describe('lib', () => {
   }
 
   beforeEach(() => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   describe('workspace v2', () => {
@@ -65,37 +61,6 @@ describe('lib', () => {
       await expect(
         runLibraryGeneratorWithOpts({ directory: 'mylib/shared/' })
       ).resolves.not.toThrow();
-    });
-
-    it('should default to standalone project for first project', async () => {
-      await runLibraryGeneratorWithOpts();
-      const projectConfig = readProjectConfiguration(tree, 'my-lib');
-      expect(projectConfig.root).toEqual('libs/my-lib');
-      expect(tree.exists('workspace.json')).toEqual(false);
-    });
-  });
-
-  describe('workspace v1', () => {
-    beforeEach(() => {
-      tree = createTreeWithEmptyV1Workspace();
-    });
-
-    it('should default to inline project for first project', async () => {
-      await runLibraryGeneratorWithOpts({
-        standaloneConfig: false,
-      });
-      const workspaceJsonEntry = toNewFormat(readJson(tree, 'workspace.json'))
-        .projects['my-lib'];
-      const projectConfig = readProjectConfiguration(tree, 'my-lib');
-      expect(projectConfig.root).toEqual('libs/my-lib');
-      expect(projectConfig).toMatchObject(workspaceJsonEntry);
-    });
-
-    it('should throw for standaloneConfig === true', async () => {
-      const promise = runLibraryGeneratorWithOpts({
-        standaloneConfig: true,
-      });
-      await expect(promise).rejects.toThrow();
     });
   });
 
@@ -169,7 +134,7 @@ describe('lib', () => {
       expect(packageJson.devDependencies['postcss-url']).toBeDefined();
     });
 
-    it('should update workspace.json', async () => {
+    it('should create project configuration', async () => {
       // ACT
       await runLibraryGeneratorWithOpts({
         publishable: true,
@@ -177,10 +142,9 @@ describe('lib', () => {
       });
 
       // ASSERT
-      const workspaceJson = readJson(tree, '/workspace.json');
-
-      expect(workspaceJson.projects['my-lib'].root).toEqual('libs/my-lib');
-      expect(workspaceJson.projects['my-lib'].architect.build).toBeDefined();
+      const json = readProjectConfiguration(tree, 'my-lib');
+      expect(json.root).toEqual('libs/my-lib');
+      expect(json.targets.build).toBeDefined();
     });
 
     it('should not generate a module file and index.ts should be empty', async () => {
@@ -198,18 +162,15 @@ describe('lib', () => {
       expect(indexApi).toEqual(``);
     });
 
-    it('should remove "build" target from workspace.json when a library is not publishable', async () => {
+    it('should remove "build" target from project.json when a library is not publishable', async () => {
       // ACT
       await runLibraryGeneratorWithOpts({
         publishable: false,
       });
 
       // ASSERT
-      const workspaceJson = readJson(tree, '/workspace.json');
-
-      expect(workspaceJson.projects['my-lib'].root).toEqual('libs/my-lib');
       expect(
-        workspaceJson.projects['my-lib'].architect.build
+        readProjectConfiguration(tree, 'my-lib').targets.build
       ).not.toBeDefined();
     });
 
@@ -221,10 +182,9 @@ describe('lib', () => {
       });
 
       // ASSERT
-      const workspaceJson = readJson(tree, '/workspace.json');
-
-      expect(workspaceJson.projects['my-lib'].root).toEqual('libs/my-lib');
-      expect(workspaceJson.projects['my-lib'].architect.build).toBeDefined();
+      expect(
+        readProjectConfiguration(tree, 'my-lib').targets.build
+      ).toBeDefined();
     });
 
     it('should remove .browserslistrc when library is not buildable or publishable', async () => {
@@ -468,52 +428,6 @@ describe('lib', () => {
       ).toBeFalsy();
     });
 
-    it('should work if the new project root is changed', async () => {
-      // ARRANGE
-      updateJson(tree, 'workspace.json', (json) => ({
-        ...json,
-        newProjectRoot: 'newProjectRoot',
-      }));
-
-      // ACT
-      await runLibraryGeneratorWithOpts();
-
-      // ASSERT
-      expect(tree.exists('libs/my-lib/src/index.ts')).toBeTruthy();
-      expect(tree.exists('libs/my-lib/src/lib/my-lib.module.ts')).toBeTruthy();
-      expect(
-        tree.exists('libs/my-lib/src/lib/my-lib.component.ts')
-      ).toBeFalsy();
-      expect(
-        tree.exists('libs/my-lib/src/lib/my-lib.component.spec.ts')
-      ).toBeFalsy();
-      expect(tree.exists('libs/my-lib/src/lib/my-lib.service.ts')).toBeFalsy();
-      expect(
-        tree.exists('libs/my-lib/src/lib/my-lib.service.spec.ts')
-      ).toBeFalsy();
-    });
-
-    it('should default the prefix to npmScope', async () => {
-      // ACT
-      await runLibraryGeneratorWithOpts();
-      await runLibraryGeneratorWithOpts({
-        name: 'myLibWithPrefix',
-        prefix: 'custom',
-      });
-
-      // ASSERT
-      expect(
-        JSON.parse(tree.read('workspace.json').toString()).projects['my-lib']
-          .prefix
-      ).toEqual('proj');
-
-      expect(
-        JSON.parse(tree.read('workspace.json').toString()).projects[
-          'my-lib-with-prefix'
-        ].prefix
-      ).toEqual('custom');
-    });
-
     it('should not install any e2e test runners', async () => {
       // ACT
       await runLibraryGeneratorWithOpts({
@@ -615,14 +529,12 @@ describe('lib', () => {
       expect(ngPackage.dest).toEqual('../../../dist/libs/my-dir/my-lib');
     });
 
-    it('should update workspace.json', async () => {
+    it('should generate project configuration', async () => {
       // ACT
       await runLibraryGeneratorWithOpts({ directory: 'myDir' });
 
       // ASSERT
-      const workspaceJson = readJson(tree, '/workspace.json');
-
-      expect(workspaceJson.projects['my-dir-my-lib'].root).toEqual(
+      expect(readProjectConfiguration(tree, 'my-dir-my-lib').root).toEqual(
         'libs/my-dir/my-lib'
       );
     });
@@ -1078,42 +990,6 @@ describe('lib', () => {
     });
   });
 
-  describe('--unit-test-runner karma', () => {
-    it('should generate karma configuration', async () => {
-      // ACT
-      await runLibraryGeneratorWithOpts({
-        unitTestRunner: UnitTestRunner.Karma,
-      });
-
-      // ASSERT
-      const workspaceJson = readJson(tree, 'workspace.json');
-
-      expect(tree.exists('libs/my-lib/src/test-setup.ts')).toBeFalsy();
-      expect(tree.exists('libs/my-lib/tsconfig.spec.json')).toBeTruthy();
-      expect(tree.exists('libs/my-lib/karma.conf.js')).toBeTruthy();
-      expect(
-        tree.exists('libs/my-lib/src/lib/my-lib.module.spec.ts')
-      ).toBeFalsy();
-      expect(tree.exists('karma.conf.js')).toBeTruthy();
-      expect(workspaceJson.projects['my-lib'].architect.test.builder).toEqual(
-        '@angular-devkit/build-angular:karma'
-      );
-    });
-
-    it('should generate module spec when addModuleSpec is specified', async () => {
-      // ACT
-      await runLibraryGeneratorWithOpts({
-        unitTestRunner: UnitTestRunner.Karma,
-        addModuleSpec: true,
-      });
-      // ASSERT
-
-      expect(
-        tree.exists('libs/my-lib/src/lib/my-lib.module.spec.ts')
-      ).toBeTruthy();
-    });
-  });
-
   describe('--unit-test-runner none', () => {
     it('should not generate test configuration', async () => {
       // ACT
@@ -1122,8 +998,6 @@ describe('lib', () => {
       });
 
       // ASSERT
-      const workspaceJson = readJson(tree, 'workspace.json');
-
       expect(
         tree.exists('libs/my-lib/src/lib/my-lib.module.spec.ts')
       ).toBeFalsy();
@@ -1132,7 +1006,6 @@ describe('lib', () => {
       expect(tree.exists('libs/my-lib/tsconfig.spec.json')).toBeFalsy();
       expect(tree.exists('libs/my-lib/jest.config.ts')).toBeFalsy();
       expect(tree.exists('libs/my-lib/karma.conf.js')).toBeFalsy();
-      expect(workspaceJson.projects['my-lib'].architect.test).toBeUndefined();
     });
   });
 
@@ -1237,18 +1110,16 @@ describe('lib', () => {
 
   describe('--linter', () => {
     describe('eslint', () => {
-      it('should add an architect target for lint', async () => {
+      it('should add a lint target', async () => {
         // ACT
         await runLibraryGeneratorWithOpts({ linter: Linter.EsLint });
 
         // ASSERT
-        const workspaceJson = readJson(tree, 'workspace.json');
-
         expect(tree.exists('libs/my-lib/tslint.json')).toBe(false);
-        expect(workspaceJson.projects['my-lib'].architect.lint)
+        expect(readProjectConfiguration(tree, 'my-lib').targets['lint'])
           .toMatchInlineSnapshot(`
           Object {
-            "builder": "@nrwl/linter:eslint",
+            "executor": "@nrwl/linter:eslint",
             "options": Object {
               "lintFilePatterns": Array [
                 "libs/my-lib/**/*.ts",
@@ -1326,8 +1197,9 @@ describe('lib', () => {
         await runLibraryGeneratorWithOpts({ linter: Linter.None });
 
         // ASSERT
-        const workspaceJson = readJson(tree, 'workspace.json');
-        expect(workspaceJson.projects['my-lib'].architect.lint).toBeUndefined();
+        expect(
+          readProjectConfiguration(tree, 'my-lib').targets.lint
+        ).toBeUndefined();
       });
     });
   });

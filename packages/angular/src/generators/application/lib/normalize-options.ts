@@ -1,10 +1,4 @@
-import {
-  extractLayoutDirectory,
-  getWorkspacePath,
-  joinPathFragments,
-  readJson,
-  Tree,
-} from '@nrwl/devkit';
+import { extractLayoutDirectory, joinPathFragments, Tree } from '@nrwl/devkit';
 import type { Schema } from '../schema';
 import type { NormalizedSchema } from './normalized-schema';
 
@@ -51,19 +45,8 @@ export function normalizeOptions(
 
   options.standaloneConfig = options.standaloneConfig ?? standaloneAsDefault;
 
-  // Determine the roots where @schematics/angular will place the projects
-  // This might not be where the projects actually end up
-  const workspaceJsonPath = getWorkspacePath(host);
-  let newProjectRoot = null;
-  if (workspaceJsonPath) {
-    ({ newProjectRoot } = readJson(host, workspaceJsonPath));
-  }
-  const ngCliSchematicAppRoot = newProjectRoot
-    ? `${newProjectRoot}/${appProjectName}`
-    : appProjectName;
-  const ngCliSchematicE2ERoot = newProjectRoot
-    ? `${newProjectRoot}/${e2eProjectName}`
-    : `${appProjectName}/e2e`;
+  const ngCliSchematicAppRoot = appProjectName;
+  const ngCliSchematicE2ERoot = `${appProjectName}/e2e`;
 
   // Set defaults and then overwrite with user options
   return {

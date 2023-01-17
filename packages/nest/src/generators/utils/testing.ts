@@ -1,24 +1,13 @@
-import { Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { addProjectConfiguration, Tree } from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
 export function createTreeWithNestApplication(appName: string): Tree {
-  const tree = createTreeWithEmptyV1Workspace();
-  tree.write(
-    'workspace.json',
-    String.raw`
-      {
-        "projects": {
-          "${appName}": {
-            "root": "apps/api",
-            "sourceRoot": "apps/api/src",
-            "projectType": "application",
-            "prefix": "api",
-            "targets":{}
-          }
-        }
-      }
-    `
-  );
-
+  const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+  addProjectConfiguration(tree, appName, {
+    root: `apps/${appName}`,
+    sourceRoot: `apps/${appName}/src`,
+    projectType: 'application',
+    targets: {},
+  });
   return tree;
 }

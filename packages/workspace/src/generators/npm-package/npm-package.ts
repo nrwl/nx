@@ -4,13 +4,13 @@ import {
   formatFiles,
   generateFiles,
   getWorkspaceLayout,
-  getWorkspacePath,
   names,
   Tree,
   writeJson,
 } from '@nrwl/devkit';
 import { join } from 'path';
 import { getImportPath } from 'nx/src/utils/path';
+
 export interface ProjectOptions {
   name: string;
 }
@@ -42,14 +42,11 @@ export async function npmPackageGenerator(tree: Tree, options: ProjectOptions) {
   options = normalizeOptions(options);
 
   const { libsDir, npmScope } = getWorkspaceLayout(tree);
-  const workspaceFile = getWorkspacePath(tree);
   const projectRoot = join(libsDir, options.name);
 
-  if (!!workspaceFile) {
-    addProjectConfiguration(tree, options.name, {
-      root: projectRoot,
-    });
-  }
+  addProjectConfiguration(tree, options.name, {
+    root: projectRoot,
+  });
 
   const fileCount = tree.children(projectRoot).length;
   const projectJsonExists = tree.exists(join(projectRoot, 'project.json'));

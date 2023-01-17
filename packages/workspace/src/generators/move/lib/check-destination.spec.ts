@@ -3,7 +3,7 @@ import {
   readProjectConfiguration,
   Tree,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Schema } from '../schema';
 import { checkDestination } from './check-destination';
 import { libraryGenerator } from '../../library/library';
@@ -13,8 +13,8 @@ describe('checkDestination', () => {
   let projectConfig: ProjectConfiguration;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyV1Workspace();
-    await libraryGenerator(tree, { name: 'my-lib', standaloneConfig: false });
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    await libraryGenerator(tree, { name: 'my-lib' });
     projectConfig = readProjectConfiguration(tree, 'my-lib');
   });
 

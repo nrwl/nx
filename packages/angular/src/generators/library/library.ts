@@ -9,7 +9,6 @@ import {
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { jestProjectGenerator } from '@nrwl/jest';
 import { Linter } from '@nrwl/linter';
-import { convertToNxProjectGenerator } from '@nrwl/workspace/generators';
 import { lt } from 'semver';
 import init from '../../generators/init/init';
 import { E2eTestRunner } from '../../utils/test-runners';
@@ -121,14 +120,6 @@ export async function libraryGenerator(tree: Tree, schema: Schema) {
       }
     );
     addBuildableLibrariesPostCssDependencies(tree);
-  }
-
-  if (libraryOptions.standaloneConfig) {
-    await convertToNxProjectGenerator(tree, {
-      project: libraryOptions.name,
-      all: false,
-      skipFormat: true,
-    });
   }
 
   if (!libraryOptions.skipFormat) {

@@ -17,7 +17,7 @@
   ],
   "properties": {
     "project": {
-      "description": "Project name.",
+      "description": "Project name",
       "type": "string"
     },
     "all": {
@@ -25,7 +25,7 @@
       "type": "boolean"
     },
     "skipFormat": {
-      "description": "Skip formatting files.",
+      "description": "Skip formatting files",
       "type": "boolean",
       "default": false,
       "x-priority": "internal"

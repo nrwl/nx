@@ -1,5 +1,5 @@
 import { readJson, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { applicationGenerator } from './application';
 import { Schema } from './schema';
 
@@ -7,7 +7,7 @@ describe('app', () => {
   let appTree: Tree;
 
   beforeEach(() => {
-    appTree = createTreeWithEmptyV1Workspace();
+    appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it('should generate files', async () => {

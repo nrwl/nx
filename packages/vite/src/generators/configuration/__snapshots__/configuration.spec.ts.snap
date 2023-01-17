@@ -128,13 +128,14 @@ exports[`@nrwl/vite:configuration library mode should set up non buildable libra
 "{
   \\"projects\\": {
     \\"react-lib-nonb-jest\\": {
+      \\"name\\": \\"react-lib-nonb-jest\\",
       \\"$schema\\": \\"../../node_modules/nx/schemas/project-schema.json\\",
       \\"root\\": \\"libs/react-lib-nonb-jest\\",
       \\"sourceRoot\\": \\"libs/react-lib-nonb-jest/src\\",
       \\"projectType\\": \\"library\\",
-      \\"architect\\": {
+      \\"targets\\": {
         \\"lint\\": {
-          \\"builder\\": \\"@nrwl/linter:eslint\\",
+          \\"executor\\": \\"@nrwl/linter:eslint\\",
           \\"outputs\\": [
             \\"{options.outputFile}\\"
           ],
@@ -145,37 +146,19 @@ exports[`@nrwl/vite:configuration library mode should set up non buildable libra
           }
         },
         \\"test\\": {
-          \\"builder\\": \\"@nrwl/vite:test\\",
+          \\"executor\\": \\"@nrwl/jest:jest\\",
           \\"outputs\\": [
             \\"{workspaceRoot}/coverage/{projectRoot}\\"
           ],
           \\"options\\": {
+            \\"jestConfig\\": \\"libs/react-lib-nonb-jest/jest.config.ts\\",
             \\"passWithNoTests\\": true
-          }
-        },
-        \\"build\\": {
-          \\"builder\\": \\"@nrwl/vite:build\\",
-          \\"outputs\\": [
-            \\"{options.outputPath}\\"
-          ],
-          \\"defaultConfiguration\\": \\"production\\",
-          \\"options\\": {
-            \\"outputPath\\": \\"dist/libs/react-lib-nonb-jest\\"
-          },
-          \\"configurations\\": {
-            \\"development\\": {
-              \\"mode\\": \\"development\\"
-            },
-            \\"production\\": {
-              \\"mode\\": \\"production\\"
-            }
           }
         }
       },
       \\"tags\\": []
     }
-  },
-  \\"version\\": 1
+  }
 }
 "
 `;
@@ -236,13 +219,14 @@ exports[`@nrwl/vite:configuration library mode should set up non buildable libra
 "{
   \\"projects\\": {
     \\"react-lib-nonb-vitest\\": {
+      \\"name\\": \\"react-lib-nonb-vitest\\",
       \\"$schema\\": \\"../../node_modules/nx/schemas/project-schema.json\\",
       \\"root\\": \\"libs/react-lib-nonb-vitest\\",
       \\"sourceRoot\\": \\"libs/react-lib-nonb-vitest/src\\",
       \\"projectType\\": \\"library\\",
-      \\"architect\\": {
+      \\"targets\\": {
         \\"lint\\": {
-          \\"builder\\": \\"@nrwl/linter:eslint\\",
+          \\"executor\\": \\"@nrwl/linter:eslint\\",
           \\"outputs\\": [
             \\"{options.outputFile}\\"
           ],
@@ -253,7 +237,7 @@ exports[`@nrwl/vite:configuration library mode should set up non buildable libra
           }
         },
         \\"test\\": {
-          \\"builder\\": \\"@nrwl/vite:test\\",
+          \\"executor\\": \\"@nrwl/vite:test\\",
           \\"outputs\\": [
             \\"{projectRoot}/coverage\\"
           ],
@@ -261,30 +245,11 @@ exports[`@nrwl/vite:configuration library mode should set up non buildable libra
             \\"passWithNoTests\\": true,
             \\"reportsDirectory\\": \\"{workspaceRoot}/coverage/{projectRoot}\\"
           }
-        },
-        \\"build\\": {
-          \\"builder\\": \\"@nrwl/vite:build\\",
-          \\"outputs\\": [
-            \\"{options.outputPath}\\"
-          ],
-          \\"defaultConfiguration\\": \\"production\\",
-          \\"options\\": {
-            \\"outputPath\\": \\"dist/libs/react-lib-nonb-vitest\\"
-          },
-          \\"configurations\\": {
-            \\"development\\": {
-              \\"mode\\": \\"development\\"
-            },
-            \\"production\\": {
-              \\"mode\\": \\"production\\"
-            }
-          }
         }
       },
       \\"tags\\": []
     }
-  },
-  \\"version\\": 1
+  }
 }
 "
 `;
@@ -293,28 +258,26 @@ exports[`@nrwl/vite:configuration transform React app to use Vite by providing c
 "{
   \\"projects\\": {
     \\"my-test-mixed-react-app\\": {
+      \\"name\\": \\"my-test-mixed-react-app\\",
       \\"$schema\\": \\"../../node_modules/nx/schemas/project-schema.json\\",
       \\"root\\": \\"apps/my-test-mixed-react-app\\",
       \\"sourceRoot\\": \\"apps/my-test-mixed-react-app/src\\",
       \\"projectType\\": \\"application\\",
-      \\"architect\\": {
+      \\"targets\\": {
         \\"invalid-build\\": {
-          \\"builder\\": \\"@nrwl/js:tsc\\",
+          \\"executor\\": \\"@nrwl/js:tsc\\",
           \\"outputs\\": [
             \\"{options.outputPath}\\"
           ]
         },
         \\"valid-build\\": {
-          \\"builder\\": \\"@nrwl/vite:build\\",
+          \\"executor\\": \\"@nrwl/webpack:webpack\\",
           \\"outputs\\": [
             \\"{options.outputPath}\\"
-          ],
-          \\"options\\": {
-            \\"outputPath\\": \\"dist/apps/my-test-mixed-react-app\\"
-          }
+          ]
         },
         \\"serve\\": {
-          \\"builder\\": \\"@nrwl/vite:dev-server\\",
+          \\"executor\\": \\"@nrwl/webpack:dev-server\\",
           \\"defaultConfiguration\\": \\"development\\",
           \\"options\\": {
             \\"buildTarget\\": \\"my-test-mixed-react-app:build\\",
@@ -331,7 +294,7 @@ exports[`@nrwl/vite:configuration transform React app to use Vite by providing c
           }
         },
         \\"lint\\": {
-          \\"builder\\": \\"@nrwl/linter:eslint\\",
+          \\"executor\\": \\"@nrwl/linter:eslint\\",
           \\"outputs\\": [
             \\"{options.outputFile}\\"
           ],
@@ -342,7 +305,7 @@ exports[`@nrwl/vite:configuration transform React app to use Vite by providing c
           }
         },
         \\"test\\": {
-          \\"builder\\": \\"@nrwl/jest:jest\\",
+          \\"executor\\": \\"@nrwl/jest:jest\\",
           \\"outputs\\": [
             \\"{workspaceRoot}/coverage/{projectRoot}\\"
           ],
@@ -350,27 +313,11 @@ exports[`@nrwl/vite:configuration transform React app to use Vite by providing c
             \\"jestConfig\\": \\"apps/my-test-mixed-react-app/jest.config.ts\\",
             \\"passWithNoTests\\": true
           }
-        },
-        \\"preview\\": {
-          \\"builder\\": \\"@nrwl/vite:preview-server\\",
-          \\"defaultConfiguration\\": \\"development\\",
-          \\"options\\": {
-            \\"buildTarget\\": \\"my-test-mixed-react-app:build\\"
-          },
-          \\"configurations\\": {
-            \\"development\\": {
-              \\"buildTarget\\": \\"my-test-mixed-react-app:build:development\\"
-            },
-            \\"production\\": {
-              \\"buildTarget\\": \\"my-test-mixed-react-app:build:production\\"
-            }
-          }
         }
       },
       \\"tags\\": []
     }
-  },
-  \\"version\\": 1
+  }
 }
 "
 `;
@@ -441,19 +388,35 @@ exports[`@nrwl/vite:configuration transform React app to use Vite should transfo
 "{
   \\"projects\\": {
     \\"my-test-react-app\\": {
+      \\"name\\": \\"my-test-react-app\\",
       \\"$schema\\": \\"../../node_modules/nx/schemas/project-schema.json\\",
       \\"root\\": \\"apps/my-test-react-app\\",
       \\"sourceRoot\\": \\"apps/my-test-react-app/src\\",
       \\"projectType\\": \\"application\\",
-      \\"architect\\": {
+      \\"targets\\": {
         \\"build\\": {
-          \\"builder\\": \\"@nrwl/vite:build\\",
+          \\"executor\\": \\"@nrwl/webpack:webpack\\",
           \\"outputs\\": [
             \\"{options.outputPath}\\"
           ],
           \\"defaultConfiguration\\": \\"production\\",
           \\"options\\": {
-            \\"outputPath\\": \\"dist/apps/my-test-react-app\\"
+            \\"compiler\\": \\"babel\\",
+            \\"outputPath\\": \\"dist/apps/my-test-react-app\\",
+            \\"index\\": \\"apps/my-test-react-app/src/index.html\\",
+            \\"baseHref\\": \\"/\\",
+            \\"main\\": \\"apps/my-test-react-app/src/main.tsx\\",
+            \\"polyfills\\": \\"apps/my-test-react-app/src/polyfills.ts\\",
+            \\"tsConfig\\": \\"apps/my-test-react-app/tsconfig.app.json\\",
+            \\"assets\\": [
+              \\"apps/my-test-react-app/src/favicon.ico\\",
+              \\"apps/my-test-react-app/src/assets\\"
+            ],
+            \\"styles\\": [
+              \\"apps/my-test-react-app/src/styles.css\\"
+            ],
+            \\"scripts\\": [],
+            \\"webpackConfig\\": \\"@nrwl/react/plugins/webpack\\"
           },
           \\"configurations\\": {
             \\"development\\": {
@@ -479,7 +442,7 @@ exports[`@nrwl/vite:configuration transform React app to use Vite should transfo
           }
         },
         \\"serve\\": {
-          \\"builder\\": \\"@nrwl/vite:dev-server\\",
+          \\"executor\\": \\"@nrwl/webpack:dev-server\\",
           \\"defaultConfiguration\\": \\"development\\",
           \\"options\\": {
             \\"buildTarget\\": \\"my-test-react-app:build\\",
@@ -496,7 +459,7 @@ exports[`@nrwl/vite:configuration transform React app to use Vite should transfo
           }
         },
         \\"lint\\": {
-          \\"builder\\": \\"@nrwl/linter:eslint\\",
+          \\"executor\\": \\"@nrwl/linter:eslint\\",
           \\"outputs\\": [
             \\"{options.outputFile}\\"
           ],
@@ -507,7 +470,7 @@ exports[`@nrwl/vite:configuration transform React app to use Vite should transfo
           }
         },
         \\"test\\": {
-          \\"builder\\": \\"@nrwl/jest:jest\\",
+          \\"executor\\": \\"@nrwl/jest:jest\\",
           \\"outputs\\": [
             \\"{workspaceRoot}/coverage/{projectRoot}\\"
           ],
@@ -515,27 +478,11 @@ exports[`@nrwl/vite:configuration transform React app to use Vite should transfo
             \\"jestConfig\\": \\"apps/my-test-react-app/jest.config.ts\\",
             \\"passWithNoTests\\": true
           }
-        },
-        \\"preview\\": {
-          \\"builder\\": \\"@nrwl/vite:preview-server\\",
-          \\"defaultConfiguration\\": \\"development\\",
-          \\"options\\": {
-            \\"buildTarget\\": \\"my-test-react-app:build\\"
-          },
-          \\"configurations\\": {
-            \\"development\\": {
-              \\"buildTarget\\": \\"my-test-react-app:build:development\\"
-            },
-            \\"production\\": {
-              \\"buildTarget\\": \\"my-test-react-app:build:production\\"
-            }
-          }
         }
       },
       \\"tags\\": []
     }
-  },
-  \\"version\\": 1
+  }
 }
 "
 `;
@@ -607,20 +554,35 @@ exports[`@nrwl/vite:configuration transform Web app to use Vite should transform
 "{
   \\"projects\\": {
     \\"my-test-web-app\\": {
+      \\"name\\": \\"my-test-web-app\\",
       \\"$schema\\": \\"../../node_modules/nx/schemas/project-schema.json\\",
       \\"projectType\\": \\"application\\",
       \\"root\\": \\"apps/my-test-web-app\\",
       \\"sourceRoot\\": \\"apps/my-test-web-app/src\\",
       \\"tags\\": [],
-      \\"architect\\": {
+      \\"targets\\": {
         \\"build\\": {
-          \\"builder\\": \\"@nrwl/vite:build\\",
+          \\"executor\\": \\"@nrwl/webpack:webpack\\",
           \\"outputs\\": [
             \\"{options.outputPath}\\"
           ],
           \\"defaultConfiguration\\": \\"production\\",
           \\"options\\": {
-            \\"outputPath\\": \\"dist/apps/my-test-web-app\\"
+            \\"outputPath\\": \\"dist/apps/my-test-web-app\\",
+            \\"compiler\\": \\"babel\\",
+            \\"main\\": \\"apps/my-test-web-app/src/main.ts\\",
+            \\"tsConfig\\": \\"apps/my-test-web-app/tsconfig.app.json\\",
+            \\"assets\\": [
+              \\"apps/my-test-web-app/src/favicon.ico\\",
+              \\"apps/my-test-web-app/src/assets\\"
+            ],
+            \\"index\\": \\"apps/my-test-web-app/src/index.html\\",
+            \\"baseHref\\": \\"/\\",
+            \\"polyfills\\": \\"apps/my-test-web-app/src/polyfills.ts\\",
+            \\"styles\\": [
+              \\"apps/my-test-web-app/src/styles.css\\"
+            ],
+            \\"scripts\\": []
           },
           \\"configurations\\": {
             \\"production\\": {
@@ -640,7 +602,7 @@ exports[`@nrwl/vite:configuration transform Web app to use Vite should transform
           }
         },
         \\"serve\\": {
-          \\"builder\\": \\"@nrwl/vite:dev-server\\",
+          \\"executor\\": \\"@nrwl/webpack:dev-server\\",
           \\"options\\": {
             \\"buildTarget\\": \\"my-test-web-app:build\\"
           },
@@ -651,7 +613,7 @@ exports[`@nrwl/vite:configuration transform Web app to use Vite should transform
           }
         },
         \\"lint\\": {
-          \\"builder\\": \\"@nrwl/linter:eslint\\",
+          \\"executor\\": \\"@nrwl/linter:eslint\\",
           \\"outputs\\": [
             \\"{options.outputFile}\\"
           ],
@@ -662,7 +624,7 @@ exports[`@nrwl/vite:configuration transform Web app to use Vite should transform
           }
         },
         \\"test\\": {
-          \\"builder\\": \\"@nrwl/jest:jest\\",
+          \\"executor\\": \\"@nrwl/jest:jest\\",
           \\"outputs\\": [
             \\"{workspaceRoot}/coverage/{projectRoot}\\"
           ],
@@ -670,26 +632,10 @@ exports[`@nrwl/vite:configuration transform Web app to use Vite should transform
             \\"jestConfig\\": \\"apps/my-test-web-app/jest.config.ts\\",
             \\"passWithNoTests\\": true
           }
-        },
-        \\"preview\\": {
-          \\"builder\\": \\"@nrwl/vite:preview-server\\",
-          \\"defaultConfiguration\\": \\"development\\",
-          \\"options\\": {
-            \\"buildTarget\\": \\"my-test-web-app:build\\"
-          },
-          \\"configurations\\": {
-            \\"development\\": {
-              \\"buildTarget\\": \\"my-test-web-app:build:development\\"
-            },
-            \\"production\\": {
-              \\"buildTarget\\": \\"my-test-web-app:build:production\\"
-            }
-          }
         }
       }
     }
-  },
-  \\"version\\": 1
+  }
 }
 "
 `;

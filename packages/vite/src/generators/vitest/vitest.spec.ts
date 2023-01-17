@@ -21,7 +21,7 @@ describe('vitest generator', () => {
   };
 
   beforeEach(() => {
-    appTree = createTreeWithEmptyWorkspace();
+    appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it('Should add the test target to existing test target', async () => {

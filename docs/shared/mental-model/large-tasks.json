@@ -10908,11 +10908,6 @@
             ]
           },
           {
-            "file": "packages/angular/src/utils/get-generator-directory-for-ng-version.spec.ts",
-            "hash": "1cff4a56a7d3dfd24079a89136d9fc31d3bcc026",
-            "deps": ["devkit"]
-          },
-          {
             "file": "packages/angular/src/utils/get-generator-directory-for-ng-version.ts",
             "hash": "dab9ffc2a86dab24d7a972e10bd104e55467a074",
             "deps": ["devkit", "npm:semver"]
@@ -19648,11 +19643,6 @@
           {
             "file": "packages/next/src/migrations/update-12-10-0/fix-page-dir-for-eslint.ts",
             "hash": "158c8d79e1a16cdb88df75868c95e141f88b3a54",
-            "deps": ["devkit"]
-          },
-          {
-            "file": "packages/next/src/migrations/update-12-6-0/add-next-eslint.spec.ts",
-            "hash": "55f5f8e45379cffcb66971597eb86e10791850c1",
             "deps": ["devkit"]
           },
           {

@@ -9,16 +9,12 @@ import {
   AffectedProjectGraphContext,
   TouchedProjectLocator,
 } from './affected-project-graph-models';
-import { getTouchedProjectsInWorkspaceJson } from './locators/workspace-json-changes';
 import { getTouchedProjectsFromTsConfig } from './locators/tsconfig-json-changes';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { ProjectGraph } from '../../config/project-graph';
 import { reverse } from '../operators';
-import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import { readNxJson } from '../../config/configuration';
-import { workspaceConfigName } from '../../config/workspaces';
 import { getTouchedProjectsFromProjectGlobChanges } from './locators/project-glob-changes';
-import { workspaceRoot } from '../../utils/workspace-root';
 
 export function filterAffected(
   graph: ProjectGraph,
@@ -33,12 +29,8 @@ export function filterAffected(
     getTouchedNpmPackages,
     getImplicitlyTouchedProjectsByJsonChanges,
     getTouchedProjectsFromTsConfig,
+    getTouchedProjectsFromProjectGlobChanges,
   ];
-  if (workspaceConfigName(workspaceRoot)) {
-    touchedProjectLocators.push(getTouchedProjectsInWorkspaceJson);
-  } else {
-    touchedProjectLocators.push(getTouchedProjectsFromProjectGlobChanges);
-  }
   const touchedProjects = touchedProjectLocators.reduce((acc, f) => {
     return acc.concat(f(touchedFiles, graph.nodes, nxJson, packageJson, graph));
   }, [] as string[]);

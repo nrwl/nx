@@ -8,7 +8,6 @@ import {
   updateNxJson,
 } from '@nrwl/devkit';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
-import { convertToNxProjectGenerator } from '@nrwl/workspace/generators';
 import { join } from 'path';
 import { UnitTestRunner } from '../../utils/test-runners';
 import { angularInitGenerator } from '../init/init';
@@ -147,13 +146,6 @@ export async function applicationGenerator(
     enableStrictTypeChecking(tree, options);
   } else {
     setApplicationStrictDefault(tree, false);
-  }
-
-  if (options.standaloneConfig) {
-    await convertToNxProjectGenerator(tree, {
-      project: options.name,
-      all: false,
-    });
   }
 
   if (options.standalone) {

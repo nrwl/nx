@@ -32,15 +32,15 @@ Object {
 }
 `;
 
-exports[`Cypress Project < v7 nested should update workspace.json 1`] = `
+exports[`Cypress Project < v7 nested should update configuration 1`] = `
 Object {
   "e2e": Object {
-    "builder": "@nrwl/cypress:cypress",
     "configurations": Object {
       "production": Object {
         "devServerTarget": "my-dir-my-app:serve:production",
       },
     },
+    "executor": "@nrwl/cypress:cypress",
     "options": Object {
       "cypressConfig": "apps/my-dir/my-app-e2e/cypress.json",
       "devServerTarget": "my-dir-my-app:serve",
@@ -49,7 +49,7 @@ Object {
     },
   },
   "lint": Object {
-    "builder": "@nrwl/linter:eslint",
+    "executor": "@nrwl/linter:eslint",
     "options": Object {
       "lintFilePatterns": Array [
         "apps/my-dir/my-app-e2e/**/*.{js,ts}",
@@ -78,15 +78,15 @@ exports[`Cypress Project < v7 project with directory in its name should set righ
 "
 `;
 
-exports[`Cypress Project < v7 project with directory in its name should update workspace.json 1`] = `
+exports[`Cypress Project < v7 project with directory in its name should update configuration 1`] = `
 Object {
   "e2e": Object {
-    "builder": "@nrwl/cypress:cypress",
     "configurations": Object {
       "production": Object {
         "devServerTarget": "my-dir-my-app:serve:production",
       },
     },
+    "executor": "@nrwl/cypress:cypress",
     "options": Object {
       "cypressConfig": "apps/my-dir/my-app-e2e/cypress.json",
       "devServerTarget": "my-dir-my-app:serve",
@@ -95,7 +95,7 @@ Object {
     },
   },
   "lint": Object {
-    "builder": "@nrwl/linter:eslint",
+    "executor": "@nrwl/linter:eslint",
     "options": Object {
       "lintFilePatterns": Array [
         "apps/my-dir/my-app-e2e/**/*.{js,ts}",
@@ -108,10 +108,10 @@ Object {
 }
 `;
 
-exports[`Cypress Project < v7 should add update \`workspace.json\` file (baseUrl) 1`] = `
+exports[`Cypress Project < v7 should update configuration (baseUrl) 1`] = `
 Object {
   "e2e": Object {
-    "builder": "@nrwl/cypress:cypress",
+    "executor": "@nrwl/cypress:cypress",
     "options": Object {
       "baseUrl": "http://localhost:3000",
       "cypressConfig": "apps/my-app-e2e/cypress.json",
@@ -120,7 +120,7 @@ Object {
     },
   },
   "lint": Object {
-    "builder": "@nrwl/linter:eslint",
+    "executor": "@nrwl/linter:eslint",
     "options": Object {
       "lintFilePatterns": Array [
         "apps/my-app-e2e/**/*.{js,ts}",
@@ -133,15 +133,15 @@ Object {
 }
 `;
 
-exports[`Cypress Project < v7 should add update \`workspace.json\` file 1`] = `
+exports[`Cypress Project < v7 should update configuration 1`] = `
 Object {
   "e2e": Object {
-    "builder": "@nrwl/cypress:cypress",
     "configurations": Object {
       "production": Object {
         "devServerTarget": "my-app:serve:production",
       },
     },
+    "executor": "@nrwl/cypress:cypress",
     "options": Object {
       "cypressConfig": "apps/my-app-e2e/cypress.json",
       "devServerTarget": "my-app:serve",
@@ -150,7 +150,7 @@ Object {
     },
   },
   "lint": Object {
-    "builder": "@nrwl/linter:eslint",
+    "executor": "@nrwl/linter:eslint",
     "options": Object {
       "lintFilePatterns": Array [
         "apps/my-app-e2e/**/*.{js,ts}",
@@ -163,15 +163,15 @@ Object {
 }
 `;
 
-exports[`Cypress Project < v7 should add update \`workspace.json\` file for a project with a defaultConfiguration 1`] = `
+exports[`Cypress Project < v7 should update configuration 2`] = `
 Object {
   "e2e": Object {
-    "builder": "@nrwl/cypress:cypress",
     "configurations": Object {
       "production": Object {
         "devServerTarget": "my-app:serve:production",
       },
     },
+    "executor": "@nrwl/cypress:cypress",
     "options": Object {
       "cypressConfig": "apps/my-app-e2e/cypress.json",
       "devServerTarget": "my-app:serve:development",
@@ -180,7 +180,7 @@ Object {
     },
   },
   "lint": Object {
-    "builder": "@nrwl/linter:eslint",
+    "executor": "@nrwl/linter:eslint",
     "options": Object {
       "lintFilePatterns": Array [
         "apps/my-app-e2e/**/*.{js,ts}",
@@ -235,20 +235,6 @@ Object {
 }
 `;
 
-exports[`Cypress Project > v10 should add update \`workspace.json\` file properly when eslint is passed 1`] = `
-Object {
-  "builder": "@nrwl/linter:eslint",
-  "options": Object {
-    "lintFilePatterns": Array [
-      "apps/my-app-e2e/**/*.{js,ts}",
-    ],
-  },
-  "outputs": Array [
-    "{options.outputFile}",
-  ],
-}
-`;
-
 exports[`Cypress Project > v10 should set right path names in \`cypress.config.ts\` 1`] = `
 "import { defineConfig } from 'cypress';
 import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
@@ -274,6 +260,20 @@ Object {
     "src/**/*.ts",
     "src/**/*.js",
     "cypress.config.ts",
+  ],
+}
+`;
+
+exports[`Cypress Project > v10 should update configuration when eslint is passed 1`] = `
+Object {
+  "executor": "@nrwl/linter:eslint",
+  "options": Object {
+    "lintFilePatterns": Array [
+      "apps/my-app-e2e/**/*.{js,ts}",
+    ],
+  },
+  "outputs": Array [
+    "{options.outputFile}",
   ],
 }
 `;

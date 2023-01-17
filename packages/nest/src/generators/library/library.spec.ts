@@ -1,7 +1,7 @@
 import type { Tree } from '@nrwl/devkit';
 import * as devkit from '@nrwl/devkit';
 import { readJson, readProjectConfiguration } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { libraryGenerator } from './library';
 
 describe('lib', () => {
@@ -10,7 +10,7 @@ describe('lib', () => {
   const libName = 'myLib';
 
   beforeEach(() => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     jest.clearAllMocks();
   });
 
@@ -18,22 +18,18 @@ describe('lib', () => {
     it('should update project configuration', async () => {
       await libraryGenerator(tree, { name: libName });
 
-      const workspaceJson = readJson(tree, '/workspace.json');
-      expect(workspaceJson.projects[libFileName].root).toEqual(
-        `libs/${libFileName}`
-      );
-      expect(
-        workspaceJson.projects[libFileName].architect.build
-      ).toBeUndefined();
-      expect(workspaceJson.projects[libFileName].architect.lint).toEqual({
-        builder: '@nrwl/linter:eslint',
+      const config = readProjectConfiguration(tree, libFileName);
+      expect(config.root).toEqual(`libs/${libFileName}`);
+      expect(config.targets.build).toBeUndefined();
+      expect(config.targets.lint).toEqual({
+        executor: '@nrwl/linter:eslint',
         outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: [`libs/${libFileName}/**/*.ts`],
         },
       });
-      expect(workspaceJson.projects[libFileName].architect.test).toEqual({
-        builder: '@nrwl/jest:jest',
+      expect(config.targets.test).toEqual({
+        executor: '@nrwl/jest:jest',
         outputs: [`{workspaceRoot}/coverage/{projectRoot}`],
         options: {
           jestConfig: `libs/${libFileName}/jest.config.ts`,

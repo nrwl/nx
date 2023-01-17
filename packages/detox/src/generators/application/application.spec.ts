@@ -4,7 +4,7 @@ import {
   readProjectConfiguration,
   Tree,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from 'packages/linter/src/generators/utils/linter';
 
 import detoxApplicationGenerator from './application';
@@ -13,7 +13,7 @@ describe('detox application generator', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     tree.write('.gitignore', '');
   });
 
@@ -73,7 +73,7 @@ describe('detox application generator', () => {
       });
     });
 
-    it('should add update `workspace.json` file', async () => {
+    it('should update configuration', async () => {
       const project = readProjectConfiguration(tree, 'my-app-e2e');
 
       expect(project.root).toEqual('apps/my-app-e2e');
@@ -147,7 +147,7 @@ describe('detox application generator', () => {
       });
     });
 
-    it('should add update `workspace.json` file', async () => {
+    it('should update configuration', async () => {
       const project = readProjectConfiguration(tree, 'my-dir-my-app-e2e');
 
       expect(project.root).toEqual('apps/my-dir/my-app-e2e');
@@ -221,9 +221,8 @@ describe('detox application generator', () => {
       });
     });
 
-    it('should add update `workspace.json` file', async () => {
-      const workspaceJson = readJson(tree, 'workspace.json');
-      const project = workspaceJson.projects['e2e-dir-my-app-e2e'];
+    it('should update configuration', async () => {
+      const project = readProjectConfiguration(tree, 'e2e-dir-my-app-e2e');
 
       expect(project.root).toEqual('apps/e2e-dir/my-app-e2e');
     });
@@ -295,10 +294,8 @@ describe('detox application generator', () => {
       });
     });
 
-    it('should add update `workspace.json` file', async () => {
-      const workspaceJson = readJson(tree, 'workspace.json');
-      const project = workspaceJson.projects['my-dir-my-app-e2e'];
-
+    it('should update configuration', async () => {
+      const project = readProjectConfiguration(tree, 'my-dir-my-app-e2e');
       expect(project.root).toEqual('apps/my-dir/my-app-e2e');
     });
 
@@ -393,7 +390,7 @@ describe('detox application generator', () => {
       });
     });
 
-    it('should add update `workspace.json` file', async () => {
+    it('should update configuration', async () => {
       const project = readProjectConfiguration(tree, 'my-dir-my-app-e2e');
 
       expect(project.root).toEqual('apps/my-dir/my-app-e2e');

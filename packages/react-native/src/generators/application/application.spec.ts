@@ -16,7 +16,7 @@ describe('app', () => {
     appTree.write('.gitignore', '');
   });
 
-  it('should update workspace.json', async () => {
+  it('should update configuration', async () => {
     await reactNativeApplicationGenerator(appTree, {
       name: 'myApp',
       displayName: 'myApp',

@@ -5,7 +5,7 @@ import {
   Tree,
   updateJson,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { nxVersion } from '../../utils/versions';
 
 import { initGenerator } from './init';
@@ -14,7 +14,7 @@ describe('@nrwl/vite:init', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   describe('dependencies for package.json', () => {

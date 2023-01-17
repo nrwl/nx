@@ -1,6 +1,6 @@
 import * as utils from './ast-utils';
 import * as ts from 'typescript';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { applyChangesToString, Tree } from '@nrwl/devkit';
 
 describe('findDefaultExport', () => {
@@ -101,7 +101,7 @@ describe('addRoute', () => {
     context = {
       warn: jest.fn(),
     };
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it('should add links and routes if they are not present', async () => {
@@ -182,7 +182,7 @@ describe('addBrowserRouter', () => {
     context = {
       warn: jest.fn(),
     };
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it('should wrap around App component', () => {
@@ -216,7 +216,7 @@ describe('findMainRenderStatement', () => {
     context = {
       warn: jest.fn(),
     };
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it('should return ReactDOM.render(...)', () => {
@@ -297,7 +297,7 @@ describe('addReduxStoreToMain', () => {
     context = {
       warn: jest.fn(),
     };
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it('should wrap around App component', () => {
@@ -333,7 +333,7 @@ describe('updateReduxStore', () => {
     context = {
       warn: jest.fn(),
     };
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it('should update configureStore call', () => {

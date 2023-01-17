@@ -29,6 +29,12 @@
         "x-priority": "important"
       },
       "jestConfig": { "type": "string", "description": "Jest config file." },
+      "standaloneConfig": {
+        "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
+        "type": "boolean",
+        "default": true,
+        "x-deprecated": "Nx only supports standaloneConfig"
+      },
       "minimal": {
         "type": "boolean",
         "description": "Generate the e2e project with a minimal setup. This would involve not generating tests for a default executor and generator.",

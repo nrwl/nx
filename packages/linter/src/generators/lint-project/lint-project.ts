@@ -15,7 +15,7 @@ import {
   findLintTarget,
   migrateConfigToMonorepoStyle,
 } from '../init/init-migration';
-import { readWorkspace } from 'nx/src/generators/utils/project-configuration';
+import { getProjects } from 'nx/src/generators/utils/project-configuration';
 
 interface LintProjectOptions {
   project: string;
@@ -113,7 +113,8 @@ export async function lintProjectGenerator(
   // companion e2e app so we should check if migration to
   // monorepo style is needed
   if (!options.rootProject) {
-    const projects = readWorkspace(tree).projects;
+    const projects = {} as any;
+    getProjects(tree).forEach((v, k) => (projects[k] = v));
     if (isMigrationToMonorepoNeeded(projects, tree)) {
       // we only migrate project configurations that have been created
       const filteredProjects = [];

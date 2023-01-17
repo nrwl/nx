@@ -92,42 +92,25 @@ export function uniq(prefix: string) {
   return `${prefix}${Math.floor(Math.random() * 10000000)}`;
 }
 
-export function workspaceConfigName() {
-  return currentCli() === 'angular' ? 'angular.json' : 'workspace.json';
-}
-
 export function updateProjectConfig(
   projectName: string,
   callback: (c: ProjectConfiguration) => ProjectConfiguration
 ) {
-  const workspace = readResolvedWorkspaceConfiguration();
+  const workspace = readResolvedConfiguration();
   const root = workspace.projects[projectName].root;
   const path = join(root, 'project.json');
   const current = readJson(path);
   updateFile(path, JSON.stringify(callback(current), null, 2));
 }
 
-export function readResolvedWorkspaceConfiguration() {
+export function readResolvedConfiguration() {
   process.env.NX_PROJECT_GLOB_CACHE = 'false';
   const ws = new Workspaces(tmpProjPath());
-  return ws.readProjectsConfig();
-}
-
-/**
- * Use readProjectConfig or readInlineProjectConfig instead
- * if you need a project's configuration.
- */
-export function readWorkspaceConfig(): Omit<
-  ProjectsConfigurations,
-  'projects'
-> {
-  const w = readJson(workspaceConfigName());
-  delete w.projects;
-  return w;
+  return ws.readProjectsConfigurations();
 }
 
 export function readProjectConfig(projectName: string): ProjectConfiguration {
-  const root = readResolvedWorkspaceConfiguration().projects[projectName].root;
+  const root = readResolvedConfiguration().projects[projectName].root;
   const path = join(root, 'project.json');
   return readJson(path);
 }
@@ -837,14 +820,11 @@ export function runCommand(
 function setMaxWorkers() {
   if (isCI) {
     const ws = new Workspaces(tmpProjPath());
-    const workspaceFile = workspaceConfigName();
-    const workspaceFileExists = fileExists(tmpProjPath(workspaceFile));
-    const workspace = ws.readProjectsConfig();
-    const rawWorkspace = workspaceFileExists ? readJson(workspaceFile) : null;
+    const projectsConfigurations = ws.readProjectsConfigurations();
     let requireWorkspaceFileUpdate = false;
 
-    Object.keys(workspace.projects).forEach((appName) => {
-      let project = workspace.projects[appName];
+    Object.keys(projectsConfigurations.projects).forEach((appName) => {
+      let project = projectsConfigurations.projects[appName];
       const { build } = project.targets;
 
       if (!build) {
@@ -860,21 +840,11 @@ function setMaxWorkers() {
         build.options.maxWorkers = 4;
       }
 
-      if (
-        !workspaceFileExists ||
-        typeof rawWorkspace.projects[appName] === 'string'
-      ) {
-        updateFile(
-          join(project.root, 'project.json'),
-          JSON.stringify(project, null, 2)
-        );
-      } else {
-        requireWorkspaceFileUpdate = true;
-      }
+      updateFile(
+        join(project.root, 'project.json'),
+        JSON.stringify(project, null, 2)
+      );
     });
-    if (workspaceFileExists && requireWorkspaceFileUpdate) {
-      updateFile(workspaceFile, JSON.stringify(workspace));
-    }
   }
 }
 

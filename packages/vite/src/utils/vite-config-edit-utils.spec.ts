@@ -1,5 +1,5 @@
 import { Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import {
   buildOption,
@@ -24,7 +24,7 @@ describe('ensureViteConfigIsCorrect', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it("should add build options if build options don't exist", () => {

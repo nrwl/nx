@@ -5,6 +5,7 @@ Array [
   "tsconfig.app.json",
   "tsconfig.spec.json",
   "src",
+  "project.json",
   "tsconfig.editor.json",
   "tsconfig.json",
   ".eslintrc.json",

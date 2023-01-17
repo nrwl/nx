@@ -1,6 +1,5 @@
 import { ProjectGraphCache, readCache } from './nx-deps-cache';
 import { buildProjectGraph } from './build-project-graph';
-import { workspaceFileName } from './file-utils';
 import { output } from '../utils/output';
 import { defaultFileHasher } from '../hasher/file-hasher';
 import { markDaemonAsDisabled, writeDaemonLogs } from '../daemon/tmp-dir';
@@ -11,6 +10,8 @@ import {
   ProjectsConfigurations,
 } from '../config/workspace-json-project-json';
 import { daemonClient } from '../daemon/client/client';
+import { fileExists } from 'nx/src/utils/fileutils';
+import { workspaceRoot } from 'nx/src/utils/workspace-root';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -18,14 +19,13 @@ import { daemonClient } from '../daemon/client/client';
  */
 export function readCachedProjectGraph(): ProjectGraph {
   const projectGraphCache: ProjectGraphCache | false = readCache();
-  const angularSpecificError =
-    workspaceFileName() === 'angular.json'
-      ? stripIndents`
+  const angularSpecificError = fileExists(`${workspaceRoot}/angular.json`)
+    ? stripIndents`
       Make sure invoke 'node ./decorate-angular-cli.js' in your postinstall script.
       The decorated CLI will compute the project graph.
       'ng --help' should say 'Smart, Fast and Extensible Build System'.
       `
-      : '';
+    : '';
   if (!projectGraphCache) {
     throw new Error(stripIndents`
       [readCachedProjectGraph] ERROR: No cached ProjectGraph is available.

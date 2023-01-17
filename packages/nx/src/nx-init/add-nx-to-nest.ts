@@ -17,9 +17,7 @@ import { markRootPackageJsonAsNxProject } from './add-nx-to-npm-repo';
 import { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { NrwlJsPluginConfig, NxJsonConfiguration } from '../config/nx-json';
 
-type NestCLIConfiguration =
-  import('@nestjs/cli/lib/configuration').Configuration;
-
+type NestCLIConfiguration = any;
 const parsedArgs = yargsParser(process.argv, {
   boolean: ['yes'],
   string: ['cacheable'], // only used for testing

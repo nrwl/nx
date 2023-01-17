@@ -5,7 +5,7 @@ import {
   updateJson,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { storybookVersion } from '../../../utils/versions';
 import configurationGenerator from '../../../generators/configuration/configuration';
 import {
@@ -18,7 +18,7 @@ describe('migrate-defaults-5-to-6 Generator', () => {
   let appTree: Tree;
 
   beforeEach(async () => {
-    appTree = createTreeWithEmptyV1Workspace();
+    appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     updateJson(appTree, 'package.json', (json) => {
       return {
         ...json,

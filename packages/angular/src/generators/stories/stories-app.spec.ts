@@ -1,6 +1,6 @@
 import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
 import type { Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { applicationGenerator } from '../application/application';
 import { scamGenerator } from '../scam/scam';
 import { componentGenerator } from '../component/component';
@@ -18,7 +18,7 @@ describe('angularStories generator: applications', () => {
 
   beforeEach(async () => {
     mockedInstalledCypressVersion.mockReturnValue(10);
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await applicationGenerator(tree, {
       name: appName,
     });

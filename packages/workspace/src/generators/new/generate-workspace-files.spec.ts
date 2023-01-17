@@ -22,7 +22,6 @@ describe('@nrwl/workspace:generateWorkspaceFiles', () => {
     });
     expect(tree.exists('/proj/README.md')).toBe(true);
     expect(tree.exists('/proj/nx.json')).toBe(true);
-    expect(tree.exists('/proj/workspace.json')).toBe(false);
     expect(tree.exists('/proj/.prettierrc')).toBe(true);
     expect(tree.exists('/proj/.prettierignore')).toBe(true);
   });

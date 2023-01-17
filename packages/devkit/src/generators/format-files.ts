@@ -2,7 +2,6 @@ import type { Tree } from 'nx/src/generators/tree';
 import * as path from 'path';
 import type * as Prettier from 'prettier';
 import { readJson, updateJson, writeJson } from 'nx/src/generators/utils/json';
-import { getWorkspacePath } from 'nx/src/generators/utils/project-configuration';
 import { sortObjectByKeys } from 'nx/src/utils/object-sort';
 
 /**
@@ -15,7 +14,6 @@ export async function formatFiles(tree: Tree): Promise<void> {
     prettier = await import('prettier');
   } catch {}
 
-  sortWorkspaceJson(tree);
   sortTsConfig(tree);
 
   if (!prettier) return;
@@ -60,26 +58,6 @@ export async function formatFiles(tree: Tree): Promise<void> {
       }
     })
   );
-}
-
-function sortWorkspaceJson(tree: Tree) {
-  const workspaceJsonPath = getWorkspacePath(tree);
-  if (!workspaceJsonPath) {
-    return;
-  }
-
-  try {
-    const workspaceJson = readJson(tree, workspaceJsonPath);
-    if (Object.entries(workspaceJson.projects).length !== 0) {
-      const sortedProjects = sortObjectByKeys(workspaceJson.projects);
-      writeJson(tree, workspaceJsonPath, {
-        ...workspaceJson,
-        projects: sortedProjects,
-      });
-    }
-  } catch (e) {
-    // catch noop
-  }
 }
 
 function sortTsConfig(tree: Tree) {

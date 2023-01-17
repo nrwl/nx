@@ -3,7 +3,7 @@ import {
   Tree,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
 import { applicationGenerator } from '../../generators/application/application';
 import { update } from './enable-swc';
@@ -12,7 +12,7 @@ describe('Migration: enable SWC', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it('should remove .babelrc file and fix jest config', async () => {

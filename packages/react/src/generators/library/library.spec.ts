@@ -6,10 +6,7 @@ import {
   Tree,
   updateJson,
 } from '@nrwl/devkit';
-import {
-  createTreeWithEmptyV1Workspace,
-  createTreeWithEmptyWorkspace,
-} from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
 import { nxVersion } from '../../utils/versions';
 import applicationGenerator from '../application/application';
@@ -32,12 +29,11 @@ describe('lib', () => {
     style: 'css',
     component: true,
     strict: true,
-    standaloneConfig: false,
   };
 
   beforeEach(() => {
     mockedInstalledCypressVersion.mockReturnValue(10);
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     updateJson(tree, '/package.json', (json) => {
       json.devDependencies = {
         '@nrwl/cypress': nxVersion,
@@ -278,15 +274,14 @@ describe('lib', () => {
         "['babel-jest', { presets: ['@nrwl/react/babel'] }]"
       );
     });
-    it('should update workspace.json', async () => {
-      await libraryGenerator(tree, { ...defaultSchema, directory: 'myDir' });
-      const workspaceJson = readJson(tree, '/workspace.json');
 
-      expect(workspaceJson.projects['my-dir-my-lib'].root).toEqual(
-        'libs/my-dir/my-lib'
-      );
-      expect(workspaceJson.projects['my-dir-my-lib'].architect.lint).toEqual({
-        builder: '@nrwl/linter:eslint',
+    it('should update project configurations', async () => {
+      await libraryGenerator(tree, { ...defaultSchema, directory: 'myDir' });
+      const config = readProjectConfiguration(tree, 'my-dir-my-lib');
+
+      expect(config.root).toEqual('libs/my-dir/my-lib');
+      expect(config.targets.lint).toEqual({
+        executor: '@nrwl/linter:eslint',
         outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: ['libs/my-dir/my-lib/**/*.{ts,tsx,js,jsx}'],
@@ -377,12 +372,11 @@ describe('lib', () => {
 
       expect(tree.exists('libs/my-lib/tsconfig.spec.json')).toBeFalsy();
       expect(tree.exists('libs/my-lib/jest.config.ts')).toBeFalsy();
-      const workspaceJson = readJson(tree, 'workspace.json');
-      expect(workspaceJson.projects['my-lib'].architect.test).toBeUndefined();
-      expect(workspaceJson.projects['my-lib'].architect.lint)
-        .toMatchInlineSnapshot(`
+      const config = readProjectConfiguration(tree, 'my-lib');
+      expect(config.targets.test).toBeUndefined();
+      expect(config.targets.lint).toMatchInlineSnapshot(`
         Object {
-          "builder": "@nrwl/linter:eslint",
+          "executor": "@nrwl/linter:eslint",
           "options": Object {
             "lintFilePatterns": Array [
               "libs/my-lib/**/*.{ts,tsx,js,jsx}",
@@ -407,7 +401,7 @@ describe('lib', () => {
         name: 'myApp',
         routing: true,
         style: 'css',
-        standaloneConfig: false,
+
         bundler: 'webpack',
       });
 
@@ -434,7 +428,7 @@ describe('lib', () => {
         unitTestRunner: 'jest',
         name: 'myApp',
         style: 'css',
-        standaloneConfig: false,
+
         bundler: 'webpack',
       });
 
@@ -461,23 +455,23 @@ describe('lib', () => {
         buildable: true,
       });
 
-      const workspaceJson = getProjects(tree);
+      const projectsConfigurations = getProjects(tree);
 
-      expect(workspaceJson.get('my-lib').targets.build).toBeDefined();
+      expect(projectsConfigurations.get('my-lib').targets.build).toBeDefined();
     });
   });
 
   describe('--publishable', () => {
-    it('should add build architect', async () => {
+    it('should add build targets', async () => {
       await libraryGenerator(tree, {
         ...defaultSchema,
         publishable: true,
         importPath: '@proj/my-lib',
       });
 
-      const workspaceJson = getProjects(tree);
+      const projectsConfigurations = getProjects(tree);
 
-      expect(workspaceJson.get('my-lib').targets.build).toMatchObject({
+      expect(projectsConfigurations.get('my-lib').targets.build).toMatchObject({
         executor: '@nrwl/rollup:rollup',
         outputs: ['{options.outputPath}'],
         options: {
@@ -515,10 +509,10 @@ describe('lib', () => {
         style: 'styled-components',
       });
 
-      const workspaceJson = readJson(tree, '/workspace.json');
+      const config = readProjectConfiguration(tree, 'my-lib');
       const babelrc = readJson(tree, 'libs/my-lib/.babelrc');
 
-      expect(workspaceJson.projects['my-lib'].architect.build).toMatchObject({
+      expect(config.targets.build).toMatchObject({
         options: {
           external: ['react/jsx-runtime'],
         },
@@ -536,11 +530,11 @@ describe('lib', () => {
         style: '@emotion/styled',
       });
 
-      const workspaceJson = readJson(tree, '/workspace.json');
+      const config = readProjectConfiguration(tree, 'my-lib');
       const babelrc = readJson(tree, 'libs/my-lib/.babelrc');
       const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.json');
 
-      expect(workspaceJson.projects['my-lib'].architect.build).toMatchObject({
+      expect(config.targets.build).toMatchObject({
         options: {
           external: ['@emotion/react/jsx-runtime'],
         },
@@ -559,10 +553,10 @@ describe('lib', () => {
         style: 'styled-jsx',
       });
 
-      const workspaceJson = readJson(tree, '/workspace.json');
+      const config = readProjectConfiguration(tree, 'my-lib');
       const babelrc = readJson(tree, 'libs/my-lib/.babelrc');
 
-      expect(workspaceJson.projects['my-lib'].architect.build).toMatchObject({
+      expect(config.targets.build).toMatchObject({
         options: {
           external: ['react/jsx-runtime'],
         },
@@ -578,9 +572,9 @@ describe('lib', () => {
         style: 'none',
       });
 
-      const workspaceJson = readJson(tree, '/workspace.json');
+      const config = readProjectConfiguration(tree, 'my-lib');
 
-      expect(workspaceJson.projects['my-lib'].architect.build).toMatchObject({
+      expect(config.targets.build).toMatchObject({
         options: {
           external: ['react/jsx-runtime'],
         },
