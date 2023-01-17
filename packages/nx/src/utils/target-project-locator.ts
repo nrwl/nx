@@ -145,7 +145,7 @@ export class TargetProjectLocator {
           importExpr.startsWith(`${project.name}/`)
       );
       if (project) {
-        this.npmResolutionCache.set(importExpr, project.name);
+        this.projectResolutionCache.set(importExpr, project.name);
         return project.name;
       }
     }
