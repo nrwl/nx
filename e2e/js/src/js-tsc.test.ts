@@ -197,9 +197,10 @@ describe('package.json updates', () => {
     runCLI(`build ${lib}`);
 
     // Check that only 'react' exists, don't care about version
-    expect(readJson(`dist/libs/${lib}/package.json`).dependencies).toEqual({});
-    expect(readJson(`dist/libs/${lib}/package.json`).peerDependencies).toEqual({
+    expect(readJson(`dist/libs/${lib}/package.json`).dependencies).toEqual({
       react: expect.any(String),
+    });
+    expect(readJson(`dist/libs/${lib}/package.json`).peerDependencies).toEqual({
       tslib: expect.any(String),
     });
     checkFilesDoNotExist(`dist/libs/${lib}/${packageManagerLockFile['npm']}`);
