@@ -11,7 +11,8 @@
       "type": "string",
       "description": "The name of the ESLint configuration file.",
       "x-completion-type": "file",
-      "x-completion-glob": ".eslintrc?(.json)"
+      "x-completion-glob": ".eslintrc?(.json)",
+      "x-priority": "important"
     },
     "lintFilePatterns": {
       "type": "array",
@@ -46,7 +47,8 @@
         {
           "minLength": 1
         }
-      ]
+      ],
+      "x-priority": "important"
     },
     "force": {
       "type": "boolean",
@@ -61,7 +63,8 @@
     "fix": {
       "type": "boolean",
       "description": "Fixes linting errors (may overwrite linted files).",
-      "default": false
+      "default": false,
+      "x-priority": "important"
     },
     "cache": {
       "type": "boolean",
@@ -87,7 +90,8 @@
     "quiet": {
       "type": "boolean",
       "description": "Report errors only - default: `false`.",
-      "default": false
+      "default": false,
+      "x-priority": "important"
     },
     "ignorePath": {
       "type": "string",
