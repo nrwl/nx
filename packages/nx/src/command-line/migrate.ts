@@ -1,11 +1,13 @@
 import * as chalk from 'chalk';
 import { exec, execSync } from 'child_process';
+import { prompt } from 'enquirer';
 import { dirname, join } from 'path';
 import { gt, lt, lte, gte, major, valid } from 'semver';
 import { promisify } from 'util';
 import {
   MigrationsJson,
   PackageJsonUpdateForPackage,
+  PackageJsonUpdates,
 } from '../config/misc-interfaces';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { flushChanges, FsTree, printChanges } from '../generators/tree';
@@ -86,6 +88,7 @@ export interface MigratorOptions {
     version: string
   ) => Promise<ResolvedMigrationConfiguration>;
   to: { [pkg: string]: string };
+  interactive?: boolean;
 }
 
 export class Migrator {
@@ -93,12 +96,14 @@ export class Migrator {
   private readonly versions: MigratorOptions['versions'];
   private readonly fetch: MigratorOptions['fetch'];
   private readonly to: MigratorOptions['to'];
+  private readonly interactive: MigratorOptions['interactive'];
 
   constructor(opts: MigratorOptions) {
     this.packageJson = opts.packageJson;
     this.versions = opts.versions;
     this.fetch = opts.fetch;
     this.to = opts.to;
+    this.interactive = opts.interactive;
   }
 
   async updatePackageJson(targetPackage: string, targetVersion: string) {
@@ -177,7 +182,7 @@ export class Migrator {
       }
     }
 
-    const packages = this.collapsePackages(
+    const packages = await this.collapsePackages(
       targetPackage,
       targetVersion,
       migrationsJson
@@ -222,11 +227,11 @@ export class Migrator {
     );
   }
 
-  private collapsePackages(
+  private async collapsePackages(
     packageName: string,
     targetVersion: string,
     migration: ResolvedMigrationConfiguration
-  ): Record<string, PackageJsonUpdateForPackage> {
+  ): Promise<Record<string, PackageJsonUpdateForPackage>> {
     // this should be used to know what version to include
     // we should use from everywhere we use versions
 
@@ -287,14 +292,25 @@ export class Migrator {
 
     if (!migration.packageJsonUpdates || !this.versions(packageName)) return {};
 
-    return Object.values(migration.packageJsonUpdates)
-      .filter(({ version, packages }) => {
-        return (
-          packages &&
-          this.gt(version, this.versions(packageName)) &&
-          this.lte(version, targetVersion)
-        );
-      })
+    const filteredPackageJsonUpdates: PackageJsonUpdates[number][] = [];
+    for (const packageJsonUpdate of Object.values(
+      migration.packageJsonUpdates
+    )) {
+      const { packages, version } = packageJsonUpdate;
+      if (
+        packages &&
+        this.gt(version, this.versions(packageName)) &&
+        this.lte(version, targetVersion) &&
+        (!this.interactive ||
+          (await this.runPackageJsonUpdatesConfirmationPrompt(
+            packageJsonUpdate
+          )))
+      ) {
+        filteredPackageJsonUpdates.push(packageJsonUpdate);
+      }
+    }
+
+    return filteredPackageJsonUpdates
       .map(({ packages }) => {
         const { dependencies, devDependencies } = this.packageJson;
 
@@ -323,6 +339,32 @@ export class Migrator {
           );
       })
       .reduce((m, c) => ({ ...m, ...c }), {});
+  }
+
+  private async runPackageJsonUpdatesConfirmationPrompt({
+    confirmationPrompt,
+    packages,
+  }: PackageJsonUpdates[number]): Promise<boolean> {
+    if (!confirmationPrompt) {
+      return Promise.resolve(true);
+    }
+
+    return await prompt([
+      {
+        name: 'shouldMigrate',
+        type: 'confirm',
+        message:
+          typeof confirmationPrompt === 'string'
+            ? confirmationPrompt
+            : `Do you want to run the migration for the packages ${Object.entries(
+                packages
+              )
+                .map(
+                  ([packageName, { version }]) => `${packageName}@${version}`
+                )
+                .join(', ')}?`,
+      },
+    ]).then((a: { shouldMigrate: boolean }) => a.shouldMigrate);
   }
 
   private gt(v1: string, v2: string) {
@@ -429,6 +471,7 @@ type GenerateMigrations = {
   targetVersion: string;
   from: { [k: string]: string };
   to: { [k: string]: string };
+  interactive?: boolean;
 };
 
 type RunMigrations = { type: 'runMigrations'; runMigrations: string };
@@ -448,12 +491,14 @@ export function parseMigrationsOptions(options: {
     const { targetPackage, targetVersion } = parseTargetPackageAndVersion(
       options['packageAndVersion']
     );
+    const interactive = options.interactive;
     return {
       type: 'generateMigrations',
       targetPackage: normalizeSlashes(targetPackage),
       targetVersion,
       from,
       to,
+      interactive,
     };
   } else {
     return {
@@ -796,12 +841,7 @@ function readNxVersion(packageJson: PackageJson) {
 
 async function generateMigrationsJsonAndUpdatePackageJson(
   root: string,
-  opts: {
-    targetPackage: string;
-    targetVersion: string;
-    from: { [p: string]: string };
-    to: { [p: string]: string };
-  }
+  opts: GenerateMigrations
 ) {
   const pmc = getPackageManagerCommand();
   try {
@@ -841,6 +881,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       versions: versions(root, opts.from),
       fetch: createFetcher(),
       to: opts.to,
+      interactive: opts.interactive,
     });
 
     const { migrations, packageJson } = await migrator.updatePackageJson(

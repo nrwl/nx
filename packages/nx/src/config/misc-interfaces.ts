@@ -58,6 +58,7 @@ export type PackageJsonUpdates = {
     packages: {
       [packageName: string]: PackageJsonUpdateForPackage;
     };
+    confirmationPrompt?: string | boolean;
   };
 };
 
