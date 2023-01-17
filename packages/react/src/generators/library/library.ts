@@ -49,18 +49,13 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
   });
   tasks.push(initTask);
 
-  addProjectConfiguration(
-    host,
-    options.name,
-    {
-      root: options.projectRoot,
-      sourceRoot: joinPathFragments(options.projectRoot, 'src'),
-      projectType: 'library',
-      tags: options.parsedTags,
-      targets: {},
-    },
-    options.standaloneConfig
-  );
+  addProjectConfiguration(host, options.name, {
+    root: options.projectRoot,
+    sourceRoot: joinPathFragments(options.projectRoot, 'src'),
+    projectType: 'library',
+    tags: options.parsedTags,
+    targets: {},
+  });
 
   const lintTask = await addLinting(host, options);
   tasks.push(lintTask);

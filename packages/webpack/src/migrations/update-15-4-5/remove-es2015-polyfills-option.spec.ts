@@ -10,7 +10,7 @@ describe('15.4.5 migration (remove es2015-polyfills)', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it('should update all executors using @nrwl/webpack:webpack and es2015Polyfills option', async () => {

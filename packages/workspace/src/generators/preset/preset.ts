@@ -32,7 +32,6 @@ async function createPreset(tree: Tree, options: Schema) {
       name: options.name,
       style: options.style,
       linter: options.linter,
-      standaloneConfig: options.standaloneConfig,
     });
   } else if (options.preset === Preset.AngularStandalone) {
     const {
@@ -43,7 +42,6 @@ async function createPreset(tree: Tree, options: Schema) {
       name: options.name,
       style: options.style,
       linter: options.linter,
-      standaloneConfig: options.standaloneConfig,
       rootProject: true,
     });
   } else if (options.preset === Preset.ReactMonorepo) {
@@ -55,7 +53,6 @@ async function createPreset(tree: Tree, options: Schema) {
       name: options.name,
       style: options.style,
       linter: options.linter,
-      standaloneConfig: options.standaloneConfig,
       bundler: 'webpack',
     });
   } else if (options.preset === Preset.ReactStandalone) {
@@ -67,7 +64,6 @@ async function createPreset(tree: Tree, options: Schema) {
       name: options.name,
       style: options.style,
       linter: options.linter,
-      standaloneConfig: options.standaloneConfig,
       rootProject: true,
       bundler: options.bundler ?? 'vite',
       e2eTestRunner: 'cypress',
@@ -81,7 +77,6 @@ async function createPreset(tree: Tree, options: Schema) {
       name: options.name,
       style: options.style,
       linter: options.linter,
-      standaloneConfig: options.standaloneConfig,
     });
   } else if (options.preset === Preset.WebComponents) {
     const { applicationGenerator: webApplicationGenerator } = require('@nrwl' +
@@ -91,7 +86,6 @@ async function createPreset(tree: Tree, options: Schema) {
       name: options.name,
       style: options.style,
       linter: options.linter,
-      standaloneConfig: options.standaloneConfig,
       bundler: 'vite',
     });
   } else if (options.preset === Preset.Nest) {
@@ -109,7 +103,6 @@ async function createPreset(tree: Tree, options: Schema) {
     await expressApplicationGenerator(tree, {
       name: options.name,
       linter: options.linter,
-      standaloneConfig: options.standaloneConfig,
     });
   } else if (options.preset === Preset.ReactNative) {
     const { reactNativeApplicationGenerator } = require('@nrwl' +
@@ -117,7 +110,6 @@ async function createPreset(tree: Tree, options: Schema) {
     await reactNativeApplicationGenerator(tree, {
       name: options.name,
       linter: options.linter,
-      standaloneConfig: options.standaloneConfig,
       e2eTestRunner: 'detox',
     });
   } else if (options.preset === Preset.Expo) {
@@ -125,7 +117,6 @@ async function createPreset(tree: Tree, options: Schema) {
     await expoApplicationGenerator(tree, {
       name: options.name,
       linter: options.linter,
-      standaloneConfig: options.standaloneConfig,
       e2eTestRunner: 'detox',
     });
   } else if (options.preset === Preset.TS) {

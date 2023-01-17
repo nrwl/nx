@@ -1,55 +1,48 @@
-import { readJson } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import {
+  addProjectConfiguration,
+  readJson,
+  readProjectConfiguration,
+} from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
 import update from './update-node-executor';
 
 describe('Migration: rename execute to node', () => {
   it(`should rename the "execute" executor to "node"`, async () => {
-    let tree = createTreeWithEmptyV1Workspace();
+    let tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
-    tree.write(
-      'workspace.json',
-      JSON.stringify({
-        version: 2,
-        projects: {
-          myapp: {
-            root: 'apps/myapp',
-            sourceRoot: 'apps/myapp/src',
-            projectType: 'application',
-            targets: {
-              serve: {
-                executor: '@nrwl/js:node',
-                options: {},
-              },
-            },
-          },
+    addProjectConfiguration(tree, 'myapp', {
+      root: 'apps/myapp',
+      sourceRoot: 'apps/myapp/src',
+      projectType: 'application',
+      targets: {
+        serve: {
+          executor: '@nrwl/js:node',
+          options: {},
         },
-      })
-    );
+      },
+    });
 
     const tasks = await update(tree);
 
     expect(tasks).toBeDefined();
-    expect(readJson(tree, 'workspace.json')).toEqual({
-      version: 2,
-      projects: {
-        myapp: {
-          root: 'apps/myapp',
-          sourceRoot: 'apps/myapp/src',
-          projectType: 'application',
-          targets: {
-            serve: {
-              executor: '@nrwl/node:node',
-              options: {},
-            },
-          },
+    expect(readProjectConfiguration(tree, 'myapp')).toEqual({
+      $schema: '../../node_modules/nx/schemas/project-schema.json',
+      name: 'myapp',
+      root: 'apps/myapp',
+      sourceRoot: 'apps/myapp/src',
+      projectType: 'application',
+      targets: {
+        serve: {
+          executor: '@nrwl/node:node',
+          options: {},
         },
       },
     });
   });
 
   it(`should skip migration if no projects use @nrwl/js:node`, async () => {
-    let tree = createTreeWithEmptyV1Workspace();
+    let tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     tree.write(
       'workspace.json',

@@ -374,7 +374,7 @@ describe('Nx Plugin', () => {
     }, 90000);
   });
   describe('--tags', () => {
-    it('should add tags to workspace.json', async () => {
+    it('should add tags to project configuration', async () => {
       const plugin = uniq('plugin');
       runCLI(
         `generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint --tags=e2etag,e2ePackage `

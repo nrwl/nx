@@ -1,34 +1,30 @@
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
-import { readJson, Tree } from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { addProjectConfiguration, readJson, Tree } from '@nrwl/devkit';
 import { useReactJsxInTsconfig } from './use-react-jsx-in-tsconfig';
 
 describe('Update tsconfig for React apps', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it(`should add web babel preset if it does not exist`, async () => {
-    tree.write(
-      'workspace.json',
-      JSON.stringify({
-        projects: {
-          'web-app': {
-            root: 'apps/web-app',
-            projectType: 'application',
-          },
-          'react-app': {
-            root: 'apps/react-app',
-            projectType: 'application',
-          },
-          'preserve-jsx-app': {
-            root: 'apps/preserve-jsx-app',
-            projectType: 'application',
-          },
-        },
-      })
-    );
+    addProjectConfiguration(tree, 'web-app', {
+      root: 'apps/web-app',
+      projectType: 'application',
+    });
+
+    addProjectConfiguration(tree, 'react-app', {
+      root: 'apps/react-app',
+      projectType: 'application',
+    });
+
+    addProjectConfiguration(tree, 'preserve-jsx-app', {
+      root: 'apps/preserve-jsx-app',
+      projectType: 'application',
+    });
+
     tree.write(
       'nx.json',
       JSON.stringify({

@@ -1,14 +1,16 @@
 import { buildExplicitTypeScriptDependencies } from './explicit-project-dependencies';
 import { buildExplicitPackageJsonDependencies } from './explicit-package-json-dependencies';
 import { ProjectFileMap, ProjectGraph } from '../../config/project-graph';
-import { Workspace } from '../../config/workspace-json-project-json';
+import { ProjectsConfigurations } from '../../config/workspace-json-project-json';
+import { NxJsonConfiguration } from 'nx/src/config/nx-json';
 
 export function buildExplicitTypescriptAndPackageJsonDependencies(
   jsPluginConfig: {
     analyzeSourceFiles?: boolean;
     analyzePackageJson?: boolean;
   },
-  workspace: Workspace,
+  nxJsonConfiguration: NxJsonConfiguration,
+  projectsConfigurations: ProjectsConfigurations,
   projectGraph: ProjectGraph,
   filesToProcess: ProjectFileMap
 ) {
@@ -18,11 +20,7 @@ export function buildExplicitTypescriptAndPackageJsonDependencies(
     jsPluginConfig.analyzeSourceFiles === true
   ) {
     res = res.concat(
-      buildExplicitTypeScriptDependencies(
-        workspace,
-        projectGraph,
-        filesToProcess
-      )
+      buildExplicitTypeScriptDependencies(projectGraph, filesToProcess)
     );
   }
   if (
@@ -31,7 +29,8 @@ export function buildExplicitTypescriptAndPackageJsonDependencies(
   ) {
     res = res.concat(
       buildExplicitPackageJsonDependencies(
-        workspace,
+        nxJsonConfiguration,
+        projectsConfigurations,
         projectGraph,
         filesToProcess
       )

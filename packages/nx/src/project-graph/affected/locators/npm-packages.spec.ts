@@ -6,11 +6,11 @@ import { WholeFileChange } from '../../file-utils';
 import { getTouchedNpmPackages } from './npm-packages';
 
 describe('getTouchedNpmPackages', () => {
-  let workspaceJson;
+  let projectsConfigurations;
   let nxJson: NxJsonConfiguration<string[]>;
   let projectGraph: ProjectGraph;
   beforeEach(() => {
-    workspaceJson = {
+    projectsConfigurations = {
       projects: {
         proj1: {},
         proj2: {},
@@ -87,7 +87,7 @@ describe('getTouchedNpmPackages', () => {
           ],
         },
       ],
-      workspaceJson,
+      projectsConfigurations,
       nxJson,
       {
         dependencies: {
@@ -117,7 +117,7 @@ describe('getTouchedNpmPackages', () => {
           ],
         },
       ],
-      workspaceJson,
+      projectsConfigurations,
       nxJson,
       {
         dependencies: {
@@ -152,7 +152,7 @@ describe('getTouchedNpmPackages', () => {
           ],
         },
       ],
-      workspaceJson,
+      projectsConfigurations,
       nxJson,
       {
         devDependencies: {
@@ -182,7 +182,7 @@ describe('getTouchedNpmPackages', () => {
           ],
         },
       ],
-      workspaceJson,
+      projectsConfigurations,
       nxJson,
       {
         dependencies: {
@@ -220,7 +220,7 @@ describe('getTouchedNpmPackages', () => {
           ],
         },
       ],
-      workspaceJson,
+      projectsConfigurations,
       nxJson,
       {
         dependencies: {
@@ -250,7 +250,7 @@ describe('getTouchedNpmPackages', () => {
           getChanges: () => [new WholeFileChange()],
         },
       ],
-      workspaceJson,
+      projectsConfigurations,
       nxJson,
       {
         dependencies: {
@@ -282,7 +282,7 @@ describe('getTouchedNpmPackages', () => {
           ],
         },
       ],
-      workspaceJson,
+      projectsConfigurations,
       nxJson,
       {
         dependencies: {
@@ -327,7 +327,7 @@ describe('getTouchedNpmPackages', () => {
             ],
           },
         ],
-        workspaceJson,
+        projectsConfigurations,
         nxJson,
         {
           dependencies: {

@@ -1,5 +1,8 @@
 import type { NxJsonConfiguration } from './nx-json';
 
+/**
+ * @deprecated use ProjectsConfigurations or NxJsonConfiguration
+ */
 export interface Workspace extends ProjectsConfigurations, NxJsonConfiguration {
   projects: Record<string, ProjectConfiguration>;
 }
@@ -24,11 +27,6 @@ export interface ProjectsConfigurations {
   projects: {
     [projectName: string]: ProjectConfiguration;
   };
-}
-
-export interface RawProjectsConfigurations
-  extends Omit<ProjectsConfigurations, 'projects'> {
-  projects: { [projectName: string]: ProjectConfiguration | string };
 }
 
 /**

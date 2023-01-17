@@ -3,12 +3,14 @@ import { join } from 'path';
 import { ProjectFileMap, ProjectGraph } from '../../config/project-graph';
 import { parseJson } from '../../utils/json';
 import { getImportPath, joinPathFragments } from '../../utils/path';
-import { Workspace } from '../../config/workspace-json-project-json';
+import { ProjectsConfigurations } from '../../config/workspace-json-project-json';
+import { NxJsonConfiguration } from '../../config/nx-json';
 
 class ProjectGraphNodeRecords {}
 
 export function buildExplicitPackageJsonDependencies(
-  workspace: Workspace,
+  nxJsonConfiguration: NxJsonConfiguration,
+  projectsConfigurations: ProjectsConfigurations,
   graph: ProjectGraph,
   filesToProcess: ProjectFileMap
 ) {
@@ -23,7 +25,9 @@ export function buildExplicitPackageJsonDependencies(
         )
       ) {
         // we only create the package name map once and only if a package.json file changes
-        packageNameMap = packageNameMap || createPackageNameMap(workspace);
+        packageNameMap =
+          packageNameMap ||
+          createPackageNameMap(nxJsonConfiguration, projectsConfigurations);
         processPackageJson(source, f.file, graph, res, packageNameMap);
       }
     });
@@ -31,15 +35,25 @@ export function buildExplicitPackageJsonDependencies(
   return res;
 }
 
-function createPackageNameMap(w: Workspace) {
+function createPackageNameMap(
+  nxJsonConfiguration: NxJsonConfiguration,
+  projectsConfigurations: ProjectsConfigurations
+) {
   const res = {};
-  for (let projectName of Object.keys(w.projects)) {
+  for (let projectName of Object.keys(projectsConfigurations.projects)) {
     try {
       const packageJson = parseJson(
-        defaultFileRead(join(w.projects[projectName].root, 'package.json'))
+        defaultFileRead(
+          join(
+            projectsConfigurations.projects[projectName].root,
+            'package.json'
+          )
+        )
       );
-      res[packageJson.name ?? getImportPath(w.npmScope, projectName)] =
-        projectName;
+      res[
+        packageJson.name ??
+          getImportPath(nxJsonConfiguration.npmScope, projectName)
+      ] = projectName;
     } catch (e) {}
   }
   return res;

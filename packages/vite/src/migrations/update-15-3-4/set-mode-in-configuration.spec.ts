@@ -1,5 +1,5 @@
 import { readProjectConfiguration, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { mockViteReactAppGenerator } from '../../utils/test-utils';
 import { setModeInConfiguration } from './set-mode-in-configuration';
 
@@ -7,7 +7,7 @@ describe('set mode in configuration object', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     mockViteReactAppGenerator(tree);
   });
 

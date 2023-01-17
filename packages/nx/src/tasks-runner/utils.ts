@@ -26,7 +26,6 @@ export function getDependencyConfigs(
   defaultDependencyConfigs: Record<string, (TargetDependencyConfig | string)[]>,
   projectGraph: ProjectGraph
 ): TargetDependencyConfig[] | undefined {
-  // DependencyConfigs configured in workspace.json override configurations at the root.
   const dependencyConfigs = expandDependencyConfigSyntaxSugar(
     projectGraph.nodes[project].data?.targets[target]?.dependsOn ??
       defaultDependencyConfigs[target] ??

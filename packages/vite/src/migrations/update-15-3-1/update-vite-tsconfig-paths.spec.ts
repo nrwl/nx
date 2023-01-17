@@ -1,5 +1,5 @@
 import { addDependenciesToPackageJson, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import { mockViteReactAppGenerator } from '../../utils/test-utils';
 import { removeProjectsFromViteTsConfigPaths } from './update-vite-tsconfig-paths';
@@ -8,7 +8,7 @@ describe('remove projects from vite-tsconfig-paths', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     mockViteReactAppGenerator(tree);
     const existing = 'existing';
     const existingVersion = '1.0.0';

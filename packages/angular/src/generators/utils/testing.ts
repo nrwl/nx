@@ -1,6 +1,6 @@
 import type { Tree } from '@nrwl/devkit';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
 import { UnitTestRunner } from '../../utils/test-runners';
 import libraryGenerator from '../library/library';
@@ -8,7 +8,7 @@ import libraryGenerator from '../library/library';
 export async function createStorybookTestWorkspaceForLib(
   libName: string
 ): Promise<Tree> {
-  let tree = createTreeWithEmptyV1Workspace();
+  let tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
   const moduleGenerator = wrapAngularDevkitSchematic(
     '@schematics/angular',

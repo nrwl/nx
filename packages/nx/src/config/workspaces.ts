@@ -7,7 +7,7 @@ import { performance } from 'perf_hooks';
 
 import { workspaceRoot } from '../utils/workspace-root';
 import { readJsonFile } from '../utils/fileutils';
-import { logger, NX_PREFIX, stripIndent } from '../utils/logger';
+import { logger, NX_PREFIX } from '../utils/logger';
 import { loadNxPlugins, readPluginPackageJson } from '../utils/nx-plugin';
 import * as yaml from 'js-yaml';
 
@@ -27,31 +27,12 @@ import {
   TaskGraphExecutor,
 } from './misc-interfaces';
 import { PackageJson } from '../utils/package-json';
-import { sortObjectByKeys } from '../utils/object-sort';
 import { output } from '../utils/output';
 import { joinPathFragments } from '../utils/path';
-
-export function workspaceConfigName(
-  root: string,
-  opts?: {
-    _includeProjectsFromAngularJson?: boolean;
-  }
-): 'angular.json' | 'workspace.json' | null {
-  if (
-    existsSync(path.join(root, 'angular.json')) &&
-    // Include projects from angular.json if explicitly required.
-    // e.g. when invoked from `packages/devkit/src/utils/convert-nx-executor.ts`
-    (opts?._includeProjectsFromAngularJson ||
-      // Or if a workspace has `@nrwl/angular` installed then projects from `angular.json` to be considered by Nx.
-      isNrwlAngularInstalled())
-  ) {
-    return 'angular.json';
-  } else if (existsSync(path.join(root, 'workspace.json'))) {
-    return 'workspace.json';
-  } else {
-    return null;
-  }
-}
+import {
+  mergeAngularJsonAndGlobProjects,
+  shouldMergeAngularProjects,
+} from '../adapter/angular-json';
 
 export class Workspaces {
   private cachedProjectsConfig: ProjectsConfigurations;
@@ -81,7 +62,7 @@ export class Workspaces {
     return nxJson.defaultProject;
   }
 
-  readProjectsConfig(opts?: {
+  readProjectsConfigurations(opts?: {
     _ignorePluginInference?: boolean;
     _includeProjectsFromAngularJson?: boolean;
   }): ProjectsConfigurations {
@@ -92,56 +73,37 @@ export class Workspaces {
       return this.cachedProjectsConfig;
     }
     const nxJson = this.readNxJson();
-    const workspace = buildWorkspaceConfigurationFromGlobs(
+    const projectsConfigurations = buildProjectsConfigurationsFromGlobs(
       nxJson,
       globForProjectFiles(this.root, nxJson, opts?._ignorePluginInference),
       (path) => readJsonFile(join(this.root, path))
     );
-
-    const workspaceFile = workspaceConfigName(this.root, opts);
-
-    if (workspaceFile) {
-      workspace.projects = this.mergeWorkspaceJsonAndGlobProjects(
-        this.readFromWorkspaceJson(opts).projects,
-        workspace.projects
+    if (
+      shouldMergeAngularProjects(
+        this.root,
+        opts?._includeProjectsFromAngularJson
+      )
+    ) {
+      projectsConfigurations.projects = mergeAngularJsonAndGlobProjects(
+        projectsConfigurations.projects
       );
     }
-
-    assertValidNxJson(nxJson);
     this.cachedProjectsConfig = this.mergeTargetDefaultsIntoProjectDescriptions(
-      workspace,
+      projectsConfigurations,
       nxJson
     );
     return this.cachedProjectsConfig;
   }
 
   /**
-   * Deprecated. Use readProjectsConfig
+   * Deprecated. Use readProjectsConfigurations
    */
   readWorkspaceConfiguration(opts?: {
     _ignorePluginInference?: boolean;
     _includeProjectsFromAngularJson?: boolean;
   }): ProjectsConfigurations & NxJsonConfiguration {
     const nxJson = this.readNxJson();
-    return { ...this.readProjectsConfig(opts), ...nxJson };
-  }
-
-  private mergeWorkspaceJsonAndGlobProjects(
-    workspaceJsonProjects: { [name: string]: any },
-    globProjects: { [name: string]: any }
-  ) {
-    const res = workspaceJsonProjects;
-    const folders = new Set();
-    for (let k of Object.keys(res)) {
-      folders.add(res[k].root);
-    }
-
-    for (let k of Object.keys(globProjects)) {
-      if (!folders.has(globProjects[k].root)) {
-        res[k] = globProjects[k];
-      }
-    }
-    return res;
+    return { ...this.readProjectsConfigurations(opts), ...nxJson };
   }
 
   private mergeTargetDefaultsIntoProjectDescriptions(
@@ -427,15 +389,6 @@ export class Workspaces {
   private resolvePaths() {
     return this.root ? [this.root, __dirname] : [__dirname];
   }
-
-  private readFromWorkspaceJson(opts?: {
-    _includeProjectsFromAngularJson?: boolean;
-  }) {
-    const rawWorkspace = readJsonFile(
-      path.join(this.root, workspaceConfigName(this.root, opts))
-    );
-    return resolveNewFormatWithInlineProjects(rawWorkspace, this.root);
-  }
 }
 
 function normalizeExecutorSchema(
@@ -452,24 +405,6 @@ function normalizeExecutorSchema(
         : schema.properties,
     ...schema,
   };
-}
-
-function assertValidNxJson(nxJson: NxJsonConfiguration & { projects?: any }) {
-  // Assert valid workspace configuration
-  if (nxJson.projects) {
-    logger.warn(
-      'NX As of Nx 13, project configuration should be moved from nx.json to workspace.json/project.json. Please run "nx format" to fix this.'
-    );
-  }
-}
-
-function isNrwlAngularInstalled() {
-  try {
-    require.resolve('@nrwl/angular');
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 function findFullGeneratorName(
@@ -491,123 +426,6 @@ function findFullGeneratorName(
     }
   }
 }
-
-export function reformattedWorkspaceJsonOrNull(w: any) {
-  const workspaceJson =
-    w.version === 2 ? toNewFormatOrNull(w) : toOldFormatOrNull(w);
-  if (workspaceJson?.projects) {
-    workspaceJson.projects = sortObjectByKeys(workspaceJson.projects);
-  }
-
-  return workspaceJson;
-}
-
-export function toNewFormat(w: any): ProjectsConfigurations {
-  const f = toNewFormatOrNull(w);
-  return f ?? w;
-}
-
-export function toNewFormatOrNull(w: any) {
-  let formatted = false;
-  Object.values(w.projects || {}).forEach((projectConfig: any) => {
-    if (projectConfig.architect) {
-      renamePropertyWithStableKeys(projectConfig, 'architect', 'targets');
-      formatted = true;
-    }
-    if (projectConfig.schematics) {
-      renamePropertyWithStableKeys(projectConfig, 'schematics', 'generators');
-      formatted = true;
-    }
-    Object.values(projectConfig.targets || {}).forEach((target: any) => {
-      if (target.builder !== undefined) {
-        renamePropertyWithStableKeys(target, 'builder', 'executor');
-        formatted = true;
-      }
-    });
-  });
-  if (w.schematics) {
-    renamePropertyWithStableKeys(w, 'schematics', 'generators');
-    formatted = true;
-  }
-  if (w.version !== 2) {
-    w.version = 2;
-    formatted = true;
-  }
-  return formatted ? w : null;
-}
-
-export function toOldFormatOrNull(w: any) {
-  let formatted = false;
-
-  Object.values(w.projects || {}).forEach((projectConfig: any) => {
-    if (typeof projectConfig === 'string') {
-      throw new Error(
-        "'project.json' files are incompatible with version 1 workspace schemas."
-      );
-    }
-    if (projectConfig.targets) {
-      renamePropertyWithStableKeys(projectConfig, 'targets', 'architect');
-      formatted = true;
-    }
-    if (projectConfig.generators) {
-      renamePropertyWithStableKeys(projectConfig, 'generators', 'schematics');
-      formatted = true;
-    }
-    delete projectConfig.name;
-    Object.values(projectConfig.architect || {}).forEach((target: any) => {
-      if (target.executor !== undefined) {
-        renamePropertyWithStableKeys(target, 'executor', 'builder');
-        formatted = true;
-      }
-    });
-  });
-
-  if (w.generators) {
-    renamePropertyWithStableKeys(w, 'generators', 'schematics');
-    formatted = true;
-  }
-  if (w.version !== 1) {
-    w.version = 1;
-    formatted = true;
-  }
-  return formatted ? w : null;
-}
-
-export function resolveOldFormatWithInlineProjects(
-  w: any,
-  root: string = workspaceRoot
-) {
-  const inlined = inlineProjectConfigurations(w, root);
-  const formatted = toOldFormatOrNull(inlined);
-  return formatted ? formatted : inlined;
-}
-
-export function resolveNewFormatWithInlineProjects(
-  w: any,
-  root: string = workspaceRoot
-) {
-  return toNewFormat(inlineProjectConfigurations(w, root));
-}
-
-function inlineProjectConfigurations(w: any, root: string = workspaceRoot) {
-  Object.entries(w.projects || {}).forEach(
-    ([project, config]: [string, any]) => {
-      if (typeof config === 'string') {
-        const configFilePath = path.join(root, config, 'project.json');
-        const fileConfig = readJsonFile(configFilePath);
-        w.projects[project] = {
-          root: config,
-          ...fileConfig,
-        };
-      }
-    }
-  );
-  return w;
-}
-
-/**
- * Reads an nx.json file from a given path or extends a local nx.json config.
- */
 
 /**
  * Pulled from toFileName in names from @nrwl/devkit.
@@ -861,8 +679,7 @@ function buildProjectConfigurationFromPackageJson(
 }
 
 export function inferProjectFromNonStandardFile(
-  file: string,
-  nxJson: NxJsonConfiguration
+  file: string
 ): ProjectConfiguration & { name: string } {
   const directory = dirname(file).split('\\').join('/');
 
@@ -872,7 +689,7 @@ export function inferProjectFromNonStandardFile(
   };
 }
 
-export function buildWorkspaceConfigurationFromGlobs(
+export function buildProjectsConfigurationsFromGlobs(
   nxJson: NxJsonConfiguration,
   projectFiles: string[], // making this parameter allows devkit to pick up newly created projects
   readJson: <T extends Object>(string) => T = <T extends Object>(string) =>
@@ -925,10 +742,7 @@ export function buildWorkspaceConfigurationFromGlobs(
       } else {
         // This project was created from an nx plugin.
         // The only thing we know about the file is its location
-        const { name, ...config } = inferProjectFromNonStandardFile(
-          file,
-          nxJson
-        );
+        const { name, ...config } = inferProjectFromNonStandardFile(file);
         if (!projects[name]) {
           projects[name] = config;
         } else {

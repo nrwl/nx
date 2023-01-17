@@ -64,8 +64,6 @@ describe('create-nx-workspace', () => {
       .filter((pm) => pm !== packageManager)
       .map((pm) => packageManagerLockFile[pm]);
 
-    checkFilesDoNotExist(...foreignLockFiles, 'workspace.json');
-
     expectNoAngularDevkit();
   });
 

@@ -16,7 +16,7 @@ import {
   isWindows,
   fileExists,
   removeFile,
-  readResolvedWorkspaceConfiguration,
+  readResolvedConfiguration,
 } from '@nrwl/e2e/utils';
 
 describe('Nx Affected and Graph Tests', () => {
@@ -234,24 +234,9 @@ describe('Nx Affected and Graph Tests', () => {
       }
     });
 
-    it('should detect changes to projects based on the workspace.json', () => {
-      // TODO: investigate why affected gives different results on windows
-      if (isNotWindows()) {
-        generateAll();
-        updateProjectConfig(myapp, (config) => ({
-          ...config,
-          prefix: 'my-app',
-        }));
-
-        expect(runCLI('affected:apps')).toContain(myapp);
-        expect(runCLI('affected:apps')).not.toContain(myapp2);
-        expect(runCLI('affected:libs')).not.toContain(mylib);
-      }
-    });
-
     it('should affect all projects by removing projects', () => {
       generateAll();
-      const root = readResolvedWorkspaceConfiguration().projects[mylib].root;
+      const root = readResolvedConfiguration().projects[mylib].root;
       removeFile(root);
       expect(runCLI('affected:apps')).toContain(myapp);
       expect(runCLI('affected:apps')).toContain(myapp2);

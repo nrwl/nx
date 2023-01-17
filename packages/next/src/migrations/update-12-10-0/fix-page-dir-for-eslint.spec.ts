@@ -1,5 +1,5 @@
 import { readJson, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
 import { applicationGenerator } from '../../generators/application/application';
 import { fixPageDirForEslint } from './fix-page-dir-for-eslint';
@@ -8,7 +8,7 @@ describe('Migration: Fix pages directory for ESLint', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     await applicationGenerator(tree, {
       style: 'none',

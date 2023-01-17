@@ -19,6 +19,8 @@ Object {
 
 exports[`convert-tslint-to-eslint should work for Cypress applications 2`] = `
 Object {
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "e2e-app-1",
   "projectType": "application",
   "root": "apps/e2e-app-1",
   "targets": Object {

@@ -47,7 +47,7 @@ import { Workspaces } from '../config/workspaces';
 export async function buildProjectGraph() {
   const projectConfigurations = new Workspaces(
     workspaceRoot
-  ).readProjectsConfig();
+  ).readProjectsConfigurations();
   const { projectFileMap, allWorkspaceFiles } = createProjectFileMap(
     projectConfigurations,
     defaultFileHasher.allFileData()
@@ -323,7 +323,8 @@ function buildExplicitDependenciesWithoutWorkers(
 ) {
   buildExplicitTypescriptAndPackageJsonDependencies(
     jsPluginConfig,
-    ctx.workspace,
+    ctx.nxJsonConfiguration,
+    ctx.projectsConfigurations,
     builder.graph,
     ctx.filesToProcess
   ).forEach((r) => {
@@ -388,7 +389,8 @@ function buildExplicitDependenciesUsingWorkers(
         }
       });
       w.postMessage({
-        workspace: ctx.workspace,
+        nxJsonConfiguration: ctx.nxJsonConfiguration,
+        projectsConfigurations: ctx.projectsConfigurations,
         projectGraph: builder.graph,
         jsPluginConfig,
       });
@@ -419,6 +421,8 @@ function createContext(
     {} as Record<string, ProjectConfiguration>
   );
   return {
+    nxJsonConfiguration: nxJson,
+    projectsConfigurations,
     workspace: {
       ...projectsConfigurations,
       ...nxJson,

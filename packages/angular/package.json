@@ -8,9 +8,6 @@
     "url": "https://github.com/nrwl/nx.git",
     "directory": "packages/angular"
   },
-  "scripts": {
-    "postinstall": "node ./scripts/nx-cli-warning.js"
-  },
   "keywords": [
     "Monorepo",
     "Angular",

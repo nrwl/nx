@@ -1,5 +1,5 @@
 import { Tree } from '../../generators/tree';
-import { readNxJson } from '../../generators/utils/project-configuration';
+import { readNxJson } from '../../generators/utils/nx-json';
 import { globForProjectFiles } from '../../config/workspaces';
 import { dirname } from 'path';
 import { readJson, writeJson } from '../../generators/utils/json';

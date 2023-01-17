@@ -1,6 +1,6 @@
 import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
 import { readJson, readProjectConfiguration, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
 import { libraryGenerator } from '@nrwl/workspace/generators';
 import { cypressProjectGenerator } from './cypress-project';
@@ -14,10 +14,9 @@ describe('@nrwl/storybook:cypress-project', () => {
 
   beforeEach(async () => {
     mockedInstalledCypressVersion.mockReturnValue(10);
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await libraryGenerator(tree, {
       name: 'test-ui-lib',
-      standaloneConfig: false,
     });
   });
   afterEach(() => jest.clearAllMocks());
@@ -26,7 +25,6 @@ describe('@nrwl/storybook:cypress-project', () => {
     await cypressProjectGenerator(tree, {
       name: 'test-ui-lib',
       linter: Linter.EsLint,
-      standaloneConfig: false,
     });
 
     expect(tree.exists('apps/test-ui-lib-e2e/cypress.config.ts')).toBeTruthy();
@@ -43,7 +41,6 @@ describe('@nrwl/storybook:cypress-project', () => {
     await cypressProjectGenerator(tree, {
       name: 'test-ui-lib',
       linter: Linter.EsLint,
-      standaloneConfig: false,
     });
 
     expect(tree.exists('apps/test-ui-lib-e2e/cypress.json')).toBeTruthy();
@@ -55,7 +52,6 @@ describe('@nrwl/storybook:cypress-project', () => {
     await cypressProjectGenerator(tree, {
       name: 'test-ui-lib',
       linter: Linter.EsLint,
-      standaloneConfig: false,
     });
     const project = readProjectConfiguration(tree, 'test-ui-lib-e2e');
 
@@ -74,10 +70,10 @@ describe('@nrwl/storybook:cypress-project', () => {
       name: 'test-ui-lib',
       directory: 'one/two',
       linter: Linter.EsLint,
-      standaloneConfig: false,
     });
-    const workspace = readJson(tree, 'workspace.json');
-    expect(workspace.projects['one-two-test-ui-lib-e2e']).toBeDefined();
+    expect(
+      readProjectConfiguration(tree, 'one-two-test-ui-lib-e2e')
+    ).toBeDefined();
     expect(
       tree.exists('apps/one/two/test-ui-lib-e2e/cypress.config.ts')
     ).toBeTruthy();
@@ -91,7 +87,6 @@ describe('@nrwl/storybook:cypress-project', () => {
       name: 'test-ui-lib',
       directory: 'one/two',
       linter: Linter.EsLint,
-      standaloneConfig: false,
     });
     expect(
       readJson(tree, 'package.json').devDependencies['cypress']

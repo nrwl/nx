@@ -1,6 +1,6 @@
 import { createApp, createLib } from '../../utils/testing-generators';
 import { logger, readJson, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { hookGenerator } from './hook';
 
 describe('hook', () => {
@@ -9,7 +9,7 @@ describe('hook', () => {
 
   beforeEach(async () => {
     projectName = 'my-lib';
-    appTree = createTreeWithEmptyV1Workspace();
+    appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await createApp(appTree, 'my-app');
     await createLib(appTree, projectName);
     jest.spyOn(logger, 'warn').mockImplementation(() => {});

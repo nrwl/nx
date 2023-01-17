@@ -868,17 +868,14 @@ Callback to install dependencies only if necessary, no-op otherwise
 
 Adds project configuration to the Nx workspace.
 
-The project configuration is stored in workspace.json or the associated project.json file.
-The utility will update either files.
-
 #### Parameters
 
-| Name                   | Type                                                                        | Description                                                                                |
-| :--------------------- | :-------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------- |
-| `tree`                 | [`Tree`](../../devkit/documents/index#tree)                                 | the file system tree                                                                       |
-| `projectName`          | `string`                                                                    | unique name. Often directories are part of the name (e.g., mydir-mylib)                    |
-| `projectConfiguration` | [`ProjectConfiguration`](../../devkit/documents/index#projectconfiguration) | project configuration                                                                      |
-| `standalone?`          | `boolean`                                                                   | should the project use package.json? If false, the project config is inside workspace.json |
+| Name                   | Type                                                                        | Default value | Description                                                             |
+| :--------------------- | :-------------------------------------------------------------------------- | :------------ | :---------------------------------------------------------------------- |
+| `tree`                 | [`Tree`](../../devkit/documents/index#tree)                                 | `undefined`   | the file system tree                                                    |
+| `projectName`          | `string`                                                                    | `undefined`   | unique name. Often directories are part of the name (e.g., mydir-mylib) |
+| `projectConfiguration` | [`ProjectConfiguration`](../../devkit/documents/index#projectconfiguration) | `undefined`   | project configuration                                                   |
+| `standalone`           | `boolean`                                                                   | `true`        | whether the project is configured in workspace.json or not              |
 
 #### Returns
 
@@ -1012,10 +1009,10 @@ Convert an Nx Generator into an Angular Devkit Schematic.
 
 #### Parameters
 
-| Name                           | Type                                                        | Default value | Description                                                                                       |
-| :----------------------------- | :---------------------------------------------------------- | :------------ | :------------------------------------------------------------------------------------------------ |
-| `generator`                    | [`Generator`](../../devkit/documents/index#generator)<`T`\> | `undefined`   | The Nx generator to convert to an Angular Devkit Schematic.                                       |
-| `skipWritingConfigInOldFormat` | `boolean`                                                   | `false`       | Whether to skip writing the configuration in the old format (the one used by the Angular DevKit). |
+| Name                           | Type                                                        | Default value | Description                                                 |
+| :----------------------------- | :---------------------------------------------------------- | :------------ | :---------------------------------------------------------- |
+| `generator`                    | [`Generator`](../../devkit/documents/index#generator)<`T`\> | `undefined`   | The Nx generator to convert to an Angular Devkit Schematic. |
+| `skipWritingConfigInOldFormat` | `boolean`                                                   | `false`       | -                                                           |
 
 #### Returns
 
@@ -1489,7 +1486,9 @@ Example:
 
 ### getWorkspacePath
 
-▸ **getWorkspacePath**(`tree`): `"/angular.json"` \| `"/workspace.json"` \| `null`
+▸ **getWorkspacePath**(`tree`): `"angular.json"` \| `"workspace.json"`
+
+**`deprecated`** all projects are configured using project.json
 
 #### Parameters
 
@@ -1499,7 +1498,7 @@ Example:
 
 #### Returns
 
-`"/angular.json"` \| `"/workspace.json"` \| `null`
+`"angular.json"` \| `"workspace.json"`
 
 ---
 
@@ -1530,6 +1529,8 @@ Runs `npm install` or `yarn install`. It will skip running the install if
 ▸ **isStandaloneProject**(`tree`, `project`): `boolean`
 
 Returns if a project has a standalone configuration (project.json).
+
+**`deprecated`** non-standalone projects were deprecated
 
 #### Parameters
 
@@ -1873,9 +1874,6 @@ Reads nx.json
 
 Reads a project configuration.
 
-The project configuration is stored in workspace.json or the associated project.json file.
-The utility will read from either file.
-
 **`throws`** If supplied projectName cannot be found
 
 #### Parameters
@@ -1992,15 +1990,12 @@ Callback to uninstall dependencies only if necessary. undefined is returned if c
 
 Removes the configuration of an existing project.
 
-The project configuration is stored in workspace.json or the associated project.json file.
-The utility will update either file.
-
 #### Parameters
 
-| Name          | Type                                        |
-| :------------ | :------------------------------------------ |
-| `tree`        | [`Tree`](../../devkit/documents/index#tree) |
-| `projectName` | `string`                                    |
+| Name          | Type                                        | Description                                                             |
+| :------------ | :------------------------------------------ | :---------------------------------------------------------------------- |
+| `tree`        | [`Tree`](../../devkit/documents/index#tree) | the file system tree                                                    |
+| `projectName` | `string`                                    | unique name. Often directories are part of the name (e.g., mydir-mylib) |
 
 #### Returns
 
@@ -2292,9 +2287,6 @@ Update nx.json
 ▸ **updateProjectConfiguration**(`tree`, `projectName`, `projectConfiguration`): `void`
 
 Updates the configuration of an existing project.
-
-The project configuration is stored in workspace.json or the associated project.json file.
-The utility will update either files.
 
 #### Parameters
 
