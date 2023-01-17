@@ -61,7 +61,7 @@
     "webpack-merge": "5.7.3"
   },
   "peerDependencies": {
-    "@nguniversal/builders": "~15.0.0",
+    "@nguniversal/builders": "~15.1.0",
     "rxjs": "^6.5.3 || ^7.5.0"
   },
   "peerDependenciesMeta": {
