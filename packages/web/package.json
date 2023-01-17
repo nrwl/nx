@@ -43,8 +43,6 @@
     "@nrwl/js": "file:../js",
     "@nrwl/linter": "file:../linter",
     "@nrwl/rollup": "file:../rollup",
-    "@nrwl/vite": "file:../vite",
-    "@nrwl/webpack": "file:../webpack",
     "@nrwl/workspace": "file:../workspace",
     "babel-plugin-const-enum": "^1.0.1",
     "babel-plugin-macros": "^2.8.0",
