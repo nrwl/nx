@@ -185,7 +185,10 @@ export function withNx(opts?: { skipTypeChecking?: boolean }) {
       optimization: {
         ...config.optimization,
         sideEffects: true,
-        minimize: !!options.optimization,
+        minimize:
+          typeof options.optimization === 'object'
+            ? !!options.optimization.scripts
+            : !!options.optimization,
         minimizer: [
           options.compiler !== 'swc'
             ? new TerserPlugin({
