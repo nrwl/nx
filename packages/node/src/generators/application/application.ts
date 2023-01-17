@@ -298,6 +298,7 @@ function updateTsConfigOptions(tree: Tree, options: NormalizedSchema) {
         compilerOptions: {
           ...shared.tsConfigBaseOptions,
           ...json.compilerOptions,
+          esModuleInterop: true,
         },
         ...json,
         extends: undefined,
