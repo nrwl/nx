@@ -1,8 +1,8 @@
 import {
-  checkFilesDoNotExist,
   checkFilesExist,
   cleanupProject,
   newProject,
+  readFile,
   runCLI,
   runCLIAsync,
   tmpProjPath,
@@ -10,6 +10,7 @@ import {
   updateFile,
 } from '@nrwl/e2e/utils';
 import { execSync } from 'child_process';
+import { read } from 'fs-extra';
 
 describe('Node Applications + webpack', () => {
   beforeEach(() => newProject());
@@ -23,13 +24,29 @@ describe('Node Applications + webpack', () => {
 
     checkFilesExist(`apps/${app}/webpack.config.js`);
 
-    updateFile(`apps/${app}/src/main.ts`, `console.log('Hello World!');`);
+    updateFile(
+      `apps/${app}/src/main.ts`,
+      `
+      function foo(x: string) {
+        return "foo " + x;
+      };
+      console.log(foo("bar")); 
+    `
+    );
     await runCLIAsync(`build ${app}`);
 
     checkFilesExist(`dist/apps/${app}/main.js`);
+    // no optimization by default
+    const content = readFile(`dist/apps/${app}/main.js`);
+    expect(content).toContain('console.log(foo("bar"))');
+
     const result = execSync(`node dist/apps/${app}/main.js`, {
       cwd: tmpProjPath(),
     }).toString();
-    expect(result).toMatch(/Hello World!/);
+    expect(result).toMatch(/foo bar/);
+
+    await runCLIAsync(`build ${app} --optimization`);
+    const optimizedContent = readFile(`dist/apps/${app}/main.js`);
+    expect(optimizedContent).toContain('console.log("foo "+"bar")');
   }, 300_000);
 });
