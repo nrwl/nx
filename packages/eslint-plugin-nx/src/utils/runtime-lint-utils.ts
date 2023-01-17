@@ -419,16 +419,22 @@ export function isAngularSecondaryEntrypoint(
   importExpr: string
 ): boolean {
   const targetFiles = targetProjectLocator.findPaths(importExpr);
-  return (
-    targetFiles &&
-    targetFiles.some(
-      (file) =>
-        // The `ng-packagr` defaults to the `src/public_api.ts` entry file to
-        // the public API if the `lib.entryFile` is not specified explicitly.
-        (file.endsWith('src/public_api.ts') || file.endsWith('src/index.ts')) &&
-        existsSync(
-          joinPathFragments(workspaceRoot, file, '../../', 'ng-package.json')
-        )
-    )
-  );
+  return targetFiles && targetFiles.some(fileIsSecondaryEntryPoint);
+}
+
+function fileIsSecondaryEntryPoint(file: string): boolean {
+  let parent = joinPathFragments(file, '../');
+  while (parent !== './') {
+    // we need to find closest existing ng-package.json
+    // in order to determine if the file matches the secondary entry point
+    const ngPackageContent = readFileIfExisting(
+      joinPathFragments(workspaceRoot, parent, 'ng-package.json')
+    );
+    if (ngPackageContent) {
+      const entryFile = parseJson(ngPackageContent)?.ngPackage?.lib?.entryFile;
+      return entryFile && file === joinPathFragments(parent, entryFile);
+    }
+    parent = joinPathFragments(parent, '../');
+  }
+  return false;
 }

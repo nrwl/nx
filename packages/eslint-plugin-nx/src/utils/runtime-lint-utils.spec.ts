@@ -3,13 +3,21 @@ import {
   ProjectGraphExternalNode,
   ProjectGraphProjectNode,
 } from '@nrwl/devkit';
+import { TargetProjectLocator } from 'nx/src/utils/target-project-locator';
 import {
   DepConstraint,
   findTransitiveExternalDependencies,
   hasBannedDependencies,
   hasBannedImport,
+  isAngularSecondaryEntrypoint,
   isTerminalRun,
 } from './runtime-lint-utils';
+import { vol } from 'memfs';
+
+jest.mock('nx/src/utils/workspace-root', () => ({
+  workspaceRoot: '/root',
+}));
+jest.mock('fs', () => require('memfs').fs);
 
 describe('hasBannedImport', () => {
   const source: ProjectGraphProjectNode = {
@@ -311,5 +319,99 @@ describe('is terminal run', () => {
       '--clientProcessId=95193',
     ]);
     expect(isTerminalRun()).toBe(false);
+  });
+});
+
+describe('isAngularSecondaryEntrypoint', () => {
+  beforeEach(() => {
+    const tsConfig = {
+      compilerOptions: {
+        baseUrl: '.',
+        resolveJsonModule: true,
+        paths: {
+          '@project/standard': ['libs/standard/src/index.ts'],
+          '@project/standard/secondary': [
+            'libs/standard/secondary/src/index.ts',
+          ],
+          '@project/standard/tertiary': [
+            'libs/standard/tertiary/src/public_api.ts',
+          ],
+          '@project/features': ['libs/features/src/index.ts'],
+          '@project/features/*': ['libs/features/*/random/folder/api.ts'],
+        },
+      },
+    };
+    const fsJson = {
+      'tsconfig.base.json': JSON.stringify(tsConfig),
+      'libs/standard/package.json': '{ "version": "0.0.0" }',
+      'libs/standard/secondary/ng-package.json': JSON.stringify({
+        version: '0.0.0',
+        ngPackage: { lib: { entryFile: 'src/index.ts' } },
+      }),
+      'libs/standard/tertiary/ng-package.json': JSON.stringify({
+        version: '0.0.0',
+        ngPackage: { lib: { entryFile: 'src/public_api.ts' } },
+      }),
+      'libs/features/package.json': '{ "version": "0.0.0" }',
+      'libs/features/secondary/ng-package.json': JSON.stringify({
+        version: '0.0.0',
+        ngPackage: { lib: { entryFile: 'random/folder/api.ts' } },
+      }),
+    };
+    vol.fromJSON(fsJson, '/root');
+  });
+
+  it('should return true for secondary entrypoints', () => {
+    const targetLocator = new TargetProjectLocator(
+      {
+        standard: {
+          name: 'standard',
+          type: 'lib',
+          data: {
+            root: '/root/libs/standard',
+            files: [
+              { file: 'libs/standard/package.json', hash: 'hsh' },
+              { file: 'libs/standard/src/index.ts', hash: 'hsh' },
+              { file: 'libs/standard/secondary/ng-package.json', hash: 'hsh' },
+              { file: 'libs/standard/secondary/src/index.ts', hash: 'hsh' },
+              { file: 'libs/standard/tertiary/ng-package.json', hash: 'hsh' },
+              { file: 'libs/standard/tertiary/src/public_api.ts', hash: 'hsh' },
+            ],
+          },
+        },
+        features: {
+          name: 'features',
+          type: 'lib',
+          data: {
+            root: '/root/libs/features',
+            files: [
+              { file: 'libs/features/package.json', hash: 'hsh' },
+              { file: 'libs/features/src/index.ts', hash: 'hsh' },
+              { file: 'libs/features/secondary/ng-package.json', hash: 'hsh' },
+              {
+                file: 'libs/features/secondary/random/folder/api.ts',
+                hash: 'hsh',
+              },
+            ],
+          },
+        },
+      },
+      {}
+    );
+    expect(
+      isAngularSecondaryEntrypoint(targetLocator, '@project/standard')
+    ).toBe(false);
+    expect(
+      isAngularSecondaryEntrypoint(targetLocator, '@project/standard/secondary')
+    ).toBe(true);
+    expect(
+      isAngularSecondaryEntrypoint(targetLocator, '@project/standard/tertiary')
+    ).toBe(true);
+    expect(
+      isAngularSecondaryEntrypoint(targetLocator, '@project/features')
+    ).toBe(false);
+    expect(
+      isAngularSecondaryEntrypoint(targetLocator, '@project/features/secondary')
+    ).toBe(true);
   });
 });

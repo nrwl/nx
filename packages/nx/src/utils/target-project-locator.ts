@@ -93,7 +93,16 @@ export class TargetProjectLocator {
           normalizedImportExpr === path.replace(/\/\*$/, ''))
     );
     if (wildcardPath) {
-      return this.paths[wildcardPath];
+      // we need to map wildcards to actual path segments
+      const keySegments = wildcardPath.split('/');
+      const importSegments = normalizedImportExpr.split('/');
+      while (keySegments.length && keySegments[0] === importSegments[0]) {
+        keySegments.shift();
+        importSegments.shift();
+      }
+      return this.paths[wildcardPath].map((path) =>
+        path.replace('*', importSegments.join('/'))
+      );
     }
     return undefined;
   }
