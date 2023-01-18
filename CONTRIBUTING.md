@@ -305,7 +305,7 @@ The scope must be one of the following:
 - node - anything Node specific
 - nx-cloud - anything NxCloud specific
 - nx-plugin - anything Nx Plugin specific
-- nxdev - anything related to docs infrastructure
+- nx-dev - anything related to docs infrastructure
 - react - anything React specific
 - react-native - anything React Native specific
 - repo - anything related to managing the Nx repo itself
