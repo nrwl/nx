@@ -142,6 +142,7 @@ export function getViteBuildOptions(
     manifest: options.manifest,
     ssrManifest: options.ssrManifest,
     ssr: options.ssr,
+    watch: options.watch,
   };
 }
 
