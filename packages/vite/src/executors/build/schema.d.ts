@@ -12,4 +12,5 @@ export interface ViteBuildExecutorOptions {
   logLevel?: 'info' | 'warn' | 'error' | 'silent';
   mode?: string;
   ssr?: boolean | string;
+  watch?: object | null;
 }

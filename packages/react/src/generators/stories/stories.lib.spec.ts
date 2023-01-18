@@ -10,9 +10,6 @@ describe('react:stories for libraries', () => {
   let appTree: Tree;
 
   beforeEach(async () => {
-    jest
-      .spyOn(enquirer, 'prompt')
-      .mockReturnValue(new Promise((res) => res({ runner: 'jest' })));
     appTree = await createTestUILib('test-ui-lib');
 
     // create another component
