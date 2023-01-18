@@ -5,10 +5,7 @@ import {
   readJsonFile,
   workspaceRoot,
 } from '@nrwl/devkit';
-import {
-  composePlugins,
-  getBaseWebpackPartial,
-} from '@nrwl/webpack/src/utils/config';
+import { composePlugins } from '@nrwl/webpack/src/utils/config';
 import { NormalizedWebpackExecutorOptions } from '@nrwl/webpack/src/executors/webpack/schema';
 import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-utils';
 import { join } from 'path';
@@ -17,7 +14,6 @@ import { Configuration, DefinePlugin, WebpackPluginInstance } from 'webpack';
 import * as mergeWebpack from 'webpack-merge';
 import { mergePlugins } from './merge-plugins';
 import { withReact } from '../with-react';
-import { withNx, withWeb } from '@nrwl/webpack';
 
 // This is shamelessly taken from CRA and modified for NX use
 // https://github.com/facebook/create-react-app/blob/4784997f0682e75eb32a897b4ffe34d735912e6c/packages/react-scripts/config/env.js#L71
@@ -96,7 +92,17 @@ export const webpack = async (
   logger.info(
     '=> Loading Nrwl React Storybook preset from "@nrwl/react/plugins/storybook"'
   );
+  // In case anyone is missing dep and did not run migrations.
+  // See: https://github.com/nrwl/nx/issues/14455
+  try {
+    require.resolve('@nrwl/webpack');
+  } catch {
+    throw new Error(
+      `'@nrwl/webpack' package is not installed. Install it and try again.`
+    );
+  }
 
+  const { withNx, withWeb } = require('@nrwl/webpack');
   const tsconfigPath = join(options.configDir, 'tsconfig.json');
 
   const builderOptions: NormalizedWebpackExecutorOptions = {

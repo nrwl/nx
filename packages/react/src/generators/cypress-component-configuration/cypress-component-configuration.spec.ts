@@ -12,7 +12,6 @@ import { applicationGenerator } from '../application/application';
 import { componentGenerator } from '../component/component';
 import { libraryGenerator } from '../library/library';
 import { cypressComponentConfigGenerator } from './cypress-component-configuration';
-import enquirer = require('enquirer');
 
 let projectGraph: ProjectGraph;
 jest.mock('@nrwl/devkit', () => ({
