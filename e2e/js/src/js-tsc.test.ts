@@ -38,7 +38,7 @@ describe('js e2e', () => {
     const babelRc = readJson(`libs/${lib}/.babelrc`);
     expect(babelRc.plugins).toBeUndefined();
     expect(babelRc.presets).toStrictEqual([
-      ['@nrwl/web/babel', { useBuiltIns: 'usage' }],
+      ['@nrwl/js/babel', { useBuiltIns: 'usage' }],
     ]);
 
     expect(runCLI(`build ${lib}`)).toContain('Done compiling TypeScript files');
