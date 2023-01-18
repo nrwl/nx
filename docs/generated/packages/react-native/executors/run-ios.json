@@ -28,7 +28,8 @@
         "type": "string",
         "description": "Explicitly set the Xcode configuration to use.",
         "default": "Debug",
-        "examples": ["Debug", "Release"]
+        "examples": ["Debug", "Release"],
+        "x-priority": "important"
       },
       "scheme": {
         "type": "string",
@@ -38,21 +39,25 @@
         "type": "string",
         "description": "Explicitly set simulator to use. Optionally include iOS version between parenthesis at the end to match an exact version: `iPhone X (12.1)`.",
         "default": "iPhone 13",
-        "examples": ["iPhone 13", "iPhone X"]
+        "examples": ["iPhone 13", "iPhone X"],
+        "x-priority": "important"
       },
       "device": {
         "type": "string",
-        "description": "Explicitly set device to use by name. The value is not required if you have a single device connected."
+        "description": "Explicitly set device to use by name. The value is not required if you have a single device connected.",
+        "x-priority": "important"
       },
       "install": {
         "type": "boolean",
         "description": "Runs `pod install` for native modules before building iOS app.",
-        "default": true
+        "default": true,
+        "x-priority": "internal"
       },
       "sync": {
         "type": "boolean",
         "description": "Syncs npm dependencies to `package.json` (for React Native autolink). Always true when `--install` is used.",
-        "default": true
+        "default": true,
+        "x-priority": "internal"
       },
       "port": {
         "type": "number",

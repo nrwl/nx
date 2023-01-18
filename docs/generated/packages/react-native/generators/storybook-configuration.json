@@ -21,7 +21,8 @@
         "type": "boolean",
         "description": "Automatically generate *.stories.ts files for components declared in this project?",
         "x-prompt": "Automatically generate *.stories.ts files for components declared in this project?",
-        "default": true
+        "default": true,
+        "x-priority": "important"
       },
       "js": {
         "type": "boolean",

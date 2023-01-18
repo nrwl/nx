@@ -18,7 +18,8 @@
       "skipFormat": {
         "description": "Skip formatting files.",
         "type": "boolean",
-        "default": false
+        "default": false,
+        "x-priority": "internal"
       },
       "e2eTestRunner": {
         "description": "Adds the specified E2E test runner.",
@@ -34,7 +35,8 @@
       "skipPackageJson": {
         "description": "Do not add dependencies to `package.json`.",
         "type": "boolean",
-        "default": false
+        "default": false,
+        "x-priority": "internal"
       }
     },
     "required": [],

@@ -14,13 +14,15 @@
       "install": {
         "type": "boolean",
         "description": "Installing npm packages and CocoaPods.",
-        "default": false
+        "default": false,
+        "x-priority": "internal"
       },
       "platform": {
         "description": "Platforms to sync",
         "default": "all",
         "enum": ["ios", "android", "all"],
-        "alias": "p"
+        "alias": "p",
+        "x-priority": "important"
       },
       "template": {
         "type": "string",
