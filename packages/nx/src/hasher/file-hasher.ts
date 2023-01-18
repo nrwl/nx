@@ -5,7 +5,6 @@ import { FileHasherBase } from './file-hasher-base';
 import { execSync } from 'child_process';
 import { existsSync } from 'fs';
 import { join } from 'path';
-import { NativeFileHasher } from './native-file-hasher';
 
 function createFileHasher(): FileHasherBase {
   // special case for unit tests
@@ -13,10 +12,6 @@ function createFileHasher(): FileHasherBase {
     return new NodeBasedFileHasher();
   }
   try {
-    if (process.env.NX_NATIVE_HASHER) {
-      return new NativeFileHasher();
-    }
-
     execSync('git rev-parse --is-inside-work-tree', { stdio: 'ignore' });
     // we don't use git based hasher when the repo uses git submodules
     if (!existsSync(join(workspaceRoot, '.git', 'modules'))) {
