@@ -1,5 +1,5 @@
-import cx from 'classnames';
 import Link from 'next/link';
+import { cx } from 'nx-dev/ui-primitives';
 import {
   AnchorHTMLAttributes,
   ForwardedRef,
