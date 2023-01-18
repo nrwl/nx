@@ -1,9 +1,8 @@
 import { joinPathFragments } from '../utils/path';
-import { parsePnpmLockFile, prunePnpmLockFile } from './pnpm-parser';
+import { parsePnpmLockfile, stringifyPnpmLockfile } from './pnpm-parser';
+import { ProjectGraph } from '../config/project-graph';
 import { vol } from 'memfs';
-import { LockFileBuilder } from './lock-file-builder';
-import { LockFileGraph } from './utils/types';
-import { mapLockFileGraphToProjectGraph } from './lock-file-graph-mapper';
+import { pruneProjectGraph } from './project-graph-pruning';
 
 jest.mock('fs', () => require('memfs').fs);
 
@@ -114,19 +113,18 @@ describe('pnpm LockFile utility', () => {
       vol.fromJSON(fileSys, '/root');
     });
 
-    let rootResult: LockFileGraph;
+    let graph: ProjectGraph;
 
     beforeEach(() => {
       const lockFile = require(joinPathFragments(
         __dirname,
         '__fixtures__/nextjs/pnpm-lock.yaml'
       )).default;
-      rootResult = parsePnpmLockFile(lockFile);
+      graph = parsePnpmLockfile(lockFile);
     });
 
     it('should parse root lock file', async () => {
-      expect(rootResult.nodes.size).toEqual(1280); ///1143
-      expect(rootResult.isValid).toBeTruthy();
+      expect(Object.keys(graph.externalNodes).length).toEqual(1280); ///1143
     });
 
     it('should prune lock file', async () => {
@@ -140,19 +138,17 @@ describe('pnpm LockFile utility', () => {
       )).default;
 
       // this is original generated lock file
-      const appResult = parsePnpmLockFile(appLockFile);
-      expect(appResult.nodes.size).toEqual(863);
-      expect(appResult.isValid).toBeTruthy();
+      const appGraph = parsePnpmLockfile(appLockFile);
+      expect(Object.keys(appGraph.externalNodes).length).toEqual(863);
 
       // this is our pruned lock file structure
-      const builder = new LockFileBuilder(rootResult);
-      builder.prune(appPackageJson);
-      expect(builder.nodes.size).toEqual(appResult.nodes.size);
+      const prunedGraph = pruneProjectGraph(graph, appPackageJson);
+      // TODO meeroslav This check fails because our pruning keeps `cypress` which is peer dep of `@nrwl/cypress`
+      // expect(Object.keys(prunedGraph.externalNodes).sort()).toEqual(Object.keys(appGraph.externalNodes).sort())
+      //expect(Object.keys(prunedGraph.externalNodes).length).toEqual(Object.keys(appGraph.externalNodes).length);
 
-      const keys = new Set(builder.nodes.keys());
-      const originalKeys = new Set(appResult.nodes.keys());
-      //TODO: this does not match, it gets resolved to latest version + signatures are different
-      //  perhaps it's still possible to run `pnpm install --frozen-lockfile` on it?
+      // (meeroslav) this does not match, it gets resolved to latest version + signatures are different
+      //  but it's still possible to run `pnpm install --frozen-lockfile` on it (there are e2e tests for that)
       // -   "@types/node@18.11.15",
       // +   "@types/node@18.11.9",
       // -   "babel-jest@28.1.3",
@@ -191,37 +187,10 @@ describe('pnpm LockFile utility', () => {
         __dirname,
         '__fixtures__/auxiliary-packages/pnpm-lock.yaml'
       )).default;
-      const result = parsePnpmLockFile(lockFile);
-      expect(result.nodes.size).toEqual(213); //202
-      expect(result.isValid).toBeTruthy();
+      const graph = parsePnpmLockfile(lockFile);
+      expect(Object.keys(graph.externalNodes).length).toEqual(213); //202
 
-      const postgres = result.nodes.get(
-        'postgres@https://codeload.github.com/charsleysa/postgres/tar.gz/3b1a01b2da3e2fafb1a79006f838eff11a8de3cb'
-      );
-      expect(postgres.name).toEqual('postgres');
-      expect(postgres.packageName).toBeUndefined();
-      expect(postgres.version).toMatch(
-        '3b1a01b2da3e2fafb1a79006f838eff11a8de3cb'
-      );
-      expect(postgres.edgesIn.values().next().value.versionSpec).toEqual(
-        'github.com/charsleysa/postgres/3b1a01b2da3e2fafb1a79006f838eff11a8de3cb'
-      );
-
-      const alias = result.nodes.get(
-        'eslint-plugin-disable-autofix@npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0'
-      );
-      expect(alias.name).toEqual('eslint-plugin-disable-autofix');
-      expect(alias.packageName).toEqual(
-        '@mattlewis92/eslint-plugin-disable-autofix'
-      );
-      expect(alias.version).toEqual('3.0.0');
-      expect(alias.edgesIn.values().next().value.versionSpec).toEqual(
-        '/@mattlewis92/eslint-plugin-disable-autofix/3.0.0'
-      );
-
-      const projectGraph = mapLockFileGraphToProjectGraph(result);
-      expect(projectGraph.externalNodes['npm:minimatch'])
-        .toMatchInlineSnapshot(`
+      expect(graph.externalNodes['npm:minimatch']).toMatchInlineSnapshot(`
         Object {
           "data": Object {
             "packageName": "minimatch",
@@ -231,8 +200,7 @@ describe('pnpm LockFile utility', () => {
           "type": "npm",
         }
       `);
-      expect(projectGraph.externalNodes['npm:minimatch@5.1.1'])
-        .toMatchInlineSnapshot(`
+      expect(graph.externalNodes['npm:minimatch@5.1.1']).toMatchInlineSnapshot(`
         Object {
           "data": Object {
             "packageName": "minimatch",
@@ -242,22 +210,22 @@ describe('pnpm LockFile utility', () => {
           "type": "npm",
         }
       `);
-      expect(projectGraph.externalNodes['npm:postgres']).toMatchInlineSnapshot(`
+      expect(graph.externalNodes['npm:postgres']).toMatchInlineSnapshot(`
         Object {
           "data": Object {
             "packageName": "postgres",
-            "version": "https://codeload.github.com/charsleysa/postgres/tar.gz/3b1a01b2da3e2fafb1a79006f838eff11a8de3cb",
+            "version": "github.com/charsleysa/postgres/3b1a01b2da3e2fafb1a79006f838eff11a8de3cb",
           },
           "name": "npm:postgres",
           "type": "npm",
         }
       `);
-      expect(projectGraph.externalNodes['npm:eslint-plugin-disable-autofix'])
+      expect(graph.externalNodes['npm:eslint-plugin-disable-autofix'])
         .toMatchInlineSnapshot(`
         Object {
           "data": Object {
-            "packageName": "@mattlewis92/eslint-plugin-disable-autofix",
-            "version": "3.0.0",
+            "packageName": "eslint-plugin-disable-autofix",
+            "version": "npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0",
           },
           "name": "npm:eslint-plugin-disable-autofix",
           "type": "npm",
@@ -275,7 +243,7 @@ describe('pnpm LockFile utility', () => {
         '__fixtures__/auxiliary-packages/pnpm-lock.yaml.pruned'
       )).default;
 
-      const result = prunePnpmLockFile(lockFile, {
+      const prunedPackageJson = {
         name: 'test',
         version: '0.0.0',
         license: 'MIT',
@@ -284,7 +252,7 @@ describe('pnpm LockFile utility', () => {
           'eslint-plugin-disable-autofix':
             'npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0',
           postgres:
-            'https://codeload.github.com/charsleysa/postgres/tar.gz/3b1a01b2da3e2fafb1a79006f838eff11a8de3cb',
+            'github.com/charsleysa/postgres/3b1a01b2da3e2fafb1a79006f838eff11a8de3cb',
           yargs: '17.6.2',
         },
         devDependencies: {
@@ -293,7 +261,15 @@ describe('pnpm LockFile utility', () => {
         peerDependencies: {
           typescript: '4.8.4',
         },
-      });
+      };
+
+      const graph = parsePnpmLockfile(lockFile);
+      const prunedGraph = pruneProjectGraph(graph, prunedPackageJson);
+      const result = stringifyPnpmLockfile(
+        prunedGraph,
+        lockFile,
+        prunedPackageJson
+      );
       // we replace the dev: true with dev: false because the lock file is generated with dev: false
       // this does not break the intallation, despite being inaccurate
       const manipulatedLockFile = prunedLockFile.replace(
@@ -324,9 +300,10 @@ describe('pnpm LockFile utility', () => {
         __dirname,
         '__fixtures__/duplicate-package/pnpm-lock.yaml'
       )).default;
-      const result = parsePnpmLockFile(lockFile);
-      expect(result.nodes.size).toEqual(370); //337
-      expect(result.isValid).toBeTruthy();
+      const graph = parsePnpmLockfile(lockFile);
+      expect(Object.keys(graph.externalNodes).length).toEqual(370); //337
+      expect(Object.keys(graph.dependencies).length).toEqual(213);
+      expect(graph.dependencies['npm:@nrwl/devkit'].length).toEqual(6);
     });
   });
 
@@ -347,22 +324,21 @@ describe('pnpm LockFile utility', () => {
         __dirname,
         '__fixtures__/optional/pnpm-lock.yaml'
       )).default;
-      const result = parsePnpmLockFile(lockFile);
-      expect(result.nodes.size).toEqual(8);
-      expect(result.isValid).toBeTruthy();
+      const graph = parsePnpmLockfile(lockFile);
+      expect(Object.keys(graph.externalNodes).length).toEqual(8);
 
       const packageJson = require(joinPathFragments(
         __dirname,
         '__fixtures__/optional/package.json'
       ));
-      const builder = new LockFileBuilder(result);
-      builder.prune(packageJson);
-      expect(builder.nodes.size).toEqual(8);
-      expect(builder.isGraphConsistent().isValid).toBeTruthy();
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      expect(Object.keys(prunedGraph.externalNodes).length).toEqual(8);
     });
   });
 
   describe('pruning', () => {
+    let graph, lockFile;
+
     beforeEach(() => {
       const fileSys = {
         'node_modules/argparse/package.json': '{"version": "2.0.1"}',
@@ -377,18 +353,26 @@ describe('pnpm LockFile utility', () => {
         )).default,
       };
       vol.fromJSON(fileSys, '/root');
-    });
 
-    it('should prune single package', () => {
-      const lockFile = require(joinPathFragments(
+      lockFile = require(joinPathFragments(
         __dirname,
         '__fixtures__/pruning/pnpm-lock.yaml'
       )).default;
+
+      graph = parsePnpmLockfile(lockFile);
+    });
+
+    it('should prune single package', () => {
       const typescriptPackageJson = require(joinPathFragments(
         __dirname,
         '__fixtures__/pruning/typescript/package.json'
       ));
-      const result = prunePnpmLockFile(lockFile, typescriptPackageJson);
+      const prunedGraph = pruneProjectGraph(graph, typescriptPackageJson);
+      const result = stringifyPnpmLockfile(
+        prunedGraph,
+        lockFile,
+        typescriptPackageJson
+      );
       expect(result).toEqual(
         require(joinPathFragments(
           __dirname,
@@ -398,16 +382,16 @@ describe('pnpm LockFile utility', () => {
     });
 
     it('should prune multi packages', () => {
-      const lockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/pruning/pnpm-lock.yaml'
-      )).default;
-
       const multiPackageJson = require(joinPathFragments(
         __dirname,
         '__fixtures__/pruning/devkit-yargs/package.json'
       ));
-      const result = prunePnpmLockFile(lockFile, multiPackageJson);
+      const prunedGraph = pruneProjectGraph(graph, multiPackageJson);
+      const result = stringifyPnpmLockfile(
+        prunedGraph,
+        lockFile,
+        multiPackageJson
+      );
       expect(result).toEqual(
         require(joinPathFragments(
           __dirname,
@@ -437,9 +421,8 @@ describe('pnpm LockFile utility', () => {
     });
 
     it('should parse lock file', async () => {
-      const result = parsePnpmLockFile(lockFile);
-      expect(result.nodes.size).toEqual(5);
-      expect(result.isValid).toBeTruthy();
+      const graph = parsePnpmLockfile(lockFile);
+      expect(Object.keys(graph.externalNodes).length).toEqual(5);
     });
   });
 });

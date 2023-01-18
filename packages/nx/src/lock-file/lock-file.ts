@@ -2,10 +2,11 @@ import { readFileSync } from 'fs-extra';
 import { detectPackageManager, PackageManager } from '../utils/package-manager';
 
 import { parseNpmLockFile, pruneNpmLockFile } from './npm-parser';
-import { parsePnpmLockFile, prunePnpmLockFile } from './pnpm-parser';
+import { parsePnpmLockfile, stringifyPnpmLockfile } from './pnpm-parser';
 import { parseYarnLockFile, pruneYarnLockFile } from './yarn-parser';
 
 import { workspaceRoot } from '../utils/workspace-root';
+import { ProjectGraph } from '../config/project-graph';
 import { join } from 'path';
 import { existsSync } from 'fs';
 import { normalizePackageJson } from './utils/pruning-utils';
@@ -13,6 +14,7 @@ import { PackageJson } from '../utils/package-json';
 import { readJsonFile } from '../utils/fileutils';
 import { LockFileGraph } from './utils/types';
 import { defaultHashing } from '../hasher/hashing-impl';
+import { mapLockFileGraphToProjectGraph } from './lock-file-graph-mapper';
 
 const YARN_LOCK_FILE = 'yarn.lock';
 const NPM_LOCK_FILE = 'package-lock.json';
@@ -72,19 +74,23 @@ export function lockFileHash(
  */
 export function parseLockFile(
   packageManager: PackageManager = detectPackageManager(workspaceRoot)
-): LockFileGraph {
+): ProjectGraph {
   const packageJson = readJsonFile(join(workspaceRoot, 'package.json'));
   if (packageManager === 'yarn') {
     const content = readFileSync(YARN_LOCK_PATH, 'utf8');
-    return parseYarnLockFile(content, packageJson);
+    return mapLockFileGraphToProjectGraph(
+      parseYarnLockFile(content, packageJson)
+    );
   }
   if (packageManager === 'pnpm') {
     const content = readFileSync(PNPM_LOCK_PATH, 'utf8');
-    return parsePnpmLockFile(content);
+    return parsePnpmLockfile(content);
   }
   if (packageManager === 'npm') {
     const content = readFileSync(NPM_LOCK_PATH, 'utf8');
-    return parseNpmLockFile(content, packageJson);
+    return mapLockFileGraphToProjectGraph(
+      parseNpmLockFile(content, packageJson)
+    );
   }
   throw new Error(`Unknown package manager: ${packageManager}`);
 }
@@ -130,7 +136,8 @@ export function createLockFile(
   }
   if (packageManager === 'pnpm') {
     const content = readFileSync(PNPM_LOCK_FILE, 'utf8');
-    return prunePnpmLockFile(content, normalizedPackageJson);
+    const prunedGraph = parsePnpmLockfile(content);
+    return stringifyPnpmLockfile(prunedGraph, content, normalizedPackageJson);
   }
   if (packageManager === 'npm') {
     const content = readFileSync(NPM_LOCK_FILE, 'utf8');

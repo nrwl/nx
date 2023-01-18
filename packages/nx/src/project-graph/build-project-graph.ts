@@ -109,7 +109,7 @@ export async function buildProjectGraphUsingProjectFileMap(
     if (cache && cache.lockFileHash === lockHash) {
       partialGraph = isolatePartialGraphFromCache(cache);
     } else {
-      partialGraph = mapLockFileGraphToProjectGraph(parseLockFile());
+      partialGraph = parseLockFile();
     }
   }
   const context = createContext(

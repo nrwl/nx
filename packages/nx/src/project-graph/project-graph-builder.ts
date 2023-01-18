@@ -168,11 +168,17 @@ export class ProjectGraphBuilder {
       this.graph.dependencies[sourceProjectName] = [];
     }
 
-    this.graph.dependencies[sourceProjectName].push({
-      source: sourceProjectName,
-      target: targetProjectName,
-      type: DependencyType.static,
-    });
+    if (
+      !this.graph.dependencies[sourceProjectName].some(
+        (d) => d.target === targetProjectName
+      )
+    ) {
+      this.graph.dependencies[sourceProjectName].push({
+        source: sourceProjectName,
+        target: targetProjectName,
+        type: DependencyType.static,
+      });
+    }
   }
 
   /**
