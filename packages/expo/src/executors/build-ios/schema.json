@@ -41,7 +41,8 @@
     "type": {
       "enum": ["archive", "simulator"],
       "description": "Type of build: [archive⎮simulator].",
-      "alias": "t"
+      "alias": "t",
+      "x-priority": "important"
     },
     "releaseChannel": {
       "type": "string",
@@ -85,8 +86,9 @@
     },
     "sync": {
       "type": "boolean",
-      "description": "Syncs npm dependencies to package.json (for React Native autolink). Always true when --install is used.",
-      "default": true
+      "description": "Syncs npm dependencies to package.json (for React Native autolink).",
+      "default": true,
+      "x-priority": "internal"
     }
   },
   "required": []

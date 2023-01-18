@@ -46,7 +46,7 @@ export async function e2eProjectGenerator(host: Tree, _options: Schema) {
       options.projectRoot,
       {
         ...options,
-        ...names(options.projectName),
+        ...names(options.rootProject ? 'server' : options.project),
         offsetFromRoot: offsetFromRoot(options.projectRoot),
         tmpl: '',
       }
@@ -59,7 +59,7 @@ export async function e2eProjectGenerator(host: Tree, _options: Schema) {
       options.projectRoot,
       {
         ...options,
-        ...names(options.projectName),
+        ...names(options.rootProject ? 'server' : options.project),
         mainFile,
         offsetFromRoot: offsetFromRoot(options.projectRoot),
         tmpl: '',
@@ -116,7 +116,13 @@ function normalizeOptions(
     ? 'e2e'
     : joinPathFragments(appsDir, appDirectory);
 
-  return { ...options, projectRoot, projectName, port: options.port ?? 3000 };
+  return {
+    ...options,
+    projectRoot,
+    projectName,
+    port: options.port ?? 3000,
+    rootProject: !!options.rootProject,
+  };
 }
 
 export default e2eProjectGenerator;

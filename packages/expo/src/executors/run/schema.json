@@ -17,7 +17,8 @@
     "xcodeConfiguration": {
       "type": "string",
       "description": "(iOS) Xcode configuration to use. Debug or Release",
-      "default": "Debug"
+      "default": "Debug",
+      "x-priority": "important"
     },
     "scheme": {
       "type": "string",
@@ -26,7 +27,8 @@
     "variant": {
       "type": "string",
       "description": "(Android) Specify your app's build variant (e.g. debug, release).",
-      "default": "debug"
+      "default": "debug",
+      "x-priority": "important"
     },
     "device": {
       "type": "string",
@@ -35,8 +37,9 @@
     },
     "sync": {
       "type": "boolean",
-      "description": "Syncs npm dependencies to package.json (for React Native autolink). Always true when --install is used.",
-      "default": true
+      "description": "Syncs npm dependencies to package.json (for React Native autolink).",
+      "default": true,
+      "x-priority": "internal"
     },
     "port": {
       "type": "number",

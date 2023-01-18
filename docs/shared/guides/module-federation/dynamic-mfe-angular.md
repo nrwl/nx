@@ -42,7 +42,7 @@ npx create-nx-workspace ng-mf
 yarn create nx-workspace ng-mf --packageManager=yarn
 ```
 
-You'll be prompted for a preset. Select `"Angular"`.
+You'll be prompted for a preset. Select `"Integrated Monorepo"` then `"Angular"`.
 
 ### Creating our applications
 

@@ -9,11 +9,11 @@
     "description": "Create a React Application for Nx.",
     "examples": [
       {
-        "command": "nx g app myapp --directory=nested",
+        "command": "nx g @nrwl/react-native:app myapp --directory=nested",
         "description": "Generate `apps/nested/myapp`"
       },
       {
-        "command": "nx g app myapp --classComponent",
+        "command": "nx g @nrwl/react-native:app myapp --classComponent",
         "description": "Use class components instead of functional components"
       }
     ],
@@ -36,7 +36,8 @@
       "skipFormat": {
         "description": "Skip formatting files",
         "type": "boolean",
-        "default": false
+        "default": false,
+        "x-priority": "internal"
       },
       "linter": {
         "description": "The tool to use for running lint checks.",
@@ -74,12 +75,14 @@
       "install": {
         "type": "boolean",
         "description": "Runs `pod install` for native modules before building iOS app.",
-        "default": true
+        "default": true,
+        "x-priority": "internal"
       },
       "skipPackageJson": {
         "description": "Do not add dependencies to `package.json`.",
         "type": "boolean",
-        "default": false
+        "default": false,
+        "x-priority": "internal"
       }
     },
     "required": [],
