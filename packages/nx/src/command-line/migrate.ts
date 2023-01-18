@@ -296,14 +296,14 @@ export class Migrator {
     for (const packageJsonUpdate of Object.values(
       migration.packageJsonUpdates
     )) {
-      const { packages, version } = packageJsonUpdate;
+      const { confirmationPrompt, packages, version } = packageJsonUpdate;
       if (
         packages &&
         this.gt(version, this.versions(packageName)) &&
         this.lte(version, targetVersion) &&
         (!this.interactive ||
           (await this.runPackageJsonUpdatesConfirmationPrompt(
-            packageJsonUpdate
+            confirmationPrompt
           )))
       ) {
         filteredPackageJsonUpdates.push(packageJsonUpdate);
@@ -341,10 +341,9 @@ export class Migrator {
       .reduce((m, c) => ({ ...m, ...c }), {});
   }
 
-  private async runPackageJsonUpdatesConfirmationPrompt({
-    confirmationPrompt,
-    packages,
-  }: PackageJsonUpdates[number]): Promise<boolean> {
+  private async runPackageJsonUpdatesConfirmationPrompt(
+    confirmationPrompt: string
+  ): Promise<boolean> {
     if (!confirmationPrompt) {
       return Promise.resolve(true);
     }
@@ -353,16 +352,8 @@ export class Migrator {
       {
         name: 'shouldMigrate',
         type: 'confirm',
-        message:
-          typeof confirmationPrompt === 'string'
-            ? confirmationPrompt
-            : `Do you want to run the migration for the packages ${Object.entries(
-                packages
-              )
-                .map(
-                  ([packageName, { version }]) => `${packageName}@${version}`
-                )
-                .join(', ')}?`,
+        message: confirmationPrompt,
+        initial: true,
       },
     ]).then((a: { shouldMigrate: boolean }) => a.shouldMigrate);
   }

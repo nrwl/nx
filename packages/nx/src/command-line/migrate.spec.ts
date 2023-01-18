@@ -551,6 +551,8 @@ describe('Migration', () => {
         jest
           .spyOn(enquirer, 'prompt')
           .mockReturnValue(Promise.resolve({ shouldMigrate: true }));
+        const customPromptMessage =
+          'Do you want to update the packages related to <some fwk name>?';
         const migrator = new Migrator({
           packageJson: createPackageJson({
             dependencies: { child1: '1.0.0', child2: '1.0.0', child3: '1.0.0' },
@@ -569,7 +571,7 @@ describe('Migration', () => {
                   },
                   'version2-prompt-group': {
                     version: '2.0.0',
-                    confirmationPrompt: true,
+                    confirmationPrompt: customPromptMessage,
                     packages: {
                       child2: { version: '3.0.0' },
                       child3: { version: '3.0.0' },
@@ -598,7 +600,11 @@ describe('Migration', () => {
             child3: { version: '3.0.0', addToPackageJson: false },
           },
         });
-        expect(enquirer.prompt).toHaveBeenCalled();
+        expect(enquirer.prompt).toHaveBeenCalledWith(
+          expect.arrayContaining([
+            expect.objectContaining({ message: customPromptMessage }),
+          ])
+        );
       });
 
       it('should filter out updates when prompt answer is false', async () => {
@@ -623,7 +629,8 @@ describe('Migration', () => {
                   },
                   'version2-prompt-group': {
                     version: '2.0.0',
-                    confirmationPrompt: true,
+                    confirmationPrompt:
+                      'Do you want to update the packages related to <some fwk name>?',
                     packages: {
                       child2: { version: '3.0.0' },
                       child3: { version: '3.0.0' },
@@ -675,7 +682,8 @@ describe('Migration', () => {
                   },
                   'version2-prompt-group': {
                     version: '2.0.0',
-                    confirmationPrompt: true,
+                    confirmationPrompt:
+                      'Do you want to update the packages related to <some fwk name>?',
                     packages: {
                       child2: { version: '3.0.0' },
                       child3: { version: '3.0.0' },
@@ -705,46 +713,6 @@ describe('Migration', () => {
           },
         });
         expect(enquirer.prompt).not.toHaveBeenCalled();
-      });
-
-      it('should support a custom prompt message', async () => {
-        jest
-          .spyOn(enquirer, 'prompt')
-          .mockReturnValue(Promise.resolve({ shouldMigrate: true }));
-        const customPromptMessage =
-          'Do you want to update the packages related to <some fwk name>?';
-        const migrator = new Migrator({
-          packageJson: createPackageJson({ dependencies: { child1: '1.0.0' } }),
-          versions: () => '1.0.0',
-          fetch: (p, _v) => {
-            if (p === 'mypackage') {
-              return Promise.resolve({
-                version: '2.0.0',
-                packageJsonUpdates: {
-                  'version2-prompt-group': {
-                    version: '2.0.0',
-                    confirmationPrompt: customPromptMessage,
-                    packages: { child1: { version: '3.0.0' } },
-                  },
-                },
-              });
-            } else if (p === 'child1') {
-              return Promise.resolve({ version: '3.0.0' });
-            } else {
-              return Promise.resolve(null);
-            }
-          },
-          to: {},
-          interactive: true,
-        });
-
-        await migrator.updatePackageJson('mypackage', '2.0.0');
-
-        expect(enquirer.prompt).toHaveBeenCalledWith(
-          expect.arrayContaining([
-            expect.objectContaining({ message: customPromptMessage }),
-          ])
-        );
       });
     });
   });
@@ -931,7 +899,8 @@ describe('Migration', () => {
                     child1: { version: '2.0.0' },
                     child2: { version: '3.0.0' },
                   },
-                  confirmationPrompt: true,
+                  confirmationPrompt:
+                    'Do you want to update the packages related to <some fwk name>?',
                 },
               },
               generators: {
