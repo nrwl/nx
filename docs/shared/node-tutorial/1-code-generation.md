@@ -40,7 +40,7 @@ Run the command `npx create-nx-workspace@latest` and when prompted, provide the 
 
 {% card title="Opting into Nx Cloud" description="You will also be prompted whether to add Nx Cloud to your workspace. We won't address this in this tutorial, but you can see the introduction to Nx Cloud for more details." url="/nx-cloud/intro/what-is-nx-cloud" /%}
 
-## Install the node plugin
+## Install the Node Plugin
 
 Open the folder that was created and install the `@nrwl/node` plugin.
 
