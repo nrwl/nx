@@ -23,7 +23,7 @@ export const backwardCompatibleVersions: Record<
     ngUniversalVersion: '~14.2.0',
     corsVersion: '~2.8.5',
     expressVersion: '~4.18.2',
-    moduleFederationNodeVersion: '^0.10.1',
+    moduleFederationNodeVersion: '~0.9.0',
     angularEslintVersion: '~14.0.4',
     tailwindVersion: '^3.0.2',
     postcssVersion: '^8.4.5',

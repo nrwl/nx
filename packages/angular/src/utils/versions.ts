@@ -12,7 +12,7 @@ export const tsLibVersion = '^2.3.0';
 export const ngUniversalVersion = '~15.1.0';
 export const corsVersion = '~2.8.5';
 export const expressVersion = '~4.18.2';
-export const moduleFederationNodeVersion = '~0.10.1';
+export const moduleFederationNodeVersion = '~0.9.0';
 
 export const angularEslintVersion = '~15.0.0';
 export const tailwindVersion = '^3.0.2';
