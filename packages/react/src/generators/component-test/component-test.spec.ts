@@ -14,9 +14,6 @@ describe(componentTestGenerator.name, () => {
   > = assertMinimumCypressVersion as never;
   beforeEach(() => {
     tree = createTreeWithEmptyV1Workspace();
-    jest
-      .spyOn(enquirer, 'prompt')
-      .mockReturnValue(new Promise((res) => res({ runner: 'jest' })));
   });
   it('should create component test for tsx files', async () => {
     mockedAssertMinimumCypressVersion.mockReturnValue();

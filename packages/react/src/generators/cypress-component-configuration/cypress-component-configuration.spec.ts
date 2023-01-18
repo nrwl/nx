@@ -30,9 +30,6 @@ describe('React:CypressComponentTestConfiguration', () => {
   > = assertMinimumCypressVersion as never;
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    jest
-      .spyOn(enquirer, 'prompt')
-      .mockReturnValue(new Promise((res) => res({ runner: 'jest' })));
   });
 
   it('should generate cypress config with vite', async () => {
