@@ -11,7 +11,8 @@
     "platform": {
       "enum": ["ios", "android"],
       "alias": "p",
-      "description": "The platform to build the app, example values: ios, android, all."
+      "description": "The platform to build the app, example values: ios, android, all.",
+      "x-priority": "important"
     },
     "distribution": {
       "enum": ["store", "internal", "simulator"],
