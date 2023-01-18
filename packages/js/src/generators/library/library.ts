@@ -256,7 +256,7 @@ function addBabelRc(tree: Tree, options: NormalizedSchema) {
   const filename = '.babelrc';
 
   const babelrc = {
-    presets: [['@nrwl/web/babel', { useBuiltIns: 'usage' }]],
+    presets: [['@nrwl/js/babel', { useBuiltIns: 'usage' }]],
   };
 
   writeJson(tree, join(options.projectRoot, filename), babelrc);
