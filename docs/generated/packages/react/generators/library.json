@@ -80,7 +80,8 @@
       "unitTestRunner": {
         "type": "string",
         "enum": ["jest", "vitest", "none"],
-        "description": "Test runner to use for unit tests."
+        "description": "Test runner to use for unit tests.",
+        "x-prompt": "What unit test runner should be used?"
       },
       "inSourceTests": {
         "type": "boolean",
