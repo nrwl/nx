@@ -15,7 +15,7 @@ const LOCKFILE_YAML_FORMAT = {
   sortKeys: false,
 };
 
-export function stringifyPnpmLockFile(lockfile: Lockfile): string {
+export function stringifyToPnpmYaml(lockfile: Lockfile): string {
   return dump(lockfile, LOCKFILE_YAML_FORMAT);
 }
 

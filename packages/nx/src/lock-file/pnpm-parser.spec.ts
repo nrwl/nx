@@ -114,9 +114,10 @@ describe('pnpm LockFile utility', () => {
     });
 
     let graph: ProjectGraph;
+    let lockFile: string;
 
     beforeEach(() => {
-      const lockFile = require(joinPathFragments(
+      lockFile = require(joinPathFragments(
         __dirname,
         '__fixtures__/nextjs/pnpm-lock.yaml'
       )).default;
@@ -143,6 +144,11 @@ describe('pnpm LockFile utility', () => {
 
       // this is our pruned lock file structure
       const prunedGraph = pruneProjectGraph(graph, appPackageJson);
+      const result = stringifyPnpmLockfile(
+        prunedGraph,
+        lockFile,
+        appPackageJson
+      );
       // TODO meeroslav This check fails because our pruning keeps `cypress` which is peer dep of `@nrwl/cypress`
       // expect(Object.keys(prunedGraph.externalNodes).sort()).toEqual(Object.keys(appGraph.externalNodes).sort())
       //expect(Object.keys(prunedGraph.externalNodes).length).toEqual(Object.keys(appGraph.externalNodes).length);

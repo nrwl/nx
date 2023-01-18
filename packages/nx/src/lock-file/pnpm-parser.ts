@@ -7,7 +7,7 @@ import {
 import {
   loadPnpmHoistedDepsDefinition,
   parseAndNormalizePnpmLockfile,
-  stringifyPnpmLockFile,
+  stringifyToPnpmYaml,
 } from './utils/pnpm-utils';
 import { getRootVersion } from './utils/parsing-utils';
 import { NormalizedPackageJson } from './utils/pruning-utils';
@@ -174,7 +174,7 @@ export function stringifyPnpmLockfile(
     ),
   };
 
-  return stringifyPnpmLockFile(output);
+  return stringifyToPnpmYaml(output);
 }
 
 function mapSnapshots(
@@ -183,31 +183,34 @@ function mapSnapshots(
 ): PackageSnapshots {
   const result: PackageSnapshots = {};
   Object.values(nodes).forEach((node) => {
-    const [key, snapshot] = findOriginalKey(packages, node, {
+    const matchedKeys = findOriginalKeys(packages, node, {
       returnFullKey: true,
     });
     // the package manager doesn't check for types of dependencies
     // so we can safely set all to prod
-    snapshot.dev = false;
-    result[key] = snapshot;
+    matchedKeys.forEach(([key, snapshot]) => {
+      snapshot.dev = false;
+      result[key] = snapshot;
+    });
   });
   return result;
 }
 
-function findOriginalKey(
+function findOriginalKeys(
   packages: PackageSnapshots,
   { data: { packageName, version } }: ProjectGraphExternalNode,
   { returnFullKey }: { returnFullKey?: boolean } = {}
-): [string, PackageSnapshot] {
+): Array<[string, PackageSnapshot]> {
+  const matchedKeys = [];
   for (const key of Object.keys(packages)) {
     const snapshot = packages[key];
     // standard package
     if (key.startsWith(`/${packageName}/${version}`)) {
-      return [returnFullKey ? key : key.split('/').pop(), snapshot];
+      matchedKeys.push([returnFullKey ? key : key.split('/').pop(), snapshot]);
     }
     // tarball package
     if (key === version) {
-      return [version, snapshot];
+      matchedKeys.push([version, snapshot]);
     }
     // alias package
     if (
@@ -218,9 +221,10 @@ function findOriginalKey(
         )}`
       )
     ) {
-      return [key, snapshot];
+      matchedKeys.push([key, snapshot]);
     }
   }
+  return matchedKeys;
 }
 
 function mapRootSnapshot(
@@ -244,7 +248,7 @@ function mapRootSnapshot(
         // peer dependencies are mapped to dependencies
         let section = depType === 'peerDependencies' ? 'dependencies' : depType;
         snapshot[section] = snapshot[section] || {};
-        snapshot[section][packageName] = findOriginalKey(packages, node)[0];
+        snapshot[section][packageName] = findOriginalKeys(packages, node)[0][0];
       });
     }
   });
