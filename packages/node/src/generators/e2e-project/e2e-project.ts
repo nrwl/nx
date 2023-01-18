@@ -25,14 +25,15 @@ export async function e2eProjectGenerator(host: Tree, _options: Schema) {
   const options = normalizeOptions(host, _options);
   const appProject = readProjectConfiguration(host, options.project);
 
-  addProjectConfiguration(host, options.projectName, {
-    root: options.projectRoot,
+  addProjectConfiguration(host, options.e2eProjectName, {
+    root: options.e2eProjectRoot,
+    implicitDependencies: [options.project],
     targets: {
       e2e: {
         executor: '@nrwl/jest:jest',
-        outputs: ['{workspaceRoot}/coverage/{projectRoot}'],
+        outputs: ['{workspaceRoot}/coverage/{e2eProjectRoot}'],
         options: {
-          jestConfig: `${options.projectRoot}/jest.config.ts`,
+          jestConfig: `${options.e2eProjectRoot}/jest.config.ts`,
           passWithNoTests: true,
         },
       },
@@ -43,11 +44,11 @@ export async function e2eProjectGenerator(host: Tree, _options: Schema) {
     generateFiles(
       host,
       path.join(__dirname, 'files/server'),
-      options.projectRoot,
+      options.e2eProjectRoot,
       {
         ...options,
         ...names(options.rootProject ? 'server' : options.project),
-        offsetFromRoot: offsetFromRoot(options.projectRoot),
+        offsetFromRoot: offsetFromRoot(options.e2eProjectRoot),
         tmpl: '',
       }
     );
@@ -56,12 +57,12 @@ export async function e2eProjectGenerator(host: Tree, _options: Schema) {
     generateFiles(
       host,
       path.join(__dirname, 'files/cli'),
-      options.projectRoot,
+      options.e2eProjectRoot,
       {
         ...options,
         ...names(options.rootProject ? 'server' : options.project),
         mainFile,
-        offsetFromRoot: offsetFromRoot(options.projectRoot),
+        offsetFromRoot: offsetFromRoot(options.e2eProjectRoot),
         tmpl: '',
       }
     );
@@ -77,11 +78,13 @@ export async function e2eProjectGenerator(host: Tree, _options: Schema) {
 
   if (options.linter === 'eslint') {
     const linterTask = await lintProjectGenerator(host, {
-      project: options.projectName,
+      project: options.e2eProjectName,
       linter: Linter.EsLint,
       skipFormat: true,
-      tsConfigPaths: [joinPathFragments(options.projectRoot, 'tsconfig.json')],
-      eslintFilePatterns: [`${options.projectRoot}/**/*.{js,ts}`],
+      tsConfigPaths: [
+        joinPathFragments(options.e2eProjectRoot, 'tsconfig.json'),
+      ],
+      eslintFilePatterns: [`${options.e2eProjectRoot}/**/*.{js,ts}`],
       setParserOptionsProject: false,
       skipPackageJson: false,
       rootProject: options.rootProject,
@@ -99,7 +102,7 @@ export async function e2eProjectGenerator(host: Tree, _options: Schema) {
 function normalizeOptions(
   tree: Tree,
   options: Schema
-): Omit<Schema, 'name'> & { projectRoot: string; projectName: string } {
+): Omit<Schema, 'name'> & { e2eProjectRoot: string; e2eProjectName: string } {
   const { layoutDirectory, projectDirectory } = extractLayoutDirectory(
     options.directory
   );
@@ -110,16 +113,16 @@ function normalizeOptions(
     ? `${names(projectDirectory).fileName}/${names(name).fileName}`
     : names(name).fileName;
 
-  const projectName = appDirectory.replace(new RegExp('/', 'g'), '-');
+  const e2eProjectName = appDirectory.replace(new RegExp('/', 'g'), '-');
 
-  const projectRoot = options.rootProject
+  const e2eProjectRoot = options.rootProject
     ? 'e2e'
     : joinPathFragments(appsDir, appDirectory);
 
   return {
     ...options,
-    projectRoot,
-    projectName,
+    e2eProjectRoot,
+    e2eProjectName,
     port: options.port ?? 3000,
     rootProject: !!options.rootProject,
   };
