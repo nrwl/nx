@@ -2,9 +2,13 @@ import type { Tree } from '@nrwl/devkit';
 import * as devkit from '@nrwl/devkit';
 import {
   readProjectConfiguration,
+  updateJson,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import {
+  createTreeWithEmptyV1Workspace,
+  createTreeWithEmptyWorkspace,
+} from '@nrwl/devkit/testing';
 import { karmaProjectGenerator } from './karma-project';
 import libraryGenerator from '../library/library';
 import { Linter } from '@nrwl/linter';
@@ -273,6 +277,55 @@ describe('karmaProject', () => {
         tree.read('libs/nested-lib/karma.conf.js', 'utf-8')
       ).toMatchSnapshot();
       expect(tree.read('karma.conf.js', 'utf-8')).toMatchSnapshot();
+    });
+
+    describe('--angular v14', () => {
+      it('should generate the correct karma files for v14', async () => {
+        // ARRANGE
+        const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+        updateJson(tree, 'package.json', (json) => ({
+          ...json,
+          dependencies: {
+            ...json.dependencies,
+            '@angular/core': '14.2.0',
+          },
+        }));
+
+        // ACT
+        await applicationGenerator(tree, {
+          name: 'app',
+          unitTestRunner: UnitTestRunner.Karma,
+        });
+
+        // ASSERT
+        expect(tree.exists('apps/app/src/test.ts')).toBeTruthy();
+        expect(tree.exists('apps/app/karma.conf.js')).toBeTruthy();
+        expect(
+          readProjectConfiguration(tree, 'app').targets.test.options.main
+        ).toEqual('apps/app/src/test.ts');
+        expect(tree.read('apps/app/tsconfig.spec.json', 'utf-8'))
+          .toMatchInlineSnapshot(`
+          "{
+            \\"extends\\": \\"./tsconfig.json\\",
+            \\"compilerOptions\\": {
+              \\"outDir\\": \\"../../dist/out-tsc\\",
+              \\"types\\": [
+                \\"jasmine\\",
+                \\"node\\"
+              ]
+            },
+            \\"include\\": [
+              \\"src/**/*.spec.ts\\",
+              \\"src/**/*.test.ts\\",
+              \\"src/**/*.d.ts\\"
+            ],
+            \\"files\\": [
+              \\"src/test.ts\\"
+            ]
+          }
+          "
+        `);
+      });
     });
   });
 });

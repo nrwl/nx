@@ -7,6 +7,8 @@ import {
   readProjectConfiguration,
 } from '@nrwl/devkit';
 import { tsquery } from '@phenomnomnominal/tsquery';
+import { getInstalledAngularVersionInfo } from '../../utils/angular-version-utils';
+import { v14TestFile } from './v14-test-file';
 
 export function generateKarmaProjectFiles(tree: Tree, project: string): void {
   const projectConfig = readProjectConfiguration(tree, project);
@@ -47,6 +49,14 @@ export function generateKarmaProjectFiles(tree: Tree, project: string): void {
         offsetFromRoot: offsetFromRoot(projectConfig.root),
         rootProjectWithConfigSet: isUsingConfigSetInBaseKarmaConfig(tree),
       }
+    );
+  }
+
+  const installedAngularVersion = getInstalledAngularVersionInfo(tree);
+  if (installedAngularVersion.major === 14) {
+    tree.write(
+      joinPathFragments(projectConfig.sourceRoot, 'test.ts'),
+      v14TestFile({ isLibrary: projectConfig.projectType === 'library' })
     );
   }
 }
