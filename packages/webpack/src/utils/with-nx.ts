@@ -164,7 +164,7 @@ export function withNx(opts?: { skipTypeChecking?: boolean }) {
       profile: options.statsJson,
       resolve: {
         ...config.resolve,
-        extensions,
+        extensions: [...extensions, ...(config?.resolve?.extensions ?? [])],
         alias: options.fileReplacements.reduce(
           (aliases, replacement) => ({
             ...aliases,
@@ -173,9 +173,10 @@ export function withNx(opts?: { skipTypeChecking?: boolean }) {
           {}
         ),
         plugins: [
+          ...(config.resolve?.plugins ?? []),
           new TsconfigPathsPlugin({
             configFile: options.tsConfig,
-            extensions,
+            extensions: [...extensions, ...(config?.resolve?.extensions ?? [])],
             mainFields,
           }),
         ],
@@ -231,6 +232,7 @@ export function withNx(opts?: { skipTypeChecking?: boolean }) {
         // Enabled for performance
         unsafeCache: true,
         rules: [
+          ...(config?.module?.rules ?? []),
           options.sourceMap && {
             test: /\.js$/,
             enforce: 'pre' as const,
