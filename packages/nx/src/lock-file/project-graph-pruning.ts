@@ -161,10 +161,11 @@ function pathLengthToIncoming(
   while (queue.length > 0) {
     const [current, distance] = queue.shift();
 
+    if (dependencies[current.data.packageName] === current.data.version) {
+      return distance;
+    }
+
     for (let parent of invertedDependencies[current.name] || []) {
-      if (dependencies[current.data.packageName] === current.data.version) {
-        return distance;
-      }
       if (!visited.has(parent)) {
         visited.add(parent);
         queue.push([builder.graph.externalNodes[parent], distance + 1]);
