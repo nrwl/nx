@@ -4,7 +4,10 @@ const glob = require('fast-glob');
 
 const p = process.argv[2];
 
-// TODO(cammisuli): only run this script when publishing locally
+if (process.env.LOCAL_RELEASE) {
+  return;
+}
+
 const nativeFiles = glob.sync(`packages/${p}/**/*.node`);
 
 nativeFiles.forEach((file) => {

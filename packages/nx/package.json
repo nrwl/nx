@@ -9,7 +9,8 @@
     "directory": "packages/nx"
   },
   "scripts": {
-    "postinstall": "node ./bin/compute-project-graph"
+    "postinstall": "node ./bin/compute-project-graph",
+    "prepublishOnly": "napi prepublishOnly --skip-gh-release --prefix ./native-packages"
   },
   "keywords": [
     "Monorepo",

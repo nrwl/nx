@@ -19,6 +19,10 @@ function hideFromGitIndex(uncommittedFiles: string[]) {
 
 (async () => {
   const options = parseArgs();
+  if (options.local) {
+    process.env.LOCAL_RELEASE = 'true';
+  }
+
   if (!options.local && !options.force) {
     console.log('Authenticating to NPM');
     execSync('npm adduser', {
@@ -52,6 +56,10 @@ function hideFromGitIndex(uncommittedFiles: string[]) {
         );
       }
     }
+  }
+
+  if (!options.local) {
+    execSync('npx nx run-many --target=artifacts');
   }
 
   const versionOptions = {
