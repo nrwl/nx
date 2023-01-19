@@ -202,6 +202,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - build-freebsd
+      - build
     steps:
       - uses: actions/checkout@v3
       - name: Setup node
