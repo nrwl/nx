@@ -1,0 +1,17 @@
+{
+  "name": "@nrwl/nx-native-darwin-arm64",
+  "version": "0.0.0",
+  "os": [
+    "darwin"
+  ],
+  "cpu": [
+    "arm64"
+  ],
+  "main": "nx-native.darwin-arm64.node",
+  "files": [
+    "nx-native.darwin-arm64.node"
+  ],
+  "engines": {
+    "node": ">= 10"
+  }
+}

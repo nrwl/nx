@@ -1,0 +1,17 @@
+{
+  "name": "@nrwl/nx-native-win32-arm64-msvc",
+  "version": "0.0.0",
+  "os": [
+    "win32"
+  ],
+  "cpu": [
+    "arm64"
+  ],
+  "main": "nx-native.win32-arm64-msvc.node",
+  "files": [
+    "nx-native.win32-arm64-msvc.node"
+  ],
+  "engines": {
+    "node": ">= 10"
+  }
+}

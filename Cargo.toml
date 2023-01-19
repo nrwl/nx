@@ -1,6 +1,6 @@
 
 [workspace]
-members = ['packages/native-extensions']
+members = ['packages/nx']
 
 [profile.release]
 lto = true

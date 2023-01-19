@@ -194,7 +194,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "native-extensions"
+name = "nx-native"
 version = "0.1.0"
 dependencies = [
  "crossbeam-channel",

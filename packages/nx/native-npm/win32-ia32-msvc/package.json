@@ -1,0 +1,17 @@
+{
+  "name": "@nrwl/nx-native-win32-ia32-msvc",
+  "version": "0.0.0",
+  "os": [
+    "win32"
+  ],
+  "cpu": [
+    "ia32"
+  ],
+  "main": "nx-native.win32-ia32-msvc.node",
+  "files": [
+    "nx-native.win32-ia32-msvc.node"
+  ],
+  "engines": {
+    "node": ">= 10"
+  }
+}

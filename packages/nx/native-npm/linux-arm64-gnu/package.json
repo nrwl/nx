@@ -1,0 +1,20 @@
+{
+  "name": "@nrwl/nx-native-linux-arm64-gnu",
+  "version": "0.0.0",
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "arm64"
+  ],
+  "main": "nx-native.linux-arm64-gnu.node",
+  "files": [
+    "nx-native.linux-arm64-gnu.node"
+  ],
+  "engines": {
+    "node": ">= 10"
+  },
+  "libc": [
+    "glibc"
+  ]
+}
