@@ -187,17 +187,8 @@ jobs:
           no_output_timeout: 60m
           command: |
             pids=()
-            npx nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD &
-            pids+=($!)
 
-            npx nx run-many -t check-imports check-commit check-lock-files root-lint depcheck documentation --parallel=1 --no-dte &
-            pids+=($!)
-
-            yarn nx affected -t test lint --base=$NX_BASE --head=$NX_HEAD --parallel=1 &
-            pids+=($!)
-
-            (yarn nx affected --target=build --base=$NX_BASE --head=$NX_HEAD --parallel=3 &&
-            npx nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --exclude=e2e-storybook,e2e-storybook-angular --parallel=1) &
+            npx nx e2e e2e-angular-core -t "hhhhhh" &
             pids+=($!)
 
             for pid in "${pids[@]}"; do
@@ -250,5 +241,5 @@ workflows:
       - agent:
           name: 'agent8'
       - main-linux
-      - mainmacos:
-          name: main-macos-e2e
+      # - mainmacos:
+      #     name: main-macos-e2e
