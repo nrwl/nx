@@ -1169,16 +1169,6 @@
     "source": "/packages/make-angular-cli-faster/src"
   },
   {
-    "documents": [],
-    "executors": [],
-    "generators": [],
-    "githubRoot": "https://github.com/nrwl/nx/blob/master",
-    "name": "native-extensions",
-    "packageName": "@nrwl/native-extensions",
-    "root": "/packages/native-extensions",
-    "source": "/packages/native-extensions/src"
-  },
-  {
     "description": "The Nx Plugin for Nest contains executors and generators for allowing your workspace to create powerful Nest best in class APIs.",
     "documents": [
       {
