@@ -1387,7 +1387,7 @@ describe('Migration', () => {
   });
 
   describe('parseMigrationsOptions', () => {
-    it('should work', () => {
+    it('should work for generating migrations', () => {
       const r = parseMigrationsOptions({
         packageAndVersion: '8.12.0',
         from: '@myscope/a@12.3,@myscope/b@1.1.1',
@@ -1404,6 +1404,18 @@ describe('Migration', () => {
         to: {
           '@myscope/c': '12.3.1',
         },
+      });
+    });
+
+    it('should work for running migrations', () => {
+      const r = parseMigrationsOptions({
+        runMigrations: '',
+        ifExists: '',
+      });
+      expect(r).toEqual({
+        type: 'runMigrations',
+        runMigrations: 'migrations.json',
+        ifExists: true,
       });
     });
 
