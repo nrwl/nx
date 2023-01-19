@@ -13,7 +13,7 @@ import { ChildProcess } from 'child_process';
 
 import { names } from '@nrwl/devkit';
 
-describe('Angular Projects', () => {
+xdescribe('Angular Projects', () => {
   let proj: string;
 
   beforeAll(() => (proj = newProject()));

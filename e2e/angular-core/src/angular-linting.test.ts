@@ -7,7 +7,7 @@ import {
 } from '@nrwl/e2e/utils';
 import * as path from 'path';
 
-describe('hhhhhhAngular Package', () => {
+describe('Angular Package', () => {
   describe('linting', () => {
     beforeAll(() => newProject());
     afterAll(() => cleanupProject());

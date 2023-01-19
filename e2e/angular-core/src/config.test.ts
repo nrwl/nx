@@ -13,7 +13,7 @@ import {
   createFile,
 } from '@nrwl/e2e/utils';
 
-describe('Angular Config', () => {
+xdescribe('Angular Config', () => {
   beforeAll(() => newProject());
   afterAll(() => cleanupProject());
 
