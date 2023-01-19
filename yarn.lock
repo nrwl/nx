@@ -4064,10 +4064,10 @@
     "@monaco-editor/loader" "^1.3.2"
     prop-types "^15.7.2"
 
-"@monodon/rust@0.4.0":
-  version "0.4.0"
-  resolved "https://registry.yarnpkg.com/@monodon/rust/-/rust-0.4.0.tgz#74e501a3df6c5909ddd96c634f4eaef712fbfdb4"
-  integrity sha512-DmkWcm4ActBhXTAXpz98KXY6Kve13zLrIskBkXoyvQ75cPHNN5NRZBVML7NAnK+FXYZE95WdCqGA5TrzictvJA==
+"@monodon/rust@0.4.1":
+  version "0.4.1"
+  resolved "https://registry.yarnpkg.com/@monodon/rust/-/rust-0.4.1.tgz#eb8c9bc6d1337490ad89687aa1567e58a61a87a1"
+  integrity sha512-0N6IzRSznA8qm7Hzhy6y98QWFEND9ys7Jnfz31gxg3ch2Y7CBjgb4HuclKLYq4xax9P8uYQ1KzZZmLXzzyv+lw==
   dependencies:
     "@ltd/j-toml" "1.24.0"
     chalk "4.1.2"

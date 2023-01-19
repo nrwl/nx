@@ -37,6 +37,8 @@ Source code and documentation are included in the top-level folders listed below
 
 ## Building the Project
 
+> Nx uses Rust to build native bindings for Node. Please make sure that you have Rust installed via [rustup.rs](https://rustup.rs)
+
 After cloning the project to your machine, to install the dependencies, run:
 
 ```bash

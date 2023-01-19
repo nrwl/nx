@@ -47,7 +47,7 @@
       "inputs": ["production", "^production"]
     },
     "build-base": {
-      "dependsOn": ["^build-base"],
+      "dependsOn": ["^build-base", "build-native"],
       "inputs": ["production", "^production"],
       "executor": "@nrwl/js:tsc",
       "options": {

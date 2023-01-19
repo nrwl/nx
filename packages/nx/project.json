@@ -31,7 +31,11 @@
           {
             "input": "packages/nx",
             "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json", "**/project.json"],
+            "ignore": [
+              "**/tsconfig*.json",
+              "**/project.json",
+              "native-packages"
+            ],
             "output": "/"
           },
           {
@@ -57,11 +61,13 @@
       "command": "echo hi"
     },
     "build": {
-      "dependsOn": ["build-native"],
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/nx"],
       "options": {
         "commands": [
+          {
+            "command": "node ./scripts/copy-local-native.js nx"
+          },
           {
             "command": "node ./scripts/copy-graph-client.js"
           },
