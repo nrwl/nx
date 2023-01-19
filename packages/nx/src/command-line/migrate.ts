@@ -11,6 +11,7 @@ import { NxJsonConfiguration } from '../config/nx-json';
 import { flushChanges, FsTree, printChanges } from '../generators/tree';
 import {
   extractFileFromTarball,
+  fileExists,
   JsonReadOptions,
   readJsonFile,
   writeJsonFile,
@@ -431,7 +432,11 @@ type GenerateMigrations = {
   to: { [k: string]: string };
 };
 
-type RunMigrations = { type: 'runMigrations'; runMigrations: string };
+type RunMigrations = {
+  type: 'runMigrations';
+  runMigrations: string;
+  ifExists: boolean;
+};
 
 export function parseMigrationsOptions(options: {
   [k: string]: any;
@@ -459,6 +464,7 @@ export function parseMigrationsOptions(options: {
     return {
       type: 'runMigrations',
       runMigrations: options.runMigrations as string,
+      ifExists: options.ifExists === '',
     };
   }
 }
@@ -1010,13 +1016,26 @@ export async function executeMigrations(
 
 async function runMigrations(
   root: string,
-  opts: { runMigrations: string },
+  opts: { runMigrations: string; ifExists: boolean },
   isVerbose: boolean,
   shouldCreateCommits = false,
   commitPrefix: string
 ) {
   if (!process.env.NX_MIGRATE_SKIP_INSTALL) {
     runInstall();
+  }
+
+  const migrationsExists: boolean = fileExists(opts.runMigrations);
+
+  if (opts.ifExists && !migrationsExists) {
+    output.log({
+      title: `Migrations file '${opts.runMigrations}' doesn't exist`,
+    });
+    return;
+  } else if (!opts.ifExists && !migrationsExists) {
+    throw new Error(
+      `File '${opts.runMigrations}' doesn't exist, can't run migrations. Use flag --if-present to run migrations only if the file exists`
+    );
   }
 
   output.log({
