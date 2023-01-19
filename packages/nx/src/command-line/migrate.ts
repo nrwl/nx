@@ -166,6 +166,13 @@ export class Migrator {
     try {
       migrationsJson = await this.fetch(targetPackage, targetVersion);
       targetVersion = migrationsJson.version;
+      if (
+        this.collectedVersions[targetPackage] &&
+        gte(this.collectedVersions[targetPackage], targetVersion)
+      ) {
+        return {};
+      }
+
       this.collectedVersions[targetPackage] = targetVersion;
     } catch (e) {
       if (e?.message?.includes('No matching version')) {
