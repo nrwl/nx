@@ -59,6 +59,12 @@
       "version": "15.4.6-beta.0",
       "description": "Refactor the Storybook target options",
       "factory": "./src/migrations/update-15-4-6/refactor-executor-options"
+    },
+    "update-15-5-3": {
+      "cli": "nx",
+      "version": "15.5.3-beta.0",
+      "description": "Add @nrwl/webpack if it is missing and is used.",
+      "factory": "./src/migrations/update-15-5-3/ensure-webpack-package"
     }
   },
   "packageJsonUpdates": {

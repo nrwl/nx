@@ -11,7 +11,6 @@ import {
   createTreeWithEmptyWorkspace,
 } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
-import enquirer = require('enquirer');
 import { nxVersion } from '../../utils/versions';
 import applicationGenerator from '../application/application';
 import libraryGenerator from './library';

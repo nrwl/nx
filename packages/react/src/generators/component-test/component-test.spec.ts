@@ -2,7 +2,6 @@ import { assertMinimumCypressVersion } from '@nrwl/cypress/src/utils/cypress-ver
 import { Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
-import enquirer = require('enquirer');
 import libraryGenerator from '../library/library';
 import { componentTestGenerator } from './component-test';
 

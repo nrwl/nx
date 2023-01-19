@@ -4,7 +4,6 @@ import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import applicationGenerator from '../application/application';
 import { Linter } from '@nrwl/linter';
 import libraryGenerator from '../library/library';
-import enquirer = require('enquirer');
 
 describe('react:stories for libraries', () => {
   let appTree: Tree;
