@@ -81,7 +81,11 @@ describe('using Nx executors and generators with Angular CLI', () => {
 
     checkFilesExist(`dist/main.js`);
     console.log('before running main');
-    expect(runCommand(`node dist/main.js`)).toMatch(/Hello World/);
+    expect(
+      runCommand(`node dist/main.js`, {
+        stdio: ['inherit', 'inherit', 'inherit'],
+      })
+    ).toMatch(/Hello World/);
     console.log('after running main');
   });
 });
