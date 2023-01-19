@@ -83,7 +83,7 @@ describe('using Nx executors and generators with Angular CLI', () => {
     console.log('before running main');
     expect(
       runCommand(`node dist/main.js`, {
-        stdio: ['inherit', 'inherit', 'inherit'],
+        stdio: 'inherit',
       })
     ).toMatch(/Hello World/);
     console.log('after running main');
