@@ -197,7 +197,7 @@ jobs:
             pids+=($!)
 
             (yarn nx affected --target=build --base=$NX_BASE --head=$NX_HEAD --parallel=3 &&
-            npx nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --exclude=e2e-storybook,e2e-storybook-angular --parallel=1) &
+            npx nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --exclude=e2e-storybook,e2e-storybook-angular --parallel=1 --verbose) &
             pids+=($!)
 
             for pid in "${pids[@]}"; do
