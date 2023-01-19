@@ -187,15 +187,18 @@ jobs:
           no_output_timeout: 60m
           command: |
             pids=()
+
             npx nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD &
             pids+=($!)
 
-            npx nx run-many -t check-imports check-commit check-lock-files root-lint depcheck documentation --parallel=1 --no-dte &
+            (npx nx lint --no-dte &&
+            npx nx run-many -t check-imports check-commit check-lock-files depcheck documentation --parallel=1 --no-dte) &
             pids+=($!)
 
-            yarn nx affected -t test lint --base=$NX_BASE --head=$NX_HEAD --parallel=1 &
+            yarn nx affected --target=lint --base=$NX_BASE --head=$NX_HEAD --parallel=3 &
             pids+=($!)
-
+            yarn nx affected --target=test --base=$NX_BASE --head=$NX_HEAD --parallel=1 &
+            pids+=($!)
             (yarn nx affected --target=build --base=$NX_BASE --head=$NX_HEAD --parallel=3 &&
             npx nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --exclude=e2e-storybook,e2e-storybook-angular --parallel=1) &
             pids+=($!)
