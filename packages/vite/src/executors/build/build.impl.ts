@@ -9,6 +9,7 @@ import { ViteBuildExecutorOptions } from './schema';
 import { copyAssets } from '@nrwl/js';
 import { existsSync } from 'fs';
 import { resolve } from 'path';
+import { createAsyncIterable } from '@nrwl/devkit/src/utils/async-iterable';
 
 export default async function* viteBuildExecutor(
   options: ViteBuildExecutorOptions,
@@ -50,23 +51,24 @@ export default async function* viteBuildExecutor(
   }
 
   if ('on' in watcherOrOutput) {
-    // watcherOrOutput is a RollupWatcher.
-    // event is a RollupWatcherEvent.
-    const emitter = makeEmitter();
-    let success = true;
-    watcherOrOutput.on('event', (event: any) => {
-      if (event.code === 'START') {
-        success = true;
-      } else if (event.code === 'ERROR') {
-        success = false;
-      } else if (event.code === 'END') {
-        emitter.push({ success });
-      }
-      // result must be closed when present.
-      // see https://rollupjs.org/guide/en/#rollupwatch
-      event.result?.close();
+    const iterable = createAsyncIterable<{ success: boolean }>(({ next }) => {
+      let success = true;
+      watcherOrOutput.on('event', (event) => {
+        if (event.code === 'START') {
+          success = true;
+        } else if (event.code === 'ERROR') {
+          success = false;
+        } else if (event.code === 'END') {
+          next({ success });
+        }
+        // result must be closed when present.
+        // see https://rollupjs.org/guide/en/#rollupwatch
+        if ('result' in event) {
+          event.result.close();
+        }
+      });
     });
-    yield* emitter;
+    yield* iterable;
   } else {
     yield { success: true };
   }
@@ -76,29 +78,4 @@ function runInstance(options: InlineConfig) {
   return build({
     ...options,
   });
-}
-
-/**
- * Helper to create an async iterator.
- * Calling push on the returned object emits the value.
- */
-function makeEmitter() {
-  const events = [];
-  let resolve: (value: unknown) => void | null;
-
-  return {
-    push: (event) => {
-      events.push(event);
-      resolve?.(event);
-      resolve = null;
-    },
-    [Symbol.asyncIterator]: () => ({
-      next: async () => {
-        if (events.length == 0) {
-          await new Promise((r) => (resolve = r));
-        }
-        return { value: events.shift(), done: false };
-      },
-    }),
-  };
 }
