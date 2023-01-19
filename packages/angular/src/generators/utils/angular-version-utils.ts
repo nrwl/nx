@@ -45,3 +45,15 @@ export function getInstalledAngularVersionInfo(tree: Tree) {
     major: major(installedVersion),
   };
 }
+
+export function getInstalledPackageVersionInfo(tree: Tree, pkgName: string) {
+  try {
+    const version =
+      readJson(tree, 'package.json').dependencies?.[pkgName] ??
+      readJson(tree, 'package.json').devDependencies?.[pkgName];
+
+    return { major: major(coerce(version)), version };
+  } catch {
+    return null;
+  }
+}
