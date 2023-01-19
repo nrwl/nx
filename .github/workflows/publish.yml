@@ -17,10 +17,10 @@ jobs:
           - host: macos-latest
             target: x86_64-apple-darwin
             build: |
-              npx nx run-many --target=build-native
+              npx nx run-many --target=build-native --target=x86_64-apple-darwin
               strip -x packages/**/*.node
           - host: windows-latest
-            build: npx nx run-many --target=build-native
+            build: npx nx run-many --target=build-native -- --target=x86_64-pc-windows-msvc
             target: x86_64-pc-windows-msvc
           - host: windows-latest
             build: |
@@ -36,7 +36,7 @@ jobs:
           - host: ubuntu-latest
             target: x86_64-unknown-linux-musl
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-alpine
-            build: set -e && npx nx run-many --target=build-native && strip *.node
+            build: set -e && npx nx run-many --target=build-native -- --target=x86_64-unknown-linux-musl && strip *.node
           - host: macos-latest
             target: aarch64-apple-darwin
             build: |
@@ -186,7 +186,7 @@ jobs:
             env
             freebsd-version
             yarn install
-            npx nx run-many --target=build-native
+            npx nx run-many --target=build-native -- --target=x86_64-unknown-freebsd
             strip -x packages/**/*.node
             rm -rf node_modules
             rm -rf target

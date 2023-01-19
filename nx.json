@@ -39,12 +39,16 @@
       "!{projectRoot}/.storybook/**/*",
       "!{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)"
     ],
-    "sharedGlobals": ["{workspaceRoot}/babel.config.json"]
+    "sharedGlobals": ["{workspaceRoot}/babel.config.json"],
+    "rustCode": ["{projectRoot}/**/*.rs", "{projectRoot}/**/Cargo.*"]
   },
   "targetDefaults": {
     "build": {
       "dependsOn": ["build-base"],
       "inputs": ["production", "^production"]
+    },
+    "build-native": {
+      "inputs": ["rustCode"]
     },
     "build-base": {
       "dependsOn": ["^build-base", "build-native"],
