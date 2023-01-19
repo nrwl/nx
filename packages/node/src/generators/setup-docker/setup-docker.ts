@@ -1,0 +1,88 @@
+import {
+  addDependenciesToPackageJson,
+  convertNxGenerator,
+  formatFiles,
+  generateFiles,
+  GeneratorCallback,
+  joinPathFragments,
+  logger,
+  readNxJson,
+  readProjectConfiguration,
+  Tree,
+  updateProjectConfiguration,
+} from '@nrwl/devkit';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+import { SetUpDockerOptions } from './schema';
+
+function normalizeOptions(
+  tree: Tree,
+  setupOptions: SetUpDockerOptions
+): SetUpDockerOptions {
+  return {
+    ...setupOptions,
+    projectName: setupOptions.projectName ?? readNxJson(tree).defaultProject,
+    targetName: setupOptions.targetName ?? 'docker-build',
+    buildTarget: setupOptions.buildTarget ?? 'build',
+  };
+}
+
+function addDocker(tree: Tree, options: SetUpDockerOptions) {
+  const project = readProjectConfiguration(tree, options.projectName);
+  if (!project || !options.targetName) {
+    return;
+  }
+
+  if (tree.exists(joinPathFragments(project.root, 'DockerFile'))) {
+    logger.info(
+      `Skipping setup since a Dockerfile already exists inside ${project.root}`
+    );
+  } else {
+    const outputPath =
+      project.targets[`${options.buildTarget}`]?.options.outputPath;
+    generateFiles(tree, joinPathFragments(__dirname, './files'), project.root, {
+      tmpl: '',
+      app: project.sourceRoot,
+      buildLocation: outputPath,
+      projectName: options.projectName,
+    });
+  }
+}
+
+export function updateProjectConfig(tree: Tree, options: SetUpDockerOptions) {
+  let projectConfig = readProjectConfiguration(tree, options.projectName);
+
+  projectConfig.targets[`${options.targetName}`] = {
+    dependsOn: [`${options.buildTarget}`],
+    executor: 'nx:run-commands',
+    options: {
+      commands: [
+        `docker build -f ${joinPathFragments(
+          projectConfig.root,
+          'Dockerfile'
+        )} .`,
+      ],
+    },
+  };
+
+  updateProjectConfiguration(tree, options.projectName, projectConfig);
+}
+
+export async function setupDockerGenerator(
+  tree: Tree,
+  setupOptions: SetUpDockerOptions
+) {
+  const tasks: GeneratorCallback[] = [];
+  const options = normalizeOptions(tree, setupOptions);
+  // Should check if the node project exists
+  addDocker(tree, options);
+  updateProjectConfig(tree, options);
+
+  if (!options.skipFormat) {
+    await formatFiles(tree);
+  }
+
+  return runTasksInSerial(...tasks);
+}
+
+export default setupDockerGenerator;
+export const setupDockerSchematic = convertNxGenerator(setupDockerGenerator);

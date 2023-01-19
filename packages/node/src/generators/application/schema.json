@@ -110,6 +110,10 @@
       "enum": ["jest", "none"],
       "description": "Test runner to use for end to end (e2e) tests",
       "default": "jest"
+    },
+    "docker": {
+      "type": "boolean",
+      "description": "Add a docker build target"
     }
   },
   "required": []

@@ -1531,6 +1531,15 @@
         "originalFilePath": "/packages/node/src/generators/library/schema.json",
         "path": "node/generators/library",
         "type": "generator"
+      },
+      {
+        "description": "Set up Docker configuration for a project.",
+        "file": "generated/packages/node/generators/setup-docker.json",
+        "hidden": false,
+        "name": "setup-docker",
+        "originalFilePath": "/packages/node/src/generators/setup-docker/schema.json",
+        "path": "node/generators/setup-docker",
+        "type": "generator"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
