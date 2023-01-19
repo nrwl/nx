@@ -15,8 +15,7 @@ import { removeSync } from 'fs-extra';
 
 process.env.SELECTED_CLI = 'angular';
 
-// TODO(leo): temporarily disabled until figure out why is causing the tests to hang
-xdescribe('using Nx executors and generators with Angular CLI', () => {
+describe('using Nx executors and generators with Angular CLI', () => {
   let project: string;
   let packageManager: PackageManager;
 
