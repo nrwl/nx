@@ -1,6 +1,6 @@
 import { FileHasherBase } from './file-hasher-base';
 import { performance } from 'perf_hooks';
-import { hashFile, hashFiles } from '@nrwl/native-extensions';
+import { hashFile, hashFiles } from '../native';
 import { workspaceRoot } from '../utils/app-root';
 
 export class NativeFileHasher extends FileHasherBase {
