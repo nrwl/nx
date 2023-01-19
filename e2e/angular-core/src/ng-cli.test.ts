@@ -22,7 +22,9 @@ describe('using Nx executors and generators with Angular CLI', () => {
   beforeEach(() => {
     project = uniq('proj');
     packageManager = getSelectedPackageManager();
+    console.log('before ng new');
     runNgNew(project, packageManager);
+    console.log('after ng new');
   });
 
   afterEach(() => {
@@ -40,8 +42,12 @@ describe('using Nx executors and generators with Angular CLI', () => {
     updateFile('package.json', JSON.stringify(packageJson, null, 2));
 
     // use vite to build a library
+    console.log('before installing vite');
     packageInstall('vite', undefined, 'latest');
+    console.log('after installing vite');
+    console.log('before installing @nrwl/vite');
     packageInstall('@nrwl/vite');
+    console.log('after installing @nrwl/vite');
     const angularJson = readJson('angular.json');
     angularJson.projects[project].architect.build = {
       builder: '@nrwl/vite:build',
@@ -69,9 +75,13 @@ describe('using Nx executors and generators with Angular CLI', () => {
     );
     updateFile(`src/main.ts`, `console.log('Hello World');`);
 
+    console.log('before building');
     runCommand(`npx ng build ${project}`);
+    console.log('after building');
 
     checkFilesExist(`dist/main.js`);
+    console.log('before running main');
     expect(runCommand(`node dist/main.js`)).toMatch(/Hello World/);
+    console.log('after running main');
   });
 });
