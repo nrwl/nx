@@ -3,9 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/nx",
   "projectType": "library",
-  "implicitDependencies": [
-    "graph-client"
-  ],
+  "implicitDependencies": ["graph-client"],
   "targets": {
     "build-native": {
       "executor": "@monodon/rust:napi",
@@ -33,18 +31,13 @@
           {
             "input": "packages/nx",
             "glob": "**/*.json",
-            "ignore": [
-              "**/tsconfig*.json",
-              "**/project.json"
-            ],
+            "ignore": ["**/tsconfig*.json", "**/project.json"],
             "output": "/"
           },
           {
             "input": "packages/nx",
             "glob": "**/*.{js,css,html,svg}",
-            "ignore": [
-              "**/jest.config.js"
-            ],
+            "ignore": ["**/jest.config.js"],
             "output": "/"
           },
           {
@@ -64,13 +57,9 @@
       "command": "echo hi"
     },
     "build": {
-      "dependsOn": [
-        "build-native"
-      ],
+      "dependsOn": ["build-native"],
       "executor": "nx:run-commands",
-      "outputs": [
-        "{workspaceRoot}/build/packages/nx"
-      ],
+      "outputs": ["{workspaceRoot}/build/packages/nx"],
       "options": {
         "commands": [
           {
