@@ -17,6 +17,7 @@ import {
   ProjectGraphExternalNode,
 } from '../config/project-graph';
 import { ProjectGraphBuilder } from '../project-graph/project-graph-builder';
+import { matchExistingNode, switchNodeToNested } from './utils/parsing';
 
 export function parsePnpmLockfile(lockFileContent: string): ProjectGraph {
   const data = parseAndNormalizePnpmLockfile(lockFileContent);
@@ -75,31 +76,6 @@ function addNodes(
   });
 }
 
-function matchExistingNode(
-  builder: ProjectGraphBuilder,
-  packageName: string,
-  version: string
-): ProjectGraphExternalNode {
-  let existingNode = builder.graph.externalNodes[`npm:${packageName}`];
-  if (existingNode && existingNode.data.version === version) {
-    return existingNode;
-  }
-  existingNode = builder.graph.externalNodes[`npm:${packageName}@${version}`];
-  if (existingNode && existingNode.data.version === version) {
-    return existingNode;
-  }
-}
-
-function switchNodeToNested(
-  node: ProjectGraphExternalNode,
-  builder: ProjectGraphBuilder
-) {
-  delete builder.graph.externalNodes[node.name];
-
-  node.name = `npm:${node.data.packageName}@${node.data.version}`;
-  builder.addExternalNode(node);
-}
-
 function getHoistedVersion(
   packageName: string,
   hoistedDependencies: Record<string, any>,
@@ -117,7 +93,7 @@ function getHoistedVersion(
     if (key) {
       version = key.slice(key.lastIndexOf('/') + 1).split('_')[0];
     } else {
-      throw new Error(`Cannot find version for ${packageName}`);
+      throw new Error(`Cannot find hoisted version for ${packageName}`);
     }
   }
 
@@ -132,11 +108,11 @@ function addDependencies(
 ) {
   Object.keys(data.packages).forEach((key) => {
     const node = keyMap.get(key);
-    addNodeDependencies(node.name, data.packages[key].dependencies, builder);
-    addNodeDependencies(
-      node.name,
-      data.packages[key].optionalDependencies,
-      builder
+    const snapshot = data.packages[key];
+    [snapshot.dependencies, snapshot.optionalDependencies].forEach(
+      (section) => {
+        addNodeDependencies(node.name, section, builder);
+      }
     );
   });
 }
@@ -152,7 +128,9 @@ function addNodeDependencies(
       const target =
         builder.graph.externalNodes[`npm:${name}@${version}`] ||
         builder.graph.externalNodes[`npm:${name}`];
-      builder.addExternalNodeDependency(source, target.name);
+      if (target) {
+        builder.addExternalNodeDependency(source, target.name);
+      }
     });
   }
 }
