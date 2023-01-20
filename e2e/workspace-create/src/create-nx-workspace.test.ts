@@ -39,6 +39,7 @@ describe('create-nx-workspace', () => {
       appName: wsName,
       style: 'css',
       packageManager,
+      bundler: 'vite',
     });
 
     checkFilesExist('package.json');

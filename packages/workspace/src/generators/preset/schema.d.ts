@@ -11,4 +11,5 @@ export interface Schema {
   standaloneConfig?: boolean;
   framework?: string;
   packageManager?: PackageManager;
+  bundler?: 'vite' | 'webpack';
 }

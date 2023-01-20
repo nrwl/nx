@@ -68,7 +68,7 @@ async function createPreset(tree: Tree, options: Schema) {
       linter: options.linter,
       standaloneConfig: options.standaloneConfig,
       rootProject: true,
-      bundler: 'vite',
+      bundler: options.bundler ?? 'vite',
       e2eTestRunner: 'cypress',
       unitTestRunner: 'vitest',
     });
