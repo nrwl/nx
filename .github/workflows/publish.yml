@@ -219,7 +219,7 @@ jobs:
       - name: Publish
         run: |
           echo $GITHUB_REF_NAME
-          yarn nx-release --local=false $GITHUB_REF_NAME --dryRun
+          yarn nx-release --local=false $GITHUB_REF_NAME --skipPublish
           ls -R build/packages/nx/native-packages
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
