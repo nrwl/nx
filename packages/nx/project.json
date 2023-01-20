@@ -12,6 +12,11 @@
         "dist": "packages/nx/src/native",
         "jsFile": "packages/nx/src/native/index.js",
         "release": true
+      },
+      "configurations": {
+        "publish": {
+          "dist": "packages/nx"
+        }
       }
     },
     "artifacts": {
