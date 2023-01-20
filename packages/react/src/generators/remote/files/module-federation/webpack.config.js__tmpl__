@@ -1,6 +1,6 @@
 const { composePlugins, withNx } = require('@nrwl/webpack');
 const { withReact } = require('@nrwl/react');
-const { withModuleFederation } = require('@nrwl/react/module-federation'));
+const { withModuleFederation } = require('@nrwl/react/module-federation');
 
 const baseConfig = require('./module-federation.config');
 
