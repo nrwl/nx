@@ -1,11 +1,12 @@
 import type { Tree } from '@nrwl/devkit';
 import { tsquery } from '@phenomnomnominal/tsquery';
-import { lt } from 'semver';
+import { coerce, lt, major } from 'semver';
 import {
-  getInstalledAngularVersion,
+  getInstalledAngularVersionInfo,
   getInstalledPackageVersionInfo,
 } from '../../utils/version-utils';
 import type { NgRxGeneratorOptions } from '../schema';
+import { getPkgVersionForAngularMajorVersion } from '../../../utils/version-utils';
 
 export function validateOptions(
   tree: Tree,
@@ -21,16 +22,21 @@ export function validateOptions(
     throw new Error(`Parent does not exist: ${options.parent}.`);
   }
 
-  const angularVersion = getInstalledAngularVersion(tree);
+  const angularVersionInfo = getInstalledAngularVersionInfo(tree);
+  const intendedNgRxVersionForAngularMajor =
+    getPkgVersionForAngularMajorVersion(
+      'ngrxVersion',
+      angularVersionInfo.major
+    );
 
-  const installedNgRxVersion = getInstalledPackageVersionInfo(
-    tree,
-    '@ngrx/store'
-  );
+  const ngrxVersion = getInstalledPackageVersionInfo(tree, '@ngrx/store') ?? {
+    version: intendedNgRxVersionForAngularMajor,
+    major: major(coerce(intendedNgRxVersionForAngularMajor)),
+  };
 
   if (
-    lt(angularVersion, '14.1.0') ||
-    (installedNgRxVersion && installedNgRxVersion.major < 15)
+    lt(angularVersionInfo.version, '14.1.0') ||
+    (ngrxVersion && ngrxVersion.major < 15)
   ) {
     const parentPath = options.parent ?? options.module;
     const parentContent = tree.read(parentPath, 'utf-8');
