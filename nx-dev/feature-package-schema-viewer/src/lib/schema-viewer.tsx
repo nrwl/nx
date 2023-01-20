@@ -58,25 +58,28 @@ function getViewModel(
 }
 
 function extractPropertiesByImportance(properties: PropertyModel[]): {
-  required: PropertyModel[];
+  deprecated: PropertyModel[];
   important: PropertyModel[];
   internal: PropertyModel[];
+  required: PropertyModel[];
   rest: PropertyModel[];
 } {
   const result: {
-    required: PropertyModel[];
+    deprecated: PropertyModel[];
     important: PropertyModel[];
     internal: PropertyModel[];
+    required: PropertyModel[];
     rest: PropertyModel[];
   } = {
-    required: [],
+    deprecated: [],
     important: [],
     internal: [],
+    required: [],
     rest: [],
   };
   for (const property of properties) {
-    if (property.isRequired) {
-      result.required.push(property);
+    if (isPropertyDeprecated(property.initialSchema)) {
+      result.deprecated.push(property);
       continue;
     }
     if (
@@ -158,6 +161,7 @@ export function SchemaViewer({
     ...categorizedProperties.important,
     ...categorizedProperties.rest,
     ...categorizedProperties.internal,
+    ...categorizedProperties.deprecated,
   ]);
 
   const additionalProperties = new Array<JSX.Element>();
