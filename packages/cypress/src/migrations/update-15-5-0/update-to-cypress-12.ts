@@ -52,7 +52,7 @@ export function updateToCypress12(tree: Tree): GeneratorCallback {
     }
   );
 
-  console.warn(stripIndents`Cypress 12 has lots of breaking changes that might subility break your tests.
+  console.warn(stripIndents`Cypress 12 has lots of breaking changes that might subtly break your tests.
 This migration marked known issues that need to be manually migrated, 
 but there can still be runtime based errors that were not detected.
 Please consult the offical Cypress v12 migration guide for more info on these changes and the next steps.
