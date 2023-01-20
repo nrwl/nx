@@ -4,7 +4,7 @@ import { lt } from 'semver';
 import {
   getInstalledAngularVersion,
   getInstalledPackageVersionInfo,
-} from '../../utils/angular-version-utils';
+} from '../../utils/version-utils';
 import type { NgRxGeneratorOptions } from '../schema';
 
 export function validateOptions(
@@ -28,8 +28,11 @@ export function validateOptions(
     '@ngrx/store'
   );
 
-  const parentPath = options.parent ?? options.module;
-  if (parentPath) {
+  if (
+    lt(angularVersion, '14.1.0') ||
+    (installedNgRxVersion && installedNgRxVersion.major < 15)
+  ) {
+    const parentPath = options.parent ?? options.module;
     const parentContent = tree.read(parentPath, 'utf-8');
     const ast = tsquery.ast(parentContent);
 
@@ -38,11 +41,7 @@ export function validateOptions(
     const nodes = tsquery(ast, NG_MODULE_DECORATOR_SELECTOR, {
       visitAllChildren: true,
     });
-    if (
-      nodes.length === 0 &&
-      (lt(angularVersion, '14.1.0') ||
-        (installedNgRxVersion && installedNgRxVersion.major < 15))
-    ) {
+    if (nodes.length === 0) {
       throw new Error(
         `The provided parent path "${parentPath}" does not contain an "NgModule". ` +
           'Please make sure to provide a path to an "NgModule" where the state will be registered. ' +

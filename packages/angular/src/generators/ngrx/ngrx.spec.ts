@@ -680,7 +680,7 @@ describe('ngrx', () => {
       ).toMatchSnapshot();
     });
 
-    it('should throw when Angular version < 14.2 and NgRx < 15 but path to routes file is provided', async () => {
+    it('should throw when Angular version < 14.1 and NgRx < 15 but path to routes file is provided', async () => {
       const parentPath = 'apps/myapp/src/app/app.routes.ts';
       tree.write(
         parentPath,
