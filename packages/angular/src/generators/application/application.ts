@@ -54,8 +54,7 @@ export async function applicationGenerator(
     let previousGenerator = await import(
       join(__dirname, generatorDirectory, 'application')
     );
-    await previousGenerator.default(tree, schema);
-    return;
+    return await previousGenerator.default(tree, schema);
   }
 
   const options = normalizeOptions(tree, schema);

@@ -134,4 +134,8 @@ function updateAppAndE2EProjectConfigurations(
       removeProjectConfiguration(host, options.e2eProjectName);
     }
   }
+
+  // delete some default test configs
+  host.delete(`${options.appProjectRoot}/karma.conf.js`);
+  host.delete(`${options.appProjectRoot}/src/test.ts`);
 }
