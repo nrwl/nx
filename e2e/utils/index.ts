@@ -160,6 +160,7 @@ export function runCreateWorkspace(
     ci,
     useDetectedPm = false,
     cwd = e2eCwd,
+    bundler,
   }: {
     preset: string;
     appName?: string;
@@ -171,6 +172,7 @@ export function runCreateWorkspace(
     ci?: 'azure' | 'github' | 'circleci';
     useDetectedPm?: boolean;
     cwd?: string;
+    bundler?: 'webpack' | 'vite';
   }
 ) {
   projName = name;
@@ -188,6 +190,10 @@ export function runCreateWorkspace(
   }
   if (ci) {
     command += ` --ci=${ci}`;
+  }
+
+  if (bundler) {
+    command += ` --bundler=${bundler}`;
   }
 
   if (base) {

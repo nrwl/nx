@@ -1,4 +1,4 @@
-import { Tree, readJson, readProjectConfiguration } from '@nrwl/devkit';
+import { Tree, readProjectConfiguration } from '@nrwl/devkit';
 import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { overrideCollectionResolutionForTesting } from '@nrwl/devkit/ngcli-adapter';
 import { presetGenerator } from './preset';
@@ -113,5 +113,37 @@ describe('preset', () => {
     });
 
     expect(tree.exists('/apps/proj/src/app/App.tsx')).toBe(true);
+  });
+
+  it(`should create files (preset = ${Preset.ReactStandalone} bundler = webpack)`, async () => {
+    await presetGenerator(tree, {
+      name: 'proj',
+      preset: Preset.ReactStandalone,
+      style: 'css',
+      linter: 'eslint',
+      cli: 'nx',
+      standaloneConfig: false,
+      bundler: 'webpack',
+    });
+    expect(tree.exists('webpack.config.js')).toBe(true);
+    expect(
+      readProjectConfiguration(tree, 'proj').targets.serve
+    ).toMatchSnapshot();
+  });
+
+  it(`should create files (preset = ${Preset.ReactStandalone} bundler = vite)`, async () => {
+    await presetGenerator(tree, {
+      name: 'proj',
+      preset: Preset.ReactStandalone,
+      style: 'css',
+      linter: 'eslint',
+      cli: 'nx',
+      standaloneConfig: false,
+      bundler: 'vite',
+    });
+    expect(tree.exists('vite.config.ts')).toBe(true);
+    expect(
+      readProjectConfiguration(tree, 'proj').targets.serve
+    ).toMatchSnapshot();
   });
 });

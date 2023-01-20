@@ -43,6 +43,7 @@ type Arguments = {
     name: string;
     email: string;
   };
+  bundler: 'vite' | 'webpack';
 };
 
 enum Preset {
@@ -150,6 +151,10 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
         })
         .option('style', {
           describe: chalk.dim`Style option to be used when a preset with pregenerated app is selected`,
+          type: 'string',
+        })
+        .option('bundler', {
+          describe: chalk.dim`Bundler to be used to build the application`,
           type: 'string',
         })
         .option('framework', {
@@ -313,7 +318,7 @@ async function getConfiguration(
   argv: yargs.Arguments<Arguments>
 ): Promise<void> {
   try {
-    let name, appName, style, preset, framework;
+    let name, appName, style, preset, framework, bundler;
 
     output.log({
       title:
@@ -360,6 +365,10 @@ async function getConfiguration(
         if (preset === Preset.NodeServer) {
           framework = await determineFramework(preset, argv);
         }
+
+        if (preset === Preset.ReactStandalone) {
+          bundler = await determineBundler(argv);
+        }
       } else {
         name = await determineRepoName(argv);
         appName = await determineAppName(preset, argv);
@@ -384,6 +393,7 @@ async function getConfiguration(
       packageManager,
       defaultBase,
       ci,
+      bundler,
     });
   } catch (e) {
     console.error(e);
@@ -834,6 +844,54 @@ async function determineStyle(
   }
 
   return Promise.resolve(parsedArgs.style);
+}
+
+async function determineBundler(
+  parsedArgs: yargs.Arguments<Arguments>
+): Promise<'vite' | 'webpack'> {
+  const choices = [
+    {
+      name: 'vite',
+      message: 'Vite             [ https://vitejs.dev/ ]',
+    },
+    {
+      name: 'webpack',
+      message: 'Webpack       [ https://webpack.js.org/ ]',
+    },
+  ];
+
+  if (!parsedArgs.bundler) {
+    return enquirer
+      .prompt([
+        {
+          name: 'bundler',
+          message: `Bundler to be used to build the application`,
+          initial: 'vite' as any,
+          type: 'autocomplete',
+          choices: choices,
+        },
+      ])
+      .then((a: { bundler: 'vite' | 'webpack' }) => a.bundler);
+  }
+
+  const foundBundler = choices.find(
+    (choice) => choice.name === parsedArgs.bundler
+  );
+
+  if (foundBundler === undefined) {
+    output.error({
+      title: 'Invalid bundler',
+      bodyLines: [
+        `It must be one of the following:`,
+        '',
+        ...choices.map((choice) => choice.name),
+      ],
+    });
+
+    process.exit(1);
+  }
+
+  return Promise.resolve(parsedArgs.bundler);
 }
 
 async function determineNxCloud(

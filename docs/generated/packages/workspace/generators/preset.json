@@ -62,6 +62,12 @@
         "description": "The framework which the application is using",
         "type": "string",
         "enum": ["express", "koa", "fastify", "connect"]
+      },
+      "bundler": {
+        "description": "The bundler to use for building the application.",
+        "type": "string",
+        "enum": ["webpack", "vite"],
+        "default": "vite"
       }
     },
     "presets": []
