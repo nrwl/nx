@@ -5,7 +5,7 @@ const glob = require('fast-glob');
 const p = process.argv[2];
 
 if (process.env.LOCAL_RELEASE) {
-  return;
+  process.exit(0);
 }
 
 const nativeFiles = glob.sync(`packages/${p}/**/*.node`);

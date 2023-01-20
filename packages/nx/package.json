@@ -119,7 +119,7 @@
     "access": "public"
   },
   "napi": {
-    "name": "nx-native",
+    "name": "nx",
     "package": {
       "name": "@nrwl/nx-native"
     },
