@@ -5,6 +5,8 @@ import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { URL } from 'url';
 import { join } from 'path';
 
+import { parse } from 'semver';
+
 import * as version from '@lerna/version/index';
 import * as publish from '@lerna/publish/index';
 
@@ -19,6 +21,21 @@ function hideFromGitIndex(uncommittedFiles: string[]) {
 
 (async () => {
   const options = parseArgs();
+
+  const currentLatestVersion = execSync('npm view nx version')
+    .toString()
+    .trim();
+
+  const parsedVersion = parse(options.version);
+  const parsedCurrentLatestVersion = parse(currentLatestVersion);
+
+  const distTag =
+    parsedVersion?.prerelease.length > 0
+      ? 'next'
+      : parsedVersion?.major < parsedCurrentLatestVersion.major
+      ? 'previous'
+      : 'latest';
+
   if (options.local) {
     process.env.LOCAL_RELEASE = 'true';
   }
@@ -39,10 +56,7 @@ function hideFromGitIndex(uncommittedFiles: string[]) {
   execSync(buildCommand, {
     stdio: [0, 1, 2],
   });
-
-  const lernaJsonPath = join(__dirname, '../lerna.json');
-
-  updateLernaJsonVersion(lernaJsonPath);
+  updateLernaJsonVersion(currentLatestVersion);
 
   if (options.local) {
     // Force all projects to be not private
@@ -110,7 +124,7 @@ function hideFromGitIndex(uncommittedFiles: string[]) {
 
   const publishOptions: Record<string, boolean | string | undefined> = {
     gitReset: false,
-    distTag: options.tag,
+    distTag: distTag,
   };
 
   if (!options.skipPublish) {
@@ -120,7 +134,7 @@ function hideFromGitIndex(uncommittedFiles: string[]) {
     console.warn('Not Publishing because --dryRun was passed');
   }
 
-  restoreOriginalLernaJson(lernaJsonPath);
+  restoreOriginalLernaJson();
 })();
 
 function parseArgs() {
@@ -165,17 +179,6 @@ function parseArgs() {
         'Alternate git remote name to publish tags to (useful for testing changelog)',
       default: 'origin',
     })
-    .option('tag', {
-      type: 'string',
-      description: 'NPM Tag',
-      choices: ['next', 'latest', 'previous'],
-    })
-    .option('preid', {
-      type: 'string',
-      description: 'The kind of prerelease tag. (1.0.0-[preid].0)',
-      choices: ['alpha', 'beta', 'rc'],
-      default: 'beta',
-    })
     .option('loglevel', {
       type: 'string',
       description: 'Log Level',
@@ -186,23 +189,23 @@ function parseArgs() {
       `By default, this will locally publish a minor version bump as latest. Great for local development. Most developers should only need this.`
     )
     .example(
-      '$0 --local false',
-      `This will really publish a new beta version to npm as next. The version is inferred by the changes.`
+      '$0 --local false 2.3.4-beta.0',
+      `This will really publish a new version to npm as next.`
     )
     .example(
-      '$0 --local false --tag latest',
-      `This will really publish a new stable version to npm as latest, tag, commit, push, and create a release on GitHub.`
+      '$0 --local false 2.3.4',
+      `Given the current latest major version on npm is 2, this will really publish a new version to npm as latest.`
     )
     .example(
-      '$0 --local false --preid rc',
-      `This will really publish a new rc version to npm as next.`
+      '$0 --local false 1.3.4-beta.0',
+      `Given the current latest major version on npm is 2, this will really publish a new version to npm as previous.`
     )
     .group(
       ['local', 'clearLocalRegistry'],
       'Local Publishing Options for most developers'
     )
     .group(
-      ['preid', 'tag', 'gitRemote', 'force'],
+      ['gitRemote', 'force'],
       'Real Publishing Options for actually publishing to NPM'
     )
     .check((args) => {
@@ -232,16 +235,17 @@ function parseArgs() {
   return parsedArgs;
 }
 
+const lernaJsonPath = join(__dirname, '../lerna.json');
 const originalLernaJson = readFileSync(lernaJsonPath);
-function updateLernaJsonVersion(lernaJsonPath: string) {
+function updateLernaJsonVersion(version: string) {
   const json = JSON.parse(readFileSync(lernaJsonPath).toString());
 
-  json.version = execSync('npm view nx version').toString().trim();
+  json.version = version;
 
   writeFileSync(lernaJsonPath, JSON.stringify(json));
 }
 
-function restoreOriginalLernaJson(lernaJsonPath: string) {
+function restoreOriginalLernaJson() {
   writeFileSync(lernaJsonPath, originalLernaJson);
 }
 
