@@ -78,6 +78,10 @@ function extractPropertiesByImportance(properties: PropertyModel[]): {
     rest: [],
   };
   for (const property of properties) {
+    if (property.isRequired) {
+      result.required.push(property);
+      continue;
+    }
     if (isPropertyDeprecated(property.initialSchema)) {
       result.deprecated.push(property);
       continue;
@@ -156,14 +160,6 @@ export function SchemaViewer({
     });
   }
 
-  const renderedProps = renderProps([
-    ...categorizedProperties.required,
-    ...categorizedProperties.important,
-    ...categorizedProperties.rest,
-    ...categorizedProperties.internal,
-    ...categorizedProperties.deprecated,
-  ]);
-
   const additionalProperties = new Array<JSX.Element>();
   if (typeof schema.additionalProperties === 'boolean') {
     if (schema.additionalProperties) {
@@ -231,7 +227,7 @@ export function SchemaViewer({
   );
 
   const hasProperties =
-    renderedProps.length > 0 ||
+    Object.keys(properties).length > 0 ||
     renderedPatternProperties.length > 0 ||
     additionalProperties.length > 0;
 
@@ -267,14 +263,21 @@ export function SchemaViewer({
   }
 
   let allRenderedProperties = <></>;
+  const renderedProps = [
+    renderProps([
+      ...categorizedProperties.required,
+      ...categorizedProperties.important,
+      ...categorizedProperties.rest,
+    ]),
+    ...renderedPatternProperties,
+    ...additionalProperties,
+    renderProps([
+      ...categorizedProperties.internal,
+      ...categorizedProperties.deprecated,
+    ]),
+  ];
   if (hasProperties) {
-    allRenderedProperties = (
-      <>
-        {renderedProps}
-        {renderedPatternProperties}
-        {additionalProperties}
-      </>
-    );
+    allRenderedProperties = <>{renderedProps}</>;
   }
 
   return (
