@@ -84,7 +84,7 @@ export const ParameterView = (props: {
 function ParameterMetadata({ schema }: { schema: JsonSchema }) {
   const data = getParameterMetadata(schema);
   return !!data.length ? (
-    <div className="mb-0.5">
+    <div className="mb-0.5 space-x-4">
       {data.map((i) => (
         <span key={i.key}>
           {i.name}: <code>{i.value}</code>
