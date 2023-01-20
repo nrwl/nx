@@ -7,7 +7,7 @@ import {
   readProjectConfiguration,
 } from '@nrwl/devkit';
 import { tsquery } from '@phenomnomnominal/tsquery';
-import { getInstalledAngularVersionInfo } from '../../utils/angular-version-utils';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import { v14TestFile } from './v14-test-file';
 
 export function generateKarmaProjectFiles(tree: Tree, project: string): void {
