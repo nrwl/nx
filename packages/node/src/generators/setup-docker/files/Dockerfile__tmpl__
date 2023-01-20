@@ -1,0 +1,11 @@
+FROM docker.io/node:lts-alpine
+
+WORKDIR /app
+
+RUN addgroup --system <%= projectName %> && \
+          adduser --system -G <%= projectName %> <%= projectName %>
+
+COPY <%= buildLocation %> dist
+RUN chown -R <%= projectName %>:<%= projectName %> .
+
+CMD [ "node", "dist" ]

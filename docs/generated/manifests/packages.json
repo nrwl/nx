@@ -1554,6 +1554,15 @@
         "originalFilePath": "/packages/node/src/generators/library/schema.json",
         "path": "/packages/node/generators/library",
         "type": "generator"
+      },
+      "/packages/node/generators/setup-docker": {
+        "description": "Set up Docker configuration for a project.",
+        "file": "generated/packages/node/generators/setup-docker.json",
+        "hidden": false,
+        "name": "setup-docker",
+        "originalFilePath": "/packages/node/src/generators/setup-docker/schema.json",
+        "path": "/packages/node/generators/setup-docker",
+        "type": "generator"
       }
     },
     "path": "/packages/node"

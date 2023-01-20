@@ -19,6 +19,7 @@ export interface Schema {
   framework?: NodeJsFrameWorks;
   port?: number;
   rootProject?: boolean;
+  docker?: boolean;
 }
 
 export type NodeJsFrameWorks =

@@ -44,6 +44,7 @@ import {
 
 import * as shared from '@nrwl/workspace/src/utils/create-ts-config';
 import { e2eProjectGenerator } from '../e2e-project/e2e-project';
+import { setupDockerGenerator } from '../setup-docker/setup-docker';
 
 export interface NormalizedSchema extends Schema {
   appProjectRoot: string;
@@ -372,6 +373,15 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
 
   if (options.frontendProject) {
     addProxy(tree, options);
+  }
+
+  if (options.docker) {
+    const dockerTask = await setupDockerGenerator(tree, {
+      ...options,
+      projectName: options.name,
+    });
+
+    tasks.push(dockerTask);
   }
 
   if (!options.skipFormat) {
