@@ -191,8 +191,7 @@ jobs:
             npx nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD &
             pids+=($!)
 
-            (npx nx lint --no-dte &&
-            npx nx run-many -t check-imports check-commit check-lock-files depcheck documentation --parallel=1 --no-dte) &
+            npx nx run-many -t root-lint check-imports check-commit check-lock-files depcheck documentation --parallel=1 --no-dte &
             pids+=($!)
 
             yarn nx affected --target=lint --base=$NX_BASE --head=$NX_HEAD --parallel=3 &
