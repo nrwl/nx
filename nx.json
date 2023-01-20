@@ -70,6 +70,7 @@
       "outputs": ["{options.outputPath}"]
     },
     "test": {
+      "dependsOn": ["^build-native"],
       "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
       "executor": "@nrwl/jest:jest",
       "options": {
