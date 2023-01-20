@@ -6,7 +6,7 @@
   "implicitDependencies": ["graph-client"],
   "targets": {
     "build-native": {
-      "outputs": ["{projectRoot}/src/native/*.node"],
+      "outputs": ["{projectRoot}/src/native/*.node", "{projectRoot}/*.node"],
       "executor": "@monodon/rust:napi",
       "options": {
         "dist": "packages/nx/src/native",
