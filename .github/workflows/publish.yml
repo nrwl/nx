@@ -17,14 +17,14 @@ jobs:
           - host: macos-latest
             target: x86_64-apple-darwin
             build: |
-              yarn nx run-many --target=build-native -- --target=x86_64-apple-darwin
+              yarn nx -- run-many --target=build-native -- --target=x86_64-apple-darwin
           - host: windows-latest
-            build: yarn nx run-many --target=build-native -- --target=x86_64-pc-windows-msvc
+            build: yarn nx -- run-many --target=build-native -- --target=x86_64-pc-windows-msvc
             target: x86_64-pc-windows-msvc
           # Windows 32bit (not needed)
           # - host: windows-latest
           #   build: |
-          #     yarn nx run-many --target=build-native -- --target=i686-pc-windows-msvc
+          #     yarn nx -- run-many --target=build-native -- --target=i686-pc-windows-msvc
           #   target: i686-pc-windows-msvc
           - host: ubuntu-latest
             target: x86_64-unknown-linux-gnu
@@ -32,11 +32,11 @@ jobs:
             build: |-
               set -e &&
               yarn --version &&
-              yarn nx run-many --target=build-native -- --target=x86_64-unknown-linux-gnu
+              yarn nx -- run-many --target=build-native -- --target=x86_64-unknown-linux-gnu
           - host: ubuntu-latest
             target: x86_64-unknown-linux-musl
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-alpine
-            build: set -e && yarn nx run-many --target=build-native -- --target=x86_64-unknown-linux-musl
+            build: set -e && yarn nx -- run-many --target=build-native -- --target=x86_64-unknown-linux-musl
           - host: macos-latest
             target: aarch64-apple-darwin
             build: |
@@ -45,40 +45,40 @@ jobs:
               export CXX=$(xcrun -f clang++);
               SYSROOT=$(xcrun --sdk macosx --show-sdk-path);
               export CFLAGS="-isysroot $SYSROOT -isystem $SYSROOT";
-              yarn nx run-many --target=build-native -- --target=aarch64-apple-darwin
+              yarn nx -- run-many --target=build-native -- --target=aarch64-apple-darwin
           - host: ubuntu-latest
             target: aarch64-unknown-linux-gnu
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian-aarch64
             build: |-
               set -e &&
               yarn --version &&
-              yarn nx run-many --target=build-native -- --target=aarch64-unknown-linux-gnu
+              yarn nx -- run-many --target=build-native -- --target=aarch64-unknown-linux-gnu
           - host: ubuntu-latest
             target: armv7-unknown-linux-gnueabihf
             setup: |
               sudo apt-get update
               sudo apt-get install gcc-arm-linux-gnueabihf -y
             build: |
-              yarn nx run-many --target=build-native -- --target=armv7-unknown-linux-gnueabihf
+              yarn nx -- run-many --target=build-native -- --target=armv7-unknown-linux-gnueabihf
           # Android (not needed)
           # - host: ubuntu-latest
           #   target: aarch64-linux-android
           #   build: |
-          #     yarn nx run-many --target=build-native -- --target=aarch64-linux-android
+          #     yarn nx -- run-many --target=build-native -- --target=aarch64-linux-android
           # - host: ubuntu-latest
           #   target: armv7-linux-androideabi
           #   build: |
-          #     yarn nx run-many --target=build-native -- --target=armv7-linux-androideabi
+          #     yarn nx -- run-many --target=build-native -- --target=armv7-linux-androideabi
           - host: ubuntu-latest
             target: aarch64-unknown-linux-musl
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-alpine
             build: |-
               set -e &&
               rustup target add aarch64-unknown-linux-musl &&
-              yarn nx run-many --target=build-native -- --target=aarch64-unknown-linux-musl
+              yarn nx -- run-many --target=build-native -- --target=aarch64-unknown-linux-musl
           - host: windows-latest
             target: aarch64-pc-windows-msvc
-            build: yarn nx run-many --target=build-native -- --target=aarch64-pc-windows-msvc
+            build: yarn nx -- run-many --target=build-native -- --target=aarch64-pc-windows-msvc
     name: stable - ${{ matrix.settings.target }} - node@18
     runs-on: ${{ matrix.settings.host }}
     steps:
@@ -182,7 +182,7 @@ jobs:
 #            env
 #            freebsd-version
 #            yarn install
-#            yarn nx run-many --target=build-native -- --target=x86_64-unknown-freebsd
+#            yarn nx -- run-many --target=build-native -- --target=x86_64-unknown-freebsd
 #            strip -x packages/*/*.node
 #            rm -rf node_modules
 #            rm -rf target
