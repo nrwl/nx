@@ -1,7 +1,8 @@
-name: Publish
+name: CI
 env:
   DEBUG: napi:*
-  NX_RUN_GROUP: '${{ github.run_id}}-${{ github.run_attempt }}'
+  APP_NAME: nx
+  MACOSX_DEPLOYMENT_TARGET: '10.13'
 'on':
   push:
     tags:
@@ -16,7 +17,7 @@ jobs:
           - host: macos-latest
             target: x86_64-apple-darwin
             build: |
-              npx nx run-many --target=build-native --target=x86_64-apple-darwin
+              npx nx run-many --target=build-native -- --target=x86_64-apple-darwin
           - host: windows-latest
             build: npx nx run-many --target=build-native -- --target=x86_64-pc-windows-msvc
             target: x86_64-pc-windows-msvc
@@ -30,7 +31,8 @@ jobs:
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian
             build: |-
               set -e &&
-              sudo npx nx run-many --target=build-native -- --target=x86_64-unknown-linux-gnu
+              chmod a+w /root/.config/yarn &&
+              npx nx run-many --target=build-native -- --target=x86_64-unknown-linux-gnu
           - host: ubuntu-latest
             target: x86_64-unknown-linux-musl
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-alpine
@@ -49,7 +51,8 @@ jobs:
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian-aarch64
             build: |-
               set -e &&
-              sudo npx nx run-many --target=build-native -- --target=aarch64-unknown-linux-gnu
+              chmod a+w /root/.config/yarn &&
+              npx nx run-many --target=build-native -- --target=aarch64-unknown-linux-gnu
           - host: ubuntu-latest
             target: armv7-unknown-linux-gnueabihf
             setup: |
@@ -141,54 +144,55 @@ jobs:
           name: bindings-${{ matrix.settings.target }}
           path: packages/**/*.node
           if-no-files-found: error
-  # build-freebsd:
-  #   runs-on: macos-12
-  #   name: Build FreeBSD
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #     - name: Build
-  #       id: build
-  #       uses: vmactions/freebsd-vm@v0
-  #       env:
-  #         DEBUG: napi:*
-  #         RUSTUP_HOME: /usr/local/rustup
-  #         CARGO_HOME: /usr/local/cargo
-  #         RUSTUP_IO_THREADS: 1
-  #       with:
-  #         envs: DEBUG RUSTUP_HOME CARGO_HOME RUSTUP_IO_THREADS
-  #         usesh: true
-  #         mem: 3000
-  #         prepare: |
-  #           pkg install -y -f curl node libnghttp2
-  #           curl -qL https://www.npmjs.com/install.sh | sh
-  #           npm install --location=global --ignore-scripts yarn
-  #           curl https://sh.rustup.rs -sSf --output rustup.sh
-  #           sh rustup.sh -y --profile minimal --default-toolchain stable
-  #           export PATH="/usr/local/cargo/bin:$PATH"
-  #           echo "~~~~ rustc --version ~~~~"
-  #           rustc --version
-  #           echo "~~~~ node -v ~~~~"
-  #           node -v
-  #           echo "~~~~ yarn --version ~~~~"
-  #           yarn --version
-  #         run: |
-  #           export PATH="/usr/local/cargo/bin:$PATH"
-  #           pwd
-  #           ls -lah
-  #           whoami
-  #           env
-  #           freebsd-version
-  #           yarn install
-  #           npx nx run-many --target=build-native -- --target=x86_64-unknown-freebsd
-  #           rm -rf node_modules
-  #           rm -rf target
-  #           rm -rf .yarn/cache
-  #     - name: Upload artifact
-  #       uses: actions/upload-artifact@v3
-  #       with:
-  #         name: bindings-freebsd
-  #         path: packages/**/*.node
-  #         if-no-files-found: error
+#  build-freebsd:
+#    runs-on: macos-12
+#    name: Build FreeBSD
+#    steps:
+#      - uses: actions/checkout@v3
+#      - name: Build
+#        id: build
+#        uses: vmactions/freebsd-vm@v0
+#        env:
+#          DEBUG: napi:*
+#          RUSTUP_HOME: /usr/local/rustup
+#          CARGO_HOME: /usr/local/cargo
+#          RUSTUP_IO_THREADS: 1
+#        with:
+#          envs: DEBUG RUSTUP_HOME CARGO_HOME RUSTUP_IO_THREADS
+#          usesh: true
+#          mem: 3000
+#          prepare: |
+#            pkg install -y -f curl node libnghttp2
+#            curl -qL https://www.npmjs.com/install.sh | sh
+#            npm install --location=global --ignore-scripts yarn
+#            curl https://sh.rustup.rs -sSf --output rustup.sh
+#            sh rustup.sh -y --profile minimal --default-toolchain stable
+#            export PATH="/usr/local/cargo/bin:$PATH"
+#            echo "~~~~ rustc --version ~~~~"
+#            rustc --version
+#            echo "~~~~ node -v ~~~~"
+#            node -v
+#            echo "~~~~ yarn --version ~~~~"
+#            yarn --version
+#          run: |
+#            export PATH="/usr/local/cargo/bin:$PATH"
+#            pwd
+#            ls -lah
+#            whoami
+#            env
+#            freebsd-version
+#            yarn install
+#            npx nx run-many --target=build-native -- --target=x86_64-unknown-freebsd
+#            strip -x packages/*/*.node
+#            rm -rf node_modules
+#            rm -rf target
+#            rm -rf .yarn/cache
+#      - name: Upload artifact
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: bindings-freebsd
+#          path: packages/*/*.node
+#          if-no-files-found: error
   publish:
     name: Publish
     runs-on: ubuntu-latest
