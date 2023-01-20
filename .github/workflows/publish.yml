@@ -1,8 +1,8 @@
 name: CI
 env:
   DEBUG: napi:*
-  APP_NAME: nx
-  MACOSX_DEPLOYMENT_TARGET: '10.13'
+  NX_RUN_GROUP: ${{ github.run_id }}-${{ github.run_attempt }}
+  NX_VERBOSE_LOGGING: true
 'on':
   push:
     tags:
