@@ -104,6 +104,15 @@ export function Content({
           >
             {schemaViewModel.type}
           </div>
+          {schemaViewModel.deprecated && (
+            <div
+              aria-hidden="true"
+              data-tooltip="Deprecated"
+              className="relative inline-flex rounded-md border border-red-100 bg-red-50 px-4 py-2 text-xs font-medium uppercase text-red-600 dark:border-red-900 dark:bg-red-900/30 dark:text-red-400"
+            >
+              Deprecated
+            </div>
+          )}
           {schemaViewModel.hidden && (
             <div
               aria-hidden="true"
@@ -143,6 +152,27 @@ export function Content({
           </a>
         </div>
       </div>
+
+      {schemaViewModel.deprecated && (
+        <div className="my-6 block rounded-md bg-red-50 p-4 ring-1 ring-red-100 dark:bg-red-900/30 dark:ring-red-900">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <HandRaisedIcon
+                className="h-5 w-5 text-red-500"
+                aria-hidden="true"
+              />
+            </div>
+            <div className="ml-3">
+              <div className="mt-0 block text-sm font-medium text-red-600 dark:text-red-400">
+                Deprecated
+              </div>
+              <p className="prose-sm mt-2 block text-red-700 dark:text-red-600">
+                {schemaViewModel.deprecated}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {!schemaViewModel.subReference && schemaViewModel.hidden && (
         <div className="my-6 block rounded-md bg-red-50 p-4 ring-1 ring-red-100 dark:bg-red-900/30 dark:ring-red-900">
