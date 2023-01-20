@@ -17,7 +17,6 @@ export class TargetProjectLocator {
   private tsConfig = this.getRootTsConfig();
   private paths = this.tsConfig.config?.compilerOptions?.paths;
   private typescriptResolutionCache = new Map<string, string | null>();
-  private projectResolutionCache = new Map<string, string | null>();
   private npmResolutionCache = new Map<string, string | null>();
 
   constructor(
@@ -52,12 +51,6 @@ export class TargetProjectLocator {
       }
     }
 
-    // check if it exists in projects
-    const project = this.findProject(normalizedImportExpr);
-    if (project) {
-      return project;
-    }
-
     // try to find npm package before using expensive typescript resolution
     const npmProject = this.findNpmPackage(normalizedImportExpr);
     if (npmProject) {
@@ -76,6 +69,15 @@ export class TargetProjectLocator {
         return resolvedProject;
       }
     }
+
+    try {
+      const resolvedModule = this.resolveImportWithRequire(
+        normalizedImportExpr,
+        filePath
+      );
+
+      return this.findProjectOfResolvedModule(resolvedModule);
+    } catch {}
 
     // nothing found, cache for later
     this.npmResolutionCache.set(normalizedImportExpr, undefined);
@@ -135,22 +137,17 @@ export class TargetProjectLocator {
     return;
   }
 
-  private findProject(importExpr: string): string | undefined {
-    if (this.projectResolutionCache.has(importExpr)) {
-      return this.projectResolutionCache.get(importExpr);
-    } else {
-      const project = Object.values(this.nodes).find(
-        (project) =>
-          importExpr === project.name ||
-          importExpr.startsWith(`${project.name}/`)
-      );
-      if (project) {
-        this.projectResolutionCache.set(importExpr, project.name);
-        return project.name;
-      }
-    }
+  private resolveImportWithRequire(
+    normalizedImportExpr: string,
+    filePath: string
+  ) {
+    return posix.relative(
+      workspaceRoot,
+      require.resolve(normalizedImportExpr, {
+        paths: [dirname(filePath)],
+      })
+    );
   }
-
   private findNpmPackage(npmImport: string): string | undefined {
     if (this.npmResolutionCache.has(npmImport)) {
       return this.npmResolutionCache.get(npmImport);

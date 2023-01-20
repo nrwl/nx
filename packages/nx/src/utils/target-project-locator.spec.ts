@@ -781,16 +781,23 @@ describe('findTargetProjectWithImport (without tsconfig.json)', () => {
   });
 
   it('should be able to resolve local project', () => {
+    jest
+      .spyOn(targetProjectLocator as any, 'resolveImportWithRequire')
+      .mockReturnValue('libs/proj1/index.ts');
+
     const result1 = targetProjectLocator.findProjectWithImport(
       '@org/proj1',
       'libs/proj1/index.ts'
     );
+    expect(result1).toEqual('@org/proj1');
+
+    jest
+      .spyOn(targetProjectLocator as any, 'resolveImportWithRequire')
+      .mockReturnValue('libs/proj1/some/nested/file.ts');
     const result2 = targetProjectLocator.findProjectWithImport(
       '@org/proj1/some/nested/path',
       'libs/proj1/index.ts'
     );
-
-    expect(result1).toEqual('@org/proj1');
     expect(result2).toEqual('@org/proj1');
   });
 
