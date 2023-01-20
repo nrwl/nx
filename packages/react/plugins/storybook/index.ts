@@ -1,17 +1,13 @@
-import {
-  ExecutorContext,
-  joinPathFragments,
-  logger,
-  readJsonFile,
-  workspaceRoot,
-} from '@nrwl/devkit';
+import { ExecutorContext, logger } from '@nrwl/devkit';
 import { composePlugins } from '@nrwl/webpack/src/utils/config';
 import { NormalizedWebpackExecutorOptions } from '@nrwl/webpack/src/executors/webpack/schema';
-import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-utils';
 import { join } from 'path';
-import { gte } from 'semver';
-import { Configuration, DefinePlugin, WebpackPluginInstance } from 'webpack';
-import * as mergeWebpack from 'webpack-merge';
+import {
+  Configuration,
+  DefinePlugin,
+  ResolvePluginInstance,
+  WebpackPluginInstance,
+} from 'webpack';
 import { mergePlugins } from './merge-plugins';
 import { withReact } from '../with-react';
 
@@ -57,29 +53,6 @@ function getClientEnvironment(mode) {
   return { stringified };
 }
 
-export const babelDefault = (): Record<
-  string,
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  (string | [string, object])[]
-> => {
-  // Add babel plugin for styled-components or emotion.
-  // We don't have a good way to know when a project uses one or the other, so
-  // add the plugin only if the other style package isn't used.
-  const packageJson = readJsonFile(join(workspaceRoot, 'package.json'));
-  const deps = { ...packageJson.dependencies, ...packageJson.devDependencies };
-  const hasStyledComponents = !!deps['styled-components'];
-
-  const plugins = [];
-  if (hasStyledComponents) {
-    plugins.push(['styled-components', { ssr: false }]);
-  }
-
-  return {
-    presets: [],
-    plugins: [...plugins],
-  };
-};
-
 export const core = (prev, options) => ({
   ...prev,
   disableWebpackDefaults: true,
@@ -118,15 +91,12 @@ export const webpack = async (
       styles: true,
       vendors: false,
     },
-    styles: [],
+    styles: options.styles ?? [],
     optimization: {},
     tsConfig: tsconfigPath,
     extractCss: storybookWebpackConfig.mode === 'production',
     target: 'web',
   };
-
-  const isScriptOptimizeOn = storybookWebpackConfig.mode !== 'development';
-  const extractCss = storybookWebpackConfig.mode === 'production';
 
   // ESM build for modern browsers.
   let baseWebpackConfig: Configuration = {};
@@ -140,81 +110,30 @@ export const webpack = async (
     context: {} as ExecutorContext, // The context is not used here.
   });
 
-  // Check whether the project .babelrc uses @emotion/babel-plugin. There's currently
-  // a Storybook issue (https://github.com/storybookjs/storybook/issues/13277) which apparently
-  // doesn't work with `@emotion/*` >= v11
-  // this is a workaround to fix that
-  let resolvedEmotionAliases = {};
-  const packageJson = readJsonFile(join(workspaceRoot, 'package.json'));
-  const deps = { ...packageJson.dependencies, ...packageJson.devDependencies };
-
-  const emotionReactVersion = deps['@emotion/react'];
-  if (
-    emotionReactVersion &&
-    gte(
-      checkAndCleanWithSemver('@emotion/react', emotionReactVersion),
-      '11.0.0'
-    )
-  ) {
-    try {
-      const babelrc = readJsonFile(
-        options.babelrcPath ||
-          joinPathFragments(options.configDir, '../', '.babelrc')
-      );
-      if (babelrc?.plugins?.includes('@emotion/babel-plugin')) {
-        resolvedEmotionAliases = {
-          resolve: {
-            alias: {
-              '@emotion/core': joinPathFragments(
-                workspaceRoot,
-                'node_modules',
-                '@emotion/react'
-              ),
-              '@emotion/styled': joinPathFragments(
-                workspaceRoot,
-                'node_modules',
-                '@emotion/styled'
-              ),
-              'emotion-theming': joinPathFragments(
-                workspaceRoot,
-                'node_modules',
-                '@emotion/react'
-              ),
-            },
-          },
-        };
-      }
-    } catch (error) {
-      // silently ignore if the .babelrc doesn't exist
-    }
-  }
-  return mergeWebpack.merge(
-    {
-      ...storybookWebpackConfig,
-      module: {
-        ...storybookWebpackConfig.module,
-        rules: [
-          ...storybookWebpackConfig.module.rules,
-          ...finalConfig.module.rules,
-        ],
-      },
-      resolve: {
-        ...storybookWebpackConfig.resolve,
-        plugins: mergePlugins(
-          ...((storybookWebpackConfig.resolve.plugins ??
-            []) as unknown as WebpackPluginInstance[]),
-          ...((finalConfig.resolve
-            .plugins as unknown as WebpackPluginInstance[]) ?? [])
-        ),
-      },
-      plugins: mergePlugins(
-        new DefinePlugin(
-          getClientEnvironment(storybookWebpackConfig.mode).stringified
-        ),
-        ...(storybookWebpackConfig.plugins ?? []),
-        ...(finalConfig.plugins ?? [])
-      ),
+  return {
+    ...storybookWebpackConfig,
+    module: {
+      ...storybookWebpackConfig.module,
+      rules: [
+        ...storybookWebpackConfig.module.rules,
+        ...finalConfig.module.rules,
+      ],
     },
-    resolvedEmotionAliases
-  );
+    resolve: {
+      ...storybookWebpackConfig.resolve,
+      plugins: mergePlugins(
+        ...((storybookWebpackConfig.resolve.plugins ??
+          []) as ResolvePluginInstance[]),
+        ...((finalConfig.resolve
+          .plugins as unknown as ResolvePluginInstance[]) ?? [])
+      ) as ResolvePluginInstance[],
+    },
+    plugins: mergePlugins(
+      new DefinePlugin(
+        getClientEnvironment(storybookWebpackConfig.mode).stringified
+      ),
+      ...(storybookWebpackConfig.plugins ?? []),
+      ...(finalConfig.plugins ?? [])
+    ) as WebpackPluginInstance[],
+  };
 };
