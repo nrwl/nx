@@ -1,4 +1,4 @@
-name: CI
+name: Publish
 env:
   DEBUG: napi:*
   APP_NAME: nx
@@ -18,7 +18,7 @@ jobs:
             target: x86_64-apple-darwin
             build: |
               npx nx run-many --target=build-native --target=x86_64-apple-darwin
-              strip -x packages/**/*.node
+              strip -x packages/*/*.node
           - host: windows-latest
             build: npx nx run-many --target=build-native -- --target=x86_64-pc-windows-msvc
             target: x86_64-pc-windows-msvc
@@ -32,7 +32,7 @@ jobs:
             build: |-
               set -e &&
               npx nx run-many --target=build-native -- --target=x86_64-unknown-linux-gnu &&
-              strip packages/**/*.node
+              strip packages/*/*.node
           - host: ubuntu-latest
             target: x86_64-unknown-linux-musl
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-alpine
@@ -46,7 +46,7 @@ jobs:
               SYSROOT=$(xcrun --sdk macosx --show-sdk-path);
               export CFLAGS="-isysroot $SYSROOT -isystem $SYSROOT";
               npx nx run-many --target=build-native -- --target=aarch64-apple-darwin
-              strip -x packages/**/*.node
+              strip -x packages/*/*.node
           - host: ubuntu-latest
             target: aarch64-unknown-linux-gnu
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian-aarch64
@@ -61,17 +61,17 @@ jobs:
               sudo apt-get install gcc-arm-linux-gnueabihf -y
             build: |
               npx nx run-many --target=build-native -- --target=armv7-unknown-linux-gnueabihf
-              arm-linux-gnueabihf-strip packages/**/*.node
+              arm-linux-gnueabihf-strip packages/*/*.node
           - host: ubuntu-latest
             target: aarch64-linux-android
             build: |
               npx nx run-many --target=build-native -- --target=aarch64-linux-android
-              ${ANDROID_NDK_LATEST_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip *.node
+              ${ANDROID_NDK_LATEST_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip packages/*/*.node
           - host: ubuntu-latest
             target: armv7-linux-androideabi
             build: |
               npx nx run-many --target=build-native -- --target=armv7-linux-androideabi
-              ${ANDROID_NDK_LATEST_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip *.node
+              ${ANDROID_NDK_LATEST_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip packages/*/*.node
           - host: ubuntu-latest
             target: aarch64-unknown-linux-musl
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-alpine
@@ -79,7 +79,7 @@ jobs:
               set -e &&
               rustup target add aarch64-unknown-linux-musl &&
               npx nx run-many --target=build-native -- --target=aarch64-unknown-linux-musl &&
-              /aarch64-linux-musl-cross/bin/aarch64-linux-musl-strip packages/**/*.node
+              /aarch64-linux-musl-cross/bin/aarch64-linux-musl-strip packages/*/*.node
           - host: windows-latest
             target: aarch64-pc-windows-msvc
             build: npx nx run-many --target=build-native -- --target=aarch64-pc-windows-msvc
