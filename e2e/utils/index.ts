@@ -592,7 +592,7 @@ export function runCommandAsync(
     exec(
       command,
       {
-        cwd: tmpProjPath(),
+        cwd: opts.cwd || tmpProjPath(),
         env: {
           CI: 'true',
           ...(opts.env || getStrippedEnvironmentVariables()),

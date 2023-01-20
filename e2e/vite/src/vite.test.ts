@@ -205,6 +205,14 @@ describe('Vite Plugin', () => {
       expect(result.combinedOutput).toContain(
         `Successfully ran target test for project ${lib}`
       );
+
+      // TODO(caleb): run tests from project root and make sure they still work
+      const nestedResults = await runCLIAsync(`test ${lib} --skip-nx-cache`, {
+        cwd: `${tmpProjPath()}/libs/${lib}`,
+      });
+      expect(nestedResults.combinedOutput).toContain(
+        `Successfully ran target test for project ${lib}`
+      );
     }, 100_000);
 
     it('should collect coverage', () => {
