@@ -35,7 +35,8 @@
       "type": "boolean",
       "aliases": ["skip-format"],
       "description": "Skip formatting files.",
-      "default": false
+      "default": false,
+      "x-priority": "internal"
     },
     "importPath": {
       "type": "string",

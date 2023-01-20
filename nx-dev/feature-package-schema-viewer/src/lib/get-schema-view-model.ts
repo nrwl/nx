@@ -19,6 +19,7 @@ function getReferenceFromQuery(query: string): string {
 export interface SchemaViewModel {
   currentSchema: NxSchema | null;
   currentSchemaExamples: Example | Errors;
+  deprecated: string;
   hidden: boolean;
   lookup: Lookup;
   packageName: string;
@@ -63,6 +64,7 @@ export function getSchemaViewModel(
       );
     },
     hidden: schema.hidden,
+    deprecated: schema['x-deprecated'],
     type: schema.type,
   };
 }
