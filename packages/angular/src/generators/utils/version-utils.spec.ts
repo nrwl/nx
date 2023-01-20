@@ -4,7 +4,7 @@ import {
   getGeneratorDirectoryForInstalledAngularVersion,
   getInstalledAngularMajorVersion,
   getInstalledAngularVersion,
-} from './angular-version-utils';
+} from './version-utils';
 
 describe('angularVersionUtils', () => {
   test.each(['14.0.0', '~14.1.0', '^14.2.0', '~14.3.0-beta.0'])(
