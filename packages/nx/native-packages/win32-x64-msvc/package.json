@@ -1,5 +1,5 @@
 {
-  "name": "@nrwl/nx-native-win32-x64-msvc",
+  "name": "@nrwl/nx-win32-x64-msvc",
   "version": "0.0.0",
   "os": [
     "win32"
@@ -7,9 +7,9 @@
   "cpu": [
     "x64"
   ],
-  "main": "nx-native.win32-x64-msvc.node",
+  "main": "nx.win32-x64-msvc.node",
   "files": [
-    "nx-native.win32-x64-msvc.node"
+    "nx.win32-x64-msvc.node"
   ],
   "engines": {
     "node": ">= 10"

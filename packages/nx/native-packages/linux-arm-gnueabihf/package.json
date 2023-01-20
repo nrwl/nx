@@ -1,5 +1,5 @@
 {
-  "name": "@nrwl/nx-native-linux-arm-gnueabihf",
+  "name": "@nrwl/nx-linux-arm-gnueabihf",
   "version": "0.0.0",
   "os": [
     "linux"
@@ -7,9 +7,9 @@
   "cpu": [
     "arm"
   ],
-  "main": "nx-native.linux-arm-gnueabihf.node",
+  "main": "nx.linux-arm-gnueabihf.node",
   "files": [
-    "nx-native.linux-arm-gnueabihf.node"
+    "nx.linux-arm-gnueabihf.node"
   ],
   "engines": {
     "node": ">= 10"

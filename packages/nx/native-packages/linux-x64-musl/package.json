@@ -1,5 +1,5 @@
 {
-  "name": "@nrwl/nx-native-linux-x64-musl",
+  "name": "@nrwl/nx-linux-x64-musl",
   "version": "0.0.0",
   "os": [
     "linux"
@@ -7,9 +7,9 @@
   "cpu": [
     "x64"
   ],
-  "main": "nx-native.linux-x64-musl.node",
+  "main": "nx.linux-x64-musl.node",
   "files": [
-    "nx-native.linux-x64-musl.node"
+    "nx.linux-x64-musl.node"
   ],
   "engines": {
     "node": ">= 10"
