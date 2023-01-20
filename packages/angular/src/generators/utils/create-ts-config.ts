@@ -1,7 +1,7 @@
 import type { Tree } from '@nrwl/devkit';
 import { writeJson } from '@nrwl/devkit';
 import { tsConfigBaseOptions } from '@nrwl/workspace/src/utils/create-ts-config';
-import { getInstalledAngularMajorVersion } from './angular-version-utils';
+import { getInstalledAngularMajorVersion } from './version-utils';
 
 export { extractTsConfigBase } from '@nrwl/workspace/src/utils/create-ts-config';
 

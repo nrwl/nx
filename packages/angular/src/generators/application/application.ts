@@ -16,7 +16,7 @@ import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
 import {
   getGeneratorDirectoryForInstalledAngularVersion,
   getInstalledAngularVersionInfo,
-} from '../utils/angular-version-utils';
+} from '../utils/version-utils';
 import {
   addE2e,
   addLinting,
