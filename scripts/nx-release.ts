@@ -40,6 +40,10 @@ function hideFromGitIndex(uncommittedFiles: string[]) {
     stdio: [0, 1, 2],
   });
 
+  const lernaJsonPath = join(__dirname, '../lerna.json');
+
+  updateLernaJsonVersion(lernaJsonPath);
+
   if (options.local) {
     // Force all projects to be not private
     const projects = JSON.parse(
@@ -88,12 +92,6 @@ function hideFromGitIndex(uncommittedFiles: string[]) {
     versionOptions.bump = options.version ? options.version : 'minor';
   }
 
-  const lernaJsonPath = join(__dirname, '../lerna.json');
-  let originalLernaJson: Buffer | undefined;
-
-  if (options.local || options.tag === 'next') {
-    originalLernaJson = readFileSync(lernaJsonPath);
-  }
   if (options.local) {
     /**
      * Hide changes from Lerna
@@ -122,9 +120,7 @@ function hideFromGitIndex(uncommittedFiles: string[]) {
     console.warn('Not Publishing because --dryRun was passed');
   }
 
-  if (originalLernaJson) {
-    writeFileSync(lernaJsonPath, originalLernaJson);
-  }
+  restoreOriginalLernaJson(lernaJsonPath);
 })();
 
 function parseArgs() {
@@ -234,6 +230,19 @@ function parseArgs() {
   parsedArgs.tag ??= parsedArgs.local ? 'latest' : 'next';
 
   return parsedArgs;
+}
+
+const originalLernaJson = readFileSync(lernaJsonPath);
+function updateLernaJsonVersion(lernaJsonPath: string) {
+  const json = JSON.parse(readFileSync(lernaJsonPath).toString());
+
+  json.version = execSync('npm view nx version').toString().trim();
+
+  writeFileSync(lernaJsonPath, JSON.stringify(json));
+}
+
+function restoreOriginalLernaJson(lernaJsonPath: string) {
+  writeFileSync(lernaJsonPath, originalLernaJson);
 }
 
 function getRegistry() {
