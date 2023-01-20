@@ -1,9 +1,5 @@
 import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
-import {
-  NxJsonConfiguration,
-  readProjectConfiguration,
-  Tree,
-} from '@nrwl/devkit';
+import { readProjectConfiguration, Tree } from '@nrwl/devkit';
 import { getProjects, readJson } from '@nrwl/devkit';
 import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 
