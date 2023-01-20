@@ -4,7 +4,7 @@ import {
   readProjectConfiguration,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
-import { getInstalledAngularVersionInfo } from '../../utils/angular-version-utils';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 
 export function updateWorkspaceConfig(tree: Tree, project: string): void {
   const installedAngularVersionInfo = getInstalledAngularVersionInfo(tree);

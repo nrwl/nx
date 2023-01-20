@@ -4,7 +4,7 @@ import {
   readProjectConfiguration,
   updateJson,
 } from '@nrwl/devkit';
-import { getInstalledAngularVersionInfo } from '../../utils/angular-version-utils';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 
 export function updateTsConfigs(tree: Tree, project: string): void {
   const projectConfig = readProjectConfiguration(tree, project);
