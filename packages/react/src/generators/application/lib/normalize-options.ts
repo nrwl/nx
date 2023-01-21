@@ -62,7 +62,6 @@ export function normalizeOptions<T extends Schema = Schema>(
     fileName,
     styledModule,
     hasStyles: options.style !== 'none',
-    includeStarterTemplate: !options.skipStarterTemplate,
   } as NormalizedSchema;
 
   normalized.routing = normalized.routing ?? false;
@@ -76,6 +75,7 @@ export function normalizeOptions<T extends Schema = Schema>(
   normalized.e2eTestRunner = normalized.e2eTestRunner ?? 'cypress';
   normalized.inSourceTests = normalized.minimal || normalized.inSourceTests;
   normalized.devServerPort ??= findFreePort(host);
+  normalized.minimal = normalized.minimal ?? false;
 
   return normalized;
 }

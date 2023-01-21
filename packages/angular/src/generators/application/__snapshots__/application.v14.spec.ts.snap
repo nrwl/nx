@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`app --skipStarterTemplate should skip Nx specific \`nx-welcome.component.ts\` file creation 1`] = `
+exports[`app --minimal should skip Nx specific \`nx-welcome.component.ts\` file creation 1`] = `
 "import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 

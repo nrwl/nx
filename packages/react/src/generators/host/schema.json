@@ -161,8 +161,8 @@
       "type": "boolean",
       "default": false
     },
-    "skipStarterTemplate": {
-      "description": "Whether to skip the adding of a Nx starter template to the application.",
+    "minimal": {
+      "description": "Generate a React app with a minimal setup. No nx starter template.",
       "type": "boolean",
       "default": false
     }

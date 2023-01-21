@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`app --skipStarterTemplate should create default application without Nx welcome component 1`] = `
+exports[`app --minimal should create default application without Nx welcome component 1`] = `
 "
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import styles from './app.module.css';
@@ -20,7 +20,31 @@ export function App() {
 
 export default App;
 
-"
+ 
+if (import.meta.vitest) {
+  // add tests related to your file here
+  // For more information please visit the Vitest docs site here: https://vitest.dev/guide/in-source.html
+  
+  const { it, expect, beforeEach } = import.meta.vitest;
+  let render: any;
+
+  beforeEach(async () => {
+    render = (await import('@testing-library/react')).render;
+  });
+
+  
+it('should render successfully', () => {
+  const { baseElement } = render(<App />);
+  expect(baseElement).toBeTruthy();
+});
+
+it('should have a greeting as the title', () => {
+  const { getByText } = render(<App />);
+  expect(getByText(/Welcome plain/gi)).toBeTruthy();
+});
+
+}
+ "
 `;
 
 exports[`app not nested should generate files 1`] = `

@@ -1091,9 +1091,9 @@ describe('app', () => {
     You can resolve this error by removing the "standalone" option or by migrating to Angular 14.1.0.`);
   });
 
-  describe('--skipStarterTemplate', () => {
+  describe('--minimal', () => {
     it('should skip Nx specific `nx-welcome.component.ts` file creation', async () => {
-      await generateApp(appTree, 'plain', { skipStarterTemplate: true });
+      await generateApp(appTree, 'plain', { minimal: true });
 
       expect(
         appTree.read('apps/plain/src/app/app.module.ts', 'utf-8')

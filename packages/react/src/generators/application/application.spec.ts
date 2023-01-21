@@ -835,12 +835,12 @@ describe('app', () => {
     });
   });
 
-  describe('--skipStarterTemplate', () => {
+  describe('--minimal', () => {
     it('should create default application without Nx welcome component', async () => {
       await applicationGenerator(appTree, {
         ...schema,
         name: 'plain',
-        skipStarterTemplate: true,
+        minimal: true,
       });
       expect(appTree.exists('apps/plain/src/app/nx-welcome.tsx')).toBeFalsy();
       expect(

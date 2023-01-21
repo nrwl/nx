@@ -159,8 +159,8 @@
       "hidden": true,
       "x-priority": "internal"
     },
-    "skipStarterTemplate": {
-      "description": "Whether to skip the adding of a Nx starter template to the application.",
+    "minimal": {
+      "description": "Generate a Angular app with a minimal setup, no nx welcome component.",
       "type": "boolean",
       "default": false
     }
