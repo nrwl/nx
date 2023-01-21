@@ -1,5 +1,5 @@
-import { Configuration } from 'webpack';
 import { ExecutorContext } from '@nrwl/devkit';
+import { Configuration } from 'webpack';
 
 import { NormalizedWebpackExecutorOptions } from '../executors/webpack/schema';
 import { withNx } from './with-nx';
@@ -23,7 +23,11 @@ export type NxWebpackPlugin = (
   }
 ) => Configuration;
 
-export function composePlugins(...plugins: NxWebpackPlugin[]) {
+export type NxWebpackPluginAsyncResolver = Promise<NxWebpackPlugin>;
+
+export function composePlugins(
+  ...plugins: (NxWebpackPlugin | NxWebpackPluginAsyncResolver)[]
+) {
   return function combined(
     config: Configuration,
     ctx: {
@@ -32,7 +36,13 @@ export function composePlugins(...plugins: NxWebpackPlugin[]) {
     }
   ): Configuration {
     for (const plugin of plugins) {
-      config = plugin(config, ctx);
+      if ('then' in plugin) {
+        plugin.then((resolvedPlugin) => {
+          config = resolvedPlugin(config, ctx);
+        });
+      } else {
+        config = plugin(config, ctx);
+      }
     }
     return config;
   };
