@@ -240,6 +240,39 @@ describe('splitArgs', () => {
     process.env.NX_HEAD = originalNxHead;
   });
 
+  it('should set runner based on environment variables, if it is not provided directly on the command', () => {
+    const originalRunner = process.env.NX_RUNNER;
+    process.env.NX_RUNNER = 'some-env-runner-name';
+
+    expect(
+      splitArgsIntoNxArgsAndOverrides(
+        {
+          __overrides_unparsed__: ['--notNxArg', 'true', '--override'],
+          $0: '',
+        },
+        'run-one',
+        {} as any,
+        {} as any
+      ).nxArgs.runner
+    ).toEqual('some-env-runner-name');
+
+    expect(
+      splitArgsIntoNxArgsAndOverrides(
+        {
+          __overrides_unparsed__: ['--notNxArg', 'true', '--override'],
+          $0: '',
+          runner: 'directlyOnCommand', // higher priority than $NX_RUNNER
+        },
+        'run-one',
+        {} as any,
+        {} as any
+      ).nxArgs.runner
+    ).toEqual('directlyOnCommand');
+
+    // Reset process data
+    process.env.NX_RUNNER = originalRunner;
+  });
+
   describe('--parallel', () => {
     it('should be a number', () => {
       const parallel = splitArgsIntoNxArgsAndOverrides(

@@ -171,6 +171,17 @@ export function splitArgsIntoNxArgsAndOverrides(
     nxArgs.skipNxCache = process.env.NX_SKIP_NX_CACHE === 'true';
   }
 
+  if (!nxArgs.runner && process.env.NX_RUNNER) {
+    nxArgs.runner = process.env.NX_RUNNER;
+    if (options.printWarnings) {
+      output.note({
+        title: `No explicit --runner argument provided, but found environment variable NX_RUNNER so using its value: ${output.bold(
+          `${nxArgs.runner}`
+        )}`,
+      });
+    }
+  }
+
   if (args['parallel'] === 'false' || args['parallel'] === false) {
     nxArgs['parallel'] = 1;
   } else if (
