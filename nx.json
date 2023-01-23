@@ -80,6 +80,7 @@
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"]
     },
     "lint": {
+      "dependsOn": ["build-native", "^build-native"],
       "inputs": [
         "default",
         "{workspaceRoot}/.eslintrc.json",
