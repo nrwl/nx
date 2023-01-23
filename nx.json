@@ -164,6 +164,7 @@
       "inputs": ["default", "^production"]
     },
     "run-e2e-tests": {
+      "dependsOn": ["build-native", "^build-native"],
       "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
       "executor": "@nrwl/jest:jest",
       "options": {
