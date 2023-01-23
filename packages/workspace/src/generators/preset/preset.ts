@@ -56,6 +56,7 @@ async function createPreset(tree: Tree, options: Schema) {
       style: options.style,
       linter: options.linter,
       standaloneConfig: options.standaloneConfig,
+      bundler: 'webpack',
     });
   } else if (options.preset === Preset.ReactStandalone) {
     const {

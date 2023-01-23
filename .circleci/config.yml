@@ -183,6 +183,10 @@ jobs:
           main-branch-name: 'master'
       - run: npx nx-cloud start-ci-run --stop-agents-after="e2e"
       - run:
+          name: Check Documentation
+          command: npx nx documentation --no-dte
+          no_output_timeout: 20m
+      - run:
           name: Run Checks/Lint/Test/Build
           no_output_timeout: 60m
           command: |
@@ -191,7 +195,7 @@ jobs:
             npx nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD &
             pids+=($!)
 
-            npx nx run-many -t root-lint check-imports check-commit check-lock-files depcheck documentation --parallel=1 --no-dte &
+            npx nx run-many -t root-lint check-imports check-commit check-lock-files depcheck --parallel=1 --no-dte &
             pids+=($!)
 
             yarn nx affected --target=lint --base=$NX_BASE --head=$NX_HEAD --parallel=3 &

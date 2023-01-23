@@ -7,6 +7,7 @@ import {
   expectNoTsJestInJestConfig,
   getSelectedPackageManager,
   packageManagerLockFile,
+  readJson,
   runCreateWorkspace,
   uniq,
 } from '@nrwl/e2e/utils';
@@ -126,10 +127,13 @@ describe('create-nx-workspace', () => {
       style: 'css',
       appName,
       packageManager,
+      bundler: 'webpack',
     });
 
     expectNoAngularDevkit();
     expectNoTsJestInJestConfig(appName);
+    const packageJson = readJson('package.json');
+    expect(packageJson.devDependencies['@nrwl/webpack']).toBeDefined();
   });
 
   it('should be able to create an next workspace', () => {
@@ -236,6 +240,7 @@ describe('create-nx-workspace', () => {
       style: 'css',
       appName,
       packageManager: 'npm',
+      bundler: 'webpack',
     });
 
     checkFilesDoNotExist('yarn.lock');
