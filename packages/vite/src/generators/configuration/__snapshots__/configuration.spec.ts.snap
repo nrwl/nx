@@ -10,6 +10,7 @@ exports[`@nrwl/vite:configuration library mode should add config for building li
 import { join } from 'path';
       
       export default defineConfig({
+        cacheDir: '../node_modules/.vite/my-lib',
         
         
         
@@ -67,6 +68,7 @@ exports[`@nrwl/vite:configuration library mode should set up non buildable libra
 import { join } from 'path';
       
       export default defineConfig({
+        cacheDir: '../../node_modules/.vite/react-lib-nonb-jest',
         
         
         
@@ -190,7 +192,7 @@ import { defineConfig } from 'vite';
       
       // Configuration for building your library.
       // See: https://vitejs.dev/guide/build.html#library-mode
-      build: {
+      cacheDir: '../../node_modules/.vite/react-lib-nonb-vitest',build: {
         lib: {
           // Could also be a dictionary or array of multiple entry points.
           entry: 'src/index.ts',
@@ -382,6 +384,7 @@ exports[`@nrwl/vite:configuration transform React app to use Vite should create 
       
       
       export default defineConfig({
+        cacheDir: '../../node_modules/.vite/my-test-react-app',
         
     server:{
       port: 4200,
@@ -546,6 +549,7 @@ exports[`@nrwl/vite:configuration transform Web app to use Vite should create vi
       
       
       export default defineConfig({
+        cacheDir: '../../node_modules/.vite/my-test-web-app',
         
     server:{
       port: 4200,
@@ -699,6 +703,7 @@ exports[`@nrwl/vite:configuration vitest should create a vitest configuration if
       
       
       export default defineConfig({
+        cacheDir: '../../node_modules/.vite/my-test-react-app',
         
     server:{
       port: 4200,
