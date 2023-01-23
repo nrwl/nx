@@ -16,7 +16,7 @@ pipelines:
             - npx nx workspace-lint
             - npx nx format:check
             - npx nx affected --target=lint --base=origin/master --parallel --max-parallel=3
-            - npx nx affected --target=test --base=origin/master --parallel --max-parallel=3 --ci --code-coverage
+            - npx nx affected --target=test --base=origin/master --parallel --max-parallel=3 --configuration=ci
             - npx nx affected --target=build --base=origin/master --head=HEAD --parallel  --max-parallel=3
 
   branches:
@@ -29,7 +29,7 @@ pipelines:
             - npm ci
             - npx nx workspace-lint
             - npx nx format:check
-            - npx nx affected --target=lint --base=origin/master --parallel --max-parallel=3 & npx nx affected --target=test --base=HEAD~1 --parallel --max-parallel=3 --ci --code-coverage & npx nx affected --target=build --base=HEAD~1 --parallel  --max-parallel=3
+            - npx nx affected --target=lint --base=origin/master --parallel --max-parallel=3 & npx nx affected --target=test --base=HEAD~1 --parallel --max-parallel=3 --configuration=ci & npx nx affected --target=build --base=HEAD~1 --parallel  --max-parallel=3
 ```
 
 The `pull-requests` and `main` jobs implement the CI workflow.

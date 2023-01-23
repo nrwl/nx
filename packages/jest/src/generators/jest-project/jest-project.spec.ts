@@ -79,6 +79,12 @@ describe('jestProject', () => {
         jestConfig: 'libs/lib1/jest.config.ts',
         passWithNoTests: true,
       },
+      configurations: {
+        ci: {
+          ci: true,
+          codeCoverage: true,
+        },
+      },
     });
     expect(lib1.targets.lint.options.tsConfig).toContain(
       'libs/lib1/tsconfig.spec.json'

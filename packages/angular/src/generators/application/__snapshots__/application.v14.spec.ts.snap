@@ -217,6 +217,12 @@ Object {
     },
     "test": Object {
       "builder": "@nrwl/jest:jest",
+      "configurations": Object {
+        "ci": Object {
+          "ci": true,
+          "codeCoverage": true,
+        },
+      },
       "options": Object {
         "jestConfig": "apps/my-dir/my-app/jest.config.ts",
         "passWithNoTests": true,
@@ -388,6 +394,12 @@ Object {
     },
     "test": Object {
       "builder": "@nrwl/jest:jest",
+      "configurations": Object {
+        "ci": Object {
+          "ci": true,
+          "codeCoverage": true,
+        },
+      },
       "options": Object {
         "jestConfig": "apps/my-app/jest.config.ts",
         "passWithNoTests": true,

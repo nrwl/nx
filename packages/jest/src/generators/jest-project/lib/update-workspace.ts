@@ -23,6 +23,12 @@ export function updateWorkspace(tree: Tree, options: JestProjectSchema) {
       ),
       passWithNoTests: true,
     },
+    configurations: {
+      ci: {
+        ci: true,
+        codeCoverage: true,
+      },
+    },
   };
 
   const isUsingTSLint =

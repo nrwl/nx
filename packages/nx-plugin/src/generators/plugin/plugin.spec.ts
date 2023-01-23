@@ -85,6 +85,12 @@ describe('NxPlugin Plugin Generator', () => {
         jestConfig: 'libs/my-plugin/jest.config.ts',
         passWithNoTests: true,
       },
+      configurations: {
+        ci: {
+          ci: true,
+          codeCoverage: true,
+        },
+      },
     });
   });
 

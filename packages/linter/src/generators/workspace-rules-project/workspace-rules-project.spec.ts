@@ -81,6 +81,12 @@ describe('@nrwl/linter:workspace-rules-project', () => {
         "sourceRoot": "tools/eslint-rules",
         "targets": Object {
           "test": Object {
+            "configurations": Object {
+              "ci": Object {
+                "ci": true,
+                "codeCoverage": true,
+              },
+            },
             "executor": "@nrwl/jest:jest",
             "options": Object {
               "jestConfig": "tools/eslint-rules/jest.config.ts",

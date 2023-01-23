@@ -43,6 +43,12 @@ describe('lib', () => {
           jestConfig: 'libs/my-lib/jest.config.ts',
           passWithNoTests: true,
         },
+        configurations: {
+          ci: {
+            ci: true,
+            codeCoverage: true,
+          },
+        },
       });
     });
 

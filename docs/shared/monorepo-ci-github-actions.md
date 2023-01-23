@@ -26,7 +26,7 @@ jobs:
       - run: npx nx workspace-lint
       - run: npx nx format:check
       - run: npx nx affected --target=lint --parallel=3
-      - run: npx nx affected --target=test --parallel=3 --ci --code-coverage
+      - run: npx nx affected --target=test --parallel=3 --configuration=ci
       - run: npx nx affected --target=build --parallel=3
 ```
 
@@ -64,7 +64,7 @@ jobs:
         npx nx-cloud record -- npx nx workspace-lint
         npx nx-cloud record -- npx nx format:check
       parallel-commands-on-agents: |
-        npx nx affected --target=lint --parallel=3 & npx nx affected --target=test --parallel=3 --ci --code-coverage & npx nx affected --target=build --parallel=3
+        npx nx affected --target=lint --parallel=3 & npx nx affected --target=test --parallel=3 --configuration=ci & npx nx affected --target=build --parallel=3
 
   agents:
     name: Nx Cloud - Agents
