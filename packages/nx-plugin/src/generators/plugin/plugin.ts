@@ -92,7 +92,7 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
 
   await libraryGenerator(host, {
     ...schema,
-    config: options.standaloneConfig !== false ? 'project' : 'workspace',
+    config: 'project',
     buildable: true,
     importPath: options.npmPackageName,
   });
@@ -122,7 +122,6 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
       projectDirectory: options.projectDirectory,
       pluginOutputPath: `dist/${options.libsDir}/${options.projectDirectory}`,
       npmPackageName: options.npmPackageName,
-      standaloneConfig: options.standaloneConfig ?? true,
       minimal: options.minimal ?? false,
     });
   }

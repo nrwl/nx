@@ -27,7 +27,6 @@ describe('NxPlugin e2e-project Generator', () => {
         pluginName: 'my-plugin',
         pluginOutputPath: `dist/libs/my-plugin`,
         npmPackageName: '@proj/my-plugin',
-        standaloneConfig: false,
       })
     ).resolves.not.toThrow();
 
@@ -36,7 +35,6 @@ describe('NxPlugin e2e-project Generator', () => {
         pluginName: 'my-nonexistentplugin',
         pluginOutputPath: `dist/libs/my-nonexistentplugin`,
         npmPackageName: '@proj/my-nonexistentplugin',
-        standaloneConfig: false,
       })
     ).rejects.toThrow();
   });
@@ -46,7 +44,6 @@ describe('NxPlugin e2e-project Generator', () => {
       pluginName: 'my-plugin',
       pluginOutputPath: `dist/libs/my-plugin`,
       npmPackageName: '@proj/my-plugin',
-      standaloneConfig: false,
     });
 
     expect(tree.exists('apps/my-plugin-e2e/tsconfig.json')).toBeTruthy();
@@ -60,7 +57,6 @@ describe('NxPlugin e2e-project Generator', () => {
       pluginName: 'my-plugin',
       pluginOutputPath: `dist/libs/my-plugin`,
       npmPackageName: '@proj/my-plugin',
-      standaloneConfig: false,
     });
 
     const tsConfig = readJson(tree, 'apps/my-plugin-e2e/tsconfig.json');
@@ -74,7 +70,6 @@ describe('NxPlugin e2e-project Generator', () => {
       pluginName: 'my-plugin',
       pluginOutputPath: `dist/libs/my-plugin`,
       npmPackageName: '@proj/my-plugin',
-      standaloneConfig: false,
     });
 
     const tsConfig = readJson(tree, 'apps/my-plugin-e2e/tsconfig.json');
@@ -87,7 +82,6 @@ describe('NxPlugin e2e-project Generator', () => {
       pluginOutputPath: `dist/libs/namespace/my-plugin`,
       npmPackageName: '@proj/namespace-my-plugin',
       projectDirectory: 'namespace/my-plugin',
-      standaloneConfig: false,
     });
 
     const project = readProjectConfiguration(tree, 'my-plugin-e2e');
@@ -99,7 +93,6 @@ describe('NxPlugin e2e-project Generator', () => {
       pluginName: 'my-plugin',
       pluginOutputPath: `dist/libs/my-plugin`,
       npmPackageName: '@proj/my-plugin',
-      standaloneConfig: false,
     });
     const projects = Object.fromEntries(getProjects(tree));
     expect(projects).toMatchObject({
@@ -115,7 +108,6 @@ describe('NxPlugin e2e-project Generator', () => {
       pluginName: 'my-plugin',
       pluginOutputPath: `dist/libs/my-plugin`,
       npmPackageName: '@proj/my-plugin',
-      standaloneConfig: false,
     });
 
     const project = readProjectConfiguration(tree, 'my-plugin-e2e');
@@ -134,7 +126,6 @@ describe('NxPlugin e2e-project Generator', () => {
       pluginName: 'my-plugin',
       pluginOutputPath: `dist/libs/my-plugin`,
       npmPackageName: '@proj/my-plugin',
-      standaloneConfig: false,
     });
 
     const project = readProjectConfiguration(tree, 'my-plugin-e2e');
@@ -155,7 +146,6 @@ describe('NxPlugin e2e-project Generator', () => {
       pluginName: 'my-plugin',
       pluginOutputPath: `dist/libs/my-plugin`,
       npmPackageName: '@proj/my-plugin',
-      standaloneConfig: false,
       minimal: true,
     });
 
