@@ -9,6 +9,7 @@ exports[`vitest generator insourceTests should add the insourceSource option in 
       
       
       export default defineConfig({
+        cacheDir: '../../node_modules/.vite/my-test-react-app',
         
         
         
@@ -54,6 +55,7 @@ exports[`vitest generator vite.config should create correct vite.config.ts file 
       
       
       export default defineConfig({
+        cacheDir: '../../node_modules/.vite/my-test-react-app',
         
         
         
@@ -97,6 +99,7 @@ exports[`vitest generator vite.config should create correct vite.config.ts file 
       
       
       export default defineConfig({
+        cacheDir: '../../node_modules/.vite/react-lib-nonb-jest',
         
         
         
