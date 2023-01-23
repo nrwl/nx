@@ -185,7 +185,19 @@ export class Workspaces {
     }
   }
 
-  readGenerator(collectionName: string, generatorName: string) {
+  readGenerator(
+    collectionName: string,
+    generatorName: string
+  ): {
+    resolvedCollectionName: string;
+    normalizedGeneratorName: string;
+    schema: any;
+    implementationFactory: () => Generator<unknown>;
+    isNgCompat: boolean;
+    aliases: string[];
+    deprecated?: string;
+    hidden: boolean;
+  } {
     try {
       const {
         generatorsFilePath,
@@ -216,6 +228,8 @@ export class Workspaces {
         implementationFactory,
         isNgCompat,
         aliases: generatorConfig.aliases || [],
+        deprecated: generatorConfig['x-deprecated'],
+        hidden: generatorConfig.hidden,
       };
     } catch (e) {
       throw new Error(

@@ -22,6 +22,7 @@ export type Generator<T = unknown> = (
 ) => void | GeneratorCallback | Promise<void | GeneratorCallback>;
 
 export interface GeneratorsJsonEntry {
+  hidden?: boolean;
   schema: string;
   implementation?: string;
   factory?: string;

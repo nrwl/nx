@@ -10,7 +10,7 @@ import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
 } from '../project-graph/project-graph';
-import { logger } from '../utils/logger';
+import { logger, NX_PREFIX } from '../utils/logger';
 import {
   combineOptionsForGenerator,
   handleErrors,
@@ -61,12 +61,27 @@ async function promptForCollection(
   );
 
   const choicesMap = new Set<string>();
+
+  const deprecatedChoices = new Set<string>();
+
   for (const collectionName of installedCollections) {
     try {
-      const { resolvedCollectionName, normalizedGeneratorName } =
-        ws.readGenerator(collectionName, generatorName);
-
-      choicesMap.add(`${resolvedCollectionName}:${normalizedGeneratorName}`);
+      const {
+        resolvedCollectionName,
+        normalizedGeneratorName,
+        deprecated,
+        hidden,
+      } = ws.readGenerator(collectionName, generatorName);
+      if (hidden) {
+        continue;
+      }
+      if (deprecated) {
+        deprecatedChoices.add(
+          `${resolvedCollectionName}:${normalizedGeneratorName}`
+        );
+      } else {
+        choicesMap.add(`${resolvedCollectionName}:${normalizedGeneratorName}`);
+      }
     } catch {}
   }
 
@@ -77,15 +92,26 @@ async function promptForCollection(
   }[] = [];
   for (const [name] of localPlugins) {
     try {
-      const { resolvedCollectionName, normalizedGeneratorName } =
-        ws.readGenerator(name, generatorName);
+      const {
+        resolvedCollectionName,
+        normalizedGeneratorName,
+        deprecated,
+        hidden,
+      } = ws.readGenerator(name, generatorName);
+      if (hidden) {
+        continue;
+      }
       const value = `${resolvedCollectionName}:${normalizedGeneratorName}`;
       if (!choicesMap.has(value)) {
-        choicesFromLocalPlugins.push({
-          name: value,
-          message: chalk.bold(value),
-          value,
-        });
+        if (deprecated) {
+          deprecatedChoices.add(value);
+        } else {
+          choicesFromLocalPlugins.push({
+            name: value,
+            message: chalk.bold(value),
+            value,
+          });
+        }
       }
     } catch {}
   }
@@ -145,6 +171,13 @@ async function promptForCollection(
     return customCollection
       ? `${customCollection}:${generatorName}`
       : generator;
+  } else if (deprecatedChoices.size > 0) {
+    throw new Error(
+      [
+        `All installed generators named "${generatorName}" are deprecated. To run one, provide its full \`collection:generator\` id.`,
+        [...deprecatedChoices].map((x) => `  - ${x}`),
+      ].join('\n')
+    );
   } else {
     throw new Error(`Could not find any generators named "${generatorName}"`);
   }
@@ -289,9 +322,22 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
     if (opts.dryRun) {
       process.env.NX_DRY_RUN = 'true';
     }
-    const { normalizedGeneratorName, schema, implementationFactory, aliases } =
-      ws.readGenerator(opts.collectionName, opts.generatorName);
+    const {
+      normalizedGeneratorName,
+      schema,
+      implementationFactory,
+      aliases,
+      deprecated,
+    } = ws.readGenerator(opts.collectionName, opts.generatorName);
 
+    if (deprecated) {
+      logger.warn(
+        [
+          `${NX_PREFIX}: ${opts.collectionName}:${normalizedGeneratorName} is deprecated`,
+          `${deprecated}`,
+        ].join('/n')
+      );
+    }
     logger.info(
       `NX Generating ${opts.collectionName}:${normalizedGeneratorName}`
     );

@@ -114,6 +114,7 @@
   "aliases": ["lib"],
   "x-type": "library",
   "description": "Create a library.",
+  "x-deprecated": "@nrwl/workspace:library is deprecated. Consider using @nrwl/js:lib instead.",
   "implementation": "/packages/workspace/src/generators/library/library#libraryGenerator.ts",
   "hidden": false,
   "path": "/packages/workspace/src/generators/library/schema.json",

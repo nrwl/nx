@@ -19,13 +19,15 @@
       "schema": "./src/generators/library/schema.json",
       "aliases": ["lib"],
       "x-type": "library",
-      "description": "Create a library."
+      "description": "Create a library.",
+      "x-deprecated": "@nrwl/workspace:library is deprecated. Consider using @nrwl/js:lib instead."
     },
     "workspace-generator": {
       "factory": "./src/generators/workspace-generator/workspace-generator",
       "schema": "./src/generators/workspace-generator/schema.json",
       "aliases": ["workspace-schematic"],
-      "description": "Generates a workspace generator."
+      "description": "Generates a workspace generator.",
+      "x-deprecated": "workspace-generators are deprecated. Consider using a local plugin instead. https://nx.dev/recipes/generators/local-generators"
     },
     "run-commands": {
       "factory": "./src/generators/run-commands/run-commands#runCommandsSchematic",
@@ -70,13 +72,15 @@
       "schema": "./src/generators/library/schema.json",
       "aliases": ["lib"],
       "x-type": "library",
-      "description": "Create a library."
+      "description": "Create a library.",
+      "x-deprecated": "@nrwl/workspace:library is deprecated. Consider using @nrwl/js:lib instead."
     },
     "workspace-generator": {
       "factory": "./src/generators/workspace-generator/workspace-generator",
       "schema": "./src/generators/workspace-generator/schema.json",
       "aliases": ["workspace-schematic"],
-      "description": "Generates a workspace generator."
+      "description": "Generates a workspace generator.",
+      "x-deprecated": "workspace-generators are deprecated. Consider using a local plugin instead. https://nx.dev/recipes/generators/local-generators"
     },
     "run-commands": {
       "factory": "./src/generators/run-commands/run-commands#runCommandsGenerator",
