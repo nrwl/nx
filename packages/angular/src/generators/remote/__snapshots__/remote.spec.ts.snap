@@ -277,15 +277,29 @@ export class RemoteEntryComponent {}
 `;
 
 exports[`MF Remote App Generator should generate the a remote setup for standalone components 4`] = `
-"import { Route } from '@angular/router';
+"/* 
+      * This remoteRoutes array is imported here to allow TS to find it during 
+      * compilation, allowing it to be included in the built bundle. This is required 
+      * for the Module Federation Plugin to expose the Module correctly
+      * in an Angular Standalone Components setup.
+      * */
+      import { remoteRoutes } from './remote-entry/entry.routes';
+import { Route } from '@angular/router';
 
-export const appRoutes: Route[] = [
-    {path: '', loadChildren: () => import('./remote-entry/entry.routes').then(m => m.remoteRoutes)},]"
+export const appRoutes: Route[] = [];"
 `;
 
 exports[`MF Remote App Generator should generate the a remote setup for standalone components 5`] = `
 "import { Route } from '@angular/router';
 import { RemoteEntryComponent } from './entry.component';
+import { appRoutes } from '../app.routes';
 
-export const remoteRoutes: Route[] = [{ path: '', component: RemoteEntryComponent }];"
+
+export const remoteRoutes: Route[] = [
+    { 
+        path: '',
+        component: RemoteEntryComponent,
+        children: appRoutes 
+    }
+];"
 `;

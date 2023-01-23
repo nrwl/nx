@@ -27,10 +27,16 @@ export function addRemoteEntry(
   );
 
   if (standalone && routing) {
-    addRoute(
-      tree,
-      joinPathFragments(appRoot, 'src/app/app.routes.ts'),
-      `{path: '', loadChildren: () => import('./remote-entry/entry.routes').then(m => m.remoteRoutes)}`
+    tree.write(
+      `${appRoot}/src/app/app.routes.ts`,
+      `/* 
+      * This remoteRoutes array is imported here to allow TS to find it during 
+      * compilation, allowing it to be included in the built bundle. This is required 
+      * for the Module Federation Plugin to expose the Module correctly
+      * in an Angular Standalone Components setup.
+      * */
+      import { remoteRoutes } from './remote-entry/entry.routes';
+${tree.read(`${appRoot}/src/app/app.routes.ts`, 'utf-8')}`
     );
   } else {
     if (routing) {
