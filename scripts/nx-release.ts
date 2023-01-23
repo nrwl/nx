@@ -10,6 +10,9 @@ import { parse } from 'semver';
 import * as version from '@lerna/version/index';
 import * as publish from '@lerna/publish/index';
 
+const lernaJsonPath = join(__dirname, '../lerna.json');
+const originalLernaJson = readFileSync(lernaJsonPath);
+
 function hideFromGitIndex(uncommittedFiles: string[]) {
   execSync(`git update-index --assume-unchanged ${uncommittedFiles.join(' ')}`);
 
@@ -235,8 +238,6 @@ function parseArgs() {
   return parsedArgs;
 }
 
-const lernaJsonPath = join(__dirname, '../lerna.json');
-const originalLernaJson = readFileSync(lernaJsonPath);
 function updateLernaJsonVersion(version: string) {
   const json = JSON.parse(readFileSync(lernaJsonPath).toString());
 
