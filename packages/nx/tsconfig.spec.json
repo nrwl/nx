@@ -12,7 +12,6 @@
     "**/*.spec.js",
     "**/*.spec.jsx",
     "**/*.d.ts",
-    "jest.config.ts",
-    "src/utils/testing/mock-fs.ts"
+    "jest.config.ts"
   ]
 }

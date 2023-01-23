@@ -146,6 +146,7 @@ const IGNORE_MATCHES_IN_PACKAGE = {
     '@nrwl/nx-native-win32-arm64-msvc', // native optional deps
     '@nrwl/nx-native-win32-ia32-msvc', // native optional deps
     '@nrwl/nx-native-win32-x64-msvc', // native optional deps
+    'memfs', // used in mock for handling .node files in tests
   ],
   web: [
     // we don't want to bloat the install of @nrwl/web by including @swc/core and swc-loader as a dependency.
