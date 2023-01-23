@@ -13,7 +13,7 @@ import {
 } from '@nrwl/e2e/utils';
 import { writeFileSync } from 'fs';
 
-describe('Storybook schematics', () => {
+describe('Storybook generators and executors', () => {
   const previousPM = process.env.SELECTED_PM;
 
   let reactStorybookLib: string;

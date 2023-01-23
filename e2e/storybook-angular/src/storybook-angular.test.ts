@@ -17,7 +17,7 @@ import {
 } from '@nrwl/e2e/utils';
 import { writeFileSync } from 'fs';
 
-describe('Storybook for Angular', () => {
+describe('Storybook generators and executors for Angular', () => {
   let proj: string;
 
   beforeAll(() => {
