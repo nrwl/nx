@@ -81,7 +81,7 @@
       "description": "Configure your workspace to use Storybook 7, even though Storybook v7 is still in beta.",
       "type": "boolean",
       "default": false,
-      "x-priority": "important"
+      "hidden": true
     },
     "storybook7UiFramework": {
       "type": "string",
@@ -103,7 +103,8 @@
         "@storybook/vue3-vite",
         "@storybook/web-components-webpack5",
         "@storybook/web-components-vite"
-      ]
+      ],
+      "hidden": true
     }
   },
   "required": ["name"],
