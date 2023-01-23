@@ -20,38 +20,18 @@ npm init nx-workspace
 yarn create nx-workspace
 ```
 
-The `create-nx-workspace` command will ask you to select a preset, which will configure some plugins and create your applications to help you get started.
-
-```
-? What to create in the new workspace (Use arrow keys)
-❯ apps              [an empty workspace with no plugins with a layout that works best for building apps]
-  core              [an empty workspace with no plugins set up to publish npm packages (similar to yarn workspaces)]
-  ts                [an empty workspace with the JS/TS plugin preinstalled]
-  react             [a workspace with a single React application]
-  angular           [a workspace with a single Angular application]
-  next.js           [a workspace with a single Next.js application]
-  nest              [a workspace with a single Nest application]
-  express           [a workspace with a single Express application]
-  web components    [a workspace with a single app built using web components]
-  react-native      [a workspace with a single React Native application]
-```
-
-Select the preset that works best for you
-
-### Adding Nx to an Existing Monorepo
+### Adding Nx to an Existing Repository
 
 Run:
 
 ```bash
-npx add-nx-to-monorepo@latest
+npx nx@latest init
 ```
 
 ## Documentation & Resources
 
-A few links to help you get started:
-
-- [Nx.Dev: Documentation, Guides, Interactive Tutorials](https://nx.dev)
-- [Tutorial: Adding Nx to an Existing Monorepo](/recipes/adopting-nx/adding-to-monorepo)
+- [Nx.Dev: Documentation, Guides, Tutorials](https://nx.dev)
+- [Intro to Nx](https://nx.dev/getting-started/intro)
 - [Official Nx YouTube Channel](https://www.youtube.com/c/Nrwl_io)
 - [Blog Posts About Nx](https://blog.nrwl.io/nx/home)
 
