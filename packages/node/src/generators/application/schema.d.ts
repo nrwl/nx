@@ -22,9 +22,4 @@ export interface Schema {
   docker?: boolean;
 }
 
-export type NodeJsFrameWorks =
-  | 'express'
-  | 'koa'
-  | 'fastify'
-  | 'connect'
-  | 'none';
+export type NodeJsFrameWorks = 'express' | 'koa' | 'fastify' | 'none';
