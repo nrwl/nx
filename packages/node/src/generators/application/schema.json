@@ -87,7 +87,7 @@
     "framework": {
       "description": "Generate the node application using a framework",
       "type": "string",
-      "enum": ["express", "koa", "fastify", "connect", "none"],
+      "enum": ["express", "koa", "fastify", "none"],
       "default": "none",
       "x-prompt": "Which framework do you want to use?",
       "x-priority": "important"

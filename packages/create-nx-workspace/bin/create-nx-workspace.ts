@@ -486,7 +486,7 @@ function determineMonorepoStyle(): Promise<string> {
           {
             name: 'react',
             message:
-              'Standalone React app:       Nx configures Vite, Vitest, ESLint, and Cypress.',
+              'Standalone React app:       Nx configures Vite (or Webpack), ESLint, and Cypress.',
           },
           {
             name: 'angular',
@@ -496,7 +496,7 @@ function determineMonorepoStyle(): Promise<string> {
           {
             name: 'node-server',
             message:
-              'Standalone Node Server app: Nx configures your framework of choice (e.g. Express) along with esbuild, Eslint and Jest.',
+              'Standalone Node Server app: Nx configures a framework (ex. Express), esbuild, ESlint and Jest.',
           },
         ],
       },
@@ -690,14 +690,27 @@ async function determineFramework(
     return Promise.resolve('');
   }
 
-  const frameworkChoices = ['express', 'koa', 'fastify', 'connect'];
+  const frameworkChoices = [
+    {
+      name: 'express',
+      message: 'Express [https://expressjs.com/]',
+    },
+    {
+      name: 'koa',
+      message: 'koa     [https://koajs.com/]',
+    },
+    {
+      name: 'fastify',
+      message: 'fastify [https://www.fastify.io/]',
+    },
+  ];
 
   if (!parsedArgs.framework) {
     return enquirer
       .prompt([
         {
           message: 'What framework should be used?',
-          type: 'select',
+          type: 'autocomplete',
           name: 'framework',
           choices: frameworkChoices,
         },
@@ -705,15 +718,17 @@ async function determineFramework(
       .then((a: { framework: string }) => a.framework);
   }
 
-  const foundFramework = frameworkChoices.indexOf(parsedArgs.framework);
+  const foundFramework = frameworkChoices
+    .map(({ name }) => name)
+    .indexOf(parsedArgs.framework);
 
   if (foundFramework < 0) {
     output.error({
-      title: 'Invalid framwork',
+      title: 'Invalid framework',
       bodyLines: [
         `It must be one of the following:`,
         '',
-        ...frameworkChoices.map((choice) => choice),
+        ...frameworkChoices.map(({ name }) => name),
       ],
     });
 
@@ -855,11 +870,11 @@ async function determineBundler(
   const choices = [
     {
       name: 'vite',
-      message: 'Vite             [ https://vitejs.dev/ ]',
+      message: 'Vite    [ https://vitejs.dev/ ]',
     },
     {
       name: 'webpack',
-      message: 'Webpack       [ https://webpack.js.org/ ]',
+      message: 'Webpack [ https://webpack.js.org/ ]',
     },
   ];
 
