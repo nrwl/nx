@@ -128,7 +128,8 @@
             "pattern": "\\.(?:css|scss|sass|less|styl)$"
           }
         ]
-      }
+      },
+      "x-priority": "important"
     },
     "inlineStyleLanguage": {
       "description": "The stylesheet language to use for the application's inline component styles.",
@@ -454,6 +455,7 @@
           "type": "string"
         }
       },
+      "x-priority": "important",
       "additionalProperties": false
     },
     "buildLibsFromSource": {
