@@ -219,13 +219,13 @@ jobs:
       NX_E2E_CI_CACHE_KEY: e2e-circleci-macos
       NX_DAEMON: 'true'
     steps:
-      - rust/install
       - run:
           name: Set dynamic nx run variable
           command: |
             echo "export NX_RUN_GROUP=\"run-group-macos-$CIRCLE_WORKFLOW_ID\";" >> $BASH_ENV
       - setup:
           os: macos
+      - rust/install
       - run:
           name: Run E2E Tests for macOS
           # FIXME: remove --exclude=e2e-detox once we have a fix for the detox tests
