@@ -348,6 +348,11 @@ export function withWeb() {
 
     config.plugins.push(...plugins);
 
+    config.resolve.mainFields = [
+      'browser',
+      ...(config.resolve.mainFields ?? []),
+    ];
+
     config.module = {
       ...config.module,
       rules: [

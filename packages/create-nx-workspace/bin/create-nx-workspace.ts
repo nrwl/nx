@@ -372,6 +372,9 @@ async function getConfiguration(
       } else {
         name = await determineRepoName(argv);
         appName = await determineAppName(preset, argv);
+        if (preset === Preset.ReactMonorepo) {
+          bundler = await determineBundler(argv);
+        }
       }
       style = await determineStyle(preset, argv);
     }
@@ -1009,6 +1012,7 @@ async function createSandbox(packageManager: PackageManager) {
 
   return tmpDir;
 }
+
 async function createApp(
   tmpDir: string,
   name: string,
