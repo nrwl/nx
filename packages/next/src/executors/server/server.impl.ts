@@ -47,10 +47,7 @@ export default async function* serveExecutor(
     parseTargetString(options.buildTarget, context.projectGraph),
     context
   );
-  const root = resolve(
-    context.root,
-    options.dev ? buildOptions.root : buildOptions.outputPath
-  );
+  const root = resolve(context.root, buildOptions.root);
   const config = await prepareConfig(
     options.dev ? PHASE_DEVELOPMENT_SERVER : PHASE_PRODUCTION_SERVER,
     buildOptions,
