@@ -1,7 +1,8 @@
+import '../utils/testing/mock-fs';
+
 import { vol, fs } from 'memfs';
 
-jest.mock('fs', () => require('memfs').fs);
-jest.mock('../utils/workspace-root', () => ({
+jest.mock('nx/src/utils/workspace-root', () => ({
   workspaceRoot: '/root',
 }));
 import { buildProjectGraph } from './build-project-graph';

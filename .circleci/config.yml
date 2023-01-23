@@ -219,6 +219,7 @@ jobs:
       NX_E2E_CI_CACHE_KEY: e2e-circleci-macos
       NX_DAEMON: 'true'
     steps:
+      - rust/install
       - run:
           name: Set dynamic nx run variable
           command: |
