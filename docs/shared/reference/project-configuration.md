@@ -406,7 +406,7 @@ An implicit dependency could also be a glob pattern:
 {
   "name": "mylib",
   "nx": {
-    "implicitDependencies": ["shop-*"] # regardless of what Nx thinks, "mylib" doesn't depend on "anotherlib"
+    "implicitDependencies": ["shop-*"] # "mylib" depends on all projects beginning with "shop-"
   }
 }
 ```
@@ -417,14 +417,12 @@ An implicit dependency could also be a glob pattern:
 ```jsonc {% fileName="project.json" %}
 {
   "root": "/libs/mylib",
-  "implicitDependencies": ["shop-*"] # regardless of what Nx thinks, "mylib" doesn't depend on "anotherlib"
+  "implicitDependencies": ["shop-*"] # "mylib" depends on all projects beginning with "shop-"
 }
 ```
 
 {% /tab %}
 {% /tabs %}
-
-In this example, mylib would implicitly depend on any project that's name started with `shop-`.
 
 ### Including package.json files as projects in the graph
 
