@@ -31,8 +31,6 @@ import { Schema } from './schema';
 import { initGenerator } from '../init/init';
 import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 import {
-  connectTypingsVersion,
-  connectVersion,
   esbuildVersion,
   expressTypingsVersion,
   expressVersion,
@@ -276,10 +274,6 @@ function addProjectDependencies(
     },
     fastify: {
       fastify: fastifyVersion,
-    },
-    connect: {
-      connect: connectVersion,
-      '@types/connect': connectTypingsVersion,
     },
   };
   return addDependenciesToPackageJson(
