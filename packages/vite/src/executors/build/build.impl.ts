@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { ExecutorContext, logger } from '@nrwl/devkit';
+import { ExecutorContext } from '@nrwl/devkit';
 import { build, InlineConfig, mergeConfig } from 'vite';
 import {
   getViteBuildOptions,
