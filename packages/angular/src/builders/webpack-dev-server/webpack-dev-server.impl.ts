@@ -8,7 +8,10 @@ import { DependentBuildableProjectNode } from '@nrwl/workspace/src/utilities/bui
 import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
 import { existsSync } from 'fs';
 import { isNpmProject } from 'nx/src/project-graph/operators';
-import { mergeCustomWebpackConfig } from '../utilities/webpack';
+import {
+  mergeCustomWebpackConfig,
+  resolveIndexHtmlTransformer,
+} from '../utilities/webpack';
 import { normalizeOptions } from './lib';
 import type { Schema } from './schema';
 import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
@@ -58,9 +61,27 @@ export function executeWebpackDevServerBuilder(
       customWebpackConfig.path
     );
 
-    if (!existsSync(pathToWebpackConfig)) {
+    if (pathToWebpackConfig && !existsSync(pathToWebpackConfig)) {
       throw new Error(
         `Custom Webpack Config File Not Found!\nTo use a custom webpack config, please ensure the path to the custom webpack file is correct: \n${pathToWebpackConfig}`
+      );
+    }
+  }
+
+  const indexFileTransformer: string =
+    buildTargetConfiguration?.indexFileTransformer ??
+    buildTarget.options.indexFileTransformer;
+
+  let pathToIndexFileTransformer: string;
+  if (indexFileTransformer) {
+    pathToIndexFileTransformer = joinPathFragments(
+      context.workspaceRoot,
+      indexFileTransformer
+    );
+
+    if (pathToIndexFileTransformer && !existsSync(pathToIndexFileTransformer)) {
+      throw new Error(
+        `File containing Index File Transformer function Not Found!\n Please ensure the path to the file containing the function is correct: \n${pathToIndexFileTransformer}`
       );
     }
   }
@@ -131,6 +152,16 @@ export function executeWebpackDevServerBuilder(
             context.target
           );
         },
+
+        ...(pathToIndexFileTransformer
+          ? {
+              indexHtml: resolveIndexHtmlTransformer(
+                pathToIndexFileTransformer,
+                buildTargetConfiguration.tsConfig,
+                context.target
+              ),
+            }
+          : {}),
       })
     )
   );
