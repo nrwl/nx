@@ -1,4 +1,5 @@
 import { execSync } from 'child_process';
+import { join } from 'path';
 import { copySync, moveSync, readdirSync, removeSync } from 'fs-extra';
 
 import { fileExists, readJsonFile } from 'nx/src/utils/fileutils';
@@ -107,7 +108,7 @@ async function reorgnizeWorkspaceStructure(options: NormalizedOptions) {
   execSync(`echo "node_modules" >> .gitignore`, { stdio: [0, 1, 2] });
   execSync(`echo "dist" >> .gitignore`, { stdio: [0, 1, 2] });
 
-  process.chdir('../');
+  process.chdir('..');
 
   copyFromTempWorkspaceToRoot();
 
@@ -154,10 +155,10 @@ async function reorgnizeWorkspaceStructure(options: NormalizedOptions) {
   if (options.isVite) {
     const indexPath = options.isStandalone
       ? 'index.html'
-      : `apps/${options.reactAppName}/index.html`;
+      : join('apps', options.reactAppName, 'index.html');
     const oldIndexPath = options.isStandalone
-      ? 'public/index.html'
-      : `apps/${options.reactAppName}/public/index.html`;
+      ? join('public', 'index.html')
+      : join('apps', options.reactAppName, 'public', 'index.html');
     output.note({
       title: `A new ${indexPath} has been created. Compare it to the previous ${oldIndexPath} file and make any changes needed, then delete the previous file.`,
     });
@@ -194,10 +195,10 @@ function createTempWorkspace(options: NormalizedOptions) {
   output.log({ title: '🧹 Clearing unused files' });
 
   copySync(
-    `temp-workspace/apps/${options.reactAppName}/project.json`,
+    join('temp-workspace', 'apps', options.reactAppName, 'project.json'),
     'project.json'
   );
-  removeSync(`temp-workspace/apps/${options.reactAppName}/`);
+  removeSync(join('temp-workspace', 'apps', options.reactAppName));
   removeSync('node_modules');
 }
 
@@ -226,8 +227,8 @@ function moveFilesToTempWorkspace(options: NormalizedOptions) {
       moveSync(
         f,
         options.isStandalone
-          ? `temp-workspace/${f}`
-          : `temp-workspace/apps/${options.reactAppName}/${f}`,
+          ? join('temp-workspace', f)
+          : join('temp-workspace', 'apps', options.reactAppName, f),
         {
           overwrite: true,
         }
@@ -239,7 +240,7 @@ function moveFilesToTempWorkspace(options: NormalizedOptions) {
     }
   });
 
-  process.chdir('temp-workspace/');
+  process.chdir('temp-workspace');
 }
 
 async function addBundler(options: NormalizedOptions) {
@@ -287,8 +288,8 @@ async function addBundler(options: NormalizedOptions) {
 function copyFromTempWorkspaceToRoot() {
   output.log({ title: '🚚 Folder restructuring.' });
 
-  readdirSync('./temp-workspace').forEach((f) => {
-    moveSync(`temp-workspace/${f}`, `./${f}`, { overwrite: true });
+  readdirSync('temp-workspace').forEach((f) => {
+    moveSync(join('temp-workspace', f), f, { overwrite: true });
   });
 }
 
@@ -305,7 +306,7 @@ function cleanUpUnusedFilesAndAddConfigFiles(options: NormalizedOptions) {
     output.log({ title: '📃 Setup e2e tests' });
     setupE2eProject(options.reactAppName);
   } else {
-    removeSync(`apps/${options.reactAppName}-e2e`);
+    removeSync(join('apps', `${options.reactAppName}-e2e`));
     execSync(`${options.pmc.rm} @nrwl/cypress eslint-plugin-cypress`);
   }
 
