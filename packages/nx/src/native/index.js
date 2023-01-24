@@ -31,7 +31,7 @@ switch (platform) {
           if (localFileExisted) {
             nativeBinding = require('./nx.android-arm64.node')
           } else {
-            nativeBinding = require('@nrwl/nx-native-android-arm64')
+            nativeBinding = require('@nrwl/nx-android-arm64')
           }
         } catch (e) {
           loadError = e
@@ -43,7 +43,7 @@ switch (platform) {
           if (localFileExisted) {
             nativeBinding = require('./nx.android-arm-eabi.node')
           } else {
-            nativeBinding = require('@nrwl/nx-native-android-arm-eabi')
+            nativeBinding = require('@nrwl/nx-android-arm-eabi')
           }
         } catch (e) {
           loadError = e
@@ -63,7 +63,7 @@ switch (platform) {
           if (localFileExisted) {
             nativeBinding = require('./nx.win32-x64-msvc.node')
           } else {
-            nativeBinding = require('@nrwl/nx-native-win32-x64-msvc')
+            nativeBinding = require('@nrwl/nx-win32-x64-msvc')
           }
         } catch (e) {
           loadError = e
@@ -77,7 +77,7 @@ switch (platform) {
           if (localFileExisted) {
             nativeBinding = require('./nx.win32-ia32-msvc.node')
           } else {
-            nativeBinding = require('@nrwl/nx-native-win32-ia32-msvc')
+            nativeBinding = require('@nrwl/nx-win32-ia32-msvc')
           }
         } catch (e) {
           loadError = e
@@ -91,7 +91,7 @@ switch (platform) {
           if (localFileExisted) {
             nativeBinding = require('./nx.win32-arm64-msvc.node')
           } else {
-            nativeBinding = require('@nrwl/nx-native-win32-arm64-msvc')
+            nativeBinding = require('@nrwl/nx-win32-arm64-msvc')
           }
         } catch (e) {
           loadError = e
@@ -107,7 +107,7 @@ switch (platform) {
       if (localFileExisted) {
         nativeBinding = require('./nx.darwin-universal.node')
       } else {
-        nativeBinding = require('@nrwl/nx-native-darwin-universal')
+        nativeBinding = require('@nrwl/nx-darwin-universal')
       }
       break
     } catch {}
@@ -118,7 +118,7 @@ switch (platform) {
           if (localFileExisted) {
             nativeBinding = require('./nx.darwin-x64.node')
           } else {
-            nativeBinding = require('@nrwl/nx-native-darwin-x64')
+            nativeBinding = require('@nrwl/nx-darwin-x64')
           }
         } catch (e) {
           loadError = e
@@ -132,7 +132,7 @@ switch (platform) {
           if (localFileExisted) {
             nativeBinding = require('./nx.darwin-arm64.node')
           } else {
-            nativeBinding = require('@nrwl/nx-native-darwin-arm64')
+            nativeBinding = require('@nrwl/nx-darwin-arm64')
           }
         } catch (e) {
           loadError = e
@@ -151,7 +151,7 @@ switch (platform) {
       if (localFileExisted) {
         nativeBinding = require('./nx.freebsd-x64.node')
       } else {
-        nativeBinding = require('@nrwl/nx-native-freebsd-x64')
+        nativeBinding = require('@nrwl/nx-freebsd-x64')
       }
     } catch (e) {
       loadError = e
@@ -168,7 +168,7 @@ switch (platform) {
             if (localFileExisted) {
               nativeBinding = require('./nx.linux-x64-musl.node')
             } else {
-              nativeBinding = require('@nrwl/nx-native-linux-x64-musl')
+              nativeBinding = require('@nrwl/nx-linux-x64-musl')
             }
           } catch (e) {
             loadError = e
@@ -181,7 +181,7 @@ switch (platform) {
             if (localFileExisted) {
               nativeBinding = require('./nx.linux-x64-gnu.node')
             } else {
-              nativeBinding = require('@nrwl/nx-native-linux-x64-gnu')
+              nativeBinding = require('@nrwl/nx-linux-x64-gnu')
             }
           } catch (e) {
             loadError = e
@@ -197,7 +197,7 @@ switch (platform) {
             if (localFileExisted) {
               nativeBinding = require('./nx.linux-arm64-musl.node')
             } else {
-              nativeBinding = require('@nrwl/nx-native-linux-arm64-musl')
+              nativeBinding = require('@nrwl/nx-linux-arm64-musl')
             }
           } catch (e) {
             loadError = e
@@ -210,7 +210,7 @@ switch (platform) {
             if (localFileExisted) {
               nativeBinding = require('./nx.linux-arm64-gnu.node')
             } else {
-              nativeBinding = require('@nrwl/nx-native-linux-arm64-gnu')
+              nativeBinding = require('@nrwl/nx-linux-arm64-gnu')
             }
           } catch (e) {
             loadError = e
@@ -225,7 +225,7 @@ switch (platform) {
           if (localFileExisted) {
             nativeBinding = require('./nx.linux-arm-gnueabihf.node')
           } else {
-            nativeBinding = require('@nrwl/nx-native-linux-arm-gnueabihf')
+            nativeBinding = require('@nrwl/nx-linux-arm-gnueabihf')
           }
         } catch (e) {
           loadError = e

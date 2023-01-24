@@ -31,15 +31,21 @@ fn hash_files(workspace_root: String) -> HashMap<String, String> {
     let workspace_root = workspace_root + "/";
     walker.add_ignore(workspace_root.clone() + ".nxignore");
 
-    let starts_with = workspace_root.clone() + ".git";
-    walker.filter_entry(move |entry| !entry.path().starts_with(starts_with.clone()));
+    let git_folder = workspace_root.clone() + ".git";
+    // We should make sure to always ignore node_modules
+    let node_folder = workspace_root.clone() + "node_modules";
+    walker.filter_entry(move |entry| {
+        !(entry.path().starts_with(&git_folder) || entry.path().starts_with(&node_folder))
+    });
+
+    // dot files are hidden by default. We want to make sure we include those here
     walker.hidden(false);
 
-    let (tx, rx) = unbounded::<(String, Vec<u8>)>();
+    let (sender, reciever) = unbounded::<(String, Vec<u8>)>();
 
-    let receiver = thread::spawn(move || {
+    let receiver_thread = thread::spawn(move || {
         let mut hash: HashMap<String, String> = HashMap::new();
-        for (path, content) in rx {
+        for (path, content) in reciever {
             hash.insert(path, xxh3::xxh3_64(&content).to_string());
         }
         hash
@@ -48,7 +54,7 @@ fn hash_files(workspace_root: String) -> HashMap<String, String> {
     let cpus = available_parallelism().map_or(2, |n| n.get()) - 1;
 
     walker.threads(cpus).build_parallel().run(|| {
-        let tx = tx.clone();
+        let tx = sender.clone();
         let workspace_root = workspace_root.clone();
         Box::new(move |entry| {
             use ignore::WalkState::*;
@@ -73,6 +79,6 @@ fn hash_files(workspace_root: String) -> HashMap<String, String> {
         })
     });
 
-    drop(tx);
-    receiver.join().unwrap()
+    drop(sender);
+    receiver_thread.join().unwrap()
 }
