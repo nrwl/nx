@@ -51,8 +51,8 @@ describe('readJsonInTree', () => {
     expect(() => readJsonInTree(tree, 'data.json'))
       .toThrowErrorMatchingInlineSnapshot(`
       "Cannot parse data.json: InvalidSymbol in JSON at 1:3
-      1: { data: 'data'
-           ^^^^ InvalidSymbol
+      [0m[31m[1m>[22m[39m[90m 1 | [39m{ data: 'data'[0m
+      [0m [90m   | [39m  [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[0m
       "
     `);
   });
