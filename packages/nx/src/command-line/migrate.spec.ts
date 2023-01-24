@@ -1410,7 +1410,7 @@ describe('Migration', () => {
     it('should work for running migrations', () => {
       const r = parseMigrationsOptions({
         runMigrations: '',
-        ifExists: '',
+        ifExists: true,
       });
       expect(r).toEqual({
         type: 'runMigrations',
