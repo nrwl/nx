@@ -641,7 +641,7 @@ export function parseMigrationsOptions(options: {
     return {
       type: 'runMigrations',
       runMigrations: options.runMigrations as string,
-      ifExists: options.ifExists === '',
+      ifExists: options.ifExists as boolean,
     };
   }
 }
