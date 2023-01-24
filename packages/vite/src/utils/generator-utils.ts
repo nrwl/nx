@@ -362,6 +362,24 @@ export function editTsConfig(tree: Tree, options: Schema) {
   writeJson(tree, `${projectConfig.root}/tsconfig.json`, config);
 }
 
+export function deleteWebpackConfig(
+  tree: Tree,
+  projectRoot: string,
+  webpackConfigFilePath?: string
+) {
+  const webpackConfigPath =
+    webpackConfigFilePath && tree.exists(webpackConfigFilePath)
+      ? webpackConfigFilePath
+      : tree.exists(`${projectRoot}/webpack.config.js`)
+      ? `${projectRoot}/webpack.config.js`
+      : tree.exists(`${projectRoot}/webpack.config.ts`)
+      ? `${projectRoot}/webpack.config.ts`
+      : null;
+  if (webpackConfigPath) {
+    tree.delete(webpackConfigPath);
+  }
+}
+
 export function moveAndEditIndexHtml(
   tree: Tree,
   options: Schema,
