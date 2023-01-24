@@ -8,14 +8,7 @@ import {
   updateProjectConfiguration,
 } from '@nrwl/devkit';
 
-/**
- * Deletes the project from the workspace file
- *
- * @param schema The options provided to the schematic
- */
-export function removeProjectConfig(tree: Tree, schema: Schema) {
-  removeProjectConfiguration(tree, schema.projectName);
-
+export function removeProjectReferencesInConfig(tree: Tree, schema: Schema) {
   // Unset default project if deleting the default project
   const nxJson = readNxJson(tree);
   if (nxJson.defaultProject && nxJson.defaultProject === schema.projectName) {

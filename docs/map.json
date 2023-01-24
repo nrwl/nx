@@ -1490,6 +1490,11 @@
               "id": "watch",
               "tags": ["workspace-watching"],
               "file": "generated/cli/watch"
+            },
+            {
+              "name": "show",
+              "id": "show",
+              "file": "generated/cli/show"
             }
           ]
         },

@@ -19,6 +19,13 @@ import { readNxJson } from './nx-json';
 import { output } from '../../utils/output';
 
 export { readNxJson, updateNxJson } from './nx-json';
+export {
+  readWorkspaceConfiguration,
+  updateWorkspaceConfiguration,
+  isStandaloneProject,
+  getWorkspacePath,
+  WorkspaceConfiguration,
+} from './deprecated';
 
 /**
  * Adds project configuration to the Nx workspace.
@@ -56,7 +63,7 @@ export function addProjectConfiguration(
     name: projectName,
     $schema: getRelativeProjectJsonSchemaPath(tree, projectConfiguration),
     ...projectConfiguration,
-    root: undefined, // TODO vsvakin do we need this?
+    root: undefined,
   });
 }
 
@@ -173,32 +180,16 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
 } {
   const nxJson = readNxJson(tree);
 
-  const globbedProjects = buildProjectsConfigurationsFromGlobs(
-    nxJson,
-    [...globForProjectFiles(tree.root, nxJson)],
-    (file) => readJson(tree, file)
+  const globbedFiles = globForProjectFiles(tree.root, nxJson);
+  const createdFiles = findCreatedProjectFiles(tree);
+  const deletedFiles = findDeletedProjectFiles(tree);
+  const projectFiles = [...globbedFiles, ...createdFiles].filter(
+    (r) => deletedFiles.indexOf(r) === -1
+  );
+
+  return buildProjectsConfigurationsFromGlobs(nxJson, projectFiles, (file) =>
+    readJson(tree, file)
   ).projects;
-
-  const createdProjects = buildProjectsConfigurationsFromGlobs(
-    nxJson,
-    findCreatedProjects(tree),
-    (file) => readJson(tree, file)
-  ).projects;
-
-  const projects = {
-    ...globbedProjects,
-    ...createdProjects,
-  };
-
-  findDeletedProjects(tree).forEach((file) => {
-    const matchingStaticProject = Object.entries(projects).find(
-      ([, config]) => (config as any).root === dirname(file.path)
-    );
-    if (matchingStaticProject) {
-      delete projects[matchingStaticProject[0]];
-    }
-  });
-  return projects;
 }
 
 /**
@@ -210,7 +201,7 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
  * We exclude the root `package.json` from this list unless
  * considered a project during workspace generation
  */
-function findCreatedProjects(tree: Tree) {
+function findCreatedProjectFiles(tree: Tree) {
   const createdProjectFiles = [];
 
   for (const change of tree.listChanges()) {
@@ -236,18 +227,26 @@ function findCreatedProjects(tree: Tree) {
  * there is no project.json file, as `glob`
  * cannot find them.
  */
-function findDeletedProjects(tree: Tree) {
-  return tree.listChanges().filter((f) => {
-    const fileName = basename(f.path);
-    return (
-      f.type === 'DELETE' &&
-      (fileName === 'project.json' || fileName === 'package.json')
-    );
-  });
+function findDeletedProjectFiles(tree: Tree) {
+  return tree
+    .listChanges()
+    .filter((f) => {
+      const fileName = basename(f.path);
+      return (
+        f.type === 'DELETE' &&
+        (fileName === 'project.json' || fileName === 'package.json')
+      );
+    })
+    .map((r) => r.path);
 }
 
 function toNewFormat(w: any): ProjectsConfigurations {
-  Object.values(w.projects || {}).forEach((projectConfig: any) => {
+  const projects = {};
+
+  Object.keys(w.projects || {}).forEach((name) => {
+    if (typeof w.projects[name] === 'string') return;
+
+    const projectConfig = w.projects[name];
     if (projectConfig.architect) {
       renamePropertyWithStableKeys(projectConfig, 'architect', 'targets');
     }
@@ -259,7 +258,11 @@ function toNewFormat(w: any): ProjectsConfigurations {
         renamePropertyWithStableKeys(target, 'builder', 'executor');
       }
     });
+
+    projects[name] = projectConfig;
   });
+
+  w.projects = projects;
   if (w.schematics) {
     renamePropertyWithStableKeys(w, 'schematics', 'generators');
   }

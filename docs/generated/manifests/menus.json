@@ -5249,6 +5249,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "show",
+                "path": "/packages/nx/documents/show",
+                "id": "show",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,
@@ -6414,9 +6422,9 @@
                 "disableCollapsible": false
               },
               {
-                "id": "convert-to-nx-project",
-                "path": "/packages/workspace/generators/convert-to-nx-project",
-                "name": "convert-to-nx-project",
+                "id": "fix-configuration",
+                "path": "/packages/workspace/generators/fix-configuration",
+                "name": "fix-configuration",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
