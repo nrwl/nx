@@ -17,11 +17,15 @@
   ],
   "properties": {
     "project": {
-      "description": "Project name",
+      "description": "Convert a single project",
       "type": "string"
     },
     "all": {
-      "description": "Should every project be converted?",
+      "description": "Convert all projects",
+      "type": "boolean"
+    },
+    "reformat": {
+      "description": "Just reformats the configuration",
       "type": "boolean"
     },
     "skipFormat": {

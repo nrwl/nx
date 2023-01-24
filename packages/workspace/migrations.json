@@ -77,6 +77,12 @@
       "description": "Migrates from @nrwl/workspace:run-commands to nx:run-commands",
       "cli": "nx",
       "implementation": "./src/migrations/update-14-8-0/change-run-commands-executor"
+    },
+    "15-7-0-split-configuration-into-project-json-files": {
+      "version": "15.7.0-beta.0",
+      "description": "Spilt global configuration files (e.g., workspace.json) into individual project.json files.",
+      "cli": "nx",
+      "implementation": "./src/migrations/update-15-7-0/split-configuration-into-project-json-files"
     }
   },
   "packageJsonUpdates": {

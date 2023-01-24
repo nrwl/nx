@@ -8,9 +8,9 @@ import {
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
 import { Schema } from '../schema';
-import { removeProjectConfig } from './remove-project-config';
+import { removeProjectReferencesInConfig } from './remove-project-references-in-config';
 
-describe('removeProjectConfig', () => {
+describe('removeProjectReferencesInConfig', () => {
   let tree: Tree;
   let schema: Schema;
 
@@ -47,24 +47,6 @@ describe('removeProjectConfig', () => {
     });
   });
 
-  describe('delete project', () => {
-    beforeEach(async () => {
-      schema = {
-        projectName: 'ng-app',
-        skipFormat: false,
-        forceRemove: false,
-      };
-    });
-
-    it('should delete the project', async () => {
-      removeProjectConfig(tree, schema);
-
-      expect(() => {
-        readProjectConfiguration(tree, schema.projectName);
-      }).toThrow();
-    });
-  });
-
   describe('defaultProject', () => {
     beforeEach(async () => {
       const nxJson = readNxJson(tree);
@@ -81,7 +63,7 @@ describe('removeProjectConfig', () => {
         forceRemove: false,
       };
 
-      removeProjectConfig(tree, schema);
+      removeProjectReferencesInConfig(tree, schema);
 
       const { defaultProject } = readNxJson(tree);
       expect(defaultProject).toBeUndefined();
@@ -94,7 +76,7 @@ describe('removeProjectConfig', () => {
         forceRemove: false,
       };
 
-      removeProjectConfig(tree, schema);
+      removeProjectReferencesInConfig(tree, schema);
 
       const { defaultProject } = readNxJson(tree);
       expect(defaultProject).toEqual('ng-app');
@@ -107,7 +89,7 @@ describe('removeProjectConfig', () => {
         forceRemove: false,
       };
 
-      removeProjectConfig(tree, schema);
+      removeProjectReferencesInConfig(tree, schema);
 
       const { implicitDependencies } = readProjectConfiguration(
         tree,

@@ -1836,6 +1836,17 @@
         "path": "/packages/nx/documents/watch",
         "tags": ["workspace-watching"],
         "originalFilePath": "generated/cli/watch"
+      },
+      "/packages/nx/documents/show": {
+        "id": "show",
+        "name": "show",
+        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+        "file": "generated/packages/nx/documents/show",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/packages/nx/documents/show",
+        "tags": [],
+        "originalFilePath": "generated/cli/show"
       }
     },
     "root": "/packages/nx",
@@ -2980,13 +2991,13 @@
         "path": "/packages/workspace/generators/run-commands",
         "type": "generator"
       },
-      "/packages/workspace/generators/convert-to-nx-project": {
-        "description": "Moves a project's configuration outside of `workspace.json`.",
-        "file": "generated/packages/workspace/generators/convert-to-nx-project.json",
+      "/packages/workspace/generators/fix-configuration": {
+        "description": "Fixes projects configuration",
+        "file": "generated/packages/workspace/generators/fix-configuration.json",
         "hidden": false,
-        "name": "convert-to-nx-project",
+        "name": "fix-configuration",
         "originalFilePath": "/packages/workspace/src/generators/convert-to-nx-project/schema.json",
-        "path": "/packages/workspace/generators/convert-to-nx-project",
+        "path": "/packages/workspace/generators/fix-configuration",
         "type": "generator"
       },
       "/packages/workspace/generators/npm-package": {

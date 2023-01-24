@@ -1,6 +1,5 @@
 import {
   addProjectConfiguration,
-  isStandaloneProject,
   ProjectConfiguration,
   removeProjectConfiguration,
   Tree,
@@ -16,7 +15,6 @@ export function moveProjectConfiguration(
     projectConfig.name = schema.newProjectName;
   }
 
-  const isStandalone = isStandaloneProject(tree, schema.projectName);
   const projectString = JSON.stringify(projectConfig);
   const newProjectString = projectString.replace(
     new RegExp(projectConfig.root, 'g'),
@@ -30,10 +28,5 @@ export function moveProjectConfiguration(
   removeProjectConfiguration(tree, schema.projectName);
 
   // Create a new project with the root replaced
-  addProjectConfiguration(
-    tree,
-    schema.newProjectName,
-    newProject,
-    isStandalone
-  );
+  addProjectConfiguration(tree, schema.newProjectName, newProject);
 }

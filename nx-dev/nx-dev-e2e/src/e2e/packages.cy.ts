@@ -485,8 +485,8 @@ describe('nx-dev: Packages Section', () => {
       path: '/packages/workspace/generators/run-commands',
     },
     {
-      title: '@nrwl/workspace:convert-to-nx-project',
-      path: '/packages/workspace/generators/convert-to-nx-project',
+      title: '@nrwl/workspace:fix-configuration',
+      path: '/packages/workspace/generators/fix-configuration',
     },
     {
       title: '@nrwl/workspace:npm-package',
