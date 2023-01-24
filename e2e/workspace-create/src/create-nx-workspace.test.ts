@@ -32,7 +32,7 @@ describe('create-nx-workspace', () => {
     checkFilesExist('project.json');
   });
 
-  it('should create a workspace with a single react app at the root', () => {
+  it('should create a workspace with a single react app with vite at the root', () => {
     const wsName = uniq('react');
 
     runCreateWorkspace(wsName, {
@@ -45,6 +45,23 @@ describe('create-nx-workspace', () => {
 
     checkFilesExist('package.json');
     checkFilesExist('project.json');
+    checkFilesExist('vite.config.ts');
+  });
+
+  it('should create a workspace with a single react app with webpack at the root', () => {
+    const wsName = uniq('react');
+
+    runCreateWorkspace(wsName, {
+      preset: 'react-standalone',
+      appName: wsName,
+      style: 'css',
+      packageManager,
+      bundler: 'webpack',
+    });
+
+    checkFilesExist('package.json');
+    checkFilesExist('project.json');
+    checkFilesExist('webpack.config.js');
   });
 
   it('should be able to create an empty workspace built for apps', () => {

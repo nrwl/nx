@@ -25,6 +25,7 @@ interface Schema {
   defaultBase: string;
   framework?: string;
   linter?: Linter;
+  bundler?: 'vite' | 'webpack';
   packageManager?: PackageManager;
 }
 

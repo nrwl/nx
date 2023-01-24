@@ -67,7 +67,7 @@ async function createPreset(tree: Tree, options: Schema) {
       rootProject: true,
       bundler: options.bundler ?? 'vite',
       e2eTestRunner: 'cypress',
-      unitTestRunner: 'vitest',
+      unitTestRunner: options.bundler === 'vite' ? 'vitest' : 'jest',
     });
   } else if (options.preset === Preset.NextJs) {
     const { applicationGenerator: nextApplicationGenerator } = require('@nrwl' +
