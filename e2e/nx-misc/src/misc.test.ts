@@ -548,7 +548,7 @@ describe('migrate', () => {
     });
 
     expect(output).toContain(
-      `Error: File 'migrations.json' doesn't exist, can't run migrations. Use flag --if-present to run migrations only if the file exists`
+      `File 'migrations.json' doesn't exist, can't run migrations. Use flag --if-exists to run migrations only if the file exists`
     );
   });
 

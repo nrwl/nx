@@ -1273,7 +1273,7 @@ async function runMigrations(
     return;
   } else if (!opts.ifExists && !migrationsExists) {
     throw new Error(
-      `File '${opts.runMigrations}' doesn't exist, can't run migrations. Use flag --if-present to run migrations only if the file exists`
+      `File '${opts.runMigrations}' doesn't exist, can't run migrations. Use flag --if-exists to run migrations only if the file exists`
     );
   }
 
