@@ -101,6 +101,14 @@ Type: `boolean`
 
 Show help
 
+### ifExists
+
+Type: `boolean`
+
+Default: `false`
+
+Run migrations only if the migrations file exists, if not continues successfully
+
 ### interactive
 
 Type: `boolean`
