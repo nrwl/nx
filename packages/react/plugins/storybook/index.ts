@@ -85,12 +85,7 @@ export const webpack = async (
     projectRoot: '',
     sourceRoot: '',
     fileReplacements: [],
-    sourceMap: {
-      hidden: false,
-      scripts: true,
-      styles: true,
-      vendors: false,
-    },
+    sourceMap: true,
     styles: options.styles ?? [],
     optimization: {},
     tsConfig: tsconfigPath,
