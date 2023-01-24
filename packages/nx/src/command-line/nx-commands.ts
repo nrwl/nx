@@ -944,6 +944,11 @@ function withMigrationOptions(yargs: yargs.Argv) {
       describe: `Execute migrations from a file (when the file isn't provided, execute migrations from migrations.json)`,
       type: 'string',
     })
+    .option('ifExists', {
+      describe: `Run migrations only if the migrations file exists, if not continues successfully`,
+      type: 'boolean',
+      default: false,
+    })
     .option('from', {
       describe:
         'Use the provided versions for packages instead of the ones installed in node_modules (e.g., --from="@nrwl/react@12.0.0,@nrwl/js@12.0.0")',
