@@ -57,7 +57,11 @@ export default async function* serveExecutor(
   );
 
   if (options.customServerTarget) {
-    yield* runCustomServer(root, config, options, buildOptions, context);
+    // Custom Server and Nx Dev Server roots are handled differently
+    const customRoot = options.dev
+      ? root
+      : resolve(context.root, buildOptions.outputPath);
+    yield* runCustomServer(customRoot, config, options, buildOptions, context);
   } else {
     yield* runNextDevServer(root, config, options, buildOptions, context);
   }
