@@ -7,6 +7,7 @@ import {
   expectNoTsJestInJestConfig,
   getSelectedPackageManager,
   packageManagerLockFile,
+  readJson,
   runCreateWorkspace,
   uniq,
 } from '@nrwl/e2e/utils';
@@ -31,7 +32,7 @@ describe('create-nx-workspace', () => {
     checkFilesExist('project.json');
   });
 
-  it('should create a workspace with a single react app at the root', () => {
+  it('should create a workspace with a single react app with vite at the root', () => {
     const wsName = uniq('react');
 
     runCreateWorkspace(wsName, {
@@ -39,10 +40,28 @@ describe('create-nx-workspace', () => {
       appName: wsName,
       style: 'css',
       packageManager,
+      bundler: 'vite',
     });
 
     checkFilesExist('package.json');
     checkFilesExist('project.json');
+    checkFilesExist('vite.config.ts');
+  });
+
+  it('should create a workspace with a single react app with webpack at the root', () => {
+    const wsName = uniq('react');
+
+    runCreateWorkspace(wsName, {
+      preset: 'react-standalone',
+      appName: wsName,
+      style: 'css',
+      packageManager,
+      bundler: 'webpack',
+    });
+
+    checkFilesExist('package.json');
+    checkFilesExist('project.json');
+    checkFilesExist('webpack.config.js');
   });
 
   it('should be able to create an empty workspace built for apps', () => {
@@ -61,8 +80,6 @@ describe('create-nx-workspace', () => {
     const foreignLockFiles = Object.keys(packageManagerLockFile)
       .filter((pm) => pm !== packageManager)
       .map((pm) => packageManagerLockFile[pm]);
-
-    checkFilesDoNotExist(...foreignLockFiles, 'workspace.json');
 
     expectNoAngularDevkit();
   });
@@ -125,10 +142,13 @@ describe('create-nx-workspace', () => {
       style: 'css',
       appName,
       packageManager,
+      bundler: 'webpack',
     });
 
     expectNoAngularDevkit();
     expectNoTsJestInJestConfig(appName);
+    const packageJson = readJson('package.json');
+    expect(packageJson.devDependencies['@nrwl/webpack']).toBeDefined();
   });
 
   it('should be able to create an next workspace', () => {
@@ -235,6 +255,7 @@ describe('create-nx-workspace', () => {
       style: 'css',
       appName,
       packageManager: 'npm',
+      bundler: 'webpack',
     });
 
     checkFilesDoNotExist('yarn.lock');

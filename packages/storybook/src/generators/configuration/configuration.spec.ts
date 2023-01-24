@@ -1,4 +1,5 @@
 import {
+  addProjectConfiguration,
   NxJsonConfiguration,
   readJson,
   readProjectConfiguration,
@@ -28,7 +29,6 @@ describe('@nrwl/storybook:configuration', () => {
       });
       await libraryGenerator(tree, {
         name: 'test-ui-lib',
-        standaloneConfig: false,
       });
       writeJson(tree, 'package.json', {
         devDependencies: {
@@ -42,7 +42,6 @@ describe('@nrwl/storybook:configuration', () => {
       await configurationGenerator(tree, {
         name: 'test-ui-lib',
         uiFramework: '@storybook/angular',
-        standaloneConfig: false,
       });
 
       expect(tree.exists('.storybook/main.js')).toBeTruthy();
@@ -79,7 +78,7 @@ describe('@nrwl/storybook:configuration', () => {
       await configurationGenerator(tree, {
         name: 'test-ui-lib',
         uiFramework: '@storybook/angular',
-        standaloneConfig: false,
+
         tsConfiguration: true,
       });
 
@@ -98,7 +97,6 @@ describe('@nrwl/storybook:configuration', () => {
       await configurationGenerator(tree, {
         name: 'test-ui-lib',
         uiFramework: '@storybook/angular',
-        standaloneConfig: false,
       });
 
       expect(
@@ -113,7 +111,6 @@ describe('@nrwl/storybook:configuration', () => {
       await configurationGenerator(tree, {
         name: 'test-ui-lib',
         uiFramework: '@storybook/angular',
-        standaloneConfig: false,
       });
 
       expect(
@@ -125,7 +122,6 @@ describe('@nrwl/storybook:configuration', () => {
       await configurationGenerator(tree, {
         name: 'test-ui-lib',
         uiFramework: '@storybook/angular',
-        standaloneConfig: false,
       });
 
       const newContents = `module.exports = {
@@ -136,14 +132,12 @@ describe('@nrwl/storybook:configuration', () => {
       // Setup a new lib
       await libraryGenerator(tree, {
         name: 'test-ui-lib-2',
-        standaloneConfig: false,
       });
 
       tree.write('.storybook/main.js', newContents);
       await configurationGenerator(tree, {
         name: 'test-ui-lib-2',
         uiFramework: '@storybook/angular',
-        standaloneConfig: false,
       });
 
       expect(tree.read('.storybook/main.js', 'utf-8')).toEqual(newContents);
@@ -153,7 +147,6 @@ describe('@nrwl/storybook:configuration', () => {
       await configurationGenerator(tree, {
         name: 'test-ui-lib',
         uiFramework: '@storybook/react',
-        standaloneConfig: false,
       });
       const project = readProjectConfiguration(tree, 'test-ui-lib');
 
@@ -184,12 +177,10 @@ describe('@nrwl/storybook:configuration', () => {
       // Setup a new lib
       await libraryGenerator(tree, {
         name: 'test-ui-lib-2',
-        standaloneConfig: false,
       });
       await configurationGenerator(tree, {
         name: 'test-ui-lib-2',
         uiFramework: '@storybook/angular',
-        standaloneConfig: false,
       });
       const project = readProjectConfiguration(tree, 'test-ui-lib-2');
 
@@ -221,13 +212,12 @@ describe('@nrwl/storybook:configuration', () => {
       // Setup a new lib
       await libraryGenerator(tree, {
         name: 'test-ui-lib-5',
-        standaloneConfig: false,
+
         buildable: true,
       });
       await configurationGenerator(tree, {
         name: 'test-ui-lib-5',
         uiFramework: '@storybook/angular',
-        standaloneConfig: false,
       });
       const project = readProjectConfiguration(tree, 'test-ui-lib-5');
 
@@ -259,7 +249,6 @@ describe('@nrwl/storybook:configuration', () => {
       await configurationGenerator(tree, {
         name: 'test-ui-lib',
         uiFramework: '@storybook/react',
-        standaloneConfig: false,
       });
       const tsconfigJson = readJson<TsConfig>(
         tree,
@@ -276,7 +265,6 @@ describe('@nrwl/storybook:configuration', () => {
       await configurationGenerator(tree, {
         name: 'test-ui-lib',
         uiFramework: '@storybook/react',
-        standaloneConfig: false,
       });
       const tsconfigJson = readJson<TsConfig>(
         tree,
@@ -302,7 +290,6 @@ describe('@nrwl/storybook:configuration', () => {
       await libraryGenerator(tree, {
         name: 'test-ui-lib2',
         linter: Linter.EsLint,
-        standaloneConfig: false,
       });
 
       updateJson(tree, 'libs/test-ui-lib2/.eslintrc.json', (json) => {
@@ -315,7 +302,6 @@ describe('@nrwl/storybook:configuration', () => {
       await configurationGenerator(tree, {
         name: 'test-ui-lib2',
         uiFramework: '@storybook/react',
-        standaloneConfig: false,
       });
 
       expect(readJson(tree, 'libs/test-ui-lib2/.eslintrc.json').parserOptions)
@@ -332,13 +318,11 @@ describe('@nrwl/storybook:configuration', () => {
       await libraryGenerator(tree, {
         name: 'test-ui-lib2',
         linter: Linter.EsLint,
-        standaloneConfig: false,
       });
 
       await configurationGenerator(tree, {
         name: 'test-ui-lib2',
         uiFramework: '@storybook/react',
-        standaloneConfig: false,
       });
 
       expect(
@@ -350,7 +334,7 @@ describe('@nrwl/storybook:configuration', () => {
       await configurationGenerator(tree, {
         name: 'test-ui-lib',
         uiFramework: '@storybook/angular',
-        standaloneConfig: false,
+
         tsConfiguration: true,
       });
 
@@ -362,14 +346,12 @@ describe('@nrwl/storybook:configuration', () => {
       // Setup a new lib
       await libraryGenerator(tree, {
         name: 'test-ui-lib-2',
-        standaloneConfig: false,
       });
 
       tree.write('.storybook/main.ts', newContents);
       await configurationGenerator(tree, {
         name: 'test-ui-lib-2',
         uiFramework: '@storybook/angular',
-        standaloneConfig: false,
       });
 
       expect(tree.read('.storybook/main.ts', 'utf-8')).toEqual(newContents);
@@ -410,7 +392,7 @@ describe('@nrwl/storybook:configuration', () => {
       let tree: Tree;
       beforeAll(async () => {
         tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-        writeJson(tree, 'workspace.json', workspaceConfiguration);
+        writeConfig(tree, workspaceConfiguration);
         writeJson(tree, 'apps/nxapp/tsconfig.json', {});
         writeJson(tree, 'apps/reapp/tsconfig.json', {});
         writeJson(tree, 'libs/nxlib/tsconfig.json', {});
@@ -508,7 +490,7 @@ describe('@nrwl/storybook:configuration', () => {
       let tree: Tree;
       beforeAll(async () => {
         tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-        writeJson(tree, 'workspace.json', workspaceConfiguration);
+        writeConfig(tree, workspaceConfiguration);
         writeJson(tree, 'apps/nxapp/tsconfig.json', {});
         writeJson(tree, 'apps/reapp/tsconfig.json', {});
         writeJson(tree, 'libs/nxlib/tsconfig.json', {});
@@ -612,7 +594,7 @@ describe('@nrwl/storybook:configuration', () => {
       let tree: Tree;
       beforeAll(async () => {
         tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-        writeJson(tree, 'workspace.json', workspaceConfiguration);
+        writeConfig(tree, workspaceConfiguration);
         writeJson(tree, 'apps/nxapp/tsconfig.json', {});
         writeJson(tree, 'apps/reapp/tsconfig.json', {});
         writeJson(tree, 'libs/nxlib/tsconfig.json', {});
@@ -714,3 +696,9 @@ describe('@nrwl/storybook:configuration', () => {
     });
   });
 });
+
+function writeConfig(tree: Tree, config: any) {
+  Object.keys(config.projects).forEach((project) => {
+    addProjectConfiguration(tree, project, config.projects[project]);
+  });
+}

@@ -47,6 +47,7 @@ export interface ExecutorOptions {
   buildableProjectDepsInPackageJsonType?: 'dependencies' | 'peerDependencies';
   external?: 'all' | 'none' | string[];
   externalBuildTargets?: string[];
+  generateLockfile?: boolean;
 }
 
 export interface NormalizedExecutorOptions extends ExecutorOptions {

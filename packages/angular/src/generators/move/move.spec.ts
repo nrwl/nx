@@ -1,6 +1,6 @@
 import { readJson, Tree } from '@nrwl/devkit';
 import * as devkit from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { angularMoveGenerator } from './move';
 import libraryGenerator from '../library/library';
 import { Linter } from '@nrwl/linter';
@@ -10,7 +10,7 @@ describe('@nrwl/angular:move', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     await libraryGenerator(tree, {
       name: 'mylib',

@@ -61,7 +61,9 @@
       },
       "standaloneConfig": {
         "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
-        "type": "boolean"
+        "type": "boolean",
+        "default": true,
+        "x-deprecated": "Nx only supports standaloneConfig"
       },
       "ignorePaths": {
         "type": "array",
@@ -88,7 +90,7 @@
         "description": "Configure your workspace to use Storybook 7, even though Storybook v7 is still in beta.",
         "type": "boolean",
         "default": false,
-        "x-priority": "important"
+        "hidden": true
       }
     },
     "required": ["name"],

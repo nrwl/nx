@@ -1,11 +1,13 @@
 import express from 'express';
-const app = express();
 
+const port = process.env.PORT ? Number(process.env.PORT) : <%= port %>;
+
+const app = express();
 
 app.get('/', (req, res) => {
     res.send({ 'message': 'Hello API'});
 });
 
-app.listen(<%= port %>, () => {
-    // Server is running
+app.listen(port, () => {
+    console.log(`[ ready ] http://localhost:${port}`);
 });

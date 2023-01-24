@@ -131,7 +131,13 @@ async function reorgnizeWorkspaceStructure(options: NormalizedOptions) {
     addDependencies(options.pmc, 'vite', 'vitest', '@vitejs/plugin-react');
     removeDependencies(options.pmc, '@nrwl/jest');
   } else {
-    addDependencies(options.pmc, '@craco/craco', 'cross-env', 'react-scripts');
+    addDependencies(
+      options.pmc,
+      '@craco/craco',
+      'cross-env',
+      'react-scripts',
+      'tsconfig-paths-webpack-plugin'
+    );
   }
 
   output.log({ title: '🎉 Done!' });
@@ -177,7 +183,7 @@ function createTempWorkspace(options: NormalizedOptions) {
       options.npxYesFlagNeeded ? '-y' : ''
     } create-nx-workspace@latest temp-workspace --appName=${
       options.reactAppName
-    } --preset=react-monorepo --style=css --packageManager=${
+    } --preset=react-monorepo --style=css --bundler=webpack --packageManager=${
       options.packageManager
     } ${options.nxCloud ? '--nxCloud' : '--nxCloud=false'}`,
     { stdio: [0, 1, 2] }

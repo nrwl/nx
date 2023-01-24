@@ -1,5 +1,5 @@
 import { readProjectConfiguration, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
 import { readFileSync } from 'fs';
 import { join } from 'path';
@@ -13,7 +13,7 @@ describe('updateRootJestConfig', () => {
   let schema: Schema;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     schema = {
       projectName: 'my-lib',
@@ -23,11 +23,9 @@ describe('updateRootJestConfig', () => {
 
     await libraryGenerator(tree, {
       name: 'my-lib',
-      standaloneConfig: false,
     });
     await libraryGenerator(tree, {
       name: 'my-other-lib',
-      standaloneConfig: false,
     });
 
     tree.write(

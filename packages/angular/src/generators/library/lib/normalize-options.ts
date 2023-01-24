@@ -1,10 +1,8 @@
 import {
   extractLayoutDirectory,
   getWorkspaceLayout,
-  getWorkspacePath,
   joinPathFragments,
   names,
-  readJson,
   Tree,
 } from '@nrwl/devkit';
 import { getImportPath } from 'nx/src/utils/path';
@@ -65,17 +63,7 @@ export function normalizeOptions(host: Tree, schema: Schema): NormalizedSchema {
   const importPath =
     options.importPath || getImportPath(npmScope, fullProjectDirectory);
 
-  // Determine the roots where @schematics/angular will place the projects
-  // This might not be where the projects actually end up
-  const workspaceJsonPath = getWorkspacePath(host);
-  let newProjectRoot = null;
-  if (workspaceJsonPath) {
-    ({ newProjectRoot } = readJson(host, workspaceJsonPath));
-  }
-  const ngCliSchematicLibRoot = newProjectRoot
-    ? `${newProjectRoot}/${projectName}`
-    : projectName;
-
+  const ngCliSchematicLibRoot = projectName;
   const allNormalizedOptions = {
     ...options,
     linter: options.linter ?? Linter.EsLint,

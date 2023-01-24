@@ -4,7 +4,7 @@ import {
   readJson,
   Tree,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
 import { storybookVersion } from '../../utils/versions';
 import { initGenerator } from './init';
@@ -13,7 +13,7 @@ describe('@nrwl/storybook:init', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   describe('dependencies for package.json', () => {

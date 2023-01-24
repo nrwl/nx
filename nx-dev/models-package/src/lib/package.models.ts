@@ -76,12 +76,12 @@ export interface SchemaMetadata {
   path: string;
   schema: NxSchema | null;
   type: 'executor' | 'generator';
+
+  'x-deprecated'?: string;
 }
 
 export interface NxSchema extends JsonSchema1 {
-  title: string;
   description: string;
-  presets: { name: string; keys: string[] }[];
   examplesFile: string;
   hidden: boolean;
 }

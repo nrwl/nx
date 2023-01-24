@@ -2,10 +2,9 @@ import { Tree } from '../../generators/tree';
 import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
 import {
   getProjects,
-  readNxJson,
-  updateNxJson,
   updateProjectConfiguration,
 } from '../../generators/utils/project-configuration';
+import { readNxJson, updateNxJson } from '../../generators/utils/nx-json';
 import { joinPathFragments } from '../../utils/path';
 import { join } from 'path';
 import {

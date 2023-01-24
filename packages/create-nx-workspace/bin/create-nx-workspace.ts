@@ -43,6 +43,7 @@ type Arguments = {
     name: string;
     email: string;
   };
+  bundler: 'vite' | 'webpack';
 };
 
 enum Preset {
@@ -152,6 +153,10 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           describe: chalk.dim`Style option to be used when a preset with pregenerated app is selected`,
           type: 'string',
         })
+        .option('bundler', {
+          describe: chalk.dim`Bundler to be used to build the application`,
+          type: 'string',
+        })
         .option('framework', {
           describe: chalk.dim`Framework option to be used when the node-server preset is selected`,
           type: 'string',
@@ -236,6 +241,7 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
     skipGit,
     commit,
     framework,
+    bundler,
   } = parsedArgs;
 
   output.log({
@@ -261,6 +267,7 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
       nxCloud,
       defaultBase,
       framework,
+      bundler,
     }
   );
 
@@ -313,7 +320,7 @@ async function getConfiguration(
   argv: yargs.Arguments<Arguments>
 ): Promise<void> {
   try {
-    let name, appName, style, preset, framework;
+    let name, appName, style, preset, framework, bundler;
 
     output.log({
       title:
@@ -335,6 +342,8 @@ async function getConfiguration(
           preset = Preset.ReactStandalone;
         } else if (monorepoStyle === 'angular') {
           preset = Preset.AngularStandalone;
+        } else if (monorepoStyle === 'node-server') {
+          preset = Preset.NodeServer;
         } else {
           preset = await determinePreset(argv);
         }
@@ -348,16 +357,25 @@ async function getConfiguration(
 
       if (
         preset === Preset.ReactStandalone ||
-        preset === Preset.AngularStandalone
+        preset === Preset.AngularStandalone ||
+        preset === Preset.NodeServer
       ) {
         appName =
           argv.appName ?? argv.name ?? (await determineAppName(preset, argv));
         name = argv.name ?? appName;
+
+        if (preset === Preset.NodeServer) {
+          framework = await determineFramework(preset, argv);
+        }
+
+        if (preset === Preset.ReactStandalone) {
+          bundler = await determineBundler(argv);
+        }
       } else {
         name = await determineRepoName(argv);
         appName = await determineAppName(preset, argv);
-        if (preset === Preset.NodeServer) {
-          framework = await determineFramework(preset, argv);
+        if (preset === Preset.ReactMonorepo) {
+          bundler = await determineBundler(argv);
         }
       }
       style = await determineStyle(preset, argv);
@@ -380,6 +398,7 @@ async function getConfiguration(
       packageManager,
       defaultBase,
       ci,
+      bundler,
     });
   } catch (e) {
     console.error(e);
@@ -459,22 +478,27 @@ function determineMonorepoStyle(): Promise<string> {
           {
             name: 'package-based',
             message:
-              'Package-based monorepo: Nx makes it fast, but lets you run things your way.',
+              'Package-based monorepo:     Nx makes it fast, but lets you run things your way.',
           },
           {
             name: 'integrated',
             message:
-              'Integrated monorepo:    Nx configures your favorite frameworks and lets you focus on shipping features.',
+              'Integrated monorepo:        Nx configures your favorite frameworks and lets you focus on shipping features.',
           },
           {
             name: 'react',
             message:
-              'Standalone React app:   Nx configures Vite, Vitest, ESLint, and Cypress.',
+              'Standalone React app:       Nx configures Vite (or Webpack), ESLint, and Cypress.',
           },
           {
             name: 'angular',
             message:
-              'Standalone Angular app: Nx configures Jest, ESLint and Cypress.',
+              'Standalone Angular app:     Nx configures Jest, ESLint and Cypress.',
+          },
+          {
+            name: 'node-server',
+            message:
+              'Standalone Node Server app: Nx configures a framework (ex. Express), esbuild, ESlint and Jest.',
           },
         ],
       },
@@ -668,14 +692,27 @@ async function determineFramework(
     return Promise.resolve('');
   }
 
-  const frameworkChoices = ['express', 'koa', 'fastify', 'connect'];
+  const frameworkChoices = [
+    {
+      name: 'express',
+      message: 'Express [https://expressjs.com/]',
+    },
+    {
+      name: 'koa',
+      message: 'koa     [https://koajs.com/]',
+    },
+    {
+      name: 'fastify',
+      message: 'fastify [https://www.fastify.io/]',
+    },
+  ];
 
   if (!parsedArgs.framework) {
     return enquirer
       .prompt([
         {
           message: 'What framework should be used?',
-          type: 'select',
+          type: 'autocomplete',
           name: 'framework',
           choices: frameworkChoices,
         },
@@ -683,15 +720,17 @@ async function determineFramework(
       .then((a: { framework: string }) => a.framework);
   }
 
-  const foundFramework = frameworkChoices.indexOf(parsedArgs.framework);
+  const foundFramework = frameworkChoices
+    .map(({ name }) => name)
+    .indexOf(parsedArgs.framework);
 
   if (foundFramework < 0) {
     output.error({
-      title: 'Invalid framwork',
+      title: 'Invalid framework',
       bodyLines: [
         `It must be one of the following:`,
         '',
-        ...frameworkChoices.map((choice) => choice),
+        ...frameworkChoices.map(({ name }) => name),
       ],
     });
 
@@ -827,6 +866,54 @@ async function determineStyle(
   return Promise.resolve(parsedArgs.style);
 }
 
+async function determineBundler(
+  parsedArgs: yargs.Arguments<Arguments>
+): Promise<'vite' | 'webpack'> {
+  const choices = [
+    {
+      name: 'vite',
+      message: 'Vite    [ https://vitejs.dev/ ]',
+    },
+    {
+      name: 'webpack',
+      message: 'Webpack [ https://webpack.js.org/ ]',
+    },
+  ];
+
+  if (!parsedArgs.bundler) {
+    return enquirer
+      .prompt([
+        {
+          name: 'bundler',
+          message: `Bundler to be used to build the application`,
+          initial: 'vite' as any,
+          type: 'autocomplete',
+          choices: choices,
+        },
+      ])
+      .then((a: { bundler: 'vite' | 'webpack' }) => a.bundler);
+  }
+
+  const foundBundler = choices.find(
+    (choice) => choice.name === parsedArgs.bundler
+  );
+
+  if (foundBundler === undefined) {
+    output.error({
+      title: 'Invalid bundler',
+      bodyLines: [
+        `It must be one of the following:`,
+        '',
+        ...choices.map((choice) => choice.name),
+      ],
+    });
+
+    process.exit(1);
+  }
+
+  return Promise.resolve(parsedArgs.bundler);
+}
+
 async function determineNxCloud(
   parsedArgs: yargs.Arguments<Arguments>
 ): Promise<boolean> {
@@ -942,6 +1029,7 @@ async function createSandbox(packageManager: PackageManager) {
 
   return tmpDir;
 }
+
 async function createApp(
   tmpDir: string,
   name: string,

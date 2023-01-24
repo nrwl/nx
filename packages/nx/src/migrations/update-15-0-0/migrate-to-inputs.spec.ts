@@ -1,7 +1,4 @@
-import {
-  createTreeWithEmptyV1Workspace,
-  createTreeWithEmptyWorkspace,
-} from '../../generators/testing-utils/create-tree-with-empty-workspace';
+import { createTreeWithEmptyWorkspace } from '../../generators/testing-utils/create-tree-with-empty-workspace';
 import type { Tree } from '../../generators/tree';
 import {
   addProjectConfiguration,
@@ -220,7 +217,7 @@ describe('15.0.0 migration (migrate-to-inputs)', () => {
       root: 'app2',
     });
     tree.delete('app2/project.json');
-    writeJson(tree, 'app2/package.json', { name: 'app2' });
+    writeJson(tree, 'app2/package.json', { name: 'app2', nx: {} });
     addProjectConfiguration(tree, 'lib1', {
       root: 'lib1',
     });
@@ -292,7 +289,7 @@ describe('15.0.0 migration (migrate-to-inputs) (v1)', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it('should add project specific implicit dependencies to project namedInputs', async () => {

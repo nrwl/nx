@@ -80,9 +80,11 @@ function getDevServerPartial(
       htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
     },
     onListening(server: any) {
+      const isHttps =
+        server.options.https || server.options.server?.type === 'https';
       logger.info(
         `NX Web Development Server is listening at ${
-          server.options.https ? 'https' : 'http'
+          isHttps ? 'https' : 'http'
         }://${server.options.host}:${server.options.port}${buildServePath(
           buildOptions
         )}`

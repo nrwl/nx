@@ -21,7 +21,8 @@
         "type": "string",
         "description": "Specify your app's build variant (e.g. `debug`, `release`).",
         "default": "debug",
-        "examples": ["debug", "release"]
+        "examples": ["debug", "release"],
+        "x-priority": "important"
       },
       "appId": {
         "type": "string",

@@ -4,7 +4,7 @@ import { installWebpackRollupDependencies } from './install-webpack-rollup-depen
 
 describe('installWebpackRollupDependencies', () => {
   it('should install packages if webpack is used', async () => {
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     addProjectConfiguration(tree, 'proj', {
       root: 'proj',
@@ -23,7 +23,7 @@ describe('installWebpackRollupDependencies', () => {
   });
 
   it('should install packages if rollup is used', async () => {
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     addProjectConfiguration(tree, 'proj', {
       root: 'proj',
@@ -42,7 +42,7 @@ describe('installWebpackRollupDependencies', () => {
   });
 
   it('should not install packages if neither webpack nor rollup are used', async () => {
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     addProjectConfiguration(tree, 'proj', {
       root: 'proj',

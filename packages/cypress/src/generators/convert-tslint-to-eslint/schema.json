@@ -36,7 +36,8 @@
     "skipFormat": {
       "type": "boolean",
       "description": "Skip formatting files.",
-      "default": false
+      "default": false,
+      "x-priority": "internal"
     }
   },
   "required": ["project"]

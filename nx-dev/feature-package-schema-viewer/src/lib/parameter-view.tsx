@@ -18,7 +18,7 @@ export const ParameterView = (props: {
   lookup: Lookup;
 }) => (
   <div key={'property-' + props.name} className="mb-8">
-    <div className="mb-2 flex items-center">
+    <div className="mb-1 flex items-center">
       <Heading3 title={props.name} />
       <div className="ml-4 flex-grow space-x-2">
         {props.alias && (
@@ -46,8 +46,8 @@ export const ParameterView = (props: {
         )}
       </div>
     </div>
-    <div className="mb-2 text-sm">
-      <div className="mb-1 text-green-600">
+    <div className="mb-1 text-sm">
+      <div className="mb-0.5 text-green-600">
         <Type
           s={props.schema}
           reference={props.reference}
@@ -60,7 +60,7 @@ export const ParameterView = (props: {
       )}
     </div>
 
-    <div className="prose prose-slate dark:prose-invert max-w-none">
+    <div className="prose prose-slate dark:prose-invert -mt-4 max-w-none">
       {
         renderMarkdown(props.description, {
           filePath: '',
@@ -84,7 +84,7 @@ export const ParameterView = (props: {
 function ParameterMetadata({ schema }: { schema: JsonSchema }) {
   const data = getParameterMetadata(schema);
   return !!data.length ? (
-    <div className="mb-1">
+    <div className="mb-0.5 space-x-4">
       {data.map((i) => (
         <span key={i.key}>
           {i.name}: <code>{i.value}</code>
@@ -103,7 +103,7 @@ function ParameterEnums({
 }) {
   const potentialEnums = (getEnum(schema, lookup) as string[]) ?? [];
   return !!potentialEnums.length ? (
-    <div className="mb-1">
+    <div className="mb-0.5">
       Accepted values:{' '}
       {potentialEnums.map((e, i) => (
         <span key={'enums-' + e}>

@@ -19,7 +19,7 @@ import {
   npmLockFileWithAliases,
   pnpmLockFileWithAliases,
   yarnLockFileWithAliases,
-} from './__fixtures__/aux.lock';
+} from './__fixtures__/auxiliary.lock';
 import {
   lockFileV3YargsAndDevkitOnly as npmLockFileV3YargsAndDevkit,
   lockFileV2YargsAndDevkitOnly as npmLockFileV2YargsAndDevkit,

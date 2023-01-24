@@ -14,7 +14,7 @@ import { ViteDevServerExecutorOptions } from '../executors/dev-server/schema';
 import { VitePreviewServerExecutorOptions } from '../executors/preview-server/schema';
 import { VitestExecutorOptions } from '../executors/test/schema';
 import { Schema } from '../generators/configuration/schema';
-import { ensureBuildOptionsInViteConfig } from './vite-config-edit-utils';
+import { ensureViteConfigIsCorrect } from './vite-config-edit-utils';
 
 export type Target = 'build' | 'serve' | 'test' | 'preview';
 export type TargetFlags = Partial<Record<Target, boolean>>;
@@ -550,6 +550,10 @@ export function createOrEditViteConfig(
     //  ],
     // },`;
 
+  const cacheDir = `cacheDir: '${offsetFromRoot(
+    projectConfig.root
+  )}node_modules/.vite/${options.project}',`;
+
   if (tree.exists(viteConfigPath)) {
     handleViteConfigFileExists(
       tree,
@@ -560,6 +564,7 @@ export function createOrEditViteConfig(
       dtsImportLine,
       pluginOption,
       testOption,
+      cacheDir,
       offsetFromRoot(projectConfig.root),
       projectAlreadyHasViteTargets
     );
@@ -574,6 +579,7 @@ export function createOrEditViteConfig(
       ${dtsImportLine}
       
       export default defineConfig({
+        ${cacheDir}
         ${devServerOption}
         ${previewServerOption}
         ${pluginOption}
@@ -725,6 +731,7 @@ function handleViteConfigFileExists(
   dtsImportLine: string,
   pluginOption: string,
   testOption: string,
+  cacheDir: string,
   offsetFromRoot: string,
   projectAlreadyHasViteTargets?: TargetFlags
 ) {
@@ -757,7 +764,7 @@ function handleViteConfigFileExists(
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
   };
 
-  const changed = ensureBuildOptionsInViteConfig(
+  const changed = ensureViteConfigIsCorrect(
     tree,
     viteConfigPath,
     buildOption,
@@ -767,6 +774,7 @@ function handleViteConfigFileExists(
     pluginOption,
     testOption,
     testOptionObject,
+    cacheDir,
     projectAlreadyHasViteTargets
   );
 

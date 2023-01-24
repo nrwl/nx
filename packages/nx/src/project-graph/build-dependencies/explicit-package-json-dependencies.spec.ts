@@ -18,7 +18,7 @@ describe('explicit package json dependencies', () => {
   let projects: Record<string, ProjectGraphProjectNode>;
   let fsJson;
   beforeEach(() => {
-    const workspaceJson = {
+    const projectsConfigurations = {
       projects: {
         proj: {
           root: 'libs/proj',
@@ -35,7 +35,7 @@ describe('explicit package json dependencies', () => {
       },
     };
 
-    const nxJson = {
+    const nxJsonConfiguration = {
       npmScope: 'proj',
     };
 
@@ -45,8 +45,7 @@ describe('explicit package json dependencies', () => {
         "dependencies": [],
         "devDependencies": []
       }`,
-      './workspace.json': JSON.stringify(workspaceJson),
-      './nx.json': JSON.stringify(nxJson),
+      './nx.json': JSON.stringify(nxJsonConfiguration),
       './tsconfig.base.json': JSON.stringify({}),
       './libs/proj2/package.json': JSON.stringify({ name: 'proj2' }),
       './libs/proj3/package.json': JSON.stringify({ name: 'proj3' }),
@@ -60,20 +59,10 @@ describe('explicit package json dependencies', () => {
     defaultFileHasher.init();
 
     ctx = {
-      workspace: {
-        projects: {
-          proj2: {
-            root: 'libs/proj2',
-          },
-          proj3: {
-            root: 'libs/proj3',
-          },
-        },
-        workspaceJson,
-        nxJson,
-      },
+      projectsConfigurations,
+      nxJsonConfiguration,
       filesToProcess: createProjectFileMap(
-        workspaceJson,
+        projectsConfigurations as any,
         defaultFileHasher.allFileData()
       ).projectFileMap,
     } as any;
@@ -115,7 +104,8 @@ describe('explicit package json dependencies', () => {
     });
 
     const res = buildExplicitPackageJsonDependencies(
-      ctx.workspace,
+      ctx.nxJsonConfiguration,
+      ctx.projectsConfigurations,
       builder.graph,
       ctx.filesToProcess
     );

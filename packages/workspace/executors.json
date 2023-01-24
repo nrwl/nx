@@ -15,7 +15,8 @@
     "run-commands": {
       "implementation": "./src/executors/run-commands/run-commands.impl",
       "schema": "./src/executors/run-commands/schema.json",
-      "description": "Run any custom commands with Nx."
+      "description": "Run any custom commands with Nx.",
+      "x-deprecated": "Use nx:run-commands instead. This will be removed in v16."
     },
     "counter": {
       "implementation": "./src/executors/counter/counter.impl",
@@ -27,7 +28,8 @@
     "run-script": {
       "implementation": "./src/executors/run-script/run-script.impl",
       "schema": "./src/executors/run-script/schema.json",
-      "description": "Run an NPM script using Nx."
+      "description": "Run an NPM script using Nx.",
+      "x-deprecated": "Use nx:run-script instead. This will be removed in v16."
     }
   }
 }

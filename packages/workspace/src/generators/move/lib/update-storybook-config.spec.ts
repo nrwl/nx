@@ -1,5 +1,5 @@
 import { readProjectConfiguration, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { libraryGenerator } from '../../library/library';
 import { NormalizedSchema } from '../schema';
 import { updateStorybookConfig } from './update-storybook-config';
@@ -8,13 +8,12 @@ describe('updateStorybookConfig', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it('should handle storybook config not existing', async () => {
     await libraryGenerator(tree, {
       name: 'my-source',
-      standaloneConfig: false,
     });
     const projectConfig = readProjectConfiguration(tree, 'my-source');
     const schema: NormalizedSchema = {
@@ -41,7 +40,6 @@ describe('updateStorybookConfig', () => {
 
     await libraryGenerator(tree, {
       name: 'my-source',
-      standaloneConfig: false,
     });
     const projectConfig = readProjectConfiguration(tree, 'my-source');
     tree.write(storybookMainPath, storybookMain);
@@ -70,7 +68,6 @@ describe('updateStorybookConfig', () => {
       '/libs/namespace/my-destination/.storybook/webpack.config.js';
     await libraryGenerator(tree, {
       name: 'my-source',
-      standaloneConfig: false,
     });
     const projectConfig = readProjectConfiguration(tree, 'my-source');
     tree.write(storybookWebpackConfigPath, storybookWebpackConfig);
@@ -112,7 +109,6 @@ describe('updateStorybookConfig', () => {
 
       await libraryGenerator(tree, {
         name: 'my-source',
-        standaloneConfig: false,
       });
       const projectConfig = readProjectConfiguration(tree, 'my-source');
       tree.write(storybookMainPath, storybookMain);
@@ -156,7 +152,6 @@ describe('updateStorybookConfig', () => {
 
       await libraryGenerator(tree, {
         name: 'my-source',
-        standaloneConfig: false,
       });
       const projectConfig = readProjectConfiguration(tree, 'my-source');
       tree.write(storybookWebpackConfigPath, storybookWebpackConfig);

@@ -1,20 +1,17 @@
-import {
-  isWholeFileChange,
-  WholeFileChange,
-  workspaceFileName,
-} from '../../file-utils';
+import { isWholeFileChange, WholeFileChange } from '../../file-utils';
 import {
   JsonDiffType,
   isJsonChange,
   JsonChange,
 } from '../../../utils/json-diff';
 import { TouchedProjectLocator } from '../affected-project-graph-models';
+import { workspaceRoot } from 'nx/src/utils/workspace-root';
 
 export const getTouchedProjectsInWorkspaceJson: TouchedProjectLocator<
   WholeFileChange | JsonChange
 > = (touchedFiles, projectGraphNodes): string[] => {
   const workspaceChange = touchedFiles.find(
-    (change) => change.file === workspaceFileName()
+    (change) => change.file === `angular.json`
   );
   if (!workspaceChange) {
     return [];

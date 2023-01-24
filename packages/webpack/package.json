@@ -33,7 +33,7 @@
     "@nrwl/js": "file:../js",
     "@nrwl/workspace": "file:../workspace",
     "autoprefixer": "^10.4.9",
-    "babel-loader": "^8.2.2",
+    "babel-loader": "^9.1.2",
     "chalk": "^4.1.0",
     "chokidar": "^3.5.1",
     "copy-webpack-plugin": "^10.2.4",

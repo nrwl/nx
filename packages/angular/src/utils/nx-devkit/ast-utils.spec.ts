@@ -12,7 +12,7 @@ import { createSourceFile, ScriptTarget } from 'typescript';
 describe('Angular AST Utils', () => {
   it('should correctly add the imported symbol to the NgModule', () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     const pathToModule = `my.module.ts`;
     const originalContents = `import { NgModule } from '@angular/core';
     
@@ -48,7 +48,7 @@ describe('Angular AST Utils', () => {
 
   it('should correctly add the imported symbol to the Component', () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     const pathToFile = `my.component.ts`;
     const originalContents = `import { Component } from '@angular/core';
     
@@ -84,7 +84,7 @@ describe('Angular AST Utils', () => {
 
   it('should correctly add the imported symbol to the Directive', () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     const pathToFile = `my.directive.ts`;
     const originalContents = `import { Directive } from '@angular/core';
     
@@ -120,7 +120,7 @@ describe('Angular AST Utils', () => {
 
   it('should correctly add the imported symbol to the Pipe', () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     const pathToFile = `my.pipe.ts`;
     const originalContents = `import { Pipe } from '@angular/core';
     
@@ -156,7 +156,7 @@ describe('Angular AST Utils', () => {
 
   it('should allow checking if a component is standalone and return true if so', () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     const pathToFile = `my.component.ts`;
     const originalContents = `import { Component } from '@angular/core';
     
@@ -183,7 +183,7 @@ describe('Angular AST Utils', () => {
 
   it('should allow checking if a component is standalone and return false if not', () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     const pathToFile = `my.component.ts`;
     const originalContents = `import { Component } from '@angular/core';
     
@@ -210,7 +210,7 @@ describe('Angular AST Utils', () => {
 
   it('should allow checking if a directive is standalone and return true if so', () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     const pathToFile = `my.directive.ts`;
     const originalContents = `import { Directive } from '@angular/core';
     
@@ -237,7 +237,7 @@ describe('Angular AST Utils', () => {
 
   it('should allow checking if a pipe is standalone and return true if so', () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     const pathToFile = `my.pipe.ts`;
     const originalContents = `import { Pipe } from '@angular/core';
     
@@ -264,7 +264,7 @@ describe('Angular AST Utils', () => {
 
   it('should add a provider to the bootstrapApplication call', () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     tree.write(
       'main.ts',
       `import { bootstrapApplication } from '@angular/platform-browser';

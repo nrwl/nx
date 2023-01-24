@@ -1,34 +1,27 @@
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
-import { readJson, Tree } from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { addProjectConfiguration, readJson, Tree } from '@nrwl/devkit';
 import { updateEmotionSetup } from './update-emotion-setup';
 
 describe('Update tsconfig config for Emotion', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it(`should add jsxImportSource if it uses @emotion/react`, async () => {
-    tree.write(
-      'workspace.json',
-      JSON.stringify({
-        projects: {
-          'no-emotion-app': {
-            root: 'apps/no-emotion-app',
-            projectType: 'application',
-          },
-          'plain-react-app': {
-            root: 'apps/plain-react-app',
-            projectType: 'application',
-          },
-          'emotion-app': {
-            root: 'apps/emotion-app',
-            projectType: 'application',
-          },
-        },
-      })
-    );
+    addProjectConfiguration(tree, 'no-emotion-app', {
+      root: 'apps/no-emotion-app',
+      projectType: 'application',
+    });
+    addProjectConfiguration(tree, 'plain-react-app', {
+      root: 'apps/plain-react-app',
+      projectType: 'application',
+    });
+    addProjectConfiguration(tree, 'emotion-app', {
+      root: 'apps/emotion-app',
+      projectType: 'application',
+    });
     tree.write(
       'nx.json',
       JSON.stringify({

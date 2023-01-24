@@ -4,7 +4,7 @@ import {
   Tree,
   writeJson,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import removeESLintProjectConfigIfNoTypeCheckingRules from './remove-eslint-project-config-if-no-type-checking-rules';
 import type { Linter } from 'eslint';
 const KNOWN_RULE_REQUIRING_TYPE_CHECKING = '@typescript-eslint/await-thenable';
@@ -12,7 +12,7 @@ const KNOWN_RULE_REQUIRING_TYPE_CHECKING = '@typescript-eslint/await-thenable';
 describe('Remove ESLint parserOptions.project config if no rules requiring type-checking are in use', () => {
   let tree: Tree;
   beforeEach(async () => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'react-app', {
       root: 'apps/react-app',
       sourceRoot: 'apps/react-app/src',

@@ -5,7 +5,7 @@ import {
   Tree,
   writeJson,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { libraryGenerator } from '../../library/library';
 import { NormalizedSchema } from '../schema';
 import { updateCypressConfig } from './update-cypress-config';
@@ -25,8 +25,8 @@ describe('updateCypressConfig', () => {
       relativeToRootDestination: 'libs/my-destination',
     };
 
-    tree = createTreeWithEmptyV1Workspace();
-    await libraryGenerator(tree, { name: 'my-lib', standaloneConfig: false });
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    await libraryGenerator(tree, { name: 'my-lib' });
     projectConfig = readProjectConfiguration(tree, 'my-lib');
   });
 

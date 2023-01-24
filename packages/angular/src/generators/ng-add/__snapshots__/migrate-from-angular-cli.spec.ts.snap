@@ -52,9 +52,6 @@ Object {
     ],
     "production": Array [
       "default",
-      "!{projectRoot}/tsconfig.spec.json",
-      "!{projectRoot}/**/*.spec.[jt]s",
-      "!{projectRoot}/karma.conf.js",
     ],
     "sharedGlobals": Array [],
   },
@@ -68,27 +65,12 @@ Object {
         "^production",
       ],
     },
-    "e2e": Object {
-      "inputs": Array [
-        "default",
-        "^production",
-      ],
-    },
-    "test": Object {
-      "inputs": Array [
-        "default",
-        "^production",
-        "{workspaceRoot}/karma.conf.js",
-      ],
-    },
   },
   "tasksRunnerOptions": Object {
     "default": Object {
       "options": Object {
         "cacheableOperations": Array [
           "build",
-          "test",
-          "e2e",
         ],
       },
       "runner": "nx/tasks-runners/default",
@@ -266,9 +248,6 @@ Object {
     ],
     "production": Array [
       "default",
-      "!{projectRoot}/tsconfig.spec.json",
-      "!{projectRoot}/**/*.spec.[jt]s",
-      "!{projectRoot}/karma.conf.js",
       "!{projectRoot}/.eslintrc.json",
     ],
     "sharedGlobals": Array [],
@@ -284,23 +263,10 @@ Object {
         "^production",
       ],
     },
-    "e2e": Object {
-      "inputs": Array [
-        "default",
-        "^production",
-      ],
-    },
     "lint": Object {
       "inputs": Array [
         "default",
         "{workspaceRoot}/.eslintrc.json",
-      ],
-    },
-    "test": Object {
-      "inputs": Array [
-        "default",
-        "^production",
-        "{workspaceRoot}/karma.conf.js",
       ],
     },
   },
@@ -309,9 +275,6 @@ Object {
       "options": Object {
         "cacheableOperations": Array [
           "build",
-          "test",
-          "lint",
-          "e2e",
         ],
       },
       "runner": "nx/tasks-runners/default",

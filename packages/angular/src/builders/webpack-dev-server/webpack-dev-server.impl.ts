@@ -14,15 +14,13 @@ import type { Schema } from './schema';
 import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
 import { from } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
+import { getRootTsConfigPath } from 'nx/src/utils/typescript';
 
 export function executeWebpackDevServerBuilder(
   rawOptions: Schema,
   context: import('@angular-devkit/architect').BuilderContext
 ) {
-  process.env.NX_TSCONFIG_PATH = joinPathFragments(
-    context.workspaceRoot,
-    'tsconfig.base.json'
-  );
+  process.env.NX_TSCONFIG_PATH = getRootTsConfigPath();
 
   const options = normalizeOptions(rawOptions);
 

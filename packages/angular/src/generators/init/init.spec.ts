@@ -1,8 +1,5 @@
 import { NxJsonConfiguration, readJson, Tree, updateJson } from '@nrwl/devkit';
-import {
-  createTreeWithEmptyV1Workspace,
-  createTreeWithEmptyWorkspace,
-} from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
 import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
@@ -12,7 +9,7 @@ describe('init', () => {
   let host: Tree;
 
   beforeEach(() => {
-    host = createTreeWithEmptyV1Workspace();
+    host = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it('should add angular dependencies', async () => {
@@ -306,7 +303,7 @@ bar
   describe('v14 support', () => {
     let tree: Tree;
     beforeEach(() => {
-      tree = createTreeWithEmptyWorkspace();
+      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       updateJson(tree, 'package.json', (json) => ({
         ...json,
         dependencies: {

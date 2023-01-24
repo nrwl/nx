@@ -5,7 +5,6 @@ import {
   Tree,
 } from '@nrwl/devkit';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
-import { convertToNxProjectGenerator } from '@nrwl/workspace/generators';
 import { UnitTestRunner } from '../../../utils/test-runners';
 import { angularInitGenerator } from '../../init/init';
 import { setupTailwindGenerator } from '../../setup-tailwind/setup-tailwind';
@@ -116,13 +115,6 @@ export async function applicationGenerator(
     enableStrictTypeChecking(host, options);
   } else {
     setApplicationStrictDefault(host, false);
-  }
-
-  if (options.standaloneConfig) {
-    await convertToNxProjectGenerator(host, {
-      project: options.name,
-      all: false,
-    });
   }
 
   if (options.standalone) {

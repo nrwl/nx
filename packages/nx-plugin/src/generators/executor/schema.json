@@ -19,7 +19,8 @@
       "$default": {
         "$source": "projectName"
       },
-      "x-prompt": "What is the name of the project for the executor?"
+      "x-prompt": "What is the name of the project for the executor?",
+      "x-priority": "important"
     },
     "name": {
       "type": "string",
@@ -28,7 +29,8 @@
         "$source": "argv",
         "index": 0
       },
-      "x-prompt": "What name would you like to use for the executor?"
+      "x-prompt": "What name would you like to use for the executor?",
+      "x-priority": "important"
     },
     "description": {
       "type": "string",

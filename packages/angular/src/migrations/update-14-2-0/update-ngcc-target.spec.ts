@@ -1,5 +1,5 @@
 import { readJson } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import updateNgccTarget from './update-ngcc-target';
 
 describe('update-ngcc-postinstall-target migration', () => {
@@ -21,7 +21,7 @@ describe('update-ngcc-postinstall-target migration', () => {
     },
   ].forEach((testEntry) => {
     it(`should adjust ngcc target for: "${testEntry.test}"`, async () => {
-      const tree = createTreeWithEmptyV1Workspace();
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       tree.write(
         '/package.json',
         JSON.stringify({ scripts: { postinstall: testEntry.test } })
@@ -45,7 +45,7 @@ describe('update-ngcc-postinstall-target migration', () => {
     },
   ].forEach((testEntry) => {
     it(`should not update postinstall script: "${testEntry.test}"`, async () => {
-      const tree = createTreeWithEmptyV1Workspace();
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       tree.write(
         '/package.json',
         JSON.stringify({ scripts: { postinstall: testEntry.test } })

@@ -31,6 +31,12 @@ Type: `string`
 
 The name of the application when a preset with pregenerated app is selected
 
+### bundler
+
+Type: `string`
+
+Bundler to be used to build the application
+
 ### ci
 
 Type: `string`
