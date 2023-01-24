@@ -241,6 +241,7 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
     skipGit,
     commit,
     framework,
+    bundler,
   } = parsedArgs;
 
   output.log({
@@ -266,6 +267,7 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
       nxCloud,
       defaultBase,
       framework,
+      bundler,
     }
   );
 
