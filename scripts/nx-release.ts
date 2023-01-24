@@ -41,6 +41,10 @@ function hideFromGitIndex(uncommittedFiles: string[]) {
 
   if (options.local) {
     process.env.LOCAL_RELEASE = 'true';
+    // with local builds, we do not want napi to modify the base package.json to include optional dependencies that do not exist.
+    // when we pass `--dry-run` as an argument to napi prepublish, it will skip modifying any files
+    // `napi prepublish` is used in package.json's `prepublishOnly` scripts
+    process.env.NAPI_DRY_RUN = '--dry-run';
   }
 
   if (!options.local && !options.force) {

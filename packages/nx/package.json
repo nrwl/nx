@@ -10,7 +10,7 @@
   },
   "scripts": {
     "postinstall": "node ./bin/compute-project-graph",
-    "prepublishOnly": "napi prepublish --skip-gh-release --prefix ./native-packages"
+    "prepublishOnly": "napi prepublish --skip-gh-release --prefix ./native-packages $NAPI_DRY_RUN"
   },
   "keywords": [
     "Monorepo",
