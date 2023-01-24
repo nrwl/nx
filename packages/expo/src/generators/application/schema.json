@@ -77,6 +77,11 @@
       "type": "boolean",
       "default": true,
       "x-deprecated": "Nx only supports standaloneConfig"
+    },
+    "skipPackageJson": {
+      "type": "boolean",
+      "description": "Do not add dependencies to `package.json`.",
+      "default": false
     }
   },
   "required": ["name"]

@@ -22,6 +22,11 @@
       "type": "string",
       "enum": ["detox", "none"],
       "default": "detox"
+    },
+    "skipPackageJson": {
+      "type": "boolean",
+      "description": "Do not add dependencies to `package.json`.",
+      "default": false
     }
   },
   "required": []
