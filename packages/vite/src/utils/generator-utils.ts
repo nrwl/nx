@@ -372,12 +372,15 @@ export function moveAndEditIndexHtml(
   let indexHtmlPath =
     projectConfig.targets[buildTarget].options?.index ??
     `${projectConfig.root}/src/index.html`;
-  const mainPath = (
+  let mainPath =
     projectConfig.targets[buildTarget].options?.main ??
     `${projectConfig.root}/src/main.ts${
       options.uiFramework === 'react' ? 'x' : ''
-    }`
-  ).replace(projectConfig.root, '');
+    }`;
+
+  if (projectConfig.root !== '.') {
+    mainPath = mainPath.replace(projectConfig.root, '');
+  }
 
   if (
     !tree.exists(indexHtmlPath) &&
