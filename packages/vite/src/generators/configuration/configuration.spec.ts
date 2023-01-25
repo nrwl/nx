@@ -4,7 +4,7 @@ import {
   readJson,
   Tree,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { nxVersion } from '../../utils/versions';
 
 import { viteConfigurationGenerator } from './configuration';
@@ -23,7 +23,7 @@ describe('@nrwl/vite:configuration', () => {
 
   describe('transform React app to use Vite', () => {
     beforeAll(async () => {
-      tree = createTreeWithEmptyV1Workspace();
+      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       mockReactAppGenerator(tree);
       const existing = 'existing';
       const existingVersion = '1.0.0';
@@ -75,7 +75,7 @@ describe('@nrwl/vite:configuration', () => {
 
   describe('transform Web app to use Vite', () => {
     beforeAll(async () => {
-      tree = createTreeWithEmptyV1Workspace();
+      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       mockWebAppGenerator(tree);
       const existing = 'existing';
       const existingVersion = '1.0.0';
@@ -124,7 +124,7 @@ describe('@nrwl/vite:configuration', () => {
 
   describe('do not transform Angular app to use Vite', () => {
     beforeAll(async () => {
-      tree = createTreeWithEmptyV1Workspace();
+      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       mockAngularAppGenerator(tree);
     });
     it('should throw when trying to convert', async () => {
@@ -146,7 +146,7 @@ describe('@nrwl/vite:configuration', () => {
 
   describe('inform user of unknown targets when converting', () => {
     beforeAll(async () => {
-      tree = createTreeWithEmptyV1Workspace();
+      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       mockUnknownAppGenerator(tree);
     });
 
@@ -193,7 +193,7 @@ describe('@nrwl/vite:configuration', () => {
   describe('transform React app to use Vite by providing custom targets', () => {
     describe('transform React app if supported executor is provided', () => {
       beforeEach(async () => {
-        tree = createTreeWithEmptyV1Workspace();
+        tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
         mockReactMixedAppGenerator(tree);
         const existing = 'existing';
         const existingVersion = '1.0.0';
@@ -229,7 +229,7 @@ describe('@nrwl/vite:configuration', () => {
 
     describe('do NOT transform React app if unsupported executor is provided', () => {
       beforeEach(async () => {
-        tree = createTreeWithEmptyV1Workspace();
+        tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
         mockReactMixedAppGenerator(tree);
         const existing = 'existing';
         const existingVersion = '1.0.0';
@@ -283,7 +283,7 @@ describe('@nrwl/vite:configuration', () => {
 
   describe('vitest', () => {
     beforeAll(async () => {
-      tree = createTreeWithEmptyV1Workspace();
+      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       await mockReactAppGenerator(tree);
       const existing = 'existing';
       const existingVersion = '1.0.0';
@@ -311,7 +311,7 @@ describe('@nrwl/vite:configuration', () => {
 
   describe('library mode', () => {
     beforeEach(async () => {
-      tree = createTreeWithEmptyV1Workspace();
+      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     });
 
     it('should add config for building library', async () => {

@@ -43,6 +43,7 @@ Array [
   "apps/.gitignore",
   "apps/one/two/test-ui-lib-e2e/.eslintrc.json",
   "apps/one/two/test-ui-lib-e2e/cypress.config.ts",
+  "apps/one/two/test-ui-lib-e2e/project.json",
   "apps/one/two/test-ui-lib-e2e/src/e2e/barrel-button/barrel-button.component.cy.ts",
   "apps/one/two/test-ui-lib-e2e/src/e2e/cmp1/cmp1.component.cy.ts",
   "apps/one/two/test-ui-lib-e2e/src/e2e/cmp2/cmp2.component.cy.ts",
@@ -70,6 +71,7 @@ Array [
   "libs/test-ui-lib/.storybook/tsconfig.json",
   "libs/test-ui-lib/jest.config.ts",
   "libs/test-ui-lib/package.json",
+  "libs/test-ui-lib/project.json",
   "libs/test-ui-lib/README.md",
   "libs/test-ui-lib/secondary-entry-point/ng-package.json",
   "libs/test-ui-lib/secondary-entry-point/README.md",
@@ -160,7 +162,6 @@ Array [
   "nx.json",
   "package.json",
   "tsconfig.base.json",
-  "workspace.json",
 ]
 `;
 
@@ -172,6 +173,7 @@ Array [
   "apps/.gitignore",
   "apps/test-ui-lib-e2e/.eslintrc.json",
   "apps/test-ui-lib-e2e/cypress.config.ts",
+  "apps/test-ui-lib-e2e/project.json",
   "apps/test-ui-lib-e2e/src/e2e/barrel-button/barrel-button.component.cy.ts",
   "apps/test-ui-lib-e2e/src/e2e/cmp1/cmp1.component.cy.ts",
   "apps/test-ui-lib-e2e/src/e2e/cmp2/cmp2.component.cy.ts",
@@ -199,6 +201,7 @@ Array [
   "libs/test-ui-lib/.storybook/tsconfig.json",
   "libs/test-ui-lib/jest.config.ts",
   "libs/test-ui-lib/package.json",
+  "libs/test-ui-lib/project.json",
   "libs/test-ui-lib/README.md",
   "libs/test-ui-lib/secondary-entry-point/ng-package.json",
   "libs/test-ui-lib/secondary-entry-point/README.md",
@@ -289,6 +292,5 @@ Array [
   "nx.json",
   "package.json",
   "tsconfig.base.json",
-  "workspace.json",
 ]
 `;

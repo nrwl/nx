@@ -7,14 +7,14 @@ import { findMatchingProjects } from './find-matching-projects';
 import { stripIndents } from './strip-indents';
 
 export function assertWorkspaceValidity(
-  workspaceJson,
+  projectsConfigurations,
   nxJson: NxJsonConfiguration
 ) {
-  const projectNames = Object.keys(workspaceJson.projects);
+  const projectNames = Object.keys(projectsConfigurations.projects);
   const projectNameSet = new Set(projectNames);
 
   const projects = {
-    ...workspaceJson.projects,
+    ...projectsConfigurations.projects,
   };
 
   const invalidImplicitDependencies = new Map<string, string[]>();

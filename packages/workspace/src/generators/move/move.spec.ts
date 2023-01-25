@@ -46,7 +46,7 @@ describe('move', () => {
   });
 
   it('should update $schema path when move', async () => {
-    await libraryGenerator(tree, { name: 'my-lib', standaloneConfig: true });
+    await libraryGenerator(tree, { name: 'my-lib' });
 
     let projectJson = readJson(tree, 'libs/my-lib/project.json');
     expect(projectJson['$schema']).toEqual(

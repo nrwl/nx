@@ -1741,6 +1741,11 @@
               "id": "upgrade-storybook-v6-react",
               "name": "React: Upgrading to Storybook 6",
               "file": "shared/packages/storybook/storybook-v6-react"
+            },
+            {
+              "id": "custom-builder-configs",
+              "name": "Custom configurations for Webpack and Vite",
+              "file": "shared/packages/storybook/custom-builder-configs"
             }
           ]
         },

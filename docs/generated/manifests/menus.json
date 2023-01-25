@@ -5015,6 +5015,14 @@
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
+              },
+              {
+                "id": "setup-docker",
+                "path": "/packages/node/generators/setup-docker",
+                "name": "setup-docker",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,
@@ -5904,6 +5912,14 @@
                 "name": "React: Upgrading to Storybook 6",
                 "path": "/packages/storybook/documents/upgrade-storybook-v6-react",
                 "id": "upgrade-storybook-v6-react",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Custom configurations for Webpack and Vite",
+                "path": "/packages/storybook/documents/custom-builder-configs",
+                "id": "custom-builder-configs",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false

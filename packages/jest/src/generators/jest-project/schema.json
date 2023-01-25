@@ -11,7 +11,8 @@
       "description": "The name of the project.",
       "$default": {
         "$source": "projectName"
-      }
+      },
+      "x-priority": "important"
     },
     "skipSetupFile": {
       "type": "boolean",
@@ -23,7 +24,8 @@
       "type": "string",
       "enum": ["none", "angular", "web-components"],
       "description": "The setup file to be generated.",
-      "default": "none"
+      "default": "none",
+      "x-priority": "important"
     },
     "skipSerializers": {
       "type": "boolean",
@@ -33,13 +35,15 @@
     "supportTsx": {
       "type": "boolean",
       "description": "Setup `tsx` support.",
-      "default": false
+      "default": false,
+      "x-priority": "important"
     },
     "testEnvironment": {
       "type": "string",
       "enum": ["jsdom", "node"],
       "description": "The test environment for jest.",
-      "default": "jsdom"
+      "default": "jsdom",
+      "x-priority": "important"
     },
     "compiler": {
       "type": "string",
@@ -57,12 +61,14 @@
     "skipFormat": {
       "description": "Skip formatting files",
       "type": "boolean",
-      "default": false
+      "default": false,
+      "x-priority": "internal"
     },
     "skipPackageJson": {
       "type": "boolean",
       "default": false,
-      "description": "Do not add dependencies to `package.json`."
+      "description": "Do not add dependencies to `package.json`.",
+      "x-priority": "internal"
     },
     "js": {
       "type": "boolean",
@@ -73,7 +79,8 @@
       "description": "Add Jest to an application at the root of the workspace",
       "type": "boolean",
       "default": false,
-      "hidden": true
+      "hidden": true,
+      "x-priority": "internal"
     }
   },
   "required": []

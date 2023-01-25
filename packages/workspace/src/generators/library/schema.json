@@ -24,7 +24,8 @@
     },
     "directory": {
       "type": "string",
-      "description": "A directory where the lib is placed."
+      "description": "A directory where the lib is placed.",
+      "x-priority": "important"
     },
     "linter": {
       "description": "The tool to use for running lint checks.",
@@ -45,7 +46,8 @@
     "skipFormat": {
       "description": "Skip formatting files.",
       "type": "boolean",
-      "default": false
+      "default": false,
+      "x-priority": "internal"
     },
     "skipTsConfig": {
       "type": "boolean",
@@ -60,7 +62,8 @@
     },
     "importPath": {
       "type": "string",
-      "description": "The library name used to import it, like `@myorg/my-awesome-lib`."
+      "description": "The library name used to import it, like `@myorg/my-awesome-lib`.",
+      "x-priority": "important"
     },
     "babelJest": {
       "type": "boolean",
@@ -100,7 +103,9 @@
     },
     "standaloneConfig": {
       "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
-      "type": "boolean"
+      "type": "boolean",
+      "default": true,
+      "x-deprecated": "Nx only supports standaloneConfig"
     }
   },
   "required": ["name"]

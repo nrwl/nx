@@ -23,6 +23,12 @@
       "aliases": ["lib"],
       "x-type": "library",
       "description": "Create a node library."
+    },
+    "setup-docker": {
+      "factory": "./src/generators/setup-docker/setup-docker",
+      "schema": "./src/generators/setup-docker/schema.json",
+      "description": "Set up Docker configuration for a project.",
+      "hidden": false
     }
   },
   "schematics": {
@@ -46,6 +52,11 @@
       "aliases": ["lib"],
       "x-type": "library",
       "description": "Create a node library."
+    },
+    "setup-docker": {
+      "factory": "./src/generators/setup-docker/setup-docker#setupDockerGenerator",
+      "schema": "./src/generators/setup-docker/schema.json",
+      "description": "Set up Docker configuration for a project."
     }
   }
 }

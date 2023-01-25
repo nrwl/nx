@@ -1,15 +1,20 @@
 import {
+  createLockFile,
+  createPackageJson,
   ExecutorContext,
+  getOutputsForTargetAndConfiguration,
+  joinPathFragments,
   normalizePath,
   ProjectGraphProjectNode,
   readJsonFile,
+  workspaceRoot,
   writeJsonFile,
 } from '@nrwl/devkit';
-import {
-  DependentBuildableProjectNode,
-  updateBuildableProjectPackageJsonDependencies,
-} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+import { DependentBuildableProjectNode } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { basename, dirname, join, parse, relative } from 'path';
+import { getLockFileName } from 'nx/src/lock-file/lock-file';
+import { writeFileSync } from 'fs-extra';
+import { isNpmProject } from 'nx/src/project-graph/operators';
 import { fileExists } from 'nx/src/utils/fileutils';
 import type { PackageJson } from 'nx/src/utils/package-json';
 
@@ -36,6 +41,7 @@ export interface UpdatePackageJsonOption {
   excludeLibsInPackageJson?: boolean;
   updateBuildableProjectDepsInPackageJson?: boolean;
   buildableProjectDepsInPackageJsonType?: 'dependencies' | 'peerDependencies';
+  generateLockfile?: boolean;
 }
 
 export function updatePackageJson(
@@ -44,45 +50,107 @@ export function updatePackageJson(
   target: ProjectGraphProjectNode,
   dependencies: DependentBuildableProjectNode[]
 ): void {
-  const pathToPackageJson = join(
-    context.root,
-    options.projectRoot,
-    'package.json'
-  );
+  let packageJson: PackageJson;
 
-  const packageJson = fileExists(pathToPackageJson)
-    ? readJsonFile(pathToPackageJson)
-    : { name: context.projectName };
+  if (options.updateBuildableProjectDepsInPackageJson) {
+    packageJson = createPackageJson(context.projectName, context.projectGraph, {
+      root: context.root,
+      // By default we remove devDependencies since this is a production build.
+      isProduction: true,
+    });
 
-  if (options.excludeLibsInPackageJson) {
-    dependencies = dependencies.filter((dep) => dep.node.type !== 'lib');
-  }
+    if (options.excludeLibsInPackageJson) {
+      dependencies = dependencies.filter((dep) => dep.node.type !== 'lib');
+    }
 
-  writeJsonFile(
-    `${options.outputPath}/package.json`,
-    getUpdatedPackageJsonContent(packageJson, options)
-  );
-
-  if (
-    dependencies.length > 0 &&
-    options.updateBuildableProjectDepsInPackageJson
-  ) {
-    updateBuildableProjectPackageJsonDependencies(
-      context.root,
-      context.projectName,
-      context.targetName,
-      context.configurationName,
-      target,
+    addMissingDependencies(
+      packageJson,
+      context,
       dependencies,
       options.buildableProjectDepsInPackageJsonType
     );
+  } else {
+    const pathToPackageJson = join(
+      context.root,
+      options.projectRoot,
+      'package.json'
+    );
+    packageJson = fileExists(pathToPackageJson)
+      ? readJsonFile(pathToPackageJson)
+      : { name: context.projectName, version: '0.0.1' };
   }
+
+  // update package specific settings
+  packageJson = getUpdatedPackageJsonContent(packageJson, options);
+
+  // save files
+  writeJsonFile(`${options.outputPath}/package.json`, packageJson);
+
+  if (options.generateLockfile) {
+    const lockFile = createLockFile(packageJson);
+    writeFileSync(`${options.outputPath}/${getLockFileName()}`, lockFile, {
+      encoding: 'utf-8',
+    });
+  }
+}
+
+function addMissingDependencies(
+  packageJson: PackageJson,
+  { projectName, targetName, configurationName, root }: ExecutorContext,
+  dependencies: DependentBuildableProjectNode[],
+  propType: 'dependencies' | 'peerDependencies' = 'dependencies'
+) {
+  const workspacePackageJson = readJsonFile(
+    joinPathFragments(workspaceRoot, 'package.json')
+  );
+  dependencies.forEach((entry) => {
+    if (isNpmProject(entry.node)) {
+      const { packageName, version } = entry.node.data;
+      if (
+        packageJson.dependencies?.[packageName] ||
+        packageJson.devDependencies?.[packageName] ||
+        packageJson.peerDependencies?.[packageName]
+      ) {
+        return;
+      }
+      if (workspacePackageJson.devDependencies?.[packageName]) {
+        return;
+      }
+
+      packageJson[propType] ??= {};
+      packageJson[propType][packageName] = version;
+    } else {
+      const packageName = entry.name;
+      if (
+        !packageJson.dependencies?.[packageName] &&
+        !packageJson.peerDependencies?.[packageName]
+      ) {
+        const outputs = getOutputsForTargetAndConfiguration(
+          {
+            overrides: {},
+            target: {
+              project: projectName,
+              target: targetName,
+              configuration: configurationName,
+            },
+          },
+          entry.node
+        );
+
+        const depPackageJsonPath = join(root, outputs[0], 'package.json');
+        const version = readJsonFile(depPackageJsonPath).version;
+
+        packageJson[propType] ??= {};
+        packageJson[propType][packageName] = version;
+      }
+    }
+  });
 }
 
 export function getUpdatedPackageJsonContent(
   packageJson: PackageJson,
   options: UpdatePackageJsonOption
-) {
+): PackageJson {
   // Default is CJS unless esm is explicitly passed.
   const hasCjsFormat = !options.format || options.format?.includes('cjs');
   const hasEsmFormat = options.format?.includes('esm');

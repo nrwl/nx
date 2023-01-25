@@ -9,7 +9,6 @@ import {
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { jestProjectGenerator } from '@nrwl/jest';
 import { Linter } from '@nrwl/linter';
-import { convertToNxProjectGenerator } from '@nrwl/workspace/generators';
 import { lt } from 'semver';
 import init from '../../generators/init/init';
 import { E2eTestRunner } from '../../utils/test-runners';
@@ -17,7 +16,7 @@ import { getPkgVersionForAngularMajorVersion } from '../../utils/version-utils';
 import addLintingGenerator from '../add-linting/add-linting';
 import karmaProjectGenerator from '../karma-project/karma-project';
 import setupTailwindGenerator from '../setup-tailwind/setup-tailwind';
-import { getInstalledAngularVersionInfo } from '../utils/angular-version-utils';
+import { getInstalledAngularVersionInfo } from '../utils/version-utils';
 import { addBuildableLibrariesPostCssDependencies } from '../utils/dependencies';
 import { addModule } from './lib/add-module';
 import { addStandaloneComponent } from './lib/add-standalone-component';
@@ -121,14 +120,6 @@ export async function libraryGenerator(tree: Tree, schema: Schema) {
       }
     );
     addBuildableLibrariesPostCssDependencies(tree);
-  }
-
-  if (libraryOptions.standaloneConfig) {
-    await convertToNxProjectGenerator(tree, {
-      project: libraryOptions.name,
-      all: false,
-      skipFormat: true,
-    });
   }
 
   if (!libraryOptions.skipFormat) {

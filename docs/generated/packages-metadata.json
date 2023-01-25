@@ -1531,6 +1531,15 @@
         "originalFilePath": "/packages/node/src/generators/library/schema.json",
         "path": "node/generators/library",
         "type": "generator"
+      },
+      {
+        "description": "Set up Docker configuration for a project.",
+        "file": "generated/packages/node/generators/setup-docker.json",
+        "hidden": false,
+        "name": "setup-docker",
+        "originalFilePath": "/packages/node/src/generators/setup-docker/schema.json",
+        "path": "node/generators/setup-docker",
+        "type": "generator"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -2494,6 +2503,17 @@
         "path": "storybook/documents/upgrade-storybook-v6-react",
         "tags": [],
         "originalFilePath": "shared/packages/storybook/storybook-v6-react"
+      },
+      {
+        "id": "custom-builder-configs",
+        "name": "Custom configurations for Webpack and Vite",
+        "description": "The Nx Plugin for Storybook contains executors and generators for allowing your workspace to use the powerful Storybook integration testing & documenting capabilities.",
+        "file": "generated/packages/storybook/documents/custom-builder-configs",
+        "itemList": [],
+        "isExternal": false,
+        "path": "storybook/documents/custom-builder-configs",
+        "tags": [],
+        "originalFilePath": "shared/packages/storybook/custom-builder-configs"
       }
     ],
     "executors": [

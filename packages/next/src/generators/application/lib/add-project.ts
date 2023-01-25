@@ -10,7 +10,7 @@ export function addProject(host: Tree, options: NormalizedSchema) {
   const targets: Record<string, any> = {};
 
   targets.build = {
-    builder: '@nrwl/next:build',
+    executor: '@nrwl/next:build',
     outputs: ['{options.outputPath}'],
     defaultConfiguration: 'production',
     options: {
@@ -26,7 +26,7 @@ export function addProject(host: Tree, options: NormalizedSchema) {
   };
 
   targets.serve = {
-    builder: '@nrwl/next:server',
+    executor: '@nrwl/next:server',
     defaultConfiguration: 'development',
     options: {
       buildTarget: `${options.projectName}:build`,
@@ -52,7 +52,7 @@ export function addProject(host: Tree, options: NormalizedSchema) {
   }
 
   targets.export = {
-    builder: '@nrwl/next:export',
+    executor: '@nrwl/next:export',
     options: {
       buildTarget: `${options.projectName}:build:production`,
     },

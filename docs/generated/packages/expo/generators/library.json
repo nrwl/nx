@@ -9,7 +9,7 @@
     "type": "object",
     "examples": [
       {
-        "command": "g lib mylib --directory=myapp",
+        "command": "g @nrwl/expo:lib mylib --directory=myapp",
         "description": "Generate libs/myapp/mylib"
       }
     ],
@@ -23,7 +23,8 @@
       },
       "directory": {
         "type": "string",
-        "description": "A directory where the lib is placed."
+        "description": "A directory where the lib is placed.",
+        "x-priority": "important"
       },
       "linter": {
         "description": "The tool to use for running lint checks.",
@@ -45,12 +46,14 @@
       "skipFormat": {
         "description": "Skip formatting files.",
         "type": "boolean",
-        "default": false
+        "default": false,
+        "x-priority": "internal"
       },
       "skipTsConfig": {
         "type": "boolean",
         "default": false,
-        "description": "Do not update tsconfig.json for development experience."
+        "description": "Do not update tsconfig.json for development experience.",
+        "x-priority": "internal"
       },
       "pascalCaseFiles": {
         "type": "boolean",
@@ -74,11 +77,6 @@
       "js": {
         "type": "boolean",
         "description": "Generate JavaScript files rather than TypeScript files.",
-        "default": false
-      },
-      "globalCss": {
-        "type": "boolean",
-        "description": "When true, the stylesheet is generated using global CSS instead of CSS modules (e.g. file is '*.css' rather than '*.module.css').",
         "default": false
       },
       "strict": {

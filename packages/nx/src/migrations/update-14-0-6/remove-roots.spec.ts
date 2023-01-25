@@ -1,8 +1,5 @@
 import { Tree } from '../../generators/tree';
-import {
-  createTreeWithEmptyV1Workspace,
-  createTreeWithEmptyWorkspace,
-} from '../../generators/testing-utils/create-tree-with-empty-workspace';
+import { createTreeWithEmptyWorkspace } from '../../generators/testing-utils/create-tree-with-empty-workspace';
 import { addProjectConfiguration } from '../../generators/utils/project-configuration';
 import { readJson, updateJson, writeJson } from '../../generators/utils/json';
 import removeRoots from './remove-roots';
@@ -28,24 +25,6 @@ describe('remove-roots >', () => {
       await removeRoots(tree);
 
       expect(readJson(tree, 'proj1/project.json').root).toBeUndefined();
-    });
-  });
-
-  describe('projects with workspace.json configs', () => {
-    beforeEach(() => {
-      tree = createTreeWithEmptyV1Workspace();
-    });
-
-    it('should remove the root property', async () => {
-      addProjectConfiguration(tree, 'proj1', {
-        root: 'proj1',
-      });
-
-      await removeRoots(tree);
-
-      expect(readJson(tree, 'workspace.json').projects.proj1.root).toEqual(
-        'proj1'
-      );
     });
   });
 

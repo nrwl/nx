@@ -1,5 +1,4 @@
 import {
-  getWorkspacePath,
   readJson,
   readNxJson,
   readProjectConfiguration,
@@ -7,13 +6,13 @@ import {
   updateNxJson,
   writeJson,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { npmPackageGenerator } from './npm-package';
 
 describe('@nrwl/workspace:npm-package', () => {
   let tree: Tree;
   beforeEach(() => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     const nxJson = readNxJson(tree);
     nxJson.workspaceLayout = {
@@ -31,6 +30,8 @@ describe('@nrwl/workspace:npm-package', () => {
     const project = readProjectConfiguration(tree, 'my-package');
     expect(project).toMatchInlineSnapshot(`
       Object {
+        "$schema": "../../node_modules/nx/schemas/project-schema.json",
+        "name": "my-package",
         "root": "packages/my-package",
       }
     `);
@@ -76,38 +77,12 @@ describe('@nrwl/workspace:npm-package', () => {
         name: 'my-package',
       });
 
-      const { projects } = readJson(tree, 'workspace.json');
-      expect(projects['my-package']).toMatchInlineSnapshot(`
-              Object {
-                "root": "packages/my-package",
-              }
-          `);
-
       expect(readJson(tree, 'packages/my-package/package.json')).toEqual(
         existingPackageJson
       );
       expect(tree.read('packages/my-package/index.ts').toString()).toEqual(
         existingIndex
       );
-    });
-  });
-
-  describe('for workspaces without workspace.json', () => {
-    it('should not create workspace.json or project.json', async () => {
-      tree.delete(getWorkspacePath(tree));
-      await npmPackageGenerator(tree, {
-        name: 'my-package',
-      });
-
-      expect(tree.exists('workspace.json')).toBeFalsy();
-      expect(tree.exists('angular.json')).toBeFalsy();
-      expect(tree.exists('packages/my-package/project.json')).toBeFalsy();
-      expect(tree.exists('packages/my-package/package.json')).toBeTruthy();
-      expect(readProjectConfiguration(tree, 'my-package')).toEqual({
-        projectType: 'library',
-        root: 'packages/my-package',
-        sourceRoot: 'packages/my-package',
-      });
     });
   });
 });

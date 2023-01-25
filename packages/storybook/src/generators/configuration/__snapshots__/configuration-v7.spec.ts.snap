@@ -83,6 +83,12 @@ Object {
       },
     },
     "test": Object {
+      "configurations": Object {
+        "ci": Object {
+          "ci": true,
+          "codeCoverage": true,
+        },
+      },
       "executor": "@nrwl/jest:jest",
       "options": Object {
         "jestConfig": "libs/test-ui-lib/jest.config.ts",
@@ -687,6 +693,7 @@ exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook confi
 Map {
   "main-vite" => Object {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "name": "main-vite",
     "projectType": "application",
     "root": "apps/main-vite",
     "sourceRoot": "apps/main-vite/src",
@@ -782,6 +789,7 @@ Map {
     "implicitDependencies": Array [
       "main-vite",
     ],
+    "name": "main-vite-e2e",
     "projectType": "application",
     "root": "apps/main-vite-e2e",
     "sourceRoot": "apps/main-vite-e2e/src",
@@ -815,6 +823,7 @@ Map {
   },
   "main-vite-ts" => Object {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "name": "main-vite-ts",
     "projectType": "application",
     "root": "apps/main-vite-ts",
     "sourceRoot": "apps/main-vite-ts/src",
@@ -910,6 +919,7 @@ Map {
     "implicitDependencies": Array [
       "main-vite-ts",
     ],
+    "name": "main-vite-ts-e2e",
     "projectType": "application",
     "root": "apps/main-vite-ts-e2e",
     "sourceRoot": "apps/main-vite-ts-e2e/src",
@@ -943,6 +953,7 @@ Map {
   },
   "main-webpack" => Object {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "name": "main-webpack",
     "projectType": "application",
     "root": "apps/main-webpack",
     "sourceRoot": "apps/main-webpack/src",
@@ -1067,6 +1078,7 @@ Map {
     "implicitDependencies": Array [
       "main-webpack",
     ],
+    "name": "main-webpack-e2e",
     "projectType": "application",
     "root": "apps/main-webpack-e2e",
     "sourceRoot": "apps/main-webpack-e2e/src",
@@ -1098,78 +1110,12 @@ Map {
       },
     },
   },
-  "my-plugin" => Object {
-    "$schema": "../../node_modules/nx/schemas/project-schema.json",
-    "projectType": "library",
-    "root": "libs/my-plugin",
-    "sourceRoot": "libs/my-plugin/src",
-    "tags": Array [],
-    "targets": Object {
-      "build": Object {
-        "executor": "@nrwl/js:tsc",
-        "options": Object {
-          "assets": Array [
-            "libs/my-plugin/*.md",
-            Object {
-              "glob": "**/!(*.ts)",
-              "input": "./libs/my-plugin/src",
-              "output": "./src",
-            },
-            Object {
-              "glob": "**/*.d.ts",
-              "input": "./libs/my-plugin/src",
-              "output": "./src",
-            },
-            Object {
-              "glob": "generators.json",
-              "input": "./libs/my-plugin",
-              "output": ".",
-            },
-            Object {
-              "glob": "executors.json",
-              "input": "./libs/my-plugin",
-              "output": ".",
-            },
-          ],
-          "main": "libs/my-plugin/src/index.ts",
-          "outputPath": "dist/libs/my-plugin",
-          "tsConfig": "libs/my-plugin/tsconfig.lib.json",
-        },
-        "outputs": Array [
-          "{options.outputPath}",
-        ],
-      },
-      "lint": Object {
-        "executor": "@nrwl/linter:eslint",
-        "options": Object {
-          "lintFilePatterns": Array [
-            "libs/my-plugin/**/*.ts",
-            "libs/my-plugin/generators.json",
-            "libs/my-plugin/executors.json",
-            "libs/my-plugin/package.json",
-          ],
-        },
-        "outputs": Array [
-          "{options.outputFile}",
-        ],
-      },
-      "test": Object {
-        "executor": "@nrwl/jest:jest",
-        "options": Object {
-          "jestConfig": "libs/my-plugin/jest.config.ts",
-          "passWithNoTests": true,
-        },
-        "outputs": Array [
-          "{workspaceRoot}/coverage/{projectRoot}",
-        ],
-      },
-    },
-  },
   "my-plugin-e2e" => Object {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "implicitDependencies": Array [
       "my-plugin",
     ],
+    "name": "my-plugin-e2e",
     "projectType": "application",
     "root": "apps/my-plugin-e2e",
     "sourceRoot": "apps/my-plugin-e2e/src",
@@ -1184,20 +1130,9 @@ Map {
       },
     },
   },
-  "mylib" => Object {
-    "$schema": "../../node_modules/nx/schemas/project-schema.json",
-    "projectType": "library",
-    "root": "libs/mylib",
-    "sourceRoot": "libs/mylib/src",
-    "tags": Array [],
-    "targets": Object {
-      "build": Object {
-        "executor": "@imported-libs/my-plugin:build",
-      },
-    },
-  },
   "nextapp" => Object {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "name": "nextapp",
     "projectType": "application",
     "root": "apps/nextapp",
     "sourceRoot": "apps/nextapp",
@@ -1299,6 +1234,7 @@ Map {
     "implicitDependencies": Array [
       "nextapp",
     ],
+    "name": "nextapp-e2e",
     "projectType": "application",
     "root": "apps/nextapp-e2e",
     "sourceRoot": "apps/nextapp-e2e/src",
@@ -1332,6 +1268,7 @@ Map {
   },
   "ngapp" => Object {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "name": "ngapp",
     "prefix": "imported-libs",
     "projectType": "application",
     "root": "apps/ngapp",
@@ -1465,6 +1402,7 @@ Map {
     "implicitDependencies": Array [
       "ngapp",
     ],
+    "name": "ngapp-e2e",
     "projectType": "application",
     "root": "apps/ngapp-e2e",
     "sourceRoot": "apps/ngapp-e2e/src",
@@ -1496,74 +1434,12 @@ Map {
       },
     },
   },
-  "nglib" => Object {
-    "$schema": "../../node_modules/nx/schemas/project-schema.json",
-    "prefix": "imported-libs",
-    "projectType": "library",
-    "root": "libs/nglib",
-    "sourceRoot": "libs/nglib/src",
-    "tags": Array [],
-    "targets": Object {
-      "build-storybook": Object {
-        "configurations": Object {
-          "ci": Object {
-            "quiet": true,
-          },
-        },
-        "executor": "@storybook/angular:build-storybook",
-        "options": Object {
-          "browserTarget": "nglib:build-storybook",
-          "compodoc": false,
-          "configDir": "libs/nglib/.storybook",
-          "outputDir": "dist/storybook/nglib",
-        },
-        "outputs": Array [
-          "{options.outputDir}",
-        ],
-      },
-      "lint": Object {
-        "executor": "@nrwl/linter:eslint",
-        "options": Object {
-          "lintFilePatterns": Array [
-            "libs/nglib/**/*.ts",
-            "libs/nglib/**/*.html",
-          ],
-        },
-        "outputs": Array [
-          "{options.outputFile}",
-        ],
-      },
-      "storybook": Object {
-        "configurations": Object {
-          "ci": Object {
-            "quiet": true,
-          },
-        },
-        "executor": "@storybook/angular:start-storybook",
-        "options": Object {
-          "browserTarget": "nglib:build-storybook",
-          "compodoc": false,
-          "configDir": "libs/nglib/.storybook",
-          "port": 4400,
-        },
-      },
-      "test": Object {
-        "executor": "@nrwl/jest:jest",
-        "options": Object {
-          "jestConfig": "libs/nglib/jest.config.ts",
-          "passWithNoTests": true,
-        },
-        "outputs": Array [
-          "{workspaceRoot}/coverage/{projectRoot}",
-        ],
-      },
-    },
-  },
   "nglib-e2e" => Object {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "implicitDependencies": Array [
       "nglib",
     ],
+    "name": "nglib-e2e",
     "projectType": "application",
     "root": "apps/nglib-e2e",
     "sourceRoot": "apps/nglib-e2e/src",
@@ -1595,144 +1471,12 @@ Map {
       },
     },
   },
-  "react-rollup" => Object {
-    "projectType": "library",
-    "root": "libs/react-rollup",
-    "sourceRoot": "libs/react-rollup/src",
-    "tags": Array [],
-    "targets": Object {
-      "build": Object {
-        "executor": "@nrwl/rollup:rollup",
-        "options": Object {
-          "assets": Array [
-            Object {
-              "glob": "libs/react-rollup/README.md",
-              "input": ".",
-              "output": ".",
-            },
-          ],
-          "compiler": "babel",
-          "entryFile": "libs/react-rollup/src/index.ts",
-          "external": Array [
-            "react/jsx-runtime",
-          ],
-          "outputPath": "dist/libs/react-rollup",
-          "project": "libs/react-rollup/package.json",
-          "rollupConfig": "@nrwl/react/plugins/bundle-rollup",
-          "tsConfig": "libs/react-rollup/tsconfig.lib.json",
-        },
-        "outputs": Array [
-          "{options.outputPath}",
-        ],
-      },
-      "build-storybook": Object {
-        "configurations": Object {
-          "ci": Object {
-            "quiet": true,
-          },
-        },
-        "executor": "@nrwl/storybook:build",
-        "options": Object {
-          "configDir": "libs/react-rollup/.storybook",
-          "outputDir": "dist/storybook/react-rollup",
-        },
-        "outputs": Array [
-          "{options.outputDir}",
-        ],
-      },
-      "lint": Object {
-        "executor": "@nrwl/linter:eslint",
-        "options": Object {
-          "lintFilePatterns": Array [
-            "libs/react-rollup/**/*.{ts,tsx,js,jsx}",
-          ],
-        },
-        "outputs": Array [
-          "{options.outputFile}",
-        ],
-      },
-      "storybook": Object {
-        "configurations": Object {
-          "ci": Object {
-            "quiet": true,
-          },
-        },
-        "executor": "@nrwl/storybook:storybook",
-        "options": Object {
-          "configDir": "libs/react-rollup/.storybook",
-          "port": 4400,
-        },
-      },
-      "test": Object {
-        "executor": "@nrwl/jest:jest",
-        "options": Object {
-          "jestConfig": "libs/react-rollup/jest.config.ts",
-          "passWithNoTests": true,
-        },
-        "outputs": Array [
-          "{workspaceRoot}/coverage/{projectRoot}",
-        ],
-      },
-    },
-  },
-  "react-rollup-2" => Object {
-    "projectType": "library",
-    "root": "libs/react-rollup-2",
-    "sourceRoot": "libs/react-rollup-2/src",
-    "tags": Array [],
-    "targets": Object {
-      "build": Object {
-        "executor": "@nrwl/rollup:rollup",
-        "options": Object {
-          "assets": Array [
-            Object {
-              "glob": "libs/react-rollup-2/README.md",
-              "input": ".",
-              "output": ".",
-            },
-          ],
-          "compiler": "babel",
-          "entryFile": "libs/react-rollup-2/src/index.ts",
-          "external": Array [
-            "react/jsx-runtime",
-          ],
-          "outputPath": "dist/libs/react-rollup-2",
-          "project": "libs/react-rollup-2/package.json",
-          "rollupConfig": "@nrwl/react/plugins/bundle-rollup",
-          "tsConfig": "libs/react-rollup-2/tsconfig.lib.json",
-        },
-        "outputs": Array [
-          "{options.outputPath}",
-        ],
-      },
-      "lint": Object {
-        "executor": "@nrwl/linter:eslint",
-        "options": Object {
-          "lintFilePatterns": Array [
-            "libs/react-rollup-2/**/*.{ts,tsx,js,jsx}",
-          ],
-        },
-        "outputs": Array [
-          "{options.outputFile}",
-        ],
-      },
-      "test": Object {
-        "executor": "@nrwl/jest:jest",
-        "options": Object {
-          "jestConfig": "libs/react-rollup-2/jest.config.ts",
-          "passWithNoTests": true,
-        },
-        "outputs": Array [
-          "{workspaceRoot}/coverage/{projectRoot}",
-        ],
-      },
-    },
-  },
   "react-rollup-e2e" => Object {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "implicitDependencies": Array [
       "react-rollup",
     ],
+    "name": "react-rollup-e2e",
     "projectType": "application",
     "root": "apps/react-rollup-e2e",
     "sourceRoot": "apps/react-rollup-e2e/src",
@@ -1766,6 +1510,7 @@ Map {
   },
   "react-swc" => Object {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "name": "react-swc",
     "projectType": "application",
     "root": "apps/react-swc",
     "sourceRoot": "apps/react-swc/src",
@@ -1889,6 +1634,7 @@ Map {
     "implicitDependencies": Array [
       "react-swc",
     ],
+    "name": "react-swc-e2e",
     "projectType": "application",
     "root": "apps/react-swc-e2e",
     "sourceRoot": "apps/react-swc-e2e/src",
@@ -1920,134 +1666,12 @@ Map {
       },
     },
   },
-  "react-vite" => Object {
-    "$schema": "../../node_modules/nx/schemas/project-schema.json",
-    "projectType": "library",
-    "root": "libs/react-vite",
-    "sourceRoot": "libs/react-vite/src",
-    "tags": Array [],
-    "targets": Object {
-      "build": Object {
-        "configurations": Object {
-          "development": Object {
-            "mode": "development",
-          },
-          "production": Object {
-            "mode": "production",
-          },
-        },
-        "defaultConfiguration": "production",
-        "executor": "@nrwl/vite:build",
-        "options": Object {
-          "outputPath": "dist/libs/react-vite",
-        },
-        "outputs": Array [
-          "{options.outputPath}",
-        ],
-      },
-      "build-storybook": Object {
-        "configurations": Object {
-          "ci": Object {
-            "quiet": true,
-          },
-        },
-        "executor": "@nrwl/storybook:build",
-        "options": Object {
-          "configDir": "libs/react-vite/.storybook",
-          "outputDir": "dist/storybook/react-vite",
-        },
-        "outputs": Array [
-          "{options.outputDir}",
-        ],
-      },
-      "lint": Object {
-        "executor": "@nrwl/linter:eslint",
-        "options": Object {
-          "lintFilePatterns": Array [
-            "libs/react-vite/**/*.{ts,tsx,js,jsx}",
-          ],
-        },
-        "outputs": Array [
-          "{options.outputFile}",
-        ],
-      },
-      "storybook": Object {
-        "configurations": Object {
-          "ci": Object {
-            "quiet": true,
-          },
-        },
-        "executor": "@nrwl/storybook:storybook",
-        "options": Object {
-          "configDir": "libs/react-vite/.storybook",
-          "port": 4400,
-        },
-      },
-      "test": Object {
-        "executor": "@nrwl/vite:test",
-        "options": Object {
-          "passWithNoTests": true,
-          "reportsDirectory": "../../coverage/libs/react-vite",
-        },
-        "outputs": Array [
-          "coverage/libs/react-vite",
-        ],
-      },
-    },
-  },
-  "react-vite-2" => Object {
-    "$schema": "../../node_modules/nx/schemas/project-schema.json",
-    "projectType": "library",
-    "root": "libs/react-vite-2",
-    "sourceRoot": "libs/react-vite-2/src",
-    "tags": Array [],
-    "targets": Object {
-      "build": Object {
-        "configurations": Object {
-          "development": Object {
-            "mode": "development",
-          },
-          "production": Object {
-            "mode": "production",
-          },
-        },
-        "defaultConfiguration": "production",
-        "executor": "@nrwl/vite:build",
-        "options": Object {
-          "outputPath": "dist/libs/react-vite-2",
-        },
-        "outputs": Array [
-          "{options.outputPath}",
-        ],
-      },
-      "lint": Object {
-        "executor": "@nrwl/linter:eslint",
-        "options": Object {
-          "lintFilePatterns": Array [
-            "libs/react-vite-2/**/*.{ts,tsx,js,jsx}",
-          ],
-        },
-        "outputs": Array [
-          "{options.outputFile}",
-        ],
-      },
-      "test": Object {
-        "executor": "@nrwl/vite:test",
-        "options": Object {
-          "passWithNoTests": true,
-          "reportsDirectory": "../../coverage/libs/react-vite-2",
-        },
-        "outputs": Array [
-          "coverage/libs/react-vite-2",
-        ],
-      },
-    },
-  },
   "react-vite-e2e" => Object {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "implicitDependencies": Array [
       "react-vite",
     ],
+    "name": "react-vite-e2e",
     "projectType": "application",
     "root": "apps/react-vite-e2e",
     "sourceRoot": "apps/react-vite-e2e/src",
@@ -2081,6 +1705,7 @@ Map {
   },
   "reapp" => Object {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "name": "reapp",
     "projectType": "application",
     "root": "apps/reapp",
     "sourceRoot": "apps/reapp/src",
@@ -2178,6 +1803,7 @@ Map {
     "implicitDependencies": Array [
       "reapp",
     ],
+    "name": "reapp-e2e",
     "projectType": "application",
     "root": "apps/reapp-e2e",
     "sourceRoot": "apps/reapp-e2e/src",
@@ -2211,6 +1837,7 @@ Map {
   },
   "reappw" => Object {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "name": "reappw",
     "projectType": "application",
     "root": "apps/reappw",
     "sourceRoot": "apps/reappw/src",
@@ -2336,6 +1963,7 @@ Map {
     "implicitDependencies": Array [
       "reappw",
     ],
+    "name": "reappw-e2e",
     "projectType": "application",
     "root": "apps/reappw-e2e",
     "sourceRoot": "apps/reappw-e2e/src",
@@ -2367,131 +1995,9 @@ Map {
       },
     },
   },
-  "utils-one" => Object {
-    "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-    "projectType": "library",
-    "root": "libs/utils/one",
-    "sourceRoot": "libs/utils/one/src",
-    "tags": Array [],
-    "targets": Object {
-      "build": Object {
-        "executor": "@nrwl/webpack:webpack",
-        "options": Object {
-          "assets": Array [],
-          "main": "libs/utils/one/src/index.ts",
-          "outputPath": "dist/libs/utils/one",
-          "tsConfig": "libs/utils/one/tsconfig.lib.json",
-        },
-        "outputs": Array [
-          "{options.outputPath}",
-        ],
-      },
-      "lint": Object {
-        "executor": "@nrwl/linter:eslint",
-        "options": Object {
-          "lintFilePatterns": Array [
-            "libs/utils/one/**/*.ts",
-          ],
-        },
-        "outputs": Array [
-          "{options.outputFile}",
-        ],
-      },
-      "test": Object {
-        "executor": "@nrwl/jest:jest",
-        "options": Object {
-          "jestConfig": "libs/utils/one/jest.config.ts",
-          "passWithNoTests": true,
-        },
-        "outputs": Array [
-          "{workspaceRoot}/coverage/{projectRoot}",
-        ],
-      },
-    },
-  },
-  "utils-three-vite" => Object {
-    "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-    "projectType": "library",
-    "root": "libs/utils/three-vite",
-    "sourceRoot": "libs/utils/three-vite/src",
-    "tags": Array [],
-    "targets": Object {
-      "build": Object {
-        "executor": "@nrwl/vite:build",
-        "options": Object {
-          "outputPath": "dist/libs/utils/three-vite",
-        },
-        "outputs": Array [
-          "{options.outputPath}",
-        ],
-      },
-      "lint": Object {
-        "executor": "@nrwl/linter:eslint",
-        "options": Object {
-          "lintFilePatterns": Array [
-            "libs/utils/three-vite/**/*.ts",
-          ],
-        },
-        "outputs": Array [
-          "{options.outputFile}",
-        ],
-      },
-      "test": Object {
-        "executor": "@nrwl/jest:jest",
-        "options": Object {
-          "jestConfig": "libs/utils/three-vite/jest.config.ts",
-          "passWithNoTests": true,
-        },
-        "outputs": Array [
-          "{workspaceRoot}/coverage/{projectRoot}",
-        ],
-      },
-    },
-  },
-  "utils-two" => Object {
-    "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-    "projectType": "library",
-    "root": "libs/utils/two",
-    "sourceRoot": "libs/utils/two/src",
-    "tags": Array [],
-    "targets": Object {
-      "build": Object {
-        "executor": "@nrwl/webpack:webpack",
-        "options": Object {
-          "assets": Array [],
-          "main": "libs/utils/two/src/index.ts",
-          "outputPath": "dist/libs/utils/two",
-          "tsConfig": "libs/utils/two/tsconfig.lib.json",
-        },
-        "outputs": Array [
-          "{options.outputPath}",
-        ],
-      },
-      "lint": Object {
-        "executor": "@nrwl/linter:eslint",
-        "options": Object {
-          "lintFilePatterns": Array [
-            "libs/utils/two/**/*.ts",
-          ],
-        },
-        "outputs": Array [
-          "{options.outputFile}",
-        ],
-      },
-      "test": Object {
-        "executor": "@nrwl/jest:jest",
-        "options": Object {
-          "jestConfig": "libs/utils/two/jest.config.ts",
-          "passWithNoTests": true,
-        },
-        "outputs": Array [
-          "{workspaceRoot}/coverage/{projectRoot}",
-        ],
-      },
-    },
-  },
   "wv1" => Object {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "name": "wv1",
     "projectType": "application",
     "root": "apps/wv1",
     "sourceRoot": "apps/wv1/src",
@@ -2587,6 +2093,7 @@ Map {
     "implicitDependencies": Array [
       "wv1",
     ],
+    "name": "wv1-e2e",
     "projectType": "application",
     "root": "apps/wv1-e2e",
     "sourceRoot": "apps/wv1-e2e/src",
@@ -2620,6 +2127,7 @@ Map {
   },
   "ww1" => Object {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "name": "ww1",
     "projectType": "application",
     "root": "apps/ww1",
     "sourceRoot": "apps/ww1/src",
@@ -2731,6 +2239,7 @@ Map {
     "implicitDependencies": Array [
       "ww1",
     ],
+    "name": "ww1-e2e",
     "projectType": "application",
     "root": "apps/ww1-e2e",
     "sourceRoot": "apps/ww1-e2e/src",
@@ -2758,6 +2267,539 @@ Map {
         },
         "outputs": Array [
           "{options.outputFile}",
+        ],
+      },
+    },
+  },
+  "my-plugin" => Object {
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "name": "my-plugin",
+    "projectType": "library",
+    "root": "libs/my-plugin",
+    "sourceRoot": "libs/my-plugin/src",
+    "tags": Array [],
+    "targets": Object {
+      "build": Object {
+        "executor": "@nrwl/js:tsc",
+        "options": Object {
+          "assets": Array [
+            "libs/my-plugin/*.md",
+            Object {
+              "glob": "**/!(*.ts)",
+              "input": "./libs/my-plugin/src",
+              "output": "./src",
+            },
+            Object {
+              "glob": "**/*.d.ts",
+              "input": "./libs/my-plugin/src",
+              "output": "./src",
+            },
+            Object {
+              "glob": "generators.json",
+              "input": "./libs/my-plugin",
+              "output": ".",
+            },
+            Object {
+              "glob": "executors.json",
+              "input": "./libs/my-plugin",
+              "output": ".",
+            },
+          ],
+          "main": "libs/my-plugin/src/index.ts",
+          "outputPath": "dist/libs/my-plugin",
+          "tsConfig": "libs/my-plugin/tsconfig.lib.json",
+        },
+        "outputs": Array [
+          "{options.outputPath}",
+        ],
+      },
+      "lint": Object {
+        "executor": "@nrwl/linter:eslint",
+        "options": Object {
+          "lintFilePatterns": Array [
+            "libs/my-plugin/**/*.ts",
+            "libs/my-plugin/generators.json",
+            "libs/my-plugin/executors.json",
+            "libs/my-plugin/package.json",
+          ],
+        },
+        "outputs": Array [
+          "{options.outputFile}",
+        ],
+      },
+      "test": Object {
+        "executor": "@nrwl/jest:jest",
+        "options": Object {
+          "jestConfig": "libs/my-plugin/jest.config.ts",
+          "passWithNoTests": true,
+        },
+        "outputs": Array [
+          "{workspaceRoot}/coverage/{projectRoot}",
+        ],
+      },
+    },
+  },
+  "mylib" => Object {
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "name": "mylib",
+    "projectType": "library",
+    "root": "libs/mylib",
+    "sourceRoot": "libs/mylib/src",
+    "tags": Array [],
+    "targets": Object {
+      "build": Object {
+        "executor": "@imported-libs/my-plugin:build",
+      },
+    },
+  },
+  "nglib" => Object {
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "name": "nglib",
+    "prefix": "imported-libs",
+    "projectType": "library",
+    "root": "libs/nglib",
+    "sourceRoot": "libs/nglib/src",
+    "tags": Array [],
+    "targets": Object {
+      "build-storybook": Object {
+        "configurations": Object {
+          "ci": Object {
+            "quiet": true,
+          },
+        },
+        "executor": "@storybook/angular:build-storybook",
+        "options": Object {
+          "browserTarget": "nglib:build-storybook",
+          "compodoc": false,
+          "configDir": "libs/nglib/.storybook",
+          "outputDir": "dist/storybook/nglib",
+        },
+        "outputs": Array [
+          "{options.outputDir}",
+        ],
+      },
+      "lint": Object {
+        "executor": "@nrwl/linter:eslint",
+        "options": Object {
+          "lintFilePatterns": Array [
+            "libs/nglib/**/*.ts",
+            "libs/nglib/**/*.html",
+          ],
+        },
+        "outputs": Array [
+          "{options.outputFile}",
+        ],
+      },
+      "storybook": Object {
+        "configurations": Object {
+          "ci": Object {
+            "quiet": true,
+          },
+        },
+        "executor": "@storybook/angular:start-storybook",
+        "options": Object {
+          "browserTarget": "nglib:build-storybook",
+          "compodoc": false,
+          "configDir": "libs/nglib/.storybook",
+          "port": 4400,
+        },
+      },
+      "test": Object {
+        "executor": "@nrwl/jest:jest",
+        "options": Object {
+          "jestConfig": "libs/nglib/jest.config.ts",
+          "passWithNoTests": true,
+        },
+        "outputs": Array [
+          "{workspaceRoot}/coverage/{projectRoot}",
+        ],
+      },
+    },
+  },
+  "react-rollup" => Object {
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "name": "react-rollup",
+    "projectType": "library",
+    "root": "libs/react-rollup",
+    "sourceRoot": "libs/react-rollup/src",
+    "tags": Array [],
+    "targets": Object {
+      "build": Object {
+        "executor": "@nrwl/rollup:rollup",
+        "options": Object {
+          "assets": Array [
+            Object {
+              "glob": "libs/react-rollup/README.md",
+              "input": ".",
+              "output": ".",
+            },
+          ],
+          "compiler": "babel",
+          "entryFile": "libs/react-rollup/src/index.ts",
+          "external": Array [
+            "react/jsx-runtime",
+          ],
+          "outputPath": "dist/libs/react-rollup",
+          "project": "libs/react-rollup/package.json",
+          "rollupConfig": "@nrwl/react/plugins/bundle-rollup",
+          "tsConfig": "libs/react-rollup/tsconfig.lib.json",
+        },
+        "outputs": Array [
+          "{options.outputPath}",
+        ],
+      },
+      "build-storybook": Object {
+        "configurations": Object {
+          "ci": Object {
+            "quiet": true,
+          },
+        },
+        "executor": "@nrwl/storybook:build",
+        "options": Object {
+          "configDir": "libs/react-rollup/.storybook",
+          "outputDir": "dist/storybook/react-rollup",
+        },
+        "outputs": Array [
+          "{options.outputDir}",
+        ],
+      },
+      "lint": Object {
+        "executor": "@nrwl/linter:eslint",
+        "options": Object {
+          "lintFilePatterns": Array [
+            "libs/react-rollup/**/*.{ts,tsx,js,jsx}",
+          ],
+        },
+        "outputs": Array [
+          "{options.outputFile}",
+        ],
+      },
+      "storybook": Object {
+        "configurations": Object {
+          "ci": Object {
+            "quiet": true,
+          },
+        },
+        "executor": "@nrwl/storybook:storybook",
+        "options": Object {
+          "configDir": "libs/react-rollup/.storybook",
+          "port": 4400,
+        },
+      },
+      "test": Object {
+        "executor": "@nrwl/jest:jest",
+        "options": Object {
+          "jestConfig": "libs/react-rollup/jest.config.ts",
+          "passWithNoTests": true,
+        },
+        "outputs": Array [
+          "{workspaceRoot}/coverage/{projectRoot}",
+        ],
+      },
+    },
+  },
+  "react-rollup-2" => Object {
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "name": "react-rollup-2",
+    "projectType": "library",
+    "root": "libs/react-rollup-2",
+    "sourceRoot": "libs/react-rollup-2/src",
+    "tags": Array [],
+    "targets": Object {
+      "build": Object {
+        "executor": "@nrwl/rollup:rollup",
+        "options": Object {
+          "assets": Array [
+            Object {
+              "glob": "libs/react-rollup-2/README.md",
+              "input": ".",
+              "output": ".",
+            },
+          ],
+          "compiler": "babel",
+          "entryFile": "libs/react-rollup-2/src/index.ts",
+          "external": Array [
+            "react/jsx-runtime",
+          ],
+          "outputPath": "dist/libs/react-rollup-2",
+          "project": "libs/react-rollup-2/package.json",
+          "rollupConfig": "@nrwl/react/plugins/bundle-rollup",
+          "tsConfig": "libs/react-rollup-2/tsconfig.lib.json",
+        },
+        "outputs": Array [
+          "{options.outputPath}",
+        ],
+      },
+      "lint": Object {
+        "executor": "@nrwl/linter:eslint",
+        "options": Object {
+          "lintFilePatterns": Array [
+            "libs/react-rollup-2/**/*.{ts,tsx,js,jsx}",
+          ],
+        },
+        "outputs": Array [
+          "{options.outputFile}",
+        ],
+      },
+      "test": Object {
+        "executor": "@nrwl/jest:jest",
+        "options": Object {
+          "jestConfig": "libs/react-rollup-2/jest.config.ts",
+          "passWithNoTests": true,
+        },
+        "outputs": Array [
+          "{workspaceRoot}/coverage/{projectRoot}",
+        ],
+      },
+    },
+  },
+  "react-vite" => Object {
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "name": "react-vite",
+    "projectType": "library",
+    "root": "libs/react-vite",
+    "sourceRoot": "libs/react-vite/src",
+    "tags": Array [],
+    "targets": Object {
+      "build": Object {
+        "configurations": Object {
+          "development": Object {
+            "mode": "development",
+          },
+          "production": Object {
+            "mode": "production",
+          },
+        },
+        "defaultConfiguration": "production",
+        "executor": "@nrwl/vite:build",
+        "options": Object {
+          "outputPath": "dist/libs/react-vite",
+        },
+        "outputs": Array [
+          "{options.outputPath}",
+        ],
+      },
+      "build-storybook": Object {
+        "configurations": Object {
+          "ci": Object {
+            "quiet": true,
+          },
+        },
+        "executor": "@nrwl/storybook:build",
+        "options": Object {
+          "configDir": "libs/react-vite/.storybook",
+          "outputDir": "dist/storybook/react-vite",
+        },
+        "outputs": Array [
+          "{options.outputDir}",
+        ],
+      },
+      "lint": Object {
+        "executor": "@nrwl/linter:eslint",
+        "options": Object {
+          "lintFilePatterns": Array [
+            "libs/react-vite/**/*.{ts,tsx,js,jsx}",
+          ],
+        },
+        "outputs": Array [
+          "{options.outputFile}",
+        ],
+      },
+      "storybook": Object {
+        "configurations": Object {
+          "ci": Object {
+            "quiet": true,
+          },
+        },
+        "executor": "@nrwl/storybook:storybook",
+        "options": Object {
+          "configDir": "libs/react-vite/.storybook",
+          "port": 4400,
+        },
+      },
+      "test": Object {
+        "executor": "@nrwl/vite:test",
+        "options": Object {
+          "passWithNoTests": true,
+          "reportsDirectory": "../../coverage/libs/react-vite",
+        },
+        "outputs": Array [
+          "coverage/libs/react-vite",
+        ],
+      },
+    },
+  },
+  "react-vite-2" => Object {
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "name": "react-vite-2",
+    "projectType": "library",
+    "root": "libs/react-vite-2",
+    "sourceRoot": "libs/react-vite-2/src",
+    "tags": Array [],
+    "targets": Object {
+      "build": Object {
+        "configurations": Object {
+          "development": Object {
+            "mode": "development",
+          },
+          "production": Object {
+            "mode": "production",
+          },
+        },
+        "defaultConfiguration": "production",
+        "executor": "@nrwl/vite:build",
+        "options": Object {
+          "outputPath": "dist/libs/react-vite-2",
+        },
+        "outputs": Array [
+          "{options.outputPath}",
+        ],
+      },
+      "lint": Object {
+        "executor": "@nrwl/linter:eslint",
+        "options": Object {
+          "lintFilePatterns": Array [
+            "libs/react-vite-2/**/*.{ts,tsx,js,jsx}",
+          ],
+        },
+        "outputs": Array [
+          "{options.outputFile}",
+        ],
+      },
+      "test": Object {
+        "executor": "@nrwl/vite:test",
+        "options": Object {
+          "passWithNoTests": true,
+          "reportsDirectory": "../../coverage/libs/react-vite-2",
+        },
+        "outputs": Array [
+          "coverage/libs/react-vite-2",
+        ],
+      },
+    },
+  },
+  "utils-one" => Object {
+    "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+    "name": "utils-one",
+    "projectType": "library",
+    "root": "libs/utils/one",
+    "sourceRoot": "libs/utils/one/src",
+    "tags": Array [],
+    "targets": Object {
+      "build": Object {
+        "executor": "@nrwl/webpack:webpack",
+        "options": Object {
+          "assets": Array [],
+          "main": "libs/utils/one/src/index.ts",
+          "outputPath": "dist/libs/utils/one",
+          "tsConfig": "libs/utils/one/tsconfig.lib.json",
+        },
+        "outputs": Array [
+          "{options.outputPath}",
+        ],
+      },
+      "lint": Object {
+        "executor": "@nrwl/linter:eslint",
+        "options": Object {
+          "lintFilePatterns": Array [
+            "libs/utils/one/**/*.ts",
+          ],
+        },
+        "outputs": Array [
+          "{options.outputFile}",
+        ],
+      },
+      "test": Object {
+        "executor": "@nrwl/jest:jest",
+        "options": Object {
+          "jestConfig": "libs/utils/one/jest.config.ts",
+          "passWithNoTests": true,
+        },
+        "outputs": Array [
+          "{workspaceRoot}/coverage/{projectRoot}",
+        ],
+      },
+    },
+  },
+  "utils-three-vite" => Object {
+    "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+    "name": "utils-three-vite",
+    "projectType": "library",
+    "root": "libs/utils/three-vite",
+    "sourceRoot": "libs/utils/three-vite/src",
+    "tags": Array [],
+    "targets": Object {
+      "build": Object {
+        "executor": "@nrwl/vite:build",
+        "options": Object {
+          "outputPath": "dist/libs/utils/three-vite",
+        },
+        "outputs": Array [
+          "{options.outputPath}",
+        ],
+      },
+      "lint": Object {
+        "executor": "@nrwl/linter:eslint",
+        "options": Object {
+          "lintFilePatterns": Array [
+            "libs/utils/three-vite/**/*.ts",
+          ],
+        },
+        "outputs": Array [
+          "{options.outputFile}",
+        ],
+      },
+      "test": Object {
+        "executor": "@nrwl/jest:jest",
+        "options": Object {
+          "jestConfig": "libs/utils/three-vite/jest.config.ts",
+          "passWithNoTests": true,
+        },
+        "outputs": Array [
+          "{workspaceRoot}/coverage/{projectRoot}",
+        ],
+      },
+    },
+  },
+  "utils-two" => Object {
+    "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+    "name": "utils-two",
+    "projectType": "library",
+    "root": "libs/utils/two",
+    "sourceRoot": "libs/utils/two/src",
+    "tags": Array [],
+    "targets": Object {
+      "build": Object {
+        "executor": "@nrwl/webpack:webpack",
+        "options": Object {
+          "assets": Array [],
+          "main": "libs/utils/two/src/index.ts",
+          "outputPath": "dist/libs/utils/two",
+          "tsConfig": "libs/utils/two/tsconfig.lib.json",
+        },
+        "outputs": Array [
+          "{options.outputPath}",
+        ],
+      },
+      "lint": Object {
+        "executor": "@nrwl/linter:eslint",
+        "options": Object {
+          "lintFilePatterns": Array [
+            "libs/utils/two/**/*.ts",
+          ],
+        },
+        "outputs": Array [
+          "{options.outputFile}",
+        ],
+      },
+      "test": Object {
+        "executor": "@nrwl/jest:jest",
+        "options": Object {
+          "jestConfig": "libs/utils/two/jest.config.ts",
+          "passWithNoTests": true,
+        },
+        "outputs": Array [
+          "{workspaceRoot}/coverage/{projectRoot}",
         ],
       },
     },

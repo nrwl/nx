@@ -205,12 +205,21 @@ describe('Vite Plugin', () => {
       expect(result.combinedOutput).toContain(
         `Successfully ran target test for project ${lib}`
       );
+
+      // TODO(caleb): run tests from project root and make sure they still work
+      const nestedResults = await runCLIAsync(`test ${lib} --skip-nx-cache`, {
+        cwd: `${tmpProjPath()}/libs/${lib}`,
+      });
+      expect(nestedResults.combinedOutput).toContain(
+        `Successfully ran target test for project ${lib}`
+      );
     }, 100_000);
 
     it('should collect coverage', () => {
       runCLI(`generate @nrwl/react:lib ${lib} --unitTestRunner=vitest`);
       updateFile(`libs/${lib}/vite.config.ts`, () => {
-        return `import { defineConfig } from 'vite';
+        return `/// <reference types="vitest" />
+        import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import viteTsConfigPaths from 'vite-tsconfig-paths';
 

@@ -9,7 +9,7 @@ import { updateRollupExecutor } from './update-rollup-executor';
 
 describe('updateRollupExecutor', () => {
   it('should migrate projects using @nrwl/web:rollup to @nrwl/rollup:rollup', async () => {
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'proj1', {
       root: 'proj1',
       targets: {

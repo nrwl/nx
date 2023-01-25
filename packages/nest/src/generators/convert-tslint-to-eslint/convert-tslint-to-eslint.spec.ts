@@ -7,7 +7,7 @@ import {
   Tree,
   writeJson,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { exampleRootTslintJson } from '@nrwl/linter';
 import { conversionGenerator } from './convert-tslint-to-eslint';
 
@@ -98,7 +98,7 @@ describe('convert-tslint-to-eslint', () => {
 
   beforeEach(async () => {
     jest.spyOn(devkit, 'installPackagesTask');
-    host = createTreeWithEmptyV1Workspace();
+    host = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     writeJson(host, 'tslint.json', exampleRootTslintJson.raw);
 

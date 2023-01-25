@@ -4,7 +4,7 @@ import {
   Tree,
 } from '@nrwl/devkit';
 import * as nxDevkit from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { NormalizedSchema } from '../schema';
 import { updateBuildTargets } from './update-build-targets';
 import { array } from 'yargs';
@@ -22,7 +22,7 @@ describe('updateBuildTargets', () => {
       newProjectName: 'subfolder-my-destination',
       relativeToRootDestination: 'libs/subfolder/my-destination',
     };
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'my-source', {
       root: 'libs/my-source',
       targets: {
@@ -32,11 +32,11 @@ describe('updateBuildTargets', () => {
       },
     });
     addProjectConfiguration(tree, 'storybook', {
-      root: 'libs/my-source',
+      root: 'libs/storybook',
       targets: {},
     });
     addProjectConfiguration(tree, 'my-source-e2e', {
-      root: 'libs/my-source',
+      root: 'libs/my-source-e2e',
       targets: {
         e2e: {
           executor: 'test-executor:hi',

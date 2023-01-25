@@ -1,11 +1,13 @@
 import koa from 'koa';
 
+const port = process.env.PORT ? Number(process.env.PORT) : <%= port %>;
+
 const app = new koa();
 
 app.use(async ctx =>{
     ctx.body = { 'message': 'Hello API'};
 });
 
-app.listen(<%= port %>, () => {
-    // Server is running
+app.listen(port, () => {
+    console.log(`[ ready ] http://localhost:${port}`);
 });

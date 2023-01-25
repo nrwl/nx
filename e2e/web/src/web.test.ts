@@ -59,18 +59,6 @@ describe('Web Components Applications', () => {
     }
   }, 500000);
 
-  it('should be able to generate a web app with standaloneConfig', async () => {
-    const appName = uniq('app');
-    runCLI(
-      `generate @nrwl/web:app ${appName} --bundler=webpack --no-interactive --standalone-config`
-    );
-
-    checkFilesExist(`apps/${appName}/project.json`);
-
-    const lintResults = runCLI(`lint ${appName}`);
-    expect(lintResults).toContain('All files pass linting.');
-  }, 120000);
-
   it('should remove previous output before building', async () => {
     const appName = uniq('app');
     const libName = uniq('lib');
@@ -166,19 +154,6 @@ describe('Web Components Applications', () => {
       /Reflect\.metadata/
     );
   }, 120000);
-
-  it('should support workspaces w/o workspace config file', async () => {
-    removeFile('workspace.json');
-    const myapp = uniq('myapp');
-    runCLI(
-      `generate @nrwl/web:app ${myapp} --bundler=webpack --directory=myDir`
-    );
-
-    runCLI(`build my-dir-${myapp}`);
-    expect(() =>
-      checkFilesDoNotExist('workspace.json', 'angular.json')
-    ).not.toThrow();
-  }, 1000000);
 
   it('should support custom webpackConfig option', async () => {
     const appName = uniq('app');

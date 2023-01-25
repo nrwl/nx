@@ -1,5 +1,5 @@
 import { Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import {
   buildOption,
@@ -18,18 +18,18 @@ import {
   testOption,
   testOptionObject,
 } from './test-files/test-vite-configs';
-import { ensureBuildOptionsInViteConfig } from './vite-config-edit-utils';
+import { ensureViteConfigIsCorrect } from './vite-config-edit-utils';
 
-describe('ensureBuildOptionsInViteConfig', () => {
+describe('ensureViteConfigIsCorrect', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it("should add build options if build options don't exist", () => {
     tree.write('apps/my-app/vite.config.ts', noBuildOptions);
-    ensureBuildOptionsInViteConfig(
+    ensureViteConfigIsCorrect(
       tree,
       'apps/my-app/vite.config.ts',
       buildOption,
@@ -53,7 +53,7 @@ describe('ensureBuildOptionsInViteConfig', () => {
 
   it('should add new build options if some build options already exist', () => {
     tree.write('apps/my-app/vite.config.ts', someBuildOptions);
-    ensureBuildOptionsInViteConfig(
+    ensureViteConfigIsCorrect(
       tree,
       'apps/my-app/vite.config.ts',
       buildOption,
@@ -77,7 +77,7 @@ describe('ensureBuildOptionsInViteConfig', () => {
 
   it('should add build and test options if defineConfig is empty', () => {
     tree.write('apps/my-app/vite.config.ts', noContentDefineConfig);
-    ensureBuildOptionsInViteConfig(
+    ensureViteConfigIsCorrect(
       tree,
       'apps/my-app/vite.config.ts',
       buildOption,
@@ -101,7 +101,7 @@ describe('ensureBuildOptionsInViteConfig', () => {
 
   it('should add build options if it is using conditional config - do nothing for test', () => {
     tree.write('apps/my-app/vite.config.ts', conditionalConfig);
-    ensureBuildOptionsInViteConfig(
+    ensureViteConfigIsCorrect(
       tree,
       'apps/my-app/vite.config.ts',
       buildOption,
@@ -125,7 +125,7 @@ describe('ensureBuildOptionsInViteConfig', () => {
 
   it('should add build options if defineConfig is not used', () => {
     tree.write('apps/my-app/vite.config.ts', configNoDefineConfig);
-    ensureBuildOptionsInViteConfig(
+    ensureViteConfigIsCorrect(
       tree,
       'apps/my-app/vite.config.ts',
       buildOption,
@@ -149,7 +149,7 @@ describe('ensureBuildOptionsInViteConfig', () => {
 
   it('should not do anything if cannot understand syntax of vite config', () => {
     tree.write('apps/my-app/vite.config.ts', `console.log('Unknown syntax')`);
-    ensureBuildOptionsInViteConfig(
+    ensureViteConfigIsCorrect(
       tree,
       'apps/my-app/vite.config.ts',
       buildOption,
@@ -167,7 +167,7 @@ describe('ensureBuildOptionsInViteConfig', () => {
 
   it('should not do anything if project has everything setup already', () => {
     tree.write('apps/my-app/vite.config.ts', hasEverything);
-    ensureBuildOptionsInViteConfig(
+    ensureViteConfigIsCorrect(
       tree,
       'apps/my-app/vite.config.ts',
       buildOption,
@@ -185,7 +185,7 @@ describe('ensureBuildOptionsInViteConfig', () => {
 
   it('should add build option but not update test option if test already setup', () => {
     tree.write('apps/my-app/vite.config.ts', noBuildOptionsHasTestOption);
-    ensureBuildOptionsInViteConfig(
+    ensureViteConfigIsCorrect(
       tree,
       'apps/my-app/vite.config.ts',
       buildOption,
@@ -203,7 +203,7 @@ describe('ensureBuildOptionsInViteConfig', () => {
 
   it('should update both test and build options - keep existing settings', () => {
     tree.write('apps/my-app/vite.config.ts', someBuildOptionsSomeTestOption);
-    ensureBuildOptionsInViteConfig(
+    ensureViteConfigIsCorrect(
       tree,
       'apps/my-app/vite.config.ts',
       buildOption,

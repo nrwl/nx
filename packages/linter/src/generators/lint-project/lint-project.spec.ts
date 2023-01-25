@@ -5,7 +5,7 @@ import {
 } from '@nrwl/devkit';
 
 import { Linter } from '../utils/linter';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { lintProjectGenerator } from './lint-project';
 
 describe('@nrwl/linter:lint-project', () => {
@@ -16,7 +16,7 @@ describe('@nrwl/linter:lint-project', () => {
   };
 
   beforeEach(() => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'test-lib', {
       root: 'libs/test-lib',
       targets: {},

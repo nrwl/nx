@@ -16,7 +16,6 @@ export interface Schema {
   buildable?: boolean;
   importPath?: string;
   js?: boolean;
-  globalCss?: boolean;
   strict?: boolean;
   setParserOptionsProject?: boolean;
   skipPackageJson?: boolean; //default is false

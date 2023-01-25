@@ -35,7 +35,6 @@ describe('react-native:storybook-configuration', () => {
       appTree.write('.gitignore', '');
       await storybookConfigurationGenerator(appTree, {
         name: 'test-ui-lib',
-        standaloneConfig: false,
       });
 
       expect(
@@ -55,7 +54,6 @@ describe('react-native:storybook-configuration', () => {
       await storybookConfigurationGenerator(appTree, {
         name: 'test-ui-lib',
         generateStories: true,
-        standaloneConfig: false,
       });
 
       expect(
@@ -71,7 +69,6 @@ describe('react-native:storybook-configuration', () => {
       appTree = await createTestAppLib('test-ui-app');
       await storybookConfigurationGenerator(appTree, {
         name: 'test-ui-app',
-        standaloneConfig: false,
       });
 
       expect(
@@ -87,7 +84,6 @@ describe('react-native:storybook-configuration', () => {
       await storybookConfigurationGenerator(appTree, {
         name: 'test-ui-app',
         generateStories: true,
-        standaloneConfig: false,
       });
 
       // Currently the auto-generate stories feature only picks up components under the 'lib' directory.

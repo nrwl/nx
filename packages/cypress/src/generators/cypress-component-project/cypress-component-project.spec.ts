@@ -7,7 +7,7 @@ import {
   updateJson,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { installedCypressVersion } from '../../utils/cypress-version';
 import { cypressComponentProject } from './cypress-component-project';
 
@@ -38,7 +38,7 @@ describe('Cypress Component Project', () => {
   > = installedCypressVersion as never;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'cool-lib', projectConfig);
     tree.write(
       '.gitignore',

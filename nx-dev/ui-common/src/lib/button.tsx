@@ -1,6 +1,11 @@
-import cx from 'classnames';
 import Link from 'next/link';
-import { ForwardedRef, forwardRef, ReactNode } from 'react';
+import { cx } from 'nx-dev/ui-primitives';
+import {
+  AnchorHTMLAttributes,
+  ForwardedRef,
+  forwardRef,
+  ReactNode,
+} from 'react';
 
 type AllowedVariants = 'primary' | 'secondary';
 type AllowedSizes = 'large' | 'default' | 'small';
@@ -15,7 +20,7 @@ const variantStyles: Record<AllowedVariants, string> = {
   primary:
     'bg-blue-500 dark:bg-sky-500 text-white group-hover:bg-blue-600 dark:group-hover:bg-sky-600 group-focus:ring-2 group-focus:ring-blue-500 dark:group-focus:ring-sky-500 focus:group-ring-offset-2',
   secondary:
-    'border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-sm group-hover:bg-slate-50 dark:group-hover:bg-slate-700 group-focus:ring-2 group-focus:ring-blue-500 dark:group-focus:ring-sky-500 focus:ring-offset-2',
+    'border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-sm group-hover:bg-slate-50 dark:group-hover:bg-slate-700 group-focus:ring-2 group-focus:ring-blue-500 dark:group-focus:ring-sky-500 focus:ring-offset-2',
 };
 const sizes: Record<AllowedSizes, string> = {
   large: 'space-x-4 px-4 py-2 text-lg',
@@ -91,7 +96,7 @@ export const ButtonLink = forwardRef(function (
     className?: string;
     href: string;
     title: string;
-  },
+  } & AnchorHTMLAttributes<HTMLAnchorElement>,
   ref: ForwardedRef<HTMLAnchorElement>
 ): JSX.Element {
   return (

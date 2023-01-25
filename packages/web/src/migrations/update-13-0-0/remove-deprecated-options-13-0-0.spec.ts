@@ -1,58 +1,51 @@
-import { readJson } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import {
+  addProjectConfiguration,
+  readJson,
+  readProjectConfiguration,
+} from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
 import subject from './remove-deprecated-options-13-0-0';
 
 describe('Migration: Remove deprecated options', () => {
   it(`should remove deprecated web build options`, async () => {
-    let tree = createTreeWithEmptyV1Workspace();
+    let tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
-    tree.write(
-      'workspace.json',
-      JSON.stringify({
-        version: 2,
-        projects: {
-          myapp: {
-            root: 'apps/myapp',
-            sourceRoot: 'apps/myapp/src',
-            projectType: 'application',
-            targets: {
-              build: {
-                executor: '@nrwl/web:build',
-                options: {
-                  showCircularDependencies: false,
-                  budgets: [],
-                },
-                configurations: {
-                  production: {
-                    showCircularDependencies: true,
-                    budgets: [],
-                  },
-                },
-              },
+    addProjectConfiguration(tree, 'myapp', {
+      root: 'apps/myapp',
+      sourceRoot: 'apps/myapp/src',
+      projectType: 'application',
+      targets: {
+        build: {
+          executor: '@nrwl/web:build',
+          options: {
+            showCircularDependencies: false,
+            budgets: [],
+          },
+          configurations: {
+            production: {
+              showCircularDependencies: true,
+              budgets: [],
             },
           },
         },
-      })
-    );
+      },
+    });
 
     await subject(tree);
 
-    expect(readJson(tree, 'workspace.json')).toEqual({
-      version: 2,
-      projects: {
-        myapp: {
-          root: 'apps/myapp',
-          sourceRoot: 'apps/myapp/src',
-          projectType: 'application',
-          targets: {
-            build: {
-              executor: '@nrwl/web:build',
-              options: {},
-              configurations: {
-                production: {},
-              },
-            },
+    expect(readProjectConfiguration(tree, 'myapp')).toEqual({
+      $schema: '../../node_modules/nx/schemas/project-schema.json',
+      name: 'myapp',
+      root: 'apps/myapp',
+      sourceRoot: 'apps/myapp/src',
+      projectType: 'application',
+      targets: {
+        build: {
+          executor: '@nrwl/web:build',
+          options: {},
+          configurations: {
+            production: {},
           },
         },
       },

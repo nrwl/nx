@@ -7,7 +7,7 @@ import {
   Tree,
   writeJson,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { ProjectConverter } from './project-converter';
 
 /**
@@ -57,7 +57,7 @@ describe('ProjectConverter', () => {
     process.argv = process.argv.filter(
       (a) => !['--dry-run', '--dryRun', '-d'].includes(a)
     );
-    host = createTreeWithEmptyV1Workspace();
+    host = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(host, projectName, {
       root: projectRoot,
       projectType: 'application',

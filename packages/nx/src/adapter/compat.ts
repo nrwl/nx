@@ -1,23 +1,18 @@
 import { logger } from '../utils/logger';
 import {
-  resolveOldFormatWithInlineProjects,
-  workspaceConfigName,
-} from '../config/workspaces';
-import { workspaceRoot } from '../utils/workspace-root';
-import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
 } from '../project-graph/project-graph';
 import { ProjectsConfigurations } from '../config/workspace-json-project-json';
 import { readNxJson } from '../config/configuration';
 import { NxJsonConfiguration } from '../config/nx-json';
+import { toOldFormat } from './angular-json';
 
 /* eslint-disable */
 const Module = require('module');
 const originalRequire: NodeRequire = Module.prototype.require;
 
 let patched = false;
-let loggedWriteWorkspaceWarning = false;
 
 const allowedProjectExtensions = [
   'tags',
@@ -27,6 +22,7 @@ const allowedProjectExtensions = [
   'generators',
   'namedInputs',
   'name',
+  'files',
 ];
 
 const allowedWorkspaceExtensions = [
@@ -46,18 +42,10 @@ if (!patched) {
   Module.prototype.require = function () {
     const result = originalRequire.apply(this, arguments);
     if (arguments[0].startsWith('@angular-devkit/core')) {
-      // Register `workspace.json` as a nonstandard workspace config file
       const ngCoreWorkspace = originalRequire.apply(this, [
         `@angular-devkit/core/src/workspace/core`,
       ]);
-      ngCoreWorkspace._test_addWorkspaceFile(
-        'workspace.json',
-        ngCoreWorkspace.WorkspaceFormat.JSON
-      );
-
       mockReadWorkspace(ngCoreWorkspace);
-      mockWriteWorkspace(ngCoreWorkspace);
-
       const readJsonUtils = originalRequire.apply(this, [
         `@angular-devkit/core/src/workspace/json/reader`,
       ]);
@@ -87,49 +75,14 @@ function mockReadWorkspace(
     'readWorkspace',
     (originalReadWorkspace) =>
       (path, ...rest) => {
-        const configFile = workspaceConfigName(workspaceRoot);
-        if (!configFile) {
-          path = 'workspace.json';
-        }
+        path = 'angular.json';
         return originalReadWorkspace.apply(this, [path, ...rest]);
       }
   );
 }
 
-function mockWriteWorkspace(
-  ngCoreWorkspace: typeof import('@angular-devkit/core/src/workspace/core')
-) {
-  mockMember(
-    ngCoreWorkspace,
-    'writeWorkspace',
-    (originalWriteWorkspace) =>
-      (...args) => {
-        const configFile = workspaceConfigName(workspaceRoot);
-        if (!loggedWriteWorkspaceWarning) {
-          if (configFile) {
-            logger.warn(
-              `[NX] Angular devkit called \`writeWorkspace\`, this may have had unintended consequences in ${configFile}`
-            );
-            logger.warn(`[NX] Double check ${configFile} before proceeding`);
-          } else {
-            logger.warn(
-              `[NX] Angular devkit called \`writeWorkspace\`, this may have created 'workspace.json' or 'angular.json`
-            );
-            logger.warn(
-              `[NX] Double check workspace configuration before proceeding`
-            );
-          }
-          loggedWriteWorkspaceWarning = true;
-        }
-        return originalWriteWorkspace.apply(this, args);
-      }
-  );
-}
-
 /**
- * Patch readJsonWorkspace to inline project configurations
- * as well as work in workspaces without a central workspace file.
- *
+ * Patch readJsonWorkspace to handle workspaces without a central workspace file.
  * NOTE: We hide warnings that would be logged during this process.
  */
 function mockReadJsonWorkspace(
@@ -150,9 +103,6 @@ function mockReadJsonWorkspace(
       } catch {
         // This failed. Its most likely due to a lack of a workspace definition file,
         // or other things that are different between NgCLI and Nx config files.
-        logger.debug(
-          '[NX] Angular devkit readJsonWorkspace fell back to Nx workspaces logic'
-        );
         const projectGraph = await createProjectGraphAsync();
         const nxJson = readNxJson();
 
@@ -163,11 +113,11 @@ function mockReadJsonWorkspace(
         };
 
         // Read our v1 workspace schema
-        const workspaceConfiguration = resolveOldFormatWithInlineProjects(w);
+        const workspaceConfiguration = toOldFormat(w);
         // readJsonWorkspace actually has AST parsing + more, so we
         // still need to call it rather than just return our file
         return originalReadJsonWorkspace.apply(this, [
-          'workspace.json', // path name, doesn't matter
+          'angular.json', // path name, doesn't matter
           {
             // second arg is a host, only method used is readFile
             readFile: () => JSON.stringify(workspaceConfiguration),

@@ -183,7 +183,6 @@ function handleAngularCLIFallbacks(workspace: WorkspaceTypeAndRoot) {
   For more information, see https://nx.dev/core-features/integrate-with-editors`);
     }
   } else {
-    require('nx/src/adapter/compat');
     try {
       const cli = require.resolve('@angular/cli/lib/init.js', {
         paths: [workspace.dir],

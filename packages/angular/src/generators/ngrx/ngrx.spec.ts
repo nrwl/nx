@@ -680,6 +680,63 @@ describe('ngrx', () => {
       ).toMatchSnapshot();
     });
 
+    it('should throw when Angular version < 14.1 and NgRx < 15 but path to routes file is provided', async () => {
+      const parentPath = 'apps/myapp/src/app/app.routes.ts';
+      tree.write(
+        parentPath,
+        `import { Routes } from '@angular/router';
+        import { NxWelcomeComponent } from './nx-welcome.component'; 
+        export const appRoutes: Routes = [{ path: '', component: NxWelcomeComponent }];`
+      );
+
+      devkit.updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '14.1.0',
+          '@ngrx/store': '14.1.0',
+        },
+      }));
+
+      // ACT & ASSERT
+      await expect(
+        ngrxGenerator(tree, {
+          ...defaultStandaloneOptions,
+          parent: parentPath,
+        })
+      ).rejects.toThrowError(
+        `The provided parent path "${parentPath}" does not contain an "NgModule".`
+      );
+    });
+
+    it('should throw when Angular version < 15 and NgRx is not currently installed but path to routes file is provided', async () => {
+      const parentPath = 'apps/myapp/src/app/app.routes.ts';
+      tree.write(
+        parentPath,
+        `import { Routes } from '@angular/router';
+        import { NxWelcomeComponent } from './nx-welcome.component'; 
+        export const appRoutes: Routes = [{ path: '', component: NxWelcomeComponent }];`
+      );
+
+      devkit.updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '14.2.0',
+        },
+      }));
+
+      // ACT & ASSERT
+      await expect(
+        ngrxGenerator(tree, {
+          ...defaultStandaloneOptions,
+          parent: parentPath,
+        })
+      ).rejects.toThrowError(
+        `The provided parent path "${parentPath}" does not contain an "NgModule".`
+      );
+    });
+
     it('should throw when the provided parent does not have an NgModule', async () => {
       const parentPath = 'apps/myapp/src/app/app.routes.ts';
       tree.write(

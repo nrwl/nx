@@ -31,11 +31,17 @@ Type: `string`
 
 The name of the application when a preset with pregenerated app is selected
 
+### bundler
+
+Type: `string`
+
+Bundler to be used to build the application
+
 ### ci
 
 Type: `string`
 
-Choices: [github, circleci, azure]
+Choices: [github, circleci, azure, bitbucket-pipelines, gitlab]
 
 Generate a CI workflow file
 

@@ -11,6 +11,7 @@ export function ProjectNodeActions({ id }: ProjectNodeToolTipProps) {
     projectGraphService.getSnapshot().context.tracing;
   const routeConstructor = useRouteConstructor();
   const navigate = useNavigate();
+  const encodedId = encodeURIComponent(id);
 
   function onExclude() {
     projectGraphService.send({
@@ -21,17 +22,13 @@ export function ProjectNodeActions({ id }: ProjectNodeToolTipProps) {
   }
 
   function onStartTrace() {
-    navigate(
-      routeConstructor(`/projects/trace/${encodeURIComponent(id)}`, true)
-    );
+    navigate(routeConstructor(`/projects/trace/${encodedId}`, true));
   }
 
   function onEndTrace() {
     navigate(
       routeConstructor(
-        `/projects/trace/${encodeURIComponent(start)}/${encodeURIComponent(
-          id
-        )}`,
+        `/projects/trace/${encodeURIComponent(start)}/${encodedId}`,
         true
       )
     );
@@ -39,7 +36,7 @@ export function ProjectNodeActions({ id }: ProjectNodeToolTipProps) {
 
   return (
     <div className="grid grid-cols-3 gap-4">
-      <TooltipLinkButton to={routeConstructor(`/projects/${id}`, true)}>
+      <TooltipLinkButton to={routeConstructor(`/projects/${encodedId}`, true)}>
         Focus
       </TooltipLinkButton>
       <TooltipButton onClick={onExclude}>Exclude</TooltipButton>

@@ -15,7 +15,7 @@ describe('Add Linting', () => {
     });
   });
 
-  it('should add update `workspace.json` file properly when eslint is passed', () => {
+  it('should add update configuration when eslint is passed', () => {
     addLinting(tree, {
       projectName: 'my-lib',
       linter: Linter.EsLint,

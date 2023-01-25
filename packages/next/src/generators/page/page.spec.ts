@@ -1,6 +1,6 @@
 import { applicationGenerator } from '../application/application';
 import { pageGenerator } from './page';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Tree } from '@nrwl/devkit';
 
 describe('component', () => {
@@ -9,11 +9,10 @@ describe('component', () => {
 
   beforeEach(async () => {
     projectName = 'my-app';
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await applicationGenerator(tree, {
       name: projectName,
       style: 'css',
-      standaloneConfig: false,
     });
   });
 

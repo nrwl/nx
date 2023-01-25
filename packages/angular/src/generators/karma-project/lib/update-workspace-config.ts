@@ -4,12 +4,17 @@ import {
   readProjectConfiguration,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 
 export function updateWorkspaceConfig(tree: Tree, project: string): void {
+  const installedAngularVersionInfo = getInstalledAngularVersionInfo(tree);
   const projectConfig = readProjectConfiguration(tree, project);
   projectConfig.targets.test = {
     executor: '@angular-devkit/build-angular:karma',
     options: {
+      ...(installedAngularVersionInfo.major === 14
+        ? { main: joinPathFragments(projectConfig.sourceRoot, 'test.ts') }
+        : {}),
       tsConfig: joinPathFragments(projectConfig.root, 'tsconfig.spec.json'),
       karmaConfig: joinPathFragments(projectConfig.root, 'karma.conf.js'),
       polyfills: ['zone.js', 'zone.js/testing'],

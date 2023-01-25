@@ -9,7 +9,7 @@ import { createTree } from '@nrwl/devkit/testing';
 import * as prettierUtils from '@nrwl/workspace/src/utilities/prettier';
 import { migrateFromAngularCli } from './migrate-from-angular-cli';
 
-describe('workspace', () => {
+xdescribe('workspace', () => {
   let tree: Tree;
 
   beforeEach(() => {

@@ -1,7 +1,6 @@
 import {
   addDependenciesToPackageJson,
   formatFiles,
-  getWorkspacePath as devkitGetWorkspacePath,
   installPackagesTask,
   names,
   PackageManager,
@@ -26,6 +25,7 @@ interface Schema {
   defaultBase: string;
   framework?: string;
   linter?: Linter;
+  bundler?: 'vite' | 'webpack';
   packageManager?: PackageManager;
 }
 
@@ -78,12 +78,6 @@ function validateOptions(options: Schema, host: Tree) {
   if (options.preset === Preset.NodeServer && !options.framework) {
     throw new Error(
       `Cannot generate ${options.preset} without selecting a framework`
-    );
-  }
-
-  if (devkitGetWorkspacePath(host)) {
-    throw new Error(
-      'Cannot generate a new workspace within an existing workspace'
     );
   }
 

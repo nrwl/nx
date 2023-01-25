@@ -9,10 +9,7 @@ import {
   updateJson,
   writeJson,
 } from '@nrwl/devkit';
-import {
-  createTreeWithEmptyV1Workspace,
-  createTreeWithEmptyWorkspace,
-} from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
 import { Linter } from '@nrwl/linter';
 import { libraryGenerator } from '@nrwl/workspace/generators';
@@ -278,7 +275,7 @@ describe('@nrwl/storybook:configuration for Storybook v7', () => {
     }
 
     beforeAll(async () => {
-      tree = createTreeWithEmptyV1Workspace();
+      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       for (const [name, project] of Object.entries(variousProjects)) {
         addProjectConfiguration(tree, name, project as ProjectConfiguration);
         writeJson(

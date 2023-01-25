@@ -194,6 +194,13 @@ Targets may define outputs to tell Nx where the target is going to create file a
 
 This configuration is usually not needed. Nx comes with reasonable defaults (imported in `nx.json`) which implement the configuration above.
 
+Specifically, by default, the following locations are cached for builds:
+
+- `{workspaceRoot}/dist/{projectRoot}`,
+- `{projectRoot}/build`,
+- `{projectRoot}/dist`,
+- `{projectRoot}/public`
+
 #### Basic Example
 
 Usually, a target writes to a specific directory or a file. The following instructs Nx to cache `dist/libs/mylib` and `build/libs/mylib/main.js`:
@@ -399,7 +406,7 @@ An implicit dependency could also be a glob pattern:
 {
   "name": "mylib",
   "nx": {
-    "implicitDependencies": ["shop-*"] # regardless of what Nx thinks, "mylib" doesn't depend on "anotherlib"
+    "implicitDependencies": ["shop-*"] # "mylib" depends on all projects beginning with "shop-"
   }
 }
 ```
@@ -410,14 +417,12 @@ An implicit dependency could also be a glob pattern:
 ```jsonc {% fileName="project.json" %}
 {
   "root": "/libs/mylib",
-  "implicitDependencies": ["shop-*"] # regardless of what Nx thinks, "mylib" doesn't depend on "anotherlib"
+  "implicitDependencies": ["shop-*"] # "mylib" depends on all projects beginning with "shop-"
 }
 ```
 
 {% /tab %}
 {% /tabs %}
-
-In this example, mylib would implicitly depend on any project that's name started with `shop-`.
 
 ### Including package.json files as projects in the graph
 

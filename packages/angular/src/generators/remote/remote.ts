@@ -6,7 +6,7 @@ import { setupMf } from '../setup-mf/setup-mf';
 import { E2eTestRunner } from '../../utils/test-runners';
 import { addSsr, findNextAvailablePort } from './lib';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
-import { getInstalledAngularVersionInfo } from '../utils/angular-version-utils';
+import { getInstalledAngularVersionInfo } from '../utils/version-utils';
 import { lt } from 'semver';
 
 export async function remote(tree: Tree, options: Schema) {

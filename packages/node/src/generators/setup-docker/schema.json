@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "cli": "nx",
+  "$id": "SchematicsNxSetupDocker",
+  "title": "Nx Node Docker Options Schema",
+  "description": "Nx Node Docker Options Schema.",
+  "type": "object",
+  "properties": {
+    "projectName": {
+      "description": "The name of the project",
+      "$default": { "$source": "argv", "index": 0 },
+      "type": "string"
+    },
+    "targetName": {
+      "description": "The name of the target to create",
+      "type": "string",
+      "default": "docker-build"
+    },
+    "buildTargetName": {
+      "description": "The name of the build target",
+      "type": "string",
+      "default": "build"
+    }
+  }
+}

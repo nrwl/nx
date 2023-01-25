@@ -3,10 +3,10 @@ import { ProjectConfiguration } from '../config/workspace-json-project-json';
 
 export function splitTarget(
   s: string,
-  projectGraph: ProjectGraph
+  projectGraph?: ProjectGraph
 ): [project: string, target?: string, configuration?: string] {
   let [project, ...segments] = splitByColons(s);
-  const validTargets = projectGraph.nodes[project]?.data?.targets;
+  const validTargets = projectGraph?.nodes?.[project]?.data?.targets;
   const validTargetNames = new Set(Object.keys(validTargets ?? {}));
 
   return [project, ...groupJointSegments(segments, validTargetNames)] as [

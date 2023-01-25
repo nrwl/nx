@@ -142,6 +142,7 @@ export function getViteBuildOptions(
     manifest: options.manifest,
     ssrManifest: options.ssrManifest,
     ssr: options.ssr,
+    watch: options.watch,
   };
 }
 
@@ -152,8 +153,6 @@ export function getVitePreviewOptions(
   options: VitePreviewServerExecutorOptions,
   context: ExecutorContext
 ): PreviewOptions {
-  const projectRoot =
-    context.projectsConfigurations.projects[context.projectName].root;
   const serverOptions: ServerOptions = {
     host: options.host,
     port: options.port,

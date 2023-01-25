@@ -21,7 +21,8 @@
       "type": "boolean",
       "description": "Automatically generate *.stories.ts files for components declared in this project?",
       "x-prompt": "Automatically generate *.stories.ts files for components declared in this project?",
-      "default": true
+      "default": true,
+      "x-priority": "important"
     },
     "js": {
       "type": "boolean",
@@ -41,7 +42,9 @@
     },
     "standaloneConfig": {
       "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
-      "type": "boolean"
+      "type": "boolean",
+      "default": true,
+      "x-deprecated": "Nx only supports standaloneConfig"
     },
     "ignorePaths": {
       "type": "array",

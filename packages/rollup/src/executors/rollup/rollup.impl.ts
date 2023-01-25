@@ -238,7 +238,7 @@ export function createRollupOptions(
       useSwc && swc(),
       useBabel &&
         getBabelInputPlugin({
-          // Let's `@nrwl/web/babel` preset know that we are packaging.
+          // Lets `@nrwl/js/babel` preset know that we are packaging.
           caller: {
             // @ts-ignore
             // Ignoring type checks for caller since we have custom attributes

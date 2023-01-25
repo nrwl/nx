@@ -1,5 +1,5 @@
 import { Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { join } from 'path';
 import { libraryGenerator } from '../../library/library';
 import { NormalizedSchema } from '../schema';
@@ -19,13 +19,12 @@ describe('updateReadme', () => {
       relativeToRootDestination: 'libs/shared/my-destination',
     };
 
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it('should handle README.md not existing', async () => {
     await libraryGenerator(tree, {
       name: 'my-lib',
-      standaloneConfig: false,
     });
     const readmePath = join(schema.relativeToRootDestination, 'README.md');
     tree.delete(readmePath);
@@ -38,7 +37,6 @@ describe('updateReadme', () => {
   it('should update README.md contents', async () => {
     await libraryGenerator(tree, {
       name: 'my-lib',
-      standaloneConfig: false,
     });
     // This step is usually handled elsewhere
     tree.rename(

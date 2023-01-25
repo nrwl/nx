@@ -88,6 +88,7 @@ Object {
 
 exports[`ProjectConverter removeTSLintFromWorkspace() should remove all relevant traces of TSLint from the workspace 3`] = `
 Object {
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "generators": Object {
     "@nrwl/angular:application": Object {
       "e2eTestRunner": "cypress",
@@ -98,6 +99,7 @@ Object {
       "linter": "tslint",
     },
   },
+  "name": "foo",
   "projectType": "application",
   "root": "apps/foo",
   "targets": Object {
@@ -149,12 +151,14 @@ Object {
 
 exports[`ProjectConverter removeTSLintFromWorkspace() should remove all relevant traces of TSLint from the workspace 6`] = `
 Object {
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "generators": Object {
     "@nrwl/angular:application": Object {
       "e2eTestRunner": "cypress",
       "unitTestRunner": "jest",
     },
   },
+  "name": "foo",
   "projectType": "application",
   "root": "apps/foo",
   "targets": Object {

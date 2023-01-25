@@ -1,6 +1,6 @@
 import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
 import { readJson } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
 import libraryGenerator from './library';
 import { Schema } from './schema';
@@ -22,7 +22,7 @@ describe('next library', () => {
       component: true,
     };
 
-    const appTree = createTreeWithEmptyV1Workspace();
+    const appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     await libraryGenerator(appTree, {
       ...baseOptions,
@@ -82,7 +82,7 @@ describe('next library', () => {
       style: 'css',
       component: true,
     };
-    const appTree = createTreeWithEmptyV1Workspace();
+    const appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     await libraryGenerator(appTree, {
       ...baseOptions,
@@ -112,7 +112,7 @@ describe('next library', () => {
       component: true,
     };
 
-    const appTree = createTreeWithEmptyV1Workspace();
+    const appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     await libraryGenerator(appTree, {
       ...baseOptions,

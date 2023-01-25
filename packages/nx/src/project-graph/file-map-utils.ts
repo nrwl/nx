@@ -3,16 +3,19 @@ import {
   createProjectRootMappingsFromProjectConfigurations,
   findProjectForPath,
 } from './utils/find-project-for-path';
+import { ProjectsConfigurations } from '../config/workspace-json-project-json';
 
 export function createProjectFileMap(
-  workspaceJson: any,
+  projectsConfigurations: ProjectsConfigurations,
   allWorkspaceFiles: FileData[]
 ): { projectFileMap: ProjectFileMap; allWorkspaceFiles: FileData[] } {
   const projectFileMap: ProjectFileMap = {};
   const projectRootMappings =
-    createProjectRootMappingsFromProjectConfigurations(workspaceJson.projects);
+    createProjectRootMappingsFromProjectConfigurations(
+      projectsConfigurations.projects
+    );
 
-  for (const projectName of Object.keys(workspaceJson.projects)) {
+  for (const projectName of Object.keys(projectsConfigurations.projects)) {
     projectFileMap[projectName] ??= [];
   }
   for (const f of allWorkspaceFiles) {
@@ -26,14 +29,16 @@ export function createProjectFileMap(
 }
 
 export function updateProjectFileMap(
-  workspaceJson: any,
+  projectsConfigurations: ProjectsConfigurations,
   projectFileMap: ProjectFileMap,
   allWorkspaceFiles: FileData[],
   updatedFiles: Map<string, string>,
   deletedFiles: string[]
 ): { projectFileMap: ProjectFileMap; allWorkspaceFiles: FileData[] } {
   const projectRootMappings =
-    createProjectRootMappingsFromProjectConfigurations(workspaceJson.projects);
+    createProjectRootMappingsFromProjectConfigurations(
+      projectsConfigurations.projects
+    );
 
   for (const f of updatedFiles.keys()) {
     const matchingProjectFiles =

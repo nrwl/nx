@@ -1,14 +1,10 @@
 import {
   formatFiles,
-  getWorkspacePath,
   NxJsonConfiguration,
   ProjectConfiguration,
   readJson,
-  readNxJson,
   readProjectConfiguration,
   Tree,
-  updateJson,
-  updateNxJson,
   updateProjectConfiguration,
   writeJson,
 } from '@nrwl/devkit';
@@ -46,30 +42,5 @@ export default async function update(tree: Tree) {
  * correctly.
  */
 function movePropertiesAreInNewLocations(tree: Tree) {
-  // If nx.json doesn't exist then there is no where to move these properties to
-  if (!tree.exists('nx.json')) {
-    return;
-  }
-
-  const workspacePath = getWorkspacePath(tree);
-  if (!workspacePath) {
-    return;
-  }
-  const nxJson = readNxJson(tree);
-  updateJson<NxJsonConfiguration>(tree, workspacePath, (json) => {
-    nxJson.generators ??= json.generators ?? (json as any).schematics;
-    if (nxJson.cli) {
-      nxJson.cli.defaultCollection ??= json.cli?.defaultCollection;
-      nxJson.cli.packageManager ??= json.cli?.packageManager;
-    } else if (json.cli) {
-      nxJson.cli ??= json.cli;
-    }
-    nxJson.defaultProject ??= json.defaultProject;
-    delete json.cli;
-    delete json.defaultProject;
-    delete (json as any).schematics;
-    delete json.generators;
-    return json;
-  });
-  updateNxJson(tree, nxJson);
+  return;
 }

@@ -173,7 +173,7 @@ function registerTSTranspiler() {
 }
 
 function lookupLocalPlugin(importPath: string, root = workspaceRoot) {
-  const workspace = new Workspaces(root).readProjectsConfig({
+  const workspace = new Workspaces(root).readProjectsConfigurations({
     _ignorePluginInference: true,
   });
   const plugin = findNxProjectForImportPath(importPath, workspace, root);
