@@ -2732,6 +2732,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Standalone NgRx APIs",
+            "path": "/recipes/other/standalone-ngrx-apis",
+            "id": "standalone-ngrx-apis",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -2980,6 +2988,14 @@
         "name": "Identify Dependencies Between Folders",
         "path": "/recipes/other/identify-dependencies-between-folders",
         "id": "identify-dependencies-between-folders",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Standalone NgRx APIs",
+        "path": "/recipes/other/standalone-ngrx-apis",
+        "id": "standalone-ngrx-apis",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
