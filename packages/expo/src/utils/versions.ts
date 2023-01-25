@@ -22,7 +22,7 @@ export const reactNativeWebVersion = '~0.18.10';
 export const reactNativeSvgTransformerVersion = '1.0.0';
 export const reactNativeSvgVersion = '13.4.0';
 
-export const metroVersion = '0.73.3';
+export const metroVersion = '0.74.1';
 
 export const testingLibraryReactNativeVersion = '11.5.0';
 export const testingLibraryJestNativeVersion = '5.3.0';
