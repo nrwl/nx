@@ -31,36 +31,36 @@ documents.map((category) => {
   });
   category.itemList.map((item) =>
     data.push({
-      title: category.name,
-      content: item.name,
+      title: item.name,
+      content: category.name,
       filename: [category.id, item.id].join('-'),
     })
   );
 });
 packages.map((pkg) => {
   data.push({
-    title: 'Package details',
-    content: pkg.packageName,
+    title: pkg.packageName,
+    content: 'Package details',
     filename: ['packages', pkg.name].join('-'),
   });
   pkg.documents.map((document) => {
     data.push({
-      title: 'Document details',
-      content: `${pkg.packageName}:${document.name}`,
+      title: document.name,
+      content: pkg.packageName,
       filename: ['packages', pkg.name, 'documents', document.id].join('-'),
     });
   });
   pkg.executors.map((executor) => {
     data.push({
-      title: 'Executor details',
-      content: `${pkg.packageName}:${executor.name}`,
+      title: executor.name,
+      content: pkg.packageName,
       filename: ['packages', pkg.name, 'executors', executor.name].join('-'),
     });
   });
   pkg.generators.map((generator) => {
     data.push({
-      title: 'Generator details',
-      content: `${pkg.packageName}:${generator.name}`,
+      title: generator.name,
+      content: pkg.packageName,
       filename: ['packages', pkg.name, 'generators', generator.name].join('-'),
     });
   });
@@ -87,16 +87,16 @@ function createOpenGraphImage(
     const context = canvas.getContext('2d');
     context.drawImage(image, 0, 0, 1200, 630);
 
-    context.font = 'bold 60px system-ui';
+    context.font = 'bold 50px system-ui';
     context.textAlign = 'center';
     context.textBaseline = 'top';
-    context.fillStyle = '#212121';
+    context.fillStyle = '#0F172A';
     context.fillText(title.toUpperCase(), 600, 220);
 
-    context.font = 'normal 42px system-ui';
+    context.font = 'normal 32px system-ui';
     context.textAlign = 'center';
     context.textBaseline = 'top';
-    context.fillStyle = '#212121';
+    context.fillStyle = '#334155';
 
     const lines = splitLines(context, content, 1100);
     lines.forEach((line, index) => {
