@@ -35,6 +35,7 @@ import { installCommonDependencies } from './lib/install-common-dependencies';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 
 async function addLinting(host: Tree, options: NormalizedSchema) {
+  console.log('Just testing');
   const tasks: GeneratorCallback[] = [];
   if (options.linter === Linter.EsLint) {
     const lintTask = await lintProjectGenerator(host, {
