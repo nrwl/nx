@@ -3,6 +3,7 @@ import {
   cleanupProject,
   createFile,
   newProject,
+  packageInstall,
   runCLI,
   uniq,
   updateFile,
@@ -17,6 +18,7 @@ describe('Angular Cypress Component Tests', () => {
 
   beforeAll(async () => {
     projectName = newProject({ name: uniq('cy-ng') });
+    packageInstall('@nrwl/cypress', projectName, '~12.3.0');
     console.log('1');
     runCLI(`generate @nrwl/angular:app ${appName} --no-interactive`);
     console.log('2');
