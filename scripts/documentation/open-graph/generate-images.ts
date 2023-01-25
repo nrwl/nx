@@ -10,11 +10,7 @@ const documents: any[] = [
 ].filter(Boolean);
 
 const packages: PackageMetadata[] = readJSONSync(
-  resolve(
-    __dirname,
-    '../../../',
-    `./nx-dev/nx-dev/public/documentation/generated/packages-metadata.json`
-  )
+  resolve(__dirname, '../../../', `./docs/generated/packages-metadata.json`)
 );
 const targetFolder: string = resolve(
   __dirname,
