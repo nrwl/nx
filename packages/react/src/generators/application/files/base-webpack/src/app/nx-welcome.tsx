@@ -532,7 +532,7 @@ export function NxWelcome({ title }: { title: string }) {
                 </svg>
               </a>
               <a
-                href="https://www.youtube.com/c/Nrwl_io/videos?utm_source=nx-project&sub_confirmation=1"
+                href="https://www.youtube.com/@NxDevtools/videos?utm_source=nx-project&sub_confirmation=1"
                 target="_blank"
                 rel="noreferrer"
                 className="list-item-link"

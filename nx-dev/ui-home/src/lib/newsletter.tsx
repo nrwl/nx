@@ -5,7 +5,7 @@ export function Newsletter(): JSX.Element {
     {
       name: 'Youtube',
       label: 'Youtube channel',
-      href: 'https://www.youtube.com/c/Nrwl_io?utm_source=nx.dev',
+      href: 'https://www.youtube.com/@NxDevtools?utm_source=nx.dev',
       icon: (props: any) => (
         <svg
           fill="currentColor"

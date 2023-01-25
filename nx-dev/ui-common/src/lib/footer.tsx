@@ -12,7 +12,7 @@ export function Footer(): JSX.Element {
       { name: 'Blog', href: 'https://blog.nrwl.io/?utm_source=nx.dev' },
       {
         name: 'Youtube Channel',
-        href: 'https://youtube.com/nrwl_io?utm_source=nx.dev',
+        href: 'https://youtube.com/@NxDevtools?utm_source=nx.dev',
       },
       {
         name: 'Nx Playbook',
@@ -104,7 +104,7 @@ export function Footer(): JSX.Element {
       {
         name: 'Youtube',
         label: 'Youtube channel',
-        href: 'https://www.youtube.com/c/Nrwl_io?utm_source=nx.dev',
+        href: 'https://www.youtube.com/@NxDevtools?utm_source=nx.dev',
         icon: (props: any) => (
           <svg
             fill="currentColor"
