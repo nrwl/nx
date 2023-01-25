@@ -4,12 +4,12 @@
   "apps": {
     "ios.debug": {
       "type": "ios.app",
-      "build": "cd <%= offsetFromRoot %><%= appRoot %>/ios && xcodebuild -workspace <%= appClassName %>.xcworkspace -scheme <%= appClassName %> -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 13' -derivedDataPath ./build -quiet",
+      "build": "cd <%= offsetFromRoot %><%= appRoot %>/ios && xcodebuild -workspace <%= appClassName %>.xcworkspace -scheme <%= appClassName %> -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
       "binaryPath": "<%= offsetFromRoot %><%= appRoot %>/ios/build/Build/Products/Debug-iphonesimulator/<%= appClassName %>.app"
     },
     "ios.release": {
       "type": "ios.app",
-      "build": "cd <%= offsetFromRoot %><%= appRoot %>/ios && xcodebuild -workspace <%= appClassName %>.xcworkspace -scheme <%= appClassName %> -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 13' -derivedDataPath ./build -quiet",
+      "build": "cd <%= offsetFromRoot %><%= appRoot %>/ios && xcodebuild -workspace <%= appClassName %>.xcworkspace -scheme <%= appClassName %> -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
       "binaryPath": "<%= offsetFromRoot %><%= appRoot %>/ios/build/Build/Products/Release-iphonesimulator/<%= appClassName %>.app"
     },
 <% if (framework === 'expo') { %>
@@ -51,7 +51,7 @@
     "simulator": {
       "type": "ios.simulator",
       "device": {
-        "type": "iPhone 13"
+        "type": "iPhone 14"
       }
     },
     "emulator": {

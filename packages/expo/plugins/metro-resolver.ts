@@ -26,6 +26,13 @@ export function getResolveRequest(extensions: string[]) {
     const { resolveRequest, ...context } = _context;
 
     const resolvedPath =
+      resolveRequestFromContext(
+        resolveRequest,
+        _context,
+        realModuleName,
+        platform,
+        debug
+      ) ||
       defaultMetroResolver(context, realModuleName, platform, debug) ||
       tsconfigPathsResolver(
         context,
@@ -40,6 +47,25 @@ export function getResolveRequest(extensions: string[]) {
     }
     throw new Error(`Cannot resolve ${chalk.bold(realModuleName)}`);
   };
+}
+
+function resolveRequestFromContext(
+  resolveRequest: Function,
+  context: any,
+  realModuleName: string,
+  platform: string,
+  debug: boolean
+) {
+  try {
+    return resolveRequest(context, realModuleName, platform);
+  } catch {
+    if (debug)
+      console.log(
+        chalk.cyan(
+          `[Nx] Unable to resolve with default resolveRequest: ${realModuleName}`
+        )
+      );
+  }
 }
 
 /**
