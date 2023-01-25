@@ -127,8 +127,7 @@ ingress:
   skip: true
 ```
 
-<details>
-<summary>⤵️ and then define it yourself (expand me)</summary>
+⤵️ and then define it yourself
 
 ```yaml
 apiVersion: networking.k8s.io/v1
@@ -194,8 +193,6 @@ spec:
                   port:
                      number: 8080
 ```
-
-</details>
 
 ### Step 5: Connect Your Workspace
 
