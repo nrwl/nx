@@ -64,7 +64,7 @@ export function getSchemaViewModel(
       );
     },
     hidden: schema.hidden,
-    deprecated: schema['x-deprecated'],
+    deprecated: schema['x-deprecated'] || '',
     type: schema.type,
   };
 }
