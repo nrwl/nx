@@ -36,6 +36,19 @@ export function resolveCustomWebpackConfig(path: string, tsConfig: string) {
   return customWebpackConfig.default ?? customWebpackConfig;
 }
 
+export function resolveIndexHtmlTransformer(
+  path: string,
+  tsConfig: string,
+  target: import('@angular-devkit/architect').Target
+) {
+  tsNodeRegister(path, tsConfig);
+
+  const indexTransformer = require(path);
+  const transform = indexTransformer.default ?? indexTransformer;
+
+  return (indexHtml) => transform(target, indexHtml);
+}
+
 function tsNodeRegister(file: string, tsConfig?: string) {
   if (!file?.endsWith('.ts')) return;
   // Register TS compiler lazily

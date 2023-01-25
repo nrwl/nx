@@ -554,6 +554,10 @@
         "x-priority": "important",
         "additionalProperties": false
       },
+      "indexFileTransformer": {
+        "description": "Path to transformer function to transform the index.html",
+        "type": "string"
+      },
       "buildLibsFromSource": {
         "type": "boolean",
         "description": "Read buildable libraries from source instead of building them separately.",
