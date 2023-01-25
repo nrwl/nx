@@ -9,7 +9,8 @@ import {
   updateProjectConfig,
 } from '../../utils';
 
-describe('React Cypress Component Tests', () => {
+// TODO(leo): reenable once https://github.com/cypress-io/cypress/issues/25568 is addressed
+xdescribe('React Cypress Component Tests', () => {
   let projectName;
   const appName = uniq('cy-react-app');
   const usedInAppLibName = uniq('cy-react-lib');
