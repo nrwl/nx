@@ -133,7 +133,7 @@ describe('create-nx-workspace', () => {
     }
   });
 
-  it('should be able to create an react workspace', () => {
+  it('should be able to create a react workspace with webpack', () => {
     const wsName = uniq('react');
     const appName = uniq('app');
 
@@ -149,6 +149,24 @@ describe('create-nx-workspace', () => {
     expectNoTsJestInJestConfig(appName);
     const packageJson = readJson('package.json');
     expect(packageJson.devDependencies['@nrwl/webpack']).toBeDefined();
+  });
+
+  it('should be able to create a react workspace with vite', () => {
+    const wsName = uniq('react');
+    const appName = uniq('app');
+
+    runCreateWorkspace(wsName, {
+      preset: 'react-monorepo',
+      style: 'css',
+      appName,
+      packageManager,
+      bundler: 'vite',
+    });
+
+    expectNoAngularDevkit();
+    const packageJson = readJson('package.json');
+    expect(packageJson.devDependencies['@nrwl/webpack']).not.toBeDefined();
+    expect(packageJson.devDependencies['@nrwl/vite']).toBeDefined();
   });
 
   it('should be able to create an next workspace', () => {
