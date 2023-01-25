@@ -81,16 +81,16 @@
       "options": {
         "commands": [
           {
-            "command": "nx run nx-dev:generate-og-images",
-            "description": "OG images generation"
-          },
-          {
             "command": "nx run nx-dev:build",
             "description": "NextJs build step"
+          },
+          {
+            "command": "nx run nx-dev:generate-og-images",
+            "description": "OG images generation"
           }
         ],
         "color": true,
-        "parallel": true
+        "parallel": false
       }
     },
     "export": {

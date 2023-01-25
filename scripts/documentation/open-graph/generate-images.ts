@@ -1,4 +1,5 @@
 import { Canvas, Image, SKRSContext2D } from '@napi-rs/canvas';
+import { PackageMetadata } from '../../../nx-dev/models-package/src/lib/package.models';
 import { ensureDir, readFile, readJSONSync, writeFileSync } from 'fs-extra';
 import { resolve } from 'path';
 
@@ -6,15 +7,15 @@ const mapJson = readJSONSync('./docs/map.json', 'utf8').content;
 
 const documents: any[] = [
   ...mapJson.find((x) => x.id === 'nx-documentation')?.['itemList'],
-  ...mapJson.find((x) => x.id === 'additional-api-references')?.['itemList'],
 ].filter(Boolean);
 
-const packages: {
-  name: string;
-  packageName: string;
-  path: string;
-  schemas: { executors: string[]; generators: string[] };
-}[] = readJSONSync('./docs/packages.json');
+const packages: PackageMetadata[] = readJSONSync(
+  resolve(
+    __dirname,
+    '../../../',
+    `./nx-dev/nx-dev/public/documentation/generated/packages-metadata.json`
+  )
+);
 const targetFolder: string = resolve(
   __dirname,
   '../../../',
@@ -42,18 +43,25 @@ packages.map((pkg) => {
     content: pkg.packageName,
     filename: ['packages', pkg.name].join('-'),
   });
-  pkg.schemas.executors.map((schema) => {
+  pkg.documents.map((document) => {
     data.push({
-      title: 'Executor details',
-      content: `${pkg.packageName}:${schema}`,
-      filename: ['packages', pkg.name, 'executors', schema].join('-'),
+      title: 'Document details',
+      content: `${pkg.packageName}:${document.name}`,
+      filename: ['packages', pkg.name, 'documents', document.id].join('-'),
     });
   });
-  pkg.schemas.generators.map((schema) => {
+  pkg.executors.map((executor) => {
+    data.push({
+      title: 'Executor details',
+      content: `${pkg.packageName}:${executor.name}`,
+      filename: ['packages', pkg.name, 'executors', executor.name].join('-'),
+    });
+  });
+  pkg.generators.map((generator) => {
     data.push({
       title: 'Generator details',
-      content: `${pkg.packageName}:${schema}`,
-      filename: ['packages', pkg.name, 'generators', schema].join('-'),
+      content: `${pkg.packageName}:${generator.name}`,
+      filename: ['packages', pkg.name, 'generators', generator.name].join('-'),
     });
   });
 });
