@@ -23,7 +23,7 @@ type AngularCliProjectConfiguration = Omit<ProjectConfiguration, 'targets'> & {
 
 const mockedLogger = { warn: jest.fn() };
 
-xdescribe('app migrator', () => {
+describe('app migrator', () => {
   let tree: Tree;
 
   function addProject(
@@ -633,7 +633,7 @@ xdescribe('app migrator', () => {
 
       expect(tree.exists('apps/app1/project.json')).toBe(true);
       const { projects } = readJson(tree, 'angular.json');
-      expect(projects.app1).toBe('apps/app1');
+      expect(projects.app1).toBeUndefined();
     });
 
     it('should update project root and source root', async () => {

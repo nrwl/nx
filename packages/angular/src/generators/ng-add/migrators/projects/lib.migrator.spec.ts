@@ -23,7 +23,7 @@ type AngularCliProjectConfiguration = Omit<ProjectConfiguration, 'targets'> & {
 
 const mockedLogger = { warn: jest.fn() };
 
-xdescribe('lib migrator', () => {
+describe('lib migrator', () => {
   let tree: Tree;
 
   function addProject(
@@ -521,7 +521,7 @@ xdescribe('lib migrator', () => {
 
       expect(tree.exists('libs/lib1/project.json')).toBe(true);
       const { projects } = readJson(tree, 'angular.json');
-      expect(projects.lib1).toBe('libs/lib1');
+      expect(projects.lib1).toBeUndefined();
     });
 
     it('should update project root and source root', async () => {
