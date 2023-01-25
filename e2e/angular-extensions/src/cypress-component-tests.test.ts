@@ -17,17 +17,23 @@ describe('Angular Cypress Component Tests', () => {
 
   beforeAll(async () => {
     projectName = newProject({ name: uniq('cy-ng') });
+    console.log('1');
     runCLI(`generate @nrwl/angular:app ${appName} --no-interactive`);
+    console.log('2');
     runCLI(
       `generate @nrwl/angular:component fancy-component --project=${appName} --no-interactive`
     );
+    console.log('3');
     runCLI(`generate @nrwl/angular:lib ${usedInAppLibName} --no-interactive`);
+    console.log('4');
     runCLI(
       `generate @nrwl/angular:component btn --project=${usedInAppLibName} --inlineTemplate --inlineStyle --export --no-interactive`
     );
+    console.log('5');
     runCLI(
       `generate @nrwl/angular:component btn-standalone --project=${usedInAppLibName} --inlineTemplate --inlineStyle --export --standalone --no-interactive`
     );
+    console.log('6');
     updateFile(
       `libs/${usedInAppLibName}/src/lib/btn/btn.component.ts`,
       `
@@ -43,6 +49,7 @@ export class BtnComponent {
 }
 `
     );
+    console.log('7');
     updateFile(
       `libs/${usedInAppLibName}/src/lib/btn-standalone/btn-standalone.component.ts`,
       `
@@ -60,6 +67,7 @@ export class BtnStandaloneComponent {
 }
 `
     );
+    console.log('8');
     // use lib in the app
     createFile(
       `apps/${appName}/src/app/app.component.html`,
@@ -69,6 +77,7 @@ export class BtnStandaloneComponent {
 <${projectName}-nx-welcome></${projectName}-nx-welcome>
 `
     );
+    console.log('9');
     const btnModuleName = names(usedInAppLibName).className;
     updateFile(
       `apps/${appName}/src/app/app.component.scss`,
@@ -79,6 +88,7 @@ h1 {
   @include headline;
 }`
     );
+    console.log('10');
     updateFile(
       `apps/${appName}/src/app/app.module.ts`,
       `
@@ -98,16 +108,20 @@ import { NxWelcomeComponent } from './nx-welcome.component';
 export class AppModule {}
 `
     );
+    console.log('11');
 
     runCLI(
       `generate @nrwl/angular:lib ${buildableLibName} --buildable --no-interactive`
     );
+    console.log('12');
     runCLI(
       `generate @nrwl/angular:component input --project=${buildableLibName} --inlineTemplate --inlineStyle --export --no-interactive`
     );
+    console.log('13');
     runCLI(
       `generate @nrwl/angular:component input-standalone --project=${buildableLibName} --inlineTemplate --inlineStyle --export --standalone --no-interactive`
     );
+    console.log('14');
     updateFile(
       `libs/${buildableLibName}/src/lib/input/input.component.ts`,
       `
@@ -123,6 +137,7 @@ import {Component, Input} from '@angular/core';
   }
   `
     );
+    console.log('15');
     updateFile(
       `libs/${buildableLibName}/src/lib/input-standalone/input-standalone.component.ts`,
       `
@@ -140,9 +155,11 @@ import {CommonModule} from '@angular/common';
   }
   `
     );
+    console.log('16');
 
     // make sure assets from the workspace root work.
     createFile('libs/assets/data.json', JSON.stringify({ data: 'data' }));
+    console.log('17');
     createFile(
       'assets/styles/styleguide.scss',
       `
@@ -154,6 +171,7 @@ import {CommonModule} from '@angular/common';
   }
   `
     );
+    console.log('18');
     updateProjectConfig(appName, (config) => {
       config.targets['build'].options.stylePreprocessorOptions = {
         includePaths: ['assets/styles'],
@@ -165,35 +183,44 @@ import {CommonModule} from '@angular/common';
       });
       return config;
     });
+    console.log('19');
   });
 
   afterAll(() => cleanupProject());
 
   it('should test app', () => {
+    console.log('20');
     runCLI(
       `generate @nrwl/angular:cypress-component-configuration --project=${appName} --generate-tests --no-interactive`
     );
+    console.log('21');
     expect(runCLI(`component-test ${appName} --no-watch`)).toContain(
       'All specs passed!'
     );
+    console.log('22');
   }, 300_000);
 
   it('should successfully component test lib being used in app', () => {
+    console.log('23');
     runCLI(
       `generate @nrwl/angular:cypress-component-configuration --project=${usedInAppLibName} --generate-tests --no-interactive`
     );
+    console.log('24');
     expect(runCLI(`component-test ${usedInAppLibName} --no-watch`)).toContain(
       'All specs passed!'
     );
+    console.log('25');
   }, 300_000);
 
   it('should test buildable lib not being used in app', () => {
+    console.log('26');
     expect(() => {
       // should error since no edge in graph between lib and app
       runCLI(
         `generate @nrwl/angular:cypress-component-configuration --project=${buildableLibName} --generate-tests --no-interactive`
       );
     }).toThrow();
+    console.log('27');
     createFile(
       `libs/${buildableLibName}/src/lib/input/input.component.cy.ts`,
       `
@@ -224,6 +251,7 @@ describe(InputComponent.name, () => {
 });
 `
     );
+    console.log('28');
 
     createFile(
       `libs/${buildableLibName}/src/lib/input-standalone/input-standalone.component.cy.ts`,
@@ -255,18 +283,22 @@ describe(InputStandaloneComponent.name, () => {
 });
 `
     );
+    console.log('29');
 
     runCLI(
       `generate @nrwl/angular:cypress-component-configuration --project=${buildableLibName} --generate-tests --build-target=${appName}:build --no-interactive`
     );
+    console.log('30');
     expect(runCLI(`component-test ${buildableLibName} --no-watch`)).toContain(
       'All specs passed!'
     );
+    console.log('31');
 
     // add tailwind
     runCLI(
       `generate @nrwl/angular:setup-tailwind --project=${buildableLibName}`
     );
+    console.log('32');
     updateFile(
       `libs/${buildableLibName}/src/lib/input/input.component.cy.ts`,
       (content) => {
@@ -274,6 +306,7 @@ describe(InputStandaloneComponent.name, () => {
         return content.replace('rgb(0, 0, 0)', 'rgb(34, 197, 94)');
       }
     );
+    console.log('33');
     updateFile(
       `libs/${buildableLibName}/src/lib/input-standalone/input-standalone.component.cy.ts`,
       (content) => {
@@ -281,10 +314,13 @@ describe(InputStandaloneComponent.name, () => {
         return content.replace('rgb(0, 0, 0)', 'rgb(34, 197, 94)');
       }
     );
+    console.log('34');
 
     expect(runCLI(`component-test ${buildableLibName} --no-watch`)).toContain(
       'All specs passed!'
     );
+    console.log('35');
     checkFilesDoNotExist(`tmp/libs/${buildableLibName}/ct-styles.css`);
+    console.log('36');
   }, 300_000);
 });
