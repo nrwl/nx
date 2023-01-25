@@ -1,4 +1,4 @@
-# Node Tutorial - Part 3: Task-Running
+# Node Standalone Tutorial - Part 3: Task-Running
 
 Common tasks include:
 
@@ -11,38 +11,45 @@ When you ran your generators in Part 1, you already set up these more common tas
 
 ## Defining Targets
 
-Here's the `project.json` file for your `products-data-client` project:
+Here's the `project.json` file for the `auth` project:
 
-```json {% fileName="libs/products-data-client/project.json" %}
+```json {% fileName="/auth/project.json" %}
 {
-  "name": "products-data-client",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "libs/products-data-client/src",
+  "name": "auth",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "auth/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
-        "outputPath": "dist/libs/products-data-client",
-        "main": "libs/products-data-client/src/index.ts",
-        "tsConfig": "libs/products-data-client/tsconfig.lib.json",
-        "assets": ["libs/products-data-client/*.md"]
+        "outputPath": "dist/./auth",
+        "tsConfig": "auth/tsconfig.lib.json",
+        "packageJson": "auth/package.json",
+        "main": "auth/src/index.ts",
+        "assets": ["auth/*.md"]
       }
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["libs/products-data-client/**/*.ts"]
+        "lintFilePatterns": ["auth/**/*.ts"]
       }
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/libs/products-data-client"],
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
-        "jestConfig": "libs/products-data-client/jest.config.ts",
+        "jestConfig": "auth/jest.config.ts",
         "passWithNoTests": true
+      },
+      "configurations": {
+        "ci": {
+          "ci": true,
+          "codeCoverage": true
+        }
       }
     }
   },
@@ -50,96 +57,93 @@ Here's the `project.json` file for your `products-data-client` project:
 }
 ```
 
-You can see that three targets are defined here: `build`, `lint` and `test`.
+You can see that three targets are defined here: `build`, `test` and `lint`.
 
-The properties inside each of these these targets is defined as follows:
+The properties of these targets are defined as follows:
 
 - `executor` - which Nx executor to run. The syntax here is: `<plugin name>:<executor name>`
-- `outputs` - this is an array of files that would be created by running this target. (This informs Nx on what to save for it's caching mechanisms you'll learn about in [4 - Workspace Optimizations](/node-tutorial/4-workspace-optimization)).
+- `outputs` - this is an array of files that would be created by running this target. (This informs Nx on what to save for it's caching mechanisms you'll learn about in [4 - Task Pipelines](/node-tutorial/4-task-pipelines)).
 - `options` - this is an object defining which executor options to use for the given target. Every Nx executor allows for options as a way to parameterize it's functionality.
 
 ## Running Tasks
 
 ![Syntax for Running Tasks in Nx](/shared/node-tutorial/run-target-syntax.svg)
 
-Run the `build` target for your `products-data-client` project:
+Run the `build` target for your `auth` project:
 
-```{% command="npx nx build products-data-client" path="~/my-products" %}
+```{% command="npx nx build auth" path="~/my-products" %}
 
-> nx run products-data-client:build
+> nx run auth:build
 
-Compiling TypeScript files for project "products-data-client"...
-Done compiling TypeScript files for project "products-data-client".
+Compiling TypeScript files for project "auth"...
+Done compiling TypeScript files for project "auth".
 
- ———————————————————————————————————————————————————————————————————————————————————————————————
+ ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target build for project products-data-client (780ms)
+ >  NX   Successfully ran target build for project auth (1s)
 ```
 
-You can now find your built `products-data-client` distributable in your `dist/libs/products-data-client` directory, as specified in the `outputPath` property of the `build` target options in your `project.json` file.
+You can now find your built `auth` distributable in your `dist/auth/` directory, as specified in the `outputPath` property of the `build` target options in your `project.json` file.
 
-Next, run a lint check on `products-data-client`:
+Next, run a lint check on `auth`:
 
-```{% command="npx nx lint products-data-client" path="~/my-products" %}
+```{% command="npx nx lint auth" path="~/my-products" %}
 
-> nx run products-data-client:lint
+> nx run auth:lint
 
 
-Linting "products-data-client"...
+Linting "auth"...
 
 All files pass linting.
 
 
  ———————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target lint for project products-data-client (777ms)
+ >  NX   Successfully ran target lint for project products-api (777ms)
 ```
 
-Next, add some tests to your data client in the `products-data-client.spec.ts` file:
+## Run e2e Tests
 
-```typescript {% fileName="libs/products-data-client/src/lib/products-data-client.spec.ts" %}
-import {
-  createProductsDataClient,
-  exampleProducts,
-} from './products-data-client';
+To run the e2e tests, you first need to serve the root `products-api` project:
 
-describe('productsDataClient', () => {
-  it('should get all example products', async () => {
-    const productsDataClient = createProductsDataClient();
-    const products = await productsDataClient.getProducts();
-    expect(products).toEqual(Object.values(exampleProducts));
-  });
+```{% command="npx nx serve products-api" path="~/my-products" %}
+> nx run products-api:serve
 
-  it('should get example product by id', async () => {
-    const productsDataClient = createProductsDataClient();
-    const product = await productsDataClient.getProductById('1');
-    expect(product).toEqual(exampleProducts['1']);
-  });
-});
+Debugger listening on ws://localhost:9229/5ee3e454-1e38-4d9b-a5de-64a4cb1e21b9
+Debugger listening on ws://localhost:9229/5ee3e454-1e38-4d9b-a5de-64a4cb1e21b9
+For help, see: https://nodejs.org/en/docs/inspector
+[ ready ] http://localhost:3000
+[ watch ] build succeeded, watching for changes...
 ```
 
-And then run your `test` target:
+Then you can run the e2e tests from the `e2e` project in a separate terminal:
 
-```{% command="npx nx test products-data-client" path="~/my-products" %}
+```{% command="npx nx e2e e2e" path="~/my-products" %}
+> nx run e2e:e2e
 
-> nx run products-data-client:test
+Determining test suites to run...
+Setting up...
 
- PASS   products-data-client  libs/products-data-client/src/lib/products-data-client.spec.ts
-  productsDataClient
-    ✓ should get all example products (1 ms)
-    ✓ should get example product by id
+ PASS   e2e  e2e/src/server/server.spec.ts
+  GET /
+    ✓ should return a message (39 ms)
+  POST /auth
+    ✓ should return a status and a name (19 ms)
 
 Test Suites: 1 passed, 1 total
 Tests:       2 passed, 2 total
 Snapshots:   0 total
-Time:        0.843 s
+Time:        0.263 s, estimated 1 s
 Ran all test suites.
 
- ———————————————————————————————————————————————————————————————————————————————————————————————
+Tearing down...
 
- >  NX   Successfully ran target test for project products-data-client (2s)
+
+ ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
+ >  NX   Successfully ran target e2e for project e2e (2s)
 ```
 
 ## What's Next
 
-- Continue to [4: Workspace Optimization](/node-tutorial/4-workspace-optimization)
+- Continue to [4: Task Pipelines](/node-tutorial/4-task-pipelines)

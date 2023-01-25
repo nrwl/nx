@@ -1,4 +1,4 @@
-# Node Tutorial - Part 5: Summary
+# Node Standalone Tutorial - Part 5: Summary
 
 In this tutorial you:
 

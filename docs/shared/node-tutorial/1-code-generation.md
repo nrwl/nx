@@ -1,5 +1,5 @@
 ---
-title: 'Node Tutorial - Part 1: Code Generation'
+title: 'Node Standalone Tutorial - Part 1: Code Generation'
 description: In this tutorial you'll create a backend-focused workspace with Nx.
 ---
 
@@ -18,98 +18,64 @@ In this tutorial you'll create a backend-focused workspace with Nx.
 - [1 - Code Generation](/node-tutorial/1-code-generation)
 - [2 - Project Graph](/node-tutorial/2-project-graph)
 - [3 - Task Running](/node-tutorial/3-task-running)
-- [4 - Workspace Optimization](/node-tutorial/4-workspace-optimization)
+- [4 - Task Pipelines](/node-tutorial/4-task-pipelines)
 - [5 - Summary](/node-tutorial/5-summary)
 
 ## Your Objective
 
-For this tutorial, you'll create an Express API application, a CLI (command-line interface) application, and a library for a data client that these two applications will use to interact with a data-source.
-
-![Our Workspace Requirements](/shared/node-tutorial/requirements-diagram.svg)
+For this tutorial, you'll create an Express API application, a library that the API can reference to handle authentication and a suite of e2e tests.
 
 ## Creating an Nx Workspace
 
 Run the command `npx create-nx-workspace@latest` and when prompted, provide the following responses:
 
 ```{% command="npx create-nx-workspace@latest" path="~" %}
-✔ Choose your style                     · integrated
-✔ What to create in the new workspace   · ts
-✔ Repository name                       · my-products
+✔ Choose your style                     · node-server
+✔ What framework should be used?        · express
+✔ Repository name                       · products-api
 ✔ Enable distributed caching to make your CI faster · Yes
 ```
 
 {% card title="Opting into Nx Cloud" description="You will also be prompted whether to add Nx Cloud to your workspace. We won't address this in this tutorial, but you can see the introduction to Nx Cloud for more details." url="/nx-cloud/intro/what-is-nx-cloud" /%}
 
-## Install the Node Plugin
-
-Open the folder that was created and install the `@nrwl/node` plugin.
-
-```shell
-cd my-products
-npm i -D @nrwl/node
-```
-
-## Add Two Application to Your Workspace
-
-```{% command="nx g @nrwl/node:app products-api" path="~/my-products" %}
->  NX  Generating @nrwl/node:application
-
-CREATE packages/products-api/src/app/.gitkeep
-CREATE packages/products-api/src/assets/.gitkeep
-CREATE packages/products-api/src/main.ts
-CREATE packages/products-api/tsconfig.app.json
-CREATE packages/products-api/tsconfig.json
-CREATE packages/products-api/project.json
-CREATE packages/products-api/.eslintrc.json
-CREATE packages/products-api/jest.config.ts
-CREATE packages/products-api/tsconfig.spec.json
-```
-
-Run this command to create your `products-cli` app:
-
-```{% command="npx nx g @nrwl/node:app products-cli" path="~/my-products" %}
->  NX  Generating @nrwl/node:application
-
-CREATE packages/products-cli/src/app/.gitkeep
-CREATE packages/products-cli/src/assets/.gitkeep
-CREATE packages/products-cli/src/main.ts
-CREATE packages/products-cli/tsconfig.app.json
-CREATE packages/products-cli/tsconfig.json
-CREATE packages/products-cli/project.json
-CREATE packages/products-cli/.eslintrc.json
-CREATE packages/products-cli/jest.config.ts
-CREATE packages/products-cli/tsconfig.spec.json
-```
-
-![Nx Generator Syntax](/shared/node-tutorial/generator-syntax.svg)
+The `node-server` preset automatically creates a `products-api` application at the root of the workspace and an `e2e` project that runs against it.
 
 ## Generating Libraries
 
-To create the `products-data-client` library, use the `@nrwl/js:lib` generator:
+To create the `auth` library, use the `@nrwl/node:lib` generator:
 
-```{% command="npx nx g @nrwl/js:lib products-data-client" path="~/my-products" %}
+![Nx Generator Syntax](/shared/node-tutorial/generator-syntax.svg)
 
->  NX  Generating @nrwl/js:library
+```{% command="npx nx g @nrwl/node:lib auth --buildable" path="~/products-api" %}
+>  NX  Generating @nrwl/node:library
 
-CREATE libs/products-data-client/README.md
-CREATE libs/products-data-client/package.json
-CREATE libs/products-data-client/src/index.ts
-CREATE libs/products-data-client/src/lib/products-data-client.spec.ts
-CREATE libs/products-data-client/src/lib/products-data-client.ts
-CREATE libs/products-data-client/tsconfig.json
-CREATE libs/products-data-client/tsconfig.lib.json
-CREATE libs/products-data-client/project.json
-UPDATE tsconfig.base.json
-CREATE libs/products-data-client/.eslintrc.json
-CREATE libs/products-data-client/jest.config.ts
-CREATE libs/products-data-client/tsconfig.spec.json
+CREATE auth/README.md
+CREATE auth/.babelrc
+CREATE auth/package.json
+CREATE auth/src/index.ts
+CREATE auth/src/lib/auth.spec.ts
+CREATE auth/src/lib/auth.ts
+CREATE auth/tsconfig.json
+CREATE auth/tsconfig.lib.json
+UPDATE tsconfig.json
+UPDATE package.json
+CREATE auth/project.json
+CREATE .eslintrc.base.json
+UPDATE .eslintrc.json
+UPDATE e2e/.eslintrc.json
+CREATE auth/.eslintrc.json
+UPDATE jest.config.ts
+CREATE jest.config.app.ts
+UPDATE project.json
+CREATE auth/jest.config.ts
+CREATE auth/tsconfig.spec.json
 ```
 
-You have now created all three projects from the design:
+You have now created three projects:
 
-- `products-api` in `apps/products-api`
-- `products-cli` in `apps/products-cli`
-- `products-data-client` in `libs/products-data-client`
+- `products-api` in `/`
+- `e2e` in `/e2e`
+- `auth` in `/auth`
 
 ## What's Next
 

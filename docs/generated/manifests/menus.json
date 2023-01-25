@@ -599,9 +599,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "4 - Workspace Optimization",
-            "path": "/node-tutorial/4-workspace-optimization",
-            "id": "4-workspace-optimization",
+            "name": "4 - Task Pipelines",
+            "path": "/node-tutorial/4-task-pipelines",
+            "id": "4-task-pipelines",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -642,9 +642,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "4 - Workspace Optimization",
-        "path": "/node-tutorial/4-workspace-optimization",
-        "id": "4-workspace-optimization",
+        "name": "4 - Task Pipelines",
+        "path": "/node-tutorial/4-task-pipelines",
+        "id": "4-task-pipelines",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

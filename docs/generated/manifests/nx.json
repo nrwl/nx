@@ -742,13 +742,13 @@
         "tags": []
       },
       {
-        "id": "4-workspace-optimization",
-        "name": "4 - Workspace Optimization",
+        "id": "4-task-pipelines",
+        "name": "4 - Task Pipelines",
         "description": "",
-        "file": "shared/node-tutorial/4-workspace-optimization",
+        "file": "shared/node-tutorial/4-task-pipelines",
         "itemList": [],
         "isExternal": false,
-        "path": "/node-tutorial/4-workspace-optimization",
+        "path": "/node-tutorial/4-task-pipelines",
         "tags": []
       },
       {
@@ -796,14 +796,14 @@
     "path": "/node-tutorial/3-task-running",
     "tags": []
   },
-  "/node-tutorial/4-workspace-optimization": {
-    "id": "4-workspace-optimization",
-    "name": "4 - Workspace Optimization",
+  "/node-tutorial/4-task-pipelines": {
+    "id": "4-task-pipelines",
+    "name": "4 - Task Pipelines",
     "description": "",
-    "file": "shared/node-tutorial/4-workspace-optimization",
+    "file": "shared/node-tutorial/4-task-pipelines",
     "itemList": [],
     "isExternal": false,
-    "path": "/node-tutorial/4-workspace-optimization",
+    "path": "/node-tutorial/4-task-pipelines",
     "tags": []
   },
   "/node-tutorial/5-summary": {
