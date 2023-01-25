@@ -5,6 +5,7 @@ import { GeneratorCallback } from 'nx/src/config/misc-interfaces';
 import { clean, coerce, gt, satisfies } from 'semver';
 import { getPackageManagerCommand } from 'nx/src/utils/package-manager';
 import { execSync } from 'child_process';
+import { readModulePackageJson } from 'nx/src/utils/package-json';
 
 const NON_SEMVER_TAGS = {
   '*': 2,
@@ -346,21 +347,22 @@ export async function ensurePackage(
   let version: string;
 
   // Read package and version from root package.json file.
-  const packageJson = readJson(tree, 'package.json');
   const dev = options.dev ?? true;
   const throwOnMissing = options.throwOnMissing ?? !!process.env.NX_DRY_RUN; // NX_DRY_RUN is set in `packages/nx/src/command-line/generate.ts`
   const pmc = getPackageManagerCommand();
-  const field = dev ? 'devDependencies' : 'dependencies';
 
-  version = packageJson[field]?.[pkg];
+  // Try to resolve the actual version from resolved module.
+  try {
+    version = readModulePackageJson(pkg).packageJson.version;
+  } catch {
+    // ignore
+  }
 
-  // If package not found, try to resolve it using Node and get its version.
+  // Otherwise try to read in from package.json. This is needed for E2E tests to pass.
   if (!version) {
-    try {
-      version = require(`${pkg}/package.json`).version;
-    } catch {
-      // ignore
-    }
+    const packageJson = readJson(tree, 'package.json');
+    const field = dev ? 'devDependencies' : 'dependencies';
+    version = packageJson[field]?.[pkg];
   }
 
   if (!satisfies(version, requiredVersion)) {
