@@ -1100,4 +1100,56 @@ describe('lib', () => {
       }
     );
   });
+
+  describe('--minimal', () => {
+    it('should generate a README.md when minimal is set to false', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        name: 'myLib',
+        minimal: false,
+      });
+
+      expect(tree.exists('libs/my-lib/README.md')).toBeTruthy();
+    });
+
+    it('should not generate a README.md when minimal is set to true', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        name: 'myLib',
+        minimal: true,
+      });
+
+      expect(tree.exists('libs/my-lib/README.md')).toBeFalsy();
+    });
+
+    it('should generate a README.md and add it to the build assets when buildable is true and minimal is false', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        name: 'myLib',
+        bundler: 'tsc',
+        minimal: false,
+      });
+
+      expect(tree.exists('libs/my-lib/README.md')).toBeTruthy();
+
+      const project = readProjectConfiguration(tree, 'my-lib');
+      expect(project.targets.build.options.assets).toStrictEqual([
+        'libs/my-lib/*.md',
+      ]);
+    });
+
+    it('should not generate a README.md when both bundler and minimal are set', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        name: 'myLib',
+        bundler: 'tsc',
+        minimal: true,
+      });
+
+      expect(tree.exists('libs/my-lib/README.md')).toBeFalsy();
+
+      const project = readProjectConfiguration(tree, 'my-lib');
+      expect(project.targets.build.options.assets).toEqual([]);
+    });
+  });
 });
