@@ -115,16 +115,24 @@ function readCompilerOptions(tsConfigPath): CompilerOptions {
       readDefaultTsConfig,
     }: typeof import('@swc-node/register/read-default-tsconfig') = require('@swc-node/register/read-default-tsconfig');
     return readDefaultTsConfig(tsConfigPath);
+  } else {
+    return readCompilerOptionsWithTypescript(tsConfigPath);
   }
-  return readCompilerOptionsWithTypescript(tsConfigPath);
 }
 
 function readCompilerOptionsWithTypescript(tsConfigPath) {
   const { readConfigFile, parseJsonConfigFileContent, sys } =
     require('typescript') as typeof import('typescript');
   const jsonContent = readConfigFile(tsConfigPath, sys.readFile);
-  return parseJsonConfigFileContent(jsonContent, sys, dirname(tsConfigPath))
-    .options;
+  const { options } = parseJsonConfigFileContent(
+    jsonContent,
+    sys,
+    dirname(tsConfigPath)
+  );
+  // This property is returned in compiler options for some reason, but not part of the typings.
+  // ts-node fails on unknown props, so we have to remove it.
+  delete options.configFilePath;
+  return options;
 }
 
 function warnTsNodeUsage() {

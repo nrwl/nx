@@ -189,17 +189,16 @@ let tsNodeAndPathsRegistered = false;
 
 function registerTSTranspiler() {
   if (!tsNodeAndPathsRegistered) {
+    // nx-ignore-next-line
+    const ts: typeof import('typescript') = require('typescript');
+
     registerTsConfigPaths(join(workspaceRoot, 'tsconfig.base.json'));
     registerTranspiler({
       lib: ['es2021'],
-      module: 1 as ModuleKind,
-      target: 8 as ScriptTarget,
-
-      strict: true,
+      module: ts.ModuleKind.CommonJS,
+      target: ts.ScriptTarget.ES2021,
       esModuleInterop: true,
       skipLibCheck: true,
-      forceConsistentCasingInFileNames: true,
-      moduleResolution: 3 as ModuleResolutionKind,
     });
   }
   tsNodeAndPathsRegistered = true;

@@ -95,6 +95,12 @@ To run a generator, invoke the `nx generate` command with the name of the genera
 nx generate @myorg/my-plugin:my-generator mylib
 ```
 
+{% callout type="warning" title="string" %}
+
+Nx uses the paths from tsconfig.base.json when running plugins locally, but uses the recommended tsconfig for node 16 for other compiler options. See https://github.com/tsconfig/bases/blob/main/bases/node16.json
+
+{% /callout %}
+
 ## Debugging generators
 
 ### With Visual Studio Code

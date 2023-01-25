@@ -155,3 +155,9 @@ To make sure that assets are copied to the dist folder, open the plugin's `proje
 ## Using your Nx Plugin
 
 To use your plugin, simply list it in `nx.json` or use its generators and executors as you would for any other plugin. This could look like `nx g @my-org/my-plugin:lib` for generators or `"executor": "@my-org/my-plugin:build"` for executors. It should be usable in all of the same ways as published plugins in your local workspace immediately after generating it. This includes setting it up as the default collection in `nx.json`, which would allow you to run `nx g lib` and hit your plugin's generator.
+
+{% callout type="warning" title="string" %}
+
+Nx uses the paths from tsconfig.base.json when running plugins locally, but uses the recommended tsconfig for node 16 for other compiler options. See https://github.com/tsconfig/bases/blob/main/bases/node16.json
+
+{% /callout %}
