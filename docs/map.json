@@ -1184,6 +1184,12 @@
               "id": "identify-dependencies-between-folders",
               "tags": [],
               "file": "shared/recipes/identify-dependencies-between-folders"
+            },
+            {
+              "name": "Standalone NgRx APIs",
+              "id": "standalone-ngrx-apis",
+              "tags": [],
+              "file": "shared/recipes/standalone-ngrx-apis"
             }
           ]
         }
