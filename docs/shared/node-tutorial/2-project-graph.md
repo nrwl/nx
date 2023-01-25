@@ -84,7 +84,7 @@ Now run `npx nx graph` again:
 
 The graph now shows the dependency between `products-api` and `auth`.
 
-The project graph is more than just a visualization - Nx provides tooling to optimize your task-running and even automate your CI based on this graph. This will be covered in more detail in: [4: Workspace Optimization](/node-tutorial/4-workspace-optimization).
+The project graph is more than just a visualization - Nx provides tooling to optimize your task-running and even automate your CI based on this graph. This will be covered in more detail in: [4: Task Pipelines](/node-tutorial/4-task-pipelines).
 
 ## What's Next
 
