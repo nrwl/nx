@@ -187,12 +187,12 @@ async function* startDevServer(
     if (
       !opts.baseUrl &&
       !output.baseUrl &&
-      !output.info.baseUrl &&
-      output.info.port
+      !output.info?.baseUrl &&
+      output.info?.port
     ) {
       output.baseUrl = `http://localhost:${output.info.port}`;
     }
-    yield opts.baseUrl || output.baseUrl || output.info.baseUrl;
+    yield opts.baseUrl || output.baseUrl || output.info?.baseUrl;
   }
 }
 
