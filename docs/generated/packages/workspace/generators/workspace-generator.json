@@ -26,7 +26,6 @@
   },
   "aliases": ["workspace-schematic"],
   "description": "Generates a workspace generator.",
-  "x-deprecated": "workspace-generators are deprecated. Consider using a local plugin instead. https://nx.dev/recipes/generators/local-generators",
   "implementation": "/packages/workspace/src/generators/workspace-generator/workspace-generator.ts",
   "hidden": false,
   "path": "/packages/workspace/src/generators/workspace-generator/schema.json",

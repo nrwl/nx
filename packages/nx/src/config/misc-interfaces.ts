@@ -30,6 +30,7 @@ export interface GeneratorsJsonEntry {
   aliases?: string[];
   cli?: 'nx';
   'x-type'?: 'library' | 'application';
+  'x-deprecated'?: string;
 }
 
 export type OutputCaptureMethod = 'direct-nodejs' | 'pipe';

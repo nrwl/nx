@@ -69,8 +69,7 @@ async function promptForCollection(
       const {
         resolvedCollectionName,
         normalizedGeneratorName,
-        deprecated,
-        hidden,
+        generatorConfiguration: { ['x-deprecated']: deprecated, hidden },
       } = ws.readGenerator(collectionName, generatorName);
       if (hidden) {
         continue;
@@ -95,8 +94,7 @@ async function promptForCollection(
       const {
         resolvedCollectionName,
         normalizedGeneratorName,
-        deprecated,
-        hidden,
+        generatorConfiguration: { ['x-deprecated']: deprecated, hidden },
       } = ws.readGenerator(name, generatorName);
       if (hidden) {
         continue;
@@ -326,8 +324,7 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
       normalizedGeneratorName,
       schema,
       implementationFactory,
-      aliases,
-      deprecated,
+      generatorConfiguration: { aliases, hidden, ['x-deprecated']: deprecated },
     } = ws.readGenerator(opts.collectionName, opts.generatorName);
 
     if (deprecated) {
