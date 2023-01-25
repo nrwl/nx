@@ -22,7 +22,7 @@ export function TopSchemaLayout({
           target="_blank"
           rel="noreferrer"
           aria-hidden="true"
-          title="See package on Github"
+          title="See package on GitHub"
           className="relative inline-flex items-center rounded-md border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-medium dark:border-slate-700 dark:bg-slate-800/60"
         >
           <svg className="mr-2 h-4 w-4" viewBox="0 0 16 16" fill="currentColor">

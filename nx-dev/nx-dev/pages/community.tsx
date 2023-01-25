@@ -66,12 +66,12 @@ export default function Community(props: CommunityProps): JSX.Element {
     <>
       <NextSeo
         title="Nx Community and Plugin Listing"
-        description="There are many ways you can connect with the open-source Nx community. The community is rich and dynamic offering Nx plugins and help on multiple platforms like Github, Slack and Twitter"
+        description="There are many ways you can connect with the open-source Nx community. The community is rich and dynamic offering Nx plugins and help on multiple platforms like GitHub, Slack and Twitter"
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
           title: 'Nx Community and Plugin Listing',
           description:
-            'There are many ways you can connect with the open-source Nx community. The community is rich and dynamic offering Nx plugins and help on multiple platforms like Github, Slack and Twitter',
+            'There are many ways you can connect with the open-source Nx community. The community is rich and dynamic offering Nx plugins and help on multiple platforms like GitHub, Slack and Twitter',
           images: [
             {
               url: 'https://nx.dev/images/nx-media.jpg',
