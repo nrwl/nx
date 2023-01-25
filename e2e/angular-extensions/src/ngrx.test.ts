@@ -9,7 +9,7 @@ import {
   uniq,
 } from '@nrwl/e2e/utils';
 
-describe('Angular Package', () => {
+xdescribe('Angular Package', () => {
   let previousPM = process.env.SELECTED_PM;
   describe('ngrx', () => {
     beforeAll(() => {

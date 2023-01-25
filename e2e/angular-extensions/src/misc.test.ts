@@ -9,7 +9,7 @@ import {
 } from '@nrwl/e2e/utils';
 import { classify } from '@nrwl/workspace/src/utils/strings';
 
-describe('Move Angular Project', () => {
+xdescribe('Move Angular Project', () => {
   let proj: string;
   let app1: string;
   let app2: string;

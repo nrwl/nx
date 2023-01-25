@@ -14,7 +14,7 @@ import {
 
 // TODO(Colum or Leosvel): Investigate and fix these tests
 
-xdescribe('Tailwind support', () => {
+describe('Tailwind support', () => {
   let project: string;
 
   const defaultButtonBgColor = 'bg-blue-700';
