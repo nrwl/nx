@@ -8,4 +8,5 @@ export default {
   globals: { 'ts-jest': { tsconfig: '<rootDir>/tsconfig.spec.json' } },
   displayName: 'e2e-angular-extensions',
   preset: '../../jest.preset.js',
+  verbose: true,
 };
