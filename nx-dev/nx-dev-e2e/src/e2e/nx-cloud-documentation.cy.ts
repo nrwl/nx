@@ -12,7 +12,7 @@ describe('nx-dev: Nx Cloud section', () => {
       path: '/nx-cloud/set-up/record-commands',
     },
     {
-      title: 'Enable Github PR Integration',
+      title: 'Enable GitHub PR Integration',
       path: '/nx-cloud/set-up/github',
     },
     {

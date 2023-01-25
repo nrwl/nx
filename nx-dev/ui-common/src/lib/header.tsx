@@ -209,13 +209,13 @@ export function Header(): JSX.Element {
             <AlgoliaSearch tiny={true} />
             <ThemeSwitcher />
             <a
-              title="Nx is open source, check the code on Github"
+              title="Nx is open source, check the code on GitHub"
               href="https://github.com/nrwl/nx"
               target="_blank"
               rel="noreferrer"
               className="px-3 py-2 opacity-60 hover:opacity-90"
             >
-              <span className="sr-only">Nx on Github</span>
+              <span className="sr-only">Nx on GitHub</span>
               <div className="item-center flex">
                 <svg
                   className="h-5 w-5"
@@ -306,13 +306,13 @@ export function Header(): JSX.Element {
         <div className="items-justified flex flex-shrink-0 justify-center space-x-1 text-sm">
           <ThemeSwitcher />
           <a
-            title="Nx is open source, check the code on Github"
+            title="Nx is open source, check the code on GitHub"
             href="https://github.com/nrwl/nx"
             target="_blank"
             rel="noreferrer"
             className="px-3 py-2 opacity-60 hover:opacity-90"
           >
-            <span className="sr-only">Nx on Github</span>
+            <span className="sr-only">Nx on GitHub</span>
             <div className="item-center flex">
               <svg className="h-5 w-5" viewBox="0 0 16 16" fill="currentColor">
                 <path

@@ -339,7 +339,7 @@ describe('getTouchedNpmPackages', () => {
       );
     }).not.toThrowError();
     expect(logger.warn).toHaveBeenCalledWith(
-      'The affected projects might have not been identified properly. The package(s) changed-test-pkg-name-1, changed-test-pkg-name-2 were not found. Please open an issue in Github including the package.json file.'
+      'The affected projects might have not been identified properly. The package(s) changed-test-pkg-name-1, changed-test-pkg-name-2 were not found. Please open an issue in GitHub including the package.json file.'
     );
   });
 });

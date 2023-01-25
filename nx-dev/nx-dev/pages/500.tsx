@@ -44,7 +44,7 @@ export default function FiveOhOh(): JSX.Element {
                   target="_blank"
                   rel="noreferrer"
                   className="font-semibold underline"
-                  title="Create a Github issue"
+                  title="Create a GitHub issue"
                 >
                   drop us a line
                 </Link>{' '}

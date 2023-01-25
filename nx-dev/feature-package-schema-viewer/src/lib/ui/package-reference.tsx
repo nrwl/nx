@@ -146,7 +146,7 @@ function EmptyList({
             target="_blank"
             rel="noreferrer"
           >
-            Please be sure to check the Nx roadmap on Github, we are probably
+            Please be sure to check the Nx roadmap on GitHub, we are probably
             working on what you are looking for.
           </a>
         </div>
