@@ -82,6 +82,7 @@ async function setupBundler(tree: Tree, options: NormalizedSchema) {
       tsConfig,
       compiler: options.compiler ?? 'babel',
       devServer: true,
+      isolatedConfig: true,
       webpackConfig: joinPathFragments(
         options.appProjectRoot,
         'webpack.config.js'

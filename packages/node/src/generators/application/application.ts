@@ -66,6 +66,7 @@ function getWebpackBuildConfig(
       ),
       tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
       assets: [joinPathFragments(project.sourceRoot, 'assets')],
+      isolatedConfig: true,
       webpackConfig: joinPathFragments(
         options.appProjectRoot,
         'webpack.config.js'

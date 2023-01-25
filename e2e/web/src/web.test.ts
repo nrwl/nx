@@ -170,9 +170,10 @@ describe('Web Components Applications', () => {
     updateFile(
       `apps/${appName}/webpack.config.js`,
       `
-      module.exports = (config, context) => {
+      const { composePlugins, withNx, withWeb } = require('@nrwl/webpack');
+      module.exports = composePlugins(withNx(), withWeb(), (config, context) => {
         return config;
-      };
+      });
     `
     );
     runCLI(`build ${appName} --outputHashing none`);
@@ -184,9 +185,10 @@ describe('Web Components Applications', () => {
     updateFile(
       `apps/${appName}/webpack.config.js`,
       `
-      module.exports = async (config, context) => {
+      const { composePlugins, withNx, withWeb } = require('@nrwl/webpack');
+      module.exports = composePlugins(withNx(), withWeb(), async (config, context) => {
         return config;
-      };
+      });
     `
     );
     runCLI(`build ${appName} --outputHashing none`);
@@ -198,9 +200,10 @@ describe('Web Components Applications', () => {
     updateFile(
       `apps/${appName}/webpack.config.js`,
       `
-      module.exports = Promise.resolve((config, context) => {
+      const { composePlugins, withNx, withWeb } = require('@nrwl/webpack');
+      module.exports = composePlugins(withNx(), withWeb(), Promise.resolve((config, context) => {
         return config;
-      });
+      }));
     `
     );
     runCLI(`build ${appName} --outputHashing none`);

@@ -55,6 +55,7 @@ describe('app', () => {
               outputPath: 'dist/my-node-app',
               main: 'my-node-app/src/main.ts',
               tsConfig: 'my-node-app/tsconfig.app.json',
+              isolatedConfig: true,
               webpackConfig: 'my-node-app/webpack.config.js',
               assets: ['my-node-app/src/assets'],
             },

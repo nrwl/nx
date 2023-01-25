@@ -54,6 +54,7 @@ export interface WebpackExecutorOptions {
   generateIndexHtml?: boolean;
   generatePackageJson?: boolean;
   index?: string;
+  isolatedConfig?: boolean;
   main: string;
   memoryLimit?: number;
   namedChunks?: boolean;
