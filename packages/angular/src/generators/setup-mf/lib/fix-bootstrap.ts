@@ -32,14 +32,14 @@ const standaloneBootstrapCode = `import {environment} from "./environments/envir
 import {enableProdMode, importProvidersFrom} from "@angular/core";
 import {bootstrapApplication} from "@angular/platform-browser";
 import {RouterModule} from "@angular/router";
-import {RemoteEntryComponent} from "./app/remote-entry/entry.component";
+import {AppComponent} from './app/app.component';
 import {appRoutes} from "./app/app.routes";
 
 if (environment.production) {
   enableProdMode();
 }
 
-bootstrapApplication(RemoteEntryComponent, {
+bootstrapApplication(AppComponent, {
   providers: [
     importProvidersFrom(
       RouterModule.forRoot(appRoutes, {initialNavigation: 'enabledBlocking'})

@@ -109,7 +109,7 @@ describe('MF Remote App Generator', () => {
     expect(defaultProject).toBeUndefined();
   });
 
-  it('should generate the a remote setup for standalone components', async () => {
+  it('should generate a remote setup for standalone components', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
@@ -121,7 +121,7 @@ describe('MF Remote App Generator', () => {
 
     // ASSERT
     expect(tree.exists(`apps/test/src/app/app.module.ts`)).toBeFalsy();
-    expect(tree.exists(`apps/test/src/app/app.component.ts`)).toBeFalsy();
+    expect(tree.exists(`apps/test/src/app/app.component.ts`)).toBeTruthy();
     expect(
       tree.exists(`apps/test/src/app/remote-entry/entry.module.ts`)
     ).toBeFalsy();
@@ -179,7 +179,7 @@ describe('MF Remote App Generator', () => {
     `);
   });
 
-  it('should update the index.html to use the remote entry component selector for root when standalone', async () => {
+  it('should NOT update the index.html to use the remote entry component selector for root when standalone', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
@@ -190,10 +190,10 @@ describe('MF Remote App Generator', () => {
     });
 
     // ASSERT
-    expect(tree.read('apps/test/src/index.html', 'utf-8')).not.toContain(
+    expect(tree.read('apps/test/src/index.html', 'utf-8')).toContain(
       'proj-root'
     );
-    expect(tree.read('apps/test/src/index.html', 'utf-8')).toContain(
+    expect(tree.read('apps/test/src/index.html', 'utf-8')).not.toContain(
       'proj-test-entry'
     );
   });

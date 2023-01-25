@@ -2,7 +2,6 @@ import { Tree } from 'nx/src/generators/tree';
 import { Schema } from '../schema';
 import { readProjectConfiguration } from 'nx/src/generators/utils/project-configuration';
 import { joinPathFragments } from 'nx/src/utils/path';
-import { readNxJson } from '@nrwl/devkit';
 
 export function removeDeadCodeFromRemote(tree: Tree, options: Schema) {
   const projectName = options.appName;
@@ -34,21 +33,18 @@ export function removeDeadCodeFromRemote(tree: Tree, options: Schema) {
     project.sourceRoot,
     'app/app.component.ts'
   );
-  if (!options.standalone) {
-    const componentContents = tree.read(pathToAppComponent, 'utf-8');
-    const isInlineTemplate = !componentContents.includes('templateUrl');
 
-    const component =
-      componentContents.split(
-        isInlineTemplate ? 'template' : 'templateUrl'
-      )[0] +
-      `template: '<router-outlet></router-outlet>'
+  const componentContents = tree.read(pathToAppComponent, 'utf-8');
+  const isInlineTemplate = !componentContents.includes('templateUrl');
+
+  let component =
+    componentContents.split(isInlineTemplate ? 'template' : 'templateUrl')[0] +
+    `template: '<router-outlet></router-outlet>'
 
 })
 export class AppComponent {}`;
 
-    tree.write(pathToAppComponent, component);
-
+  if (!options.standalone) {
     tree.write(
       joinPathFragments(project.sourceRoot, 'app/app.module.ts'),
       `import { NgModule } from '@angular/core';
@@ -71,20 +67,13 @@ import { AppComponent } from './app.component';
 export class AppModule {}`
     );
   } else {
-    tree.delete(pathToAppComponent);
-
-    const prefix = options.prefix ?? readNxJson(tree).npmScope;
-    const remoteEntrySelector = `${prefix}-${projectName}-entry`;
-
-    const pathToIndexHtml = project.targets.build.options.index;
-    const indexContents = tree.read(pathToIndexHtml, 'utf-8');
-
-    const rootSelectorRegex = new RegExp(`${prefix}-root`, 'ig');
-    const newIndexContents = indexContents.replace(
-      rootSelectorRegex,
-      remoteEntrySelector
-    );
-
-    tree.write(pathToIndexHtml, newIndexContents);
+    component = component
+      .replace(
+        `import { NxWelcomeComponent } from './nx-welcome.component';`,
+        ''
+      )
+      .replace(`[NxWelcomeComponent, `, '[');
   }
+
+  tree.write(pathToAppComponent, component);
 }

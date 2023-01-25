@@ -231,19 +231,19 @@ const config = require('./module-federation.config');
 module.exports = withModuleFederation(config);"
 `;
 
-exports[`MF Remote App Generator should generate the a remote setup for standalone components 1`] = `
+exports[`MF Remote App Generator should generate a remote setup for standalone components 1`] = `
 "import {environment} from \\"./environments/environment\\";
 import {enableProdMode, importProvidersFrom} from \\"@angular/core\\";
 import {bootstrapApplication} from \\"@angular/platform-browser\\";
 import {RouterModule} from \\"@angular/router\\";
-import {RemoteEntryComponent} from \\"./app/remote-entry/entry.component\\";
+import {AppComponent} from './app/app.component';
 import {appRoutes} from \\"./app/app.routes\\";
 
 if (environment.production) {
   enableProdMode();
 }
 
-bootstrapApplication(RemoteEntryComponent, {
+bootstrapApplication(AppComponent, {
   providers: [
     importProvidersFrom(
       RouterModule.forRoot(appRoutes, {initialNavigation: 'enabledBlocking'})
@@ -252,7 +252,7 @@ bootstrapApplication(RemoteEntryComponent, {
 });"
 `;
 
-exports[`MF Remote App Generator should generate the a remote setup for standalone components 2`] = `
+exports[`MF Remote App Generator should generate a remote setup for standalone components 2`] = `
 "module.exports = {
   name: 'test',
   exposes: {
@@ -261,7 +261,7 @@ exports[`MF Remote App Generator should generate the a remote setup for standalo
 }"
 `;
 
-exports[`MF Remote App Generator should generate the a remote setup for standalone components 3`] = `
+exports[`MF Remote App Generator should generate a remote setup for standalone components 3`] = `
 "import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NxWelcomeComponent } from './nx-welcome.component';
@@ -276,14 +276,14 @@ export class RemoteEntryComponent {}
 "
 `;
 
-exports[`MF Remote App Generator should generate the a remote setup for standalone components 4`] = `
+exports[`MF Remote App Generator should generate a remote setup for standalone components 4`] = `
 "import { Route } from '@angular/router';
 
 export const appRoutes: Route[] = [
     {path: '', loadChildren: () => import('./remote-entry/entry.routes').then(m => m.remoteRoutes)},]"
 `;
 
-exports[`MF Remote App Generator should generate the a remote setup for standalone components 5`] = `
+exports[`MF Remote App Generator should generate a remote setup for standalone components 5`] = `
 "import { Route } from '@angular/router';
 import { RemoteEntryComponent } from './entry.component';
 
