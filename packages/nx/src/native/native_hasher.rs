@@ -44,11 +44,11 @@ fn hash_files(workspace_root: String) -> HashMap<String, String> {
     let (sender, reciever) = unbounded::<(String, Vec<u8>)>();
 
     let receiver_thread = thread::spawn(move || {
-        let mut hash: HashMap<String, String> = HashMap::new();
+        let mut collection: HashMap<String, String> = HashMap::new();
         for (path, content) in reciever {
-            hash.insert(path, xxh3::xxh3_64(&content).to_string());
+            collection.insert(path, xxh3::xxh3_64(&content).to_string());
         }
-        hash
+        collection
     });
 
     let cpus = available_parallelism().map_or(2, |n| n.get()) - 1;
