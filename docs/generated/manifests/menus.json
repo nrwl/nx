@@ -3271,6 +3271,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Kubernetes Setup",
+            "path": "/nx-cloud/private-cloud/kubernetes-setup",
+            "id": "kubernetes-setup",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Standalone",
             "path": "/nx-cloud/private-cloud/standalone",
             "id": "standalone",
@@ -3333,6 +3341,14 @@
         "name": "Advanced Configuration",
         "path": "/nx-cloud/private-cloud/advanced-config",
         "id": "advanced-config",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Kubernetes Setup",
+        "path": "/nx-cloud/private-cloud/kubernetes-setup",
+        "id": "kubernetes-setup",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

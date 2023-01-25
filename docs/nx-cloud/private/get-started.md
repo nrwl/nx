@@ -14,6 +14,7 @@ documented.
 
 ## Resources
 
+- [Kubernetes Setup Instructions](/nx-cloud/private-cloud/kubernetes-setup)
 - [Nx Cloud K8s Example + All Config Options](https://github.com/nrwl/nx-cloud-helm)
 - [Nx Cloud K8s Example + All Config Options (no Helm)](https://github.com/nrwl/nx-cloud-helm/tree/main/no-helm)
 - [Standalone Container](/nx-cloud/private-cloud/standalone)
