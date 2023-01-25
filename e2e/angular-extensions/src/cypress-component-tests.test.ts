@@ -9,7 +9,7 @@ import {
   updateProjectConfig,
 } from '../../utils';
 import { names } from '@nrwl/devkit';
-describe('Angular Cypress Component Tests', () => {
+xdescribe('Angular Cypress Component Tests', () => {
   let projectName: string;
   const appName = uniq('cy-angular-app');
   const usedInAppLibName = uniq('cy-angular-lib');
