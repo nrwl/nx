@@ -3,6 +3,7 @@
 import { string } from 'yargs';
 
 export interface ExpoPrebuildOptions {
+  clean: boolean; // default is false
   install: boolean; // default is true
   platform: 'all' | 'android' | 'ios'; // default is all
   template?: string;
