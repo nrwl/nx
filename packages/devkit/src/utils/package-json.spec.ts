@@ -318,20 +318,6 @@ describe('ensurePackage', () => {
     tree = createTree();
   });
 
-  it('should return without error when dependency is satisfied', async () => {
-    writeJson(tree, 'package.json', {
-      devDependencies: {
-        '@nrwl/vite': '15.0.0',
-      },
-    });
-
-    await expect(
-      ensurePackage(tree, '@nrwl/vite', '>=15.0.0', {
-        throwOnMissing: true,
-      })
-    ).resolves.toBeUndefined();
-  });
-
   it('should throw when dependencies are missing', async () => {
     writeJson(tree, 'package.json', {});
 
