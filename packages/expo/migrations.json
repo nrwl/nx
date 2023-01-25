@@ -539,7 +539,7 @@
           "alwaysAddToPackageJson": false
         },
         "react-native-svg": {
-          "version": "12.3.0",
+          "version": "13.3.0",
           "alwaysAddToPackageJson": false
         },
         "@svgr/webpack": {
@@ -574,6 +574,31 @@
         },
         "react-native-svg": {
           "version": "13.4.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "15.6.2": {
+      "version": "15.6.2-beta.0",
+      "packages": {
+        "expo": {
+          "version": "47.0.13",
+          "alwaysAddToPackageJson": false
+        },
+        "@expo/webpack-config": {
+          "version": "~0.17.4",
+          "alwaysAddToPackageJson": false
+        },
+        "eas-cli": {
+          "version": "3.3.2",
+          "alwaysAddToPackageJson": false
+        },
+        "expo-cli": {
+          "version": "6.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@expo/cli": {
+          "version": "0.4.11",
           "alwaysAddToPackageJson": false
         }
       }
