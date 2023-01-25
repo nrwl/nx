@@ -64,7 +64,6 @@ function updateExistingDependenciesVersion(
 
       const incomingVersion = dependencies[d];
       const existingVersion = existingAltDependencies[d];
-
       return isIncomingVersionGreater(incomingVersion, existingVersion);
     })
     .reduce((acc, d) => ({ ...acc, [d]: dependencies[d] }), {});
@@ -117,6 +116,15 @@ export function addDependenciesToPackageJson(
     ),
   };
 
+  filteredDependencies = removeLowerVersions(
+    filteredDependencies,
+    currentPackageJson.dependencies
+  );
+  filteredDevDependencies = removeLowerVersions(
+    filteredDevDependencies,
+    currentPackageJson.devDependencies
+  );
+
   if (
     requiresAddingOfPackages(
       currentPackageJson,
@@ -129,20 +137,41 @@ export function addDependenciesToPackageJson(
         ...(json.dependencies || {}),
         ...filteredDependencies,
       };
+
       json.devDependencies = {
         ...(json.devDependencies || {}),
         ...filteredDevDependencies,
       };
+
       json.dependencies = sortObjectByKeys(json.dependencies);
       json.devDependencies = sortObjectByKeys(json.devDependencies);
 
       return json;
     });
+
     return (): void => {
       installPackagesTask(tree);
     };
   }
   return () => {};
+}
+
+/**
+ * @returns The the incoming dependencies that are higher than the existing verions
+ **/
+function removeLowerVersions(
+  incomingDeps: Record<string, string>,
+  existingDeps: Record<string, string>
+) {
+  return Object.keys(incomingDeps).reduce((acc, d) => {
+    if (
+      existingDeps?.[d] &&
+      !isIncomingVersionGreater(incomingDeps[d], existingDeps[d])
+    ) {
+      return acc;
+    }
+    return { ...acc, [d]: incomingDeps[d] };
+  }, {});
 }
 
 /**
