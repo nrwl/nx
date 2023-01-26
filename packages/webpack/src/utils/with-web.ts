@@ -457,7 +457,10 @@ function getCommonLoadersForCssModules(
       loader: require.resolve('postcss-loader'),
       options: {
         implementation: require('postcss'),
-        postcssOptions: postcssOptionsCreator(options, includePaths),
+        postcssOptions: postcssOptionsCreator(options, {
+          includePaths,
+          forCssModules: true,
+        }),
       },
     },
   ];
@@ -478,7 +481,7 @@ function getCommonLoadersForGlobalCss(
       loader: require.resolve('postcss-loader'),
       options: {
         implementation: require('postcss'),
-        postcssOptions: postcssOptionsCreator(options, includePaths),
+        postcssOptions: postcssOptionsCreator(options, { includePaths }),
       },
     },
   ];
@@ -498,7 +501,7 @@ function getCommonLoadersForGlobalStyle(
       loader: require.resolve('postcss-loader'),
       options: {
         implementation: require('postcss'),
-        postcssOptions: postcssOptionsCreator(options, includePaths),
+        postcssOptions: postcssOptionsCreator(options, { includePaths }),
       },
     },
   ];
@@ -506,7 +509,10 @@ function getCommonLoadersForGlobalStyle(
 
 function postcssOptionsCreator(
   options: NormalizedWebpackExecutorOptions,
-  includePaths: string[]
+  {
+    includePaths,
+    forCssModules = false,
+  }: { includePaths: string[]; forCssModules?: boolean }
 ) {
   const hashFormat = getOutputHashFormat(options.outputHashing as string);
   // PostCSS options depend on the webpack loader, but we need to set the `config` path as a string due to this check:
@@ -523,13 +529,17 @@ function postcssOptionsCreator(
         addModulesDirectories: includePaths,
         resolve: (url: string) => (url.startsWith('~') ? url.slice(1) : url),
       }),
-      PostcssCliResources({
-        baseHref: options.baseHref,
-        deployUrl: options.deployUrl,
-        loader,
-        filename: `[name]${hashFormat.file}.[ext]`,
-      }),
-      autoprefixer(),
+      ...(forCssModules
+        ? []
+        : [
+            PostcssCliResources({
+              baseHref: options.baseHref,
+              deployUrl: options.deployUrl,
+              loader,
+              filename: `[name]${hashFormat.file}.[ext]`,
+            }),
+            autoprefixer(),
+          ]),
     ],
   });
 
