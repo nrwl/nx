@@ -176,7 +176,7 @@ export function withWeb() {
             loader: require.resolve('sass-loader'),
             options: {
               implementation: require('sass'),
-              sourceMap: options.sourceMap,
+              sourceMap: !!options.sourceMap,
               sassOptions: {
                 fiber: false,
                 // bootstrap-sass requires a minimum precision of 8
@@ -195,7 +195,7 @@ export function withWeb() {
           {
             loader: require.resolve('less-loader'),
             options: {
-              sourceMap: options.sourceMap,
+              sourceMap: !!options.sourceMap,
               lessOptions: {
                 javascriptEnabled: true,
                 ...lessPathOptions,
@@ -212,7 +212,7 @@ export function withWeb() {
           {
             loader: require.resolve('stylus-loader'),
             options: {
-              sourceMap: options.sourceMap,
+              sourceMap: !!options.sourceMap,
               stylusOptions: {
                 include: includePaths,
               },
@@ -237,7 +237,7 @@ export function withWeb() {
             loader: require.resolve('sass-loader'),
             options: {
               implementation: require('sass'),
-              sourceMap: options.sourceMap,
+              sourceMap: !!options.sourceMap,
               sassOptions: {
                 fiber: false,
                 // bootstrap-sass requires a minimum precision of 8
@@ -256,7 +256,7 @@ export function withWeb() {
           {
             loader: require.resolve('less-loader'),
             options: {
-              sourceMap: options.sourceMap,
+              sourceMap: !!options.sourceMap,
               lessOptions: {
                 javascriptEnabled: true,
                 ...lessPathOptions,
@@ -273,7 +273,7 @@ export function withWeb() {
           {
             loader: require.resolve('stylus-loader'),
             options: {
-              sourceMap: options.sourceMap,
+              sourceMap: !!options.sourceMap,
               stylusOptions: {
                 include: includePaths,
               },

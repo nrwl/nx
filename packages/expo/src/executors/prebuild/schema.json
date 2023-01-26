@@ -8,6 +8,11 @@
   "description": "Create native iOS and Android project files for building natively.",
   "type": "object",
   "properties": {
+    "clean": {
+      "type": "boolean",
+      "description": "Delete the native folders and regenerate them before applying changes",
+      "default": false
+    },
     "install": {
       "type": "boolean",
       "description": "Installing npm packages and CocoaPods.",

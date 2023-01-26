@@ -1,5 +1,5 @@
 import type { ExecutorContext, ProjectGraphProjectNode } from '@nrwl/devkit';
-import { readJsonFile, normalizePath } from '@nrwl/devkit';
+import { normalizePath, readJsonFile } from '@nrwl/devkit';
 import {
   copySync,
   readdirSync,
@@ -9,6 +9,7 @@ import {
 } from 'fs-extra';
 import { join, relative } from 'path';
 import type { NormalizedExecutorOptions } from './schema';
+import { existsSync } from 'fs';
 
 interface InlineProjectNode {
   name: string;
@@ -91,8 +92,22 @@ export function postProcessInlinedDependencies(
 }
 
 function readBasePathAliases(context: ExecutorContext) {
-  const tsConfigPath = join(context.root, 'tsconfig.base.json');
-  return readJsonFile(tsConfigPath)?.['compilerOptions']['paths'] || {};
+  return readJsonFile(getRootTsConfigPath(context))?.['compilerOptions'][
+    'paths'
+  ];
+}
+
+export function getRootTsConfigPath(context: ExecutorContext): string | null {
+  for (const tsConfigName of ['tsconfig.base.json', 'tsconfig.json']) {
+    const tsConfigPath = join(context.root, tsConfigName);
+    if (existsSync(tsConfigPath)) {
+      return tsConfigPath;
+    }
+  }
+
+  throw new Error(
+    'Could not find a root tsconfig.json or tsconfig.base.json file.'
+  );
 }
 
 function emptyInlineGraph(): InlineProjectGraph {

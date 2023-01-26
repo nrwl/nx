@@ -1344,6 +1344,16 @@
         "isExternal": false,
         "path": "/recipes/other/identify-dependencies-between-folders",
         "tags": []
+      },
+      {
+        "id": "standalone-ngrx-apis",
+        "name": "Standalone NgRx APIs",
+        "description": "",
+        "file": "shared/recipes/standalone-ngrx-apis",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/other/standalone-ngrx-apis",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -1658,6 +1668,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/other/identify-dependencies-between-folders",
+    "tags": []
+  },
+  "/recipes/other/standalone-ngrx-apis": {
+    "id": "standalone-ngrx-apis",
+    "name": "Standalone NgRx APIs",
+    "description": "",
+    "file": "shared/recipes/standalone-ngrx-apis",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/other/standalone-ngrx-apis",
     "tags": []
   }
 }

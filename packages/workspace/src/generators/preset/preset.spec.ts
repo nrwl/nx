@@ -52,7 +52,7 @@ describe('preset', () => {
     expect(tree.children('apps/proj')).toMatchSnapshot();
     expect(tree.children('apps/proj/src/')).toMatchSnapshot();
     expect(tree.children('apps/proj/src/app')).toMatchSnapshot();
-  }, 10000);
+  }, 20000);
 
   it(`should create files (preset = ${Preset.WebComponents})`, async () => {
     await presetGenerator(tree, {

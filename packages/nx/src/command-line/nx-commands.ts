@@ -395,8 +395,25 @@ export const commandsObject = yargs
       await import('./watch').then((m) => m.watch(args as WatchArguments));
     },
   })
+  .command({
+    command: 'show <object>',
+    describe: 'Show information about the workspace (e.g., list of projects)',
+    builder: (yargs) => withShowOptions(yargs),
+    handler: async (args) => {
+      await import('./show').then((m) => m.show(args as any));
+      process.exit(0);
+    },
+  })
   .help()
   .version(nxVersion);
+
+function withShowOptions(yargs: yargs.Argv): yargs.Argv {
+  return yargs.positional('object', {
+    describe: 'What to show (e.g., projects)',
+    choices: ['projects'],
+    required: true,
+  });
+}
 
 function withFormatOptions(yargs: yargs.Argv): yargs.Argv {
   return withAffectedOptions(yargs)

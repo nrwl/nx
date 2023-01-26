@@ -304,8 +304,7 @@ describe('Workspace Tests', () => {
     });
   });
 
-  // TODO: vsavkin rerenable
-  xdescribe('move project', () => {
+  describe('move project', () => {
     /**
      * Tries moving a library from ${lib}/data-access -> shared/${lib}/data-access
      */
@@ -820,8 +819,7 @@ describe('Workspace Tests', () => {
     });
   });
 
-  //TODO: vsavkin reenable
-  xdescribe('remove project', () => {
+  describe('remove project', () => {
     /**
      * Tries creating then deleting a lib
      */

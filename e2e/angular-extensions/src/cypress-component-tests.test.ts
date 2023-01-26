@@ -9,7 +9,9 @@ import {
   updateProjectConfig,
 } from '../../utils';
 import { names } from '@nrwl/devkit';
-describe('Angular Cypress Component Tests', () => {
+
+// TODO(leo): reenable once https://github.com/cypress-io/cypress/issues/25568 is addressed
+xdescribe('Angular Cypress Component Tests', () => {
   let projectName: string;
   const appName = uniq('cy-angular-app');
   const usedInAppLibName = uniq('cy-angular-lib');

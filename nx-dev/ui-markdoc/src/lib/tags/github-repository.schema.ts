@@ -7,7 +7,7 @@ export const githubRepository: Schema = {
     url: {
       type: 'String',
       required: true,
-      description: 'The url of the Github repository',
+      description: 'The url of the GitHub repository',
     },
   },
 };

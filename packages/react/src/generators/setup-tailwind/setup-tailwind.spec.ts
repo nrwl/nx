@@ -34,8 +34,8 @@ describe('setup-tailwind', () => {
 
     expect(tree.read(`apps/example/${stylesPath}`).toString()).toEqual(
       stripIndents`
-        @tailwind components;
         @tailwind base;
+        @tailwind components;
         @tailwind utilities;
         /* existing content */
       `

@@ -12,7 +12,7 @@ export function Footer(): JSX.Element {
       { name: 'Blog', href: 'https://blog.nrwl.io/?utm_source=nx.dev' },
       {
         name: 'Youtube Channel',
-        href: 'https://youtube.com/nrwl_io?utm_source=nx.dev',
+        href: 'https://youtube.com/@NxDevtools?utm_source=nx.dev',
       },
       {
         name: 'Nx Playbook',
@@ -26,7 +26,7 @@ export function Footer(): JSX.Element {
     ],
     community: [
       { name: 'Twitter', href: 'https://twitter.com/NXdevtools' },
-      { name: 'Github', href: 'https://github.com/nrwl/nx/' },
+      { name: 'GitHub', href: 'https://github.com/nrwl/nx/' },
       {
         name: 'Newsletter',
         href: 'https://go.nrwl.io/nx-newsletter?utm_source=nx.dev',
@@ -75,7 +75,7 @@ export function Footer(): JSX.Element {
       },
       {
         name: 'GitHub',
-        label: 'Nx is open source, check the code on Github',
+        label: 'Nx is open source, check the code on GitHub',
         href: 'https://github.com/nrwl/nx?utm_source=nx.dev',
         icon: (props: any) => (
           <svg fill="currentColor" viewBox="0 0 16 16" {...props}>
@@ -104,7 +104,7 @@ export function Footer(): JSX.Element {
       {
         name: 'Youtube',
         label: 'Youtube channel',
-        href: 'https://www.youtube.com/c/Nrwl_io?utm_source=nx.dev',
+        href: 'https://www.youtube.com/@NxDevtools?utm_source=nx.dev',
         icon: (props: any) => (
           <svg
             fill="currentColor"

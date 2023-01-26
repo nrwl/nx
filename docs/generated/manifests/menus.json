@@ -858,7 +858,7 @@
         "isExternal": false,
         "children": [
           {
-            "name": "Integrated Repos vs. Package-Based Repos",
+            "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
             "path": "/concepts/integrated-vs-package-based",
             "id": "integrated-vs-package-based",
             "isExternal": false,
@@ -917,7 +917,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Integrated Repos vs. Package-Based Repos",
+        "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
         "path": "/concepts/integrated-vs-package-based",
         "id": "integrated-vs-package-based",
         "isExternal": false,
@@ -2732,6 +2732,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Standalone NgRx APIs",
+            "path": "/recipes/other/standalone-ngrx-apis",
+            "id": "standalone-ngrx-apis",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -2980,6 +2988,14 @@
         "name": "Identify Dependencies Between Folders",
         "path": "/recipes/other/identify-dependencies-between-folders",
         "id": "identify-dependencies-between-folders",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Standalone NgRx APIs",
+        "path": "/recipes/other/standalone-ngrx-apis",
+        "id": "standalone-ngrx-apis",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -3255,6 +3271,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Kubernetes Setup",
+            "path": "/nx-cloud/private-cloud/kubernetes-setup",
+            "id": "kubernetes-setup",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Standalone",
             "path": "/nx-cloud/private-cloud/standalone",
             "id": "standalone",
@@ -3317,6 +3341,14 @@
         "name": "Advanced Configuration",
         "path": "/nx-cloud/private-cloud/advanced-config",
         "id": "advanced-config",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Kubernetes Setup",
+        "path": "/nx-cloud/private-cloud/kubernetes-setup",
+        "id": "kubernetes-setup",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5233,6 +5265,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "show",
+                "path": "/packages/nx/documents/show",
+                "id": "show",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,
@@ -6398,9 +6438,9 @@
                 "disableCollapsible": false
               },
               {
-                "id": "convert-to-nx-project",
-                "path": "/packages/workspace/generators/convert-to-nx-project",
-                "name": "convert-to-nx-project",
+                "id": "fix-configuration",
+                "path": "/packages/workspace/generators/fix-configuration",
+                "name": "fix-configuration",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

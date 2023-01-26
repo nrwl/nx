@@ -15,12 +15,14 @@ export function getBaseWebpackPartial(
   return configure(config, { options, context });
 }
 
+export interface NxWebpackExecutionContext {
+  options: NormalizedWebpackExecutorOptions;
+  context: ExecutorContext;
+}
+
 export type NxWebpackPlugin = (
   config: Configuration,
-  ctx: {
-    options: NormalizedWebpackExecutorOptions;
-    context: ExecutorContext;
-  }
+  ctx: NxWebpackExecutionContext
 ) => Configuration;
 
 export type NxWebpackPluginAsyncResolver = Promise<NxWebpackPlugin>;
@@ -30,10 +32,7 @@ export function composePlugins(
 ) {
   return function combined(
     config: Configuration,
-    ctx: {
-      options: NormalizedWebpackExecutorOptions;
-      context: ExecutorContext;
-    }
+    ctx: NxWebpackExecutionContext
   ): Configuration {
     for (const plugin of plugins) {
       if ('then' in plugin) {

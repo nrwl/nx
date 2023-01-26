@@ -19,27 +19,53 @@ export function getResolveRequest(extensions: string[]) {
     realModuleName: string,
     platform: string | null
   ) {
-    const DEBUG = process.env.NX_REACT_NATIVE_DEBUG === 'true';
+    const debug = process.env.NX_REACT_NATIVE_DEBUG === 'true';
 
-    if (DEBUG) console.log(chalk.cyan(`[Nx] Resolving: ${realModuleName}`));
+    if (debug) console.log(chalk.cyan(`[Nx] Resolving: ${realModuleName}`));
 
     const { resolveRequest, ...context } = _context;
 
     const resolvedPath =
-      defaultMetroResolver(context, realModuleName, platform, DEBUG) ||
+      resolveRequestFromContext(
+        resolveRequest,
+        _context,
+        realModuleName,
+        platform,
+        debug
+      ) ||
+      defaultMetroResolver(context, realModuleName, platform, debug) ||
       tsconfigPathsResolver(
         context,
         extensions,
         realModuleName,
         platform,
-        DEBUG
+        debug
       ) ||
-      pnpmResolver(extensions, context, realModuleName, DEBUG);
+      pnpmResolver(extensions, context, realModuleName, debug);
     if (resolvedPath) {
       return resolvedPath;
     }
     throw new Error(`Cannot resolve ${chalk.bold(realModuleName)}`);
   };
+}
+
+function resolveRequestFromContext(
+  resolveRequest: Function,
+  context: any,
+  realModuleName: string,
+  platform: string,
+  debug: boolean
+) {
+  try {
+    return resolveRequest(context, realModuleName, platform);
+  } catch {
+    if (debug)
+      console.log(
+        chalk.cyan(
+          `[Nx] Unable to resolve with default resolveRequest: ${realModuleName}`
+        )
+      );
+  }
 }
 
 /**
@@ -177,6 +203,7 @@ function getPnpmResolver(extensions: string[]) {
       extensions: extensions.map((extension) => '.' + extension),
       useSyncFileSystemCalls: true,
       modules: [join(workspaceRoot, 'node_modules'), 'node_modules'],
+      conditionNames: ['native', 'browser', 'require', 'default'],
     });
   }
   return resolver;

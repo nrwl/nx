@@ -26,7 +26,7 @@ body:
   - type: input
     id: repo
     attributes:
-      label: Github Repo
+      label: GitHub Repo
       description: |
         This is extremely important! If this issue is reproduce-able on https://github.com/nrwl/nx-examples, you may use that as the repo.
         If not, please do take a few minutes of your time to create a repo to help us reproduce the issue.

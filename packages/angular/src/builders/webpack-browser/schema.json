@@ -128,7 +128,8 @@
             "pattern": "\\.(?:css|scss|sass|less|styl)$"
           }
         ]
-      }
+      },
+      "x-priority": "important"
     },
     "inlineStyleLanguage": {
       "description": "The stylesheet language to use for the application's inline component styles.",
@@ -454,7 +455,12 @@
           "type": "string"
         }
       },
+      "x-priority": "important",
       "additionalProperties": false
+    },
+    "indexFileTransformer": {
+      "description": "Path to transformer function to transform the index.html",
+      "type": "string"
     },
     "buildLibsFromSource": {
       "type": "boolean",

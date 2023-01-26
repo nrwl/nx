@@ -37,15 +37,15 @@ export function addTailwindStyleImports(
     const content = tree.read(stylesPath).toString();
     tree.write(
       stylesPath,
-      `@tailwind components;\n@tailwind base;\n@tailwind utilities;\n${content}`
+      `@tailwind base;\n@tailwind components;\n@tailwind utilities;\n${content}`
     );
   } else {
     logger.warn(
       stripIndents`
         Could not find stylesheet to update. Add the following imports to your stylesheet (e.g. styles.css):
         
-          @tailwind components;
           @tailwind base;
+          @tailwind components;
           @tailwind utilities;
           
         See our guide for more details: https://nx.dev/guides/using-tailwind-css-in-react`

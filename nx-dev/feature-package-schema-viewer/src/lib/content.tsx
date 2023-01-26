@@ -135,7 +135,7 @@ export function Content({
             href={schemaViewModel.schemaGithubUrl}
             target="_blank"
             rel="noreferrer"
-            title="See this schema on Github"
+            title="See this schema on GitHub"
             className="relative -ml-px inline-flex items-center rounded-r-md border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-600 focus-within:ring-blue-500 hover:bg-slate-50 focus:z-10 focus:outline-none focus:ring-1 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400 dark:focus-within:ring-sky-500 dark:hover:bg-slate-800"
           >
             <svg

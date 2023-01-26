@@ -157,7 +157,7 @@ async function* runCustomServer(
   const customServerBuild = await runExecutor(
     parseTargetString(options.customServerTarget, context.projectGraph),
     {
-      watch: true,
+      watch: options.dev ? true : false,
     },
     context
   );

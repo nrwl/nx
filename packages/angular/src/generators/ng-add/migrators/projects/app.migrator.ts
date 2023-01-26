@@ -5,7 +5,6 @@ import {
   updateJson,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
-import { convertToNxProjectGenerator } from '@nrwl/workspace/generators';
 import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
 import { basename } from 'path';
 import type { GeneratorOptions } from '../../schema';
@@ -15,6 +14,7 @@ import type {
   Target,
   ValidationResult,
 } from '../../utilities';
+import { convertToNxProject } from '../../utilities';
 import type { BuilderMigratorClassType } from '../builders';
 import {
   AngularDevkitKarmaMigrator,
@@ -93,10 +93,12 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
 
     await super.migrate();
 
+    this.updateProjectConfiguration();
+
     await this.e2eMigrator.migrate();
 
     this.moveProjectFiles();
-    await this.updateProjectConfiguration();
+    this.updateProjectConfigurationTargets();
 
     for (const builderMigrator of this.builderMigrators ?? []) {
       await builderMigrator.migrate();
@@ -121,7 +123,7 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
 
   private moveProjectFiles(): void {
     // project is self-contained and can be safely moved
-    if (this.projectConfig.root !== '') {
+    if (this.project.oldRoot !== '') {
       this.moveDir(this.project.oldRoot, this.project.newRoot);
       return;
     }
@@ -166,10 +168,22 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
     }
   }
 
-  private async updateProjectConfiguration(): Promise<void> {
+  private updateProjectConfiguration(): void {
+    convertToNxProject(this.tree, this.project.name);
+    this.moveFile(
+      joinPathFragments(this.project.oldRoot, 'project.json'),
+      joinPathFragments(this.project.newRoot, 'project.json')
+    );
+
     this.projectConfig.root = this.project.newRoot;
     this.projectConfig.sourceRoot = this.project.newSourceRoot;
 
+    updateProjectConfiguration(this.tree, this.project.name, {
+      ...this.projectConfig,
+    });
+  }
+
+  private updateProjectConfigurationTargets(): void {
     if (
       !this.projectConfig.targets ||
       !Object.keys(this.projectConfig.targets).length
@@ -177,20 +191,16 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
       this.logger.warn(
         'The project does not have any targets configured. Skipping updating targets.'
       );
-    } else {
-      this.updateBuildTargetConfiguration();
-      this.updateServerTargetConfiguration();
-      this.updatePrerenderTargetConfiguration();
-      this.updateServeSsrTargetConfiguration();
+      return;
     }
+
+    this.updateBuildTargetConfiguration();
+    this.updateServerTargetConfiguration();
+    this.updatePrerenderTargetConfiguration();
+    this.updateServeSsrTargetConfiguration();
 
     updateProjectConfiguration(this.tree, this.project.name, {
       ...this.projectConfig,
-    });
-
-    await convertToNxProjectGenerator(this.tree, {
-      project: this.project.name,
-      skipFormat: true,
     });
   }
 

@@ -23,16 +23,22 @@ Test all projects:
  nx run-many --target=test
 ```
 
-Test proj1 and proj2:
+Test proj1 and proj2 in parallel:
 
 ```shell
  nx run-many --target=test --projects=proj1,proj2
 ```
 
-Test proj1 and proj2 in parallel:
+Test proj1 and proj2 in parallel using 5 workers:
 
 ```shell
- nx run-many --target=test --projects=proj1,proj2 --parallel=2
+ nx run-many --target=test --projects=proj1,proj2 --parallel=5
+```
+
+Test proj1 and proj2 in sequence:
+
+```shell
+ nx run-many --target=test --projects=proj1,proj2 --parallel=false
 ```
 
 Test all projects ending with `*-app` except `excluded-app`:
