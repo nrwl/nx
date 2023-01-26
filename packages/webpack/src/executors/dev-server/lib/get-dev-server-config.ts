@@ -2,14 +2,11 @@ import { ExecutorContext, logger } from '@nrwl/devkit';
 import type { Configuration as WebpackConfiguration } from 'webpack';
 import type { Configuration as WebpackDevServerConfiguration } from 'webpack-dev-server';
 import * as path from 'path';
-import { basename, resolve } from 'path';
 
 import { getWebpackConfig } from '../../webpack/lib/get-webpack-config';
 import { WebDevServerOptions } from '../schema';
 import { buildServePath } from './serve-path';
 import { readFileSync } from 'fs-extra';
-import { generateEntryPoints } from '../../../utils//webpack/package-chunk-sort';
-import { IndexHtmlWebpackPlugin } from '../../../utils/webpack/plugins/index-html-webpack-plugin';
 import { NormalizedWebpackExecutorOptions } from '../../webpack/schema';
 
 export function getDevServerConfig(
@@ -26,27 +23,6 @@ export function getDevServerConfig(
     workspaceRoot,
     serveOptions,
     buildOptions
-  );
-
-  const {
-    deployUrl,
-    subresourceIntegrity,
-    scripts = [],
-    styles = [],
-    index,
-    baseHref,
-  } = buildOptions;
-
-  webpackConfig.plugins.push(
-    new IndexHtmlWebpackPlugin({
-      indexPath: resolve(workspaceRoot, index),
-      outputPath: basename(index),
-      baseHref,
-      entrypoints: generateEntryPoints({ scripts, styles }),
-      deployUrl,
-      sri: subresourceIntegrity,
-      moduleEntrypoints: [],
-    })
   );
 
   return webpackConfig as WebpackConfiguration;

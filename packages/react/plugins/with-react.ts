@@ -1,13 +1,18 @@
 import type { Configuration } from 'webpack';
+import type { WithWebOptions } from '@nrwl/webpack';
 
 const processed = new Set();
 
-export function withReact() {
+interface WithReactOptions extends WithWebOptions {}
+
+export function withReact(pluginOptions: WithReactOptions = {}) {
   return function configure(config: Configuration, _ctx?: any): Configuration {
     const { withWeb } = require('@nrwl/webpack');
 
     if (processed.has(config)) return config;
-    config = withWeb()(config, _ctx);
+
+    // Apply web config for CSS, JSX, index.html handling, etc.
+    config = withWeb(pluginOptions)(config, _ctx);
 
     config.module.rules.push({
       test: /\.svg$/,

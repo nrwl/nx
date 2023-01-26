@@ -4,24 +4,21 @@ import { eachValueFrom } from '@nrwl/devkit/src/utils/rxjs-for-await';
 import type { Configuration } from 'webpack';
 import { of } from 'rxjs';
 import { switchMap, tap } from 'rxjs/operators';
-import { basename, join, resolve } from 'path';
+import { resolve } from 'path';
 import {
   calculateProjectDependencies,
   createTmpTsConfig,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 
 import { getWebpackConfig } from './lib/get-webpack-config';
-import { getEmittedFiles } from './lib/get-emitted-files';
 import { runWebpack } from './lib/run-webpack';
 import { deleteOutputDir } from '../../utils/fs';
-import { writeIndexHtml } from '../../utils/webpack/write-index-html';
 import { resolveCustomWebpackConfig } from '../../utils/webpack/custom-webpack';
 import type {
   NormalizedWebpackExecutorOptions,
   WebpackExecutorOptions,
 } from './schema';
 import { normalizeOptions } from './lib/normalize-options';
-import { EmittedFile } from '../../utils/models';
 
 async function getWebpackConfigs(
   options: NormalizedWebpackExecutorOptions,
@@ -32,6 +29,7 @@ async function getWebpackConfigs(
       `Using "isolatedConfig" without a "webpackConfig" is not supported.`
     );
   }
+
   let customWebpack = null;
 
   if (options.webpackConfig) {
@@ -73,7 +71,6 @@ export type WebpackExecutorEvent =
   | {
       success: true;
       outfile: string;
-      emittedFiles: EmittedFile[];
       options?: WebpackExecutorOptions;
     };
 
@@ -151,22 +148,6 @@ export async function* webpackExecutor(
       }),
       switchMap(async (result) => {
         const success = result && !result.hasErrors();
-        const emittedFiles = getEmittedFiles(result);
-        if (options.index && options.generateIndexHtml) {
-          await writeIndexHtml({
-            crossOrigin: options.crossOrigin,
-            sri: options.subresourceIntegrity,
-            outputPath: join(options.outputPath, basename(options.index)),
-            indexPath: join(context.root, options.index),
-            files: emittedFiles.filter((x) => x.extension === '.css'),
-            noModuleFiles: [],
-            moduleFiles: emittedFiles,
-            baseHref: options.baseHref,
-            deployUrl: options.deployUrl,
-            scripts: options.scripts,
-            styles: options.styles,
-          });
-        }
         return {
           success,
           outfile: resolve(
@@ -174,7 +155,6 @@ export async function* webpackExecutor(
             options.outputPath,
             options.outputFileName
           ),
-          emittedFiles,
           options,
         };
       })
