@@ -56,6 +56,16 @@ export interface Task {
      */
     runtime?: { [input: string]: string };
   };
+  /**
+   *
+   * Unix timestamp of when a Batch Task starts
+   **/
+  startTime?: number;
+  /**
+   *
+   * Unix timestamp of when a Batch Task ends
+   **/
+  endTime?: number;
 }
 
 /**

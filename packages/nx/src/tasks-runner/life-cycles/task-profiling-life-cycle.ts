@@ -37,9 +37,18 @@ export class TaskProfilingLifeCycle implements LifeCycle {
     metadata: TaskMetadata
   ): void {
     for (let tr of taskResults) {
-      this.timings[
-        `${tr.task.target.project}:${tr.task.target.target}`
-      ].perfEnd = performance.now();
+      if (tr.task.endTime && tr.task.startTime) {
+        this.timings[
+          `${tr.task.target.project}:${tr.task.target.target}`
+        ].perfStart = tr.task.startTime;
+        this.timings[
+          `${tr.task.target.project}:${tr.task.target.target}`
+        ].perfEnd = tr.task.endTime;
+      } else {
+        this.timings[
+          `${tr.task.target.project}:${tr.task.target.target}`
+        ].perfEnd = performance.now();
+      }
     }
     this.recordTaskCompletions(taskResults, metadata);
   }

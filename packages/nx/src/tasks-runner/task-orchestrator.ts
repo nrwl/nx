@@ -229,8 +229,6 @@ export class TaskOrchestrator {
       );
       const batchResultEntries = Object.entries(results);
       return batchResultEntries.map(([taskId, result]) => ({
-        // TODO(caleb): this is where the extra info from batch executor comes in at but it's up to the lifecycle to make use of that information.
-        // i.e. CloudEnabledLifeCycle needs to use that info to prevent saying all tasks take the same amount of time.
         ...result,
         task: this.taskGraph.tasks[taskId],
         status: (result.success ? 'success' : 'failure') as TaskStatus,

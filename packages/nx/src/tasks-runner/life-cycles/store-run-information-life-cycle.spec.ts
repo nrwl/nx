@@ -1,5 +1,79 @@
 import { StoreRunInformationLifeCycle } from './store-run-information-life-cycle';
 describe('StoreRunInformationLifeCycle', () => {
+  it.only('should handle startTime/endTime in TaskResults', () => {
+    let runDetails;
+    const store = new StoreRunInformationLifeCycle(
+      'nx run-many --target=test',
+      (res) => (runDetails = res),
+      () => 'DATE'
+    );
+
+    store.startCommand();
+
+    store.startTasks([{ id: 'proj1:test' }, { id: 'proj2:test' }] as any);
+
+    store.endTasks([
+      {
+        task: {
+          id: 'proj1:test',
+          target: { target: 'test', project: 'proj1' },
+          hash: 'hash1',
+          startTime: new Date('2020-01-0T10:00:00:000Z').getTime(),
+          endTime: new Date('2020-01-0T10:00:02:000Z').getTime(),
+        },
+        status: 'cache-miss',
+        code: 0,
+      },
+      {
+        task: {
+          id: 'proj2:test',
+          target: { target: 'test', project: 'proj2' },
+          hash: 'hash2',
+          startTime: new Date('2020-01-0T10:00:01:000Z').getTime(),
+          endTime: new Date('2020-01-0T10:00:04:000Z').getTime(),
+        },
+        status: 'cache-miss',
+        code: 0,
+      },
+    ] as any);
+
+    store.endCommand();
+    expect(runDetails).toMatchInlineSnapshot(`
+      Object {
+        "run": Object {
+          "command": "nx run-many --target=test",
+          "endTime": "DATE",
+          "inner": false,
+          "startTime": "DATE",
+        },
+        "tasks": Array [
+          Object {
+            "cacheStatus": "cache-miss",
+            "endTime": "DATE",
+            "hash": "hash1",
+            "params": "",
+            "projectName": "proj1",
+            "startTime": "DATE",
+            "status": 0,
+            "target": "test",
+            "taskId": "proj1:test",
+          },
+          Object {
+            "cacheStatus": "cache-miss",
+            "endTime": "DATE",
+            "hash": "hash2",
+            "params": "",
+            "projectName": "proj2",
+            "startTime": "DATE",
+            "status": 0,
+            "target": "test",
+            "taskId": "proj2:test",
+          },
+        ],
+      }
+    `);
+  });
+
   it('should create run details', () => {
     let runDetails;
     const store = new StoreRunInformationLifeCycle(
