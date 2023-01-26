@@ -702,12 +702,12 @@ async function determineFramework(
       message: 'Express [https://expressjs.com/]',
     },
     {
-      name: 'koa',
-      message: 'koa     [https://koajs.com/]',
-    },
-    {
       name: 'fastify',
       message: 'fastify [https://www.fastify.io/]',
+    },
+    {
+      name: 'koa',
+      message: 'koa     [https://koajs.com/]',
     },
   ];
 

@@ -1,5 +1,5 @@
 export interface SetUpDockerOptions {
-  projectName?: string;
+  project?: string;
   targetName?: string;
   buildTarget?: string;
   skipFormat?: boolean;
