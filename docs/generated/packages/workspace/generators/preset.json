@@ -70,6 +70,11 @@
         "type": "string",
         "enum": ["webpack", "vite"],
         "default": "vite"
+      },
+      "docker": {
+        "description": "Generate a Dockerfile",
+        "type": "boolean",
+        "default": false
       }
     },
     "presets": []

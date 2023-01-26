@@ -81,6 +81,12 @@ Default: `main`
 
 Default base to use for new projects
 
+### docker
+
+Type: `boolean`
+
+Generate a Dockerfile with your node-server
+
 ### framework
 
 Type: `string`
