@@ -103,7 +103,7 @@ describe('js e2e', () => {
     const swcHelpersFromDist = readJson(`dist/libs/${lib}/package.json`)
       .peerDependencies['@swc/helpers'];
 
-    expect(satisfies(swcHelpersFromDist, swcHelpersFromRoot)).toBeTruthy();
+    expect(swcHelpersFromDist).toEqual(swcHelpersFromRoot);
 
     updateJson(`libs/${lib}/.lib.swcrc`, (json) => {
       json.jsc.externalHelpers = false;

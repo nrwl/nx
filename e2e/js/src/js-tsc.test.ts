@@ -144,11 +144,8 @@ describe('js e2e', () => {
     const rootPackageJson = readJson(`package.json`);
 
     expect(
-      satisfies(
-        readJson(`dist/libs/${lib}/package.json`).peerDependencies.tslib,
-        rootPackageJson.dependencies.tslib
-      )
-    ).toBeTruthy();
+      readJson(`dist/libs/${lib}/package.json`).peerDependencies.tslib
+    ).toEqual(rootPackageJson.dependencies.tslib);
 
     updateJson(`libs/${lib}/tsconfig.json`, (json) => {
       json.compilerOptions = { ...json.compilerOptions, importHelpers: false };

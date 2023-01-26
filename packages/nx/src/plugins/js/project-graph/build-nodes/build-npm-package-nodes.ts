@@ -1,7 +1,7 @@
+import { ProjectGraphBuilder } from '../../../../project-graph/project-graph-builder';
+import { readJsonFile } from '../../../../utils/fileutils';
 import { join } from 'path';
-import { workspaceRoot } from '../../utils/workspace-root';
-import { readJsonFile } from '../../utils/fileutils';
-import { ProjectGraphBuilder } from '../project-graph-builder';
+import { workspaceRoot } from '../../../../utils/workspace-root';
 
 export function buildNpmPackageNodes(builder: ProjectGraphBuilder) {
   const packageJson = readJsonFile(join(workspaceRoot, 'package.json'));
