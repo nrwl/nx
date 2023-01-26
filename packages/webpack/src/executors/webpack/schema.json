@@ -394,5 +394,6 @@
         }
       ]
     }
-  }
+  },
+  "examplesFile": "../../../docs/webpack-build-executor-examples.md"
 }

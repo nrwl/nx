@@ -1,0 +1,53 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`15.6.3 migration (setup webpack.config file) should create webpack.config.js for projects that do not have one 1`] = `
+"
+        const { composePlugins, withNx } = require('@nrwl/webpack');
+      
+        // Nx plugins for webpack.
+        module.exports = composePlugins(withNx(), (config) => {
+          // Update the webpack config as needed here.
+          // e.g. config.plugins.push(new MyPlugin())
+          return config;
+        });
+        "
+`;
+
+exports[`15.6.3 migration (setup webpack.config file) should create webpack.config.js for projects that do not have one 2`] = `
+"
+        const { composePlugins, withNx } = require('@nrwl/webpack');
+      
+        // Nx plugins for webpack.
+        module.exports = composePlugins(withNx(), (config) => {
+          // Update the webpack config as needed here.
+          // e.g. config.plugins.push(new MyPlugin())
+          return config;
+        });
+        "
+`;
+
+exports[`15.6.3 migration (setup webpack.config file) should rename existing webpack.config file and create new one that requires it 1`] = `
+"
+        const { composePlugins, withNx } = require('@nrwl/webpack');
+
+        // Nx plugins for webpack.
+        module.exports = composePlugins(withNx(), (config, { options, context }) => {
+          // Note: This was added by an Nx migration.
+          // You should consider inlining the logic into this file.
+          return require('./webpack.config.js')(config, context);
+        });
+        "
+`;
+
+exports[`15.6.3 migration (setup webpack.config file) should rename existing webpack.config file and create new one that requires it 3`] = `
+"
+        const { composePlugins, withNx } = require('@nrwl/webpack');
+
+        // Nx plugins for webpack.
+        module.exports = composePlugins(withNx(), (config, { options, context }) => {
+          // Note: This was added by an Nx migration.
+          // You should consider inlining the logic into this file.
+          return require('./webpack.something.ts')(config, context);
+        });
+        "
+`;
