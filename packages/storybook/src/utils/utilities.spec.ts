@@ -24,7 +24,7 @@ const runAngularStorybookSchematic = wrapAngularDevkitSchematic(
   'storybook-configuration'
 );
 
-xdescribe('testing utilities', () => {
+describe('testing utilities', () => {
   describe('Test functions that need workspace tree', () => {
     let appTree: Tree;
 

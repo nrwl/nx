@@ -31,7 +31,7 @@ const runAngularStorybookSchematic = wrapAngularDevkitSchematic(
   'storybook-configuration'
 );
 
-xdescribe('migrate-stories-to-6-2 schematic', () => {
+describe('migrate-stories-to-6-2 schematic', () => {
   let appTree: Tree;
 
   describe('angular project', () => {

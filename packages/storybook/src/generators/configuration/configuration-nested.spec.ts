@@ -8,10 +8,9 @@ import {
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
 import configurationGenerator from './configuration';
-import * as rootProjectConfiguration from './test-configs/root-project-configuration.json';
 import * as workspaceConfiguration from './test-configs/root-workspace-configuration.json';
 
-xdescribe('@nrwl/storybook:configuration for workspaces with Root project', () => {
+describe('@nrwl/storybook:configuration for workspaces with Root project', () => {
   describe('basic functionalities', () => {
     let tree: Tree;
 
@@ -23,8 +22,7 @@ xdescribe('@nrwl/storybook:configuration for workspaces with Root project', () =
         };
         return json;
       });
-
-      writeJson(tree, 'project.json', rootProjectConfiguration);
+      writeConfig(tree, workspaceConfiguration);
       writeJson(tree, 'tsconfig.json', {
         extends: './tsconfig.base.json',
         compilerOptions: {
@@ -63,7 +61,6 @@ xdescribe('@nrwl/storybook:configuration for workspaces with Root project', () =
           },
         ],
       });
-      writeConfig(tree, workspaceConfiguration);
       writeJson(tree, 'package.json', {
         devDependencies: {
           '@storybook/addon-essentials': '~6.2.9',
