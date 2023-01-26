@@ -2,14 +2,9 @@ name: publish
 env:
   DEBUG: napi:*
   NX_RUN_GROUP: ${{ github.run_id }}-${{ github.run_attempt }}
-  NX_VERBOSE_LOGGING: true
-'on':
-  push:
-    tags:
-      - "[0-9]+.[0-9]+.[0-9]+"
-      - "[0-9]+.[0-9]+.[0-9]+-alpha.[0-9]+"
-      - "[0-9]+.[0-9]+.[0-9]+-beta.[0-9]+"
-      - "[0-9]+.[0-9]+.[0-9]+-rc.[0-9]+"
+on:
+  release:
+    types: [published]
 jobs:
   build:
     if: "!contains(github.event.head_commit.message, 'skip ci')"
@@ -122,6 +117,7 @@ jobs:
         shell: bash
       - name: Install dependencies
         run: yarn install
+        timeout-minutes: 30
       - name: Setup node x86
         uses: actions/setup-node@v3
         if: matrix.settings.target == 'i686-pc-windows-msvc'
@@ -224,8 +220,6 @@ jobs:
           git checkout -b publish/$GITHUB_REF_NAME
           npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
           yarn nx-release --local=false $GITHUB_REF_NAME
-#          npm config set registry //registry.npmjs.org/
-#          npm config set //registry.yarnpkg.com/:_authToken=$NPM_TOKEN
-        env:
-          GH_TOKEN: ${{ github.token }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

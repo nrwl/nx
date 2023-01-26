@@ -13,8 +13,6 @@ import * as publish from '@lerna/publish/index';
 const lernaJsonPath = join(__dirname, '../lerna.json');
 const originalLernaJson = readFileSync(lernaJsonPath);
 
-import * as enquirer from 'enquirer';
-
 function hideFromGitIndex(uncommittedFiles: string[]) {
   execSync(`git update-index --assume-unchanged ${uncommittedFiles.join(' ')}`);
 
@@ -45,31 +43,15 @@ function hideFromGitIndex(uncommittedFiles: string[]) {
       ? 'previous'
       : 'latest';
 
-  if (!options.local && !process.env.NPM_TOKEN) {
-    execSync('git status --ahead-behind');
-
-    const { result } = await enquirer.prompt<{ result: boolean }>({
-      message:
-        'This is a local machine. Do you want to tag this version and push it for publishing?',
-      type: 'confirm',
-      name: 'result',
-    });
-
-    if (result) {
-      execSync(`git tag ${options.version}`);
-      execSync(`git push origin ${options.version}`);
-    }
-    console.log(
-      'Check github: https://github.com/nrwl/nx/actions/workflows/publish.yml'
-    );
-  }
-
   const buildCommand = 'yarn build';
   console.log(`> ${buildCommand}`);
   execSync(buildCommand, {
     stdio: [0, 1, 2],
   });
-  updateLernaJsonVersion(currentLatestVersion);
+
+  if (options.local) {
+    updateLernaJsonVersion(currentLatestVersion);
+  }
 
   if (options.local) {
     // Force all projects to be not private
@@ -89,7 +71,7 @@ function hideFromGitIndex(uncommittedFiles: string[]) {
     }
   }
 
-  if (!options.local) {
+  if (!options.local && process.env.NPM_TOKEN) {
     execSync('npx nx run-many --target=artifacts', {
       stdio: [0, 1, 2],
     });
@@ -105,10 +87,10 @@ function hideFromGitIndex(uncommittedFiles: string[]) {
     tagVersionPrefix: '',
     exact: true,
     gitRemote: options.gitRemote,
-    gitTagVersion: true,
+    gitTagVersion: !process.env.NPM_TOKEN,
     message: 'chore(misc): publish %v',
     loglevel: options.loglevel ?? 'info',
-    yes: !options.local && !!process.env.NPM_TOKEN,
+    yes: !!process.env.NPM_TOKEN,
   };
 
   if (options.local) {
@@ -141,14 +123,23 @@ function hideFromGitIndex(uncommittedFiles: string[]) {
     distTag: distTag,
   };
 
-  if (!options.skipPublish) {
+  if (!options.local && !process.env.NPM_TOKEN) {
+    execSync('git status --ahead-behind');
+
+    await version(versionOptions);
+    console.log(
+      'Check github: https://github.com/nrwl/nx/actions/workflows/publish.yml'
+    );
+  } else if (!options.skipPublish) {
     await publish({ ...versionOptions, ...publishOptions });
   } else {
     await version(versionOptions);
     console.warn('Not Publishing because --dryRun was passed');
   }
 
-  restoreOriginalLernaJson();
+  if (options.local) {
+    restoreOriginalLernaJson();
+  }
 })();
 
 function parseArgs() {
