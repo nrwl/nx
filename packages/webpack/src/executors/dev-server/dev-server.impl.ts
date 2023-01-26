@@ -17,7 +17,6 @@ import {
 import { runWebpackDevServer } from '../../utils/run-webpack';
 import { resolveCustomWebpackConfig } from '../../utils/webpack/custom-webpack';
 import { normalizeOptions } from '../webpack/lib/normalize-options';
-import { getEmittedFiles } from '../webpack/lib/get-emitted-files';
 import { WebpackExecutorOptions } from '../webpack/schema';
 import { WebDevServerOptions } from './schema';
 
@@ -83,7 +82,6 @@ export async function* devServerExecutor(
       map(({ baseUrl, stats }) => {
         return {
           baseUrl,
-          emittedFiles: getEmittedFiles(stats),
           success: !stats.hasErrors(),
         };
       })

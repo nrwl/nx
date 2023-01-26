@@ -1,5 +1,4 @@
 import { AssetGlob } from '@nrwl/workspace/src/utilities/assets';
-import { CrossOriginValue } from '../../utils/webpack/write-index-html';
 
 export interface AssetGlobPattern {
   glob: string;
@@ -40,20 +39,14 @@ export interface OptimizationOptions {
 export interface WebpackExecutorOptions {
   additionalEntryPoints?: AdditionalEntryPoint[];
   assets?: Array<AssetGlob | string>;
-  baseHref?: string;
   buildLibsFromSource?: boolean;
   commonChunk?: boolean;
   compiler?: 'babel' | 'swc' | 'tsc';
-  crossOrigin?: CrossOriginValue;
   deleteOutputPath?: boolean;
-  deployUrl?: string;
   externalDependencies?: 'all' | 'none' | string[];
-  extractCss?: boolean;
   extractLicenses?: boolean;
   fileReplacements?: FileReplacement[];
-  generateIndexHtml?: boolean;
   generatePackageJson?: boolean;
-  index?: string;
   isolatedConfig?: boolean;
   main: string;
   memoryLimit?: number;
@@ -64,15 +57,10 @@ export interface WebpackExecutorOptions {
   outputPath: string;
   poll?: number;
   polyfills?: string;
-  postcssConfig?: string;
   progress?: boolean;
   runtimeChunk?: boolean;
-  scripts?: Array<ExtraEntryPointClass | string>;
   sourceMap?: boolean | 'hidden';
   statsJson?: boolean;
-  stylePreprocessorOptions?: any;
-  styles?: Array<ExtraEntryPointClass | string>;
-  subresourceIntegrity?: boolean;
   target?: 'node' | 'web';
   transformers?: TransformerEntry[];
   tsConfig: string;
@@ -80,6 +68,29 @@ export interface WebpackExecutorOptions {
   verbose?: boolean;
   watch?: boolean;
   webpackConfig?: string;
+  // TODO(jack): Also deprecate these in schema.json once we have migration from executor options to webpack.config.js file.
+  /** @deprecated Moved to withWeb options from `@nrwl/webpack` */
+  baseHref?: string;
+  /** @deprecated Moved to withWeb options from `@nrwl/webpack` */
+  crossOrigin?: 'none' | 'anonymous' | 'use-credentials';
+  /** @deprecated Moved to withWeb options from `@nrwl/webpack` */
+  deployUrl?: string;
+  /** @deprecated Moved to withWeb options from `@nrwl/webpack` */
+  extractCss?: boolean;
+  /** @deprecated Moved to withWeb options from `@nrwl/webpack` */
+  generateIndexHtml?: boolean;
+  /** @deprecated Moved to withWeb options from `@nrwl/webpack` */
+  index?: string;
+  /** @deprecated Moved to withWeb options from `@nrwl/webpack` */
+  postcssConfig?: string;
+  /** @deprecated Moved to withWeb options from `@nrwl/webpack` */
+  scripts?: Array<ExtraEntryPointClass | string>;
+  /** @deprecated Moved to withWeb options from `@nrwl/webpack` */
+  stylePreprocessorOptions?: any;
+  /** @deprecated Moved to withWeb options from `@nrwl/webpack` */
+  styles?: Array<ExtraEntryPointClass | string>;
+  /** @deprecated Moved to withWeb options from `@nrwl/webpack` */
+  subresourceIntegrity?: boolean;
 }
 
 export interface NormalizedWebpackExecutorOptions
