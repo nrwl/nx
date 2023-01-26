@@ -315,6 +315,7 @@ describe('app', () => {
       scripts: [],
       styles: ['apps/my-app/src/styles.css'],
       tsConfig: 'apps/my-app/tsconfig.app.json',
+      isolatedConfig: true,
       webpackConfig: 'apps/my-app/webpack.config.js',
     });
     expect(targetConfig.build.configurations.production).toEqual({

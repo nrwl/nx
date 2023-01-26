@@ -27,15 +27,11 @@ async function getWebpackConfigs(
   options: NormalizedWebpackExecutorOptions,
   context: ExecutorContext
 ): Promise<Configuration> {
-  const metadata = context.projectsConfigurations.projects[context.projectName];
-  const projectRoot = metadata.root;
-  const isScriptOptimizeOn =
-    typeof options.optimization === 'boolean'
-      ? options.optimization
-      : options.optimization && options.optimization.scripts
-      ? options.optimization.scripts
-      : false;
-
+  if (options.isolatedConfig && !options.webpackConfig) {
+    throw new Error(
+      `Using "isolatedConfig" without a "webpackConfig" is not supported.`
+    );
+  }
   let customWebpack = null;
 
   if (options.webpackConfig) {
@@ -49,15 +45,21 @@ async function getWebpackConfigs(
     }
   }
 
-  const config = getWebpackConfig(context, options);
+  const config = options.isolatedConfig
+    ? {}
+    : getWebpackConfig(context, options);
 
   if (customWebpack) {
-    return await customWebpack(config, {
-      options,
-      context,
-      configuration: context.configurationName, // backwards compat
-    });
+    return await customWebpack(
+      {},
+      {
+        options,
+        context,
+        configuration: context.configurationName, // backwards compat
+      }
+    );
   } else {
+    // If the user has no webpackConfig specified then we always have to apply
     return config;
   }
 }

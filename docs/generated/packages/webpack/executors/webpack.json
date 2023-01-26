@@ -331,6 +331,11 @@
         "description": "Generates a 'stats.json' file which can be analyzed using tools such as: 'webpack-bundle-analyzer' or `<https://webpack.github.io/analyse>`.",
         "default": false
       },
+      "isolatedConfig": {
+        "type": "boolean",
+        "description": "Do not apply Nx webpack plugins automatically. Plugins need to be applied in the project's webpack.config.js file (e.g. withNx, withReact, etc.).",
+        "default": false
+      },
       "extractLicenses": {
         "type": "boolean",
         "description": "Extract all licenses in a separate file, in the case of production builds only.",
