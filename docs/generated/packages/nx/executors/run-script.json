@@ -17,7 +17,8 @@
         "hidden": true,
         "type": "array",
         "items": { "type": "string" },
-        "$default": { "$source": "unparsed" }
+        "$default": { "$source": "unparsed" },
+        "x-priority": "internal"
       }
     },
     "additionalProperties": true,
