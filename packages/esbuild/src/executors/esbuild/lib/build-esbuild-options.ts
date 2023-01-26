@@ -40,10 +40,12 @@ export function buildEsbuildOptions(
     esbuildOptions.define = getClientEnvironment();
   }
 
-  if (options.singleEntry && options.bundle) {
-    esbuildOptions.outfile = getOutfile(format, options, context);
-  } else {
-    esbuildOptions.outdir = options.outputPath;
+  if (!esbuildOptions.outfile && !esbuildOptions.outdir) {
+    if (options.singleEntry && options.bundle && !esbuildOptions.splitting) {
+      esbuildOptions.outfile = getOutfile(format, options, context);
+    } else {
+      esbuildOptions.outdir = options.outputPath;
+    }
   }
 
   const entryPoints = options.additionalEntryPoints
