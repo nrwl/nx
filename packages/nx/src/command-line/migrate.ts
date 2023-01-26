@@ -29,6 +29,7 @@ import {
 } from '../utils/fileutils';
 import { logger } from '../utils/logger';
 import {
+  ArrayPackageGroup,
   NxMigrationsConfiguration,
   PackageGroup,
   PackageJson,
@@ -50,7 +51,7 @@ import { messages, recordStat } from '../utils/ab-testing';
 import { nxVersion } from '../utils/versions';
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
-  packageGroup?: NxMigrationsConfiguration['packageGroup'];
+  packageGroup?: ArrayPackageGroup;
 }
 
 const execAsync = promisify(exec);
@@ -302,24 +303,12 @@ export class Migrator {
     packageJsonUpdates: PackageJsonUpdates[string][];
     packageGroupOrder: string[];
   } {
-    const packageGroup = this.normalizePackageGroup(
-      packageName,
-      targetVersion,
-      migrationConfig.packageGroup
-    );
-
-    let packageGroupOrder: string[] = [];
-    if (packageGroup.length) {
-      packageGroupOrder = packageGroup.map(
-        (packageConfig) => packageConfig.package
-      );
-
-      setPackageGroupAsPackageJsonUpdate(
-        packageGroup,
+    const packageGroupOrder: string[] =
+      this.getPackageJsonUpdatesFromPackageGroup(
+        packageName,
         targetVersion,
         migrationConfig
       );
-    }
 
     if (
       !migrationConfig.packageJsonUpdates ||
@@ -335,6 +324,56 @@ export class Migrator {
     );
 
     return { packageJsonUpdates, packageGroupOrder };
+  }
+
+  /**
+   * Mutates migrationConfig, adding package group updates into packageJsonUpdates section
+   *
+   * @param packageName Package which is being migrated
+   * @param targetVersion Version which is being migrated to
+   * @param migrationConfig Configuration which is mutated to contain package json updates
+   * @returns Order of package groups
+   */
+  private getPackageJsonUpdatesFromPackageGroup(
+    packageName: string,
+    targetVersion: string,
+    migrationConfig: ResolvedMigrationConfiguration
+  ) {
+    const packageGroup: ArrayPackageGroup =
+      packageName === '@nrwl/workspace' && lt(targetVersion, '14.0.0-beta.0')
+        ? LEGACY_NRWL_PACKAGE_GROUP
+        : migrationConfig.packageGroup ?? [];
+
+    let packageGroupOrder: string[] = [];
+    if (packageGroup.length) {
+      packageGroupOrder = packageGroup.map(
+        (packageConfig) => packageConfig.package
+      );
+
+      migrationConfig.packageJsonUpdates ??= {};
+      const packages: Record<string, PackageJsonUpdateForPackage> = {};
+      migrationConfig.packageJsonUpdates[targetVersion + '--PackageGroup'] = {
+        version: targetVersion,
+        packages,
+      };
+      for (const packageConfig of packageGroup) {
+        packages[packageConfig.package] = {
+          version:
+            packageConfig.version === '*'
+              ? targetVersion
+              : packageConfig.version,
+          alwaysAddToPackageJson: false,
+        };
+        if (
+          packageConfig.version === '*' &&
+          this.installedPkgVersionOverrides[packageName]
+        ) {
+          this.installedPkgVersionOverrides[packageConfig.package] ??=
+            this.installedPkgVersionOverrides[packageName];
+        }
+      }
+    }
+    return packageGroupOrder;
   }
 
   private filterPackageJsonUpdates(
@@ -450,73 +489,6 @@ export class Migrator {
     );
   }
 
-  private normalizePackageGroup(
-    packageName: string,
-    targetVersion: string,
-    packageGroup: PackageGroup
-  ): { package: string; version: string }[] {
-    // Support Migrating to older versions of Nx
-    // Use the packageGroup of the latest version of Nx instead of the one from the target version which could be older.
-    if (
-      packageName === '@nrwl/workspace' &&
-      lt(targetVersion, '14.0.0-beta.0')
-    ) {
-      packageGroup = {
-        '@nrwl/workspace': '*',
-        '@nrwl/angular': '*',
-        '@nrwl/cypress': '*',
-        '@nrwl/devkit': '*',
-        '@nrwl/eslint-plugin-nx': '*',
-        '@nrwl/express': '*',
-        '@nrwl/jest': '*',
-        '@nrwl/linter': '*',
-        '@nrwl/nest': '*',
-        '@nrwl/next': '*',
-        '@nrwl/node': '*',
-        '@nrwl/nx-plugin': '*',
-        '@nrwl/react': '*',
-        '@nrwl/storybook': '*',
-        '@nrwl/web': '*',
-        '@nrwl/js': '*',
-        '@nrwl/cli': '*',
-        '@nrwl/nx-cloud': 'latest',
-        '@nrwl/react-native': '*',
-        '@nrwl/detox': '*',
-        '@nrwl/expo': '*',
-      };
-    }
-
-    if (!packageGroup) {
-      return [];
-    }
-
-    if (!Array.isArray(packageGroup)) {
-      return Object.entries(packageGroup).map(([pkg, version]) => {
-        if (this.installedPkgVersionOverrides[packageName] && version === '*') {
-          this.installedPkgVersionOverrides[pkg] ??=
-            this.installedPkgVersionOverrides[packageName];
-        }
-        return { package: pkg, version };
-      });
-    }
-
-    return packageGroup.map((packageConfig) => {
-      if (this.installedPkgVersionOverrides[packageName]) {
-        if (typeof packageConfig === 'string') {
-          this.installedPkgVersionOverrides[packageConfig] ??=
-            this.installedPkgVersionOverrides[packageName];
-        } else if (packageConfig.version === '*') {
-          this.installedPkgVersionOverrides[packageConfig.package] ??=
-            this.installedPkgVersionOverrides[packageName];
-        }
-      }
-
-      return typeof packageConfig === 'string'
-        ? { package: packageConfig, version: targetVersion }
-        : packageConfig;
-    });
-  }
-
   private gt(v1: string, v2: string) {
     return gt(normalizeVersion(v1), normalizeVersion(v2));
   }
@@ -526,23 +498,29 @@ export class Migrator {
   }
 }
 
-function setPackageGroupAsPackageJsonUpdate(
-  packageGroup: { package: string; version: string }[],
-  targetVersion: string,
-  migrationConfig: ResolvedMigrationConfiguration
-) {
-  migrationConfig.packageJsonUpdates ??= {};
-  migrationConfig.packageJsonUpdates[targetVersion + '--PackageGroup'] = {
-    version: targetVersion,
-    packages: packageGroup.reduce((acc, packageConfig) => {
-      acc[packageConfig.package] = {
-        version: packageConfig.version,
-        alwaysAddToPackageJson: false,
-      };
-      return acc;
-    }, {}),
-  };
-}
+const LEGACY_NRWL_PACKAGE_GROUP: ArrayPackageGroup = [
+  { package: '@nrwl/workspace', version: '*' },
+  { package: '@nrwl/angular', version: '*' },
+  { package: '@nrwl/cypress', version: '*' },
+  { package: '@nrwl/devkit', version: '*' },
+  { package: '@nrwl/eslint-plugin-nx', version: '*' },
+  { package: '@nrwl/express', version: '*' },
+  { package: '@nrwl/jest', version: '*' },
+  { package: '@nrwl/linter', version: '*' },
+  { package: '@nrwl/nest', version: '*' },
+  { package: '@nrwl/next', version: '*' },
+  { package: '@nrwl/node', version: '*' },
+  { package: '@nrwl/nx-plugin', version: '*' },
+  { package: '@nrwl/react', version: '*' },
+  { package: '@nrwl/storybook', version: '*' },
+  { package: '@nrwl/web', version: '*' },
+  { package: '@nrwl/js', version: '*' },
+  { package: '@nrwl/cli', version: '*' },
+  { package: '@nrwl/nx-cloud', version: 'latest' },
+  { package: '@nrwl/react-native', version: '*' },
+  { package: '@nrwl/detox', version: '*' },
+  { package: '@nrwl/expo', version: '*' },
+];
 
 function normalizeVersionWithTagCheck(version: string) {
   if (version === 'latest' || version === 'next') return version;
@@ -810,7 +788,7 @@ async function getPackageMigrationsUsingRegistry(
 async function getPackageMigrationsConfigFromRegistry(
   packageName: string,
   packageVersion: string
-): Promise<NxMigrationsConfiguration> {
+) {
   const result = await packageRegistryView(
     packageName,
     packageVersion,
@@ -827,7 +805,10 @@ async function getPackageMigrationsConfigFromRegistry(
 async function downloadPackageMigrationsFromRegistry(
   packageName: string,
   packageVersion: string,
-  { migrations: migrationsFilePath, packageGroup }: NxMigrationsConfiguration
+  {
+    migrations: migrationsFilePath,
+    packageGroup,
+  }: NxMigrationsConfiguration & { packageGroup?: ArrayPackageGroup }
 ): Promise<ResolvedMigrationConfiguration> {
   const { dir, cleanup } = createTempNpmDirectory();
 
@@ -894,6 +875,7 @@ async function getPackageMigrationsUsingInstall(
 
 interface PackageMigrationConfig extends NxMigrationsConfiguration {
   packageJson: PackageJson;
+  packageGroup: ArrayPackageGroup;
 }
 
 function readPackageMigrationConfig(
@@ -905,35 +887,27 @@ function readPackageMigrationConfig(
     [dir]
   );
 
-  const migrationConfigOrFile = json['nx-migrations'] || json['ng-update'];
+  const config = readNxMigrateConfig(json);
 
-  if (!migrationConfigOrFile) {
+  if (!config) {
     return { packageJson: json, migrations: null, packageGroup: [] };
   }
 
-  const migrationsConfig =
-    typeof migrationConfigOrFile === 'string'
-      ? {
-          migrations: migrationConfigOrFile,
-          packageGroup: [],
-        }
-      : migrationConfigOrFile;
-
   try {
-    const migrationFile = require.resolve(migrationsConfig.migrations, {
+    const migrationFile = require.resolve(config.migrations, {
       paths: [dirname(packageJsonPath)],
     });
 
     return {
       packageJson: json,
       migrations: migrationFile,
-      packageGroup: migrationsConfig.packageGroup,
+      packageGroup: config.packageGroup,
     };
   } catch {
     return {
       packageJson: json,
       migrations: null,
-      packageGroup: migrationsConfig.packageGroup,
+      packageGroup: config.packageGroup,
     };
   }
 }

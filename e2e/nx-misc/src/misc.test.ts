@@ -1,5 +1,6 @@
 import {
   cleanupProject,
+  getPublishedVersion,
   isNotWindows,
   newProject,
   readFile,
@@ -12,7 +13,6 @@ import {
   updateFile,
 } from '@nrwl/e2e/utils';
 import { renameSync } from 'fs';
-import { packagesWeCareAbout } from 'nx/src/command-line/report';
 import * as path from 'path';
 
 describe('Nx Commands', () => {
@@ -44,9 +44,12 @@ describe('Nx Commands', () => {
     it(`should report package versions`, async () => {
       const reportOutput = runCLI('report');
 
-      packagesWeCareAbout.forEach((p) => {
-        expect(reportOutput).toContain(p);
-      });
+      expect(reportOutput).toEqual(
+        expect.stringMatching(
+          new RegExp(`\@nrwl\/workspace.*:.*${getPublishedVersion()}`)
+        )
+      );
+      expect(reportOutput).toContain('@nrwl/workspace');
     }, 120000);
 
     it(`should list plugins`, async () => {
