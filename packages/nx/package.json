@@ -9,8 +9,7 @@
     "directory": "packages/nx"
   },
   "scripts": {
-    "postinstall": "node ./bin/compute-project-graph",
-    "prepublishOnly": "napi prepublish --skip-gh-release --prefix ./native-packages $NAPI_DRY_RUN"
+    "postinstall": "node ./bin/compute-project-graph"
   },
   "keywords": [
     "Monorepo",
@@ -78,6 +77,17 @@
     "@swc/core": {
       "optional": true
     }
+  },
+  "optionalDependencies": {
+    "@nrwl/nx-win32-x64-msvc": "*",
+    "@nrwl/nx-darwin-x64": "*",
+    "@nrwl/nx-linux-x64-gnu": "*",
+    "@nrwl/nx-darwin-arm64": "*",
+    "@nrwl/nx-linux-arm64-gnu": "*",
+    "@nrwl/nx-linux-arm64-musl": "*",
+    "@nrwl/nx-win32-arm64-msvc": "*",
+    "@nrwl/nx-linux-arm-gnueabihf": "*",
+    "@nrwl/nx-linux-x64-musl": "*"
   },
   "nx-migrations": {
     "migrations": "./migrations.json",

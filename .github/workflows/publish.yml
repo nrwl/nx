@@ -6,7 +6,10 @@ env:
 'on':
   push:
     tags:
-      - '*.*.*'
+      - "[0-9]+.[0-9]+.[0-9]+"
+      - "[0-9]+.[0-9]+.[0-9]+-alpha.[0-9]+"
+      - "[0-9]+.[0-9]+.[0-9]+-beta.[0-9]+"
+      - "[0-9]+.[0-9]+.[0-9]+-rc.[0-9]+"
 jobs:
   build:
     if: "!contains(github.event.head_commit.message, 'skip ci')"
@@ -218,7 +221,11 @@ jobs:
         shell: bash
       - name: Publish
         run: |
+          git checkout -b publish/$GITHUB_REF_NAME
+          npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
           yarn nx-release --local=false $GITHUB_REF_NAME
+#          npm config set registry //registry.npmjs.org/
+#          npm config set //registry.yarnpkg.com/:_authToken=$NPM_TOKEN
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
