@@ -20,14 +20,14 @@ function normalizeOptions(
 ): SetUpDockerOptions {
   return {
     ...setupOptions,
-    projectName: setupOptions.projectName ?? readNxJson(tree).defaultProject,
+    project: setupOptions.project ?? readNxJson(tree).defaultProject,
     targetName: setupOptions.targetName ?? 'docker-build',
     buildTarget: setupOptions.buildTarget ?? 'build',
   };
 }
 
 function addDocker(tree: Tree, options: SetUpDockerOptions) {
-  const project = readProjectConfiguration(tree, options.projectName);
+  const project = readProjectConfiguration(tree, options.project);
   if (!project || !options.targetName) {
     return;
   }
@@ -43,13 +43,13 @@ function addDocker(tree: Tree, options: SetUpDockerOptions) {
       tmpl: '',
       app: project.sourceRoot,
       buildLocation: outputPath,
-      projectName: options.projectName,
+      project: options.project,
     });
   }
 }
 
 export function updateProjectConfig(tree: Tree, options: SetUpDockerOptions) {
-  let projectConfig = readProjectConfiguration(tree, options.projectName);
+  let projectConfig = readProjectConfiguration(tree, options.project);
 
   projectConfig.targets[`${options.targetName}`] = {
     dependsOn: [`${options.buildTarget}`],
@@ -59,12 +59,12 @@ export function updateProjectConfig(tree: Tree, options: SetUpDockerOptions) {
         `docker build -f ${joinPathFragments(
           projectConfig.root,
           'Dockerfile'
-        )} .`,
+        )} . -t ${options.project}`,
       ],
     },
   };
 
-  updateProjectConfiguration(tree, options.projectName, projectConfig);
+  updateProjectConfiguration(tree, options.project, projectConfig);
 }
 
 export async function setupDockerGenerator(

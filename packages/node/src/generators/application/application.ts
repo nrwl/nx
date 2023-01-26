@@ -59,7 +59,10 @@ function getWebpackBuildConfig(
     options: {
       target: 'node',
       compiler: 'tsc',
-      outputPath: joinPathFragments('dist', options.appProjectRoot),
+      outputPath: joinPathFragments(
+        'dist',
+        options.rootProject ? options.name : options.appProjectRoot
+      ),
       main: joinPathFragments(
         project.sourceRoot,
         'main' + (options.js ? '.js' : '.ts')
@@ -90,7 +93,10 @@ function getEsBuildConfig(
     executor: '@nrwl/esbuild:esbuild',
     outputs: ['{options.outputPath}'],
     options: {
-      outputPath: joinPathFragments('dist', options.appProjectRoot),
+      outputPath: joinPathFragments(
+        'dist',
+        options.rootProject ? options.name : options.appProjectRoot
+      ),
       format: ['cjs'],
       main: joinPathFragments(
         project.sourceRoot,
@@ -373,7 +379,7 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
   if (options.docker) {
     const dockerTask = await setupDockerGenerator(tree, {
       ...options,
-      projectName: options.name,
+      project: options.name,
     });
 
     tasks.push(dockerTask);

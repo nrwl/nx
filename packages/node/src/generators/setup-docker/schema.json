@@ -6,10 +6,14 @@
   "description": "Nx Node Docker Options Schema.",
   "type": "object",
   "properties": {
-    "projectName": {
+    "project": {
       "description": "The name of the project",
-      "$default": { "$source": "argv", "index": 0 },
-      "type": "string"
+      "$default": {
+        "$source": "projectName"
+      },
+      "type": "string",
+      "x-prompt": "What project would you like to add a Dockerfile to?",
+      "x-priority": "important"
     },
     "targetName": {
       "description": "The name of the target to create",
