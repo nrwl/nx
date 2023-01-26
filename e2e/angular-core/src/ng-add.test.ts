@@ -16,8 +16,7 @@ import {
 } from '@nrwl/e2e/utils';
 import { PackageManager } from 'nx/src/utils/package-manager';
 
-// TODO(leo): temporarily disabled until a bug in the Angular CLI is solved
-xdescribe('convert Angular CLI workspace to an Nx workspace', () => {
+describe('convert Angular CLI workspace to an Nx workspace', () => {
   let project: string;
   let packageManager: PackageManager;
 
