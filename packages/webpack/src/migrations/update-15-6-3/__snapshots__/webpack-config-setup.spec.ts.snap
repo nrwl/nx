@@ -34,7 +34,7 @@ exports[`15.6.3 migration (setup webpack.config file) should rename existing web
         module.exports = composePlugins(withNx(), (config, { options, context }) => {
           // Note: This was added by an Nx migration.
           // You should consider inlining the logic into this file.
-          return require('./webpack.config.js')(config, context);
+          return require('./webpack.config.old.js')(config, context);
         });
         "
 `;
@@ -47,7 +47,7 @@ exports[`15.6.3 migration (setup webpack.config file) should rename existing web
         module.exports = composePlugins(withNx(), (config, { options, context }) => {
           // Note: This was added by an Nx migration.
           // You should consider inlining the logic into this file.
-          return require('./webpack.something.ts')(config, context);
+          return require('./webpack.something.old.ts')(config, context);
         });
         "
 `;

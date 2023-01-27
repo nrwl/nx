@@ -71,6 +71,30 @@ describe('15.6.3 migration (setup webpack.config file)', () => {
       },
     });
 
+    addProjectConfiguration(tree, 'app6', {
+      root: 'apps/app6',
+      targets: {
+        custom: {
+          executor: '@nrwl/webpack:webpack',
+          options: {
+            webpackConfig: '@nrwl/react/plugins/webpack',
+          },
+        },
+      },
+    });
+
+    addProjectConfiguration(tree, 'app7', {
+      root: 'apps/app7',
+      targets: {
+        custom: {
+          executor: '@nrwl/webpack:webpack',
+          options: {
+            main: 'apps/app7/src/main.tsx',
+          },
+        },
+      },
+    });
+
     await webpackConfigSetup(tree);
   });
 
@@ -135,5 +159,10 @@ describe('15.6.3 migration (setup webpack.config file)', () => {
 
   it('should not do anything if isolatedConfig is true', () => {
     expect(tree.exists('apps/app5/webpack.config.js')).toBeFalsy();
+  });
+
+  it('should not do anything if project is react', () => {
+    expect(tree.exists('apps/app6/webpack.config.js')).toBeFalsy();
+    expect(tree.exists('apps/app7/webpack.config.js')).toBeFalsy();
   });
 });

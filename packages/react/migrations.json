@@ -77,6 +77,12 @@
       "version": "15.3.0-beta.0",
       "description": "Install new dependencies for React projects using Webpack or Rollup.",
       "factory": "./src/migrations/update-15-3-0/install-webpack-rollup-dependencies"
+    },
+    "react-webpack-config-setup": {
+      "cli": "nx",
+      "version": "15.6.3-beta.0",
+      "description": "Creates or updates webpack.config.js file with the new options for webpack.",
+      "factory": "./src/migrations/update-15-6-3/webpack-config-setup"
     }
   },
   "packageJsonUpdates": {
