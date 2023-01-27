@@ -20,6 +20,11 @@ export function App() {
       <StyledApp>
         <% if (!minimal) { %>
         <NxWelcome title="<%= projectName %>"/>
+        <% } else { %>
+          <h1>
+            <span> Hello there, </span>
+            Welcome <%= projectName %> 👋
+          </h1>
         <% } %>
       </StyledApp>
   );
