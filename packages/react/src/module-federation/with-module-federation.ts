@@ -27,8 +27,8 @@ export async function withModuleFederation(options: ModuleFederationConfig) {
   const { sharedDependencies, sharedLibraries, mappedRemotes } =
     await getModuleFederationConfig(options, determineRemoteUrl);
 
-  return (config) => {
-    config = reactWebpackConfig(config);
+  return (config, ctx) => {
+    config = reactWebpackConfig(config, ctx);
     config.output.uniqueName = options.name;
     config.output.publicPath = 'auto';
 

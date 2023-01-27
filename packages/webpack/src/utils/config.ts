@@ -11,7 +11,7 @@ export function getBaseWebpackPartial(
   context?: ExecutorContext
 ): Configuration {
   const config: Configuration = {};
-  const configure = composePlugins(withNx(), withWeb());
+  const configure = composePluginsSync(withNx(), withWeb());
   return configure(config, { options, context });
 }
 
@@ -20,28 +20,41 @@ export interface NxWebpackExecutionContext {
   context: ExecutorContext;
 }
 
-export type NxWebpackPlugin = (
-  config: Configuration,
-  ctx: NxWebpackExecutionContext
-) => Configuration;
-
-export type NxWebpackPluginAsyncResolver = Promise<NxWebpackPlugin>;
+export interface NxWebpackPlugin {
+  (config: Configuration, ctx: NxWebpackExecutionContext): Configuration;
+}
+export interface AsyncNxWebpackPlugin {
+  (config: Configuration, ctx: NxWebpackExecutionContext):
+    | Configuration
+    | Promise<Configuration>;
+}
 
 export function composePlugins(
-  ...plugins: (NxWebpackPlugin | NxWebpackPluginAsyncResolver)[]
+  ...plugins: (
+    | NxWebpackPlugin
+    | AsyncNxWebpackPlugin
+    | Promise<NxWebpackPlugin | AsyncNxWebpackPlugin>
+  )[]
 ) {
+  return async function combined(
+    config: Configuration,
+    ctx: NxWebpackExecutionContext
+  ): Promise<Configuration> {
+    for (const plugin of plugins) {
+      const fn = await plugin;
+      config = await fn(config, ctx);
+    }
+    return config;
+  };
+}
+
+export function composePluginsSync(...plugins: NxWebpackPlugin[]) {
   return function combined(
     config: Configuration,
     ctx: NxWebpackExecutionContext
   ): Configuration {
     for (const plugin of plugins) {
-      if ('then' in plugin) {
-        plugin.then((resolvedPlugin) => {
-          config = resolvedPlugin(config, ctx);
-        });
-      } else {
-        config = plugin(config, ctx);
-      }
+      config = plugin(config, ctx);
     }
     return config;
   };

@@ -1,5 +1,5 @@
-import { ExecutorContext, logger } from '@nrwl/devkit';
-import { composePlugins } from '@nrwl/webpack/src/utils/config';
+import { ExecutorContext, logger, workspaceRoot } from '@nrwl/devkit';
+import { composePluginsSync } from '@nrwl/webpack/src/utils/config';
 import { NormalizedWebpackExecutorOptions } from '@nrwl/webpack/src/executors/webpack/schema';
 import { join } from 'path';
 import {
@@ -95,14 +95,14 @@ export const webpack = async (
 
   // ESM build for modern browsers.
   let baseWebpackConfig: Configuration = {};
-  const configure = composePlugins(
+  const configure = composePluginsSync(
     withNx({ skipTypeChecking: true }),
     withWeb(),
     withReact()
   );
   const finalConfig = configure(baseWebpackConfig, {
     options: builderOptions,
-    context: {} as ExecutorContext, // The context is not used here.
+    context: { root: workspaceRoot } as ExecutorContext, // The context is not used here.
   });
 
   return {

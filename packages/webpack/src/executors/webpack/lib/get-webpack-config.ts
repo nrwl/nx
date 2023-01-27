@@ -4,7 +4,7 @@ import { ExecutorContext } from '@nrwl/devkit';
 import { NormalizedWebpackExecutorOptions } from '../schema';
 import { withNx } from '../../../utils/with-nx';
 import { withWeb } from '../../../utils/with-web';
-import { composePlugins } from '@nrwl/webpack';
+import { composePluginsSync } from '../../../utils/config';
 
 interface GetWebpackConfigOverrides {
   root: string;
@@ -20,6 +20,8 @@ export function getWebpackConfig(
 ): Configuration {
   const config: Configuration = {};
   const configure =
-    options.target === 'node' ? withNx() : composePlugins(withNx(), withWeb());
+    options.target === 'node'
+      ? withNx()
+      : composePluginsSync(withNx(), withWeb());
   return configure(config, { options, context });
 }
