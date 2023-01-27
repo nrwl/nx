@@ -14,12 +14,6 @@ export function App() {
   return (
     <>
       <style jsx>{`/** your style here **/`}</style>
-      <% } else { %>
-      <h1>
-        <span> Hello there, </span>
-        Welcome <%= projectName %> 👋
-      </h1>
-     <% } %>
     </>
   );
 

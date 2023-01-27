@@ -12,6 +12,11 @@ export function App() {
   return (
     <>
       
+      <h1>
+        <span> Hello there, </span>
+        Welcome plain 👋
+      </h1>
+     
       <div />
     </>);
 
@@ -62,7 +67,7 @@ export function App() {
     <>
       
       <NxWelcome title=\\"my-app\\"/>
-      
+     
       <div />
     </>);
 
@@ -89,7 +94,7 @@ export function App() {
     <>
       
       <NxWelcome title=\\"my-dir-my-app\\"/>
-      
+     
       <div />
     </>);
 
