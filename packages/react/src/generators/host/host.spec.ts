@@ -28,6 +28,20 @@ describe('hostGenerator', () => {
     expect(tree.exists('apps/test/src/remotes.d.ts'));
   });
 
+  it('should install @nrwl/web for the file-server executor', async () => {
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    await hostGenerator(tree, {
+      name: 'test',
+      style: 'css',
+      linter: Linter.None,
+      unitTestRunner: 'none',
+      e2eTestRunner: 'none',
+    });
+
+    const packageJson = readJson(tree, 'package.json');
+    expect(packageJson.devDependencies['@nrwl/web']).toBeDefined();
+  });
+
   it('should generate host files and configs for SSR', async () => {
     await hostGenerator(tree, {
       name: 'test',
