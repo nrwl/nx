@@ -50,6 +50,7 @@ export {
   addDependenciesToPackageJson,
   ensurePackage,
   removeDependenciesFromPackageJson,
+  NX_VERSION,
 } from './src/utils/package-json';
 
 /**
