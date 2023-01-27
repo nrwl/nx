@@ -36,9 +36,9 @@ export async function makeAngularCliFaster(args: Args) {
   }
 
   output.success({
-    title: '🎉 Angular CLI is faster now!',
+    title: '🎉 Nx is now enabled in your workspace!',
     bodyLines: [
-      `Execute 'npx ng build' twice to see the computation caching in action.`,
+      `Execute 'npx nx build' twice to see the computation caching in action.`,
       'Learn more about the changes done to your workspace at https://nx.dev/recipes/adopting-nx/migration-angular.',
     ],
   });
