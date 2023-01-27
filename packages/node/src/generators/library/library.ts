@@ -140,12 +140,19 @@ function updateProject(tree: Tree, options: NormalizedSchema) {
   const project = readProjectConfiguration(tree, options.name);
   const { libsDir } = getWorkspaceLayout(tree);
 
+  const rootProject = options.projectRoot === '.' || options.projectRoot === '';
+
   project.targets = project.targets || {};
   project.targets.build = {
     executor: `@nrwl/js:${options.compiler}`,
     outputs: ['{options.outputPath}'],
     options: {
-      outputPath: `dist/${libsDir}/${options.projectDirectory}`,
+      outputPath: joinPathFragments(
+        'dist',
+        rootProject
+          ? options.projectDirectory
+          : `${libsDir}/${options.projectDirectory}`
+      ),
       tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
       packageJson: `${options.projectRoot}/package.json`,
       main: `${options.projectRoot}/src/index` + (options.js ? '.js' : '.ts'),
