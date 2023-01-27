@@ -3,7 +3,9 @@ import { Component } from 'react';
 <% } %>
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import styles from './<%= fileName %>.module.<%= style %>';
+<% if (!minimal) { %>
 import NxWelcome from "./nx-welcome";
+<% } %>
 
 <% if (classComponent) { %>
 export class App extends Component {
@@ -13,7 +15,14 @@ export function App() {
 <% } %>
   return (
     <>
+      <% if (!minimal) { %>
       <NxWelcome title="<%= projectName %>"/>
+     <% } else { %>
+      <h1>
+        <span> Hello there, </span>
+        Welcome <%= projectName %> 👋
+      </h1>
+     <% } %>
       <div />
     </>);
 <% if (classComponent) { %>

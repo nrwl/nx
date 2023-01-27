@@ -76,6 +76,9 @@ describe('app', () => {
       expect(appTree.exists('apps/my-app/.babelrc')).toBeTruthy();
       expect(appTree.exists('apps/my-app/src/main.tsx')).toBeTruthy();
       expect(appTree.exists('apps/my-app/src/app/app.tsx')).toBeTruthy();
+      expect(
+        appTree.read('apps/my-app/src/app/app.tsx', 'utf-8')
+      ).toMatchSnapshot();
       expect(appTree.exists('apps/my-app/src/app/app.spec.tsx')).toBeTruthy();
       expect(appTree.exists('apps/my-app/src/app/app.module.css')).toBeTruthy();
 
@@ -235,8 +238,8 @@ describe('app', () => {
     await applicationGenerator(appTree, { ...schema, directory: 'myDir' });
 
     expect(
-      appTree.read('apps/my-dir/my-app/src/app/app.tsx').toString()
-    ).toContain(`<NxWelcome title="my-dir-my-app"/>`);
+      appTree.read('apps/my-dir/my-app/src/app/app.tsx', 'utf-8')
+    ).toMatchSnapshot();
     expect(
       appTree.read('apps/my-dir/my-app/src/app/nx-welcome.tsx').toString()
     ).toContain('Hello there');
@@ -832,6 +835,20 @@ describe('app', () => {
           style: 'styled-components',
         },
       });
+    });
+  });
+
+  describe('--minimal', () => {
+    it('should create default application without Nx welcome component', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        name: 'plain',
+        minimal: true,
+      });
+      expect(appTree.exists('apps/plain/src/app/nx-welcome.tsx')).toBeFalsy();
+      expect(
+        appTree.read('apps/plain/src/app/app.tsx', 'utf-8')
+      ).toMatchSnapshot();
     });
   });
 

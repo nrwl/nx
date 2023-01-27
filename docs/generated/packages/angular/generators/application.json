@@ -156,6 +156,11 @@
         "default": false,
         "hidden": true,
         "x-priority": "internal"
+      },
+      "minimal": {
+        "description": "Generate a Angular app with a minimal setup.",
+        "type": "boolean",
+        "default": false
       }
     },
     "additionalProperties": false,

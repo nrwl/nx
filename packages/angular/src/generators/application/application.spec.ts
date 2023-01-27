@@ -862,6 +862,19 @@ describe('app', () => {
       .toThrow(stripIndents`The "standalone" option is only supported in Angular >= 14.1.0. You are currently using 14.0.0.
     You can resolve this error by removing the "standalone" option or by migrating to Angular 14.1.0.`);
   });
+
+  describe('--minimal', () => {
+    it('should skip Nx specific `nx-welcome.component.ts` file creation', async () => {
+      await generateApp(appTree, 'plain', { minimal: true });
+
+      expect(
+        appTree.read('apps/plain/src/app/app.module.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        appTree.exists('apps/plain/src/app/nx-welcome.component.ts')
+      ).toBeFalsy();
+    });
+  });
 });
 
 async function generateApp(

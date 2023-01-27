@@ -92,24 +92,26 @@ export async function applicationGenerator(
   updateConfigFiles(tree, options);
   updateAppComponentTemplate(tree, options);
 
-  // Create the NxWelcomeComponent
-  const angularComponentSchematic = wrapAngularDevkitSchematic(
-    '@schematics/angular',
-    'component'
-  );
-  await angularComponentSchematic(tree, {
-    name: 'NxWelcome',
-    inlineTemplate: true,
-    inlineStyle: true,
-    prefix: options.prefix,
-    skipTests: true,
-    style: options.style,
-    flat: true,
-    viewEncapsulation: 'None',
-    project: options.name,
-    standalone: options.standalone,
-  });
-  updateNxComponentTemplate(tree, options);
+  if (!options.minimal) {
+    // Create the NxWelcomeComponent
+    const angularComponentSchematic = wrapAngularDevkitSchematic(
+      '@schematics/angular',
+      'component'
+    );
+    await angularComponentSchematic(tree, {
+      name: 'NxWelcome',
+      inlineTemplate: true,
+      inlineStyle: true,
+      prefix: options.prefix,
+      skipTests: true,
+      style: options.style,
+      flat: true,
+      viewEncapsulation: 'None',
+      project: options.name,
+      standalone: options.standalone,
+    });
+    updateNxComponentTemplate(tree, options);
+  }
 
   if (options.addTailwind) {
     await setupTailwindGenerator(tree, {
