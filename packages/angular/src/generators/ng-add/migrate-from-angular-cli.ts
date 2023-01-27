@@ -22,6 +22,7 @@ import {
   getAllProjects,
   getWorkspaceRootFileTypesInfo,
   normalizeOptions,
+  removeWatchFromKarmaConf,
   updatePackageJson,
   updatePrettierConfig,
   updateRootEsLintConfig,
@@ -62,6 +63,7 @@ export async function migrateFromAngularCli(
       $schema: undefined,
     }));
     convertAllToNxProjects(tree);
+    removeWatchFromKarmaConf(tree);
   } else {
     const migrators: ProjectMigrator[] = [
       ...projects.apps.map((app) => new AppMigrator(tree, options, app)),

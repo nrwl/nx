@@ -6,3 +6,4 @@ export * from './projects';
 export * from './types';
 export * from './validation-logging';
 export * from './workspace';
+export * from './remove-watch-from-karma-conf';

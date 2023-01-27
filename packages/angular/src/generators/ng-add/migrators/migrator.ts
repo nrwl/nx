@@ -133,7 +133,7 @@ export abstract class Migrator {
       : originalPath;
   }
 
-  private getTargetValuesForOption(
+  protected getTargetValuesForOption(
     target: TargetConfiguration,
     optionPath: string
   ): any[] {

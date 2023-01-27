@@ -12,6 +12,7 @@ import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescr
 import { basename } from 'path';
 import type { Logger, ProjectMigrationInfo } from '../../utilities';
 import { BuilderMigrator } from './builder.migrator';
+import { tsquery } from '@phenomnomnominal/tsquery';
 
 export class AngularDevkitKarmaMigrator extends BuilderMigrator {
   constructor(
@@ -41,6 +42,7 @@ export class AngularDevkitKarmaMigrator extends BuilderMigrator {
         'tsConfig',
         'webWorkerTsConfig',
       ]);
+      this.removeWatchFromKarmaConf(target);
       this.updateTargetConfiguration(name, target);
       this.updateTsConfigFileUsedByTestTarget(name, target);
       this.updateCacheableOperations([name]);
@@ -126,5 +128,37 @@ export class AngularDevkitKarmaMigrator extends BuilderMigrator {
       getRootTsConfigPathInTree(this.tree),
       offsetFromRoot(this.projectConfig.root)
     );
+  }
+
+  private removeWatchFromKarmaConf(target: TargetConfiguration) {
+    const karmaConfFiles = this.getTargetValuesForOption(target, 'karmaConfig');
+    for (const file of karmaConfFiles) {
+      if (!this.tree.exists(file)) {
+        continue;
+      }
+
+      const karmaConfFileContents = this.tree.read(file, 'utf-8');
+      const ast = tsquery.ast(karmaConfFileContents);
+
+      const HAS_SINGLE_RUN_FALSE_SELECTOR = `PropertyAssignment:has(Identifier[name=singleRun]) > FalseKeyword`;
+      const nodes = tsquery(ast, HAS_SINGLE_RUN_FALSE_SELECTOR, {
+        visitAllChildren: true,
+      });
+      if (nodes.length === 0) {
+        continue;
+      }
+
+      const SINGLE_RUN_FALSE_SELECTOR = `PropertyAssignment:has(Identifier[name=singleRun])`;
+      const node = tsquery(ast, SINGLE_RUN_FALSE_SELECTOR, {
+        visitAllChildren: true,
+      })[0];
+
+      const newFileContents = `${karmaConfFileContents.slice(
+        0,
+        node.getStart()
+      )}singleRun: true${karmaConfFileContents.slice(node.getEnd())}`;
+
+      this.tree.write(file, newFileContents);
+    }
   }
 }
