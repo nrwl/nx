@@ -80,7 +80,6 @@ process.on('message', async (message: BatchMessage) => {
         type: BatchMessageType.Complete,
         results,
       } as BatchCompleteMessage);
-      process.exit(0);
     }
   }
 });

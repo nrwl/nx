@@ -229,6 +229,7 @@ export class TaskOrchestrator {
       );
       const batchResultEntries = Object.entries(results);
       return batchResultEntries.map(([taskId, result]) => ({
+        ...result,
         task: this.taskGraph.tasks[taskId],
         status: (result.success ? 'success' : 'failure') as TaskStatus,
         terminalOutput: result.terminalOutput,
@@ -359,7 +360,6 @@ export class TaskOrchestrator {
           this.cache.put(task, terminalOutput, outputs, code)
         )
     );
-
     this.options.lifeCycle.endTasks(
       results.map((result) => {
         const code =
@@ -370,6 +370,7 @@ export class TaskOrchestrator {
             ? 0
             : 1;
         return {
+          ...result,
           task: result.task,
           status: result.status,
           code,
