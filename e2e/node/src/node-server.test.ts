@@ -1,5 +1,6 @@
 import {
   checkFilesDoNotExist,
+  checkFilesExist,
   cleanupProject,
   killPort,
   newProject,
@@ -59,5 +60,15 @@ describe('Node Applications + webpack', () => {
     await runE2eTests(expressApp);
     await runE2eTests(fastifyApp);
     await runE2eTests(koaApp);
+  }, 300_000);
+
+  it('should generate a Dockerfile', async () => {
+    const expressApp = uniq('expressapp');
+
+    runCLI(
+      `generate @nrwl/node:app  ${expressApp} --framework=express --docker --no-interactive`
+    );
+
+    checkFilesExist(`apps/${expressApp}/Dockerfile`);
   }, 300_000);
 });

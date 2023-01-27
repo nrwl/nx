@@ -10,7 +10,6 @@ import {
   updateFile,
 } from '@nrwl/e2e/utils';
 import { execSync } from 'child_process';
-import { read } from 'fs-extra';
 
 describe('Node Applications + webpack', () => {
   beforeEach(() => newProject());
