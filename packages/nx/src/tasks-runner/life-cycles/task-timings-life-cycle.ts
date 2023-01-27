@@ -12,7 +12,7 @@ export class TaskTimingsLifeCycle implements LifeCycle {
 
   startTasks(tasks: Task[]): void {
     for (let t of tasks) {
-      this.timings[`${t.target.project}:${t.target.target}`] = {
+      this.timings[t.id] = {
         start: new Date().getTime(),
         end: undefined,
       };
@@ -28,14 +28,10 @@ export class TaskTimingsLifeCycle implements LifeCycle {
   ): void {
     for (let tr of taskResults) {
       if (tr.task.endTime && tr.task.startTime) {
-        this.timings[
-          `${tr.task.target.project}:${tr.task.target.target}`
-        ].start = tr.task.startTime;
-        this.timings[`${tr.task.target.project}:${tr.task.target.target}`].end =
-          tr.task.endTime;
+        this.timings[tr.task.id].start = tr.task.startTime;
+        this.timings[tr.task.id].end = tr.task.endTime;
       } else {
-        this.timings[`${tr.task.target.project}:${tr.task.target.target}`].end =
-          new Date().getTime();
+        this.timings[tr.task.id].end = new Date().getTime();
       }
     }
   }

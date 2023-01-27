@@ -1,3 +1,5 @@
+import { Task } from 'nx/src/config/task-graph';
+import { TaskStatus } from '../tasks-runner';
 import { StoreRunInformationLifeCycle } from './store-run-information-life-cycle';
 describe('StoreRunInformationLifeCycle', () => {
   it.only('should handle startTime/endTime in TaskResults', () => {
@@ -89,7 +91,7 @@ describe('StoreRunInformationLifeCycle', () => {
       { id: 'proj2:test' },
       { id: 'proj3:test' },
       { id: 'proj4:test' },
-    ] as any);
+    ] as Task[]);
 
     store.endTasks([
       {
@@ -128,7 +130,7 @@ describe('StoreRunInformationLifeCycle', () => {
         status: 'cache-miss',
         code: 1,
       },
-    ] as any);
+    ] as Array<{ task: Task; status: TaskStatus; code: number }>);
 
     store.endCommand();
 

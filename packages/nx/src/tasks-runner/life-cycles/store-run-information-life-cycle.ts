@@ -41,12 +41,11 @@ export class StoreRunInformationLifeCycle implements LifeCycle {
   ): void {
     for (let tr of taskResults) {
       if (tr.task.endTime && tr.task.startTime) {
-        this.timings[
-          `${tr.task.target.project}:${tr.task.target.target}`
-        ].start = new Date(tr.task.startTime).toISOString();
+        this.timings[tr.task.id].start = new Date(
+          tr.task.startTime
+        ).toISOString();
 
-        this.timings[`${tr.task.target.project}:${tr.task.target.target}`].end =
-          new Date(tr.task.endTime).toISOString();
+        this.timings[tr.task.id].end = new Date(tr.task.endTime).toISOString();
       } else {
         this.timings[tr.task.id].end = this.now();
       }
