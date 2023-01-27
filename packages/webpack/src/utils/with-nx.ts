@@ -125,6 +125,9 @@ export function withNx(opts?: { skipTypeChecking?: boolean }) {
 
     const updated = {
       ...config,
+      context: context
+        ? path.join(context.root, options.projectRoot)
+        : undefined,
       target: options.target,
       node: false as const,
       // When mode is development or production, webpack will automatically

@@ -1,6 +1,6 @@
-import { composePlugins, withNx } from '@nrwl/webpack';
-import { withReact } from '@nrwl/react';
-import { withModuleFederationForSSR } from '@nrwl/react/module-federation';
+const { composePlugins, withNx } = require('@nrwl/webpack');
+const { withReact } = require('@nrwl/react');
+const { withModuleFederationForSSR } = require('@nrwl/react/module-federation');
 
 const baseConfig = require('./module-federation.config');
 
