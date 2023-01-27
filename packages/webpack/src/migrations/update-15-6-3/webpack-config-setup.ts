@@ -10,6 +10,9 @@ import { WebpackExecutorOptions } from '../../executors/webpack/schema';
 import { basename } from 'path';
 
 export default async function (tree: Tree) {
+  // Since projects can have multiple configurations, we need to know if the default options
+  // need to be migrated or not. If so then the subsequent configurations with `webpackConfig` also need to be.
+  const defaultOptionsUpdated = new Set<string>();
   forEachExecutorOptions<WebpackExecutorOptions>(
     tree,
     '@nrwl/webpack:webpack',
@@ -17,15 +20,28 @@ export default async function (tree: Tree) {
       options: WebpackExecutorOptions,
       projectName,
       targetName,
-      _configurationName
+      configurationName
     ) => {
+      const projectConfiguration = readProjectConfiguration(tree, projectName);
+      const defaultOptions = projectConfiguration.targets[targetName].options;
+      const defaultWasUpdated = defaultOptionsUpdated.has(projectName);
+
+      // If default was not updated (for different configurations), we don't do anything
       // If isolatedConfig is set, we don't need to do anything
       // If project is React, we don't need to do anything
       if (
-        options?.isolatedConfig ||
-        options?.main?.match(/main\.(t|j)sx$/) ||
-        options?.webpackConfig === '@nrwl/react/plugins/webpack'
+        !defaultWasUpdated &&
+        (defaultOptions?.isolatedConfig ||
+          defaultOptions?.main?.match(/main\.(t|j)sx$/) ||
+          defaultOptions?.webpackConfig === '@nrwl/react/plugins/webpack')
       ) {
+        return;
+      }
+      defaultOptionsUpdated.add(projectName);
+
+      // If this is not the base options (e.g. for development, production, or something custom),
+      // then skip it unless it specifically configures a webpackConfig file
+      if (configurationName && !options?.webpackConfig) {
         return;
       }
 
@@ -55,6 +71,8 @@ export default async function (tree: Tree) {
         module.exports = composePlugins(withNx(), (config, { options, context }) => {
           // Note: This was added by an Nx migration.
           // You should consider inlining the logic into this file.
+          // For more information on webpack config and Nx see:
+          // https://nx.dev/packages/webpack/documents/webpack-config-setup
           return require('./${justTheFileName}')(config, context);
         });
         `
@@ -62,11 +80,9 @@ export default async function (tree: Tree) {
 
         options.isolatedConfig = true;
 
-        const projectConfiguration = readProjectConfiguration(
-          tree,
-          projectName
-        );
-        projectConfiguration.targets[targetName].options = options;
+        projectConfiguration.targets[targetName][
+          configurationName ?? 'options'
+        ] = options;
         updateProjectConfiguration(tree, projectName, projectConfiguration);
 
         logger.info(
@@ -101,6 +117,8 @@ export default async function (tree: Tree) {
         module.exports = composePlugins(withNx(), (config) => {
           // Update the webpack config as needed here.
           // e.g. config.plugins.push(new MyPlugin())
+          // For more information on webpack config and Nx see:
+          // https://nx.dev/packages/webpack/documents/webpack-config-setup
           return config;
         });
         `

@@ -9,6 +9,8 @@ exports[`15.6.3 migration (setup webpack.config file for React apps) should crea
           module.exports = composePlugins(withNx(), withReact(), (config, { options, context }) => {
             // Update the webpack config as needed here.
             // e.g. config.plugins.push(new MyPlugin())
+            // For more information on webpack config and Nx see:
+            // https://nx.dev/packages/webpack/documents/webpack-config-setup
             return config;
           });
         "
@@ -23,6 +25,8 @@ exports[`15.6.3 migration (setup webpack.config file for React apps) should crea
           module.exports = composePlugins(withNx(), withReact(), (config, { options, context }) => {
             // Update the webpack config as needed here.
             // e.g. config.plugins.push(new MyPlugin())
+            // For more information on webpack config and Nx see:
+            // https://nx.dev/packages/webpack/documents/webpack-config-setup
             return config;
           });
         "
@@ -37,6 +41,8 @@ exports[`15.6.3 migration (setup webpack.config file for React apps) should crea
           module.exports = composePlugins(withNx(), withReact(), (config, { options, context }) => {
             // Update the webpack config as needed here.
             // e.g. config.plugins.push(new MyPlugin())
+            // For more information on webpack config and Nx see:
+            // https://nx.dev/packages/webpack/documents/webpack-config-setup
             return config;
           });
         "
@@ -51,6 +57,8 @@ exports[`15.6.3 migration (setup webpack.config file for React apps) should crea
             module.exports = composePlugins(withNx(), withReact(), (config, { options, context }) => {
               // Note: This was added by an Nx migration.
               // You should consider inlining the logic into this file.
+              // For more information on webpack config and Nx see:
+              // https://nx.dev/packages/webpack/documents/webpack-config-setup
               return require('./webpack.something.old.ts')(config, context);
             });
             "
