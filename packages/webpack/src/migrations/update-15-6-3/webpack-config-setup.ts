@@ -19,7 +19,13 @@ export default async function (tree: Tree) {
       targetName,
       _configurationName
     ) => {
-      if (options?.['isolatedConfig']) {
+      // If isolatedConfig is set, we don't need to do anything
+      // If project is React, we don't need to do anything
+      if (
+        options?.isolatedConfig ||
+        options?.main?.match(/main\.(t|j)sx$/) ||
+        options?.webpackConfig === '@nrwl/react/plugins/webpack'
+      ) {
         return;
       }
 
@@ -29,11 +35,7 @@ export default async function (tree: Tree) {
       // executor options
 
       if (options?.webpackConfig) {
-        if (options.webpackConfig === '@nrwl/react/plugin/webpack') {
-          return;
-        }
-
-        let oldName = options?.webpackConfig;
+        let oldName = options.webpackConfig;
         if (options.webpackConfig.endsWith('.js')) {
           oldName = options.webpackConfig.replace('.js', '.old.js');
         }
@@ -41,8 +43,8 @@ export default async function (tree: Tree) {
           oldName = options.webpackConfig.replace('.ts', '.old.ts');
         }
 
-        const justTheFileName = basename(options.webpackConfig);
         renameFile(tree, options.webpackConfig, oldName);
+        const justTheFileName = basename(oldName);
 
         tree.write(
           options.webpackConfig,
@@ -58,7 +60,7 @@ export default async function (tree: Tree) {
         `
         );
 
-        options['isolatedConfig'] = true;
+        options.isolatedConfig = true;
 
         const projectConfiguration = readProjectConfiguration(
           tree,
@@ -88,7 +90,7 @@ export default async function (tree: Tree) {
         }
 
         options.webpackConfig = `${projectConfiguration.root}/webpack.config.js`;
-        options['isolatedConfig'] = true;
+        options.isolatedConfig = true;
 
         tree.write(
           options.webpackConfig,

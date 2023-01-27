@@ -1,0 +1,57 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`15.6.3 migration (setup webpack.config file for React apps) should create webpack.config.js for React projects only 1`] = `
+"
+          const { composePlugins, withNx } = require('@nrwl/webpack');
+          const { withReact } = require('@nrwl/react');
+          
+          // Nx plugins for webpack.
+          module.exports = composePlugins(withNx(), withReact(), (config, { options, context }) => {
+            // Update the webpack config as needed here.
+            // e.g. config.plugins.push(new MyPlugin())
+            return config;
+          });
+        "
+`;
+
+exports[`15.6.3 migration (setup webpack.config file for React apps) should create webpack.config.js for React projects only 2`] = `
+"
+          const { composePlugins, withNx } = require('@nrwl/webpack');
+          const { withReact } = require('@nrwl/react');
+          
+          // Nx plugins for webpack.
+          module.exports = composePlugins(withNx(), withReact(), (config, { options, context }) => {
+            // Update the webpack config as needed here.
+            // e.g. config.plugins.push(new MyPlugin())
+            return config;
+          });
+        "
+`;
+
+exports[`15.6.3 migration (setup webpack.config file for React apps) should create webpack.config.js for React projects only 3`] = `
+"
+          const { composePlugins, withNx } = require('@nrwl/webpack');
+          const { withReact } = require('@nrwl/react');
+          
+          // Nx plugins for webpack.
+          module.exports = composePlugins(withNx(), withReact(), (config, { options, context }) => {
+            // Update the webpack config as needed here.
+            // e.g. config.plugins.push(new MyPlugin())
+            return config;
+          });
+        "
+`;
+
+exports[`15.6.3 migration (setup webpack.config file for React apps) should create webpack.config.js for React projects only 4`] = `
+"
+            const { composePlugins, withNx } = require('@nrwl/webpack');
+            const { withReact } = require('@nrwl/react');
+
+            // Nx plugins for webpack.
+            module.exports = composePlugins(withNx(), withReact(), (config, { options, context }) => {
+              // Note: This was added by an Nx migration.
+              // You should consider inlining the logic into this file.
+              return require('./webpack.something.old.ts')(config, context);
+            });
+            "
+`;
