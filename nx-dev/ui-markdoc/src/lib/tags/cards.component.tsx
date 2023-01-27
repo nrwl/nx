@@ -58,7 +58,7 @@ export function Card({
     >
       {!!hasYoutubeId && (
         <img
-          className="!m-0 aspect-video rounded-md"
+          className="!m-0 aspect-video rounded-l-md"
           alt="Youtube Link"
           src={`https://img.youtube.com/vi/${hasYoutubeId}/default.jpg`}
         />
