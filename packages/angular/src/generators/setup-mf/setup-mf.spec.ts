@@ -317,6 +317,54 @@ describe('Init MF', () => {
     });
   });
 
+  it('should generate bootstrap with environments for ng14', async () => {
+    // ARRANGE
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: {
+        ...json.dependencies,
+        '@angular/core': '14.1.0',
+      },
+    }));
+
+    await applicationGenerator(tree, {
+      name: 'ng14',
+      routing: true,
+      standalone: true,
+    });
+
+    // ACT
+    await setupMf(tree, {
+      appName: 'ng14',
+      mfType: 'host',
+      routing: true,
+      standalone: true,
+    });
+
+    // ASSERT
+    expect(tree.read('apps/ng14/src/bootstrap.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import {importProvidersFrom} from \\"@angular/core\\";
+      import {bootstrapApplication} from \\"@angular/platform-browser\\";
+      import {RouterModule} from \\"@angular/router\\";
+      import {RemoteEntryComponent} from \\"./app/remote-entry/entry.component\\";
+      import {appRoutes} from \\"./app/app.routes\\";
+      import {enableProdMode} from '@angular/core';
+      import {environment} from './environments/environment';
+      if(environment.production) {
+        enableProdMode();
+      }
+
+      bootstrapApplication(RemoteEntryComponent, {
+        providers: [
+          importProvidersFrom(
+            RouterModule.forRoot(appRoutes, {initialNavigation: 'enabledBlocking'})
+          )
+        ]
+      });"
+    `);
+  });
+
   it('should add a remote to dynamic host correctly', async () => {
     // ARRANGE
     await setupMf(tree, {
