@@ -1,18 +1,18 @@
 import type { Configuration } from 'webpack';
-import { NormalizedWebpackExecutorOptions } from '@nrwl/webpack';
-import { ExecutorContext } from 'nx/src/config/misc-interfaces';
+import type { WithWebOptions } from '@nrwl/webpack';
 
 const processed = new Set();
 
-export function withReact() {
-  return function configure(
-    config: Configuration,
-    _ctx?: {
-      options: NormalizedWebpackExecutorOptions;
-      context: ExecutorContext;
-    }
-  ): Configuration {
+interface WithReactOptions extends WithWebOptions {}
+
+export function withReact(pluginOptions: WithReactOptions = {}) {
+  return function configure(config: Configuration, _ctx?: any): Configuration {
+    const { withWeb } = require('@nrwl/webpack');
+
     if (processed.has(config)) return config;
+
+    // Apply web config for CSS, JSX, index.html handling, etc.
+    config = withWeb(pluginOptions)(config, _ctx);
 
     config.module.rules.push({
       test: /\.svg$/,

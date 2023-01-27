@@ -342,7 +342,8 @@ export function createRootStorybookDirForRootProject(
   isNextJs?: boolean,
   usesSwc?: boolean,
   usesVite?: boolean,
-  usesV7?: boolean
+  usesV7?: boolean,
+  viteConfigFilePath?: string
 ) {
   const rootConfigExists =
     tree.exists('.storybook/main.root.js') ||
@@ -397,6 +398,7 @@ export function createRootStorybookDirForRootProject(
     usesSwc,
     usesVite,
     isRootProject: true,
+    viteConfigFilePath,
   });
 
   if (js) {
@@ -413,7 +415,8 @@ export function createProjectStorybookDir(
   isNextJs?: boolean,
   usesSwc?: boolean,
   usesVite?: boolean,
-  usesV7?: boolean
+  usesV7?: boolean,
+  viteConfigFilePath?: string
 ) {
   const { root, projectType } = readProjectConfiguration(tree, projectName);
 
@@ -462,6 +465,7 @@ export function createProjectStorybookDir(
     usesSwc,
     usesVite,
     isRootProject: false,
+    viteConfigFilePath,
   });
 
   if (js) {
@@ -567,4 +571,18 @@ export async function getE2EProjectName(
     }
   );
   return e2eProject;
+}
+
+export function getViteConfigFilePath(
+  tree: Tree,
+  projectRoot: string,
+  configFile?: string
+): string | undefined {
+  return configFile && tree.exists(configFile)
+    ? configFile
+    : tree.exists(joinPathFragments(`${projectRoot}/vite.config.ts`))
+    ? joinPathFragments(`${projectRoot}/vite.config.ts`)
+    : tree.exists(joinPathFragments(`${projectRoot}/vite.config.js`))
+    ? joinPathFragments(`${projectRoot}/vite.config.js`)
+    : undefined;
 }

@@ -12,10 +12,7 @@ import {
   writeCache,
 } from './nx-deps-cache';
 import { buildImplicitProjectDependencies } from './build-dependencies';
-import {
-  buildNpmPackageNodes,
-  buildWorkspaceProjectNodes,
-} from './build-nodes';
+import { buildWorkspaceProjectNodes } from './build-nodes';
 import * as os from 'os';
 import { buildExplicitTypescriptAndPackageJsonDependencies } from './build-dependencies/build-explicit-typescript-and-package-json-dependencies';
 import { loadNxPlugins } from '../utils/nx-plugin';
@@ -175,13 +172,16 @@ async function buildProjectGraphUsingContext(
   performance.mark('build project graph:start');
 
   const builder = new ProjectGraphBuilder(partialGraph);
+  builder.setVersion(projectGraphVersion);
 
   buildWorkspaceProjectNodes(ctx, builder, nxJson);
-  if (!partialGraph) {
-    buildNpmPackageNodes(builder);
-  }
+  const initProjectGraph = builder.getUpdatedProjectGraph();
+
+  const r = await updateProjectGraphWithPlugins(ctx, initProjectGraph);
+
+  const updatedBuilder = new ProjectGraphBuilder(r);
   for (const proj of Object.keys(cachedFileData)) {
-    for (const f of builder.graph.nodes[proj].data.files) {
+    for (const f of updatedBuilder.graph.nodes[proj].data.files) {
       const cached = cachedFileData[proj][f.file];
       if (cached && cached.deps) {
         f.deps = [...cached.deps];
@@ -192,14 +192,12 @@ async function buildProjectGraphUsingContext(
   await buildExplicitDependencies(
     jsPluginConfig(nxJson, packageJsonDeps),
     ctx,
-    builder
+    updatedBuilder
   );
 
-  buildImplicitProjectDependencies(ctx, builder);
-  builder.setVersion(projectGraphVersion);
-  const initProjectGraph = builder.getUpdatedProjectGraph();
+  buildImplicitProjectDependencies(ctx, updatedBuilder);
 
-  const r = await updateProjectGraphWithPlugins(ctx, initProjectGraph);
+  const finalGraph = updatedBuilder.getUpdatedProjectGraph();
 
   performance.mark('build project graph:end');
   performance.measure(
@@ -208,7 +206,7 @@ async function buildProjectGraphUsingContext(
     'build project graph:end'
   );
 
-  return r;
+  return finalGraph;
 }
 
 function jsPluginConfig(

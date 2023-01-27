@@ -158,7 +158,7 @@
         "x-priority": "internal"
       },
       "minimal": {
-        "description": "Generate a Angular app with a minimal setup, no nx welcome component.",
+        "description": "Generate a Angular app with a minimal setup.",
         "type": "boolean",
         "default": false
       }

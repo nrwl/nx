@@ -50,7 +50,6 @@
     "loader-utils": "^2.0.3",
     "mini-css-extract-plugin": "~2.4.7",
     "parse5": "4.0.0",
-    "parse5-html-rewriting-stream": "6.0.1",
     "postcss": "^8.4.14",
     "postcss-import": "~14.1.0",
     "postcss-loader": "^6.1.1",

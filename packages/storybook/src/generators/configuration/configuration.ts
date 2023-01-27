@@ -23,6 +23,7 @@ import {
   createRootStorybookDir,
   createRootStorybookDirForRootProject,
   getE2EProjectName,
+  getViteConfigFilePath,
   projectIsRootProjectInNestedWorkspace,
   updateLintConfig,
 } from './util-functions';
@@ -72,6 +73,8 @@ export async function configurationGenerator(
     );
   }
 
+  let viteConfigFilePath: string | undefined;
+
   if (viteBuildTarget) {
     if (schema.bundler !== 'vite') {
       logger.info(
@@ -80,6 +83,12 @@ export async function configurationGenerator(
       );
       schema.bundler = 'vite';
     }
+
+    viteConfigFilePath = getViteConfigFilePath(
+      tree,
+      root,
+      targets[viteBuildTarget]?.options?.configFile
+    );
   }
 
   if (schema.storybook7betaConfiguration) {
@@ -146,7 +155,8 @@ export async function configurationGenerator(
       !!nextBuildTarget,
       compiler === 'swc',
       schema.bundler === 'vite',
-      schema.storybook7betaConfiguration
+      schema.storybook7betaConfiguration,
+      viteConfigFilePath
     );
   } else {
     createRootStorybookDir(tree, schema.js, schema.tsConfiguration);
@@ -161,7 +171,8 @@ export async function configurationGenerator(
       !!nextBuildTarget,
       compiler === 'swc',
       schema.bundler === 'vite',
-      schema.storybook7betaConfiguration
+      schema.storybook7betaConfiguration,
+      viteConfigFilePath
     );
   }
 

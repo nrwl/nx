@@ -1,8 +1,5 @@
 <% if (!isRootProject){ %>const rootMain = require('<%= offsetFromRoot %>../.storybook/<%= rootMainName %>');<% } %>
 <% if (isRootProject){ %>const rootMain = require('./main.root');<% } %>
-<% if (usesVite){ %>const { mergeConfig } = require('vite');<% } %>
-<% if (usesVite){ %>const viteTsConfigPaths = require('vite-tsconfig-paths').default;<% } %>
-<% if (existsRootWebpackConfig && !usesVite){ %>const rootWebpackConfig = require('<%= offsetFromRoot %>../.storybook/webpack.config'); <% } %>
 
 module.exports = {
   ...rootMain,
@@ -13,27 +10,26 @@ module.exports = {
   <% } %>],
   addons: [...rootMain.addons <% if(uiFramework === '@storybook/react-webpack5') { %>, '@nrwl/react/plugins/storybook' <% } %><% if(uiFramework === '@storybook/react-native') { %>, '@storybook/addon-ondevice-actions',  '@storybook/addon-ondevice-backgrounds', '@storybook/addon-ondevice-controls', '@storybook/addon-ondevice-notes'  <% } %>
     <% if(usesSwc) { %>, 'storybook-addon-swc' <% } %>
-  ]<% if(usesVite) { %>,
-  async viteFinal(config, { configType }) {
-    return mergeConfig(config, {
-      plugins: [
-        viteTsConfigPaths({
-          root: '<%= offsetFromRoot %>../',
-        }),
-      ],
-    });
-  },<% } %>
+  ],
   framework: {
     name: '<%= uiFramework %>',
-    options: {},
+    options: {
+      <% if (usesVite) { %>
+      builder: {
+        viteConfigPath: '<%= viteConfigFilePath %>',
+      },
+      <% } %>
+    },
   },
 };
 <% if(!usesVite) { %>
 // To customize your webpack configuration you can use the webpackFinal field.
 // Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
+// and https://nx.dev/packages/storybook/documents/custom-builder-configs
 <% } %>
 
 <% if(usesVite) { %>
 // To customize your Vite configuration you can use the viteFinal field. 
 // Check https://storybook.js.org/docs/react/builders/vite#configuration
+// and https://nx.dev/packages/storybook/documents/custom-builder-configs
 <% } %>

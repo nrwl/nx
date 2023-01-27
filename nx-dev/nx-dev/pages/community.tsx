@@ -130,8 +130,8 @@ export default function Community(props: CommunityProps): JSX.Element {
                     <span className="absolute inset-0" aria-hidden="true" />
                     <p className="leading-relaxed">
                       Official Nx plugins are created and maintained by the Nx
-                      team at Nrwl but you can easily create your own! Follow
-                      our documentation on how to create your own plugin.
+                      team but you can easily create your own! Follow our
+                      documentation on how to create your own plugin.
                     </p>
                   </a>
                 </div>

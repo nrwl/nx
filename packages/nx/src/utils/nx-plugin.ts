@@ -47,49 +47,63 @@ export interface NxPlugin {
 // Allows loadNxPlugins to be called multiple times w/o
 // executing resolution mulitple times.
 let nxPluginCache: NxPlugin[] = null;
+
+function loadNxPlugin(moduleName: string, paths: string[], root: string) {
+  let pluginPath: string;
+  try {
+    pluginPath = require.resolve(moduleName, {
+      paths,
+    });
+  } catch (e) {
+    if (e.code === 'MODULE_NOT_FOUND') {
+      const plugin = resolveLocalNxPlugin(moduleName, root);
+      if (plugin) {
+        const main = readPluginMainFromProjectConfiguration(
+          plugin.projectConfig
+        );
+        pluginPath = main ? path.join(root, main) : plugin.path;
+      } else {
+        logger.error(`Plugin listed in \`nx.json\` not found: ${moduleName}`);
+        throw e;
+      }
+    } else {
+      throw e;
+    }
+  }
+  const packageJsonPath = path.join(pluginPath, 'package.json');
+  const { name } =
+    !['.ts', '.js'].some((x) => x === path.extname(pluginPath)) && // Not trying to point to a ts or js file
+    existsSync(packageJsonPath) // plugin has a package.json
+      ? readJsonFile(packageJsonPath) // read name from package.json
+      : { name: path.basename(pluginPath) }; // use the name of the file we point to
+  const plugin = require(pluginPath) as NxPlugin;
+  plugin.name = name;
+
+  return plugin;
+}
+
 export function loadNxPlugins(
   plugins?: string[],
   paths = [workspaceRoot],
   root = workspaceRoot
 ): NxPlugin[] {
-  return plugins?.length
-    ? nxPluginCache ||
-        (nxPluginCache = plugins.map((moduleName) => {
-          let pluginPath: string;
-          try {
-            pluginPath = require.resolve(moduleName, {
-              paths,
-            });
-          } catch (e) {
-            if (e.code === 'MODULE_NOT_FOUND') {
-              const plugin = resolveLocalNxPlugin(moduleName, root);
-              if (plugin) {
-                const main = readPluginMainFromProjectConfiguration(
-                  plugin.projectConfig
-                );
-                pluginPath = main ? path.join(root, main) : plugin.path;
-              } else {
-                logger.error(
-                  `Plugin listed in \`nx.json\` not found: ${moduleName}`
-                );
-                throw e;
-              }
-            } else {
-              throw e;
-            }
-          }
-          const packageJsonPath = path.join(pluginPath, 'package.json');
-          const { name } =
-            !['.ts', '.js'].some((x) => x === path.extname(pluginPath)) && // Not trying to point to a ts or js file
-            existsSync(packageJsonPath) // plugin has a package.json
-              ? readJsonFile(packageJsonPath) // read name from package.json
-              : { name: path.basename(pluginPath) }; // use the name of the file we point to
-          const plugin = require(pluginPath) as NxPlugin;
-          plugin.name = name;
+  const result: NxPlugin[] = [];
 
-          return plugin;
-        }))
-    : [];
+  // TODO: This should be specified in nx.json
+  // Temporarily load js as if it were a plugin which is built into nx
+  // In the future, this will be optional and need to be specified in nx.json
+  const jsPlugin = require('../plugins/js');
+  jsPlugin.name = 'index';
+  result.push(jsPlugin as NxPlugin);
+
+  plugins ??= [];
+  if (!nxPluginCache) {
+    nxPluginCache = plugins.map((moduleName) =>
+      loadNxPlugin(moduleName, paths, root)
+    );
+  }
+
+  return result.concat(nxPluginCache);
 }
 
 export function mergePluginTargetsWithNxTargets(

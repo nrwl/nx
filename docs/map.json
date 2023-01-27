@@ -1610,6 +1610,25 @@
           ]
         },
         {
+          "name": "webpack",
+          "id": "webpack",
+          "description": "Webpack package.",
+          "itemList": [
+            {
+              "name": "Configure webpack on your Nx workspace",
+              "id": "webpack-config-setup",
+              "description": "Configure webpack on your Nx workspace",
+              "file": "shared/packages/webpack/webpack-config-setup"
+            },
+            {
+              "name": "Webpack plugins",
+              "id": "webpack-plugins",
+              "description": "Webpack plugins",
+              "file": "shared/packages/webpack/webpack-plugins"
+            }
+          ]
+        },
+        {
           "name": "angular",
           "id": "angular",
           "description": "Angular package.",

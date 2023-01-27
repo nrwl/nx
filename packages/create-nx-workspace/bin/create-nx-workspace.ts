@@ -32,6 +32,7 @@ type Arguments = {
   cli: string;
   style: string;
   framework: string;
+  docker: boolean;
   nxCloud: boolean;
   allPrompts: boolean;
   packageManager: PackageManager;
@@ -161,6 +162,10 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           describe: chalk.dim`Framework option to be used when the node-server preset is selected`,
           type: 'string',
         })
+        .option('docker', {
+          describe: chalk.dim`Generate a Dockerfile with your node-server`,
+          type: 'boolean',
+        })
         .option('nxCloud', {
           describe: chalk.dim(messages.getPromptMessage('nxCloudCreation')),
           type: 'boolean',
@@ -241,6 +246,7 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
     skipGit,
     commit,
     framework,
+    docker,
     bundler,
   } = parsedArgs;
 
@@ -267,6 +273,7 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
       nxCloud,
       defaultBase,
       framework,
+      docker,
       bundler,
     }
   );
@@ -320,7 +327,7 @@ async function getConfiguration(
   argv: yargs.Arguments<Arguments>
 ): Promise<void> {
   try {
-    let name, appName, style, preset, framework, bundler;
+    let name, appName, style, preset, framework, bundler, docker;
 
     output.log({
       title:
@@ -365,7 +372,8 @@ async function getConfiguration(
         name = argv.name ?? appName;
 
         if (preset === Preset.NodeServer) {
-          framework = await determineFramework(preset, argv);
+          framework = await determineFramework(argv);
+          docker = await determineDockerfile(argv);
         }
 
         if (preset === Preset.ReactStandalone) {
@@ -399,6 +407,7 @@ async function getConfiguration(
       defaultBase,
       ci,
       bundler,
+      docker,
     });
   } catch (e) {
     console.error(e);
@@ -685,25 +694,20 @@ async function determineAppName(
 }
 
 async function determineFramework(
-  preset: Preset,
   parsedArgs: yargs.Arguments<Arguments>
 ): Promise<string> {
-  if (preset !== Preset.NodeServer) {
-    return Promise.resolve('');
-  }
-
   const frameworkChoices = [
     {
       name: 'express',
       message: 'Express [https://expressjs.com/]',
     },
     {
-      name: 'koa',
-      message: 'koa     [https://koajs.com/]',
-    },
-    {
       name: 'fastify',
       message: 'fastify [https://www.fastify.io/]',
+    },
+    {
+      name: 'koa',
+      message: 'koa     [https://koajs.com/]',
     },
   ];
 
@@ -738,6 +742,35 @@ async function determineFramework(
   }
 
   return Promise.resolve(parsedArgs.framework);
+}
+
+async function determineDockerfile(
+  parsedArgs: yargs.Arguments<Arguments>
+): Promise<boolean> {
+  if (parsedArgs.docker === undefined) {
+    return enquirer
+      .prompt([
+        {
+          name: 'docker',
+          message:
+            'Would you like to generate a Dockerfile? [https://docs.docker.com/]',
+          type: 'autocomplete',
+          choices: [
+            {
+              name: 'Yes',
+              hint: 'I want to generate a Dockerfile',
+            },
+            {
+              name: 'No',
+            },
+          ],
+          initial: 'No' as any,
+        },
+      ])
+      .then((a: { docker: 'Yes' | 'No' }) => a.docker === 'Yes');
+  } else {
+    return Promise.resolve(parsedArgs.docker);
+  }
 }
 
 function isValidCli(cli: string): cli is 'angular' | 'nx' {

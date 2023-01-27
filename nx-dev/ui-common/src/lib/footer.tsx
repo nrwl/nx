@@ -6,7 +6,6 @@ export function Footer(): JSX.Element {
     solutions: [
       { name: 'Nx', href: 'https://nx.dev' },
       { name: 'NxCloud', href: 'https://nx.app/?utm_source=nx.dev' },
-      { name: 'Nrwl', href: 'https://nrwl.io/?utm_source=nx.dev' },
     ],
     resources: [
       { name: 'Blog', href: 'https://blog.nrwl.io/?utm_source=nx.dev' },
@@ -18,7 +17,6 @@ export function Footer(): JSX.Element {
         name: 'Nx Playbook',
         href: 'https://nxplaybook.com/?utm_source=nx.dev',
       },
-      { name: 'Nrwl', href: 'https://nrwl.io/?utm_source=nx.dev' },
       {
         name: 'Brands & Guidelines',
         href: 'https://nx.app/brands?utm_source=nx.dev',
@@ -257,7 +255,7 @@ export function Footer(): JSX.Element {
             &copy; 2023 made with{' '}
             <HeartIcon className="-mt-0.5 inline h-4 w-4" /> by{' '}
             <Link
-              href="https://nrwl.io/?utm_source=nx.dev"
+              href="https://nx.app/company/?utm_source=nx.dev"
               target="_blank"
               rel="noreferrer"
             >

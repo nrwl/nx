@@ -1,5 +1,6 @@
 import fastify from 'fastify';
 
+const host = process.env.HOST ?? 'localhost';
 const port = process.env.PORT ? Number(process.env.PORT) : <%= port %>;
 
 const app = fastify();
@@ -10,8 +11,8 @@ app.get('/', async (req, res) => {
 
 const start = async() => {
     try {
-        await app.listen({ port });
-        console.log(`[ ready ] http://localhost:${port}`);
+        await app.listen({ host, port });
+        console.log(`[ ready ] http://${host}:${port}`);
     } catch (err) {
         // Errors are logged here
         process.exit(1);

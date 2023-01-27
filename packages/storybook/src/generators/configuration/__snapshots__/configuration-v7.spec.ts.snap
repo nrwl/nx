@@ -5,8 +5,6 @@ exports[`@nrwl/storybook:configuration for Storybook v7 basic functionalities sh
 
 import type { StorybookConfig, Options } from '@storybook/core-common';
 
-
-
 const config: StorybookConfig = {
   ...rootMain,
   stories: [
@@ -14,10 +12,12 @@ const config: StorybookConfig = {
     '../**/*.stories.@(js|jsx|ts|tsx|mdx)' ],
   addons: [...(rootMain.addons || []) 
     
-  ]
+  ],
   framework: {
     name: '@storybook/angular',
-    options: {},
+    options: {
+      
+    },
   },
 };
 
@@ -26,6 +26,7 @@ module.exports = config;
 
 // To customize your webpack configuration you can use the webpackFinal field.
 // Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
+// and https://nx.dev/packages/storybook/documents/custom-builder-configs
 
 
 "
@@ -138,8 +139,6 @@ exports[`@nrwl/storybook:configuration for Storybook v7 basic functionalities sh
 
 import type { StorybookConfig, Options } from '@storybook/core-common';
 
-
-
 const config: StorybookConfig = {
   ...rootMain,
   stories: [
@@ -147,10 +146,12 @@ const config: StorybookConfig = {
     '../**/*.stories.@(js|jsx|ts|tsx|mdx)' ],
   addons: [...(rootMain.addons || []) 
     
-  ]
+  ],
   framework: {
     name: '@storybook/angular',
-    options: {},
+    options: {
+      
+    },
   },
 };
 
@@ -159,6 +160,7 @@ module.exports = config;
 
 // To customize your webpack configuration you can use the webpackFinal field.
 // Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
+// and https://nx.dev/packages/storybook/documents/custom-builder-configs
 
 
 "
@@ -191,9 +193,6 @@ exports[`@nrwl/storybook:configuration for Storybook v7 basic functionalities sh
 exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/main-vite/.storybook/" 1`] = `
 "const rootMain = require('../../../.storybook/main');
 
-const { mergeConfig } = require('vite');
-const viteTsConfigPaths = require('vite-tsconfig-paths').default;
-
 
 module.exports = {
   ...rootMain,
@@ -204,18 +203,15 @@ module.exports = {
   addons: [...rootMain.addons 
     
   ],
-  async viteFinal(config, { configType }) {
-    return mergeConfig(config, {
-      plugins: [
-        viteTsConfigPaths({
-          root: '../../../',
-        }),
-      ],
-    });
-  },
   framework: {
     name: '@storybook/react-vite',
-    options: {},
+    options: {
+      
+      builder: {
+        viteConfigPath: 'apps/main-vite/vite.config.ts',
+      },
+      
+    },
   },
 };
 
@@ -223,6 +219,7 @@ module.exports = {
 
 // To customize your Vite configuration you can use the viteFinal field. 
 // Check https://storybook.js.org/docs/react/builders/vite#configuration
+// and https://nx.dev/packages/storybook/documents/custom-builder-configs
 "
 `;
 
@@ -253,9 +250,6 @@ exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook confi
 exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/main-vite-ts/.storybook/" 1`] = `
 "const rootMain = require('../../../.storybook/main');
 
-const { mergeConfig } = require('vite');
-const viteTsConfigPaths = require('vite-tsconfig-paths').default;
-
 
 module.exports = {
   ...rootMain,
@@ -266,18 +260,15 @@ module.exports = {
   addons: [...rootMain.addons 
     
   ],
-  async viteFinal(config, { configType }) {
-    return mergeConfig(config, {
-      plugins: [
-        viteTsConfigPaths({
-          root: '../../../',
-        }),
-      ],
-    });
-  },
   framework: {
     name: '@storybook/react-vite',
-    options: {},
+    options: {
+      
+      builder: {
+        viteConfigPath: 'apps/main-vite-ts/vite.config.custom.ts',
+      },
+      
+    },
   },
 };
 
@@ -285,6 +276,7 @@ module.exports = {
 
 // To customize your Vite configuration you can use the viteFinal field. 
 // Check https://storybook.js.org/docs/react/builders/vite#configuration
+// and https://nx.dev/packages/storybook/documents/custom-builder-configs
 "
 `;
 
@@ -316,9 +308,6 @@ exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook confi
 "const rootMain = require('../../../.storybook/main');
 
 
-
-
-
 module.exports = {
   ...rootMain,
   stories: [
@@ -327,15 +316,18 @@ module.exports = {
   ],
   addons: [...rootMain.addons , '@nrwl/react/plugins/storybook' 
     
-  ]
+  ],
   framework: {
     name: '@storybook/react-webpack5',
-    options: {},
+    options: {
+      
+    },
   },
 };
 
 // To customize your webpack configuration you can use the webpackFinal field.
 // Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
+// and https://nx.dev/packages/storybook/documents/custom-builder-configs
 
 
 "
@@ -369,9 +361,6 @@ exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook confi
 "const rootMain = require('../../../.storybook/main');
 
 
-
-
-
 module.exports = {
   ...rootMain,
   stories: [
@@ -380,15 +369,18 @@ module.exports = {
   ],
   addons: [...rootMain.addons 
     
-  ]
+  ],
   framework: {
     name: '@storybook/nextjs',
-    options: {},
+    options: {
+      
+    },
   },
 };
 
 // To customize your webpack configuration you can use the webpackFinal field.
 // Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
+// and https://nx.dev/packages/storybook/documents/custom-builder-configs
 
 
 "
@@ -418,9 +410,6 @@ exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook confi
 "const rootMain = require('../../../.storybook/main');
 
 
-
-
-
 module.exports = {
   ...rootMain,
   stories: [
@@ -429,15 +418,18 @@ module.exports = {
   ],
   addons: [...rootMain.addons , '@nrwl/react/plugins/storybook' 
     , 'storybook-addon-swc' 
-  ]
+  ],
   framework: {
     name: '@storybook/react-webpack5',
-    options: {},
+    options: {
+      
+    },
   },
 };
 
 // To customize your webpack configuration you can use the webpackFinal field.
 // Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
+// and https://nx.dev/packages/storybook/documents/custom-builder-configs
 
 
 "
@@ -470,9 +462,6 @@ exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook confi
 exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/wv1/.storybook/" 1`] = `
 "const rootMain = require('../../../.storybook/main');
 
-const { mergeConfig } = require('vite');
-const viteTsConfigPaths = require('vite-tsconfig-paths').default;
-
 
 module.exports = {
   ...rootMain,
@@ -483,18 +472,15 @@ module.exports = {
   addons: [...rootMain.addons 
     
   ],
-  async viteFinal(config, { configType }) {
-    return mergeConfig(config, {
-      plugins: [
-        viteTsConfigPaths({
-          root: '../../../',
-        }),
-      ],
-    });
-  },
   framework: {
     name: '@storybook/web-components-vite',
-    options: {},
+    options: {
+      
+      builder: {
+        viteConfigPath: 'apps/wv1/vite.config.custom.ts',
+      },
+      
+    },
   },
 };
 
@@ -502,6 +488,7 @@ module.exports = {
 
 // To customize your Vite configuration you can use the viteFinal field. 
 // Check https://storybook.js.org/docs/react/builders/vite#configuration
+// and https://nx.dev/packages/storybook/documents/custom-builder-configs
 "
 `;
 
@@ -529,9 +516,6 @@ exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook confi
 "const rootMain = require('../../../.storybook/main');
 
 
-
-
-
 module.exports = {
   ...rootMain,
   stories: [
@@ -540,15 +524,18 @@ module.exports = {
   ],
   addons: [...rootMain.addons 
     
-  ]
+  ],
   framework: {
     name: '@storybook/web-components-webpack5',
-    options: {},
+    options: {
+      
+    },
   },
 };
 
 // To customize your webpack configuration you can use the webpackFinal field.
 // Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
+// and https://nx.dev/packages/storybook/documents/custom-builder-configs
 
 
 "
@@ -578,9 +565,6 @@ exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook confi
 "const rootMain = require('../../../.storybook/main');
 
 
-
-
-
 module.exports = {
   ...rootMain,
   stories: [
@@ -589,15 +573,18 @@ module.exports = {
   ],
   addons: [...rootMain.addons , '@nrwl/react/plugins/storybook' 
     
-  ]
+  ],
   framework: {
     name: '@storybook/react-webpack5',
-    options: {},
+    options: {
+      
+    },
   },
 };
 
 // To customize your webpack configuration you can use the webpackFinal field.
 // Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
+// and https://nx.dev/packages/storybook/documents/custom-builder-configs
 
 
 "
@@ -630,9 +617,6 @@ exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook confi
 exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "libs/react-vite/.storybook/" 1`] = `
 "const rootMain = require('../../../.storybook/main');
 
-const { mergeConfig } = require('vite');
-const viteTsConfigPaths = require('vite-tsconfig-paths').default;
-
 
 module.exports = {
   ...rootMain,
@@ -643,18 +627,15 @@ module.exports = {
   addons: [...rootMain.addons 
     
   ],
-  async viteFinal(config, { configType }) {
-    return mergeConfig(config, {
-      plugins: [
-        viteTsConfigPaths({
-          root: '../../../',
-        }),
-      ],
-    });
-  },
   framework: {
     name: '@storybook/react-vite',
-    options: {},
+    options: {
+      
+      builder: {
+        viteConfigPath: 'libs/react-vite/vite.config.ts',
+      },
+      
+    },
   },
 };
 
@@ -662,6 +643,7 @@ module.exports = {
 
 // To customize your Vite configuration you can use the viteFinal field. 
 // Check https://storybook.js.org/docs/react/builders/vite#configuration
+// and https://nx.dev/packages/storybook/documents/custom-builder-configs
 "
 `;
 
@@ -711,6 +693,7 @@ Map {
         "defaultConfiguration": "production",
         "executor": "@nrwl/vite:build",
         "options": Object {
+          "configFile": "apps/main-vite/vite.config.ts",
           "outputPath": "dist/apps/main-vite",
         },
         "outputs": Array [
@@ -841,6 +824,7 @@ Map {
         "defaultConfiguration": "production",
         "executor": "@nrwl/vite:build",
         "options": Object {
+          "configFile": "apps/main-vite-ts/vite.config.custom.ts",
           "outputPath": "dist/apps/main-vite-ts",
         },
         "outputs": Array [
@@ -1723,6 +1707,7 @@ Map {
         "defaultConfiguration": "production",
         "executor": "@nrwl/vite:build",
         "options": Object {
+          "configFile": "apps/reapp/vite.config.ts",
           "outputPath": "dist/apps/reapp",
         },
         "outputs": Array [
@@ -2015,6 +2000,7 @@ Map {
         "defaultConfiguration": "production",
         "executor": "@nrwl/vite:build",
         "options": Object {
+          "configFile": "apps/wv1/vite.config.custom.ts",
           "outputPath": "dist/apps/wv1",
         },
         "outputs": Array [

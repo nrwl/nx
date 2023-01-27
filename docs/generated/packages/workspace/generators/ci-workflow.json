@@ -12,7 +12,13 @@
       "ci": {
         "type": "string",
         "description": "CI provider.",
-        "enum": ["github", "circleci", "azure", "bitbucket-pipelines"],
+        "enum": [
+          "github",
+          "circleci",
+          "azure",
+          "bitbucket-pipelines",
+          "gitlab"
+        ],
         "x-prompt": {
           "message": "What is your target CI provider?",
           "type": "list",

@@ -7,15 +7,20 @@ import {
 } from 'webpack';
 import { SubresourceIntegrityPlugin } from 'webpack-subresource-integrity';
 import * as path from 'path';
-import { basename } from 'path';
+import { basename, join } from 'path';
 import { getOutputHashFormat } from '@nrwl/webpack/src/utils/hash-format';
 import { PostcssCliResources } from '@nrwl/webpack/src/utils/webpack/plugins/postcss-cli-resources';
 import { normalizeExtraEntryPoints } from '@nrwl/webpack/src/utils/webpack/normalize-entry';
 
-import { NormalizedWebpackExecutorOptions } from '../executors/webpack/schema';
+import {
+  ExtraEntryPointClass,
+  NormalizedWebpackExecutorOptions,
+} from '../executors/webpack/schema';
 import { getClientEnvironment } from './get-client-environment';
 import { ScriptsWebpackPlugin } from './webpack/plugins/scripts-webpack-plugin';
 import { getCSSModuleLocalIdent } from './get-css-module-local-ident';
+import { WriteIndexHtmlPlugin } from '../plugins/write-index-html-plugin';
+import { ExecutorContext } from '@nrwl/devkit';
 import CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 import MiniCssExtractPlugin = require('mini-css-extract-plugin');
 import autoprefixer = require('autoprefixer');
@@ -29,25 +34,67 @@ interface PostcssOptions {
 
 const processed = new Set();
 
-export function withWeb() {
+export interface WithWebOptions {
+  baseHref?: string;
+  crossOrigin?: 'none' | 'anonymous' | 'use-credentials';
+  deployUrl?: string;
+  extractCss?: boolean;
+  generateIndexHtml?: boolean;
+  index?: string;
+  postcssConfig?: string;
+  scripts?: Array<ExtraEntryPointClass | string>;
+  stylePreprocessorOptions?: any;
+  styles?: Array<ExtraEntryPointClass | string>;
+  subresourceIntegrity?: boolean;
+}
+
+// Omit deprecated options
+export type MergedOptions = Omit<
+  NormalizedWebpackExecutorOptions,
+  keyof WithWebOptions
+> &
+  WithWebOptions;
+
+export function withWeb(pluginOptions: WithWebOptions = {}) {
   return function configure(
     config: Configuration,
-    { options }: { options: NormalizedWebpackExecutorOptions }
+    {
+      options: executorOptions,
+      context,
+    }: { options: NormalizedWebpackExecutorOptions; context: ExecutorContext }
   ): Configuration {
     if (processed.has(config)) return config;
 
+    const mergedOptions: MergedOptions = {
+      ...executorOptions,
+      ...pluginOptions,
+    };
     const plugins = [];
 
     const stylesOptimization =
-      typeof options.optimization === 'object'
-        ? options.optimization.styles
-        : options.optimization;
+      typeof mergedOptions.optimization === 'object'
+        ? mergedOptions.optimization.styles
+        : mergedOptions.optimization;
 
-    if (Array.isArray(options.scripts)) {
-      plugins.push(...createScriptsPlugin(options));
+    if (Array.isArray(mergedOptions.scripts)) {
+      plugins.push(...createScriptsPlugin(mergedOptions));
+    }
+    if (mergedOptions.index && mergedOptions.generateIndexHtml) {
+      plugins.push(
+        new WriteIndexHtmlPlugin({
+          crossOrigin: mergedOptions.crossOrigin,
+          sri: mergedOptions.subresourceIntegrity,
+          outputPath: basename(mergedOptions.index),
+          indexPath: join(context.root, mergedOptions.index),
+          baseHref: mergedOptions.baseHref,
+          deployUrl: mergedOptions.deployUrl,
+          scripts: mergedOptions.scripts,
+          styles: mergedOptions.styles,
+        })
+      );
     }
 
-    if (options.subresourceIntegrity) {
+    if (mergedOptions.subresourceIntegrity) {
       plugins.push(new SubresourceIntegrityPlugin());
     }
 
@@ -71,13 +118,15 @@ export function withWeb() {
     const globalStylePaths: string[] = [];
 
     // Determine hashing format.
-    const hashFormat = getOutputHashFormat(options.outputHashing as string);
+    const hashFormat = getOutputHashFormat(
+      mergedOptions.outputHashing as string
+    );
 
     const includePaths: string[] = [];
-    if (options?.stylePreprocessorOptions?.includePaths?.length > 0) {
-      options.stylePreprocessorOptions.includePaths.forEach(
+    if (mergedOptions?.stylePreprocessorOptions?.includePaths?.length > 0) {
+      mergedOptions.stylePreprocessorOptions.includePaths.forEach(
         (includePath: string) =>
-          includePaths.push(path.resolve(options.root, includePath))
+          includePaths.push(path.resolve(mergedOptions.root, includePath))
       );
     }
 
@@ -90,32 +139,34 @@ export function withWeb() {
     }
 
     // Process global styles.
-    if (options.styles.length > 0) {
-      normalizeExtraEntryPoints(options.styles, 'styles').forEach((style) => {
-        const resolvedPath = path.resolve(options.root, style.input);
-        // Add style entry points.
-        if (entry[style.bundleName]) {
-          entry[style.bundleName].push(resolvedPath);
-        } else {
-          entry[style.bundleName] = [resolvedPath];
-        }
+    if (mergedOptions.styles.length > 0) {
+      normalizeExtraEntryPoints(mergedOptions.styles, 'styles').forEach(
+        (style) => {
+          const resolvedPath = path.resolve(mergedOptions.root, style.input);
+          // Add style entry points.
+          if (entry[style.bundleName]) {
+            entry[style.bundleName].push(resolvedPath);
+          } else {
+            entry[style.bundleName] = [resolvedPath];
+          }
 
-        // Add global css paths.
-        globalStylePaths.push(resolvedPath);
-      });
+          // Add global css paths.
+          globalStylePaths.push(resolvedPath);
+        }
+      );
     }
 
     const cssModuleRules: RuleSetRule[] = [
       {
         test: /\.module\.css$/,
         exclude: globalStylePaths,
-        use: getCommonLoadersForCssModules(options, includePaths),
+        use: getCommonLoadersForCssModules(mergedOptions, includePaths),
       },
       {
         test: /\.module\.(scss|sass)$/,
         exclude: globalStylePaths,
         use: [
-          ...getCommonLoadersForCssModules(options, includePaths),
+          ...getCommonLoadersForCssModules(mergedOptions, includePaths),
           {
             loader: require.resolve('sass-loader'),
             options: {
@@ -133,7 +184,7 @@ export function withWeb() {
         test: /\.module\.less$/,
         exclude: globalStylePaths,
         use: [
-          ...getCommonLoadersForCssModules(options, includePaths),
+          ...getCommonLoadersForCssModules(mergedOptions, includePaths),
           {
             loader: require.resolve('less-loader'),
             options: {
@@ -148,7 +199,7 @@ export function withWeb() {
         test: /\.module\.styl$/,
         exclude: globalStylePaths,
         use: [
-          ...getCommonLoadersForCssModules(options, includePaths),
+          ...getCommonLoadersForCssModules(mergedOptions, includePaths),
           {
             loader: require.resolve('stylus-loader'),
             options: {
@@ -165,18 +216,18 @@ export function withWeb() {
       {
         test: /\.css$/,
         exclude: globalStylePaths,
-        use: getCommonLoadersForGlobalCss(options, includePaths),
+        use: getCommonLoadersForGlobalCss(mergedOptions, includePaths),
       },
       {
         test: /\.scss$|\.sass$/,
         exclude: globalStylePaths,
         use: [
-          ...getCommonLoadersForGlobalCss(options, includePaths),
+          ...getCommonLoadersForGlobalCss(mergedOptions, includePaths),
           {
             loader: require.resolve('sass-loader'),
             options: {
               implementation: require('sass'),
-              sourceMap: !!options.sourceMap,
+              sourceMap: !!mergedOptions.sourceMap,
               sassOptions: {
                 fiber: false,
                 // bootstrap-sass requires a minimum precision of 8
@@ -191,11 +242,11 @@ export function withWeb() {
         test: /\.less$/,
         exclude: globalStylePaths,
         use: [
-          ...getCommonLoadersForGlobalCss(options, includePaths),
+          ...getCommonLoadersForGlobalCss(mergedOptions, includePaths),
           {
             loader: require.resolve('less-loader'),
             options: {
-              sourceMap: !!options.sourceMap,
+              sourceMap: !!mergedOptions.sourceMap,
               lessOptions: {
                 javascriptEnabled: true,
                 ...lessPathOptions,
@@ -208,11 +259,11 @@ export function withWeb() {
         test: /\.styl$/,
         exclude: globalStylePaths,
         use: [
-          ...getCommonLoadersForGlobalCss(options, includePaths),
+          ...getCommonLoadersForGlobalCss(mergedOptions, includePaths),
           {
             loader: require.resolve('stylus-loader'),
             options: {
-              sourceMap: !!options.sourceMap,
+              sourceMap: !!mergedOptions.sourceMap,
               stylusOptions: {
                 include: includePaths,
               },
@@ -226,18 +277,18 @@ export function withWeb() {
       {
         test: /\.css$/,
         include: globalStylePaths,
-        use: getCommonLoadersForGlobalStyle(options, includePaths),
+        use: getCommonLoadersForGlobalStyle(mergedOptions, includePaths),
       },
       {
         test: /\.scss$|\.sass$/,
         include: globalStylePaths,
         use: [
-          ...getCommonLoadersForGlobalStyle(options, includePaths),
+          ...getCommonLoadersForGlobalStyle(mergedOptions, includePaths),
           {
             loader: require.resolve('sass-loader'),
             options: {
               implementation: require('sass'),
-              sourceMap: !!options.sourceMap,
+              sourceMap: !!mergedOptions.sourceMap,
               sassOptions: {
                 fiber: false,
                 // bootstrap-sass requires a minimum precision of 8
@@ -252,11 +303,11 @@ export function withWeb() {
         test: /\.less$/,
         include: globalStylePaths,
         use: [
-          ...getCommonLoadersForGlobalStyle(options, includePaths),
+          ...getCommonLoadersForGlobalStyle(mergedOptions, includePaths),
           {
             loader: require.resolve('less-loader'),
             options: {
-              sourceMap: !!options.sourceMap,
+              sourceMap: !!mergedOptions.sourceMap,
               lessOptions: {
                 javascriptEnabled: true,
                 ...lessPathOptions,
@@ -269,11 +320,11 @@ export function withWeb() {
         test: /\.styl$/,
         include: globalStylePaths,
         use: [
-          ...getCommonLoadersForGlobalStyle(options, includePaths),
+          ...getCommonLoadersForGlobalStyle(mergedOptions, includePaths),
           {
             loader: require.resolve('stylus-loader'),
             options: {
-              sourceMap: !!options.sourceMap,
+              sourceMap: !!mergedOptions.sourceMap,
               stylusOptions: {
                 include: includePaths,
               },
@@ -299,7 +350,7 @@ export function withWeb() {
 
     config.output = {
       ...config.output,
-      crossOriginLoading: options.subresourceIntegrity
+      crossOriginLoading: mergedOptions.subresourceIntegrity
         ? ('anonymous' as const)
         : (false as const),
     };
@@ -319,16 +370,16 @@ export function withWeb() {
       minimizer,
       emitOnErrors: false,
       moduleIds: 'deterministic' as const,
-      runtimeChunk: options.runtimeChunk ? ('single' as const) : false,
+      runtimeChunk: mergedOptions.runtimeChunk ? ('single' as const) : false,
       splitChunks: {
         maxAsyncRequests: Infinity,
         cacheGroups: {
-          default: !!options.commonChunk && {
+          default: !!mergedOptions.commonChunk && {
             chunks: 'async' as const,
             minChunks: 2,
             priority: 10,
           },
-          common: !!options.commonChunk && {
+          common: !!mergedOptions.commonChunk && {
             name: 'common',
             chunks: 'async' as const,
             minChunks: 2,
@@ -336,7 +387,7 @@ export function withWeb() {
             priority: 5,
           },
           vendors: false as const,
-          vendor: !!options.vendorChunk && {
+          vendor: !!mergedOptions.vendorChunk && {
             name: 'vendor',
             chunks: (chunk) => chunk.name === 'main',
             enforce: true,
@@ -381,9 +432,7 @@ export function withWeb() {
   };
 }
 
-function createScriptsPlugin(
-  options: NormalizedWebpackExecutorOptions
-): WebpackPluginInstance[] {
+function createScriptsPlugin(options: MergedOptions): WebpackPluginInstance[] {
   // process global scripts
   const globalScriptsByBundleName = normalizeExtraEntryPoints(
     options.scripts || [],
@@ -433,7 +482,7 @@ function createScriptsPlugin(
 }
 
 function getCommonLoadersForCssModules(
-  options: NormalizedWebpackExecutorOptions,
+  options: MergedOptions,
   includePaths: string[]
 ) {
   // load component css as raw strings
@@ -457,14 +506,17 @@ function getCommonLoadersForCssModules(
       loader: require.resolve('postcss-loader'),
       options: {
         implementation: require('postcss'),
-        postcssOptions: postcssOptionsCreator(options, includePaths),
+        postcssOptions: postcssOptionsCreator(options, {
+          includePaths,
+          forCssModules: true,
+        }),
       },
     },
   ];
 }
 
 function getCommonLoadersForGlobalCss(
-  options: NormalizedWebpackExecutorOptions,
+  options: MergedOptions,
   includePaths: string[]
 ) {
   return [
@@ -478,14 +530,14 @@ function getCommonLoadersForGlobalCss(
       loader: require.resolve('postcss-loader'),
       options: {
         implementation: require('postcss'),
-        postcssOptions: postcssOptionsCreator(options, includePaths),
+        postcssOptions: postcssOptionsCreator(options, { includePaths }),
       },
     },
   ];
 }
 
 function getCommonLoadersForGlobalStyle(
-  options: NormalizedWebpackExecutorOptions,
+  options: MergedOptions,
   includePaths: string[]
 ) {
   return [
@@ -498,15 +550,19 @@ function getCommonLoadersForGlobalStyle(
       loader: require.resolve('postcss-loader'),
       options: {
         implementation: require('postcss'),
-        postcssOptions: postcssOptionsCreator(options, includePaths),
+        postcssOptions: postcssOptionsCreator(options, { includePaths }),
       },
     },
   ];
 }
 
 function postcssOptionsCreator(
-  options: NormalizedWebpackExecutorOptions,
-  includePaths: string[]
+  options: MergedOptions,
+
+  {
+    includePaths,
+    forCssModules = false,
+  }: { includePaths: string[]; forCssModules?: boolean }
 ) {
   const hashFormat = getOutputHashFormat(options.outputHashing as string);
   // PostCSS options depend on the webpack loader, but we need to set the `config` path as a string due to this check:
@@ -523,13 +579,17 @@ function postcssOptionsCreator(
         addModulesDirectories: includePaths,
         resolve: (url: string) => (url.startsWith('~') ? url.slice(1) : url),
       }),
-      PostcssCliResources({
-        baseHref: options.baseHref,
-        deployUrl: options.deployUrl,
-        loader,
-        filename: `[name]${hashFormat.file}.[ext]`,
-      }),
-      autoprefixer(),
+      ...(forCssModules
+        ? []
+        : [
+            PostcssCliResources({
+              baseHref: options.baseHref,
+              deployUrl: options.deployUrl,
+              loader,
+              filename: `[name]${hashFormat.file}.[ext]`,
+            }),
+            autoprefixer(),
+          ]),
     ],
   });
 

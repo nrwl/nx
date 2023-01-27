@@ -6252,6 +6252,31 @@
         "name": "webpack",
         "children": [
           {
+            "id": "documents",
+            "path": "/packages/webpack/documents",
+            "name": "documents",
+            "children": [
+              {
+                "name": "Configure webpack on your Nx workspace",
+                "path": "/packages/webpack/documents/webpack-config-setup",
+                "id": "webpack-config-setup",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Webpack plugins",
+                "path": "/packages/webpack/documents/webpack-plugins",
+                "id": "webpack-plugins",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
+          {
             "id": "executors",
             "path": "/packages/webpack/executors",
             "name": "executors",

@@ -18,7 +18,8 @@
       },
       "$default": {
         "$source": "unparsed"
-      }
+      },
+      "x-priority": "internal"
     }
   },
   "additionalProperties": true,
