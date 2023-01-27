@@ -24,6 +24,7 @@ import {
   ExecutorsJson,
   Generator,
   GeneratorsJson,
+  GeneratorsJsonEntry,
   TaskGraphExecutor,
 } from './misc-interfaces';
 import { PackageJson } from '../utils/package-json';
@@ -185,7 +186,21 @@ export class Workspaces {
     }
   }
 
-  readGenerator(collectionName: string, generatorName: string) {
+  readGenerator(
+    collectionName: string,
+    generatorName: string
+  ): {
+    resolvedCollectionName: string;
+    normalizedGeneratorName: string;
+    schema: any;
+    implementationFactory: () => Generator<unknown>;
+    isNgCompat: boolean;
+    /**
+     * @deprecated(v16): This will be removed in v16, use generatorConfiguration.aliases
+     */
+    aliases: string[];
+    generatorConfiguration: GeneratorsJsonEntry;
+  } {
     try {
       const {
         generatorsFilePath,
@@ -209,6 +224,11 @@ export class Workspaces {
         generatorConfig.implementation,
         generatorsDir
       );
+      const normalizedGeneratorConfiguration: GeneratorsJsonEntry = {
+        ...generatorConfig,
+        aliases: generatorConfig.aliases ?? [],
+        hidden: !!generatorConfig.hidden,
+      };
       return {
         resolvedCollectionName,
         normalizedGeneratorName,
@@ -216,6 +236,7 @@ export class Workspaces {
         implementationFactory,
         isNgCompat,
         aliases: generatorConfig.aliases || [],
+        generatorConfiguration: normalizedGeneratorConfiguration,
       };
     } catch (e) {
       throw new Error(

@@ -19,7 +19,8 @@
       "schema": "./src/generators/library/schema.json",
       "aliases": ["lib"],
       "x-type": "library",
-      "description": "Create a library."
+      "description": "Create a library.",
+      "x-deprecated": "Use @nrwl/js:lib instead. This will be removed in Nx v16"
     },
     "workspace-generator": {
       "factory": "./src/generators/workspace-generator/workspace-generator",
@@ -70,7 +71,8 @@
       "schema": "./src/generators/library/schema.json",
       "aliases": ["lib"],
       "x-type": "library",
-      "description": "Create a library."
+      "description": "Create a library.",
+      "x-deprecated": "Use @nrwl/js:lib instead. This will be removed in Nx v16."
     },
     "workspace-generator": {
       "factory": "./src/generators/workspace-generator/workspace-generator",

@@ -22,6 +22,7 @@ export type Generator<T = unknown> = (
 ) => void | GeneratorCallback | Promise<void | GeneratorCallback>;
 
 export interface GeneratorsJsonEntry {
+  hidden?: boolean;
   schema: string;
   implementation?: string;
   factory?: string;
@@ -29,6 +30,7 @@ export interface GeneratorsJsonEntry {
   aliases?: string[];
   cli?: 'nx';
   'x-type'?: 'library' | 'application';
+  'x-deprecated'?: string;
 }
 
 export type OutputCaptureMethod = 'direct-nodejs' | 'pipe';
