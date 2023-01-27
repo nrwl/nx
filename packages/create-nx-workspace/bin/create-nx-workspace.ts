@@ -100,11 +100,6 @@ const presetOptions: { name: Preset; message: string }[] = [
     message:
       'react-native      [a monorepo with a single React Native application]',
   },
-  {
-    name: Preset.NodeServer,
-    message:
-      'node              [a standalone repo with a single Node Server e.g. Express]',
-  },
 ];
 
 const nxVersion = require('../package.json').version;
