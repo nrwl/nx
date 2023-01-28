@@ -41,11 +41,19 @@ export async function* esbuildExecutor(
 
   const externalDependencies: DependentBuildableProjectNode[] =
     options.external.map((name) => {
-      const externalNode = context.projectGraph.externalNodes[`npm:${name}`];
-      if (!externalNode)
-        throw new Error(
-          `Cannot find external dependency ${name}. Check your package.json file.`
-        );
+      let externalNode = context.projectGraph.externalNodes[`npm:${name}`];
+      
+      if (!externalNode) {
+          externalNode = {
+             type: '',
+             name: '',
+            data: {
+            version: '',
+            packageName: `${name}`,
+            hash: ''
+          }
+        } 
+      }
       return {
         name,
         outputs: [],
