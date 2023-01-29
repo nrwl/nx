@@ -6,9 +6,10 @@ import { clean, coerce, gt, satisfies } from 'semver';
 import { getPackageManagerCommand } from 'nx/src/utils/package-manager';
 import { execSync } from 'child_process';
 
+const UNIDENTIFIED_VERSION = 'UNIDENTIFIED_VERSION';
 const NON_SEMVER_TAGS = {
   '*': 2,
-  unidentified: 2,
+  [UNIDENTIFIED_VERSION]: 2,
   next: 1,
   latest: 0,
   previous: -1,
@@ -40,11 +41,11 @@ function isIncomingVersionGreater(
   const incomingVersionCompareBy =
     incomingVersion in NON_SEMVER_TAGS
       ? incomingVersion
-      : cleanSemver(incomingVersion)?.toString() ?? 'unidentified';
+      : cleanSemver(incomingVersion)?.toString() ?? UNIDENTIFIED_VERSION;
   const existingVersionCompareBy =
     existingVersion in NON_SEMVER_TAGS
       ? existingVersion
-      : cleanSemver(existingVersion)?.toString() ?? 'unidentified';
+      : cleanSemver(existingVersion)?.toString() ?? UNIDENTIFIED_VERSION;
 
   if (
     incomingVersionCompareBy in NON_SEMVER_TAGS &&
@@ -66,7 +67,7 @@ function isIncomingVersionGreater(
   return gt(cleanSemver(incomingVersion), cleanSemver(existingVersion));
 }
 
-function updateExistingDependenciesVersion(
+function updateExistingAltDependenciesVersion(
   dependencies: Record<string, string>,
   existingAltDependencies: Record<string, string>
 ) {
@@ -78,6 +79,24 @@ function updateExistingDependenciesVersion(
 
       const incomingVersion = dependencies[d];
       const existingVersion = existingAltDependencies[d];
+
+      return isIncomingVersionGreater(incomingVersion, existingVersion);
+    })
+    .reduce((acc, d) => ({ ...acc, [d]: dependencies[d] }), {});
+}
+
+function updateExistingDependenciesVersion(
+  dependencies: Record<string, string>,
+  existingDependencies: Record<string, string> = {}
+) {
+  return Object.keys(dependencies)
+    .filter((d) => {
+      if (!existingDependencies[d]) {
+        return true;
+      }
+
+      const incomingVersion = dependencies[d];
+      const existingVersion = existingDependencies[d];
 
       return isIncomingVersionGreater(incomingVersion, existingVersion);
     })
@@ -107,25 +126,37 @@ export function addDependenciesToPackageJson(
 ): GeneratorCallback {
   const currentPackageJson = readJson(tree, packageJsonPath);
 
+  /** Dependencies to install that are not met in dev dependencies */
   let filteredDependencies = filterExistingDependencies(
     dependencies,
     currentPackageJson.devDependencies
   );
+  /** Dev dependencies to install that are not met in dependencies */
   let filteredDevDependencies = filterExistingDependencies(
     devDependencies,
     currentPackageJson.dependencies
   );
 
+  // filtered dependencies should consist of:
+  // - dependencies of the same type that are not present
+  // - dependencies of the same type that have greater version
+  // - specified dependencies of the other type that have greater version and are already installed as current type
   filteredDependencies = {
-    ...filteredDependencies,
     ...updateExistingDependenciesVersion(
+      filteredDependencies,
+      currentPackageJson.dependencies
+    ),
+    ...updateExistingAltDependenciesVersion(
       devDependencies,
       currentPackageJson.dependencies
     ),
   };
   filteredDevDependencies = {
-    ...filteredDevDependencies,
     ...updateExistingDependenciesVersion(
+      filteredDevDependencies,
+      currentPackageJson.devDependencies
+    ),
+    ...updateExistingAltDependenciesVersion(
       dependencies,
       currentPackageJson.devDependencies
     ),
