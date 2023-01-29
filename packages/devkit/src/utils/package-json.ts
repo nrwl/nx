@@ -8,6 +8,7 @@ import { execSync } from 'child_process';
 
 const NON_SEMVER_TAGS = {
   '*': 2,
+  unidentified: 2,
   next: 1,
   latest: 0,
   previous: -1,
@@ -35,16 +36,29 @@ function isIncomingVersionGreater(
   incomingVersion: string,
   existingVersion: string
 ) {
-  if (
-    incomingVersion in NON_SEMVER_TAGS &&
+  // if version is in the format of "latest", "next" or similar - keep it, otherwise try to parse it
+  const incomingVersionCompareBy =
+    incomingVersion in NON_SEMVER_TAGS
+      ? incomingVersion
+      : cleanSemver(incomingVersion)?.toString() ?? 'unidentified';
+  const existingVersionCompareBy =
     existingVersion in NON_SEMVER_TAGS
+      ? existingVersion
+      : cleanSemver(existingVersion)?.toString() ?? 'unidentified';
+
+  if (
+    incomingVersionCompareBy in NON_SEMVER_TAGS &&
+    existingVersionCompareBy in NON_SEMVER_TAGS
   ) {
-    return NON_SEMVER_TAGS[incomingVersion] > NON_SEMVER_TAGS[existingVersion];
+    return (
+      NON_SEMVER_TAGS[incomingVersionCompareBy] >
+      NON_SEMVER_TAGS[existingVersionCompareBy]
+    );
   }
 
   if (
-    incomingVersion in NON_SEMVER_TAGS ||
-    existingVersion in NON_SEMVER_TAGS
+    incomingVersionCompareBy in NON_SEMVER_TAGS ||
+    existingVersionCompareBy in NON_SEMVER_TAGS
   ) {
     return true;
   }

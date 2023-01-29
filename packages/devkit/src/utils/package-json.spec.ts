@@ -242,6 +242,46 @@ describe('addDependenciesToPackageJson', () => {
     expect(installTask).toBeDefined();
   });
 
+  it('should overwrite dependencies when their version is not in a semver format', () => {
+    // ARRANGE
+    writeJson(tree, 'package.json', {
+      dependencies: {
+        '@nrwl/angular': 'github:reponame/packageNameOne',
+        // '@nrwl/vite': 'git://github.com/npm/cli.git#v14.2.0' // this format is parsable
+      },
+      devDependencies: {
+        '@nrwl/next': '14.1.0',
+      },
+    });
+
+    // ACT
+    const installTask = addDependenciesToPackageJson(
+      tree,
+      {
+        '@nrwl/next': 'github:reponame/packageNameTwo',
+        '@nrwl/cypress':
+          'git+https://username@github.com/reponame/packagename.git',
+        // '@nrwl/vite': '14.0.1'
+      },
+      {
+        '@nrwl/angular': '14.1.0',
+      }
+    );
+
+    // ASSERT
+    const { dependencies, devDependencies } = readJson(tree, 'package.json');
+    expect(dependencies).toEqual({
+      '@nrwl/angular': '14.1.0',
+      '@nrwl/cypress':
+        'git+https://username@github.com/reponame/packagename.git',
+      // '@nrwl/vite': 'git://github.com/npm/cli.git#v14.2.0'
+    });
+    expect(devDependencies).toEqual({
+      '@nrwl/next': 'github:reponame/packageNameTwo',
+    });
+    expect(installTask).toBeDefined();
+  });
+
   it('should add additional dependencies when they dont exist in devDependencies or vice versa and not update the ones that do exist', () => {
     // ARRANGE
     writeJson(tree, 'package.json', {
