@@ -4,6 +4,7 @@ import {
   getPackageManagerCommand,
   getPublishedVersion,
   getSelectedPackageManager,
+  removeFile,
   renameFile,
   runCLI,
   runCommand,
@@ -94,5 +95,32 @@ describe('nx init', () => {
     expect(output).toContain('HELLO\n');
     expect(output).toContain('COMPOUND TEST');
     expect(output).not.toContain('HELLO COMPOUND');
+  });
+
+  describe('encapsulated', () => {
+    it('should support running targets in a encapsulated repo', () => {
+      createNonNxProjectDirectory('encapsulated-repo', false);
+      removeFile('package.json');
+      updateFile(
+        'projects/a/project.json',
+        JSON.stringify({
+          name: 'a',
+          targets: {
+            echo: {
+              command: `echo 'Hello from A'`,
+            },
+          },
+        })
+      );
+      const output = runCommand(
+        `${pmc.runUninstalledPackage} nx@latest init --encapsulated`
+      );
+      expect(output).toContain('Setting Nx up in encapsulated mode');
+      if (process.platform === 'win32') {
+        expect(runCommand('./nx.bat echo a')).toContain('Hello from A');
+      } else {
+        expect(runCommand('./nx echo a')).toContain('Hello from A');
+      }
+    });
   });
 });

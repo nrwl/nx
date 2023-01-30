@@ -1,10 +1,16 @@
+import { existsSync } from 'fs';
+import { join } from 'path';
+
 import { ProjectGraphBuilder } from '../../../../project-graph/project-graph-builder';
 import { readJsonFile } from '../../../../utils/fileutils';
-import { join } from 'path';
+import { PackageJson } from '../../../../utils/package-json';
 import { workspaceRoot } from '../../../../utils/workspace-root';
 
 export function buildNpmPackageNodes(builder: ProjectGraphBuilder) {
-  const packageJson = readJsonFile(join(workspaceRoot, 'package.json'));
+  const packageJsonPath = join(workspaceRoot, 'package.json');
+  const packageJson: Partial<PackageJson> = existsSync(packageJsonPath)
+    ? readJsonFile(packageJsonPath)
+    : {};
   const deps = {
     ...packageJson.dependencies,
     ...packageJson.devDependencies,

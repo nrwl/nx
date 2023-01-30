@@ -16,8 +16,8 @@ export function workspaceRootInner(
 
   const matches = [
     path.join(dir, 'nx.json'),
-    path.join(dir, 'nx.sh'),
-    path.join(dir, 'nx.bat')
+    path.join(dir, 'nx'),
+    path.join(dir, 'nx.bat'),
   ];
 
   if (matches.some((x) => fileExists(x))) {
