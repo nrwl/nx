@@ -10,7 +10,7 @@ import { libraryGenerator } from '@nrwl/workspace';
 describe('Jest Migration - jest 29 update configs', () => {
   let tree: Tree;
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
   it('should update jest.config.ts', async () => {
     await setup(tree, 'my-lib');

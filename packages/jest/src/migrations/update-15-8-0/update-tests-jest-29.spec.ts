@@ -10,7 +10,7 @@ import { updateTestsJest29 } from './update-tests-jest-29';
 describe('Jest Migration - jest 29 mocked usage in tests', () => {
   let tree: Tree;
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it('should not update anything if there are no tests', async () => {
