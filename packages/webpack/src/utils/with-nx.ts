@@ -13,6 +13,7 @@ import { StatsJsonPlugin } from '../plugins/stats-json-plugin';
 import { createCopyPlugin } from './create-copy-plugin';
 import { GeneratePackageJsonPlugin } from '../plugins/generate-package-json-plugin';
 import { getOutputHashFormat } from './hash-format';
+import { NxWebpackPlugin } from './config';
 
 const IGNORED_WEBPACK_WARNINGS = [
   /The comment file/i,
@@ -24,7 +25,15 @@ const mainFields = ['main', 'module'];
 
 const processed = new Set();
 
-export function withNx(opts?: { skipTypeChecking?: boolean }) {
+export interface WithNxOptions {
+  skipTypeChecking?: boolean;
+}
+
+/**
+ * @param {WithNxOptions} pluginOptions
+ * @returns {NxWebpackPlugin}
+ */
+export function withNx(pluginOptions?: WithNxOptions): NxWebpackPlugin {
   return function configure(
     config: Configuration,
     {
@@ -39,7 +48,7 @@ export function withNx(opts?: { skipTypeChecking?: boolean }) {
 
     const plugins: WebpackPluginInstance[] = [];
 
-    if (!opts?.skipTypeChecking) {
+    if (!pluginOptions?.skipTypeChecking) {
       plugins.push(
         new ForkTsCheckerWebpackPlugin({
           typescript: {

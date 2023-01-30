@@ -4,7 +4,9 @@ import type { NxWebpackExecutionContext } from '@nrwl/webpack';
 
 const processed = new Set();
 
-interface WithReactOptions extends WithWebOptions {}
+interface WithReactOptions extends WithWebOptions {
+  svgr?: false;
+}
 
 function addHotReload(config: Configuration) {
   if (config.mode === 'development' && config['devServer']?.hot) {
@@ -44,6 +46,10 @@ function removeSvgLoaderIfPresent(config: Configuration) {
   config.module.rules.splice(svgLoaderIdx, 1);
 }
 
+/**
+ * @param {WithReactOptions} pluginOptions
+ * @returns {NxWebpackPlugin}
+ */
 export function withReact(pluginOptions: WithReactOptions = {}) {
   return function configure(
     config: Configuration,
@@ -57,28 +63,31 @@ export function withReact(pluginOptions: WithReactOptions = {}) {
     config = withWeb(pluginOptions)(config, context);
 
     addHotReload(config);
-    removeSvgLoaderIfPresent(config);
 
-    config.module.rules.push({
-      test: /\.svg$/,
-      issuer: /\.(js|ts|md)x?$/,
-      use: [
-        {
-          loader: require.resolve('@svgr/webpack'),
-          options: {
-            svgo: false,
-            titleProp: true,
-            ref: true,
+    if (pluginOptions?.svgr !== false) {
+      removeSvgLoaderIfPresent(config);
+
+      config.module.rules.push({
+        test: /\.svg$/,
+        issuer: /\.(js|ts|md)x?$/,
+        use: [
+          {
+            loader: require.resolve('@svgr/webpack'),
+            options: {
+              svgo: false,
+              titleProp: true,
+              ref: true,
+            },
           },
-        },
-        {
-          loader: require.resolve('file-loader'),
-          options: {
-            name: '[name].[hash].[ext]',
+          {
+            loader: require.resolve('file-loader'),
+            options: {
+              name: '[name].[hash].[ext]',
+            },
           },
-        },
-      ],
-    });
+        ],
+      });
+    }
 
     // enable webpack node api
     config.node = {

@@ -2,6 +2,7 @@ import { ModuleFederationConfig } from '@nrwl/devkit';
 import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
 import { getModuleFederationConfig } from './utils';
 import ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
+import type { AsyncNxWebpackPlugin, NxWebpackPlugin } from '@nrwl/webpack';
 
 function determineRemoteUrl(remote: string) {
   const remoteConfiguration = readCachedProjectConfiguration(remote);
@@ -21,7 +22,13 @@ function determineRemoteUrl(remote: string) {
   }:${port}/remoteEntry.js`;
 }
 
-export async function withModuleFederation(options: ModuleFederationConfig) {
+/**
+ * @param {ModuleFederationConfig} options
+ * @return {Promise<AsyncNxWebpackPlugin>}
+ */
+export async function withModuleFederation(
+  options: ModuleFederationConfig
+): Promise<AsyncNxWebpackPlugin> {
   const reactWebpackConfig = require('../../plugins/webpack');
 
   const { sharedDependencies, sharedLibraries, mappedRemotes } =
