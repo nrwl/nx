@@ -1206,16 +1206,6 @@
         "tags": []
       },
       {
-        "id": "customize-webpack",
-        "name": "Customizing Webpack Config",
-        "description": "",
-        "file": "shared/guides/customize-webpack",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/other/customize-webpack",
-        "tags": ["use-task-executors"]
-      },
-      {
         "id": "react-nx",
         "name": "Powering Up React Development With Nx",
         "description": "",
@@ -1529,16 +1519,6 @@
     "isExternal": false,
     "path": "/recipes/other/misc-data-persistence",
     "tags": []
-  },
-  "/recipes/other/customize-webpack": {
-    "id": "customize-webpack",
-    "name": "Customizing Webpack Config",
-    "description": "",
-    "file": "shared/guides/customize-webpack",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/customize-webpack",
-    "tags": ["use-task-executors"]
   },
   "/recipes/other/react-nx": {
     "id": "react-nx",
