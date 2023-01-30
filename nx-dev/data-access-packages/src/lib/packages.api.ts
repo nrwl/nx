@@ -38,7 +38,7 @@ export class PackagesApi {
       throw new Error('public document sources cannot be undefined');
     }
 
-    this.manifest = Object.assign({}, this.options.manifest);
+    this.manifest = structuredClone(this.options.manifest);
   }
 
   getFilePath(path: string): string {

@@ -466,7 +466,7 @@ function generateJsonExampleForHelper(
       }
 
       if (matchedType === 'object') {
-        const example = Object.assign({}, ...examples);
+        const example = structuredClone(examples);
         return Example.of(example);
       } else if (
         matchedType === 'string' ||
