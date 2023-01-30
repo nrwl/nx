@@ -607,9 +607,17 @@
             "disableCollapsible": false
           },
           {
-            "name": "5 - Summary",
-            "path": "/node-tutorial/5-summary",
-            "id": "5-summary",
+            "name": "5 - Docker Target",
+            "path": "/node-tutorial/5-docker-target",
+            "id": "5-docker-target",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "6 - Summary",
+            "path": "/node-tutorial/6-summary",
+            "id": "6-summary",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -650,9 +658,17 @@
         "disableCollapsible": false
       },
       {
-        "name": "5 - Summary",
-        "path": "/node-tutorial/5-summary",
-        "id": "5-summary",
+        "name": "5 - Docker Target",
+        "path": "/node-tutorial/5-docker-target",
+        "id": "5-docker-target",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "6 - Summary",
+        "path": "/node-tutorial/6-summary",
+        "id": "6-summary",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

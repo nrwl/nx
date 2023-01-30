@@ -236,9 +236,14 @@
               "file": "shared/node-tutorial/4-task-pipelines"
             },
             {
-              "name": "5 - Summary",
-              "id": "5-summary",
-              "file": "shared/node-tutorial/5-summary"
+              "name": "5 - Docker Target",
+              "id": "5-docker-target",
+              "file": "shared/node-tutorial/5-docker-target"
+            },
+            {
+              "name": "6 - Summary",
+              "id": "6-summary",
+              "file": "shared/node-tutorial/6-summary"
             }
           ]
         },

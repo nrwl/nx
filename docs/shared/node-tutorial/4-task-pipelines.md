@@ -4,7 +4,7 @@
 
 Let's build the `products-api` application:
 
-```{% command="npx nx build products-api" path="~/my-products" %}
+```{% command="npx nx build products-api" path="~/products-api" %}
 
    ✔    1/1 dependent project tasks succeeded [0 read from cache]
 
@@ -73,7 +73,7 @@ Why does Nx always run the dependent tasks? Doesn't that waste time repeating th
 
 It would, if Nx didn't have a robust caching mechanism to take care of that problem for you. Let's build the `products-api` app again.
 
-```{% command="npx nx build products-api" path="~/my-products" %}
+```{% command="npx nx build products-api" path="~/products-api" %}
 
    ✔    1/1 dependent project tasks succeeded [1 read from cache]
 

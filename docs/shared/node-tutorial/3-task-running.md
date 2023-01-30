@@ -71,7 +71,7 @@ The properties of these targets are defined as follows:
 
 Run the `build` target for your `auth` project:
 
-```{% command="npx nx build auth" path="~/my-products" %}
+```{% command="npx nx build auth" path="~/products-api" %}
 
 > nx run auth:build
 
@@ -87,7 +87,7 @@ You can now find your built `auth` distributable in your `dist/auth/` directory,
 
 Next, run a lint check on `auth`:
 
-```{% command="npx nx lint auth" path="~/my-products" %}
+```{% command="npx nx lint auth" path="~/products-api" %}
 
 > nx run auth:lint
 
@@ -106,7 +106,7 @@ All files pass linting.
 
 To run the e2e tests, you first need to serve the root `products-api` project:
 
-```{% command="npx nx serve products-api" path="~/my-products" %}
+```{% command="npx nx serve products-api" path="~/products-api" %}
 > nx run products-api:serve
 
 Debugger listening on ws://localhost:9229/5ee3e454-1e38-4d9b-a5de-64a4cb1e21b9
@@ -118,7 +118,7 @@ For help, see: https://nodejs.org/en/docs/inspector
 
 Then you can run the e2e tests from the `e2e` project in a separate terminal:
 
-```{% command="npx nx e2e e2e" path="~/my-products" %}
+```{% command="npx nx e2e e2e" path="~/products-api" %}
 > nx run e2e:e2e
 
 Determining test suites to run...

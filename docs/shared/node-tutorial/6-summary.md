@@ -1,4 +1,4 @@
-# Node Standalone Tutorial - Part 5: Summary
+# Node Standalone Tutorial - Part 6: Summary
 
 In this tutorial you:
 
@@ -6,6 +6,7 @@ In this tutorial you:
 - Learned how Nx determines a graph of your workspace
 - Learned how to configure and run tasks in your workspace
 - Learned how Nx's built-in optimizations work, and how to apply those to your own workspace
+- Learned how Nx can create a simple Dockerfile for you
 
 ## Learn More
 
