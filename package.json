@@ -44,7 +44,7 @@
     "@babel/preset-typescript": "^7.15.0",
     "@cypress/react": "^6.0.0",
     "@floating-ui/react-dom": "^1.0.1",
-    "@monodon/rust": "0.4.3",
+    "@monodon/rust": "0.4.4",
     "@napi-rs/cli": "2.14.0",
     "@nestjs/cli": "^9.0.0",
     "@nestjs/common": "^9.0.0",
