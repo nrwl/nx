@@ -124,4 +124,4 @@ The `docker-build` command is defined as a target in the `orders-api` `project.j
 
 ## What's Next
 
-- Continue to [6: Summary](/node-tutorial/5-summary)
+- Continue to [6: Summary](/node-tutorial/6-summary)

@@ -232,4 +232,4 @@ This can be particularly helpful in CI pipelines for larger repos, where most co
 
 ## What's Next
 
-- Continue to [5: Summary](/node-tutorial/5-summary)
+- Continue to [5: Docker Target](/node-tutorial/5-docker-target)

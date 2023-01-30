@@ -19,7 +19,8 @@ In this tutorial you'll create a backend-focused workspace with Nx.
 - [2 - Project Graph](/node-tutorial/2-project-graph)
 - [3 - Task Running](/node-tutorial/3-task-running)
 - [4 - Task Pipelines](/node-tutorial/4-task-pipelines)
-- [5 - Summary](/node-tutorial/5-summary)
+- [5 - Docker Target](/node-tutorial/5-docker-target)
+- [6 - Summary](/node-tutorial/6-summary)
 
 ## Your Objective
 
