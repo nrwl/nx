@@ -1104,13 +1104,6 @@
               "file": "shared/guides/misc-data-persistence"
             },
             {
-              "name": "Customizing Webpack Config",
-              "id": "customize-webpack",
-              "tags": ["use-task-executors"],
-              "file": "shared/guides/customize-webpack"
-            },
-
-            {
               "name": "Powering Up React Development With Nx",
               "id": "react-nx",
               "file": "shared/examples/react-nx"

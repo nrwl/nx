@@ -242,7 +242,8 @@ const diataxis = {
   '/guides/monorepo-nx-enterprise': '/more-concepts/monorepo-nx-enterprise',
   '/guides/performance-profiling': '/recipes/other/performance-profiling',
   '/guides/eslint': '/recipes/other/eslint',
-  '/guides/customize-webpack': '/recipes/other/customize-webpack',
+  '/guides/customize-webpack':
+    '/packages/webpack/documents/webpack-config-setup',
   '/guides/nx-daemon': '/more-concepts/nx-daemon',
   '/guides/js-and-ts': '/recipes/other/js-and-ts',
   '/guides/browser-support': '/recipes/other/browser-support',
@@ -268,6 +269,8 @@ const diataxis = {
   '/examples/caching': '/recipes/other/caching',
   '/examples/dte': '/recipes/other/dte',
   '/recipe/workspace-generators': '/recipes/generators/local-generators',
+  '/recipes/other/customize-webpack':
+    '/packages/webpack/documents/webpack-config-setup',
 };
 
 /**
