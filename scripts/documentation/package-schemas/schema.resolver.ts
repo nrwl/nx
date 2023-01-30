@@ -72,7 +72,7 @@ export function schemaResolver(
   resolveExamplesFile: () => void;
   getSchema: () => NxSchema;
 } {
-  const updatedSchema: NxSchema = Object.assign({}, schema);
+  const updatedSchema: NxSchema = structuredClone(schema);
   return {
     resolveReferences: () => {
       traverseAndReplaceReferences(updatedSchema, '$ref', lookup);

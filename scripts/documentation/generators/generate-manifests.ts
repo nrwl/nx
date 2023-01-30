@@ -393,7 +393,7 @@ function documentRecurseOperations(
   target: DocumentMetadata,
   parent: DocumentMetadata
 ): DocumentMetadata {
-  const document: DocumentMetadata = Object.assign({}, target);
+  const document: DocumentMetadata = structuredClone(target);
 
   /**
    * Calculate `path`
