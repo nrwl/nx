@@ -25,6 +25,7 @@ import CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 import MiniCssExtractPlugin = require('mini-css-extract-plugin');
 import autoprefixer = require('autoprefixer');
 import postcssImports = require('postcss-import');
+import { NxWebpackExecutionContext } from '@nrwl/webpack/src/utils/config';
 
 interface PostcssOptions {
   (loader: any): any;
@@ -58,10 +59,7 @@ export type MergedOptions = Omit<
 export function withWeb(pluginOptions: WithWebOptions = {}) {
   return function configure(
     config: Configuration,
-    {
-      options: executorOptions,
-      context,
-    }: { options: NormalizedWebpackExecutorOptions; context: ExecutorContext }
+    { options: executorOptions, context }: NxWebpackExecutionContext
   ): Configuration {
     if (processed.has(config)) return config;
 
@@ -367,7 +365,7 @@ export function withWeb(pluginOptions: WithWebOptions = {}) {
 
     config.optimization = {
       ...config.optimization,
-      minimizer,
+      minimizer: [...config.optimization.minimizer, ...minimizer],
       emitOnErrors: false,
       moduleIds: 'deterministic' as const,
       runtimeChunk: mergedOptions.runtimeChunk ? ('single' as const) : false,
