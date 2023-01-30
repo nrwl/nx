@@ -92,21 +92,16 @@ export const getStaticPaths: GetStaticPaths = () => {
     fallback: 'blocking',
   };
 };
-export async function getStaticProps({
-  params,
-}: {
-  params: { name: string };
-}): Promise<{
-  props: {
-    menu: MenuItem[];
-    overview: string;
-    pkg: ProcessedPackageMetadata;
-  };
-}> {
-  const pkg = nxPackagesApi.getPackage([params.name]);
+
+function getData(packageName: string): {
+  menu: MenuItem[];
+  overview: string;
+  pkg: ProcessedPackageMetadata;
+} {
+  const pkg = nxPackagesApi.getPackage([packageName]);
   const documents = new DocumentsApi({
-    id: [params.name, 'documents'].join('-'),
-    manifest: nxPackagesApi.getPackageDocuments(params.name),
+    id: [packageName, 'documents'].join('-'),
+    manifest: nxPackagesApi.getPackageDocuments(packageName),
     prefix: '',
     publicDocsRoot: 'nx-dev/nx-dev/public/documentation',
     tagsApi,
@@ -116,7 +111,7 @@ export async function getStaticProps({
   try {
     overview = documents.getDocument([
       'packages',
-      params.name,
+      packageName,
       'documents',
       'overview',
     ])['content'];
@@ -125,10 +120,20 @@ export async function getStaticProps({
   }
 
   return {
-    props: {
-      menu: menusApi.getMenu('packages', 'packages'),
-      overview: overview,
-      pkg,
-    },
+    menu: menusApi.getMenu('packages', 'packages'),
+    overview: overview,
+    pkg,
   };
+}
+export async function getStaticProps({ params }: { params: { name: string } }) {
+  try {
+    return { props: getData(params.name) };
+  } catch (e) {
+    return {
+      notFound: true,
+      props: {
+        statusCode: 404,
+      },
+    };
+  }
 }
