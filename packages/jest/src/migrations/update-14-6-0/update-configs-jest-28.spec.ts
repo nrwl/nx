@@ -1,4 +1,4 @@
-import { readJson } from '@nrwl/devkit';
+import { readJson, updateJson } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { libraryGenerator as workspaceLib } from '@nrwl/workspace';
 import {
@@ -155,6 +155,11 @@ module.exports = {
   it('should update deps from jest.config.ts', async () => {
     let tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await workspaceLib(tree, { name: 'my-lib', unitTestRunner: 'jest' });
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies['jest'] = '27.1.1';
+      json.devDependencies['jest-environment-jsdom'] = '27.1.1';
+      return json;
+    });
     tree.write(
       'libs/my-lib/jest.config.ts',
       `
