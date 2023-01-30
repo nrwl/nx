@@ -66,7 +66,7 @@ export function PackageSchemaSubList({
               type: 'image/jpeg',
             },
           ],
-          site_name: 'Nx',
+          siteName: 'Nx',
           type: 'website',
         }}
       />
