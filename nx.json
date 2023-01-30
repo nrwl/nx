@@ -16,6 +16,7 @@
           "build-native",
           "e2e",
           "test",
+          "test-native",
           "sitemap",
           "build-storybook"
         ],
@@ -69,8 +70,13 @@
       },
       "outputs": ["{options.outputPath}"]
     },
+    "test-native": {
+      "inputs": ["native"],
+      "executor": "@monodon/rust:test",
+      "options": {}
+    },
     "test": {
-      "dependsOn": ["build-native", "^build-native"],
+      "dependsOn": ["test-native", "build-native", "^build-native"],
       "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
       "executor": "@nrwl/jest:jest",
       "options": {

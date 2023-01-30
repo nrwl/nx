@@ -93,6 +93,7 @@
       }
     },
     "lint": {},
-    "test": {}
+    "test": {},
+    "test-native": {}
   }
 }
