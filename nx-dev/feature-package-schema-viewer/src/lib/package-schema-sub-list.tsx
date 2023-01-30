@@ -38,7 +38,7 @@ export function PackageSchemaSubList({
     },
     githubUrl: pkg.githubRoot + pkg.root,
     seo: {
-      title: `${pkg.packageName} | Nx`,
+      title: `${pkg.packageName}:${type}s | Nx`,
       description: pkg.description,
       imageUrl: `https://nx.dev/images/open-graph/${router.asPath
         .replace('/', '')
