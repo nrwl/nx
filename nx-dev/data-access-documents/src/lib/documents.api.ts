@@ -36,7 +36,7 @@ export class DocumentsApi {
       throw new Error('public document sources cannot be undefined');
     }
 
-    this.manifest = Object.assign({}, this.options.manifest);
+    this.manifest = structuredClone(this.options.manifest);
   }
   private getManifestKey(path: string): string {
     return '/' + path;

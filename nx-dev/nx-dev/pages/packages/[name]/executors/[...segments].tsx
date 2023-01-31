@@ -102,27 +102,39 @@ export const getStaticPaths: GetStaticPaths = () => {
   };
 };
 
+function getData(
+  packageName: string,
+  segments: string[]
+): {
+  pkg: ProcessedPackageMetadata;
+  schema: SchemaMetadata;
+  menu: MenuItem[];
+} {
+  return {
+    pkg: nxPackagesApi.getPackage([packageName]),
+    schema: nxPackagesApi.getSchemaMetadata(
+      nxPackagesApi.getPackageFileMetadatas(packageName, 'executors')[
+        '/' + ['packages', packageName, 'executors', ...segments].join('/')
+      ]
+    ),
+    menu: menusApi.getMenu('packages', 'packages'),
+  };
+}
 export async function getStaticProps({
   params,
 }: {
   params: { name: string; segments: string[] };
-}): Promise<{
-  props: {
-    pkg: ProcessedPackageMetadata;
-    schema: SchemaMetadata;
-    menu: MenuItem[];
-  };
-}> {
-  return {
-    props: {
-      pkg: nxPackagesApi.getPackage([params.name]),
-      schema: nxPackagesApi.getSchemaMetadata(
-        nxPackagesApi.getPackageFileMetadatas(params.name, 'executors')[
-          '/' +
-            ['packages', params.name, 'executors', ...params.segments].join('/')
-        ]
-      ),
-      menu: menusApi.getMenu('packages', 'packages'),
-    },
-  };
+}) {
+  try {
+    return {
+      props: getData(params.name, params.segments),
+    };
+  } catch (e) {
+    return {
+      notFound: true,
+      props: {
+        statusCode: 404,
+      },
+    };
+  }
 }

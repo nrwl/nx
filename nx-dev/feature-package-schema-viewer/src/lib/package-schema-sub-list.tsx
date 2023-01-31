@@ -38,7 +38,7 @@ export function PackageSchemaSubList({
     },
     githubUrl: pkg.githubRoot + pkg.root,
     seo: {
-      title: `${pkg.packageName} | Nx`,
+      title: `${pkg.packageName}:${type}s | Nx`,
       description: pkg.description,
       imageUrl: `https://nx.dev/images/open-graph/${router.asPath
         .replace('/', '')
@@ -66,7 +66,7 @@ export function PackageSchemaSubList({
               type: 'image/jpeg',
             },
           ],
-          site_name: 'Nx',
+          siteName: 'Nx',
           type: 'website',
         }}
       />
@@ -78,7 +78,7 @@ export function PackageSchemaSubList({
           <div data-document="main">
             <TopSchemaLayout name={vm.package.packageName} url={vm.githubUrl} />
 
-            <Heading1 title={vm.package.packageName} />
+            <Heading1 title={vm.seo.title} />
 
             <Heading2 title={vm.heading} />
 

@@ -32,7 +32,8 @@
     "skipFormat": {
       "description": "Skip formatting files.",
       "type": "boolean",
-      "default": false
+      "default": false,
+      "x-priority": "internal"
     },
     "flat": {
       "description": "Flag to indicate if a directory is created.",

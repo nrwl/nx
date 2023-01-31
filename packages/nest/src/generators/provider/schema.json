@@ -32,7 +32,8 @@
     "skipFormat": {
       "description": "Skip formatting files.",
       "type": "boolean",
-      "default": false
+      "default": false,
+      "x-priority": "internal"
     },
     "unitTestRunner": {
       "description": "Test runner to use for unit tests.",

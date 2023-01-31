@@ -1104,13 +1104,6 @@
               "file": "shared/guides/misc-data-persistence"
             },
             {
-              "name": "Customizing Webpack Config",
-              "id": "customize-webpack",
-              "tags": ["use-task-executors"],
-              "file": "shared/guides/customize-webpack"
-            },
-
-            {
               "name": "Powering Up React Development With Nx",
               "id": "react-nx",
               "file": "shared/examples/react-nx"
@@ -1614,6 +1607,12 @@
           "id": "webpack",
           "description": "Webpack package.",
           "itemList": [
+            {
+              "id": "overview",
+              "name": "Webpack Package Overview",
+              "path": "/packages/webpack",
+              "file": "shared/packages/webpack/plugin-overview"
+            },
             {
               "name": "Configure webpack on your Nx workspace",
               "id": "webpack-config-setup",

@@ -14,6 +14,8 @@ import {
   updateJson,
   updateProjectConfig,
 } from '@nrwl/e2e/utils';
+import { readFileSync } from 'fs-extra';
+import { join } from 'path';
 
 describe('React Applications', () => {
   let proj: string;
@@ -26,6 +28,7 @@ describe('React Applications', () => {
     const appName = uniq('app');
     const libName = uniq('lib');
     const libWithNoComponents = uniq('lib');
+    const logoSvg = readFileSync(join(__dirname, 'logo.svg')).toString();
 
     runCLI(
       `generate @nrwl/react:app ${appName} --style=css --bundler=webpack --no-interactive`
@@ -47,6 +50,28 @@ describe('React Applications', () => {
         import '@${proj}/${libWithNoComponents}';
         import '@${proj}/${libName}';
         ${readFile(mainPath)}
+      `
+    );
+
+    updateFile(`apps/${appName}/src/app/logo.svg`, logoSvg);
+    updateFile(
+      `apps/${appName}/src/app/app.tsx`,
+      `
+        import { ReactComponent as Logo } from './logo.svg';
+        import logo from './logo.svg';
+        import NxWelcome from './nx-welcome';
+
+        export function App() {
+          return (
+            <>
+              <Logo />
+              <img src={logo} alt="" />
+              <NxWelcome title="${appName}" />
+            </>
+          );
+        }
+        
+        export default App;
       `
     );
 

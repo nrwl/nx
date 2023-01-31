@@ -60,7 +60,7 @@ export function PackageSchemaViewer({
               type: 'image/jpeg',
             },
           ],
-          site_name: 'Nx',
+          siteName: 'Nx',
           type: 'website',
         }}
       />

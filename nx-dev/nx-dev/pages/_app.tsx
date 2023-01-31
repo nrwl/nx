@@ -54,7 +54,16 @@ export default function CustomApp({
           content="#DA532C"
           key="windows-tile-color"
         />
-        <meta name="theme-color" content="#FFFFFF" />
+        <meta
+          name="theme-color"
+          media="(prefers-color-scheme: light)"
+          content="#F8FAFC"
+        />
+        <meta
+          name="theme-color"
+          media="(prefers-color-scheme: dark)"
+          content="#0F172A"
+        />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
       <a

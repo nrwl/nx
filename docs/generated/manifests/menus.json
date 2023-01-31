@@ -2622,14 +2622,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Customizing Webpack Config",
-            "path": "/recipes/other/customize-webpack",
-            "id": "customize-webpack",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Powering Up React Development With Nx",
             "path": "/recipes/other/react-nx",
             "id": "react-nx",
@@ -2876,14 +2868,6 @@
         "name": "Using Data Persistence operators",
         "path": "/recipes/other/misc-data-persistence",
         "id": "misc-data-persistence",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Customizing Webpack Config",
-        "path": "/recipes/other/customize-webpack",
-        "id": "customize-webpack",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -6256,6 +6240,14 @@
             "path": "/packages/webpack/documents",
             "name": "documents",
             "children": [
+              {
+                "name": "Webpack Package Overview",
+                "path": "/packages/webpack/documents/overview",
+                "id": "overview",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
               {
                 "name": "Configure webpack on your Nx workspace",
                 "path": "/packages/webpack/documents/webpack-config-setup",

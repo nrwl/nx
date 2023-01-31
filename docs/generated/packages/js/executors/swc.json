@@ -80,7 +80,8 @@
       "skipTypeCheck": {
         "type": "boolean",
         "description": "Whether to skip TypeScript type checking.",
-        "default": false
+        "default": false,
+        "x-priority": "important"
       },
       "swcExclude": {
         "type": "array",
@@ -91,7 +92,8 @@
           "./src/**/jest-setup.ts$",
           "./**/jest-setup.ts$",
           "./**/.*.js$"
-        ]
+        ],
+        "hidden": true
       },
       "updateBuildableProjectDepsInPackageJson": {
         "type": "boolean",

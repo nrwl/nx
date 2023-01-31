@@ -7,7 +7,7 @@ export class TagsApi {
       throw new Error('tags property cannot be undefined');
     }
 
-    this.manifest = Object.assign({}, this.tags);
+    this.manifest = structuredClone(this.tags);
   }
 
   getAssociatedItems(tag: string): RelatedDocument[] {
