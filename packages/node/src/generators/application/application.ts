@@ -104,6 +104,12 @@ function getEsBuildConfig(
       ),
       tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
       assets: [joinPathFragments(project.sourceRoot, 'assets')],
+      esbuildOptions: { sourcemap: true },
+    },
+    configurations: {
+      production: {
+        esbuildOptions: { sourcemap: false },
+      },
     },
   };
 }
