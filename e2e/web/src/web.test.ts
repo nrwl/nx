@@ -289,14 +289,17 @@ describe('CLI - Environment Variables', () => {
 
     updateFile(main2, `${newCode2}\n${content2}`);
 
-    runCLI(`run-many --target build --all --outputHashing=none`, {
-      env: {
-        ...process.env,
-        NODE_ENV: 'test',
-        NX_BUILD: '52',
-        NX_API: 'QA',
-      },
-    });
+    runCLI(
+      `run-many --target build --all --outputHashing=none --optimization=false`,
+      {
+        env: {
+          ...process.env,
+          NODE_ENV: 'test',
+          NX_BUILD: '52',
+          NX_API: 'QA',
+        },
+      }
+    );
     expect(readFile(`dist/apps/${appName}/main.js`)).toContain(
       'const envVars = ["test", "52", "QA", "ws-base", "ws-env-local", "ws-local-env", "app-base", "app-env-local", "app-local-env", "shared-in-app-env-local"];'
     );
