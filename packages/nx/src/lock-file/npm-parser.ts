@@ -1,9 +1,7 @@
-import { existsSync, readFileSync } from 'fs';
-import { PackageJson } from '../utils/package-json';
+import { existsSync, readFileSync } from 'fs-extra';
 import { workspaceRoot } from '../utils/workspace-root';
 import { LockFileBuilder } from './lock-file-builder';
 import {
-  LockFileGraph,
   LockFileNode,
   NpmDependencyV1,
   NpmDependencyV3,
@@ -11,57 +9,331 @@ import {
 } from './utils/types';
 import { satisfies } from 'semver';
 import { NormalizedPackageJson } from './utils/types';
-import { normalizeNpmPackageJson } from './utils/npm-utils';
 import { addEdgeOuts } from './utils/parsing-utils';
+import { ProjectGraphBuilder } from '../project-graph/project-graph-builder';
+import {
+  ProjectGraph,
+  ProjectGraphExternalNode,
+} from '../config/project-graph';
 
-export function parseNpmLockFile(
-  lockFileContent: string,
-  packageJson: PackageJson
-): LockFileGraph {
-  const rootLockFile = JSON.parse(lockFileContent) as NpmLockFile;
-  const builder = buildLockFileGraph(rootLockFile, packageJson);
-  return builder.getLockFileGraph();
+export function parseNpmLockfile(lockFileContent: string): ProjectGraph {
+  const data = JSON.parse(lockFileContent) as NpmLockFile;
+
+  const builder = new ProjectGraphBuilder();
+  const keyMap = new Map<string, ProjectGraphExternalNode>();
+  addNodes(data, builder, keyMap);
+  addDependencies(data, builder, keyMap);
+
+  return builder.getUpdatedProjectGraph();
 }
 
-export function pruneNpmLockFile(
-  rootLockFileContent: string,
-  packageJson: PackageJson,
-  prunedPackageJson: NormalizedPackageJson
-): string {
-  const rootLockFile = JSON.parse(rootLockFileContent) as NpmLockFile;
-  const builder = buildLockFileGraph(rootLockFile, packageJson);
-  builder.prune(prunedPackageJson);
+function addNodes(
+  data: NpmLockFile,
+  builder: ProjectGraphBuilder,
+  keyMap: Map<string, ProjectGraphExternalNode>
+) {
+  const addedNodes: Map<
+    string,
+    Map<string, ProjectGraphExternalNode>
+  > = new Map();
 
-  const mappedPackages = remapPackages(
-    rootLockFile,
-    builder.nodes,
-    rootLockFile.lockfileVersion
-  );
+  if (data.lockfileVersion > 1) {
+    // TODO: use packages
+    Object.entries(data.packages).forEach(([path, snapshot]) => {
+      // skip workspaces packages
+      if (path === '' || !path.includes('node_modules') || snapshot.link) {
+        return;
+      }
 
-  const prunedLockFile: NpmLockFile = {
-    name: prunedPackageJson.name,
-    version: prunedPackageJson.version,
-    lockfileVersion: rootLockFile.lockfileVersion,
-    requires: true,
+      const packageName = path.split('node_modules/').pop();
+      const version = findV3Version(snapshot, packageName);
+      // we don't need to keep duplicates, we can just track the keys
+      const node = createNode(packageName, version, path, addedNodes, keyMap);
+
+      // if node was already added the createNode will return undefined
+      if (node) {
+        builder.addExternalNode(node);
+      }
+    });
+  } else {
+    Object.entries(data.dependencies).forEach(([packageName, snapshot]) => {
+      // we only care about dependencies of workspace packages
+      if (snapshot.version?.startsWith('file:')) {
+        if (snapshot.dependencies) {
+          Object.entries(snapshot.dependencies).forEach(
+            ([depName, depSnapshot]) => {
+              addV1Node(
+                depName,
+                depSnapshot,
+                `${snapshot.version.slice(5)}/node_modules/${depName}`,
+                addedNodes,
+                keyMap,
+                builder
+              );
+            }
+          );
+        }
+      } else {
+        addV1Node(
+          packageName,
+          snapshot,
+          `node_modules/${packageName}`,
+          addedNodes,
+          keyMap,
+          builder
+        );
+      }
+    });
+  }
+}
+
+function createNode(
+  packageName: string,
+  version: string,
+  path: string,
+  addedNodes: Map<string, Map<string, ProjectGraphExternalNode>>,
+  keyMap: Map<string, ProjectGraphExternalNode>
+) {
+  // we don't need to keep duplicates, we can just track the keys
+  const existingNode = addedNodes.get(packageName)?.get(version);
+  if (existingNode) {
+    keyMap.set(path, existingNode);
+    return;
+  }
+
+  const isHoisted = !path.includes('/node_modules/');
+  const node: ProjectGraphExternalNode = {
+    type: 'npm',
+    name: isHoisted ? `npm:${packageName}` : `npm:${packageName}@${version}`,
+    data: {
+      version,
+      packageName,
+    },
   };
-  if (rootLockFile.lockfileVersion > 1) {
-    prunedLockFile.packages = {
-      '': prunedPackageJson,
-    };
-    mappedPackages.forEach((p) => {
-      prunedLockFile.packages[p.path] = p.valueV3;
-    });
-  }
-  if (rootLockFile.lockfileVersion < 3) {
-    prunedLockFile.dependencies = {};
-    mappedPackages.forEach((p) => {
-      getDependencyParent(p.path, prunedLockFile.dependencies)[p.name] =
-        p.valueV1;
-    });
+
+  if (!addedNodes.has(packageName)) {
+    addedNodes.set(packageName, new Map());
   }
 
-  return JSON.stringify(prunedLockFile, null, 2);
+  addedNodes.get(packageName).set(version, node);
+  keyMap.set(path, node);
+
+  return node;
 }
+
+function addV1Node(
+  packageName: string,
+  snapshot: NpmDependencyV1,
+  path: string,
+  addedNodes: Map<string, Map<string, ProjectGraphExternalNode>>,
+  keyMap: Map<string, ProjectGraphExternalNode>,
+  builder: ProjectGraphBuilder
+) {
+  const node = createNode(
+    packageName,
+    snapshot.version,
+    path,
+    addedNodes,
+    keyMap
+  );
+  if (node) {
+    builder.addExternalNode(node);
+  }
+
+  if (snapshot.dependencies) {
+    Object.entries(snapshot.dependencies).forEach(([depName, depSnapshot]) => {
+      addV1Node(
+        depName,
+        depSnapshot,
+        `${path}/node_modules/${depName}`,
+        addedNodes,
+        keyMap,
+        builder
+      );
+    });
+  }
+}
+
+function findV3Version(snapshot: NpmDependencyV3, packageName: string): string {
+  let version = snapshot.version;
+
+  const resolved = snapshot.resolved;
+  // for tarball packages version might not exist or be useless
+  if (!version || (resolved && !resolved.includes(version))) {
+    version = resolved;
+  }
+  // for alias packages name is set
+  if (snapshot.name && snapshot.name !== packageName) {
+    if (version) {
+      version = `npm:${snapshot.name}@${version}`;
+    } else {
+      version = `npm:${snapshot.name}`;
+    }
+  }
+
+  return version;
+}
+
+function addDependencies(
+  data: NpmLockFile,
+  builder: ProjectGraphBuilder,
+  keyMap: Map<string, ProjectGraphExternalNode>
+) {
+  if (data.lockfileVersion > 1) {
+    Object.keys(data.packages).forEach((path) => {
+      const snapshot = data.packages[path];
+      [
+        snapshot.peerDependencies,
+        snapshot.dependencies,
+        snapshot.optionalDependencies,
+      ].forEach((section) => {
+        addNodeDependencies(path, section, builder, keyMap);
+      });
+    });
+  } else {
+    Object.entries(data.dependencies).forEach(([packageName, snapshot]) => {
+      addV1NodeDependencies(
+        `node_modules/${packageName}`,
+        snapshot,
+        builder,
+        keyMap
+      );
+    });
+  }
+}
+
+function addNodeDependencies(
+  sourcePath: string,
+  section: Record<string, string>,
+  builder: ProjectGraphBuilder,
+  keyMap: Map<string, ProjectGraphExternalNode>
+) {
+  if (section) {
+    const node = keyMap.get(sourcePath);
+    // we are skipping workspaces packages
+    if (!node) {
+      return;
+    }
+    Object.entries(section).forEach(([name, versionRange]) => {
+      const target = findTarget(sourcePath, name, versionRange, keyMap);
+      if (target) {
+        builder.addExternalNodeDependency(node.name, target.name);
+      }
+    });
+  }
+}
+
+function addV1NodeDependencies(
+  path: string,
+  snapshot: NpmDependencyV1,
+  builder: ProjectGraphBuilder,
+  keyMap: Map<string, ProjectGraphExternalNode>
+) {
+  addNodeDependencies(path, snapshot.requires, builder, keyMap);
+
+  if (snapshot.dependencies) {
+    Object.entries(snapshot.dependencies).forEach(([depName, depSnapshot]) => {
+      addV1NodeDependencies(
+        `${path}/node_modules/${depName}`,
+        depSnapshot,
+        builder,
+        keyMap
+      );
+    });
+  }
+}
+
+function findTarget(
+  sourcePath: string,
+  targetName: string,
+  versionRange: string,
+  keyMap: Map<string, ProjectGraphExternalNode>
+): ProjectGraphExternalNode {
+  if (sourcePath && !sourcePath.endsWith('/')) {
+    sourcePath = `${sourcePath}/`;
+  }
+  const searchPath = `${sourcePath}node_modules/${targetName}`;
+
+  if (keyMap.has(searchPath)) {
+    const child = keyMap.get(searchPath);
+    if (
+      child.data.version === versionRange ||
+      satisfies(child.data.version, versionRange)
+    ) {
+      return child;
+    }
+  }
+  // the hoisted package did not match, this dependency is missing
+  if (!sourcePath) {
+    return;
+  }
+  return findTarget(
+    sourcePath.split('node_modules/').slice(0, -1).join('node_modules/'),
+    targetName,
+    versionRange,
+    keyMap
+  );
+}
+
+export function stringifyNpmLockfile(
+  graph: ProjectGraph,
+  rootLockFileContent: string,
+  packageJson: NormalizedPackageJson
+): string {
+  const { lockfileVersion, dependencies, packages, requires, name } =
+    JSON.parse(rootLockFileContent) as NpmLockFile;
+
+  const output: NpmLockFile = {
+    lockfileVersion,
+    requires,
+    name: packageJson.name || name,
+    version: packageJson.version || '0.0.1',
+    // dependencies
+    // packages
+  };
+
+  return JSON.stringify(output, null, 2);
+}
+
+// export function pruneNpmLockFile(
+//   rootLockFileContent: string,
+//   packageJson: PackageJson,
+//   prunedPackageJson: NormalizedPackageJson
+// ): string {
+//   const rootLockFile = JSON.parse(rootLockFileContent) as NpmLockFile;
+//   const builder = buildLockFileGraph(rootLockFile, packageJson);
+//   builder.prune(prunedPackageJson);
+
+//   const mappedPackages = remapPackages(
+//     rootLockFile,
+//     builder.nodes,
+//     rootLockFile.lockfileVersion
+//   );
+
+//   const prunedLockFile: NpmLockFile = {
+//     name: prunedPackageJson.name,
+//     version: prunedPackageJson.version,
+//     lockfileVersion: rootLockFile.lockfileVersion,
+//     requires: true,
+//   };
+//   if (rootLockFile.lockfileVersion > 1) {
+//     prunedLockFile.packages = {
+//       '': prunedPackageJson,
+//     };
+//     mappedPackages.forEach((p) => {
+//       prunedLockFile.packages[p.path] = p.valueV3;
+//     });
+//   }
+//   if (rootLockFile.lockfileVersion < 3) {
+//     prunedLockFile.dependencies = {};
+//     mappedPackages.forEach((p) => {
+//       getDependencyParent(p.path, prunedLockFile.dependencies)[p.name] =
+//         p.valueV1;
+//     });
+//   }
+
+//   return JSON.stringify(prunedLockFile, null, 2);
+// }
 
 function getDependencyParent(
   path: string,
@@ -296,58 +568,6 @@ function findMatchingPackageV1(
       }
     }
   }
-}
-
-function buildLockFileGraph(
-  data: NpmLockFile,
-  packageJson: PackageJson
-): LockFileBuilder {
-  const isLockFileV1 = data.lockfileVersion === 1;
-
-  const normalizedPackageJson = normalizeNpmPackageJson(
-    packageJson,
-    isLockFileV1 ? data.dependencies : data.packages,
-    { isLockFileV1 }
-  );
-
-  const builder = new LockFileBuilder(normalizedPackageJson, {
-    includeOptional: true,
-  });
-  // parse workspace dependencies as incoming dependencies
-  if (packageJson.workspaces) {
-    if (isLockFileV1) {
-      Object.keys(data.dependencies).forEach((key) => {
-        if (
-          data.dependencies[key].version.startsWith('file:') &&
-          data.dependencies[key].requires
-        ) {
-          const normalizedJson = normalizeNpmPackageJson(
-            { dependencies: data.dependencies[key].requires } as PackageJson,
-            data.dependencies,
-            { isLockFileV1, parentPath: key }
-          );
-          builder.addWorkspaceIncomingEdges(normalizedJson);
-        }
-      });
-    } else {
-      Object.keys(data.packages).forEach((key) => {
-        if (key && !key.includes('node_modules')) {
-          const normalizedJson = normalizeNpmPackageJson(
-            data.packages[key] as PackageJson,
-            data.packages,
-            { isLockFileV1, parentPath: key }
-          );
-          builder.addWorkspaceIncomingEdges(normalizedJson);
-        }
-      });
-    }
-  }
-
-  isLockFileV1
-    ? parseV1LockFile(builder, data.dependencies)
-    : parseV3LockFile(builder, data.packages); // we will treat V2 lockfile as V3 but map it back to V2 for backwards compatibility
-
-  return builder;
 }
 
 /**********************************************

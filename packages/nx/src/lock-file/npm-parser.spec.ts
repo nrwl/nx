@@ -1,9 +1,8 @@
 import { joinPathFragments } from '../utils/path';
-import { parseNpmLockFile, pruneNpmLockFile } from './npm-parser';
+import { parseNpmLockfile, stringifyNpmLockfile } from './npm-parser';
+import { pruneProjectGraph } from './project-graph-pruning';
 import { vol } from 'memfs';
-import { LockFileBuilder } from './lock-file-builder';
-import { LockFileGraph } from './utils/types';
-import { mapLockFileGraphToProjectGraph } from './lock-file-graph-mapper';
+import { ProjectGraph } from '../config/project-graph';
 
 jest.mock('fs', () => require('memfs').fs);
 
@@ -26,20 +25,15 @@ describe('NPM lock file utility', () => {
       __dirname,
       '__fixtures__/nextjs/package-lock.json'
     ));
-    const packageJson = require(joinPathFragments(
-      __dirname,
-      '__fixtures__/nextjs/package.json'
-    ));
 
-    let rootResult: LockFileGraph;
+    let graph: ProjectGraph;
 
     beforeEach(() => {
-      rootResult = parseNpmLockFile(JSON.stringify(rootLockFile), packageJson);
+      graph = parseNpmLockfile(JSON.stringify(rootLockFile));
     });
 
     it('should parse root lock file', async () => {
-      expect(rootResult.nodes.size).toEqual(1285); // 1143
-      expect(rootResult.isValid).toBeTruthy();
+      expect(Object.keys(graph.externalNodes).length).toEqual(1285); // 1143
     });
 
     it('should prune lock file', async () => {
@@ -53,22 +47,17 @@ describe('NPM lock file utility', () => {
       ));
 
       // this is original generated lock file
-      const appResult = parseNpmLockFile(
-        JSON.stringify(appLockFile),
-        appPackageJson
-      );
-      expect(appResult.nodes.size).toEqual(984);
-      expect(appResult.isValid).toBeTruthy();
+      const appGraph = parseNpmLockfile(JSON.stringify(appLockFile));
+      expect(Object.keys(appGraph.externalNodes).length).toEqual(984);
 
       // this is our pruned lock file structure
-      const builder = new LockFileBuilder(rootResult, {
-        includeOptional: true,
-      });
-      builder.prune(appPackageJson);
-      expect(builder.nodes.size).toEqual(appResult.nodes.size);
+      const prunedGraph = pruneProjectGraph(graph, appPackageJson);
+      expect(Object.keys(prunedGraph.externalNodes).length).toEqual(
+        Object.keys(appGraph.externalNodes).length
+      );
 
-      const keys = new Set(builder.nodes.keys());
-      const originalKeys = new Set(appResult.nodes.keys());
+      const keys = new Set(Object.keys(prunedGraph.externalNodes));
+      const originalKeys = new Set(Object.keys(appGraph.externalNodes));
       expect(keys).toEqual(originalKeys);
     });
   });
@@ -98,51 +87,37 @@ describe('NPM lock file utility', () => {
       vol.fromJSON(fileSys, '/root');
     });
 
-    const packageJson = require(joinPathFragments(
-      __dirname,
-      '__fixtures__/auxiliary-packages/package.json'
-    ));
-
     it('should parse v1', async () => {
       const rootLockFile = require(joinPathFragments(
         __dirname,
         '__fixtures__/auxiliary-packages/package-lock.json'
       ));
 
-      const resultV1 = parseNpmLockFile(
-        JSON.stringify(rootLockFile),
-        packageJson
-      );
+      const graph = parseNpmLockfile(JSON.stringify(rootLockFile));
 
-      expect(resultV1.nodes.size).toEqual(212); // 202
-      expect(resultV1.isValid).toBeTruthy();
+      expect(Object.keys(graph.externalNodes).length).toEqual(212); // 202
 
-      const postgres = resultV1.nodes.get(
-        'postgres@git+ssh://git@github.com/charsleysa/postgres.git#3b1a01b2da3e2fafb1a79006f838eff11a8de3cb'
-      );
-      expect(postgres.name).toEqual('postgres');
-      expect(postgres.packageName).toBeUndefined();
-      expect(postgres.version).toMatch(
-        '3b1a01b2da3e2fafb1a79006f838eff11a8de3cb'
-      );
-      expect(postgres.edgesIn.values().next().value.versionSpec).toMatch(
-        'git+ssh://git@github.com/charsleysa/postgres.git#3b1a01b2da3e2fafb1a79006f838eff11a8de3cb'
-      );
-
-      const eslintPlugin = resultV1.nodes.get(
-        'eslint-plugin-disable-autofix@npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0'
-      );
-      expect(eslintPlugin.name).toEqual('eslint-plugin-disable-autofix');
-      expect(eslintPlugin.packageName).toEqual(
-        '@mattlewis92/eslint-plugin-disable-autofix'
-      );
-      expect(eslintPlugin.version).toEqual('3.0.0');
-      expect(eslintPlugin.edgesIn.values().next().value.versionSpec).toEqual(
-        'npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0'
-      );
-
-      const projectGraph = mapLockFileGraphToProjectGraph(resultV1);
-      expect(projectGraph.externalNodes['npm:postgres']).toMatchInlineSnapshot(`
+      expect(graph.externalNodes['npm:minimatch']).toMatchInlineSnapshot(`
+        Object {
+          "data": Object {
+            "packageName": "minimatch",
+            "version": "3.1.2",
+          },
+          "name": "npm:minimatch",
+          "type": "npm",
+        }
+      `);
+      expect(graph.externalNodes['npm:minimatch@5.1.1']).toMatchInlineSnapshot(`
+        Object {
+          "data": Object {
+            "packageName": "minimatch",
+            "version": "5.1.1",
+          },
+          "name": "npm:minimatch@5.1.1",
+          "type": "npm",
+        }
+      `);
+      expect(graph.externalNodes['npm:postgres']).toMatchInlineSnapshot(`
         Object {
           "data": Object {
             "packageName": "postgres",
@@ -152,12 +127,12 @@ describe('NPM lock file utility', () => {
           "type": "npm",
         }
       `);
-      expect(projectGraph.externalNodes['npm:eslint-plugin-disable-autofix'])
+      expect(graph.externalNodes['npm:eslint-plugin-disable-autofix'])
         .toMatchInlineSnapshot(`
         Object {
           "data": Object {
-            "packageName": "@mattlewis92/eslint-plugin-disable-autofix",
-            "version": "3.0.0",
+            "packageName": "eslint-plugin-disable-autofix",
+            "version": "npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0",
           },
           "name": "npm:eslint-plugin-disable-autofix",
           "type": "npm",
@@ -171,40 +146,10 @@ describe('NPM lock file utility', () => {
         '__fixtures__/auxiliary-packages/package-lock-v2.json'
       ));
 
-      const resultV2 = parseNpmLockFile(
-        JSON.stringify(rootV2LockFile),
-        packageJson
-      );
-      expect(resultV2.nodes.size).toEqual(212); // 202
-      expect(resultV2.isValid).toBeTruthy();
+      const graph = parseNpmLockfile(JSON.stringify(rootV2LockFile));
+      expect(Object.keys(graph.externalNodes).length).toEqual(212); // 202
 
-      const postgres = resultV2.nodes.get(
-        'postgres@git+ssh://git@github.com/charsleysa/postgres.git#3b1a01b2da3e2fafb1a79006f838eff11a8de3cb'
-      );
-      expect(postgres.name).toEqual('postgres');
-      expect(postgres.packageName).toBeUndefined();
-      expect(postgres.version).toMatch(
-        '3b1a01b2da3e2fafb1a79006f838eff11a8de3cb'
-      );
-      expect(postgres.edgesIn.values().next().value.versionSpec).toEqual(
-        'git+ssh://git@github.com/charsleysa/postgres.git#3b1a01b2da3e2fafb1a79006f838eff11a8de3cb'
-      );
-
-      const eslintPlugin = resultV2.nodes.get(
-        'eslint-plugin-disable-autofix@npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0'
-      );
-      expect(eslintPlugin.name).toEqual('eslint-plugin-disable-autofix');
-      expect(eslintPlugin.packageName).toEqual(
-        '@mattlewis92/eslint-plugin-disable-autofix'
-      );
-      expect(eslintPlugin.version).toEqual('3.0.0');
-      expect(eslintPlugin.edgesIn.values().next().value.versionSpec).toEqual(
-        'npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0'
-      );
-
-      const projectGraph = mapLockFileGraphToProjectGraph(resultV2);
-      expect(projectGraph.externalNodes['npm:minimatch'])
-        .toMatchInlineSnapshot(`
+      expect(graph.externalNodes['npm:minimatch']).toMatchInlineSnapshot(`
         Object {
           "data": Object {
             "packageName": "minimatch",
@@ -214,8 +159,7 @@ describe('NPM lock file utility', () => {
           "type": "npm",
         }
       `);
-      expect(projectGraph.externalNodes['npm:minimatch@5.1.1'])
-        .toMatchInlineSnapshot(`
+      expect(graph.externalNodes['npm:minimatch@5.1.1']).toMatchInlineSnapshot(`
         Object {
           "data": Object {
             "packageName": "minimatch",
@@ -225,7 +169,7 @@ describe('NPM lock file utility', () => {
           "type": "npm",
         }
       `);
-      expect(projectGraph.externalNodes['npm:postgres']).toMatchInlineSnapshot(`
+      expect(graph.externalNodes['npm:postgres']).toMatchInlineSnapshot(`
         Object {
           "data": Object {
             "packageName": "postgres",
@@ -235,12 +179,12 @@ describe('NPM lock file utility', () => {
           "type": "npm",
         }
       `);
-      expect(projectGraph.externalNodes['npm:eslint-plugin-disable-autofix'])
+      expect(graph.externalNodes['npm:eslint-plugin-disable-autofix'])
         .toMatchInlineSnapshot(`
         Object {
           "data": Object {
-            "packageName": "@mattlewis92/eslint-plugin-disable-autofix",
-            "version": "3.0.0",
+            "packageName": "eslint-plugin-disable-autofix",
+            "version": "npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0",
           },
           "name": "npm:eslint-plugin-disable-autofix",
           "type": "npm",
@@ -271,34 +215,38 @@ describe('NPM lock file utility', () => {
         __dirname,
         '__fixtures__/auxiliary-packages/package-lock-v2.pruned.json'
       ));
-      // TODO this test is ignoring types until we resolve type passing (dev, peer, etc..)
+      const normalizedPackageJson = {
+        name: 'test',
+        version: '0.0.0',
+        license: 'MIT',
+        dependencies: {
+          '@nrwl/devkit': '15.0.13',
+          'eslint-plugin-disable-autofix':
+            'npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0',
+          postgres:
+            'git+ssh://git@github.com/charsleysa/postgres.git#3b1a01b2da3e2fafb1a79006f838eff11a8de3cb',
+          yargs: '17.6.2',
+        },
+        devDependencies: {
+          react: '18.2.0',
+        },
+        peerDependencies: {
+          typescript: '4.8.4',
+        },
+      };
+      // (meeroslav)this test is ignoring types since they are not vital (dev, peer, etc..)
       cleanupTypes(prunedV2LockFile.packages);
       cleanupTypes(prunedV2LockFile.dependencies, true);
 
-      const resultV2 = pruneNpmLockFile(
-        JSON.stringify(rootV2LockFile, null, 2),
-        packageJson,
-        {
-          name: 'test',
-          version: '0.0.0',
-          license: 'MIT',
-          dependencies: {
-            '@nrwl/devkit': '15.0.13',
-            'eslint-plugin-disable-autofix':
-              'npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0',
-            postgres:
-              'git+ssh://git@github.com/charsleysa/postgres.git#3b1a01b2da3e2fafb1a79006f838eff11a8de3cb',
-            yargs: '17.6.2',
-          },
-          devDependencies: {
-            react: '18.2.0',
-          },
-          peerDependencies: {
-            typescript: '4.8.4',
-          },
-        }
+      const graph = parseNpmLockfile(JSON.stringify(rootV2LockFile));
+      const prunedGraph = pruneProjectGraph(graph, normalizedPackageJson);
+      const result = stringifyNpmLockfile(
+        prunedGraph,
+        JSON.stringify(rootV2LockFile),
+        normalizedPackageJson
       );
-      expect(resultV2).toEqual(JSON.stringify(prunedV2LockFile, null, 2));
+
+      expect(result).toEqual(JSON.stringify(prunedV2LockFile, null, 2));
     });
   });
 
@@ -369,23 +317,14 @@ describe('NPM lock file utility', () => {
       vol.fromJSON(fileSys, '/root');
     });
 
-    const packageJson = require(joinPathFragments(
-      __dirname,
-      '__fixtures__/duplicate-package/package.json'
-    ));
-
     it('should parse v1', async () => {
       const rootLockFile = require(joinPathFragments(
         __dirname,
         '__fixtures__/duplicate-package/package-lock-v1.json'
       ));
 
-      const result = parseNpmLockFile(
-        JSON.stringify(rootLockFile),
-        packageJson
-      );
-      expect(result.nodes.size).toEqual(369); // 338
-      expect(result.isValid).toBeTruthy();
+      const graph = parseNpmLockfile(JSON.stringify(rootLockFile));
+      expect(Object.keys(graph.externalNodes).length).toEqual(369); // 338
     });
     it('should parse v3', async () => {
       const rootLockFile = require(joinPathFragments(
@@ -393,12 +332,8 @@ describe('NPM lock file utility', () => {
         '__fixtures__/duplicate-package/package-lock.json'
       ));
 
-      const result = parseNpmLockFile(
-        JSON.stringify(rootLockFile),
-        packageJson
-      );
-      expect(result.nodes.size).toEqual(369); //338
-      expect(result.isValid).toBeTruthy();
+      const graph = parseNpmLockfile(JSON.stringify(rootLockFile));
+      expect(Object.keys(graph.externalNodes).length).toEqual(369); //338
     });
   });
 
@@ -412,28 +347,21 @@ describe('NPM lock file utility', () => {
         __dirname,
         '__fixtures__/optional/package.json'
       ));
-      const result = parseNpmLockFile(JSON.stringify(lockFile), packageJson);
-      expect(result.nodes.size).toEqual(8);
-      expect(result.isValid).toBeTruthy();
+      const graph = parseNpmLockfile(JSON.stringify(lockFile));
+      expect(Object.keys(graph.externalNodes).length).toEqual(8);
 
-      const builder = new LockFileBuilder(result);
-      builder.prune(packageJson);
-      expect(builder.nodes.size).toEqual(8);
-      expect(builder.isGraphConsistent().isValid).toBeTruthy();
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      expect(Object.keys(prunedGraph.externalNodes).length).toEqual(8);
     });
   });
 
   describe('pruning', () => {
-    let rootLockFile, packageJson;
+    let rootLockFile;
 
     beforeAll(() => {
       rootLockFile = require(joinPathFragments(
         __dirname,
         '__fixtures__/pruning/package-lock.json'
-      ));
-      packageJson = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/pruning/package.json'
       ));
     });
 
@@ -442,11 +370,14 @@ describe('NPM lock file utility', () => {
         __dirname,
         '__fixtures__/pruning/typescript/package.json'
       ));
-      const result = pruneNpmLockFile(
+      const graph = parseNpmLockfile(JSON.stringify(rootLockFile));
+      const prunedGraph = pruneProjectGraph(graph, typescriptPackageJson);
+      const result = stringifyNpmLockfile(
+        prunedGraph,
         JSON.stringify(rootLockFile),
-        packageJson,
         typescriptPackageJson
       );
+
       expect(result).toEqual(
         JSON.stringify(
           require(joinPathFragments(
@@ -464,11 +395,14 @@ describe('NPM lock file utility', () => {
         __dirname,
         '__fixtures__/pruning/devkit-yargs/package.json'
       ));
-      const result = pruneNpmLockFile(
+      const graph = parseNpmLockfile(JSON.stringify(rootLockFile));
+      const prunedGraph = pruneProjectGraph(graph, multiPackageJson);
+      const result = stringifyNpmLockfile(
+        prunedGraph,
         JSON.stringify(rootLockFile),
-        packageJson,
         multiPackageJson
       );
+
       expect(result).toEqual(
         JSON.stringify(
           require(joinPathFragments(
@@ -483,23 +417,15 @@ describe('NPM lock file utility', () => {
   });
 
   describe('workspaces', () => {
-    let lockFile, packageJson;
-
-    beforeAll(() => {
-      packageJson = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/workspaces/package.json'
-      ));
-    });
+    let lockFile;
 
     it('should parse v2 lock file', async () => {
       lockFile = require(joinPathFragments(
         __dirname,
         '__fixtures__/workspaces/package-lock.json'
       ));
-      const result = parseNpmLockFile(JSON.stringify(lockFile), packageJson);
-      expect(result.nodes.size).toEqual(5);
-      expect(result.isValid).toBeTruthy();
+      const result = parseNpmLockfile(JSON.stringify(lockFile));
+      expect(Object.keys(result.externalNodes).length).toEqual(5);
     });
 
     it('should parse v1 lock file', async () => {
@@ -507,9 +433,9 @@ describe('NPM lock file utility', () => {
         __dirname,
         '__fixtures__/workspaces/package-lock.v1.json'
       ));
-      const result = parseNpmLockFile(JSON.stringify(lockFile), packageJson);
-      expect(result.nodes.size).toEqual(5);
-      expect(result.isValid).toBeTruthy();
+      const result = parseNpmLockfile(JSON.stringify(lockFile));
+      console.log(result.externalNodes);
+      expect(Object.keys(result.externalNodes).length).toEqual(5);
     });
   });
 });

@@ -639,10 +639,6 @@ describe('yarn LockFile utility', () => {
         __dirname,
         '__fixtures__/pruning/yarn.lock'
       )).default;
-      const packageJson = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/pruning/package.json'
-      ));
 
       const typescriptPackageJson = require(joinPathFragments(
         __dirname,

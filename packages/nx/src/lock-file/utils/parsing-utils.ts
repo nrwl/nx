@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'fs';
+import { existsSync, readFileSync } from 'fs-extra';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { LockFileBuilder } from '../lock-file-builder';
 import { LockFileNode } from './types';
