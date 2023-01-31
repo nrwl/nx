@@ -3,6 +3,7 @@ import {
   checkFilesExist,
   cleanupProject,
   createFile,
+  newAngularProject,
   newProject,
   readFile,
   readJson,
@@ -185,7 +186,7 @@ describe('Linter', () => {
     }, 1000000);
 
     it('lint plugin should ensure module boundaries', () => {
-      const proj = newProject();
+      const proj = newAngularProject();
       const myapp = uniq('myapp');
       const myapp2 = uniq('myapp2');
       const mylib = uniq('mylib');
@@ -515,7 +516,7 @@ export function tslibC(): string {
       const myapp = uniq('myapp');
       const mylib = uniq('mylib');
 
-      newProject();
+      newAngularProject();
       runCLI(`generate @nrwl/angular:app ${myapp} --rootProject=true`);
 
       let rootEslint = readJson('.eslintrc.json');

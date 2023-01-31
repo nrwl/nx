@@ -2,7 +2,7 @@ import {
   cleanupProject,
   expectTestsPass,
   getSelectedPackageManager,
-  newProject,
+  newAngularProject,
   readJson,
   runCLI,
   runCLIAsync,
@@ -10,15 +10,12 @@ import {
 } from '@nrwl/e2e/utils';
 
 describe('Angular Package', () => {
-  let previousPM = process.env.SELECTED_PM;
   describe('ngrx', () => {
     beforeAll(() => {
-      process.env.SELECTED_PM = 'npm';
-      newProject();
+      newAngularProject();
     });
     afterAll(() => {
       cleanupProject();
-      process.env.SELECTED_PM = previousPM;
     });
 
     it('should work', async () => {

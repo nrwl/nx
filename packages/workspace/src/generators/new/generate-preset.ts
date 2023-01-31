@@ -4,7 +4,7 @@ import {
   Tree,
 } from '@nrwl/devkit';
 import { Preset } from '../utils/presets';
-import { nxVersion } from '../../utils/versions';
+import { angularCliVersion, nxVersion } from '../../utils/versions';
 import { getNpmPackageVersion } from '../utils/get-npm-package-version';
 import { NormalizedSchema } from './new';
 import { join } from 'path';
@@ -89,7 +89,14 @@ function getPresetDependencies(preset: string, version?: string) {
 
     case Preset.AngularMonorepo:
     case Preset.AngularStandalone:
-      return { dependencies: { '@nrwl/angular': nxVersion }, dev: {} };
+      return {
+        dependencies: { '@nrwl/angular': nxVersion },
+        dev: {
+          '@angular-devkit/core': angularCliVersion,
+          '@angular-devkit/schematics': angularCliVersion,
+          '@schematics/angular': angularCliVersion,
+        },
+      };
 
     case Preset.Express:
       return { dependencies: {}, dev: { '@nrwl/express': nxVersion } };

@@ -2,7 +2,6 @@ import {
   joinPathFragments,
   parseJson,
   ProjectConfiguration,
-  ProjectsConfigurations,
   readJsonFile,
   workspaceRoot,
 } from '@nrwl/devkit';
@@ -363,6 +362,21 @@ export function newProject({
     logError(`Failed to set up project for e2e tests.`, e.message);
     throw e;
   }
+}
+
+export function newAngularProject({
+  name = uniq('proj'),
+  packageManager = getSelectedPackageManager(),
+} = {}): string {
+  const projScope = newProject({ name, packageManager });
+
+  const angularPackages = [
+    '@angular-devkit/core',
+    '@angular-devkit/schematics',
+    '@schematics/angular',
+  ];
+  packageInstall(angularPackages.join(` `), projScope, 'latest');
+  return projScope;
 }
 
 export function newLernaWorkspace({
