@@ -306,6 +306,47 @@ describe('yarn LockFile utility', () => {
       expect(result).toEqual(prunedLockFile);
     });
 
+    it('should prune yarn classic with package json with ranges', () => {
+      const lockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/auxiliary-packages/yarn.lock'
+      )).default;
+      const normalizedPackageJson = {
+        name: 'test',
+        version: '0.0.0',
+        license: 'MIT',
+        dependencies: {
+          '@nrwl/devkit': '^15.0.0',
+          'eslint-plugin-disable-autofix':
+            'npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0',
+          postgres:
+            'https://codeload.github.com/charsleysa/postgres/tar.gz/3b1a01b2da3e2fafb1a79006f838eff11a8de3cb',
+          yargs: '~17.6.0',
+        },
+        devDependencies: {
+          react: '>=18 < 19',
+        },
+      };
+      const prunedLockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/auxiliary-packages/yarn.lock.pruned'
+      )).default;
+
+      const graph = parseYarnLockfile(lockFile);
+      const prunedGraph = pruneProjectGraph(graph, normalizedPackageJson);
+      const result = stringifyYarnLockfile(
+        prunedGraph,
+        lockFile,
+        normalizedPackageJson
+      );
+      expect(result).toEqual(
+        prunedLockFile
+          .replace('"@nrwl/devkit@15.0.13":', '"@nrwl/devkit@^15.0.0":')
+          .replace('react@18.2.0:', '"react@>=18 < 19":')
+          .replace('yargs@17.6.2:', 'yargs@~17.6.0:')
+      );
+    });
+
     it('should parse yarn berry', async () => {
       const berryLockFile = require(joinPathFragments(
         __dirname,

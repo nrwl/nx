@@ -6,6 +6,7 @@ import {
 import { PackageJson } from '../utils/package-json';
 import { reverse } from '../project-graph/operators';
 import { NormalizedPackageJson } from './utils/types';
+import { satisfies } from 'semver';
 
 /**
  * Strip off non-pruning related fields from package.json
@@ -47,8 +48,6 @@ export function pruneProjectGraph(
 ): ProjectGraph {
   const builder = new ProjectGraphBuilder();
 
-  // TODO: 0. normalize packageJson to ensure correct version (replace version e.g. ^1.0.0 with matching 1.2.3) (happens only with manually modified package.json)
-
   const {
     dependencies,
     devDependencies,
@@ -56,17 +55,52 @@ export function pruneProjectGraph(
     peerDependencies,
   } = prunedPackageJson;
 
-  const combinedDependencies = {
-    ...dependencies,
-    ...devDependencies,
-    ...optionalDependencies,
-    ...peerDependencies,
-  };
+  const combinedDependencies = normalizeDependencies(
+    {
+      ...dependencies,
+      ...devDependencies,
+      ...optionalDependencies,
+      ...peerDependencies,
+    },
+    graph
+  );
 
   addNodesAndDependencies(graph, combinedDependencies, builder);
   rehoistNodes(graph, combinedDependencies, builder);
 
   return builder.getUpdatedProjectGraph();
+}
+
+function normalizeDependencies(
+  combinedDependencies: Record<string, string>,
+  graph: ProjectGraph
+) {
+  Object.entries(combinedDependencies).forEach(
+    ([packageName, versionRange]) => {
+      if (graph.externalNodes[`npm:${packageName}@${versionRange}`]) {
+        return;
+      }
+      if (
+        graph.externalNodes[`npm:${packageName}`] &&
+        graph.externalNodes[`npm:${packageName}`].data.version === versionRange
+      ) {
+        return;
+      }
+      // otherwise we need to find the correct version
+      const nodes = Object.values(graph.externalNodes).filter(
+        (n) => n.data.packageName === packageName
+      );
+      const node = nodes.find((n) => satisfies(n.data.version, versionRange));
+      if (node) {
+        combinedDependencies[packageName] = node.data.version;
+      } else {
+        throw new Error(
+          `Pruning failed. The following package was not found in the root lock file: ${packageName}@${versionRange}`
+        );
+      }
+    }
+  );
+  return combinedDependencies;
 }
 
 function addNodesAndDependencies(
