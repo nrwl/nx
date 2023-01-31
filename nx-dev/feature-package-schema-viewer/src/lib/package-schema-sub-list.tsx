@@ -78,7 +78,7 @@ export function PackageSchemaSubList({
           <div data-document="main">
             <TopSchemaLayout name={vm.package.packageName} url={vm.githubUrl} />
 
-            <Heading1 title={vm.package.packageName} />
+            <Heading1 title={vm.seo.title} />
 
             <Heading2 title={vm.heading} />
 
