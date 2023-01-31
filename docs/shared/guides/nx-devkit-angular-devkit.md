@@ -130,7 +130,7 @@ Then, you might need to register it in the `collections.json`:
 
 ```typescript
 export const libraryGenerator = wrapAngularDevkitSchematic(
-  '@nrwl/angular',
+  '@schematics/angular',
   'library'
 );
 
