@@ -5,6 +5,10 @@ Checks for:
     * Cargo
  */
 
+if (process.env.CI) {
+  process.exit(0);
+}
+
 const childProcess = require('child_process');
 
 // Check node version
