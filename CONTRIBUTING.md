@@ -64,7 +64,7 @@ Check out [this video for a live walkthrough](https://youtu.be/Tx257WpNsxc) or f
 - Run `cd ./tmp` in Terminal 2
 - Run `npx create-nx-workspace@16.0.0` in Terminal 2
 
-If you have problems publishing, make sure you use Node 16 and NPM 6 or 8.
+If you have problems publishing, make sure you use Node 18 and NPM 8.
 
 **NOTE:** After you finish with local testing don't forget to stop the local registry (e.g. closing the Terminal 1) and disabling the local registy using `yarn local-registry disable`. Keeping local registry enabled will change your lock file resolutions to `localhost:4873` on the next `yarn install`. You can also run `yarn local-registry clear` to clean all packages in that local registry.
 
@@ -119,7 +119,7 @@ nx test jest
 
 ### Running E2E Tests
 
-**Use Node 16 and NPM 8. E2E tests won't work on Node 15 and NPM 7.**
+**Use Node 18 and NPM 8. E2E tests won't work on Node 15 and NPM 7.**
 
 To make sure your changes do not break any E2E tests, run:
 
