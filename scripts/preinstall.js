@@ -1,16 +1,15 @@
 /*
-This preinstall script will check that the necessary dependencies are installed
+This pre-install script will check that the necessary dependencies are installed
 Checks for:
     * Node 18+
     * Cargo
  */
 
-const semver = require('semver');
 const childProcess = require('child_process');
 
 // Check node version
-const nodeVersion = semver.parse(process.version);
-if (nodeVersion.major < 18) {
+const nodeVersion = process.version.slice(1).split('.');
+if (+nodeVersion[0] < 18) {
   console.error(
     'Please make sure that your installed Node version is greater than v18'
   );
