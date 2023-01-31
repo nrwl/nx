@@ -14,18 +14,25 @@ export function createFiles(tree: Tree, options: JestProjectSchema) {
     options.setupFile === 'angular' ? '../files-angular' : '../files';
 
   let transformer: string;
+  let transformerOptions: string | null = null;
   if (options.compiler === 'babel' || options.babelJest) {
     transformer = 'babel-jest';
   } else if (options.compiler === 'swc') {
     transformer = '@swc/jest';
+    if (options.supportTsx) {
+      transformerOptions =
+        "{ jsc: { transform: { react: { runtime: 'automatic' } } } }";
+    }
   } else {
     transformer = 'ts-jest';
+    transformerOptions = "{ tsconfig: '<rootDir>/tsconfig.spec.json' }";
   }
 
   generateFiles(tree, join(__dirname, filesFolder), projectConfig.root, {
     tmpl: '',
     ...options,
     transformer,
+    transformerOptions,
     js: !!options.js,
     rootProject: options.rootProject,
     projectRoot: options.rootProject ? options.project : projectConfig.root,

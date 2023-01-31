@@ -5,7 +5,10 @@ export const nxPreset = {
   moduleFileExtensions: ['ts', 'js', 'mjs', 'html'],
   coverageReporters: ['html'],
   transform: {
-    '^.+\\.(ts|js|html)$': 'ts-jest',
+    '^.+\\.(ts|js|html)$': [
+      'ts-jest',
+      { tsconfig: '<rootDir>/tsconfig.spec.json' },
+    ],
   },
   testEnvironment: 'jsdom',
   /**

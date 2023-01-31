@@ -87,6 +87,7 @@ function updateTsJestOptions(tree: Tree, configPath: string): string {
       return getGlobalConfigWithoutTsJest(node);
     }
   );
+  console.log(tsJestGlobalsConfig);
 
   if (!tsJestGlobalsConfig) {
     return;

@@ -195,6 +195,25 @@ async function setup(tree: Tree, name: string) {
   };
 
   updateProjectConfiguration(tree, name, projectConfig);
+  tree.write(
+    `libs/${name}/jest.config.ts`,
+    `/* eslint-disable */
+export default {
+  displayName: '${name}',
+  preset: '../../jest.preset.js',
+  globals: {
+    'ts-jest': {
+      tsconfig: '<rootDir>/tsconfig.spec.json',
+    }
+  },
+  transform: {
+    '^.+\\\\.[tj]sx?$': 'ts-jest'
+  },
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+  coverageDirectory: '../../coverage/libs/${name}'
+};
+`
+  );
 
   tree.write(
     `libs/${name}/jest.config.js`,

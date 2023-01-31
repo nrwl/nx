@@ -250,7 +250,10 @@ describe('jestProject', () => {
       } as JestProjectSchema);
       const jestConfig = jestConfigObject(tree, 'libs/lib1/jest.config.ts');
       expect(jestConfig.transform).toEqual({
-        '^.+\\.[tj]sx?$': 'ts-jest',
+        '^.+\\.[tj]sx?$': [
+          'ts-jest',
+          { tsconfig: '<rootDir>/tsconfig.spec.json' },
+        ],
       });
     });
 
@@ -322,19 +325,16 @@ describe('jestProject', () => {
   });
 
   describe('--babelJest', () => {
-    it('should have globals.ts-jest configured when babelJest is false', async () => {
+    // no longer true for jest v29
+    it.skip('should have globals.ts-jest configured when babelJest is false', async () => {
       await jestProjectGenerator(tree, {
         ...defaultOptions,
         project: 'lib1',
         babelJest: false,
       } as JestProjectSchema);
-      const jestConfig = jestConfigObject(tree, 'libs/lib1/jest.config.ts');
+      const jestConfig = tree.read('libs/lib1/jest.config.ts', 'utf-8');
 
-      expect(jestConfig.globals).toEqual({
-        'ts-jest': {
-          tsconfig: '<rootDir>/tsconfig.spec.json',
-        },
-      });
+      expect(jestConfig).toMatchSnapshot();
     });
 
     it('should generate proper jest.transform when babelJest is true', async () => {
@@ -397,11 +397,6 @@ describe('jestProject', () => {
         export default {
           displayName: 'my-project',
           preset: './jest.preset.js',
-          globals: {
-            'ts-jest': {
-              tsconfig: '<rootDir>/tsconfig.spec.json',
-            }
-          },
           coverageDirectory: './coverage/my-project',
           testMatch: [
             '<rootDir>/src/**/__tests__/**/*.[jt]s?(x)',
@@ -435,11 +430,6 @@ describe('jestProject', () => {
         module.exports = {
           displayName: 'my-project',
           preset: './jest.preset.js',
-          globals: {
-            'ts-jest': {
-              tsconfig: '<rootDir>/tsconfig.spec.json',
-            }
-          },
           coverageDirectory: './coverage/my-project',
           testMatch: [
             '<rootDir>/src/**/__tests__/**/*.[jt]s?(x)',
