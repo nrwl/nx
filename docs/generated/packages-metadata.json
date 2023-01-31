@@ -2784,6 +2784,17 @@
     "description": "The Nx Plugin for Webpack contains executors and generators that support building applications using Webpack.",
     "documents": [
       {
+        "id": "overview",
+        "name": "Webpack Package Overview",
+        "description": "The Nx Plugin for Webpack contains executors and generators that support building applications using Webpack.",
+        "file": "generated/packages/webpack/documents/overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "webpack/documents/overview",
+        "tags": [],
+        "originalFilePath": "shared/packages/webpack/plugin-overview"
+      },
+      {
         "id": "webpack-config-setup",
         "name": "Configure webpack on your Nx workspace",
         "description": "Configure webpack on your Nx workspace",

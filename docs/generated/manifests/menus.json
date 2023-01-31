@@ -6241,6 +6241,14 @@
             "name": "documents",
             "children": [
               {
+                "name": "Webpack Package Overview",
+                "path": "/packages/webpack/documents/overview",
+                "id": "overview",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Configure webpack on your Nx workspace",
                 "path": "/packages/webpack/documents/webpack-config-setup",
                 "id": "webpack-config-setup",
