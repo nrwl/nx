@@ -9,8 +9,7 @@ import {
 } from '../config/project-graph';
 import { ProjectGraphBuilder } from '../project-graph/project-graph-builder';
 import { satisfies } from 'semver';
-import { NormalizedPackageJson } from './utils/pruning';
-import { _ } from 'ajv';
+import { NormalizedPackageJson } from './utils/types';
 
 export function parseYarnLockfile(lockFileContent: string): ProjectGraph {
   const { __metadata, ...dependencies } = parseSyml(lockFileContent);

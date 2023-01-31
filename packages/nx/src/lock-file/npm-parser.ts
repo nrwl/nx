@@ -10,7 +10,7 @@ import {
   NpmLockFile,
 } from './utils/types';
 import { satisfies } from 'semver';
-import { NormalizedPackageJson } from './utils/pruning';
+import { NormalizedPackageJson } from './utils/types';
 import { normalizeNpmPackageJson } from './utils/npm-utils';
 import { addEdgeOuts } from './utils/parsing-utils';
 

@@ -1,4 +1,19 @@
 import { PackageSnapshot } from '@pnpm/lockfile-types';
+import { PackageJson } from '../../utils/package-json';
+
+export type NormalizedPackageJson = Pick<
+  PackageJson,
+  | 'name'
+  | 'version'
+  | 'license'
+  | 'dependencies'
+  | 'devDependencies'
+  | 'peerDependencies'
+  | 'peerDependenciesMeta'
+  | 'optionalDependencies'
+>;
+
+// Lock File
 
 export type LockFileGraph = {
   nodes: Map<string, LockFileNode>;
