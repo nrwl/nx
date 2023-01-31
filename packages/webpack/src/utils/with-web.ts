@@ -12,6 +12,7 @@ import { getOutputHashFormat } from '@nrwl/webpack/src/utils/hash-format';
 import { PostcssCliResources } from '@nrwl/webpack/src/utils/webpack/plugins/postcss-cli-resources';
 import { normalizeExtraEntryPoints } from '@nrwl/webpack/src/utils/webpack/normalize-entry';
 
+import { NxWebpackPlugin } from './config';
 import {
   ExtraEntryPointClass,
   NormalizedWebpackExecutorOptions,
@@ -56,7 +57,11 @@ export type MergedOptions = Omit<
 > &
   WithWebOptions;
 
-export function withWeb(pluginOptions: WithWebOptions = {}) {
+/**
+ * @param {WithWebOptions} pluginOptions
+ * @returns {NxWebpackPlugin}
+ */
+export function withWeb(pluginOptions: WithWebOptions = {}): NxWebpackPlugin {
   return function configure(
     config: Configuration,
     { options: executorOptions, context }: NxWebpackExecutionContext
