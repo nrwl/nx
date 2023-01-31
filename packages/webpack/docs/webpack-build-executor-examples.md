@@ -1,3 +1,8 @@
+---
+title: Examples for the @nrwl/webpack:webpack build executor
+description: Examples and a short guide on how to use the @nrwl/webpack:webpack build executor
+---
+
 `project.json`:
 
 ```json

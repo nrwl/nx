@@ -1609,19 +1609,20 @@
           "itemList": [
             {
               "id": "overview",
-              "name": "Webpack Package Overview",
               "path": "/packages/webpack",
+              "name": "Overview of the Nx Webpack Plugin",
+              "description": "The Nx Plugin for Webpack contains executors and generators that support building applications using Webpack.",
               "file": "shared/packages/webpack/plugin-overview"
             },
             {
-              "name": "Configure webpack on your Nx workspace",
               "id": "webpack-config-setup",
-              "description": "Configure webpack on your Nx workspace",
+              "name": "How to configure webpack on your Nx workspace",
+              "description": "A guide on how to configure webpack on your Nx workspace, and instructions on how to customize your webpack configuration",
               "file": "shared/packages/webpack/webpack-config-setup"
             },
             {
-              "name": "Webpack plugins",
               "id": "webpack-plugins",
+              "name": "Webpack plugins",
               "description": "Webpack plugins",
               "file": "shared/packages/webpack/webpack-plugins"
             }

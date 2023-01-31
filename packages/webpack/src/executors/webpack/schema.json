@@ -1,8 +1,8 @@
 {
   "version": 2,
   "outputCapture": "direct-nodejs",
-  "title": "Webpack Executor",
-  "description": "Builds web applications using webpack.",
+  "title": "Webpack builder",
+  "description": "Build a project using webpack.",
   "cli": "nx",
   "type": "object",
   "properties": {

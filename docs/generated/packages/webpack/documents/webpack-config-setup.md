@@ -1,3 +1,8 @@
+---
+title: How to configure webpack on your Nx workspace
+description: A guide on how to configure webpack on your Nx workspace, and instructions on how to customize your webpack configuration
+---
+
 # Configure webpack on your Nx workspace
 
 You can configure Webpack using a `webpack.config.js` file in your project. You can set the path to this file in your `project.json` file, in the `build` target options:
