@@ -18,4 +18,5 @@ export interface Schema {
   js: boolean; // default is false
   strict: boolean; // default is true
   setParserOptionsProject?: boolean;
+  skipPackageJson?: boolean; // default is false
 }
