@@ -1,9 +1,8 @@
 import { joinPathFragments } from '../utils/path';
-import { parseYarnLockFile, pruneYarnLockFile } from './yarn-parser';
+import { parseYarnLockfile, stringifyYarnLockfile } from './yarn-parser';
+import { pruneProjectGraph } from './project-graph-pruning';
 import { vol } from 'memfs';
-import { LockFileBuilder } from './lock-file-builder';
-import { LockFileGraph } from './utils/types';
-import { mapLockFileGraphToProjectGraph } from './lock-file-graph-mapper';
+import { ProjectGraph } from '../config/project-graph';
 
 jest.mock('fs', () => require('memfs').fs);
 
@@ -151,26 +150,20 @@ describe('yarn LockFile utility', () => {
       vol.fromJSON(fileSys, '/root');
     });
 
-    let packageJson;
     let lockFile;
 
-    let rootResult: LockFileGraph;
+    let graph: ProjectGraph;
 
     beforeEach(() => {
-      packageJson = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/nextjs/package.json'
-      ));
       lockFile = require(joinPathFragments(
         __dirname,
         '__fixtures__/nextjs/yarn.lock'
       )).default;
-      rootResult = parseYarnLockFile(lockFile, packageJson);
+      graph = parseYarnLockfile(lockFile);
     });
 
     it('should parse root lock file', async () => {
-      expect(rootResult.nodes.size).toEqual(1244); // 1104
-      expect(rootResult.isValid).toBeTruthy();
+      expect(Object.keys(graph.externalNodes).length).toEqual(1244); // 1104
     });
 
     it('should prune lock file', async () => {
@@ -178,26 +171,21 @@ describe('yarn LockFile utility', () => {
         __dirname,
         '__fixtures__/nextjs/app/package.json'
       ));
-      const appLockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/nextjs/app/yarn.lock'
-      )).default;
-
-      // this is original generated lock file
-      const appResult = parseYarnLockFile(appLockFile, appPackageJson);
-      expect(appResult.nodes.size).toEqual(864);
-      expect(appResult.isValid).toBeTruthy();
 
       // this is our pruned lock file structure
-      const builder = new LockFileBuilder(rootResult, {
-        includeOptional: true,
-      });
-      builder.prune(appPackageJson);
-      expect(builder.nodes.size).toEqual(appResult.nodes.size);
-
-      const keys = new Set(builder.nodes.keys());
-      const originalKeys = new Set(appResult.nodes.keys());
-      expect(keys).toEqual(originalKeys);
+      const prunedGraph = pruneProjectGraph(graph, appPackageJson);
+      expect(Object.keys(prunedGraph.externalNodes).length).toEqual(864);
+      const result = stringifyYarnLockfile(
+        prunedGraph,
+        lockFile,
+        appPackageJson
+      );
+      expect(result).toEqual(
+        require(joinPathFragments(
+          __dirname,
+          '__fixtures__/nextjs/app/yarn.lock'
+        )).default
+      );
     });
 
     it('should match pruned lock file', () => {
@@ -205,7 +193,12 @@ describe('yarn LockFile utility', () => {
         __dirname,
         '__fixtures__/nextjs/app/package.json'
       ));
-      const result = pruneYarnLockFile(lockFile, packageJson, appPackageJson);
+      const prunedGraph = pruneProjectGraph(graph, appPackageJson);
+      const result = stringifyYarnLockfile(
+        prunedGraph,
+        lockFile,
+        appPackageJson
+      );
       expect(result).toEqual(
         require(joinPathFragments(
           __dirname,
@@ -227,45 +220,14 @@ describe('yarn LockFile utility', () => {
     });
 
     it('should parse yarn classic', async () => {
-      const packageJson = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/auxiliary-packages/package.json'
-      ));
       const classicLockFile = require(joinPathFragments(
         __dirname,
         '__fixtures__/auxiliary-packages/yarn.lock'
       )).default;
-      const resultClassic = parseYarnLockFile(classicLockFile, packageJson);
-      expect(resultClassic.nodes.size).toEqual(127); // 124 hoisted
-      expect(resultClassic.isValid).toBeTruthy();
+      const graph = parseYarnLockfile(classicLockFile);
+      expect(Object.keys(graph.externalNodes).length).toEqual(127); // 124 hoisted
 
-      const classicPostgres = resultClassic.nodes.get(
-        'postgres@https://codeload.github.com/charsleysa/postgres/tar.gz/3b1a01b2da3e2fafb1a79006f838eff11a8de3cb'
-      );
-      expect(classicPostgres.name).toEqual('postgres');
-      expect(classicPostgres.packageName).toBeUndefined();
-      expect(classicPostgres.version).toMatch(
-        '3b1a01b2da3e2fafb1a79006f838eff11a8de3cb'
-      );
-      expect(classicPostgres.edgesIn.values().next().value.versionSpec).toEqual(
-        'charsleysa/postgres#fix-errors-compiled'
-      );
-
-      const classicAlias = resultClassic.nodes.get(
-        'eslint-plugin-disable-autofix@npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0'
-      );
-      expect(classicAlias.name).toEqual('eslint-plugin-disable-autofix');
-      expect(classicAlias.packageName).toEqual(
-        '@mattlewis92/eslint-plugin-disable-autofix'
-      );
-      expect(classicAlias.version).toEqual('3.0.0');
-      expect(classicAlias.edgesIn.values().next().value.versionSpec).toEqual(
-        'npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0'
-      );
-
-      const projectGraph = mapLockFileGraphToProjectGraph(resultClassic);
-      expect(projectGraph.externalNodes['npm:minimatch'])
-        .toMatchInlineSnapshot(`
+      expect(graph.externalNodes['npm:minimatch']).toMatchInlineSnapshot(`
         Object {
           "data": Object {
             "packageName": "minimatch",
@@ -275,8 +237,7 @@ describe('yarn LockFile utility', () => {
           "type": "npm",
         }
       `);
-      expect(projectGraph.externalNodes['npm:minimatch@5.1.1'])
-        .toMatchInlineSnapshot(`
+      expect(graph.externalNodes['npm:minimatch@5.1.1']).toMatchInlineSnapshot(`
         Object {
           "data": Object {
             "packageName": "minimatch",
@@ -286,7 +247,7 @@ describe('yarn LockFile utility', () => {
           "type": "npm",
         }
       `);
-      expect(projectGraph.externalNodes['npm:postgres']).toMatchInlineSnapshot(`
+      expect(graph.externalNodes['npm:postgres']).toMatchInlineSnapshot(`
         Object {
           "data": Object {
             "packageName": "postgres",
@@ -296,12 +257,12 @@ describe('yarn LockFile utility', () => {
           "type": "npm",
         }
       `);
-      expect(projectGraph.externalNodes['npm:eslint-plugin-disable-autofix'])
+      expect(graph.externalNodes['npm:eslint-plugin-disable-autofix'])
         .toMatchInlineSnapshot(`
         Object {
           "data": Object {
-            "packageName": "@mattlewis92/eslint-plugin-disable-autofix",
-            "version": "3.0.0",
+            "packageName": "eslint-plugin-disable-autofix",
+            "version": "npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0",
           },
           "name": "npm:eslint-plugin-disable-autofix",
           "type": "npm",
@@ -314,16 +275,7 @@ describe('yarn LockFile utility', () => {
         __dirname,
         '__fixtures__/auxiliary-packages/yarn.lock'
       )).default;
-      const packageJson = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/auxiliary-packages/package.json'
-      ));
-      const prunedLockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/auxiliary-packages/yarn.lock.pruned'
-      )).default;
-
-      const result = pruneYarnLockFile(lockFile, packageJson, {
+      const normalizedPackageJson = {
         name: 'test',
         version: '0.0.0',
         license: 'MIT',
@@ -338,50 +290,31 @@ describe('yarn LockFile utility', () => {
         devDependencies: {
           react: '18.2.0',
         },
-      });
+      };
+      const prunedLockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/auxiliary-packages/yarn.lock.pruned'
+      )).default;
+
+      const graph = parseYarnLockfile(lockFile);
+      const prunedGraph = pruneProjectGraph(graph, normalizedPackageJson);
+      const result = stringifyYarnLockfile(
+        prunedGraph,
+        lockFile,
+        normalizedPackageJson
+      );
       expect(result).toEqual(prunedLockFile);
     });
 
     it('should parse yarn berry', async () => {
-      const packageJson = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/auxiliary-packages/package.json'
-      ));
       const berryLockFile = require(joinPathFragments(
         __dirname,
         '__fixtures__/auxiliary-packages/yarn-berry.lock'
       )).default;
-      const resultBerry = parseYarnLockFile(berryLockFile, packageJson);
-      expect(resultBerry.nodes.size).toEqual(128); //124 hoisted
-      expect(resultBerry.isValid).toBeTruthy();
+      const graph = parseYarnLockfile(berryLockFile);
+      expect(Object.keys(graph.externalNodes).length).toEqual(128); //124 hoisted
 
-      const berryPostgres = resultBerry.nodes.get(
-        'postgres@https://github.com/charsleysa/postgres.git#commit=3b1a01b2da3e2fafb1a79006f838eff11a8de3cb'
-      );
-      expect(berryPostgres.name).toEqual('postgres');
-      expect(berryPostgres.packageName).toBeUndefined();
-      expect(berryPostgres.version).toMatch(
-        '3b1a01b2da3e2fafb1a79006f838eff11a8de3cb'
-      );
-      expect(berryPostgres.edgesIn.values().next().value.versionSpec).toEqual(
-        'charsleysa/postgres#fix-errors-compiled'
-      );
-
-      const berryAlias = resultBerry.nodes.get(
-        'eslint-plugin-disable-autofix@npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0'
-      );
-      expect(berryAlias.name).toEqual('eslint-plugin-disable-autofix');
-      expect(berryAlias.packageName).toEqual(
-        '@mattlewis92/eslint-plugin-disable-autofix'
-      );
-      expect(berryAlias.version).toEqual('3.0.0');
-      expect(berryAlias.edgesIn.values().next().value.versionSpec).toEqual(
-        'npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0'
-      );
-
-      const projectGraph = mapLockFileGraphToProjectGraph(resultBerry);
-      expect(projectGraph.externalNodes['npm:minimatch'])
-        .toMatchInlineSnapshot(`
+      expect(graph.externalNodes['npm:minimatch']).toMatchInlineSnapshot(`
         Object {
           "data": Object {
             "packageName": "minimatch",
@@ -391,8 +324,7 @@ describe('yarn LockFile utility', () => {
           "type": "npm",
         }
       `);
-      expect(projectGraph.externalNodes['npm:minimatch@5.1.1'])
-        .toMatchInlineSnapshot(`
+      expect(graph.externalNodes['npm:minimatch@5.1.1']).toMatchInlineSnapshot(`
         Object {
           "data": Object {
             "packageName": "minimatch",
@@ -402,7 +334,7 @@ describe('yarn LockFile utility', () => {
           "type": "npm",
         }
       `);
-      expect(projectGraph.externalNodes['npm:postgres']).toMatchInlineSnapshot(`
+      expect(graph.externalNodes['npm:postgres']).toMatchInlineSnapshot(`
         Object {
           "data": Object {
             "packageName": "postgres",
@@ -412,12 +344,12 @@ describe('yarn LockFile utility', () => {
           "type": "npm",
         }
       `);
-      expect(projectGraph.externalNodes['npm:eslint-plugin-disable-autofix'])
+      expect(graph.externalNodes['npm:eslint-plugin-disable-autofix'])
         .toMatchInlineSnapshot(`
         Object {
           "data": Object {
-            "packageName": "@mattlewis92/eslint-plugin-disable-autofix",
-            "version": "3.0.0",
+            "packageName": "eslint-plugin-disable-autofix",
+            "version": "npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0",
           },
           "name": "npm:eslint-plugin-disable-autofix",
           "type": "npm",
@@ -430,16 +362,7 @@ describe('yarn LockFile utility', () => {
         __dirname,
         '__fixtures__/auxiliary-packages/yarn-berry.lock'
       )).default;
-      const packageJson = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/auxiliary-packages/package.json'
-      ));
-      const prunedLockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/auxiliary-packages/yarn-berry.lock.pruned'
-      )).default;
-
-      const result = pruneYarnLockFile(lockFile, packageJson, {
+      const normalizedPackageJson = {
         name: 'test',
         version: '0.0.0',
         license: 'MIT',
@@ -454,7 +377,19 @@ describe('yarn LockFile utility', () => {
         devDependencies: {
           react: '18.2.0',
         },
-      });
+      };
+      const prunedLockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/auxiliary-packages/yarn-berry.lock.pruned'
+      )).default;
+
+      const graph = parseYarnLockfile(lockFile);
+      const prunedGraph = pruneProjectGraph(graph, normalizedPackageJson);
+      const result = stringifyYarnLockfile(
+        prunedGraph,
+        lockFile,
+        normalizedPackageJson
+      );
       expect(result.split('\n').slice(2)).toEqual(
         prunedLockFile.split('\n').slice(2)
       );
@@ -499,19 +434,13 @@ describe('yarn LockFile utility', () => {
       vol.fromJSON(fileSys, '/root');
     });
 
-    const packageJson = require(joinPathFragments(
-      __dirname,
-      '__fixtures__/duplicate-package/package.json'
-    ));
-
     it('should parse root lock file', async () => {
       const classicLockFile = require(joinPathFragments(
         __dirname,
         '__fixtures__/duplicate-package/yarn.lock'
       )).default;
-      const resultClassic = parseYarnLockFile(classicLockFile, packageJson);
-      expect(resultClassic.nodes.size).toEqual(371); //337 hoisted
-      expect(resultClassic.isValid).toBeTruthy();
+      const graph = parseYarnLockfile(classicLockFile);
+      expect(Object.keys(graph.externalNodes).length).toEqual(371); //337 hoisted
     });
   });
 
@@ -538,14 +467,11 @@ describe('yarn LockFile utility', () => {
         __dirname,
         '__fixtures__/optional/package.json'
       ));
-      const result = parseYarnLockFile(lockFile, packageJson);
-      expect(result.nodes.size).toEqual(103);
-      expect(result.isValid).toBeTruthy();
+      const graph = parseYarnLockfile(lockFile);
+      expect(Object.keys(graph.externalNodes).length).toEqual(103);
 
-      const builder = new LockFileBuilder(result, packageJson);
-      builder.prune(packageJson);
-      expect(builder.nodes.size).toEqual(103);
-      expect(builder.isGraphConsistent().isValid).toBeTruthy();
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      expect(graph).toEqual(prunedGraph);
     });
   });
 
@@ -722,9 +648,11 @@ describe('yarn LockFile utility', () => {
         __dirname,
         '__fixtures__/pruning/typescript/package.json'
       ));
-      const result = pruneYarnLockFile(
+      const graph = parseYarnLockfile(lockFile);
+      const prunedGraph = pruneProjectGraph(graph, typescriptPackageJson);
+      const result = stringifyYarnLockfile(
+        prunedGraph,
         lockFile,
-        packageJson,
         typescriptPackageJson
       );
       expect(result).toEqual(
@@ -740,16 +668,18 @@ describe('yarn LockFile utility', () => {
         __dirname,
         '__fixtures__/pruning/yarn.lock'
       )).default;
-      const packageJson = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/pruning/package.json'
-      ));
 
       const multiPackageJson = require(joinPathFragments(
         __dirname,
         '__fixtures__/pruning/devkit-yargs/package.json'
       ));
-      const result = pruneYarnLockFile(lockFile, packageJson, multiPackageJson);
+      const graph = parseYarnLockfile(lockFile);
+      const prunedGraph = pruneProjectGraph(graph, multiPackageJson);
+      const result = stringifyYarnLockfile(
+        prunedGraph,
+        lockFile,
+        multiPackageJson
+      );
       expect(result).toEqual(
         require(joinPathFragments(
           __dirname,
@@ -760,39 +690,31 @@ describe('yarn LockFile utility', () => {
   });
 
   describe('workspaces', () => {
-    let lockFile, packageJson;
-
-    beforeAll(() => {
+    beforeEach(() => {
       const fileSys = {
         'packages/package-a/package.json':
           '{"name": "package-a", "version": "0.0.1", "dependencies": { "react": "18" } }',
         'node_modules/react/package.json': '{"version": "17.0.2"}',
       };
       vol.fromJSON(fileSys, '/root');
-      packageJson = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/workspaces/package.json'
-      ));
     });
 
     it('should parse classic lock file', async () => {
-      lockFile = require(joinPathFragments(
+      const lockFile = require(joinPathFragments(
         __dirname,
         '__fixtures__/workspaces/yarn.lock'
       )).default;
-      const result = parseYarnLockFile(lockFile, packageJson);
-      expect(result.nodes.size).toEqual(5);
-      expect(result.isValid).toBeTruthy();
+      const graph = parseYarnLockfile(lockFile);
+      expect(Object.keys(graph.externalNodes).length).toEqual(5);
     });
 
     it('should parse berry lock file', async () => {
-      lockFile = require(joinPathFragments(
+      const lockFile = require(joinPathFragments(
         __dirname,
         '__fixtures__/workspaces/yarn.lock.berry'
       )).default;
-      const result = parseYarnLockFile(lockFile, packageJson);
-      expect(result.nodes.size).toEqual(5);
-      expect(result.isValid).toBeTruthy();
+      const graph = parseYarnLockfile(lockFile);
+      expect(Object.keys(graph.externalNodes).length).toEqual(5);
     });
   });
 });

@@ -1,33 +1,10 @@
-import { existsSync, readdirSync, readFileSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { workspaceRoot } from '../../utils/workspace-root';
-import { output } from '../../utils/output';
 import { LockFileBuilder } from '../lock-file-builder';
 import { LockFileNode } from './types';
 import { PackageJson } from '../../utils/package-json';
 
 export type UnresolvedDependencies<T> = Set<[string, string, T]>;
-
-export function reportUnresolvedDependencies<T>(
-  unresolvedDependencies: UnresolvedDependencies<T>
-) {
-  output.error({
-    title: `Breaking out of the parsing to avoid infinite loop.`,
-    bodyLines: [
-      `Could not resolve following dependencies:`,
-      ...Array.from(unresolvedDependencies).map(
-        ([packageName, versionSpec]) => `- ${packageName}@${versionSpec}\n`
-      ),
-    ],
-  });
-}
-
-export function getSubfolders(path: string): string[] {
-  const fullPath = `${workspaceRoot}/${path}`;
-  if (!existsSync(fullPath)) {
-    return [];
-  }
-  return readdirSync(fullPath).map((folder) => `${path}/${folder}`);
-}
 
 export function getPackageJson(path: string): PackageJson {
   const fullPath = `${workspaceRoot}/${path}/package.json`;

@@ -1,477 +1,397 @@
 import { parseSyml, stringifySyml } from '@yarnpkg/parsers';
 import { stringify } from '@yarnpkg/lockfile';
-import { PackageJson } from '../utils/package-json';
-import { LockFileBuilder, nodeKey } from './lock-file-builder';
-import { LockFileGraph, LockFileNode, YarnDependency } from './utils/types';
+import { YarnDependency } from './utils/types';
 import { sortObjectByKeys } from '../utils/object-sort';
+import { getRootVersion } from './utils/parsing-utils';
 import {
-  BERRY_LOCK_FILE_DISCLAIMER,
-  generateRootWorkspacePackage,
-  isAliasDependency,
-  isTarballDependency,
-} from './utils/yarn-utils';
-import {
-  addEdgeOuts,
-  getPackageJson,
-  getRootVersion,
-  getSubfolders,
-  reportUnresolvedDependencies,
-  UnresolvedDependencies,
-} from './utils/parsing-utils';
+  ProjectGraph,
+  ProjectGraphExternalNode,
+} from '../config/project-graph';
+import { ProjectGraphBuilder } from '../project-graph/project-graph-builder';
+import { satisfies } from 'semver';
+import { NormalizedPackageJson } from './utils/pruning';
+import { _ } from 'ajv';
 
-export function parseYarnLockFile(
-  lockFileContent: string,
-  packageJson: PackageJson
-): LockFileGraph {
+export function parseYarnLockfile(lockFileContent: string): ProjectGraph {
   const { __metadata, ...dependencies } = parseSyml(lockFileContent);
   const isBerry = !!__metadata;
-  const [groupedDependencies, workspaceProjects] = groupDependencies(
-    dependencies,
-    isBerry,
-    packageJson
-  );
 
-  const builder = new LockFileBuilder(packageJson, { includeOptional: true });
-  // parse workspace dependencies as incoming dependencies
-  workspaceProjects.forEach((project) => {
-    builder.addWorkspaceIncomingEdges(project);
-  });
+  const builder = new ProjectGraphBuilder();
 
-  buildLockFileGraph(builder, groupedDependencies, isBerry);
+  // we use key => node map to avoid duplicate work when parsing keys
+  const keyMap = new Map<string, ProjectGraphExternalNode>();
+  addNodes(dependencies, builder, keyMap, isBerry);
+  addDependencies(dependencies, builder, keyMap);
 
-  return builder.getLockFileGraph();
+  return builder.getUpdatedProjectGraph();
 }
 
-export function pruneYarnLockFile(
+function addNodes(
+  dependencies: Record<string, YarnDependency>,
+  builder: ProjectGraphBuilder,
+  keyMap: Map<string, ProjectGraphExternalNode>,
+  isBerry: boolean
+) {
+  const nodesToadd: Map<
+    string,
+    Map<string, ProjectGraphExternalNode>
+  > = new Map();
+
+  Object.entries(dependencies).forEach(([keys, snapshot]) => {
+    // ignore workspace projects
+    if (snapshot.linkType === 'soft') {
+      return;
+    }
+    const packageName = keys.slice(0, keys.indexOf('@', 1));
+    const version = parseVersion(
+      packageName,
+      keys.split(', ')[0],
+      snapshot,
+      isBerry
+    );
+    keys.split(', ').forEach((key) => {
+      // we don't need to keep duplicates, we can just track the keys
+      const existingNode = nodesToadd.get(packageName)?.get(version);
+      if (existingNode) {
+        keyMap.set(key, existingNode);
+        return;
+      }
+
+      const node: ProjectGraphExternalNode = {
+        type: 'npm',
+        name: `npm:${packageName}@${version}`,
+        data: {
+          version,
+          packageName,
+        },
+      };
+
+      if (!nodesToadd.has(packageName)) {
+        nodesToadd.set(packageName, new Map());
+      }
+      nodesToadd.get(packageName).set(version, node);
+      keyMap.set(key, node);
+    });
+  });
+
+  for (const [packageName, versionMap] of nodesToadd.entries()) {
+    let hoistedNode: ProjectGraphExternalNode;
+    if (versionMap.size === 1) {
+      hoistedNode = versionMap.values().next().value;
+    } else {
+      const hoistedVersion = getHoistedVersion(packageName);
+      hoistedNode = versionMap.get(hoistedVersion);
+    }
+    hoistedNode.name = `npm:${packageName}`;
+
+    versionMap.forEach((node) => {
+      builder.addExternalNode(node);
+    });
+  }
+}
+
+function parseVersion(
+  packageName: string,
+  key: string,
+  snapshot: YarnDependency,
+  isBerry: boolean
+): string {
+  const versionRange = key.slice(packageName.length + 1);
+  // check for alias packages
+  const isAlias = isBerry
+    ? snapshot.resolution && !snapshot.resolution.startsWith(`${packageName}@`)
+    : versionRange.startsWith('npm:');
+  if (isAlias) {
+    return versionRange;
+  }
+  // check for berry tarball packages
+  if (
+    isBerry &&
+    snapshot.resolution &&
+    snapshot.resolution !== `${packageName}@npm:${snapshot.version}`
+  ) {
+    return snapshot.resolution.slice(packageName.length + 1);
+  }
+  if (!isBerry && !satisfies(snapshot.version, versionRange)) {
+    return snapshot.resolved;
+  }
+  // otherwise it's a standard version
+  return snapshot.version;
+}
+
+function getHoistedVersion(packageName: string): string {
+  const version = getRootVersion(packageName);
+  if (version) {
+    return version;
+  } else {
+    throw new Error(`Cannot find hoisted version for ${packageName}`);
+  }
+}
+
+function addDependencies(
+  dependencies: Record<string, YarnDependency>,
+  builder: ProjectGraphBuilder,
+  keyMap: Map<string, ProjectGraphExternalNode>
+) {
+  Object.keys(dependencies).forEach((keys) => {
+    const snapshot = dependencies[keys];
+    keys.split(', ').forEach((key) => {
+      if (keyMap.has(key)) {
+        const node = keyMap.get(key);
+        [snapshot.dependencies, snapshot.optionalDependencies].forEach(
+          (section) => {
+            addNodeDependencies(node.name, section, builder, keyMap);
+          }
+        );
+      }
+    });
+  });
+}
+
+function addNodeDependencies(
+  source: string,
+  section: Record<string, string>,
+  builder: ProjectGraphBuilder,
+  keyMap: Map<string, ProjectGraphExternalNode>
+) {
+  if (section) {
+    Object.entries(section).forEach(([name, versionSpec]) => {
+      const target =
+        keyMap.get(`${name}@npm:${versionSpec}`) ||
+        keyMap.get(`${name}@${versionSpec}`);
+      if (target) {
+        builder.addExternalNodeDependency(source, target.name);
+      }
+    });
+  }
+}
+
+export function stringifyYarnLockfile(
+  graph: ProjectGraph,
   rootLockFileContent: string,
-  packageJson: PackageJson,
-  prunedPackageJson: PackageJson
+  packageJson: NormalizedPackageJson
 ): string {
   const { __metadata, ...dependencies } = parseSyml(rootLockFileContent);
   const isBerry = !!__metadata;
-  const [groupedDependencies] = groupDependencies(dependencies);
 
-  const builder = new LockFileBuilder(packageJson, { includeOptional: true });
-  buildLockFileGraph(builder, groupedDependencies, isBerry);
-  builder.prune(prunedPackageJson);
-
-  const output: Record<string, YarnDependency> = {};
-  builder.nodes.forEach((node) => {
-    const packageGroup = groupedDependencies.get(node.name);
-
-    let versionSet;
-    if (packageGroup.has(node.version)) {
-      versionSet = packageGroup.get(node.version);
-    } else {
-      // for alias, version in the original groupedDependencies might be different
-      for (let set of packageGroup.values()) {
-        if (
-          set.values().next().value[1].resolved === node.version ||
-          set.values().next().value[1].resolution ===
-            `${node.name}@${node.version}`
-        ) {
-          // for berry resolution contains project name
-          versionSet = set;
-          break;
-        }
-      }
-    }
-
-    const value = versionSet.values().next().value[1];
-    const keys = new Set<string>();
-    node.edgesIn.forEach((edge) => {
-      const version =
-        isBerry &&
-        !isAliasDependency(edge.versionSpec) &&
-        !isTarballDependency(value)
-          ? `npm:${edge.versionSpec}`
-          : edge.versionSpec;
-      keys.add(`${node.name}@${version}`);
-    });
-
-    const sortedKeys = Array.from(keys).sort();
-
-    if (isBerry) {
-      output[Array.from(keys).sort().join(', ')] = value;
-    } else {
-      sortedKeys.forEach((key) => {
-        output[key] = value;
-      });
-    }
-  });
+  const snapshots = mapSnapshots(
+    dependencies,
+    graph.externalNodes,
+    packageJson,
+    isBerry
+  );
 
   if (isBerry) {
     // add root workspace package
-    const workspacePackage = generateRootWorkspacePackage(prunedPackageJson);
-    output[workspacePackage.resolution] = workspacePackage;
+    const workspacePackage = generateRootWorkspacePackage(packageJson);
+    snapshots[workspacePackage.resolution] = workspacePackage;
 
     return (
       BERRY_LOCK_FILE_DISCLAIMER +
       stringifySyml({
         __metadata,
-        ...sortObjectByKeys(output),
+        ...sortObjectByKeys(snapshots),
       })
     );
   } else {
-    return stringify(sortObjectByKeys(output));
+    return stringify(sortObjectByKeys(snapshots));
   }
 }
 
-function buildLockFileGraph(
-  builder: LockFileBuilder,
-  groupedDependencies: Map<string, Map<string, Set<[string, YarnDependency]>>>,
-  isBerry: boolean
-): LockFileBuilder {
-  isBerry
-    ? parseBerryLockFile(builder, groupedDependencies)
-    : parseClassicLockFile(builder, groupedDependencies);
-
-  return builder;
-}
-
-// Map Record<string, YarnDependency> to
-// Map[packageName] -> Map[version] -> Set[key, YarnDependency]
-function groupDependencies(
+function mapSnapshots(
   dependencies: Record<string, YarnDependency>,
-  isBerry?: boolean,
-  packageJson?: PackageJson
-): [
-  Map<string, Map<string, Set<[string, YarnDependency]>>>,
-  Set<YarnDependency>
-] {
-  const groupedDependencies = new Map<
-    string,
-    Map<string, Set<[string, YarnDependency]>>
-  >();
-  const workspaceProjects = new Set<YarnDependency>();
+  nodes: Record<string, ProjectGraphExternalNode>,
+  packageJson: NormalizedPackageJson,
+  isBerry: boolean
+): Record<string, YarnDependency> {
+  const snapshotMap: Map<YarnDependency, Set<string>> = new Map();
+  const detectedDeps = new Map<string, Set<string>>();
 
-  Object.entries(dependencies).forEach(([keyExp, value]) => {
-    // Berry's parsed yaml keeps multiple version spec for the same version together
-    // e.g. "foo@^1.0.0, foo@^1.1.0"
-    const keys = keyExp.split(', ');
-    const packageName = keys[0].slice(0, keys[0].indexOf('@', 1));
-
-    keys.forEach((key) => {
-      // we don't track patch dependencies (this is berry specific)
-      if (key.startsWith(`${packageName}@patch:${packageName}`)) {
-        return;
-      }
-      // we don't track root workspace project (this is berry specific)
-      if (value.linkType === 'soft') {
-        if (key.includes('@workspace:.')) {
-          return;
-        } else {
-          workspaceProjects.add(value);
-          return;
-        }
-      }
-
-      const valueSet = new Set<[string, YarnDependency]>().add([key, value]);
-      if (!groupedDependencies.has(packageName)) {
-        groupedDependencies.set(
-          packageName,
-          new Map([[value.version, valueSet]])
-        );
-      } else {
-        const packageMap = groupedDependencies.get(packageName);
-        if (packageMap.has(value.version)) {
-          packageMap.get(value.version).add([key, value]);
-        } else {
-          packageMap.set(value.version, valueSet);
-        }
-      }
-    });
-  });
-
-  if (!isBerry && packageJson && packageJson.workspaces) {
-    getClassicWorkspacesDependencies(workspaceProjects, packageJson.workspaces);
-  }
-
-  return [groupedDependencies, workspaceProjects];
-}
-
-function getClassicWorkspacesDependencies(
-  workspaceConfigs: Set<YarnDependency>,
-  workspaces: string[] | { packages: string[] }
-) {
-  const workspacesPackages = Array.isArray(workspaces)
-    ? workspaces
-    : workspaces.packages;
-  workspacesPackages.forEach((workspace) => {
-    if (workspace.endsWith('*')) {
-      getSubfolders(workspace.replace('/*', '')).forEach((folder) => {
-        const packageJson = getPackageJson(folder);
-        if (packageJson) {
-          workspaceConfigs.add(packageJson);
-        }
-      });
-    } else {
-      const packageJson = getPackageJson(workspace);
-      if (packageJson) {
-        workspaceConfigs.add(packageJson);
-      }
+  const addDependency = (packageName: string, version: string) => {
+    if (!detectedDeps.has(packageName)) {
+      detectedDeps.set(packageName, new Set());
     }
-  });
-}
-
-function parseClassicLockFile(
-  builder: LockFileBuilder,
-  groupedDependencies: Map<string, Map<string, Set<[string, YarnDependency]>>>
-) {
-  // Non-root dependencies that need to be resolved later
-  // Map[packageName, specKey, YarnDependency]
-  const unresolvedDependencies = new Set<[string, string, YarnDependency]>();
-
-  const isHoisted = true;
-
-  groupedDependencies.forEach((versionMap, packageName) => {
-    // use root packages t
-    let rootVersion;
-    if (versionMap.size === 1) {
-      // If there is only one version, it is the root version
-      rootVersion = versionMap.values().next().value.values().next()
-        .value[1].version;
-    } else {
-      // Otherwise, we need to find the root version from the package.json
-      rootVersion = getRootVersion(packageName);
+    detectedDeps.get(packageName).add(`${packageName}@${version}`);
+    if (isBerry && !version.startsWith('npm:')) {
+      detectedDeps.get(packageName).add(`${packageName}@npm:${version}`);
     }
-    versionMap.forEach((valueSet) => {
-      const [key, dependency]: [string, YarnDependency] = valueSet
-        .values()
-        .next().value;
-
-      if (dependency.version === rootVersion) {
-        const versionSpec = key.slice(packageName.length + 1);
-        const node = parseClassicNode(
-          packageName,
-          versionSpec,
-          dependency,
-          isHoisted
-        );
-        builder.addNode(node);
-        valueSet.forEach(([newKey]) => {
-          const newSpec = newKey.slice(packageName.length + 1);
-          builder.addEdgeIn(node, newSpec);
-        });
-        if (dependency.dependencies) {
-          Object.entries(dependency.dependencies).forEach(
-            ([depName, depSpec]) => {
-              builder.addEdgeOut(node, depName, depSpec);
-            }
-          );
-        }
-        if (dependency.optionalDependencies) {
-          Object.entries(dependency.optionalDependencies).forEach(
-            ([depName, depSpec]) => {
-              builder.addEdgeOut(node, depName, depSpec, true);
-            }
-          );
-        }
-      } else {
-        valueSet.forEach(([newKey]) => {
-          const versionSpec = newKey.slice(packageName.length + 1);
-          // we don't know the path yet, so we need to resolve non-root deps later
-          unresolvedDependencies.add([packageName, versionSpec, dependency]);
-        });
-      }
-    });
-  });
-
-  // recursively resolve non-root dependencies
-  // in each run we resolve one level of dependencies
-  exhaustUnresolvedDependencies(builder, {
-    unresolvedDependencies,
-    isBerry: false,
-  });
-}
-
-function parseBerryLockFile(
-  builder: LockFileBuilder,
-  groupedDependencies: Map<string, Map<string, Set<[string, YarnDependency]>>>
-) {
-  // Non-root dependencies that need to be resolved later
-  // Map[packageName, specKey, YarnDependency]
-  const unresolvedDependencies = new Set<[string, string, YarnDependency]>();
-
-  const isHoisted = true;
-
-  groupedDependencies.forEach((versionMap, packageName) => {
-    let rootVersion;
-    if (versionMap.size === 1) {
-      // If there is only one version, it is the root version
-      rootVersion = versionMap.values().next().value.values().next()
-        .value[1].version;
-    } else {
-      // Otherwise, we need to find the root version from the package.json
-      rootVersion = getRootVersion(packageName);
-    }
-
-    versionMap.forEach((valueSet) => {
-      const [_, value]: [string, YarnDependency] = valueSet
-        .values()
-        .next().value;
-
-      if (value.version === rootVersion) {
-        const node = parseBerryNode(packageName, value, isHoisted);
-        builder.addNode(node);
-        valueSet.forEach(([key]) => {
-          const versionSpec = parseBerryVersionSpec(key, packageName);
-          builder.addEdgeIn(node, versionSpec);
-        });
-        addEdgeOuts({ builder, node, section: value.dependencies });
-        addEdgeOuts({
-          builder,
-          node,
-          section: value.optionalDependencies,
-          isOptional: true,
-        });
-      } else {
-        valueSet.forEach(([key]) => {
-          const versionSpec = parseBerryVersionSpec(key, packageName);
-          // we don't know the path yet, so we need to resolve non-root deps later
-          unresolvedDependencies.add([packageName, versionSpec, value]);
-        });
-      }
-    });
-  });
-
-  exhaustUnresolvedDependencies(builder, {
-    unresolvedDependencies,
-    isBerry: true,
-  });
-}
-
-function parseBerryVersionSpec(key: string, packageName: string) {
-  const versionSpec = key.slice(packageName.length + 1);
-  // if it's alias, we keep the `npm:` prefix
-  if (versionSpec.startsWith('npm:') && !versionSpec.includes('@')) {
-    return versionSpec.slice(4);
-  }
-  return versionSpec;
-}
-
-function parseClassicNode(
-  packageName: string,
-  versionSpec: string,
-  value: YarnDependency,
-  isHoisted = false
-): LockFileNode {
-  // for alias packages, name would not match packageName
-  const name = versionSpec.startsWith('npm:')
-    ? versionSpec.slice(4, versionSpec.lastIndexOf('@'))
-    : packageName;
-
-  let version = value.version;
-  // for tarball packages version might not exist or be useless
-  const resolved = value.resolved;
-  if (!version || (resolved && !resolved.includes(version))) {
-    version = resolved;
-  }
-
-  const node: LockFileNode = {
-    name: packageName,
-    ...(name !== packageName && { packageName: name }),
-    ...(version && { version }),
-    isHoisted,
   };
 
-  return node;
-}
-
-function parseBerryNode(
-  packageName: string,
-  value: YarnDependency,
-  isHoisted = false
-): LockFileNode {
-  const resolution = value.resolution;
-
-  // for alias packages, name would not match packageName
-  const name = resolution.slice(0, resolution.indexOf('@', 1));
-
-  let version = value.version;
-  // for tarball packages version might not exist or be useless
-  if (!version || (resolution && !resolution.includes(version))) {
-    version = resolution.slice(resolution.indexOf('@', 1) + 1);
+  let groupedDependencies: Record<string, YarnDependency>;
+  if (isBerry) {
+    groupedDependencies = dependencies;
+  } else {
+    // yarn classic splits keys when parsing so we need to stich them back together
+    const resolutionMap = new Map<string, YarnDependency>();
+    const snapshotMap = new Map<YarnDependency, Set<string>>();
+    Object.entries(dependencies).forEach(([key, snapshot]) => {
+      const resolutionKey = `${snapshot.resolution}${snapshot.integrity}`;
+      if (resolutionMap.has(resolutionKey)) {
+        const existingSnapshot = resolutionMap.get(resolutionKey);
+        snapshotMap.get(existingSnapshot).add(key);
+      } else {
+        resolutionMap.set(resolutionKey, snapshot);
+        snapshotMap.set(snapshot, new Set([key]));
+      }
+    });
+    groupedDependencies = {};
+    snapshotMap.forEach((keys, snapshot) => {
+      groupedDependencies[Array.from(keys).join(', ')] = snapshot;
+    });
   }
 
-  const node: LockFileNode = {
-    name: packageName,
-    ...(name !== packageName && { packageName: name }),
-    ...(version && { version }),
-    isHoisted,
+  const combinedDependencies = {
+    ...packageJson.dependencies,
+    ...packageJson.devDependencies,
+    ...packageJson.optionalDependencies,
+    ...packageJson.peerDependencies,
   };
 
-  return node;
-}
+  Object.values(nodes).forEach((node) => {
+    const [matchedKeys, snapshot] = findOriginalKeys(groupedDependencies, node);
+    snapshotMap.set(snapshot, new Set(matchedKeys));
 
-function exhaustUnresolvedDependencies(
-  builder: LockFileBuilder,
-  {
-    unresolvedDependencies,
-    isBerry,
-  }: {
-    unresolvedDependencies: UnresolvedDependencies<YarnDependency>;
-    isBerry: boolean;
-  }
-) {
-  const initialSize = unresolvedDependencies.size;
-  if (!initialSize) {
-    return;
-  }
-
-  unresolvedDependencies.forEach((unresolvedSet) => {
-    const [packageName, versionSpec, value] = unresolvedSet;
-
-    for (const n of builder.nodes.values()) {
-      if (n.edgesOut && n.edgesOut.has(packageName)) {
-        const edge = n.edgesOut.get(packageName);
-
-        if (edge.versionSpec === versionSpec) {
-          const node = isBerry
-            ? parseBerryNode(packageName, value)
-            : parseClassicNode(packageName, versionSpec, value);
-
-          // we might have added the node already
-          if (!builder.nodes.has(nodeKey(node))) {
-            builder.addNode(node);
-            builder.addEdgeIn(node, versionSpec);
-            addEdgeOuts({ builder, node, section: value.dependencies });
-            addEdgeOuts({
-              builder,
-              node,
-              section: value.optionalDependencies,
-              isOptional: true,
-            });
-          } else {
-            const existingNode = builder.nodes.get(nodeKey(node));
-            builder.addEdgeIn(existingNode, versionSpec);
-          }
-          unresolvedDependencies.delete(unresolvedSet);
-          return;
-        }
+    [snapshot.dependencies, snapshot.optionalDependencies].forEach(
+      (section) => {
+        Object.entries(section || {}).forEach(([name, versionSpec]) =>
+          addDependency(name, versionSpec)
+        );
       }
-      if (builder.isIncomingPackage(packageName, versionSpec)) {
-        const node = isBerry
-          ? parseBerryNode(packageName, value)
-          : parseClassicNode(packageName, versionSpec, value);
+    );
 
-        builder.addNode(node);
-        builder.addEdgeIn(node, versionSpec);
-        addEdgeOuts({ builder, node, section: value.dependencies });
-        addEdgeOuts({
-          builder,
-          node,
-          section: value.optionalDependencies,
-          isOptional: true,
-        });
-        unresolvedDependencies.delete(unresolvedSet);
-        return;
+    const requestedVersion = getPackageJsonVersion(combinedDependencies, node);
+    if (requestedVersion) {
+      addDependency(node.data.packageName, requestedVersion);
+      const requestedKey = isBerry
+        ? reverseMapBerryKey(node, requestedVersion, snapshot)
+        : `${node.data.packageName}@${requestedVersion}`;
+      if (!snapshotMap.get(snapshot).has(requestedKey)) {
+        snapshotMap.get(snapshot).add(requestedKey);
       }
     }
   });
-  if (initialSize === unresolvedDependencies.size) {
-    reportUnresolvedDependencies(unresolvedDependencies);
-  } else if (unresolvedDependencies.size > 0) {
-    exhaustUnresolvedDependencies(builder, { unresolvedDependencies, isBerry });
+
+  snapshotMap.forEach((keysSet) => {
+    for (const key of keysSet.values()) {
+      const packageName = key.slice(0, key.indexOf('@', 1));
+      try {
+        if (!detectedDeps.get(packageName).has(key)) {
+          keysSet.delete(key);
+        }
+      } catch (e) {
+        console.log(packageName);
+        throw e;
+      }
+    }
+  });
+
+  const result: Record<string, YarnDependency> = {};
+  snapshotMap.forEach((keysSet, snapshot) => {
+    if (isBerry) {
+      result[Array.from(keysSet).sort().join(', ')] = snapshot;
+    } else {
+      for (const key of keysSet.values()) {
+        result[key] = snapshot;
+      }
+    }
+  });
+
+  return result;
+}
+
+function reverseMapBerryKey(
+  node: ProjectGraphExternalNode,
+  version: string,
+  snapshot: YarnDependency
+): string {
+  // alias packages already have version
+  if (version.startsWith('npm:')) {
+    `${node.data.packageName}@${version}`;
   }
+  // check for berry tarball packages
+  if (
+    snapshot.resolution &&
+    snapshot.resolution === `${node.data.packageName}@${version}`
+  ) {
+    return snapshot.resolution;
+  }
+
+  return `${node.data.packageName}@npm:${version}`;
+}
+
+function getPackageJsonVersion(
+  combinedDependencies: Record<string, string>,
+  node: ProjectGraphExternalNode
+): string {
+  const { packageName, version } = node.data;
+
+  if (combinedDependencies[packageName]) {
+    if (
+      combinedDependencies[packageName] === version ||
+      satisfies(version, combinedDependencies[packageName])
+    ) {
+      return combinedDependencies[packageName];
+    }
+  }
+}
+
+function findOriginalKeys(
+  dependencies: Record<string, YarnDependency>,
+  node: ProjectGraphExternalNode
+): [string[], YarnDependency] {
+  for (const keyExpr of Object.keys(dependencies)) {
+    const snapshot = dependencies[keyExpr];
+    const keys = keyExpr.split(', ');
+    if (!keys[0].startsWith(`${node.data.packageName}@`)) {
+      continue;
+    }
+    // standard package
+    if (snapshot.version === node.data.version) {
+      return [keys, snapshot];
+    }
+    // berry alias package
+    if (
+      snapshot.resolution &&
+      `npm:${snapshot.resolution}` === node.data.version
+    ) {
+      return [keys, snapshot];
+    }
+    // classic alias
+    if (
+      node.data.version.startsWith('npm:') &&
+      keys.every((k) => k === `${node.data.packageName}@${node.data.version}`)
+    ) {
+      return [keys, snapshot];
+    }
+    // tarball package
+    if (
+      snapshot.resolved === node.data.version ||
+      snapshot.resolution === `${node.data.packageName}@${node.data.version}`
+    ) {
+      return [keys, snapshot];
+    }
+  }
+}
+
+const BERRY_LOCK_FILE_DISCLAIMER = `# This file was generated by Nx. Do not edit this file directly\n# Manual changes might be lost - proceed with caution!\n\n`;
+
+function generateRootWorkspacePackage(
+  packageJson: NormalizedPackageJson
+): YarnDependency {
+  return {
+    version: '0.0.0-use.local',
+    resolution: `${packageJson.name}@workspace:.`,
+    ...(packageJson.dependencies && { dependencies: packageJson.dependencies }),
+    ...(packageJson.peerDependencies && {
+      peerDependencies: packageJson.peerDependencies,
+    }),
+    ...(packageJson.devDependencies && {
+      devDependencies: packageJson.devDependencies,
+    }),
+    ...(packageJson.optionalDependencies && {
+      optionalDependencies: packageJson.optionalDependencies,
+    }),
+    languageName: 'unknown',
+    linkType: 'soft',
+  };
 }

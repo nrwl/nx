@@ -10,6 +10,7 @@ import {
 } from '../config/project-graph';
 
 export class ProjectGraphBuilder {
+  // TODO(FrozenPandaz): make this private
   readonly graph: ProjectGraph;
   readonly removedEdges: { [source: string]: Set<string> } = {};
 
@@ -44,6 +45,23 @@ export class ProjectGraphBuilder {
     }
     this.graph.nodes[node.name] = node;
     this.graph.dependencies[node.name] = [];
+  }
+
+  /**
+   * Removes a node and all of its dependency edges from the graph
+   */
+  removeNode(name: string) {
+    if (!this.graph.nodes[name] && !this.graph.externalNodes[name]) {
+      throw new Error(`There is no node named: "${name}"`);
+    }
+
+    this.removeDependenciesWithNode(name);
+
+    if (this.graph.nodes[name]) {
+      delete this.graph.nodes[name];
+    } else {
+      delete this.graph.externalNodes[name];
+    }
   }
 
   /**
@@ -213,6 +231,27 @@ export class ProjectGraphBuilder {
       }
     }
     return this.graph;
+  }
+
+  private removeDependenciesWithNode(name: string) {
+    // remove all source dependencies
+    delete this.graph.dependencies[name];
+
+    // remove all target dependencies
+    for (const dependencies of Object.values(this.graph.dependencies)) {
+      for (const [index, { source, target }] of dependencies.entries()) {
+        if (target === name) {
+          const deps = this.graph.dependencies[source];
+          this.graph.dependencies[source] = [
+            ...deps.slice(0, index),
+            ...deps.slice(index + 1),
+          ];
+          if (this.graph.dependencies[source].length === 0) {
+            delete this.graph.dependencies[source];
+          }
+        }
+      }
+    }
   }
 
   private calculateTargetDepsFromFiles(sourceProject: string) {

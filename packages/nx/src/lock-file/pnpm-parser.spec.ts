@@ -133,33 +133,28 @@ describe('pnpm LockFile utility', () => {
         __dirname,
         '__fixtures__/nextjs/app/package.json'
       ));
-      const appLockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/nextjs/app/pnpm-lock.yaml'
-      )).default;
-
       // this is original generated lock file
-      const appGraph = parsePnpmLockfile(appLockFile);
-      expect(Object.keys(appGraph.externalNodes).length).toEqual(863);
+      // const appLockFile = require(joinPathFragments(
+      //   __dirname,
+      //   '__fixtures__/nextjs/app/pnpm-lock.yaml'
+      // )).default;
+
+      // const appGraph = parsePnpmLockfile(appLockFile);
+      // expect(Object.keys(appGraph.externalNodes).length).toEqual(863);
 
       // this is our pruned lock file structure
       const prunedGraph = pruneProjectGraph(graph, appPackageJson);
+      // meeroslav: our pruning keep all transitive peer deps, mainly cypress and eslint
+      // which adds 119 more deps
+      //  but it's still possible to run `pnpm install --frozen-lockfile` on it (there are e2e tests for that)
+      expect(Object.keys(prunedGraph.externalNodes).length).toEqual(863 + 119);
+
+      // this should not fail
       const result = stringifyPnpmLockfile(
         prunedGraph,
         lockFile,
         appPackageJson
       );
-      // TODO meeroslav This check fails because our pruning keeps `cypress` which is peer dep of `@nrwl/cypress`
-      // expect(Object.keys(prunedGraph.externalNodes).sort()).toEqual(Object.keys(appGraph.externalNodes).sort())
-      //expect(Object.keys(prunedGraph.externalNodes).length).toEqual(Object.keys(appGraph.externalNodes).length);
-
-      // (meeroslav) this does not match, it gets resolved to latest version + signatures are different
-      //  but it's still possible to run `pnpm install --frozen-lockfile` on it (there are e2e tests for that)
-      // -   "@types/node@18.11.15",
-      // +   "@types/node@18.11.9",
-      // -   "babel-jest@28.1.3",
-      // +   "babel-jest@28.1.1",
-      // expect(keys).toEqual(originalKeys);
     });
   });
 

@@ -8,16 +8,15 @@ import {
   loadPnpmHoistedDepsDefinition,
   parseAndNormalizePnpmLockfile,
   stringifyToPnpmYaml,
-} from './utils/pnpm-utils';
+} from './utils/pnpm-normalizer';
 import { getRootVersion } from './utils/parsing-utils';
-import { NormalizedPackageJson } from './utils/pruning-utils';
+import { NormalizedPackageJson } from './utils/pruning';
 import { sortObjectByKeys } from '../utils/object-sort';
 import {
   ProjectGraph,
   ProjectGraphExternalNode,
 } from '../config/project-graph';
 import { ProjectGraphBuilder } from '../project-graph/project-graph-builder';
-import { matchExistingNode, switchNodeToNested } from './utils/parsing';
 
 export function parsePnpmLockfile(lockFileContent: string): ProjectGraph {
   const data = parseAndNormalizePnpmLockfile(lockFileContent);
@@ -37,15 +36,17 @@ function addNodes(
   builder: ProjectGraphBuilder,
   keyMap: Map<string, ProjectGraphExternalNode>
 ) {
-  const hoistedDeps = loadPnpmHoistedDepsDefinition();
-  const hoistedVersionCache = new Map<string, string>();
+  const nodesToadd: Map<
+    string,
+    Map<string, ProjectGraphExternalNode>
+  > = new Map();
 
   Object.entries(data.packages).forEach(([key, value]) => {
     const packageName = findPackageName(key, value, data);
     const version = parseVersionSpec(key, packageName).split('_')[0];
 
     // we don't need to keep duplicates, we can just track the keys
-    const existingNode = matchExistingNode(builder, packageName, version);
+    const existingNode = nodesToadd.get(packageName)?.get(version);
     if (existingNode) {
       keyMap.set(key, existingNode);
       return;
@@ -53,37 +54,42 @@ function addNodes(
 
     const node: ProjectGraphExternalNode = {
       type: 'npm',
-      name: `npm:${packageName}`,
+      name: `npm:${packageName}@${version}`,
       data: {
         version,
         packageName,
       },
     };
 
-    if (builder.graph.externalNodes[node.name]) {
-      // check for hoisting
-      if (
-        getHoistedVersion(packageName, hoistedDeps, hoistedVersionCache) ===
-        version
-      ) {
-        switchNodeToNested(builder.graph.externalNodes[node.name], builder);
-      } else {
-        node.name = `npm:${packageName}@${version}`;
-      }
+    if (!nodesToadd.has(packageName)) {
+      nodesToadd.set(packageName, new Map());
     }
-    builder.addExternalNode(node);
+
+    nodesToadd.get(packageName).set(version, node);
     keyMap.set(key, node);
   });
+
+  const hoistedDeps = loadPnpmHoistedDepsDefinition();
+  for (const [packageName, versionMap] of nodesToadd.entries()) {
+    let hoistedNode: ProjectGraphExternalNode;
+    if (versionMap.size === 1) {
+      hoistedNode = versionMap.values().next().value;
+    } else {
+      const hoistedVersion = getHoistedVersion(packageName, hoistedDeps);
+      hoistedNode = versionMap.get(hoistedVersion);
+    }
+    hoistedNode.name = `npm:${packageName}`;
+
+    versionMap.forEach((node) => {
+      builder.addExternalNode(node);
+    });
+  }
 }
 
 function getHoistedVersion(
   packageName: string,
-  hoistedDependencies: Record<string, any>,
-  cache: Map<string, string>
+  hoistedDependencies: Record<string, any>
 ): string {
-  if (cache.has(packageName)) {
-    return cache.get(packageName);
-  }
   let version = getRootVersion(packageName);
 
   if (!version) {
@@ -97,7 +103,6 @@ function getHoistedVersion(
     }
   }
 
-  cache.set(packageName, version);
   return version;
 }
 

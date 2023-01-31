@@ -4,6 +4,7 @@ import {
   ProjectGraphExternalNode,
 } from '../config/project-graph';
 import { PackageJson } from '../utils/package-json';
+import { reverse } from '../project-graph/operators';
 
 export function pruneProjectGraph(
   graph: ProjectGraph,
@@ -95,14 +96,7 @@ function rehoistNodes(
       switchNodeToHoisted(nestedNodes[0], builder);
     } else {
       // invert dependencies for easier traversal back
-      const invertedDependencies: Record<string, string[]> = {};
-      Object.values(builder.graph.dependencies).forEach((deps) => {
-        deps.forEach((dep) => {
-          invertedDependencies[dep.target] =
-            invertedDependencies[dep.target] || [];
-          invertedDependencies[dep.target].push(dep.source);
-        });
-      });
+      const invertedGraph = reverse(builder.graph);
       let minDistance = Infinity;
       let closest;
       nestedNodes.forEach((node) => {
@@ -110,7 +104,7 @@ function rehoistNodes(
           node,
           dependencies,
           builder,
-          invertedDependencies
+          invertedGraph
         );
         if (distance < minDistance) {
           minDistance = distance;
@@ -127,33 +121,32 @@ function switchNodeToHoisted(
   builder: ProjectGraphBuilder
 ) {
   const previousName = node.name;
-  delete builder.graph.externalNodes[previousName];
+  const targets = (builder.graph.dependencies[node.name] || []).map(
+    (d) => d.target
+  );
+  const sources: string[] = Object.keys(builder.graph.dependencies).filter(
+    (name) =>
+      builder.graph.dependencies[name].some((d) => d.target === previousName)
+  );
+
+  builder.removeNode(node.name);
 
   node.name = `npm:${node.data.packageName}`;
   builder.addExternalNode(node);
 
-  // remap all from dependencies
-  if (builder.graph.dependencies[previousName]) {
-    builder.graph.dependencies[previousName].forEach((dep) => {
-      builder.addExternalNodeDependency(node.name, dep.target);
-    });
-    delete builder.graph.dependencies[previousName];
+  for (const target of targets) {
+    builder.addExternalNodeDependency(node.name, target);
   }
-  // remap all to dependencies
-  Object.values(builder.graph.dependencies).forEach((deps) => {
-    deps.forEach((dep) => {
-      if (dep.target === previousName) {
-        dep.target = node.name;
-      }
-    });
-  });
+  sources.forEach((source) =>
+    builder.addExternalNodeDependency(source, node.name)
+  );
 }
 
 function pathLengthToIncoming(
   node: ProjectGraphExternalNode,
   dependencies: Record<string, string>,
   builder: ProjectGraphBuilder,
-  invertedDependencies: Record<string, string[]>
+  invertedGraph: ProjectGraph
 ): number {
   const visited = new Set<string>([node.name]);
   const queue: Array<[ProjectGraphExternalNode, number]> = [[node, 0]];
@@ -165,10 +158,10 @@ function pathLengthToIncoming(
       return distance;
     }
 
-    for (let parent of invertedDependencies[current.name] || []) {
-      if (!visited.has(parent)) {
-        visited.add(parent);
-        queue.push([builder.graph.externalNodes[parent], distance + 1]);
+    for (let { target } of invertedGraph.dependencies[current.name] || []) {
+      if (!visited.has(target)) {
+        visited.add(target);
+        queue.push([builder.graph.externalNodes[target], distance + 1]);
       }
     }
   }
