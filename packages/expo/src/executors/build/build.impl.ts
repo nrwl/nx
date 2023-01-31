@@ -39,7 +39,7 @@ function runCliBuild(
     childProcess = fork(
       join(workspaceRoot, './node_modules/eas-cli/bin/run'),
       ['build', ...createBuildOptions(options)],
-      { cwd: join(workspaceRoot, projectRoot) }
+      { cwd: join(workspaceRoot, projectRoot), env: process.env }
     );
 
     // Ensure the child process is killed when the parent exits

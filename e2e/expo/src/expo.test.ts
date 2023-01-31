@@ -3,11 +3,14 @@ import {
   cleanupProject,
   expectTestsPass,
   newProject,
+  readJson,
+  readResolvedConfiguration,
   runCLI,
   runCLIAsync,
   uniq,
   updateFile,
 } from '@nrwl/e2e/utils';
+import { join } from 'path';
 
 describe('expo', () => {
   let proj: string;
@@ -17,15 +20,15 @@ describe('expo', () => {
   );
   afterEach(() => cleanupProject());
 
-  it('should test, lint and export', async () => {
+  it('should test, lint, export and prebuild', async () => {
     const appName = uniq('my-app');
     const libName = uniq('lib');
     const componentName = uniq('component');
 
-    runCLI(`generate @nrwl/expo:application ${appName}`);
-    runCLI(`generate @nrwl/expo:library ${libName}`);
+    runCLI(`generate @nrwl/expo:application ${appName} --no-interactive`);
+    runCLI(`generate @nrwl/expo:library ${libName} --no-interactive`);
     runCLI(
-      `generate @nrwl/expo:component ${componentName} --project=${libName} --export`
+      `generate @nrwl/expo:component ${componentName} --project=${libName} --export --no-interactive`
     );
     expectTestsPass(await runCLIAsync(`test ${appName}`));
     expectTestsPass(await runCLIAsync(`test ${libName}`));
@@ -43,11 +46,33 @@ describe('expo', () => {
     const libLintResults = await runCLIAsync(`lint ${libName}`);
     expect(libLintResults.combinedOutput).toContain('All files pass linting.');
 
-    const exportResults = await runCLIAsync(`export ${appName}`);
+    const exportResults = await runCLIAsync(
+      `export ${appName} --no-interactive`
+    );
     expect(exportResults.combinedOutput).toContain(
       'Export was successful. Your exported files can be found'
     );
-  }, 1000000);
+
+    // set a mock package name for ios and android in expo's app.json
+    const workspace = readResolvedConfiguration();
+    const root = workspace.projects[appName].root;
+    const appJsonPath = join(root, `app.json`);
+    const appJson = await readJson(appJsonPath);
+    if (appJson.expo.ios) {
+      appJson.expo.ios.bundleIdentifier = 'nx.test';
+    }
+    if (appJson.expo.android) {
+      appJson.expo.android.package = 'nx.test';
+    }
+    updateFile(appJsonPath, JSON.stringify(appJson));
+
+    // run prebuild command with git check disable
+    process.env['EXPO_NO_GIT_STATUS'] = 'true';
+    const prebuildResult = await runCLIAsync(
+      `prebuild ${appName} --no-interactive`
+    );
+    expect(prebuildResult.combinedOutput).toContain('Config synced');
+  }, 1_000_000);
 
   it('should build publishable library', async () => {
     const libName = uniq('lib');

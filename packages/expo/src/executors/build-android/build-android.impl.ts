@@ -57,7 +57,7 @@ function runCliBuild(
     childProcess = fork(
       join(workspaceRoot, './node_modules/expo-cli/bin/expo.js'),
       ['build:android', ...createRunOptions(options)],
-      { cwd: join(workspaceRoot, projectRoot) }
+      { cwd: join(workspaceRoot, projectRoot), env: process.env }
     );
 
     // Ensure the child process is killed when the parent exits

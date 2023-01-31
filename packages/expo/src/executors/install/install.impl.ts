@@ -40,7 +40,7 @@ export function installAsync(
     childProcess = fork(
       join(workspaceRoot, './node_modules/@expo/cli/build/bin/cli'),
       ['install', ...createInstallOptions(options)],
-      { cwd: workspaceRoot }
+      { cwd: workspaceRoot, env: process.env }
     );
 
     // Ensure the child process is killed when the parent exits

@@ -51,7 +51,7 @@ function prebuildAsync(
     childProcess = fork(
       join(workspaceRoot, './node_modules/@expo/cli/build/bin/cli'),
       ['prebuild', ...createPrebuildOptions(options), '--no-install'],
-      { cwd: join(workspaceRoot, projectRoot) }
+      { cwd: join(workspaceRoot, projectRoot), env: process.env }
     );
 
     // Ensure the child process is killed when the parent exits
@@ -71,13 +71,13 @@ function prebuildAsync(
   });
 }
 
-const nxOptions = ['install'];
+const nxOptions = ['install', 'interactive'];
 // options from https://github.com/expo/expo/blob/main/packages/%40expo/cli/src/prebuild/index.ts
 function createPrebuildOptions(options: ExpoPrebuildOptions) {
   return Object.keys(options).reduce((acc, k) => {
     if (!nxOptions.includes(k)) {
       const v = options[k];
-      acc.push(`--${names(k).fileName}`, v);
+      acc.push(`--${names(k).fileName}=${v}`);
     }
     return acc;
   }, []);
