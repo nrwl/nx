@@ -1017,8 +1017,11 @@ function withWatchOptions(yargs: yargs.Argv) {
     }, true);
 }
 
-function parseCSV(args: string) {
+function parseCSV(args: string[] | string) {
   if (!args) {
+    return args;
+  }
+  if (Array.isArray(args)) {
     return args;
   }
   return args.split(',');
