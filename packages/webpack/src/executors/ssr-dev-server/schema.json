@@ -1,8 +1,8 @@
 {
   "version": 2,
   "outputCapture": "direct-nodejs",
-  "title": "Web SSR Dev Server",
-  "description": "Serve a SSR application.",
+  "title": "Webpack SSR Dev Server",
+  "description": "Serve a SSR application using webpack.",
   "cli": "nx",
   "type": "object",
   "properties": {
