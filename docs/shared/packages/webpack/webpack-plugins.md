@@ -12,7 +12,7 @@ functionality to the webpack build.
 This guide contains information on the plugins provided by Nx. For more information on customizing webpack configuration, refer to the
 [configuration guide](/packages/webpack/documents/webpack-config-setup).
 
-## `withNx`
+## withNx
 
 The `withNx` plugin provides common configuration for the build, including TypeScript support and linking workspace libraries (via tsconfig paths).
 
@@ -35,7 +35,7 @@ module.exports = composePlugins(withNx(), (config) => {
 });
 ```
 
-## `withWeb`
+## withWeb
 
 The `withWeb` plugin adds support for CSS/SASS/Less/Stylus stylesheets, assets (such as images and fonts), and `index.html` processing.
 
@@ -126,13 +126,13 @@ module.exports = composePlugins(
 );
 ```
 
-## `withReact`
+## withReact
 
 The `withReact` plugin adds support for React JSX, [SVGR](https://react-svgr.com/), and [Fast Refresh](https://github.com/pmmmwh/react-refresh-webpack-plugin)
 
 ### Options
 
-The options are the same as [`withWeb`](#with-web) plus the following.
+The options are the same as [`withWeb`](#withweb) plus the following.
 
 #### svgr
 
@@ -160,13 +160,152 @@ module.exports = composePlugins(
 );
 ```
 
-## `withModuleFederation`
+## withModuleFederation and withModuleFederationForSSR
+
+The `withModuleFederation` and `withModuleFederationForSSR` plugins add module federation support to the webpack build. These plugins use
+[`ModuleFederationPlugin`](https://webpack.js.org/concepts/module-federation/) and provide a simpler API through Nx.
+
+For more information, refer to the [Module Federation recipe](/recipes/module-federation/faster-builds).
+
+### Options
+
+Both `withModuleFederation` and `withModuleFederationForSSR` share the same options. The `withModuleFederation` plugin is for the browser, and the `withModuleFederationForSSR` plugin is used on the server-side (Node).
+
+#### name
+
+Type: `string`
+
+The name of the host/remote application.
+
+#### remotes
+
+Type: `Aray<string[] | [remoteName: string, remoteUrl: string]>`
+
+For _host_ to specify all _remote_ applications. If a string is used, Nx will match it with a matching remote in the workspace.
+
+Use `[<name>, <url>]` to specify the exact URL of the remote, rather than what's in the remote's `project.json` file.
+
+#### library
+
+Type: `{ type: string; name: string }`
+
+#### exposes
+
+Type: `Record<string, string>`
+
+Entry points that are exposed from a _remote_ application.
+
+e.g.
+
+```js
+exposes: {
+  './Module': '<app-root>/src/remote-entry.ts',
+},
+```
+
+#### shared
+
+Type: `Function`
+
+Takes a library name and the current [share configuration](https://webpack.js.org/plugins/module-federation-plugin/#sharing-hints), and returns one of
+
+- `false` - Exclude this library from shared.
+- `undefined` - Keep Nx sharing defaults.
+- `SharedLibraryConfig` - Override Nx sharing defaults with [custom configuration](https://webpack.js.org/plugins/module-federation-plugin/#sharing-hints).
+
+#### additionalShared
+
+Type: `Array<string |{ libraryName: string; sharedConfig: SharedLibraryConfig }>`
+
+Shared libraries in addition to the ones that Nx detects automatically. Items match [`ModuleFederationPlugin`'s sharing configuration](https://webpack.js.org/plugins/module-federation-plugin/#sharing-hints).
+
+{% tabs %}
+{% tab label="React Module Federation" %}
 
 ```js
 const { composePlugins, withNx } = require('@nrwl/webpack');
+const { withReact, withModuleFederation } = require('@nrwl/react');
 
-module.exports = composePlugins(withNx(), (config) => {
-  // Further customize webpack config
-  return config;
-});
+// Host config
+// e.g. { remotes: ['about', 'dashboard'] }
+const moduleFederationConfig = require('./module-federation.config');
+
+module.exports = composePlugins(
+  withNx(),
+  withReact(),
+  withModuleFederation(moduleFederationConfig),
+  (config) => {
+    // Further customize webpack config
+    return config;
+  }
+);
 ```
+
+{% /tab %}
+{% tab label="Angular Module Federation" %}
+
+```js
+const {
+  composePlugins,
+  withModuleFederation,
+} = require('@nrwl/angular/module-federation');
+
+// Host config
+// e.g. { remotes: ['about', 'dashboard'] }
+const moduleFederationConfig = require('./module-federation.config');
+
+module.exports = composePlugins(
+  withModuleFederation(moduleFederationConfig),
+  (config) => {
+    // Further customize webpack config
+    return config;
+  }
+);
+```
+
+{% /tab %}
+{% tab label="React Module Federation for SSR " %}
+
+```js
+const { composePlugins, withNx } = require('@nrwl/webpack');
+const { withReact, withModuleFederatioForSSRn } = require('@nrwl/react');
+
+// Host config
+// e.g. { remotes: ['about', 'dashboard'] }
+const moduleFederationConfig = require('./module-federation.config');
+
+module.exports = composePlugins(
+  withNx(),
+  withReact(),
+  withModuleFederationForSSR(moduleFederationConfig),
+  (config) => {
+    // Further customize webpack config
+    return config;
+  }
+);
+```
+
+{% /tab %}
+{% tab label="Angular Module Federation for SSR" %}
+
+```js
+const {
+  composePlugins,
+  withModuleFederationForSSR,
+} = require('@nrwl/angular/module-federation');
+
+// Host config
+// e.g. { remotes: ['about', 'dashboard'] }
+const moduleFederationConfig = require('./module-federation.config');
+
+module.exports = composePlugins(
+  withModuleFederationForSSR(moduleFederationConfig),
+  (config) => {
+    // Further customize webpack config
+    return config;
+  }
+);
+```
+
+{% /tab %}
+{% /tabs %}
