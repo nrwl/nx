@@ -89,12 +89,12 @@
         "type": "string",
         "description": "An email address to send a link to",
         "alias": "s",
-        "x-deprecated": true
+        "x-deprecated": "This option will be removed in v16. It is no longer supported by @expo/cli."
       },
       "webpack": {
         "type": "boolean",
         "description": "Start a Webpack dev server for the web app.",
-        "x-deprecated": true
+        "x-deprecated": "This option will be removed in v16. It is no longer supported by @expo/cli."
       }
     },
     "presets": []
