@@ -63,12 +63,18 @@
     "update-configs-jest-28": {
       "version": "14.6.0-beta.0",
       "cli": "nx",
+      "requires": {
+        "jest": "^28.0.0"
+      },
       "description": "Update jest configs to support jest 28 changes (https://jestjs.io/docs/upgrading-to-jest28#configuration-options)",
       "factory": "./src/migrations/update-14-6-0/update-configs-jest-28"
     },
     "update-tests-jest-28": {
       "version": "14.6.0-beta.0",
       "cli": "nx",
+      "requires": {
+        "jest": "^28.0.0"
+      },
       "description": "Update jest test files to support jest 28 changes (https://jestjs.io/docs/upgrading-to-jest28)",
       "factory": "./src/migrations/update-14-6-0/update-tests-jest-28"
     },
@@ -172,6 +178,10 @@
     },
     "14.6.0": {
       "version": "14.6.0-beta.0",
+      "x-prompt": "Do you want to update the Jest version to v28?",
+      "requires": {
+        "jest": "^27.0.0"
+      },
       "packages": {
         "jest": {
           "version": "~28.1.1",
@@ -205,11 +215,17 @@
           "version": "~28.1.1",
           "alwaysAddToPackageJson": false
         }
+      }
+    },
+    "15.0.1-beta.3": {
+      "version": "15.0.1-beta.3",
+      "requires": {
+        "jest": "^28.0.0"
       },
-      "15.0.1-beta.3": {
+      "packages": {
         "jest-environment-jsdom": {
           "version": "~28.1.1",
-          "alwaysAddToPackageJson": true
+          "addToPackageJson": "devDependencies"
         }
       }
     }

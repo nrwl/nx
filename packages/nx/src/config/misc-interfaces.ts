@@ -58,7 +58,8 @@ export type PackageJsonUpdates = {
     packages: {
       [packageName: string]: PackageJsonUpdateForPackage;
     };
-    confirmationPrompt?: string;
+    'x-prompt'?: string;
+    requires?: Record<string, string>;
   };
 };
 
@@ -68,6 +69,7 @@ export interface MigrationsJsonEntry {
   cli?: string;
   implementation?: string;
   factory?: string;
+  requires?: Record<string, string>;
 }
 
 export interface MigrationsJson {
