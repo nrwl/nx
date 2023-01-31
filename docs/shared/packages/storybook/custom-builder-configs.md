@@ -12,7 +12,7 @@ In your root `.storybook/main.js|ts` file, you can add the `webpackFinal` or `vi
 
 The `webpackFinal` field would look like this:
 
-```ts
+```ts {% fileName=".storybook/main.js" %}
 webpackFinal: async (config, { configType }) => {
   // Make whatever fine-grained changes you need that should apply to all storybook configs
 
@@ -25,7 +25,7 @@ webpackFinal: async (config, { configType }) => {
 
 The `viteFinal` field would look like this:
 
-```ts
+```ts {% fileName=".storybook/main.js" %}
 async viteFinal(config, { configType }) {
    if (configType === 'DEVELOPMENT') {
      // Your development configuration goes here
@@ -41,7 +41,7 @@ async viteFinal(config, { configType }) {
 
 In the `viteFinal` case, you would have to import the `mergeConfig` function from `vite`. So, on the top of your root `.storybook/main.js|ts` file, you would have to add:
 
-```ts
+```ts {% fileName=".storybook/main.js" %}
 const { mergeConfig } = require('vite');
 ```
 
@@ -51,9 +51,7 @@ const { mergeConfig } = require('vite');
 
 You can customize or extend the global `webpack` configuration for a specific project by adding a `webpackFinal` field in your project-specific `.storybok/main.js|ts` file, like this:
 
-```ts
-// apps/my-react-webpack-app/.storybook/main.js
-
+```ts {% fileName="apps/my-react-webpack-app/.storybook/main.js" %}
 const rootMain = require('../../../.storybook/main');
 
 module.exports = {
@@ -86,8 +84,7 @@ It's important to note here that for Vite.js to work on monorepos, and specifica
 
 So, a project-level `.storybook/main.js|ts` file for a Vite.js project would look like this:
 
-```ts
-// apps/my-react-vite-app/.storybook/main.js
+```ts {% fileName="apps/my-react-vite-app/.storybook/main.js" %}
 const { mergeConfig } = require('vite');
 const viteTsConfigPaths = require('vite-tsconfig-paths').default;
 const rootMain = require('../../../.storybook/main');
@@ -116,7 +113,7 @@ module.exports = {
 
 or just simplified (if you don't want to take into account any global Storybook Vite.js configuration):
 
-```ts
+```ts {% fileName="apps/my-react-vite-app/.storybook/main.js" %}
 const { mergeConfig } = require('vite');
 const viteTsConfigPaths = require('vite-tsconfig-paths').default;
 const rootMain = require('../../../.storybook/main');
