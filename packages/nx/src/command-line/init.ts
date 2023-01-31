@@ -5,11 +5,7 @@ import { addNxToNpmRepo } from '../nx-init/add-nx-to-npm-repo';
 import { directoryExists, readJsonFile } from '../utils/fileutils';
 import { PackageJson } from '../utils/package-json';
 import * as parser from 'yargs-parser';
-import {
-  writeMinimalNxJson,
-  writeNxBat,
-  writeNxSH,
-} from '../nx-init/add-nx-scripts';
+import { generateEncapsulatedNxSetup } from '../nx-init/encapsulated/add-nx-scripts';
 
 export async function initHandler() {
   const args = process.argv.slice(2).join(' ');
@@ -28,9 +24,7 @@ export async function initHandler() {
     console.log(
       'Setting Nx up in encapsulated mode. You can run nx commands like: `./nx build myapp`'
     );
-    writeNxBat();
-    writeNxSH();
-    writeMinimalNxJson(version);
+    generateEncapsulatedNxSetup(version);
     if (process.platform === 'win32') {
       execSync('./nx.bat', { stdio: 'inherit' });
     } else {

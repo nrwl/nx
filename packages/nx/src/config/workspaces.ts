@@ -586,7 +586,11 @@ export function globForProjectFiles(
 
   if (!ignorePluginInference) {
     projectGlobPatterns.push(
-      ...getGlobPatternsFromPlugins(nxJson, [root], root)
+      ...getGlobPatternsFromPlugins(
+        nxJson,
+        [root, join(root, '.nx', 'installation')],
+        root
+      )
     );
   }
 

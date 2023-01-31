@@ -1,4 +1,7 @@
+import { NxJsonConfiguration } from '@nrwl/devkit';
 import {
+  checkFilesDoNotExist,
+  checkFilesExist,
   cleanupProject,
   createNonNxProjectDirectory,
   getPackageManagerCommand,
@@ -9,7 +12,9 @@ import {
   runCLI,
   runCommand,
   updateFile,
+  updateJson,
 } from '@nrwl/e2e/utils';
+import { json } from 'stream/consumers';
 
 describe('nx init', () => {
   const pmc = getPackageManagerCommand({
@@ -116,11 +121,52 @@ describe('nx init', () => {
         `${pmc.runUninstalledPackage} nx@latest init --encapsulated`
       );
       expect(output).toContain('Setting Nx up in encapsulated mode');
+
+      updateJson<NxJsonConfiguration>('nx.json', (json) => ({
+        ...json,
+        tasksRunnerOptions: {
+          default: {
+            ...json.tasksRunnerOptions['default'],
+            options: {
+              ...json.tasksRunnerOptions['default'].options,
+              cacheableOperations: ['echo'],
+            },
+          },
+        },
+      }));
+
       if (process.platform === 'win32') {
         expect(runCommand('./nx.bat echo a')).toContain('Hello from A');
       } else {
         expect(runCommand('./nx echo a')).toContain('Hello from A');
       }
+
+      if (process.platform === 'win32') {
+        expect(runCommand('./nx.bat echo a')).toContain(
+          'Nx read the output from the cache instead of running the command for 1 out of 1 tasks'
+        );
+      } else {
+        expect(runCommand('./nx echo a')).toContain(
+          'Nx read the output from the cache instead of running the command for 1 out of 1 tasks'
+        );
+      }
+
+      expect(() =>
+        checkFilesDoNotExist(
+          'node_modules',
+          'package.json',
+          'package-lock.json',
+          'yarn-lock.json',
+          'pnpm-lock.yaml'
+        )
+      ).not.toThrow();
+      expect(() =>
+        checkFilesExist(
+          '.nx/installation/package.json',
+          '.nx/installation/package-lock.json',
+          '.nx/cache/terminalOutputs'
+        )
+      ).not.toThrow();
     });
   });
 });

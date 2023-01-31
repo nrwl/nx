@@ -85,7 +85,7 @@ function loadNxPlugin(moduleName: string, paths: string[], root: string) {
 
 export function loadNxPlugins(
   plugins?: string[],
-  paths = [workspaceRoot],
+  paths = [workspaceRoot, join(workspaceRoot, '.nx', 'installation')],
   root = workspaceRoot
 ): NxPlugin[] {
   const result: NxPlugin[] = [];

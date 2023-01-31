@@ -11,13 +11,14 @@ import {
   getGlobPatternsFromPlugins,
 } from '../../../config/workspaces';
 import { workspaceRoot } from '../../../utils/workspace-root';
+import { join } from 'path';
 
 export const getTouchedProjectsFromProjectGlobChanges: TouchedProjectLocator<
   WholeFileChange | JsonChange | DeletedFileChange
 > = (touchedFiles, projectGraphNodes, nxJson): string[] => {
   const pluginGlobPatterns = getGlobPatternsFromPlugins(
     nxJson,
-    [workspaceRoot],
+    [workspaceRoot, join(workspaceRoot, '.nx', 'installation')],
     workspaceRoot
   );
   const workspacesGlobPatterns =

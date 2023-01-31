@@ -157,7 +157,11 @@ export function defaultFileRead(filePath: string): string | null {
 }
 
 export function readPackageJson(): any {
-  return readJsonFile(`${workspaceRoot}/package.json`);
+  try {
+    return readJsonFile(`${workspaceRoot}/package.json`);
+  } catch {
+    return {}; // if package.json doesn't exist
+  }
 }
 // Original Exports
 export { FileData };
