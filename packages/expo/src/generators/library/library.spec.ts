@@ -215,9 +215,9 @@ describe('lib', () => {
         buildable: true,
       });
 
-      const workspaceJson = getProjects(appTree);
+      const projects = getProjects(appTree);
 
-      expect(workspaceJson.get('my-lib').targets.build).toBeDefined();
+      expect(projects.get('my-lib').targets.build).toBeDefined();
     });
   });
 
@@ -229,9 +229,9 @@ describe('lib', () => {
         importPath: '@proj/my-lib',
       });
 
-      const workspaceJson = getProjects(appTree);
+      const projects = getProjects(appTree);
 
-      expect(workspaceJson.get('my-lib').targets.build).toMatchObject({
+      expect(projects.get('my-lib').targets.build).toMatchObject({
         executor: '@nrwl/web:rollup',
         outputs: ['{options.outputPath}'],
         options: {

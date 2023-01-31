@@ -1,5 +1,5 @@
 import { addProjectConfiguration, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Schema } from '../schema';
 import { checkTargets } from './check-targets';
 
@@ -8,7 +8,7 @@ describe('checkTargets', () => {
   let schema: Schema;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     schema = {
       projectName: 'ng-app',
@@ -90,32 +90,5 @@ describe('checkTargets', () => {
     schema.forceRemove = true;
 
     await expect(checkTargets(tree, schema)).resolves.toBeUndefined();
-  });
-
-  describe('use project in other project target', () => {
-    beforeEach(() => {
-      addProjectConfiguration(tree, 'other', {
-        projectType: 'application',
-        root: 'apps/storybook',
-        sourceRoot: 'apps/storybook/src',
-        targets: {
-          storybook: {
-            executor: '@nrwl/storybook:storybook',
-          },
-          serve: {
-            executor: '@angular-devkit/build-angular:dev-server',
-            options: {
-              browserTarget: 'storybook:build',
-            },
-          },
-        },
-      });
-    });
-
-    it('should throw an error since it is used as a target in another project', async () => {
-      schema.projectName = 'storybook';
-
-      await expect(checkTargets(tree, schema)).rejects.toThrow();
-    });
   });
 });

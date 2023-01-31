@@ -26,6 +26,7 @@
     "presets": []
   },
   "description": "Run an NPM script using Nx.",
+  "x-deprecated": "Use nx:run-script instead. This will be removed in v16.",
   "aliases": [],
   "hidden": false,
   "path": "/packages/workspace/src/executors/run-script/schema.json",

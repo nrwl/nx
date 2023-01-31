@@ -150,7 +150,7 @@ Since Nx allows us to group apps and libs in directories, those directories can 
 /libs/shared/utils-testing  julie,hank
 ```
 
-If you want to know more about code ownership on Github, please check [the documentation on the `CODEOWNERS` file](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners).
+If you want to know more about code ownership on GitHub, please check [the documentation on the `CODEOWNERS` file](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners).
 
 ## Enforcing Best Practices
 

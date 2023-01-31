@@ -6,7 +6,8 @@ We provide a recommended version, and it is usually the latest minor version of 
 
 | Angular Version | **Nx Version _(recommended)_** | Nx Version _(range)_ |
 | --------------- | ------------------------------ | -------------------- |
-| ~15.0.0         | **latest**                     | 15.2.0 <= latest     |
+| ~15.1.0         | **latest**                     | 15.5.0 <= latest     |
+| ~15.0.0         | **15.4.8**                     | 15.2.0 <= 15.4.8     |
 | ~14.2.0         | **15.1.1**                     | 14.6.0 <= 15.1.1     |
 | ~14.1.0         | **14.5.10**                    | 14.5.0 <= 14.5.10    |
 | ~14.0.0         | **14.4.3**                     | 14.2.1 <= 14.4.3     |

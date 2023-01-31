@@ -23,9 +23,9 @@
       "root": "apps/main-app",
       "sourceRoot": "apps/main-app/src",
       "prefix": "katst",
-      "architect": {
+      "targets": {
         "build": {
-          "builder": "@angular-devkit/build-angular:browser",
+          "executor": "@angular-devkit/build-angular:browser",
           "outputs": ["{options.outputPath}"]
         }
       }

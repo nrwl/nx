@@ -4,13 +4,13 @@ import { splitArgsIntoNxArgsAndOverrides } from '../utils/command-line-utils';
 import { projectHasTarget } from '../utils/project-graph-utils';
 import { connectToNxCloudIfExplicitlyAsked } from './connect';
 import { performance } from 'perf_hooks';
-import * as minimatch from 'minimatch';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { readNxJson } from '../config/configuration';
 import { output } from '../utils/output';
 import { findMatchingProjects } from '../utils/find-matching-projects';
+import { workspaceConfigurationCheck } from 'nx/src/utils/workspace-configuration-check';
 
 export async function runMany(
   args: { [k: string]: any },
@@ -24,6 +24,7 @@ export async function runMany(
   }
 ) {
   performance.mark('command-execution-begins');
+  workspaceConfigurationCheck();
   const nxJson = readNxJson();
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
     args,

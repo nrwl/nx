@@ -612,6 +612,8 @@ Object {
 
 exports[`convert-tslint-to-eslint should work for Angular applications 2`] = `
 Object {
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "angular-app-1",
   "prefix": "angular-app",
   "projectType": "application",
   "root": "apps/angular-app-1",
@@ -984,6 +986,8 @@ Object {
 
 exports[`convert-tslint-to-eslint should work for Angular libraries 2`] = `
 Object {
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "angular-lib-1",
   "prefix": "angular-app",
   "projectType": "library",
   "root": "libs/angular-lib-1",

@@ -13,6 +13,7 @@ import { StatsJsonPlugin } from '../plugins/stats-json-plugin';
 import { createCopyPlugin } from './create-copy-plugin';
 import { GeneratePackageJsonPlugin } from '../plugins/generate-package-json-plugin';
 import { getOutputHashFormat } from './hash-format';
+import { NxWebpackPlugin } from './config';
 
 const IGNORED_WEBPACK_WARNINGS = [
   /The comment file/i,
@@ -24,7 +25,15 @@ const mainFields = ['main', 'module'];
 
 const processed = new Set();
 
-export function withNx(opts?: { skipTypeChecking?: boolean }) {
+export interface WithNxOptions {
+  skipTypeChecking?: boolean;
+}
+
+/**
+ * @param {WithNxOptions} pluginOptions
+ * @returns {NxWebpackPlugin}
+ */
+export function withNx(pluginOptions?: WithNxOptions): NxWebpackPlugin {
   return function configure(
     config: Configuration,
     {
@@ -39,7 +48,7 @@ export function withNx(opts?: { skipTypeChecking?: boolean }) {
 
     const plugins: WebpackPluginInstance[] = [];
 
-    if (!opts?.skipTypeChecking) {
+    if (!pluginOptions?.skipTypeChecking) {
       plugins.push(
         new ForkTsCheckerWebpackPlugin({
           typescript: {
@@ -125,6 +134,9 @@ export function withNx(opts?: { skipTypeChecking?: boolean }) {
 
     const updated = {
       ...config,
+      context: context
+        ? path.join(context.root, options.projectRoot)
+        : undefined,
       target: options.target,
       node: false as const,
       // When mode is development or production, webpack will automatically
@@ -164,7 +176,7 @@ export function withNx(opts?: { skipTypeChecking?: boolean }) {
       profile: options.statsJson,
       resolve: {
         ...config.resolve,
-        extensions,
+        extensions: [...extensions, ...(config?.resolve?.extensions ?? [])],
         alias: options.fileReplacements.reduce(
           (aliases, replacement) => ({
             ...aliases,
@@ -173,9 +185,10 @@ export function withNx(opts?: { skipTypeChecking?: boolean }) {
           {}
         ),
         plugins: [
+          ...(config.resolve?.plugins ?? []),
           new TsconfigPathsPlugin({
             configFile: options.tsConfig,
-            extensions,
+            extensions: [...extensions, ...(config?.resolve?.extensions ?? [])],
             mainFields,
           }),
         ],
@@ -185,7 +198,10 @@ export function withNx(opts?: { skipTypeChecking?: boolean }) {
       optimization: {
         ...config.optimization,
         sideEffects: true,
-        minimize: !!options.optimization,
+        minimize:
+          typeof options.optimization === 'object'
+            ? !!options.optimization.scripts
+            : !!options.optimization,
         minimizer: [
           options.compiler !== 'swc'
             ? new TerserPlugin({
@@ -228,6 +244,7 @@ export function withNx(opts?: { skipTypeChecking?: boolean }) {
         // Enabled for performance
         unsafeCache: true,
         rules: [
+          ...(config?.module?.rules ?? []),
           options.sourceMap && {
             test: /\.js$/,
             enforce: 'pre' as const,

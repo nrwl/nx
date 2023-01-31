@@ -284,12 +284,14 @@
             "type": "string"
           }
         },
+        "x-priority": "important",
         "additionalProperties": false
       },
       "buildLibsFromSource": {
         "type": "boolean",
         "description": "Read buildable libraries from source instead of building them separately.",
-        "default": true
+        "default": true,
+        "x-priority": "important"
       }
     },
     "additionalProperties": false,

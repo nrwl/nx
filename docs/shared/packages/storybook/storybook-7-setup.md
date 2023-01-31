@@ -72,7 +72,7 @@ In the field `storybook7UiFramework` you must choose one of the following Storyb
 
 In Storybook 7, [the `framework` field in `.storybook/main.js|ts` is mandatory](https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#framework-field-mandatory). You must choose one of the above frameworks when setting up your application.
 
-If you are using one of the framework-specific generators (e.g. [`@nrwl/angular:storybook-configuration`](/packages/angular/generators/storybook-configuration), or [`@nrwl/react:storybook-configuration`](/packages/react/generators/storybook-configuration) for React and Nextjs projects, or [`@nrwl/react-native:storybook-configuration`](<(/packages/react-native/generators/storybook-configuration)>)), the generator will automatically choose the correct framework for you.
+If you are using one of the framework-specific generators (e.g. [`@nrwl/angular:storybook-configuration`](/packages/angular/generators/storybook-configuration), or [`@nrwl/react:storybook-configuration`](/packages/react/generators/storybook-configuration) for React and Nextjs projects, or [`@nrwl/react-native:storybook-configuration`](/packages/react-native/generators/storybook-configuration), the generator will automatically choose the correct framework for you.
 
 Choosing one of these frameworks will have the following effects on your workspace:
 

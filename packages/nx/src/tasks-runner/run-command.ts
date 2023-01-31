@@ -161,6 +161,9 @@ export async function runCommand(
       }
 
       const tasks = Object.values(taskGraph.tasks);
+      if (process.env.NX_BATCH_MODE === 'true') {
+        nxArgs.outputStyle = 'stream';
+      }
       if (nxArgs.outputStyle == 'stream') {
         process.env.NX_STREAM_OUTPUT = 'true';
         process.env.NX_PREFIX_OUTPUT = 'true';

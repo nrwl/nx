@@ -4,7 +4,7 @@
   "sourceRoot": "e2e/react-native",
   "projectType": "application",
   "targets": {
-    "e2e": {},
+    "e2e-macos": {},
     "run-e2e-tests": {}
   },
   "implicitDependencies": ["react-native"]

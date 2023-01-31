@@ -1,6 +1,5 @@
-import type { Tree } from '@nrwl/devkit';
+import { joinPathFragments, Tree } from '@nrwl/devkit';
 import { updateProjectConfiguration } from '@nrwl/devkit';
-import { convertToNxProjectGenerator } from '@nrwl/workspace/generators';
 import type { GeneratorOptions } from '../../schema';
 import type {
   Logger,
@@ -8,6 +7,7 @@ import type {
   ValidationError,
   ValidationResult,
 } from '../../utilities';
+import { convertToNxProject } from '../../utilities';
 import type { BuilderMigratorClassType } from '../builders';
 import {
   AngularDevkitKarmaMigrator,
@@ -70,6 +70,12 @@ export class LibMigrator extends ProjectMigrator {
   }
 
   private async updateProjectConfiguration(): Promise<void> {
+    convertToNxProject(this.tree, this.project.name);
+    this.moveFile(
+      joinPathFragments(this.project.oldRoot, 'project.json'),
+      joinPathFragments(this.project.newRoot, 'project.json')
+    );
+
     this.projectConfig.root = this.project.newRoot;
     this.projectConfig.sourceRoot = this.project.newSourceRoot;
 
@@ -84,11 +90,6 @@ export class LibMigrator extends ProjectMigrator {
 
     updateProjectConfiguration(this.tree, this.project.name, {
       ...this.projectConfig,
-    });
-
-    await convertToNxProjectGenerator(this.tree, {
-      project: this.project.name,
-      skipFormat: true,
     });
   }
 }

@@ -4,7 +4,7 @@ import {
   updateProjectConfiguration,
 } from '@nrwl/devkit';
 import storiesGenerator from './stories';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import applicationGenerator from '../application/application';
 import { Linter } from '@nrwl/linter';
 
@@ -57,7 +57,7 @@ describe('nextjs:stories for applications', () => {
 });
 
 export async function createTestUIApp(name: string): Promise<Tree> {
-  const tree = createTreeWithEmptyV1Workspace();
+  const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   await applicationGenerator(tree, {
     e2eTestRunner: 'none',
     linter: Linter.EsLint,
@@ -65,7 +65,6 @@ export async function createTestUIApp(name: string): Promise<Tree> {
     style: 'css',
     unitTestRunner: 'none',
     name,
-    standaloneConfig: false,
     bundler: 'vite',
   });
 

@@ -14,5 +14,4 @@ export const koaTypingsVersion = '2.13.5';
 
 export const fastifyVersion = '4.11.0';
 
-export const connectVersion = '3.7.0';
-export const connectTypingsVersion = '3.4.35';
+export const axiosVersion = '^1.0.0';

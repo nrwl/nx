@@ -78,6 +78,11 @@
       "force": {
         "description": "Force the optimizer to ignore the cache and re-bundle",
         "type": "boolean"
+      },
+      "watch": {
+        "description": "Enable re-building when files change.",
+        "type": "object",
+        "default": null
       }
     },
     "definitions": {},

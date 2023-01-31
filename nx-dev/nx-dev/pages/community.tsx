@@ -66,12 +66,12 @@ export default function Community(props: CommunityProps): JSX.Element {
     <>
       <NextSeo
         title="Nx Community and Plugin Listing"
-        description="There are many ways you can connect with the open-source Nx community. The community is rich and dynamic offering Nx plugins and help on multiple platforms like Github, Slack and Twitter"
+        description="There are many ways you can connect with the open-source Nx community. The community is rich and dynamic offering Nx plugins and help on multiple platforms like GitHub, Slack and Twitter"
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
           title: 'Nx Community and Plugin Listing',
           description:
-            'There are many ways you can connect with the open-source Nx community. The community is rich and dynamic offering Nx plugins and help on multiple platforms like Github, Slack and Twitter',
+            'There are many ways you can connect with the open-source Nx community. The community is rich and dynamic offering Nx plugins and help on multiple platforms like GitHub, Slack and Twitter',
           images: [
             {
               url: 'https://nx.dev/images/nx-media.jpg',
@@ -130,8 +130,8 @@ export default function Community(props: CommunityProps): JSX.Element {
                     <span className="absolute inset-0" aria-hidden="true" />
                     <p className="leading-relaxed">
                       Official Nx plugins are created and maintained by the Nx
-                      team at Nrwl but you can easily create your own! Follow
-                      our documentation on how to create your own plugin.
+                      team but you can easily create your own! Follow our
+                      documentation on how to create your own plugin.
                     </p>
                   </a>
                 </div>

@@ -1,7 +1,5 @@
 // source: https://github.com/Myrmod/vitejs-theming/blob/master/build-plugins/rollup/replace-files.js
 
-import { resolve } from 'path';
-
 /**
  * @function replaceFiles
  * @param {FileReplacement[]} replacements

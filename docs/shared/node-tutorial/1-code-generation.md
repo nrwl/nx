@@ -33,35 +33,52 @@ Run the command `npx create-nx-workspace@latest` and when prompted, provide the 
 
 ```{% command="npx create-nx-workspace@latest" path="~" %}
 ✔ Choose your style                     · integrated
-✔ What to create in the new workspace   · express
+✔ What to create in the new workspace   · ts
 ✔ Repository name                       · my-products
-✔ Application name                      · products-api
 ✔ Enable distributed caching to make your CI faster · Yes
 ```
 
 {% card title="Opting into Nx Cloud" description="You will also be prompted whether to add Nx Cloud to your workspace. We won't address this in this tutorial, but you can see the introduction to Nx Cloud for more details." url="/nx-cloud/intro/what-is-nx-cloud" /%}
 
-Once the command complete, you can find your Express API application in `apps/products-api`.
+## Install the Node Plugin
 
-## Adding Another Application to Your Workspace
+Open the folder that was created and install the `@nrwl/node` plugin.
+
+```shell
+cd my-products
+npm i -D @nrwl/node
+```
+
+## Add Two Application to Your Workspace
+
+```{% command="nx g @nrwl/node:app products-api" path="~/my-products" %}
+>  NX  Generating @nrwl/node:application
+
+CREATE packages/products-api/src/app/.gitkeep
+CREATE packages/products-api/src/assets/.gitkeep
+CREATE packages/products-api/src/main.ts
+CREATE packages/products-api/tsconfig.app.json
+CREATE packages/products-api/tsconfig.json
+CREATE packages/products-api/project.json
+CREATE packages/products-api/.eslintrc.json
+CREATE packages/products-api/jest.config.ts
+CREATE packages/products-api/tsconfig.spec.json
+```
 
 Run this command to create your `products-cli` app:
 
 ```{% command="npx nx g @nrwl/node:app products-cli" path="~/my-products" %}
-
 >  NX  Generating @nrwl/node:application
 
-CREATE apps/products-cli/src/app/.gitkeep
-CREATE apps/products-cli/src/assets/.gitkeep
-CREATE apps/products-cli/src/environments/environment.prod.ts
-CREATE apps/products-cli/src/environments/environment.ts
-CREATE apps/products-cli/src/main.ts
-CREATE apps/products-cli/tsconfig.app.json
-CREATE apps/products-cli/tsconfig.json
-CREATE apps/products-cli/project.json
-CREATE apps/products-cli/.eslintrc.json
-CREATE apps/products-cli/jest.config.ts
-CREATE apps/products-cli/tsconfig.spec.json
+CREATE packages/products-cli/src/app/.gitkeep
+CREATE packages/products-cli/src/assets/.gitkeep
+CREATE packages/products-cli/src/main.ts
+CREATE packages/products-cli/tsconfig.app.json
+CREATE packages/products-cli/tsconfig.json
+CREATE packages/products-cli/project.json
+CREATE packages/products-cli/.eslintrc.json
+CREATE packages/products-cli/jest.config.ts
+CREATE packages/products-cli/tsconfig.spec.json
 ```
 
 ![Nx Generator Syntax](/shared/node-tutorial/generator-syntax.svg)

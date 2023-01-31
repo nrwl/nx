@@ -35,7 +35,8 @@
         "description": "Specify Detox config file path. If not supplied, detox searches for `.detoxrc[.js]` or `detox` section in package.json.",
         "alias": "cp",
         "x-completion-type": "file",
-        "x-completion-glob": ".detoxrc?(.js)"
+        "x-completion-glob": ".detoxrc?(.js)",
+        "x-priority": "important"
       },
       "runnerConfig": {
         "type": "string",

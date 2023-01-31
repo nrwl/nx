@@ -244,7 +244,7 @@ export function hasBannedImport(
       tags = [c.sourceTag];
     }
 
-    return tags.every((t) => (source.data.tags || []).includes(t));
+    return tags.every((t) => hasTag(source, t));
   });
   return depConstraints.find((constraint) =>
     isConstraintBanningProject(target, constraint)

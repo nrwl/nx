@@ -1,5 +1,5 @@
 import { Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
 import { formatFile } from '../../utils/format-file';
 import applicationGenerator from '../application/application';
@@ -153,7 +153,6 @@ describe('react:component-cypress-spec', () => {
       skipFormat: true,
       style: 'css',
       unitTestRunner: 'none',
-      standaloneConfig: false,
     });
     // since other-e2e isn't a real cypress project we mock the v10 cypress config
     appTree.write('apps/other-e2e/cypress.config.ts', `export default {}`);
@@ -179,7 +178,6 @@ describe('react:component-cypress-spec', () => {
       skipFormat: true,
       style: 'css',
       unitTestRunner: 'none',
-      standaloneConfig: false,
     });
     appTree.delete(`apps/other-e2e/cypress.config.ts`);
     appTree.write(`apps/other-e2e/cypress.json`, '{}');
@@ -205,7 +203,7 @@ export async function createTestUILib(
   libName: string,
   plainJS = false
 ): Promise<Tree> {
-  let appTree = createTreeWithEmptyV1Workspace();
+  let appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   await libraryGenerator(appTree, {
     name: libName,
     linter: Linter.EsLint,
@@ -215,7 +213,6 @@ export async function createTestUILib(
     skipTsConfig: false,
     style: 'css',
     unitTestRunner: 'jest',
-    standaloneConfig: false,
   });
 
   // create some Nx app that we'll use to generate the cypress
@@ -228,7 +225,6 @@ export async function createTestUILib(
     skipFormat: true,
     style: 'css',
     unitTestRunner: 'none',
-    standaloneConfig: false,
   });
 
   return appTree;

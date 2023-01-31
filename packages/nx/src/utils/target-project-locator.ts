@@ -40,6 +40,7 @@ export class TargetProjectLocator {
       return this.findProjectOfResolvedModule(resolvedModule);
     }
 
+    // find project using tsconfig paths
     const paths = this.findPaths(normalizedImportExpr);
     if (paths) {
       for (let p of paths) {
@@ -68,6 +69,15 @@ export class TargetProjectLocator {
         return resolvedProject;
       }
     }
+
+    try {
+      const resolvedModule = this.resolveImportWithRequire(
+        normalizedImportExpr,
+        filePath
+      );
+
+      return this.findProjectOfResolvedModule(resolvedModule);
+    } catch {}
 
     // nothing found, cache for later
     this.npmResolutionCache.set(normalizedImportExpr, undefined);
@@ -127,6 +137,17 @@ export class TargetProjectLocator {
     return;
   }
 
+  private resolveImportWithRequire(
+    normalizedImportExpr: string,
+    filePath: string
+  ) {
+    return posix.relative(
+      workspaceRoot,
+      require.resolve(normalizedImportExpr, {
+        paths: [dirname(filePath)],
+      })
+    );
+  }
   private findNpmPackage(npmImport: string): string | undefined {
     if (this.npmResolutionCache.has(npmImport)) {
       return this.npmResolutionCache.get(npmImport);

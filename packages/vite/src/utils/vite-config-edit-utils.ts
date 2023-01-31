@@ -4,7 +4,7 @@ import ts = require('typescript');
 import { tsquery } from '@phenomnomnominal/tsquery';
 import { TargetFlags } from './generator-utils';
 
-export function ensureBuildOptionsInViteConfig(
+export function ensureViteConfigIsCorrect(
   tree: Tree,
   path: string,
   buildConfigString: string,
@@ -14,6 +14,7 @@ export function ensureBuildOptionsInViteConfig(
   pluginOption: string,
   testConfigString: string,
   testConfigObject: {},
+  cacheDir: string,
   projectAlreadyHasViteTargets?: TargetFlags
 ): boolean {
   const fileContent = tree.read(path, 'utf-8');
@@ -45,6 +46,12 @@ export function ensureBuildOptionsInViteConfig(
     );
   }
 
+  if (cacheDir?.length) {
+    updatedContent = handleCacheDirNode(
+      updatedContent ?? fileContent,
+      cacheDir
+    );
+  }
   if (updatedContent) {
     tree.write(path, updatedContent);
     return true;
@@ -97,7 +104,7 @@ function handleBuildOrTestNode(
           );
         } else {
           // no test config in conditional config
-          return undefined;
+          return updatedFileContent;
         }
       } else {
         const propertyAssignments = tsquery.query(
@@ -144,7 +151,7 @@ function handleBuildOrTestNode(
           },
         ]);
       } catch {
-        return undefined;
+        return updatedFileContent;
       }
     }
   }
@@ -229,11 +236,13 @@ function transformConditionalConfig(
     if (serveExists && elseKeywordExists) {
       // build options live inside the else block
 
-      return transformCurrentBuildObject(
-        returnStatements?.length - 1,
-        returnStatements,
-        appFileContent,
-        buildConfigObject
+      return (
+        transformCurrentBuildObject(
+          returnStatements?.length - 1,
+          returnStatements,
+          appFileContent,
+          buildConfigObject
+        ) ?? appFileContent
       );
     } else {
       // no build options exist yet
@@ -256,11 +265,13 @@ function transformConditionalConfig(
     // it will be the return statement which lives
     // at the buildExistsExpressionIndex
 
-    return transformCurrentBuildObject(
-      buildExistsExpressionIndex,
-      returnStatements,
-      appFileContent,
-      buildConfigObject
+    return (
+      transformCurrentBuildObject(
+        buildExistsExpressionIndex,
+        returnStatements,
+        appFileContent,
+        buildConfigObject
+      ) ?? appFileContent
     );
   }
 }
@@ -367,5 +378,78 @@ function handlePluginNode(
     }
     return appFileContent;
   }
-  return undefined;
+  return appFileContent;
+}
+
+function handleCacheDirNode(appFileContent: string, cacheDir: string): string {
+  const file = tsquery.ast(appFileContent);
+  const cacheDirNode = tsquery.query(
+    file,
+    'PropertyAssignment:has(Identifier[name="cacheDir"])'
+  );
+
+  if (!cacheDirNode?.length || cacheDirNode?.length === 0) {
+    // cacheDir node does not exist yet
+    // So make one from scratch
+
+    const foundDefineConfig = tsquery.query(
+      file,
+      'CallExpression:has(Identifier[name="defineConfig"])'
+    );
+
+    if (foundDefineConfig.length) {
+      const conditionalConfig = tsquery.query(
+        foundDefineConfig[0],
+        'ArrowFunction'
+      );
+
+      if (conditionalConfig.length) {
+        // We are NOT transforming the conditional config
+        // with cacheDir
+      } else {
+        const propertyAssignments = tsquery.query(
+          foundDefineConfig[0],
+          'PropertyAssignment'
+        );
+
+        if (propertyAssignments.length) {
+          appFileContent = applyChangesToString(appFileContent, [
+            {
+              type: ChangeType.Insert,
+              index: propertyAssignments[0].getStart(),
+              text: cacheDir,
+            },
+          ]);
+        } else {
+          appFileContent = applyChangesToString(appFileContent, [
+            {
+              type: ChangeType.Insert,
+              index: foundDefineConfig[0].getStart() + 14,
+              text: cacheDir,
+            },
+          ]);
+        }
+      }
+    } else {
+      // cacheDir option does not exist and defineConfig is not used
+      // could also potentially be invalid syntax, so try-catch
+      try {
+        const defaultExport = tsquery.query(file, 'ExportAssignment');
+        const found = tsquery?.query(
+          defaultExport?.[0],
+          'ObjectLiteralExpression'
+        );
+        const startOfObject = found?.[0].getStart();
+        appFileContent = applyChangesToString(appFileContent, [
+          {
+            type: ChangeType.Insert,
+            index: startOfObject + 1,
+            text: cacheDir,
+          },
+        ]);
+      } catch {}
+    }
+  }
+
+  return appFileContent;
 }

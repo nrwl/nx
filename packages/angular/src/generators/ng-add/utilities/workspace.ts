@@ -7,7 +7,6 @@ import {
   readNxJson,
   updateJson,
   updateNxJson,
-  updateProjectConfiguration,
   writeJson,
 } from '@nrwl/devkit';
 import { Linter, lintInitGenerator } from '@nrwl/linter';
@@ -16,6 +15,7 @@ import { deduceDefaultBase } from '@nrwl/workspace/src/utilities/default-base';
 import { resolveUserExistingPrettierConfig } from '@nrwl/workspace/src/utilities/prettier';
 import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
 import { prettierVersion } from '@nrwl/workspace/src/utils/versions';
+import { toNewFormat } from 'nx/src/adapter/angular-json';
 import { angularDevkitVersion, nxVersion } from '../../../utils/versions';
 import type { ProjectMigrator } from '../migrators';
 import type { GeneratorOptions } from '../schema';
@@ -363,12 +363,10 @@ export async function updatePrettierConfig(tree: Tree): Promise<void> {
 }
 
 export function deleteAngularJson(tree: Tree): void {
-  const projects = getProjects(tree);
-  for (const [project, config] of projects) {
-    config.name = project;
-    updateProjectConfiguration(tree, project, config);
+  const projects = toNewFormat(readJson(tree, 'angular.json')).projects;
+  if (!Object.keys(projects).length) {
+    tree.delete('angular.json');
   }
-  tree.delete('angular.json');
 }
 
 export function deleteGitKeepFilesIfNotNeeded(tree: Tree): void {

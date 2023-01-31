@@ -82,8 +82,7 @@ If you are using React, you need to use the [`@vitejs/plugin-react` plugin](http
 
 Add a `vite.config.ts` file to the root of your project. If you are not using React, you can skip adding the `react` plugin, of course.
 
-```ts
-// e.g. apps/my-app/vite.config.ts
+```ts {% fileName="apps/my-app/vite.config.ts" %}
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import ViteTsConfigPathsPlugin from 'vite-tsconfig-paths';
@@ -100,7 +99,7 @@ export default defineConfig({
 
 If you are converting a library (rather than an application) to use vite, your `vite.config.ts` file should look like this:
 
-```ts
+```ts {% fileName="libs/my-lib/vite.config.ts" %}
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import viteTsConfigPaths from 'vite-tsconfig-paths';
@@ -154,7 +153,7 @@ First of all, move your `index.html` file to the root of your app (e.g. from `ap
 
 Then, add a module `script` tag pointing to the `main.tsx` (or `main.ts`) file of your app:
 
-```html
+```html {% fileName="apps/my-app/index.html" %}
 ...
   <body>
     <div id="root"></div>
@@ -195,7 +194,7 @@ Change your app's `tsconfig.json` (e.g. `apps/my-app/tsconfig.json`) `compilerOp
 
 ### For React apps
 
-```json
+```json {% fileName="apps/my-app/tsconfig.json" %}
 ...
   "compilerOptions": {
     "jsx": "react-jsx",
@@ -220,7 +219,7 @@ Change your app's `tsconfig.json` (e.g. `apps/my-app/tsconfig.json`) `compilerOp
 
 ### For Web apps
 
-```json
+```json {% fileName="apps/my-app/tsconfig.json" %}
 ...
   "compilerOptions": {
     "target": "ESNext",

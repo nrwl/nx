@@ -57,7 +57,6 @@ function updateAppAndE2EProjectConfigurations(
   host: Tree,
   options: NormalizedSchema
 ) {
-  // workspace.json
   let project = readProjectConfiguration(host, options.name);
 
   if (options.ngCliSchematicAppRoot !== options.appProjectRoot) {
@@ -116,12 +115,7 @@ function updateAppAndE2EProjectConfigurations(
    * it back to workaround that.
    */
   removeProjectConfiguration(host, options.name);
-  addProjectConfiguration(
-    host,
-    options.name,
-    project,
-    options.standaloneConfig
-  );
+  addProjectConfiguration(host, options.name, project);
 
   if (options.unitTestRunner === UnitTestRunner.None) {
     host.delete(`${options.appProjectRoot}/src/app/app.component.spec.ts`);
@@ -134,4 +128,8 @@ function updateAppAndE2EProjectConfigurations(
       removeProjectConfiguration(host, options.e2eProjectName);
     }
   }
+
+  // delete some default test configs
+  host.delete(`${options.appProjectRoot}/karma.conf.js`);
+  host.delete(`${options.appProjectRoot}/src/test.ts`);
 }

@@ -148,6 +148,11 @@ jobs:
       NX_VERBOSE_LOGGING: 'false'
     steps:
       - run:
+          name: Configure git metadata (needed for lerna smoke tests)
+          command: |
+            git config --global user.email test@test.com
+            git config --global user.name "Test Test"
+      - run:
           name: Set dynamic nx run variable
           command: |
             echo "export NX_RUN_GROUP=\"run-group-<< parameters.os >>-$CIRCLE_WORKFLOW_ID\";" >> $BASH_ENV
@@ -178,21 +183,27 @@ jobs:
           main-branch-name: 'master'
       - run: npx nx-cloud start-ci-run --stop-agents-after="e2e"
       - run:
+          name: Check Documentation
+          command: npx nx documentation --no-dte
+          no_output_timeout: 20m
+      - run:
           name: Run Checks/Lint/Test/Build
           no_output_timeout: 60m
           command: |
             pids=()
+
             npx nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD &
             pids+=($!)
 
-            npx nx run-many -t check-imports check-commit check-lock-files root-lint depcheck documentation --parallel=1 --no-dte &
+            npx nx run-many -t root-lint check-imports check-commit check-lock-files depcheck --parallel=1 --no-dte &
             pids+=($!)
 
-            yarn nx affected -t test lint --base=$NX_BASE --head=$NX_HEAD --parallel=1 &
+            yarn nx affected --target=lint --base=$NX_BASE --head=$NX_HEAD --parallel=3 &
             pids+=($!)
-
+            yarn nx affected --target=test --base=$NX_BASE --head=$NX_HEAD --parallel=1 &
+            pids+=($!)
             (yarn nx affected --target=build --base=$NX_BASE --head=$NX_HEAD --parallel=3 &&
-            npx nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --exclude=e2e-storybook,e2e-storybook-angular,e2e-react-native,e2e-detox --parallel=1) &
+            npx nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --exclude=e2e-storybook,e2e-storybook-angular --parallel=1) &
             pids+=($!)
 
             for pid in "${pids[@]}"; do
@@ -213,27 +224,11 @@ jobs:
             echo "export NX_RUN_GROUP=\"run-group-macos-$CIRCLE_WORKFLOW_ID\";" >> $BASH_ENV
       - setup:
           os: macos
-      - nx/set-shas:
-          main-branch-name: 'master'
       - run:
-          name: Check if "detox" or "react-native" were modified directly
+          name: Run E2E Tests for macOS
+          # FIXME: remove --exclude=e2e-detox once we have a fix for the detox tests
           command: |
-            COUNT=`git diff --name-only $NX_BASE $NX_HEAD | (grep -E 'packages/detox|packages/react-native|e2e/detox|e2e/react-native' || true) | wc -l`
-            if [[ $COUNT -gt 0 ]]; then
-              echo "React Native and Detox were touched directly"
-              echo "export E2E_AFFECTED=true;" >> $BASH_ENV
-            else
-              echo "React Native and Detox were not touched directly"
-              echo "export E2E_AFFECTED=false;" >> $BASH_ENV
-            fi
-      - run:
-          name: Run E2E Tests
-          command: |
-            if $E2E_AFFECTED; then
-              npx nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --exclude=e2e-make-angular-cli-faster,e2e-detox,e2e-js,e2e-next,e2e-workspace-create,e2e-nx-run,e2e-nx-misc,e2e-react,e2e-web,e2e-webpack,e2e-rollup,e2e-esbuild,e2e-angular-extensions,e2e-angular-core,e2e-nx-plugin,e2e-cypress,e2e-node,e2e-linter,e2e-jest,e2e-add-nx-to-monorepo,nx-dev-e2e,e2e-nx-init,e2e-graph-client,e2e-vite,e2e-cra-to-nx,e2e-storybook,e2e-storybook-angular --parallel=1;
-            else
-              echo "Skipping E2E tests";
-            fi
+            npx nx run-many -t e2e-macos --parallel=1 --exclude=e2e-detox
           no_output_timeout: 45m
 
 # -------------------------

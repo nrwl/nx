@@ -14,7 +14,8 @@
       "platform": {
         "enum": ["ios", "android", "all"],
         "alias": "p",
-        "description": "The platform to build the app, example values: ios, android, all."
+        "description": "The platform to build the app, exaple values: ios, android, all.",
+        "x-priority": "important"
       },
       "json": {
         "type": "boolean",
@@ -24,7 +25,8 @@
       "profile": {
         "type": "string",
         "description": "Name of the build profile from eas.json. Defaults to \"production\" if defined in eas.json.",
-        "examples": ["PROFILE_NAME"]
+        "examples": ["production", "development", "preview"],
+        "x-priority": "important"
       },
       "nonInteractive": {
         "type": "boolean",
@@ -54,7 +56,7 @@
       "autoSubmitWithProfile": {
         "type": "string",
         "description": "Submit on build complete using the submit profile with provided name",
-        "examples": ["PROFILE_NAME"]
+        "examples": ["production", "development", "preview"]
       }
     },
     "required": [],

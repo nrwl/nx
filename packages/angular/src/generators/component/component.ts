@@ -11,7 +11,7 @@ import { pathStartsWith } from '../utils/path';
 import { exportComponentInEntryPoint } from './lib/component';
 import { normalizeOptions } from './lib/normalize-options';
 import type { NormalizedSchema, Schema } from './schema';
-import { getInstalledAngularVersionInfo } from '../utils/angular-version-utils';
+import { getInstalledAngularVersionInfo } from '../utils/version-utils';
 import { lt } from 'semver';
 
 export async function componentGenerator(tree: Tree, rawOptions: Schema) {

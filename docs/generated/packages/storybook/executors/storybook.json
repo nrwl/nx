@@ -73,13 +73,11 @@
       },
       "quiet": {
         "type": "boolean",
-        "description": "Suppress verbose build output.",
-        "default": false
+        "description": "Suppress verbose build output."
       },
       "docs": {
         "type": "boolean",
-        "description": "Starts Storybook in documentation mode. Learn more about it : https://storybook.js.org/docs/react/writing-docs/build-documentation#preview-storybooks-documentation.",
-        "default": false
+        "description": "Starts Storybook in documentation mode. Learn more about it : https://storybook.js.org/docs/react/writing-docs/build-documentation#preview-storybooks-documentation."
       },
       "docsMode": {
         "type": "boolean",

@@ -11,11 +11,13 @@
     "properties": {
       "pluginName": {
         "type": "string",
-        "description": "the name of the plugin to be tested."
+        "description": "the project name of the plugin to be tested.",
+        "x-priority": "important"
       },
       "npmPackageName": {
         "type": "string",
-        "description": "the name of the package that would be published to NPM."
+        "description": "the package name of the plugin as it would be published to NPM.",
+        "x-priority": "important"
       },
       "projectDirectory": {
         "type": "string",
@@ -23,12 +25,15 @@
       },
       "pluginOutputPath": {
         "type": "string",
-        "description": "the output path of the plugin after it builds."
+        "description": "the output path of the plugin after it builds.",
+        "x-priority": "important"
       },
       "jestConfig": { "type": "string", "description": "Jest config file." },
       "standaloneConfig": {
         "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
-        "type": "boolean"
+        "type": "boolean",
+        "default": true,
+        "x-deprecated": "Nx only supports standaloneConfig"
       },
       "minimal": {
         "type": "boolean",
@@ -37,7 +42,6 @@
       }
     },
     "required": ["pluginName", "npmPackageName"],
-    "additionalProperties": false,
     "presets": []
   },
   "description": "Create a E2E application for a Nx Plugin.",

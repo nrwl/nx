@@ -1,5 +1,5 @@
 import { readProjectConfiguration, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { libraryGenerator } from '../../library/library';
 import { NormalizedSchema } from '../schema';
 import { updateProjectRootFiles } from './update-project-root-files';
@@ -8,7 +8,7 @@ describe('updateProjectRootFiles', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it('should update the relative root in files at the root of the project', async () => {
@@ -24,7 +24,6 @@ describe('updateProjectRootFiles', () => {
     const testFilePath = '/libs/subfolder/my-destination/jest.config.js';
     await libraryGenerator(tree, {
       name: 'my-source',
-      standaloneConfig: false,
     });
     const projectConfig = readProjectConfiguration(tree, 'my-source');
     tree.write(testFilePath, testFile);

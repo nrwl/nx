@@ -90,7 +90,8 @@ export function mockViteReactAppGenerator(tree: Tree): Tree {
 
   tree.write(
     `apps/${appName}/vite.config.ts`,
-    `import { defineConfig } from 'vite';
+    `    /// <reference types="vitest" />
+    import { defineConfig } from 'vite';
     import react from '@vitejs/plugin-react';
     import tsconfigPaths from 'vite-tsconfig-paths';
     
@@ -533,7 +534,8 @@ export function mockReactLibNonBuildableVitestRunnerGenerator(
 
   tree.write(
     `libs/${libName}/vite.config.ts`,
-    `import { defineConfig } from 'vite';
+    `/// <reference types="vitest" />
+    import { defineConfig } from 'vite';
     import react from '@vitejs/plugin-react';
     import viteTsConfigPaths from 'vite-tsconfig-paths';
 

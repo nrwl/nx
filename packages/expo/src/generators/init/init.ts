@@ -42,7 +42,12 @@ export async function expoInitGenerator(host: Tree, schema: Schema) {
   addGitIgnoreEntry(host);
   initRootBabelConfig(host);
 
-  const tasks = [moveDependency(host), updateDependencies(host)];
+  const tasks = [];
+
+  if (!schema.skipPackageJson) {
+    tasks.push(moveDependency(host));
+    tasks.push(updateDependencies(host));
+  }
 
   if (!schema.unitTestRunner || schema.unitTestRunner === 'jest') {
     const jestTask = jestInitGenerator(host, {});

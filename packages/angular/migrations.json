@@ -1,40 +1,5 @@
 {
   "schematics": {
-    "update-ngcc-postinstall": {
-      "version": "12.0.0-beta.0",
-      "description": "adjusts the ngcc postinstall command to just leave 'ngcc' in there. This fixes Ivy in Jest tests and Storybooks",
-      "factory": "./src/migrations/update-12-0-0/update-ngcc-postinstall"
-    },
-    "update-webpack-browser-config": {
-      "cli": "nx",
-      "version": "12.3.1",
-      "description": "Remove deprecated options and update others according to new defaults. It syncs with the v12 migration of Angular builders.",
-      "factory": "./src/migrations/update-12-3-0/update-webpack-browser-config"
-    },
-    "update-storybook": {
-      "cli": "nx",
-      "version": "12.3.1",
-      "description": "Updates storybook configurations to support webpack 5",
-      "factory": "./src/migrations/update-12-3-0/update-storybook"
-    },
-    "update-angular-eslint-rules": {
-      "cli": "nx",
-      "version": "12.3.1",
-      "description": "Migrates some rules that have changed in Angular EsLint",
-      "factory": "./src/migrations/update-12-3-0/update-angular-eslint-rules"
-    },
-    "convert-webpack-browser-build-target-to-delegate-build": {
-      "cli": "nx",
-      "version": "12.3.5-beta.0",
-      "description": "Convert targets using @nrwl/angular:webpack-browser with the buildTarget option set to use the @nrwl/angular:delegate-build executor instead.",
-      "factory": "./src/migrations/update-12-3-0/convert-webpack-browser-build-target-to-delegate-build"
-    },
-    "update-invalid-import-paths": {
-      "cli": "nx",
-      "version": "12.9.0",
-      "description": "Fixes invalid importPaths for buildable and publishable libs.",
-      "factory": "./src/migrations/update-12-9-0/update-invalid-import-paths"
-    },
     "add-postcss-packages": {
       "cli": "nx",
       "version": "13.0.0-beta.10",
@@ -1753,6 +1718,19 @@
           "alwaysAddToPackageJson": false
         },
         "ng-packagr": {
+          "version": "~15.1.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "15.5.2": {
+      "version": "15.5.2-beta.0",
+      "packages": {
+        "@nguniversal/builders": {
+          "version": "~15.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nguniversal/express-engine": {
           "version": "~15.1.0",
           "alwaysAddToPackageJson": false
         }

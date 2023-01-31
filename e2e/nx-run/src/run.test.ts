@@ -512,7 +512,8 @@ describe('Nx Running Tests', () => {
       runCLI(`generate @nrwl/web:app ${myapp2}`);
 
       let outputs = runCLI(
-        `run-many -t build test -p ${myapp1} ${myapp2} --ci`
+        // Options with lists can be specified using multiple args or with a delimiter (comma or space).
+        `run-many -t build -t test -p ${myapp1} ${myapp2} --ci`
       );
       expect(outputs).toContain('Running targets build, test for 2 projects:');
 

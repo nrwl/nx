@@ -15,7 +15,7 @@ import {
   verifyIsInlineScam,
   verifyModuleIsScam,
 } from './lib';
-import { getInstalledAngularVersionInfo } from '../utils/angular-version-utils';
+import { getInstalledAngularVersionInfo } from '../utils/version-utils';
 import { lt } from 'semver';
 
 export async function scamToStandalone(

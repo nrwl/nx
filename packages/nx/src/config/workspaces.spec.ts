@@ -65,7 +65,7 @@ describe('Workspaces', () => {
       );
 
       const workspaces = new Workspaces('/root');
-      const resolved = workspaces.readProjectsConfig();
+      const resolved = workspaces.readProjectsConfigurations();
       expect(resolved.projects.lib1).toEqual(standaloneConfig);
     });
 
@@ -85,9 +85,6 @@ describe('Workspaces', () => {
           }),
           'libs/domain/lib4/project.json': JSON.stringify(domainLibConfig),
           'libs/domain/lib4/package.json': JSON.stringify({}),
-          'workspace.json': JSON.stringify({
-            projects: { 'lib1-workspace': 'libs/lib1' },
-          }),
           'package.json': JSON.stringify({
             workspaces: ['**/package.json'],
           }),
@@ -96,10 +93,12 @@ describe('Workspaces', () => {
       );
 
       const workspaces = new Workspaces('/root');
-      const { projects } = workspaces.readProjectsConfig();
+      const { projects } = workspaces.readProjectsConfigurations();
       // projects got deduped so the workspace one remained
-      expect(projects['lib1-workspace']).toEqual(lib1Config);
-      expect(projects['lib1']).toBeUndefined();
+      expect(projects['lib1']).toEqual({
+        root: 'libs/lib1',
+        sourceRoot: 'libs/lib1/src',
+      });
       expect(projects.lib2).toEqual(lib2Config);
       expect(projects['domain-lib3']).toEqual(domainPackageConfig);
       expect(projects['lib4']).toEqual(domainLibConfig);
@@ -136,7 +135,7 @@ describe('Workspaces', () => {
       );
 
       const workspaces = new Workspaces('/root2');
-      const resolved = workspaces.readProjectsConfig();
+      const resolved = workspaces.readProjectsConfigurations();
       expect(resolved.projects['my-package']).toEqual({
         root: 'packages/my-package',
         sourceRoot: 'packages/my-package',

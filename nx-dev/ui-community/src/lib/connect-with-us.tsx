@@ -71,7 +71,7 @@ export function ConnectWithUs(): JSX.Element {
               </div>
               <h4 className="mb-2 text-lg font-bold">Livestreams on Youtube</h4>
               <a
-                href="https://www.youtube.com/nrwl_io/videos?utm_source=nx.dev"
+                href="https://www.youtube.com/@NxDevtools/videos?utm_source=nx.dev"
                 rel="noreferrer"
                 target="_blank"
                 title="Nx Youtube channel"

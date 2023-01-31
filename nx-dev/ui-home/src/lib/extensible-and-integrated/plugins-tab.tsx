@@ -197,8 +197,8 @@ export function PluginsTab(): JSX.Element {
             Plugins available for all stacks
           </h3>
           <p className="mt-4 text-slate-900 dark:text-slate-400">
-            Official Nx plugins are created and maintained by the Nx team at
-            Nrwl. You can see all the available plugins when you run the{' '}
+            Official Nx plugins are created and maintained by the Nx team. You
+            can see all the available plugins when you run the{' '}
             <code className="break-normal rounded-md border border-slate-200 bg-slate-50 px-2 py-1 font-mono text-xs text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
               nx list
             </code>{' '}

@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'fs-extra';
+import { existsSync, readFileSync } from 'fs';
 import { satisfies } from 'semver';
 import { workspaceRoot } from '../utils/workspace-root';
 import { ProjectGraphBuilder } from '../project-graph/project-graph-builder';

@@ -1,8 +1,7 @@
 import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
 import { logger, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
-import enquirer = require('enquirer');
 import applicationGenerator from '../application/application';
 import componentGenerator from '../component/component';
 import libraryGenerator from '../library/library';
@@ -16,18 +15,9 @@ describe('react:storybook-configuration', () => {
     ReturnType<typeof installedCypressVersion>
   > = installedCypressVersion as never;
   beforeEach(async () => {
-    // jest.spyOn(fileUtils, 'readPackageJson').mockReturnValue({
-    //   devDependencies: {
-    //     '@storybook/addon-essentials': '^6.0.21',
-    //     '@storybook/react': '^6.0.21',
-    //   },
-    // });
     mockedInstalledCypressVersion.mockReturnValue(10);
     jest.spyOn(logger, 'warn').mockImplementation(() => {});
     jest.spyOn(logger, 'debug').mockImplementation(() => {});
-    jest
-      .spyOn(enquirer, 'prompt')
-      .mockReturnValue(new Promise((res) => res({ runner: 'jest' })));
   });
 
   afterEach(() => {
@@ -39,7 +29,6 @@ describe('react:storybook-configuration', () => {
     await storybookConfigurationGenerator(appTree, {
       name: 'test-ui-lib',
       configureCypress: true,
-      standaloneConfig: false,
     });
 
     expect(appTree.exists('libs/test-ui-lib/.storybook/main.js')).toBeTruthy();
@@ -57,7 +46,6 @@ describe('react:storybook-configuration', () => {
       name: 'test-ui-lib',
       generateStories: true,
       configureCypress: false,
-      standaloneConfig: false,
     });
 
     expect(
@@ -91,7 +79,6 @@ describe('react:storybook-configuration', () => {
       generateStories: true,
       configureCypress: false,
       js: true,
-      standaloneConfig: false,
     });
 
     expect(
@@ -104,7 +91,6 @@ describe('react:storybook-configuration', () => {
     await storybookConfigurationGenerator(appTree, {
       name: 'test-ui-app',
       configureCypress: true,
-      standaloneConfig: false,
     });
 
     expect(appTree.exists('apps/test-ui-app/.storybook/main.js')).toBeTruthy();
@@ -128,7 +114,6 @@ describe('react:storybook-configuration', () => {
       name: 'test-ui-app',
       generateStories: true,
       configureCypress: false,
-      standaloneConfig: false,
     });
 
     // Currently the auto-generate stories feature only picks up components under the 'lib' directory.
@@ -154,7 +139,6 @@ describe('react:storybook-configuration', () => {
       configureCypress: true,
       generateCypressSpecs: true,
       cypressDirectory: 'one/two',
-      standaloneConfig: false,
     });
     [
       'apps/one/two/test-ui-lib-e2e/cypress.config.ts',
@@ -175,7 +159,7 @@ export async function createTestUILib(
   libName: string,
   plainJS = false
 ): Promise<Tree> {
-  let appTree = createTreeWithEmptyV1Workspace();
+  let appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
   await libraryGenerator(appTree, {
     linter: Linter.EsLint,
@@ -185,7 +169,6 @@ export async function createTestUILib(
     style: 'css',
     unitTestRunner: 'none',
     name: libName,
-    standaloneConfig: false,
   });
   return appTree;
 }
@@ -194,7 +177,7 @@ export async function createTestAppLib(
   libName: string,
   plainJS = false
 ): Promise<Tree> {
-  let appTree = createTreeWithEmptyV1Workspace();
+  let appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
   await applicationGenerator(appTree, {
     e2eTestRunner: 'none',
@@ -204,7 +187,6 @@ export async function createTestAppLib(
     unitTestRunner: 'none',
     name: libName,
     js: plainJS,
-    standaloneConfig: false,
   });
 
   await componentGenerator(appTree, {

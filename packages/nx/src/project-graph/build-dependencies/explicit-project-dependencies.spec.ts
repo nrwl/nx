@@ -1,5 +1,4 @@
 import { vol } from 'memfs';
-import type { Workspace } from '../../config/workspace-json-project-json';
 import { defaultFileHasher } from '../../hasher/file-hasher';
 import { createProjectFileMap } from '../file-map-utils';
 import { ProjectGraphBuilder } from '../project-graph-builder';
@@ -41,7 +40,6 @@ describe('explicit project dependencies', () => {
       });
 
       const res = buildExplicitTypeScriptDependencies(
-        ctx.workspace,
         builder.graph,
         ctx.filesToProcess
       );
@@ -87,7 +85,6 @@ describe('explicit project dependencies', () => {
       });
 
       const res = buildExplicitTypeScriptDependencies(
-        ctx.workspace,
         builder.graph,
         ctx.filesToProcess
       );
@@ -128,7 +125,6 @@ describe('explicit project dependencies', () => {
       });
 
       const res = buildExplicitTypeScriptDependencies(
-        ctx.workspace,
         builder.graph,
         ctx.filesToProcess
       );
@@ -190,7 +186,6 @@ describe('explicit project dependencies', () => {
       });
 
       const res = buildExplicitTypeScriptDependencies(
-        ctx.workspace,
         builder.graph,
         ctx.filesToProcess
       );
@@ -235,7 +230,6 @@ describe('explicit project dependencies', () => {
       });
 
       const res = buildExplicitTypeScriptDependencies(
-        ctx.workspace,
         builder.graph,
         ctx.filesToProcess
       );
@@ -339,7 +333,6 @@ describe('explicit project dependencies', () => {
       });
 
       const res = buildExplicitTypeScriptDependencies(
-        ctx.workspace,
         builder.graph,
         ctx.filesToProcess
       );
@@ -415,7 +408,6 @@ describe('explicit project dependencies', () => {
       });
 
       const res = buildExplicitTypeScriptDependencies(
-        ctx.workspace,
         builder.graph,
         ctx.filesToProcess
       );
@@ -466,7 +458,6 @@ describe('explicit project dependencies', () => {
       });
 
       const res = buildExplicitTypeScriptDependencies(
-        ctx.workspace,
         builder.graph,
         ctx.filesToProcess
       );
@@ -532,7 +523,6 @@ describe('explicit project dependencies', () => {
       });
 
       const res = buildExplicitTypeScriptDependencies(
-        ctx.workspace,
         builder.graph,
         ctx.filesToProcess
       );
@@ -558,7 +548,7 @@ function createVirtualWorkspace(config: VirtualWorkspaceConfig) {
   const nxJson = {
     npmScope: 'proj',
   };
-  const workspaceJson = {
+  const projects = {
     projects: {
       [config.sourceProjectName]: {
         root: `libs/${config.sourceProjectName}`,
@@ -573,7 +563,6 @@ function createVirtualWorkspace(config: VirtualWorkspaceConfig) {
       },
       "devDependencies": []
     }`,
-    './workspace.json': JSON.stringify(workspaceJson),
     './nx.json': JSON.stringify(nxJson),
     ...config.sourceProjectFiles.reduce(
       (acc, file) => ({
@@ -618,7 +607,7 @@ function createVirtualWorkspace(config: VirtualWorkspaceConfig) {
     dependencyProjectNamesToImportPaths
   )) {
     fsJson[`libs/${projectName}/index.ts`] = ``;
-    workspaceJson.projects[projectName] = {
+    projects.projects[projectName] = {
       root: `libs/${projectName}`,
     };
     tsConfig.compilerOptions.paths[tsconfigPath] = [
@@ -642,12 +631,10 @@ function createVirtualWorkspace(config: VirtualWorkspaceConfig) {
 
   return {
     ctx: {
-      workspace: {
-        ...workspaceJson,
-        ...nxJson,
-      } as Workspace,
+      projectsConfigurations: projects,
+      nxJsonConfiguration: nxJson,
       filesToProcess: createProjectFileMap(
-        workspaceJson,
+        projects as any,
         defaultFileHasher.allFileData()
       ).projectFileMap,
     },

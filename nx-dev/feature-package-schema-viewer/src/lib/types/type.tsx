@@ -60,8 +60,9 @@ function hasPatternProperties(s: JsonSchema1): boolean {
 }
 
 function hasAdditionalProperties(s: JsonSchema1): boolean {
-  return !(
-    typeof s.additionalProperties === 'boolean' && !s.additionalProperties
+  return (
+    typeof s.additionalProperties === 'boolean' ||
+    typeof s.additionalProperties === 'object'
   );
 }
 

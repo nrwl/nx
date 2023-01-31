@@ -112,6 +112,9 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
       devDependencies['@babel/core'] = babelCoreVersion;
       devDependencies['@babel/preset-typescript'] =
         babelPresetTypescriptVersion;
+      if (schema.bundler === 'webpack') {
+        devDependencies['@nrwl/webpack'] = nxVersion;
+      }
     }
 
     if (schema.uiFramework === '@storybook/web-components') {

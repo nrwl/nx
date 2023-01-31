@@ -130,23 +130,29 @@ export { generateFiles } from './src/generators/generate-files';
 /**
  * @category Generators
  */
-export type { WorkspaceConfiguration } from 'nx/src/generators/utils/project-configuration';
-
-/**
- * @category Generators
- */
 export {
   addProjectConfiguration,
   readProjectConfiguration,
   removeProjectConfiguration,
   updateProjectConfiguration,
+  getProjects,
+} from 'nx/src/generators/utils/project-configuration';
+
+/**
+ * @category Generators
+ */
+export { readNxJson, updateNxJson } from 'nx/src/generators/utils/nx-json';
+
+/**
+ * @category Generators
+ */
+export {
   readWorkspaceConfiguration,
   updateWorkspaceConfiguration,
-  getProjects,
   isStandaloneProject,
-  readNxJson,
-  updateNxJson,
-} from 'nx/src/generators/utils/project-configuration';
+  WorkspaceConfiguration,
+  getWorkspacePath,
+} from 'nx/src/generators/utils/deprecated';
 
 /**
  * @category Generators
@@ -242,7 +248,6 @@ export { names } from './src/utils/names';
  */
 export {
   getWorkspaceLayout,
-  getWorkspacePath,
   extractLayoutDirectory,
 } from './src/utils/get-workspace-layout';
 

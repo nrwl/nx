@@ -19,7 +19,7 @@ import {
   typesJasmineVersion,
   typesNodeVersion,
 } from '../../utils/versions';
-import { getGeneratorDirectoryForInstalledAngularVersion } from '../utils/angular-version-utils';
+import { getGeneratorDirectoryForInstalledAngularVersion } from '../utils/version-utils';
 import { GeneratorOptions } from './schema';
 
 function addTestInputs(tree: Tree) {

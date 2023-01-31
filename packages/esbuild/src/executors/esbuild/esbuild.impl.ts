@@ -115,7 +115,7 @@ export async function* esbuildExecutor(
                       }
 
                       next({
-                        success: !!error && !hasTypeErrors,
+                        success,
                         // Need to call getOutfile directly in the case of bundle=false and outfile is not set for esbuild.
                         outfile: join(
                           context.root,

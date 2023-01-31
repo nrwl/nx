@@ -27,6 +27,7 @@ describe('Node Applications + esbuild', () => {
     await runCLIAsync(`build ${app}`);
 
     checkFilesExist(`dist/apps/${app}/main.cjs`);
+    checkFilesExist(`dist/apps/${app}/main.cjs.map`);
     const result = execSync(`node dist/apps/${app}/main.cjs`, {
       cwd: tmpProjPath(),
     }).toString();

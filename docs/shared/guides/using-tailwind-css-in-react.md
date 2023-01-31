@@ -110,8 +110,8 @@ In the above, you are invoking the `createGlobPatternsForDependencies` utility f
 Next, import tailwind styles to the application's base `styles.css` or `styles.scss` file. This can be done by adding the following lines:
 
 ```css
-@tailwind components;
 @tailwind base;
+@tailwind components;
 @tailwind utilities;
 ```
 

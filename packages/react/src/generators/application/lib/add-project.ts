@@ -22,14 +22,9 @@ export function addProject(host, options: NormalizedSchema) {
     };
   }
 
-  addProjectConfiguration(
-    host,
-    options.projectName,
-    {
-      ...project,
-    },
-    options.standaloneConfig
-  );
+  addProjectConfiguration(host, options.projectName, {
+    ...project,
+  });
 }
 
 function maybeJs(options: NormalizedSchema, path: string): string {
@@ -72,6 +67,7 @@ function createBuildTarget(options: NormalizedSchema): TargetConfiguration {
               ),
             ],
       scripts: [],
+      isolatedConfig: true,
       webpackConfig: joinPathFragments(
         options.appProjectRoot,
         'webpack.config.js'

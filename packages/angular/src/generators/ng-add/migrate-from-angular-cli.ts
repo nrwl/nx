@@ -5,7 +5,6 @@ import {
   readJson,
   updateJson,
 } from '@nrwl/devkit';
-import { convertToNxProjectGenerator } from '@nrwl/workspace/generators';
 import { prettierVersion } from '@nrwl/workspace/src/utils/versions';
 import { nxVersion } from '../../utils/versions';
 import type { ProjectMigrator } from './migrators';
@@ -13,6 +12,7 @@ import { AppMigrator, LibMigrator } from './migrators';
 import type { GeneratorOptions } from './schema';
 import {
   cleanupEsLintPackages,
+  convertAllToNxProjects,
   createNxJson,
   createRootKarmaConfig,
   createWorkspaceFiles,
@@ -61,7 +61,7 @@ export async function migrateFromAngularCli(
       version: 2,
       $schema: undefined,
     }));
-    await convertToNxProjectGenerator(tree, { all: true, skipFormat: true });
+    convertAllToNxProjects(tree);
   } else {
     const migrators: ProjectMigrator[] = [
       ...projects.apps.map((app) => new AppMigrator(tree, options, app)),

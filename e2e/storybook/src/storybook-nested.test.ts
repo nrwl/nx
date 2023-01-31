@@ -1,19 +1,18 @@
 import {
   checkFilesExist,
   cleanupProject,
+  getPackageManagerCommand,
+  getSelectedPackageManager,
   killPorts,
-  newProject,
+  readJson,
   runCLI,
+  runCommand,
   runCommandUntil,
+  runCreateWorkspace,
   tmpProjPath,
   uniq,
-  updateJson,
-  getPackageManagerCommand,
-  runCommand,
-  runCreateWorkspace,
-  getSelectedPackageManager,
   updateFile,
-  readJson,
+  updateJson,
 } from '@nrwl/e2e/utils';
 import { writeFileSync } from 'fs';
 
@@ -28,10 +27,11 @@ describe('Storybook generators for nested workspaces', () => {
 
     // create a workspace with a single react app at the root
     runCreateWorkspace(wsName, {
-      preset: 'react-experimental',
+      preset: 'react-standalone',
       appName,
       style: 'css',
       packageManager,
+      bundler: 'vite',
     });
 
     runCLI(
@@ -48,38 +48,7 @@ describe('Storybook generators for nested workspaces', () => {
       return json;
     });
 
-    // TODO(katerina): Once Storybook vite generators are fixed, remove this.
-    updateJson('package.json', (json) => {
-      json['devDependencies'] = {
-        ...json['devDependencies'],
-        '@storybook/builder-vite': '0.2.5',
-      };
-      return json;
-    });
-
     runCommand(getPackageManagerCommand().install);
-
-    // TODO(katerina): Once Storybook vite generators are fixed, remove this.
-    updateFile(
-      './storybook/main.js',
-      `const rootMain = require(‘./main.root’);
-    module.exports = {
-      …rootMain,
-      core: { …rootMain.core, builder: ‘@storybook/builder-vite’ },
-      stories: [
-        …rootMain.stories,
-        ‘../src/app/**/*.stories.mdx’,
-        ‘../src/app/**/*.stories.@(js|jsx|ts|tsx)’,
-      ],
-      addons: […rootMain.addons, ‘@nrwl/react/plugins/storybook’],
-      webpackFinal: async (config, { configType }) => {
-        if (rootMain.webpackFinal) {
-          config = await rootMain.webpackFinal(config, { configType });
-        }
-        return config;
-      },
-    };`
-    );
   });
 
   afterAll(() => {
@@ -98,7 +67,7 @@ describe('Storybook generators for nested workspaces', () => {
     });
 
     it('should edit root tsconfig.json', () => {
-      const tsconfig = readJson(`tsconfig.base.json`);
+      const tsconfig = readJson(`tsconfig.json`);
       expect(tsconfig['ts-node']?.compilerOptions?.module).toEqual('commonjs');
     });
 
@@ -115,7 +84,12 @@ describe('Storybook generators for nested workspaces', () => {
     });
   });
 
-  describe('serve storybook', () => {
+  // TODO: Re-enable this test when Nx uses only Storybook 7 (Nx 16)
+  // This fails for Node 18 because Storybook 6.5 uses webpack even in non-webpack projects
+  // https://github.com/storybookjs/builder-vite/issues/414#issuecomment-1287536049
+  // https://github.com/storybookjs/storybook/issues/20209
+  // Error: error:0308010C:digital envelope routines::unsupported
+  xdescribe('serve storybook', () => {
     afterEach(() => killPorts());
 
     it('should run a React based Storybook setup', async () => {
@@ -127,7 +101,12 @@ describe('Storybook generators for nested workspaces', () => {
     }, 1000000);
   });
 
-  describe('build storybook', () => {
+  // TODO: Re-enable this test when Nx uses only Storybook 7 (Nx 16)
+  // This fails for Node 18 because Storybook 6.5 uses webpack even in non-webpack projects
+  // https://github.com/storybookjs/builder-vite/issues/414#issuecomment-1287536049
+  // https://github.com/storybookjs/storybook/issues/20209
+  // Error: error:0308010C:digital envelope routines::unsupported
+  xdescribe('build storybook', () => {
     it('should build and lint a React based storybook', () => {
       // build
       runCLI(`run ${appName}:build-storybook --verbose`);

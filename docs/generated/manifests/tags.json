@@ -507,13 +507,6 @@
       "path": "/recipes/other/performance-profiling"
     },
     {
-      "description": "",
-      "file": "shared/guides/customize-webpack",
-      "id": "customize-webpack",
-      "name": "Customizing Webpack Config",
-      "path": "/recipes/other/customize-webpack"
-    },
-    {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
       "file": "generated/packages/generated/packages/nx/documents/run",
       "id": "run",
@@ -677,7 +670,7 @@
       "description": "",
       "file": "shared/concepts/integrated-vs-package-based",
       "id": "integrated-vs-package-based",
-      "name": "Integrated Repos vs. Package-Based Repos",
+      "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
       "path": "/concepts/integrated-vs-package-based"
     },
     {

@@ -24,7 +24,8 @@
     "project": {
       "description": "Project name.",
       "type": "string",
-      "x-prompt": "What project does the target belong to?"
+      "x-prompt": "What project does the target belong to?",
+      "x-dropdown": "projects"
     },
     "command": {
       "description": "Command to run.",

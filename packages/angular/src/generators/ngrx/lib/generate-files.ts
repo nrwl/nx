@@ -1,7 +1,7 @@
 import type { Tree } from '@nrwl/devkit';
 import { generateFiles, joinPathFragments, names } from '@nrwl/devkit';
 import { lt } from 'semver';
-import { getInstalledAngularVersion } from '../../utils/angular-version-utils';
+import { getInstalledAngularVersion } from '../../utils/version-utils';
 import { NormalizedNgRxGeneratorOptions } from './normalize-options';
 
 /**

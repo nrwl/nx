@@ -221,16 +221,24 @@ ${content}`;
     // are they overriding some option on top of each other causing cypress to not see it's running?
     createFile(
       `apps/${appName}/webpack.config.js`,
-      `module.exports = async function (configuration) {
-  await new Promise((res) => {
-    setTimeout(() => {
-      console.log('I am from the custom async Webpack config')
-      res()
-    }, 1000)
-  })
-  const defaultConfig = require("@nrwl/react/plugins/webpack")
-  return defaultConfig(configuration);
-};`
+      `
+        const { composePlugins, withNx } = require('@nrwl/webpack');
+        const { withReact } = require('@nrwl/react');
+        
+        module.exports = composePlugins(
+          withNx(),
+          withReact(),
+          async function (configuration) {
+            await new Promise((res) => {
+              setTimeout(() => {
+                console.log('I am from the custom async Webpack config');
+                res();
+              }, 1000);
+            });
+            return configuration;
+          }
+        );
+      `
     );
     updateProjectConfig(appName, (config) => {
       config.targets[

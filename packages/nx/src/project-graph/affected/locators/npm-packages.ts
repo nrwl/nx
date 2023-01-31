@@ -68,7 +68,7 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
     logger.warn(
       `The affected projects might have not been identified properly. The package(s) ${missingTouchedNpmPackages.join(
         ', '
-      )} were not found. Please open an issue in Github including the package.json file.`
+      )} were not found. Please open an issue in GitHub including the package.json file.`
     );
   }
   return touched;

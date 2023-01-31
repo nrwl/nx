@@ -7,7 +7,7 @@ describe('normalizeOptions', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it('should set unitTestRunner=jest and bundler=none by default', async () => {

@@ -90,7 +90,7 @@
           }
         ],
         "color": true,
-        "parallel": true
+        "parallel": false
       }
     },
     "export": {

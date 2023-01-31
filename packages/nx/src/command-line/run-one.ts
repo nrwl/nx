@@ -12,11 +12,11 @@ import { workspaceRoot } from '../utils/workspace-root';
 import { splitTarget } from '../utils/split-target';
 import { output } from '../utils/output';
 import {
-  ProjectConfiguration,
   ProjectsConfigurations,
   TargetDependencyConfig,
 } from '../config/workspace-json-project-json';
 import { readNxJson } from '../config/configuration';
+import { workspaceConfigurationCheck } from '../utils/workspace-configuration-check';
 
 export async function runOne(
   cwd: string,
@@ -32,6 +32,7 @@ export async function runOne(
 ): Promise<void> {
   performance.mark('command-execution-begins');
   performance.measure('code-loading', 'init-local', 'command-execution-begins');
+  workspaceConfigurationCheck();
 
   const nxJson = readNxJson();
   const projectGraph = await createProjectGraphAsync({ exitOnError: true });

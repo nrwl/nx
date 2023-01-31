@@ -9,7 +9,10 @@
         "executor": "@nrwl/vite:build",
         "outputs": ["{options.outputPath}"],
         "defaultConfiguration": "production",
-        "options": { "outputPath": "dist/apps/main-vite" },
+        "options": {
+          "outputPath": "dist/apps/main-vite",
+          "configFile": "apps/main-vite/vite.config.ts"
+        },
         "configurations": {
           "development": { "mode": "development" },
           "production": { "mode": "production" }
@@ -105,7 +108,10 @@
         "executor": "@nrwl/vite:build",
         "outputs": ["{options.outputPath}"],
         "defaultConfiguration": "production",
-        "options": { "outputPath": "dist/apps/main-vite-ts" },
+        "options": {
+          "outputPath": "dist/apps/main-vite-ts",
+          "configFile": "apps/main-vite-ts/vite.config.custom.ts"
+        },
         "configurations": {
           "development": { "mode": "development" },
           "production": { "mode": "production" }
@@ -763,7 +769,10 @@
         "executor": "@nrwl/vite:build",
         "outputs": ["{options.outputPath}"],
         "defaultConfiguration": "production",
-        "options": { "outputPath": "dist/apps/reapp" },
+        "options": {
+          "outputPath": "dist/apps/reapp",
+          "configFile": "apps/reapp/vite.config.ts"
+        },
         "configurations": {
           "development": { "mode": "development" },
           "production": { "mode": "production" }
@@ -978,7 +987,10 @@
         "executor": "@nrwl/vite:build",
         "outputs": ["{options.outputPath}"],
         "defaultConfiguration": "production",
-        "options": { "outputPath": "dist/apps/wv1" },
+        "options": {
+          "outputPath": "dist/apps/wv1",
+          "configFile": "apps/wv1/vite.config.custom.ts"
+        },
         "configurations": {
           "development": { "mode": "development" },
           "production": { "mode": "production" }

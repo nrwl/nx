@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'fs-extra';
+import { existsSync, readFileSync } from 'fs';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { PackageJson } from '../../utils/package-json';
 

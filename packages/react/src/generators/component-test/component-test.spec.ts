@@ -1,8 +1,7 @@
 import { assertMinimumCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
 import { Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
-import enquirer = require('enquirer');
 import libraryGenerator from '../library/library';
 import { componentTestGenerator } from './component-test';
 
@@ -13,10 +12,7 @@ describe(componentTestGenerator.name, () => {
     ReturnType<typeof assertMinimumCypressVersion>
   > = assertMinimumCypressVersion as never;
   beforeEach(() => {
-    tree = createTreeWithEmptyV1Workspace();
-    jest
-      .spyOn(enquirer, 'prompt')
-      .mockReturnValue(new Promise((res) => res({ runner: 'jest' })));
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
   it('should create component test for tsx files', async () => {
     mockedAssertMinimumCypressVersion.mockReturnValue();

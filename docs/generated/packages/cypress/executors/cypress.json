@@ -73,7 +73,8 @@
       },
       "baseUrl": {
         "type": "string",
-        "description": "The address (with the port) which your application is running on."
+        "description": "The address (with the port) which your application is running on.",
+        "x-priority": "important"
       },
       "browser": {
         "type": "string",
@@ -90,7 +91,8 @@
       "copyFiles": {
         "type": "string",
         "description": "A regex string that is used to choose what additional integration files to copy to the dist folder.",
-        "x-deprecated": "No longer used since cypress supports typescript out of the box. If specified, it will be ignored."
+        "x-deprecated": "No longer used since cypress supports typescript out of the box. If specified, it will be ignored.",
+        "x-priority": "internal"
       },
       "ciBuildId": {
         "oneOf": [{ "type": "string" }, { "type": "number" }],

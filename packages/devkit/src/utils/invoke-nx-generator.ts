@@ -4,14 +4,13 @@ import type {
   Tree,
   TreeWriteOptions,
 } from 'nx/src/generators/tree';
-import { toNewFormat, toOldFormatOrNull } from 'nx/src/config/workspaces';
 import { Generator, GeneratorCallback } from 'nx/src/config/misc-interfaces';
-import { parseJson, serializeJson } from 'nx/src/utils/json';
 import { join, relative } from 'path';
 import type { Mode } from 'fs';
 
 class RunCallbackTask {
   constructor(private callback: GeneratorCallback) {}
+
   toConfiguration() {
     return {
       name: 'RunCallback',
@@ -38,7 +37,6 @@ function createRunCallbackTask() {
 /**
  * Convert an Nx Generator into an Angular Devkit Schematic.
  * @param generator The Nx generator to convert to an Angular Devkit Schematic.
- * @param skipWritingConfigInOldFormat Whether to skip writing the configuration in the old format (the one used by the Angular DevKit).
  */
 export function convertNxGenerator<T = any>(
   generator: Generator<T>,
@@ -46,11 +44,7 @@ export function convertNxGenerator<T = any>(
 ) {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   return (generatorOptions: T) =>
-    invokeNxGenerator(
-      generator,
-      generatorOptions,
-      skipWritingConfigInOldFormat
-    );
+    invokeNxGenerator(generator, generatorOptions);
 }
 
 /**
@@ -168,16 +162,9 @@ class DevkitTreeFromAngularDevkitTree implements Tree {
   read(filePath: string): Buffer;
   read(filePath: string, encoding: BufferEncoding): string;
   read(filePath: string, encoding?: BufferEncoding) {
-    const rawResult = encoding
+    return encoding
       ? this.tree.read(filePath).toString(encoding)
       : this.tree.read(filePath);
-    if (isWorkspaceJsonChange(filePath)) {
-      const formatted = toNewFormat(
-        parseJson(Buffer.isBuffer(rawResult) ? rawResult.toString() : rawResult)
-      );
-      return encoding ? serializeJson(formatted) : serializeJson(formatted);
-    }
-    return rawResult;
   }
 
   rename(from: string, to: string): void {
@@ -191,21 +178,6 @@ class DevkitTreeFromAngularDevkitTree implements Tree {
   ): void {
     if (options?.mode) {
       this.warnUnsupportedFilePermissionsChange(filePath, options.mode);
-    }
-
-    if (!this.skipWritingConfigInOldFormat && isWorkspaceJsonChange(filePath)) {
-      const w = parseJson(content.toString());
-      for (const [project, configuration] of Object.entries(w.projects)) {
-        if (typeof configuration === 'string') {
-          w.projects[project] = {
-            root: configuration,
-            ...parseJson(this.tree.read(`${configuration}/project.json`)),
-          };
-          w.projects[project].configFilePath = `${configuration}/project.json`;
-        }
-      }
-      const formatted = toOldFormatOrNull(w);
-      content = serializeJson(formatted ? formatted : w);
     }
 
     if (this.tree.exists(filePath)) {
@@ -225,13 +197,4 @@ class DevkitTreeFromAngularDevkitTree implements Tree {
                   Ignoring changing ${filePath} permissions to ${mode}.`)
     );
   }
-}
-
-function isWorkspaceJsonChange(path) {
-  return (
-    path === 'workspace.json' ||
-    path === '/workspace.json' ||
-    path === 'angular.json' ||
-    path === '/angular.json'
-  );
 }

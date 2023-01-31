@@ -77,7 +77,6 @@
     "cli-cursor": "3.1.0",
     "cli-spinners": "2.6.1",
     "dotenv": "~10.0.0",
-    "enquirer": "~2.3.6",
     "figures": "3.2.0",
     "flat": "^5.0.2",
     "fs-extra": "^11.1.0",

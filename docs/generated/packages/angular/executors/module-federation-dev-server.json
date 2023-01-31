@@ -101,7 +101,8 @@
       "devRemotes": {
         "type": "array",
         "items": { "type": "string" },
-        "description": "List of remote applications to run in development mode (i.e. using serve target)."
+        "description": "List of remote applications to run in development mode (i.e. using serve target).",
+        "x-priority": "important"
       },
       "skipRemotes": {
         "type": "array",

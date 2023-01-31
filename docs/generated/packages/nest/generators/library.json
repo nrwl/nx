@@ -46,21 +46,25 @@
       "skipFormat": {
         "description": "Skip formatting files.",
         "type": "boolean",
-        "default": false
+        "default": false,
+        "x-priority": "internal"
       },
       "skipTsConfig": {
         "description": "Do not update tsconfig.base.json for development experience.",
         "type": "boolean",
-        "default": false
+        "default": false,
+        "x-priority": "internal"
       },
       "publishable": {
         "description": "Create a publishable library.",
-        "type": "boolean"
+        "type": "boolean",
+        "x-priority": "important"
       },
       "buildable": {
         "description": "Generate a buildable library.",
         "type": "boolean",
-        "default": false
+        "default": false,
+        "x-priority": "important"
       },
       "importPath": {
         "description": "The library name used to import it, like @myorg/my-awesome-lib. Must be a valid npm name.",
@@ -111,7 +115,8 @@
       "standaloneConfig": {
         "description": "Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json",
         "type": "boolean",
-        "default": true
+        "default": true,
+        "x-deprecated": "Nx only supports standaloneConfig"
       },
       "setParserOptionsProject": {
         "type": "boolean",

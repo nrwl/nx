@@ -111,7 +111,9 @@
     },
     "standaloneConfig": {
       "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`",
-      "type": "boolean"
+      "type": "boolean",
+      "default": true,
+      "x-deprecated": "Nx only supports standaloneConfig"
     },
     "swc": {
       "description": "Enable the Rust-based compiler SWC to compile JS/TS files.",

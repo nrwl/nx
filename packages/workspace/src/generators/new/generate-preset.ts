@@ -73,7 +73,9 @@ export function generatePreset(host: Tree, opts: NormalizedSchema) {
       opts.linter ? `--linter=${opts.linter}` : null,
       opts.npmScope ? `--npmScope=${opts.npmScope}` : `--npmScope=${opts.name}`,
       opts.preset ? `--preset=${opts.preset}` : null,
+      opts.bundler ? `--bundler=${opts.bundler}` : null,
       opts.framework ? `--framework=${opts.framework}` : null,
+      opts.docker ? `--docker=${opts.docker}` : null,
       opts.packageManager ? `--packageManager=${opts.packageManager}` : null,
       parsedArgs.interactive ? '--interactive=true' : '--interactive=false',
     ].filter((e) => !!e);

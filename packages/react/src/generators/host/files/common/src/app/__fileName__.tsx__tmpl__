@@ -1,5 +1,7 @@
 import * as React from 'react';
+<% if (!minimal) { %>
 import NxWelcome from "./nx-welcome";
+<% } %>
 import { Link, Route, Routes } from 'react-router-dom';
 
 <% if (remotes.length > 0) { %>
@@ -17,7 +19,9 @@ export function App() {
        <% }); %>
      </ul>
      <Routes>
+       <% if (!minimal) { %>
        <Route path="/" element={<NxWelcome title="<%= projectName %>"/>} />
+       <% } %>
        <% remotes.forEach(function(r) { %>
          <Route path="/<%=r.fileName%>" element={<<%= r.className %>/>} />
        <% }); %>

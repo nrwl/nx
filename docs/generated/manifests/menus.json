@@ -858,7 +858,7 @@
         "isExternal": false,
         "children": [
           {
-            "name": "Integrated Repos vs. Package-Based Repos",
+            "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
             "path": "/concepts/integrated-vs-package-based",
             "id": "integrated-vs-package-based",
             "isExternal": false,
@@ -917,7 +917,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Integrated Repos vs. Package-Based Repos",
+        "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
         "path": "/concepts/integrated-vs-package-based",
         "id": "integrated-vs-package-based",
         "isExternal": false,
@@ -2622,14 +2622,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Customizing Webpack Config",
-            "path": "/recipes/other/customize-webpack",
-            "id": "customize-webpack",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Powering Up React Development With Nx",
             "path": "/recipes/other/react-nx",
             "id": "react-nx",
@@ -2729,6 +2721,14 @@
             "name": "Identify Dependencies Between Folders",
             "path": "/recipes/other/identify-dependencies-between-folders",
             "id": "identify-dependencies-between-folders",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Standalone NgRx APIs",
+            "path": "/recipes/other/standalone-ngrx-apis",
+            "id": "standalone-ngrx-apis",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -2873,14 +2873,6 @@
         "disableCollapsible": false
       },
       {
-        "name": "Customizing Webpack Config",
-        "path": "/recipes/other/customize-webpack",
-        "id": "customize-webpack",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
         "name": "Powering Up React Development With Nx",
         "path": "/recipes/other/react-nx",
         "id": "react-nx",
@@ -2980,6 +2972,14 @@
         "name": "Identify Dependencies Between Folders",
         "path": "/recipes/other/identify-dependencies-between-folders",
         "id": "identify-dependencies-between-folders",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Standalone NgRx APIs",
+        "path": "/recipes/other/standalone-ngrx-apis",
+        "id": "standalone-ngrx-apis",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -3255,6 +3255,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Kubernetes Setup",
+            "path": "/nx-cloud/private-cloud/kubernetes-setup",
+            "id": "kubernetes-setup",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Standalone",
             "path": "/nx-cloud/private-cloud/standalone",
             "id": "standalone",
@@ -3317,6 +3325,14 @@
         "name": "Advanced Configuration",
         "path": "/nx-cloud/private-cloud/advanced-config",
         "id": "advanced-config",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Kubernetes Setup",
+        "path": "/nx-cloud/private-cloud/kubernetes-setup",
+        "id": "kubernetes-setup",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5015,6 +5031,14 @@
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
+              },
+              {
+                "id": "setup-docker",
+                "path": "/packages/node/generators/setup-docker",
+                "name": "setup-docker",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,
@@ -5222,6 +5246,14 @@
                 "name": "watch",
                 "path": "/packages/nx/documents/watch",
                 "id": "watch",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "show",
+                "path": "/packages/nx/documents/show",
+                "id": "show",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -6204,6 +6236,39 @@
         "name": "webpack",
         "children": [
           {
+            "id": "documents",
+            "path": "/packages/webpack/documents",
+            "name": "documents",
+            "children": [
+              {
+                "name": "Overview of the Nx Webpack Plugin",
+                "path": "/packages/webpack/documents/overview",
+                "id": "overview",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "How to configure webpack on your Nx workspace",
+                "path": "/packages/webpack/documents/webpack-config-setup",
+                "id": "webpack-config-setup",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Webpack plugins",
+                "path": "/packages/webpack/documents/webpack-plugins",
+                "id": "webpack-plugins",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
+          {
             "id": "executors",
             "path": "/packages/webpack/executors",
             "name": "executors",
@@ -6390,9 +6455,9 @@
                 "disableCollapsible": false
               },
               {
-                "id": "convert-to-nx-project",
-                "path": "/packages/workspace/generators/convert-to-nx-project",
-                "name": "convert-to-nx-project",
+                "id": "fix-configuration",
+                "path": "/packages/workspace/generators/fix-configuration",
+                "name": "fix-configuration",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

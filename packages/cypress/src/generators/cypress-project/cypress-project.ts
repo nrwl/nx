@@ -162,12 +162,7 @@ function addProject(tree: Tree, options: CypressProjectSchema) {
       'tsconfig.json'
     );
   }
-  addProjectConfiguration(
-    tree,
-    options.projectName,
-    e2eProjectConfig,
-    options.standaloneConfig
-  );
+  addProjectConfiguration(tree, options.projectName, e2eProjectConfig);
 }
 
 export async function addLinter(host: Tree, options: CypressProjectSchema) {

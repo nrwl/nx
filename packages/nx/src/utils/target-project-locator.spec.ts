@@ -12,13 +12,12 @@ jest.mock('nx/src/utils/workspace-root', () => ({
 jest.mock('fs', () => require('memfs').fs);
 
 describe('findTargetProjectWithImport', () => {
-  let ctx: ProjectGraphProcessorContext;
   let projects: Record<string, ProjectGraphProjectNode>;
   let npmProjects: Record<string, ProjectGraphExternalNode>;
   let fsJson;
   let targetProjectLocator: TargetProjectLocator;
   beforeEach(() => {
-    const workspaceJson = {
+    const projecstConfigurations = {
       projects: {
         proj1: {},
       },
@@ -49,7 +48,7 @@ describe('findTargetProjectWithImport', () => {
       },
     };
     fsJson = {
-      './workspace.json': JSON.stringify(workspaceJson),
+      './workspace.json': JSON.stringify(projecstConfigurations),
       './nx.json': JSON.stringify(nxJson),
       './tsconfig.base.json': JSON.stringify(tsConfig),
       './libs/proj/index.ts': `import {a} from '@proj/my-second-proj';
@@ -69,9 +68,9 @@ describe('findTargetProjectWithImport', () => {
     };
     vol.fromJSON(fsJson, '/root');
 
-    ctx = {
+    const ctx = {
       workspace: {
-        ...workspaceJson,
+        ...projecstConfigurations,
         ...nxJson,
       } as any,
       fileMap: {
@@ -489,7 +488,7 @@ describe('findTargetProjectWithImport (without tsconfig.json)', () => {
   let targetProjectLocator: TargetProjectLocator;
 
   beforeEach(() => {
-    const workspaceJson = {
+    const projectsConfigurations = {
       projects: {
         proj1: {},
       },
@@ -498,7 +497,7 @@ describe('findTargetProjectWithImport (without tsconfig.json)', () => {
       npmScope: 'proj',
     };
     fsJson = {
-      './workspace.json': JSON.stringify(workspaceJson),
+      './workspace.json': JSON.stringify(projectsConfigurations),
       './nx.json': JSON.stringify(nxJson),
       './libs/proj/index.ts': `import {a} from '@proj/my-second-proj';
                               import('@proj/project-3');
@@ -518,7 +517,7 @@ describe('findTargetProjectWithImport (without tsconfig.json)', () => {
     vol.fromJSON(fsJson, '/root');
     ctx = {
       workspace: {
-        ...workspaceJson,
+        ...projectsConfigurations,
         ...nxJson,
       } as any,
       fileMap: {
@@ -594,6 +593,14 @@ describe('findTargetProjectWithImport (without tsconfig.json)', () => {
     } as any;
 
     projects = {
+      '@org/proj1': {
+        name: '@org/proj1',
+        type: 'lib',
+        data: {
+          root: 'libs/proj1',
+          files: [],
+        },
+      },
       proj3a: {
         name: 'proj3a',
         type: 'lib',
@@ -771,6 +778,27 @@ describe('findTargetProjectWithImport (without tsconfig.json)', () => {
     expect(res2).toEqual('proj');
     expect(res3).toEqual('proj2');
     expect(res4).toEqual('proj');
+  });
+
+  it('should be able to resolve local project', () => {
+    jest
+      .spyOn(targetProjectLocator as any, 'resolveImportWithRequire')
+      .mockReturnValue('libs/proj1/index.ts');
+
+    const result1 = targetProjectLocator.findProjectWithImport(
+      '@org/proj1',
+      'libs/proj1/index.ts'
+    );
+    expect(result1).toEqual('@org/proj1');
+
+    jest
+      .spyOn(targetProjectLocator as any, 'resolveImportWithRequire')
+      .mockReturnValue('libs/proj1/some/nested/file.ts');
+    const result2 = targetProjectLocator.findProjectWithImport(
+      '@org/proj1/some/nested/path',
+      'libs/proj1/index.ts'
+    );
+    expect(result2).toEqual('@org/proj1');
   });
 
   it('should be able to npm dependencies', () => {

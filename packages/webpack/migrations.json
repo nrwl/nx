@@ -5,13 +5,19 @@
       "version": "15.0.0-beta.0",
       "description": "Adds babel.config.json to the hash of all tasks",
       "factory": "./src/migrations/update-15-0-0/add-babel-inputs"
+    },
+    "remove-es2015-polyfills-option": {
+      "cli": "nx",
+      "version": "15.4.5-beta.0",
+      "description": "Removes es2015Polyfills option since legacy browsers are no longer supported.",
+      "factory": "./src/migrations/update-15-4-5/remove-es2015-polyfills-option"
+    },
+    "webpack-config-setup": {
+      "cli": "nx",
+      "version": "15.6.3-beta.0",
+      "description": "Creates or updates webpack.config.js file with the new options for webpack.",
+      "factory": "./src/migrations/update-15-6-3/webpack-config-setup"
     }
-  },
-  "remove-es2015-polyfills-option": {
-    "cli": "nx",
-    "version": "15.4.5-beta.0",
-    "description": "Removes es2015Polyfills option since legacy browsers are no longer supported.",
-    "factory": "./src/migrations/update-15-4-5/remove-es2015-polyfills-option"
   },
   "packageJsonUpdates": {}
 }

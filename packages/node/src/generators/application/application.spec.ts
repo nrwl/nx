@@ -40,7 +40,6 @@ describe('app', () => {
     it('should update project config', async () => {
       await applicationGenerator(tree, {
         name: 'myNodeApp',
-        standaloneConfig: false,
         bundler: 'webpack',
       });
       const project = readProjectConfiguration(tree, 'my-node-app');
@@ -56,6 +55,7 @@ describe('app', () => {
               outputPath: 'dist/my-node-app',
               main: 'my-node-app/src/main.ts',
               tsConfig: 'my-node-app/tsconfig.app.json',
+              isolatedConfig: true,
               webpackConfig: 'my-node-app/webpack.config.js',
               assets: ['my-node-app/src/assets'],
             },
@@ -87,16 +87,15 @@ describe('app', () => {
           lintFilePatterns: ['my-node-app/**/*.ts'],
         },
       });
-      expect(() => readProjectConfiguration(tree, 'my-node-app-e2e')).toThrow(
-        /Cannot find/
-      );
+      expect(() =>
+        readProjectConfiguration(tree, 'my-node-app-e2e')
+      ).not.toThrow();
     });
 
     it('should update tags', async () => {
       await applicationGenerator(tree, {
         name: 'myNodeApp',
         tags: 'one,two',
-        standaloneConfig: false,
       });
       const projects = Object.fromEntries(getProjects(tree));
       expect(projects).toMatchObject({
@@ -109,7 +108,6 @@ describe('app', () => {
     it('should generate files', async () => {
       await applicationGenerator(tree, {
         name: 'myNodeApp',
-        standaloneConfig: false,
       });
       expect(tree.exists(`my-node-app/jest.config.ts`)).toBeTruthy();
       expect(tree.exists('my-node-app/src/main.ts')).toBeTruthy();
@@ -185,7 +183,6 @@ describe('app', () => {
 
       await applicationGenerator(tree, {
         name: 'myNodeApp',
-        standaloneConfig: false,
       });
 
       const tsconfig = readJson(tree, 'my-node-app/tsconfig.json');
@@ -198,7 +195,6 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'myNodeApp',
         directory: 'myDir',
-        standaloneConfig: false,
       });
       const project = readProjectConfiguration(tree, 'my-dir-my-node-app');
 
@@ -222,7 +218,6 @@ describe('app', () => {
         name: 'myNodeApp',
         directory: 'myDir',
         tags: 'one,two',
-        standaloneConfig: false,
       });
       const projects = Object.fromEntries(getProjects(tree));
       expect(projects).toMatchObject({
@@ -241,7 +236,6 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'myNodeApp',
         directory: 'myDir',
-        standaloneConfig: false,
       });
 
       // Make sure these exist
@@ -287,7 +281,6 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'myNodeApp',
         unitTestRunner: 'none',
-        standaloneConfig: false,
       });
       expect(tree.exists('jest.config.ts')).toBeFalsy();
       expect(tree.exists('my-node-app/src/test-setup.ts')).toBeFalsy();
@@ -319,7 +312,6 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'myNodeApp',
         frontendProject: 'my-frontend',
-        standaloneConfig: false,
       });
 
       expect(tree.exists('my-frontend/proxy.conf.json')).toBeTruthy();
@@ -334,13 +326,11 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'cart',
         frontendProject: 'my-frontend',
-        standaloneConfig: false,
       });
 
       await applicationGenerator(tree, {
         name: 'billing',
         frontendProject: 'my-frontend',
-        standaloneConfig: false,
       });
 
       expect(tree.exists('my-frontend/proxy.conf.json')).toBeTruthy();
@@ -357,7 +347,6 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'myNodeApp',
         frontendProject: 'myFrontend',
-        standaloneConfig: false,
       });
 
       expect(tree.exists('my-frontend/proxy.conf.json')).toBeTruthy();

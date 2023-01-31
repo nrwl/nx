@@ -4,7 +4,7 @@ import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-u
 import { gte } from 'semver';
 import { getPkgVersionForAngularMajorVersion } from '../../../utils/version-utils';
 import { rxjsVersion as defaultRxjsVersion } from '../../../utils/versions';
-import { getInstalledAngularMajorVersion } from '../../utils/angular-version-utils';
+import { getInstalledAngularMajorVersion } from '../../utils/version-utils';
 
 export function addNgRxToPackageJson(tree: Tree): GeneratorCallback {
   let rxjsVersion: string;

@@ -1,35 +1,5 @@
 {
   "schematics": {
-    "update-12-1-0": {
-      "version": "12.1.0-beta.7",
-      "cli": "nx",
-      "description": "Update react storybook tsconfig to avoid VSCode errors",
-      "factory": "./src/migrations/update-12-1-0/fix-storybook-tsconfig"
-    },
-    "update-12-5-0": {
-      "version": "12.5.0-beta.5",
-      "cli": "nx",
-      "description": "Upgrade Storybook to v6.3",
-      "factory": "./src/migrations/update-12-5-0/migrate-storybook-6-3"
-    },
-    "install-addon-essentials": {
-      "version": "12.5.0-beta.5",
-      "cli": "nx",
-      "description": "Install the @storybook/addon-essentials package",
-      "factory": "./src/migrations/update-12-5-0/install-addon-essentials"
-    },
-    "update-12-5-9-beta.1": {
-      "version": "12.5.9-beta.1",
-      "cli": "nx",
-      "description": "Update Storybook React typings in tsconfig files",
-      "factory": "./src/migrations/update-12-5-9/update-storybook-react-typings"
-    },
-    "update-12-8.0": {
-      "version": "12.8.0-beta.11",
-      "cli": "nx",
-      "description": "Adjust Storybook tsconfig to add styled-jsx typings",
-      "factory": "./src/migrations/update-12-8-0/update-storybook-styled-jsx-typings"
-    },
     "update-13.4.6": {
       "version": "13.4.6-beta.1",
       "cli": "nx",
@@ -59,9 +29,40 @@
       "version": "15.4.6-beta.0",
       "description": "Refactor the Storybook target options",
       "factory": "./src/migrations/update-15-4-6/refactor-executor-options"
+    },
+    "update-15-5-3": {
+      "cli": "nx",
+      "version": "15.5.3-beta.0",
+      "description": "Add @nrwl/webpack if it is missing and is used.",
+      "factory": "./src/migrations/update-15-5-3/ensure-webpack-package"
     }
   },
   "packageJsonUpdates": {
+    "15.5.2": {
+      "version": "15.5.2-beta.0",
+      "packages": {
+        "@storybook/react-native": {
+          "version": "^6.0.1-beta.11",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/addon-ondevice-actions": {
+          "version": "^6.0.1-beta.11",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/addon-ondevice-backgrounds": {
+          "version": "^6.0.1-beta.11",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/addon-ondevice-controls": {
+          "version": "^6.0.1-beta.11",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/addon-ondevice-notes": {
+          "version": "^6.0.1-beta.11",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
     "15.4.3": {
       "version": "15.4.3-beta.1",
       "packages": {

@@ -1,11 +1,16 @@
-import { readJson, Tree, updateJson } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import {
+  addProjectConfiguration,
+  readJson,
+  Tree,
+  updateJson,
+} from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { migrateStorybookToWebPack5 } from './migrate-storybook-to-webpack-5';
 
 describe('migrateStorybookToWebPack5', () => {
   let tree: Tree;
   beforeEach(() => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it('should add packages needed by Storybook if workspace has the @storybook/react package', async () => {
@@ -25,7 +30,7 @@ describe('migrateStorybookToWebPack5', () => {
   });
 
   it('should not add the webpack Storybook packages again if they already exist', async () => {
-    let newTree = createTreeWithEmptyV1Workspace();
+    let newTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     updateJson(newTree, 'package.json', (json) => {
       json.dependencies = {
         '@storybook/react': '~6.3.0',
@@ -62,38 +67,32 @@ describe('migrateStorybookToWebPack5', () => {
         return json;
       });
 
-      updateJson(tree, 'workspace.json', (json) => {
-        json = {
-          ...json,
-          projects: {
-            ...json.projects,
-            'test-one': {
-              targets: {
-                storybook: {
-                  options: {
-                    uiFramework: '@storybook/react',
-                    config: {
-                      configFolder: 'libs/test-one/.storybook',
-                    },
-                  },
-                },
-              },
-            },
-            'test-two': {
-              targets: {
-                storybook: {
-                  options: {
-                    uiFramework: '@storybook/react',
-                    config: {
-                      configFolder: 'libs/test-two/.storybook',
-                    },
-                  },
-                },
+      addProjectConfiguration(tree, 'test-one', {
+        root: 'libs/test-one',
+        targets: {
+          storybook: {
+            options: {
+              uiFramework: '@storybook/react',
+              config: {
+                configFolder: 'libs/test-one/.storybook',
               },
             },
           },
-        };
-        return json;
+        },
+      });
+
+      addProjectConfiguration(tree, 'test-two', {
+        root: 'libs/test-two',
+        targets: {
+          storybook: {
+            options: {
+              uiFramework: '@storybook/react',
+              config: {
+                configFolder: 'libs/test-two/.storybook',
+              },
+            },
+          },
+        },
       });
 
       tree.write(

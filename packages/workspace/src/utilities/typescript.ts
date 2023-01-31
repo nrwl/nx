@@ -40,6 +40,7 @@ function readTsConfigOptions(tsConfigPath: string) {
   // we don't need to scan the files, we only care about options
   const host: Partial<ts.ParseConfigHost> = {
     readDirectory: () => [],
+    readFile: () => '',
     fileExists: tsModule.sys.fileExists,
   };
 

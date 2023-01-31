@@ -9,10 +9,7 @@ import {
   updateJson,
   writeJson,
 } from '@nrwl/devkit';
-import {
-  createTreeWithEmptyV1Workspace,
-  createTreeWithEmptyWorkspace,
-} from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
 import { Linter } from '@nrwl/linter';
 import { libraryGenerator } from '@nrwl/workspace/generators';
@@ -278,7 +275,7 @@ describe('@nrwl/storybook:configuration for Storybook v7', () => {
     }
 
     beforeAll(async () => {
-      tree = createTreeWithEmptyV1Workspace();
+      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       for (const [name, project] of Object.entries(variousProjects)) {
         addProjectConfiguration(tree, name, project as ProjectConfiguration);
         writeJson(
@@ -289,6 +286,15 @@ describe('@nrwl/storybook:configuration for Storybook v7', () => {
           {}
         );
       }
+
+      tree.write('libs/react-vite/vite.config.ts', 'export default {}');
+      tree.write('apps/main-vite/vite.config.ts', 'export default {}');
+      tree.write(
+        'apps/main-vite-ts/vite.config.custom.ts',
+        'export default {}'
+      );
+      tree.write('apps/reapp/vite.config.ts', 'export default {}');
+      tree.write('apps/wv1/vite.config.custom.ts', 'export default {}');
 
       await configurationGenerator(tree, {
         name: 'main-vite',
@@ -316,6 +322,7 @@ describe('@nrwl/storybook:configuration for Storybook v7', () => {
         storybook7betaConfiguration: true,
         storybook7UiFramework: '@storybook/react-webpack5',
       });
+
       await configurationGenerator(tree, {
         name: 'react-vite',
         uiFramework: '@storybook/react',

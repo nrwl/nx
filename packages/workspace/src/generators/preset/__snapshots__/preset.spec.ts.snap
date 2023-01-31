@@ -5,6 +5,7 @@ Array [
   "tsconfig.app.json",
   "tsconfig.spec.json",
   "src",
+  "project.json",
   "tsconfig.editor.json",
   "tsconfig.json",
   ".eslintrc.json",
@@ -33,4 +34,44 @@ Array [
   "app.component.ts",
   "nx-welcome.component.ts",
 ]
+`;
+
+exports[`preset should create files (preset = react-standalone bundler = vite) 1`] = `
+Object {
+  "configurations": Object {
+    "development": Object {
+      "buildTarget": "proj:build:development",
+      "hmr": true,
+    },
+    "production": Object {
+      "buildTarget": "proj:build:production",
+      "hmr": false,
+    },
+  },
+  "defaultConfiguration": "development",
+  "executor": "@nrwl/vite:dev-server",
+  "options": Object {
+    "buildTarget": "proj:build",
+  },
+}
+`;
+
+exports[`preset should create files (preset = react-standalone bundler = webpack) 1`] = `
+Object {
+  "configurations": Object {
+    "development": Object {
+      "buildTarget": "proj:build:development",
+    },
+    "production": Object {
+      "buildTarget": "proj:build:production",
+      "hmr": false,
+    },
+  },
+  "defaultConfiguration": "development",
+  "executor": "@nrwl/webpack:dev-server",
+  "options": Object {
+    "buildTarget": "proj:build",
+    "hmr": true,
+  },
+}
 `;

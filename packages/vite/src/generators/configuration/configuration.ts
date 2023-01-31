@@ -18,6 +18,7 @@ import {
   UserProvidedTargetName,
   TargetFlags,
   addPreviewTarget,
+  deleteWebpackConfig,
 } from '../../utils/generator-utils';
 
 import initGenerator from '../init/init';
@@ -27,7 +28,7 @@ import { Schema } from './schema';
 export async function viteConfigurationGenerator(tree: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
 
-  const { targets, projectType } = readProjectConfiguration(
+  const { targets, projectType, root } = readProjectConfiguration(
     tree,
     schema.project
   );
@@ -134,6 +135,13 @@ export async function viteConfigurationGenerator(tree: Tree, schema: Schema) {
     if (projectType === 'application') {
       moveAndEditIndexHtml(tree, schema, buildTargetName);
     }
+
+    deleteWebpackConfig(
+      tree,
+      root,
+      targets[buildTargetName]?.options?.webpackConfig
+    );
+
     editTsConfig(tree, schema);
   }
 

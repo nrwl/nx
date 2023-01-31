@@ -1,18 +1,23 @@
-import fastify from 'fastify';
+import Fastify from 'fastify';
+import { app } from './app/app';
 
-const app = fastify();
+const host = process.env.HOST ?? 'localhost';
+const port = process.env.PORT ? Number(process.env.PORT) : <%= port %>;
 
-app.get('/', async (req, res) => {
-    return { 'message': 'Hello API'};
+// Instantiate Fastify with some config
+const server = Fastify({
+  logger: true,
 });
 
-const start = async() => {
-    try {
-        await app.listen({ port: <%= port %> })
-    } catch (err) {
-        // Errors are logged here
-        process.exit(1);
-    }
-}
+// Register your application as a normal plugin.
+server.register(app);
 
-start();
+// Start listening.
+server.listen({ port, host }, (err) => {
+  if (err) {
+    server.log.error(err);
+    process.exit(1);
+  } else {
+    console.log(`[ ready ] http://${host}:${port}`);
+  }
+});

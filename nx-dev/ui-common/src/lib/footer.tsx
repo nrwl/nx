@@ -6,19 +6,17 @@ export function Footer(): JSX.Element {
     solutions: [
       { name: 'Nx', href: 'https://nx.dev' },
       { name: 'NxCloud', href: 'https://nx.app/?utm_source=nx.dev' },
-      { name: 'Nrwl', href: 'https://nrwl.io/?utm_source=nx.dev' },
     ],
     resources: [
       { name: 'Blog', href: 'https://blog.nrwl.io/?utm_source=nx.dev' },
       {
         name: 'Youtube Channel',
-        href: 'https://youtube.com/nrwl_io?utm_source=nx.dev',
+        href: 'https://youtube.com/@NxDevtools?utm_source=nx.dev',
       },
       {
         name: 'Nx Playbook',
         href: 'https://nxplaybook.com/?utm_source=nx.dev',
       },
-      { name: 'Nrwl', href: 'https://nrwl.io/?utm_source=nx.dev' },
       {
         name: 'Brands & Guidelines',
         href: 'https://nx.app/brands?utm_source=nx.dev',
@@ -26,7 +24,7 @@ export function Footer(): JSX.Element {
     ],
     community: [
       { name: 'Twitter', href: 'https://twitter.com/NXdevtools' },
-      { name: 'Github', href: 'https://github.com/nrwl/nx/' },
+      { name: 'GitHub', href: 'https://github.com/nrwl/nx/' },
       {
         name: 'Newsletter',
         href: 'https://go.nrwl.io/nx-newsletter?utm_source=nx.dev',
@@ -75,7 +73,7 @@ export function Footer(): JSX.Element {
       },
       {
         name: 'GitHub',
-        label: 'Nx is open source, check the code on Github',
+        label: 'Nx is open source, check the code on GitHub',
         href: 'https://github.com/nrwl/nx?utm_source=nx.dev',
         icon: (props: any) => (
           <svg fill="currentColor" viewBox="0 0 16 16" {...props}>
@@ -104,7 +102,7 @@ export function Footer(): JSX.Element {
       {
         name: 'Youtube',
         label: 'Youtube channel',
-        href: 'https://www.youtube.com/c/Nrwl_io?utm_source=nx.dev',
+        href: 'https://www.youtube.com/@NxDevtools?utm_source=nx.dev',
         icon: (props: any) => (
           <svg
             fill="currentColor"
@@ -257,7 +255,7 @@ export function Footer(): JSX.Element {
             &copy; 2023 made with{' '}
             <HeartIcon className="-mt-0.5 inline h-4 w-4" /> by{' '}
             <Link
-              href="https://nrwl.io/?utm_source=nx.dev"
+              href="https://nx.app/company/?utm_source=nx.dev"
               target="_blank"
               rel="noreferrer"
             >

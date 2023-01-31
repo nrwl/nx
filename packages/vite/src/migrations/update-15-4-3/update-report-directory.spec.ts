@@ -9,7 +9,7 @@ import { updateReportDirectoryPlaceholders } from './update-report-directory';
 describe('Update Report Directory Vitest Migration', () => {
   let tree: Tree;
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it('should migrate', () => {

@@ -1,7 +1,4 @@
-import {
-  createTreeWithEmptyV1Workspace,
-  createTreeWithEmptyWorkspace,
-} from '../../generators/testing-utils/create-tree-with-empty-workspace';
+import { createTreeWithEmptyWorkspace } from '../../generators/testing-utils/create-tree-with-empty-workspace';
 import type { Tree } from '../../generators/tree';
 import {
   addProjectConfiguration,
@@ -125,7 +122,7 @@ describe('15.0.0 migration (prefix-outputs) (v1)', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it('should prefix project outputs', async () => {

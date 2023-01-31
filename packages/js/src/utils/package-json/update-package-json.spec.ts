@@ -1,4 +1,16 @@
-import { getUpdatedPackageJsonContent } from './update-package-json';
+import {
+  getUpdatedPackageJsonContent,
+  updatePackageJson,
+  UpdatePackageJsonOption,
+} from './update-package-json';
+import { vol } from 'memfs';
+import { ExecutorContext, ProjectGraph } from '@nrwl/devkit';
+import { DependentBuildableProjectNode } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+
+jest.mock('nx/src/utils/workspace-root', () => ({
+  workspaceRoot: '/root',
+}));
+jest.mock('fs', () => require('memfs').fs);
 
 describe('getUpdatedPackageJsonContent', () => {
   it('should update fields for commonjs only (default)', () => {
@@ -257,5 +269,159 @@ describe('getUpdatedPackageJsonContent', () => {
         './custom': './custom.js',
       },
     });
+  });
+});
+
+describe('updatePackageJson', () => {
+  const originalPackageJson = {
+    name: '@org/lib1',
+    version: '0.0.3',
+    dependencies: { lib2: '^0.0.1' },
+    devDependencies: { jest: '27' },
+  };
+  const rootPackageJson = {
+    name: '@org/root',
+    version: '1.2.3',
+    dependencies: { external1: '~1.0.0', external2: '^4.0.0' },
+    devDependencies: { jest: '27' },
+  };
+  const projectGraph: ProjectGraph = {
+    nodes: {
+      '@org/lib1': {
+        type: 'lib',
+        name: '@org/lib1',
+        data: {
+          root: 'libs/lib1',
+          targets: {
+            build: {
+              outputs: ['{workspaceRoot}/dist/libs/lib1'],
+            },
+          },
+          files: [],
+        },
+      },
+    },
+    externalNodes: {
+      'npm:external1': {
+        type: 'npm',
+        name: 'npm:external1',
+        data: {
+          packageName: 'external1',
+          version: '1.0.0',
+        },
+      },
+      'npm:external2': {
+        type: 'npm',
+        name: 'npm:external2',
+        data: {
+          packageName: 'external2',
+          version: '4.5.6',
+        },
+      },
+      'npm:jest': {
+        type: 'npm',
+        name: 'npm:jest',
+        data: {
+          packageName: 'jest',
+          version: '21.1.0',
+        },
+      },
+    },
+    dependencies: {
+      '@org/lib1': [
+        { source: '@org/lib1', target: 'npm:external1', type: 'static' },
+        { source: '@org/lib1', target: 'npm:external2', type: 'static' },
+      ],
+    },
+  };
+  const context: ExecutorContext = {
+    root: '/root',
+    projectName: '@org/lib1',
+    isVerbose: false,
+    cwd: '',
+    targetName: 'build',
+    projectGraph,
+  };
+
+  it('should generate new package if missing', () => {
+    const fsJson = {};
+    vol.fromJSON(fsJson, '/root');
+    const options: UpdatePackageJsonOption = {
+      outputPath: 'dist/libs/lib1',
+      projectRoot: 'libs/lib1',
+      main: 'libs/lib1/main.ts',
+    };
+    const dependencies: DependentBuildableProjectNode[] = [];
+    updatePackageJson(options, context, undefined, dependencies);
+
+    expect(vol.existsSync('dist/libs/lib1/package.json')).toEqual(true);
+    const distPackageJson = JSON.parse(
+      vol.readFileSync('dist/libs/lib1/package.json', 'utf-8').toString()
+    );
+    expect(distPackageJson).toMatchInlineSnapshot(`
+      Object {
+        "main": "./main.js",
+        "name": "@org/lib1",
+        "types": "./main.d.ts",
+        "version": "0.0.1",
+      }
+    `);
+  });
+
+  it('should keep package unchanged if "updateBuildableProjectDepsInPackageJson" not set', () => {
+    const fsJson = {
+      'libs/lib1/package.json': JSON.stringify(originalPackageJson, null, 2),
+    };
+    vol.fromJSON(fsJson, '/root');
+    const options: UpdatePackageJsonOption = {
+      outputPath: 'dist/libs/lib1',
+      projectRoot: 'libs/lib1',
+      main: 'libs/lib1/main.ts',
+    };
+    const dependencies: DependentBuildableProjectNode[] = [];
+    updatePackageJson(options, context, undefined, dependencies);
+
+    expect(vol.existsSync('dist/libs/lib1/package.json')).toEqual(true);
+    const distPackageJson = JSON.parse(
+      vol.readFileSync('dist/libs/lib1/package.json', 'utf-8').toString()
+    );
+    expect(distPackageJson.dependencies).toEqual(
+      originalPackageJson.dependencies
+    );
+    expect(distPackageJson.main).toEqual('./main.js');
+    expect(distPackageJson.types).toEqual('./main.d.ts');
+  });
+
+  it('should modify package if "updateBuildableProjectDepsInPackageJson" is set', () => {
+    const fsJson = {
+      'package.json': JSON.stringify(rootPackageJson, null, 2),
+      'libs/lib1/package.json': JSON.stringify(originalPackageJson, null, 2),
+    };
+    vol.fromJSON(fsJson, '/root');
+    const options: UpdatePackageJsonOption = {
+      outputPath: 'dist/libs/lib1',
+      projectRoot: 'libs/lib1',
+      main: 'libs/lib1/main.ts',
+      updateBuildableProjectDepsInPackageJson: true,
+    };
+    const dependencies: DependentBuildableProjectNode[] = [];
+    updatePackageJson(options, context, undefined, dependencies);
+
+    expect(vol.existsSync('dist/libs/lib1/package.json')).toEqual(true);
+    const distPackageJson = JSON.parse(
+      vol.readFileSync('dist/libs/lib1/package.json', 'utf-8').toString()
+    );
+    expect(distPackageJson).toMatchInlineSnapshot(`
+      Object {
+        "dependencies": Object {
+          "external1": "1.0.0",
+          "external2": "4.5.6",
+        },
+        "main": "./main.js",
+        "name": "@org/lib1",
+        "types": "./main.d.ts",
+        "version": "0.0.1",
+      }
+    `);
   });
 });

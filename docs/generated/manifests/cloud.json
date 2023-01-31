@@ -329,6 +329,16 @@
         "tags": []
       },
       {
+        "id": "kubernetes-setup",
+        "name": "Kubernetes Setup",
+        "description": "",
+        "file": "nx-cloud/private/kubernetes-setup",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/private-cloud/kubernetes-setup",
+        "tags": []
+      },
+      {
         "id": "standalone",
         "name": "Standalone",
         "description": "",
@@ -411,6 +421,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/nx-cloud/private-cloud/advanced-config",
+    "tags": []
+  },
+  "/nx-cloud/private-cloud/kubernetes-setup": {
+    "id": "kubernetes-setup",
+    "name": "Kubernetes Setup",
+    "description": "",
+    "file": "nx-cloud/private/kubernetes-setup",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/private-cloud/kubernetes-setup",
     "tags": []
   },
   "/nx-cloud/private-cloud/standalone": {

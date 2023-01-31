@@ -9,11 +9,11 @@
     "type": "object",
     "examples": [
       {
-        "command": "g component my-component --project=mylib",
+        "command": "g @nrwl/expo:component my-component --project=mylib",
         "description": "Generate a component in the mylib library"
       },
       {
-        "command": "g component my-component --project=mylib --classComponent",
+        "command": "g @nrwl/expo:component my-component --project=mylib --classComponent",
         "description": "Generate a class component in the mylib library"
       }
     ],
@@ -39,7 +39,8 @@
       "skipFormat": {
         "description": "Skip formatting files.",
         "type": "boolean",
-        "default": false
+        "default": false,
+        "x-priority": "internal"
       },
       "skipTests": {
         "type": "boolean",
@@ -48,7 +49,8 @@
       },
       "directory": {
         "type": "string",
-        "description": "Create the component under this directory (can be nested)."
+        "description": "Create the component under this directory (can be nested).",
+        "x-priority": "important"
       },
       "flat": {
         "type": "boolean",

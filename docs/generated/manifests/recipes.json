@@ -1206,16 +1206,6 @@
         "tags": []
       },
       {
-        "id": "customize-webpack",
-        "name": "Customizing Webpack Config",
-        "description": "",
-        "file": "shared/guides/customize-webpack",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/other/customize-webpack",
-        "tags": ["use-task-executors"]
-      },
-      {
         "id": "react-nx",
         "name": "Powering Up React Development With Nx",
         "description": "",
@@ -1343,6 +1333,16 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/other/identify-dependencies-between-folders",
+        "tags": []
+      },
+      {
+        "id": "standalone-ngrx-apis",
+        "name": "Standalone NgRx APIs",
+        "description": "",
+        "file": "shared/recipes/standalone-ngrx-apis",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/other/standalone-ngrx-apis",
         "tags": []
       }
     ],
@@ -1520,16 +1520,6 @@
     "path": "/recipes/other/misc-data-persistence",
     "tags": []
   },
-  "/recipes/other/customize-webpack": {
-    "id": "customize-webpack",
-    "name": "Customizing Webpack Config",
-    "description": "",
-    "file": "shared/guides/customize-webpack",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/customize-webpack",
-    "tags": ["use-task-executors"]
-  },
   "/recipes/other/react-nx": {
     "id": "react-nx",
     "name": "Powering Up React Development With Nx",
@@ -1658,6 +1648,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/other/identify-dependencies-between-folders",
+    "tags": []
+  },
+  "/recipes/other/standalone-ngrx-apis": {
+    "id": "standalone-ngrx-apis",
+    "name": "Standalone NgRx APIs",
+    "description": "",
+    "file": "shared/recipes/standalone-ngrx-apis",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/other/standalone-ngrx-apis",
     "tags": []
   }
 }

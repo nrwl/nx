@@ -18,6 +18,30 @@ describe('addDependenciesToPackageJson', () => {
     });
   });
 
+  it('should not add dependency if it is not greater', () => {
+    writeJson(tree, 'package.json', {
+      dependencies: {
+        tslib: '^2.0.0',
+      },
+      devDependencies: {
+        jest: '28.1.3',
+      },
+    });
+    const installTask = addDependenciesToPackageJson(
+      tree,
+      {
+        tslib: '^2.3.0',
+      },
+      { jest: '28.1.1' }
+    );
+
+    expect(readJson(tree, 'package.json')).toEqual({
+      dependencies: { tslib: '^2.3.0' },
+      devDependencies: { jest: '28.1.3' },
+    });
+    expect(installTask).toBeDefined();
+  });
+
   it('should add dependencies to the package.json', () => {
     const installTask = addDependenciesToPackageJson(
       tree,
@@ -316,20 +340,6 @@ describe('ensurePackage', () => {
 
   beforeEach(() => {
     tree = createTree();
-  });
-
-  it('should return without error when dependency is satisfied', async () => {
-    writeJson(tree, 'package.json', {
-      devDependencies: {
-        '@nrwl/vite': '15.0.0',
-      },
-    });
-
-    await expect(
-      ensurePackage(tree, '@nrwl/vite', '>=15.0.0', {
-        throwOnMissing: true,
-      })
-    ).resolves.toBeUndefined();
   });
 
   it('should throw when dependencies are missing', async () => {

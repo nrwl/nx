@@ -1,11 +1,5 @@
 {
   "schematics": {
-    "add-next-eslint-12.6.0": {
-      "cli": "nx",
-      "version": "12.6.0-beta.0",
-      "description": "Add 'next' eslint config",
-      "factory": "./src/migrations/update-12-6-0/add-next-eslint"
-    },
     "fix-nextjs-lib-babel-config-12.8.0": {
       "cli": "nx",
       "version": "12.8.0-beta.11",

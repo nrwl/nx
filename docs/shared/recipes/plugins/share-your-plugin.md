@@ -22,7 +22,7 @@ Nx provides a utility (`nx list`) that lists both core and community plugins. To
 - Use the following commit message template: `chore(core): nx plugin submission [PLUGIN_NAME]`
 - push your changes, and run `yarn submit-plugin`
 
-> The `yarn submit-plugin` command automatically opens the Github pull request process with the correct template.
+> The `yarn submit-plugin` command automatically opens the GitHub pull request process with the correct template.
 
 We will then verify the plugin, offer suggestions or merge the pull request!
 

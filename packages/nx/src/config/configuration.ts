@@ -13,7 +13,7 @@ export function readNxJson(): NxJsonConfiguration {
  */
 export function readAllWorkspaceConfiguration(): ProjectsConfigurations &
   NxJsonConfiguration {
-  return new Workspaces(workspaceRoot).readProjectsConfig();
+  return new Workspaces(workspaceRoot).readProjectsConfigurations();
 }
 
 /**

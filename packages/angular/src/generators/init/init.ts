@@ -28,7 +28,7 @@ import {
   zoneJsVersion,
 } from '../../utils/versions';
 import { karmaGenerator } from '../karma/karma';
-import { getGeneratorDirectoryForInstalledAngularVersion } from '../utils/angular-version-utils';
+import { getGeneratorDirectoryForInstalledAngularVersion } from '../utils/version-utils';
 import { Schema } from './schema';
 
 export async function angularInitGenerator(

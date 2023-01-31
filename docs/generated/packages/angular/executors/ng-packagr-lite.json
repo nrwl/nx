@@ -32,7 +32,8 @@
         "type": "string",
         "description": "The full path for the TypeScript configuration file, relative to the workspace root.",
         "x-completion-type": "file",
-        "x-completion-glob": "tsconfig.*.json"
+        "x-completion-glob": "tsconfig.*.json",
+        "x-priority": "important"
       },
       "watch": {
         "type": "boolean",

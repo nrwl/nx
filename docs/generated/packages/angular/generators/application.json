@@ -128,7 +128,8 @@
       "standaloneConfig": {
         "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
         "type": "boolean",
-        "x-priority": "internal"
+        "default": true,
+        "x-deprecated": "Nx only supports standaloneConfig"
       },
       "port": {
         "type": "number",
@@ -155,6 +156,11 @@
         "default": false,
         "hidden": true,
         "x-priority": "internal"
+      },
+      "minimal": {
+        "description": "Generate a Angular app with a minimal setup.",
+        "type": "boolean",
+        "default": false
       }
     },
     "additionalProperties": false,

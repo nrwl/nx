@@ -328,7 +328,7 @@
           "description": "Learn about all the different concepts Nx uses to manage your tasks and enhance your productivity.",
           "itemList": [
             {
-              "name": "Integrated Repos vs. Package-Based Repos",
+              "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
               "tags": ["intro"],
               "id": "integrated-vs-package-based",
               "file": "shared/concepts/integrated-vs-package-based"
@@ -1104,13 +1104,6 @@
               "file": "shared/guides/misc-data-persistence"
             },
             {
-              "name": "Customizing Webpack Config",
-              "id": "customize-webpack",
-              "tags": ["use-task-executors"],
-              "file": "shared/guides/customize-webpack"
-            },
-
-            {
               "name": "Powering Up React Development With Nx",
               "id": "react-nx",
               "file": "shared/examples/react-nx"
@@ -1184,6 +1177,12 @@
               "id": "identify-dependencies-between-folders",
               "tags": [],
               "file": "shared/recipes/identify-dependencies-between-folders"
+            },
+            {
+              "name": "Standalone NgRx APIs",
+              "id": "standalone-ngrx-apis",
+              "tags": [],
+              "file": "shared/recipes/standalone-ngrx-apis"
             }
           ]
         }
@@ -1309,6 +1308,11 @@
               "name": "Advanced Configuration",
               "id": "advanced-config",
               "file": "nx-cloud/private/advanced-config"
+            },
+            {
+              "name": "Kubernetes Setup",
+              "id": "kubernetes-setup",
+              "file": "nx-cloud/private/kubernetes-setup"
             },
             {
               "name": "Standalone",
@@ -1484,6 +1488,11 @@
               "id": "watch",
               "tags": ["workspace-watching"],
               "file": "generated/cli/watch"
+            },
+            {
+              "name": "show",
+              "id": "show",
+              "file": "generated/cli/show"
             }
           ]
         },
@@ -1590,6 +1599,32 @@
               "id": "set-up-vite-manually",
               "description": "Manually set up your project to use Vite.js",
               "file": "shared/packages/vite/set-up-vite-manually"
+            }
+          ]
+        },
+        {
+          "name": "webpack",
+          "id": "webpack",
+          "description": "Webpack package.",
+          "itemList": [
+            {
+              "id": "overview",
+              "path": "/packages/webpack",
+              "name": "Overview of the Nx Webpack Plugin",
+              "description": "The Nx Plugin for Webpack contains executors and generators that support building applications using Webpack.",
+              "file": "shared/packages/webpack/plugin-overview"
+            },
+            {
+              "id": "webpack-config-setup",
+              "name": "How to configure webpack on your Nx workspace",
+              "description": "A guide on how to configure webpack on your Nx workspace, and instructions on how to customize your webpack configuration",
+              "file": "shared/packages/webpack/webpack-config-setup"
+            },
+            {
+              "id": "webpack-plugins",
+              "name": "Webpack plugins",
+              "description": "Webpack plugins",
+              "file": "shared/packages/webpack/webpack-plugins"
             }
           ]
         },

@@ -3,6 +3,7 @@ import {
   checkFilesDoNotExist,
   checkFilesExist,
   cleanupProject,
+  detectPackageManager,
   getPackageManagerCommand,
   newProject,
   packageManagerLockFile,
@@ -12,6 +13,7 @@ import {
   runCLIAsync,
   runCommand,
   runCommandUntil,
+  tmpProjPath,
   uniq,
   updateFile,
   updateJson,
@@ -36,7 +38,7 @@ describe('js e2e', () => {
     const babelRc = readJson(`libs/${lib}/.babelrc`);
     expect(babelRc.plugins).toBeUndefined();
     expect(babelRc.presets).toStrictEqual([
-      ['@nrwl/web/babel', { useBuiltIns: 'usage' }],
+      ['@nrwl/js/babel', { useBuiltIns: 'usage' }],
     ]);
 
     expect(runCLI(`build ${lib}`)).toContain('Done compiling TypeScript files');
@@ -47,6 +49,14 @@ describe('js e2e', () => {
       `dist/libs/${lib}/src/lib/${lib}.js`,
       `dist/libs/${lib}/src/index.d.ts`,
       `dist/libs/${lib}/src/lib/${lib}.d.ts`
+    );
+
+    runCLI(`build ${lib} --generateLockfile=true`);
+    checkFilesExist(
+      `dist/libs/${lib}/package.json`,
+      `dist/libs/${lib}/${
+        packageManagerLockFile[detectPackageManager(tmpProjPath())]
+      }`
     );
 
     updateJson(`libs/${lib}/project.json`, (json) => {
@@ -134,11 +144,8 @@ describe('js e2e', () => {
     const rootPackageJson = readJson(`package.json`);
 
     expect(
-      satisfies(
-        readJson(`dist/libs/${lib}/package.json`).peerDependencies.tslib,
-        rootPackageJson.dependencies.tslib
-      )
-    ).toBeTruthy();
+      readJson(`dist/libs/${lib}/package.json`).peerDependencies.tslib
+    ).toEqual(rootPackageJson.dependencies.tslib);
 
     updateJson(`libs/${lib}/tsconfig.json`, (json) => {
       json.compilerOptions = { ...json.compilerOptions, importHelpers: false };
@@ -187,9 +194,10 @@ describe('package.json updates', () => {
     runCLI(`build ${lib}`);
 
     // Check that only 'react' exists, don't care about version
-    expect(readJson(`dist/libs/${lib}/package.json`).dependencies).toEqual({});
-    expect(readJson(`dist/libs/${lib}/package.json`).peerDependencies).toEqual({
+    expect(readJson(`dist/libs/${lib}/package.json`).dependencies).toEqual({
       react: expect.any(String),
+    });
+    expect(readJson(`dist/libs/${lib}/package.json`).peerDependencies).toEqual({
       tslib: expect.any(String),
     });
     checkFilesDoNotExist(`dist/libs/${lib}/${packageManagerLockFile['npm']}`);

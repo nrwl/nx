@@ -27,12 +27,10 @@ import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { jestProjectGenerator } from '@nrwl/jest';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
-import { NodeJsFrameWorks, Schema } from './schema';
+import { Schema } from './schema';
 import { initGenerator } from '../init/init';
 import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 import {
-  connectTypingsVersion,
-  connectVersion,
   esbuildVersion,
   expressTypingsVersion,
   expressVersion,
@@ -41,9 +39,10 @@ import {
   koaVersion,
   nxVersion,
 } from '../../utils/versions';
-import { prompt } from 'enquirer';
 
 import * as shared from '@nrwl/workspace/src/utils/create-ts-config';
+import { e2eProjectGenerator } from '../e2e-project/e2e-project';
+import { setupDockerGenerator } from '../setup-docker/setup-docker';
 
 export interface NormalizedSchema extends Schema {
   appProjectRoot: string;
@@ -60,13 +59,17 @@ function getWebpackBuildConfig(
     options: {
       target: 'node',
       compiler: 'tsc',
-      outputPath: joinPathFragments('dist', options.appProjectRoot),
+      outputPath: joinPathFragments(
+        'dist',
+        options.rootProject ? options.name : options.appProjectRoot
+      ),
       main: joinPathFragments(
         project.sourceRoot,
         'main' + (options.js ? '.js' : '.ts')
       ),
       tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
       assets: [joinPathFragments(project.sourceRoot, 'assets')],
+      isolatedConfig: true,
       webpackConfig: joinPathFragments(
         options.appProjectRoot,
         'webpack.config.js'
@@ -90,7 +93,10 @@ function getEsBuildConfig(
     executor: '@nrwl/esbuild:esbuild',
     outputs: ['{options.outputPath}'],
     options: {
-      outputPath: joinPathFragments('dist', options.appProjectRoot),
+      outputPath: joinPathFragments(
+        'dist',
+        options.rootProject ? options.name : options.appProjectRoot
+      ),
       format: ['cjs'],
       main: joinPathFragments(
         project.sourceRoot,
@@ -98,6 +104,12 @@ function getEsBuildConfig(
       ),
       tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
       assets: [joinPathFragments(project.sourceRoot, 'assets')],
+      esbuildOptions: { sourcemap: true },
+    },
+    configurations: {
+      production: {
+        esbuildOptions: { sourcemap: false },
+      },
     },
   };
 }
@@ -276,10 +288,6 @@ function addProjectDependencies(
     fastify: {
       fastify: fastifyVersion,
     },
-    connect: {
-      connect: connectVersion,
-      '@types/connect': connectTypingsVersion,
-    },
   };
   return addDependenciesToPackageJson(
     tree,
@@ -298,6 +306,7 @@ function updateTsConfigOptions(tree: Tree, options: NormalizedSchema) {
         compilerOptions: {
           ...shared.tsConfigBaseOptions,
           ...json.compilerOptions,
+          esModuleInterop: true,
         },
         ...json,
         extends: undefined,
@@ -317,15 +326,16 @@ function updateTsConfigOptions(tree: Tree, options: NormalizedSchema) {
 
 export async function applicationGenerator(tree: Tree, schema: Schema) {
   const options = normalizeOptions(tree, schema);
-
   const tasks: GeneratorCallback[] = [];
+
   const initTask = await initGenerator(tree, {
     ...options,
     skipFormat: true,
   });
   tasks.push(initTask);
 
-  addProjectDependencies(tree, options);
+  const installTask = addProjectDependencies(tree, options);
+  tasks.push(installTask);
   addAppFiles(tree, options);
   addProject(tree, options);
 
@@ -346,18 +356,39 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
       setupFile: 'none',
       skipSerializers: true,
       supportTsx: options.js,
-      babelJest: options.babelJest,
       testEnvironment: 'node',
+      compiler: 'tsc',
       skipFormat: true,
     });
     tasks.push(jestTask);
   }
+
+  if (options.e2eTestRunner === 'jest') {
+    const e2eTask = await e2eProjectGenerator(tree, {
+      ...options,
+      projectType: options.framework === 'none' ? 'cli' : 'server',
+      name: options.rootProject ? 'e2e' : `${options.name}-e2e`,
+      project: options.name,
+      port: options.port,
+    });
+    tasks.push(e2eTask);
+  }
+
   if (options.js) {
     updateTsConfigsToJs(tree, { projectRoot: options.appProjectRoot });
   }
 
   if (options.frontendProject) {
     addProxy(tree, options);
+  }
+
+  if (options.docker) {
+    const dockerTask = await setupDockerGenerator(tree, {
+      ...options,
+      project: options.name,
+    });
+
+    tasks.push(dockerTask);
   }
 
   if (!options.skipFormat) {
@@ -384,6 +415,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     : joinPathFragments(appsDir, appDirectory);
 
   options.bundler = options.bundler ?? 'esbuild';
+  options.e2eTestRunner = options.e2eTestRunner ?? 'jest';
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
@@ -399,6 +431,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     parsedTags,
     linter: options.linter ?? Linter.EsLint,
     unitTestRunner: options.unitTestRunner ?? 'jest',
+    rootProject: options.rootProject ?? false,
     port: options.port ?? 3000,
   };
 }

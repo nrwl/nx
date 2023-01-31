@@ -47,6 +47,12 @@
       "version": "15.0.0-beta.1",
       "description": "Update usages of rollup executors to @nrwl/rollup",
       "factory": "./src/migrations/update-15-0-0/update-rollup-executor"
+    },
+    "update-babel-preset": {
+      "cli": "nx",
+      "version": "15.5.4-beta.0",
+      "description": "Update `@nrwl/web/babel` preset to `@nrwl/js/babel` for projects that have a .babelrc file.",
+      "factory": "./src/migrations/update-15-5-4/update-babel-preset"
     }
   },
   "packageJsonUpdates": {

@@ -22,7 +22,7 @@ export function writeCracoConfig(
           new TsConfigPathsPlugin({
             configFile: path.resolve(__dirname, 'tsconfig.json'),
             extensions: ['.ts', '.tsx', '.js', '.jsx'],
-            mainFields: ['module', 'main'],
+            mainFields: ['browser', 'module', 'main'],
           })
         );
         ${

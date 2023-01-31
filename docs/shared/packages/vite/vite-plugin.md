@@ -24,7 +24,7 @@ npx create-nx-workspace@latest --preset=web-components
 - Generate a new standalone React app set up with Vite
 
 ```shell
-npx create-nx-workspace@latest --preset=react-standalone
+npx create-nx-workspace@latest --preset=react-standalone --bundler=vite
 ```
 
 ## Add Vite to an existing workspace

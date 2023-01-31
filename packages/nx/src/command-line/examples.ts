@@ -294,11 +294,15 @@ export const examples: Record<string, Example[]> = {
     },
     {
       command: 'run-many --target=test --projects=proj1,proj2',
-      description: 'Test proj1 and proj2',
+      description: 'Test proj1 and proj2 in parallel',
     },
     {
-      command: 'run-many --target=test --projects=proj1,proj2 --parallel=2',
-      description: 'Test proj1 and proj2 in parallel',
+      command: 'run-many --target=test --projects=proj1,proj2 --parallel=5',
+      description: 'Test proj1 and proj2 in parallel using 5 workers',
+    },
+    {
+      command: 'run-many --target=test --projects=proj1,proj2 --parallel=false',
+      description: 'Test proj1 and proj2 in sequence',
     },
     {
       command: 'run-many --target=test --projects=*-app --exclude excluded-app',

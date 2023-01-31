@@ -16,7 +16,7 @@ export function normalizeOptions(
       : options.parent
       ? dirname(options.parent)
       : undefined,
-    route: options.route ?? "''",
+    route: options.route ?? '',
     directory: names(options.directory).fileName,
   };
 }

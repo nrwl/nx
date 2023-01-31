@@ -5,13 +5,13 @@
       "root": "apps/main-app",
       "sourceRoot": "apps/main-app/src",
       "prefix": "katst",
-      "architect": {
+      "targets": {
         "build": {
-          "builder": "@angular-devkit/build-angular:browser",
+          "executor": "@angular-devkit/build-angular:browser",
           "outputs": ["{options.outputPath}"]
         },
         "storybook": {
-          "builder": "@nrwl/storybook:storybook",
+          "executor": "@nrwl/storybook:storybook",
           "options": {
             "uiFramework": "@storybook/angular",
             "port": 4400,
@@ -33,13 +33,13 @@
       "root": "apps/other-app",
       "sourceRoot": "apps/other-app/src",
       "prefix": "katst",
-      "architect": {
+      "targets": {
         "build": {
-          "builder": "@angular-devkit/build-angular:browser",
+          "executor": "@angular-devkit/build-angular:browser",
           "outputs": ["{options.outputPath}"]
         },
         "storybook": {
-          "builder": "@nrwl/storybook:storybook",
+          "executor": "@nrwl/storybook:storybook",
           "options": {
             "uiFramework": "@storybook/angular",
             "port": 4400,

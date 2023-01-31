@@ -9,7 +9,7 @@ import {
   readProjectConfiguration,
   writeJson,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import type { MigrationProjectConfiguration } from '../../utilities';
 import { LibMigrator } from './lib.migrator';
 
@@ -41,11 +41,10 @@ describe('lib migrator', () => {
   }
 
   beforeEach(() => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     // when this migrator is invoked, some of the workspace migration has
     // already been run, so we make some adjustments to match that state
-    tree.delete('workspace.json');
     writeJson(tree, 'angular.json', { version: 2, projects: {} });
 
     jest.clearAllMocks();
@@ -522,7 +521,7 @@ describe('lib migrator', () => {
 
       expect(tree.exists('libs/lib1/project.json')).toBe(true);
       const { projects } = readJson(tree, 'angular.json');
-      expect(projects.lib1).toBe('libs/lib1');
+      expect(projects.lib1).toBeUndefined();
     });
 
     it('should update project root and source root', async () => {

@@ -34,7 +34,7 @@ The `simulator` option allows you to launch your iOS app in a specific simulator
     "run-ios": {
       "executor": "@nrwl/react-native:run-ios",
       "options": {
-        "simulator": "iPhone 13 Pro"
+        "simulator": "iPhone 14 Pro"
       }
     }
 ```

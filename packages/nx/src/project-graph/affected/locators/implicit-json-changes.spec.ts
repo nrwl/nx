@@ -15,10 +15,10 @@ function getModifiedChange(path: string[]) {
 }
 
 describe('getImplicitlyTouchedProjectsByJsonChanges', () => {
-  let workspaceJson;
+  let projectsConfigurations;
   let nxJson: NxJsonConfiguration<string[]>;
   beforeEach(() => {
-    workspaceJson = {};
+    projectsConfigurations = {};
     nxJson = {
       implicitDependencies: {
         'package.json': {
@@ -43,7 +43,7 @@ describe('getImplicitlyTouchedProjectsByJsonChanges', () => {
           getChanges: () => [getModifiedChange(['some', 'deep-field'])],
         },
       ],
-      workspaceJson,
+      projectsConfigurations,
       nxJson
     );
     expect(result).toEqual(['proj2']);
@@ -62,7 +62,7 @@ describe('getImplicitlyTouchedProjectsByJsonChanges', () => {
           ],
         },
       ],
-      workspaceJson,
+      projectsConfigurations,
       nxJson
     );
     expect(result).toEqual(['proj3', 'proj4', 'proj5', 'proj1']);
@@ -77,7 +77,7 @@ describe('getImplicitlyTouchedProjectsByJsonChanges', () => {
           getChanges: () => [new WholeFileChange()],
         },
       ],
-      workspaceJson,
+      projectsConfigurations,
       nxJson
     );
     expect(result).toEqual(['proj1', 'proj2', 'proj3', 'proj4', 'proj5']);

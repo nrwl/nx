@@ -15,7 +15,8 @@
     "skipPackageJson": {
       "type": "boolean",
       "default": false,
-      "description": "Do not add dependencies to `package.json`."
+      "description": "Do not add dependencies to `package.json`.",
+      "x-priority": "internal"
     },
     "js": {
       "type": "boolean",
@@ -26,7 +27,8 @@
       "description": "initialize Jest for an application at the root of the workspace",
       "type": "boolean",
       "default": false,
-      "hidden": true
+      "hidden": true,
+      "x-priority": "internal"
     }
   },
   "required": []

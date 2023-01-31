@@ -109,7 +109,7 @@ export function addProviderToRoute(
     );
   }
 
-  const ROUTE_SELECTOR = `ObjectLiteralExpression:has(PropertyAssignment:has(Identifier[name=path]) > StringLiteral[value=${routeToAddProviderTo}]):last-child`;
+  const ROUTE_SELECTOR = `ObjectLiteralExpression:has(PropertyAssignment:has(Identifier[name=path]) > StringLiteral[value='${routeToAddProviderTo}']):last-child`;
   const ROUTE_PATH_PROVIDERS_SELECTOR =
     'ObjectLiteralExpression > PropertyAssignment:has(Identifier[name=providers])';
 

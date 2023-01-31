@@ -21,6 +21,25 @@ describe('Nx Commands', () => {
 
   afterAll(() => cleanupProject());
 
+  describe('show', () => {
+    it('ttt should show the list of projects', () => {
+      const app1 = uniq('myapp');
+      const app2 = uniq('myapp');
+      expect(runCLI('show projects')).toEqual('');
+
+      runCLI(`generate @nrwl/web:app ${app1}`);
+      runCLI(`generate @nrwl/web:app ${app2}`);
+
+      const s = runCLI('show projects').split('\n');
+
+      expect(s.length).toEqual(4);
+      expect(s).toContain(app1);
+      expect(s).toContain(app2);
+      expect(s).toContain(`${app1}-e2e`);
+      expect(s).toContain(`${app2}-e2e`);
+    });
+  });
+
   describe('report and list', () => {
     it(`should report package versions`, async () => {
       const reportOutput = runCLI('report');

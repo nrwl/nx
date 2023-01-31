@@ -1,4 +1,4 @@
-import { readFileSync, existsSync } from 'fs-extra';
+import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 
 import { detectPackageManager, PackageManager } from '../utils/package-manager';

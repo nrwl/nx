@@ -91,7 +91,8 @@
               "required": ["name"]
             }
           ]
-        }
+        },
+        "x-priority": "important"
       },
       "updateBuildableProjectDepsInPackageJson": {
         "type": "boolean",
@@ -116,6 +117,12 @@
         "items": { "type": "string" },
         "description": "List of target names that annotate a build target for a project",
         "default": ["build"]
+      },
+      "generateLockfile": {
+        "type": "boolean",
+        "description": "Generate a lockfile (e.g. yarn.lock) that matches the workspace lockfile to ensure package versions match.",
+        "default": false,
+        "x-priority": "internal"
       }
     },
     "required": ["main", "outputPath", "tsConfig"],

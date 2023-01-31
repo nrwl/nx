@@ -1,4 +1,4 @@
-import { removeProjectConfiguration } from '@nrwl/devkit';
+import { getProjects, removeProjectConfiguration } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import applicationGenerator from '../../generators/application/application';
 import setupMf from '../../generators/setup-mf/setup-mf';

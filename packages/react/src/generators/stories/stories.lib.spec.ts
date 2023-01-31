@@ -1,18 +1,14 @@
 import { Tree } from '@nrwl/devkit';
 import storiesGenerator from './stories';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import applicationGenerator from '../application/application';
 import { Linter } from '@nrwl/linter';
 import libraryGenerator from '../library/library';
-import enquirer = require('enquirer');
 
 describe('react:stories for libraries', () => {
   let appTree: Tree;
 
   beforeEach(async () => {
-    jest
-      .spyOn(enquirer, 'prompt')
-      .mockReturnValue(new Promise((res) => res({ runner: 'jest' })));
     appTree = await createTestUILib('test-ui-lib');
 
     // create another component
@@ -228,7 +224,7 @@ export async function createTestUILib(
   libName: string,
   plainJS = false
 ): Promise<Tree> {
-  let appTree = createTreeWithEmptyV1Workspace();
+  let appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
   await libraryGenerator(appTree, {
     linter: Linter.EsLint,
@@ -238,7 +234,6 @@ export async function createTestUILib(
     style: 'css',
     unitTestRunner: 'none',
     name: libName,
-    standaloneConfig: false,
   });
 
   // create some Nx app that we'll use to generate the cypress
@@ -252,7 +247,6 @@ export async function createTestUILib(
     unitTestRunner: 'none',
     name: `${libName}-e2e`,
     js: plainJS,
-    standaloneConfig: false,
   });
   return appTree;
 }

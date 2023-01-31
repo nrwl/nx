@@ -2,14 +2,13 @@ import {
   addDependenciesToPackageJson,
   convertNxGenerator,
   formatFiles,
-  GeneratorCallback,
   Tree,
 } from '@nrwl/devkit';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { swcCoreVersion } from '@nrwl/js/src/utils/versions';
 
 import { Schema } from './schema';
 import {
+  nxVersion,
   reactRefreshVersion,
   reactRefreshWebpackPluginVersion,
   svgrWebpackVersion,
@@ -21,54 +20,36 @@ import {
 import { addBabelInputs } from '@nrwl/js/src/utils/add-babel-inputs';
 
 export async function webpackInitGenerator(tree: Tree, schema: Schema) {
-  const tasks: GeneratorCallback[] = [];
-
   if (schema.compiler === 'babel') {
     addBabelInputs(tree);
   }
+  const devDependencies = {
+    '@nrwl/webpack': nxVersion,
+  };
 
   if (schema.compiler === 'swc') {
-    const swcInstallTask = addDependenciesToPackageJson(
-      tree,
-      {},
-      {
-        '@swc/helpers': swcHelpersVersion,
-        '@swc/core': swcCoreVersion,
-        'swc-loader': swcLoaderVersion,
-      }
-    );
-    tasks.push(swcInstallTask);
+    devDependencies['@swc/helpers'] = swcHelpersVersion;
+    devDependencies['@swc/core'] = swcCoreVersion;
+    devDependencies['swc-loader'] = swcLoaderVersion;
   }
 
   if (schema.compiler === 'tsc') {
-    const tscInstallTask = addDependenciesToPackageJson(
-      tree,
-      {},
-      { tslib: tsLibVersion }
-    );
-    tasks.push(tscInstallTask);
+    devDependencies['tslib'] = tsLibVersion;
   }
 
   if (schema.uiFramework === 'react') {
-    const reactInstallTask = addDependenciesToPackageJson(
-      tree,
-      {},
-      {
-        '@pmmmwh/react-refresh-webpack-plugin':
-          reactRefreshWebpackPluginVersion,
-        '@svgr/webpack': svgrWebpackVersion,
-        'react-refresh': reactRefreshVersion,
-        'url-loader': urlLoaderVersion,
-      }
-    );
-    tasks.push(reactInstallTask);
+    devDependencies['@pmmmwh/react-refresh-webpack-plugin'] =
+      reactRefreshWebpackPluginVersion;
+    devDependencies['@svgr/webpack'] = svgrWebpackVersion;
+    devDependencies['react-refresh'] = reactRefreshVersion;
+    devDependencies['url-loader'] = urlLoaderVersion;
   }
 
   if (!schema.skipFormat) {
     await formatFiles(tree);
   }
 
-  return runTasksInSerial(...tasks);
+  return addDependenciesToPackageJson(tree, {}, devDependencies);
 }
 
 export default webpackInitGenerator;

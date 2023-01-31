@@ -53,4 +53,12 @@ describe('splitTarget', () => {
       splitTarget('project:"other:other":configuration', projectGraph)
     ).toEqual(['project', 'other:other', 'configuration']);
   });
+
+  it('should targets that contain colons when not provided graph but surrounded by quotes', () => {
+    expect(splitTarget('project:"other:other":configuration')).toEqual([
+      'project',
+      'other:other',
+      'configuration',
+    ]);
+  });
 });

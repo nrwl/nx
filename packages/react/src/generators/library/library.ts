@@ -23,25 +23,10 @@ import { createFiles } from './lib/create-files';
 import { updateBaseTsConfig } from './lib/update-base-tsconfig';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 import { installCommonDependencies } from './lib/install-common-dependencies';
-import { prompt } from 'enquirer';
 import { setDefaults } from './lib/set-defaults';
 
 export async function libraryGenerator(host: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
-
-  // Check if unit test runner was provided or if we have a default
-  if (!schema.unitTestRunner) {
-    schema.unitTestRunner = (
-      await prompt<{ runner: 'vitest' | 'jest' | 'none' }>([
-        {
-          message: 'What unit test runner should be used?',
-          type: 'select',
-          name: 'runner',
-          choices: ['vitest', 'jest', 'none'],
-        },
-      ])
-    ).runner;
-  }
 
   const options = normalizeOptions(host, schema);
   if (options.publishable === true && !schema.importPath) {
@@ -64,18 +49,13 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
   });
   tasks.push(initTask);
 
-  addProjectConfiguration(
-    host,
-    options.name,
-    {
-      root: options.projectRoot,
-      sourceRoot: joinPathFragments(options.projectRoot, 'src'),
-      projectType: 'library',
-      tags: options.parsedTags,
-      targets: {},
-    },
-    options.standaloneConfig
-  );
+  addProjectConfiguration(host, options.name, {
+    root: options.projectRoot,
+    sourceRoot: joinPathFragments(options.projectRoot, 'src'),
+    projectType: 'library',
+    tags: options.parsedTags,
+    targets: {},
+  });
 
   const lintTask = await addLinting(host, options);
   tasks.push(lintTask);

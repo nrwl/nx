@@ -1,8 +1,8 @@
-# Enable Github PR Integration
+# Enable GitHub PR Integration
 
 ## Get Started
 
-The [Nx Cloud Github App](https://github.com/marketplace/official-nx-cloud-app) lets you access the result of every run—with all its logs and build insights—straight from your PR.
+The [Nx Cloud GitHub App](https://github.com/marketplace/official-nx-cloud-app) lets you access the result of every run—with all its logs and build insights—straight from your PR.
 
 ## Connecting Your Workspace
 
@@ -12,23 +12,23 @@ Once you have installed the Nx Cloud GitHub App, you must link your workspace to
 
 Once on the VCS Integrations setup page, select "GitHub" in the platforms dropdown. You will be prompted to enter the name of your repository.
 
-![Add Github Repository](/nx-cloud/set-up/add-github-repository.png)
+![Add GitHub Repository](/nx-cloud/set-up/add-github-repository.png)
 
 ### Choosing an Authentication Method
 
 It is easier to configure the Nx Cloud GitHub Integration to use its GitHub App to authenticate, and this method should be preferred for users on Nx Public Cloud. Advanced users, or Nx Enterprise clients may instead wish to generate a personal access token instead.
 
-#### Using the Github App
+#### Using the GitHub App
 
 To use the Nx Cloud GitHub App for authentication, select the radio button and then click "Test Connection". This will verify that Nx Cloud can connect to your repo. Upon a successful test, your configuration is saved. Check the CI Platform Considerations section below and if there are no additional instructions for your platform of choice, setup is complete.
 
-![Use Github App for Authentication](/nx-cloud/set-up/use-github-app-auth.png)
+![Use GitHub App for Authentication](/nx-cloud/set-up/use-github-app-auth.png)
 
 #### Using a Personal Access Token
 
 To use a Personal Access Token for authentication, one must be generated with proper permissions. The minimum required permissions are shown in the screenshot below.
 
-![Minimum Github Personal Access Token Permissions](/nx-cloud/set-up/minimal-github-access-token.png)
+![Minimum GitHub Personal Access Token Permissions](/nx-cloud/set-up/minimal-github-access-token.png)
 
 Once this token is created, select the radio button for providing a personal access token, paste the value, and then click "Test Connection". This will verify that Nx Cloud can connect to your repo. Upon a successful test, your configuration is saved. Check the CI Platform Considerations section below and if there are no additional instructions for your platform of choice, setup is complete.
 

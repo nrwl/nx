@@ -3,10 +3,8 @@ title: 'React Standalone Tutorial - Part 1: Code Generation'
 description: In this tutorial you'll create a frontend-focused workspace with Nx.
 ---
 
-{% callout type="check" title="Standalone Repo" %}
-This tutorial sets up a repo with a single application at the root level that breaks out its code into libraries to add structure.
-
-Looking for a React monorepo setup? Check our [React monorepo tutorial](/react-tutorial/1-code-generation).
+{% callout type="check" title="Looking for React monorepos?" %}
+This tutorial sets up a repo with a single application at the root level that breaks out its code into libraries to add structure. If you are looking for a React monorepo setup then check out our [React monorepo tutorial](/react-tutorial/1-code-generation).
 
 {% /callout %}
 

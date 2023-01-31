@@ -5,7 +5,7 @@ import {
   readProjectConfiguration,
   updateJson,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import * as linter from '@nrwl/linter';
 import { addLintingGenerator } from './add-linting';
 
@@ -15,7 +15,7 @@ describe('addLinting generator', () => {
   const appProjectRoot = `apps/${appProjectName}`;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     addProjectConfiguration(tree, appProjectName, {
       root: appProjectRoot,
@@ -85,7 +85,7 @@ describe('addLinting generator', () => {
 
   describe('support angular v14', () => {
     beforeEach(() => {
-      tree = createTreeWithEmptyV1Workspace();
+      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       updateJson(tree, 'package.json', (json) => ({
         ...json,
         dependencies: {

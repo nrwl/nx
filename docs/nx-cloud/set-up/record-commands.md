@@ -18,6 +18,6 @@ Commands that Nx Cloud stores will appear under your "Runs" view. For easy ident
 
 ![nx-cloud record -- yarn nx workspace-lint](/nx-cloud/set-up/record-workspace-lint.png)
 
-If you use the Nx Cloud Github Integration, links to recorded output will also be displayed based on exit code in the summary comment.
+If you use the Nx Cloud GitHub Integration, links to recorded output will also be displayed based on exit code in the summary comment.
 
 ![Nx Cloud Report](/nx-cloud/set-up/record-report.png)

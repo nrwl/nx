@@ -9,7 +9,6 @@ import { E2eTestRunner } from '../../../../utils/test-runners';
 import { addProtractor } from './add-protractor';
 import { removeScaffoldedE2e } from './remove-scaffolded-e2e';
 import { updateE2eProject } from './update-e2e-project';
-import { convertToNxProjectGenerator } from '@nrwl/workspace/generators';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 
 export async function addE2e(tree: Tree, options: NormalizedSchema) {
@@ -34,14 +33,6 @@ export async function addE2e(tree: Tree, options: NormalizedSchema) {
 
   if (options.e2eTestRunner === E2eTestRunner.Protractor) {
     updateE2eProject(tree, options);
-    if (
-      options.standaloneConfig ??
-      getWorkspaceLayout(tree).standaloneAsDefault
-    ) {
-      await convertToNxProjectGenerator(tree, {
-        project: `${options.e2eProjectName}`,
-      });
-    }
     if (options.linter === Linter.EsLint) {
       await lintProjectGenerator(tree, {
         project: options.e2eProjectName,

@@ -43,7 +43,7 @@ export async function connectToNxCloudCommand(
         'Go to https://nx.app to learn more.',
         ' ',
         'If you have not done so already, please claim this workspace:',
-        `${getNxCloudUrl()}'/orgs/workspace-setup?accessToken=${getNxCloudToken()}`,
+        `${getNxCloudUrl()}/orgs/workspace-setup?accessToken=${getNxCloudToken()}`,
       ],
     });
     return false;

@@ -5,7 +5,7 @@ import {
   installPackagesTask,
 } from '@nrwl/devkit';
 import { getPkgVersionsForAngularMajorVersion } from '../../utils/version-utils';
-import { getInstalledAngularVersionInfo } from '../utils/angular-version-utils';
+import { getInstalledAngularVersionInfo } from '../utils/version-utils';
 import {
   generateSSRFiles,
   normalizeOptions,

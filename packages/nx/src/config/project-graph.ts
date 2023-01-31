@@ -1,8 +1,9 @@
 import type {
   ProjectConfiguration,
+  ProjectsConfigurations,
   Workspace,
 } from './workspace-json-project-json';
-import { InputDefinition } from './workspace-json-project-json';
+import { NxJsonConfiguration } from './nx-json';
 
 /**
  * Some metadata about a file
@@ -127,8 +128,13 @@ export interface ProjectGraphDependency {
 export interface ProjectGraphProcessorContext {
   /**
    * Workspace information such as projects and configuration
+   * @deprecated use projectsConfigurations or nxJsonConfiguration
    */
   workspace: Workspace;
+
+  projectsConfigurations: ProjectsConfigurations;
+
+  nxJsonConfiguration: NxJsonConfiguration;
 
   /**
    * All files in the workspace

@@ -8,7 +8,6 @@ import {
   updateNxJson,
 } from '@nrwl/devkit';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
-import { convertToNxProjectGenerator } from '@nrwl/workspace/generators';
 import { join } from 'path';
 import { UnitTestRunner } from '../../utils/test-runners';
 import { angularInitGenerator } from '../init/init';
@@ -16,7 +15,7 @@ import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
 import {
   getGeneratorDirectoryForInstalledAngularVersion,
   getInstalledAngularVersionInfo,
-} from '../utils/angular-version-utils';
+} from '../utils/version-utils';
 import {
   addE2e,
   addLinting,
@@ -54,8 +53,7 @@ export async function applicationGenerator(
     let previousGenerator = await import(
       join(__dirname, generatorDirectory, 'application')
     );
-    await previousGenerator.default(tree, schema);
-    return;
+    return await previousGenerator.default(tree, schema);
   }
 
   const options = normalizeOptions(tree, schema);
@@ -94,24 +92,26 @@ export async function applicationGenerator(
   updateConfigFiles(tree, options);
   updateAppComponentTemplate(tree, options);
 
-  // Create the NxWelcomeComponent
-  const angularComponentSchematic = wrapAngularDevkitSchematic(
-    '@schematics/angular',
-    'component'
-  );
-  await angularComponentSchematic(tree, {
-    name: 'NxWelcome',
-    inlineTemplate: true,
-    inlineStyle: true,
-    prefix: options.prefix,
-    skipTests: true,
-    style: options.style,
-    flat: true,
-    viewEncapsulation: 'None',
-    project: options.name,
-    standalone: options.standalone,
-  });
-  updateNxComponentTemplate(tree, options);
+  if (!options.minimal) {
+    // Create the NxWelcomeComponent
+    const angularComponentSchematic = wrapAngularDevkitSchematic(
+      '@schematics/angular',
+      'component'
+    );
+    await angularComponentSchematic(tree, {
+      name: 'NxWelcome',
+      inlineTemplate: true,
+      inlineStyle: true,
+      prefix: options.prefix,
+      skipTests: true,
+      style: options.style,
+      flat: true,
+      viewEncapsulation: 'None',
+      project: options.name,
+      standalone: options.standalone,
+    });
+    updateNxComponentTemplate(tree, options);
+  }
 
   if (options.addTailwind) {
     await setupTailwindGenerator(tree, {
@@ -148,13 +148,6 @@ export async function applicationGenerator(
     enableStrictTypeChecking(tree, options);
   } else {
     setApplicationStrictDefault(tree, false);
-  }
-
-  if (options.standaloneConfig) {
-    await convertToNxProjectGenerator(tree, {
-      project: options.name,
-      all: false,
-    });
   }
 
   if (options.standalone) {

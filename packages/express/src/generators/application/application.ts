@@ -60,8 +60,13 @@ server.on('error', console.error);
     toJS(tree);
   }
 }
-
+// TODO (nicholas): Remove After Nx 16
+// @deprecated Use `nx g @nrwl/node:app --framework=express instead.
 export async function applicationGenerator(tree: Tree, schema: Schema) {
+  console.warn(
+    'As of Nx 16 using `nx g @nrwl/express:app` has been deprecated! Use `nx g @nrwl/node:app --framework=express instead.'
+  );
+
   const options = normalizeOptions(tree, schema);
   const initTask = await initGenerator(tree, { ...options, skipFormat: true });
   const applicationTask = await nodeApplicationGenerator(tree, {

@@ -1,5 +1,5 @@
 import { getProjects, Tree, updateProjectConfiguration } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import libraryGenerator from '../library/library';
 import componentStoryGenerator from './component-story';
 import { Linter } from '@nrwl/linter';
@@ -706,7 +706,7 @@ describe('react:component-story', () => {
 });
 
 export async function createTestUILib(libName: string): Promise<Tree> {
-  let appTree = createTreeWithEmptyV1Workspace();
+  let appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   await libraryGenerator(appTree, {
     name: libName,
     linter: Linter.EsLint,
@@ -715,7 +715,6 @@ export async function createTestUILib(libName: string): Promise<Tree> {
     skipTsConfig: false,
     style: 'css',
     unitTestRunner: 'jest',
-    standaloneConfig: false,
   });
 
   const currentWorkspaceJson = getProjects(appTree);

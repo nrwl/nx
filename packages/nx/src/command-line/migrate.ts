@@ -1,7 +1,7 @@
 import * as chalk from 'chalk';
 import { exec, execSync } from 'child_process';
 import { dirname, join } from 'path';
-import { gt, lt, lte, major, valid } from 'semver';
+import { gt, lt, lte, gte, major, valid } from 'semver';
 import { promisify } from 'util';
 import {
   MigrationsJson,
@@ -808,14 +808,12 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     let originalPackageJson = readJsonFile<PackageJson>(
       join(root, 'package.json')
     );
+    const from = readNxVersion(originalPackageJson);
 
     try {
       if (
         ['nx', '@nrwl/workspace'].includes(opts.targetPackage) &&
-        (await isMigratingToNewMajor(
-          readNxVersion(originalPackageJson),
-          opts.targetVersion
-        ))
+        (await isMigratingToNewMajor(from, opts.targetVersion))
       ) {
         const useCloud = await connectToNxCloudCommand(
           messages.getPromptMessage('nxCloudMigration')
@@ -853,7 +851,10 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     updatePackageJson(root, packageJson);
 
     if (migrations.length > 0) {
-      createMigrationsFile(root, migrations);
+      createMigrationsFile(root, [
+        ...addSplitConfigurationMigrationIfAvailable(from, packageJson),
+        ...migrations,
+      ] as any);
     }
 
     output.success({
@@ -889,6 +890,33 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       title: `The migrate command failed.`,
     });
     throw e;
+  }
+}
+
+function addSplitConfigurationMigrationIfAvailable(
+  from: string,
+  packageJson: any
+) {
+  if (!packageJson['@nrw/workspace']) return [];
+
+  if (
+    gte(packageJson['@nrw/workspace'].version, '15.7.0') &&
+    lt(from, '15.7.0')
+  ) {
+    return [
+      {
+        version: '15.7.0-beta.0',
+        description:
+          'Spilt global configuration files into individual project.json files. This migration has been added automatically to the beginning of your migration set to retroactively make them work with the new version of Nx.',
+        cli: 'nx',
+        implementation:
+          './src/migrations/update-15-7-0/split-configuration-into-project-json-files',
+        package: '@nrwl/workspace',
+        name: '15-7-0-split-configuration-into-project-json-files',
+      },
+    ];
+  } else {
+    return [];
   }
 }
 

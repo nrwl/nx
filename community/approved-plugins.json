@@ -125,8 +125,13 @@
     "url": "https://github.com/twittwer/nx-tools/tree/master/libs/compodoc#readme"
   },
   {
+    "name": "@enio.ai/nx-install",
+    "description": "nx-install is a plugin for Nx workspaces to quickly setup custom install commands via npm.",
+    "url": "https://github.com/enio-ireland/enio/tree/develop/packages/nx-install#readme"
+  },
+  {
     "name": "@enio.ai/typedoc",
-    "description": "typedoc is a transparent wrapper plugin for Nx workspaces to quickly setup documentation automation on your projects using typedoc.",
+    "description": "typedoc is a plugin for Nx workspaces to quickly setup documentation automation on your projects using typedoc.",
     "url": "https://github.com/enio-ireland/enio/tree/develop/packages/typedoc#readme"
   },
   {

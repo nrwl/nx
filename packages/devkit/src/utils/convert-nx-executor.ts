@@ -17,7 +17,7 @@ export function convertNxExecutor(executor: Executor) {
   const builderFunction = (options, builderContext) => {
     const workspaces = new Workspaces(builderContext.workspaceRoot);
     const nxJsonConfiguration = workspaces.readNxJson();
-    const projectsConfigurations = workspaces.readProjectsConfig({
+    const projectsConfigurations = workspaces.readProjectsConfigurations({
       _includeProjectsFromAngularJson: true,
     });
 

@@ -638,7 +638,6 @@ describe('workspace', () => {
       expect(tree.exists('angular.json')).toBe(false);
       expect(tree.exists('.prettierignore')).toBe(true);
       expect(tree.exists('.prettierrc')).toBe(true);
-      const { scripts } = readJson(tree, 'package.json');
       expect(readJson(tree, 'nx.json')).toMatchSnapshot();
       expect(readJson(tree, 'project.json')).toMatchSnapshot();
       expect(readJson(tree, 'projects/app2/project.json')).toMatchSnapshot();
