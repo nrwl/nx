@@ -4,6 +4,8 @@ import { join } from 'path';
 import { detectPackageManager, PackageManager } from '../utils/package-manager';
 import { workspaceRoot } from '../utils/workspace-root';
 import { ProjectGraph } from '../config/project-graph';
+import { PackageJson } from '../utils/package-json';
+import { defaultHashing } from '../hasher/hashing-impl';
 
 import { parseNpmLockfile, stringifyNpmLockfile } from './npm-parser';
 import { parsePnpmLockfile, stringifyPnpmLockfile } from './pnpm-parser';
@@ -12,9 +14,6 @@ import {
   normalizePackageJson,
   pruneProjectGraph,
 } from './project-graph-pruning';
-import { PackageJson } from '../utils/package-json';
-import { LockFileGraph } from './utils/types';
-import { defaultHashing } from '../hasher/hashing-impl';
 
 const YARN_LOCK_FILE = 'yarn.lock';
 const NPM_LOCK_FILE = 'package-lock.json';

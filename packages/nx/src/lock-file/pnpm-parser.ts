@@ -9,7 +9,7 @@ import {
   parseAndNormalizePnpmLockfile,
   stringifyToPnpmYaml,
 } from './utils/pnpm-normalizer';
-import { getRootVersion } from './utils/parsing-utils';
+import { getRootVersion } from './utils/package-json-version';
 import { NormalizedPackageJson } from './utils/types';
 import { sortObjectByKeys } from '../utils/object-sort';
 import {

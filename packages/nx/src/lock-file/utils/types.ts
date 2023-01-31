@@ -1,4 +1,3 @@
-import { PackageSnapshot } from '@pnpm/lockfile-types';
 import { PackageJson } from '../../utils/package-json';
 
 export type NormalizedPackageJson = Pick<
@@ -12,36 +11,6 @@ export type NormalizedPackageJson = Pick<
   | 'peerDependenciesMeta'
   | 'optionalDependencies'
 >;
-
-// Lock File
-
-export type LockFileGraph = {
-  nodes: Map<string, LockFileNode>;
-  isValid: boolean;
-};
-
-export type LockFileNode = {
-  name: string;
-  packageName?: string;
-  version?: string;
-  edgesOut?: Map<string, LockFileEdge>;
-  edgesIn?: Set<LockFileEdge>;
-  isHoisted: boolean;
-};
-
-export type LockFileEdge = {
-  name: string;
-  versionSpec: string;
-  from?: LockFileNode;
-  to?: LockFileNode;
-  // some optional dependencies might be missing
-  // we want to keep track of that to avoid false positives
-  optional?: boolean;
-  // incoming edges don't have a source
-  incoming?: boolean;
-  // error type if source or target is missing
-  error?: 'MISSING_TARGET' | 'MISSING_SOURCE';
-};
 
 // YARN
 
@@ -108,7 +77,3 @@ export type NpmLockFile = {
   packages?: Record<string, NpmDependencyV3>;
   dependencies?: Record<string, NpmDependencyV1>;
 };
-
-// PNPM
-
-export type VersionedPackageSnapshot = PackageSnapshot & { version?: string };

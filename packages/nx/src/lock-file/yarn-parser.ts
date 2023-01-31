@@ -2,7 +2,7 @@ import { parseSyml, stringifySyml } from '@yarnpkg/parsers';
 import { stringify } from '@yarnpkg/lockfile';
 import { YarnDependency } from './utils/types';
 import { sortObjectByKeys } from '../utils/object-sort';
-import { getRootVersion } from './utils/parsing-utils';
+import { getRootVersion } from './utils/package-json-version';
 import {
   ProjectGraph,
   ProjectGraphExternalNode,
@@ -273,13 +273,8 @@ function mapSnapshots(
   snapshotMap.forEach((keysSet) => {
     for (const key of keysSet.values()) {
       const packageName = key.slice(0, key.indexOf('@', 1));
-      try {
-        if (!detectedDeps.get(packageName).has(key)) {
-          keysSet.delete(key);
-        }
-      } catch (e) {
-        console.log(packageName);
-        throw e;
+      if (!detectedDeps.get(packageName).has(key)) {
+        keysSet.delete(key);
       }
     }
   });

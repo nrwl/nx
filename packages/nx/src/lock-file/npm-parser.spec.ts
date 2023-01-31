@@ -434,7 +434,6 @@ describe('NPM lock file utility', () => {
         '__fixtures__/workspaces/package-lock.v1.json'
       ));
       const result = parseNpmLockfile(JSON.stringify(lockFile));
-      console.log(result.externalNodes);
       expect(Object.keys(result.externalNodes).length).toEqual(5);
     });
   });
