@@ -22,7 +22,8 @@
     "submit-plugin": "node ./scripts/submit-plugin.js",
     "prepare": "is-ci || husky install",
     "echo": "echo 123458",
-    "root-lint": "nx workspace-lint"
+    "root-lint": "nx workspace-lint",
+    "preinstall": "node ./scripts/preinstall.js"
   },
   "devDependencies": {
     "@angular-devkit/architect": "~0.1501.0",
