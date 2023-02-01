@@ -53,7 +53,8 @@
       },
       "publicHost": {
         "type": "string",
-        "description": "Public URL where the application will be served."
+        "description": "Public URL where the application will be served.",
+        "x-priority": "important"
       },
       "open": {
         "type": "boolean",
@@ -74,9 +75,12 @@
       },
       "baseHref": {
         "type": "string",
-        "description": "Base url for the application being built."
+        "description": "Base url for the application being built.",
+        "x-priority": "important"
       }
     },
+    "additionalProperties": false,
+    "required": ["buildTarget"],
     "presets": []
   },
   "description": "Serve a web application.",
