@@ -1,3 +1,8 @@
+---
+title: Examples for the Vite preview server executor
+description: This page contains examples for the Vite @nrwl/vite:preview-server executor.
+---
+
 `project.json`:
 
 ```json

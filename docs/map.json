@@ -1589,15 +1589,16 @@
           "description": "Vite package.",
           "itemList": [
             {
-              "name": "Overview",
               "id": "overview",
               "path": "/packages/vite",
+              "name": "Overview of the Nx Vite Plugin",
+              "description": "The Nx Plugin for Vite contains executors and generators that support building applications using Vite. This page also explains how to configure Vite on your Nx workspace.",
               "file": "shared/packages/vite/vite-plugin"
             },
             {
-              "name": "Manually set up your project to use Vite.js",
               "id": "set-up-vite-manually",
-              "description": "Manually set up your project to use Vite.js",
+              "name": "Manually set up your project to use Vite.js",
+              "description": "This guide explains how you can manually set up your project to use Vite.js in your Nx workspace.",
               "file": "shared/packages/vite/set-up-vite-manually"
             }
           ]

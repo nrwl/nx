@@ -3,7 +3,7 @@
   "outputCapture": "direct-nodejs",
   "title": "Vite Prod Builder",
   "cli": "nx",
-  "description": "Build using Vite.",
+  "description": "Builds a Vite.js application for production.",
   "type": "object",
   "presets": [
     {
