@@ -1,3 +1,8 @@
+---
+title: Storybook 7 setup guide
+description: This guide explains how you can set up Storybook version 7 in your Nx workspace. It contains information about the generators and the frameworks that are supported.
+---
+
 # Storybook 7 is here - and Nx is ready
 
 {% callout type="info" title="Available on Nx v15.6" %}

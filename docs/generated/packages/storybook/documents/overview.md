@@ -1,3 +1,8 @@
+---
+title: Nx Storybook Plugin Overview
+description: This is an overview page for the Storybook plugin in Nx. It explains what Storybook is and how to set it up in your Nx workspace.
+---
+
 [Storybook](https://storybook.js.org) is a development environment for UI components. It allows you to browse a component library, view the different states of each component, and interactively develop and test components.
 
 This guide will briefly walk you through using Storybook within an Nx workspace.
@@ -188,4 +193,4 @@ For more on using Storybook, see the [official Storybook documentation](https://
 Here's more information on common migration scenarios for Storybook with Nx. For Storybook specific migrations that are not automatically handled by Nx please refer to the [official Storybook page](https://storybook.js.org/)
 
 - [Upgrading to Storybook 6](/packages/storybook/documents/upgrade-storybook-v6-react)
-- [Migrate to the Nrwl React Storybook Preset](/packages/storybook/documents/migrate-webpack-final-react)
+- [Migrate to the Nx React Storybook Addon](/packages/storybook/documents/migrate-webpack-final-react)

@@ -2379,8 +2379,8 @@
     "documents": {
       "/packages/storybook/documents/overview": {
         "id": "overview",
-        "name": "Overview Generic",
-        "description": "The Nx Plugin for Storybook contains executors and generators for allowing your workspace to use the powerful Storybook integration testing & documenting capabilities.",
+        "name": "Nx Storybook Plugin Overview",
+        "description": "This is an overview page for the Storybook plugin in Nx. It explains what Storybook is and how to set it up in your Nx workspace.",
         "file": "generated/packages/storybook/documents/overview",
         "itemList": [],
         "isExternal": false,
@@ -2391,7 +2391,7 @@
       "/packages/storybook/documents/overview-react": {
         "id": "overview-react",
         "name": "Set up Storybook for React Projects",
-        "description": "The Nx Plugin for Storybook contains executors and generators for allowing your workspace to use the powerful Storybook integration testing & documenting capabilities.",
+        "description": "This guide explains how to set up Storybook for React projects in your Nx workspace.",
         "file": "generated/packages/storybook/documents/overview-react",
         "itemList": [],
         "isExternal": false,
@@ -2402,7 +2402,7 @@
       "/packages/storybook/documents/overview-angular": {
         "id": "overview-angular",
         "name": "Set up Storybook for Angular Projects",
-        "description": "The Nx Plugin for Storybook contains executors and generators for allowing your workspace to use the powerful Storybook integration testing & documenting capabilities.",
+        "description": "This guide explains how to set up Storybook for Angular projects in your Nx workspace.",
         "file": "generated/packages/storybook/documents/overview-angular",
         "itemList": [],
         "isExternal": false,
@@ -2413,7 +2413,7 @@
       "/packages/storybook/documents/storybook-7-setup": {
         "id": "storybook-7-setup",
         "name": "Storybook 7 setup guide",
-        "description": "The Nx Plugin for Storybook contains executors and generators for allowing your workspace to use the powerful Storybook integration testing & documenting capabilities.",
+        "description": "This guide explains how you can set up Storybook version 7 in your Nx workspace. It contains information about the generators and the frameworks that are supported.",
         "file": "generated/packages/storybook/documents/storybook-7-setup",
         "itemList": [],
         "isExternal": false,
@@ -2423,8 +2423,8 @@
       },
       "/packages/storybook/documents/migrate-storybook-7": {
         "id": "migrate-storybook-7",
-        "name": "Migrate Storybook to version 7",
-        "description": "The Nx Plugin for Storybook contains executors and generators for allowing your workspace to use the powerful Storybook integration testing & documenting capabilities.",
+        "name": " Migrate your Nx workspace to Storybook version 7",
+        "description": "This guide explains how migrate your Nx workspace to Storybook version 7.",
         "file": "generated/packages/storybook/documents/migrate-storybook-7",
         "itemList": [],
         "isExternal": false,
@@ -2435,7 +2435,7 @@
       "/packages/storybook/documents/best-practices": {
         "id": "best-practices",
         "name": "Storybook best practices for making the most out of Nx",
-        "description": "The Nx Plugin for Storybook contains executors and generators for allowing your workspace to use the powerful Storybook integration testing & documenting capabilities.",
+        "description": "The purpose of this guide is to help you set up Storybook in your Nx workspace so that you can get the most out of Nx and its powerful capabilities.",
         "file": "generated/packages/storybook/documents/best-practices",
         "itemList": [],
         "isExternal": false,
@@ -2446,7 +2446,7 @@
       "/packages/storybook/documents/storybook-composition-setup": {
         "id": "storybook-composition-setup",
         "name": "Setting up Storybook Composition with Nx",
-        "description": "The Nx Plugin for Storybook contains executors and generators for allowing your workspace to use the powerful Storybook integration testing & documenting capabilities.",
+        "description": "This guide explains how you can set up Storybook composition on your Nx workspace.",
         "file": "generated/packages/storybook/documents/storybook-composition-setup",
         "itemList": [],
         "isExternal": false,
@@ -2457,7 +2457,7 @@
       "/packages/storybook/documents/angular-storybook-compodoc": {
         "id": "angular-storybook-compodoc",
         "name": "Angular: Set up Compodoc for Storybook on Nx",
-        "description": "The Nx Plugin for Storybook contains executors and generators for allowing your workspace to use the powerful Storybook integration testing & documenting capabilities.",
+        "description": "This guide explains how to set up Compodoc for Storybook on Angular projects in a Nx workspace.",
         "file": "generated/packages/storybook/documents/angular-storybook-compodoc",
         "itemList": [],
         "isExternal": false,
@@ -2468,7 +2468,7 @@
       "/packages/storybook/documents/angular-storybook-targets": {
         "id": "angular-storybook-targets",
         "name": "Angular: Information about the Storybook targets",
-        "description": "The Nx Plugin for Storybook contains executors and generators for allowing your workspace to use the powerful Storybook integration testing & documenting capabilities.",
+        "description": "This document explains the role of the storybook and build-storybook targets in Angular projects with a Storybook configuration, and specifically which executors are used for them.",
         "file": "generated/packages/storybook/documents/angular-storybook-targets",
         "itemList": [],
         "isExternal": false,
@@ -2479,7 +2479,7 @@
       "/packages/storybook/documents/angular-configuring-styles": {
         "id": "angular-configuring-styles",
         "name": "Angular: Configuring styles and preprocessor options",
-        "description": "The Nx Plugin for Storybook contains executors and generators for allowing your workspace to use the powerful Storybook integration testing & documenting capabilities.",
+        "description": "This document explains how to configure styles and preprocessor options in Angular projects with a Storybook configuration.",
         "file": "generated/packages/storybook/documents/angular-configuring-styles",
         "itemList": [],
         "isExternal": false,
@@ -2490,7 +2490,7 @@
       "/packages/storybook/documents/angular-browser-target": {
         "id": "angular-browser-target",
         "name": "Angular: The browserTarget",
-        "description": "The Nx Plugin for Storybook contains executors and generators for allowing your workspace to use the powerful Storybook integration testing & documenting capabilities.",
+        "description": "This document explains the role of the browserTarget in Angular projects with a Storybook configuration, and how the Storybook executors use it.",
         "file": "generated/packages/storybook/documents/angular-browser-target",
         "itemList": [],
         "isExternal": false,
@@ -2500,8 +2500,8 @@
       },
       "/packages/storybook/documents/migrate-webpack-final-angular": {
         "id": "migrate-webpack-final-angular",
-        "name": "Angular: Storybook Webpack Migration",
-        "description": "The Nx Plugin for Storybook contains executors and generators for allowing your workspace to use the powerful Storybook integration testing & documenting capabilities.",
+        "name": "Angular: Storybook Migration to webpackFinal",
+        "description": "This guide explains how migrate from older versions of Storybook which used a custom webpack.config.js to the new Storybook 6.3+ which uses the webpackFinal property in the main configuration.",
         "file": "generated/packages/storybook/documents/migrate-webpack-final-angular",
         "itemList": [],
         "isExternal": false,
@@ -2512,7 +2512,7 @@
       "/packages/storybook/documents/upgrade-storybook-v6-angular": {
         "id": "upgrade-storybook-v6-angular",
         "name": "Angular: Upgrading to Storybook 6",
-        "description": "The Nx Plugin for Storybook contains executors and generators for allowing your workspace to use the powerful Storybook integration testing & documenting capabilities.",
+        "description": "This guide explains how you can upgrade your Storybook from versions 5.3 and below to Storybook 6, for Angular projects.",
         "file": "generated/packages/storybook/documents/upgrade-storybook-v6-angular",
         "itemList": [],
         "isExternal": false,
@@ -2522,8 +2522,8 @@
       },
       "/packages/storybook/documents/migrate-webpack-final-react": {
         "id": "migrate-webpack-final-react",
-        "name": "React: Migrate to the Nrwl React Storybook Preset",
-        "description": "The Nx Plugin for Storybook contains executors and generators for allowing your workspace to use the powerful Storybook integration testing & documenting capabilities.",
+        "name": "React: Storybook Migration to webpackFinal and the Nx Addon",
+        "description": "This guide explains how migrate from older versions of Storybook which used a custom webpack.config.js to the new Storybook 6.3+ which uses the webpackFinal property in the main configuration and the Nx React Addon.",
         "file": "generated/packages/storybook/documents/migrate-webpack-final-react",
         "itemList": [],
         "isExternal": false,
@@ -2534,7 +2534,7 @@
       "/packages/storybook/documents/upgrade-storybook-v6-react": {
         "id": "upgrade-storybook-v6-react",
         "name": "React: Upgrading to Storybook 6",
-        "description": "The Nx Plugin for Storybook contains executors and generators for allowing your workspace to use the powerful Storybook integration testing & documenting capabilities.",
+        "description": "This guide explains how you can upgrade your Storybook from versions 5.3 and below to Storybook 6, for React projects.",
         "file": "generated/packages/storybook/documents/upgrade-storybook-v6-react",
         "itemList": [],
         "isExternal": false,
@@ -2544,8 +2544,8 @@
       },
       "/packages/storybook/documents/custom-builder-configs": {
         "id": "custom-builder-configs",
-        "name": "Custom configurations for Webpack and Vite",
-        "description": "The Nx Plugin for Storybook contains executors and generators for allowing your workspace to use the powerful Storybook integration testing & documenting capabilities.",
+        "name": "How to configure Webpack and Vite for Storybook",
+        "description": "This guide explains how to customize the webpack configuration and your vite configuration for Storybook.",
         "file": "generated/packages/storybook/documents/custom-builder-configs",
         "itemList": [],
         "isExternal": false,

@@ -1,3 +1,8 @@
+---
+title: Set up Storybook for React Projects
+description: This guide explains how to set up Storybook for React projects in your Nx workspace.
+---
+
 # Set up Storybook for React Projects
 
 This guide will walk you through setting up [Storybook](https://storybook.js.org) for React projects in your Nx workspace.
@@ -156,4 +161,4 @@ For more on using Storybook, see the [official Storybook documentation](https://
 Here's more information on common migration scenarios for Storybook with Nx. For Storybook specific migrations that are not automatically handled by Nx please refer to the [official Storybook page](https://storybook.js.org/)
 
 - [Upgrading to Storybook 6](/packages/storybook/documents/upgrade-storybook-v6-react)
-- [Migrate to the Nrwl React Storybook Preset](/packages/storybook/documents/migrate-webpack-final-react)
+- [Migrate to the Nx React Storybook Addon](/packages/storybook/documents/migrate-webpack-final-react)

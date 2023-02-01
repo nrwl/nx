@@ -3,7 +3,7 @@
   "outputCapture": "direct-nodejs",
   "title": "Storybook Dev Builder",
   "cli": "nx",
-  "description": "Serve up storybook in development mode.",
+  "description": "Serve up Storybook in development mode.",
   "type": "object",
   "presets": [
     {

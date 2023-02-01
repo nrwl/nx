@@ -1,3 +1,8 @@
+---
+title: Migrate your Nx workspace to Storybook version 7
+description: This guide explains how migrate your Nx workspace to Storybook version 7.
+---
+
 # Migrate your Nx workspace to Storybook version 7
 
 {% callout type="info" title="Available on Nx v15.5" %}
