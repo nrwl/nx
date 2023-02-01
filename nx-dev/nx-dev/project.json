@@ -16,7 +16,7 @@
         "outputPath": "dist/nx-dev/nx-dev",
         "commands": [
           "nx run nx-dev:sitemap",
-          "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/internal-link-checker.ts"
+          "ts-node -P ./scripts/tsconfig.release.json ./scripts/documentation/internal-link-checker.ts"
         ],
         "parallel": false
       }
