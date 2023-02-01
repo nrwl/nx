@@ -98,21 +98,29 @@ function compileToolsDir(outDir: string) {
 
 function constructCollection() {
   const generators = {};
+  const schematics = {};
   readdirSync(generatorsDir).forEach((c) => {
     const childDir = path.join(generatorsDir, c);
     if (existsSync(path.join(childDir, 'schema.json'))) {
-      generators[c] = {
+      const generatorOrSchematic = {
         factory: `./${c}`,
         schema: `./${normalizePath(path.join(c, 'schema.json'))}`,
         description: `Schematic ${c}`,
       };
+
+      const { isSchematic } = readJsonFile(path.join(childDir, 'schema.json'));
+      if (isSchematic) {
+        schematics[c] = generatorOrSchematic;
+      } else {
+        generators[c] = generatorOrSchematic;
+      }
     }
   });
   return {
     name: 'workspace-generators',
     version: '1.0',
     generators,
-    schematics: generators,
+    schematics,
   };
 }
 
