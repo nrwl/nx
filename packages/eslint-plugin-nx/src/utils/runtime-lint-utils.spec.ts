@@ -1,3 +1,5 @@
+import 'nx/src/utils/testing/mock-fs';
+
 import {
   ProjectGraph,
   ProjectGraphExternalNode,
@@ -16,7 +18,6 @@ import { vol } from 'memfs';
 jest.mock('nx/src/utils/workspace-root', () => ({
   workspaceRoot: '/root',
 }));
-jest.mock('fs', () => require('memfs').fs);
 
 describe('hasBannedImport', () => {
   const source: ProjectGraphProjectNode = {
