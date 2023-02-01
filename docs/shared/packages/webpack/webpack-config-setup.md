@@ -116,7 +116,7 @@ module.exports = composePlugins(
 );
 ```
 
-### Add a Loader
+### Add a custom Webpack Loader
 
 To add the `css-loader` to your config, install it and add the rule.
 
