@@ -4,7 +4,7 @@
  */
 
 import {
-  cleanupLernaWorkspace,
+  cleanupProject,
   newLernaWorkspace,
   runLernaCLI,
   tmpProjPath,
@@ -32,7 +32,7 @@ expect.addSnapshotSerializer({
 
 describe('Lerna Smoke Tests', () => {
   beforeAll(() => newLernaWorkspace());
-  afterAll(() => cleanupLernaWorkspace());
+  afterAll(() => cleanupProject({ skipReset: true }));
 
   // `lerna repair` builds on top of `nx repair` and runs all of its generators
   describe('lerna repair', () => {
