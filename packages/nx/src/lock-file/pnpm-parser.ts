@@ -78,7 +78,9 @@ function addNodes(
       const hoistedVersion = getHoistedVersion(packageName, hoistedDeps);
       hoistedNode = versionMap.get(hoistedVersion);
     }
-    hoistedNode.name = `npm:${packageName}`;
+    if (hoistedNode) {
+      hoistedNode.name = `npm:${packageName}`;
+    }
 
     versionMap.forEach((node) => {
       builder.addExternalNode(node);
@@ -99,7 +101,9 @@ function getHoistedVersion(
     if (key) {
       version = key.slice(key.lastIndexOf('/') + 1).split('_')[0];
     } else {
-      throw new Error(`Cannot find hoisted version for ${packageName}`);
+      // pnpm might not hoist every package
+      // similarly those packages will not be available to be used via import
+      return;
     }
   }
 
