@@ -5,7 +5,7 @@
  */
 const UPPERCASE = /[\p{Lu}]/u;
 const IDENTIFIER = /([\p{Alpha}\p{N}_]|$)/u;
-const SEPARATORS = /[_.\- ]+/;
+const SEPARATORS = /[_.\-\/ ]+/;
 
 const LEADING_SEPARATORS = new RegExp('^' + SEPARATORS.source);
 const SEPARATORS_AND_IDENTIFIER = new RegExp(
@@ -99,7 +99,7 @@ const postProcess = (input, toUpperCase) => {
  * @param {string} str - Input that might have special characters.
  */
 function replaceNonWord(str) {
-  return str.replace(/[^0-9a-zA-Z \-\_]/g, '');
+  return str.replace(/[^0-9a-zA-Z \-\_\/]/g, '');
 }
 
 /**
