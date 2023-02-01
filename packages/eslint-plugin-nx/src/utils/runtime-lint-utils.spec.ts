@@ -3,7 +3,6 @@ import {
   ProjectGraphExternalNode,
   ProjectGraphProjectNode,
 } from '@nrwl/devkit';
-import { TargetProjectLocator } from 'nx/src/utils/target-project-locator';
 import {
   DepConstraint,
   findTransitiveExternalDependencies,
@@ -343,75 +342,43 @@ describe('isAngularSecondaryEntrypoint', () => {
     };
     const fsJson = {
       'tsconfig.base.json': JSON.stringify(tsConfig),
+      'apps/app.ts': '',
       'libs/standard/package.json': '{ "version": "0.0.0" }',
       'libs/standard/secondary/ng-package.json': JSON.stringify({
         version: '0.0.0',
         ngPackage: { lib: { entryFile: 'src/index.ts' } },
       }),
+      'libs/standard/secondary/src/index.ts': 'const bla = "foo"',
       'libs/standard/tertiary/ng-package.json': JSON.stringify({
         version: '0.0.0',
         ngPackage: { lib: { entryFile: 'src/public_api.ts' } },
       }),
+      'libs/standard/tertiary/src/public_api.ts': 'const bla = "foo"',
       'libs/features/package.json': '{ "version": "0.0.0" }',
       'libs/features/secondary/ng-package.json': JSON.stringify({
         version: '0.0.0',
         ngPackage: { lib: { entryFile: 'random/folder/api.ts' } },
       }),
+      'libs/features/secondary/random/folder/api.ts': 'const bla = "foo"',
     };
     vol.fromJSON(fsJson, '/root');
   });
 
   it('should return true for secondary entrypoints', () => {
-    const targetLocator = new TargetProjectLocator(
-      {
-        standard: {
-          name: 'standard',
-          type: 'lib',
-          data: {
-            root: '/root/libs/standard',
-            files: [
-              { file: 'libs/standard/package.json', hash: 'hsh' },
-              { file: 'libs/standard/src/index.ts', hash: 'hsh' },
-              { file: 'libs/standard/secondary/ng-package.json', hash: 'hsh' },
-              { file: 'libs/standard/secondary/src/index.ts', hash: 'hsh' },
-              { file: 'libs/standard/tertiary/ng-package.json', hash: 'hsh' },
-              { file: 'libs/standard/tertiary/src/public_api.ts', hash: 'hsh' },
-            ],
-          },
-        },
-        features: {
-          name: 'features',
-          type: 'lib',
-          data: {
-            root: '/root/libs/features',
-            files: [
-              { file: 'libs/features/package.json', hash: 'hsh' },
-              { file: 'libs/features/src/index.ts', hash: 'hsh' },
-              { file: 'libs/features/secondary/ng-package.json', hash: 'hsh' },
-              {
-                file: 'libs/features/secondary/random/folder/api.ts',
-                hash: 'hsh',
-              },
-            ],
-          },
-        },
-      },
-      {}
-    );
     expect(
-      isAngularSecondaryEntrypoint(targetLocator, '@project/standard')
+      isAngularSecondaryEntrypoint('@project/standard', 'apps/app.ts')
     ).toBe(false);
     expect(
-      isAngularSecondaryEntrypoint(targetLocator, '@project/standard/secondary')
+      isAngularSecondaryEntrypoint('@project/standard/secondary', 'apps/app.ts')
     ).toBe(true);
     expect(
-      isAngularSecondaryEntrypoint(targetLocator, '@project/standard/tertiary')
+      isAngularSecondaryEntrypoint('@project/standard/tertiary', 'apps/app.ts')
     ).toBe(true);
     expect(
-      isAngularSecondaryEntrypoint(targetLocator, '@project/features')
+      isAngularSecondaryEntrypoint('@project/features', 'apps/app.ts')
     ).toBe(false);
     expect(
-      isAngularSecondaryEntrypoint(targetLocator, '@project/features/secondary')
+      isAngularSecondaryEntrypoint('@project/features/secondary', 'apps/app.ts')
     ).toBe(true);
   });
 });

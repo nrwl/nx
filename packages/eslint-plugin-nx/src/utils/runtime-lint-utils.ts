@@ -12,13 +12,16 @@ import {
   workspaceRoot,
 } from '@nrwl/devkit';
 import { getPath, pathExists } from './graph-utils';
-import { existsSync } from 'fs';
 import { readFileIfExisting } from 'nx/src/project-graph/file-utils';
 import { TargetProjectLocator } from 'nx/src/utils/target-project-locator';
 import {
   findProjectForPath,
   ProjectRootMappings,
 } from 'nx/src/project-graph/utils/find-project-for-path';
+import {
+  getRootTsConfigFileName,
+  resolveModuleByImport,
+} from 'nx/src/utils/typescript';
 
 export type Deps = { [projectName: string]: ProjectGraphDependency[] };
 type SingleSourceTagConstraint = {
@@ -415,11 +418,16 @@ export function groupImports(
  * @returns
  */
 export function isAngularSecondaryEntrypoint(
-  targetProjectLocator: TargetProjectLocator,
-  importExpr: string
+  importExpr: string,
+  filePath: string
 ): boolean {
-  const targetFiles = targetProjectLocator.findPaths(importExpr);
-  return targetFiles && targetFiles.some(fileIsSecondaryEntryPoint);
+  const resolvedModule = resolveModuleByImport(
+    importExpr,
+    filePath,
+    join(workspaceRoot, getRootTsConfigFileName())
+  );
+
+  return !!resolvedModule && fileIsSecondaryEntryPoint(resolvedModule);
 }
 
 function fileIsSecondaryEntryPoint(file: string): boolean {
