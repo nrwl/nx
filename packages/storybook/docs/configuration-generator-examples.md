@@ -1,3 +1,8 @@
+---
+title: Storybook configuration generator examples
+description: This page contains examples for the @nrwl/storybook:configuration generator.
+---
+
 This is a framework-agnostic generator for setting up Storybook configuration for a project.
 
 ```bash

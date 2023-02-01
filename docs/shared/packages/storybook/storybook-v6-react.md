@@ -1,3 +1,8 @@
+---
+title: React - Upgrading to Storybook 6
+description: This guide explains how you can upgrade your Storybook from versions 5.3 and below to Storybook 6, for React projects.
+---
+
 # Upgrading to Storybook 6 (and Nx versions >10.1.x and <14.0.0)
 
 _Disclaimer: From Nx 14.0.0 and on, Nx does not support Storybook v.5. If your workspace is on a version of Nx older than Nx 14, then you will be able to use the generators described in this guide. If you're using Nx >14, then you will already have been automatically migrated to Storybook 6._

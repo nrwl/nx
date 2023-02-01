@@ -1,3 +1,8 @@
+---
+title: Storybook best practices for making the most out of Nx
+description: The purpose of this guide is to help you set up Storybook in your Nx workspace so that you can get the most out of Nx and its powerful capabilities.
+---
+
 # Storybook best practices for making the most out of Nx
 
 ## Purpose of this guide

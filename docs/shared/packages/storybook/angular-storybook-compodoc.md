@@ -1,3 +1,8 @@
+---
+title: Angular - Set up Compodoc for Storybook on Nx
+description: This guide explains how to set up Compodoc for Storybook on Angular projects in a Nx workspace.
+---
+
 # Set up Compodoc for Storybook on Nx
 
 {% callout type="note" title="Note" %}
