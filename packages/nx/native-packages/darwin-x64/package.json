@@ -1,0 +1,20 @@
+{
+  "name": "@nrwl/nx-darwin-x64",
+  "version": "0.0.0",
+  "os": [
+    "darwin"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "main": "nx.darwin-x64.node",
+  "files": [
+    "nx.darwin-x64.node"
+  ],
+  "engines": {
+    "node": ">= 10"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

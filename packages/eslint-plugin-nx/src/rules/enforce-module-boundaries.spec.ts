@@ -1,3 +1,5 @@
+import 'nx/src/utils/testing/mock-fs';
+
 import type { FileData, ProjectGraph } from '@nrwl/devkit';
 import { DependencyType } from '@nrwl/devkit';
 import * as parser from '@typescript-eslint/parser';
@@ -8,8 +10,6 @@ import enforceModuleBoundaries, {
   RULE_NAME as enforceModuleBoundariesRuleName,
 } from '../../src/rules/enforce-module-boundaries';
 import { createProjectRootMappings } from 'nx/src/project-graph/utils/find-project-for-path';
-
-jest.mock('fs', () => require('memfs').fs);
 
 jest.mock('@nrwl/devkit', () => ({
   ...jest.requireActual<any>('@nrwl/devkit'),
