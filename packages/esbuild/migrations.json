@@ -1,0 +1,14 @@
+{
+  "generators": {},
+  "packageJsonUpdates": {
+    "15.7.0": {
+      "version": "15.7.0-beta.0",
+      "packages": {
+        "esbuild": {
+          "version": "0.17.5",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    }
+  }
+}
