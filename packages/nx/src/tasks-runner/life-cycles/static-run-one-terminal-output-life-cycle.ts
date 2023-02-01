@@ -4,6 +4,7 @@ import { getPrintableCommandArgsForTask } from '../utils';
 import type { LifeCycle } from '../life-cycle';
 import { Task } from '../../config/task-graph';
 import { formatTargetsAndProjects } from './formatting-utils';
+import { getReadFromCacheLines } from './get-read-from-cache-lines';
 
 /**
  * The following life cycle's outputs are static, meaning no previous content
@@ -49,14 +50,10 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
     if (this.failedTasks.length === 0) {
       output.addVerticalSeparatorWithoutNewLines('green');
 
-      const bodyLines =
-        this.cachedTasks.length > 0
-          ? [
-              output.dim(
-                `Nx read the output from the cache instead of running the command for ${this.cachedTasks.length} out of ${this.tasks.length} tasks.`
-              ),
-            ]
-          : [];
+      const bodyLines = getReadFromCacheLines(
+        this.cachedTasks.length,
+        this.tasks.length
+      );
 
       output.success({
         title: `Successfully ran ${formatTargetsAndProjects(

@@ -9,6 +9,7 @@ import { Task } from '../../config/task-graph';
 import { prettyTime } from './pretty-time';
 import { formatFlags, formatTargetsAndProjects } from './formatting-utils';
 import { viewLogsFooterRows } from './view-logs-utils';
+import { getReadFromCacheLines } from './get-read-from-cache-lines';
 
 /**
  * The following function is responsible for creating a life cycle with dynamic
@@ -333,21 +334,17 @@ export async function createRunManyDynamicOutputRenderer({
           .forEach((arg) => taskOverridesRows.push(arg));
       }
 
-      const pinnedFooterLines = [
-        output.applyNxPrefix(
-          'green',
-          output.colors.green(text) + output.dim.white(` (${timeTakenText})`)
-        ),
-        ...taskOverridesRows,
-      ];
-      if (totalCachedTasks > 0) {
-        pinnedFooterLines.push(
-          output.dim(
-            `${EOL}   Nx read the output from the cache instead of running the command for ${totalCachedTasks} out of ${totalTasks} tasks.`
-          )
-        );
-      }
-      renderPinnedFooter(pinnedFooterLines, 'green');
+      renderPinnedFooter(
+        [
+          output.applyNxPrefix(
+            'green',
+            output.colors.green(text) + output.dim.white(` (${timeTakenText})`)
+          ),
+          ...taskOverridesRows,
+          ...getReadFromCacheLines(totalCachedTasks, totalTasks),
+        ],
+        'green'
+      );
     } else {
       const text = `Ran ${formatTargetsAndProjects(
         projectNames,

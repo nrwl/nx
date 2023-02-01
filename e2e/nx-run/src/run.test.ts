@@ -582,7 +582,7 @@ describe('Nx Running Tests', () => {
         const output = runCommand('npm run build', {
           cwd: pkgRoot,
         });
-        expect(output).toContain('Nx read the output from the cache');
+        expect(output).toContain('All -1 commands built from cache!');
       });
 
       it('should read outputs', () => {

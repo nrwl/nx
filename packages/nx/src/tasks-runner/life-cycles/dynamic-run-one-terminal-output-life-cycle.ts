@@ -8,6 +8,7 @@ import { prettyTime } from './pretty-time';
 import { Task } from '../../config/task-graph';
 import { formatFlags, formatTargetsAndProjects } from './formatting-utils';
 import { viewLogsFooterRows } from './view-logs-utils';
+import { getReadFromCacheLines } from './get-read-from-cache-lines';
 
 /**
  * As tasks are completed the overall state moves from:
@@ -292,21 +293,17 @@ export async function createRunOneDynamicOutputRenderer({
           .forEach((arg) => taskOverridesLines.push(arg));
       }
 
-      const pinnedFooterLines = [
-        output.applyNxPrefix(
-          'green',
-          output.colors.green(text) + output.dim(` (${timeTakenText})`)
-        ),
-        ...taskOverridesLines,
-      ];
-      if (totalCachedTasks > 0) {
-        pinnedFooterLines.push(
-          output.dim(
-            `${EOL}   Nx read the output from the cache instead of running the command for ${totalCachedTasks} out of ${totalTasks} tasks.`
-          )
-        );
-      }
-      renderLines(pinnedFooterLines, 'green');
+      renderLines(
+        [
+          output.applyNxPrefix(
+            'green',
+            output.colors.green(text) + output.dim(` (${timeTakenText})`)
+          ),
+          ...taskOverridesLines,
+          ...getReadFromCacheLines(totalCachedTasks, totalTasks),
+        ],
+        'green'
+      );
     } else {
       state = 'COMPLETED_WITH_ERRORS';
 

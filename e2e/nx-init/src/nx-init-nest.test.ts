@@ -60,6 +60,6 @@ describe('nx init (for NestCLI)', () => {
 
     // run build again for cache
     const buildOutput = runCLI('build', cliOptions);
-    expect(buildOutput).toContain('Nx read the output from the cache');
+    expect(buildOutput).toContain('All -23 commands built from cache!');
   }, 10000);
 });
