@@ -51,7 +51,8 @@
       },
       "frontendProject": {
         "type": "string",
-        "description": "Frontend project that needs to access this application. This sets up proxy configuration."
+        "description": "Frontend project that needs to access this application. This sets up proxy configuration.",
+        "x-priority": "important"
       },
       "babelJest": {
         "type": "boolean",
@@ -84,7 +85,8 @@
         "description": "Bundler which is used to package the application",
         "type": "string",
         "enum": ["esbuild", "webpack"],
-        "default": "esbuild"
+        "default": "esbuild",
+        "x-priority": "important"
       },
       "framework": {
         "description": "Generate the node application using a framework",
@@ -97,8 +99,7 @@
       "port": {
         "description": "The port which the server will be run on",
         "type": "number",
-        "default": 3000,
-        "x-priority": "important"
+        "default": 3000
       },
       "rootProject": {
         "description": "Create node application at the root of the workspace",
@@ -118,7 +119,7 @@
         "description": "Add a docker build target"
       }
     },
-    "required": [],
+    "required": ["name"],
     "presets": []
   },
   "aliases": ["app"],
