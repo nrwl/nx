@@ -2607,8 +2607,8 @@
     "documents": [
       {
         "id": "overview",
-        "name": "Overview",
-        "description": "The Nx Plugin for building and testing applications using Vite",
+        "name": "Overview of the Nx Vite Plugin",
+        "description": "The Nx Plugin for Vite contains executors and generators that support building applications using Vite. This page also explains how to configure Vite on your Nx workspace.",
         "file": "generated/packages/vite/documents/overview",
         "itemList": [],
         "isExternal": false,
@@ -2619,7 +2619,7 @@
       {
         "id": "set-up-vite-manually",
         "name": "Manually set up your project to use Vite.js",
-        "description": "Manually set up your project to use Vite.js",
+        "description": "This guide explains how you can manually set up your project to use Vite.js in your Nx workspace.",
         "file": "generated/packages/vite/documents/set-up-vite-manually",
         "itemList": [],
         "isExternal": false,

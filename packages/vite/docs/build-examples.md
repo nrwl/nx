@@ -1,3 +1,8 @@
+---
+title: Examples for the Vite builder executor
+description: This page contains examples for the Vite @nrwl/vite:build executor.
+---
+
 `project.json`:
 
 ```json

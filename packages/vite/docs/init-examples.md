@@ -1,3 +1,8 @@
+---
+title: Examples for the Vite init generator
+description: This page contains examples for the Vite @nrwl/vite:init generator, which helps you initialize vite in your Nx workspace, by installing the necessary dependencies.
+---
+
 This is a generator will initialize Vite.js in your workspace. It will install all the necessary dependencies. You can read more about how this generator works, in the [Vite package overview page](/packages/vite).
 
 {% callout type="note" title="string" %}

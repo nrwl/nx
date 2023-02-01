@@ -3,7 +3,7 @@
   "outputCapture": "direct-nodejs",
   "title": "Vite Dev Server",
   "cli": "nx",
-  "description": "Dev server for Vite.",
+  "description": "Starts a dev server using Vite.",
   "type": "object",
   "presets": [
     {

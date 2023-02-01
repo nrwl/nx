@@ -1,3 +1,8 @@
+---
+title: Examples for the Vitest executor
+description: This page contains examples for the Vitest @nrwl/vite:test executor.
+---
+
 `project.json`:
 
 ```json
