@@ -1,7 +1,7 @@
 import {
   convertToDocumentMetadata,
   DocumentMetadata,
-} from '../../../nx-dev/models-document/src';
+} from '@nrwl/nx-dev/models-document';
 import { readFileSync } from 'fs';
 import { readJsonSync } from 'fs-extra';
 import { sync } from 'glob';
@@ -11,7 +11,7 @@ import {
   JsonSchema1,
   PackageData,
   SchemaMetadata,
-} from '../../../nx-dev/models-package/src';
+} from '@nrwl/nx-dev/models-package';
 
 function createSchemaMetadata(
   name: string,
