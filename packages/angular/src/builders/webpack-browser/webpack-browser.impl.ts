@@ -1,12 +1,13 @@
-import { joinPathFragments } from '@nrwl/devkit';
+import { joinPathFragments, stripIndents } from '@nrwl/devkit';
 import { existsSync } from 'fs';
 import { from, Observable } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
+import { getInstalledAngularVersionInfo } from '../../executors/utilities/angular-version-utils';
+import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
 import {
   mergeCustomWebpackConfig,
   resolveIndexHtmlTransformer,
 } from '../utilities/webpack';
-import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
-import { switchMap } from 'rxjs/operators';
 
 export type BrowserBuilderSchema =
   import('@angular-devkit/build-angular/src/builders/browser/schema').Schema & {
@@ -108,10 +109,19 @@ function buildAppWithCustomWebpackConfiguration(
   );
 }
 
+function validateOptions(options: BrowserBuilderSchema): void {
+  const { major, version } = getInstalledAngularVersionInfo();
+  if (major < 15 && Array.isArray(options.polyfills)) {
+    throw new Error(stripIndents`The array syntax for the "polyfills" option is supported from Angular >= 15.0.0. You are currently using ${version}.
+    You can resolve this error by removing the "polyfills" option, setting it to a string value or migrating to Angular 15.0.0.`);
+  }
+}
+
 export function executeWebpackBrowserBuilder(
   options: BrowserBuilderSchema,
   context: import('@angular-devkit/architect').BuilderContext
 ): Observable<import('@angular-devkit/architect').BuilderOutput> {
+  validateOptions(options);
   options.buildLibsFromSource ??= true;
 
   if (!options.buildLibsFromSource) {
