@@ -15,13 +15,14 @@ export default async function* viteBuildExecutor(
   options: ViteBuildExecutorOptions,
   context: ExecutorContext
 ) {
+  const normalizedOptions = normalizeOptions(options);
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
 
   const buildConfig = mergeConfig(
-    getViteSharedConfig(options, false, context),
+    getViteSharedConfig(normalizedOptions, false, context),
     {
-      build: getViteBuildOptions(options, context),
+      build: getViteBuildOptions(normalizedOptions, context),
     }
   );
 
@@ -37,7 +38,7 @@ export default async function* viteBuildExecutor(
   ) {
     await copyAssets(
       {
-        outputPath: options.outputPath,
+        outputPath: normalizedOptions.outputPath,
         assets: [
           {
             input: projectRoot,
@@ -78,4 +79,17 @@ function runInstance(options: InlineConfig) {
   return build({
     ...options,
   });
+}
+
+function normalizeOptions(options: ViteBuildExecutorOptions) {
+  const normalizedOptions = { ...options };
+
+  // coerce watch to null or {} to match with Vite's watch config
+  if (options.watch === false) {
+    normalizedOptions.watch = null;
+  } else if (options.watch === true) {
+    normalizedOptions.watch = {};
+  }
+
+  return normalizedOptions;
 }
