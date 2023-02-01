@@ -107,7 +107,9 @@ function parseVersion(
   if (
     isBerry &&
     snapshot.resolution &&
-    snapshot.resolution !== `${packageName}@npm:${snapshot.version}`
+    // different registry would yield suffix following '::' which we don't need
+    snapshot.resolution.split('::')[0] !==
+      `${packageName}@npm:${snapshot.version}`
   ) {
     return snapshot.resolution.slice(packageName.length + 1);
   }
