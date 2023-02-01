@@ -123,21 +123,17 @@ export function createLockFile(
 ): string {
   const normalizedPackageJson = normalizePackageJson(packageJson);
 
-  let content, graph;
+  const content = readFileSync(getLockFileName(packageManager), 'utf8');
+
+  let graph;
   if (packageManager === 'yarn') {
-    content = readFileSync(YARN_LOCK_PATH, 'utf8');
-    graph = parsePnpmLockfile(content);
+    graph = parseYarnLockfile(content);
   }
   if (packageManager === 'pnpm') {
-    content = readFileSync(PNPM_LOCK_FILE, 'utf8');
     graph = parsePnpmLockfile(content);
   }
   if (packageManager === 'npm') {
-    content = readFileSync(NPM_LOCK_FILE, 'utf8');
     graph = parseNpmLockfile(content);
-  }
-  if (!content) {
-    throw new Error(`Unknown package manager: ${packageManager}`);
   }
 
   const prunedGraph = pruneProjectGraph(graph, packageJson);

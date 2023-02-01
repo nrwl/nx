@@ -95,7 +95,7 @@ function normalizeDependencies(
         combinedDependencies[packageName] = node.data.version;
       } else {
         throw new Error(
-          `Pruning failed. The following package was not found in the root lock file: ${packageName}@${versionRange}`
+          `Pruned lock file creation failed. The following package was not found in the root lock file: ${packageName}@${versionRange}`
         );
       }
     }
@@ -112,11 +112,6 @@ function addNodesAndDependencies(
     const node =
       graph.externalNodes[`npm:${name}@${version}`] ||
       graph.externalNodes[`npm:${name}`];
-    if (!node) {
-      throw new Error(
-        `Pruning failed. The following package was not found in root lock file: ${name}@${version}`
-      );
-    }
     traverseNode(graph, builder, node);
   });
 }

@@ -1,4 +1,3 @@
-import { satisfies } from 'semver';
 import {
   checkFilesDoNotExist,
   checkFilesExist,
@@ -83,20 +82,21 @@ describe('js e2e', () => {
     expect(output).toContain('1 task it depends on');
     expect(output).toContain('Successfully compiled: 2 files with swc');
 
-    runCLI(`build ${parentLib} --generateLockfile=true`);
-    checkFilesExist(
-      `dist/libs/${parentLib}/package.json`,
-      `dist/libs/${parentLib}/${
-        packageManagerLockFile[detectPackageManager(tmpProjPath())]
-      }`
-    );
+    runCLI(`build ${parentLib}`);
+    checkFilesExist(`dist/libs/${parentLib}/package.json`);
 
     updateJson(`libs/${lib}/.lib.swcrc`, (json) => {
       json.jsc.externalHelpers = true;
       return json;
     });
 
-    runCLI(`build ${lib}`);
+    runCLI(`build ${lib} --generateLockfile=true`);
+    checkFilesExist(
+      `dist/libs/${lib}/package.json`,
+      `dist/libs/${lib}/${
+        packageManagerLockFile[detectPackageManager(tmpProjPath())]
+      }`
+    );
 
     const swcHelpersFromRoot =
       readJson(`package.json`).dependencies['@swc/helpers'];
