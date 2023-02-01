@@ -511,18 +511,15 @@ export async function killPorts(port?: number): Promise<boolean> {
 }
 
 // Useful in order to cleanup space during CI to prevent `No space left on device` exceptions
-export async function cleanupProject(opts?: RunCmdOpts) {
+export function cleanupProject({
+  skipReset,
+  ...opts
+}: RunCmdOpts & { skipReset?: boolean } = {}) {
   if (isCI) {
     // Stopping the daemon is not required for tests to pass, but it cleans up background processes
-    runCLI('reset', opts);
-    try {
-      removeSync(tmpProjPath());
-    } catch (e) {}
-  }
-}
-
-export function cleanupLernaWorkspace() {
-  if (isCI) {
+    if (!skipReset) {
+      runCLI('reset', opts);
+    }
     try {
       removeSync(tmpProjPath());
     } catch (e) {}
