@@ -96,7 +96,7 @@ You may still reconfigure everything manually, without using the Nx plugins. How
 
 For most apps, the default configuration of webpack is sufficient, but sometimes you need to tweak a setting in your webpack config. This guide explains how to make a small change without taking on the maintenance burden of the entire webpack config.
 
-### React projects
+### Configure webpack for React projects
 
 React projects use the `@nrwl/react` package to build their apps. This package provides a `withReact` plugin that adds the necessary configuration for React to work with webpack. You can use this plugin to add the necessary configuration to your webpack config.
 
@@ -116,7 +116,7 @@ module.exports = composePlugins(
 );
 ```
 
-### Add a custom Webpack Loader
+### Add a CSS loader to your webpack config
 
 To add the `css-loader` to your config, install it and add the rule.
 
@@ -155,7 +155,7 @@ module.exports = composePlugins(withNx(), (config, { options, context }) => {
 });
 ```
 
-### Module Federation
+### Configure webpack for Module Federation
 
 If you use the [Module Federation](/recipes/module-federation/faster-builds) support from `@nrwl/angular` or `@nrwl/react` then
 you can customize your webpack configuration as follows.
@@ -180,7 +180,7 @@ module.exports = composePlugins(withNx(), (config, { options, context }) => {
 Reference the [webpack documentation](https://webpack.js.org/configuration/) for details on the structure of the webpack
 config object.
 
-### Next.js Applications
+### Configure webpack for Next.js Applications
 
 Next.js supports webpack customization in the `next.config.js` file.
 

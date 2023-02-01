@@ -1,7 +1,7 @@
 # Customize your Webpack Config
 
 {% callout type="note" title="Webpack Config Setup" %}
-This guide helps you customize your webpack config - add extra functionality and support for other frameworks or features. To see how you can set up a basic webpack config for Nx, read the [Webpack Config Setup guide](/packages/webpack/documents/webpack-config-setup).
+This guide helps you customize your webpack config - add extra functionality and support for other frameworks or features. To see how you can set up a basic webpack config for Nx, read the [Nx Webpack configuration guide](/packages/webpack/documents/webpack-config-setup).
 {% /callout %}
 
 For most apps, the default configuration of webpack is sufficient, but sometimes you need to tweak a setting in your webpack config. This guide explains how to make a small change without taking on the maintenance burden of the entire webpack config.
