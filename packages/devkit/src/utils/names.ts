@@ -111,6 +111,9 @@ function toClassName(str: string): string {
 
 /**
  * Hyphenated to lowerCamelCase
+ * 
+ * @param {string} str - the string that will be transformed to camel case.
+ * @returns {string} - The string as camel case. 
  */
 function toPropertyName(s: string): string {
   s = replaceNonWord(s);
