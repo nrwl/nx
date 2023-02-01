@@ -313,7 +313,7 @@ export default createESLintRule<Options, MessageIds>({
         if (
           !allowCircularSelfDependency &&
           !isRelativePath(imp) &&
-          !isAngularSecondaryEntrypoint(targetProjectLocator, imp)
+          !isAngularSecondaryEntrypoint(imp, sourceFilePath)
         ) {
           context.report({
             node,
