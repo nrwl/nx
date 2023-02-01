@@ -136,7 +136,7 @@ nx e2e e2e-cli -t versions # I often add qqqq to my test name so I can use -t qq
 Sometimes tests pass locally but they fail on the CI. To reproduce the CI environment and be able to debug the issue, run:
 
 ```bash
-NX_VERBOSE_LOGGING=true CI=true PACKAGE_MANAGER=pnpm yarn nx e2e e2e-cli --t="should do something is this test"
+NX_VERBOSE_LOGGING=true CI=true SELECTED_PM=pnpm yarn nx e2e e2e-cli --t="should do something is this test"
 ```
 
 The above command sets verbose logging (this exposes stack traces and underlying errors), sets the defaults to be CI-like and sets Pnpm as the selected package manager.
