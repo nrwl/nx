@@ -5257,6 +5257,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "view-logs",
+                "path": "/packages/nx/documents/view-logs",
+                "id": "view-logs",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,

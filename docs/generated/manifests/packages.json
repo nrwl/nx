@@ -1847,6 +1847,17 @@
         "path": "/packages/nx/documents/show",
         "tags": [],
         "originalFilePath": "generated/cli/show"
+      },
+      "/packages/nx/documents/view-logs": {
+        "id": "view-logs",
+        "name": "view-logs",
+        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+        "file": "generated/packages/nx/documents/view-logs",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/packages/nx/documents/view-logs",
+        "tags": [],
+        "originalFilePath": "generated/cli/view-logs"
       }
     },
     "root": "/packages/nx",
