@@ -92,6 +92,10 @@ Cleanup: Handle issues with the network and the api in a consistent fashion.
 
 # Docker Containers
 
+## 26-01-2023T21-22-48
+
+- Misc: Fixes to the Gitlab integration
+
 ## 05-01-2023T17-53-45
 
 - Misc: This release contains small bug fixes and UI improvements.
