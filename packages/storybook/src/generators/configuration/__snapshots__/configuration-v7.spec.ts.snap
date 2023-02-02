@@ -1,16 +1,13 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`@nrwl/storybook:configuration for Storybook v7 basic functionalities should generate TS config for project if root config is TS 1`] = `
-"import { rootMain } from '../../../.storybook/main';
-
-import type { StorybookConfig, Options } from '@storybook/core-common';
+"import type { StorybookConfig } from '@storybook/angular';
 
 const config: StorybookConfig = {
-  ...rootMain,
   stories: [
-    ...rootMain.stories,
+    
     '../**/*.stories.@(js|jsx|ts|tsx|mdx)' ],
-  addons: [...(rootMain.addons || []) 
+  addons: ['@storybook/addon-essentials' 
     
   ],
   framework: {
@@ -21,7 +18,7 @@ const config: StorybookConfig = {
   },
 };
 
-module.exports = config;
+export default config;
 
 
 // To customize your webpack configuration you can use the webpackFinal field.
@@ -103,15 +100,7 @@ Object {
 }
 `;
 
-exports[`@nrwl/storybook:configuration for Storybook v7 basic functionalities should generate TypeScript Configuration files 2`] = `
-"import type { StorybookConfig } from '@storybook/core-common';
-
-export const rootMain: StorybookConfig = {
-  stories: [],
-  addons: ['@storybook/addon-essentials']
-};
-"
-`;
+exports[`@nrwl/storybook:configuration for Storybook v7 basic functionalities should generate TypeScript Configuration files 2`] = `null`;
 
 exports[`@nrwl/storybook:configuration for Storybook v7 basic functionalities should generate TypeScript Configuration files 3`] = `
 "{
@@ -135,16 +124,13 @@ exports[`@nrwl/storybook:configuration for Storybook v7 basic functionalities sh
 `;
 
 exports[`@nrwl/storybook:configuration for Storybook v7 basic functionalities should generate TypeScript Configuration files 4`] = `
-"import { rootMain } from '../../../.storybook/main';
-
-import type { StorybookConfig, Options } from '@storybook/core-common';
+"import type { StorybookConfig } from '@storybook/angular';
 
 const config: StorybookConfig = {
-  ...rootMain,
   stories: [
-    ...rootMain.stories,
+    
     '../**/*.stories.@(js|jsx|ts|tsx|mdx)' ],
-  addons: [...(rootMain.addons || []) 
+  addons: ['@storybook/addon-essentials' 
     
   ],
   framework: {
@@ -155,7 +141,7 @@ const config: StorybookConfig = {
   },
 };
 
-module.exports = config;
+export default config;
 
 
 // To customize your webpack configuration you can use the webpackFinal field.
@@ -191,16 +177,12 @@ exports[`@nrwl/storybook:configuration for Storybook v7 basic functionalities sh
 `;
 
 exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/main-vite/.storybook/" 1`] = `
-"const rootMain = require('../../../.storybook/main');
-
-
-module.exports = {
-  ...rootMain,
+"const config = {
   stories: [
-    ...rootMain.stories,
+    
     '../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'
   ],
-  addons: [...rootMain.addons 
+  addons: ['@storybook/addon-essentials' 
     
   ],
   framework: {
@@ -214,6 +196,9 @@ module.exports = {
     },
   },
 };
+
+export default config;
+
 
 
 
@@ -248,16 +233,14 @@ exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook confi
 `;
 
 exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/main-vite-ts/.storybook/" 1`] = `
-"const rootMain = require('../../../.storybook/main');
+"import type { StorybookConfig } from '@storybook/react-vite';
 
-
-module.exports = {
-  ...rootMain,
+const config: StorybookConfig = {
   stories: [
-    ...rootMain.stories,
+    
     '../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'
   ],
-  addons: [...rootMain.addons 
+  addons: ['@storybook/addon-essentials' 
     
   ],
   framework: {
@@ -271,6 +254,9 @@ module.exports = {
     },
   },
 };
+
+export default config;
+
 
 
 
@@ -299,22 +285,19 @@ exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook confi
     \\"../src/**/*.stories.jsx\\",
     \\"../src/**/*.stories.tsx\\",
     \\"../src/**/*.stories.mdx\\",
+    \\"*.ts\\",
     \\"*.js\\"]
 }
 "
 `;
 
 exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/main-webpack/.storybook/" 1`] = `
-"const rootMain = require('../../../.storybook/main');
-
-
-module.exports = {
-  ...rootMain,
+"const config = {
   stories: [
-    ...rootMain.stories,
+    
     '../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'
   ],
-  addons: [...rootMain.addons , '@nrwl/react/plugins/storybook' 
+  addons: ['@storybook/addon-essentials' , '@nrwl/react/plugins/storybook' 
     
   ],
   framework: {
@@ -324,6 +307,9 @@ module.exports = {
     },
   },
 };
+
+export default config;
+
 
 // To customize your webpack configuration you can use the webpackFinal field.
 // Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
@@ -358,16 +344,12 @@ exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook confi
 `;
 
 exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/nextapp/.storybook/" 1`] = `
-"const rootMain = require('../../../.storybook/main');
-
-
-module.exports = {
-  ...rootMain,
+"const config = {
   stories: [
-    ...rootMain.stories,
+    
     '../components/**/*.stories.@(js|jsx|ts|tsx|mdx)'
   ],
-  addons: [...rootMain.addons 
+  addons: ['@storybook/addon-essentials' 
     
   ],
   framework: {
@@ -377,6 +359,9 @@ module.exports = {
     },
   },
 };
+
+export default config;
+
 
 // To customize your webpack configuration you can use the webpackFinal field.
 // Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
@@ -407,16 +392,12 @@ exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook confi
 `;
 
 exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/react-swc/.storybook/" 1`] = `
-"const rootMain = require('../../../.storybook/main');
-
-
-module.exports = {
-  ...rootMain,
+"const config = {
   stories: [
-    ...rootMain.stories,
+    
     '../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'
   ],
-  addons: [...rootMain.addons , '@nrwl/react/plugins/storybook' 
+  addons: ['@storybook/addon-essentials' , '@nrwl/react/plugins/storybook' 
     , 'storybook-addon-swc' 
   ],
   framework: {
@@ -426,6 +407,9 @@ module.exports = {
     },
   },
 };
+
+export default config;
+
 
 // To customize your webpack configuration you can use the webpackFinal field.
 // Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
@@ -460,16 +444,12 @@ exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook confi
 `;
 
 exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/wv1/.storybook/" 1`] = `
-"const rootMain = require('../../../.storybook/main');
-
-
-module.exports = {
-  ...rootMain,
+"const config = {
   stories: [
-    ...rootMain.stories,
+    
     '../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'
   ],
-  addons: [...rootMain.addons 
+  addons: ['@storybook/addon-essentials' 
     
   ],
   framework: {
@@ -483,6 +463,9 @@ module.exports = {
     },
   },
 };
+
+export default config;
+
 
 
 
@@ -513,16 +496,12 @@ exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook confi
 `;
 
 exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/ww1/.storybook/" 1`] = `
-"const rootMain = require('../../../.storybook/main');
-
-
-module.exports = {
-  ...rootMain,
+"const config = {
   stories: [
-    ...rootMain.stories,
+    
     '../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'
   ],
-  addons: [...rootMain.addons 
+  addons: ['@storybook/addon-essentials' 
     
   ],
   framework: {
@@ -532,6 +511,9 @@ module.exports = {
     },
   },
 };
+
+export default config;
+
 
 // To customize your webpack configuration you can use the webpackFinal field.
 // Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
@@ -562,16 +544,12 @@ exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook confi
 `;
 
 exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "libs/react-rollup/.storybook/" 1`] = `
-"const rootMain = require('../../../.storybook/main');
-
-
-module.exports = {
-  ...rootMain,
+"const config = {
   stories: [
-    ...rootMain.stories,
+    
     '../src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)'
   ],
-  addons: [...rootMain.addons , '@nrwl/react/plugins/storybook' 
+  addons: ['@storybook/addon-essentials' , '@nrwl/react/plugins/storybook' 
     
   ],
   framework: {
@@ -581,6 +559,9 @@ module.exports = {
     },
   },
 };
+
+export default config;
+
 
 // To customize your webpack configuration you can use the webpackFinal field.
 // Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
@@ -615,16 +596,12 @@ exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook confi
 `;
 
 exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "libs/react-vite/.storybook/" 1`] = `
-"const rootMain = require('../../../.storybook/main');
-
-
-module.exports = {
-  ...rootMain,
+"const config = {
   stories: [
-    ...rootMain.stories,
+    
     '../src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)'
   ],
-  addons: [...rootMain.addons 
+  addons: ['@storybook/addon-essentials' 
     
   ],
   framework: {
@@ -638,6 +615,9 @@ module.exports = {
     },
   },
 };
+
+export default config;
+
 
 
 
