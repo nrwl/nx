@@ -1,4 +1,4 @@
-export interface Schema {
+export interface ViteConfigurationGeneratorSchema {
   uiFramework: 'react' | 'none';
   project: string;
   newProject?: boolean;

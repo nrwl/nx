@@ -38,7 +38,7 @@ class NxReporter implements Reporter {
   }
 }
 
-export default async function* runExecutor(
+export async function* vitestExecutor(
   options: VitestExecutorOptions,
   context: ExecutorContext
 ) {
@@ -97,3 +97,5 @@ export default async function* runExecutor(
     success: !hasErrors,
   };
 }
+
+export default vitestExecutor;

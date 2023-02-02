@@ -47,6 +47,7 @@
   "exports": {
     "./package.json": {
       "require": "./package.json"
-    }
+    },
+    "./executors": "./executors.js"
   }
 }
