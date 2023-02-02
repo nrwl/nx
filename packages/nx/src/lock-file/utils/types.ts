@@ -12,7 +12,15 @@ export type NormalizedPackageJson = Pick<
   | 'optionalDependencies'
 >;
 
-// YARN
+/**
+ * Yarn
+ * - Classic has resolved and integrity
+ * - Berry has resolution, checksum, languageName and linkType
+ */
+
+export type YarnLockFile = {
+  __metadata?: {};
+} & Record<string, YarnDependency>;
 
 export type YarnDependency = {
   version: string;
@@ -31,44 +39,38 @@ export type YarnDependency = {
   linkType?: 'soft' | 'hard';
 };
 
-// NPM
+/**
+ * NPM
+ * - v1 has only dependencies
+ * - v2 has packages and dependencies for backwards compatibility
+ * - v3 has only packages
+ */
 
-export type NpmDependencyV3 = {
+type NpmDependency = {
+  name?: string;
   version: string;
   resolved?: string;
   integrity?: string;
+  dev?: boolean;
+  peer?: boolean;
+  devOptional?: boolean;
+  optional?: boolean;
+};
+
+export type NpmDependencyV3 = NpmDependency & {
   dependencies?: Record<string, string>;
   optionalDependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
   peerDependencies?: Record<string, string>;
   peerDependenciesMeta?: Record<string, { optional: boolean }>;
-  dev?: boolean;
-  peer?: boolean;
-  devOptional?: boolean;
-  optional?: boolean;
-  name?: string;
   link?: boolean;
 };
 
-export type NpmDependencyV1 = {
-  version: string;
-  resolved: string;
-  integrity: string;
+export type NpmDependencyV1 = NpmDependency & {
   requires?: Record<string, string>;
   dependencies?: Record<string, NpmDependencyV1>;
-  dev?: boolean;
-  peer?: boolean;
-  devOptional?: boolean;
-  optional?: boolean;
-  name?: string;
 };
 
-/**
- * Lock file version differences:
- * - v1 has only dependencies
- * - v2 has dependencies and packages for backwards compatibility
- * - v3 has only packages
- */
 export type NpmLockFile = {
   name?: string;
   version?: string;

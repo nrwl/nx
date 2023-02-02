@@ -5,76 +5,45 @@ import {
 } from '../config/project-graph';
 import { PackageJson } from '../utils/package-json';
 import { reverse } from '../project-graph/operators';
-import { NormalizedPackageJson } from './utils/types';
 import { satisfies } from 'semver';
 
 /**
- * Strip off non-pruning related fields from package.json
- *
- * @param packageJson
- * @param isProduction
- * @param projectName
- * @returns
+ * Prune project graph's external nodes and their dependencies
+ * based on the pruned package.json
  */
-export function normalizePackageJson(
-  packageJson: PackageJson
-): NormalizedPackageJson {
-  const {
-    name,
-    version,
-    license,
-    dependencies,
-    devDependencies,
-    peerDependencies,
-    peerDependenciesMeta,
-    optionalDependencies,
-  } = packageJson;
-
-  return {
-    name,
-    version,
-    license,
-    dependencies,
-    devDependencies,
-    peerDependencies,
-    peerDependenciesMeta,
-    optionalDependencies,
-  };
-}
-
 export function pruneProjectGraph(
   graph: ProjectGraph,
   prunedPackageJson: PackageJson
 ): ProjectGraph {
   const builder = new ProjectGraphBuilder();
 
-  const {
-    dependencies,
-    devDependencies,
-    optionalDependencies,
-    peerDependencies,
-  } = prunedPackageJson;
-
-  const combinedDependencies = normalizeDependencies(
-    {
-      ...dependencies,
-      ...devDependencies,
-      ...optionalDependencies,
-      ...peerDependencies,
-    },
-    graph
-  );
+  const combinedDependencies = normalizeDependencies(prunedPackageJson, graph);
 
   addNodesAndDependencies(graph, combinedDependencies, builder);
+  // for NPM (as well as the graph consistency)
+  // we need to distinguish between hoisted and non-hoisted dependencies
   rehoistNodes(graph, combinedDependencies, builder);
 
   return builder.getUpdatedProjectGraph();
 }
 
-function normalizeDependencies(
-  combinedDependencies: Record<string, string>,
-  graph: ProjectGraph
-) {
+// ensure that dependency ranges from package.json (e.g. ^1.0.0)
+// are replaced with the actual version based on the available nodes (e.g. 1.0.1)
+function normalizeDependencies(packageJson: PackageJson, graph: ProjectGraph) {
+  const {
+    dependencies,
+    devDependencies,
+    optionalDependencies,
+    peerDependencies,
+  } = packageJson;
+
+  const combinedDependencies = {
+    ...dependencies,
+    ...devDependencies,
+    ...optionalDependencies,
+    ...peerDependencies,
+  };
+
   Object.entries(combinedDependencies).forEach(
     ([packageName, versionRange]) => {
       if (graph.externalNodes[`npm:${packageName}@${versionRange}`]) {
@@ -105,10 +74,10 @@ function normalizeDependencies(
 
 function addNodesAndDependencies(
   graph: ProjectGraph,
-  dependencies: Record<string, string>,
+  packageJsonDeps: Record<string, string>,
   builder: ProjectGraphBuilder
 ) {
-  Object.entries(dependencies).forEach(([name, version]) => {
+  Object.entries(packageJsonDeps).forEach(([name, version]) => {
     const node =
       graph.externalNodes[`npm:${name}@${version}`] ||
       graph.externalNodes[`npm:${name}`];
@@ -134,7 +103,7 @@ function traverseNode(
 
 function rehoistNodes(
   graph: ProjectGraph,
-  dependencies: Record<string, string>,
+  packageJsonDeps: Record<string, string>,
   builder: ProjectGraphBuilder
 ) {
   const packagesToRehoist = new Map<string, ProjectGraphExternalNode[]>();
@@ -166,7 +135,7 @@ function rehoistNodes(
       nestedNodes.forEach((node) => {
         const distance = pathLengthToIncoming(
           node,
-          dependencies,
+          packageJsonDeps,
           builder,
           invertedGraph
         );
@@ -184,6 +153,7 @@ function switchNodeToHoisted(
   node: ProjectGraphExternalNode,
   builder: ProjectGraphBuilder
 ) {
+  // make a copy of current name, all the dependencies and dependents
   const previousName = node.name;
   const targets = (builder.graph.dependencies[node.name] || []).map(
     (d) => d.target
@@ -195,20 +165,23 @@ function switchNodeToHoisted(
 
   builder.removeNode(node.name);
 
+  // modify the node and re-add it
   node.name = `npm:${node.data.packageName}`;
   builder.addExternalNode(node);
 
-  for (const target of targets) {
+  targets.forEach((target) => {
     builder.addExternalNodeDependency(node.name, target);
-  }
+  });
   sources.forEach((source) =>
     builder.addExternalNodeDependency(source, node.name)
   );
 }
 
+// BFS to find the shortest path to a dependency specified in package.json
+// package version with the shortest path is the one that should be hoisted
 function pathLengthToIncoming(
   node: ProjectGraphExternalNode,
-  dependencies: Record<string, string>,
+  packageJsonDeps: Record<string, string>,
   builder: ProjectGraphBuilder,
   invertedGraph: ProjectGraph
 ): number {
@@ -218,7 +191,7 @@ function pathLengthToIncoming(
   while (queue.length > 0) {
     const [current, distance] = queue.shift();
 
-    if (dependencies[current.data.packageName] === current.data.version) {
+    if (packageJsonDeps[current.data.packageName] === current.data.version) {
       return distance;
     }
 

@@ -9,7 +9,7 @@ import {
   parseAndNormalizePnpmLockfile,
   stringifyToPnpmYaml,
 } from './utils/pnpm-normalizer';
-import { getRootVersion } from './utils/package-json-version';
+import { getHoistedPackageVersion } from './utils/package-json';
 import { NormalizedPackageJson } from './utils/types';
 import { sortObjectByKeys } from '../utils/object-sort';
 import {
@@ -17,18 +17,16 @@ import {
   ProjectGraphExternalNode,
 } from '../config/project-graph';
 import { ProjectGraphBuilder } from '../project-graph/project-graph-builder';
+import {
+  addNodeDependencies,
+  addNodesToBuilder,
+  parseLockfileData,
+  createNode,
+} from './utils/parsing';
 
 export function parsePnpmLockfile(lockFileContent: string): ProjectGraph {
   const data = parseAndNormalizePnpmLockfile(lockFileContent);
-
-  const builder = new ProjectGraphBuilder();
-
-  // we use key => node map to avoid duplicate work when parsing keys
-  const keyMap = new Map<string, ProjectGraphExternalNode>();
-  addNodes(data, builder, keyMap);
-  addDependencies(data, builder, keyMap);
-
-  return builder.getUpdatedProjectGraph();
+  return parseLockfileData(data, addNodes, addDependencies);
 }
 
 function addNodes(
@@ -36,63 +34,24 @@ function addNodes(
   builder: ProjectGraphBuilder,
   keyMap: Map<string, ProjectGraphExternalNode>
 ) {
-  const nodesToadd: Map<
-    string,
-    Map<string, ProjectGraphExternalNode>
-  > = new Map();
+  const nodes: Map<string, Map<string, ProjectGraphExternalNode>> = new Map();
 
   Object.entries(data.packages).forEach(([key, value]) => {
     const packageName = findPackageName(key, value, data);
-    const version = parseVersionSpec(key, packageName).split('_')[0];
+    const version = findVersion(key, packageName).split('_')[0];
 
-    // we don't need to keep duplicates, we can just track the keys
-    const existingNode = nodesToadd.get(packageName)?.get(version);
-    if (existingNode) {
-      keyMap.set(key, existingNode);
-      return;
-    }
-
-    const node: ProjectGraphExternalNode = {
-      type: 'npm',
-      name: `npm:${packageName}@${version}`,
-      data: {
-        version,
-        packageName,
-      },
-    };
-
-    if (!nodesToadd.has(packageName)) {
-      nodesToadd.set(packageName, new Map());
-    }
-
-    nodesToadd.get(packageName).set(version, node);
-    keyMap.set(key, node);
+    createNode(packageName, version, key, nodes, keyMap);
   });
 
   const hoistedDeps = loadPnpmHoistedDepsDefinition();
-  for (const [packageName, versionMap] of nodesToadd.entries()) {
-    let hoistedNode: ProjectGraphExternalNode;
-    if (versionMap.size === 1) {
-      hoistedNode = versionMap.values().next().value;
-    } else {
-      const hoistedVersion = getHoistedVersion(packageName, hoistedDeps);
-      hoistedNode = versionMap.get(hoistedVersion);
-    }
-    if (hoistedNode) {
-      hoistedNode.name = `npm:${packageName}`;
-    }
-
-    versionMap.forEach((node) => {
-      builder.addExternalNode(node);
-    });
-  }
+  addNodesToBuilder(nodes, builder, getHoistedVersion.bind(null, hoistedDeps));
 }
 
 function getHoistedVersion(
-  packageName: string,
-  hoistedDependencies: Record<string, any>
+  hoistedDependencies: Record<string, any>,
+  packageName: string
 ): string {
-  let version = getRootVersion(packageName);
+  let version = getHoistedPackageVersion(packageName);
 
   if (!version) {
     const key = Object.keys(hoistedDependencies).find((k) =>
@@ -115,33 +74,22 @@ function addDependencies(
   builder: ProjectGraphBuilder,
   keyMap: Map<string, ProjectGraphExternalNode>
 ) {
-  Object.keys(data.packages).forEach((key) => {
+  const findTarget = (name: string, versionSpec: string) => {
+    const version = findVersion(versionSpec, name).split('_')[0];
+    return (
+      builder.graph.externalNodes[`npm:${name}@${version}`] ||
+      builder.graph.externalNodes[`npm:${name}`]
+    );
+  };
+
+  Object.entries(data.packages).forEach(([key, snapshot]) => {
     const node = keyMap.get(key);
-    const snapshot = data.packages[key];
     [snapshot.dependencies, snapshot.optionalDependencies].forEach(
       (section) => {
-        addNodeDependencies(node.name, section, builder);
+        addNodeDependencies(node.name, section, builder, findTarget);
       }
     );
   });
-}
-
-function addNodeDependencies(
-  source: string,
-  section: Record<string, string>,
-  builder: ProjectGraphBuilder
-) {
-  if (section) {
-    Object.entries(section).forEach(([name, versionSpec]) => {
-      const version = parseVersionSpec(versionSpec, name).split('_')[0];
-      const target =
-        builder.graph.externalNodes[`npm:${name}@${version}`] ||
-        builder.graph.externalNodes[`npm:${name}`];
-      if (target) {
-        builder.addExternalNodeDependency(source, target.name);
-      }
-    });
-  }
 }
 
 export function stringifyPnpmLockfile(
@@ -247,7 +195,7 @@ function mapRootSnapshot(
   return snapshot;
 }
 
-function parseVersionSpec(key: string, packageName: string): string {
+function findVersion(key: string, packageName: string): string {
   if (key.startsWith(`/${packageName}/`)) {
     return key.slice(key.lastIndexOf('/') + 1);
   }

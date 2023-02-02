@@ -1,3 +1,8 @@
+/**
+ * This file contains the logic to convert pnpm lockfile to a standard format.
+ * It will convert inline specifiers to the separate specifiers format and ensure importers are present.
+ */
+
 import {
   Lockfile,
   ProjectSnapshot,

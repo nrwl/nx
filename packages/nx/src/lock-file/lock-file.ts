@@ -1,3 +1,8 @@
+/**
+ * This is the main API for accessing the lock file functionality.
+ * It encapsulates the package manager specific logic and implementation details.
+ */
+
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 
@@ -10,10 +15,8 @@ import { defaultHashing } from '../hasher/hashing-impl';
 import { parseNpmLockfile, stringifyNpmLockfile } from './npm-parser';
 import { parsePnpmLockfile, stringifyPnpmLockfile } from './pnpm-parser';
 import { parseYarnLockfile, stringifyYarnLockfile } from './yarn-parser';
-import {
-  normalizePackageJson,
-  pruneProjectGraph,
-} from './project-graph-pruning';
+import { pruneProjectGraph } from './project-graph-pruning';
+import { normalizePackageJson } from './utils/package-json';
 
 const YARN_LOCK_FILE = 'yarn.lock';
 const NPM_LOCK_FILE = 'package-lock.json';
@@ -49,18 +52,18 @@ export function lockFileExists(
 export function lockFileHash(
   packageManager: PackageManager = detectPackageManager(workspaceRoot)
 ): string {
-  let file: string;
+  let content: string;
   if (packageManager === 'yarn') {
-    file = readFileSync(YARN_LOCK_PATH, 'utf8');
+    content = readFileSync(YARN_LOCK_PATH, 'utf8');
   }
   if (packageManager === 'pnpm') {
-    file = readFileSync(PNPM_LOCK_PATH, 'utf8');
+    content = readFileSync(PNPM_LOCK_PATH, 'utf8');
   }
   if (packageManager === 'npm') {
-    file = readFileSync(NPM_LOCK_PATH, 'utf8');
+    content = readFileSync(NPM_LOCK_PATH, 'utf8');
   }
-  if (file) {
-    return hashString(file);
+  if (content) {
+    return defaultHashing.hashArray([content]);
   } else {
     throw new Error(
       `Unknown package manager ${packageManager} or lock file missing`
@@ -122,7 +125,6 @@ export function createLockFile(
   packageManager: PackageManager = detectPackageManager(workspaceRoot)
 ): string {
   const normalizedPackageJson = normalizePackageJson(packageJson);
-
   const content = readFileSync(getLockFileName(packageManager), 'utf8');
 
   let graph;
@@ -137,6 +139,7 @@ export function createLockFile(
   }
 
   const prunedGraph = pruneProjectGraph(graph, packageJson);
+
   if (packageManager === 'yarn') {
     return stringifyYarnLockfile(prunedGraph, content, normalizedPackageJson);
   }
@@ -146,8 +149,4 @@ export function createLockFile(
   if (packageManager === 'npm') {
     return stringifyNpmLockfile(prunedGraph, content, normalizedPackageJson);
   }
-}
-
-function hashString(fileContent: string): string {
-  return defaultHashing.hashArray([fileContent]);
 }
