@@ -85,8 +85,6 @@ function getHoistedVersion(packageName: string): string {
   const version = getHoistedPackageVersion(packageName);
   if (version) {
     return version;
-  } else {
-    throw new Error(`Cannot find hoisted version for ${packageName}`);
   }
 }
 
