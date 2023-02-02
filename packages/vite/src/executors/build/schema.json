@@ -121,8 +121,15 @@
     },
     "watch": {
       "description": "Enable re-building when files change.",
-      "type": "object",
-      "default": null
+      "oneOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "object"
+        }
+      ],
+      "default": false
     }
   },
   "definitions": {},
