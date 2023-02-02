@@ -1266,6 +1266,16 @@
         "tags": []
       },
       {
+        "id": "dependency-management",
+        "name": "Dependency Management",
+        "description": "",
+        "file": "shared/concepts/dependency-management",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/more-concepts/dependency-management",
+        "tags": []
+      },
+      {
         "id": "monorepo-nx-enterprise",
         "name": "Using Nx at Enterprises",
         "description": "",
@@ -1438,6 +1448,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/more-concepts/why-monorepos",
+    "tags": []
+  },
+  "/more-concepts/dependency-management": {
+    "id": "dependency-management",
+    "name": "Dependency Management",
+    "description": "",
+    "file": "shared/concepts/dependency-management",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/more-concepts/dependency-management",
     "tags": []
   },
   "/more-concepts/monorepo-nx-enterprise": {

@@ -404,6 +404,11 @@
               "file": "shared/guides/why-monorepos"
             },
             {
+              "name": "Dependency Management",
+              "id": "dependency-management",
+              "file": "shared/concepts/dependency-management"
+            },
+            {
               "name": "Using Nx at Enterprises",
               "id": "monorepo-nx-enterprise",
               "tags": ["enforce-project-boundaries", "use-code-generators"],

@@ -1019,6 +1019,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Dependency Management",
+            "path": "/more-concepts/dependency-management",
+            "id": "dependency-management",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Using Nx at Enterprises",
             "path": "/more-concepts/monorepo-nx-enterprise",
             "id": "monorepo-nx-enterprise",
@@ -1153,6 +1161,14 @@
         "name": "Monorepos",
         "path": "/more-concepts/why-monorepos",
         "id": "why-monorepos",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Dependency Management",
+        "path": "/more-concepts/dependency-management",
+        "id": "dependency-management",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
