@@ -179,6 +179,7 @@ export async function* esbuildExecutor(
         yield {
           success: buildResult.errors.length === 0,
           // Need to call getOutfile directly in the case of bundle=false and outfile is not set for esbuild.
+          // This field is needed for `@nrwl/js:node` executor to work.
           outfile: join(context.root, getOutfile(format, options, context)),
         };
       }
@@ -223,6 +224,7 @@ export async function* esbuildExecutor(
                         next({
                           success,
                           // Need to call getOutfile directly in the case of bundle=false and outfile is not set for esbuild.
+                          // This field is needed for `@nrwl/js:node` executor to work.
                           outfile: join(
                             context.root,
                             getOutfile(format, options, context)

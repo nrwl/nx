@@ -38,6 +38,7 @@ describe('normalizeOptions', () => {
       tsConfig: 'apps/myapp/tsconfig.app.json',
       project: 'apps/myapp/package.json',
       assets: [],
+      outputFileName: 'index.js',
       additionalEntryPoints: ['apps/myapp/src/extra-entry.ts'],
       singleEntry: false,
       external: [],

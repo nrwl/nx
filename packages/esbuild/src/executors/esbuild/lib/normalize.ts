@@ -18,6 +18,10 @@ export function normalizeOptions(
       ...rest,
       external: options.external ?? [],
       singleEntry: false,
+      // Use the `main` file name as the output file name.
+      // This is needed for `@nrwl/js:node` to know the main file to execute.
+      // NOTE: The .js default extension may be replaced later in getOutfile() call.
+      outputFileName: `${parse(options.main).name}.js`,
     };
   } else {
     return {
@@ -25,6 +29,7 @@ export function normalizeOptions(
       external: options.external ?? [],
       singleEntry: true,
       outputFileName:
+        // NOTE: The .js default extension may be replaced later in getOutfile() call.
         options.outputFileName ?? `${parse(options.main).name}.js`,
     };
   }

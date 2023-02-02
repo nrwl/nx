@@ -172,4 +172,22 @@ describe('EsBuild Plugin', () => {
     // Check that the build is correct
     expect(runCommand(`node dist/libs/${myPkg}`)).toMatch(/new API/);
   }, 120_000);
+
+  it('should support additional entry points', () => {
+    const myPkg = uniq('my-pkg');
+    runCLI(`generate @nrwl/js:lib ${myPkg} --bundler=esbuild`);
+    updateFile(`libs/${myPkg}/src/index.ts`, `console.log('main');\n`);
+    updateFile(`libs/${myPkg}/src/extra.ts`, `console.log('extra');\n`);
+    updateProjectConfig(myPkg, (json) => {
+      json.targets.build.options.additionalEntryPoints = [
+        `libs/${myPkg}/src/extra.ts`,
+      ];
+      return json;
+    });
+
+    runCommand(`build ${myPkg}`);
+
+    expect(runCommand(`node dist/libs/${myPkg}/main.js`)).toMatch(/main/);
+    expect(runCommand(`node dist/libs/${myPkg}/extra.js`)).toMatch(/extra/);
+  });
 });
