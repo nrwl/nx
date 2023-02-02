@@ -1,5 +1,6 @@
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import {
+  ProjectGraph,
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
@@ -7,12 +8,20 @@ import {
 import { updateConfigsJest29 } from './update-configs-jest-29';
 import { libraryGenerator } from '@nrwl/workspace';
 
+let projectGraph: ProjectGraph;
+jest.mock('@nrwl/devkit', () => ({
+  ...jest.requireActual<any>('@nrwl/devkit'),
+  createProjectGraphAsync: jest.fn().mockImplementation(async () => {
+    return projectGraph;
+  }),
+}));
+
 describe('Jest Migration - jest 29 update configs', () => {
   let tree: Tree;
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
-  it('should update jest.config.ts', async () => {
+  it.only('should update jest.config.ts', async () => {
     await setup(tree, 'my-lib');
 
     await updateConfigsJest29(tree);
@@ -239,4 +248,15 @@ preset: '../../jest.preset.js'
 };
 `
   );
+
+  projectGraph = {
+    dependencies: {},
+    nodes: {
+      [name]: {
+        name,
+        type: 'lib',
+        data: projectConfig,
+      } as any,
+    },
+  };
 }

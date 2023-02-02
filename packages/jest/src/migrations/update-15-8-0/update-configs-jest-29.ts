@@ -1,16 +1,24 @@
-import { formatFiles, logger, stripIndents, Tree } from '@nrwl/devkit';
+import {
+  formatFiles,
+  logger,
+  stripIndents,
+  Tree,
+  createProjectGraphAsync,
+} from '@nrwl/devkit';
 import { TS_QUERY_JEST_CONFIG_PREFIX } from '../../utils/ast-utils';
-import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
 import { tsquery } from '@phenomnomnominal/tsquery';
-import type { JestExecutorOptions } from '../../executors/jest/schema';
 import * as ts from 'typescript';
+import { JestExecutorOptions } from '../../executors/jest/schema';
+import { forEachExecutorOptionsInGraph } from '@nrwl/workspace/src/utilities/executor-options-utils';
+
 export async function updateConfigsJest29(tree: Tree) {
-  forEachExecutorOptions<JestExecutorOptions>(
-    tree,
+  // have to use graph so the negative configuration targets are expanded
+  const graph = await createProjectGraphAsync();
+  forEachExecutorOptionsInGraph<JestExecutorOptions>(
+    graph,
     '@nrwl/jest:jest',
     (options, projectName, targetName) => {
       if (options.jestConfig && tree.exists(options.jestConfig)) {
-        // TODO(caleb): this is stripping out all the comments in the config
         addSnapshotOptionsToConfig(
           tree,
           options.jestConfig,
@@ -21,6 +29,7 @@ export async function updateConfigsJest29(tree: Tree) {
       }
     }
   );
+
   await formatFiles(tree);
   logger.info(stripIndents`NX Jest Snapshot format changed in v29.
 By default Nx kept the older style to prevent breaking of existing tests with snapshots.
@@ -87,7 +96,6 @@ function updateTsJestOptions(tree: Tree, configPath: string): string {
       return getGlobalConfigWithoutTsJest(node);
     }
   );
-  console.log(tsJestGlobalsConfig);
 
   if (!tsJestGlobalsConfig) {
     return;

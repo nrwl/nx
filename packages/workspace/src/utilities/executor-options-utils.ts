@@ -1,4 +1,16 @@
-import { Tree, getProjects } from '@nrwl/devkit';
+import {
+  Tree,
+  getProjects,
+  ProjectConfiguration,
+  ProjectGraph,
+} from '@nrwl/devkit';
+
+type CallBack<T> = (
+  currentValue: T,
+  project: string,
+  target: string,
+  configuration?: string
+) => void;
 
 /**
  * Calls a function for each different options that an executor is configured with
@@ -12,14 +24,32 @@ export function forEachExecutorOptions<Options>(
   /**
    * Callback that is called for each options configured for a builder
    */
-  callback: (
-    currentValue: Options,
-    project: string,
-    target: string,
-    configuration?: string
-  ) => void
+  callback: CallBack<Options>
 ) {
-  for (const [projectName, project] of getProjects(tree)) {
+  forEachProjectConfig(getProjects(tree), executorName, callback);
+}
+
+/**
+ * Calls a function for each different options that an executor is configured with via the project graph
+ * this is helpful when you need to get the expaned configuration options from the nx.json
+ **/
+export function forEachExecutorOptionsInGraph<Options>(
+  graph: ProjectGraph,
+  executorName: string,
+  callback: CallBack<Options>
+) {
+  const projects = new Map<string, ProjectConfiguration>();
+  Object.values(graph.nodes).forEach((p) => projects.set(p.name, p.data));
+
+  forEachProjectConfig<Options>(projects, executorName, callback);
+}
+
+function forEachProjectConfig<Options>(
+  projects: Map<string, ProjectConfiguration>,
+  executorName: string,
+  callback: CallBack<Options>
+) {
+  for (const [projectName, project] of projects) {
     for (const [targetName, target] of Object.entries(project.targets || {})) {
       if (executorName !== target.executor) {
         continue;

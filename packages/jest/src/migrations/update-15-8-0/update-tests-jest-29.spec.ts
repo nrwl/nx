@@ -1,4 +1,5 @@
 import {
+  ProjectGraph,
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
@@ -7,6 +8,13 @@ import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { libraryGenerator } from '@nrwl/workspace';
 import { updateTestsJest29 } from './update-tests-jest-29';
 
+let projectGraph: ProjectGraph;
+jest.mock('@nrwl/devkit', () => ({
+  ...jest.requireActual<any>('@nrwl/devkit'),
+  createProjectGraphAsync: jest
+    .fn()
+    .mockImplementation(async () => projectGraph),
+}));
 describe('Jest Migration - jest 29 mocked usage in tests', () => {
   let tree: Tree;
   beforeEach(() => {
@@ -160,4 +168,14 @@ test('direct usage', () => {
 });
 `
   );
+  projectGraph = {
+    dependencies: {},
+    nodes: {
+      [name]: {
+        name,
+        type: 'lib',
+        data: projectConfig,
+      } as any,
+    },
+  };
 }

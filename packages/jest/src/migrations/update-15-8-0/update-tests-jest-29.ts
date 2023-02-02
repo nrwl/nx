@@ -1,23 +1,24 @@
 import {
+  createProjectGraphAsync,
+  formatFiles,
   readProjectConfiguration,
   Tree,
   visitNotIgnoredFiles,
 } from '@nrwl/devkit';
-import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
+import { forEachExecutorOptionsInGraph } from '@nrwl/workspace/src/utilities/executor-options-utils';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import {
   CallExpression,
   ImportDeclaration,
-  isCallExpression,
-  PropertyAccessExpression,
   VariableStatement,
 } from 'typescript';
 import type { JestExecutorOptions } from '../../executors/jest/schema';
 import { TEST_FILE_PATTERN } from '../../utils/ast-utils';
 
-export function updateTestsJest29(tree: Tree) {
-  forEachExecutorOptions<JestExecutorOptions>(
-    tree,
+export async function updateTestsJest29(tree: Tree) {
+  const graph = await createProjectGraphAsync();
+  forEachExecutorOptionsInGraph<JestExecutorOptions>(
+    graph,
     '@nrwl/jest:jest',
     (options, projectName) => {
       const projectConfig = readProjectConfiguration(tree, projectName);
@@ -30,6 +31,7 @@ export function updateTestsJest29(tree: Tree) {
       });
     }
   );
+  await formatFiles(tree);
 }
 
 export function updateJestMockTypes(tree: Tree, filePath: string) {
