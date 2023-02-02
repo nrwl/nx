@@ -38,4 +38,33 @@ describe('e2eProjectGenerator', () => {
 
     expect(tree.exists(`e2e/src/server/server.spec.ts`)).toBeTruthy();
   });
+
+  it('should generate cli project', async () => {
+    await applicationGenerator(tree, {
+      name: 'api',
+      framework: 'none',
+      e2eTestRunner: 'none',
+    });
+    await e2eProjectGenerator(tree, {
+      projectType: 'cli',
+      project: 'api',
+    });
+    expect(tree.read('api-e2e/src/api/api.spec.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { execSync } from 'child_process';
+      import { join } from 'path';
+
+      describe('CLI tests', () => {
+        it('should print a message', () => {
+          const cliPath = join(process.cwd(), \\"dist/api\\");
+
+          const output = execSync(\`node \${cliPath}\`).toString();
+
+          expect(output).toMatch(/Hello World/);
+        });
+      });
+
+      "
+    `);
+  });
 });
