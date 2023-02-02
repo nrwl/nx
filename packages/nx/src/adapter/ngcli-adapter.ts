@@ -1,4 +1,5 @@
 /* eslint-disable no-restricted-imports */
+import type { Architect } from '@angular-devkit/architect';
 import {
   fragment,
   logging,
@@ -10,35 +11,29 @@ import {
   virtualFs,
   workspaces,
 } from '@angular-devkit/core';
-import * as chalk from 'chalk';
 import { createConsoleLogger, NodeJsSyncHost } from '@angular-devkit/core/node';
-import { Stats } from 'fs';
-import { detectPackageManager } from '../utils/package-manager';
-import { GenerateOptions } from '../command-line/generate';
-import { Tree } from '../generators/tree';
-import { dirname, extname, resolve } from 'path';
 import { FileBuffer } from '@angular-devkit/core/src/virtual-fs/host/interface';
-import type { Architect } from '@angular-devkit/architect';
-import { concat, from, Observable, of } from 'rxjs';
-import { concatMap, map, tap } from 'rxjs/operators';
-import { NX_ERROR, NX_PREFIX } from '../utils/logger';
-import { readJsonFile } from '../utils/fileutils';
-import { parseJson } from '../utils/json';
-import { NxJsonConfiguration } from '../config/nx-json';
-import { ProjectsConfigurations } from '../config/workspace-json-project-json';
-import { toNewFormat, toOldFormat } from './angular-json';
-import {
-  createProjectGraphAsync,
-  readProjectsConfigurationFromProjectGraph,
-} from '../project-graph/project-graph';
-import { readNxJson } from '../config/configuration';
+import * as chalk from 'chalk';
+import { Stats } from 'fs';
+import { dirname, extname, join, resolve } from 'path';
+import { concat, from, Observable, of, zip } from 'rxjs';
+import { catchError, concatMap, map, tap } from 'rxjs/operators';
+import { GenerateOptions } from '../command-line/generate';
+import { ProjectConfiguration } from '../config/workspace-json-project-json';
+import { Tree } from '../generators/tree';
+import { readJson } from '../generators/utils/json';
 import {
   addProjectConfiguration,
   getProjects,
   updateProjectConfiguration,
 } from '../generators/utils/project-configuration';
-import { readJson } from '../generators/utils/json';
+import { createProjectGraphAsync } from '../project-graph/project-graph';
+import { readJsonFile } from '../utils/fileutils';
+import { parseJson } from '../utils/json';
+import { NX_ERROR, NX_PREFIX } from '../utils/logger';
 import { readModulePackageJson } from '../utils/package-json';
+import { detectPackageManager } from '../utils/package-manager';
+import { toNewFormat, toOldFormat } from './angular-json';
 
 export async function scheduleTarget(
   root: string,
@@ -209,62 +204,104 @@ async function runSchematic(
 }
 
 export class NxScopedHost extends virtualFs.ScopedHost<any> {
-  protected cachedConfigurationV1: any;
-
   constructor(private root: string) {
     super(new NodeJsSyncHost(), normalize(root));
   }
 
   read(path: Path): Observable<FileBuffer> {
     if (path === 'angular.json' || path === '/angular.json') {
-      if (this.cachedConfigurationV1) {
-        return of(Buffer.from(JSON.stringify(this.cachedConfigurationV1)));
-      }
-
-      return from(
-        (async () => {
-          const projectGraph = await createProjectGraphAsync();
-          const nxJson = readNxJson();
-          // Construct old workspace.json format from project graph
-          const w: ProjectsConfigurations & NxJsonConfiguration = {
-            ...nxJson,
-            ...readProjectsConfigurationFromProjectGraph(projectGraph),
-          };
-          const workspaceConfiguration = toOldFormat(w);
-          this.cachedConfigurationV1 = workspaceConfiguration;
-          return Buffer.from(JSON.stringify(workspaceConfiguration));
-        })()
+      return this.readMergedProjectConfiguration().pipe(
+        map((r) => Buffer.from(JSON.stringify(toOldFormat(r))))
       );
     } else {
       return super.read(path);
     }
   }
 
+  private readMergedProjectConfiguration() {
+    return zip(
+      from(createProjectGraphAsync()),
+      this.readExistingAngularJson()
+    ).pipe(
+      concatMap((arg) => {
+        const graph = arg[0] as any;
+        const ret = (arg[1] || { projects: {} }) as any;
+        const projectJsonReads = [] as Observable<any>[];
+        for (let projectName of Object.keys(graph.nodes)) {
+          if (!ret.projects[projectName]) {
+            projectJsonReads.push(
+              this.readExistingProjectJson(
+                join(graph.nodes[projectName].data.root, 'project.json')
+              )
+            );
+          }
+        }
+        return zip(...projectJsonReads).pipe(
+          map((projectJsons) => {
+            projectJsons
+              .filter((p) => p !== null)
+              .forEach((p) => {
+                delete p.version;
+                ret.projects[p.name] = p;
+              });
+
+            return ret;
+          })
+        );
+      }),
+      catchError((err) => {
+        console.log('Unable to read angular.json');
+        console.log(err);
+        process.exit(1);
+      })
+    );
+  }
+
   write(path: Path, content: FileBuffer): Observable<void> {
     if (path === 'angular.json' || path === '/angular.json') {
-      this.cachedConfigurationV1 = toOldFormat(parseJson(content.toString()));
+      const configV2 = toNewFormat(parseJson(content.toString()));
+      const root = this.root;
 
-      const configV2 = toNewFormat(this.cachedConfigurationV1);
+      return zip(
+        this.readMergedProjectConfiguration(),
+        this.readExistingAngularJson()
+      ).pipe(
+        concatMap((arg) => {
+          const existingConfig = arg[0] as any;
+          const existingAngularJson = arg[1] as any;
 
-      return this.readExistingAngularJson().pipe(
-        concatMap((existingAngularJson) => {
           const projectsInAngularJson = existingAngularJson
             ? Object.keys(existingAngularJson.projects)
             : [];
-
-          const newAngularJson = { version: 1, projects: {} };
-
           const projects = configV2.projects;
           const allObservables = [];
           Object.keys(projects).forEach((projectName) => {
             if (projectsInAngularJson.includes(projectName)) {
-              newAngularJson.projects[projectName] = projects[projectName];
+              // ignore updates to angular.json
             } else {
               updateProjectConfiguration(
                 {
+                  root,
                   exists: () => true,
                   write: (path: string, content) => {
-                    allObservables.push(super.write(path as any, content));
+                    if (existingConfig.projects[projectName]) {
+                      const updatedContent = this.mergeProjectConfiguration(
+                        existingConfig.projects[projectName],
+                        projects[projectName]
+                      );
+                      if (updatedContent) {
+                        allObservables.push(
+                          super.write(
+                            path as any,
+                            Buffer.from(JSON.stringify(updatedContent, null, 2))
+                          )
+                        );
+                      }
+                    } else {
+                      allObservables.push(
+                        super.write(path as any, Buffer.from(content))
+                      );
+                    }
                   },
                 } as any,
                 projectName,
@@ -272,18 +309,9 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
               );
             }
           });
-
-          if (Object.keys(newAngularJson.projects).length > 0) {
-            allObservables.push(
-              super.write(
-                'angular.json' as any,
-                JSON.stringify(toOldFormat(newAngularJson)) as any
-              )
-            );
-          }
-          return concat(allObservables);
+          return concat(...allObservables);
         })
-      );
+      ) as any;
     } else {
       return super.write(path, content);
     }
@@ -305,6 +333,27 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
     }
   }
 
+  mergeProjectConfiguration(
+    existing: ProjectConfiguration,
+    updated: ProjectConfiguration
+  ) {
+    const res = { ...existing };
+
+    if (!res.targets) {
+      res.targets = {};
+    }
+
+    let modified = false;
+    for (let target of Object.keys(updated.targets)) {
+      if (!res.targets[target]) {
+        res.targets[target] = updated.targets[target];
+        modified = true;
+      }
+    }
+
+    return modified ? res : null;
+  }
+
   readExistingAngularJson() {
     return super
       .exists('angular.json' as any)
@@ -313,8 +362,22 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
           r
             ? super
                 .read('angular.json' as any)
+                .pipe(map((r) => parseJson(arrayBufferToString(r))))
+            : of(null)
+        )
+      );
+  }
+
+  readExistingProjectJson(path: string) {
+    return super
+      .exists(path as any)
+      .pipe(
+        concatMap((r) =>
+          r
+            ? super
+                .read(path as any)
                 .pipe(
-                  map((r) => toOldFormat(parseJson(arrayBufferToString(r))))
+                  map((r) => toNewFormat(parseJson(arrayBufferToString(r))))
                 )
             : of(null)
         )
