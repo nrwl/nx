@@ -877,6 +877,38 @@ describe('params', () => {
       `);
     });
 
+    it('should not throw if one of the anyOf conditions is met', () => {
+      expect(() =>
+        validateOptsAgainstSchema(
+          {
+            a: true
+          },
+
+          {
+            properties: {
+              a: {
+                type: 'boolean',
+              },
+
+              b: {
+                type: 'boolean',
+              },
+            },
+
+            anyOf: [
+              {
+                required: ['a'],
+              },
+
+              {
+                required: ['b'],
+              },
+            ],
+          }
+        )
+      ).not.toThrow();
+    });
+
     it('should throw if found an unknown property', () => {
       expect(() =>
         validateOptsAgainstSchema(
