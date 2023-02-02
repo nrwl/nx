@@ -16,13 +16,13 @@ This will enable you to use the Nx CLI in your existing Angular CLI workspace wh
 
 - The `nx`, `@nrwl/workspace` and `prettier` packages will be installed.
 - An `nx.json` file will be created in the root of your workspace.
-- For an Angular 15+ repo, the `angular.json` file is split into separate `project.json` files for each project.
+- For an Angular 14+ repo, the `angular.json` file is split into separate `project.json` files for each project.
 
 After the process completes, you can continue using the same `serve/build/lint/test` commands you are used to.
 
-**Note:** The changes will be slightly different for Angular 14 and lower.
+**Note:** The changes will be slightly different for Angular 13 and lower.
 
-## Transforming an Angular CLI workspace to an Integrated Nx Monorepo
+## Migrating to an Integrated Nx Monorepo
 
 To take advantage of Nx's monorepo features provided by Nx and the Nx Angular plugin, you can also perform a migration from an Angular CLI to an Integrated Nx Monorepo with the command:
 
@@ -150,7 +150,7 @@ width="100%" /%}
 ## Migrating an Angular app manually
 
 {% callout type="note" title="Older Angular Versions" %}
-If you are using older versions of Angular (version 14 or lower), make sure to use the appropriate version of Nx that matches your version of Angular. See the [Nx and Angular Version Compatibility Matrix](/packages/angular/documents/angular-nx-version-matrix) to find the correct version. The generated files will also be slightly different.
+If you are using older versions of Angular (version 13 or lower), make sure to use the appropriate version of Nx that matches your version of Angular. See the [Nx and Angular Version Compatibility Matrix](/packages/angular/documents/angular-nx-version-matrix) to find the correct version. The generated files will also be slightly different.
 {% /callout %}
 
 If you are unable to automatically transform your Angular CLI workspace to an Nx workspace using the [ng add](#transforming-an-angular-cli-workspace-to-an-nx-workspace) method, there are some manual steps you can take to move your project(s) into an Nx workspace.
@@ -215,6 +215,10 @@ A new Nx workspace with your `org name` as the folder name, and your `applicatio
 ├── tsconfig.json
 └── tsconfig.spec.json
 ```
+
+### Review Angular installed packages versions
+
+Creating an Nx workspace with the latest version will install the Angular packages on their latest versions. If you're using a [lower version that's supported by the latest Nx](/packages/angular/documents/angular-nx-version-matrix), make sure to adjust the newly generated `package.json` file with your versions.
 
 ### Copying over application files
 
