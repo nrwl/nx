@@ -56,7 +56,6 @@
     "webpack-merge": "5.7.3"
   },
   "peerDependencies": {
-    "@angular-devkit/architect": ">= 0.1400.0 < 0.1600.0",
     "@angular-devkit/build-angular": ">= 14.0.0 < 16.0.0",
     "@angular-devkit/schematics": ">= 14.0.0 < 16.0.0",
     "@schematics/angular": ">= 14.0.0 < 16.0.0",

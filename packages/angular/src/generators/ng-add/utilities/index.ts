@@ -1,3 +1,4 @@
+export * from './dependencies';
 export * from './file-change-recorder';
 export * from './format-files-task';
 export * from './logger';
