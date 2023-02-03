@@ -1,11 +1,12 @@
+import { execSync } from 'child_process';
 import { readJson, updateJson } from 'nx/src/generators/utils/json';
-import { installPackagesTask } from '../tasks/install-packages-task';
 import type { Tree } from 'nx/src/generators/tree';
 import { GeneratorCallback } from 'nx/src/config/misc-interfaces';
 import { clean, coerce, gt, satisfies } from 'semver';
 import { getPackageManagerCommand } from 'nx/src/utils/package-manager';
-import { execSync } from 'child_process';
-import { readModulePackageJson } from 'nx/src/utils/package-json';
+import { workspaceRoot } from 'nx/src/utils/workspace-root';
+
+import { installPackagesTask } from '../tasks/install-packages-task';
 
 const UNIDENTIFIED_VERSION = 'UNIDENTIFIED_VERSION';
 const NON_SEMVER_TAGS = {
@@ -389,19 +390,12 @@ export async function ensurePackage(
     throwOnMissing?: boolean;
   } = {}
 ): Promise<void> {
-  let version: string;
-
   // Read package and version from root package.json file.
   const dev = options.dev ?? true;
   const throwOnMissing = options.throwOnMissing ?? !!process.env.NX_DRY_RUN; // NX_DRY_RUN is set in `packages/nx/src/command-line/generate.ts`
   const pmc = getPackageManagerCommand();
 
-  // Try to resolve the actual version from resolved module.
-  try {
-    version = readModulePackageJson(pkg).packageJson.version;
-  } catch {
-    // ignore
-  }
+  let version = getPackageVersion(pkg);
 
   // Otherwise try to read in from package.json. This is needed for E2E tests to pass.
   if (!version) {
@@ -410,7 +404,15 @@ export async function ensurePackage(
     version = packageJson[field]?.[pkg];
   }
 
-  if (!satisfies(version, requiredVersion)) {
+  if (
+    // Special case: When running Nx unit tests, the version read from package.json is "0.0.1".
+    !(
+      pkg.startsWith('@nrwl/') &&
+      (version === '0.0.1' || requiredVersion === '0.0.1')
+    ) &&
+    // Normal case
+    !satisfies(version, requiredVersion, { includePrerelease: true })
+  ) {
     const installCmd = `${
       dev ? pmc.addDev : pmc.add
     } ${pkg}@${requiredVersion}`;
@@ -424,5 +426,28 @@ export async function ensurePackage(
         stdio: [0, 1, 2],
       });
     }
+  }
+}
+
+/**
+ * Use another process to resolve the package.json path of the package (if it exists).
+ * Cannot use `require.resolve` here since there is an unclearable internal cache used by Node that can lead to issues
+ * when resolving the package after installation.
+ *
+ * See: https://github.com/nodejs/node/issues/31803
+ */
+function getPackageVersion(pkg: string): undefined | string {
+  try {
+    return execSync(
+      `node -e "console.log(require('${pkg}/package.json').version)"`,
+      {
+        cwd: workspaceRoot,
+        stdio: ['pipe', 'pipe', 'ignore'],
+      }
+    )
+      .toString()
+      .trim();
+  } catch (e) {
+    return undefined;
   }
 }
