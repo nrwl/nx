@@ -8,11 +8,6 @@ import {
   ProjectGraphExternalNode,
 } from '../config/project-graph';
 import { NormalizedPackageJson } from './utils/package-json';
-import {
-  addNodeDependencies,
-  parseLockfileData,
-  createNode,
-} from './utils/parsing';
 
 /**
  * NPM
@@ -56,7 +51,14 @@ type NpmLockFile = {
 
 export function parseNpmLockfile(lockFileContent: string): ProjectGraph {
   const data = JSON.parse(lockFileContent) as NpmLockFile;
-  return parseLockfileData(data, addNodes, addDependencies);
+  const builder = new ProjectGraphBuilder();
+
+  // we use key => node map to avoid duplicate work when parsing keys
+  const keyMap = new Map<string, ProjectGraphExternalNode>();
+  addNodes(data, builder, keyMap);
+  addDependencies(data, builder, keyMap);
+
+  return builder.getUpdatedProjectGraph();
 }
 
 function addNodes(
@@ -154,6 +156,39 @@ function addV1Node(
   }
 }
 
+function createNode(
+  packageName: string,
+  version: string,
+  key: string,
+  nodes: Map<string, Map<string, ProjectGraphExternalNode>>,
+  keyMap: Map<string, ProjectGraphExternalNode>,
+  isHoisted?: boolean
+): ProjectGraphExternalNode {
+  const existingNode = nodes.get(packageName)?.get(version);
+  if (existingNode) {
+    keyMap.set(key, existingNode);
+    return;
+  }
+
+  const node: ProjectGraphExternalNode = {
+    type: 'npm',
+    name: isHoisted ? `npm:${packageName}` : `npm:${packageName}@${version}`,
+    data: {
+      version,
+      packageName,
+    },
+  };
+
+  keyMap.set(key, node);
+  if (!nodes.has(packageName)) {
+    nodes.set(packageName, new Map([[version, node]]));
+  } else {
+    nodes.get(packageName).set(version, node);
+  }
+
+  return node;
+}
+
 function findV3Version(snapshot: NpmDependencyV3, packageName: string): string {
   let version = snapshot.version;
 
@@ -185,17 +220,20 @@ function addDependencies(
       if (!keyMap.has(path)) {
         return;
       }
+      const sourceName = keyMap.get(path).name;
       [
         snapshot.peerDependencies,
         snapshot.dependencies,
         snapshot.optionalDependencies,
       ].forEach((section) => {
-        addNodeDependencies(
-          keyMap.get(path).name,
-          section,
-          builder,
-          findTarget.bind(null, path, keyMap)
-        );
+        if (section) {
+          Object.entries(section).forEach(([name, versionRange]) => {
+            const target = findTarget(path, keyMap, name, versionRange);
+            if (target) {
+              builder.addExternalNodeDependency(sourceName, target.name);
+            }
+          });
+        }
       });
     });
   } else {
@@ -248,13 +286,14 @@ function addV1NodeDependencies(
   builder: ProjectGraphBuilder,
   keyMap: Map<string, ProjectGraphExternalNode>
 ) {
-  if (keyMap.has(path)) {
-    addNodeDependencies(
-      keyMap.get(path).name,
-      snapshot.requires,
-      builder,
-      findTarget.bind(null, path, keyMap)
-    );
+  if (keyMap.has(path) && snapshot.requires) {
+    const source = keyMap.get(path).name;
+    Object.entries(snapshot.requires).forEach(([name, versionRange]) => {
+      const target = findTarget(path, keyMap, name, versionRange);
+      if (target) {
+        builder.addExternalNodeDependency(source, target.name);
+      }
+    });
   }
 
   if (snapshot.dependencies) {

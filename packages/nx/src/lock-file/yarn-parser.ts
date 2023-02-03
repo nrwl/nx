@@ -9,12 +9,6 @@ import {
 import { ProjectGraphBuilder } from '../project-graph/project-graph-builder';
 import { satisfies } from 'semver';
 import { NormalizedPackageJson } from './utils/package-json';
-import {
-  addNodeDependencies,
-  addNodesToBuilder,
-  parseLockfileData,
-  createNode,
-} from './utils/parsing';
 
 /**
  * Yarn
@@ -44,7 +38,14 @@ type YarnDependency = {
 
 export function parseYarnLockfile(lockFileContent: string): ProjectGraph {
   const data = parseSyml(lockFileContent);
-  return parseLockfileData(data, addNodes, addDependencies);
+  const builder = new ProjectGraphBuilder();
+
+  // we use key => node map to avoid duplicate work when parsing keys
+  const keyMap = new Map<string, ProjectGraphExternalNode>();
+  addNodes(data, builder, keyMap);
+  addDependencies(data, builder, keyMap);
+
+  return builder.getUpdatedProjectGraph();
 }
 
 function addNodes(
@@ -68,11 +69,47 @@ function addNodes(
       isBerry
     );
     keys.split(', ').forEach((key) => {
-      createNode(packageName, version, key, nodes, keyMap);
+      // we don't need to keep duplicates, we can just track the keys
+      const existingNode = nodes.get(packageName)?.get(version);
+      if (existingNode) {
+        keyMap.set(key, existingNode);
+        return;
+      }
+
+      const node: ProjectGraphExternalNode = {
+        type: 'npm',
+        name: `npm:${packageName}@${version}`,
+        data: {
+          version,
+          packageName,
+        },
+      };
+
+      keyMap.set(key, node);
+      if (!nodes.has(packageName)) {
+        nodes.set(packageName, new Map([[version, node]]));
+      } else {
+        nodes.get(packageName).set(version, node);
+      }
     });
   });
 
-  addNodesToBuilder(nodes, builder, getHoistedVersion);
+  for (const [packageName, versionMap] of nodes.entries()) {
+    let hoistedNode: ProjectGraphExternalNode;
+    if (versionMap.size === 1) {
+      hoistedNode = versionMap.values().next().value;
+    } else {
+      const hoistedVersion = getHoistedVersion(packageName);
+      hoistedNode = versionMap.get(hoistedVersion);
+    }
+    if (hoistedNode) {
+      hoistedNode.name = `npm:${packageName}`;
+    }
+
+    versionMap.forEach((node) => {
+      builder.addExternalNode(node);
+    });
+  }
 }
 
 function findVersion(
@@ -118,12 +155,6 @@ function addDependencies(
   builder: ProjectGraphBuilder,
   keyMap: Map<string, ProjectGraphExternalNode>
 ) {
-  const findTarget = (name: string, version: string) => {
-    return (
-      keyMap.get(`${name}@npm:${version}`) || keyMap.get(`${name}@${version}`)
-    );
-  };
-
   Object.keys(dependencies).forEach((keys) => {
     const snapshot = dependencies[keys];
     keys.split(', ').forEach((key) => {
@@ -131,7 +162,16 @@ function addDependencies(
         const node = keyMap.get(key);
         [snapshot.dependencies, snapshot.optionalDependencies].forEach(
           (section) => {
-            addNodeDependencies(node.name, section, builder, findTarget);
+            if (section) {
+              Object.entries(section).forEach(([name, versionRange]) => {
+                const target =
+                  keyMap.get(`${name}@npm:${versionRange}`) ||
+                  keyMap.get(`${name}@${versionRange}`);
+                if (target) {
+                  builder.addExternalNodeDependency(node.name, target.name);
+                }
+              });
+            }
           }
         );
       }
