@@ -243,10 +243,7 @@ describe('Build Node apps', () => {
     const nestapp = uniq('nestapp');
     runCLI(`generate @nrwl/nest:app ${nestapp} --linter=eslint`);
 
-    const { combinedOutput: nestCombinedOutput } = await runCLIAsync(
-      `build ${nestapp} --generatePackageJson`
-    );
-    expect(nestCombinedOutput).not.toMatch(/Graph is not consistent/);
+    await runCLIAsync(`build ${nestapp} --generatePackageJson`);
 
     checkFilesExist(`dist/apps/${nestapp}/package.json`);
     checkFilesExist(

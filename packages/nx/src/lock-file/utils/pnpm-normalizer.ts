@@ -3,7 +3,7 @@
  * It will convert inline specifiers to the separate specifiers format and ensure importers are present.
  */
 
-import {
+import type {
   Lockfile,
   ProjectSnapshot,
   ResolvedDependencies,
