@@ -127,26 +127,19 @@ export function createLockFile(
   const normalizedPackageJson = normalizePackageJson(packageJson);
   const content = readFileSync(getLockFileName(packageManager), 'utf8');
 
-  let graph;
   if (packageManager === 'yarn') {
-    graph = parseYarnLockfile(content);
-  }
-  if (packageManager === 'pnpm') {
-    graph = parsePnpmLockfile(content);
-  }
-  if (packageManager === 'npm') {
-    graph = parseNpmLockfile(content);
-  }
-
-  const prunedGraph = pruneProjectGraph(graph, packageJson);
-
-  if (packageManager === 'yarn') {
+    const graph = parseYarnLockfile(content);
+    const prunedGraph = pruneProjectGraph(graph, packageJson);
     return stringifyYarnLockfile(prunedGraph, content, normalizedPackageJson);
   }
   if (packageManager === 'pnpm') {
+    const graph = parsePnpmLockfile(content);
+    const prunedGraph = pruneProjectGraph(graph, packageJson);
     return stringifyPnpmLockfile(prunedGraph, content, normalizedPackageJson);
   }
   if (packageManager === 'npm') {
+    const graph = parseNpmLockfile(content);
+    const prunedGraph = pruneProjectGraph(graph, packageJson);
     return stringifyNpmLockfile(prunedGraph, content, normalizedPackageJson);
   }
 }
