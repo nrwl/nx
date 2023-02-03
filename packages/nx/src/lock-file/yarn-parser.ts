@@ -1,6 +1,5 @@
 import { parseSyml, stringifySyml } from '@yarnpkg/parsers';
 import { stringify } from '@yarnpkg/lockfile';
-import { YarnDependency, YarnLockFile } from './utils/types';
 import { sortObjectByKeys } from '../utils/object-sort';
 import { getHoistedPackageVersion } from './utils/package-json';
 import {
@@ -9,13 +8,39 @@ import {
 } from '../config/project-graph';
 import { ProjectGraphBuilder } from '../project-graph/project-graph-builder';
 import { satisfies } from 'semver';
-import { NormalizedPackageJson } from './utils/types';
+import { NormalizedPackageJson } from './utils/package-json';
 import {
   addNodeDependencies,
   addNodesToBuilder,
   parseLockfileData,
   createNode,
 } from './utils/parsing';
+
+/**
+ * Yarn
+ * - Classic has resolved and integrity
+ * - Berry has resolution, checksum, languageName and linkType
+ */
+type YarnLockFile = {
+  __metadata?: {};
+} & Record<string, YarnDependency>;
+
+type YarnDependency = {
+  version: string;
+  dependencies?: Record<string, string>;
+  optionalDependencies?: Record<string, string>;
+  peerDependencies?: Record<string, string>;
+
+  // classic specific
+  resolved?: string;
+  integrity?: string;
+
+  // berry specific
+  resolution?: string;
+  checksum?: string;
+  languageName?: string;
+  linkType?: 'soft' | 'hard';
+};
 
 export function parseYarnLockfile(lockFileContent: string): ProjectGraph {
   const data = parseSyml(lockFileContent);

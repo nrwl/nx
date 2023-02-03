@@ -1,7 +1,6 @@
 import { existsSync, readFileSync } from 'fs';
 import { PackageJson } from '../../utils/package-json';
 import { workspaceRoot } from '../../utils/workspace-root';
-import { NormalizedPackageJson } from './types';
 
 /**
  * Get version of hoisted package if available
@@ -18,6 +17,18 @@ export function getHoistedPackageVersion(packageName: string): string {
   }
   return;
 }
+
+export type NormalizedPackageJson = Pick<
+  PackageJson,
+  | 'name'
+  | 'version'
+  | 'license'
+  | 'dependencies'
+  | 'devDependencies'
+  | 'peerDependencies'
+  | 'peerDependenciesMeta'
+  | 'optionalDependencies'
+>;
 
 /**
  * Strip off non-pruning related fields from package.json

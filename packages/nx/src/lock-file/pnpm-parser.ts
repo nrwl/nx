@@ -10,7 +10,7 @@ import {
   stringifyToPnpmYaml,
 } from './utils/pnpm-normalizer';
 import { getHoistedPackageVersion } from './utils/package-json';
-import { NormalizedPackageJson } from './utils/types';
+import { NormalizedPackageJson } from './utils/package-json';
 import { sortObjectByKeys } from '../utils/object-sort';
 import {
   ProjectGraph,

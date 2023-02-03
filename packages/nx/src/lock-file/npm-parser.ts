@@ -7,13 +7,52 @@ import {
   ProjectGraph,
   ProjectGraphExternalNode,
 } from '../config/project-graph';
-import { NpmDependencyV1, NpmDependencyV3, NpmLockFile } from './utils/types';
-import { NormalizedPackageJson } from './utils/types';
+import { NormalizedPackageJson } from './utils/package-json';
 import {
   addNodeDependencies,
   parseLockfileData,
   createNode,
 } from './utils/parsing';
+
+/**
+ * NPM
+ * - v1 has only dependencies
+ * - v2 has packages and dependencies for backwards compatibility
+ * - v3 has only packages
+ */
+type NpmDependency = {
+  name?: string;
+  version: string;
+  resolved?: string;
+  integrity?: string;
+  dev?: boolean;
+  peer?: boolean;
+  devOptional?: boolean;
+  optional?: boolean;
+};
+
+type NpmDependencyV3 = NpmDependency & {
+  dependencies?: Record<string, string>;
+  optionalDependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+  peerDependencies?: Record<string, string>;
+  peerDependenciesMeta?: Record<string, { optional: boolean }>;
+  link?: boolean;
+};
+
+type NpmDependencyV1 = NpmDependency & {
+  requires?: Record<string, string>;
+  dependencies?: Record<string, NpmDependencyV1>;
+};
+
+type NpmLockFile = {
+  name?: string;
+  version?: string;
+  lockfileVersion: number;
+  requires?: boolean;
+  packages?: Record<string, NpmDependencyV3>;
+  dependencies?: Record<string, NpmDependencyV1>;
+};
 
 export function parseNpmLockfile(lockFileContent: string): ProjectGraph {
   const data = JSON.parse(lockFileContent) as NpmLockFile;
