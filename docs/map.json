@@ -1498,6 +1498,11 @@
               "name": "show",
               "id": "show",
               "file": "generated/cli/show"
+            },
+            {
+              "name": "view-logs",
+              "id": "view-logs",
+              "file": "generated/cli/view-logs"
             }
           ]
         },
