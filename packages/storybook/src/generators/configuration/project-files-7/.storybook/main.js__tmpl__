@@ -1,14 +1,10 @@
-<% if (!isRootProject){ %>const rootMain = require('<%= offsetFromRoot %>../.storybook/<%= rootMainName %>');<% } %>
-<% if (isRootProject){ %>const rootMain = require('./main.root');<% } %>
-
-module.exports = {
-  ...rootMain,
+const config = {
   stories: [
-    ...rootMain.stories,<% if(uiFramework === '@storybook/angular' && projectType === 'library') { %>
+    <% if(uiFramework === '@storybook/angular' && projectType === 'library') { %>
     '../**/*.stories.@(js|jsx|ts|tsx|mdx)' <% } else { %>
     '../<%= projectDirectory %>/**/*.stories.@(js|jsx|ts|tsx|mdx)'
   <% } %>],
-  addons: [...rootMain.addons <% if(uiFramework === '@storybook/react-webpack5') { %>, '@nrwl/react/plugins/storybook' <% } %><% if(uiFramework === '@storybook/react-native') { %>, '@storybook/addon-ondevice-actions',  '@storybook/addon-ondevice-backgrounds', '@storybook/addon-ondevice-controls', '@storybook/addon-ondevice-notes'  <% } %>
+  addons: ['@storybook/addon-essentials' <% if(uiFramework === '@storybook/react-webpack5') { %>, '@nrwl/react/plugins/storybook' <% } %><% if(uiFramework === '@storybook/react-native') { %>, '@storybook/addon-ondevice-actions',  '@storybook/addon-ondevice-backgrounds', '@storybook/addon-ondevice-controls', '@storybook/addon-ondevice-notes'  <% } %>
     <% if(usesSwc) { %>, 'storybook-addon-swc' <% } %>
   ],
   framework: {
@@ -22,6 +18,9 @@ module.exports = {
     },
   },
 };
+
+export default config;
+
 <% if(!usesVite) { %>
 // To customize your webpack configuration you can use the webpackFinal field.
 // Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
