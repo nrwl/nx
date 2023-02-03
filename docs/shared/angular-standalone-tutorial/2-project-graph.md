@@ -63,7 +63,7 @@ Configure the routes:
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
-import { SharedUiModule } from '@store/shared/ui';
+import { SharedUiModule } from 'shared/ui';
 
 import { AppComponent } from './app.component';
 import { NxWelcomeComponent } from './nx-welcome.component';
@@ -152,7 +152,7 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { CartRouteComponent } from './cart-route/cart-route.component';
-import { SharedUiModule } from '@store/shared/ui';
+import { SharedUiModule } from 'shared/ui';
 
 @NgModule({
   declarations: [CartRouteComponent],
