@@ -2,7 +2,8 @@ import { readTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 import * as chalk from 'chalk';
 import * as path from 'path';
 import type { BuilderProgram, Diagnostic, Program } from 'typescript';
-import { codeFrameColumns } from '../code-frames/code-frames';
+import { codeFrameColumns } from 'nx/src/utils/code-frames';
+import { highlight } from '../code-frames/highlight';
 
 export interface TypeCheckResult {
   warnings?: string[];
@@ -208,13 +209,16 @@ export function getFormattedDiagnostic(
     message =
       `${chalk.underline.blue(`${fileName}:${line}:${column}`)} - ` + message;
 
+    const code = diagnostic.file.getFullText(diagnostic.file.getSourceFile());
+
     message +=
       '\n' +
       codeFrameColumns(
-        diagnostic.file.getFullText(diagnostic.file.getSourceFile()),
+        code,
         {
           start: { line: line, column },
-        }
+        },
+        { highlight }
       );
   }
 
