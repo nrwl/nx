@@ -26,6 +26,7 @@ export function normalizeOptions(
     appProjectRoot,
     linter: options.linter ?? Linter.EsLint,
     unitTestRunner: options.unitTestRunner ?? 'jest',
+    e2eTestRunner: options.e2eTestRunner ?? 'jest',
   };
 }
 
@@ -42,6 +43,7 @@ export function toNodeApplicationGeneratorOptions(
     standaloneConfig: options.standaloneConfig,
     tags: options.tags,
     unitTestRunner: options.unitTestRunner,
+    e2eTestRunner: options.e2eTestRunner,
     setParserOptionsProject: options.setParserOptionsProject,
     bundler: 'webpack', // Some features require webpack plugins such as TS transformers
   };

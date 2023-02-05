@@ -1,5 +1,4 @@
 import { Linter } from '@nrwl/linter';
-import { UnitTestRunner } from '../../utils/test-runners';
 
 export interface ApplicationGeneratorOptions {
   name: string;
@@ -10,7 +9,8 @@ export interface ApplicationGeneratorOptions {
   skipPackageJson?: boolean;
   standaloneConfig?: boolean;
   tags?: string;
-  unitTestRunner?: UnitTestRunner;
+  unitTestRunner?: 'jest' | 'none';
+  e2eTestRunner?: 'jest' | 'none';
   setParserOptionsProject?: boolean;
 }
 
