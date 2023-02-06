@@ -535,7 +535,7 @@ describe('migrate', () => {
   });
 
   it('should fail if no migrations are present', () => {
-    removeFile(`./node_modules/migrate-parent-package/migrations.json`);
+    removeFile(`./migrations.json`);
 
     // Invalid: runs migrations with a custom commit-prefix but without enabling --create-commits
     const output = runCLI(`migrate --run-migrations`, {
@@ -553,7 +553,7 @@ describe('migrate', () => {
   });
 
   it('should not run migrations if no migrations are present and flag --if-exists is used', () => {
-    removeFile(`./node_modules/migrate-parent-package/migrations.json`);
+    removeFile(`./migrations.json`);
 
     // Invalid: runs migrations with a custom commit-prefix but without enabling --create-commits
     const output = runCLI(`migrate --run-migrations --if-exists`, {
