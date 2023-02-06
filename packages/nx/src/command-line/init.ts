@@ -21,9 +21,15 @@ export async function initHandler() {
     console.log(`Using version ${process.env.NX_VERSION}`);
   }
   if (flags.encapsulated === true) {
-    console.log(
-      'Setting Nx up in encapsulated mode. You can run nx commands like: `./nx build myapp`'
-    );
+    if (process.platform !== 'win32') {
+      console.log(
+        'Setting Nx up installation in `.nx`. You can run nx commands like: `./nx --help`'
+      );
+    } else {
+      console.log(
+        'Setting Nx up installation in `.nx`. You can run nx commands like: `./nx.bat --help`'
+      );
+    }
     generateEncapsulatedNxSetup(version);
     if (process.platform === 'win32') {
       execSync('./nx.bat', { stdio: 'inherit' });

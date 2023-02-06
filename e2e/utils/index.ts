@@ -468,6 +468,22 @@ export function newLernaWorkspace({
   }
 }
 
+export function newEncapsulatedNxWorkspace({
+  name = uniq('encapsulated'),
+  pmc = getPackageManagerCommand(),
+} = {}): (command: string) => string {
+  projName = name;
+  ensureDirSync(tmpProjPath());
+  runCommand(`${pmc.runUninstalledPackage} nx@latest init --encapsulated`);
+  return (command: string) => {
+    if (process.platform === 'win32') {
+      return runCommand(`./nx.bat ${command}`);
+    } else {
+      return runCommand(`./nx ${command}`);
+    }
+  };
+}
+
 const KILL_PORT_DELAY = 5000;
 
 export async function killPort(port: number): Promise<boolean> {
@@ -505,11 +521,11 @@ export function cleanupProject({
   ...opts
 }: RunCmdOpts & { skipReset?: boolean } = {}) {
   if (isCI) {
+    // Stopping the daemon is not required for tests to pass, but it cleans up background processes
+    if (!skipReset) {
+      runCLI('reset', opts);
+    }
     try {
-      // Stopping the daemon is not required for tests to pass, but it cleans up background processes
-      if (!skipReset) {
-        runCLI('reset', opts);
-      }
       removeSync(tmpProjPath());
     } catch (e) {}
   }

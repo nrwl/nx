@@ -7,6 +7,7 @@ import {
   getPackageManagerCommand,
   getPublishedVersion,
   getSelectedPackageManager,
+  newEncapsulatedNxWorkspace,
   removeFile,
   renameFile,
   runCLI,
@@ -14,14 +15,11 @@ import {
   updateFile,
   updateJson,
 } from '@nrwl/e2e/utils';
-import { json } from 'stream/consumers';
 
 describe('nx init', () => {
   const pmc = getPackageManagerCommand({
     packageManager: getSelectedPackageManager(),
   });
-
-  afterEach(() => cleanupProject());
 
   it('should work in a monorepo', () => {
     createNonNxProjectDirectory('monorepo', true);
@@ -46,6 +44,7 @@ describe('nx init', () => {
     renameFile('nx.json', 'nx.json.old');
 
     expect(runCLI('run package:echo')).toContain('123');
+    cleanupProject();
   });
 
   it('should work in a regular npm repo', () => {
@@ -74,6 +73,7 @@ describe('nx init', () => {
     renameFile('nx.json', 'nx.json.old');
 
     expect(runCLI('echo')).toContain('123');
+    cleanupProject();
   });
 
   it('should support compound scripts', () => {
@@ -100,12 +100,12 @@ describe('nx init', () => {
     expect(output).toContain('HELLO\n');
     expect(output).toContain('COMPOUND TEST');
     expect(output).not.toContain('HELLO COMPOUND');
+    cleanupProject();
   });
 
   describe('encapsulated', () => {
     it('should support running targets in a encapsulated repo', () => {
-      createNonNxProjectDirectory('encapsulated-repo', false);
-      removeFile('package.json');
+      const runEncapsulatedNx = newEncapsulatedNxWorkspace();
       updateFile(
         'projects/a/project.json',
         JSON.stringify({
@@ -117,10 +117,6 @@ describe('nx init', () => {
           },
         })
       );
-      const output = runCommand(
-        `${pmc.runUninstalledPackage} nx@latest init --encapsulated`
-      );
-      expect(output).toContain('Setting Nx up in encapsulated mode');
 
       updateJson<NxJsonConfiguration>('nx.json', (json) => ({
         ...json,
@@ -135,21 +131,11 @@ describe('nx init', () => {
         },
       }));
 
-      if (process.platform === 'win32') {
-        expect(runCommand('./nx.bat echo a')).toContain('Hello from A');
-      } else {
-        expect(runCommand('./nx echo a')).toContain('Hello from A');
-      }
+      expect(runEncapsulatedNx('echo a')).toContain('Hello from A');
 
-      if (process.platform === 'win32') {
-        expect(runCommand('./nx.bat echo a')).toContain(
-          'Nx read the output from the cache instead of running the command for 1 out of 1 tasks'
-        );
-      } else {
-        expect(runCommand('./nx echo a')).toContain(
-          'Nx read the output from the cache instead of running the command for 1 out of 1 tasks'
-        );
-      }
+      expect(runEncapsulatedNx('echo a')).toContain(
+        'Nx read the output from the cache instead of running the command for 1 out of 1 tasks'
+      );
 
       expect(() =>
         checkFilesDoNotExist(
@@ -167,6 +153,9 @@ describe('nx init', () => {
           '.nx/cache/terminalOutputs'
         )
       ).not.toThrow();
+    });
+    cleanupProject({
+      skipReset: true,
     });
   });
 });

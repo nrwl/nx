@@ -1,6 +1,10 @@
-// The contents of this file, once transpiled, are inlined into nx and nx.bat.
-// As such, we cannot import anything from nx or other @nrwl packages. Node
-// builtins only.
+// This file should be committed to your repository! It wraps Nx and ensures
+// that your local installation matches nx.json.
+// See: https://nx.dev/more-concepts/encapsulated-nx-and-the-wrapper for more info.
+//
+// INTERNAL: The contents of this file are executed before packages are installed.
+// INTERNAL: As such, we should not import anything from nx, other @nrwl packages,
+// INTERNAL: or any other npm packages. Only import node builtins.
 
 const fs: typeof import('fs') = require('fs');
 const path: typeof import('path') = require('path');
@@ -57,7 +61,7 @@ function ensureUpToDateInstallation() {
     nxJson = JSON.parse(fs.readFileSync(nxJsonPath, 'utf-8'));
   } catch {
     console.error(
-      '[NX]: nx.json is required when running in encapsulated mode. Run `npx nx init --encapuslated` to restore it.'
+      '[NX]: nx.json is required when running in encapsulated mode. Run `npx nx init --encapsulated` to restore it.'
     );
     process.exit(1);
   }
@@ -75,11 +79,16 @@ function ensureUpToDateInstallation() {
           },
         })
       );
-      cp.execSync('npm i', {
+      cp.execSync('npm i --legacy-peer-deps', {
         cwd: path.dirname(installationPath),
+        stdio: 'inherit',
       });
     }
-  } catch {}
+  } catch (e) {
+    console.error('[NX]: Nx wrapper failed to synchronize installation.');
+    console.error(e.stack());
+    process.exit(1);
+  }
 }
 
 if (require.main === module) {
