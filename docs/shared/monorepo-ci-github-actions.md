@@ -57,7 +57,7 @@ on:
 jobs:
   main:
     name: Nx Cloud - Main Job
-    uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.11.2
+    uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.11.3
     with:
       number-of-agents: 3
       parallel-commands: |
@@ -68,7 +68,7 @@ jobs:
 
   agents:
     name: Nx Cloud - Agents
-    uses: nrwl/ci/.github/workflows/nx-cloud-agents.yml@v0.11.2
+    uses: nrwl/ci/.github/workflows/nx-cloud-agents.yml@v0.11.3
     with:
       number-of-agents: 3
 ```
