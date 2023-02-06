@@ -111,8 +111,8 @@ function collectDependentProjectNodesNames(
   for (const dependency of dependencies) {
     const dependencyName = dependency.target;
 
-    // we're only intersted in project dependencies, not npm
-    if (dependencyName.startsWith('npm:')) {
+    // we're only interested in internal nodes, not external
+    if (nxDeps.externalNodes?.[dependencyName]) {
       continue;
     }
 
