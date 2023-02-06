@@ -4,6 +4,7 @@ import {
   formatFiles,
   readJson,
   Tree,
+  updateProjectConfiguration,
   writeJson,
 } from '@nrwl/devkit';
 import { join } from 'path';
@@ -52,14 +53,24 @@ export async function convertToNxProjectGenerator(host: Tree, schema: Schema) {
 
   for (const projectName of Object.keys(projects)) {
     const config = projects[projectName];
-    if (typeof config === 'string') continue;
     if (
       (!schema.project || schema.project === projectName) &&
       !schema.reformat
     ) {
-      const path = join(config.root, 'project.json');
-      if (!host.exists(path)) {
-        addProjectConfiguration(host, path, projects[projectName]);
+      if (typeof config === 'string') {
+        // configuration is in project.json
+        const projectConfig = readJson(host, join(config, 'project.json'));
+        if (projectConfig.name !== projectName) {
+          projectConfig.name = projectName;
+          updateProjectConfiguration(host, projectName, projectConfig);
+        }
+      } else {
+        // configuration is an object in workspace.json
+        const path = join(config.root, 'project.json');
+        if (!host.exists(path)) {
+          projects[projectName].name = projectName;
+          addProjectConfiguration(host, path, projects[projectName]);
+        }
       }
     } else {
       leftOverProjects[projectName] = config;

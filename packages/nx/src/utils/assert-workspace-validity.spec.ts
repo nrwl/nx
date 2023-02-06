@@ -36,7 +36,7 @@ describe('assertWorkspaceValidity', () => {
       fail('should not reach');
     } catch (e) {
       expect(e.message).toContain(
-        'The following implicitDependencies specified in project configurations are invalid'
+        'The following implicitDependencies point to non-existent project(s)'
       );
       expect(e.message).toContain('README.md');
       expect(e.message).toContain('invalidproj');
@@ -59,7 +59,7 @@ describe('assertWorkspaceValidity', () => {
       fail('should not reach');
     } catch (e) {
       expect(e.message).toContain(
-        'The following implicitDependencies specified in project configurations are invalid'
+        'The following implicitDependencies point to non-existent project(s)'
       );
       expect(e.message).toContain('invalidproj');
       expect(e.message).toContain('invalidproj');
@@ -74,7 +74,7 @@ describe('assertWorkspaceValidity', () => {
       fail('should not reach');
     } catch (e) {
       expect(e.message).toContain(
-        'The following implicitDependencies specified in project configurations are invalid'
+        'The following implicitDependencies point to non-existent project(s)'
       );
       expect(e.message).toContain('invalid*');
       expect(e.message).toContain('invalid*');
