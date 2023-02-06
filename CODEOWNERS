@@ -1,0 +1,109 @@
+# Any file not covered by a rule below, will default to Jason + Victor.
+* @FrozenPandaz @vsavkin
+
+# Docs Site + Graph
+/docs/nx-cloud @StalkAltan @rarmatei @isaacplmann @juristr @bcabanes
+/docs/shared @bcabanes @isaacplmann @juristr
+/graph/** @philipjfulcher @FrozenPandaz @bcabanes
+/images/shared @bcabanes @isaacplmann @juristr
+/nx-dev/** @bcabanes @isaacplmann
+/typedoc-theme @bcabanes @isaacplmann
+
+# Plugin Verticals
+
+## Angular
+/packages/angular/** @Coly010 @leosvelperez
+/e2e/angular-core/** @Coly010 @leosvelperez
+/e2e/angular-extensions/** @Coly010 @leosvelperez
+/packages/make-angular-cli-faster/** @leosvelperez @Coly010
+/e2e/make-angular-cli-faster/** @leosvelperez @Coly010
+
+## React
+/packages/react/** @jaysoo @ndcunningham @mandarini
+/e2e/react/** @jaysoo @mandarini
+/packages/next/** @ndcunningham @jaysoo
+/e2e/next/** @ndcunningham @jaysoo
+/packages/cra-to-nx/** @jaysoo @xiongemi @mandarini
+/e2e/cra-to-nx/** @jaysoo @xiongemi @mandarini
+
+/packages/detox/** @xiongemi @jaysoo
+/e2e/detox/** @xiongemi @jaysoo
+/packages/expo/** @xiongemi @jaysoo
+/e2e/expo/** @xiongemi @jaysoo
+/packages/react-native/** @xiongemi @jaysoo
+/e2e/react-native/** @xiongemi @jaysoo
+
+## Node
+/packages/node/** @nartc @ndcunningham
+/packages/express/** @nartc @ndcunningham
+/packages/nest/** @nartc @ndcunningham
+/e2e/node/** @nartc @ndcunningham
+
+## JS
+/packages/js/** @nartc @jaysoo
+/e2e/js/** @nartc @jaysoo
+/packages/web/** @jaysoo @mandarini
+/e2e/web/** @jaysoo @mandarini
+/packages/webpack/** @jaysoo @mandarini
+/e2e/webpack/** @jaysoo @mandarini
+/packages/esbuild/** @jaysoo @nartc
+/e2e/esbuild/** @jaysoo @nartc
+/packages/rollup/** @jaysoo @mandarini
+/e2e/rollup/** @jaysoo @mandarini
+/packages/vite/** @jaysoo @mandarini
+/e2e/vite/** @jaysoo @mandarini
+
+## Tools
+/packages/cypress/** @barbados-clemens @FrozenPandaz
+/e2e/cypress/** @barbados-clemens @FrozenPandaz
+/packages/jest/** @barbados-clemens @FrozenPandaz
+/e2e/jest/** @barbados-clemens @FrozenPandaz
+
+/packages/eslint-plugin-nx/** @meeroslav @FrozenPandaz
+/packages/linter/** @meeroslav @FrozenPandaz
+/e2e/linter/** @meeroslav @FrozenPandaz
+
+/packages/storybook/** @mandarini @jaysoo
+/e2e/storybook/** @mandarini @FrozenPandaz
+/e2e/storybook-angular/** @mandarini @Coly010
+
+## Devkit
+/packages/devkit/** @FrozenPandaz @AgentEnder
+/packages/devkit/index.ts @FrozenPandaz @vsavkin
+/packages/devkit/src/utils/module-federation @jaysoo @Coly010
+
+/packages/nx-plugin/** @AgentEnder @FrozenPandaz
+/e2e/nx-plugin/** @AgentEnder @FrozenPandaz
+
+## Core
+/packages/nx/** @vsavkin @FrozenPandaz @AgentEnder
+/packages/nx/src/adapter @AgentEnder @leosvelperez
+/packages/nx/src/config @AgentEnder @vsavkin
+/packages/nx/src/generators @AgentEnder @vsavkin @FrozenPandaz
+/packages/nx/src/plugins @AgentEnder @FrozenPandaz @vsavkin
+/packages/nx/src/utils @vsavkin @FrozenPandaz @AgentEnder
+/packages/nx/src/native @vsavkin @FrozenPandaz @Cammisuli
+/e2e/nx*/** @FrozenPandaz @AgentEnder @vsavkin
+/packages/workspace/** @FrozenPandaz @AgentEnder @vsavkin
+/e2e/workspace/** @FrozenPandaz @AgentEnder @vsavkin
+/e2e/workspace-create/** @FrozenPandaz @vsavkin
+
+/packages/add-nx-to-monorepo/** @vsavkin @FrozenPandaz @AgentEnder
+/e2e/add-nx-to-monorepo/** @vsavkin @FrozenPandaz @AgentEnder
+
+# Misc
+/e2e/lerna-smoke-tests/** @vsavkin @JamesHenry
+/community @AgentEnder @FrozenPandaz
+/CONTRIBUTING.md @FrozenPandaz @isaacplmann
+/CODE_OF_CONDUCT.md @FrozenPandaz @isaacplmann
+
+# Scripts
+/scripts/depcheck @FrozenPandaz @vsavkin
+/scripts/documentation @bcabanes @isaacplmann
+/scripts/local-registry @FrozenPandaz @vsavkin
+/scripts/angular-support-upgrades @Coly010 @leosvelperez
+
+# Global Files
+project.json @FrozenPandaz @vsavkin
+jest.config.ts @barbados-clemens @FrozenPandaz
+jest.preset.ts @barbados-clemens @FrozenPandaz
