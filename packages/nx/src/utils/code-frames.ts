@@ -1,5 +1,4 @@
 // Adapted from https://raw.githubusercontent.com/babel/babel/4108524/packages/babel-code-frame/src/index.js
-import { highlight } from './highlight';
 import * as chalk from 'chalk';
 
 type Location = {
@@ -32,11 +31,10 @@ const NEWLINE = /\r\n|[\n\r\u2028\u2029]/;
 /**
  * Extract what lines should be marked and highlighted.
  */
-
 function getMarkerLines(
   loc: NodeLocation,
   source: Array<string>,
-  opts: { linesAbove?: number; linesBelow?: number }
+  opts: { linesAbove?: number; linesBelow?: number } = {}
 ): { start: number; end: number; markerLines: Object } {
   const startLoc: Location = {
     column: 0,
@@ -103,14 +101,18 @@ function getMarkerLines(
 export function codeFrameColumns(
   rawLines: string,
   loc: NodeLocation,
-  opts: Object = {}
+  opts: {
+    linesAbove?: number;
+    linesBelow?: number;
+    highlight?: (rawLines: string) => string;
+  } = {}
 ): string {
   const defs = getDefs(chalk);
   const lines = rawLines.split(NEWLINE);
   const { start, end, markerLines } = getMarkerLines(loc, lines, opts);
 
   const numberMaxWidth = String(end).length;
-  const highlightedLines = highlight(rawLines);
+  const highlightedLines = opts.highlight ? opts.highlight(rawLines) : rawLines;
 
   let frame = highlightedLines
     .split(NEWLINE)
@@ -145,23 +147,4 @@ export function codeFrameColumns(
     .join('\n');
 
   return chalk.reset(frame);
-}
-
-/**
- * Create a code frame, adding line numbers, code highlighting, and pointing to a given position.
- */
-
-export default function (
-  rawLines: string,
-  lineNumber: number,
-  colNumber?: number,
-  opts: Object = {}
-): string {
-  colNumber = Math.max(colNumber, 0);
-
-  const location: NodeLocation = {
-    start: { column: colNumber, line: lineNumber },
-  };
-
-  return codeFrameColumns(rawLines, location, opts);
 }

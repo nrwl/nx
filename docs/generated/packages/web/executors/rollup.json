@@ -40,7 +40,8 @@
         "description": "Only build the specified comma-separated formats (`esm,umd,cjs`)",
         "alias": "f",
         "items": { "type": "string", "enum": ["esm", "umd", "cjs"] },
-        "default": ["esm"]
+        "default": ["esm"],
+        "x-priority": "important"
       },
       "external": {
         "type": "array",
@@ -79,7 +80,8 @@
             "x-completion-glob": "rollup?(*)@(.js|.ts)"
           }
         ],
-        "description": "Path to a function which takes a rollup config and returns an updated rollup config."
+        "description": "Path to a function which takes a rollup config and returns an updated rollup config.",
+        "x-priority": "important"
       },
       "extractCss": {
         "type": ["boolean", "string"],
@@ -119,7 +121,8 @@
         "type": "string",
         "enum": ["babel", "swc"],
         "default": "babel",
-        "description": "Which compiler to use."
+        "description": "Which compiler to use.",
+        "x-priority": "important"
       },
       "javascriptEnabled": {
         "type": "boolean",

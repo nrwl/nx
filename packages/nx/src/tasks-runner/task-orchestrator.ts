@@ -200,7 +200,7 @@ export class TaskOrchestrator {
       results.push(...batchResults);
     }
 
-    await this.postRunSteps(tasks, results, { groupId });
+    await this.postRunSteps(tasks, results, doNotSkipCache, { groupId });
 
     const tasksCompleted = taskEntries.filter(
       ([taskId]) => this.completedTasks[taskId]
@@ -270,7 +270,7 @@ export class TaskOrchestrator {
         terminalOutput,
       });
     }
-    await this.postRunSteps([task], results, { groupId });
+    await this.postRunSteps([task], results, doNotSkipCache, { groupId });
   }
 
   private async runTaskInForkedProcess(task: Task) {
@@ -327,39 +327,42 @@ export class TaskOrchestrator {
       status: TaskStatus;
       terminalOutput?: string;
     }[],
+    doNotSkipCache: boolean,
     { groupId }: { groupId: number }
   ) {
     for (const task of tasks) {
       await this.recordOutputsHash(task);
     }
 
-    // cache the results
-    await Promise.all(
-      results
-        .filter(
-          ({ status }) =>
-            status !== 'local-cache' &&
-            status !== 'local-cache-kept-existing' &&
-            status !== 'remote-cache' &&
-            status !== 'skipped'
-        )
-        .map((result) => ({
-          ...result,
-          code:
-            result.status === 'local-cache' ||
-            result.status === 'local-cache-kept-existing' ||
-            result.status === 'remote-cache' ||
-            result.status === 'success'
-              ? 0
-              : 1,
-          outputs: getOutputs(this.projectGraph.nodes, result.task),
-        }))
-        .filter(({ task, code }) => this.shouldCacheTaskResult(task, code))
-        .filter(({ terminalOutput, outputs }) => terminalOutput || outputs)
-        .map(async ({ task, code, terminalOutput, outputs }) =>
-          this.cache.put(task, terminalOutput, outputs, code)
-        )
-    );
+    if (doNotSkipCache) {
+      // cache the results
+      await Promise.all(
+        results
+          .filter(
+            ({ status }) =>
+              status !== 'local-cache' &&
+              status !== 'local-cache-kept-existing' &&
+              status !== 'remote-cache' &&
+              status !== 'skipped'
+          )
+          .map((result) => ({
+            ...result,
+            code:
+              result.status === 'local-cache' ||
+              result.status === 'local-cache-kept-existing' ||
+              result.status === 'remote-cache' ||
+              result.status === 'success'
+                ? 0
+                : 1,
+            outputs: getOutputs(this.projectGraph.nodes, result.task),
+          }))
+          .filter(({ task, code }) => this.shouldCacheTaskResult(task, code))
+          .filter(({ terminalOutput, outputs }) => terminalOutput || outputs)
+          .map(async ({ task, code, terminalOutput, outputs }) =>
+            this.cache.put(task, terminalOutput, outputs, code)
+          )
+      );
+    }
     this.options.lifeCycle.endTasks(
       results.map((result) => {
         const code =

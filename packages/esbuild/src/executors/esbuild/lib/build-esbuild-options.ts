@@ -24,7 +24,10 @@ export function buildEsbuildOptions(
     entryNames:
       options.outputHashing === 'all' ? '[dir]/[name].[hash]' : '[dir]/[name]',
     bundle: options.bundle,
-    external: options.external,
+    // Cannot use external with bundle option
+    external: options.bundle
+      ? [...(options.esbuildOptions?.external ?? []), ...options.external]
+      : undefined,
     minify: options.minify,
     platform: options.platform,
     target: options.target,

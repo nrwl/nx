@@ -1,3 +1,8 @@
+---
+title: Change Storybook targets generator examples
+description: This page contains examples for the @nrwl/storybook:change-storybook-targets generator, targeted to Angular projects set up with Storybook.
+---
+
 This generator will change the `storybook` and `build-storybook` targets in all your Angular projects that are configured to use Storybook. The new target configuration will use the native Storybook builders (`@storybook/angular:build-storybook` and `@storybook/angular:start-storybook`) instead of the Nx Storybook builders (`@nrwl/storybook:build-storybook` and `@nrwl/storybook:storybook`).
 
 This generator is usually invoked through a migrator, when you are using `nx migrate` to upgrade your workspace to Nx `14.1.8` or later.

@@ -1,3 +1,8 @@
+---
+title: Angular - The browserTarget
+description: This document explains the role of the browserTarget in Angular projects with a Storybook configuration, and how the Storybook executors use it.
+---
+
 # The `browserTarget` for Angular projects with a Storybook configuration
 
 {% callout type="note" title="Note" %}

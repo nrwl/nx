@@ -1,3 +1,8 @@
+---
+title: Manually set up your project to use Vite.js
+description: This guide explains how you can manually set up your project to use Vite.js in your Nx workspace.
+---
+
 # Manually set up your project to use Vite.js
 
 {% callout type="note" title="Use our generator!" %}

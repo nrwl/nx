@@ -3,8 +3,8 @@ import { join } from 'path';
 import {
   getSchemaFromReference,
   Lookup,
-} from '../../../nx-dev/data-access-packages/src/lib/lookup';
-import { NxSchema } from '../../../nx-dev/models-package/src/lib/package.models';
+} from '@nrwl/nx-dev/data-access-packages';
+import { NxSchema } from '@nrwl/nx-dev/models-package';
 import { isArray, isObject } from './utils';
 
 function traverseAndReplaceReferences(

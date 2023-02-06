@@ -3,7 +3,7 @@ process.env.SELECTED_CLI = 'angular';
 import {
   cleanupProject,
   listFiles,
-  newProject,
+  newAngularProject,
   readFile,
   removeFile,
   runCLI,
@@ -118,10 +118,8 @@ describe('Tailwind support', () => {
     updateFile(tailwindConfigPath, tailwindConfigUpdated);
   };
 
-  let previousPM = process.env.SELECTED_PM;
   beforeAll(() => {
-    process.env.SELECTED_PM = 'npm';
-    project = newProject();
+    project = newAngularProject();
 
     // Create tailwind config in the workspace root
     createWorkspaceTailwindConfigFile();
@@ -129,7 +127,6 @@ describe('Tailwind support', () => {
 
   afterAll(() => {
     cleanupProject();
-    process.env.SELECTED_PM = previousPM;
   });
 
   describe('Libraries', () => {

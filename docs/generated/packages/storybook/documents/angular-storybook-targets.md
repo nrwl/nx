@@ -1,3 +1,8 @@
+---
+title: Angular - Information about the Storybook targets
+description: This document explains the role of the storybook and build-storybook targets in Angular projects with a Storybook configuration, and specifically which executors are used for them.
+---
+
 # Information about `storybook` and `build-storybook` targets for Angular projects with a Storybook configuration
 
 {% callout type="note" title="Note" %}

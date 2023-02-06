@@ -1,3 +1,5 @@
+import 'nx/src/utils/testing/mock-fs';
+
 import {
   ProjectGraph,
   ProjectGraphExternalNode,
@@ -8,8 +10,14 @@ import {
   findTransitiveExternalDependencies,
   hasBannedDependencies,
   hasBannedImport,
+  isAngularSecondaryEntrypoint,
   isTerminalRun,
 } from './runtime-lint-utils';
+import { vol } from 'memfs';
+
+jest.mock('nx/src/utils/workspace-root', () => ({
+  workspaceRoot: '/root',
+}));
 
 describe('hasBannedImport', () => {
   const source: ProjectGraphProjectNode = {
@@ -311,5 +319,67 @@ describe('is terminal run', () => {
       '--clientProcessId=95193',
     ]);
     expect(isTerminalRun()).toBe(false);
+  });
+});
+
+describe('isAngularSecondaryEntrypoint', () => {
+  beforeEach(() => {
+    const tsConfig = {
+      compilerOptions: {
+        baseUrl: '.',
+        resolveJsonModule: true,
+        paths: {
+          '@project/standard': ['libs/standard/src/index.ts'],
+          '@project/standard/secondary': [
+            'libs/standard/secondary/src/index.ts',
+          ],
+          '@project/standard/tertiary': [
+            'libs/standard/tertiary/src/public_api.ts',
+          ],
+          '@project/features': ['libs/features/src/index.ts'],
+          '@project/features/*': ['libs/features/*/random/folder/api.ts'],
+        },
+      },
+    };
+    const fsJson = {
+      'tsconfig.base.json': JSON.stringify(tsConfig),
+      'apps/app.ts': '',
+      'libs/standard/package.json': '{ "version": "0.0.0" }',
+      'libs/standard/secondary/ng-package.json': JSON.stringify({
+        version: '0.0.0',
+        ngPackage: { lib: { entryFile: 'src/index.ts' } },
+      }),
+      'libs/standard/secondary/src/index.ts': 'const bla = "foo"',
+      'libs/standard/tertiary/ng-package.json': JSON.stringify({
+        version: '0.0.0',
+        ngPackage: { lib: { entryFile: 'src/public_api.ts' } },
+      }),
+      'libs/standard/tertiary/src/public_api.ts': 'const bla = "foo"',
+      'libs/features/package.json': '{ "version": "0.0.0" }',
+      'libs/features/secondary/ng-package.json': JSON.stringify({
+        version: '0.0.0',
+        ngPackage: { lib: { entryFile: 'random/folder/api.ts' } },
+      }),
+      'libs/features/secondary/random/folder/api.ts': 'const bla = "foo"',
+    };
+    vol.fromJSON(fsJson, '/root');
+  });
+
+  it('should return true for secondary entrypoints', () => {
+    expect(
+      isAngularSecondaryEntrypoint('@project/standard', 'apps/app.ts')
+    ).toBe(false);
+    expect(
+      isAngularSecondaryEntrypoint('@project/standard/secondary', 'apps/app.ts')
+    ).toBe(true);
+    expect(
+      isAngularSecondaryEntrypoint('@project/standard/tertiary', 'apps/app.ts')
+    ).toBe(true);
+    expect(
+      isAngularSecondaryEntrypoint('@project/features', 'apps/app.ts')
+    ).toBe(false);
+    expect(
+      isAngularSecondaryEntrypoint('@project/features/secondary', 'apps/app.ts')
+    ).toBe(true);
   });
 });

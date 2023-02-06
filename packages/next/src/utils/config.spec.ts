@@ -1,3 +1,4 @@
+import 'nx/src/utils/testing/mock-fs';
 import { createWebpackConfig, prepareConfig } from './config';
 import { NextBuildBuilderOptions } from '@nrwl/next';
 import { dirname } from 'path';
@@ -15,7 +16,6 @@ jest.mock('next/dist/server/config', () => ({
     webpack: () => ({}),
   }),
 }));
-jest.mock('fs', () => require('memfs').fs);
 
 describe('Next.js webpack config builder', () => {
   beforeEach(() => {

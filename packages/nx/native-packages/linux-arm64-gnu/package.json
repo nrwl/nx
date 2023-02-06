@@ -1,0 +1,23 @@
+{
+  "name": "@nrwl/nx-linux-arm64-gnu",
+  "version": "0.0.0",
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "arm64"
+  ],
+  "main": "nx.linux-arm64-gnu.node",
+  "files": [
+    "nx.linux-arm64-gnu.node"
+  ],
+  "engines": {
+    "node": ">= 10"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "libc": [
+    "glibc"
+  ]
+}

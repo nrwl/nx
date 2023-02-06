@@ -159,7 +159,9 @@ export async function configurationGenerator(
       viteConfigFilePath
     );
   } else {
-    createRootStorybookDir(tree, schema.js, schema.tsConfiguration);
+    if (!schema.storybook7betaConfiguration) {
+      createRootStorybookDir(tree, schema.js, schema.tsConfiguration);
+    }
     createProjectStorybookDir(
       tree,
       schema.name,

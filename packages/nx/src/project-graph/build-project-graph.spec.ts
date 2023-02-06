@@ -1,7 +1,8 @@
+import '../utils/testing/mock-fs';
+
 import { vol, fs } from 'memfs';
 
-jest.mock('fs', () => require('memfs').fs);
-jest.mock('../utils/workspace-root', () => ({
+jest.mock('nx/src/utils/workspace-root', () => ({
   workspaceRoot: '/root',
 }));
 import { buildProjectGraph } from './build-project-graph';
@@ -214,8 +215,8 @@ describe('project graph', () => {
     } catch (e) {
       expect(e.message).toMatchInlineSnapshot(`
         "InvalidSymbol in /root/tsconfig.base.json at 1:248
-        1: {\\"compilerOptions\\":{\\"baseUrl\\":\\".\\",\\"paths\\":{\\"@nrwl/shared/util\\":[\\"libs/shared/util/src/index.ts\\"],\\"@nrwl/shared-util-data\\":[\\"libs/shared/util/data/src/index.ts\\"],\\"@nrwl/ui\\":[\\"libs/ui/src/index.ts\\"],\\"@nrwl/lazy-lib\\":[\\"libs/lazy-lib/src/index.ts\\"]}}}invalid
-                                                                                                                                                                                                                                                                  ^^^^^^^ InvalidSymbol
+        [0m[31m[1m>[22m[39m[90m 1 | [39m{\\"compilerOptions\\":{\\"baseUrl\\":\\".\\",\\"paths\\":{\\"@nrwl/shared/util\\":[\\"libs/shared/util/src/index.ts\\"],\\"@nrwl/shared-util-data\\":[\\"libs/shared/util/data/src/index.ts\\"],\\"@nrwl/ui\\":[\\"libs/ui/src/index.ts\\"],\\"@nrwl/lazy-lib\\":[\\"libs/lazy-lib/src/index.ts\\"]}}}invalid[0m
+        [0m [90m   | [39m                                                                                                                                                                                                                                                       [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[0m
         "
       `);
     }

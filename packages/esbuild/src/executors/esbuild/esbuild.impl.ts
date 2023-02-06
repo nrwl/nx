@@ -82,128 +82,237 @@ export async function* esbuildExecutor(
 
   const packageJsonResult = await copyPackageJson(cpjOptions, context);
 
-  if (options.watch) {
-    return yield* createAsyncIterable<{ success: boolean; outfile?: string }>(
-      async ({ next, done }) => {
-        let hasTypeErrors = false;
+  if ('context' in esbuild) {
+    // 0.17.0+ adds esbuild.context and context.watch()
+    if (options.watch) {
+      return yield* createAsyncIterable<{ success: boolean; outfile?: string }>(
+        async ({ next, done }) => {
+          let hasTypeErrors = false;
+          const disposeFns = await Promise.all(
+            options.format.map(async (format, idx) => {
+              const esbuildOptions = buildEsbuildOptions(
+                format,
+                options,
+                context
+              );
+              const ctx = await esbuild.context({
+                ...esbuildOptions,
+                plugins: [
+                  ...(esbuildOptions.plugins ?? []),
+                  // Only emit info on one of the watch processes.
+                  idx === 0
+                    ? {
+                        name: 'nx-watch-plugin',
+                        setup(build: esbuild.PluginBuild) {
+                          build.onEnd(async (result: esbuild.BuildResult) => {
+                            if (!options.skipTypeCheck) {
+                              const { errors } = await runTypeCheck(
+                                options,
+                                context
+                              );
+                              hasTypeErrors = errors.length > 0;
+                            }
+                            const success =
+                              result.errors.length === 0 && !hasTypeErrors;
 
-        const results = await Promise.all(
-          options.format.map(async (format, idx) => {
-            const esbuildOptions = buildEsbuildOptions(
-              format,
-              options,
-              context
-            );
-            const watch =
-              // Only emit info on one of the watch processes.
-              idx === 0
-                ? {
-                    onRebuild: async (
-                      error: esbuild.BuildFailure,
-                      result: esbuild.BuildResult
-                    ) => {
-                      if (!options.skipTypeCheck) {
-                        const { errors } = await runTypeCheck(options, context);
-                        hasTypeErrors = errors.length > 0;
+                            if (!success) {
+                              logger.info(BUILD_WATCH_FAILED);
+                            } else {
+                              logger.info(BUILD_WATCH_SUCCEEDED);
+                            }
+
+                            next({
+                              success,
+                              // Need to call getOutfile directly in the case of bundle=false and outfile is not set for esbuild.
+                              outfile: join(
+                                context.root,
+                                getOutfile(format, options, context)
+                              ),
+                            });
+                          });
+                        },
                       }
-                      const success = !error && !hasTypeErrors;
-
-                      if (!success) {
-                        logger.info(BUILD_WATCH_FAILED);
-                      } else {
-                        logger.info(BUILD_WATCH_SUCCEEDED);
-                      }
-
-                      next({
-                        success,
-                        // Need to call getOutfile directly in the case of bundle=false and outfile is not set for esbuild.
-                        outfile: join(
-                          context.root,
-                          getOutfile(format, options, context)
-                        ),
-                      });
-                    },
-                  }
-                : true;
-            try {
-              const result = await esbuild.build({ ...esbuildOptions, watch });
-
-              next({
-                success: true,
-                // Need to call getOutfile directly in the case of bundle=false and outfile is not set for esbuild.
-                outfile: join(
-                  context.root,
-                  getOutfile(format, options, context)
-                ),
+                    : null,
+                ].filter(Boolean),
               });
 
-              return result;
-            } catch {
-              next({ success: false });
-            }
-          })
-        );
-        const processOnExit = () => {
-          assetsResult?.stop();
-          packageJsonResult?.stop();
-          results.forEach((r) => r?.stop());
-          done();
-          process.off('SIGINT', processOnExit);
-          process.off('SIGTERM', processOnExit);
-          process.off('exit', processOnExit);
-        };
+              await ctx.watch();
+              return () => ctx.dispose();
+            })
+          );
 
-        process.on('SIGINT', processOnExit);
-        process.on('SIGTERM', processOnExit);
-        process.on('exit', processOnExit);
-
-        if (!options.skipTypeCheck) {
-          const { errors } = await runTypeCheck(options, context);
-          hasTypeErrors = errors.length > 0;
+          registerCleanupCallback(() => {
+            assetsResult?.stop();
+            packageJsonResult?.stop();
+            disposeFns.forEach((fn) => fn());
+            done(); // return from async iterable
+          });
         }
-
-        const success =
-          results.every((r) => r.errors?.length === 0) && !hasTypeErrors;
-
-        if (!success) {
-          logger.info(BUILD_WATCH_FAILED);
-        } else {
-          logger.info(BUILD_WATCH_SUCCEEDED);
+      );
+    } else {
+      // Run type-checks first and bail if they don't pass.
+      if (!options.skipTypeCheck) {
+        const { errors } = await runTypeCheck(options, context);
+        if (errors.length > 0) {
+          yield { success: false };
+          return;
         }
       }
-    );
-  } else {
-    // Run type-checks first and bail if they don't pass.
-    if (!options.skipTypeCheck) {
-      const { errors } = await runTypeCheck(options, context);
-      if (errors.length > 0) {
-        yield { success: false };
-        return;
+
+      // Emit a build event for each file format.
+      for (let i = 0; i < options.format.length; i++) {
+        const format = options.format[i];
+        const esbuildOptions = buildEsbuildOptions(format, options, context);
+        const buildResult = await esbuild.build(esbuildOptions);
+
+        if (options.metafile) {
+          const filename =
+            options.format.length === 1
+              ? 'meta.json'
+              : `meta.${options.format[i]}.json`;
+          writeJsonSync(
+            joinPathFragments(options.outputPath, filename),
+            buildResult.metafile
+          );
+        }
+
+        yield {
+          success: buildResult.errors.length === 0,
+          // Need to call getOutfile directly in the case of bundle=false and outfile is not set for esbuild.
+          // This field is needed for `@nrwl/js:node` executor to work.
+          outfile: join(context.root, getOutfile(format, options, context)),
+        };
       }
     }
+  } else {
+    // TODO(jack): Remove in Nx 16
+    // < 0.17.0 takes watch as an argument to build()
+    if (options.watch) {
+      return yield* createAsyncIterable<{ success: boolean; outfile?: string }>(
+        async ({ next, done }) => {
+          let hasTypeErrors = false;
+          const results = await Promise.all(
+            options.format.map(async (format, idx) => {
+              const esbuildOptions = buildEsbuildOptions(
+                format,
+                options,
+                context
+              );
+              const watch =
+                // Only emit info on one of the watch processes.
+                idx === 0
+                  ? {
+                      onRebuild: async (
+                        error: esbuild.BuildFailure,
+                        result: esbuild.BuildResult
+                      ) => {
+                        if (!options.skipTypeCheck) {
+                          const { errors } = await runTypeCheck(
+                            options,
+                            context
+                          );
+                          hasTypeErrors = errors.length > 0;
+                        }
+                        const success = !error && !hasTypeErrors;
 
-    // Emit a build event for each file format.
-    for (let i = 0; i < options.format.length; i++) {
-      const format = options.format[i];
-      const esbuildOptions = buildEsbuildOptions(format, options, context);
-      const buildResult = await esbuild.build(esbuildOptions);
+                        if (!success) {
+                          logger.info(BUILD_WATCH_FAILED);
+                        } else {
+                          logger.info(BUILD_WATCH_SUCCEEDED);
+                        }
 
-      if (options.metafile) {
-        const filename =
-          options.format.length === 1
-            ? 'meta.json'
-            : `meta.${options.format[i]}.json`;
-        writeJsonSync(
-          joinPathFragments(options.outputPath, filename),
-          buildResult.metafile
-        );
+                        next({
+                          success,
+                          // Need to call getOutfile directly in the case of bundle=false and outfile is not set for esbuild.
+                          // This field is needed for `@nrwl/js:node` executor to work.
+                          outfile: join(
+                            context.root,
+                            getOutfile(format, options, context)
+                          ),
+                        });
+                      },
+                    }
+                  : true;
+              try {
+                const result = await esbuild.build({
+                  ...esbuildOptions,
+                  watch,
+                });
+
+                next({
+                  success: true,
+                  // Need to call getOutfile directly in the case of bundle=false and outfile is not set for esbuild.
+                  outfile: join(
+                    context.root,
+                    getOutfile(format, options, context)
+                  ),
+                });
+
+                return result;
+              } catch {
+                next({ success: false });
+              }
+            })
+          );
+
+          registerCleanupCallback(() => {
+            assetsResult?.stop();
+            packageJsonResult?.stop();
+            results.forEach((r) =>
+              // result.stop() is no in esbuild 0.17.0+ but it exists in earlier versions
+              r?.['stop']?.()
+            );
+            done();
+          });
+
+          if (!options.skipTypeCheck) {
+            const { errors } = await runTypeCheck(options, context);
+            hasTypeErrors = errors.length > 0;
+          }
+
+          const success =
+            results.every((r) => r.errors?.length === 0) && !hasTypeErrors;
+
+          if (!success) {
+            logger.info(BUILD_WATCH_FAILED);
+          } else {
+            logger.info(BUILD_WATCH_SUCCEEDED);
+          }
+        }
+      );
+    } else {
+      // Run type-checks first and bail if they don't pass.
+      if (!options.skipTypeCheck) {
+        const { errors } = await runTypeCheck(options, context);
+        if (errors.length > 0) {
+          yield { success: false };
+          return;
+        }
       }
 
-      yield {
-        success: buildResult.errors.length === 0,
-        // Need to call getOutfile directly in the case of bundle=false and outfile is not set for esbuild.
-        outfile: join(context.root, getOutfile(format, options, context)),
-      };
+      // Emit a build event for each file format.
+      for (let i = 0; i < options.format.length; i++) {
+        const format = options.format[i];
+        const esbuildOptions = buildEsbuildOptions(format, options, context);
+        const buildResult = await esbuild.build(esbuildOptions);
+
+        if (options.metafile) {
+          const filename =
+            options.format.length === 1
+              ? 'meta.json'
+              : `meta.${options.format[i]}.json`;
+          writeJsonSync(
+            joinPathFragments(options.outputPath, filename),
+            buildResult.metafile
+          );
+        }
+
+        yield {
+          success: buildResult.errors.length === 0,
+          // Need to call getOutfile directly in the case of bundle=false and outfile is not set for esbuild.
+          outfile: join(context.root, getOutfile(format, options, context)),
+        };
+      }
     }
   }
 }
@@ -246,6 +355,19 @@ async function runTypeCheck(
   }
 
   return { errors, warnings };
+}
+
+function registerCleanupCallback(callback: () => void) {
+  const wrapped = () => {
+    callback();
+    process.off('SIGINT', wrapped);
+    process.off('SIGTERM', wrapped);
+    process.off('exit', wrapped);
+  };
+
+  process.on('SIGINT', wrapped);
+  process.on('SIGTERM', wrapped);
+  process.on('exit', wrapped);
 }
 
 export default esbuildExecutor;

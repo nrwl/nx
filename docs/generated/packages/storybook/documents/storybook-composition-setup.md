@@ -1,3 +1,8 @@
+---
+title: Setting up Storybook Composition with Nx
+description: This guide explains how you can set up Storybook composition on your Nx workspace.
+---
+
 # Setting up Storybook Composition with Nx
 
 ## What is Storybook Composition

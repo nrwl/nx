@@ -197,6 +197,12 @@
       "version": "15.5.0-beta.0",
       "description": "Update the @angular/cli package version to ~15.1.0.",
       "factory": "./src/migrations/update-15-5-0/update-angular-cli"
+    },
+    "install-required-packages": {
+      "cli": "nx",
+      "version": "15.7.0-beta.1",
+      "description": "Install the required angular-devkit packages as we do not directly depend on them anymore",
+      "factory": "./src/migrations/update-15-7-0/install-required-packages"
     }
   },
   "packageJsonUpdates": {

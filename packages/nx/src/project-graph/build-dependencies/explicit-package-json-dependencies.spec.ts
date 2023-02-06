@@ -1,3 +1,4 @@
+import '../../utils/testing/mock-fs';
 import { buildExplicitPackageJsonDependencies } from './explicit-package-json-dependencies';
 import { vol } from 'memfs';
 import { createProjectFileMap } from '../file-map-utils';
@@ -8,7 +9,6 @@ import {
 } from '../../config/project-graph';
 import { ProjectGraphBuilder } from '../project-graph-builder';
 
-jest.mock('fs', () => require('memfs').fs);
 jest.mock('nx/src/utils/workspace-root', () => ({
   workspaceRoot: '/root',
 }));

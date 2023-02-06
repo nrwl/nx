@@ -48,14 +48,16 @@
         "type": "string",
         "description": "The compiler to use",
         "enum": ["babel", "swc"],
-        "default": "babel"
+        "default": "babel",
+        "x-priority": "important"
       },
       "bundler": {
         "type": "string",
         "description": "The bundler to use.",
         "enum": ["webpack", "none", "vite"],
         "default": "webpack",
-        "x-prompt": "Which bundler do you want to use?"
+        "x-prompt": "Which bundler do you want to use?",
+        "x-priority": "important"
       },
       "linter": {
         "description": "The tool to use for running lint checks.",
@@ -66,7 +68,8 @@
       "skipFormat": {
         "description": "Skip formatting files",
         "type": "boolean",
-        "default": false
+        "default": false,
+        "x-priority": "internal"
       },
       "unitTestRunner": {
         "type": "string",
@@ -100,7 +103,7 @@
         "x-deprecated": "Nx only supports standaloneConfig"
       }
     },
-    "required": [],
+    "required": ["name"],
     "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Simple Application\" %}\n\nCreate an application named `my-app`:\n\n```bash\nnx g @nrwl/web:application my-app\n```\n\n{% /tab %}\n\n{% tab label=\"Application using Vite as bundler\" %}\n\nCreate an application named `my-app`:\n\n```bash\nnx g @nrwl/web:app my-app --bundler=vite\n```\n\n{% /tab %}\n\n{% tab label=\"Specify directory\" %}\n\nCreate an application named `my-app` in the `my-dir` directory:\n\n```bash\nnx g @nrwl/web:app my-app --directory=my-dir\n```\n\n{% /tab %}\n\n{% tab label=\"Add tags\" %}\n\nAdd tags to the application (used for linting).\n\n```bash\nnx g @nrwl/web:app my-app --tags=scope:admin,type:ui\n```\n\n{% /tab %}\n{% /tabs %}\n",
     "presets": []
   },

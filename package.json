@@ -13,7 +13,7 @@
     "check-documentation-map": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/map-link-checker.ts",
     "e2e-start-local-registry": "node ./scripts/e2e-start-local-registry.js",
     "e2e-build-package-publish": "ts-node -P ./scripts/tsconfig.e2e.json ./scripts/e2e-build-package-publish.ts",
-    "nx-release": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/nx-release",
+    "nx-release": "ts-node -P ./scripts/tsconfig.release.json ./scripts/nx-release",
     "prepublishOnly": "node ./scripts/update-package-group.js",
     "version": "npx prettier lerna.json --write",
     "depcheck": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/depcheck",
@@ -22,7 +22,8 @@
     "submit-plugin": "node ./scripts/submit-plugin.js",
     "prepare": "is-ci || husky install",
     "echo": "echo 123458",
-    "root-lint": "nx workspace-lint"
+    "root-lint": "nx workspace-lint",
+    "preinstall": "node ./scripts/preinstall.js"
   },
   "devDependencies": {
     "@angular-devkit/architect": "~0.1501.0",
@@ -44,6 +45,8 @@
     "@babel/preset-typescript": "^7.15.0",
     "@cypress/react": "^6.0.0",
     "@floating-ui/react-dom": "^1.0.1",
+    "@monodon/rust": "0.4.4",
+    "@napi-rs/cli": "2.14.0",
     "@nestjs/cli": "^9.0.0",
     "@nestjs/common": "^9.0.0",
     "@nestjs/core": "^9.0.0",
@@ -144,6 +147,7 @@
     "dotenv": "~10.0.0",
     "ejs": "^3.1.7",
     "enhanced-resolve": "^5.8.3",
+    "esbuild": "^0.17.5",
     "eslint": "8.15.0",
     "eslint-config-next": "13.1.1",
     "eslint-config-prettier": "^8.1.0",
@@ -328,4 +332,3 @@
     ]
   }
 }
-

@@ -10,7 +10,7 @@ Nx uses enhanced webpack configuration files (e.g. `webpack.config.js`). These c
 functionality to the webpack build.
 
 This guide contains information on the plugins provided by Nx. For more information on customizing webpack configuration, refer to the
-[configuration guide](/packages/webpack/documents/webpack-config-setup).
+[Nx Webpack configuration guide](/packages/webpack/documents/webpack-config-setup).
 
 ## withNx
 

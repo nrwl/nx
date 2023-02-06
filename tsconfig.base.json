@@ -15,6 +15,7 @@
     "resolveJsonModule": true,
     "baseUrl": ".",
     "rootDir": ".",
+    "allowJs": true,
     "paths": {
       "@nrwl/angular": ["packages/angular"],
       "@nrwl/angular/*": ["packages/angular/*"],

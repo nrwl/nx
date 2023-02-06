@@ -1019,6 +1019,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Dependency Management",
+            "path": "/more-concepts/dependency-management",
+            "id": "dependency-management",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Using Nx at Enterprises",
             "path": "/more-concepts/monorepo-nx-enterprise",
             "id": "monorepo-nx-enterprise",
@@ -1153,6 +1161,14 @@
         "name": "Monorepos",
         "path": "/more-concepts/why-monorepos",
         "id": "why-monorepos",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Dependency Management",
+        "path": "/more-concepts/dependency-management",
+        "id": "dependency-management",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5257,6 +5273,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "view-logs",
+                "path": "/packages/nx/documents/view-logs",
+                "id": "view-logs",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,
@@ -5821,7 +5845,7 @@
             "name": "documents",
             "children": [
               {
-                "name": "Overview Generic",
+                "name": "Nx Storybook Plugin Overview",
                 "path": "/packages/storybook/documents/overview",
                 "id": "overview",
                 "isExternal": false,
@@ -5853,7 +5877,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Migrate Storybook to version 7",
+                "name": " Migrate your Nx workspace to Storybook version 7",
                 "path": "/packages/storybook/documents/migrate-storybook-7",
                 "id": "migrate-storybook-7",
                 "isExternal": false,
@@ -5909,7 +5933,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Angular: Storybook Webpack Migration",
+                "name": "Angular: Storybook Migration to webpackFinal",
                 "path": "/packages/storybook/documents/migrate-webpack-final-angular",
                 "id": "migrate-webpack-final-angular",
                 "isExternal": false,
@@ -5925,7 +5949,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "React: Migrate to the Nrwl React Storybook Preset",
+                "name": "React: Storybook Migration to webpackFinal and the Nx Addon",
                 "path": "/packages/storybook/documents/migrate-webpack-final-react",
                 "id": "migrate-webpack-final-react",
                 "isExternal": false,
@@ -5941,7 +5965,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Custom configurations for Webpack and Vite",
+                "name": "How to configure Webpack and Vite for Storybook",
                 "path": "/packages/storybook/documents/custom-builder-configs",
                 "id": "custom-builder-configs",
                 "isExternal": false,
@@ -6041,7 +6065,7 @@
             "name": "documents",
             "children": [
               {
-                "name": "Overview",
+                "name": "Overview of the Nx Vite Plugin",
                 "path": "/packages/vite/documents/overview",
                 "id": "overview",
                 "isExternal": false,

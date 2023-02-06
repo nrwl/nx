@@ -18,6 +18,7 @@ import {
   createWorkspaceFiles,
   deleteAngularJson,
   deleteGitKeepFilesIfNotNeeded,
+  ensureAngularDevKitPeerDependenciesAreInstalled,
   formatFilesTask,
   getAllProjects,
   getWorkspaceRootFileTypesInfo,
@@ -40,6 +41,7 @@ export async function migrateFromAngularCli(
   const options = normalizeOptions(tree, rawOptions, projects);
 
   const angularJson = readJson(tree, 'angular.json') as any;
+  ensureAngularDevKitPeerDependenciesAreInstalled(tree);
 
   if (options.preserveAngularCliLayout) {
     addDependenciesToPackageJson(

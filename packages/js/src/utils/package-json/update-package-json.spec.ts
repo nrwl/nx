@@ -1,3 +1,5 @@
+import 'nx/src/utils/testing/mock-fs';
+
 import {
   getUpdatedPackageJsonContent,
   updatePackageJson,
@@ -10,7 +12,6 @@ import { DependentBuildableProjectNode } from '@nrwl/workspace/src/utilities/bui
 jest.mock('nx/src/utils/workspace-root', () => ({
   workspaceRoot: '/root',
 }));
-jest.mock('fs', () => require('memfs').fs);
 
 describe('getUpdatedPackageJsonContent', () => {
   it('should update fields for commonjs only (default)', () => {

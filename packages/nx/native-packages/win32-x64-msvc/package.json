@@ -1,0 +1,20 @@
+{
+  "name": "@nrwl/nx-win32-x64-msvc",
+  "version": "0.0.0",
+  "os": [
+    "win32"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "main": "nx.win32-x64-msvc.node",
+  "files": [
+    "nx.win32-x64-msvc.node"
+  ],
+  "engines": {
+    "node": ">= 10"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

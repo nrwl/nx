@@ -4,7 +4,7 @@ export const tslibVersion = '^2.3.0';
 
 export const typesNodeVersion = '18.7.1';
 
-export const esbuildVersion = '^0.15.7';
+export const esbuildVersion = '^0.17.5';
 
 export const expressVersion = '^4.18.1';
 export const expressTypingsVersion = '4.17.13';

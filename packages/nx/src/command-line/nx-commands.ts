@@ -165,7 +165,7 @@ export const commandsObject = yargs
     command: 'affected:libs',
     deprecated:
       'Use `nx print-affected --type=lib ...` instead. This command will be removed in v15.',
-    describe: `Print libraries affected by changes`,
+    describe: 'Print libraries affected by changes',
     builder: (yargs) =>
       linkToNxDevAndExamples(
         withAffectedOptions(withPlainOption(yargs)),
@@ -369,7 +369,8 @@ export const commandsObject = yargs
   })
   .command({
     command: 'view-logs',
-    describe: false,
+    describe:
+      'Enables you to view and interact with the logs via the advanced analytic UI from Nx Cloud to help you debug your issue. To do this, Nx needs to connect your workspace to Nx Cloud and upload the most recent run details. Only the metrics are uploaded, not the artefacts.',
     handler: async () =>
       process.exit(await (await import('./view-logs')).viewLogs()),
   })

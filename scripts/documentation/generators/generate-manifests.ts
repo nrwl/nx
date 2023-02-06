@@ -5,12 +5,12 @@ import {
   convertToDocumentMetadata,
   createDocumentMetadata,
   DocumentMetadata,
-} from '../../../nx-dev/models-document/src';
-import { MenuItem } from '../../../nx-dev/models-menu/src';
+} from '@nrwl/nx-dev/models-document';
+import { MenuItem } from '@nrwl/nx-dev/models-menu';
 import {
   PackageMetadata,
   ProcessedPackageMetadata,
-} from '../../../nx-dev/models-package/src';
+} from '@nrwl/nx-dev/models-package';
 import { generateJsonFile } from '../utils';
 import { convertToDictionary } from './utils-generator/convert-to-dictionary';
 

@@ -1,0 +1,23 @@
+{
+  "name": "@nrwl/nx-linux-x64-musl",
+  "version": "0.0.0",
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "main": "nx.linux-x64-musl.node",
+  "files": [
+    "nx.linux-x64-musl.node"
+  ],
+  "engines": {
+    "node": ">= 10"
+  },
+  "libc": [
+    "musl"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

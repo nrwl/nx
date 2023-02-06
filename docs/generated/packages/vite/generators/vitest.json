@@ -5,9 +5,9 @@
     "$schema": "http://json-schema.org/schema",
     "cli": "nx",
     "$id": "Vitest",
-    "title": "",
+    "title": "Vitest",
     "type": "object",
-    "description": "Generate a vitest setup for a project.",
+    "description": "Generate a Vitest setup for a project.",
     "properties": {
       "project": {
         "type": "string",
@@ -18,17 +18,17 @@
         "type": "string",
         "enum": ["react", "none"],
         "default": "none",
-        "description": "UI framework to use with vitest"
+        "description": "UI framework to use with vitest."
       },
       "inSourceTests": {
         "type": "boolean",
         "default": false,
-        "description": "Do not generate separate spec files and set up in-source testing"
+        "description": "Do not generate separate spec files and set up in-source testing."
       },
       "skipViteConfig": {
         "type": "boolean",
         "default": false,
-        "description": "Skip generating a vite config file"
+        "description": "Skip generating a vite config file."
       },
       "coverageProvider": {
         "type": "string",

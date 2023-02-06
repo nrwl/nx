@@ -13,8 +13,10 @@
           "lint-base",
           "lint",
           "build-base",
+          "build-native",
           "e2e",
           "test",
+          "test-native",
           "sitemap",
           "build-storybook"
         ],
@@ -39,15 +41,25 @@
       "!{projectRoot}/.storybook/**/*",
       "!{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)"
     ],
-    "sharedGlobals": ["{workspaceRoot}/babel.config.json"]
+    "sharedGlobals": ["{workspaceRoot}/babel.config.json"],
+    "native": [
+      "{projectRoot}/**/*.rs",
+      "{projectRoot}/**/Cargo.*",
+      {
+        "runtime": "node -p 'process.platform'"
+      }
+    ]
   },
   "targetDefaults": {
     "build": {
       "dependsOn": ["build-base"],
       "inputs": ["production", "^production"]
     },
+    "build-native": {
+      "inputs": ["native"]
+    },
     "build-base": {
-      "dependsOn": ["^build-base"],
+      "dependsOn": ["^build-base", "build-native"],
       "inputs": ["production", "^production"],
       "executor": "@nrwl/js:tsc",
       "options": {
@@ -58,7 +70,13 @@
       },
       "outputs": ["{options.outputPath}"]
     },
+    "test-native": {
+      "inputs": ["native"],
+      "executor": "@monodon/rust:test",
+      "options": {}
+    },
     "test": {
+      "dependsOn": ["test-native", "build-native", "^build-native"],
       "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
       "executor": "@nrwl/jest:jest",
       "options": {
@@ -68,6 +86,7 @@
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"]
     },
     "lint": {
+      "dependsOn": ["build-native", "^build-native"],
       "inputs": [
         "default",
         "{workspaceRoot}/.eslintrc.json",
@@ -164,5 +183,6 @@
       "inputs": ["default", "^production", "{workspaceRoot}/.storybook/**/*"]
     }
   },
-  "defaultProject": "@nrwl/nx-source"
+  "defaultProject": "@nrwl/nx-source",
+  "plugins": ["@monodon/rust"]
 }

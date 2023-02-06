@@ -1,0 +1,6 @@
+
+[workspace]
+members = ['packages/nx']
+
+[profile.release]
+lto = true

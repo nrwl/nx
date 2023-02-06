@@ -6,6 +6,7 @@ version: 2.1
 orbs:
   nx: nrwl/nx@1.6.1
   node: circleci/node@5.0.2
+  rust: circleci/rust@1.6.0
   browser-tools: circleci/browser-tools@1.4.0
 
 # -------------------------
@@ -38,7 +39,7 @@ executors:
   linux:
     <<: *defaults
     docker:
-      - image: cimg/node:lts-browsers
+      - image: cimg/rust:1.66.1-browsers
     resource_class: medium+
 
   macos:
@@ -224,6 +225,7 @@ jobs:
             echo "export NX_RUN_GROUP=\"run-group-macos-$CIRCLE_WORKFLOW_ID\";" >> $BASH_ENV
       - setup:
           os: macos
+      - rust/install
       - run:
           name: Run E2E Tests for macOS
           # FIXME: remove --exclude=e2e-detox once we have a fix for the detox tests

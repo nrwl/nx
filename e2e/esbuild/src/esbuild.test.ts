@@ -11,6 +11,8 @@ import {
   updateFile,
   updateProjectConfig,
   packageInstall,
+  rmDist,
+  runCommandUntil,
 } from '@nrwl/e2e/utils';
 
 describe('EsBuild Plugin', () => {
@@ -135,4 +137,57 @@ describe('EsBuild Plugin', () => {
     // Can run package (package.json fields are correctly generated)
     expect(runCommand(`node dist/libs/${myPkg}`)).toMatch(/Hello/);
   }, 300_000);
+
+  it('should support new watch API in >= 0.17.0 and old watch API in < 0.17.0', async () => {
+    const myPkg = uniq('my-pkg');
+    runCLI(`generate @nrwl/js:lib ${myPkg} --bundler=esbuild`);
+    updateFile(`libs/${myPkg}/src/index.ts`, `console.log('new API');\n`);
+
+    let watchProcess = await runCommandUntil(
+      `build ${myPkg} --bundle=false --watch`,
+      (output) => {
+        return output.includes('build succeeded');
+      }
+    );
+
+    watchProcess.kill();
+
+    // Check that the build is correct
+    expect(runCommand(`node dist/libs/${myPkg}`)).toMatch(/new API/);
+
+    // Now install legacy esbuild and do a build watch
+    packageInstall('esbuild', undefined, '0.16.17');
+
+    rmDist();
+
+    watchProcess = await runCommandUntil(
+      `build ${myPkg} --bundle=false --watch`,
+      (output) => {
+        return output.includes('build succeeded');
+      }
+    );
+
+    watchProcess.kill();
+
+    // Check that the build is correct
+    expect(runCommand(`node dist/libs/${myPkg}`)).toMatch(/new API/);
+  }, 120_000);
+
+  it('should support additional entry points', () => {
+    const myPkg = uniq('my-pkg');
+    runCLI(`generate @nrwl/js:lib ${myPkg} --bundler=esbuild`);
+    updateFile(`libs/${myPkg}/src/index.ts`, `console.log('main');\n`);
+    updateFile(`libs/${myPkg}/src/extra.ts`, `console.log('extra');\n`);
+    updateProjectConfig(myPkg, (json) => {
+      json.targets.build.options.additionalEntryPoints = [
+        `libs/${myPkg}/src/extra.ts`,
+      ];
+      return json;
+    });
+
+    runCommand(`build ${myPkg}`);
+
+    expect(runCommand(`node dist/libs/${myPkg}/main.js`)).toMatch(/main/);
+    expect(runCommand(`node dist/libs/${myPkg}/extra.js`)).toMatch(/extra/);
+  });
 });

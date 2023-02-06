@@ -37,6 +37,7 @@ type PropertyDescription = {
     | { message: string; type: string; items?: any[]; multiselect?: boolean };
   'x-deprecated'?: boolean | string;
   'x-dropdown'?: 'projects';
+  'x-priority'?: 'important' | 'internal';
 
   // Numbers Only
   multipleOf?: number;

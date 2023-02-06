@@ -1,3 +1,8 @@
+---
+title: Set up Storybook for Angular Projects
+description: This guide explains how to set up Storybook for Angular projects in your Nx workspace.
+---
+
 # Set up Storybook for Angular Projects
 
 This guide will walk you through setting up [Storybook](https://storybook.js.org) for Angular projects in your Nx workspace.

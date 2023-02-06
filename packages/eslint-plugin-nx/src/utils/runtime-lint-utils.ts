@@ -12,13 +12,16 @@ import {
   workspaceRoot,
 } from '@nrwl/devkit';
 import { getPath, pathExists } from './graph-utils';
-import { existsSync } from 'fs';
 import { readFileIfExisting } from 'nx/src/project-graph/file-utils';
 import { TargetProjectLocator } from 'nx/src/utils/target-project-locator';
 import {
   findProjectForPath,
   ProjectRootMappings,
 } from 'nx/src/project-graph/utils/find-project-for-path';
+import {
+  getRootTsConfigFileName,
+  resolveModuleByImport,
+} from 'nx/src/utils/typescript';
 
 export type Deps = { [projectName: string]: ProjectGraphDependency[] };
 type SingleSourceTagConstraint = {
@@ -415,20 +418,31 @@ export function groupImports(
  * @returns
  */
 export function isAngularSecondaryEntrypoint(
-  targetProjectLocator: TargetProjectLocator,
-  importExpr: string
+  importExpr: string,
+  filePath: string
 ): boolean {
-  const targetFiles = targetProjectLocator.findPaths(importExpr);
-  return (
-    targetFiles &&
-    targetFiles.some(
-      (file) =>
-        // The `ng-packagr` defaults to the `src/public_api.ts` entry file to
-        // the public API if the `lib.entryFile` is not specified explicitly.
-        (file.endsWith('src/public_api.ts') || file.endsWith('src/index.ts')) &&
-        existsSync(
-          joinPathFragments(workspaceRoot, file, '../../', 'ng-package.json')
-        )
-    )
+  const resolvedModule = resolveModuleByImport(
+    importExpr,
+    filePath,
+    join(workspaceRoot, getRootTsConfigFileName())
   );
+
+  return !!resolvedModule && fileIsSecondaryEntryPoint(resolvedModule);
+}
+
+function fileIsSecondaryEntryPoint(file: string): boolean {
+  let parent = joinPathFragments(file, '../');
+  while (parent !== './') {
+    // we need to find closest existing ng-package.json
+    // in order to determine if the file matches the secondary entry point
+    const ngPackageContent = readFileIfExisting(
+      joinPathFragments(workspaceRoot, parent, 'ng-package.json')
+    );
+    if (ngPackageContent) {
+      const entryFile = parseJson(ngPackageContent)?.ngPackage?.lib?.entryFile;
+      return entryFile && file === joinPathFragments(parent, entryFile);
+    }
+    parent = joinPathFragments(parent, '../');
+  }
+  return false;
 }

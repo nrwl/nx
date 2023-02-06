@@ -7,7 +7,7 @@ The Nx plugin for [webpack](https://webpack.js.org/).
 
 [Webpack](https://webpack.js.org/) is a static module bundler for modern JavaScript applications. The `@nrwl/webpack` plugin provides executors that allow you to build and serve your projects using webpack, plus an executor for SSR.
 
-Nx now allows you to [customize your webpack configuration](/packages/webpack/documents/webpack-config-setup) for your projects. And we also offer [a number of plugins](/packages/webpack/documents/webpack-plugins) for supporting Nx and other frameworks.
+Nx now allows you to [customize your webpack configuration](/packages/webpack/documents/webpack-config-setup) for your projects. And we also offer [a number of webpack plugins](/packages/webpack/documents/webpack-plugins) for supporting Nx and other frameworks.
 
 ## Setting up a new Nx workspace with Webpack
 

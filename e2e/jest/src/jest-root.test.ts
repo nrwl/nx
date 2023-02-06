@@ -1,4 +1,10 @@
-import { newProject, runCLI, uniq, runCLIAsync } from '@nrwl/e2e/utils';
+import {
+  newAngularProject,
+  newProject,
+  runCLI,
+  runCLIAsync,
+  uniq,
+} from '@nrwl/e2e/utils';
 
 describe('Jest root projects', () => {
   const myapp = uniq('myapp');
@@ -6,7 +12,7 @@ describe('Jest root projects', () => {
 
   describe('angular', () => {
     beforeAll(() => {
-      newProject();
+      newAngularProject();
     });
 
     it('should test root level app projects', async () => {
