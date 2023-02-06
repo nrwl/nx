@@ -56,6 +56,13 @@ function runInstance(options: CLIOptions, storybook7: boolean): Promise<void> {
       mode: 'static',
     } as any); // TODO(katerina): Change to actual types when Storybook 7
   } else {
+    const nodeVersion = process.version.slice(1).split('.');
+    if (+nodeVersion[0] === 18) {
+      logger.warn(`
+        If you are using the @storybook/builder-vite you may experience issues with Node 18.
+        Please use Node 16 if you are using @storybook/builder-vite. 
+      `);
+    }
     return build.buildStaticStandalone({
       ...options,
       ci: true,

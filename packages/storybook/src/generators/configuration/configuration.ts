@@ -37,6 +37,7 @@ import {
   storybookSwcAddonVersion,
   storybookTestRunnerVersion,
   storybookVersion,
+  tsNodeVersion,
 } from '../../utils/versions';
 
 export async function configurationGenerator(
@@ -219,6 +220,7 @@ export async function configurationGenerator(
         {},
         {
           ['@storybook/core-common']: storybookVersion,
+          ['ts-node']: tsNodeVersion,
         }
       )
     );
