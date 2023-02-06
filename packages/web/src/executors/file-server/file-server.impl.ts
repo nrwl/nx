@@ -19,7 +19,7 @@ import { readModulePackageJson } from 'nx/src/utils/package-json';
 const pmCmd = platform() === 'win32' ? `npx.cmd` : 'npx';
 
 function getHttpServerArgs(options: Schema) {
-  const args = ['-c-1'];
+  const args = [`-c${options.cacheSeconds}`];
 
   if (options.cors) {
     args.push(`--cors`);
@@ -42,6 +42,12 @@ function getHttpServerArgs(options: Schema) {
   }
   if (options.proxyUrl) {
     args.push(`-P=${options.proxyUrl}`);
+  }
+  if (options.gzip) {
+    args.push('-g');
+  }
+  if (options.brotli) {
+    args.push('-b');
   }
 
   if (options.proxyOptions) {
