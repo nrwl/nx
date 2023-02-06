@@ -123,6 +123,9 @@
     "update-angular-cli-version-14-1-0": {
       "cli": "nx",
       "version": "14.5.2-beta.0",
+      "requires": {
+        "@angular/core": ">=14.1.0"
+      },
       "description": "Update the @angular/cli package version to ~14.1.0.",
       "factory": "./src/migrations/update-14-5-2/update-angular-cli"
     },
@@ -135,6 +138,9 @@
     "update-angular-cli-version-14-2-0": {
       "cli": "nx",
       "version": "14.6.0-beta.0",
+      "requires": {
+        "@angular/core": ">=14.2.0"
+      },
       "description": "Update the @angular/cli package version to ~14.2.0.",
       "factory": "./src/migrations/update-14-6-0/update-angular-cli"
     },
@@ -159,42 +165,63 @@
     "update-angular-cli-version-15-0-0": {
       "cli": "nx",
       "version": "15.2.0-beta.0",
+      "requires": {
+        "@angular/core": ">=15.0.0"
+      },
       "description": "Update the @angular/cli package version to ~15.0.0.",
       "factory": "./src/migrations/update-15-2-0/update-angular-cli"
     },
     "remove-browserlist-config": {
       "cli": "nx",
       "version": "15.2.0-beta.0",
+      "requires": {
+        "@angular/core": ">=15.0.0"
+      },
       "description": "Remove browserlist config as it's handled by build-angular",
       "factory": "./src/migrations/update-15-2-0/remove-browserlist-config"
     },
     "update-typescript-target": {
       "cli": "nx",
       "version": "15.2.0-beta.0",
+      "requires": {
+        "@angular/core": ">=15.0.0"
+      },
       "description": "Update typescript target to ES2022",
       "factory": "./src/migrations/update-15-2-0/update-typescript-target"
     },
     "update-workspace-config": {
       "cli": "nx",
       "version": "15.2.0-beta.0",
+      "requires": {
+        "@angular/core": ">=15.0.0"
+      },
       "description": "Remove bundleDependencies from server targets",
       "factory": "./src/migrations/update-15-2-0/update-workspace-config"
     },
     "update-platform-server-exports": {
       "cli": "ng",
       "version": "15.2.0-beta.0",
+      "requires": {
+        "@angular/core": ">=15.0.0"
+      },
       "description": "Remove exported `@angular/platform-server` `renderModule` method. The `renderModule` method is now exported by the Angular CLI.",
       "factory": "./src/migrations/update-15-2-0/remove-platform-server-exports"
     },
     "update-karma-main-file": {
       "cli": "ng",
       "version": "15.2.0-beta.0",
+      "requires": {
+        "@angular/core": ">=15.0.0"
+      },
       "description": "Remove no longer needed require calls in Karma builder main file.",
       "factory": "./src/migrations/update-15-2-0/update-karma-main-file"
     },
     "update-angular-cli-version-15-1-0": {
       "cli": "nx",
       "version": "15.5.0-beta.0",
+      "requires": {
+        "@angular/core": ">=15.1.0"
+      },
       "description": "Update the @angular/cli package version to ~15.1.0.",
       "factory": "./src/migrations/update-15-5-0/update-angular-cli"
     },
@@ -1346,6 +1373,9 @@
     },
     "14.3.7": {
       "version": "14.3.7-beta.0",
+      "requires": {
+        "@angular/core": "^14.0.0"
+      },
       "packages": {
         "@ngrx/store": {
           "version": "~14.0.0",
@@ -1378,6 +1408,9 @@
     },
     "14.4.0": {
       "version": "14.4.0-beta.1",
+      "requires": {
+        "eslint": "^7.0.0 || ^8.0.0"
+      },
       "packages": {
         "@angular-eslint/eslint-plugin": {
           "version": "~14.0.0",
@@ -1395,6 +1428,10 @@
     },
     "14.5.2": {
       "version": "14.5.2-beta.0",
+      "x-prompt": "Do you want to update the Angular version to v14.1?",
+      "requires": {
+        "@angular/core": ">=14.0.0 <14.1.0"
+      },
       "packages": {
         "@angular-devkit/architect": {
           "version": "~0.1401.0",
@@ -1417,7 +1454,7 @@
           "alwaysAddToPackageJson": false
         },
         "@schematics/angular": {
-          "version": "~14.0.0",
+          "version": "~14.1.0",
           "alwaysAddToPackageJson": false
         },
         "@angular/core": {
@@ -1500,13 +1537,13 @@
         }
       }
     },
-    "14.6.0": {
+    "14.6.0-angular": {
       "version": "14.6.0-beta.0",
+      "x-prompt": "Do you want to update the Angular version to v14.2?",
+      "requires": {
+        "@angular/core": ">=14.1.0 <14.2.0"
+      },
       "packages": {
-        "jest-preset-angular": {
-          "version": "~12.2.0",
-          "alwaysAddToPackageJson": false
-        },
         "@angular-devkit/architect": {
           "version": "~0.1402.0",
           "alwaysAddToPackageJson": false
@@ -1549,17 +1586,25 @@
         }
       }
     },
-    "14.8.0": {
-      "version": "14.8.0-beta.0",
+    "14.6.0-jest-preset-angular": {
+      "version": "14.6.0-beta.0",
+      "requires": {
+        "@angular-devkit/build-angular": ">=0.1102.19 <15.0.0",
+        "@angular/compiler-cli": ">=11.2.14 <15.0.0",
+        "@angular/core": ">=11.2.14 <15.0.0",
+        "@angular/platform-browser-dynamic": ">=11.2.14 <15.0.0",
+        "jest": "^28.0.0"
+      },
       "packages": {
         "jest-preset-angular": {
-          "version": "~12.2.2",
+          "version": "12.2.0",
           "alwaysAddToPackageJson": false
-        },
-        "typescript": {
-          "version": "~4.8.2",
-          "alwaysAddToPackageJson": false
-        },
+        }
+      }
+    },
+    "14.8.0-angular-eslint": {
+      "version": "14.8.0-beta.0",
+      "packages": {
         "@angular-eslint/eslint-plugin": {
           "version": "~14.0.4",
           "alwaysAddToPackageJson": false
@@ -1574,8 +1619,28 @@
         }
       }
     },
+    "14.8.0-jest-preset-angular": {
+      "version": "14.8.0-beta.0",
+      "requires": {
+        "@angular-devkit/build-angular": ">=0.1102.19 <15.0.0",
+        "@angular/compiler-cli": ">=11.2.14 <15.0.0",
+        "@angular/core": ">=11.2.14 <15.0.0",
+        "@angular/platform-browser-dynamic": ">=11.2.14 <15.0.0",
+        "jest": "^28.0.0"
+      },
+      "packages": {
+        "jest-preset-angular": {
+          "version": "12.2.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
     "15.2.0": {
       "version": "15.2.0-beta.0",
+      "x-prompt": "Do you want to update the Angular version to v15?",
+      "requires": {
+        "@angular/core": "^14.0.0"
+      },
       "packages": {
         "@angular-devkit/architect": {
           "version": "~0.1500.0",
@@ -1631,8 +1696,11 @@
         }
       }
     },
-    "15.2.2": {
+    "15.2.2-angular-eslint": {
       "version": "15.2.2-beta.0",
+      "requires": {
+        "eslint": "^7.20.0 || ^8.0.0"
+      },
       "packages": {
         "@angular-eslint/eslint-plugin": {
           "version": "~15.0.0",
@@ -1645,7 +1713,19 @@
         "@angular-eslint/template-parser": {
           "version": "~15.0.0",
           "alwaysAddToPackageJson": false
-        },
+        }
+      }
+    },
+    "15.2.2-jest": {
+      "version": "15.2.2-beta.0",
+      "requires": {
+        "@angular-devkit/build-angular": ">=12.2.18 <16.0.0",
+        "@angular/compiler-cli": ">=12.2.16 <16.0.0",
+        "@angular/core": ">=12.2.16 <16.0.0",
+        "@angular/platform-browser-dynamic": ">=12.2.16 <16.0.0",
+        "jest": "^28.0.0"
+      },
+      "packages": {
         "jest-preset-angular": {
           "version": "12.2.3",
           "alwaysAddToPackageJson": false
@@ -1654,6 +1734,9 @@
     },
     "15.3.1": {
       "version": "15.3.1-beta.0",
+      "requires": {
+        "@angular/core": "^15.0.0"
+      },
       "packages": {
         "@ngrx/store": {
           "version": "~15.0.0",
@@ -1686,6 +1769,10 @@
     },
     "15.5.0": {
       "version": "15.5.0-beta.0",
+      "x-prompt": "Do you want to update the Angular version to v15.1?",
+      "requires": {
+        "@angular/core": ">=15.0.0 <15.1.0"
+      },
       "packages": {
         "@angular-devkit/architect": {
           "version": "~0.1501.0",
@@ -1731,6 +1818,9 @@
     },
     "15.5.2": {
       "version": "15.5.2-beta.0",
+      "requires": {
+        "@angular-devkit/build-angular": ">=15.0.0 <16.0.0"
+      },
       "packages": {
         "@nguniversal/builders": {
           "version": "~15.1.0",

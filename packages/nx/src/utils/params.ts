@@ -80,7 +80,7 @@ export async function handleErrors(isVerbose: boolean, fn: Function) {
   try {
     return await fn();
   } catch (err) {
-    err ??= new Error('Unknown error caught');
+    err ||= new Error('Unknown error caught');
     if (err.constructor.name === 'UnsuccessfulWorkflowExecution') {
       logger.error('The generator workflow failed. See above.');
     } else {

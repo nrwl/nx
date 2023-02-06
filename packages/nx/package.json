@@ -92,6 +92,8 @@
   "nx-migrations": {
     "migrations": "./migrations.json",
     "packageGroup": [
+      "@nrwl/jest",
+      "@nrwl/linter",
       "@nrwl/angular",
       "@nrwl/cli",
       "@nrwl/cypress",
@@ -101,9 +103,7 @@
       "@nrwl/eslint-plugin-nx",
       "@nrwl/expo",
       "@nrwl/express",
-      "@nrwl/jest",
       "@nrwl/js",
-      "@nrwl/linter",
       "@nrwl/nest",
       "@nrwl/next",
       "@nrwl/node",
