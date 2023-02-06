@@ -78,6 +78,7 @@ export function generatePreset(host: Tree, opts: NormalizedSchema) {
       opts.docker ? `--docker=${opts.docker}` : null,
       opts.packageManager ? `--packageManager=${opts.packageManager}` : null,
       parsedArgs.interactive ? '--interactive=true' : '--interactive=false',
+      opts.routing !== undefined ? `--routing=${opts.routing}` : null,
     ].filter((e) => !!e);
   }
 }

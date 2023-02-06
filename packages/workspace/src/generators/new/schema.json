@@ -20,6 +20,11 @@
       "type": "string",
       "default": "css"
     },
+    "routing": {
+      "description": "Add routing to the generated application.",
+      "type": "boolean",
+      "default": true
+    },
     "npmScope": {
       "type": "string",
       "description": "Npm scope for importing libs."
