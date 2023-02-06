@@ -112,7 +112,7 @@ function collectDependentProjectNodesNames(
     const dependencyName = dependency.target;
 
     // we're only interested in internal nodes, not external
-    if (nxDeps.externalNodes[dependencyName]) {
+    if (nxDeps.externalNodes?.[dependencyName]) {
       continue;
     }
 
