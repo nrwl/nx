@@ -1,9 +1,9 @@
 # Configuring CI Using GitHub Actions and Nx
 
-The `GitHub` can track the last successful run on `main` branch and use this as a reference point for the `BASE`. The `Nx Set SHAs` provides convenient implementation of this functionality which you can drop into you existing CI config.
-To understand why knowing the last successful build is important for the affected command, check out the [in-depth explanation at Actions's docs](https://github.com/marketplace/actions/nx-set-shas#background).
+`GitHub` can track the last successful run on the `main` branch and use this as a reference point for the `BASE`. The `Nx Set SHAs` provides a convenient implementation of this functionality which you can drop into your existing CI config.
+To understand why knowing the last successful build is important for the affected command, check out the [in-depth explanation in Actions's docs](https://github.com/marketplace/actions/nx-set-shas#background).
 
-Below is an example of a GitHub setup for an Nx workspace only building and testing what is affected. For more details on how the action is used, head over to the [official docs](https://github.com/marketplace/actions/nx-set-shas).
+Below is an example of a GitHub setup for an Nx workspace - building and testing only what is affected. For more details on how the action is used, head over to the [official docs](https://github.com/marketplace/actions/nx-set-shas).
 
 ```yaml
 name: CI
@@ -34,7 +34,7 @@ The `pr` and `main` jobs implement the CI workflow. Setting `timeout-minutes` is
 
 {% callout type="note" title="Tracking the origin branch" %}
 
-If you're using this action in the context of a branch you may need to add `run: "git branch --track main origin/main"` before running `nx affected` since `origin/main` won't exist.
+If you're using this action in the context of a branch you may need to add `run: "git branch --track main origin/main"` before running the `nx affected` command since `origin/main` won't exist.
 
 {% /callout %}
 
@@ -42,7 +42,7 @@ If you're using this action in the context of a branch you may need to add `run:
 
 ## Distributed CI with Nx Cloud
 
-In order to use distributed task execution, we need to start agents and set the `NX_CLOUD_DISTRIBUTED_EXECUTION` flag to `true`.
+To use distributed task execution, we need to start agents and set the `NX_CLOUD_DISTRIBUTED_EXECUTION` flag to `true`.
 
 Read more about the [Distributed CI setup with Nx Cloud](/recipes/ci/ci-setup#distributed-ci-with-nx-cloud).
 

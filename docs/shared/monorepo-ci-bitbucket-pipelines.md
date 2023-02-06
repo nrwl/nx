@@ -1,6 +1,6 @@
 # Configuring CI Using Bitbucket Pipelines and Nx
 
-Below is an example of a Bitbucket Pipeline setup for an Nx workspace only building and testing what is affected.
+Below is an example of a Bitbucket Pipeline setup for an Nx workspace - building and testing only what is affected.
 
 ```yaml
 image: node:16
