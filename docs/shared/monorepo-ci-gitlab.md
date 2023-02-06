@@ -1,6 +1,6 @@
 # Configuring CI Using GitLab and Nx
 
-Below is an example of a GitLab pipeline setup for an Nx workspace only building and testing what is affected.
+Below is an example of a GitLab pipeline setup for an Nx workspace - building and testing only what is affected.
 
 ```yaml
 image: node:16
@@ -59,13 +59,13 @@ build:
     - npx nx affected --base=$NX_BASE --head=$NX_HEAD --target=build --parallel=3
 ```
 
-The `build` and `test` jobs implement the CI workflow using `.distributed` as template to keep CI configuration file more readable.
+The `build` and `test` jobs implement the CI workflow using `.distributed` as a template to keep the CI configuration file more readable.
 
 {% nx-cloud-section %}
 
 ## Distributed CI with Nx Cloud
 
-In order to use distributed task execution, we need to start agents and set the `NX_CLOUD_DISTRIBUTED_EXECUTION` flag to `true`.
+To use distributed task execution, we need to start agents and set the `NX_CLOUD_DISTRIBUTED_EXECUTION` flag to `true`.
 
 Read more about the [Distributed CI setup with Nx Cloud](/recipes/ci/ci-setup#distributed-ci-with-nx-cloud).
 
