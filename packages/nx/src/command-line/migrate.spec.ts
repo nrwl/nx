@@ -29,7 +29,7 @@ describe('Migration', () => {
       });
 
       await expect(
-        migrator.updatePackageJson('mypackage', 'myversion')
+        migrator.migrate('mypackage', 'myversion')
       ).rejects.toThrowError(/cannot fetch/);
     });
 
@@ -42,9 +42,9 @@ describe('Migration', () => {
         to: {},
       });
 
-      expect(await migrator.updatePackageJson('mypackage', '2.0.0')).toEqual({
+      expect(await migrator.migrate('mypackage', '2.0.0')).toEqual({
         migrations: [],
-        packageJson: {
+        packageUpdates: {
           mypackage: { version: '2.0.0', addToPackageJson: false },
         },
       });
@@ -84,9 +84,9 @@ describe('Migration', () => {
         to: {},
       });
 
-      expect(await migrator.updatePackageJson('parent', '2.0.0')).toEqual({
+      expect(await migrator.migrate('parent', '2.0.0')).toEqual({
         migrations: [],
-        packageJson: {
+        packageUpdates: {
           parent: { version: '2.0.0', addToPackageJson: false },
           child: { version: '2.0.0', addToPackageJson: false },
           newChild: { version: '2.0.0', addToPackageJson: 'devDependencies' },
@@ -124,9 +124,9 @@ describe('Migration', () => {
         to: {},
       });
 
-      expect(await migrator.updatePackageJson('mypackage', '2.0.0')).toEqual({
+      expect(await migrator.migrate('mypackage', '2.0.0')).toEqual({
         migrations: [],
-        packageJson: {
+        packageUpdates: {
           mypackage: { version: '2.0.0', addToPackageJson: false },
           child1: { version: '3.0.0', addToPackageJson: false },
           child2: { version: '3.0.0', addToPackageJson: 'dependencies' },
@@ -173,9 +173,9 @@ describe('Migration', () => {
         to: {},
       });
 
-      expect(await migrator.updatePackageJson('parent', '2.0.0')).toEqual({
+      expect(await migrator.migrate('parent', '2.0.0')).toEqual({
         migrations: [],
-        packageJson: {
+        packageUpdates: {
           parent: { version: '2.0.0', addToPackageJson: false },
           child: { version: '2.0.0', addToPackageJson: false },
         },
@@ -241,9 +241,9 @@ describe('Migration', () => {
         to: {},
       });
 
-      expect(await migrator.updatePackageJson('parent', '2.0.0')).toEqual({
+      expect(await migrator.migrate('parent', '2.0.0')).toEqual({
         migrations: [],
-        packageJson: {
+        packageUpdates: {
           parent: { version: '2.0.0', addToPackageJson: false },
           child1: { version: '2.0.0', addToPackageJson: false },
           child2: { version: '2.0.0', addToPackageJson: false },
@@ -293,9 +293,9 @@ describe('Migration', () => {
         to: {},
       });
 
-      expect(await migrator.updatePackageJson('parent', '2.0.0')).toEqual({
+      expect(await migrator.migrate('parent', '2.0.0')).toEqual({
         migrations: [],
-        packageJson: {
+        packageUpdates: {
           parent: { version: '2.0.0', addToPackageJson: false },
           child: { version: '2.0.0', addToPackageJson: false },
         },
@@ -339,9 +339,9 @@ describe('Migration', () => {
         to: {},
       });
 
-      expect(await migrator.updatePackageJson('parent', '2.0.0')).toEqual({
+      expect(await migrator.migrate('parent', '2.0.0')).toEqual({
         migrations: [],
-        packageJson: {
+        packageUpdates: {
           parent: { version: '2.0.0', addToPackageJson: false },
           child1: { version: '2.0.0', addToPackageJson: false },
         },
@@ -404,10 +404,10 @@ describe('Migration', () => {
       });
 
       expect(
-        await migrator.updatePackageJson('@my-company/nx-workspace', '2.0.0')
+        await migrator.migrate('@my-company/nx-workspace', '2.0.0')
       ).toStrictEqual({
         migrations: [],
-        packageJson: {
+        packageUpdates: {
           '@my-company/nx-workspace': {
             version: '2.0.0',
             addToPackageJson: false,
@@ -487,10 +487,10 @@ describe('Migration', () => {
       });
 
       expect(
-        await migrator.updatePackageJson('@my-company/nx-workspace', '2.0.0')
+        await migrator.migrate('@my-company/nx-workspace', '2.0.0')
       ).toStrictEqual({
         migrations: [],
-        packageJson: {
+        packageUpdates: {
           '@my-company/nx-workspace': {
             version: '3.0.0',
             addToPackageJson: false,
@@ -514,7 +514,7 @@ describe('Migration', () => {
         from: {},
         to: {},
       });
-      await migrator.updatePackageJson('@nrwl/workspace', '2.0.0');
+      await migrator.migrate('@nrwl/workspace', '2.0.0');
     });
 
     it('should only fetch packages that are installed', async () => {
@@ -534,7 +534,7 @@ describe('Migration', () => {
         from: {},
         to: {},
       });
-      await migrator.updatePackageJson('@nrwl/workspace', '2.0.0');
+      await migrator.migrate('@nrwl/workspace', '2.0.0');
     });
 
     it('should only fetch packages that are top-level deps', async () => {
@@ -571,7 +571,7 @@ describe('Migration', () => {
         to: {},
       });
 
-      await migrator.updatePackageJson('parent', '2.0.0');
+      await migrator.migrate('parent', '2.0.0');
     });
 
     describe('--interactive', () => {
@@ -622,11 +622,11 @@ describe('Migration', () => {
           interactive: true,
         });
 
-        const result = await migrator.updatePackageJson('mypackage', '2.0.0');
+        const result = await migrator.migrate('mypackage', '2.0.0');
 
         expect(result).toStrictEqual({
           migrations: [],
-          packageJson: {
+          packageUpdates: {
             mypackage: { version: '2.0.0', addToPackageJson: false },
             child1: { version: '3.0.0', addToPackageJson: false },
             child2: { version: '3.0.0', addToPackageJson: false },
@@ -682,11 +682,11 @@ describe('Migration', () => {
           interactive: true,
         });
 
-        const result = await migrator.updatePackageJson('mypackage', '2.0.0');
+        const result = await migrator.migrate('mypackage', '2.0.0');
 
         expect(result).toStrictEqual({
           migrations: [],
-          packageJson: {
+          packageUpdates: {
             mypackage: { version: '2.0.0', addToPackageJson: false },
             child1: { version: '3.0.0', addToPackageJson: false },
           },
@@ -736,11 +736,11 @@ describe('Migration', () => {
           interactive: false,
         });
 
-        const result = await migrator.updatePackageJson('mypackage', '2.0.0');
+        const result = await migrator.migrate('mypackage', '2.0.0');
 
         expect(result).toStrictEqual({
           migrations: [],
-          packageJson: {
+          packageUpdates: {
             mypackage: { version: '2.0.0', addToPackageJson: false },
             child1: { version: '3.0.0', addToPackageJson: false },
             child2: { version: '3.0.0', addToPackageJson: false },
@@ -819,11 +819,11 @@ describe('Migration', () => {
           to: {},
         });
 
-        const result = await migrator.updatePackageJson('mypackage', '2.0.0');
+        const result = await migrator.migrate('mypackage', '2.0.0');
 
         expect(result).toStrictEqual({
           migrations: [],
-          packageJson: {
+          packageUpdates: {
             mypackage: { version: '2.0.0', addToPackageJson: false },
             child2: { version: '3.0.0', addToPackageJson: false },
             child3: { version: '3.0.0', addToPackageJson: false },
@@ -898,11 +898,11 @@ describe('Migration', () => {
           to: {},
         });
 
-        const result = await migrator.updatePackageJson('mypackage', '2.0.0');
+        const result = await migrator.migrate('mypackage', '2.0.0');
 
         expect(result).toStrictEqual({
           migrations: [],
-          packageJson: {
+          packageUpdates: {
             mypackage: { version: '2.0.0', addToPackageJson: false },
             child1: { version: '3.0.0', addToPackageJson: false },
             child2: { version: '3.0.0', addToPackageJson: false },
@@ -950,11 +950,11 @@ describe('Migration', () => {
           interactive: true,
         });
 
-        const result = await migrator.updatePackageJson('mypackage', '2.0.0');
+        const result = await migrator.migrate('mypackage', '2.0.0');
 
         expect(result).toStrictEqual({
           migrations: [],
-          packageJson: {
+          packageUpdates: {
             mypackage: { version: '2.0.0', addToPackageJson: false },
             child1: { version: '3.0.0', addToPackageJson: false },
           },
@@ -1003,11 +1003,11 @@ describe('Migration', () => {
           interactive: true,
         });
 
-        const result = await migrator.updatePackageJson('mypackage', '2.0.0');
+        const result = await migrator.migrate('mypackage', '2.0.0');
 
         expect(result).toStrictEqual({
           migrations: [],
-          packageJson: {
+          packageUpdates: {
             mypackage: { version: '2.0.0', addToPackageJson: false },
           },
         });
@@ -1076,7 +1076,7 @@ describe('Migration', () => {
         from: {},
         to: {},
       });
-      expect(await migrator.updatePackageJson('parent', '2.0.0')).toEqual({
+      expect(await migrator.migrate('parent', '2.0.0')).toEqual({
         migrations: [
           {
             version: '2.0.0',
@@ -1091,7 +1091,7 @@ describe('Migration', () => {
             description: 'child-desc',
           },
         ],
-        packageJson: {
+        packageUpdates: {
           parent: { version: '2.0.0', addToPackageJson: false },
           child: { version: '2.0.0', addToPackageJson: false },
           newChild: { version: '3.0.0', addToPackageJson: false },
@@ -1158,7 +1158,7 @@ describe('Migration', () => {
         to: {},
       });
 
-      expect(await migrator.updatePackageJson('parent', '2.0.0')).toEqual({
+      expect(await migrator.migrate('parent', '2.0.0')).toEqual({
         migrations: [
           {
             version: '2.0.0',
@@ -1173,7 +1173,7 @@ describe('Migration', () => {
             description: 'child-desc',
           },
         ],
-        packageJson: {
+        packageUpdates: {
           parent: { version: '2.0.0', addToPackageJson: false },
           child: { version: '2.0.0', addToPackageJson: false },
         },
@@ -1240,7 +1240,7 @@ describe('Migration', () => {
         interactive: true,
       });
 
-      const result = await migrator.updatePackageJson('parent', '2.0.0');
+      const result = await migrator.migrate('parent', '2.0.0');
 
       expect(result).toEqual({
         migrations: [
@@ -1251,7 +1251,7 @@ describe('Migration', () => {
             description: 'parent-desc',
           },
         ],
-        packageJson: {
+        packageUpdates: {
           parent: { version: '2.0.0', addToPackageJson: false },
         },
       });
@@ -1339,7 +1339,7 @@ describe('Migration', () => {
         to: {},
       });
 
-      const result = await migrator.updatePackageJson('parent', '2.0.0');
+      const result = await migrator.migrate('parent', '2.0.0');
 
       expect(result).toEqual({
         migrations: [
@@ -1358,7 +1358,7 @@ describe('Migration', () => {
             requires: { pkg3: '^2.0.0' },
           },
         ],
-        packageJson: {
+        packageUpdates: {
           child1: { version: '2.0.0', addToPackageJson: false },
           child2: { version: '3.0.0', addToPackageJson: false },
           parent: { version: '2.0.0', addToPackageJson: false },

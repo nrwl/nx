@@ -190,7 +190,10 @@ async function findLocalPlugins() {
 
 function readPackageJson(p: string): PackageJson | null {
   try {
-    return readModulePackageJson(p).packageJson;
+    return readModulePackageJson(p, [
+      workspaceRoot,
+      join(workspaceRoot, '.nx', 'installation'),
+    ]).packageJson;
   } catch {
     return null;
   }

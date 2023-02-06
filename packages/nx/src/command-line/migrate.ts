@@ -16,7 +16,7 @@ import {
 import { promisify } from 'util';
 import {
   MigrationsJson,
-  PackageJsonUpdateForPackage,
+  PackageJsonUpdateForPackage as PackageUpdate,
   PackageJsonUpdates,
 } from '../config/misc-interfaces';
 import { NxJsonConfiguration } from '../config/nx-json';
@@ -117,10 +117,7 @@ export class Migrator {
   private readonly installedPkgVersionOverrides: MigratorOptions['from'];
   private readonly to: MigratorOptions['to'];
   private readonly interactive: MigratorOptions['interactive'];
-  private readonly packageJsonUpdates: Record<
-    string,
-    PackageJsonUpdateForPackage
-  > = {};
+  private readonly packageUpdates: Record<string, PackageUpdate> = {};
   private readonly collectedVersions: Record<string, string> = {};
 
   constructor(opts: MigratorOptions) {
@@ -132,23 +129,23 @@ export class Migrator {
     this.interactive = opts.interactive;
   }
 
-  async updatePackageJson(targetPackage: string, targetVersion: string) {
+  async migrate(targetPackage: string, targetVersion: string) {
     await this.buildPackageJsonUpdates(targetPackage, {
       version: targetVersion,
       addToPackageJson: false,
     });
 
     const migrations = await this.createMigrateJson();
-    return { packageJson: this.packageJsonUpdates, migrations };
+    return { packageUpdates: this.packageUpdates, migrations };
   }
 
   private async createMigrateJson() {
     const migrations = await Promise.all(
-      Object.keys(this.packageJsonUpdates).map(async (packageName) => {
+      Object.keys(this.packageUpdates).map(async (packageName) => {
         const currentVersion = this.getPkgVersion(packageName);
         if (currentVersion === null) return [];
 
-        const { version } = this.packageJsonUpdates[packageName];
+        const { version } = this.packageUpdates[packageName];
         const { generators } = await this.fetch(packageName, version);
 
         if (!generators) return [];
@@ -174,7 +171,7 @@ export class Migrator {
 
   private async buildPackageJsonUpdates(
     targetPackage: string,
-    target: PackageJsonUpdateForPackage
+    target: PackageUpdate
   ): Promise<void> {
     const packagesToCheck =
       await this.populatePackageJsonUpdatesAndGetPackagesToCheck(
@@ -182,7 +179,7 @@ export class Migrator {
         target
       );
     for (const packageToCheck of packagesToCheck) {
-      const filteredUpdates: Record<string, PackageJsonUpdateForPackage> = {};
+      const filteredUpdates: Record<string, PackageUpdate> = {};
       for (const packageUpdate of packageToCheck.updates) {
         if (
           this.areRequirementsMet(packageUpdate.requires, filteredUpdates) &&
@@ -207,7 +204,7 @@ export class Migrator {
 
   private async populatePackageJsonUpdatesAndGetPackagesToCheck(
     targetPackage: string,
-    target: PackageJsonUpdateForPackage
+    target: PackageUpdate
   ): Promise<
     {
       package: string;
@@ -273,7 +270,7 @@ export class Migrator {
 
     const packageUpdatesToApply = packageJsonUpdates.reduce(
       (m, c) => ({ ...m, ...c.packages }),
-      {} as Record<string, PackageJsonUpdateForPackage>
+      {} as Record<string, PackageUpdate>
     );
     return (
       await Promise.all(
@@ -351,7 +348,7 @@ export class Migrator {
       );
 
       migrationConfig.packageJsonUpdates ??= {};
-      const packages: Record<string, PackageJsonUpdateForPackage> = {};
+      const packages: Record<string, PackageUpdate> = {};
       migrationConfig.packageJsonUpdates[targetVersion + '--PackageGroup'] = {
         version: targetVersion,
         packages,
@@ -416,7 +413,7 @@ export class Migrator {
               : packageUpdate.addToPackageJson || false,
           };
           return acc;
-        }, {} as Record<string, PackageJsonUpdateForPackage>);
+        }, {} as Record<string, PackageUpdate>);
 
       if (Object.keys(packageJsonUpdate.packages).length) {
         filteredPackageJsonUpdates.push(packageJsonUpdate);
@@ -428,19 +425,19 @@ export class Migrator {
 
   private addPackageJsonUpdate(
     name: string,
-    packageUpdate: PackageJsonUpdateForPackage
+    packageUpdate: PackageUpdate
   ): void {
     if (
-      !this.packageJsonUpdates[name] ||
-      this.gt(packageUpdate.version, this.packageJsonUpdates[name].version)
+      !this.packageUpdates[name] ||
+      this.gt(packageUpdate.version, this.packageUpdates[name].version)
     ) {
-      this.packageJsonUpdates[name] = packageUpdate;
+      this.packageUpdates[name] = packageUpdate;
     }
   }
 
   private areRequirementsMet(
     requirements: PackageJsonUpdates[string]['requires'],
-    extraPackageUpdatesToCheck?: Record<string, PackageJsonUpdateForPackage>
+    extraPackageUpdatesToCheck?: Record<string, PackageUpdate>
   ): boolean {
     if (!requirements || !Object.keys(requirements).length) {
       return true;
@@ -452,8 +449,8 @@ export class Migrator {
           satisfies(this.getPkgVersion(pkgName), versionRange, {
             includePrerelease: true,
           })) ||
-        (this.packageJsonUpdates[pkgName]?.version &&
-          satisfies(this.packageJsonUpdates[pkgName].version, versionRange, {
+        (this.packageUpdates[pkgName]?.version &&
+          satisfies(this.packageUpdates[pkgName].version, versionRange, {
             includePrerelease: true,
           })) ||
         (extraPackageUpdatesToCheck?.[pkgName]?.version &&
@@ -924,7 +921,7 @@ function createMigrationsFile(
 
 function updatePackageJson(
   root: string,
-  updatedPackages: Record<string, PackageJsonUpdateForPackage>
+  updatedPackages: Record<string, PackageUpdate>
 ) {
   const packageJsonPath = join(root, 'package.json');
   const parseOptions: JsonReadOptions = {};
@@ -949,6 +946,37 @@ function updatePackageJson(
   });
 
   writeJsonFile(packageJsonPath, json, {
+    appendNewLine: parseOptions.endsWithNewline,
+  });
+}
+
+function updateInstallationDetails(
+  root: string,
+  updatedPackages: Record<string, PackageUpdate>
+) {
+  const nxJsonPath = join(root, 'nx.json');
+  const parseOptions: JsonReadOptions = {};
+  const nxJson = readJsonFile<NxJsonConfiguration>(nxJsonPath, parseOptions);
+
+  if (!nxJson.installation) {
+    return;
+  }
+
+  const nxVersion = updatedPackages.nx?.version;
+  if (nxVersion) {
+    nxJson.installation.version = nxVersion;
+  }
+
+  if (nxJson.installation.plugins) {
+    for (const dep in nxJson.installation.plugins) {
+      const update = updatedPackages[dep];
+      if (update) {
+        nxJson.installation.plugins[dep] = update.version;
+      }
+    }
+  }
+
+  writeJsonFile(nxJsonPath, nxJson, {
     appendNewLine: parseOptions.endsWithNewline,
   });
 }
@@ -1020,16 +1048,17 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       interactive: opts.interactive,
     });
 
-    const { migrations, packageJson } = await migrator.updatePackageJson(
+    const { migrations, packageUpdates } = await migrator.migrate(
       opts.targetPackage,
       opts.targetVersion
     );
 
-    updatePackageJson(root, packageJson);
+    updatePackageJson(root, packageUpdates);
+    updateInstallationDetails(root, packageUpdates);
 
     if (migrations.length > 0) {
       createMigrationsFile(root, [
-        ...addSplitConfigurationMigrationIfAvailable(from, packageJson),
+        ...addSplitConfigurationMigrationIfAvailable(from, packageUpdates),
         ...migrations,
       ] as any);
     }
