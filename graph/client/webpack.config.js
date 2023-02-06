@@ -1,4 +1,9 @@
-module.exports = (config, context) => {
+// nx-ignore-next-line
+const { withNx, composePlugins } = require('@nrwl/webpack');
+// nx-ignore-next-line
+const { withReact } = require('@nrwl/react');
+
+module.exports = composePlugins(withNx(), withReact(), (config, context) => {
   return {
     ...config,
     resolve: {
@@ -12,4 +17,4 @@ module.exports = (config, context) => {
       },
     },
   };
-};
+});
