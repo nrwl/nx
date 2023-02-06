@@ -44,14 +44,11 @@ export default async function* vitePreviewServerExecutor(
 
   const processOnExit = async () => {
     await closeServer(server);
-    process.off('SIGINT', processOnExit);
-    process.off('SIGTERM', processOnExit);
-    process.off('exit', processOnExit);
   };
 
-  process.on('SIGINT', processOnExit);
-  process.on('SIGTERM', processOnExit);
-  process.on('exit', processOnExit);
+  process.once('SIGINT', processOnExit);
+  process.once('SIGTERM', processOnExit);
+  process.once('exit', processOnExit);
 
   // Launch the build target.
   const target = parseTargetString(options.buildTarget, context.projectGraph);
@@ -89,7 +86,11 @@ export default async function* vitePreviewServerExecutor(
     }
   }
 
-  await new Promise(() => {});
+  await new Promise<void>((resolve) => {
+    process.once('SIGINT', () => resolve());
+    process.once('SIGTERM', () => resolve());
+    process.once('exit', () => resolve());
+  });
 }
 
 function closeServer(server?: PreviewServer): Promise<void> {
