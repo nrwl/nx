@@ -29,6 +29,8 @@ export interface NxMigrationsConfiguration {
   packageGroup?: PackageGroup;
 }
 
+type PackageOverride = { [key: string]: string | PackageOverride };
+
 export interface PackageJson {
   // Generic Package.Json Configuration
   name: string;
@@ -47,8 +49,11 @@ export interface PackageJson {
       >;
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
+  optionalDependencies?: Record<string, string>;
   peerDependencies?: Record<string, string>;
-  peerDependenciesMeta?: Record<string, { optional?: boolean }>;
+  peerDependenciesMeta?: Record<string, { optional: boolean }>;
+  resolutions?: Record<string, string>;
+  overrides?: PackageOverride;
   bin?: Record<string, string>;
   workspaces?:
     | string[]

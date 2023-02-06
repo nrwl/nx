@@ -1,0 +1,11 @@
+{
+  "name": "test",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "dependencies": {
+    "react": "^17.0.0"
+  },
+  "packageManager": "yarn@1.22.19"
+}

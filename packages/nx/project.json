@@ -40,7 +40,11 @@
           {
             "input": "packages/nx",
             "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json", "**/project.json"],
+            "ignore": [
+              "**/tsconfig*.json",
+              "**/project.json",
+              "**/__fixtures__/**"
+            ],
             "output": "/"
           },
           {

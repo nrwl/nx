@@ -36,7 +36,6 @@ import { readNxJson } from '../config/configuration';
 import {
   lockFileExists,
   lockFileHash,
-  mapLockFileDataToPartialGraph,
   parseLockFile,
 } from '../lock-file/lock-file';
 import { Workspaces } from '../config/workspaces';
@@ -106,7 +105,7 @@ export async function buildProjectGraphUsingProjectFileMap(
     if (cache && cache.lockFileHash === lockHash) {
       partialGraph = isolatePartialGraphFromCache(cache);
     } else {
-      partialGraph = mapLockFileDataToPartialGraph(parseLockFile());
+      partialGraph = parseLockFile();
     }
   }
   const context = createContext(

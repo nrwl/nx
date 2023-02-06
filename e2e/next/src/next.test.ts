@@ -1,13 +1,18 @@
+import { detectPackageManager, joinPathFragments } from '@nrwl/devkit';
 import {
   checkFilesExist,
   cleanupProject,
+  getPackageManagerCommand,
   isNotWindows,
   killPorts,
   newProject,
+  packageManagerLockFile,
   readFile,
   rmDist,
   runCLI,
+  runCommand,
   runCommandUntil,
+  tmpProjPath,
   uniq,
   updateFile,
   updateProjectConfig,
@@ -19,8 +24,12 @@ import { checkApp } from './utils';
 describe('Next.js Applications', () => {
   let proj: string;
   let originalEnv: string;
+  let packageManager;
 
-  beforeAll(() => (proj = newProject()));
+  beforeAll(() => {
+    proj = newProject();
+    packageManager = detectPackageManager(tmpProjPath());
+  });
 
   afterAll(() => cleanupProject());
 
@@ -146,6 +155,20 @@ describe('Next.js Applications', () => {
       `dist/apps/${appName}/public/shared/ui/hello.txt`
     );
   }, 300_000);
+
+  it('should build and install pruned lock file', () => {
+    const appName = uniq('app');
+    runCLI(`generate @nrwl/next:app ${appName} --no-interactive --style=css`);
+
+    const result = runCLI(`build ${appName} --generateLockfile=true`);
+    expect(result).not.toMatch(/Graph is not consistent/);
+    checkFilesExist(
+      `dist/apps/${appName}/${packageManagerLockFile[packageManager]}`
+    );
+    runCommand(`${getPackageManagerCommand().ciInstall}`, {
+      cwd: joinPathFragments(tmpProjPath(), 'dist/apps', appName),
+    });
+  }, 1_000_000);
 
   // TODO(jack): re-enable this test
   xit('should be able to serve with a proxy configuration', async () => {
