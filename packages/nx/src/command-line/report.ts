@@ -19,6 +19,7 @@ import {
   readProjectsConfigurationFromProjectGraph,
 } from '../project-graph/project-graph';
 import { gt, valid } from 'semver';
+import { NxJsonConfiguration } from '../devkit-exports';
 
 const nxPackageJson = readJsonFile<typeof import('../../package.json')>(
   join(__dirname, '../../package.json')
@@ -190,7 +191,10 @@ async function findLocalPlugins() {
 
 function readPackageJson(p: string): PackageJson | null {
   try {
-    return readModulePackageJson(p).packageJson;
+    return readModulePackageJson(p, [
+      workspaceRoot,
+      join(workspaceRoot, '.nx', 'installation'),
+    ]).packageJson;
   } catch {
     return null;
   }
@@ -248,14 +252,9 @@ export function findMisalignedPackagesForPackage(
 export function findInstalledCommunityPlugins(): (PackageJson & {
   package: string;
 })[] {
-  const { dependencies, devDependencies } = readJsonFile(
-    join(workspaceRoot, 'package.json')
-  );
-  const deps = [
-    Object.keys(dependencies || {}),
-    Object.keys(devDependencies || {}),
-  ].flat();
-
+  const packageJsonDeps = getDependenciesFromPackageJson();
+  const nxJsonDeps = getDependenciesFromNxJson();
+  const deps = [...new Set<string>(...packageJsonDeps, ...nxJsonDeps)];
   return deps.reduce(
     (arr: any[], nextDep: string): { project: string; version: string }[] => {
       if (
@@ -301,4 +300,26 @@ export function findInstalledPackagesWeCareAbout() {
     }
     return acc;
   }, [] as { package: string; version: string }[]);
+}
+
+function getDependenciesFromPackageJson(
+  packageJsonPath = 'package.json'
+): string[] {
+  try {
+    const { dependencies, devDependencies } = readJsonFile(
+      join(workspaceRoot, packageJsonPath)
+    );
+    return Object.keys({ ...dependencies, ...devDependencies });
+  } catch {}
+  return [];
+}
+
+function getDependenciesFromNxJson(): string[] {
+  const { installation } = readJsonFile<NxJsonConfiguration>(
+    join(workspaceRoot, 'nx.json')
+  );
+  if (!installation) {
+    return [];
+  }
+  return ['nx', ...Object.keys(installation.plugins || {})];
 }
