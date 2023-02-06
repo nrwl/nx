@@ -80,7 +80,7 @@ export function assertWorkspaceValidity(
     return;
   }
 
-  let message = `The following implicitDependencies specified in project configurations are invalid:\n`;
+  let message = `The following implicitDependencies point to non-existent project(s):\n`;
   message += [...invalidImplicitDependencies.keys()]
     .map((key) => {
       const projectNames = invalidImplicitDependencies.get(key);
