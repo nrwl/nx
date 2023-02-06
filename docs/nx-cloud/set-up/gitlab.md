@@ -8,7 +8,11 @@ The Nx Cloud GitLab Integration lets you access the result of every run—with a
 
 ![Access VCS Setup](/nx-cloud/set-up/access-vcs-setup.png)
 
-Once on the VCS Integrations setup page, select "GitLab" in the platforms dropdown. You will be prompted to enter the name of your repository.
+Once on the VCS Integrations setup page, select "GitLab" in the platforms dropdown. You will be prompted to enter your project's ID.
+
+![Locate Gitlab Project ID](/nx-cloud/set-up/find-gitlab-project-id.png)
+
+To locate the ID for your project, visit the home page of your repository on GitLab. The value can be found underneath the name of your project, and has a clickable button to copy to your clipboard.
 
 ![Add GitLab Repository](/nx-cloud/set-up/add-gitlab-repository.png)
 
