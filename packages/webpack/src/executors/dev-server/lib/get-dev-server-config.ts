@@ -2,11 +2,11 @@ import { ExecutorContext, logger } from '@nrwl/devkit';
 import type { Configuration as WebpackConfiguration } from 'webpack';
 import type { Configuration as WebpackDevServerConfiguration } from 'webpack-dev-server';
 import * as path from 'path';
+import { readFileSync } from 'fs-extra';
 
 import { getWebpackConfig } from '../../webpack/lib/get-webpack-config';
 import { WebDevServerOptions } from '../schema';
 import { buildServePath } from './serve-path';
-import { readFileSync } from 'fs-extra';
 import { NormalizedWebpackExecutorOptions } from '../../webpack/schema';
 
 export function getDevServerConfig(
@@ -15,9 +15,9 @@ export function getDevServerConfig(
   serveOptions: WebDevServerOptions
 ): Partial<WebpackConfiguration> {
   const workspaceRoot = context.root;
-  const { root: projectRoot, sourceRoot } =
-    context.projectsConfigurations.projects[context.projectName];
-  const webpackConfig = getWebpackConfig(context, buildOptions);
+  const webpackConfig = buildOptions.isolatedConfig
+    ? {}
+    : getWebpackConfig(context, buildOptions);
 
   (webpackConfig as any).devServer = getDevServerPartial(
     workspaceRoot,
