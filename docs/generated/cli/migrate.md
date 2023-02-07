@@ -87,7 +87,7 @@ Automatically create a git commit after each migration runs
 
 Type: `string`
 
-Use the provided versions for packages instead of the ones installed in node_modules (e.g., --from="@nrwl/react:12.0.0,@nrwl/js:12.0.0")
+Use the provided versions for packages instead of the ones installed in node_modules (e.g., --from="@nrwl/react@12.0.0,@nrwl/js@12.0.0")
 
 ### help
 
@@ -111,7 +111,7 @@ Execute migrations from a file (when the file isn't provided, execute migrations
 
 Type: `string`
 
-Use the provided versions for packages instead of the ones calculated by the migrator (e.g., --to="@nrwl/react:12.0.0,@nrwl/js:12.0.0")
+Use the provided versions for packages instead of the ones calculated by the migrator (e.g., --to="@nrwl/react@12.0.0,@nrwl/js@12.0.0")
 
 ### version
 

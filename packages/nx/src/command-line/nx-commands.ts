@@ -933,12 +933,12 @@ function withMigrationOptions(yargs: yargs.Argv) {
     })
     .option('from', {
       describe:
-        'Use the provided versions for packages instead of the ones installed in node_modules (e.g., --from="@nrwl/react:12.0.0,@nrwl/js:12.0.0")',
+        'Use the provided versions for packages instead of the ones installed in node_modules (e.g., --from="@nrwl/react@12.0.0,@nrwl/js@12.0.0")',
       type: 'string',
     })
     .option('to', {
       describe:
-        'Use the provided versions for packages instead of the ones calculated by the migrator (e.g., --to="@nrwl/react:12.0.0,@nrwl/js:12.0.0")',
+        'Use the provided versions for packages instead of the ones calculated by the migrator (e.g., --to="@nrwl/react@12.0.0,@nrwl/js@12.0.0")',
       type: 'string',
     })
     .option('createCommits', {
