@@ -1,6 +1,11 @@
 import * as enquirer from 'enquirer';
 import { PackageJson } from '../utils/package-json';
-import { Migrator, normalizeVersion, parseMigrationsOptions } from './migrate';
+import {
+  Migrator,
+  normalizeVersion,
+  parseMigrationsOptions,
+  ResolvedMigrationConfiguration,
+} from './migrate';
 
 const createPackageJson = (
   overrides: Partial<PackageJson> = {}
@@ -366,9 +371,9 @@ describe('Migration', () => {
             return {
               version: '2.0.0',
               packageGroup: [
-                '@my-company/lib-1',
-                '@my-company/lib-2',
-                '@my-company/lib-3',
+                { package: '@my-company/lib-1', version: '*' },
+                { package: '@my-company/lib-2', version: '*' },
+                { package: '@my-company/lib-3', version: '*' },
                 { package: '@my-company/lib-4', version: 'latest' },
               ],
             };
@@ -376,13 +381,17 @@ describe('Migration', () => {
           if (pkg === '@my-company/lib-6') {
             return {
               version: '2.0.0',
-              packageGroup: ['@my-company/nx-workspace'],
+              packageGroup: [
+                { version: '*', package: '@my-company/nx-workspace' },
+              ],
             };
           }
           if (pkg === '@my-company/lib-3') {
             return {
               version: '2.0.0',
-              packageGroup: ['@my-company/lib-3-child'],
+              packageGroup: [
+                { version: '*', package: '@my-company/lib-3-child' },
+              ],
             };
           }
           if (version === 'latest') {
@@ -440,19 +449,26 @@ describe('Migration', () => {
           if (pkg === '@my-company/nx-workspace' && version === '3.0.0') {
             return {
               version: '3.0.0',
-              packageGroup: ['@my-company/lib-1', '@my-company/lib-2'],
+              packageGroup: [
+                { package: '@my-company/lib-1', version: '*' },
+                { package: '@my-company/lib-2', version: '*' },
+              ],
             };
           }
           if (pkg === '@my-company/lib-1' && version === 'latest') {
             return {
               version: '3.0.0',
-              packageGroup: ['@my-company/nx-workspace'],
+              packageGroup: [
+                { package: '@my-company/nx-workspace', version: '*' },
+              ],
             };
           }
           if (pkg === '@my-company/lib-1' && version === '3.0.0') {
             return {
               version: '3.0.0',
-              packageGroup: ['@my-company/nx-workspace'],
+              packageGroup: [
+                { package: '@my-company/nx-workspace', version: '*' },
+              ],
             };
           }
           if (pkg === '@my-company/lib-2' && version === '3.0.0') {
@@ -827,7 +843,7 @@ describe('Migration', () => {
             },
           }),
           getInstalledPackageVersion: () => '1.0.0',
-          fetch: (p) => {
+          fetch: (p): Promise<ResolvedMigrationConfiguration> => {
             if (p === 'mypackage') {
               return Promise.resolve({
                 version: '2.0.0',
@@ -837,7 +853,10 @@ describe('Migration', () => {
                     packages: { child1: { version: '3.0.0' } },
                   },
                 },
-                packageGroup: ['pkg1', 'pkg2'],
+                packageGroup: [
+                  { package: 'pkg1', version: '*' },
+                  { package: 'pkg2', version: '*' },
+                ],
               });
             } else if (p === 'pkg1') {
               // add a delay to showcase the dependent requirement will wait for it
@@ -1008,7 +1027,7 @@ describe('Migration', () => {
           if (p === 'child') return '1.0.0';
           return null;
         },
-        fetch: (p, _v) => {
+        fetch: (p: string): Promise<ResolvedMigrationConfiguration> => {
           if (p === 'parent') {
             return Promise.resolve({
               version: '2.0.0',
@@ -1089,7 +1108,7 @@ describe('Migration', () => {
           if (p === 'newChild') return '1.0.0'; // installed as a transitive dep, not a top-level dep
           return null;
         },
-        fetch: (p, _v) => {
+        fetch: (p: string): Promise<ResolvedMigrationConfiguration> => {
           if (p === 'parent') {
             return Promise.resolve({
               version: '2.0.0',
