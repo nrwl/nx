@@ -10,6 +10,9 @@ import {
   createProjectRootMappings,
   findProjectForPath,
 } from '../project-graph/utils/find-project-for-path';
+import { builtinModules } from 'module';
+
+const builtInModuleSet = new Set(builtinModules);
 
 export class TargetProjectLocator {
   private projectRootMappings = createProjectRootMappings(this.nodes);
@@ -70,6 +73,11 @@ export class TargetProjectLocator {
       }
     }
 
+    if (builtInModuleSet.has(normalizedImportExpr)) {
+      this.npmResolutionCache.set(normalizedImportExpr, null);
+      return null;
+    }
+
     try {
       const resolvedModule = this.resolveImportWithRequire(
         normalizedImportExpr,
@@ -80,7 +88,7 @@ export class TargetProjectLocator {
     } catch {}
 
     // nothing found, cache for later
-    this.npmResolutionCache.set(normalizedImportExpr, undefined);
+    this.npmResolutionCache.set(normalizedImportExpr, null);
     return null;
   }
 
