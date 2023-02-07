@@ -2454,6 +2454,17 @@
         "tags": [],
         "originalFilePath": "shared/packages/storybook/best-practices"
       },
+      "/packages/storybook/documents/configuring-storybook": {
+        "id": "configuring-storybook",
+        "name": "Configuring Storybook on Nx",
+        "description": "This guide explains how Storybook is configured on your Nx workspace.",
+        "file": "generated/packages/storybook/documents/configuring-storybook",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/packages/storybook/documents/configuring-storybook",
+        "tags": [],
+        "originalFilePath": "shared/packages/storybook/configuring-storybook"
+      },
       "/packages/storybook/documents/storybook-composition-setup": {
         "id": "storybook-composition-setup",
         "name": "Setting up Storybook Composition with Nx",

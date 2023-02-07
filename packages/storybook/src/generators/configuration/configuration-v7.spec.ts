@@ -195,7 +195,7 @@ describe('@nrwl/storybook:configuration for Storybook v7', () => {
       ).toMatchSnapshot();
     });
 
-    it('should generate TS config for project if root config is TS', async () => {
+    it('should generate TS config for project if tsConfiguration true', async () => {
       await configurationGenerator(tree, {
         name: 'test-ui-lib',
         uiFramework: '@storybook/angular',
@@ -205,37 +205,14 @@ describe('@nrwl/storybook:configuration for Storybook v7', () => {
         storybook7UiFramework: '@storybook/angular',
       });
 
-      const newContents = `module.exports = {
-        stories: [],
-        addons: ['@storybook/addon-essentials', 'new-addon'],
-      };
-      `;
-      // Setup a new lib
-      await libraryGenerator(tree, {
-        name: 'test-ui-lib-2',
-        standaloneConfig: false,
-      });
-
-      tree.write('.storybook/main.ts', newContents);
-      await configurationGenerator(tree, {
-        name: 'test-ui-lib-2',
-        uiFramework: '@storybook/angular',
-        standaloneConfig: false,
-        storybook7betaConfiguration: true,
-        storybook7UiFramework: '@storybook/angular',
-      });
-
-      expect(tree.read('.storybook/main.ts', 'utf-8')).toEqual(newContents);
       expect(
-        tree.read('libs/test-ui-lib-2/.storybook/main.ts', 'utf-8')
+        tree.read('libs/test-ui-lib/.storybook/main.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
-        tree.exists('libs/test-ui-lib-2/.storybook/preview.ts')
+        tree.exists('libs/test-ui-lib/.storybook/preview.ts')
       ).toBeTruthy();
-      expect(tree.exists('libs/test-ui-lib-2/.storybook/main.js')).toBeFalsy();
-      expect(
-        tree.exists('libs/test-ui-lib-2/.storybook/preview.js')
-      ).toBeFalsy();
+      expect(tree.exists('libs/test-ui-lib/.storybook/main.js')).toBeFalsy();
+      expect(tree.exists('libs/test-ui-lib/.storybook/preview.js')).toBeFalsy();
     });
 
     it('should add test-storybook target', async () => {

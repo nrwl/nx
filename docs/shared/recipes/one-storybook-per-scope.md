@@ -15,7 +15,6 @@ Say, for example, that you have a client app, an admin app, and a number of UI l
 
 ```text
 happynrwl/
-├── .storybook/
 ├── apps/
 │   ├── client/
 │   ├── client-e2e/
@@ -114,10 +113,9 @@ For example, `libs/storybook-host-admin/.storybook/main.js`:
 ```javascript {% fileName="libs/storybook-host-admin/.storybook/main.js" %}
 const rootMain = require('../../../.storybook/main');
 module.exports = {
-  ...rootMain,
-  core: { ...rootMain.core, builder: 'webpack5' },
+  core: { builder: 'webpack5' },
   stories: ['../../admin/ui/**/src/lib/**/*.stories.ts'],
-  addons: [...rootMain.addons],
+  addons: ['@storybook/addon-essentials'],
 };
 ```
 

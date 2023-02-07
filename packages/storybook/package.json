@@ -35,6 +35,7 @@
     "@nrwl/linter": "file:../linter",
     "@nrwl/workspace": "file:../workspace",
     "dotenv": "~10.0.0",
+    "@phenomnomnominal/tsquery": "4.1.1",
     "semver": "7.3.4"
   },
   "publishConfig": {

@@ -1,22 +1,19 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`@nrwl/storybook:configuration for workspaces with Root project basic functionalities should generate Storybook files for nested first - then for root 1`] = `
-"
-import { rootMain } from './main.root';
-import type { StorybookConfig, Options } from '@storybook/core-common';
+exports[`@nrwl/storybook:configuration for workspaces with Root project basic functionalities should generate Storybook files for nested project only 1`] = `
+"import type { StorybookConfig } from '@storybook/core-common';
 
 import { mergeConfig } from 'vite';
 import viteTsConfigPaths from 'vite-tsconfig-paths';
 
 const config: StorybookConfig = {
-  ...rootMain,
-  core: { ...rootMain.core, builder: '@storybook/builder-vite' },
+  core: { builder: '@storybook/builder-vite' },
   stories: [
-    ...rootMain.stories,
+    
     '../src/app/**/*.stories.mdx',
     '../src/app/**/*.stories.@(js|jsx|ts|tsx)'
   ],
-  addons: [...(rootMain.addons || []) 
+  addons: ['@storybook/addon-essentials' 
     
     
   ],
@@ -42,7 +39,7 @@ module.exports = config;
 "
 `;
 
-exports[`@nrwl/storybook:configuration for workspaces with Root project basic functionalities should generate Storybook files for nested first - then for root 2`] = `
+exports[`@nrwl/storybook:configuration for workspaces with Root project basic functionalities should generate Storybook files for nested project only 2`] = `
 "{
   \\"extends\\": \\"../tsconfig.json\\",
   \\"compilerOptions\\": {
@@ -67,35 +64,22 @@ exports[`@nrwl/storybook:configuration for workspaces with Root project basic fu
 "
 `;
 
-exports[`@nrwl/storybook:configuration for workspaces with Root project basic functionalities should generate Storybook files for nested first - then for root 3`] = `""`;
+exports[`@nrwl/storybook:configuration for workspaces with Root project basic functionalities should generate Storybook files for nested project only 3`] = `""`;
 
-exports[`@nrwl/storybook:configuration for workspaces with Root project basic functionalities should generate Storybook files for nested first - then for root 4`] = `
+exports[`@nrwl/storybook:configuration for workspaces with Root project basic functionalities should generate Storybook files for nested project only 4`] = `
 "import type { StorybookConfig } from '@storybook/core-common';
-
-export const rootMain: StorybookConfig = {
-  stories: [],
-  addons: ['@storybook/addon-essentials']
-};
-"
-`;
-
-exports[`@nrwl/storybook:configuration for workspaces with Root project basic functionalities should generate Storybook files for nested first - then for root 5`] = `
-"import { rootMain } from '../../../.storybook/main.root';
-
-import type { StorybookConfig, Options } from '@storybook/core-common';
 
 
 
 
 const config: StorybookConfig = {
-  ...rootMain,
-  core: { ...rootMain.core, builder: 'webpack5' },
+  core: { builder: 'webpack5' },
   stories: [
-    ...rootMain.stories,
+    
     '../src/app/**/*.stories.mdx',
     '../src/app/**/*.stories.@(js|jsx|ts|tsx)'
   ],
-  addons: [...(rootMain.addons || []) , '@nrwl/react/plugins/storybook' 
+  addons: ['@storybook/addon-essentials' , '@nrwl/react/plugins/storybook' 
     
     
   ]
@@ -112,7 +96,7 @@ module.exports = config;
 "
 `;
 
-exports[`@nrwl/storybook:configuration for workspaces with Root project basic functionalities should generate Storybook files for nested first - then for root 6`] = `
+exports[`@nrwl/storybook:configuration for workspaces with Root project basic functionalities should generate Storybook files for nested project only 5`] = `
 "{
   \\"extends\\": \\"../tsconfig.json\\",
   \\"compilerOptions\\": {
@@ -137,4 +121,4 @@ exports[`@nrwl/storybook:configuration for workspaces with Root project basic fu
 "
 `;
 
-exports[`@nrwl/storybook:configuration for workspaces with Root project basic functionalities should generate Storybook files for nested first - then for root 7`] = `""`;
+exports[`@nrwl/storybook:configuration for workspaces with Root project basic functionalities should generate Storybook files for nested project only 6`] = `""`;

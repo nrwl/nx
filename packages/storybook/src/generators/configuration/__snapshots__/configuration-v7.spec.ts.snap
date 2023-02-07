@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`@nrwl/storybook:configuration for Storybook v7 basic functionalities should generate TS config for project if root config is TS 1`] = `
+exports[`@nrwl/storybook:configuration for Storybook v7 basic functionalities should generate TS config for project if tsConfiguration true 1`] = `
 "import type { StorybookConfig } from '@storybook/angular';
 
 const config: StorybookConfig = {

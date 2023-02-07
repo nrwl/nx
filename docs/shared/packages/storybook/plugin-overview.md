@@ -57,7 +57,7 @@ Choosing one of these frameworks will have the following effects on your workspa
 
 1. Nx will install all the required Storybook packages that go with it.
 
-2. Nx will generate a root `.storybook` folder and a project-level `.storybook` folder (located under `libs/your-project/.storybook` or `apps/your-project/.storybook`) containing the essential configuration files for Storybook.
+2. Nx will generate a project-level `.storybook` folder (located under `libs/your-project/.storybook` or `apps/your-project/.storybook`) containing the essential configuration files for Storybook.
 
 3. If you are working on an Angular, a React or a React Native project (and you choose `@storybook/angular`, `@storybook/react` or `@storybook/react-native`) the Nx generator will also generate stories for all the components in your project.
 
@@ -105,25 +105,7 @@ nx build-storybook project-name
 
 ### Anatomy of the Storybook setup
 
-When running the Nx Storybook generator, it'll configure the Nx workspace to be able to run Storybook seamlessly. It'll create
-
-- a global Storybook configuration
-- a project specific Storybook configuration
-
-The **global** Storybook configuration allows to set addon-ons or custom webpack configuration at a global level that applies to all Storybook's within the Nx workspace. You can find that folder at `.storybook/` at the root of the workspace.
-
-```text
-<workspace name>/
-├── .storybook/
-│   ├── main.js
-│   ├── tsconfig.json
-├── apps/
-├── libs/
-├── nx.json
-├── package.json
-├── README.md
-└── etc...
-```
+When running the Nx Storybook generator, it'll configure the Nx workspace to be able to run Storybook seamlessly. It'll create a project specific Storybook configuration.
 
 The project-specific Storybook configuration is pretty much similar what you would have for a non-Nx setup of Storybook. There's a `.storybook` folder within the project root folder.
 

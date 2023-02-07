@@ -150,7 +150,7 @@ You can read more about the `storybook` and `build-storybook` targets for Angula
 
 In your project's `.storybook/preview.js` file (for example for your `web` app the path would be `apps/web/.storybook/preview.js`), add the following:
 
-```js {% fileName=".storybook/preview.js" %}
+```js {% fileName="apps/web/.storybook/preview.js" %}
 import { setCompodocJson } from '@storybook/addon-docs/angular';
 import docJson from '../documentation.json';
 setCompodocJson(docJson);

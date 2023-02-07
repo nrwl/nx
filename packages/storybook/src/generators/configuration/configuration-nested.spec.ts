@@ -76,12 +76,11 @@ describe('@nrwl/storybook:configuration for workspaces with Root project', () =>
       });
 
       expect(tree.exists('.storybook/main.js')).toBeTruthy();
-      expect(tree.exists('.storybook/main.root.js')).toBeTruthy();
       expect(tree.exists('.storybook/tsconfig.json')).toBeTruthy();
       expect(tree.exists('.storybook/preview.js')).toBeTruthy();
     });
 
-    it('should generate Storybook files for nested first - then for root', async () => {
+    it('should generate Storybook files for nested project only', async () => {
       writeJson(tree, 'apps/reapp/tsconfig.json', {});
 
       await configurationGenerator(tree, {
@@ -91,7 +90,6 @@ describe('@nrwl/storybook:configuration for workspaces with Root project', () =>
       });
 
       expect(tree.exists('.storybook/main.ts')).toBeFalsy();
-      expect(tree.exists('.storybook/main.root.ts')).toBeTruthy();
       expect(tree.exists('.storybook/tsconfig.json')).toBeFalsy();
       expect(tree.exists('.storybook/preview.ts')).toBeFalsy();
 
@@ -102,6 +100,7 @@ describe('@nrwl/storybook:configuration for workspaces with Root project', () =>
       await configurationGenerator(tree, {
         name: 'web',
         uiFramework: '@storybook/react',
+        tsConfiguration: true,
       });
 
       expect(tree.exists('.storybook/main.ts')).toBeTruthy();
@@ -111,7 +110,6 @@ describe('@nrwl/storybook:configuration for workspaces with Root project', () =>
       expect(tree.read('.storybook/main.ts', 'utf-8')).toMatchSnapshot();
       expect(tree.read('.storybook/tsconfig.json', 'utf-8')).toMatchSnapshot();
       expect(tree.read('.storybook/preview.ts', 'utf-8')).toMatchSnapshot();
-      expect(tree.read('.storybook/main.root.ts', 'utf-8')).toMatchSnapshot();
       expect(
         tree.read('apps/reapp/.storybook/main.ts', 'utf-8')
       ).toMatchSnapshot();
