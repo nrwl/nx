@@ -1,5 +1,7 @@
 import type { Tree } from 'nx/src/generators/tree';
-import { updateJson } from 'nx/src/generators/utils/json';
+import { requireNx } from '../../nx';
+
+const { updateJson } = requireNx();
 
 export function updateTsConfigsToJs(
   tree: Tree,

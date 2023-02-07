@@ -1,8 +1,11 @@
 import type { Tree } from 'nx/src/generators/tree';
 import * as path from 'path';
 import type * as Prettier from 'prettier';
-import { readJson, updateJson, writeJson } from 'nx/src/generators/utils/json';
+// eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { sortObjectByKeys } from 'nx/src/utils/object-sort';
+import { requireNx } from '../../nx';
+
+const { updateJson } = requireNx();
 
 /**
  * Formats all the created or updated files using Prettier

@@ -1,5 +1,4 @@
-import { Tree } from 'nx/src/generators/tree';
-import { getProjects } from 'nx/src/generators/utils/project-configuration';
+import type { Tree } from 'nx/src/generators/tree';
 import {
   StringChange,
   ChangeType,
@@ -10,6 +9,10 @@ import { tsquery } from '@phenomnomnominal/tsquery';
 
 import { visitNotIgnoredFiles } from '../../generators/visit-not-ignored-files';
 import { formatFiles } from '../../generators/format-files';
+// eslint-disable-next-line @typescript-eslint/no-restricted-imports
+import { requireNx } from '../../../nx';
+
+const { getProjects } = requireNx();
 
 export default async function update(tree: Tree): Promise<void> {
   for (const [project, { root }] of getProjects(tree)) {

@@ -623,7 +623,7 @@
         "isExternal": false,
         "path": "/packages/devkit/documents/index",
         "tags": [],
-        "originalFilePath": "generated/devkit/index"
+        "originalFilePath": "generated/devkit/nrwl_devkit"
       },
       "/packages/devkit/documents/ngcli_adapter": {
         "id": "ngcli_adapter",

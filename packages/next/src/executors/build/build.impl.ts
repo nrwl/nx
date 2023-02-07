@@ -4,10 +4,9 @@ import {
   readJsonFile,
   workspaceLayout,
   workspaceRoot,
-  createPackageJson,
-  createLockFile,
   writeJsonFile,
 } from '@nrwl/devkit';
+import { createLockFile, createPackageJson } from '@nrwl/js';
 import build from 'next/dist/build';
 import { join, resolve } from 'path';
 import { copySync, existsSync, mkdir, writeFileSync } from 'fs-extra';

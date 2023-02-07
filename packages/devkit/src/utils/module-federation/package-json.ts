@@ -1,7 +1,7 @@
-import { joinPathFragments } from 'nx/src/utils/path';
-import { readJsonFile } from 'nx/src/utils/fileutils';
-import { workspaceRoot } from 'nx/src/utils/workspace-root';
 import { existsSync } from 'fs';
+import { requireNx } from '../../../nx';
+
+const { workspaceRoot, readJsonFile, joinPathFragments } = requireNx();
 
 export function readRootPackageJson(): {
   dependencies?: { [key: string]: string };

@@ -4,12 +4,14 @@ import { ProjectsConfigurations } from '../../config/workspace-json-project-json
 import type { Tree } from '../tree';
 import { readNxJson, updateNxJson } from './nx-json';
 
+// TODO(v16): Remove this
 /**
  * @deprecated using NxJsonConfiguration
  */
 export type WorkspaceConfiguration = Omit<ProjectsConfigurations, 'projects'> &
   Partial<NxJsonConfiguration>;
 
+// TODO(v16): Remove this
 /**
  * Update general workspace configuration such as the default project or cli settings.
  *
@@ -59,6 +61,7 @@ export function updateWorkspaceConfiguration(
   updateNxJson(tree, nxJson);
 }
 
+// TODO(v16): Remove this
 /**
  * Returns if a project has a standalone configuration (project.json).
  *
@@ -71,6 +74,7 @@ export function isStandaloneProject(tree: Tree, project: string): boolean {
   return true;
 }
 
+// TODO(v16): Remove this
 /**
  * Read general workspace configuration such as the default project or cli settings
  *
@@ -81,6 +85,7 @@ export function readWorkspaceConfiguration(tree: Tree): WorkspaceConfiguration {
   return readNxJson(tree) as any;
 }
 
+// TODO(v16): Remove this
 /**
  * @deprecated all projects are configured using project.json
  */

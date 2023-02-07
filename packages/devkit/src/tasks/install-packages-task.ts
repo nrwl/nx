@@ -1,12 +1,11 @@
-import type { Tree } from 'nx/src/generators/tree';
 import { execSync } from 'child_process';
 import { join } from 'path';
-import {
-  detectPackageManager,
-  getPackageManagerCommand,
-} from 'nx/src/utils/package-manager';
+import { requireNx } from '../../nx';
+
+import type { Tree } from 'nx/src/generators/tree';
 import type { PackageManager } from 'nx/src/utils/package-manager';
-import { joinPathFragments } from 'nx/src/utils/path';
+const { detectPackageManager, getPackageManagerCommand, joinPathFragments } =
+  requireNx();
 
 /**
  * Runs `npm install` or `yarn install`. It will skip running the install if
