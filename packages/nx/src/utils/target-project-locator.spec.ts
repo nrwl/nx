@@ -856,4 +856,20 @@ describe('findTargetProjectWithImport (without tsconfig.json)', () => {
     );
     expect(similarDeepImportFromNpm).toEqual('npm:@proj/proj123-base');
   });
+
+  it('should return null for native modules', () => {
+    const result = targetProjectLocator.findProjectWithImport(
+      'path',
+      'libs/proj/index.ts'
+    );
+    expect(result).toEqual(null);
+  });
+
+  it('should return null for unresolved paths', () => {
+    const result = targetProjectLocator.findProjectWithImport(
+      'unresolved-path',
+      'libs/proj/index.ts'
+    );
+    expect(result).toEqual(null);
+  });
 });
