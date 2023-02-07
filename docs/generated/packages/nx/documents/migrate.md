@@ -53,6 +53,12 @@ Update another-package to "12.0.0". This will update other packages and will gen
  nx migrate another-package@12.0.0
 ```
 
+Collect package updates and migrations in interactive mode. In this mode, the user will be prompted whether to apply any optional package update and migration:
+
+```shell
+ nx migrate latest --interactive
+```
+
 Run migrations from the provided migrations.json file. You can modify migrations.json and run this command many times:
 
 ```shell
@@ -94,6 +100,14 @@ Use the provided versions for packages instead of the ones installed in node_mod
 Type: `boolean`
 
 Show help
+
+### interactive
+
+Type: `boolean`
+
+Default: `false`
+
+Enable prompts to confirm whether to collect optional package updates and migrations
 
 ### packageAndVersion
 

@@ -955,11 +955,9 @@ function withMigrationOptions(yargs: yargs.Argv) {
     })
     .option('interactive', {
       describe:
-        'Enable prompts to confirm whether to collect migrations for packages that allow being skipped',
+        'Enable prompts to confirm whether to collect optional package updates and migrations',
       type: 'boolean',
       default: false,
-      // TODO(leo): make it visible when we publish the docs about it
-      hidden: true,
     })
     .check(({ createCommits, commitPrefix }) => {
       if (!createCommits && commitPrefix !== defaultCommitPrefix) {

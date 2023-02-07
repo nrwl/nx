@@ -344,6 +344,11 @@ export const examples: Record<string, Example[]> = {
         'Update another-package to "12.0.0". This will update other packages and will generate migrations.json file',
     },
     {
+      command: 'migrate latest --interactive',
+      description:
+        'Collect package updates and migrations in interactive mode. In this mode, the user will be prompted whether to apply any optional package update and migration',
+    },
+    {
       command: 'migrate --run-migrations=migrations.json',
       description:
         'Run migrations from the provided migrations.json file. You can modify migrations.json and run this command many times',
