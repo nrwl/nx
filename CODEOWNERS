@@ -1,8 +1,5 @@
 # Any file not covered by a rule below, will default to Jason + Victor.
-/packages/**/* @FrozenPandaz @vsavkin
-/e2e/**/* @FrozenPandaz @vsavkin
-/scripts/**/* @FrozenPandaz @vsavkin
-/tools/**/* @FrozenPandaz @vsavkin
+* @FrozenPandaz @vsavkin @jaysoo @AgentEnder @bcabanes
 
 # Docs Site + Graph
 /docs/nx-cloud @StalkAltan @rarmatei @isaacplmann @juristr @bcabanes
