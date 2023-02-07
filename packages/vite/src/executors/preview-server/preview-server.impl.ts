@@ -52,7 +52,7 @@ export async function* vitePreviewServerExecutor(
 
   // Launch the build target.
   const target = parseTargetString(options.buildTarget, context.projectGraph);
-  const build = await runExecutor(target, mergedOptions, context);
+  const build = await runExecutor(target, buildTargetOptions, context);
 
   for await (const result of build) {
     if (result.success) {
