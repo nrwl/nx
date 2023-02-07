@@ -1027,6 +1027,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Code Sharing",
+            "path": "/more-concepts/code-sharing",
+            "id": "code-sharing",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Using Nx at Enterprises",
             "path": "/more-concepts/monorepo-nx-enterprise",
             "id": "monorepo-nx-enterprise",
@@ -1169,6 +1177,14 @@
         "name": "Dependency Management",
         "path": "/more-concepts/dependency-management",
         "id": "dependency-management",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Code Sharing",
+        "path": "/more-concepts/code-sharing",
+        "id": "code-sharing",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
