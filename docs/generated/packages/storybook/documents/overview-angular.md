@@ -49,7 +49,6 @@ and the result would be the following:
 
 ```text
 <workspace name>/
-├── .storybook/
 ├── apps/
 ├── libs/
 │   ├── feature/

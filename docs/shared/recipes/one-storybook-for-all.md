@@ -40,12 +40,10 @@ Now it’s time to import the stories of our other projects in our new library's
 Here is a sample `libs/storybook-host/.storybook/main.js` file:
 
 ```javascript {% fileName="libs/storybook-host/.storybook/main.js" %}
-const rootMain = require('../../../.storybook/main');
 module.exports = {
-  ...rootMain,
-  core: { ...rootMain.core, builder: 'webpack5' },
+  core: { builder: 'webpack5' },
   stories: ['../../**/ui/**/src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
-  addons: [...rootMain.addons, '@nrwl/react/plugins/storybook'],
+  addons: ['@storybook/addon-essentials', '@nrwl/react/plugins/storybook'],
 };
 ```
 

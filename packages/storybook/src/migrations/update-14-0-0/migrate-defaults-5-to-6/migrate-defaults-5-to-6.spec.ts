@@ -124,14 +124,6 @@ describe('migrate-defaults-5-to-6 Generator', () => {
     );
   });
 
-  it('should update root config to version 6', async () => {
-    migrateDefaultsGenerator(appTree);
-
-    expect(appTree.exists('.storybook/addons.js')).toBeFalsy();
-
-    expect(appTree.exists('.storybook/main.js')).toBeTruthy();
-  });
-
   it('should update configuration of all projects', async () => {
     migrateDefaultsGenerator(appTree);
 
@@ -161,7 +153,5 @@ describe('migrate-defaults-5-to-6 Generator', () => {
     expect(
       appTree.exists('libs/test-ui-lib2/.old_storybook/config.js')
     ).toBeTruthy();
-
-    expect(appTree.exists('.old_storybook/addons.js')).toBeTruthy();
   });
 });

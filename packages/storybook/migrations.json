@@ -35,6 +35,12 @@
       "version": "15.5.3-beta.0",
       "description": "Add @nrwl/webpack if it is missing and is used.",
       "factory": "./src/migrations/update-15-5-3/ensure-webpack-package"
+    },
+    "update-15-7-0": {
+      "cli": "nx",
+      "version": "15.7.0-beta.0",
+      "description": "Add @storybook/addon-essentials to all project-level configs and attempt to remove root config.",
+      "factory": "./src/migrations/update-15-7-0/add-addon-essentials-to-all"
     }
   },
   "packageJsonUpdates": {

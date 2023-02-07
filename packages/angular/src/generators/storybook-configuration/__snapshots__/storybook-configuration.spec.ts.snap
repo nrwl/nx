@@ -1,21 +1,17 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`StorybookConfiguration generator should configure storybook to use webpack 5 1`] = `
-"const rootMain = require('../../../.storybook/main');
-
-
-
+"
 
 
 
 module.exports = {
-  ...rootMain,
-  core: { ...rootMain.core, builder: 'webpack5' },
+  core: { builder: 'webpack5' },
   stories: [
-    ...rootMain.stories,
+    
     '../**/*.stories.mdx',
     '../**/*.stories.@(js|jsx|ts|tsx)' ],
-  addons: [...rootMain.addons 
+  addons: ['@storybook/addon-essentials' 
     
     
   ]
@@ -34,7 +30,6 @@ exports[`StorybookConfiguration generator should generate in the correct folder 
 Array [
   ".eslintrc.json",
   ".prettierrc",
-  ".storybook/main.js",
   "apps/.gitignore",
   "apps/one/two/test-ui-lib-e2e/.eslintrc.json",
   "apps/one/two/test-ui-lib-e2e/cypress.config.ts",
@@ -164,7 +159,6 @@ exports[`StorybookConfiguration generator should generate the right files 1`] = 
 Array [
   ".eslintrc.json",
   ".prettierrc",
-  ".storybook/main.js",
   "apps/.gitignore",
   "apps/test-ui-lib-e2e/.eslintrc.json",
   "apps/test-ui-lib-e2e/cypress.config.ts",

@@ -100,36 +100,6 @@ Array [
 ]
 `;
 
-exports[`@nrwl/storybook:configuration basic functionalities should reference the "old" webpack.config.js if there - for backwards compatibility 1`] = `
-"const rootMain = require('../../../.storybook/main');
-
-
-
-const rootWebpackConfig = require('../../../.storybook/webpack.config'); 
-
-
-module.exports = {
-  ...rootMain,
-  core: { ...rootMain.core, builder: 'webpack5' },
-  stories: [
-    ...rootMain.stories,
-    '../**/*.stories.mdx',
-    '../**/*.stories.@(js|jsx|ts|tsx)' ],
-  addons: [...rootMain.addons 
-    
-    
-  ]
-};
-
-
-// To customize your webpack configuration you can use the webpackFinal field.
-// Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
-// and https://nx.dev/packages/storybook/documents/custom-builder-configs
-
-
-"
-`;
-
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for Storybook configurations with Vite should create correct main.ts and tsconfig.json for NextJS buildable libs 1`] = `
 "import { rootMain } from '../../../.storybook/main';
 
@@ -779,22 +749,19 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 `;
 
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for React apps using the swc compiler 1`] = `
-"import { rootMain } from '../../../.storybook/main';
-
-import type { StorybookConfig, Options } from '@storybook/core-common';
+"import type { StorybookConfig } from '@storybook/core-common';
 
 
 
 
 const config: StorybookConfig = {
-  ...rootMain,
-  core: { ...rootMain.core, builder: 'webpack5' },
+  core: { builder: 'webpack5' },
   stories: [
-    ...rootMain.stories,
+    
     '../src/app/**/*.stories.mdx',
     '../src/app/**/*.stories.@(js|jsx|ts|tsx)'
   ],
-  addons: [...(rootMain.addons || []) , '@nrwl/react/plugins/storybook' 
+  addons: ['@storybook/addon-essentials' , '@nrwl/react/plugins/storybook' 
     , 'storybook-addon-swc' 
     
   ]

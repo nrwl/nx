@@ -24,7 +24,6 @@ import {
   TsConfig,
 } from '../../utils/utilities';
 import { StorybookConfigureSchema } from './schema';
-import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
 import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
 import { UiFramework, UiFramework7 } from '../../utils/models';
 
@@ -278,29 +277,7 @@ export function normalizeSchema(
   };
 }
 
-export function createRootStorybookDir(
-  tree: Tree,
-  js: boolean,
-  tsConfiguration: boolean
-) {
-  if (tree.exists('.storybook')) {
-    logger.warn(`Root Storybook configuration files already exist!`);
-    return;
-  }
-  logger.debug(`adding .storybook folder to the root directory`);
-
-  const isInNestedWorkspace = workspaceHasRootProject(tree);
-
-  const templatePath = join(
-    __dirname,
-    `./root-files${tsConfiguration ? '-ts' : ''}`
-  );
-
-  generateFiles(tree, templatePath, '', {
-    mainName: isInNestedWorkspace ? 'main.root' : 'main',
-    tmpl: '',
-  });
-
+export function addStorybookToNamedInputs(tree: Tree) {
   const nxJson = readNxJson(tree);
 
   if (nxJson.namedInputs) {
@@ -320,89 +297,10 @@ export function createRootStorybookDir(
     ];
 
     nxJson.targetDefaults['build-storybook'].inputs.push(
-      '{workspaceRoot}/.storybook/**/*'
+      '!{projectRoot}/.storybook/**/*'
     );
 
     updateNxJson(tree, nxJson);
-  }
-
-  if (js) {
-    toJS(tree);
-  }
-}
-
-export function createRootStorybookDirForRootProject(
-  tree: Tree,
-  projectName: string,
-  uiFramework: UiFramework | UiFramework7,
-  js: boolean,
-  tsConfiguration: boolean,
-  root: string,
-  projectType: string,
-  isNextJs?: boolean,
-  usesSwc?: boolean,
-  usesVite?: boolean,
-  usesV7?: boolean,
-  viteConfigFilePath?: string
-) {
-  const rootConfigExists =
-    tree.exists('.storybook/main.root.js') ||
-    tree.exists('.storybook/main.root.ts');
-  const rootProjectConfigExists =
-    tree.exists('.storybook/main.js') || tree.exists('.storybook/main.ts');
-
-  if (!rootConfigExists) {
-    createRootStorybookDir(tree, js, tsConfiguration);
-  }
-
-  if (rootConfigExists && rootProjectConfigExists) {
-    logger.warn(
-      `Storybook configuration files already exist for ${projectName}!`
-    );
-    return;
-  }
-  if (rootConfigExists && !rootProjectConfigExists) {
-    logger.warn(
-      `Root Storybook configuration files already exist. 
-      Only the project-specific configuration file will be generated.`
-    );
-  }
-
-  logger.debug(`Creating Storybook configuration files for ${projectName}.`);
-
-  const projectDirectory =
-    projectType === 'application'
-      ? isNextJs
-        ? 'components'
-        : 'src/app'
-      : 'src/lib';
-
-  const templatePath = join(
-    __dirname,
-    `./project-files${usesV7 ? '-7' : ''}${
-      rootFileIsTs(tree, 'main.root', tsConfiguration) ? '-ts' : ''
-    }`
-  );
-
-  generateFiles(tree, templatePath, root, {
-    tmpl: '',
-    uiFramework,
-    offsetFromRoot: offsetFromRoot(root),
-    rootTsConfigPath: getRootTsConfigPathInTree(tree),
-    projectDirectory,
-    rootMainName: 'main.root',
-    existsRootWebpackConfig: tree.exists('.storybook/webpack.config.js'),
-    projectType,
-    mainDir: isNextJs && projectType === 'application' ? 'components' : 'src',
-    isNextJs: isNextJs && projectType === 'application',
-    usesSwc,
-    usesVite,
-    isRootProject: true,
-    viteConfigFilePath,
-  });
-
-  if (js) {
-    toJS(tree);
   }
 }
 
@@ -412,14 +310,15 @@ export function createProjectStorybookDir(
   uiFramework: UiFramework | UiFramework7,
   js: boolean,
   tsConfiguration: boolean,
+  root: string,
+  projectType: string,
+  projectIsRootProjectInStandaloneWorkspace: boolean,
   isNextJs?: boolean,
   usesSwc?: boolean,
   usesVite?: boolean,
   usesV7?: boolean,
   viteConfigFilePath?: string
 ) {
-  const { root, projectType } = readProjectConfiguration(tree, projectName);
-
   const projectDirectory =
     projectType === 'application'
       ? isNextJs
@@ -427,9 +326,12 @@ export function createProjectStorybookDir(
         : 'src/app'
       : 'src/lib';
 
-  const storybookRoot = join(root, '.storybook');
+  const storybookConfigExists = projectIsRootProjectInStandaloneWorkspace
+    ? tree.exists('.storybook/main.js') || tree.exists('.storybook/main.ts')
+    : tree.exists(join(root, '.storybook/main.ts')) ||
+      tree.exists(join(root, '.storybook/main.js'));
 
-  if (tree.exists(storybookRoot)) {
+  if (storybookConfigExists) {
     logger.warn(
       `Storybook configuration files already exist for ${projectName}!`
     );
@@ -438,33 +340,22 @@ export function createProjectStorybookDir(
 
   logger.debug(`adding .storybook folder to your ${projectType}`);
 
-  const rootMainName =
-    tree.exists('.storybook/main.root.js') ||
-    tree.exists('.storybook/main.root.ts')
-      ? 'main.root'
-      : 'main';
-
   const templatePath = join(
     __dirname,
-    `./project-files${usesV7 ? '-7' : ''}${
-      rootFileIsTs(tree, rootMainName, tsConfiguration) ? '-ts' : ''
-    }`
+    `./project-files${usesV7 ? '-7' : ''}${tsConfiguration ? '-ts' : ''}`
   );
 
   generateFiles(tree, templatePath, root, {
     tmpl: '',
     uiFramework,
     offsetFromRoot: offsetFromRoot(root),
-    rootTsConfigPath: getRootTsConfigPathInTree(tree),
     projectDirectory,
-    rootMainName,
-    existsRootWebpackConfig: tree.exists('.storybook/webpack.config.js'),
     projectType,
     mainDir: isNextJs && projectType === 'application' ? 'components' : 'src',
     isNextJs: isNextJs && projectType === 'application',
     usesSwc,
     usesVite,
-    isRootProject: false,
+    isRootProject: projectIsRootProjectInStandaloneWorkspace,
     viteConfigFilePath,
   });
 
@@ -511,7 +402,7 @@ export function addBuildStorybookToCacheableOperations(tree: Tree) {
   }));
 }
 
-export function projectIsRootProjectInNestedWorkspace(projectRoot: string) {
+export function projectIsRootProjectInStandaloneWorkspace(projectRoot: string) {
   return relative(workspaceRoot, projectRoot).length === 0;
 }
 

@@ -17,14 +17,13 @@ import {
   addAngularStorybookTask,
   addBuildStorybookToCacheableOperations,
   addStorybookTask,
+  addStorybookToNamedInputs,
   configureTsProjectConfig,
   configureTsSolutionConfig,
   createProjectStorybookDir,
-  createRootStorybookDir,
-  createRootStorybookDirForRootProject,
   getE2EProjectName,
   getViteConfigFilePath,
-  projectIsRootProjectInNestedWorkspace,
+  projectIsRootProjectInStandaloneWorkspace,
   updateLintConfig,
 } from './util-functions';
 import { Linter } from '@nrwl/linter';
@@ -142,48 +141,30 @@ export async function configurationGenerator(
   });
   tasks.push(initTask);
 
-  if (projectIsRootProjectInNestedWorkspace(root)) {
-    createRootStorybookDirForRootProject(
-      tree,
-      schema.name,
-      schema.storybook7betaConfiguration
-        ? schema.storybook7UiFramework
-        : schema.uiFramework,
-      schema.js,
-      schema.tsConfiguration,
-      root,
-      projectType,
-      !!nextBuildTarget,
-      compiler === 'swc',
-      schema.bundler === 'vite',
-      schema.storybook7betaConfiguration,
-      viteConfigFilePath
-    );
-  } else {
-    if (!schema.storybook7betaConfiguration) {
-      createRootStorybookDir(tree, schema.js, schema.tsConfiguration);
-    }
-    createProjectStorybookDir(
-      tree,
-      schema.name,
-      schema.storybook7betaConfiguration
-        ? schema.storybook7UiFramework
-        : schema.uiFramework,
-      schema.js,
-      schema.tsConfiguration,
-      !!nextBuildTarget,
-      compiler === 'swc',
-      schema.bundler === 'vite',
-      schema.storybook7betaConfiguration,
-      viteConfigFilePath
-    );
-  }
+  createProjectStorybookDir(
+    tree,
+    schema.name,
+    schema.storybook7betaConfiguration
+      ? schema.storybook7UiFramework
+      : schema.uiFramework,
+    schema.js,
+    schema.tsConfiguration,
+    root,
+    projectType,
+    projectIsRootProjectInStandaloneWorkspace(root),
+    !!nextBuildTarget,
+    compiler === 'swc',
+    schema.bundler === 'vite',
+    schema.storybook7betaConfiguration,
+    viteConfigFilePath
+  );
 
   configureTsProjectConfig(tree, schema);
   configureTsSolutionConfig(tree, schema);
   updateLintConfig(tree, schema);
 
   addBuildStorybookToCacheableOperations(tree);
+  addStorybookToNamedInputs(tree);
 
   if (schema.uiFramework === '@storybook/angular') {
     addAngularStorybookTask(tree, schema.name, schema.configureTestRunner);

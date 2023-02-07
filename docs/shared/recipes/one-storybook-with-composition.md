@@ -50,10 +50,8 @@ Now it’s important to change the Storybook ports in the `storybook-host-angula
 Create the composition in ``:
 
 ```javascript {% fileName="libs/storybook-host/.storybook/main.js" %}
-const rootMain = require('../../../.storybook/main');
 module.exports = {
-  ...rootMain,
-  core: { ...rootMain.core, builder: 'webpack5' },
+  core: { builder: 'webpack5' },
   refs: {
     'angular-stories': {
       title: 'Angular Stories',
@@ -65,7 +63,7 @@ module.exports = {
     },
   },
   stories: ['../src/lib/**/*.stories.tsx'],
-  addons: [...rootMain.addons, '@nrwl/react/plugins/storybook'],
+  addons: ['@storybook/addon-essentials', '@nrwl/react/plugins/storybook'],
 };
 ```
 

@@ -21,14 +21,12 @@ nx g @nrwl/react:storybook-configuration project-name
 
 ## Nx React Storybook Preset
 
-`@nrwl/react` ships with a Storybook preset to make sure it uses the very same configuration as your Nx React application. When you generate a Storybook configuration for a project, it'll automatically add the preset to your configuration.
+`@nrwl/react` ships with a Storybook addon to make sure it uses the very same configuration as your Nx React application. When you generate a Storybook configuration for a project, it'll automatically add the addon to your configuration.
 
 ```typescript
-const rootMain = require('../../../.storybook/main');
-
 module.exports = {
-  ...rootMain,
-  addons: [...rootMain.addons, '@nrwl/react/plugins/storybook'],
+  ...
+  addons: ['@storybook/addon-essentials', ..., '@nrwl/react/plugins/storybook'],
   ...
 };
 ```
@@ -63,7 +61,6 @@ and the result would be the following:
 
 ```text
 <workspace name>/
-├── .storybook/
 ├── apps/
 ├── libs/
 │   ├── feature/

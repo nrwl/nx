@@ -116,7 +116,7 @@ describe('StorybookConfiguration generator', () => {
     });
 
     expect(
-      tree.read('libs/test-ui-lib/.storybook/main.js').toString()
+      tree.read('libs/test-ui-lib/.storybook/main.js', 'utf-8')
     ).toMatchSnapshot();
   });
 
