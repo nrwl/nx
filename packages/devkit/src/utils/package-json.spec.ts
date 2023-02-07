@@ -456,6 +456,16 @@ describe('ensurePackage', () => {
     tree = createTree();
   });
 
+  it('should return successfully when package is present', async () => {
+    writeJson(tree, 'package.json', {});
+
+    await expect(
+      ensurePackage(tree, '@nrwl/devkit', '>=15.0.0', {
+        throwOnMissing: true,
+      })
+    ).resolves.toBeUndefined(); // return void
+  });
+
   it('should throw when dependencies are missing', async () => {
     writeJson(tree, 'package.json', {});
 
