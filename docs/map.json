@@ -409,6 +409,11 @@
               "file": "shared/concepts/dependency-management"
             },
             {
+              "name": "Code Sharing",
+              "id": "code-sharing",
+              "file": "shared/concepts/code-sharing"
+            },
+            {
               "name": "Using Nx at Enterprises",
               "id": "monorepo-nx-enterprise",
               "tags": ["enforce-project-boundaries", "use-code-generators"],

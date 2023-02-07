@@ -1276,6 +1276,16 @@
         "tags": []
       },
       {
+        "id": "code-sharing",
+        "name": "Code Sharing",
+        "description": "",
+        "file": "shared/concepts/code-sharing",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/more-concepts/code-sharing",
+        "tags": []
+      },
+      {
         "id": "monorepo-nx-enterprise",
         "name": "Using Nx at Enterprises",
         "description": "",
@@ -1458,6 +1468,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/more-concepts/dependency-management",
+    "tags": []
+  },
+  "/more-concepts/code-sharing": {
+    "id": "code-sharing",
+    "name": "Code Sharing",
+    "description": "",
+    "file": "shared/concepts/code-sharing",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/more-concepts/code-sharing",
     "tags": []
   },
   "/more-concepts/monorepo-nx-enterprise": {
