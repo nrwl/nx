@@ -23,9 +23,12 @@ import {
 
 import initGenerator from '../init/init';
 import vitestGenerator from '../vitest/vitest-generator';
-import { Schema } from './schema';
+import { ViteConfigurationGeneratorSchema } from './schema';
 
-export async function viteConfigurationGenerator(tree: Tree, schema: Schema) {
+export async function viteConfigurationGenerator(
+  tree: Tree,
+  schema: ViteConfigurationGeneratorSchema
+) {
   const tasks: GeneratorCallback[] = [];
 
   const { targets, projectType, root } = readProjectConfiguration(

@@ -11,7 +11,7 @@ import { existsSync } from 'fs';
 import { resolve } from 'path';
 import { createAsyncIterable } from '@nrwl/devkit/src/utils/async-iterable';
 
-export default async function* viteBuildExecutor(
+export async function* viteBuildExecutor(
   options: ViteBuildExecutorOptions,
   context: ExecutorContext
 ) {
@@ -93,3 +93,5 @@ function normalizeOptions(options: ViteBuildExecutorOptions) {
 
   return normalizedOptions;
 }
+
+export default viteBuildExecutor;

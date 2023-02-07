@@ -12,7 +12,7 @@ import {
 import { ViteDevServerExecutorOptions } from './schema';
 import { ViteBuildExecutorOptions } from '../build/schema';
 
-export default async function* viteDevServerExecutor(
+export async function* viteDevServerExecutor(
   options: ViteDevServerExecutorOptions,
   context: ExecutorContext
 ): AsyncGenerator<{ success: boolean; baseUrl: string }> {
@@ -77,3 +77,5 @@ async function runViteDevServer(server: ViteDevServer): Promise<void> {
   process.once('SIGTERM', processOnExit);
   process.once('exit', processOnExit);
 }
+
+export default viteDevServerExecutor;

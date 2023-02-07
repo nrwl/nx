@@ -19,9 +19,9 @@ import {
   viteTsConfigPathsVersion,
   viteVersion,
 } from '../../utils/versions';
-import { Schema } from './schema';
+import { InitGeneratorSchema } from './schema';
 
-function checkDependenciesInstalled(host: Tree, schema: Schema) {
+function checkDependenciesInstalled(host: Tree, schema: InitGeneratorSchema) {
   const packageJson = readJson(host, 'package.json');
   const devDependencies = {};
   const dependencies = {};
@@ -85,7 +85,7 @@ export function createVitestConfig(tree: Tree) {
   updateNxJson(tree, nxJson);
 }
 
-export function initGenerator(tree: Tree, schema: Schema) {
+export function initGenerator(tree: Tree, schema: InitGeneratorSchema) {
   moveToDevDependencies(tree);
   createVitestConfig(tree);
   const installTask = checkDependenciesInstalled(tree, schema);

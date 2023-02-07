@@ -13,7 +13,7 @@ import { ViteBuildExecutorOptions } from '../executors/build/schema';
 import { ViteDevServerExecutorOptions } from '../executors/dev-server/schema';
 import { VitePreviewServerExecutorOptions } from '../executors/preview-server/schema';
 import { VitestExecutorOptions } from '../executors/test/schema';
-import { Schema } from '../generators/configuration/schema';
+import { ViteConfigurationGeneratorSchema } from '../generators/configuration/schema';
 import { ensureViteConfigIsCorrect } from './vite-config-edit-utils';
 
 export type Target = 'build' | 'serve' | 'test' | 'preview';
@@ -138,7 +138,7 @@ export function findExistingTargetsInProject(
 
 export function addOrChangeTestTarget(
   tree: Tree,
-  options: Schema,
+  options: ViteConfigurationGeneratorSchema,
   target: string
 ) {
   const project = readProjectConfiguration(tree, options.project);
@@ -174,7 +174,7 @@ export function addOrChangeTestTarget(
 
 export function addOrChangeBuildTarget(
   tree: Tree,
-  options: Schema,
+  options: ViteConfigurationGeneratorSchema,
   target: string
 ) {
   const project = readProjectConfiguration(tree, options.project);
@@ -219,7 +219,7 @@ export function addOrChangeBuildTarget(
 
 export function addOrChangeServeTarget(
   tree: Tree,
-  options: Schema,
+  options: ViteConfigurationGeneratorSchema,
   target: string
 ) {
   const project = readProjectConfiguration(tree, options.project);
@@ -272,7 +272,7 @@ export function addOrChangeServeTarget(
  */
 export function addPreviewTarget(
   tree: Tree,
-  options: Schema,
+  options: ViteConfigurationGeneratorSchema,
   serveTarget: string
 ) {
   const project = readProjectConfiguration(tree, options.project);
@@ -311,7 +311,10 @@ export function addPreviewTarget(
   updateProjectConfiguration(tree, options.project, project);
 }
 
-export function editTsConfig(tree: Tree, options: Schema) {
+export function editTsConfig(
+  tree: Tree,
+  options: ViteConfigurationGeneratorSchema
+) {
   const projectConfig = readProjectConfiguration(tree, options.project);
 
   const config = readJson(tree, `${projectConfig.root}/tsconfig.json`);
@@ -382,7 +385,7 @@ export function deleteWebpackConfig(
 
 export function moveAndEditIndexHtml(
   tree: Tree,
-  options: Schema,
+  options: ViteConfigurationGeneratorSchema,
   buildTarget: string
 ) {
   const projectConfig = readProjectConfiguration(tree, options.project);
@@ -449,7 +452,7 @@ export function moveAndEditIndexHtml(
 
 export function createOrEditViteConfig(
   tree: Tree,
-  options: Schema,
+  options: ViteConfigurationGeneratorSchema,
   onlyVitest: boolean,
   projectAlreadyHasViteTargets?: TargetFlags
 ) {
@@ -746,7 +749,7 @@ export async function handleUnknownExecutors(projectName: string) {
 function handleViteConfigFileExists(
   tree: Tree,
   viteConfigPath: string,
-  options: Schema,
+  options: ViteConfigurationGeneratorSchema,
   buildOption: string,
   dtsPlugin: string,
   dtsImportLine: string,

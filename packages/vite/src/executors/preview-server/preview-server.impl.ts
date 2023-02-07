@@ -9,7 +9,7 @@ import {
 import { ViteBuildExecutorOptions } from '../build/schema';
 import { VitePreviewServerExecutorOptions } from './schema';
 
-export default async function* vitePreviewServerExecutor(
+export async function* vitePreviewServerExecutor(
   options: VitePreviewServerExecutorOptions,
   context: ExecutorContext
 ) {
@@ -105,3 +105,5 @@ function closeServer(server?: PreviewServer): Promise<void> {
     }
   });
 }
+
+export default vitePreviewServerExecutor;
