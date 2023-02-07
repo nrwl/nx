@@ -242,7 +242,10 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
               .filter((p) => p !== null)
               .forEach((p) => {
                 delete p.version;
-                ret.projects[p.name] = p;
+                ret.projects[p.name] = {
+                  ...p,
+                  root: graph.nodes[p.name].data.root,
+                };
               });
 
             return ret;
