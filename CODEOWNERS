@@ -66,8 +66,8 @@
 /packages/linter/** @meeroslav @FrozenPandaz
 /e2e/linter/** @meeroslav @FrozenPandaz
 
-/packages/storybook/** @mandarini @jaysoo
-/e2e/storybook/** @mandarini @FrozenPandaz
+/packages/storybook/** @mandarini @jaysoo @Coly010
+/e2e/storybook/** @mandarini @FrozenPandaz @Coly010
 /e2e/storybook-angular/** @mandarini @Coly010
 
 ## Devkit
