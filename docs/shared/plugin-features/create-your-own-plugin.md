@@ -71,6 +71,7 @@ and generators.
 ## Learn more
 
 - [Creating and Publishing Your Own Nx Plugin - Youtube](https://www.youtube.com/watch?v=vVT7Al01VZc)
+- [Walkthrough Creating an Nx Plugin for tRPC](https://blog.nrwl.io/create-your-own-trpc-stack-de42209f83a3)
 - [Local generators](/recipes/generators/local-generators)
 - [Local executors](/recipes/executors/creating-custom-executors)
 - [Nx Community Plugins](/community)
