@@ -15,10 +15,11 @@ describe('Migration', () => {
     it('should throw an error when the target package is not available', async () => {
       const migrator = new Migrator({
         packageJson: createPackageJson(),
-        versions: () => '1.0',
+        getInstalledPackageVersion: () => '1.0',
         fetch: (_p, _v) => {
           throw new Error('cannot fetch');
         },
+        from: {},
         to: {},
       });
 
@@ -30,8 +31,9 @@ describe('Migration', () => {
     it('should return a patch to the new version', async () => {
       const migrator = new Migrator({
         packageJson: createPackageJson(),
-        versions: () => '1.0.0',
+        getInstalledPackageVersion: () => '1.0.0',
         fetch: (_p, _v) => Promise.resolve({ version: '2.0.0' }),
+        from: {},
         to: {},
       });
 
@@ -46,7 +48,7 @@ describe('Migration', () => {
     it('should collect the information recursively from upserts', async () => {
       const migrator = new Migrator({
         packageJson: createPackageJson({ dependencies: { child: '1.0.0' } }),
-        versions: () => '1.0.0',
+        getInstalledPackageVersion: () => '1.0.0',
         fetch: (p, _v) => {
           if (p === 'parent') {
             return Promise.resolve({
@@ -73,6 +75,7 @@ describe('Migration', () => {
             return Promise.resolve(null);
           }
         },
+        from: {},
         to: {},
       });
 
@@ -89,7 +92,7 @@ describe('Migration', () => {
     it('should support the deprecated "alwaysAddToPackageJson" option', async () => {
       const migrator = new Migrator({
         packageJson: createPackageJson({ dependencies: { child1: '1.0.0' } }),
-        versions: () => '1.0.0',
+        getInstalledPackageVersion: () => '1.0.0',
         fetch: (p, _v) => {
           if (p === 'mypackage') {
             return Promise.resolve({
@@ -112,6 +115,7 @@ describe('Migration', () => {
             return Promise.resolve(null);
           }
         },
+        from: {},
         to: {},
       });
 
@@ -128,7 +132,7 @@ describe('Migration', () => {
     it('should stop recursive calls when exact version', async () => {
       const migrator = new Migrator({
         packageJson: createPackageJson({ dependencies: { child: '1.0.0' } }),
-        versions: () => '1.0.0',
+        getInstalledPackageVersion: () => '1.0.0',
         fetch: (p, _v) => {
           if (p === 'parent') {
             return Promise.resolve({
@@ -160,6 +164,7 @@ describe('Migration', () => {
             return Promise.resolve(null);
           }
         },
+        from: {},
         to: {},
       });
 
@@ -181,7 +186,7 @@ describe('Migration', () => {
             grandchild: '1.0.0',
           },
         }),
-        versions: () => '1.0.0',
+        getInstalledPackageVersion: () => '1.0.0',
         fetch: (p, _v) => {
           if (p === 'parent') {
             return Promise.resolve({
@@ -227,6 +232,7 @@ describe('Migration', () => {
             return Promise.resolve({ version: '4.0.0' });
           }
         },
+        from: {},
         to: {},
       });
 
@@ -246,7 +252,7 @@ describe('Migration', () => {
         packageJson: createPackageJson({
           dependencies: { child: '1.0.0', grandchild: '2.0.0' },
         }),
-        versions: () => '1.0.0',
+        getInstalledPackageVersion: () => '1.0.0',
         fetch: (p, _v) => {
           if (p === 'parent') {
             return Promise.resolve({
@@ -278,6 +284,7 @@ describe('Migration', () => {
             return Promise.resolve({ version: '2.0.0' });
           }
         },
+        from: {},
         to: {},
       });
 
@@ -295,7 +302,8 @@ describe('Migration', () => {
         packageJson: createPackageJson({
           dependencies: { child1: '1.0.0', child2: '1.0.0' },
         }),
-        versions: (p) => (p !== 'not-installed' ? '1.0.0' : null),
+        getInstalledPackageVersion: (p) =>
+          p !== 'not-installed' ? '1.0.0' : null,
         fetch: (p, _v) => {
           if (p === 'parent') {
             return Promise.resolve({
@@ -322,6 +330,7 @@ describe('Migration', () => {
             return Promise.resolve(null);
           }
         },
+        from: {},
         to: {},
       });
 
@@ -351,7 +360,7 @@ describe('Migration', () => {
             '@my-company/lib-6': '0.9.0',
           },
         },
-        versions: () => '1.0.0',
+        getInstalledPackageVersion: () => '1.0.0',
         fetch: async (pkg, version) => {
           if (pkg === '@my-company/nx-workspace') {
             return {
@@ -381,6 +390,7 @@ describe('Migration', () => {
           }
           return { version: '2.0.0' };
         },
+        from: {},
         to: {},
       });
 
@@ -417,7 +427,7 @@ describe('Migration', () => {
             '@my-company/lib-2': '0.9.0',
           },
         },
-        versions: () => '1.0.0',
+        getInstalledPackageVersion: () => '1.0.0',
         fetch: async (pkg, version) => {
           if (pkg === '@my-company/nx-workspace' && version === '2.0.0') {
             return {
@@ -456,6 +466,7 @@ describe('Migration', () => {
           }
           throw new Error(`Should not call fetch for ${pkg}@${version}`);
         },
+        from: {},
         to: {},
       });
 
@@ -477,12 +488,14 @@ describe('Migration', () => {
     it('should not throw when packages are missing', async () => {
       const migrator = new Migrator({
         packageJson: createPackageJson(),
-        versions: (p) => (p === '@nrwl/nest' ? null : '1.0.0'),
+        getInstalledPackageVersion: (p) =>
+          p === '@nrwl/nest' ? null : '1.0.0',
         fetch: (_p, _v) =>
           Promise.resolve({
             version: '2.0.0',
             packageJsonUpdates: { one: { version: '2.0.0', packages: {} } },
           }),
+        from: {},
         to: {},
       });
       await migrator.updatePackageJson('@nrwl/workspace', '2.0.0');
@@ -491,7 +504,8 @@ describe('Migration', () => {
     it('should only fetch packages that are installed', async () => {
       const migrator = new Migrator({
         packageJson: createPackageJson(),
-        versions: (p) => (p === '@nrwl/nest' ? null : '1.0.0'),
+        getInstalledPackageVersion: (p) =>
+          p === '@nrwl/nest' ? null : '1.0.0',
         fetch: (p, _v) => {
           if (p === '@nrwl/nest') {
             throw new Error('Boom');
@@ -501,6 +515,7 @@ describe('Migration', () => {
             packageJsonUpdates: { one: { version: '2.0.0', packages: {} } },
           });
         },
+        from: {},
         to: {},
       });
       await migrator.updatePackageJson('@nrwl/workspace', '2.0.0');
@@ -511,7 +526,7 @@ describe('Migration', () => {
         packageJson: createPackageJson({
           devDependencies: { parent: '1.0.0', child1: '1.0.0' },
         }),
-        versions: () => '1.0.0',
+        getInstalledPackageVersion: () => '1.0.0',
         fetch: (p, _v) => {
           if (p === 'parent') {
             return Promise.resolve({
@@ -536,6 +551,7 @@ describe('Migration', () => {
             throw new Error('Boom');
           }
         },
+        from: {},
         to: {},
       });
 
@@ -557,7 +573,7 @@ describe('Migration', () => {
           packageJson: createPackageJson({
             dependencies: { child1: '1.0.0', child2: '1.0.0', child3: '1.0.0' },
           }),
-          versions: () => '1.0.0',
+          getInstalledPackageVersion: () => '1.0.0',
           fetch: (p) => {
             if (p === 'mypackage') {
               return Promise.resolve({
@@ -585,6 +601,7 @@ describe('Migration', () => {
               return Promise.resolve(null);
             }
           },
+          from: {},
           to: {},
           interactive: true,
         });
@@ -615,7 +632,7 @@ describe('Migration', () => {
           packageJson: createPackageJson({
             dependencies: { child1: '1.0.0', child2: '1.0.0', child3: '1.0.0' },
           }),
-          versions: () => '1.0.0',
+          getInstalledPackageVersion: () => '1.0.0',
           fetch: (p) => {
             if (p === 'mypackage') {
               return Promise.resolve({
@@ -644,6 +661,7 @@ describe('Migration', () => {
               return Promise.resolve(null);
             }
           },
+          from: {},
           to: {},
           interactive: true,
         });
@@ -668,7 +686,7 @@ describe('Migration', () => {
           packageJson: createPackageJson({
             dependencies: { child1: '1.0.0', child2: '1.0.0', child3: '1.0.0' },
           }),
-          versions: () => '1.0.0',
+          getInstalledPackageVersion: () => '1.0.0',
           fetch: (p) => {
             if (p === 'mypackage') {
               return Promise.resolve({
@@ -697,6 +715,7 @@ describe('Migration', () => {
               return Promise.resolve(null);
             }
           },
+          from: {},
           to: {},
           interactive: false,
         });
@@ -734,7 +753,7 @@ describe('Migration', () => {
               pkg2: '2.0.0',
             },
           }),
-          versions: (p) => (p === 'pkg2' ? '2.0.0' : '1.0.0'),
+          getInstalledPackageVersion: (p) => (p === 'pkg2' ? '2.0.0' : '1.0.0'),
           fetch: (p) => {
             if (p === 'mypackage') {
               return Promise.resolve({
@@ -780,6 +799,7 @@ describe('Migration', () => {
               return Promise.resolve(null);
             }
           },
+          from: {},
           to: {},
         });
 
@@ -806,7 +826,7 @@ describe('Migration', () => {
               pkg2: '1.0.0',
             },
           }),
-          versions: () => '1.0.0',
+          getInstalledPackageVersion: () => '1.0.0',
           fetch: (p) => {
             if (p === 'mypackage') {
               return Promise.resolve({
@@ -855,6 +875,7 @@ describe('Migration', () => {
               return Promise.resolve(null);
             }
           },
+          from: {},
           to: {},
         });
 
@@ -883,7 +904,7 @@ describe('Migration', () => {
           packageJson: createPackageJson({
             dependencies: { child1: '1.0.0', pkg1: '2.0.0' },
           }),
-          versions: (p) => (p === 'pkg1' ? '2.0.0' : '1.0.0'),
+          getInstalledPackageVersion: (p) => (p === 'pkg1' ? '2.0.0' : '1.0.0'),
           fetch: (p) => {
             if (p === 'mypackage') {
               return Promise.resolve({
@@ -905,6 +926,7 @@ describe('Migration', () => {
               return Promise.resolve(null);
             }
           },
+          from: {},
           to: {},
           interactive: true,
         });
@@ -935,7 +957,7 @@ describe('Migration', () => {
           packageJson: createPackageJson({
             dependencies: { child1: '1.0.0', pkg1: '1.0.0' },
           }),
-          versions: () => '1.0.0',
+          getInstalledPackageVersion: () => '1.0.0',
           fetch: (p) => {
             if (p === 'mypackage') {
               return Promise.resolve({
@@ -957,6 +979,7 @@ describe('Migration', () => {
               return Promise.resolve(null);
             }
           },
+          from: {},
           to: {},
           interactive: true,
         });
@@ -980,7 +1003,7 @@ describe('Migration', () => {
         packageJson: createPackageJson({
           dependencies: { child: '1.0.0', newChild: '1.0.0' },
         }),
-        versions: (p) => {
+        getInstalledPackageVersion: (p) => {
           if (p === 'parent') return '1.0.0';
           if (p === 'child') return '1.0.0';
           return null;
@@ -1031,6 +1054,7 @@ describe('Migration', () => {
             return Promise.resolve(null);
           }
         },
+        from: {},
         to: {},
       });
       expect(await migrator.updatePackageJson('parent', '2.0.0')).toEqual({
@@ -1059,7 +1083,7 @@ describe('Migration', () => {
     it('should not generate migrations for non top-level packages', async () => {
       const migrator = new Migrator({
         packageJson: createPackageJson({ dependencies: { child: '1.0.0' } }),
-        versions: (p) => {
+        getInstalledPackageVersion: (p) => {
           if (p === 'parent') return '1.0.0';
           if (p === 'child') return '1.0.0';
           if (p === 'newChild') return '1.0.0'; // installed as a transitive dep, not a top-level dep
@@ -1111,6 +1135,7 @@ describe('Migration', () => {
             return Promise.resolve(null);
           }
         },
+        from: {},
         to: {},
       });
 
@@ -1144,7 +1169,7 @@ describe('Migration', () => {
         packageJson: createPackageJson({
           dependencies: { child: '1.0.0', child2: '1.0.0' },
         }),
-        versions: () => '1.0.0',
+        getInstalledPackageVersion: () => '1.0.0',
         fetch: (p) => {
           if (p === 'parent') {
             return Promise.resolve({
@@ -1191,6 +1216,7 @@ describe('Migration', () => {
             return Promise.resolve(null);
           }
         },
+        from: {},
         to: {},
         interactive: true,
       });
@@ -1224,7 +1250,8 @@ describe('Migration', () => {
             pkg3: '2.0.0',
           },
         }),
-        versions: (p) => (p === 'pkg2' || p === 'pkg3' ? '2.0.0' : '1.0.0'),
+        getInstalledPackageVersion: (p) =>
+          p === 'pkg2' || p === 'pkg3' ? '2.0.0' : '1.0.0',
         fetch: (p) => {
           if (p === 'parent') {
             return Promise.resolve({
@@ -1289,6 +1316,7 @@ describe('Migration', () => {
             return Promise.resolve(null);
           }
         },
+        from: {},
         to: {},
       });
 

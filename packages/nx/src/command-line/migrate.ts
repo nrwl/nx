@@ -96,19 +96,24 @@ function normalizeSlashes(packageName: string): string {
 
 export interface MigratorOptions {
   packageJson: PackageJson;
-  versions: (pkg: string) => string;
+  getInstalledPackageVersion: (
+    pkg: string,
+    overrides: Record<string, string>
+  ) => string;
   fetch: (
     pkg: string,
     version: string
   ) => Promise<ResolvedMigrationConfiguration>;
+  from: { [pkg: string]: string };
   to: { [pkg: string]: string };
   interactive?: boolean;
 }
 
 export class Migrator {
   private readonly packageJson: MigratorOptions['packageJson'];
-  private readonly versions: MigratorOptions['versions'];
+  private readonly getInstalledPackageVersion: MigratorOptions['getInstalledPackageVersion'];
   private readonly fetch: MigratorOptions['fetch'];
+  private readonly installedPkgVersionOverrides: MigratorOptions['from'];
   private readonly to: MigratorOptions['to'];
   private readonly interactive: MigratorOptions['interactive'];
   private readonly packageJsonUpdates: Record<
@@ -119,8 +124,9 @@ export class Migrator {
 
   constructor(opts: MigratorOptions) {
     this.packageJson = opts.packageJson;
-    this.versions = opts.versions;
+    this.getInstalledPackageVersion = opts.getInstalledPackageVersion;
     this.fetch = opts.fetch;
+    this.installedPkgVersionOverrides = opts.from;
     this.to = opts.to;
     this.interactive = opts.interactive;
   }
@@ -138,7 +144,7 @@ export class Migrator {
   private async createMigrateJson() {
     const migrations = await Promise.all(
       Object.keys(this.packageJsonUpdates).map(async (packageName) => {
-        const currentVersion = this.versions(packageName);
+        const currentVersion = this.getPkgVersion(packageName);
         if (currentVersion === null) return [];
 
         const { version } = this.packageJsonUpdates[packageName];
@@ -212,7 +218,7 @@ export class Migrator {
       targetVersion = this.to[targetPackage];
     }
 
-    if (!this.versions(targetPackage)) {
+    if (!this.getPkgVersion(targetPackage)) {
       this.addPackageJsonUpdate(targetPackage, {
         version: target.version,
         addToPackageJson: target.addToPackageJson || false,
@@ -296,7 +302,7 @@ export class Migrator {
     packageJsonUpdates: PackageJsonUpdates[string][];
     packageGroupOrder: string[];
   } {
-    const packageGroup = normalizePackageGroup(
+    const packageGroup = this.normalizePackageGroup(
       packageName,
       targetVersion,
       migrationConfig.packageGroup
@@ -315,7 +321,10 @@ export class Migrator {
       );
     }
 
-    if (!migrationConfig.packageJsonUpdates || !this.versions(packageName)) {
+    if (
+      !migrationConfig.packageJsonUpdates ||
+      !this.getPkgVersion(packageName)
+    ) {
       return { packageJsonUpdates: [], packageGroupOrder };
     }
 
@@ -338,7 +347,7 @@ export class Migrator {
     for (const packageJsonUpdate of Object.values(packageJsonUpdates)) {
       if (
         !packageJsonUpdate.packages ||
-        this.lte(packageJsonUpdate.version, this.versions(packageName)) ||
+        this.lte(packageJsonUpdate.version, this.getPkgVersion(packageName)) ||
         this.gt(packageJsonUpdate.version, targetVersion)
       ) {
         continue;
@@ -349,7 +358,7 @@ export class Migrator {
         .filter(
           ([packageName, packageUpdate]) =>
             (!packageUpdate.ifPackageInstalled ||
-              this.versions(packageUpdate.ifPackageInstalled)) &&
+              this.getPkgVersion(packageUpdate.ifPackageInstalled)) &&
             (packageUpdate.alwaysAddToPackageJson ||
               packageUpdate.addToPackageJson ||
               !!dependencies?.[packageName] ||
@@ -400,8 +409,8 @@ export class Migrator {
 
     return Object.entries(requirements).every(
       ([pkgName, versionRange]) =>
-        (this.versions(pkgName) &&
-          satisfies(this.versions(pkgName), versionRange, {
+        (this.getPkgVersion(pkgName) &&
+          satisfies(this.getPkgVersion(pkgName), versionRange, {
             includePrerelease: true,
           })) ||
         (this.packageJsonUpdates[pkgName]?.version &&
@@ -434,6 +443,80 @@ export class Migrator {
     ]).then((a: { shouldApply: boolean }) => a.shouldApply);
   }
 
+  private getPkgVersion(pkg: string): string {
+    return this.getInstalledPackageVersion(
+      pkg,
+      this.installedPkgVersionOverrides
+    );
+  }
+
+  private normalizePackageGroup(
+    packageName: string,
+    targetVersion: string,
+    packageGroup: PackageGroup
+  ): { package: string; version: string }[] {
+    // Support Migrating to older versions of Nx
+    // Use the packageGroup of the latest version of Nx instead of the one from the target version which could be older.
+    if (
+      packageName === '@nrwl/workspace' &&
+      lt(targetVersion, '14.0.0-beta.0')
+    ) {
+      packageGroup = {
+        '@nrwl/workspace': '*',
+        '@nrwl/angular': '*',
+        '@nrwl/cypress': '*',
+        '@nrwl/devkit': '*',
+        '@nrwl/eslint-plugin-nx': '*',
+        '@nrwl/express': '*',
+        '@nrwl/jest': '*',
+        '@nrwl/linter': '*',
+        '@nrwl/nest': '*',
+        '@nrwl/next': '*',
+        '@nrwl/node': '*',
+        '@nrwl/nx-plugin': '*',
+        '@nrwl/react': '*',
+        '@nrwl/storybook': '*',
+        '@nrwl/web': '*',
+        '@nrwl/js': '*',
+        '@nrwl/cli': '*',
+        '@nrwl/nx-cloud': 'latest',
+        '@nrwl/react-native': '*',
+        '@nrwl/detox': '*',
+        '@nrwl/expo': '*',
+      };
+    }
+
+    if (!packageGroup) {
+      return [];
+    }
+
+    if (!Array.isArray(packageGroup)) {
+      return Object.entries(packageGroup).map(([pkg, version]) => {
+        if (this.installedPkgVersionOverrides[packageName] && version === '*') {
+          this.installedPkgVersionOverrides[pkg] ??=
+            this.installedPkgVersionOverrides[packageName];
+        }
+        return { package: pkg, version };
+      });
+    }
+
+    return packageGroup.map((packageConfig) => {
+      if (this.installedPkgVersionOverrides[packageName]) {
+        if (typeof packageConfig === 'string') {
+          this.installedPkgVersionOverrides[packageConfig] ??=
+            this.installedPkgVersionOverrides[packageName];
+        } else if (packageConfig.version === '*') {
+          this.installedPkgVersionOverrides[packageConfig.package] ??=
+            this.installedPkgVersionOverrides[packageName];
+        }
+      }
+
+      return typeof packageConfig === 'string'
+        ? { package: packageConfig, version: targetVersion }
+        : packageConfig;
+    });
+  }
+
   private gt(v1: string, v2: string) {
     return gt(normalizeVersion(v1), normalizeVersion(v2));
   }
@@ -459,57 +542,6 @@ function setPackageGroupAsPackageJsonUpdate(
       return acc;
     }, {}),
   };
-}
-
-function normalizePackageGroup(
-  packageName: string,
-  targetVersion: string,
-  packageGroup: PackageGroup
-): { package: string; version: string }[] {
-  // Support Migrating to older versions of Nx
-  // Use the packageGroup of the latest version of Nx instead of the one from the target version which could be older.
-  if (packageName === '@nrwl/workspace' && lt(targetVersion, '14.0.0-beta.0')) {
-    packageGroup = {
-      '@nrwl/workspace': targetVersion,
-      '@nrwl/angular': targetVersion,
-      '@nrwl/cypress': targetVersion,
-      '@nrwl/devkit': targetVersion,
-      '@nrwl/eslint-plugin-nx': targetVersion,
-      '@nrwl/express': targetVersion,
-      '@nrwl/jest': targetVersion,
-      '@nrwl/linter': targetVersion,
-      '@nrwl/nest': targetVersion,
-      '@nrwl/next': targetVersion,
-      '@nrwl/node': targetVersion,
-      '@nrwl/nx-plugin': targetVersion,
-      '@nrwl/react': targetVersion,
-      '@nrwl/storybook': targetVersion,
-      '@nrwl/web': targetVersion,
-      '@nrwl/js': targetVersion,
-      '@nrwl/cli': targetVersion,
-      '@nrwl/nx-cloud': 'latest',
-      '@nrwl/react-native': targetVersion,
-      '@nrwl/detox': targetVersion,
-      '@nrwl/expo': targetVersion,
-    };
-  }
-
-  if (!packageGroup) {
-    return [];
-  }
-
-  if (!Array.isArray(packageGroup)) {
-    return Object.entries(packageGroup).map(([pkg, version]) => ({
-      package: pkg,
-      version,
-    }));
-  }
-
-  return packageGroup.map((packageConfig) =>
-    typeof packageConfig === 'string'
-      ? { package: packageConfig, version: targetVersion }
-      : packageConfig
-  );
 }
 
 function normalizeVersionWithTagCheck(version: string) {
@@ -632,13 +664,18 @@ export function parseMigrationsOptions(options: {
   }
 }
 
-function versions(root: string, from: Record<string, string>) {
+function createInstalledPackageVersionsResolver(
+  root: string
+): MigratorOptions['getInstalledPackageVersion'] {
   const cache: Record<string, string> = {};
 
-  function getFromVersion(packageName: string) {
+  function getInstalledPackageVersion(
+    packageName: string,
+    overrides: Record<string, string>
+  ): string | null {
     try {
-      if (from[packageName]) {
-        return from[packageName];
+      if (overrides[packageName]) {
+        return overrides[packageName];
       }
 
       if (!cache[packageName]) {
@@ -650,13 +687,13 @@ function versions(root: string, from: Record<string, string>) {
     } catch {
       // Support migrating old workspaces without nx package
       if (packageName === 'nx') {
-        return getFromVersion('@nrwl/workspace');
+        return getInstalledPackageVersion('@nrwl/workspace', overrides);
       }
       return null;
     }
   }
 
-  return getFromVersion;
+  return getInstalledPackageVersion;
 }
 
 // testing-fetch-start
@@ -1002,8 +1039,9 @@ async function generateMigrationsJsonAndUpdatePackageJson(
 
     const migrator = new Migrator({
       packageJson: originalPackageJson,
-      versions: versions(root, opts.from),
+      getInstalledPackageVersion: createInstalledPackageVersionsResolver(root),
       fetch: createFetcher(),
+      from: opts.from,
       to: opts.to,
       interactive: opts.interactive,
     });
