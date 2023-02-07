@@ -142,7 +142,7 @@ export async function* webpackExecutor(
       switchMap((config) => {
         return runWebpack(config).pipe(
           tap((stats) => {
-            console.info(stats.toString());
+            console.info(stats.toString(config.stats));
           })
         );
       }),
