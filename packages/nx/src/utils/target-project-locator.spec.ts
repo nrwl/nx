@@ -94,7 +94,6 @@ describe('findTargetProjectWithImport', () => {
           {
             file: 'libs/proj2/deep/index.ts',
             hash: 'some-hash',
-            ext: '.ts',
           },
         ],
         proj3a: [
@@ -113,21 +112,18 @@ describe('findTargetProjectWithImport', () => {
           {
             file: 'libs/proj5/index.ts',
             hash: 'some-hash',
-            ext: '.ts',
           },
         ],
         proj6: [
           {
             file: 'libs/proj6/index.ts',
             hash: 'some-hash',
-            ext: '.ts',
           },
         ],
         proj7: [
           {
             file: 'libs/proj7/index.ts',
             hash: 'some-hash',
-            ext: '.ts',
           },
         ],
         proj123: [
@@ -535,7 +531,6 @@ describe('findTargetProjectWithImport (without tsconfig.json)', () => {
           {
             file: 'libs/proj2/deep/index.ts',
             hash: 'some-hash',
-            ext: '.ts',
           },
         ],
         proj3a: [
@@ -554,21 +549,18 @@ describe('findTargetProjectWithImport (without tsconfig.json)', () => {
           {
             file: 'libs/proj5/index.ts',
             hash: 'some-hash',
-            ext: '.ts',
           },
         ],
         proj6: [
           {
             file: 'libs/proj6/index.ts',
             hash: 'some-hash',
-            ext: '.ts',
           },
         ],
         proj7: [
           {
             file: 'libs/proj7/index.ts',
             hash: 'some-hash',
-            ext: '.ts',
           },
         ],
         proj123: [
