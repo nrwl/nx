@@ -106,7 +106,8 @@ describe('Next.js Applications', () => {
       `
           import { jsLibAsync } from '@${proj}/${jsLib}';
 
-          export default async function handler(_, res) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          export default async function handler(_: any, res: any) {
             const value = await jsLibAsync();
             res.send(value);
           }
@@ -261,7 +262,7 @@ describe('Next.js Applications', () => {
     updateFile(
       `apps/${appName}/pages/api/hello.js`,
       `
-        export default (_req, res) => {
+        export default (_req: any, res: any) => {
           res.status(200).send('Welcome');
         };
       `
