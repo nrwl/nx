@@ -1,0 +1,811 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`devkit goldens index.ts >  AdditionalSharedConfig should not have changed: Previous type of AdditionalSharedConfig 1`] = `
+Array [
+  "AdditionalSharedConfig > (length: number, toString: () => string, toLocaleString: () => string, pop: () => string | [libraryName: string, sharedConfig: SharedLibraryConfig] | { libraryName: string; sharedConfig: SharedLibraryConfig; }, push: (...items: (string | [libraryName: string, sharedConfig: SharedLibraryConfig] | { libraryName: string; sharedConfig: SharedLibraryConfig; })[]) => number, concat: { (...items: ConcatArray<string | [libraryName: string, sharedConfig: SharedLibraryConfig] | { libraryName: string; sharedConfig: SharedLibraryConfig; }>[]): (string | ... 1 more ... | { ...; })[]; (...items: (string | ... 2 more ... | ConcatArray<...>)[]): (string | ... 1 more ... | { ...; })[]; }|{ (...items: ConcatArray<string | [libraryName: string, sharedConfig: SharedLibraryConfig] | { libraryName: string; sharedConfig: SharedLibraryConfig; }>[]): (string | ... 1 more ... | { ...; })[]; (...items: (string | ... 2 more ... | ConcatArray<...>)[]): (string | ... 1 more ... | { ...; })[]; }, join: (separator?: string) => string, reverse: () => (string | [libraryName: string, sharedConfig: SharedLibraryConfig] | { libraryName: string; sharedConfig: SharedLibraryConfig; })[], shift: () => string | [libraryName: string, sharedConfig: SharedLibraryConfig] | { libraryName: string; sharedConfig: SharedLibraryConfig; }, slice: (start?: number, end?: number) => (string | [libraryName: string, sharedConfig: SharedLibraryConfig] | { libraryName: string; sharedConfig: SharedLibraryConfig; })[], sort: (compareFn?: (a: string | [libraryName: string, sharedConfig: SharedLibraryConfig] | { libraryName: string; sharedConfig: SharedLibraryConfig; }, b: string | [libraryName: string, sharedConfig: SharedLibraryConfig] | { ...; }) => number) => AdditionalSharedConfig, splice: { (start: number, deleteCount?: number): (string | [libraryName: string, sharedConfig: SharedLibraryConfig] | { libraryName: string; sharedConfig: SharedLibraryConfig; })[]; (start: number, deleteCount: number, ...items: (string | ... 1 more ... | { ...; })[]): (string | ... 1 more ... | { ...; })[]; }|{ (start: number, deleteCount?: number): (string | [libraryName: string, sharedConfig: SharedLibraryConfig] | { libraryName: string; sharedConfig: SharedLibraryConfig; })[]; (start: number, deleteCount: number, ...items: (string | ... 1 more ... | { ...; })[]): (string | ... 1 more ... | { ...; })[]; }, unshift: (...items: (string | [libraryName: string, sharedConfig: SharedLibraryConfig] | { libraryName: string; sharedConfig: SharedLibraryConfig; })[]) => number, indexOf: (searchElement: string | [libraryName: string, sharedConfig: SharedLibraryConfig] | { libraryName: string; sharedConfig: SharedLibraryConfig; }, fromIndex?: number) => number, lastIndexOf: (searchElement: string | [libraryName: string, sharedConfig: SharedLibraryConfig] | { libraryName: string; sharedConfig: SharedLibraryConfig; }, fromIndex?: number) => number, every: { <S extends string | [libraryName: string, sharedConfig: SharedLibraryConfig] | { libraryName: string; sharedConfig: SharedLibraryConfig; }>(predicate: (value: string | [libraryName: string, sharedConfig: SharedLibraryConfig] | { ...; }, index: number, array: (string | ... 1 more ... | { ...; })[]) => value is S, t...|{ <S extends string | [libraryName: string, sharedConfig: SharedLibraryConfig] | { libraryName: string; sharedConfig: SharedLibraryConfig; }>(predicate: (value: string | [libraryName: string, sharedConfig: SharedLibraryConfig] | { ...; }, index: number, array: (string | ... 1 more ... | { ...; })[]) => value is S, t..., some: (predicate: (value: string | [libraryName: string, sharedConfig: SharedLibraryConfig] | { libraryName: string; sharedConfig: SharedLibraryConfig; }, index: number, array: (string | ... 1 more ... | { ...; })[]) => unknown, thisArg?: any) => boolean, forEach: (callbackfn: (value: string | [libraryName: string, sharedConfig: SharedLibraryConfig] | { libraryName: string; sharedConfig: SharedLibraryConfig; }, index: number, array: (string | ... 1 more ... | { ...; })[]) => void, thisArg?: any) => void, map: <U>(callbackfn: (value: string | [libraryName: string, sharedConfig: SharedLibraryConfig] | { libraryName: string; sharedConfig: SharedLibraryConfig; }, index: number, array: (string | ... 1 more ... | { ...; })[]) => U, thisArg?: any) => U[], filter: { <S extends string | [libraryName: string, sharedConfig: SharedLibraryConfig] | { libraryName: string; sharedConfig: SharedLibraryConfig; }>(predicate: (value: string | [libraryName: string, sharedConfig: SharedLibraryConfig] | { ...; }, index: number, array: (string | ... 1 more ... | { ...; })[]) => value is S, t...|{ <S extends string | [libraryName: string, sharedConfig: SharedLibraryConfig] | { libraryName: string; sharedConfig: SharedLibraryConfig; }>(predicate: (value: string | [libraryName: string, sharedConfig: SharedLibraryConfig] | { ...; }, index: number, array: (string | ... 1 more ... | { ...; })[]) => value is S, t..., reduce: { (callbackfn: (previousValue: string | [libraryName: string, sharedConfig: SharedLibraryConfig] | { libraryName: string; sharedConfig: SharedLibraryConfig; }, currentValue: string | [libraryName: ...] | { ...; }, currentIndex: number, array: (string | ... 1 more ... | { ...; })[]) => string | ... 1 more ... | { ......|{ (callbackfn: (previousValue: string | [libraryName: string, sharedConfig: SharedLibraryConfig] | { libraryName: string; sharedConfig: SharedLibraryConfig; }, currentValue: string | [libraryName: ...] | { ...; }, currentIndex: number, array: (string | ... 1 more ... | { ...; })[]) => string | ... 1 more ... | { ......|{ (callbackfn: (previousValue: string | [libraryName: string, sharedConfig: SharedLibraryConfig] | { libraryName: string; sharedConfig: SharedLibraryConfig; }, currentValue: string | [libraryName: ...] | { ...; }, currentIndex: number, array: (string | ... 1 more ... | { ...; })[]) => string | ... 1 more ... | { ......, reduceRight: { (callbackfn: (previousValue: string | [libraryName: string, sharedConfig: SharedLibraryConfig] | { libraryName: string; sharedConfig: SharedLibraryConfig; }, currentValue: string | [libraryName: ...] | { ...; }, currentIndex: number, array: (string | ... 1 more ... | { ...; })[]) => string | ... 1 more ... | { ......|{ (callbackfn: (previousValue: string | [libraryName: string, sharedConfig: SharedLibraryConfig] | { libraryName: string; sharedConfig: SharedLibraryConfig; }, currentValue: string | [libraryName: ...] | { ...; }, currentIndex: number, array: (string | ... 1 more ... | { ...; })[]) => string | ... 1 more ... | { ......|{ (callbackfn: (previousValue: string | [libraryName: string, sharedConfig: SharedLibraryConfig] | { libraryName: string; sharedConfig: SharedLibraryConfig; }, currentValue: string | [libraryName: ...] | { ...; }, currentIndex: number, array: (string | ... 1 more ... | { ...; })[]) => string | ... 1 more ... | { ......, find: { <S extends string | [libraryName: string, sharedConfig: SharedLibraryConfig] | { libraryName: string; sharedConfig: SharedLibraryConfig; }>(predicate: (this: void, value: string | [libraryName: string, sharedConfig: SharedLibraryConfig] | { ...; }, index: number, obj: (string | ... 1 more ... | { ...; })[]) => val...|{ <S extends string | [libraryName: string, sharedConfig: SharedLibraryConfig] | { libraryName: string; sharedConfig: SharedLibraryConfig; }>(predicate: (this: void, value: string | [libraryName: string, sharedConfig: SharedLibraryConfig] | { ...; }, index: number, obj: (string | ... 1 more ... | { ...; })[]) => val..., findIndex: (predicate: (value: string | [libraryName: string, sharedConfig: SharedLibraryConfig] | { libraryName: string; sharedConfig: SharedLibraryConfig; }, index: number, obj: (string | ... 1 more ... | { ...; })[]) => unknown, thisArg?: any) => number, fill: (value: string | [libraryName: string, sharedConfig: SharedLibraryConfig] | { libraryName: string; sharedConfig: SharedLibraryConfig; }, start?: number, end?: number) => AdditionalSharedConfig, copyWithin: (target: number, start: number, end?: number) => AdditionalSharedConfig, entries: () => IterableIterator<[number, string | [libraryName: string, sharedConfig: SharedLibraryConfig] | { libraryName: string; sharedConfig: SharedLibraryConfig; }]>, keys: () => IterableIterator<number>, values: () => IterableIterator<string | [libraryName: string, sharedConfig: SharedLibraryConfig] | { libraryName: string; sharedConfig: SharedLibraryConfig; }>, includes: (searchElement: string | [libraryName: string, sharedConfig: SharedLibraryConfig] | { libraryName: string; sharedConfig: SharedLibraryConfig; }, fromIndex?: number) => boolean, flatMap: <U, This = undefined>(callback: (this: This, value: string | [libraryName: string, sharedConfig: SharedLibraryConfig] | { libraryName: string; sharedConfig: SharedLibraryConfig; }, index: number, array: (string | ... 1 more ... | { ...; })[]) => U | readonly U[], thisArg?: This) => U[], flat: <A, D extends number = 1>(this: A, depth?: D) => FlatArray<A, D>[], __@iterator@112: () => IterableIterator<string | [libraryName: string, sharedConfig: SharedLibraryConfig] | { libraryName: string; sharedConfig: SharedLibraryConfig; }>, __@unscopables@5104: () => { copyWithin: boolean; entries: boolean; fill: boolean; find: boolean; findIndex: boolean; keys: boolean; values: boolean; }, at: (index: number) => string | [libraryName: string, sharedConfig: SharedLibraryConfig] | { libraryName: string; sharedConfig: SharedLibraryConfig; }))",
+]
+`;
+
+exports[`devkit goldens index.ts >  ChangeType should not have changed: Previous type of ChangeType 1`] = `
+Array [
+  "ChangeType > (toString: () => string, charAt: (pos: number) => string, charCodeAt: (index: number) => number, concat: (...strings: string[]) => string, indexOf: (searchString: string, position?: number) => number, lastIndexOf: (searchString: string, position?: number) => number, localeCompare: { (that: string): number; (that: string, locales?: string | string[], options?: CollatorOptions): number; }|{ (that: string): number; (that: string, locales?: string | string[], options?: CollatorOptions): number; }, match: { (regexp: string | RegExp): RegExpMatchArray; (matcher: { [Symbol.match](string: string): RegExpMatchArray; }): RegExpMatchArray; }|{ (regexp: string | RegExp): RegExpMatchArray; (matcher: { [Symbol.match](string: string): RegExpMatchArray; }): RegExpMatchArray; }, replace: { (searchValue: string | RegExp, replaceValue: string): string; (searchValue: string | RegExp, replacer: (substring: string, ...args: any[]) => string): string; (searchValue: { ...; }, replaceValue: string): string; (searchValue: { ...; }, replacer: (substring: string, ...args: any[]) => string): string; }|{ (searchValue: string | RegExp, replaceValue: string): string; (searchValue: string | RegExp, replacer: (substring: string, ...args: any[]) => string): string; (searchValue: { ...; }, replaceValue: string): string; (searchValue: { ...; }, replacer: (substring: string, ...args: any[]) => string): string; }|{ (searchValue: string | RegExp, replaceValue: string): string; (searchValue: string | RegExp, replacer: (substring: string, ...args: any[]) => string): string; (searchValue: { ...; }, replaceValue: string): string; (searchValue: { ...; }, replacer: (substring: string, ...args: any[]) => string): string; }|{ (searchValue: string | RegExp, replaceValue: string): string; (searchValue: string | RegExp, replacer: (substring: string, ...args: any[]) => string): string; (searchValue: { ...; }, replaceValue: string): string; (searchValue: { ...; }, replacer: (substring: string, ...args: any[]) => string): string; }, search: { (regexp: string | RegExp): number; (searcher: { [Symbol.search](string: string): number; }): number; }|{ (regexp: string | RegExp): number; (searcher: { [Symbol.search](string: string): number; }): number; }, slice: (start?: number, end?: number) => string, split: { (separator: string | RegExp, limit?: number): string[]; (splitter: { [Symbol.split](string: string, limit?: number): string[]; }, limit?: number): string[]; }|{ (separator: string | RegExp, limit?: number): string[]; (splitter: { [Symbol.split](string: string, limit?: number): string[]; }, limit?: number): string[]; }, substring: (start: number, end?: number) => string, toLowerCase: () => string, toLocaleLowerCase: (locales?: string | string[]) => string, toUpperCase: () => string, toLocaleUpperCase: (locales?: string | string[]) => string, trim: () => string, length: number, substr: (from: number, length?: number) => string, valueOf: () => string, codePointAt: (pos: number) => number, includes: (searchString: string, position?: number) => boolean, endsWith: (searchString: string, endPosition?: number) => boolean, normalize: { (form: \\"NFC\\" | \\"NFD\\" | \\"NFKC\\" | \\"NFKD\\"): string; (form?: string): string; }|{ (form: \\"NFC\\" | \\"NFD\\" | \\"NFKC\\" | \\"NFKD\\"): string; (form?: string): string; }, repeat: (count: number) => string, startsWith: (searchString: string, position?: number) => boolean, anchor: (name: string) => string, big: () => string, blink: () => string, bold: () => string, fixed: () => string, fontcolor: (color: string) => string, fontsize: { (size: number): string; (size: string): string; }|{ (size: number): string; (size: string): string; }, italics: () => string, link: (url: string) => string, small: () => string, strike: () => string, sub: () => string, sup: () => string, padStart: (maxLength: number, fillString?: string) => string, padEnd: (maxLength: number, fillString?: string) => string, trimEnd: () => string, trimStart: () => string, trimLeft: () => string, trimRight: () => string, matchAll: (regexp: RegExp) => IterableIterator<RegExpMatchArray>, __@iterator@112: () => IterableIterator<string>, at: (index: number) => string))",
+]
+`;
+
+exports[`devkit goldens index.ts >  CustomHasher should not have changed: Previous type of CustomHasher 1`] = `
+Array [
+  "CustomHasher > (apply: (this: Function, thisArg: any, argArray?: any) => any, call: (this: Function, thisArg: any, ...argArray: any[]) => any, bind: (this: Function, thisArg: any, ...argArray: any[]) => any, toString: () => string, prototype: any, length: number, arguments: any, caller: Function, name: string, __@hasInstance@4604: (value: any) => boolean))",
+]
+`;
+
+exports[`devkit goldens index.ts >  DefaultTasksRunnerOptions should not have changed: Previous type of DefaultTasksRunnerOptions 1`] = `
+Array [
+  "DefaultTasksRunnerOptions > (parallel: number, cacheableOperations: string[], cacheableTargets: string[], runtimeCacheInputs: string[], cacheDirectory: string, remoteCache: RemoteCache, lifeCycle: LifeCycle, captureStderr: boolean, skipNxCache: boolean))",
+]
+`;
+
+exports[`devkit goldens index.ts >  DependencyType should not have changed: Previous type of DependencyType 1`] = `
+Array [
+  "DependencyType > (toString: () => string, charAt: (pos: number) => string, charCodeAt: (index: number) => number, concat: (...strings: string[]) => string, indexOf: (searchString: string, position?: number) => number, lastIndexOf: (searchString: string, position?: number) => number, localeCompare: { (that: string): number; (that: string, locales?: string | string[], options?: CollatorOptions): number; }|{ (that: string): number; (that: string, locales?: string | string[], options?: CollatorOptions): number; }, match: { (regexp: string | RegExp): RegExpMatchArray; (matcher: { [Symbol.match](string: string): RegExpMatchArray; }): RegExpMatchArray; }|{ (regexp: string | RegExp): RegExpMatchArray; (matcher: { [Symbol.match](string: string): RegExpMatchArray; }): RegExpMatchArray; }, replace: { (searchValue: string | RegExp, replaceValue: string): string; (searchValue: string | RegExp, replacer: (substring: string, ...args: any[]) => string): string; (searchValue: { ...; }, replaceValue: string): string; (searchValue: { ...; }, replacer: (substring: string, ...args: any[]) => string): string; }|{ (searchValue: string | RegExp, replaceValue: string): string; (searchValue: string | RegExp, replacer: (substring: string, ...args: any[]) => string): string; (searchValue: { ...; }, replaceValue: string): string; (searchValue: { ...; }, replacer: (substring: string, ...args: any[]) => string): string; }|{ (searchValue: string | RegExp, replaceValue: string): string; (searchValue: string | RegExp, replacer: (substring: string, ...args: any[]) => string): string; (searchValue: { ...; }, replaceValue: string): string; (searchValue: { ...; }, replacer: (substring: string, ...args: any[]) => string): string; }|{ (searchValue: string | RegExp, replaceValue: string): string; (searchValue: string | RegExp, replacer: (substring: string, ...args: any[]) => string): string; (searchValue: { ...; }, replaceValue: string): string; (searchValue: { ...; }, replacer: (substring: string, ...args: any[]) => string): string; }, search: { (regexp: string | RegExp): number; (searcher: { [Symbol.search](string: string): number; }): number; }|{ (regexp: string | RegExp): number; (searcher: { [Symbol.search](string: string): number; }): number; }, slice: (start?: number, end?: number) => string, split: { (separator: string | RegExp, limit?: number): string[]; (splitter: { [Symbol.split](string: string, limit?: number): string[]; }, limit?: number): string[]; }|{ (separator: string | RegExp, limit?: number): string[]; (splitter: { [Symbol.split](string: string, limit?: number): string[]; }, limit?: number): string[]; }, substring: (start: number, end?: number) => string, toLowerCase: () => string, toLocaleLowerCase: (locales?: string | string[]) => string, toUpperCase: () => string, toLocaleUpperCase: (locales?: string | string[]) => string, trim: () => string, length: number, substr: (from: number, length?: number) => string, valueOf: () => string, codePointAt: (pos: number) => number, includes: (searchString: string, position?: number) => boolean, endsWith: (searchString: string, endPosition?: number) => boolean, normalize: { (form: \\"NFC\\" | \\"NFD\\" | \\"NFKC\\" | \\"NFKD\\"): string; (form?: string): string; }|{ (form: \\"NFC\\" | \\"NFD\\" | \\"NFKC\\" | \\"NFKD\\"): string; (form?: string): string; }, repeat: (count: number) => string, startsWith: (searchString: string, position?: number) => boolean, anchor: (name: string) => string, big: () => string, blink: () => string, bold: () => string, fixed: () => string, fontcolor: (color: string) => string, fontsize: { (size: number): string; (size: string): string; }|{ (size: number): string; (size: string): string; }, italics: () => string, link: (url: string) => string, small: () => string, strike: () => string, sub: () => string, sup: () => string, padStart: (maxLength: number, fillString?: string) => string, padEnd: (maxLength: number, fillString?: string) => string, trimEnd: () => string, trimStart: () => string, trimLeft: () => string, trimRight: () => string, matchAll: (regexp: RegExp) => IterableIterator<RegExpMatchArray>, __@iterator@112: () => IterableIterator<string>, at: (index: number) => string))",
+]
+`;
+
+exports[`devkit goldens index.ts >  Executor should not have changed: Previous type of Executor 1`] = `
+Array [
+  "Executor<T> > (apply: (this: Function, thisArg: any, argArray?: any) => any, call: (this: Function, thisArg: any, ...argArray: any[]) => any, bind: (this: Function, thisArg: any, ...argArray: any[]) => any, toString: () => string, prototype: any, length: number, arguments: any, caller: Function, name: string, __@hasInstance@4604: (value: any) => boolean))",
+]
+`;
+
+exports[`devkit goldens index.ts >  ExecutorContext should not have changed: Previous type of ExecutorContext 1`] = `
+Array [
+  "ExecutorContext > (root: string, projectName: string, targetName: string, configurationName: string, target: TargetConfiguration<any>, workspace: ProjectsConfigurations & NxJsonConfiguration<string[] | \\"*\\">, projectsConfigurations: ProjectsConfigurations, nxJsonConfiguration: NxJsonConfiguration<string[] | \\"*\\">, cwd: string, isVerbose: boolean, projectGraph: ProjectGraph))",
+]
+`;
+
+exports[`devkit goldens index.ts >  ExecutorsJson should not have changed: Previous type of ExecutorsJson 1`] = `
+Array [
+  "ExecutorsJson > (executors: Record<string, ExecutorsJsonEntry>, builders: Record<string, ExecutorsJsonEntry>))",
+]
+`;
+
+exports[`devkit goldens index.ts >  FileChange should not have changed: Previous type of FileChange 1`] = `
+Array [
+  "FileChange > (path: string, type: \\"CREATE\\" | \\"DELETE\\" | \\"UPDATE\\", content: Buffer, options: TreeWriteOptions))",
+]
+`;
+
+exports[`devkit goldens index.ts >  FileData should not have changed: Previous type of FileData 1`] = `
+Array [
+  "FileData > (file: string, hash: string, ext: string, deps: string[]))",
+]
+`;
+
+exports[`devkit goldens index.ts >  Generator should not have changed: Previous type of Generator 1`] = `
+Array [
+  "Generator<T> > (apply: (this: Function, thisArg: any, argArray?: any) => any, call: (this: Function, thisArg: any, ...argArray: any[]) => any, bind: (this: Function, thisArg: any, ...argArray: any[]) => any, toString: () => string, prototype: any, length: number, arguments: any, caller: Function, name: string, __@hasInstance@4604: (value: any) => boolean))",
+]
+`;
+
+exports[`devkit goldens index.ts >  GeneratorCallback should not have changed: Previous type of GeneratorCallback 1`] = `
+Array [
+  "GeneratorCallback > (apply: (this: Function, thisArg: any, argArray?: any) => any, call: (this: Function, thisArg: any, ...argArray: any[]) => any, bind: (this: Function, thisArg: any, ...argArray: any[]) => any, toString: () => string, prototype: any, length: number, arguments: any, caller: Function, name: string, __@hasInstance@4604: (value: any) => boolean))",
+]
+`;
+
+exports[`devkit goldens index.ts >  GeneratorsJson should not have changed: Previous type of GeneratorsJson 1`] = `
+Array [
+  "GeneratorsJson > (extends: string, schematics: Record<string, GeneratorsJsonEntry>, generators: Record<string, GeneratorsJsonEntry>))",
+]
+`;
+
+exports[`devkit goldens index.ts >  Hash should not have changed: Previous type of Hash 1`] = `
+Array [
+  "Hash > (value: string, details: { command: string; nodes: { [name: string]: string; }; implicitDeps?: { [fileName: string]: string; }; runtime?: { [input: string]: string; }; }))",
+]
+`;
+
+exports[`devkit goldens index.ts >  Hasher should not have changed: Previous type of Hasher 1`] = `
+Array [
+  "Hasher > (projectGraph: any, nxJson: any, options: any, taskHasher: any, hashing: any, hashTask: (task: Task) => Promise<Hash>, hashDependsOnOtherTasks: (task: Task) => boolean, hashTaskWithDepsAndContext: (task: Task) => Promise<Hash>, hashContext: () => Promise<any>, hashCommand: (task: Task) => string, hashSource: (task: Task) => Promise<string>, hashArray: (values: string[]) => string, hashFile: (path: string) => string, readTsConfig: any))",
+]
+`;
+
+exports[`devkit goldens index.ts >  HasherContext should not have changed: Previous type of HasherContext 1`] = `
+Array [
+  "HasherContext > (hasher: Hasher, projectGraph: ProjectGraph, taskGraph: TaskGraph, projectsConfigurations: ProjectsConfigurations, nxJsonConfiguration: NxJsonConfiguration<string[] | \\"*\\">))",
+]
+`;
+
+exports[`devkit goldens index.ts >  ImplicitDependencyEntry should not have changed: Previous type of ImplicitDependencyEntry 1`] = `
+Array [
+  "ImplicitDependencyEntry<T> > ())",
+]
+`;
+
+exports[`devkit goldens index.ts >  ImplicitJsonSubsetDependency should not have changed: Previous type of ImplicitJsonSubsetDependency 1`] = `
+Array [
+  "ImplicitJsonSubsetDependency<T> > ())",
+]
+`;
+
+exports[`devkit goldens index.ts >  JsonParseOptions should not have changed: Previous type of JsonParseOptions 1`] = `
+Array [
+  "JsonParseOptions > (expectComments: boolean, disallowComments: boolean, allowTrailingComma: boolean, allowEmptyContent: boolean))",
+]
+`;
+
+exports[`devkit goldens index.ts >  JsonSerializeOptions should not have changed: Previous type of JsonSerializeOptions 1`] = `
+Array [
+  "JsonSerializeOptions > (spaces: number))",
+]
+`;
+
+exports[`devkit goldens index.ts >  MigrationsJson should not have changed: Previous type of MigrationsJson 1`] = `
+Array [
+  "MigrationsJson > (version: string, collection: string, generators: { [name: string]: MigrationsJsonEntry; }, schematics: { [name: string]: MigrationsJsonEntry; }, packageJsonUpdates: PackageJsonUpdates))",
+]
+`;
+
+exports[`devkit goldens index.ts >  ModuleFederationConfig should not have changed: Previous type of ModuleFederationConfig 1`] = `
+Array [
+  "ModuleFederationConfig > (name: string, remotes: Remotes, library: ModuleFederationLibrary, exposes: Record<string, string>, shared: SharedFunction, additionalShared: AdditionalSharedConfig))",
+]
+`;
+
+exports[`devkit goldens index.ts >  ModuleFederationLibrary should not have changed: Previous type of ModuleFederationLibrary 1`] = `
+Array [
+  "ModuleFederationLibrary > (type: string, name: string))",
+]
+`;
+
+exports[`devkit goldens index.ts >  NxAffectedConfig should not have changed: Previous type of NxAffectedConfig 1`] = `
+Array [
+  "NxAffectedConfig > (defaultBase: string))",
+]
+`;
+
+exports[`devkit goldens index.ts >  NxJsonConfiguration should not have changed: Previous type of NxJsonConfiguration 1`] = `
+Array [
+  "NxJsonConfiguration<T> > (extends: string, implicitDependencies: ImplicitDependencyEntry<T>, targetDependencies: TargetDependencies, namedInputs: { [inputName: string]: (string | InputDefinition)[]; }, targetDefaults: TargetDefaults, npmScope: string, affected: NxAffectedConfig, workspaceLayout: { libsDir: string; appsDir: string; }, tasksRunnerOptions: { [tasksRunnerName: string]: { runner: string; options?: any; }; }, generators: { [collectionName: string]: { [generatorName: string]: any; }; }, cli: { packageManager?: PackageManager; defaultCollection?: string; defaultProjectName?: string; }, plugins: string[], pluginsConfig: Record<string, unknown>, defaultProject: string))",
+]
+`;
+
+exports[`devkit goldens index.ts >  NxPlugin should not have changed: Previous type of NxPlugin 1`] = `
+Array [
+  "NxPlugin > (name: string, processProjectGraph: ProjectGraphProcessor, registerProjectTargets: ProjectTargetConfigurator, projectFilePatterns: string[]))",
+]
+`;
+
+exports[`devkit goldens index.ts >  PackageManager should not have changed: Previous type of PackageManager 1`] = `
+Array [
+  "PackageManager > (toString: () => string, charAt: (pos: number) => string, charCodeAt: (index: number) => number, concat: (...strings: string[]) => string, indexOf: (searchString: string, position?: number) => number, lastIndexOf: (searchString: string, position?: number) => number, localeCompare: { (that: string): number; (that: string, locales?: string | string[], options?: CollatorOptions): number; }|{ (that: string): number; (that: string, locales?: string | string[], options?: CollatorOptions): number; }, match: { (regexp: string | RegExp): RegExpMatchArray; (matcher: { [Symbol.match](string: string): RegExpMatchArray; }): RegExpMatchArray; }|{ (regexp: string | RegExp): RegExpMatchArray; (matcher: { [Symbol.match](string: string): RegExpMatchArray; }): RegExpMatchArray; }, replace: { (searchValue: string | RegExp, replaceValue: string): string; (searchValue: string | RegExp, replacer: (substring: string, ...args: any[]) => string): string; (searchValue: { ...; }, replaceValue: string): string; (searchValue: { ...; }, replacer: (substring: string, ...args: any[]) => string): string; }|{ (searchValue: string | RegExp, replaceValue: string): string; (searchValue: string | RegExp, replacer: (substring: string, ...args: any[]) => string): string; (searchValue: { ...; }, replaceValue: string): string; (searchValue: { ...; }, replacer: (substring: string, ...args: any[]) => string): string; }|{ (searchValue: string | RegExp, replaceValue: string): string; (searchValue: string | RegExp, replacer: (substring: string, ...args: any[]) => string): string; (searchValue: { ...; }, replaceValue: string): string; (searchValue: { ...; }, replacer: (substring: string, ...args: any[]) => string): string; }|{ (searchValue: string | RegExp, replaceValue: string): string; (searchValue: string | RegExp, replacer: (substring: string, ...args: any[]) => string): string; (searchValue: { ...; }, replaceValue: string): string; (searchValue: { ...; }, replacer: (substring: string, ...args: any[]) => string): string; }, search: { (regexp: string | RegExp): number; (searcher: { [Symbol.search](string: string): number; }): number; }|{ (regexp: string | RegExp): number; (searcher: { [Symbol.search](string: string): number; }): number; }, slice: (start?: number, end?: number) => string, split: { (separator: string | RegExp, limit?: number): string[]; (splitter: { [Symbol.split](string: string, limit?: number): string[]; }, limit?: number): string[]; }|{ (separator: string | RegExp, limit?: number): string[]; (splitter: { [Symbol.split](string: string, limit?: number): string[]; }, limit?: number): string[]; }, substring: (start: number, end?: number) => string, toLowerCase: () => string, toLocaleLowerCase: (locales?: string | string[]) => string, toUpperCase: () => string, toLocaleUpperCase: (locales?: string | string[]) => string, trim: () => string, length: number, substr: (from: number, length?: number) => string, valueOf: () => string, codePointAt: (pos: number) => number, includes: (searchString: string, position?: number) => boolean, endsWith: (searchString: string, endPosition?: number) => boolean, normalize: { (form: \\"NFC\\" | \\"NFD\\" | \\"NFKC\\" | \\"NFKD\\"): string; (form?: string): string; }|{ (form: \\"NFC\\" | \\"NFD\\" | \\"NFKC\\" | \\"NFKD\\"): string; (form?: string): string; }, repeat: (count: number) => string, startsWith: (searchString: string, position?: number) => boolean, anchor: (name: string) => string, big: () => string, blink: () => string, bold: () => string, fixed: () => string, fontcolor: (color: string) => string, fontsize: { (size: number): string; (size: string): string; }|{ (size: number): string; (size: string): string; }, italics: () => string, link: (url: string) => string, small: () => string, strike: () => string, sub: () => string, sup: () => string, padStart: (maxLength: number, fillString?: string) => string, padEnd: (maxLength: number, fillString?: string) => string, trimEnd: () => string, trimStart: () => string, trimLeft: () => string, trimRight: () => string, matchAll: (regexp: RegExp) => IterableIterator<RegExpMatchArray>, __@iterator@112: () => IterableIterator<string>, at: (index: number) => string))",
+]
+`;
+
+exports[`devkit goldens index.ts >  ProjectConfiguration should not have changed: Previous type of ProjectConfiguration 1`] = `
+Array [
+  "ProjectConfiguration > (name: string, targets: { [targetName: string]: TargetConfiguration<any>; }, root: string, sourceRoot: string, projectType: ProjectType, generators: { [collectionName: string]: { [generatorName: string]: any; }; }, implicitDependencies: string[], namedInputs: { [inputName: string]: (string | InputDefinition)[]; }, tags: string[]))",
+]
+`;
+
+exports[`devkit goldens index.ts >  ProjectFileMap should not have changed: Previous type of ProjectFileMap 1`] = `
+Array [
+  "ProjectFileMap > ())",
+]
+`;
+
+exports[`devkit goldens index.ts >  ProjectGraph should not have changed: Previous type of ProjectGraph 1`] = `
+Array [
+  "ProjectGraph > (nodes: Record<string, ProjectGraphProjectNode>, externalNodes: Record<string, ProjectGraphExternalNode>, dependencies: Record<string, ProjectGraphDependency[]>, allWorkspaceFiles: FileData[], version: string))",
+]
+`;
+
+exports[`devkit goldens index.ts >  ProjectGraphBuilder should not have changed: Previous type of ProjectGraphBuilder 1`] = `
+Array [
+  "ProjectGraphBuilder > (graph: ProjectGraph, removedEdges: { [source: string]: Set<string>; }, addNode: (node: ProjectGraphProjectNode) => void, addExternalNode: (node: ProjectGraphExternalNode) => void, addImplicitDependency: (sourceProjectName: string, targetProjectName: string) => void, removeDependency: (sourceProjectName: string, targetProjectName: string) => void, addExplicitDependency: (sourceProjectName: string, sourceProjectFile: string, targetProjectName: string) => void, setVersion: (version: string) => void, getUpdatedProjectGraph: () => ProjectGraph, calculateTargetDepsFromFiles: any, calculateAlreadySetTargetDeps: any))",
+]
+`;
+
+exports[`devkit goldens index.ts >  ProjectGraphDependency should not have changed: Previous type of ProjectGraphDependency 1`] = `
+Array [
+  "ProjectGraphDependency > (type: string, target: string, source: string))",
+]
+`;
+
+exports[`devkit goldens index.ts >  ProjectGraphExternalNode should not have changed: Previous type of ProjectGraphExternalNode 1`] = `
+Array [
+  "ProjectGraphExternalNode > (type: \\"npm\\", name: \`npm:\${string}\`, data: { version: string; packageName: string; hash?: string; }))",
+]
+`;
+
+exports[`devkit goldens index.ts >  ProjectGraphNode should not have changed: Previous type of ProjectGraphNode 1`] = `
+Array [
+  "ProjectGraphNode > (type: \\"npm\\" | \\"app\\" | \\"e2e\\" | \\"lib\\"|\\"npm\\" | \\"app\\" | \\"e2e\\" | \\"lib\\", name: string|string, data: (ProjectConfiguration & { files: FileData[]; description?: string; }) | { version: string; packageName: string; hash?: string; }|(ProjectConfiguration & { files: FileData[]; description?: string; }) | { version: string; packageName: string; hash?: string; }))",
+]
+`;
+
+exports[`devkit goldens index.ts >  ProjectGraphProcessorContext should not have changed: Previous type of ProjectGraphProcessorContext 1`] = `
+Array [
+  "ProjectGraphProcessorContext > (workspace: Workspace, fileMap: ProjectFileMap, filesToProcess: ProjectFileMap))",
+]
+`;
+
+exports[`devkit goldens index.ts >  ProjectGraphProjectNode should not have changed: Previous type of ProjectGraphProjectNode 1`] = `
+Array [
+  "ProjectGraphProjectNode > (type: \\"app\\" | \\"e2e\\" | \\"lib\\", name: string, data: ProjectConfiguration & { files: FileData[]; description?: string; }))",
+]
+`;
+
+exports[`devkit goldens index.ts >  ProjectGraphV4 should not have changed: Previous type of ProjectGraphV4 1`] = `
+Array [
+  "ProjectGraphV4<T> > (nodes: Record<string, ProjectGraphNode>, dependencies: Record<string, ProjectGraphDependency[]>, allWorkspaceFiles: FileData[], version: string))",
+]
+`;
+
+exports[`devkit goldens index.ts >  ProjectTargetConfigurator should not have changed: Previous type of ProjectTargetConfigurator 1`] = `
+Array [
+  "ProjectTargetConfigurator > (apply: (this: Function, thisArg: any, argArray?: any) => any, call: (this: Function, thisArg: any, ...argArray: any[]) => any, bind: (this: Function, thisArg: any, ...argArray: any[]) => any, toString: () => string, prototype: any, length: number, arguments: any, caller: Function, name: string, __@hasInstance@4604: (value: any) => boolean))",
+]
+`;
+
+exports[`devkit goldens index.ts >  ProjectType should not have changed: Previous type of ProjectType 1`] = `
+Array [
+  "ProjectType > (toString: () => string, charAt: (pos: number) => string, charCodeAt: (index: number) => number, concat: (...strings: string[]) => string, indexOf: (searchString: string, position?: number) => number, lastIndexOf: (searchString: string, position?: number) => number, localeCompare: { (that: string): number; (that: string, locales?: string | string[], options?: CollatorOptions): number; }|{ (that: string): number; (that: string, locales?: string | string[], options?: CollatorOptions): number; }, match: { (regexp: string | RegExp): RegExpMatchArray; (matcher: { [Symbol.match](string: string): RegExpMatchArray; }): RegExpMatchArray; }|{ (regexp: string | RegExp): RegExpMatchArray; (matcher: { [Symbol.match](string: string): RegExpMatchArray; }): RegExpMatchArray; }, replace: { (searchValue: string | RegExp, replaceValue: string): string; (searchValue: string | RegExp, replacer: (substring: string, ...args: any[]) => string): string; (searchValue: { ...; }, replaceValue: string): string; (searchValue: { ...; }, replacer: (substring: string, ...args: any[]) => string): string; }|{ (searchValue: string | RegExp, replaceValue: string): string; (searchValue: string | RegExp, replacer: (substring: string, ...args: any[]) => string): string; (searchValue: { ...; }, replaceValue: string): string; (searchValue: { ...; }, replacer: (substring: string, ...args: any[]) => string): string; }|{ (searchValue: string | RegExp, replaceValue: string): string; (searchValue: string | RegExp, replacer: (substring: string, ...args: any[]) => string): string; (searchValue: { ...; }, replaceValue: string): string; (searchValue: { ...; }, replacer: (substring: string, ...args: any[]) => string): string; }|{ (searchValue: string | RegExp, replaceValue: string): string; (searchValue: string | RegExp, replacer: (substring: string, ...args: any[]) => string): string; (searchValue: { ...; }, replaceValue: string): string; (searchValue: { ...; }, replacer: (substring: string, ...args: any[]) => string): string; }, search: { (regexp: string | RegExp): number; (searcher: { [Symbol.search](string: string): number; }): number; }|{ (regexp: string | RegExp): number; (searcher: { [Symbol.search](string: string): number; }): number; }, slice: (start?: number, end?: number) => string, split: { (separator: string | RegExp, limit?: number): string[]; (splitter: { [Symbol.split](string: string, limit?: number): string[]; }, limit?: number): string[]; }|{ (separator: string | RegExp, limit?: number): string[]; (splitter: { [Symbol.split](string: string, limit?: number): string[]; }, limit?: number): string[]; }, substring: (start: number, end?: number) => string, toLowerCase: () => string, toLocaleLowerCase: (locales?: string | string[]) => string, toUpperCase: () => string, toLocaleUpperCase: (locales?: string | string[]) => string, trim: () => string, length: number, substr: (from: number, length?: number) => string, valueOf: () => string, codePointAt: (pos: number) => number, includes: (searchString: string, position?: number) => boolean, endsWith: (searchString: string, endPosition?: number) => boolean, normalize: { (form: \\"NFC\\" | \\"NFD\\" | \\"NFKC\\" | \\"NFKD\\"): string; (form?: string): string; }|{ (form: \\"NFC\\" | \\"NFD\\" | \\"NFKC\\" | \\"NFKD\\"): string; (form?: string): string; }, repeat: (count: number) => string, startsWith: (searchString: string, position?: number) => boolean, anchor: (name: string) => string, big: () => string, blink: () => string, bold: () => string, fixed: () => string, fontcolor: (color: string) => string, fontsize: { (size: number): string; (size: string): string; }|{ (size: number): string; (size: string): string; }, italics: () => string, link: (url: string) => string, small: () => string, strike: () => string, sub: () => string, sup: () => string, padStart: (maxLength: number, fillString?: string) => string, padEnd: (maxLength: number, fillString?: string) => string, trimEnd: () => string, trimStart: () => string, trimLeft: () => string, trimRight: () => string, matchAll: (regexp: RegExp) => IterableIterator<RegExpMatchArray>, __@iterator@112: () => IterableIterator<string>, at: (index: number) => string))",
+]
+`;
+
+exports[`devkit goldens index.ts >  ProjectsConfigurations should not have changed: Previous type of ProjectsConfigurations 1`] = `
+Array [
+  "ProjectsConfigurations > (version: number, projects: { [projectName: string]: ProjectConfiguration; }))",
+]
+`;
+
+exports[`devkit goldens index.ts >  RemoteCache should not have changed: Previous type of RemoteCache 1`] = `
+Array [
+  "RemoteCache > (retrieve: (hash: string, cacheDirectory: string) => Promise<boolean>, store: (hash: string, cacheDirectory: string) => Promise<boolean>))",
+]
+`;
+
+exports[`devkit goldens index.ts >  Remotes should not have changed: Previous type of Remotes 1`] = `
+Array [
+  "Remotes > (length: number, toString: (() => string) | (() => string)|(() => string) | (() => string), toLocaleString: (() => string) | (() => string)|(() => string) | (() => string), pop: (() => string) | (() => [remoteName: string, remoteUrl: string])|(() => string) | (() => [remoteName: string, remoteUrl: string]), push: ((...items: string[]) => number) | ((...items: [remoteName: string, remoteUrl: string][]) => number)|((...items: string[]) => number) | ((...items: [remoteName: string, remoteUrl: string][]) => number), concat: { (...items: ConcatArray<string>[]): string[]; (...items: (string | ConcatArray<string>)[]): string[]; } | { (...items: ConcatArray<[remoteName: string, remoteUrl: string]>[]): [remoteName: ...][]; (...items: ([remoteName: ...] | ConcatArray<...>)[]): [remoteName: ...][]; }|{ (...items: ConcatArray<string>[]): string[]; (...items: (string | ConcatArray<string>)[]): string[]; } | { (...items: ConcatArray<[remoteName: string, remoteUrl: string]>[]): [remoteName: ...][]; (...items: ([remoteName: ...] | ConcatArray<...>)[]): [remoteName: ...][]; }|{ (...items: ConcatArray<string>[]): string[]; (...items: (string | ConcatArray<string>)[]): string[]; } | { (...items: ConcatArray<[remoteName: string, remoteUrl: string]>[]): [remoteName: ...][]; (...items: ([remoteName: ...] | ConcatArray<...>)[]): [remoteName: ...][]; }|{ (...items: ConcatArray<string>[]): string[]; (...items: (string | ConcatArray<string>)[]): string[]; } | { (...items: ConcatArray<[remoteName: string, remoteUrl: string]>[]): [remoteName: ...][]; (...items: ([remoteName: ...] | ConcatArray<...>)[]): [remoteName: ...][]; }, join: ((separator?: string) => string) | ((separator?: string) => string)|((separator?: string) => string) | ((separator?: string) => string), reverse: (() => string[]) | (() => [remoteName: string, remoteUrl: string][])|(() => string[]) | (() => [remoteName: string, remoteUrl: string][]), shift: (() => string) | (() => [remoteName: string, remoteUrl: string])|(() => string) | (() => [remoteName: string, remoteUrl: string]), slice: ((start?: number, end?: number) => string[]) | ((start?: number, end?: number) => [remoteName: string, remoteUrl: string][])|((start?: number, end?: number) => string[]) | ((start?: number, end?: number) => [remoteName: string, remoteUrl: string][]), sort: ((compareFn?: (a: string, b: string) => number) => string[]) | ((compareFn?: (a: [remoteName: string, remoteUrl: string], b: [remoteName: string, remoteUrl: string]) => number) => [remoteName: string, remoteUrl: string][])|((compareFn?: (a: string, b: string) => number) => string[]) | ((compareFn?: (a: [remoteName: string, remoteUrl: string], b: [remoteName: string, remoteUrl: string]) => number) => [remoteName: string, remoteUrl: string][]), splice: { (start: number, deleteCount?: number): string[]; (start: number, deleteCount: number, ...items: string[]): string[]; } | { (start: number, deleteCount?: number): [remoteName: string, remoteUrl: string][]; (start: number, deleteCount: number, ...items: [remoteName: ...][]): [remoteName: ...][]; }|{ (start: number, deleteCount?: number): string[]; (start: number, deleteCount: number, ...items: string[]): string[]; } | { (start: number, deleteCount?: number): [remoteName: string, remoteUrl: string][]; (start: number, deleteCount: number, ...items: [remoteName: ...][]): [remoteName: ...][]; }|{ (start: number, deleteCount?: number): string[]; (start: number, deleteCount: number, ...items: string[]): string[]; } | { (start: number, deleteCount?: number): [remoteName: string, remoteUrl: string][]; (start: number, deleteCount: number, ...items: [remoteName: ...][]): [remoteName: ...][]; }|{ (start: number, deleteCount?: number): string[]; (start: number, deleteCount: number, ...items: string[]): string[]; } | { (start: number, deleteCount?: number): [remoteName: string, remoteUrl: string][]; (start: number, deleteCount: number, ...items: [remoteName: ...][]): [remoteName: ...][]; }, unshift: ((...items: string[]) => number) | ((...items: [remoteName: string, remoteUrl: string][]) => number)|((...items: string[]) => number) | ((...items: [remoteName: string, remoteUrl: string][]) => number), indexOf: ((searchElement: string, fromIndex?: number) => number) | ((searchElement: [remoteName: string, remoteUrl: string], fromIndex?: number) => number)|((searchElement: string, fromIndex?: number) => number) | ((searchElement: [remoteName: string, remoteUrl: string], fromIndex?: number) => number), lastIndexOf: ((searchElement: string, fromIndex?: number) => number) | ((searchElement: [remoteName: string, remoteUrl: string], fromIndex?: number) => number)|((searchElement: string, fromIndex?: number) => number) | ((searchElement: [remoteName: string, remoteUrl: string], fromIndex?: number) => number), every: { <S extends string>(predicate: (value: string, index: number, array: string[]) => value is S, thisArg?: any): this is S[]; (predicate: (value: string, index: number, array: string[]) => unknown, thisArg?: any): boolean; } | { ...; }|{ <S extends string>(predicate: (value: string, index: number, array: string[]) => value is S, thisArg?: any): this is S[]; (predicate: (value: string, index: number, array: string[]) => unknown, thisArg?: any): boolean; } | { ...; }|{ <S extends string>(predicate: (value: string, index: number, array: string[]) => value is S, thisArg?: any): this is S[]; (predicate: (value: string, index: number, array: string[]) => unknown, thisArg?: any): boolean; } | { ...; }|{ <S extends string>(predicate: (value: string, index: number, array: string[]) => value is S, thisArg?: any): this is S[]; (predicate: (value: string, index: number, array: string[]) => unknown, thisArg?: any): boolean; } | { ...; }, some: ((predicate: (value: string, index: number, array: string[]) => unknown, thisArg?: any) => boolean) | ((predicate: (value: [remoteName: string, remoteUrl: string], index: number, array: [remoteName: string, remoteUrl: string][]) => unknown, thisArg?: any) => boolean)|((predicate: (value: string, index: number, array: string[]) => unknown, thisArg?: any) => boolean) | ((predicate: (value: [remoteName: string, remoteUrl: string], index: number, array: [remoteName: string, remoteUrl: string][]) => unknown, thisArg?: any) => boolean), forEach: ((callbackfn: (value: string, index: number, array: string[]) => void, thisArg?: any) => void) | ((callbackfn: (value: [remoteName: string, remoteUrl: string], index: number, array: [remoteName: string, remoteUrl: string][]) => void, thisArg?: any) => void)|((callbackfn: (value: string, index: number, array: string[]) => void, thisArg?: any) => void) | ((callbackfn: (value: [remoteName: string, remoteUrl: string], index: number, array: [remoteName: string, remoteUrl: string][]) => void, thisArg?: any) => void), map: (<U>(callbackfn: (value: string, index: number, array: string[]) => U, thisArg?: any) => U[]) | (<U>(callbackfn: (value: [remoteName: string, remoteUrl: string], index: number, array: [remoteName: string, remoteUrl: string][]) => U, thisArg?: any) => U[])|(<U>(callbackfn: (value: string, index: number, array: string[]) => U, thisArg?: any) => U[]) | (<U>(callbackfn: (value: [remoteName: string, remoteUrl: string], index: number, array: [remoteName: string, remoteUrl: string][]) => U, thisArg?: any) => U[]), filter: { <S extends string>(predicate: (value: string, index: number, array: string[]) => value is S, thisArg?: any): S[]; (predicate: (value: string, index: number, array: string[]) => unknown, thisArg?: any): string[]; } | { ...; }|{ <S extends string>(predicate: (value: string, index: number, array: string[]) => value is S, thisArg?: any): S[]; (predicate: (value: string, index: number, array: string[]) => unknown, thisArg?: any): string[]; } | { ...; }|{ <S extends string>(predicate: (value: string, index: number, array: string[]) => value is S, thisArg?: any): S[]; (predicate: (value: string, index: number, array: string[]) => unknown, thisArg?: any): string[]; } | { ...; }|{ <S extends string>(predicate: (value: string, index: number, array: string[]) => value is S, thisArg?: any): S[]; (predicate: (value: string, index: number, array: string[]) => unknown, thisArg?: any): string[]; } | { ...; }, reduce: { (callbackfn: (previousValue: string, currentValue: string, currentIndex: number, array: string[]) => string): string; (callbackfn: (previousValue: string, currentValue: string, currentIndex: number, array: string[]) => string, initialValue: string): string; <U>(callbackfn: (previousValue: U, currentValue: string, ...|{ (callbackfn: (previousValue: string, currentValue: string, currentIndex: number, array: string[]) => string): string; (callbackfn: (previousValue: string, currentValue: string, currentIndex: number, array: string[]) => string, initialValue: string): string; <U>(callbackfn: (previousValue: U, currentValue: string, ...|{ (callbackfn: (previousValue: string, currentValue: string, currentIndex: number, array: string[]) => string): string; (callbackfn: (previousValue: string, currentValue: string, currentIndex: number, array: string[]) => string, initialValue: string): string; <U>(callbackfn: (previousValue: U, currentValue: string, ...|{ (callbackfn: (previousValue: string, currentValue: string, currentIndex: number, array: string[]) => string): string; (callbackfn: (previousValue: string, currentValue: string, currentIndex: number, array: string[]) => string, initialValue: string): string; <U>(callbackfn: (previousValue: U, currentValue: string, ...|{ (callbackfn: (previousValue: string, currentValue: string, currentIndex: number, array: string[]) => string): string; (callbackfn: (previousValue: string, currentValue: string, currentIndex: number, array: string[]) => string, initialValue: string): string; <U>(callbackfn: (previousValue: U, currentValue: string, ...|{ (callbackfn: (previousValue: string, currentValue: string, currentIndex: number, array: string[]) => string): string; (callbackfn: (previousValue: string, currentValue: string, currentIndex: number, array: string[]) => string, initialValue: string): string; <U>(callbackfn: (previousValue: U, currentValue: string, ..., reduceRight: { (callbackfn: (previousValue: string, currentValue: string, currentIndex: number, array: string[]) => string): string; (callbackfn: (previousValue: string, currentValue: string, currentIndex: number, array: string[]) => string, initialValue: string): string; <U>(callbackfn: (previousValue: U, currentValue: string, ...|{ (callbackfn: (previousValue: string, currentValue: string, currentIndex: number, array: string[]) => string): string; (callbackfn: (previousValue: string, currentValue: string, currentIndex: number, array: string[]) => string, initialValue: string): string; <U>(callbackfn: (previousValue: U, currentValue: string, ...|{ (callbackfn: (previousValue: string, currentValue: string, currentIndex: number, array: string[]) => string): string; (callbackfn: (previousValue: string, currentValue: string, currentIndex: number, array: string[]) => string, initialValue: string): string; <U>(callbackfn: (previousValue: U, currentValue: string, ...|{ (callbackfn: (previousValue: string, currentValue: string, currentIndex: number, array: string[]) => string): string; (callbackfn: (previousValue: string, currentValue: string, currentIndex: number, array: string[]) => string, initialValue: string): string; <U>(callbackfn: (previousValue: U, currentValue: string, ...|{ (callbackfn: (previousValue: string, currentValue: string, currentIndex: number, array: string[]) => string): string; (callbackfn: (previousValue: string, currentValue: string, currentIndex: number, array: string[]) => string, initialValue: string): string; <U>(callbackfn: (previousValue: U, currentValue: string, ...|{ (callbackfn: (previousValue: string, currentValue: string, currentIndex: number, array: string[]) => string): string; (callbackfn: (previousValue: string, currentValue: string, currentIndex: number, array: string[]) => string, initialValue: string): string; <U>(callbackfn: (previousValue: U, currentValue: string, ..., find: { <S extends string>(predicate: (this: void, value: string, index: number, obj: string[]) => value is S, thisArg?: any): S; (predicate: (value: string, index: number, obj: string[]) => unknown, thisArg?: any): string; } | { ...; }|{ <S extends string>(predicate: (this: void, value: string, index: number, obj: string[]) => value is S, thisArg?: any): S; (predicate: (value: string, index: number, obj: string[]) => unknown, thisArg?: any): string; } | { ...; }|{ <S extends string>(predicate: (this: void, value: string, index: number, obj: string[]) => value is S, thisArg?: any): S; (predicate: (value: string, index: number, obj: string[]) => unknown, thisArg?: any): string; } | { ...; }|{ <S extends string>(predicate: (this: void, value: string, index: number, obj: string[]) => value is S, thisArg?: any): S; (predicate: (value: string, index: number, obj: string[]) => unknown, thisArg?: any): string; } | { ...; }, findIndex: ((predicate: (value: string, index: number, obj: string[]) => unknown, thisArg?: any) => number) | ((predicate: (value: [remoteName: string, remoteUrl: string], index: number, obj: [remoteName: string, remoteUrl: string][]) => unknown, thisArg?: any) => number)|((predicate: (value: string, index: number, obj: string[]) => unknown, thisArg?: any) => number) | ((predicate: (value: [remoteName: string, remoteUrl: string], index: number, obj: [remoteName: string, remoteUrl: string][]) => unknown, thisArg?: any) => number), fill: ((value: string, start?: number, end?: number) => string[]) | ((value: [remoteName: string, remoteUrl: string], start?: number, end?: number) => [remoteName: string, remoteUrl: string][])|((value: string, start?: number, end?: number) => string[]) | ((value: [remoteName: string, remoteUrl: string], start?: number, end?: number) => [remoteName: string, remoteUrl: string][]), copyWithin: ((target: number, start: number, end?: number) => string[]) | ((target: number, start: number, end?: number) => [remoteName: string, remoteUrl: string][])|((target: number, start: number, end?: number) => string[]) | ((target: number, start: number, end?: number) => [remoteName: string, remoteUrl: string][]), entries: (() => IterableIterator<[number, string]>) | (() => IterableIterator<[number, [remoteName: string, remoteUrl: string]]>)|(() => IterableIterator<[number, string]>) | (() => IterableIterator<[number, [remoteName: string, remoteUrl: string]]>), keys: (() => IterableIterator<number>) | (() => IterableIterator<number>)|(() => IterableIterator<number>) | (() => IterableIterator<number>), values: (() => IterableIterator<string>) | (() => IterableIterator<[remoteName: string, remoteUrl: string]>)|(() => IterableIterator<string>) | (() => IterableIterator<[remoteName: string, remoteUrl: string]>), includes: ((searchElement: string, fromIndex?: number) => boolean) | ((searchElement: [remoteName: string, remoteUrl: string], fromIndex?: number) => boolean)|((searchElement: string, fromIndex?: number) => boolean) | ((searchElement: [remoteName: string, remoteUrl: string], fromIndex?: number) => boolean), flatMap: (<U, This = undefined>(callback: (this: This, value: string, index: number, array: string[]) => U | readonly U[], thisArg?: This) => U[]) | (<U, This = undefined>(callback: (this: This, value: [remoteName: string, remoteUrl: string], index: number, array: [remoteName: ...][]) => U | readonly U[], thisArg?: This) => ...|(<U, This = undefined>(callback: (this: This, value: string, index: number, array: string[]) => U | readonly U[], thisArg?: This) => U[]) | (<U, This = undefined>(callback: (this: This, value: [remoteName: string, remoteUrl: string], index: number, array: [remoteName: ...][]) => U | readonly U[], thisArg?: This) => ..., flat: (<A, D extends number = 1>(this: A, depth?: D) => FlatArray<A, D>[]) | (<A, D extends number = 1>(this: A, depth?: D) => FlatArray<A, D>[])|(<A, D extends number = 1>(this: A, depth?: D) => FlatArray<A, D>[]) | (<A, D extends number = 1>(this: A, depth?: D) => FlatArray<A, D>[]), __@iterator@112: (() => IterableIterator<string>) | (() => IterableIterator<[remoteName: string, remoteUrl: string]>)|(() => IterableIterator<string>) | (() => IterableIterator<[remoteName: string, remoteUrl: string]>), __@unscopables@5104: (() => { copyWithin: boolean; entries: boolean; fill: boolean; find: boolean; findIndex: boolean; keys: boolean; values: boolean; }) | (() => { copyWithin: boolean; entries: boolean; fill: boolean; find: boolean; findIndex: boolean; keys: boolean; values: boolean; })|(() => { copyWithin: boolean; entries: boolean; fill: boolean; find: boolean; findIndex: boolean; keys: boolean; values: boolean; }) | (() => { copyWithin: boolean; entries: boolean; fill: boolean; find: boolean; findIndex: boolean; keys: boolean; values: boolean; }), at: ((index: number) => string) | ((index: number) => [remoteName: string, remoteUrl: string])|((index: number) => string) | ((index: number) => [remoteName: string, remoteUrl: string])))",
+]
+`;
+
+exports[`devkit goldens index.ts >  SharedFunction should not have changed: Previous type of SharedFunction 1`] = `
+Array [
+  "SharedFunction > (apply: (this: Function, thisArg: any, argArray?: any) => any, call: (this: Function, thisArg: any, ...argArray: any[]) => any, bind: (this: Function, thisArg: any, ...argArray: any[]) => any, toString: () => string, prototype: any, length: number, arguments: any, caller: Function, name: string, __@hasInstance@4604: (value: any) => boolean))",
+]
+`;
+
+exports[`devkit goldens index.ts >  SharedLibraryConfig should not have changed: Previous type of SharedLibraryConfig 1`] = `
+Array [
+  "SharedLibraryConfig > (singleton: boolean, strictVersion: boolean, requiredVersion: string | false, eager: boolean))",
+]
+`;
+
+exports[`devkit goldens index.ts >  SharedWorkspaceLibraryConfig should not have changed: Previous type of SharedWorkspaceLibraryConfig 1`] = `
+Array [
+  "SharedWorkspaceLibraryConfig > (getAliases: () => Record<string, string>, getLibraries: (eager?: boolean) => Record<string, SharedLibraryConfig>, getReplacementPlugin: () => NormalModuleReplacementPlugin))",
+]
+`;
+
+exports[`devkit goldens index.ts >  StringChange should not have changed: Previous type of StringChange 1`] = `
+Array [
+  "StringChange > (type: ChangeType|ChangeType))",
+]
+`;
+
+exports[`devkit goldens index.ts >  StringDeletion should not have changed: Previous type of StringDeletion 1`] = `
+Array [
+  "StringDeletion > (type: ChangeType.Delete, start: number, length: number))",
+]
+`;
+
+exports[`devkit goldens index.ts >  StringInsertion should not have changed: Previous type of StringInsertion 1`] = `
+Array [
+  "StringInsertion > (type: ChangeType.Insert, text: string, index: number))",
+]
+`;
+
+exports[`devkit goldens index.ts >  Target should not have changed: Previous type of Target 1`] = `
+Array [
+  "Target > (project: string, target: string, configuration: string))",
+]
+`;
+
+exports[`devkit goldens index.ts >  TargetConfiguration should not have changed: Previous type of TargetConfiguration 1`] = `
+Array [
+  "TargetConfiguration<T> > (executor: string, command: string, outputs: string[], dependsOn: (string | TargetDependencyConfig)[], inputs: (string | InputDefinition)[], options: T, configurations: { [config: string]: any; }, defaultConfiguration: string))",
+]
+`;
+
+exports[`devkit goldens index.ts >  TargetDependencyConfig should not have changed: Previous type of TargetDependencyConfig 1`] = `
+Array [
+  "TargetDependencyConfig > (projects: \\"self\\" | \\"dependencies\\", target: string, params: \\"ignore\\" | \\"forward\\"))",
+]
+`;
+
+exports[`devkit goldens index.ts >  Task should not have changed: Previous type of Task 1`] = `
+Array [
+  "Task > (id: string, target: { project: string; target: string; configuration?: string; }, overrides: any, projectRoot: string, hash: string, hashDetails: { command: string; nodes: { [name: string]: string; }; implicitDeps?: { [fileName: string]: string; }; runtime?: { [input: string]: string; }; }))",
+]
+`;
+
+exports[`devkit goldens index.ts >  TaskGraph should not have changed: Previous type of TaskGraph 1`] = `
+Array [
+  "TaskGraph > (roots: string[], tasks: Record<string, Task>, dependencies: Record<string, string[]>))",
+]
+`;
+
+exports[`devkit goldens index.ts >  TaskGraphExecutor should not have changed: Previous type of TaskGraphExecutor 1`] = `
+Array [
+  "TaskGraphExecutor<T> > (apply: (this: Function, thisArg: any, argArray?: any) => any, call: (this: Function, thisArg: any, ...argArray: any[]) => any, bind: (this: Function, thisArg: any, ...argArray: any[]) => any, toString: () => string, prototype: any, length: number, arguments: any, caller: Function, name: string, __@hasInstance@4604: (value: any) => boolean))",
+]
+`;
+
+exports[`devkit goldens index.ts >  Tree should not have changed: Previous type of Tree 1`] = `
+Array [
+  "Tree > (root: string, read: { (filePath: string): Buffer; (filePath: string, encoding: BufferEncoding): string; }|{ (filePath: string): Buffer; (filePath: string, encoding: BufferEncoding): string; }, write: (filePath: string, content: string | Buffer, options?: TreeWriteOptions) => void, exists: (filePath: string) => boolean, delete: (filePath: string) => void, rename: (from: string, to: string) => void, isFile: (filePath: string) => boolean, children: (dirPath: string) => string[], listChanges: () => FileChange[], changePermissions: (filePath: string, mode: Mode) => void))",
+]
+`;
+
+exports[`devkit goldens index.ts >  Workspace should not have changed: Previous type of Workspace 1`] = `
+Array [
+  "Workspace > (projects: Record<string, ProjectConfiguration>, version: number, extends: string, implicitDependencies: ImplicitDependencyEntry<string[] | \\"*\\">, targetDependencies: TargetDependencies, namedInputs: { [inputName: string]: (string | InputDefinition)[]; }, targetDefaults: TargetDefaults, npmScope: string, affected: NxAffectedConfig, workspaceLayout: { libsDir: string; appsDir: string; }, tasksRunnerOptions: { [tasksRunnerName: string]: { runner: string; options?: any; }; }, generators: { [collectionName: string]: { [generatorName: string]: any; }; }, cli: { packageManager?: PackageManager; defaultCollection?: string; defaultProjectName?: string; }, plugins: string[], pluginsConfig: Record<string, unknown>, defaultProject: string))",
+]
+`;
+
+exports[`devkit goldens index.ts >  WorkspaceConfiguration should not have changed: Previous type of WorkspaceConfiguration 1`] = `
+Array [
+  "any",
+]
+`;
+
+exports[`devkit goldens index.ts >  WorkspaceJsonConfiguration should not have changed: Previous type of WorkspaceJsonConfiguration 1`] = `
+Array [
+  "ProjectsConfigurations > (version: number, projects: { [projectName: string]: ProjectConfiguration; }))",
+]
+`;
+
+exports[`devkit goldens index.ts >  WorkspaceLibrary should not have changed: Previous type of WorkspaceLibrary 1`] = `
+Array [
+  "WorkspaceLibrary > (name: string, root: string, importKey: string))",
+]
+`;
+
+exports[`devkit goldens index.ts >  WorkspaceLibrarySecondaryEntryPoint should not have changed: Previous type of WorkspaceLibrarySecondaryEntryPoint 1`] = `
+Array [
+  "WorkspaceLibrarySecondaryEntryPoint > (name: string, path: string))",
+]
+`;
+
+exports[`devkit goldens index.ts >  Workspaces should not have changed: Previous type of Workspaces 1`] = `
+Array [
+  "Workspaces > (root: any, cachedProjectsConfig: any, relativeCwd: (cwd: string) => string, calculateDefaultProjectName: (cwd: string, projects: ProjectsConfigurations, nxJson: NxJsonConfiguration<string[] | \\"*\\">) => string, readProjectsConfig: (opts?: { _ignorePluginInference?: boolean; _includeProjectsFromAngularJson?: boolean; }) => ProjectsConfigurations, readWorkspaceConfiguration: (opts?: { _ignorePluginInference?: boolean; _includeProjectsFromAngularJson?: boolean; }) => ProjectsConfigurations & NxJsonConfiguration<string[] | \\"*\\">, mergeWorkspaceJsonAndGlobProjects: any, mergeTargetDefaultsIntoProjectDescriptions: any, isNxExecutor: (nodeModule: string, executor: string) => boolean, isNxGenerator: (collectionName: string, generatorName: string) => boolean, readExecutor: (nodeModule: string, executor: string) => ExecutorConfig & { isNgCompat: boolean; }, readGenerator: (collectionName: string, generatorName: string) => { resolvedCollectionName: string; normalizedGeneratorName: string; schema: any; implementationFactory: () => Generator<unknown>; isNgCompat: boolean; aliases: string[]; }, hasNxJson: () => boolean, readNxJson: () => NxJsonConfiguration<string[] | \\"*\\">, mergeTargetDefaultsAndTargetDependencies: any, getImplementationFactory: any, readExecutorsJson: any, readGeneratorsJson: any, resolvePaths: any, readFromWorkspaceJson: any))",
+]
+`;
+
+exports[`devkit goldens index.ts >  addDependenciesToPackageJson should not have changed: Previous type of addDependenciesToPackageJson 1`] = `
+Array [
+  "(tree: Tree, dependencies: Record<string, string>, devDependencies: Record<string, string>, packageJsonPath?: string) => GeneratorCallback",
+]
+`;
+
+exports[`devkit goldens index.ts >  addProjectConfiguration should not have changed: Previous type of addProjectConfiguration 1`] = `
+Array [
+  "(tree: Tree, projectName: string, projectConfiguration: ProjectConfiguration, standalone?: boolean) => void",
+]
+`;
+
+exports[`devkit goldens index.ts >  appRootPath should not have changed: Previous type of appRootPath 1`] = `
+Array [
+  "string",
+]
+`;
+
+exports[`devkit goldens index.ts >  applyAdditionalShared should not have changed: Previous type of applyAdditionalShared 1`] = `
+Array [
+  "(sharedConfig: Record<string, SharedLibraryConfig>, additionalShared: AdditionalSharedConfig, projectGraph: ProjectGraph) => void",
+]
+`;
+
+exports[`devkit goldens index.ts >  applyChangesToString should not have changed: Previous type of applyChangesToString 1`] = `
+Array [
+  "(text: string, changes: StringChange[]) => string",
+]
+`;
+
+exports[`devkit goldens index.ts >  applySharedFunction should not have changed: Previous type of applySharedFunction 1`] = `
+Array [
+  "(sharedConfig: Record<string, SharedLibraryConfig>, sharedFn: SharedFunction) => void",
+]
+`;
+
+exports[`devkit goldens index.ts >  cacheDir should not have changed: Previous type of cacheDir 1`] = `
+Array [
+  "string",
+]
+`;
+
+exports[`devkit goldens index.ts >  convertNxExecutor should not have changed: Previous type of convertNxExecutor 1`] = `
+Array [
+  "(executor: Executor<any>) => any",
+]
+`;
+
+exports[`devkit goldens index.ts >  convertNxGenerator should not have changed: Previous type of convertNxGenerator 1`] = `
+Array [
+  "<T = any>(generator: Generator<T>, skipWritingConfigInOldFormat?: boolean) => (generatorOptions: T) => (tree: any, context: any) => Promise<any>",
+]
+`;
+
+exports[`devkit goldens index.ts >  createLockFile should not have changed: Previous type of createLockFile 1`] = `
+Array [
+  "(packageJson: PackageJson, packageManager?: PackageManager) => string",
+]
+`;
+
+exports[`devkit goldens index.ts >  createPackageJson should not have changed: Previous type of createPackageJson 1`] = `
+Array [
+  "(projectName: string, graph: ProjectGraph, options?: { root?: string; isProduction?: boolean; }) => PackageJson",
+]
+`;
+
+exports[`devkit goldens index.ts >  createProjectGraphAsync should not have changed: Previous type of createProjectGraphAsync 1`] = `
+Array [
+  "(opts?: { exitOnError: boolean; resetDaemonClient?: boolean; }) => Promise<ProjectGraph>",
+]
+`;
+
+exports[`devkit goldens index.ts >  defaultTasksRunner should not have changed: Previous type of defaultTasksRunner 1`] = `
+Array [
+  "TasksRunner<DefaultTasksRunnerOptions>",
+]
+`;
+
+exports[`devkit goldens index.ts >  detectPackageManager should not have changed: Previous type of detectPackageManager 1`] = `
+Array [
+  "(dir?: string) => PackageManager",
+]
+`;
+
+exports[`devkit goldens index.ts >  detectWorkspaceScope should not have changed: Previous type of detectWorkspaceScope 1`] = `
+Array [
+  "(packageName: string) => string",
+]
+`;
+
+exports[`devkit goldens index.ts >  ensurePackage should not have changed: Previous type of ensurePackage 1`] = `
+Array [
+  "(tree: Tree, pkg: string, requiredVersion: string, options?: { dev?: boolean; throwOnMissing?: boolean; }) => Promise<void>",
+]
+`;
+
+exports[`devkit goldens index.ts >  extractLayoutDirectory should not have changed: Previous type of extractLayoutDirectory 1`] = `
+Array [
+  "(directory: string) => { layoutDirectory: string; projectDirectory: string; }",
+]
+`;
+
+exports[`devkit goldens index.ts >  formatFiles should not have changed: Previous type of formatFiles 1`] = `
+Array [
+  "(tree: Tree) => Promise<void>",
+]
+`;
+
+exports[`devkit goldens index.ts >  generateFiles should not have changed: Previous type of generateFiles 1`] = `
+Array [
+  "(tree: Tree, srcFolder: string, target: string, substitutions: { [k: string]: any; }) => void",
+]
+`;
+
+exports[`devkit goldens index.ts >  getDependentPackagesForProject should not have changed: Previous type of getDependentPackagesForProject 1`] = `
+Array [
+  "(projectGraph: ProjectGraph, name: string) => { workspaceLibraries: WorkspaceLibrary[]; npmPackages: string[]; }",
+]
+`;
+
+exports[`devkit goldens index.ts >  getImportPath should not have changed: Previous type of getImportPath 1`] = `
+Array [
+  "(npmScope: string, projectDirectory: string) => string",
+]
+`;
+
+exports[`devkit goldens index.ts >  getNpmPackageSharedConfig should not have changed: Previous type of getNpmPackageSharedConfig 1`] = `
+Array [
+  "(pkgName: string, version: string) => SharedLibraryConfig",
+]
+`;
+
+exports[`devkit goldens index.ts >  getOutputsForTargetAndConfiguration should not have changed: Previous type of getOutputsForTargetAndConfiguration 1`] = `
+Array [
+  "(task: Pick<Task, \\"target\\" | \\"overrides\\">, node: ProjectGraphProjectNode) => string[]",
+]
+`;
+
+exports[`devkit goldens index.ts >  getPackageManagerCommand should not have changed: Previous type of getPackageManagerCommand 1`] = `
+Array [
+  "(packageManager?: PackageManager) => PackageManagerCommands",
+]
+`;
+
+exports[`devkit goldens index.ts >  getPackageManagerVersion should not have changed: Previous type of getPackageManagerVersion 1`] = `
+Array [
+  "(packageManager?: PackageManager) => string",
+]
+`;
+
+exports[`devkit goldens index.ts >  getProjects should not have changed: Previous type of getProjects 1`] = `
+Array [
+  "(tree: Tree) => Map<string, ProjectConfiguration>",
+]
+`;
+
+exports[`devkit goldens index.ts >  getWorkspaceLayout should not have changed: Previous type of getWorkspaceLayout 1`] = `
+Array [
+  "(tree: Tree) => { appsDir: string; libsDir: string; standaloneAsDefault: boolean; npmScope: string; }",
+]
+`;
+
+exports[`devkit goldens index.ts >  getWorkspacePath should not have changed: Previous type of getWorkspacePath 1`] = `
+Array [
+  "any",
+]
+`;
+
+exports[`devkit goldens index.ts >  installPackagesTask should not have changed: Previous type of installPackagesTask 1`] = `
+Array [
+  "(tree: Tree, alwaysRun?: boolean, cwd?: string, packageManager?: PackageManager) => void",
+]
+`;
+
+exports[`devkit goldens index.ts >  isStandaloneProject should not have changed: Previous type of isStandaloneProject 1`] = `
+Array [
+  "any",
+]
+`;
+
+exports[`devkit goldens index.ts >  joinPathFragments should not have changed: Previous type of joinPathFragments 1`] = `
+Array [
+  "(...fragments: string[]) => string",
+]
+`;
+
+exports[`devkit goldens index.ts >  logger should not have changed: Previous type of logger 1`] = `
+Array [
+  "{ warn: (s: any) => void; error: (s: any) => void; info: (s: any) => void; log: (...s: any[]) => void; debug: (...s: any[]) => void; fatal: (...s: any[]) => void; }",
+]
+`;
+
+exports[`devkit goldens index.ts >  mapRemotes should not have changed: Previous type of mapRemotes 1`] = `
+Array [
+  "(remotes: Remotes, remoteEntryExt: \\"js\\" | \\"mjs\\", determineRemoteUrl: (remote: string) => string) => Record<string, string>",
+]
+`;
+
+exports[`devkit goldens index.ts >  mapRemotesForSSR should not have changed: Previous type of mapRemotesForSSR 1`] = `
+Array [
+  "(remotes: Remotes, remoteEntryExt: \\"js\\" | \\"mjs\\", determineRemoteUrl: (remote: string) => string) => Record<string, string>",
+]
+`;
+
+exports[`devkit goldens index.ts >  moveFilesToNewDirectory should not have changed: Previous type of moveFilesToNewDirectory 1`] = `
+Array [
+  "(tree: Tree, oldDir: string, newDir: string) => void",
+]
+`;
+
+exports[`devkit goldens index.ts >  names should not have changed: Previous type of names 1`] = `
+Array [
+  "(name: string) => { name: string; className: string; propertyName: string; constantName: string; fileName: string; }",
+]
+`;
+
+exports[`devkit goldens index.ts >  normalizePath should not have changed: Previous type of normalizePath 1`] = `
+Array [
+  "(osSpecificPath: string) => string",
+]
+`;
+
+exports[`devkit goldens index.ts >  offsetFromRoot should not have changed: Previous type of offsetFromRoot 1`] = `
+Array [
+  "(fullPathToDir: string) => string",
+]
+`;
+
+exports[`devkit goldens index.ts >  output should not have changed: Previous type of output 1`] = `
+Array [
+  "CLIOutput",
+]
+`;
+
+exports[`devkit goldens index.ts >  parseJson should not have changed: Previous type of parseJson 1`] = `
+Array [
+  "<T extends object = any>(input: string, options?: JsonParseOptions) => T",
+]
+`;
+
+exports[`devkit goldens index.ts >  parseTargetString should not have changed: Previous type of parseTargetString 1`] = `
+Array [
+  "{ (targetString: string): Target; (targetString: string, projectGraph: ProjectGraph): Target; }|{ (targetString: string): Target; (targetString: string, projectGraph: ProjectGraph): Target; }|{ (targetString: string): Target; (targetString: string, projectGraph: ProjectGraph): Target; }",
+]
+`;
+
+exports[`devkit goldens index.ts >  readAllWorkspaceConfiguration should not have changed: Previous type of readAllWorkspaceConfiguration 1`] = `
+Array [
+  "() => ProjectsConfigurations & NxJsonConfiguration<string[] | \\"*\\">",
+]
+`;
+
+exports[`devkit goldens index.ts >  readCachedProjectGraph should not have changed: Previous type of readCachedProjectGraph 1`] = `
+Array [
+  "() => ProjectGraph",
+]
+`;
+
+exports[`devkit goldens index.ts >  readJson should not have changed: Previous type of readJson 1`] = `
+Array [
+  "<T extends object = any>(tree: Tree, path: string, options?: JsonParseOptions) => T",
+]
+`;
+
+exports[`devkit goldens index.ts >  readJsonFile should not have changed: Previous type of readJsonFile 1`] = `
+Array [
+  "<T extends object = any>(path: string, options?: JsonReadOptions) => T",
+]
+`;
+
+exports[`devkit goldens index.ts >  readNxJson should not have changed: Previous type of readNxJson 1`] = `
+Array [
+  "any",
+]
+`;
+
+exports[`devkit goldens index.ts >  readProjectConfiguration should not have changed: Previous type of readProjectConfiguration 1`] = `
+Array [
+  "(tree: Tree, projectName: string) => ProjectConfiguration",
+]
+`;
+
+exports[`devkit goldens index.ts >  readRootPackageJson should not have changed: Previous type of readRootPackageJson 1`] = `
+Array [
+  "() => { dependencies?: { [key: string]: string; }; devDependencies?: { [key: string]: string; }; }",
+]
+`;
+
+exports[`devkit goldens index.ts >  readTargetOptions should not have changed: Previous type of readTargetOptions 1`] = `
+Array [
+  "<T = any>({ project, target, configuration }: Target, context: ExecutorContext) => T",
+]
+`;
+
+exports[`devkit goldens index.ts >  readWorkspaceConfiguration should not have changed: Previous type of readWorkspaceConfiguration 1`] = `
+Array [
+  "any",
+]
+`;
+
+exports[`devkit goldens index.ts >  removeDependenciesFromPackageJson should not have changed: Previous type of removeDependenciesFromPackageJson 1`] = `
+Array [
+  "(tree: Tree, dependencies: string[], devDependencies: string[], packageJsonPath?: string) => GeneratorCallback",
+]
+`;
+
+exports[`devkit goldens index.ts >  removeProjectConfiguration should not have changed: Previous type of removeProjectConfiguration 1`] = `
+Array [
+  "(tree: Tree, projectName: string) => void",
+]
+`;
+
+exports[`devkit goldens index.ts >  reverse should not have changed: Previous type of reverse 1`] = `
+Array [
+  "(graph: ProjectGraph) => ProjectGraph",
+]
+`;
+
+exports[`devkit goldens index.ts >  runExecutor should not have changed: Previous type of runExecutor 1`] = `
+Array [
+  "<T extends { success: boolean; }>(targetDescription: { project: string; target: string; configuration?: string; }, overrides: { [k: string]: any; }, context: ExecutorContext) => Promise<AsyncIterableIterator<...>>",
+]
+`;
+
+exports[`devkit goldens index.ts >  serializeJson should not have changed: Previous type of serializeJson 1`] = `
+Array [
+  "<T extends object = object>(input: T, options?: JsonSerializeOptions) => string",
+]
+`;
+
+exports[`devkit goldens index.ts >  sharePackages should not have changed: Previous type of sharePackages 1`] = `
+Array [
+  "(packages: string[]) => Record<string, SharedLibraryConfig>",
+]
+`;
+
+exports[`devkit goldens index.ts >  shareWorkspaceLibraries should not have changed: Previous type of shareWorkspaceLibraries 1`] = `
+Array [
+  "(libraries: WorkspaceLibrary[], tsConfigPath?: string) => SharedWorkspaceLibraryConfig",
+]
+`;
+
+exports[`devkit goldens index.ts >  stripIndents should not have changed: Previous type of stripIndents 1`] = `
+Array [
+  "(strings: TemplateStringsArray, ...values: any[]) => string",
+]
+`;
+
+exports[`devkit goldens index.ts >  stripJsonComments should not have changed: Previous type of stripJsonComments 1`] = `
+Array [
+  "(text: string, replaceCh?: string) => string",
+]
+`;
+
+exports[`devkit goldens index.ts >  targetToTargetString should not have changed: Previous type of targetToTargetString 1`] = `
+Array [
+  "({ project, target, configuration, }: Target) => string",
+]
+`;
+
+exports[`devkit goldens index.ts >  toJS should not have changed: Previous type of toJS 1`] = `
+Array [
+  "(tree: Tree) => void",
+]
+`;
+
+exports[`devkit goldens index.ts >  updateJson should not have changed: Previous type of updateJson 1`] = `
+Array [
+  "<T extends object = any, U extends object = T>(tree: Tree, path: string, updater: (value: T) => U, options?: JsonParseOptions & JsonSerializeOptions) => void",
+]
+`;
+
+exports[`devkit goldens index.ts >  updateNxJson should not have changed: Previous type of updateNxJson 1`] = `
+Array [
+  "any",
+]
+`;
+
+exports[`devkit goldens index.ts >  updateProjectConfiguration should not have changed: Previous type of updateProjectConfiguration 1`] = `
+Array [
+  "(tree: Tree, projectName: string, projectConfiguration: ProjectConfiguration) => void",
+]
+`;
+
+exports[`devkit goldens index.ts >  updateTsConfigsToJs should not have changed: Previous type of updateTsConfigsToJs 1`] = `
+Array [
+  "(tree: Tree, options: { projectRoot: string; }) => void",
+]
+`;
+
+exports[`devkit goldens index.ts >  updateWorkspaceConfiguration should not have changed: Previous type of updateWorkspaceConfiguration 1`] = `
+Array [
+  "any",
+]
+`;
+
+exports[`devkit goldens index.ts >  visitNotIgnoredFiles should not have changed: Previous type of visitNotIgnoredFiles 1`] = `
+Array [
+  "(tree: Tree, dirPath: string, visitor: (path: string) => void) => void",
+]
+`;
+
+exports[`devkit goldens index.ts >  workspaceLayout should not have changed: Previous type of workspaceLayout 1`] = `
+Array [
+  "() => { appsDir: string; libsDir: string; }",
+]
+`;
+
+exports[`devkit goldens index.ts >  workspaceRoot should not have changed: Previous type of workspaceRoot 1`] = `
+Array [
+  "string",
+]
+`;
+
+exports[`devkit goldens index.ts >  writeJson should not have changed: Previous type of writeJson 1`] = `
+Array [
+  "<T extends object = object>(tree: Tree, path: string, value: T, options?: JsonSerializeOptions) => void",
+]
+`;
+
+exports[`devkit goldens index.ts >  writeJsonFile should not have changed: Previous type of writeJsonFile 1`] = `
+Array [
+  "<T extends object = object>(path: string, data: T, options?: JsonWriteOptions) => void",
+]
+`;
+
+exports[`devkit goldens testing.ts >  createTree should not have changed: Previous type of createTree 1`] = `
+Array [
+  "() => Tree",
+]
+`;
+
+exports[`devkit goldens testing.ts >  createTreeWithEmptyV1Workspace should not have changed: Previous type of createTreeWithEmptyV1Workspace 1`] = `
+Array [
+  "() => Tree",
+]
+`;
+
+exports[`devkit goldens testing.ts >  createTreeWithEmptyWorkspace should not have changed: Previous type of createTreeWithEmptyWorkspace 1`] = `
+Array [
+  "(opts?: { layout?: \\"apps-libs\\"; }) => Tree",
+]
+`;
