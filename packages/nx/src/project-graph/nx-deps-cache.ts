@@ -9,7 +9,7 @@ import {
   ProjectGraph,
   ProjectGraphDependency,
   ProjectGraphExternalNode,
-  ProjectGraphNode,
+  ProjectGraphProjectNode,
 } from '../config/project-graph';
 import { ProjectsConfigurations } from '../config/workspace-json-project-json';
 import { projectGraphCacheDirectory } from '../utils/cache-directory';
@@ -27,7 +27,7 @@ export interface ProjectGraphCache {
   pathMappings: Record<string, any>;
   nxJsonPlugins: { name: string; version: string }[];
   pluginsConfig?: any;
-  nodes: Record<string, ProjectGraphNode>;
+  nodes: Record<string, ProjectGraphProjectNode>;
   externalNodes?: Record<string, ProjectGraphExternalNode>;
 
   // this is only used by scripts that read dependency from the file
@@ -241,7 +241,7 @@ export function extractCachedFileData(
 
 function processProjectNode(
   name: string,
-  cachedNode: ProjectGraphNode,
+  cachedNode: ProjectGraphProjectNode,
   cachedFileData: { [project: string]: { [file: string]: FileData } },
   filesToProcess: ProjectFileMap,
   fileMap: ProjectFileMap

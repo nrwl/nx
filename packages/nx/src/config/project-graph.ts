@@ -33,6 +33,7 @@ export interface ProjectGraph {
   version?: string;
 }
 
+/** @deprecated this type will be removed in v16. Use {@link ProjectGraph} instead */
 export interface ProjectGraphV4<T = any> {
   nodes: Record<string, ProjectGraphNode>;
   dependencies: Record<string, ProjectGraphDependency[]>;
@@ -59,9 +60,7 @@ export enum DependencyType {
   implicit = 'implicit',
 }
 
-/**
- * A node describing a project or an external node in a workspace
- */
+/** @deprecated this type will be removed in v16. Use {@link ProjectGraphProjectNode} or {@link ProjectGraphExternalNode} instead */
 export type ProjectGraphNode =
   | ProjectGraphProjectNode
   | ProjectGraphExternalNode;

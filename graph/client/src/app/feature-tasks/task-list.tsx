@@ -1,5 +1,5 @@
 // nx-ignore-next-line
-import type { ProjectGraphNode } from '@nrwl/devkit';
+import type { ProjectGraphProjectNode } from '@nrwl/devkit';
 import {
   createTaskName,
   getProjectsByType,
@@ -13,7 +13,7 @@ import { TaskGraphErrorTooltip } from './task-graph-error-tooltip';
 import { ExperimentalFeature } from '../ui-components/experimental-feature';
 
 interface SidebarProject {
-  projectGraphNode: ProjectGraphNode;
+  projectGraphNode: ProjectGraphProjectNode;
   isSelected: boolean;
   error: string | null;
 }
@@ -108,7 +108,7 @@ function SubProjectList({
 }
 
 function mapToSidebarProjectWithTasks(
-  project: ProjectGraphNode,
+  project: ProjectGraphProjectNode,
   selectedProjects: string[],
   selectedTarget: string,
   errors: Record<string, string>
@@ -123,7 +123,7 @@ function mapToSidebarProjectWithTasks(
 }
 
 export interface TaskListProps {
-  projects: ProjectGraphNode[];
+  projects: ProjectGraphProjectNode[];
   workspaceLayout: WorkspaceLayout;
   selectedTarget: string;
   selectedProjects: string[];
