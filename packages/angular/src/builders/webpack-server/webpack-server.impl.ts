@@ -6,7 +6,7 @@ import { Schema } from './schema';
 import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
 import { switchMap } from 'rxjs/operators';
 import { getInstalledAngularVersionInfo } from '../../executors/utilities/angular-version-utils';
-import { lt } from 'semver';
+import { gte, lt } from 'semver';
 
 function buildServerApp(
   options: Schema,
@@ -101,6 +101,22 @@ export function executeWebpackServerBuilder(
   ) {
     throw new Error(stripIndents`The "assets" option is only supported in Angular >= 15.1.0. You are currently using ${installedAngularVersionInfo.version}.
     You can resolve this error by removing the "assets" option or by migrating to Angular 15.1.0.`);
+  }
+
+  if (
+    gte(installedAngularVersionInfo.version, '15.0.0') &&
+    options.bundleDependencies
+  ) {
+    throw new Error(stripIndents`The "bundleDependencies" option was removed in Angular version 15. You are currently using ${installedAngularVersionInfo.version}.
+    You can resolve this error by removing the "bundleDependencies" option.`);
+  }
+
+  // default bundleDependencies to true if supported by Angular version
+  if (
+    lt(installedAngularVersionInfo.version, '15.0.0') &&
+    options.bundleDependencies === undefined
+  ) {
+    options.bundleDependencies = true;
   }
 
   options.buildLibsFromSource ??= true;

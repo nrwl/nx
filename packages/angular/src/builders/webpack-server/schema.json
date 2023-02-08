@@ -200,8 +200,7 @@
       "default": []
     },
     "bundleDependencies": {
-      "description": "Which external dependencies to bundle into the bundle. By default, all of node_modules will be bundled.",
-      "default": true,
+      "description": "Which external dependencies to bundle into the bundle. By default, all of node_modules will be bundled. _Note: This is only supported in Angular versions >= 14.0.0, < 15.0.0. It was removed in Angular 15._",
       "oneOf": [
         {
           "type": "boolean"
