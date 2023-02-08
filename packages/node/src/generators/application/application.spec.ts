@@ -459,4 +459,24 @@ describe('app', () => {
       expect(devkit.formatFiles).not.toHaveBeenCalled();
     });
   });
+
+  describe.each([
+    ['fastify' as const, true],
+    ['express' as const, false],
+    ['koa' as const, false],
+  ])('--unitTestRunner', (framework, checkSpecFile) => {
+    it('should generate test target and spec file by default', async () => {
+      await applicationGenerator(tree, {
+        name: 'api',
+        framework,
+      });
+
+      const project = readProjectConfiguration(tree, 'api');
+      expect(project.targets.test).toBeDefined();
+
+      if (checkSpecFile) {
+        expect(tree.exists(`api/src/app/app.spec.ts`)).toBeTruthy();
+      }
+    });
+  });
 });

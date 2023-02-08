@@ -361,6 +361,11 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
       skipFormat: true,
     });
     tasks.push(jestTask);
+  } else {
+    // No need for default spec file if unit testing is not setup.
+    tree.delete(
+      joinPathFragments(options.appProjectRoot, 'src/app/app.spec.ts')
+    );
   }
 
   if (options.e2eTestRunner === 'jest') {
