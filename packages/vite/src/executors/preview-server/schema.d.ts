@@ -8,4 +8,5 @@ export interface VitePreviewServerExecutorOptions {
   logLevel?: 'info' | 'warn' | 'error' | 'silent';
   mode?: string;
   clearScreen?: boolean;
+  staticFilePath?: string;
 }
