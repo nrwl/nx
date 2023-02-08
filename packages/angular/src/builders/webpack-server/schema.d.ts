@@ -5,4 +5,5 @@ export interface Schema extends ServerBuilderOptions {
     path: string;
   };
   buildLibsFromSource?: boolean;
+  bundleDependencies?: boolean | 'none' | 'all';
 }
