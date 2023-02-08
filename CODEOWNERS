@@ -12,6 +12,7 @@
 # Plugin Verticals
 
 ## Angular
+/docs/generated/packages/angular/** @Coly010 @leosvelperez
 /packages/angular/** @Coly010 @leosvelperez
 /e2e/angular-core/** @Coly010 @leosvelperez
 /e2e/angular-extensions/** @Coly010 @leosvelperez
@@ -19,6 +20,8 @@
 /e2e/make-angular-cli-faster/** @leosvelperez @Coly010
 
 ## React
+/docs/generated/packages/react/** @jaysoo @ndcunningham @mandarini
+/docs/generated/packages/next/** @jaysoo @ndcunningham
 /packages/react/** @jaysoo @ndcunningham @mandarini
 /e2e/react/** @jaysoo @mandarini
 /packages/next/** @ndcunningham @jaysoo
@@ -26,6 +29,9 @@
 /packages/cra-to-nx/** @jaysoo @xiongemi @mandarini
 /e2e/cra-to-nx/** @jaysoo @xiongemi @mandarini
 
+/docs/generated/packages/detox/** @xiongemi @jaysoo
+/docs/generated/packages/expo/** @xiongemi @jaysoo
+/docs/generated/packages/react-native/** @xiongemi @jaysoo
 /packages/detox/** @xiongemi @jaysoo
 /e2e/detox/** @xiongemi @jaysoo
 /packages/expo/** @xiongemi @jaysoo
@@ -34,12 +40,19 @@
 /e2e/react-native/** @xiongemi @jaysoo
 
 ## Node
+/docs/generated/packages/node/** @nartc @ndcunningham
 /packages/node/** @nartc @ndcunningham
 /packages/express/** @nartc @ndcunningham
 /packages/nest/** @nartc @ndcunningham
 /e2e/node/** @nartc @ndcunningham
 
 ## JS
+/docs/generated/packages/js/** @nartc @jaysoo
+/docs/generated/packages/web/** @jaysoo @mandarini
+/docs/generated/packages/webpack/** @jaysoo @mandarini
+/docs/generated/packages/esbuild/** @nartc @jaysoo
+/docs/generated/packages/rollup/** @jaysoo @mandarini
+/docs/generated/packages/vite/** @jaysoo @mandarini
 /packages/js/** @nartc @jaysoo
 /e2e/js/** @nartc @jaysoo
 /packages/web/** @jaysoo @mandarini
@@ -54,28 +67,38 @@
 /e2e/vite/** @jaysoo @mandarini
 
 ## Tools
+/docs/generated/packages/cypress/** @barbados-clemens @FrozenPandaz
+/docs/generated/packages/jest/** @barbados-clemens @FrozenPandaz
 /packages/cypress/** @barbados-clemens @FrozenPandaz
 /e2e/cypress/** @barbados-clemens @FrozenPandaz
 /packages/jest/** @barbados-clemens @FrozenPandaz
 /e2e/jest/** @barbados-clemens @FrozenPandaz
 
+/docs/generated/packages/eslint-plugin-nx/** @meeroslav @FrozenPandaz
+/docs/generated/packages/linter/** @meeroslav @FrozenPandaz
 /packages/eslint-plugin-nx/** @meeroslav @FrozenPandaz
 /packages/linter/** @meeroslav @FrozenPandaz
 /e2e/linter/** @meeroslav @FrozenPandaz
 
+/docs/generated/packages/storybook/** @mandarini @jaysoo @Coly010
 /packages/storybook/** @mandarini @jaysoo @Coly010
 /e2e/storybook/** @mandarini @FrozenPandaz @Coly010
 /e2e/storybook-angular/** @mandarini @Coly010
 
 ## Devkit
+/docs/generated/devkit/** @FrozenPandaz @AgentEnder
+/docs/generated/packages/devkit/** @FrozenPandaz @AgentEnder
 /packages/devkit/** @FrozenPandaz @AgentEnder
 /packages/devkit/index.ts @FrozenPandaz @vsavkin
 /packages/devkit/src/utils/module-federation @jaysoo @Coly010
 
+/docs/generated/packages/nx-plugin/** @AgentEnder @FrozenPandaz
 /packages/nx-plugin/** @AgentEnder @FrozenPandaz
 /e2e/nx-plugin/** @AgentEnder @FrozenPandaz
 
 ## Core
+/docs/generated/packages/nx/** @vsavkin @FrozenPandaz @AgentEnder
+/docs/generated/packages/workspace/** @vsavkin @FrozenPandaz @AgentEnder
 /packages/nx/** @vsavkin @FrozenPandaz @AgentEnder
 /packages/nx/src/adapter @AgentEnder @leosvelperez
 /packages/nx/src/config @AgentEnder @vsavkin
