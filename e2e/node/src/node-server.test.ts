@@ -57,6 +57,9 @@ describe('Node Applications + webpack', () => {
     expect(() => runCLI(`lint ${fastifyApp}-e2e`)).not.toThrow();
     expect(() => runCLI(`lint ${koaApp}-e2e`)).not.toThrow();
 
+    // Only Fastify generates with unit tests since it supports them without additional libraries.
+    expect(() => runCLI(`lint ${fastifyApp}`)).not.toThrow();
+
     await runE2eTests(expressApp);
     await runE2eTests(fastifyApp);
     await runE2eTests(koaApp);
