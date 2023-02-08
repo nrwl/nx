@@ -24,9 +24,6 @@ stages:
     - npm ci --cache .npm --prefer-offline
     - NX_HEAD=$CI_COMMIT_SHA
     - NX_BASE=${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
-  artifacts:
-    paths:
-      - node_modules/.cache/nx
 
 workspace-lint:
   stage: test
@@ -107,10 +104,6 @@ variables:
     - yarn install --cache-folder .yarn-cache --prefer-offline --frozen-lockfile
     - NX_HEAD=$CI_COMMIT_SHA
     - NX_BASE=${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
-  artifacts:
-    expire_in: 5 days
-    paths:
-      - node_modules/.cache/nx
 
 # Main job running DTE
 nx-dte:
