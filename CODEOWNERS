@@ -74,12 +74,14 @@
 /packages/jest/** @barbados-clemens @FrozenPandaz
 /e2e/jest/** @barbados-clemens @FrozenPandaz
 
+# Linter
 /docs/generated/packages/eslint-plugin-nx/** @meeroslav @FrozenPandaz
 /docs/generated/packages/linter/** @meeroslav @FrozenPandaz
 /packages/eslint-plugin-nx/** @meeroslav @FrozenPandaz
 /packages/linter/** @meeroslav @FrozenPandaz
 /e2e/linter/** @meeroslav @FrozenPandaz
 
+# Storybook
 /docs/generated/packages/storybook/** @mandarini @jaysoo @Coly010
 /packages/storybook/** @mandarini @jaysoo @Coly010
 /e2e/storybook/** @mandarini @FrozenPandaz @Coly010
@@ -92,6 +94,7 @@
 /packages/devkit/index.ts @FrozenPandaz @vsavkin
 /packages/devkit/src/utils/module-federation @jaysoo @Coly010
 
+# Nx-Plugin
 /docs/generated/packages/nx-plugin/** @AgentEnder @FrozenPandaz
 /packages/nx-plugin/** @AgentEnder @FrozenPandaz
 /e2e/nx-plugin/** @AgentEnder @FrozenPandaz
@@ -106,6 +109,7 @@
 /packages/nx/src/plugins @AgentEnder @FrozenPandaz @vsavkin
 /packages/nx/src/utils @vsavkin @FrozenPandaz @AgentEnder
 /packages/nx/src/native @vsavkin @FrozenPandaz @Cammisuli
+/packages/nx/src/lock-file @meeroslav @FrozenPandaz
 /e2e/nx*/** @FrozenPandaz @AgentEnder @vsavkin
 /packages/workspace/** @FrozenPandaz @AgentEnder @vsavkin
 /e2e/workspace/** @FrozenPandaz @AgentEnder @vsavkin
@@ -125,6 +129,11 @@
 /scripts/documentation @bcabanes @isaacplmann
 /scripts/local-registry @FrozenPandaz @vsavkin
 /scripts/angular-support-upgrades @Coly010 @leosvelperez
+
+# CI
+/.circleci/** @meeroslav @vsavkin
+/.github/** @meeroslav @vsavkin
+/packages/workspace/src/generators/ci-workflow/** @meeroslav @StalkAltan @vsavkin
 
 # Global Files
 project.json @FrozenPandaz @vsavkin
