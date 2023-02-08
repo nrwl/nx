@@ -20,8 +20,7 @@ That's it!
 
 {% callout type="note" title="Vite" %}
 You will notice that the project now uses [Vite](https://vitejs.dev/) and [Vitest](https://vitest.dev/) to build and
-test your application. Vite is a next-gen tooling for building frontend applications, and is much faster than Webpack (
-which CRA uses).
+test your application. Vite is a next-gen tooling for building frontend applications, and is much faster than Webpack (which CRA uses).
 
 If you do not want to use Vite, you can run `npx nx init --vite=false` instead.
 {% /callout %}
