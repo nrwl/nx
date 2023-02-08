@@ -357,18 +357,6 @@ export function readJsonInTree<T extends object = any>(
   }
 }
 
-// TODO(v13): remove this deprecated method
-/**
- * @deprecated This method is deprecated
- */
-export function getFileDataInHost(host: Tree, path: Path): FileData {
-  return {
-    file: path,
-    ext: extname(normalize(path)),
-    hash: '',
-  };
-}
-
 export function allFilesInDirInHost(
   host: Tree,
   path: Path,

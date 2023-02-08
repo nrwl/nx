@@ -11,8 +11,6 @@ import { NxJsonConfiguration } from './nx-json';
 export interface FileData {
   file: string;
   hash: string;
-  /** @deprecated this field will be removed in v13. Use {@link path.extname} to parse extension */
-  ext?: string;
   deps?: string[];
 }
 
