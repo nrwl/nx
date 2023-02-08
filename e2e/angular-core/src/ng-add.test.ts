@@ -1,5 +1,3 @@
-process.env.SELECTED_CLI = 'angular';
-
 import {
   checkFilesDoNotExist,
   checkFilesExist,
@@ -56,6 +54,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     runNgAdd('@cypress/schematic', '--e2e-update', '1.7.0');
     packageInstall('cypress', null, '^9.0.0');
   }
+
   function addCypress10() {
     runNgAdd('@cypress/schematic', '--e2e', 'latest');
   }

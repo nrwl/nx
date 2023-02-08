@@ -1,4 +1,4 @@
-import { Tree, readJson, readProjectConfiguration } from '@nrwl/devkit';
+import { readProjectConfiguration, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { overrideCollectionResolutionForTesting } from '@nrwl/devkit/ngcli-adapter';
 import { presetGenerator } from './preset';
@@ -45,7 +45,6 @@ describe('preset', () => {
     await presetGenerator(tree, {
       name: 'proj',
       preset: Preset.AngularMonorepo,
-      cli: 'nx',
       style: 'css',
       linter: 'eslint',
     });
@@ -58,7 +57,6 @@ describe('preset', () => {
     await presetGenerator(tree, {
       name: 'proj',
       preset: Preset.WebComponents,
-      cli: 'nx',
     });
     expect(tree.exists('/apps/proj/src/main.ts')).toBe(true);
   });
@@ -69,7 +67,6 @@ describe('preset', () => {
       preset: Preset.ReactMonorepo,
       style: 'css',
       linter: 'eslint',
-      cli: 'nx',
     });
     expect(tree.exists('/apps/proj/src/main.tsx')).toBe(true);
     expect(readProjectConfiguration(tree, 'proj').targets.serve).toBeDefined();
@@ -81,7 +78,6 @@ describe('preset', () => {
       preset: Preset.NextJs,
       style: 'css',
       linter: 'eslint',
-      cli: 'nx',
     });
     expect(tree.exists('/apps/proj/pages/index.tsx')).toBe(true);
   });
@@ -91,7 +87,6 @@ describe('preset', () => {
       name: 'proj',
       preset: Preset.Express,
       linter: 'eslint',
-      cli: 'nx',
     });
 
     expect(tree.exists('apps/proj/src/main.ts')).toBe(true);
@@ -103,7 +98,6 @@ describe('preset', () => {
       name: 'proj',
       preset: Preset.ReactNative,
       linter: 'eslint',
-      cli: 'nx',
     });
 
     expect(tree.exists('/apps/proj/src/app/App.tsx')).toBe(true);
@@ -115,7 +109,6 @@ describe('preset', () => {
       preset: Preset.ReactStandalone,
       style: 'css',
       linter: 'eslint',
-      cli: 'nx',
       bundler: 'webpack',
     });
     expect(tree.exists('webpack.config.js')).toBe(true);
@@ -130,7 +123,6 @@ describe('preset', () => {
       preset: Preset.ReactStandalone,
       style: 'css',
       linter: 'eslint',
-      cli: 'nx',
       bundler: 'vite',
     });
     expect(tree.exists('vite.config.ts')).toBe(true);

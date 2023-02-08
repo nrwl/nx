@@ -15,12 +15,6 @@
         "$default": { "$source": "argv", "index": 0 },
         "x-prompt": "What name would you like to use for the workspace?"
       },
-      "cli": {
-        "description": "CLI used for generating code and running tasks.",
-        "type": "string",
-        "enum": ["nx", "angular"],
-        "default": "nx"
-      },
       "style": {
         "description": "The file extension to be used for style files.",
         "type": "string",

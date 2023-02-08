@@ -67,10 +67,6 @@ interface RunCmdOpts {
   silent?: boolean;
 }
 
-export function currentCli() {
-  return process.env.SELECTED_CLI || 'nx';
-}
-
 export const e2eRoot = isCI
   ? dirSync({ prefix: 'nx-e2e-' }).name
   : '/tmp/nx-e2e';
@@ -82,7 +78,7 @@ export function isVerbose() {
   );
 }
 
-export const e2eCwd = `${e2eRoot}/${currentCli()}`;
+export const e2eCwd = `${e2eRoot}/nx`;
 ensureDirSync(e2eCwd);
 
 let projName: string;
@@ -137,7 +133,6 @@ export function runCreateWorkspace(
     style,
     base,
     packageManager,
-    cli,
     extraArgs,
     ci,
     useDetectedPm = false,
@@ -149,7 +144,6 @@ export function runCreateWorkspace(
     style?: string;
     base?: string;
     packageManager?: 'npm' | 'yarn' | 'pnpm';
-    cli?: string;
     extraArgs?: string;
     ci?: 'azure' | 'github' | 'circleci';
     useDetectedPm?: boolean;
@@ -161,9 +155,7 @@ export function runCreateWorkspace(
 
   const pm = getPackageManagerCommand({ packageManager });
 
-  let command = `${pm.createWorkspace} ${name} --cli=${
-    cli || currentCli()
-  } --preset=${preset} --no-nxCloud --no-interactive`;
+  let command = `${pm.createWorkspace} ${name} --preset=${preset} --no-nxCloud --no-interactive`;
   if (appName) {
     command += ` --appName=${appName}`;
   }

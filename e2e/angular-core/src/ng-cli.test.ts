@@ -13,8 +13,6 @@ import {
 import { PackageManager } from 'nx/src/utils/package-manager';
 import { removeSync } from 'fs-extra';
 
-process.env.SELECTED_CLI = 'angular';
-
 describe('using Nx executors and generators with Angular CLI', () => {
   let project: string;
   let packageManager: PackageManager;

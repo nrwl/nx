@@ -18,7 +18,6 @@
         "description": "Npm scope for importing libs.",
         "type": "string"
       },
-      "cli": { "description": "CLI powering the workspace.", "type": "string" },
       "linter": {
         "description": "The tool to use for running lint checks.",
         "type": "string",
