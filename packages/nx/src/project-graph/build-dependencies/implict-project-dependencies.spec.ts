@@ -25,7 +25,7 @@ describe('explicit project dependencies', () => {
       {
         filesToProcess: {},
         fileMap: {},
-        workspace: {
+        projectsConfigurations: {
           projects: {
             proj1: { implicitDependencies: ['proj2'] },
           },
@@ -59,7 +59,7 @@ describe('explicit project dependencies', () => {
       {
         filesToProcess: {},
         fileMap: {},
-        workspace: {
+        projectsConfigurations: {
           projects: {
             proj1: { implicitDependencies: ['!proj2'] },
           },
