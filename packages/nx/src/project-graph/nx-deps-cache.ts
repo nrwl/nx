@@ -94,7 +94,7 @@ export function createCache(
     version: packageJsonDeps[p],
   }));
   const newValue: ProjectGraphCache = {
-    version: projectGraph.version || '5.0',
+    version: projectGraph.version || '5.1',
     deps: packageJsonDeps,
     lockFileHash,
     // compilerOptions may not exist, especially for repos converted through add-nx-to-monorepo
@@ -149,7 +149,7 @@ export function shouldRecomputeWholeGraph(
   nxJson: NxJsonConfiguration,
   tsConfig: { compilerOptions: { paths: { [k: string]: any } } }
 ): boolean {
-  if (cache.version !== '5.0') {
+  if (cache.version !== '5.1') {
     return true;
   }
   if (cache.deps['@nrwl/workspace'] !== packageJsonDeps['@nrwl/workspace']) {

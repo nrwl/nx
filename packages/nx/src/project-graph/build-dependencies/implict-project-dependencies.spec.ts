@@ -1,4 +1,7 @@
-import { ProjectGraphProcessorContext } from '../../config/project-graph';
+import {
+  DependencyType,
+  ProjectGraphProcessorContext,
+} from '../../config/project-graph';
 import { ProjectGraphBuilder } from '../project-graph-builder';
 import { buildImplicitProjectDependencies } from './implicit-project-dependencies';
 

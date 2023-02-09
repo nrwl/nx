@@ -73,7 +73,7 @@ export async function buildProjectGraphUsingProjectFileMap(
   projectGraphCache: ProjectGraphCache;
 }> {
   const nxJson = readNxJson();
-  const projectGraphVersion = '5.0';
+  const projectGraphVersion = '5.1';
   assertWorkspaceValidity(projectsConfigurations, nxJson);
   const packageJsonDeps = readCombinedDeps();
   const rootTsConfig = readRootTsConfig();
@@ -182,8 +182,8 @@ async function buildProjectGraphUsingContext(
   for (const proj of Object.keys(cachedFileData)) {
     for (const f of updatedBuilder.graph.nodes[proj].data.files) {
       const cached = cachedFileData[proj][f.file];
-      if (cached && cached.deps) {
-        f.deps = [...cached.deps];
+      if (cached && cached.dependencies) {
+        f.dependencies = [...cached.dependencies];
       }
     }
   }

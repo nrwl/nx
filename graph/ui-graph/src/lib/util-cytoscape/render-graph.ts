@@ -281,7 +281,9 @@ export class RenderGraph {
               .source()
               .data('files')
               ?.filter(
-                (file) => file.deps && file.deps.includes(edge.target().id())
+                (file) =>
+                  file.dependencies &&
+                  file.dependencies.find((d) => d.target === edge.target().id())
               )
               .map((file) => {
                 return {

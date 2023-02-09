@@ -11,7 +11,9 @@ import { NxJsonConfiguration } from './nx-json';
 export interface FileData {
   file: string;
   hash: string;
+  /** @deprecated this field will be removed in v16. Use {@link dependencies} instead */
   deps?: string[];
+  dependencies?: ProjectGraphDependency[];
 }
 
 /**
@@ -27,15 +29,6 @@ export interface ProjectFileMap {
 export interface ProjectGraph {
   nodes: Record<string, ProjectGraphProjectNode>;
   externalNodes?: Record<string, ProjectGraphExternalNode>;
-  dependencies: Record<string, ProjectGraphDependency[]>;
-  // this is optional otherwise it might break folks who use project graph creation
-  allWorkspaceFiles?: FileData[];
-  version?: string;
-}
-
-/** @deprecated this type will be removed in v16. Use {@link ProjectGraph} instead */
-export interface ProjectGraphV4<T = any> {
-  nodes: Record<string, ProjectGraphNode>;
   dependencies: Record<string, ProjectGraphDependency[]>;
   // this is optional otherwise it might break folks who use project graph creation
   allWorkspaceFiles?: FileData[];
@@ -125,7 +118,7 @@ export interface ProjectGraphDependency {
 export interface ProjectGraphProcessorContext {
   /**
    * Workspace information such as projects and configuration
-   * @deprecated use projectsConfigurations or nxJsonConfiguration
+   * @deprecated use {@link projectsConfigurations} or {@link nxJsonConfiguration} instead
    */
   workspace: Workspace;
 
