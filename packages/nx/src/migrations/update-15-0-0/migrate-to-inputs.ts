@@ -39,6 +39,7 @@ export default async function (tree: Tree) {
     sharedGlobals: [],
     production: ['default'],
   };
+  nxJson.namedInputs.production = ['default'];
 
   if (isBuildATarget(tree)) {
     nxJson.targetDefaults ??= {};

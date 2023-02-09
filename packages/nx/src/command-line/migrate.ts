@@ -1077,8 +1077,8 @@ function addSplitConfigurationMigrationIfAvailable(
   if (!packageJson['@nrwl/workspace']) return [];
 
   if (
-    gte(packageJson['@nrwl/workspace'].version, '15.7.0') &&
-    lt(from, '15.7.0')
+    gte(packageJson['@nrwl/workspace'].version, '15.7.0-beta.0') &&
+    lt(from, '15.7.0-beta.0')
   ) {
     return [
       {
