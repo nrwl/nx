@@ -1,6 +1,5 @@
 import { cypressInitGenerator } from '@nrwl/cypress';
 import {
-  addDependenciesToPackageJson,
   formatFiles,
   GeneratorCallback,
   logger,
@@ -14,6 +13,10 @@ import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-ser
 import { backwardCompatibleVersions } from '../../../utils/backward-compatible-versions';
 import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
 import { karmaGenerator } from '../../karma/karma';
+import {
+  addDependenciesToPackageJsonIfDontExist,
+  getInstalledPackageVersion,
+} from '../../utils/version-utils';
 import { Schema } from './schema';
 
 export async function angularInitGenerator(
@@ -73,51 +76,51 @@ function setDefaults(host: Tree, options: Schema) {
   updateNxJson(host, nxJson);
 }
 
-function updateDependencies(host: Tree): GeneratorCallback {
-  return addDependenciesToPackageJson(
-    host,
+function updateDependencies(tree: Tree): GeneratorCallback {
+  const angularVersion =
+    getInstalledPackageVersion(tree, '@angular/core') ??
+    backwardCompatibleVersions.angularV14.angularVersion;
+  const angularDevkitVersion =
+    getInstalledPackageVersion(tree, '@angular-devkit/build-angular') ??
+    backwardCompatibleVersions.angularV14.angularDevkitVersion;
+
+  return addDependenciesToPackageJsonIfDontExist(
+    tree,
     {
-      '@angular/animations':
-        backwardCompatibleVersions.angularV14.angularVersion,
-      '@angular/common': backwardCompatibleVersions.angularV14.angularVersion,
-      '@angular/compiler': backwardCompatibleVersions.angularV14.angularVersion,
-      '@angular/core': backwardCompatibleVersions.angularV14.angularVersion,
-      '@angular/forms': backwardCompatibleVersions.angularV14.angularVersion,
-      '@angular/platform-browser':
-        backwardCompatibleVersions.angularV14.angularVersion,
-      '@angular/platform-browser-dynamic':
-        backwardCompatibleVersions.angularV14.angularVersion,
-      '@angular/router': backwardCompatibleVersions.angularV14.angularVersion,
+      '@angular/animations': angularVersion,
+      '@angular/common': angularVersion,
+      '@angular/compiler': angularVersion,
+      '@angular/core': angularVersion,
+      '@angular/forms': angularVersion,
+      '@angular/platform-browser': angularVersion,
+      '@angular/platform-browser-dynamic': angularVersion,
+      '@angular/router': angularVersion,
       rxjs: backwardCompatibleVersions.angularV14.rxjsVersion,
       tslib: backwardCompatibleVersions.angularV14.tsLibVersion,
       'zone.js': backwardCompatibleVersions.angularV14.zoneJsVersion,
     },
     {
-      '@angular/cli':
-        backwardCompatibleVersions.angularV14.angularDevkitVersion,
-      '@angular/compiler-cli':
-        backwardCompatibleVersions.angularV14.angularVersion,
-      '@angular/language-service':
-        backwardCompatibleVersions.angularV14.angularVersion,
-      '@angular-devkit/build-angular':
-        backwardCompatibleVersions.angularV14.angularDevkitVersion,
+      '@angular/cli': angularDevkitVersion,
+      '@angular/compiler-cli': angularVersion,
+      '@angular/language-service': angularVersion,
+      '@angular-devkit/build-angular': angularDevkitVersion,
     }
   );
 }
 
 async function addUnitTestRunner(
-  host: Tree,
+  tree: Tree,
   options: Schema
 ): Promise<GeneratorCallback> {
   switch (options.unitTestRunner) {
     case UnitTestRunner.Karma:
-      return await karmaGenerator(host, {
+      return await karmaGenerator(tree, {
         skipPackageJson: options.skipPackageJson,
       });
     case UnitTestRunner.Jest:
       if (!options.skipPackageJson) {
-        addDependenciesToPackageJson(
-          host,
+        addDependenciesToPackageJsonIfDontExist(
+          tree,
           {},
           {
             'jest-preset-angular':
@@ -126,7 +129,7 @@ async function addUnitTestRunner(
         );
       }
 
-      return jestInitGenerator(host, {
+      return jestInitGenerator(tree, {
         skipPackageJson: options.skipPackageJson,
       });
     default:
@@ -134,12 +137,12 @@ async function addUnitTestRunner(
   }
 }
 
-function addE2ETestRunner(host: Tree, options: Schema): GeneratorCallback {
+function addE2ETestRunner(tree: Tree, options: Schema): GeneratorCallback {
   switch (options.e2eTestRunner) {
     case E2eTestRunner.Protractor:
       return !options.skipPackageJson
-        ? addDependenciesToPackageJson(
-            host,
+        ? addDependenciesToPackageJsonIfDontExist(
+            tree,
             {},
             {
               protractor:
@@ -158,7 +161,7 @@ function addE2ETestRunner(host: Tree, options: Schema): GeneratorCallback {
           )
         : () => {};
     case E2eTestRunner.Cypress:
-      return cypressInitGenerator(host, {
+      return cypressInitGenerator(tree, {
         skipPackageJson: options.skipPackageJson,
       });
     default:
