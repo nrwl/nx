@@ -97,6 +97,7 @@ function getEsBuildConfig(
         'dist',
         options.rootProject ? options.name : options.appProjectRoot
       ),
+      // Use CJS for Node apps for widest compatibility.
       format: ['cjs'],
       main: joinPathFragments(
         project.sourceRoot,
@@ -104,7 +105,11 @@ function getEsBuildConfig(
       ),
       tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
       assets: [joinPathFragments(project.sourceRoot, 'assets')],
-      esbuildOptions: { sourcemap: true },
+      esbuildOptions: {
+        sourcemap: true,
+        // Generate CJS files as .js so imports can be './foo' rather than './foo.cjs'.
+        outExtension: { '.js': '.js' },
+      },
     },
     configurations: {
       production: {

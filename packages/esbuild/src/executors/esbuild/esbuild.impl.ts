@@ -16,12 +16,14 @@ import { normalizeOptions } from './lib/normalize';
 import { EsBuildExecutorOptions } from './schema';
 import { removeSync, writeJsonSync } from 'fs-extra';
 import { createAsyncIterable } from '@nrwl/devkit/src/utils/async-iterable';
-import { buildEsbuildOptions, getOutfile } from './lib/build-esbuild-options';
+import {
+  buildEsbuildOptions,
+  getOutExtension,
+  getOutfile,
+} from './lib/build-esbuild-options';
 import { getExtraDependencies } from './lib/get-extra-dependencies';
 import { DependentBuildableProjectNode } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { join } from 'path';
-
-const CJS_FILE_EXTENSION = '.cjs' as const;
 
 const BUILD_WATCH_FAILED = `[ ${chalk.red(
   'watch'
@@ -68,7 +70,7 @@ export async function* esbuildExecutor(
     ...options,
     // TODO(jack): make types generate with esbuild
     skipTypings: true,
-    outputFileExtensionForCjs: CJS_FILE_EXTENSION,
+    outputFileExtensionForCjs: getOutExtension('cjs', options),
     excludeLibsInPackageJson: !options.thirdParty,
     updateBuildableProjectDepsInPackageJson: externalDependencies.length > 0,
   };
