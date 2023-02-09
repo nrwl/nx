@@ -67,18 +67,26 @@ describe('Webpack Plugin', () => {
       `console.log(process.env['NX_TEST_VAR']);\n`
     );
 
-    process.env.NX_TEST_VAR = 'Hello build time';
-    runCLI(`build ${myPkg} --platform=node`);
+    runCLI(`build ${myPkg} --platform=node`, {
+      env: {
+        NX_TEST_VAR: 'Hello build time',
+      },
+    });
 
-    process.env.NX_TEST_VAR = 'Hello run time';
-    expect(runCommand(`node dist/libs/${myPkg}/main.js`)).toMatch(
-      /Hello run time/
-    );
+    expect(
+      runCommand(`node dist/libs/${myPkg}/main.js`, {
+        env: {
+          NX_TEST_VAR: 'Hello run time',
+        },
+      })
+    ).toMatch(/Hello run time/);
 
-    process.env.NX_TEST_VAR = 'Hello build time';
-    runCLI(`build ${myPkg} --platform=web`);
+    runCLI(`build ${myPkg} --platform=web`, {
+      env: {
+        NX_TEST_VAR: 'Hello build time',
+      },
+    });
 
     expect(readFile(`dist/libs/${myPkg}/main.js`)).toMatch(/Hello build time/);
-    delete process.env.NX_TEST_VAR;
   }, 300_000);
 });

@@ -132,20 +132,19 @@ async function runWatch(command: string) {
       stdio: 'pipe',
     });
 
+    let output = '';
     p.stdout?.on('data', (data) => {
+      output += data;
       const s = data.toString().trim();
       isVerbose() && console.log(s);
       if (s.includes('watch process waiting')) {
         resolve(async (timeout = 6000) => {
           await wait(timeout);
           p.kill();
-          return output;
+          return output
+            .split('\n')
+            .filter((line) => line.length > 0 && !line.includes('NX'));
         });
-      } else {
-        if (s.length == 0 || s.includes('NX')) {
-          return;
-        }
-        output.push(s);
       }
     });
   });
