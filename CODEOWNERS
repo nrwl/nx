@@ -1,5 +1,5 @@
-# Any file not covered by a rule below, will default to Jason + Victor.
-* @FrozenPandaz @vsavkin @jaysoo @AgentEnder @bcabanes
+# Any file not covered by a rule below, will default to Jason + Victor and a few select others.
+* @FrozenPandaz @vsavkin @jaysoo @AgentEnder @bcabanes @JamesHenry
 
 # Docs Site + Graph
 /docs/nx-cloud @StalkAltan @rarmatei @isaacplmann @juristr @bcabanes
@@ -20,14 +20,14 @@
 /e2e/make-angular-cli-faster/** @leosvelperez @Coly010
 
 ## React
-/docs/generated/packages/react/** @jaysoo @ndcunningham @mandarini
-/docs/generated/packages/next/** @jaysoo @ndcunningham
-/packages/react/** @jaysoo @ndcunningham @mandarini
-/e2e/react/** @jaysoo @mandarini
-/packages/next/** @ndcunningham @jaysoo
-/e2e/next/** @ndcunningham @jaysoo
+/docs/generated/packages/react/** @jaysoo @ndcunningham @mandarini @xiongemi
+/docs/generated/packages/next/** @jaysoo @ndcunningham @xiongemi
+/packages/react/** @jaysoo @ndcunningham @mandarini @xiongemi
+/e2e/react/** @jaysoo @mandarini @xiongemi @ndcunningham
+/packages/next/** @ndcunningham @jaysoo @xiongemi
+/e2e/next/** @ndcunningham @jaysoo @xiongemi
 /packages/cra-to-nx/** @jaysoo @xiongemi @mandarini
-/e2e/cra-to-nx/** @jaysoo @xiongemi @mandarini
+/e2e/cra-to-nx/** @jaysoo @xiongemi @mandarini @ndcunningham
 
 # React Native
 /docs/generated/packages/detox/** @xiongemi @jaysoo
@@ -41,31 +41,31 @@
 /e2e/react-native/** @xiongemi @jaysoo
 
 ## Node
-/docs/generated/packages/node/** @nartc @ndcunningham
-/packages/node/** @nartc @ndcunningham
-/packages/express/** @nartc @ndcunningham
-/packages/nest/** @nartc @ndcunningham
-/e2e/node/** @nartc @ndcunningham
+/docs/generated/packages/node/** @nartc @ndcunningham @jaysoo
+/packages/node/** @nartc @ndcunningham @jaysoo
+/packages/express/** @nartc @ndcunningham @jaysoo
+/packages/nest/** @nartc @ndcunningham @jaysoo
+/e2e/node/** @nartc @ndcunningham @jaysoo
 
 ## JS
-/docs/generated/packages/js/** @nartc @jaysoo
-/docs/generated/packages/web/** @jaysoo @mandarini
-/docs/generated/packages/webpack/** @jaysoo @mandarini
-/docs/generated/packages/esbuild/** @nartc @jaysoo
-/docs/generated/packages/rollup/** @jaysoo @mandarini
-/docs/generated/packages/vite/** @jaysoo @mandarini
-/packages/js/** @nartc @jaysoo
-/e2e/js/** @nartc @jaysoo
-/packages/web/** @jaysoo @mandarini
-/e2e/web/** @jaysoo @mandarini
-/packages/webpack/** @jaysoo @mandarini
-/e2e/webpack/** @jaysoo @mandarini
-/packages/esbuild/** @jaysoo @nartc
-/e2e/esbuild/** @jaysoo @nartc
-/packages/rollup/** @jaysoo @mandarini
-/e2e/rollup/** @jaysoo @mandarini
-/packages/vite/** @jaysoo @mandarini
-/e2e/vite/** @jaysoo @mandarini
+/docs/generated/packages/js/** @nartc @jaysoo @ndcunningham
+/docs/generated/packages/web/** @jaysoo @mandarini @ndcunningham
+/docs/generated/packages/webpack/** @jaysoo @mandarini @ndcunningham
+/docs/generated/packages/esbuild/** @nartc @jaysoo @ndcunningham
+/docs/generated/packages/rollup/** @jaysoo @mandarini @ndcunningham
+/docs/generated/packages/vite/** @jaysoo @mandarini @ndcunningham
+/packages/js/** @nartc @jaysoo @ndcunningham
+/e2e/js/** @nartc @jaysoo @ndcunningham
+/packages/web/** @jaysoo @mandarini @ndcunningham
+/e2e/web/** @jaysoo @mandarini @ndcunningham
+/packages/webpack/** @jaysoo @mandarini @ndcunningham
+/e2e/webpack/** @jaysoo @mandarini @ndcunningham
+/packages/esbuild/** @jaysoo @nartc @ndcunningham
+/e2e/esbuild/** @jaysoo @nartc @ndcunningham
+/packages/rollup/** @jaysoo @mandarini @ndcunningham
+/e2e/rollup/** @jaysoo @mandarini @ndcunningham
+/packages/vite/** @jaysoo @mandarini @ndcunningham
+/e2e/vite/** @jaysoo @mandarini @ndcunningham
 
 ## Tools
 /docs/generated/packages/cypress/** @barbados-clemens @FrozenPandaz
