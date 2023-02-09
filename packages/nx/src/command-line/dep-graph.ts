@@ -582,31 +582,35 @@ function getAllTaskGraphsForWorkspace(
     const targets = Object.keys(project.data.targets);
 
     targets.forEach((target) => {
-      taskGraphs[createTaskId(projectName, target)] = createTaskGraph(
-        projectGraph,
-        defaultDependencyConfigs,
-        [projectName],
-        [target],
-        undefined,
-        {}
-      );
+      try {
+        taskGraphs[createTaskId(projectName, target)] = createTaskGraph(
+          projectGraph,
+          defaultDependencyConfigs,
+          [projectName],
+          [target],
+          undefined,
+          {}
+        );
 
-      const configurations = Object.keys(
-        project.data.targets[target]?.configurations || {}
-      );
+        const configurations = Object.keys(
+          project.data.targets[target]?.configurations || {}
+        );
 
-      if (configurations.length > 0) {
-        configurations.forEach((configuration) => {
-          taskGraphs[createTaskId(projectName, target, configuration)] =
-            createTaskGraph(
-              projectGraph,
-              defaultDependencyConfigs,
-              [projectName],
-              [target],
-              configuration,
-              {}
-            );
-        });
+        if (configurations.length > 0) {
+          configurations.forEach((configuration) => {
+            taskGraphs[createTaskId(projectName, target, configuration)] =
+              createTaskGraph(
+                projectGraph,
+                defaultDependencyConfigs,
+                [projectName],
+                [target],
+                configuration,
+                {}
+              );
+          });
+        }
+      } catch (e) {
+        console.error(e);
       }
     });
   }
