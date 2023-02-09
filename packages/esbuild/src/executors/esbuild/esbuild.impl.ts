@@ -32,6 +32,11 @@ const BUILD_WATCH_SUCCEEDED = `[ ${chalk.green(
   'watch'
 )} ] build succeeded, watching for changes...`;
 
+// since the workspace has esbuild 0.17+ installed, there's no definition
+// of esbuild without 'context', therefore, the esbuild import in the else
+// branch below has type never, getting the type to cast later
+type EsBuild = typeof esbuild;
+
 export async function* esbuildExecutor(
   _options: EsBuildExecutorOptions,
   context: ExecutorContext
@@ -295,7 +300,7 @@ export async function* esbuildExecutor(
       for (let i = 0; i < options.format.length; i++) {
         const format = options.format[i];
         const esbuildOptions = buildEsbuildOptions(format, options, context);
-        const buildResult = await esbuild.build(esbuildOptions);
+        const buildResult = await (esbuild as EsBuild).build(esbuildOptions);
 
         if (options.metafile) {
           const filename =

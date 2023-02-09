@@ -1,12 +1,12 @@
-export function sortCorePackagesFirst<ItemType>(
+export function sortCorePackagesFirst<ItemType extends object>(
   itemList: ItemType[],
   ref: PropertyKey
 ): ItemType[] {
   const nxPackageIds = ['nx', 'workspace', 'devkit', 'nx-plugin'];
-  function assertRef<OBJECT>(
+  function assertRef(
     value: PropertyKey,
-    target: OBJECT
-  ): value is keyof OBJECT {
+    target: ItemType
+  ): value is keyof ItemType {
     if (!(value in target))
       throw new Error(
         `Property '${value.toString()}' can not be found in passed object.`

@@ -142,6 +142,15 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "15.7.1": {
+      "version": "15.7.1-beta.0",
+      "x-prompt": "Do you want to update the TypeScript version to v4.9?",
+      "packages": {
+        "typescript": {
+          "version": "~4.9.5"
+        }
+      }
     }
   }
 }
