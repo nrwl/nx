@@ -13,7 +13,6 @@ pipelines:
             - node
           script:
             - npm ci
-            - npx nx workspace-lint
             - npx nx format:check
             - npx nx affected --target=lint --base=origin/master --parallel --max-parallel=3
             - npx nx affected --target=test --base=origin/master --parallel --max-parallel=3 --configuration=ci
@@ -27,7 +26,6 @@ pipelines:
             - node
           script:
             - npm ci
-            - npx nx workspace-lint
             - npx nx format:check
             - npx nx affected --target=lint --base=origin/master --parallel --max-parallel=3 & npx nx affected --target=test --base=HEAD~1 --parallel --max-parallel=3 --configuration=ci & npx nx affected --target=build --base=HEAD~1 --parallel  --max-parallel=3
 ```

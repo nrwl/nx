@@ -23,7 +23,6 @@ jobs:
       - uses: nrwl/nx-set-shas@v3
       - run: npm ci
 
-      - run: npx nx workspace-lint
       - run: npx nx format:check
       - run: npx nx affected --target=lint --parallel=3
       - run: npx nx affected --target=test --parallel=3 --configuration=ci
@@ -61,7 +60,6 @@ jobs:
     with:
       number-of-agents: 3
       parallel-commands: |
-        npx nx-cloud record -- npx nx workspace-lint
         npx nx-cloud record -- npx nx format:check
       parallel-commands-on-agents: |
         npx nx affected --target=lint --parallel=3 & npx nx affected --target=test --parallel=3 --configuration=ci & npx nx affected --target=build --parallel=3

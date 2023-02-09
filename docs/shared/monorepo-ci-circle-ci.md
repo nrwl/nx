@@ -18,7 +18,6 @@ jobs:
       - run: npm ci
       - nx/set-shas
 
-      - run: npx nx workspace-lint
       - run: npx nx format:check
       - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint --parallel=3
       - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --parallel=3 --configuration=ci
@@ -73,7 +72,6 @@ jobs:
       - nx/set-shas
       - run: npx nx-cloud start-ci-run --stop-agents-after="build"
 
-      - run: npx nx-cloud record -- npx nx workspace-lint
       - run: npx nx-cloud record -- npx nx format:check
       - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint --parallel=3 & npx nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --parallel=3 --configuration=ci & npx nx affected --base=$NX_BASE --head=$NX_HEAD --target=build --parallel=3
 workflows:
