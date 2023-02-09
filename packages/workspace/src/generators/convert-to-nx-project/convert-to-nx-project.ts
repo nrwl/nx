@@ -62,6 +62,7 @@ export async function convertToNxProjectGenerator(host: Tree, schema: Schema) {
         const projectConfig = readJson(host, join(config, 'project.json'));
         if (projectConfig.name !== projectName) {
           projectConfig.name = projectName;
+          projectConfig.root = config;
           updateProjectConfiguration(host, projectName, projectConfig);
         }
       } else {
