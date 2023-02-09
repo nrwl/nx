@@ -1,23 +1,12 @@
 /**
- * The Nx Devkit is the underlying technology used to customize Nx to support
- * different technologies and custom use-cases. It contains many utility
- * functions for reading and writing files, updating configuration,
- * working with Abstract Syntax Trees(ASTs), and more.
+ * STOP! Do not change this file!
  *
- * As with most things in Nx, the core of Nx Devkit is very simple.
- * It only uses language primitives and immutable objects
- * (the tree being the only exception).
+ * If you need to export something from nx, it should go into nx/src/devkit-exports
  */
 
-/**
- * Note to developers: This is the Public API of @nrwl/devkit.
- * @nrwl/devkit should be compatible with versions of Nx 1 major version prior.
- * This is so that plugins can use the latest @nrwl/devkit while their users may use versions +/- 1 of Nx.
- *
- * 1. Try hard to not add to this API to reduce the surface area we need to maintain.
- * 2. Do not add newly created paths from the nx package to this file as they will not be available in older versions of Nx.
- *   a. We might need to duplicate code instead of importing from nx until all supported versions of nx contain the file.
- */
+// TODO(v17): Remove this file
+
+/* eslint-disable @typescript-eslint/no-restricted-imports */
 
 /**
  * @category Tree
@@ -141,18 +130,15 @@ export {
 /**
  * @category Generators
  */
-export { readNxJson, updateNxJson } from 'nx/src/generators/utils/nx-json';
-
-/**
- * @category Generators
- */
 export {
+  readNxJson,
+  updateNxJson,
   readWorkspaceConfiguration,
   updateWorkspaceConfiguration,
   isStandaloneProject,
   WorkspaceConfiguration,
   getWorkspacePath,
-} from 'nx/src/generators/utils/deprecated';
+} from 'nx/src/generators/utils/project-configuration';
 
 /**
  * @category Generators
@@ -366,8 +352,4 @@ export { Hash, Hasher } from 'nx/src/hasher/hasher';
  */
 export { cacheDir } from 'nx/src/utils/cache-directory';
 
-/**
- * @category Package Manager
- */
-export { createLockFile } from 'nx/src/lock-file/lock-file';
-export { createPackageJson } from 'nx/src/utils/create-package-json';
+// STOP! Do not export any new things from the nx package

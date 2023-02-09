@@ -1,6 +1,6 @@
+import { createLockFile } from 'nx/src/lock-file/lock-file';
+import { createPackageJson } from 'nx/src/utils/create-package-json';
 import {
-  createLockFile,
-  createPackageJson,
   ExecutorContext,
   getOutputsForTargetAndConfiguration,
   joinPathFragments,

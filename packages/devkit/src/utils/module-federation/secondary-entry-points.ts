@@ -2,10 +2,12 @@ import type { WorkspaceLibrary } from './models';
 import { WorkspaceLibrarySecondaryEntryPoint } from './models';
 import { dirname, join, relative } from 'path';
 import { existsSync, lstatSync, readdirSync } from 'fs';
+
+// eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { PackageJson, readModulePackageJson } from 'nx/src/utils/package-json';
-import { workspaceRoot } from 'nx/src/utils/workspace-root';
-import { joinPathFragments } from 'nx/src/utils/path';
-import { readJsonFile } from 'nx/src/utils/fileutils';
+import { requireNx } from '../../../nx';
+
+const { readJsonFile, joinPathFragments, workspaceRoot } = requireNx();
 
 export function collectWorkspaceLibrarySecondaryEntryPoints(
   library: WorkspaceLibrary,

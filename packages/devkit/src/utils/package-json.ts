@@ -1,12 +1,15 @@
 import { execSync } from 'child_process';
-import { readJson, updateJson } from 'nx/src/generators/utils/json';
+
 import type { Tree } from 'nx/src/generators/tree';
-import { GeneratorCallback } from 'nx/src/config/misc-interfaces';
+
+import type { GeneratorCallback } from 'nx/src/config/misc-interfaces';
 import { clean, coerce, gt, satisfies } from 'semver';
-import { getPackageManagerCommand } from 'nx/src/utils/package-manager';
-import { workspaceRoot } from 'nx/src/utils/workspace-root';
 
 import { installPackagesTask } from '../tasks/install-packages-task';
+import { requireNx } from '../../nx';
+
+const { readJson, updateJson, getPackageManagerCommand, workspaceRoot } =
+  requireNx();
 
 const UNIDENTIFIED_VERSION = 'UNIDENTIFIED_VERSION';
 const NON_SEMVER_TAGS = {

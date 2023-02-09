@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-restricted-imports */
 export {
   createTreeWithEmptyWorkspace,
   createTreeWithEmptyV1Workspace,

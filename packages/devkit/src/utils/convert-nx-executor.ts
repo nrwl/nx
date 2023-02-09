@@ -1,11 +1,10 @@
 import type { Observable } from 'rxjs';
-import { Workspaces } from 'nx/src/config/workspaces';
-import { Executor, ExecutorContext } from 'nx/src/config/misc-interfaces';
-import {
-  createProjectGraphAsync,
-  readCachedProjectGraph,
-} from 'nx/src/project-graph/project-graph';
-import { ProjectGraph } from 'nx/src/config/project-graph';
+import type { Executor, ExecutorContext } from 'nx/src/config/misc-interfaces';
+import type { ProjectGraph } from 'nx/src/config/project-graph';
+import { requireNx } from '../../nx';
+
+const { createProjectGraphAsync, readCachedProjectGraph, Workspaces } =
+  requireNx();
 
 /**
  * Convert an Nx Executor into an Angular Devkit Builder

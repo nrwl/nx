@@ -1,7 +1,6 @@
 import { type Compiler, sources, type WebpackPluginInstance } from 'webpack';
+import { createLockFile, createPackageJson } from '@nrwl/js';
 import {
-  createLockFile,
-  createPackageJson,
   ExecutorContext,
   type ProjectGraph,
   serializeJson,

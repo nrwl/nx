@@ -1,12 +1,19 @@
-import { logger, stripIndent } from 'nx/src/utils/logger';
+// eslint-disable-next-line @typescript-eslint/no-restricted-imports
+import { stripIndent } from 'nx/src/utils/logger';
 import type {
   FileChange,
   Tree,
   TreeWriteOptions,
 } from 'nx/src/generators/tree';
-import { Generator, GeneratorCallback } from 'nx/src/config/misc-interfaces';
+import type {
+  Generator,
+  GeneratorCallback,
+} from 'nx/src/config/misc-interfaces';
 import { join, relative } from 'path';
 import type { Mode } from 'fs';
+import { requireNx } from '../../nx';
+
+const { logger } = requireNx();
 
 class RunCallbackTask {
   constructor(private callback: GeneratorCallback) {}

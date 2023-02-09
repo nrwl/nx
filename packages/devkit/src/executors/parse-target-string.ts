@@ -1,7 +1,10 @@
 import type { Target } from 'nx/src/command-line/run';
-import { ProjectGraph } from 'nx/src/config/project-graph';
-import { readCachedProjectGraph } from 'nx/src/project-graph/project-graph';
+import type { ProjectGraph } from 'nx/src/config/project-graph';
+// eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { splitTarget } from 'nx/src/utils/split-target';
+import { requireNx } from '../../nx';
+
+const { readCachedProjectGraph } = requireNx();
 
 /**
  * @deprecated(v17) A project graph should be passed to parseTargetString for best accuracy.
