@@ -70,10 +70,10 @@ export function buildEsbuildOptions(
   return esbuildOptions;
 }
 
-function getOutExtension(
+export function getOutExtension(
   format: 'cjs' | 'esm',
   options: EsBuildExecutorOptions
-): string {
+): '.cjs' | '.mjs' | '.js' {
   const userDefinedExt = options.esbuildOptions?.outExtension?.['.js'];
   // Allow users to change the output extensions from default CJS and ESM extensions.
   // CJS -> .js

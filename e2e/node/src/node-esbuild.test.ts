@@ -26,9 +26,9 @@ describe('Node Applications + esbuild', () => {
     updateFile(`apps/${app}/src/main.ts`, `console.log('Hello World!');`);
     await runCLIAsync(`build ${app}`);
 
-    checkFilesExist(`dist/apps/${app}/main.cjs`);
-    checkFilesExist(`dist/apps/${app}/main.cjs.map`);
-    const result = execSync(`node dist/apps/${app}/main.cjs`, {
+    checkFilesExist(`dist/apps/${app}/main.js`);
+    checkFilesExist(`dist/apps/${app}/main.js.map`);
+    const result = execSync(`node dist/apps/${app}/main.js`, {
       cwd: tmpProjPath(),
     }).toString();
     expect(result).toMatch(/Hello World!/);
