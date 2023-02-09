@@ -1,6 +1,5 @@
 import type { Tree } from '@nrwl/devkit';
 import {
-  addDependenciesToPackageJson,
   generateFiles,
   joinPathFragments,
   readJson,
@@ -8,6 +7,7 @@ import {
   updateNxJson,
 } from '@nrwl/devkit';
 import { backwardCompatibleVersions } from '../../../utils/backward-compatible-versions';
+import { addDependenciesToPackageJsonIfDontExist } from '../../utils/version-utils';
 import { GeneratorOptions } from './schema';
 
 function addTestInputs(tree: Tree) {
@@ -54,7 +54,7 @@ export function karmaGenerator(tree: Tree, options: GeneratorOptions) {
     return () => {};
   }
 
-  return addDependenciesToPackageJson(
+  return addDependenciesToPackageJsonIfDontExist(
     tree,
     {},
     {

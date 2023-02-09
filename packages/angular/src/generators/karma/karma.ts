@@ -1,6 +1,5 @@
 import type { Tree } from '@nrwl/devkit';
 import {
-  addDependenciesToPackageJson,
   generateFiles,
   joinPathFragments,
   readJson,
@@ -19,7 +18,10 @@ import {
   typesJasmineVersion,
   typesNodeVersion,
 } from '../../utils/versions';
-import { getGeneratorDirectoryForInstalledAngularVersion } from '../utils/version-utils';
+import {
+  addDependenciesToPackageJsonIfDontExist,
+  getGeneratorDirectoryForInstalledAngularVersion,
+} from '../utils/version-utils';
 import { GeneratorOptions } from './schema';
 
 function addTestInputs(tree: Tree) {
@@ -75,7 +77,7 @@ export async function karmaGenerator(tree: Tree, options: GeneratorOptions) {
     return () => {};
   }
 
-  return addDependenciesToPackageJson(
+  return addDependenciesToPackageJsonIfDontExist(
     tree,
     {},
     {
