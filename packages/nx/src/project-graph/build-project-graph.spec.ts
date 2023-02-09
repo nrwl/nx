@@ -262,7 +262,7 @@ describe('project graph', () => {
         {
           source: 'demo',
           target: 'lazy-lib',
-          type: 'static',
+          type: 'dynamic',
         },
         { source: 'demo', target: 'api', type: 'implicit' },
       ],
@@ -277,7 +277,7 @@ describe('project graph', () => {
         {
           source: 'ui',
           target: 'lazy-lib',
-          type: 'static',
+          type: 'dynamic',
         },
       ],
     });
@@ -305,7 +305,7 @@ describe('project graph', () => {
         target: 'shared-util',
       },
       {
-        type: DependencyType.static,
+        type: DependencyType.dynamic,
         source: 'ui',
         target: 'lazy-lib',
       },

@@ -6,6 +6,13 @@ import {
   ProjectGraph,
 } from '../../config/project-graph';
 
+export type ExplicitDependency = {
+  sourceProjectName: string;
+  targetProjectName: string;
+  sourceProjectFile: string;
+  type?: DependencyType.static | DependencyType.dynamic;
+};
+
 export function buildExplicitTypeScriptDependencies(
   graph: ProjectGraph,
   filesToProcess: ProjectFileMap
@@ -19,12 +26,16 @@ export function buildExplicitTypeScriptDependencies(
     graph.nodes as any,
     graph.externalNodes
   );
-  const res = [] as any;
+  const res: ExplicitDependency[] = [];
   Object.keys(filesToProcess).forEach((source) => {
     Object.values(filesToProcess[source]).forEach((f) => {
       importLocator.fromFile(
         f.file,
-        (importExpr: string, filePath: string, type: DependencyType) => {
+        (
+          importExpr: string,
+          filePath: string,
+          type: DependencyType.static | DependencyType.dynamic
+        ) => {
           const target = targetProjectLocator.findProjectWithImport(
             importExpr,
             f.file
@@ -39,6 +50,7 @@ export function buildExplicitTypeScriptDependencies(
               sourceProjectName: source,
               targetProjectName: target,
               sourceProjectFile: f.file,
+              type,
             });
           }
         }

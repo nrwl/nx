@@ -11,7 +11,10 @@ import {
   shouldRecomputeWholeGraph,
   writeCache,
 } from './nx-deps-cache';
-import { buildImplicitProjectDependencies } from './build-dependencies';
+import {
+  buildImplicitProjectDependencies,
+  ExplicitDependency,
+} from './build-dependencies';
 import { buildWorkspaceProjectNodes } from './build-nodes';
 import * as os from 'os';
 import { buildExplicitTypescriptAndPackageJsonDependencies } from './build-dependencies/build-explicit-typescript-and-package-json-dependencies';
@@ -328,7 +331,8 @@ function buildExplicitDependenciesWithoutWorkers(
     builder.addExplicitDependency(
       r.sourceProjectName,
       r.sourceProjectFile,
-      r.targetProjectName
+      r.targetProjectName,
+      r.type
     );
   });
 }
@@ -357,11 +361,12 @@ function buildExplicitDependenciesUsingWorkers(
   return new Promise((res, reject) => {
     for (let w of workers) {
       w.on('message', (explicitDependencies) => {
-        explicitDependencies.forEach((r) => {
+        explicitDependencies.forEach((r: ExplicitDependency) => {
           builder.addExplicitDependency(
             r.sourceProjectName,
             r.sourceProjectFile,
-            r.targetProjectName
+            r.targetProjectName,
+            r.type
           );
         });
         if (bins.length > 0) {
