@@ -53,6 +53,7 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
       ],
       skipFormat: true,
       rootProject: options.rootProject,
+      skipPackageJson: options.skipPackageJson,
     });
     tasks.push(lintTask);
 
@@ -62,17 +63,19 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
       extendReactEslintJson
     );
 
-    const installTask = await addDependenciesToPackageJson(
-      host,
-      extraEslintDependencies.dependencies,
-      {
-        ...extraEslintDependencies.devDependencies,
-        ...(options.compiler === 'swc'
-          ? { '@swc/core': swcCoreVersion, 'swc-loader': swcLoaderVersion }
-          : {}),
-      }
-    );
-    tasks.push(installTask);
+    if (!options.skipPackageJson) {
+      const installTask = await addDependenciesToPackageJson(
+        host,
+        extraEslintDependencies.dependencies,
+        {
+          ...extraEslintDependencies.devDependencies,
+          ...(options.compiler === 'swc'
+            ? { '@swc/core': swcCoreVersion, 'swc-loader': swcLoaderVersion }
+            : {}),
+        }
+      );
+      tasks.push(installTask);
+    }
   }
   return runTasksInSerial(...tasks);
 }
