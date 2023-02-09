@@ -29,6 +29,7 @@
 /packages/cra-to-nx/** @jaysoo @xiongemi @mandarini
 /e2e/cra-to-nx/** @jaysoo @xiongemi @mandarini
 
+# React Native
 /docs/generated/packages/detox/** @xiongemi @jaysoo
 /docs/generated/packages/expo/** @xiongemi @jaysoo
 /docs/generated/packages/react-native/** @xiongemi @jaysoo
@@ -116,6 +117,7 @@
 
 # Misc
 /e2e/lerna-smoke-tests/** @vsavkin @JamesHenry
+/e2e/utils/** @meeroslav @barbados-clemens @vsavkin
 /community @AgentEnder @FrozenPandaz
 /CONTRIBUTING.md @FrozenPandaz @isaacplmann
 /CODE_OF_CONDUCT.md @FrozenPandaz @isaacplmann
