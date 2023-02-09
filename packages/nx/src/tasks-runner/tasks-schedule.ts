@@ -188,7 +188,8 @@ export class TasksSchedule {
       } as TaskGraph));
 
     batch.tasks[task.id] = task;
-    batch.dependencies[task.id] = this.taskGraph.dependencies[task.id];
+    batch.dependencies[task.id] =
+      this.notScheduledTaskGraph.dependencies[task.id];
     if (isRoot) {
       batch.roots.push(task.id);
     }
