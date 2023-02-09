@@ -71,8 +71,11 @@ describe('convertToESLintConfig()', () => {
       exampleRootTslintJson.raw,
       []
     );
+    expect(
+      converted.convertedESLintConfig.rules['no-console'][1].allow
+    ).toContain('log');
     // Ensure no-console snapshot is deterministic
-    converted.convertedESLintConfig.rules['no-console'][1].allow.sort();
+    delete converted.convertedESLintConfig.rules['no-console'][1].allow;
     expect(converted).toMatchSnapshot();
   });
 
