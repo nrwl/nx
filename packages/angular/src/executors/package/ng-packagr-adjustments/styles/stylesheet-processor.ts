@@ -64,7 +64,7 @@ export class StylesheetProcessor {
     // We change the default query to browsers that Angular support.
     // https://angular.io/guide/browser-support
     (browserslist.defaults as string[]) = [
-      'last 1 Chrome version',
+      'last 2 Chrome version',
       'last 1 Firefox version',
       'last 2 Edge major versions',
       'last 2 Safari major versions',
@@ -313,7 +313,7 @@ function transformSupportedBrowsersToTargets(
     if (browserName === 'ie') {
       transformed.push('edge12');
     } else if (esBuildSupportedBrowsers.has(browserName)) {
-      if (browserName === 'safari' && version === 'TP') {
+      if (browserName === 'safari' && version === 'tp') {
         // esbuild only supports numeric versions so `TP` is converted to a high number (999) since
         // a Technology Preview (TP) of Safari is assumed to support all currently known features.
         version = '999';
