@@ -29,6 +29,11 @@
       "type": "string",
       "description": "Npm scope for importing libs."
     },
+    "standaloneApi": {
+      "description": "Use the Standalone APIs if generating an Angular application.",
+      "type": "boolean",
+      "default": false
+    },
     "defaultBase": {
       "type": "string",
       "description": "Default base branch for affected."

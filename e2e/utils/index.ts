@@ -139,6 +139,7 @@ export function runCreateWorkspace(
     cwd = e2eCwd,
     bundler,
     routing,
+    standaloneApi,
   }: {
     preset: string;
     appName?: string;
@@ -150,6 +151,7 @@ export function runCreateWorkspace(
     useDetectedPm?: boolean;
     cwd?: string;
     bundler?: 'webpack' | 'vite';
+    standaloneApi?: boolean;
     routing?: boolean;
   }
 ) {
@@ -170,6 +172,10 @@ export function runCreateWorkspace(
 
   if (bundler) {
     command += ` --bundler=${bundler}`;
+  }
+
+  if (standaloneApi !== undefined) {
+    command += ` --standaloneApi=${standaloneApi}`;
   }
 
   if (routing !== undefined) {

@@ -42,11 +42,29 @@ describe('create-nx-workspace', () => {
       appName: wsName,
       style: 'css',
       packageManager,
+      standaloneApi: false,
       routing: false,
     });
 
     checkFilesExist('package.json');
     checkFilesExist('project.json');
+    checkFilesExist('src/app/app.module.ts');
+  });
+
+  it('should create a workspace with a single angular app at the root using standalone APIs', () => {
+    const wsName = uniq('angular');
+
+    runCreateWorkspace(wsName, {
+      preset: 'angular-standalone',
+      appName: wsName,
+      style: 'css',
+      packageManager,
+      standaloneApi: true,
+    });
+
+    checkFilesExist('package.json');
+    checkFilesExist('project.json');
+    checkFilesDoNotExist('src/app/app.module.ts');
   });
 
   it('should create a workspace with a single react app with vite at the root', () => {
@@ -129,6 +147,7 @@ describe('create-nx-workspace', () => {
       style: 'css',
       appName,
       packageManager,
+      standaloneApi: false,
       routing: true,
     });
   });
@@ -145,6 +164,7 @@ describe('create-nx-workspace', () => {
         style: 'css',
         appName,
         packageManager,
+        standaloneApi: false,
         routing: true,
       });
     } catch (e) {
@@ -313,6 +333,7 @@ describe('create-nx-workspace', () => {
       style: 'css',
       packageManager: 'npm',
       routing: true,
+      standaloneApi: false,
     });
 
     checkFilesDoNotExist('yarn.lock');
