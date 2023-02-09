@@ -43,9 +43,6 @@ jobs:
           name: Initialize the Nx Cloud distributed CI run
           command: <%= packageManagerPrefix %> nx-cloud start-ci-run --stop-agents-after="build" --agent-count=3
       - run:
-          name: Run workspace lint
-          command: <%= packageManagerPrefix %> nx-cloud record -- <%= packageManagerPrefix %> nx workspace-lint
-      - run:
           name: Check format
           command: <%= packageManagerPrefix %> nx-cloud record -- <%= packageManagerPrefix %> nx format:check --base=$NX_BASE --head=$NX_HEAD
       - run:

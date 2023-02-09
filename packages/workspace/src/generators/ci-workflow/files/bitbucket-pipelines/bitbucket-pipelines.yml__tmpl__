@@ -28,7 +28,6 @@ pipelines:
                 <% } %>
                 - <%= packageManagerInstall %>
                 - <%= packageManagerPrefix %> nx-cloud start-ci-run --stop-agents-after="build" --agent-count=3
-                - <%= packageManagerPrefix %> nx-cloud record -- yarn nx workspace-lint
                 - <%= packageManagerPrefix %> nx-cloud record -- yarn nx format:check
                 - <%= packageManagerPrefix %> nx affected --target=lint & <%= packageManagerPrefix %> nx affected --target=test & <%= packageManagerPrefix %> nx affected --target=build
                 - <%= packageManagerPrefix %> nx-cloud stop-all-agents

@@ -30,7 +30,6 @@ jobs:
     steps:
       - script: npm ci
 
-      - script: npx nx workspace-lint
       - script: npx nx format:check
 
       - script: npx nx affected --base=$(BASE_SHA) --target=lint --parallel=3
@@ -84,7 +83,6 @@ jobs:
       - script: npm ci
       - script: npx nx-cloud start-ci-run --stop-agents-after="build"
 
-      - script: npx nx-cloud record -- npx nx workspace-lint
       - script: npx nx-cloud record -- npx nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
       - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --target=lint --parallel=3 & npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --target=test --parallel=3 --configuration=ci & npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --target=build --parallel=3
 ```

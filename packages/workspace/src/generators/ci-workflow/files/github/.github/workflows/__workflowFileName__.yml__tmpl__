@@ -15,7 +15,6 @@ jobs:
       init-commands: |
         <%= packageManagerPrefix %> nx-cloud start-ci-run --stop-agents-after="build" --agent-count=3
       parallel-commands: |
-        <%= packageManagerPrefix %> nx-cloud record -- <%= packageManagerPrefix %> nx workspace-lint
         <%= packageManagerPrefix %> nx-cloud record -- <%= packageManagerPrefix %> nx format:check
       parallel-commands-on-agents: |
         <%= packageManagerPrefix %> nx affected --target=lint --parallel=3

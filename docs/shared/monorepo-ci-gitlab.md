@@ -25,12 +25,6 @@ stages:
     - NX_HEAD=$CI_COMMIT_SHA
     - NX_BASE=${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
 
-workspace-lint:
-  stage: test
-  extends: .distributed
-  script:
-    - npx nx workspace-lint --base=$NX_BASE --head=$NX_HEAD
-
 format-check:
   stage: test
   extends: .distributed
@@ -111,7 +105,6 @@ nx-dte:
   extends: .base-pipeline
   script:
     - yarn nx-cloud start-ci-run --stop-agents-after="build"
-    - yarn nx-cloud record -- yarn nx workspace-lint --base=$NX_BASE --head=$NX_HEAD
     - yarn nx-cloud record -- yarn nx format:check --base=$NX_BASE --head=$NX_HEAD
     - yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint --parallel=3 & yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --parallel=3 --configuration=ci & yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e --parallel=3 & yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=build --parallel=3
 

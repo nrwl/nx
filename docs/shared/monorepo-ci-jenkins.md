@@ -22,7 +22,6 @@ pipeline {
                     agent any
                     steps {
                         sh "npm ci"
-                        sh "npx nx workspace-lint"
                         sh "npx nx format:check"
                         sh "npx nx affected --base=HEAD~1 --target=lint --parallel=3"
                         sh "npx nx affected --base=HEAD~1 --target=test --parallel=3"
@@ -36,7 +35,6 @@ pipeline {
                     agent any
                     steps {
                         sh "npm ci"
-                        sh "npx nx workspace-lint"
                         sh "npx nx format:check"
                         sh "npx nx affected --base origin/${env.CHANGE_TARGET} --target=lint --parallel=3"
                         sh "npx nx affected --base origin/${env.CHANGE_TARGET} --target=test --parallel=3 --configuration=ci"
@@ -76,7 +74,6 @@ pipeline {
                     steps {
                         sh "npm ci"
                         sh "npx nx-cloud start-ci-run --stop-agents-after='build'"
-                        sh "npx nx workspace-lint"
                         sh "npx nx format:check"
                         sh "npx nx affected --base=HEAD~1 --target=lint --parallel=3 & npx nx affected --base=HEAD~1 --target=test --parallel=3 --configuration=ci & npx nx affected --base=HEAD~1 --target=build --parallel=3"
                     }
@@ -89,7 +86,6 @@ pipeline {
                     steps {
                         sh "npm ci"
                         sh "npx nx-cloud start-ci-run --stop-agents-after='build'"
-                        sh "npx nx workspace-lint"
                         sh "npx nx format:check"
                         sh "npx nx affected --base origin/${env.CHANGE_TARGET} --target=lint --parallel=3 & npx nx affected --base origin/${env.CHANGE_TARGET} --target=test --parallel=3 --configuration=ci & npx nx affected --base origin/${env.CHANGE_TARGET} --target=build --parallel=3"
                     }
