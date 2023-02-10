@@ -1084,7 +1084,7 @@ function addSplitConfigurationMigrationIfAvailable(
       {
         version: '15.7.0-beta.0',
         description:
-          'Spilt global configuration files into individual project.json files. This migration has been added automatically to the beginning of your migration set to retroactively make them work with the new version of Nx.',
+          'Split global configuration files into individual project.json files. This migration has been added automatically to the beginning of your migration set to retroactively make them work with the new version of Nx.',
         cli: 'nx',
         implementation:
           './src/migrations/update-15-7-0/split-configuration-into-project-json-files',
