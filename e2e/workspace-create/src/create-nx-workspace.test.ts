@@ -18,7 +18,7 @@ describe('create-nx-workspace', () => {
 
   afterEach(() => cleanupProject());
 
-  it('should create a workspace with a single angular app at the root', () => {
+  it('should create a workspace with a single angular app at the root with routing', () => {
     const wsName = uniq('angular');
 
     runCreateWorkspace(wsName, {
@@ -26,6 +26,23 @@ describe('create-nx-workspace', () => {
       appName: wsName,
       style: 'css',
       packageManager,
+      routing: true,
+    });
+
+    checkFilesExist('package.json');
+    checkFilesExist('src/app/app.routes.ts');
+    checkFilesExist('project.json');
+  });
+
+  it('should create a workspace with a single angular app at the root without routing', () => {
+    const wsName = uniq('angular');
+
+    runCreateWorkspace(wsName, {
+      preset: 'angular-standalone',
+      appName: wsName,
+      style: 'css',
+      packageManager,
+      routing: false,
     });
 
     checkFilesExist('package.json');
@@ -112,6 +129,7 @@ describe('create-nx-workspace', () => {
       style: 'css',
       appName,
       packageManager,
+      routing: true,
     });
   });
 
@@ -127,6 +145,7 @@ describe('create-nx-workspace', () => {
         style: 'css',
         appName,
         packageManager,
+        routing: true,
       });
     } catch (e) {
       expect(e).toBeTruthy();
@@ -293,6 +312,7 @@ describe('create-nx-workspace', () => {
       appName,
       style: 'css',
       packageManager: 'npm',
+      routing: true,
     });
 
     checkFilesDoNotExist('yarn.lock');

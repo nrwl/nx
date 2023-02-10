@@ -33,6 +33,7 @@ type Arguments = {
   framework: string;
   docker: boolean;
   nxCloud: boolean;
+  routing: string;
   allPrompts: boolean;
   packageManager: PackageManager;
   defaultBase: string;
@@ -143,6 +144,10 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           describe: chalk.dim`Style option to be used when a preset with pregenerated app is selected`,
           type: 'string',
         })
+        .option('routing', {
+          describe: chalk.dim`Add a routing setup when a preset with pregenerated app is selected`,
+          type: 'string',
+        })
         .option('bundler', {
           describe: chalk.dim`Bundler to be used to build the application`,
           type: 'string',
@@ -227,6 +232,7 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
     preset,
     appName,
     style,
+    routing,
     nxCloud,
     packageManager,
     defaultBase,
@@ -257,6 +263,7 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
       preset,
       appName,
       style,
+      routing,
       nxCloud,
       defaultBase,
       framework,
@@ -314,7 +321,7 @@ async function getConfiguration(
   argv: yargs.Arguments<Arguments>
 ): Promise<void> {
   try {
-    let name, appName, style, preset, framework, bundler, docker;
+    let name, appName, style, preset, framework, bundler, docker, routing;
 
     output.log({
       title:
@@ -366,11 +373,19 @@ async function getConfiguration(
         if (preset === Preset.ReactStandalone) {
           bundler = await determineBundler(argv);
         }
+
+        if (preset === Preset.AngularStandalone) {
+          routing = await determineRouting(argv);
+        }
       } else {
         name = await determineRepoName(argv);
         appName = await determineAppName(preset, argv);
         if (preset === Preset.ReactMonorepo) {
           bundler = await determineBundler(argv);
+        }
+
+        if (preset === Preset.AngularMonorepo) {
+          routing = await determineRouting(argv);
         }
       }
       style = await determineStyle(preset, argv);
@@ -386,6 +401,7 @@ async function getConfiguration(
       preset,
       appName,
       style,
+      routing,
       framework,
       nxCloud,
       packageManager,
@@ -853,6 +869,36 @@ async function determineStyle(
   }
 
   return Promise.resolve(parsedArgs.style);
+}
+
+async function determineRouting(
+  parsedArgs: yargs.Arguments<Arguments>
+): Promise<string> {
+  if (!parsedArgs.routing) {
+    return enquirer
+      .prompt([
+        {
+          name: 'routing',
+          message: 'Would you like to add routing?',
+          type: 'autocomplete',
+          choices: [
+            {
+              name: 'Yes',
+            },
+
+            {
+              name: 'No',
+            },
+          ],
+          initial: 'Yes' as any,
+        },
+      ])
+      .then((a: { routing: 'Yes' | 'No' }) =>
+        a.routing === 'Yes' ? 'true' : 'false'
+      );
+  }
+
+  return parsedArgs.routing;
 }
 
 async function determineBundler(

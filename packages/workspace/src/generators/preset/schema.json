@@ -24,6 +24,11 @@
       "enum": ["eslint"],
       "default": "eslint"
     },
+    "routing": {
+      "description": "Add routing to the generated application.",
+      "type": "boolean",
+      "default": true
+    },
     "style": {
       "description": "The file extension to be used for style files.",
       "type": "string",

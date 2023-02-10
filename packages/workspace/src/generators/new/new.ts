@@ -27,6 +27,7 @@ interface Schema {
   docker?: boolean;
   linter?: Linter;
   bundler?: 'vite' | 'webpack';
+  routing?: boolean;
   packageManager?: PackageManager;
 }
 

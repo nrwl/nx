@@ -138,6 +138,7 @@ export function runCreateWorkspace(
     useDetectedPm = false,
     cwd = e2eCwd,
     bundler,
+    routing,
   }: {
     preset: string;
     appName?: string;
@@ -149,6 +150,7 @@ export function runCreateWorkspace(
     useDetectedPm?: boolean;
     cwd?: string;
     bundler?: 'webpack' | 'vite';
+    routing?: boolean;
   }
 ) {
   projName = name;
@@ -168,6 +170,10 @@ export function runCreateWorkspace(
 
   if (bundler) {
     command += ` --bundler=${bundler}`;
+  }
+
+  if (routing !== undefined) {
+    command += ` --routing=${routing}`;
   }
 
   if (base) {

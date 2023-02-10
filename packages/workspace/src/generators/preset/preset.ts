@@ -32,6 +32,7 @@ async function createPreset(tree: Tree, options: Schema) {
       name: options.name,
       style: options.style,
       linter: options.linter,
+      routing: options.routing,
     });
   } else if (options.preset === Preset.AngularStandalone) {
     const {
@@ -42,6 +43,7 @@ async function createPreset(tree: Tree, options: Schema) {
       name: options.name,
       style: options.style,
       linter: options.linter,
+      routing: options.routing,
       rootProject: true,
     });
   } else if (options.preset === Preset.ReactMonorepo) {
