@@ -1,14 +1,17 @@
 /**
  * This is here for backwards-compat.
- * TODO(jack): remove in Nx 16.
+ * TODO(v16): remove in Nx 16.
  */
-import { ExecutorContext } from '@nrwl/devkit';
+import { ExecutorContext, logger } from '@nrwl/devkit';
 
 export async function* devServerExecutor(
   options: any,
   context: ExecutorContext
 ) {
   const { devServerExecutor: baseDevServerExecutor } = require('@nrwl/webpack');
+  logger.warn(
+    '"@nrwl/web:dev-server" executor is deprecated. Use "@nrwl/webpack:dev-server" instead in your project.json.'
+  );
   yield* baseDevServerExecutor(
     {
       ...options,
