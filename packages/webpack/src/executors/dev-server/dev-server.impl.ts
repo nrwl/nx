@@ -24,6 +24,9 @@ export async function* devServerExecutor(
   serveOptions: WebDevServerOptions,
   context: ExecutorContext
 ) {
+  // Default to dev mode so builds are faster and HMR mode works better.
+  process.env.NODE_ENV ??= 'development';
+
   const { root: projectRoot, sourceRoot } =
     context.projectsConfigurations.projects[context.projectName];
   const buildOptions = normalizeOptions(
