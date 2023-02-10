@@ -77,6 +77,7 @@ function getWebpackBuildConfig(
     },
     configurations: {
       production: {
+        ...(options.docker && { generateLockfile: true }),
         optimization: true,
         extractLicenses: true,
         inspect: false,
@@ -113,6 +114,7 @@ function getEsBuildConfig(
     },
     configurations: {
       production: {
+        ...(options.docker && { generateLockfile: true }),
         esbuildOptions: { sourcemap: false },
       },
     },
