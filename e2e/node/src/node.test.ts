@@ -79,7 +79,7 @@ describe('Node Applications', () => {
       return config;
     });
 
-    await runCLIAsync(`build ${nodeapp}`);
+    await runCLIAsync(`build ${nodeapp} --bundle`);
     checkFilesExist(`dist/apps/${nodeapp}/index.js`);
   }, 300000);
 

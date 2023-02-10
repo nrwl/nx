@@ -34,6 +34,8 @@ import {
   esbuildVersion,
   expressTypingsVersion,
   expressVersion,
+  fastifyAutoloadVersion,
+  fastifySensibleVersion,
   fastifyVersion,
   koaTypingsVersion,
   koaVersion,
@@ -105,6 +107,8 @@ function getEsBuildConfig(
       ),
       tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
       assets: [joinPathFragments(project.sourceRoot, 'assets')],
+      // By default, don't bundle the app. Things like __dirname won't work in a bundle.
+      bundle: false,
       esbuildOptions: {
         sourcemap: true,
         // Generate CJS files as .js so imports can be './foo' rather than './foo.cjs'.
@@ -292,13 +296,26 @@ function addProjectDependencies(
     },
     fastify: {
       fastify: fastifyVersion,
+      '@fastify/autoload': fastifyAutoloadVersion,
+      '@fastify/sensible': fastifySensibleVersion,
     },
+  };
+  const frameworkDevDependencies = {
+    express: {
+      '@types/express': expressTypingsVersion,
+    },
+    koa: {
+      '@types/koa': koaTypingsVersion,
+    },
+    fastify: {},
   };
   return addDependenciesToPackageJson(
     tree,
-    {},
     {
       ...frameworkDependencies[options.framework],
+    },
+    {
+      ...frameworkDevDependencies[options.framework],
       ...bundlers[options.bundler],
     }
   );

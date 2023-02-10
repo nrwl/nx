@@ -36,6 +36,12 @@ export async function* esbuildExecutor(
   _options: EsBuildExecutorOptions,
   context: ExecutorContext
 ) {
+  if (!_options.bundle && _options.outputFileName) {
+    logger.warn(
+      `--outputFileName=${_options.outputFileName} can only work when --bundle is used`
+    );
+  }
+
   const options = normalizeOptions(_options);
   if (options.deleteOutputPath) removeSync(options.outputPath);
 
