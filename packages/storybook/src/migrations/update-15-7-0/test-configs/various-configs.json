@@ -646,6 +646,135 @@
       }
     }
   },
+  "react-rollup-3": {
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "name": "react-rollup-3",
+    "projectType": "library",
+    "root": "libs/react-rollup-3",
+    "sourceRoot": "libs/react-rollup-3/src",
+    "tags": [],
+    "targets": {
+      "build": {
+        "executor": "@nrwl/rollup:rollup",
+        "options": {
+          "assets": [
+            {
+              "glob": "libs/react-rollup-3/README.md",
+              "input": ".",
+              "output": "."
+            }
+          ],
+          "compiler": "babel",
+          "entryFile": "libs/react-rollup-3/src/index.ts",
+          "external": ["react/jsx-runtime"],
+          "outputPath": "dist/libs/react-rollup-3",
+          "project": "libs/react-rollup-3/package.json",
+          "rollupConfig": "@nrwl/react/plugins/bundle-rollup",
+          "tsConfig": "libs/react-rollup-3/tsconfig.lib.json"
+        },
+        "outputs": ["{options.outputPath}"]
+      },
+      "build-storybook": {
+        "configurations": {
+          "ci": {
+            "quiet": true
+          }
+        },
+        "executor": "@nrwl/storybook:build",
+        "options": {
+          "configDir": "libs/react-rollup-3/.storybook",
+          "outputDir": "dist/storybook/react-rollup-3",
+          "uiFramework": "@storybook/react"
+        },
+        "outputs": ["{options.outputDir}"]
+      },
+      "lint": {
+        "executor": "@nrwl/linter:eslint",
+        "options": {
+          "lintFilePatterns": ["libs/react-rollup-3/**/*.{ts,tsx,js,jsx}"]
+        },
+        "outputs": ["{options.outputFile}"]
+      },
+      "storybook": {
+        "configurations": {
+          "ci": {
+            "quiet": true
+          }
+        },
+        "executor": "@nrwl/storybook:storybook",
+        "options": {
+          "configDir": "libs/react-rollup-3/.storybook",
+          "port": 4400,
+          "uiFramework": "@storybook/react"
+        }
+      },
+      "test": {
+        "executor": "@nrwl/jest:jest",
+        "options": {
+          "jestConfig": "libs/react-rollup-3/jest.config.ts",
+          "passWithNoTests": true
+        },
+        "outputs": ["{workspaceRoot}/coverage/{projectRoot}"]
+      }
+    }
+  },
+  "react-rollup-4": {
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "name": "react-rollup-4",
+    "projectType": "library",
+    "root": "libs/react-rollup-4",
+    "sourceRoot": "libs/react-rollup-4/src",
+    "tags": [],
+    "targets": {
+      "build": {
+        "executor": "@nrwl/rollup:rollup",
+        "options": {
+          "assets": [
+            {
+              "glob": "libs/react-rollup-4/README.md",
+              "input": ".",
+              "output": "."
+            }
+          ],
+          "compiler": "babel",
+          "entryFile": "libs/react-rollup-4/src/index.ts",
+          "external": ["react/jsx-runtime"],
+          "outputPath": "dist/libs/react-rollup-4",
+          "project": "libs/react-rollup-4/package.json",
+          "rollupConfig": "@nrwl/react/plugins/bundle-rollup",
+          "tsConfig": "libs/react-rollup-4/tsconfig.lib.json"
+        },
+        "outputs": ["{options.outputPath}"]
+      },
+      "build-storybook": {
+        "configurations": {
+          "ci": {
+            "quiet": true
+          }
+        },
+        "executor": "@nrwl/storybook:build",
+        "options": {
+          "configDir": "libs/react-rollup-4/.storybook",
+          "outputDir": "dist/storybook/react-rollup-4",
+          "uiFramework": "@storybook/react"
+        },
+        "outputs": ["{options.outputDir}"]
+      },
+      "storybook": {
+        "configurations": {
+          "ci": {
+            "quiet": true
+          }
+        },
+        "executor": "@nrwl/storybook:storybook",
+        "options": {
+          "configDir": "libs/react-rollup-4/.storybook",
+          "port": 4400,
+          "uiFramework": "@storybook/react"
+        }
+      }
+    }
+  },
   "react-vite": {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "name": "react-vite",

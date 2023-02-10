@@ -98,43 +98,52 @@ exports[`Add addon-essentials to project-level main.js files should add addon-es
 
 exports[`Add addon-essentials to project-level main.js files should add addon-essentials to main.js|ts where possible 4`] = `
 "
+          // project: react-rollup
           const rootMain = require('../../../.storybook/main');
-          const { mergeConfig } = require('vite');
-          const viteTsConfigPaths = require('vite-tsconfig-paths').default;
+          // Use the following syntax to add addons!
+          rootMain.addons.push('@storybook/addon-essentials', '@storybook/addon-a11y');
+          rootMain.stories.push(
+            ...['../src/lib/**/*.stories.mdx', '../src/lib/**/*.stories.@(js|jsx|ts|tsx)']
+          );
 
-          module.exports = {
-            ...rootMain,
-            core: { ...rootMain.core, builder: 'webpack5' },
-            stories: [
-              ...rootMain.stories,
-              '../src/app/**/*.stories.mdx',
-              '../src/app/**/*.stories.@(js|jsx|ts|tsx)',
-            ],
-            addons: ['@storybook/addon-essentials', ...rootMain.addons, '@nrwl/react/plugins/storybook'],
-            webpackFinal: async (config, { configType }) => {
-              // apply any global webpack configs that might have been specified in .storybook/main.js
-              if (rootMain.webpackFinal) {
-                config = await rootMain.webpackFinal(config, { configType });
-              }
+          module.exports = rootMain;
 
-              // add your own webpack tweaks if needed
-
-              return config;
-            },
-            async viteFinal(config, { configType }) {
-              return mergeConfig(config, {
-                plugins: [
-                  viteTsConfigPaths({
-                    root: '../../../',
-                  }),
-                ],
-              });
-            },
-          };
+          module.exports.core = { ...module.exports.core, builder: 'webpack5' };
           "
 `;
 
 exports[`Add addon-essentials to project-level main.js files should add addon-essentials to main.js|ts where possible 5`] = `
+"
+          // project: react-rollup-3
+          const rootMain = require('../../../.storybook/main');
+          // Use the following syntax to add addons!
+          rootMain.addons.push('@storybook/addon-essentials', );
+          rootMain.stories.push(
+            ...['../src/lib/**/*.stories.mdx', '../src/lib/**/*.stories.@(js|jsx|ts|tsx)']
+          );
+
+          module.exports = rootMain;
+
+          module.exports.core = { ...module.exports.core, builder: 'webpack5' };
+          "
+`;
+
+exports[`Add addon-essentials to project-level main.js files should add addon-essentials to main.js|ts where possible 6`] = `
+"
+          // project: react-rollup-4
+          const rootMain = require('../../../.storybook/main');
+rootMain.addons.push('@storybook/addon-essentials');
+          rootMain.stories.push(
+            ...['../src/lib/**/*.stories.mdx', '../src/lib/**/*.stories.@(js|jsx|ts|tsx)']
+          );
+
+          module.exports = rootMain;
+
+          module.exports.core = { ...module.exports.core, builder: 'webpack5' };
+          "
+`;
+
+exports[`Add addon-essentials to project-level main.js files should add addon-essentials to main.js|ts where possible 7`] = `
 "
           const rootMain = require('../../../.storybook/main');
           const { mergeConfig } = require('vite');
@@ -172,7 +181,7 @@ exports[`Add addon-essentials to project-level main.js files should add addon-es
           "
 `;
 
-exports[`Add addon-essentials to project-level main.js files should add addon-essentials to main.js|ts where possible 6`] = `
+exports[`Add addon-essentials to project-level main.js files should add addon-essentials to main.js|ts where possible 8`] = `
 "
         some invalid stuff
         "
@@ -292,40 +301,52 @@ exports[`Add addon-essentials to project-level main.js files should remove the r
 
 exports[`Add addon-essentials to project-level main.js files should remove the root config import and delete root file 4`] = `
 "
+          // project: react-rollup
           
-          const { mergeConfig } = require('vite');
-          const viteTsConfigPaths = require('vite-tsconfig-paths').default;
+          // Use the following syntax to add addons!
+          
+          
 
-          module.exports = {
-            
-            core: {  builder: 'webpack5' },
-            stories: [
-              
-              '../src/app/**/*.stories.mdx',
-              '../src/app/**/*.stories.@(js|jsx|ts|tsx)',
-            ],
-            addons: ['@storybook/addon-essentials',  '@nrwl/react/plugins/storybook'],
-            webpackFinal: async (config, { configType }) => {
-              // apply any global webpack configs that might have been specified in .storybook/main.js
-              
-              // add your own webpack tweaks if needed
+          module.exports = rootMain;
 
-              return config;
-            },
-            async viteFinal(config, { configType }) {
-              return mergeConfig(config, {
-                plugins: [
-                  viteTsConfigPaths({
-                    root: '../../../',
-                  }),
-                ],
-              });
-            },
-          };
-          "
+          module.exports.core = { ...module.exports.core, builder: 'webpack5' };
+          module.exports.addons = ['@storybook/addon-essentials', '@storybook/addon-a11y'];
+module.exports.stories = ['../src/lib/**/*.stories.mdx', '../src/lib/**/*.stories.@(js|jsx|ts|tsx)'];
+"
 `;
 
 exports[`Add addon-essentials to project-level main.js files should remove the root config import and delete root file 5`] = `
+"
+          // project: react-rollup-3
+          
+          // Use the following syntax to add addons!
+          
+          
+
+          module.exports = rootMain;
+
+          module.exports.core = { ...module.exports.core, builder: 'webpack5' };
+          module.exports.addons = ['@storybook/addon-essentials'];
+module.exports.stories = ['../src/lib/**/*.stories.mdx', '../src/lib/**/*.stories.@(js|jsx|ts|tsx)'];
+"
+`;
+
+exports[`Add addon-essentials to project-level main.js files should remove the root config import and delete root file 6`] = `
+"
+          // project: react-rollup-4
+          
+
+          
+
+          module.exports = rootMain;
+
+          module.exports.core = { ...module.exports.core, builder: 'webpack5' };
+          module.exports.addons = ['@storybook/addon-essentials'];
+module.exports.stories = ['../src/lib/**/*.stories.mdx', '../src/lib/**/*.stories.@(js|jsx|ts|tsx)'];
+"
+`;
+
+exports[`Add addon-essentials to project-level main.js files should remove the root config import and delete root file 7`] = `
 "
           
           const { mergeConfig } = require('vite');
@@ -360,7 +381,7 @@ exports[`Add addon-essentials to project-level main.js files should remove the r
           "
 `;
 
-exports[`Add addon-essentials to project-level main.js files should remove the root config import and delete root file 6`] = `
+exports[`Add addon-essentials to project-level main.js files should remove the root config import and delete root file 8`] = `
 "
         some invalid stuff
         "

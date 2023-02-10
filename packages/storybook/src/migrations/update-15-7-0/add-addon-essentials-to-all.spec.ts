@@ -38,6 +38,12 @@ describe('Add addon-essentials to project-level main.js files', () => {
       tree.read('libs/react-rollup/.storybook/main.js', 'utf-8')
     ).toMatchSnapshot();
     expect(
+      tree.read('libs/react-rollup-3/.storybook/main.js', 'utf-8')
+    ).toMatchSnapshot();
+    expect(
+      tree.read('libs/react-rollup-4/.storybook/main.js', 'utf-8')
+    ).toMatchSnapshot();
+    expect(
       tree.read('libs/react-vite/.storybook/main.js', 'utf-8')
     ).toMatchSnapshot();
     expect(
@@ -109,6 +115,12 @@ describe('Add addon-essentials to project-level main.js files', () => {
     ).toMatchSnapshot();
     expect(
       tree.read('libs/react-rollup/.storybook/main.js', 'utf-8')
+    ).toMatchSnapshot();
+    expect(
+      tree.read('libs/react-rollup-3/.storybook/main.js', 'utf-8')
+    ).toMatchSnapshot();
+    expect(
+      tree.read('libs/react-rollup-4/.storybook/main.js', 'utf-8')
     ).toMatchSnapshot();
     expect(
       tree.read('libs/react-vite/.storybook/main.js', 'utf-8')
@@ -191,6 +203,56 @@ export function addAllProjectsToWorkspace(tree: Tree) {
           `
         some invalid stuff
         `
+        );
+      } else if (name === 'react-rollup') {
+        tree.write(
+          `${project.targets['build-storybook']?.options?.configDir}/main.js`,
+          `
+          // project: ${name}
+          const rootMain = require('../../../.storybook/main');
+          // Use the following syntax to add addons!
+          rootMain.addons.push('@storybook/addon-a11y');
+          rootMain.stories.push(
+            ...['../src/lib/**/*.stories.mdx', '../src/lib/**/*.stories.@(js|jsx|ts|tsx)']
+          );
+
+          module.exports = rootMain;
+
+          module.exports.core = { ...module.exports.core, builder: 'webpack5' };
+          `
+        );
+      } else if (name === 'react-rollup-3') {
+        tree.write(
+          `${project.targets['build-storybook']?.options?.configDir}/main.js`,
+          `
+          // project: ${name}
+          const rootMain = require('../../../.storybook/main');
+          // Use the following syntax to add addons!
+          rootMain.addons.push();
+          rootMain.stories.push(
+            ...['../src/lib/**/*.stories.mdx', '../src/lib/**/*.stories.@(js|jsx|ts|tsx)']
+          );
+
+          module.exports = rootMain;
+
+          module.exports.core = { ...module.exports.core, builder: 'webpack5' };
+          `
+        );
+      } else if (name === 'react-rollup-4') {
+        tree.write(
+          `${project.targets['build-storybook']?.options?.configDir}/main.js`,
+          `
+          // project: ${name}
+          const rootMain = require('../../../.storybook/main');
+
+          rootMain.stories.push(
+            ...['../src/lib/**/*.stories.mdx', '../src/lib/**/*.stories.@(js|jsx|ts|tsx)']
+          );
+
+          module.exports = rootMain;
+
+          module.exports.core = { ...module.exports.core, builder: 'webpack5' };
+          `
         );
       } else {
         tree.write(
