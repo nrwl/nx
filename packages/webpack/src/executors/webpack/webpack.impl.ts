@@ -48,14 +48,11 @@ async function getWebpackConfigs(
     : getWebpackConfig(context, options);
 
   if (customWebpack) {
-    return await customWebpack(
-      {},
-      {
-        options,
-        context,
-        configuration: context.configurationName, // backwards compat
-      }
-    );
+    return await customWebpack(config, {
+      options,
+      context,
+      configuration: context.configurationName, // backwards compat
+    });
   } else {
     // If the user has no webpackConfig specified then we always have to apply
     return config;
