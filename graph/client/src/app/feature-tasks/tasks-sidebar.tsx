@@ -17,19 +17,7 @@ import { CheckboxPanel } from '../ui-components/checkbox-panel';
 import { Dropdown } from '@nrwl/graph/ui-components';
 import { ShowHideAll } from '../ui-components/show-hide-all';
 import { useCurrentPath } from '../hooks/use-current-path';
-import { useRouteConstructor } from '../util';
-
-function createTaskName(
-  project: string,
-  target: string,
-  configuration?: string
-) {
-  if (configuration) {
-    return `${project}:${target}:${configuration}`;
-  } else {
-    return `${project}:${target}`;
-  }
-}
+import { createTaskName, useRouteConstructor } from '../util';
 
 export function TasksSidebar() {
   const graphService = getGraphService();
@@ -47,8 +35,9 @@ export function TasksSidebar() {
   const routeData = useRouteLoaderData(
     'selectedTarget'
   ) as TaskGraphClientResponse;
-  const { taskGraphs } = routeData;
-  const { projects, targets } = selectedWorkspaceRouteData;
+  const { taskGraphs, errors } = routeData;
+  let { projects, targets } = selectedWorkspaceRouteData;
+
   const selectedTarget = params['selectedTarget'] ?? targets[0];
 
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
@@ -217,6 +206,7 @@ export function TasksSidebar() {
         workspaceLayout={workspaceLayout}
         selectedTarget={selectedTarget}
         toggleProject={toggleProject}
+        errors={errors}
       >
         <label
           htmlFor="selectedTarget"

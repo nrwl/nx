@@ -1,6 +1,7 @@
 import {
   Attributes,
   cloneElement,
+  Fragment,
   HTMLAttributes,
   ReactElement,
   ReactNode,
@@ -10,6 +11,7 @@ import {
 } from 'react';
 import {
   arrow,
+  autoUpdate,
   flip,
   offset,
   Placement,
@@ -17,6 +19,7 @@ import {
   shift,
   useFloating,
 } from '@floating-ui/react-dom';
+import { FloatingPortal, useFloatingPortalNode } from '@floating-ui/react';
 
 export type TooltipProps = HTMLAttributes<HTMLDivElement> & {
   open?: boolean;
@@ -25,6 +28,7 @@ export type TooltipProps = HTMLAttributes<HTMLDivElement> & {
   placement?: Placement;
   reference?: ReferenceType;
   openAction?: 'click' | 'hover' | 'manual';
+  floatingPortal?: boolean;
 };
 
 export function Tooltip({
@@ -34,6 +38,7 @@ export function Tooltip({
   placement = 'top',
   reference: externalReference,
   openAction = 'click',
+  floatingPortal = false,
 }: TooltipProps) {
   const [isOpen, setIsOpen] = useState(open);
   const arrowRef = useRef(null);
@@ -47,6 +52,7 @@ export function Tooltip({
     middlewareData: { arrow: { x: arrowX, y: arrowY } = {} },
   } = useFloating({
     placement,
+    whileElementsMounted: floatingPortal ? autoUpdate : undefined,
     middleware: [
       offset(6),
       flip(),
@@ -78,40 +84,51 @@ export function Tooltip({
     cloneProps.onMouseLeave = () => setIsOpen(false);
   }
 
+  let WrapperElement, wrapperProps;
+
+  if (floatingPortal) {
+    WrapperElement = FloatingPortal;
+    wrapperProps = { id: 'graph-ui-tooltip-portal' };
+  } else {
+    WrapperElement = Fragment;
+    wrapperProps = {};
+  }
+
   return (
     <>
       {!externalReference && !!children
         ? cloneElement(children, cloneProps)
         : children}
-
-      {isOpen ? (
-        <div
-          role="tooltip"
-          ref={floating}
-          style={{
-            position: strategy,
-            top: y ?? 0,
-            left: x ?? 0,
-            width: 'max-content',
-          }}
-          className="absolute z-0 min-w-[250px] rounded-md border border-slate-500"
-        >
+      <WrapperElement {...wrapperProps}>
+        {isOpen ? (
           <div
+            role="tooltip"
+            ref={floating}
             style={{
-              left: arrowX != null ? `${arrowX}px` : '',
-              top: arrowY != null ? `${arrowY}px` : '',
-              right: '',
-              bottom: '',
-              [staticSide]: '-4px',
+              position: strategy,
+              top: y ?? 0,
+              left: x ?? 0,
+              width: 'max-content',
             }}
-            className="absolute -z-10 h-4 w-4 rotate-45 bg-slate-500"
-            ref={arrowRef}
-          ></div>
-          <div className="rounded-md bg-white p-3 dark:bg-slate-900 dark:text-slate-400">
-            {content}
+            className="absolute z-0 min-w-[250px] rounded-md border border-slate-500"
+          >
+            <div
+              style={{
+                left: arrowX != null ? `${arrowX}px` : '',
+                top: arrowY != null ? `${arrowY}px` : '',
+                right: '',
+                bottom: '',
+                [staticSide]: '-4px',
+              }}
+              className="absolute -z-10 h-4 w-4 rotate-45 bg-slate-500"
+              ref={arrowRef}
+            ></div>
+            <div className="rounded-md bg-white p-3 dark:bg-slate-900 dark:text-slate-400">
+              {content}
+            </div>
           </div>
-        </div>
-      ) : null}
+        ) : null}
+      </WrapperElement>
     </>
   );
 }

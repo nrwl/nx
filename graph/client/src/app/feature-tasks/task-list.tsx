@@ -1,13 +1,20 @@
 // nx-ignore-next-line
 import type { ProjectGraphNode } from '@nrwl/devkit';
-import { getProjectsByType, groupProjectsByDirectory } from '../util';
+import {
+  createTaskName,
+  getProjectsByType,
+  groupProjectsByDirectory,
+} from '../util';
 import { WorkspaceLayout } from '../interfaces';
-import { EyeIcon } from '@heroicons/react/24/outline';
+import { ExclamationCircleIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { ReactNode } from 'react';
+import { Tooltip } from '@nrwl/graph/ui-tooltips';
+import { TaskGraphErrorTooltip } from './task-graph-error-tooltip';
 
 interface SidebarProject {
   projectGraphNode: ProjectGraphNode;
   isSelected: boolean;
+  error: string | null;
 }
 
 function ProjectListItem({
@@ -25,11 +32,29 @@ function ProjectListItem({
           data-project={project.projectGraphNode.name}
           title={project.projectGraphNode.name}
           data-active={project.isSelected.toString()}
-          onClick={() => toggleTask(project.projectGraphNode.name)}
+          onClick={() =>
+            !project.error ? toggleTask(project.projectGraphNode.name) : null
+          }
         >
           {project.projectGraphNode.name}
         </label>
       </div>
+
+      {project.error ? (
+        <Tooltip
+          content={<TaskGraphErrorTooltip error={project.error} />}
+          openAction="click"
+          floatingPortal={true}
+        >
+          <span className="absolute inset-y-0 right-0 flex cursor-pointer items-center text-blue-500 dark:text-sky-500">
+            <ExclamationCircleIcon
+              className="h-5 w-5 text-yellow-500 dark:text-yellow-400"
+              aria-hidden="true"
+            />
+          </span>
+        </Tooltip>
+      ) : null}
+
       {project.isSelected ? (
         <span
           title="This task is visible"
@@ -81,11 +106,16 @@ function SubProjectList({
 
 function mapToSidebarProjectWithTasks(
   project: ProjectGraphNode,
-  selectedProjects: string[]
+  selectedProjects: string[],
+  selectedTarget: string,
+  errors: Record<string, string>
 ): SidebarProject {
+  const taskId = createTaskName(project.name, selectedTarget);
+
   return {
     projectGraphNode: project,
     isSelected: selectedProjects.includes(project.name),
+    error: errors?.[taskId] ?? null,
   };
 }
 
@@ -96,6 +126,7 @@ export interface TaskListProps {
   selectedProjects: string[];
   toggleProject: (projectName: string) => void;
   children: ReactNode | ReactNode[];
+  errors: Record<string, string>;
 }
 
 export function TaskList({
@@ -105,13 +136,13 @@ export function TaskList({
   selectedProjects,
   toggleProject,
   children,
+  errors,
 }: TaskListProps) {
   const filteredProjects = projects
     .filter((project) =>
       (project.data as any).targets.hasOwnProperty(selectedTarget)
     )
     .sort((a, b) => a.name.localeCompare(b.name));
-
   const appProjects = getProjectsByType('app', filteredProjects);
   const libProjects = getProjectsByType('lib', filteredProjects);
   const e2eProjects = getProjectsByType('e2e', filteredProjects);
@@ -146,7 +177,12 @@ export function TaskList({
             key={'app-' + directoryName}
             headerText={directoryName}
             projects={appDirectoryGroups[directoryName].map((project) =>
-              mapToSidebarProjectWithTasks(project, selectedProjects)
+              mapToSidebarProjectWithTasks(
+                project,
+                selectedProjects,
+                selectedTarget,
+                errors
+              )
             )}
             toggleTask={toggleProject}
           ></SubProjectList>
@@ -163,7 +199,12 @@ export function TaskList({
             key={'e2e-' + directoryName}
             headerText={directoryName}
             projects={e2eDirectoryGroups[directoryName].map((project) =>
-              mapToSidebarProjectWithTasks(project, selectedProjects)
+              mapToSidebarProjectWithTasks(
+                project,
+                selectedProjects,
+                selectedTarget,
+                errors
+              )
             )}
             toggleTask={toggleProject}
           ></SubProjectList>
@@ -180,7 +221,12 @@ export function TaskList({
             key={'lib-' + directoryName}
             headerText={directoryName}
             projects={libDirectoryGroups[directoryName].map((project) =>
-              mapToSidebarProjectWithTasks(project, selectedProjects)
+              mapToSidebarProjectWithTasks(
+                project,
+                selectedProjects,
+                selectedTarget,
+                errors
+              )
             )}
             toggleTask={toggleProject}
           ></SubProjectList>
