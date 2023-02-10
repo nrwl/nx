@@ -676,7 +676,7 @@ export function runNgAdd(
     packageInstall(packageName, undefined, version);
     return execSync(pmc.run(`ng g ${packageName}:ng-add`, command ?? ''), {
       cwd: tmpProjPath(),
-      stdio: isVerbose() ? 'inherit' : 'pipe',
+      stdio: 'pipe',
       env: { ...(opts.env || getStrippedEnvironmentVariables()) },
       encoding: 'utf-8',
     })
@@ -709,7 +709,7 @@ export function runCLI(
     const pm = getPackageManagerCommand();
     const logs = execSync(`${pm.runNx} ${command}`, {
       cwd: opts.cwd || tmpProjPath(),
-      env: { CI: 'true', ...(opts.env || getStrippedEnvironmentVariables()) },
+      env: { CI: 'true', ...getStrippedEnvironmentVariables(), ...opts.env },
       encoding: 'utf-8',
       stdio: 'pipe',
       maxBuffer: 50 * 1024 * 1024,
@@ -1153,13 +1153,17 @@ export async function expectJestTestsToPass(
 }
 
 export function getStrippedEnvironmentVariables() {
-  const strippedVariables = new Set(['NX_TASK_TARGET_PROJECT']);
   return Object.fromEntries(
-    Object.entries(process.env).filter(
-      ([key, value]) =>
-        !strippedVariables.has(key) ||
-        !key.startsWith('NX_') ||
-        key.startsWith('NX_E2E_')
-    )
+    Object.entries(process.env).filter(([key, value]) => {
+      if (key.startsWith('NX_E2E_')) {
+        return true;
+      }
+
+      if (key.startsWith('NX_')) {
+        return false;
+      }
+
+      return true;
+    })
   );
 }
