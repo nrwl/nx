@@ -219,7 +219,7 @@ function addProxy(tree: Tree, options: NormalizedSchema) {
         JSON.stringify(
           {
             '/api': {
-              target: 'http://localhost:3333',
+              target: `http://localhost:${options.port}`,
               secure: false,
             },
           },
@@ -234,7 +234,7 @@ function addProxy(tree: Tree, options: NormalizedSchema) {
       const proxyModified = {
         ...JSON.parse(proxyFileContent),
         [`/${options.name}-api`]: {
-          target: 'http://localhost:3333',
+          target: `http://localhost:${options.port}`,
           secure: false,
         },
       };
