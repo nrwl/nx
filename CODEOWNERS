@@ -129,8 +129,8 @@
 /scripts/angular-support-upgrades @Coly010 @leosvelperez
 
 # CI
-/.circleci/** @meeroslav @vsavkin
-/.github/** @meeroslav @vsavkin
+/.circleci/** @meeroslav @vsavkin @FrozenPandaz
+/.github/** @meeroslav @vsavkin @FrozenPandaz
 /packages/workspace/src/generators/ci-workflow/** @meeroslav @StalkAltan @vsavkin
 
 # Global Files
