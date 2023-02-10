@@ -94,6 +94,7 @@
     "packageGroup": [
       "@nrwl/jest",
       "@nrwl/linter",
+      "@nrwl/workspace",
       "@nrwl/angular",
       "@nrwl/cli",
       "@nrwl/cypress",
@@ -116,7 +117,6 @@
       "@nrwl/vite",
       "@nrwl/web",
       "@nrwl/webpack",
-      "@nrwl/workspace",
       {
         "package": "@nrwl/nx-cloud",
         "version": "latest"

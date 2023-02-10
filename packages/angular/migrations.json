@@ -1489,6 +1489,9 @@
     },
     "14.5.3": {
       "version": "14.5.3-beta.0",
+      "requires": {
+        "@angular/core": "14.1.0"
+      },
       "packages": {
         "@angular-devkit/architect": {
           "version": "~0.1401.1",
@@ -1639,7 +1642,7 @@
       "version": "15.2.0-beta.0",
       "x-prompt": "Do you want to update the Angular version to v15?",
       "requires": {
-        "@angular/core": "^14.0.0"
+        "@angular/core": "^14.2.0"
       },
       "packages": {
         "@angular-devkit/architect": {
