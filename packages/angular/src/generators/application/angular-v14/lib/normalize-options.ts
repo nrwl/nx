@@ -3,7 +3,6 @@ import {
   getWorkspaceLayout,
   joinPathFragments,
   names,
-  readJson,
   Tree,
 } from '@nrwl/devkit';
 import type { Schema } from '../schema';
@@ -59,7 +58,7 @@ export function normalizeOptions(
     routing: false,
     inlineStyle: false,
     inlineTemplate: false,
-    skipTests: false,
+    skipTests: options.unitTestRunner === UnitTestRunner.None,
     skipFormat: false,
     unitTestRunner: UnitTestRunner.Jest,
     e2eTestRunner: E2eTestRunner.Cypress,

@@ -1,8 +1,12 @@
-import { extractLayoutDirectory, joinPathFragments, Tree } from '@nrwl/devkit';
+import {
+  extractLayoutDirectory,
+  getWorkspaceLayout,
+  joinPathFragments,
+  names,
+  Tree,
+} from '@nrwl/devkit';
 import type { Schema } from '../schema';
 import type { NormalizedSchema } from './normalized-schema';
-
-import { names, getWorkspaceLayout } from '@nrwl/devkit';
 import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
 import { Linter } from '@nrwl/linter';
 import {
@@ -54,7 +58,7 @@ export function normalizeOptions(
     routing: false,
     inlineStyle: false,
     inlineTemplate: false,
-    skipTests: false,
+    skipTests: options.unitTestRunner === UnitTestRunner.None,
     skipFormat: false,
     unitTestRunner: UnitTestRunner.Jest,
     e2eTestRunner: E2eTestRunner.Cypress,
