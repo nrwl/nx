@@ -7,6 +7,7 @@ import { getEnvironmentConfig } from './hooks/use-environment-config';
 import { ProjectGraphClientResponse } from 'nx/src/command-line/dep-graph';
 import { getProjectGraphDataService } from './hooks/get-project-graph-data-service';
 import { getProjectGraphService } from './machines/get-services';
+import { TasksSidebarErrorBoundary } from './feature-tasks/tasks-sidebar-error-boundary';
 
 const { appConfig } = getEnvironmentConfig();
 const projectGraphDataService = getProjectGraphDataService();
@@ -88,6 +89,7 @@ const childRoutes: RouteObject[] = [
     },
     path: 'tasks',
     id: 'selectedTarget',
+    errorElement: <TasksSidebarErrorBoundary />,
     shouldRevalidate: ({ currentParams, nextParams }) => {
       return (
         !currentParams.selectedWorkspaceId ||

@@ -37,6 +37,7 @@ export interface ProjectGraphClientResponse {
 
 export interface TaskGraphClientResponse {
   taskGraphs: Record<string, TaskGraph>;
+  errors: Record<string, string>;
 }
 
 // maps file extention to MIME types
@@ -561,14 +562,13 @@ async function createTaskGraphClientResponse(): Promise<TaskGraphClientResponse>
     'task graph generation:end'
   );
 
-  return {
-    taskGraphs,
-  };
+  return taskGraphs;
 }
 
-function getAllTaskGraphsForWorkspace(
-  projectGraph: ProjectGraph
-): Record<string, TaskGraph> {
+function getAllTaskGraphsForWorkspace(projectGraph: ProjectGraph): {
+  taskGraphs: Record<string, TaskGraph>;
+  errors: Record<string, string>;
+} {
   const nxJson = readNxJson();
 
   const defaultDependencyConfigs = mapTargetDefaultsToDependencies(
@@ -576,20 +576,32 @@ function getAllTaskGraphsForWorkspace(
   );
 
   const taskGraphs: Record<string, TaskGraph> = {};
+  const taskGraphErrors: Record<string, string> = {};
 
   for (const projectName in projectGraph.nodes) {
     const project = projectGraph.nodes[projectName];
     const targets = Object.keys(project.data.targets);
 
     targets.forEach((target) => {
-      taskGraphs[createTaskId(projectName, target)] = createTaskGraph(
-        projectGraph,
-        defaultDependencyConfigs,
-        [projectName],
-        [target],
-        undefined,
-        {}
-      );
+      const taskId = createTaskId(projectName, target);
+      try {
+        taskGraphs[taskId] = createTaskGraph(
+          projectGraph,
+          defaultDependencyConfigs,
+          [projectName],
+          [target],
+          undefined,
+          {}
+        );
+      } catch (err) {
+        taskGraphs[taskId] = {
+          tasks: {},
+          dependencies: {},
+          roots: [],
+        };
+
+        taskGraphErrors[taskId] = err.message;
+      }
 
       const configurations = Object.keys(
         project.data.targets[target]?.configurations || {}
@@ -597,8 +609,9 @@ function getAllTaskGraphsForWorkspace(
 
       if (configurations.length > 0) {
         configurations.forEach((configuration) => {
-          taskGraphs[createTaskId(projectName, target, configuration)] =
-            createTaskGraph(
+          const taskId = createTaskId(projectName, target, configuration);
+          try {
+            taskGraphs[taskId] = createTaskGraph(
               projectGraph,
               defaultDependencyConfigs,
               [projectName],
@@ -606,12 +619,21 @@ function getAllTaskGraphsForWorkspace(
               configuration,
               {}
             );
+          } catch (err) {
+            taskGraphs[taskId] = {
+              tasks: {},
+              dependencies: {},
+              roots: [],
+            };
+
+            taskGraphErrors[taskId] = err.message;
+          }
         });
       }
     });
   }
 
-  return taskGraphs;
+  return { taskGraphs, errors: taskGraphErrors };
 }
 
 function mapTargetDefaultsToDependencies(

@@ -115,3 +115,15 @@ export function groupProjectsByDirectory(
 
   return groups;
 }
+
+export function createTaskName(
+  project: string,
+  target: string,
+  configuration?: string
+) {
+  if (configuration) {
+    return `${project}:${target}:${configuration}`;
+  } else {
+    return `${project}:${target}`;
+  }
+}
