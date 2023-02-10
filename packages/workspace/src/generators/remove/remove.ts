@@ -5,6 +5,7 @@ import {
   Tree,
 } from '@nrwl/devkit';
 
+import { checkProjectIsSafeToRemove } from './lib/check-project-is-safe-to-remove';
 import { checkDependencies } from './lib/check-dependencies';
 import { checkTargets } from './lib/check-targets';
 import { removeProject } from './lib/remove-project';
@@ -15,6 +16,7 @@ import { updateJestConfig } from './lib/update-jest-config';
 
 export async function removeGenerator(tree: Tree, schema: Schema) {
   const project = readProjectConfiguration(tree, schema.projectName);
+  await checkProjectIsSafeToRemove(tree, schema, project);
   await checkDependencies(tree, schema);
   await checkTargets(tree, schema);
   updateJestConfig(tree, schema, project);
