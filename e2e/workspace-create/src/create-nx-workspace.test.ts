@@ -26,6 +26,7 @@ describe('create-nx-workspace', () => {
       appName: wsName,
       style: 'css',
       packageManager,
+      standaloneApi: false,
       routing: true,
     });
 
@@ -60,6 +61,7 @@ describe('create-nx-workspace', () => {
       style: 'css',
       packageManager,
       standaloneApi: true,
+      routing: true,
     });
 
     checkFilesExist('package.json');
