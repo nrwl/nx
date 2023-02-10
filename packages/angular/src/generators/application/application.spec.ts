@@ -43,6 +43,18 @@ describe('app', () => {
       expect(readProjectConfiguration(appTree, 'my-app-e2e')).toMatchSnapshot();
     });
 
+    it('should not produce tests when UnitTestRunner = none', async () => {
+      // ACT
+      await generateApp(appTree, 'my-app', {
+        unitTestRunner: UnitTestRunner.None,
+      });
+      const { targets } = readProjectConfiguration(appTree, 'my-app');
+      expect(targets.test).toBeFalsy();
+      expect(
+        appTree.exists('apps/my-app/src/app/app.component.spec.ts')
+      ).toBeFalsy();
+    });
+
     it('should remove the e2e target on the application', async () => {
       // ACT
       await generateApp(appTree);
