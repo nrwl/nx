@@ -8,6 +8,7 @@ import {
 import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import ts = require('typescript');
+import { getRootMainVariableName } from './add-addon-essentials-to-all';
 
 /**
  * The purpose of this migrator is to help users move away
@@ -160,6 +161,15 @@ function makeTheChanges(tree: Tree, options: {}): string | undefined {
         tree.write(mainJsTsPath, mainJsTs);
 
         if (hasMoreRootMainUses(tree, mainJsTsPath, rootMainVariableName)) {
+          if (
+            checkIfUsesOldSyntaxAndUpdate(
+              tree,
+              mainJsTsPath,
+              rootMainVariableName
+            )
+          ) {
+            return undefined;
+          }
           return mainJsTsPath;
         }
       }
@@ -167,50 +177,105 @@ function makeTheChanges(tree: Tree, options: {}): string | undefined {
   }
 }
 
-function getRootMainVariableName(mainJsTs: string): {
-  rootMainVariableName: string;
-  importExpression: ts.Node;
-} {
-  const requireVariableStatement = tsquery.query(
-    mainJsTs,
-    `VariableStatement:has(CallExpression:has(Identifier[name="require"]))`
-  );
+function checkIfUsesOldSyntaxAndUpdate(
+  tree: Tree,
+  filePath: string,
+  rootMainVariableName: string
+) {
+  const mainJsTs = tree.read(filePath, 'utf-8');
+  const changesToBeMade: StringChange[] = [];
+  const { stringArray: addonsArrayString, expressionToDelete: addonsToDelete } =
+    getPropertyArray('addons', mainJsTs, rootMainVariableName);
 
-  let rootMainVariableName;
-  let importExpression;
+  const {
+    stringArray: storiesArrayString,
+    expressionToDelete: storiesToDelete,
+  } = getPropertyArray('stories', mainJsTs, rootMainVariableName);
 
-  if (requireVariableStatement.length) {
-    importExpression = requireVariableStatement.find((statement) => {
-      const requireCallExpression = tsquery.query(
-        statement,
-        'CallExpression:has(Identifier[name="require"])'
-      );
-      return requireCallExpression?.[0]?.getText()?.includes('.storybook/main');
-    });
+  changesToBeMade.push(addonsToDelete, storiesToDelete);
 
-    if (importExpression) {
-      rootMainVariableName = tsquery
-        .query(importExpression, 'Identifier')?.[0]
-        ?.getText();
-    }
-  } else {
-    const importDeclarations = tsquery.query(mainJsTs, 'ImportDeclaration');
-    importExpression = importDeclarations.find((statement) => {
-      const stringLiteral = tsquery.query(statement, 'StringLiteral');
-      return stringLiteral?.[0]?.getText()?.includes('.storybook/main');
-    });
-
-    if (importExpression) {
-      rootMainVariableName = tsquery
-        .query(importExpression, 'ImportSpecifier')?.[0]
-        ?.getText();
-    }
+  if (addArrayToModuleExports('addons', mainJsTs, addonsArrayString)) {
+    changesToBeMade.push(
+      addArrayToModuleExports('addons', mainJsTs, addonsArrayString)
+    );
   }
 
-  return {
-    rootMainVariableName,
-    importExpression,
-  };
+  if (addArrayToModuleExports('stories', mainJsTs, storiesArrayString)) {
+    changesToBeMade.push(
+      addArrayToModuleExports('stories', mainJsTs, storiesArrayString)
+    );
+  }
+
+  if (changesToBeMade.length) {
+    tree.write(filePath, applyChangesToString(mainJsTs, changesToBeMade));
+    return true;
+  }
+}
+
+function addArrayToModuleExports(
+  propertyName: string,
+  mainJsTs: string,
+  arrayString: string
+): StringChange {
+  if (!arrayString) {
+    return;
+  }
+
+  const moduleExports = tsquery.query(
+    mainJsTs,
+    `PropertyAccessExpression:has([expression.name="module"]):has([name="exports"]):has([name="${propertyName}"])`
+  )?.[0];
+  if (moduleExports) {
+    const parentBinaryExpression = moduleExports.parent;
+    const arrayExpression = tsquery.query(
+      parentBinaryExpression,
+      `ArrayLiteralExpression`
+    )?.[0];
+
+    return {
+      type: ChangeType.Insert,
+      index: arrayExpression.getStart() + 1,
+      text: arrayString,
+    };
+  } else {
+    return {
+      type: ChangeType.Insert,
+      index: mainJsTs.length,
+      text: `module.exports.${propertyName} = [${arrayString}];\n`,
+    };
+  }
+}
+
+function getPropertyArray(
+  propertyName: string,
+  mainJsTs: string,
+  rootMainVariableName: string
+): { stringArray: string; expressionToDelete: StringChange } {
+  const propertyAccessExpression = tsquery.query(
+    mainJsTs,
+    `PropertyAccessExpression:has([expression.name="${rootMainVariableName}"]):has([name="${propertyName}"])`
+  )?.[0];
+
+  if (propertyAccessExpression) {
+    if (
+      propertyAccessExpression?.getText() ===
+      `${rootMainVariableName}.${propertyName}.push`
+    ) {
+      const parentCallExpression = propertyAccessExpression.parent;
+      const stringPropertyArray = tsquery
+        .query(parentCallExpression, `StringLiteral`)
+        .map((stringLiteral) => stringLiteral?.getText());
+
+      return {
+        stringArray: `${stringPropertyArray.join(', ')}`,
+        expressionToDelete: {
+          type: ChangeType.Delete,
+          start: parentCallExpression.getStart(),
+          length: parentCallExpression.getText().length + 1,
+        },
+      };
+    }
+  }
 }
 
 function hasMoreRootMainUses(

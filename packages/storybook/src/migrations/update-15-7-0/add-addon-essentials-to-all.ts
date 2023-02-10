@@ -7,6 +7,7 @@ import {
 } from '@nrwl/devkit';
 import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
 import { tsquery } from '@phenomnomnominal/tsquery';
+import ts = require('typescript');
 import { removeRootConfig } from './remove-root-config';
 
 /**
@@ -229,6 +230,63 @@ function transformMainJsTs(tree: Tree, mainJsTsPath: string): boolean {
       ]);
       tree.write(mainJsTsPath, mainJsTs);
       return true;
+    } else {
+      /**
+       * main.js has potentially a different structure
+       * sort of like this:
+       * rootMain.addons.push(' ...)
+       * rootMain.stories.push(' ...)
+       * Like in older versions of Nx
+       */
+
+      const { rootMainVariableName, importExpression } =
+        getRootMainVariableName(mainJsTs);
+
+      // If there is a PropertyAccessExpression with the text rootMain.addons
+      // then check if it has addon-essentials, if not add it
+      const addonsPropertyAccessExpression = tsquery.query(
+        mainJsTs,
+        `PropertyAccessExpression:has([expression.name="${rootMainVariableName}"]):has([name="addons"])`
+      )?.[0];
+
+      if (rootMainVariableName && importExpression) {
+        if (
+          addonsPropertyAccessExpression?.getText() ===
+          `${rootMainVariableName}.addons.push`
+        ) {
+          const parentCallExpression = addonsPropertyAccessExpression.parent;
+
+          // see if parentCallExpression contains a StringLiteral with the text '@storybook/addon-essentials'
+          const hasAddonEssentials = !!tsquery
+            .query(
+              parentCallExpression,
+              `StringLiteral:has([text="@storybook/addon-essentials"])`
+            )?.[0]
+            ?.getText();
+
+          if (!hasAddonEssentials) {
+            mainJsTs = applyChangesToString(mainJsTs, [
+              {
+                type: ChangeType.Insert,
+                index: addonsPropertyAccessExpression.getEnd() + 1,
+                text: `'@storybook/addon-essentials', `,
+              },
+            ]);
+            tree.write(mainJsTsPath, mainJsTs);
+            return true;
+          }
+        } else {
+          mainJsTs = applyChangesToString(mainJsTs, [
+            {
+              type: ChangeType.Insert,
+              index: importExpression.getEnd() + 1,
+              text: `${rootMainVariableName}.addons.push('@storybook/addon-essentials');`,
+            },
+          ]);
+          tree.write(mainJsTsPath, mainJsTs);
+          return true;
+        }
+      }
     }
     return false;
   }
@@ -263,4 +321,50 @@ function removeStoriesArrayFromRootIfEmpty(
       return true;
     }
   }
+}
+
+export function getRootMainVariableName(mainJsTs: string): {
+  rootMainVariableName: string;
+  importExpression: ts.Node;
+} {
+  const requireVariableStatement = tsquery.query(
+    mainJsTs,
+    `VariableStatement:has(CallExpression:has(Identifier[name="require"]))`
+  );
+
+  let rootMainVariableName;
+  let importExpression;
+
+  if (requireVariableStatement.length) {
+    importExpression = requireVariableStatement.find((statement) => {
+      const requireCallExpression = tsquery.query(
+        statement,
+        'CallExpression:has(Identifier[name="require"])'
+      );
+      return requireCallExpression?.[0]?.getText()?.includes('.storybook/main');
+    });
+
+    if (importExpression) {
+      rootMainVariableName = tsquery
+        .query(importExpression, 'Identifier')?.[0]
+        ?.getText();
+    }
+  } else {
+    const importDeclarations = tsquery.query(mainJsTs, 'ImportDeclaration');
+    importExpression = importDeclarations.find((statement) => {
+      const stringLiteral = tsquery.query(statement, 'StringLiteral');
+      return stringLiteral?.[0]?.getText()?.includes('.storybook/main');
+    });
+
+    if (importExpression) {
+      rootMainVariableName = tsquery
+        .query(importExpression, 'ImportSpecifier')?.[0]
+        ?.getText();
+    }
+  }
+
+  return {
+    rootMainVariableName,
+    importExpression,
+  };
 }
