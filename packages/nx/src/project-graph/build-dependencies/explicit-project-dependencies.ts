@@ -6,6 +6,8 @@ import {
   ProjectGraph,
 } from '../../config/project-graph';
 
+const IGNORED_ROOT_FILES = ['jest.preset.js'];
+
 export function buildExplicitTypeScriptDependencies(
   graph: ProjectGraph,
   filesToProcess: ProjectFileMap
@@ -34,7 +36,10 @@ export function buildExplicitTypeScriptDependencies(
               // TODO: These edges technically should be allowed but we need to figure out how to separate config files out from root
               return;
             }
-
+            // standalone apps should not have dependency to jest.preset.js imports
+            if (isRoot(source) && IGNORED_ROOT_FILES.includes(f.file)) {
+              return;
+            }
             res.push({
               sourceProjectName: source,
               targetProjectName: target,

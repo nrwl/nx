@@ -77,6 +77,7 @@ function processPackageJson(
   collectedDeps: any[],
   packageNameMap: { [packageName: string]: string }
 ) {
+  const isRootPackageJson = fileName === 'package.json';
   try {
     const deps = readDeps(parseJson(defaultFileRead(fileName)));
     // the name matches the import path
@@ -88,7 +89,7 @@ function processPackageJson(
           targetProjectName: packageNameMap[d],
           sourceProjectFile: fileName,
         });
-      } else if (graph.externalNodes[`npm:${d}`]) {
+      } else if (!isRootPackageJson && graph.externalNodes[`npm:${d}`]) {
         collectedDeps.push({
           sourceProjectName: sourceProject,
           targetProjectName: `npm:${d}`,
