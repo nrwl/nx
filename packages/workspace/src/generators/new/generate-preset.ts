@@ -77,6 +77,9 @@ export function generatePreset(host: Tree, opts: NormalizedSchema) {
       opts.framework ? `--framework=${opts.framework}` : null,
       opts.docker ? `--docker=${opts.docker}` : null,
       opts.packageManager ? `--packageManager=${opts.packageManager}` : null,
+      opts.standaloneApi !== undefined
+        ? `--standaloneApi=${opts.standaloneApi}`
+        : null,
       parsedArgs.interactive ? '--interactive=true' : '--interactive=false',
       opts.routing !== undefined ? `--routing=${opts.routing}` : null,
     ].filter((e) => !!e);

@@ -139,6 +139,12 @@ Default: `false`
 
 Skip initializing a git repository.
 
+### standaloneApi
+
+Type: `string`
+
+Use Standalone Components if generating an Angular app
+
 ### style
 
 Type: `string`

@@ -13,4 +13,5 @@ export interface Schema {
   bundler?: 'vite' | 'webpack';
   docker?: boolean;
   routing?: boolean;
+  standaloneApi?: boolean;
 }

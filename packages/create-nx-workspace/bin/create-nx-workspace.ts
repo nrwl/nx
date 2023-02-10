@@ -31,6 +31,7 @@ type Arguments = {
   appName: string;
   style: string;
   framework: string;
+  standaloneApi: string;
   docker: boolean;
   nxCloud: boolean;
   routing: string;
@@ -144,6 +145,10 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           describe: chalk.dim`Style option to be used when a preset with pregenerated app is selected`,
           type: 'string',
         })
+        .option('standaloneApi', {
+          describe: chalk.dim`Use Standalone Components if generating an Angular app`,
+          type: 'string',
+        })
         .option('routing', {
           describe: chalk.dim`Add a routing setup when a preset with pregenerated app is selected`,
           type: 'string',
@@ -232,6 +237,7 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
     preset,
     appName,
     style,
+    standaloneApi,
     routing,
     nxCloud,
     packageManager,
@@ -264,6 +270,7 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
       appName,
       style,
       routing,
+      standaloneApi,
       nxCloud,
       defaultBase,
       framework,
@@ -321,7 +328,15 @@ async function getConfiguration(
   argv: yargs.Arguments<Arguments>
 ): Promise<void> {
   try {
-    let name, appName, style, preset, framework, bundler, docker, routing;
+    let name,
+      appName,
+      style,
+      preset,
+      framework,
+      bundler,
+      docker,
+      routing,
+      standaloneApi;
 
     output.log({
       title:
@@ -375,6 +390,7 @@ async function getConfiguration(
         }
 
         if (preset === Preset.AngularStandalone) {
+          standaloneApi = await determineStandaloneApi(argv);
           routing = await determineRouting(argv);
         }
       } else {
@@ -385,6 +401,7 @@ async function getConfiguration(
         }
 
         if (preset === Preset.AngularMonorepo) {
+          standaloneApi = await determineStandaloneApi(argv);
           routing = await determineRouting(argv);
         }
       }
@@ -401,6 +418,7 @@ async function getConfiguration(
       preset,
       appName,
       style,
+      standaloneApi,
       routing,
       framework,
       nxCloud,
@@ -743,6 +761,37 @@ async function determineFramework(
   }
 
   return Promise.resolve(parsedArgs.framework);
+}
+
+async function determineStandaloneApi(
+  parsedArgs: yargs.Arguments<Arguments>
+): Promise<string> {
+  if (parsedArgs.standaloneApi === undefined) {
+    return enquirer
+      .prompt([
+        {
+          name: 'standaloneApi',
+          message:
+            'Would you like to use Standalone Components in your application?',
+          type: 'autocomplete',
+          choices: [
+            {
+              name: 'Yes',
+            },
+
+            {
+              name: 'No',
+            },
+          ],
+          initial: 'No' as any,
+        },
+      ])
+      .then((a: { standaloneApi: 'Yes' | 'No' }) =>
+        a.standaloneApi === 'Yes' ? 'true' : 'false'
+      );
+  }
+
+  return parsedArgs.standaloneApi;
 }
 
 async function determineDockerfile(
