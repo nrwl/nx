@@ -9,7 +9,7 @@ import {
   output,
 } from '@nrwl/devkit';
 import { execSync } from 'child_process';
-import { removeSync } from 'fs-extra';
+import { rmSync } from 'fs';
 import * as path from 'path';
 import { dirSync } from 'tmp';
 import { initializeGitRepo, showNxWarning } from './shared';
@@ -119,8 +119,8 @@ function updateWorkspace(workspaceName: string) {
 
   writeJsonFile(nxJsonPath, nxJson);
 
-  removeSync(path.join(workspaceName, 'apps'));
-  removeSync(path.join(workspaceName, 'libs'));
+  rmSync(path.join(workspaceName, 'apps'), { recursive: true, force: true });
+  rmSync(path.join(workspaceName, 'libs'), { recursive: true, force: true });
 }
 
 function determineWorkspaceName(parsedArgs: any): Promise<string> {
