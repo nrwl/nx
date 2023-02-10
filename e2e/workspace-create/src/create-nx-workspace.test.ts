@@ -293,7 +293,6 @@ describe('create-nx-workspace', () => {
       appName,
       style: 'css',
       packageManager: 'npm',
-      cli: 'angular',
     });
 
     checkFilesDoNotExist('yarn.lock');

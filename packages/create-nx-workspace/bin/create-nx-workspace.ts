@@ -29,7 +29,6 @@ type Arguments = {
   name: string;
   preset: string;
   appName: string;
-  cli: string;
   style: string;
   framework: string;
   docker: boolean;
@@ -140,11 +139,6 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           describe: chalk.dim`Enable interactive mode with presets`,
           type: 'boolean',
         })
-        .option('cli', {
-          describe: chalk.dim`CLI to power the Nx workspace`,
-          choices: ['nx', 'angular'],
-          type: 'string',
-        })
         .option('style', {
           describe: chalk.dim`Style option to be used when a preset with pregenerated app is selected`,
           type: 'string',
@@ -230,7 +224,6 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
 async function main(parsedArgs: yargs.Arguments<Arguments>) {
   const {
     name,
-    cli,
     preset,
     appName,
     style,
@@ -261,7 +254,6 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
     packageManager as PackageManager,
     {
       ...parsedArgs,
-      cli,
       preset,
       appName,
       style,
@@ -384,7 +376,6 @@ async function getConfiguration(
       style = await determineStyle(preset, argv);
     }
 
-    const cli = await determineCli(preset, argv);
     const packageManager = await determinePackageManager(argv);
     const defaultBase = await determineDefaultBase(argv);
     const nxCloud = await determineNxCloud(argv);
@@ -396,7 +387,6 @@ async function getConfiguration(
       appName,
       style,
       framework,
-      cli,
       nxCloud,
       packageManager,
       defaultBase,
@@ -768,35 +758,6 @@ async function determineDockerfile(
   }
 }
 
-function isValidCli(cli: string): cli is 'angular' | 'nx' {
-  return ['nx', 'angular'].indexOf(cli) !== -1;
-}
-
-async function determineCli(
-  preset: Preset,
-  parsedArgs: yargs.Arguments<Arguments>
-): Promise<'nx' | 'angular'> {
-  if (parsedArgs.cli) {
-    if (!isValidCli(parsedArgs.cli)) {
-      output.error({
-        title: 'Invalid cli',
-        bodyLines: [`It must be one of the following:`, '', 'nx', 'angular'],
-      });
-      process.exit(1);
-    }
-    return Promise.resolve(parsedArgs.cli);
-  }
-
-  switch (preset) {
-    case Preset.AngularMonorepo: {
-      return Promise.resolve('angular');
-    }
-    default: {
-      return Promise.resolve('nx');
-    }
-  }
-}
-
 async function determineStyle(
   preset: Preset,
   parsedArgs: yargs.Arguments<Arguments>
@@ -1064,7 +1025,7 @@ async function createApp(
   packageManager: PackageManager,
   parsedArgs: any
 ): Promise<string> {
-  const { _, cli, ...restArgs } = parsedArgs;
+  const { _, ...restArgs } = parsedArgs;
 
   // Ensure to use packageManager for args
   // if it's not already passed in from previous process
@@ -1122,17 +1083,8 @@ async function createPreset(
   packageManager: PackageManager,
   directory: string
 ): Promise<void> {
-  const {
-    _,
-    cli,
-    skipGit,
-    ci,
-    commit,
-    allPrompts,
-    nxCloud,
-    preset,
-    ...restArgs
-  } = parsedArgs;
+  const { _, skipGit, ci, commit, allPrompts, nxCloud, preset, ...restArgs } =
+    parsedArgs;
 
   const args = unparse(restArgs).join(' ');
 

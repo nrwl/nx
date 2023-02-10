@@ -45,14 +45,6 @@ Choices: [github, circleci, azure, bitbucket-pipelines, gitlab]
 
 Generate a CI workflow file
 
-### cli
-
-Type: `string`
-
-Choices: [nx, angular]
-
-CLI to power the Nx workspace
-
 ### commit.email
 
 Type: `string`

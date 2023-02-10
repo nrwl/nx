@@ -14,9 +14,6 @@ describe('Angular Config', () => {
   afterAll(() => cleanupProject());
 
   it('should upgrade the config correctly', async () => {
-    const previousCI = process.env.SELECTED_CLI;
-    process.env.SELECTED_CLI = 'angular';
-
     const myapp = uniq('myapp');
     runCLI(`generate @nrwl/angular:app ${myapp} --no-interactive`);
 
@@ -34,8 +31,6 @@ describe('Angular Config', () => {
     const myapp2 = uniq('myapp');
     runCLI(`generate @nrwl/angular:app ${myapp2} --no-interactive`);
     expectTestsPass(await runCLIAsync(`test ${myapp2} --no-watch`));
-
-    process.env.SELECTED_CLI = previousCI;
   }, 1000000);
 });
 

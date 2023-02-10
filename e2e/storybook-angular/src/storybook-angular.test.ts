@@ -1,19 +1,17 @@
-process.env.SELECTED_CLI = 'angular';
-
 import {
   checkFilesExist,
+  cleanupProject,
+  getPackageManagerCommand,
   isNotWindows,
   killPorts,
   newProject,
   readFile,
-  cleanupProject,
   runCLI,
+  runCommand,
   runCypressTests,
   tmpProjPath,
   uniq,
-  getPackageManagerCommand,
   updateJson,
-  runCommand,
 } from '@nrwl/e2e/utils';
 import { writeFileSync } from 'fs';
 
