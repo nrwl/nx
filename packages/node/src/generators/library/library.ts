@@ -17,6 +17,8 @@ import { getImportPath } from 'nx/src/utils/path';
 import { Schema } from './schema';
 import { libraryGenerator as workspaceLibraryGenerator } from '@nrwl/workspace/generators';
 import { join } from 'path';
+import { addSwcDependencies } from '@nrwl/js/src/utils/swc/add-swc-dependencies';
+import { addSwcConfig } from '@nrwl/js/src/utils/swc/add-swc-config';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -159,6 +161,11 @@ function updateProject(tree: Tree, options: NormalizedSchema) {
       assets: [`${options.projectRoot}/*.md`],
     },
   };
+
+  if (options.compiler === 'swc') {
+    addSwcDependencies(tree);
+    addSwcConfig(tree, options.projectRoot);
+  }
 
   if (options.rootDir) {
     project.targets.build.options.srcRootForCompilationRoot = options.rootDir;
