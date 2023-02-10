@@ -10,6 +10,7 @@ import { ExclamationCircleIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { ReactNode } from 'react';
 import { Tooltip } from '@nrwl/graph/ui-tooltips';
 import { TaskGraphErrorTooltip } from './task-graph-error-tooltip';
+import { ExperimentalFeature } from '../ui-components/experimental-feature';
 
 interface SidebarProject {
   projectGraphNode: ProjectGraphNode;
@@ -40,20 +41,22 @@ function ProjectListItem({
         </label>
       </div>
 
-      {project.error ? (
-        <Tooltip
-          content={<TaskGraphErrorTooltip error={project.error} />}
-          openAction="click"
-          floatingPortal={true}
-        >
-          <span className="absolute inset-y-0 right-0 flex cursor-pointer items-center text-blue-500 dark:text-sky-500">
-            <ExclamationCircleIcon
-              className="h-5 w-5 text-yellow-500 dark:text-yellow-400"
-              aria-hidden="true"
-            />
-          </span>
-        </Tooltip>
-      ) : null}
+      <ExperimentalFeature>
+        {project.error ? (
+          <Tooltip
+            content={<TaskGraphErrorTooltip error={project.error} />}
+            openAction="click"
+            floatingPortal={true}
+          >
+            <span className="absolute inset-y-0 right-0 flex cursor-pointer items-center text-blue-500 dark:text-sky-500">
+              <ExclamationCircleIcon
+                className="h-5 w-5 text-yellow-500 dark:text-yellow-400"
+                aria-hidden="true"
+              />
+            </span>
+          </Tooltip>
+        ) : null}
+      </ExperimentalFeature>
 
       {project.isSelected ? (
         <span
