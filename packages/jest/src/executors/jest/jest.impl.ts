@@ -228,7 +228,7 @@ export async function batchJest(
         resultOutput +=
           '\n\r' +
           jestReporterUtils.getResultHeader(
-            testResult,
+            testResult as any,
             globalConfig as any,
             configs[i] as any
           );
@@ -243,7 +243,8 @@ export async function batchJest(
       success: aggregatedResults.numFailedTests === 0,
       // TODO(caleb): getSummary assumed endTime is Date.now().
       // might need to make own method to correctly set the endtime base on tests instead of _now_
-      terminalOutput: resultOutput + '\n\r\n\r' + getSummary(aggregatedResults),
+      terminalOutput:
+        resultOutput + '\n\r\n\r' + getSummary(aggregatedResults as any),
     };
   }
 

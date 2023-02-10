@@ -1,3 +1,4 @@
+const j = require('./tsconfig.json');
 /* eslint-disable */
 export default {
   transform: {

@@ -24,7 +24,7 @@ describe('Jest Migration - jest 29 mocked usage in tests', () => {
   it('should not update anything if there are no tests', async () => {
     await setup(tree, 'my-lib');
     const expected = tree.read('libs/my-lib/src/lib/my-lib.spec.ts', 'utf-8');
-    updateTestsJest29(tree);
+    await updateTestsJest29(tree);
     expect(
       tree.read('libs/my-lib/src/file-one.spec.ts', 'utf-8')
     ).toMatchSnapshot();
@@ -40,7 +40,7 @@ describe('Jest Migration - jest 29 mocked usage in tests', () => {
 
     const expected = tree.read('libs/my-lib/src/lib/my-lib.spec.ts', 'utf-8');
 
-    updateTestsJest29(tree);
+    await updateTestsJest29(tree);
 
     expect(
       tree.read('libs/my-lib/src/file-one.spec.ts', 'utf-8')
@@ -52,7 +52,7 @@ describe('Jest Migration - jest 29 mocked usage in tests', () => {
       expected
     );
 
-    updateTestsJest29(tree);
+    await updateTestsJest29(tree);
 
     expect(
       tree.read('libs/my-lib/src/file-one.spec.ts', 'utf-8')

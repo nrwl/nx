@@ -22,13 +22,17 @@ export async function updateTestsJest29(tree: Tree) {
     '@nrwl/jest:jest',
     (options, projectName) => {
       const projectConfig = readProjectConfiguration(tree, projectName);
-      visitNotIgnoredFiles(tree, projectConfig.sourceRoot, (file) => {
-        if (!TEST_FILE_PATTERN.test(file)) {
-          return;
+      visitNotIgnoredFiles(
+        tree,
+        projectConfig.sourceRoot || projectConfig.root,
+        (file) => {
+          if (!TEST_FILE_PATTERN.test(file)) {
+            return;
+          }
+          updateJestMockTypes(tree, file);
+          updateJestMocked(tree, file);
         }
-        updateJestMockTypes(tree, file);
-        updateJestMocked(tree, file);
-      });
+      );
     }
   );
   await formatFiles(tree);
@@ -40,15 +44,16 @@ export function updateJestMockTypes(tree: Tree, filePath: string) {
     contents,
     ':matches(ImportDeclaration, VariableStatement):has(Identifier[name="MaybeMockedDeep"], Identifier[name="MaybeMocked"]):has(StringLiteral[value="jest-mock"])',
     (node: ImportDeclaration | VariableStatement) => {
-      return (
-        node
-          .getText()
-          // MaybeMockedDeep and MaybeMocked now are exported as Mocked and MockedShallow
-          .replace('MaybeMockedDeep', 'Mocked')
-          .replace('MaybeMocked', 'MockedShallow')
-      );
+      const text = node.getText();
+      console.log('mock node', text);
+      const updated = text
+        // MaybeMockedDeep and MaybeMocked now are exported as Mocked and MockedShallow
+        .replace('MaybeMockedDeep', 'Mocked')
+        .replace('MaybeMocked', 'MockedShallow');
+      return updated;
     }
   );
+  console.log('updatedContent', updatedContent, contents);
   tree.write(filePath, updatedContent);
 }
 
