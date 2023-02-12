@@ -1,5 +1,6 @@
 import { Tree, readJson, NxJsonConfiguration, updateJson } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { nxVersion } from '../../utils/versions';
 
 import { rollupInitGenerator } from './init';
 
@@ -35,6 +36,7 @@ describe('rollupInitGenerator', () => {
       name: expect.any(String),
       dependencies: {},
       devDependencies: {
+        '@nrwl/rollup': nxVersion,
         '@swc/helpers': expect.any(String),
         '@swc/core': expect.any(String),
         'swc-loader': expect.any(String),

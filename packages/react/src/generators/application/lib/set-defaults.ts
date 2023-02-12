@@ -1,8 +1,4 @@
-import {
-  readWorkspaceConfiguration,
-  Tree,
-  updateWorkspaceConfiguration,
-} from '@nrwl/devkit';
+import { readNxJson, Tree, updateNxJson } from '@nrwl/devkit';
 import { NormalizedSchema } from '../schema';
 
 export function setDefaults(host: Tree, options: NormalizedSchema) {
@@ -10,17 +6,16 @@ export function setDefaults(host: Tree, options: NormalizedSchema) {
     return;
   }
 
-  const workspace = readWorkspaceConfiguration(host);
+  const nxJson = readNxJson(host);
 
-  if (!options.skipDefaultProject && !workspace.defaultProject) {
-    workspace.defaultProject = options.projectName;
+  if (options.rootProject) {
+    nxJson.defaultProject = options.projectName;
   }
 
-  workspace.generators = workspace.generators || {};
-  workspace.generators['@nrwl/react'] =
-    workspace.generators['@nrwl/react'] || {};
+  nxJson.generators = nxJson.generators || {};
+  nxJson.generators['@nrwl/react'] = nxJson.generators['@nrwl/react'] || {};
 
-  const prev = { ...workspace.generators['@nrwl/react'] };
+  const prev = { ...nxJson.generators['@nrwl/react'] };
 
   const appDefaults = {
     style: options.style,
@@ -37,13 +32,9 @@ export function setDefaults(host: Tree, options: NormalizedSchema) {
     linter: options.linter,
     ...prev.library,
   };
-  // Future react libs should use same test runner as the app.
-  if (options.unitTestRunner === 'vitest') {
-    // Note: We don't set bundler: 'vite' for libraries because that means they are buildable.
-    libDefaults.unitTestRunner ??= 'vitest';
-  }
-  workspace.generators = {
-    ...workspace.generators,
+
+  nxJson.generators = {
+    ...nxJson.generators,
     '@nrwl/react': {
       ...prev,
       application: appDefaults,
@@ -52,5 +43,5 @@ export function setDefaults(host: Tree, options: NormalizedSchema) {
     },
   };
 
-  updateWorkspaceConfiguration(host, workspace);
+  updateNxJson(host, nxJson);
 }

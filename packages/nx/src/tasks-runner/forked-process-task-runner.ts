@@ -60,6 +60,7 @@ export class ForkedProcessTaskRunner {
         this.processes.add(p);
 
         p.once('exit', (code, signal) => {
+          this.processes.delete(p);
           if (code === null) code = this.signalToCode(signal);
           if (code !== 0) {
             const results: BatchResults = {};
@@ -171,6 +172,7 @@ export class ForkedProcessTaskRunner {
         });
 
         p.on('exit', (code, signal) => {
+          this.processes.delete(p);
           if (code === null) code = this.signalToCode(signal);
           // we didn't print any output as we were running the command
           // print all the collected output|
@@ -407,28 +409,36 @@ export class ForkedProcessTaskRunner {
     // When the nx process gets a message, it will be sent into the task's process
     process.on('message', (message: Serializable) => {
       this.processes.forEach((p) => {
-        p.send(message);
+        if (p.connected) {
+          p.send(message);
+        }
       });
     });
 
     // Terminate any task processes on exit
     process.on('SIGINT', () => {
       this.processes.forEach((p) => {
-        p.kill('SIGTERM');
+        if (p.connected) {
+          p.kill('SIGTERM');
+        }
       });
       // we exit here because we don't need to write anything to cache.
       process.exit();
     });
     process.on('SIGTERM', () => {
       this.processes.forEach((p) => {
-        p.kill('SIGTERM');
+        if (p.connected) {
+          p.kill('SIGTERM');
+        }
       });
       // no exit here because we expect child processes to terminate which
       // will store results to the cache and will terminate this process
     });
     process.on('SIGHUP', () => {
       this.processes.forEach((p) => {
-        p.kill('SIGTERM');
+        if (p.connected) {
+          p.kill('SIGTERM');
+        }
       });
       // no exit here because we expect child processes to terminate which
       // will store results to the cache and will terminate this process

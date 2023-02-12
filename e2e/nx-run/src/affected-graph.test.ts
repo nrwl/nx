@@ -5,7 +5,6 @@ import {
   newProject,
   readFile,
   readJson,
-  readProjectConfig,
   cleanupProject,
   runCLI,
   runCLIAsync,
@@ -17,7 +16,7 @@ import {
   isWindows,
   fileExists,
   removeFile,
-  readResolvedWorkspaceConfiguration,
+  readResolvedConfiguration,
 } from '@nrwl/e2e/utils';
 
 describe('Nx Affected and Graph Tests', () => {
@@ -129,7 +128,7 @@ describe('Nx Affected and Graph Tests', () => {
       const build = runCLI(
         `affected:build --files="libs/${mylib}/src/index.ts" --parallel`
       );
-      expect(build).toContain(`Running target build for 3 project(s):`);
+      expect(build).toContain(`Running target build for 3 projects:`);
       expect(build).toContain(`- ${myapp}`);
       expect(build).toContain(`- ${mypublishablelib}`);
       expect(build).not.toContain('is not registered with the build command');
@@ -138,7 +137,7 @@ describe('Nx Affected and Graph Tests', () => {
       const buildExcluded = runCLI(
         `affected:build --files="libs/${mylib}/src/index.ts" --exclude ${myapp}`
       );
-      expect(buildExcluded).toContain(`Running target build for 2 project(s):`);
+      expect(buildExcluded).toContain(`Running target build for 2 projects:`);
       expect(buildExcluded).toContain(`- ${mypublishablelib}`);
 
       // test
@@ -235,28 +234,37 @@ describe('Nx Affected and Graph Tests', () => {
       }
     });
 
-    it('should detect changes to projects based on the workspace.json', () => {
-      // TODO: investigate why affected gives different results on windows
-      if (isNotWindows()) {
-        generateAll();
-        updateProjectConfig(myapp, (config) => ({
-          ...config,
-          prefix: 'my-app',
-        }));
-
-        expect(runCLI('affected:apps')).toContain(myapp);
-        expect(runCLI('affected:apps')).not.toContain(myapp2);
-        expect(runCLI('affected:libs')).not.toContain(mylib);
-      }
-    });
-
     it('should affect all projects by removing projects', () => {
       generateAll();
-      const root = readResolvedWorkspaceConfiguration().projects[mylib].root;
+      const root = readResolvedConfiguration().projects[mylib].root;
       removeFile(root);
       expect(runCLI('affected:apps')).toContain(myapp);
       expect(runCLI('affected:apps')).toContain(myapp2);
       expect(runCLI('affected:libs')).not.toContain(mylib);
+    });
+
+    it('should detect changes to implicitly dependant projects', () => {
+      generateAll();
+      updateProjectConfig(myapp, (config) => ({
+        ...config,
+        implicitDependencies: ['*', `!${myapp2}`],
+      }));
+
+      runCommand('git commit -m "setup test"');
+      updateFile(`libs/${mylib}/index.html`, '<html></html>');
+
+      const affectedApps = runCLI('affected:apps');
+      const affectedLibs = runCLI('affected:libs');
+
+      expect(affectedApps).toContain(myapp);
+      expect(affectedApps).not.toContain(myapp2);
+      expect(affectedLibs).toContain(mylib);
+
+      // Clear implicit deps to not interfere with other tests.
+      updateProjectConfig(myapp, (config) => ({
+        ...config,
+        implicitDependencies: [],
+      }));
     });
   });
 
@@ -574,7 +582,6 @@ describe('Nx Affected and Graph Tests', () => {
       expect(() => checkFilesExist('project-graph.html')).not.toThrow();
       expect(() => checkFilesExist('static/styles.css')).not.toThrow();
       expect(() => checkFilesExist('static/runtime.js')).not.toThrow();
-      expect(() => checkFilesExist('static/polyfills.js')).not.toThrow();
       expect(() => checkFilesExist('static/main.js')).not.toThrow();
       expect(() => checkFilesExist('static/environment.js')).not.toThrow();
 

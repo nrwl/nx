@@ -6,34 +6,32 @@ import {
   addNgRxToPackageJson,
   generateNgrxFilesFromTemplates,
   normalizeOptions,
+  validateOptions,
 } from './lib';
 import type { NgRxGeneratorOptions } from './schema';
 
 export async function ngrxGenerator(
   tree: Tree,
-  options: NgRxGeneratorOptions
+  schema: NgRxGeneratorOptions
 ): Promise<GeneratorCallback> {
-  const normalizedOptions = normalizeOptions(options);
+  validateOptions(tree, schema);
+  const options = normalizeOptions(schema);
 
-  if (!tree.exists(normalizedOptions.module)) {
-    throw new Error(`Module does not exist: ${normalizedOptions.module}.`);
+  if (!options.minimal || !options.root) {
+    generateNgrxFilesFromTemplates(tree, options);
   }
 
-  if (!normalizedOptions.minimal || !normalizedOptions.root) {
-    generateNgrxFilesFromTemplates(tree, normalizedOptions);
-  }
-
-  if (!normalizedOptions.skipImport) {
-    addImportsToModule(tree, normalizedOptions);
-    addExportsToBarrel(tree, normalizedOptions);
+  if (!options.skipImport) {
+    addImportsToModule(tree, options);
+    addExportsToBarrel(tree, options);
   }
 
   let packageInstallationTask: GeneratorCallback = () => {};
-  if (!normalizedOptions.skipPackageJson) {
+  if (!options.skipPackageJson) {
     packageInstallationTask = addNgRxToPackageJson(tree);
   }
 
-  if (!normalizedOptions.skipFormat) {
+  if (!options.skipFormat) {
     await formatFiles(tree);
   }
 

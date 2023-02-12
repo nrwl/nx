@@ -4,29 +4,12 @@
   "sourceRoot": "packages/cra-to-nx/src",
   "projectType": "library",
   "targets": {
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "lintFilePatterns": ["packages/cra-to-nx/**/*.ts"]
-      }
-    },
-    "test": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/packages/cra-to-nx"],
-      "options": {
-        "jestConfig": "packages/cra-to-nx/jest.config.ts",
-        "passWithNoTests": true
-      }
-    },
+    "lint": {},
+    "test": {},
     "build-base": {
       "executor": "@nrwl/js:tsc",
-      "outputs": ["{options.outputPath}"],
       "options": {
-        "outputPath": "build/packages/cra-to-nx",
-        "tsConfig": "packages/cra-to-nx/tsconfig.lib.json",
-        "packageJson": "packages/cra-to-nx/package.json",
         "main": "packages/cra-to-nx/src/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           "packages/cra-to-nx/*.md",
           "packages/cra-to-nx/package.json",

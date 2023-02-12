@@ -14,7 +14,11 @@
       },
       "configurations": {
         "development": {},
-        "production": {}
+        "production": {},
+        "ssr": {
+          "ssr": true,
+          "my-other-setting": "my-other-value"
+        }
       }
     },
     "serve": {

@@ -1,0 +1,20 @@
+[package]
+name = 'nx'
+version = '0.1.0'
+edition = '2021'
+
+[dependencies]
+xxhash-rust = { version = '0.8.5', features = ['xxh3', 'xxh64'] }
+napi = { version = '2.10.2', default-features = false, features = ['napi4'] }
+napi-derive = '2.9.3'
+ignore = '0.4'
+crossbeam-channel = '0.5'
+
+[lib]
+crate-type = ['cdylib']
+
+[build-dependencies]
+napi-build = '2.0.1'
+
+[dev-dependencies]
+assert_fs = "1.0.10"

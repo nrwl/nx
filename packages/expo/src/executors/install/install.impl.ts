@@ -15,7 +15,8 @@ export default async function* installExecutor(
   options: ExpoInstallOptions,
   context: ExecutorContext
 ): AsyncGenerator<ExpoInstallOutput> {
-  const projectRoot = context.workspace.projects[context.projectName].root;
+  const projectRoot =
+    context.projectsConfigurations.projects[context.projectName].root;
 
   try {
     await installAsync(context.root, options);

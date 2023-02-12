@@ -37,8 +37,7 @@
     "@yarnpkg/parsers": "^3.0.0-rc.18",
     "@zkochan/js-yaml": "0.0.6",
     "axios": "^1.0.0",
-    "chalk": "4.1.0",
-    "chokidar": "^3.5.1",
+    "chalk": "^4.1.0",
     "cli-cursor": "3.1.0",
     "cli-spinners": "2.6.1",
     "cliui": "^7.0.2",
@@ -47,11 +46,12 @@
     "fast-glob": "3.2.7",
     "figures": "3.2.0",
     "flat": "^5.0.2",
-    "fs-extra": "^10.1.0",
+    "fs-extra": "^11.1.0",
     "glob": "7.1.4",
     "ignore": "^5.0.4",
     "js-yaml": "4.1.0",
     "jsonc-parser": "3.2.0",
+    "lines-and-columns": "~2.0.3",
     "minimatch": "3.0.5",
     "npm-run-path": "^4.0.1",
     "open": "^8.4.0",
@@ -60,7 +60,7 @@
     "strong-log-transformer": "^2.1.0",
     "tar-stream": "~2.2.0",
     "tmp": "~0.2.1",
-    "tsconfig-paths": "^3.9.0",
+    "tsconfig-paths": "^4.1.2",
     "tslib": "^2.3.0",
     "v8-compile-cache": "2.3.0",
     "yargs": "^17.6.2",
@@ -78,9 +78,23 @@
       "optional": true
     }
   },
+  "optionalDependencies": {
+    "@nrwl/nx-win32-x64-msvc": "*",
+    "@nrwl/nx-darwin-x64": "*",
+    "@nrwl/nx-linux-x64-gnu": "*",
+    "@nrwl/nx-darwin-arm64": "*",
+    "@nrwl/nx-linux-arm64-gnu": "*",
+    "@nrwl/nx-linux-arm64-musl": "*",
+    "@nrwl/nx-win32-arm64-msvc": "*",
+    "@nrwl/nx-linux-arm-gnueabihf": "*",
+    "@nrwl/nx-linux-x64-musl": "*"
+  },
   "nx-migrations": {
     "migrations": "./migrations.json",
     "packageGroup": [
+      "@nrwl/jest",
+      "@nrwl/linter",
+      "@nrwl/workspace",
       "@nrwl/angular",
       "@nrwl/cli",
       "@nrwl/cypress",
@@ -90,9 +104,7 @@
       "@nrwl/eslint-plugin-nx",
       "@nrwl/expo",
       "@nrwl/express",
-      "@nrwl/jest",
       "@nrwl/js",
-      "@nrwl/linter",
       "@nrwl/nest",
       "@nrwl/next",
       "@nrwl/node",
@@ -102,9 +114,9 @@
       "@nrwl/rollup",
       "@nrwl/storybook",
       "@nrwl/tao",
+      "@nrwl/vite",
       "@nrwl/web",
       "@nrwl/webpack",
-      "@nrwl/workspace",
       {
         "package": "@nrwl/nx-cloud",
         "version": "latest"
@@ -115,5 +127,21 @@
   "builders": "./executors.json",
   "publishConfig": {
     "access": "public"
+  },
+  "napi": {
+    "name": "nx",
+    "package": {
+      "name": "@nrwl/nx"
+    },
+    "triples": {
+      "additional": [
+        "aarch64-apple-darwin",
+        "aarch64-unknown-linux-gnu",
+        "aarch64-unknown-linux-musl",
+        "aarch64-pc-windows-msvc",
+        "armv7-unknown-linux-gnueabihf",
+        "x86_64-unknown-linux-musl"
+      ]
+    }
   }
 }

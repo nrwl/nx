@@ -42,8 +42,6 @@ jobs:
         displayName: NPM Install Dependencies
       - script: yarn nx-cloud start-ci-run --stop-agents-after=\\"build\\" --agent-count=3
         displayName: Start CI run
-      - script: yarn nx-cloud record -- yarn nx workspace-lint
-        displayName: Run workspace lint
       - script: yarn nx-cloud record -- yarn nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
         displayName: Check format
       - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --target=lint --parallel=3
@@ -85,13 +83,13 @@ pipelines:
                 
                 - yarn install --frozen-lockfile
                 - yarn nx-cloud start-ci-run --stop-agents-after=\\"build\\" --agent-count=3
-                - yarn nx-cloud record -- yarn nx workspace-lint
                 - yarn nx-cloud record -- yarn nx format:check
                 - yarn nx affected --target=lint & yarn nx affected --target=test & yarn nx affected --target=build
                 - yarn nx-cloud stop-all-agents
           - step: *agent
           - step: *agent
-          - step: *agent"
+          - step: *agent
+"
 `;
 
 exports[`lib should generate circleci CI config 1`] = `
@@ -131,9 +129,6 @@ jobs:
       - run:
           name: Initialize the Nx Cloud distributed CI run
           command: yarn nx-cloud start-ci-run --stop-agents-after=\\"build\\" --agent-count=3
-      - run:
-          name: Run workspace lint
-          command: yarn nx-cloud record -- yarn nx workspace-lint
       - run:
           name: Check format
           command: yarn nx-cloud record -- yarn nx format:check --base=$NX_BASE --head=$NX_HEAD
@@ -178,13 +173,12 @@ on:
 jobs:
   main:
     name: Nx Cloud - Main Job
-    uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.8
+    uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.11.3
     with:
       number-of-agents: 3
       init-commands: |
         yarn nx-cloud start-ci-run --stop-agents-after=\\"build\\" --agent-count=3
       parallel-commands: |
-        yarn nx-cloud record -- yarn nx workspace-lint
         yarn nx-cloud record -- yarn nx format:check
       parallel-commands-on-agents: |
         yarn nx affected --target=lint --parallel=3
@@ -193,7 +187,7 @@ jobs:
 
   agents:
     name: Nx Cloud - Agents
-    uses: nrwl/ci/.github/workflows/nx-cloud-agents.yml@v0.8
+    uses: nrwl/ci/.github/workflows/nx-cloud-agents.yml@v0.11.3
     with:
       number-of-agents: 3
 "
@@ -211,13 +205,12 @@ on:
 jobs:
   main:
     name: Nx Cloud - Main Job
-    uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.8
+    uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.11.3
     with:
       number-of-agents: 3
       init-commands: |
         yarn nx-cloud start-ci-run --stop-agents-after=\\"build\\" --agent-count=3
       parallel-commands: |
-        yarn nx-cloud record -- yarn nx workspace-lint
         yarn nx-cloud record -- yarn nx format:check
       parallel-commands-on-agents: |
         yarn nx affected --target=lint --parallel=3
@@ -226,7 +219,7 @@ jobs:
 
   agents:
     name: Nx Cloud - Agents
-    uses: nrwl/ci/.github/workflows/nx-cloud-agents.yml@v0.8
+    uses: nrwl/ci/.github/workflows/nx-cloud-agents.yml@v0.11.3
     with:
       number-of-agents: 3
 "
@@ -263,7 +256,6 @@ CI:
   extends: .base-pipeline
   script:
     - yarn nx-cloud start-ci-run --stop-agents-after=\\"build\\"
-    - yarn nx-cloud record -- yarn nx workspace-lint --base=$NX_BASE --head=$NX_HEAD
     - yarn nx-cloud record -- yarn nx format:check --base=$NX_BASE --head=$NX_HEAD
     - yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint --parallel=3 & yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --parallel=3 --ci --code-coverage & yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e --parallel=3 --ci --code-coverage & yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=build --parallel=3
 

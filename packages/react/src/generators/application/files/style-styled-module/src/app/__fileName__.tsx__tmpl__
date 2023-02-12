@@ -1,0 +1,40 @@
+<% if (classComponent) { %>
+import { Component } from 'react';
+<% } %>
+import styled from '<%= styledModule %>';
+<% if (!minimal) { %>
+import NxWelcome from "./nx-welcome";
+<% } %>
+
+const StyledApp = styled.div`
+    // Your style here
+`;
+
+<% if (classComponent) { %>
+export class App extends Component {
+  render() {
+<% } else { %>
+export function App() {
+<% } %>
+  return (
+      <StyledApp>
+        <% if (!minimal) { %>
+        <NxWelcome title="<%= projectName %>"/>
+        <% } else { %>
+          <h1>
+            <span> Hello there, </span>
+            Welcome <%= projectName %> 👋
+          </h1>
+        <% } %>
+      </StyledApp>
+  );
+<% if (classComponent) { %>
+  }
+}
+<% } else { %>
+}
+<% } %>
+
+export default App;
+
+<% if (inSourceTests === true) { %> <%- inSourceVitestTests %> <% } %>

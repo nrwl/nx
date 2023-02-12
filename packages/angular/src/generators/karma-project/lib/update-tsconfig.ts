@@ -4,6 +4,7 @@ import {
   readProjectConfiguration,
   updateJson,
 } from '@nrwl/devkit';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 
 export function updateTsConfigs(tree: Tree, project: string): void {
   const projectConfig = readProjectConfiguration(tree, project);
@@ -24,7 +25,9 @@ export function updateTsConfigs(tree: Tree, project: string): void {
     }
   );
 
-  let extraFiles: string[] = [];
+  const installedAngularVersion = getInstalledAngularVersionInfo(tree);
+  let extraFiles: string[] =
+    installedAngularVersion.major === 14 ? ['src/test.ts'] : [];
   if (
     projectConfig.projectType == 'application' &&
     projectConfig.targets.build?.options?.polyfills &&
@@ -34,7 +37,7 @@ export function updateTsConfigs(tree: Tree, project: string): void {
     polyfillsPath = polyfillsPath.startsWith(projectConfig.root)
       ? polyfillsPath.replace(`${projectConfig.root}/`, '')
       : polyfillsPath;
-    extraFiles = [polyfillsPath];
+    extraFiles = [...extraFiles, polyfillsPath];
   }
 
   if (!extraFiles.length) {

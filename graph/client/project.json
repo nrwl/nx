@@ -39,7 +39,7 @@
         "main": "graph/client/src/main.tsx",
         "polyfills": "graph/client/src/polyfills.ts",
         "tsConfig": "graph/client/tsconfig.app.json",
-        "styles": ["graph/client/src/styles.scss"],
+        "styles": ["graph/client/src/styles.css"],
         "scripts": [],
         "assets": [],
         "webpackConfig": "graph/client/webpack.config.js",
@@ -239,29 +239,14 @@
       },
       "defaultConfiguration": "dev"
     },
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["graph/client/**/*.{ts,tsx,js,jsx}"]
-      }
-    },
-    "test": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/graph/client"],
-      "options": {
-        "jestConfig": "graph/client/jest.config.ts",
-        "passWithNoTests": true
-      }
-    },
+    "lint": {},
+    "test": {},
     "storybook": {
       "executor": "@nrwl/storybook:storybook",
       "options": {
         "uiFramework": "@storybook/react",
         "port": 4400,
-        "config": {
-          "configFolder": "graph/client/.storybook"
-        }
+        "configDir": "graph/client/.storybook"
       },
       "configurations": {
         "ci": {
@@ -271,13 +256,11 @@
     },
     "build-storybook": {
       "executor": "@nrwl/storybook:build",
-      "outputs": ["{options.outputPath}"],
+      "outputs": ["{options.outputDir}"],
       "options": {
         "uiFramework": "@storybook/react",
-        "outputPath": "dist/storybook/graph-client",
-        "config": {
-          "configFolder": "graph/client/.storybook"
-        }
+        "configDir": "graph/client/.storybook",
+        "outputDir": "dist/storybook/graph-client"
       },
       "configurations": {
         "ci": {

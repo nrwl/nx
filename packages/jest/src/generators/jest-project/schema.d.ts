@@ -2,14 +2,14 @@ export interface JestProjectSchema {
   project: string;
   supportTsx?: boolean;
   /**
-   * @deprecated
+   * @deprecated use setupFile instead
    */
   skipSetupFile?: boolean;
   setupFile?: 'angular' | 'web-components' | 'none';
   skipSerializers?: boolean;
   testEnvironment?: 'node' | 'jsdom' | '';
   /**
-   * @deprecated
+   * @deprecated use compiler: "babel" instead
    */
   babelJest?: boolean;
   skipFormat?: boolean;

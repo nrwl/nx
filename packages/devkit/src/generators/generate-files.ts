@@ -1,7 +1,9 @@
 import { readFileSync, readdirSync, statSync } from 'fs';
 import * as path from 'path';
 import type { Tree } from 'nx/src/generators/tree';
-import { logger } from 'nx/src/utils/logger';
+import { requireNx } from '../../nx';
+
+const { logger } = requireNx();
 
 const binaryExts = new Set([
   // // Image types originally from https://github.com/sindresorhus/image-type/blob/5541b6a/index.js

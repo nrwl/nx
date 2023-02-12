@@ -2,7 +2,7 @@ import * as fs from 'fs';
 
 export function writeViteConfig(
   appName: string,
-  isNested: boolean,
+  isStandalone: boolean,
   isJs: boolean
 ) {
   let port = 4200;
@@ -18,14 +18,16 @@ export function writeViteConfig(
   }
 
   fs.writeFileSync(
-    isNested ? 'vite.config.js' : `apps/${appName}/vite.config.js`,
+    isStandalone ? 'vite.config.js' : `apps/${appName}/vite.config.js`,
     `import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 // https://vitejs.dev/config/
 export default defineConfig({
   build: {
-    outDir: ${isNested ? `'./dist/${appName}'` : `'../../dist/apps/${appName}'`}
+    outDir: ${
+      isStandalone ? `'./dist/${appName}'` : `'../../dist/apps/${appName}'`
+    }
   },
   server: {
     port: ${port},

@@ -1,10 +1,10 @@
 import { createTreeWithEmptyWorkspace } from '../../generators/testing-utils/create-tree-with-empty-workspace';
 import type { Tree } from '../../generators/tree';
-import removeDefaultCollection from './remove-default-collection';
 import {
-  readWorkspaceConfiguration,
-  updateWorkspaceConfiguration,
+  readNxJson,
+  updateNxJson,
 } from '../../generators/utils/project-configuration';
+import removeDefaultCollection from './remove-default-collection';
 
 describe('remove-default-collection', () => {
   let tree: Tree;
@@ -14,39 +14,42 @@ describe('remove-default-collection', () => {
   });
 
   it('should remove default collection from nx.json', async () => {
-    const config = readWorkspaceConfiguration(tree);
+    const config = readNxJson(tree);
     config.cli = {
       defaultCollection: 'default-collection',
       defaultProjectName: 'default-project',
     };
-    updateWorkspaceConfiguration(tree, config);
+    updateNxJson(tree, config);
 
     await removeDefaultCollection(tree);
 
-    expect(readWorkspaceConfiguration(tree).cli).toEqual({
+    expect(readNxJson(tree).cli).toEqual({
       defaultProjectName: 'default-project',
     });
   });
 
   it('should remove cli entirely if defaultCollection was the only setting', async () => {
-    const config = readWorkspaceConfiguration(tree);
+    const config = readNxJson(tree);
     config.cli = {
       defaultCollection: 'default-collection',
     };
-    updateWorkspaceConfiguration(tree, config);
+    updateNxJson(tree, config);
 
     await removeDefaultCollection(tree);
 
-    expect(
-      readWorkspaceConfiguration(tree).cli?.defaultCollection
-    ).toBeUndefined();
+    expect(readNxJson(tree).cli?.defaultCollection).toBeUndefined();
   });
 
   it('should not error when "cli" is not defined', async () => {
-    const config = readWorkspaceConfiguration(tree);
+    const config = readNxJson(tree);
     delete config.cli;
-    updateWorkspaceConfiguration(tree, config);
+    updateNxJson(tree, config);
 
+    await expect(removeDefaultCollection(tree)).resolves.not.toThrow();
+  });
+
+  it('should not error when nxJson does not exist', async () => {
+    tree.delete('nx.json');
     await expect(removeDefaultCollection(tree)).resolves.not.toThrow();
   });
 });

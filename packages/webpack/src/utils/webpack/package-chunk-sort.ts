@@ -13,18 +13,14 @@ export function generateEntryPoints(appConfig: {
     const entryPoints = normalizeExtraEntryPoints(
       extraEntryPoints,
       defaultBundleName
-    )
-      .filter((entry) => entry.inject)
-      .map((entry) => entry.bundleName);
+    ).map((entry) => entry.bundleName);
 
     // remove duplicates
     return [...new Set(entryPoints)];
   };
 
   const entryPoints = [
-    'polyfills-nomodule-es5',
     'runtime',
-    'polyfills-es5',
     'polyfills',
     'sw-register',
     ...extraEntryPoints(appConfig.styles, 'styles'),

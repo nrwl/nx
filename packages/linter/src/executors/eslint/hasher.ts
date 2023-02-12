@@ -13,7 +13,7 @@ export default async function run(
     hasher: Hasher;
     projectGraph: ProjectGraph;
     taskGraph: TaskGraph;
-    workspaceConfig: ProjectsConfigurations;
+    projectsConfigurations: ProjectsConfigurations;
   }
 ): Promise<Hash> {
   const res = await context.hasher.hashTask(task);
@@ -23,7 +23,9 @@ export default async function run(
 
   const deps = allDeps(task.id, context.taskGraph, context.projectGraph);
   const tags = context.hasher.hashArray(
-    deps.map((d) => (context.workspaceConfig.projects[d].tags || []).join('|'))
+    deps.map((d) =>
+      (context.projectsConfigurations.projects[d].tags || []).join('|')
+    )
   );
 
   const command = res.details['command'];

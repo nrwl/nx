@@ -17,21 +17,26 @@ import {
   addAngularStorybookTask,
   addBuildStorybookToCacheableOperations,
   addStorybookTask,
+  addStorybookToNamedInputs,
   configureTsProjectConfig,
   configureTsSolutionConfig,
   createProjectStorybookDir,
-  createRootStorybookDir,
-  createRootStorybookDirForRootProject,
   getE2EProjectName,
-  projectIsRootProjectInNestedWorkspace,
+  getViteConfigFilePath,
+  projectIsRootProjectInStandaloneWorkspace,
   updateLintConfig,
 } from './util-functions';
 import { Linter } from '@nrwl/linter';
-import { findStorybookAndBuildTargetsAndCompiler } from '../../utils/utilities';
+import {
+  findStorybookAndBuildTargetsAndCompiler,
+  isStorybookV7,
+} from '../../utils/utilities';
 import {
   storybookNextAddonVersion,
   storybookSwcAddonVersion,
   storybookTestRunnerVersion,
+  storybookVersion,
+  tsNodeVersion,
 } from '../../utils/versions';
 
 export async function configurationGenerator(
@@ -49,52 +54,117 @@ export async function configurationGenerator(
   const { nextBuildTarget, compiler, viteBuildTarget } =
     findStorybookAndBuildTargetsAndCompiler(targets);
 
-  if (viteBuildTarget && schema.bundler !== 'vite') {
-    logger.info(
-      `Your project ${schema.name} uses Vite as a bundler. 
-      Nx will configure Storybook for this project to use Vite as well.`
-    );
-    schema.bundler = 'vite';
+  /**
+   * Make sure someone is not trying to configure Storybook
+   * with the wrong version.
+   */
+  let storybook7;
+  try {
+    storybook7 = isStorybookV7();
+  } catch (e) {
+    storybook7 = schema.storybook7betaConfiguration;
   }
 
-  const initTask = await initGenerator(tree, {
-    uiFramework: schema.uiFramework,
+  if (storybook7 && !schema.storybook7betaConfiguration) {
+    schema.storybook7betaConfiguration = true;
+    logger.info(
+      `You are using Storybook version 7. 
+       So Nx will configure Storybook for version 7.`
+    );
+  }
+
+  let viteConfigFilePath: string | undefined;
+
+  if (viteBuildTarget) {
+    if (schema.bundler !== 'vite') {
+      logger.info(
+        `Your project ${schema.name} uses Vite as a bundler. 
+        Nx will configure Storybook for this project to use Vite as well.`
+      );
+      schema.bundler = 'vite';
+    }
+
+    viteConfigFilePath = getViteConfigFilePath(
+      tree,
+      root,
+      targets[viteBuildTarget]?.options?.configFile
+    );
+  }
+
+  if (schema.storybook7betaConfiguration) {
+    if (viteBuildTarget) {
+      if (schema.storybook7UiFramework === '@storybook/react-webpack5') {
+        logger.info(
+          `Your project ${schema.name} uses Vite as a bundler. 
+        Nx will configure Storybook for this project to use Vite as well.`
+        );
+        schema.storybook7UiFramework = '@storybook/react-vite';
+      }
+      if (
+        schema.storybook7UiFramework === '@storybook/web-components-webpack5'
+      ) {
+        logger.info(
+          `Your project ${schema.name} uses Vite as a bundler. 
+        Nx will configure Storybook for this project to use Vite as well.`
+        );
+        schema.storybook7UiFramework = '@storybook/web-components-vite';
+      }
+    }
+
+    if (nextBuildTarget) {
+      schema.storybook7UiFramework = '@storybook/nextjs';
+    }
+
+    if (!schema.storybook7UiFramework) {
+      if (schema.uiFramework === '@storybook/react') {
+        schema.storybook7UiFramework = viteBuildTarget
+          ? '@storybook/react-vite'
+          : '@storybook/react-webpack5';
+      } else if (schema.uiFramework === '@storybook/web-components') {
+        schema.storybook7UiFramework = viteBuildTarget
+          ? '@storybook/web-components-vite'
+          : '@storybook/web-components-webpack5';
+      } else if (schema.uiFramework === '@storybook/angular') {
+        schema.storybook7UiFramework = '@storybook/angular';
+      } else if (schema.uiFramework !== '@storybook/react-native') {
+        schema.storybook7UiFramework = `${schema.uiFramework}-webpack5`;
+      }
+    }
+  }
+
+  const initTask = initGenerator(tree, {
+    uiFramework: schema.storybook7betaConfiguration
+      ? schema.storybook7UiFramework
+      : schema.uiFramework,
     bundler: schema.bundler,
+    storybook7betaConfiguration: schema.storybook7betaConfiguration,
   });
   tasks.push(initTask);
 
-  if (projectIsRootProjectInNestedWorkspace(root)) {
-    createRootStorybookDirForRootProject(
-      tree,
-      schema.name,
-      schema.uiFramework,
-      schema.js,
-      schema.tsConfiguration,
-      root,
-      projectType,
-      !!nextBuildTarget,
-      compiler === 'swc',
-      schema.bundler === 'vite'
-    );
-  } else {
-    createRootStorybookDir(tree, schema.js, schema.tsConfiguration);
-    createProjectStorybookDir(
-      tree,
-      schema.name,
-      schema.uiFramework,
-      schema.js,
-      schema.tsConfiguration,
-      !!nextBuildTarget,
-      compiler === 'swc',
-      schema.bundler === 'vite'
-    );
-  }
+  createProjectStorybookDir(
+    tree,
+    schema.name,
+    schema.storybook7betaConfiguration
+      ? schema.storybook7UiFramework
+      : schema.uiFramework,
+    schema.js,
+    schema.tsConfiguration,
+    root,
+    projectType,
+    projectIsRootProjectInStandaloneWorkspace(root),
+    !!nextBuildTarget,
+    compiler === 'swc',
+    schema.bundler === 'vite',
+    schema.storybook7betaConfiguration,
+    viteConfigFilePath
+  );
 
   configureTsProjectConfig(tree, schema);
   configureTsSolutionConfig(tree, schema);
   updateLintConfig(tree, schema);
 
   addBuildStorybookToCacheableOperations(tree);
+  addStorybookToNamedInputs(tree);
 
   if (schema.uiFramework === '@storybook/angular') {
     addAngularStorybookTask(tree, schema.name, schema.configureTestRunner);
@@ -103,11 +173,12 @@ export async function configurationGenerator(
       tree,
       schema.name,
       schema.uiFramework,
-      schema.configureTestRunner
+      schema.configureTestRunner,
+      schema.storybook7betaConfiguration
     );
   }
 
-  const e2eProject = getE2EProjectName(tree, schema.name);
+  const e2eProject = await getE2EProjectName(tree, schema.name);
   if (schema.configureCypress && !e2eProject) {
     const cypressTask = await cypressProjectGenerator(tree, {
       name: schema.name,
@@ -123,7 +194,24 @@ export async function configurationGenerator(
     );
   }
 
-  if (nextBuildTarget && projectType === 'application') {
+  if (schema.tsConfiguration) {
+    tasks.push(
+      addDependenciesToPackageJson(
+        tree,
+        {},
+        {
+          ['@storybook/core-common']: storybookVersion,
+          ['ts-node']: tsNodeVersion,
+        }
+      )
+    );
+  }
+
+  if (
+    nextBuildTarget &&
+    projectType === 'application' &&
+    !schema.storybook7betaConfiguration
+  ) {
     tasks.push(
       addDependenciesToPackageJson(
         tree,

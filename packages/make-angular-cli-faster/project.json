@@ -8,11 +8,7 @@
     "build-base": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "outputPath": "build/packages/make-angular-cli-faster",
-        "tsConfig": "packages/make-angular-cli-faster/tsconfig.lib.json",
-        "packageJson": "packages/make-angular-cli-faster/package.json",
         "main": "packages/make-angular-cli-faster/src/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "",
@@ -20,10 +16,8 @@
             "output": "/"
           },
           "packages/make-angular-cli-faster/*.md"
-        ],
-        "srcRootForCompilationRoot": "packages/make-angular-cli-faster/src"
-      },
-      "outputs": ["{options.outputPath}"]
+        ]
+      }
     },
     "build": {
       "executor": "nx:run-commands",

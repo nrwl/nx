@@ -36,11 +36,19 @@ describe('assertWorkspaceValidity', () => {
       fail('should not reach');
     } catch (e) {
       expect(e.message).toContain(
-        'The following implicitDependencies specified in project configurations are invalid'
+        'The following implicitDependencies point to non-existent project(s)'
       );
       expect(e.message).toContain('README.md');
       expect(e.message).toContain('invalidproj');
     }
+  });
+
+  it('should not throw for a project-level implicit dependency with a glob', () => {
+    mockWorkspaceJson.projects.app2.implicitDependencies = ['lib*'];
+
+    expect(() => {
+      assertWorkspaceValidity(mockWorkspaceJson, mockNxJson);
+    }).not.toThrow();
   });
 
   it('should throw for an invalid project-level implicit dependency', () => {
@@ -51,10 +59,25 @@ describe('assertWorkspaceValidity', () => {
       fail('should not reach');
     } catch (e) {
       expect(e.message).toContain(
-        'The following implicitDependencies specified in project configurations are invalid'
+        'The following implicitDependencies point to non-existent project(s)'
       );
       expect(e.message).toContain('invalidproj');
       expect(e.message).toContain('invalidproj');
+    }
+  });
+
+  it('should throw for an invalid project-level implicit dependency with glob', () => {
+    mockWorkspaceJson.projects.app2.implicitDependencies = ['invalid*'];
+
+    try {
+      assertWorkspaceValidity(mockWorkspaceJson, mockNxJson);
+      fail('should not reach');
+    } catch (e) {
+      expect(e.message).toContain(
+        'The following implicitDependencies point to non-existent project(s)'
+      );
+      expect(e.message).toContain('invalid*');
+      expect(e.message).toContain('invalid*');
     }
   });
 

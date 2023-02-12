@@ -4,7 +4,7 @@ import {
   Tree,
   updateJson,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { excludeJestConfigSwcrc } from './exclude-jest-config-swcrc';
 import { ProjectConfiguration } from 'nx/src/config/workspace-json-project-json';
 
@@ -57,7 +57,7 @@ const oldSwcRc = {
 describe('JS Migration (v14.0.0)', () => {
   let tree: Tree;
   beforeEach(() => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'swc-lib', projectConfig);
 
     tree.write('libs/swc-lib/.lib.swcrc', JSON.stringify(oldSwcRc));

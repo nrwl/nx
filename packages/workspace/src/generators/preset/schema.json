@@ -18,15 +18,16 @@
       "description": "Npm scope for importing libs.",
       "type": "string"
     },
-    "cli": {
-      "description": "CLI powering the workspace.",
-      "type": "string"
-    },
     "linter": {
       "description": "The tool to use for running lint checks.",
       "type": "string",
       "enum": ["eslint"],
       "default": "eslint"
+    },
+    "routing": {
+      "description": "Add routing to the generated application.",
+      "type": "boolean",
+      "default": true
     },
     "style": {
       "description": "The file extension to be used for style files.",
@@ -55,14 +56,37 @@
         ]
       }
     },
+    "standaloneApi": {
+      "description": "Use the Standalone APIs if generating an Angular application.",
+      "type": "boolean",
+      "default": false
+    },
     "standaloneConfig": {
       "description": "Split the project configurations into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
-      "type": "boolean"
+      "type": "boolean",
+      "default": true,
+      "x-deprecated": "Nx only supports standaloneConfig"
     },
     "packageManager": {
       "description": "The package manager used to install dependencies.",
       "type": "string",
       "enum": ["npm", "yarn", "pnpm"]
+    },
+    "framework": {
+      "description": "The framework which the application is using",
+      "type": "string",
+      "enum": ["express", "koa", "fastify", "connect"]
+    },
+    "bundler": {
+      "description": "The bundler to use for building the application.",
+      "type": "string",
+      "enum": ["webpack", "vite"],
+      "default": "vite"
+    },
+    "docker": {
+      "description": "Generate a Dockerfile",
+      "type": "boolean",
+      "default": false
     }
   }
 }

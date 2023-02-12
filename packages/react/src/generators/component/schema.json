@@ -23,7 +23,8 @@
       "$default": {
         "$source": "projectName"
       },
-      "x-prompt": "What is the name of the project for this component?"
+      "x-prompt": "What is the name of the project for this component?",
+      "x-priority": "important"
     },
     "name": {
       "type": "string",
@@ -32,7 +33,8 @@
         "$source": "argv",
         "index": 0
       },
-      "x-prompt": "What name would you like to use for the component?"
+      "x-prompt": "What name would you like to use for the component?",
+      "x-priority": "important"
     },
     "style": {
       "description": "The file extension to be used for style files.",
@@ -83,12 +85,14 @@
     "skipTests": {
       "type": "boolean",
       "description": "When true, does not create `spec.ts` test files for the new component.",
-      "default": false
+      "default": false,
+      "x-priority": "internal"
     },
     "directory": {
       "type": "string",
       "description": "Create the component under this directory (can be nested).",
-      "alias": "dir"
+      "alias": "dir",
+      "x-priority": "important"
     },
     "flat": {
       "type": "boolean",
@@ -132,6 +136,11 @@
     "fileName": {
       "type": "string",
       "description": "Create a component with this file name."
+    },
+    "inSourceTests": {
+      "type": "boolean",
+      "default": false,
+      "description": "When using Vitest, separate spec files will not be generated and instead will be included within the source files. Read more on the Vitest docs site: https://vitest.dev/guide/in-source.html"
     }
   },
   "required": ["name", "project"]

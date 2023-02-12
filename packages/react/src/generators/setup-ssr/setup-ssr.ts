@@ -6,11 +6,11 @@ import {
   formatFiles,
   generateFiles,
   joinPathFragments,
+  readNxJson,
   readProjectConfiguration,
-  readWorkspaceConfiguration,
   Tree,
+  updateNxJson,
   updateProjectConfiguration,
-  updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import initGenerator from '../init/init';
 
@@ -95,6 +95,7 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
   projectConfig.targets = {
     ...projectConfig.targets,
     server: {
+      dependsOn: ['build'],
       executor: '@nrwl/webpack:webpack',
       outputs: ['{options.outputPath}'],
       defaultConfiguration: 'production',
@@ -106,7 +107,8 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
         compiler: 'babel',
         externalDependencies: 'all',
         outputHashing: 'none',
-        webpackConfig: '@nrwl/react/plugins/webpack',
+        isolatedConfig: true,
+        webpackConfig: joinPathFragments(projectRoot, 'webpack.config.js'),
       },
       configurations: {
         development: {
@@ -164,13 +166,15 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
 
   updateProjectConfiguration(tree, options.project, projectConfig);
 
-  const workspace = readWorkspaceConfiguration(tree);
+  const nxJson = readNxJson(tree);
   if (
-    workspace.tasksRunnerOptions?.default &&
-    !workspace.tasksRunnerOptions.default.options.cacheableOperations['server']
+    nxJson.tasksRunnerOptions?.default &&
+    !nxJson.tasksRunnerOptions.default.options.cacheableOperations.includes(
+      'server'
+    )
   ) {
-    workspace.tasksRunnerOptions.default.options.cacheableOperations = [
-      ...workspace.tasksRunnerOptions.default.options.cacheableOperations,
+    nxJson.tasksRunnerOptions.default.options.cacheableOperations = [
+      ...nxJson.tasksRunnerOptions.default.options.cacheableOperations,
       'server',
     ];
   }
@@ -199,7 +203,7 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
     tree.write(serverEntry, changes);
   }
 
-  updateWorkspaceConfiguration(tree, workspace);
+  updateNxJson(tree, nxJson);
 
   const installTask = addDependenciesToPackageJson(
     tree,

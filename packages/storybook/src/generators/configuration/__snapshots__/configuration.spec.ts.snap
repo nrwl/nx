@@ -6,6 +6,8 @@ exports[`@nrwl/storybook:configuration basic functionalities should generate a w
 
 
 
+
+
 module.exports = {
   ...rootMain,
   core: { ...rootMain.core, builder: 'webpack5' },
@@ -16,20 +18,15 @@ module.exports = {
   addons: [...rootMain.addons 
     
     
-  ],
-  webpackFinal: async (config, { configType }) => {
-    // apply any global webpack configs that might have been specified in .storybook/main.js
-    if (rootMain.webpackFinal) {
-      config = await rootMain.webpackFinal(config, { configType });
-    }
-    
-    
-
-    // add your own webpack tweaks if needed
-
-    return config;
-  },
+  ]
 };
+
+
+// To customize your webpack configuration you can use the webpackFinal field.
+// Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
+// and https://nx.dev/packages/storybook/documents/custom-builder-configs
+
+
 "
 `;
 
@@ -103,48 +100,13 @@ Array [
 ]
 `;
 
-exports[`@nrwl/storybook:configuration basic functionalities should reference the "old" webpack.config.js if there - for backwards compatibility 1`] = `
-"const rootMain = require('../../../.storybook/main');
-
-const rootWebpackConfig = require('../../../.storybook/webpack.config'); 
-
-
-module.exports = {
-  ...rootMain,
-  core: { ...rootMain.core, builder: 'webpack5' },
-  stories: [
-    ...rootMain.stories,
-    '../**/*.stories.mdx',
-    '../**/*.stories.@(js|jsx|ts|tsx)' ],
-  addons: [...rootMain.addons 
-    
-    
-  ],
-  webpackFinal: async (config, { configType }) => {
-    // apply any global webpack configs that might have been specified in .storybook/main.js
-    if (rootMain.webpackFinal) {
-      config = await rootMain.webpackFinal(config, { configType });
-    }
-    
-    // for backwards compatibility call the \`rootWebpackConfig\`
-      // this can be removed once that one is migrated fully to
-      // use the \`webpackFinal\` property in the \`main.js\` file
-      config = rootWebpackConfig({ config });
-    
-
-    // add your own webpack tweaks if needed
-
-    return config;
-  },
-};
-"
-`;
-
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for Storybook configurations with Vite should create correct main.ts and tsconfig.json for NextJS buildable libs 1`] = `
 "import { rootMain } from '../../../.storybook/main';
 
 import type { StorybookConfig, Options } from '@storybook/core-common';
 
+import { mergeConfig } from 'vite';
+import viteTsConfigPaths from 'vite-tsconfig-paths';
 
 const config: StorybookConfig = {
   ...rootMain,
@@ -157,10 +119,26 @@ const config: StorybookConfig = {
   addons: [...(rootMain.addons || []) 
     
     
-  ]
-};
+  ],
+  async viteFinal(config: any) {
+    return mergeConfig(config, {
+      plugins: [
+        viteTsConfigPaths({
+          root: '../../../',
+        }),
+      ],
+    });
+  },
+} as StorybookConfig;
 
 module.exports = config;
+
+
+
+
+// To customize your Vite configuration you can use the viteFinal field. 
+// Check https://storybook.js.org/docs/react/builders/vite#configuration
+// and https://nx.dev/packages/storybook/documents/custom-builder-configs
 "
 `;
 
@@ -194,6 +172,8 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 
 import type { StorybookConfig, Options } from '@storybook/core-common';
 
+import { mergeConfig } from 'vite';
+import viteTsConfigPaths from 'vite-tsconfig-paths';
 
 const config: StorybookConfig = {
   ...rootMain,
@@ -206,10 +186,26 @@ const config: StorybookConfig = {
   addons: [...(rootMain.addons || []) 
     
     
-  ]
-};
+  ],
+  async viteFinal(config: any) {
+    return mergeConfig(config, {
+      plugins: [
+        viteTsConfigPaths({
+          root: '../../../',
+        }),
+      ],
+    });
+  },
+} as StorybookConfig;
 
 module.exports = config;
+
+
+
+
+// To customize your Vite configuration you can use the viteFinal field. 
+// Check https://storybook.js.org/docs/react/builders/vite#configuration
+// and https://nx.dev/packages/storybook/documents/custom-builder-configs
 "
 `;
 
@@ -243,6 +239,8 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 
 import type { StorybookConfig, Options } from '@storybook/core-common';
 import path from 'path';
+import { mergeConfig } from 'vite';
+import viteTsConfigPaths from 'vite-tsconfig-paths';
 
 const config: StorybookConfig = {
   ...rootMain,
@@ -262,10 +260,26 @@ const config: StorybookConfig = {
       },
     }
      
-  ]
-};
+  ],
+  async viteFinal(config: any) {
+    return mergeConfig(config, {
+      plugins: [
+        viteTsConfigPaths({
+          root: '../../../',
+        }),
+      ],
+    });
+  },
+} as StorybookConfig;
 
 module.exports = config;
+
+
+
+
+// To customize your Vite configuration you can use the viteFinal field. 
+// Check https://storybook.js.org/docs/react/builders/vite#configuration
+// and https://nx.dev/packages/storybook/documents/custom-builder-configs
 "
 `;
 
@@ -299,6 +313,8 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 
 import type { StorybookConfig, Options } from '@storybook/core-common';
 
+import { mergeConfig } from 'vite';
+import viteTsConfigPaths from 'vite-tsconfig-paths';
 
 const config: StorybookConfig = {
   ...rootMain,
@@ -311,10 +327,26 @@ const config: StorybookConfig = {
   addons: [...(rootMain.addons || []) 
     
     
-  ]
-};
+  ],
+  async viteFinal(config: any) {
+    return mergeConfig(config, {
+      plugins: [
+        viteTsConfigPaths({
+          root: '../../../',
+        }),
+      ],
+    });
+  },
+} as StorybookConfig;
 
 module.exports = config;
+
+
+
+
+// To customize your Vite configuration you can use the viteFinal field. 
+// Check https://storybook.js.org/docs/react/builders/vite#configuration
+// and https://nx.dev/packages/storybook/documents/custom-builder-configs
 "
 `;
 
@@ -348,6 +380,8 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 
 import type { StorybookConfig, Options } from '@storybook/core-common';
 
+import { mergeConfig } from 'vite';
+import viteTsConfigPaths from 'vite-tsconfig-paths';
 
 const config: StorybookConfig = {
   ...rootMain,
@@ -360,10 +394,26 @@ const config: StorybookConfig = {
   addons: [...(rootMain.addons || []) 
     , 'storybook-addon-swc' 
     
-  ]
-};
+  ],
+  async viteFinal(config: any) {
+    return mergeConfig(config, {
+      plugins: [
+        viteTsConfigPaths({
+          root: '../../../',
+        }),
+      ],
+    });
+  },
+} as StorybookConfig;
 
 module.exports = config;
+
+
+
+
+// To customize your Vite configuration you can use the viteFinal field. 
+// Check https://storybook.js.org/docs/react/builders/vite#configuration
+// and https://nx.dev/packages/storybook/documents/custom-builder-configs
 "
 `;
 
@@ -397,6 +447,8 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 
 import type { StorybookConfig, Options } from '@storybook/core-common';
 
+import { mergeConfig } from 'vite';
+import viteTsConfigPaths from 'vite-tsconfig-paths';
 
 const config: StorybookConfig = {
   ...rootMain,
@@ -409,10 +461,26 @@ const config: StorybookConfig = {
   addons: [...(rootMain.addons || []) 
     
     
-  ]
-};
+  ],
+  async viteFinal(config: any) {
+    return mergeConfig(config, {
+      plugins: [
+        viteTsConfigPaths({
+          root: '../../../',
+        }),
+      ],
+    });
+  },
+} as StorybookConfig;
 
 module.exports = config;
+
+
+
+
+// To customize your Vite configuration you can use the viteFinal field. 
+// Check https://storybook.js.org/docs/react/builders/vite#configuration
+// and https://nx.dev/packages/storybook/documents/custom-builder-configs
 "
 `;
 
@@ -447,6 +515,8 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 import type { StorybookConfig, Options } from '@storybook/core-common';
 
 
+
+
 const config: StorybookConfig = {
   ...rootMain,
   core: { ...rootMain.core, builder: 'webpack5' },
@@ -458,20 +528,17 @@ const config: StorybookConfig = {
   addons: [...(rootMain.addons || []) , '@nrwl/react/plugins/storybook' 
     
     
-  ],
-  webpackFinal: async (config, { configType }: Options) => {
-    // apply any global webpack configs that might have been specified in .storybook/main.ts
-    if (rootMain.webpackFinal) {
-      config = await rootMain.webpackFinal(config, { configType } as Options);
-    }
-
-    // add your own webpack tweaks if needed
-
-    return config;
-  },
-};
+  ]
+} as StorybookConfig;
 
 module.exports = config;
+
+
+// To customize your webpack configuration you can use the webpackFinal field.
+// Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
+// and https://nx.dev/packages/storybook/documents/custom-builder-configs
+
+
 "
 `;
 
@@ -506,6 +573,8 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 import type { StorybookConfig, Options } from '@storybook/core-common';
 
 
+
+
 const config: StorybookConfig = {
   ...rootMain,
   core: { ...rootMain.core, builder: 'webpack5' },
@@ -517,20 +586,17 @@ const config: StorybookConfig = {
   addons: [...(rootMain.addons || []) , '@nrwl/react/plugins/storybook' 
     
     
-  ],
-  webpackFinal: async (config, { configType }: Options) => {
-    // apply any global webpack configs that might have been specified in .storybook/main.ts
-    if (rootMain.webpackFinal) {
-      config = await rootMain.webpackFinal(config, { configType } as Options);
-    }
-
-    // add your own webpack tweaks if needed
-
-    return config;
-  },
-};
+  ]
+} as StorybookConfig;
 
 module.exports = config;
+
+
+// To customize your webpack configuration you can use the webpackFinal field.
+// Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
+// and https://nx.dev/packages/storybook/documents/custom-builder-configs
+
+
 "
 `;
 
@@ -565,6 +631,8 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 import type { StorybookConfig, Options } from '@storybook/core-common';
 import path from 'path';
 
+
+
 const config: StorybookConfig = {
   ...rootMain,
   core: { ...rootMain.core, builder: 'webpack5' },
@@ -583,20 +651,17 @@ const config: StorybookConfig = {
       },
     }
      
-  ],
-  webpackFinal: async (config, { configType }: Options) => {
-    // apply any global webpack configs that might have been specified in .storybook/main.ts
-    if (rootMain.webpackFinal) {
-      config = await rootMain.webpackFinal(config, { configType } as Options);
-    }
-
-    // add your own webpack tweaks if needed
-
-    return config;
-  },
-};
+  ]
+} as StorybookConfig;
 
 module.exports = config;
+
+
+// To customize your webpack configuration you can use the webpackFinal field.
+// Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
+// and https://nx.dev/packages/storybook/documents/custom-builder-configs
+
+
 "
 `;
 
@@ -631,6 +696,8 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 import type { StorybookConfig, Options } from '@storybook/core-common';
 
 
+
+
 const config: StorybookConfig = {
   ...rootMain,
   core: { ...rootMain.core, builder: 'webpack5' },
@@ -642,20 +709,17 @@ const config: StorybookConfig = {
   addons: [...(rootMain.addons || []) , '@nrwl/react/plugins/storybook' 
     
     
-  ],
-  webpackFinal: async (config, { configType }: Options) => {
-    // apply any global webpack configs that might have been specified in .storybook/main.ts
-    if (rootMain.webpackFinal) {
-      config = await rootMain.webpackFinal(config, { configType } as Options);
-    }
-
-    // add your own webpack tweaks if needed
-
-    return config;
-  },
-};
+  ]
+} as StorybookConfig;
 
 module.exports = config;
+
+
+// To customize your webpack configuration you can use the webpackFinal field.
+// Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
+// and https://nx.dev/packages/storybook/documents/custom-builder-configs
+
+
 "
 `;
 
@@ -685,36 +749,32 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 `;
 
 exports[`@nrwl/storybook:configuration for other types of projects - Next.js and the swc compiler for TypeScript Storybook configurations should create correct main.ts and tsconfig.json for React apps using the swc compiler 1`] = `
-"import { rootMain } from '../../../.storybook/main';
+"import type { StorybookConfig } from '@storybook/core-common';
 
-import type { StorybookConfig, Options } from '@storybook/core-common';
+
 
 
 const config: StorybookConfig = {
-  ...rootMain,
-  core: { ...rootMain.core, builder: 'webpack5' },
+  core: { builder: 'webpack5' },
   stories: [
-    ...rootMain.stories,
+    
     '../src/app/**/*.stories.mdx',
     '../src/app/**/*.stories.@(js|jsx|ts|tsx)'
   ],
-  addons: [...(rootMain.addons || []) , '@nrwl/react/plugins/storybook' 
+  addons: ['@storybook/addon-essentials' , '@nrwl/react/plugins/storybook' 
     , 'storybook-addon-swc' 
     
-  ],
-  webpackFinal: async (config, { configType }: Options) => {
-    // apply any global webpack configs that might have been specified in .storybook/main.ts
-    if (rootMain.webpackFinal) {
-      config = await rootMain.webpackFinal(config, { configType } as Options);
-    }
-
-    // add your own webpack tweaks if needed
-
-    return config;
-  },
-};
+  ]
+} as StorybookConfig;
 
 module.exports = config;
+
+
+// To customize your webpack configuration you can use the webpackFinal field.
+// Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
+// and https://nx.dev/packages/storybook/documents/custom-builder-configs
+
+
 "
 `;
 
@@ -749,6 +809,8 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 import type { StorybookConfig, Options } from '@storybook/core-common';
 
 
+
+
 const config: StorybookConfig = {
   ...rootMain,
   core: { ...rootMain.core, builder: 'webpack5' },
@@ -760,20 +822,17 @@ const config: StorybookConfig = {
   addons: [...(rootMain.addons || []) , '@nrwl/react/plugins/storybook' 
     
     
-  ],
-  webpackFinal: async (config, { configType }: Options) => {
-    // apply any global webpack configs that might have been specified in .storybook/main.ts
-    if (rootMain.webpackFinal) {
-      config = await rootMain.webpackFinal(config, { configType } as Options);
-    }
-
-    // add your own webpack tweaks if needed
-
-    return config;
-  },
-};
+  ]
+} as StorybookConfig;
 
 module.exports = config;
+
+
+// To customize your webpack configuration you can use the webpackFinal field.
+// Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
+// and https://nx.dev/packages/storybook/documents/custom-builder-configs
+
+
 "
 `;
 
@@ -808,6 +867,8 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 
 
 
+
+
 module.exports = {
   ...rootMain,
   core: { ...rootMain.core, builder: 'webpack5' },
@@ -819,20 +880,15 @@ module.exports = {
   addons: [...rootMain.addons , '@nrwl/react/plugins/storybook' 
     
     
-  ],
-  webpackFinal: async (config, { configType }) => {
-    // apply any global webpack configs that might have been specified in .storybook/main.js
-    if (rootMain.webpackFinal) {
-      config = await rootMain.webpackFinal(config, { configType });
-    }
-    
-    
-
-    // add your own webpack tweaks if needed
-
-    return config;
-  },
+  ]
 };
+
+
+// To customize your webpack configuration you can use the webpackFinal field.
+// Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
+// and https://nx.dev/packages/storybook/documents/custom-builder-configs
+
+
 "
 `;
 
@@ -866,6 +922,8 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 
 
 
+
+
 module.exports = {
   ...rootMain,
   core: { ...rootMain.core, builder: 'webpack5' },
@@ -877,20 +935,15 @@ module.exports = {
   addons: [...rootMain.addons , '@nrwl/react/plugins/storybook' 
     
     
-  ],
-  webpackFinal: async (config, { configType }) => {
-    // apply any global webpack configs that might have been specified in .storybook/main.js
-    if (rootMain.webpackFinal) {
-      config = await rootMain.webpackFinal(config, { configType });
-    }
-    
-    
-
-    // add your own webpack tweaks if needed
-
-    return config;
-  },
+  ]
 };
+
+
+// To customize your webpack configuration you can use the webpackFinal field.
+// Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
+// and https://nx.dev/packages/storybook/documents/custom-builder-configs
+
+
 "
 `;
 
@@ -922,6 +975,8 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 "const rootMain = require('../../../.storybook/main');
 
 
+
+
 const path = require('path');
 
 module.exports = {
@@ -942,20 +997,15 @@ module.exports = {
       },
     }
      
-  ],
-  webpackFinal: async (config, { configType }) => {
-    // apply any global webpack configs that might have been specified in .storybook/main.js
-    if (rootMain.webpackFinal) {
-      config = await rootMain.webpackFinal(config, { configType });
-    }
-    
-    
-
-    // add your own webpack tweaks if needed
-
-    return config;
-  },
+  ]
 };
+
+
+// To customize your webpack configuration you can use the webpackFinal field.
+// Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
+// and https://nx.dev/packages/storybook/documents/custom-builder-configs
+
+
 "
 `;
 
@@ -989,6 +1039,8 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 
 
 
+
+
 module.exports = {
   ...rootMain,
   core: { ...rootMain.core, builder: 'webpack5' },
@@ -1000,20 +1052,15 @@ module.exports = {
   addons: [...rootMain.addons , '@nrwl/react/plugins/storybook' 
     
     
-  ],
-  webpackFinal: async (config, { configType }) => {
-    // apply any global webpack configs that might have been specified in .storybook/main.js
-    if (rootMain.webpackFinal) {
-      config = await rootMain.webpackFinal(config, { configType });
-    }
-    
-    
-
-    // add your own webpack tweaks if needed
-
-    return config;
-  },
+  ]
 };
+
+
+// To customize your webpack configuration you can use the webpackFinal field.
+// Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
+// and https://nx.dev/packages/storybook/documents/custom-builder-configs
+
+
 "
 `;
 
@@ -1047,6 +1094,8 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 
 
 
+
+
 module.exports = {
   ...rootMain,
   core: { ...rootMain.core, builder: 'webpack5' },
@@ -1058,20 +1107,15 @@ module.exports = {
   addons: [...rootMain.addons , '@nrwl/react/plugins/storybook' 
     , 'storybook-addon-swc' 
     
-  ],
-  webpackFinal: async (config, { configType }) => {
-    // apply any global webpack configs that might have been specified in .storybook/main.js
-    if (rootMain.webpackFinal) {
-      config = await rootMain.webpackFinal(config, { configType });
-    }
-    
-    
-
-    // add your own webpack tweaks if needed
-
-    return config;
-  },
+  ]
 };
+
+
+// To customize your webpack configuration you can use the webpackFinal field.
+// Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
+// and https://nx.dev/packages/storybook/documents/custom-builder-configs
+
+
 "
 `;
 
@@ -1105,6 +1149,8 @@ exports[`@nrwl/storybook:configuration for other types of projects - Next.js and
 
 
 
+
+
 module.exports = {
   ...rootMain,
   core: { ...rootMain.core, builder: 'webpack5' },
@@ -1116,20 +1162,15 @@ module.exports = {
   addons: [...rootMain.addons , '@nrwl/react/plugins/storybook' 
     
     
-  ],
-  webpackFinal: async (config, { configType }) => {
-    // apply any global webpack configs that might have been specified in .storybook/main.js
-    if (rootMain.webpackFinal) {
-      config = await rootMain.webpackFinal(config, { configType });
-    }
-    
-    
-
-    // add your own webpack tweaks if needed
-
-    return config;
-  },
+  ]
 };
+
+
+// To customize your webpack configuration you can use the webpackFinal field.
+// Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
+// and https://nx.dev/packages/storybook/documents/custom-builder-configs
+
+
 "
 `;
 

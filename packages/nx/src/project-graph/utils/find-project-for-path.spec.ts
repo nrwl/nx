@@ -43,7 +43,7 @@ describe('get project utils', () => {
             type: 'lib',
             data: {},
           },
-        },
+        } as any,
         dependencies: {
           'demo-app': [
             {

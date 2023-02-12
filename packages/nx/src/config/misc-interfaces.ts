@@ -22,6 +22,7 @@ export type Generator<T = unknown> = (
 ) => void | GeneratorCallback | Promise<void | GeneratorCallback>;
 
 export interface GeneratorsJsonEntry {
+  hidden?: boolean;
   schema: string;
   implementation?: string;
   factory?: string;
@@ -29,6 +30,7 @@ export interface GeneratorsJsonEntry {
   aliases?: string[];
   cli?: 'nx';
   'x-type'?: 'library' | 'application';
+  'x-deprecated'?: string;
 }
 
 export type OutputCaptureMethod = 'direct-nodejs' | 'pipe';
@@ -56,6 +58,8 @@ export type PackageJsonUpdates = {
     packages: {
       [packageName: string]: PackageJsonUpdateForPackage;
     };
+    'x-prompt'?: string;
+    requires?: Record<string, string>;
   };
 };
 
@@ -65,6 +69,7 @@ export interface MigrationsJsonEntry {
   cli?: string;
   implementation?: string;
   factory?: string;
+  requires?: Record<string, string>;
 }
 
 export interface MigrationsJson {
@@ -111,9 +116,10 @@ export type Executor<T = any> = (
 
 export interface HasherContext {
   hasher: Hasher;
-  projectGraph: ProjectGraph<any>;
+  projectGraph: ProjectGraph;
   taskGraph: TaskGraph;
-  workspaceConfig: ProjectsConfigurations & NxJsonConfiguration;
+  projectsConfigurations: ProjectsConfigurations;
+  nxJsonConfiguration: NxJsonConfiguration;
 }
 
 export type CustomHasher = (
@@ -170,9 +176,25 @@ export interface ExecutorContext {
   target?: TargetConfiguration;
 
   /**
+   * Deprecated. Use projectsConfigurations or nxJsonConfiguration
    * The full workspace configuration
+   * @todo(vsavkin): remove after v17
    */
-  workspace: ProjectsConfigurations & NxJsonConfiguration;
+  workspace?: ProjectsConfigurations & NxJsonConfiguration;
+
+  /**
+   * Projects config
+   *
+   * @todo(vsavkin): mark this as required for v17
+   */
+  projectsConfigurations?: ProjectsConfigurations;
+
+  /**
+   * The contents of nx.json.
+   *
+   * @todo(vsavkin): mark this as required for v17
+   */
+  nxJsonConfiguration?: NxJsonConfiguration;
 
   /**
    * The current working directory
@@ -188,7 +210,7 @@ export interface ExecutorContext {
    * A snapshot of the project graph as
    * it existed when the Nx command was kicked off
    *
-   * @todo(AgentEnder) mark this required for v15
+   * @todo(vsavkin) mark this required for v17
    */
   projectGraph?: ProjectGraph;
 }

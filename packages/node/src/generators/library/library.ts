@@ -17,6 +17,8 @@ import { getImportPath } from 'nx/src/utils/path';
 import { Schema } from './schema';
 import { libraryGenerator as workspaceLibraryGenerator } from '@nrwl/workspace/generators';
 import { join } from 'path';
+import { addSwcDependencies } from '@nrwl/js/src/utils/swc/add-swc-dependencies';
+import { addSwcConfig } from '@nrwl/js/src/utils/swc/add-swc-config';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -140,18 +142,30 @@ function updateProject(tree: Tree, options: NormalizedSchema) {
   const project = readProjectConfiguration(tree, options.name);
   const { libsDir } = getWorkspaceLayout(tree);
 
+  const rootProject = options.projectRoot === '.' || options.projectRoot === '';
+
   project.targets = project.targets || {};
   project.targets.build = {
     executor: `@nrwl/js:${options.compiler}`,
     outputs: ['{options.outputPath}'],
     options: {
-      outputPath: `dist/${libsDir}/${options.projectDirectory}`,
+      outputPath: joinPathFragments(
+        'dist',
+        rootProject
+          ? options.projectDirectory
+          : `${libsDir}/${options.projectDirectory}`
+      ),
       tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
       packageJson: `${options.projectRoot}/package.json`,
       main: `${options.projectRoot}/src/index` + (options.js ? '.js' : '.ts'),
       assets: [`${options.projectRoot}/*.md`],
     },
   };
+
+  if (options.compiler === 'swc') {
+    addSwcDependencies(tree);
+    addSwcConfig(tree, options.projectRoot);
+  }
 
   if (options.rootDir) {
     project.targets.build.options.srcRootForCompilationRoot = options.rootDir;

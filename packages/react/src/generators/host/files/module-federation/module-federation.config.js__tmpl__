@@ -1,13 +1,6 @@
-// @ts-check
-
-/**
- * @type {import('@nrwl/devkit').ModuleFederationConfig}
- **/
-const moduleFederationConfig = {
-    name: '<%= projectName %>',
-    remotes: [
-    <% remotes.forEach(function(r) {%> "<%= r.fileName %>", <% }); %>
-    ],
+module.exports = {
+  name: '<%= projectName %>',
+  remotes: [
+  <% remotes.forEach(function(r) {%> "<%= r.fileName %>", <% }); %>
+  ],
 };
-
-module.exports = moduleFederationConfig;

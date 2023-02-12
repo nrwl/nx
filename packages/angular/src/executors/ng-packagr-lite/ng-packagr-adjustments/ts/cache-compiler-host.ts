@@ -104,9 +104,6 @@ export function cacheCompilerHost(
           }
         }
 
-        // Rename file to index.d.ts so that TypeScript can resolve types without
-        // them needing to be referenced in the package.json manifest.
-        fileName = fileName.replace(flatModuleFileDtsFilename, 'index.d.ts');
         sourceFiles.forEach((source) => {
           const cache = sourcesFileCache.getOrCreate(source.fileName);
           if (!cache.declarationFileName) {

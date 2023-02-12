@@ -15,7 +15,6 @@ import {
   prettierVersion,
   typescriptVersion,
 } from '../../utils/versions';
-import { readFileSync } from 'fs';
 import { join, join as pathJoin } from 'path';
 import { Preset } from '../utils/presets';
 import { deduceDefaultBase } from '../../utilities/default-base';
@@ -37,9 +36,7 @@ export async function generateWorkspaceFiles(
   createFiles(tree, options);
   createNxJson(tree, options);
   createPrettierrc(tree, options);
-  if (options.preset === Preset.AngularMonorepo) {
-    decorateAngularClI(tree, options);
-  }
+
   const [packageMajor] = getPackageManagerVersion(
     options.packageManager as PackageManager
   ).split('.');
@@ -54,13 +51,6 @@ export async function generateWorkspaceFiles(
   setUpWorkspacesInPackageJson(tree, options);
 
   await formatFiles(tree);
-}
-
-function decorateAngularClI(tree: Tree, options: NormalizedSchema) {
-  const decorateCli = readFileSync(
-    pathJoin(__dirname as any, '..', 'utils', 'decorate-angular-cli.js__tmpl__')
-  ).toString();
-  tree.write(join(options.directory, 'decorate-angular-cli.js'), decorateCli);
 }
 
 function setPresetProperty(tree: Tree, options: NormalizedSchema) {
@@ -86,7 +76,8 @@ function createAppsAndLibsFolders(tree: Tree, options: NormalizedSchema) {
     tree.write(join(options.directory, 'packages/.gitkeep'), '');
   } else if (
     options.preset === Preset.AngularStandalone ||
-    options.preset === Preset.ReactStandalone
+    options.preset === Preset.ReactStandalone ||
+    options.preset === Preset.NodeServer
   ) {
     // don't generate any folders
   } else {
@@ -144,7 +135,8 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
   const formattedNames = names(options.name);
   const filesDirName =
     options.preset === Preset.AngularStandalone ||
-    options.preset === Preset.ReactStandalone
+    options.preset === Preset.ReactStandalone ||
+    options.preset === Preset.NodeServer
       ? './files-root-app'
       : options.preset === Preset.NPM || options.preset === Preset.Core
       ? './files-package-based-repo'
@@ -184,6 +176,7 @@ function createPrettierrc(tree: Tree, options: NormalizedSchema) {
     DEFAULT_NRWL_PRETTIER_CONFIG
   );
 }
+
 // ensure that pnpm install add all the missing peer deps
 
 function createNpmrc(tree: Tree, options: NormalizedSchema) {
@@ -192,6 +185,7 @@ function createNpmrc(tree: Tree, options: NormalizedSchema) {
     'strict-peer-dependencies=false\nauto-install-peers=true\n'
   );
 }
+
 // ensure that yarn (berry) install uses classic node linker
 
 function createYarnrcYml(tree: Tree, options: NormalizedSchema) {
@@ -202,20 +196,10 @@ function createYarnrcYml(tree: Tree, options: NormalizedSchema) {
 }
 
 function addNpmScripts(tree: Tree, options: NormalizedSchema) {
-  if (options.preset === Preset.AngularMonorepo) {
-    updateJson(tree, join(options.directory, 'package.json'), (json) => {
-      Object.assign(json.scripts, {
-        ng: 'nx',
-        postinstall: 'node ./decorate-angular-cli.js',
-      });
-      return json;
-    });
-  }
-
   if (
-    options.preset !== Preset.TS &&
-    options.preset !== Preset.Core &&
-    options.preset !== Preset.NPM
+    options.preset === Preset.AngularStandalone ||
+    options.preset === Preset.ReactStandalone ||
+    options.preset === Preset.NodeServer
   ) {
     updateJson(tree, join(options.directory, 'package.json'), (json) => {
       Object.assign(json.scripts, {

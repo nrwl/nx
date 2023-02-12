@@ -2,10 +2,8 @@ import {
   addProjectConfiguration,
   offsetFromRoot,
   ProjectConfiguration,
-  readWorkspaceConfiguration,
   TargetConfiguration,
   Tree,
-  updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import { NormalizedSchema } from './normalize-options';
 
@@ -24,14 +22,6 @@ export function addProject(host: Tree, options: NormalizedSchema) {
     projectConfiguration,
     options.standaloneConfig
   );
-
-  const workspace = readWorkspaceConfiguration(host);
-
-  if (!workspace.defaultProject) {
-    workspace.defaultProject = options.projectName;
-
-    updateWorkspaceConfiguration(host, workspace);
-  }
 }
 
 function getTargets(options: NormalizedSchema) {

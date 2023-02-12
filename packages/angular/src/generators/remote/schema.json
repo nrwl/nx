@@ -23,7 +23,8 @@
     "host": {
       "type": "string",
       "description": "The name of the host app to attach this remote app to.",
-      "x-dropdown": "projects"
+      "x-dropdown": "projects",
+      "x-priority": "important"
     },
     "port": {
       "type": "number",
@@ -93,7 +94,8 @@
     "skipPackageJson": {
       "type": "boolean",
       "default": false,
-      "description": "Do not add dependencies to `package.json`."
+      "description": "Do not add dependencies to `package.json`.",
+      "x-priority": "internal"
     },
     "unitTestRunner": {
       "type": "string",
@@ -128,7 +130,9 @@
     },
     "standaloneConfig": {
       "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
-      "type": "boolean"
+      "type": "boolean",
+      "default": true,
+      "x-deprecated": "Nx only supports standaloneConfig"
     },
     "setParserOptionsProject": {
       "type": "boolean",
@@ -143,10 +147,11 @@
     "skipFormat": {
       "description": "Skip formatting files.",
       "type": "boolean",
-      "default": false
+      "default": false,
+      "x-priority": "internal"
     },
     "standalone": {
-      "description": "Whether to generate a remote application with standalone components.",
+      "description": "Whether to generate a remote application with standalone components. _Note: This is only supported in Angular versions >= 14.1.0_",
       "type": "boolean",
       "default": false
     },

@@ -1,30 +1,45 @@
-import {
-  BuilderContext,
-  BuilderOutput,
-  createBuilder,
-} from '@angular-devkit/architect';
-import { executeBrowserBuilder } from '@angular-devkit/build-angular';
-import { Schema } from '@angular-devkit/build-angular/src/builders/browser/schema';
-import { JsonObject } from '@angular-devkit/core';
-import { joinPathFragments } from '@nrwl/devkit';
+import { joinPathFragments, stripIndents } from '@nrwl/devkit';
 import { existsSync } from 'fs';
-import { Observable } from 'rxjs';
-import { mergeCustomWebpackConfig } from '../utilities/webpack';
+import { from, Observable } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
+import { getInstalledAngularVersionInfo } from '../../executors/utilities/angular-version-utils';
 import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
+import {
+  mergeCustomWebpackConfig,
+  resolveIndexHtmlTransformer,
+} from '../utilities/webpack';
 
-export type BrowserBuilderSchema = Schema & {
-  customWebpackConfig?: {
-    path: string;
+export type BrowserBuilderSchema =
+  import('@angular-devkit/build-angular/src/builders/browser/schema').Schema & {
+    customWebpackConfig?: {
+      path: string;
+    };
+    indexFileTransformer?: string;
+    buildLibsFromSource?: boolean;
   };
-  buildLibsFromSource?: boolean;
-};
 
 function buildApp(
   options: BrowserBuilderSchema,
-  context: BuilderContext
-): Observable<BuilderOutput> {
-  const { buildLibsFromSource, customWebpackConfig, ...delegateOptions } =
-    options;
+  context: import('@angular-devkit/architect').BuilderContext
+): Observable<import('@angular-devkit/architect').BuilderOutput> {
+  const {
+    buildLibsFromSource,
+    customWebpackConfig,
+    indexFileTransformer,
+    ...delegateOptions
+  } = options;
+
+  // If there is a path to an indexFileTransformer
+  // check it exists and apply it to the build
+  const pathToIndexFileTransformer =
+    indexFileTransformer &&
+    joinPathFragments(context.workspaceRoot, indexFileTransformer);
+  if (pathToIndexFileTransformer && !existsSync(pathToIndexFileTransformer)) {
+    throw new Error(
+      `File containing Index File Transformer function Not Found!\n Please ensure the path to the file containing the function is correct: \n${pathToIndexFileTransformer}`
+    );
+  }
+
   // If there is a path to custom webpack config
   // Invoke our own support for custom webpack config
   if (customWebpackConfig && customWebpackConfig.path) {
@@ -37,7 +52,8 @@ function buildApp(
       return buildAppWithCustomWebpackConfiguration(
         delegateOptions,
         context,
-        pathToWebpackConfig
+        pathToWebpackConfig,
+        pathToIndexFileTransformer
       );
     } else {
       throw new Error(
@@ -46,29 +62,66 @@ function buildApp(
     }
   }
 
-  return executeBrowserBuilder(delegateOptions, context);
+  return from(import('@angular-devkit/build-angular')).pipe(
+    switchMap(({ executeBrowserBuilder }) =>
+      executeBrowserBuilder(delegateOptions, context, {
+        ...(pathToIndexFileTransformer
+          ? {
+              indexHtml: resolveIndexHtmlTransformer(
+                pathToIndexFileTransformer,
+                options.tsConfig,
+                context.target
+              ),
+            }
+          : {}),
+      })
+    )
+  );
 }
 
 function buildAppWithCustomWebpackConfiguration(
-  options: Schema,
-  context: BuilderContext,
-  pathToWebpackConfig: string
+  options: import('@angular-devkit/build-angular/src/builders/browser/schema').Schema,
+  context: import('@angular-devkit/architect').BuilderContext,
+  pathToWebpackConfig: string,
+  pathToIndexFileTransformer?: string
 ) {
-  return executeBrowserBuilder(options, context as any, {
-    webpackConfiguration: (baseWebpackConfig) =>
-      mergeCustomWebpackConfig(
-        baseWebpackConfig,
-        pathToWebpackConfig,
-        options,
-        context.target
-      ),
-  });
+  return from(import('@angular-devkit/build-angular')).pipe(
+    switchMap(({ executeBrowserBuilder }) =>
+      executeBrowserBuilder(options, context as any, {
+        webpackConfiguration: (baseWebpackConfig) =>
+          mergeCustomWebpackConfig(
+            baseWebpackConfig,
+            pathToWebpackConfig,
+            options,
+            context.target
+          ),
+        ...(pathToIndexFileTransformer
+          ? {
+              indexHtml: resolveIndexHtmlTransformer(
+                pathToIndexFileTransformer,
+                options.tsConfig,
+                context.target
+              ),
+            }
+          : {}),
+      })
+    )
+  );
+}
+
+function validateOptions(options: BrowserBuilderSchema): void {
+  const { major, version } = getInstalledAngularVersionInfo();
+  if (major < 15 && Array.isArray(options.polyfills)) {
+    throw new Error(stripIndents`The array syntax for the "polyfills" option is supported from Angular >= 15.0.0. You are currently using ${version}.
+    You can resolve this error by removing the "polyfills" option, setting it to a string value or migrating to Angular 15.0.0.`);
+  }
 }
 
 export function executeWebpackBrowserBuilder(
   options: BrowserBuilderSchema,
-  context: BuilderContext
-): Observable<BuilderOutput> {
+  context: import('@angular-devkit/architect').BuilderContext
+): Observable<import('@angular-devkit/architect').BuilderOutput> {
+  validateOptions(options);
   options.buildLibsFromSource ??= true;
 
   if (!options.buildLibsFromSource) {
@@ -82,6 +135,6 @@ export function executeWebpackBrowserBuilder(
   return buildApp(options, context);
 }
 
-export default createBuilder<JsonObject & BrowserBuilderSchema>(
+export default require('@angular-devkit/architect').createBuilder(
   executeWebpackBrowserBuilder
 ) as any;

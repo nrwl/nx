@@ -14,9 +14,11 @@ describe('rollupExecutor', () => {
     context = {
       root: '/root',
       cwd: '/root',
-      workspace: {
+      projectsConfigurations: {
         version: 2,
         projects: {},
+      },
+      nxJsonConfiguration: {
         npmScope: 'test',
       },
       isVerbose: false,

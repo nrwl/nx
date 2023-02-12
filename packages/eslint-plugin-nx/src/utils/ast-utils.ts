@@ -31,7 +31,7 @@ export function getBarrelEntryPointByImportScope(
 }
 
 export function getBarrelEntryPointProjectNode(
-  projectNode: ProjectGraphProjectNode<any>
+  projectNode: ProjectGraphProjectNode
 ): { path: string; importScope: string }[] | null {
   const tsConfigBase = tryReadBaseJson();
 

@@ -1,5 +1,5 @@
 import type { ExecutorContext, ProjectGraphProjectNode } from '@nrwl/devkit';
-import { readJsonFile, normalizePath } from '@nrwl/devkit';
+import { normalizePath, readJsonFile } from '@nrwl/devkit';
 import {
   copySync,
   readdirSync,
@@ -9,6 +9,7 @@ import {
 } from 'fs-extra';
 import { join, relative } from 'path';
 import type { NormalizedExecutorOptions } from './schema';
+import { existsSync } from 'fs';
 
 interface InlineProjectNode {
   name: string;
@@ -76,10 +77,7 @@ export function postProcessInlinedDependencies(
       const isBuildable = !!inlineDependency.buildOutputPath;
 
       if (isBuildable) {
-        copySync(depOutputPath, destDepOutputPath, {
-          overwrite: true,
-          recursive: true,
-        });
+        copySync(depOutputPath, destDepOutputPath, { overwrite: true });
       } else {
         movePackage(depOutputPath, destDepOutputPath);
       }
@@ -94,8 +92,22 @@ export function postProcessInlinedDependencies(
 }
 
 function readBasePathAliases(context: ExecutorContext) {
-  const tsConfigPath = join(context.root, 'tsconfig.base.json');
-  return readJsonFile(tsConfigPath)?.['compilerOptions']['paths'] || {};
+  return readJsonFile(getRootTsConfigPath(context))?.['compilerOptions'][
+    'paths'
+  ];
+}
+
+export function getRootTsConfigPath(context: ExecutorContext): string | null {
+  for (const tsConfigName of ['tsconfig.base.json', 'tsconfig.json']) {
+    const tsConfigPath = join(context.root, tsConfigName);
+    if (existsSync(tsConfigPath)) {
+      return tsConfigPath;
+    }
+  }
+
+  throw new Error(
+    'Could not find a root tsconfig.json or tsconfig.base.json file.'
+  );
 }
 
 function emptyInlineGraph(): InlineProjectGraph {
@@ -248,7 +260,8 @@ function buildInlineGraphExternals(
 }
 
 function movePackage(from: string, to: string) {
-  copySync(from, to, { overwrite: true, recursive: true });
+  if (from === to) return;
+  copySync(from, to, { overwrite: true });
   removeSync(from);
 }
 
@@ -272,7 +285,8 @@ function updateImports(
 function recursiveUpdateImport(
   dirPath: string,
   importRegex: RegExp,
-  inlinedDepsDestOutputRecord: Record<string, string>
+  inlinedDepsDestOutputRecord: Record<string, string>,
+  rootParentDir?: string
 ) {
   const files = readdirSync(dirPath, { withFileTypes: true });
   for (const file of files) {
@@ -285,6 +299,8 @@ function recursiveUpdateImport(
       const fileContent = readFileSync(filePath, 'utf-8');
       const updatedContent = fileContent.replace(importRegex, (matched) => {
         const result = matched.replace(/['"]/g, '');
+        // If a match is the same as the rootParentDir, we're checking its own files so we return the matched as in no changes.
+        if (result === rootParentDir) return matched;
         const importPath = `"${relative(
           dirPath,
           inlinedDepsDestOutputRecord[result]
@@ -296,7 +312,8 @@ function recursiveUpdateImport(
       recursiveUpdateImport(
         join(dirPath, file.name),
         importRegex,
-        inlinedDepsDestOutputRecord
+        inlinedDepsDestOutputRecord,
+        rootParentDir || file.name
       );
     }
   }

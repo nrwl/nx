@@ -8,7 +8,8 @@
   "properties": {
     "buildTarget": {
       "type": "string",
-      "description": "Target which builds the application"
+      "description": "Target which builds the application",
+      "x-priority": "important"
     },
     "silent": {
       "type": "boolean",

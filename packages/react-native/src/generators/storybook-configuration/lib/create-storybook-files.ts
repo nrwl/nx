@@ -24,7 +24,13 @@ export async function createStorybookFiles(
   );
 
   // do not proceed if not a react native project
-  if (targets?.start?.executor !== '@nrwl/react-native:start') {
+  if (
+    targets?.start?.executor !== '@nrwl/react-native:start' &&
+    targets?.start?.executor !== '@nrwl/expo:start'
+  ) {
+    logger.error(
+      `Unable to add storybook to ${schema.name}. It is not a Nx React Native / Expo project.`
+    );
     return;
   }
 
@@ -33,7 +39,7 @@ export async function createStorybookFiles(
 
   if (host.exists(storybookUIFilePath)) {
     logger.warn(
-      `${storybookUIFileName} file already exists for React Native ${projectType} ${schema.name}! Skipping generating this file.`
+      `${storybookUIFileName} file already exists for ${projectType} ${schema.name}! Skipping generating this file.`
     );
     return;
   }
@@ -45,10 +51,6 @@ export async function createStorybookFiles(
     );
   }
 
-  const projectDirectory = projectType === 'application' ? 'app' : 'lib';
-
-  logger.debug(`Adding storybook file to React Native app ${projectDirectory}`);
-
   // copy files to app's .storybook folder
   generateFiles(
     host,
@@ -57,7 +59,6 @@ export async function createStorybookFiles(
     {
       tmpl: '',
       offsetFromRoot: offsetFromRoot(sourceRoot),
-      projectType: projectDirectory,
     }
   );
 

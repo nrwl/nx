@@ -20,14 +20,18 @@ export interface NxProjectPackageJsonConfiguration {
   includedScripts?: string[];
 }
 
-export type PackageGroup =
+export type ArrayPackageGroup = { package: string; version: string }[];
+export type MixedPackageGroup =
   | (string | { package: string; version: string })[]
   | Record<string, string>;
+export type PackageGroup = MixedPackageGroup | ArrayPackageGroup;
 
 export interface NxMigrationsConfiguration {
   migrations?: string;
   packageGroup?: PackageGroup;
 }
+
+type PackageOverride = { [key: string]: string | PackageOverride };
 
 export interface PackageJson {
   // Generic Package.Json Configuration
@@ -47,8 +51,11 @@ export interface PackageJson {
       >;
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
+  optionalDependencies?: Record<string, string>;
   peerDependencies?: Record<string, string>;
-  peerDependenciesMeta?: Record<string, { optional?: boolean }>;
+  peerDependenciesMeta?: Record<string, { optional: boolean }>;
+  resolutions?: Record<string, string>;
+  overrides?: PackageOverride;
   bin?: Record<string, string>;
   workspaces?:
     | string[]
@@ -68,12 +75,25 @@ export interface PackageJson {
   'ng-update'?: string | NxMigrationsConfiguration;
 }
 
+export function normalizePackageGroup(
+  packageGroup: PackageGroup
+): ArrayPackageGroup {
+  return Array.isArray(packageGroup)
+    ? packageGroup.map((x) =>
+        typeof x === 'string' ? { package: x, version: '*' } : x
+      )
+    : Object.entries(packageGroup).map(([pkg, version]) => ({
+        package: pkg,
+        version,
+      }));
+}
+
 export function readNxMigrateConfig(
   json: Partial<PackageJson>
-): NxMigrationsConfiguration {
+): NxMigrationsConfiguration & { packageGroup?: ArrayPackageGroup } {
   const parseNxMigrationsConfig = (
     fromJson?: string | NxMigrationsConfiguration
-  ): NxMigrationsConfiguration => {
+  ): NxMigrationsConfiguration & { packageGroup?: ArrayPackageGroup } => {
     if (!fromJson) {
       return {};
     }
@@ -83,7 +103,9 @@ export function readNxMigrateConfig(
 
     return {
       ...(fromJson.migrations ? { migrations: fromJson.migrations } : {}),
-      ...(fromJson.packageGroup ? { packageGroup: fromJson.packageGroup } : {}),
+      ...(fromJson.packageGroup
+        ? { packageGroup: normalizePackageGroup(fromJson.packageGroup) }
+        : {}),
     };
   };
 

@@ -205,11 +205,14 @@
           "version": "~28.1.1",
           "alwaysAddToPackageJson": false
         }
-      },
-      "15.0.1-beta.3": {
+      }
+    },
+    "15.0.1-beta.3": {
+      "version": "15.0.1-beta.3",
+      "packages": {
         "jest-environment-jsdom": {
           "version": "~28.1.1",
-          "alwaysAddToPackageJson": true
+          "addToPackageJson": "devDependencies"
         }
       }
     }

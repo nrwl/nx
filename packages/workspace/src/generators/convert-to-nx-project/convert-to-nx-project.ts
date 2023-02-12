@@ -1,86 +1,103 @@
-import { dirname } from 'path';
-import { prompt } from 'enquirer';
-
 import {
+  addProjectConfiguration,
   convertNxGenerator,
   formatFiles,
-  getProjects,
-  getWorkspacePath,
-  logger,
-  normalizePath,
-  ProjectConfiguration,
-  readProjectConfiguration,
-  readWorkspaceConfiguration,
+  readJson,
   Tree,
-  updateJson,
+  updateProjectConfiguration,
   writeJson,
 } from '@nrwl/devkit';
-
+import { join } from 'path';
 import { Schema } from './schema';
-import { getProjectConfigurationPath } from './utils/get-project-configuration-path';
+import { toNewFormat, toOldFormat } from 'nx/src/adapter/angular-json';
+import { output } from '../../utils/output';
 
-export const SCHEMA_OPTIONS_ARE_MUTUALLY_EXCLUSIVE =
-  '--project and --all are mutually exclusive';
-
-export async function validateSchema(schema: Schema) {
+export async function validateSchema(schema: Schema, configName: string) {
   if (schema.project && schema.all) {
-    throw SCHEMA_OPTIONS_ARE_MUTUALLY_EXCLUSIVE;
+    throw new Error('--project and --all are mutually exclusive');
   }
 
-  if (!schema.project && !schema.all) {
-    schema.project = (
-      await prompt<{ project: string }>([
-        {
-          message: 'What project should be converted?',
-          type: 'input',
-          name: 'project',
-        },
-      ])
-    ).project;
+  if (schema.project && schema.reformat) {
+    throw new Error('--project and --reformat are mutually exclusive');
+  }
+
+  if (schema.all && schema.reformat) {
+    throw new Error('--all and --reformat are mutually exclusive');
+  }
+
+  if (
+    (configName === 'workspace.json' && schema.project) ||
+    (configName === 'workspace.json' && schema.reformat)
+  ) {
+    throw new Error(
+      'workspace.json is no longer supported. Please pass --all to convert all projects and remove workspace.json.'
+    );
+  }
+
+  if (!schema.project && !schema.all && !schema.reformat) {
+    schema.all = true;
   }
 }
 
 export async function convertToNxProjectGenerator(host: Tree, schema: Schema) {
-  const workspace = readWorkspaceConfiguration(host);
-  if (workspace.version < 2) {
-    logger.error(`
-NX Only workspaces with version 2+ support project.json files.
-To upgrade change the version number at the top of ${getWorkspacePath(
-      host
-    )} and run 'nx format'.
-`);
-    throw new Error('v2+ Required');
+  const configName = host.exists('angular.json')
+    ? 'angular.json'
+    : 'workspace.json';
+
+  if (!host.exists(configName)) return;
+
+  await validateSchema(schema, configName);
+
+  const projects = toNewFormat(readJson(host, configName)).projects;
+  const leftOverProjects = {};
+
+  for (const projectName of Object.keys(projects)) {
+    const config = projects[projectName];
+    if (
+      (!schema.project || schema.project === projectName) &&
+      !schema.reformat
+    ) {
+      if (typeof config === 'string') {
+        // configuration is in project.json
+        const projectConfig = readJson(host, join(config, 'project.json'));
+        if (projectConfig.name !== projectName) {
+          projectConfig.name = projectName;
+          projectConfig.root = config;
+          updateProjectConfiguration(host, projectName, projectConfig);
+        }
+      } else {
+        // configuration is an object in workspace.json
+        const path = join(config.root, 'project.json');
+        if (!host.exists(path)) {
+          projects[projectName].name = projectName;
+          addProjectConfiguration(host, path, projects[projectName]);
+        }
+      }
+    } else {
+      leftOverProjects[projectName] = config;
+    }
   }
 
-  await validateSchema(schema);
-
-  const projects = schema.all
-    ? getProjects(host).entries()
-    : ([[schema.project, readProjectConfiguration(host, schema.project)]] as [
-        string,
-        ProjectConfiguration
-      ][]);
-
-  for (const [project, configuration] of projects) {
-    const configPath = getProjectConfigurationPath(configuration);
-    if (host.exists(configPath)) {
-      logger.warn(`Skipping ${project} since ${configPath} already exists.`);
-      continue;
-    }
-
-    delete configuration.root;
-
-    writeJson(host, configPath, configuration);
-
-    updateJson(host, getWorkspacePath(host), (value) => {
-      value.projects[project] = normalizePath(dirname(configPath));
-      return value;
-    });
+  if (Object.keys(leftOverProjects).length > 0) {
+    writeJson(
+      host,
+      'angular.json',
+      toOldFormat({ version: 1, projects: leftOverProjects })
+    );
+  } else {
+    host.delete(configName);
   }
 
   if (!schema.skipFormat) {
     await formatFiles(host);
   }
+
+  output.note({
+    title: 'Use "nx show projects" to read the list of projects.',
+    bodyLines: [
+      `If you read the list of projects from ${configName}, use "nx show projects" instead.`,
+    ],
+  });
 }
 
 export default convertToNxProjectGenerator;

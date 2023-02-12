@@ -5,10 +5,7 @@ import {
   readJson,
   readProjectConfiguration,
 } from '@nrwl/devkit';
-import {
-  createTreeWithEmptyV1Workspace,
-  createTreeWithEmptyWorkspace,
-} from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import type { NormalizedSchema } from '../schema';
 import { moveProjectConfiguration } from './move-project-configuration';
 
@@ -29,8 +26,8 @@ describe('moveProjectConfiguration', () => {
 
     tree =
       version === 1
-        ? createTreeWithEmptyV1Workspace()
-        : createTreeWithEmptyWorkspace();
+        ? createTreeWithEmptyWorkspace()
+        : createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     addProjectConfiguration(tree, 'my-source', {
       projectType: 'application',

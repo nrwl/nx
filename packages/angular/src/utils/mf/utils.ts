@@ -40,7 +40,7 @@ export async function getModuleFederationConfig(
   determineRemoteUrl: (remote: string) => string,
   options: { isServer: boolean } = { isServer: false }
 ) {
-  let projectGraph: ProjectGraph<any>;
+  let projectGraph: ProjectGraph;
   try {
     projectGraph = readCachedProjectGraph();
   } catch (e) {

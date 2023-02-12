@@ -7,7 +7,7 @@ import {
   Tree,
   writeJson,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { exampleRootTslintJson } from '@nrwl/linter';
 import { conversionGenerator } from './convert-tslint-to-eslint';
 
@@ -133,7 +133,7 @@ describe('convert-tslint-to-eslint', () => {
   let host: Tree;
 
   beforeEach(async () => {
-    host = createTreeWithEmptyV1Workspace();
+    host = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     writeJson(host, 'tslint.json', exampleRootTslintJson.raw);
 
@@ -226,7 +226,13 @@ describe('convert-tslint-to-eslint', () => {
     /**
      * The root level .eslintrc.json should now have been generated
      */
-    expect(readJson(host, '.eslintrc.json')).toMatchSnapshot();
+    const eslintJson = readJson(host, '.eslintrc.json');
+    expect(eslintJson.overrides[3].rules['no-console'][1].allow).toContain(
+      'log'
+    );
+    // Remove no-console config because it is not deterministic across node versions
+    delete eslintJson.overrides[3].rules['no-console'][1].allow;
+    expect(eslintJson).toMatchSnapshot();
 
     /**
      * The project level .eslintrc.json should now have been generated
@@ -267,7 +273,13 @@ describe('convert-tslint-to-eslint', () => {
     /**
      * The root level .eslintrc.json should now have been generated
      */
-    expect(readJson(host, '.eslintrc.json')).toMatchSnapshot();
+    const eslintJson = readJson(host, '.eslintrc.json');
+    expect(eslintJson.overrides[3].rules['no-console'][1].allow).toContain(
+      'log'
+    );
+    // Remove no-console config because it is not deterministic across node versions
+    delete eslintJson.overrides[3].rules['no-console'][1].allow;
+    expect(eslintJson).toMatchSnapshot();
 
     /**
      * The project level .eslintrc.json should now have been generated
@@ -298,6 +310,11 @@ describe('convert-tslint-to-eslint', () => {
      * The root level .eslintrc.json should now have been generated
      */
     const eslintContent = readJson(host, '.eslintrc.json');
+    expect(eslintContent.overrides[3].rules['no-console'][1].allow).toContain(
+      'log'
+    );
+    // Remove no-console config because it is not deterministic across node versions
+    delete eslintContent.overrides[3].rules['no-console'][1].allow;
     expect(eslintContent).toMatchSnapshot();
 
     /**
@@ -330,7 +347,8 @@ describe('convert-tslint-to-eslint', () => {
      * The root level .eslintrc.json should not be re-created
      * if it already existed
      */
-    expect(readJson(host, '.eslintrc.json')).toMatchSnapshot();
+    const eslintJson2 = readJson(host, '.eslintrc.json');
+    expect(eslintJson2).toMatchSnapshot();
 
     /**
      * The root TSLint file should have been deleted

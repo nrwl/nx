@@ -4,14 +4,15 @@ import {
   formatFiles,
   installPackagesTask,
 } from '@nrwl/devkit';
-import type { Schema } from './schema';
+import { getPkgVersionsForAngularMajorVersion } from '../../utils/version-utils';
+import { getInstalledAngularVersionInfo } from '../utils/version-utils';
 import {
   generateSSRFiles,
   normalizeOptions,
   updateAppModule,
   updateProjectConfig,
 } from './lib';
-import { angularVersion, ngUniversalVersion } from '../../utils/versions';
+import type { Schema } from './schema';
 
 export async function setupSsr(tree: Tree, schema: Schema) {
   const options = normalizeOptions(tree, schema);
@@ -20,11 +21,15 @@ export async function setupSsr(tree: Tree, schema: Schema) {
   updateAppModule(tree, options);
   updateProjectConfig(tree, options);
 
+  const installedAngularVersion = getInstalledAngularVersionInfo(tree);
+  const { angularVersion: ngPlatformServerVersion, ngUniversalVersion } =
+    getPkgVersionsForAngularMajorVersion(installedAngularVersion.major);
+
   addDependenciesToPackageJson(
     tree,
     {
       '@nguniversal/express-engine': ngUniversalVersion,
-      '@angular/platform-server': angularVersion,
+      '@angular/platform-server': ngPlatformServerVersion,
     },
     {
       '@nguniversal/builders': ngUniversalVersion,

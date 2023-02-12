@@ -1,0 +1,42 @@
+{
+  "name": "cypress-component-project",
+  "factory": "./src/generators/cypress-component-project/cypress-component-project#cypressComponentProject",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "$id": "NxCypressComponentProject",
+    "cli": "nx",
+    "title": "Set up Cypress component testing for a project",
+    "description": "Set up Cypress component test for a project.",
+    "type": "object",
+    "examples": [
+      {
+        "command": "nx g @nrwl/cypress:cypress-component-project --project=my-cool-lib ",
+        "description": "Add cypress component testing to an existing project named my-cool-lib"
+      }
+    ],
+    "properties": {
+      "project": {
+        "type": "string",
+        "description": "The name of the project to add cypress component testing to",
+        "$default": { "$source": "projectName" },
+        "x-prompt": "What project should we add Cypress component testing to?"
+      },
+      "bundler": {
+        "description": "The Cypress bundler to use.",
+        "type": "string",
+        "enum": ["vite", "webpack"],
+        "x-prompt": "Which Cypress bundler do you want to use for the dev-server?",
+        "default": "webpack"
+      }
+    },
+    "required": ["project"],
+    "examplesFile": "This is a framework-agnostic generator for adding component testing to a project.\n\n```bash\nnx g cypress-component-project --project=my-cool-project\n```\n\nRunning this generator, adds the required files to the specified project without any configurations for Cypress. It's best to use the framework specific generator, instead `cypress-component-project` directly\n\n- [React component testing](/packages/react/generators/cypress-component-configuration)\n- [Angular component testing](/packages/angular/generators/cypress-component-configuration)\n\nA new `component-test` target will be added to the specified project.\n\n```bash\nnx g component-test my-cool-project\n```\n\nRead more about [Cypress Component Testing](/cypress/cypress-component-testing)\n",
+    "presets": []
+  },
+  "description": "Set up Cypress Component Test for a project",
+  "hidden": true,
+  "implementation": "/packages/cypress/src/generators/cypress-component-project/cypress-component-project#cypressComponentProject.ts",
+  "aliases": [],
+  "path": "/packages/cypress/src/generators/cypress-component-project/schema.json",
+  "type": "generator"
+}

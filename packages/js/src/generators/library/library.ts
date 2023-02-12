@@ -65,6 +65,7 @@ export async function projectGenerator(
 
   if (options.bundler === 'vite') {
     await ensurePackage(tree, '@nrwl/vite', nxVersion);
+    // nx-ignore-next-line
     const { viteConfigurationGenerator } = require('@nrwl/vite');
     const viteTask = await viteConfigurationGenerator(tree, {
       project: options.name,
@@ -99,6 +100,7 @@ export async function projectGenerator(
     options.bundler !== 'vite' // Test would have been set up already
   ) {
     await ensurePackage(tree, '@nrwl/vite', nxVersion);
+    // nx-ignore-next-line
     const { vitestGenerator } = require('@nrwl/vite');
     const vitestTask = await vitestGenerator(tree, {
       project: options.name,
@@ -254,7 +256,7 @@ function addBabelRc(tree: Tree, options: NormalizedSchema) {
   const filename = '.babelrc';
 
   const babelrc = {
-    presets: [['@nrwl/web/babel', { useBuiltIns: 'usage' }]],
+    presets: [['@nrwl/js/babel', { useBuiltIns: 'usage' }]],
   };
 
   writeJson(tree, join(options.projectRoot, filename), babelrc);

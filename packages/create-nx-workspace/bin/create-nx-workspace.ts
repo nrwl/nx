@@ -1,4 +1,4 @@
-import { exec } from 'child_process';
+import { exec, spawn } from 'child_process';
 import { writeFileSync } from 'fs';
 import * as enquirer from 'enquirer';
 import * as path from 'path';
@@ -29,9 +29,12 @@ type Arguments = {
   name: string;
   preset: string;
   appName: string;
-  cli: string;
   style: string;
+  framework: string;
+  standaloneApi: string;
+  docker: boolean;
   nxCloud: boolean;
+  routing: string;
   allPrompts: boolean;
   packageManager: PackageManager;
   defaultBase: string;
@@ -42,6 +45,7 @@ type Arguments = {
     name: string;
     email: string;
   };
+  bundler: 'vite' | 'webpack';
 };
 
 enum Preset {
@@ -62,6 +66,7 @@ enum Preset {
   Express = 'express',
   React = 'react',
   Angular = 'angular',
+  NodeServer = 'node-server',
 }
 
 const presetOptions: { name: Preset; message: string }[] = [
@@ -94,7 +99,7 @@ const presetOptions: { name: Preset; message: string }[] = [
   {
     name: Preset.ReactNative,
     message:
-      'react-native      [a workspace with a single React Native application]',
+      'react-native      [a monorepo with a single React Native application]',
   },
 ];
 
@@ -136,14 +141,29 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           describe: chalk.dim`Enable interactive mode with presets`,
           type: 'boolean',
         })
-        .option('cli', {
-          describe: chalk.dim`CLI to power the Nx workspace`,
-          choices: ['nx', 'angular'],
-          type: 'string',
-        })
         .option('style', {
           describe: chalk.dim`Style option to be used when a preset with pregenerated app is selected`,
           type: 'string',
+        })
+        .option('standaloneApi', {
+          describe: chalk.dim`Use Standalone Components if generating an Angular app`,
+          type: 'string',
+        })
+        .option('routing', {
+          describe: chalk.dim`Add a routing setup when a preset with pregenerated app is selected`,
+          type: 'string',
+        })
+        .option('bundler', {
+          describe: chalk.dim`Bundler to be used to build the application`,
+          type: 'string',
+        })
+        .option('framework', {
+          describe: chalk.dim`Framework option to be used when the node-server preset is selected`,
+          type: 'string',
+        })
+        .option('docker', {
+          describe: chalk.dim`Generate a Dockerfile with your node-server`,
+          type: 'boolean',
         })
         .option('nxCloud', {
           describe: chalk.dim(messages.getPromptMessage('nxCloudCreation')),
@@ -214,16 +234,20 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
 async function main(parsedArgs: yargs.Arguments<Arguments>) {
   const {
     name,
-    cli,
     preset,
     appName,
     style,
+    standaloneApi,
+    routing,
     nxCloud,
     packageManager,
     defaultBase,
     ci,
     skipGit,
     commit,
+    framework,
+    docker,
+    bundler,
   } = parsedArgs;
 
   output.log({
@@ -242,14 +266,22 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
     packageManager as PackageManager,
     {
       ...parsedArgs,
-      cli,
       preset,
       appName,
       style,
+      routing,
+      standaloneApi,
       nxCloud,
       defaultBase,
+      framework,
+      docker,
+      bundler,
     }
   );
+
+  if (!isKnownPreset(parsedArgs.preset)) {
+    await createPreset(parsedArgs, packageManager as PackageManager, directory);
+  }
 
   let nxCloudInstallRes;
   if (nxCloud) {
@@ -296,7 +328,15 @@ async function getConfiguration(
   argv: yargs.Arguments<Arguments>
 ): Promise<void> {
   try {
-    let name, appName, style, preset;
+    let name,
+      appName,
+      style,
+      preset,
+      framework,
+      bundler,
+      docker,
+      routing,
+      standaloneApi;
 
     output.log({
       title:
@@ -318,6 +358,8 @@ async function getConfiguration(
           preset = Preset.ReactStandalone;
         } else if (monorepoStyle === 'angular') {
           preset = Preset.AngularStandalone;
+        } else if (monorepoStyle === 'node-server') {
+          preset = Preset.NodeServer;
         } else {
           preset = await determinePreset(argv);
         }
@@ -331,19 +373,41 @@ async function getConfiguration(
 
       if (
         preset === Preset.ReactStandalone ||
-        preset === Preset.AngularStandalone
+        preset === Preset.AngularStandalone ||
+        preset === Preset.NodeServer
       ) {
         appName =
           argv.appName ?? argv.name ?? (await determineAppName(preset, argv));
         name = argv.name ?? appName;
+
+        if (preset === Preset.NodeServer) {
+          framework = await determineFramework(argv);
+          docker = await determineDockerfile(argv);
+        }
+
+        if (preset === Preset.ReactStandalone) {
+          bundler = await determineBundler(argv);
+        }
+
+        if (preset === Preset.AngularStandalone) {
+          standaloneApi = await determineStandaloneApi(argv);
+          routing = await determineRouting(argv);
+        }
       } else {
         name = await determineRepoName(argv);
         appName = await determineAppName(preset, argv);
+        if (preset === Preset.ReactMonorepo) {
+          bundler = await determineBundler(argv);
+        }
+
+        if (preset === Preset.AngularMonorepo) {
+          standaloneApi = await determineStandaloneApi(argv);
+          routing = await determineRouting(argv);
+        }
       }
       style = await determineStyle(preset, argv);
     }
 
-    const cli = await determineCli(preset, argv);
     const packageManager = await determinePackageManager(argv);
     const defaultBase = await determineDefaultBase(argv);
     const nxCloud = await determineNxCloud(argv);
@@ -354,11 +418,15 @@ async function getConfiguration(
       preset,
       appName,
       style,
-      cli,
+      standaloneApi,
+      routing,
+      framework,
       nxCloud,
       packageManager,
       defaultBase,
       ci,
+      bundler,
+      docker,
     });
   } catch (e) {
     console.error(e);
@@ -438,21 +506,27 @@ function determineMonorepoStyle(): Promise<string> {
           {
             name: 'package-based',
             message:
-              'Package-based monorepo: Nx makes it fast, but lets you run things your way.',
+              'Package-based monorepo:     Nx makes it fast, but lets you run things your way.',
           },
           {
             name: 'integrated',
             message:
-              'Integrated monorepo:    Nx configures your favorite frameworks and lets you focus on shipping features.',
+              'Integrated monorepo:        Nx configures your favorite frameworks and lets you focus on shipping features.',
           },
           {
             name: 'react',
-            message: 'Standalone React app:   Nx configures Vite and ESLint.',
+            message:
+              'Standalone React app:       Nx configures Vite (or Webpack), ESLint, and Cypress.',
           },
           {
             name: 'angular',
             message:
-              'Standalone Angular app: Nx configures Jest, ESLint and Cypress.',
+              'Standalone Angular app:     Nx configures Jest, ESLint and Cypress.',
+          },
+          {
+            name: 'node-server',
+            message:
+              'Standalone Node Server app: Nx configures a framework (ex. Express), esbuild, ESlint and Jest.',
           },
         ],
       },
@@ -638,32 +712,114 @@ async function determineAppName(
     });
 }
 
-function isValidCli(cli: string): cli is 'angular' | 'nx' {
-  return ['nx', 'angular'].indexOf(cli) !== -1;
-}
-
-async function determineCli(
-  preset: Preset,
+async function determineFramework(
   parsedArgs: yargs.Arguments<Arguments>
-): Promise<'nx' | 'angular'> {
-  if (parsedArgs.cli) {
-    if (!isValidCli(parsedArgs.cli)) {
-      output.error({
-        title: 'Invalid cli',
-        bodyLines: [`It must be one of the following:`, '', 'nx', 'angular'],
-      });
-      process.exit(1);
-    }
-    return Promise.resolve(parsedArgs.cli);
+): Promise<string> {
+  const frameworkChoices = [
+    {
+      name: 'express',
+      message: 'Express [https://expressjs.com/]',
+    },
+    {
+      name: 'fastify',
+      message: 'fastify [https://www.fastify.io/]',
+    },
+    {
+      name: 'koa',
+      message: 'koa     [https://koajs.com/]',
+    },
+  ];
+
+  if (!parsedArgs.framework) {
+    return enquirer
+      .prompt([
+        {
+          message: 'What framework should be used?',
+          type: 'autocomplete',
+          name: 'framework',
+          choices: frameworkChoices,
+        },
+      ])
+      .then((a: { framework: string }) => a.framework);
   }
 
-  switch (preset) {
-    case Preset.AngularMonorepo: {
-      return Promise.resolve('angular');
-    }
-    default: {
-      return Promise.resolve('nx');
-    }
+  const foundFramework = frameworkChoices
+    .map(({ name }) => name)
+    .indexOf(parsedArgs.framework);
+
+  if (foundFramework < 0) {
+    output.error({
+      title: 'Invalid framework',
+      bodyLines: [
+        `It must be one of the following:`,
+        '',
+        ...frameworkChoices.map(({ name }) => name),
+      ],
+    });
+
+    process.exit(1);
+  }
+
+  return Promise.resolve(parsedArgs.framework);
+}
+
+async function determineStandaloneApi(
+  parsedArgs: yargs.Arguments<Arguments>
+): Promise<string> {
+  if (parsedArgs.standaloneApi === undefined) {
+    return enquirer
+      .prompt([
+        {
+          name: 'standaloneApi',
+          message:
+            'Would you like to use Standalone Components in your application?',
+          type: 'autocomplete',
+          choices: [
+            {
+              name: 'Yes',
+            },
+
+            {
+              name: 'No',
+            },
+          ],
+          initial: 'No' as any,
+        },
+      ])
+      .then((a: { standaloneApi: 'Yes' | 'No' }) =>
+        a.standaloneApi === 'Yes' ? 'true' : 'false'
+      );
+  }
+
+  return parsedArgs.standaloneApi;
+}
+
+async function determineDockerfile(
+  parsedArgs: yargs.Arguments<Arguments>
+): Promise<boolean> {
+  if (parsedArgs.docker === undefined) {
+    return enquirer
+      .prompt([
+        {
+          name: 'docker',
+          message:
+            'Would you like to generate a Dockerfile? [https://docs.docker.com/]',
+          type: 'autocomplete',
+          choices: [
+            {
+              name: 'Yes',
+              hint: 'I want to generate a Dockerfile',
+            },
+            {
+              name: 'No',
+            },
+          ],
+          initial: 'No' as any,
+        },
+      ])
+      .then((a: { docker: 'Yes' | 'No' }) => a.docker === 'Yes');
+  } else {
+    return Promise.resolve(parsedArgs.docker);
   }
 }
 
@@ -680,7 +836,8 @@ async function determineStyle(
     preset === Preset.Nest ||
     preset === Preset.Express ||
     preset === Preset.ReactNative ||
-    preset === Preset.Expo
+    preset === Preset.Expo ||
+    preset === Preset.NodeServer
   ) {
     return Promise.resolve(null);
   }
@@ -761,6 +918,84 @@ async function determineStyle(
   }
 
   return Promise.resolve(parsedArgs.style);
+}
+
+async function determineRouting(
+  parsedArgs: yargs.Arguments<Arguments>
+): Promise<string> {
+  if (!parsedArgs.routing) {
+    return enquirer
+      .prompt([
+        {
+          name: 'routing',
+          message: 'Would you like to add routing?',
+          type: 'autocomplete',
+          choices: [
+            {
+              name: 'Yes',
+            },
+
+            {
+              name: 'No',
+            },
+          ],
+          initial: 'Yes' as any,
+        },
+      ])
+      .then((a: { routing: 'Yes' | 'No' }) =>
+        a.routing === 'Yes' ? 'true' : 'false'
+      );
+  }
+
+  return parsedArgs.routing;
+}
+
+async function determineBundler(
+  parsedArgs: yargs.Arguments<Arguments>
+): Promise<'vite' | 'webpack'> {
+  const choices = [
+    {
+      name: 'vite',
+      message: 'Vite    [ https://vitejs.dev/ ]',
+    },
+    {
+      name: 'webpack',
+      message: 'Webpack [ https://webpack.js.org/ ]',
+    },
+  ];
+
+  if (!parsedArgs.bundler) {
+    return enquirer
+      .prompt([
+        {
+          name: 'bundler',
+          message: `Bundler to be used to build the application`,
+          initial: 'vite' as any,
+          type: 'autocomplete',
+          choices: choices,
+        },
+      ])
+      .then((a: { bundler: 'vite' | 'webpack' }) => a.bundler);
+  }
+
+  const foundBundler = choices.find(
+    (choice) => choice.name === parsedArgs.bundler
+  );
+
+  if (foundBundler === undefined) {
+    output.error({
+      title: 'Invalid bundler',
+      bodyLines: [
+        `It must be one of the following:`,
+        '',
+        ...choices.map((choice) => choice.name),
+      ],
+    });
+
+    process.exit(1);
+  }
+
+  return Promise.resolve(parsedArgs.bundler);
 }
 
 async function determineNxCloud(
@@ -885,7 +1120,7 @@ async function createApp(
   packageManager: PackageManager,
   parsedArgs: any
 ): Promise<string> {
-  const { _, cli, ...restArgs } = parsedArgs;
+  const { _, ...restArgs } = parsedArgs;
 
   // Ensure to use packageManager for args
   // if it's not already passed in from previous process
@@ -936,6 +1171,57 @@ async function createApp(
     workspaceSetupSpinner.stop();
   }
   return join(workingDir, getFileName(name));
+}
+
+async function createPreset(
+  parsedArgs: yargs.Arguments<Arguments>,
+  packageManager: PackageManager,
+  directory: string
+): Promise<void> {
+  const { _, skipGit, ci, commit, allPrompts, nxCloud, preset, ...restArgs } =
+    parsedArgs;
+
+  const args = unparse(restArgs).join(' ');
+
+  const pmc = getPackageManagerCommand(packageManager);
+
+  const workingDir = process.cwd().replace(/\\/g, '/');
+  let nxWorkspaceRoot = `"${workingDir}"`;
+
+  // If path contains spaces there is a problem in Windows for npm@6.
+  // In this case we have to escape the wrapping quotes.
+  if (
+    process.platform === 'win32' &&
+    /\s/.test(nxWorkspaceRoot) &&
+    packageManager === 'npm'
+  ) {
+    const pmVersion = +getPackageManagerVersion(packageManager).split('.')[0];
+    if (pmVersion < 7) {
+      nxWorkspaceRoot = `\\"${nxWorkspaceRoot.slice(1, -1)}\\"`;
+    }
+  }
+
+  const command = `g ${preset}:preset ${args}`;
+
+  try {
+    const [exec, ...args] = pmc.exec.split(' ');
+    args.push(
+      'nx',
+      `--nxWorkspaceRoot=${nxWorkspaceRoot}`,
+      ...command.split(' ')
+    );
+    await spawnAndWait(exec, args, directory);
+
+    output.log({
+      title: `Successfully applied preset: ${preset}.`,
+    });
+  } catch (e) {
+    output.error({
+      title: `Failed to apply preset: ${preset}`,
+      bodyLines: ['See above'],
+    });
+    process.exit(1);
+  }
 }
 
 async function setupNxCloud(name: string, packageManager: PackageManager) {
@@ -1044,6 +1330,27 @@ function execAndWait(command: string, cwd: string) {
   });
 }
 
+/**
+ * Use spawn only for interactive shells
+ */
+function spawnAndWait(command: string, args: string[], cwd: string) {
+  return new Promise((res, rej) => {
+    const childProcess = spawn(command, args, {
+      cwd,
+      stdio: 'inherit',
+      env: { ...process.env, NX_DAEMON: 'false' },
+    });
+
+    childProcess.on('exit', (code) => {
+      if (code !== 0) {
+        rej({ code: code });
+      } else {
+        res({ code: 0 });
+      }
+    });
+  });
+}
+
 function pointToTutorialAndCourse(preset: Preset) {
   const title = `First time using Nx? Check out this interactive Nx tutorial.`;
   switch (preset) {
@@ -1097,6 +1404,7 @@ function pointToTutorialAndCourse(preset: Preset) {
       });
       break;
     case Preset.Express:
+    case Preset.NodeServer:
       output.addVerticalSeparator();
       output.note({
         title,

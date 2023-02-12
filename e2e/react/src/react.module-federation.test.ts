@@ -48,19 +48,26 @@ describe('React Module Federation', () => {
     updateFile(
       `apps/${shell}/webpack.config.js`,
       stripIndents`
-        const { withModuleFederation } = require('@nrwl/react/module-federation');
-        const moduleFederationConfig = require('./module-federation.config');
-
-        module.exports = withModuleFederation({
-          ...moduleFederationConfig,
-          remotes: [
-            '${remote1}',
-            ['${remote2}', 'http://localhost:${readPort(
+        import { ModuleFederationConfig } from '@nrwl/devkit';
+        import { composePlugins, withNx } from '@nrwl/webpack';
+        import { withReact } from '@nrwl/react';
+        import { withModuleFederation } from '@nrwl/react/module-federation');
+        
+        const baseConfig = require('./module-federation.config');
+        
+        const config: ModuleFederationConfig = {
+          ...baseConfig,
+              remotes: [
+                '${remote1}',
+                ['${remote2}', 'http://localhost:${readPort(
         remote2
       )}/remoteEntry.js'],
-            ['${remote3}', 'http://localhost:${readPort(remote3)}'],
-          ],
-        });
+                ['${remote3}', 'http://localhost:${readPort(remote3)}'],
+              ],
+        };
+
+        // Nx plugins for webpack to build config object from Nx options and context.
+        module.exports = composePlugins(withNx(), withReact(), withModuleFederation(config));
       `
     );
 

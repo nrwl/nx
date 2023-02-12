@@ -163,6 +163,8 @@ const guideUrls = {
   '/structure/project-graph-plugins': '/extending-nx/project-graph-plugins',
   '/guides/lerna-and-nx': '/migration/lerna-and-nx',
   '/cypress/v10-migration-guide': '/cypress/v11-migration-guide',
+  '/cypress/generators/migrate-to-cypress-10':
+    '/cypress/generators/migrate-to-cypress-11',
 };
 
 /**
@@ -240,13 +242,13 @@ const diataxis = {
   '/guides/monorepo-nx-enterprise': '/more-concepts/monorepo-nx-enterprise',
   '/guides/performance-profiling': '/recipes/other/performance-profiling',
   '/guides/eslint': '/recipes/other/eslint',
-  '/guides/customize-webpack': '/recipes/other/customize-webpack',
+  '/guides/customize-webpack':
+    '/packages/webpack/documents/webpack-config-setup',
   '/guides/nx-daemon': '/more-concepts/nx-daemon',
   '/guides/js-and-ts': '/recipes/other/js-and-ts',
   '/guides/browser-support': '/recipes/other/browser-support',
   '/guides/react-native': '/recipes/other/react-native',
   '/guides/deploy-nextjs-to-vercel': '/recipes/other/deploy-nextjs-to-vercel',
-  '/guides/webpack-5': '/recipes/other/webpack-5',
   '/guides/using-tailwind-css-in-react':
     '/recipes/other/using-tailwind-css-in-react',
   '/guides/react-18': '/recipes/other/react-18',
@@ -267,6 +269,8 @@ const diataxis = {
   '/examples/caching': '/recipes/other/caching',
   '/examples/dte': '/recipes/other/dte',
   '/recipe/workspace-generators': '/recipes/generators/local-generators',
+  '/recipes/other/customize-webpack':
+    '/packages/webpack/documents/webpack-config-setup',
 };
 
 /**
@@ -332,8 +336,16 @@ const nxCloudUrls = {
 };
 
 /**
- * Tutorial Updates
+ * Tutorial Updates (updated 2023-01-13)
  */
+const tutorialBaseUrls = {
+  '/(l|latest)/(a|angular)/tutorial/1-code-generation':
+    '/angular-tutorial/1-code-generation',
+  '/(l|latest)/(a|node)/tutorial/1-code-generation':
+    '/getting-started/node-tutorial',
+  '/(l|latest)/(r|react)/tutorial/1-code-generation':
+    '/react-tutorial/1-code-generation',
+};
 const oldReactTutorialPaths = [
   '/react-tutorial/01-create-application',
   '/react-tutorial/02-add-e2e-test',
@@ -363,12 +375,13 @@ const oldNodeTutorialPaths = [
   '/node-tutorial/07-test-affected-projects',
   '/node-tutorial/08-summary',
 ];
-const nodeRedirectDestination = '/node-tutorial/1-code-generation';
+const nodeRedirectDestination = '/getting-started/node-tutorial';
 const nodeTutorialRedirects = oldNodeTutorialPaths.reduce((acc, path) => {
   acc[path] = nodeRedirectDestination;
   return acc;
 }, {});
 const tutorialRedirects = Object.assign(
+  tutorialBaseUrls,
   reactTutorialRedirects,
   nodeTutorialRedirects
 );
@@ -420,6 +433,66 @@ const packagesIndexes = {
   '/webpack': '/packages/webpack',
 };
 
+const packagesDocuments = {
+  '/nx/create-nx-workspace': '/packages/nx/documents/create-nx-workspace',
+  '/nx/init': '/packages/nx/documents/init',
+  '/nx/generate': '/packages/nx/documents/generate',
+  '/nx/run': '/packages/nx/documents/run',
+  '/nx/daemon': '/packages/nx/documents/daemon',
+  '/nx/dep-graph': '/packages/nx/documents/dep-graph',
+  '/nx/run-many': '/packages/nx/documents/run-many',
+  '/nx/affected': '/packages/nx/documents/affected',
+  '/nx/affected-dep-graph': '/packages/nx/documents/affected-dep-graph',
+  '/nx/affected-apps': '/packages/nx/documents/affected-apps',
+  '/nx/affected-libs': '/packages/nx/documents/affected-libs',
+  '/nx/print-affected': '/packages/nx/documents/print-affected',
+  '/nx/format-check': '/packages/nx/documents/format-check',
+  '/nx/format-write': '/packages/nx/documents/format-write',
+  '/nx/migrate': '/packages/nx/documents/migrate',
+  '/nx/report': '/packages/nx/documents/report',
+  '/nx/list': '/packages/nx/documents/list',
+  '/nx/workspace-lint': '/packages/nx/documents/workspace-lint',
+  '/nx/workspace-generator': '/packages/nx/documents/workspace-generator',
+  '/nx/connect-to-nx-cloud': '/packages/nx/documents/connect-to-nx-cloud',
+  '/nx/reset': '/packages/nx/documents/reset',
+  '/nx/repair': '/packages/nx/documents/repair',
+  '/nx/exec': '/packages/nx/documents/exec',
+  '/nx/watch': '/packages/nx/documents/watch',
+  '/workspace/nx-nodejs-typescript-version-matrix':
+    '/packages/workspace/documents/nx-nodejs-typescript-version-matrix',
+  '/devkit/index': '/packages/devkit/documents/index',
+  '/devkit/ngcli_adapter': '/packages/devkit/documents/ngcli_adapter',
+  '/angular-nx-version-matrix':
+    '/packages/angular/documents/angular-nx-version-matrix',
+  '/cypress/cypress-component-testing':
+    '/packages/cypress/documents/cypress-component-testing',
+  '/cypress/v11-migration-guide':
+    '/packages/cypress/documents/v11-migration-guide',
+  '/storybook/overview-react': '/packages/storybook/documents/overview-react',
+  '/storybook/overview-angular':
+    '/packages/storybook/documents/overview-angular',
+  '/storybook/best-practices': '/packages/storybook/documents/best-practices',
+  '/storybook/storybook-composition-setup':
+    '/packages/storybook/documents/storybook-composition-setup',
+  '/storybook/angular-storybook-compodoc':
+    '/packages/storybook/documents/angular-storybook-compodoc',
+  '/storybook/angular-storybook-targets':
+    '/packages/storybook/documents/angular-storybook-targets',
+  '/storybook/angular-configuring-styles':
+    '/packages/storybook/documents/angular-configuring-styles',
+  '/storybook/angular-browser-target':
+    '/packages/storybook/documents/angular-browser-target',
+  '/storybook/migrate-webpack-final-angular':
+    '/packages/storybook/documents/migrate-webpack-final-angular',
+  '/storybook/upgrade-storybook-v6-angular':
+    '/packages/storybook/documents/upgrade-storybook-v6-angular',
+  '/storybook/migrate-webpack-final-react':
+    '/packages/storybook/documents/migrate-webpack-final-react',
+  '/storybook/upgrade-storybook-v6-react':
+    '/packages/storybook/documents/upgrade-storybook-v6-react',
+  '/linter/eslint-plugin-nx': '/packages/linter/documents/eslint-plugin-nx',
+};
+
 /**
  * Public export API
  */
@@ -433,4 +506,5 @@ module.exports = {
   schemaUrls,
   tutorialRedirects,
   packagesIndexes,
+  packagesDocuments,
 };

@@ -41,7 +41,7 @@
       "oneOf": [
         {
           "type": "array",
-          "description": "A list of polyfills to include in the build. Can be a full path for a file, relative to the current workspace or module specifier. Example: 'zone.js'.",
+          "description": "A list of polyfills to include in the build. Can be a full path for a file, relative to the current workspace or module specifier. Example: 'zone.js'. _Note: supported in Angular versions >= 15.0.0_.",
           "items": {
             "type": "string",
             "uniqueItems": true
@@ -128,7 +128,8 @@
             "pattern": "\\.(?:css|scss|sass|less|styl)$"
           }
         ]
-      }
+      },
+      "x-priority": "important"
     },
     "inlineStyleLanguage": {
       "description": "The stylesheet language to use for the application's inline component styles.",
@@ -454,7 +455,12 @@
           "type": "string"
         }
       },
+      "x-priority": "important",
       "additionalProperties": false
+    },
+    "indexFileTransformer": {
+      "description": "Path to transformer function to transform the index.html",
+      "type": "string"
     },
     "buildLibsFromSource": {
       "type": "boolean",

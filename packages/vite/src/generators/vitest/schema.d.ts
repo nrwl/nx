@@ -4,4 +4,5 @@ export interface VitestGeneratorSchema {
   coverageProvider: 'c8' | 'istanbul';
   inSourceTests?: boolean;
   skipViteConfig?: boolean;
+  testTarget?: string;
 }

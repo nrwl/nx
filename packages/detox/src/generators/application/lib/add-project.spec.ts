@@ -3,7 +3,7 @@ import {
   readProjectConfiguration,
   Tree,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
 import { addProject } from './add-project';
 
@@ -11,7 +11,7 @@ describe('Add Project', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'my-app', {
       root: 'my-app',
       targets: {
@@ -44,7 +44,7 @@ describe('Add Project', () => {
       });
     });
 
-    it('should update workspace.json', () => {
+    it('should update configuration', () => {
       const project = readProjectConfiguration(tree, 'my-app-e2e');
 
       expect(project.root).toEqual('apps/my-app-e2e');
@@ -94,7 +94,7 @@ describe('Add Project', () => {
       });
     });
 
-    it('should update workspace.json', () => {
+    it('should update configuration', () => {
       const project = readProjectConfiguration(tree, 'my-dir-my-app-e2e');
 
       expect(project.root).toEqual('apps/my-dir/my-app-e2e');

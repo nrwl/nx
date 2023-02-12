@@ -3,61 +3,79 @@ import { ExecutorContext } from '@nrwl/devkit';
 import { createServer, InlineConfig, mergeConfig, ViteDevServer } from 'vite';
 
 import {
-  getBuildAndSharedConfig,
-  getBuildTargetOptions,
-  getServerOptions,
+  getViteSharedConfig,
+  getNxTargetOptions,
+  getViteServerOptions,
+  getViteBuildOptions,
 } from '../../utils/options-utils';
 
 import { ViteDevServerExecutorOptions } from './schema';
 import { ViteBuildExecutorOptions } from '../build/schema';
 
-export default async function* viteDevServerExecutor(
+export async function* viteDevServerExecutor(
   options: ViteDevServerExecutorOptions,
   context: ExecutorContext
 ): AsyncGenerator<{ success: boolean; baseUrl: string }> {
-  const mergedOptions = {
-    ...getBuildTargetOptions(options.buildTarget, context),
-    ...options,
-  } as ViteDevServerExecutorOptions & ViteBuildExecutorOptions;
-
-  const serverConfig: InlineConfig = mergeConfig(
-    await getBuildAndSharedConfig(mergedOptions, context),
-    {
-      server: getServerOptions(mergedOptions, context),
-    } as InlineConfig
+  // Retrieve the option for the configured buildTarget.
+  const buildTargetOptions: ViteBuildExecutorOptions = getNxTargetOptions(
+    options.buildTarget,
+    context
   );
 
-  const server = await createServer(serverConfig);
-
-  const baseUrl = await runViteDevServer(server);
-
-  yield {
-    success: true,
-    baseUrl: baseUrl,
+  // Merge the options from the build and dev-serve targets.
+  // The latter takes precedence.
+  const mergedOptions = {
+    ...buildTargetOptions,
+    ...options,
   };
 
-  // This Promise intentionally never resolves, leaving the process running
-  await new Promise<{ success: boolean }>(() => {});
-}
+  // Add the server specific configuration.
+  const serverConfig: InlineConfig = mergeConfig(
+    getViteSharedConfig(mergedOptions, options.clearScreen, context),
+    {
+      build: getViteBuildOptions(mergedOptions, context),
+      server: getViteServerOptions(mergedOptions, context),
+    }
+  );
 
-async function runViteDevServer(server: ViteDevServer): Promise<string> {
   try {
-    await server.listen();
-    server.printUrls();
+    const server = await createServer(serverConfig);
+    await runViteDevServer(server);
+    const resolvedUrls = [
+      ...server.resolvedUrls.local,
+      ...server.resolvedUrls.network,
+    ];
 
-    const processOnExit = () => {
-      process.off('SIGINT', processOnExit);
-      process.off('SIGTERM', processOnExit);
-      process.off('exit', processOnExit);
+    yield {
+      success: true,
+      baseUrl: resolvedUrls[0] ?? '',
     };
-
-    process.on('SIGINT', processOnExit);
-    process.on('SIGTERM', processOnExit);
-    process.on('exit', processOnExit);
-    return `${server.config?.server?.https ? 'https' : 'http'}://${
-      server.config?.server?.host
-    }:${server.config?.server?.port}`;
-  } catch (err) {
-    console.log(err);
+  } catch (e) {
+    console.error(e);
+    yield {
+      success: false,
+      baseUrl: '',
+    };
   }
+
+  await new Promise<void>((resolve) => {
+    process.once('SIGINT', () => resolve());
+    process.once('SIGTERM', () => resolve());
+    process.once('exit', () => resolve());
+  });
 }
+
+async function runViteDevServer(server: ViteDevServer): Promise<void> {
+  await server.listen();
+  server.printUrls();
+
+  const processOnExit = async () => {
+    await server.close();
+  };
+
+  process.once('SIGINT', processOnExit);
+  process.once('SIGTERM', processOnExit);
+  process.once('exit', processOnExit);
+}
+
+export default viteDevServerExecutor;

@@ -45,6 +45,11 @@ export const examples: Record<string, Example[]> = {
       description: 'Run the test target for all projects',
     },
     {
+      command: 'affected --targets=lint,test,build',
+      description:
+        'Run lint, test, and build targets for affected projects. Requires Nx v15.4+',
+    },
+    {
       command: 'affected --target=test --files=libs/mylib/src/index.ts',
       description:
         'Run tests for all the projects affected by changing the index.ts file',
@@ -289,16 +294,25 @@ export const examples: Record<string, Example[]> = {
     },
     {
       command: 'run-many --target=test --projects=proj1,proj2',
-      description: 'Test proj1 and proj2',
+      description: 'Test proj1 and proj2 in parallel',
     },
     {
-      command: 'run-many --target=test --projects=proj1,proj2 --parallel=2',
-      description: 'Test proj1 and proj2 in parallel',
+      command: 'run-many --target=test --projects=proj1,proj2 --parallel=5',
+      description: 'Test proj1 and proj2 in parallel using 5 workers',
+    },
+    {
+      command: 'run-many --target=test --projects=proj1,proj2 --parallel=false',
+      description: 'Test proj1 and proj2 in sequence',
     },
     {
       command: 'run-many --target=test --projects=*-app --exclude excluded-app',
       description:
         'Test all projects ending with `*-app` except `excluded-app`',
+    },
+    {
+      command: 'run-many --targets=lint,test,build --all',
+      description:
+        'Run lint, test, and build targets for all projects. Requires Nx v15.4+',
     },
   ],
   migrate: [
@@ -338,6 +352,25 @@ export const examples: Record<string, Example[]> = {
       command: 'migrate --run-migrations --create-commits',
       description:
         'Create a dedicated commit for each successfully completed migration. You can customize the prefix used for each commit by additionally setting --commit-prefix="PREFIX_HERE "',
+    },
+  ],
+  watch: [
+    {
+      command:
+        'watch --projects=app -- echo \\$NX_PROJECT_NAME \\$NX_FILE_CHANGES',
+      description:
+        'Watch the "app" project and echo the project name and the files that changed',
+    },
+    {
+      command:
+        'watch --projects=app1,app2 --includeDependencies -- echo \\$NX_PROJECT_NAME',
+      description:
+        'Watch "app1" and "app2" and echo the project name whenever a specified project or its dependencies change',
+    },
+    {
+      command: 'watch --all -- echo \\$NX_PROJECT_NAME',
+      description:
+        'Watch all projects (including newly created projects) in the workspace',
     },
   ],
 };

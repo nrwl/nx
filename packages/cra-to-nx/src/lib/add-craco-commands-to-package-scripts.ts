@@ -2,12 +2,14 @@ import { readJsonFile, writeJsonFile } from 'nx/src/utils/fileutils';
 
 export function addCracoCommandsToPackageScripts(
   appName: string,
-  isNested: boolean
+  isStandalone: boolean
 ) {
-  const packageJsonPath = isNested
+  const packageJsonPath = isStandalone
     ? 'package.json'
     : `apps/${appName}/package.json`;
-  const distPath = isNested ? `dist/${appName}` : `../../dist/apps/${appName}`;
+  const distPath = isStandalone
+    ? `dist/${appName}`
+    : `../../dist/apps/${appName}`;
   const packageJson = readJsonFile(packageJsonPath);
   packageJson.scripts = {
     ...packageJson.scripts,

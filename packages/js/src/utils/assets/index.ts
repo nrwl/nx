@@ -23,7 +23,8 @@ export async function copyAssets(
   context: ExecutorContext
 ): Promise<CopyAssetsResult> {
   const assetHandler = new CopyAssetsHandler({
-    projectDir: context.workspace.projects[context.projectName].root,
+    projectDir:
+      context.projectsConfigurations.projects[context.projectName].root,
     rootDir: context.root,
     outputDir: options.outputPath,
     assets: options.assets,

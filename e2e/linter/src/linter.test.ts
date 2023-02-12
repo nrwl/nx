@@ -3,6 +3,7 @@ import {
   checkFilesExist,
   cleanupProject,
   createFile,
+  newAngularProject,
   newProject,
   readFile,
   readJson,
@@ -185,7 +186,7 @@ describe('Linter', () => {
     }, 1000000);
 
     it('lint plugin should ensure module boundaries', () => {
-      const proj = newProject();
+      const proj = newAngularProject();
       const myapp = uniq('myapp');
       const myapp2 = uniq('myapp2');
       const mylib = uniq('mylib');
@@ -398,7 +399,9 @@ export function tslibC(): string {
       const fixedStout = runCLI(`lint ${libC} --fix`, {
         silenceError: true,
       });
-      expect(fixedStout).toContain('Successfully ran target lint for project');
+      expect(fixedStout).toContain(
+        `Successfully ran target lint for project ${libC}`
+      );
 
       const fileContent = readFile(`libs/${libC}/src/lib/tslib-c-another.ts`);
       expect(fileContent).toContain(`import { tslibC } from './tslib-c';`);
@@ -424,7 +427,9 @@ export function tslibC(): string {
       const fixedStout = runCLI(`lint ${libB} --fix`, {
         silenceError: true,
       });
-      expect(fixedStout).toContain('Successfully ran target lint for project');
+      expect(fixedStout).toContain(
+        `Successfully ran target lint for project ${libB}`
+      );
 
       const fileContent = readFile(`libs/${libB}/src/lib/tslib-b.ts`);
       expect(fileContent).toContain(
@@ -473,7 +478,7 @@ export function tslibC(): string {
         'plugin:@nrwl/nx/javascript',
       ]);
 
-      runCLI(`generate @nrwl/react:lib ${mylib}`);
+      runCLI(`generate @nrwl/react:lib ${mylib} --unitTestRunner=jest`);
       // should add new tslint
       expect(() => checkFilesExist(`.eslintrc.base.json`)).not.toThrow();
       const appEslint = readJson(`.eslintrc.json`);
@@ -511,7 +516,7 @@ export function tslibC(): string {
       const myapp = uniq('myapp');
       const mylib = uniq('mylib');
 
-      newProject();
+      newAngularProject();
       runCLI(`generate @nrwl/angular:app ${myapp} --rootProject=true`);
 
       let rootEslint = readJson('.eslintrc.json');

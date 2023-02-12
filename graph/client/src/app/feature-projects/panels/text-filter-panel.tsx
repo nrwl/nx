@@ -1,4 +1,4 @@
-import DebouncedTextInput from '../../ui-components/debounced-text-input';
+import { DebouncedTextInput } from '@nrwl/graph/ui-components';
 
 export interface TextFilterPanelProps {
   textFilter: string;
@@ -56,5 +56,3 @@ export function TextFilterPanel({
     </div>
   );
 }
-
-export default TextFilterPanel;

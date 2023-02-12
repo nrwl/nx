@@ -14,10 +14,11 @@ documented.
 
 ## Resources
 
+- [Kubernetes Setup Instructions](/nx-cloud/private-cloud/kubernetes-setup)
 - [Nx Cloud K8s Example + All Config Options](https://github.com/nrwl/nx-cloud-helm)
 - [Nx Cloud K8s Example + All Config Options (no Helm)](https://github.com/nrwl/nx-cloud-helm/tree/main/no-helm)
 - [Standalone Container](/nx-cloud/private-cloud/standalone)
-- [GitHub PR Integration](/nx-cloud/private-cloud/github)
+- [GitHub PR Integration](/nx-cloud/set-up/github)
 - [Auth (Basic)](/nx-cloud/private-cloud/auth-single-admin)
 - [GitHub Auth](/nx-cloud/private-cloud/auth-github)
 - [GitLab Auth](/nx-cloud/private-cloud/auth-gitlab)

@@ -1,9 +1,11 @@
 import { buildEsbuildOptions } from './build-esbuild-options';
 import { ExecutorContext } from 'nx/src/config/misc-interfaces';
+import path = require('path');
 
 describe('buildEsbuildOptions', () => {
   const context: ExecutorContext = {
-    workspace: {
+    projectName: 'myapp',
+    projectsConfigurations: {
       version: 2,
       projects: {
         myapp: {
@@ -11,9 +13,10 @@ describe('buildEsbuildOptions', () => {
         },
       },
     },
+    nxJsonConfiguration: {},
     isVerbose: false,
-    root: '/',
-    cwd: '/',
+    root: path.join(__dirname, 'fixtures'),
+    cwd: path.join(__dirname, 'fixtures'),
     target: {
       executor: '@nrwl/esbuild:esbuild',
       options: {
@@ -27,6 +30,7 @@ describe('buildEsbuildOptions', () => {
       buildEsbuildOptions(
         'esm',
         {
+          bundle: true,
           platform: 'browser',
           main: 'apps/myapp/src/index.ts',
           outputPath: 'dist/apps/myapp',
@@ -62,6 +66,7 @@ describe('buildEsbuildOptions', () => {
       buildEsbuildOptions(
         'esm',
         {
+          bundle: true,
           platform: 'browser',
           main: 'apps/myapp/src/index.ts',
           additionalEntryPoints: ['apps/myapp/src/extra-entry.ts'],
@@ -98,6 +103,7 @@ describe('buildEsbuildOptions', () => {
       buildEsbuildOptions(
         'cjs',
         {
+          bundle: true,
           platform: 'browser',
           main: 'apps/myapp/src/index.ts',
           outputPath: 'dist/apps/myapp',
@@ -133,6 +139,7 @@ describe('buildEsbuildOptions', () => {
       buildEsbuildOptions(
         'cjs',
         {
+          bundle: true,
           platform: 'node',
           main: 'apps/myapp/src/index.ts',
           outputPath: 'dist/apps/myapp',
@@ -156,6 +163,186 @@ describe('buildEsbuildOptions', () => {
       external: [],
       outExtension: {
         '.js': '.cjs',
+      },
+    });
+  });
+
+  it('should respect user defined outExtension', () => {
+    expect(
+      buildEsbuildOptions(
+        'esm',
+        {
+          bundle: true,
+          platform: 'node',
+          main: 'apps/myapp/src/index.ts',
+          outputPath: 'dist/apps/myapp',
+          tsConfig: 'apps/myapp/tsconfig.app.json',
+          project: 'apps/myapp/package.json',
+          outputFileName: 'index.js',
+          assets: [],
+          singleEntry: true,
+          external: [],
+          esbuildOptions: {
+            outExtension: {
+              '.js': '.mjs',
+            },
+          },
+        },
+        context
+      )
+    ).toEqual({
+      bundle: true,
+      entryNames: '[dir]/[name]',
+      entryPoints: ['apps/myapp/src/index.ts'],
+      format: 'esm',
+      platform: 'node',
+      outfile: 'dist/apps/myapp/index.mjs',
+      tsconfig: 'apps/myapp/tsconfig.app.json',
+      external: [],
+      outExtension: {
+        '.js': '.mjs',
+      },
+    });
+
+    expect(
+      buildEsbuildOptions(
+        'cjs',
+        {
+          bundle: true,
+          platform: 'node',
+          main: 'apps/myapp/src/index.ts',
+          outputPath: 'dist/apps/myapp',
+          tsConfig: 'apps/myapp/tsconfig.app.json',
+          project: 'apps/myapp/package.json',
+          outputFileName: 'index.js',
+          assets: [],
+          singleEntry: true,
+          external: [],
+          esbuildOptions: {
+            outExtension: {
+              '.js': '.js',
+            },
+          },
+        },
+        context
+      )
+    ).toEqual({
+      bundle: true,
+      entryNames: '[dir]/[name]',
+      entryPoints: ['apps/myapp/src/index.ts'],
+      format: 'cjs',
+      platform: 'node',
+      outfile: 'dist/apps/myapp/index.js',
+      tsconfig: 'apps/myapp/tsconfig.app.json',
+      external: [],
+      outExtension: {
+        '.js': '.js',
+      },
+    });
+
+    // ESM cannot be mapped to .cjs so ignore
+    expect(
+      buildEsbuildOptions(
+        'esm',
+        {
+          bundle: true,
+          platform: 'node',
+          main: 'apps/myapp/src/index.ts',
+          outputPath: 'dist/apps/myapp',
+          tsConfig: 'apps/myapp/tsconfig.app.json',
+          project: 'apps/myapp/package.json',
+          outputFileName: 'index.js',
+          assets: [],
+          singleEntry: true,
+          external: [],
+          esbuildOptions: {
+            outExtension: {
+              '.js': '.cjs',
+            },
+          },
+        },
+        context
+      )
+    ).toEqual({
+      bundle: true,
+      entryNames: '[dir]/[name]',
+      entryPoints: ['apps/myapp/src/index.ts'],
+      format: 'esm',
+      platform: 'node',
+      outfile: 'dist/apps/myapp/index.js',
+      tsconfig: 'apps/myapp/tsconfig.app.json',
+      external: [],
+      outExtension: {
+        '.js': '.js',
+      },
+    });
+  });
+
+  it('should respect user defined external', () => {
+    expect(
+      buildEsbuildOptions(
+        'esm',
+        {
+          bundle: true,
+          platform: 'node',
+          main: 'apps/myapp/src/index.ts',
+          outputPath: 'dist/apps/myapp',
+          tsConfig: 'apps/myapp/tsconfig.app.json',
+          project: 'apps/myapp/package.json',
+          outputFileName: 'index.js',
+          assets: [],
+          singleEntry: true,
+          external: ['foo'],
+          esbuildOptions: {
+            external: ['bar'],
+          },
+        },
+        context
+      )
+    ).toEqual({
+      bundle: true,
+      entryNames: '[dir]/[name]',
+      entryPoints: ['apps/myapp/src/index.ts'],
+      format: 'esm',
+      platform: 'node',
+      outfile: 'dist/apps/myapp/index.js',
+      tsconfig: 'apps/myapp/tsconfig.app.json',
+      external: ['bar', 'foo'],
+      outExtension: {
+        '.js': '.js',
+      },
+    });
+  });
+
+  it('should not set external if --bundle=false', () => {
+    expect(
+      buildEsbuildOptions(
+        'esm',
+        {
+          bundle: false,
+          platform: 'node',
+          main: 'apps/myapp/src/index.ts',
+          outputPath: 'dist/apps/myapp',
+          tsConfig: 'apps/myapp/tsconfig.app.json',
+          project: 'apps/myapp/package.json',
+          outputFileName: 'index.js',
+          assets: [],
+          singleEntry: true,
+          external: ['foo'],
+        },
+        context
+      )
+    ).toEqual({
+      bundle: false,
+      entryNames: '[dir]/[name]',
+      entryPoints: ['apps/myapp/src/index.ts'],
+      format: 'esm',
+      platform: 'node',
+      outdir: 'dist/apps/myapp',
+      tsconfig: 'apps/myapp/tsconfig.app.json',
+      external: undefined,
+      outExtension: {
+        '.js': '.js',
       },
     });
   });

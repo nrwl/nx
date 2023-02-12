@@ -1,8 +1,11 @@
 import {
+  addDependenciesToPackageJson,
+  GeneratorCallback,
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
+import { nxVersion } from '../utils/versions';
 
 export function updateModuleFederationProject(
   host: Tree,
@@ -11,7 +14,7 @@ export function updateModuleFederationProject(
     appProjectRoot: string;
     devServerPort?: number;
   }
-) {
+): GeneratorCallback {
   const projectConfig = readProjectConfiguration(host, options.projectName);
 
   projectConfig.targets.build.options = {
@@ -48,4 +51,6 @@ export function updateModuleFederationProject(
   };
 
   updateProjectConfiguration(host, options.projectName, projectConfig);
+
+  return addDependenciesToPackageJson(host, {}, { '@nrwl/web': nxVersion });
 }

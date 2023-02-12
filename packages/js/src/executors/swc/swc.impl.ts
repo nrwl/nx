@@ -98,7 +98,8 @@ export async function* swcExecutor(
   _options: SwcExecutorOptions,
   context: ExecutorContext
 ) {
-  const { sourceRoot, root } = context.workspace.projects[context.projectName];
+  const { sourceRoot, root } =
+    context.projectsConfigurations.projects[context.projectName];
   const options = normalizeOptions(_options, context.root, sourceRoot, root);
   const { tmpTsConfig, dependencies } = checkDependencies(
     context,

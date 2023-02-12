@@ -65,6 +65,26 @@ describe('dev mode - task graph', () => {
       getSelectAllButton().scrollIntoView().click({ force: true });
       getCheckedProjectItems().should('have.length', 2);
     });
+
+    it('should remove all from the url when no longer selected', () => {
+      getSelectAllButton().scrollIntoView().click({ force: true });
+
+      cy.url().should('contain', '/all');
+
+      getDeselectAllButton().click();
+
+      cy.url().should('not.contain', '/all');
+
+      getSelectAllButton().scrollIntoView().click({ force: true });
+
+      cy.url().should('contain', '/all');
+
+      cy.get('[data-project="cart"]').click({
+        force: true,
+      });
+
+      cy.url().should('not.contain', '/all');
+    });
   });
 
   describe('deselect all button', () => {

@@ -51,14 +51,16 @@
       "type": "string",
       "description": "The compiler to use",
       "enum": ["babel", "swc"],
-      "default": "babel"
+      "default": "babel",
+      "x-priority": "important"
     },
     "bundler": {
       "type": "string",
       "description": "The bundler to use.",
       "enum": ["webpack", "none", "vite"],
       "default": "webpack",
-      "x-prompt": "Which bundler do you want to use?"
+      "x-prompt": "Which bundler do you want to use?",
+      "x-priority": "important"
     },
     "linter": {
       "description": "The tool to use for running lint checks.",
@@ -69,13 +71,13 @@
     "skipFormat": {
       "description": "Skip formatting files",
       "type": "boolean",
-      "default": false
+      "default": false,
+      "x-priority": "internal"
     },
     "unitTestRunner": {
       "type": "string",
       "enum": ["jest", "vitest", "none"],
-      "description": "Test runner to use for unit tests",
-      "default": "jest"
+      "description": "Test runner to use for unit tests. Default value is 'jest' when using 'webpack' or 'none' as the bundler and 'vitest' when using 'vite' as the bundler"
     },
     "inSourceTests": {
       "type": "boolean",
@@ -99,9 +101,11 @@
     },
     "standaloneConfig": {
       "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside workspace.json",
-      "type": "boolean"
+      "type": "boolean",
+      "default": true,
+      "x-deprecated": "Nx only supports standaloneConfig"
     }
   },
-  "required": [],
+  "required": ["name"],
   "examplesFile": "../../../docs/application-examples.md"
 }

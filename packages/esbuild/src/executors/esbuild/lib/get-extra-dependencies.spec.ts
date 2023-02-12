@@ -19,7 +19,7 @@ describe('getExtraDependencies', () => {
           name: 'child2',
           data: {},
         },
-      },
+      } as any,
       externalNodes: {
         'npm:react': {
           type: 'npm',

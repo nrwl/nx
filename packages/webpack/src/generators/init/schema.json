@@ -3,7 +3,7 @@
   "$id": "NxWebpackInit",
   "cli": "nx",
   "title": "Init Webpack Plugin",
-  "description": "Init Webpack Plugin.",
+  "description": "Initialize the Webpack Plugin.",
   "type": "object",
   "properties": {
     "uiFramework": {

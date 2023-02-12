@@ -1,20 +1,23 @@
 import { cypressInitGenerator } from '@nrwl/cypress';
 import {
-  addDependenciesToPackageJson,
   formatFiles,
   GeneratorCallback,
   logger,
-  readWorkspaceConfiguration,
+  readNxJson,
   Tree,
-  updateWorkspaceConfiguration,
+  updateNxJson,
 } from '@nrwl/devkit';
 import { jestInitGenerator } from '@nrwl/jest';
 import { Linter } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+import { backwardCompatibleVersions } from '../../../utils/backward-compatible-versions';
 import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
 import { karmaGenerator } from '../../karma/karma';
+import {
+  addDependenciesToPackageJsonIfDontExist,
+  getInstalledPackageVersion,
+} from '../../utils/version-utils';
 import { Schema } from './schema';
-import { versions } from '../../../utils/versions';
 
 export async function angularInitGenerator(
   host: Tree,
@@ -50,75 +53,83 @@ function normalizeOptions(options: Schema): Required<Schema> {
 }
 
 function setDefaults(host: Tree, options: Schema) {
-  const workspace = readWorkspaceConfiguration(host);
+  const nxJson = readNxJson(host);
 
-  workspace.generators = workspace.generators || {};
-  workspace.generators['@nrwl/angular:application'] = {
+  nxJson.generators = nxJson.generators || {};
+  nxJson.generators['@nrwl/angular:application'] = {
     style: options.style,
     linter: options.linter,
     unitTestRunner: options.unitTestRunner,
     e2eTestRunner: options.e2eTestRunner,
-    ...(workspace.generators['@nrwl/angular:application'] || {}),
+    ...(nxJson.generators['@nrwl/angular:application'] || {}),
   };
-  workspace.generators['@nrwl/angular:library'] = {
+  nxJson.generators['@nrwl/angular:library'] = {
     linter: options.linter,
     unitTestRunner: options.unitTestRunner,
-    ...(workspace.generators['@nrwl/angular:library'] || {}),
+    ...(nxJson.generators['@nrwl/angular:library'] || {}),
   };
-  workspace.generators['@nrwl/angular:component'] = {
+  nxJson.generators['@nrwl/angular:component'] = {
     style: options.style,
-    ...(workspace.generators['@nrwl/angular:component'] || {}),
+    ...(nxJson.generators['@nrwl/angular:component'] || {}),
   };
 
-  updateWorkspaceConfiguration(host, workspace);
+  updateNxJson(host, nxJson);
 }
 
-function updateDependencies(host: Tree): GeneratorCallback {
-  return addDependenciesToPackageJson(
-    host,
+function updateDependencies(tree: Tree): GeneratorCallback {
+  const angularVersion =
+    getInstalledPackageVersion(tree, '@angular/core') ??
+    backwardCompatibleVersions.angularV14.angularVersion;
+  const angularDevkitVersion =
+    getInstalledPackageVersion(tree, '@angular-devkit/build-angular') ??
+    backwardCompatibleVersions.angularV14.angularDevkitVersion;
+
+  return addDependenciesToPackageJsonIfDontExist(
+    tree,
     {
-      '@angular/animations': versions.angularV14.angularVersion,
-      '@angular/common': versions.angularV14.angularVersion,
-      '@angular/compiler': versions.angularV14.angularVersion,
-      '@angular/core': versions.angularV14.angularVersion,
-      '@angular/forms': versions.angularV14.angularVersion,
-      '@angular/platform-browser': versions.angularV14.angularVersion,
-      '@angular/platform-browser-dynamic': versions.angularV14.angularVersion,
-      '@angular/router': versions.angularV14.angularVersion,
-      rxjs: versions.angularV14.rxjsVersion,
-      tslib: versions.angularV14.tsLibVersion,
-      'zone.js': versions.angularV14.zoneJsVersion,
+      '@angular/animations': angularVersion,
+      '@angular/common': angularVersion,
+      '@angular/compiler': angularVersion,
+      '@angular/core': angularVersion,
+      '@angular/forms': angularVersion,
+      '@angular/platform-browser': angularVersion,
+      '@angular/platform-browser-dynamic': angularVersion,
+      '@angular/router': angularVersion,
+      rxjs: backwardCompatibleVersions.angularV14.rxjsVersion,
+      tslib: backwardCompatibleVersions.angularV14.tsLibVersion,
+      'zone.js': backwardCompatibleVersions.angularV14.zoneJsVersion,
     },
     {
-      '@angular/cli': versions.angularV14.angularDevkitVersion,
-      '@angular/compiler-cli': versions.angularV14.angularVersion,
-      '@angular/language-service': versions.angularV14.angularVersion,
-      '@angular-devkit/build-angular': versions.angularV14.angularDevkitVersion,
+      '@angular/cli': angularDevkitVersion,
+      '@angular/compiler-cli': angularVersion,
+      '@angular/language-service': angularVersion,
+      '@angular-devkit/build-angular': angularDevkitVersion,
     }
   );
 }
 
 async function addUnitTestRunner(
-  host: Tree,
+  tree: Tree,
   options: Schema
 ): Promise<GeneratorCallback> {
   switch (options.unitTestRunner) {
     case UnitTestRunner.Karma:
-      return await karmaGenerator(host, {
+      return await karmaGenerator(tree, {
         skipPackageJson: options.skipPackageJson,
       });
     case UnitTestRunner.Jest:
       if (!options.skipPackageJson) {
-        addDependenciesToPackageJson(
-          host,
+        addDependenciesToPackageJsonIfDontExist(
+          tree,
           {},
           {
-            'jest-preset-angular': versions.angularV14.jestPresetAngularVersion,
+            'jest-preset-angular':
+              backwardCompatibleVersions.angularV14.jestPresetAngularVersion,
           }
         );
       }
 
-      return jestInitGenerator(host, {
+      return jestInitGenerator(tree, {
         skipPackageJson: options.skipPackageJson,
       });
     default:
@@ -126,26 +137,31 @@ async function addUnitTestRunner(
   }
 }
 
-function addE2ETestRunner(host: Tree, options: Schema): GeneratorCallback {
+function addE2ETestRunner(tree: Tree, options: Schema): GeneratorCallback {
   switch (options.e2eTestRunner) {
     case E2eTestRunner.Protractor:
       return !options.skipPackageJson
-        ? addDependenciesToPackageJson(
-            host,
+        ? addDependenciesToPackageJsonIfDontExist(
+            tree,
             {},
             {
-              protractor: versions.angularV14.protractorVersion,
-              'jasmine-core': versions.angularV14.jasmineCoreVersion,
+              protractor:
+                backwardCompatibleVersions.angularV14.protractorVersion,
+              'jasmine-core':
+                backwardCompatibleVersions.angularV14.jasmineCoreVersion,
               'jasmine-spec-reporter':
-                versions.angularV14.jasmineSpecReporterVersion,
-              'ts-node': versions.angularV14.tsNodeVersion,
-              '@types/jasmine': versions.angularV14.typesJasmineVersion,
-              '@types/jasminewd2': versions.angularV14.typesJasminewd2Version,
+                backwardCompatibleVersions.angularV14
+                  .jasmineSpecReporterVersion,
+              'ts-node': backwardCompatibleVersions.angularV14.tsNodeVersion,
+              '@types/jasmine':
+                backwardCompatibleVersions.angularV14.typesJasmineVersion,
+              '@types/jasminewd2':
+                backwardCompatibleVersions.angularV14.typesJasminewd2Version,
             }
           )
         : () => {};
     case E2eTestRunner.Cypress:
-      return cypressInitGenerator(host, {
+      return cypressInitGenerator(tree, {
         skipPackageJson: options.skipPackageJson,
       });
     default:

@@ -11,7 +11,8 @@
       "description": "Which project should be the configuration be added to?",
       "$default": {
         "$source": "projectName"
-      }
+      },
+      "x-priority": "important"
     }
   },
   "required": ["projectName"]

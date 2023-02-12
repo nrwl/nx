@@ -3,7 +3,7 @@ import {
   ChatBubbleLeftEllipsisIcon,
   ClipboardIcon,
 } from '@heroicons/react/24/solid';
-import { Footer, Header } from '@nrwl/nx-dev/ui-common';
+import { Footer, Header, SectionHeading } from '@nrwl/nx-dev/ui-common';
 import {
   ConnectWithUs,
   CreateNxPlugin,
@@ -11,7 +11,7 @@ import {
 } from '@nrwl/nx-dev/ui-community';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
-import { packagesApi } from '../lib/api';
+import { nxPackagesApi } from '../lib/packages.api';
 
 declare const fetch: any;
 
@@ -31,23 +31,21 @@ export async function getStaticProps(): Promise<{ props: CommunityProps }> {
   );
   const pluginList = await res.json();
 
-  const officialPluginList = (
-    packagesApi.getPackageDocuments().itemList ?? []
-  ).filter(
+  const officialPluginList = (nxPackagesApi.getRootPackageIndex() ?? []).filter(
     (m) =>
-      m.id !== 'add-nx-to-monorepo' &&
-      m.id !== 'cra-to-nx' &&
-      m.id !== 'create-nx-plugin' &&
-      m.id !== 'create-nx-workspace' &&
-      m.id !== 'make-angular-cli-faster' &&
-      m.id !== 'tao'
+      m.name !== 'add-nx-to-monorepo' &&
+      m.name !== 'cra-to-nx' &&
+      m.name !== 'create-nx-plugin' &&
+      m.name !== 'create-nx-workspace' &&
+      m.name !== 'make-angular-cli-faster' &&
+      m.name !== 'tao'
   );
 
   return {
     props: {
       pluginList: [
         ...officialPluginList.map((plugin) => ({
-          name: `@nrwl/${plugin.id}`,
+          name: plugin.packageName,
           description: plugin.description ?? '',
           url: plugin.path,
           isOfficial: true,
@@ -68,12 +66,12 @@ export default function Community(props: CommunityProps): JSX.Element {
     <>
       <NextSeo
         title="Nx Community and Plugin Listing"
-        description="There are many ways you can connect with the open-source Nx community. The community is rich and dynamic offering Nx plugins and help on multiple platforms like Github, Slack and Twitter"
+        description="There are many ways you can connect with the open-source Nx community. The community is rich and dynamic offering Nx plugins and help on multiple platforms like GitHub, Slack and Twitter"
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
           title: 'Nx Community and Plugin Listing',
           description:
-            'There are many ways you can connect with the open-source Nx community. The community is rich and dynamic offering Nx plugins and help on multiple platforms like Github, Slack and Twitter',
+            'There are many ways you can connect with the open-source Nx community. The community is rich and dynamic offering Nx plugins and help on multiple platforms like GitHub, Slack and Twitter',
           images: [
             {
               url: 'https://nx.dev/images/nx-media.jpg',
@@ -96,13 +94,13 @@ export default function Community(props: CommunityProps): JSX.Element {
           >
             <header className="mx-auto max-w-prose px-4 text-center sm:max-w-3xl sm:px-6 lg:px-8">
               <div>
-                <h1 className="text-lg font-semibold tracking-tight text-blue-500 dark:text-sky-500">
+                <SectionHeading as="h1" variant="title" id="community">
                   <span className="sr-only">Nx has </span> A strong and dynamic
                   community
-                </h1>
-                <p className="mt-4 text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 sm:text-5xl">
+                </SectionHeading>
+                <SectionHeading as="p" variant="display" className="mt-4">
                   It's always better when we're together.
-                </p>
+                </SectionHeading>
               </div>
             </header>
 
@@ -132,8 +130,8 @@ export default function Community(props: CommunityProps): JSX.Element {
                     <span className="absolute inset-0" aria-hidden="true" />
                     <p className="leading-relaxed">
                       Official Nx plugins are created and maintained by the Nx
-                      team at Nrwl but you can easily create your own! Follow
-                      our documentation on how to create your own plugin.
+                      team but you can easily create your own! Follow our
+                      documentation on how to create your own plugin.
                     </p>
                   </a>
                 </div>

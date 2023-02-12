@@ -1,10 +1,10 @@
 import {
   addDependenciesToPackageJson,
   convertNxGenerator,
-  readWorkspaceConfiguration,
+  readNxJson,
   removeDependenciesFromPackageJson,
   Tree,
-  updateWorkspaceConfiguration,
+  updateNxJson,
 } from '@nrwl/devkit';
 import {
   cypressVersion,
@@ -14,23 +14,23 @@ import {
 import { Schema } from './schema';
 
 function setupE2ETargetDefaults(tree: Tree) {
-  const workspaceConfiguration = readWorkspaceConfiguration(tree);
+  const nxJson = readNxJson(tree);
 
-  if (!workspaceConfiguration.namedInputs) {
+  if (!nxJson.namedInputs) {
     return;
   }
 
   // E2e targets depend on all their project's sources + production sources of dependencies
-  workspaceConfiguration.targetDefaults ??= {};
+  nxJson.targetDefaults ??= {};
 
-  const productionFileSet = !!workspaceConfiguration.namedInputs?.production;
-  workspaceConfiguration.targetDefaults.e2e ??= {};
-  workspaceConfiguration.targetDefaults.e2e.inputs ??= [
+  const productionFileSet = !!nxJson.namedInputs?.production;
+  nxJson.targetDefaults.e2e ??= {};
+  nxJson.targetDefaults.e2e.inputs ??= [
     'default',
     productionFileSet ? '^production' : '^default',
   ];
 
-  updateWorkspaceConfiguration(tree, workspaceConfiguration);
+  updateNxJson(tree, nxJson);
 }
 
 function updateDependencies(tree: Tree) {

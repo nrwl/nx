@@ -4,14 +4,14 @@ import {
   TargetConfiguration,
   Tree,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import addOutputs from './add-outputs';
 
 describe('addOutputs', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     const lintWithoutOutputs: TargetConfiguration = {
       executor: '@nrwl/linter:eslint',
@@ -41,29 +41,31 @@ describe('addOutputs', () => {
     await addOutputs(tree);
 
     expect(readProjectConfiguration(tree, 'proj')).toMatchInlineSnapshot(`
-Object {
-  "root": "proj",
-  "targets": Object {
-    "lintWithOutputs": Object {
-      "executor": "@nrwl/linter:eslint",
-      "options": Object {},
-      "outputs": Array [
-        "dist",
-      ],
-    },
-    "lintWithoutOutputs": Object {
-      "executor": "@nrwl/linter:eslint",
-      "options": Object {},
-      "outputs": Array [
-        "{options.outputFile}",
-      ],
-    },
-    "notLint": Object {
-      "executor": "@nrwl/node:build",
-      "options": Object {},
-    },
-  },
-}
-`);
+      Object {
+        "$schema": "../node_modules/nx/schemas/project-schema.json",
+        "name": "proj",
+        "root": "proj",
+        "targets": Object {
+          "lintWithOutputs": Object {
+            "executor": "@nrwl/linter:eslint",
+            "options": Object {},
+            "outputs": Array [
+              "dist",
+            ],
+          },
+          "lintWithoutOutputs": Object {
+            "executor": "@nrwl/linter:eslint",
+            "options": Object {},
+            "outputs": Array [
+              "{options.outputFile}",
+            ],
+          },
+          "notLint": Object {
+            "executor": "@nrwl/node:build",
+            "options": Object {},
+          },
+        },
+      }
+    `);
   });
 });

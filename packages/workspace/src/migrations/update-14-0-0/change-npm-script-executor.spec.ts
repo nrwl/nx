@@ -1,19 +1,16 @@
 import {
   addProjectConfiguration,
-  readJson,
   readProjectConfiguration,
-  readWorkspaceConfiguration,
   Tree,
-  updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import changeNpmScriptExecutor from './change-npm-script-executor';
 
 describe('changeNxJsonPresets', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     addProjectConfiguration(tree, 'proj1', {
       root: 'proj1',
@@ -35,6 +32,8 @@ describe('changeNxJsonPresets', () => {
 
     expect(readProjectConfiguration(tree, 'proj1')).toMatchInlineSnapshot(`
       Object {
+        "$schema": "../node_modules/nx/schemas/project-schema.json",
+        "name": "proj1",
         "root": "proj1",
         "targets": Object {
           "notScriptTarget": Object {

@@ -6,27 +6,25 @@ export function Footer(): JSX.Element {
     solutions: [
       { name: 'Nx', href: 'https://nx.dev' },
       { name: 'NxCloud', href: 'https://nx.app/?utm_source=nx.dev' },
-      { name: 'Nrwl', href: 'https://nrwl.io/?utm_source=nx.dev' },
     ],
     resources: [
       { name: 'Blog', href: 'https://blog.nrwl.io/?utm_source=nx.dev' },
       {
         name: 'Youtube Channel',
-        href: 'https://youtube.com/nrwl_io?utm_source=nx.dev',
+        href: 'https://youtube.com/@NxDevtools?utm_source=nx.dev',
       },
       {
         name: 'Nx Playbook',
         href: 'https://nxplaybook.com/?utm_source=nx.dev',
       },
-      { name: 'Nrwl', href: 'https://nrwl.io/?utm_source=nx.dev' },
       {
-        name: 'Press kit',
-        href: 'https://nrwl.io/pages/brands?utm_source=nx.dev',
+        name: 'Brands & Guidelines',
+        href: 'https://nx.app/brands?utm_source=nx.dev',
       },
     ],
     community: [
       { name: 'Twitter', href: 'https://twitter.com/NXdevtools' },
-      { name: 'Github', href: 'https://github.com/nrwl/nx/' },
+      { name: 'GitHub', href: 'https://github.com/nrwl/nx/' },
       {
         name: 'Newsletter',
         href: 'https://go.nrwl.io/nx-newsletter?utm_source=nx.dev',
@@ -51,6 +49,10 @@ export function Footer(): JSX.Element {
         name: 'Report Issues',
         href: 'https://github.com/nrwl/nx/issues?q=is%3Aopen+is%3Aissue',
       },
+      {
+        name: 'Status Page',
+        href: 'https://status.nx.app',
+      },
     ],
     social: [
       {
@@ -71,7 +73,7 @@ export function Footer(): JSX.Element {
       },
       {
         name: 'GitHub',
-        label: 'Nx is open source, check the code on Github',
+        label: 'Nx is open source, check the code on GitHub',
         href: 'https://github.com/nrwl/nx?utm_source=nx.dev',
         icon: (props: any) => (
           <svg fill="currentColor" viewBox="0 0 16 16" {...props}>
@@ -100,7 +102,7 @@ export function Footer(): JSX.Element {
       {
         name: 'Youtube',
         label: 'Youtube channel',
-        href: 'https://www.youtube.com/c/Nrwl_io?utm_source=nx.dev',
+        href: 'https://www.youtube.com/@NxDevtools?utm_source=nx.dev',
         icon: (props: any) => (
           <svg
             fill="currentColor"
@@ -158,14 +160,14 @@ export function Footer(): JSX.Element {
               <title>Nx</title>
               <path d="M11.987 14.138l-3.132 4.923-5.193-8.427-.012 8.822H0V4.544h3.691l5.247 8.833.005-3.998 3.044 4.759zm.601-5.761c.024-.048 0-3.784.008-3.833h-3.65c.002.059-.005 3.776-.003 3.833h3.645zm5.634 4.134a2.061 2.061 0 0 0-1.969 1.336 1.963 1.963 0 0 1 2.343-.739c.396.161.917.422 1.33.283a2.1 2.1 0 0 0-1.704-.88zm3.39 1.061c-.375-.13-.8-.277-1.109-.681-.06-.08-.116-.17-.176-.265a2.143 2.143 0 0 0-.533-.642c-.294-.216-.68-.322-1.18-.322a2.482 2.482 0 0 0-2.294 1.536 2.325 2.325 0 0 1 4.002.388.75.75 0 0 0 .836.334c.493-.105.46.36 1.203.518v-.133c-.003-.446-.246-.55-.75-.733zm2.024 1.266a.723.723 0 0 0 .347-.638c-.01-2.957-2.41-5.487-5.37-5.487a5.364 5.364 0 0 0-4.487 2.418c-.01-.026-1.522-2.39-1.538-2.418H8.943l3.463 5.423-3.379 5.32h3.54l1.54-2.366 1.568 2.366h3.541l-3.21-5.052a.7.7 0 0 1-.084-.32 2.69 2.69 0 0 1 2.69-2.691h.001c1.488 0 1.736.89 2.057 1.308.634.826 1.9.464 1.9 1.541a.707.707 0 0 0 1.066.596zm.35.133c-.173.372-.56.338-.755.639-.176.271.114.412.114.412s.337.156.538-.311c.104-.231.14-.488.103-.74z" />
             </svg>
-            <p className="text-base">Smart, Fast and Extensible Build System</p>
+            <p className="text-sm">Smart, Fast and Extensible Build System</p>
             <div className="flex space-x-6">
               {navigation.social.map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}
                   title={item.label}
-                  className="text-base text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
+                  className="text-sm text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
                 >
                   <span className="sr-only">{item.name}</span>
                   <item.icon className="h-6 w-6" aria-hidden="true" />
@@ -184,7 +186,7 @@ export function Footer(): JSX.Element {
                     <li key={item.name}>
                       <Link
                         href={item.href}
-                        className="text-base text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
+                        className="text-sm text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
                       >
                         {item.name}
                       </Link>
@@ -201,7 +203,7 @@ export function Footer(): JSX.Element {
                     <li key={item.name}>
                       <Link
                         href={item.href}
-                        className="text-base text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
+                        className="text-sm text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
                       >
                         {item.name}
                       </Link>
@@ -220,7 +222,7 @@ export function Footer(): JSX.Element {
                     <li key={item.name}>
                       <Link
                         href={item.href}
-                        className="text-base text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
+                        className="text-sm text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
                       >
                         {item.name}
                       </Link>
@@ -237,7 +239,7 @@ export function Footer(): JSX.Element {
                     <li key={item.name}>
                       <Link
                         href={item.href}
-                        className="text-base text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
+                        className="text-sm text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
                       >
                         {item.name}
                       </Link>
@@ -250,10 +252,10 @@ export function Footer(): JSX.Element {
         </div>
         <div className="mt-12 border-t border-slate-200 pt-2 dark:border-slate-800">
           <p className="text-sm text-slate-400 xl:text-center">
-            &copy; 2022 made with{' '}
+            &copy; 2023 made with{' '}
             <HeartIcon className="-mt-0.5 inline h-4 w-4" /> by{' '}
             <Link
-              href="https://nrwl.io/?utm_source=nx.dev"
+              href="https://nx.app/company/?utm_source=nx.dev"
               target="_blank"
               rel="noreferrer"
             >

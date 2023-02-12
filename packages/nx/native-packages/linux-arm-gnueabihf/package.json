@@ -1,0 +1,20 @@
+{
+  "name": "@nrwl/nx-linux-arm-gnueabihf",
+  "version": "0.0.0",
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "arm"
+  ],
+  "main": "nx.linux-arm-gnueabihf.node",
+  "files": [
+    "nx.linux-arm-gnueabihf.node"
+  ],
+  "engines": {
+    "node": ">= 10"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

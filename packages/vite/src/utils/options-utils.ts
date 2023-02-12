@@ -4,54 +4,31 @@ import {
   logger,
   parseTargetString,
   readTargetOptions,
-  Tree,
 } from '@nrwl/devkit';
 import { existsSync } from 'fs';
 import { join, relative } from 'path';
 import {
   BuildOptions,
   InlineConfig,
-  mergeConfig,
+  PluginOption,
+  PreviewOptions,
   searchForWorkspaceRoot,
   ServerOptions,
-  UserConfig,
 } from 'vite';
 import { ViteDevServerExecutorOptions } from '../executors/dev-server/schema';
+import { VitePreviewServerExecutorOptions } from '../executors/preview-server/schema';
 import replaceFiles from '../../plugins/rollup-replace-files.plugin';
 import { ViteBuildExecutorOptions } from '../executors/build/schema';
 
-export async function getBuildAndSharedConfig(
-  options:
-    | (ViteDevServerExecutorOptions & ViteBuildExecutorOptions)
-    | ViteBuildExecutorOptions,
-  context: ExecutorContext
-): Promise<InlineConfig> {
-  const projectRoot = context.workspace.projects[context.projectName].root;
-
-  return mergeConfig({}, {
-    mode: options.mode ?? context.configurationName,
-    root: projectRoot,
-    base: options.base,
-    configFile: normalizeConfigFilePath(
-      projectRoot,
-      options.configFile,
-      context.root
-    ),
-    plugins: [replaceFiles(options.fileReplacements)],
-    build: getViteBuildOptions(
-      options as ViteDevServerExecutorOptions & ViteBuildExecutorOptions,
-      projectRoot
-    ),
-  } as InlineConfig);
-}
-
-export function normalizeConfigFilePath(
+/**
+ * Returns the path to the vite config file or undefined when not found.
+ */
+export function normalizeViteConfigFilePath(
   projectRoot: string,
-  configFile?: string,
-  workspaceRoot?: string
-): string {
-  return configFile
-    ? joinPathFragments(`${workspaceRoot}/${configFile}`)
+  configFile?: string
+): string | undefined {
+  return configFile && existsSync(joinPathFragments(configFile))
+    ? configFile
     : existsSync(joinPathFragments(`${projectRoot}/vite.config.ts`))
     ? joinPathFragments(`${projectRoot}/vite.config.ts`)
     : existsSync(joinPathFragments(`${projectRoot}/vite.config.js`))
@@ -59,57 +36,99 @@ export function normalizeConfigFilePath(
     : undefined;
 }
 
-export function getServerOptions(
-  options: ViteDevServerExecutorOptions,
+/**
+ * Returns the path to the proxy configuration file or undefined when not found.
+ */
+export function getViteServerProxyConfigPath(
+  nxProxyConfig: string | undefined,
   context: ExecutorContext
-): ServerOptions {
-  const projectRoot = context.workspace.projects[context.projectName].root;
-  let serverOptions: ServerOptions & UserConfig = {};
-  if (options.proxyConfig) {
-    const proxyConfigPath = options.proxyConfig
-      ? join(context.root, options.proxyConfig)
+): string | undefined {
+  if (nxProxyConfig) {
+    const projectRoot =
+      context.projectsConfigurations.projects[context.projectName].root;
+
+    const proxyConfigPath = nxProxyConfig
+      ? join(context.root, nxProxyConfig)
       : join(projectRoot, 'proxy.conf.json');
 
     if (existsSync(proxyConfigPath)) {
-      logger.info(`Loading proxy configuration from: ${proxyConfigPath}`);
-      serverOptions.proxy = require(proxyConfigPath);
-      serverOptions.fs = {
-        allow: [
-          searchForWorkspaceRoot(joinPathFragments(projectRoot)),
-          joinPathFragments(context.root, 'node_modules/vite'),
-        ],
-      };
+      return proxyConfigPath;
     }
   }
+}
 
-  serverOptions = {
-    ...serverOptions,
+/**
+ * Builds the shared options for vite.
+ *
+ * Most shared options are derived from the build target.
+ */
+export function getViteSharedConfig(
+  options: ViteBuildExecutorOptions,
+  clearScreen: boolean | undefined,
+  context: ExecutorContext
+): InlineConfig {
+  const projectRoot =
+    context.projectsConfigurations.projects[context.projectName].root;
+
+  return {
+    mode: options.mode,
+    root: projectRoot,
+    base: options.base,
+    configFile: normalizeViteConfigFilePath(projectRoot, options.configFile),
+    plugins: [replaceFiles(options.fileReplacements) as PluginOption],
+    optimizeDeps: { force: options.force },
+    clearScreen: clearScreen,
+    logLevel: options.logLevel,
+  };
+}
+
+/**
+ * Builds the options for the vite dev server.
+ */
+export function getViteServerOptions(
+  options: ViteDevServerExecutorOptions,
+  context: ExecutorContext
+): ServerOptions {
+  const projectRoot =
+    context.projectsConfigurations.projects[context.projectName].root;
+  const serverOptions: ServerOptions = {
     host: options.host,
     port: options.port,
     https: options.https,
     hmr: options.hmr,
     open: options.open,
     cors: options.cors,
-    logLevel: options.logLevel,
-    clearScreen: options.clearScreen,
+    fs: {
+      allow: [
+        searchForWorkspaceRoot(joinPathFragments(projectRoot)),
+        joinPathFragments(context.root, 'node_modules/vite'),
+      ],
+    },
   };
+
+  const proxyConfigPath = getViteServerProxyConfigPath(
+    options.proxyConfig,
+    context
+  );
+  if (proxyConfigPath) {
+    logger.info(`Loading proxy configuration from: ${proxyConfigPath}`);
+    serverOptions.proxy = require(proxyConfigPath);
+  }
 
   return serverOptions;
 }
 
-export function getBuildTargetOptions(
-  buildTarget: string,
-  context: ExecutorContext
-) {
-  const target = parseTargetString(buildTarget);
-  return readTargetOptions(target, context);
-}
-
+/**
+ * Builds the build options for the vite.
+ */
 export function getViteBuildOptions(
-  options: ViteDevServerExecutorOptions & ViteBuildExecutorOptions,
-  projectRoot: string
+  options: ViteBuildExecutorOptions,
+  context: ExecutorContext
 ): BuildOptions {
-  let buildOptions: BuildOptions & UserConfig = {
+  const projectRoot =
+    context.projectsConfigurations.projects[context.projectName].root;
+
+  return {
     outDir: relative(projectRoot, options.outputPath),
     emptyOutDir: true,
     reportCompressedSize: true,
@@ -118,16 +137,42 @@ export function getViteBuildOptions(
     commonjsOptions: {
       transformMixedEsModules: true,
     },
-  };
-
-  buildOptions = {
-    ...buildOptions,
     sourcemap: options.sourcemap,
     minify: options.minify,
     manifest: options.manifest,
     ssrManifest: options.ssrManifest,
-    logLevel: options.logLevel,
+    ssr: options.ssr,
+    watch: options.watch as BuildOptions['watch'],
+  };
+}
+
+/**
+ * Builds the options for the vite preview server.
+ */
+export function getVitePreviewOptions(
+  options: VitePreviewServerExecutorOptions,
+  context: ExecutorContext
+): PreviewOptions {
+  const serverOptions: ServerOptions = {
+    host: options.host,
+    port: options.port,
+    https: options.https,
+    open: options.open,
   };
 
-  return buildOptions;
+  const proxyConfigPath = getViteServerProxyConfigPath(
+    options.proxyConfig,
+    context
+  );
+  if (proxyConfigPath) {
+    logger.info(`Loading proxy configuration from: ${proxyConfigPath}`);
+    serverOptions.proxy = require(proxyConfigPath);
+  }
+
+  return serverOptions;
+}
+
+export function getNxTargetOptions(target: string, context: ExecutorContext) {
+  const targetObj = parseTargetString(target, context.projectGraph);
+  return readTargetOptions(targetObj, context);
 }

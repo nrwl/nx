@@ -16,7 +16,6 @@ This will enable you to use the Nx CLI in your existing Angular CLI workspace wh
 
 - The `nx`, `@nrwl/workspace` and `prettier` packages will be installed.
 - An `nx.json` file will be created in the root of your workspace.
-- A `decorate-angular-cli.js` file will be added to the root of your workspace, and a `postinstall` script will be added to your `package.json` to run this script when your dependencies are updated. (The script forwards the `ng` commands to the Nx CLI (`nx`) to enable features such as [Computation Caching](/concepts/how-caching-works).)
 - For an Angular 15+ repo, the `angular.json` file is split into separate `project.json` files for each project.
 
 After the process completes, you can continue using the same `serve/build/lint/test` commands you are used to.
@@ -37,7 +36,7 @@ ng add @nrwl/angular@<version_number>
 ng add @nrwl/workspace@<version_number>
 ```
 
-**Note**: Refer to the [Nx and Angular Version Compatibility Matrix](/angular-nx-version-matrix) for matching Angular and Nx versions.
+**Note**: Refer to the [Nx and Angular Version Compatibility Matrix](/packages/angular/documents/angular-nx-version-matrix) for matching Angular and Nx versions.
 
 **Note**: Support for workspaces with multiple applications and libraries was added in Nx v14.1.0. If you are migrating using an older version of Nx, your workspace can only contain one application and no libraries in order to use the automated migration, otherwise, you can still [migrate manually](#transitioning-manually).
 
@@ -104,7 +103,6 @@ After the changes are applied, your workspace file structure should look similar
 ├── .gitignore
 ├── .prettierignore
 ├── .prettierrc
-├── decorate-angular-cli.js
 ├── karma.conf.js
 ├── nx.json
 ├── package.json
@@ -150,6 +148,10 @@ title="Nx Tutorial: Migrate Multiple Angular CLI apps into a Single Nx Monorepo"
 width="100%" /%}
 
 ## Migrating an Angular app manually
+
+{% callout type="note" title="Older Angular Versions" %}
+If you are using older versions of Angular (version 14 or lower), make sure to use the appropriate version of Nx that matches your version of Angular. See the [Nx and Angular Version Compatibility Matrix](/packages/angular/documents/angular-nx-version-matrix) to find the correct version. The generated files will also be slightly different.
+{% /callout %}
 
 If you are unable to automatically transform your Angular CLI workspace to an Nx workspace using the [ng add](#transforming-an-angular-cli-workspace-to-an-nx-workspace) method, there are some manual steps you can take to move your project(s) into an Nx workspace.
 
@@ -355,7 +357,6 @@ The script will make the following changes:
   - If you opted into Nx Cloud, `@nrwl/nx-cloud` will be installed as well.
   - If your project's Angular version is greater than or equal to version 13, then the `@nrwl/angular` package will be installed as well.
 - Creates an `nx.json` file in the root of your workspace.
-- Adds a `decorate-angular-cli.js` to the root of your workspace, and a `postinstall` script in your `package.json` to run the script when your dependencies are updated. The script forwards the `ng` commands to the Nx CLI (`nx`) to enable features such as [Computation Caching](/concepts/how-caching-works).
 
 By running this command and accepting Nx Cloud, Nx distributed caching is now enabled.
 

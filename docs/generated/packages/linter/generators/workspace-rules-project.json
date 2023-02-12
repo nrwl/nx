@@ -1,0 +1,27 @@
+{
+  "name": "workspace-rules-project",
+  "factory": "./src/generators/workspace-rules-project/workspace-rules-project#lintWorkspaceRulesProjectGenerator",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "$id": "NxWorkspaceRulesProject",
+    "cli": "nx",
+    "title": "Create the Workspace Lint Rules Project",
+    "description": "Create the Workspace Lint Rules Project.",
+    "type": "object",
+    "examples": [
+      {
+        "command": "nx g @nrwl/linter:workspace-rules-project",
+        "description": "Create the Workspace Lint Rules Project"
+      }
+    ],
+    "properties": {},
+    "required": [],
+    "presets": []
+  },
+  "description": "Create the Workspace Lint Rules Project.",
+  "hidden": true,
+  "implementation": "/packages/linter/src/generators/workspace-rules-project/workspace-rules-project#lintWorkspaceRulesProjectGenerator.ts",
+  "aliases": [],
+  "path": "/packages/linter/src/generators/workspace-rules-project/schema.json",
+  "type": "generator"
+}

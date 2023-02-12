@@ -160,7 +160,7 @@ export function GitHubIntegrationTab(): JSX.Element {
         <div className="absolute left-12 -bottom-2 mx-auto flex w-full w-auto max-w-none overflow-hidden rounded-xl border border-slate-200 shadow-xl">
           <Image
             src="/images/github-nxcloud.webp"
-            alt="Nx Cloud Github app"
+            alt="Nx Cloud GitHub app"
             loading="lazy"
             width={715}
             height={510}

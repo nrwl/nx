@@ -3,7 +3,7 @@ import { TaskStatus } from '../tasks-runner';
 import { getPrintableCommandArgsForTask } from '../utils';
 import type { LifeCycle } from '../life-cycle';
 import { Task } from '../../config/task-graph';
-import { formatFlags } from './formatting-utils';
+import { formatFlags, formatTargetsAndProjects } from './formatting-utils';
 
 /**
  * The following life cycle's outputs are static, meaning no previous content
@@ -22,7 +22,7 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
     private readonly projectNames: string[],
     private readonly tasks: Task[],
     private readonly args: {
-      target?: string;
+      targets?: string[];
       configuration?: string;
     },
     private readonly taskOverrides: any
@@ -30,11 +30,13 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
 
   startCommand(): void {
     if (this.projectNames.length <= 0) {
-      let description = `with "${this.args.target}"`;
-      if (this.args.configuration) {
-        description += ` that are configured for "${this.args.configuration}"`;
-      }
-      output.logSingleLine(`No projects ${description} were run`);
+      output.logSingleLine(
+        `No projects with ${formatTargetsAndProjects(
+          this.projectNames,
+          this.args.targets,
+          this.tasks
+        )} were run`
+      );
       return;
     }
 
@@ -49,16 +51,11 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
         .forEach((arg) => bodyLines.push(arg));
     }
 
-    let title = `Running target ${output.bold(
-      this.args.target
-    )} for ${output.bold(this.projectNames.length)} project(s)`;
-    const dependentTasksCount = this.tasks.length - this.projectNames.length;
-    if (dependentTasksCount > 0) {
-      title += ` and ${output.bold(
-        dependentTasksCount
-      )} task(s) they depend on`;
-    }
-    title += ':';
+    const title = `Running ${formatTargetsAndProjects(
+      this.projectNames,
+      this.args.targets,
+      this.tasks
+    )}:`;
 
     output.log({
       color: 'cyan',
@@ -85,9 +82,11 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
           : [];
 
       output.success({
-        title: `Successfully ran target ${output.bold(
-          this.args.target
-        )} for ${output.bold(this.projectNames.length)} projects`,
+        title: `Successfully ran ${formatTargetsAndProjects(
+          this.projectNames,
+          this.args.targets,
+          this.tasks
+        )}`,
         bodyLines,
       });
     } else {
@@ -113,7 +112,11 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
         )
       );
       output.error({
-        title: `Running target "${this.args.target}" failed`,
+        title: `Running ${formatTargetsAndProjects(
+          this.projectNames,
+          this.args.targets,
+          this.tasks
+        )} failed`,
         bodyLines,
       });
     }

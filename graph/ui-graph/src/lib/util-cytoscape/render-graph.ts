@@ -104,6 +104,7 @@ export class RenderGraph {
     this.listenForEdgeNodeClicks();
     this.listenForProjectNodeHovers();
     this.listenForTaskNodeClicks();
+    this.listenForEmptyClicks();
   }
 
   render(): { numEdges: number; numNodes: number } {
@@ -232,6 +233,7 @@ export class RenderGraph {
           id: node.id(),
           type: node.data('type'),
           tags: node.data('tags'),
+          description: node.data('description'),
         },
       });
     });
@@ -252,6 +254,7 @@ export class RenderGraph {
           id: node.id(),
           label: node.data('label'),
           executor: node.data('executor'),
+          description: node.data('description'),
         },
       });
     });
@@ -259,7 +262,8 @@ export class RenderGraph {
 
   private listenForEdgeNodeClicks() {
     this.cy.$('edge.projectEdge').on('click', (event) => {
-      const edge: EdgeSingular = event.target;
+      const edge: EdgeSingular & { popperRef: () => VirtualElement } =
+        event.target;
       let ref: VirtualElement = edge.popperRef(); // used only for positioning
 
       this.broadcast({
@@ -268,24 +272,26 @@ export class RenderGraph {
         id: edge.id(),
 
         data: {
+          id: edge.id(),
           type: edge.data('type'),
           source: edge.source().id(),
           target: edge.target().id(),
-          fileDependencies: edge
-            .source()
-            .data('files')
-            .filter(
-              (file) => file.deps && file.deps.includes(edge.target().id())
-            )
-            .map((file) => {
-              return {
-                fileName: file.file.replace(
-                  `${edge.source().data('root')}/`,
-                  ''
-                ),
-                target: edge.target().id(),
-              };
-            }),
+          fileDependencies:
+            edge
+              .source()
+              .data('files')
+              ?.filter(
+                (file) => file.deps && file.deps.includes(edge.target().id())
+              )
+              .map((file) => {
+                return {
+                  fileName: file.file.replace(
+                    `${edge.source().data('root')}/`,
+                    ''
+                  ),
+                  target: edge.target().id(),
+                };
+              }) || [],
         },
       });
     });
@@ -318,6 +324,14 @@ export class RenderGraph {
         .outgoers()
         .union(node.incomers())
         .removeClass('highlight');
+    });
+  }
+
+  private listenForEmptyClicks(): void {
+    this.cy.on('click', (event) => {
+      if (event.target === this.cy) {
+        this.broadcast({ type: 'BackgroundClick' });
+      }
     });
   }
 

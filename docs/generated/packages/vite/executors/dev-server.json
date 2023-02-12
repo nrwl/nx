@@ -1,0 +1,72 @@
+{
+  "name": "dev-server",
+  "implementation": "/packages/vite/src/executors/dev-server/dev-server.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "title": "Vite Dev Server",
+    "cli": "nx",
+    "description": "Starts a dev server using Vite.",
+    "type": "object",
+    "presets": [
+      { "name": "Default minimum setup", "keys": ["buildTarget"] },
+      { "name": "Using a Different Port", "keys": ["buildTarget", "port"] }
+    ],
+    "properties": {
+      "buildTarget": {
+        "type": "string",
+        "description": "Target which builds the application. Only used to retrieve the configuration as the dev-server does not build the code.",
+        "x-priority": "important"
+      },
+      "proxyConfig": {
+        "type": "string",
+        "description": "Path to the proxy configuration file.",
+        "x-completion-type": "file"
+      },
+      "port": {
+        "type": "number",
+        "description": "Port to listen on.",
+        "x-priority": "important"
+      },
+      "host": {
+        "description": "Specify which IP addresses the server should listen on.",
+        "oneOf": [{ "type": "boolean" }, { "type": "string" }]
+      },
+      "https": { "type": "boolean", "description": "Serve using HTTPS." },
+      "hmr": {
+        "description": "Enable hot module replacement. For more options, use the 'hmr' option in the Vite configuration file.",
+        "type": "boolean"
+      },
+      "open": {
+        "description": "Automatically open the app in the browser on server start. When the value is a string, it will be used as the URL's pathname.",
+        "oneOf": [{ "type": "boolean" }, { "type": "string" }]
+      },
+      "cors": {
+        "description": "Configure CORS for the dev server.",
+        "type": "boolean"
+      },
+      "logLevel": {
+        "type": "string",
+        "description": "Adjust console output verbosity.",
+        "enum": ["info", "warn", "error", "silent"]
+      },
+      "mode": { "type": "string", "description": "Mode to run the server in." },
+      "clearScreen": {
+        "description": "Set to false to prevent Vite from clearing the terminal screen when logging certain messages.",
+        "type": "boolean"
+      },
+      "force": {
+        "description": "Force the optimizer to ignore the cache and re-bundle",
+        "type": "boolean"
+      }
+    },
+    "definitions": {},
+    "required": ["buildTarget"],
+    "examplesFile": "---\ntitle: Examples for the Vite dev server executor\ndescription: This page contains examples for the Vite @nrwl/vite:dev-server executor.\n---\n\n`project.json`:\n\n```json\n//...\n\"my-app\": {\n    \"targets\": {\n        //...\n        \"serve\": {\n            \"executor\": \"@nrwl/vite:dev-server\",\n            \"defaultConfiguration\": \"development\",\n            \"options\": {\n                \"buildTarget\": \"my-app:build\",\n            },\n            \"configurations\": {\n                ...\n            }\n        },\n    }\n}\n```\n\n```bash\nnx serve my-app\n```\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Set up a custom port\" %}\n\nYou can always set the port in your `vite.config.ts` file. However, you can also set it directly in your `project.json` file, in the `serve` target options:\n\n```json\n//...\n\"my-app\": {\n    \"targets\": {\n        //...\n        \"serve\": {\n            \"executor\": \"@nrwl/vite:dev-server\",\n            \"defaultConfiguration\": \"development\",\n            \"options\": {\n                \"buildTarget\": \"my-app:build\",\n                \"port\": 4200,\n            },\n            \"configurations\": {\n                ...\n            }\n        },\n    }\n}\n```\n\n{% /tab %}\n{% tab label=\"Specify a proxyConfig\" %}\n\nYou can specify a proxy config by pointing to the path of your proxy configuration file:\n\n```json\n//...\n\"my-app\": {\n    \"targets\": {\n        //...\n        \"serve\": {\n            \"executor\": \"@nrwl/vite:dev-server\",\n            \"defaultConfiguration\": \"development\",\n            \"options\": {\n                \"buildTarget\": \"my-app:build\",\n                \"proxyConfig\": \"apps/my-app/proxy.conf.json\"\n            },\n            \"configurations\": {\n                ...\n            }\n        },\n    }\n}\n```\n\n{% /tab %}\n\n{% /tabs %}\n"
+  },
+  "description": "Vite dev server.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/vite/src/executors/dev-server/schema.json",
+  "type": "executor"
+}

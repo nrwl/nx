@@ -1,6 +1,8 @@
 import {
+  NxJsonConfiguration,
   readJson,
   readProjectConfiguration,
+  updateJson,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
@@ -130,6 +132,23 @@ describe('setupSSR', () => {
     for (const [dep, version] of Object.entries(devDeps)) {
       expect(packageJson.devDependencies[dep]).toEqual(version);
     }
+    const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
+    expect(nxJson.tasksRunnerOptions).toMatchInlineSnapshot(`
+      Object {
+        "default": Object {
+          "options": Object {
+            "cacheableOperations": Array [
+              "build",
+              "lint",
+              "test",
+              "e2e",
+              "server",
+            ],
+          },
+          "runner": "nx/tasks-runners/default",
+        },
+      }
+    `);
   });
 
   it('should use fileReplacements if they already exist', async () => {
@@ -158,5 +177,32 @@ describe('setupSSR', () => {
     expect(
       readProjectConfiguration(tree, 'app1').targets.server
     ).toMatchSnapshot();
+  });
+
+  it('should install the correct versions when using older versions of Angular', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+
+    await applicationGenerator(tree, {
+      name: 'app1',
+    });
+
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: {
+        '@angular/core': '14.2.0',
+      },
+    }));
+
+    // ACT
+    await setupSsr(tree, { project: 'app1' });
+
+    // ASSERT
+    const pkgJson = readJson(tree, 'package.json');
+    expect(pkgJson.dependencies['@angular/platform-server']).toEqual('~14.2.0');
+    expect(pkgJson.dependencies['@nguniversal/express-engine']).toEqual(
+      '~14.2.0'
+    );
+    expect(pkgJson.devDependencies['@nguniversal/builders']).toEqual('~14.2.0');
   });
 });

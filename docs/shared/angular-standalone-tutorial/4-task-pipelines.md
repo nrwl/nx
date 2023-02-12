@@ -34,7 +34,7 @@ Build at: 2022-11-30T16:44:43.171Z - Hash: 9850ece7cc7c6b7c - Time: 6527ms
 
  —————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target build for project store and 1 task(s) it depends on (9s)
+ >  NX   Successfully ran target build for project store and 1 task(s) they depend on (9s)
 
 ```
 
@@ -100,7 +100,7 @@ Build at: 2022-11-30T16:44:43.171Z - Hash: 9850ece7cc7c6b7c - Time: 6527ms
 
  ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target build for project store and 1 task(s) it depends on (13ms)
+ >  NX   Successfully ran target build for project store and 1 task(s) they depend on (13ms)
 
    Nx read the output from the cache instead of running the command for 2 out of 2 tasks.
 ```

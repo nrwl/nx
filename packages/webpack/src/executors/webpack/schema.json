@@ -1,8 +1,8 @@
 {
   "version": 2,
   "outputCapture": "direct-nodejs",
-  "title": "Webpack Executor",
-  "description": "Builds web applications using webpack.",
+  "title": "Webpack builder",
+  "description": "Build a project using webpack.",
   "cli": "nx",
   "type": "object",
   "properties": {
@@ -14,13 +14,15 @@
       "type": "string",
       "description": "The name of the main entry-point file.",
       "x-completion-type": "file",
-      "x-completion-glob": "**/*@(.js|.ts|.tsx)"
+      "x-completion-glob": "**/*@(.js|.ts|.tsx)",
+      "x-priority": "important"
     },
     "tsConfig": {
       "type": "string",
       "description": "The name of the Typescript configuration file.",
       "x-completion-type": "file",
-      "x-completion-glob": "tsconfig.*.json"
+      "x-completion-glob": "tsconfig.*.json",
+      "x-priority": "important"
     },
     "compiler": {
       "type": "string",
@@ -31,7 +33,8 @@
     "outputPath": {
       "type": "string",
       "description": "The output path of the generated files.",
-      "x-completion-type": "directory"
+      "x-completion-type": "directory",
+      "x-priority": "important"
     },
     "target": {
       "type": "string",
@@ -117,14 +120,6 @@
       "description": "External Styles which will be included with the application",
       "items": {
         "$ref": "#/definitions/extraEntryPoint"
-      },
-      "default": []
-    },
-    "budgets": {
-      "description": "Budget thresholds to ensure parts of your application stay within boundaries which you set.",
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/budget"
       },
       "default": []
     },
@@ -236,10 +231,6 @@
       "description": "Extract CSS into a `.css` file.",
       "default": true
     },
-    "es2015Polyfills": {
-      "description": "Conditional polyfills loaded in browsers which do not support `ES2015`.",
-      "type": "string"
-    },
     "subresourceIntegrity": {
       "type": "boolean",
       "description": "Enables the use of subresource integrity validation.",
@@ -261,6 +252,11 @@
       "description": "Generates a 'stats.json' file which can be analyzed using tools such as: 'webpack-bundle-analyzer' or `<https://webpack.github.io/analyse>`.",
       "default": false
     },
+    "isolatedConfig": {
+      "type": "boolean",
+      "description": "Do not apply Nx webpack plugins automatically. Plugins need to be applied in the project's webpack.config.js file (e.g. withNx, withReact, etc.).",
+      "default": false
+    },
     "extractLicenses": {
       "type": "boolean",
       "description": "Extract all licenses in a separate file, in the case of production builds only.",
@@ -270,11 +266,6 @@
       "type": "number",
       "description": "Memory limit for type checking service process in `MB`.",
       "default": 2048
-    },
-    "maxWorkers": {
-      "type": "number",
-      "description": "Number of workers to use for type checking.",
-      "default": 2
     },
     "fileReplacements": {
       "description": "Replace files with other files in the build.",
@@ -316,7 +307,8 @@
       "type": "string",
       "description": "Path to a function which takes a webpack config, some context and returns the resulting webpack config. See https://nx.dev/guides/customize-webpack",
       "x-completion-type": "file",
-      "x-completion-glob": "webpack?(*)@(.js|.ts)"
+      "x-completion-glob": "webpack?(*)@(.js|.ts)",
+      "x-priority": "important"
     }
   },
   "required": ["tsConfig", "main"],
@@ -353,50 +345,6 @@
           "type": "string"
         }
       ]
-    },
-    "budget": {
-      "type": "object",
-      "properties": {
-        "type": {
-          "type": "string",
-          "description": "The type of budget.",
-          "enum": ["all", "allScript", "any", "anyScript", "bundle", "initial"]
-        },
-        "name": {
-          "type": "string",
-          "description": "The name of the bundle."
-        },
-        "baseline": {
-          "type": "string",
-          "description": "The baseline size for comparison."
-        },
-        "maximumWarning": {
-          "type": "string",
-          "description": "The maximum threshold for warning relative to the baseline."
-        },
-        "maximumError": {
-          "type": "string",
-          "description": "The maximum threshold for error relative to the baseline."
-        },
-        "minimumWarning": {
-          "type": "string",
-          "description": "The minimum threshold for warning relative to the baseline."
-        },
-        "minimumError": {
-          "type": "string",
-          "description": "The minimum threshold for error relative to the baseline."
-        },
-        "warning": {
-          "type": "string",
-          "description": "The threshold for warning relative to the baseline (min & max)."
-        },
-        "error": {
-          "type": "string",
-          "description": "The threshold for error relative to the baseline (min & max)."
-        }
-      },
-      "additionalProperties": false,
-      "required": ["type"]
     },
     "extraEntryPoint": {
       "oneOf": [
@@ -451,5 +399,6 @@
         }
       ]
     }
-  }
+  },
+  "examplesFile": "../../../docs/webpack-build-executor-examples.md"
 }

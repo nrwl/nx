@@ -917,7 +917,7 @@ describe('lib', () => {
           Object {
             "presets": Array [
               Array [
-                "@nrwl/web/babel",
+                "@nrwl/js/babel",
                 Object {
                   "useBuiltIns": "usage",
                 },
@@ -950,7 +950,7 @@ describe('lib', () => {
           Object {
             "presets": Array [
               Array [
-                "@nrwl/web/babel",
+                "@nrwl/js/babel",
                 Object {
                   "useBuiltIns": "usage",
                 },

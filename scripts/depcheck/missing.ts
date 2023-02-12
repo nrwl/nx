@@ -44,6 +44,7 @@ const IGNORE_MATCHES_IN_PACKAGE = {
     'node-sass',
     'node-sass-tilde-importer',
     'ora',
+    'convert-source-map',
     'postcss',
     'postcss-import',
     'postcss-preset-env',
@@ -53,7 +54,7 @@ const IGNORE_MATCHES_IN_PACKAGE = {
     'tailwindcss',
   ],
   cli: ['nx'],
-  cypress: ['cypress', '@angular-devkit/schematics', '@nrwl/cypress'],
+  cypress: ['cypress', '@angular-devkit/schematics', '@nrwl/cypress', 'vite'],
   devkit: ['@angular-devkit/architect', 'rxjs', 'webpack'],
   'eslint-plugin-nx': ['@angular-eslint/eslint-plugin'],
   jest: [
@@ -87,6 +88,8 @@ const IGNORE_MATCHES_IN_PACKAGE = {
     '@module-federation/node',
     '@phenomnomnominal/tsquery',
     '@pmmmwh/react-refresh-webpack-plugin',
+    '@svgr/rollup',
+    '@rollup/plugin-url',
     '@svgr/webpack',
     '@swc/jest',
     'babel-jest',
@@ -94,6 +97,7 @@ const IGNORE_MATCHES_IN_PACKAGE = {
     'babel-plugin-emotion',
     'babel-plugin-styled-components',
     'css-loader',
+    'file-loader',
     'less-loader',
     'react-refresh',
     'rollup',
@@ -116,6 +120,7 @@ const IGNORE_MATCHES_IN_PACKAGE = {
     '@storybook/addon-essentials',
     '@storybook/core',
     '@storybook/core-server',
+    '@storybook/types',
     'rxjs',
   ],
   nx: [
@@ -124,7 +129,24 @@ const IGNORE_MATCHES_IN_PACKAGE = {
     '@angular-devkit/core',
     '@angular-devkit/architect',
     '@angular/cli',
+    '@nrwl/angular',
+    '@nestjs/cli', // nx init nest makes use of nestjs cli (which should be available in NestJS CLI app) to parse the nest-cli.json file
     'ts-node', // We *may* fall back on ts-node, but we want to encourage the use of @swc-node instead so we don't explicitly list ts-node as an optional dep
+    '@nrwl/nx-android-arm-eabi', // native optional deps
+    '@nrwl/nx-android-arm64', // native optional deps
+    '@nrwl/nx-darwin-arm64', // native optional deps
+    '@nrwl/nx-darwin-universal', // native optional deps
+    '@nrwl/nx-darwin-x64', // native optional deps
+    '@nrwl/nx-freebsd-x64', // native optional deps
+    '@nrwl/nx-linux-arm-gnueabihf', // native optional deps
+    '@nrwl/nx-linux-arm64-gnu', // native optional deps
+    '@nrwl/nx-linux-arm64-musl', // native optional deps
+    '@nrwl/nx-linux-x64-gnu', // native optional deps
+    '@nrwl/nx-linux-x64-musl', // native optional deps
+    '@nrwl/nx-win32-arm64-msvc', // native optional deps
+    '@nrwl/nx-win32-ia32-msvc', // native optional deps
+    '@nrwl/nx-win32-x64-msvc', // native optional deps
+    'memfs', // used in mock for handling .node files in tests
   ],
   web: [
     // we don't want to bloat the install of @nrwl/web by including @swc/core and swc-loader as a dependency.

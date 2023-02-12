@@ -11,10 +11,12 @@ import {
   collectPackageSecondaryEntryPoints,
   collectWorkspaceLibrarySecondaryEntryPoints,
 } from './secondary-entry-points';
-import { workspaceRoot } from 'nx/src/utils/workspace-root';
-import { logger } from 'nx/src/utils/logger';
+// eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { getRootTsConfigPath } from 'nx/src/utils/typescript';
-import { ProjectGraph } from 'nx/src/config/project-graph';
+import type { ProjectGraph } from 'nx/src/config/project-graph';
+import { requireNx } from '../../../nx';
+
+const { workspaceRoot, logger } = requireNx();
 
 /**
  * Build an object of functions to be used with the ModuleFederationPlugin to

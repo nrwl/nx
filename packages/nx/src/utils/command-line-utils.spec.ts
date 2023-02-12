@@ -161,6 +161,24 @@ describe('splitArgs', () => {
     });
   });
 
+  it('should split projects when it is a string', () => {
+    expect(
+      splitArgsIntoNxArgsAndOverrides(
+        {
+          projects: 'aaa,bbb',
+          __overrides_unparsed__: [],
+          $0: '',
+        },
+        'run-many',
+        {} as any,
+        {} as any
+      ).nxArgs
+    ).toEqual({
+      projects: ['aaa', 'bbb'],
+      skipNxCache: false,
+    });
+  });
+
   it('should set base and head based on environment variables in affected mode, if they are not provided directly on the command', () => {
     const originalNxBase = process.env.NX_BASE;
     process.env.NX_BASE = 'envVarSha1';

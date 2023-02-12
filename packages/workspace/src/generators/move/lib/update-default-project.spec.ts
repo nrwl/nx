@@ -1,10 +1,10 @@
 import {
   addProjectConfiguration,
-  readWorkspaceConfiguration,
+  readNxJson,
   Tree,
-  updateWorkspaceConfiguration,
+  updateNxJson,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { NormalizedSchema } from '../schema';
 import { updateDefaultProject } from './update-default-project';
 
@@ -12,16 +12,16 @@ describe('updateDefaultProject', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'my-source', {
       root: 'libs/my-source',
       targets: {},
     });
 
-    const workspace = readWorkspaceConfiguration(tree);
+    const nxJson = readNxJson(tree);
 
-    updateWorkspaceConfiguration(tree, {
-      ...workspace,
+    updateNxJson(tree, {
+      ...nxJson,
       defaultProject: 'my-source',
     });
   });
@@ -38,7 +38,7 @@ describe('updateDefaultProject', () => {
 
     updateDefaultProject(tree, schema);
 
-    const { defaultProject } = readWorkspaceConfiguration(tree);
+    const { defaultProject } = readNxJson(tree);
     expect(defaultProject).toBe('subfolder-my-destination');
   });
 });

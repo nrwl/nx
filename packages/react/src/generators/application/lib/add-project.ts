@@ -22,14 +22,9 @@ export function addProject(host, options: NormalizedSchema) {
     };
   }
 
-  addProjectConfiguration(
-    host,
-    options.projectName,
-    {
-      ...project,
-    },
-    options.standaloneConfig
-  );
+  addProjectConfiguration(host, options.projectName, {
+    ...project,
+  });
 }
 
 function maybeJs(options: NormalizedSchema, path: string): string {
@@ -57,10 +52,6 @@ function createBuildTarget(options: NormalizedSchema): TargetConfiguration {
         options.appProjectRoot,
         maybeJs(options, `src/main.tsx`)
       ),
-      polyfills: joinPathFragments(
-        options.appProjectRoot,
-        maybeJs(options, 'src/polyfills.ts')
-      ),
       tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
       assets: [
         joinPathFragments(options.appProjectRoot, 'src/favicon.ico'),
@@ -76,7 +67,11 @@ function createBuildTarget(options: NormalizedSchema): TargetConfiguration {
               ),
             ],
       scripts: [],
-      webpackConfig: '@nrwl/react/plugins/webpack',
+      isolatedConfig: true,
+      webpackConfig: joinPathFragments(
+        options.appProjectRoot,
+        'webpack.config.js'
+      ),
     },
     configurations: {
       development: {

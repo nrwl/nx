@@ -1,5 +1,4 @@
 import { output } from '../utils/output';
-import { getPackageManagerCommand } from '../utils/package-manager';
 import * as yargsParser from 'yargs-parser';
 import * as enquirer from 'enquirer';
 import { readJsonFile, writeJsonFile } from '../utils/fileutils';
@@ -11,6 +10,11 @@ import {
   runInstall,
 } from './utils';
 import { joinPathFragments } from 'nx/src/utils/path';
+import { PackageJson } from '../utils/package-json';
+import {
+  getPackageManagerCommand,
+  PackageManagerCommands,
+} from '../utils/package-manager';
 
 const parsedArgs = yargsParser(process.argv, {
   boolean: ['yes'],
@@ -74,12 +78,19 @@ export async function addNxToNpmRepo() {
 
   createNxJsonFile(repoRoot, [], cacheableOperations, {}, packageJson.name);
 
+  const pmc = getPackageManagerCommand();
+
   addDepsToPackageJson(repoRoot, useCloud);
-  markRootPackageJsonAsNxProject(repoRoot, cacheableOperations, scriptOutputs);
+  markRootPackageJsonAsNxProject(
+    repoRoot,
+    cacheableOperations,
+    scriptOutputs,
+    pmc
+  );
 
   output.log({ title: `📦 Installing dependencies` });
 
-  runInstall(repoRoot);
+  runInstall(repoRoot, pmc);
 
   if (useCloud) {
     initCloud(repoRoot);
@@ -101,9 +112,12 @@ function printFinalMessage() {
 export function markRootPackageJsonAsNxProject(
   repoRoot: string,
   cacheableScripts: string[],
-  scriptOutputs: { [script: string]: string }
+  scriptOutputs: { [script: string]: string },
+  pmc: PackageManagerCommands
 ) {
-  const json = readJsonFile(joinPathFragments(repoRoot, `package.json`));
+  const json = readJsonFile<PackageJson>(
+    joinPathFragments(repoRoot, `package.json`)
+  );
   json.nx = { targets: {} };
   for (let script of Object.keys(scriptOutputs)) {
     if (scriptOutputs[script]) {
@@ -113,7 +127,16 @@ export function markRootPackageJsonAsNxProject(
     }
   }
   for (let script of cacheableScripts) {
-    if (json.scripts[script]) {
+    const scriptDefinition = json.scripts[script];
+    if (!scriptDefinition) {
+      continue;
+    }
+
+    if (scriptDefinition.includes('&&') || scriptDefinition.includes('||')) {
+      let backingScriptName = `_${script}`;
+      json.scripts[backingScriptName] = scriptDefinition;
+      json.scripts[script] = `nx exec -- ${pmc.run(backingScriptName, '')}`;
+    } else {
       json.scripts[script] = `nx exec -- ${json.scripts[script]}`;
     }
   }

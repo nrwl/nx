@@ -2,8 +2,8 @@ import { ExecutorContext } from '@nrwl/devkit';
 import { join } from 'path';
 import { ensureNodeModulesSymlink } from '../../utils/ensure-node-modules-symlink';
 import { ChildProcess, spawn } from 'child_process';
-import { chmodSync } from 'fs';
 import { ReactNativeBuildOptions } from './schema';
+import { chmodAndroidGradlewFiles } from '../../utils/chmod-android-gradle-files';
 export interface ReactNativeBuildOutput {
   success: boolean;
 }
@@ -14,10 +14,10 @@ export default async function* buildAndroidExecutor(
   options: ReactNativeBuildOptions,
   context: ExecutorContext
 ): AsyncGenerator<ReactNativeBuildOutput> {
-  const projectRoot = context.workspace.projects[context.projectName].root;
+  const projectRoot =
+    context.projectsConfigurations.projects[context.projectName].root;
   ensureNodeModulesSymlink(context.root, projectRoot);
-  chmodSync(join(projectRoot, 'android', 'gradlew'), 0o775);
-  chmodSync(join(projectRoot, 'android', 'gradlew.bat'), 0o775);
+  chmodAndroidGradlewFiles(join(projectRoot, 'android'));
 
   try {
     await runCliBuild(context.root, projectRoot, options);

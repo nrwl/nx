@@ -12,11 +12,10 @@ import {
 } from '@nrwl/devkit';
 import {
   addOrChangeTestTarget,
-  findExistingTargets,
-  writeViteConfig,
+  findExistingTargetsInProject,
+  createOrEditViteConfig,
 } from '../../utils/generator-utils';
 import { VitestGeneratorSchema } from './schema';
-
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import initGenerator from '../init/init';
 import {
@@ -30,21 +29,32 @@ export async function vitestGenerator(
 ) {
   const tasks: GeneratorCallback[] = [];
 
-  const { targets, root } = readProjectConfiguration(tree, schema.project);
-  let testTarget = findExistingTargets(targets).testTarget;
+  const { targets, root, projectType } = readProjectConfiguration(
+    tree,
+    schema.project
+  );
+  let testTarget =
+    schema.testTarget ??
+    findExistingTargetsInProject(targets).validFoundTargetName.test ??
+    'test';
 
-  addOrChangeTestTarget(tree, schema, testTarget ?? 'test');
+  addOrChangeTestTarget(tree, schema, testTarget);
 
-  const initTask = await initGenerator(tree, {
+  const initTask = initGenerator(tree, {
     uiFramework: schema.uiFramework,
   });
   tasks.push(initTask);
 
   if (!schema.skipViteConfig) {
-    writeViteConfig(tree, {
-      ...schema,
-      includeVitest: true,
-    });
+    createOrEditViteConfig(
+      tree,
+      {
+        ...schema,
+        includeVitest: true,
+        includeLib: projectType === 'library',
+      },
+      true
+    );
   }
 
   createFiles(tree, schema, root);
@@ -62,9 +72,6 @@ export async function vitestGenerator(
         }
   );
   tasks.push(installCoverageProviderTask);
-
-  if (schema.coverageProvider === 'istanbul') {
-  }
 
   await formatFiles(tree);
 
@@ -84,6 +91,15 @@ function updateTsConfig(
       json.references.push({
         path: './tsconfig.spec.json',
       });
+    }
+
+    if (!json.compilerOptions?.types?.includes('vitest')) {
+      if (json.compilerOptions?.types) {
+        json.compilerOptions.types.push('vitest');
+      } else {
+        json.compilerOptions ??= {};
+        json.compilerOptions.types = ['vitest'];
+      }
     }
     return json;
   });

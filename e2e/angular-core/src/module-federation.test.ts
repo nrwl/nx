@@ -1,6 +1,6 @@
 import {
   cleanupProject,
-  newProject,
+  newAngularProject,
   promisifiedTreeKill,
   readProjectConfig,
   runCLI,
@@ -16,7 +16,7 @@ import { names } from '@nrwl/devkit';
 describe('Angular Projects', () => {
   let proj: string;
 
-  beforeAll(() => (proj = newProject()));
+  beforeAll(() => (proj = newAngularProject()));
   afterAll(() => cleanupProject());
 
   it('should serve the host and remote apps successfully, even with a shared library with a secondary entry point between them', async () => {

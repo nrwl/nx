@@ -23,6 +23,7 @@ import { createFiles } from './lib/create-files';
 import { updateBaseTsConfig } from './lib/update-base-tsconfig';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 import { installCommonDependencies } from './lib/install-common-dependencies';
+import { setDefaults } from './lib/set-defaults';
 
 export async function libraryGenerator(host: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
@@ -48,18 +49,13 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
   });
   tasks.push(initTask);
 
-  addProjectConfiguration(
-    host,
-    options.name,
-    {
-      root: options.projectRoot,
-      sourceRoot: joinPathFragments(options.projectRoot, 'src'),
-      projectType: 'library',
-      tags: options.parsedTags,
-      targets: {},
-    },
-    options.standaloneConfig
-  );
+  addProjectConfiguration(host, options.name, {
+    root: options.projectRoot,
+    sourceRoot: joinPathFragments(options.projectRoot, 'src'),
+    projectType: 'library',
+    tags: options.parsedTags,
+    targets: {},
+  });
 
   const lintTask = await addLinting(host, options);
   tasks.push(lintTask);
@@ -80,7 +76,7 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
       newProject: true,
       includeLib: true,
       inSourceTests: options.inSourceTests,
-      includeVitest: true,
+      includeVitest: options.unitTestRunner === 'vitest',
     });
     tasks.push(viteTask);
   } else if (options.buildable && options.bundler === 'rollup') {
@@ -140,6 +136,7 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
       routing: options.routing,
       js: options.js,
       pascalCaseFiles: options.pascalCaseFiles,
+      inSourceTests: options.inSourceTests,
     });
     tasks.push(componentTask);
   }
@@ -158,6 +155,7 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
 
   const routeTask = updateAppRoutes(host, options);
   tasks.push(routeTask);
+  setDefaults(host, options);
 
   if (!options.skipFormat) {
     await formatFiles(host);

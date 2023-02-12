@@ -1,8 +1,14 @@
-import { toProjectName, Workspaces } from './workspaces';
+import {
+  mergeTargetConfigurations,
+  readTargetDefaultsForTarget,
+  toProjectName,
+  Workspaces,
+} from './workspaces';
 import { NxJsonConfiguration } from './nx-json';
 import { vol } from 'memfs';
 
 import * as fastGlob from 'fast-glob';
+import { TargetConfiguration } from './workspace-json-project-json';
 
 jest.mock('fs', () => require('memfs').fs);
 
@@ -59,7 +65,7 @@ describe('Workspaces', () => {
       );
 
       const workspaces = new Workspaces('/root');
-      const resolved = workspaces.readWorkspaceConfiguration();
+      const resolved = workspaces.readProjectsConfigurations();
       expect(resolved.projects.lib1).toEqual(standaloneConfig);
     });
 
@@ -79,9 +85,6 @@ describe('Workspaces', () => {
           }),
           'libs/domain/lib4/project.json': JSON.stringify(domainLibConfig),
           'libs/domain/lib4/package.json': JSON.stringify({}),
-          'workspace.json': JSON.stringify({
-            projects: { 'lib1-workspace': 'libs/lib1' },
-          }),
           'package.json': JSON.stringify({
             workspaces: ['**/package.json'],
           }),
@@ -90,10 +93,12 @@ describe('Workspaces', () => {
       );
 
       const workspaces = new Workspaces('/root');
-      const { projects } = workspaces.readWorkspaceConfiguration();
+      const { projects } = workspaces.readProjectsConfigurations();
       // projects got deduped so the workspace one remained
-      expect(projects['lib1-workspace']).toEqual(lib1Config);
-      expect(projects['lib1']).toBeUndefined();
+      expect(projects['lib1']).toEqual({
+        root: 'libs/lib1',
+        sourceRoot: 'libs/lib1/src',
+      });
       expect(projects.lib2).toEqual(lib2Config);
       expect(projects['domain-lib3']).toEqual(domainPackageConfig);
       expect(projects['lib4']).toEqual(domainLibConfig);
@@ -130,11 +135,415 @@ describe('Workspaces', () => {
       );
 
       const workspaces = new Workspaces('/root2');
-      const resolved = workspaces.readWorkspaceConfiguration();
+      const resolved = workspaces.readProjectsConfigurations();
       expect(resolved.projects['my-package']).toEqual({
         root: 'packages/my-package',
         sourceRoot: 'packages/my-package',
         projectType: 'library',
+      });
+    });
+  });
+
+  describe('target defaults', () => {
+    const targetDefaults = {
+      'nx:run-commands': {
+        options: {
+          key: 'default-value-for-executor',
+        },
+      },
+      build: {
+        options: {
+          key: 'default-value-for-targetname',
+        },
+      },
+    };
+
+    it('should prefer executor key', () => {
+      expect(
+        readTargetDefaultsForTarget(
+          'other-target',
+          targetDefaults,
+          'nx:run-commands'
+        ).options['key']
+      ).toEqual('default-value-for-executor');
+    });
+
+    it('should fallback to target key', () => {
+      expect(
+        readTargetDefaultsForTarget('build', targetDefaults, 'other-executor')
+          .options['key']
+      ).toEqual('default-value-for-targetname');
+    });
+
+    it('should return undefined if not found', () => {
+      expect(
+        readTargetDefaultsForTarget(
+          'other-target',
+          targetDefaults,
+          'other-executor'
+        )
+      ).toBeNull();
+    });
+
+    describe('options', () => {
+      it('should merge if executor matches', () => {
+        expect(
+          mergeTargetConfigurations(
+            {
+              root: '.',
+              targets: {
+                build: {
+                  executor: 'target',
+                  options: {
+                    a: 'project-value-a',
+                  },
+                },
+              },
+            },
+            'build',
+            {
+              executor: 'target',
+              options: {
+                a: 'default-value-a',
+                b: 'default-value-b',
+              },
+            }
+          ).options
+        ).toEqual({ a: 'project-value-a', b: 'default-value-b' });
+      });
+
+      it('should merge if executor is only provided on the project', () => {
+        expect(
+          mergeTargetConfigurations(
+            {
+              root: '.',
+              targets: {
+                build: {
+                  executor: 'target',
+                  options: {
+                    a: 'project-value',
+                  },
+                },
+              },
+            },
+            'build',
+            {
+              options: {
+                a: 'default-value',
+                b: 'default-value',
+              },
+            }
+          ).options
+        ).toEqual({ a: 'project-value', b: 'default-value' });
+      });
+
+      it('should merge if executor is only provided in the defaults', () => {
+        expect(
+          mergeTargetConfigurations(
+            {
+              root: '.',
+              targets: {
+                build: {
+                  options: {
+                    a: 'project-value',
+                  },
+                },
+              },
+            },
+            'build',
+            {
+              executor: 'target',
+              options: {
+                a: 'default-value',
+                b: 'default-value',
+              },
+            }
+          ).options
+        ).toEqual({ a: 'project-value', b: 'default-value' });
+      });
+
+      it('should not merge if executor is different', () => {
+        expect(
+          mergeTargetConfigurations(
+            {
+              root: '',
+              targets: {
+                build: {
+                  executor: 'other',
+                  options: {
+                    a: 'project-value',
+                  },
+                },
+              },
+            },
+            'build',
+            {
+              executor: 'default-executor',
+              options: {
+                b: 'default-value',
+              },
+            }
+          ).options
+        ).toEqual({ a: 'project-value' });
+      });
+
+      it('should resolve workspaceRoot and projectRoot tokens', () => {
+        expect(
+          mergeTargetConfigurations(
+            {
+              root: 'my/project',
+              targets: {
+                build: {
+                  options: {
+                    a: '{workspaceRoot}',
+                  },
+                },
+              },
+            },
+            'build',
+            {
+              executor: 'target',
+              options: {
+                b: '{workspaceRoot}/dist/{projectRoot}',
+              },
+            }
+          ).options
+        ).toEqual({ a: '{workspaceRoot}', b: 'dist/my/project' });
+      });
+    });
+
+    describe('configurations', () => {
+      const projectConfigurations: TargetConfiguration['configurations'] = {
+        dev: {
+          foo: 'project-value-foo',
+        },
+        prod: {
+          bar: 'project-value-bar',
+        },
+      };
+
+      const defaultConfigurations: TargetConfiguration['configurations'] = {
+        dev: {
+          foo: 'default-value-foo',
+          other: 'default-value-other',
+        },
+        baz: {
+          x: 'default-value-x',
+        },
+      };
+
+      const merged: TargetConfiguration['configurations'] = {
+        dev: {
+          foo: projectConfigurations.dev.foo,
+          other: defaultConfigurations.dev.other,
+        },
+        prod: { bar: projectConfigurations.prod.bar },
+        baz: { x: defaultConfigurations.baz.x },
+      };
+
+      it('should merge configurations if executor matches', () => {
+        expect(
+          mergeTargetConfigurations(
+            {
+              root: '.',
+              targets: {
+                build: {
+                  executor: 'target',
+                  configurations: projectConfigurations,
+                },
+              },
+            },
+            'build',
+            {
+              executor: 'target',
+              configurations: defaultConfigurations,
+            }
+          ).configurations
+        ).toEqual(merged);
+      });
+
+      it('should merge if executor is only provided on the project', () => {
+        expect(
+          mergeTargetConfigurations(
+            {
+              root: '.',
+              targets: {
+                build: {
+                  executor: 'target',
+                  configurations: projectConfigurations,
+                },
+              },
+            },
+            'build',
+            {
+              configurations: defaultConfigurations,
+            }
+          ).configurations
+        ).toEqual(merged);
+      });
+
+      it('should merge if executor is only provided in the defaults', () => {
+        expect(
+          mergeTargetConfigurations(
+            {
+              root: '.',
+              targets: {
+                build: {
+                  configurations: projectConfigurations,
+                },
+              },
+            },
+            'build',
+            {
+              executor: 'target',
+              configurations: defaultConfigurations,
+            }
+          ).configurations
+        ).toEqual(merged);
+      });
+
+      it('should not merge if executor doesnt match', () => {
+        expect(
+          mergeTargetConfigurations(
+            {
+              root: '',
+              targets: {
+                build: {
+                  executor: 'other',
+                  configurations: projectConfigurations,
+                },
+              },
+            },
+            'build',
+            {
+              executor: 'target',
+              configurations: defaultConfigurations,
+            }
+          ).configurations
+        ).toEqual(projectConfigurations);
+      });
+
+      it('should resolve workspaceRoot and projectRoot tokens', () => {
+        expect(
+          mergeTargetConfigurations(
+            {
+              root: 'my/project',
+              targets: {
+                build: {
+                  configurations: {
+                    dev: {
+                      a: '{workspaceRoot}',
+                    },
+                  },
+                },
+              },
+            },
+            'build',
+            {
+              executor: 'target',
+              configurations: {
+                prod: {
+                  a: '{workspaceRoot}/dist/{projectRoot}',
+                },
+              },
+            }
+          ).configurations
+        ).toEqual({
+          dev: { a: '{workspaceRoot}' },
+          prod: { a: 'dist/my/project' },
+        });
+      });
+    });
+
+    describe('defaultConfiguration', () => {
+      const projectDefaultConfiguration: TargetConfiguration['defaultConfiguration'] =
+        'dev';
+      const defaultDefaultConfiguration: TargetConfiguration['defaultConfiguration'] =
+        'prod';
+
+      const merged: TargetConfiguration['defaultConfiguration'] =
+        projectDefaultConfiguration;
+
+      it('should merge defaultConfiguration if executor matches', () => {
+        expect(
+          mergeTargetConfigurations(
+            {
+              root: '.',
+              targets: {
+                build: {
+                  executor: 'target',
+                  defaultConfiguration: projectDefaultConfiguration,
+                },
+              },
+            },
+            'build',
+            {
+              executor: 'target',
+              defaultConfiguration: defaultDefaultConfiguration,
+            }
+          ).defaultConfiguration
+        ).toEqual(merged);
+      });
+
+      it('should merge if executor is only provided on the project', () => {
+        expect(
+          mergeTargetConfigurations(
+            {
+              root: '.',
+              targets: {
+                build: {
+                  executor: 'target',
+                  defaultConfiguration: projectDefaultConfiguration,
+                },
+              },
+            },
+            'build',
+            {
+              defaultConfiguration: defaultDefaultConfiguration,
+            }
+          ).defaultConfiguration
+        ).toEqual(merged);
+      });
+
+      it('should merge if executor is only provided in the defaults', () => {
+        expect(
+          mergeTargetConfigurations(
+            {
+              root: '.',
+              targets: {
+                build: {
+                  defaultConfiguration: projectDefaultConfiguration,
+                },
+              },
+            },
+            'build',
+            {
+              executor: 'target',
+              defaultConfiguration: defaultDefaultConfiguration,
+            }
+          ).defaultConfiguration
+        ).toEqual(merged);
+      });
+
+      it('should not merge if executor doesnt match', () => {
+        expect(
+          mergeTargetConfigurations(
+            {
+              root: '',
+              targets: {
+                build: {
+                  executor: 'other',
+                  defaultConfiguration: projectDefaultConfiguration,
+                },
+              },
+            },
+            'build',
+            {
+              executor: 'target',
+              defaultConfiguration: defaultDefaultConfiguration,
+            }
+          ).defaultConfiguration
+        ).toEqual(projectDefaultConfiguration);
       });
     });
   });

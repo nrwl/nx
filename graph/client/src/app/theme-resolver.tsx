@@ -7,8 +7,18 @@ export let currentTheme: Theme;
 
 function mediaListener(ev: MediaQueryListEvent) {
   const resolver = ev.matches ? 'dark' : 'light';
-  htmlEl.className = resolver;
+  toggleHtmlClass(resolver);
   currentTheme = resolver;
+}
+
+function toggleHtmlClass(theme: Theme) {
+  if (theme === 'dark') {
+    htmlEl.classList.add('dark');
+    htmlEl.classList.remove('light');
+  } else {
+    htmlEl.classList.add('light');
+    htmlEl.classList.remove('dark');
+  }
 }
 
 export function themeInit() {
@@ -25,13 +35,13 @@ export function themeResolver(theme: Theme) {
   const darkMedia = window.matchMedia('(prefers-color-scheme: dark)');
   if (theme !== 'system') {
     darkMedia.removeEventListener('change', mediaListener);
-    htmlEl.className = theme;
+    toggleHtmlClass(theme);
     currentTheme = theme;
   } else {
     const resolver = darkMedia.matches ? 'dark' : 'light';
 
     darkMedia.addEventListener('change', mediaListener);
-    htmlEl.className = resolver;
+    toggleHtmlClass(resolver);
     currentTheme = resolver;
   }
 

@@ -5,7 +5,7 @@ import {
   Tree,
   writeJson,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { jestConfigObject } from '../../utils/config/functions';
 
 import { jestProjectGenerator } from './jest-project';
@@ -24,7 +24,7 @@ describe('jestProject', () => {
   };
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'lib1', {
       root: 'libs/lib1',
       sourceRoot: 'libs/lib1/src',
@@ -78,6 +78,12 @@ describe('jestProject', () => {
       options: {
         jestConfig: 'libs/lib1/jest.config.ts',
         passWithNoTests: true,
+      },
+      configurations: {
+        ci: {
+          ci: true,
+          codeCoverage: true,
+        },
       },
     });
     expect(lib1.targets.lint.options.tsConfig).toContain(
@@ -390,13 +396,13 @@ describe('jestProject', () => {
         "/* eslint-disable */
         export default {
           displayName: 'my-project',
-          preset: '../jest.preset.js',
+          preset: './jest.preset.js',
           globals: {
             'ts-jest': {
               tsconfig: '<rootDir>/tsconfig.spec.json',
             }
           },
-          coverageDirectory: '../coverage/my-project',
+          coverageDirectory: './coverage/my-project',
           testMatch: [
             '<rootDir>/src/**/__tests__/**/*.[jt]s?(x)',
             '<rootDir>/src/**/?(*.)+(spec|test).[jt]s?(x)',
@@ -428,13 +434,13 @@ describe('jestProject', () => {
         "/* eslint-disable */
         module.exports = {
           displayName: 'my-project',
-          preset: '../jest.preset.js',
+          preset: './jest.preset.js',
           globals: {
             'ts-jest': {
               tsconfig: '<rootDir>/tsconfig.spec.json',
             }
           },
-          coverageDirectory: '../coverage/my-project',
+          coverageDirectory: './coverage/my-project',
           testMatch: [
             '<rootDir>/src/**/__tests__/**/*.[jt]s?(x)',
             '<rootDir>/src/**/?(*.)+(spec|test).[jt]s?(x)',

@@ -1,7 +1,7 @@
 # Publishing Storybook: One Storybook instance per scope
 
 This guide extends the
-[Using Storybook in a Nx workspace - Best practices](/storybook/best-practices) guide. In that guide, we discussed the best practices of using Storybook in a Nx workspace. We explained the main concepts and the mental model of how to best set up Storybook. In this guide, we are going to see how to put that into practice, by looking at a real-world example. We are going to see how you can publish one Storybook per scope (eg. theme, app, framework) for your workspace.
+[Using Storybook in a Nx workspace - Best practices](/packages/storybook/documents/best-practices) guide. In that guide, we discussed the best practices of using Storybook in a Nx workspace. We explained the main concepts and the mental model of how to best set up Storybook. In this guide, we are going to see how to put that into practice, by looking at a real-world example. We are going to see how you can publish one Storybook per scope (eg. theme, app, framework) for your workspace.
 
 Sometimes, you have multiple apps and libraries, and each of these is associated with a specific scope. You can read more about grouping libraries and scoping them in the [Library Types](/more-concepts/library-types) documentation page, and also in the [Code Organization and Naming Conventions](/more-concepts/monorepo-nx-enterprise#code-organization-&-naming-conventions) documentation section.
 
@@ -15,7 +15,6 @@ Say, for example, that you have a client app, an admin app, and a number of UI l
 
 ```text
 happynrwl/
-├── .storybook/
 ├── apps/
 │   ├── client/
 │   ├── client-e2e/
@@ -114,10 +113,9 @@ For example, `libs/storybook-host-admin/.storybook/main.js`:
 ```javascript {% fileName="libs/storybook-host-admin/.storybook/main.js" %}
 const rootMain = require('../../../.storybook/main');
 module.exports = {
-  ...rootMain,
-  core: { ...rootMain.core, builder: 'webpack5' },
+  core: { builder: 'webpack5' },
   stories: ['../../admin/ui/**/src/lib/**/*.stories.ts'],
-  addons: [...rootMain.addons],
+  addons: ['@storybook/addon-essentials'],
 };
 ```
 

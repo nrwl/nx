@@ -1,0 +1,148 @@
+{
+  "name": "build",
+  "implementation": "/packages/storybook/src/executors/build-storybook/build-storybook.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "title": "Storybook Builder",
+    "cli": "nx",
+    "description": "Build storybook in production mode.",
+    "type": "object",
+    "presets": [
+      {
+        "name": "Default minimum setup",
+        "keys": ["uiFramework", "outputDir", "configDir"]
+      }
+    ],
+    "properties": {
+      "uiFramework": {
+        "type": "string",
+        "description": "Storybook framework npm package.",
+        "enum": [
+          "@storybook/react",
+          "@storybook/html",
+          "@storybook/web-components",
+          "@storybook/vue",
+          "@storybook/vue3",
+          "@storybook/svelte"
+        ],
+        "default": "@storybook/react",
+        "x-priority": "important"
+      },
+      "outputDir": {
+        "type": "string",
+        "description": "Directory where to store built files.",
+        "x-completion-type": "directory"
+      },
+      "styles": {
+        "type": "array",
+        "description": "Global styles to be included in the build.",
+        "items": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "input": {
+                  "type": "string",
+                  "description": "The file to include.",
+                  "x-completion-type": "file"
+                },
+                "bundleName": {
+                  "type": "string",
+                  "pattern": "^[\\w\\-.]*$",
+                  "description": "The bundle name for this extra entry point."
+                },
+                "inject": {
+                  "type": "boolean",
+                  "description": "If the bundle will be referenced in the HTML file.",
+                  "default": true
+                }
+              },
+              "additionalProperties": false,
+              "required": ["input"]
+            },
+            { "type": "string", "description": "The file to include." }
+          ]
+        }
+      },
+      "stylePreprocessorOptions": {
+        "type": "object",
+        "description": "Options to pass to style preprocessors.",
+        "properties": {
+          "includePaths": {
+            "type": "array",
+            "description": "The paths to include. Paths will be resolved to workspace root.",
+            "items": { "type": "string" }
+          }
+        }
+      },
+      "docsMode": {
+        "type": "boolean",
+        "description": "Build a documentation-only site using addon-docs.",
+        "default": false
+      },
+      "staticDir": {
+        "type": "array",
+        "description": "Directory where to load static files from, array of strings.",
+        "items": { "type": "string" },
+        "x-deprecated": "In Storybook 6.4 the `--static-dir` CLI flag has been replaced with the the `staticDirs` field in `.storybook/main.js`. It will be removed completely in Storybook 7.0."
+      },
+      "configDir": {
+        "type": "string",
+        "description": "Directory where to load Storybook configurations from.",
+        "x-completion-type": "directory",
+        "x-priority": "important"
+      },
+      "loglevel": {
+        "type": "string",
+        "description": "Controls level of logging during build. Can be one of: [silly, verbose, info (default), warn, error, silent].",
+        "pattern": "(silly|verbose|info|warn|silent)"
+      },
+      "quiet": {
+        "type": "boolean",
+        "description": "Suppress verbose build output."
+      },
+      "docs": {
+        "type": "boolean",
+        "description": "Starts Storybook in documentation mode. Learn more about it : https://storybook.js.org/docs/react/writing-docs/build-documentation#preview-storybooks-documentation."
+      }
+    },
+    "definitions": {
+      "extraEntryPoint": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "string",
+                "description": "The file to include.",
+                "x-completion-type": "file"
+              },
+              "bundleName": {
+                "type": "string",
+                "pattern": "^[\\w\\-.]*$",
+                "description": "The bundle name for this extra entry point."
+              },
+              "inject": {
+                "type": "boolean",
+                "description": "If the bundle will be referenced in the HTML file.",
+                "default": true
+              }
+            },
+            "additionalProperties": false,
+            "required": ["input"]
+          },
+          { "type": "string", "description": "The file to include." }
+        ]
+      }
+    },
+    "additionalProperties": true,
+    "required": ["uiFramework", "configDir"],
+    "examplesFile": "---\ntitle: Storybook builder executor examples\ndescription: This page contains examples for the @nrwl/storybook:build executor.\n---\n\n`project.json`:\n\n```json\n//...\n\"ui\": {\n    \"targets\": {\n        //...\n        \"build-storybook\": {\n            \"executor\": \"@nrwl/storybook:build\",\n            \"outputs\": [\"{options.outputDir}\"],\n            \"options\": {\n                \"uiFramework\": \"@storybook/react\",\n                \"outputDir\": \"dist/storybook/ui\",\n                \"configDir\": \"libs/ui/.storybook\"\n            },\n            \"configurations\": {\n                \"ci\": {\n                    \"quiet\": true\n                }\n            }\n        }\n}\n```\n\n```bash\nnx run ui:build-storybook\n```\n\n## Examples\n\n### For non-Angular projects\n\n{% tabs %}\n{% tab label=\"Setting the uiFramework\" %}\n\nYou can change the `uiFramework` option, to correspond to the framework you are using for your project. Supported values are: `\"@storybook/react\"`, `\"@storybook/html\"`, `\"@storybook/web-components\"`, `\"@storybook/vue\"`, `\"@storybook/vue3\"` and `\"@storybook/svelte\"`. If you are using Angular, please check out the Angular-specific Storybook executor.\n\n```json\n\"build-storybook\": {\n    \"executor\": \"@nrwl/storybook:build\",\n    \"outputs\": [\"{options.outputDir}\"],\n    \"options\": {\n        \"uiFramework\": \"@storybook/web-components\",\n        \"outputDir\": \"dist/storybook/ui\",\n        \"configDir\": \"libs/ui/.storybook\"\n    },\n    \"configurations\": {\n        \"ci\": {\n            \"quiet\": true\n        }\n    }\n}\n```\n\n{% /tab %}\n{% tab label=\"Working in docsMode\" %}\n\nYou can work in docs mode, building a documentation-only site, by setting the `docsMode` option to `true` and using the `@storybook/addon-docs` addon.\n\nRead more on the [Storybook documentation page for `addon-docs`](https://storybook.js.org/addons/@storybook/addon-docs).\n\n```json\n\"storybook\": {\n    \"executor\": \"@nrwl/storybook:build\",\n    \"options\": {\n        \"uiFramework\": \"@storybook/react\",\n        \"port\": 4400,\n        \"configDir\": \"libs/ui/.storybook\",\n        \"docsMode\": true\n    },\n    \"configurations\": {\n        \"ci\": {\n            \"quiet\": true\n        }\n    }\n}\n```\n\n{% /tab %}\n\n{% /tabs %}\n\n### For Angular projects\n\n{% tabs %}\n{% tab label=\"Default configuration\" %}\n\nThis is the default configuration for Angular projects using Storybook. You can see that it uses the native `@storybook/angular:build-storybook` executor. You can read more about the configuration options at the relevant [Storybook documentation page](https://storybook.js.org/docs/angular/get-started/install).\n\n```json\n\"build-storybook\": {\n  \"executor\": \"@storybook/angular:build-storybook\",\n  \"outputs\": [\"{options.outputDir}\"],\n  \"options\": {\n    \"outputDir\": \"dist/storybook/ngapp\",\n    \"configDir\": \"libs/ui/.storybook\",\n    \"browserTarget\": \"ui:build\",\n    \"compodoc\": false\n  },\n  \"configurations\": {\n    \"ci\": {\n      \"quiet\": true\n    }\n  }\n}\n```\n\n{% /tab %}\n{% tab label=\"Changing the browserTarget\" %}\n\nYou can set the [`browserTarget`](/packages/storybook/documents/angular-browser-target) to use `build-storybook` as the builder. This is most useful in the cases where your project does not have a `build` target.\n\n```json\n\"build-storybook\": {\n  \"executor\": \"@storybook/angular:build-storybook\",\n  \"outputs\": [\"{options.outputDir}\"],\n  \"options\": {\n    \"outputDir\": \"dist/storybook/ngapp\",\n    \"configDir\": \"libs/ui/.storybook\",\n    \"browserTarget\": \"ui:build-storybook\",\n    \"compodoc\": false\n  },\n  \"configurations\": {\n    \"ci\": {\n      \"quiet\": true\n    }\n  }\n}\n```\n\n{% /tab %}\n\n{% tab label=\"Adding styles\" %}\n\nYou can add paths to stylesheets to be included in the Storybook build by using the `styles` array. You can also add `stylePreprocessorOptions`, much like you would do in the Angular builder. You can read more in our guide about [styles and preprocessor options for Storybook](/packages/storybook/documents/angular-configuring-styles).\n\n```json\n\"build-storybook\": {\n  \"executor\": \"@storybook/angular:build-storybook\",\n  \"outputs\": [\"{options.outputDir}\"],\n  \"options\": {\n    \"outputDir\": \"dist/storybook/ngapp\",\n    \"configDir\": \"libs/ui/.storybook\",\n    \"browserTarget\": \"ui:build-storybook\",\n    \"compodoc\": false,\n    \"styles\": [\"some-styles.css\"],\n    \"stylePreprocessorOptions\": {\n        \"includePaths\": [\"some-style-paths\"]\n }\n  },\n  \"configurations\": {\n    \"ci\": {\n      \"quiet\": true\n    }\n  }\n}\n```\n\n{% /tab %}\n\n{% /tabs %}\n"
+  },
+  "description": "Build Storybook.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/storybook/src/executors/build-storybook/schema.json",
+  "type": "executor"
+}

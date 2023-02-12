@@ -67,3 +67,5 @@ export function <%= className %>(props: <%= className %>Props) {
 <% } %>
 
 export default <%= className %>;
+
+<% if (inSourceTests === true) { %> <%- inSourceVitestTests %> <% } %>

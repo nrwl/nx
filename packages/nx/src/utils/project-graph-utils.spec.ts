@@ -54,6 +54,9 @@ describe('project graph utils', () => {
           data: {},
         },
       },
+      externalNodes: {
+        'npm:chalk': {},
+      },
       dependencies: {
         'demo-app': [
           {
@@ -73,7 +76,7 @@ describe('project graph utils', () => {
           },
         ],
       },
-    };
+    } as any;
     it('should correctly gather the source root dirs of the dependent projects', () => {
       const [paths] = getSourceDirOfDependentProjects('demo-app', projGraph);
 

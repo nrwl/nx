@@ -1,13 +1,20 @@
-import { readJson, updateJson } from 'nx/src/generators/utils/json';
-import { installPackagesTask } from '../tasks/install-packages-task';
-import type { Tree } from 'nx/src/generators/tree';
-import { GeneratorCallback } from 'nx/src/config/misc-interfaces';
-import { coerce, gt, satisfies } from 'semver';
-import { getPackageManagerCommand } from 'nx/src/utils/package-manager';
 import { execSync } from 'child_process';
 
+import type { Tree } from 'nx/src/generators/tree';
+
+import type { GeneratorCallback } from 'nx/src/config/misc-interfaces';
+import { clean, coerce, gt, satisfies } from 'semver';
+
+import { installPackagesTask } from '../tasks/install-packages-task';
+import { requireNx } from '../../nx';
+
+const { readJson, updateJson, getPackageManagerCommand, workspaceRoot } =
+  requireNx();
+
+const UNIDENTIFIED_VERSION = 'UNIDENTIFIED_VERSION';
 const NON_SEMVER_TAGS = {
   '*': 2,
+  [UNIDENTIFIED_VERSION]: 2,
   next: 1,
   latest: 0,
   previous: -1,
@@ -27,28 +34,45 @@ function filterExistingDependencies(
     .reduce((acc, d) => ({ ...acc, [d]: dependencies[d] }), {});
 }
 
+function cleanSemver(version: string) {
+  return clean(version) ?? coerce(version);
+}
+
 function isIncomingVersionGreater(
   incomingVersion: string,
   existingVersion: string
 ) {
-  if (
-    incomingVersion in NON_SEMVER_TAGS &&
+  // if version is in the format of "latest", "next" or similar - keep it, otherwise try to parse it
+  const incomingVersionCompareBy =
+    incomingVersion in NON_SEMVER_TAGS
+      ? incomingVersion
+      : cleanSemver(incomingVersion)?.toString() ?? UNIDENTIFIED_VERSION;
+  const existingVersionCompareBy =
     existingVersion in NON_SEMVER_TAGS
+      ? existingVersion
+      : cleanSemver(existingVersion)?.toString() ?? UNIDENTIFIED_VERSION;
+
+  if (
+    incomingVersionCompareBy in NON_SEMVER_TAGS &&
+    existingVersionCompareBy in NON_SEMVER_TAGS
   ) {
-    return NON_SEMVER_TAGS[incomingVersion] > NON_SEMVER_TAGS[existingVersion];
+    return (
+      NON_SEMVER_TAGS[incomingVersionCompareBy] >
+      NON_SEMVER_TAGS[existingVersionCompareBy]
+    );
   }
 
   if (
-    incomingVersion in NON_SEMVER_TAGS ||
-    existingVersion in NON_SEMVER_TAGS
+    incomingVersionCompareBy in NON_SEMVER_TAGS ||
+    existingVersionCompareBy in NON_SEMVER_TAGS
   ) {
     return true;
   }
 
-  return gt(coerce(incomingVersion), coerce(existingVersion));
+  return gt(cleanSemver(incomingVersion), cleanSemver(existingVersion));
 }
 
-function updateExistingDependenciesVersion(
+function updateExistingAltDependenciesVersion(
   dependencies: Record<string, string>,
   existingAltDependencies: Record<string, string>
 ) {
@@ -60,6 +84,23 @@ function updateExistingDependenciesVersion(
 
       const incomingVersion = dependencies[d];
       const existingVersion = existingAltDependencies[d];
+      return isIncomingVersionGreater(incomingVersion, existingVersion);
+    })
+    .reduce((acc, d) => ({ ...acc, [d]: dependencies[d] }), {});
+}
+
+function updateExistingDependenciesVersion(
+  dependencies: Record<string, string>,
+  existingDependencies: Record<string, string> = {}
+) {
+  return Object.keys(dependencies)
+    .filter((d) => {
+      if (!existingDependencies[d]) {
+        return true;
+      }
+
+      const incomingVersion = dependencies[d];
+      const existingVersion = existingDependencies[d];
 
       return isIncomingVersionGreater(incomingVersion, existingVersion);
     })
@@ -89,29 +130,50 @@ export function addDependenciesToPackageJson(
 ): GeneratorCallback {
   const currentPackageJson = readJson(tree, packageJsonPath);
 
+  /** Dependencies to install that are not met in dev dependencies */
   let filteredDependencies = filterExistingDependencies(
     dependencies,
     currentPackageJson.devDependencies
   );
+  /** Dev dependencies to install that are not met in dependencies */
   let filteredDevDependencies = filterExistingDependencies(
     devDependencies,
     currentPackageJson.dependencies
   );
 
+  // filtered dependencies should consist of:
+  // - dependencies of the same type that are not present
+  // - dependencies of the same type that have greater version
+  // - specified dependencies of the other type that have greater version and are already installed as current type
   filteredDependencies = {
-    ...filteredDependencies,
     ...updateExistingDependenciesVersion(
+      filteredDependencies,
+      currentPackageJson.dependencies
+    ),
+    ...updateExistingAltDependenciesVersion(
       devDependencies,
       currentPackageJson.dependencies
     ),
   };
   filteredDevDependencies = {
-    ...filteredDevDependencies,
     ...updateExistingDependenciesVersion(
+      filteredDevDependencies,
+      currentPackageJson.devDependencies
+    ),
+    ...updateExistingAltDependenciesVersion(
       dependencies,
       currentPackageJson.devDependencies
     ),
   };
+
+  filteredDependencies = removeLowerVersions(
+    filteredDependencies,
+    currentPackageJson.dependencies
+  );
+  filteredDevDependencies = removeLowerVersions(
+    filteredDevDependencies,
+    currentPackageJson.devDependencies
+  );
 
   if (
     requiresAddingOfPackages(
@@ -125,20 +187,41 @@ export function addDependenciesToPackageJson(
         ...(json.dependencies || {}),
         ...filteredDependencies,
       };
+
       json.devDependencies = {
         ...(json.devDependencies || {}),
         ...filteredDevDependencies,
       };
+
       json.dependencies = sortObjectByKeys(json.dependencies);
       json.devDependencies = sortObjectByKeys(json.devDependencies);
 
       return json;
     });
+
     return (): void => {
       installPackagesTask(tree);
     };
   }
   return () => {};
+}
+
+/**
+ * @returns The the incoming dependencies that are higher than the existing verions
+ **/
+function removeLowerVersions(
+  incomingDeps: Record<string, string>,
+  existingDeps: Record<string, string>
+) {
+  return Object.keys(incomingDeps).reduce((acc, d) => {
+    if (
+      existingDeps?.[d] &&
+      !isIncomingVersionGreater(incomingDeps[d], existingDeps[d])
+    ) {
+      return acc;
+    }
+    return { ...acc, [d]: incomingDeps[d] };
+  }, {});
 }
 
 /**
@@ -310,27 +393,29 @@ export async function ensurePackage(
     throwOnMissing?: boolean;
   } = {}
 ): Promise<void> {
-  let version: string;
-
   // Read package and version from root package.json file.
-  const packageJson = readJson(tree, 'package.json');
   const dev = options.dev ?? true;
   const throwOnMissing = options.throwOnMissing ?? !!process.env.NX_DRY_RUN; // NX_DRY_RUN is set in `packages/nx/src/command-line/generate.ts`
   const pmc = getPackageManagerCommand();
-  const field = dev ? 'devDependencies' : 'dependencies';
 
-  version = packageJson[field]?.[pkg];
+  let version = getPackageVersion(pkg);
 
-  // If package not found, try to resolve it using Node and get its version.
+  // Otherwise try to read in from package.json. This is needed for E2E tests to pass.
   if (!version) {
-    try {
-      version = require(`${pkg}/package.json`).version;
-    } catch {
-      // ignore
-    }
+    const packageJson = readJson(tree, 'package.json');
+    const field = dev ? 'devDependencies' : 'dependencies';
+    version = packageJson[field]?.[pkg];
   }
 
-  if (!satisfies(version, requiredVersion)) {
+  if (
+    // Special case: When running Nx unit tests, the version read from package.json is "0.0.1".
+    !(
+      pkg.startsWith('@nrwl/') &&
+      (version === '0.0.1' || requiredVersion === '0.0.1')
+    ) &&
+    // Normal case
+    !satisfies(version, requiredVersion, { includePrerelease: true })
+  ) {
     const installCmd = `${
       dev ? pmc.addDev : pmc.add
     } ${pkg}@${requiredVersion}`;
@@ -344,5 +429,28 @@ export async function ensurePackage(
         stdio: [0, 1, 2],
       });
     }
+  }
+}
+
+/**
+ * Use another process to resolve the package.json path of the package (if it exists).
+ * Cannot use `require.resolve` here since there is an unclearable internal cache used by Node that can lead to issues
+ * when resolving the package after installation.
+ *
+ * See: https://github.com/nodejs/node/issues/31803
+ */
+function getPackageVersion(pkg: string): undefined | string {
+  try {
+    return execSync(
+      `node -e "console.log(require('${pkg}/package.json').version)"`,
+      {
+        cwd: workspaceRoot,
+        stdio: ['pipe', 'pipe', 'ignore'],
+      }
+    )
+      .toString()
+      .trim();
+  } catch (e) {
+    return undefined;
   }
 }

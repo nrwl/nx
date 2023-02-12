@@ -11,10 +11,13 @@ export function createTreeWithEmptyWorkspace(
   return addCommonFiles(tree, opts.layout === 'apps-libs');
 }
 
+/**
+ * @deprecated use createTreeWithEmptyWorkspace instead
+ */
 export function createTreeWithEmptyV1Workspace(): Tree {
-  const tree = new FsTree('/virtual', false);
-  tree.write('/workspace.json', JSON.stringify({ version: 1, projects: {} }));
-  return addCommonFiles(tree, true);
+  throw new Error(
+    'Use createTreeWithEmptyWorkspace instead of createTreeWithEmptyV1Workspace'
+  );
 }
 
 function addCommonFiles(tree: Tree, addAppsAndLibsFolders: boolean): Tree {

@@ -22,7 +22,8 @@ export default async function* buildIosExecutor(
   logger.warn(
     '@nrwl/expo:build-status is deprecated and will be removed in Nx 16. Please switch to expo:prebuild and expo:build.'
   );
-  const projectRoot = context.workspace.projects[context.projectName].root;
+  const projectRoot =
+    context.projectsConfigurations.projects[context.projectName].root;
   ensureNodeModulesSymlink(context.root, projectRoot);
   if (options.sync) {
     displayNewlyAddedDepsMessage(

@@ -1,0 +1,36 @@
+{
+  "name": "build-android",
+  "implementation": "/packages/react-native/src/executors/build-android/build-android.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "cli": "nx",
+    "$id": "NxReactNativeBuildAndroid",
+    "$schema": "http://json-schema.org/schema",
+    "title": "Release Build for Android",
+    "description": "Build target options for Android.",
+    "type": "object",
+    "properties": {
+      "apk": {
+        "type": "boolean",
+        "description": "Generate apk file(s) rather than a bundle (`.aab`)."
+      },
+      "debug": {
+        "type": "boolean",
+        "description": "Generate a debug build instead of a release build."
+      },
+      "gradleTask": {
+        "type": "string",
+        "description": "Override default gradle task incase of multi build variants"
+      }
+    },
+    "required": [],
+    "examplesFile": "`project.json`:\n\n```json\n{\n  \"name\": \"mobile\",\n  //...\n  \"targets\": {\n    //...\n    \"build-android\": {\n      \"executor\": \"@nrwl/react-native:build-android\",\n      \"outputs\": [\n        \"{projectRoot}/build/outputs/bundle\",\n        \"{projectRoot}/build/outputs/apk\"\n      ],\n      \"options\": {}\n    }\n  }\n}\n```\n\n```bash\nnx run mobile:build-android\n```\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Build with custom gradleTask\" %}\nThe `gradleTask` option accepts any custom gradle task, such as `assembleDebug`, `assembleRelease`, `bundleDebug`, `bundleRelease`:\n\n```json\n    \"build-android\": {\n      \"executor\": \"@nrwl/react-native:build-android\",\n      \"outputs\": [\n        \"{projectRoot}/build/outputs/bundle\",\n        \"{projectRoot}/build/outputs/apk\"\n      ],\n      \"options\": {\n        \"gradleTask\": \"assembleDebug\"\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Create a build with apk format\" %}\n\nThe `apk` option allows you determine the format of android build. If set as true, it will create a build with `.apk` extension under apk folder; if set as false, it will create with `.aab` extension under bundle folder.\n\n```json\n    \"build-android\": {\n      \"executor\": \"@nrwl/react-native:build-android\",\n      \"outputs\": [\n        \"{projectRoot}/build/outputs/bundle\",\n        \"{projectRoot}/build/outputs/apk\"\n      ],\n      \"options\": {\n        \"apk\": true\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Build for debug/release\" %}\n\nIf set `debug` option as `true`, it will create a debug build; if set as `false`, it will create a release build.\n\n```json\n    \"build-android\": {\n      \"executor\": \"@nrwl/react-native:build-android\",\n      \"outputs\": [\n        \"{projectRoot}/build/outputs/bundle\",\n        \"{projectRoot}/build/outputs/apk\"\n      ],\n      \"options\": {\n        \"debug\": true\n      }\n    }\n```\n\n{% /tab %}\n{% /tabs %}\n\n---\n",
+    "presets": []
+  },
+  "description": "Release Build for Android.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/react-native/src/executors/build-android/schema.json",
+  "type": "executor"
+}

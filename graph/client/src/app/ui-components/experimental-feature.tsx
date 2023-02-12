@@ -1,7 +1,7 @@
 import { useEnvironmentConfig } from '../hooks/use-environment-config';
 import { Children, cloneElement } from 'react';
 
-function ExperimentalFeature(props) {
+export function ExperimentalFeature(props) {
   const environment = useEnvironmentConfig();
   const showExperimentalFeatures =
     environment.appConfig.showExperimentalFeatures;
@@ -11,5 +11,3 @@ function ExperimentalFeature(props) {
       )
     : null;
 }
-
-export default ExperimentalFeature;

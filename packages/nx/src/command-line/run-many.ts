@@ -4,12 +4,13 @@ import { splitArgsIntoNxArgsAndOverrides } from '../utils/command-line-utils';
 import { projectHasTarget } from '../utils/project-graph-utils';
 import { connectToNxCloudIfExplicitlyAsked } from './connect';
 import { performance } from 'perf_hooks';
-import * as minimatch from 'minimatch';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { readNxJson } from '../config/configuration';
 import { output } from '../utils/output';
+import { findMatchingProjects } from '../utils/find-matching-projects';
+import { workspaceConfigurationCheck } from 'nx/src/utils/workspace-configuration-check';
 
 export async function runMany(
   args: { [k: string]: any },
@@ -23,6 +24,7 @@ export async function runMany(
   }
 ) {
   performance.mark('command-execution-begins');
+  workspaceConfigurationCheck();
   const nxJson = readNxJson();
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
     args,
@@ -56,8 +58,7 @@ export function projectsToRun(
   projectGraph: ProjectGraph
 ): ProjectGraphProjectNode[] {
   const selectedProjects = new Map<string, ProjectGraphProjectNode>();
-  const validProjects = runnableForTarget(projectGraph.nodes, nxArgs.target);
-  const validProjectNames = Array.from(validProjects.keys());
+  const validProjects = runnableForTarget(projectGraph.nodes, nxArgs.targets);
   const invalidProjects: string[] = [];
 
   // --all is default now, if --projects is provided, it'll override the --all
@@ -66,55 +67,42 @@ export function projectsToRun(
       selectedProjects.set(projectName, projectGraph.nodes[projectName]);
     }
   } else {
-    for (const nameOrGlob of nxArgs.projects) {
-      if (validProjects.has(nameOrGlob)) {
-        selectedProjects.set(nameOrGlob, projectGraph.nodes[nameOrGlob]);
-        continue;
-      } else if (projectGraph.nodes[nameOrGlob]) {
-        invalidProjects.push(nameOrGlob);
-        continue;
+    const allProjectNames = Object.keys(projectGraph.nodes);
+    const matchingProjects = findMatchingProjects(
+      nxArgs.projects,
+      allProjectNames,
+      new Set(allProjectNames)
+    );
+    for (const project of matchingProjects) {
+      if (!validProjects.has(project)) {
+        invalidProjects.push(project);
+      } else {
+        selectedProjects.set(project, projectGraph.nodes[project]);
       }
-
-      const matchedProjectNames = minimatch.match(
-        validProjectNames,
-        nameOrGlob
-      );
-
-      if (matchedProjectNames.length === 0) {
-        throw new Error(`No projects matching: ${nameOrGlob}`);
-      }
-
-      matchedProjectNames.forEach((matchedProjectName) => {
-        selectedProjects.set(
-          matchedProjectName,
-          projectGraph.nodes[matchedProjectName]
-        );
-      });
     }
 
     if (invalidProjects.length > 0) {
       output.warn({
-        title: `the following do not have configuration for "${nxArgs.target}"`,
+        title: `The following projects do not have a configuration for any of the provided targets ("${nxArgs.targets.join(
+          ', '
+        )}")`,
         bodyLines: invalidProjects.map((name) => `- ${name}`),
       });
     }
   }
 
-  for (const nameOrGlob of nxArgs.exclude ?? []) {
-    const project = selectedProjects.has(nameOrGlob);
+  const excludedProjects = findMatchingProjects(
+    nxArgs.exclude ?? [],
+    Array.from(selectedProjects.keys()),
+    new Set(selectedProjects.keys())
+  );
+
+  for (const excludedProject of excludedProjects) {
+    const project = selectedProjects.has(excludedProject);
+
     if (project) {
-      selectedProjects.delete(nameOrGlob);
-      continue;
+      selectedProjects.delete(excludedProject);
     }
-
-    const matchedProjects = minimatch.match(
-      Array.from(selectedProjects.keys()),
-      nameOrGlob
-    );
-
-    matchedProjects.forEach((matchedProjectName) => {
-      selectedProjects.delete(matchedProjectName);
-    });
   }
 
   return Array.from(selectedProjects.values());
@@ -122,12 +110,12 @@ export function projectsToRun(
 
 function runnableForTarget(
   projects: Record<string, ProjectGraphProjectNode>,
-  target: string
+  targets: string[]
 ): Set<string> {
   const runnable = new Set<string>();
   for (let projectName in projects) {
     const project = projects[projectName];
-    if (projectHasTarget(project, target)) {
+    if (targets.find((target) => projectHasTarget(project, target))) {
       runnable.add(projectName);
     }
   }

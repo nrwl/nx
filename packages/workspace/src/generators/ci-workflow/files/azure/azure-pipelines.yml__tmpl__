@@ -45,8 +45,6 @@ jobs:
         displayName: NPM Install Dependencies
       - script: <%= packageManagerPrefix %> nx-cloud start-ci-run --stop-agents-after="build" --agent-count=3
         displayName: Start CI run
-      - script: <%= packageManagerPrefix %> nx-cloud record -- <%= packageManagerPrefix %> nx workspace-lint
-        displayName: Run workspace lint
       - script: <%= packageManagerPrefix %> nx-cloud record -- <%= packageManagerPrefix %> nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
         displayName: Check format
       - script: <%= packageManagerPrefix %> nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --target=lint --parallel=3

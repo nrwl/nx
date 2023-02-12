@@ -1,10 +1,10 @@
 import { join } from 'path';
-import { webpackProjectGenerator } from '@nrwl/webpack';
 import { cypressProjectGenerator } from '@nrwl/cypress';
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
   convertNxGenerator,
+  ensurePackage,
   extractLayoutDirectory,
   formatFiles,
   generateFiles,
@@ -13,21 +13,20 @@ import {
   joinPathFragments,
   names,
   offsetFromRoot,
+  readNxJson,
   readProjectConfiguration,
-  readWorkspaceConfiguration,
   TargetConfiguration,
   Tree,
+  updateNxJson,
   updateProjectConfiguration,
-  updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import { jestProjectGenerator } from '@nrwl/jest';
 import { swcCoreVersion } from '@nrwl/js/src/utils/versions';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
-import { viteConfigurationGenerator, vitestGenerator } from '@nrwl/vite';
 
-import { swcLoaderVersion } from '../../utils/versions';
+import { nxVersion, swcLoaderVersion } from '../../utils/versions';
 import { webInitGenerator } from '../init/init';
 import { Schema } from './schema';
 
@@ -44,7 +43,7 @@ function createApplicationFiles(tree: Tree, options: NormalizedSchema) {
     tree,
     join(
       __dirname,
-      options.bundler === 'vite' ? './files/app-vite' : './files/app'
+      options.bundler === 'vite' ? './files/app-vite' : './files/app-webpack'
     ),
     options.appProjectRoot,
     {
@@ -75,12 +74,19 @@ async function setupBundler(tree: Tree, options: NormalizedSchema) {
   ];
 
   if (options.bundler === 'webpack') {
+    await ensurePackage(tree, '@nrwl/webpack', nxVersion);
+    const { webpackProjectGenerator } = require('@nrwl/webpack');
     await webpackProjectGenerator(tree, {
       project: options.projectName,
       main,
       tsConfig,
       compiler: options.compiler ?? 'babel',
       devServer: true,
+      isolatedConfig: true,
+      webpackConfig: joinPathFragments(
+        options.appProjectRoot,
+        'webpack.config.js'
+      ),
     });
     const project = readProjectConfiguration(tree, options.projectName);
     const prodConfig = project.targets.build.configurations.production;
@@ -91,10 +97,6 @@ async function setupBundler(tree: Tree, options: NormalizedSchema) {
       'src/index.html'
     );
     buildOptions.baseHref = '/';
-    buildOptions.polyfills = joinPathFragments(
-      options.appProjectRoot,
-      'src/polyfills.ts'
-    );
     buildOptions.styles = [
       joinPathFragments(options.appProjectRoot, `src/styles.${options.style}`),
     ];
@@ -156,33 +158,25 @@ async function addProject(tree: Tree, options: NormalizedSchema) {
   if (options.bundler !== 'vite') {
     await setupBundler(tree, options);
   }
-
-  const workspace = readWorkspaceConfiguration(tree);
-
-  if (!workspace.defaultProject) {
-    workspace.defaultProject = options.projectName;
-
-    updateWorkspaceConfiguration(tree, workspace);
-  }
 }
 
 function setDefaults(tree: Tree, options: NormalizedSchema) {
-  const workspace = readWorkspaceConfiguration(tree);
-  workspace.generators = workspace.generators || {};
-  workspace.generators['@nrwl/web:application'] = {
+  const nxJson = readNxJson(tree);
+  nxJson.generators = nxJson.generators || {};
+  nxJson.generators['@nrwl/web:application'] = {
     style: options.style,
     linter: options.linter,
     unitTestRunner: options.unitTestRunner,
     e2eTestRunner: options.e2eTestRunner,
-    ...workspace.generators['@nrwl/web:application'],
+    ...nxJson.generators['@nrwl/web:application'],
   };
-  workspace.generators['@nrwl/web:library'] = {
+  nxJson.generators['@nrwl/web:library'] = {
     style: options.style,
     linter: options.linter,
     unitTestRunner: options.unitTestRunner,
-    ...workspace.generators['@nrwl/web:library'],
+    ...nxJson.generators['@nrwl/web:library'],
   };
-  updateWorkspaceConfiguration(tree, workspace);
+  updateNxJson(tree, nxJson);
 }
 
 export async function applicationGenerator(host: Tree, schema: Schema) {
@@ -202,21 +196,31 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
   await addProject(host, options);
 
   if (options.bundler === 'vite') {
+    await ensurePackage(host, '@nrwl/vite', nxVersion);
+    const { viteConfigurationGenerator } = require('@nrwl/vite');
     // We recommend users use `import.meta.env.MODE` and other variables in their code to differentiate between production and development.
     // See: https://vitejs.dev/guide/env-and-mode.html
-    host.delete(joinPathFragments(options.appProjectRoot, 'src/environments'));
+    if (
+      host.exists(joinPathFragments(options.appProjectRoot, 'src/environments'))
+    ) {
+      host.delete(
+        joinPathFragments(options.appProjectRoot, 'src/environments')
+      );
+    }
 
     const viteTask = await viteConfigurationGenerator(host, {
       uiFramework: 'none',
       project: options.projectName,
       newProject: true,
-      includeVitest: true,
+      includeVitest: options.unitTestRunner === 'vitest',
       inSourceTests: options.inSourceTests,
     });
     tasks.push(viteTask);
   }
 
   if (options.bundler !== 'vite' && options.unitTestRunner === 'vitest') {
+    await ensurePackage(host, '@nrwl/vite', nxVersion);
+    const { vitestGenerator } = require('@nrwl/vite');
     const vitestTask = await vitestGenerator(host, {
       uiFramework: 'none',
       project: options.projectName,
@@ -306,7 +310,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
-  if (options.bundler === 'vite') {
+  if (options.bundler === 'vite' && !options.unitTestRunner) {
     options.unitTestRunner = 'vitest';
   }
 

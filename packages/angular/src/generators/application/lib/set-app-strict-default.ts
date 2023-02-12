@@ -1,18 +1,14 @@
 import type { Tree } from '@nrwl/devkit';
-
-import {
-  readWorkspaceConfiguration,
-  updateWorkspaceConfiguration,
-} from '@nrwl/devkit';
+import { readNxJson, updateNxJson } from '@nrwl/devkit';
 
 export function setApplicationStrictDefault(host: Tree, strict: boolean) {
-  const workspaceConfig = readWorkspaceConfiguration(host);
+  const nxJson = readNxJson(host);
 
-  workspaceConfig.generators = workspaceConfig.generators || {};
-  workspaceConfig.generators['@nrwl/angular:application'] =
-    workspaceConfig.generators['@nrwl/angular:application'] || {};
-  workspaceConfig.generators['@nrwl/angular:application'].strict =
-    workspaceConfig.generators['@nrwl/angular:application'].strict ?? strict;
+  nxJson.generators = nxJson.generators || {};
+  nxJson.generators['@nrwl/angular:application'] =
+    nxJson.generators['@nrwl/angular:application'] || {};
+  nxJson.generators['@nrwl/angular:application'].strict =
+    nxJson.generators['@nrwl/angular:application'].strict ?? strict;
 
-  updateWorkspaceConfiguration(host, workspaceConfig);
+  updateNxJson(host, nxJson);
 }

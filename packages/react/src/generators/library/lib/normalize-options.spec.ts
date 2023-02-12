@@ -7,7 +7,7 @@ describe('normalizeOptions', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it('should set unitTestRunner=jest and bundler=none by default', async () => {
@@ -15,6 +15,7 @@ describe('normalizeOptions', () => {
       name: 'test',
       style: 'css',
       linter: Linter.None,
+      unitTestRunner: 'jest',
     });
 
     expect(options).toMatchObject({
@@ -57,6 +58,7 @@ describe('normalizeOptions', () => {
       style: 'css',
       linter: Linter.None,
       bundler: 'vite',
+      unitTestRunner: 'vitest',
     });
 
     expect(options).toMatchObject({
@@ -80,6 +82,39 @@ describe('normalizeOptions', () => {
       buildable: true,
       bundler: 'vite',
       compiler: 'babel',
+      unitTestRunner: 'jest',
+    });
+  });
+
+  it('should set bundler to rollup if buildable is true not no bundler is passed', () => {
+    const options = normalizeOptions(tree, {
+      name: 'test',
+      style: 'css',
+      linter: Linter.None,
+      buildable: true,
+      unitTestRunner: 'jest',
+    });
+
+    expect(options).toMatchObject({
+      buildable: true,
+      bundler: 'rollup',
+      unitTestRunner: 'jest',
+    });
+  });
+
+  it('should set bundler to rollup if buildable is true and bundler is none ', () => {
+    const options = normalizeOptions(tree, {
+      name: 'test',
+      style: 'css',
+      linter: Linter.None,
+      buildable: true,
+      bundler: 'none',
+      unitTestRunner: 'jest',
+    });
+
+    expect(options).toMatchObject({
+      buildable: true,
+      bundler: 'rollup',
       unitTestRunner: 'jest',
     });
   });

@@ -4,7 +4,7 @@ import {
   Tree,
   updateJson,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '../../../utils/lint';
 import { libraryGenerator } from '../../library/library';
 import { NormalizedSchema } from '../schema';
@@ -24,14 +24,13 @@ describe('updateEslint', () => {
       relativeToRootDestination: 'libs/shared/my-destination',
     };
 
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it('should handle .eslintrc.json not existing', async () => {
     await libraryGenerator(tree, {
       name: 'my-lib',
       linter: Linter.None,
-      standaloneConfig: false,
     });
 
     const projectConfig = readProjectConfiguration(tree, 'my-lib');
@@ -45,7 +44,6 @@ describe('updateEslint', () => {
     await libraryGenerator(tree, {
       name: 'my-lib',
       linter: Linter.EsLint,
-      standaloneConfig: false,
     });
     // This step is usually handled elsewhere
     tree.rename(
@@ -70,7 +68,6 @@ describe('updateEslint', () => {
       name: 'test',
       directory: 'api',
       linter: Linter.EsLint,
-      standaloneConfig: false,
     });
     // This step is usually handled elsewhere
     tree.rename('libs/api/test/.eslintrc.json', 'libs/test/.eslintrc.json');
@@ -98,7 +95,6 @@ describe('updateEslint', () => {
     await libraryGenerator(tree, {
       name: 'my-lib',
       linter: Linter.EsLint,
-      standaloneConfig: false,
     });
     updateJson(tree, 'libs/my-lib/.eslintrc.json', (eslintRcJson) => {
       eslintRcJson.extends = [
@@ -135,7 +131,6 @@ describe('updateEslint', () => {
       name: 'my-lib',
       linter: Linter.EsLint,
       setParserOptionsProject: true,
-      standaloneConfig: false,
     });
     // This step is usually handled elsewhere
     tree.rename(
@@ -166,7 +161,6 @@ describe('updateEslint', () => {
       name: 'my-lib',
       linter: Linter.EsLint,
       setParserOptionsProject: true,
-      standaloneConfig: false,
     });
 
     // Add another parser project to eslint.json

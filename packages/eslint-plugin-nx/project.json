@@ -4,21 +4,11 @@
   "sourceRoot": "packages/eslint-plugin-nx",
   "projectType": "library",
   "targets": {
-    "test": {
-      "executor": "@nrwl/jest:jest",
-      "options": {
-        "jestConfig": "packages/eslint-plugin-nx/jest.config.ts",
-        "passWithNoTests": true
-      },
-      "outputs": ["{workspaceRoot}/coverage/packages/eslint-plugin-nx"]
-    },
+    "test": {},
     "build-base": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "outputPath": "build/packages/eslint-plugin-nx",
-        "tsConfig": "packages/eslint-plugin-nx/tsconfig.lib.json",
         "main": "packages/eslint-plugin-nx/src/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/eslint-plugin-nx",
@@ -53,8 +43,7 @@
             "output": "/"
           }
         ]
-      },
-      "outputs": ["{options.outputPath}"]
+      }
     },
     "build": {
       "executor": "nx:run-commands",
@@ -63,20 +52,6 @@
         "command": "node ./scripts/copy-readme.js eslint-plugin-nx"
       }
     },
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "lintFilePatterns": [
-          "packages/eslint-plugin-nx/**/*.ts",
-          "packages/eslint-plugin-nx/**/*.spec.ts",
-          "packages/eslint-plugin-nx/**/*_spec.ts",
-          "packages/eslint-plugin-nx/**/*.spec.tsx",
-          "packages/eslint-plugin-nx/**/*.spec.js",
-          "packages/eslint-plugin-nx/**/*.spec.jsx",
-          "packages/eslint-plugin-nx/**/*.d.ts"
-        ]
-      },
-      "outputs": ["{options.outputFile}"]
-    }
+    "lint": {}
   }
 }

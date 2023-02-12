@@ -1,8 +1,4 @@
-import {
-  readWorkspaceConfiguration,
-  Tree,
-  updateWorkspaceConfiguration,
-} from '@nrwl/devkit';
+import { readNxJson, Tree, updateNxJson } from '@nrwl/devkit';
 import { NormalizedSchema } from '../schema';
 
 /**
@@ -13,14 +9,11 @@ import { NormalizedSchema } from '../schema';
  * - change target references
  */
 export function updateDefaultProject(tree: Tree, schema: NormalizedSchema) {
-  const workspaceConfiguration = readWorkspaceConfiguration(tree);
+  const nxJson = readNxJson(tree);
 
   // update default project (if necessary)
-  if (
-    workspaceConfiguration.defaultProject &&
-    workspaceConfiguration.defaultProject === schema.projectName
-  ) {
-    workspaceConfiguration.defaultProject = schema.newProjectName;
-    updateWorkspaceConfiguration(tree, workspaceConfiguration);
+  if (nxJson.defaultProject && nxJson.defaultProject === schema.projectName) {
+    nxJson.defaultProject = schema.newProjectName;
+    updateNxJson(tree, nxJson);
   }
 }

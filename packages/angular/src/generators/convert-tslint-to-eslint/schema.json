@@ -27,7 +27,8 @@
         "$source": "argv",
         "index": 0
       },
-      "x-prompt": "Which Angular project would you like to convert from TSLint to ESLint?"
+      "x-prompt": "Which Angular project would you like to convert from TSLint to ESLint?",
+      "x-priority": "important"
     },
     "ignoreExistingTslintConfig": {
       "type": "boolean",
@@ -44,7 +45,8 @@
     "skipFormat": {
       "type": "boolean",
       "description": "Skip formatting files.",
-      "default": false
+      "default": false,
+      "x-priority": "internal"
     }
   },
   "additionalProperties": false,

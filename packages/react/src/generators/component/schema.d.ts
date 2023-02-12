@@ -15,4 +15,5 @@ export interface Schema {
   flat?: boolean;
   globalCss?: boolean;
   fileName?: string;
+  inSourceTests?: boolean;
 }

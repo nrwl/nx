@@ -126,7 +126,8 @@ Try playing around with a [fully interactive graph on a sample repo](https://nrw
   "affectedProjectIds": [],
   "focus": null,
   "groupByFolder": false,
-  "exclude": []
+  "exclude": [],
+  "enableTooltips": true
 }
 ```
 

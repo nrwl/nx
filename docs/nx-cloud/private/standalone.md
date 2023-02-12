@@ -130,7 +130,7 @@ invite other members in your team to the workspace.
 
 ### Optional step 6: set up GitHub Pull Request integration
 
-You can [optionally configure Nx Cloud](/nx-cloud/private-cloud/github) to post build stats directly on your GitHub
+You can [optionally configure Nx Cloud](/nx-cloud/set-up/github) to post build stats directly on your GitHub
 pull requests.
 
 ### Optional step 7: Setting Up Proxy

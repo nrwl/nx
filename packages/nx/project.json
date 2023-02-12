@@ -5,15 +5,28 @@
   "projectType": "library",
   "implicitDependencies": ["graph-client"],
   "targets": {
+    "build-native": {
+      "outputs": ["{projectRoot}/src/native/*.node"],
+      "executor": "@monodon/rust:napi",
+      "options": {
+        "dist": "packages/nx/src/native",
+        "jsFile": "packages/nx/src/native/index.js",
+        "release": true
+      }
+    },
+    "artifacts": {
+      "command": "yarn napi artifacts -c build/packages/nx/package.json -d ./artifacts --dist build/packages/nx/native-packages"
+    },
     "build-base": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "outputPath": "build/packages/nx",
-        "tsConfig": "packages/nx/tsconfig.lib.json",
-        "packageJson": "packages/nx/package.json",
         "main": "packages/nx/bin/nx.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
+          {
+            "input": "packages/nx",
+            "glob": ".npmignore",
+            "output": "/"
+          },
           {
             "input": "packages/nx",
             "glob": "**/files/**",
@@ -27,7 +40,11 @@
           {
             "input": "packages/nx",
             "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json", "**/project.json"],
+            "ignore": [
+              "**/tsconfig*.json",
+              "**/project.json",
+              "**/__fixtures__/**"
+            ],
             "output": "/"
           },
           {
@@ -47,20 +64,19 @@
             "output": "/"
           }
         ]
-      },
-      "outputs": ["{options.outputPath}"]
+      }
     },
     "echo": {
-      "executor": "nx:command",
-      "options": {
-        "command": "echo hi"
-      }
+      "command": "echo hi"
     },
     "build": {
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/nx"],
       "options": {
         "commands": [
+          {
+            "command": "node ./scripts/copy-local-native.js nx"
+          },
           {
             "command": "node ./scripts/copy-graph-client.js"
           },
@@ -80,31 +96,8 @@
         "parallel": false
       }
     },
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "lintFilePatterns": [
-          "packages/nx/**/*.ts",
-          "packages/nx/**/*.spec.ts",
-          "packages/nx/**/*_spec.ts",
-          "packages/nx/**/*.spec.tsx",
-          "packages/nx/**/*.spec.js",
-          "packages/nx/**/*.spec.jsx",
-          "packages/nx/**/*.d.ts",
-          "packages/nx/executors.json",
-          "packages/nx/package.json",
-          "packages/nx/migrations.json"
-        ]
-      },
-      "outputs": ["{options.outputFile}"]
-    },
-    "test": {
-      "executor": "@nrwl/jest:jest",
-      "options": {
-        "jestConfig": "packages/nx/jest.config.ts",
-        "passWithNoTests": true
-      },
-      "outputs": ["{workspaceRoot}/coverage/packages/nx"]
-    }
+    "lint": {},
+    "test": {},
+    "test-native": {}
   }
 }

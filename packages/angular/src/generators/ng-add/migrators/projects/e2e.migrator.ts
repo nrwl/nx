@@ -113,6 +113,10 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
       return;
     }
 
+    if (this.shouldSkipTargetTypeMigration('e2e')) {
+      return;
+    }
+
     if (this.isProtractorE2eProject()) {
       await this.migrateProtractorE2eProject();
     } else if (this.isCypressE2eProject()) {
@@ -150,10 +154,11 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
     if (!e2eTarget.options) {
       return [
         {
-          message: `The "${this.targetNames.e2e}" target is not specifying any options.`,
+          message: `The "${this.targetNames.e2e}" target is not specifying any options. The target will be skipped.`,
           hint:
-            `Make sure the "${this.appName}.architect.e2e.options" is correctly set ` +
-            `or remove the "${this.appName}.architect.e2e" target if it is not valid.`,
+            `Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could ` +
+            `revert the migration, ensure the "${this.appName}.architect.e2e.options" is correctly set or remove the target if ` +
+            `it is not valid, and run the migration again.`,
         },
       ];
     }
@@ -163,10 +168,11 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
         return [
           {
             message:
-              'The "e2e" target is using the "@angular-devkit/build-angular:protractor" builder but the Protractor config file is not specified.',
+              'The "e2e" target is using the "@angular-devkit/build-angular:protractor" builder but the Protractor config file is not specified. The target will be skipped.',
             hint:
-              `Make sure the "${this.appName}.architect.e2e.options.protractorConfig" is correctly set ` +
-              `or remove the "${this.appName}.architect.e2e" target if it is not valid.`,
+              `Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could ` +
+              `revert the migration, ensure the "${this.appName}.architect.e2e.options.protractorConfig" is correctly set ` +
+              `or remove the "${this.appName}.architect.e2e" target if it is not valid, and run the migration again.`,
           },
         ];
       }
@@ -174,10 +180,11 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
       if (!this.tree.exists(e2eTarget.options.protractorConfig)) {
         return [
           {
-            message: `The specified Protractor config file "${e2eTarget.options.protractorConfig}" in the "e2e" target could not be found.`,
+            message: `The specified Protractor config file "${e2eTarget.options.protractorConfig}" in the "e2e" target could not be found. The target will be skipped.`,
             hint:
-              `Make sure the "${this.appName}.architect.e2e.options.protractorConfig" is set to a valid path ` +
-              `or remove the "${this.appName}.architect.e2e" target if it is not valid.`,
+              `Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could ` +
+              `revert the migration, ensure the "${this.appName}.architect.e2e.options.protractorConfig" is set to a valid path ` +
+              `or remove the "${this.appName}.architect.e2e" target if it is not valid, and run the migration again.`,
           },
         ];
       }
@@ -198,20 +205,22 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
           {
             message:
               `The "e2e" target is using the "@cypress/schematic:cypress" builder but the "configFile" option is not specified ` +
-              `and a "${expectedConfigFile}" file could not be found at the project root.`,
+              `and a "${expectedConfigFile}" file could not be found at the project root. The target will be skipped.`,
             hint:
-              `Make sure the "${this.appName}.architect.e2e.options.configFile" option is set to a valid path, ` +
-              `or that a "${expectedConfigFile}" file exists at the project root, ` +
-              `or remove the "${this.appName}.architect.e2e" target if it is not valid.`,
+              `Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could ` +
+              `revert the migration, ensure the "${this.appName}.architect.e2e.options.configFile" option is set to a valid path ` +
+              `or that a "${expectedConfigFile}" file exists at the project root or remove the "${this.appName}.architect.e2e" target ` +
+              `if it is not valid, and run the migration again.`,
           },
         ];
       } else if (configFile && !this.tree.exists(configFile)) {
         return [
           {
-            message: `The specified Cypress config file "${configFile}" in the "e2e" target could not be found.`,
+            message: `The specified Cypress config file "${configFile}" in the "e2e" target could not be found. The target will be skipped.`,
             hint:
-              `Make sure the "${this.appName}.architect.e2e.options.configFile" option is set to a valid path ` +
-              `or remove the "${this.appName}.architect.e2e" target if it is not valid.`,
+              `Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could ` +
+              `revert the migration, ensure the "${this.appName}.architect.e2e.options.configFile" option is set to a valid path ` +
+              `or remove the "${this.appName}.architect.e2e" target if it is not valid, and run the migration again.`,
           },
         ];
       }
@@ -221,8 +230,11 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
       ) {
         return [
           {
-            message: `The "e2e" target is using the "@cypress/schematic:cypress" builder but the "cypress" directory could not be found at the project root.`,
-            hint: 'Make sure the "cypress" directory exists in the project root or remove the "e2e" target if it is not valid.',
+            message: `The "e2e" target is using the "@cypress/schematic:cypress" builder but the "cypress" directory could not be found at the project root. The target will be skipped.`,
+            hint:
+              `Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could ` +
+              `revert the migration, ensure the "cypress" directory exists in the project root or remove the "e2e" target if it is not ` +
+              `valid, and run the migration again.`,
           },
         ];
       }

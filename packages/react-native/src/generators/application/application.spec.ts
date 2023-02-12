@@ -1,6 +1,5 @@
 import {
   Tree,
-  readWorkspaceConfiguration,
   getProjects,
   readJson,
   readProjectConfiguration,
@@ -17,7 +16,7 @@ describe('app', () => {
     appTree.write('.gitignore', '');
   });
 
-  it('should update workspace.json', async () => {
+  it('should update configuration', async () => {
     await reactNativeApplicationGenerator(appTree, {
       name: 'myApp',
       displayName: 'myApp',
@@ -25,11 +24,9 @@ describe('app', () => {
       e2eTestRunner: 'none',
       install: false,
     });
-    const workspaceJson = readWorkspaceConfiguration(appTree);
     const projects = getProjects(appTree);
 
     expect(projects.get('my-app').root).toEqual('apps/my-app');
-    expect(workspaceJson.defaultProject).toEqual('my-app');
   });
 
   it('should update nx.json', async () => {
@@ -90,10 +87,8 @@ describe('app', () => {
         install: false,
       });
 
-      const workspaceJson = readWorkspaceConfiguration(appTree);
       const projects = getProjects(appTree);
       expect(projects.get('my-dir-my-app').root).toEqual('apps/my-dir/my-app');
-      expect(workspaceJson.defaultProject).toEqual('my-dir-my-app');
 
       expect(
         appTree.exists('apps/my-dir/my-app-e2e/.detoxrc.json')
@@ -125,14 +120,14 @@ describe('app', () => {
           binaryPath:
             '../../../apps/my-dir/my-app/ios/build/Build/Products/Debug-iphonesimulator/MyApp.app',
           build:
-            "cd ../../../apps/my-dir/my-app/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 13' -derivedDataPath ./build -quiet",
+            "cd ../../../apps/my-dir/my-app/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
           type: 'ios.app',
         },
         'ios.release': {
           binaryPath:
             '../../../apps/my-dir/my-app/ios/build/Build/Products/Release-iphonesimulator/MyApp.app',
           build:
-            "cd ../../../apps/my-dir/my-app/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 13' -derivedDataPath ./build -quiet",
+            "cd ../../../apps/my-dir/my-app/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
           type: 'ios.app',
         },
       });
@@ -146,12 +141,9 @@ describe('app', () => {
         install: false,
       });
 
-      const workspaceJson = readWorkspaceConfiguration(appTree);
       const projects = getProjects(appTree);
       expect(projects.get('my-app').root).toEqual('apps/my-app');
-      expect(workspaceJson.defaultProject).toEqual('my-app');
 
-      expect(appTree.exists('apps/my-app-e2e/.detoxrc.json')).toBeTruthy();
       const detoxrc = appTree.read('apps/my-app-e2e/.detoxrc.json', 'utf-8');
       // Strip trailing commas
       const detoxrcJson = JSON.parse(
@@ -176,14 +168,14 @@ describe('app', () => {
           binaryPath:
             '../../apps/my-app/ios/build/Build/Products/Debug-iphonesimulator/MyApp.app',
           build:
-            "cd ../../apps/my-app/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 13' -derivedDataPath ./build -quiet",
+            "cd ../../apps/my-app/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
           type: 'ios.app',
         },
         'ios.release': {
           binaryPath:
             '../../apps/my-app/ios/build/Build/Products/Release-iphonesimulator/MyApp.app',
           build:
-            "cd ../../apps/my-app/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 13' -derivedDataPath ./build -quiet",
+            "cd ../../apps/my-app/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
           type: 'ios.app',
         },
       });

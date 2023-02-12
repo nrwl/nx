@@ -1,9 +1,11 @@
+import { SectionHeading } from '@nrwl/nx-dev/ui-common';
+
 export function Newsletter(): JSX.Element {
   const communityLinks = [
     {
       name: 'Youtube',
       label: 'Youtube channel',
-      href: 'https://www.youtube.com/c/Nrwl_io?utm_source=nx.dev',
+      href: 'https://www.youtube.com/@NxDevtools?utm_source=nx.dev',
       icon: (props: any) => (
         <svg
           fill="currentColor"
@@ -51,8 +53,8 @@ export function Newsletter(): JSX.Element {
       ),
     },
     {
-      name: 'Github',
-      label: 'Nx is open source, check the code on Github',
+      name: 'GitHub',
+      label: 'Nx is open source, check the code on GitHub',
       href: 'https://github.com/nrwl/nx?utm_source=nx.dev',
       icon: (props: any) => (
         <svg
@@ -61,7 +63,7 @@ export function Newsletter(): JSX.Element {
           xmlns="http://www.w3.org/2000/svg"
           {...props}
         >
-          {/*<title>Github</title>*/}
+          {/*<title>GitHub</title>*/}
           <path d="M8 0a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38l-.01-1.49c-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.42 7.42 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48l-.01 2.2c0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8a8 8 0 0 0-8-8z" />
         </svg>
       ),
@@ -72,12 +74,17 @@ export function Newsletter(): JSX.Element {
     <div className="bg-slate-50 pt-28 dark:bg-slate-800/40">
       <div className="mx-auto max-w-7xl py-16 px-4 sm:px-6 lg:flex lg:items-center lg:py-24 lg:px-8">
         <div className="lg:w-0 lg:flex-1">
-          <h1 className="text-lg font-semibold tracking-tight text-blue-500 dark:text-sky-500">
+          <SectionHeading as="h1" variant="title" id="stay-informed">
             Stay up to date
-          </h1>
-          <h2 className="mt-4 text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 sm:text-5xl">
+          </SectionHeading>
+          <SectionHeading
+            as="p"
+            variant="display"
+            id="nx-is-fast"
+            className="mt-4"
+          >
             Nx is growing fast, stay in the loop!
-          </h2>
+          </SectionHeading>
           <p className="mt-4 text-lg text-slate-700 dark:text-slate-400">
             Join the Nx community and stay updated on new releases and features,
             guides and recipes, events and fresh video tutorials.

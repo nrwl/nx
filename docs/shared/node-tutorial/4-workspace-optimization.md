@@ -191,7 +191,7 @@ webpack compiled successfully (bafa37be9890ecb2)
 
  ———————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target build for project products-cli and 1 task(s) it depends on (2s)
+ >  NX   Successfully ran target build for project products-cli and 1 task(s) they depend on (2s)
 
    Nx read the output from the cache instead of running the command for 1 out of 2 tasks.
 ```

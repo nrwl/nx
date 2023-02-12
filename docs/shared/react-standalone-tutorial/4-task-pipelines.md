@@ -25,7 +25,7 @@ dist/store/assets/index.f18c2b19.js.map 565.79 KiB
 
  ————————————————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target build for project store and 2 task(s) it depends on (6s)
+ >  NX   Successfully ran target build for project store and 2 task(s) they depend on (6s)
 
 ```
 
@@ -86,7 +86,7 @@ dist/store/assets/index.f18c2b19.js.map 565.79 KiB
 
  ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target build for project store and 2 task(s) it depends on (42ms)
+ >  NX   Successfully ran target build for project store and 2 task(s) they depend on (42ms)
 
    Nx read the output from the cache instead of running the command for 3 out of 3 tasks.
 ```

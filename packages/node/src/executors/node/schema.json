@@ -18,7 +18,7 @@
     },
     "waitUntilTargets": {
       "type": "array",
-      "description": "The targets to run to before starting the node app.",
+      "description": "The targets to run before starting the node app.",
       "default": [],
       "items": {
         "type": "string"

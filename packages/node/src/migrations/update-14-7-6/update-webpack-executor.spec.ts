@@ -1,49 +1,42 @@
-import { readJson } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import {
+  addProjectConfiguration,
+  readJson,
+  readProjectConfiguration,
+} from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
 import update from './update-webpack-executor';
 
 describe('Migration: @nrwl/webpack', () => {
   it(`should update usage of webpack executor`, async () => {
-    let tree = createTreeWithEmptyV1Workspace();
+    let tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
-    tree.write(
-      'workspace.json',
-      JSON.stringify({
-        version: 2,
-        projects: {
-          myapp: {
-            root: 'apps/myapp',
-            sourceRoot: 'apps/myapp/src',
-            projectType: 'application',
-            targets: {
-              build: {
-                executor: '@nrwl/node:webpack',
-                options: {},
-              },
-            },
-          },
+    addProjectConfiguration(tree, 'myapp', {
+      root: 'apps/myapp',
+      sourceRoot: 'apps/myapp/src',
+      projectType: 'application',
+      targets: {
+        build: {
+          executor: '@nrwl/node:webpack',
+          options: {},
         },
-      })
-    );
+      },
+    });
 
     await update(tree);
 
-    expect(readJson(tree, 'workspace.json')).toEqual({
-      version: 2,
-      projects: {
-        myapp: {
-          root: 'apps/myapp',
-          sourceRoot: 'apps/myapp/src',
-          projectType: 'application',
-          targets: {
-            build: {
-              executor: '@nrwl/webpack:webpack',
-              options: {
-                compiler: 'tsc',
-                target: 'node',
-              },
-            },
+    expect(readProjectConfiguration(tree, 'myapp')).toEqual({
+      $schema: '../../node_modules/nx/schemas/project-schema.json',
+      name: 'myapp',
+      root: 'apps/myapp',
+      sourceRoot: 'apps/myapp/src',
+      projectType: 'application',
+      targets: {
+        build: {
+          executor: '@nrwl/webpack:webpack',
+          options: {
+            compiler: 'tsc',
+            target: 'node',
           },
         },
       },

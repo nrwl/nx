@@ -5,13 +5,7 @@
   "projectType": "library",
   "tags": ["scope:nx-dev", "type:ui"],
   "targets": {
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["nx-dev/ui-home/**/*.{ts,tsx,js,jsx}"]
-      }
-    },
+    "lint": {},
     "xtest": {
       "executor": "@nrwl/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/nx-dev/ui-home"],

@@ -51,9 +51,13 @@ export const typesExpressVersion = '4.17.14';
 export const isbotVersion = '^3.6.5';
 export const corsVersion = '~2.8.5';
 export const typesCorsVersion = '~2.8.12';
-export const moduleFederationNodeVersion = '~0.9.6';
+export const moduleFederationNodeVersion = '~0.9.9';
 
 // style preprocessors
 export const lessVersion = '3.12.2';
 export const sassVersion = '^1.55.0';
 export const stylusVersion = '^0.55.0';
+
+// rollup plugins (if needed)
+export const rollupPluginUrlVersion = '^7.0.0';
+export const svgrRollupVersion = '^6.1.2';

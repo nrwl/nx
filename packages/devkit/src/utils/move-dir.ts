@@ -1,8 +1,9 @@
-import { Tree } from 'nx/src/generators/tree';
+import type { Tree } from 'nx/src/generators/tree';
 import { relative } from 'path';
 import { visitNotIgnoredFiles } from '../generators/visit-not-ignored-files';
-import { normalizePath } from 'nx/src/utils/path';
+import { requireNx } from '../../nx';
 
+const { normalizePath } = requireNx();
 /**
  * Analogous to cp -r oldDir newDir
  */

@@ -5,7 +5,7 @@ import { ModuleFederationConfig } from './models';
 export function loadModuleFederationConfigFromContext(
   context: ExecutorContext
 ): ModuleFederationConfig {
-  const p = context.workspace.projects[context.projectName];
+  const p = context.projectsConfigurations.projects[context.projectName];
   const moduleFederationConfigPath = join(
     context.root,
     p.root,

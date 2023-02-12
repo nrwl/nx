@@ -54,5 +54,3 @@ export const ShowHideAll = memo(
     );
   }
 );
-
-export default ShowHideAll;

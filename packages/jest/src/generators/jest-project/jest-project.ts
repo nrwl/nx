@@ -3,7 +3,6 @@ import { checkForTestTarget } from './lib/check-for-test-target';
 import { createFiles } from './lib/create-files';
 import { updateTsConfig } from './lib/update-tsconfig';
 import { updateWorkspace } from './lib/update-workspace';
-import { updateJestConfig } from './lib/update-jestconfig';
 import { JestProjectSchema } from './schema';
 import { formatFiles, Tree, convertNxGenerator } from '@nrwl/devkit';
 

@@ -11,7 +11,8 @@
     "platform": {
       "description": "Choose the platform to compile for",
       "enum": ["ios", "android", "all", "web"],
-      "alias": "p"
+      "alias": "p",
+      "x-priority": "important"
     },
     "dev": {
       "type": "boolean",
@@ -43,5 +44,5 @@
       "default": "metro"
     }
   },
-  "required": ["bundler"]
+  "required": []
 }

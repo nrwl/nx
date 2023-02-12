@@ -10,20 +10,16 @@ import {
 import { Schema } from './schema';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { addBabelInputs } from '@nrwl/js/src/utils/add-babel-inputs';
-
 import { jestInitGenerator } from '@nrwl/jest';
 import { detoxInitGenerator } from '@nrwl/detox';
-import {
-  reactTestRendererVersion,
-  reactVersion,
-  typesReactVersion,
-} from '@nrwl/react/src/utils/versions';
+import { babelPresetReactVersion } from '@nrwl/react/src/utils/versions';
 
 import {
   babelRuntimeVersion,
   jestReactNativeVersion,
   metroVersion,
   nxVersion,
+  reactDomVersion,
   reactNativeAsyncStorageAsyncStorageVersion,
   reactNativeCommunityCli,
   reactNativeCommunityCliAndroid,
@@ -32,10 +28,13 @@ import {
   reactNativeSvgTransformerVersion,
   reactNativeSvgVersion,
   reactNativeVersion,
+  reactTestRendererVersion,
+  reactVersion,
   testingLibraryJestNativeVersion,
   testingLibraryReactNativeVersion,
   typesNodeVersion,
   typesReactNativeVersion,
+  typesReactVersion,
 } from '../../utils/versions';
 
 import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
@@ -76,6 +75,7 @@ export function updateDependencies(host: Tree) {
     host,
     {
       react: reactVersion,
+      'react-dom': reactDomVersion,
       'react-native': reactNativeVersion,
     },
     {
@@ -101,6 +101,7 @@ export function updateDependencies(host: Tree) {
       'react-native-config': reactNativeConfigVersion,
       '@react-native-async-storage/async-storage':
         reactNativeAsyncStorageAsyncStorageVersion,
+      '@babel/preset-react': babelPresetReactVersion,
       ...(isPnpm
         ? {
             'metro-config': metroVersion, // metro-config is used by metro.config.js

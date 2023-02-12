@@ -5,6 +5,7 @@ import {
   extractLayoutDirectory,
   formatFiles,
   generateFiles,
+  getProjects,
   getWorkspaceLayout,
   joinPathFragments,
   logger,
@@ -16,7 +17,6 @@ import {
   toJS,
   Tree,
   updateJson,
-  getProjects,
 } from '@nrwl/devkit';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
@@ -32,6 +32,7 @@ import { filePathPrefix } from '../../utils/project-name';
 import {
   cypressVersion,
   eslintPluginCypressVersion,
+  viteVersion,
 } from '../../utils/versions';
 import { cypressInitGenerator } from '../init/init';
 // app
@@ -63,6 +64,7 @@ function createFiles(tree: Tree, options: CypressProjectSchema) {
         tree,
         options.projectRoot
       ),
+      bundler: options.bundler,
     }
   );
 
@@ -160,12 +162,7 @@ function addProject(tree: Tree, options: CypressProjectSchema) {
       'tsconfig.json'
     );
   }
-  addProjectConfiguration(
-    tree,
-    options.projectName,
-    e2eProjectConfig,
-    options.standaloneConfig
-  );
+  addProjectConfiguration(tree, options.projectName, e2eProjectConfig);
 }
 
 export async function addLinter(host: Tree, options: CypressProjectSchema) {
@@ -271,6 +268,19 @@ export async function cypressProjectGenerator(host: Tree, schema: Schema) {
   if (!cypressVersion) {
     tasks.push(cypressInitGenerator(host, options));
   }
+
+  if (schema.bundler === 'vite') {
+    tasks.push(
+      addDependenciesToPackageJson(
+        host,
+        {},
+        {
+          vite: viteVersion,
+        }
+      )
+    );
+  }
+
   createFiles(host, options);
   addProject(host, options);
   const installTask = await addLinter(host, options);
@@ -301,7 +311,8 @@ function normalizeOptions(host: Tree, options: Schema): CypressProjectSchema {
   if (
     maybeRootProject?.root === '.' ||
     // should still check to see if we are in a standalone based workspace
-    Array.from(projects.values()).some((config) => config.root === '.')
+    (!maybeRootProject &&
+      Array.from(projects.values()).some((config) => config.root === '.'))
   ) {
     projectName = options.name;
     projectRoot = options.name;
@@ -320,6 +331,7 @@ function normalizeOptions(host: Tree, options: Schema): CypressProjectSchema {
   }
 
   options.linter = options.linter || Linter.EsLint;
+  options.bundler = options.bundler || 'webpack';
   return {
     ...options,
     // other generators depend on the rootProject flag down stream

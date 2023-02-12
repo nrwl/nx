@@ -80,16 +80,19 @@
             "type": "string"
           }
         ]
-      }
+      },
+      "x-priority": "important"
     },
     "command": {
       "type": "string",
-      "description": "Command to run in child process."
+      "description": "Command to run in child process.",
+      "x-priority": "important"
     },
     "parallel": {
       "type": "boolean",
       "description": "Run commands in parallel.",
-      "default": true
+      "default": true,
+      "x-priority": "important"
     },
     "readyWhen": {
       "type": "string",
@@ -134,7 +137,8 @@
       },
       "$default": {
         "$source": "unparsed"
-      }
+      },
+      "x-priority": "internal"
     }
   },
   "additionalProperties": true,

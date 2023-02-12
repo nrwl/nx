@@ -2,14 +2,11 @@ import { ExecutorContext, logger } from '@nrwl/devkit';
 import type { Configuration as WebpackConfiguration } from 'webpack';
 import type { Configuration as WebpackDevServerConfiguration } from 'webpack-dev-server';
 import * as path from 'path';
-import { basename, resolve } from 'path';
+import { readFileSync } from 'fs-extra';
 
 import { getWebpackConfig } from '../../webpack/lib/get-webpack-config';
 import { WebDevServerOptions } from '../schema';
 import { buildServePath } from './serve-path';
-import { readFileSync } from 'fs-extra';
-import { generateEntryPoints } from '../../../utils//webpack/package-chunk-sort';
-import { IndexHtmlWebpackPlugin } from '../../../utils/webpack/plugins/index-html-webpack-plugin';
 import { NormalizedWebpackExecutorOptions } from '../../webpack/schema';
 
 export function getDevServerConfig(
@@ -18,43 +15,14 @@ export function getDevServerConfig(
   serveOptions: WebDevServerOptions
 ): Partial<WebpackConfiguration> {
   const workspaceRoot = context.root;
-  const { root: projectRoot, sourceRoot } =
-    context.workspace.projects[context.projectName];
-  const webpackConfig = getWebpackConfig(
-    context,
-    buildOptions,
-    true,
-    typeof buildOptions.optimization === 'boolean'
-      ? buildOptions.optimization
-      : buildOptions.optimization?.scripts
-  );
+  const webpackConfig = buildOptions.isolatedConfig
+    ? {}
+    : getWebpackConfig(context, buildOptions);
 
   (webpackConfig as any).devServer = getDevServerPartial(
     workspaceRoot,
     serveOptions,
     buildOptions
-  );
-
-  const {
-    deployUrl,
-    subresourceIntegrity,
-    scripts = [],
-    styles = [],
-    index,
-    baseHref,
-  } = buildOptions;
-
-  webpackConfig.plugins.push(
-    new IndexHtmlWebpackPlugin({
-      indexPath: resolve(workspaceRoot, index),
-      outputPath: basename(index),
-      baseHref,
-      entrypoints: generateEntryPoints({ scripts, styles }),
-      deployUrl,
-      sri: subresourceIntegrity,
-      moduleEntrypoints: [],
-      noModuleEntrypoints: ['polyfills-es5'],
-    })
   );
 
   return webpackConfig as WebpackConfiguration;
@@ -88,9 +56,11 @@ function getDevServerPartial(
       htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
     },
     onListening(server: any) {
+      const isHttps =
+        server.options.https || server.options.server?.type === 'https';
       logger.info(
         `NX Web Development Server is listening at ${
-          server.options.https ? 'https' : 'http'
+          isHttps ? 'https' : 'http'
         }://${server.options.host}:${server.options.port}${buildServePath(
           buildOptions
         )}`

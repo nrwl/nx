@@ -1,16 +1,15 @@
 import type { Tree } from '@nrwl/devkit';
 import { joinPathFragments, names } from '@nrwl/devkit';
 import { addGlobal } from '@nrwl/workspace/src/utilities/ast-utils';
-import { dirname } from 'path';
 import { createSourceFile, ScriptTarget } from 'typescript';
-import type { NgRxGeneratorOptions } from '../schema';
+import type { NormalizedNgRxGeneratorOptions } from './normalize-options';
 
 /**
  * Add ngrx feature exports to the public barrel in the feature library
  */
 export function addExportsToBarrel(
   tree: Tree,
-  options: NgRxGeneratorOptions
+  options: NormalizedNgRxGeneratorOptions
 ): void {
   // Don't update the public barrel for the root state, only for feature states
   if (options.root) {
@@ -18,7 +17,7 @@ export function addExportsToBarrel(
   }
 
   const indexFilePath = joinPathFragments(
-    dirname(options.module),
+    options.parentDirectory,
     '..',
     'index.ts'
   );

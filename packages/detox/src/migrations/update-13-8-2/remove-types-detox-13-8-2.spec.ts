@@ -4,14 +4,14 @@ import {
   Tree,
   updateJson,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import update from './remove-types-detox-13-8-2';
 
 describe('remove-types-detox-13-8-2', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     updateJson(tree, 'package.json', (packageJson) => {
       packageJson.devDependencies['@types/detox'] = '*';
       return packageJson;

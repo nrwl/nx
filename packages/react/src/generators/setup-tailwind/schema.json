@@ -21,21 +21,25 @@
         "index": 0
       },
       "x-dropdown": "projects",
-      "x-prompt": "What project would you like to add the Tailwind CSS setup?"
+      "x-prompt": "What project would you like to add the Tailwind CSS setup?",
+      "x-priority": "important"
     },
     "buildTarget": {
       "type": "string",
       "description": "The name of the target used to build the project. This option is not needed in most cases.",
-      "default": "build"
+      "default": "build",
+      "x-priority": "important"
     },
     "skipFormat": {
       "type": "boolean",
-      "description": "Skips formatting the workspace after the generator completes."
+      "description": "Skips formatting the workspace after the generator completes.",
+      "x-priority": "internal"
     },
     "skipPackageJson": {
       "type": "boolean",
       "default": false,
-      "description": "Do not add dependencies to `package.json`."
+      "description": "Do not add dependencies to `package.json`.",
+      "x-priority": "internal"
     }
   },
   "additionalProperties": false,

@@ -35,6 +35,12 @@
       "version": "15.1.0-beta.0",
       "description": "Update to Cypress v11. This migration will only update if the workspace is already on v10. https://www.cypress.io/blog/2022/11/04/upcoming-changes-to-component-testing/",
       "factory": "./src/migrations/update-15-1-0/cypress-11"
+    },
+    "update-to-cypress-12": {
+      "cli": "nx",
+      "version": "15.5.0-beta.0",
+      "description": "Update to Cypress v12. Cypress 12 contains a handful of breaking changes that might causes tests to start failing that nx cannot directly fix. Read more Cypress 12 changes: https://docs.cypress.io/guides/references/migration-guide#Migrating-to-Cypress-12-0.This migration will only run if you are already using Cypress v11.",
+      "factory": "./src/migrations/update-15-5-0/update-to-cypress-12"
     }
   },
   "packageJsonUpdates": {}

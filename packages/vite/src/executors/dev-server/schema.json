@@ -3,7 +3,7 @@
   "outputCapture": "direct-nodejs",
   "title": "Vite Dev Server",
   "cli": "nx",
-  "description": "Dev server for Vite.",
+  "description": "Starts a dev server using Vite.",
   "type": "object",
   "presets": [
     {
@@ -18,7 +18,8 @@
   "properties": {
     "buildTarget": {
       "type": "string",
-      "description": "Target which builds the application."
+      "description": "Target which builds the application. Only used to retrieve the configuration as the dev-server does not build the code.",
+      "x-priority": "important"
     },
     "proxyConfig": {
       "type": "string",
@@ -27,7 +28,8 @@
     },
     "port": {
       "type": "number",
-      "description": "Port to listen on."
+      "description": "Port to listen on.",
+      "x-priority": "important"
     },
     "host": {
       "description": "Specify which IP addresses the server should listen on.",
@@ -70,11 +72,14 @@
     },
     "mode": {
       "type": "string",
-      "description": "Mode to run the server in.",
-      "enum": ["production", "development"]
+      "description": "Mode to run the server in."
     },
     "clearScreen": {
       "description": "Set to false to prevent Vite from clearing the terminal screen when logging certain messages.",
+      "type": "boolean"
+    },
+    "force": {
+      "description": "Force the optimizer to ignore the cache and re-bundle",
       "type": "boolean"
     }
   },

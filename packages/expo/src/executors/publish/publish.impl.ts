@@ -21,7 +21,8 @@ export default async function* publishExecutor(
 ): AsyncGenerator<ExpoPublishOutput> {
   logger.warn('@nrwl/expo:publish is deprecated and will be removed in Nx 16.');
 
-  const projectRoot = context.workspace.projects[context.projectName].root;
+  const projectRoot =
+    context.projectsConfigurations.projects[context.projectName].root;
   ensureNodeModulesSymlink(context.root, projectRoot);
   if (options.sync) {
     displayNewlyAddedDepsMessage(

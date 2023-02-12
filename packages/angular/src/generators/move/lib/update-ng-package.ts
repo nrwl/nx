@@ -41,7 +41,7 @@ export function updateNgPackage(tree: Tree, schema: Schema): void {
         root: project.root,
         targets: project.targets,
       },
-    }
+    } as any
   );
 
   const output = outputs[0] ?? `dist/${project.root}`;

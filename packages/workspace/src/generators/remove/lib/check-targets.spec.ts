@@ -1,5 +1,5 @@
 import { addProjectConfiguration, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Schema } from '../schema';
 import { checkTargets } from './check-targets';
 
@@ -8,7 +8,7 @@ describe('checkTargets', () => {
   let schema: Schema;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     schema = {
       projectName: 'ng-app',
@@ -65,9 +65,8 @@ describe('checkTargets', () => {
   });
 
   it('should throw an error if another project targets', async () => {
-    expect(() => {
-      checkTargets(tree, schema);
-    }).toThrowErrorMatchingInlineSnapshot(`
+    await expect(checkTargets(tree, schema)).rejects
+      .toThrowErrorMatchingInlineSnapshot(`
       "ng-app is still targeted by some projects:
 
       \\"ng-app:serve\\" is used by \\"ng-app-e2e\\"
@@ -78,53 +77,18 @@ describe('checkTargets', () => {
   it('should NOT throw an error if no other project targets', async () => {
     schema.projectName = 'ng-app-e2e';
 
-    expect(() => {
-      checkTargets(tree, schema);
-    }).not.toThrow();
+    await expect(checkTargets(tree, schema)).resolves.toBeUndefined();
   });
 
   it('should NOT throw an error if it is a nrwl package', async () => {
     schema.projectName = 'storybook';
 
-    expect(() => {
-      checkTargets(tree, schema);
-    }).not.toThrow();
+    await expect(checkTargets(tree, schema)).resolves.toBeUndefined();
   });
 
   it('should not error if forceRemove is true', async () => {
     schema.forceRemove = true;
 
-    expect(() => {
-      checkTargets(tree, schema);
-    }).not.toThrow();
-  });
-
-  describe('use project in other project target', () => {
-    beforeEach(() => {
-      addProjectConfiguration(tree, 'other', {
-        projectType: 'application',
-        root: 'apps/storybook',
-        sourceRoot: 'apps/storybook/src',
-        targets: {
-          storybook: {
-            executor: '@nrwl/storybook:storybook',
-          },
-          serve: {
-            executor: '@angular-devkit/build-angular:dev-server',
-            options: {
-              browserTarget: 'storybook:build',
-            },
-          },
-        },
-      });
-    });
-
-    it('should throw an error since it is used as a target in another project', async () => {
-      schema.projectName = 'storybook';
-
-      expect(() => {
-        checkTargets(tree, schema);
-      }).toThrow();
-    });
+    await expect(checkTargets(tree, schema)).resolves.toBeUndefined();
   });
 });

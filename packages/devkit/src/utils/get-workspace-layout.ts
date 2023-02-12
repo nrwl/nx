@@ -1,10 +1,7 @@
-import {
-  readNxJson,
-  shouldDefaultToUsingStandaloneConfigs,
-} from 'nx/src/generators/utils/project-configuration';
 import type { Tree } from 'nx/src/generators/tree';
+import { requireNx } from '../../nx';
 
-export { getWorkspacePath } from 'nx/src/generators/utils/project-configuration';
+const { readNxJson } = requireNx();
 
 /**
  * Returns workspace defaults. It includes defaults folders for apps and libs,
@@ -32,7 +29,7 @@ export function getWorkspaceLayout(tree: Tree): {
       nxJson?.workspaceLayout?.libsDir ??
       inOrderOfPreference(tree, ['libs', 'packages'], '.'),
     npmScope: nxJson?.npmScope,
-    standaloneAsDefault: shouldDefaultToUsingStandaloneConfigs(tree),
+    standaloneAsDefault: true,
   };
 }
 
@@ -45,7 +42,7 @@ export function extractLayoutDirectory(directory: string): {
 } {
   if (directory) {
     directory = directory.startsWith('/') ? directory.substring(1) : directory;
-    for (let dir of ['apps', 'libs', 'packages', 'appsD']) {
+    for (let dir of ['apps', 'libs', 'packages']) {
       if (directory.startsWith(dir + '/') || directory === dir) {
         return {
           layoutDirectory: dir,

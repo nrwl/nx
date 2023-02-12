@@ -412,6 +412,63 @@ describe('createTaskGraph', () => {
     });
   });
 
+  it('should correctly set dependencies when they are all given as inputs', () => {
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['app1', 'lib1'],
+      ['build', 'prebuild'],
+      'development',
+      {
+        __overrides_unparsed__: [],
+      }
+    );
+    // prebuild should also be in here
+    expect(taskGraph).toEqual({
+      roots: ['app1:prebuild', 'lib1:build'],
+      tasks: {
+        'app1:build': {
+          id: 'app1:build',
+          target: {
+            project: 'app1',
+            target: 'build',
+          },
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'app1-root',
+        },
+        'app1:prebuild': {
+          id: 'app1:prebuild',
+          target: {
+            project: 'app1',
+            target: 'prebuild',
+          },
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'app1-root',
+        },
+        'lib1:build': {
+          id: 'lib1:build',
+          target: {
+            project: 'lib1',
+            target: 'build',
+          },
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'lib1-root',
+        },
+      },
+      dependencies: {
+        'app1:build': ['lib1:build', 'app1:prebuild'],
+        'app1:prebuild': [],
+        'lib1:build': [],
+      },
+    });
+  });
+
   it('should handle diamond shape dependencies', () => {
     projectGraph = {
       nodes: {

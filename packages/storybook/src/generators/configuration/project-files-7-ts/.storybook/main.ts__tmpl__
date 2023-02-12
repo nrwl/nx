@@ -1,0 +1,36 @@
+import type { StorybookConfig } from '<%= uiFramework %>';
+
+const config: StorybookConfig = {
+  stories: [
+    <% if(uiFramework === '@storybook/angular' && projectType === 'library') { %>
+    '../**/*.stories.@(js|jsx|ts|tsx|mdx)' <% } else { %>
+    '../<%= projectDirectory %>/**/*.stories.@(js|jsx|ts|tsx|mdx)'
+  <% } %>],
+  addons: ['@storybook/addon-essentials' <% if(uiFramework === '@storybook/react-webpack5') { %>, '@nrwl/react/plugins/storybook' <% } %><% if(uiFramework === '@storybook/react-native') { %>, '@storybook/addon-ondevice-actions',  '@storybook/addon-ondevice-backgrounds', '@storybook/addon-ondevice-controls', '@storybook/addon-ondevice-notes'  <% } %>
+    <% if(usesSwc) { %>, 'storybook-addon-swc' <% } %>
+  ],
+  framework: {
+    name: '<%= uiFramework %>',
+    options: {
+      <% if (usesVite) { %>
+      builder: {
+        viteConfigPath: '<%= viteConfigFilePath %>',
+      },
+      <% } %>
+    },
+  },
+};
+
+export default config;
+
+<% if(!usesVite) { %>
+// To customize your webpack configuration you can use the webpackFinal field.
+// Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
+// and https://nx.dev/packages/storybook/documents/custom-builder-configs
+<% } %>
+
+<% if(usesVite) { %>
+// To customize your Vite configuration you can use the viteFinal field. 
+// Check https://storybook.js.org/docs/react/builders/vite#configuration
+// and https://nx.dev/packages/storybook/documents/custom-builder-configs
+<% } %>

@@ -85,7 +85,7 @@ root.render(
 ```
 
 ```javascript {% fileName="src/app/app.tsx" %}
-import { RoutesCart } from '@store/cart';
+import { RoutesCart } from 'cart';
 import { Route, Routes } from 'react-router-dom';
 import Shop from './shop/shop';
 
@@ -136,7 +136,7 @@ export default Banner;
 Add the `Banner` component to the cart route and link back to the main page:
 
 ```javascript {% fileName="cart/src/lib/cart.tsx" %}
-import { Banner } from '@store/shared/ui';
+import { Banner } from 'shared/ui';
 import { Link } from 'react-router-dom';
 import styles from './cart.module.css';
 
@@ -160,7 +160,7 @@ export default RoutesCart;
 Update the `shop` component to use the `Banner` component and link to the cart.
 
 ```javascript {% fileName="src/app/shop/shop.tsx" %}
-import { Banner } from '@store/shared/ui';
+import { Banner } from 'shared/ui';
 import { Link } from 'react-router-dom';
 import styles from './shop.module.css';
 

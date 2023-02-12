@@ -3,11 +3,16 @@ title: 'Angular Standalone Tutorial - Part 1: Code Generation'
 description: In this tutorial you'll create a frontend-focused workspace with Nx.
 ---
 
-{% callout type="check" title="Standalone Repo" %}
-This tutorial sets up a repo with a single application at the root level that breaks out its code into libraries to add structure.
-
-Looking for a Angular monorepo setup? Check our [Angular monorepo tutorial](/angular-tutorial/1-code-generation).
+{% callout type="check" title="Looking for Angular monorepos?" %}
+This tutorial sets up a repo with a single application at the root level that breaks out its code into libraries to add structure. If you are looking for a Angular monorepo setup then check out our [Angular monorepo tutorial](/angular-tutorial/1-code-generation).
 {% /callout %}
+
+{% youtube
+src="https://www.youtube.com/embed/LYPVrWQNnEc"
+title="Tutorial: Standalone Angular Application"
+width="100%" /%}
+
+{% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/standalone-angular-app" /%}
 
 # Angular Standalone Tutorial - Part 1: Code Generation
 
@@ -31,7 +36,7 @@ Run the command `npx create-nx-workspace@latest` and when prompted, provide the 
 ✔ Repository name                       · store
 ✔ Application name                      · store
 ✔ Default stylesheet format             · css
-✔ Enable distributed caching to make your CI faster · No
+✔ Enable distributed caching to make your CI faster · Yes
 ```
 
 {% card title="Opting into Nx Cloud" description="You will also be prompted whether to add Nx Cloud to your workspace. We won't address this in this tutorial, but you can see the introduction to Nx Cloud for more details." url="/nx-cloud/intro/what-is-nx-cloud" /%}

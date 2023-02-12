@@ -83,7 +83,7 @@ describe('Linter Builder', () => {
       projectName,
       root: '/root',
       cwd: '/root',
-      workspace: {
+      projectsConfigurations: {
         version: 2,
         projects: {
           [projectName]: {
@@ -92,6 +92,8 @@ describe('Linter Builder', () => {
             targets: {},
           },
         },
+      },
+      nxJsonConfiguration: {
         npmScope: 'test',
       },
       isVerbose: false,

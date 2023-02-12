@@ -1,5 +1,10 @@
-import { readJson, readProjectConfiguration, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import {
+  readJson,
+  readProjectConfiguration,
+  Tree,
+  updateJson,
+} from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
 import { setupMf } from './setup-mf';
 import applicationGenerator from '../application/application';
@@ -8,7 +13,7 @@ describe('Init MF', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await applicationGenerator(tree, {
       name: 'app1',
       routing: true,
@@ -312,6 +317,54 @@ describe('Init MF', () => {
     });
   });
 
+  it('should generate bootstrap with environments for ng14', async () => {
+    // ARRANGE
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: {
+        ...json.dependencies,
+        '@angular/core': '14.1.0',
+      },
+    }));
+
+    await applicationGenerator(tree, {
+      name: 'ng14',
+      routing: true,
+      standalone: true,
+    });
+
+    // ACT
+    await setupMf(tree, {
+      appName: 'ng14',
+      mfType: 'host',
+      routing: true,
+      standalone: true,
+    });
+
+    // ASSERT
+    expect(tree.read('apps/ng14/src/bootstrap.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import {importProvidersFrom} from \\"@angular/core\\";
+      import {bootstrapApplication} from \\"@angular/platform-browser\\";
+      import {RouterModule} from \\"@angular/router\\";
+      import {RemoteEntryComponent} from \\"./app/remote-entry/entry.component\\";
+      import {appRoutes} from \\"./app/app.routes\\";
+      import {enableProdMode} from '@angular/core';
+      import {environment} from './environments/environment';
+      if(environment.production) {
+        enableProdMode();
+      }
+
+      bootstrapApplication(RemoteEntryComponent, {
+        providers: [
+          importProvidersFrom(
+            RouterModule.forRoot(appRoutes, {initialNavigation: 'enabledBlocking'})
+          )
+        ]
+      });"
+    `);
+  });
+
   it('should add a remote to dynamic host correctly', async () => {
     // ARRANGE
     await setupMf(tree, {
@@ -342,5 +395,27 @@ describe('Init MF', () => {
     expect(
       tree.read('apps/app1/src/app/app.routes.ts', 'utf-8')
     ).toMatchSnapshot();
+  });
+
+  it('should throw an error when installed version of angular < 14.1.0 and --standalone is used', async () => {
+    // ARRANGE
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: {
+        ...json.dependencies,
+        '@angular/core': '14.0.0',
+      },
+    }));
+
+    // ACT & ASSERT
+    await expect(
+      setupMf(tree, {
+        appName: 'app1',
+        mfType: 'host',
+        standalone: true,
+      })
+    ).rejects.toThrow(
+      'The --standalone flag is not supported in your current version of Angular (14.0.0). Please update to a version of Angular that supports Standalone Components (>= 14.1.0).'
+    );
   });
 });

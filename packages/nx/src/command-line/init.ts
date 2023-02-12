@@ -1,7 +1,9 @@
 import { execSync } from 'child_process';
 import { existsSync } from 'fs';
-import { readJsonFile, directoryExists } from '../utils/fileutils';
+import { addNxToNest } from '../nx-init/add-nx-to-nest';
 import { addNxToNpmRepo } from '../nx-init/add-nx-to-npm-repo';
+import { directoryExists, readJsonFile } from '../utils/fileutils';
+import { PackageJson } from '../utils/package-json';
 
 export async function initHandler() {
   const args = process.argv.slice(2).join(' ');
@@ -10,17 +12,20 @@ export async function initHandler() {
     console.log(`Using version ${process.env.NX_VERSION}`);
   }
   if (existsSync('package.json')) {
+    const packageJson: PackageJson = readJsonFile('package.json');
     if (existsSync('angular.json')) {
       // TODO(leo): remove make-angular-cli-faster
       execSync(`npx --yes make-angular-cli-faster@${version} ${args}`, {
         stdio: [0, 1, 2],
       });
-    } else if (isCRA()) {
+    } else if (isCRA(packageJson)) {
       // TODO(jack): remove cra-to-nx
       execSync(`npx --yes cra-to-nx@${version} ${args}`, {
         stdio: [0, 1, 2],
       });
-    } else if (isMonorepo()) {
+    } else if (isNestCLI(packageJson)) {
+      await addNxToNest(packageJson);
+    } else if (isMonorepo(packageJson)) {
       // TODO: vsavkin remove add-nx-to-monorepo
       execSync(`npx --yes add-nx-to-monorepo@${version} ${args}`, {
         stdio: [0, 1, 2],
@@ -35,8 +40,7 @@ export async function initHandler() {
   }
 }
 
-function isCRA() {
-  const packageJson = readJsonFile('package.json');
+function isCRA(packageJson: PackageJson) {
   const combinedDependencies = {
     ...packageJson.dependencies,
     ...packageJson.devDependencies,
@@ -54,8 +58,19 @@ function isCRA() {
   );
 }
 
-function isMonorepo() {
-  const packageJson = readJsonFile('package.json');
+function isNestCLI(packageJson: PackageJson) {
+  const combinedDependencies = {
+    ...packageJson.dependencies,
+    ...packageJson.devDependencies,
+  };
+  return (
+    existsSync('nest-cli.json') &&
+    combinedDependencies['@nestjs/core'] &&
+    combinedDependencies['@nestjs/cli']
+  );
+}
+
+function isMonorepo(packageJson: PackageJson) {
   if (!!packageJson.workspaces) return true;
 
   if (existsSync('pnpm-workspace.yaml') || existsSync('pnpm-workspace.yml'))

@@ -150,6 +150,20 @@ describe('Update jest.config.js', () => {
       );
     });
 
+    it('should be able to update an existing value in a nested object with a dot delimited key', () => {
+      const newPropertyValue = 'value';
+      addPropertyToJestConfig(
+        host,
+        'jest.config.js',
+        ['alreadyExistingObject', 'nestedProperty', 'key.with.dot'],
+        newPropertyValue
+      );
+      const json = jestConfigObject(host, 'jest.config.js');
+      expect(json.alreadyExistingObject.nestedProperty['key.with.dot']).toEqual(
+        newPropertyValue
+      );
+    });
+
     it('should be able to modify an object with a string identifier', () => {
       addPropertyToJestConfig(
         host,
@@ -258,6 +272,33 @@ describe('Update jest.config.js', () => {
       const json = jestConfigObject(host, 'jest.config.js');
       expect(
         json['alreadyExistingObject']['nested-object']['childArray']
+      ).toEqual(undefined);
+    });
+    it('should remove single nested properties in the jest config, with a dot delimited key', () => {
+      host.write(
+        'jest.config.js',
+        String.raw`
+       const { nxPreset } = require('@nrwl/jest/preset');
+        
+      module.exports = {
+        ...nxPreset,
+        name: 'test',
+        alreadyExistingObject: {
+          'nested-object': {
+            'child.dotted.value': ['value1', 'value2']
+          }
+        },
+      }
+    `
+      );
+      removePropertyFromJestConfig(host, 'jest.config.js', [
+        'alreadyExistingObject',
+        'nested-object',
+        'child.dotted.value',
+      ]);
+      const json = jestConfigObject(host, 'jest.config.js');
+      expect(
+        json['alreadyExistingObject']['nested-object']['child.dotted.value']
       ).toEqual(undefined);
     });
     it('should remove single properties', () => {

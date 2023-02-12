@@ -1,5 +1,3 @@
-import { DocumentMetadata } from '@nrwl/nx-dev/models-document';
-
 export interface Menu {
   sections: MenuSection[];
 }
@@ -11,8 +9,11 @@ export interface MenuSection {
   hideSectionHeader: boolean;
 }
 
-export interface MenuItem extends DocumentMetadata {
+export interface MenuItem {
+  name: string;
   path: string;
-  itemList: MenuItem[];
+  id: string;
+  isExternal: boolean;
+  children: MenuItem[];
   disableCollapsible: boolean;
 }

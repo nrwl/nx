@@ -4,21 +4,11 @@
   "sourceRoot": "packages/cli",
   "projectType": "library",
   "targets": {
-    "test": {
-      "executor": "@nrwl/jest:jest",
-      "options": {
-        "jestConfig": "packages/cli/jest.config.ts",
-        "passWithNoTests": true
-      },
-      "outputs": ["{workspaceRoot}/coverage/packages/cli"]
-    },
+    "test": {},
     "build-base": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "outputPath": "build/packages/cli",
-        "tsConfig": "packages/cli/tsconfig.lib.json",
         "main": "packages/cli/bin/nx.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/cli",
@@ -53,8 +43,7 @@
             "output": "/"
           }
         ]
-      },
-      "outputs": ["{options.outputPath}"]
+      }
     },
     "build": {
       "executor": "nx:run-commands",
@@ -71,21 +60,7 @@
         "parallel": false
       }
     },
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "lintFilePatterns": [
-          "packages/cli/**/*.ts",
-          "packages/cli/**/*.spec.ts",
-          "packages/cli/**/*_spec.ts",
-          "packages/cli/**/*.spec.tsx",
-          "packages/cli/**/*.spec.js",
-          "packages/cli/**/*.spec.jsx",
-          "packages/cli/**/*.d.ts"
-        ]
-      },
-      "outputs": ["{options.outputFile}"]
-    }
+    "lint": {}
   },
   "implicitDependencies": ["workspace"]
 }

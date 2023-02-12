@@ -1,6 +1,6 @@
 import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
 import { Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
 import applicationGenerator from '../application/application';
 import storiesGenerator from './stories';
@@ -342,7 +342,7 @@ export async function createTestUIApp(
   libName: string,
   plainJS = false
 ): Promise<Tree> {
-  let appTree = createTreeWithEmptyV1Workspace();
+  let appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
   await applicationGenerator(appTree, {
     e2eTestRunner: 'cypress',
@@ -352,7 +352,6 @@ export async function createTestUIApp(
     unitTestRunner: 'none',
     name: libName,
     js: plainJS,
-    standaloneConfig: false,
   });
   return appTree;
 }

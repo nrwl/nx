@@ -2,7 +2,7 @@
 
 exports[`@nrwl/linter:workspace-rule --dir should support creating the rule in a nested directory 1`] = `
 "/**
- * This file sets you up with with structure needed for an ESLint rule.
+ * This file sets you up with structure needed for an ESLint rule.
  *
  * It leverages utilities from @typescript-eslint to allow TypeScript to
  * provide autocompletions etc for the configuration.
@@ -58,7 +58,7 @@ ruleTester.run(RULE_NAME, rule, {
 
 exports[`@nrwl/linter:workspace-rule --dir should support creating the rule in a nested directory with multiple levels of nesting 1`] = `
 "/**
- * This file sets you up with with structure needed for an ESLint rule.
+ * This file sets you up with structure needed for an ESLint rule.
  *
  * It leverages utilities from @typescript-eslint to allow TypeScript to
  * provide autocompletions etc for the configuration.
@@ -114,7 +114,7 @@ ruleTester.run(RULE_NAME, rule, {
 
 exports[`@nrwl/linter:workspace-rule should generate the required files 1`] = `
 "/**
- * This file sets you up with with structure needed for an ESLint rule.
+ * This file sets you up with structure needed for an ESLint rule.
  *
  * It leverages utilities from @typescript-eslint to allow TypeScript to
  * provide autocompletions etc for the configuration.

@@ -62,12 +62,7 @@ function addProject(tree: Tree, options: NormalizedSchema) {
     };
   }
 
-  addProjectConfiguration(
-    tree,
-    options.name,
-    projectConfiguration,
-    options.standaloneConfig
-  );
+  addProjectConfiguration(tree, options.name, projectConfiguration);
 }
 
 export async function addLint(

@@ -1,9 +1,9 @@
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import {
-  Tree,
   addProjectConfiguration,
-  readWorkspaceConfiguration,
-  updateWorkspaceConfiguration,
+  readNxJson,
+  Tree,
+  updateNxJson,
 } from '@nrwl/devkit';
 import addStorybookInputs from './add-storybook-inputs';
 
@@ -15,8 +15,7 @@ describe('15.0.0 migration (add-storybook-inputs)', () => {
   });
 
   it('should add inputs configuration for storybook targets', async () => {
-    updateWorkspaceConfiguration(tree, {
-      version: 2,
+    updateNxJson(tree, {
       namedInputs: {
         default: ['{projectRoot}/**/*', 'sharedGlobals'],
         sharedGlobals: [],
@@ -43,7 +42,7 @@ describe('15.0.0 migration (add-storybook-inputs)', () => {
 
     await addStorybookInputs(tree);
 
-    const updated = readWorkspaceConfiguration(tree);
+    const updated = readNxJson(tree);
     expect(updated).toMatchInlineSnapshot(`
       Object {
         "namedInputs": Object {
@@ -74,14 +73,12 @@ describe('15.0.0 migration (add-storybook-inputs)', () => {
             ],
           },
         },
-        "version": 2,
       }
     `);
   });
 
   it('should add inputs configuration for angular storybook targets', async () => {
-    updateWorkspaceConfiguration(tree, {
-      version: 2,
+    updateNxJson(tree, {
       namedInputs: {
         default: ['{projectRoot}/**/*', 'sharedGlobals'],
         sharedGlobals: [],
@@ -108,7 +105,7 @@ describe('15.0.0 migration (add-storybook-inputs)', () => {
 
     await addStorybookInputs(tree);
 
-    const updated = readWorkspaceConfiguration(tree);
+    const updated = readNxJson(tree);
     expect(updated).toMatchInlineSnapshot(`
       Object {
         "namedInputs": Object {
@@ -139,7 +136,6 @@ describe('15.0.0 migration (add-storybook-inputs)', () => {
             ],
           },
         },
-        "version": 2,
       }
     `);
   });

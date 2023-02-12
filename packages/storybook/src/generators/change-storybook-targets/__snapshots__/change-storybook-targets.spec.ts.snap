@@ -19,7 +19,6 @@ Object {
       "runner": "nx/tasks-runners/default",
     },
   },
-  "version": 1,
 }
 `;
 
@@ -64,7 +63,6 @@ Object {
       "runner": "nx/tasks-runners/default",
     },
   },
-  "version": 1,
 }
 `;
 
@@ -87,7 +85,6 @@ Object {
       "runner": "nx/tasks-runners/default",
     },
   },
-  "version": 1,
 }
 `;
 
@@ -110,7 +107,6 @@ Object {
       "runner": "nx/tasks-runners/default",
     },
   },
-  "version": 1,
 }
 `;
 

@@ -3,6 +3,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
 const path_1 = require('path');
 const ts = require('typescript');
 const fs = require('fs');
+const { relative, join } = require('path');
 
 /**
  * Custom resolver which will respect package exports (until Jest supports it natively
@@ -67,7 +68,9 @@ module.exports = function (path, options) {
     if (path.startsWith('nx/')) throw new Error('custom resolution');
 
     if (path.indexOf('@nrwl/workspace') > -1) {
-      throw 'Reference to local Nx package found. Use local version instead.';
+      throw new Error(
+        'Reference to local Nx package found. Use local version instead.'
+      );
     }
 
     // Global modules which must be resolved by defaultResolver
@@ -80,6 +83,14 @@ module.exports = function (path, options) {
     // Fallback to using typescript
     compilerSetup = compilerSetup || getCompilerSetup(options.rootDir);
     const { compilerOptions, host } = compilerSetup;
+
+    // TODO(v17): Remove this workaround
+    // We have some weird d.ts + .js business going on for these 2 imports so this is a workaround
+    if (path === '@nrwl/devkit') {
+      return join(__dirname, '../', './packages/devkit/index.js');
+    } else if (path === '@nrwl/devkit/testing') {
+      return join(__dirname, '../', './packages/devkit/testing.js');
+    }
     return ts.resolveModuleName(path, options.basedir, compilerOptions, host)
       .resolvedModule.resolvedFileName;
   }

@@ -1,13 +1,8 @@
-import {
-  formatFiles,
-  readWorkspaceConfiguration,
-  Tree,
-  updateWorkspaceConfiguration,
-} from '@nrwl/devkit';
+import { formatFiles, readNxJson, Tree, updateNxJson } from '@nrwl/devkit';
 import { output } from '../../utilities/output';
 
 export async function setTargetDependencies(host: Tree) {
-  const config = readWorkspaceConfiguration(host);
+  const config = readNxJson(host);
   const strictlyOrderedTargets = config.tasksRunnerOptions?.['default']?.options
     ?.strictlyOrderedTargets || ['build'];
   delete config.tasksRunnerOptions?.['default']?.options
@@ -23,7 +18,7 @@ export async function setTargetDependencies(host: Tree) {
       updatedStrictlyOrderedTargets.push(target);
     }
   });
-  updateWorkspaceConfiguration(host, config);
+  updateNxJson(host, config);
 
   if (updatedStrictlyOrderedTargets.length > 0) {
     output.note({

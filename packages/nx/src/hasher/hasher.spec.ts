@@ -89,7 +89,7 @@ describe('Hasher', () => {
                   ],
                 },
               },
-              files: [{ file: '/file', ext: '.ts', hash: 'file.hash' }],
+              files: [{ file: '/file', hash: 'file.hash' }],
             },
           },
         },

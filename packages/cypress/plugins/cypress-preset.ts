@@ -2,6 +2,8 @@ import { workspaceRoot } from '@nrwl/devkit';
 import { dirname, join, relative } from 'path';
 import { lstatSync } from 'fs';
 
+import vitePreprocessor from '../src/plugins/preprocessor-vite';
+
 interface BaseCypressPreset {
   videosFolder: string;
   screenshotsFolder: string;
@@ -15,8 +17,10 @@ export interface NxComponentTestingOptions {
    * this is only when customized away from the default value of `component-test`
    * @example 'component-test'
    */
-  ctTargetName: string;
+  ctTargetName?: string;
+  bundler?: 'vite' | 'webpack';
 }
+
 export function nxBaseCypressPreset(pathToConfig: string): BaseCypressPreset {
   // prevent from placing path outside the root of the workspace
   // if they pass in a file or directory
@@ -58,12 +62,25 @@ export function nxBaseCypressPreset(pathToConfig: string): BaseCypressPreset {
  *
  * @param pathToConfig will be used to construct the output paths for videos and screenshots
  */
-export function nxE2EPreset(pathToConfig: string) {
-  return {
+export function nxE2EPreset(
+  pathToConfig: string,
+  options?: { bundler?: string }
+) {
+  const baseConfig = {
     ...nxBaseCypressPreset(pathToConfig),
     fileServerFolder: '.',
     supportFile: 'src/support/e2e.ts',
     specPattern: 'src/**/*.cy.{js,jsx,ts,tsx}',
     fixturesFolder: 'src/fixtures',
   };
+
+  if (options?.bundler === 'vite') {
+    return {
+      ...baseConfig,
+      setupNodeEvents(on) {
+        on('file:preprocessor', vitePreprocessor());
+      },
+    };
+  }
+  return baseConfig;
 }

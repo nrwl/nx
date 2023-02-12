@@ -1,10 +1,8 @@
 import { Tree } from 'nx/src/generators/tree';
 import { Schema } from '../schema';
-import {
-  readProjectConfiguration,
-  readWorkspaceConfiguration,
-} from 'nx/src/generators/utils/project-configuration';
+import { readProjectConfiguration } from 'nx/src/generators/utils/project-configuration';
 import { joinPathFragments } from 'nx/src/utils/path';
+import { readNxJson } from '@nrwl/devkit';
 
 export function removeDeadCodeFromRemote(tree: Tree, options: Schema) {
   const projectName = options.appName;
@@ -75,7 +73,7 @@ export class AppModule {}`
   } else {
     tree.delete(pathToAppComponent);
 
-    const prefix = options.prefix ?? readWorkspaceConfiguration(tree).npmScope;
+    const prefix = options.prefix ?? readNxJson(tree).npmScope;
     const remoteEntrySelector = `${prefix}-${projectName}-entry`;
 
     const pathToIndexHtml = project.targets.build.options.index;

@@ -37,5 +37,3 @@ export const CollapseEdgesPanel = memo(
     );
   }
 );
-
-export default CollapseEdgesPanel;

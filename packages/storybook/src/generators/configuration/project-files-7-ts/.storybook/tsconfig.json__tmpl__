@@ -1,0 +1,28 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "emitDecoratorMetadata": true
+    <% if(uiFramework === '@storybook/react-webpack5' || uiFramework === '@storybook/react-vite') { %>, "outDir": "" <% } %>
+  },
+  <% if(uiFramework === '@storybook/react-webpack5' || uiFramework === '@storybook/react-vite') { %>"files": [
+    "<% if(!isRootProject) { %><%= offsetFromRoot %><% } %>../node_modules/@nrwl/react/typings/styled-jsx.d.ts",
+    "<% if(!isRootProject) { %><%= offsetFromRoot %><% } %>../node_modules/@nrwl/react/typings/cssmodule.d.ts",
+    "<% if(!isRootProject) { %><%= offsetFromRoot %><% } %>../node_modules/@nrwl/react/typings/image.d.ts"
+  ],<% } %>
+  "exclude": ["../**/*.spec.ts" <% if(uiFramework === '@storybook/react-webpack5' || uiFramework === '@storybook/react-vite') { %>, "../**/*.spec.js", "../**/*.spec.tsx", "../**/*.spec.jsx"<% } %>],
+  "include": [<% if(uiFramework === '@storybook/angular' && projectType === 'library') { %>
+    "../src/**/*.stories.ts",
+    "../src/**/*.stories.js",
+    "../src/**/*.stories.jsx",
+    "../src/**/*.stories.tsx",
+    "../src/**/*.stories.mdx",
+    "*.ts",
+    "*.js"<% } else { %>
+    "../<%= mainDir %>/**/*.stories.ts",
+    "../<%= mainDir %>/**/*.stories.js",
+    "../<%= mainDir %>/**/*.stories.jsx",
+    "../<%= mainDir %>/**/*.stories.tsx",
+    "../<%= mainDir %>/**/*.stories.mdx",
+    "*.ts",
+    "*.js"<% if(uiFramework === '@storybook/react-native') { %>, "*.tsx"<% } %><% } %>]
+}

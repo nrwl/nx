@@ -269,6 +269,11 @@ describe('dev mode - project graph', () => {
         ['cart', ...dependencies, ...dependents].length
       );
     });
+
+    it('should url encode projects with special chars', () => {
+      getFocusButtonForProject('@scoped/project-a').click({ force: true });
+      cy.url().should('include', '%40scoped%2Fproject-a');
+    });
   });
 
   describe('unfocus button', () => {

@@ -22,11 +22,15 @@ export default async function* detoxTestExecutor(
   options: DetoxTestOptions,
   context: ExecutorContext
 ): AsyncGenerator<DetoxTestOutput> {
-  const projectRoot = context.workspace.projects[context.projectName].root;
+  const projectRoot =
+    context.projectsConfigurations.projects[context.projectName].root;
 
   try {
     if (options.buildTarget) {
-      const buildTarget = parseTargetString(options.buildTarget);
+      const buildTarget = parseTargetString(
+        options.buildTarget,
+        context.projectGraph
+      );
       const buildOptions = readTargetOptions<DetoxBuildOptions>(
         buildTarget,
         context

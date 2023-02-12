@@ -2,26 +2,27 @@ import type { Tree } from '@nrwl/devkit';
 import {
   formatFiles,
   normalizePath,
+  readNxJson,
   readProjectConfiguration,
-  readWorkspaceConfiguration,
+  stripIndents,
 } from '@nrwl/devkit';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { pathStartsWith } from '../utils/path';
 import { exportComponentInEntryPoint } from './lib/component';
 import { normalizeOptions } from './lib/normalize-options';
 import type { NormalizedSchema, Schema } from './schema';
-import { getGeneratorDirectoryForInstalledAngularVersion } from '../../utils/get-generator-directory-for-ng-version';
-import { join } from 'path';
+import { getInstalledAngularVersionInfo } from '../utils/version-utils';
+import { lt } from 'semver';
 
 export async function componentGenerator(tree: Tree, rawOptions: Schema) {
-  const generatorDirectory =
-    getGeneratorDirectoryForInstalledAngularVersion(tree);
-  if (generatorDirectory) {
-    let previousGenerator = await import(
-      join(__dirname, generatorDirectory, 'component')
-    );
-    await previousGenerator.default(tree, rawOptions);
-    return;
+  const installedAngularVersionInfo = getInstalledAngularVersionInfo(tree);
+
+  if (
+    lt(installedAngularVersionInfo.version, '14.1.0') &&
+    rawOptions.standalone
+  ) {
+    throw new Error(stripIndents`The "standalone" option is only supported in Angular >= 14.1.0. You are currently using ${installedAngularVersionInfo.version}.
+    You can resolve this error by removing the "standalone" option or by migrating to Angular 14.1.0.`);
   }
 
   const options = await normalizeOptions(tree, rawOptions);
@@ -45,8 +46,7 @@ function checkPathUnderProjectRoot(tree: Tree, schema: NormalizedSchema): void {
     return;
   }
 
-  const project =
-    schema.project ?? readWorkspaceConfiguration(tree).defaultProject;
+  const project = schema.project ?? readNxJson(tree).defaultProject;
   const { root } = readProjectConfiguration(tree, project);
 
   let pathToComponent = normalizePath(schema.path);

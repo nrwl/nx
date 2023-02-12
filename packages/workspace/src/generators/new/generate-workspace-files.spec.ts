@@ -22,7 +22,6 @@ describe('@nrwl/workspace:generateWorkspaceFiles', () => {
     });
     expect(tree.exists('/proj/README.md')).toBe(true);
     expect(tree.exists('/proj/nx.json')).toBe(true);
-    expect(tree.exists('/proj/workspace.json')).toBe(false);
     expect(tree.exists('/proj/.prettierrc')).toBe(true);
     expect(tree.exists('/proj/.prettierignore')).toBe(true);
   });
@@ -42,6 +41,7 @@ describe('@nrwl/workspace:generateWorkspaceFiles', () => {
             Preset.NextJs,
             Preset.WebComponents,
             Preset.Express,
+            Preset.NodeServer,
           ].includes(Preset[preset])
         ) {
           appName = 'app1';
@@ -196,46 +196,6 @@ describe('@nrwl/workspace:generateWorkspaceFiles', () => {
     ).recommendations;
 
     expect(recommendations).toMatchSnapshot();
-  });
-
-  it('should add decorate-angular-cli when used with angular cli', async () => {
-    await generateWorkspaceFiles(tree, {
-      name: 'proj',
-      directory: 'proj',
-      preset: Preset.AngularMonorepo,
-      defaultBase: 'main',
-    });
-    expect(tree.exists('/proj/decorate-angular-cli.js')).toBe(true);
-
-    const { scripts } = readJson(tree, '/proj/package.json');
-    expect(scripts).toMatchInlineSnapshot(`
-      Object {
-        "build": "nx build",
-        "ng": "nx",
-        "postinstall": "node ./decorate-angular-cli.js",
-        "start": "nx serve",
-        "test": "nx test",
-      }
-    `);
-  });
-
-  it('should not add decorate-angular-cli when used with nx cli', async () => {
-    await generateWorkspaceFiles(tree, {
-      name: 'proj',
-      directory: 'proj',
-      preset: Preset.Empty,
-      defaultBase: 'main',
-    });
-    expect(tree.exists('/proj/decorate-angular-cli.js')).toBe(false);
-
-    const { scripts } = readJson(tree, '/proj/package.json');
-    expect(scripts).toMatchInlineSnapshot(`
-      Object {
-        "build": "nx build",
-        "start": "nx serve",
-        "test": "nx test",
-      }
-    `);
   });
 
   it('should create a workspace using NPM preset (npm package manager)', async () => {

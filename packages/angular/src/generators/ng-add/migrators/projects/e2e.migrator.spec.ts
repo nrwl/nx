@@ -11,11 +11,7 @@ jest.mock('fs', () => {
 });
 
 import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
-import type {
-  ProjectConfiguration,
-  TargetConfiguration,
-  Tree,
-} from '@nrwl/devkit';
+import type { ProjectConfiguration, Tree } from '@nrwl/devkit';
 import {
   joinPathFragments,
   offsetFromRoot,
@@ -23,46 +19,53 @@ import {
   readProjectConfiguration,
   writeJson,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
-import type { MigrationProjectConfiguration } from '../../utilities';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import type { Logger, MigrationProjectConfiguration } from '../../utilities';
 import { E2eMigrator } from './e2e.migrator';
-
-type AngularCliProjectConfiguration = Omit<ProjectConfiguration, 'targets'> & {
-  architect?: {
-    [targetName: string]: Omit<TargetConfiguration, 'executor'> & {
-      builder: string;
-    };
-  };
-};
 
 const mockedLogger = { warn: jest.fn() };
 
 describe('e2e migrator', () => {
   let tree: Tree;
+  let migrator: E2eMigrator;
   let mockedInstalledCypressVersion = installedCypressVersion as jest.Mock<
     ReturnType<typeof installedCypressVersion>
   >;
 
   function addProject(
     name: string,
-    config: AngularCliProjectConfiguration
+    config: ProjectConfiguration
   ): MigrationProjectConfiguration {
     config.projectType = 'application';
-    const angularJson = readJson(tree, 'angular.json');
-    angularJson.projects[name] = config;
-    writeJson(tree, 'angular.json', angularJson);
+    writeJson(tree, `apps/${name}/project.json`, config);
     tree.write(`${config.root}/README.md`, '');
     tree.write(`${config.sourceRoot}/main.ts`, '');
 
-    return { config: readProjectConfiguration(tree, name), name };
+    return {
+      config: {
+        ...readProjectConfiguration(tree, name),
+        root: config.root,
+      },
+      name,
+    };
+  }
+
+  function createMigrator(
+    project: MigrationProjectConfiguration,
+    lintTargetName?: string,
+    logger?: Logger
+  ): void {
+    migrator = new E2eMigrator(tree, {}, project, lintTargetName, logger);
+    // the app migrator does this before invoking e2e migrator, it's an implementation
+    // detail for now until the e2e migrator is split into builder migrators
+    project.config.root = 'apps/app1';
   }
 
   beforeEach(() => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     // when this migrator is invoked, some of the workspace migration has
     // already been run, so we make some adjustments to match that state
-    tree.delete('workspace.json');
     writeJson(tree, 'angular.json', { version: 2, projects: {} });
 
     mockedInstalledCypressVersion.mockReturnValue(9);
@@ -73,7 +76,7 @@ describe('e2e migrator', () => {
   describe('validation', () => {
     it('should succeed validation when the project does not have an e2e target', async () => {
       const project = addProject('app1', { root: '' });
-      const migrator = new E2eMigrator(tree, {}, project, undefined);
+      createMigrator(project);
 
       const result = migrator.validate();
 
@@ -83,66 +86,66 @@ describe('e2e migrator', () => {
     it('should fail validation when the e2e target is not specifying any options', async () => {
       const project = addProject('app1', {
         root: '',
-        architect: {
-          e2e: { builder: '@angular-devkit/build-angular:protractor' },
+        targets: {
+          e2e: { executor: '@angular-devkit/build-angular:protractor' },
         },
       });
-      const migrator = new E2eMigrator(tree, {}, project, undefined);
+      createMigrator(project);
 
       const result = migrator.validate();
 
       expect(result).toHaveLength(1);
       expect(result[0].message).toBe(
-        'The "e2e" target is not specifying any options.'
+        'The "e2e" target is not specifying any options. The target will be skipped.'
       );
       expect(result[0].hint).toBe(
-        'Make sure the "app1.architect.e2e.options" is correctly set or remove the "app1.architect.e2e" target if it is not valid.'
+        'Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, ensure the "app1.architect.e2e.options" is correctly set or remove the target if it is not valid, and run the migration again.'
       );
     });
 
     it('should fail validation when using Protractor and the protractorConfig option is not set', async () => {
       const project = addProject('app1', {
         root: '',
-        architect: {
+        targets: {
           e2e: {
-            builder: '@angular-devkit/build-angular:protractor',
+            executor: '@angular-devkit/build-angular:protractor',
             options: {},
           },
         },
       });
-      const migrator = new E2eMigrator(tree, {}, project, undefined);
+      createMigrator(project);
 
       const result = migrator.validate();
 
       expect(result).toHaveLength(1);
       expect(result[0].message).toBe(
-        'The "e2e" target is using the "@angular-devkit/build-angular:protractor" builder but the Protractor config file is not specified.'
+        'The "e2e" target is using the "@angular-devkit/build-angular:protractor" builder but the Protractor config file is not specified. The target will be skipped.'
       );
       expect(result[0].hint).toBe(
-        'Make sure the "app1.architect.e2e.options.protractorConfig" is correctly set or remove the "app1.architect.e2e" target if it is not valid.'
+        'Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, ensure the "app1.architect.e2e.options.protractorConfig" is correctly set or remove the "app1.architect.e2e" target if it is not valid, and run the migration again.'
       );
     });
 
     it('should fail validation when using Protractor and the specified protractorConfig does not exist', async () => {
       const project = addProject('app1', {
         root: '',
-        architect: {
+        targets: {
           e2e: {
-            builder: '@angular-devkit/build-angular:protractor',
+            executor: '@angular-devkit/build-angular:protractor',
             options: { protractorConfig: 'protractor.conf.js' },
           },
         },
       });
-      const migrator = new E2eMigrator(tree, {}, project, undefined);
+      createMigrator(project);
 
       const result = migrator.validate();
 
       expect(result).toHaveLength(1);
       expect(result[0].message).toBe(
-        'The specified Protractor config file "protractor.conf.js" in the "e2e" target could not be found.'
+        'The specified Protractor config file "protractor.conf.js" in the "e2e" target could not be found. The target will be skipped.'
       );
       expect(result[0].hint).toBe(
-        'Make sure the "app1.architect.e2e.options.protractorConfig" is set to a valid path or remove the "app1.architect.e2e" target if it is not valid.'
+        'Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, ensure the "app1.architect.e2e.options.protractorConfig" is set to a valid path or remove the "app1.architect.e2e" target if it is not valid, and run the migration again.'
       );
     });
 
@@ -150,14 +153,14 @@ describe('e2e migrator', () => {
       tree.write('protractor.conf.js', '');
       const project = addProject('app1', {
         root: '',
-        architect: {
+        targets: {
           e2e: {
-            builder: '@angular-devkit/build-angular:protractor',
+            executor: '@angular-devkit/build-angular:protractor',
             options: { protractorConfig: 'protractor.conf.js' },
           },
         },
       });
-      const migrator = new E2eMigrator(tree, {}, project, undefined);
+      createMigrator(project);
 
       const result = migrator.validate();
 
@@ -167,23 +170,23 @@ describe('e2e migrator', () => {
     it('should fail validation when using Cypress and the specified config file does not exist', async () => {
       const project = addProject('app1', {
         root: '',
-        architect: {
+        targets: {
           e2e: {
-            builder: '@cypress/schematic:cypress',
+            executor: '@cypress/schematic:cypress',
             options: { configFile: 'cypress.conf.json' },
           },
         },
       });
-      const migrator = new E2eMigrator(tree, {}, project, undefined);
+      createMigrator(project);
 
       const result = migrator.validate();
 
       expect(result).toHaveLength(1);
       expect(result[0].message).toBe(
-        'The specified Cypress config file "cypress.conf.json" in the "e2e" target could not be found.'
+        'The specified Cypress config file "cypress.conf.json" in the "e2e" target could not be found. The target will be skipped.'
       );
       expect(result[0].hint).toBe(
-        'Make sure the "app1.architect.e2e.options.configFile" option is set to a valid path or remove the "app1.architect.e2e" target if it is not valid.'
+        'Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, ensure the "app1.architect.e2e.options.configFile" option is set to a valid path or remove the "app1.architect.e2e" target if it is not valid, and run the migration again.'
       );
     });
 
@@ -191,20 +194,20 @@ describe('e2e migrator', () => {
       writeJson(tree, 'cypress.json', {});
       const project = addProject('app1', {
         root: '',
-        architect: {
-          e2e: { builder: '@cypress/schematic:cypress', options: {} },
+        targets: {
+          e2e: { executor: '@cypress/schematic:cypress', options: {} },
         },
       });
-      const migrator = new E2eMigrator(tree, {}, project, undefined);
+      createMigrator(project);
 
       const result = migrator.validate();
 
       expect(result).toHaveLength(1);
       expect(result[0].message).toBe(
-        'The "e2e" target is using the "@cypress/schematic:cypress" builder but the "cypress" directory could not be found at the project root.'
+        'The "e2e" target is using the "@cypress/schematic:cypress" builder but the "cypress" directory could not be found at the project root. The target will be skipped.'
       );
       expect(result[0].hint).toBe(
-        'Make sure the "cypress" directory exists in the project root or remove the "e2e" target if it is not valid.'
+        'Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, ensure the "cypress" directory exists in the project root or remove the "e2e" target if it is not valid, and run the migration again.'
       );
     });
 
@@ -212,43 +215,43 @@ describe('e2e migrator', () => {
       it('should fail validation when using Cypress and the cypress.json file does not exist', async () => {
         const project = addProject('app1', {
           root: '',
-          architect: {
-            e2e: { builder: '@cypress/schematic:cypress', options: {} },
+          targets: {
+            e2e: { executor: '@cypress/schematic:cypress', options: {} },
           },
         });
-        const migrator = new E2eMigrator(tree, {}, project, undefined);
+        createMigrator(project);
 
         const result = migrator.validate();
 
         expect(result).toHaveLength(1);
         expect(result[0].message).toBe(
-          'The "e2e" target is using the "@cypress/schematic:cypress" builder but the "configFile" option is not specified and a "cypress.json" file could not be found at the project root.'
+          'The "e2e" target is using the "@cypress/schematic:cypress" builder but the "configFile" option is not specified and a "cypress.json" file could not be found at the project root. The target will be skipped.'
         );
         expect(result[0].hint).toBe(
-          'Make sure the "app1.architect.e2e.options.configFile" option is set to a valid path, or that a "cypress.json" file exists at the project root, or remove the "app1.architect.e2e" target if it is not valid.'
+          'Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, ensure the "app1.architect.e2e.options.configFile" option is set to a valid path or that a "cypress.json" file exists at the project root or remove the "app1.architect.e2e" target if it is not valid, and run the migration again.'
         );
       });
 
       it('should fail validation when using Cypress and the specified config file does not exist', async () => {
         const project = addProject('app1', {
           root: '',
-          architect: {
+          targets: {
             e2e: {
-              builder: '@cypress/schematic:cypress',
+              executor: '@cypress/schematic:cypress',
               options: { configFile: 'cypress.conf.json' },
             },
           },
         });
-        const migrator = new E2eMigrator(tree, {}, project, undefined);
+        createMigrator(project);
 
         const result = migrator.validate();
 
         expect(result).toHaveLength(1);
         expect(result[0].message).toBe(
-          'The specified Cypress config file "cypress.conf.json" in the "e2e" target could not be found.'
+          'The specified Cypress config file "cypress.conf.json" in the "e2e" target could not be found. The target will be skipped.'
         );
         expect(result[0].hint).toBe(
-          'Make sure the "app1.architect.e2e.options.configFile" option is set to a valid path or remove the "app1.architect.e2e" target if it is not valid.'
+          'Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, ensure the "app1.architect.e2e.options.configFile" option is set to a valid path or remove the "app1.architect.e2e" target if it is not valid, and run the migration again.'
         );
       });
 
@@ -257,11 +260,11 @@ describe('e2e migrator', () => {
         writeJson(tree, 'cypress/tsconfig.json', {});
         const project = addProject('app1', {
           root: '',
-          architect: {
-            e2e: { builder: '@cypress/schematic:cypress', options: {} },
+          targets: {
+            e2e: { executor: '@cypress/schematic:cypress', options: {} },
           },
         });
-        const migrator = new E2eMigrator(tree, {}, project, undefined);
+        createMigrator(project);
 
         const result = migrator.validate();
 
@@ -274,20 +277,20 @@ describe('e2e migrator', () => {
         mockedInstalledCypressVersion.mockReturnValue(10);
         const project = addProject('app1', {
           root: '',
-          architect: {
-            e2e: { builder: '@cypress/schematic:cypress', options: {} },
+          targets: {
+            e2e: { executor: '@cypress/schematic:cypress', options: {} },
           },
         });
-        const migrator = new E2eMigrator(tree, {}, project, undefined);
+        createMigrator(project);
 
         const result = migrator.validate();
 
         expect(result).toHaveLength(1);
         expect(result[0].message).toBe(
-          'The "e2e" target is using the "@cypress/schematic:cypress" builder but the "configFile" option is not specified and a "cypress.config.{ts,js,mjs,cjs}" file could not be found at the project root.'
+          'The "e2e" target is using the "@cypress/schematic:cypress" builder but the "configFile" option is not specified and a "cypress.config.{ts,js,mjs,cjs}" file could not be found at the project root. The target will be skipped.'
         );
         expect(result[0].hint).toBe(
-          'Make sure the "app1.architect.e2e.options.configFile" option is set to a valid path, or that a "cypress.config.{ts,js,mjs,cjs}" file exists at the project root, or remove the "app1.architect.e2e" target if it is not valid.'
+          'Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, ensure the "app1.architect.e2e.options.configFile" option is set to a valid path or that a "cypress.config.{ts,js,mjs,cjs}" file exists at the project root or remove the "app1.architect.e2e" target if it is not valid, and run the migration again.'
         );
       });
 
@@ -297,11 +300,11 @@ describe('e2e migrator', () => {
         writeJson(tree, 'cypress/tsconfig.json', {});
         const project = addProject('app1', {
           root: '',
-          architect: {
-            e2e: { builder: '@cypress/schematic:cypress', options: {} },
+          targets: {
+            e2e: { executor: '@cypress/schematic:cypress', options: {} },
           },
         });
-        const migrator = new E2eMigrator(tree, {}, project, undefined);
+        createMigrator(project);
 
         const result = migrator.validate();
 
@@ -315,20 +318,14 @@ describe('e2e migrator', () => {
       tree.write('e2e/protractor.conf.js', '');
       const project = addProject('app1', {
         root: '',
-        architect: {
+        targets: {
           e2e: {
-            builder: '@angular-devkit/build-angular:protractor',
+            executor: '@angular-devkit/build-angular:protractor',
             options: { protractorConfig: 'e2e/protractor.conf.js' },
           },
         },
       });
-      const migrator = new E2eMigrator(
-        tree,
-        {},
-        project,
-        undefined,
-        mockedLogger as any
-      );
+      createMigrator(project, undefined, mockedLogger as any);
 
       await expect(migrator.migrate()).resolves.not.toThrow();
 
@@ -342,17 +339,11 @@ describe('e2e migrator', () => {
       writeJson(tree, 'cypress/README.md', {});
       const project = addProject('app1', {
         root: '',
-        architect: {
-          e2e: { builder: '@cypress/schematic:cypress', options: {} },
+        targets: {
+          e2e: { executor: '@cypress/schematic:cypress', options: {} },
         },
       });
-      const migrator = new E2eMigrator(
-        tree,
-        {},
-        project,
-        undefined,
-        mockedLogger as any
-      );
+      createMigrator(project, undefined, mockedLogger as any);
 
       await expect(migrator.migrate()).resolves.not.toThrow();
 
@@ -370,9 +361,9 @@ describe('e2e migrator', () => {
         writeJson(tree, joinPathFragments(root, 'e2e/tsconfig.json'), {});
         const project = addProject('app1', {
           root,
-          architect: {
+          targets: {
             e2e: {
-              builder: '@angular-devkit/build-angular:protractor',
+              executor: '@angular-devkit/build-angular:protractor',
               options: {
                 protractorConfig: joinPathFragments(
                   root,
@@ -382,7 +373,7 @@ describe('e2e migrator', () => {
             },
           },
         });
-        const migrator = new E2eMigrator(tree, {}, project, undefined);
+        createMigrator(project);
 
         await migrator.migrate();
 
@@ -396,9 +387,9 @@ describe('e2e migrator', () => {
         tree.write(joinPathFragments(root, 'e2e/protractor.conf.js'), '');
         const project = addProject('app1', {
           root,
-          architect: {
+          targets: {
             e2e: {
-              builder: '@angular-devkit/build-angular:protractor',
+              executor: '@angular-devkit/build-angular:protractor',
               options: {
                 protractorConfig: joinPathFragments(
                   root,
@@ -408,12 +399,12 @@ describe('e2e migrator', () => {
             },
           },
         });
-        const migrator = new E2eMigrator(tree, {}, project, undefined);
+        createMigrator(project);
 
         await migrator.migrate();
 
         const angularJson = readJson(tree, 'angular.json');
-        expect(angularJson.projects['app1-e2e']).toBe('apps/app1-e2e');
+        expect(angularJson.projects['app1-e2e']).toBeUndefined();
         const e2eProject = readProjectConfiguration(tree, 'app1-e2e');
         expect(e2eProject).toStrictEqual({
           $schema: '../../node_modules/nx/schemas/project-schema.json',
@@ -436,9 +427,9 @@ describe('e2e migrator', () => {
         tree.write(joinPathFragments(root, 'e2e/protractor.conf.js'), '');
         const project = addProject('app1', {
           root,
-          architect: {
+          targets: {
             e2e: {
-              builder: '@angular-devkit/build-angular:protractor',
+              executor: '@angular-devkit/build-angular:protractor',
               options: {
                 protractorConfig: joinPathFragments(
                   root,
@@ -448,7 +439,7 @@ describe('e2e migrator', () => {
             },
           },
         });
-        const migrator = new E2eMigrator(tree, {}, project, undefined);
+        createMigrator(project);
 
         await migrator.migrate();
 
@@ -460,9 +451,9 @@ describe('e2e migrator', () => {
         tree.write(joinPathFragments(root, 'e2e/protractor.conf.js'), '');
         const project = addProject('app1', {
           root,
-          architect: {
+          targets: {
             e2e: {
-              builder: '@angular-devkit/build-angular:protractor',
+              executor: '@angular-devkit/build-angular:protractor',
               options: {
                 protractorConfig: joinPathFragments(
                   root,
@@ -470,10 +461,10 @@ describe('e2e migrator', () => {
                 ),
               },
             },
-            lint: { builder: '@angular-eslint/builder:lint', options: {} },
+            lint: { executor: '@angular-eslint/builder:lint', options: {} },
           },
         });
-        const migrator = new E2eMigrator(tree, {}, project, 'lint');
+        createMigrator(project, 'lint');
 
         await migrator.migrate();
 
@@ -485,9 +476,9 @@ describe('e2e migrator', () => {
         tree.write(joinPathFragments(root, 'e2e/protractor.conf.js'), '');
         const project = addProject('app1', {
           root,
-          architect: {
+          targets: {
             e2e: {
-              builder: '@angular-devkit/build-angular:protractor',
+              executor: '@angular-devkit/build-angular:protractor',
               options: {
                 protractorConfig: joinPathFragments(
                   root,
@@ -497,7 +488,7 @@ describe('e2e migrator', () => {
             },
           },
         });
-        const migrator = new E2eMigrator(tree, {}, project, undefined);
+        createMigrator(project);
 
         await migrator.migrate();
 
@@ -515,11 +506,11 @@ describe('e2e migrator', () => {
         writeJson(tree, joinPathFragments(root, 'cypress/tsconfig.json'), {});
         const project = addProject('app1', {
           root,
-          architect: {
-            e2e: { builder: '@cypress/schematic:cypress', options: {} },
+          targets: {
+            e2e: { executor: '@cypress/schematic:cypress', options: {} },
           },
         });
-        const migrator = new E2eMigrator(tree, {}, project, undefined);
+        createMigrator(project);
 
         await migrator.migrate();
 
@@ -534,16 +525,16 @@ describe('e2e migrator', () => {
         writeJson(tree, joinPathFragments(root, 'cypress/tsconfig.json'), {});
         const project = addProject('app1', {
           root,
-          architect: {
-            e2e: { builder: '@cypress/schematic:cypress', options: {} },
+          targets: {
+            e2e: { executor: '@cypress/schematic:cypress', options: {} },
           },
         });
-        const migrator = new E2eMigrator(tree, {}, project, undefined);
+        createMigrator(project);
 
         await migrator.migrate();
 
         const angularJson = readJson(tree, 'angular.json');
-        expect(angularJson.projects['app1-e2e']).toBe('apps/app1-e2e');
+        expect(angularJson.projects['app1-e2e']).toBeUndefined();
         const e2eProject = readProjectConfiguration(tree, 'app1-e2e');
         expect(e2eProject).toStrictEqual({
           $schema: '../../node_modules/nx/schemas/project-schema.json',
@@ -567,19 +558,19 @@ describe('e2e migrator', () => {
         writeJson(tree, joinPathFragments(root, 'cypress/tsconfig.json'), {});
         const project = addProject('app1', {
           root,
-          architect: {
+          targets: {
             'cypress-run': {
-              builder: '@cypress/schematic:cypress',
+              executor: '@cypress/schematic:cypress',
               options: {},
             },
             'cypress-open': {
-              builder: '@cypress/schematic:cypress',
+              executor: '@cypress/schematic:cypress',
               options: {},
             },
-            e2e: { builder: '@cypress/schematic:cypress', options: {} },
+            e2e: { executor: '@cypress/schematic:cypress', options: {} },
           },
         });
-        const migrator = new E2eMigrator(tree, {}, project, undefined);
+        createMigrator(project);
 
         await migrator.migrate();
 
@@ -594,19 +585,19 @@ describe('e2e migrator', () => {
         writeJson(tree, joinPathFragments(root, 'cypress/tsconfig.json'), {});
         const project = addProject('app1', {
           root,
-          architect: {
+          targets: {
             'cypress-run': {
-              builder: '@cypress/schematic:cypress',
+              executor: '@cypress/schematic:cypress',
               options: {},
             },
             'cypress-open': {
-              builder: '@cypress/schematic:cypress',
+              executor: '@cypress/schematic:cypress',
               options: {},
             },
-            e2e: { builder: '@cypress/schematic:cypress', options: {} },
+            e2e: { executor: '@cypress/schematic:cypress', options: {} },
           },
         });
-        const migrator = new E2eMigrator(tree, {}, project, undefined);
+        createMigrator(project);
 
         await migrator.migrate();
 
@@ -641,26 +632,26 @@ describe('e2e migrator', () => {
         writeJson(tree, joinPathFragments(root, 'cypress/tsconfig.json'), {});
         const project = addProject('app1', {
           root,
-          architect: {
+          targets: {
             'cypress-run': {
-              builder: '@cypress/schematic:cypress',
+              executor: '@cypress/schematic:cypress',
               options: {
                 tsConfig: joinPathFragments(root, 'cypress/tsconfig.json'),
               },
             },
             'cypress-open': {
-              builder: '@cypress/schematic:cypress',
+              executor: '@cypress/schematic:cypress',
               options: {},
             },
             e2e: {
-              builder: '@cypress/schematic:cypress',
+              executor: '@cypress/schematic:cypress',
               options: {
                 tsConfig: joinPathFragments(root, 'cypress/tsconfig.json'),
               },
             },
           },
         });
-        const migrator = new E2eMigrator(tree, {}, project, undefined);
+        createMigrator(project);
 
         await migrator.migrate();
 
@@ -701,12 +692,12 @@ describe('e2e migrator', () => {
         writeJson(tree, joinPathFragments(root, 'cypress/tsconfig.json'), {});
         const project = addProject('app1', {
           root,
-          architect: {
-            e2e: { builder: '@cypress/schematic:cypress', options: {} },
-            lint: { builder: '@angular-eslint/builder:lint', options: {} },
+          targets: {
+            e2e: { executor: '@cypress/schematic:cypress', options: {} },
+            lint: { executor: '@angular-eslint/builder:lint', options: {} },
           },
         });
-        const migrator = new E2eMigrator(tree, {}, project, 'lint');
+        createMigrator(project, 'lint');
 
         await migrator.migrate();
 
@@ -719,11 +710,11 @@ describe('e2e migrator', () => {
         writeJson(tree, joinPathFragments(root, 'cypress/tsconfig.json'), {});
         const project = addProject('app1', {
           root,
-          architect: {
-            e2e: { builder: '@cypress/schematic:cypress', options: {} },
+          targets: {
+            e2e: { executor: '@cypress/schematic:cypress', options: {} },
           },
         });
-        const migrator = new E2eMigrator(tree, {}, project, undefined);
+        createMigrator(project);
 
         await migrator.migrate();
 
@@ -738,11 +729,11 @@ describe('e2e migrator', () => {
         });
         const project = addProject('app1', {
           root,
-          architect: {
-            e2e: { builder: '@cypress/schematic:cypress', options: {} },
+          targets: {
+            e2e: { executor: '@cypress/schematic:cypress', options: {} },
           },
         });
-        const migrator = new E2eMigrator(tree, {}, project, undefined);
+        createMigrator(project);
 
         await migrator.migrate();
 
@@ -756,14 +747,14 @@ describe('e2e migrator', () => {
           writeJson(tree, joinPathFragments(root, 'cypress/tsconfig.json'), {});
           const project = addProject('app1', {
             root,
-            architect: {
+            targets: {
               e2e: {
-                builder: '@cypress/schematic:cypress',
+                executor: '@cypress/schematic:cypress',
                 options: { configFile: false },
               },
             },
           });
-          const migrator = new E2eMigrator(tree, {}, project, undefined);
+          createMigrator(project);
 
           await migrator.migrate();
 
@@ -796,11 +787,11 @@ describe('e2e migrator', () => {
           });
           const project = addProject('app1', {
             root,
-            architect: {
-              e2e: { builder: '@cypress/schematic:cypress', options: {} },
+            targets: {
+              e2e: { executor: '@cypress/schematic:cypress', options: {} },
             },
           });
-          const migrator = new E2eMigrator(tree, {}, project, undefined);
+          createMigrator(project);
 
           await migrator.migrate();
 
@@ -824,14 +815,14 @@ describe('e2e migrator', () => {
           writeJson(tree, joinPathFragments(root, 'cypress/tsconfig.json'), {});
           const project = addProject('app1', {
             root,
-            architect: {
+            targets: {
               e2e: {
-                builder: '@cypress/schematic:cypress',
+                executor: '@cypress/schematic:cypress',
                 options: {},
               },
             },
           });
-          const migrator = new E2eMigrator(tree, {}, project, undefined);
+          createMigrator(project);
 
           await migrator.migrate();
 
@@ -840,13 +831,8 @@ describe('e2e migrator', () => {
             'apps/app1-e2e/cypress.config.ts',
             'utf-8'
           );
-          expect(cypressConfig).toBe(`import { defineConfig } from 'cypress';
-import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
 
-export default defineConfig({
-  e2e: nxE2EPreset(__dirname)
-});
-`);
+          expect(cypressConfig).toMatchSnapshot();
         });
 
         it('should update e2e config with the nx preset', async () => {
@@ -856,19 +842,19 @@ export default defineConfig({
             joinPathFragments(root, 'cypress.config.ts'),
             `import { defineConfig } from 'cypress';
 
-export default defineConfig({
-  e2e: {
-    baseUrl: 'http://localhost:4200'
-  },
-});`
+            export default defineConfig({
+              e2e: {
+                baseUrl: 'http://localhost:4200'
+              },
+            });`
           );
           const project = addProject('app1', {
             root,
-            architect: {
-              e2e: { builder: '@cypress/schematic:cypress', options: {} },
+            targets: {
+              e2e: { executor: '@cypress/schematic:cypress', options: {} },
             },
           });
-          const migrator = new E2eMigrator(tree, {}, project, undefined);
+          createMigrator(project);
 
           await migrator.migrate();
 
@@ -902,11 +888,11 @@ export default defineConfig({
           );
           const project = addProject('app1', {
             root,
-            architect: {
-              e2e: { builder: '@cypress/schematic:cypress', options: {} },
+            targets: {
+              e2e: { executor: '@cypress/schematic:cypress', options: {} },
             },
           });
-          const migrator = new E2eMigrator(tree, {}, project, undefined);
+          createMigrator(project);
 
           await migrator.migrate();
 
@@ -935,11 +921,11 @@ export default defineConfig({
           );
           const project = addProject('app1', {
             root,
-            architect: {
-              e2e: { builder: '@cypress/schematic:cypress', options: {} },
+            targets: {
+              e2e: { executor: '@cypress/schematic:cypress', options: {} },
             },
           });
-          const migrator = new E2eMigrator(tree, {}, project, undefined);
+          createMigrator(project);
 
           await migrator.migrate();
 
@@ -968,11 +954,11 @@ export default defineConfig({
           );
           const project = addProject('app1', {
             root,
-            architect: {
-              e2e: { builder: '@cypress/schematic:cypress', options: {} },
+            targets: {
+              e2e: { executor: '@cypress/schematic:cypress', options: {} },
             },
           });
-          const migrator = new E2eMigrator(tree, {}, project, undefined);
+          createMigrator(project);
 
           await migrator.migrate();
 
@@ -1001,11 +987,11 @@ export default defineConfig({
           );
           const project = addProject('app1', {
             root,
-            architect: {
-              e2e: { builder: '@cypress/schematic:cypress', options: {} },
+            targets: {
+              e2e: { executor: '@cypress/schematic:cypress', options: {} },
             },
           });
-          const migrator = new E2eMigrator(tree, {}, project, undefined);
+          createMigrator(project);
 
           await migrator.migrate();
 
@@ -1028,11 +1014,11 @@ export default defineConfig({});`
           );
           const project = addProject('app1', {
             root,
-            architect: {
-              e2e: { builder: '@cypress/schematic:cypress', options: {} },
+            targets: {
+              e2e: { executor: '@cypress/schematic:cypress', options: {} },
             },
           });
-          const migrator = new E2eMigrator(tree, {}, project, undefined);
+          createMigrator(project);
 
           await expect(migrator.migrate()).resolves.not.toThrow();
         });
@@ -1048,11 +1034,11 @@ export default defineConfig({ e2e });`
           );
           const project = addProject('app1', {
             root,
-            architect: {
-              e2e: { builder: '@cypress/schematic:cypress', options: {} },
+            targets: {
+              e2e: { executor: '@cypress/schematic:cypress', options: {} },
             },
           });
-          const migrator = new E2eMigrator(tree, {}, project, undefined);
+          createMigrator(project);
 
           await expect(migrator.migrate()).resolves.not.toThrow();
         });
@@ -1063,11 +1049,11 @@ export default defineConfig({ e2e });`
           tree.write(joinPathFragments(root, 'cypress.config.ts'), '');
           const project = addProject('app1', {
             root,
-            architect: {
-              e2e: { builder: '@cypress/schematic:cypress', options: {} },
+            targets: {
+              e2e: { executor: '@cypress/schematic:cypress', options: {} },
             },
           });
-          const migrator = new E2eMigrator(tree, {}, project, undefined);
+          createMigrator(project);
 
           await expect(migrator.migrate()).resolves.not.toThrow();
         });

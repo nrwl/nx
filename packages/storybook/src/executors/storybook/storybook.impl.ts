@@ -1,68 +1,73 @@
 import { ExecutorContext } from '@nrwl/devkit';
-import { buildDev } from '@storybook/core-server';
+import * as build from '@storybook/core-server';
 import 'dotenv/config';
-import { CommonNxStorybookConfig } from '../models';
 import {
-  getStorybookFrameworkPath,
-  resolveCommonStorybookOptionMapper,
-  runStorybookSetupCheck,
-} from '../utils';
-export interface StorybookExecutorOptions extends CommonNxStorybookConfig {
-  host?: string;
-  port?: number;
-  quiet?: boolean;
-  https?: boolean;
-  sslCert?: string;
-  sslKey?: string;
-  staticDir?: string[];
-  watch?: boolean;
-  docsMode?: boolean;
-}
+  isStorybookV7,
+  storybookConfigExistsCheck,
+} from '../../utils/utilities';
+import { getStorybookFrameworkPath, runStorybookSetupCheck } from '../utils';
+import { CLIOptions } from '@storybook/types'; // TODO(katerina): Remove when Storybook 7
+import { CommonNxStorybookConfig } from '../../utils/models';
 
 export default async function* storybookExecutor(
-  options: StorybookExecutorOptions,
+  options: CLIOptions & CommonNxStorybookConfig,
   context: ExecutorContext
-): AsyncGenerator<{ success: boolean }> {
-  let frameworkPath = getStorybookFrameworkPath(options.uiFramework);
-  const frameworkOptions = (await import(frameworkPath)).default;
+): AsyncGenerator<{
+  success: boolean;
+  info?: { port: number; baseUrl?: string };
+}> {
+  const storybook7 = isStorybookV7();
+  storybookConfigExistsCheck(options.configDir, context.projectName);
+  if (storybook7) {
+    const buildOptions: CLIOptions = options;
+    const result: { port: number } = await runInstance(
+      buildOptions,
+      storybook7
+    );
+    yield {
+      success: true,
+      info: {
+        port: result?.port,
+        baseUrl: `${options.https ? 'https' : 'http'}://${
+          options.host ?? 'localhost'
+        }:${result?.port}`,
+      },
+    };
+    await new Promise<{ success: boolean }>(() => {});
+  } else {
+    // TODO(katerina): Remove when Storybook 7
+    // print warnings
+    runStorybookSetupCheck(options);
 
-  const option = storybookOptionMapper(options, frameworkOptions, context);
+    let frameworkPath = getStorybookFrameworkPath(options.uiFramework);
+    const frameworkOptions = (await import(frameworkPath)).default;
+    const buildOptions: CLIOptions = {
+      ...options,
+      ...frameworkOptions,
+      frameworkPresets: [...(frameworkOptions.frameworkPresets || [])],
+    };
 
-  // print warnings
-  runStorybookSetupCheck(options);
-
-  await runInstance(option);
-
-  yield { success: true };
-
-  // This Promise intentionally never resolves, leaving the process running
-  await new Promise<{ success: boolean }>(() => {});
+    await runInstance(buildOptions, storybook7);
+    yield { success: true };
+    await new Promise<{ success: boolean }>(() => {});
+  }
 }
 
-function runInstance(options: StorybookExecutorOptions) {
+function runInstance(options: CLIOptions, storybook7: boolean) {
   const env = process.env.NODE_ENV ?? 'development';
   process.env.NODE_ENV = env;
-  return buildDev({
-    ...options,
-    configType: env.toUpperCase(),
-  } as any);
-}
 
-function storybookOptionMapper(
-  builderOptions: StorybookExecutorOptions,
-  frameworkOptions: any,
-  context: ExecutorContext
-) {
-  const storybookOptions = {
-    ...builderOptions,
-    ...resolveCommonStorybookOptionMapper(
-      builderOptions,
-      frameworkOptions,
-      context
-    ),
-    mode: 'dev',
-    watch: true,
-  };
-
-  return storybookOptions;
+  if (storybook7) {
+    return build['build']({
+      ...options,
+      mode: 'dev',
+    } as any); // TODO(katerina): Change to actual types when Storybook 7
+  } else {
+    // TODO(katerina): Remove when Storybook 7
+    return build.buildDev({
+      ...options,
+      configType: env.toUpperCase(),
+      mode: 'dev',
+    } as any);
+  }
 }

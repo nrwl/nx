@@ -24,6 +24,7 @@ Primary.args = {
             executor: '@nrwl/js:tsc',
           },
         },
+        description: 'The app uses this task to build itself.',
       },
     },
     {
@@ -36,6 +37,7 @@ Primary.args = {
             executor: '@nrwl/js:tsc',
           },
         },
+        description: 'The lib uses this task to build itself.',
       },
     },
     {
@@ -107,4 +109,5 @@ Primary.args = {
   },
   taskId: 'app:build',
   height: '450px',
+  enableTooltips: true,
 };

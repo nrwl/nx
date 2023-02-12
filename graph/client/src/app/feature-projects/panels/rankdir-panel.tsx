@@ -9,7 +9,7 @@ import {
   rankDirResolver,
 } from '../../rankdir-resolver';
 
-export default function RankdirPanel(): JSX.Element {
+export function RankdirPanel(): JSX.Element {
   const [rankDir, setRankDir] = useState(
     (localStorage.getItem(localStorageRankDirKey) as RankDir) || 'TB'
   );

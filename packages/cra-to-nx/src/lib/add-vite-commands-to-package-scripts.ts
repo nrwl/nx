@@ -2,9 +2,9 @@ import { readJsonFile, writeJsonFile } from 'nx/src/utils/fileutils';
 
 export function addViteCommandsToPackageScripts(
   appName: string,
-  isNested: boolean
+  isStandalone: boolean
 ) {
-  const packageJsonPath = isNested
+  const packageJsonPath = isStandalone
     ? 'package.json'
     : `apps/${appName}/package.json`;
   const packageJson = readJsonFile(packageJsonPath);

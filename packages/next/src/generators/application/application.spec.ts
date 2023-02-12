@@ -1,5 +1,11 @@
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
-import { getProjects, NxJsonConfiguration, readJson, Tree } from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import {
+  getProjects,
+  NxJsonConfiguration,
+  readJson,
+  readProjectConfiguration,
+  Tree,
+} from '@nrwl/devkit';
 
 import { applicationGenerator } from './application';
 
@@ -7,25 +13,22 @@ describe('app', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   describe('not nested', () => {
-    it('should update workspace.json and set defaultProject', async () => {
+    it('should update configurations', async () => {
       await applicationGenerator(tree, {
         name: 'myApp',
         style: 'css',
-        standaloneConfig: false,
       });
 
-      const workspaceJson = readJson(tree, 'workspace.json');
-      const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
-
-      expect(workspaceJson.projects['my-app'].root).toEqual('apps/my-app');
-      expect(workspaceJson.projects['my-app-e2e'].root).toEqual(
+      expect(readProjectConfiguration(tree, 'my-app').root).toEqual(
+        'apps/my-app'
+      );
+      expect(readProjectConfiguration(tree, 'my-app-e2e').root).toEqual(
         'apps/my-app-e2e'
       );
-      expect(nxJson.defaultProject).toEqual('my-app');
     });
 
     it('should update tags and implicit dependencies', async () => {
@@ -33,7 +36,6 @@ describe('app', () => {
         name: 'myApp',
         style: 'css',
         tags: 'one,two',
-        standaloneConfig: false,
       });
 
       const projects = Object.fromEntries(getProjects(tree));
@@ -53,7 +55,6 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'myApp',
         style: 'css',
-        standaloneConfig: false,
       });
       expect(tree.exists('apps/my-app/tsconfig.json')).toBeTruthy();
       expect(tree.exists('apps/my-app/pages/index.tsx')).toBeTruthy();
@@ -65,7 +66,6 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'myApp',
         style: 'css',
-        standaloneConfig: false,
       });
 
       const tsConfig = readJson(tree, 'apps/my-app/tsconfig.json');
@@ -78,7 +78,6 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'myApp',
         style: 'css',
-        standaloneConfig: false,
       });
 
       const tsConfig = readJson(tree, 'apps/my-app/tsconfig.json');
@@ -91,7 +90,6 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'myApp',
         style: 'scss',
-        standaloneConfig: false,
       });
 
       expect(tree.exists('apps/my-app/pages/index.module.scss')).toBeTruthy();
@@ -109,7 +107,6 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'myApp',
         style: 'less',
-        standaloneConfig: false,
       });
 
       expect(tree.exists('apps/my-app/pages/index.module.less')).toBeTruthy();
@@ -127,7 +124,6 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'myApp',
         style: 'styl',
-        standaloneConfig: false,
       });
 
       expect(tree.exists('apps/my-app/pages/index.module.styl')).toBeTruthy();
@@ -145,7 +141,6 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'myApp',
         style: 'styled-components',
-        standaloneConfig: false,
       });
 
       expect(
@@ -164,7 +159,6 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'myApp',
         style: '@emotion/styled',
-        standaloneConfig: false,
       });
 
       expect(
@@ -181,7 +175,6 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'myApp',
         style: '@emotion/styled',
-        standaloneConfig: false,
       });
 
       const tsconfigJson = readJson(tree, 'apps/my-app/tsconfig.json');
@@ -197,7 +190,6 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'myApp',
         style: 'styled-jsx',
-        standaloneConfig: false,
       });
 
       const indexContent = tree.read('apps/my-app/pages/index.tsx', 'utf-8');
@@ -219,7 +211,6 @@ describe('app', () => {
     await applicationGenerator(tree, {
       name: 'my-app',
       style: 'css',
-      standaloneConfig: false,
     });
 
     expect(tree.read('apps/my-app/jest.config.ts', 'utf-8')).toContain(
@@ -231,7 +222,6 @@ describe('app', () => {
     await applicationGenerator(tree, {
       name: 'my-app',
       style: 'css',
-      standaloneConfig: false,
     });
 
     expect(tree.read('apps/my-app/jest.config.ts', 'utf-8')).toContain(
@@ -243,13 +233,13 @@ describe('app', () => {
     await applicationGenerator(tree, {
       name: 'my-app',
       style: 'css',
-      standaloneConfig: false,
     });
 
-    const workspaceJson = readJson(tree, 'workspace.json');
-    const architectConfig = workspaceJson.projects['my-app'].architect;
-    expect(architectConfig.build.builder).toEqual('@nrwl/next:build');
-    expect(architectConfig.build.options).toEqual({
+    const projectConfiguration = readProjectConfiguration(tree, 'my-app');
+    expect(projectConfiguration.targets.build.executor).toEqual(
+      '@nrwl/next:build'
+    );
+    expect(projectConfiguration.targets.build.options).toEqual({
       root: 'apps/my-app',
       outputPath: 'dist/apps/my-app',
     });
@@ -259,17 +249,17 @@ describe('app', () => {
     await applicationGenerator(tree, {
       name: 'my-app',
       style: 'css',
-      standaloneConfig: false,
     });
 
-    const workspaceJson = readJson(tree, 'workspace.json');
-    const architectConfig = workspaceJson.projects['my-app'].architect;
-    expect(architectConfig.serve.builder).toEqual('@nrwl/next:server');
-    expect(architectConfig.serve.options).toEqual({
+    const projectConfiguration = readProjectConfiguration(tree, 'my-app');
+    expect(projectConfiguration.targets.serve.executor).toEqual(
+      '@nrwl/next:server'
+    );
+    expect(projectConfiguration.targets.serve.options).toEqual({
       buildTarget: 'my-app:build',
       dev: true,
     });
-    expect(architectConfig.serve.configurations).toEqual({
+    expect(projectConfiguration.targets.serve.configurations).toEqual({
       development: {
         buildTarget: 'my-app:build:development',
         dev: true,
@@ -282,13 +272,13 @@ describe('app', () => {
     await applicationGenerator(tree, {
       name: 'my-app',
       style: 'css',
-      standaloneConfig: false,
     });
 
-    const workspaceJson = readJson(tree, 'workspace.json');
-    const architectConfig = workspaceJson.projects['my-app'].architect;
-    expect(architectConfig.export.builder).toEqual('@nrwl/next:export');
-    expect(architectConfig.export.options).toEqual({
+    const projectConfiguration = readProjectConfiguration(tree, 'my-app');
+    expect(projectConfiguration.targets.export.executor).toEqual(
+      '@nrwl/next:export'
+    );
+    expect(projectConfiguration.targets.export.options).toEqual({
       buildTarget: 'my-app:build:production',
     });
   });
@@ -299,7 +289,6 @@ describe('app', () => {
         name: 'myApp',
         style: 'css',
         unitTestRunner: 'none',
-        standaloneConfig: false,
       });
       expect(tree.exists('jest.config.ts')).toBeFalsy();
       expect(tree.exists('apps/my-app/specs/index.spec.tsx')).toBeFalsy();
@@ -312,11 +301,8 @@ describe('app', () => {
         name: 'myApp',
         style: 'css',
         e2eTestRunner: 'none',
-        standaloneConfig: false,
       });
       expect(tree.exists('apps/my-app-e2e')).toBeFalsy();
-      const workspaceJson = readJson(tree, 'workspace.json');
-      expect(workspaceJson.projects['my-app-e2e']).toBeUndefined();
     });
   });
 
@@ -324,7 +310,6 @@ describe('app', () => {
     await applicationGenerator(tree, {
       name: 'myApp',
       style: 'css',
-      standaloneConfig: false,
     });
 
     const appContent = tree.read('apps/my-app/pages/index.tsx', 'utf-8');
@@ -338,7 +323,6 @@ describe('app', () => {
         await applicationGenerator(tree, {
           name: 'myApp',
           style: 'css',
-          standaloneConfig: false,
         });
 
         const packageJson = readJson(tree, '/package.json');
@@ -410,7 +394,6 @@ describe('app', () => {
         name: 'myApp',
         style: 'css',
         js: true,
-        standaloneConfig: false,
       });
 
       expect(tree.exists('apps/my-app/pages/index.js')).toBeTruthy();
@@ -422,8 +405,8 @@ describe('app', () => {
       expect(tsConfig.compilerOptions.allowJs).toEqual(true);
 
       const tsConfigApp = readJson(tree, 'apps/my-app/tsconfig.json');
-      expect(tsConfigApp.include).toContain('src/**/*.js');
-      expect(tsConfigApp.exclude).not.toContain('src/**/*.spec.js');
+      expect(tsConfigApp.include).toContain('**/*.js');
+      expect(tsConfigApp.exclude).not.toContain('**/*.spec.js');
     });
   });
 
@@ -431,7 +414,6 @@ describe('app', () => {
     await applicationGenerator(tree, {
       name: 'myApp',
       style: 'css',
-      standaloneConfig: false,
     });
 
     expect(tree.exists('apps/my-app/public/.gitkeep')).toBe(true);

@@ -8,7 +8,8 @@
   "properties": {
     "project": {
       "type": "string",
-      "description": "The name of the project."
+      "description": "The name of the project.",
+      "x-priority": "important"
     },
     "name": {
       "type": "string",
@@ -16,7 +17,8 @@
       "$default": {
         "$source": "argv",
         "index": 0
-      }
+      },
+      "x-priority": "important"
     },
     "angularJsImport": {
       "type": "string",
@@ -25,12 +27,14 @@
     "skipFormat": {
       "type": "boolean",
       "description": "Skip formatting files.",
-      "default": false
+      "default": false,
+      "x-priority": "internal"
     },
     "skipPackageJson": {
       "type": "boolean",
       "description": "Do not add `@angular/upgrade` to `package.json` (e.g., `--skipPackageJson`).",
-      "default": false
+      "default": false,
+      "x-priority": "internal"
     }
   },
   "additionalProperties": false,

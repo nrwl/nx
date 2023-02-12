@@ -2,13 +2,20 @@ import {
   formatFiles,
   installPackagesTask,
   moveFilesToNewDirectory,
+  readNxJson,
+  stripIndents,
   Tree,
+  updateNxJson,
 } from '@nrwl/devkit';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
-import { convertToNxProjectGenerator } from '@nrwl/workspace/generators';
+import { join } from 'path';
 import { UnitTestRunner } from '../../utils/test-runners';
 import { angularInitGenerator } from '../init/init';
 import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
+import {
+  getGeneratorDirectoryForInstalledAngularVersion,
+  getInstalledAngularVersionInfo,
+} from '../utils/version-utils';
 import {
   addE2e,
   addLinting,
@@ -20,7 +27,6 @@ import {
   enableStrictTypeChecking,
   normalizeOptions,
   setApplicationStrictDefault,
-  setDefaultProject,
   updateAppComponentTemplate,
   updateComponentSpec,
   updateConfigFiles,
@@ -28,21 +34,26 @@ import {
   updateNxComponentTemplate,
 } from './lib';
 import type { Schema } from './schema';
-import { getGeneratorDirectoryForInstalledAngularVersion } from '../../utils/get-generator-directory-for-ng-version';
-import { join } from 'path';
+import { lt } from 'semver';
 
 export async function applicationGenerator(
   tree: Tree,
   schema: Partial<Schema>
 ) {
+  const installedAngularVersionInfo = getInstalledAngularVersionInfo(tree);
+
+  if (lt(installedAngularVersionInfo.version, '14.1.0') && schema.standalone) {
+    throw new Error(stripIndents`The "standalone" option is only supported in Angular >= 14.1.0. You are currently using ${installedAngularVersionInfo.version}.
+    You can resolve this error by removing the "standalone" option or by migrating to Angular 14.1.0.`);
+  }
+
   const generatorDirectory =
     getGeneratorDirectoryForInstalledAngularVersion(tree);
   if (generatorDirectory) {
     let previousGenerator = await import(
       join(__dirname, generatorDirectory, 'application')
     );
-    await previousGenerator.default(tree, schema);
-    return;
+    return await previousGenerator.default(tree, schema);
   }
 
   const options = normalizeOptions(tree, schema);
@@ -81,24 +92,26 @@ export async function applicationGenerator(
   updateConfigFiles(tree, options);
   updateAppComponentTemplate(tree, options);
 
-  // Create the NxWelcomeComponent
-  const angularComponentSchematic = wrapAngularDevkitSchematic(
-    '@schematics/angular',
-    'component'
-  );
-  await angularComponentSchematic(tree, {
-    name: 'NxWelcome',
-    inlineTemplate: true,
-    inlineStyle: true,
-    prefix: options.prefix,
-    skipTests: true,
-    style: options.style,
-    flat: true,
-    viewEncapsulation: 'None',
-    project: options.name,
-    standalone: options.standalone,
-  });
-  updateNxComponentTemplate(tree, options);
+  if (!options.minimal) {
+    // Create the NxWelcomeComponent
+    const angularComponentSchematic = wrapAngularDevkitSchematic(
+      '@schematics/angular',
+      'component'
+    );
+    await angularComponentSchematic(tree, {
+      name: 'NxWelcome',
+      inlineTemplate: true,
+      inlineStyle: true,
+      prefix: options.prefix,
+      skipTests: true,
+      style: options.style,
+      flat: true,
+      viewEncapsulation: 'None',
+      project: options.name,
+      standalone: options.standalone,
+    });
+    updateNxComponentTemplate(tree, options);
+  }
 
   if (options.addTailwind) {
     await setupTailwindGenerator(tree, {
@@ -121,8 +134,10 @@ export async function applicationGenerator(
   await addE2e(tree, options);
   updateEditorTsConfig(tree, options);
 
-  if (!options.skipDefaultProject) {
-    setDefaultProject(tree, options);
+  if (options.rootProject) {
+    const nxJson = readNxJson(tree);
+    nxJson.defaultProject = options.name;
+    updateNxJson(tree, nxJson);
   }
 
   if (options.backendProject) {
@@ -133,13 +148,6 @@ export async function applicationGenerator(
     enableStrictTypeChecking(tree, options);
   } else {
     setApplicationStrictDefault(tree, false);
-  }
-
-  if (options.standaloneConfig) {
-    await convertToNxProjectGenerator(tree, {
-      project: options.name,
-      all: false,
-    });
   }
 
   if (options.standalone) {

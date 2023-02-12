@@ -13,7 +13,7 @@ const basePath = 'docs';
 const sharedFilesPattern = 'shared/cli';
 
 const readmePathList: string[] = glob
-  .sync(`${basePath}/**/!(README).md`)
+  .sync(`${basePath}/**/!(documents)/!(README).md`)
   .map((path: string) => path.split(basePath)[1])
   .map((path: string) => path.slice(1, -3)) // Removing first `/` and `.md`
   .filter((path: string) => !path.startsWith(sharedFilesPattern));

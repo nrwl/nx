@@ -18,7 +18,7 @@ export async function getGitHashForFiles(
     // the overall comand, rather than the number of individual
     // arguments. Since file paths are large and rather variable,
     // we use a smaller batchSize.
-    const batchSize = process.platform === 'win32' ? 500 : 4000;
+    const batchSize = process.platform === 'win32' ? 250 : 4000;
     for (
       let startIndex = 0;
       startIndex < filesToHash.length;

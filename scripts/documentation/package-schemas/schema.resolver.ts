@@ -3,8 +3,8 @@ import { join } from 'path';
 import {
   getSchemaFromReference,
   Lookup,
-} from '../../../nx-dev/data-access-packages/src/lib/lookup';
-import { NxSchema } from '../../../nx-dev/models-package/src/lib/package.models';
+} from '@nrwl/nx-dev/data-access-packages';
+import { NxSchema } from '@nrwl/nx-dev/models-package';
 import { isArray, isObject } from './utils';
 
 function traverseAndReplaceReferences(
@@ -72,7 +72,7 @@ export function schemaResolver(
   resolveExamplesFile: () => void;
   getSchema: () => NxSchema;
 } {
-  const updatedSchema: NxSchema = Object.assign({}, schema);
+  const updatedSchema: NxSchema = structuredClone(schema);
   return {
     resolveReferences: () => {
       traverseAndReplaceReferences(updatedSchema, '$ref', lookup);

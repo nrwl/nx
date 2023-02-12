@@ -1,4 +1,5 @@
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
+import { joinPathFragments } from '@nrwl/devkit';
 import {
   checkFilesDoNotExist,
   checkFilesExist,
@@ -6,13 +7,17 @@ import {
   createFile,
   detectPackageManager,
   expectJestTestsToPass,
+  getPackageManagerCommand,
   killPorts,
   newProject,
   packageInstall,
+  packageManagerLockFile,
   promisifiedTreeKill,
   readFile,
+  readJson,
   runCLI,
   runCLIAsync,
+  runCommand,
   runCommandUntil,
   tmpProjPath,
   uniq,
@@ -22,7 +27,6 @@ import {
 import { exec, execSync } from 'child_process';
 import * as http from 'http';
 import { getLockFileName } from 'nx/src/lock-file/lock-file';
-import { satisfies } from 'semver';
 
 function getData(port, path = '/api'): Promise<any> {
   return new Promise((resolve) => {
@@ -82,7 +86,9 @@ describe('Node Applications', () => {
   it('should be able to generate an empty application with additional entries', async () => {
     const nodeapp = uniq('nodeapp');
 
-    runCLI(`generate @nrwl/node:app ${nodeapp} --linter=eslint`);
+    runCLI(
+      `generate @nrwl/node:app ${nodeapp} --linter=eslint --bundler=webpack`
+    );
 
     const lintResults = runCLI(`lint ${nodeapp}`);
     expect(lintResults).toContain('All files pass linting.');
@@ -124,9 +130,9 @@ describe('Node Applications', () => {
 
   it('should be able to generate an express application', async () => {
     const nodeapp = uniq('nodeapp');
-    const originalEnvPort = process.env.port;
+    const originalEnvPort = process.env.PORT;
     const port = 3333;
-    process.env.port = `${port}`;
+    process.env.PORT = `${port}`;
 
     runCLI(`generate @nrwl/express:app ${nodeapp} --linter=eslint`);
     const lintResults = runCLI(`lint ${nodeapp}`);
@@ -233,6 +239,7 @@ describe('Build Node apps', () => {
 
   it('should generate a package.json with the `--generatePackageJson` flag', async () => {
     const scope = newProject();
+    const packageManager = detectPackageManager(tmpProjPath());
     const nestapp = uniq('nestapp');
     runCLI(`generate @nrwl/nest:app ${nestapp} --linter=eslint`);
 
@@ -244,6 +251,7 @@ describe('Build Node apps', () => {
         detectPackageManager(tmpProjPath())
       )}`
     );
+    const rootPackageJson = JSON.parse(readFile(`package.json`));
     const packageJson = JSON.parse(
       readFile(`dist/apps/${nestapp}/package.json`)
     );
@@ -254,20 +262,32 @@ describe('Build Node apps', () => {
         version: '0.0.1',
       })
     );
-    expect(
-      satisfies(packageJson.dependencies['@nestjs/common'], '^9.0.0')
-    ).toBeTruthy();
-    expect(
-      satisfies(packageJson.dependencies['@nestjs/core'], '^9.0.0')
-    ).toBeTruthy();
-    expect(
-      satisfies(packageJson.dependencies['reflect-metadata'], '^0.1.13')
-    ).toBeTruthy();
-    expect(satisfies(packageJson.dependencies['rxjs'], '^7.0.0')).toBeTruthy();
-    expect(satisfies(packageJson.dependencies['tslib'], '^2.3.0')).toBeTruthy();
+
+    expect(packageJson.dependencies['@nestjs/common']).toEqual(
+      rootPackageJson.dependencies['@nestjs/common']
+    );
+    expect(packageJson.dependencies['@nestjs/core']).toEqual(
+      rootPackageJson.dependencies['@nestjs/core']
+    );
+    expect(packageJson.dependencies['reflect-metadata']).toEqual(
+      rootPackageJson.dependencies['reflect-metadata']
+    );
+    expect(packageJson.dependencies['rxjs']).toEqual(
+      rootPackageJson.dependencies['rxjs']
+    );
+    expect(packageJson.dependencies['tslib']).toEqual(
+      rootPackageJson.dependencies['tslib']
+    );
+
+    checkFilesExist(
+      `dist/apps/${nestapp}/${packageManagerLockFile[packageManager]}`
+    );
+    runCommand(`${getPackageManagerCommand().ciInstall}`, {
+      cwd: joinPathFragments(tmpProjPath(), 'dist/apps', nestapp),
+    });
 
     const nodeapp = uniq('nodeapp');
-    runCLI(`generate @nrwl/node:app ${nodeapp}`);
+    runCLI(`generate @nrwl/node:app ${nodeapp} --bundler=webpack`);
 
     const jslib = uniq('jslib');
     runCLI(`generate @nrwl/js:lib ${jslib} --buildable`);
@@ -281,14 +301,28 @@ ${jslib}();
 `
     );
 
-    await runCLIAsync(`build ${nodeapp} --generate-package-json`);
-    checkFilesExist(`dist/apps/${nestapp}/package.json`);
+    const { combinedOutput: nodeCombinedOutput } = await runCLIAsync(
+      `build ${nodeapp} --generate-package-json`
+    );
+    expect(nodeCombinedOutput).not.toMatch(/Graph is not consistent/);
+    checkFilesExist(`dist/apps/${nodeapp}/package.json`);
+    checkFilesExist(
+      `dist/apps/${nodeapp}/${packageManagerLockFile[packageManager]}`
+    );
     const nodeAppPackageJson = JSON.parse(
       readFile(`dist/apps/${nodeapp}/package.json`)
     );
 
     expect(nodeAppPackageJson['dependencies']['tslib']).toBeTruthy();
-  }, 300000);
+
+    runCommand(`${getPackageManagerCommand().ciInstall}`, {
+      cwd: joinPathFragments(tmpProjPath(), 'dist/apps', nestapp),
+    });
+
+    runCommand(`${getPackageManagerCommand().ciInstall}`, {
+      cwd: joinPathFragments(tmpProjPath(), 'dist/apps', nodeapp),
+    });
+  }, 1_000_000);
 
   it('should remove previous output before building with the --deleteOutputPath option set', async () => {
     const appName = uniq('app');

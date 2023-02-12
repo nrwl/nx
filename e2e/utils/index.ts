@@ -2,11 +2,11 @@ import {
   joinPathFragments,
   parseJson,
   ProjectConfiguration,
-  ProjectsConfigurations,
   readJsonFile,
   workspaceRoot,
 } from '@nrwl/devkit';
 import { angularCliVersion } from '@nrwl/workspace/src/utils/versions';
+import { dump } from '@zkochan/js-yaml';
 import { ChildProcess, exec, execSync, ExecSyncOptions } from 'child_process';
 import {
   copySync,
@@ -46,7 +46,8 @@ export function getPublishedVersion(): string {
 export function detectPackageManager(dir: string = ''): PackageManager {
   return existsSync(join(dir, 'yarn.lock'))
     ? 'yarn'
-    : existsSync(join(dir, 'pnpm-lock.yaml'))
+    : existsSync(join(dir, 'pnpm-lock.yaml')) ||
+      existsSync(join(dir, 'pnpm-workspace.yaml'))
     ? 'pnpm'
     : 'npm';
 }
@@ -66,22 +67,18 @@ interface RunCmdOpts {
   silent?: boolean;
 }
 
-export function currentCli() {
-  return process.env.SELECTED_CLI || 'nx';
-}
-
 export const e2eRoot = isCI
   ? dirSync({ prefix: 'nx-e2e-' }).name
   : '/tmp/nx-e2e';
 
-function isVerbose() {
+export function isVerbose() {
   return (
     process.env.NX_VERBOSE_LOGGING === 'true' ||
     process.argv.includes('--verbose')
   );
 }
 
-export const e2eCwd = `${e2eRoot}/${currentCli()}`;
+export const e2eCwd = `${e2eRoot}/nx`;
 ensureDirSync(e2eCwd);
 
 let projName: string;
@@ -90,42 +87,25 @@ export function uniq(prefix: string) {
   return `${prefix}${Math.floor(Math.random() * 10000000)}`;
 }
 
-export function workspaceConfigName() {
-  return currentCli() === 'angular' ? 'angular.json' : 'workspace.json';
-}
-
 export function updateProjectConfig(
   projectName: string,
   callback: (c: ProjectConfiguration) => ProjectConfiguration
 ) {
-  const workspace = readResolvedWorkspaceConfiguration();
+  const workspace = readResolvedConfiguration();
   const root = workspace.projects[projectName].root;
   const path = join(root, 'project.json');
   const current = readJson(path);
   updateFile(path, JSON.stringify(callback(current), null, 2));
 }
 
-export function readResolvedWorkspaceConfiguration() {
+export function readResolvedConfiguration() {
   process.env.NX_PROJECT_GLOB_CACHE = 'false';
   const ws = new Workspaces(tmpProjPath());
-  return ws.readWorkspaceConfiguration();
-}
-
-/**
- * Use readProjectConfig or readInlineProjectConfig instead
- * if you need a project's configuration.
- */
-export function readWorkspaceConfig(): Omit<
-  ProjectsConfigurations,
-  'projects'
-> {
-  const w = readJson(workspaceConfigName());
-  delete w.projects;
-  return w;
+  return ws.readProjectsConfigurations();
 }
 
 export function readProjectConfig(projectName: string): ProjectConfiguration {
-  const root = readResolvedWorkspaceConfiguration().projects[projectName].root;
+  const root = readResolvedConfiguration().projects[projectName].root;
   const path = join(root, 'project.json');
   return readJson(path);
 }
@@ -153,31 +133,33 @@ export function runCreateWorkspace(
     style,
     base,
     packageManager,
-    cli,
     extraArgs,
     ci,
     useDetectedPm = false,
     cwd = e2eCwd,
+    bundler,
+    routing,
+    standaloneApi,
   }: {
     preset: string;
     appName?: string;
     style?: string;
     base?: string;
     packageManager?: 'npm' | 'yarn' | 'pnpm';
-    cli?: string;
     extraArgs?: string;
     ci?: 'azure' | 'github' | 'circleci';
     useDetectedPm?: boolean;
     cwd?: string;
+    bundler?: 'webpack' | 'vite';
+    standaloneApi?: boolean;
+    routing?: boolean;
   }
 ) {
   projName = name;
 
   const pm = getPackageManagerCommand({ packageManager });
 
-  let command = `${pm.createWorkspace} ${name} --cli=${
-    cli || currentCli()
-  } --preset=${preset} --no-nxCloud --no-interactive`;
+  let command = `${pm.createWorkspace} ${name} --preset=${preset} --no-nxCloud --no-interactive`;
   if (appName) {
     command += ` --appName=${appName}`;
   }
@@ -186,6 +168,18 @@ export function runCreateWorkspace(
   }
   if (ci) {
     command += ` --ci=${ci}`;
+  }
+
+  if (bundler) {
+    command += ` --bundler=${bundler}`;
+  }
+
+  if (standaloneApi !== undefined) {
+    command += ` --standaloneApi=${standaloneApi}`;
+  }
+
+  if (routing !== undefined) {
+    command += ` --routing=${routing}`;
   }
 
   if (base) {
@@ -374,6 +368,121 @@ export function newProject({
   }
 }
 
+export function newAngularProject({
+  name = uniq('proj'),
+  packageManager = getSelectedPackageManager(),
+} = {}): string {
+  const projScope = newProject({ name, packageManager });
+
+  const angularPackages = [
+    '@angular-devkit/core',
+    '@angular-devkit/schematics',
+    '@schematics/angular',
+  ];
+  packageInstall(angularPackages.join(` `), projScope, 'latest');
+  return projScope;
+}
+
+export function newLernaWorkspace({
+  name = uniq('lerna-proj'),
+  packageManager = getSelectedPackageManager(),
+} = {}): string {
+  try {
+    const projScope = name;
+    projName = name;
+
+    const pm = getPackageManagerCommand({ packageManager });
+
+    createNonNxProjectDirectory(projScope, packageManager !== 'pnpm');
+
+    if (packageManager === 'pnpm') {
+      updateFile(
+        'pnpm-workspace.yaml',
+        dump({
+          packages: ['packages/*'],
+        })
+      );
+      updateFile(
+        '.npmrc',
+        'prefer-frozen-lockfile=false\nstrict-peer-dependencies=false\nauto-install-peers=true'
+      );
+    }
+
+    if (process.env.NX_VERBOSE_LOGGING == 'true') {
+      logInfo(`NX`, `E2E test has created a lerna workspace: ${tmpProjPath()}`);
+    }
+
+    // We need to force the real latest version of lerna to depend on our locally published version of nx
+    updateJson(`package.json`, (json) => {
+      // yarn workspaces can only be enabled in private projects
+      json.private = true;
+
+      const nxVersion = getPublishedVersion();
+      const overrides = {
+        ...json.overrides,
+        nx: nxVersion,
+        '@nrwl/devkit': nxVersion,
+      };
+      if (packageManager === 'pnpm') {
+        json.pnpm = {
+          ...json.pnpm,
+          overrides: {
+            ...json.pnpm?.overrides,
+            ...overrides,
+          },
+        };
+      } else if (packageManager === 'yarn') {
+        json.resolutions = {
+          ...json.resolutions,
+          ...overrides,
+        };
+      } else {
+        json.overrides = overrides;
+      }
+      return json;
+    });
+
+    /**
+     * Again, in order to ensure we override the required version relationships, we first install lerna as a devDep
+     * before running `lerna init`.
+     */
+    execSync(
+      `${pm.addDev} lerna@${getLatestLernaVersion()}${
+        packageManager === 'pnpm'
+          ? ' --workspace-root'
+          : packageManager === 'yarn'
+          ? ' -W'
+          : ''
+      }`,
+      {
+        cwd: tmpProjPath(),
+        stdio: isVerbose() ? 'inherit' : 'pipe',
+        env: { CI: 'true', ...process.env },
+        encoding: 'utf-8',
+      }
+    );
+
+    execSync(`${pm.runLerna} init`, {
+      cwd: tmpProjPath(),
+      stdio: isVerbose() ? 'inherit' : 'pipe',
+      env: { CI: 'true', ...process.env },
+      encoding: 'utf-8',
+    });
+
+    execSync(pm.install, {
+      cwd: tmpProjPath(),
+      stdio: isVerbose() ? 'inherit' : 'pipe',
+      env: { CI: 'true', ...process.env },
+      encoding: 'utf-8',
+    });
+
+    return projScope;
+  } catch (e) {
+    logError(`Failed to set up lerna workspace for e2e tests.`, e.message);
+    throw e;
+  }
+}
+
 const KILL_PORT_DELAY = 5000;
 
 export async function killPort(port: number): Promise<boolean> {
@@ -406,10 +515,15 @@ export async function killPorts(port?: number): Promise<boolean> {
 }
 
 // Useful in order to cleanup space during CI to prevent `No space left on device` exceptions
-export async function cleanupProject(opts?: RunCmdOpts) {
+export function cleanupProject({
+  skipReset,
+  ...opts
+}: RunCmdOpts & { skipReset?: boolean } = {}) {
   if (isCI) {
     // Stopping the daemon is not required for tests to pass, but it cleans up background processes
-    runCLI('reset', opts);
+    if (!skipReset) {
+      runCLI('reset', opts);
+    }
     try {
       removeSync(tmpProjPath());
     } catch (e) {}
@@ -476,7 +590,7 @@ export function runCommandAsync(
     exec(
       command,
       {
-        cwd: tmpProjPath(),
+        cwd: opts.cwd || tmpProjPath(),
         env: {
           CI: 'true',
           ...(opts.env || getStrippedEnvironmentVariables()),
@@ -566,7 +680,7 @@ export function runNgAdd(
     packageInstall(packageName, undefined, version);
     return execSync(pmc.run(`ng g ${packageName}:ng-add`, command ?? ''), {
       cwd: tmpProjPath(),
-      stdio: isVerbose() ? 'inherit' : 'pipe',
+      stdio: 'pipe',
       env: { ...(opts.env || getStrippedEnvironmentVariables()) },
       encoding: 'utf-8',
     })
@@ -599,7 +713,7 @@ export function runCLI(
     const pm = getPackageManagerCommand();
     const logs = execSync(`${pm.runNx} ${command}`, {
       cwd: opts.cwd || tmpProjPath(),
-      env: { CI: 'true', ...(opts.env || getStrippedEnvironmentVariables()) },
+      env: { CI: 'true', ...getStrippedEnvironmentVariables(), ...opts.env },
       encoding: 'utf-8',
       stdio: 'pipe',
       maxBuffer: 50 * 1024 * 1024,
@@ -613,6 +727,42 @@ export function runCLI(
     const needsMaxWorkers = /g.*(express|nest|node|web|react):app.*/;
     if (needsMaxWorkers.test(command)) {
       setMaxWorkers();
+    }
+
+    return r;
+  } catch (e) {
+    if (opts.silenceError) {
+      return stripConsoleColors(e.stdout?.toString() + e.stderr?.toString());
+    } else {
+      logError(
+        `Original command: ${command}`,
+        `${e.stdout?.toString()}\n\n${e.stderr?.toString()}`
+      );
+      throw e;
+    }
+  }
+}
+
+export function runLernaCLI(
+  command: string,
+  opts: RunCmdOpts = {
+    silenceError: false,
+    env: undefined,
+  }
+): string {
+  try {
+    const pm = getPackageManagerCommand();
+    const logs = execSync(`${pm.runLerna} ${command}`, {
+      cwd: opts.cwd || tmpProjPath(),
+      env: { CI: 'true', ...(opts.env || getStrippedEnvironmentVariables()) },
+      encoding: 'utf-8',
+      stdio: 'pipe',
+      maxBuffer: 50 * 1024 * 1024,
+    });
+    const r = stripConsoleColors(logs);
+
+    if (isVerbose()) {
+      console.log(logs);
     }
 
     return r;
@@ -685,14 +835,11 @@ export function runCommand(
 function setMaxWorkers() {
   if (isCI) {
     const ws = new Workspaces(tmpProjPath());
-    const workspaceFile = workspaceConfigName();
-    const workspaceFileExists = fileExists(tmpProjPath(workspaceFile));
-    const workspace = ws.readWorkspaceConfiguration();
-    const rawWorkspace = workspaceFileExists ? readJson(workspaceFile) : null;
+    const projectsConfigurations = ws.readProjectsConfigurations();
     let requireWorkspaceFileUpdate = false;
 
-    Object.keys(workspace.projects).forEach((appName) => {
-      let project = workspace.projects[appName];
+    Object.keys(projectsConfigurations.projects).forEach((appName) => {
+      let project = projectsConfigurations.projects[appName];
       const { build } = project.targets;
 
       if (!build) {
@@ -708,21 +855,11 @@ function setMaxWorkers() {
         build.options.maxWorkers = 4;
       }
 
-      if (
-        !workspaceFileExists ||
-        typeof rawWorkspace.projects[appName] === 'string'
-      ) {
-        updateFile(
-          join(project.root, 'project.json'),
-          JSON.stringify(project, null, 2)
-        );
-      } else {
-        requireWorkspaceFileUpdate = true;
-      }
+      updateFile(
+        join(project.root, 'project.json'),
+        JSON.stringify(project, null, 2)
+      );
     });
-    if (workspaceFileExists && requireWorkspaceFileUpdate) {
-      updateFile(workspaceFile, JSON.stringify(workspace));
-    }
   }
 }
 
@@ -879,9 +1016,11 @@ export function getPackageManagerCommand({
   runNxSilent: string;
   runUninstalledPackage: string;
   install: string;
+  ciInstall: string;
   addProd: string;
   addDev: string;
   list: string;
+  runLerna: string;
 } {
   const npmMajorVersion = getNpmMajorVersion();
   const publishedVersion = getPublishedVersion();
@@ -896,9 +1035,11 @@ export function getPackageManagerCommand({
       runNxSilent: `npx nx`,
       runUninstalledPackage: `npx --yes`,
       install: 'npm install',
+      ciInstall: 'npm ci',
       addProd: `npm install --legacy-peer-deps`,
       addDev: `npm install --legacy-peer-deps -D`,
       list: 'npm ls --depth 10',
+      runLerna: `npx lerna`,
     },
     yarn: {
       // `yarn create nx-workspace` is failing due to wrong global path
@@ -908,9 +1049,11 @@ export function getPackageManagerCommand({
       runNxSilent: `yarn --silent nx`,
       runUninstalledPackage: 'npx --yes',
       install: 'yarn',
+      ciInstall: 'yarn --frozen-lockfile',
       addProd: `yarn add`,
       addDev: `yarn add -D`,
       list: 'npm ls --depth 10',
+      runLerna: `yarn lerna`,
     },
     // Pnpm 3.5+ adds nx to
     pnpm: {
@@ -920,9 +1063,11 @@ export function getPackageManagerCommand({
       runNxSilent: `pnpm exec nx`,
       runUninstalledPackage: 'pnpm dlx',
       install: 'pnpm i',
+      ciInstall: 'pnpm install --frozen-lockfile',
       addProd: `pnpm add`,
       addDev: `pnpm add -D`,
       list: 'npm ls --depth 10',
+      runLerna: `pnpm exec lerna`,
     },
   }[packageManager.trim() as PackageManager];
 }
@@ -930,6 +1075,11 @@ export function getPackageManagerCommand({
 function getNpmMajorVersion(): string {
   const [npmMajorVersion] = execSync(`npm -v`).toString().split('.');
   return npmMajorVersion;
+}
+
+function getLatestLernaVersion(): string {
+  const lernaVersion = execSync(`npm view lerna version`).toString().trim();
+  return lernaVersion;
 }
 
 export const packageManagerLockFile = {
@@ -1006,14 +1156,18 @@ export async function expectJestTestsToPass(
   expect(results.combinedOutput).toContain('Test Suites: 1 passed, 1 total');
 }
 
-function getStrippedEnvironmentVariables() {
-  const strippedVariables = new Set(['NX_TASK_TARGET_PROJECT']);
+export function getStrippedEnvironmentVariables() {
   return Object.fromEntries(
-    Object.entries(process.env).filter(
-      ([key, value]) =>
-        !strippedVariables.has(key) ||
-        !key.startsWith('NX_') ||
-        key.startsWith('NX_E2E_')
-    )
+    Object.entries(process.env).filter(([key, value]) => {
+      if (key.startsWith('NX_E2E_')) {
+        return true;
+      }
+
+      if (key.startsWith('NX_')) {
+        return false;
+      }
+
+      return true;
+    })
   );
 }

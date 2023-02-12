@@ -1,5 +1,10 @@
 [
   {
+    "name": "@ahryman40k/nx-vitepress",
+    "description": "Nx plugin add vitepress project to your workspace",
+    "url": "https://github.com/Ahryman40k/nx-vitepress/tree/main/packages/nx-vitepress"
+  },
+  {
     "name": "@nxkit/playwright",
     "description": "The Playwright plugin allows your workspace to use the power of Playwright end-to-end testing",
     "url": "https://github.com/nxkit/nxkit"
@@ -120,8 +125,13 @@
     "url": "https://github.com/twittwer/nx-tools/tree/master/libs/compodoc#readme"
   },
   {
+    "name": "@enio.ai/nx-install",
+    "description": "nx-install is a plugin for Nx workspaces to quickly setup custom install commands via npm.",
+    "url": "https://github.com/enio-ireland/enio/tree/develop/packages/nx-install#readme"
+  },
+  {
     "name": "@enio.ai/typedoc",
-    "description": "typedoc is a transparent wrapper plugin for Nx workspaces to quickly setup documentation automation on your projects using typedoc.",
+    "description": "typedoc is a plugin for Nx workspaces to quickly setup documentation automation on your projects using typedoc.",
     "url": "https://github.com/enio-ireland/enio/tree/develop/packages/typedoc#readme"
   },
   {
@@ -153,6 +163,11 @@
     "name": "@nx-go/nx-go",
     "description": "Nx plugin to use Go in a Nx workspace",
     "url": "https://github.com/nx-go/nx-go"
+  },
+  {
+    "name": "@nx-golang/gin",
+    "description": "Nx plugin to use Go-Gin in a Nx workspace",
+    "url": "https://github.com/nx-golang/nx-golang"
   },
   {
     "name": "@angular-architects/module-federation",
@@ -265,6 +280,16 @@
     "url": "https://github.com/tripss/nx-extend/tree/master/packages/playwright"
   },
   {
+    "name": "@nx-extend/terraform",
+    "description": "Nx plugin for deploying your resources with Terraform",
+    "url": "https://github.com/tripss/nx-extend/tree/master/packages/terraform"
+  },
+  {
+    "name": "@nx-extend/pulumi",
+    "description": "Nx plugin for deploying your resources with Pulumi",
+    "url": "https://github.com/tripss/nx-extend/tree/master/packages/pulumi"
+  },
+  {
     "name": "@nativescript/nx",
     "description": "Nx Plugin adding first class support for NativeScript in your Nx workspace",
     "url": "https://github.com/nativescript/nx"
@@ -353,5 +378,10 @@
     "name": "@nx-tools/nx-container",
     "description": "Nx plugin to build OCI containers with Docker, Podman or Kaniko.",
     "url": "https://github.com/gperdomor/nx-tools/tree/main/packages/nx-container"
+  },
+  {
+    "name": "@nxrocks/nx-melos",
+    "description": "Nx plugin adding first class support for Melos in your Nx workspace",
+    "url": "https://github.com/tinesoft/nxrocks/tree/master/packages/nx-melos"
   }
 ]

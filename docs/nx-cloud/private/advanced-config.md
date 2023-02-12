@@ -6,7 +6,7 @@ To help troubleshoot installations, add the following env variables when startin
 
 ```
 -e NX_VERBOSE_LOGGING=true
--e NX_API_LOG_LEVEL=DEBIG
+-e NX_API_LOG_LEVEL=DEBUG
 -e NX_MONGO_LOG_LEVEL=DEBUG
 ```
 

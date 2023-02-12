@@ -5,8 +5,6 @@ import {
   Workspaces,
 } from '@nrwl/devkit';
 import { scheduleTarget } from 'nx/src/adapter/ngcli-adapter';
-import { BuilderContext, createBuilder } from '@angular-devkit/architect';
-import { JsonObject } from '@angular-devkit/core';
 import { executeWebpackDevServerBuilder } from '../webpack-dev-server/webpack-dev-server.impl';
 import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
 import {
@@ -17,7 +15,7 @@ import {
 
 export function executeModuleFederationDevServerBuilder(
   schema: Schema,
-  context: BuilderContext
+  context: import('@angular-devkit/architect').BuilderContext
 ) {
   const { ...options } = schema;
   const projectGraph = readCachedProjectGraph();
@@ -95,6 +93,6 @@ export function executeModuleFederationDevServerBuilder(
   return executeWebpackDevServerBuilder(options, context);
 }
 
-export default createBuilder<JsonObject & Schema>(
+export default require('@angular-devkit/architect').createBuilder(
   executeModuleFederationDevServerBuilder
 );

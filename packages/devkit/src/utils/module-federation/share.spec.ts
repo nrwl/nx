@@ -2,7 +2,13 @@ jest.mock('fs');
 import * as fs from 'fs';
 import * as tsUtils from './typescript';
 
-import * as nxFileutils from 'nx/src/utils/fileutils';
+jest.mock('nx/src/devkit-exports', () => {
+  return {
+    ...jest.requireActual('nx/src/devkit-exports'),
+    readJsonFile: jest.fn(),
+  };
+});
+import * as nxFileutils from 'nx/src/devkit-exports';
 import { sharePackages, shareWorkspaceLibraries } from './share';
 
 describe('MF Share Utils', () => {
@@ -336,13 +342,16 @@ describe('MF Share Utils', () => {
       (fs.existsSync as jest.Mock).mockImplementation(
         (file) => !file.endsWith('non-existent-top-level-package/package.json')
       );
-      jest.spyOn(nxFileutils, 'readJsonFile').mockImplementation((file) => ({
-        name: file
-          .replace(/\\/g, '/')
-          .replace(/^.*node_modules[/]/, '')
-          .replace('/package.json', ''),
-        dependencies: { '@angular/core': '~13.2.0' },
-      }));
+      jest.spyOn(nxFileutils, 'readJsonFile').mockImplementation((file) => {
+        console.log('HELLO?');
+        return {
+          name: file
+            .replace(/\\/g, '/')
+            .replace(/^.*node_modules[/]/, '')
+            .replace('/package.json', ''),
+          dependencies: { '@angular/core': '~13.2.0' },
+        };
+      });
 
       // ACT & ASSERT
       expect(() =>

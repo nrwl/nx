@@ -113,6 +113,13 @@ In this case Nx will use the right `production` input for each project.
 
 ### Target Defaults
 
+Target defaults provide ways to set common options for a particular target in your workspace. When building your project's configuration, we merge it with up to 1 default from this map. For a given target, we look at its name and its executor. We then check target defaults for any of the following combinations:
+
+- `` `${executor}` ``
+- `` `${targetName}` ``
+
+Whichever of these we find first, we use as the base for that target's configuration. Some common scenarios for this follow.
+
 Targets can depend on other targets. A common scenario is having to build dependencies of a project first before
 building the project. The `dependsOn` property in `project.json` can be used to define the list of dependencies of an
 individual target.
@@ -149,6 +156,35 @@ Another target default you can configure is `outputs`:
 }
 ```
 
+When defining any options or configurations inside of a target default, you may use the `{workspaceRoot}` and `{projectRoot}` tokens. This is useful for defining things like the outputPath or tsconfig for many build targets.
+
+```json {% fileName="nx.json" %}
+{
+  "targetDefaults": {
+    "@nrwl/js:tsc": {
+      "options": {
+        "main": "{projectRoot}/src/index.ts"
+      },
+      "configurations": {
+        "prod": {
+          "tsconfig": "{projectRoot}/tsconfig.prod.json"
+        }
+      },
+      "inputs": ["prod"],
+      "outputs": ["{workspaceRoot}/{projectRoot}"]
+    },
+    "build": {
+      "inputs": ["prod"],
+      "outputs": ["{workspaceRoot}/{projectRoot}"]
+    }
+  }
+}
+```
+
+{% callout type="note" title="Target Default Priority" %}
+Note that the inputs and outputs are respecified on the @nrwl/js:tsc default configuration. This is **required**, as when reading target defaults Nx will only ever look at one key. If there is a default configuration based on the executor used, it will be read first. If not, Nx will fall back to looking at the configuration based on target name. For instance, running `nx build project` will read the options from `targetDefaults[@nrwl/js:tsc]` if the target configuration for build uses the @nrwl/js:tsc executor. It **would not** read any of the configuration from the `build` target default configuration unless the executor does not match.
+{% /callout %}
+
 ### Generators
 
 Default generator options are configured in `nx.json` as well. For instance, the following tells Nx to always
@@ -174,7 +210,7 @@ named "default" is used by default. Specify a different one like this `nx run-ma
 Tasks runners can accept different options. The following are the options supported
 by `"nx/tasks-runners/default"` and `"@nrwl/nx-cloud"`.
 
-| Property                | Descrtipion                                                                                                                                                                                                                                                                                                                                   |
+| Property                | Description                                                                                                                                                                                                                                                                                                                                   |
 | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | cacheableOperations     | defines the list of targets/operations that are cached by Nx                                                                                                                                                                                                                                                                                  |
 | parallel                | defines the max number of targets ran in parallel (in older versions of Nx you had to pass `--parallel --maxParallel=3` instead of `--parallel=3`)                                                                                                                                                                                            |

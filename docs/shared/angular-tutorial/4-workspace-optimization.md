@@ -198,7 +198,7 @@ Build at: 2022-11-23T22:53:29.097Z - Hash: 3cd478c78ebeead2 - Time: 5154ms
 
  ————————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target build for project store and 1 task(s) it depends on (8s)
+ >  NX   Successfully ran target build for project store and 1 task(s) they depend on (8s)
 ```
 
 Notice the line here:

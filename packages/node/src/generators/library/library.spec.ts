@@ -5,14 +5,13 @@ import {
   readProjectConfiguration,
   Tree,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
 import { Schema } from './schema.d';
 import { libraryGenerator } from './library';
 
 const baseLibraryConfig = {
   name: 'myLib',
-  standaloneConfig: false,
   compiler: 'tsc' as const,
 };
 
@@ -20,41 +19,46 @@ describe('lib', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   describe('not nested', () => {
-    it('should update workspace.json', async () => {
+    it('should update configuration', async () => {
       await libraryGenerator(tree, baseLibraryConfig);
-      const workspaceJson = readJson(tree, '/workspace.json');
-      expect(workspaceJson.projects['my-lib'].root).toEqual('libs/my-lib');
-      expect(workspaceJson.projects['my-lib'].architect.build).toBeUndefined();
-      expect(workspaceJson.projects['my-lib'].architect.lint).toEqual({
-        builder: '@nrwl/linter:eslint',
+      const configuration = readProjectConfiguration(tree, 'my-lib');
+      expect(configuration.root).toEqual('libs/my-lib');
+      expect(configuration.targets.build).toBeUndefined();
+      expect(configuration.targets.lint).toEqual({
+        executor: '@nrwl/linter:eslint',
         outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: ['libs/my-lib/**/*.ts'],
         },
       });
-      expect(workspaceJson.projects['my-lib'].architect.test).toEqual({
-        builder: '@nrwl/jest:jest',
+      expect(configuration.targets.test).toEqual({
+        executor: '@nrwl/jest:jest',
         outputs: ['{workspaceRoot}/coverage/{projectRoot}'],
         options: {
           jestConfig: 'libs/my-lib/jest.config.ts',
           passWithNoTests: true,
         },
+        configurations: {
+          ci: {
+            ci: true,
+            codeCoverage: true,
+          },
+        },
       });
     });
 
-    it('adds srcRootForCompilationRoot in workspace.json', async () => {
+    it('adds srcRootForCompilationRoot', async () => {
       await libraryGenerator(tree, {
         ...baseLibraryConfig,
         rootDir: './src',
         buildable: true,
       });
-      const workspaceJson = readJson(tree, '/workspace.json');
       expect(
-        workspaceJson.projects['my-lib'].architect.build.options
+        readProjectConfiguration(tree, 'my-lib').targets.build.options
           .srcRootForCompilationRoot
       ).toEqual('./src');
     });
@@ -212,13 +216,11 @@ describe('lib', () => {
         ...baseLibraryConfig,
         directory: 'myDir',
       });
-      const workspaceJson = readJson(tree, '/workspace.json');
 
-      expect(workspaceJson.projects['my-dir-my-lib'].root).toEqual(
-        'libs/my-dir/my-lib'
-      );
-      expect(workspaceJson.projects['my-dir-my-lib'].architect.lint).toEqual({
-        builder: '@nrwl/linter:eslint',
+      const project = readProjectConfiguration(tree, 'my-dir-my-lib');
+      expect(project.root).toEqual('libs/my-dir/my-lib');
+      expect(project.targets.lint).toEqual({
+        executor: '@nrwl/linter:eslint',
         outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: ['libs/my-dir/my-lib/**/*.ts'],
@@ -326,8 +328,9 @@ describe('lib', () => {
       expect(tree.exists('libs/my-lib/tsconfig.spec.json')).toBeFalsy();
       expect(tree.exists('libs/my-lib/jest.config.ts')).toBeFalsy();
       expect(tree.exists('libs/my-lib/lib/my-lib.spec.ts')).toBeFalsy();
-      const workspaceJson = readJson(tree, 'workspace.json');
-      expect(workspaceJson.projects['my-lib'].architect.test).toBeUndefined();
+      expect(
+        readProjectConfiguration(tree, 'my-lib').targets.test
+      ).toBeUndefined();
       const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.json');
       expect(tsconfigJson.extends).toEqual('../../tsconfig.base.json');
       expect(tsconfigJson.references).toEqual([
@@ -335,20 +338,6 @@ describe('lib', () => {
           path: './tsconfig.lib.json',
         },
       ]);
-      expect(workspaceJson.projects['my-lib'].architect.lint)
-        .toMatchInlineSnapshot(`
-        Object {
-          "builder": "@nrwl/linter:eslint",
-          "options": Object {
-            "lintFilePatterns": Array [
-              "libs/my-lib/**/*.ts",
-            ],
-          },
-          "outputs": Array [
-            "{options.outputFile}",
-          ],
-        }
-      `);
     });
   });
 
@@ -358,14 +347,13 @@ describe('lib', () => {
         ...baseLibraryConfig,
         buildable: true,
       });
-      const workspaceJson = readJson(tree, '/workspace.json');
 
-      expect(workspaceJson.projects['my-lib'].root).toEqual('libs/my-lib');
+      const projectConfiguration = readProjectConfiguration(tree, 'my-lib');
+      expect(projectConfiguration.root).toEqual('libs/my-lib');
 
-      expect(workspaceJson.projects['my-lib'].architect.build)
-        .toMatchInlineSnapshot(`
+      expect(projectConfiguration.targets.build).toMatchInlineSnapshot(`
         Object {
-          "builder": "@nrwl/js:tsc",
+          "executor": "@nrwl/js:tsc",
           "options": Object {
             "assets": Array [
               "libs/my-lib/*.md",
@@ -390,11 +378,10 @@ describe('lib', () => {
         publishable: true,
         importPath: '@proj/mylib',
       });
-      const workspaceJson = readJson(tree, '/workspace.json');
 
-      expect(workspaceJson.projects['my-lib'].root).toEqual('libs/my-lib');
-
-      expect(workspaceJson.projects['my-lib'].architect.build).toBeDefined();
+      const projectConfiguration = readProjectConfiguration(tree, 'my-lib');
+      expect(projectConfiguration.root).toEqual('libs/my-lib');
+      expect(projectConfiguration.targets.build).toBeDefined();
     });
 
     it('should update package.json', async () => {
@@ -521,13 +508,13 @@ describe('lib', () => {
         buildable: true,
         js: true,
       } as Schema);
-      const workspaceJson = readJson(tree, '/workspace.json');
 
-      expect(workspaceJson.projects['my-lib'].root).toEqual('libs/my-lib');
+      const projectConfiguration = readProjectConfiguration(tree, 'my-lib');
+      expect(projectConfiguration.root).toEqual('libs/my-lib');
 
-      expect(
-        workspaceJson.projects['my-lib'].architect.build.options.main
-      ).toEqual('libs/my-lib/src/index.js');
+      expect(projectConfiguration.targets.build.options.main).toEqual(
+        'libs/my-lib/src/index.js'
+      );
     });
 
     it('should generate js files for nested libs as well', async () => {

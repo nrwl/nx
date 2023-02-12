@@ -59,7 +59,10 @@ export class MockProjectGraphService implements ProjectGraphService {
     groupByFolder: false,
   };
 
-  private taskGraphsResponse: TaskGraphClientResponse = { taskGraphs: {} };
+  private taskGraphsResponse: TaskGraphClientResponse = {
+    taskGraphs: {},
+    errors: {},
+  };
 
   constructor(updateFrequency: number = 5000) {
     setInterval(() => this.updateResponse(), updateFrequency);

@@ -17,7 +17,6 @@ import {
 import { runWebpackDevServer } from '../../utils/run-webpack';
 import { resolveCustomWebpackConfig } from '../../utils/webpack/custom-webpack';
 import { normalizeOptions } from '../webpack/lib/normalize-options';
-import { getEmittedFiles } from '../webpack/lib/get-emitted-files';
 import { WebpackExecutorOptions } from '../webpack/schema';
 import { WebDevServerOptions } from './schema';
 
@@ -25,11 +24,15 @@ export async function* devServerExecutor(
   serveOptions: WebDevServerOptions,
   context: ExecutorContext
 ) {
+  // Default to dev mode so builds are faster and HMR mode works better.
+  process.env.NODE_ENV ??= 'development';
+
   const { root: projectRoot, sourceRoot } =
-    context.workspace.projects[context.projectName];
+    context.projectsConfigurations.projects[context.projectName];
   const buildOptions = normalizeOptions(
     getBuildOptions(serveOptions, context),
     context.root,
+    projectRoot,
     sourceRoot
   );
 
@@ -55,7 +58,7 @@ export async function* devServerExecutor(
     );
   }
 
-  let webpackConfig = getDevServerConfig(context, buildOptions, serveOptions);
+  let config = getDevServerConfig(context, buildOptions, serveOptions);
 
   if (buildOptions.webpackConfig) {
     let customWebpack = resolveCustomWebpackConfig(
@@ -67,21 +70,21 @@ export async function* devServerExecutor(
       customWebpack = await customWebpack;
     }
 
-    webpackConfig = await customWebpack(webpackConfig, {
-      buildOptions,
+    config = await customWebpack(config, {
+      options: buildOptions,
+      context,
       configuration: serveOptions.buildTarget.split(':')[2],
     });
   }
 
   return yield* eachValueFrom(
-    runWebpackDevServer(webpackConfig, webpack, WebpackDevServer).pipe(
+    runWebpackDevServer(config, webpack, WebpackDevServer).pipe(
       tap(({ stats }) => {
-        console.info(stats.toString((webpackConfig as any).stats));
+        console.info(stats.toString((config as any).stats));
       }),
       map(({ baseUrl, stats }) => {
         return {
           baseUrl,
-          emittedFiles: getEmittedFiles(stats),
           success: !stats.hasErrors(),
         };
       })
@@ -93,14 +96,11 @@ function getBuildOptions(
   options: WebDevServerOptions,
   context: ExecutorContext
 ): WebpackExecutorOptions {
-  const target = parseTargetString(options.buildTarget);
+  const target = parseTargetString(options.buildTarget, context.projectGraph);
 
   const overrides: Partial<WebpackExecutorOptions> = {
     watch: false,
   };
-  if (options.maxWorkers) {
-    overrides.maxWorkers = options.maxWorkers;
-  }
   if (options.memoryLimit) {
     overrides.memoryLimit = options.memoryLimit;
   }

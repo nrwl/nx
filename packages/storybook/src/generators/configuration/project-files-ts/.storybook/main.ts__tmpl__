@@ -1,19 +1,18 @@
-<% if (!isRootProject){ %>import { rootMain } from '<%= offsetFromRoot %>../.storybook/<%= rootMainName %>';<% } %>
-<% if (isRootProject){ %>import { rootMain } from './main.root';<% } %>
-import type { StorybookConfig, Options } from '@storybook/core-common';
+import type { StorybookConfig } from '@storybook/core-common';
 <% if (isNextJs){ %>import path from 'path';<% } %>
+<% if (usesVite){ %>import { mergeConfig } from 'vite';<% } %>
+<% if (usesVite){ %>import viteTsConfigPaths from 'vite-tsconfig-paths';<% } %>
 
 const config: StorybookConfig = {
-  ...rootMain,
-  core: { ...rootMain.core, builder: <% if (!usesVite) { %>'webpack5'<% } %><% if (usesVite) { %>'@storybook/builder-vite'<% } %> },
+  core: { builder: <% if (!usesVite) { %>'webpack5'<% } %><% if (usesVite) { %>'@storybook/builder-vite'<% } %> },
   stories: [
-    ...rootMain.stories,<% if(uiFramework === '@storybook/angular' && projectType === 'library') { %>
+    <% if(uiFramework === '@storybook/angular' && projectType === 'library') { %>
     '../**/*.stories.mdx',
     '../**/*.stories.@(js|jsx|ts|tsx)' <% } else { %>
     '../<%= projectDirectory %>/**/*.stories.mdx',
     '../<%= projectDirectory %>/**/*.stories.@(js|jsx|ts|tsx)'
   <% } %>],
-  addons: [...(rootMain.addons || []) <% if(uiFramework === '@storybook/react' && !usesVite) { %>, '@nrwl/react/plugins/storybook' <% } %><% if(uiFramework === '@storybook/react-native') { %>, '@storybook/addon-ondevice-actions',  '@storybook/addon-ondevice-backgrounds', '@storybook/addon-ondevice-controls', '@storybook/addon-ondevice-notes'  <% } %>
+  addons: ['@storybook/addon-essentials' <% if(uiFramework === '@storybook/react' && !usesVite) { %>, '@nrwl/react/plugins/storybook' <% } %><% if(uiFramework === '@storybook/react-native') { %>, '@storybook/addon-ondevice-actions',  '@storybook/addon-ondevice-backgrounds', '@storybook/addon-ondevice-controls', '@storybook/addon-ondevice-notes'  <% } %>
     <% if(usesSwc && !isNextJs) { %>, 'storybook-addon-swc' <% } %>
     <% if(isNextJs) { %>, 'storybook-addon-swc', 
         {
@@ -23,17 +22,28 @@ const config: StorybookConfig = {
       },
     }
      <% } %>
-  ]<% if (!usesVite) { %>,
-  webpackFinal: async (config, { configType }: Options) => {
-    // apply any global webpack configs that might have been specified in .storybook/main.ts
-    if (rootMain.webpackFinal) {
-      config = await rootMain.webpackFinal(config, { configType } as Options);
-    }
-
-    // add your own webpack tweaks if needed
-
-    return config;
+  ]<% if (usesVite) { %>,
+  async viteFinal(config: any) {
+    return mergeConfig(config, {
+      plugins: [
+        viteTsConfigPaths({
+          root: '<%= offsetFromRoot %>../',
+        }),
+      ],
+    });
   },<% } %>
-};
+} as StorybookConfig;
 
 module.exports = config;
+
+<% if(!usesVite) { %>
+// To customize your webpack configuration you can use the webpackFinal field.
+// Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
+// and https://nx.dev/packages/storybook/documents/custom-builder-configs
+<% } %>
+
+<% if(usesVite) { %>
+// To customize your Vite configuration you can use the viteFinal field. 
+// Check https://storybook.js.org/docs/react/builders/vite#configuration
+// and https://nx.dev/packages/storybook/documents/custom-builder-configs
+<% } %>

@@ -3,7 +3,7 @@ import {
   overrideCollectionResolutionForTesting,
   wrapAngularDevkitSchematic,
 } from '@nrwl/devkit/ngcli-adapter';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import {
   findStorybookAndBuildTargetsAndCompiler,
   isTheFileAStory,
@@ -36,7 +36,7 @@ describe('testing utilities', () => {
         ),
       });
 
-      appTree = createTreeWithEmptyV1Workspace();
+      appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
       await runAngularLibrarySchematic(appTree, {
         name: 'test-ui-lib',

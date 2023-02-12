@@ -1,10 +1,10 @@
 import type { GeneratorCallback, Tree } from '@nrwl/devkit';
 import {
   addDependenciesToPackageJson,
-  readWorkspaceConfiguration,
+  readNxJson,
   removeDependenciesFromPackageJson,
   updateJson,
-  updateWorkspaceConfiguration,
+  updateNxJson,
   writeJson,
 } from '@nrwl/devkit';
 import {
@@ -26,26 +26,24 @@ export interface LinterInitOptions {
 }
 
 function addTargetDefaults(tree: Tree) {
-  const workspaceConfiguration = readWorkspaceConfiguration(tree);
+  const nxJson = readNxJson(tree);
 
-  const productionFileSet = workspaceConfiguration.namedInputs?.production;
+  const productionFileSet = nxJson.namedInputs?.production;
   if (productionFileSet) {
     // Remove .eslintrc.json
     productionFileSet.push('!{projectRoot}/.eslintrc.json');
     // Dedupe and set
-    workspaceConfiguration.namedInputs.production = Array.from(
-      new Set(productionFileSet)
-    );
+    nxJson.namedInputs.production = Array.from(new Set(productionFileSet));
   }
 
-  workspaceConfiguration.targetDefaults ??= {};
+  nxJson.targetDefaults ??= {};
 
-  workspaceConfiguration.targetDefaults.lint ??= {};
-  workspaceConfiguration.targetDefaults.lint.inputs ??= [
+  nxJson.targetDefaults.lint ??= {};
+  nxJson.targetDefaults.lint.inputs ??= [
     'default',
     `{workspaceRoot}/.eslintrc.json`,
   ];
-  updateWorkspaceConfiguration(tree, workspaceConfiguration);
+  updateNxJson(tree, nxJson);
 }
 
 function initEsLint(tree: Tree, options: LinterInitOptions): GeneratorCallback {

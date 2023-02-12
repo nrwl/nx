@@ -58,7 +58,9 @@ describe('Package executor', () => {
       projectName: 'my-lib',
       targetName: 'build',
       configurationName: 'production',
-      workspace: { projects: { 'my-lib': { root: '/libs/my-lib' } } },
+      projectsConfigurations: {
+        projects: { 'my-lib': { root: '/libs/my-lib' } },
+      },
     } as any;
     options = { project: 'my-lib' };
   });

@@ -5,6 +5,7 @@ import {
   runCLI,
   uniq,
   updateFile,
+  updateJson,
   updateProjectConfig,
 } from '../../utils';
 
@@ -16,13 +17,29 @@ describe('React Cypress Component Tests', () => {
 
   beforeAll(() => {
     projectName = newProject({ name: uniq('cy-react') });
+
     runCLI(
       `generate @nrwl/react:app ${appName} --bundler=webpack --no-interactive`
     );
+
+    updateJson('nx.json', (json) => ({
+      ...json,
+      generators: {
+        ...json.generators,
+        '@nrwl/react': {
+          library: {
+            unitTestRunner: 'jest',
+          },
+        },
+      },
+    }));
+
     runCLI(
       `generate @nrwl/react:component fancy-cmp --project=${appName} --no-interactive`
     );
-    runCLI(`generate @nrwl/react:lib ${usedInAppLibName} --no-interactive`);
+    runCLI(
+      `generate @nrwl/react:lib ${usedInAppLibName} --no-interactive --unitTestRunner=jest`
+    );
     runCLI(
       `generate @nrwl/react:component btn --project=${usedInAppLibName} --export --no-interactive`
     );
@@ -83,7 +100,7 @@ export default App;`
     );
 
     runCLI(
-      `generate @nrwl/react:lib ${buildableLibName} --buildable --no-interactive`
+      `generate @nrwl/react:lib ${buildableLibName} --buildable --no-interactive --unitTestRunner=jest`
     );
     runCLI(
       `generate @nrwl/react:component input --project=${buildableLibName} --export --no-interactive`
@@ -198,4 +215,41 @@ ${content}`;
       'All specs passed!'
     );
   }, 300_000);
+
+  it('should work with async webpack config', () => {
+    // TODO: (caleb) for whatever reason the MF webpack config + CT is running, but cypress is not starting up?
+    // are they overriding some option on top of each other causing cypress to not see it's running?
+    createFile(
+      `apps/${appName}/webpack.config.js`,
+      `
+        const { composePlugins, withNx } = require('@nrwl/webpack');
+        const { withReact } = require('@nrwl/react');
+        
+        module.exports = composePlugins(
+          withNx(),
+          withReact(),
+          async function (configuration) {
+            await new Promise((res) => {
+              setTimeout(() => {
+                console.log('I am from the custom async Webpack config');
+                res();
+              }, 1000);
+            });
+            return configuration;
+          }
+        );
+      `
+    );
+    updateProjectConfig(appName, (config) => {
+      config.targets[
+        'build'
+      ].options.webpackConfig = `apps/${appName}/webpack.config.js`;
+
+      return config;
+    });
+
+    const results = runCLI(`component-test ${appName}`);
+    expect(results).toContain('I am from the custom async Webpack config');
+    expect(results).toContain('All specs passed!');
+  });
 });

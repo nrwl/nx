@@ -2,12 +2,11 @@ import { Tree } from '../../generators/tree';
 import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
 import {
   getProjects,
-  readWorkspaceConfiguration,
   updateProjectConfiguration,
-  updateWorkspaceConfiguration,
 } from '../../generators/utils/project-configuration';
+import { readNxJson, updateNxJson } from '../../generators/utils/nx-json';
 import { joinPathFragments } from '../../utils/path';
-import { join, relative } from 'path';
+import { join } from 'path';
 import {
   transformLegacyOutputs,
   validateOutputs,
@@ -21,7 +20,7 @@ export default async function (tree: Tree) {
     return;
   }
 
-  const workspaceConfiguration = readWorkspaceConfiguration(tree);
+  const nxJson = readNxJson(tree);
 
   for (const [projectName, project] of getProjects(tree)) {
     if (!project.targets) {
@@ -57,10 +56,8 @@ export default async function (tree: Tree) {
     }
   }
 
-  if (workspaceConfiguration.targetDefaults) {
-    for (const [_, target] of Object.entries(
-      workspaceConfiguration.targetDefaults
-    )) {
+  if (nxJson.targetDefaults) {
+    for (const [_, target] of Object.entries(nxJson.targetDefaults)) {
       if (!target.outputs) {
         continue;
       }
@@ -72,7 +69,7 @@ export default async function (tree: Tree) {
       });
     }
 
-    updateWorkspaceConfiguration(tree, workspaceConfiguration);
+    updateNxJson(tree, nxJson);
   }
 
   await formatChangedFilesWithPrettierIfAvailable(tree);

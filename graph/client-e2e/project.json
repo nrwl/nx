@@ -8,7 +8,8 @@
       "executor": "@nrwl/cypress:cypress",
       "options": {
         "tsConfig": "graph/client-e2e/tsconfig.e2e.json",
-        "testingType": "e2e"
+        "testingType": "e2e",
+        "browser": "chrome"
       },
       "configurations": {
         "dev": {
@@ -59,13 +60,7 @@
         "parallel": false
       }
     },
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["graph/client-e2e/**/*.ts"]
-      }
-    }
+    "lint": {}
   },
   "implicitDependencies": ["graph-client"]
 }

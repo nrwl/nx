@@ -1,16 +1,16 @@
 import { cypressInitGenerator } from '@nrwl/cypress';
 import {
-  addDependenciesToPackageJson,
   formatFiles,
   GeneratorCallback,
   logger,
-  readWorkspaceConfiguration,
+  readNxJson,
   Tree,
-  updateWorkspaceConfiguration,
+  updateNxJson,
 } from '@nrwl/devkit';
 import { jestInitGenerator } from '@nrwl/jest';
 import { Linter } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+import { join } from 'path';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import {
   angularDevkitVersion,
@@ -27,9 +27,12 @@ import {
   zoneJsVersion,
 } from '../../utils/versions';
 import { karmaGenerator } from '../karma/karma';
+import {
+  addDependenciesToPackageJsonIfDontExist,
+  getGeneratorDirectoryForInstalledAngularVersion,
+  getInstalledPackageVersion,
+} from '../utils/version-utils';
 import { Schema } from './schema';
-import { getGeneratorDirectoryForInstalledAngularVersion } from '../../utils/get-generator-directory-for-ng-version';
-import { join } from 'path';
 
 export async function angularInitGenerator(
   tree: Tree,
@@ -75,67 +78,73 @@ function normalizeOptions(options: Schema): Required<Schema> {
 }
 
 function setDefaults(host: Tree, options: Schema) {
-  const workspace = readWorkspaceConfiguration(host);
+  const nxJson = readNxJson(host);
 
-  workspace.generators = workspace.generators || {};
-  workspace.generators['@nrwl/angular:application'] = {
+  nxJson.generators = nxJson.generators || {};
+  nxJson.generators['@nrwl/angular:application'] = {
     style: options.style,
     linter: options.linter,
     unitTestRunner: options.unitTestRunner,
     e2eTestRunner: options.e2eTestRunner,
-    ...(workspace.generators['@nrwl/angular:application'] || {}),
+    ...(nxJson.generators['@nrwl/angular:application'] || {}),
   };
-  workspace.generators['@nrwl/angular:library'] = {
+  nxJson.generators['@nrwl/angular:library'] = {
     linter: options.linter,
     unitTestRunner: options.unitTestRunner,
-    ...(workspace.generators['@nrwl/angular:library'] || {}),
+    ...(nxJson.generators['@nrwl/angular:library'] || {}),
   };
-  workspace.generators['@nrwl/angular:component'] = {
+  nxJson.generators['@nrwl/angular:component'] = {
     style: options.style,
-    ...(workspace.generators['@nrwl/angular:component'] || {}),
+    ...(nxJson.generators['@nrwl/angular:component'] || {}),
   };
 
-  updateWorkspaceConfiguration(host, workspace);
+  updateNxJson(host, nxJson);
 }
 
-function updateDependencies(host: Tree): GeneratorCallback {
-  return addDependenciesToPackageJson(
-    host,
+function updateDependencies(tree: Tree): GeneratorCallback {
+  const angularVersionToInstall =
+    getInstalledPackageVersion(tree, '@angular/core') ?? angularVersion;
+  const angularDevkitVersionToInstall =
+    getInstalledPackageVersion(tree, '@angular-devkit/build-angular') ??
+    angularDevkitVersion;
+
+  return addDependenciesToPackageJsonIfDontExist(
+    tree,
     {
-      '@angular/animations': angularVersion,
-      '@angular/common': angularVersion,
-      '@angular/compiler': angularVersion,
-      '@angular/core': angularVersion,
-      '@angular/forms': angularVersion,
-      '@angular/platform-browser': angularVersion,
-      '@angular/platform-browser-dynamic': angularVersion,
-      '@angular/router': angularVersion,
+      '@angular/animations': angularVersionToInstall,
+      '@angular/common': angularVersionToInstall,
+      '@angular/compiler': angularVersionToInstall,
+      '@angular/core': angularVersionToInstall,
+      '@angular/forms': angularVersionToInstall,
+      '@angular/platform-browser': angularVersionToInstall,
+      '@angular/platform-browser-dynamic': angularVersionToInstall,
+      '@angular/router': angularVersionToInstall,
       rxjs: rxjsVersion,
       tslib: tsLibVersion,
       'zone.js': zoneJsVersion,
     },
     {
-      '@angular/cli': angularDevkitVersion,
-      '@angular/compiler-cli': angularVersion,
-      '@angular/language-service': angularVersion,
-      '@angular-devkit/build-angular': angularDevkitVersion,
+      '@angular/cli': angularDevkitVersionToInstall,
+      '@angular/compiler-cli': angularVersionToInstall,
+      '@angular/language-service': angularVersionToInstall,
+      '@angular-devkit/build-angular': angularDevkitVersionToInstall,
     }
   );
 }
 
 async function addUnitTestRunner(
-  host: Tree,
+  tree: Tree,
   options: Schema
 ): Promise<GeneratorCallback> {
   switch (options.unitTestRunner) {
     case UnitTestRunner.Karma:
-      return await karmaGenerator(host, {
+      return await karmaGenerator(tree, {
         skipPackageJson: options.skipPackageJson,
       });
     case UnitTestRunner.Jest:
       if (!options.skipPackageJson) {
-        addDependenciesToPackageJson(
-          host,
+        addDependenciesToPackageJsonIfDontExist(
+          tree,
           {},
           {
             'jest-preset-angular': jestPresetAngularVersion,
@@ -143,7 +152,7 @@ async function addUnitTestRunner(
         );
       }
 
-      return jestInitGenerator(host, {
+      return jestInitGenerator(tree, {
         skipPackageJson: options.skipPackageJson,
       });
     default:
@@ -151,12 +160,12 @@ async function addUnitTestRunner(
   }
 }
 
-function addE2ETestRunner(host: Tree, options: Schema): GeneratorCallback {
+function addE2ETestRunner(tree: Tree, options: Schema): GeneratorCallback {
   switch (options.e2eTestRunner) {
     case E2eTestRunner.Protractor:
       return !options.skipPackageJson
-        ? addDependenciesToPackageJson(
-            host,
+        ? addDependenciesToPackageJsonIfDontExist(
+            tree,
             {},
             {
               protractor: protractorVersion,
@@ -169,7 +178,7 @@ function addE2ETestRunner(host: Tree, options: Schema): GeneratorCallback {
           )
         : () => {};
     case E2eTestRunner.Cypress:
-      return cypressInitGenerator(host, {
+      return cypressInitGenerator(tree, {
         skipPackageJson: options.skipPackageJson,
       });
     default:

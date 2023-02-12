@@ -10,6 +10,9 @@ import {
   createProjectRootMappings,
   findProjectForPath,
 } from '../project-graph/utils/find-project-for-path';
+import { builtinModules } from 'module';
+
+const builtInModuleSet = new Set(builtinModules);
 
 export class TargetProjectLocator {
   private projectRootMappings = createProjectRootMappings(this.nodes);
@@ -40,6 +43,7 @@ export class TargetProjectLocator {
       return this.findProjectOfResolvedModule(resolvedModule);
     }
 
+    // find project using tsconfig paths
     const paths = this.findPaths(normalizedImportExpr);
     if (paths) {
       for (let p of paths) {
@@ -69,8 +73,22 @@ export class TargetProjectLocator {
       }
     }
 
+    if (builtInModuleSet.has(normalizedImportExpr)) {
+      this.npmResolutionCache.set(normalizedImportExpr, null);
+      return null;
+    }
+
+    try {
+      const resolvedModule = this.resolveImportWithRequire(
+        normalizedImportExpr,
+        filePath
+      );
+
+      return this.findProjectOfResolvedModule(resolvedModule);
+    } catch {}
+
     // nothing found, cache for later
-    this.npmResolutionCache.set(normalizedImportExpr, undefined);
+    this.npmResolutionCache.set(normalizedImportExpr, null);
     return null;
   }
 
@@ -127,6 +145,17 @@ export class TargetProjectLocator {
     return;
   }
 
+  private resolveImportWithRequire(
+    normalizedImportExpr: string,
+    filePath: string
+  ) {
+    return posix.relative(
+      workspaceRoot,
+      require.resolve(normalizedImportExpr, {
+        paths: [dirname(filePath)],
+      })
+    );
+  }
   private findNpmPackage(npmImport: string): string | undefined {
     if (this.npmResolutionCache.has(npmImport)) {
       return this.npmResolutionCache.get(npmImport);

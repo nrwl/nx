@@ -1,5 +1,5 @@
 import { readProjectConfiguration, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
 import { addLinting } from './add-linting';
 import { addProject } from './add-project';
@@ -8,7 +8,7 @@ describe('Add Linting', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProject(tree, {
       e2eName: 'my-app-e2e',
       e2eProjectName: 'my-app-e2e',
@@ -25,7 +25,7 @@ describe('Add Linting', () => {
     });
   });
 
-  it('should add update `workspace.json` file properly when eslint is passed', () => {
+  it('should update configuration when eslint is passed', () => {
     addLinting(tree, {
       e2eName: 'my-app-e2e',
       e2eProjectName: 'my-app-e2e',

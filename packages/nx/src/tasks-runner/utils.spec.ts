@@ -56,7 +56,7 @@ describe('utils', () => {
       ).toEqual(['one', 'myapp/two', 'myapp/three']);
     });
 
-    it('should interpolate {projectRoot} when it is not in front', () => {
+    it('should interpolate {projectRoot} when it is not at the beginning', () => {
       expect(
         getOutputsForTargetAndConfiguration(
           task,
@@ -65,6 +65,74 @@ describe('utils', () => {
           })
         )
       ).toEqual(['dist/myapp']);
+    });
+
+    it('should throw when {workspaceRoot} is used not at the beginning', () => {
+      expect(() =>
+        getOutputsForTargetAndConfiguration(
+          task,
+          getNode({
+            outputs: ['test/{workspaceRoot}/dist'],
+          })
+        )
+      ).toThrow();
+    });
+
+    it('should interpolate {projectRoot} = . by removing the slash after it', () => {
+      const data = {
+        name: 'myapp',
+        type: 'app',
+        data: {
+          root: '.',
+          targets: {
+            build: {
+              outputs: ['{projectRoot}/dist'],
+            },
+          },
+          files: [],
+        },
+      };
+      expect(getOutputsForTargetAndConfiguration(task, data as any)).toEqual([
+        'dist',
+      ]);
+    });
+
+    it('should interpolate {workspaceRoot} when {projectRoot} = . by removing the slash after it', () => {
+      const data = {
+        name: 'myapp',
+        type: 'app',
+        data: {
+          root: '.',
+          targets: {
+            build: {
+              outputs: ['{workspaceRoot}/dist'],
+            },
+          },
+          files: [],
+        },
+      };
+      expect(getOutputsForTargetAndConfiguration(task, data as any)).toEqual([
+        'dist',
+      ]);
+    });
+
+    it('should throw when {projectRoot} is used not at the beginning and the value is .', () => {
+      const data = {
+        name: 'myapp',
+        type: 'app',
+        data: {
+          root: '.',
+          targets: {
+            build: {
+              outputs: ['test/{projectRoot}'],
+            },
+          },
+          files: [],
+        },
+      };
+      expect(() =>
+        getOutputsForTargetAndConfiguration(task, data as any)
+      ).toThrow();
     });
 
     it('should support interpolation based on options', () => {

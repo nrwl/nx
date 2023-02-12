@@ -22,7 +22,7 @@ describe('updateTsconfig', () => {
   let schemaWithImportPath: Schema;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     schema = {
       projectName: 'my-lib',
@@ -41,7 +41,6 @@ describe('updateTsconfig', () => {
   it('should delete project ref from the root tsconfig.base.json', async () => {
     await libraryGenerator(tree, {
       name: 'my-lib',
-      standaloneConfig: false,
     });
 
     graph = {
@@ -51,7 +50,7 @@ describe('updateTsconfig', () => {
           type: 'lib',
           data: {
             root: readProjectConfiguration(tree, 'my-lib').root,
-          },
+          } as any,
         },
       },
       dependencies: {},
@@ -67,7 +66,6 @@ describe('updateTsconfig', () => {
     tree.delete('libs');
     await libraryGenerator(tree, {
       name: 'my-lib',
-      standaloneConfig: false,
     });
 
     graph = {
@@ -77,7 +75,7 @@ describe('updateTsconfig', () => {
           type: 'lib',
           data: {
             root: readProjectConfiguration(tree, 'my-lib').root,
-          },
+          } as any,
         },
       },
       dependencies: {},
@@ -92,7 +90,7 @@ describe('updateTsconfig', () => {
   it('should delete project ref with importPath from the root tsconfig.base.json', async () => {
     await libraryGenerator(tree, {
       name: 'my-lib',
-      standaloneConfig: false,
+
       importPath: '@proj/whatever-name',
     });
 
@@ -103,7 +101,7 @@ describe('updateTsconfig', () => {
           type: 'lib',
           data: {
             root: readProjectConfiguration(tree, 'my-lib').root,
-          },
+          } as any,
         },
       },
       dependencies: {},
@@ -119,7 +117,6 @@ describe('updateTsconfig', () => {
     tree.rename('tsconfig.base.json', 'tsconfig.json');
     await libraryGenerator(tree, {
       name: 'my-lib',
-      standaloneConfig: false,
     });
 
     graph = {
@@ -129,7 +126,7 @@ describe('updateTsconfig', () => {
           type: 'lib',
           data: {
             root: readProjectConfiguration(tree, 'my-lib').root,
-          },
+          } as any,
         },
       },
       dependencies: {},
@@ -145,7 +142,7 @@ describe('updateTsconfig', () => {
     tree.rename('tsconfig.base.json', 'tsconfig.json');
     await libraryGenerator(tree, {
       name: 'my-lib',
-      standaloneConfig: false,
+
       importPath: '@proj/whatever-name',
     });
 
@@ -156,7 +153,7 @@ describe('updateTsconfig', () => {
           type: 'lib',
           data: {
             root: readProjectConfiguration(tree, 'my-lib').root,
-          },
+          } as any,
         },
       },
       dependencies: {},
@@ -171,13 +168,13 @@ describe('updateTsconfig', () => {
   it('should not delete importPaths of nested projects from tsconfig.base.json', async () => {
     await libraryGenerator(tree, {
       name: 'my-lib',
-      standaloneConfig: false,
+
       importPath: '@proj/whatever-name',
     });
     await libraryGenerator(tree, {
       name: 'nested-lib',
       directory: 'libs/my-lib',
-      standaloneConfig: false,
+
       importPath: '@proj/nested/whatever-name',
     });
 
@@ -188,14 +185,14 @@ describe('updateTsconfig', () => {
           type: 'lib',
           data: {
             root: readProjectConfiguration(tree, 'my-lib').root,
-          },
+          } as any,
         },
         'my-lib-nested-lib': {
           name: 'my-lib-nested-lib',
           type: 'lib',
           data: {
             root: readProjectConfiguration(tree, 'my-lib-nested-lib').root,
-          },
+          } as any,
         },
       },
       dependencies: {},

@@ -3,7 +3,7 @@ import { getWorkspaceLayout } from './get-workspace-layout';
 
 describe('getWorkspaceLayout', () => {
   it('should return selected values', () => {
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     tree.write(
       'nx.json',
       JSON.stringify({
@@ -21,7 +21,7 @@ describe('getWorkspaceLayout', () => {
     });
   });
   it('should return apps and libs when present', () => {
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     tree.write('nx.json', JSON.stringify({}));
     tree.write('apps/file', '');
     tree.write('libs/file', '');

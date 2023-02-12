@@ -1,11 +1,10 @@
 import type { Observable } from 'rxjs';
-import { Workspaces } from 'nx/src/config/workspaces';
-import { Executor, ExecutorContext } from 'nx/src/config/misc-interfaces';
-import {
-  createProjectGraphAsync,
-  readCachedProjectGraph,
-} from 'nx/src/project-graph/project-graph';
-import { ProjectGraph } from 'nx/src/config/project-graph';
+import type { Executor, ExecutorContext } from 'nx/src/config/misc-interfaces';
+import type { ProjectGraph } from 'nx/src/config/project-graph';
+import { requireNx } from '../../nx';
+
+const { createProjectGraphAsync, readCachedProjectGraph, Workspaces } =
+  requireNx();
 
 /**
  * Convert an Nx Executor into an Angular Devkit Builder
@@ -16,7 +15,10 @@ import { ProjectGraph } from 'nx/src/config/project-graph';
 export function convertNxExecutor(executor: Executor) {
   const builderFunction = (options, builderContext) => {
     const workspaces = new Workspaces(builderContext.workspaceRoot);
-    const workspaceConfig = workspaces.readWorkspaceConfiguration();
+    const nxJsonConfiguration = workspaces.readNxJson();
+    const projectsConfigurations = workspaces.readProjectsConfigurations({
+      _includeProjectsFromAngularJson: true,
+    });
 
     const promise = async () => {
       let projectGraph: ProjectGraph;
@@ -31,7 +33,9 @@ export function convertNxExecutor(executor: Executor) {
         targetName: builderContext.target.target,
         target: builderContext.target.target,
         configurationName: builderContext.target.configuration,
-        workspace: workspaceConfig,
+        projectsConfigurations,
+        nxJsonConfiguration,
+        workspace: { ...projectsConfigurations, ...nxJsonConfiguration },
         cwd: process.cwd(),
         projectGraph,
         isVerbose: false,

@@ -1,61 +1,120 @@
 import { NxJsonConfiguration, readJson, Tree, updateJson } from '@nrwl/devkit';
-import {
-  createTreeWithEmptyV1Workspace,
-  createTreeWithEmptyWorkspace,
-} from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
-
-import init from './init';
+import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
-import { versions } from '../../utils/versions';
+import { angularDevkitVersion, angularVersion } from '../../utils/versions';
+import init from './init';
 
 describe('init', () => {
-  let host: Tree;
+  let tree: Tree;
 
   beforeEach(() => {
-    host = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it('should add angular dependencies', async () => {
     // ACT
-    await init(host, {
+    await init(tree, {
       unitTestRunner: UnitTestRunner.Jest,
       linter: Linter.EsLint,
       skipFormat: false,
     });
 
     // ASSERT
-    const { dependencies, devDependencies } = readJson(host, 'package.json');
+    const { dependencies, devDependencies } = readJson(tree, 'package.json');
 
-    expect(dependencies['@angular/animations']).toBeDefined();
-    expect(dependencies['@angular/common']).toBeDefined();
-    expect(dependencies['@angular/compiler']).toBeDefined();
-    expect(dependencies['@angular/core']).toBeDefined();
-    expect(dependencies['@angular/platform-browser']).toBeDefined();
-    expect(dependencies['@angular/platform-browser-dynamic']).toBeDefined();
-    expect(dependencies['@angular/router']).toBeDefined();
+    expect(dependencies['@angular/animations']).toBe(angularVersion);
+    expect(dependencies['@angular/common']).toBe(angularVersion);
+    expect(dependencies['@angular/compiler']).toBe(angularVersion);
+    expect(dependencies['@angular/core']).toBe(angularVersion);
+    expect(dependencies['@angular/platform-browser']).toBe(angularVersion);
+    expect(dependencies['@angular/platform-browser-dynamic']).toBe(
+      angularVersion
+    );
+    expect(dependencies['@angular/router']).toBe(angularVersion);
     expect(dependencies['rxjs']).toBeDefined();
+    expect(dependencies['tslib']).toBeDefined();
     expect(dependencies['zone.js']).toBeDefined();
-    expect(devDependencies['@angular/cli']).toBeDefined();
-    expect(devDependencies['@angular/compiler-cli']).toBeDefined();
-    expect(devDependencies['@angular/language-service']).toBeDefined();
-    expect(devDependencies['@angular-devkit/build-angular']).toBeDefined();
+    expect(devDependencies['@angular/cli']).toBe(angularDevkitVersion);
+    expect(devDependencies['@angular/compiler-cli']).toBe(angularVersion);
+    expect(devDependencies['@angular/language-service']).toBe(angularVersion);
+    expect(devDependencies['@angular-devkit/build-angular']).toBe(
+      angularDevkitVersion
+    );
 
     // codelyzer should no longer be there by default
     expect(devDependencies['codelyzer']).toBeUndefined();
+  });
+
+  it('should add angular dependencies respecting base packages versions', async () => {
+    // ARRANGE
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: {
+        ...json.dependencies,
+        '@angular/core': '~15.0.0',
+      },
+      devDependencies: {
+        ...json.devDependencies,
+        '@angular-devkit/build-angular': '~15.0.0',
+      },
+    }));
+
+    // ACT
+    await init(tree, {});
+
+    // ASSERT
+    const { dependencies, devDependencies } = readJson(tree, 'package.json');
+
+    expect(dependencies['@angular/animations']).toBe('~15.0.0');
+    expect(dependencies['@angular/common']).toBe('~15.0.0');
+    expect(dependencies['@angular/compiler']).toBe('~15.0.0');
+    expect(dependencies['@angular/core']).toBe('~15.0.0');
+    expect(dependencies['@angular/platform-browser']).toBe('~15.0.0');
+    expect(dependencies['@angular/platform-browser-dynamic']).toBe('~15.0.0');
+    expect(dependencies['@angular/router']).toBe('~15.0.0');
+    expect(dependencies['rxjs']).toBeDefined();
+    expect(dependencies['tslib']).toBeDefined();
+    expect(dependencies['zone.js']).toBeDefined();
+    expect(devDependencies['@angular/cli']).toBe('~15.0.0');
+    expect(devDependencies['@angular/compiler-cli']).toBe('~15.0.0');
+    expect(devDependencies['@angular/language-service']).toBe('~15.0.0');
+    expect(devDependencies['@angular-devkit/build-angular']).toBe('~15.0.0');
+  });
+
+  it('should not overwrite already installed dependencies', async () => {
+    // ARRANGE
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: {
+        ...json.dependencies,
+        '@angular/animations': '~15.0.1',
+        '@angular/core': '~15.0.0',
+      },
+    }));
+
+    // ACT
+    await init(tree, {});
+
+    // ASSERT
+    const { dependencies } = readJson(tree, 'package.json');
+
+    expect(dependencies['@angular/animations']).toBe('~15.0.1');
+    expect(dependencies['@angular/core']).toBe('~15.0.0');
   });
 
   describe('--unit-test-runner', () => {
     describe('karma', () => {
       it('should add karma dependencies', async () => {
         // ACT
-        await init(host, {
+        await init(tree, {
           unitTestRunner: UnitTestRunner.Karma,
           linter: Linter.EsLint,
           skipFormat: false,
         });
 
-        const { devDependencies } = readJson(host, 'package.json');
+        const { devDependencies } = readJson(tree, 'package.json');
 
         // ASSERT
         expect(devDependencies['karma']).toBeDefined();
@@ -70,13 +129,13 @@ describe('init', () => {
 
       it('should add karma configuration', async () => {
         // ACT
-        await init(host, {
+        await init(tree, {
           unitTestRunner: UnitTestRunner.Karma,
           linter: Linter.EsLint,
           skipFormat: false,
         });
 
-        const hasKarmaConfigFile = host.exists('karma.conf.js');
+        const hasKarmaConfigFile = tree.exists('karma.conf.js');
 
         // ASSERT
         expect(hasKarmaConfigFile).toBeTruthy();
@@ -84,13 +143,13 @@ describe('init', () => {
 
       it('should set defaults', async () => {
         // ACT
-        await init(host, {
+        await init(tree, {
           unitTestRunner: UnitTestRunner.Karma,
           linter: Linter.EsLint,
           skipFormat: false,
         });
 
-        const { generators } = readJson<NxJsonConfiguration>(host, 'nx.json');
+        const { generators } = readJson<NxJsonConfiguration>(tree, 'nx.json');
 
         // ASSERT
         expect(generators['@nrwl/angular:application'].unitTestRunner).toEqual(
@@ -105,13 +164,13 @@ describe('init', () => {
     describe('jest', () => {
       it('should add jest dependencies', async () => {
         // ACT
-        await init(host, {
+        await init(tree, {
           unitTestRunner: UnitTestRunner.Jest,
           linter: Linter.EsLint,
           skipFormat: false,
         });
 
-        const { devDependencies } = readJson(host, 'package.json');
+        const { devDependencies } = readJson(tree, 'package.json');
 
         // ASSERT
         expect(devDependencies['@nrwl/jest']).toBeDefined();
@@ -121,13 +180,13 @@ describe('init', () => {
 
       it('should add jest configuration', async () => {
         // ACT
-        await init(host, {
+        await init(tree, {
           unitTestRunner: UnitTestRunner.Jest,
           linter: Linter.EsLint,
           skipFormat: false,
         });
 
-        const hasJestConfigFile = host.exists('jest.config.ts');
+        const hasJestConfigFile = tree.exists('jest.config.ts');
 
         // ASSERT
         expect(hasJestConfigFile).toBeTruthy();
@@ -135,13 +194,13 @@ describe('init', () => {
 
       it('should set defaults', async () => {
         // ACT
-        await init(host, {
+        await init(tree, {
           unitTestRunner: UnitTestRunner.Jest,
           linter: Linter.EsLint,
           skipFormat: false,
         });
 
-        const { generators } = readJson<NxJsonConfiguration>(host, 'nx.json');
+        const { generators } = readJson<NxJsonConfiguration>(tree, 'nx.json');
 
         // ASSERT
         expect(generators['@nrwl/angular:application'].unitTestRunner).toEqual(
@@ -158,14 +217,14 @@ describe('init', () => {
     describe('cypress', () => {
       it('should add cypress dependencies', async () => {
         // ACT
-        await init(host, {
+        await init(tree, {
           unitTestRunner: UnitTestRunner.None,
           e2eTestRunner: E2eTestRunner.Cypress,
           linter: Linter.EsLint,
           skipFormat: false,
         });
 
-        const { devDependencies } = readJson(host, 'package.json');
+        const { devDependencies } = readJson(tree, 'package.json');
 
         // ASSERT
         expect(devDependencies['@nrwl/cypress']).toBeDefined();
@@ -174,14 +233,14 @@ describe('init', () => {
 
       it('should set defaults', async () => {
         // ACT
-        await init(host, {
+        await init(tree, {
           unitTestRunner: UnitTestRunner.None,
           e2eTestRunner: E2eTestRunner.Cypress,
           linter: Linter.EsLint,
           skipFormat: false,
         });
 
-        const { generators } = readJson<NxJsonConfiguration>(host, 'nx.json');
+        const { generators } = readJson<NxJsonConfiguration>(tree, 'nx.json');
 
         // ASSERT
         expect(generators['@nrwl/angular:application'].e2eTestRunner).toEqual(
@@ -193,14 +252,14 @@ describe('init', () => {
     describe('protractor', () => {
       it('should add protractor dependencies', async () => {
         // ACT
-        await init(host, {
+        await init(tree, {
           unitTestRunner: UnitTestRunner.None,
           e2eTestRunner: E2eTestRunner.Protractor,
           linter: Linter.EsLint,
           skipFormat: false,
         });
 
-        const { devDependencies } = readJson(host, 'package.json');
+        const { devDependencies } = readJson(tree, 'package.json');
 
         // ASSERT
         expect(devDependencies['protractor']).toBeDefined();
@@ -212,14 +271,14 @@ describe('init', () => {
 
       it('should set defaults', async () => {
         // ACT
-        await init(host, {
+        await init(tree, {
           unitTestRunner: UnitTestRunner.None,
           e2eTestRunner: E2eTestRunner.Protractor,
           linter: Linter.EsLint,
           skipFormat: false,
         });
 
-        const { generators } = readJson<NxJsonConfiguration>(host, 'nx.json');
+        const { generators } = readJson<NxJsonConfiguration>(tree, 'nx.json');
 
         // ASSERT
         expect(generators['@nrwl/angular:application'].e2eTestRunner).toEqual(
@@ -233,13 +292,13 @@ describe('init', () => {
     describe('eslint', () => {
       it('should set the default to eslint', async () => {
         // ACT
-        await init(host, {
+        await init(tree, {
           unitTestRunner: UnitTestRunner.None,
           linter: Linter.EsLint,
           skipFormat: false,
         });
 
-        const { generators } = readJson<NxJsonConfiguration>(host, 'nx.json');
+        const { generators } = readJson<NxJsonConfiguration>(tree, 'nx.json');
 
         // ASSERT
         expect(generators['@nrwl/angular:application'].linter).toEqual(
@@ -252,13 +311,13 @@ describe('init', () => {
     describe('none', () => {
       it('should set the default to none', async () => {
         // ACT
-        await init(host, {
+        await init(tree, {
           unitTestRunner: UnitTestRunner.None,
           linter: Linter.None,
           skipFormat: false,
         });
 
-        const { generators } = readJson<NxJsonConfiguration>(host, 'nx.json');
+        const { generators } = readJson<NxJsonConfiguration>(tree, 'nx.json');
 
         // ASSERT
         expect(generators['@nrwl/angular:application'].linter).toEqual('none');
@@ -268,20 +327,20 @@ describe('init', () => {
   });
 
   it('should add .angular to gitignore', async () => {
-    host.write('.gitignore', '');
+    tree.write('.gitignore', '');
 
-    await init(host, {
+    await init(tree, {
       unitTestRunner: UnitTestRunner.Jest,
       e2eTestRunner: E2eTestRunner.Cypress,
       linter: Linter.EsLint,
       skipFormat: false,
     });
 
-    expect(host.read('.gitignore', 'utf-8')).toContain('.angular');
+    expect(tree.read('.gitignore', 'utf-8')).toContain('.angular');
   });
 
   it('should not add .angular to gitignore when it already exists', async () => {
-    host.write(
+    tree.write(
       '.gitignore',
       `foo
 bar
@@ -291,14 +350,14 @@ bar
 `
     );
 
-    await init(host, {
+    await init(tree, {
       unitTestRunner: UnitTestRunner.Jest,
       e2eTestRunner: E2eTestRunner.Cypress,
       linter: Linter.EsLint,
       skipFormat: false,
     });
 
-    const angularEntries = host
+    const angularEntries = tree
       .read('.gitignore', 'utf-8')
       .match(/^.angular$/gm);
     expect(angularEntries).toHaveLength(1);
@@ -307,12 +366,12 @@ bar
   describe('v14 support', () => {
     let tree: Tree;
     beforeEach(() => {
-      tree = createTreeWithEmptyWorkspace();
+      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       updateJson(tree, 'package.json', (json) => ({
         ...json,
         dependencies: {
           ...json.dependencies,
-          '@angular/core': '14.1.0',
+          '@angular/core': '~14.2.0',
         },
       }));
     });
@@ -329,45 +388,104 @@ bar
       const { dependencies, devDependencies } = readJson(tree, 'package.json');
 
       expect(dependencies['@angular/animations']).toEqual(
-        versions.angularV14.angularVersion
+        backwardCompatibleVersions.angularV14.angularVersion
       );
       expect(dependencies['@angular/common']).toEqual(
-        versions.angularV14.angularVersion
+        backwardCompatibleVersions.angularV14.angularVersion
       );
       expect(dependencies['@angular/compiler']).toEqual(
-        versions.angularV14.angularVersion
+        backwardCompatibleVersions.angularV14.angularVersion
       );
       expect(dependencies['@angular/core']).toEqual(
-        versions.angularV14.angularVersion
+        backwardCompatibleVersions.angularV14.angularVersion
       );
       expect(dependencies['@angular/platform-browser']).toEqual(
-        versions.angularV14.angularVersion
+        backwardCompatibleVersions.angularV14.angularVersion
       );
       expect(dependencies['@angular/platform-browser-dynamic']).toEqual(
-        versions.angularV14.angularVersion
+        backwardCompatibleVersions.angularV14.angularVersion
       );
       expect(dependencies['@angular/router']).toEqual(
-        versions.angularV14.angularVersion
+        backwardCompatibleVersions.angularV14.angularVersion
       );
-      expect(dependencies['rxjs']).toEqual(versions.angularV14.rxjsVersion);
+      expect(dependencies['rxjs']).toEqual(
+        backwardCompatibleVersions.angularV14.rxjsVersion
+      );
       expect(dependencies['zone.js']).toEqual(
-        versions.angularV14.zoneJsVersion
+        backwardCompatibleVersions.angularV14.zoneJsVersion
       );
       expect(devDependencies['@angular/cli']).toEqual(
-        versions.angularV14.angularDevkitVersion
+        backwardCompatibleVersions.angularV14.angularDevkitVersion
       );
       expect(devDependencies['@angular/compiler-cli']).toEqual(
-        versions.angularV14.angularDevkitVersion
+        backwardCompatibleVersions.angularV14.angularDevkitVersion
       );
       expect(devDependencies['@angular/language-service']).toEqual(
-        versions.angularV14.angularVersion
+        backwardCompatibleVersions.angularV14.angularVersion
       );
       expect(devDependencies['@angular-devkit/build-angular']).toEqual(
-        versions.angularV14.angularDevkitVersion
+        backwardCompatibleVersions.angularV14.angularDevkitVersion
       );
 
       // codelyzer should no longer be there by default
       expect(devDependencies['codelyzer']).toBeUndefined();
+    });
+
+    it('should add angular dependencies respecting base packages versions', async () => {
+      // ARRANGE
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '~14.0.0',
+        },
+        devDependencies: {
+          ...json.devDependencies,
+          '@angular-devkit/build-angular': '~14.0.0',
+        },
+      }));
+
+      // ACT
+      await init(tree, {});
+
+      // ASSERT
+      const { dependencies, devDependencies } = readJson(tree, 'package.json');
+
+      expect(dependencies['@angular/animations']).toBe('~14.0.0');
+      expect(dependencies['@angular/common']).toBe('~14.0.0');
+      expect(dependencies['@angular/compiler']).toBe('~14.0.0');
+      expect(dependencies['@angular/core']).toBe('~14.0.0');
+      expect(dependencies['@angular/platform-browser']).toBe('~14.0.0');
+      expect(dependencies['@angular/platform-browser-dynamic']).toBe('~14.0.0');
+      expect(dependencies['@angular/router']).toBe('~14.0.0');
+      expect(dependencies['rxjs']).toBeDefined();
+      expect(dependencies['tslib']).toBeDefined();
+      expect(dependencies['zone.js']).toBeDefined();
+      expect(devDependencies['@angular/cli']).toBe('~14.0.0');
+      expect(devDependencies['@angular/compiler-cli']).toBe('~14.0.0');
+      expect(devDependencies['@angular/language-service']).toBe('~14.0.0');
+      expect(devDependencies['@angular-devkit/build-angular']).toBe('~14.0.0');
+    });
+
+    it('should not overwrite already installed dependencies', async () => {
+      // ARRANGE
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/animations': '~14.0.1',
+          '@angular/core': '~14.0.0',
+        },
+      }));
+
+      // ACT
+      await init(tree, {});
+
+      // ASSERT
+      const { dependencies } = readJson(tree, 'package.json');
+
+      expect(dependencies['@angular/animations']).toBe('~14.0.1');
+      expect(dependencies['@angular/core']).toBe('~14.0.0');
     });
 
     describe('--unit-test-runner', () => {
@@ -384,28 +502,29 @@ bar
 
           // ASSERT
           expect(devDependencies['karma']).toEqual(
-            versions.angularV14.karmaVersion
+            backwardCompatibleVersions.angularV14.karmaVersion
           );
           expect(devDependencies['karma-chrome-launcher']).toEqual(
-            versions.angularV14.karmaChromeLauncherVersion
+            backwardCompatibleVersions.angularV14.karmaChromeLauncherVersion
           );
           expect(devDependencies['karma-coverage']).toEqual(
-            versions.angularV14.karmaCoverageVersion
+            backwardCompatibleVersions.angularV14.karmaCoverageVersion
           );
           expect(devDependencies['karma-jasmine']).toEqual(
-            versions.angularV14.karmaJasmineVersion
+            backwardCompatibleVersions.angularV14.karmaJasmineVersion
           );
           expect(devDependencies['karma-jasmine-html-reporter']).toEqual(
-            versions.angularV14.karmaJasmineHtmlReporterVersion
+            backwardCompatibleVersions.angularV14
+              .karmaJasmineHtmlReporterVersion
           );
           expect(devDependencies['jasmine-core']).toEqual(
-            versions.angularV14.jasmineCoreVersion
+            backwardCompatibleVersions.angularV14.jasmineCoreVersion
           );
           expect(devDependencies['jasmine-spec-reporter']).toEqual(
-            versions.angularV14.jasmineSpecReporterVersion
+            backwardCompatibleVersions.angularV14.jasmineSpecReporterVersion
           );
           expect(devDependencies['@types/jasmine']).toEqual(
-            versions.angularV14.typesJasmineVersion
+            backwardCompatibleVersions.angularV14.typesJasmineVersion
           );
         });
 
@@ -458,7 +577,7 @@ bar
           expect(devDependencies['@nrwl/jest']).toBeDefined();
           expect(devDependencies['jest']).toBeDefined();
           expect(devDependencies['jest-preset-angular']).toEqual(
-            versions.angularV14.jestPresetAngularVersion
+            backwardCompatibleVersions.angularV14.jestPresetAngularVersion
           );
         });
 
@@ -547,19 +666,19 @@ bar
 
           // ASSERT
           expect(devDependencies['protractor']).toEqual(
-            versions.angularV14.protractorVersion
+            backwardCompatibleVersions.angularV14.protractorVersion
           );
           expect(devDependencies['jasmine-core']).toEqual(
-            versions.angularV14.jasmineCoreVersion
+            backwardCompatibleVersions.angularV14.jasmineCoreVersion
           );
           expect(devDependencies['jasmine-spec-reporter']).toEqual(
-            versions.angularV14.jasmineSpecReporterVersion
+            backwardCompatibleVersions.angularV14.jasmineSpecReporterVersion
           );
           expect(devDependencies['@types/jasmine']).toEqual(
-            versions.angularV14.typesJasmineVersion
+            backwardCompatibleVersions.angularV14.typesJasmineVersion
           );
           expect(devDependencies['@types/jasminewd2']).toEqual(
-            versions.angularV14.typesJasminewd2Version
+            backwardCompatibleVersions.angularV14.typesJasminewd2Version
           );
         });
 

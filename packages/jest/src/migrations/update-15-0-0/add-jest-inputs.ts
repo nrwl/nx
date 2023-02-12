@@ -1,21 +1,14 @@
-import {
-  formatFiles,
-  readWorkspaceConfiguration,
-  Tree,
-  updateWorkspaceConfiguration,
-} from '@nrwl/devkit';
+import { formatFiles, readNxJson, Tree, updateNxJson } from '@nrwl/devkit';
 import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
 
 export default async function (tree: Tree) {
-  const workspaceConfiguration = readWorkspaceConfiguration(tree);
+  const nxJson = readNxJson(tree);
 
   const jestTargets = getJestTargetNames(tree);
-  const hasProductionFileset = !!workspaceConfiguration.namedInputs?.production;
+  const hasProductionFileset = !!nxJson.namedInputs?.production;
 
   if (jestTargets.size > 0 && hasProductionFileset) {
-    const productionFileset = new Set(
-      workspaceConfiguration.namedInputs.production
-    );
+    const productionFileset = new Set(nxJson.namedInputs.production);
     for (const exclusion of [
       '!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)',
       '!{projectRoot}/tsconfig.spec.json',
@@ -23,15 +16,12 @@ export default async function (tree: Tree) {
     ]) {
       productionFileset.add(exclusion);
     }
-    workspaceConfiguration.namedInputs.production =
-      Array.from(productionFileset);
+    nxJson.namedInputs.production = Array.from(productionFileset);
   }
 
   for (const targetName of jestTargets) {
-    workspaceConfiguration.targetDefaults ??= {};
-    const jestTargetDefaults = (workspaceConfiguration.targetDefaults[
-      targetName
-    ] ??= {});
+    nxJson.targetDefaults ??= {};
+    const jestTargetDefaults = (nxJson.targetDefaults[targetName] ??= {});
 
     jestTargetDefaults.inputs ??= [
       'default',
@@ -42,7 +32,7 @@ export default async function (tree: Tree) {
     ];
   }
 
-  updateWorkspaceConfiguration(tree, workspaceConfiguration);
+  updateNxJson(tree, nxJson);
 
   await formatFiles(tree);
 }

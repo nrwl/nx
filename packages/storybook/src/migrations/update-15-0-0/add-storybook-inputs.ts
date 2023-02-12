@@ -1,36 +1,26 @@
-import {
-  formatFiles,
-  readWorkspaceConfiguration,
-  Tree,
-  updateWorkspaceConfiguration,
-} from '@nrwl/devkit';
+import { formatFiles, readNxJson, Tree, updateNxJson } from '@nrwl/devkit';
 import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
 
 export default async function (tree: Tree) {
-  const workspaceConfiguration = readWorkspaceConfiguration(tree);
+  const nxJson = readNxJson(tree);
 
   const storybookTargets = getStorybookBuildTargets(tree);
-  const hasProductionFileset = !!workspaceConfiguration.namedInputs?.production;
+  const hasProductionFileset = !!nxJson.namedInputs?.production;
 
   if (storybookTargets.size > 0 && hasProductionFileset) {
-    const productionFileset = new Set(
-      workspaceConfiguration.namedInputs.production
-    );
+    const productionFileset = new Set(nxJson.namedInputs.production);
     for (const exclusion of [
       '!{projectRoot}/.storybook/**/*',
       '!{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)',
     ]) {
       productionFileset.add(exclusion);
     }
-    workspaceConfiguration.namedInputs.production =
-      Array.from(productionFileset);
+    nxJson.namedInputs.production = Array.from(productionFileset);
   }
 
   for (const targetName of storybookTargets) {
-    workspaceConfiguration.targetDefaults ??= {};
-    const storybookTargetDefaults = (workspaceConfiguration.targetDefaults[
-      targetName
-    ] ??= {});
+    nxJson.targetDefaults ??= {};
+    const storybookTargetDefaults = (nxJson.targetDefaults[targetName] ??= {});
 
     storybookTargetDefaults.inputs ??= [
       'default',
@@ -39,7 +29,7 @@ export default async function (tree: Tree) {
     ];
   }
 
-  updateWorkspaceConfiguration(tree, workspaceConfiguration);
+  updateNxJson(tree, nxJson);
 
   await formatFiles(tree);
 }

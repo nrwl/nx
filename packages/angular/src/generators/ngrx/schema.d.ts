@@ -1,7 +1,9 @@
 export interface NgRxGeneratorOptions {
   directory: string;
   minimal: boolean;
-  module: string;
+  module?: string;
+  parent?: string;
+  route?: string;
   name: string;
   barrels?: boolean;
   facade?: boolean;

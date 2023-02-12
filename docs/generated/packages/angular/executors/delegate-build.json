@@ -1,0 +1,44 @@
+{
+  "name": "delegate-build",
+  "implementation": "/packages/angular/src/executors/delegate-build/delegate-build.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "title": "Schema for an executor which delegates a build.",
+    "description": "Delegates the build to a different target while supporting incremental builds.",
+    "cli": "nx",
+    "type": "object",
+    "properties": {
+      "buildTarget": {
+        "description": "Build target used for building the application after its dependencies have been built.",
+        "type": "string"
+      },
+      "outputPath": {
+        "type": "string",
+        "description": "The full path for the output directory, relative to the workspace root.",
+        "x-completion-type": "directory"
+      },
+      "tsConfig": {
+        "type": "string",
+        "description": "The full path for the TypeScript configuration file, relative to the workspace root.",
+        "x-completion-type": "file",
+        "x-completion-glob": "tsconfig.*.json"
+      },
+      "watch": {
+        "type": "boolean",
+        "description": "Whether to run a build when any file changes.",
+        "default": false
+      }
+    },
+    "additionalProperties": false,
+    "required": ["buildTarget", "outputPath", "tsConfig"],
+    "examplesFile": "## Examples\n\n{% tabs %}\n\n{% tab label=\"Basic Usage\" %}\nDelegate the build of the project to a different target.\n\n```json\n{\n  \"prod-build\": {\n    \"executor\": \"@nrwl/angular:delegate-build\",\n    \"options\": {\n      \"buildTarget\": \"app:build:production\",\n      \"outputPath\": \"dist/apps/app/production\",\n      \"tsConfig\": \"apps/app/tsconfig.json\",\n      \"watch\": false\n    }\n  }\n}\n```\n\n{% /tab %}\n\n{% tab label=\"Watch for build changes\" %}\nDelegate the build of the project to a different target.\n\n```json\n{\n  \"prod-build\": {\n    \"executor\": \"@nrwl/angular:delegate-build\",\n    \"options\": {\n      \"buildTarget\": \"app:build:production\",\n      \"outputPath\": \"dist/apps/app/production\",\n      \"tsConfig\": \"apps/app/tsconfig.json\",\n      \"watch\": true\n    }\n  }\n}\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
+    "presets": []
+  },
+  "description": "Delegates the build to a different target while supporting incremental builds.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/angular/src/executors/delegate-build/schema.json",
+  "type": "executor"
+}

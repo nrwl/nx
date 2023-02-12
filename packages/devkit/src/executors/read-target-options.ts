@@ -1,7 +1,10 @@
 import type { Target } from 'nx/src/command-line/run';
 import type { ExecutorContext } from 'nx/src/config/misc-interfaces';
-import { Workspaces } from 'nx/src/config/workspaces';
+// eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { combineOptionsForExecutor } from 'nx/src/utils/params';
+import { requireNx } from '../../nx';
+
+const { Workspaces } = requireNx();
 
 /**
  * Reads and combines options for a given target.
@@ -21,7 +24,8 @@ export function readTargetOptions<T = any>(
 
   const defaultProject = ws.calculateDefaultProjectName(
     context.cwd,
-    context.workspace
+    context.projectsConfigurations,
+    context.nxJsonConfiguration
   );
 
   return combineOptionsForExecutor(

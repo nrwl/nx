@@ -19,6 +19,13 @@
         "$source": "projectName"
       },
       "x-prompt": "What project should we add Cypress component testing to?"
+    },
+    "bundler": {
+      "description": "The Cypress bundler to use.",
+      "type": "string",
+      "enum": ["vite", "webpack"],
+      "x-prompt": "Which Cypress bundler do you want to use for the dev-server?",
+      "default": "webpack"
     }
   },
   "required": ["project"],

@@ -103,13 +103,20 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
     const { viteConfigurationGenerator } = await import('@nrwl/vite');
     // We recommend users use `import.meta.env.MODE` and other variables in their code to differentiate between production and development.
     // See: https://vitejs.dev/guide/env-and-mode.html
-    host.delete(joinPathFragments(options.appProjectRoot, 'src/environments'));
+    if (
+      host.exists(joinPathFragments(options.appProjectRoot, 'src/environments'))
+    ) {
+      host.delete(
+        joinPathFragments(options.appProjectRoot, 'src/environments')
+      );
+    }
 
     const viteTask = await viteConfigurationGenerator(host, {
       uiFramework: 'react',
       project: options.projectName,
       newProject: true,
-      includeVitest: true,
+      includeVitest: options.unitTestRunner === 'vitest',
+      inSourceTests: options.inSourceTests,
     });
     tasks.push(viteTask);
   } else if (options.bundler === 'webpack') {

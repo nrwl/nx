@@ -16,7 +16,7 @@
         "outputPath": "dist/nx-dev/nx-dev",
         "commands": [
           "nx run nx-dev:sitemap",
-          "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/internal-link-checker.ts"
+          "ts-node -P ./scripts/tsconfig.release.json ./scripts/documentation/internal-link-checker.ts"
         ],
         "parallel": false
       }
@@ -90,7 +90,7 @@
           }
         ],
         "color": true,
-        "parallel": true
+        "parallel": false
       }
     },
     "export": {
@@ -99,21 +99,8 @@
         "buildTarget": "nx-dev:build:production"
       }
     },
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "lintFilePatterns": ["nx-dev/nx-dev/**/*.{ts,tsx,js,jsx}"]
-      },
-      "outputs": ["{options.outputFile}"]
-    },
-    "test": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/nx-dev/nx-dev"],
-      "options": {
-        "jestConfig": "nx-dev/nx-dev/jest.config.ts",
-        "passWithNoTests": true
-      }
-    }
+    "lint": {},
+    "test": {}
   },
   "tags": ["scope:nx-dev", "type:app"],
   "implicitDependencies": ["docs"]

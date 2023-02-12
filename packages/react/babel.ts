@@ -1,12 +1,18 @@
-import type { NxWebBabelPresetOptions } from '@nrwl/web';
-
 /*
  * Babel preset to provide React support for Nx.
  */
 
-interface NxReactBabelOptions extends NxWebBabelPresetOptions {
+interface NxReactBabelOptions {
   runtime?: string;
   importSource?: string;
+  useBuiltIns?: boolean | string;
+  decorators?: {
+    decoratorsBeforeExport?: boolean;
+    legacy?: boolean;
+  };
+  classProperties?: {
+    loose?: boolean;
+  };
 }
 
 module.exports = function (api: any, options: NxReactBabelOptions) {
@@ -17,7 +23,7 @@ module.exports = function (api: any, options: NxReactBabelOptions) {
    */
   const isNextJs = api.caller((caller) => caller?.pagesDir);
 
-  const presets: any[] = [['@nrwl/web/babel', options]];
+  const presets: any[] = [['@nrwl/js/babel', options]];
 
   /**
    * Next.js already includes the preset-react, and including it

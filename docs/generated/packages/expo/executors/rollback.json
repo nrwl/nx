@@ -1,0 +1,35 @@
+{
+  "name": "rollback",
+  "implementation": "/packages/expo/src/executors/rollback/rollback.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "cli": "nx",
+    "$id": "NxExpoRollback",
+    "$schema": "http://json-schema.org/schema",
+    "title": "Rollback Publish Command for Expo",
+    "description": "Undo an update to a channel.",
+    "type": "object",
+    "properties": {
+      "releaseChannel": {
+        "type": "string",
+        "description": "The release channel to publish to."
+      },
+      "sdkVersion": {
+        "type": "string",
+        "description": "The sdk version to rollback."
+      },
+      "platform": {
+        "enum": ["ios", "android"],
+        "description": "The platform to rollback."
+      }
+    },
+    "required": ["releaseChannel", "sdkVersion"],
+    "presets": []
+  },
+  "description": "Undo an update to a channel",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/expo/src/executors/rollback/schema.json",
+  "type": "executor"
+}

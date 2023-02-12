@@ -7,6 +7,7 @@ import { examples } from './examples';
 import { workspaceRoot } from '../utils/workspace-root';
 import { getPackageManagerCommand } from '../utils/package-manager';
 import { writeJsonFile } from '../utils/fileutils';
+import { WatchArguments } from './watch';
 
 // Ensure that the output takes up the available width of the terminal.
 yargs.wrap(yargs.terminalWidth());
@@ -164,7 +165,7 @@ export const commandsObject = yargs
     command: 'affected:libs',
     deprecated:
       'Use `nx print-affected --type=lib ...` instead. This command will be removed in v15.',
-    describe: `Print libraries affected by changes`,
+    describe: 'Print libraries affected by changes',
     builder: (yargs) =>
       linkToNxDevAndExamples(
         withAffectedOptions(withPlainOption(yargs)),
@@ -368,7 +369,8 @@ export const commandsObject = yargs
   })
   .command({
     command: 'view-logs',
-    describe: false,
+    describe:
+      'Enables you to view and interact with the logs via the advanced analytic UI from Nx Cloud to help you debug your issue. To do this, Nx needs to connect your workspace to Nx Cloud and upload the most recent run details. Only the metrics are uploaded, not the artefacts.',
     handler: async () =>
       process.exit(await (await import('./view-logs')).viewLogs()),
   })
@@ -377,12 +379,42 @@ export const commandsObject = yargs
     describe: 'Executes any command as if it was a target on the project',
     builder: (yargs) => withRunOneOptions(yargs),
     handler: async (args) => {
-      await (await import('./exec')).nxExecCommand(withOverrides(args));
+      try {
+        await (await import('./exec')).nxExecCommand(withOverrides(args));
+        process.exit(0);
+      } catch (e) {
+        process.exit(1);
+      }
+    },
+  })
+  .command({
+    command: 'watch',
+    describe: 'Watch for changes within projects, and execute commands',
+    builder: (yargs) =>
+      linkToNxDevAndExamples(withWatchOptions(yargs), 'watch'),
+    handler: async (args) => {
+      await import('./watch').then((m) => m.watch(args as WatchArguments));
+    },
+  })
+  .command({
+    command: 'show <object>',
+    describe: 'Show information about the workspace (e.g., list of projects)',
+    builder: (yargs) => withShowOptions(yargs),
+    handler: async (args) => {
+      await import('./show').then((m) => m.show(args as any));
       process.exit(0);
     },
   })
   .help()
   .version(nxVersion);
+
+function withShowOptions(yargs: yargs.Argv): yargs.Argv {
+  return yargs.positional('object', {
+    describe: 'What to show (e.g., projects)',
+    choices: ['projects'],
+    required: true,
+  });
+}
 
 function withFormatOptions(yargs: yargs.Argv): yargs.Argv {
   return withAffectedOptions(yargs)
@@ -394,8 +426,8 @@ function withFormatOptions(yargs: yargs.Argv): yargs.Argv {
       type: 'boolean',
     })
     .option('projects', {
-      describe: 'Projects to format (comma delimited)',
-      type: 'array',
+      describe: 'Projects to format (comma/space delimited)',
+      type: 'string',
       coerce: parseCSV,
     })
     .conflicts({
@@ -438,9 +470,9 @@ function withPlainOption(yargs: yargs.Argv): yargs.Argv {
 function withExcludeOption(yargs: yargs.Argv): yargs.Argv {
   return yargs.option('exclude', {
     describe: 'Exclude certain projects from being processed',
-    type: 'array',
+    type: 'string',
     coerce: parseCSV,
-    default: [],
+    default: '',
   });
 }
 
@@ -505,8 +537,8 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
     })
     .option('files', {
       describe:
-        'Change the way Nx is calculating the affected command by providing directly changed files, list of files delimited by commas',
-      type: 'array',
+        'Change the way Nx is calculating the affected command by providing directly changed files, list of files delimited by commas or spaces',
+      type: 'string',
       requiresArg: true,
       coerce: parseCSV,
     })
@@ -561,9 +593,11 @@ function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
       'populate--': true,
     })
     .option('projects', {
-      describe:
-        'Projects to run. (comma delimited project names and/or patterns)',
       type: 'string',
+      alias: 'p',
+      coerce: parseCSV,
+      describe:
+        'Projects to run. (comma/space delimited project names and/or patterns)',
     })
     .option('all', {
       describe: '[deprecated] Run the target on all projects in the workspace',
@@ -587,7 +621,7 @@ function withDepGraphOptions(yargs: yargs.Argv): yargs.Argv {
     .option('exclude', {
       describe:
         'List of projects delimited by commas to exclude from the project graph.',
-      type: 'array',
+      type: 'string',
       coerce: parseCSV,
     })
 
@@ -639,10 +673,12 @@ function withTargetAndConfigurationOption(
   yargs: yargs.Argv,
   demandOption = true
 ): yargs.Argv {
-  return withConfiguration(yargs).option('target', {
-    describe: 'Task to run for affected projects',
+  return withConfiguration(yargs).option('targets', {
+    describe: 'Tasks to run for affected projects',
     type: 'string',
+    alias: ['target', 't'],
     requiresArg: true,
+    coerce: parseCSV,
     demandOption,
     global: false,
   });
@@ -713,7 +749,7 @@ function withRunOneOptions(yargs: yargs.Argv) {
   );
 
   const res = withRunOptions(
-    withOutputStyleOption(withTargetAndConfigurationOption(yargs, false), [
+    withOutputStyleOption(withConfiguration(yargs), [
       'dynamic',
       'static',
       'stream',
@@ -917,6 +953,14 @@ function withMigrationOptions(yargs: yargs.Argv) {
       type: 'string',
       default: defaultCommitPrefix,
     })
+    .option('interactive', {
+      describe:
+        'Enable prompts to confirm whether to collect migrations for packages that allow being skipped',
+      type: 'boolean',
+      default: false,
+      // TODO(leo): make it visible when we publish the docs about it
+      hidden: true,
+    })
     .check(({ createCommits, commitPrefix }) => {
       if (!createCommits && commitPrefix !== defaultCommitPrefix) {
         throw new Error(
@@ -927,15 +971,69 @@ function withMigrationOptions(yargs: yargs.Argv) {
     });
 }
 
-function parseCSV(args: string[]) {
+function withWatchOptions(yargs: yargs.Argv) {
+  return yargs
+    .parserConfiguration({
+      'strip-dashed': true,
+      'populate--': true,
+    })
+    .option('projects', {
+      type: 'string',
+      alias: 'p',
+      coerce: parseCSV,
+      description: 'Projects to watch (comma/space delimited).',
+    })
+    .option('all', {
+      type: 'boolean',
+      description: 'Watch all projects.',
+    })
+    .option('includeDependentProjects', {
+      type: 'boolean',
+      description:
+        'When watching selected projects, include dependent projects as well.',
+      alias: 'd',
+    })
+    .option('includeGlobalWorkspaceFiles', {
+      type: 'boolean',
+      description:
+        'Include global workspace files that are not part of a project. For example, the root eslint, or tsconfig file.',
+      alias: 'g',
+      hidden: true,
+    })
+    .option('command', { type: 'string', hidden: true })
+    .option('verbose', {
+      type: 'boolean',
+      description:
+        'Run watch mode in verbose mode, where commands are logged before execution.',
+    })
+    .conflicts({
+      all: 'projects',
+    })
+    .check((args) => {
+      if (!args.all && !args.projects) {
+        throw Error('Please specify either --all or --projects');
+      }
+
+      return true;
+    })
+    .middleware((args) => {
+      const { '--': doubledash } = args;
+      if (doubledash && Array.isArray(doubledash)) {
+        args.command = (doubledash as string[]).join(' ');
+      } else {
+        throw Error('No command specified for watch mode.');
+      }
+    }, true);
+}
+
+function parseCSV(args: string[] | string) {
   if (!args) {
     return args;
   }
-  return args
-    .map((arg) => arg.split(','))
-    .reduce((acc, value) => {
-      return [...acc, ...value];
-    }, [] as string[]);
+  if (Array.isArray(args)) {
+    return args;
+  }
+  return args.split(',');
 }
 
 function linkToNxDevAndExamples(yargs: yargs.Argv, command: string) {

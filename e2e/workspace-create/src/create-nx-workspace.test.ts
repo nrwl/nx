@@ -7,6 +7,7 @@ import {
   expectNoTsJestInJestConfig,
   getSelectedPackageManager,
   packageManagerLockFile,
+  readJson,
   runCreateWorkspace,
   uniq,
 } from '@nrwl/e2e/utils';
@@ -17,7 +18,7 @@ describe('create-nx-workspace', () => {
 
   afterEach(() => cleanupProject());
 
-  it('should create a workspace with a single angular app at the root', () => {
+  it('should create a workspace with a single angular app at the root with routing', () => {
     const wsName = uniq('angular');
 
     runCreateWorkspace(wsName, {
@@ -25,13 +26,50 @@ describe('create-nx-workspace', () => {
       appName: wsName,
       style: 'css',
       packageManager,
+      standaloneApi: false,
+      routing: true,
+    });
+
+    checkFilesExist('package.json');
+    checkFilesExist('src/app/app.routes.ts');
+    checkFilesExist('project.json');
+  });
+
+  it('should create a workspace with a single angular app at the root without routing', () => {
+    const wsName = uniq('angular');
+
+    runCreateWorkspace(wsName, {
+      preset: 'angular-standalone',
+      appName: wsName,
+      style: 'css',
+      packageManager,
+      standaloneApi: false,
+      routing: false,
     });
 
     checkFilesExist('package.json');
     checkFilesExist('project.json');
+    checkFilesExist('src/app/app.module.ts');
   });
 
-  it('should create a workspace with a single react app at the root', () => {
+  it('should create a workspace with a single angular app at the root using standalone APIs', () => {
+    const wsName = uniq('angular');
+
+    runCreateWorkspace(wsName, {
+      preset: 'angular-standalone',
+      appName: wsName,
+      style: 'css',
+      packageManager,
+      standaloneApi: true,
+      routing: true,
+    });
+
+    checkFilesExist('package.json');
+    checkFilesExist('project.json');
+    checkFilesDoNotExist('src/app/app.module.ts');
+  });
+
+  it('should create a workspace with a single react app with vite at the root', () => {
     const wsName = uniq('react');
 
     runCreateWorkspace(wsName, {
@@ -39,10 +77,28 @@ describe('create-nx-workspace', () => {
       appName: wsName,
       style: 'css',
       packageManager,
+      bundler: 'vite',
     });
 
     checkFilesExist('package.json');
     checkFilesExist('project.json');
+    checkFilesExist('vite.config.ts');
+  });
+
+  it('should create a workspace with a single react app with webpack at the root', () => {
+    const wsName = uniq('react');
+
+    runCreateWorkspace(wsName, {
+      preset: 'react-standalone',
+      appName: wsName,
+      style: 'css',
+      packageManager,
+      bundler: 'webpack',
+    });
+
+    checkFilesExist('package.json');
+    checkFilesExist('project.json');
+    checkFilesExist('webpack.config.js');
   });
 
   it('should be able to create an empty workspace built for apps', () => {
@@ -61,8 +117,6 @@ describe('create-nx-workspace', () => {
     const foreignLockFiles = Object.keys(packageManagerLockFile)
       .filter((pm) => pm !== packageManager)
       .map((pm) => packageManagerLockFile[pm]);
-
-    checkFilesDoNotExist(...foreignLockFiles, 'workspace.json');
 
     expectNoAngularDevkit();
   });
@@ -95,6 +149,8 @@ describe('create-nx-workspace', () => {
       style: 'css',
       appName,
       packageManager,
+      standaloneApi: false,
+      routing: true,
     });
   });
 
@@ -110,13 +166,15 @@ describe('create-nx-workspace', () => {
         style: 'css',
         appName,
         packageManager,
+        standaloneApi: false,
+        routing: true,
       });
     } catch (e) {
       expect(e).toBeTruthy();
     }
   });
 
-  it('should be able to create an react workspace', () => {
+  it('should be able to create a react workspace with webpack', () => {
     const wsName = uniq('react');
     const appName = uniq('app');
 
@@ -125,10 +183,31 @@ describe('create-nx-workspace', () => {
       style: 'css',
       appName,
       packageManager,
+      bundler: 'webpack',
     });
 
     expectNoAngularDevkit();
     expectNoTsJestInJestConfig(appName);
+    const packageJson = readJson('package.json');
+    expect(packageJson.devDependencies['@nrwl/webpack']).toBeDefined();
+  });
+
+  it('should be able to create a react workspace with vite', () => {
+    const wsName = uniq('react');
+    const appName = uniq('app');
+
+    runCreateWorkspace(wsName, {
+      preset: 'react-monorepo',
+      style: 'css',
+      appName,
+      packageManager,
+      bundler: 'vite',
+    });
+
+    expectNoAngularDevkit();
+    const packageJson = readJson('package.json');
+    expect(packageJson.devDependencies['@nrwl/webpack']).not.toBeDefined();
+    expect(packageJson.devDependencies['@nrwl/vite']).toBeDefined();
   });
 
   it('should be able to create an next workspace', () => {
@@ -235,6 +314,7 @@ describe('create-nx-workspace', () => {
       style: 'css',
       appName,
       packageManager: 'npm',
+      bundler: 'webpack',
     });
 
     checkFilesDoNotExist('yarn.lock');
@@ -254,7 +334,8 @@ describe('create-nx-workspace', () => {
       appName,
       style: 'css',
       packageManager: 'npm',
-      cli: 'angular',
+      routing: true,
+      standaloneApi: false,
     });
 
     checkFilesDoNotExist('yarn.lock');

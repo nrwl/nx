@@ -317,7 +317,7 @@ export function updatePaths(
           );
 
           // Get the dependency's package name
-          const { root } = dep.node?.data || {};
+          const { root } = (dep.node?.data || {}) as any;
           if (root) {
             // Update nested mappings to point to the dependency's output paths
             mappedPaths = mappedPaths.concat(

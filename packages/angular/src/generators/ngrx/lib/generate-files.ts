@@ -1,36 +1,55 @@
 import type { Tree } from '@nrwl/devkit';
 import { generateFiles, joinPathFragments, names } from '@nrwl/devkit';
-import { dirname } from 'path';
-import type { NgRxGeneratorOptions } from '../schema';
+import { lt } from 'semver';
+import { getInstalledAngularVersion } from '../../utils/version-utils';
+import { NormalizedNgRxGeneratorOptions } from './normalize-options';
 
 /**
  * Generate 'feature' scaffolding: actions, reducer, effects, interfaces, selectors, facade
  */
 export function generateNgrxFilesFromTemplates(
   tree: Tree,
-  options: NgRxGeneratorOptions
+  options: NormalizedNgRxGeneratorOptions
 ): void {
   const name = options.name;
-  const moduleDir = dirname(options.module);
   const projectNames = names(name);
 
-  generateFiles(tree, joinPathFragments(__dirname, '..', 'files'), moduleDir, {
-    ...options,
-    ...projectNames,
-    tmpl: '',
-  });
+  generateFiles(
+    tree,
+    joinPathFragments(__dirname, '..', 'files', 'latest'),
+    options.parentDirectory,
+    {
+      ...options,
+      ...projectNames,
+      tmpl: '',
+    }
+  );
+
+  const angularVersion = getInstalledAngularVersion(tree);
+  if (lt(angularVersion, '14.1.0')) {
+    generateFiles(
+      tree,
+      joinPathFragments(__dirname, '..', 'files', 'no-inject'),
+      options.parentDirectory,
+      {
+        ...options,
+        ...projectNames,
+        tmpl: '',
+      }
+    );
+  }
 
   if (!options.facade) {
     tree.delete(
       joinPathFragments(
-        moduleDir,
+        options.parentDirectory,
         options.directory,
         `${projectNames.fileName}.facade.ts`
       )
     );
     tree.delete(
       joinPathFragments(
-        moduleDir,
+        options.parentDirectory,
         options.directory,
         `${projectNames.fileName}.facade.spec.ts`
       )

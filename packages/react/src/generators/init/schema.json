@@ -34,7 +34,7 @@
       "default": false
     },
     "skipHelperLibs": {
-      "description": "Do not install helpers libs (tslib, core-js, regenerator-runtime).",
+      "description": "Do not install  tslib.",
       "type": "boolean",
       "default": false,
       "hidden": true

@@ -1,0 +1,557 @@
+{
+  "/nx-cloud/intro": {
+    "id": "intro",
+    "name": "Intro",
+    "description": "Learn about basic Nx Cloud knowledge.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "what-is-nx-cloud",
+        "name": "What is Nx Cloud?",
+        "description": "",
+        "file": "nx-cloud/intro/nx-cloud",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/intro/what-is-nx-cloud",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/nx-cloud/intro",
+    "tags": []
+  },
+  "/nx-cloud/intro/what-is-nx-cloud": {
+    "id": "what-is-nx-cloud",
+    "name": "What is Nx Cloud?",
+    "description": "",
+    "file": "nx-cloud/intro/nx-cloud",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/intro/what-is-nx-cloud",
+    "tags": []
+  },
+  "/nx-cloud/set-up": {
+    "id": "set-up",
+    "name": "Set Up",
+    "description": "Learn how to set up Nx Cloud for your workspace.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "record-commands",
+        "name": "Record Non-Nx Commands",
+        "description": "",
+        "file": "nx-cloud/set-up/record-commands",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/set-up/record-commands",
+        "tags": []
+      },
+      {
+        "id": "github",
+        "name": "Enable GitHub PR Integration",
+        "description": "",
+        "file": "nx-cloud/set-up/github",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/set-up/github",
+        "tags": []
+      },
+      {
+        "id": "bitbucket-cloud",
+        "name": "Enable Bitbucket Cloud PR Integration",
+        "description": "",
+        "file": "nx-cloud/set-up/bitbucket-cloud",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/set-up/bitbucket-cloud",
+        "tags": []
+      },
+      {
+        "id": "gitlab",
+        "name": "Enable GitLab MR Integration",
+        "description": "",
+        "file": "nx-cloud/set-up/gitlab",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/set-up/gitlab",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/nx-cloud/set-up",
+    "tags": []
+  },
+  "/nx-cloud/set-up/record-commands": {
+    "id": "record-commands",
+    "name": "Record Non-Nx Commands",
+    "description": "",
+    "file": "nx-cloud/set-up/record-commands",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/set-up/record-commands",
+    "tags": []
+  },
+  "/nx-cloud/set-up/github": {
+    "id": "github",
+    "name": "Enable GitHub PR Integration",
+    "description": "",
+    "file": "nx-cloud/set-up/github",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/set-up/github",
+    "tags": []
+  },
+  "/nx-cloud/set-up/bitbucket-cloud": {
+    "id": "bitbucket-cloud",
+    "name": "Enable Bitbucket Cloud PR Integration",
+    "description": "",
+    "file": "nx-cloud/set-up/bitbucket-cloud",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/set-up/bitbucket-cloud",
+    "tags": []
+  },
+  "/nx-cloud/set-up/gitlab": {
+    "id": "gitlab",
+    "name": "Enable GitLab MR Integration",
+    "description": "",
+    "file": "nx-cloud/set-up/gitlab",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/set-up/gitlab",
+    "tags": []
+  },
+  "/nx-cloud/account": {
+    "id": "account",
+    "name": "Account Management",
+    "description": "Learn how to manage Nx Cloud subscriptions and other options.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "billing",
+        "name": "Billing and Utilization",
+        "description": "",
+        "file": "nx-cloud/account/billing",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/account/billing",
+        "tags": []
+      },
+      {
+        "id": "users",
+        "name": "Users",
+        "description": "",
+        "file": "nx-cloud/account/users",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/account/users",
+        "tags": []
+      },
+      {
+        "id": "google-auth",
+        "name": "Authenticate with Google Identity",
+        "description": "",
+        "file": "nx-cloud/account/google-auth",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/account/google-auth",
+        "tags": []
+      },
+      {
+        "id": "access-tokens",
+        "name": "Access Tokens",
+        "description": "",
+        "file": "nx-cloud/account/access-tokens",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/account/access-tokens",
+        "tags": []
+      },
+      {
+        "id": "scenarios",
+        "name": "Security Scenarios",
+        "description": "",
+        "file": "nx-cloud/account/scenarios",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/account/scenarios",
+        "tags": []
+      },
+      {
+        "id": "encryption",
+        "name": "End to End Encryption",
+        "description": "",
+        "file": "nx-cloud/account/encryption",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/account/encryption",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/nx-cloud/account",
+    "tags": []
+  },
+  "/nx-cloud/account/billing": {
+    "id": "billing",
+    "name": "Billing and Utilization",
+    "description": "",
+    "file": "nx-cloud/account/billing",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/account/billing",
+    "tags": []
+  },
+  "/nx-cloud/account/users": {
+    "id": "users",
+    "name": "Users",
+    "description": "",
+    "file": "nx-cloud/account/users",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/account/users",
+    "tags": []
+  },
+  "/nx-cloud/account/google-auth": {
+    "id": "google-auth",
+    "name": "Authenticate with Google Identity",
+    "description": "",
+    "file": "nx-cloud/account/google-auth",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/account/google-auth",
+    "tags": []
+  },
+  "/nx-cloud/account/access-tokens": {
+    "id": "access-tokens",
+    "name": "Access Tokens",
+    "description": "",
+    "file": "nx-cloud/account/access-tokens",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/account/access-tokens",
+    "tags": []
+  },
+  "/nx-cloud/account/scenarios": {
+    "id": "scenarios",
+    "name": "Security Scenarios",
+    "description": "",
+    "file": "nx-cloud/account/scenarios",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/account/scenarios",
+    "tags": []
+  },
+  "/nx-cloud/account/encryption": {
+    "id": "encryption",
+    "name": "End to End Encryption",
+    "description": "",
+    "file": "nx-cloud/account/encryption",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/account/encryption",
+    "tags": []
+  },
+  "/nx-cloud/private-cloud": {
+    "id": "private-cloud",
+    "name": "On Prem",
+    "description": "Learn about Nx Cloud On Premise, dedicated Nx Cloud application hosted on your server, in your network with total private access.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "get-started",
+        "name": "Get Started",
+        "description": "",
+        "file": "nx-cloud/private/get-started",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/private-cloud/get-started",
+        "tags": []
+      },
+      {
+        "id": "auth-single-admin",
+        "name": "Authenticate with a Single Admin",
+        "description": "",
+        "file": "nx-cloud/private/auth-single-admin",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/private-cloud/auth-single-admin",
+        "tags": []
+      },
+      {
+        "id": "auth-github",
+        "name": "Authenticate with GitHub",
+        "description": "",
+        "file": "nx-cloud/private/auth-github",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/private-cloud/auth-github",
+        "tags": []
+      },
+      {
+        "id": "auth-gitlab",
+        "name": "Authenticate with GitLab",
+        "description": "",
+        "file": "nx-cloud/private/auth-gitlab",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/private-cloud/auth-gitlab",
+        "tags": []
+      },
+      {
+        "id": "auth-bitbucket",
+        "name": "Authenticate with BitBucket",
+        "description": "",
+        "file": "nx-cloud/private/auth-bitbucket",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/private-cloud/auth-bitbucket",
+        "tags": []
+      },
+      {
+        "id": "auth-saml",
+        "name": "Authenticate via SAML",
+        "description": "",
+        "file": "nx-cloud/private/auth-saml",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/private-cloud/auth-saml",
+        "tags": []
+      },
+      {
+        "id": "advanced-config",
+        "name": "Advanced Configuration",
+        "description": "",
+        "file": "nx-cloud/private/advanced-config",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/private-cloud/advanced-config",
+        "tags": []
+      },
+      {
+        "id": "kubernetes-setup",
+        "name": "Kubernetes Setup",
+        "description": "",
+        "file": "nx-cloud/private/kubernetes-setup",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/private-cloud/kubernetes-setup",
+        "tags": []
+      },
+      {
+        "id": "standalone",
+        "name": "Standalone",
+        "description": "",
+        "file": "nx-cloud/private/standalone",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/private-cloud/standalone",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/nx-cloud/private-cloud",
+    "tags": []
+  },
+  "/nx-cloud/private-cloud/get-started": {
+    "id": "get-started",
+    "name": "Get Started",
+    "description": "",
+    "file": "nx-cloud/private/get-started",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/private-cloud/get-started",
+    "tags": []
+  },
+  "/nx-cloud/private-cloud/auth-single-admin": {
+    "id": "auth-single-admin",
+    "name": "Authenticate with a Single Admin",
+    "description": "",
+    "file": "nx-cloud/private/auth-single-admin",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/private-cloud/auth-single-admin",
+    "tags": []
+  },
+  "/nx-cloud/private-cloud/auth-github": {
+    "id": "auth-github",
+    "name": "Authenticate with GitHub",
+    "description": "",
+    "file": "nx-cloud/private/auth-github",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/private-cloud/auth-github",
+    "tags": []
+  },
+  "/nx-cloud/private-cloud/auth-gitlab": {
+    "id": "auth-gitlab",
+    "name": "Authenticate with GitLab",
+    "description": "",
+    "file": "nx-cloud/private/auth-gitlab",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/private-cloud/auth-gitlab",
+    "tags": []
+  },
+  "/nx-cloud/private-cloud/auth-bitbucket": {
+    "id": "auth-bitbucket",
+    "name": "Authenticate with BitBucket",
+    "description": "",
+    "file": "nx-cloud/private/auth-bitbucket",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/private-cloud/auth-bitbucket",
+    "tags": []
+  },
+  "/nx-cloud/private-cloud/auth-saml": {
+    "id": "auth-saml",
+    "name": "Authenticate via SAML",
+    "description": "",
+    "file": "nx-cloud/private/auth-saml",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/private-cloud/auth-saml",
+    "tags": []
+  },
+  "/nx-cloud/private-cloud/advanced-config": {
+    "id": "advanced-config",
+    "name": "Advanced Configuration",
+    "description": "",
+    "file": "nx-cloud/private/advanced-config",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/private-cloud/advanced-config",
+    "tags": []
+  },
+  "/nx-cloud/private-cloud/kubernetes-setup": {
+    "id": "kubernetes-setup",
+    "name": "Kubernetes Setup",
+    "description": "",
+    "file": "nx-cloud/private/kubernetes-setup",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/private-cloud/kubernetes-setup",
+    "tags": []
+  },
+  "/nx-cloud/private-cloud/standalone": {
+    "id": "standalone",
+    "name": "Standalone",
+    "description": "",
+    "file": "nx-cloud/private/standalone",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/private-cloud/standalone",
+    "tags": []
+  },
+  "/nx-cloud/reference": {
+    "id": "reference",
+    "name": "Reference",
+    "description": "Understand how to use Nx Cloud, what arguments and options are available for each component.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "config",
+        "name": "Configuration Options",
+        "description": "",
+        "file": "nx-cloud/reference/config",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/reference/config",
+        "tags": []
+      },
+      {
+        "id": "nx-cloud-cli",
+        "name": "nx-cloud CLI",
+        "description": "",
+        "file": "nx-cloud/reference/nx-cloud-cli",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/reference/nx-cloud-cli",
+        "tags": []
+      },
+      {
+        "id": "env-vars",
+        "name": "Environment Variables",
+        "description": "",
+        "file": "nx-cloud/reference/env-vars",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/reference/env-vars",
+        "tags": []
+      },
+      {
+        "id": "server-api",
+        "name": "Server API Reference",
+        "description": "",
+        "file": "nx-cloud/reference/server-api",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/reference/server-api",
+        "tags": []
+      },
+      {
+        "id": "release-notes",
+        "name": "Release Notes",
+        "description": "",
+        "file": "nx-cloud/reference/release-notes",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/reference/release-notes",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/nx-cloud/reference",
+    "tags": []
+  },
+  "/nx-cloud/reference/config": {
+    "id": "config",
+    "name": "Configuration Options",
+    "description": "",
+    "file": "nx-cloud/reference/config",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/reference/config",
+    "tags": []
+  },
+  "/nx-cloud/reference/nx-cloud-cli": {
+    "id": "nx-cloud-cli",
+    "name": "nx-cloud CLI",
+    "description": "",
+    "file": "nx-cloud/reference/nx-cloud-cli",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/reference/nx-cloud-cli",
+    "tags": []
+  },
+  "/nx-cloud/reference/env-vars": {
+    "id": "env-vars",
+    "name": "Environment Variables",
+    "description": "",
+    "file": "nx-cloud/reference/env-vars",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/reference/env-vars",
+    "tags": []
+  },
+  "/nx-cloud/reference/server-api": {
+    "id": "server-api",
+    "name": "Server API Reference",
+    "description": "",
+    "file": "nx-cloud/reference/server-api",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/reference/server-api",
+    "tags": []
+  },
+  "/nx-cloud/reference/release-notes": {
+    "id": "release-notes",
+    "name": "Release Notes",
+    "description": "",
+    "file": "nx-cloud/reference/release-notes",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/reference/release-notes",
+    "tags": []
+  }
+}

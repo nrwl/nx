@@ -120,7 +120,7 @@ https://nx.dev/cypress/v10-migration-guide
   );
 
   updateJson(tree, 'package.json', (json) => {
-    json.devDependencies['cypress'] = cypressVersion;
+    json.devDependencies['cypress'] = '^11.2.0';
     return json;
   });
 

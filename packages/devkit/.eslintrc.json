@@ -1,12 +1,27 @@
 {
   "extends": "../../.eslintrc",
   "rules": {
-    "no-restricted-imports": [
+    "@typescript-eslint/no-restricted-imports": [
       "error",
-      "@nrwl/workspace",
-      "@angular-devkit/core",
-      "@angular-devkit/architect",
-      "@angular-devkit/schematics"
+      {
+        "paths": [
+          "@nrwl/workspace",
+          "@angular-devkit/core",
+          "@angular-devkit/architect",
+          "@angular-devkit/schematics"
+        ],
+        "patterns": [
+          {
+            "group": ["nx/**/*"],
+            "message": "Use requireNx() from packages/devkit/nx.ts OR use a type import instead.",
+            "allowTypeImports": true
+          },
+          {
+            "group": ["@nrwl/devkit/**/*"],
+            "message": "Use a relative import"
+          }
+        ]
+      }
     ]
   },
   "ignorePatterns": ["!**/*"],
@@ -14,6 +29,12 @@
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
       "rules": {}
+    },
+    {
+      "files": ["*.spec.ts"],
+      "rules": {
+        "@typescript-eslint/no-restricted-imports": "off"
+      }
     },
     {
       "files": ["*.ts", "*.tsx"],

@@ -18,6 +18,8 @@ Object {
 
 exports[`convert-tslint-to-eslint should work for NestJS applications 2`] = `
 Object {
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "nest-app-1",
   "projectType": "application",
   "root": "apps/nest-app-1",
   "targets": Object {
@@ -211,29 +213,7 @@ Object {
         "no-caller": "error",
         "no-console": Array [
           "error",
-          Object {
-            "allow": Array [
-              "log",
-              "warn",
-              "dir",
-              "timeLog",
-              "assert",
-              "clear",
-              "count",
-              "countReset",
-              "group",
-              "groupEnd",
-              "table",
-              "dirxml",
-              "error",
-              "groupCollapsed",
-              "_buffer",
-              "_counters",
-              "_timers",
-              "_groupDepth",
-              "Console",
-            ],
-          },
+          Object {},
         ],
         "no-debugger": "error",
         "no-empty": "off",
@@ -323,6 +303,8 @@ Object {
 
 exports[`convert-tslint-to-eslint should work for NestJS libraries 2`] = `
 Object {
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "nest-lib-1",
   "projectType": "library",
   "root": "libs/nest-lib-1",
   "targets": Object {
@@ -516,29 +498,7 @@ Object {
         "no-caller": "error",
         "no-console": Array [
           "error",
-          Object {
-            "allow": Array [
-              "log",
-              "warn",
-              "dir",
-              "timeLog",
-              "assert",
-              "clear",
-              "count",
-              "countReset",
-              "group",
-              "groupEnd",
-              "table",
-              "dirxml",
-              "error",
-              "groupCollapsed",
-              "_buffer",
-              "_counters",
-              "_timers",
-              "_groupDepth",
-              "Console",
-            ],
-          },
+          Object {},
         ],
         "no-debugger": "error",
         "no-empty": "off",

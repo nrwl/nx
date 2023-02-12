@@ -1,21 +1,21 @@
-import { Tree } from '../../generators/tree';
-import {
-  readWorkspaceConfiguration,
-  updateWorkspaceConfiguration,
-} from '../../generators/utils/project-configuration';
 import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
+import { Tree } from '../../generators/tree';
+import { readNxJson, updateNxJson } from '../../generators/utils/nx-json';
 
 export default async function (tree: Tree) {
-  const workspaceConfiguration = readWorkspaceConfiguration(tree);
+  // If the workspace doesn't have a nx.json, don't make any changes
+  if (!tree.exists('nx.json')) {
+    return;
+  }
 
-  if (workspaceConfiguration.targetDependencies) {
-    workspaceConfiguration.targetDefaults = {};
-    for (const targetName of Object.keys(
-      workspaceConfiguration.targetDependencies
-    )) {
+  const nxJson = readNxJson(tree);
+
+  if (nxJson.targetDependencies) {
+    nxJson.targetDefaults = {};
+    for (const targetName of Object.keys(nxJson.targetDependencies)) {
       const dependsOn = [];
 
-      for (const c of workspaceConfiguration.targetDependencies[targetName]) {
+      for (const c of nxJson.targetDependencies[targetName]) {
         if (typeof c === 'string') {
           dependsOn.push(c);
         } else if (c.projects === 'self') {
@@ -25,13 +25,13 @@ export default async function (tree: Tree) {
         }
       }
 
-      workspaceConfiguration.targetDefaults[targetName] = {
+      nxJson.targetDefaults[targetName] = {
         dependsOn,
       };
     }
   }
-  delete workspaceConfiguration.targetDependencies;
-  updateWorkspaceConfiguration(tree, workspaceConfiguration);
+  delete nxJson.targetDependencies;
+  updateNxJson(tree, nxJson);
 
   await formatChangedFilesWithPrettierIfAvailable(tree);
 }

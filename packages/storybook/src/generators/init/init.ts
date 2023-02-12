@@ -2,27 +2,27 @@ import {
   addDependenciesToPackageJson,
   convertNxGenerator,
   readJson,
-  readWorkspaceConfiguration,
+  readNxJson,
   Tree,
   updateJson,
-  updateWorkspaceConfiguration,
+  updateNxJson,
 } from '@nrwl/devkit';
-import { isFramework } from '../../utils/utilities';
 
 import {
   babelCoreVersion,
   babelLoaderVersion,
   babelPresetTypescriptVersion,
+  htmlWebpackPluginVersion,
   litHtmlVersion,
   nxVersion,
   reactNativeStorybookLoader,
+  storybook7Version,
   storybookReactNativeVersion,
   storybookVersion,
   svgrVersion,
   urlLoaderVersion,
-  viteBuilderVeresion,
+  viteBuilderVersion,
   webpack5Version,
-  htmlWebpackPluginVersion,
 } from '../../utils/versions';
 import { Schema } from './schema';
 
@@ -36,107 +36,135 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
 
   // base deps
   devDependencies['@nrwl/storybook'] = nxVersion;
-  devDependencies['@storybook/core-server'] = storybookVersion;
-  devDependencies['@storybook/addon-essentials'] = storybookVersion;
 
-  if (schema.bundler === 'vite') {
-    devDependencies['@storybook/builder-vite'] = viteBuilderVeresion;
-  } else {
-    devDependencies['@storybook/builder-webpack5'] = storybookVersion;
-    devDependencies['@storybook/manager-webpack5'] = storybookVersion;
-  }
+  if (schema.storybook7betaConfiguration) {
+    if (schema.uiFramework === '@storybook/react-native') {
+      devDependencies['@storybook/react-native'] = storybookReactNativeVersion;
+    } else {
+      devDependencies[schema.uiFramework] = storybook7Version;
+    }
+    devDependencies['@storybook/core-server'] = storybook7Version;
+    devDependencies['@storybook/addon-essentials'] = storybook7Version;
 
-  // TODO(katerina): Remove this when Storybook 7.0 is added in Nx
-  devDependencies['html-webpack-plugin'] = htmlWebpackPluginVersion;
-
-  if (isFramework('angular', schema)) {
-    devDependencies['@storybook/angular'] = storybookVersion;
-    devDependencies['webpack'] = webpack5Version;
+    if (schema.uiFramework === '@storybook/angular') {
+      if (
+        !packageJson.dependencies['@angular/forms'] &&
+        !packageJson.devDependencies['@angular/forms']
+      ) {
+        devDependencies['@angular/forms'] = '*';
+      }
+    }
 
     if (
-      !packageJson.dependencies['@angular/forms'] &&
-      !packageJson.devDependencies['@angular/forms']
+      schema.uiFramework === '@storybook/web-components-vite' ||
+      schema.uiFramework === '@storybook/web-components-webpack5'
     ) {
-      devDependencies['@angular/forms'] = '*';
+      devDependencies['lit-html'] = litHtmlVersion;
     }
-  }
 
-  if (isFramework('react', schema)) {
-    devDependencies['@storybook/react'] = storybookVersion;
-    devDependencies['@svgr/webpack'] = svgrVersion;
-    devDependencies['url-loader'] = urlLoaderVersion;
-    devDependencies['babel-loader'] = babelLoaderVersion;
-    devDependencies['@babel/core'] = babelCoreVersion;
-    devDependencies['@babel/preset-typescript'] = babelPresetTypescriptVersion;
-    devDependencies['@storybook/react'] = storybookVersion;
-  }
+    if (schema.uiFramework === '@storybook/react-native') {
+      devDependencies['@storybook/addon-ondevice-actions'] =
+        storybookReactNativeVersion;
+      devDependencies['@storybook/addon-ondevice-backgrounds'] =
+        storybookReactNativeVersion;
+      devDependencies['@storybook/addon-ondevice-controls'] =
+        storybookReactNativeVersion;
+      devDependencies['@storybook/addon-ondevice-notes'] =
+        storybookReactNativeVersion;
+      devDependencies['react-native-storybook-loader'] =
+        reactNativeStorybookLoader;
+    }
+  } else {
+    // TODO(katerina): Remove when Storybook v7
+    if (schema.uiFramework === '@storybook/react-native') {
+      devDependencies['@storybook/react-native'] = storybookReactNativeVersion;
+    } else {
+      devDependencies[schema.uiFramework] = storybookVersion;
+    }
 
-  if (isFramework('html', schema)) {
-    devDependencies['@storybook/html'] = storybookVersion;
-  }
+    devDependencies['@storybook/core-server'] = storybookVersion;
+    devDependencies['@storybook/addon-essentials'] = storybookVersion;
 
-  if (isFramework('vue', schema)) {
-    devDependencies['@storybook/vue'] = storybookVersion;
-  }
+    if (schema.bundler === 'vite') {
+      devDependencies['@storybook/builder-vite'] = viteBuilderVersion;
+    } else {
+      devDependencies['@storybook/builder-webpack5'] = storybookVersion;
+      devDependencies['@storybook/manager-webpack5'] = storybookVersion;
+    }
 
-  if (isFramework('vue3', schema)) {
-    devDependencies['@storybook/vue3'] = storybookVersion;
-  }
+    devDependencies['html-webpack-plugin'] = htmlWebpackPluginVersion;
 
-  if (isFramework('web-components', schema)) {
-    devDependencies['@storybook/web-components'] = storybookVersion;
-    devDependencies['lit-html'] = litHtmlVersion;
-  }
+    if (schema.uiFramework === '@storybook/angular') {
+      devDependencies['webpack'] = webpack5Version;
 
-  if (isFramework('svelte', schema)) {
-    devDependencies['@storybook/svelte'] = storybookVersion;
-  }
+      if (
+        !packageJson.dependencies['@angular/forms'] &&
+        !packageJson.devDependencies['@angular/forms']
+      ) {
+        devDependencies['@angular/forms'] = '*';
+      }
+    }
 
-  if (isFramework('react-native', schema)) {
-    devDependencies['@storybook/react-native'] = storybookReactNativeVersion;
-    devDependencies['@storybook/addon-ondevice-actions'] =
-      storybookReactNativeVersion;
-    devDependencies['@storybook/addon-ondevice-backgrounds'] =
-      storybookReactNativeVersion;
-    devDependencies['@storybook/addon-ondevice-controls'] =
-      storybookReactNativeVersion;
-    devDependencies['@storybook/addon-ondevice-notes'] =
-      storybookReactNativeVersion;
-    devDependencies['react-native-storybook-loader'] =
-      reactNativeStorybookLoader;
+    if (schema.uiFramework === '@storybook/react') {
+      devDependencies['@svgr/webpack'] = svgrVersion;
+      devDependencies['url-loader'] = urlLoaderVersion;
+      devDependencies['babel-loader'] = babelLoaderVersion;
+      devDependencies['@babel/core'] = babelCoreVersion;
+      devDependencies['@babel/preset-typescript'] =
+        babelPresetTypescriptVersion;
+      if (schema.bundler === 'webpack') {
+        devDependencies['@nrwl/webpack'] = nxVersion;
+      }
+    }
+
+    if (schema.uiFramework === '@storybook/web-components') {
+      devDependencies['lit-html'] = litHtmlVersion;
+    }
+
+    if (schema.uiFramework === '@storybook/react-native') {
+      devDependencies['@storybook/addon-ondevice-actions'] =
+        storybookReactNativeVersion;
+      devDependencies['@storybook/addon-ondevice-backgrounds'] =
+        storybookReactNativeVersion;
+      devDependencies['@storybook/addon-ondevice-controls'] =
+        storybookReactNativeVersion;
+      devDependencies['@storybook/addon-ondevice-notes'] =
+        storybookReactNativeVersion;
+      devDependencies['react-native-storybook-loader'] =
+        reactNativeStorybookLoader;
+    }
   }
 
   return addDependenciesToPackageJson(host, dependencies, devDependencies);
 }
 
 function addCacheableOperation(tree: Tree) {
-  const workspace = readWorkspaceConfiguration(tree);
+  const nxJson = readNxJson(tree);
   if (
-    !workspace.tasksRunnerOptions ||
-    !workspace.tasksRunnerOptions.default ||
-    (workspace.tasksRunnerOptions.default.runner !==
+    !nxJson.tasksRunnerOptions ||
+    !nxJson.tasksRunnerOptions.default ||
+    (nxJson.tasksRunnerOptions.default.runner !==
       '@nrwl/workspace/tasks-runners/default' &&
-      workspace.tasksRunnerOptions.default.runner !==
-        'nx/tasks-runners/default')
+      nxJson.tasksRunnerOptions.default.runner !== 'nx/tasks-runners/default')
   ) {
     return;
   }
 
-  workspace.tasksRunnerOptions.default.options =
-    workspace.tasksRunnerOptions.default.options || {};
+  nxJson.tasksRunnerOptions.default.options =
+    nxJson.tasksRunnerOptions.default.options || {};
 
-  workspace.tasksRunnerOptions.default.options.cacheableOperations =
-    workspace.tasksRunnerOptions.default.options.cacheableOperations || [];
+  nxJson.tasksRunnerOptions.default.options.cacheableOperations =
+    nxJson.tasksRunnerOptions.default.options.cacheableOperations || [];
   if (
-    !workspace.tasksRunnerOptions.default.options.cacheableOperations?.includes(
+    !nxJson.tasksRunnerOptions.default.options.cacheableOperations?.includes(
       'build-storybook'
     )
   ) {
-    workspace.tasksRunnerOptions.default.options.cacheableOperations.push(
+    nxJson.tasksRunnerOptions.default.options.cacheableOperations.push(
       'build-storybook'
     );
   }
-  updateWorkspaceConfiguration(tree, workspace);
+  updateNxJson(tree, nxJson);
 }
 
 function moveToDevDependencies(tree: Tree) {

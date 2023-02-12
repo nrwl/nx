@@ -1,20 +1,15 @@
-import {
-  formatFiles,
-  readWorkspaceConfiguration,
-  Tree,
-  updateWorkspaceConfiguration,
-} from '@nrwl/devkit';
+import { formatFiles, readNxJson, Tree, updateNxJson } from '@nrwl/devkit';
 
 export async function changeNxJsonPresets(tree: Tree) {
-  const workspaceConfig = readWorkspaceConfiguration(tree);
+  const nxJson = readNxJson(tree);
   const replacements = {
     '@nrwl/workspace/presets/npm.json': 'nx/presets/npm.json',
     '@nrwl/workspace/presets/core.json': 'nx/presets/core.json',
   };
-  if (workspaceConfig.extends && replacements[workspaceConfig.extends]) {
-    updateWorkspaceConfiguration(tree, {
-      ...workspaceConfig,
-      extends: replacements[workspaceConfig.extends],
+  if (nxJson.extends && replacements[nxJson.extends]) {
+    updateNxJson(tree, {
+      ...nxJson,
+      extends: replacements[nxJson.extends],
     });
   }
 

@@ -1,16 +1,16 @@
 import {
+  formatFiles,
   NxJsonConfiguration,
   ProjectConfiguration,
   readJson,
-  writeJson,
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
-  formatFiles,
+  writeJson,
 } from '@nrwl/devkit';
 
-export default async function update(host: Tree) {
-  const nxJson = readJson(host, 'nx.json') as NxJsonConfiguration & {
+export default async function update(tree: Tree) {
+  const nxJson = readJson(tree, 'nx.json') as NxJsonConfiguration & {
     projects: Record<
       string,
       Pick<ProjectConfiguration, 'tags' | 'implicitDependencies'>
@@ -18,15 +18,29 @@ export default async function update(host: Tree) {
   };
   // updateProjectConfiguration automatically saves the project opts into workspace/project.json
   if (nxJson.projects) {
-    Object.entries(nxJson.projects).forEach(([p, nxJsonConfig]) => {
-      const configuration = readProjectConfiguration(host, p);
-      configuration.tags ??= nxJsonConfig.tags;
-      configuration.implicitDependencies ??= nxJsonConfig.implicitDependencies;
-      updateProjectConfiguration(host, p, configuration);
+    Object.entries(nxJson.projects).forEach(([p, nxJsonConfiguration]) => {
+      const configuration = readProjectConfiguration(tree, p);
+      configuration.tags ??= nxJsonConfiguration.tags;
+      configuration.implicitDependencies ??=
+        nxJsonConfiguration.implicitDependencies;
+      updateProjectConfiguration(tree, p, configuration);
     });
     delete nxJson.projects;
   }
 
-  writeJson(host, 'nx.json', nxJson);
-  await formatFiles(host); // format files handles moving config options to new spots.
+  writeJson(tree, 'nx.json', nxJson);
+
+  movePropertiesAreInNewLocations(tree); // move config options to new spots.
+
+  await formatFiles(tree);
+}
+
+/**
+ * `updateWorkspaceConfiguration` already handles
+ * placing properties in their new locations, so
+ * reading + updating it ensures that props are placed
+ * correctly.
+ */
+function movePropertiesAreInNewLocations(tree: Tree) {
+  return;
 }

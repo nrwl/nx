@@ -16,6 +16,7 @@ import { projectHasTarget } from '../utils/project-graph-utils';
 import { filterAffected } from '../project-graph/affected/affected-project-graph';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { readNxJson } from '../config/configuration';
+import { workspaceConfigurationCheck } from '../utils/workspace-configuration-check';
 
 export async function affected(
   command: 'apps' | 'libs' | 'graph' | 'print-affected' | 'affected',
@@ -26,6 +27,8 @@ export async function affected(
   > = {}
 ): Promise<void> {
   performance.mark('command-execution-begins');
+  workspaceConfigurationCheck();
+
   const nxJson = readNxJson();
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
     args,
@@ -93,7 +96,7 @@ export async function affected(
         break;
 
       case 'print-affected':
-        if (nxArgs.target) {
+        if (nxArgs.targets && nxArgs.targets.length > 0) {
           await printAffected(
             allProjectsWithTarget(projects, nxArgs),
             projectGraph,
@@ -163,7 +166,9 @@ function allProjectsWithTarget(
   projects: ProjectGraphProjectNode[],
   nxArgs: NxArgs
 ) {
-  return projects.filter((p) => projectHasTarget(p, nxArgs.target));
+  return projects.filter((p) =>
+    nxArgs.targets.find((target) => projectHasTarget(p, target))
+  );
 }
 
 function printError(e: any, verbose?: boolean) {

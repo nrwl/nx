@@ -3,7 +3,7 @@
   "outputCapture": "direct-nodejs",
   "title": "Vite Prod Builder",
   "cli": "nx",
-  "description": "Build using Vite.",
+  "description": "Builds a Vite.js application for production.",
   "type": "object",
   "presets": [
     {
@@ -15,7 +15,8 @@
     "outputPath": {
       "type": "string",
       "description": "The output path of the generated files.",
-      "x-completion-type": "directory"
+      "x-completion-type": "directory",
+      "x-priority": "important"
     },
     "base": {
       "type": "string",
@@ -94,6 +95,17 @@
         }
       ]
     },
+    "ssr": {
+      "description": "Produce SSR-oriented build. The value can be a string to directly specify the SSR entry, or true, which requires specifying the SSR entry via rollupOptions.input.",
+      "oneOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
     "logLevel": {
       "type": "string",
       "description": "Adjust console output verbosity.",
@@ -101,8 +113,23 @@
     },
     "mode": {
       "type": "string",
-      "description": "Mode to run the build in.",
-      "enum": ["production", "development"]
+      "description": "Mode to run the build in."
+    },
+    "force": {
+      "description": "Force the optimizer to ignore the cache and re-bundle",
+      "type": "boolean"
+    },
+    "watch": {
+      "description": "Enable re-building when files change.",
+      "oneOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "object"
+        }
+      ],
+      "default": false
     }
   },
   "definitions": {},

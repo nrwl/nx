@@ -48,9 +48,13 @@ describe('readJsonInTree', () => {
 
   it('should throw an error if the file cannot be parsed', () => {
     tree.create('data.json', `{ data: 'data'`);
-    expect(() => readJsonInTree(tree, 'data.json')).toThrow(
-      'Cannot parse data.json: InvalidSymbol in JSON at position 2'
-    );
+    expect(() => readJsonInTree(tree, 'data.json'))
+      .toThrowErrorMatchingInlineSnapshot(`
+      "Cannot parse data.json: InvalidSymbol in JSON at 1:3
+      [0m[31m[1m>[22m[39m[90m 1 | [39m{ data: 'data'[0m
+      [0m [90m   | [39m  [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[0m
+      "
+    `);
   });
 });
 

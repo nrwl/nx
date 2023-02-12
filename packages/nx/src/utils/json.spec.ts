@@ -58,7 +58,16 @@ describe('parseJson', () => {
   }`,
         { disallowComments: true }
       )
-    ).toThrowError();
+    ).toThrowErrorMatchingInlineSnapshot(`
+      "InvalidCommentToken in JSON at 2:7
+      [0m [90m 1 | [39m{[0m
+      [0m[31m[1m>[22m[39m[90m 2 | [39m      //\\"test\\": 123,[0m
+      [0m [90m   | [39m      [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[0m
+      [0m [90m 3 | [39m      \\"nested\\": {[0m
+      [0m [90m 4 | [39m          \\"test\\": 123[0m
+      [0m [90m 5 | [39m          /*[0m
+      "
+    `);
   });
 
   it('should throw when JSON with comments gets parsed and disallowComments and expectComments is true', () => {
@@ -77,7 +86,56 @@ describe('parseJson', () => {
   }`,
         { disallowComments: true, expectComments: true }
       )
-    ).toThrowError();
+    ).toThrowErrorMatchingInlineSnapshot(`
+      "InvalidCommentToken in JSON at 2:7
+      [0m [90m 1 | [39m{[0m
+      [0m[31m[1m>[22m[39m[90m 2 | [39m      //\\"test\\": 123,[0m
+      [0m [90m   | [39m      [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[0m
+      [0m [90m 3 | [39m      \\"nested\\": {[0m
+      [0m [90m 4 | [39m          \\"test\\": 123[0m
+      [0m [90m 5 | [39m          /*[0m
+      "
+    `);
+  });
+
+  it('should allow trailing commas by default', () => {
+    expect(() =>
+      parseJson(
+        `{
+      "test": 123,
+      "nested": {
+          "test": 123,
+          "more": 456,
+     },
+      "array": [1, 2, 3,]
+  }`
+      )
+    ).not.toThrow();
+  });
+
+  it('should throw when JSON has trailing commas if disabled', () => {
+    expect(() =>
+      parseJson(
+        `{
+      "test": 123,
+      "nested": {
+          "test": 123,
+          "more": 456,
+     },
+      "array": [1, 2, 3,]
+  }`,
+        { allowTrailingComma: false }
+      )
+    ).toThrowErrorMatchingInlineSnapshot(`
+      "PropertyNameExpected in JSON at 6:6
+      [0m [90m 4 | [39m          \\"test\\": 123,[0m
+      [0m [90m 5 | [39m          \\"more\\": 456,[0m
+      [0m[31m[1m>[22m[39m[90m 6 | [39m     },[0m
+      [0m [90m   | [39m     [31m[1m^[22m[39m[0m
+      [0m [90m 7 | [39m      \\"array\\": [1, 2, 3,][0m
+      [0m [90m 8 | [39m  }[0m
+      "
+    `);
   });
 
   it('should handle trailing commas', () => {

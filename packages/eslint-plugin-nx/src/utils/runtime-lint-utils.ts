@@ -12,21 +12,35 @@ import {
   workspaceRoot,
 } from '@nrwl/devkit';
 import { getPath, pathExists } from './graph-utils';
-import { existsSync } from 'fs';
 import { readFileIfExisting } from 'nx/src/project-graph/file-utils';
 import { TargetProjectLocator } from 'nx/src/utils/target-project-locator';
 import {
   findProjectForPath,
   ProjectRootMappings,
 } from 'nx/src/project-graph/utils/find-project-for-path';
+import {
+  getRootTsConfigFileName,
+  resolveModuleByImport,
+} from 'nx/src/utils/typescript';
 
 export type Deps = { [projectName: string]: ProjectGraphDependency[] };
-export type DepConstraint = {
+type SingleSourceTagConstraint = {
   sourceTag: string;
   onlyDependOnLibsWithTags?: string[];
   notDependOnLibsWithTags?: string[];
+  allowedExternalImports?: string[];
   bannedExternalImports?: string[];
 };
+type ComboSourceTagConstraint = {
+  allSourceTags: string[];
+  onlyDependOnLibsWithTags?: string[];
+  notDependOnLibsWithTags?: string[];
+  allowedExternalImports?: string[];
+  bannedExternalImports?: string[];
+};
+export type DepConstraint =
+  | SingleSourceTagConstraint
+  | ComboSourceTagConstraint;
 
 export function stringifyTags(tags: string[]): string {
   return tags.map((t) => `"${t}"`).join(', ');
@@ -37,6 +51,12 @@ export function hasNoneOfTheseTags(
   tags: string[]
 ): boolean {
   return tags.filter((tag) => hasTag(proj, tag)).length === 0;
+}
+
+export function isComboDepConstraint(
+  depConstraint: DepConstraint
+): depConstraint is ComboSourceTagConstraint {
+  return !!(depConstraint as ComboSourceTagConstraint).allSourceTags;
 }
 
 /**
@@ -102,7 +122,7 @@ export function getTargetProjectBasedOnRelativeImport(
   projectGraph: ProjectGraph,
   projectRootMappings: ProjectRootMappings,
   sourceFilePath: string
-): ProjectGraphProjectNode<any> | undefined {
+): ProjectGraphProjectNode | undefined {
   if (!isRelative(imp)) {
     return undefined;
   }
@@ -151,7 +171,13 @@ export function findConstraintsFor(
   depConstraints: DepConstraint[],
   sourceProject: ProjectGraphProjectNode
 ) {
-  return depConstraints.filter((f) => hasTag(sourceProject, f.sourceTag));
+  return depConstraints.filter((f) => {
+    if (isComboDepConstraint(f)) {
+      return f.allSourceTags.every((tag) => hasTag(sourceProject, tag));
+    } else {
+      return hasTag(sourceProject, f.sourceTag);
+    }
+  });
 }
 
 export function onlyLoadChildren(
@@ -188,10 +214,22 @@ function isConstraintBanningProject(
   externalProject: ProjectGraphExternalNode,
   constraint: DepConstraint
 ): boolean {
-  return constraint.bannedExternalImports.some((importDefinition) =>
-    parseImportWildcards(importDefinition).test(
-      externalProject.data.packageName
+  const { allowedExternalImports, bannedExternalImports } = constraint;
+  const { packageName } = externalProject.data;
+
+  /* Check if import is banned... */
+  if (
+    bannedExternalImports?.some((importDefinition) =>
+      parseImportWildcards(importDefinition).test(packageName)
     )
+  ) {
+    return true;
+  }
+
+  /* ... then check if there is a whitelist and if there is a match in the whitelist.  */
+  return allowedExternalImports?.every(
+    (importDefinition) =>
+      !parseImportWildcards(importDefinition).test(packageName)
   );
 }
 
@@ -200,13 +238,17 @@ export function hasBannedImport(
   target: ProjectGraphExternalNode,
   depConstraints: DepConstraint[]
 ): DepConstraint | undefined {
-  // return those constraints that match source project and have `bannedExternalImports` defined
-  depConstraints = depConstraints.filter(
-    (c) =>
-      (source.data.tags || []).includes(c.sourceTag) &&
-      c.bannedExternalImports &&
-      c.bannedExternalImports.length
-  );
+  // return those constraints that match source project
+  depConstraints = depConstraints.filter((c) => {
+    let tags = [];
+    if (isComboDepConstraint(c)) {
+      tags = c.allSourceTags;
+    } else {
+      tags = [c.sourceTag];
+    }
+
+    return tags.every((t) => hasTag(source, t));
+  });
   return depConstraints.find((constraint) =>
     isConstraintBanningProject(target, constraint)
   );
@@ -376,20 +418,31 @@ export function groupImports(
  * @returns
  */
 export function isAngularSecondaryEntrypoint(
-  targetProjectLocator: TargetProjectLocator,
-  importExpr: string
+  importExpr: string,
+  filePath: string
 ): boolean {
-  const targetFiles = targetProjectLocator.findPaths(importExpr);
-  return (
-    targetFiles &&
-    targetFiles.some(
-      (file) =>
-        // The `ng-packagr` defaults to the `src/public_api.ts` entry file to
-        // the public API if the `lib.entryFile` is not specified explicitly.
-        (file.endsWith('src/public_api.ts') || file.endsWith('src/index.ts')) &&
-        existsSync(
-          joinPathFragments(workspaceRoot, file, '../../', 'ng-package.json')
-        )
-    )
+  const resolvedModule = resolveModuleByImport(
+    importExpr,
+    filePath,
+    join(workspaceRoot, getRootTsConfigFileName())
   );
+
+  return !!resolvedModule && fileIsSecondaryEntryPoint(resolvedModule);
+}
+
+function fileIsSecondaryEntryPoint(file: string): boolean {
+  let parent = joinPathFragments(file, '../');
+  while (parent !== './') {
+    // we need to find closest existing ng-package.json
+    // in order to determine if the file matches the secondary entry point
+    const ngPackageContent = readFileIfExisting(
+      joinPathFragments(workspaceRoot, parent, 'ng-package.json')
+    );
+    if (ngPackageContent) {
+      const entryFile = parseJson(ngPackageContent)?.ngPackage?.lib?.entryFile;
+      return entryFile && file === joinPathFragments(parent, entryFile);
+    }
+    parent = joinPathFragments(parent, '../');
+  }
+  return false;
 }

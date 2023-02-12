@@ -1,5 +1,6 @@
 import {
   cleanupProject,
+  getPublishedVersion,
   isNotWindows,
   newProject,
   readFile,
@@ -12,7 +13,6 @@ import {
   updateFile,
 } from '@nrwl/e2e/utils';
 import { renameSync } from 'fs';
-import { packagesWeCareAbout } from 'nx/src/command-line/report';
 import * as path from 'path';
 
 describe('Nx Commands', () => {
@@ -21,13 +21,35 @@ describe('Nx Commands', () => {
 
   afterAll(() => cleanupProject());
 
+  describe('show', () => {
+    it('ttt should show the list of projects', () => {
+      const app1 = uniq('myapp');
+      const app2 = uniq('myapp');
+      expect(runCLI('show projects')).toEqual('');
+
+      runCLI(`generate @nrwl/web:app ${app1}`);
+      runCLI(`generate @nrwl/web:app ${app2}`);
+
+      const s = runCLI('show projects').split('\n');
+
+      expect(s.length).toEqual(4);
+      expect(s).toContain(app1);
+      expect(s).toContain(app2);
+      expect(s).toContain(`${app1}-e2e`);
+      expect(s).toContain(`${app2}-e2e`);
+    });
+  });
+
   describe('report and list', () => {
     it(`should report package versions`, async () => {
       const reportOutput = runCLI('report');
 
-      packagesWeCareAbout.forEach((p) => {
-        expect(reportOutput).toContain(p);
-      });
+      expect(reportOutput).toEqual(
+        expect.stringMatching(
+          new RegExp(`\@nrwl\/workspace.*:.*${getPublishedVersion()}`)
+        )
+      );
+      expect(reportOutput).toContain('@nrwl/workspace');
     }, 120000);
 
     it(`should list plugins`, async () => {

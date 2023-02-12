@@ -13,7 +13,7 @@ import {
   updateProjectConfig,
   readProjectConfig,
   tmpProjPath,
-  readResolvedWorkspaceConfiguration,
+  readResolvedConfiguration,
   removeFile,
   getPackageManagerCommand,
   getSelectedPackageManager,
@@ -401,7 +401,7 @@ describe('Workspace Tests', () => {
       expect(moveOutput).toContain(`CREATE ${rootClassPath}`);
       checkFilesExist(rootClassPath);
 
-      let workspace = await readResolvedWorkspaceConfiguration();
+      let workspace = await readResolvedConfiguration();
       expect(workspace.projects[`${lib1}-data-access`]).toBeUndefined();
       const newConfig = readProjectConfig(newName);
       expect(newConfig).toMatchObject({
@@ -423,7 +423,7 @@ describe('Workspace Tests', () => {
         ]
       ).toEqual([`libs/shared/${lib1}/data-access/src/index.ts`]);
 
-      workspace = readResolvedWorkspaceConfiguration();
+      workspace = readResolvedConfiguration();
       expect(workspace.projects[`${lib1}-data-access`]).toBeUndefined();
       const project = readProjectConfig(newName);
       expect(project).toBeTruthy();
@@ -549,7 +549,7 @@ describe('Workspace Tests', () => {
         ]
       ).toEqual([`libs/shared/${lib1}/data-access/src/index.ts`]);
 
-      const workspace = await readResolvedWorkspaceConfiguration();
+      const workspace = await readResolvedConfiguration();
       expect(workspace.projects[`${lib1}-data-access`]).toBeUndefined();
       const project = readProjectConfig(newName);
       expect(project).toBeTruthy();
@@ -681,7 +681,7 @@ describe('Workspace Tests', () => {
         ]
       ).toEqual([`packages/shared/${lib1}/data-access/src/index.ts`]);
 
-      const workspace = await readResolvedWorkspaceConfiguration();
+      const workspace = await readResolvedConfiguration();
       expect(workspace.projects[`${lib1}-data-access`]).toBeUndefined();
       const project = readProjectConfig(newName);
       expect(project).toBeTruthy();
@@ -799,8 +799,8 @@ describe('Workspace Tests', () => {
         rootTsConfig.compilerOptions.paths[`shared/${lib1}/data-access`]
       ).toEqual([`libs/shared/${lib1}/data-access/src/index.ts`]);
 
-      const workspaceJson = readResolvedWorkspaceConfiguration();
-      expect(workspaceJson.projects[`${lib1}-data-access`]).toBeUndefined();
+      const projects = readResolvedConfiguration();
+      expect(projects.projects[`${lib1}-data-access`]).toBeUndefined();
       const project = readProjectConfig(newName);
       expect(project).toBeTruthy();
       expect(project.sourceRoot).toBe(`${newPath}/src`);
@@ -871,51 +871,12 @@ describe('Workspace Tests', () => {
       expect(exists(tmpProjPath(`libs/${lib1}`))).toBeFalsy();
 
       expect(removeOutputForced).not.toContain(`UPDATE nx.json`);
-      const workspaceJson = readResolvedWorkspaceConfiguration();
-      expect(workspaceJson.projects[`${lib1}`]).toBeUndefined();
+      const projectsConfigurations = readResolvedConfiguration();
+      expect(projectsConfigurations.projects[`${lib1}`]).toBeUndefined();
       const lib2Config = readProjectConfig(lib2);
       expect(lib2Config.implicitDependencies).toEqual([]);
 
-      expect(workspaceJson.projects[`${lib1}`]).toBeUndefined();
-    });
-  });
-
-  describe('workspace-lint', () => {
-    beforeAll(() => {
-      // Unfortunately, this is required as this test is testing a different workspace layout
-      // workspace-lint only picks up missing projects and such when workspace.json exists.
-      newProject();
-      updateFile(
-        'workspace.json',
-        JSON.stringify({ version: 2, projects: {} })
-      );
-    });
-
-    afterAll(() => {
-      removeFile('workspace.json');
-    });
-
-    it('should identify issues with the workspace', () => {
-      const appBefore = uniq('before');
-      const appAfter = uniq('after');
-
-      // this tests an issue that doesn't come up when using standalone configurations
-      runCLI(`generate @nrwl/web:app ${appBefore} --standalone-config false`);
-      renameFile(`apps/${appBefore}`, `apps/${appAfter}`);
-
-      const stdout = runCLI('workspace-lint', { silenceError: true });
-      expect(stdout).toContain(
-        `- Cannot find project '${appBefore}' in 'apps/${appBefore}'`
-      );
-      expect(stdout).toContain(
-        'The following file(s) do not belong to any projects:'
-      );
-      expect(stdout).toContain(`- apps/${appAfter}/jest.config.ts`);
-      expect(stdout).toContain(`- apps/${appAfter}/src/app/app.element.css`);
-      expect(stdout).toContain(`- apps/${appAfter}/src/app/app.element.ts`);
-      expect(stdout).toContain(
-        `- apps/${appAfter}/src/app/app.element.spec.ts`
-      );
+      expect(projectsConfigurations.projects[`${lib1}`]).toBeUndefined();
     });
   });
 });

@@ -18,7 +18,7 @@ export default async function (
       stdio: ['inherit', 'inherit', 'inherit'],
       cwd: path.join(
         context.root,
-        context.workspace.projects[context.projectName].root
+        context.projectsConfigurations.projects[context.projectName].root
       ),
     });
     return { success: true };

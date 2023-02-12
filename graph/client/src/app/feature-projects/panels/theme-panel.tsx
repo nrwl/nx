@@ -12,7 +12,7 @@ import {
   themeResolver,
 } from '../../theme-resolver';
 
-export default function ThemePanel(): JSX.Element {
+export function ThemePanel(): JSX.Element {
   const [theme, setTheme] = useState(
     (localStorage.getItem(localStorageThemeKey) as Theme) || 'system'
   );

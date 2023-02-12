@@ -1,11 +1,13 @@
+import { SectionHeading } from '@nrwl/nx-dev/ui-common';
+
 export function NxStatistics(): JSX.Element {
   return (
     <div className="bg-white pt-12 dark:bg-slate-900 sm:pt-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-4xl text-center">
-          <h2 className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 sm:text-5xl">
+          <SectionHeading as="h2" variant="display" id="trusted-by-all">
             Trusted by developers, enterprises and open-source projects.
-          </h2>
+          </SectionHeading>
           <p className="mt-3 text-lg text-slate-700 dark:text-slate-400 sm:mt-4">
             Whether your workspace{' '}
             <span className="font-semibold">

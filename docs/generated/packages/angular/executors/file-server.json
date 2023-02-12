@@ -1,0 +1,80 @@
+{
+  "name": "file-server",
+  "implementation": "/packages/angular/src/executors/file-server/file-server.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "title": "File Server",
+    "description": "Serves a static web application from a folder.",
+    "type": "object",
+    "cli": "nx",
+    "properties": {
+      "buildTarget": {
+        "type": "string",
+        "description": "Target which builds the application."
+      },
+      "parallel": {
+        "type": "boolean",
+        "description": "Build the target in parallel.",
+        "default": true
+      },
+      "maxParallel": {
+        "type": "number",
+        "description": "Max number of parallel jobs."
+      },
+      "port": {
+        "type": "number",
+        "description": "Port to listen on.",
+        "default": 4200
+      },
+      "host": {
+        "type": "string",
+        "description": "Host to listen on.",
+        "default": "localhost"
+      },
+      "ssl": {
+        "type": "boolean",
+        "description": "Serve using `HTTPS`.",
+        "default": false
+      },
+      "sslKey": {
+        "type": "string",
+        "description": "SSL key to use for serving `HTTPS`."
+      },
+      "sslCert": {
+        "type": "string",
+        "description": "SSL certificate to use for serving `HTTPS`."
+      },
+      "proxyUrl": {
+        "type": "string",
+        "description": "URL to proxy unhandled requests to."
+      },
+      "proxyOptions": {
+        "type": "object",
+        "description": "Options for the proxy used by `http-server`.",
+        "default": {},
+        "properties": { "secure": { "type": "boolean", "default": false } },
+        "additionalProperties": true
+      },
+      "watch": {
+        "type": "boolean",
+        "description": "Watch for file changes.",
+        "default": false
+      },
+      "spa": {
+        "type": "boolean",
+        "description": "Redirect 404 errors to index.html (useful for SPA's).",
+        "default": false
+      }
+    },
+    "additionalProperties": false,
+    "required": ["buildTarget"],
+    "examplesFile": "## Examples\n\n{% tabs %}\n\n{% tab label=\"Serve static files with http-server\" %}\n\nSet up `http-server` to host static files on a local webserver.\n\n```json\n{\n  \"static-serve\": {\n    \"executor\": \"@nrwl/angular:file-server\",\n    \"options\": {\n      \"buildTarget\": \"app:build\",\n      \"port\": 4201\n    }\n  }\n}\n```\n\n{% /tab %}\n\n{% tab label=\"Watch for changes\" %}\n\nTo allow watching for changes, simply add the watch property.\n\n```json\n{\n  \"static-serve\": {\n    \"executor\": \"@nrwl/angular:file-server\",\n    \"options\": {\n      \"buildTarget\": \"app:build\",\n      \"port\": 4201,\n      \"watch\": true\n    }\n  }\n}\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
+    "presets": []
+  },
+  "description": "Serves a static web application from a folder.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/angular/src/executors/file-server/schema.json",
+  "type": "executor"
+}

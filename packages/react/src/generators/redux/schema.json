@@ -12,7 +12,8 @@
       "$default": {
         "$source": "argv",
         "index": 0
-      }
+      },
+      "x-priority": "important"
     },
     "project": {
       "type": "string",
@@ -21,13 +22,15 @@
       "$default": {
         "$source": "projectName"
       },
-      "x-prompt": "What is the name of the project for this slice?"
+      "x-prompt": "What is the name of the project for this slice?",
+      "x-priority": "important"
     },
     "directory": {
       "type": "string",
       "alias": "dir",
       "default": "",
-      "description": "The name of the folder used to contain/group the generated Redux files."
+      "description": "The name of the folder used to contain/group the generated Redux files.",
+      "x-priority": "important"
     },
     "appProject": {
       "type": "string",

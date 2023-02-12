@@ -11,6 +11,7 @@ export function createTsConfig(
     style?: string;
     bundler?: string;
     rootProject?: boolean;
+    unitTestRunner?: string;
   },
   relativePathToRootTsConfig: string
 ) {
@@ -36,7 +37,10 @@ export function createTsConfig(
   }
 
   if (options.bundler === 'vite') {
-    json.compilerOptions.types = ['vite/client'];
+    json.compilerOptions.types =
+      options.unitTestRunner === 'vitest'
+        ? ['vite/client', 'vitest']
+        : ['vite/client'];
   }
 
   // inline tsconfig.base.json into the project

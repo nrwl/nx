@@ -14,16 +14,23 @@ import {
   Target,
   workspaceRoot,
 } from '@nrwl/devkit';
-import type { WebpackExecutorOptions } from '@nrwl/webpack/src/executors/webpack/schema';
-import { normalizeOptions } from '@nrwl/webpack/src/executors/webpack/lib/normalize-options';
-import { getWebpackConfig } from '@nrwl/webpack/src/executors/webpack/lib/get-webpack-config';
-import { resolveCustomWebpackConfig } from '@nrwl/webpack/src/utils/webpack/custom-webpack';
-import { buildBaseWebpackConfig } from './webpack-fallback';
 import {
   createExecutorContext,
   getProjectConfigByPath,
 } from '@nrwl/cypress/src/utils/ct-helpers';
 
+import type { Configuration } from 'webpack';
+type ViteDevServer = {
+  framework: 'react';
+  bundler: 'vite';
+  viteConfig?: any;
+};
+
+type WebpackDevServer = {
+  framework: 'react';
+  bundler: 'webpack';
+  webpackConfig?: any;
+};
 /**
  * React nx preset for Cypress Component Testing
  *
@@ -45,8 +52,25 @@ import {
 export function nxComponentTestingPreset(
   pathToConfig: string,
   options?: NxComponentTestingOptions
-) {
-  let webpackConfig;
+): {
+  specPattern: string;
+  devServer: ViteDevServer | WebpackDevServer;
+  videosFolder: string;
+  screenshotsFolder: string;
+  video: boolean;
+  chromeWebSecurity: boolean;
+} {
+  if (options?.bundler === 'vite') {
+    return {
+      ...nxBaseCypressPreset(pathToConfig),
+      specPattern: 'src/**/*.cy.{js,jsx,ts,tsx}',
+      devServer: {
+        ...({ framework: 'react', bundler: 'vite' } as const),
+      },
+    };
+  }
+
+  let webpackConfig: any;
   try {
     const graph = readCachedProjectGraph();
     const { targets: ctTargets, name: ctProjectName } = getProjectConfigByPath(
@@ -88,32 +112,33 @@ export function nxComponentTestingPreset(
       Falling back to default webpack config.`
     );
     logger.warn(e);
+
+    const { buildBaseWebpackConfig } = require('./webpack-fallback');
     webpackConfig = buildBaseWebpackConfig({
       tsConfigPath: 'cypress/tsconfig.cy.json',
       compiler: 'babel',
     });
   }
+
   return {
     ...nxBaseCypressPreset(pathToConfig),
     specPattern: 'src/**/*.cy.{js,jsx,ts,tsx}',
     devServer: {
       // cypress uses string union type,
       // need to use const to prevent typing to string
-      framework: 'react',
-      bundler: 'webpack',
+      // but don't want to use as const on webpackConfig
+      // so it is still user modifiable
+      ...({ framework: 'react', bundler: 'webpack' } as const),
       webpackConfig,
-    } as const,
+    },
   };
 }
 
 /**
  * apply the schema.json defaults from the @nrwl/web:webpack executor to the target options
  */
-function withSchemaDefaults(
-  target: Target,
-  context: ExecutorContext
-): WebpackExecutorOptions {
-  const options = readTargetOptions<WebpackExecutorOptions>(target, context);
+function withSchemaDefaults(target: Target, context: ExecutorContext) {
+  const options = readTargetOptions(target, context);
 
   options.compiler ??= 'babel';
   options.deleteOutputPath ??= true;
@@ -141,7 +166,7 @@ function buildTargetWebpack(
   buildTarget: string,
   componentTestingProjectName: string
 ) {
-  const parsed = parseTargetString(buildTarget);
+  const parsed = parseTargetString(buildTarget, graph);
 
   const buildableProjectConfig = graph.nodes[parsed.project]?.data;
   const ctProjectConfig = graph.nodes[componentTestingProjectName]?.data;
@@ -161,53 +186,49 @@ function buildTargetWebpack(
     parsed.target
   );
 
+  const {
+    normalizeOptions,
+  } = require('@nrwl/webpack/src/executors/webpack/lib/normalize-options');
+  const {
+    resolveCustomWebpackConfig,
+  } = require('@nrwl/webpack/src/utils/webpack/custom-webpack');
+  const {
+    getWebpackConfig,
+  } = require('@nrwl/webpack/src/executors/webpack/lib/get-webpack-config');
+
   const options = normalizeOptions(
     withSchemaDefaults(parsed, context),
     workspaceRoot,
+    buildableProjectConfig.root!,
     buildableProjectConfig.sourceRoot!
   );
 
-  const isScriptOptimizeOn =
-    typeof options.optimization === 'boolean'
-      ? options.optimization
-      : options.optimization && options.optimization.scripts
-      ? options.optimization.scripts
-      : false;
-
-  let customWebpack;
   if (options.webpackConfig) {
+    let customWebpack: any;
+
     customWebpack = resolveCustomWebpackConfig(
       options.webpackConfig,
       options.tsConfig
     );
 
-    if (typeof customWebpack.then === 'function') {
-      // cypress configs have to be sync.
-      // TODO(caleb): there might be a workaround with setUpNodeEvents preprocessor?
-      logger.warn(stripIndents`Nx React Component Testing Preset currently doesn't support custom async webpack configs. 
-      Skipping the custom webpack config option '${options.webpackConfig}'`);
-      customWebpack = null;
-    }
-  }
+    return async () => {
+      customWebpack = await customWebpack;
+      // TODO(jack): Once webpackConfig is always set in @nrwl/webpack:webpack, we no longer need this default.
+      const defaultWebpack = getWebpackConfig(context, {
+        ...options,
+        root: workspaceRoot,
+        projectRoot: ctProjectConfig.root,
+        sourceRoot: ctProjectConfig.sourceRoot,
+      });
 
-  const defaultWebpack = getWebpackConfig(
-    context,
-    options,
-    true,
-    isScriptOptimizeOn,
-    {
-      root: ctProjectConfig.root,
-      sourceRoot: ctProjectConfig.sourceRoot,
-      configuration: parsed.configuration,
-    }
-  );
-
-  if (customWebpack) {
-    return customWebpack(defaultWebpack, {
-      options,
-      context,
-      configuration: parsed.configuration,
-    });
+      if (customWebpack) {
+        return await customWebpack(defaultWebpack, {
+          options,
+          context,
+          configuration: parsed.configuration,
+        });
+      }
+      return defaultWebpack;
+    };
   }
-  return defaultWebpack;
 }

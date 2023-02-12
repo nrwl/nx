@@ -11,7 +11,7 @@ export default async function updateWorkspaceConfigurations(tree: Tree) {
 
   const supportedExecutors: Set<string> = new Set([Builders.Server]);
   for (const [name, project] of projects) {
-    for (const [targetName, target] of Object.entries(project.targets)) {
+    for (const [targetName, target] of Object.entries(project.targets || {})) {
       if (!supportedExecutors.has(target.executor)) {
         continue;
       }
@@ -19,7 +19,7 @@ export default async function updateWorkspaceConfigurations(tree: Tree) {
       target.options.bundleDependencies = undefined;
 
       for (const [configurationName, configuration] of Object.entries(
-        target.configurations
+        target.configurations || {}
       )) {
         configuration.bundleDependencies = undefined;
         target[configurationName] = configuration;

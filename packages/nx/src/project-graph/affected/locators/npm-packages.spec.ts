@@ -1,15 +1,16 @@
 import { NxJsonConfiguration } from '../../../config/nx-json';
 import { ProjectGraph } from '../../../config/project-graph';
 import { JsonDiffType } from '../../../utils/json-diff';
+import { logger } from '../../../utils/logger';
 import { WholeFileChange } from '../../file-utils';
 import { getTouchedNpmPackages } from './npm-packages';
 
 describe('getTouchedNpmPackages', () => {
-  let workspaceJson;
+  let projectsConfigurations;
   let nxJson: NxJsonConfiguration<string[]>;
   let projectGraph: ProjectGraph;
   beforeEach(() => {
-    workspaceJson = {
+    projectsConfigurations = {
       projects: {
         proj1: {},
         proj2: {},
@@ -33,14 +34,14 @@ describe('getTouchedNpmPackages', () => {
           name: 'proj1',
           data: {
             files: [],
-          },
+          } as any,
         },
         proj2: {
           type: 'lib',
           name: 'proj2',
           data: {
             files: [],
-          },
+          } as any,
         },
       },
       externalNodes: {
@@ -86,7 +87,7 @@ describe('getTouchedNpmPackages', () => {
           ],
         },
       ],
-      workspaceJson,
+      projectsConfigurations,
       nxJson,
       {
         dependencies: {
@@ -116,7 +117,7 @@ describe('getTouchedNpmPackages', () => {
           ],
         },
       ],
-      workspaceJson,
+      projectsConfigurations,
       nxJson,
       {
         dependencies: {
@@ -151,7 +152,7 @@ describe('getTouchedNpmPackages', () => {
           ],
         },
       ],
-      workspaceJson,
+      projectsConfigurations,
       nxJson,
       {
         devDependencies: {
@@ -181,7 +182,7 @@ describe('getTouchedNpmPackages', () => {
           ],
         },
       ],
-      workspaceJson,
+      projectsConfigurations,
       nxJson,
       {
         dependencies: {
@@ -219,7 +220,7 @@ describe('getTouchedNpmPackages', () => {
           ],
         },
       ],
-      workspaceJson,
+      projectsConfigurations,
       nxJson,
       {
         dependencies: {
@@ -249,7 +250,7 @@ describe('getTouchedNpmPackages', () => {
           getChanges: () => [new WholeFileChange()],
         },
       ],
-      workspaceJson,
+      projectsConfigurations,
       nxJson,
       {
         dependencies: {
@@ -264,5 +265,81 @@ describe('getTouchedNpmPackages', () => {
       'npm:@types/happy-nrwl',
       'npm:awesome-nrwl',
     ]);
+  });
+
+  it('should handle and workspace packages when defined in dependencies', () => {
+    const result = getTouchedNpmPackages(
+      [
+        {
+          file: 'package.json',
+          hash: 'some-hash',
+          getChanges: () => [
+            {
+              type: 'JsonPropertyAdded',
+              path: ['devDependencies', 'changed-test-pkg-name-1'],
+              value: { rhs: 'workspace:*' },
+            },
+          ],
+        },
+      ],
+      projectsConfigurations,
+      nxJson,
+      {
+        dependencies: {
+          'happy-nrwl': '0.0.1',
+          'awesome-nrwl': '0.0.1',
+        },
+      },
+      {
+        ...projectGraph,
+        nodes: {
+          ...projectGraph.nodes,
+          'any-random-name': {
+            name: 'changed-test-pkg-name-1',
+            type: 'lib',
+            data: {} as any,
+          },
+        },
+      }
+    );
+    expect(result).toEqual(['changed-test-pkg-name-1']);
+  });
+
+  it('should handle and log workspace package.json changes when the changes are not in `npmPackages` (projectGraph.externalNodes)', () => {
+    jest.spyOn(logger, 'warn');
+    expect(() => {
+      getTouchedNpmPackages(
+        [
+          {
+            file: 'package.json',
+            hash: 'some-hash',
+            getChanges: () => [
+              {
+                type: 'JsonPropertyAdded',
+                path: ['devDependencies', 'changed-test-pkg-name-1'],
+                value: { rhs: 'workspace:*' },
+              },
+              {
+                type: 'JsonPropertyAdded',
+                path: ['devDependencies', 'changed-test-pkg-name-2'],
+                value: { rhs: 'workspace:*' },
+              },
+            ],
+          },
+        ],
+        projectsConfigurations,
+        nxJson,
+        {
+          dependencies: {
+            'happy-nrwl': '0.0.1',
+            'awesome-nrwl': '0.0.1',
+          },
+        },
+        projectGraph
+      );
+    }).not.toThrowError();
+    expect(logger.warn).toHaveBeenCalledWith(
+      'The affected projects might have not been identified properly. The package(s) changed-test-pkg-name-1, changed-test-pkg-name-2 were not found. Please open an issue in GitHub including the package.json file.'
+    );
   });
 });

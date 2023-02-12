@@ -1,5 +1,5 @@
 import { readProjectConfiguration, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { libraryGenerator } from '../../library/library';
 import { NormalizedSchema } from '../schema';
 import { updateJestConfig } from './update-jest-config';
@@ -8,13 +8,12 @@ describe('updateJestConfig', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyV1Workspace();
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
   it('should handle jest config not existing', async () => {
     await libraryGenerator(tree, {
       name: 'my-source',
-      standaloneConfig: false,
     });
     const projectConfig = readProjectConfiguration(tree, 'my-source');
     const schema: NormalizedSchema = {
@@ -43,7 +42,6 @@ describe('updateJestConfig', () => {
     const rootJestConfigPath = '/jest.config.ts';
     await libraryGenerator(tree, {
       name: 'my-source',
-      standaloneConfig: false,
     });
     const projectConfig = readProjectConfiguration(tree, 'my-source');
     tree.write(jestConfigPath, jestConfig);
@@ -81,7 +79,6 @@ describe('updateJestConfig', () => {
     const rootJestConfigPath = '/jest.config.ts';
     await libraryGenerator(tree, {
       name: 'some/test/dir/my-source',
-      standaloneConfig: false,
     });
     const projectConfig = readProjectConfiguration(
       tree,
@@ -111,7 +108,6 @@ describe('updateJestConfig', () => {
     const rootJestConfigPath = '/jest.config.ts';
     await libraryGenerator(tree, {
       name: 'some/test/dir/my-source',
-      standaloneConfig: false,
     });
     tree.write(
       rootJestConfigPath,
@@ -148,7 +144,6 @@ describe('updateJestConfig', () => {
     const rootJestConfigPath = '/jest.config.ts';
     await libraryGenerator(tree, {
       name: 'some/test/dir/my-source',
-      standaloneConfig: false,
     });
     tree.write(
       rootJestConfigPath,
@@ -188,7 +183,6 @@ module.exports = {
     const rootJestConfigPath = '/jest.config.ts';
     await libraryGenerator(tree, {
       name: 'some/test/dir/my-source',
-      standaloneConfig: false,
     });
     tree.write(
       rootJestConfigPath,

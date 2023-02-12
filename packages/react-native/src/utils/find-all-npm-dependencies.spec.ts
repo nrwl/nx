@@ -24,7 +24,7 @@ test('findAllNpmDependencies', () => {
         name: 'lib3',
         data: { files: [] },
       },
-    },
+    } as any,
     externalNodes: {
       'npm:react-native-image-picker': {
         type: 'npm',

@@ -2,8 +2,8 @@ import {
   joinPathFragments,
   names,
   normalizePath,
+  readNxJson,
   readProjectConfiguration,
-  readWorkspaceConfiguration,
   Tree,
 } from '@nrwl/devkit';
 
@@ -46,8 +46,7 @@ function getFileInfo(
   options: GenerationOptions,
   defaultType: string
 ): FileInfo {
-  const project =
-    options.project ?? readWorkspaceConfiguration(tree).defaultProject;
+  const project = options.project ?? readNxJson(tree).defaultProject;
   const { root, sourceRoot, projectType } = readProjectConfiguration(
     tree,
     project

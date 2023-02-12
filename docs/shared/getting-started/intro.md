@@ -59,7 +59,7 @@ Nx has two main goals:
 - **Speed up your existing workflow with minimum effort.**
 - **Provide a first-rate developer experience no matter the size of the repo.**
 
-It achieves speed that via [computation caching](/core-features/cache-task-results), by only [run tasks affected by a given change](/core-features/run-tasks#run-tasks-affected-by-a-pr) and by being able to [distribute your task execution](/core-features/distribute-task-execution) across multiple agents in CI.
+It achieves that speed via [computation caching](/core-features/cache-task-results), by only [run tasks affected by a given change](/core-features/run-tasks#run-tasks-affected-by-a-pr) and by being able to [distribute your task execution](/core-features/distribute-task-execution) across multiple agents in CI.
 
 High quality DX is implemented via [code generators](/plugin-features/use-code-generators), [IDE extensions](/core-features/integrate-with-editors#integrate-with-editors) and by helping you [keep your codebase evergreen](/core-features/automate-updating-dependencies).
 

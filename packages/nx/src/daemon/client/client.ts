@@ -28,7 +28,7 @@ import { Message, SocketMessenger } from './socket-messenger';
 const DAEMON_ENV_SETTINGS = {
   ...process.env,
   NX_PROJECT_GLOB_CACHE: 'false',
-  NX_CACHE_WORKSPACE_CONFIG: 'false',
+  NX_CACHE_PROJECTS_CONFIG: 'false',
 };
 
 export type UnregisterCallback = () => void;

@@ -3,7 +3,7 @@ import { createProjectFileMap, updateProjectFileMap } from './file-map-utils';
 describe('fileMapUtils', () => {
   describe('createFileMap', () => {
     it('should map files to projects', () => {
-      const workspaceJson = {
+      const projectsConfigurations = {
         projects: {
           demo: {
             root: 'apps/demo',
@@ -29,7 +29,7 @@ describe('fileMapUtils', () => {
         { file: 'tools/myfile.txt', hash: 'some-hash' },
       ];
 
-      const result = createProjectFileMap(workspaceJson, files);
+      const result = createProjectFileMap(projectsConfigurations as any, files);
 
       expect(result).toEqual({
         projectFileMap: {
@@ -51,7 +51,7 @@ describe('fileMapUtils', () => {
 
   describe('updateFileMap', () => {
     it('should map files to projects', () => {
-      const workspaceJson = {
+      const projectsConfigurations = {
         projects: {
           demo: {
             root: 'apps/demo',
@@ -87,7 +87,7 @@ describe('fileMapUtils', () => {
         ],
       };
       const result = updateProjectFileMap(
-        workspaceJson,
+        projectsConfigurations as any,
         projectFileMap,
         files,
         new Map([

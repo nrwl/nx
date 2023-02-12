@@ -12,10 +12,7 @@ import {
   writeCache,
 } from './nx-deps-cache';
 import { buildImplicitProjectDependencies } from './build-dependencies';
-import {
-  buildNpmPackageNodes,
-  buildWorkspaceProjectNodes,
-} from './build-nodes';
+import { buildWorkspaceProjectNodes } from './build-nodes';
 import * as os from 'os';
 import { buildExplicitTypescriptAndPackageJsonDependencies } from './build-dependencies/build-explicit-typescript-and-package-json-dependencies';
 import { loadNxPlugins } from '../utils/nx-plugin';
@@ -28,26 +25,25 @@ import {
   ProjectGraphProcessorContext,
 } from '../config/project-graph';
 import { readJsonFile } from '../utils/fileutils';
-import { NxJsonConfiguration } from '../config/nx-json';
+import { NrwlJsPluginConfig, NxJsonConfiguration } from '../config/nx-json';
 import { logger } from '../utils/logger';
 import { ProjectGraphBuilder } from './project-graph-builder';
 import {
   ProjectConfiguration,
   ProjectsConfigurations,
 } from '../config/workspace-json-project-json';
-import {
-  readAllWorkspaceConfiguration,
-  readNxJson,
-} from '../config/configuration';
+import { readNxJson } from '../config/configuration';
 import {
   lockFileExists,
   lockFileHash,
-  mapLockFileDataToPartialGraph,
   parseLockFile,
 } from '../lock-file/lock-file';
+import { Workspaces } from '../config/workspaces';
 
 export async function buildProjectGraph() {
-  const projectConfigurations = readAllWorkspaceConfiguration();
+  const projectConfigurations = new Workspaces(
+    workspaceRoot
+  ).readProjectsConfigurations();
   const { projectFileMap, allWorkspaceFiles } = createProjectFileMap(
     projectConfigurations,
     defaultFileHasher.allFileData()
@@ -109,7 +105,7 @@ export async function buildProjectGraphUsingProjectFileMap(
     if (cache && cache.lockFileHash === lockHash) {
       partialGraph = isolatePartialGraphFromCache(cache);
     } else {
-      partialGraph = mapLockFileDataToPartialGraph(parseLockFile());
+      partialGraph = parseLockFile();
     }
   }
   const context = createContext(
@@ -175,13 +171,16 @@ async function buildProjectGraphUsingContext(
   performance.mark('build project graph:start');
 
   const builder = new ProjectGraphBuilder(partialGraph);
+  builder.setVersion(projectGraphVersion);
 
   buildWorkspaceProjectNodes(ctx, builder, nxJson);
-  if (!partialGraph) {
-    buildNpmPackageNodes(builder);
-  }
+  const initProjectGraph = builder.getUpdatedProjectGraph();
+
+  const r = await updateProjectGraphWithPlugins(ctx, initProjectGraph);
+
+  const updatedBuilder = new ProjectGraphBuilder(r);
   for (const proj of Object.keys(cachedFileData)) {
-    for (const f of builder.graph.nodes[proj].data.files) {
+    for (const f of updatedBuilder.graph.nodes[proj].data.files) {
       const cached = cachedFileData[proj][f.file];
       if (cached && cached.deps) {
         f.deps = [...cached.deps];
@@ -192,14 +191,12 @@ async function buildProjectGraphUsingContext(
   await buildExplicitDependencies(
     jsPluginConfig(nxJson, packageJsonDeps),
     ctx,
-    builder
+    updatedBuilder
   );
 
-  buildImplicitProjectDependencies(ctx, builder);
-  builder.setVersion(projectGraphVersion);
-  const initProjectGraph = builder.getUpdatedProjectGraph();
+  buildImplicitProjectDependencies(ctx, updatedBuilder);
 
-  const r = await updateProjectGraphWithPlugins(ctx, initProjectGraph);
+  const finalGraph = updatedBuilder.getUpdatedProjectGraph();
 
   performance.mark('build project graph:end');
   performance.measure(
@@ -208,12 +205,7 @@ async function buildProjectGraphUsingContext(
     'build project graph:end'
   );
 
-  return r;
-}
-
-interface NrwlJsPluginConfig {
-  analyzeSourceFiles?: boolean;
-  analyzePackageJson?: boolean;
+  return finalGraph;
 }
 
 function jsPluginConfig(
@@ -328,7 +320,8 @@ function buildExplicitDependenciesWithoutWorkers(
 ) {
   buildExplicitTypescriptAndPackageJsonDependencies(
     jsPluginConfig,
-    ctx.workspace,
+    ctx.nxJsonConfiguration,
+    ctx.projectsConfigurations,
     builder.graph,
     ctx.filesToProcess
   ).forEach((r) => {
@@ -393,7 +386,8 @@ function buildExplicitDependenciesUsingWorkers(
         }
       });
       w.postMessage({
-        workspace: ctx.workspace,
+        nxJsonConfiguration: ctx.nxJsonConfiguration,
+        projectsConfigurations: ctx.projectsConfigurations,
         projectGraph: builder.graph,
         jsPluginConfig,
       });
@@ -405,7 +399,7 @@ function buildExplicitDependenciesUsingWorkers(
 function getNumberOfWorkers(): number {
   return process.env.NX_PROJECT_GRAPH_MAX_WORKERS
     ? +process.env.NX_PROJECT_GRAPH_MAX_WORKERS
-    : os.cpus().length - 1;
+    : Math.min(os.cpus().length - 1, 8); // This is capped for cases in CI where `os.cpus()` returns way more CPUs than the resources that are allocated
 }
 
 function createContext(
@@ -414,15 +408,18 @@ function createContext(
   fileMap: ProjectFileMap,
   filesToProcess: ProjectFileMap
 ): ProjectGraphProcessorContext {
-  const projects: Record<string, ProjectConfiguration> = Object.keys(
-    projectsConfigurations.projects
-  ).reduce((map, projectName) => {
-    map[projectName] = {
-      ...projectsConfigurations.projects[projectName],
-    };
-    return map;
-  }, {});
+  const projects = Object.keys(projectsConfigurations.projects).reduce(
+    (map, projectName) => {
+      map[projectName] = {
+        ...projectsConfigurations.projects[projectName],
+      };
+      return map;
+    },
+    {} as Record<string, ProjectConfiguration>
+  );
   return {
+    nxJsonConfiguration: nxJson,
+    projectsConfigurations,
     workspace: {
       ...projectsConfigurations,
       ...nxJson,

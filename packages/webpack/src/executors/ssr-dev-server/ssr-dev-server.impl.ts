@@ -5,7 +5,7 @@ import {
   runExecutor,
 } from '@nrwl/devkit';
 import * as chalk from 'chalk';
-import { combineAsyncIterableIterators } from '@nrwl/devkit/src/utils/async-iterable';
+import { combineAsyncIterables } from '@nrwl/devkit/src/utils/async-iterable';
 
 import { WebpackExecutorOptions } from '../webpack/schema';
 import { TargetOptions, WebSsrDevServerOptions } from './schema';
@@ -15,8 +15,14 @@ export async function* ssrDevServerExecutor(
   options: WebSsrDevServerOptions,
   context: ExecutorContext
 ) {
-  const browserTarget = parseTargetString(options.browserTarget);
-  const serverTarget = parseTargetString(options.serverTarget);
+  const browserTarget = parseTargetString(
+    options.browserTarget,
+    context.projectGraph
+  );
+  const serverTarget = parseTargetString(
+    options.serverTarget,
+    context.projectGraph
+  );
   const browserOptions = readTargetOptions<WebpackExecutorOptions>(
     browserTarget,
     context
@@ -46,7 +52,7 @@ export async function* ssrDevServerExecutor(
   );
   let browserBuilt = false;
   let nodeStarted = false;
-  const combined = combineAsyncIterableIterators(runBrowser, runServer);
+  const combined = combineAsyncIterables(runBrowser, runServer);
 
   process.env['port'] = `${options.port}`;
 

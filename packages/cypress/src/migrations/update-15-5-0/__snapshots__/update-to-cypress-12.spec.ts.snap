@@ -1,0 +1,87 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Cypress 12 Migration should migrate to cy 12 1`] = `
+"describe('something', () => {
+  it('should do the thing', () => {
+    // TODO(@nrwl/cypress): this command has been removed, use cy.session instead. https://docs.cypress.io/guides/references/migration-guide#Command-Cypress-API-Changes
+Cypress.Cookies.defaults()
+    // TODO(@nrwl/cypress): this command has been removed, use cy.session instead. https://docs.cypress.io/guides/references/migration-guide#Command-Cypress-API-Changes
+Cypress.Cookies.preserveOnce('seesion_id', 'remember-token');
+    Cypress.blah.abc() 
+    // TODO(@nrwl/cypress): this command has been removed, use cy.intercept instead. https://docs.cypress.io/guides/references/migration-guide#cy-server-cy-route-and-Cypress-Server-defaults
+Cypress.Server.defaults({
+     delay: 500,
+     method: 'GET',
+   })
+   // TODO(@nrwl/cypress): this command has been removed, use cy.intercept instead. https://docs.cypress.io/guides/references/migration-guide#cy-server-cy-route-and-Cypress-Server-defaults
+cy.server()
+   // TODO(@nrwl/cypress): this command has been removed, use cy.intercept instead. https://docs.cypress.io/guides/references/migration-guide#cy-server-cy-route-and-Cypress-Server-defaults
+cy.route(/api/, () => {
+      return {
+        'test': 'We’ll',
+      }
+    }).as('getApi')
+ 
+    cy.visit('/index.html')
+    cy.window().then((win) => {
+      const xhr = new win.XMLHttpRequest
+      xhr.open('GET', '/api/v1/foo/bar?a=42')
+      xhr.send()
+    })
+
+    cy.wait('@getApi')
+   .its('url').should('include', 'api/v1')
+    /**
+* TODO(@nrwl/cypress): Nesting Cypress commands in a should assertion now throws.
+* You should use .then() to chain commands instead.
+* More Info: https://docs.cypress.io/guides/references/migration-guide#-should
+**/
+cy.should(($s) => {
+      cy.get('@table').find('tr').should('have.length', 3)
+})
+  })
+})"
+`;
+
+exports[`Cypress 12 Migration should migrate to cy 12 2`] = `
+"describe('something', () => {
+  it('should do the thing', () => {
+    // TODO(@nrwl/cypress): this command has been removed, use cy.session instead. https://docs.cypress.io/guides/references/migration-guide#Command-Cypress-API-Changes
+Cypress.Cookies.defaults()
+    // TODO(@nrwl/cypress): this command has been removed, use cy.session instead. https://docs.cypress.io/guides/references/migration-guide#Command-Cypress-API-Changes
+Cypress.Cookies.preserveOnce('seesion_id', 'remember-token');
+    Cypress.blah.abc() 
+    // TODO(@nrwl/cypress): this command has been removed, use cy.intercept instead. https://docs.cypress.io/guides/references/migration-guide#cy-server-cy-route-and-Cypress-Server-defaults
+Cypress.Server.defaults({
+     delay: 500,
+     method: 'GET',
+   })
+   // TODO(@nrwl/cypress): this command has been removed, use cy.intercept instead. https://docs.cypress.io/guides/references/migration-guide#cy-server-cy-route-and-Cypress-Server-defaults
+cy.server()
+   // TODO(@nrwl/cypress): this command has been removed, use cy.intercept instead. https://docs.cypress.io/guides/references/migration-guide#cy-server-cy-route-and-Cypress-Server-defaults
+cy.route(/api/, () => {
+      return {
+        'test': 'We’ll',
+      }
+    }).as('getApi')
+ 
+    cy.visit('/index.html')
+    cy.window().then((win) => {
+      const xhr = new win.XMLHttpRequest
+      xhr.open('GET', '/api/v1/foo/bar?a=42')
+      xhr.send()
+    })
+
+    cy.wait('@getApi')
+   .its('url').should('include', 'api/v1')
+    /**
+* TODO(@nrwl/cypress): Nesting Cypress commands in a should assertion now throws.
+* You should use .then() to chain commands instead.
+* More Info: https://docs.cypress.io/guides/references/migration-guide#-should
+**/
+cy.should(($s) => {
+      cy.get('@table').find('tr').should('have.length', 3)
+})
+  })
+})"
+`;

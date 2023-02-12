@@ -11,10 +11,11 @@ import { logger, NX_PREFIX } from '../utils/logger';
 import { loadNxPlugins, readPluginPackageJson } from '../utils/nx-plugin';
 import * as yaml from 'js-yaml';
 
-import type { NxJsonConfiguration } from './nx-json';
+import type { NxJsonConfiguration, TargetDefaults } from './nx-json';
 import {
   ProjectConfiguration,
   ProjectsConfigurations,
+  TargetConfiguration,
 } from './workspace-json-project-json';
 import {
   CustomHasher,
@@ -23,27 +24,19 @@ import {
   ExecutorsJson,
   Generator,
   GeneratorsJson,
+  GeneratorsJsonEntry,
   TaskGraphExecutor,
 } from './misc-interfaces';
 import { PackageJson } from '../utils/package-json';
-import { sortObjectByKeys } from '../utils/object-sort';
 import { output } from '../utils/output';
 import { joinPathFragments } from '../utils/path';
-
-export function workspaceConfigName(
-  root: string
-): 'angular.json' | 'workspace.json' | null {
-  if (existsSync(path.join(root, 'angular.json'))) {
-    return 'angular.json';
-  } else if (existsSync(path.join(root, 'workspace.json'))) {
-    return 'workspace.json';
-  } else {
-    return null;
-  }
-}
+import {
+  mergeAngularJsonAndGlobProjects,
+  shouldMergeAngularProjects,
+} from '../adapter/angular-json';
 
 export class Workspaces {
-  private cachedWorkspaceConfig: ProjectsConfigurations & NxJsonConfiguration;
+  private cachedProjectsConfig: ProjectsConfigurations;
 
   constructor(private root: string) {}
 
@@ -53,12 +46,13 @@ export class Workspaces {
 
   calculateDefaultProjectName(
     cwd: string,
-    wc: ProjectsConfigurations & NxJsonConfiguration
+    projects: ProjectsConfigurations,
+    nxJson: NxJsonConfiguration
   ) {
     const relativeCwd = this.relativeCwd(cwd);
     if (relativeCwd) {
-      const matchingProject = Object.keys(wc.projects).find((p) => {
-        const projectRoot = wc.projects[p].root;
+      const matchingProject = Object.keys(projects.projects).find((p) => {
+        const projectRoot = projects.projects[p].root;
         return (
           relativeCwd == projectRoot ||
           relativeCwd.startsWith(`${projectRoot}/`)
@@ -66,58 +60,51 @@ export class Workspaces {
       });
       if (matchingProject) return matchingProject;
     }
-    return wc.defaultProject;
+    return nxJson.defaultProject;
   }
 
-  readWorkspaceConfiguration(opts?: {
+  readProjectsConfigurations(opts?: {
     _ignorePluginInference?: boolean;
-  }): ProjectsConfigurations & NxJsonConfiguration {
+    _includeProjectsFromAngularJson?: boolean;
+  }): ProjectsConfigurations {
     if (
-      this.cachedWorkspaceConfig &&
-      process.env.NX_CACHE_WORKSPACE_CONFIG !== 'false'
+      this.cachedProjectsConfig &&
+      process.env.NX_CACHE_PROJECTS_CONFIG !== 'false'
     ) {
-      return this.cachedWorkspaceConfig;
+      return this.cachedProjectsConfig;
     }
     const nxJson = this.readNxJson();
-    const workspace = buildWorkspaceConfigurationFromGlobs(
+    const projectsConfigurations = buildProjectsConfigurationsFromGlobs(
       nxJson,
       globForProjectFiles(this.root, nxJson, opts?._ignorePluginInference),
       (path) => readJsonFile(join(this.root, path))
     );
-
-    const workspaceFile = workspaceConfigName(this.root);
-
-    if (workspaceFile) {
-      workspace.projects = this.mergeWorkspaceJsonAndGlobProjects(
-        this.readFromWorkspaceJson().projects,
-        workspace.projects
+    if (
+      shouldMergeAngularProjects(
+        this.root,
+        opts?._includeProjectsFromAngularJson
+      )
+    ) {
+      projectsConfigurations.projects = mergeAngularJsonAndGlobProjects(
+        projectsConfigurations.projects
       );
     }
-
-    assertValidWorkspaceConfiguration(nxJson);
-    this.cachedWorkspaceConfig = {
-      ...this.mergeTargetDefaultsIntoProjectDescriptions(workspace, nxJson),
-      ...nxJson,
-    };
-    return this.cachedWorkspaceConfig;
+    this.cachedProjectsConfig = this.mergeTargetDefaultsIntoProjectDescriptions(
+      projectsConfigurations,
+      nxJson
+    );
+    return this.cachedProjectsConfig;
   }
 
-  private mergeWorkspaceJsonAndGlobProjects(
-    workspaceJsonProjects: { [name: string]: any },
-    globProjects: { [name: string]: any }
-  ) {
-    const res = workspaceJsonProjects;
-    const folders = new Set();
-    for (let k of Object.keys(res)) {
-      folders.add(res[k].root);
-    }
-
-    for (let k of Object.keys(globProjects)) {
-      if (!folders.has(globProjects[k].root)) {
-        res[k] = globProjects[k];
-      }
-    }
-    return res;
+  /**
+   * Deprecated. Use readProjectsConfigurations
+   */
+  readWorkspaceConfiguration(opts?: {
+    _ignorePluginInference?: boolean;
+    _includeProjectsFromAngularJson?: boolean;
+  }): ProjectsConfigurations & NxJsonConfiguration {
+    const nxJson = this.readNxJson();
+    return { ...this.readProjectsConfigurations(opts), ...nxJson };
   }
 
   private mergeTargetDefaultsIntoProjectDescriptions(
@@ -127,16 +114,19 @@ export class Workspaces {
     for (const proj of Object.values(config.projects)) {
       if (proj.targets) {
         for (const targetName of Object.keys(proj.targets)) {
-          if (nxJson.targetDefaults[targetName]) {
-            const projectTargetDefinition = proj.targets[targetName];
-            if (!projectTargetDefinition.outputs) {
-              projectTargetDefinition.outputs =
-                nxJson.targetDefaults[targetName].outputs;
-            }
-            if (!projectTargetDefinition.dependsOn) {
-              projectTargetDefinition.dependsOn =
-                nxJson.targetDefaults[targetName].dependsOn;
-            }
+          const projectTargetDefinition = proj.targets[targetName];
+          const defaults = readTargetDefaultsForTarget(
+            targetName,
+            nxJson.targetDefaults,
+            projectTargetDefinition.executor
+          );
+
+          if (defaults) {
+            proj.targets[targetName] = mergeTargetConfigurations(
+              proj,
+              targetName,
+              defaults
+            );
           }
         }
       }
@@ -196,7 +186,21 @@ export class Workspaces {
     }
   }
 
-  readGenerator(collectionName: string, generatorName: string) {
+  readGenerator(
+    collectionName: string,
+    generatorName: string
+  ): {
+    resolvedCollectionName: string;
+    normalizedGeneratorName: string;
+    schema: any;
+    implementationFactory: () => Generator<unknown>;
+    isNgCompat: boolean;
+    /**
+     * @deprecated(v16): This will be removed in v16, use generatorConfiguration.aliases
+     */
+    aliases: string[];
+    generatorConfiguration: GeneratorsJsonEntry;
+  } {
     try {
       const {
         generatorsFilePath,
@@ -220,6 +224,11 @@ export class Workspaces {
         generatorConfig.implementation,
         generatorsDir
       );
+      const normalizedGeneratorConfiguration: GeneratorsJsonEntry = {
+        ...generatorConfig,
+        aliases: generatorConfig.aliases ?? [],
+        hidden: !!generatorConfig.hidden,
+      };
       return {
         resolvedCollectionName,
         normalizedGeneratorName,
@@ -227,6 +236,7 @@ export class Workspaces {
         implementationFactory,
         isNgCompat,
         aliases: generatorConfig.aliases || [],
+        generatorConfiguration: normalizedGeneratorConfiguration,
       };
     } catch (e) {
       throw new Error(
@@ -243,19 +253,24 @@ export class Workspaces {
   readNxJson(): NxJsonConfiguration {
     const nxJson = path.join(this.root, 'nx.json');
     if (existsSync(nxJson)) {
-      const nxJsonConfig = readJsonFile<NxJsonConfiguration>(nxJson);
-      if (nxJsonConfig.extends) {
-        const extendedNxJsonPath = require.resolve(nxJsonConfig.extends, {
-          paths: [dirname(nxJson)],
-        });
+      const nxJsonConfiguration = readJsonFile<NxJsonConfiguration>(nxJson);
+      if (nxJsonConfiguration.extends) {
+        const extendedNxJsonPath = require.resolve(
+          nxJsonConfiguration.extends,
+          {
+            paths: [dirname(nxJson)],
+          }
+        );
         const baseNxJson =
           readJsonFile<NxJsonConfiguration>(extendedNxJsonPath);
         return this.mergeTargetDefaultsAndTargetDependencies({
           ...baseNxJson,
-          ...nxJsonConfig,
+          ...nxJsonConfiguration,
         });
       } else {
-        return this.mergeTargetDefaultsAndTargetDependencies(nxJsonConfig);
+        return this.mergeTargetDefaultsAndTargetDependencies(
+          nxJsonConfiguration
+        );
       }
     } else {
       try {
@@ -395,13 +410,6 @@ export class Workspaces {
   private resolvePaths() {
     return this.root ? [this.root, __dirname] : [__dirname];
   }
-
-  private readFromWorkspaceJson() {
-    const rawWorkspace = readJsonFile(
-      path.join(this.root, workspaceConfigName(this.root))
-    );
-    return resolveNewFormatWithInlineProjects(rawWorkspace, this.root);
-  }
 }
 
 function normalizeExecutorSchema(
@@ -418,17 +426,6 @@ function normalizeExecutorSchema(
         : schema.properties,
     ...schema,
   };
-}
-
-function assertValidWorkspaceConfiguration(
-  nxJson: NxJsonConfiguration & { projects?: any }
-) {
-  // Assert valid workspace configuration
-  if (nxJson.projects) {
-    logger.warn(
-      'NX As of Nx 13, project configuration should be moved from nx.json to workspace.json/project.json. Please run "nx format" to fix this.'
-    );
-  }
 }
 
 function findFullGeneratorName(
@@ -450,123 +447,6 @@ function findFullGeneratorName(
     }
   }
 }
-
-export function reformattedWorkspaceJsonOrNull(w: any) {
-  const workspaceJson =
-    w.version === 2 ? toNewFormatOrNull(w) : toOldFormatOrNull(w);
-  if (workspaceJson?.projects) {
-    workspaceJson.projects = sortObjectByKeys(workspaceJson.projects);
-  }
-
-  return workspaceJson;
-}
-
-export function toNewFormat(w: any): ProjectsConfigurations {
-  const f = toNewFormatOrNull(w);
-  return f ?? w;
-}
-
-export function toNewFormatOrNull(w: any) {
-  let formatted = false;
-  Object.values(w.projects || {}).forEach((projectConfig: any) => {
-    if (projectConfig.architect) {
-      renamePropertyWithStableKeys(projectConfig, 'architect', 'targets');
-      formatted = true;
-    }
-    if (projectConfig.schematics) {
-      renamePropertyWithStableKeys(projectConfig, 'schematics', 'generators');
-      formatted = true;
-    }
-    Object.values(projectConfig.targets || {}).forEach((target: any) => {
-      if (target.builder !== undefined) {
-        renamePropertyWithStableKeys(target, 'builder', 'executor');
-        formatted = true;
-      }
-    });
-  });
-  if (w.schematics) {
-    renamePropertyWithStableKeys(w, 'schematics', 'generators');
-    formatted = true;
-  }
-  if (w.version !== 2) {
-    w.version = 2;
-    formatted = true;
-  }
-  return formatted ? w : null;
-}
-
-export function toOldFormatOrNull(w: any) {
-  let formatted = false;
-
-  Object.values(w.projects || {}).forEach((projectConfig: any) => {
-    if (typeof projectConfig === 'string') {
-      throw new Error(
-        "'project.json' files are incompatible with version 1 workspace schemas."
-      );
-    }
-    if (projectConfig.targets) {
-      renamePropertyWithStableKeys(projectConfig, 'targets', 'architect');
-      formatted = true;
-    }
-    if (projectConfig.generators) {
-      renamePropertyWithStableKeys(projectConfig, 'generators', 'schematics');
-      formatted = true;
-    }
-    delete projectConfig.name;
-    Object.values(projectConfig.architect || {}).forEach((target: any) => {
-      if (target.executor !== undefined) {
-        renamePropertyWithStableKeys(target, 'executor', 'builder');
-        formatted = true;
-      }
-    });
-  });
-
-  if (w.generators) {
-    renamePropertyWithStableKeys(w, 'generators', 'schematics');
-    formatted = true;
-  }
-  if (w.version !== 1) {
-    w.version = 1;
-    formatted = true;
-  }
-  return formatted ? w : null;
-}
-
-export function resolveOldFormatWithInlineProjects(
-  w: any,
-  root: string = workspaceRoot
-) {
-  const inlined = inlineProjectConfigurations(w, root);
-  const formatted = toOldFormatOrNull(inlined);
-  return formatted ? formatted : inlined;
-}
-
-export function resolveNewFormatWithInlineProjects(
-  w: any,
-  root: string = workspaceRoot
-) {
-  return toNewFormat(inlineProjectConfigurations(w, root));
-}
-
-function inlineProjectConfigurations(w: any, root: string = workspaceRoot) {
-  Object.entries(w.projects || {}).forEach(
-    ([project, config]: [string, any]) => {
-      if (typeof config === 'string') {
-        const configFilePath = path.join(root, config, 'project.json');
-        const fileConfig = readJsonFile(configFilePath);
-        w.projects[project] = {
-          root: config,
-          ...fileConfig,
-        };
-      }
-    }
-  );
-  return w;
-}
-
-/**
- * Reads an nx.json file from a given path or extends a local nx.json config.
- */
 
 /**
  * Pulled from toFileName in names from @nrwl/devkit.
@@ -820,8 +700,7 @@ function buildProjectConfigurationFromPackageJson(
 }
 
 export function inferProjectFromNonStandardFile(
-  file: string,
-  nxJson: NxJsonConfiguration
+  file: string
 ): ProjectConfiguration & { name: string } {
   const directory = dirname(file).split('\\').join('/');
 
@@ -831,7 +710,7 @@ export function inferProjectFromNonStandardFile(
   };
 }
 
-export function buildWorkspaceConfigurationFromGlobs(
+export function buildProjectsConfigurationsFromGlobs(
   nxJson: NxJsonConfiguration,
   projectFiles: string[], // making this parameter allows devkit to pick up newly created projects
   readJson: <T extends Object>(string) => T = <T extends Object>(string) =>
@@ -884,10 +763,7 @@ export function buildWorkspaceConfigurationFromGlobs(
       } else {
         // This project was created from an nx plugin.
         // The only thing we know about the file is its location
-        const { name, ...config } = inferProjectFromNonStandardFile(
-          file,
-          nxJson
-        );
+        const { name, ...config } = inferProjectFromNonStandardFile(file);
         if (!projects[name]) {
           projects[name] = config;
         } else {
@@ -904,6 +780,130 @@ export function buildWorkspaceConfigurationFromGlobs(
     version: 2,
     projects: projects,
   };
+}
+
+export function mergeTargetConfigurations(
+  projectConfiguration: ProjectConfiguration,
+  target: string,
+  targetDefaults: TargetDefaults[string]
+): TargetConfiguration {
+  const targetConfiguration = projectConfiguration.targets?.[target];
+
+  if (!targetConfiguration) {
+    throw new Error(
+      `Attempted to merge targetDefaults for ${projectConfiguration.name}.${target}, which doesn't exist.`
+    );
+  }
+
+  const {
+    configurations: defaultConfigurations,
+    options: defaultOptions,
+    ...defaults
+  } = targetDefaults;
+  const result = {
+    ...defaults,
+    ...targetConfiguration,
+  };
+
+  // Target is "compatible", e.g. executor is defined only once or is the same
+  // in both places. This means that it is likely safe to merge options
+  if (
+    !targetDefaults.executor ||
+    !targetConfiguration.executor ||
+    targetDefaults.executor === targetConfiguration.executor
+  ) {
+    result.options = mergeOptions(
+      defaultOptions,
+      targetConfiguration.options ?? {},
+      projectConfiguration,
+      target
+    );
+    result.configurations = mergeConfigurations(
+      defaultConfigurations,
+      targetConfiguration.configurations,
+      projectConfiguration,
+      target
+    );
+  }
+  return result as TargetConfiguration;
+}
+
+function mergeOptions<T extends Object>(
+  defaults: T,
+  options: T,
+  project: ProjectConfiguration,
+  key: string
+): T {
+  return {
+    ...resolvePathTokensInOptions(defaults, project, key),
+    ...options,
+  };
+}
+
+function mergeConfigurations<T extends Object>(
+  defaultConfigurations: Record<string, T>,
+  projectDefinedConfigurations: Record<string, T>,
+  project: ProjectConfiguration,
+  targetName: string
+): Record<string, T> {
+  const configurations: Record<string, T> = { ...projectDefinedConfigurations };
+  for (const configuration in defaultConfigurations) {
+    configurations[configuration] = mergeOptions(
+      defaultConfigurations[configuration],
+      configurations[configuration],
+      project,
+      `${targetName}.${configuration}`
+    );
+  }
+  return configurations;
+}
+
+function resolvePathTokensInOptions<T extends Object | Array<unknown>>(
+  object: T,
+  project: ProjectConfiguration,
+  key: string
+): T {
+  const result: T = Array.isArray(object) ? ([...object] as T) : { ...object };
+  for (let [opt, value] of Object.entries(object ?? {})) {
+    if (typeof value === 'string') {
+      if (value.startsWith('{workspaceRoot}/')) {
+        value = value.replace(/^\{workspaceRoot\}\//, '');
+      }
+      if (value.includes('{workspaceRoot}')) {
+        throw new Error(
+          `${NX_PREFIX} The {workspaceRoot} token is only valid at the beginning of an option. (${key})`
+        );
+      }
+      value = value.replace('{projectRoot}', project.root);
+      result[opt] = value.replace('{projectName}', project.name);
+    } else if (typeof value === 'object' && value) {
+      result[opt] = resolvePathTokensInOptions(
+        value,
+        project,
+        [key, opt].join('.')
+      );
+    }
+  }
+  return result;
+}
+
+export function readTargetDefaultsForTarget(
+  targetName: string,
+  targetDefaults: TargetDefaults,
+  executor?: string
+): TargetDefaults[string] {
+  if (executor) {
+    // If an executor is defined in project.json, defaults should be read
+    // from the most specific key that matches that executor.
+    // e.g. If executor === run-commands, and the target is named build:
+    // Use, use nx:run-commands if it is present
+    // If not, use build if it is present.
+    const key = [executor, targetName].find((x) => targetDefaults?.[x]);
+    return key ? targetDefaults?.[key] : null;
+  } else {
+    // If the executor is not defined, the only key we have is the target name.
+    return targetDefaults?.[targetName];
+  }
 }
 
 // we have to do it this way to preserve the order of properties

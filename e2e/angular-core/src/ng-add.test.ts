@@ -1,5 +1,3 @@
-process.env.SELECTED_CLI = 'angular';
-
 import {
   checkFilesDoNotExist,
   checkFilesExist,
@@ -56,6 +54,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     runNgAdd('@cypress/schematic', '--e2e-update', '1.7.0');
     packageInstall('cypress', null, '^9.0.0');
   }
+
   function addCypress10() {
     runNgAdd('@cypress/schematic', '--e2e', 'latest');
   }
@@ -129,12 +128,11 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     const updatedPackageJson = readJson('package.json');
     expect(updatedPackageJson.description).toEqual('some description');
     expect(updatedPackageJson.scripts).toEqual({
-      ng: 'nx',
+      ng: 'ng',
       start: 'nx serve',
       build: 'nx build',
       watch: 'nx build --watch --configuration development',
       test: 'nx test',
-      postinstall: 'node ./decorate-angular-cli.js',
     });
     expect(updatedPackageJson.devDependencies['@nrwl/workspace']).toBeDefined();
     expect(updatedPackageJson.devDependencies['@angular/cli']).toBeDefined();
@@ -144,9 +142,6 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     expect(nxJson).toEqual({
       affected: {
         defaultBase: 'main',
-      },
-      cli: {
-        packageManager: packageManager,
       },
       npmScope: 'projscope',
       tasksRunnerOptions: {
@@ -271,51 +266,8 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     checkFilesExist(`dist/apps/${project}/main.js`);
   });
 
-  it('should handle different types of errors', () => {
-    addProtractor();
-
-    // Remove e2e directory
-    runCommand('mv e2e e2e-bak');
-    expect(() =>
-      runNgAdd('@nrwl/angular', '--npm-scope projscope --skip-install')
-    ).toThrow(
-      'The specified Protractor config file "e2e/protractor.conf.js" in the "e2e" target could not be found.'
-    );
-    // Restore e2e directory
-    runCommand('mv e2e-bak e2e');
-
-    // Remove src
-    runCommand('mv src src-bak');
-    expect(() =>
-      runNgAdd('@nrwl/angular', '--npm-scope projscope --skip-install')
-    ).toThrow('The project source root "src" could not be found.');
-
-    // Put src back
-    runCommand('mv src-bak src');
-  });
-
   it('should handle a workspace with cypress v9', () => {
     addCypress9();
-
-    // Remove cypress.json
-    runCommand('mv cypress.json cypress.json.bak');
-    expect(() =>
-      runNgAdd('@nrwl/angular', '--npm-scope projscope --skip-install')
-    ).toThrow(
-      'The "e2e" target is using the "@cypress/schematic:cypress" builder but the "configFile" option is not specified and a "cypress.json" file could not be found at the project root.'
-    );
-    // Restore cypress.json
-    runCommand('mv cypress.json.bak cypress.json');
-
-    // Remove cypress directory
-    runCommand('mv cypress cypress-bak');
-    expect(() =>
-      runNgAdd('@nrwl/angular', '--npm-scope projscope --skip-install')
-    ).toThrow(
-      'The "e2e" target is using the "@cypress/schematic:cypress" builder but the "cypress" directory could not be found at the project root.'
-    );
-    // Restore cypress.json
-    runCommand('mv cypress-bak cypress');
 
     runNgAdd('@nrwl/angular', '--npm-scope projscope --skip-install');
 
@@ -383,26 +335,6 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
 
   it('should handle a workspace with cypress v10', () => {
     addCypress10();
-
-    // Remove cypress.config.ts
-    runCommand('mv cypress.config.ts cypress.config.ts.bak');
-    expect(() =>
-      runNgAdd('@nrwl/angular', '--npm-scope projscope --skip-install')
-    ).toThrow(
-      'The "e2e" target is using the "@cypress/schematic:cypress" builder but the "configFile" option is not specified and a "cypress.config.{ts,js,mjs,cjs}" file could not be found at the project root.'
-    );
-    // Restore cypress.json
-    runCommand('mv cypress.config.ts.bak cypress.config.ts');
-
-    // Remove cypress directory
-    runCommand('mv cypress cypress-bak');
-    expect(() =>
-      runNgAdd('@nrwl/angular', '--npm-scope projscope --skip-install')
-    ).toThrow(
-      'The "e2e" target is using the "@cypress/schematic:cypress" builder but the "cypress" directory could not be found at the project root.'
-    );
-    // Restore cypress.json
-    runCommand('mv cypress-bak cypress');
 
     runNgAdd('@nrwl/angular', '--npm-scope projscope --skip-install');
 

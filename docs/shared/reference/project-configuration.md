@@ -2,7 +2,7 @@
 
 Projects can be configured in `package.json` (if you use npm scripts and not Nx executors) and `project.json` (if you
 [use task executors](/plugin-features/use-task-executors)). Both `package.json` and `project.json` files are located in each project's folder. Nx merges the two
-files to get each project's configuration. This reference
+files to get each project's configuration.
 
 The following configuration creates `build` and `test` targets for Nx.
 
@@ -194,6 +194,13 @@ Targets may define outputs to tell Nx where the target is going to create file a
 
 This configuration is usually not needed. Nx comes with reasonable defaults (imported in `nx.json`) which implement the configuration above.
 
+Specifically, by default, the following locations are cached for builds:
+
+- `{workspaceRoot}/dist/{projectRoot}`,
+- `{projectRoot}/build`,
+- `{projectRoot}/dist`,
+- `{projectRoot}/public`
+
 #### Basic Example
 
 Usually, a target writes to a specific directory or a file. The following instructs Nx to cache `dist/libs/mylib` and `build/libs/mylib/main.js`:
@@ -336,8 +343,7 @@ belonging to `myteam` are not depended on by libraries belong to `theirteam`.
 
 ### implicitDependencies
 
-Nx uses powerful source-code analysis to figure out your workspace's project graph. Some dependencies cannot be deduced
-statically, so you can set them manually like this:
+Nx uses powerful source-code analysis to figure out your workspace's project graph. Some dependencies cannot be deduced statically, so you can set them manually like this:
 
 {% tabs %}
 {% tab label="package.json" %}
@@ -385,6 +391,33 @@ You can also remove a dependency as follows:
 {
   "root": "/libs/mylib",
   "implicitDependencies": ["!anotherlib"] # regardless of what Nx thinks, "mylib" doesn't depend on "anotherlib"
+}
+```
+
+{% /tab %}
+{% /tabs %}
+
+An implicit dependency could also be a glob pattern:
+
+{% tabs %}
+{% tab label="package.json" %}
+
+```jsonc {% fileName="package.json" %}
+{
+  "name": "mylib",
+  "nx": {
+    "implicitDependencies": ["shop-*"] # "mylib" depends on all projects beginning with "shop-"
+  }
+}
+```
+
+{% /tab %}
+{% tab label="project.json" %}
+
+```jsonc {% fileName="project.json" %}
+{
+  "root": "/libs/mylib",
+  "implicitDependencies": ["shop-*"] # "mylib" depends on all projects beginning with "shop-"
 }
 ```
 

@@ -1,4 +1,4 @@
-import { joinPathFragments, logger } from '@nrwl/devkit';
+import { joinPathFragments, logger, normalizePath } from '@nrwl/devkit';
 import { workspaceRoot } from 'nx/src/utils/workspace-root';
 import { dirname, join, relative, resolve } from 'path';
 import { readCachedProjectGraph } from 'nx/src/project-graph/project-graph';
@@ -30,7 +30,9 @@ export function createGlobPatternsForDependencies(
   fileGlobPattern: string
 ): string[] {
   let ig = configureIgnore();
-  const filenameRelativeToWorkspaceRoot = relative(workspaceRoot, dirPath);
+  const filenameRelativeToWorkspaceRoot = normalizePath(
+    relative(workspaceRoot, dirPath)
+  );
   const projectGraph = readCachedProjectGraph();
   const projectRootMappings = createProjectRootMappings(projectGraph.nodes);
 

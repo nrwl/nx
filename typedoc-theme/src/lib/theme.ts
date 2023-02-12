@@ -13,7 +13,16 @@ export default class NrwlMarkdownTheme extends MarkdownTheme {
   }
 
   render(page: PageEvent<Reflection>): string {
-    return super.render(page).replace(/.md#/gi, '#');
+    return (
+      super
+        .render(page)
+        .replace(/.md#/gi, '#')
+        /**
+         * Hack: This is the simplest way to update the urls and make them work
+         * in the `/packages/[name]/documents/[index|ngcli_adapter] context.
+         */
+        .replace(/\/devkit\//gi, '/devkit/documents/')
+    );
   }
 
   get mappings() {

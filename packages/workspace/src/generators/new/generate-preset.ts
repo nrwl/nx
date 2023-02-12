@@ -4,12 +4,12 @@ import {
   Tree,
 } from '@nrwl/devkit';
 import { Preset } from '../utils/presets';
-import { nxVersion } from '../../utils/versions';
+import { angularCliVersion, nxVersion } from '../../utils/versions';
 import { getNpmPackageVersion } from '../utils/get-npm-package-version';
 import { NormalizedSchema } from './new';
 import { join } from 'path';
 import * as yargsParser from 'yargs-parser';
-import { spawn } from 'child_process';
+import { spawn, SpawnOptions } from 'child_process';
 
 export function addPresetDependencies(host: Tree, options: NormalizedSchema) {
   if (
@@ -35,9 +35,12 @@ export function addPresetDependencies(host: Tree, options: NormalizedSchema) {
 export function generatePreset(host: Tree, opts: NormalizedSchema) {
   const parsedArgs = yargsParser(process.argv, {
     boolean: ['interactive'],
+    default: {
+      interactive: true,
+    },
   });
-  const spawnOptions = {
-    stdio: [process.stdin, process.stdout, process.stderr],
+  const spawnOptions: SpawnOptions = {
+    stdio: 'inherit',
     shell: true,
     cwd: join(host.root, opts.directory),
   };
@@ -57,11 +60,8 @@ export function generatePreset(host: Tree, opts: NormalizedSchema) {
   });
 
   function getPresetArgs(options: NormalizedSchema) {
-    if (Object.values(Preset).some((val) => val === options.preset)) {
-      // supported presets
-      return getDefaultArgs(options);
-    }
-    return getThirdPartyPresetArgs();
+    // supported presets
+    return getDefaultArgs(options);
   }
 
   function getDefaultArgs(opts: NormalizedSchema) {
@@ -73,29 +73,16 @@ export function generatePreset(host: Tree, opts: NormalizedSchema) {
       opts.linter ? `--linter=${opts.linter}` : null,
       opts.npmScope ? `--npmScope=${opts.npmScope}` : `--npmScope=${opts.name}`,
       opts.preset ? `--preset=${opts.preset}` : null,
+      opts.bundler ? `--bundler=${opts.bundler}` : null,
+      opts.framework ? `--framework=${opts.framework}` : null,
+      opts.docker ? `--docker=${opts.docker}` : null,
       opts.packageManager ? `--packageManager=${opts.packageManager}` : null,
+      opts.standaloneApi !== undefined
+        ? `--standaloneApi=${opts.standaloneApi}`
+        : null,
       parsedArgs.interactive ? '--interactive=true' : '--interactive=false',
+      opts.routing !== undefined ? `--routing=${opts.routing}` : null,
     ].filter((e) => !!e);
-  }
-
-  function getThirdPartyPresetArgs() {
-    const thirdPartyPkgArgs = Object.entries(opts).reduce(
-      (acc, [key, value]) => {
-        if (value === true) {
-          acc.push(`--${key}`);
-        } else if (value === false) {
-          acc.push(`--no-${key}`);
-          // nxWorkspaceRoot breaks CLI if incorrectly set, so need to exclude it.
-          // TODO(jack): Should read in the preset schema and only pass the options specified.
-        } else if (key !== 'nxWorkspaceRoot') {
-          // string, number (don't handle arrays or nested objects)
-          acc.push(`--${key}=${value}`);
-        }
-        return acc;
-      },
-      []
-    );
-    return [`g`, `${opts.preset}:preset`, ...thirdPartyPkgArgs];
   }
 }
 
@@ -106,7 +93,14 @@ function getPresetDependencies(preset: string, version?: string) {
 
     case Preset.AngularMonorepo:
     case Preset.AngularStandalone:
-      return { dependencies: { '@nrwl/angular': nxVersion }, dev: {} };
+      return {
+        dependencies: { '@nrwl/angular': nxVersion },
+        dev: {
+          '@angular-devkit/core': angularCliVersion,
+          '@angular-devkit/schematics': angularCliVersion,
+          '@schematics/angular': angularCliVersion,
+        },
+      };
 
     case Preset.Express:
       return { dependencies: {}, dev: { '@nrwl/express': nxVersion } };
@@ -131,6 +125,9 @@ function getPresetDependencies(preset: string, version?: string) {
 
     case Preset.WebComponents:
       return { dependencies: {}, dev: { '@nrwl/web': nxVersion } };
+
+    case Preset.NodeServer:
+      return { dependencies: {}, dev: { '@nrwl/node': nxVersion } };
 
     default: {
       return {

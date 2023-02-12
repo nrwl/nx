@@ -4,10 +4,9 @@ import {
   getProjects,
   joinPathFragments,
   readJson,
-  readWorkspaceConfiguration,
+  readNxJson,
   updateJson,
-  updateProjectConfiguration,
-  updateWorkspaceConfiguration,
+  updateNxJson,
   writeJson,
 } from '@nrwl/devkit';
 import { Linter, lintInitGenerator } from '@nrwl/linter';
@@ -16,14 +15,11 @@ import { deduceDefaultBase } from '@nrwl/workspace/src/utilities/default-base';
 import { resolveUserExistingPrettierConfig } from '@nrwl/workspace/src/utilities/prettier';
 import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
 import { prettierVersion } from '@nrwl/workspace/src/utils/versions';
-import { readFileSync } from 'fs';
-import { readModulePackageJson } from 'nx/src/utils/package-json';
-import { dirname, join } from 'path';
+import { toNewFormat } from 'nx/src/adapter/angular-json';
 import { angularDevkitVersion, nxVersion } from '../../../utils/versions';
 import type { ProjectMigrator } from '../migrators';
 import type { GeneratorOptions } from '../schema';
 import type { WorkspaceRootFileTypesInfo } from './types';
-import { workspaceMigrationErrorHeading } from './validation-logging';
 
 export function validateWorkspace(tree: Tree): void {
   const errors: string[] = [];
@@ -38,12 +34,16 @@ export function validateWorkspace(tree: Tree): void {
     return;
   }
 
-  throw new Error(`${workspaceMigrationErrorHeading}
+  throw new Error(`The workspace cannot be migrated because of the following issues:
 
   - ${errors.join('\n  ')}`);
 }
 
-export function createNxJson(tree: Tree, options: GeneratorOptions): void {
+export function createNxJson(
+  tree: Tree,
+  options: GeneratorOptions,
+  defaultProject: string | undefined
+): void {
   const { npmScope } = options;
 
   const targets = getWorkspaceCommonTargets(tree);
@@ -102,6 +102,7 @@ export function createNxJson(tree: Tree, options: GeneratorOptions): void {
           }
         : undefined,
     },
+    defaultProject,
   });
 }
 
@@ -132,44 +133,13 @@ function getWorkspaceCommonTargets(tree: Tree): {
   return targets;
 }
 
-export function decorateAngularCli(tree: Tree): void {
-  const nrwlWorkspacePath = readModulePackageJson('@nrwl/workspace').path;
-  const decorateCli = readFileSync(
-    join(
-      dirname(nrwlWorkspacePath),
-      'src/generators/utils/decorate-angular-cli.js__tmpl__'
-    ),
-    'utf-8'
-  );
-  tree.write('decorate-angular-cli.js', decorateCli);
-
-  updateJson(tree, 'package.json', (json) => {
-    if (
-      json.scripts &&
-      json.scripts.postinstall &&
-      !json.scripts.postinstall.includes('decorate-angular-cli.js')
-    ) {
-      // if exists, add execution of this script
-      json.scripts.postinstall += ' && node ./decorate-angular-cli.js';
-    } else {
-      json.scripts ??= {};
-      // if doesn't exist, set to execute this script
-      json.scripts.postinstall = 'node ./decorate-angular-cli.js';
-    }
-    if (json.scripts.ng) {
-      json.scripts.ng = 'nx';
-    }
-    return json;
-  });
-}
-
 export function updateWorkspaceConfigDefaults(tree: Tree): void {
-  const workspaceConfig = readWorkspaceConfiguration(tree);
-  delete (workspaceConfig as any).newProjectRoot;
-  if (workspaceConfig.cli) {
-    delete (workspaceConfig as any).defaultCollection;
+  const nxJson = readNxJson(tree);
+  delete (nxJson as any).newProjectRoot;
+  if (nxJson.cli) {
+    delete (nxJson as any).defaultCollection;
   }
-  updateWorkspaceConfiguration(tree, workspaceConfig);
+  updateNxJson(tree, nxJson);
 }
 
 export function updateRootTsConfig(tree: Tree): void {
@@ -393,12 +363,10 @@ export async function updatePrettierConfig(tree: Tree): Promise<void> {
 }
 
 export function deleteAngularJson(tree: Tree): void {
-  const projects = getProjects(tree);
-  for (const [project, config] of projects) {
-    config.name = project;
-    updateProjectConfiguration(tree, project, config);
+  const projects = toNewFormat(readJson(tree, 'angular.json')).projects;
+  if (!Object.keys(projects).length) {
+    tree.delete('angular.json');
   }
-  tree.delete('angular.json');
 }
 
 export function deleteGitKeepFilesIfNotNeeded(tree: Tree): void {

@@ -12,8 +12,8 @@ import {
   readTargetOptions,
   ExecutorContext,
   workspaceRoot,
-  readNxJson,
 } from '@nrwl/devkit';
+import { readNxJson } from 'nx/src/project-graph/file-utils';
 import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
 
 interface FindTargetOptions {
@@ -185,7 +185,9 @@ function createExecutorContext(
   targetName: string,
   configurationName?: string
 ): ExecutorContext {
-  const projectConfigs = readProjectsConfigurationFromProjectGraph(graph);
+  const nxJsonConfiguration = readNxJson();
+  const projectsConfigurations =
+    readProjectsConfigurationFromProjectGraph(graph);
   return {
     cwd: process.cwd(),
     projectGraph: graph,
@@ -195,9 +197,11 @@ function createExecutorContext(
     root: workspaceRoot,
     isVerbose: false,
     projectName,
+    projectsConfigurations,
+    nxJsonConfiguration,
     workspace: {
-      ...readNxJson(),
-      ...projectConfigs,
+      ...projectsConfigurations,
+      ...nxJsonConfiguration,
     },
   };
 }

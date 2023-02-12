@@ -16,7 +16,8 @@ describe('updatePackageJson', () => {
 
   const sharedContext = {
     isVerbose: false,
-    workspace: { version: 2, projects: {} },
+    projectsConfigurations: { version: 2, projects: {} },
+    nxJsonConfiguration: {},
     root: '',
     cwd: '',
   };
@@ -33,7 +34,7 @@ describe('updatePackageJson', () => {
           format: ['esm'],
         },
         sharedContext,
-        { type: 'app', name: 'test', data: {} },
+        { type: 'app', name: 'test', data: {} as any },
         [],
         {} as unknown as PackageJson
       );
@@ -64,7 +65,7 @@ describe('updatePackageJson', () => {
           format: ['cjs'],
         },
         sharedContext,
-        { type: 'app', name: 'test', data: {} },
+        { type: 'app', name: 'test', data: {} as any },
         [],
         {} as unknown as PackageJson
       );
@@ -94,7 +95,7 @@ describe('updatePackageJson', () => {
           format: ['esm', 'cjs'],
         },
         sharedContext,
-        { type: 'app', name: 'test', data: {} },
+        { type: 'app', name: 'test', data: {} as any },
         [],
         {} as unknown as PackageJson
       );
@@ -126,7 +127,7 @@ describe('updatePackageJson', () => {
           format: ['esm'],
         },
         sharedContext,
-        { type: 'app', name: 'test', data: {} },
+        { type: 'app', name: 'test', data: {} as any },
         [],
         {
           exports: {
@@ -167,7 +168,7 @@ describe('updatePackageJson', () => {
           format: ['esm'],
         },
         sharedContext,
-        { type: 'app', name: 'test', data: {} },
+        { type: 'app', name: 'test', data: {} as any },
         [],
         {} as unknown as PackageJson
       );
@@ -191,7 +192,7 @@ describe('updatePackageJson', () => {
           format: ['cjs'],
         },
         sharedContext,
-        { type: 'app', name: 'test', data: {} },
+        { type: 'app', name: 'test', data: {} as any },
         [],
         {} as unknown as PackageJson
       );
@@ -214,7 +215,7 @@ describe('updatePackageJson', () => {
           format: ['esm', 'cjs'],
         },
         sharedContext,
-        { type: 'app', name: 'test', data: {} },
+        { type: 'app', name: 'test', data: {} as any },
         [],
         {} as unknown as PackageJson
       );
@@ -238,7 +239,7 @@ describe('updatePackageJson', () => {
           format: ['esm'],
         },
         sharedContext,
-        { type: 'app', name: 'test', data: {} },
+        { type: 'app', name: 'test', data: {} as any },
         [],
         {
           exports: {
@@ -276,7 +277,7 @@ describe('updatePackageJson', () => {
           skipTypeField: true,
         },
         sharedContext,
-        { type: 'app', name: 'test', data: {} },
+        { type: 'app', name: 'test', data: {} as any },
         [],
         {} as unknown as PackageJson
       );

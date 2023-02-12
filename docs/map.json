@@ -328,7 +328,7 @@
           "description": "Learn about all the different concepts Nx uses to manage your tasks and enhance your productivity.",
           "itemList": [
             {
-              "name": "Integrated Repos vs. Package-Based Repos",
+              "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
               "tags": ["intro"],
               "id": "integrated-vs-package-based",
               "file": "shared/concepts/integrated-vs-package-based"
@@ -402,6 +402,16 @@
               "name": "Monorepos",
               "id": "why-monorepos",
               "file": "shared/guides/why-monorepos"
+            },
+            {
+              "name": "Dependency Management",
+              "id": "dependency-management",
+              "file": "shared/concepts/dependency-management"
+            },
+            {
+              "name": "Code Sharing",
+              "id": "code-sharing",
+              "file": "shared/concepts/code-sharing"
             },
             {
               "name": "Using Nx at Enterprises",
@@ -539,8 +549,14 @@
               "id": "packages-devkit",
               "tags": ["create-your-own-plugin"],
               "file": "",
-              "path": "/packages#devkit",
+              "path": "/packages/devkit/documents/index",
               "isExternal": true
+            },
+            {
+              "name": "Glossary",
+              "id": "glossary",
+              "tags": [],
+              "file": "shared/reference/glossary"
             }
           ]
         },
@@ -607,7 +623,7 @@
               "id": "skip-nx-cache-flag",
               "file": "",
               "tags": ["cache-task-results"],
-              "path": "/nx/affected#skip-nx-cache",
+              "path": "/packages/nx/documents/affected#skip-nx-cache",
               "isExternal": true
             },
             {
@@ -721,6 +737,12 @@
               "file": "shared/ci-overview"
             },
             {
+              "name": "Prepare applications for deployment via CI",
+              "id": "ci-deployment",
+              "tags": ["docker", "deploy"],
+              "file": "shared/recipes/ci-deployment"
+            },
+            {
               "name": "Setting up Azure Pipelines",
               "id": "monorepo-ci-azure",
               "file": "shared/monorepo-ci-azure"
@@ -819,14 +841,14 @@
             {
               "name": "Local Executors",
               "id": "creating-custom-executors",
-              "tags": ["use-task-executors"],
-              "file": "shared/recipes/local-executors"
+              "tags": ["use-task-executors", "create-your-own-plugin"],
+              "file": "shared/recipes/plugins/local-executors"
             },
             {
               "name": "Compose Executors",
               "id": "compose-executors",
               "tags": ["use-task-executors"],
-              "file": "shared/recipes/compose-executors"
+              "file": "shared/recipes/plugins/compose-executors"
             }
           ]
         },
@@ -838,32 +860,32 @@
             {
               "name": "Local Generators",
               "id": "local-generators",
-              "tags": ["use-code-generators"],
-              "file": "shared/recipes/local-generators"
+              "tags": ["use-code-generators", "create-your-own-plugin"],
+              "file": "shared/recipes/generators/local-generators"
             },
             {
               "name": "Composing Generators",
               "id": "composing-generators",
               "tags": ["use-code-generators"],
-              "file": "shared/generators/composing-generators"
+              "file": "shared/recipes/generators/composing-generators"
             },
             {
               "name": "Generator Options",
               "id": "generator-options",
               "tags": ["use-code-generators"],
-              "file": "shared/generators/generator-options"
+              "file": "shared/recipes/generators/generator-options"
             },
             {
               "name": "Creating Files",
               "id": "creating-files",
               "tags": ["use-code-generators"],
-              "file": "shared/generators/creating-files"
+              "file": "shared/recipes/generators/creating-files"
             },
             {
               "name": "Modifying Files",
               "id": "modifying-files",
               "tags": ["use-code-generators"],
-              "file": "shared/generators/modifying-files"
+              "file": "shared/recipes/generators/modifying-files"
             }
           ]
         },
@@ -873,16 +895,34 @@
           "description": "Learn more about creating your own plugin, extending Nx.",
           "itemList": [
             {
-              "name": "Project Inference Plugins",
-              "id": "project-inference-plugins",
+              "name": "Share Your Plugin",
+              "id": "share-your-plugin",
               "tags": ["create-your-own-plugin"],
-              "file": "shared/extending-nx/project-inference-plugins"
+              "file": "shared/recipes/plugins/share-your-plugin"
+            },
+            {
+              "name": "Create a Preset",
+              "id": "create-preset",
+              "tags": ["create-your-own-plugin"],
+              "file": "shared/recipes/plugins/create-preset"
+            },
+            {
+              "name": "Migration Generators",
+              "id": "migration-generators",
+              "tags": ["create-your-own-plugin"],
+              "file": "shared/recipes/plugins/migration-generators"
             },
             {
               "name": "Project Graph Plugins",
               "id": "project-graph-plugins",
               "tags": ["create-your-own-plugin", "explore-graph"],
-              "file": "shared/extending-nx/project-graph-plugins"
+              "file": "shared/recipes/plugins/project-graph-plugins"
+            },
+            {
+              "name": "Project Inference Plugins",
+              "id": "project-inference-plugins",
+              "tags": ["create-your-own-plugin"],
+              "file": "shared/recipes/plugins/project-inference-plugins"
             }
           ]
         },
@@ -919,12 +959,29 @@
             {
               "name": "Faster Builds with Module Federation",
               "id": "faster-builds",
-              "tags": ["use-task-executors"],
+              "tags": [
+                "use-task-executors",
+                "module-federation",
+                "angular",
+                "react"
+              ],
               "file": "shared/guides/module-federation/faster-builds"
+            },
+            {
+              "name": "Setup Module Federation with SSR for Angular and React",
+              "id": "module-federation-with-ssr",
+              "tags": [
+                "use-task-executors",
+                "module-federation",
+                "angular",
+                "react"
+              ],
+              "file": "shared/recipes/module-federation-with-ssr"
             },
             {
               "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
               "id": "dynamic-module-federation-with-angular",
+              "tags": ["use-task-executors", "module-federation", "angular"],
               "file": "shared/guides/module-federation/dynamic-mfe-angular"
             },
             {
@@ -977,6 +1034,12 @@
               "file": "shared/recipes/analyze-source-files"
             },
             {
+              "name": "Workspace Watching",
+              "id": "workspace-watching",
+              "tags": ["workspace-watching"],
+              "file": "shared/recipes/workspace-watching"
+            },
+            {
               "name": "Advanced Update Nx",
               "id": "advanced-update",
               "tags": ["automate-updating-dependencies"],
@@ -1026,11 +1089,6 @@
               "file": "shared/guides/deploy-nextjs-to-vercel"
             },
             {
-              "name": "Webpack 5 Migration",
-              "id": "webpack-5",
-              "file": "shared/guides/webpack-5"
-            },
-            {
               "name": "Using Tailwind CSS in React",
               "id": "using-tailwind-css-in-react",
               "file": "shared/guides/using-tailwind-css-in-react"
@@ -1055,13 +1113,6 @@
               "id": "misc-data-persistence",
               "file": "shared/guides/misc-data-persistence"
             },
-            {
-              "name": "Customizing Webpack Config",
-              "id": "customize-webpack",
-              "tags": ["use-task-executors"],
-              "file": "shared/guides/customize-webpack"
-            },
-
             {
               "name": "Powering Up React Development With Nx",
               "id": "react-nx",
@@ -1130,6 +1181,18 @@
               "id": "include-all-packagejson",
               "tags": [],
               "file": "shared/recipes/include-all-packagejson"
+            },
+            {
+              "name": "Identify Dependencies Between Folders",
+              "id": "identify-dependencies-between-folders",
+              "tags": [],
+              "file": "shared/recipes/identify-dependencies-between-folders"
+            },
+            {
+              "name": "Standalone NgRx APIs",
+              "id": "standalone-ngrx-apis",
+              "tags": [],
+              "file": "shared/recipes/standalone-ngrx-apis"
             }
           ]
         }
@@ -1166,6 +1229,16 @@
               "name": "Enable GitHub PR Integration",
               "id": "github",
               "file": "nx-cloud/set-up/github"
+            },
+            {
+              "name": "Enable Bitbucket Cloud PR Integration",
+              "id": "bitbucket-cloud",
+              "file": "nx-cloud/set-up/bitbucket-cloud"
+            },
+            {
+              "name": "Enable GitLab MR Integration",
+              "id": "gitlab",
+              "file": "nx-cloud/set-up/gitlab"
             }
           ]
         },
@@ -1217,11 +1290,6 @@
               "file": "nx-cloud/private/get-started"
             },
             {
-              "name": "Enable Github PR Integration",
-              "id": "github",
-              "file": "nx-cloud/private/github"
-            },
-            {
               "name": "Authenticate with a Single Admin",
               "id": "auth-single-admin",
               "file": "nx-cloud/private/auth-single-admin"
@@ -1250,6 +1318,11 @@
               "name": "Advanced Configuration",
               "id": "advanced-config",
               "file": "nx-cloud/private/advanced-config"
+            },
+            {
+              "name": "Kubernetes Setup",
+              "id": "kubernetes-setup",
+              "file": "nx-cloud/private/kubernetes-setup"
             },
             {
               "name": "Standalone",
@@ -1419,6 +1492,22 @@
               "name": "exec",
               "id": "exec",
               "file": "generated/cli/exec"
+            },
+            {
+              "name": "watch",
+              "id": "watch",
+              "tags": ["workspace-watching"],
+              "file": "generated/cli/watch"
+            },
+            {
+              "name": "show",
+              "id": "show",
+              "file": "generated/cli/show"
+            },
+            {
+              "name": "view-logs",
+              "id": "view-logs",
+              "file": "generated/cli/view-logs"
             }
           ]
         },
@@ -1431,12 +1520,12 @@
               "name": "Overview",
               "id": "overview",
               "path": "/packages/workspace",
-              "file": "shared/workspace-plugin"
+              "file": "shared/packages/workspace/workspace-plugin"
             },
             {
               "name": "Nx, NodeJS and Typescript Versions",
               "id": "nx-nodejs-typescript-version-matrix",
-              "file": "shared/nx-compatibility-matrix"
+              "file": "shared/packages/workspace/nx-compatibility-matrix"
             }
           ]
         },
@@ -1449,7 +1538,7 @@
               "id": "overview",
               "name": "Overview",
               "path": "/packages/nx-plugin",
-              "file": "shared/nx-plugin"
+              "file": "shared/packages/nx-plugin/nx-plugin"
             }
           ]
         },
@@ -1461,7 +1550,7 @@
             {
               "id": "index",
               "name": "Overview",
-              "file": "generated/devkit/index"
+              "file": "generated/devkit/nrwl_devkit"
             },
             {
               "id": "ngcli_adapter",
@@ -1479,7 +1568,7 @@
               "name": "Overview",
               "id": "overview",
               "path": "/packages/js",
-              "file": "shared/js-plugin"
+              "file": "shared/packages/js/js-plugin"
             }
           ]
         },
@@ -1492,7 +1581,7 @@
               "name": "Overview",
               "id": "overview",
               "path": "/packages/web",
-              "file": "shared/web-plugin"
+              "file": "shared/packages/web/web-plugin"
             }
           ]
         },
@@ -1505,7 +1594,7 @@
               "name": "Overview",
               "id": "overview",
               "path": "/packages/esbuild",
-              "file": "shared/esbuild-plugin"
+              "file": "shared/packages/esbuild/esbuild-plugin"
             }
           ]
         },
@@ -1515,10 +1604,43 @@
           "description": "Vite package.",
           "itemList": [
             {
-              "name": "Overview",
               "id": "overview",
               "path": "/packages/vite",
-              "file": "shared/vite-plugin"
+              "name": "Overview of the Nx Vite Plugin",
+              "description": "The Nx Plugin for Vite contains executors and generators that support building applications using Vite. This page also explains how to configure Vite on your Nx workspace.",
+              "file": "shared/packages/vite/vite-plugin"
+            },
+            {
+              "id": "set-up-vite-manually",
+              "name": "Manually set up your project to use Vite.js",
+              "description": "This guide explains how you can manually set up your project to use Vite.js in your Nx workspace.",
+              "file": "shared/packages/vite/set-up-vite-manually"
+            }
+          ]
+        },
+        {
+          "name": "webpack",
+          "id": "webpack",
+          "description": "Webpack package.",
+          "itemList": [
+            {
+              "id": "overview",
+              "path": "/packages/webpack",
+              "name": "Overview of the Nx Webpack Plugin",
+              "description": "The Nx Plugin for Webpack contains executors and generators that support building applications using Webpack.",
+              "file": "shared/packages/webpack/plugin-overview"
+            },
+            {
+              "id": "webpack-config-setup",
+              "name": "How to configure webpack on your Nx workspace",
+              "description": "A guide on how to configure webpack on your Nx workspace, and instructions on how to customize your webpack configuration",
+              "file": "shared/packages/webpack/webpack-config-setup"
+            },
+            {
+              "id": "webpack-plugins",
+              "name": "Webpack plugins",
+              "description": "Webpack plugins",
+              "file": "shared/packages/webpack/webpack-plugins"
             }
           ]
         },
@@ -1531,12 +1653,12 @@
               "name": "Overview",
               "id": "overview",
               "path": "/packages/angular",
-              "file": "shared/angular-plugin"
+              "file": "shared/packages/angular/angular-plugin"
             },
             {
               "name": "Angular and Nx Version Matrix",
               "id": "angular-nx-version-matrix",
-              "file": "shared/angular-nx-version-matrix",
+              "file": "shared/packages/angular/angular-nx-version-matrix",
               "path": "/angular-nx-version-matrix"
             }
           ]
@@ -1550,7 +1672,7 @@
               "name": "Overview",
               "id": "overview",
               "path": "/packages/react",
-              "file": "shared/react-plugin"
+              "file": "shared/packages/react/react-plugin"
             }
           ]
         },
@@ -1563,7 +1685,7 @@
               "name": "Overview",
               "id": "overview",
               "path": "/packages/jest",
-              "file": "shared/jest-plugin"
+              "file": "shared/packages/jest/jest-plugin"
             }
           ]
         },
@@ -1576,17 +1698,17 @@
               "name": "Overview",
               "id": "overview",
               "path": "/packages/cypress",
-              "file": "shared/cypress-plugin"
+              "file": "shared/packages/cypress/cypress-plugin"
             },
             {
               "name": "Component Testing",
               "id": "cypress-component-testing",
-              "file": "shared/cypress-component-testing"
+              "file": "shared/packages/cypress/cypress-component-testing"
             },
             {
               "name": "v11 Migration Guide",
               "id": "v11-migration-guide",
-              "file": "shared/guides/cypress/cypress-v11-migration"
+              "file": "shared/packages/cypress/cypress-v11-migration"
             }
           ]
         },
@@ -1597,69 +1719,106 @@
           "itemList": [
             {
               "id": "overview",
-              "name": "Overview Generic",
+              "name": "Nx Storybook Plugin Overview",
+              "description": "This is an overview page for the Storybook plugin in Nx. It explains what Storybook is and how to set it up in your Nx workspace.",
               "path": "/packages/storybook",
-              "file": "shared/guides/storybook/plugin-overview"
+              "file": "shared/packages/storybook/plugin-overview"
             },
             {
               "id": "overview-react",
               "name": "Set up Storybook for React Projects",
-              "file": "shared/guides/storybook/plugin-react"
+              "description": "This guide explains how to set up Storybook for React projects in your Nx workspace.",
+              "file": "shared/packages/storybook/plugin-react"
             },
             {
               "id": "overview-angular",
               "name": "Set up Storybook for Angular Projects",
-              "file": "shared/guides/storybook/plugin-angular"
+              "description": "This guide explains how to set up Storybook for Angular projects in your Nx workspace.",
+              "file": "shared/packages/storybook/plugin-angular"
+            },
+            {
+              "id": "storybook-7-setup",
+              "name": "Storybook 7 setup guide",
+              "description": "This guide explains how you can set up Storybook version 7 in your Nx workspace. It contains information about the generators and the frameworks that are supported.",
+              "file": "shared/packages/storybook/storybook-7-setup"
+            },
+            {
+              "id": "migrate-storybook-7",
+              "name": " Migrate your Nx workspace to Storybook version 7",
+              "description": "This guide explains how migrate your Nx workspace to Storybook version 7.",
+              "file": "shared/packages/storybook/migrate-storybook-7"
             },
             {
               "id": "best-practices",
               "name": "Storybook best practices for making the most out of Nx",
-              "file": "shared/guides/storybook/best-practices"
+              "description": "The purpose of this guide is to help you set up Storybook in your Nx workspace so that you can get the most out of Nx and its powerful capabilities.",
+              "file": "shared/packages/storybook/best-practices"
+            },
+            {
+              "id": "configuring-storybook",
+              "name": "Configuring Storybook on Nx",
+              "description": "This guide explains how Storybook is configured on your Nx workspace.",
+              "file": "shared/packages/storybook/configuring-storybook"
             },
             {
               "id": "storybook-composition-setup",
               "name": "Setting up Storybook Composition with Nx",
-              "file": "shared/guides/storybook/storybook-composition-setup"
+              "description": "This guide explains how you can set up Storybook composition on your Nx workspace.",
+              "file": "shared/packages/storybook/storybook-composition-setup"
             },
             {
               "id": "angular-storybook-compodoc",
               "name": "Angular: Set up Compodoc for Storybook on Nx",
-              "file": "shared/guides/storybook/angular-storybook-compodoc"
+              "description": "This guide explains how to set up Compodoc for Storybook on Angular projects in a Nx workspace.",
+              "file": "shared/packages/storybook/angular-storybook-compodoc"
             },
             {
               "id": "angular-storybook-targets",
               "name": "Angular: Information about the Storybook targets",
-              "file": "shared/guides/storybook/angular-storybook-targets"
+              "description": "This document explains the role of the storybook and build-storybook targets in Angular projects with a Storybook configuration, and specifically which executors are used for them.",
+              "file": "shared/packages/storybook/angular-storybook-targets"
             },
             {
               "id": "angular-configuring-styles",
               "name": "Angular: Configuring styles and preprocessor options",
-              "file": "shared/guides/storybook/angular-configuring-styles"
+              "description": "This document explains how to configure styles and preprocessor options in Angular projects with a Storybook configuration.",
+              "file": "shared/packages/storybook/angular-configuring-styles"
             },
             {
               "id": "angular-browser-target",
               "name": "Angular: The browserTarget",
-              "file": "shared/guides/storybook/angular-browser-target"
+              "description": "This document explains the role of the browserTarget in Angular projects with a Storybook configuration, and how the Storybook executors use it.",
+              "file": "shared/packages/storybook/angular-browser-target"
             },
             {
               "id": "migrate-webpack-final-angular",
-              "name": "Angular: Storybook Webpack Migration",
-              "file": "shared/guides/storybook/migrate-webpack-final-angular"
+              "name": "Angular: Storybook Migration to webpackFinal",
+              "description": "This guide explains how migrate from older versions of Storybook which used a custom webpack.config.js to the new Storybook 6.3+ which uses the webpackFinal property in the main configuration.",
+              "file": "shared/packages/storybook/migrate-webpack-final-angular"
             },
             {
               "id": "upgrade-storybook-v6-angular",
               "name": "Angular: Upgrading to Storybook 6",
-              "file": "shared/guides/storybook/storybook-v6-angular"
+              "description": "This guide explains how you can upgrade your Storybook from versions 5.3 and below to Storybook 6, for Angular projects.",
+              "file": "shared/packages/storybook/storybook-v6-angular"
             },
             {
               "id": "migrate-webpack-final-react",
-              "name": "React: Migrate to the Nrwl React Storybook Preset",
-              "file": "shared/guides/storybook/migrate-webpack-final-react"
+              "name": "React: Storybook Migration to webpackFinal and the Nx Addon",
+              "description": "This guide explains how migrate from older versions of Storybook which used a custom webpack.config.js to the new Storybook 6.3+ which uses the webpackFinal property in the main configuration and the Nx React Addon.",
+              "file": "shared/packages/storybook/migrate-webpack-final-react"
             },
             {
               "id": "upgrade-storybook-v6-react",
               "name": "React: Upgrading to Storybook 6",
-              "file": "shared/guides/storybook/storybook-v6-react"
+              "description": "This guide explains how you can upgrade your Storybook from versions 5.3 and below to Storybook 6, for React projects.",
+              "file": "shared/packages/storybook/storybook-v6-react"
+            },
+            {
+              "id": "custom-builder-configs",
+              "name": "How to configure Webpack and Vite for Storybook",
+              "description": "This guide explains how to customize the webpack configuration and your vite configuration for Storybook.",
+              "file": "shared/packages/storybook/custom-builder-configs"
             }
           ]
         },
@@ -1672,12 +1831,12 @@
               "id": "overview",
               "name": "Overview",
               "path": "/packages/linter",
-              "file": "shared/linter-plugin"
+              "file": "shared/packages/linter/linter-plugin"
             },
             {
               "id": "eslint-plugin-nx",
               "name": "eslint-plugin-nx",
-              "file": "shared/eslint-plugin-nx"
+              "file": "shared/packages/linter/eslint-plugin-nx"
             }
           ]
         },
@@ -1690,7 +1849,7 @@
               "id": "overview",
               "name": "Overview",
               "path": "/packages/eslint-plugin-nx",
-              "file": "shared/eslint-plugin-nx"
+              "file": "shared/packages/linter/eslint-plugin-nx"
             }
           ]
         },
@@ -1703,7 +1862,7 @@
               "id": "overview",
               "name": "Overview",
               "path": "/packages/node",
-              "file": "shared/node-plugin"
+              "file": "shared/packages/node/node-plugin"
             }
           ]
         },
@@ -1716,7 +1875,7 @@
               "id": "overview",
               "name": "Overview",
               "path": "/packages/express",
-              "file": "shared/express-plugin"
+              "file": "shared/packages/express/express-plugin"
             }
           ]
         },
@@ -1729,7 +1888,7 @@
               "id": "overview",
               "name": "Overview",
               "path": "/packages/nest",
-              "file": "shared/nest-plugin"
+              "file": "shared/packages/nest/nest-plugin"
             }
           ]
         },
@@ -1742,7 +1901,7 @@
               "id": "overview",
               "name": "Overview",
               "path": "/packages/next",
-              "file": "shared/next-plugin"
+              "file": "shared/packages/next/next-plugin"
             }
           ]
         },
@@ -1755,7 +1914,7 @@
               "id": "overview",
               "name": "Overview",
               "path": "/packages/detox",
-              "file": "shared/detox-plugin"
+              "file": "shared/packages/detox/detox-plugin"
             }
           ]
         },
@@ -1768,7 +1927,7 @@
               "id": "overview",
               "name": "Overview",
               "path": "/packages/react-native",
-              "file": "shared/react-native-plugin"
+              "file": "shared/packages/react-native/react-native-plugin"
             }
           ]
         }

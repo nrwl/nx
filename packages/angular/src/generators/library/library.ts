@@ -9,15 +9,17 @@ import {
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { jestProjectGenerator } from '@nrwl/jest';
 import { Linter } from '@nrwl/linter';
-import { convertToNxProjectGenerator } from '@nrwl/workspace/generators';
+import { lt } from 'semver';
 import init from '../../generators/init/init';
 import { E2eTestRunner } from '../../utils/test-runners';
-import { ngPackagrVersion } from '../../utils/versions';
+import { getPkgVersionForAngularMajorVersion } from '../../utils/version-utils';
 import addLintingGenerator from '../add-linting/add-linting';
 import karmaProjectGenerator from '../karma-project/karma-project';
 import setupTailwindGenerator from '../setup-tailwind/setup-tailwind';
+import { getInstalledAngularVersionInfo } from '../utils/version-utils';
 import { addBuildableLibrariesPostCssDependencies } from '../utils/dependencies';
 import { addModule } from './lib/add-module';
+import { addStandaloneComponent } from './lib/add-standalone-component';
 import {
   enableStrictTypeChecking,
   setLibraryStrictDefault,
@@ -27,7 +29,6 @@ import { NormalizedSchema } from './lib/normalized-schema';
 import { updateLibPackageNpmScope } from './lib/update-lib-package-npm-scope';
 import { updateProject } from './lib/update-project';
 import { updateTsConfig } from './lib/update-tsconfig';
-import { addStandaloneComponent } from './lib/add-standalone-component';
 import { Schema } from './schema';
 
 export async function libraryGenerator(tree: Tree, schema: Schema) {
@@ -45,6 +46,13 @@ export async function libraryGenerator(tree: Tree, schema: Schema) {
   if (schema.addTailwind && !schema.buildable && !schema.publishable) {
     throw new Error(
       `To use "--addTailwind" option, you have to set either "--buildable" or "--publishable".`
+    );
+  }
+
+  const userInstalledAngularVersion = getInstalledAngularVersionInfo(tree);
+  if (lt(userInstalledAngularVersion.version, '14.1.0') && schema.standalone) {
+    throw new Error(
+      `The "--standalone" option is not supported in Angular versions < 14.1.0.`
     );
   }
 
@@ -105,18 +113,13 @@ export async function libraryGenerator(tree: Tree, schema: Schema) {
       tree,
       {},
       {
-        'ng-packagr': ngPackagrVersion,
+        'ng-packagr': getPkgVersionForAngularMajorVersion(
+          'ngPackagrVersion',
+          userInstalledAngularVersion.major
+        ),
       }
     );
     addBuildableLibrariesPostCssDependencies(tree);
-  }
-
-  if (libraryOptions.standaloneConfig) {
-    await convertToNxProjectGenerator(tree, {
-      project: libraryOptions.name,
-      all: false,
-      skipFormat: true,
-    });
   }
 
   if (!libraryOptions.skipFormat) {

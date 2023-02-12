@@ -1,10 +1,8 @@
 ## Documentation & Resources
 
-A few links to help you get started:
-
-- [Nx.Dev: Documentation, Guides, Interactive Tutorials](https://nx.dev)
-- [Tutorial: Adding Nx to an Existing Monorepo](https://nx.dev/recipes/adopting-nx/adding-to-monorepo)
-- [Official Nx YouTube Channel](https://www.youtube.com/c/Nrwl_io)
+- [Nx.Dev: Documentation, Guides, Tutorials](https://nx.dev)
+- [Intro to Nx](https://nx.dev/getting-started/intro)
+- [Official Nx YouTube Channel](https://www.youtube.com/@NxDevtools)
 - [Blog Posts About Nx](https://blog.nrwl.io/nx/home)
 
 <p style="text-align: center;"><a href="https://nx.dev/#learning-materials" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-courses-and-videos.svg" 

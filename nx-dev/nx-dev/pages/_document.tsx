@@ -28,15 +28,6 @@ export default function Document(): JSX.Element {
           href="/favicon/safari-pinned-tab.svg"
           color="#5bbad5"
         />
-        <meta name="apple-mobile-web-app-title" content="Nx" />
-        <meta name="application-name" content="Nx" />
-        <meta
-          name="msapplication-TileColor"
-          content="#DA532C"
-          key="windows-tile-color"
-        />
-        <meta name="theme-color" content="#FFFFFF" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <script
           dangerouslySetInnerHTML={{
             __html: `

@@ -5,7 +5,6 @@ import {
   readJson,
   updateJson,
 } from '@nrwl/devkit';
-import { convertToNxProjectGenerator } from '@nrwl/workspace/generators';
 import { prettierVersion } from '@nrwl/workspace/src/utils/versions';
 import { nxVersion } from '../../utils/versions';
 import type { ProjectMigrator } from './migrators';
@@ -13,12 +12,13 @@ import { AppMigrator, LibMigrator } from './migrators';
 import type { GeneratorOptions } from './schema';
 import {
   cleanupEsLintPackages,
+  convertAllToNxProjects,
   createNxJson,
   createRootKarmaConfig,
   createWorkspaceFiles,
-  decorateAngularCli,
   deleteAngularJson,
   deleteGitKeepFilesIfNotNeeded,
+  ensureAngularDevKitPeerDependenciesAreInstalled,
   formatFilesTask,
   getAllProjects,
   getWorkspaceRootFileTypesInfo,
@@ -29,7 +29,6 @@ import {
   updateRootTsConfig,
   updateVsCodeRecommendedExtensions,
   updateWorkspaceConfigDefaults,
-  validateProjects,
   validateWorkspace,
 } from './utilities';
 
@@ -41,6 +40,9 @@ export async function migrateFromAngularCli(
   const projects = getAllProjects(tree);
   const options = normalizeOptions(tree, rawOptions, projects);
 
+  const angularJson = readJson(tree, 'angular.json') as any;
+  ensureAngularDevKitPeerDependenciesAreInstalled(tree);
+
   if (options.preserveAngularCliLayout) {
     addDependenciesToPackageJson(
       tree,
@@ -51,8 +53,7 @@ export async function migrateFromAngularCli(
         prettier: prettierVersion,
       }
     );
-    createNxJson(tree, options);
-    decorateAngularCli(tree);
+    createNxJson(tree, options, angularJson.defaultProject);
     updateVsCodeRecommendedExtensions(tree);
     await updatePrettierConfig(tree);
 
@@ -62,15 +63,12 @@ export async function migrateFromAngularCli(
       version: 2,
       $schema: undefined,
     }));
-    await convertToNxProjectGenerator(tree, { all: true, skipFormat: true });
+    convertAllToNxProjects(tree);
   } else {
     const migrators: ProjectMigrator[] = [
       ...projects.apps.map((app) => new AppMigrator(tree, options, app)),
       ...projects.libs.map((lib) => new LibMigrator(tree, options, lib)),
     ];
-
-    // validate all projects
-    validateProjects(migrators);
 
     const workspaceRootFileTypesInfo = getWorkspaceRootFileTypesInfo(
       tree,
@@ -94,11 +92,10 @@ export async function migrateFromAngularCli(
       version: 2,
       $schema: undefined,
     }));
-    createNxJson(tree, options);
+    createNxJson(tree, options, angularJson.defaultProject);
     updateWorkspaceConfigDefaults(tree);
     updateRootTsConfig(tree);
     updatePackageJson(tree);
-    decorateAngularCli(tree);
     await createWorkspaceFiles(tree);
 
     // migrate all projects

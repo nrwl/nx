@@ -1,4 +1,3 @@
-import { BuilderContext } from '@angular-devkit/architect';
 import {
   calculateProjectDependencies,
   createTmpTsConfig,
@@ -9,7 +8,7 @@ import { join } from 'path';
 
 export function createTmpTsConfigForBuildableLibs(
   tsConfigPath: string,
-  context: BuilderContext,
+  context: import('@angular-devkit/architect').BuilderContext,
   target?: string
 ) {
   let dependencies: DependentBuildableProjectNode[];

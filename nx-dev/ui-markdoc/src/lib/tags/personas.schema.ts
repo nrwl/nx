@@ -15,12 +15,19 @@ export const persona: Schema = {
     },
     type: {
       type: 'String',
-      default: 'zahra',
+      default: 'integrated',
       required: true,
-      matches: ['zahra', 'logan', 'harold'],
+      matches: [
+        'cache',
+        'distribute',
+        'javascript',
+        'lerna',
+        'react',
+        'angular',
+        'integrated',
+      ],
       errorLevel: 'critical',
-      description:
-        'Controls the color and image of the persona. Can be: "zahra", "logan", "harold".',
+      description: 'Controls the icon of the persona.',
     },
     url: {
       type: 'String',

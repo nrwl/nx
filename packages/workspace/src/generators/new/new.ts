@@ -1,7 +1,6 @@
 import {
   addDependenciesToPackageJson,
   formatFiles,
-  getWorkspacePath as devkitGetWorkspacePath,
   installPackagesTask,
   names,
   PackageManager,
@@ -24,7 +23,12 @@ interface Schema {
   nxCloud?: boolean;
   preset: string;
   defaultBase: string;
+  framework?: string;
+  docker?: boolean;
   linter?: Linter;
+  bundler?: 'vite' | 'webpack';
+  standaloneApi?: boolean;
+  routing?: boolean;
   packageManager?: PackageManager;
 }
 
@@ -39,13 +43,19 @@ export async function newGenerator(host: Tree, options: Schema) {
   await generateWorkspaceFiles(host, { ...options, nxCloud: undefined } as any);
 
   addPresetDependencies(host, options);
+  const isCustomPreset = !Object.values(Preset).includes(options.preset as any);
   addCloudDependencies(host, options);
 
   await formatFiles(host);
 
   return async () => {
     installPackagesTask(host, false, options.directory, options.packageManager);
-    if (options.preset !== Preset.NPM && options.preset !== Preset.Core) {
+    // TODO: move all of these into create-nx-workspace
+    if (
+      options.preset !== Preset.NPM &&
+      options.preset !== Preset.Core &&
+      !isCustomPreset
+    ) {
       await generatePreset(host, options);
     }
   };
@@ -68,9 +78,9 @@ function validateOptions(options: Schema, host: Tree) {
     throw new Error(`Cannot select nxCloud when skipInstall is set to true.`);
   }
 
-  if (devkitGetWorkspacePath(host)) {
+  if (options.preset === Preset.NodeServer && !options.framework) {
     throw new Error(
-      'Cannot generate a new workspace within an existing workspace'
+      `Cannot generate ${options.preset} without selecting a framework`
     );
   }
 

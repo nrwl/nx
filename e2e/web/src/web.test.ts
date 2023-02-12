@@ -34,7 +34,6 @@ describe('Web Components Applications', () => {
     checkFilesExist(
       `dist/apps/${appName}/index.html`,
       `dist/apps/${appName}/runtime.js`,
-      `dist/apps/${appName}/polyfills.js`,
       `dist/apps/${appName}/main.js`,
       `dist/apps/${appName}/styles.css`
     );
@@ -60,18 +59,6 @@ describe('Web Components Applications', () => {
     }
   }, 500000);
 
-  it('should be able to generate a web app with standaloneConfig', async () => {
-    const appName = uniq('app');
-    runCLI(
-      `generate @nrwl/web:app ${appName} --bundler=webpack --no-interactive --standalone-config`
-    );
-
-    checkFilesExist(`apps/${appName}/project.json`);
-
-    const lintResults = runCLI(`lint ${appName}`);
-    expect(lintResults).toContain('All files pass linting.');
-  }, 120000);
-
   it('should remove previous output before building', async () => {
     const appName = uniq('app');
     const libName = uniq('lib');
@@ -80,7 +67,7 @@ describe('Web Components Applications', () => {
       `generate @nrwl/web:app ${appName} --bundler=webpack --no-interactive --compiler swc`
     );
     runCLI(
-      `generate @nrwl/react:lib ${libName} --bundler=rollup --no-interactive --compiler swc`
+      `generate @nrwl/react:lib ${libName} --bundler=rollup --no-interactive --compiler swc --unitTestRunner=jest`
     );
 
     createFile(`dist/apps/${appName}/_should_remove.txt`);
@@ -111,23 +98,6 @@ describe('Web Components Applications', () => {
     createFile(`dist/libs/${libName}/_should_keep.txt`);
     runCLI(`build ${libName} --delete-output-path=false --outputHashing none`);
     checkFilesExist(`dist/libs/${libName}/_should_keep.txt`);
-  }, 120000);
-
-  it('should do another build if differential loading is needed', async () => {
-    const appName = uniq('app');
-
-    runCLI(
-      `generate @nrwl/web:app ${appName} --bundler=webpack --no-interactive`
-    );
-
-    updateFile(`apps/${appName}/browserslist`, `IE 9-11`);
-
-    runCLI(`build ${appName} --outputHashing=none`);
-
-    checkFilesExist(
-      `dist/apps/${appName}/main.js`,
-      `dist/apps/${appName}/main.es5.js`
-    );
   }, 120000);
 
   it('should emit decorator metadata when it is enabled in tsconfig', async () => {
@@ -185,19 +155,6 @@ describe('Web Components Applications', () => {
     );
   }, 120000);
 
-  it('should support workspaces w/o workspace config file', async () => {
-    removeFile('workspace.json');
-    const myapp = uniq('myapp');
-    runCLI(
-      `generate @nrwl/web:app ${myapp} --bundler=webpack --directory=myDir`
-    );
-
-    runCLI(`build my-dir-${myapp}`);
-    expect(() =>
-      checkFilesDoNotExist('workspace.json', 'angular.json')
-    ).not.toThrow();
-  }, 1000000);
-
   it('should support custom webpackConfig option', async () => {
     const appName = uniq('app');
     runCLI(
@@ -213,9 +170,10 @@ describe('Web Components Applications', () => {
     updateFile(
       `apps/${appName}/webpack.config.js`,
       `
-      module.exports = (config, context) => {
+      const { composePlugins, withNx, withWeb } = require('@nrwl/webpack');
+      module.exports = composePlugins(withNx(), withWeb(), (config, context) => {
         return config;
-      };
+      });
     `
     );
     runCLI(`build ${appName} --outputHashing none`);
@@ -227,9 +185,10 @@ describe('Web Components Applications', () => {
     updateFile(
       `apps/${appName}/webpack.config.js`,
       `
-      module.exports = async (config, context) => {
+      const { composePlugins, withNx, withWeb } = require('@nrwl/webpack');
+      module.exports = composePlugins(withNx(), withWeb(), async (config, context) => {
         return config;
-      };
+      });
     `
     );
     runCLI(`build ${appName} --outputHashing none`);
@@ -241,9 +200,10 @@ describe('Web Components Applications', () => {
     updateFile(
       `apps/${appName}/webpack.config.js`,
       `
-      module.exports = Promise.resolve((config, context) => {
+      const { composePlugins, withNx, withWeb } = require('@nrwl/webpack');
+      module.exports = composePlugins(withNx(), withWeb(), Promise.resolve((config, context) => {
         return config;
-      });
+      }));
     `
     );
     runCLI(`build ${appName} --outputHashing none`);
@@ -329,14 +289,17 @@ describe('CLI - Environment Variables', () => {
 
     updateFile(main2, `${newCode2}\n${content2}`);
 
-    runCLI(`run-many --target build --all --no-optimization`, {
-      env: {
-        ...process.env,
-        NODE_ENV: 'test',
-        NX_BUILD: '52',
-        NX_API: 'QA',
-      },
-    });
+    runCLI(
+      `run-many --target build --all --outputHashing=none --optimization=false`,
+      {
+        env: {
+          ...process.env,
+          NODE_ENV: 'test',
+          NX_BUILD: '52',
+          NX_API: 'QA',
+        },
+      }
+    );
     expect(readFile(`dist/apps/${appName}/main.js`)).toContain(
       'const envVars = ["test", "52", "QA", "ws-base", "ws-env-local", "ws-local-env", "app-base", "app-env-local", "app-local-env", "shared-in-app-env-local"];'
     );

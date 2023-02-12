@@ -25,7 +25,8 @@ export default async function* runIosExecutor(
   if (platform() !== 'darwin') {
     throw new Error(`The run-ios build requires Mac to run`);
   }
-  const projectRoot = context.workspace.projects[context.projectName].root;
+  const projectRoot =
+    context.projectsConfigurations.projects[context.projectName].root;
   ensureNodeModulesSymlink(context.root, projectRoot);
   if (options.sync) {
     displayNewlyAddedDepsMessage(

@@ -1,9 +1,5 @@
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import {
-  Tree,
-  readWorkspaceConfiguration,
-  updateWorkspaceConfiguration,
-} from '@nrwl/devkit';
+import { readNxJson, Tree, updateNxJson } from '@nrwl/devkit';
 import addBabelInputs from './add-babel-inputs';
 
 describe('15.0.0 migration (add-babel-inputs)', () => {
@@ -14,8 +10,7 @@ describe('15.0.0 migration (add-babel-inputs)', () => {
   });
 
   it('should add babel.config.json to sharedGlobals', async () => {
-    updateWorkspaceConfiguration(tree, {
-      version: 2,
+    updateNxJson(tree, {
       namedInputs: {
         default: ['{projectRoot}/**/*', 'sharedGlobals'],
         sharedGlobals: [],
@@ -26,7 +21,7 @@ describe('15.0.0 migration (add-babel-inputs)', () => {
 
     await addBabelInputs(tree);
 
-    const updated = readWorkspaceConfiguration(tree);
+    const updated = readNxJson(tree);
     expect(updated).toMatchInlineSnapshot(`
       Object {
         "namedInputs": Object {
@@ -41,14 +36,12 @@ describe('15.0.0 migration (add-babel-inputs)', () => {
             "{workspaceRoot}/babel.config.json",
           ],
         },
-        "version": 2,
       }
     `);
   });
 
   it('should add babel.config.js', async () => {
-    updateWorkspaceConfiguration(tree, {
-      version: 2,
+    updateNxJson(tree, {
       namedInputs: {
         default: ['{projectRoot}/**/*', 'sharedGlobals'],
         sharedGlobals: [],
@@ -59,7 +52,7 @@ describe('15.0.0 migration (add-babel-inputs)', () => {
 
     await addBabelInputs(tree);
 
-    const updated = readWorkspaceConfiguration(tree);
+    const updated = readNxJson(tree);
     expect(updated).toMatchInlineSnapshot(`
       Object {
         "namedInputs": Object {
@@ -74,7 +67,6 @@ describe('15.0.0 migration (add-babel-inputs)', () => {
             "{workspaceRoot}/babel.config.js",
           ],
         },
-        "version": 2,
       }
     `);
   });

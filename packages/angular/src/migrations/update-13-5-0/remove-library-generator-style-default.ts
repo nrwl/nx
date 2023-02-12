@@ -1,23 +1,18 @@
-import {
-  formatFiles,
-  readWorkspaceConfiguration,
-  Tree,
-  updateWorkspaceConfiguration,
-} from '@nrwl/devkit';
+import { formatFiles, readNxJson, Tree, updateNxJson } from '@nrwl/devkit';
 
 export default async function (tree: Tree) {
-  const workspace = readWorkspaceConfiguration(tree);
+  const nxJson = readNxJson(tree);
 
-  if (!workspace.generators) {
+  if (!nxJson.generators) {
     return;
   }
 
-  if (workspace.generators['@nrwl/angular:library']) {
-    delete workspace.generators['@nrwl/angular:library'].style;
-    updateWorkspaceConfiguration(tree, workspace);
-  } else if (workspace.generators['@nrwl/angular']?.library) {
-    delete workspace.generators['@nrwl/angular'].library.style;
-    updateWorkspaceConfiguration(tree, workspace);
+  if (nxJson.generators['@nrwl/angular:library']) {
+    delete nxJson.generators['@nrwl/angular:library'].style;
+    updateNxJson(tree, nxJson);
+  } else if (nxJson.generators['@nrwl/angular']?.library) {
+    delete nxJson.generators['@nrwl/angular'].library.style;
+    updateNxJson(tree, nxJson);
   }
 
   await formatFiles(tree);

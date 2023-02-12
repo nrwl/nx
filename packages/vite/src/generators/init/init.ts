@@ -2,10 +2,10 @@ import {
   addDependenciesToPackageJson,
   convertNxGenerator,
   readJson,
-  readWorkspaceConfiguration,
+  readNxJson,
   Tree,
   updateJson,
-  updateWorkspaceConfiguration,
+  updateNxJson,
 } from '@nrwl/devkit';
 
 import {
@@ -19,9 +19,9 @@ import {
   viteTsConfigPathsVersion,
   viteVersion,
 } from '../../utils/versions';
-import { Schema } from './schema';
+import { InitGeneratorSchema } from './schema';
 
-function checkDependenciesInstalled(host: Tree, schema: Schema) {
+function checkDependenciesInstalled(host: Tree, schema: InitGeneratorSchema) {
   const packageJson = readJson(host, 'package.json');
   const devDependencies = {};
   const dependencies = {};
@@ -63,31 +63,29 @@ function moveToDevDependencies(tree: Tree) {
 }
 
 export function createVitestConfig(tree: Tree) {
-  const workspaceConfiguration = readWorkspaceConfiguration(tree);
+  const nxJson = readNxJson(tree);
 
-  const productionFileSet = workspaceConfiguration.namedInputs?.production;
+  const productionFileSet = nxJson.namedInputs?.production;
   if (productionFileSet) {
     productionFileSet.push(
       '!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)',
       '!{projectRoot}/tsconfig.spec.json'
     );
 
-    workspaceConfiguration.namedInputs.production = Array.from(
-      new Set(productionFileSet)
-    );
+    nxJson.namedInputs.production = Array.from(new Set(productionFileSet));
   }
 
-  workspaceConfiguration.targetDefaults ??= {};
-  workspaceConfiguration.targetDefaults.test ??= {};
-  workspaceConfiguration.targetDefaults.test.inputs ??= [
+  nxJson.targetDefaults ??= {};
+  nxJson.targetDefaults.test ??= {};
+  nxJson.targetDefaults.test.inputs ??= [
     'default',
     productionFileSet ? '^production' : '^default',
   ];
 
-  updateWorkspaceConfiguration(tree, workspaceConfiguration);
+  updateNxJson(tree, nxJson);
 }
 
-export function initGenerator(tree: Tree, schema: Schema) {
+export function initGenerator(tree: Tree, schema: InitGeneratorSchema) {
   moveToDevDependencies(tree);
   createVitestConfig(tree);
   const installTask = checkDependenciesInstalled(tree, schema);

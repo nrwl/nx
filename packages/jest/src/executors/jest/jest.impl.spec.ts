@@ -37,7 +37,7 @@ describe('Jest Executor', () => {
     mockContext = {
       root: '/root',
       projectName: 'proj',
-      workspace: {
+      projectsConfigurations: {
         version: 2,
         projects: {
           proj: {
@@ -49,6 +49,8 @@ describe('Jest Executor', () => {
             },
           },
         },
+      },
+      nxJsonConfiguration: {
         npmScope: 'test',
       },
       target: {

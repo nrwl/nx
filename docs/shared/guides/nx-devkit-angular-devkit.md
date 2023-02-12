@@ -1,7 +1,7 @@
 # Nx Devkit and Angular Devkit
 
 {% callout type="note" title="Nx & Angular" %}
-This document covers the difference between Nx Devkit and Angular Devkit. See the [Nx Devkit](/devkit/index) guide for more in-depth details about Nx Devkit.
+This document covers the difference between Nx Devkit and Angular Devkit. See the [Nx Devkit](/packages/devkit/documents/index) guide for more in-depth details about Nx Devkit.
 {% /callout %}
 
 Nx comes with a devkit to write generators and executors, but you can also use Angular devkit (schematics and builders). In other words, you can use an Angular schematic to implement a generator, and you can use an Angular builder to implement an executor.
@@ -74,7 +74,7 @@ export default function (options: Schema): Rule {
 ### Notable Differences
 
 - Nx Devkit generators do not use partial application. An Angular Schematic returns a rule that is then invoked with a tree.
-- Nx Devkit generators do not use RxJS observables. Instead you invoke the helpers directly, which makes them more debuggable. As you step through the generator you can see the tree being updated.
+- Nx Devkit generators do not use RxJS observables. Instead, you invoke the helpers directly, which makes them more debuggable. As you step through the generator you can see the tree being updated.
 - There are more affordances for commonly used operations. For instance, `chain([mergeWith(apply(url` is replaced with `generateFiles`)
 - Nx Devkit generators return a function that performs side effects. Angular Schematics have to create a custom task runner and register a task using it.
 - Nx Devkit generators are composed as any other JS function. You do need to go through a special resolution step (`externalSchematic`) that is required when using Angular Schematics.
@@ -86,7 +86,7 @@ The Nx CLI can invoke Nx Generator or Angular Schematics directly. When the user
 
 ```shell
 nx g mygenerator params
-nx g mygenerator params  # will work exactly the same same as the line above
+nx g mygenerator params  # will work exactly the same as the line above
 ```
 
 The Nx CLI will see what type of generator `mygenerator` is and will invoke it using the right machinery. The user doesn't have to know how the generator is implemented.
@@ -130,7 +130,7 @@ Then, you might need to register it in the `collections.json`:
 
 ```typescript
 export const libraryGenerator = wrapAngularDevkitSchematic(
-  '@nrwl/angular',
+  '@schematics/angular',
   'library'
 );
 

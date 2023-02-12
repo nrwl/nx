@@ -17,6 +17,7 @@ import { findNodes } from 'nx/src/utils/typescript';
 import { NormalizedSchema } from '../schema';
 import { normalizeSlashes } from './utils';
 import { relative } from 'path';
+import { parse } from 'jsonc-parser';
 
 /**
  * Updates all the imports in the workspace and modifies the tsconfig appropriately.
@@ -42,7 +43,15 @@ export function updateImports(
   let tsConfig: any;
   let fromPath: string;
   if (tree.exists(tsConfigPath)) {
-    tsConfig = JSON.parse(tree.read(tsConfigPath).toString('utf-8'));
+    const tsConfigRawContents = tree.read(tsConfigPath).toString('utf-8');
+    tsConfig = (() => {
+      try {
+        return JSON.parse(tsConfigRawContents);
+      } catch {
+        return parse(tsConfigRawContents);
+      }
+    })();
+
     fromPath = Object.keys(tsConfig.compilerOptions.paths).find((path) =>
       tsConfig.compilerOptions.paths[path].some((x) =>
         x.startsWith(project.sourceRoot)

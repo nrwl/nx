@@ -3,4 +3,5 @@ export interface CypressComponentConfigurationSchema {
   generateTests: boolean;
   skipFormat?: boolean;
   buildTarget?: string;
+  bundler?: 'webpack' | 'vite';
 }

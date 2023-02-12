@@ -21,18 +21,16 @@ import {
   reactNativeSvgTransformerVersion,
   reactNativeSvgVersion,
   expoCliVersion,
-  svgrWebpackVersion,
   babelPresetExpoVersion,
   easCliVersion,
   deprecatedExpoCliVersion,
-} from '../../utils/versions';
-
-import {
-  reactDomVersion,
+  expoWebpackConfig,
   reactVersion,
   reactTestRendererVersion,
   typesReactVersion,
-} from '@nrwl/react/src/utils/versions';
+  reactDomVersion,
+} from '../../utils/versions';
+
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { jestInitGenerator } from '@nrwl/jest';
 import { detoxInitGenerator } from '@nrwl/detox';
@@ -44,7 +42,12 @@ export async function expoInitGenerator(host: Tree, schema: Schema) {
   addGitIgnoreEntry(host);
   initRootBabelConfig(host);
 
-  const tasks = [moveDependency(host), updateDependencies(host)];
+  const tasks = [];
+
+  if (!schema.skipPackageJson) {
+    tasks.push(moveDependency(host));
+    tasks.push(updateDependencies(host));
+  }
 
   if (!schema.unitTestRunner || schema.unitTestRunner === 'jest') {
     const jestTask = jestInitGenerator(host, {});
@@ -75,6 +78,7 @@ export function updateDependencies(host: Tree) {
       'expo-status-bar': expoStatusBarVersion,
       'react-native-web': reactNativeWebVersion,
       '@expo/metro-config': expoMetroConfigVersion,
+      '@expo/webpack-config': expoWebpackConfig,
       'react-native-svg-transformer': reactNativeSvgTransformerVersion,
       'react-native-svg': reactNativeSvgVersion,
     },
@@ -89,7 +93,6 @@ export function updateDependencies(host: Tree) {
       'expo-cli': deprecatedExpoCliVersion,
       '@expo/cli': expoCliVersion,
       'eas-cli': easCliVersion,
-      '@svgr/webpack': svgrWebpackVersion,
       'babel-preset-expo': babelPresetExpoVersion,
     }
   );

@@ -24,7 +24,7 @@ export interface Schema {
   port?: number;
   setParserOptionsProject?: boolean;
   skipPackageJson?: boolean;
-  skipDefaultProject?: boolean;
   standalone?: boolean;
   rootProject?: boolean;
+  minimal?: boolean;
 }

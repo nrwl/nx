@@ -1,0 +1,122 @@
+import * as chalk from 'chalk';
+import { readFileSync } from 'fs';
+import { readJsonSync } from 'fs-extra';
+import { join } from 'path';
+import { register as registerTsConfigPaths } from 'tsconfig-paths';
+import { examples } from '../../../packages/nx/src/command-line/examples';
+import {
+  formatDeprecated,
+  generateMarkdownFile,
+  generateOptionsMarkdown,
+  getCommands,
+  parseCommand,
+  ParsedCommand,
+} from '../utils';
+
+const importFresh = require('import-fresh');
+
+const sharedCommands = ['generate', 'run'];
+
+export async function generateCliDocumentation(
+  commandsOutputDirectory: string
+) {
+  /**
+   * For certain commands, they will output dynamic data at runtime in a real workspace,
+   * so we leverage an envrionment variable to inform the logic of the context that we
+   * are just statically generating documentation for the current execution.
+   */
+  process.env.NX_GENERATE_DOCS_PROCESS = 'true';
+
+  const config = readJsonSync(
+    join(__dirname, '../../../tsconfig.base.json')
+  ).compilerOptions;
+  registerTsConfigPaths(config);
+
+  console.log(`\n${chalk.blue('i')} Generating Documentation for Nx Commands`);
+
+  const { commandsObject } = importFresh(
+    '../../../packages/nx/src/command-line/nx-commands'
+  );
+
+  function generateMarkdown(command: ParsedCommand) {
+    let template = `
+---
+title: "${command.name} - CLI command"
+description: "${command.description}"
+---
+
+# ${command.name}
+
+${formatDeprecated(command.description, command.deprecated)}
+
+## Usage
+
+\`\`\`shell
+nx ${command.commandString}
+\`\`\`
+
+Install \`nx\` globally to invoke the command directly using \`nx\`, or use \`npx nx\`, \`yarn nx\`, or \`pnpm nx\`.\n`;
+
+    if (examples[command.name] && examples[command.name].length > 0) {
+      template += `\n### Examples\n`;
+      examples[command.name].forEach((example) => {
+        template += `${example.description}:\n\`\`\`shell\n nx ${example.command}\n\`\`\`\n`;
+      });
+    }
+
+    template += generateOptionsMarkdown(command);
+
+    return {
+      name: command.name
+        .replace(':', '-')
+        .replace(' ', '-')
+        .replace(/[\]\[.]+/gm, ''),
+      template,
+    };
+  }
+
+  // TODO: Try to add option's type, examples, and group?
+  const nxCommands = getCommands(commandsObject);
+  await Promise.all(
+    Object.keys(nxCommands)
+      .filter((name) => !sharedCommands.includes(name))
+      .filter((name) => nxCommands[name].description)
+      .map((name) => parseCommand(name, nxCommands[name]))
+      .map(async (command) => generateMarkdown(await command))
+      .map(async (templateObject) =>
+        generateMarkdownFile(commandsOutputDirectory, await templateObject)
+      )
+  );
+
+  await Promise.all(
+    sharedCommands.map((command) => {
+      const sharedCommandsDirectory = join(
+        __dirname,
+        '../../../docs/shared/cli'
+      );
+      const sharedCommandsOutputDirectory = join(
+        __dirname,
+        '../../../docs/',
+        'generated',
+        'cli'
+      );
+
+      const templateObject = {
+        name: command,
+        template: readFileSync(
+          join(sharedCommandsDirectory, `${command}.md`),
+          'utf-8'
+        ),
+      };
+
+      return generateMarkdownFile(
+        sharedCommandsOutputDirectory,
+        templateObject
+      );
+    })
+  );
+
+  delete process.env.NX_GENERATE_DOCS_PROCESS;
+
+  console.log(`${chalk.green('✓')} Generated Documentation for Nx Commands`);
+}

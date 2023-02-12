@@ -73,4 +73,4 @@ For a more in-depth understanding of the caching implementation and to fine-tune
 ## Local Computation Caching
 
 By default, Nx uses a local computation cache. Nx stores the cached values only for a week, after which they
-are deleted. To clear the cache run [`nx reset`](/nx/reset), and Nx will create a new one the next time it tries to access it.
+are deleted. To clear the cache run [`nx reset`](/packages/nx/documents/reset), and Nx will create a new one the next time it tries to access it.

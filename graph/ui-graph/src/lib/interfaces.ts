@@ -4,6 +4,12 @@ import type {
   ProjectGraphProjectNode,
   TaskGraph,
 } from '@nrwl/devkit';
+import { VirtualElement } from '@floating-ui/react-dom';
+import {
+  ProjectEdgeNodeTooltipProps,
+  ProjectNodeToolTipProps,
+  TaskNodeTooltipProps,
+} from '@nrwl/graph/ui-tooltips';
 
 export interface GraphPerfReport {
   renderTime: number;
@@ -94,4 +100,17 @@ export type TaskGraphRenderEvents =
   | {
       type: 'setGroupByProject';
       groupByProject: boolean;
+    };
+
+export type TooltipEvent =
+  | {
+      ref: VirtualElement;
+      type: 'projectNode';
+      props: ProjectNodeToolTipProps;
+    }
+  | { ref: VirtualElement; type: 'taskNode'; props: TaskNodeTooltipProps }
+  | {
+      ref: VirtualElement;
+      type: 'projectEdge';
+      props: ProjectEdgeNodeTooltipProps;
     };

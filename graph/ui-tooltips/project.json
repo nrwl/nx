@@ -1,0 +1,38 @@
+{
+  "name": "graph-ui-tooltips",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "graph/ui-tooltips/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "lint": {},
+    "test": {},
+    "storybook": {
+      "executor": "@nrwl/storybook:storybook",
+      "options": {
+        "uiFramework": "@storybook/react",
+        "port": 4400,
+        "configDir": "graph/ui-tooltips/.storybook"
+      },
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      }
+    },
+    "build-storybook": {
+      "executor": "@nrwl/storybook:build",
+      "outputs": ["{options.outputDir}"],
+      "options": {
+        "uiFramework": "@storybook/react",
+        "configDir": "graph/ui-tooltips/.storybook",
+        "outputDir": "dist/storybook/graph-ui-tooltips"
+      },
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      }
+    }
+  }
+}

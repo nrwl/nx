@@ -22,15 +22,16 @@ export async function printAffected(
     nxArgs.type ? p.type === nxArgs.type : true
   );
   const projectNames = projectsForType.map((p) => p.name);
-  const tasksJson = nxArgs.target
-    ? await createTasks(
-        projectsForType,
-        projectGraph,
-        nxArgs,
-        nxJson,
-        overrides
-      )
-    : [];
+  const tasksJson =
+    nxArgs.targets && nxArgs.targets.length > 0
+      ? await createTasks(
+          projectsForType,
+          projectGraph,
+          nxArgs,
+          nxJson,
+          overrides
+        )
+      : [];
   const result = {
     tasks: tasksJson,
     projects: projectNames,
@@ -53,24 +54,28 @@ async function createTasks(
   const workspaces = new Workspaces(workspaceRoot);
   const hasher = new Hasher(projectGraph, nxJson, {});
   const execCommand = getPackageManagerCommand().exec;
-
-  const tasks: Task[] = affectedProjectsWithTargetAndConfig.map(
-    (affectedProject) => {
-      const p = new ProcessTasks({}, projectGraph);
+  const p = new ProcessTasks({}, projectGraph);
+  const tasks = [];
+  for (let target of nxArgs.targets) {
+    for (const affectedProject of affectedProjectsWithTargetAndConfig) {
       const resolvedConfiguration = p.resolveConfiguration(
         affectedProject,
-        nxArgs.target,
+        target,
         nxArgs.configuration
       );
-      return p.createTask(
-        p.getId(affectedProject.name, nxArgs.target, resolvedConfiguration),
-        affectedProject,
-        nxArgs.target,
-        resolvedConfiguration,
-        overrides
-      );
+      try {
+        tasks.push(
+          p.createTask(
+            p.getId(affectedProject.name, target, resolvedConfiguration),
+            affectedProject,
+            target,
+            resolvedConfiguration,
+            overrides
+          )
+        );
+      } catch (e) {}
     }
-  );
+  }
 
   await Promise.all(
     tasks.map((t) => hashTask(workspaces, hasher, projectGraph, {} as any, t))

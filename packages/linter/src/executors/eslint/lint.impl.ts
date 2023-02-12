@@ -64,8 +64,8 @@ export default async function run(
       )
     ) {
       let eslintConfigPathForError = `for ${projectName}`;
-      if (context.workspace?.projects?.[projectName]?.root) {
-        const { root } = context.workspace.projects[projectName];
+      if (context.projectsConfigurations?.projects?.[projectName]?.root) {
+        const { root } = context.projectsConfigurations.projects[projectName];
         eslintConfigPathForError = `\`${root}/.eslintrc.json\``;
       }
 

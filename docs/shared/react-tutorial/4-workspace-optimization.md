@@ -181,7 +181,7 @@ webpack compiled successfully (06e95dfdacea84c7)
 
  ———————————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target build for project store and 1 task(s) it depends on (5s)
+ >  NX   Successfully ran target build for project store and 1 task(s) they depend on (5s)
 ```
 
 Notice the line here:

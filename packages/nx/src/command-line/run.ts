@@ -26,6 +26,7 @@ import {
   readProjectsConfigurationFromProjectGraph,
 } from '../project-graph/project-graph';
 import { ProjectGraph } from '../config/project-graph';
+import { readNxJson } from '../config/configuration';
 
 export interface Target {
   project: string;
@@ -45,10 +46,10 @@ export function printRunHelp(
 }
 
 export function validateProject(
-  workspace: ProjectsConfigurations,
+  projects: ProjectsConfigurations,
   projectName: string
 ) {
-  const project = workspace.projects[projectName];
+  const project = projects.projects[projectName];
   if (!project) {
     throw new Error(`Could not find project "${projectName}"`);
   }
@@ -135,22 +136,23 @@ async function runExecutorInternal<T extends { success: boolean }>(
   overrides: { [k: string]: any },
   root: string,
   cwd: string,
-  workspace: ProjectsConfigurations & NxJsonConfiguration,
+  projectsConfigurations: ProjectsConfigurations,
+  nxJsonConfiguration: NxJsonConfiguration,
   projectGraph: ProjectGraph,
   isVerbose: boolean,
   printHelp: boolean
 ): Promise<AsyncIterableIterator<T>> {
-  validateProject(workspace, project);
+  validateProject(projectsConfigurations, project);
 
   const ws = new Workspaces(root);
-  const proj = workspace.projects[project];
+  const proj = projectsConfigurations.projects[project];
   const targetConfig =
     proj.targets?.[target] ||
     createImplicitTargetConfig(root, proj, target) ||
     mergePluginTargetsWithNxTargets(
       proj.root,
       proj.targets,
-      loadNxPlugins(workspace.plugins, [root], root)
+      loadNxPlugins(nxJsonConfiguration.plugins, [root], root)
     )[target];
 
   if (!targetConfig) {
@@ -188,7 +190,9 @@ async function runExecutorInternal<T extends { success: boolean }>(
     const r = implementation(combinedOptions, {
       root,
       target: targetConfig,
-      workspace,
+      workspace: { ...projectsConfigurations, ...nxJsonConfiguration },
+      projectsConfigurations,
+      nxJsonConfiguration,
       projectName: project,
       targetName: target,
       configurationName: configuration,
@@ -266,7 +270,8 @@ export async function runExecutor<T extends { success: boolean }>(
     },
     context.root,
     context.cwd,
-    context.workspace,
+    context.projectsConfigurations,
+    context.nxJsonConfiguration,
     context.projectGraph,
     context.isVerbose,
     false
@@ -287,14 +292,16 @@ export function run(
 ) {
   const projectGraph = readCachedProjectGraph();
   return handleErrors(isVerbose, async () => {
-    const workspace = readProjectsConfigurationFromProjectGraph(projectGraph);
+    const projectsConfigurations =
+      readProjectsConfigurationFromProjectGraph(projectGraph);
     return iteratorToProcessStatusCode(
       await runExecutorInternal(
         targetDescription,
         overrides,
         root,
         cwd,
-        workspace,
+        projectsConfigurations,
+        readNxJson(),
         projectGraph,
         isVerbose,
         isHelp

@@ -12,7 +12,6 @@ export interface WebDevServerOptions {
   hmr: boolean;
   watch: boolean;
   allowedHosts: string;
-  maxWorkers?: number;
   memoryLimit?: number;
   baseHref?: string;
 }

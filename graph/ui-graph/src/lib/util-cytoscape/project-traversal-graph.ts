@@ -317,12 +317,13 @@ export class ProjectTraversalGraph {
       }
     });
 
-    const projectElements = projectNodes.map((projectNode) =>
-      projectNode.getCytoscapeNodeDef(groupByFolder)
-    );
+    const projectElements: (ElementDefinition & { pannable?: boolean })[] =
+      projectNodes.map((projectNode) =>
+        projectNode.getCytoscapeNodeDef(groupByFolder)
+      );
 
     const edgeElements = edgeNodes.map((edgeNode) =>
-      edgeNode.getCytosacpeNodeDef()
+      edgeNode.getCytoscapeNodeDef()
     );
 
     elements = projectElements.concat(edgeElements);

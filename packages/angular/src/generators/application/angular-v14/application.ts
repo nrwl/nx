@@ -5,7 +5,6 @@ import {
   Tree,
 } from '@nrwl/devkit';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
-import { convertToNxProjectGenerator } from '@nrwl/workspace/generators';
 import { UnitTestRunner } from '../../../utils/test-runners';
 import { angularInitGenerator } from '../../init/init';
 import { setupTailwindGenerator } from '../../setup-tailwind/setup-tailwind';
@@ -20,7 +19,6 @@ import {
   enableStrictTypeChecking,
   normalizeOptions,
   setApplicationStrictDefault,
-  setDefaultProject,
   updateAppComponentTemplate,
   updateComponentSpec,
   updateConfigFiles,
@@ -69,24 +67,26 @@ export async function applicationGenerator(
   updateConfigFiles(host, options);
   updateAppComponentTemplate(host, options);
 
-  // Create the NxWelcomeComponent
-  const angularComponentSchematic = wrapAngularDevkitSchematic(
-    '@schematics/angular',
-    'component'
-  );
-  await angularComponentSchematic(host, {
-    name: 'NxWelcome',
-    inlineTemplate: true,
-    inlineStyle: true,
-    prefix: options.prefix,
-    skipTests: true,
-    style: options.style,
-    flat: true,
-    viewEncapsulation: 'None',
-    project: options.name,
-    standalone: options.standalone,
-  });
-  updateNxComponentTemplate(host, options);
+  if (!options.minimal) {
+    // Create the NxWelcomeComponent
+    const angularComponentSchematic = wrapAngularDevkitSchematic(
+      '@schematics/angular',
+      'component'
+    );
+    await angularComponentSchematic(host, {
+      name: 'NxWelcome',
+      inlineTemplate: true,
+      inlineStyle: true,
+      prefix: options.prefix,
+      skipTests: true,
+      style: options.style,
+      flat: true,
+      viewEncapsulation: 'None',
+      project: options.name,
+      standalone: options.standalone,
+    });
+    updateNxComponentTemplate(host, options);
+  }
 
   if (options.addTailwind) {
     await setupTailwindGenerator(host, {
@@ -109,10 +109,6 @@ export async function applicationGenerator(
   await addE2e(host, options);
   updateEditorTsConfig(host, options);
 
-  if (!options.skipDefaultProject) {
-    setDefaultProject(host, options);
-  }
-
   if (options.backendProject) {
     addProxyConfig(host, options);
   }
@@ -121,13 +117,6 @@ export async function applicationGenerator(
     enableStrictTypeChecking(host, options);
   } else {
     setApplicationStrictDefault(host, false);
-  }
-
-  if (options.standaloneConfig) {
-    await convertToNxProjectGenerator(host, {
-      project: options.name,
-      all: false,
-    });
   }
 
   if (options.standalone) {

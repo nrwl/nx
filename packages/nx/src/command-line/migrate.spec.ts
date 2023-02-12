@@ -1,5 +1,11 @@
+import * as enquirer from 'enquirer';
 import { PackageJson } from '../utils/package-json';
-import { Migrator, normalizeVersion, parseMigrationsOptions } from './migrate';
+import {
+  Migrator,
+  normalizeVersion,
+  parseMigrationsOptions,
+  ResolvedMigrationConfiguration,
+} from './migrate';
 
 const createPackageJson = (
   overrides: Partial<PackageJson> = {}
@@ -14,10 +20,11 @@ describe('Migration', () => {
     it('should throw an error when the target package is not available', async () => {
       const migrator = new Migrator({
         packageJson: createPackageJson(),
-        versions: () => '1.0',
+        getInstalledPackageVersion: () => '1.0',
         fetch: (_p, _v) => {
           throw new Error('cannot fetch');
         },
+        from: {},
         to: {},
       });
 
@@ -29,8 +36,9 @@ describe('Migration', () => {
     it('should return a patch to the new version', async () => {
       const migrator = new Migrator({
         packageJson: createPackageJson(),
-        versions: () => '1.0.0',
+        getInstalledPackageVersion: () => '1.0.0',
         fetch: (_p, _v) => Promise.resolve({ version: '2.0.0' }),
+        from: {},
         to: {},
       });
 
@@ -45,7 +53,7 @@ describe('Migration', () => {
     it('should collect the information recursively from upserts', async () => {
       const migrator = new Migrator({
         packageJson: createPackageJson({ dependencies: { child: '1.0.0' } }),
-        versions: () => '1.0.0',
+        getInstalledPackageVersion: () => '1.0.0',
         fetch: (p, _v) => {
           if (p === 'parent') {
             return Promise.resolve({
@@ -72,6 +80,7 @@ describe('Migration', () => {
             return Promise.resolve(null);
           }
         },
+        from: {},
         to: {},
       });
 
@@ -88,7 +97,7 @@ describe('Migration', () => {
     it('should support the deprecated "alwaysAddToPackageJson" option', async () => {
       const migrator = new Migrator({
         packageJson: createPackageJson({ dependencies: { child1: '1.0.0' } }),
-        versions: () => '1.0.0',
+        getInstalledPackageVersion: () => '1.0.0',
         fetch: (p, _v) => {
           if (p === 'mypackage') {
             return Promise.resolve({
@@ -111,6 +120,7 @@ describe('Migration', () => {
             return Promise.resolve(null);
           }
         },
+        from: {},
         to: {},
       });
 
@@ -127,7 +137,7 @@ describe('Migration', () => {
     it('should stop recursive calls when exact version', async () => {
       const migrator = new Migrator({
         packageJson: createPackageJson({ dependencies: { child: '1.0.0' } }),
-        versions: () => '1.0.0',
+        getInstalledPackageVersion: () => '1.0.0',
         fetch: (p, _v) => {
           if (p === 'parent') {
             return Promise.resolve({
@@ -159,6 +169,7 @@ describe('Migration', () => {
             return Promise.resolve(null);
           }
         },
+        from: {},
         to: {},
       });
 
@@ -180,7 +191,7 @@ describe('Migration', () => {
             grandchild: '1.0.0',
           },
         }),
-        versions: () => '1.0.0',
+        getInstalledPackageVersion: () => '1.0.0',
         fetch: (p, _v) => {
           if (p === 'parent') {
             return Promise.resolve({
@@ -226,6 +237,7 @@ describe('Migration', () => {
             return Promise.resolve({ version: '4.0.0' });
           }
         },
+        from: {},
         to: {},
       });
 
@@ -245,7 +257,7 @@ describe('Migration', () => {
         packageJson: createPackageJson({
           dependencies: { child: '1.0.0', grandchild: '2.0.0' },
         }),
-        versions: () => '1.0.0',
+        getInstalledPackageVersion: () => '1.0.0',
         fetch: (p, _v) => {
           if (p === 'parent') {
             return Promise.resolve({
@@ -277,6 +289,7 @@ describe('Migration', () => {
             return Promise.resolve({ version: '2.0.0' });
           }
         },
+        from: {},
         to: {},
       });
 
@@ -294,7 +307,8 @@ describe('Migration', () => {
         packageJson: createPackageJson({
           dependencies: { child1: '1.0.0', child2: '1.0.0' },
         }),
-        versions: (p) => (p !== 'not-installed' ? '1.0.0' : null),
+        getInstalledPackageVersion: (p) =>
+          p !== 'not-installed' ? '1.0.0' : null,
         fetch: (p, _v) => {
           if (p === 'parent') {
             return Promise.resolve({
@@ -321,6 +335,7 @@ describe('Migration', () => {
             return Promise.resolve(null);
           }
         },
+        from: {},
         to: {},
       });
 
@@ -350,15 +365,15 @@ describe('Migration', () => {
             '@my-company/lib-6': '0.9.0',
           },
         },
-        versions: () => '1.0.0',
+        getInstalledPackageVersion: () => '1.0.0',
         fetch: async (pkg, version) => {
           if (pkg === '@my-company/nx-workspace') {
             return {
               version: '2.0.0',
               packageGroup: [
-                '@my-company/lib-1',
-                '@my-company/lib-2',
-                '@my-company/lib-3',
+                { package: '@my-company/lib-1', version: '*' },
+                { package: '@my-company/lib-2', version: '*' },
+                { package: '@my-company/lib-3', version: '*' },
                 { package: '@my-company/lib-4', version: 'latest' },
               ],
             };
@@ -366,13 +381,17 @@ describe('Migration', () => {
           if (pkg === '@my-company/lib-6') {
             return {
               version: '2.0.0',
-              packageGroup: ['@my-company/nx-workspace'],
+              packageGroup: [
+                { version: '*', package: '@my-company/nx-workspace' },
+              ],
             };
           }
           if (pkg === '@my-company/lib-3') {
             return {
               version: '2.0.0',
-              packageGroup: ['@my-company/lib-3-child'],
+              packageGroup: [
+                { version: '*', package: '@my-company/lib-3-child' },
+              ],
             };
           }
           if (version === 'latest') {
@@ -380,6 +399,7 @@ describe('Migration', () => {
           }
           return { version: '2.0.0' };
         },
+        from: {},
         to: {},
       });
 
@@ -416,7 +436,7 @@ describe('Migration', () => {
             '@my-company/lib-2': '0.9.0',
           },
         },
-        versions: () => '1.0.0',
+        getInstalledPackageVersion: () => '1.0.0',
         fetch: async (pkg, version) => {
           if (pkg === '@my-company/nx-workspace' && version === '2.0.0') {
             return {
@@ -429,19 +449,26 @@ describe('Migration', () => {
           if (pkg === '@my-company/nx-workspace' && version === '3.0.0') {
             return {
               version: '3.0.0',
-              packageGroup: ['@my-company/lib-1', '@my-company/lib-2'],
+              packageGroup: [
+                { package: '@my-company/lib-1', version: '*' },
+                { package: '@my-company/lib-2', version: '*' },
+              ],
             };
           }
           if (pkg === '@my-company/lib-1' && version === 'latest') {
             return {
               version: '3.0.0',
-              packageGroup: ['@my-company/nx-workspace'],
+              packageGroup: [
+                { package: '@my-company/nx-workspace', version: '*' },
+              ],
             };
           }
           if (pkg === '@my-company/lib-1' && version === '3.0.0') {
             return {
               version: '3.0.0',
-              packageGroup: ['@my-company/nx-workspace'],
+              packageGroup: [
+                { package: '@my-company/nx-workspace', version: '*' },
+              ],
             };
           }
           if (pkg === '@my-company/lib-2' && version === '3.0.0') {
@@ -455,6 +482,7 @@ describe('Migration', () => {
           }
           throw new Error(`Should not call fetch for ${pkg}@${version}`);
         },
+        from: {},
         to: {},
       });
 
@@ -476,12 +504,14 @@ describe('Migration', () => {
     it('should not throw when packages are missing', async () => {
       const migrator = new Migrator({
         packageJson: createPackageJson(),
-        versions: (p) => (p === '@nrwl/nest' ? null : '1.0.0'),
+        getInstalledPackageVersion: (p) =>
+          p === '@nrwl/nest' ? null : '1.0.0',
         fetch: (_p, _v) =>
           Promise.resolve({
             version: '2.0.0',
             packageJsonUpdates: { one: { version: '2.0.0', packages: {} } },
           }),
+        from: {},
         to: {},
       });
       await migrator.updatePackageJson('@nrwl/workspace', '2.0.0');
@@ -490,7 +520,8 @@ describe('Migration', () => {
     it('should only fetch packages that are installed', async () => {
       const migrator = new Migrator({
         packageJson: createPackageJson(),
-        versions: (p) => (p === '@nrwl/nest' ? null : '1.0.0'),
+        getInstalledPackageVersion: (p) =>
+          p === '@nrwl/nest' ? null : '1.0.0',
         fetch: (p, _v) => {
           if (p === '@nrwl/nest') {
             throw new Error('Boom');
@@ -500,6 +531,7 @@ describe('Migration', () => {
             packageJsonUpdates: { one: { version: '2.0.0', packages: {} } },
           });
         },
+        from: {},
         to: {},
       });
       await migrator.updatePackageJson('@nrwl/workspace', '2.0.0');
@@ -510,7 +542,7 @@ describe('Migration', () => {
         packageJson: createPackageJson({
           devDependencies: { parent: '1.0.0', child1: '1.0.0' },
         }),
-        versions: () => '1.0.0',
+        getInstalledPackageVersion: () => '1.0.0',
         fetch: (p, _v) => {
           if (p === 'parent') {
             return Promise.resolve({
@@ -535,10 +567,452 @@ describe('Migration', () => {
             throw new Error('Boom');
           }
         },
+        from: {},
         to: {},
       });
 
       await migrator.updatePackageJson('parent', '2.0.0');
+    });
+
+    describe('--interactive', () => {
+      beforeEach(() => {
+        jest.clearAllMocks();
+      });
+
+      it('should prompt when --interactive and there is a package updates group with confirmation prompts', async () => {
+        jest
+          .spyOn(enquirer, 'prompt')
+          .mockReturnValue(Promise.resolve({ shouldApply: true }));
+        const promptMessage =
+          'Do you want to update the packages related to <some fwk name>?';
+        const migrator = new Migrator({
+          packageJson: createPackageJson({
+            dependencies: { child1: '1.0.0', child2: '1.0.0', child3: '1.0.0' },
+          }),
+          getInstalledPackageVersion: () => '1.0.0',
+          fetch: (p) => {
+            if (p === 'mypackage') {
+              return Promise.resolve({
+                version: '2.0.0',
+                packageJsonUpdates: {
+                  version2: {
+                    version: '2.0.0',
+                    packages: {
+                      child1: { version: '3.0.0' },
+                    },
+                  },
+                  'version2-prompt-group': {
+                    version: '2.0.0',
+                    'x-prompt': promptMessage,
+                    packages: {
+                      child2: { version: '3.0.0' },
+                      child3: { version: '3.0.0' },
+                    },
+                  },
+                },
+              });
+            } else if (p === 'child1' || p === 'child2' || p === 'child3') {
+              return Promise.resolve({ version: '3.0.0' });
+            } else {
+              return Promise.resolve(null);
+            }
+          },
+          from: {},
+          to: {},
+          interactive: true,
+        });
+
+        const result = await migrator.updatePackageJson('mypackage', '2.0.0');
+
+        expect(result).toStrictEqual({
+          migrations: [],
+          packageJson: {
+            mypackage: { version: '2.0.0', addToPackageJson: false },
+            child1: { version: '3.0.0', addToPackageJson: false },
+            child2: { version: '3.0.0', addToPackageJson: false },
+            child3: { version: '3.0.0', addToPackageJson: false },
+          },
+        });
+        expect(enquirer.prompt).toHaveBeenCalledWith(
+          expect.arrayContaining([
+            expect.objectContaining({ message: promptMessage }),
+          ])
+        );
+      });
+
+      it('should filter out updates when prompt answer is false', async () => {
+        jest
+          .spyOn(enquirer, 'prompt')
+          .mockReturnValue(Promise.resolve({ shouldApply: false }));
+        const migrator = new Migrator({
+          packageJson: createPackageJson({
+            dependencies: { child1: '1.0.0', child2: '1.0.0', child3: '1.0.0' },
+          }),
+          getInstalledPackageVersion: () => '1.0.0',
+          fetch: (p) => {
+            if (p === 'mypackage') {
+              return Promise.resolve({
+                version: '2.0.0',
+                packageJsonUpdates: {
+                  version2: {
+                    version: '2.0.0',
+                    packages: {
+                      child1: { version: '3.0.0' },
+                    },
+                  },
+                  'version2-prompt-group': {
+                    version: '2.0.0',
+                    'x-prompt':
+                      'Do you want to update the packages related to <some fwk name>?',
+                    packages: {
+                      child2: { version: '3.0.0' },
+                      child3: { version: '3.0.0' },
+                    },
+                  },
+                },
+              });
+            } else if (p === 'child1' || p === 'child2' || p === 'child3') {
+              return Promise.resolve({ version: '3.0.0' });
+            } else {
+              return Promise.resolve(null);
+            }
+          },
+          from: {},
+          to: {},
+          interactive: true,
+        });
+
+        const result = await migrator.updatePackageJson('mypackage', '2.0.0');
+
+        expect(result).toStrictEqual({
+          migrations: [],
+          packageJson: {
+            mypackage: { version: '2.0.0', addToPackageJson: false },
+            child1: { version: '3.0.0', addToPackageJson: false },
+          },
+        });
+        expect(enquirer.prompt).toHaveBeenCalled();
+      });
+
+      it('should not prompt and get all updates when --interactive=false', async () => {
+        jest
+          .spyOn(enquirer, 'prompt')
+          .mockReturnValue(Promise.resolve({ shouldApply: false }));
+        const migrator = new Migrator({
+          packageJson: createPackageJson({
+            dependencies: { child1: '1.0.0', child2: '1.0.0', child3: '1.0.0' },
+          }),
+          getInstalledPackageVersion: () => '1.0.0',
+          fetch: (p) => {
+            if (p === 'mypackage') {
+              return Promise.resolve({
+                version: '2.0.0',
+                packageJsonUpdates: {
+                  version2: {
+                    version: '2.0.0',
+                    packages: {
+                      child1: { version: '3.0.0' },
+                    },
+                  },
+                  'version2-prompt-group': {
+                    version: '2.0.0',
+                    'x-prompt':
+                      'Do you want to update the packages related to <some fwk name>?',
+                    packages: {
+                      child2: { version: '3.0.0' },
+                      child3: { version: '3.0.0' },
+                    },
+                  },
+                },
+              });
+            } else if (p === 'child1' || p === 'child2' || p === 'child3') {
+              return Promise.resolve({ version: '3.0.0' });
+            } else {
+              return Promise.resolve(null);
+            }
+          },
+          from: {},
+          to: {},
+          interactive: false,
+        });
+
+        const result = await migrator.updatePackageJson('mypackage', '2.0.0');
+
+        expect(result).toStrictEqual({
+          migrations: [],
+          packageJson: {
+            mypackage: { version: '2.0.0', addToPackageJson: false },
+            child1: { version: '3.0.0', addToPackageJson: false },
+            child2: { version: '3.0.0', addToPackageJson: false },
+            child3: { version: '3.0.0', addToPackageJson: false },
+          },
+        });
+        expect(enquirer.prompt).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('requirements', () => {
+      beforeEach(() => {
+        jest.clearAllMocks();
+      });
+
+      it('should collect updates that meet requirements and leave out those that do not meet them', async () => {
+        const migrator = new Migrator({
+          packageJson: createPackageJson({
+            dependencies: {
+              child1: '1.0.0',
+              child2: '1.0.0',
+              child3: '1.0.0',
+              child4: '1.0.0',
+              child5: '1.0.0',
+              pkg1: '1.0.0',
+              pkg2: '2.0.0',
+            },
+          }),
+          getInstalledPackageVersion: (p) => (p === 'pkg2' ? '2.0.0' : '1.0.0'),
+          fetch: (p) => {
+            if (p === 'mypackage') {
+              return Promise.resolve({
+                version: '2.0.0',
+                packageJsonUpdates: {
+                  group1: {
+                    version: '2.0.0',
+                    packages: { child1: { version: '3.0.0' } },
+                    requires: {
+                      // exist on a lower version
+                      pkg1: '^2.0.0',
+                    },
+                  },
+                  group2: {
+                    version: '2.0.0',
+                    packages: {
+                      child2: { version: '3.0.0' },
+                      child3: { version: '3.0.0' },
+                    },
+                    requires: {
+                      // exists on a version satisfying the range
+                      pkg2: '^2.0.0',
+                    },
+                  },
+                  group3: {
+                    version: '2.0.0',
+                    packages: {
+                      child4: { version: '3.0.0' },
+                      child5: { version: '3.0.0' },
+                    },
+                    requires: {
+                      // non existent
+                      pkg3: '^2.0.0',
+                    },
+                  },
+                },
+              });
+            } else if (
+              ['child1', 'child2', 'child3', 'child4', 'child5'].includes(p)
+            ) {
+              return Promise.resolve({ version: '3.0.0' });
+            } else {
+              return Promise.resolve(null);
+            }
+          },
+          from: {},
+          to: {},
+        });
+
+        const result = await migrator.updatePackageJson('mypackage', '2.0.0');
+
+        expect(result).toStrictEqual({
+          migrations: [],
+          packageJson: {
+            mypackage: { version: '2.0.0', addToPackageJson: false },
+            child2: { version: '3.0.0', addToPackageJson: false },
+            child3: { version: '3.0.0', addToPackageJson: false },
+          },
+        });
+      });
+
+      it('should meet requirements with versions set by dependent package updates in package groups', async () => {
+        const migrator = new Migrator({
+          packageJson: createPackageJson({
+            dependencies: {
+              child1: '1.0.0',
+              child2: '1.0.0',
+              child3: '1.0.0',
+              pkg1: '1.0.0',
+              pkg2: '1.0.0',
+            },
+          }),
+          getInstalledPackageVersion: () => '1.0.0',
+          fetch: (p): Promise<ResolvedMigrationConfiguration> => {
+            if (p === 'mypackage') {
+              return Promise.resolve({
+                version: '2.0.0',
+                packageJsonUpdates: {
+                  group1: {
+                    version: '2.0.0',
+                    packages: { child1: { version: '3.0.0' } },
+                  },
+                },
+                packageGroup: [
+                  { package: 'pkg1', version: '*' },
+                  { package: 'pkg2', version: '*' },
+                ],
+              });
+            } else if (p === 'pkg1') {
+              // add a delay to showcase the dependent requirement will wait for it
+              return new Promise((resolve) => {
+                setTimeout(() => {
+                  resolve({
+                    version: '2.0.0',
+                    packageJsonUpdates: {
+                      group1: {
+                        version: '2.0.0',
+                        packages: { child2: { version: '3.0.0' } },
+                        requires: { child1: '^3.0.0' },
+                      },
+                    },
+                  });
+                }, 100);
+              });
+            } else if (p === 'pkg2') {
+              return Promise.resolve({
+                version: '2.0.0',
+                packageJsonUpdates: {
+                  group1: {
+                    version: '2.0.0',
+                    packages: { child3: { version: '3.0.0' } },
+                    // installed version doesn't satisfy the requirements, but
+                    // a package update from "pkg1" fulfills it, it waits for it
+                    // because of the packageGroup order
+                    requires: { child2: '^3.0.0' },
+                  },
+                },
+              });
+            } else if (['child1', 'child2', 'child3'].includes(p)) {
+              return Promise.resolve({ version: '3.0.0' });
+            } else {
+              return Promise.resolve(null);
+            }
+          },
+          from: {},
+          to: {},
+        });
+
+        const result = await migrator.updatePackageJson('mypackage', '2.0.0');
+
+        expect(result).toStrictEqual({
+          migrations: [],
+          packageJson: {
+            mypackage: { version: '2.0.0', addToPackageJson: false },
+            child1: { version: '3.0.0', addToPackageJson: false },
+            child2: { version: '3.0.0', addToPackageJson: false },
+            child3: { version: '3.0.0', addToPackageJson: false },
+            pkg1: { version: '2.0.0', addToPackageJson: false },
+            pkg2: { version: '2.0.0', addToPackageJson: false },
+          },
+        });
+      });
+
+      it('should prompt when requirements are met', async () => {
+        jest
+          .spyOn(enquirer, 'prompt')
+          .mockReturnValue(Promise.resolve({ shouldApply: true }));
+        const promptMessage =
+          'Do you want to update the packages related to <some fwk name>?';
+        const migrator = new Migrator({
+          packageJson: createPackageJson({
+            dependencies: { child1: '1.0.0', pkg1: '2.0.0' },
+          }),
+          getInstalledPackageVersion: (p) => (p === 'pkg1' ? '2.0.0' : '1.0.0'),
+          fetch: (p) => {
+            if (p === 'mypackage') {
+              return Promise.resolve({
+                version: '2.0.0',
+                packageJsonUpdates: {
+                  version2: {
+                    version: '2.0.0',
+                    'x-prompt': promptMessage,
+                    requires: { pkg1: '^2.0.0' },
+                    packages: {
+                      child1: { version: '3.0.0' },
+                    },
+                  },
+                },
+              });
+            } else if (p === 'child1') {
+              return Promise.resolve({ version: '3.0.0' });
+            } else {
+              return Promise.resolve(null);
+            }
+          },
+          from: {},
+          to: {},
+          interactive: true,
+        });
+
+        const result = await migrator.updatePackageJson('mypackage', '2.0.0');
+
+        expect(result).toStrictEqual({
+          migrations: [],
+          packageJson: {
+            mypackage: { version: '2.0.0', addToPackageJson: false },
+            child1: { version: '3.0.0', addToPackageJson: false },
+          },
+        });
+        expect(enquirer.prompt).toHaveBeenCalledWith(
+          expect.arrayContaining([
+            expect.objectContaining({ message: promptMessage }),
+          ])
+        );
+      });
+
+      it('should not prompt when requirements are not met', async () => {
+        jest
+          .spyOn(enquirer, 'prompt')
+          .mockReturnValue(Promise.resolve({ shouldApply: true }));
+        const promptMessage =
+          'Do you want to update the packages related to <some fwk name>?';
+        const migrator = new Migrator({
+          packageJson: createPackageJson({
+            dependencies: { child1: '1.0.0', pkg1: '1.0.0' },
+          }),
+          getInstalledPackageVersion: () => '1.0.0',
+          fetch: (p) => {
+            if (p === 'mypackage') {
+              return Promise.resolve({
+                version: '2.0.0',
+                packageJsonUpdates: {
+                  version2: {
+                    version: '2.0.0',
+                    'x-prompt': promptMessage,
+                    requires: { pkg1: '^2.0.0' },
+                    packages: {
+                      child1: { version: '3.0.0' },
+                    },
+                  },
+                },
+              });
+            } else if (p === 'child1') {
+              return Promise.resolve({ version: '3.0.0' });
+            } else {
+              return Promise.resolve(null);
+            }
+          },
+          from: {},
+          to: {},
+          interactive: true,
+        });
+
+        const result = await migrator.updatePackageJson('mypackage', '2.0.0');
+
+        expect(result).toStrictEqual({
+          migrations: [],
+          packageJson: {
+            mypackage: { version: '2.0.0', addToPackageJson: false },
+          },
+        });
+        expect(enquirer.prompt).not.toHaveBeenCalled();
+      });
     });
   });
 
@@ -548,12 +1022,12 @@ describe('Migration', () => {
         packageJson: createPackageJson({
           dependencies: { child: '1.0.0', newChild: '1.0.0' },
         }),
-        versions: (p) => {
+        getInstalledPackageVersion: (p) => {
           if (p === 'parent') return '1.0.0';
           if (p === 'child') return '1.0.0';
           return null;
         },
-        fetch: (p, _v) => {
+        fetch: (p: string): Promise<ResolvedMigrationConfiguration> => {
           if (p === 'parent') {
             return Promise.resolve({
               version: '2.0.0',
@@ -599,6 +1073,7 @@ describe('Migration', () => {
             return Promise.resolve(null);
           }
         },
+        from: {},
         to: {},
       });
       expect(await migrator.updatePackageJson('parent', '2.0.0')).toEqual({
@@ -627,13 +1102,13 @@ describe('Migration', () => {
     it('should not generate migrations for non top-level packages', async () => {
       const migrator = new Migrator({
         packageJson: createPackageJson({ dependencies: { child: '1.0.0' } }),
-        versions: (p) => {
+        getInstalledPackageVersion: (p) => {
           if (p === 'parent') return '1.0.0';
           if (p === 'child') return '1.0.0';
           if (p === 'newChild') return '1.0.0'; // installed as a transitive dep, not a top-level dep
           return null;
         },
-        fetch: (p, _v) => {
+        fetch: (p: string): Promise<ResolvedMigrationConfiguration> => {
           if (p === 'parent') {
             return Promise.resolve({
               version: '2.0.0',
@@ -679,6 +1154,7 @@ describe('Migration', () => {
             return Promise.resolve(null);
           }
         },
+        from: {},
         to: {},
       });
 
@@ -700,6 +1176,192 @@ describe('Migration', () => {
         packageJson: {
           parent: { version: '2.0.0', addToPackageJson: false },
           child: { version: '2.0.0', addToPackageJson: false },
+        },
+      });
+    });
+
+    it('should not generate migrations for packages which confirmation prompt answer was false', async () => {
+      jest
+        .spyOn(enquirer, 'prompt')
+        .mockReturnValue(Promise.resolve({ shouldApply: false }));
+      const migrator = new Migrator({
+        packageJson: createPackageJson({
+          dependencies: { child: '1.0.0', child2: '1.0.0' },
+        }),
+        getInstalledPackageVersion: () => '1.0.0',
+        fetch: (p) => {
+          if (p === 'parent') {
+            return Promise.resolve({
+              version: '2.0.0',
+              packageJsonUpdates: {
+                version2: {
+                  version: '2.0.0',
+                  packages: {
+                    child1: { version: '2.0.0' },
+                    child2: { version: '3.0.0' },
+                  },
+                  'x-prompt':
+                    'Do you want to update the packages related to <some fwk name>?',
+                },
+              },
+              generators: {
+                version2: {
+                  version: '2.0.0',
+                  description: 'parent-desc',
+                },
+              },
+            });
+          } else if (p === 'child1') {
+            return Promise.resolve({
+              version: '2.0.0',
+              generators: {
+                version2: {
+                  version: '2.0.0',
+                  description: 'child1-desc',
+                },
+              },
+            });
+          } else if (p === 'child2') {
+            return Promise.resolve({
+              version: '3.0.0',
+              generators: {
+                version2: {
+                  version: '3.0.0',
+                  description: 'child2-desc',
+                },
+              },
+            });
+          } else {
+            return Promise.resolve(null);
+          }
+        },
+        from: {},
+        to: {},
+        interactive: true,
+      });
+
+      const result = await migrator.updatePackageJson('parent', '2.0.0');
+
+      expect(result).toEqual({
+        migrations: [
+          {
+            version: '2.0.0',
+            name: 'version2',
+            package: 'parent',
+            description: 'parent-desc',
+          },
+        ],
+        packageJson: {
+          parent: { version: '2.0.0', addToPackageJson: false },
+        },
+      });
+      expect(enquirer.prompt).toHaveBeenCalled();
+    });
+
+    it('should generate migrations that meet requirements and leave out those that do not meet them', async () => {
+      const migrator = new Migrator({
+        packageJson: createPackageJson({
+          dependencies: {
+            child1: '1.0.0',
+            child2: '1.0.0',
+            pkg1: '1.0.0',
+            pkg2: '2.0.0',
+            pkg3: '2.0.0',
+          },
+        }),
+        getInstalledPackageVersion: (p) =>
+          p === 'pkg2' || p === 'pkg3' ? '2.0.0' : '1.0.0',
+        fetch: (p) => {
+          if (p === 'parent') {
+            return Promise.resolve({
+              version: '2.0.0',
+              packageJsonUpdates: {
+                version2: {
+                  version: '2.0.0',
+                  packages: {
+                    child1: { version: '2.0.0' },
+                    child2: { version: '3.0.0' },
+                  },
+                },
+              },
+              generators: {
+                migration1: {
+                  version: '2.0.0',
+                  description: 'migration1 desc',
+                  requires: {
+                    // exist on a lower version
+                    pkg1: '^2.0.0',
+                  },
+                },
+                migration2: {
+                  version: '2.0.0',
+                  description: 'migration2 desc',
+                  requires: {
+                    // exists on a version satisfying the range
+                    pkg2: '^2.0.0',
+                  },
+                },
+              },
+            });
+          } else if (p === 'child1') {
+            return Promise.resolve({
+              version: '2.0.0',
+              generators: {
+                migration1: {
+                  version: '2.0.0',
+                  description: 'child1 - migration 1 desc',
+                  requires: {
+                    // exists on a version satisfying the range
+                    pkg3: '^2.0.0',
+                  },
+                },
+              },
+            });
+          } else if (p === 'child2') {
+            return Promise.resolve({
+              version: '3.0.0',
+              generators: {
+                migration1: {
+                  version: '3.0.0',
+                  description: 'child2 - migration1 desc',
+                  requires: {
+                    // non existent
+                    pkg4: '^2.0.0',
+                  },
+                },
+              },
+            });
+          } else {
+            return Promise.resolve(null);
+          }
+        },
+        from: {},
+        to: {},
+      });
+
+      const result = await migrator.updatePackageJson('parent', '2.0.0');
+
+      expect(result).toEqual({
+        migrations: [
+          {
+            version: '2.0.0',
+            name: 'migration2',
+            package: 'parent',
+            description: 'migration2 desc',
+            requires: { pkg2: '^2.0.0' },
+          },
+          {
+            version: '2.0.0',
+            name: 'migration1',
+            package: 'child1',
+            description: 'child1 - migration 1 desc',
+            requires: { pkg3: '^2.0.0' },
+          },
+        ],
+        packageJson: {
+          child1: { version: '2.0.0', addToPackageJson: false },
+          child2: { version: '3.0.0', addToPackageJson: false },
+          parent: { version: '2.0.0', addToPackageJson: false },
         },
       });
     });

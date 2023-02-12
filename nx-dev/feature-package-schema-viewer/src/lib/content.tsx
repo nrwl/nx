@@ -89,7 +89,7 @@ export function Content({
         {
           filePath: '',
         }
-      );
+      ).node;
     },
   };
 
@@ -104,6 +104,15 @@ export function Content({
           >
             {schemaViewModel.type}
           </div>
+          {schemaViewModel.deprecated && (
+            <div
+              aria-hidden="true"
+              data-tooltip="Deprecated"
+              className="relative inline-flex rounded-md border border-red-100 bg-red-50 px-4 py-2 text-xs font-medium uppercase text-red-600 dark:border-red-900 dark:bg-red-900/30 dark:text-red-400"
+            >
+              Deprecated
+            </div>
+          )}
           {schemaViewModel.hidden && (
             <div
               aria-hidden="true"
@@ -126,7 +135,7 @@ export function Content({
             href={schemaViewModel.schemaGithubUrl}
             target="_blank"
             rel="noreferrer"
-            title="See this schema on Github"
+            title="See this schema on GitHub"
             className="relative -ml-px inline-flex items-center rounded-r-md border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-600 focus-within:ring-blue-500 hover:bg-slate-50 focus:z-10 focus:outline-none focus:ring-1 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400 dark:focus-within:ring-sky-500 dark:hover:bg-slate-800"
           >
             <svg
@@ -143,6 +152,27 @@ export function Content({
           </a>
         </div>
       </div>
+
+      {schemaViewModel.deprecated && (
+        <div className="my-6 block rounded-md bg-red-50 p-4 ring-1 ring-red-100 dark:bg-red-900/30 dark:ring-red-900">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <HandRaisedIcon
+                className="h-5 w-5 text-red-500"
+                aria-hidden="true"
+              />
+            </div>
+            <div className="ml-3">
+              <div className="mt-0 block text-sm font-medium text-red-600 dark:text-red-400">
+                Deprecated
+              </div>
+              <p className="prose-sm mt-2 block text-red-700 dark:text-red-600">
+                {schemaViewModel.deprecated}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {!schemaViewModel.subReference && schemaViewModel.hidden && (
         <div className="my-6 block rounded-md bg-red-50 p-4 ring-1 ring-red-100 dark:bg-red-900/30 dark:ring-red-900">
@@ -177,7 +207,7 @@ export function Content({
       )}
 
       {/*TODO@ben: create new component*/}
-      {schemaViewModel.type === 'executors' && !schemaViewModel.subReference && (
+      {schemaViewModel.type === 'executor' && !schemaViewModel.subReference && (
         <div className="mt-8 hidden md:block">
           <Heading2 title="Options playground" />
           <p className="my-6">
@@ -220,7 +250,7 @@ export function Content({
             <SchemaEditor
               packageName={schemaViewModel.packageName}
               schemaName={schemaViewModel.schemaMetadata.name}
-              type={schemaViewModel.type.replace('s', '') as any}
+              type={schemaViewModel.type}
               content={filterWithPresets(vm.fullExample, presets)}
               schema={schemaViewModel.currentSchema}
             />
@@ -261,7 +291,7 @@ const getMarkdown = (data: {
   schemaAlias: string;
   schemaName: string;
   schema: NxSchema;
-  type: 'executors' | 'generators';
+  type: 'executor' | 'generator';
 }): string => {
   const hasExamplesFile = !!data.schema['examplesFile'];
   const executorNotice: string = `Options can be configured in \`project.json\` when defining the executor, or when invoking it. Read more about how to configure targets and executors here: [https://nx.dev/reference/project-configuration#targets](https://nx.dev/reference/project-configuration#targets).`;
@@ -271,10 +301,10 @@ const getMarkdown = (data: {
     `\n\n`,
     data.schema.description,
     '\n\n',
-    data.type === 'executors' ? executorNotice : '',
+    data.type === 'executor' ? executorNotice : '',
     `\n\n`,
     hasExamplesFile ? data.schema['examplesFile'] : '',
-    data.type === 'generators'
+    data.type === 'generator'
       ? getUsage(data.packageName, data.schemaName, data.schemaAlias)
       : '',
     !!data.schema['examples']

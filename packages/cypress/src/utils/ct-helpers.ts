@@ -2,7 +2,6 @@ import type { ExecutorContext, ProjectGraph } from '@nrwl/devkit';
 import {
   normalizePath,
   ProjectConfiguration,
-  readNxJson,
   stripIndents,
   TargetConfiguration,
   workspaceRoot,
@@ -14,6 +13,7 @@ import {
   findProjectForPath,
 } from 'nx/src/project-graph/utils/find-project-for-path';
 import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
+import { readNxJson } from 'nx/src/project-graph/file-utils';
 
 export const CY_FILE_MATCHER = new RegExp(/\.cy\.[tj]sx?$/);
 /**
@@ -94,7 +94,9 @@ export function createExecutorContext(
   targetName: string,
   configurationName: string
 ): ExecutorContext {
-  const projectConfigs = readProjectsConfigurationFromProjectGraph(graph);
+  const projectsConfigurations =
+    readProjectsConfigurationFromProjectGraph(graph);
+  const nxJsonConfiguration = readNxJson();
   return {
     cwd: process.cwd(),
     projectGraph: graph,
@@ -104,9 +106,11 @@ export function createExecutorContext(
     root: workspaceRoot,
     isVerbose: false,
     projectName,
+    projectsConfigurations,
+    nxJsonConfiguration,
     workspace: {
-      ...readNxJson(),
-      ...projectConfigs,
+      ...nxJsonConfiguration,
+      ...projectsConfigurations,
     },
   };
 }

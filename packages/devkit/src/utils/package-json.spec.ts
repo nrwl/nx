@@ -18,6 +18,30 @@ describe('addDependenciesToPackageJson', () => {
     });
   });
 
+  it('should not add dependency if it is not greater', () => {
+    writeJson(tree, 'package.json', {
+      dependencies: {
+        tslib: '^2.0.0',
+      },
+      devDependencies: {
+        jest: '28.1.3',
+      },
+    });
+    const installTask = addDependenciesToPackageJson(
+      tree,
+      {
+        tslib: '^2.3.0',
+      },
+      { jest: '28.1.1' }
+    );
+
+    expect(readJson(tree, 'package.json')).toEqual({
+      dependencies: { tslib: '^2.3.0' },
+      devDependencies: { jest: '28.1.3' },
+    });
+    expect(installTask).toBeDefined();
+  });
+
   it('should add dependencies to the package.json', () => {
     const installTask = addDependenciesToPackageJson(
       tree,
@@ -209,6 +233,80 @@ describe('addDependenciesToPackageJson', () => {
     expect(installTask).toBeDefined();
   });
 
+  it('should not overwrite dependencies when they exist in "dependencies" and one of the versions is lesser', () => {
+    // ARRANGE
+    writeJson(tree, 'package.json', {
+      dependencies: {
+        '@nrwl/angular': '14.2.0',
+        '@nrwl/cypress': '14.1.1',
+      },
+      devDependencies: {
+        '@nrwl/next': '14.0.0',
+        '@nrwl/vite': '14.1.0',
+      },
+    });
+
+    // ACT
+    const installTask = addDependenciesToPackageJson(
+      tree,
+      {
+        '@nrwl/angular': '14.1.0',
+      },
+      {
+        '@nrwl/next': '14.1.0',
+      }
+    );
+
+    // ASSERT
+    const { dependencies, devDependencies } = readJson(tree, 'package.json');
+    expect(dependencies).toEqual({
+      '@nrwl/angular': '14.2.0',
+      '@nrwl/cypress': '14.1.1',
+    });
+    expect(devDependencies).toEqual({
+      '@nrwl/next': '14.1.0',
+      '@nrwl/vite': '14.1.0',
+    });
+    expect(installTask).toBeDefined();
+  });
+
+  it('should not overwrite dependencies when they exist in "devDependencies" and one of the versions is lesser', () => {
+    // ARRANGE
+    writeJson(tree, 'package.json', {
+      dependencies: {
+        '@nrwl/angular': '14.0.0',
+        '@nrwl/cypress': '14.1.1',
+      },
+      devDependencies: {
+        '@nrwl/next': '14.2.0',
+        '@nrwl/vite': '14.1.0',
+      },
+    });
+
+    // ACT
+    const installTask = addDependenciesToPackageJson(
+      tree,
+      {
+        '@nrwl/angular': '14.1.0',
+      },
+      {
+        '@nrwl/next': '14.1.0',
+      }
+    );
+
+    // ASSERT
+    const { dependencies, devDependencies } = readJson(tree, 'package.json');
+    expect(dependencies).toEqual({
+      '@nrwl/angular': '14.1.0',
+      '@nrwl/cypress': '14.1.1',
+    });
+    expect(devDependencies).toEqual({
+      '@nrwl/next': '14.2.0',
+      '@nrwl/vite': '14.1.0',
+    });
+    expect(installTask).toBeDefined();
+  });
+
   it('should only overwrite dependencies when their version is greater', () => {
     // ARRANGE
     writeJson(tree, 'package.json', {
@@ -238,6 +336,46 @@ describe('addDependenciesToPackageJson', () => {
     });
     expect(devDependencies).toEqual({
       '@nrwl/next': '14.1.0',
+    });
+    expect(installTask).toBeDefined();
+  });
+
+  it('should overwrite dependencies when their version is not in a semver format', () => {
+    // ARRANGE
+    writeJson(tree, 'package.json', {
+      dependencies: {
+        '@nrwl/angular': 'github:reponame/packageNameOne',
+        '@nrwl/vite': 'git://github.com/npm/cli.git#v14.2.0', // this format is parsable
+      },
+      devDependencies: {
+        '@nrwl/next': '14.1.0',
+      },
+    });
+
+    // ACT
+    const installTask = addDependenciesToPackageJson(
+      tree,
+      {
+        '@nrwl/next': 'github:reponame/packageNameTwo',
+        '@nrwl/cypress':
+          'git+https://username@github.com/reponame/packagename.git',
+        '@nrwl/vite': '14.0.1',
+      },
+      {
+        '@nrwl/angular': '14.1.0',
+      }
+    );
+
+    // ASSERT
+    const { dependencies, devDependencies } = readJson(tree, 'package.json');
+    expect(dependencies).toEqual({
+      '@nrwl/angular': '14.1.0',
+      '@nrwl/cypress':
+        'git+https://username@github.com/reponame/packagename.git',
+      '@nrwl/vite': 'git://github.com/npm/cli.git#v14.2.0',
+    });
+    expect(devDependencies).toEqual({
+      '@nrwl/next': 'github:reponame/packageNameTwo',
     });
     expect(installTask).toBeDefined();
   });
@@ -318,18 +456,14 @@ describe('ensurePackage', () => {
     tree = createTree();
   });
 
-  it('should return without error when dependency is satisfied', async () => {
-    writeJson(tree, 'package.json', {
-      devDependencies: {
-        '@nrwl/vite': '15.0.0',
-      },
-    });
+  it('should return successfully when package is present', async () => {
+    writeJson(tree, 'package.json', {});
 
     await expect(
-      ensurePackage(tree, '@nrwl/vite', '>=15.0.0', {
+      ensurePackage(tree, '@nrwl/devkit', '>=15.0.0', {
         throwOnMissing: true,
       })
-    ).resolves.toBeUndefined();
+    ).resolves.toBeUndefined(); // return void
   });
 
   it('should throw when dependencies are missing', async () => {

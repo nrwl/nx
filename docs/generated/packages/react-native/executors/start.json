@@ -1,0 +1,38 @@
+{
+  "name": "start",
+  "implementation": "/packages/react-native/src/executors/start/start.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "cli": "nx",
+    "$id": "NxReactNativeStart",
+    "$schema": "http://json-schema.org/schema",
+    "title": "Packager Server for React Native",
+    "description": "Packager Server target options.",
+    "type": "object",
+    "properties": {
+      "port": {
+        "type": "number",
+        "description": "The port to listen on.",
+        "default": 8081
+      },
+      "resetCache": {
+        "type": "boolean",
+        "description": "Resets metro cache.",
+        "default": false
+      },
+      "interactive": {
+        "type": "boolean",
+        "description": "Run packager server in interactive mode.",
+        "default": true
+      }
+    },
+    "examplesFile": "`project.json`:\n\n```json\n{\n  \"name\": \"mobile\",\n  //...\n  \"targets\": {\n    //...\n    \"start\": {\n      \"executor\": \"@nrwl/react-native:start\",\n      \"options\": {\n        \"port\": 8081\n      }\n    }\n  }\n}\n```\n\n```bash\nnx run mobile:start\n```\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Starts the server non-interactively\" %}\nThe `interactive` option allows you to specify whether to use interactive mode:\n\n```json\n    \"start\": {\n      \"executor\": \"@nrwl/react-native:start\",\n      \"options\": {\n        \"port\": 8081,\n        \"interactive\": false\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Starts the server with cache reset\" %}\n\nThe `resetCache` option allows you to remove cached files.\n\n```json\n    \"start\": {\n      \"executor\": \"@nrwl/react-native:start\",\n      \"options\": {\n        \"port\": 8081,\n        \"resetCache\": true\n      }\n    }\n```\n\n{% /tab %}\n{% /tabs %}\n\n---\n",
+    "presets": []
+  },
+  "description": "Starts the Javascript server that communicates with connected devices.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/react-native/src/executors/start/schema.json",
+  "type": "executor"
+}

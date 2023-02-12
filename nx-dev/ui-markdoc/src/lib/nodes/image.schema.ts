@@ -5,7 +5,6 @@ import {
   Schema,
   Tag,
 } from '@markdoc/markdoc';
-import { DocumentData } from '@nrwl/nx-dev/models-document';
 import { transformImagePath } from './helpers/transform-image-path';
 
 export const getImageSchema = (documentFilePath: string): Schema => ({

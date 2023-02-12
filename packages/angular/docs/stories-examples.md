@@ -4,7 +4,7 @@ This generator will generate stories for all your components in your project.
 nx g @nrwl/angular:stories project-name
 ```
 
-You can read more about how this generator works, in the [Storybook for Angular overview page](/storybook/overview-angular#auto-generate-stories).
+You can read more about how this generator works, in the [Storybook for Angular overview page](/packages/storybook/documents/overview-angular#auto-generate-stories).
 
 When running this generator, you will be prompted to provide the following:
 

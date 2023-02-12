@@ -29,11 +29,11 @@ describe('nx-dev: Additional API references section', () => {
     { title: 'Storybook', path: '/storybook/overview-react' },
     { title: 'Storybook', path: '/storybook/overview-angular' },
     {
-      title: 'Nrwl React Storybook Preset',
+      title: 'Nx React Storybook Addon',
       path: '/storybook/migrate-webpack-final-react',
     },
     {
-      title: 'Storybook Webpack Migration',
+      title: 'Storybook Migration to webpackFinal',
       path: '/storybook/migrate-webpack-final-angular',
     },
     {
@@ -49,7 +49,7 @@ describe('nx-dev: Additional API references section', () => {
       path: '/storybook/storybook-composition-setup',
     },
     {
-      title: 'Module: index',
+      title: 'Module: @nrwl/devkit',
       path: '/devkit/index',
     },
     {

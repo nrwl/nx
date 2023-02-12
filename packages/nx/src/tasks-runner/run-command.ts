@@ -129,7 +129,7 @@ export async function runCommand(
         projectGraph,
         defaultDependencyConfigs,
         projectNames,
-        [nxArgs.target],
+        nxArgs.targets,
         nxArgs.configuration,
         overrides,
         extraOptions.excludeTaskDependencies
@@ -161,6 +161,9 @@ export async function runCommand(
       }
 
       const tasks = Object.values(taskGraph.tasks);
+      if (process.env.NX_BATCH_MODE === 'true') {
+        nxArgs.outputStyle = 'stream';
+      }
       if (nxArgs.outputStyle == 'stream') {
         process.env.NX_STREAM_OUTPUT = 'true';
         process.env.NX_PREFIX_OUTPUT = 'true';
@@ -199,7 +202,6 @@ export async function runCommand(
         {
           initiatingProject:
             nxArgs.outputStyle === 'compact' ? null : initiatingProject,
-          target: nxArgs.target,
           projectGraph,
           nxJson,
           nxArgs,

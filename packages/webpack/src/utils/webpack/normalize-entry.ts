@@ -1,6 +1,3 @@
-import { basename } from 'path';
-import { normalizePath } from '@nrwl/devkit';
-
 import { ExtraEntryPoint, NormalizedEntryPoint } from '../models';
 
 export function normalizeExtraEntryPoints(
@@ -16,24 +13,16 @@ export function normalizeExtraEntryPoints(
         bundleName: defaultBundleName,
       };
     } else {
-      const { lazy, inject = true, ...newEntry } = entry;
-      const injectNormalized = entry.lazy !== undefined ? !entry.lazy : inject;
+      const { inject = true, ...newEntry } = entry;
       let bundleName;
 
       if (entry.bundleName) {
         bundleName = entry.bundleName;
-      } else if (!injectNormalized) {
-        // Lazy entry points use the file name as bundle name.
-        bundleName = basename(
-          normalizePath(
-            entry.input.replace(/\.(js|css|scss|sass|less|styl)$/i, '')
-          )
-        );
       } else {
         bundleName = defaultBundleName;
       }
 
-      normalizedEntry = { ...newEntry, inject: injectNormalized, bundleName };
+      normalizedEntry = { ...newEntry, bundleName };
     }
 
     return normalizedEntry;

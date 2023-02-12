@@ -1,26 +1,19 @@
 import {
-  expectTestsPass,
-  newProject,
   cleanupProject,
+  expectTestsPass,
+  newAngularProject,
+  readJson,
   runCLI,
   runCLIAsync,
   uniq,
   updateFile,
-  removeFile,
-  checkFilesDoNotExist,
-  isNotWindows,
-  readJson,
-  createFile,
 } from '@nrwl/e2e/utils';
 
 describe('Angular Config', () => {
-  beforeAll(() => newProject());
+  beforeAll(() => newAngularProject());
   afterAll(() => cleanupProject());
 
   it('should upgrade the config correctly', async () => {
-    const previousCI = process.env.SELECTED_CLI;
-    process.env.SELECTED_CLI = 'angular';
-
     const myapp = uniq('myapp');
     runCLI(`generate @nrwl/angular:app ${myapp} --no-interactive`);
 
@@ -38,8 +31,6 @@ describe('Angular Config', () => {
     const myapp2 = uniq('myapp');
     runCLI(`generate @nrwl/angular:app ${myapp2} --no-interactive`);
     expectTestsPass(await runCLIAsync(`test ${myapp2} --no-watch`));
-
-    process.env.SELECTED_CLI = previousCI;
   }, 1000000);
 });
 

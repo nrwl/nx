@@ -19,7 +19,8 @@ export default async function* publishSetExecutor(
     '@nrwl/expo:publish-set is deprecated and will be removed in Nx 16.'
   );
 
-  const projectRoot = context.workspace.projects[context.projectName].root;
+  const projectRoot =
+    context.projectsConfigurations.projects[context.projectName].root;
   ensureNodeModulesSymlink(context.root, projectRoot);
 
   try {

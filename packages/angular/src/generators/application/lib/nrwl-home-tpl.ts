@@ -536,7 +536,7 @@ export const nrwlHomeTemplate = {
                 />
               </svg>
             </a>
-            <a href="https://www.youtube.com/c/Nrwl_io/videos?utm_source=nx-project&sub_confirmation=1" target="_blank" rel="noreferrer" class="list-item-link">
+            <a href="https://www.youtube.com/@NxDevtools/videos?utm_source=nx-project&sub_confirmation=1" target="_blank" rel="noreferrer" class="list-item-link">
               <svg
                 role="img"
                 viewBox="0 0 24 24"

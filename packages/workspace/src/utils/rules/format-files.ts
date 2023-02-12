@@ -10,11 +10,6 @@ import { from } from 'rxjs';
 import { filter, map, mergeMap } from 'rxjs/operators';
 import * as path from 'path';
 import { workspaceRoot } from '@nrwl/devkit';
-import {
-  reformattedWorkspaceJsonOrNull,
-  workspaceConfigName,
-} from 'nx/src/config/workspaces';
-import { parseJson, serializeJson } from '@nrwl/devkit';
 
 export function formatFiles(
   options: { skipFormat: boolean } = { skipFormat: false },
@@ -30,8 +25,6 @@ export function formatFiles(
   }
 
   return (host: Tree, context: SchematicContext) => {
-    updateWorkspaceJsonToMatchFormatVersion(host);
-
     if (!prettier) {
       return host;
     }
@@ -77,25 +70,4 @@ export function formatFiles(
       map(() => host)
     );
   };
-}
-
-function updateWorkspaceJsonToMatchFormatVersion(host: Tree) {
-  const workspaceConfigPath = workspaceConfigName(workspaceRoot);
-
-  if (workspaceConfigPath) {
-    try {
-      const workspaceJson = parseJson(
-        host.read(workspaceConfigPath).toString()
-      );
-      const reformatted = reformattedWorkspaceJsonOrNull(workspaceJson);
-      if (reformatted) {
-        host.overwrite(workspaceConfigPath, serializeJson(reformatted));
-      }
-    } catch (e) {
-      console.error(
-        `Failed to format workspace config: ${workspaceConfigPath}`
-      );
-      console.error(e);
-    }
-  }
 }

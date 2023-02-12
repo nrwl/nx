@@ -43,5 +43,6 @@ export function toNodeApplicationGeneratorOptions(
     tags: options.tags,
     unitTestRunner: options.unitTestRunner,
     setParserOptionsProject: options.setParserOptionsProject,
+    bundler: 'webpack', // Some features require webpack plugins such as TS transformers
   };
 }

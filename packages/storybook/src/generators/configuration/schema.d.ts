@@ -1,22 +1,17 @@
 import { Linter } from '@nrwl/linter';
+import { UiFramework7, UiFramework } from '../../utils/models';
 
 export interface StorybookConfigureSchema {
   name: string;
-  uiFramework:
-    | '@storybook/angular'
-    | '@storybook/react'
-    | '@storybook/react-native'
-    | '@storybook/html'
-    | '@storybook/web-components'
-    | '@storybook/vue'
-    | '@storybook/vue3'
-    | '@storybook/svelte';
+  uiFramework: UiFramework; // TODO(katerina): Remove when Storybook 7
   configureCypress?: boolean;
-  bundler?: 'webpack' | 'vite';
+  bundler?: 'webpack' | 'vite'; // TODO(katerina): Remove when Storybook 7
   linter?: Linter;
   js?: boolean;
   tsConfiguration?: boolean;
   cypressDirectory?: string;
   standaloneConfig?: boolean;
   configureTestRunner?: boolean;
+  storybook7betaConfiguration?: boolean; // TODO(katerina): Change when Storybook 7
+  storybook7UiFramework?: UiFramework7; // TODO(katerina): Change when Storybook 7
 }

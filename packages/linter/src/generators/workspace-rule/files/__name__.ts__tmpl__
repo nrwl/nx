@@ -1,5 +1,5 @@
 /**
- * This file sets you up with with structure needed for an ESLint rule.
+ * This file sets you up with structure needed for an ESLint rule.
  *
  * It leverages utilities from @typescript-eslint to allow TypeScript to
  * provide autocompletions etc for the configuration.

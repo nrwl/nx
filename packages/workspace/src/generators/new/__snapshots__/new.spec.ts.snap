@@ -6,7 +6,10 @@ Object {
     "@nrwl/angular": "0.0.1",
   },
   "devDependencies": Object {
+    "@angular-devkit/core": "~15.1.0",
+    "@angular-devkit/schematics": "~15.1.0",
     "@nrwl/workspace": "0.0.1",
+    "@schematics/angular": "~15.1.0",
     "nx": "0.0.1",
     "prettier": "^2.6.2",
     "typescript": "~4.8.2",
@@ -14,13 +17,7 @@ Object {
   "license": "MIT",
   "name": "my-workspace",
   "private": true,
-  "scripts": Object {
-    "build": "nx build",
-    "ng": "nx",
-    "postinstall": "node ./decorate-angular-cli.js",
-    "start": "nx serve",
-    "test": "nx test",
-  },
+  "scripts": Object {},
   "version": "0.0.0",
 }
 `;
@@ -37,11 +34,7 @@ Object {
   "license": "MIT",
   "name": "my-workspace",
   "private": true,
-  "scripts": Object {
-    "build": "nx build",
-    "start": "nx serve",
-    "test": "nx test",
-  },
+  "scripts": Object {},
   "version": "0.0.0",
 }
 `;
@@ -59,11 +52,7 @@ Object {
   "license": "MIT",
   "name": "my-workspace",
   "private": true,
-  "scripts": Object {
-    "build": "nx build",
-    "start": "nx serve",
-    "test": "nx test",
-  },
+  "scripts": Object {},
   "version": "0.0.0",
 }
 `;

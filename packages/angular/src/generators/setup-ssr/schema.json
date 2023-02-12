@@ -51,7 +51,8 @@
     },
     "skipFormat": {
       "type": "boolean",
-      "description": "Skip formatting the workspace after the generator completes."
+      "description": "Skip formatting the workspace after the generator completes.",
+      "x-priority": "internal"
     }
   },
   "required": ["project"],

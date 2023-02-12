@@ -1,5 +1,5 @@
 import { Node, parse, renderers, transform } from '@markdoc/markdoc';
-import { DocumentData } from '@nrwl/nx-dev/models-document';
+import { load as yamlLoad } from 'js-yaml';
 import React, { ReactNode } from 'react';
 import { Fence } from './lib/nodes/fence.component';
 import { fence } from './lib/nodes/fence.schema';
@@ -18,10 +18,10 @@ import { Graph } from './lib/tags/graph.component';
 import { graph } from './lib/tags/graph.schema';
 import { Iframe } from './lib/tags/iframe.component';
 import { iframe } from './lib/tags/iframe.schema';
-import { NxCloudSection } from './lib/tags/nx-cloud-section.component';
-import { nxCloudSection } from './lib/tags/nx-cloud-section.schema';
 import { InstallNxConsole } from './lib/tags/install-nx-console.component';
 import { installNxConsole } from './lib/tags/install-nx-console.schema';
+import { NxCloudSection } from './lib/tags/nx-cloud-section.component';
+import { nxCloudSection } from './lib/tags/nx-cloud-section.schema';
 import { Persona, Personas } from './lib/tags/personas.component';
 import { persona, personas } from './lib/tags/personas.schema';
 import { SideBySide } from './lib/tags/side-by-side.component';
@@ -85,13 +85,19 @@ export const parseMarkdown: (markdown: string) => Node = (markdown) =>
 export const renderMarkdown: (
   documentContent: string,
   options: { filePath: string }
-) => ReactNode = (
+) => { metadata: Record<string, any>; node: ReactNode } = (
   documentContent: string,
   options: { filePath: string } = { filePath: '' }
-): ReactNode => {
+): { metadata: Record<string, any>; node: ReactNode } => {
   const ast = parseMarkdown(documentContent);
   const configuration = getMarkdocCustomConfig(options.filePath);
-  return renderers.react(transform(ast, configuration.config), React, {
-    components: configuration.components,
-  });
+
+  return {
+    metadata: ast.attributes['frontmatter']
+      ? (yamlLoad(ast.attributes['frontmatter']) as Record<string, any>)
+      : {},
+    node: renderers.react(transform(ast, configuration.config), React, {
+      components: configuration.components,
+    }),
+  };
 };

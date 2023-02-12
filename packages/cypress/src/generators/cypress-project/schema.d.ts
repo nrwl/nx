@@ -12,4 +12,5 @@ export interface Schema {
   standaloneConfig?: boolean;
   skipPackageJson?: boolean;
   rootProject?: boolean;
+  bundler?: 'webpack' | 'vite' | 'none';
 }

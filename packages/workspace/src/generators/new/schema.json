@@ -15,20 +15,24 @@
       },
       "x-prompt": "What name would you like to use for the workspace?"
     },
-    "cli": {
-      "description": "CLI used for generating code and running tasks.",
-      "type": "string",
-      "enum": ["nx", "angular"],
-      "default": "nx"
-    },
     "style": {
       "description": "The file extension to be used for style files.",
       "type": "string",
       "default": "css"
     },
+    "routing": {
+      "description": "Add routing to the generated application.",
+      "type": "boolean",
+      "default": true
+    },
     "npmScope": {
       "type": "string",
       "description": "Npm scope for importing libs."
+    },
+    "standaloneApi": {
+      "description": "Use the Standalone APIs if generating an Angular application.",
+      "type": "boolean",
+      "default": false
     },
     "defaultBase": {
       "type": "string",
@@ -62,6 +66,11 @@
       "description": "The package manager used to install dependencies.",
       "type": "string",
       "enum": ["npm", "yarn", "pnpm"]
+    },
+    "framework": {
+      "description": "The framework which the application is using",
+      "type": "string",
+      "enum": ["express", "koa", "fastify", "connect"]
     }
   },
   "additionalProperties": true

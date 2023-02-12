@@ -11,7 +11,7 @@ export function checkDependencies(
 ): {
   tmpTsConfig: string | null;
   projectRoot: string;
-  target: ProjectGraphProjectNode<any>;
+  target: ProjectGraphProjectNode;
   dependencies: DependentBuildableProjectNode[];
 } {
   const { target, dependencies } = calculateProjectDependencies(

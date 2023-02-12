@@ -209,6 +209,30 @@
       "type": "object",
       "description": "Target defaults",
       "properties": {
+        "executor": {
+          "description": "The function that Nx will invoke when you run this target",
+          "type": "string"
+        },
+        "options": {
+          "type": "object"
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "defaultConfiguration": {
+          "type": "string",
+          "description": "The name of a configuration to use as the default if a configuration is not provided"
+        },
+        "configurations": {
+          "type": "object",
+          "description": "provides extra sets of values that will be merged into the options map",
+          "additionalProperties": {
+            "type": "object"
+          }
+        },
         "inputs": {
           "$ref": "#/definitions/inputs"
         },
@@ -242,12 +266,6 @@
                 "required": ["projects", "target"]
               }
             ]
-          }
-        },
-        "outputs": {
-          "type": "array",
-          "items": {
-            "type": "string"
           }
         }
       },

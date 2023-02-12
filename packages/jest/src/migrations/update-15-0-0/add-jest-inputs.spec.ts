@@ -1,9 +1,9 @@
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import {
-  Tree,
   addProjectConfiguration,
-  readWorkspaceConfiguration,
-  updateWorkspaceConfiguration,
+  readNxJson,
+  Tree,
+  updateNxJson,
 } from '@nrwl/devkit';
 import addJestInputs from './add-jest-inputs';
 
@@ -15,8 +15,7 @@ describe('15.0.0 migration (add-jest-inputs)', () => {
   });
 
   it('should add inputs configuration for jest targets', async () => {
-    updateWorkspaceConfiguration(tree, {
-      version: 2,
+    updateNxJson(tree, {
       namedInputs: {
         default: ['{projectRoot}/**/*', 'sharedGlobals'],
         sharedGlobals: [],
@@ -43,7 +42,7 @@ describe('15.0.0 migration (add-jest-inputs)', () => {
 
     await addJestInputs(tree);
 
-    const updated = readWorkspaceConfiguration(tree);
+    const updated = readNxJson(tree);
     expect(updated).toMatchInlineSnapshot(`
       Object {
         "namedInputs": Object {
@@ -75,7 +74,6 @@ describe('15.0.0 migration (add-jest-inputs)', () => {
             ],
           },
         },
-        "version": 2,
       }
     `);
   });

@@ -100,6 +100,7 @@ export function Graph({
           workspaceLayout={parsedProps.workspaceLayout}
           dependencies={parsedProps.dependencies}
           affectedProjectIds={parsedProps.affectedProjectIds}
+          enableTooltips={parsedProps.enableTooltips}
         />
       ) : (
         <NxTaskGraphViz
@@ -108,6 +109,7 @@ export function Graph({
           projects={parsedProps.projects}
           taskGraphs={parsedProps.taskGraphs}
           taskId={parsedProps.taskId}
+          enableTooltips={parsedProps.enableTooltips}
         />
       )}
     </div>

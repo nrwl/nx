@@ -1,17 +1,17 @@
+import { detectPackageManager, joinPathFragments } from '@nrwl/devkit';
 import {
   checkFilesExist,
   cleanupProject,
-  detectPackageManager,
+  getPackageManagerCommand,
   isNotWindows,
   killPorts,
   newProject,
+  packageManagerLockFile,
   readFile,
-  readJson,
   rmDist,
   runCLI,
-  runCLIAsync,
+  runCommand,
   runCommandUntil,
-  runCypressTests,
   tmpProjPath,
   uniq,
   updateFile,
@@ -19,13 +19,17 @@ import {
 } from '@nrwl/e2e/utils';
 import { stringUtils } from '@nrwl/workspace';
 import * as http from 'http';
-import { getLockFileName } from 'nx/src/lock-file/lock-file';
+import { checkApp } from './utils';
 
 describe('Next.js Applications', () => {
   let proj: string;
   let originalEnv: string;
+  let packageManager;
 
-  beforeAll(() => (proj = newProject()));
+  beforeAll(() => {
+    proj = newProject();
+    packageManager = detectPackageManager(tmpProjPath());
+  });
 
   afterAll(() => cleanupProject());
 
@@ -151,6 +155,20 @@ describe('Next.js Applications', () => {
       `dist/apps/${appName}/public/shared/ui/hello.txt`
     );
   }, 300_000);
+
+  it('should build and install pruned lock file', () => {
+    const appName = uniq('app');
+    runCLI(`generate @nrwl/next:app ${appName} --no-interactive --style=css`);
+
+    const result = runCLI(`build ${appName} --generateLockfile=true`);
+    expect(result).not.toMatch(/Graph is not consistent/);
+    checkFilesExist(
+      `dist/apps/${appName}/${packageManagerLockFile[packageManager]}`
+    );
+    runCommand(`${getPackageManagerCommand().ciInstall}`, {
+      cwd: joinPathFragments(tmpProjPath(), 'dist/apps', appName),
+    });
+  }, 1_000_000);
 
   // TODO(jack): re-enable this test
   xit('should be able to serve with a proxy configuration', async () => {
@@ -363,58 +381,6 @@ describe('Next.js Applications', () => {
       checkExport: false,
     });
   }, 300_000);
-
-  it('should support different --style options', async () => {
-    const lessApp = uniq('app');
-
-    runCLI(`generate @nrwl/next:app ${lessApp} --no-interactive --style=less`);
-
-    await checkApp(lessApp, {
-      checkUnitTest: false,
-      checkLint: false,
-      checkE2E: false,
-      checkExport: false,
-    });
-
-    const stylusApp = uniq('app');
-
-    runCLI(
-      `generate @nrwl/next:app ${stylusApp} --no-interactive --style=styl`
-    );
-
-    await checkApp(stylusApp, {
-      checkUnitTest: false,
-      checkLint: false,
-      checkE2E: false,
-      checkExport: false,
-    });
-
-    const scApp = uniq('app');
-
-    runCLI(
-      `generate @nrwl/next:app ${scApp} --no-interactive --style=styled-components`
-    );
-
-    await checkApp(scApp, {
-      checkUnitTest: true,
-      checkLint: false,
-      checkE2E: false,
-      checkExport: false,
-    });
-
-    const emotionApp = uniq('app');
-
-    runCLI(
-      `generate @nrwl/next:app ${emotionApp} --no-interactive --style=@emotion/styled`
-    );
-
-    await checkApp(emotionApp, {
-      checkUnitTest: true,
-      checkLint: false,
-      checkE2E: false,
-      checkExport: false,
-    });
-  }, 300_000);
 });
 
 function getData(port: number, path = ''): Promise<any> {
@@ -430,52 +396,4 @@ function getData(port: number, path = ''): Promise<any> {
       });
     });
   });
-}
-
-async function checkApp(
-  appName: string,
-  opts: {
-    checkUnitTest: boolean;
-    checkLint: boolean;
-    checkE2E: boolean;
-    checkExport: boolean;
-  }
-) {
-  const buildResult = runCLI(`build ${appName}`);
-  expect(buildResult).toContain(`Compiled successfully`);
-  checkFilesExist(`dist/apps/${appName}/.next/build-manifest.json`);
-
-  const packageJson = readJson(`dist/apps/${appName}/package.json`);
-  expect(packageJson.dependencies.react).toBeDefined();
-  expect(packageJson.dependencies['react-dom']).toBeDefined();
-  expect(packageJson.dependencies.next).toBeDefined();
-
-  checkFilesExist(
-    `dist/apps/${appName}/${getLockFileName(
-      detectPackageManager(tmpProjPath())
-    )}`
-  );
-
-  if (opts.checkLint) {
-    const lintResults = runCLI(`lint ${appName}`);
-    expect(lintResults).toContain('All files pass linting.');
-  }
-
-  if (opts.checkUnitTest) {
-    const testResults = await runCLIAsync(`test ${appName}`);
-    expect(testResults.combinedOutput).toContain(
-      'Test Suites: 1 passed, 1 total'
-    );
-  }
-
-  if (opts.checkE2E && runCypressTests()) {
-    const e2eResults = runCLI(`e2e ${appName}-e2e --no-watch`);
-    expect(e2eResults).toContain('All specs passed!');
-    expect(await killPorts()).toBeTruthy();
-  }
-
-  if (opts.checkExport) {
-    runCLI(`export ${appName}`);
-    checkFilesExist(`dist/apps/${appName}/exported/index.html`);
-  }
 }

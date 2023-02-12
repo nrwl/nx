@@ -1,6 +1,7 @@
 import { PackageManager } from '../utils/package-manager';
 import {
   InputDefinition,
+  TargetConfiguration,
   TargetDependencyConfig,
 } from './workspace-json-project-json';
 
@@ -19,19 +20,17 @@ export interface NxAffectedConfig {
   defaultBase?: string;
 }
 
-export type TargetDefaults = Record<
-  string,
-  {
-    outputs?: string[];
-    dependsOn?: (TargetDependencyConfig | string)[];
-    inputs?: (InputDefinition | string)[];
-  }
->;
+export type TargetDefaults = Record<string, Partial<TargetConfiguration>>;
 
 export type TargetDependencies = Record<
   string,
   (TargetDependencyConfig | string)[]
 >;
+
+export interface NrwlJsPluginConfig {
+  analyzeSourceFiles?: boolean;
+  analyzePackageJson?: boolean;
+}
 
 /**
  * Nx.json configuration

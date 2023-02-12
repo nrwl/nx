@@ -5,7 +5,6 @@ import {
   updateJson,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
-import { convertToNxProjectGenerator } from '@nrwl/workspace/generators';
 import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
 import { basename } from 'path';
 import type { GeneratorOptions } from '../../schema';
@@ -15,6 +14,7 @@ import type {
   Target,
   ValidationResult,
 } from '../../utilities';
+import { convertToNxProject } from '../../utilities';
 import type { BuilderMigratorClassType } from '../builders';
 import {
   AngularDevkitKarmaMigrator,
@@ -87,19 +87,25 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
   }
 
   override async migrate(): Promise<void> {
+    if (this.skipMigration === true) {
+      return;
+    }
+
+    await super.migrate();
+
+    this.updateProjectConfiguration();
+
     await this.e2eMigrator.migrate();
 
     this.moveProjectFiles();
-    await this.updateProjectConfiguration();
+    this.updateProjectConfigurationTargets();
 
     for (const builderMigrator of this.builderMigrators ?? []) {
       await builderMigrator.migrate();
     }
 
     this.updateTsConfigs();
-    this.updateCacheableOperations(
-      [this.targetNames.build, this.targetNames.e2e].filter(Boolean)
-    );
+    this.setCacheableOperations();
   }
 
   override validate(): ValidationResult {
@@ -117,7 +123,7 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
 
   private moveProjectFiles(): void {
     // project is self-contained and can be safely moved
-    if (this.projectConfig.root !== '') {
+    if (this.project.oldRoot !== '') {
       this.moveDir(this.project.oldRoot, this.project.newRoot);
       return;
     }
@@ -145,10 +151,39 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
     this.moveDir(this.project.oldSourceRoot, this.project.newSourceRoot);
   }
 
-  private async updateProjectConfiguration(): Promise<void> {
+  private setCacheableOperations(): void {
+    const toCache = [];
+    if (
+      this.targetNames.build &&
+      !this.shouldSkipTargetTypeMigration('build')
+    ) {
+      toCache.push(this.targetNames.build);
+    }
+    if (this.targetNames.e2e && !this.shouldSkipTargetTypeMigration('e2e')) {
+      toCache.push(this.targetNames.e2e);
+    }
+
+    if (toCache.length) {
+      this.updateCacheableOperations(toCache);
+    }
+  }
+
+  private updateProjectConfiguration(): void {
+    convertToNxProject(this.tree, this.project.name);
+    this.moveFile(
+      joinPathFragments(this.project.oldRoot, 'project.json'),
+      joinPathFragments(this.project.newRoot, 'project.json')
+    );
+
     this.projectConfig.root = this.project.newRoot;
     this.projectConfig.sourceRoot = this.project.newSourceRoot;
 
+    updateProjectConfiguration(this.tree, this.project.name, {
+      ...this.projectConfig,
+    });
+  }
+
+  private updateProjectConfigurationTargets(): void {
     if (
       !this.projectConfig.targets ||
       !Object.keys(this.projectConfig.targets).length
@@ -156,20 +191,16 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
       this.logger.warn(
         'The project does not have any targets configured. Skipping updating targets.'
       );
-    } else {
-      this.updateBuildTargetConfiguration();
-      this.updateServerTargetConfiguration();
-      this.updatePrerenderTargetConfiguration();
-      this.updateServeSsrTargetConfiguration();
+      return;
     }
+
+    this.updateBuildTargetConfiguration();
+    this.updateServerTargetConfiguration();
+    this.updatePrerenderTargetConfiguration();
+    this.updateServeSsrTargetConfiguration();
 
     updateProjectConfiguration(this.tree, this.project.name, {
       ...this.projectConfig,
-    });
-
-    await convertToNxProjectGenerator(this.tree, {
-      project: this.project.name,
-      skipFormat: true,
     });
   }
 
@@ -246,6 +277,10 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
       return;
     }
 
+    if (this.shouldSkipTargetTypeMigration('build')) {
+      return;
+    }
+
     const buildTarget = this.projectConfig.targets[this.targetNames.build];
 
     if (
@@ -282,7 +317,10 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
   }
 
   private updatePrerenderTargetConfiguration(): void {
-    if (!this.targetNames.prerender) {
+    if (
+      !this.targetNames.prerender ||
+      this.shouldSkipTargetTypeMigration('prerender')
+    ) {
       return;
     }
 
@@ -301,7 +339,10 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
   }
 
   private updateServerTargetConfiguration(): void {
-    if (!this.targetNames.server) {
+    if (
+      !this.targetNames.server ||
+      this.shouldSkipTargetTypeMigration('server')
+    ) {
       return;
     }
 
@@ -341,7 +382,10 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
   }
 
   private updateServeSsrTargetConfiguration(): void {
-    if (!this.targetNames.serveSsr) {
+    if (
+      !this.targetNames.serveSsr ||
+      this.shouldSkipTargetTypeMigration('serveSsr')
+    ) {
       return;
     }
 
@@ -381,7 +425,10 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
     rootTsConfigFile: string,
     projectOffsetFromRoot: string
   ): void {
-    if (!this.targetNames.build) {
+    if (
+      !this.targetNames.build ||
+      this.shouldSkipTargetTypeMigration('build')
+    ) {
       return;
     }
 
@@ -405,7 +452,10 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
   private updateTsConfigFileUsedByServerTarget(
     projectOffsetFromRoot: string
   ): void {
-    if (!this.targetNames.server) {
+    if (
+      !this.targetNames.server ||
+      this.shouldSkipTargetTypeMigration('server')
+    ) {
       return;
     }
 

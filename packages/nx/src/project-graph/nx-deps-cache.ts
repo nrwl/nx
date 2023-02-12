@@ -145,7 +145,7 @@ export function writeCache(cache: ProjectGraphCache): void {
 export function shouldRecomputeWholeGraph(
   cache: ProjectGraphCache,
   packageJsonDeps: Record<string, string>,
-  workspaceJson: ProjectsConfigurations,
+  projects: ProjectsConfigurations,
   nxJson: NxJsonConfiguration,
   tsConfig: { compilerOptions: { paths: { [k: string]: any } } }
 ): boolean {
@@ -166,7 +166,7 @@ export function shouldRecomputeWholeGraph(
         (cache.nodes[p].type === 'app' ||
           cache.nodes[p].type === 'lib' ||
           cache.nodes[p].type === 'e2e') &&
-        !workspaceJson.projects[p]
+        !projects.projects[p]
     )
   ) {
     return true;
@@ -252,7 +252,7 @@ function processProjectNode(
   }
 
   const fileDataFromCache = {} as any;
-  for (let f of cachedNode.data.files) {
+  for (let f of (cachedNode.data as any).files) {
     fileDataFromCache[f.file] = f;
   }
 

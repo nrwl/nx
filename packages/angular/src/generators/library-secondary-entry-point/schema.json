@@ -14,14 +14,16 @@
         "index": 0
       },
       "x-prompt": "What name would you like to use for the secondary entry point?",
-      "pattern": "^[a-zA-Z].*$"
+      "pattern": "^[a-zA-Z].*$",
+      "x-priority": "important"
     },
     "library": {
       "type": "string",
       "description": "The name of the library to create the secondary entry point for.",
       "x-prompt": "What library would you like to create the secondary entry point for?",
       "pattern": "^[a-zA-Z].*$",
-      "x-dropdown": "projects"
+      "x-dropdown": "projects",
+      "x-priority": "important"
     },
     "skipModule": {
       "type": "boolean",

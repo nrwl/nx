@@ -5,9 +5,9 @@ import type {
 } from '@nrwl/devkit';
 import {
   joinPathFragments,
-  readWorkspaceConfiguration,
+  readNxJson,
   updateJson,
-  updateWorkspaceConfiguration,
+  updateNxJson,
 } from '@nrwl/devkit';
 import { basename } from 'path';
 import type { Logger } from '../utilities/logger';
@@ -31,6 +31,7 @@ export abstract class Migrator {
   }
 
   abstract migrate(): Promise<void> | void;
+
   abstract validate(): ValidationResult;
 
   protected convertAsset(asset: string | any): string | any {
@@ -94,21 +95,19 @@ export abstract class Migrator {
       return;
     }
 
-    const workspaceConfig = readWorkspaceConfiguration(this.tree);
+    const nxJson = readNxJson(this.tree);
 
-    Object.keys(workspaceConfig.tasksRunnerOptions ?? {}).forEach(
-      (taskRunnerName) => {
-        const taskRunner = workspaceConfig.tasksRunnerOptions[taskRunnerName];
-        taskRunner.options.cacheableOperations = Array.from(
-          new Set([
-            ...(taskRunner.options.cacheableOperations ?? []),
-            ...targetNames,
-          ])
-        );
-      }
-    );
+    Object.keys(nxJson.tasksRunnerOptions ?? {}).forEach((taskRunnerName) => {
+      const taskRunner = nxJson.tasksRunnerOptions[taskRunnerName];
+      taskRunner.options.cacheableOperations = Array.from(
+        new Set([
+          ...(taskRunner.options.cacheableOperations ?? []),
+          ...targetNames,
+        ])
+      );
+    });
 
-    updateWorkspaceConfiguration(this.tree, workspaceConfig);
+    updateNxJson(this.tree, nxJson);
   }
 
   // TODO(leo): This should be moved to BuilderMigrator once everything is split into builder migrators.

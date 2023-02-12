@@ -32,7 +32,7 @@ export async function addJest(
     moduleFileExtensions: ['ts', 'js', 'html', 'tsx', 'jsx'],
     setupFilesAfterEnv: ['<rootDir>/test-setup.${js ? 'js' : 'ts'}'],
     moduleNameMapper: {
-      '\\.svg': '@nrwl/expo/plugins/jest/svg-mock'
+      '\\\\.svg$': '@nrwl/expo/plugins/jest/svg-mock'
     }
   };`;
   host.write(configPath, content);

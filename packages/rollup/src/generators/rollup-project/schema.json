@@ -14,7 +14,8 @@
         "index": 0
       },
       "x-dropdown": "project",
-      "x-prompt": "What is the name of the project to set up a rollup for?"
+      "x-prompt": "What is the name of the project to set up a rollup for?",
+      "x-priority": "important"
     },
     "compiler": {
       "type": "string",
@@ -25,26 +26,31 @@
     "main": {
       "type": "string",
       "description": "Path relative to the workspace root for the main entry file. Defaults to '<projectRoot>/src/main.ts'.",
-      "alias": "entryFile"
+      "alias": "entryFile",
+      "x-priority": "important"
     },
     "tsConfig": {
       "type": "string",
-      "description": "Path relative to the workspace root for the tsconfig file to build with. Defaults to '<projectRoot>/tsconfig.app.json'."
+      "description": "Path relative to the workspace root for the tsconfig file to build with. Defaults to '<projectRoot>/tsconfig.app.json'.",
+      "x-priority": "important"
     },
     "skipFormat": {
       "description": "Skip formatting files.",
       "type": "boolean",
-      "default": false
+      "default": false,
+      "x-priority": "internal"
     },
     "skipPackageJson": {
       "type": "boolean",
       "default": false,
-      "description": "Do not add dependencies to `package.json`."
+      "description": "Do not add dependencies to `package.json`.",
+      "x-priority": "internal"
     },
     "skipValidation": {
       "type": "boolean",
       "default": false,
-      "description": "Do not perform any validation on existing project."
+      "description": "Do not perform any validation on existing project.",
+      "x-priority": "internal"
     },
     "importPath": {
       "type": "string",

@@ -1,11 +1,10 @@
-import type { Target } from '@angular-devkit/architect';
 import { merge } from 'webpack-merge';
 
 export async function mergeCustomWebpackConfig(
   baseWebpackConfig: any,
   pathToWebpackConfig: string,
   options: { tsConfig: string; [k: string]: any },
-  target: Target
+  target: import('@angular-devkit/architect').Target
 ) {
   const customWebpackConfiguration = resolveCustomWebpackConfig(
     pathToWebpackConfig,
@@ -35,6 +34,19 @@ export function resolveCustomWebpackConfig(path: string, tsConfig: string) {
   // `export default { ... }`. The ESM format is compiled into:
   // `{ default: { ... } }`
   return customWebpackConfig.default ?? customWebpackConfig;
+}
+
+export function resolveIndexHtmlTransformer(
+  path: string,
+  tsConfig: string,
+  target: import('@angular-devkit/architect').Target
+) {
+  tsNodeRegister(path, tsConfig);
+
+  const indexTransformer = require(path);
+  const transform = indexTransformer.default ?? indexTransformer;
+
+  return (indexHtml) => transform(target, indexHtml);
 }
 
 function tsNodeRegister(file: string, tsConfig?: string) {

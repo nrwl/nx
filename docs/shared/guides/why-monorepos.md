@@ -8,13 +8,13 @@ If you are familiar with Lerna or Yarn workspaces, check out [this guide](/recip
 
 ## What are the benefits of a monorepo?
 
-- **Shared code and visibility** - Keeps your code DRY across your entire organization. Reuse validation code, UI components, and types across the codebase. Reuse code between the backend, the frontend, and utility libraries.
+- **Shared code and visibility** - [Keeps your code DRY across your entire organization.](/more-concepts/code-sharing) Reuse validation code, UI components, and types across the codebase. Reuse code between the backend, the frontend, and utility libraries.
 
 - **Atomic changes** - Change a server API and modify the downstream applications that consume that API in the same commit. You can change a button component in a shared library and the applications that use that component in the same commit. A monorepo saves the pain of trying to coordinate commits across multiple repositories.
 
 - **Developer mobility** - Get a consistent way of building and testing applications written using different tools and technologies. Developers can confidently contribute to other teams’ applications and verify that their changes are safe.
 
-- **Single set of dependencies** - Use a single version of all third-party dependencies, reducing inconsistencies between applications. Less actively developed applications are still kept up-to-date with the latest version of a framework, library, or build tool.
+- **Single set of dependencies** - [Use a single version of all third-party dependencies](/more-concepts/dependency-management), reducing inconsistencies between applications. Less actively developed applications are still kept up-to-date with the latest version of a framework, library, or build tool.
 
 ## Why not just code collocation?
 
@@ -38,7 +38,7 @@ Nx provides tools to give you the benefits of a monorepo without the drawbacks o
 
 - **Consistent Code Generation** - Generators allow you to customize and standardize organizational conventions and structure, removing the need to perform the same manual setup tasks repetitively.
 
-- **Affected Commands** - [Nx’s affected commands](/nx/affected) analyze your source code, the context of the changes, and only runs tasks on the affected projects impacted by the source code changes.
+- **Affected Commands** - [Nx’s affected commands](/packages/nx/documents/affected) analyze your source code, the context of the changes, and only runs tasks on the affected projects impacted by the source code changes.
 
 - **Distributed Caching** - Nx provides local caching and support for distributed caching of command executions. With distributed caching, when someone on your team runs a command, everyone else gets access to those artifacts to speed up their command executions, bringing them down from minutes to seconds. Nx helps you scale your development to massive applications and libraries even more with distributed task execution and incremental builds.
 

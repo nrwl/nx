@@ -1,4 +1,5 @@
 import { EnvelopeIcon } from '@heroicons/react/24/solid';
+import { SectionHeading } from '@nrwl/nx-dev/ui-common';
 
 export function ConnectWithUs(): JSX.Element {
   return (
@@ -8,9 +9,9 @@ export function ConnectWithUs(): JSX.Element {
     >
       <header className="space-y-10 md:py-12 lg:w-5/12 xl:w-5/12">
         <div>
-          <h1 className="mt-4 text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 sm:text-5xl">
+          <SectionHeading as="h1" variant="display" id="connect-with-us">
             Let's connect together!
-          </h1>
+          </SectionHeading>
           <p className="mt-4">
             There are many ways you can connect with the open-source Nx
             community. Let's connect together!
@@ -70,7 +71,7 @@ export function ConnectWithUs(): JSX.Element {
               </div>
               <h4 className="mb-2 text-lg font-bold">Livestreams on Youtube</h4>
               <a
-                href="https://www.youtube.com/nrwl_io/videos?utm_source=nx.dev"
+                href="https://www.youtube.com/@NxDevtools/videos?utm_source=nx.dev"
                 rel="noreferrer"
                 target="_blank"
                 title="Nx Youtube channel"

@@ -1,19 +1,38 @@
 import type { Target } from 'nx/src/command-line/run';
+import type { ProjectGraph } from 'nx/src/config/project-graph';
+// eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { splitTarget } from 'nx/src/utils/split-target';
+import { requireNx } from '../../nx';
 
+const { readCachedProjectGraph } = requireNx();
+
+/**
+ * @deprecated(v17) A project graph should be passed to parseTargetString for best accuracy.
+ */
+export function parseTargetString(targetString: string): Target;
 /**
  * Parses a target string into {project, target, configuration}
  *
  * Examples:
  * ```typescript
- * parseTargetString("proj:test") // returns { project: "proj", target: "test" }
- * parseTargetString("proj:test:production") // returns { project: "proj", target: "test", configuration: "production" }
+ * parseTargetString("proj:test", graph) // returns { project: "proj", target: "test" }
+ * parseTargetString("proj:test:production", graph) // returns { project: "proj", target: "test", configuration: "production" }
  * ```
  *
  * @param targetString - target reference
  */
-export function parseTargetString(targetString: string): Target {
-  const [project, target, configuration] = splitTarget(targetString);
+export function parseTargetString(
+  targetString: string,
+  projectGraph: ProjectGraph
+): Target;
+export function parseTargetString(
+  targetString: string,
+  projectGraph = readCachedProjectGraph()
+): Target {
+  const [project, target, configuration] = splitTarget(
+    targetString,
+    projectGraph
+  );
   if (!project || !target) {
     throw new Error(`Invalid Target String: ${targetString}`);
   }

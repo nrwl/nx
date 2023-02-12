@@ -5,20 +5,20 @@ import {
   joinPathFragments,
   offsetFromRoot,
   ProjectConfiguration,
+  readNxJson,
   readProjectConfiguration,
   Tree,
   updateJson,
   updateProjectConfiguration,
-  NxJsonConfiguration,
-  readWorkspaceConfiguration,
-  updateWorkspaceConfiguration,
+  updateNxJson,
 } from '@nrwl/devkit';
 import { installedCypressVersion } from '../../utils/cypress-version';
 
 import {
   cypressVersion,
+  cypressViteDevServerVersion,
   cypressWebpackVersion,
-  webpackHttpPluginVersion,
+  htmlWebpackPluginVersion,
 } from '../../utils/versions';
 import { CypressComponentProjectSchema } from './schema';
 
@@ -35,11 +35,11 @@ export async function cypressComponentProject(
 
   const projectConfig = readProjectConfiguration(tree, options.project);
 
-  const installDepsTask = updateDeps(tree);
+  const installDepsTask = updateDeps(tree, options);
 
   addProjectFiles(tree, projectConfig, options);
   addTargetToProject(tree, projectConfig, options);
-  updateNxJson(tree);
+  updateNxJsonConfiguration(tree);
   updateTsConfigForComponentTesting(tree, projectConfig);
 
   if (!options.skipFormat) {
@@ -50,12 +50,17 @@ export async function cypressComponentProject(
   };
 }
 
-function updateDeps(tree: Tree) {
+function updateDeps(tree: Tree, options: CypressComponentProjectSchema) {
   const devDeps = {
-    '@cypress/webpack-dev-server': cypressWebpackVersion,
-    'html-webpack-plugin': webpackHttpPluginVersion,
     cypress: cypressVersion,
   };
+
+  if (options.bundler === 'vite') {
+    devDeps['@cypress/vite-dev-server'] = cypressViteDevServerVersion;
+  } else {
+    devDeps['@cypress/webpack-dev-server'] = cypressWebpackVersion;
+    devDeps['html-webpack-plugin'] = htmlWebpackPluginVersion;
+  }
 
   return addDependenciesToPackageJson(tree, {}, devDeps);
 }
@@ -94,17 +99,17 @@ function addTargetToProject(
   updateProjectConfiguration(tree, options.project, projectConfig);
 }
 
-function updateNxJson(tree: Tree) {
-  const workspaceConfiguration = readWorkspaceConfiguration(tree);
-  workspaceConfiguration.tasksRunnerOptions = {
-    ...workspaceConfiguration?.tasksRunnerOptions,
+function updateNxJsonConfiguration(tree: Tree) {
+  const nxJson = readNxJson(tree);
+  nxJson.tasksRunnerOptions = {
+    ...nxJson?.tasksRunnerOptions,
     default: {
-      ...workspaceConfiguration?.tasksRunnerOptions?.default,
+      ...nxJson?.tasksRunnerOptions?.default,
       options: {
-        ...workspaceConfiguration?.tasksRunnerOptions?.default?.options,
+        ...nxJson?.tasksRunnerOptions?.default?.options,
         cacheableOperations: Array.from(
           new Set([
-            ...(workspaceConfiguration?.tasksRunnerOptions?.default?.options
+            ...(nxJson?.tasksRunnerOptions?.default?.options
               ?.cacheableOperations ?? []),
             'component-test',
           ])
@@ -113,11 +118,11 @@ function updateNxJson(tree: Tree) {
     },
   };
 
-  if (workspaceConfiguration.namedInputs) {
-    workspaceConfiguration.targetDefaults ??= {};
-    const productionFileSet = workspaceConfiguration.namedInputs?.production;
+  if (nxJson.namedInputs) {
+    nxJson.targetDefaults ??= {};
+    const productionFileSet = nxJson.namedInputs?.production;
     if (productionFileSet) {
-      workspaceConfiguration.namedInputs.production = Array.from(
+      nxJson.namedInputs.production = Array.from(
         new Set([
           ...productionFileSet,
           '!{projectRoot}/cypress/**/*',
@@ -126,13 +131,13 @@ function updateNxJson(tree: Tree) {
         ])
       );
     }
-    workspaceConfiguration.targetDefaults['component-test'] ??= {};
-    workspaceConfiguration.targetDefaults['component-test'].inputs ??= [
+    nxJson.targetDefaults['component-test'] ??= {};
+    nxJson.targetDefaults['component-test'].inputs ??= [
       'default',
       productionFileSet ? '^production' : '^default',
     ];
   }
-  updateWorkspaceConfiguration(tree, workspaceConfiguration);
+  updateNxJson(tree, nxJson);
 }
 
 export function updateTsConfigForComponentTesting(

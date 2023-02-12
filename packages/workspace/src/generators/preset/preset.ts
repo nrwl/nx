@@ -1,14 +1,12 @@
 import {
-  addDependenciesToPackageJson,
   formatFiles,
   installPackagesTask,
   names,
-  readWorkspaceConfiguration,
+  readNxJson,
   Tree,
-  updateWorkspaceConfiguration,
+  updateNxJson,
 } from '@nrwl/devkit';
 import { Schema } from './schema';
-import { insertStatement } from '../utils/insert-statement';
 import { Preset } from '../utils/presets';
 
 export async function presetGenerator(tree: Tree, options: Schema) {
@@ -19,6 +17,7 @@ export async function presetGenerator(tree: Tree, options: Schema) {
     installPackagesTask(tree);
   };
 }
+
 export default presetGenerator;
 
 async function createPreset(tree: Tree, options: Schema) {
@@ -33,7 +32,8 @@ async function createPreset(tree: Tree, options: Schema) {
       name: options.name,
       style: options.style,
       linter: options.linter,
-      standaloneConfig: options.standaloneConfig,
+      standalone: options.standaloneApi,
+      routing: options.routing,
     });
   } else if (options.preset === Preset.AngularStandalone) {
     const {
@@ -44,8 +44,9 @@ async function createPreset(tree: Tree, options: Schema) {
       name: options.name,
       style: options.style,
       linter: options.linter,
-      standaloneConfig: options.standaloneConfig,
+      routing: options.routing,
       rootProject: true,
+      standalone: options.standaloneApi,
     });
   } else if (options.preset === Preset.ReactMonorepo) {
     const {
@@ -56,7 +57,7 @@ async function createPreset(tree: Tree, options: Schema) {
       name: options.name,
       style: options.style,
       linter: options.linter,
-      standaloneConfig: options.standaloneConfig,
+      bundler: options.bundler ?? 'webpack',
     });
   } else if (options.preset === Preset.ReactStandalone) {
     const {
@@ -67,11 +68,10 @@ async function createPreset(tree: Tree, options: Schema) {
       name: options.name,
       style: options.style,
       linter: options.linter,
-      standaloneConfig: options.standaloneConfig,
       rootProject: true,
-      bundler: 'vite',
-      e2eTestRunner: 'none',
-      unitTestRunner: 'vitest',
+      bundler: options.bundler ?? 'vite',
+      e2eTestRunner: 'cypress',
+      unitTestRunner: options.bundler === 'vite' ? 'vitest' : 'jest',
     });
   } else if (options.preset === Preset.NextJs) {
     const { applicationGenerator: nextApplicationGenerator } = require('@nrwl' +
@@ -81,7 +81,6 @@ async function createPreset(tree: Tree, options: Schema) {
       name: options.name,
       style: options.style,
       linter: options.linter,
-      standaloneConfig: options.standaloneConfig,
     });
   } else if (options.preset === Preset.WebComponents) {
     const { applicationGenerator: webApplicationGenerator } = require('@nrwl' +
@@ -91,7 +90,6 @@ async function createPreset(tree: Tree, options: Schema) {
       name: options.name,
       style: options.style,
       linter: options.linter,
-      standaloneConfig: options.standaloneConfig,
       bundler: 'vite',
     });
   } else if (options.preset === Preset.Nest) {
@@ -109,7 +107,6 @@ async function createPreset(tree: Tree, options: Schema) {
     await expressApplicationGenerator(tree, {
       name: options.name,
       linter: options.linter,
-      standaloneConfig: options.standaloneConfig,
     });
   } else if (options.preset === Preset.ReactNative) {
     const { reactNativeApplicationGenerator } = require('@nrwl' +
@@ -117,7 +114,6 @@ async function createPreset(tree: Tree, options: Schema) {
     await reactNativeApplicationGenerator(tree, {
       name: options.name,
       linter: options.linter,
-      standaloneConfig: options.standaloneConfig,
       e2eTestRunner: 'detox',
     });
   } else if (options.preset === Preset.Expo) {
@@ -125,24 +121,28 @@ async function createPreset(tree: Tree, options: Schema) {
     await expoApplicationGenerator(tree, {
       name: options.name,
       linter: options.linter,
-      standaloneConfig: options.standaloneConfig,
       e2eTestRunner: 'detox',
     });
   } else if (options.preset === Preset.TS) {
-    const c = readWorkspaceConfiguration(tree);
+    const c = readNxJson(tree);
     c.workspaceLayout = {
       appsDir: 'packages',
       libsDir: 'packages',
     };
-    updateWorkspaceConfiguration(tree, c);
+    updateNxJson(tree, c);
+  } else if (options.preset === Preset.NodeServer) {
+    const { applicationGenerator: nodeApplicationGenerator } = require('@nrwl' +
+      '/node');
+    await nodeApplicationGenerator(tree, {
+      name: options.name,
+      linter: options.linter,
+      standaloneConfig: options.standaloneConfig,
+      framework: options.framework,
+      docker: options.docker,
+      rootProject: true,
+    });
   } else {
     throw new Error(`Invalid preset ${options.preset}`);
-  }
-}
-
-function addPolyfills(host: Tree, polyfillsPath: string, polyfills: string[]) {
-  for (const polyfill of polyfills) {
-    insertStatement(host, polyfillsPath, `import '${polyfill}';\n`);
   }
 }
 

@@ -1,0 +1,30 @@
+{
+  "name": "npm-package",
+  "factory": "./src/generators/npm-package/npm-package#npmPackageGenerator",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "$id": "NxWorkspaceNpmPackage",
+    "title": "Add a minimal npm package",
+    "description": "Add a minimal npm package.",
+    "cli": "nx",
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "description": "Package name.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "What name of your npm package?",
+        "pattern": "^[a-zA-Z].*$"
+      }
+    },
+    "required": ["name"],
+    "presets": []
+  },
+  "description": "Create a minimal NPM package.",
+  "x-type": "library",
+  "implementation": "/packages/workspace/src/generators/npm-package/npm-package#npmPackageGenerator.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/workspace/src/generators/npm-package/schema.json",
+  "type": "generator"
+}

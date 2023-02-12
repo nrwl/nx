@@ -6,6 +6,7 @@ export interface Schema {
   skipPackageJson?: boolean;
   directory?: string;
   unitTestRunner?: 'jest' | 'none';
+  e2eTestRunner?: 'jest' | 'none';
   linter?: Linter;
   tags?: string;
   frontendProject?: string;
@@ -14,4 +15,11 @@ export interface Schema {
   pascalCaseFiles?: boolean;
   setParserOptionsProject?: boolean;
   standaloneConfig?: boolean;
+  bundler?: 'esbuild' | 'webpack';
+  framework?: NodeJsFrameWorks;
+  port?: number;
+  rootProject?: boolean;
+  docker?: boolean;
 }
+
+export type NodeJsFrameWorks = 'express' | 'koa' | 'fastify' | 'none';
