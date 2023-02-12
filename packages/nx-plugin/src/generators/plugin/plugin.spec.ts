@@ -115,6 +115,7 @@ describe('NxPlugin Plugin Generator', () => {
       'libs/my-plugin/project.json',
       'libs/my-plugin/generators.json',
       'libs/my-plugin/executors.json',
+      'libs/my-plugin/index.ts',
       'libs/my-plugin/src/generators/my-plugin/schema.d.ts',
       'libs/my-plugin/src/generators/my-plugin/generator.ts',
       'libs/my-plugin/src/generators/my-plugin/generator.spec.ts',
