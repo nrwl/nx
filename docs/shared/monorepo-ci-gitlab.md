@@ -25,6 +25,9 @@ stages:
     - NX_HEAD=$CI_COMMIT_SHA
     - NX_BASE=${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
 
+variables:
+  GIT_DEPTH: 0
+
 format-check:
   stage: test
   extends: .distributed
