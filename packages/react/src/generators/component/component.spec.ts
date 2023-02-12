@@ -113,10 +113,13 @@ describe('component', () => {
         name: 'hello',
         style: 'css',
         project: projectName,
-        classComponent: true
+        classComponent: true,
       });
 
-      const tsxFileContent = appTree.read(`libs/my-lib/src/lib/hello/hello.tsx/`, 'utf-8');
+      const tsxFileContent = appTree.read(
+        `libs/my-lib/src/lib/hello/hello.tsx/`,
+        'utf-8'
+      );
       expect(tsxFileContent).toMatch(/override\srender\(\)/);
     });
   });
