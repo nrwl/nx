@@ -136,7 +136,7 @@ Hello World
 
 {% callout type="warning" title="string" %}
 
-Nx uses the paths from tsconfig.base.json when running plugins locally, but uses the recommended tsconfig for node 16 for other compiler options. See https://github.com/tsconfig/bases/blob/main/bases/node16.json
+Nx uses the paths from `tsconfig.base.json` when running plugins locally, but uses the recommended tsconfig for node 16 for other compiler options. See https://github.com/tsconfig/bases/blob/main/bases/node16.json
 
 {% /callout %}
 

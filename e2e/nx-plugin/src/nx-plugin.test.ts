@@ -70,10 +70,9 @@ describe('Nx Plugin', () => {
   // we should change it to point to the right collection using relative path
   // TODO: Re-enable this to work with pnpm
   xit(`should run the plugin's e2e tests`, async () => {
-    const plugin = uniq('plugin-name');
-    runCLI(`generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint`);
-
     if (isNotWindows()) {
+      const plugin = uniq('plugin-name');
+      runCLI(`generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint`);
       const e2eResults = runCLI(`e2e ${plugin}-e2e`);
       expect(e2eResults).toContain('Successfully ran target e2e');
       expect(await killPorts()).toBeTruthy();
@@ -281,7 +280,7 @@ describe('Nx Plugin', () => {
   /**
    * @todo(@AgentEnder): reenable after figuring out @swc-node
    */
-  xdescribe('local plugins', () => {
+  describe('local plugins', () => {
     let plugin: string;
     beforeEach(() => {
       plugin = uniq('plugin');

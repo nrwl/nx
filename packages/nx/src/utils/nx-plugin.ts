@@ -24,12 +24,6 @@ import {
 import { normalizePath } from './path';
 import { join } from 'path';
 
-import type {
-  ModuleKind,
-  ModuleResolutionKind,
-  ScriptTarget,
-} from 'typescript';
-
 export type ProjectTargetConfigurator = (
   file: string
 ) => Record<string, TargetConfiguration>;
