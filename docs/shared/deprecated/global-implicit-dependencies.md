@@ -38,7 +38,7 @@ For a more detailed explanation, read the [Customizing Inputs and Named Inputs g
 
 ### Dependencies on Sections of the Root `package.json` File
 
-You used to be able to set up dependencies on specific packages in the `dependenceis` and `devDependencies` sections of the `package.json` file, like this:
+You used to be able to set up dependencies on specific packages in the `dependencies` and `devDependencies` sections of the `package.json` file, like this:
 
 ```json
 {
