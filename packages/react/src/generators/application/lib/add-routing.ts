@@ -35,11 +35,15 @@ export function addRouting(host: Tree, options: NormalizedSchema) {
   );
   host.write(appPath, changes);
 
-  return addDependenciesToPackageJson(
-    host,
-    { 'react-router-dom': reactRouterDomVersion },
-    { '@types/react-router-dom': typesReactRouterDomVersion }
-  );
+  if (!options.skipPackageJson) {
+    return addDependenciesToPackageJson(
+      host,
+      { 'react-router-dom': reactRouterDomVersion },
+      { '@types/react-router-dom': typesReactRouterDomVersion }
+    );
+  }
+
+  return () => {};
 }
 
 function maybeJs(options: NormalizedSchema, path: string): string {
