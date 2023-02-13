@@ -8,6 +8,19 @@
     "description": "Packages a library for different web usages (ESM, CommonJS).",
     "cli": "nx",
     "type": "object",
+    "presets": [
+      {
+        "name": "Including Dependencies in package.json",
+        "keys": [
+          "main",
+          "outputPath",
+          "project",
+          "tsConfig",
+          "buildableProjectDepsInPackageJsonType",
+          "updateBuildableProjectDepsInPackageJson"
+        ]
+      }
+    ],
     "properties": {
       "project": {
         "type": "string",
@@ -172,7 +185,7 @@
         ]
       }
     },
-    "presets": []
+    "examplesFile": "{% tabs %}\n{% tab label=\"Including Dependencies\" %}\nTo include dependencies in the output `package.json`, the dependencies must be installed as a **dependencies** in the root `package.json`\n\n```json {% fileName=\"package.json\" %}\n{\n  \"dependencies\": {\n    \"some-dependency\": \"^1.0.0\"\n  }\n}\n```\n\nTo have dependencies in the be listed in the final `package.json` of your project, set the `updateBuildableProjectDepsInPackageJson` option to `true`. After than dependencies will be added to the `peerDependencies` field of the output `package.json`. You can use `buildableProjectDepsInPackageJsonType` option to change which field the dependencies are output to.\n\n```json {% fileName=\"project.json\" %}\n{\n  \"targets\": {\n    \"build\": {\n      \"executor\": \"@nrwl/rollup:rollup\",\n      \"options\": {\n        \"buildableProjectDepsInPackageJsonType\": \"dependencies\",\n        \"updateBuildableProjectDepsInPackageJson\": true\n      }\n    }\n  }\n}\n```\n\n{% /tab}\n{% /tabs %}\n"
   },
   "description": "Bundle a package using Rollup.",
   "aliases": [],
