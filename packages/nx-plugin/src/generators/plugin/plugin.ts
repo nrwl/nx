@@ -9,7 +9,6 @@ import {
   readProjectConfiguration,
   Tree,
   updateJson,
-  readJson,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
 import { libraryGenerator } from '@nrwl/js';
@@ -26,7 +25,6 @@ import pluginLintCheckGenerator from '../lint-checks/generator';
 import { NormalizedSchema, normalizeOptions } from './utils/normalize-schema';
 
 import type { Schema } from './schema';
-import { readJSON } from 'fs-extra';
 
 async function addFiles(host: Tree, options: NormalizedSchema) {
   host.delete(normalizePath(`${options.projectRoot}/src/lib`));
