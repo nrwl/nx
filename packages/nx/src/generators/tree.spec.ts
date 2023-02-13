@@ -262,12 +262,12 @@ describe('tree', () => {
           type: 'CREATE',
           content: 'new child content',
         },
-        { path: 'root-file.txt', type: 'DELETE', content: null },
         {
           path: 'renamed-root-file.txt',
           type: 'CREATE',
           content: 'root content',
         },
+        { path: 'root-file.txt', type: 'DELETE', content: null },
       ]);
 
       flushChanges(dir, tree.listChanges());
@@ -384,8 +384,41 @@ describe('tree', () => {
       });
     });
 
+    it('should be able to rename nested files', () => {
+      tree.write('a/b/hello.txt', '');
+
+      tree.rename('a/b/hello.txt', 'a/b/bye.txt');
+
+      expect(tree.exists('a/b/hello.txt')).toBe(false);
+      expect(tree.exists('a/b/bye.txt')).toBe(true);
+      expect(tree.children('a/b').length).toBe(1);
+      expect(tree.children('a').length).toBe(1);
+    });
+
     it('should be able to rename dirs', () => {
-      // not supported yet
+      tree.write('a/b/hello.txt', 'something');
+
+      tree.rename('a', 'z');
+
+      expect(tree.exists('a/b/hello.txt')).toBe(false);
+      expect(tree.exists('z/b/hello.txt')).toBe(true);
+      expect(tree.exists('a/b')).toBe(false);
+      expect(tree.exists('z/b')).toBe(true);
+      expect(tree.children('a/b').length).toBe(0);
+      expect(tree.children('a').length).toBe(0);
+      expect(tree.children('z/b').length).toBe(1);
+      expect(tree.children('z').length).toBe(1);
+    });
+
+    it('should do nothing when renaming to the same path', () => {
+      tree.write('a/b/hello.txt', 'something');
+
+      tree.rename('a', 'a');
+
+      expect(tree.exists('a/b/hello.txt')).toBe(true);
+      expect(tree.exists('a/b')).toBe(true);
+      expect(tree.children('a/b').length).toBe(1);
+      expect(tree.children('a').length).toBe(1);
     });
 
     describe('changePermissions', () => {

@@ -397,6 +397,7 @@ describe('convertToCypressTen', () => {
       sourceRoot: 'apps/app-e2e/src',
     };
     const filePaths = [
+      'src/integration/nested/something.spec.ts',
       'src/integration/something.spec.ts',
       'src/integration/another.spec.ts',
       'src/integration/another.spec.js',
@@ -488,6 +489,26 @@ const eh = require("../../support")
       expect(tree.exists('apps/app-e2e/src/fixtures/example.json')).toEqual(
         true
       );
+    });
+
+    it('should rename files', () => {
+      const newIntegrationFolder = joinPathFragments(
+        projectConfig.root,
+        cypressConfigs.cypressConfigTs.e2e.integrationFolder
+      );
+      const oldIntegrationFolder = joinPathFragments(
+        projectConfig.root,
+        cypressConfigs.cypressConfigJson.integrationFolder
+      );
+      updateProjectPaths(tree, projectConfig, {
+        cypressConfigTs: cypressConfigs.cypressConfigTs,
+        cypressConfigJson: cypressConfigs.cypressConfigJson,
+      });
+      expect(tree.exists(newIntegrationFolder)).toEqual(true);
+      expect(tree.exists(oldIntegrationFolder)).toEqual(false);
+      expect(
+        tree.exists(`${newIntegrationFolder}/nested/something.cy.ts`)
+      ).toBe(true);
     });
   });
 

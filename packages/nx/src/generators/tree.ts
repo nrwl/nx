@@ -222,9 +222,19 @@ export class FsTree implements Tree {
   rename(from: string, to: string): void {
     from = this.normalize(from);
     to = this.normalize(to);
-    const content = this.read(this.rp(from));
-    this.delete(this.rp(from));
-    this.write(this.rp(to), content);
+    if (from === to) {
+      return;
+    }
+
+    if (this.isFile(from)) {
+      const content = this.read(this.rp(from));
+      this.write(this.rp(to), content);
+      this.delete(this.rp(from));
+    } else {
+      for (const child of this.children(from)) {
+        this.rename(join(from, child), join(to, child));
+      }
+    }
   }
 
   isFile(filePath: string): boolean {
