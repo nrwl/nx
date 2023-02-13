@@ -11,7 +11,7 @@ There are currently two (2) types of Access Tokens for Nx Cloud's runner that yo
 
 ### Access Tokens: Read Only
 
-The `read-only` access tokens allow Nx Cloud to store metadata about runs and **read cached artifacts**, supports distributed task execution.
+The `read-only` access tokens will only read from the remote cache.  Task results will not be stored in the remote cache for other developers to use.
 
 ### Access Tokens: Read & Write
 
