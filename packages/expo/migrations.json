@@ -602,6 +602,23 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "15.7.2": {
+      "version": "15.7.2-beta.0",
+      "packages": {
+        "@expo/webpack-config": {
+          "version": "~18.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "eas-cli": {
+          "version": "3.5.2",
+          "alwaysAddToPackageJson": false
+        },
+        "expo-cli": {
+          "version": "6.3.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
