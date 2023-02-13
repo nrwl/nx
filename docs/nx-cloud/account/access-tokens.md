@@ -15,7 +15,7 @@ The `read-only` access tokens allow Nx Cloud to store metadata about runs and **
 
 ### Access Tokens: Read & Write
 
-The `read-write` access tokens allow Nx Cloud to store metadata about runs, **read and write cached artifacts**, supports distributed task execution.
+The `read-write` access tokens allows task results to be stored in the remote cache for other developers to download and replay on their machines.
 
 ## Setting Access Tokens
 
