@@ -25,6 +25,8 @@
 ## React
 /docs/generated/packages/react/** @jaysoo @ndcunningham @mandarini @xiongemi
 /docs/generated/packages/next/** @jaysoo @ndcunningham @xiongemi
+/docs/shared/packages/react/** @jaysoo @ndcunningham @mandarini @xiongemi
+/docs/shared/packages/next/** @jaysoo @ndcunningham @xiongemi
 /packages/react/** @jaysoo @ndcunningham @mandarini @xiongemi
 /e2e/react/** @jaysoo @mandarini @xiongemi @ndcunningham
 /packages/next/** @ndcunningham @jaysoo @xiongemi
@@ -57,6 +59,12 @@
 /docs/generated/packages/esbuild/** @nartc @jaysoo @ndcunningham
 /docs/generated/packages/rollup/** @jaysoo @mandarini @ndcunningham
 /docs/generated/packages/vite/** @jaysoo @mandarini @ndcunningham
+/docs/shared/packages/js/** @nartc @jaysoo @ndcunningham
+/docs/shared/packages/web/** @jaysoo @mandarini @ndcunningham
+/docs/shared/packages/webpack/** @jaysoo @mandarini @ndcunningham
+/docs/shared/packages/esbuild/** @nartc @jaysoo @ndcunningham
+/docs/shared/packages/rollup/** @jaysoo @mandarini @ndcunningham
+/docs/shared/packages/vite/** @jaysoo @mandarini @ndcunningham
 /packages/js/** @nartc @jaysoo @ndcunningham
 /e2e/js/** @nartc @jaysoo @ndcunningham
 /packages/web/** @jaysoo @mandarini @ndcunningham
@@ -87,6 +95,7 @@
 
 # Storybook
 /docs/generated/packages/storybook/** @mandarini @jaysoo @Coly010
+/docs/shared/packages/storybook/** @mandarini @jaysoo @Coly010
 /packages/storybook/** @mandarini @jaysoo @Coly010
 /e2e/storybook/** @mandarini @FrozenPandaz @Coly010
 /e2e/storybook-angular/** @mandarini @Coly010
