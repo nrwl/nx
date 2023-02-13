@@ -1642,7 +1642,8 @@
       "version": "15.2.0-beta.0",
       "x-prompt": "Do you want to update the Angular version to v15?",
       "requires": {
-        "@angular/core": "^14.2.0"
+        "@angular/core": "^14.2.0",
+        "typescript": ">=4.8.2 <5.0"
       },
       "packages": {
         "@angular-devkit/architect": {
@@ -1774,7 +1775,8 @@
       "version": "15.5.0-beta.0",
       "x-prompt": "Do you want to update the Angular version to v15.1?",
       "requires": {
-        "@angular/core": ">=15.0.0 <15.1.0"
+        "@angular/core": ">=15.0.0 <15.1.0",
+        "typescript": ">=4.8.2 <5.0"
       },
       "packages": {
         "@angular-devkit/architect": {
