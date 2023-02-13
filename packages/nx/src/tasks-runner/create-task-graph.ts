@@ -69,6 +69,14 @@ export class ProcessTasks {
       }
     }
 
+    for (const projectName of Object.keys(this.dependencies)) {
+      if (this.dependencies[projectName].length > 1) {
+        this.dependencies[projectName] = [
+          ...new Set(this.dependencies[projectName]).values(),
+        ];
+      }
+    }
+
     return Object.keys(this.dependencies).filter(
       (d) => this.dependencies[d].length === 0
     );
@@ -224,10 +232,12 @@ export class ProcessTasks {
     target: string,
     configuration: string | undefined
   ) {
-    configuration ??= project.data.targets?.[target]?.defaultConfiguration;
+    const defaultConfiguration =
+      project.data.targets?.[target]?.defaultConfiguration;
+    configuration ??= defaultConfiguration;
     return projectHasTargetAndConfiguration(project, target, configuration)
       ? configuration
-      : undefined;
+      : defaultConfiguration;
   }
 
   getId(

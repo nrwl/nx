@@ -149,6 +149,278 @@ describe('createTaskGraph', () => {
     });
   });
 
+  it('should correctly set default configuration', () => {
+    const projectGraph = {
+      nodes: {
+        app1: {
+          name: 'app1',
+          type: 'app',
+          data: {
+            root: 'app1-root',
+            files: [],
+            targets: {
+              build: {
+                executor: 'my-executor',
+                configurations: {
+                  ci: {},
+                },
+                dependsOn: [
+                  {
+                    projects: 'dependencies',
+                    target: 'build',
+                  },
+                ],
+              },
+            },
+          },
+        },
+        lib1: {
+          name: 'lib1',
+          type: 'lib',
+          data: {
+            root: 'lib1-root',
+            files: [],
+            targets: {
+              build: {
+                executor: 'my-executor',
+                configurations: {
+                  libDefault: {},
+                },
+                defaultConfiguration: 'libDefault',
+                dependsOn: [
+                  {
+                    projects: 'dependencies',
+                    target: 'build',
+                  },
+                ],
+              },
+            },
+          },
+        },
+        lib2: {
+          name: 'lib2',
+          type: 'lib',
+          data: {
+            root: 'lib2-root',
+            files: [],
+            targets: {
+              build: {
+                executor: 'my-executor',
+                configurations: {
+                  ci: {},
+                },
+              },
+            },
+          },
+        },
+      },
+      dependencies: {
+        app1: [{ source: 'app1', target: 'lib1', type: 'static' }],
+        lib1: [{ source: 'lib1', target: 'lib2', type: 'static' }],
+        lib2: [],
+      },
+    } as any;
+
+    const buildLib = createTaskGraph(
+      projectGraph,
+      {},
+      ['lib1'],
+      ['build'],
+      null,
+      {}
+    );
+
+    expect(buildLib).toEqual({
+      roots: ['lib2:build'],
+      tasks: {
+        'lib1:build:libDefault': {
+          id: 'lib1:build:libDefault',
+          target: {
+            project: 'lib1',
+            target: 'build',
+            configuration: 'libDefault',
+          },
+          overrides: {},
+          projectRoot: 'lib1-root',
+        },
+        'lib2:build': {
+          id: 'lib2:build',
+          target: {
+            project: 'lib2',
+            target: 'build',
+          },
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'lib2-root',
+        },
+      },
+      dependencies: {
+        'lib1:build:libDefault': ['lib2:build'],
+        'lib2:build': [],
+      },
+    });
+
+    const buildApp = createTaskGraph(
+      projectGraph,
+      {},
+      ['app1'],
+      ['build'],
+      'ci',
+      {}
+    );
+
+    expect(buildApp).toEqual({
+      roots: ['lib2:build:ci'],
+      tasks: {
+        'app1:build:ci': {
+          id: 'app1:build:ci',
+          target: {
+            project: 'app1',
+            target: 'build',
+            configuration: 'ci',
+          },
+          overrides: {},
+          projectRoot: 'app1-root',
+        },
+        'lib1:build:libDefault': {
+          id: 'lib1:build:libDefault',
+          target: {
+            project: 'lib1',
+            target: 'build',
+            configuration: 'libDefault',
+          },
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'lib1-root',
+        },
+        'lib2:build:ci': {
+          id: 'lib2:build:ci',
+          target: {
+            project: 'lib2',
+            target: 'build',
+            configuration: 'ci',
+          },
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'lib2-root',
+        },
+      },
+      dependencies: {
+        'app1:build:ci': ['lib1:build:libDefault'],
+        'lib1:build:libDefault': ['lib2:build:ci'],
+        'lib2:build:ci': [],
+      },
+    });
+  });
+
+  it('should not duplicate dependencies', () => {
+    const projectGraph = {
+      nodes: {
+        app1: {
+          name: 'app1',
+          type: 'app',
+          data: {
+            root: 'app1-root',
+            files: [],
+            targets: {
+              build: {
+                executor: 'my-executor',
+                dependsOn: [
+                  {
+                    projects: 'dependencies',
+                    target: 'build',
+                  },
+                ],
+              },
+            },
+          },
+        },
+        lib1: {
+          name: 'lib1',
+          type: 'lib',
+          data: {
+            root: 'lib1-root',
+            files: [],
+            targets: {},
+          },
+        },
+        lib2: {
+          name: 'lib2',
+          type: 'lib',
+          data: {
+            root: 'lib2-root',
+            files: [],
+            targets: {},
+          },
+        },
+        lib3: {
+          name: 'lib3',
+          type: 'lib',
+          data: {
+            root: 'lib3-root',
+            files: [],
+            targets: {
+              build: {
+                executor: 'my-executor',
+              },
+            },
+          },
+        },
+      },
+      dependencies: {
+        app1: [
+          { source: 'app1', target: 'lib1', type: 'static' },
+          { source: 'app1', target: 'lib2', type: 'static' },
+        ],
+        lib1: [{ source: 'lib1', target: 'lib3', type: 'static' }],
+        lib2: [{ source: 'lib2', target: 'lib3', type: 'static' }],
+        lib3: [],
+      },
+    } as any;
+
+    const buildApp = createTaskGraph(
+      projectGraph,
+      {},
+      ['app1'],
+      ['build'],
+      null,
+      {}
+    );
+
+    expect(buildApp).toEqual({
+      dependencies: {
+        'app1:build': ['lib3:build'],
+        'lib3:build': [],
+      },
+      roots: ['lib3:build'],
+      tasks: {
+        'app1:build': {
+          id: 'app1:build',
+          overrides: {},
+          projectRoot: 'app1-root',
+          target: {
+            project: 'app1',
+            target: 'build',
+          },
+        },
+        'lib3:build': {
+          id: 'lib3:build',
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'lib3-root',
+          target: {
+            project: 'lib3',
+            target: 'build',
+          },
+        },
+      },
+    });
+  });
+
   it('should interpolate overrides', () => {
     const oneTask = createTaskGraph(
       projectGraph,
@@ -758,7 +1030,6 @@ describe('createTaskGraph', () => {
           'app2:build',
           'coreInfra:apply',
           'app1:build',
-          'coreInfra:apply',
           'infra2:apply',
         ],
         'app2:build': [],
