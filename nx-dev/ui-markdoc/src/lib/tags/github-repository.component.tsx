@@ -20,7 +20,7 @@ export function GithubRepository({ url }: { url: string }): JSX.Element {
 
         <div className="mx-3">
           <p>
-            Check the example:
+            Example repository
             <a
               href={url}
               target="_blank"
