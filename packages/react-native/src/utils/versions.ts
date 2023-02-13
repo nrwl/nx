@@ -1,7 +1,7 @@
 export const nxVersion = require('../../package.json').version;
 
-export const reactNativeVersion = '0.71.1';
-export const typesReactNativeVersion = '0.71.0';
+export const reactNativeVersion = '0.71.2';
+export const typesReactNativeVersion = '0.71.2';
 
 export const typesNodeVersion = '18.11.18';
 
@@ -16,15 +16,15 @@ export const reactDomVersion = '18.2.0';
 export const reactTestRendererVersion = '18.2.0';
 export const typesReactVersion = '18.0.26';
 
-export const reactNativeConfigVersion = '1.4.12';
+export const reactNativeConfigVersion = '1.5.0';
 export const reactNativeAsyncStorageAsyncStorageVersion = '1.17.11';
 
-export const testingLibraryReactNativeVersion = '11.5.0';
+export const testingLibraryReactNativeVersion = '11.5.2';
 export const testingLibraryJestNativeVersion = '5.4.1';
 
 export const jestReactNativeVersion = '18.0.0';
 
 export const reactNativeSvgTransformerVersion = '1.0.0';
-export const reactNativeSvgVersion = '13.7.0';
+export const reactNativeSvgVersion = '13.8.0';
 
-export const babelRuntimeVersion = '7.20.7';
+export const babelRuntimeVersion = '7.20.13';
