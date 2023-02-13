@@ -67,6 +67,11 @@
     "clearScreen": {
       "description": "Set to false to prevent Vite from clearing the terminal screen when logging certain messages.",
       "type": "boolean"
+    },
+    "staticFilePath": {
+      "type": "string",
+      "description": "Path where the build artifacts are located. If not provided then it will be infered from the buildTarget executor options as outputPath",
+      "x-completion-type": "directory"
     }
   },
   "definitions": {},
