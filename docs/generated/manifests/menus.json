@@ -1365,7 +1365,7 @@
           },
           {
             "name": "Nx Devkit",
-            "path": "/packages/devkit/documents/index",
+            "path": "/packages/devkit/documents/nrwl_devkit",
             "id": "packages-devkit",
             "isExternal": true,
             "children": [],
@@ -1432,7 +1432,7 @@
       },
       {
         "name": "Nx Devkit",
-        "path": "/packages/devkit/documents/index",
+        "path": "/packages/devkit/documents/nrwl_devkit",
         "id": "packages-devkit",
         "isExternal": true,
         "children": [],
@@ -4071,8 +4071,8 @@
             "children": [
               {
                 "name": "Overview",
-                "path": "/packages/devkit/documents/index",
-                "id": "index",
+                "path": "/packages/devkit/documents/nrwl_devkit",
+                "id": "nrwl_devkit",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false

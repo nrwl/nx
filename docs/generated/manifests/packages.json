@@ -614,14 +614,14 @@
     "packageName": "@nrwl/devkit",
     "description": "The Nx Devkit is used to customize Nx for different technologies and use cases. It contains many utility functions for reading and writing files, updating configuration, working with Abstract Syntax Trees(ASTs), and more.",
     "documents": {
-      "/packages/devkit/documents/index": {
-        "id": "index",
+      "/packages/devkit/documents/nrwl_devkit": {
+        "id": "nrwl_devkit",
         "name": "Overview",
         "description": "The Nx Devkit is used to customize Nx for different technologies and use cases. It contains many utility functions for reading and writing files, updating configuration, working with Abstract Syntax Trees(ASTs), and more.",
-        "file": "generated/packages/devkit/documents/index",
+        "file": "generated/packages/devkit/documents/nrwl_devkit",
         "itemList": [],
         "isExternal": false,
-        "path": "/packages/devkit/documents/index",
+        "path": "/packages/devkit/documents/nrwl_devkit",
         "tags": [],
         "originalFilePath": "generated/devkit/nrwl_devkit"
       },

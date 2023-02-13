@@ -549,7 +549,7 @@
               "id": "packages-devkit",
               "tags": ["create-your-own-plugin"],
               "file": "",
-              "path": "/packages/devkit/documents/index",
+              "path": "/packages/devkit/documents/nrwl_devkit",
               "isExternal": true
             },
             {
@@ -1548,7 +1548,7 @@
           "description": "Devkit package.",
           "itemList": [
             {
-              "id": "index",
+              "id": "nrwl_devkit",
               "name": "Overview",
               "file": "generated/devkit/nrwl_devkit"
             },
