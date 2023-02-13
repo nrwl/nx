@@ -71,7 +71,7 @@
     "@nrwl/storybook": "15.7.0-beta.3",
     "@nrwl/web": "15.7.0-beta.3",
     "@nrwl/webpack": "15.7.0-beta.3",
-    "@parcel/watcher": "2.1.0",
+    "@parcel/watcher": "2.0.4",
     "@phenomnomnominal/tsquery": "4.1.1",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.7",
     "@pnpm/lockfile-types": "^4.3.6",
