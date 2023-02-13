@@ -10,7 +10,7 @@ import {
   PackageJson,
   readModulePackageJsonWithoutFallbacks,
 } from './package-json';
-import { registerTsProject } from './register';
+import { registerTranspiler, registerTsConfigPaths } from './register';
 import {
   ProjectConfiguration,
   ProjectsConfigurations,
@@ -22,6 +22,7 @@ import {
   findProjectForPath,
 } from '../project-graph/utils/find-project-for-path';
 import { normalizePath } from './path';
+import { join } from 'path';
 
 export type ProjectTargetConfigurator = (
   file: string
@@ -179,9 +180,20 @@ export function resolveLocalNxPlugin(
 }
 
 let tsNodeAndPathsRegistered = false;
+
 function registerTSTranspiler() {
   if (!tsNodeAndPathsRegistered) {
-    registerTsProject(workspaceRoot, 'tsconfig.base.json');
+    // nx-ignore-next-line
+    const ts: typeof import('typescript') = require('typescript');
+
+    registerTsConfigPaths(join(workspaceRoot, 'tsconfig.base.json'));
+    registerTranspiler({
+      lib: ['es2021'],
+      module: ts.ModuleKind.CommonJS,
+      target: ts.ScriptTarget.ES2021,
+      esModuleInterop: true,
+      skipLibCheck: true,
+    });
   }
   tsNodeAndPathsRegistered = true;
 }
