@@ -80,8 +80,7 @@ export async function projectGenerator(
     });
     tasks.push(viteTask);
   }
-
-  if (schema.bundler === 'webpack' || schema.bundler === 'rollup') {
+  if (schema.bundler === 'rollup') {
     ensureBabelRootConfigExists(tree);
   }
 
@@ -154,17 +153,11 @@ function addProject(
         outputPath,
         main: `${options.projectRoot}/src/index` + (options.js ? '.js' : '.ts'),
         tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
-        // TODO(jack): assets for webpack and rollup have validation that we need to fix (assets must be under <project-root>/src)
+        // TODO(jack): assets for rollup have validation that we need to fix (assets must be under <project-root>/src)
         assets:
-          options.bundler === 'webpack' || options.bundler === 'rollup'
-            ? []
-            : [`${options.projectRoot}/*.md`],
+          options.bundler === 'rollup' ? [] : [`${options.projectRoot}/*.md`],
       },
     };
-
-    if (options.bundler === 'webpack') {
-      projectConfiguration.targets.build.options.babelUpwardRootMode = true;
-    }
 
     if (options.compiler === 'swc' && options.skipTypeCheck) {
       projectConfiguration.targets.build.options.skipTypeCheck = true;
@@ -446,14 +439,6 @@ function addProjectDependencies(
     );
   }
 
-  if (options.bundler == 'webpack') {
-    return addDependenciesToPackageJson(
-      tree,
-      {},
-      { '@nrwl/webpack': nxVersion, '@types/node': typesNodeVersion }
-    );
-  }
-
   // noop
   return () => {};
 }
@@ -464,8 +449,6 @@ function getBuildExecutor(options: NormalizedSchema) {
       return `@nrwl/esbuild:esbuild`;
     case 'rollup':
       return `@nrwl/rollup:rollup`;
-    case 'webpack':
-      return `@nrwl/webpack:webpack`;
     default:
       return `@nrwl/js:${options.compiler}`;
   }

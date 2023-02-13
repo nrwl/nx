@@ -1,4 +1,4 @@
-import { basename, dirname, relative, resolve } from 'path';
+import { basename, dirname, join, relative, resolve } from 'path';
 import { statSync } from 'fs';
 import { normalizePath } from '@nrwl/devkit';
 
@@ -18,7 +18,9 @@ export function normalizeRollupExecutorOptions(
 ): NormalizedRollupExecutorOptions {
   const main = `${root}/${options.main}`;
   const entryRoot = dirname(main);
-  const project = `${root}/${options.project}`;
+  const project = options.project
+    ? `${root}/${options.project}`
+    : join(root, 'package.json');
   const projectRoot = dirname(project);
   const outputPath = `${root}/${options.outputPath}`;
 

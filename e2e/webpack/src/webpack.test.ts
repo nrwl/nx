@@ -58,35 +58,4 @@ describe('Webpack Plugin', () => {
     output = runCommand(`node dist/libs/${myPkg}/main.js`);
     expect(output).toMatch(/Hello/);
   }, 500000);
-
-  it('should define process.env variables only for --platform=web', async () => {
-    const myPkg = uniq('my-pkg');
-    runCLI(`generate @nrwl/js:lib ${myPkg} --bundler=webpack`);
-    updateFile(
-      `libs/${myPkg}/src/index.ts`,
-      `console.log(process.env['NX_TEST_VAR']);\n`
-    );
-
-    runCLI(`build ${myPkg} --platform=node`, {
-      env: {
-        NX_TEST_VAR: 'Hello build time',
-      },
-    });
-
-    expect(
-      runCommand(`node dist/libs/${myPkg}/main.js`, {
-        env: {
-          NX_TEST_VAR: 'Hello run time',
-        },
-      })
-    ).toMatch(/Hello run time/);
-
-    runCLI(`build ${myPkg} --platform=web`, {
-      env: {
-        NX_TEST_VAR: 'Hello build time',
-      },
-    });
-
-    expect(readFile(`dist/libs/${myPkg}/main.js`)).toMatch(/Hello build time/);
-  }, 300_000);
 });

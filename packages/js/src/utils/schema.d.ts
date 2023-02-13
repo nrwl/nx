@@ -7,7 +7,7 @@ import type {
 import { TransformerEntry } from './typescript/types';
 
 export type Compiler = 'tsc' | 'swc';
-export type Bundler = 'none' | 'rollup' | 'esbuild' | 'vite' | 'webpack';
+export type Bundler = 'none' | 'rollup' | 'esbuild' | 'vite';
 
 export interface LibraryGeneratorSchema {
   name: string;
