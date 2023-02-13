@@ -42,7 +42,7 @@ export function executeWebpackDevServerBuilder(
     ? buildTarget.configurations[parsedBrowserTarget.configuration]
     : buildTarget.defaultConfiguration
     ? buildTarget.configurations[buildTarget.defaultConfiguration]
-    : undefined;
+    : buildTarget.options;
 
   const buildLibsFromSource =
     options.buildLibsFromSource ??
