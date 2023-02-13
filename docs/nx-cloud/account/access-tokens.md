@@ -2,11 +2,20 @@
 
 The permissions and membership define what developers can access on nx.app. They don't affect what happens when you run Nx commands locally or on CI. To manage that, you need to provision access tokens. To do that, go to Workspace Options / Manage Access Tokens.
 
-There are two types of tokens:
+## Types of Access Tokens
 
-Read - stores metadata about runs and reads cached artifacts, supports distributed task execution.
+They are currently two (2) types of Access Tokens for Nx Cloud's runner that you can use on your workspace.
 
-Read-write - stores metadata about runs, reads and writes cached artifacts, supports distributed task execution.
+- `read-only`
+- `read-write`
+
+### Access Tokens: Read Only
+
+The `read-only` access tokens allow Nx Cloud to store metadata about runs and **read cached artifacts**, supports distributed task execution.
+
+### Access Tokens: Read & Write
+
+The `read-write` access tokens allow Nx Cloud to store metadata about runs, **read and write cached artifacts**, supports distributed task execution.
 
 ## Setting Access Tokens
 
