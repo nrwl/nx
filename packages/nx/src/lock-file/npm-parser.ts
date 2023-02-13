@@ -496,6 +496,7 @@ function nestMappedPackages(
   }
 
   nestedNodes.forEach((node) => {
+    let unresolvedParents = invertedGraph.dependencies[node.name].length;
     invertedGraph.dependencies[node.name].forEach(({ target }) => {
       const targetNode = invertedGraph.externalNodes[target];
 
@@ -517,9 +518,12 @@ function nestMappedPackages(
           }
           visitedPaths.add(mappedPackage.path);
         });
-        nestedNodes.delete(node);
+        unresolvedParents--;
       }
     });
+    if (!unresolvedParents) {
+      nestedNodes.delete(node);
+    }
   });
 
   if (initialSize === nestedNodes.size) {
