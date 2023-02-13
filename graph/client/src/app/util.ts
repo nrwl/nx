@@ -1,5 +1,5 @@
 // nx-ignore-next-line
-import { ProjectGraphDependency, ProjectGraphNode } from '@nrwl/devkit';
+import { ProjectGraphDependency, ProjectGraphProjectNode } from '@nrwl/devkit';
 import { getEnvironmentConfig } from './hooks/use-environment-config';
 import { To, useParams, useSearchParams } from 'react-router-dom';
 
@@ -83,17 +83,20 @@ export function hasPath(
   return false;
 }
 
-export function getProjectsByType(type: string, projects: ProjectGraphNode[]) {
+export function getProjectsByType(
+  type: string,
+  projects: ProjectGraphProjectNode[]
+): ProjectGraphProjectNode[] {
   return projects
     .filter((project) => project.type === type)
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
 export function groupProjectsByDirectory(
-  projects: ProjectGraphNode[],
+  projects: ProjectGraphProjectNode[],
   workspaceLayout: { appsDir: string; libsDir: string }
-): Record<string, ProjectGraphNode[]> {
-  let groups: Record<string, ProjectGraphNode[]> = {};
+): Record<string, ProjectGraphProjectNode[]> {
+  let groups: Record<string, ProjectGraphProjectNode[]> = {};
 
   projects.forEach((project) => {
     const workspaceRoot =
