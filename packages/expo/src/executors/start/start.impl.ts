@@ -47,7 +47,7 @@ function startAsync(
     childProcess = fork(
       join(workspaceRoot, './node_modules/@expo/cli/build/bin/cli'),
       ['start', ...createStartOptions(options)],
-      { cwd: join(workspaceRoot, projectRoot) }
+      { cwd: join(workspaceRoot, projectRoot), env: process.env }
     );
 
     // Ensure the child process is killed when the parent exits

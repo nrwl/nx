@@ -31,7 +31,7 @@ export function runCliBuildList(
     `./node_modules/eas-cli/bin/run build:list ${createBuildListOptions(
       options
     ).join(' ')}`,
-    { cwd: join(workspaceRoot, projectRoot) }
+    { cwd: join(workspaceRoot, projectRoot), env: process.env }
   ).toString();
 }
 

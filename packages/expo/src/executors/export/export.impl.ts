@@ -45,7 +45,7 @@ function exportAsync(
         '.',
         ...createExportOptions(options),
       ],
-      { cwd: join(workspaceRoot, projectRoot) }
+      { cwd: join(workspaceRoot, projectRoot), env: process.env }
     );
 
     // Ensure the child process is killed when the parent exits
