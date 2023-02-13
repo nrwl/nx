@@ -30,6 +30,13 @@ export function createPackageJson(
       packageJson = readJsonFile(
         `${graph.nodes[projectName].data.root}/package.json`
       );
+      // for standalone projects we don't want to include all the root dependencies
+      if (graph.nodes[projectName].data.root === '.') {
+        packageJson = {
+          name: packageJson.name,
+          version: packageJson.version,
+        };
+      }
     } catch (e) {}
   }
 

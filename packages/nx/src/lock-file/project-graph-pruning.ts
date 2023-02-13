@@ -5,7 +5,7 @@ import {
 } from '../config/project-graph';
 import { PackageJson } from '../utils/package-json';
 import { reverse } from '../project-graph/operators';
-import { satisfies } from 'semver';
+import { satisfies, gte } from 'semver';
 
 /**
  * Prune project graph's external nodes and their dependencies
@@ -56,10 +56,7 @@ function normalizeDependencies(packageJson: PackageJson, graph: ProjectGraph) {
         return;
       }
       // otherwise we need to find the correct version
-      const nodes = Object.values(graph.externalNodes).filter(
-        (n) => n.data.packageName === packageName
-      );
-      const node = nodes.find((n) => satisfies(n.data.version, versionRange));
+      const node = findNodeMatchingVersion(graph, packageName, versionRange);
       if (node) {
         combinedDependencies[packageName] = node.data.version;
       } else {
@@ -70,6 +67,23 @@ function normalizeDependencies(packageJson: PackageJson, graph: ProjectGraph) {
     }
   );
   return combinedDependencies;
+}
+
+function findNodeMatchingVersion(
+  graph: ProjectGraph,
+  packageName: string,
+  versionExpr: string
+) {
+  if (versionExpr === '*') {
+    return graph.externalNodes[`npm:${packageName}`];
+  }
+  const nodes = Object.values(graph.externalNodes).filter(
+    (n) => n.data.packageName === packageName
+  );
+  if (versionExpr === 'latest') {
+    return nodes.sort((a, b) => +gte(b.data.version, a.data.version))[0];
+  }
+  return nodes.find((n) => satisfies(n.data.version, versionExpr));
 }
 
 function addNodesAndDependencies(
