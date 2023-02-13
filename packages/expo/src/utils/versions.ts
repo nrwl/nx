@@ -2,12 +2,12 @@ export const nxVersion = require('../../package.json').version;
 
 export const expoVersion = '47.0.13';
 export const expoMetroConfigVersion = '0.5.2';
-export const expoWebpackConfig = '~0.17.4';
+export const expoWebpackConfig = '~18.0.1';
 export const expoSplashScreenVersion = '~0.17.5';
 export const expoStatusBarVersion = '~1.4.2';
-export const deprecatedExpoCliVersion = '6.1.0'; // expo-cli
+export const deprecatedExpoCliVersion = '6.3.0'; // expo-cli
 export const expoCliVersion = '0.4.11'; // @expo/cli
-export const easCliVersion = '3.3.2';
+export const easCliVersion = '3.5.2';
 export const babelPresetExpoVersion = '~9.2.2';
 
 export const reactVersion = '18.1.0';

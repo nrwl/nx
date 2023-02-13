@@ -20,7 +20,7 @@ describe('expo', () => {
   );
   afterEach(() => cleanupProject());
 
-  it('should test, lint, export and prebuild', async () => {
+  it('should test, lint, export, export-web and prebuild', async () => {
     const appName = uniq('my-app');
     const libName = uniq('lib');
     const componentName = uniq('component');
@@ -52,6 +52,13 @@ describe('expo', () => {
     expect(exportResults.combinedOutput).toContain(
       'Export was successful. Your exported files can be found'
     );
+    checkFilesExist(`dist/apps/${appName}/metadata.json`);
+
+    expect(() => {
+      runCLI(`export-web ${appName}`);
+      checkFilesExist(`apps/${appName}/web-build/index.html`);
+      checkFilesExist(`apps/${appName}/web-build/manifest.json`);
+    }).not.toThrow();
 
     // set a mock package name for ios and android in expo's app.json
     const workspace = readResolvedConfiguration();

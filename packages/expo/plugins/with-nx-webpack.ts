@@ -2,7 +2,7 @@ import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { resolve } from 'path';
 
 /**
- * This function add addtional rules to expo's webpack config to make expo web working
+ * This function add additional rules to expo's webpack config to make expo web working
  */
 export async function withNxWebpack(config) {
   // add additional rule to load files under libs
@@ -25,6 +25,13 @@ export async function withNxWebpack(config) {
         },
       },
     });
+  }
+
+  if (!config.resolve) {
+    config.resolve = {};
+  }
+  if (!config.resolve.plugins) {
+    config.resolve.plugins = [];
   }
 
   const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
