@@ -84,6 +84,7 @@ async function spawnProcess(
 ): Promise<{ code: number; stdout: string; stderr: string }> {
   const cp = spawn(command, args, {
     windowsHide: true,
+    detached: true,
     shell: false,
     cwd,
   });

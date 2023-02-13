@@ -45,6 +45,7 @@ export class Cache {
         const p = spawn('node', [scriptPath, `"${this.cachePath}"`], {
           stdio: 'ignore',
           detached: true,
+          shell: false,
         });
         p.unref();
       } catch (e) {

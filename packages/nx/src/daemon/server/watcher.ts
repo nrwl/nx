@@ -14,6 +14,7 @@ import { handleServerProcessTermination } from './shutdown-utils';
 import { Server } from 'net';
 import ignore from 'ignore';
 import { normalizePath } from '../../utils/path';
+import { platform } from 'os';
 
 const ALWAYS_IGNORE = [
   join(workspaceRoot, 'node_modules'),
@@ -78,9 +79,7 @@ export async function subscribeToOutputsChanges(
         cb(null, workspaceRelativeEvents);
       }
     },
-    {
-      ignore: [...ALWAYS_IGNORE],
-    }
+    watcherOptions([...ALWAYS_IGNORE])
   );
 }
 
@@ -137,9 +136,7 @@ export async function subscribeToWorkspaceChanges(
         cb(null, nonIgnoredEvents);
       }
     },
-    {
-      ignore: getIgnoredGlobs(),
-    }
+    watcherOptions(getIgnoredGlobs())
   );
 }
 
@@ -185,4 +182,16 @@ export function convertChangeEventsToLogMessage(changeEvents: Event[]): string {
   }
 
   return `${numCreatedOrRestoredFiles} file(s) created or restored, ${numModifiedFiles} file(s) modified, ${numDeletedFiles} file(s) deleted`;
+}
+
+function watcherOptions(ignore: string[]) {
+  const options: import('@parcel/watcher').Options = {
+    ignore,
+  };
+
+  if (platform() === 'win32') {
+    options.backend = 'windows';
+  }
+
+  return options;
 }
