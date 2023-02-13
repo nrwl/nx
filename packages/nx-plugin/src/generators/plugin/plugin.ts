@@ -4,9 +4,12 @@ import {
   formatFiles,
   generateFiles,
   installPackagesTask,
+  joinPathFragments,
   normalizePath,
   readProjectConfiguration,
   Tree,
+  updateJson,
+  readJson,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
 import { libraryGenerator } from '@nrwl/js';
@@ -23,6 +26,7 @@ import pluginLintCheckGenerator from '../lint-checks/generator';
 import { NormalizedSchema, normalizeOptions } from './utils/normalize-schema';
 
 import type { Schema } from './schema';
+import { readJSON } from 'fs-extra';
 
 async function addFiles(host: Tree, options: NormalizedSchema) {
   host.delete(normalizePath(`${options.projectRoot}/src/lib`));
@@ -87,6 +91,35 @@ function updateWorkspaceJson(host: Tree, options: NormalizedSchema) {
   }
 }
 
+function updatePluginIndexFile(host: Tree, options: NormalizedSchema) {
+  host.delete(joinPathFragments(options.projectRoot, 'src', 'index.ts'));
+
+  const projectConfig = readProjectConfiguration(host, options.name);
+
+  updateProjectConfiguration(host, options.name, {
+    ...projectConfig,
+    targets: {
+      ...projectConfig.targets,
+      build: {
+        ...projectConfig.targets.build,
+        options: {
+          ...projectConfig.targets.build.options,
+          main: joinPathFragments(options.projectRoot, 'index.ts'),
+        },
+      },
+    },
+  });
+
+  updateJson(
+    host,
+    joinPathFragments(options.projectRoot, 'tsconfig.lib.json'),
+    (tsconfigLibJson) => {
+      tsconfigLibJson.include = ['index.ts', ...tsconfigLibJson.include];
+      return tsconfigLibJson;
+    }
+  );
+}
+
 export async function pluginGenerator(host: Tree, schema: Schema) {
   const options = normalizeOptions(host, schema);
 
@@ -114,6 +147,7 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
   addSwcDependencies(host);
 
   await addFiles(host, options);
+  updatePluginIndexFile(host, options);
   updateWorkspaceJson(host, options);
 
   if (options.e2eTestRunner !== 'none') {

@@ -41,7 +41,7 @@ describe('<%= pluginName %> e2e', () => {
         `generate <%=npmPackageName%>:<%= pluginName %> ${project} --directory subdir`
       );
       expect(() =>
-        checkFilesExist(`libs/subdir/${project}/src/index.ts`)
+        checkFilesExist(`libs/subdir/${project}/index.ts`)
       ).not.toThrow();
     }, 120000);
   });
