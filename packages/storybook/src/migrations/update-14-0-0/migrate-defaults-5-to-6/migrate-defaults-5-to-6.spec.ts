@@ -14,6 +14,14 @@ import {
 } from '../../../utils/testing';
 import { migrateDefaultsGenerator } from './migrate-defaults-5-to-6';
 
+// nested code imports graph from the repo, which might have innacurate graph version
+jest.mock('nx/src/project-graph/project-graph', () => ({
+  ...jest.requireActual<any>('nx/src/project-graph/project-graph'),
+  createProjectGraphAsync: jest
+    .fn()
+    .mockImplementation(async () => ({ nodes: {}, dependencies: {} })),
+}));
+
 describe('migrate-defaults-5-to-6 Generator', () => {
   let appTree: Tree;
 

@@ -48,7 +48,6 @@ It only uses language primitives and immutable objects
 - [ProjectGraphExternalNode](../../devkit/documents/nrwl_devkit#projectgraphexternalnode)
 - [ProjectGraphProcessorContext](../../devkit/documents/nrwl_devkit#projectgraphprocessorcontext)
 - [ProjectGraphProjectNode](../../devkit/documents/nrwl_devkit#projectgraphprojectnode)
-- [ProjectGraphV4](../../devkit/documents/nrwl_devkit#projectgraphv4)
 
 ### Tree Interfaces
 
@@ -298,18 +297,6 @@ A plugin for Nx
 ### ProjectGraphProjectNode
 
 • **ProjectGraphProjectNode**: `Object`
-
----
-
-### ProjectGraphV4
-
-• **ProjectGraphV4**<`T`\>: `Object`
-
-#### Type parameters
-
-| Name | Type  |
-| :--- | :---- |
-| `T`  | `any` |
 
 ---
 
