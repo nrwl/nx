@@ -496,9 +496,8 @@ function nestMappedPackages(
   }
 
   nestedNodes.forEach((node) => {
-    if (invertedGraph.dependencies[node.name].length === 1) {
-      const targetName = invertedGraph.dependencies[node.name][0].target;
-      const targetNode = invertedGraph.externalNodes[targetName];
+    invertedGraph.dependencies[node.name].forEach(({ target }) => {
+      const targetNode = invertedGraph.externalNodes[target];
 
       if (visitedNodes.has(targetNode)) {
         visitedNodes.get(targetNode).forEach((path) => {
@@ -520,7 +519,7 @@ function nestMappedPackages(
         });
         nestedNodes.delete(node);
       }
-    }
+    });
   });
 
   if (initialSize === nestedNodes.size) {
