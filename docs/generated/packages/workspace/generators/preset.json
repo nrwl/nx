@@ -54,7 +54,7 @@
         }
       },
       "standaloneApi": {
-        "description": "Use the Standalone APIs if generating an Angular application.",
+        "description": "Use Standalone Components if generating an Angular application.",
         "type": "boolean",
         "default": false
       },
