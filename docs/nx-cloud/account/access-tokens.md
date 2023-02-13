@@ -4,14 +4,14 @@ The permissions and membership define what developers can access on nx.app. They
 
 ## Types of Access Tokens
 
-There are currently two (2) types of Access Tokens for Nx Cloud's runner that you can use on your workspace.  Both tokens support distributed task execution and allow Nx Cloud to store metadata about runs.
+There are currently two (2) types of Access Tokens for Nx Cloud's runner that you can use on your workspace. Both tokens support distributed task execution and allow Nx Cloud to store metadata about runs.
 
 - `read-only`
 - `read-write`
 
 ### Access Tokens: Read Only
 
-The `read-only` access tokens will only read from the remote cache.  Task results will not be stored in the remote cache for other developers to use.
+The `read-only` access tokens will only read from the remote cache. Task results will not be stored in the remote cache for other developers to use.
 
 ### Access Tokens: Read & Write
 
