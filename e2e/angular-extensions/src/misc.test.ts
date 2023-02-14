@@ -20,7 +20,7 @@ describe('Move Angular Project', () => {
     app1 = uniq('app1');
     app2 = uniq('app2');
     newPath = `subfolder/${app2}`;
-    runCLI(`generate @nrwl/angular:app ${app1}`);
+    runCLI(`generate @nrwl/angular:app ${app1} --no-interactive`);
   });
 
   afterAll(() => cleanupProject());
@@ -99,13 +99,13 @@ describe('Move Angular Project', () => {
   it('should work for libraries', () => {
     const lib1 = uniq('mylib');
     const lib2 = uniq('mylib');
-    runCLI(`generate @nrwl/angular:lib ${lib1}`);
+    runCLI(`generate @nrwl/angular:lib ${lib1} --no-interactive`);
 
     /**
      * Create a library which imports the module from the other lib
      */
 
-    runCLI(`generate @nrwl/angular:lib ${lib2}`);
+    runCLI(`generate @nrwl/angular:lib ${lib2} --no-interactive`);
 
     updateFile(
       `libs/${lib2}/src/lib/${lib2}.module.ts`,
