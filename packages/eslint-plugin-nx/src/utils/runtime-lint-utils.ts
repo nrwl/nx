@@ -86,8 +86,23 @@ export function findDependenciesWithTags(
   );
 }
 
-function hasTag(proj: ProjectGraphProjectNode, tag: string) {
-  return tag === '*' || (proj.data.tags || []).indexOf(tag) > -1;
+const regexMap = new Map<string, RegExp>();
+function hasTag(proj: ProjectGraphProjectNode, tag: string): boolean {
+  if (tag === '*') return true;
+
+  // if the tag is a regex, check if the project matches the regex
+  if (tag.startsWith('/') && tag.endsWith('/')) {
+    let regex;
+    if (regexMap.has(tag)) {
+      regex = regexMap.get(tag);
+    } else {
+      regex = new RegExp(tag.substring(1, tag.length - 1));
+      regexMap.set(tag, regex);
+    }
+    return (proj.data.tags || []).some((t) => regex.test(t));
+  }
+
+  return (proj.data.tags || []).indexOf(tag) > -1;
 }
 
 export function matchImportWithWildcard(
