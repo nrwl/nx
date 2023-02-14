@@ -1,14 +1,18 @@
 import { sync as globSync } from 'fast-glob';
-import { existsSync, readFileSync } from 'fs';
+import { existsSync, readFileSync, statSync } from 'fs';
 import ignore, { Ignore } from 'ignore';
 import * as path from 'path';
-import { basename, dirname, join } from 'path';
+import { basename, dirname, extname, join } from 'path';
 import { performance } from 'perf_hooks';
 
 import { workspaceRoot } from '../utils/workspace-root';
 import { readJsonFile } from '../utils/fileutils';
 import { logger, NX_PREFIX } from '../utils/logger';
-import { loadNxPlugins, readPluginPackageJson } from '../utils/nx-plugin';
+import {
+  loadNxPlugins,
+  readPluginPackageJson,
+  registerPluginTSTranspiler,
+} from '../utils/nx-plugin';
 import * as yaml from 'js-yaml';
 
 import type { NxJsonConfiguration, TargetDefaults } from './nx-json';
@@ -313,7 +317,15 @@ export class Workspaces {
     const [implementationModulePath, implementationExportName] =
       implementation.split('#');
     return () => {
-      const module = require(path.join(directory, implementationModulePath));
+      const possibleModulePath = path.join(directory, implementationModulePath);
+      const validImplementations = ['', '.js', '.ts'].map(
+        (x) => possibleModulePath + x
+      );
+      const modulePath = validImplementations.find((f) => existsSync(f));
+      if (extname(modulePath) === '.ts') {
+        registerPluginTSTranspiler();
+      }
+      const module = require(modulePath);
       return implementationExportName
         ? module[implementationExportName]
         : module.default ?? module;
