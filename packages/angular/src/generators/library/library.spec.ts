@@ -1164,6 +1164,7 @@ describe('lib', () => {
             ],
             "ignorePatterns": Array [
               "!**/*",
+              "node_modules",
             ],
             "overrides": Array [
               Object {

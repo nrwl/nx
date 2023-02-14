@@ -6,7 +6,8 @@ exports[`@nrwl/linter:lint-project --linter eslint should extend to .eslintrc.js
     \\"../../.eslintrc.js\\"
   ],
   \\"ignorePatterns\\": [
-    \\"!**/*\\"
+    \\"!**/*\\",
+    \\"node_modules\\"
   ],
   \\"overrides\\": [
     {
@@ -43,7 +44,8 @@ exports[`@nrwl/linter:lint-project --linter eslint should generate a eslint conf
     \\"../../.eslintrc.json\\"
   ],
   \\"ignorePatterns\\": [
-    \\"!**/*\\"
+    \\"!**/*\\",
+    \\"node_modules\\"
   ],
   \\"overrides\\": [
     {

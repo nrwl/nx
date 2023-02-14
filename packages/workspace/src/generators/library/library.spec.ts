@@ -380,6 +380,7 @@ describe('lib', () => {
               ],
               "ignorePatterns": Array [
                 "!**/*",
+                "node_modules",
               ],
               "overrides": Array [
                 Object {
@@ -448,6 +449,7 @@ describe('lib', () => {
               ],
               "ignorePatterns": Array [
                 "!**/*",
+                "node_modules",
               ],
               "overrides": Array [
                 Object {
@@ -675,6 +677,7 @@ describe('lib', () => {
           ],
           "ignorePatterns": Array [
             "!**/*",
+            "node_modules",
           ],
           "overrides": Array [
             Object {
