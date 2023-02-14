@@ -214,8 +214,10 @@ function generateOptionsOutput(schema: Schema): string {
     }
   >();
   let requiredSpaceToRenderAllFlagsAndAliases = 0;
-
-  for (const [optionName, optionConfig] of Object.entries(schema.properties)) {
+  const sorted = Object.entries(schema.properties).sort((a, b) =>
+    compareByPriority(a, b, schema)
+  );
+  for (const [optionName, optionConfig] of sorted) {
     const renderedFlagAndAlias =
       `--${optionName}` +
       (optionConfig.alias ? `, -${optionConfig.alias}` : '');
@@ -335,4 +337,45 @@ function generateLinkOutput({
   return `\n\n${chalk.dim(
     'Find more information and examples at:'
   )} ${chalk.bold(link)}`;
+}
+
+/**
+ * sorts properties in the following order
+ * - required
+ * - x-priority: important
+ * - everything else
+ * - x-priority: internal
+ * - deprecated
+ * if two properties have equal priority, they are sorted by name
+ */
+function compareByPriority(
+  a: [string, Schema['properties'][0]],
+  b: [string, Schema['properties'][0]],
+  schema: Schema
+): number {
+  function getPriority([name, property]: [
+    string,
+    Schema['properties'][0]
+  ]): number {
+    if (schema.required?.includes(name)) {
+      return 0;
+    }
+    if (property['x-priority'] === 'important') {
+      return 1;
+    }
+    if (property['x-deprecated']) {
+      return 4;
+    }
+    if (property['x-priority'] === 'internal') {
+      return 3;
+    }
+    return 2;
+  }
+
+  const aPriority = getPriority(a);
+  const bPriority = getPriority(b);
+  if (aPriority === bPriority) {
+    return a[0].localeCompare(b[0]);
+  }
+  return aPriority - bPriority;
 }
