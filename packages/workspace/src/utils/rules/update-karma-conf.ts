@@ -1,4 +1,4 @@
-import { Rule, Tree } from '@angular-devkit/schematics';
+import type { Rule, Tree } from '@angular-devkit/schematics';
 import { createOrUpdate, getProjectConfig } from '../ast-utils';
 import { offsetFromRoot } from '@nrwl/devkit';
 

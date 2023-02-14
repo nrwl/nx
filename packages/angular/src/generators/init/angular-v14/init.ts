@@ -1,5 +1,6 @@
 import { cypressInitGenerator } from '@nrwl/cypress';
 import {
+  ensurePackage,
   formatFiles,
   GeneratorCallback,
   logger,
@@ -25,6 +26,23 @@ export async function angularInitGenerator(
 ): Promise<GeneratorCallback> {
   const options = normalizeOptions(rawOptions);
   setDefaults(host, options);
+
+  const peerDepsToInstall = [
+    '@angular-devkit/core',
+    '@angular-devkit/schematics',
+    '@schematics/angular',
+  ];
+  let devkitVersion: string;
+  peerDepsToInstall.forEach((pkg) => {
+    const packageVersion = getInstalledPackageVersion(host, pkg);
+
+    if (!packageVersion) {
+      devkitVersion ??=
+        getInstalledPackageVersion(host, '@angular-devkit/build-angular') ??
+        backwardCompatibleVersions.angularV14.angularDevkitVersion;
+      ensurePackage(host, pkg, devkitVersion);
+    }
+  });
 
   const depsTask = !options.skipPackageJson
     ? updateDependencies(host)

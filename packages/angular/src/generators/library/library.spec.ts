@@ -27,6 +27,23 @@ jest.mock('@nrwl/devkit', () => {
   return {
     ...jest.requireActual('@nrwl/devkit'),
     createProjectGraphAsync: jest.fn().mockImplementation(() => projectGraph),
+    // need to mock so it doesn't resolve what the workspace has installed
+    // and be able to test with different versions
+    ensurePackage: jest
+      .fn()
+      .mockImplementation((tree, pkg, version, options) => {
+        updateJson(tree, 'package.json', (json) => ({
+          ...json,
+          dependencies: {
+            ...json.dependencies,
+            ...(options?.dev === false ? { [pkg]: version } : {}),
+          },
+          devDependencies: {
+            ...json.devDependencies,
+            ...(options?.dev ?? true ? { [pkg]: version } : {}),
+          },
+        }));
+      }),
   };
 });
 

@@ -368,21 +368,6 @@ export function newProject({
   }
 }
 
-export function newAngularProject({
-  name = uniq('proj'),
-  packageManager = getSelectedPackageManager(),
-} = {}): string {
-  const projScope = newProject({ name, packageManager });
-
-  const angularPackages = [
-    '@angular-devkit/core',
-    '@angular-devkit/schematics',
-    '@schematics/angular',
-  ];
-  packageInstall(angularPackages.join(` `), projScope, 'latest');
-  return projScope;
-}
-
 export function newLernaWorkspace({
   name = uniq('lerna-proj'),
   packageManager = getSelectedPackageManager(),
