@@ -17,7 +17,11 @@ function createFileHasher(): FileHasherBase {
       return new NativeFileHasher();
     }
 
-    execSync('git rev-parse --is-inside-work-tree', { stdio: 'ignore' });
+    execSync('git rev-parse --is-inside-work-tree', {
+      stdio: 'ignore',
+      windowsHide: true,
+    });
+
     // we don't use git based hasher when the repo uses git submodules
     if (!existsSync(join(workspaceRoot, '.git', 'modules'))) {
       return new GitBasedFileHasher();
