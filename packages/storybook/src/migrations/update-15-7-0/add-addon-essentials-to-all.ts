@@ -82,7 +82,7 @@ export default async function (tree: Tree) {
   logger.info(
     `
     Read more about our effort to deprecate the root .storybook folder here:
-    https://nx.dev/packages/storybook/configuring-storybook
+    https://nx.dev/packages/storybook/documents/configuring-storybook
     `
   );
 
