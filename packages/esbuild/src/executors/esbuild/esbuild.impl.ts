@@ -100,7 +100,6 @@ export async function* esbuildExecutor(
               const ctx = await esbuild.context({
                 ...esbuildOptions,
                 plugins: [
-                  ...(esbuildOptions.plugins ?? []),
                   // Only emit info on one of the watch processes.
                   idx === 0
                     ? {
