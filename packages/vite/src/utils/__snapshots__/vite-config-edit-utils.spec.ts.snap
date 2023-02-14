@@ -29,8 +29,8 @@ import { join } from 'path';
       }
     },plugins: [
       dts({
+      entryRoot: 'src',
       tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
-      // Faster builds by skipping tests. Set this to false to enable type checking.
       skipDiagnostics: true,
     }),
       react(),
@@ -82,14 +82,13 @@ import { defineConfig } from 'vite';
         }),
       ],
                     dts({
+      entryRoot: 'src',
       tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
-      // Faster builds by skipping tests. Set this to false to enable type checking.
       skipDiagnostics: true,
     }),
                 ],
 
       test: {
-                  ...{
         globals: true,
         cache: {
           dir: '../../node_modules/.vitest',
@@ -97,8 +96,6 @@ import { defineConfig } from 'vite';
         environment: 'jsdom',
         include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
       },
-                  ...{\\"globals\\":true,\\"cache\\":{\\"dir\\":\\"../node_modules/.vitest\\"},\\"environment\\":\\"jsdom\\",\\"include\\":[\\"src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}\\"]}
-               },
 
     });
     "
@@ -137,14 +134,13 @@ import { defineConfig } from 'vite';
         }),
       ],
                     dts({
+      entryRoot: 'src',
       tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
-      // Faster builds by skipping tests. Set this to false to enable type checking.
       skipDiagnostics: true,
     }),
                 ],
 
       test: {
-                  ...{
         globals: true,
         cache: {
           dir: '../../node_modules/.vitest',
@@ -152,8 +148,6 @@ import { defineConfig } from 'vite';
         environment: 'jsdom',
         include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
       },
-                  ...{\\"globals\\":true,\\"cache\\":{\\"dir\\":\\"../node_modules/.vitest\\"},\\"environment\\":\\"jsdom\\",\\"include\\":[\\"src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}\\"]}
-               },
 
     });
     "
@@ -199,8 +193,8 @@ import { defineConfig } from 'vite';
         }),
       ],
                     dts({
+      entryRoot: 'src',
       tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
-      // Faster builds by skipping tests. Set this to false to enable type checking.
       skipDiagnostics: true,
     }),
                 ],
@@ -247,14 +241,13 @@ import { defineConfig } from 'vite';
         }),
       ],
                     dts({
+      entryRoot: 'src',
       tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
-      // Faster builds by skipping tests. Set this to false to enable type checking.
       skipDiagnostics: true,
     }),
                 ],
 
       test: {
-                  ...{
         globals: true,
         cache: {
           dir: '../../node_modules/.vitest',
@@ -262,8 +255,6 @@ import { defineConfig } from 'vite';
         environment: 'jsdom',
         include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
       },
-                  ...{\\"globals\\":true,\\"cache\\":{\\"dir\\":\\"../node_modules/.vitest\\"},\\"environment\\":\\"jsdom\\",\\"include\\":[\\"src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}\\"]}
-               },
 
       build: {
                   ...{
@@ -279,18 +270,19 @@ import { defineConfig } from 'vite';
 exports[`ensureViteConfigIsCorrect should not do anything if cannot understand syntax of vite config 1`] = `"console.log('Unknown syntax')"`;
 
 exports[`ensureViteConfigIsCorrect should not do anything if project has everything setup already 1`] = `
-"import dts from 'vite-plugin-dts';
-import { join } from 'path';
-import { defineConfig } from 'vite';
+"
+    /// <reference types=\\"vitest\\" />
+    import { defineConfig } from 'vite';
     import react from '@vitejs/plugin-react';
     import viteTsConfigPaths from 'vite-tsconfig-paths';
+    import dts from 'vite-plugin-dts';
+    import { join } from 'path';
 
     export default defineConfig({
       plugins: [
-                    ...[
         dts({
+          entryRoot: 'src',
           tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
-          // Faster builds by skipping tests. Set this to false to enable type checking.
           skipDiagnostics: true,
         }),
         react(),
@@ -298,17 +290,10 @@ import { defineConfig } from 'vite';
           root: '../../../',
         }),
       ],
-                    dts({
-      tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
-      // Faster builds by skipping tests. Set this to false to enable type checking.
-      skipDiagnostics: true,
-    }),
-                ],
     
       // Configuration for building your library.
       // See: https://vitejs.dev/guide/build.html#library-mode
       build: {
-                  ...{
         lib: {
           // Could also be a dictionary or array of multiple entry points.
           entry: 'src/index.ts',
@@ -323,11 +308,8 @@ import { defineConfig } from 'vite';
           external: ['react', 'react-dom', 'react/jsx-runtime'],
         },
       },
-                  ...{\\"lib\\":{\\"entry\\":\\"src/index.ts\\",\\"name\\":\\"my-app\\",\\"fileName\\":\\"index\\",\\"formats\\":[\\"es\\",\\"cjs\\"]},\\"rollupOptions\\":{\\"external\\":[\\"'react', 'react-dom', 'react/jsx-runtime'\\"]}}
-               },
     
       test: {
-                  ...{
         globals: true,
         cache: {
           dir: '../../../node_modules/.vitest',
@@ -335,8 +317,6 @@ import { defineConfig } from 'vite';
         environment: 'jsdom',
         include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
       },
-                  ...{\\"globals\\":true,\\"cache\\":{\\"dir\\":\\"../node_modules/.vitest\\"},\\"environment\\":\\"jsdom\\",\\"include\\":[\\"src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}\\"]}
-               },
     });
     "
 `;
@@ -357,8 +337,8 @@ import { defineConfig } from 'vite';
         }),
       ],
                     dts({
+      entryRoot: 'src',
       tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
-      // Faster builds by skipping tests. Set this to false to enable type checking.
       skipDiagnostics: true,
     }),
                 ],

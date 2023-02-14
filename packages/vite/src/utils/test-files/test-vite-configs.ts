@@ -153,12 +153,14 @@ export const hasEverything = `
     import { defineConfig } from 'vite';
     import react from '@vitejs/plugin-react';
     import viteTsConfigPaths from 'vite-tsconfig-paths';
+    import dts from 'vite-plugin-dts';
+    import { join } from 'path';
 
     export default defineConfig({
       plugins: [
         dts({
+          entryRoot: 'src',
           tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
-          // Faster builds by skipping tests. Set this to false to enable type checking.
           skipDiagnostics: true,
         }),
         react(),
@@ -245,8 +247,8 @@ export const testOptionObject = {
 };
 
 export const dtsPlugin = `dts({
+      entryRoot: 'src',
       tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
-      // Faster builds by skipping tests. Set this to false to enable type checking.
       skipDiagnostics: true,
     }),`;
 export const dtsImportLine = `import dts from 'vite-plugin-dts';\nimport { join } from 'path';`;
