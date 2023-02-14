@@ -1,7 +1,4 @@
-import {
-  DependencyType,
-  ProjectGraphProcessorContext,
-} from '../../config/project-graph';
+import { ProjectGraphProcessorContext } from '../../config/project-graph';
 import { ProjectGraphBuilder } from '../project-graph-builder';
 import { buildImplicitProjectDependencies } from './implicit-project-dependencies';
 
@@ -28,7 +25,7 @@ describe('explicit project dependencies', () => {
       {
         filesToProcess: {},
         fileMap: {},
-        projectsConfigurations: {
+        workspace: {
           projects: {
             proj1: { implicitDependencies: ['proj2'] },
           },
@@ -62,7 +59,7 @@ describe('explicit project dependencies', () => {
       {
         filesToProcess: {},
         fileMap: {},
-        projectsConfigurations: {
+        workspace: {
           projects: {
             proj1: { implicitDependencies: ['!proj2'] },
           },
