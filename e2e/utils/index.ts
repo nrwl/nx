@@ -468,6 +468,22 @@ export function newLernaWorkspace({
   }
 }
 
+export function newEncapsulatedNxWorkspace({
+  name = uniq('encapsulated'),
+  pmc = getPackageManagerCommand(),
+} = {}): (command: string) => string {
+  projName = name;
+  ensureDirSync(tmpProjPath());
+  runCommand(`${pmc.runUninstalledPackage} nx@latest init --encapsulated`);
+  return (command: string) => {
+    if (process.platform === 'win32') {
+      return runCommand(`./nx.bat ${command}`);
+    } else {
+      return runCommand(`./nx ${command}`);
+    }
+  };
+}
+
 const KILL_PORT_DELAY = 5000;
 
 export async function killPort(port: number): Promise<boolean> {

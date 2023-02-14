@@ -1404,6 +1404,16 @@
         "isExternal": false,
         "path": "/more-concepts/how-project-graph-is-built",
         "tags": ["explore-graph"]
+      },
+      {
+        "id": "encapsulated-nx-and-the-wrapper",
+        "name": "Encapsulated Nx and the Nx Wrapper",
+        "description": "",
+        "file": "shared/guides/encapsulated-nx-and-the-wrapper",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/more-concepts/encapsulated-nx-and-the-wrapper",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -1599,6 +1609,16 @@
     "isExternal": false,
     "path": "/more-concepts/how-project-graph-is-built",
     "tags": ["explore-graph"]
+  },
+  "/more-concepts/encapsulated-nx-and-the-wrapper": {
+    "id": "encapsulated-nx-and-the-wrapper",
+    "name": "Encapsulated Nx and the Nx Wrapper",
+    "description": "",
+    "file": "shared/guides/encapsulated-nx-and-the-wrapper",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/more-concepts/encapsulated-nx-and-the-wrapper",
+    "tags": []
   },
   "/recipes": {
     "id": "all",

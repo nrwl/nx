@@ -7,6 +7,7 @@ import * as chalk from 'chalk';
 import { initLocal } from './init-local';
 import { detectPackageManager } from '../src/utils/package-manager';
 import { output } from '../src/utils/output';
+import { join } from 'path';
 
 const workspace = findWorkspaceRoot(process.cwd());
 // new is a special case because there is no local workspace to load
@@ -70,11 +71,22 @@ if (
 }
 
 function resolveNx(workspace: WorkspaceTypeAndRoot | null) {
+  // prefer Nx installed in .nx/installation
+  try {
+    return require.resolve('nx/bin/nx.js', {
+      paths: workspace
+        ? [join(workspace.dir, '.nx', 'installation')]
+        : undefined,
+    });
+  } catch {}
+
+  // check for root install
   try {
     return require.resolve('nx/bin/nx.js', {
       paths: workspace ? [workspace.dir] : undefined,
     });
   } catch {
+    // fallback for old CLI install setup
     return require.resolve('@nrwl/cli/bin/nx.js', {
       paths: workspace ? [workspace.dir] : undefined,
     });

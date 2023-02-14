@@ -479,6 +479,11 @@
               "id": "how-project-graph-is-built",
               "tags": ["explore-graph"],
               "file": "shared/concepts/how-project-graph-is-built"
+            },
+            {
+              "name": "Encapsulated Nx and the Nx Wrapper",
+              "id": "encapsulated-nx-and-the-wrapper",
+              "file": "shared/guides/encapsulated-nx-and-the-wrapper"
             }
           ]
         },

@@ -1,3 +1,4 @@
+import { existsSync } from 'fs';
 import { isAbsolute, join } from 'path';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { readJsonFile } from './fileutils';
@@ -28,8 +29,14 @@ function cacheDirectory(root: string, cacheDirectory: string) {
   if (cacheDirectory) {
     return absolutePath(root, cacheDirectory);
   } else {
-    return join(root, 'node_modules', '.cache', 'nx');
+    return defaultCacheDirectory(root);
   }
+}
+
+function defaultCacheDirectory(root: string) {
+  return existsSync(join(root, '.nx'))
+    ? join(root, '.nx', 'cache')
+    : join(root, 'node_modules', '.cache', 'nx');
 }
 
 /**
@@ -43,5 +50,5 @@ export const cacheDir = cacheDirectory(
 export const projectGraphCacheDirectory = absolutePath(
   workspaceRoot,
   process.env.NX_PROJECT_GRAPH_CACHE_DIRECTORY ??
-    join(workspaceRoot, 'node_modules', '.cache', 'nx')
+    defaultCacheDirectory(workspaceRoot)
 );

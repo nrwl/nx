@@ -39,6 +39,8 @@ import {
   parseLockFile,
 } from '../lock-file/lock-file';
 import { Workspaces } from '../config/workspaces';
+import { existsSync } from 'fs';
+import { PackageJson } from '../utils/package-json';
 
 export async function buildProjectGraph() {
   const projectConfigurations = new Workspaces(
@@ -140,8 +142,27 @@ export async function buildProjectGraphUsingProjectFileMap(
 }
 
 function readCombinedDeps() {
-  const json = readJsonFile(join(workspaceRoot, 'package.json'));
-  return { ...json.dependencies, ...json.devDependencies };
+  const installationPackageJsonPath = join(
+    workspaceRoot,
+    '.nx',
+    'installation',
+    'package.json'
+  );
+  const installationPackageJson: Partial<PackageJson> = existsSync(
+    installationPackageJsonPath
+  )
+    ? readJsonFile(installationPackageJsonPath)
+    : {};
+  const rootPackageJsonPath = join(workspaceRoot, 'package.json');
+  const rootPackageJson: Partial<PackageJson> = existsSync(rootPackageJsonPath)
+    ? readJsonFile(rootPackageJsonPath)
+    : {};
+  return {
+    ...rootPackageJson.dependencies,
+    ...rootPackageJson.devDependencies,
+    ...installationPackageJson.dependencies,
+    ...installationPackageJson.devDependencies,
+  };
 }
 
 // extract only external nodes and their dependencies

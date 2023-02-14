@@ -4,14 +4,39 @@ import { addNxToNest } from '../nx-init/add-nx-to-nest';
 import { addNxToNpmRepo } from '../nx-init/add-nx-to-npm-repo';
 import { directoryExists, readJsonFile } from '../utils/fileutils';
 import { PackageJson } from '../utils/package-json';
+import * as parser from 'yargs-parser';
+import { generateEncapsulatedNxSetup } from '../nx-init/encapsulated/add-nx-scripts';
 
 export async function initHandler() {
   const args = process.argv.slice(2).join(' ');
+  const flags = parser(args, {
+    boolean: ['encapsulated'],
+    default: {
+      encapsulated: false,
+    },
+  }) as any as { encapsulated: boolean };
+
   const version = process.env.NX_VERSION ?? 'latest';
   if (process.env.NX_VERSION) {
     console.log(`Using version ${process.env.NX_VERSION}`);
   }
-  if (existsSync('package.json')) {
+  if (flags.encapsulated === true) {
+    if (process.platform !== 'win32') {
+      console.log(
+        'Setting Nx up installation in `.nx`. You can run nx commands like: `./nx --help`'
+      );
+    } else {
+      console.log(
+        'Setting Nx up installation in `.nx`. You can run nx commands like: `./nx.bat --help`'
+      );
+    }
+    generateEncapsulatedNxSetup(version);
+    if (process.platform === 'win32') {
+      execSync('./nx.bat', { stdio: 'inherit' });
+    } else {
+      execSync('./nx', { stdio: 'inherit' });
+    }
+  } else if (existsSync('package.json')) {
     const packageJson: PackageJson = readJsonFile('package.json');
     if (existsSync('angular.json')) {
       // TODO(leo): remove make-angular-cli-faster
