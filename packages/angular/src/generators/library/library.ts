@@ -6,7 +6,6 @@ import {
   removeDependenciesFromPackageJson,
   Tree,
 } from '@nrwl/devkit';
-import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { jestProjectGenerator } from '@nrwl/jest';
 import { Linter } from '@nrwl/linter';
 import { lt } from 'semver';
@@ -65,6 +64,7 @@ export async function libraryGenerator(tree: Tree, schema: Schema) {
     e2eTestRunner: E2eTestRunner.None,
   });
 
+  const { wrapAngularDevkitSchematic } = require('@nrwl/devkit/ngcli-adapter');
   const runAngularLibrarySchematic = wrapAngularDevkitSchematic(
     '@schematics/angular',
     'library'

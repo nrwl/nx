@@ -1,9 +1,9 @@
 import type { Tree } from '@nrwl/devkit';
 import { joinPathFragments, moveFilesToNewDirectory } from '@nrwl/devkit';
-import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import type { NormalizedSchema } from './normalized-schema';
 
 export async function addProtractor(host: Tree, options: NormalizedSchema) {
+  const { wrapAngularDevkitSchematic } = require('@nrwl/devkit/ngcli-adapter');
   const protractorSchematic = wrapAngularDevkitSchematic(
     '@schematics/angular',
     'e2e'

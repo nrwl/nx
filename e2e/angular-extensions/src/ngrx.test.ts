@@ -2,7 +2,7 @@ import {
   cleanupProject,
   expectTestsPass,
   getSelectedPackageManager,
-  newAngularProject,
+  newProject,
   readJson,
   runCLI,
   runCLIAsync,
@@ -12,7 +12,7 @@ import {
 describe('Angular Package', () => {
   describe('ngrx', () => {
     beforeAll(() => {
-      newAngularProject();
+      newProject();
     });
     afterAll(() => {
       cleanupProject();

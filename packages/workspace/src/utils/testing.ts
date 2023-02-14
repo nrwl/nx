@@ -1,6 +1,6 @@
 import { join } from 'path';
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
-import { Rule, Tree } from '@angular-devkit/schematics';
+import type { Rule, Tree } from '@angular-devkit/schematics';
 import { updateWorkspace } from './workspace';
 import { TestingArchitectHost } from '@angular-devkit/architect/testing';
 import { schema } from '@angular-devkit/core';

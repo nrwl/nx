@@ -1,4 +1,4 @@
-import { Tree } from '@angular-devkit/schematics';
+import type { Tree } from '@angular-devkit/schematics';
 import {
   _test_addWorkspaceFile,
   WorkspaceFormat,

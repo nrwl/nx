@@ -5,7 +5,6 @@ import {
   readNxJson,
   readProjectConfiguration,
 } from '@nrwl/devkit';
-import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { exportScam } from '../utils/export-scam';
 import { getPipeFileInfo } from '../utils/file-info';
 import { pathStartsWith } from '../utils/path';
@@ -18,6 +17,7 @@ export async function scamPipeGenerator(tree: Tree, rawOptions: Schema) {
 
   checkPathUnderProjectRoot(tree, options);
 
+  const { wrapAngularDevkitSchematic } = require('@nrwl/devkit/ngcli-adapter');
   const angularPipeSchematic = wrapAngularDevkitSchematic(
     '@schematics/angular',
     'pipe'

@@ -1,6 +1,6 @@
-import { Tree } from '@angular-devkit/schematics';
+import type { Tree } from '@angular-devkit/schematics';
 import { getProjectConfig } from './ast-utils';
-import { join, Path } from '@angular-devkit/core';
+import { join } from '@angular-devkit/core';
 
 export enum ProjectType {
   Application = 'application',
