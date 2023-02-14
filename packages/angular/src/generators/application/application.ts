@@ -7,7 +7,6 @@ import {
   Tree,
   updateNxJson,
 } from '@nrwl/devkit';
-import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { join } from 'path';
 import { UnitTestRunner } from '../../utils/test-runners';
 import { angularInitGenerator } from '../init/init';
@@ -63,6 +62,7 @@ export async function applicationGenerator(
     skipFormat: true,
   });
 
+  const { wrapAngularDevkitSchematic } = require('@nrwl/devkit/ngcli-adapter');
   const angularAppSchematic = wrapAngularDevkitSchematic(
     '@schematics/angular',
     'application'

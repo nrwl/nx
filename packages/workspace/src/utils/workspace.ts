@@ -1,4 +1,4 @@
-import { Tree, Rule } from '@angular-devkit/schematics';
+import type { Tree, Rule } from '@angular-devkit/schematics';
 import { JsonArray, JsonObject, workspaces } from '@angular-devkit/core';
 import {
   ProjectDefinition,

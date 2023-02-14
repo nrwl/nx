@@ -5,28 +5,18 @@
  * Use of this source code is governed by an MIT- style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-import {
-  apply,
-  chain,
+import type {
   DirEntry,
-  forEach,
-  mergeWith,
-  noop,
   Rule,
   SchematicContext,
   Source,
   Tree,
 } from '@angular-devkit/schematics';
 import * as ts from 'typescript';
-import {
-  parseJson,
-  ProjectConfiguration,
-  serializeJson,
-  FileData,
-} from '@nrwl/devkit';
+import { parseJson, serializeJson } from '@nrwl/devkit';
 import { getWorkspacePath } from './cli-config-utils';
-import { extname, join, normalize, Path } from '@angular-devkit/core';
-import type { NxJsonConfiguration, ProjectsConfigurations } from '@nrwl/devkit';
+import type { Path } from '@angular-devkit/core';
+import type { NxJsonConfiguration } from '@nrwl/devkit';
 import { addInstallTask } from './rules/add-install-task';
 import { findNodes } from 'nx/src/utils/typescript';
 import { getSourceNodes } from '../utilities/typescript/get-source-nodes';
@@ -364,6 +354,7 @@ export function allFilesInDirInHost(
     recursive: boolean;
   } = { recursive: true }
 ): Path[] {
+  const { join } = require('@angular-devkit/core');
   const dir = host.getDir(path);
   const res: Path[] = [];
   dir.subfiles.forEach((p) => {
@@ -490,6 +481,7 @@ export function addDepsToPackageJson(
   devDeps: any,
   addInstall = true
 ): Rule {
+  const { chain, noop } = require('@angular-devkit/schematics');
   return (host: Tree, context: SchematicContext) => {
     const currentPackageJson = readJsonInTree(host, 'package.json');
 
@@ -525,6 +517,7 @@ export function updatePackageJsonDependencies(
   devDeps: any,
   addInstall = true
 ): Rule {
+  const { chain } = require('@angular-devkit/schematics');
   return chain([
     updateJsonInTree('package.json', (json, context: SchematicContext) => {
       json.dependencies = {
@@ -723,6 +716,7 @@ function renameFile(tree: Tree, from: string, to: string) {
  * Applies a template merge but skips for already existing entries
  */
 export function applyWithSkipExisting(source: Source, rules: Rule[]): Rule {
+  const { mergeWith, apply, forEach } = require('@angular-devkit/schematics');
   return (tree: Tree, _context: SchematicContext) => {
     const rule = mergeWith(
       apply(source, [

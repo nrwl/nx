@@ -5,7 +5,6 @@ import {
   readNxJson,
   readProjectConfiguration,
 } from '@nrwl/devkit';
-import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { exportScam } from '../utils/export-scam';
 import { getDirectiveFileInfo } from '../utils/file-info';
 import { pathStartsWith } from '../utils/path';
@@ -18,6 +17,7 @@ export async function scamDirectiveGenerator(tree: Tree, rawOptions: Schema) {
 
   checkPathUnderProjectRoot(tree, options);
 
+  const { wrapAngularDevkitSchematic } = require('@nrwl/devkit/ngcli-adapter');
   const angularDirectiveSchematic = wrapAngularDevkitSchematic(
     '@schematics/angular',
     'directive'

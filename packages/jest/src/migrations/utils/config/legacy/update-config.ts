@@ -1,4 +1,4 @@
-import { Tree } from '@angular-devkit/schematics';
+import type { Tree } from '@angular-devkit/schematics';
 import { insert, RemoveChange } from '@nrwl/workspace';
 import {
   addOrUpdateProperty,

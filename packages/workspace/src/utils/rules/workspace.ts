@@ -1,5 +1,5 @@
-import { JsonObject } from '@angular-devkit/core';
-import { Rule } from '@angular-devkit/schematics';
+import type { JsonObject } from '@angular-devkit/core';
+import type { Rule } from '@angular-devkit/schematics';
 import { updateWorkspace } from '../workspace';
 
 /**

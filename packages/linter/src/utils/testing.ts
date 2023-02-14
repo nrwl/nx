@@ -1,6 +1,6 @@
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import { join } from 'path';
-import { Tree } from '@angular-devkit/schematics';
+import type { Tree } from '@angular-devkit/schematics';
 
 const migrationTestRunner = new SchematicTestRunner(
   '@nrwl/linter-migrations',

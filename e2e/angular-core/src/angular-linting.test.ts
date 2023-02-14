@@ -1,6 +1,6 @@
 import {
   cleanupProject,
-  newAngularProject,
+  newProject,
   runCLI,
   uniq,
   updateFile,
@@ -9,7 +9,7 @@ import * as path from 'path';
 
 describe('Angular Package', () => {
   describe('linting', () => {
-    beforeAll(() => newAngularProject());
+    beforeAll(() => newProject());
     afterAll(() => cleanupProject());
 
     it('should support eslint and pass linting on the standard generated code', async () => {

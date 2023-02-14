@@ -4,7 +4,6 @@ import {
   moveFilesToNewDirectory,
   Tree,
 } from '@nrwl/devkit';
-import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { UnitTestRunner } from '../../../utils/test-runners';
 import { angularInitGenerator } from '../../init/init';
 import { setupTailwindGenerator } from '../../setup-tailwind/setup-tailwind';
@@ -38,6 +37,7 @@ export async function applicationGenerator(
     skipFormat: true,
   });
 
+  const { wrapAngularDevkitSchematic } = require('@nrwl/devkit/ngcli-adapter');
   const angularAppSchematic = wrapAngularDevkitSchematic(
     '@schematics/angular',
     'application'

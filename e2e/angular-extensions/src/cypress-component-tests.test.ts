@@ -2,7 +2,7 @@ import {
   checkFilesDoNotExist,
   cleanupProject,
   createFile,
-  newAngularProject,
+  newProject,
   runCLI,
   uniq,
   updateFile,
@@ -17,7 +17,7 @@ describe('Angular Cypress Component Tests', () => {
   const buildableLibName = uniq('cy-angular-buildable-lib');
 
   beforeAll(async () => {
-    projectName = newAngularProject({ name: uniq('cy-ng') });
+    projectName = newProject({ name: uniq('cy-ng') });
     runCLI(`generate @nrwl/angular:app ${appName} --no-interactive`);
     runCLI(
       `generate @nrwl/angular:component fancy-component --project=${appName} --no-interactive`

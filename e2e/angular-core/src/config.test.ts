@@ -1,7 +1,7 @@
 import {
   cleanupProject,
   expectTestsPass,
-  newAngularProject,
+  newProject,
   readJson,
   runCLI,
   runCLIAsync,
@@ -10,7 +10,7 @@ import {
 } from '@nrwl/e2e/utils';
 
 describe('Angular Config', () => {
-  beforeAll(() => newAngularProject());
+  beforeAll(() => newProject());
   afterAll(() => cleanupProject());
 
   it('should upgrade the config correctly', async () => {

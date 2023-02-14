@@ -1,7 +1,6 @@
 import type { Tree } from '@nrwl/devkit';
 import { formatFiles } from '@nrwl/devkit';
 import type { NestSchematic, NormalizedOptions } from './types';
-import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 export async function runNestSchematic(
   tree: Tree,
@@ -10,6 +9,7 @@ export async function runNestSchematic(
 ): Promise<any> {
   const { skipFormat, ...schematicOptions } = options;
 
+  const { wrapAngularDevkitSchematic } = require('@nrwl/devkit/ngcli-adapter');
   const nestSchematic = wrapAngularDevkitSchematic(
     '@nestjs/schematics',
     schematic

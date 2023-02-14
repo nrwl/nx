@@ -1,6 +1,5 @@
 import type { Tree } from '@nrwl/devkit';
 import { formatFiles } from '@nrwl/devkit';
-import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { normalizeOptions, updateTsConfig } from './lib';
 import type { WebWorkerGeneratorOptions } from './schema';
 
@@ -10,6 +9,7 @@ export async function webWorkerGenerator(
 ): Promise<void> {
   const options = normalizeOptions(rawOptions);
   const { skipFormat, ...schematicOptions } = options;
+  const { wrapAngularDevkitSchematic } = require('@nrwl/devkit/ngcli-adapter');
   const webWorkerSchematic = wrapAngularDevkitSchematic(
     '@schematics/angular',
     'web-worker'

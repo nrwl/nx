@@ -1,9 +1,4 @@
-import {
-  cleanupProject,
-  newAngularProject,
-  runCLI,
-  uniq,
-} from '@nrwl/e2e/utils';
+import { cleanupProject, newProject, runCLI, uniq } from '@nrwl/e2e/utils';
 
 describe('Move Angular Project', () => {
   let proj: string;
@@ -12,7 +7,7 @@ describe('Move Angular Project', () => {
   let newPath: string;
 
   beforeAll(() => {
-    proj = newAngularProject();
+    proj = newProject();
     app1 = uniq('app1');
     app2 = uniq('app2');
     newPath = `subfolder/${app2}`;

@@ -3,7 +3,7 @@ import {
   cleanupProject,
   getSize,
   killPorts,
-  newAngularProject,
+  newProject,
   promisifiedTreeKill,
   readFile,
   runCLI,
@@ -20,7 +20,7 @@ import { names } from '@nrwl/devkit';
 describe('Angular Projects', () => {
   let proj: string;
 
-  beforeAll(() => (proj = newAngularProject()));
+  beforeAll(() => (proj = newProject()));
   afterAll(() => cleanupProject());
 
   it('should generate an app, a lib, link them, build, serve and test both correctly', async () => {

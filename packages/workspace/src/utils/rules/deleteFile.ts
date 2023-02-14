@@ -1,4 +1,4 @@
-import { Rule, Tree } from '@angular-devkit/schematics';
+import type { Rule, Tree } from '@angular-devkit/schematics';
 
 /**
  * Remove a file from the Virtual Schematic Tree

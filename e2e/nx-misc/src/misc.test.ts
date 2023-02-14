@@ -22,7 +22,7 @@ describe('Nx Commands', () => {
   afterAll(() => cleanupProject());
 
   describe('show', () => {
-    it('ttt should show the list of projects', () => {
+    it('should show the list of projects', () => {
       const app1 = uniq('myapp');
       const app2 = uniq('myapp');
       expect(runCLI('show projects')).toEqual('');

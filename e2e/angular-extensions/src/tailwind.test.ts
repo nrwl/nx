@@ -1,7 +1,7 @@
 import {
   cleanupProject,
   listFiles,
-  newAngularProject,
+  newProject,
   readFile,
   removeFile,
   runCLI,
@@ -117,7 +117,7 @@ describe('Tailwind support', () => {
   };
 
   beforeAll(() => {
-    project = newAngularProject();
+    project = newProject();
 
     // Create tailwind config in the workspace root
     createWorkspaceTailwindConfigFile();

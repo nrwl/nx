@@ -93,14 +93,7 @@ function getPresetDependencies(preset: string, version?: string) {
 
     case Preset.AngularMonorepo:
     case Preset.AngularStandalone:
-      return {
-        dependencies: { '@nrwl/angular': nxVersion },
-        dev: {
-          '@angular-devkit/core': angularCliVersion,
-          '@angular-devkit/schematics': angularCliVersion,
-          '@schematics/angular': angularCliVersion,
-        },
-      };
+      return { dependencies: { '@nrwl/angular': nxVersion }, dev: {} };
 
     case Preset.Express:
       return { dependencies: {}, dev: { '@nrwl/express': nxVersion } };
