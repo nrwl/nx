@@ -491,8 +491,8 @@ export function createOrEditViteConfig(
     ? ''
     : options.includeLib
     ? `dts({
+      entryRoot: 'src',
       tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
-      // Faster builds by skipping tests. Set this to false to enable type checking.
       skipDiagnostics: true,
     }),`
     : '';
