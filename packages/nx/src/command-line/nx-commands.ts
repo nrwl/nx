@@ -36,6 +36,7 @@ export const commandsObject = yargs
     handler: async (args) => {
       // Remove the command from the args
       args._ = args._.slice(1);
+
       process.exit(
         await (await import('./generate')).generate(process.cwd(), args)
       );
@@ -732,6 +733,18 @@ function withGenerateOptions(yargs: yargs.Argv) {
         'Prints additional information about the commands (e.g., stack traces)',
       type: 'boolean',
       default: false,
+    })
+    .middleware((args) => {
+      if (process.env.NX_INTERACTIVE !== 'false') {
+        args.interactive = true;
+      } else {
+        process.env.NX_INTERACTIVE = `${args.interactive}`;
+      }
+      if (process.env.NX_DRY_RUN === 'true') {
+        args.dryRun = true;
+      } else {
+        process.env.NX_DRY_RUN = `${args.dryRun}`;
+      }
     });
 
   if (generatorWillShowHelp) {
