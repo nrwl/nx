@@ -25,7 +25,7 @@ describe('EsBuild Plugin', () => {
   it('should setup and build projects using build', async () => {
     const myPkg = uniq('my-pkg');
     runCLI(`generate @nrwl/js:lib ${myPkg} --bundler=esbuild`);
-    updateFile(`libs/${myPkg}/src/index.ts`, `console.log('Hello');\n`);
+    updateFile(`libs/${myPkg}/index.ts`, `console.log('Hello');\n`);
     updateProjectConfig(myPkg, (json) => {
       json.targets.build.options.assets = [`libs/${myPkg}/assets/*`];
       return json;
@@ -58,7 +58,7 @@ describe('EsBuild Plugin', () => {
     /* Type errors are turned on by default
      */
     updateFile(
-      `libs/${myPkg}/src/index.ts`,
+      `libs/${myPkg}/index.ts`,
       `
       const x: number = 'a'; // type error
       console.log('Bye');
@@ -77,7 +77,7 @@ describe('EsBuild Plugin', () => {
     runCLI(`generate @nrwl/js:lib ${parentLib} --bundler=esbuild`);
     runCLI(`generate @nrwl/js:lib ${childLib} --buildable=false`);
     updateFile(
-      `libs/${parentLib}/src/index.ts`,
+      `libs/${parentLib}/index.ts`,
       `
         // @ts-ignore
         import _ from 'lodash';
@@ -88,7 +88,7 @@ describe('EsBuild Plugin', () => {
       `
     );
     updateFile(
-      `libs/${childLib}/src/index.ts`,
+      `libs/${childLib}/index.ts`,
       `
         import { always } from 'rambda';
         export const greet = always('Hello from child lib');
@@ -124,16 +124,16 @@ describe('EsBuild Plugin', () => {
     const myPkg = uniq('my-pkg');
     runCLI(`generate @nrwl/js:lib ${myPkg} --bundler=esbuild`);
     updateFile(`libs/${myPkg}/src/lib/${myPkg}.ts`, `console.log('Hello');\n`);
-    updateFile(`libs/${myPkg}/src/index.ts`, `import './lib/${myPkg}.js';\n`);
+    updateFile(`libs/${myPkg}/index.ts`, `import './src/lib/${myPkg}.js';\n`);
 
     runCLI(`build ${myPkg} --bundle=false`);
 
     checkFilesExist(
-      `dist/libs/${myPkg}/lib/${myPkg}.js`,
+      `dist/libs/${myPkg}/src/lib/${myPkg}.js`,
       `dist/libs/${myPkg}/index.js`
     );
     // Test files are excluded in tsconfig (e.g. tsconfig.lib.json)
-    checkFilesDoNotExist(`dist/libs/${myPkg}/lib/${myPkg}.spec.js`);
+    checkFilesDoNotExist(`dist/libs/${myPkg}/src/lib/${myPkg}.spec.js`);
     // Can run package (package.json fields are correctly generated)
     expect(runCommand(`node dist/libs/${myPkg}`)).toMatch(/Hello/);
   }, 300_000);
@@ -141,7 +141,7 @@ describe('EsBuild Plugin', () => {
   it('should support new watch API in >= 0.17.0 and old watch API in < 0.17.0', async () => {
     const myPkg = uniq('my-pkg');
     runCLI(`generate @nrwl/js:lib ${myPkg} --bundler=esbuild`);
-    updateFile(`libs/${myPkg}/src/index.ts`, `console.log('new API');\n`);
+    updateFile(`libs/${myPkg}/index.ts`, `console.log('new API');\n`);
 
     let watchProcess = await runCommandUntil(
       `build ${myPkg} --bundle=false --watch`,
@@ -176,7 +176,7 @@ describe('EsBuild Plugin', () => {
   it('should support additional entry points', () => {
     const myPkg = uniq('my-pkg');
     runCLI(`generate @nrwl/js:lib ${myPkg} --bundler=esbuild`);
-    updateFile(`libs/${myPkg}/src/index.ts`, `console.log('main');\n`);
+    updateFile(`libs/${myPkg}/index.ts`, `console.log('main');\n`);
     updateFile(`libs/${myPkg}/src/extra.ts`, `console.log('extra');\n`);
     updateProjectConfig(myPkg, (json) => {
       json.targets.build.options.additionalEntryPoints = [

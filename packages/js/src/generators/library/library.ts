@@ -148,7 +148,7 @@ function addProject(
       outputs: ['{options.outputPath}'],
       options: {
         outputPath,
-        main: `${options.projectRoot}/src/index` + (options.js ? '.js' : '.ts'),
+        main: `${options.projectRoot}/index` + (options.js ? '.js' : '.ts'),
         tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
         // TODO(jack): assets for webpack and rollup have validation that we need to fix (assets must be under <project-root>/src)
         assets:
@@ -450,7 +450,6 @@ function updateRootTsConfig(host: Tree, options: NormalizedSchema) {
     c.paths[options.importPath] = [
       joinPathFragments(
         options.projectRoot,
-        './src',
         'index.' + (options.js ? 'js' : 'ts')
       ),
     ];
@@ -463,36 +462,18 @@ function addProjectDependencies(
   tree: Tree,
   options: NormalizedSchema
 ): GeneratorCallback {
-  if (options.bundler == 'esbuild') {
-    return addDependenciesToPackageJson(
-      tree,
-      {},
-      {
-        '@nrwl/esbuild': nxVersion,
-        '@types/node': typesNodeVersion,
-        esbuild: esbuildVersion,
-      }
-    );
+  const devDependencies = {
+    '@types/node': typesNodeVersion,
+  };
+  if (options.bundler && options.bundler !== 'none') {
+    devDependencies[`@nrwl/${options.bundler}`] = nxVersion;
+
+    if (options.bundler == 'esbuild') {
+      devDependencies['esbuild'] = esbuildVersion;
+    }
   }
 
-  if (options.bundler == 'rollup') {
-    return addDependenciesToPackageJson(
-      tree,
-      {},
-      { '@nrwl/rollup': nxVersion, '@types/node': typesNodeVersion }
-    );
-  }
-
-  if (options.bundler == 'webpack') {
-    return addDependenciesToPackageJson(
-      tree,
-      {},
-      { '@nrwl/webpack': nxVersion, '@types/node': typesNodeVersion }
-    );
-  }
-
-  // noop
-  return () => {};
+  return addDependenciesToPackageJson(tree, {}, devDependencies);
 }
 
 function getBuildExecutor(options: NormalizedSchema) {

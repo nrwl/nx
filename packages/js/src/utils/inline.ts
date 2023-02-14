@@ -16,6 +16,7 @@ interface InlineProjectNode {
   root: string;
   sourceRoot: string;
   pathAlias: string;
+  isInSrc: boolean;
   buildOutputPath?: string;
 }
 
@@ -82,9 +83,8 @@ export function postProcessInlinedDependencies(
         movePackage(depOutputPath, destDepOutputPath);
       }
 
-      // TODO: hard-coded "src"
       inlinedDepsDestOutputRecord[inlineDependency.pathAlias] =
-        destDepOutputPath + '/src';
+        destDepOutputPath + (inlineDependency.isInSrc ? '/src' : '');
     }
   }
 
@@ -124,6 +124,7 @@ function projectNodeToInlineProjectNode(
     root: projectNode.data.root,
     sourceRoot: projectNode.data.sourceRoot,
     pathAlias,
+    isInSrc: pathAlias.includes('/src/'),
     buildOutputPath,
   };
 }

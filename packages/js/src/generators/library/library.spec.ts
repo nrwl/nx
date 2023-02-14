@@ -47,7 +47,7 @@ describe('lib', () => {
         },
       });
 
-      expect(tree.exists('libs/my-lib/src/index.ts')).toBeTruthy();
+      expect(tree.exists('libs/my-lib/index.ts')).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/lib/my-lib.ts')).toBeTruthy();
 
       // unitTestRunner property is ignored.
@@ -96,7 +96,7 @@ describe('lib', () => {
         await libraryGenerator(tree, { ...defaultOptions, name: 'myLib' });
         const tsconfigJson = readJson(tree, '/tsconfig.base.json');
         expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-          'libs/my-lib/src/index.ts',
+          'libs/my-lib/index.ts',
         ]);
       });
 
@@ -107,7 +107,7 @@ describe('lib', () => {
 
         const tsconfigJson = readJson(tree, 'tsconfig.json');
         expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-          'libs/my-lib/src/index.ts',
+          'libs/my-lib/index.ts',
         ]);
       });
 
@@ -120,7 +120,7 @@ describe('lib', () => {
         await libraryGenerator(tree, { ...defaultOptions, name: 'myLib' });
         const tsconfigJson = readJson(tree, '/tsconfig.base.json');
         expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-          'libs/my-lib/src/index.ts',
+          'libs/my-lib/index.ts',
         ]);
       });
 
@@ -203,14 +203,14 @@ describe('lib', () => {
           directory: 'myDir',
         });
         expect(tree.exists(`libs/my-dir/my-lib/jest.config.ts`)).toBeTruthy();
-        expect(tree.exists('libs/my-dir/my-lib/src/index.ts')).toBeTruthy();
+        expect(tree.exists('libs/my-dir/my-lib/index.ts')).toBeTruthy();
         expect(
           tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.ts')
         ).toBeTruthy();
         expect(
           tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.spec.ts')
         ).toBeTruthy();
-        expect(tree.exists('libs/my-dir/my-lib/src/index.ts')).toBeTruthy();
+        expect(tree.exists('libs/my-dir/my-lib/index.ts')).toBeTruthy();
         expect(tree.exists(`libs/my-dir/my-lib/.eslintrc.json`)).toBeTruthy();
         expect(tree.exists(`libs/my-dir/my-lib/package.json`)).toBeFalsy();
       });
@@ -237,7 +237,7 @@ describe('lib', () => {
         const tsconfigJson = readJson(tree, '/tsconfig.base.json');
         expect(
           tsconfigJson.compilerOptions.paths['@proj/my-dir/my-lib']
-        ).toEqual(['libs/my-dir/my-lib/src/index.ts']);
+        ).toEqual(['libs/my-dir/my-lib/index.ts']);
         expect(
           tsconfigJson.compilerOptions.paths['my-dir-my-lib/*']
         ).toBeUndefined();
@@ -255,7 +255,7 @@ describe('lib', () => {
         const tsconfigJson = readJson(tree, '/tsconfig.json');
         expect(
           tsconfigJson.compilerOptions.paths['@proj/my-dir/my-lib']
-        ).toEqual(['libs/my-dir/my-lib/src/index.ts']);
+        ).toEqual(['libs/my-dir/my-lib/index.ts']);
         expect(
           tsconfigJson.compilerOptions.paths['my-dir-my-lib/*']
         ).toBeUndefined();
@@ -561,7 +561,7 @@ describe('lib', () => {
           js: true,
         });
         expect(tree.exists(`libs/my-lib/jest.config.js`)).toBeTruthy();
-        expect(tree.exists('libs/my-lib/src/index.js')).toBeTruthy();
+        expect(tree.exists('libs/my-lib/index.js')).toBeTruthy();
         expect(tree.exists('libs/my-lib/src/lib/my-lib.js')).toBeTruthy();
         expect(tree.exists('libs/my-lib/src/lib/my-lib.spec.js')).toBeTruthy();
       });
@@ -584,7 +584,7 @@ describe('lib', () => {
           js: true,
         });
         expect(readJson(tree, 'libs/my-lib/tsconfig.lib.json').include).toEqual(
-          ['src/**/*.ts', 'src/**/*.js']
+          ['src/**/*.ts', 'index.ts', 'src/**/*.js', 'index.js']
         );
       });
 
@@ -596,7 +596,7 @@ describe('lib', () => {
         });
         const tsconfigJson = readJson(tree, '/tsconfig.base.json');
         expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-          'libs/my-lib/src/index.js',
+          'libs/my-lib/index.js',
         ]);
       });
 
@@ -608,14 +608,14 @@ describe('lib', () => {
           js: true,
         });
         expect(tree.exists(`libs/my-dir/my-lib/jest.config.js`)).toBeTruthy();
-        expect(tree.exists('libs/my-dir/my-lib/src/index.js')).toBeTruthy();
+        expect(tree.exists('libs/my-dir/my-lib/index.js')).toBeTruthy();
         expect(
           tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.js')
         ).toBeTruthy();
         expect(
           tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.spec.js')
         ).toBeTruthy();
-        expect(tree.exists('libs/my-dir/my-lib/src/index.js')).toBeTruthy();
+        expect(tree.exists('libs/my-dir/my-lib/index.js')).toBeTruthy();
       });
 
       it('should configure the project for linting js files', async () => {
@@ -746,7 +746,7 @@ describe('lib', () => {
           executor: '@nrwl/js:tsc',
           options: {
             assets: ['libs/my-lib/*.md'],
-            main: 'libs/my-lib/src/index.ts',
+            main: 'libs/my-lib/index.ts',
             outputPath: 'dist/libs/my-lib',
             tsConfig: 'libs/my-lib/tsconfig.lib.json',
           },
@@ -767,7 +767,7 @@ describe('lib', () => {
           executor: '@nrwl/js:swc',
           options: {
             assets: ['libs/my-lib/*.md'],
-            main: 'libs/my-lib/src/index.ts',
+            main: 'libs/my-lib/index.ts',
             outputPath: 'dist/libs/my-lib',
             tsConfig: 'libs/my-lib/tsconfig.lib.json',
           },
@@ -825,7 +825,7 @@ describe('lib', () => {
           executor: '@nrwl/js:tsc',
           options: {
             assets: ['libs/my-lib/*.md'],
-            main: 'libs/my-lib/src/index.ts',
+            main: 'libs/my-lib/index.ts',
             outputPath: 'dist/libs/my-lib',
             tsConfig: 'libs/my-lib/tsconfig.lib.json',
           },

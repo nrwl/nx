@@ -182,9 +182,9 @@ export class MyLibController {
 `;
 
 exports[`lib not nested should provide the controller and service 3`] = `
-"export * from './lib/my-lib.controller';
-export * from './lib/my-lib.service';
-export * from './lib/my-lib.module';
+"export * from './src/lib/my-lib.controller';
+export * from './src/lib/my-lib.service';
+export * from './src/lib/my-lib.module';
 
 "
 `;

@@ -40,7 +40,7 @@ describe('NxPlugin Plugin Generator', () => {
       options: {
         outputPath: 'dist/libs/my-plugin',
         tsConfig: 'libs/my-plugin/tsconfig.lib.json',
-        main: 'libs/my-plugin/src/index.ts',
+        main: 'libs/my-plugin/index.ts',
         assets: [
           'libs/my-plugin/*.md',
           {

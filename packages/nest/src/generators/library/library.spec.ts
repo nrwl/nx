@@ -109,7 +109,7 @@ describe('lib', () => {
         )
       ).toMatchSnapshot();
       expect(
-        tree.read(`libs/${libFileName}/src/index.ts`, 'utf-8')
+        tree.read(`libs/${libFileName}/index.ts`, 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -130,7 +130,7 @@ describe('lib', () => {
       const tsconfigJson = readJson(tree, '/tsconfig.base.json');
       expect(
         tsconfigJson.compilerOptions.paths[`@proj/${libFileName}`]
-      ).toEqual([`libs/${libFileName}/src/index.ts`]);
+      ).toEqual([`libs/${libFileName}/index.ts`]);
     });
 
     it('should create a local tsconfig.json', async () => {
@@ -169,7 +169,7 @@ describe('lib', () => {
       await libraryGenerator(tree, { name: libName });
 
       expect(tree.exists(`libs/${libFileName}/jest.config.ts`)).toBeTruthy();
-      expect(tree.exists(`libs/${libFileName}/src/index.ts`)).toBeTruthy();
+      expect(tree.exists(`libs/${libFileName}/index.ts`)).toBeTruthy();
       expect(
         tree.exists(`libs/${libFileName}/src/lib/${libFileName}.spec.ts`)
       ).toBeFalsy();
@@ -204,7 +204,7 @@ describe('lib', () => {
         tree.exists(`libs/${dirFileName}/${libFileName}/jest.config.ts`)
       ).toBeTruthy();
       expect(
-        tree.exists(`libs/${dirFileName}/${libFileName}/src/index.ts`)
+        tree.exists(`libs/${dirFileName}/${libFileName}/index.ts`)
       ).toBeTruthy();
       expect(
         tree.exists(
@@ -235,7 +235,7 @@ describe('lib', () => {
         tsconfigJson.compilerOptions.paths[
           `@proj/${dirFileName}/${libFileName}`
         ]
-      ).toEqual([`libs/${dirFileName}/${libFileName}/src/index.ts`]);
+      ).toEqual([`libs/${dirFileName}/${libFileName}/index.ts`]);
       expect(
         tsconfigJson.compilerOptions.paths[`${nestedLibFileName}/*`]
       ).toBeUndefined();

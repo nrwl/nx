@@ -43,7 +43,7 @@ describe('Nx Plugin', () => {
       `dist/libs/${plugin}/package.json`,
       `dist/libs/${plugin}/generators.json`,
       `dist/libs/${plugin}/executors.json`,
-      `dist/libs/${plugin}/src/index.js`,
+      `dist/libs/${plugin}/index.js`,
       `dist/libs/${plugin}/src/generators/${plugin}/schema.json`,
       `dist/libs/${plugin}/src/generators/${plugin}/schema.d.ts`,
       `dist/libs/${plugin}/src/generators/${plugin}/generator.js`,
@@ -290,7 +290,7 @@ describe('Nx Plugin', () => {
     it('should be able to infer projects and targets', async () => {
       // Setup project inference + target inference
       updateFile(
-        `libs/${plugin}/src/index.ts`,
+        `libs/${plugin}/index.ts`,
         `import {basename} from 'path'
 
   export function registerProjectTargets(f) {

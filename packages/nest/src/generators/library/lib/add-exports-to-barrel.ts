@@ -10,7 +10,7 @@ export function addExportsToBarrelFile(
   tree: Tree,
   options: NormalizedOptions
 ): void {
-  const indexPath = `${options.projectRoot}/src/index.ts`;
+  const indexPath = `${options.projectRoot}/index.ts`;
   const indexContent = tree.read(indexPath, 'utf-8');
   let sourceFile = ts.createSourceFile(
     indexPath,
@@ -24,13 +24,13 @@ export function addExportsToBarrelFile(
     sourceFile,
     indexPath,
     0,
-    `export * from './lib/${options.fileName}';`
+    `export * from './src/lib/${options.fileName}';`
   );
   sourceFile = addGlobal(
     tree,
     sourceFile,
     indexPath,
-    `export * from './lib/${options.fileName}.module';`
+    `export * from './src/lib/${options.fileName}.module';`
   );
 
   if (options.service) {
@@ -38,7 +38,7 @@ export function addExportsToBarrelFile(
       tree,
       sourceFile,
       indexPath,
-      `export * from './lib/${options.fileName}.service';`
+      `export * from './src/lib/${options.fileName}.service';`
     );
   }
   if (options.controller) {
@@ -46,7 +46,7 @@ export function addExportsToBarrelFile(
       tree,
       sourceFile,
       indexPath,
-      `export * from './lib/${options.fileName}.controller';`
+      `export * from './src/lib/${options.fileName}.controller';`
     );
   }
 }
