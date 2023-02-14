@@ -72,8 +72,13 @@ export function createPackageJson(
       const isOptionalPeer =
         npmDeps.peerDependenciesMeta[packageName]?.optional;
       if (!isOptionalPeer) {
-        packageJson.peerDependencies ??= {};
-        packageJson.peerDependencies[packageName] = version;
+        if (
+          !options.isProduction ||
+          rootPackageJson.dependencies?.[packageName]
+        ) {
+          packageJson.peerDependencies ??= {};
+          packageJson.peerDependencies[packageName] = version;
+        }
       } else if (!options.isProduction) {
         // add peer optional dependencies if not in production
         packageJson.peerDependencies ??= {};
@@ -183,17 +188,4 @@ function recursivelyCollectPeerDependencies(
   } catch (e) {
     return list;
   }
-}
-
-function filterOptionalPeerDependencies(
-  packageJson: PackageJson
-): Record<string, string> {
-  let peerDependencies;
-  Object.keys(packageJson.peerDependencies).forEach((key) => {
-    if (!packageJson.peerDependenciesMeta?.[key]?.optional) {
-      peerDependencies = peerDependencies || {};
-      peerDependencies[key] = packageJson.peerDependencies[key];
-    }
-  });
-  return peerDependencies;
 }
