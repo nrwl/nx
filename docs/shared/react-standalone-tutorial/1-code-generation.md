@@ -13,7 +13,7 @@ src="https://www.youtube.com/embed/dqCZteGFP4k"
 title="Tutorial: React Standalone Application"
 width="100%" /%}
 
-{% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/react-standalone-application" /%}
+{% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/standalone-react-app" /%}
 
 # React Standalone Tutorial - Part 1: Code Generation
 
