@@ -181,7 +181,11 @@ export function resolveLocalNxPlugin(
 
 let tsNodeAndPathsRegistered = false;
 
-function registerTSTranspiler() {
+/**
+ * Register swc-node or ts-node if they are not currently registered
+ * with some default settings which work well for Nx plugins.
+ */
+export function registerPluginTSTranspiler() {
   if (!tsNodeAndPathsRegistered) {
     // nx-ignore-next-line
     const ts: typeof import('typescript') = require('typescript');
@@ -208,7 +212,7 @@ function lookupLocalPlugin(importPath: string, root = workspaceRoot) {
   }
 
   if (!tsNodeAndPathsRegistered) {
-    registerTSTranspiler();
+    registerPluginTSTranspiler();
   }
 
   const projectConfig = workspace.projects[plugin];
