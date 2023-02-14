@@ -83,7 +83,61 @@ You need to use the [`vite-tsconfig-paths` plugin](https://www.npmjs.com/package
 
 If you are using React, you need to use the [`@vitejs/plugin-react` plugin](https://www.npmjs.com/package/@vitejs/plugin-react).
 
+### DTS plugin
+
+If you are building a library, you need to use the [`vite-plugin-dts` plugin](https://www.npmjs.com/package/vite-plugin-dts) to generate the `.d.ts` files for your library.
+
+#### Skip diagnostics
+
+If you are building a library, you can set the `skipDiagnostics` option to `true` to speed up the build. This means that type diagnostic will be skipped during the build process. However, if there are some files with type errors which interrupt the build process, these files will not be emitted and `.d.ts` declaration files will not be generated.
+
+If you choose to skip diagnostics, here is what your `'vite-plugin-dts'` plugin setup will look like:
+
+```ts {% fileName="libs/my-lib/vite.config.ts" %}
+...
+import dts from 'vite-plugin-dts';
+import { join } from 'path';
+...
+...
+export default defineConfig({
+  plugins: [
+    ...,
+    dts({
+      entryRoot: 'src',
+      tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
+      skipDiagnostics: true,
+    }),
+```
+
+#### Do not skip diagnostics
+
+If you are building a library, and you want to make sure that all the files are type checked, you can set the `skipDiagnostics` option to `false` to make sure that all the files are type checked. This means that type diagnostic will be run during the build process.
+
+If you choose to enable diagnostics, here is what your `'vite-plugin-dts'` plugin setup will look like:
+
+```ts {% fileName="libs/my-lib/vite.config.ts" %}
+...
+import dts from 'vite-plugin-dts';
+...
+...
+export default defineConfig({
+  plugins: [
+    ...,
+    dts({
+      root: '../../',
+      entryRoot: 'packages/one/src',
+      tsConfigFilePath: 'packages/one/tsconfig.lib.json',
+      include: ['packages/one/src/**/*.ts'],
+      outputDir: 'dist/packages/one',
+      skipDiagnostics: false,
+    }),
+```
+
+You can read more about the configuration options in the [`vite-plugin-dts` plugin documentation](https://www.npmjs.com/package/vite-plugin-dts)).
+
 ### How your `vite.config.ts` looks like
+
+#### For applications
 
 Add a `vite.config.ts` file to the root of your project. If you are not using React, you can skip adding the `react` plugin, of course.
 
@@ -102,7 +156,9 @@ export default defineConfig({
 });
 ```
 
-If you are converting a library (rather than an application) to use vite, your `vite.config.ts` file should look like this:
+#### For libraries
+
+If you are setting up a library (rather than an application) to use vite, your `vite.config.ts` file should look like this:
 
 ```ts {% fileName="libs/my-lib/vite.config.ts" %}
 import { defineConfig } from 'vite';
@@ -114,13 +170,13 @@ import { join } from 'path';
 export default defineConfig({
   plugins: [
     dts({
+      entryRoot: 'src',
       tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
-      // Faster builds by skipping tests. Set this to false to enable type checking.
       skipDiagnostics: true,
     }),
     react(),
     viteTsConfigPaths({
-      root: '../../../',
+      root: '../../',
     }),
   ],
 

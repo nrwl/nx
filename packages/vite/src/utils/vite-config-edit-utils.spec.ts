@@ -39,6 +39,7 @@ describe('ensureViteConfigIsCorrect', () => {
       pluginOption,
       testOption,
       testOptionObject,
+      '',
       { build: false, test: true, serve: false }
     );
     const appFileContent = tree.read('apps/my-app/vite.config.ts', 'utf-8');
@@ -63,6 +64,7 @@ describe('ensureViteConfigIsCorrect', () => {
       pluginOption,
       testOption,
       testOptionObject,
+      '',
       { build: false, test: true, serve: false }
     );
     const appFileContent = tree.read('apps/my-app/vite.config.ts', 'utf-8');
@@ -87,6 +89,7 @@ describe('ensureViteConfigIsCorrect', () => {
       pluginOption,
       testOption,
       testOptionObject,
+      '',
       { build: false, test: false, serve: false }
     );
     const appFileContent = tree.read('apps/my-app/vite.config.ts', 'utf-8');
@@ -111,6 +114,7 @@ describe('ensureViteConfigIsCorrect', () => {
       pluginOption,
       testOption,
       testOptionObject,
+      '',
       { build: false, test: false, serve: false }
     );
     const appFileContent = tree.read('apps/my-app/vite.config.ts', 'utf-8');
@@ -135,6 +139,7 @@ describe('ensureViteConfigIsCorrect', () => {
       pluginOption,
       testOption,
       testOptionObject,
+      '',
       { build: false, test: false, serve: false }
     );
     const appFileContent = tree.read('apps/my-app/vite.config.ts', 'utf-8');
@@ -159,6 +164,7 @@ describe('ensureViteConfigIsCorrect', () => {
       pluginOption,
       testOption,
       testOptionObject,
+      '',
       { build: false, test: false, serve: false }
     );
     const appFileContent = tree.read('apps/my-app/vite.config.ts', 'utf-8');
@@ -177,6 +183,7 @@ describe('ensureViteConfigIsCorrect', () => {
       pluginOption,
       testOption,
       testOptionObject,
+      '',
       { build: true, test: true, serve: true }
     );
     const appFileContent = tree.read('apps/my-app/vite.config.ts', 'utf-8');
@@ -195,6 +202,7 @@ describe('ensureViteConfigIsCorrect', () => {
       pluginOption,
       testOption,
       testOptionObject,
+      '',
       { build: false, test: true, serve: true }
     );
     const appFileContent = tree.read('apps/my-app/vite.config.ts', 'utf-8');
@@ -213,6 +221,7 @@ describe('ensureViteConfigIsCorrect', () => {
       pluginOption,
       testOption,
       testOptionObject,
+      '',
       { build: false, test: false, serve: true }
     );
     const appFileContent = tree.read('apps/my-app/vite.config.ts', 'utf-8');
