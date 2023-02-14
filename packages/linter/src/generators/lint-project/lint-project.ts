@@ -40,7 +40,7 @@ function createEsLintConfiguration(
       ? [`${offsetFromRoot(projectConfig.root)}${eslintConfig}`]
       : undefined,
     // Include project files to be linted since the global one excludes all files.
-    ignorePatterns: ['!**/*'],
+    ignorePatterns: ['!**/*', 'node_modules'],
     overrides: [
       {
         files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
