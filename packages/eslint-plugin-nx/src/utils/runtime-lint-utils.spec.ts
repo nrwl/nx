@@ -7,6 +7,7 @@ import {
 } from '@nrwl/devkit';
 import {
   DepConstraint,
+  findConstraintsFor,
   findTransitiveExternalDependencies,
   hasBannedDependencies,
   hasBannedImport,
@@ -18,6 +19,68 @@ import { vol } from 'memfs';
 jest.mock('nx/src/utils/workspace-root', () => ({
   workspaceRoot: '/root',
 }));
+
+describe('findConstraintsFor', () => {
+  it('should find constraints matching tag', () => {
+    const constriants: DepConstraint[] = [
+      { sourceTag: 'a', onlyDependOnLibsWithTags: ['b'] },
+      { sourceTag: 'b', onlyDependOnLibsWithTags: ['c'] },
+      { sourceTag: 'c', onlyDependOnLibsWithTags: ['a'] },
+    ];
+
+    expect(
+      findConstraintsFor(constriants, {
+        type: 'lib',
+        name: 'someLib',
+        data: { root: '.', files: [], tags: ['b'] },
+      })
+    ).toEqual([{ sourceTag: 'b', onlyDependOnLibsWithTags: ['c'] }]);
+  });
+
+  it('should find constraints matching *', () => {
+    const constriants: DepConstraint[] = [
+      { sourceTag: 'a', onlyDependOnLibsWithTags: ['b'] },
+      { sourceTag: 'b', onlyDependOnLibsWithTags: ['c'] },
+      { sourceTag: '*', onlyDependOnLibsWithTags: ['a'] },
+    ];
+
+    expect(
+      findConstraintsFor(constriants, {
+        type: 'lib',
+        name: 'someLib',
+        data: { root: '.', files: [], tags: ['b'] },
+      })
+    ).toEqual([
+      { sourceTag: 'b', onlyDependOnLibsWithTags: ['c'] },
+      { sourceTag: '*', onlyDependOnLibsWithTags: ['a'] },
+    ]);
+  });
+
+  it('should find constraints matching regex', () => {
+    const constriants: DepConstraint[] = [
+      { sourceTag: 'a', onlyDependOnLibsWithTags: ['a'] },
+      { sourceTag: '/^b$/', onlyDependOnLibsWithTags: ['c'] },
+      { sourceTag: '/a|b/', onlyDependOnLibsWithTags: ['c'] },
+    ];
+    expect(
+      findConstraintsFor(constriants, {
+        type: 'lib',
+        name: 'someLib',
+        data: { root: '.', files: [], tags: ['b'] },
+      })
+    ).toEqual([
+      { sourceTag: '/^b$/', onlyDependOnLibsWithTags: ['c'] },
+      { sourceTag: '/a|b/', onlyDependOnLibsWithTags: ['c'] },
+    ]);
+    expect(
+      findConstraintsFor(constriants, {
+        type: 'lib',
+        name: 'someLib',
+        data: { root: '.', files: [], tags: ['baz'] },
+      })
+    ).toEqual([{ sourceTag: '/a|b/', onlyDependOnLibsWithTags: ['c'] }]);
+  });
+});
 
 describe('hasBannedImport', () => {
   const source: ProjectGraphProjectNode = {
