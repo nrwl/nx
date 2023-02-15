@@ -19,8 +19,8 @@ export function createProjectFileMap(
     projectFileMap[projectName] ??= [];
   }
   for (const f of allWorkspaceFiles) {
-    const matchingProjectFiles =
-      projectFileMap[findProjectForPath(f.file, projectRootMappings)];
+    const projectFileMapKey = findProjectForPath(f.file, projectRootMappings);
+    const matchingProjectFiles = projectFileMap[projectFileMapKey];
     if (matchingProjectFiles) {
       matchingProjectFiles.push(f);
     }

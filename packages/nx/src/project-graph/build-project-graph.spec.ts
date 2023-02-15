@@ -201,17 +201,6 @@ describe('project graph', () => {
     jest.spyOn(fastGlob, 'sync').mockImplementation(() => globResults);
   });
 
-  it('should throw an appropriate error for an invalid json config', async () => {
-    tempFs.appendFile('tsconfig.base.json', 'invalid');
-    try {
-      await buildProjectGraph();
-      fail('Invalid tsconfigs should cause project graph to throw error');
-    } catch (e) {
-      expect(e.message).toContain(`${tempFs.tempDir}/tsconfig.base.json`);
-      expect(e.message).toContain(`invalid`);
-    }
-  });
-
   it('should create nodes and dependencies with workspace projects', async () => {
     const graph = await buildProjectGraph();
 

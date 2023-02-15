@@ -1,9 +1,9 @@
-import { TempFs } from '../../utils/testing/temp-fs';
+import { TempFs } from '../../../../utils/testing/temp-fs';
 const tempFs = new TempFs('explicit-project-deps');
 
-import { defaultFileHasher } from '../../hasher/file-hasher';
-import { createProjectFileMap } from '../file-map-utils';
-import { ProjectGraphBuilder } from '../project-graph-builder';
+import { defaultFileHasher } from '../../../../hasher/file-hasher';
+import { createProjectFileMap } from '../../../../project-graph/file-map-utils';
+import { ProjectGraphBuilder } from '../../../../project-graph/project-graph-builder';
 import { buildExplicitTypeScriptDependencies } from './explicit-project-dependencies';
 
 // projectName => tsconfig import path

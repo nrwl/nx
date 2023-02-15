@@ -1,8 +1,8 @@
 import type * as ts from 'typescript';
 import * as path from 'path';
-import { stripSourceCode } from '../../utils/strip-source-code';
-import { defaultFileRead } from '../file-utils';
-import { DependencyType } from '../../config/project-graph';
+import { stripSourceCode } from './strip-source-code';
+import { DependencyType } from '../../../../config/project-graph';
+import { defaultFileRead } from '../../../../project-graph/file-utils';
 
 let tsModule: typeof import('typescript');
 

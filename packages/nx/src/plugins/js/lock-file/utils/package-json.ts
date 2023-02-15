@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'fs';
-import { PackageJson } from '../../utils/package-json';
-import { workspaceRoot } from '../../utils/workspace-root';
+import { PackageJson } from '../../../../utils/package-json';
+import { workspaceRoot } from '../../../../utils/workspace-root';
 
 /**
  * Get version of hoisted package if available

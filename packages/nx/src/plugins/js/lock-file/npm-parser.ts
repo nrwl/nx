@@ -1,14 +1,14 @@
 import { existsSync, readFileSync } from 'fs';
 import { satisfies } from 'semver';
-import { workspaceRoot } from '../utils/workspace-root';
-import { ProjectGraphBuilder } from '../project-graph/project-graph-builder';
-import { reverse } from '../project-graph/operators';
+import { workspaceRoot } from '../../../utils/workspace-root';
+import { reverse } from '../../../project-graph/operators';
+import { NormalizedPackageJson } from './utils/package-json';
+import { ProjectGraphBuilder } from '../../../project-graph/project-graph-builder';
 import {
   ProjectGraph,
   ProjectGraphExternalNode,
-} from '../config/project-graph';
-import { NormalizedPackageJson } from './utils/package-json';
-import { defaultHashing } from '../hasher/hashing-impl';
+} from '../../../config/project-graph';
+import { defaultHashing } from '../../../hasher/hashing-impl';
 
 /**
  * NPM
@@ -50,16 +50,16 @@ type NpmLockFile = {
   dependencies?: Record<string, NpmDependencyV1>;
 };
 
-export function parseNpmLockfile(lockFileContent: string): ProjectGraph {
+export function parseNpmLockfile(
+  lockFileContent: string,
+  builder: ProjectGraphBuilder
+) {
   const data = JSON.parse(lockFileContent) as NpmLockFile;
-  const builder = new ProjectGraphBuilder();
 
   // we use key => node map to avoid duplicate work when parsing keys
   const keyMap = new Map<string, ProjectGraphExternalNode>();
   addNodes(data, builder, keyMap);
   addDependencies(data, builder, keyMap);
-
-  return builder.getUpdatedProjectGraph();
 }
 
 function addNodes(

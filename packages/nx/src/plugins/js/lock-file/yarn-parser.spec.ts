@@ -1,9 +1,10 @@
-import { joinPathFragments } from '../utils/path';
+import { joinPathFragments } from '../../../utils/path';
 import { parseYarnLockfile, stringifyYarnLockfile } from './yarn-parser';
 import { pruneProjectGraph } from './project-graph-pruning';
 import { vol } from 'memfs';
-import { ProjectGraph } from '../config/project-graph';
-import { PackageJson } from '../utils/package-json';
+import { ProjectGraph } from '../../../config/project-graph';
+import { PackageJson } from '../../../utils/package-json';
+import { ProjectGraphBuilder } from '../../../project-graph/project-graph-builder';
 
 jest.mock('fs', () => require('memfs').fs);
 
@@ -12,7 +13,7 @@ jest.mock('@nrwl/devkit', () => ({
   workspaceRoot: '/root',
 }));
 
-jest.mock('nx/src/utils/workspace-root', () => ({
+jest.mock('../../../utils/workspace-root', () => ({
   workspaceRoot: '/root',
 }));
 
@@ -156,11 +157,13 @@ describe('yarn LockFile utility', () => {
     let graph: ProjectGraph;
 
     beforeEach(() => {
+      const builder = new ProjectGraphBuilder();
       lockFile = require(joinPathFragments(
         __dirname,
         '__fixtures__/nextjs/yarn.lock'
       )).default;
-      graph = parseYarnLockfile(lockFile);
+      parseYarnLockfile(lockFile, builder);
+      graph = builder.getUpdatedProjectGraph();
     });
 
     it('should parse root lock file', async () => {
@@ -225,7 +228,9 @@ describe('yarn LockFile utility', () => {
         __dirname,
         '__fixtures__/auxiliary-packages/yarn.lock'
       )).default;
-      const graph = parseYarnLockfile(classicLockFile);
+      const builder = new ProjectGraphBuilder();
+      parseYarnLockfile(classicLockFile, builder);
+      const graph = builder.getUpdatedProjectGraph();
       expect(Object.keys(graph.externalNodes).length).toEqual(127); // 124 hoisted
 
       expect(graph.externalNodes['npm:minimatch']).toMatchInlineSnapshot(`
@@ -301,7 +306,9 @@ describe('yarn LockFile utility', () => {
         '__fixtures__/auxiliary-packages/yarn.lock.pruned'
       )).default;
 
-      const graph = parseYarnLockfile(lockFile);
+      const builder = new ProjectGraphBuilder();
+      parseYarnLockfile(lockFile, builder);
+      const graph = builder.getUpdatedProjectGraph();
       const prunedGraph = pruneProjectGraph(graph, normalizedPackageJson);
       const result = stringifyYarnLockfile(
         prunedGraph,
@@ -337,7 +344,9 @@ describe('yarn LockFile utility', () => {
         '__fixtures__/auxiliary-packages/yarn.lock.pruned'
       )).default;
 
-      const graph = parseYarnLockfile(lockFile);
+      const builder = new ProjectGraphBuilder();
+      parseYarnLockfile(lockFile, builder);
+      const graph = builder.getUpdatedProjectGraph();
       const prunedGraph = pruneProjectGraph(graph, normalizedPackageJson);
       const result = stringifyYarnLockfile(
         prunedGraph,
@@ -357,7 +366,9 @@ describe('yarn LockFile utility', () => {
         __dirname,
         '__fixtures__/auxiliary-packages/yarn-berry.lock'
       )).default;
-      const graph = parseYarnLockfile(berryLockFile);
+      const builder = new ProjectGraphBuilder();
+      parseYarnLockfile(berryLockFile, builder);
+      const graph = builder.getUpdatedProjectGraph();
       expect(Object.keys(graph.externalNodes).length).toEqual(128); //124 hoisted
 
       expect(graph.externalNodes['npm:minimatch']).toMatchInlineSnapshot(`
@@ -433,7 +444,9 @@ describe('yarn LockFile utility', () => {
         '__fixtures__/auxiliary-packages/yarn-berry.lock.pruned'
       )).default;
 
-      const graph = parseYarnLockfile(lockFile);
+      const builder = new ProjectGraphBuilder();
+      parseYarnLockfile(lockFile, builder);
+      const graph = builder.getUpdatedProjectGraph();
       const prunedGraph = pruneProjectGraph(graph, normalizedPackageJson);
       const result = stringifyYarnLockfile(
         prunedGraph,
@@ -489,7 +502,9 @@ describe('yarn LockFile utility', () => {
         __dirname,
         '__fixtures__/duplicate-package/yarn.lock'
       )).default;
-      const graph = parseYarnLockfile(classicLockFile);
+      const builder = new ProjectGraphBuilder();
+      parseYarnLockfile(classicLockFile, builder);
+      const graph = builder.getUpdatedProjectGraph();
       expect(Object.keys(graph.externalNodes).length).toEqual(371); //337 hoisted
     });
   });
@@ -517,7 +532,9 @@ describe('yarn LockFile utility', () => {
         __dirname,
         '__fixtures__/optional/package.json'
       ));
-      const graph = parseYarnLockfile(lockFile);
+      const builder = new ProjectGraphBuilder();
+      parseYarnLockfile(lockFile, builder);
+      const graph = builder.getUpdatedProjectGraph();
       expect(Object.keys(graph.externalNodes).length).toEqual(103);
 
       const prunedGraph = pruneProjectGraph(graph, packageJson);
@@ -694,7 +711,9 @@ describe('yarn LockFile utility', () => {
         __dirname,
         '__fixtures__/pruning/typescript/package.json'
       ));
-      const graph = parseYarnLockfile(lockFile);
+      const builder = new ProjectGraphBuilder();
+      parseYarnLockfile(lockFile, builder);
+      const graph = builder.getUpdatedProjectGraph();
       const prunedGraph = pruneProjectGraph(graph, typescriptPackageJson);
       const result = stringifyYarnLockfile(
         prunedGraph,
@@ -719,7 +738,9 @@ describe('yarn LockFile utility', () => {
         __dirname,
         '__fixtures__/pruning/devkit-yargs/package.json'
       ));
-      const graph = parseYarnLockfile(lockFile);
+      const builder = new ProjectGraphBuilder();
+      parseYarnLockfile(lockFile, builder);
+      const graph = builder.getUpdatedProjectGraph();
       const prunedGraph = pruneProjectGraph(graph, multiPackageJson);
       const result = stringifyYarnLockfile(
         prunedGraph,
@@ -750,7 +771,9 @@ describe('yarn LockFile utility', () => {
         __dirname,
         '__fixtures__/workspaces/yarn.lock'
       )).default;
-      const graph = parseYarnLockfile(lockFile);
+      const builder = new ProjectGraphBuilder();
+      parseYarnLockfile(lockFile, builder);
+      const graph = builder.getUpdatedProjectGraph();
       expect(Object.keys(graph.externalNodes).length).toEqual(5);
     });
 
@@ -759,7 +782,9 @@ describe('yarn LockFile utility', () => {
         __dirname,
         '__fixtures__/workspaces/yarn.lock.berry'
       )).default;
-      const graph = parseYarnLockfile(lockFile);
+      const builder = new ProjectGraphBuilder();
+      parseYarnLockfile(lockFile, builder);
+      const graph = builder.getUpdatedProjectGraph();
       expect(Object.keys(graph.externalNodes).length).toEqual(5);
     });
   });
@@ -800,7 +825,9 @@ type-fest@^0.20.2:
   integrity sha512-Ne+eE4r0/iWnpAxD852z3A+N0Bt5RN//NjJwRd2VFHEmrywxf5vsZlh4R6lixl6B+wz/8d+maTSAkN1FIkI3LQ==
 `;
 
-      const graph = parseYarnLockfile(lockFile);
+      const builder = new ProjectGraphBuilder();
+      parseYarnLockfile(lockFile, builder);
+      const graph = builder.getUpdatedProjectGraph();
       expect(graph.externalNodes['npm:tslib']).toMatchInlineSnapshot(`
         Object {
           "data": Object {
@@ -873,7 +900,9 @@ __metadata:
   languageName: node
   linkType: hard
 `;
-      const graph = parseYarnLockfile(lockFile);
+      const builder = new ProjectGraphBuilder();
+      parseYarnLockfile(lockFile, builder);
+      const graph = builder.getUpdatedProjectGraph();
       expect(graph.externalNodes['npm:tslib']).toMatchInlineSnapshot(`
         Object {
           "data": Object {

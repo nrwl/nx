@@ -11,24 +11,24 @@ import {
 } from './utils/pnpm-normalizer';
 import { getHoistedPackageVersion } from './utils/package-json';
 import { NormalizedPackageJson } from './utils/package-json';
-import { sortObjectByKeys } from '../utils/object-sort';
+import { sortObjectByKeys } from '../../../utils/object-sort';
+import { ProjectGraphBuilder } from '../../../project-graph/project-graph-builder';
 import {
   ProjectGraph,
   ProjectGraphExternalNode,
-} from '../config/project-graph';
-import { ProjectGraphBuilder } from '../project-graph/project-graph-builder';
-import { defaultHashing } from '../hasher/hashing-impl';
+} from '../../../config/project-graph';
+import { defaultHashing } from '../../../hasher/hashing-impl';
 
-export function parsePnpmLockfile(lockFileContent: string): ProjectGraph {
+export function parsePnpmLockfile(
+  lockFileContent: string,
+  builder: ProjectGraphBuilder
+): void {
   const data = parseAndNormalizePnpmLockfile(lockFileContent);
-  const builder = new ProjectGraphBuilder();
 
   // we use key => node map to avoid duplicate work when parsing keys
   const keyMap = new Map<string, ProjectGraphExternalNode>();
   addNodes(data, builder, keyMap);
   addDependencies(data, builder, keyMap);
-
-  return builder.getUpdatedProjectGraph();
 }
 
 function addNodes(

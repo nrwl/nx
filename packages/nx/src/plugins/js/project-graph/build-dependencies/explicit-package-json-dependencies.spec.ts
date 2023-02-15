@@ -1,15 +1,15 @@
-import { TempFs } from '../../utils/testing/temp-fs';
+import { TempFs } from '../../../../utils/testing/temp-fs';
 const tempFs = new TempFs('explicit-package-json');
 
 import { buildExplicitPackageJsonDependencies } from './explicit-package-json-dependencies';
 
-import { createProjectFileMap } from '../file-map-utils';
-import { defaultFileHasher } from '../../hasher/file-hasher';
+import { defaultFileHasher } from '../../../../hasher/file-hasher';
 import {
   ProjectGraphProcessorContext,
   ProjectGraphProjectNode,
-} from '../../config/project-graph';
-import { ProjectGraphBuilder } from '../project-graph-builder';
+} from '../../../../config/project-graph';
+import { ProjectGraphBuilder } from '../../../../project-graph/project-graph-builder';
+import { createProjectFileMap } from '../../../../project-graph/file-map-utils';
 
 describe('explicit package json dependencies', () => {
   let ctx: ProjectGraphProcessorContext;

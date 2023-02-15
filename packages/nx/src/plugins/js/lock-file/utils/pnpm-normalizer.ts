@@ -10,7 +10,7 @@ import type {
 } from '@pnpm/lockfile-types';
 import { dump, load } from '@zkochan/js-yaml';
 import { existsSync, readFileSync } from 'fs';
-import { workspaceRoot } from '../../utils/workspace-root';
+import { workspaceRoot } from '../../../../utils/workspace-root';
 
 const LOCKFILE_YAML_FORMAT = {
   blankLines: true,

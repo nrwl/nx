@@ -1,10 +1,10 @@
 import { TypeScriptImportLocator } from './typescript-import-locator';
-import { TargetProjectLocator } from '../../utils/target-project-locator';
+import { TargetProjectLocator } from './target-project-locator';
 import {
   DependencyType,
   ProjectFileMap,
   ProjectGraph,
-} from '../../config/project-graph';
+} from '../../../../config/project-graph';
 
 export type ExplicitDependency = {
   sourceProjectName: string;

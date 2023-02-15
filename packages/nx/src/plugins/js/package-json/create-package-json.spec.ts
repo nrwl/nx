@@ -1,10 +1,10 @@
 import * as fs from 'fs';
 
-import * as configModule from '../config/configuration';
-import { DependencyType } from '../config/project-graph';
-import * as hashModule from '../hasher/hasher';
+import * as configModule from '../../../config/configuration';
+import { DependencyType } from '../../../config/project-graph';
+import * as hashModule from '../../../hasher/hasher';
 import { createPackageJson } from './create-package-json';
-import * as fileutilsModule from './fileutils';
+import * as fileutilsModule from '../../../utils/fileutils';
 
 describe('createPackageJson', () => {
   it('should add additional dependencies', () => {

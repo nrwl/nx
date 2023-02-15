@@ -1,11 +1,11 @@
-import { ProjectGraphBuilder } from '../project-graph/project-graph-builder';
 import {
   ProjectGraph,
   ProjectGraphExternalNode,
-} from '../config/project-graph';
-import { PackageJson } from '../utils/package-json';
-import { reverse } from '../project-graph/operators';
+} from '../../../config/project-graph';
 import { satisfies, gte } from 'semver';
+import { PackageJson } from '../../../utils/package-json';
+import { ProjectGraphBuilder } from '../../../project-graph/project-graph-builder';
+import { reverse } from '../../../project-graph/operators';
 
 /**
  * Prune project graph's external nodes and their dependencies

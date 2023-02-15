@@ -1,14 +1,14 @@
-import { defaultFileRead } from '../file-utils';
+import { defaultFileRead } from '../../../../project-graph/file-utils';
 import { join } from 'path';
 import {
   DependencyType,
   ProjectFileMap,
   ProjectGraph,
-} from '../../config/project-graph';
-import { parseJson } from '../../utils/json';
-import { getImportPath, joinPathFragments } from '../../utils/path';
-import { ProjectsConfigurations } from '../../config/workspace-json-project-json';
-import { NxJsonConfiguration } from '../../config/nx-json';
+} from '../../../../config/project-graph';
+import { parseJson } from '../../../../utils/json';
+import { getImportPath, joinPathFragments } from '../../../../utils/path';
+import { ProjectsConfigurations } from '../../../../config/workspace-json-project-json';
+import { NxJsonConfiguration } from '../../../../config/nx-json';
 import { ExplicitDependency } from './explicit-project-dependencies';
 
 class ProjectGraphNodeRecords {}

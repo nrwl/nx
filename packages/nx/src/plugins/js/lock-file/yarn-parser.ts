@@ -1,15 +1,15 @@
 import { parseSyml, stringifySyml } from '@yarnpkg/parsers';
 import { stringify } from '@yarnpkg/lockfile';
-import { sortObjectByKeys } from '../utils/object-sort';
 import { getHoistedPackageVersion } from './utils/package-json';
+import { ProjectGraphBuilder } from '../../../project-graph/project-graph-builder';
+import { satisfies } from 'semver';
+import { NormalizedPackageJson } from './utils/package-json';
 import {
   ProjectGraph,
   ProjectGraphExternalNode,
-} from '../config/project-graph';
-import { ProjectGraphBuilder } from '../project-graph/project-graph-builder';
-import { satisfies } from 'semver';
-import { NormalizedPackageJson } from './utils/package-json';
-import { defaultHashing } from '../hasher/hashing-impl';
+} from '../../../config/project-graph';
+import { defaultHashing } from '../../../hasher/hashing-impl';
+import { sortObjectByKeys } from '../../../utils/object-sort';
 
 /**
  * Yarn
@@ -37,16 +37,16 @@ type YarnDependency = {
   linkType?: 'soft' | 'hard';
 };
 
-export function parseYarnLockfile(lockFileContent: string): ProjectGraph {
+export function parseYarnLockfile(
+  lockFileContent: string,
+  builder: ProjectGraphBuilder
+) {
   const data = parseSyml(lockFileContent);
-  const builder = new ProjectGraphBuilder();
 
   // we use key => node map to avoid duplicate work when parsing keys
   const keyMap = new Map<string, ProjectGraphExternalNode>();
   addNodes(data, builder, keyMap);
   addDependencies(data, builder, keyMap);
-
-  return builder.getUpdatedProjectGraph();
 }
 
 function addNodes(

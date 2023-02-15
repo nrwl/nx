@@ -1,17 +1,13 @@
-import { joinPathFragments } from '../utils/path';
+import { joinPathFragments } from '../../../utils/path';
 import { parsePnpmLockfile, stringifyPnpmLockfile } from './pnpm-parser';
-import { ProjectGraph } from '../config/project-graph';
+import { ProjectGraph } from '../../../config/project-graph';
 import { vol } from 'memfs';
 import { pruneProjectGraph } from './project-graph-pruning';
+import { ProjectGraphBuilder } from 'nx/src/project-graph/project-graph-builder';
 
 jest.mock('fs', () => require('memfs').fs);
 
-jest.mock('@nrwl/devkit', () => ({
-  ...jest.requireActual<any>('@nrwl/devkit'),
-  workspaceRoot: '/root',
-}));
-
-jest.mock('nx/src/utils/workspace-root', () => ({
+jest.mock('../../../utils/workspace-root', () => ({
   workspaceRoot: '/root',
 }));
 
@@ -121,7 +117,9 @@ describe('pnpm LockFile utility', () => {
         __dirname,
         '__fixtures__/nextjs/pnpm-lock.yaml'
       )).default;
-      graph = parsePnpmLockfile(lockFile);
+      const builder = new ProjectGraphBuilder();
+      parsePnpmLockfile(lockFile, builder);
+      graph = builder.getUpdatedProjectGraph();
     });
 
     it('should parse root lock file', async () => {
@@ -188,7 +186,9 @@ describe('pnpm LockFile utility', () => {
         __dirname,
         '__fixtures__/auxiliary-packages/pnpm-lock.yaml'
       )).default;
-      const graph = parsePnpmLockfile(lockFile);
+      const builder = new ProjectGraphBuilder();
+      parsePnpmLockfile(lockFile, builder);
+      const graph = builder.getUpdatedProjectGraph();
       expect(Object.keys(graph.externalNodes).length).toEqual(213); //202
 
       expect(graph.externalNodes['npm:minimatch']).toMatchInlineSnapshot(`
@@ -268,7 +268,9 @@ describe('pnpm LockFile utility', () => {
         },
       };
 
-      const graph = parsePnpmLockfile(lockFile);
+      const builder = new ProjectGraphBuilder();
+      parsePnpmLockfile(lockFile, builder);
+      const graph = builder.getUpdatedProjectGraph();
       const prunedGraph = pruneProjectGraph(graph, prunedPackageJson);
       const result = stringifyPnpmLockfile(
         prunedGraph,
@@ -305,7 +307,9 @@ describe('pnpm LockFile utility', () => {
         __dirname,
         '__fixtures__/duplicate-package/pnpm-lock.yaml'
       )).default;
-      const graph = parsePnpmLockfile(lockFile);
+      const builder = new ProjectGraphBuilder();
+      parsePnpmLockfile(lockFile, builder);
+      const graph = builder.getUpdatedProjectGraph();
       expect(Object.keys(graph.externalNodes).length).toEqual(370); //337
       expect(Object.keys(graph.dependencies).length).toEqual(213);
       expect(graph.dependencies['npm:@nrwl/devkit'].length).toEqual(6);
@@ -329,7 +333,9 @@ describe('pnpm LockFile utility', () => {
         __dirname,
         '__fixtures__/optional/pnpm-lock.yaml'
       )).default;
-      const graph = parsePnpmLockfile(lockFile);
+      const builder = new ProjectGraphBuilder();
+      parsePnpmLockfile(lockFile, builder);
+      const graph = builder.getUpdatedProjectGraph();
       expect(Object.keys(graph.externalNodes).length).toEqual(8);
 
       const packageJson = require(joinPathFragments(
@@ -364,7 +370,9 @@ describe('pnpm LockFile utility', () => {
         '__fixtures__/pruning/pnpm-lock.yaml'
       )).default;
 
-      graph = parsePnpmLockfile(lockFile);
+      const builder = new ProjectGraphBuilder();
+      parsePnpmLockfile(lockFile, builder);
+      graph = builder.getUpdatedProjectGraph();
     });
 
     it('should prune single package', () => {
@@ -426,7 +434,9 @@ describe('pnpm LockFile utility', () => {
     });
 
     it('should parse lock file', async () => {
-      const graph = parsePnpmLockfile(lockFile);
+      const builder = new ProjectGraphBuilder();
+      parsePnpmLockfile(lockFile, builder);
+      const graph = builder.getUpdatedProjectGraph();
       expect(Object.keys(graph.externalNodes).length).toEqual(5);
     });
   });

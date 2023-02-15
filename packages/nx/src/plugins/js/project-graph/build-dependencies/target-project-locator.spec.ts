@@ -4,7 +4,7 @@ import {
   ProjectGraphExternalNode,
   ProjectGraphProcessorContext,
   ProjectGraphProjectNode,
-} from '../config/project-graph';
+} from '../../../../config/project-graph';
 
 jest.mock('nx/src/utils/workspace-root', () => ({
   workspaceRoot: '/root',

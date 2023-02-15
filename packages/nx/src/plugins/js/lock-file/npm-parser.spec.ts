@@ -1,19 +1,11 @@
-import { joinPathFragments } from '../utils/path';
+import { joinPathFragments } from '../../../utils/path';
 import { parseNpmLockfile, stringifyNpmLockfile } from './npm-parser';
 import { pruneProjectGraph } from './project-graph-pruning';
 import { vol } from 'memfs';
-import { ProjectGraph } from '../config/project-graph';
+import { ProjectGraph } from '../../../config/project-graph';
+import { ProjectGraphBuilder } from '../../../project-graph/project-graph-builder';
 
 jest.mock('fs', () => require('memfs').fs);
-
-jest.mock('@nrwl/devkit', () => ({
-  ...jest.requireActual<any>('@nrwl/devkit'),
-  workspaceRoot: '/root',
-}));
-
-jest.mock('nx/src/utils/workspace-root', () => ({
-  workspaceRoot: '/root',
-}));
 
 describe('NPM lock file utility', () => {
   afterEach(() => {
@@ -29,7 +21,9 @@ describe('NPM lock file utility', () => {
     let graph: ProjectGraph;
 
     beforeEach(() => {
-      graph = parseNpmLockfile(JSON.stringify(rootLockFile));
+      const builder = new ProjectGraphBuilder();
+      parseNpmLockfile(JSON.stringify(rootLockFile), builder);
+      graph = builder.getUpdatedProjectGraph();
     });
 
     it('should parse root lock file', async () => {
@@ -47,7 +41,9 @@ describe('NPM lock file utility', () => {
       ));
 
       // this is original generated lock file
-      const appGraph = parseNpmLockfile(JSON.stringify(appLockFile));
+      const builder = new ProjectGraphBuilder();
+      parseNpmLockfile(JSON.stringify(appLockFile), builder);
+      const appGraph = builder.getUpdatedProjectGraph();
       expect(Object.keys(appGraph.externalNodes).length).toEqual(984);
 
       // this is our pruned lock file structure
@@ -93,7 +89,9 @@ describe('NPM lock file utility', () => {
         '__fixtures__/auxiliary-packages/package-lock.json'
       ));
 
-      const graph = parseNpmLockfile(JSON.stringify(rootLockFile));
+      const builder = new ProjectGraphBuilder();
+      parseNpmLockfile(JSON.stringify(rootLockFile), builder);
+      const graph = builder.getUpdatedProjectGraph();
 
       expect(Object.keys(graph.externalNodes).length).toEqual(212); // 202
 
@@ -150,7 +148,9 @@ describe('NPM lock file utility', () => {
         '__fixtures__/auxiliary-packages/package-lock-v2.json'
       ));
 
-      const graph = parseNpmLockfile(JSON.stringify(rootV2LockFile));
+      const builder = new ProjectGraphBuilder();
+      parseNpmLockfile(JSON.stringify(rootV2LockFile), builder);
+      const graph = builder.getUpdatedProjectGraph();
       expect(Object.keys(graph.externalNodes).length).toEqual(212); // 202
 
       expect(graph.externalNodes['npm:minimatch']).toMatchInlineSnapshot(`
@@ -246,7 +246,9 @@ describe('NPM lock file utility', () => {
       cleanupTypes(prunedV2LockFile.packages);
       cleanupTypes(prunedV2LockFile.dependencies, true);
 
-      const graph = parseNpmLockfile(JSON.stringify(rootV2LockFile));
+      const builder = new ProjectGraphBuilder();
+      parseNpmLockfile(JSON.stringify(rootV2LockFile), builder);
+      const graph = builder.getUpdatedProjectGraph();
       const prunedGraph = pruneProjectGraph(graph, normalizedPackageJson);
       const result = stringifyNpmLockfile(
         prunedGraph,
@@ -331,7 +333,9 @@ describe('NPM lock file utility', () => {
         '__fixtures__/duplicate-package/package-lock-v1.json'
       ));
 
-      const graph = parseNpmLockfile(JSON.stringify(rootLockFile));
+      const builder = new ProjectGraphBuilder();
+      parseNpmLockfile(JSON.stringify(rootLockFile), builder);
+      const graph = builder.getUpdatedProjectGraph();
       expect(Object.keys(graph.externalNodes).length).toEqual(369); // 338
     });
     it('should parse v3', async () => {
@@ -340,7 +344,9 @@ describe('NPM lock file utility', () => {
         '__fixtures__/duplicate-package/package-lock.json'
       ));
 
-      const graph = parseNpmLockfile(JSON.stringify(rootLockFile));
+      const builder = new ProjectGraphBuilder();
+      parseNpmLockfile(JSON.stringify(rootLockFile), builder);
+      const graph = builder.getUpdatedProjectGraph();
       expect(Object.keys(graph.externalNodes).length).toEqual(369); //338
     });
   });
@@ -355,7 +361,9 @@ describe('NPM lock file utility', () => {
         __dirname,
         '__fixtures__/optional/package.json'
       ));
-      const graph = parseNpmLockfile(JSON.stringify(lockFile));
+      const builder = new ProjectGraphBuilder();
+      parseNpmLockfile(JSON.stringify(lockFile), builder);
+      const graph = builder.getUpdatedProjectGraph();
       expect(Object.keys(graph.externalNodes).length).toEqual(8);
 
       const prunedGraph = pruneProjectGraph(graph, packageJson);
@@ -378,7 +386,9 @@ describe('NPM lock file utility', () => {
         __dirname,
         '__fixtures__/pruning/typescript/package.json'
       ));
-      const graph = parseNpmLockfile(JSON.stringify(rootLockFile));
+      const builder = new ProjectGraphBuilder();
+      parseNpmLockfile(JSON.stringify(rootLockFile), builder);
+      const graph = builder.getUpdatedProjectGraph();
       const prunedGraph = pruneProjectGraph(graph, typescriptPackageJson);
       const result = stringifyNpmLockfile(
         prunedGraph,
@@ -403,7 +413,9 @@ describe('NPM lock file utility', () => {
         __dirname,
         '__fixtures__/pruning/devkit-yargs/package.json'
       ));
-      const graph = parseNpmLockfile(JSON.stringify(rootLockFile));
+      const builder = new ProjectGraphBuilder();
+      parseNpmLockfile(JSON.stringify(rootLockFile), builder);
+      const graph = builder.getUpdatedProjectGraph();
       const prunedGraph = pruneProjectGraph(graph, multiPackageJson);
       const result = stringifyNpmLockfile(
         prunedGraph,
@@ -432,7 +444,9 @@ describe('NPM lock file utility', () => {
         __dirname,
         '__fixtures__/workspaces/package-lock.json'
       ));
-      const result = parseNpmLockfile(JSON.stringify(lockFile));
+      const builder = new ProjectGraphBuilder();
+      parseNpmLockfile(JSON.stringify(lockFile), builder);
+      const result = builder.getUpdatedProjectGraph();
       expect(Object.keys(result.externalNodes).length).toEqual(5);
     });
 
@@ -441,7 +455,9 @@ describe('NPM lock file utility', () => {
         __dirname,
         '__fixtures__/workspaces/package-lock.v1.json'
       ));
-      const result = parseNpmLockfile(JSON.stringify(lockFile));
+      const builder = new ProjectGraphBuilder();
+      parseNpmLockfile(JSON.stringify(lockFile), builder);
+      const result = builder.getUpdatedProjectGraph();
       expect(Object.keys(result.externalNodes).length).toEqual(5);
     });
   });

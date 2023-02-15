@@ -13,9 +13,9 @@ const packageNames = [];
 
 function processNodeModules(path = '.') {
   if (existsSync(`${path}/node_modules`)) {
-    readdirSync(`${path}/node_modules`).forEach(folder => {
+    readdirSync(`${path}/node_modules`).forEach((folder) => {
       if (folder.startsWith('@')) {
-        readdirSync(`${path}/node_modules/${folder}`).forEach(subfolder => {
+        readdirSync(`${path}/node_modules/${folder}`).forEach((subfolder) => {
           packageNames.push(`${path}/node_modules/${folder}/${subfolder}`);
           processNodeModules(`${path}/node_modules/${folder}/${subfolder}`);
         });
@@ -29,15 +29,15 @@ function processNodeModules(path = '.') {
 
 processNodeModules();
 
-packageNames.forEach(path => {
+packageNames.forEach((path) => {
   const filePath = `${path}/package.json`;
   if (existsSync(filePath)) {
     const content = readFileSync(filePath, 'utf-8');
     const peerDependencies = JSON.parse(content).peerDependencies;
     const peerDependenciesMeta = JSON.parse(content).peerDependenciesMeta;
     const output = JSON.stringify({
-      ...peerDependencies && { peerDependencies },
-      ...peerDependenciesMeta && { peerDependenciesMeta },
+      ...(peerDependencies && { peerDependencies }),
+      ...(peerDependenciesMeta && { peerDependenciesMeta }),
     });
     if (output === '{}') return;
     report += `'${filePath.slice(2)}': '${output}',\n`;
@@ -59,10 +59,10 @@ const existsSync = require('fs').existsSync;
 let report = '';
 
 const packageNames = [];
-readdirSync('node_modules').forEach(folder => {
+readdirSync('node_modules').forEach((folder) => {
   if (folder === '.pnpm') return;
   if (folder.startsWith('@')) {
-    readdirSync(`node_modules/${folder}`).forEach(subfolder => {
+    readdirSync(`node_modules/${folder}`).forEach((subfolder) => {
       packageNames.push(`${folder}/${subfolder}`);
     });
   } else {
@@ -70,7 +70,7 @@ readdirSync('node_modules').forEach(folder => {
   }
 });
 
-packageNames.forEach(packageName => {
+packageNames.forEach((packageName) => {
   const path = `node_modules/${packageName}/package.json`;
   if (existsSync(path)) {
     const content = readFileSync(path, 'utf-8');
