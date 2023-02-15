@@ -599,17 +599,25 @@
             "disableCollapsible": false
           },
           {
-            "name": "4 - Workspace Optimization",
-            "path": "/node-tutorial/4-workspace-optimization",
-            "id": "4-workspace-optimization",
+            "name": "4 - Task Pipelines",
+            "path": "/node-tutorial/4-task-pipelines",
+            "id": "4-task-pipelines",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
           {
-            "name": "5 - Summary",
-            "path": "/node-tutorial/5-summary",
-            "id": "5-summary",
+            "name": "5 - Docker Target",
+            "path": "/node-tutorial/5-docker-target",
+            "id": "5-docker-target",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "6 - Summary",
+            "path": "/node-tutorial/6-summary",
+            "id": "6-summary",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -642,17 +650,25 @@
         "disableCollapsible": false
       },
       {
-        "name": "4 - Workspace Optimization",
-        "path": "/node-tutorial/4-workspace-optimization",
-        "id": "4-workspace-optimization",
+        "name": "4 - Task Pipelines",
+        "path": "/node-tutorial/4-task-pipelines",
+        "id": "4-task-pipelines",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
       },
       {
-        "name": "5 - Summary",
-        "path": "/node-tutorial/5-summary",
-        "id": "5-summary",
+        "name": "5 - Docker Target",
+        "path": "/node-tutorial/5-docker-target",
+        "id": "5-docker-target",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "6 - Summary",
+        "path": "/node-tutorial/6-summary",
+        "id": "6-summary",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

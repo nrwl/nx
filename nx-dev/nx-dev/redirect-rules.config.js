@@ -373,6 +373,7 @@ const oldNodeTutorialPaths = [
   '/node-tutorial/05-dep-graph',
   '/node-tutorial/06-computation-caching',
   '/node-tutorial/07-test-affected-projects',
+  '/node-tutorial/4-workspace-optimization',
   '/node-tutorial/08-summary',
 ];
 const nodeRedirectDestination = '/getting-started/node-tutorial';

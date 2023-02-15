@@ -742,23 +742,33 @@
         "tags": []
       },
       {
-        "id": "4-workspace-optimization",
-        "name": "4 - Workspace Optimization",
+        "id": "4-task-pipelines",
+        "name": "4 - Task Pipelines",
         "description": "",
-        "file": "shared/node-tutorial/4-workspace-optimization",
+        "file": "shared/node-tutorial/4-task-pipelines",
         "itemList": [],
         "isExternal": false,
-        "path": "/node-tutorial/4-workspace-optimization",
+        "path": "/node-tutorial/4-task-pipelines",
         "tags": []
       },
       {
-        "id": "5-summary",
-        "name": "5 - Summary",
+        "id": "5-docker-target",
+        "name": "5 - Docker Target",
         "description": "",
-        "file": "shared/node-tutorial/5-summary",
+        "file": "shared/node-tutorial/5-docker-target",
         "itemList": [],
         "isExternal": false,
-        "path": "/node-tutorial/5-summary",
+        "path": "/node-tutorial/5-docker-target",
+        "tags": []
+      },
+      {
+        "id": "6-summary",
+        "name": "6 - Summary",
+        "description": "",
+        "file": "shared/node-tutorial/6-summary",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/node-tutorial/6-summary",
         "tags": []
       }
     ],
@@ -796,24 +806,34 @@
     "path": "/node-tutorial/3-task-running",
     "tags": []
   },
-  "/node-tutorial/4-workspace-optimization": {
-    "id": "4-workspace-optimization",
-    "name": "4 - Workspace Optimization",
+  "/node-tutorial/4-task-pipelines": {
+    "id": "4-task-pipelines",
+    "name": "4 - Task Pipelines",
     "description": "",
-    "file": "shared/node-tutorial/4-workspace-optimization",
+    "file": "shared/node-tutorial/4-task-pipelines",
     "itemList": [],
     "isExternal": false,
-    "path": "/node-tutorial/4-workspace-optimization",
+    "path": "/node-tutorial/4-task-pipelines",
     "tags": []
   },
-  "/node-tutorial/5-summary": {
-    "id": "5-summary",
-    "name": "5 - Summary",
+  "/node-tutorial/5-docker-target": {
+    "id": "5-docker-target",
+    "name": "5 - Docker Target",
     "description": "",
-    "file": "shared/node-tutorial/5-summary",
+    "file": "shared/node-tutorial/5-docker-target",
     "itemList": [],
     "isExternal": false,
-    "path": "/node-tutorial/5-summary",
+    "path": "/node-tutorial/5-docker-target",
+    "tags": []
+  },
+  "/node-tutorial/6-summary": {
+    "id": "6-summary",
+    "name": "6 - Summary",
+    "description": "",
+    "file": "shared/node-tutorial/6-summary",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/node-tutorial/6-summary",
     "tags": []
   },
   "/core-features": {

@@ -1,4 +1,9 @@
-# Node Tutorial - Part 5: Summary
+---
+title: 'Node Standalone Tutorial - Part 6: Summary'
+description: In this tutorial you'll create a backend-focused workspace with Nx.
+---
+
+# Node Standalone Tutorial - Part 6: Summary
 
 In this tutorial you:
 
@@ -6,6 +11,7 @@ In this tutorial you:
 - Learned how Nx determines a graph of your workspace
 - Learned how to configure and run tasks in your workspace
 - Learned how Nx's built-in optimizations work, and how to apply those to your own workspace
+- Learned how Nx can create a simple Dockerfile for you
 
 ## Learn More
 
