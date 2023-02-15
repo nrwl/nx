@@ -83,6 +83,85 @@ describe('calculateProjectDependencies', () => {
       dependencies: [{ name: 'formik' }],
     });
   });
+
+  it('should include npm packages in dependency list and sort them correctly', async () => {
+    const graph: ProjectGraph = {
+      nodes: {
+        example: {
+          type: 'lib',
+          name: 'example',
+          data: {
+            files: [],
+            root: '/root/example',
+          },
+        },
+      },
+      externalNodes: {
+        'npm:some-lib': {
+          type: 'npm',
+          name: 'npm:some-lib',
+          data: {
+            packageName: 'some-lib',
+            version: '0.0.0',
+          },
+        },
+        'npm:formik': {
+          type: 'npm',
+          name: 'npm:formik',
+          data: {
+            packageName: 'formik',
+            version: '0.0.0',
+          },
+        },
+        'npm:@prefixed-lib': {
+          type: 'npm',
+          name: 'npm:@prefixed-lib',
+          data: {
+            packageName: '@prefixed-lib',
+            version: '0.0.0',
+          },
+        },
+      },
+      dependencies: {
+        example: [
+          {
+            source: 'example',
+            target: 'npm:some-lib',
+            type: DependencyType.static,
+          },
+          {
+            source: 'example',
+            target: 'npm:formik',
+            type: DependencyType.static,
+          },
+          {
+            source: 'example',
+            target: 'npm:@prefixed-lib',
+            type: DependencyType.static,
+          },
+        ],
+      },
+    };
+
+    const results = await calculateProjectDependencies(
+      graph,
+      'root',
+      'example',
+      'build',
+      undefined
+    );
+    expect(results).toMatchObject({
+      target: {
+        type: 'lib',
+        name: 'example',
+      },
+      dependencies: [
+        { name: '@prefixed-lib' },
+        { name: 'formik' },
+        { name: 'some-lib' },
+      ],
+    });
+  });
 });
 
 describe('missingDependencies', () => {
