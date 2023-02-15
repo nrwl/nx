@@ -4,8 +4,6 @@ import {
   ProjectGraphProjectNode,
 } from '../config/project-graph';
 
-const reverseMemo = new Map<ProjectGraph, ProjectGraph>();
-
 /**
  * Returns a new project graph where all the edges are reversed.
  *
@@ -13,11 +11,6 @@ const reverseMemo = new Map<ProjectGraph, ProjectGraph>();
  * B will depend on A.
  */
 export function reverse(graph: ProjectGraph): ProjectGraph {
-  const resultFromMemo = reverseMemo.get(graph);
-  if (resultFromMemo) {
-    return resultFromMemo;
-  }
-
   const result = {
     nodes: graph.nodes,
     externalNodes: graph.externalNodes,
@@ -42,8 +35,7 @@ export function reverse(graph: ProjectGraph): ProjectGraph {
       }
     });
   });
-  reverseMemo.set(graph, result);
-  reverseMemo.set(result, graph);
+
   return result;
 }
 
