@@ -49,6 +49,7 @@ import { connectToNxCloudCommand } from './connect';
 import { output } from '../utils/output';
 import { messages, recordStat } from '../utils/ab-testing';
 import { nxVersion } from '../utils/versions';
+import { existsSync } from 'fs';
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
   packageGroup?: ArrayPackageGroup;
@@ -924,6 +925,10 @@ function updatePackageJson(
   updatedPackages: Record<string, PackageUpdate>
 ) {
   const packageJsonPath = join(root, 'package.json');
+  if (!existsSync(packageJsonPath)) {
+    return;
+  }
+
   const parseOptions: JsonReadOptions = {};
   const json = readJsonFile(packageJsonPath, parseOptions);
 
