@@ -1,3 +1,8 @@
+---
+title: 'Node Standalone Tutorial - Part 4: Task Pipelines'
+description: In this tutorial you'll create a backend-focused workspace with Nx.
+---
+
 # Node Standalone Tutorial - Part 4: Task Pipelines
 
 ## Running Dependent Tasks

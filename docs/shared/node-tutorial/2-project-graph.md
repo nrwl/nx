@@ -1,3 +1,8 @@
+---
+title: 'Node Standalone Tutorial - Part 2: Project Graph'
+description: In this tutorial you'll create a backend-focused workspace with Nx.
+---
+
 # Node Standalone Tutorial - Part 2: Project Graph
 
 Run the command: `npx nx graph`. A browser should open up with the following contents:

@@ -41,7 +41,7 @@ Run the command `npx create-nx-workspace@latest` and when prompted, provide the 
 
 The `node-server` preset automatically creates a `products-api` application at the root of the workspace and an `e2e` project that runs against it.
 
-{% card title="Framework Options" description="This tutorial uses the `express` framework.  The `node-server` preset also provides starter files for `koa` and `fastify`." url="/nx-cloud/intro/what-is-nx-cloud" /%}
+{% callout type="note" title="Framework Options" description="This tutorial uses the `express` framework.  The `node-server` preset also provides starter files for `koa` and `fastify`." /%}
 
 ## Generating Libraries
 

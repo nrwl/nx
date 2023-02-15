@@ -1,3 +1,8 @@
+---
+title: 'Node Standalone Tutorial - Part 5: Docker Target'
+description: In this tutorial you'll create a backend-focused workspace with Nx.
+---
+
 # Node Standalone Tutorial - Part 5: Docker Target
 
 ## Generate a Micro-service with a Docker File
