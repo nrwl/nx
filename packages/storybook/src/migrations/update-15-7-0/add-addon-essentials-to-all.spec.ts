@@ -71,7 +71,6 @@ describe('Add addon-essentials to project-level main.js files', () => {
       import type { StorybookConfig } from '@storybook/core-common';
 
       export const rootMain: StorybookConfig = {
-        stories: [],
         addons: ['@storybook/addon-knobs', '@storybook/addon-essentials'],
       };
       `
