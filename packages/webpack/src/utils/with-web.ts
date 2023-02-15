@@ -48,6 +48,7 @@ export interface WithWebOptions {
   stylePreprocessorOptions?: any;
   styles?: Array<ExtraEntryPointClass | string>;
   subresourceIntegrity?: boolean;
+  composeClientEnvironment?: typeof getClientEnvironment;
 }
 
 // Omit deprecated options
@@ -111,9 +112,12 @@ export function withWeb(pluginOptions: WithWebOptions = {}): NxWebpackPlugin {
         })
       );
     }
+
+    const composeClientEnvironment =
+      mergedOptions.composeClientEnvironment || getClientEnvironment;
     plugins.push(
       new webpack.DefinePlugin(
-        getClientEnvironment(process.env.NODE_ENV).stringified
+        composeClientEnvironment(process.env.NODE_ENV).stringified
       )
     );
 
