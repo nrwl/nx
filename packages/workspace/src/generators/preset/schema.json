@@ -80,7 +80,7 @@
     "bundler": {
       "description": "The bundler to use for building the application.",
       "type": "string",
-      "enum": ["webpack", "vite"],
+      "enum": ["webpack", "vite", "rspack"],
       "default": "vite"
     },
     "docker": {

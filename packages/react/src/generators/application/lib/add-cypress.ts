@@ -15,6 +15,6 @@ export async function addCypress(host: Tree, options: NormalizedSchema) {
     directory: options.directory,
     project: options.projectName,
     rootProject: options.rootProject,
-    bundler: options.bundler,
+    bundler: options.bundler !== 'rspack' ? options.bundler : 'webpack',
   });
 }

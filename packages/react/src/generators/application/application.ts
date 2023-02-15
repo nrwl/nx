@@ -130,6 +130,26 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
       uiFramework: 'react',
     });
     tasks.push(webpackInitTask);
+  } else if (options.bundler === 'rspack') {
+    await ensurePackage(host, '@nrwl/rspack', '15.7.0-beta.1');
+
+    const { rspackProjectGenerator } = await import('@nrwl/rspack');
+    if (
+      options.style !== 'css' &&
+      options.style !== 'less' &&
+      options.style !== 'scss'
+    ) {
+      throw new Error(
+        `--style=${options.style} is not currently supported in rspack`
+      );
+    }
+    const rspackTask = await rspackProjectGenerator(host, {
+      project: options.projectName,
+      uiFramework: 'react',
+      // Not all styling solutions are working as of now.
+      style: options.style,
+    });
+    tasks.push(rspackTask);
   }
 
   if (options.bundler !== 'vite' && options.unitTestRunner === 'vitest') {

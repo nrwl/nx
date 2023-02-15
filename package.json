@@ -44,8 +44,8 @@
     "@babel/preset-react": "^7.14.5",
     "@babel/preset-typescript": "^7.15.0",
     "@cypress/react": "^6.0.0",
-    "@floating-ui/react-dom": "^1.0.1",
     "@floating-ui/react": "^0.19.1",
+    "@floating-ui/react-dom": "^1.0.1",
     "@monodon/rust": "0.4.4",
     "@napi-rs/cli": "2.14.0",
     "@nestjs/cli": "^9.0.0",
@@ -277,6 +277,7 @@
     "@markdoc/markdoc": "0.1.13",
     "@monaco-editor/react": "^4.4.6",
     "@napi-rs/canvas": "^0.1.19",
+    "@nrwl/rspack": "15.7.0-beta.1",
     "@swc/helpers": "~0.4.11",
     "@tailwindcss/aspect-ratio": "^0.4.2",
     "@tailwindcss/forms": "^0.5.3",
@@ -333,4 +334,3 @@
     ]
   }
 }
-

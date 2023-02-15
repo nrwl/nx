@@ -45,7 +45,7 @@ type Arguments = {
     name: string;
     email: string;
   };
-  bundler: 'vite' | 'webpack';
+  bundler: 'vite' | 'webpack' | 'rspack';
 };
 
 enum Preset {
@@ -405,7 +405,7 @@ async function getConfiguration(
           routing = await determineRouting(argv);
         }
       }
-      style = await determineStyle(preset, argv);
+      style = await determineStyle(preset, bundler, argv);
     }
 
     const packageManager = await determinePackageManager(argv);
@@ -825,6 +825,7 @@ async function determineDockerfile(
 
 async function determineStyle(
   preset: Preset,
+  bundler: 'vite' | 'webpack' | 'rspack',
   parsedArgs: yargs.Arguments<Arguments>
 ): Promise<string> {
   if (
@@ -857,7 +858,10 @@ async function determineStyle(
     },
   ];
 
-  if (![Preset.AngularMonorepo, Preset.AngularStandalone].includes(preset)) {
+  if (
+    ![Preset.AngularMonorepo, Preset.AngularStandalone].includes(preset) &&
+    bundler !== 'rspack'
+  ) {
     choices.push({
       name: 'styl',
       message: 'Stylus(.styl)     [ http://stylus-lang.com ]',
@@ -867,7 +871,8 @@ async function determineStyle(
   if (
     [Preset.ReactMonorepo, Preset.ReactStandalone, Preset.NextJs].includes(
       preset
-    )
+    ) &&
+    bundler !== 'rspack'
   ) {
     choices.push(
       {
@@ -952,7 +957,7 @@ async function determineRouting(
 
 async function determineBundler(
   parsedArgs: yargs.Arguments<Arguments>
-): Promise<'vite' | 'webpack'> {
+): Promise<'vite' | 'webpack' | 'rspack'> {
   const choices = [
     {
       name: 'vite',
@@ -961,6 +966,10 @@ async function determineBundler(
     {
       name: 'webpack',
       message: 'Webpack [ https://webpack.js.org/ ]',
+    },
+    {
+      name: 'rspack',
+      message: 'Rspack  [ https://rspack-website.vercel.app/ ] (experimental)',
     },
   ];
 
