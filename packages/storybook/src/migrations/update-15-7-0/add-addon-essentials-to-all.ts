@@ -304,6 +304,10 @@ function removeStoriesArrayFromRootIfEmpty(
       'PropertyAssignment:has([name="stories"])'
     )?.[0];
 
+    if (!fullStoriesNode) {
+      return false;
+    }
+
     const stringLiterals = tsquery.query(fullStoriesNode, 'StringLiteral');
 
     if (stringLiterals?.length === 0) {
