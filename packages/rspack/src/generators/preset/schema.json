@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "cli": "nx",
+  "$id": "Preset",
+  "title": "Standalone preset",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-priority": "important"
+    },
+    "style": {
+      "type": "string",
+      "description": "The style solution to use.",
+      "enum": ["none", "css", "sass", "less"],
+      "default": "css"
+    },
+    "unitTestRunner": {
+      "type": "string",
+      "description": "The unit test runner to use.",
+      "enum": ["none", "jest"],
+      "default": "jest"
+    },
+    "e2eTestRunner": {
+      "type": "string",
+      "description": "The e2e test runner to use.",
+      "enum": ["none", "cypress"],
+      "default": "cypress"
+    },
+    "directory": {
+      "type": "string",
+      "description": "The directory to nest the app under."
+    },
+    "tags": {
+      "type": "array",
+      "description": "The tags to assign to the project.",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "monorepo": {
+      "type": "boolean",
+      "description": "Creates an integrated monorepo.",
+      "default": false,
+      "aliases": ["integrated"]
+    },
+    "rootProject": {
+      "type": "boolean",
+      "x-priority": "internal",
+      "default": true
+    }
+  },
+  "required": ["name"]
+}

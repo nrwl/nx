@@ -1,0 +1,61 @@
+{
+  "name": "rspack",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/rspack/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/rspack",
+        "main": "packages/rspack/src/index.ts",
+        "tsConfig": "packages/rspack/tsconfig.lib.json",
+        "assets": [
+          "packages/rspack/*.md",
+          {
+            "input": "./packages/rspack/src",
+            "glob": "**/!(*.ts)",
+            "output": "./src"
+          },
+          {
+            "input": "./packages/rspack/src",
+            "glob": "**/*.d.ts",
+            "output": "./src"
+          },
+          {
+            "input": "./packages/rspack",
+            "glob": "generators.json",
+            "output": "."
+          },
+          {
+            "input": "./packages/rspack",
+            "glob": "executors.json",
+            "output": "."
+          }
+        ]
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "packages/rspack/**/*.ts",
+          "packages/rspack/generators.json",
+          "packages/rspack/executors.json",
+          "packages/rspack/package.json"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "packages/rspack/jest.config.ts",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "tags": []
+}
