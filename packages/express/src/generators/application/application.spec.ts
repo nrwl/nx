@@ -83,26 +83,26 @@ describe('app', () => {
     const tsconfig = readJson(appTree, 'apps/my-node-app/tsconfig.app.json');
     expect(tsconfig.compilerOptions.types).toContain('express');
     expect(tsconfig).toMatchInlineSnapshot(`
-  Object {
-    "compilerOptions": Object {
-      "module": "commonjs",
-      "outDir": "../../dist/out-tsc",
-      "types": Array [
-        "node",
-        "express",
-      ],
-    },
-    "exclude": Array [
-      "jest.config.ts",
-      "src/**/*.spec.ts",
-      "src/**/*.test.ts",
+Object {
+  "compilerOptions": Object {
+    "module": "commonjs",
+    "outDir": "../../dist/out-tsc",
+    "types": Array [
+      "node",
+      "express",
     ],
-    "extends": "./tsconfig.json",
-    "include": Array [
-      "src/**/*.ts",
-    ],
-  }
-  `);
+  },
+  "exclude": Array [
+    "jest.config.ts",
+    "src/**/*.spec.ts",
+    "src/**/*.test.ts",
+  ],
+  "extends": "./tsconfig.json",
+  "include": Array [
+    "src/**/*.ts",
+  ],
+}
+`);
   });
 
   describe('--js flag', () => {
