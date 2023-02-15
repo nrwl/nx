@@ -4,9 +4,9 @@ import {
   Tree,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { moveProject } from '@nrwl/workspace/src/generators/move/lib/move-project';
 import { libraryGenerator } from '../../library/library';
 import { NormalizedSchema } from '../schema';
+import { moveProjectFiles } from './move-project-files';
 
 describe('moveProject', () => {
   let tree: Tree;
@@ -28,7 +28,7 @@ describe('moveProject', () => {
       relativeToRootDestination: 'libs/my-destination',
     };
 
-    moveProject(tree, schema, projectConfig);
+    moveProjectFiles(tree, schema, projectConfig);
 
     const destinationChildren = tree.children('libs/my-destination');
     expect(destinationChildren.length).toBeGreaterThan(0);
