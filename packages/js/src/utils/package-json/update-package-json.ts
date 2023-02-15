@@ -17,6 +17,7 @@ import { writeFileSync } from 'fs-extra';
 import { isNpmProject } from 'nx/src/project-graph/operators';
 import { fileExists } from 'nx/src/utils/fileutils';
 import type { PackageJson } from 'nx/src/utils/package-json';
+import { existsSync } from 'fs';
 
 function getMainFileDirRelativeToProjectRoot(
   main: string,
@@ -138,10 +139,13 @@ function addMissingDependencies(
         );
 
         const depPackageJsonPath = join(root, outputs[0], 'package.json');
-        const version = readJsonFile(depPackageJsonPath).version;
 
-        packageJson[propType] ??= {};
-        packageJson[propType][packageName] = version;
+        if (existsSync(depPackageJsonPath)) {
+          const version = readJsonFile(depPackageJsonPath).version;
+
+          packageJson[propType] ??= {};
+          packageJson[propType][packageName] = version;
+        }
       }
     }
   });
