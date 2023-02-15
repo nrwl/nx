@@ -61,6 +61,7 @@ Object {
       "inputs": Array [
         "default",
         "{workspaceRoot}/.eslintrc.json",
+        "{workspaceRoot}/.eslintignore",
       ],
     },
     "test": Object {
