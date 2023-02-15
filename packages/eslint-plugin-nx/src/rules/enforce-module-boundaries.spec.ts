@@ -14,7 +14,6 @@ import enforceModuleBoundaries, {
   RULE_NAME as enforceModuleBoundariesRuleName,
 } from '../../src/rules/enforce-module-boundaries';
 import { createProjectRootMappings } from 'nx/src/project-graph/utils/find-project-for-path';
-import { dependencies } from 'webpack';
 
 jest.mock('@nrwl/devkit', () => ({
   ...jest.requireActual<any>('@nrwl/devkit'),

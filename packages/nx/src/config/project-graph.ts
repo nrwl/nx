@@ -11,7 +11,7 @@ import { NxJsonConfiguration } from './nx-json';
 export interface FileData {
   file: string;
   hash: string;
-  /** @deprecated this field will be removed in v16. Use {@link dependencies} instead */
+  /** @deprecated this field will be removed in v17. Use {@link dependencies} instead */
   deps?: string[];
   dependencies?: ProjectGraphDependency[];
 }

@@ -34,14 +34,14 @@ describe('ProjectGraphBuilder', () => {
     ).toThrowError();
 
     // ignore the self deps
-    builder.addDynamicDependency('source', 'source');
+    builder.addDynamicDependency('source', 'source', 'source/index.ts');
 
     // don't include duplicates of the same type
     builder.addImplicitDependency('source', 'target');
     builder.addImplicitDependency('source', 'target');
-    builder.addStaticDependency('source', 'target');
-    builder.addDynamicDependency('source', 'target');
-    builder.addStaticDependency('source', 'target');
+    builder.addStaticDependency('source', 'target', 'source/index.ts');
+    builder.addDynamicDependency('source', 'target', 'source/index.ts');
+    builder.addStaticDependency('source', 'target', 'source/index.ts');
 
     const graph = builder.getUpdatedProjectGraph();
     expect(graph.dependencies).toEqual({
@@ -128,7 +128,7 @@ describe('ProjectGraphBuilder', () => {
   it(`should use both deps when both implicit and explicit deps are available`, () => {
     // don't include duplicates
     builder.addImplicitDependency('source', 'target');
-    builder.addExplicitDependency('source', 'source/index.ts', 'target');
+    builder.addStaticDependency('source', 'target', 'source/index.ts');
 
     const graph = builder.getUpdatedProjectGraph();
     expect(graph.dependencies).toEqual({
@@ -155,7 +155,7 @@ describe('ProjectGraphBuilder', () => {
       data: {} as any,
     });
     builder.addImplicitDependency('source', 'target');
-    builder.addExplicitDependency('source', 'source/index.ts', 'target');
+    builder.addStaticDependency('source', 'target', 'source/index.ts');
     builder.addImplicitDependency('source', 'target2');
     builder.removeDependency('source', 'target');
 

@@ -99,16 +99,16 @@ Even though the plugin is written in JavaScript, resolving dependencies of diffe
 
 Because an implicit dependency is not associated with any file, Nx doesn't know when it might change, so it will be recomputed every time.
 
-## Explicit Dependencies
+## Static Dependencies
 
 Nx knows what files have changed since the last invocation. Only those files will be present in the provided `filesToProcess`. You can associate a dependency with a particular file (e.g., if that file contains an import).
 
 ```typescript
 // Add a new edge
-builder.addExplicitDependency(
+builder.addStaticDependency(
   'existing-project',
-  'libs/existing-project/src/index.ts',
-  'new-project'
+  'new-project',
+  'libs/existing-project/src/index.ts'
 );
 ```
 
@@ -123,11 +123,10 @@ A typical example would be lazy-loaded routes. Having separation between these t
 import { DependencyType } from '@nrwl/devkit';
 
 // Add a new edge
-builder.addExplicitDependency(
+builder.addDynamicDependency(
   'existing-project',
-  'libs/existing-project/src/router-setup.ts',
   'lazy-route',
-  DependencyType.dynamic
+  'libs/existing-project/src/router-setup.ts'
 );
 ```
 

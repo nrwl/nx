@@ -328,12 +328,19 @@ function buildExplicitDependenciesWithoutWorkers(
     builder.graph,
     ctx.filesToProcess
   ).forEach((r) => {
-    builder.addExplicitDependency(
-      r.sourceProjectName,
-      r.sourceProjectFile,
-      r.targetProjectName,
-      r.type
-    );
+    if (r.type === 'static') {
+      builder.addStaticDependency(
+        r.sourceProjectName,
+        r.targetProjectName,
+        r.sourceProjectFile
+      );
+    } else {
+      builder.addDynamicDependency(
+        r.sourceProjectName,
+        r.targetProjectName,
+        r.sourceProjectFile
+      );
+    }
   });
 }
 
@@ -362,12 +369,19 @@ function buildExplicitDependenciesUsingWorkers(
     for (let w of workers) {
       w.on('message', (explicitDependencies) => {
         explicitDependencies.forEach((r: ExplicitDependency) => {
-          builder.addExplicitDependency(
-            r.sourceProjectName,
-            r.sourceProjectFile,
-            r.targetProjectName,
-            r.type
-          );
+          if (r.type === 'static') {
+            builder.addStaticDependency(
+              r.sourceProjectName,
+              r.targetProjectName,
+              r.sourceProjectFile
+            );
+          } else {
+            builder.addDynamicDependency(
+              r.sourceProjectName,
+              r.targetProjectName,
+              r.sourceProjectFile
+            );
+          }
         });
         if (bins.length > 0) {
           w.postMessage({ filesToProcess: bins.shift() });

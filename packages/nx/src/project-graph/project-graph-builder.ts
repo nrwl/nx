@@ -75,12 +75,17 @@ export class ProjectGraphBuilder {
    */
   addStaticDependency(
     sourceProjectName: string,
-    targetProjectName: string
+    targetProjectName: string,
+    sourceProjectFile?: string
   ): void {
+    if (this.graph.nodes[sourceProjectName] && !sourceProjectFile) {
+      throw new Error(`Source project file is required`);
+    }
     this.addDependency(
       sourceProjectName,
       targetProjectName,
-      DependencyType.static
+      DependencyType.static,
+      sourceProjectFile
     );
   }
 
@@ -89,15 +94,20 @@ export class ProjectGraphBuilder {
    */
   addDynamicDependency(
     sourceProjectName: string,
-    targetProjectName: string
+    targetProjectName: string,
+    sourceProjectFile: string
   ): void {
     if (this.graph.externalNodes[sourceProjectName]) {
       throw new Error(`External projects can't have "dynamic" dependencies`);
     }
+    if (!sourceProjectFile) {
+      throw new Error(`Source project file is required`);
+    }
     this.addDependency(
       sourceProjectName,
       targetProjectName,
-      DependencyType.dynamic
+      DependencyType.dynamic,
+      sourceProjectFile
     );
   }
 
@@ -145,12 +155,12 @@ export class ProjectGraphBuilder {
 
   /**
    * Add an explicit dependency from a file in source project to target project
+   * @deprecated this method will be removed in v17. Use {@link addStaticDependency} or {@link addDynamicDependency} instead
    */
   addExplicitDependency(
     sourceProjectName: string,
     sourceProjectFile: string,
-    targetProjectName: string,
-    type: DependencyType.static | DependencyType.dynamic = DependencyType.static
+    targetProjectName: string
   ): void {
     if (sourceProjectName === targetProjectName) {
       return;
@@ -180,17 +190,12 @@ export class ProjectGraphBuilder {
       fileData.dependencies = [];
     }
 
-    if (
-      !fileData.dependencies.find(
-        (d) => d.target === targetProjectName && d.type === type
-      )
-    ) {
+    if (!fileData.dependencies.find((t) => t.target === targetProjectName)) {
       fileData.dependencies.push({
         target: targetProjectName,
-        type,
         source: sourceProjectName,
+        type: DependencyType.static,
       });
-      this.addDependency(sourceProjectName, targetProjectName, type);
     }
   }
 
@@ -236,7 +241,8 @@ export class ProjectGraphBuilder {
   private addDependency(
     sourceProjectName: string,
     targetProjectName: string,
-    type: DependencyType
+    type: DependencyType,
+    sourceProjectFile?: string
   ): void {
     if (sourceProjectName === targetProjectName) {
       return;
@@ -270,11 +276,38 @@ export class ProjectGraphBuilder {
     ) {
       return;
     }
-    this.graph.dependencies[sourceProjectName].push({
+
+    const dependency = {
       source: sourceProjectName,
       target: targetProjectName,
       type,
-    });
+    };
+
+    if (sourceProjectFile) {
+      const source = this.graph.nodes[sourceProjectName];
+      if (!source) {
+        throw new Error(
+          `Source project is not a project node: ${sourceProjectName}`
+        );
+      }
+      const fileData = source.data.files.find(
+        (f) => f.file === sourceProjectFile
+      );
+      if (!fileData) {
+        throw new Error(
+          `Source project ${sourceProjectName} does not have a file: ${sourceProjectFile}`
+        );
+      }
+
+      if (!fileData.dependencies) {
+        fileData.dependencies = [];
+      }
+      if (!fileData.dependencies.find((t) => t.target === targetProjectName)) {
+        fileData.dependencies.push(dependency);
+      }
+    }
+
+    this.graph.dependencies[sourceProjectName].push(dependency);
   }
 
   private removeDependenciesWithNode(name: string) {
