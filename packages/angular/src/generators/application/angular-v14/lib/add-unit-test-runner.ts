@@ -17,9 +17,6 @@ export async function addUnitTestRunner(host: Tree, options: NormalizedSchema) {
       rootProject: options.rootProject,
     });
   } else if (options.unitTestRunner === UnitTestRunner.Karma) {
-    const {
-      karmaProjectGenerator,
-    } = require('../../../karma-project/karma-project');
     await karmaProjectGenerator(host, {
       project: options.name,
       skipFormat: true,

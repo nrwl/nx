@@ -81,7 +81,7 @@ export async function angularInitGenerator(
   }
   const unitTestTask = await addUnitTestRunner(tree, options);
   tasks.push(unitTestTask);
-  const e2eTask = await addE2ETestRunner(tree, options);
+  const e2eTask = addE2ETestRunner(tree, options);
   tasks.push(e2eTask);
 
   addGitIgnoreEntry(tree, '.angular');
@@ -188,10 +188,7 @@ async function addUnitTestRunner(
   }
 }
 
-async function addE2ETestRunner(
-  tree: Tree,
-  options: Schema
-): Promise<GeneratorCallback> {
+function addE2ETestRunner(tree: Tree, options: Schema): GeneratorCallback {
   switch (options.e2eTestRunner) {
     case E2eTestRunner.Protractor:
       return !options.skipPackageJson

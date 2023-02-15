@@ -19,8 +19,6 @@ import {
   writeJson,
 } from '@nrwl/devkit';
 import { getImportPath } from 'nx/src/utils/path';
-// nx-ignore-next-line
-const { Linter } = require('@nrwl/linter'); // use require to import to avoid circular dependency
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import {
   getRelativePathToRootTsConfig,
@@ -380,6 +378,7 @@ function normalizeOptions(
     options.buildable = true;
   }
 
+  const { Linter } = require('@nrwl/linter');
   if (options.config === 'npm-scripts') {
     options.unitTestRunner = 'none';
     options.linter = Linter.None;

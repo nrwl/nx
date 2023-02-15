@@ -238,7 +238,8 @@ function normalizeOptions(tree: Tree, options: Schema): NormalizedSchema {
   }
 
   if (!options.linter) {
-    options.linter = 'eslint';
+    const { Linter } = require('@nrwl/linter');
+    options.linter = Linter.EsLint;
   }
 
   const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
