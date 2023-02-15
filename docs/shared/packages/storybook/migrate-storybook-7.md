@@ -52,7 +52,7 @@ The Storybook CLI will prompt you to run some code generators and modifiers.
 
 Say `yes` to the following:
 
-- `mainjsFramework`: It will add the `framework` field in your root `.storybook/main.js|ts` file. We are going to delete it since it's not needed in the root file, but it's handy to have it ready to copy. Also, it shows you an indication of what it looks like.
+- `mainjsFramework`: It will try to add the `framework` field in your project's `.storybook/main.js|ts` file.
 - `eslintPlugin`: installs the `eslint-plugin-storybook`
 - `storybook-binary`: installs Storybook's `storybook` binary
 - `newFrameworks`: removes unused dependencies (eg. `@storybook/builder-webpack5`, `@storybook/manager-webpack5`, `@storybook/builder-vite`)
@@ -60,21 +60,6 @@ Say `yes` to the following:
 Say `no` to the following:
 
 - `autodocsTrue`: we don't need it and it can potentially cause issues with missing dependencies on your Nx workspace
-
-### 3. Restore the root `.storybook/main.js|ts` file
-
-You will have noticed that the Storybook automigrator added the `framework` option to your root `.storybook/main.js|ts` file. Let's remove that.
-
-So, remove:
-
-```ts
-  framework: {
-    name: '@storybook/angular',
-    options: {}
-  }
-```
-
-from your root `.storybook/main.js|ts` file.
 
 ### 3. Edit all the project-level `.storybook/main.js|ts` files
 
@@ -87,7 +72,7 @@ In your project-level `.storybook/main.js|ts` files, remove the `builder` from `
 Your core options most probably look like this:
 
 ```ts
-core: { ...rootMain.core, builder: '@storybook/builder-vite' },
+core: { builder: '@storybook/builder-vite' },
 ```
 
 You must remove the `builder`, or you can also delete the `core` object entirely.
@@ -126,12 +111,16 @@ Choose the `@storybook/angular` framework. So add this in your project-level `.s
 
 #### For React projects using `'@storybook/builder-vite'`
 
-Choose the `@storybook/react-vite` framework. So add this in your project-level `.storybook/main.js|ts` file:
+Choose the `@storybook/react-vite` framework. You must also point the builder to the Vite configuration file path, so that it can read the settings from there. If your project's root path is `apps/my-app` and it's using a Vite configuration file at `apps/my-app/vite.config.ts`, then you must add this in your project-level `.storybook/main.js|ts` file:
 
 ```ts
   framework: {
     name: '@storybook/react-vite',
-    options: {}
+    options: {
+       builder: {
+        viteConfigPath: 'apps/my-app/vite.config.ts',
+      },
+    }
   }
 ```
 
@@ -159,12 +148,16 @@ Choose the `@storybook/nextjs` framework. So add this in your project-level `.st
 
 #### For Web Components projects using `'@storybook/builder-vite'`
 
-Choose the `@storybook/web-components-vite` framework. So add this in your project-level `.storybook/main.js|ts` file:
+Choose the `@storybook/web-components-vite` framework. You must also point the builder to the Vite configuration file path, so that it can read the settings from there. If your project's root path is `apps/my-app` and it's using a Vite configuration file at `apps/my-app/vite.config.ts`, then you must add this in your project-level `.storybook/main.js|ts` file:
 
 ```ts
   framework: {
     name: '@storybook/web-components-vite',
-    options: {}
+    options: {
+      builder: {
+        viteConfigPath: 'apps/my-app/vite.config.ts',
+      },
+    }
   }
 ```
 
@@ -183,79 +176,67 @@ Choose the `@storybook/web-components-webpack5` framework. So add this in your p
 
 You can easily find the correct framework by looking at the `builder` option in your project-level `.storybook/main.js|ts` file.
 
-#### Resulting project-level `.storybook/main.js|ts` file
+### 4. Check result of project-level `.storybook/main.js|ts` file
+
+#### Full example for Angular projects
 
 Here is an example of a project-level `.storybook/main.js|ts` file for an Angular project:
 
-```ts
-// apps/my-angular-app/.storybook/main.js|ts
-
-const rootMain = require('../../../.storybook/main');
-
-module.exports = {
-  ...rootMain,
-  stories: [
-    ...rootMain.stories,
-    '../src/app/**/*.stories.mdx',
-    '../src/app/**/*.stories.@(js|jsx|ts|tsx)',
-  ],
-  addons: [...rootMain.addons],
+```ts {% fileName="apps/my-angular-app/.storybook/main.js" %}
+const config = {
+  stories: ['../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
+  addons: ['@storybook/addon-essentials'],
   framework: {
     name: '@storybook/angular',
     options: {},
   },
 };
+
+export default config;
 ```
 
-### 4. For Vite.js projects
+#### Full example for React projects with Vite
 
-Make sure to add the `viteFinal` option to your project-level `.storybook/main.js|ts` files on projects that use Vite.js.
+Here is an example of a project-level `.storybook/main.js|ts` file for a React project using Vite:
 
-```ts
-  async viteFinal(config, { configType }) {
-    return mergeConfig(config, {
-      plugins: [
-        viteTsConfigPaths({
-          root: '<PATH_TO_PROJECT_ROOT>',
-        }),
-      ],
-    });
-  },
-```
-
-This will take care of any path resolution issues.
-
-An example of a project-level `.storybook/main.js|ts` file for a React project that uses Vite.js:
-
-```ts
-// apps/my-react-vite-app/.storybook/main.js|ts
-
-const { mergeConfig } = require('vite');
-const viteTsConfigPaths = require('vite-tsconfig-paths').default;
-const rootMain = require('../../../.storybook/main');
-
-module.exports = {
-  ...rootMain,
-  stories: [
-    ...rootMain.stories,
-    '../src/app/**/*.stories.mdx',
-    '../src/app/**/*.stories.@(js|jsx|ts|tsx)',
-  ],
-  addons: [...rootMain.addons],
-  async viteFinal(config, { configType }) {
-    return mergeConfig(config, {
-      plugins: [
-        viteTsConfigPaths({
-          root: '../../../',
-        }),
-      ],
-    });
-  },
+```ts {% fileName="apps/my-react-app/.storybook/main.js" %}
+const config = {
+  stories: ['../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
+  addons: ['@storybook/addon-essentials'],
   framework: {
     name: '@storybook/react-vite',
-    options: {},
+    options: {
+      builder: {
+        viteConfigPath: 'apps/rv1/vite.config.ts',
+      },
+    },
   },
 };
+
+export default config;
+```
+
+### 5. Remove `uiFramework` from `project.json`
+
+You can now remove the `uiFramework` option from your `storybook` and `build-storybook` targets in your project's `project.json` file.
+
+So, for example, this is what a resulting `storybook` target would look for a non-Angular project:
+
+```json {% fileName="apps/my-react-app/project.json" %}
+{
+  ...
+  "targets": {
+    ...
+    "storybook": {
+      "executor": "@nrwl/storybook:storybook",
+      "options": {
+        "port": 4400,
+        "configDir": "apps/my-react-app/.storybook"
+      },
+      "configurations": {
+        ...
+      }
+    },
 ```
 
 ## Use Storybook 7 beta
