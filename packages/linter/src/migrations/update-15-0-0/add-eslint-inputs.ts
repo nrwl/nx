@@ -5,8 +5,8 @@ import {
   Tree,
   updateNxJson,
 } from '@nrwl/devkit';
-import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
 import { eslintConfigFileWhitelist } from '../../generators/utils/eslint-file';
+import { getEslintTargets } from '../../generators/utils/eslint-targets';
 
 export default async function addEslintInputs(tree: Tree) {
   const nxJson = readNxJson(tree);
@@ -39,12 +39,4 @@ export default async function addEslintInputs(tree: Tree) {
   updateNxJson(tree, nxJson);
 
   await formatFiles(tree);
-}
-
-function getEslintTargets(tree: Tree) {
-  const eslintTargetNames = new Set<string>();
-  forEachExecutorOptions(tree, '@nrwl/linter:eslint', (_, __, target) => {
-    eslintTargetNames.add(target);
-  });
-  return eslintTargetNames;
 }
