@@ -451,40 +451,40 @@ describe('lib', () => {
 
         const eslintJson = readJson(tree, 'libs/my-lib/.eslintrc.json');
         expect(eslintJson).toMatchInlineSnapshot(`
-          Object {
-            "extends": Array [
-              "../../.eslintrc.json",
-            ],
-            "ignorePatterns": Array [
-              "!**/*",
-            ],
-            "overrides": Array [
-              Object {
-                "files": Array [
-                  "*.ts",
-                  "*.tsx",
-                  "*.js",
-                  "*.jsx",
-                ],
-                "rules": Object {},
-              },
-              Object {
-                "files": Array [
-                  "*.ts",
-                  "*.tsx",
-                ],
-                "rules": Object {},
-              },
-              Object {
-                "files": Array [
-                  "*.js",
-                  "*.jsx",
-                ],
-                "rules": Object {},
-              },
-            ],
-          }
-        `);
+            Object {
+              "extends": Array [
+                "../../.eslintrc.json",
+              ],
+              "ignorePatterns": Array [
+                "!**/*",
+              ],
+              "overrides": Array [
+                Object {
+                  "files": Array [
+                    "*.ts",
+                    "*.tsx",
+                    "*.js",
+                    "*.jsx",
+                  ],
+                  "rules": Object {},
+                },
+                Object {
+                  "files": Array [
+                    "*.ts",
+                    "*.tsx",
+                  ],
+                  "rules": Object {},
+                },
+                Object {
+                  "files": Array [
+                    "*.js",
+                    "*.jsx",
+                  ],
+                  "rules": Object {},
+                },
+              ],
+            }
+          `);
       });
     });
 
@@ -516,40 +516,40 @@ describe('lib', () => {
 
         const eslintJson = readJson(tree, 'libs/my-dir/my-lib/.eslintrc.json');
         expect(eslintJson).toMatchInlineSnapshot(`
-          Object {
-            "extends": Array [
-              "../../../.eslintrc.json",
-            ],
-            "ignorePatterns": Array [
-              "!**/*",
-            ],
-            "overrides": Array [
-              Object {
-                "files": Array [
-                  "*.ts",
-                  "*.tsx",
-                  "*.js",
-                  "*.jsx",
-                ],
-                "rules": Object {},
-              },
-              Object {
-                "files": Array [
-                  "*.ts",
-                  "*.tsx",
-                ],
-                "rules": Object {},
-              },
-              Object {
-                "files": Array [
-                  "*.js",
-                  "*.jsx",
-                ],
-                "rules": Object {},
-              },
-            ],
-          }
-        `);
+            Object {
+              "extends": Array [
+                "../../../.eslintrc.json",
+              ],
+              "ignorePatterns": Array [
+                "!**/*",
+              ],
+              "overrides": Array [
+                Object {
+                  "files": Array [
+                    "*.ts",
+                    "*.tsx",
+                    "*.js",
+                    "*.jsx",
+                  ],
+                  "rules": Object {},
+                },
+                Object {
+                  "files": Array [
+                    "*.ts",
+                    "*.tsx",
+                  ],
+                  "rules": Object {},
+                },
+                Object {
+                  "files": Array [
+                    "*.js",
+                    "*.jsx",
+                  ],
+                  "rules": Object {},
+                },
+              ],
+            }
+          `);
       });
     });
 
@@ -631,40 +631,40 @@ describe('lib', () => {
         ).toEqual(['libs/my-dir/my-lib/**/*.js']);
         expect(readJson(tree, 'libs/my-dir/my-lib/.eslintrc.json'))
           .toMatchInlineSnapshot(`
-          Object {
-            "extends": Array [
-              "../../../.eslintrc.json",
-            ],
-            "ignorePatterns": Array [
-              "!**/*",
-            ],
-            "overrides": Array [
-              Object {
-                "files": Array [
-                  "*.ts",
-                  "*.tsx",
-                  "*.js",
-                  "*.jsx",
-                ],
-                "rules": Object {},
-              },
-              Object {
-                "files": Array [
-                  "*.ts",
-                  "*.tsx",
-                ],
-                "rules": Object {},
-              },
-              Object {
-                "files": Array [
-                  "*.js",
-                  "*.jsx",
-                ],
-                "rules": Object {},
-              },
-            ],
-          }
-        `);
+                Object {
+                  "extends": Array [
+                    "../../../.eslintrc.json",
+                  ],
+                  "ignorePatterns": Array [
+                    "!**/*",
+                  ],
+                  "overrides": Array [
+                    Object {
+                      "files": Array [
+                        "*.ts",
+                        "*.tsx",
+                        "*.js",
+                        "*.jsx",
+                      ],
+                      "rules": Object {},
+                    },
+                    Object {
+                      "files": Array [
+                        "*.ts",
+                        "*.tsx",
+                      ],
+                      "rules": Object {},
+                    },
+                    Object {
+                      "files": Array [
+                        "*.js",
+                        "*.jsx",
+                      ],
+                      "rules": Object {},
+                    },
+                  ],
+                }
+              `);
       });
     });
   });

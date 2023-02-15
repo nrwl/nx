@@ -18,7 +18,10 @@ describe('@nrwl/linter:init', () => {
         });
 
         expect(tree.read('.eslintrc.json', 'utf-8')).toMatchSnapshot();
-        expect(tree.read('.eslintignore', 'utf-8')).toMatchSnapshot();
+        expect(tree.read('.eslintignore', 'utf-8')).toMatchInlineSnapshot(`
+          "node_modules
+          "
+        `);
       });
 
       it('should add the root eslint config to the lint targetDefaults for lint', async () => {
