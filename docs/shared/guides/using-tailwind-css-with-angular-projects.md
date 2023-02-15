@@ -1,42 +1,66 @@
 # Using Tailwind CSS with Angular projects
 
-The purpose of this guide is to cover how to use and configure [Tailwind CSS](https://tailwindcss.com/) with [Angular](https://angular.io/) projects. It shows the different options available to set it up in existing projects or new projects, and it also contains a set of our recommended setups for using Tailwind CSS in different scenarios that can be found on an Nx workspace.
+The purpose of this guide is to cover how to use and configure [Tailwind CSS](https://tailwindcss.com/)
+with [Angular](https://angular.io/) projects. It shows the different options available to set it up in existing projects
+or new projects, and it also contains a set of our recommended setups for using Tailwind CSS in different scenarios that
+can be found on an Nx workspace.
 
-For an in-depth look on this topic, be sure to check out our blog post [Set up Tailwind CSS with Angular in an Nx workspace](https://medium.com/nrwl/set-up-tailwind-css-with-angular-in-an-nx-workspace-6f039a0f4479).
+For an in-depth look on this topic, be sure to check out our blog
+post [Set up Tailwind CSS with Angular in an Nx workspace](https://medium.com/nrwl/set-up-tailwind-css-with-angular-in-an-nx-workspace-6f039a0f4479)
+.
 
 ## Tailwind CSS support by the Nx Angular plugin
 
 The Nx Angular plugin provides support for Tailwind CSS v2 and v3. The support includes the following features:
 
 - A generator called `@nrwl/angular:setup-tailwind` that configures Tailwind CSS in an existing project.
-- An option `--add-tailwind` for the `@nrwl/angular:app` generator to create an application with Tailwind CSS pre-configured.
-- An option `--add-tailwind` for the `@nrwl/angular:lib` generator to create a library with Tailwind CSS pre-configured. This option can only be used with buildable and publishable libraries.
+- An option `--add-tailwind` for the `@nrwl/angular:app` generator to create an application with Tailwind CSS
+  pre-configured.
+- An option `--add-tailwind` for the `@nrwl/angular:lib` generator to create a library with Tailwind CSS pre-configured.
+  This option can only be used with buildable and publishable libraries.
 - Ability to build buildable libraries with Tailwind CSS using the `@nrwl/angular:ng-packagr-lite` executor.
 - Ability to build publishable libraries with Tailwind CSS using the `@nrwl/angular:package` executor.
 
 The generation for existing or new projects will perform the following steps:
 
-- Check if the `tailwindcss` package is already installed and if not installed, it will install the necessary packages (`tailwindcss`, `postcss` and `autoprefixer`)
-- Create a `tailwind.config.js` file in the project root with the default configuration to get started (specific to the installed version) and set up to scan the content (or purge for v2) of the project's source and its dependencies (using the [`createGlobPatternsForDependencies` utility function](#createglobpatternsfordependencies-utility-function))
+- Check if the `tailwindcss` package is already installed and if not installed, it will install the necessary
+  packages (`tailwindcss`, `postcss` and `autoprefixer`)
+- Create a `tailwind.config.js` file in the project root with the default configuration to get started (specific to the
+  installed version) and set up to scan the content (or purge for v2) of the project's source and its dependencies (
+  using the [`createGlobPatternsForDependencies` utility function](#createglobpatternsfordependencies-utility-function))
 - Based on the project type, it will perform the following actions:
-  - Applications: update the application styles entry point file located at `apps/app1/src/styles.css` by including the Tailwind CSS base styles
+  - Applications: update the application styles entry point file located at `apps/app1/src/styles.css` by including
+    the Tailwind CSS base styles
   - Libraries: add the `tailwind.config.js` file path to the `build` target configuration
 
 {% callout type="note" title="More details" %}
-When Tailwind CSS has not been installed yet, the generator will install Tailwind CSS v3. Only if Tailwind CSS v2 is installed, the generator will use it and generate the configuration accordingly.
+When Tailwind CSS has not been installed yet, the generator will install Tailwind CSS v3. Only if Tailwind CSS v2 is
+installed, the generator will use it and generate the configuration accordingly.
 {% /callout %}
 
-> All the examples in this guide will use Tailwind CSS v3, but the guide will work the same for v2. To convert the examples to v2, check the [Tailwind CSS upgrade guide](https://tailwindcss.com/docs/upgrade-guide#migrating-to-the-jit-engine) to understand the differences between the configuration for both versions.
+> All the examples in this guide will use Tailwind CSS v3, but the guide will work the same for v2. To convert the
+> examples to v2, check
+> the [Tailwind CSS upgrade guide](https://tailwindcss.com/docs/upgrade-guide#migrating-to-the-jit-engine) to understand
+> the differences between the configuration for both versions.
 
 ### `createGlobPatternsForDependencies` utility function
 
-One of the advantages of Tailwind is that it post-processes your CSS removing (also called "purging") all the parts that are not being used. In order to configure which file should be processed, the `tailwind.config.js` has a `content` property (formerly called `purge` in v2). You can find more details on Tailwind's [official documentation](https://tailwindcss.com/docs/content-configuration#configuring-source-paths).
+One of the advantages of Tailwind is that it post-processes your CSS removing (also called "purging") all the parts that
+are not being used. In order to configure which file should be processed, the `tailwind.config.js` has a `content`
+property (formerly called `purge` in v2). You can find more details on
+Tailwind's [official documentation](https://tailwindcss.com/docs/content-configuration#configuring-source-paths).
 
-The `content` property usually consistes of a glob pattern to include all the necessary files that should be processed. In an Nx workspace it is very common for a project to have other projects as its dependencies. Setting and updating the glob to reflect those dependencies and their files is cumbersome and error prone.
+The `content` property usually consistes of a glob pattern to include all the necessary files that should be processed.
+In an Nx workspace it is very common for a project to have other projects as its dependencies. Setting and updating the
+glob to reflect those dependencies and their files is cumbersome and error prone.
 
-Nx has a utility function that can be used to construct the glob representation of all files a project depends on (based on the Nx Project Graph).
+Nx has a utility function that can be used to construct the glob representation of all files a project depends on (based
+on the Nx Project Graph).
 
-The function receives a directory path that is used to identify the project for which the dependencies are going to be identified (therefore it needs to be a directory path within a project). It can also receive an optional glob pattern to append to each dependency source root path to conform the final glob pattern. If the glob pattern is not provided, it will default to `/**/!(*.stories|*.spec).{ts,html}`.
+The function receives a directory path that is used to identify the project for which the dependencies are going to be
+identified (therefore it needs to be a directory path within a project). It can also receive an optional glob pattern to
+append to each dependency source root path to conform the final glob pattern. If the glob pattern is not provided, it
+will default to `/**/!(*.stories|*.spec).{ts,html}`.
 
 The following is an example of it being used in an application called `app1`:
 
@@ -56,7 +80,10 @@ module.exports = {
 };
 ```
 
-In the above, you are invoking the `createGlobPatternsForDependencies` utility function with the `__dirname` of the project root. The utility function will identify the project `app1` and obtain its dependencies from the project graph. It will then create the glob patterns for each dependency and return them as an array. If `app1` were to have `lib1` and `lib2` as dependencies, the utility function will return the following glob patterns:
+In the above, you are invoking the `createGlobPatternsForDependencies` utility function with the `__dirname` of the
+project root. The utility function will identify the project `app1` and obtain its dependencies from the project graph.
+It will then create the glob patterns for each dependency and return them as an array. If `app1` were to have `lib1`
+and `lib2` as dependencies, the utility function will return the following glob patterns:
 
 ```javascript
 [
@@ -64,6 +91,22 @@ In the above, you are invoking the `createGlobPatternsForDependencies` utility f
   'libs/lib2/src/**/!(*.stories|*.spec).{ts,html}',
 ];
 ```
+
+{% callout type="note" title="Usage with Module Federation" %}
+When using Tailwind with Module Federation, Tailwind starts its purge at the host application, and only includes direct
+dependencies of that application. As the other applications in the Module Federation are not direct dependencies, but
+rather runtime dependencies, this can lead to missing classes from being included in your generated Tailwind css file.
+
+This can be fixed in two manners:
+
+1. Add an implicit dependency between the host application and the remote applications. This is beneficial because when
+   you make a change to the remote application, the host will know to rebuild to allow Tailwind to find any new Tailwind
+   classes to include.
+2. Add a path to the `content` array to include the remote application and its dependencies. This means that when the
+   host is rebuilt it will search for new Tailwind classes to include. It will not mark the host application as affected
+   when you change a remote application, however, so you need to be more proactive on rebuilding the host application.
+
+{% /callout %}
 
 ## Generating or adding Tailwind CSS support to Angular projects
 
@@ -93,7 +136,8 @@ npx nx g @nrwl/angular:lib my-lib --publishable --importPath=@my-org/my-lib --ad
 
 ### Add Tailwind CSS to an existing Angular application, buildable library or publishable library
 
-To add Tailwind CSS to an existing Angular application, buildable library or publishable library, you can use the following command:
+To add Tailwind CSS to an existing Angular application, buildable library or publishable library, you can use the
+following command:
 
 ```shell
 npx nx g @nrwl/angular:setup-tailwind my-project
@@ -105,15 +149,25 @@ You can see the available options for the above generator in [its docs](/package
 
 ### Configure Tailwind CSS for an application with non-buildable libraries as dependencies
 
-In workspaces with a single application that's consuming non-buildable libraries (libraries without a `build` target), you only need to configure Tailwind CSS in the application. You can do so by either [generating the application with Tailwind CSS already configured](#generate-an-angular-application-with-tailwind-css-pre-configured) or by [adding Tailwind CSS to an existing application](#add-tailwind-css-to-an-existing-angular-application-buildable-library-or-publishable-library).
+In workspaces with a single application that's consuming non-buildable libraries (libraries without a `build` target),
+you only need to configure Tailwind CSS in the application. You can do so by
+either [generating the application with Tailwind CSS already configured](#generate-an-angular-application-with-tailwind-css-pre-configured)
+or
+by [adding Tailwind CSS to an existing application](#add-tailwind-css-to-an-existing-angular-application-buildable-library-or-publishable-library)
+.
 
-In this scenario, the libraries will be processed as part of the application build process and therefore, the application's configuration for Tailwind CSS will be used.
+In this scenario, the libraries will be processed as part of the application build process and therefore, the
+application's configuration for Tailwind CSS will be used.
 
 ### Configure Tailwind CSS for an application with buildable or publishable libraries as dependencies
 
-In workspaces where an application depends on buildable and/or publishable libraries, the application and those libraries need to share the same Tailwind CSS configuration because the libraries have a `build` target and therefore, they are set to be built on its own. When building the libraries, they need a Tailwind CSS configuration and to avoid inconsistencies, they all (the application and the libraries) need to share the same configuration.
+In workspaces where an application depends on buildable and/or publishable libraries, the application and those
+libraries need to share the same Tailwind CSS configuration because the libraries have a `build` target and therefore,
+they are set to be built on its own. When building the libraries, they need a Tailwind CSS configuration and to avoid
+inconsistencies, they all (the application and the libraries) need to share the same configuration.
 
-To do so, we recommend using a [Tailwind CSS preset](https://tailwindcss.com/docs/presets) and place it in a shared library.
+To do so, we recommend using a [Tailwind CSS preset](https://tailwindcss.com/docs/presets) and place it in a shared
+library.
 
 Create a new folder `libs/tailwind-preset` with a `tailwind.config.js` file in it with your shared configuration:
 
@@ -191,7 +245,8 @@ If using the workspace configuration v1:
 }
 ```
 
-Adjust the application's `tailwind.config.js` file to use the preset and remove the configuration that's already included in the preset:
+Adjust the application's `tailwind.config.js` file to use the preset and remove the configuration that's already
+included in the preset:
 
 ```javascript {% fileName="apps/app1/tailwind.config.js" %}
 const { createGlobPatternsForDependencies } = require('@nrwl/angular/tailwind');
@@ -223,24 +278,37 @@ module.exports = {
 };
 ```
 
-If you're using a publishable library, you want to distribute it with a generated CSS that can be used by the consuming applications. To do so, take a look at [this section](#distribute-publishable-libraries-themes).
+If you're using a publishable library, you want to distribute it with a generated CSS that can be used by the consuming
+applications. To do so, take a look at [this section](#distribute-publishable-libraries-themes).
 
 ### Configure Tailwind CSS for multiple applications sharing the same theme
 
-To configure Tailwind CSS for multiple applications sharing the same theme, our recommendation is to also use a Tailwind CSS preset and place it in a shared library. Please refer to [the previous scenario setup](#configure-tailwind-css-for-an-application-with-buildable-or-publishable-libraries-as-dependencies) and do the same configuration. You'll have to use the shared Tailwind CSS preset in the applications sharing the same theme.
+To configure Tailwind CSS for multiple applications sharing the same theme, our recommendation is to also use a Tailwind
+CSS preset and place it in a shared library. Please refer
+to [the previous scenario setup](#configure-tailwind-css-for-an-application-with-buildable-or-publishable-libraries-as-dependencies)
+and do the same configuration. You'll have to use the shared Tailwind CSS preset in the applications sharing the same
+theme.
 
 ### Configure Tailwind CSS for multiple applications with different themes and sharing common buildable or publishable libraries
 
-To configure Tailwind CSS for multiple applications that use different themes and share common buildable or publishable libraries, our recommendation is still to use a Tailwind CSS preset and place it in a shared library. The difference is that instead of using literal CSS values for the configuration values, you would use CSS variables to allow each application to provide different values.
+To configure Tailwind CSS for multiple applications that use different themes and share common buildable or publishable
+libraries, our recommendation is still to use a Tailwind CSS preset and place it in a shared library. The difference is
+that instead of using literal CSS values for the configuration values, you would use CSS variables to allow each
+application to provide different values.
 
-A key aspect in this scenario is that because the same buildable libraries are shared by multiple applications, you need to make sure those libraries use Tailwind CSS utility classes and/or theme keys that are common to all the applications that consume them.
+A key aspect in this scenario is that because the same buildable libraries are shared by multiple applications, you need
+to make sure those libraries use Tailwind CSS utility classes and/or theme keys that are common to all the applications
+that consume them.
 
 {% callout type="note" title="Configuration" %}
-Different applications can still have some extra configuration unique to them, but the unique configuration can't be used by shared libraries, because it's not going to be available for other applications.
+Different applications can still have some extra configuration unique to them, but the unique configuration can't be
+used by shared libraries, because it's not going to be available for other applications.
 {% /callout %}
 
 {% callout type="note" title="Non buildable libraries" %}
-As explained in [this section](#configure-tailwind-css-for-an-application-with-non-buildable-libraries-as-dependencies), non-buildable libraries are processed as part of the application build process and therefore, they just use the same configuration the application uses.
+As explained in [this section](#configure-tailwind-css-for-an-application-with-non-buildable-libraries-as-dependencies),
+non-buildable libraries are processed as part of the application build process and therefore, they just use the same
+configuration the application uses.
 {% /callout %}
 
 Create a new folder `libs/tailwind-preset` with a `tailwind.config.js` file in it with your shared configuration:
@@ -273,7 +341,8 @@ module.exports = {
 };
 ```
 
-> **Note**: The `content` property shouldn't be specified in the preset because its value is not common for multiple projects.
+> **Note**: The `content` property shouldn't be specified in the preset because its value is not common for multiple
+> projects.
 
 Add the project configuration for the project:
 
@@ -317,7 +386,8 @@ If using the workspace configuration v1:
 }
 ```
 
-Adjust the `tailwind.config.js` file of the different applications to use the preset and remove the configuration that's already included in the preset:
+Adjust the `tailwind.config.js` file of the different applications to use the preset and remove the configuration that's
+already included in the preset:
 
 ```javascript {% fileName="tailwind.config.js" %}
 // apps/app1/tailwind.config.js
@@ -402,11 +472,13 @@ Add the CSS variable values to the different application styles entry point:
 }
 ```
 
-If you're using a publishable library, you want to distribute it with a generated CSS that can be used by the consuming applications. To do so, take a look at [this section](#distribute-publishable-libraries-themes).
+If you're using a publishable library, you want to distribute it with a generated CSS that can be used by the consuming
+applications. To do so, take a look at [this section](#distribute-publishable-libraries-themes).
 
 ### Distribute publishable libraries themes
 
-The purpose of publishable libraries is to distribute them outside of the workspace. As such, they should provide the CSS for their components so they can be used by the applications consuming them.
+The purpose of publishable libraries is to distribute them outside of the workspace. As such, they should provide the
+CSS for their components so they can be used by the applications consuming them.
 
 To build and share a theme, you can create a theme file in the library like the following:
 
@@ -435,10 +507,12 @@ To build and share a theme, you can create a theme file in the library like the 
 ```
 
 {% callout type="note" title="More details" %}
-This section assume you've already followed one of the previous sections setup and have the library with Tailwind CSS configured.
+This section assume you've already followed one of the previous sections setup and have the library with Tailwind CSS
+configured.
 {% /callout %}
 
-Next, you need to configure your project to build the theme when you build the library. Edit the project configuration to have the following targets:
+Next, you need to configure your project to build the theme when you build the library. Edit the project configuration
+to have the following targets:
 
 ```jsonc {% fileName="project.json" %}
 ...
@@ -502,7 +576,9 @@ Next, you need to configure your project to build the theme when you build the l
 ...
 ```
 
-In the above, you are configuring the library build and the Tailwind CSS processing to happen in parallel. Also, you are going to disable the automatic deletion of the output folder that `ng-packagr` does because that can cause the theme to be deleted. Instead, you configured the `build` target to delete the output folder and then kick off the library build.
+In the above, you are configuring the library build and the Tailwind CSS processing to happen in parallel. Also, you are
+going to disable the automatic deletion of the output folder that `ng-packagr` does because that can cause the theme to
+be deleted. Instead, you configured the `build` target to delete the output folder and then kick off the library build.
 
 {% callout type="note" title="Need more?" %}
 You can have more themes and simply add them to be built in the `build-lib` target commands.
@@ -519,10 +595,14 @@ Update the `libs/lib1/ng-package.json` file to set the `deleteDestPath` property
 
 You can now build the library and the theme CSS will be generated in the output folder as expected.
 
-One important thing to keep in mind is that if you use the default Tailwind CSS utility classes and distribute your theme with them, there can be conflicts with consumer applications that also use Tailwind CSS. To avoid this, you have a couple of options:
+One important thing to keep in mind is that if you use the default Tailwind CSS utility classes and distribute your
+theme with them, there can be conflicts with consumer applications that also use Tailwind CSS. To avoid this, you have a
+couple of options:
 
 - Add a unique [prefix](https://tailwindcss.com/docs/configuration#prefix) to your Tailwind CSS utility classes.
-- Create unique CSS classes for your components and theme in general using a Tailwind CSS directive like [`@apply`](https://tailwindcss.com/docs/functions-and-directives#apply) or a function like [`theme()`](https://tailwindcss.com/docs/functions-and-directives#theme).
+- Create unique CSS classes for your components and theme in general using a Tailwind CSS directive
+  like [`@apply`](https://tailwindcss.com/docs/functions-and-directives#apply) or a function
+  like [`theme()`](https://tailwindcss.com/docs/functions-and-directives#theme).
 
 {% callout type="note" title="Prefix" %}
 If you decide to use a unique prefix, remember to change the utility classes used in your components to use the prefix.
