@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { existsSync, removeSync } from 'fs-extra';
+import { existsSync, rmSync } from 'fs';
 import { directoryExists } from 'nx/src/utils/fileutils';
 
 export function findUp(
@@ -63,5 +63,5 @@ export function deleteOutputDir(root: string, outputPath: string) {
     throw new Error('Output path MUST not be project root directory!');
   }
 
-  removeSync(resolvedOutputPath);
+  rmSync(resolvedOutputPath, { recursive: true, force: true });
 }

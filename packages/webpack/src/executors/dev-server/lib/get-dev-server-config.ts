@@ -2,7 +2,7 @@ import { ExecutorContext, logger } from '@nrwl/devkit';
 import type { Configuration as WebpackConfiguration } from 'webpack';
 import type { Configuration as WebpackDevServerConfiguration } from 'webpack-dev-server';
 import * as path from 'path';
-import { readFileSync } from 'fs-extra';
+import { readFileSync } from 'fs';
 
 import { getWebpackConfig } from '../../webpack/lib/get-webpack-config';
 import { WebDevServerOptions } from '../schema';
