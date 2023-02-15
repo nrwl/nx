@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "version": 2,
+  "cli": "nx",
+  "title": "Rspack dev-server executor",
+  "description": "",
+  "type": "object",
+  "properties": {
+    "buildTarget": {
+      "type": "string",
+      "description": "The build target for rspack."
+    },
+    "port": {
+      "type": "number",
+      "description": "The port to for the dev-server to listen on."
+    }
+  },
+  "required": ["buildTarget"]
+}
