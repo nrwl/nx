@@ -22,7 +22,6 @@ describe('report', () => {
 
     it('should read angular-devkit plugins', () => {
       jest.spyOn(fileUtils, 'readJsonFile').mockImplementation((path) => {
-        console.log(path);
         if (path === 'package.json') {
           return {
             dependencies: {
@@ -32,6 +31,8 @@ describe('report', () => {
               'plugin-two': '2.0.0',
             },
           };
+        } else if (path === 'nx.json') {
+          return {};
         }
       });
       jest.spyOn(packageJsonUtils, 'readModulePackageJson').mockImplementation(
@@ -64,6 +65,8 @@ describe('report', () => {
               'plugin-two': '2.0.0',
             },
           };
+        } else if (path === 'nx.json') {
+          return {};
         }
       });
       jest.spyOn(packageJsonUtils, 'readModulePackageJson').mockImplementation(
@@ -91,6 +94,8 @@ describe('report', () => {
               'plugin-two': '2.0.0',
             },
           };
+        } else if (path === 'nx.json') {
+          return {};
         }
       });
       jest.spyOn(packageJsonUtils, 'readModulePackageJson').mockImplementation(
@@ -112,6 +117,47 @@ describe('report', () => {
       ]);
     });
 
+    it('should read nx plugins from installations', () => {
+      jest.spyOn(fileUtils, 'readJsonFile').mockImplementation((path) => {
+        if (path === 'package.json') {
+          return {
+            dependencies: {},
+            devDependencies: {
+              'plugin-two': '2.0.0',
+            },
+          };
+        } else if (path === 'nx.json') {
+          return {
+            installation: {
+              version: '1.12.0',
+              plugins: {
+                'plugin-one': '1.0.0',
+              },
+            },
+          };
+        }
+      });
+      jest.spyOn(packageJsonUtils, 'readModulePackageJson').mockImplementation(
+        provideMockPackages({
+          'plugin-one': {
+            'nx-migrations': {},
+            version: '1.0.0',
+          },
+          'plugin-two': {
+            generators: '',
+            version: '2.0.0',
+          },
+        })
+      );
+      const plugins = findInstalledCommunityPlugins();
+      expect(plugins).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ package: 'plugin-one', version: '1.0.0' }),
+          expect.objectContaining({ package: 'plugin-two', version: '2.0.0' }),
+        ])
+      );
+    });
+
     it('should not include non-plugins', () => {
       jest.spyOn(fileUtils, 'readJsonFile').mockImplementation((path) => {
         if (path === 'package.json') {
@@ -124,6 +170,8 @@ describe('report', () => {
               'other-package': '1.44.0',
             },
           };
+        } else if (path === 'nx.json') {
+          return {};
         }
       });
       jest.spyOn(packageJsonUtils, 'readModulePackageJson').mockImplementation(

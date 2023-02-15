@@ -19,7 +19,7 @@ import {
   readProjectsConfigurationFromProjectGraph,
 } from '../project-graph/project-graph';
 import { gt, valid } from 'semver';
-import { NxJsonConfiguration } from '../devkit-exports';
+import { NxJsonConfiguration } from '../config/nx-json';
 
 const nxPackageJson = readJsonFile<typeof import('../../package.json')>(
   join(__dirname, '../../package.json')
@@ -254,7 +254,7 @@ export function findInstalledCommunityPlugins(): (PackageJson & {
 })[] {
   const packageJsonDeps = getDependenciesFromPackageJson();
   const nxJsonDeps = getDependenciesFromNxJson();
-  const deps = [...new Set<string>(...packageJsonDeps, ...nxJsonDeps)];
+  const deps = packageJsonDeps.concat(nxJsonDeps);
   return deps.reduce(
     (arr: any[], nextDep: string): { project: string; version: string }[] => {
       if (
