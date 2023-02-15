@@ -347,7 +347,6 @@ describe('app', () => {
             ],
             "ignorePatterns": Array [
               "!**/*",
-              "node_modules",
               ".next/**/*",
             ],
             "overrides": Array [

@@ -42,6 +42,7 @@ function addTargetDefaults(tree: Tree) {
   nxJson.targetDefaults.lint.inputs ??= [
     'default',
     `{workspaceRoot}/.eslintrc.json`,
+    `{workspaceRoot}/.eslintignore`,
   ];
   updateNxJson(tree, nxJson);
 }
@@ -60,6 +61,7 @@ function initEsLint(tree: Tree, options: LinterInitOptions): GeneratorCallback {
     '.eslintrc.json',
     getGlobalEsLintConfiguration(options.unitTestRunner, options.rootProject)
   );
+  tree.write('.eslintignore', 'node_modules\n');
   addTargetDefaults(tree);
 
   if (tree.exists('.vscode/extensions.json')) {

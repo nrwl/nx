@@ -251,7 +251,6 @@ Object {
   ],
   "ignorePatterns": Array [
     "!**/*",
-    "node_modules",
   ],
   "overrides": Array [
     Object {
@@ -842,7 +841,6 @@ Object {
   ],
   "ignorePatterns": Array [
     "!**/*",
-    "node_modules",
   ],
   "overrides": Array [
     Object {
@@ -1195,7 +1193,6 @@ Object {
   ],
   "ignorePatterns": Array [
     "!**/*",
-    "node_modules",
   ],
   "overrides": Array [
     Object {

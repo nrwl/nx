@@ -59,3 +59,8 @@ exports[`@nrwl/linter:init --linter eslint should generate the global eslint con
 }
 "
 `;
+
+exports[`@nrwl/linter:init --linter eslint should generate the global eslint config 2`] = `
+"node_modules
+"
+`;
