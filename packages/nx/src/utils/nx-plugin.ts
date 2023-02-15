@@ -197,6 +197,8 @@ export function registerPluginTSTranspiler() {
       target: ts.ScriptTarget.ES2021,
       esModuleInterop: true,
       skipLibCheck: true,
+      experimentalDecorators: true,
+      emitDecoratorMetadata: true,
     });
   }
   tsNodeAndPathsRegistered = true;
