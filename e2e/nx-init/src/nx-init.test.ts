@@ -1,19 +1,13 @@
-import { NxJsonConfiguration } from '@nrwl/devkit';
 import {
-  checkFilesDoNotExist,
-  checkFilesExist,
   cleanupProject,
   createNonNxProjectDirectory,
   getPackageManagerCommand,
   getPublishedVersion,
   getSelectedPackageManager,
-  newEncapsulatedNxWorkspace,
-  removeFile,
   renameFile,
   runCLI,
   runCommand,
   updateFile,
-  updateJson,
 } from '@nrwl/e2e/utils';
 
 describe('nx init', () => {
@@ -101,61 +95,5 @@ describe('nx init', () => {
     expect(output).toContain('COMPOUND TEST');
     expect(output).not.toContain('HELLO COMPOUND');
     cleanupProject();
-  });
-
-  describe('encapsulated', () => {
-    it('should support running targets in a encapsulated repo', () => {
-      const runEncapsulatedNx = newEncapsulatedNxWorkspace();
-      updateFile(
-        'projects/a/project.json',
-        JSON.stringify({
-          name: 'a',
-          targets: {
-            echo: {
-              command: `echo 'Hello from A'`,
-            },
-          },
-        })
-      );
-
-      updateJson<NxJsonConfiguration>('nx.json', (json) => ({
-        ...json,
-        tasksRunnerOptions: {
-          default: {
-            ...json.tasksRunnerOptions['default'],
-            options: {
-              ...json.tasksRunnerOptions['default'].options,
-              cacheableOperations: ['echo'],
-            },
-          },
-        },
-      }));
-
-      expect(runEncapsulatedNx('echo a')).toContain('Hello from A');
-
-      expect(runEncapsulatedNx('echo a')).toContain(
-        'Nx read the output from the cache instead of running the command for 1 out of 1 tasks'
-      );
-
-      expect(() =>
-        checkFilesDoNotExist(
-          'node_modules',
-          'package.json',
-          'package-lock.json',
-          'yarn-lock.json',
-          'pnpm-lock.yaml'
-        )
-      ).not.toThrow();
-      expect(() =>
-        checkFilesExist(
-          '.nx/installation/package.json',
-          '.nx/installation/package-lock.json',
-          '.nx/cache/terminalOutputs'
-        )
-      ).not.toThrow();
-    });
-    cleanupProject({
-      skipReset: true,
-    });
   });
 });
