@@ -1,3 +1,4 @@
+import type { NxJsonConfiguration } from '@nrwl/devkit';
 import {
   cleanupProject,
   getPublishedVersion,
@@ -11,6 +12,7 @@ import {
   tmpProjPath,
   uniq,
   updateFile,
+  updateJson,
 } from '@nrwl/e2e/utils';
 import { renameSync } from 'fs';
 import * as path from 'path';
@@ -368,6 +370,15 @@ describe('migrate', () => {
   });
 
   it('should run migrations', () => {
+    updateJson('nx.json', (j: NxJsonConfiguration) => {
+      j.installation = {
+        version: getPublishedVersion(),
+        plugins: {
+          'migrate-child-package': '1.0.0',
+        },
+      };
+      return j;
+    });
     runCLI(
       'migrate migrate-parent-package@2.0.0 --from="migrate-parent-package@1.0.0"',
       {
@@ -392,6 +403,10 @@ describe('migrate', () => {
       '9.0.0'
     );
     expect(packageJson.devDependencies['migrate-child-package-5']).toEqual(
+      '9.0.0'
+    );
+    const nxJson: NxJsonConfiguration = readJson(`nx.json`);
+    expect(nxJson.installation.plugins['migrate-child-package']).toEqual(
       '9.0.0'
     );
     // should keep new line on package
