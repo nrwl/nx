@@ -43,7 +43,6 @@ export function addStorybookTask(
   projectConfig.targets['storybook'] = {
     executor: '@nrwl/storybook:storybook',
     options: {
-      uiFramework,
       port: DEFAULT_PORT,
       configDir: `${projectConfig.root}/.storybook`,
     },
@@ -58,7 +57,6 @@ export function addStorybookTask(
     executor: '@nrwl/storybook:build',
     outputs: ['{options.outputDir}'],
     options: {
-      uiFramework,
       outputDir: joinPathFragments('dist/storybook', projectName),
       configDir: `${projectConfig.root}/.storybook`,
     },
@@ -69,9 +67,9 @@ export function addStorybookTask(
     },
   };
 
-  if (usesV7) {
-    delete projectConfig.targets['storybook'].options.uiFramework;
-    delete projectConfig.targets['build-storybook'].options.uiFramework;
+  if (!usesV7) {
+    projectConfig.targets['storybook'].options.uiFramework = uiFramework;
+    projectConfig.targets['build-storybook'].options.uiFramework = uiFramework;
   }
 
   if (configureTestRunner === true) {
@@ -174,7 +172,8 @@ export function configureTsProjectConfig(
       '**/*.stories.ts',
       '**/*.stories.js',
       ...(schema.uiFramework === '@storybook/react' ||
-      schema.uiFramework === '@storybook/react-native'
+      schema.uiFramework === '@storybook/react-native' ||
+      schema.storybook7UiFramework?.startsWith('@storybook/react')
         ? ['**/*.stories.jsx', '**/*.stories.tsx']
         : []),
     ];
