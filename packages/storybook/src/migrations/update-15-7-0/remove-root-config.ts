@@ -147,7 +147,7 @@ function makeTheChanges(tree: Tree, options: {}): string | undefined {
           if (
             otherRootMainUse.parent.kind ===
               ts.SyntaxKind.PropertyAccessExpression &&
-            otherRootMainUse.parent.parent.kind === ts.SyntaxKind.IfStatement
+            otherRootMainUse.parent.parent?.kind === ts.SyntaxKind.IfStatement
           ) {
             changesToBeMade.push({
               type: ChangeType.Delete,
@@ -181,7 +181,7 @@ function checkIfUsesOldSyntaxAndUpdate(
   tree: Tree,
   filePath: string,
   rootMainVariableName: string
-) {
+): boolean {
   const mainJsTs = tree.read(filePath, 'utf-8');
   const changesToBeMade: StringChange[] = [];
   const { stringArray: addonsArrayString, expressionToDelete: addonsToDelete } =
@@ -192,7 +192,12 @@ function checkIfUsesOldSyntaxAndUpdate(
     expressionToDelete: storiesToDelete,
   } = getPropertyArray('stories', mainJsTs, rootMainVariableName);
 
-  changesToBeMade.push(addonsToDelete, storiesToDelete);
+  if (storiesToDelete) {
+    changesToBeMade.push(storiesToDelete);
+  }
+  if (addonsToDelete) {
+    changesToBeMade.push(addonsToDelete);
+  }
 
   if (addArrayToModuleExports('addons', mainJsTs, addonsArrayString)) {
     changesToBeMade.push(
