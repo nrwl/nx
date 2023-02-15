@@ -111,7 +111,6 @@ Thanks to our folder structure, we can easily configure Storybook to import all 
 For example, `libs/storybook-host-admin/.storybook/main.js`:
 
 ```javascript {% fileName="libs/storybook-host-admin/.storybook/main.js" %}
-const rootMain = require('../../../.storybook/main');
 module.exports = {
   core: { builder: 'webpack5' },
   stories: ['../../admin/ui/**/src/lib/**/*.stories.ts'],
