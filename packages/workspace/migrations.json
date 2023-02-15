@@ -135,7 +135,7 @@
     },
     "14.8.0": {
       "version": "14.8.0-beta.0",
-      "x-prompt": "Do you want to update the TypeScript version to v4.8?",
+      "x-prompt": "Do you want to update to TypeScript v4.8?",
       "packages": {
         "typescript": {
           "version": "~4.8.2",
@@ -145,7 +145,7 @@
     },
     "15.7.1": {
       "version": "15.7.1-beta.0",
-      "x-prompt": "Do you want to update the TypeScript version to v4.9?",
+      "x-prompt": "Do you want to update to TypeScript v4.9?",
       "packages": {
         "typescript": {
           "version": "~4.9.5"
