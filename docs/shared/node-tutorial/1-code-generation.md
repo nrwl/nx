@@ -67,8 +67,8 @@ CREATE .eslintrc.base.json
 UPDATE .eslintrc.json
 UPDATE e2e/.eslintrc.json
 CREATE auth/.eslintrc.json
-UPDATE jest.config.ts
 CREATE jest.config.app.ts
+UPDATE jest.config.ts
 UPDATE project.json
 CREATE auth/jest.config.ts
 CREATE auth/tsconfig.spec.json
