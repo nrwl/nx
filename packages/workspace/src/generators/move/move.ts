@@ -2,12 +2,12 @@ import {
   convertNxGenerator,
   formatFiles,
   readProjectConfiguration,
+  removeProjectConfiguration,
   Tree,
 } from '@nrwl/devkit';
-
 import { checkDestination } from './lib/check-destination';
-import { moveProject } from './lib/move-project';
-import { moveProjectConfiguration } from './lib/move-project-configuration';
+import { createProjectConfigurationInNewDestination } from './lib/create-project-configuration-in-new-destination';
+import { moveProjectFiles } from './lib/move-project-files';
 import { normalizeSchema } from './lib/normalize-schema';
 import { updateBuildTargets } from './lib/update-build-targets';
 import { updateCypressConfig } from './lib/update-cypress-config';
@@ -27,8 +27,9 @@ export async function moveGenerator(tree: Tree, rawSchema: Schema) {
   checkDestination(tree, rawSchema, projectConfig);
   const schema = normalizeSchema(tree, rawSchema, projectConfig);
 
-  moveProjectConfiguration(tree, schema, projectConfig);
-  moveProject(tree, schema, projectConfig); // we MUST move the project first, if we don't we get a "This should never happen" error 🤦‍♀️
+  removeProjectConfiguration(tree, schema.projectName);
+  moveProjectFiles(tree, schema, projectConfig);
+  createProjectConfigurationInNewDestination(tree, schema, projectConfig);
   updateImports(tree, schema, projectConfig);
   updateProjectRootFiles(tree, schema, projectConfig);
   updateCypressConfig(tree, schema, projectConfig);
