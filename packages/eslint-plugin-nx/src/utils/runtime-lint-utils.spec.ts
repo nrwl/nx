@@ -409,19 +409,16 @@ describe('isAngularSecondaryEntrypoint', () => {
       'apps/app.ts': '',
       'libs/standard/package.json': '{ "version": "0.0.0" }',
       'libs/standard/secondary/ng-package.json': JSON.stringify({
-        version: '0.0.0',
-        ngPackage: { lib: { entryFile: 'src/index.ts' } },
+        lib: { entryFile: 'src/index.ts' },
       }),
       'libs/standard/secondary/src/index.ts': 'const bla = "foo"',
       'libs/standard/tertiary/ng-package.json': JSON.stringify({
-        version: '0.0.0',
-        ngPackage: { lib: { entryFile: 'src/public_api.ts' } },
+        lib: { entryFile: 'src/public_api.ts' },
       }),
       'libs/standard/tertiary/src/public_api.ts': 'const bla = "foo"',
       'libs/features/package.json': '{ "version": "0.0.0" }',
       'libs/features/secondary/ng-package.json': JSON.stringify({
-        version: '0.0.0',
-        ngPackage: { lib: { entryFile: 'random/folder/api.ts' } },
+        lib: { entryFile: 'random/folder/api.ts' },
       }),
       'libs/features/secondary/random/folder/api.ts': 'const bla = "foo"',
     };
