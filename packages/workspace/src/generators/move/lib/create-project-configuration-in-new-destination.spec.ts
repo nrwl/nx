@@ -1,13 +1,12 @@
-import { getProjects, Tree } from '@nrwl/devkit';
 import {
   addProjectConfiguration,
   ProjectConfiguration,
-  readJson,
   readProjectConfiguration,
+  Tree,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import type { NormalizedSchema } from '../schema';
-import { moveProjectConfiguration } from './move-project-configuration';
+import { createProjectConfigurationInNewDestination } from './create-project-configuration-in-new-destination';
 
 describe('moveProjectConfiguration', () => {
   let tree: Tree;
@@ -156,11 +155,8 @@ describe('moveProjectConfiguration', () => {
   it('should rename the project', async () => {
     setupWorkspace();
 
-    moveProjectConfiguration(tree, schema, projectConfig);
+    createProjectConfigurationInNewDestination(tree, schema, projectConfig);
 
-    expect(() => {
-      readProjectConfiguration(tree, 'my-source');
-    }).toThrow();
     expect(
       readProjectConfiguration(tree, 'subfolder-my-destination')
     ).toBeDefined();
@@ -169,7 +165,7 @@ describe('moveProjectConfiguration', () => {
   it('should update paths in only the intended project', async () => {
     setupWorkspace();
 
-    moveProjectConfiguration(tree, schema, projectConfig);
+    createProjectConfigurationInNewDestination(tree, schema, projectConfig);
 
     const actualProject = readProjectConfiguration(
       tree,
@@ -186,7 +182,7 @@ describe('moveProjectConfiguration', () => {
 
   it('should update tags and implicitDependencies', () => {
     setupWorkspace();
-    moveProjectConfiguration(tree, schema, projectConfig);
+    createProjectConfigurationInNewDestination(tree, schema, projectConfig);
 
     const actualProject = readProjectConfiguration(
       tree,
@@ -194,8 +190,6 @@ describe('moveProjectConfiguration', () => {
     );
     expect(actualProject.tags).toEqual(['type:ui']);
     expect(actualProject.implicitDependencies).toEqual(['my-other-lib']);
-    const projects = Object.fromEntries(getProjects(tree));
-    expect(projects['my-source']).not.toBeDefined();
   });
 
   it('should support moving a standalone project', () => {
@@ -222,11 +216,8 @@ describe('moveProjectConfiguration', () => {
       updateImportPath: true,
     };
 
-    moveProjectConfiguration(tree, moveSchema, projectConfig);
+    createProjectConfigurationInNewDestination(tree, moveSchema, projectConfig);
 
-    expect(() => {
-      readProjectConfiguration(tree, projectName);
-    }).toThrow();
     expect(readProjectConfiguration(tree, newProjectName)).toBeDefined();
   });
 });

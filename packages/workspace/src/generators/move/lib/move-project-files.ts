@@ -7,7 +7,7 @@ import { NormalizedSchema } from '../schema';
  *
  * @param schema The options provided to the schematic
  */
-export function moveProject(
+export function moveProjectFiles(
   tree: Tree,
   schema: NormalizedSchema,
   project: ProjectConfiguration

@@ -1,12 +1,11 @@
 import {
   addProjectConfiguration,
   ProjectConfiguration,
-  removeProjectConfiguration,
   Tree,
 } from '@nrwl/devkit';
 import { NormalizedSchema } from '../schema';
 
-export function moveProjectConfiguration(
+export function createProjectConfigurationInNewDestination(
   tree: Tree,
   schema: NormalizedSchema,
   projectConfig: ProjectConfiguration
@@ -15,17 +14,13 @@ export function moveProjectConfiguration(
     projectConfig.name = schema.newProjectName;
   }
 
+  // replace old root path with new one
   const projectString = JSON.stringify(projectConfig);
   const newProjectString = projectString.replace(
     new RegExp(projectConfig.root, 'g'),
     schema.relativeToRootDestination
   );
-
-  // rename
   const newProject: ProjectConfiguration = JSON.parse(newProjectString);
-
-  // Delete the original project
-  removeProjectConfiguration(tree, schema.projectName);
 
   // Create a new project with the root replaced
   addProjectConfiguration(tree, schema.newProjectName, newProject);
