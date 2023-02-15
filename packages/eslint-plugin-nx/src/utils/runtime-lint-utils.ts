@@ -454,7 +454,8 @@ function fileIsSecondaryEntryPoint(file: string): boolean {
       joinPathFragments(workspaceRoot, parent, 'ng-package.json')
     );
     if (ngPackageContent) {
-      const entryFile = parseJson(ngPackageContent)?.ngPackage?.lib?.entryFile;
+      // https://github.com/ng-packagr/ng-packagr/blob/23c718d04eea85e015b4c261310b7bd0c39e5311/src/ng-package.schema.json#L54
+      const entryFile = parseJson(ngPackageContent)?.lib?.entryFile;
       return entryFile && file === joinPathFragments(parent, entryFile);
     }
     parent = joinPathFragments(parent, '../');
