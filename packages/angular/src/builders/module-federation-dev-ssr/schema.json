@@ -78,6 +78,10 @@
     "verbose": {
       "type": "boolean",
       "description": "Adds more details to output logging."
+    },
+    "pathToManifestFile": {
+      "type": "string",
+      "description": "Path to a module-federation.manifest.json file containing the dynamic remote applications relative to the workspace root."
     }
   },
   "additionalProperties": false,

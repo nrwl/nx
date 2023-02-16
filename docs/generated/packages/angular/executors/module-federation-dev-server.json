@@ -108,6 +108,10 @@
         "type": "array",
         "items": { "type": "string" },
         "description": "List of remote applications to not automatically serve, either statically or in development mode. This can be useful for multi-repository module federation setups where the host application uses a remote application from an external repository."
+      },
+      "pathToManifestFile": {
+        "type": "string",
+        "description": "Path to a module-federation.manifest.json file containing the dynamic remote applications relative to the workspace root."
       }
     },
     "additionalProperties": false,

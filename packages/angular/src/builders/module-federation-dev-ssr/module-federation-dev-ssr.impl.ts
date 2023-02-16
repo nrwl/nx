@@ -12,9 +12,10 @@ import {
 } from '../utilities/module-federation';
 import { switchMap, tap } from 'rxjs/operators';
 import { from } from 'rxjs';
-import { join } from 'path';
+import { extname, join } from 'path';
 import { execSync, fork } from 'child_process';
 import { scheduleTarget } from 'nx/src/adapter/ngcli-adapter';
+import { existsSync } from 'fs';
 
 export function executeModuleFederationDevSSRBuilder(
   schema: Schema,
@@ -26,6 +27,29 @@ export function executeModuleFederationDevSSRBuilder(
     readProjectsConfigurationFromProjectGraph(projectGraph);
   const ws = new Workspaces(workspaceRoot);
   const project = workspaceProjects[context.target.project];
+
+  let pathToManifestFile = join(
+    context.workspaceRoot,
+    project.sourceRoot,
+    'assets/module-federation.manifest.json'
+  );
+  if (options.pathToManifestFile) {
+    const userPathToManifestFile = join(
+      context.workspaceRoot,
+      options.pathToManifestFile
+    );
+    if (!existsSync(userPathToManifestFile)) {
+      throw new Error(
+        `Path to the Manifest File does not exist. Please check the file exists at ${userPathToManifestFile}.`
+      );
+    } else if (extname(options.pathToManifestFile) !== 'json') {
+      throw new Error(
+        `Manifest file must be JSON. Please ensure the file at ${userPathToManifestFile} is JSON.`
+      );
+    }
+
+    pathToManifestFile = userPathToManifestFile;
+  }
 
   validateDevRemotes(options, workspaceProjects);
 
@@ -40,7 +64,8 @@ export function executeModuleFederationDevSSRBuilder(
     project,
     context,
     workspaceProjects,
-    remotesToSkip
+    remotesToSkip,
+    pathToManifestFile
   );
   const remotes = [...staticRemotes, ...dynamicRemotes];
 

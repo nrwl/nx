@@ -13,4 +13,5 @@ export interface Schema {
   devRemotes?: string[];
   skipRemotes?: string[];
   verbose?: boolean;
+  pathToManifestFile?: string;
 }
