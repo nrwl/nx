@@ -1,5 +1,5 @@
 import { joinPathFragments, logger } from '@nrwl/devkit';
-import { removeSync } from 'fs-extra';
+import { rmSync } from 'fs';
 import * as ts from 'typescript';
 import type { CustomTransformers, Diagnostic, Program } from 'typescript';
 import { readTsConfig } from '../typescript';
@@ -29,7 +29,7 @@ export function compileTypeScript(options: TypeScriptCompilationOptions): {
   const tsConfig = getNormalizedTsConfig(normalizedOptions);
 
   if (normalizedOptions.deleteOutputPath) {
-    removeSync(normalizedOptions.outputPath);
+    rmSync(normalizedOptions.outputPath, { recursive: true, force: true });
   }
 
   return createProgram(tsConfig, normalizedOptions);
@@ -48,7 +48,7 @@ export function compileTypeScriptWatcher(
   const tsConfig = getNormalizedTsConfig(normalizedOptions);
 
   if (normalizedOptions.deleteOutputPath) {
-    removeSync(normalizedOptions.outputPath);
+    rmSync(normalizedOptions.outputPath, { recursive: true, force: true });
   }
 
   const host = ts.createWatchCompilerHost(
