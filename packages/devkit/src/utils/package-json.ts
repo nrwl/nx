@@ -395,7 +395,8 @@ export async function ensurePackage(
 ): Promise<void> {
   // Read package and version from root package.json file.
   const dev = options.dev ?? true;
-  const throwOnMissing = options.throwOnMissing ?? !!process.env.NX_DRY_RUN; // NX_DRY_RUN is set in `packages/nx/src/command-line/generate.ts`
+  const throwOnMissing =
+    options.throwOnMissing ?? process.env.NX_DRY_RUN === 'true'; // NX_DRY_RUN is set in `packages/nx/src/command-line/nx-commands.ts`
   const pmc = getPackageManagerCommand();
 
   let version = getPackageVersion(pkg);
