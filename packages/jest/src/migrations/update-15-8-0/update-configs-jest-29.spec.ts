@@ -21,7 +21,10 @@ describe('Jest Migration - jest 29 update configs', () => {
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
-  it.only('should update jest.config.ts', async () => {
+  afterAll(() => {
+    jest.resetAllMocks();
+  });
+  it('should update jest.config.ts', async () => {
     await setup(tree, 'my-lib');
 
     await updateConfigsJest29(tree);
@@ -34,7 +37,7 @@ describe('Jest Migration - jest 29 update configs', () => {
 
   it('should work with multiple projects + configs', async () => {
     await setup(tree, 'my-lib');
-    await setup(tree, 'another-lib');
+    await setup(tree, 'another-lib', projectGraph);
     await updateConfigsJest29(tree);
 
     const actualJestConfigTs1 = tree.read(
@@ -58,6 +61,121 @@ describe('Jest Migration - jest 29 update configs', () => {
       'utf-8'
     );
     expect(actualJestConfigJs2).toMatchSnapshot();
+  });
+
+  it('should update globalThis.ngJest.teardown to testEnvironmentOptions ', async () => {
+    await setup(tree, 'jest-preset-angular');
+    tree.write(
+      `libs/jest-preset-angular/jest.config.ts`,
+      `globalThis.ngJest = {
+  teardown: true
+}
+
+export default {
+  globals: {
+    'ts-jest': {
+      tsconfig: '<rootDir>/tsconfig.spec.json',
+      stringifyContentPathRegex: '\\.(html|svg)$',
+    }
+  },
+  transform: {
+    '^.+.(ts|mjs|js|html)$': 'jest-preset-angular',
+  },
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
+  displayName: 'jest',
+  testEnvironment: 'node',
+  preset: '../../jest.preset.js',
+};`
+    );
+    tree.write(
+      `libs/jest-preset-angular/jest.config.js`,
+      `
+globalThis.ngJest = {
+  ngcc: true,
+  teardown: false
+}
+
+module.exports = {
+  globals: {
+    'ts-jest': {
+      tsconfig: '<rootDir>/tsconfig.spec.json',
+      stringifyContentPathRegex: '\\.(html|svg)$',
+    }
+  },
+  transform: {
+    '^.+.(ts|mjs|js|html)$': 'jest-preset-angular',
+  },
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
+  testEnvironmentOptions: {
+   blah: 123,
+  },
+  displayName: 'jest',
+  testEnvironment: 'node',
+  preset: '../../jest.preset.js',
+};`
+    );
+    await updateConfigsJest29(tree);
+    const jpaJestConfigTs = tree.read(
+      `libs/jest-preset-angular/jest.config.ts`,
+      'utf-8'
+    );
+    expect(jpaJestConfigTs).toMatchSnapshot();
+    const jpaJestConfigJs = tree.read(
+      `libs/jest-preset-angular/jest.config.js`,
+      'utf-8'
+    );
+    expect(jpaJestConfigJs).toMatchSnapshot();
+  });
+
+  it('should work with jest-preset-angular', async () => {
+    await setup(tree, 'jest-preset-angular');
+    tree.write(
+      `libs/jest-preset-angular/jest.config.ts`,
+      `export default {
+  globals: {
+    'ts-jest': {
+      tsconfig: '<rootDir>/tsconfig.spec.json',
+      stringifyContentPathRegex: '\\.(html|svg)$',
+    }
+  },
+  transform: {
+    '^.+.(ts|mjs|js|html)$': 'jest-preset-angular',
+  },
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html']
+  displayName: 'jest',
+  testEnvironment: 'node',
+  preset: '../../jest.preset.js',
+};`
+    );
+    tree.write(
+      `libs/jest-preset-angular/jest.config.js`,
+      `module.exports = {
+  globals: {
+    'ts-jest': {
+      tsconfig: '<rootDir>/tsconfig.spec.json',
+      stringifyContentPathRegex: '\\.(html|svg)$',
+    }
+  },
+  transform: {
+    '^.+.(ts|mjs|js|html)$': 'jest-preset-angular',
+  },
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html']
+  displayName: 'jest',
+  testEnvironment: 'node',
+  preset: '../../jest.preset.js',
+};`
+    );
+    await updateConfigsJest29(tree);
+    const jpaJestConfigTs = tree.read(
+      `libs/jest-preset-angular/jest.config.ts`,
+      'utf-8'
+    );
+    expect(jpaJestConfigTs).toMatchSnapshot();
+    const jpaJestConfigJs = tree.read(
+      `libs/jest-preset-angular/jest.config.js`,
+      'utf-8'
+    );
+    expect(jpaJestConfigJs).toMatchSnapshot();
   });
 
   it('should work if not using ts-jest transformer', async () => {
@@ -186,7 +304,7 @@ describe('Jest Migration - jest 29 update configs', () => {
   });
 });
 
-async function setup(tree: Tree, name: string) {
+async function setup(tree: Tree, name: string, existingGraph?: ProjectGraph) {
   await libraryGenerator(tree, {
     name,
   });
@@ -250,8 +368,11 @@ preset: '../../jest.preset.js'
   );
 
   projectGraph = {
-    dependencies: {},
+    dependencies: {
+      ...existingGraph?.dependencies,
+    },
     nodes: {
+      ...existingGraph?.nodes,
       [name]: {
         name,
         type: 'lib',

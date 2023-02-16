@@ -26,6 +26,7 @@ export async function updateConfigsJest29(tree: Tree) {
           targetName
         );
         updateTsJestOptions(tree, options.jestConfig);
+        updateNgJestOptions(tree, options.jestConfig);
       }
     }
   );
@@ -77,7 +78,7 @@ snapshotFormat: { escapeString: true, printBasicPrototype: true }
   tree.write(configPath, updatedConfig);
 }
 
-function updateTsJestOptions(tree: Tree, configPath: string): string {
+function updateTsJestOptions(tree: Tree, configPath: string) {
   // query for the globals property, if they don't have one then there's nothing to modify.
   const contents = tree.read(configPath, 'utf-8');
   let tsJestGlobalsConfig: string;
@@ -103,13 +104,65 @@ function updateTsJestOptions(tree: Tree, configPath: string): string {
 
   const updatedTsJestTransformer = tsquery.replace(
     noTsJestGlobals,
-    `${TS_QUERY_JEST_CONFIG_PREFIX}> ObjectLiteralExpression PropertyAssignment:has(Identifier[name="transform"]) PropertyAssignment > StringLiteral[value="ts-jest"]`,
+    `${TS_QUERY_JEST_CONFIG_PREFIX}> ObjectLiteralExpression PropertyAssignment:has(Identifier[name="transform"]) PropertyAssignment > :has(StringLiteral[value="ts-jest"], StringLiteral[value="jest-preset-angular"])`,
     (node: ts.StringLiteral) => {
-      return `['ts-jest', ${tsJestGlobalsConfig}]`;
+      return `[${node.getText()}, ${tsJestGlobalsConfig}]`;
     }
   );
 
   tree.write(configPath, updatedTsJestTransformer);
+}
+
+function updateNgJestOptions(tree: Tree, configPath: string) {
+  const contents = tree.read(configPath, 'utf-8');
+
+  let ngJestTeardownConfig: string;
+  const noTeardownConfig = tsquery.replace(
+    contents,
+    'BinaryExpression:has(PropertyAccessExpression:has(Identifier[name=ngJest]))  PropertyAssignment:has(Identifier[name=teardown])',
+    (node: ts.PropertyAssignment) => {
+      ngJestTeardownConfig = node.initializer.getText();
+      return ' ';
+    }
+  );
+
+  if (!ngJestTeardownConfig) {
+    return;
+  }
+
+  let maybeUpdatedTestEnvOpts = tsquery.replace(
+    noTeardownConfig,
+    `${TS_QUERY_JEST_CONFIG_PREFIX} > ObjectLiteralExpression PropertyAssignment:has(Identifier[name="testEnvironmentOptions"]) ObjectLiteralExpression`,
+    (node: ts.ObjectLiteralExpression) => {
+      return `{
+  ${node.properties
+    .map((p) => getNodeWithComments(noTeardownConfig, p))
+    .join(',\n')},
+   teardown: ${ngJestTeardownConfig}
+  }`;
+    }
+  );
+
+  if (maybeUpdatedTestEnvOpts !== noTeardownConfig) {
+    tree.write(configPath, maybeUpdatedTestEnvOpts);
+    return;
+  }
+  // didn't find existing testEnvironmentOptions, so add the new property
+
+  const updatedConfig = tsquery.replace(
+    maybeUpdatedTestEnvOpts,
+    `${TS_QUERY_JEST_CONFIG_PREFIX} > ObjectLiteralExpression`,
+    (node: ts.ObjectLiteralExpression) => {
+      return `{
+${node.properties
+  .map((p) => getNodeWithComments(maybeUpdatedTestEnvOpts, p))
+  .join(',\n')},
+testEnvironmentOptions: { teardown: ${ngJestTeardownConfig} }, 
+}`;
+    },
+    { visitAllChildren: false }
+  );
+  tree.write(configPath, updatedConfig);
 }
 
 function getGlobalTsJestConfig(node: ts.PropertyAssignment): string {

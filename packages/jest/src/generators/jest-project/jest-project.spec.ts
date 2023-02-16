@@ -325,18 +325,6 @@ describe('jestProject', () => {
   });
 
   describe('--babelJest', () => {
-    // no longer true for jest v29
-    it.skip('should have globals.ts-jest configured when babelJest is false', async () => {
-      await jestProjectGenerator(tree, {
-        ...defaultOptions,
-        project: 'lib1',
-        babelJest: false,
-      } as JestProjectSchema);
-      const jestConfig = tree.read('libs/lib1/jest.config.ts', 'utf-8');
-
-      expect(jestConfig).toMatchSnapshot();
-    });
-
     it('should generate proper jest.transform when babelJest is true', async () => {
       await jestProjectGenerator(tree, {
         ...defaultOptions,

@@ -58,6 +58,73 @@ snapshotFormat: { escapeString: true, printBasicPrototype: true }
 "
 `;
 
+exports[`Jest Migration - jest 29 update configs should update globalThis.ngJest.teardown to testEnvironmentOptions  1`] = `
+"globalThis.ngJest = {
+   
+}
+
+export default {
+globals: {  },
+transform: {
+    '^.+.(ts|mjs|js|html)$': ['jest-preset-angular', {
+      tsconfig: '<rootDir>/tsconfig.spec.json',
+      stringifyContentPathRegex: '\\\\.(html|svg)$',
+    }],
+  },
+moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
+displayName: 'jest',
+testEnvironment: 'node',
+preset: '../../jest.preset.js',
+/* TODO: Update to latest Jest snapshotFormat
+ * By default Nx has kept the older style of Jest Snapshot formats
+ * to prevent breaking of any existing tests with snapshots.
+ * It's recommend you update to the latest format.
+ * You can do this by removing snapshotFormat property
+ * and running tests with --update-snapshot flag.
+ * Example: \\"nx test jest-preset-angular --update-snapshot\\"
+ * More info: https://jestjs.io/docs/upgrading-to-jest29#snapshot-format
+ */
+snapshotFormat: { escapeString: true, printBasicPrototype: true },
+testEnvironmentOptions: { teardown: true }, 
+};"
+`;
+
+exports[`Jest Migration - jest 29 update configs should update globalThis.ngJest.teardown to testEnvironmentOptions  2`] = `
+"
+globalThis.ngJest = {
+  ngcc: true,
+   
+}
+
+module.exports = {
+globals: {  },
+transform: {
+    '^.+.(ts|mjs|js|html)$': ['jest-preset-angular', {
+      tsconfig: '<rootDir>/tsconfig.spec.json',
+      stringifyContentPathRegex: '\\\\.(html|svg)$',
+    }],
+  },
+moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
+testEnvironmentOptions: {
+  blah: 123,
+   teardown: false
+  },
+displayName: 'jest',
+testEnvironment: 'node',
+preset: '../../jest.preset.js',
+/* TODO: Update to latest Jest snapshotFormat
+ * By default Nx has kept the older style of Jest Snapshot formats
+ * to prevent breaking of any existing tests with snapshots.
+ * It's recommend you update to the latest format.
+ * You can do this by removing snapshotFormat property
+ * and running tests with --update-snapshot flag.
+ * Example: \\"nx test jest-preset-angular --update-snapshot\\"
+ * More info: https://jestjs.io/docs/upgrading-to-jest29#snapshot-format
+ */
+snapshotFormat: { escapeString: true, printBasicPrototype: true }
+};"
+`;
+
 exports[`Jest Migration - jest 29 update configs should update jest.config.ts 1`] = `
 "/* eslint-disable */
 export default {
@@ -189,6 +256,58 @@ exports[`Jest Migration - jest 29 update configs should work snapshotFormat is d
   globals: { something: 'else',
 abc: [1234, true, {abc: 'yes'}] },
   snapshotFormat: {escapeString: false, printBasicPrototype: true}
+};"
+`;
+
+exports[`Jest Migration - jest 29 update configs should work with jest-preset-angular 1`] = `
+"export default {
+globals: {  },
+transform: {
+    '^.+.(ts|mjs|js|html)$': ['jest-preset-angular', {
+      tsconfig: '<rootDir>/tsconfig.spec.json',
+      stringifyContentPathRegex: '\\\\.(html|svg)$',
+    }],
+  },
+moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
+displayName: 'jest',
+testEnvironment: 'node',
+preset: '../../jest.preset.js',
+/* TODO: Update to latest Jest snapshotFormat
+ * By default Nx has kept the older style of Jest Snapshot formats
+ * to prevent breaking of any existing tests with snapshots.
+ * It's recommend you update to the latest format.
+ * You can do this by removing snapshotFormat property
+ * and running tests with --update-snapshot flag.
+ * Example: \\"nx test jest-preset-angular --update-snapshot\\"
+ * More info: https://jestjs.io/docs/upgrading-to-jest29#snapshot-format
+ */
+snapshotFormat: { escapeString: true, printBasicPrototype: true }
+};"
+`;
+
+exports[`Jest Migration - jest 29 update configs should work with jest-preset-angular 2`] = `
+"module.exports = {
+globals: {  },
+transform: {
+    '^.+.(ts|mjs|js|html)$': ['jest-preset-angular', {
+      tsconfig: '<rootDir>/tsconfig.spec.json',
+      stringifyContentPathRegex: '\\\\.(html|svg)$',
+    }],
+  },
+moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
+displayName: 'jest',
+testEnvironment: 'node',
+preset: '../../jest.preset.js',
+/* TODO: Update to latest Jest snapshotFormat
+ * By default Nx has kept the older style of Jest Snapshot formats
+ * to prevent breaking of any existing tests with snapshots.
+ * It's recommend you update to the latest format.
+ * You can do this by removing snapshotFormat property
+ * and running tests with --update-snapshot flag.
+ * Example: \\"nx test jest-preset-angular --update-snapshot\\"
+ * More info: https://jestjs.io/docs/upgrading-to-jest29#snapshot-format
+ */
+snapshotFormat: { escapeString: true, printBasicPrototype: true }
 };"
 `;
 

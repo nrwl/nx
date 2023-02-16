@@ -45,15 +45,14 @@ export function updateJestMockTypes(tree: Tree, filePath: string) {
     ':matches(ImportDeclaration, VariableStatement):has(Identifier[name="MaybeMockedDeep"], Identifier[name="MaybeMocked"]):has(StringLiteral[value="jest-mock"])',
     (node: ImportDeclaration | VariableStatement) => {
       const text = node.getText();
-      console.log('mock node', text);
-      const updated = text
-        // MaybeMockedDeep and MaybeMocked now are exported as Mocked and MockedShallow
-        .replace('MaybeMockedDeep', 'Mocked')
-        .replace('MaybeMocked', 'MockedShallow');
-      return updated;
+      return (
+        text
+          // MaybeMockedDeep and MaybeMocked now are exported as Mocked and MockedShallow
+          .replace('MaybeMockedDeep', 'Mocked')
+          .replace('MaybeMocked', 'MockedShallow')
+      );
     }
   );
-  console.log('updatedContent', updatedContent, contents);
   tree.write(filePath, updatedContent);
 }
 
