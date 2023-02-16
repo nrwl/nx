@@ -367,7 +367,7 @@ describe('Nx Plugin', () => {
 
     it('should work with ts-node only', async () => {
       const oldPackageJson: PackageJson = readJson('package.json');
-      updateJson<PackageJson>('packageJson', (j) => {
+      updateJson<PackageJson>('package.json', (j) => {
         delete j.dependencies['@swc-node/register'];
         delete j.devDependencies['@swc-node/register'];
         return j;
