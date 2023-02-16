@@ -40,11 +40,11 @@ export function executeModuleFederationDevSSRBuilder(
     );
     if (!existsSync(userPathToManifestFile)) {
       throw new Error(
-        `Path to the Manifest File does not exist. Please check the file exists at ${userPathToManifestFile}.`
+        `The provided Module Federation manifest file path does not exist. Please check the file exists at "${userPathToManifestFile}".`
       );
-    } else if (extname(options.pathToManifestFile) !== 'json') {
+    } else if (extname(options.pathToManifestFile) !== '.json') {
       throw new Error(
-        `Manifest file must be JSON. Please ensure the file at ${userPathToManifestFile} is JSON.`
+        `The Module Federation manifest file must be a JSON. Please ensure the file at ${userPathToManifestFile} is a JSON.`
       );
     }
 
