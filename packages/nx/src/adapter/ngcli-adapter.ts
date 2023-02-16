@@ -20,7 +20,7 @@ import { concat, from, Observable, of, zip } from 'rxjs';
 import { catchError, concatMap, map, tap } from 'rxjs/operators';
 import { GenerateOptions } from '../command-line/generate';
 import { ProjectConfiguration } from '../config/workspace-json-project-json';
-import { Tree } from '../generators/tree';
+import { FsTree, Tree } from '../generators/tree';
 import { readJson } from '../generators/utils/json';
 import {
   addProjectConfiguration,
@@ -566,7 +566,10 @@ export async function runMigration(
   isVerbose: boolean
 ) {
   const logger = getLogger(isVerbose);
-  const fsHost = new NxScopedHost(root);
+  const fsHost = new NxScopeHostUsedForWrappedSchematics(
+    root,
+    new FsTree(root, isVerbose)
+  );
   const workflow = createWorkflow(fsHost, root, {});
   const collection = resolveMigrationsCollection(packageName);
 
