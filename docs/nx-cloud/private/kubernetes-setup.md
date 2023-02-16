@@ -39,23 +39,17 @@ skip steps 1 and 2.
 > kubectl apply -f examples/mongodb.yml
 ```
 
-This will create a secret. You can get the value of the secret as follows:
+You might need to wait a bit for the Pods to be created.
 
-```
-> kubectl get secret cloud-mongodb-nrwl-api-admin-user -o go-template='{{range $k,$v := .data}}{{"### "}}{{$k}}{{"n"}}{{$v|base64decode}}{{"nn"}}{{end}}'
-```
-
-You might need to wait a bit for the Pods to be created before this secret will be available.
-
-The result should look like
+The default connection string for the Mongo Community Operator should look like
 this: `mongodb+srv://admin-user:DB_PASSWORD@cloud-mongodb-svc.default.svc.cluster.local/nrwl-api?replicaSet=cloud-mongodb&ssl=false`
 .
 
-Extract the connection string and paste it into your `secret.yml`.
+Take this connection string and paste it into your `examples/secret.yml`, replacing the placeholder value.
 
 ### Step 3: Create a secret
 
-Create a secret by running `kubectl apply -f examples/secret.yml`
+With the values updated, create a secret by running `kubectl apply -f examples/secret.yml`
 
 ### Step 4: Install Nx Cloud using helm
 
