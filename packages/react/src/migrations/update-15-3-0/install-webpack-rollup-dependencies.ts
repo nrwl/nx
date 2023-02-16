@@ -1,5 +1,5 @@
 import { addDependenciesToPackageJson, getProjects, Tree } from '@nrwl/devkit';
-
+import { nxVersion } from '../../utils/versions';
 export function installWebpackRollupDependencies(tree: Tree) {
   const projects = getProjects(tree);
   let shouldInstall = false;
@@ -33,6 +33,7 @@ export function installWebpackRollupDependencies(tree: Tree) {
         'url-loader': '^4.1.1',
         webpack: '^5.75.0',
         'webpack-merge': '^5.8.0',
+        '@nrwl/webpack': nxVersion,
       }
     );
   }
