@@ -132,10 +132,13 @@ export async function configurationGenerator(
     }
   }
 
+  // If we're on Storybook 7, ignore schema.uiFramework
+  const uiFrameworkUsed = schema.storybook7betaConfiguration
+    ? schema.storybook7UiFramework
+    : schema.uiFramework;
+
   const initTask = initGenerator(tree, {
-    uiFramework: schema.storybook7betaConfiguration
-      ? schema.storybook7UiFramework
-      : schema.uiFramework,
+    uiFramework: uiFrameworkUsed,
     bundler: schema.bundler,
     storybook7betaConfiguration: schema.storybook7betaConfiguration,
   });
@@ -144,9 +147,7 @@ export async function configurationGenerator(
   createProjectStorybookDir(
     tree,
     schema.name,
-    schema.storybook7betaConfiguration
-      ? schema.storybook7UiFramework
-      : schema.uiFramework,
+    uiFrameworkUsed,
     schema.js,
     schema.tsConfiguration,
     root,
@@ -166,13 +167,13 @@ export async function configurationGenerator(
   addBuildStorybookToCacheableOperations(tree);
   addStorybookToNamedInputs(tree);
 
-  if (schema.uiFramework === '@storybook/angular') {
+  if (uiFrameworkUsed === '@storybook/angular') {
     addAngularStorybookTask(tree, schema.name, schema.configureTestRunner);
   } else {
     addStorybookTask(
       tree,
       schema.name,
-      schema.uiFramework,
+      uiFrameworkUsed,
       schema.configureTestRunner,
       schema.storybook7betaConfiguration
     );
