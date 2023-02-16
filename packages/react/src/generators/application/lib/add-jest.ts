@@ -1,9 +1,12 @@
-import { ensurePackage, Tree } from '@nrwl/devkit';
+import { ensurePackage, GeneratorCallback, Tree } from '@nrwl/devkit';
 import { NormalizedSchema } from '../schema';
 import { nxVersion } from '../../../utils/versions';
 
-export async function addJest(host: Tree, options: NormalizedSchema) {
-  await ensurePackage(host, '@nrwl/jest', nxVersion);
+export async function addJest(
+  host: Tree,
+  options: NormalizedSchema
+): Promise<GeneratorCallback> {
+  ensurePackage(host, '@nrwl/jest', nxVersion);
   const { jestProjectGenerator } = await import('@nrwl/jest');
 
   if (options.unitTestRunner !== 'jest') {

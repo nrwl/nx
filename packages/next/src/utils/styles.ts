@@ -5,7 +5,7 @@ import {
   updateJson,
 } from '@nrwl/devkit';
 
-import { CSS_IN_JS_DEPENDENCIES } from '@nrwl/react';
+import { CSS_IN_JS_DEPENDENCIES } from '@nrwl/react/src/utils/styled';
 import {
   babelPluginStyledComponentsVersion,
   emotionServerVersion,

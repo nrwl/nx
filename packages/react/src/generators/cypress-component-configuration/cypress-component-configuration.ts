@@ -18,7 +18,7 @@ export async function cypressComponentConfigGenerator(
   tree: Tree,
   options: CypressComponentConfigurationSchema
 ) {
-  await ensurePackage(tree, '@nrwl/cypress', nxVersion);
+  ensurePackage(tree, '@nrwl/cypress', nxVersion);
   const { cypressComponentProject } = await import('@nrwl/cypress');
   const projectConfig = readProjectConfiguration(tree, options.project);
   const installTask = await cypressComponentProject(tree, {

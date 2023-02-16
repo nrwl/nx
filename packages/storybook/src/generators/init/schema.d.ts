@@ -4,4 +4,5 @@ export interface Schema {
   uiFramework: UiFramework | UiFramework7;
   bundler?: 'webpack' | 'vite'; // TODO(katerina): Remove when Storybook 7
   storybook7betaConfiguration?: boolean;
+  js?: boolean;
 }

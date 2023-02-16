@@ -11,7 +11,6 @@ export interface Schema {
   unitTestRunner?: 'jest' | 'none';
   e2eTestRunner?: 'cypress' | 'none';
   linter?: Linter;
-  skipWorkspaceJson?: boolean;
   js?: boolean;
   setParserOptionsProject?: boolean;
   standaloneConfig?: boolean;

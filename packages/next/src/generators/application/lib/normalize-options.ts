@@ -1,4 +1,4 @@
-import { assertValidStyle } from '@nrwl/react';
+import { assertValidStyle } from '@nrwl/react/src/utils/assertion';
 import {
   extractLayoutDirectory,
   getWorkspaceLayout,

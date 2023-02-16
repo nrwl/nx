@@ -393,7 +393,7 @@ describe('@nrwl/storybook:init', () => {
   });
 
   describe('update root tsconfig.json', () => {
-    it('should set the tsnode module to commonjs if there is a root tsconfig.json', () => {
+    it('should set the tsnode module to commonjs if there is a root tsconfig.json', async () => {
       tree.write(
         'tsconfig.json',
         JSON.stringify({
@@ -422,14 +422,14 @@ describe('@nrwl/storybook:init', () => {
           ],
         })
       );
-      initGenerator(tree, {
+      await initGenerator(tree, {
         uiFramework: '@storybook/react',
       });
       const tsconfig = readJson(tree, 'tsconfig.json');
       expect(tsconfig['ts-node'].compilerOptions.module).toEqual('commonjs');
     });
 
-    it('should set the tsnode module to commonjs and respect other tsnode settings', () => {
+    it('should set the tsnode module to commonjs and respect other tsnode settings', async () => {
       tree.write(
         'tsconfig.json',
         JSON.stringify({
@@ -457,7 +457,7 @@ describe('@nrwl/storybook:init', () => {
           },
         })
       );
-      initGenerator(tree, {
+      await initGenerator(tree, {
         uiFramework: '@storybook/react',
       });
       const tsconfig = readJson(tree, 'tsconfig.json');

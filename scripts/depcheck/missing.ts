@@ -63,6 +63,7 @@ const IGNORE_MATCHES_IN_PACKAGE = {
     'identity-obj-proxy',
     '@angular-devkit/schematics',
   ],
+  js: ['@nrwl/linter'],
   linter: [
     'eslint',
     '@angular-devkit/schematics',

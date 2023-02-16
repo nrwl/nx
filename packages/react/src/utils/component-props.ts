@@ -1,12 +1,17 @@
-import * as ts from 'typescript';
+import type * as ts from 'typescript';
 import { getComponentPropsInterface } from './ast-utils';
+
+let tsModule: typeof import('typescript');
 
 // TODO: candidate to refactor with the angular component story
 export function getArgsDefaultValue(property: ts.SyntaxKind): string {
+  if (!tsModule) {
+    tsModule = require('typescript');
+  }
   const typeNameToDefault: Record<number, any> = {
-    [ts.SyntaxKind.StringKeyword]: "''",
-    [ts.SyntaxKind.NumberKeyword]: 0,
-    [ts.SyntaxKind.BooleanKeyword]: false,
+    [tsModule.SyntaxKind.StringKeyword]: "''",
+    [tsModule.SyntaxKind.NumberKeyword]: 0,
+    [tsModule.SyntaxKind.BooleanKeyword]: false,
   };
 
   const resolvedValue = typeNameToDefault[property];
@@ -21,6 +26,9 @@ export function getDefaultsForComponent(
   sourceFile: ts.SourceFile,
   cmpDeclaration: ts.Node
 ) {
+  if (!tsModule) {
+    tsModule = require('typescript');
+  }
   const propsInterface = getComponentPropsInterface(sourceFile, cmpDeclaration);
 
   let propsTypeName: string = null;
@@ -37,7 +45,7 @@ export function getDefaultsForComponent(
   if (propsInterface) {
     propsTypeName = propsInterface.name.text;
     props = propsInterface.members.map((member: ts.PropertySignature) => {
-      if (member.type.kind === ts.SyntaxKind.FunctionType) {
+      if (member.type.kind === tsModule.SyntaxKind.FunctionType) {
         argTypes.push({
           name: (member.name as ts.Identifier).text,
           type: 'action',
@@ -58,7 +66,7 @@ export function getDefaultsForComponent(
 export function getImportForType(sourceFile: ts.SourceFile, typeName: string) {
   return sourceFile.statements.find(
     (statement: ts.Node) =>
-      ts.isImportDeclaration(statement) &&
+      tsModule.isImportDeclaration(statement) &&
       statement.getText().includes(typeName)
   );
 }

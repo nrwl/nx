@@ -13,6 +13,7 @@ import { addBabelInputs } from '@nrwl/js/src/utils/add-babel-inputs';
 import { jestInitGenerator } from '@nrwl/jest';
 import { detoxInitGenerator } from '@nrwl/detox';
 import { babelPresetReactVersion } from '@nrwl/react/src/utils/versions';
+import { initGenerator as jsInitGenerator } from '@nrwl/js';
 
 import {
   babelRuntimeVersion,
@@ -42,7 +43,10 @@ import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
 export async function reactNativeInitGenerator(host: Tree, schema: Schema) {
   addGitIgnoreEntry(host);
   addBabelInputs(host);
-
+  await jsInitGenerator(host, {
+    js: schema.js,
+    skipFormat: true,
+  });
   const tasks: GeneratorCallback[] = [];
 
   if (!schema.skipPackageJson) {
@@ -53,7 +57,7 @@ export async function reactNativeInitGenerator(host: Tree, schema: Schema) {
   }
 
   if (!schema.unitTestRunner || schema.unitTestRunner === 'jest') {
-    const jestTask = jestInitGenerator(host, schema);
+    const jestTask = await jestInitGenerator(host, schema);
     tasks.push(jestTask);
   }
 

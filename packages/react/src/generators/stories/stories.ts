@@ -4,7 +4,6 @@ import {
   findExportDeclarationsForJsx,
   getComponentNode,
 } from '../../utils/ast-utils';
-import * as ts from 'typescript';
 import {
   convertNxGenerator,
   getProjects,
@@ -16,6 +15,8 @@ import {
 } from '@nrwl/devkit';
 import { basename, join } from 'path';
 import minimatch = require('minimatch');
+
+let tsModule: typeof import('typescript');
 
 export interface StorybookStoriesSchema {
   project: string;
@@ -55,15 +56,19 @@ export function containsComponentDeclaration(
   tree: Tree,
   componentPath: string
 ): boolean {
+  if (!tsModule) {
+    tsModule = require('typescript');
+  }
+
   const contents = tree.read(componentPath, 'utf-8');
   if (contents === null) {
     throw new Error(`Failed to read ${componentPath}`);
   }
 
-  const sourceFile = ts.createSourceFile(
+  const sourceFile = tsModule.createSourceFile(
     componentPath,
     contents,
-    ts.ScriptTarget.Latest,
+    tsModule.ScriptTarget.Latest,
     true
   );
 

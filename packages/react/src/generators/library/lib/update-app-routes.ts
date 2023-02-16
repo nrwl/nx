@@ -6,20 +6,22 @@ import {
 } from '@nrwl/devkit';
 import { Tree } from 'nx/src/generators/tree';
 import { getImportPath, joinPathFragments } from 'nx/src/utils/path';
-import * as ts from 'typescript';
+import type * as ts from 'typescript';
 
 import { NormalizedSchema } from '../schema';
 import {
   addBrowserRouter,
-  addInitialRoutes,
   addRoute,
   findComponentImportPath,
 } from '../../../utils/ast-utils';
+import { addInitialRoutes } from '../../../utils/ast-utils';
 import { maybeJs } from './maybe-js';
 import {
   reactRouterDomVersion,
   typesReactRouterDomVersion,
 } from '../../../utils/versions';
+
+let tsModule: typeof import('typescript');
 
 export function updateAppRoutes(host: Tree, options: NormalizedSchema) {
   if (!options.appMain || !options.appSourceRoot) {
@@ -97,13 +99,16 @@ function readComponent(
   if (!host.exists(path)) {
     throw new Error(`Cannot find ${path}`);
   }
+  if (!tsModule) {
+    tsModule = require('typescript');
+  }
 
   const content = host.read(path, 'utf-8');
 
-  const source = ts.createSourceFile(
+  const source = tsModule.createSourceFile(
     path,
     content,
-    ts.ScriptTarget.Latest,
+    tsModule.ScriptTarget.Latest,
     true
   );
 

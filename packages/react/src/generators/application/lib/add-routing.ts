@@ -1,4 +1,3 @@
-import * as ts from 'typescript';
 import { addInitialRoutes } from '../../../utils/ast-utils';
 import { NormalizedSchema } from '../schema';
 import {
@@ -12,20 +11,25 @@ import {
   addDependenciesToPackageJson,
 } from '@nrwl/devkit';
 
+let tsModule: typeof import('typescript');
+
 export function addRouting(host: Tree, options: NormalizedSchema) {
   if (!options.routing) {
     return () => {};
   }
 
+  if (!tsModule) {
+    tsModule = require('typescript');
+  }
   const appPath = joinPathFragments(
     options.appProjectRoot,
     maybeJs(options, `src/app/${options.fileName}.tsx`)
   );
   const appFileContent = host.read(appPath, 'utf-8');
-  const appSource = ts.createSourceFile(
+  const appSource = tsModule.createSourceFile(
     appPath,
     appFileContent,
-    ts.ScriptTarget.Latest,
+    tsModule.ScriptTarget.Latest,
     true
   );
 

@@ -5,6 +5,7 @@ import {
   extractLayoutDirectory,
   formatFiles,
   generateFiles,
+  GeneratorCallback,
   getProjects,
   getWorkspaceLayout,
   joinPathFragments,
@@ -20,7 +21,10 @@ import {
 } from '@nrwl/devkit';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
-import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
+import {
+  initGenerator as jsInitGenerator,
+  getRelativePathToRootTsConfig,
+} from '@nrwl/js';
 import {
   globalJavaScriptOverrides,
   globalTypeScriptOverrides,
@@ -261,7 +265,11 @@ export async function addLinter(host: Tree, options: CypressProjectSchema) {
 
 export async function cypressProjectGenerator(host: Tree, schema: Schema) {
   const options = normalizeOptions(host, schema);
-  const tasks = [];
+  await jsInitGenerator(host, {
+    js: schema.js,
+    skipFormat: true,
+  });
+  const tasks: GeneratorCallback[] = [];
   const cypressVersion = installedCypressVersion();
   // if there is an installed cypress version, then we don't call
   // init since we want to keep the existing version that is installed

@@ -1190,14 +1190,14 @@ Detect workspace scope from the package.json name
 
 ### ensurePackage
 
-▸ **ensurePackage**(`tree`, `pkg`, `requiredVersion`, `options?`): `Promise`<`void`\>
+▸ **ensurePackage**(`tree`, `pkg`, `requiredVersion`, `options?`): `void`
 
 Ensure that dependencies and devDependencies from package.json are installed at the required versions.
 
 For example:
 
 ```typescript
-ensurePackage(tree, {}, { '@nrwl/jest': nxVersion });
+ensurePackage(tree, '@nrwl/jest', nxVersion);
 ```
 
 This will check that @nrwl/jest@<nxVersion> exists in devDependencies.
@@ -1217,7 +1217,7 @@ When running with --dryRun, the function will throw when dependencies are missin
 
 #### Returns
 
-`Promise`<`void`\>
+`void`
 
 ---
 

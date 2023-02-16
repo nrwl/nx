@@ -6,7 +6,6 @@ import {
   Tree,
 } from '@nrwl/devkit';
 import { basename, dirname, extname, relative } from 'path';
-import * as ts from 'typescript';
 import {
   findExportDeclarationsForJsx,
   getComponentNode,
@@ -15,11 +14,13 @@ import { getDefaultsForComponent } from '../../utils/component-props';
 import { nxVersion } from '../../utils/versions';
 import { ComponentTestSchema } from './schema';
 
+let tsModule: typeof import('typescript');
+
 export async function componentTestGenerator(
   tree: Tree,
   options: ComponentTestSchema
 ) {
-  await ensurePackage(tree, '@nrwl/cypress', nxVersion);
+  ensurePackage(tree, '@nrwl/cypress', nxVersion);
   const { assertMinimumCypressVersion } = await import(
     '@nrwl/cypress/src/utils/cypress-version'
   );
@@ -44,10 +45,14 @@ export async function componentTestGenerator(
 }
 
 function generateSpecsForComponents(tree: Tree, filePath: string) {
-  const sourceFile = ts.createSourceFile(
+  if (!tsModule) {
+    tsModule = require('typescript');
+  }
+
+  const sourceFile = tsModule.createSourceFile(
     filePath,
     tree.read(filePath, 'utf-8'),
-    ts.ScriptTarget.Latest,
+    tsModule.ScriptTarget.Latest,
     true
   );
 

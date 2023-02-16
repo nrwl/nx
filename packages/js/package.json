@@ -40,7 +40,6 @@
     "@babel/preset-typescript": "^7.15.0",
     "@babel/runtime": "^7.14.8",
     "@nrwl/devkit": "file:../devkit",
-    "@nrwl/linter": "file:../linter",
     "@nrwl/workspace": "file:../workspace",
     "babel-plugin-const-enum": "^1.0.1",
     "babel-plugin-macros": "^2.8.0",

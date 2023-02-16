@@ -137,8 +137,9 @@ export async function configurationGenerator(
     ? schema.storybook7UiFramework
     : schema.uiFramework;
 
-  const initTask = initGenerator(tree, {
+  const initTask = await initGenerator(tree, {
     uiFramework: uiFrameworkUsed,
+    js: schema.js,
     bundler: schema.bundler,
     storybook7betaConfiguration: schema.storybook7betaConfiguration,
   });

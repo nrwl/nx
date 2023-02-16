@@ -1,6 +1,5 @@
 import type { Tree } from '@nrwl/devkit';
 import { generateFiles, joinPathFragments } from '@nrwl/devkit';
-import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 import type { NormalizedSchema } from './normalized-schema';
 
 export function createFiles(tree: Tree, options: NormalizedSchema) {

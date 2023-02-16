@@ -129,6 +129,7 @@ describe('create-nx-workspace', () => {
     });
 
     expectNoAngularDevkit();
+    checkFilesDoNotExist('tsconfig.base.json');
   });
 
   it('should be able to create an empty workspace with ts/js capabilities', () => {

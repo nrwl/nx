@@ -13,7 +13,6 @@ import {
   Tree,
 } from '@nrwl/devkit';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
-import * as ts from 'typescript';
 import { addStyledModuleDependencies } from '../../rules/add-styled-dependencies';
 import { assertValidStyle } from '../../utils/assertion';
 import { addImport } from '../../utils/ast-utils';
@@ -103,7 +102,11 @@ function createComponentFiles(host: Tree, options: NormalizedSchema) {
   }
 }
 
+let tsModule: typeof import('typescript');
 function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
+  if (!tsModule) {
+    tsModule = require('typescript');
+  }
   const workspace = getProjects(host);
   const isApp = workspace.get(options.project).projectType === 'application';
 
@@ -114,10 +117,10 @@ function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
     );
     const indexSource = host.read(indexFilePath, 'utf-8');
     if (indexSource !== null) {
-      const indexSourceFile = ts.createSourceFile(
+      const indexSourceFile = tsModule.createSourceFile(
         indexFilePath,
         indexSource,
-        ts.ScriptTarget.Latest,
+        tsModule.ScriptTarget.Latest,
         true
       );
       const changes = applyChangesToString(

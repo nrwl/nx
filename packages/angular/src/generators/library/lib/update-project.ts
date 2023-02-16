@@ -8,7 +8,7 @@ import {
   Tree,
   updateJson,
 } from '@nrwl/devkit';
-import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
+import { getRelativePathToRootTsConfig } from '@nrwl/js';
 import { replaceAppNameWithPath } from '@nrwl/workspace/src/utils/cli-config-utils';
 import { NormalizedSchema } from './normalized-schema';
 import { updateNgPackage } from './update-ng-package';

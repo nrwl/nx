@@ -1,4 +1,4 @@
-import * as ts from 'typescript';
+import type * as ts from 'typescript';
 import {
   addDependenciesToPackageJson,
   applyChangesToString,
@@ -24,14 +24,25 @@ import {
 } from '../../utils/versions';
 import { addStaticRouter } from '../../utils/ast-utils';
 
+let tsModule: typeof import('typescript');
+
 function readEntryFile(
   host: Tree,
   path: string
 ): { content: string; source: ts.SourceFile } {
+  if (!tsModule) {
+    tsModule = require('typescript');
+  }
+
   const content = host.read(path, 'utf-8');
   return {
     content,
-    source: ts.createSourceFile(path, content, ts.ScriptTarget.Latest, true),
+    source: tsModule.createSourceFile(
+      path,
+      content,
+      tsModule.ScriptTarget.Latest,
+      true
+    ),
   };
 }
 

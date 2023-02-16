@@ -1,5 +1,5 @@
 import { Tree } from 'nx/src/generators/tree';
-import * as shared from '@nrwl/workspace/src/utils/create-ts-config';
+import * as shared from '@nrwl/js/src/utils/typescript/create-ts-config';
 import { writeJson } from 'nx/src/generators/utils/json';
 
 export function createTsConfig(

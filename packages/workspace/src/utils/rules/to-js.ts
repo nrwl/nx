@@ -1,4 +1,3 @@
-import { transpile, JsxEmit, ScriptTarget } from 'typescript';
 import {
   forEach,
   Rule,
@@ -10,7 +9,14 @@ import {
 import { normalize } from '@angular-devkit/core';
 import { updateJsonInTree } from '../ast-utils';
 
+let tsModule: typeof import('typescript');
+
 export function toJS(): Rule {
+  if (!tsModule) {
+    tsModule = require('typescript');
+  }
+
+  const { transpile, JsxEmit, ScriptTarget } = tsModule;
   return chain([
     forEach(
       when(

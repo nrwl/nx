@@ -7,6 +7,8 @@ import {
   Tree,
 } from '@nrwl/devkit';
 import { jestInitGenerator } from '@nrwl/jest';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+import { initGenerator as jsInitGenerator } from '@nrwl/js';
 import {
   nxVersion,
   tslibVersion,
@@ -35,22 +37,23 @@ function normalizeOptions(schema: Schema) {
 
 export async function initGenerator(tree: Tree, schema: Schema) {
   const options = normalizeOptions(schema);
+  await jsInitGenerator(tree, {
+    js: schema.js,
+    skipFormat: true,
+  });
 
-  let jestInstall: GeneratorCallback;
+  const tasks: GeneratorCallback[] = [];
   if (options.unitTestRunner === 'jest') {
-    jestInstall = await jestInitGenerator(tree, schema);
+    tasks.push(await jestInitGenerator(tree, schema));
   }
-  const installTask = await updateDependencies(tree);
+
+  tasks.push(updateDependencies(tree));
+
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
 
-  return async () => {
-    if (jestInstall) {
-      await jestInstall();
-    }
-    await installTask();
-  };
+  return runTasksInSerial(...tasks);
 }
 
 export default initGenerator;

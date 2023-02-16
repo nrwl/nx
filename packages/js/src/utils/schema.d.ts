@@ -1,5 +1,5 @@
 // nx-ignore-next-line
-const { Linter } = require('@nrwl/linter');
+const { Linter } = require('@nrwl/linter'); // use require to import to avoid circular dependency
 import type {
   AssetGlob,
   FileInputOutput,
