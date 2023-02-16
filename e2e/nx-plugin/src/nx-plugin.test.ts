@@ -15,7 +15,11 @@ import {
   readFile,
   removeFile,
   cleanupProject,
+  runCommand,
+  getPackageManagerCommand,
+  updateJson,
 } from '@nrwl/e2e/utils';
+import type { PackageJson } from 'nx/src/utils/package-json';
 
 import { ASYNC_GENERATOR_EXECUTOR_CONTENTS } from './nx-plugin.fixtures';
 
@@ -359,6 +363,30 @@ describe('Nx Plugin', () => {
 
       expect(() => checkFilesExist(`libs/${generatedProject}`)).not.toThrow();
       expect(() => runCLI(`execute ${generatedProject}`)).not.toThrow();
+    });
+
+    it('should work with ts-node only', async () => {
+      const oldPackageJson: PackageJson = readJson('package.json');
+      updateJson<PackageJson>('packageJson', (j) => {
+        delete j.dependencies['@swc-node/register'];
+        delete j.devDependencies['@swc-node/register'];
+        return j;
+      });
+      runCommand(getPackageManagerCommand().install);
+
+      const generator = uniq('generator');
+
+      expect(() => {
+        runCLI(
+          `generate @nrwl/nx-plugin:generator ${generator} --project=${plugin}`
+        );
+
+        runCLI(
+          `generate @${npmScope}/${plugin}:${generator} --name ${uniq('test')}`
+        );
+      }).not.toThrow();
+      updateFile('package.json', JSON.stringify(oldPackageJson, null, 2));
+      runCommand(getPackageManagerCommand().install);
     });
   });
 
