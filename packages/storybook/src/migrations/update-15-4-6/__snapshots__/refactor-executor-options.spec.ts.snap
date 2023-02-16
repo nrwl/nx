@@ -2,6 +2,101 @@
 
 exports[`update the executor options to match the new schema for non-angular projects should update the target options 1`] = `
 Map {
+  "main-vite-new" => Object {
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "name": "main-vite-new",
+    "projectType": "application",
+    "root": "apps/main-vite-new",
+    "sourceRoot": "apps/main-vite-new/src",
+    "tags": Array [],
+    "targets": Object {
+      "build": Object {
+        "configurations": Object {
+          "development": Object {
+            "mode": "development",
+          },
+          "production": Object {
+            "mode": "production",
+          },
+        },
+        "defaultConfiguration": "production",
+        "executor": "@nrwl/vite:build",
+        "options": Object {
+          "outputPath": "dist/apps/main-vite-new",
+        },
+        "outputs": Array [
+          "{options.outputPath}",
+        ],
+      },
+      "build-storybook": Object {
+        "configurations": Object {
+          "ci": Object {
+            "quiet": true,
+          },
+        },
+        "executor": "@nrwl/storybook:build",
+        "options": Object {
+          "configDir": "apps/main-vite-new/.storybook",
+          "outputDir": "dist/storybook/main-vite-new",
+          "uiFramework": "@storybook/react",
+        },
+        "outputs": Array [
+          "{options.outputDir}",
+        ],
+      },
+      "lint": Object {
+        "executor": "@nrwl/linter:eslint",
+        "options": Object {
+          "lintFilePatterns": Array [
+            "apps/main-vite-new/**/*.{ts,tsx,js,jsx}",
+          ],
+        },
+        "outputs": Array [
+          "{options.outputFile}",
+        ],
+      },
+      "serve": Object {
+        "configurations": Object {
+          "development": Object {
+            "buildTarget": "main-vite-new:build:development",
+            "hmr": true,
+          },
+          "production": Object {
+            "buildTarget": "main-vite-new:build:production",
+            "hmr": false,
+          },
+        },
+        "defaultConfiguration": "development",
+        "executor": "@nrwl/vite:dev-server",
+        "options": Object {
+          "buildTarget": "main-vite-new:build",
+        },
+      },
+      "storybook": Object {
+        "configurations": Object {
+          "ci": Object {
+            "quiet": true,
+          },
+        },
+        "executor": "@nrwl/storybook:storybook",
+        "options": Object {
+          "configDir": "apps/main-vite-new/.storybook",
+          "port": 4400,
+          "uiFramework": "@storybook/react",
+        },
+      },
+      "test": Object {
+        "executor": "@nrwl/vite:test",
+        "options": Object {
+          "passWithNoTests": true,
+          "reportsDirectory": "../../coverage/apps/main-vite-new",
+        },
+        "outputs": Array [
+          "coverage/apps/main-vite-new",
+        ],
+      },
+    },
+  },
   "main-vite" => Object {
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "name": "main-vite",
