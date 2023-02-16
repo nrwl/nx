@@ -10,11 +10,11 @@ import {
   readProjectConfiguration,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
+import type { Tree } from '@nrwl/devkit';
 import { jestProjectGenerator } from '@nrwl/jest';
-import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
+import { getRelativePathToRootTsConfig } from '@nrwl/js';
 import * as path from 'path';
 
-import type { Tree } from '@nrwl/devkit';
 import type { Schema } from './schema';
 
 interface NormalizedSchema extends Schema {

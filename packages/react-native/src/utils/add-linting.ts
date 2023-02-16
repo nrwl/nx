@@ -7,7 +7,10 @@ import {
   Tree,
   updateJson,
 } from '@nrwl/devkit';
-import { extendReactEslintJson, extraEslintDependencies } from '@nrwl/react';
+import {
+  extendReactEslintJson,
+  extraEslintDependencies,
+} from '@nrwl/react/src/utils/lint';
 import type { Linter as ESLintLinter } from 'eslint';
 
 interface NormalizedSchema {

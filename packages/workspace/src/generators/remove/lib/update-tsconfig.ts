@@ -5,7 +5,7 @@ import {
   Tree,
   updateJson,
 } from '@nrwl/devkit';
-import { getRootTsConfigPathInTree } from '../../../utilities/typescript';
+import { getRootTsConfigPathInTree } from '../../../utilities/ts-config';
 import { Schema } from '../schema';
 import {
   createProjectRootMappings,

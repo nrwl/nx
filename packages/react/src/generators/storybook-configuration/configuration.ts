@@ -11,7 +11,7 @@ import {
 import { nxVersion } from '../../utils/versions';
 
 async function generateStories(host: Tree, schema: StorybookConfigureSchema) {
-  await ensurePackage(host, '@nrwl/cypress', nxVersion);
+  ensurePackage(host, '@nrwl/cypress', nxVersion);
   const { getE2eProjectName } = await import(
     '@nrwl/cypress/src/utils/project-name'
   );
@@ -35,7 +35,7 @@ export async function storybookConfigurationGenerator(
   host: Tree,
   schema: StorybookConfigureSchema
 ) {
-  await ensurePackage(host, '@nrwl/storybook', nxVersion);
+  ensurePackage(host, '@nrwl/storybook', nxVersion);
   const { configurationGenerator } = await import('@nrwl/storybook');
 
   let bundler = schema.bundler ?? 'webpack';

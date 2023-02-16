@@ -1,9 +1,10 @@
 import { names, Tree } from '@nrwl/devkit';
 import { insertImport } from '@nrwl/workspace/src/utilities/ast-utils';
-import * as ts from 'typescript';
 import { addImportToModule } from '../../../utils/nx-devkit/ast-utils';
 import { NormalizedSchema } from './normalized-schema';
 import { addRoute } from '../../../utils/nx-devkit/route-utils';
+
+let tsModule: typeof import('typescript');
 
 export function addChildren(
   tree: Tree,
@@ -12,16 +13,19 @@ export function addChildren(
   if (!tree.exists(options.parent)) {
     throw new Error(`Cannot find '${options.parent}'`);
   }
+  if (!tsModule) {
+    tsModule = require('typescript');
+  }
 
   const routeFileSource = tree.read(options.parent, 'utf-8');
   const constName = options.standalone
     ? `${names(options.name).propertyName}Routes`
     : `${names(options.fileName).propertyName}Routes`;
   const importPath = options.importPath;
-  let sourceFile = ts.createSourceFile(
+  let sourceFile = tsModule.createSourceFile(
     options.parent,
     routeFileSource,
-    ts.ScriptTarget.Latest,
+    tsModule.ScriptTarget.Latest,
     true
   );
 

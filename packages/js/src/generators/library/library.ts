@@ -19,12 +19,13 @@ import {
   writeJson,
 } from '@nrwl/devkit';
 import { getImportPath } from 'nx/src/utils/path';
-import { Linter, lintProjectGenerator } from '@nrwl/linter';
+// nx-ignore-next-line
+const { Linter } = require('@nrwl/linter'); // use require to import to avoid circular dependency
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import {
   getRelativePathToRootTsConfig,
-  getRootTsConfigPathInTree,
-} from '@nrwl/workspace/src/utilities/typescript';
+  updateRootTsConfig,
+} from '../../utils/typescript/ts-config';
 import { join } from 'path';
 import { addMinimalPublishScript } from '../../utils/minimal-publish-script';
 import { LibraryGeneratorSchema } from '../../utils/schema';
@@ -35,6 +36,7 @@ import {
   nxVersion,
   typesNodeVersion,
 } from '../../utils/versions';
+import jsInitGenerator from '../init/init';
 
 export async function libraryGenerator(
   tree: Tree,
@@ -54,6 +56,10 @@ export async function projectGenerator(
   destinationDir: string,
   filesDir: string
 ) {
+  await jsInitGenerator(tree, {
+    js: schema.js,
+    skipFormat: true,
+  });
   const tasks: GeneratorCallback[] = [];
   const options = normalizeOptions(tree, schema, destinationDir);
 
@@ -64,7 +70,7 @@ export async function projectGenerator(
   tasks.push(addProjectDependencies(tree, options));
 
   if (options.bundler === 'vite') {
-    await ensurePackage(tree, '@nrwl/vite', nxVersion);
+    ensurePackage(tree, '@nrwl/vite', nxVersion);
     // nx-ignore-next-line
     const { viteConfigurationGenerator } = require('@nrwl/vite');
     const viteTask = await viteConfigurationGenerator(tree, {
@@ -75,10 +81,6 @@ export async function projectGenerator(
       includeLib: true,
     });
     tasks.push(viteTask);
-  }
-
-  if (!schema.skipTsConfig) {
-    updateRootTsConfig(tree, options);
   }
 
   if (schema.bundler === 'webpack' || schema.bundler === 'rollup') {
@@ -99,7 +101,7 @@ export async function projectGenerator(
     options.unitTestRunner === 'vitest' &&
     options.bundler !== 'vite' // Test would have been set up already
   ) {
-    await ensurePackage(tree, '@nrwl/vite', nxVersion);
+    ensurePackage(tree, '@nrwl/vite', nxVersion);
     // nx-ignore-next-line
     const { vitestGenerator } = require('@nrwl/vite');
     const vitestTask = await vitestGenerator(tree, {
@@ -108,6 +110,10 @@ export async function projectGenerator(
       coverageProvider: 'c8',
     });
     tasks.push(vitestTask);
+  }
+
+  if (!schema.skipTsConfig) {
+    updateRootTsConfig(tree, options);
   }
 
   if (!options.skipFormat) {
@@ -191,10 +197,12 @@ function addProject(
   }
 }
 
-export function addLint(
+export async function addLint(
   tree: Tree,
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
+  ensurePackage(tree, '@nrwl/linter', nxVersion);
+  const { lintProjectGenerator } = require('@nrwl/linter');
   return lintProjectGenerator(tree, {
     project: options.name,
     linter: options.linter,
@@ -320,7 +328,7 @@ async function addJest(
   tree: Tree,
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
-  await ensurePackage(tree, '@nrwl/jest', nxVersion);
+  ensurePackage(tree, '@nrwl/jest', nxVersion);
   const { jestProjectGenerator } = require('@nrwl/jest');
   return await jestProjectGenerator(tree, {
     ...options,
@@ -433,30 +441,6 @@ function getCaseAwareFileName(options: {
   const normalized = names(options.fileName);
 
   return options.pascalCaseFiles ? normalized.className : normalized.fileName;
-}
-
-function updateRootTsConfig(host: Tree, options: NormalizedSchema) {
-  updateJson(host, getRootTsConfigPathInTree(host), (json) => {
-    const c = json.compilerOptions;
-    c.paths = c.paths || {};
-    delete c.paths[options.name];
-
-    if (c.paths[options.importPath]) {
-      throw new Error(
-        `You already have a library using the import path "${options.importPath}". Make sure to specify a unique one.`
-      );
-    }
-
-    c.paths[options.importPath] = [
-      joinPathFragments(
-        options.projectRoot,
-        './src',
-        'index.' + (options.js ? 'js' : 'ts')
-      ),
-    ];
-
-    return json;
-  });
 }
 
 function addProjectDependencies(

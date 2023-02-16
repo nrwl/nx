@@ -32,6 +32,7 @@
   },
   "dependencies": {
     "@nrwl/devkit": "file:../devkit",
+    "@nrwl/js": "file:../js",
     "@nrwl/linter": "file:../linter",
     "@nrwl/workspace": "file:../workspace",
     "@phenomnomnominal/tsquery": "4.1.1",

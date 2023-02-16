@@ -1,7 +1,6 @@
 import type { GeneratorCallback, Tree } from '@nrwl/devkit';
 import { convertNxGenerator, formatFiles } from '@nrwl/devkit';
 import { libraryGenerator as jsLibraryGenerator } from '@nrwl/js';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { addDependencies } from '../init/lib';
 import {
   addExportsToBarrelFile,
@@ -19,10 +18,7 @@ export async function libraryGenerator(
   rawOptions: LibraryGeneratorOptions
 ): Promise<GeneratorCallback> {
   const options = normalizeOptions(tree, rawOptions);
-  const jsLibraryTask = await jsLibraryGenerator(
-    tree,
-    toJsLibraryGeneratorOptions(options)
-  );
+  await jsLibraryGenerator(tree, toJsLibraryGeneratorOptions(options));
   const installDepsTask = addDependencies(tree);
   deleteFiles(tree, options);
   createFiles(tree, options);
@@ -34,7 +30,7 @@ export async function libraryGenerator(
     await formatFiles(tree);
   }
 
-  return runTasksInSerial(jsLibraryTask, installDepsTask);
+  return installDepsTask;
 }
 
 export default libraryGenerator;

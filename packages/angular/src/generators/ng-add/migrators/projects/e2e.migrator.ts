@@ -22,8 +22,7 @@ import {
 } from '@nrwl/devkit';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { insertImport } from '@nrwl/workspace/src/utilities/ast-utils';
-import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
-import { tsquery } from '@phenomnomnominal/tsquery';
+import { getRootTsConfigPathInTree } from '@nrwl/js';
 import { basename, relative } from 'path';
 import type {
   Node,
@@ -578,6 +577,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
   }
 
   private updateCypress10ConfigFile(configFilePath: string): void {
+    const { tsquery } = require('@phenomnomnominal/tsquery');
     this.cypressPreset = nxE2EPreset(configFilePath);
 
     const fileContent = this.tree.read(configFilePath, 'utf-8');
@@ -657,6 +657,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
     recorder: FileChangeRecorder,
     { ...globalConfig }: CypressCommonConfig
   ): void {
+    const { tsquery } = require('@phenomnomnominal/tsquery');
     const e2eConfig = {};
     const presetSpreadAssignment = `...nxE2EPreset(__dirname),`;
     if (!e2eNode) {

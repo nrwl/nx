@@ -459,27 +459,27 @@ describe('ensurePackage', () => {
   it('should return successfully when package is present', async () => {
     writeJson(tree, 'package.json', {});
 
-    await expect(
+    expect(
       ensurePackage(tree, '@nrwl/devkit', '>=15.0.0', {
         throwOnMissing: true,
       })
-    ).resolves.toBeUndefined(); // return void
+    ).toBeUndefined(); // return void
   });
 
   it('should throw when dependencies are missing', async () => {
     writeJson(tree, 'package.json', {});
 
-    await expect(() =>
+    expect(() =>
       ensurePackage(tree, '@nrwl/does-not-exist', '>=15.0.0', {
         throwOnMissing: true,
       })
-    ).rejects.toThrow(/-D( -W)? @nrwl\/does-not-exist@>=15.0.0/);
+    ).toThrow(/-D( -W)? @nrwl\/does-not-exist@>=15.0.0/);
 
-    await expect(() =>
+    expect(() =>
       ensurePackage(tree, '@nrwl/does-not-exist', '>=15.0.0', {
         dev: false,
         throwOnMissing: true,
       })
-    ).rejects.toThrow('@nrwl/does-not-exist@>=15.0.0');
+    ).toThrow('@nrwl/does-not-exist@>=15.0.0');
   });
 });

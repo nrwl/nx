@@ -1,7 +1,6 @@
 import type { Tree } from '@nrwl/devkit';
 import { joinPathFragments } from '@nrwl/devkit';
 import type { NormalizedSchema } from './normalized-schema';
-import { tsquery } from '@phenomnomnominal/tsquery';
 
 export function convertToStandaloneApp(tree: Tree, options: NormalizedSchema) {
   const pathToAppModule = joinPathFragments(
@@ -24,6 +23,7 @@ function updateMainEntrypoint(
 ) {
   let routerModuleSetup: string;
   if (options.routing) {
+    const { tsquery } = require('@phenomnomnominal/tsquery');
     const appModuleContents = tree.read(pathToAppModule, 'utf-8');
     const ast = tsquery.ast(appModuleContents);
 
@@ -73,6 +73,7 @@ function updateAppComponent(tree: Tree, options: NormalizedSchema) {
   );
   const appComponentContents = tree.read(pathToAppComponent, 'utf-8');
 
+  const { tsquery } = require('@phenomnomnominal/tsquery');
   const ast = tsquery.ast(appComponentContents);
   const COMPONENT_DECORATOR_SELECTOR =
     'Decorator > CallExpression:has(Identifier[name=Component])  ObjectLiteralExpression';

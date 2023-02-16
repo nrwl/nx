@@ -15,7 +15,6 @@ import {
 } from '@nrwl/devkit';
 import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
 import { CypressExecutorOptions } from '../../executors/cypress/cypress.impl';
-import { cypressVersion } from '../../utils/versions';
 import {
   addConfigToTsConfig,
   createNewCypressConfig,

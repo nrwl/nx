@@ -7,7 +7,7 @@ import {
   Tree,
   updateJson,
 } from '@nrwl/devkit';
-import { libraryGenerator as reactLibraryGenerator } from '@nrwl/react';
+import { libraryGenerator as reactLibraryGenerator } from '@nrwl/react/src/generators/library/library';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { nextInitGenerator } from '../init/init';
 import { Schema } from './schema';

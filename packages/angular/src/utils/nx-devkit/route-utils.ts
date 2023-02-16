@@ -1,8 +1,8 @@
 import { Tree } from '@nrwl/devkit';
-import { tsquery } from '@phenomnomnominal/tsquery';
-import * as ts from 'typescript';
 import { insertImport } from '@nrwl/workspace/src/utilities/ast-utils';
 import { addRouteToNgModule } from './ast-utils';
+
+let tsModule: typeof import('typescript');
 
 export function addRoute(
   tree: Tree,
@@ -17,14 +17,18 @@ export function addRoute(
       `Path to parent routing declaration (${routesFile}) does not exist. Please ensure path is correct.`
     );
   }
+  if (!tsModule) {
+    tsModule = require('typescript');
+  }
+  const { tsquery } = require('@phenomnomnominal/tsquery');
 
   let routesFileContents = tree.read(routesFile, 'utf-8');
 
   if (!lazy) {
-    let parentSourceFile = ts.createSourceFile(
+    let parentSourceFile = tsModule.createSourceFile(
       routesFile,
       routesFileContents,
-      ts.ScriptTarget.Latest,
+      tsModule.ScriptTarget.Latest,
       true
     );
 
@@ -51,10 +55,10 @@ export function addRoute(
 
   if (!isRoutesArray) {
     if (routesFileContents.includes('@NgModule')) {
-      const sourceFile = ts.createSourceFile(
+      const sourceFile = tsModule.createSourceFile(
         routesFile,
         routesFileContents,
-        ts.ScriptTarget.Latest,
+        tsModule.ScriptTarget.Latest,
         true
       );
 
@@ -91,6 +95,7 @@ export function addProviderToRoute(
     );
   }
 
+  const { tsquery } = require('@phenomnomnominal/tsquery');
   let routesFileContents = tree.read(routesFile, 'utf-8');
 
   const ast = tsquery.ast(routesFileContents);

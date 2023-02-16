@@ -1,16 +1,21 @@
 import type { Tree } from '@nrwl/devkit';
 import type { NormalizedSchema } from './normalized-schema';
 
-import * as ts from 'typescript';
 import { replaceNodeValue } from '@nrwl/workspace/src/utilities/ast-utils';
 import { getDecoratorPropertyValueNode } from '../../../utils/nx-devkit/ast-utils';
 
 import { nrwlHomeTemplate } from './nrwl-home-tpl';
 
-export function updateAppComponentTemplate(
+let tsModule: typeof import('typescript');
+
+export async function updateAppComponentTemplate(
   host: Tree,
   options: NormalizedSchema
 ) {
+  if (!tsModule) {
+    tsModule = require('typescript');
+  }
+
   const content = options.routing
     ? `${nrwlHomeTemplate.getSelector(
         options.prefix
@@ -35,10 +40,10 @@ export function updateAppComponentTemplate(
 
   replaceNodeValue(
     host,
-    ts.createSourceFile(
+    tsModule.createSourceFile(
       componentPath,
       host.read(componentPath, 'utf-8'),
-      ts.ScriptTarget.Latest,
+      tsModule.ScriptTarget.Latest,
       true
     ),
     componentPath,

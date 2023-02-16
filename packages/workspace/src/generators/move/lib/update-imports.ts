@@ -12,12 +12,14 @@ import {
   readJson,
   getImportPath,
 } from '@nrwl/devkit';
-import * as ts from 'typescript';
-import { getRootTsConfigPathInTree } from '../../../utilities/typescript';
+import type * as ts from 'typescript';
+import { getRootTsConfigPathInTree } from '../../../utilities/ts-config';
 import { findNodes } from 'nx/src/utils/typescript';
 import { NormalizedSchema } from '../schema';
 import { normalizeSlashes } from './utils';
 import { relative } from 'path';
+
+let tsModule: typeof import('typescript');
 
 /**
  * Updates all the imports in the workspace and modifies the tsconfig appropriately.
@@ -118,11 +120,14 @@ export function updateImports(
  * Changes imports in a file from one import to another
  */
 function updateImportPaths(tree: Tree, path: string, from: string, to: string) {
+  if (!tsModule) {
+    tsModule = require('typescript');
+  }
   const contents = tree.read(path, 'utf-8');
-  const sourceFile = ts.createSourceFile(
+  const sourceFile = tsModule.createSourceFile(
     path,
     contents,
-    ts.ScriptTarget.Latest,
+    tsModule.ScriptTarget.Latest,
     true
   );
 
@@ -143,15 +148,18 @@ function updateImportDeclarations(
   from: string,
   to: string
 ): StringChange[] {
+  if (!tsModule) {
+    tsModule = require('typescript');
+  }
   const importDecls = findNodes(
     sourceFile,
-    ts.SyntaxKind.ImportDeclaration
+    tsModule.SyntaxKind.ImportDeclaration
   ) as ts.ImportDeclaration[];
 
   const changes: StringChange[] = [];
 
   for (const { moduleSpecifier } of importDecls) {
-    if (ts.isStringLiteral(moduleSpecifier)) {
+    if (tsModule.isStringLiteral(moduleSpecifier)) {
       changes.push(...updateModuleSpecifier(moduleSpecifier, from, to));
     }
   }
@@ -167,9 +175,12 @@ function updateDynamicImports(
   from: string,
   to: string
 ): StringChange[] {
+  if (!tsModule) {
+    tsModule = require('typescript');
+  }
   const expressions = findNodes(
     sourceFile,
-    ts.SyntaxKind.CallExpression
+    tsModule.SyntaxKind.CallExpression
   ) as ts.CallExpression[];
 
   const changes: StringChange[] = [];
@@ -179,19 +190,19 @@ function updateDynamicImports(
 
     // handle dynamic import statements
     if (
-      expression.kind === ts.SyntaxKind.ImportKeyword &&
+      expression.kind === tsModule.SyntaxKind.ImportKeyword &&
       moduleSpecifier &&
-      ts.isStringLiteral(moduleSpecifier)
+      tsModule.isStringLiteral(moduleSpecifier)
     ) {
       changes.push(...updateModuleSpecifier(moduleSpecifier, from, to));
     }
 
     // handle require statements
     if (
-      ts.isIdentifier(expression) &&
+      tsModule.isIdentifier(expression) &&
       expression.text === 'require' &&
       moduleSpecifier &&
-      ts.isStringLiteral(moduleSpecifier)
+      tsModule.isStringLiteral(moduleSpecifier)
     ) {
       changes.push(...updateModuleSpecifier(moduleSpecifier, from, to));
     }

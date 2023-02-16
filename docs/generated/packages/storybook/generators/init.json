@@ -52,6 +52,11 @@
         "type": "boolean",
         "default": false,
         "hidden": true
+      },
+      "js": {
+        "type": "boolean",
+        "description": "Generate JavaScript story files rather than TypeScript story files.",
+        "default": false
       }
     },
     "presets": []

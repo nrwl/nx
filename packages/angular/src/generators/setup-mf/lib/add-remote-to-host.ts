@@ -8,10 +8,12 @@ import {
 } from '@nrwl/devkit';
 import type { Schema } from '../schema';
 import { tsquery } from '@phenomnomnominal/tsquery';
-import * as ts from 'typescript';
+import type * as ts from 'typescript';
 import { ArrayLiteralExpression } from 'typescript';
 import { insertImport } from '@nrwl/workspace/src/utilities/ast-utils';
 import { addRoute } from '../../../utils/nx-devkit/route-utils';
+
+let tsModule: typeof import('typescript');
 
 export function checkIsCommaNeeded(mfRemoteText: string) {
   const remoteText = mfRemoteText.replace(/\s+/g, '');
@@ -118,6 +120,9 @@ function addLazyLoadedRouteToHostAppModule(
   options: Schema,
   hostFederationType: 'dynamic' | 'static'
 ) {
+  if (!tsModule) {
+    tsModule = require('typescript');
+  }
   const hostAppConfig = readProjectConfiguration(tree, options.host);
 
   const pathToHostRootRouting = `${hostAppConfig.sourceRoot}/app/app.routes.ts`;
@@ -128,10 +133,10 @@ function addLazyLoadedRouteToHostAppModule(
 
   const hostRootRoutingFile = tree.read(pathToHostRootRouting, 'utf-8');
 
-  let sourceFile = ts.createSourceFile(
+  let sourceFile = tsModule.createSourceFile(
     pathToHostRootRouting,
     hostRootRoutingFile,
-    ts.ScriptTarget.Latest,
+    tsModule.ScriptTarget.Latest,
     true
   );
 

@@ -2,7 +2,7 @@ import * as path from 'path';
 import { Configuration, WebpackPluginInstance, ProgressPlugin } from 'webpack';
 import { ExecutorContext } from 'nx/src/config/misc-interfaces';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
-import { readTsConfig } from '@nrwl/workspace/src/utilities/typescript';
+import { readTsConfig } from '@nrwl/js';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import TerserPlugin = require('terser-webpack-plugin');
 import nodeExternals = require('webpack-node-externals');

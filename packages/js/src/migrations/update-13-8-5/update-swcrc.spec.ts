@@ -15,9 +15,9 @@ describe('Migration: adjust .swcrc', () => {
   let tree: Tree;
   let projectConfiguration: ProjectConfiguration;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    libraryGenerator(tree, {
+    await libraryGenerator(tree, {
       name: 'swc',
       buildable: true,
       linter: 'none',

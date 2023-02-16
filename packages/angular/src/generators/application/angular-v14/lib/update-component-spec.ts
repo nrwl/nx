@@ -1,22 +1,26 @@
 import type { Tree } from '@nrwl/devkit';
 import type { NormalizedSchema } from './normalized-schema';
 
-import * as ts from 'typescript';
 import { insertImport } from '@nrwl/workspace/src/utilities/ast-utils';
 import {
   addImportToTestBed,
   replaceIntoToTestBed,
 } from '../../../../utils/nx-devkit/ast-utils';
 
+let tsModule: typeof import('typescript');
+
 export function updateComponentSpec(host: Tree, options: NormalizedSchema) {
+  if (!tsModule) {
+    tsModule = require('typescript');
+  }
   if (options.skipTests !== true) {
     const componentSpecPath = `${options.appProjectRoot}/src/app/app.component.spec.ts`;
     const componentSpecSource = host.read(componentSpecPath, 'utf-8');
 
-    let componentSpecSourceFile = ts.createSourceFile(
+    let componentSpecSourceFile = tsModule.createSourceFile(
       componentSpecPath,
       componentSpecSource,
-      ts.ScriptTarget.Latest,
+      tsModule.ScriptTarget.Latest,
       true
     );
 

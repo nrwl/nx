@@ -10,6 +10,7 @@ import {
 } from '@nrwl/devkit';
 import { jestInitGenerator } from '@nrwl/jest';
 import { Linter } from '@nrwl/linter';
+import { initGenerator as jsInitGenerator } from '@nrwl/js';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { join } from 'path';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
@@ -68,19 +69,28 @@ export async function angularInitGenerator(
 
   const options = normalizeOptions(rawOptions);
   setDefaults(tree, options);
+  await jsInitGenerator(tree, {
+    js: false,
+    skipFormat: true,
+  });
 
-  const depsTask = !options.skipPackageJson
-    ? updateDependencies(tree)
-    : () => {};
+  const tasks: GeneratorCallback[] = [];
+
+  if (!options.skipPackageJson) {
+    tasks.push(updateDependencies(tree));
+  }
   const unitTestTask = await addUnitTestRunner(tree, options);
-  const e2eTask = addE2ETestRunner(tree, options);
+  tasks.push(unitTestTask);
+  const e2eTask = await addE2ETestRunner(tree, options);
+  tasks.push(e2eTask);
+
   addGitIgnoreEntry(tree, '.angular');
 
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
 
-  return runTasksInSerial(depsTask, unitTestTask, e2eTask);
+  return runTasksInSerial(...tasks);
 }
 
 function normalizeOptions(options: Schema): Required<Schema> {
@@ -178,7 +188,10 @@ async function addUnitTestRunner(
   }
 }
 
-function addE2ETestRunner(tree: Tree, options: Schema): GeneratorCallback {
+async function addE2ETestRunner(
+  tree: Tree,
+  options: Schema
+): Promise<GeneratorCallback> {
   switch (options.e2eTestRunner) {
     case E2eTestRunner.Protractor:
       return !options.skipPackageJson

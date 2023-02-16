@@ -6,12 +6,14 @@ import {
   Tree,
 } from '@nrwl/devkit';
 import { basename, join } from 'path';
-import * as ts from 'typescript';
+import type * as ts from 'typescript';
 import {
   findExportDeclarationsForJsx,
   getComponentNode,
   getComponentPropsInterface,
 } from '../../utils/ast-utils';
+
+let tsModule: typeof import('typescript');
 
 export interface CreateComponentSpecFileSchema {
   project: string;
@@ -29,10 +31,13 @@ export function componentCypressGenerator(
 
 // TODO: candidate to refactor with the angular component story
 export function getArgsDefaultValue(property: ts.SyntaxKind): string {
+  if (!tsModule) {
+    tsModule = require('typescript');
+  }
   const typeNameToDefault: Record<number, any> = {
-    [ts.SyntaxKind.StringKeyword]: '',
-    [ts.SyntaxKind.NumberKeyword]: 0,
-    [ts.SyntaxKind.BooleanKeyword]: false,
+    [tsModule.SyntaxKind.StringKeyword]: '',
+    [tsModule.SyntaxKind.NumberKeyword]: 0,
+    [tsModule.SyntaxKind.BooleanKeyword]: false,
   };
 
   const resolvedValue = typeNameToDefault[property];
@@ -49,6 +54,9 @@ export function createComponentSpecFile(
   tree: Tree,
   { project, componentPath, js, cypressProject }: CreateComponentSpecFileSchema
 ) {
+  if (!tsModule) {
+    tsModule = require('typescript');
+  }
   const e2eProjectName = cypressProject || `${project}-e2e`;
   const projects = getProjects(tree);
   const e2eProject = projects.get(e2eProjectName);
@@ -73,10 +81,10 @@ export function createComponentSpecFile(
     throw new Error(`Failed to read ${componentFilePath}`);
   }
 
-  const sourceFile = ts.createSourceFile(
+  const sourceFile = tsModule.createSourceFile(
     componentFilePath,
     contents,
-    ts.ScriptTarget.Latest,
+    tsModule.ScriptTarget.Latest,
     true
   );
 

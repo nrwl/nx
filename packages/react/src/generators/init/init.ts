@@ -10,6 +10,7 @@ import {
   writeJson,
 } from '@nrwl/devkit';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+import { initGenerator as jsInitGenerator } from '@nrwl/js';
 import {
   babelPresetReactVersion,
   nxVersion,
@@ -85,13 +86,19 @@ function initRootBabelConfig(tree: Tree, schema: InitSchema) {
 }
 
 export async function reactInitGenerator(host: Tree, schema: InitSchema) {
+  await jsInitGenerator(host, {
+    js: schema.js,
+    skipFormat: true,
+  });
   const tasks: GeneratorCallback[] = [];
 
   setDefault(host);
 
   if (!schema.e2eTestRunner || schema.e2eTestRunner === 'cypress') {
-    await ensurePackage(host, '@nrwl/cypress', nxVersion);
-    const { cypressInitGenerator } = await import('@nrwl/cypress');
+    ensurePackage(host, '@nrwl/cypress', nxVersion);
+    const { cypressInitGenerator } = await import(
+      '@nrwl/cypress/src/generators/init/init'
+    );
     const cypressTask = cypressInitGenerator(host, {});
     tasks.push(cypressTask);
   }

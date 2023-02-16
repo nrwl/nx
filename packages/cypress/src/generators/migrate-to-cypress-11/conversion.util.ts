@@ -8,14 +8,11 @@ import {
   visitNotIgnoredFiles,
   normalizePath,
 } from '@nrwl/devkit';
-import { tsquery } from '@phenomnomnominal/tsquery';
 import { basename, dirname, extname, relative } from 'path';
-import {
-  isCallExpression,
-  isExportDeclaration,
-  isImportDeclaration,
-  StringLiteral,
-} from 'typescript';
+import type { StringLiteral } from 'typescript';
+
+let tsModule: typeof import('typescript');
+let tsquery: typeof import('@phenomnomnominal/tsquery').tsquery;
 
 const validFilesEndingsToUpdate = [
   '.js',
@@ -272,6 +269,14 @@ export function updateImports(
   oldImportPath: string,
   newImportPath: string
 ) {
+  if (!tsquery) {
+    tsquery = require('@phenomnomnominal/tsquery').tsquery;
+  }
+  if (!tsModule) {
+    tsModule = require('typescript');
+  }
+  const { isCallExpression, isExportDeclaration, isImportDeclaration } =
+    tsModule;
   const endOfImportSelector = `StringLiteral[value=/${oldImportPath}$/]`;
   const fileContent = tree.read(filePath, 'utf-8');
   const newContent = tsquery.replace(

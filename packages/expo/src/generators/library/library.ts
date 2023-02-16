@@ -14,6 +14,7 @@ import {
   updateJson,
 } from '@nrwl/devkit';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+import { updateRootTsConfig } from '@nrwl/js';
 
 import init from '../init/init';
 import { addLinting } from '../../utils/add-linting';
@@ -52,7 +53,7 @@ export async function expoLibraryGenerator(
   );
 
   if (!options.skipTsConfig) {
-    updateBaseTsConfig(host, options);
+    updateRootTsConfig(host, options);
   }
 
   const jestTask = await addJest(
@@ -129,31 +130,6 @@ function updateTsConfig(tree: Tree, options: NormalizedSchema) {
       return json;
     }
   );
-}
-
-function updateBaseTsConfig(host: Tree, options: NormalizedSchema) {
-  updateJson(host, 'tsconfig.base.json', (json) => {
-    const c = json.compilerOptions;
-    c.paths = c.paths || {};
-    delete c.paths[options.name];
-
-    if (c.paths[options.importPath]) {
-      throw new Error(
-        `You already have a library using the import path "${options.importPath}". Make sure to specify a unique one.`
-      );
-    }
-
-    const { libsDir } = getWorkspaceLayout(host);
-
-    c.paths[options.importPath] = [
-      maybeJs(
-        options,
-        joinPathFragments(libsDir, `${options.projectDirectory}/src/index.ts`)
-      ),
-    ];
-
-    return json;
-  });
 }
 
 function createFiles(host: Tree, options: NormalizedSchema) {

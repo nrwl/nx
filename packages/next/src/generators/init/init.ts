@@ -7,7 +7,9 @@ import {
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { jestInitGenerator } from '@nrwl/jest';
 import { cypressInitGenerator } from '@nrwl/cypress';
-import { reactDomVersion, reactInitGenerator, reactVersion } from '@nrwl/react';
+import { reactDomVersion, reactVersion } from '@nrwl/react/src/utils/versions';
+import reactInitGenerator from '@nrwl/react/src/generators/init/init';
+import { initGenerator as jsInitGenerator } from '@nrwl/js';
 
 import {
   eslintConfigNextVersion,
@@ -35,10 +37,14 @@ function updateDependencies(host: Tree) {
 }
 
 export async function nextInitGenerator(host: Tree, schema: InitSchema) {
+  await jsInitGenerator(host, {
+    js: schema.js,
+    skipFormat: true,
+  });
   const tasks: GeneratorCallback[] = [];
 
   if (!schema.unitTestRunner || schema.unitTestRunner === 'jest') {
-    const jestTask = jestInitGenerator(host, schema);
+    const jestTask = await jestInitGenerator(host, schema);
     tasks.push(jestTask);
   }
   if (!schema.e2eTestRunner || schema.e2eTestRunner === 'cypress') {

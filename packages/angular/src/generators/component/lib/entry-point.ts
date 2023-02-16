@@ -1,5 +1,4 @@
 import type { Tree } from '@nrwl/devkit';
-import { tsquery } from '@phenomnomnominal/tsquery';
 import type { StringLiteral } from 'typescript';
 import { getRelativeImportToFile } from '../../utils/path';
 
@@ -12,6 +11,7 @@ export function shouldExportInEntryPoint(
     return false;
   }
 
+  const { tsquery } = require('@phenomnomnominal/tsquery');
   const moduleImportPath = getRelativeImportToFile(entryPoint, modulePath);
   const entryPointContent = tree.read(entryPoint, 'utf-8');
   const entryPointAst = tsquery.ast(entryPointContent);

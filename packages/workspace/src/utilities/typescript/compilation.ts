@@ -1,8 +1,10 @@
 import { joinPathFragments, logger } from '@nrwl/devkit';
 import { rmSync } from 'fs';
-import * as ts from 'typescript';
+import type * as ts from 'typescript';
 import type { CustomTransformers, Diagnostic, Program } from 'typescript';
-import { readTsConfig } from '../typescript';
+import { readTsConfig } from '../ts-config';
+
+let tsModule: typeof import('typescript');
 
 export interface TypeScriptCompilationOptions {
   outputPath: string;
@@ -44,6 +46,9 @@ export function compileTypeScriptWatcher(
     errorCount: number
   ) => void | Promise<void>
 ) {
+  if (!tsModule) {
+    tsModule = require('typescript');
+  }
   const normalizedOptions = normalizeOptions(options);
   const tsConfig = getNormalizedTsConfig(normalizedOptions);
 
@@ -51,10 +56,10 @@ export function compileTypeScriptWatcher(
     rmSync(normalizedOptions.outputPath, { recursive: true, force: true });
   }
 
-  const host = ts.createWatchCompilerHost(
+  const host = tsModule.createWatchCompilerHost(
     tsConfig.fileNames,
     tsConfig.options,
-    ts.sys
+    tsModule.sys
   );
 
   const originalAfterProgramCreate = host.afterProgramCreate;
@@ -94,7 +99,7 @@ export function compileTypeScriptWatcher(
     await callback?.(a, b, c, d);
   };
 
-  return ts.createWatchProgram(host);
+  return tsModule.createWatchProgram(host);
 }
 
 function mergeCustomTransformers(
@@ -153,8 +158,11 @@ function createProgram(
   tsconfig: ts.ParsedCommandLine,
   { projectName, getCustomTransformers }: TypeScriptCompilationOptions
 ): { success: boolean } {
-  const host = ts.createCompilerHost(tsconfig.options);
-  const program = ts.createProgram({
+  if (!tsModule) {
+    tsModule = require('typescript');
+  }
+  const host = tsModule.createCompilerHost(tsconfig.options);
+  const program = tsModule.createProgram({
     rootNames: tsconfig.fileNames,
     options: tsconfig.options,
     host,
@@ -168,11 +176,11 @@ function createProgram(
     getCustomTransformers?.(program)
   );
   if (results.emitSkipped) {
-    const diagnostics = ts.formatDiagnosticsWithColorAndContext(
+    const diagnostics = tsModule.formatDiagnosticsWithColorAndContext(
       results.diagnostics,
       {
-        getCurrentDirectory: () => ts.sys.getCurrentDirectory(),
-        getNewLine: () => ts.sys.newLine,
+        getCurrentDirectory: () => tsModule.sys.getCurrentDirectory(),
+        getNewLine: () => tsModule.sys.newLine,
         getCanonicalFileName: (name) => name,
       }
     );

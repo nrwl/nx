@@ -11,6 +11,8 @@ import {
   updateNxJson,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
+import { initGenerator as jsInitGenerator } from '@nrwl/js';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { findRootJestConfig } from '../../utils/config/find-root-jest-files';
 import {
   babelJestVersion,
@@ -184,18 +186,27 @@ function updateExtensions(host: Tree) {
   });
 }
 
-export function jestInitGenerator(tree: Tree, schema: JestInitSchema) {
+export async function jestInitGenerator(
+  tree: Tree,
+  schema: JestInitSchema
+): Promise<GeneratorCallback> {
   const options = normalizeOptions(schema);
+  await jsInitGenerator(tree, {
+    js: schema.js,
+    skipFormat: true,
+  });
+  const tasks: GeneratorCallback[] = [];
+
   createJestConfig(tree, options);
 
-  let installTask: GeneratorCallback = () => {};
   if (!options.skipPackageJson) {
     removeDependenciesFromPackageJson(tree, ['@nrwl/jest'], []);
-    installTask = updateDependencies(tree, options);
+    const installTask = updateDependencies(tree, options);
+    tasks.push(installTask);
   }
 
   updateExtensions(tree);
-  return installTask;
+  return runTasksInSerial(...tasks);
 }
 
 function normalizeOptions(options: JestInitSchema) {

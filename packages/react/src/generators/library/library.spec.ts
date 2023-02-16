@@ -97,7 +97,8 @@ describe('lib', () => {
 
       await libraryGenerator(tree, defaultSchema);
 
-      const tsconfigJson = readJson(tree, '/tsconfig.base.json');
+      expect(tree.exists('tsconfig.base.json')).toEqual(true);
+      const tsconfigJson = readJson(tree, 'tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
         'libs/my-lib/src/index.ts',
       ]);

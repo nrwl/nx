@@ -1,37 +1,11 @@
 import type { Tree } from '@nrwl/devkit';
-import { joinPathFragments, updateJson } from '@nrwl/devkit';
-import {
-  getRelativePathToRootTsConfig,
-  getRootTsConfigPathInTree,
-} from '@nrwl/workspace/src/utilities/typescript';
+import { updateJson } from '@nrwl/devkit';
+import { getRelativePathToRootTsConfig } from '@nrwl/js';
 import { NormalizedSchema } from './normalized-schema';
 import {
   createTsConfig,
   extractTsConfigBase,
 } from '../../utils/create-ts-config';
-
-function updateRootConfig(
-  host: Tree,
-  options: NormalizedSchema['libraryOptions']
-) {
-  updateJson(host, getRootTsConfigPathInTree(host), (json) => {
-    const c = json.compilerOptions;
-    c.paths = c.paths || {};
-    delete c.paths[options.name];
-
-    if (c.paths[options.importPath]) {
-      throw new Error(
-        `You already have a library using the import path "${options.importPath}". Make sure to specify a unique one.`
-      );
-    }
-
-    c.paths[options.importPath] = [
-      joinPathFragments(options.projectRoot, '/src/index.ts'),
-    ];
-
-    return json;
-  });
-}
 
 function updateProjectConfig(
   host: Tree,
@@ -82,7 +56,6 @@ export function updateTsConfig(
   options: NormalizedSchema['libraryOptions']
 ) {
   extractTsConfigBase(host);
-  updateRootConfig(host, options);
   updateProjectConfig(host, options);
   updateProjectIvyConfig(host, options);
 }

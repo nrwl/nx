@@ -1,8 +1,10 @@
-import * as ts from 'typescript';
+import type * as ts from 'typescript';
 import { applyChangesToString, ChangeType, Tree } from '@nrwl/devkit';
 import { Config } from '@jest/types';
 import { createContext, runInContext } from 'vm';
 import { dirname, join } from 'path';
+
+let tsModule: typeof import('typescript');
 
 function makeTextToInsert(
   value: unknown,
@@ -15,8 +17,12 @@ function findPropertyAssignment(
   object: ts.ObjectLiteralExpression,
   propertyName: string
 ) {
+  if (!tsModule) {
+    tsModule = require('typescript');
+  }
+
   return object.properties.find((prop) => {
-    if (!ts.isPropertyAssignment(prop)) {
+    if (!tsModule.isPropertyAssignment(prop)) {
       return false;
     }
     const propNameText = prop.name.getText();
@@ -35,6 +41,11 @@ export function addOrUpdateProperty(
   value: unknown,
   path: string
 ) {
+  if (!tsModule) {
+    tsModule = require('typescript');
+  }
+  const { SyntaxKind } = tsModule;
+
   const propertyName = properties.shift();
   const propertyAssignment = findPropertyAssignment(object, propertyName);
 
@@ -42,10 +53,10 @@ export function addOrUpdateProperty(
 
   if (propertyAssignment) {
     if (
-      propertyAssignment.initializer.kind === ts.SyntaxKind.StringLiteral ||
-      propertyAssignment.initializer.kind === ts.SyntaxKind.NumericLiteral ||
-      propertyAssignment.initializer.kind === ts.SyntaxKind.FalseKeyword ||
-      propertyAssignment.initializer.kind === ts.SyntaxKind.TrueKeyword
+      propertyAssignment.initializer.kind === SyntaxKind.StringLiteral ||
+      propertyAssignment.initializer.kind === SyntaxKind.NumericLiteral ||
+      propertyAssignment.initializer.kind === SyntaxKind.FalseKeyword ||
+      propertyAssignment.initializer.kind === SyntaxKind.TrueKeyword
     ) {
       const updatedContents = applyChangesToString(originalContents, [
         {
@@ -65,8 +76,7 @@ export function addOrUpdateProperty(
     }
 
     if (
-      propertyAssignment.initializer.kind ===
-      ts.SyntaxKind.ArrayLiteralExpression
+      propertyAssignment.initializer.kind === SyntaxKind.ArrayLiteralExpression
     ) {
       const arrayLiteral =
         propertyAssignment.initializer as ts.ArrayLiteralExpression;
@@ -106,8 +116,7 @@ export function addOrUpdateProperty(
         return;
       }
     } else if (
-      propertyAssignment.initializer.kind ===
-      ts.SyntaxKind.ObjectLiteralExpression
+      propertyAssignment.initializer.kind === SyntaxKind.ObjectLiteralExpression
     ) {
       return addOrUpdateProperty(
         tree,
@@ -143,6 +152,10 @@ export function removeProperty(
   object: ts.ObjectLiteralExpression,
   properties: string[]
 ): ts.PropertyAssignment | null {
+  if (!tsModule) {
+    tsModule = require('typescript');
+  }
+
   const propertyName = properties.shift();
   const propertyAssignment = findPropertyAssignment(object, propertyName);
 
@@ -150,7 +163,7 @@ export function removeProperty(
     if (
       properties.length > 0 &&
       propertyAssignment.initializer.kind ===
-        ts.SyntaxKind.ObjectLiteralExpression
+        tsModule.SyntaxKind.ObjectLiteralExpression
     ) {
       return removeProperty(
         propertyAssignment.initializer as ts.ObjectLiteralExpression,
@@ -164,20 +177,28 @@ export function removeProperty(
 }
 
 function isModuleExport(node: ts.Statement) {
+  if (!tsModule) {
+    tsModule = require('typescript');
+  }
+
   return (
-    ts.isExpressionStatement(node) &&
+    tsModule.isExpressionStatement(node) &&
     node.expression?.kind &&
-    ts.isBinaryExpression(node.expression) &&
+    tsModule.isBinaryExpression(node.expression) &&
     node.expression.left.getText() === 'module.exports' &&
-    node.expression.operatorToken?.kind === ts.SyntaxKind.EqualsToken
+    node.expression.operatorToken?.kind === tsModule.SyntaxKind.EqualsToken
   );
 }
 
 function isDefaultExport(node: ts.Statement) {
+  if (!tsModule) {
+    tsModule = require('typescript');
+  }
+
   return (
-    ts.isExportAssignment(node) &&
+    tsModule.isExportAssignment(node) &&
     node.expression?.kind &&
-    ts.isObjectLiteralExpression(node.expression) &&
+    tsModule.isObjectLiteralExpression(node.expression) &&
     node.getText().startsWith('export default')
   );
 }
@@ -188,10 +209,14 @@ function isDefaultExport(node: ts.Statement) {
 export function jestConfigObjectAst(
   fileContent: string
 ): ts.ObjectLiteralExpression {
-  const sourceFile = ts.createSourceFile(
+  if (!tsModule) {
+    tsModule = require('typescript');
+  }
+
+  const sourceFile = tsModule.createSourceFile(
     'jest.config.ts',
     fileContent,
-    ts.ScriptTarget.Latest,
+    tsModule.ScriptTarget.Latest,
     true
   );
 
@@ -200,7 +225,7 @@ export function jestConfigObjectAst(
   );
 
   let ast: ts.ObjectLiteralExpression;
-  if (ts.isExpressionStatement(exportStatement)) {
+  if (tsModule.isExpressionStatement(exportStatement)) {
     const moduleExports = exportStatement.expression as ts.BinaryExpression;
     if (!moduleExports) {
       throw new Error(
@@ -211,7 +236,7 @@ export function jestConfigObjectAst(
     }
 
     ast = moduleExports.right as ts.ObjectLiteralExpression;
-  } else if (ts.isExportAssignment(exportStatement)) {
+  } else if (tsModule.isExportAssignment(exportStatement)) {
     const defaultExport =
       exportStatement.expression as ts.ObjectLiteralExpression;
 
@@ -233,7 +258,7 @@ export function jestConfigObjectAst(
     );
   }
 
-  if (!ts.isObjectLiteralExpression(ast)) {
+  if (!tsModule.isObjectLiteralExpression(ast)) {
     throw new Error(
       `The 'export default' or 'module.exports' expression is not an object literal.`
     );

@@ -6,7 +6,7 @@ import {
   updateJson,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
-import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
+import { getRelativePathToRootTsConfig } from '@nrwl/js';
 import type { NormalizedSchema } from './normalized-schema';
 
 export function updateE2eProject(tree: Tree, options: NormalizedSchema) {

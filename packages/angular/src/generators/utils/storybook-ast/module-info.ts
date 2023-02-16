@@ -6,7 +6,6 @@ import {
   visitNotIgnoredFiles,
 } from '@nrwl/devkit';
 import { findNodes } from 'nx/src/utils/typescript';
-import { tsquery } from '@phenomnomnominal/tsquery';
 import { extname } from 'path';
 import type {
   ClassDeclaration,
@@ -79,6 +78,7 @@ export function getModuleFilePaths(
 }
 
 function hasNgModule(tree: Tree, filePath: string): boolean {
+  const { tsquery } = require('@phenomnomnominal/tsquery');
   const fileContent = tree.read(filePath, 'utf-8');
   const ast = tsquery.ast(fileContent);
   const ngModule = tsquery(

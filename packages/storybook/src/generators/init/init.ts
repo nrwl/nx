@@ -7,6 +7,7 @@ import {
   updateJson,
   updateNxJson,
 } from '@nrwl/devkit';
+import { initGenerator as jsInitGenerator } from '@nrwl/js';
 
 import {
   babelCoreVersion,
@@ -210,7 +211,11 @@ function editRootTsConfig(tree: Tree) {
   }
 }
 
-export function initGenerator(tree: Tree, schema: Schema) {
+export async function initGenerator(tree: Tree, schema: Schema) {
+  await jsInitGenerator(tree, {
+    js: schema.js,
+    skipFormat: true,
+  });
   const installTask = checkDependenciesInstalled(tree, schema);
   moveToDevDependencies(tree);
   editRootTsConfig(tree);

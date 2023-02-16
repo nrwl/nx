@@ -3,19 +3,23 @@ import {
   addGlobal,
   removeChange,
 } from '@nrwl/workspace/src/utilities/ast-utils';
-import * as ts from 'typescript';
 import type { NormalizedOptions } from '../schema';
+
+let tsModule: typeof import('typescript');
 
 export function addExportsToBarrelFile(
   tree: Tree,
   options: NormalizedOptions
 ): void {
+  if (!tsModule) {
+    tsModule = require('typescript');
+  }
   const indexPath = `${options.projectRoot}/src/index.ts`;
   const indexContent = tree.read(indexPath, 'utf-8');
-  let sourceFile = ts.createSourceFile(
+  let sourceFile = tsModule.createSourceFile(
     indexPath,
     indexContent,
-    ts.ScriptTarget.Latest,
+    tsModule.ScriptTarget.Latest,
     true
   );
 

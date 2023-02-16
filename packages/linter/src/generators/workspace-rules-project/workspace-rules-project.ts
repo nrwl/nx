@@ -13,7 +13,7 @@ import {
   updateJson,
   updateNxJson,
 } from '@nrwl/devkit';
-import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
+import { getRelativePathToRootTsConfig } from '@nrwl/js';
 import { join } from 'path';
 import { workspaceLintPluginDir } from '../../utils/workspace-lint-rules';
 import { swcCoreVersion, swcNodeVersion } from 'nx/src/utils/versions';
@@ -24,7 +24,7 @@ export const WORKSPACE_RULES_PROJECT_NAME = 'eslint-rules';
 export const WORKSPACE_PLUGIN_DIR = 'tools/eslint-rules';
 
 export async function lintWorkspaceRulesProjectGenerator(tree: Tree) {
-  await ensurePackage(tree, '@nrwl/jest/', nxVersion);
+  ensurePackage(tree, '@nrwl/jest/', nxVersion);
   const { addPropertyToJestConfig, jestProjectGenerator } = await import(
     '@nrwl/jest'
   );

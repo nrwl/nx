@@ -8,7 +8,7 @@ import {
   offsetFromRoot,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
-import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
+import { getRootTsConfigPathInTree } from '@nrwl/js';
 import { basename } from 'path';
 import type { Logger, ProjectMigrationInfo } from '../../utilities';
 import { BuilderMigrator } from './builder.migrator';

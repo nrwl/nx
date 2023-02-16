@@ -7,11 +7,25 @@
     "cli": "nx",
     "title": "Init nrwl/js",
     "description": "Init generator placeholder for nrwl/js.",
+    "properties": {
+      "js": {
+        "type": "boolean",
+        "default": false,
+        "description": "Use JavaScript instead of TypeScript"
+      },
+      "skipFormat": {
+        "type": "boolean",
+        "aliases": ["skip-format"],
+        "description": "Skip formatting files.",
+        "default": true,
+        "x-priority": "internal"
+      }
+    },
     "presets": []
   },
   "aliases": ["lib"],
   "x-type": "init",
-  "description": "Init placeholder.",
+  "description": "Initialize a TS/JS workspace.",
   "hidden": true,
   "implementation": "/packages/js/src/generators/init/init#initGenerator.ts",
   "path": "/packages/js/src/generators/init/schema.json",
