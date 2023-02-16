@@ -1365,6 +1365,112 @@ describe('Migration', () => {
         },
       });
     });
+
+    it('should generate the correct migrations when  "--only-skipped-migrations"', async () => {
+      const migrator = new Migrator({
+        packageJson: createPackageJson({
+          dependencies: {
+            parent: '1.0.0',
+            pkg1: '1.0.0',
+          },
+        }),
+        getInstalledPackageVersion: (p, overrides) => overrides?.[p] ?? '1.0.0',
+        fetch: (p) => {
+          if (p === 'parent') {
+            return Promise.resolve({
+              version: '2.0.0',
+              packageGroup: [{ package: 'pkg1', version: '*' }],
+              generators: {
+                // previous migration
+                migration1: {
+                  version: '1.0.0',
+                  description: 'migration1 desc',
+                  requires: {
+                    // didn't meet requirements and now meets requirements, should collect it
+                    pkg1: '>=2.0.0',
+                  },
+                },
+                // previous migration
+                migration2: {
+                  version: '1.0.0',
+                  description: 'migration2 desc',
+                  requires: {
+                    // didn't meet requirements and now doesn't meet requirements, should not collect it
+                    pkg1: '>=3.0.0',
+                  },
+                },
+                // previous migration, no requirements, should not collect it
+                migration3: {
+                  version: '1.0.0',
+                  description: 'migration3 desc',
+                },
+                // new migration
+                migration4: {
+                  version: '2.0.0',
+                  description: 'migration4 desc',
+                  requires: {
+                    // meets requirements, should collect it
+                    pkg1: '>=2.0.0',
+                  },
+                },
+                // new migration
+                migration5: {
+                  version: '2.0.0',
+                  description: 'migration5 desc',
+                  requires: {
+                    // doesn't meet requirements, should not collect it
+                    pkg1: '>=3.0.0',
+                  },
+                },
+                // new migrationg, no requirements, should collect it
+                migration6: {
+                  version: '2.0.0',
+                  description: 'migration6 desc',
+                },
+              },
+            });
+          } else if (p === 'pkg1') {
+            return Promise.resolve({ version: '2.0.0' });
+          } else {
+            return Promise.resolve(null);
+          }
+        },
+        from: { parent: '0.1.0' },
+        to: {},
+        skipAppliedMigrations: true,
+      });
+
+      const result = await migrator.migrate('parent', '2.0.0');
+
+      expect(result).toEqual({
+        migrations: [
+          {
+            version: '1.0.0',
+            name: 'migration1',
+            package: 'parent',
+            description: 'migration1 desc',
+            requires: { pkg1: '>=2.0.0' },
+          },
+          {
+            version: '2.0.0',
+            name: 'migration4',
+            package: 'parent',
+            description: 'migration4 desc',
+            requires: { pkg1: '>=2.0.0' },
+          },
+          {
+            version: '2.0.0',
+            name: 'migration6',
+            package: 'parent',
+            description: 'migration6 desc',
+          },
+        ],
+        packageUpdates: {
+          parent: { version: '2.0.0', addToPackageJson: false },
+          pkg1: { version: '2.0.0', addToPackageJson: false },
+        },
+      });
+    });
   });
 
   describe('normalizeVersions', () => {

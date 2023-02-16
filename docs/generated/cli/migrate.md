@@ -35,7 +35,7 @@ Update @nrwl/workspace to "9.0.0". This will update other packages and will gene
  nx migrate 9.0.0
 ```
 
-Update @nrwl/workspace and generate the list of migrations starting with version 8.0.0 of @nrwl/workspace and @nrwl/node, regardless of what installed locally:
+Update @nrwl/workspace and generate the list of migrations starting with version 8.0.0 of @nrwl/workspace and @nrwl/node, regardless of what is installed locally:
 
 ```shell
  nx migrate @nrwl/workspace@9.0.0 --from="@nrwl/workspace@8.0.0,@nrwl/node@8.0.0"
@@ -57,6 +57,12 @@ Collect package updates and migrations in interactive mode. In this mode, the us
 
 ```shell
  nx migrate latest --interactive
+```
+
+Collect package updates and migrations starting with version 14.5.0 of "nx" (and Nx first-party plugins), regardless of what is installed locally, while skipping migrations that were meant to be applied on previous updates:
+
+```shell
+ nx migrate latest --from=nx@14.5.0 --skip-applied-migrations
 ```
 
 Run migrations from the provided migrations.json file. You can modify migrations.json and run this command many times:
@@ -120,6 +126,14 @@ The target package and version (e.g, @nrwl/workspace@13.0.0)
 Type: `string`
 
 Execute migrations from a file (when the file isn't provided, execute migrations from migrations.json)
+
+### skipAppliedMigrations
+
+Type: `boolean`
+
+Default: `false`
+
+Skip collecting migrations that were meant to be applied on previous updates. To be used with --from
 
 ### to
 
