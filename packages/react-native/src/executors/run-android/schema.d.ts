@@ -13,4 +13,5 @@ export interface ReactNativeRunAndroidOptions {
   packager: boolean; // default is true
   resetCache: boolean; // default is false
   interactive: boolean; // default is true
+  activeArchOnly?: boolean;
 }
