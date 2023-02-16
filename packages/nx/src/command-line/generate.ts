@@ -21,6 +21,7 @@ import { getLocalWorkspacePlugins } from '../utils/plugins/local-plugins';
 import { printHelp } from '../utils/print-help';
 import { workspaceRoot } from '../utils/workspace-root';
 import { NxJsonConfiguration } from '../config/nx-json';
+import { findInstalledPlugins } from '../utils/plugins/installed-plugins';
 
 export interface GenerateOptions {
   collectionName: string;
@@ -50,14 +51,10 @@ async function promptForCollection(
   interactive: boolean,
   projectsConfiguration: ProjectsConfigurations
 ): Promise<string> {
-  const packageJson = readJsonFile(`${workspaceRoot}/package.json`);
   const localPlugins = getLocalWorkspacePlugins(projectsConfiguration);
 
   const installedCollections = Array.from(
-    new Set([
-      ...Object.keys(packageJson.dependencies || {}),
-      ...Object.keys(packageJson.devDependencies || {}),
-    ])
+    new Set(findInstalledPlugins().map((x) => x.name))
   );
 
   const choicesMap = new Set<string>();
