@@ -2,9 +2,9 @@
 // that your local installation matches nx.json.
 // See: https://nx.dev/more-concepts/encapsulated-nx-and-the-wrapper for more info.
 //
-// INTERNAL: The contents of this file are executed before packages are installed.
-// INTERNAL: As such, we should not import anything from nx, other @nrwl packages,
-// INTERNAL: or any other npm packages. Only import node builtins.
+//# The contents of this file are executed before packages are installed.
+//# As such, we should not import anything from nx, other @nrwl packages,
+//# or any other npm packages. Only import node builtins.
 
 const fs: typeof import('fs') = require('fs');
 const path: typeof import('path') = require('path');
@@ -23,10 +23,16 @@ function matchesCurrentNxInstall(
       fs.readFileSync(installationPath, 'utf-8')
     );
     if (
-      currentInstallation.dependencies['nx'] !== nxJsonInstallation.version ||
+      currentInstallation.devDependencies['nx'] !==
+        nxJsonInstallation.version ||
       JSON.parse(
         fs.readFileSync(
-          path.join(installationPath, 'node_modules', 'nx', 'package.json'),
+          path.join(
+            path.dirname(installationPath),
+            'node_modules',
+            'nx',
+            'package.json'
+          ),
           'utf-8'
         )
       ).version !== nxJsonInstallation.version
@@ -36,7 +42,7 @@ function matchesCurrentNxInstall(
     for (const [plugin, desiredVersion] of Object.entries(
       nxJsonInstallation.plugins || {}
     )) {
-      if (currentInstallation.dependencies[plugin] !== desiredVersion) {
+      if (currentInstallation.devDependencies[plugin] !== desiredVersion) {
         return false;
       }
     }
