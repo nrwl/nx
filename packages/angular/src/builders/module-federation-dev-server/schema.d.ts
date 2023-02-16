@@ -19,4 +19,5 @@ export interface Schema {
   poll?: number;
   devRemotes?: string[];
   skipRemotes?: string[];
+  pathToManifestFile?: string;
 }

@@ -12,6 +12,8 @@ import {
   getStaticRemotes,
   validateDevRemotes,
 } from '../utilities/module-federation';
+import { existsSync } from 'fs';
+import { extname, join } from 'path';
 
 export function executeModuleFederationDevServerBuilder(
   schema: Schema,
@@ -23,6 +25,29 @@ export function executeModuleFederationDevServerBuilder(
     readProjectsConfigurationFromProjectGraph(projectGraph);
   const ws = new Workspaces(workspaceRoot);
   const project = workspaceProjects[context.target.project];
+
+  let pathToManifestFile = join(
+    context.workspaceRoot,
+    project.sourceRoot,
+    'assets/module-federation.manifest.json'
+  );
+  if (options.pathToManifestFile) {
+    const userPathToManifestFile = join(
+      context.workspaceRoot,
+      options.pathToManifestFile
+    );
+    if (!existsSync(userPathToManifestFile)) {
+      throw new Error(
+        `The provided Module Federation manifest file path does not exist. Please check the file exists at "${userPathToManifestFile}".`
+      );
+    } else if (extname(options.pathToManifestFile) !== '.json') {
+      throw new Error(
+        `The Module Federation manifest file must be a JSON. Please ensure the file at ${userPathToManifestFile} is a JSON.`
+      );
+    }
+
+    pathToManifestFile = userPathToManifestFile;
+  }
 
   validateDevRemotes(options, workspaceProjects);
 
@@ -37,7 +62,8 @@ export function executeModuleFederationDevServerBuilder(
     project,
     context,
     workspaceProjects,
-    remotesToSkip
+    remotesToSkip,
+    pathToManifestFile
   );
   const remotes = [...staticRemotes, ...dynamicRemotes];
 
