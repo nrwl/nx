@@ -1,6 +1,7 @@
 import type { Tree } from '@nrwl/devkit';
 import { joinPathFragments } from '@nrwl/devkit';
 import type { NormalizedSchema } from './normalized-schema';
+import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 
 export function convertToStandaloneApp(tree: Tree, options: NormalizedSchema) {
   const pathToAppModule = joinPathFragments(
@@ -21,6 +22,7 @@ function updateMainEntrypoint(
   tree: Tree,
   pathToAppModule: string
 ) {
+  ensureTypescript();
   const { tsquery } = require('@phenomnomnominal/tsquery');
   let routerModuleSetup: string;
   if (options.routing) {
@@ -63,6 +65,7 @@ bootstrapApplication(AppComponent${
 }).catch((err) => console.error(err));`;
 
 function updateAppComponent(tree: Tree, options: NormalizedSchema) {
+  ensureTypescript();
   const { tsquery } = require('@phenomnomnominal/tsquery');
   const pathToAppComponent = joinPathFragments(
     options.appProjectRoot,

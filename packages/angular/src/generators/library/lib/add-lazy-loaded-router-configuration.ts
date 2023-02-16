@@ -3,6 +3,7 @@ import { insertImport } from '@nrwl/workspace/src/utilities/ast-utils';
 import { addImportToModule } from '../../../utils/nx-devkit/ast-utils';
 import { NormalizedSchema } from './normalized-schema';
 import { dirname } from 'path';
+import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 
@@ -11,7 +12,7 @@ export function addLazyLoadedRouterConfiguration(
   options: NormalizedSchema['libraryOptions']
 ) {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const constName = `${names(options.fileName).propertyName}Routes`;
   tree.write(

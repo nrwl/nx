@@ -7,8 +7,7 @@ export async function addCypress(host: Tree, options: NormalizedSchema) {
     return () => {};
   }
 
-  ensurePackage(host, '@nrwl/cypress', nxVersion);
-  const { cypressProjectGenerator } = await import('@nrwl/cypress');
+  const { cypressProjectGenerator } = ensurePackage('@nrwl/cypress', nxVersion);
 
   return await cypressProjectGenerator(host, {
     ...options,

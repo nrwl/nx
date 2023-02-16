@@ -8,6 +8,7 @@ import {
 } from '@nrwl/devkit';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import { v14TestFile } from './v14-test-file';
+import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 
 export function generateKarmaProjectFiles(tree: Tree, project: string): void {
   const projectConfig = readProjectConfiguration(tree, project);
@@ -75,6 +76,7 @@ function isUsingConfigSetInBaseKarmaConfig(tree: Tree) {
   if (!tree.exists('karma.conf.js')) {
     return false;
   }
+  ensureTypescript();
   const { tsquery } = require('@phenomnomnominal/tsquery');
 
   const CONFIG_SET_SELECTOR =

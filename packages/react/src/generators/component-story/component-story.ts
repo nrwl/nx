@@ -13,6 +13,7 @@ import {
   getComponentNode,
 } from '../../utils/ast-utils';
 import { getDefaultsForComponent } from '../../utils/component-props';
+import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 
@@ -26,7 +27,7 @@ export function createComponentStoriesFile(
   { project, componentPath }: CreateComponentStoriesFileSchema
 ) {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const proj = getProjects(host).get(project);
   const sourceRoot = proj.sourceRoot;

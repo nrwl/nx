@@ -20,6 +20,7 @@ import type { NxJsonConfiguration } from '@nrwl/devkit';
 import { addInstallTask } from './rules/add-install-task';
 import { findNodes } from 'nx/src/utils/typescript';
 import { getSourceNodes } from '../utilities/typescript/get-source-nodes';
+import { ensureTypescript } from '../utilities/typescript';
 
 let tsModule: typeof import('typescript');
 
@@ -174,7 +175,7 @@ export function addParameterToConstructor(
   opts: { className: string; param: string }
 ): Change[] {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const clazz = findClass(source, opts.className);
   const constructor = clazz.members.filter(
@@ -217,7 +218,7 @@ export function findClass(
   silent: boolean = false
 ): ts.ClassDeclaration {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const nodes = getSourceNodes(source);
 
@@ -275,7 +276,7 @@ export function getImport(
   predicate: (a: any) => boolean
 ): { moduleSpec: string; bindings: string[] }[] {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const allImports = findNodes(source, tsModule.SyntaxKind.ImportDeclaration);
   const matching = allImports.filter((i: ts.ImportDeclaration) =>
@@ -302,7 +303,7 @@ export function addGlobal(
   statement: string
 ): Change[] {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const allImports = findNodes(source, tsModule.SyntaxKind.ImportDeclaration);
   if (allImports.length > 0) {
@@ -581,7 +582,7 @@ export function insertImport(
   isDefault = false
 ): Change {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const rootNode = source;
   const allImports = findNodes(rootNode, tsModule.SyntaxKind.ImportDeclaration);

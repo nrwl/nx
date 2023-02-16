@@ -43,11 +43,14 @@ import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
 export async function reactNativeInitGenerator(host: Tree, schema: Schema) {
   addGitIgnoreEntry(host);
   addBabelInputs(host);
-  await jsInitGenerator(host, {
-    js: schema.js,
-    skipFormat: true,
-  });
   const tasks: GeneratorCallback[] = [];
+
+  tasks.push(
+    await jsInitGenerator(host, {
+      ...schema,
+      skipFormat: true,
+    })
+  );
 
   if (!schema.skipPackageJson) {
     const installTask = updateDependencies(host);

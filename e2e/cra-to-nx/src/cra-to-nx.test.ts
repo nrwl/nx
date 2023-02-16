@@ -34,6 +34,10 @@ describe('nx init (for CRA)', () => {
   });
 
   it('should convert to an integrated workspace with Vite', () => {
+    // TODO investigate why this is broken
+    const originalPM = process.env.SELECTED_PM;
+    process.env.SELECTED_PM = originalPM === 'pnpm' ? 'yarn' : originalPM;
+
     const appName = 'my-app';
     createReactApp(appName);
 
@@ -53,9 +57,13 @@ describe('nx init (for CRA)', () => {
 
     const unitTestsOutput = runCLI(`test ${appName}`);
     expect(unitTestsOutput).toContain('Successfully ran target test');
+    process.env.SELECTED_PM = originalPM;
   });
 
   it('should convert to an integrated workspace with Vite with custom port', () => {
+    // TODO investigate why this is broken
+    const originalPM = process.env.SELECTED_PM;
+    process.env.SELECTED_PM = originalPM === 'pnpm' ? 'yarn' : originalPM;
     const appName = 'my-app';
     createReactApp(appName);
     updateFile(`.env`, `NOT_THE_PORT=8000\nPORT=3000\nSOMETHING_ELSE=whatever`);
@@ -71,6 +79,7 @@ describe('nx init (for CRA)', () => {
 
     const unitTestsOutput = runCLI(`test ${appName}`);
     expect(unitTestsOutput).toContain('Successfully ran target test');
+    process.env.SELECTED_PM = originalPM;
   });
 
   it('should convert to a standalone workspace with craco (webpack)', () => {

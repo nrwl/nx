@@ -7,6 +7,7 @@ import {
 } from '@nrwl/workspace/src/utilities/ast-utils';
 import { getDecoratorPropertyValueNode } from '../../../utils/nx-devkit/ast-utils';
 import { nrwlHomeTemplate } from './nrwl-home-tpl';
+import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 
@@ -15,7 +16,7 @@ export function updateNxComponentTemplate(
   options: NormalizedSchema
 ) {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
 
   const componentPath = `${options.appProjectRoot}/src/app/nx-welcome.component.ts`;

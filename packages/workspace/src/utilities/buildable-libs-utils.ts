@@ -12,6 +12,7 @@ import type * as ts from 'typescript';
 import { unlinkSync } from 'fs';
 import { output } from './output';
 import { isNpmProject } from 'nx/src/project-graph/operators';
+import { ensureTypescript } from './typescript';
 
 let tsModule: typeof import('typescript');
 
@@ -194,7 +195,7 @@ export function computeCompilerOptionsPaths(
 
 function readPaths(tsConfig: string | ts.ParsedCommandLine) {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   try {
     let config: ts.ParsedCommandLine;

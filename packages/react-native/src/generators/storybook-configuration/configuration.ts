@@ -27,8 +27,10 @@ export async function storybookConfigurationGenerator(
   host: Tree,
   schema: StorybookConfigureSchema
 ): Promise<GeneratorCallback> {
-  ensurePackage(host, '@nrwl/storybook', nxVersion);
-  const { configurationGenerator } = await import('@nrwl/storybook');
+  const { configurationGenerator } = ensurePackage(
+    '@nrwl/storybook',
+    nxVersion
+  );
 
   const installTask = await configurationGenerator(host, {
     name: schema.name,

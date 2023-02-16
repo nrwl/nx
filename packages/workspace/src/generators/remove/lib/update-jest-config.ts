@@ -13,6 +13,7 @@ import type {
   StringLiteral,
 } from 'typescript';
 import { join } from 'path';
+import { ensureTypescript } from '../../../utilities/typescript';
 
 let tsModule: typeof import('typescript');
 
@@ -29,7 +30,7 @@ export function updateJestConfig(
   projectConfig: ProjectConfiguration
 ) {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const {
     createSourceFile,

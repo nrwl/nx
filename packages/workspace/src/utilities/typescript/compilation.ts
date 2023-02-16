@@ -3,6 +3,7 @@ import { rmSync } from 'fs';
 import type * as ts from 'typescript';
 import type { CustomTransformers, Diagnostic, Program } from 'typescript';
 import { readTsConfig } from '../ts-config';
+import { ensureTypescript } from '../typescript';
 
 let tsModule: typeof import('typescript');
 
@@ -47,7 +48,7 @@ export function compileTypeScriptWatcher(
   ) => void | Promise<void>
 ) {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const normalizedOptions = normalizeOptions(options);
   const tsConfig = getNormalizedTsConfig(normalizedOptions);
@@ -159,7 +160,7 @@ function createProgram(
   { projectName, getCustomTransformers }: TypeScriptCompilationOptions
 ): { success: boolean } {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const host = tsModule.createCompilerHost(tsconfig.options);
   const program = tsModule.createProgram({

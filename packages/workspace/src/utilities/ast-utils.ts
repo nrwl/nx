@@ -1,6 +1,6 @@
 import type { Tree } from '@nrwl/devkit';
 import type * as ts from 'typescript';
-import { getSourceNodes } from './typescript';
+import { ensureTypescript, getSourceNodes } from './typescript';
 import { findNodes } from 'nx/src/utils/typescript';
 
 let tsModule: typeof import('typescript');
@@ -89,7 +89,7 @@ export function insertImport(
   isDefault = false
 ): ts.SourceFile {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const rootNode = source;
   const allImports = findNodes(rootNode, tsModule.SyntaxKind.ImportDeclaration);
@@ -216,7 +216,7 @@ export function addGlobal(
   statement: string
 ): ts.SourceFile {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const allImports = findNodes(source, tsModule.SyntaxKind.ImportDeclaration);
   if (allImports.length > 0) {
@@ -238,7 +238,7 @@ export function getImport(
   predicate: (a: any) => boolean
 ): { moduleSpec: string; bindings: string[] }[] {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const allImports = findNodes(source, tsModule.SyntaxKind.ImportDeclaration);
   const matching = allImports.filter((i: ts.ImportDeclaration) =>
@@ -283,7 +283,7 @@ export function addParameterToConstructor(
   opts: { className: string; param: string }
 ): ts.SourceFile {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const clazz = findClass(source, opts.className);
   const constructor = clazz.members.filter(
@@ -326,7 +326,7 @@ export function findClass(
   silent: boolean = false
 ): ts.ClassDeclaration {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const nodes = getSourceNodes(source);
 

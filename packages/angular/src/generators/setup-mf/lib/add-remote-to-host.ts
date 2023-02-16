@@ -12,6 +12,7 @@ import type * as ts from 'typescript';
 import { ArrayLiteralExpression } from 'typescript';
 import { insertImport } from '@nrwl/workspace/src/utilities/ast-utils';
 import { addRoute } from '../../../utils/nx-devkit/route-utils';
+import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 
@@ -121,7 +122,7 @@ function addLazyLoadedRouteToHostAppModule(
   hostFederationType: 'dynamic' | 'static'
 ) {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const hostAppConfig = readProjectConfiguration(tree, options.host);
 

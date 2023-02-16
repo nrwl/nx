@@ -14,6 +14,7 @@ import {
 
 import { Schema } from './schema';
 import { addImport } from '../../utils/ast-utils';
+import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 
 interface NormalizedSchema extends Schema {
   projectSourceRoot: string;
@@ -62,7 +63,7 @@ function createFiles(host: Tree, options: NormalizedSchema) {
 let tsModule: typeof import('typescript');
 function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const workspace = getProjects(host);
   const isApp = workspace.get(options.project).projectType === 'application';

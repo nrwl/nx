@@ -1,12 +1,13 @@
 import { offsetFromRoot, Tree, workspaceRoot } from '@nrwl/devkit';
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
+import { ensureTypescript } from './typescript';
 
 let tsModule: typeof import('typescript');
 
 export function readTsConfig(tsConfigPath: string) {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const readResult = tsModule.readConfigFile(
     tsConfigPath,

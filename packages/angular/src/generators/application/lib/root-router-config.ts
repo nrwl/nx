@@ -3,6 +3,7 @@ import type { NormalizedSchema } from './normalized-schema';
 
 import { insertImport } from '@nrwl/workspace/src/utilities/ast-utils';
 import { addImportToModule } from '../../../utils/nx-devkit/ast-utils';
+import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 
@@ -14,7 +15,7 @@ export function addRouterRootConfiguration(
   const moduleSource = host.read(modulePath, 'utf-8');
 
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   let sourceFile = tsModule.createSourceFile(
     modulePath,

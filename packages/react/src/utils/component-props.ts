@@ -1,3 +1,4 @@
+import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 import type * as ts from 'typescript';
 import { getComponentPropsInterface } from './ast-utils';
 
@@ -6,7 +7,7 @@ let tsModule: typeof import('typescript');
 // TODO: candidate to refactor with the angular component story
 export function getArgsDefaultValue(property: ts.SyntaxKind): string {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const typeNameToDefault: Record<number, any> = {
     [tsModule.SyntaxKind.StringKeyword]: "''",
@@ -27,7 +28,7 @@ export function getDefaultsForComponent(
   cmpDeclaration: ts.Node
 ) {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const propsInterface = getComponentPropsInterface(sourceFile, cmpDeclaration);
 

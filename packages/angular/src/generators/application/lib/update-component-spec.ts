@@ -5,12 +5,13 @@ import {
   replaceIntoToTestBed,
 } from '../../../utils/nx-devkit/ast-utils';
 import type { NormalizedSchema } from './normalized-schema';
+import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 
 export function updateComponentSpec(host: Tree, options: NormalizedSchema) {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
 
   if (options.skipTests !== true) {

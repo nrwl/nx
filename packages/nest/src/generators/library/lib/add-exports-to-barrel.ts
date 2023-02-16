@@ -4,6 +4,7 @@ import {
   removeChange,
 } from '@nrwl/workspace/src/utilities/ast-utils';
 import type { NormalizedOptions } from '../schema';
+import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 
@@ -12,7 +13,7 @@ export function addExportsToBarrelFile(
   options: NormalizedOptions
 ): void {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const indexPath = `${options.projectRoot}/src/index.ts`;
   const indexContent = tree.read(indexPath, 'utf-8');

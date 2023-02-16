@@ -23,6 +23,7 @@ import {
   typesExpressVersion,
 } from '../../utils/versions';
 import { addStaticRouter } from '../../utils/ast-utils';
+import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 
@@ -31,7 +32,7 @@ function readEntryFile(
   path: string
 ): { content: string; source: ts.SourceFile } {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
 
   const content = host.read(path, 'utf-8');

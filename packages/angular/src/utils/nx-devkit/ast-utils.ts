@@ -9,6 +9,7 @@ import {
   removeChange,
   replaceChange,
 } from '@nrwl/workspace/src/utilities/ast-utils';
+import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 
@@ -19,7 +20,7 @@ function _angularImportsFromNode(
   _sourceFile: ts.SourceFile
 ): { [name: string]: string } {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const ms = node.moduleSpecifier;
   let modulePath: string;
@@ -89,7 +90,7 @@ export function getDecoratorMetadata(
   module: string
 ): ts.Node[] {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const angularImports: { [name: string]: string } = findNodes(
     source,
@@ -169,7 +170,7 @@ function _addSymbolToDecoratorMetadata(
     return source;
   }
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   // Get all the children property assignment of object literals.
   const matchingProperties: ts.ObjectLiteralElement[] = (
@@ -415,7 +416,7 @@ export function addImportToTestBed(
   symbolName: string
 ): ts.SourceFile {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const allCalls: ts.CallExpression[] = <any>(
     findNodes(source, tsModule.SyntaxKind.CallExpression)
@@ -456,7 +457,7 @@ export function addDeclarationsToTestBed(
   symbolName: string[]
 ): ts.SourceFile {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const allCalls: ts.CallExpression[] = <any>(
     findNodes(source, tsModule.SyntaxKind.CallExpression)
@@ -498,7 +499,7 @@ export function replaceIntoToTestBed(
   previousSymbol: string
 ): ts.SourceFile {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const allCalls: ts.CallExpression[] = <any>(
     findNodes(source, tsModule.SyntaxKind.CallExpression)
@@ -592,7 +593,7 @@ function getListOfRoutes(
   source: ts.SourceFile
 ): ts.NodeArray<ts.Expression> | null {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const imports: any = getMatchingProperty(
     source,
@@ -647,6 +648,7 @@ export function addProviderToBootstrapApplication(
   filePath: string,
   providerToAdd: string
 ) {
+  ensureTypescript();
   const { tsquery } = require('@phenomnomnominal/tsquery');
   const PROVIDERS_ARRAY_SELECTOR =
     'CallExpression:has(Identifier[name=bootstrapApplication]) ObjectLiteralExpression > PropertyAssignment:has(Identifier[name=providers]) > ArrayLiteralExpression';
@@ -749,7 +751,7 @@ export function readBootstrapInfo(
   bootstrapComponentFileName: string;
 } {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const config = readProjectConfiguration(host, app);
 
@@ -831,7 +833,7 @@ export function getDecoratorPropertyValueNode(
   module: string
 ) {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const moduleSourceText = host.read(modulePath)!.toString('utf-8');
   const moduleSource = tsModule.createSourceFile(
@@ -856,7 +858,7 @@ function getMatchingObjectLiteralElement(
   property: string
 ) {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   return (
     (node as ts.ObjectLiteralExpression).properties
@@ -878,7 +880,7 @@ function getMatchingObjectLiteralElement(
 
 export function getTsSourceFile(host: Tree, path: string): ts.SourceFile {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const buffer = host.read(path);
   if (!buffer) {

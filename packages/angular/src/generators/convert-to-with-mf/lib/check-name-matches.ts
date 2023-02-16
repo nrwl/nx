@@ -1,9 +1,11 @@
 import type { SourceFile } from 'typescript';
+import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 
 export function checkOutputNameMatchesProjectName(
   ast: SourceFile,
   projectName: string
 ) {
+  ensureTypescript();
   const { tsquery } = require('@phenomnomnominal/tsquery');
   const OUTPUT_SELECTOR =
     'PropertyAssignment:has(Identifier[name=output]) > ObjectLiteralExpression:has(PropertyAssignment:has(Identifier[name=uniqueName]))';

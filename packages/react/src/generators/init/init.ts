@@ -86,22 +86,24 @@ function initRootBabelConfig(tree: Tree, schema: InitSchema) {
 }
 
 export async function reactInitGenerator(host: Tree, schema: InitSchema) {
-  await jsInitGenerator(host, {
+  const tasks: GeneratorCallback[] = [];
+
+  const jsInitTask = await jsInitGenerator(host, {
     ...schema,
     tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
-    js: schema.js,
     skipFormat: true,
   });
-  const tasks: GeneratorCallback[] = [];
+
+  tasks.push(jsInitTask);
 
   setDefault(host);
 
   if (!schema.e2eTestRunner || schema.e2eTestRunner === 'cypress') {
-    ensurePackage(host, '@nrwl/cypress', nxVersion);
+    ensurePackage('@nrwl/cypress', nxVersion);
     const { cypressInitGenerator } = await import(
       '@nrwl/cypress/src/generators/init/init'
     );
-    const cypressTask = cypressInitGenerator(host, {});
+    const cypressTask = await cypressInitGenerator(host, {});
     tasks.push(cypressTask);
   }
 

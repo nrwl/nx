@@ -50,7 +50,7 @@ export async function webInitGenerator(tree: Tree, schema: Schema) {
     tasks.push(jestTask);
   }
   if (!schema.e2eTestRunner || schema.e2eTestRunner === 'cypress') {
-    const cypressTask = cypressInitGenerator(tree, {
+    const cypressTask = await cypressInitGenerator(tree, {
       skipPackageJson: schema.skipPackageJson,
     });
     tasks.push(cypressTask);

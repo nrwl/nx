@@ -8,12 +8,13 @@ import {
 } from '@angular-devkit/schematics';
 import { normalize } from '@angular-devkit/core';
 import { updateJsonInTree } from '../ast-utils';
+import { ensureTypescript } from '../../utilities/typescript';
 
 let tsModule: typeof import('typescript');
 
 export function toJS(): Rule {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
 
   const { transpile, JsxEmit, ScriptTarget } = tsModule;

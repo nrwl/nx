@@ -1,6 +1,7 @@
 import { Tree } from '@nrwl/devkit';
 import { insertImport } from '@nrwl/workspace/src/utilities/ast-utils';
 import { addRouteToNgModule } from './ast-utils';
+import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 
@@ -20,6 +21,7 @@ export function addRoute(
   if (!tsModule) {
     tsModule = require('typescript');
   }
+  ensureTypescript();
   const { tsquery } = require('@phenomnomnominal/tsquery');
 
   let routesFileContents = tree.read(routesFile, 'utf-8');
@@ -92,6 +94,7 @@ export function addProviderToRoute(
     );
   }
 
+  ensureTypescript();
   const { tsquery } = require('@phenomnomnominal/tsquery');
   let routesFileContents = tree.read(routesFile, 'utf-8');
 

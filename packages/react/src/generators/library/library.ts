@@ -62,8 +62,10 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
 
   // Set up build target
   if (options.buildable && options.bundler === 'vite') {
-    ensurePackage(host, '@nrwl/vite', nxVersion);
-    const { viteConfigurationGenerator } = await import('@nrwl/vite');
+    const { viteConfigurationGenerator } = ensurePackage(
+      '@nrwl/vite',
+      nxVersion
+    );
     const viteTask = await viteConfigurationGenerator(host, {
       uiFramework: 'react',
       project: options.name,
@@ -80,8 +82,7 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
 
   // Set up test target
   if (options.unitTestRunner === 'jest') {
-    ensurePackage(host, '@nrwl/jest', nxVersion);
-    const { jestProjectGenerator } = await import('@nrwl/jest');
+    const { jestProjectGenerator } = ensurePackage('@nrwl/jest', nxVersion);
 
     const jestTask = await jestProjectGenerator(host, {
       ...options,
@@ -106,8 +107,7 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
     options.unitTestRunner === 'vitest' &&
     options.bundler !== 'vite' // tests are already configured if bundler is vite
   ) {
-    ensurePackage(host, '@nrwl/vite', nxVersion);
-    const { vitestGenerator } = await import('@nrwl/vite');
+    const { vitestGenerator } = ensurePackage('@nrwl/vite', nxVersion);
     const vitestTask = await vitestGenerator(host, {
       uiFramework: 'react',
       project: options.name,

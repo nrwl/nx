@@ -1,4 +1,5 @@
 import {
+  addDependenciesToPackageJson,
   createProjectGraphAsync,
   ensurePackage,
   generateFiles,
@@ -15,6 +16,7 @@ import { getComponentNode } from '../../../utils/ast-utils';
 import { componentTestGenerator } from '../../component-test/component-test';
 import { CypressComponentConfigurationSchema } from '../schema';
 import { FoundTarget } from './update-configs';
+import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 
@@ -58,7 +60,7 @@ export async function addFiles(
     options.bundler === 'webpack' ||
     (!options.bundler && actualBundler === 'webpack')
   ) {
-    ensurePackage(tree, '@nrwl/webpack', nxVersion);
+    addDependenciesToPackageJson(tree, {}, { '@nrwl/webpack': nxVersion });
   }
 
   if (options.generateTests) {
@@ -98,7 +100,7 @@ async function getBundler(
 
 function isComponent(tree: Tree, filePath: string): boolean {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
 
   if (isSpecFile.test(filePath) || !allowedFileExt.test(filePath)) {

@@ -1,6 +1,7 @@
 import {
   addDependenciesToPackageJson,
   convertNxGenerator,
+  GeneratorCallback,
   readNxJson,
   removeDependenciesFromPackageJson,
   Tree,
@@ -12,6 +13,8 @@ import {
   typesNodeVersion,
 } from '../../utils/versions';
 import { Schema } from './schema';
+import { initGenerator } from '@nrwl/js';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
 function setupE2ETargetDefaults(tree: Tree) {
   const nxJson = readNxJson(tree);
@@ -47,9 +50,23 @@ function updateDependencies(tree: Tree) {
   );
 }
 
-export function cypressInitGenerator(tree: Tree, options: Schema) {
+export async function cypressInitGenerator(tree: Tree, options: Schema) {
   setupE2ETargetDefaults(tree);
-  return !options.skipPackageJson ? updateDependencies(tree) : () => {};
+
+  const tasks: GeneratorCallback[] = [];
+
+  tasks.push(
+    await initGenerator(tree, {
+      ...options,
+      skipFormat: true,
+    })
+  );
+
+  if (!options.skipPackageJson) {
+    tasks.push(updateDependencies(tree));
+  }
+
+  return runTasksInSerial(...tasks);
 }
 
 export default cypressInitGenerator;

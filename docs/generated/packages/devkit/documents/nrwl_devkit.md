@@ -134,7 +134,7 @@ It only uses language primitives and immutable objects
 - [output](../../devkit/documents/nrwl_devkit#output)
 - [workspaceRoot](../../devkit/documents/nrwl_devkit#workspaceroot)
 
-### Functions
+### Other Functions
 
 - [addDependenciesToPackageJson](../../devkit/documents/nrwl_devkit#adddependenciestopackagejson)
 - [addProjectConfiguration](../../devkit/documents/nrwl_devkit#addprojectconfiguration)
@@ -149,7 +149,6 @@ It only uses language primitives and immutable objects
 - [defaultTasksRunner](../../devkit/documents/nrwl_devkit#defaulttasksrunner)
 - [detectPackageManager](../../devkit/documents/nrwl_devkit#detectpackagemanager)
 - [detectWorkspaceScope](../../devkit/documents/nrwl_devkit#detectworkspacescope)
-- [ensurePackage](../../devkit/documents/nrwl_devkit#ensurepackage)
 - [extractLayoutDirectory](../../devkit/documents/nrwl_devkit#extractlayoutdirectory)
 - [formatFiles](../../devkit/documents/nrwl_devkit#formatfiles)
 - [generateFiles](../../devkit/documents/nrwl_devkit#generatefiles)
@@ -202,6 +201,10 @@ It only uses language primitives and immutable objects
 - [workspaceLayout](../../devkit/documents/nrwl_devkit#workspacelayout)
 - [writeJson](../../devkit/documents/nrwl_devkit#writejson)
 - [writeJsonFile](../../devkit/documents/nrwl_devkit#writejsonfile)
+
+### Utils Functions
+
+- [ensurePackage](../../devkit/documents/nrwl_devkit#ensurepackage)
 
 ## Project Graph Enumerations
 
@@ -823,7 +826,7 @@ Implementation of a target of a project that handles multiple projects to be bat
 
 • **workspaceRoot**: `string`
 
-## Functions
+## Other Functions
 
 ### addDependenciesToPackageJson
 
@@ -1179,39 +1182,6 @@ Detect workspace scope from the package.json name
 #### Returns
 
 `string`
-
----
-
-### ensurePackage
-
-▸ **ensurePackage**(`tree`, `pkg`, `requiredVersion`, `options?`): `void`
-
-Ensure that dependencies and devDependencies from package.json are installed at the required versions.
-
-For example:
-
-```typescript
-ensurePackage(tree, '@nrwl/jest', nxVersion);
-```
-
-This will check that @nrwl/jest@<nxVersion> exists in devDependencies.
-If it exists then function returns, otherwise it will install the package before continuing.
-When running with --dryRun, the function will throw when dependencies are missing.
-
-#### Parameters
-
-| Name                      | Type                                              | Description                                                        |
-| :------------------------ | :------------------------------------------------ | :----------------------------------------------------------------- |
-| `tree`                    | [`Tree`](../../devkit/documents/nrwl_devkit#tree) | the file system tree                                               |
-| `pkg`                     | `string`                                          | the package to check (e.g. @nrwl/jest)                             |
-| `requiredVersion`         | `string`                                          | the version or semver range to check (e.g. ~1.0.0, >=1.0.0 <2.0.0) |
-| `options`                 | `Object`                                          |                                                                    |
-| `options.dev?`            | `boolean`                                         | -                                                                  |
-| `options.throwOnMissing?` | `boolean`                                         | -                                                                  |
-
-#### Returns
-
-`void`
 
 ---
 
@@ -2431,3 +2401,66 @@ Serializes the given data to JSON and writes it to a file.
 #### Returns
 
 `void`
+
+---
+
+## Utils Functions
+
+### ensurePackage
+
+▸ **ensurePackage**(`tree`, `pkg`, `requiredVersion`, `options?`): `void`
+
+**`deprecated`** Use the other function signature without a Tree
+
+Use a package that has not been installed as a dependency.
+
+For example:
+
+```typescript
+ensurePackage(tree, '@nrwl/jest', nxVersion);
+```
+
+This install the @nrwl/jest@<nxVersion> and return the module
+When running with --dryRun, the function will throw when dependencies are missing.
+
+#### Parameters
+
+| Name                      | Type                                              | Description                                                        |
+| :------------------------ | :------------------------------------------------ | :----------------------------------------------------------------- |
+| `tree`                    | [`Tree`](../../devkit/documents/nrwl_devkit#tree) | the file system tree                                               |
+| `pkg`                     | `string`                                          | the package to check (e.g. @nrwl/jest)                             |
+| `requiredVersion`         | `string`                                          | the version or semver range to check (e.g. ~1.0.0, >=1.0.0 <2.0.0) |
+| `options?`                | `Object`                                          | -                                                                  |
+| `options.dev?`            | `boolean`                                         | -                                                                  |
+| `options.throwOnMissing?` | `boolean`                                         | -                                                                  |
+
+#### Returns
+
+`void`
+
+▸ **ensurePackage**<`T`\>(`pkg`, `version`): `T`
+
+Ensure that dependencies and devDependencies from package.json are installed at the required versions.
+
+For example:
+
+```typescript
+ensurePackage(tree, '@nrwl/jest', nxVersion);
+```
+
+#### Type parameters
+
+| Name | Type                      |
+| :--- | :------------------------ |
+| `T`  | extends `unknown` = `any` |
+
+#### Parameters
+
+| Name      | Type     | Description                                                 |
+| :-------- | :------- | :---------------------------------------------------------- |
+| `pkg`     | `string` | the package to install and require                          |
+| `version` | `string` | the version to install if the package doesn't exist already |
+
+#### Returns
+
+`T`

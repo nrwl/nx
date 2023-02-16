@@ -10,8 +10,7 @@ import { nxVersion } from '../../utils/versions';
 
 export default async function eslint8Updates(tree: Tree) {
   try {
-    ensurePackage(tree, '@nrwl/jest/', nxVersion);
-    const { addPropertyToJestConfig } = await import('@nrwl/jest');
+    const { addPropertyToJestConfig } = ensurePackage('@nrwl/jest', nxVersion);
     const existingJestConfigPath = normalizePath(
       'tools/eslint-rules/jest.config.js'
     );
