@@ -92,6 +92,12 @@ Cleanup: Handle issues with the network and the api in a consistent fashion.
 
 # Docker Containers
 
+## 13-02-2023T23-45-24
+
+- Feat: Targettable agents for DTE. You can now ask specific agents to pick up specific tasks (via `--targets
+- Fix: DTE fixes for 404 not found artefacts errors
+- Fix: issue when using Github integration with self-hosted Github instances
+
 ## 26-01-2023T21-22-48
 
 - Misc: Fixes to the Gitlab integration
