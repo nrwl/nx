@@ -233,7 +233,7 @@ export class ProjectGraphBuilder {
     return this.graph;
   }
 
-  private removeDependenciesWithNode(name: string) {
+  removeDependenciesWithNode(name: string) {
     // remove all source dependencies
     delete this.graph.dependencies[name];
 
