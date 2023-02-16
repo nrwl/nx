@@ -5,7 +5,7 @@ describe('Next.js apps', () => {
   let originalEnv: string;
 
   beforeAll(() => {
-    newProject({ packageManager: 'npm' });
+    newProject();
   });
 
   afterAll(() => cleanupProject());
