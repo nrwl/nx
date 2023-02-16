@@ -47,7 +47,7 @@ export interface NxPlugin {
 // holding resolved nx plugin objects.
 // Allows loadNxPlugins to be called multiple times w/o
 // executing resolution mulitple times.
-let nxPluginCache: NxPlugin[] = null;
+let nxPluginCache: Map<string, NxPlugin> = new Map();
 
 function loadNxPlugin(moduleName: string, paths: string[], root: string) {
   let pluginPath: string;
@@ -98,13 +98,16 @@ export function loadNxPlugins(
   result.push(jsPlugin as NxPlugin);
 
   plugins ??= [];
-  if (!nxPluginCache) {
-    nxPluginCache = plugins.map((moduleName) =>
-      loadNxPlugin(moduleName, paths, root)
-    );
+  for (const plugin of plugins) {
+    let pluginModule = nxPluginCache.get(plugin);
+    if (!pluginModule) {
+      pluginModule = loadNxPlugin(plugin, paths, root);
+      nxPluginCache.set(plugin, pluginModule);
+    }
+    result.push(pluginModule);
   }
 
-  return result.concat(nxPluginCache);
+  return result;
 }
 
 export function mergePluginTargetsWithNxTargets(
