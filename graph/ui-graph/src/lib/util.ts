@@ -30,7 +30,7 @@ export function hasPath(
 
   if (maxSearchDepth === -1 || currentSearchDepth <= maxSearchDepth) {
     for (let d of dependencies[node] || []) {
-      if (visited.indexOf(d.target) > -1) continue;
+      if (visited?.indexOf(d.target) > -1) continue;
       visited.push(d.target);
       if (
         hasPath(

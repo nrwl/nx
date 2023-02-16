@@ -1,5 +1,4 @@
-module.exports = {
-  core: { builder: 'webpack5' },
+export default {
   stories: [
     '../src/app/**/*.stories.mdx',
     '../src/app/**/*.stories.@(js|jsx|ts|tsx)',
@@ -9,4 +8,8 @@ module.exports = {
     '@nrwl/react/plugins/storybook',
     'storybook-dark-mode',
   ],
+  framework: {
+    name: '@storybook/react-webpack5',
+    options: {},
+  },
 };
