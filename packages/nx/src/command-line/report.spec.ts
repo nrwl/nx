@@ -189,7 +189,7 @@ describe('report', () => {
           },
         })
       );
-      const plugins = findInstalledCommunityPlugins().map((x) => x.package);
+      const plugins = findInstalledCommunityPlugins().map((x) => x.name);
       expect(plugins).not.toContain('other-package');
     });
   });

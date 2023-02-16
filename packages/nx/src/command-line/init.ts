@@ -18,8 +18,7 @@ export async function initHandler() {
   }) as any as { encapsulated: boolean };
 
   const version =
-    process.env.NX_VERSION ??
-    prerelease(require('../../../../package.json').version)
+    process.env.NX_VERSION ?? prerelease(require('../../package.json').version)
       ? 'next'
       : 'latest';
   if (process.env.NX_VERSION) {

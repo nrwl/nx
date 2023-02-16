@@ -250,17 +250,14 @@ export function findMisalignedPackagesForPackage(
 
 export function findInstalledCommunityPlugins(): PackageJson[] {
   const installedPlugins = findInstalledPlugins();
-  return installedPlugins.filter((dep) => {
-    if (
-      patternsWeIgnoreInCommunityReport.some((pattern) =>
+  return installedPlugins.filter(
+    (dep) =>
+      !patternsWeIgnoreInCommunityReport.some((pattern) =>
         typeof pattern === 'string'
           ? pattern === dep.name
           : pattern.test(dep.name)
       )
-    ) {
-      return false;
-    }
-  }, []);
+  );
 }
 export function findInstalledPackagesWeCareAbout() {
   return packagesWeCareAbout.reduce((acc, next) => {

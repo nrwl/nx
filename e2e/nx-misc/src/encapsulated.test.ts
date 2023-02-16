@@ -7,6 +7,7 @@ import {
   checkFilesExist,
   cleanupProject,
   getPublishedVersion,
+  uniq,
 } from '@nrwl/e2e/utils';
 
 describe('encapsulated nx', () => {
@@ -68,6 +69,18 @@ describe('encapsulated nx', () => {
     expect(runEncapsulatedNx('report')).toMatch(
       new RegExp(`nx.*:.*${getPublishedVersion()}`)
     );
+  });
+
+  it('should work with basic generators', () => {
+    updateJson<NxJsonConfiguration>('nx.json', (j) => {
+      j.installation.plugins ??= {};
+      j.installation.plugins['@nrwl/workspace'] = getPublishedVersion();
+      return j;
+    });
+    expect(() =>
+      runEncapsulatedNx(`g npm-package ${uniq('pkg')}`)
+    ).not.toThrow();
+    expect(() => checkFilesExist());
   });
 });
 
