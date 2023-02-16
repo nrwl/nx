@@ -317,9 +317,7 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
       'generate',
       projectsConfigurations
     );
-    if (opts.dryRun) {
-      process.env.NX_DRY_RUN = 'true';
-    }
+
     const {
       normalizedGeneratorName,
       schema,
