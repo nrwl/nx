@@ -1,4 +1,73 @@
 {
+  "main-vite-new": {
+    "name": "main-vite-new",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "apps/main-vite-new/src",
+    "projectType": "application",
+    "targets": {
+      "build": {
+        "executor": "@nrwl/vite:build",
+        "outputs": ["{options.outputPath}"],
+        "defaultConfiguration": "production",
+        "options": { "outputPath": "dist/apps/main-vite-new" },
+        "configurations": {
+          "development": { "mode": "development" },
+          "production": { "mode": "production" }
+        }
+      },
+      "serve": {
+        "executor": "@nrwl/vite:dev-server",
+        "defaultConfiguration": "development",
+        "options": { "buildTarget": "main-vite-new:build" },
+        "configurations": {
+          "development": {
+            "buildTarget": "main-vite-new:build:development",
+            "hmr": true
+          },
+          "production": {
+            "buildTarget": "main-vite-new:build:production",
+            "hmr": false
+          }
+        }
+      },
+      "test": {
+        "executor": "@nrwl/vite:test",
+        "outputs": ["coverage/apps/main-vite-new"],
+        "options": {
+          "passWithNoTests": true,
+          "reportsDirectory": "../../coverage/apps/main-vite-new"
+        }
+      },
+      "lint": {
+        "executor": "@nrwl/linter:eslint",
+        "outputs": ["{options.outputFile}"],
+        "options": {
+          "lintFilePatterns": ["apps/main-vite-new/**/*.{ts,tsx,js,jsx}"]
+        }
+      },
+      "storybook": {
+        "executor": "@nrwl/storybook:storybook",
+        "options": {
+          "uiFramework": "@storybook/react",
+          "port": 4400,
+          "configDir": "apps/main-vite-new/.storybook"
+        },
+        "configurations": { "ci": { "quiet": true } }
+      },
+      "build-storybook": {
+        "executor": "@nrwl/storybook:build",
+        "outputs": ["{options.outputDir}"],
+        "options": {
+          "uiFramework": "@storybook/react",
+          "outputDir": "dist/storybook/main-vite-new",
+          "configDir": "apps/main-vite-new/.storybook"
+        },
+        "configurations": { "ci": { "quiet": true } }
+      }
+    },
+    "tags": [],
+    "root": "apps/main-vite-new"
+  },
   "main-vite": {
     "name": "main-vite",
     "$schema": "../../node_modules/nx/schemas/project-schema.json",

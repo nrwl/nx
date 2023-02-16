@@ -20,16 +20,26 @@ function updateNonAngularStorybookBuildTargets(tree: Tree) {
       if (!configuration) {
         return;
       }
-
       const projectConfiguration = readProjectConfiguration(tree, projectName);
-      projectConfiguration.targets[targetName].options = {
-        ...projectConfiguration.targets[targetName].options,
-        configDir:
-          projectConfiguration.targets[targetName].options?.config
-            ?.configFolder,
-        outputDir: projectConfiguration.targets[targetName].options?.outputPath,
-        docs: projectConfiguration.targets[targetName].options?.docsMode,
-      };
+
+      if (!projectConfiguration.targets[targetName].options) {
+        projectConfiguration.targets[targetName].options = {};
+      }
+
+      if (!projectConfiguration.targets[targetName].options.configDir) {
+        projectConfiguration.targets[targetName].options.configDir =
+          projectConfiguration.targets[targetName].options.config?.configFolder;
+      }
+
+      if (!projectConfiguration.targets[targetName].options.outputDir) {
+        projectConfiguration.targets[targetName].options.outputDir =
+          projectConfiguration.targets[targetName].options.outputPath;
+      }
+
+      if (!projectConfiguration.targets[targetName].options.docs) {
+        projectConfiguration.targets[targetName].options.docs =
+          projectConfiguration.targets[targetName].options.docsMode;
+      }
 
       projectConfiguration.targets[targetName].outputs =
         projectConfiguration.targets[targetName].outputs?.map(
@@ -58,13 +68,20 @@ function updateNonAngularStorybookServeTargets(tree: Tree) {
       }
 
       const projectConfiguration = readProjectConfiguration(tree, projectName);
-      projectConfiguration.targets[targetName].options = {
-        ...projectConfiguration.targets[targetName].options,
-        configDir:
-          projectConfiguration.targets[targetName].options?.config
-            ?.configFolder,
-        docs: projectConfiguration.targets[targetName].options?.docsMode,
-      };
+
+      if (!projectConfiguration.targets[targetName].options) {
+        projectConfiguration.targets[targetName].options = {};
+      }
+
+      if (!projectConfiguration.targets[targetName].options.configDir) {
+        projectConfiguration.targets[targetName].options.configDir =
+          projectConfiguration.targets[targetName].options.config?.configFolder;
+      }
+
+      if (!projectConfiguration.targets[targetName].options.docs) {
+        projectConfiguration.targets[targetName].options.docs =
+          projectConfiguration.targets[targetName].options.docsMode;
+      }
 
       delete projectConfiguration.targets[targetName].options.config;
       delete projectConfiguration.targets[targetName].options.docsMode;
