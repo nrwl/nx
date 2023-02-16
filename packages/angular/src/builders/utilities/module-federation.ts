@@ -7,23 +7,23 @@ export function getDynamicRemotes(
   project: ProjectConfiguration,
   context: import('@angular-devkit/architect').BuilderContext,
   workspaceProjects: Record<string, ProjectConfiguration>,
-  remotesToSkip: Set<string>
+  remotesToSkip: Set<string>,
+  pathToManifestFile = join(
+    context.workspaceRoot,
+    project.sourceRoot,
+    'assets/module-federation.manifest.json'
+  )
 ): string[] {
   // check for dynamic remotes
   // we should only check for dynamic based on what we generate
   // and fallback to empty array
 
-  const standardPathToGeneratedMFManifestJson = join(
-    context.workspaceRoot,
-    project.sourceRoot,
-    'assets/module-federation.manifest.json'
-  );
-  if (!existsSync(standardPathToGeneratedMFManifestJson)) {
+  if (!existsSync(pathToManifestFile)) {
     return [];
   }
 
   const moduleFederationManifestJson = readFileSync(
-    standardPathToGeneratedMFManifestJson,
+    pathToManifestFile,
     'utf-8'
   );
 
@@ -54,8 +54,8 @@ export function getDynamicRemotes(
   if (invalidDynamicRemotes.length) {
     throw new Error(
       invalidDynamicRemotes.length === 1
-        ? `Invalid dynamic remote configured in "${standardPathToGeneratedMFManifestJson}": ${invalidDynamicRemotes[0]}.`
-        : `Invalid dynamic remotes configured in "${standardPathToGeneratedMFManifestJson}": ${invalidDynamicRemotes.join(
+        ? `Invalid dynamic remote configured in "${pathToManifestFile}": ${invalidDynamicRemotes[0]}.`
+        : `Invalid dynamic remotes configured in "${pathToManifestFile}": ${invalidDynamicRemotes.join(
             ', '
           )}.`
     );
