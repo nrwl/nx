@@ -81,7 +81,7 @@
       },
       "activeArchOnly": {
         "type": "boolean",
-        "description": "Builds only for the active architecture (e.g. x86_64, arm64).",
+        "description": "Builds only for the active architecture (e.g. x86_64, arm64-v8a).",
         "default": false
       }
     },
