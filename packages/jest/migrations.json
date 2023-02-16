@@ -262,10 +262,6 @@
         "babel-jest": {
           "version": "~29.4.1",
           "alwaysAddToPackageJson": false
-        },
-        "jest-preset-angular": {
-          "version": "~13.0.0-next.1",
-          "alwaysAddToPackageJson": false
         }
       }
     }
