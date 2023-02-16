@@ -87,7 +87,7 @@
       },
       "storybook7UiFramework": {
         "type": "string",
-        "description": "Storybook UI Framework to use.",
+        "description": "Storybook UI Framework to use, for Storybook version 7.",
         "enum": [
           "@storybook/angular",
           "@storybook/html-webpack5",
