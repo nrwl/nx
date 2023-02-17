@@ -388,8 +388,19 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
   }
 }
 
-function arrayBufferToString(buffer: any) {
-  return String.fromCharCode.apply(null, new Uint8Array(buffer));
+export function arrayBufferToString(buffer: any) {
+  const array = new Uint8Array(buffer);
+  let result = '';
+  const chunkSize = 8 * 1024;
+  let i = 0;
+  for (i = 0; i < array.length / chunkSize; i++) {
+    result += String.fromCharCode.apply(
+      null,
+      array.subarray(i * chunkSize, (i + 1) * chunkSize)
+    );
+  }
+  result += String.fromCharCode.apply(null, array.subarray(i * chunkSize));
+  return result;
 }
 
 export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
