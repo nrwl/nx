@@ -114,7 +114,9 @@ export function Shell(): JSX.Element {
                   }}
                 >
                   {routes.map((route) => (
-                    <option value={route.route}>{route.label}</option>
+                    <option key={route.label} value={route.route}>
+                      {route.label}
+                    </option>
                   ))}
                 </Dropdown>
 
@@ -184,12 +186,12 @@ export function Shell(): JSX.Element {
           <Tooltip
             openAction="hover"
             content="Download Graph as PNG"
-            placement="right"
+            placement="left"
           >
             <button
               type="button"
               className={classNames(
-                !nodesVisible ? 'opacity-0' : '',
+                !nodesVisible ? 'invisible opacity-0' : '',
                 'fixed bottom-4 right-4 z-50 block h-16 w-16 transform rounded-full bg-blue-500 text-white shadow-sm transition duration-300 dark:bg-sky-500'
               )}
               data-cy="downloadImageButton"

@@ -41,22 +41,20 @@ function ProjectListItem({
         </label>
       </div>
 
-      <ExperimentalFeature>
-        {project.error ? (
-          <Tooltip
-            content={<TaskGraphErrorTooltip error={project.error} />}
-            openAction="click"
-            floatingPortal={true}
-          >
-            <span className="absolute inset-y-0 right-0 flex cursor-pointer items-center text-blue-500 dark:text-sky-500">
-              <ExclamationCircleIcon
-                className="h-5 w-5 text-yellow-500 dark:text-yellow-400"
-                aria-hidden="true"
-              />
-            </span>
-          </Tooltip>
-        ) : null}
-      </ExperimentalFeature>
+      {project.error ? (
+        <Tooltip
+          content={<TaskGraphErrorTooltip error={project.error} />}
+          openAction="click"
+          strategy="fixed"
+        >
+          <span className="absolute inset-y-0 right-0 flex cursor-pointer items-center text-blue-500 dark:text-sky-500">
+            <ExclamationCircleIcon
+              className="h-5 w-5 text-yellow-500 dark:text-yellow-400"
+              aria-hidden="true"
+            />
+          </span>
+        </Tooltip>
+      ) : null}
 
       {project.isSelected ? (
         <span

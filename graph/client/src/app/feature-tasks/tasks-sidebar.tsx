@@ -222,7 +222,9 @@ export function TasksSidebar() {
           onChange={(event) => selectTarget(event.currentTarget.value)}
         >
           {targets.map((target) => (
-            <option value={target}>{target}</option>
+            <option key={target} value={target}>
+              {target}
+            </option>
           ))}
         </Dropdown>
       </TaskList>
