@@ -1366,7 +1366,7 @@ describe('Migration', () => {
       });
     });
 
-    it('should generate the correct migrations when  "--only-skipped-migrations"', async () => {
+    it('should generate the correct migrations when  "--exclude-applied-migrations"', async () => {
       const migrator = new Migrator({
         packageJson: createPackageJson({
           dependencies: {
