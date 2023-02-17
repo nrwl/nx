@@ -226,25 +226,30 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
       concatMap((arg) => {
         const graph = arg[0] as any;
         const ret = (arg[1] || { projects: {} }) as any;
-        const projectJsonReads = [] as Observable<any>[];
+        const projectJsonReads: Observable<
+          [string, ProjectConfiguration & { version: string }]
+        >[] = [];
         for (let projectName of Object.keys(graph.nodes)) {
           if (!ret.projects[projectName]) {
             projectJsonReads.push(
-              this.readExistingProjectJson(
-                join(graph.nodes[projectName].data.root, 'project.json')
+              zip(
+                of(projectName),
+                this.readExistingProjectJson(
+                  join(graph.nodes[projectName].data.root, 'project.json')
+                )
               )
             );
           }
         }
         return zip(...projectJsonReads).pipe(
-          map((projectJsons) => {
-            projectJsons
-              .filter((p) => p !== null)
-              .forEach((p) => {
-                delete p.version;
-                ret.projects[p.name] = {
-                  ...p,
-                  root: graph.nodes[p.name].data.root,
+          map((reads) => {
+            reads
+              .filter(([, p]) => p !== null)
+              .forEach(([projectName, project]) => {
+                delete project.version;
+                ret.projects[projectName] = {
+                  ...project,
+                  root: graph.nodes[projectName].data.root,
                 };
               });
 
@@ -290,9 +295,11 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
                     if (existingConfig.projects[projectName]) {
                       const updatedContent = this.mergeProjectConfiguration(
                         existingConfig.projects[projectName],
-                        projects[projectName]
+                        projects[projectName],
+                        projectName
                       );
                       if (updatedContent) {
+                        delete updatedContent.root;
                         allObservables.push(
                           super.write(
                             path as any,
@@ -338,7 +345,8 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
 
   mergeProjectConfiguration(
     existing: ProjectConfiguration,
-    updated: ProjectConfiguration
+    updated: ProjectConfiguration,
+    projectName: string
   ) {
     const res = { ...existing };
 
@@ -352,6 +360,10 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
         res.targets[target] = updated.targets[target];
         modified = true;
       }
+    }
+    if (!res.name) {
+      res.name = updated.name || projectName;
+      modified = true;
     }
 
     return modified ? res : null;
