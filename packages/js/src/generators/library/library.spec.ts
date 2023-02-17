@@ -201,6 +201,7 @@ describe('lib', () => {
           ...defaultOptions,
           name: 'myLib',
           directory: 'myDir',
+          bundler: 'none',
         });
         expect(tree.exists(`libs/my-dir/my-lib/jest.config.ts`)).toBeTruthy();
         expect(tree.exists('libs/my-dir/my-lib/src/index.ts')).toBeTruthy();
@@ -727,12 +728,23 @@ describe('lib', () => {
       expect(readme).toContain('nx test my-lib');
     });
 
-    describe('--buildable', () => {
+    it('should not generate a buildable lib if bundler=none', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        name: 'myLib',
+        bundler: 'none',
+        compiler: 'tsc',
+      });
+
+      const config = readProjectConfiguration(tree, 'my-lib');
+      expect(config.targets.build).toBeUndefined();
+    });
+
+    describe('for buildable libs', () => {
       it('should generate the build target', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
           name: 'myLib',
-          buildable: true,
           compiler: 'tsc',
         });
 
@@ -749,11 +761,57 @@ describe('lib', () => {
         });
       });
 
+      it('should generate the build target for bundler esbuild', async () => {
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          name: 'myLib',
+          bundler: 'esbuild',
+          compiler: 'tsc',
+        });
+
+        const config = readProjectConfiguration(tree, 'my-lib');
+        expect(config.targets.build.executor).toEqual('@nrwl/esbuild:esbuild');
+      });
+
+      it('should generate the build target for bundler rollup', async () => {
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          name: 'myLib',
+          bundler: 'rollup',
+          compiler: 'tsc',
+        });
+
+        const config = readProjectConfiguration(tree, 'my-lib');
+        expect(config.targets.build.executor).toEqual('@nrwl/rollup:rollup');
+      });
+
+      it('should generate the build target for bundler vite', async () => {
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          name: 'myLib',
+          bundler: 'vite',
+          compiler: 'tsc',
+        });
+
+        const config = readProjectConfiguration(tree, 'my-lib');
+        expect(config.targets.build.executor).toEqual('@nrwl/vite:build');
+      });
+      it('should generate the build target for bundler webpack', async () => {
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          name: 'myLib',
+          bundler: 'webpack',
+          compiler: 'tsc',
+        });
+
+        const config = readProjectConfiguration(tree, 'my-lib');
+        expect(config.targets.build.executor).toEqual('@nrwl/webpack:webpack');
+      });
+
       it('should generate the build target for swc', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
           name: 'myLib',
-          buildable: true,
           compiler: 'swc',
         });
 
@@ -774,7 +832,6 @@ describe('lib', () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
           name: 'myLib',
-          buildable: true,
           compiler: 'swc',
         });
 
@@ -785,7 +842,6 @@ describe('lib', () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
           name: 'myLib',
-          buildable: true,
           compiler: 'swc',
         });
 
@@ -797,7 +853,6 @@ describe('lib', () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
           name: 'myLib',
-          buildable: true,
           compiler: 'tsc',
         });
 

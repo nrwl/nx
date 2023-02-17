@@ -143,7 +143,7 @@ function addProject(
     tags: options.parsedTags,
   };
 
-  if (options.buildable && options.config !== 'npm-scripts') {
+  if (options.bundler !== 'none' && options.config !== 'npm-scripts') {
     const outputPath = destinationDir
       ? `dist/${destinationDir}/${options.projectDirectory}`
       : `dist/${options.projectDirectory}`;
@@ -262,7 +262,7 @@ function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
     tmpl: '',
     offsetFromRoot: offsetFromRoot(options.projectRoot),
     rootTsConfigPath: getRelativePathToRootTsConfig(tree, options.projectRoot),
-    buildable: options.buildable === true,
+    buildable: options.bundler !== 'none',
     hasUnitTestRunner: options.unitTestRunner !== 'none',
   });
 
@@ -299,7 +299,7 @@ function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
       };
       return json;
     });
-  } else if (!options.buildable) {
+  } else if (options.bundler === 'none') {
     tree.delete(packageJsonPath);
   }
 
@@ -358,14 +358,13 @@ function normalizeOptions(
         `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`
       );
     }
-    options.buildable = true;
   }
 
   const { Linter } = require('@nrwl/linter');
   if (options.config === 'npm-scripts') {
     options.unitTestRunner = 'none';
     options.linter = Linter.None;
-    options.buildable = false;
+    options.bundler = 'none';
   }
   options.compiler ??= 'tsc';
 
@@ -459,6 +458,8 @@ function getBuildExecutor(options: NormalizedSchema) {
       return `@nrwl/esbuild:esbuild`;
     case 'rollup':
       return `@nrwl/rollup:rollup`;
+    case 'none':
+      return;
     default:
       return `@nrwl/js:${options.compiler}`;
   }

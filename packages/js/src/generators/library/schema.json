@@ -87,9 +87,9 @@
     },
     "buildable": {
       "type": "boolean",
-      "default": true,
+      "default": false,
       "description": "Generate a buildable library.",
-      "x-priority": "important"
+      "x-deprecated": "Use the `bundler` option for greater control (none, esbuild, rollup, vite, webpack)."
     },
     "setParserOptionsProject": {
       "type": "boolean",
@@ -111,10 +111,11 @@
       "x-priority": "important"
     },
     "bundler": {
-      "description": "The bundler to use.",
+      "description": "The bundler to use. Choosing 'none' means this library is not buildable.",
       "type": "string",
       "enum": ["none", "esbuild", "rollup", "vite"],
       "default": "none",
+      "x-prompt": "Which bundler would you like to use to build the library? Choose 'none' to skip build setup.",
       "x-priority": "important"
     },
     "skipTypeCheck": {
