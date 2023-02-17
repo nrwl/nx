@@ -8,7 +8,9 @@ export function updatePackageJson(
   if (!packageJson.scripts) {
     packageJson.scripts = {};
   }
-  packageJson.scripts.start = 'next start';
+  if (!packageJson.scripts.start) {
+    packageJson.scripts.start = 'next start';
+  }
 
   const typescriptNode = context.projectGraph.externalNodes['npm:typescript'];
   if (typescriptNode) {
