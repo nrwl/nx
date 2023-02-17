@@ -103,29 +103,21 @@ As the migration runs and collects the package updates, you'll be prompted to ap
 
 Once you have skipped some optional updates, there'll come a time when you'll want to update those packages. To do so, you'll need to generate the package updates and migrations from the Nx version that contained those skipped updates.
 
-Say you skipped updating Jest to **v28.x.x**. That package update was meant to happen as part of the `@nrwl/jest@14.6.0` update, but you decided to skip it at the time. The `nx migrate` command collects updates for a package from versions higher than the currently installed version of the said package in the workspace. Since you need to collect updates and migrations that were meant to happen for version **14.6.0** (a version older that what's currently installed), you need to run the command and "fake" the installed version of the `@nrwl/jest` package to a version lower than **14.6.0**:
+Say you skipped updating Jest to **v28.x.x**. That package update was meant to happen as part of the `@nrwl/jest@14.6.0` update, but you decided to skip it at the time. The recommended way to collect the migrations from such an older version is to run the following:
 
 ```shell
-nx migrate @nrwl/jest@latest --from=@nrwl/jest@14.5.0
+nx migrate latest --from=nx@14.5.0 --exclude-applied-migrations
 ```
 
-The above command will effectively collect any package update and migration meant to run if your workspace had `@nrwl/jest@14.5.0` installed. While collecting package updates and migrations for a specific package works, it's not always the best way to proceed.
+A couple of things are happening there:
 
-In the specific example we have been using, since you manage the `jest` package (because you opted out of its automated migrations), you also need to be mindful of packages that depend on it and act accordingly. You could have different version requirements from different packages that depend on it. An example would be if you decide to stay on Jest v27 while updating your Angular version to v15. The `jest-preset-angular` package doesn't have a version that works with both. All versions of `jest-preset-angular` that support Angular v15 require Jest v28.
+- The `--from=nx@14.5.0` flag tells the `migrate` command to use the version **14.5.0** as the installed version for the `nx` package and all the first-party Nx plugins
+- The `--exclude-applied-migrations` flag tells the `migrate` command not to collect migrations that should have been applied on previous updates
 
-In that case you have a couple of options:
+So, the above command will effectively collect any package update and migration meant to run if your workspace had `nx@14.5.0` installed while excluding those that should have been applied before. You can provide a different older version to collect migrations from.
 
-- Don't update to Angular v15
-- Update Jest to v28 and Angular to v15
-
-If you choose the latter, you'll need to make sure package updates and migrations from `@nrwl/jest` (manages `jest`) and `@nrwl/angular` (manages `jest-preset-angular`) are collected. You can do that by using the `nx` package that groups the rest of the first-party Nx plugins:
-
-```shell
-nx migrate latest --from=nx@14.5.0
-```
-
-{% callout type="check" title="Collect updates for all packages" %}
-As a general rule, prefer to run `nx migrate latest --from=nx@<version>` so package updates and migrations are collected from all Nx first-party plugins. By doing so, you'll be closer to what a fully-automated Nx migration does and avoid some potential issues. While it might collect migrations previously run in the repo, those migrations should be idempotent and you could always remove them from the `migrations.json` file if you want.
+{% callout type="warning" title="Automatically excluding previously applied migrations" %}
+Automatically excluding previously applied migrations doesn't consider migrations manually removed from the `migrations.json` in previous updates. If you've manually removed migrations in the past and want to run them, don't pass the `--exclude-applied-migrations` and collect all previous migrations.
 {% /callout %}
 
 ## Other advanced capabilities
