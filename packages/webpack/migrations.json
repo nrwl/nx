@@ -17,6 +17,12 @@
       "version": "15.6.3-beta.0",
       "description": "Creates or updates webpack.config.js file with the new options for webpack.",
       "factory": "./src/migrations/update-15-6-3/webpack-config-setup"
+    },
+    "add-babelUpwardRootMode-flag": {
+      "cli": "nx",
+      "version": "15.7.2-beta.0",
+      "description": "Add the babelUpwardRootMode option to the build executor options.",
+      "factory": "./src/migrations/update-15-7-2/add-babelUpwardRootMode-flag"
     }
   },
   "packageJsonUpdates": {}

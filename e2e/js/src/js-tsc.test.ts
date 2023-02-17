@@ -34,13 +34,6 @@ describe('js e2e', () => {
     const libPackageJson = readJson(`libs/${lib}/package.json`);
     expect(libPackageJson.scripts).toBeUndefined();
 
-    // Since `@nrwl/web` is installed in workspace, .babelrc and babel preset are needed for this lib
-    const babelRc = readJson(`libs/${lib}/.babelrc`);
-    expect(babelRc.plugins).toBeUndefined();
-    expect(babelRc.presets).toStrictEqual([
-      ['@nrwl/js/babel', { useBuiltIns: 'usage' }],
-    ]);
-
     expect(runCLI(`build ${lib}`)).toContain('Done compiling TypeScript files');
     checkFilesExist(
       `dist/libs/${lib}/README.md`,

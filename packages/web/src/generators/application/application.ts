@@ -100,6 +100,10 @@ async function setupBundler(tree: Tree, options: NormalizedSchema) {
     buildOptions.styles = [
       joinPathFragments(options.appProjectRoot, `src/styles.${options.style}`),
     ];
+    // We can delete that, because this projest is an application
+    // and applications have a .babelrc file in their root dir.
+    // So Nx will find it and use it
+    delete buildOptions.babelUpwardRootMode;
     buildOptions.scripts = [];
     prodConfig.fileReplacements = [
       {
