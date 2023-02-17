@@ -735,7 +735,7 @@ function withGenerateOptions(yargs: yargs.Argv) {
       default: false,
     })
     .middleware((args) => {
-      if (process.env.NX_INTERACTIVE !== 'false') {
+      if (process.env.NX_INTERACTIVE === 'true') {
         args.interactive = true;
       } else {
         process.env.NX_INTERACTIVE = `${args.interactive}`;
