@@ -1,6 +1,5 @@
 import { dirname, join } from 'path';
-import { TsConfigOptions } from 'ts-node';
-import type { CompilerOptions, TsConfigSourceFile } from 'typescript';
+import type { CompilerOptions } from 'typescript';
 import { logger, NX_PREFIX, stripIndent } from './logger';
 
 const swcNodeInstalled = packageIsInstalled('@swc-node/register');
@@ -174,31 +173,31 @@ function packageIsInstalled(m: string) {
  * `register`'s signature just types the field as `object`, so we
  * unfortunately do not get any kind of type safety on this.
  */
-function getTsNodeCompilerOptions(compilerOptions: CompilerOptions) {
+export function getTsNodeCompilerOptions(compilerOptions: CompilerOptions) {
   if (!ts) {
     ts = require('typescript');
   }
-  return {
-    ...compilerOptions,
-    ...getValueFromTsEnum(compilerOptions, 'module', 'ModuleKind'),
-    ...getValueFromTsEnum(compilerOptions, 'target', 'ScriptTarget'),
-    ...getValueFromTsEnum(
-      compilerOptions,
-      'moduleDetection',
-      'ModuleDetectionKind'
-    ),
-    ...getValueFromTsEnum(compilerOptions, 'newLine', 'NewLineKind'),
-    ...getValueFromTsEnum(
-      compilerOptions,
-      'moduleResolution',
-      'ModuleResolutionKind'
-    ),
-    ...getValueFromTsEnum(
-      compilerOptions,
-      'importsNotUsedAsValues',
-      'ImportsNotUsedAsValues'
-    ),
+
+  const flagMap: Partial<
+    Record<keyof RemoveIndex<CompilerOptions>, keyof typeof ts>
+  > = {
+    module: 'ModuleKind',
+    target: 'ScriptTarget',
+    moduleDetection: 'ModuleDetectionKind',
+    newLine: 'NewLineKind',
+    moduleResolution: 'ModuleResolutionKind',
+    importsNotUsedAsValues: 'ImportsNotUsedAsValues',
   };
+
+  const result = { ...compilerOptions };
+
+  for (const flag in flagMap) {
+    if (compilerOptions[flag]) {
+      result[flag] = ts[flagMap[flag]][compilerOptions[flag]];
+    }
+  }
+
+  return result;
 }
 
 /**
@@ -209,15 +208,3 @@ function getTsNodeCompilerOptions(compilerOptions: CompilerOptions) {
 type RemoveIndex<T> = {
   [K in keyof T as {} extends Record<K, 1> ? never : K]: T[K];
 };
-
-function getValueFromTsEnum(
-  compilerOptions: CompilerOptions,
-  flag: keyof RemoveIndex<CompilerOptions>,
-  enumName: keyof typeof ts
-) {
-  return compilerOptions[flag]
-    ? {
-        [flag]: ts[enumName][compilerOptions[flag] as any],
-      }
-    : {};
-}
