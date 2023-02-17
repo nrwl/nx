@@ -1,5 +1,5 @@
 // Create packages dictionary mapping
-export function convertToDictionary<OBJECT>(
+export function convertToDictionary<OBJECT extends object>(
   arr: OBJECT[],
   ref: PropertyKey
 ): Record<PropertyKey, OBJECT> {
