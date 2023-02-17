@@ -66,6 +66,11 @@
       "type": "string",
       "description": "Path relative to workspace root to a custom webpack file that takes a config object and returns an updated config.",
       "x-priority": "internal"
+    },
+    "babelConfig": {
+      "type": "string",
+      "description": "Optionally specify a path relative to workspace root to the babel configuration file of your project.",
+      "x-completion-type": "file"
     }
   },
   "required": []

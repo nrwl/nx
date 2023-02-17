@@ -68,6 +68,8 @@ export interface WebpackExecutorOptions {
   verbose?: boolean;
   watch?: boolean;
   webpackConfig?: string;
+  babelConfig?: string;
+  babelUpwardRootMode?: boolean;
   // TODO(jack): Also deprecate these in schema.json once we have migration from executor options to webpack.config.js file.
   /** @deprecated Moved to withWeb options from `@nrwl/webpack` */
   baseHref?: string;

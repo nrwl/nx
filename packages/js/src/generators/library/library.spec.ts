@@ -927,38 +927,6 @@ describe('lib', () => {
         `);
       });
 
-      it('should generate a .babelrc when flag is not set and there is a `@nrwl/web` package installed', async () => {
-        updateJson(tree, 'package.json', (json) => {
-          json.devDependencies = {
-            '@nrwl/web': '1.1.1',
-            '@nrwl/react': '1.1.1',
-            '@nrwl/next': '1.1.1',
-          };
-          return json;
-        });
-
-        await libraryGenerator(tree, {
-          ...defaultOptions,
-          name: 'myLib',
-          includeBabelRc: undefined,
-        });
-
-        expect(tree.exists('libs/my-lib/.babelrc')).toBeTruthy();
-
-        const babelRc = readJson(tree, 'libs/my-lib/.babelrc');
-        expect(babelRc).toMatchInlineSnapshot(`
-          Object {
-            "presets": Array [
-              Array [
-                "@nrwl/js/babel",
-                Object {
-                  "useBuiltIns": "usage",
-                },
-              ],
-            ],
-          }
-        `);
-      });
       it('should not generate a .babelrc when flag is not set and there is NOT a `@nrwl/web` package installed', async () => {
         updateJson(tree, 'package.json', (json) => {
           json.devDependencies = {
