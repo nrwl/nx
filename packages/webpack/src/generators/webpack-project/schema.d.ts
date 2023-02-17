@@ -9,4 +9,5 @@ export interface WebpackProjectGeneratorSchema {
   skipValidation?: boolean;
   target?: 'node' | 'web';
   webpackConfig?: string;
+  babelConfig?: string;
 }

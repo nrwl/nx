@@ -61,6 +61,12 @@ function addBuildTarget(tree: Tree, options: WebpackProjectGeneratorSchema) {
     buildOptions.webpackConfig = options.webpackConfig;
   }
 
+  if (options.babelConfig) {
+    buildOptions.babelConfig = options.babelConfig;
+  } else {
+    buildOptions.babelUpwardRootMode = true;
+  }
+
   updateProjectConfiguration(tree, options.project, {
     ...project,
     targets: {
