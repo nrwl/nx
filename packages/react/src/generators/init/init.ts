@@ -87,6 +87,7 @@ function initRootBabelConfig(tree: Tree, schema: InitSchema) {
 
 export async function reactInitGenerator(host: Tree, schema: InitSchema) {
   await jsInitGenerator(host, {
+    ...schema,
     js: schema.js,
     skipFormat: true,
   });

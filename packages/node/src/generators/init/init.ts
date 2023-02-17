@@ -38,6 +38,7 @@ function normalizeOptions(schema: Schema) {
 export async function initGenerator(tree: Tree, schema: Schema) {
   const options = normalizeOptions(schema);
   await jsInitGenerator(tree, {
+    ...schema,
     js: schema.js,
     skipFormat: true,
   });

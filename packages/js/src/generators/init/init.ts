@@ -19,8 +19,10 @@ export async function initGenerator(
   }
 
   // add tsconfig.base.json
-  if (!getRootTsConfigFileName()) {
-    generateFiles(host, joinPathFragments(__dirname, './files'), '.', {});
+  if (!getRootTsConfigFileName(host)) {
+    generateFiles(host, joinPathFragments(__dirname, './files'), '.', {
+      fileName: schema.tsConfigName ?? 'tsconfig.base.json',
+    });
   }
 
   if (!schema.skipFormat) {

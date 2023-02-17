@@ -19,6 +19,11 @@
         "description": "Skip formatting files.",
         "default": true,
         "x-priority": "internal"
+      },
+      "tsConfigName": {
+        "type": "string",
+        "description": "Customize the generated tsconfig file name.",
+        "x-priority": "internal"
       }
     },
     "presets": []

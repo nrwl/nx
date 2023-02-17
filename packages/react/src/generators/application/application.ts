@@ -88,12 +88,14 @@ export async function applicationGenerator(
 
   const options = normalizeOptions(host, schema);
 
-  const initTask = await reactInitGenerator(host, {
+  const initOptions = {
     ...options,
+    tsConfigName: options.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
     skipFormat: true,
     skipBabelConfig: options.bundler === 'vite',
     skipHelperLibs: options.bundler === 'vite',
-  });
+  };
+  const initTask = await reactInitGenerator(host, initOptions);
 
   tasks.push(initTask);
 

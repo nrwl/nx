@@ -70,6 +70,7 @@ export async function angularInitGenerator(
   const options = normalizeOptions(rawOptions);
   setDefaults(tree, options);
   await jsInitGenerator(tree, {
+    ...options,
     js: false,
     skipFormat: true,
   });

@@ -58,10 +58,12 @@ export async function applicationGenerator(
 
   const options = normalizeOptions(tree, schema);
 
-  await angularInitGenerator(tree, {
+  const initOptions = {
     ...options,
+    tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
     skipFormat: true,
-  });
+  };
+  await angularInitGenerator(tree, initOptions);
 
   const { wrapAngularDevkitSchematic } = require('@nrwl/devkit/ngcli-adapter');
   const angularAppSchematic = wrapAngularDevkitSchematic(
