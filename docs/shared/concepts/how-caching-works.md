@@ -72,9 +72,16 @@ We can define a more precise configuration as follows:
 }
 ```
 
-{% callout type="note" title="{projectRoot}" %}
-`{projectRoot}` is a key word that is replaced by the path to the current project's root directory.
+<!-- Prettier causes the callout block to break -->
+<!-- prettier-ignore-start -->
+
+{% callout type="note" title="Special Syntax Explained" %}
+
+- `{projectRoot}` is a key word that is replaced by the path to the current project's root directory.
+- `{workspaceRoot}` is key word that is replace by the root path of your workspace.
+- The `^` symbol means "of dependencies", i.e. `"^production"` means match the files defined for the `"production"` `namedInput`, but for all projects which the current project depends on.
 {% /callout %}
+<!-- prettier-ignore-end -->
 
 With this configuration, the build script will only consider the non-test files of `remixapp`, `header` and `footer`.
 The test script will consider all the source files for the project under test and only non-test files of its
