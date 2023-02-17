@@ -28,6 +28,8 @@ export async function angularInitGenerator(
   const options = normalizeOptions(rawOptions);
   setDefaults(host, options);
   await jsInitGenerator(host, {
+    ...options,
+    tsConfigName: options.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
     js: false,
     skipFormat: true,
   });
@@ -78,7 +80,7 @@ function normalizeOptions(options: Schema): Required<Schema> {
     skipPackageJson: options.skipPackageJson ?? false,
     style: options.style ?? 'css',
     unitTestRunner: options.unitTestRunner ?? UnitTestRunner.Jest,
-    tsConfigName: options.tsConfigName ?? 'tsconfig.base.json',
+    rootProject: options.rootProject,
   };
 }
 

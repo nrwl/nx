@@ -334,12 +334,10 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
   const options = normalizeOptions(tree, schema);
   const tasks: GeneratorCallback[] = [];
 
-  const initOptions = {
+  const initTask = await initGenerator(tree, {
     ...schema,
-    tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
     skipFormat: true,
-  };
-  const initTask = await initGenerator(tree, initOptions);
+  });
   tasks.push(initTask);
 
   const installTask = addProjectDependencies(tree, options);
