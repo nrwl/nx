@@ -31,10 +31,10 @@ type Arguments = {
   appName: string;
   style: string;
   framework: string;
-  standaloneApi: string;
+  standaloneApi: boolean;
   docker: boolean;
   nxCloud: boolean;
-  routing: string;
+  routing: boolean;
   allPrompts: boolean;
   packageManager: PackageManager;
   defaultBase: string;
@@ -46,6 +46,7 @@ type Arguments = {
     email: string;
   };
   bundler: 'vite' | 'webpack';
+  interactive: boolean;
 };
 
 enum Preset {
@@ -147,11 +148,11 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
         })
         .option('standaloneApi', {
           describe: chalk.dim`Use Standalone Components if generating an Angular app`,
-          type: 'string',
+          type: 'boolean',
         })
         .option('routing', {
           describe: chalk.dim`Add a routing setup when a preset with pregenerated app is selected`,
-          type: 'string',
+          type: 'boolean',
         })
         .option('bundler', {
           describe: chalk.dim`Bundler to be used to build the application`,
@@ -390,8 +391,12 @@ async function getConfiguration(
         }
 
         if (preset === Preset.AngularStandalone) {
-          standaloneApi = await determineStandaloneApi(argv);
-          routing = await determineRouting(argv);
+          standaloneApi =
+            argv.standaloneApi ??
+            (argv.interactive ? await determineStandaloneApi(argv) : false);
+          routing =
+            argv.routing ??
+            (argv.interactive ? await determineRouting(argv) : true);
         }
       } else {
         name = await determineRepoName(argv);
@@ -401,8 +406,12 @@ async function getConfiguration(
         }
 
         if (preset === Preset.AngularMonorepo) {
-          standaloneApi = await determineStandaloneApi(argv);
-          routing = await determineRouting(argv);
+          standaloneApi =
+            argv.standaloneApi ??
+            (argv.interactive ? await determineStandaloneApi(argv) : false);
+          routing =
+            argv.routing ??
+            (argv.interactive ? await determineRouting(argv) : true);
         }
       }
       style = await determineStyle(preset, argv);
@@ -765,7 +774,7 @@ async function determineFramework(
 
 async function determineStandaloneApi(
   parsedArgs: yargs.Arguments<Arguments>
-): Promise<string> {
+): Promise<boolean> {
   if (parsedArgs.standaloneApi === undefined) {
     return enquirer
       .prompt([
@@ -786,9 +795,7 @@ async function determineStandaloneApi(
           initial: 'No' as any,
         },
       ])
-      .then((a: { standaloneApi: 'Yes' | 'No' }) =>
-        a.standaloneApi === 'Yes' ? 'true' : 'false'
-      );
+      .then((a: { standaloneApi: 'Yes' | 'No' }) => a.standaloneApi === 'Yes');
   }
 
   return parsedArgs.standaloneApi;
@@ -922,7 +929,7 @@ async function determineStyle(
 
 async function determineRouting(
   parsedArgs: yargs.Arguments<Arguments>
-): Promise<string> {
+): Promise<boolean> {
   if (!parsedArgs.routing) {
     return enquirer
       .prompt([
@@ -942,9 +949,7 @@ async function determineRouting(
           initial: 'Yes' as any,
         },
       ])
-      .then((a: { routing: 'Yes' | 'No' }) =>
-        a.routing === 'Yes' ? 'true' : 'false'
-      );
+      .then((a: { routing: 'Yes' | 'No' }) => a.routing === 'Yes');
   }
 
   return parsedArgs.routing;
@@ -1128,7 +1133,9 @@ async function createApp(
     restArgs.packageManager = packageManager;
   }
 
-  const args = unparse(restArgs).join(' ');
+  const args = unparse({
+    ...restArgs,
+  }).join(' ');
 
   const pmc = getPackageManagerCommand(packageManager);
 
@@ -1181,7 +1188,9 @@ async function createPreset(
   const { _, skipGit, ci, commit, allPrompts, nxCloud, preset, ...restArgs } =
     parsedArgs;
 
-  const args = unparse(restArgs).join(' ');
+  const args = unparse({
+    ...restArgs,
+  }).join(' ');
 
   const pmc = getPackageManagerCommand(packageManager);
 

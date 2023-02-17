@@ -44,13 +44,13 @@ describe('create-nx-workspace', () => {
       appName: wsName,
       style: 'css',
       packageManager,
-      standaloneApi: false,
       routing: false,
     });
 
     checkFilesExist('package.json');
     checkFilesExist('project.json');
     checkFilesExist('src/app/app.module.ts');
+    checkFilesDoNotExist('src/app/app.routes.ts');
   });
 
   it('should create a workspace with a single angular app at the root using standalone APIs', () => {
