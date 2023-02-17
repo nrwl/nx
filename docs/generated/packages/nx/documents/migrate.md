@@ -59,10 +59,10 @@ Collect package updates and migrations in interactive mode. In this mode, the us
  nx migrate latest --interactive
 ```
 
-Collect package updates and migrations starting with version 14.5.0 of "nx" (and Nx first-party plugins), regardless of what is installed locally, while skipping migrations that were meant to be applied on previous updates:
+Collect package updates and migrations starting with version 14.5.0 of "nx" (and Nx first-party plugins), regardless of what is installed locally, while excluding migrations that should have been applied on previous updates:
 
 ```shell
- nx migrate latest --from=nx@14.5.0 --skip-applied-migrations
+ nx migrate latest --from=nx@14.5.0 --exclude-applied-migrations
 ```
 
 Run migrations from the provided migrations.json file. You can modify migrations.json and run this command many times:
@@ -95,6 +95,14 @@ Default: `false`
 
 Automatically create a git commit after each migration runs
 
+### excludeAppliedMigrations
+
+Type: `boolean`
+
+Default: `false`
+
+Exclude migrations that should have been previously applied on previous updates. To be used with --from
+
 ### from
 
 Type: `string`
@@ -126,14 +134,6 @@ The target package and version (e.g, @nrwl/workspace@13.0.0)
 Type: `string`
 
 Execute migrations from a file (when the file isn't provided, execute migrations from migrations.json)
-
-### skipAppliedMigrations
-
-Type: `boolean`
-
-Default: `false`
-
-Skip collecting migrations that were meant to be applied on previous updates. To be used with --from
 
 ### to
 

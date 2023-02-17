@@ -109,7 +109,7 @@ export interface MigratorOptions {
   from: { [pkg: string]: string };
   to: { [pkg: string]: string };
   interactive?: boolean;
-  skipAppliedMigrations?: boolean;
+  excludeAppliedMigrations?: boolean;
 }
 
 export class Migrator {
@@ -119,7 +119,7 @@ export class Migrator {
   private readonly installedPkgVersionOverrides: MigratorOptions['from'];
   private readonly to: MigratorOptions['to'];
   private readonly interactive: MigratorOptions['interactive'];
-  private readonly skipAppliedMigrations: MigratorOptions['skipAppliedMigrations'];
+  private readonly excludeAppliedMigrations: MigratorOptions['excludeAppliedMigrations'];
   private readonly packageUpdates: Record<string, PackageUpdate> = {};
   private readonly collectedVersions: Record<string, string> = {};
 
@@ -130,7 +130,7 @@ export class Migrator {
     this.installedPkgVersionOverrides = opts.from;
     this.to = opts.to;
     this.interactive = opts.interactive;
-    this.skipAppliedMigrations = opts.skipAppliedMigrations;
+    this.excludeAppliedMigrations = opts.excludeAppliedMigrations;
   }
 
   async migrate(targetPackage: string, targetVersion: string) {
@@ -471,7 +471,7 @@ export class Migrator {
     packageName: string,
     migration: MigrationsJsonEntry
   ): boolean {
-    if (!this.skipAppliedMigrations) {
+    if (!this.excludeAppliedMigrations) {
       return this.areRequirementsMet(migration.requires);
     }
 
@@ -657,7 +657,7 @@ type GenerateMigrations = {
   from: { [k: string]: string };
   to: { [k: string]: string };
   interactive?: boolean;
-  skipAppliedMigrations?: boolean;
+  excludeAppliedMigrations?: boolean;
 };
 
 type RunMigrations = { type: 'runMigrations'; runMigrations: string };
@@ -684,7 +684,7 @@ export function parseMigrationsOptions(options: {
       from,
       to,
       interactive: options.interactive,
-      skipAppliedMigrations: options.skipAppliedMigrations,
+      excludeAppliedMigrations: options.excludeAppliedMigrations,
     };
   } else {
     return {
@@ -1105,7 +1105,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       from: opts.from,
       to: opts.to,
       interactive: opts.interactive,
-      skipAppliedMigrations: opts.skipAppliedMigrations,
+      excludeAppliedMigrations: opts.excludeAppliedMigrations,
     });
 
     const { migrations, packageUpdates } = await migrator.migrate(

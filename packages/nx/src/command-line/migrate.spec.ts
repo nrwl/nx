@@ -1437,7 +1437,7 @@ describe('Migration', () => {
         },
         from: { parent: '0.1.0' },
         to: {},
-        skipAppliedMigrations: true,
+        excludeAppliedMigrations: true,
       });
 
       const result = await migrator.migrate('parent', '2.0.0');

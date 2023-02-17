@@ -972,25 +972,27 @@ function withMigrationOptions(yargs: yargs.Argv) {
       type: 'boolean',
       default: false,
     })
-    .option('skipAppliedMigrations', {
+    .option('excludeAppliedMigrations', {
       describe:
-        'Skip collecting migrations that were meant to be applied on previous updates. To be used with --from',
+        'Exclude migrations that should have been previously applied on previous updates. To be used with --from',
       type: 'boolean',
       default: false,
     })
-    .check(({ createCommits, commitPrefix, from, skipAppliedMigrations }) => {
-      if (!createCommits && commitPrefix !== defaultCommitPrefix) {
-        throw new Error(
-          'Error: Providing a custom commit prefix requires --create-commits to be enabled'
-        );
+    .check(
+      ({ createCommits, commitPrefix, from, excludeAppliedMigrations }) => {
+        if (!createCommits && commitPrefix !== defaultCommitPrefix) {
+          throw new Error(
+            'Error: Providing a custom commit prefix requires --create-commits to be enabled'
+          );
+        }
+        if (excludeAppliedMigrations && !from) {
+          throw new Error(
+            'Error: Excluding migrations that should have been previously applied requires --from to be set'
+          );
+        }
+        return true;
       }
-      if (skipAppliedMigrations && !from) {
-        throw new Error(
-          'Error: Skipping migrations that were previously applied requires --from to be set'
-        );
-      }
-      return true;
-    });
+    );
 }
 
 function withWatchOptions(yargs: yargs.Argv) {

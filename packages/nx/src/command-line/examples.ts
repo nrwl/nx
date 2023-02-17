@@ -349,9 +349,9 @@ export const examples: Record<string, Example[]> = {
         'Collect package updates and migrations in interactive mode. In this mode, the user will be prompted whether to apply any optional package update and migration',
     },
     {
-      command: 'migrate latest --from=nx@14.5.0 --skip-applied-migrations',
+      command: 'migrate latest --from=nx@14.5.0 --exclude-applied-migrations',
       description:
-        'Collect package updates and migrations starting with version 14.5.0 of "nx" (and Nx first-party plugins), regardless of what is installed locally, while skipping migrations that were meant to be applied on previous updates',
+        'Collect package updates and migrations starting with version 14.5.0 of "nx" (and Nx first-party plugins), regardless of what is installed locally, while excluding migrations that should have been applied on previous updates',
     },
     {
       command: 'migrate --run-migrations=migrations.json',
