@@ -8,12 +8,13 @@ import { join } from 'path';
 import { NativeFileHasher } from './native-file-hasher';
 
 function createFileHasher(): FileHasherBase {
-  // special case for unit tests
-  if (workspaceRoot === '/root') {
-    return new NodeBasedFileHasher();
-  }
   try {
-    if (process.env.NX_NATIVE_HASHER) {
+    if (
+      !(
+        process.env.NX_NON_NATIVE_HASHER &&
+        process.env.NX_NON_NATIVE_HASHER == 'false'
+      )
+    ) {
       return new NativeFileHasher();
     }
 

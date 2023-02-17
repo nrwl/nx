@@ -1,6 +1,8 @@
-import '../../utils/testing/mock-fs';
+import { TempFs } from '../../utils/testing/temp-fs';
+const tempFs = new TempFs('explicit-package-json');
+
 import { buildExplicitPackageJsonDependencies } from './explicit-package-json-dependencies';
-import { vol } from 'memfs';
+
 import { createProjectFileMap } from '../file-map-utils';
 import { defaultFileHasher } from '../../hasher/file-hasher';
 import {
@@ -9,15 +11,11 @@ import {
 } from '../../config/project-graph';
 import { ProjectGraphBuilder } from '../project-graph-builder';
 
-jest.mock('nx/src/utils/workspace-root', () => ({
-  workspaceRoot: '/root',
-}));
-
 describe('explicit package json dependencies', () => {
   let ctx: ProjectGraphProcessorContext;
   let projects: Record<string, ProjectGraphProjectNode>;
-  let fsJson;
-  beforeEach(() => {
+
+  beforeEach(async () => {
     const projectsConfigurations = {
       projects: {
         proj: {
@@ -39,12 +37,12 @@ describe('explicit package json dependencies', () => {
       npmScope: 'proj',
     };
 
-    fsJson = {
+    await tempFs.createFiles({
       './package.json': `{
-        "name": "test",
-        "dependencies": [],
-        "devDependencies": []
-      }`,
+            "name": "test",
+            "dependencies": [],
+            "devDependencies": []
+          }`,
       './nx.json': JSON.stringify(nxJsonConfiguration),
       './tsconfig.base.json': JSON.stringify({}),
       './libs/proj2/package.json': JSON.stringify({ name: 'proj2' }),
@@ -53,10 +51,9 @@ describe('explicit package json dependencies', () => {
         dependencies: { proj2: '*', external: '12.0.0' },
         devDependencies: { proj3: '*' },
       }),
-    };
-    vol.fromJSON(fsJson, '/root');
+    });
 
-    defaultFileHasher.init();
+    await defaultFileHasher.init();
 
     ctx = {
       projectsConfigurations,
@@ -87,6 +84,10 @@ describe('explicit package json dependencies', () => {
         data: { root: 'libs/proj4', files: [] },
       },
     };
+  });
+
+  afterEach(() => {
+    tempFs.cleanup();
   });
 
   it(`should add dependencies for projects based on deps in package.json`, () => {
