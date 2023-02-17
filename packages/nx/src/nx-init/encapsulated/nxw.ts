@@ -19,23 +19,16 @@ function matchesCurrentNxInstall(
   nxJsonInstallation: NxJsonConfiguration['installation']
 ) {
   try {
-    const currentInstallation: PackageJson = JSON.parse(
-      fs.readFileSync(installationPath, 'utf-8')
-    );
+    const currentInstallation: PackageJson = require(installationPath);
     if (
       currentInstallation.devDependencies['nx'] !==
         nxJsonInstallation.version ||
-      JSON.parse(
-        fs.readFileSync(
-          path.join(
-            path.dirname(installationPath),
-            'node_modules',
-            'nx',
-            'package.json'
-          ),
-          'utf-8'
-        )
-      ).version !== nxJsonInstallation.version
+      require(path.join(
+        path.dirname(installationPath),
+        'node_modules',
+        'nx',
+        'package.json'
+      )).version !== nxJsonInstallation.version
     ) {
       return false;
     }
@@ -64,7 +57,7 @@ function ensureUpToDateInstallation() {
   let nxJson: NxJsonConfiguration;
 
   try {
-    nxJson = JSON.parse(fs.readFileSync(nxJsonPath, 'utf-8'));
+    nxJson = require(nxJsonPath);
   } catch {
     console.error(
       '[NX]: nx.json is required when running in encapsulated mode. Run `npx nx init --encapsulated` to restore it.'

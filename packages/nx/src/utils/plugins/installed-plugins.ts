@@ -13,35 +13,36 @@ export function findInstalledPlugins(): PackageJson[] {
   const packageJsonDeps = getDependenciesFromPackageJson();
   const nxJsonDeps = getDependenciesFromNxJson();
   const deps = packageJsonDeps.concat(nxJsonDeps);
-  return deps.reduce(
-    (arr: any[], nextDep: string): { project: string; version: string }[] => {
-      try {
-        const depPackageJson: Partial<PackageJson> =
-          readModulePackageJson(nextDep, [
-            workspaceRoot,
-            join(workspaceRoot, '.nx', ' installation'),
-          ]).packageJson || {};
-        if (
-          [
-            'ng-update',
-            'nx-migrations',
-            'schematics',
-            'generators',
-            'builders',
-            'executors',
-          ].some((field) => field in depPackageJson)
-        ) {
-          arr.push({ package: nextDep, ...depPackageJson });
-          return arr;
-        } else {
-          return arr;
-        }
-      } catch {
-        return arr;
-      }
-    },
-    []
-  );
+  const result: PackageJson[] = [];
+  for (const dep of deps) {
+    const pluginPackageJson = getNxPluginPackageJsonOrNull(dep);
+    if (pluginPackageJson) {
+      result.push(pluginPackageJson);
+    }
+  }
+  return result;
+}
+
+function getNxPluginPackageJsonOrNull(pkg: string): PackageJson | null {
+  try {
+    const { packageJson } = readModulePackageJson(pkg, [
+      workspaceRoot,
+      join(workspaceRoot, '.nx', ' installation'),
+    ]);
+    return packageJson &&
+      [
+        'ng-update',
+        'nx-migrations',
+        'schematics',
+        'generators',
+        'builders',
+        'executors',
+      ].some((field) => field in packageJson)
+      ? packageJson
+      : null;
+  } catch {
+    return null;
+  }
 }
 
 function getDependenciesFromPackageJson(
