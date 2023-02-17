@@ -4,6 +4,7 @@ import { logger, NX_PREFIX, stripIndent } from './logger';
 
 const swcNodeInstalled = packageIsInstalled('@swc-node/register');
 const tsNodeInstalled = packageIsInstalled('ts-node/register');
+let ts: typeof import('typescript');
 
 /**
  * Optionally, if swc-node and tsconfig-paths are available in the current workspace, apply the require
@@ -63,7 +64,7 @@ export function registerTranspiler(
       registerTranspiler = () => {
         const service = register({
           transpileOnly: true,
-          compilerOptions,
+          compilerOptions: getTsNodeCompilerOptions(compilerOptions),
         });
         // Don't warn if a faster transpiler is enabled
         if (!service.options.transpiler && !service.options.swc) {
@@ -121,8 +122,10 @@ function readCompilerOptions(tsConfigPath): CompilerOptions {
 }
 
 function readCompilerOptionsWithTypescript(tsConfigPath) {
-  const { readConfigFile, parseJsonConfigFileContent, sys } =
-    require('typescript') as typeof import('typescript');
+  if (!ts) {
+    ts = require('typescript');
+  }
+  const { readConfigFile, parseJsonConfigFileContent, sys } = ts;
   const jsonContent = readConfigFile(tsConfigPath, sys.readFile);
   const { options } = parseJsonConfigFileContent(
     jsonContent,
@@ -164,3 +167,44 @@ function packageIsInstalled(m: string) {
     return false;
   }
 }
+
+/**
+ * ts-node requires string values for enum based typescript options.
+ * `register`'s signature just types the field as `object`, so we
+ * unfortunately do not get any kind of type safety on this.
+ */
+export function getTsNodeCompilerOptions(compilerOptions: CompilerOptions) {
+  if (!ts) {
+    ts = require('typescript');
+  }
+
+  const flagMap: Partial<
+    Record<keyof RemoveIndex<CompilerOptions>, keyof typeof ts>
+  > = {
+    module: 'ModuleKind',
+    target: 'ScriptTarget',
+    moduleDetection: 'ModuleDetectionKind',
+    newLine: 'NewLineKind',
+    moduleResolution: 'ModuleResolutionKind',
+    importsNotUsedAsValues: 'ImportsNotUsedAsValues',
+  };
+
+  const result = { ...compilerOptions };
+
+  for (const flag in flagMap) {
+    if (compilerOptions[flag]) {
+      result[flag] = ts[flagMap[flag]][compilerOptions[flag]];
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Index keys allow empty objects, where as "real" keys
+ * require a value. Thus, this filters out index keys
+ * See: https://stackoverflow.com/a/68261113/3662471
+ */
+type RemoveIndex<T> = {
+  [K in keyof T as {} extends Record<K, 1> ? never : K]: T[K];
+};
