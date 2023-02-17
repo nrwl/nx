@@ -78,7 +78,7 @@ We can define a more precise configuration as follows:
 {% callout type="note" title="Special Syntax Explained" %}
 
 - `{projectRoot}` is a key word that is replaced by the path to the current project's root directory.
-- `{workspaceRoot}` is key word that is replace by the root path of your workspace.
+- `{workspaceRoot}` is a key word that is replaced by the root path of your workspace.
 - The `^` symbol means "of dependencies", i.e. `"^production"` means match the files defined for the `"production"` `namedInput`, but for all projects which the current project depends on.
 {% /callout %}
 <!-- prettier-ignore-end -->
