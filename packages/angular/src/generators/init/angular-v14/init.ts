@@ -78,6 +78,7 @@ function normalizeOptions(options: Schema): Required<Schema> {
     skipPackageJson: options.skipPackageJson ?? false,
     style: options.style ?? 'css',
     unitTestRunner: options.unitTestRunner ?? UnitTestRunner.Jest,
+    tsConfigName: options.tsConfigName ?? 'tsconfig.base.json',
   };
 }
 
