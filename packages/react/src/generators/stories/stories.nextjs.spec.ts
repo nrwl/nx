@@ -61,7 +61,7 @@ export async function createTestUIApp(name: string): Promise<Tree> {
   await applicationGenerator(tree, {
     e2eTestRunner: 'none',
     linter: Linter.EsLint,
-    skipFormat: false,
+    skipFormat: true,
     style: 'css',
     unitTestRunner: 'none',
     name,

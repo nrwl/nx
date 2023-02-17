@@ -347,7 +347,7 @@ export async function createTestUIApp(
   await applicationGenerator(appTree, {
     e2eTestRunner: 'cypress',
     linter: Linter.EsLint,
-    skipFormat: false,
+    skipFormat: true,
     style: 'css',
     unitTestRunner: 'none',
     name: libName,

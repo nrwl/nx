@@ -242,7 +242,7 @@ export async function createTestUILib(
   await applicationGenerator(appTree, {
     e2eTestRunner: 'none',
     linter: Linter.EsLint,
-    skipFormat: false,
+    skipFormat: true,
     style: 'css',
     unitTestRunner: 'none',
     name: `${libName}-e2e`,
