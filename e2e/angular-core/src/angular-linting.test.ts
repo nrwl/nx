@@ -14,18 +14,24 @@ describe('Angular Package', () => {
 
     it('should support eslint and pass linting on the standard generated code', async () => {
       const myapp = uniq('myapp');
-      runCLI(`generate @nrwl/angular:app ${myapp} --linter=eslint`);
+      runCLI(
+        `generate @nrwl/angular:app ${myapp} --linter=eslint --no-interactive`
+      );
       expect(runCLI(`lint ${myapp}`)).toContain('All files pass linting.');
 
       const mylib = uniq('mylib');
-      runCLI(`generate @nrwl/angular:lib ${mylib} --linter=eslint`);
+      runCLI(
+        `generate @nrwl/angular:lib ${mylib} --linter=eslint --no-interactive`
+      );
       expect(runCLI(`lint ${mylib}`)).toContain('All files pass linting.');
     });
 
     it('should support eslint and successfully lint external HTML files and inline templates', async () => {
       const myapp = uniq('myapp');
 
-      runCLI(`generate @nrwl/angular:app ${myapp} --linter=eslint`);
+      runCLI(
+        `generate @nrwl/angular:app ${myapp} --linter=eslint --no-interactive`
+      );
 
       const templateWhichFailsBananaInBoxLintCheck = `<div ([foo])="bar"></div>`;
       const wrappedAsInlineTemplate = `

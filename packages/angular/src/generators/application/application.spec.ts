@@ -20,17 +20,23 @@ import {
 } from '../../utils/versions';
 import { applicationGenerator } from './application';
 import type { Schema } from './schema';
-
+import * as enquirer from 'enquirer';
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
 jest.mock('@nrwl/cypress/src/utils/cypress-version');
+jest.mock('enquirer');
 describe('app', () => {
   let appTree: Tree;
   let mockedInstalledCypressVersion: jest.Mock<
     ReturnType<typeof installedCypressVersion>
   > = installedCypressVersion as never;
+
   beforeEach(() => {
     mockedInstalledCypressVersion.mockReturnValue(10);
+    // @ts-ignore
+    enquirer.prompt = jest
+      .fn()
+      .mockReturnValue(Promise.resolve({ 'standalone-components': true }));
     appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
@@ -818,6 +824,48 @@ describe('app', () => {
       expect(
         appTree.read('apps/standalone/src/app/nx-welcome.component.ts', 'utf-8')
       ).toContain('standalone: true');
+    });
+
+    it('should prompt for standalone components and not use them when the user selects false', async () => {
+      // ARRANGE
+      process.env.NX_INTERACTIVE = 'true';
+      // @ts-ignore
+      enquirer.prompt = jest
+        .fn()
+        .mockReturnValue(Promise.resolve({ 'standalone-components': false }));
+
+      // ACT
+      await generateApp(appTree, 'nostandalone');
+
+      // ASSERT
+      expect(
+        appTree.exists('apps/nostandalone/src/app/app.module.ts')
+      ).toBeTruthy();
+      expect(enquirer.prompt).toHaveBeenCalled();
+
+      // CLEANUP
+      process.env.NX_INTERACTIVE = undefined;
+    });
+
+    it('should prompt for standalone components and use them when the user selects true', async () => {
+      // ARRANGE
+      process.env.NX_INTERACTIVE = 'true';
+      // @ts-ignore
+      enquirer.prompt = jest
+        .fn()
+        .mockReturnValue(Promise.resolve({ 'standalone-components': true }));
+
+      // ACT
+      await generateApp(appTree, 'nostandalone');
+
+      // ASSERT
+      expect(
+        appTree.exists('apps/nostandalone/src/app/app.module.ts')
+      ).not.toBeTruthy();
+      expect(enquirer.prompt).toHaveBeenCalled();
+
+      // CLEANUP
+      process.env.NX_INTERACTIVE = undefined;
     });
   });
 

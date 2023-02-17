@@ -148,7 +148,7 @@
       "standalone": {
         "description": "Generate an application that is setup to use standalone components. _Note: This is only supported in Angular versions >= 14.1.0_",
         "type": "boolean",
-        "default": false
+        "x-priority": "important"
       },
       "rootProject": {
         "description": "Create an application at the root of the workspace.",
