@@ -383,5 +383,10 @@
     "name": "@nxrocks/nx-melos",
     "description": "Nx plugin adding first class support for Melos in your Nx workspace",
     "url": "https://github.com/tinesoft/nxrocks/tree/master/packages/nx-melos"
+  },
+  {
+    "name": "@monodon/rust",
+    "description": "Adds Cargo and Rust support",
+    "url": "https://github.com/cammisuli/monodon/tree/main/packages/rust"
   }
 ]
