@@ -31,5 +31,18 @@
       "factory": "./src/migrations/update-14-1-5/update-swcrc-path"
     }
   },
-  "packageJsonUpdates": {}
+  "packageJsonUpdates": {
+    "15.8.0": {
+      "version": "15.8.0-beta.2",
+      "x-prompt": "Do you want to update to TypeScript v4.9?",
+      "requires": {
+        "typescript": ">=4.8.2 <4.9.0"
+      },
+      "packages": {
+        "typescript": {
+          "version": "~4.9.5"
+        }
+      }
+    }
+  }
 }
