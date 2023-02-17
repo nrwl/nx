@@ -13,7 +13,10 @@ import {
 } from '@nrwl/e2e/utils';
 
 describe('Node Applications + webpack', () => {
-  beforeEach(() => newProject());
+  let proj: string;
+  beforeEach(() => {
+    proj = newProject();
+  });
 
   afterEach(() => cleanupProject());
 
@@ -22,7 +25,7 @@ describe('Node Applications + webpack', () => {
     updateFile(
       `apps/${appName}/src/main.ts`,
       `
-      import { ${libName} } from '@proj/${libName}';
+      import { ${libName} } from '@${proj}/${libName}';
       ${content}
       console.log(${libName}());
       `
@@ -75,6 +78,10 @@ describe('Node Applications + webpack', () => {
 
     // Only Fastify generates with unit tests since it supports them without additional libraries.
     expect(() => runCLI(`lint ${fastifyApp}`)).not.toThrow();
+
+    addLibImport(expressApp, utilLib);
+    addLibImport(fastifyApp, utilLib);
+    addLibImport(koaApp, utilLib);
 
     await runE2eTests(expressApp);
     await runE2eTests(fastifyApp);
