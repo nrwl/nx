@@ -75,6 +75,11 @@
       "type": "boolean",
       "description": "Run packager server in interactive mode.",
       "default": true
+    },
+    "activeArchOnly": {
+      "type": "boolean",
+      "description": "Builds only for the active architecture (e.g. x86_64, arm64-v8a).",
+      "default": false
     }
   },
   "examplesFile": "../../../docs/run-android-examples.md"

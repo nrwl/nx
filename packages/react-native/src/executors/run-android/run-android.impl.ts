@@ -115,6 +115,10 @@ function createRunAndroidOptions(options) {
       if (!v) {
         acc.push(`--no-jetifier`);
       }
+    } else if (k === 'activeArchOnly') {
+      if (v) {
+        acc.push(`--active-arch-only`);
+      }
     } else if (v && !nxOrStartOptions.includes(k)) {
       acc.push(`--${k}`, v);
     }
