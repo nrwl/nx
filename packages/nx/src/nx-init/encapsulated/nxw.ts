@@ -2,9 +2,9 @@
 // that your local installation matches nx.json.
 // See: https://nx.dev/more-concepts/encapsulated-nx-and-the-wrapper for more info.
 //
-// INTERNAL: The contents of this file are executed before packages are installed.
-// INTERNAL: As such, we should not import anything from nx, other @nrwl packages,
-// INTERNAL: or any other npm packages. Only import node builtins.
+//# The contents of this file are executed before packages are installed.
+//# As such, we should not import anything from nx, other @nrwl packages,
+//# or any other npm packages. Only import node builtins.
 
 const fs: typeof import('fs') = require('fs');
 const path: typeof import('path') = require('path');
@@ -19,24 +19,23 @@ function matchesCurrentNxInstall(
   nxJsonInstallation: NxJsonConfiguration['installation']
 ) {
   try {
-    const currentInstallation: PackageJson = JSON.parse(
-      fs.readFileSync(installationPath, 'utf-8')
-    );
+    const currentInstallation: PackageJson = require(installationPath);
     if (
-      currentInstallation.dependencies['nx'] !== nxJsonInstallation.version ||
-      JSON.parse(
-        fs.readFileSync(
-          path.join(installationPath, 'node_modules', 'nx', 'package.json'),
-          'utf-8'
-        )
-      ).version !== nxJsonInstallation.version
+      currentInstallation.devDependencies['nx'] !==
+        nxJsonInstallation.version ||
+      require(path.join(
+        path.dirname(installationPath),
+        'node_modules',
+        'nx',
+        'package.json'
+      )).version !== nxJsonInstallation.version
     ) {
       return false;
     }
     for (const [plugin, desiredVersion] of Object.entries(
       nxJsonInstallation.plugins || {}
     )) {
-      if (currentInstallation.dependencies[plugin] !== desiredVersion) {
+      if (currentInstallation.devDependencies[plugin] !== desiredVersion) {
         return false;
       }
     }
@@ -58,7 +57,7 @@ function ensureUpToDateInstallation() {
   let nxJson: NxJsonConfiguration;
 
   try {
-    nxJson = JSON.parse(fs.readFileSync(nxJsonPath, 'utf-8'));
+    nxJson = require(nxJsonPath);
   } catch {
     console.error(
       '[NX]: nx.json is required when running in encapsulated mode. Run `npx nx init --encapsulated` to restore it.'

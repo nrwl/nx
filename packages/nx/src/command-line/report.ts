@@ -20,6 +20,7 @@ import {
 } from '../project-graph/project-graph';
 import { gt, valid } from 'semver';
 import { NxJsonConfiguration } from '../config/nx-json';
+import { findInstalledPlugins } from '../utils/plugins/installed-plugins';
 
 const nxPackageJson = readJsonFile<typeof import('../../package.json')>(
   join(__dirname, '../../package.json')
@@ -79,11 +80,11 @@ export async function reportHandler() {
 
   if (communityPlugins.length) {
     bodyLines.push(LINE_SEPARATOR);
-    padding = Math.max(...communityPlugins.map((x) => x.package.length)) + 1;
+    padding = Math.max(...communityPlugins.map((x) => x.name.length)) + 1;
     bodyLines.push('Community plugins:');
     communityPlugins.forEach((p) => {
       bodyLines.push(
-        `${chalk.green(p.package.padEnd(padding))}: ${chalk.bold(p.version)}`
+        `${chalk.green(p.name.padEnd(padding))}: ${chalk.bold(p.version)}`
       );
     });
   }
@@ -129,9 +130,7 @@ export interface ReportData {
   pm: PackageManager;
   pmVersion: string;
   localPlugins: string[];
-  communityPlugins: (PackageJson & {
-    package: string;
-  })[];
+  communityPlugins: PackageJson[];
   packageVersionsWeCareAbout: {
     package: string;
     version: string;
@@ -249,47 +248,15 @@ export function findMisalignedPackagesForPackage(
     : undefined;
 }
 
-export function findInstalledCommunityPlugins(): (PackageJson & {
-  package: string;
-})[] {
-  const packageJsonDeps = getDependenciesFromPackageJson();
-  const nxJsonDeps = getDependenciesFromNxJson();
-  const deps = packageJsonDeps.concat(nxJsonDeps);
-  return deps.reduce(
-    (arr: any[], nextDep: string): { project: string; version: string }[] => {
-      if (
-        patternsWeIgnoreInCommunityReport.some((pattern) =>
-          typeof pattern === 'string'
-            ? pattern === nextDep
-            : pattern.test(nextDep)
-        )
-      ) {
-        return arr;
-      }
-      try {
-        const depPackageJson: Partial<PackageJson> =
-          readPackageJson(nextDep) || {};
-        if (
-          [
-            'ng-update',
-            'nx-migrations',
-            'schematics',
-            'generators',
-            'builders',
-            'executors',
-          ].some((field) => field in depPackageJson)
-        ) {
-          arr.push({ package: nextDep, ...depPackageJson });
-          return arr;
-        } else {
-          return arr;
-        }
-      } catch {
-        console.warn(`Error parsing packageJson for ${nextDep}`);
-        return arr;
-      }
-    },
-    []
+export function findInstalledCommunityPlugins(): PackageJson[] {
+  const installedPlugins = findInstalledPlugins();
+  return installedPlugins.filter(
+    (dep) =>
+      !patternsWeIgnoreInCommunityReport.some((pattern) =>
+        typeof pattern === 'string'
+          ? pattern === dep.name
+          : pattern.test(dep.name)
+      )
   );
 }
 export function findInstalledPackagesWeCareAbout() {
@@ -300,26 +267,4 @@ export function findInstalledPackagesWeCareAbout() {
     }
     return acc;
   }, [] as { package: string; version: string }[]);
-}
-
-function getDependenciesFromPackageJson(
-  packageJsonPath = 'package.json'
-): string[] {
-  try {
-    const { dependencies, devDependencies } = readJsonFile(
-      join(workspaceRoot, packageJsonPath)
-    );
-    return Object.keys({ ...dependencies, ...devDependencies });
-  } catch {}
-  return [];
-}
-
-function getDependenciesFromNxJson(): string[] {
-  const { installation } = readJsonFile<NxJsonConfiguration>(
-    join(workspaceRoot, 'nx.json')
-  );
-  if (!installation) {
-    return [];
-  }
-  return ['nx', ...Object.keys(installation.plugins || {})];
 }

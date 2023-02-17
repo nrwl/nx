@@ -4,20 +4,78 @@ import type { CommunityPlugin, CorePlugin, PluginCapabilities } from './models';
 import { getPluginCapabilities } from './plugin-capabilities';
 import { hasElements } from './shared';
 import { readJsonFile } from '../fileutils';
-import { readModulePackageJson } from '../package-json';
+import { PackageJson, readModulePackageJson } from '../package-json';
+import { workspaceRoot } from '../workspace-root';
+import { join } from 'path';
+import { NxJsonConfiguration } from '../../config/nx-json';
 
-export function getInstalledPluginsFromPackageJson(
+export function findInstalledPlugins(): PackageJson[] {
+  const packageJsonDeps = getDependenciesFromPackageJson();
+  const nxJsonDeps = getDependenciesFromNxJson();
+  const deps = packageJsonDeps.concat(nxJsonDeps);
+  const result: PackageJson[] = [];
+  for (const dep of deps) {
+    const pluginPackageJson = getNxPluginPackageJsonOrNull(dep);
+    if (pluginPackageJson) {
+      result.push(pluginPackageJson);
+    }
+  }
+  return result;
+}
+
+function getNxPluginPackageJsonOrNull(pkg: string): PackageJson | null {
+  try {
+    const { packageJson } = readModulePackageJson(pkg, [
+      workspaceRoot,
+      join(workspaceRoot, '.nx', ' installation'),
+    ]);
+    return packageJson &&
+      [
+        'ng-update',
+        'nx-migrations',
+        'schematics',
+        'generators',
+        'builders',
+        'executors',
+      ].some((field) => field in packageJson)
+      ? packageJson
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function getDependenciesFromPackageJson(
+  packageJsonPath = 'package.json'
+): string[] {
+  try {
+    const { dependencies, devDependencies } = readJsonFile(
+      join(workspaceRoot, packageJsonPath)
+    );
+    return Object.keys({ ...dependencies, ...devDependencies });
+  } catch {}
+  return [];
+}
+
+function getDependenciesFromNxJson(): string[] {
+  const { installation } = readJsonFile<NxJsonConfiguration>(
+    join(workspaceRoot, 'nx.json')
+  );
+  if (!installation) {
+    return [];
+  }
+  return ['nx', ...Object.keys(installation.plugins || {})];
+}
+
+export function getInstalledPluginsAndCapabilities(
   workspaceRoot: string,
   corePlugins: CorePlugin[],
   communityPlugins: CommunityPlugin[] = []
 ): Map<string, PluginCapabilities> {
-  const packageJson = readJsonFile(`${workspaceRoot}/package.json`);
-
   const plugins = new Set([
     ...corePlugins.map((p) => p.name),
     ...communityPlugins.map((p) => p.name),
-    ...Object.keys(packageJson.dependencies || {}),
-    ...Object.keys(packageJson.devDependencies || {}),
+    ...findInstalledPlugins().map((p) => p.name),
   ]);
 
   return new Map(

@@ -79,7 +79,7 @@ describe('report', () => {
       );
       const plugins = findInstalledCommunityPlugins();
       expect(plugins).toEqual([
-        expect.objectContaining({ package: 'plugin-two', version: '2.0.0' }),
+        expect.objectContaining({ name: 'plugin-two', version: '2.0.0' }),
       ]);
     });
 
@@ -112,8 +112,8 @@ describe('report', () => {
       );
       const plugins = findInstalledCommunityPlugins();
       expect(plugins).toEqual([
-        expect.objectContaining({ package: 'plugin-one', version: '1.0.0' }),
-        expect.objectContaining({ package: 'plugin-two', version: '2.0.0' }),
+        expect.objectContaining({ name: 'plugin-one', version: '1.0.0' }),
+        expect.objectContaining({ name: 'plugin-two', version: '2.0.0' }),
       ]);
     });
 
@@ -152,8 +152,8 @@ describe('report', () => {
       const plugins = findInstalledCommunityPlugins();
       expect(plugins).toEqual(
         expect.arrayContaining([
-          expect.objectContaining({ package: 'plugin-one', version: '1.0.0' }),
-          expect.objectContaining({ package: 'plugin-two', version: '2.0.0' }),
+          expect.objectContaining({ name: 'plugin-one', version: '1.0.0' }),
+          expect.objectContaining({ name: 'plugin-two', version: '2.0.0' }),
         ])
       );
     });
@@ -189,7 +189,7 @@ describe('report', () => {
           },
         })
       );
-      const plugins = findInstalledCommunityPlugins().map((x) => x.package);
+      const plugins = findInstalledCommunityPlugins().map((x) => x.name);
       expect(plugins).not.toContain('other-package');
     });
   });
