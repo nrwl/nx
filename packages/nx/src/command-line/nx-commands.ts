@@ -974,7 +974,7 @@ function withMigrationOptions(yargs: yargs.Argv) {
     })
     .option('excludeAppliedMigrations', {
       describe:
-        'Exclude migrations that should have been previously applied on previous updates. To be used with --from',
+        'Exclude migrations that should have been applied on previous updates. To be used with --from',
       type: 'boolean',
       default: false,
     })

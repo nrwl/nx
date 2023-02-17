@@ -101,7 +101,7 @@ Type: `boolean`
 
 Default: `false`
 
-Exclude migrations that should have been previously applied on previous updates. To be used with --from
+Exclude migrations that should have been applied on previous updates. To be used with --from
 
 ### from
 
