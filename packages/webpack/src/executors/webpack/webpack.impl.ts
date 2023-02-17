@@ -1,9 +1,15 @@
 import 'dotenv/config';
 import { ExecutorContext, logger } from '@nrwl/devkit';
 import { eachValueFrom } from '@nrwl/devkit/src/utils/rxjs-for-await';
-import type { Configuration } from 'webpack';
-import { of } from 'rxjs';
-import { switchMap, tap } from 'rxjs/operators';
+import type { Configuration, Stats } from 'webpack';
+import { from, of } from 'rxjs';
+import {
+  bufferCount,
+  mergeMap,
+  mergeScan,
+  switchMap,
+  tap,
+} from 'rxjs/operators';
 import { resolve } from 'path';
 import {
   calculateProjectDependencies,
@@ -23,7 +29,7 @@ import { normalizeOptions } from './lib/normalize-options';
 async function getWebpackConfigs(
   options: NormalizedWebpackExecutorOptions,
   context: ExecutorContext
-): Promise<Configuration> {
+): Promise<Configuration | Configuration[]> {
   if (options.isolatedConfig && !options.webpackConfig) {
     throw new Error(
       `Using "isolatedConfig" without a "webpackConfig" is not supported.`
@@ -134,17 +140,32 @@ export async function* webpackExecutor(
   }
 
   const configs = await getWebpackConfigs(options, context);
+
   return yield* eachValueFrom(
     of(configs).pipe(
-      switchMap((config) => {
-        return runWebpack(config).pipe(
-          tap((stats) => {
-            console.info(stats.toString(config.stats));
-          })
+      mergeMap((config) => (Array.isArray(config) ? from(config) : of(config))),
+      // Run build sequentially and bail when first one fails.
+      mergeScan(
+        (acc, config) => {
+          if (!acc.hasErrors()) {
+            return runWebpack(config).pipe(
+              tap((stats) => {
+                console.info(stats.toString(config.stats));
+              })
+            );
+          } else {
+            return of();
+          }
+        },
+        { hasErrors: () => false } as Stats,
+        1
+      ),
+      // Collect build results as an array.
+      bufferCount(Array.isArray(configs) ? configs.length : 1),
+      switchMap(async (results) => {
+        const success = results.every(
+          (result) => Boolean(result) && !result.hasErrors()
         );
-      }),
-      switchMap(async (result) => {
-        const success = result && !result.hasErrors();
         return {
           success,
           outfile: resolve(
