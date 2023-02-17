@@ -5,6 +5,18 @@ import { readJsonFile } from './fileutils';
 import { readCachedProjectGraph } from '../project-graph/project-graph';
 import { TargetConfiguration } from '../config/workspace-json-project-json';
 
+export function projectHasTargetAndOptionalConfiguration(
+  project: ProjectGraphProjectNode,
+  target: string,
+  configuration: string | undefined
+) {
+  if (configuration) {
+    return projectHasTargetAndConfiguration(project, target, configuration);
+  } else {
+    return projectHasTarget(project, target);
+  }
+}
+
 export function projectHasTarget(
   project: ProjectGraphProjectNode,
   target: string

@@ -32,6 +32,7 @@ export interface NxArgs {
   outputStyle?: string;
   nxBail?: boolean;
   nxIgnoreCycles?: boolean;
+  nxAcceptSameTargetVariations?: boolean;
   type?: string;
 }
 

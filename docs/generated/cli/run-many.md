@@ -81,6 +81,14 @@ Type: `boolean`
 
 Show help
 
+### nx-accept-same-target-variations
+
+Type: `boolean`
+
+Default: `false`
+
+Do not throw if the same target is included multiple times with different configurations
+
 ### nx-bail
 
 Type: `boolean`

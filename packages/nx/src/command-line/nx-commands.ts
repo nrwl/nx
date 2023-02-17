@@ -515,6 +515,12 @@ function withRunOptions(yargs: yargs.Argv): yargs.Argv {
       type: 'boolean',
       default: false,
     })
+    .option('nx-accept-same-target-variations', {
+      describe:
+        'Do not throw if the same target is included multiple times with different configurations',
+      type: 'boolean',
+      default: false,
+    })
     .options('skip-nx-cache', {
       describe:
         'Rerun the tasks even when the results are available in the cache',
