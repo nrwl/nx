@@ -5,9 +5,11 @@ import {
   killPort,
   newProject,
   promisifiedTreeKill,
+  readFile,
   runCLI,
   runCommandUntil,
   uniq,
+  updateFile,
 } from '@nrwl/e2e/utils';
 
 describe('Node Applications + webpack', () => {
@@ -15,12 +17,24 @@ describe('Node Applications + webpack', () => {
 
   afterEach(() => cleanupProject());
 
+  function addLibImport(appName: string, libName: string) {
+    const content = readFile(`apps/${appName}/src/main.ts`);
+    updateFile(
+      `apps/${appName}/src/main.ts`,
+      `
+      import { ${libName} } from '@proj/${libName}';
+      ${content}
+      console.log(${libName}());
+      `
+    );
+  }
+
   async function runE2eTests(appName: string) {
     process.env.PORT = '5000';
     const childProcess = await runCommandUntil(`serve ${appName}`, (output) => {
       return output.includes('http://localhost:5000');
     });
-    const result = runCLI(`e2e ${appName}-e2e`);
+    const result = runCLI(`e2e ${appName}-e2e --verbose`);
     expect(result).toContain('Setting up...');
     expect(result).toContain('Tearing down..');
     expect(result).toContain('Successfully ran target e2e');
@@ -31,10 +45,12 @@ describe('Node Applications + webpack', () => {
   }
 
   it('should generate an app using webpack', async () => {
+    const utilLib = uniq('util');
     const expressApp = uniq('expressapp');
     const fastifyApp = uniq('fastifyapp');
     const koaApp = uniq('koaapp');
 
+    runCLI(`generate @nrwl/node:lib ${utilLib}`);
     runCLI(
       `generate @nrwl/node:app ${expressApp} --framework=express --no-interactive`
     );

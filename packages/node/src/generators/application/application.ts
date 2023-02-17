@@ -92,6 +92,7 @@ function getEsBuildConfig(
     executor: '@nrwl/esbuild:esbuild',
     outputs: ['{options.outputPath}'],
     options: {
+      platform: 'node',
       outputPath: joinPathFragments(
         'dist',
         options.rootProject ? options.name : options.appProjectRoot

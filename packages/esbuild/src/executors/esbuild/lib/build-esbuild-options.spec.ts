@@ -13,6 +13,16 @@ describe('buildEsbuildOptions', () => {
         },
       },
     },
+    projectGraph: {
+      nodes: {
+        myapp: {
+          type: 'app',
+          name: 'myapp',
+          data: { root: 'apps/myapp', files: [] },
+        },
+      },
+      dependencies: { myapp: [] },
+    },
     nxJsonConfiguration: {},
     isVerbose: false,
     root: path.join(__dirname, 'fixtures'),
