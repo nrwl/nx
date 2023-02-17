@@ -46,7 +46,7 @@
     "@cypress/react": "^6.0.0",
     "@floating-ui/react-dom": "^1.0.1",
     "@floating-ui/react": "^0.19.1",
-    "@monodon/rust": "0.4.4",
+    "@monodon/rust": "1.0.0",
     "@napi-rs/cli": "2.14.0",
     "@nestjs/cli": "^9.0.0",
     "@nestjs/common": "^9.0.0",
