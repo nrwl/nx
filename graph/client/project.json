@@ -56,7 +56,8 @@
             "maximumWarning": "2mb",
             "maximumError": "5mb"
           }
-        ]
+        ],
+        "babelUpwardRootMode": true
       },
       "configurations": {
         "dev": {
