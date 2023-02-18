@@ -32,6 +32,9 @@ import {
   esbuildVersion,
   expressTypingsVersion,
   expressVersion,
+  fastifyAutoloadVersion,
+  fastifyPluginVersion,
+  fastifySensibleVersion,
   fastifyVersion,
   koaTypingsVersion,
   koaVersion,
@@ -99,6 +102,7 @@ function getEsBuildConfig(
       ),
       // Use CJS for Node apps for widest compatibility.
       format: ['cjs'],
+      bundle: false,
       main: joinPathFragments(
         project.sourceRoot,
         'main' + (options.js ? '.js' : '.ts')
@@ -293,13 +297,27 @@ function addProjectDependencies(
     },
     fastify: {
       fastify: fastifyVersion,
+      'fastify-plugin': fastifyPluginVersion,
+      '@fastify/autoload': fastifyAutoloadVersion,
+      '@fastify/sensible': fastifySensibleVersion,
     },
+  };
+  const frameworkDevDependencies = {
+    express: {
+      '@types/express': expressTypingsVersion,
+    },
+    koa: {
+      '@types/koa': koaTypingsVersion,
+    },
+    fastify: {},
   };
   return addDependenciesToPackageJson(
     tree,
-    {},
     {
       ...frameworkDependencies[options.framework],
+    },
+    {
+      ...frameworkDevDependencies[options.framework],
       ...bundlers[options.bundler],
     }
   );
