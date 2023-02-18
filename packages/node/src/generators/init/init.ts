@@ -38,6 +38,8 @@ function normalizeOptions(schema: Schema) {
 export async function initGenerator(tree: Tree, schema: Schema) {
   const options = normalizeOptions(schema);
   await jsInitGenerator(tree, {
+    ...schema,
+    tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
     js: schema.js,
     skipFormat: true,
   });

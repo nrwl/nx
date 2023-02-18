@@ -87,6 +87,8 @@ function initRootBabelConfig(tree: Tree, schema: InitSchema) {
 
 export async function reactInitGenerator(host: Tree, schema: InitSchema) {
   await jsInitGenerator(host, {
+    ...schema,
+    tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
     js: schema.js,
     skipFormat: true,
   });

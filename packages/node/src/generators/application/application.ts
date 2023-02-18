@@ -335,7 +335,7 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
 
   const initTask = await initGenerator(tree, {
-    ...options,
+    ...schema,
     skipFormat: true,
   });
   tasks.push(initTask);

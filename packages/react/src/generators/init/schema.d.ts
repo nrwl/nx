@@ -6,4 +6,6 @@ export interface InitSchema {
   skipPackageJson?: boolean;
   skipHelperLibs?: boolean;
   js?: boolean;
+
+  rootProject?: boolean;
 }
