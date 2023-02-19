@@ -77,11 +77,11 @@ export function recursivelyCollectSecondaryEntryPointsFromDirectory(
       try {
         // require the secondary entry point to try to rule out sample code
         require.resolve(entryPointName, { paths: [workspaceRoot] });
-        const { name } = readJsonFile(packageJsonPath);
+        const { name, version } = readJsonFile(packageJsonPath);
         // further check to make sure what we were able to require is the
         // same as the package name
         if (name === entryPointName) {
-          collectedPackages.push({ name, version: pkgVersion });
+          collectedPackages.push({ name, version });
         }
       } catch {}
     } else if (mainEntryPointExports) {
