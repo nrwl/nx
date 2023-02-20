@@ -503,7 +503,10 @@ export async function generate(
   verbose: boolean
 ) {
   const logger = getLogger(verbose);
-  const fsHost = new NxScopedHost(root);
+  const fsHost = new NxScopeHostUsedForWrappedSchematics(
+    root,
+    new FsTree(root, verbose)
+  );
   const workflow = createWorkflow(fsHost, root, opts);
   const collection = getCollection(workflow, opts.collectionName);
   const schematic = collection.createSchematic(opts.generatorName, true);
