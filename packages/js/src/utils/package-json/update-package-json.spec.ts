@@ -298,7 +298,13 @@ describe('updatePackageJson', () => {
               outputs: ['{workspaceRoot}/dist/libs/lib1'],
             },
           },
-          files: [],
+          files: [
+            {
+              file: 'libs/lib1/src/main.ts',
+              hash: '123',
+              deps: ['npm:external1', 'npm:external2'],
+            },
+          ],
         },
       },
     },
