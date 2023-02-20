@@ -404,15 +404,6 @@
         "originalFilePath": "/packages/angular/src/generators/web-worker/schema.json",
         "path": "/packages/angular/generators/web-worker",
         "type": "generator"
-      },
-      "/packages/angular/generators/change-storybook-targets": {
-        "description": "Change storybook targets for Angular projects to use @storybook/angular executors",
-        "file": "generated/packages/angular/generators/change-storybook-targets.json",
-        "hidden": false,
-        "name": "change-storybook-targets",
-        "originalFilePath": "/packages/angular/src/generators/change-storybook-targets/schema.json",
-        "path": "/packages/angular/generators/change-storybook-targets",
-        "type": "generator"
       }
     },
     "path": "/packages/angular"
@@ -2624,15 +2615,6 @@
         "name": "cypress-project",
         "originalFilePath": "/packages/storybook/src/generators/cypress-project/schema.json",
         "path": "/packages/storybook/generators/cypress-project",
-        "type": "generator"
-      },
-      "/packages/storybook/generators/change-storybook-targets": {
-        "description": "Change storybook targets for Angular projects to use @storybook/angular executors",
-        "file": "generated/packages/storybook/generators/change-storybook-targets.json",
-        "hidden": false,
-        "name": "change-storybook-targets",
-        "originalFilePath": "/packages/storybook/src/generators/change-storybook-targets/schema.json",
-        "path": "/packages/storybook/generators/change-storybook-targets",
         "type": "generator"
       }
     },

@@ -1,6 +1,5 @@
 export * from './src/generators/add-linting/add-linting';
 export * from './src/generators/application/application';
-export * from './src/generators/change-storybook-targets/change-storybook-targets';
 export * from './src/generators/component-cypress-spec/component-cypress-spec';
 export * from './src/generators/component-story/component-story';
 export * from './src/generators/component/component';
