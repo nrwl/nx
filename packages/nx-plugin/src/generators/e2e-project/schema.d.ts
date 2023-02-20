@@ -1,3 +1,5 @@
+import { Linter } from '@nrwl/linter';
+
 export interface Schema {
   pluginName: string;
   npmPackageName: string;
@@ -5,4 +7,5 @@ export interface Schema {
   pluginOutputPath?: string;
   jestConfig?: string;
   minimal?: boolean;
+  linter?: Linter;
 }

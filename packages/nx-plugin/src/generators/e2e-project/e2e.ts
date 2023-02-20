@@ -4,6 +4,7 @@ import {
   extractLayoutDirectory,
   formatFiles,
   generateFiles,
+  GeneratorCallback,
   getWorkspaceLayout,
   joinPathFragments,
   names,
@@ -16,12 +17,15 @@ import { getRelativePathToRootTsConfig } from '@nrwl/js';
 import * as path from 'path';
 
 import type { Schema } from './schema';
+import { Linter, lintProjectGenerator } from '@nrwl/linter';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
 interface NormalizedSchema extends Schema {
   projectRoot: string;
   projectName: string;
   pluginPropertyName: string;
   npmScope: string;
+  linter: Linter;
 }
 
 function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
@@ -41,6 +45,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     ...options,
     minimal: options.minimal ?? false,
     projectName,
+    linter: options.linter ?? Linter.EsLint,
     pluginPropertyName,
     projectRoot,
     npmScope,
@@ -101,14 +106,44 @@ async function addJest(host: Tree, options: NormalizedSchema) {
   updateProjectConfiguration(host, options.projectName, project);
 }
 
+async function addLintingToApplication(
+  tree: Tree,
+  options: NormalizedSchema
+): Promise<GeneratorCallback> {
+  const lintTask = await lintProjectGenerator(tree, {
+    linter: options.linter,
+    project: options.projectName,
+    tsConfigPaths: [
+      joinPathFragments(options.projectRoot, 'tsconfig.app.json'),
+    ],
+    eslintFilePatterns: [`${options.projectRoot}/**/*.ts`],
+    unitTestRunner: 'jest',
+    skipFormat: true,
+    setParserOptionsProject: false,
+  });
+
+  return lintTask;
+}
+
 export async function e2eProjectGenerator(host: Tree, schema: Schema) {
+  const tasks: GeneratorCallback[] = [];
+
   validatePlugin(host, schema.pluginName);
   const options = normalizeOptions(host, schema);
   addFiles(host, options);
   updateWorkspaceConfiguration(host, options);
   await addJest(host, options);
 
+  if (options.linter !== Linter.None) {
+    const lintTask = await addLintingToApplication(host, {
+      ...options,
+    });
+    tasks.push(lintTask);
+  }
+
   await formatFiles(host);
+
+  return runTasksInSerial(...tasks);
 }
 
 export default e2eProjectGenerator;
