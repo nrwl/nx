@@ -28,7 +28,7 @@ describe('NxPlugin e2e-project Generator', () => {
         pluginOutputPath: `dist/libs/my-plugin`,
         npmPackageName: '@proj/my-plugin',
       })
-    ).resolves.not.toThrow();
+    ).resolves.toBeDefined();
 
     await expect(
       e2eProjectGenerator(tree, {
