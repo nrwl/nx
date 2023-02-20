@@ -1,9 +1,33 @@
 import { readJsonFile } from './fileutils';
 import { sortObjectByKeys } from './object-sort';
-import { ProjectGraph } from '../config/project-graph';
+import {
+  FileData,
+  ProjectGraph,
+  ProjectGraphDependency,
+} from '../config/project-graph';
 import { PackageJson } from './package-json';
 import { existsSync } from 'fs';
 import { workspaceRoot } from './workspace-root';
+
+// all dependencies from those files will be ignored
+const devOnlyFiles = [
+  // test files
+  '.spec.ts',
+  '.test.ts',
+  '.spec.tsx',
+  '.test.tsx',
+  '.spec.js',
+  '.test.js',
+  '.spec.jsx',
+  '.test.jsx',
+  // jest configs
+  'jest.config.ts',
+  'jest.preset.js',
+  // eslint config
+  '.eslintrc.js',
+  '.eslintrc.cjs',
+  'eslint.config.js',
+];
 
 /**
  * Creates a package.json in the output directory for support to install dependencies within containers.
@@ -133,13 +157,30 @@ function findAllNpmDeps(
   } else {
     // we are not interested in the dependencies of external projects
     graph.dependencies[projectName]?.forEach((dep) => {
-      if (dep.type === 'static' || dep.type === 'dynamic') {
+      if (isProductionDependency(dep, graph)) {
         findAllNpmDeps(dep.target, graph, list, seen);
       }
     });
   }
 
   return list;
+}
+
+function isProductionDependency(
+  dependency: ProjectGraphDependency,
+  graph: ProjectGraph
+) {
+  if (dependency.type === 'implicit') {
+    return false;
+  }
+
+  const isDevFile = (f: FileData): boolean => {
+    return devOnlyFiles.some((devOnlyFile) => f.file.endsWith(devOnlyFile));
+  };
+
+  return graph.nodes[dependency.source].data.files.some(
+    (f) => f.deps.some((d) => d === dependency.target) && !isDevFile(f)
+  );
 }
 
 function recursivelyCollectPeerDependencies(
