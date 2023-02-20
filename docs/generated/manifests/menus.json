@@ -3874,14 +3874,6 @@
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
-              },
-              {
-                "id": "change-storybook-targets",
-                "path": "/packages/angular/generators/change-storybook-targets",
-                "name": "change-storybook-targets",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
               }
             ],
             "isExternal": false,
@@ -6082,14 +6074,6 @@
                 "id": "cypress-project",
                 "path": "/packages/storybook/generators/cypress-project",
                 "name": "cypress-project",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "change-storybook-targets",
-                "path": "/packages/storybook/generators/change-storybook-targets",
-                "name": "change-storybook-targets",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

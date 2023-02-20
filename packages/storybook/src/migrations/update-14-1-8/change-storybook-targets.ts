@@ -1,5 +1,5 @@
 import { Tree } from '@nrwl/devkit';
-import { changeStorybookTargetsGenerator } from '../../generators/change-storybook-targets/change-storybook-targets';
+import { changeStorybookTargetsGenerator } from './change-storybook-targets-generator';
 
 export default async function changeStorybookTargets(tree: Tree) {
   return changeStorybookTargetsGenerator(tree);
