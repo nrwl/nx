@@ -10,7 +10,9 @@ describe('Jest root projects', () => {
     });
 
     it('should test root level app projects', async () => {
-      runCLI(`generate @nrwl/angular:app ${myapp} --rootProject=true`);
+      runCLI(
+        `generate @nrwl/angular:app ${myapp} --rootProject=true --no-interactive`
+      );
       const rootProjectTestResults = await runCLIAsync(`test ${myapp}`);
       expect(rootProjectTestResults.combinedOutput).toContain(
         'Test Suites: 1 passed, 1 total'
@@ -18,7 +20,7 @@ describe('Jest root projects', () => {
     }, 300_000);
 
     it('should add lib project and tests should still work', async () => {
-      runCLI(`generate @nrwl/angular:lib ${mylib}`);
+      runCLI(`generate @nrwl/angular:lib ${mylib} --no-interactive`);
       runCLI(
         `generate @nrwl/angular:component ${mylib} --export --standalone --project=${mylib} --no-interactive`
       );
