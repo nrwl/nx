@@ -11,7 +11,7 @@ You can use these fields in your Nx workspace Storybook configurations normally,
 
 ## Global configuration
 
-In your root `.storybook/main.js|ts` file, you can add the `webpackFinal` or `viteFinal` field, and return the modified configuration. This will be applied to every project in your workspace.
+If you want to add a global configuration for Webpack or Vite in your workspace, you may create a `.storybook/main.js` file at the root of your workspace. In that root `.storybook/main.js|ts` file, you can add the `webpackFinal` or `viteFinal` field, and return the modified configuration. This will be applied to every project in your workspace.
 
 ### `webpack` and `webpackFinal`
 
@@ -54,7 +54,21 @@ const { mergeConfig } = require('vite');
 
 ### `webpack` and `webpackFinal`
 
-You can customize or extend the global `webpack` configuration for a specific project by adding a `webpackFinal` field in your project-specific `.storybok/main.js|ts` file, like this:
+You can customize the `webpack` configuration for a specific project by adding a `webpackFinal` field in your project-specific `.storybok/main.js|ts` file, like this:
+
+```ts {% fileName="apps/my-react-webpack-app/.storybook/main.js" %}
+module.exports = {
+  ...
+  webpackFinal: async (config, { configType }) => {
+
+    // add your own webpack tweaks if needed
+
+    return config;
+  },
+};
+```
+
+If you are using a global, root-level, `webpack` configuration in your project, you can customize or extend that for a specific project like this:
 
 ```ts {% fileName="apps/my-react-webpack-app/.storybook/main.js" %}
 const rootMain = require('../../../.storybook/main');
@@ -75,19 +89,31 @@ module.exports = {
 };
 ```
 
-Take note how we are first applying the global `webpack` configuration, and then adding our own tweaks. If you don't want to apply any global configuration, you can just return your own configuration, and skip the `rootMain.webpackFinal` check.
+Take note how, in this case, we are first applying the global `webpack` configuration, and then adding our own tweaks. If you don't want to apply any global configuration, you can just return your own configuration, and skip the `rootMain.webpackFinal` check.
 
 ### `vite` and `viteFinal`
 
-You can customize or extend the global `vite` configuration for a specific project by adding a `viteFinal` field in your project-specific `.storybok/main.js|ts` file.
+You can customize the `vite` configuration for a specific project by adding a `viteFinal` field in your project-specific `.storybok/main.js|ts` file, like this:
 
-{% callout type="check" title="Don't forget the vite-tsconfig-paths plugin" %}
-For Vite.js to work on monorepos, and specifically on Nx workspaces, you need to use the `'vite-tsconfig-paths'` plugin!
-{% /callout %}
+```ts {% fileName="apps/my-react-vite-app/.storybook/main.js" %}
+const { mergeConfig } = require('vite');
+const viteTsConfigPaths = require('vite-tsconfig-paths').default;
 
-It's important to note here that for Vite.js to work on monorepos, and specifically on Nx workspaces, you need to use the `'vite-tsconfig-paths'` plugin, just like you must already do in your project's `vite.config.ts` file. Storybook does not read your project's Vite configuration automatically, so you have to manually add the plugin to your project's Storybook Vite configuration.
+module.exports = {
+  ...
+  async viteFinal(config, { configType }) {
+    return mergeConfig(config, {
+      plugins: [
+        viteTsConfigPaths({
+          root: '../../../',
+        }),
+      ],
+    });
+  },
+};
+```
 
-So, a project-level `.storybook/main.js|ts` file for a Vite.js project would look like this:
+If you are using a global, root-level, `vite` configuration in your workspace, you can customize or extend that for a specific project like this:
 
 ```ts {% fileName="apps/my-react-vite-app/.storybook/main.js" %}
 const { mergeConfig } = require('vite');
@@ -95,14 +121,7 @@ const viteTsConfigPaths = require('vite-tsconfig-paths').default;
 const rootMain = require('../../../.storybook/main');
 
 module.exports = {
-  ...rootMain,
-  core: { ...rootMain.core, builder: '@storybook/builder-vite' },
-  stories: [
-    ...rootMain.stories,
-    '../src/app/**/*.stories.mdx',
-    '../src/app/**/*.stories.@(js|jsx|ts|tsx)',
-  ],
-  addons: [...rootMain.addons],
+  ...
   async viteFinal(config, { configType }) {
     return mergeConfig(config, {
       ...((await rootMain.viteFinal(config, { configType })) ?? {}),
@@ -116,22 +135,25 @@ module.exports = {
 };
 ```
 
-or just simplified (if you don't want to take into account any global Storybook Vite.js configuration):
+{% callout type="check" title="Don't forget the vite-tsconfig-paths plugin" %}
+For Vite.js to work on monorepos, and specifically on Nx workspaces, you need to use the `'vite-tsconfig-paths'` plugin! Starting Storybook version 7, however, Storybook will automatically read your project's `vite.config.ts` file, so you don't need to add the plugin to your Storybook Vite configuration anymore. You will only have to specify the path to your project's `vite.config.ts` file in your project's Storybook configuration.
+{% /callout %}
+
+It's important to note here that for Vite.js to work on monorepos, and specifically on Nx workspaces, you need to use the `'vite-tsconfig-paths'` plugin, just like you must already do in your project's `vite.config.ts` file. Storybook does not read your project's Vite configuration automatically, so you have to manually add the plugin to your project's Storybook Vite configuration.
+
+So, a full project-level `.storybook/main.js|ts` file for a Vite.js project would look like this:
 
 ```ts {% fileName="apps/my-react-vite-app/.storybook/main.js" %}
 const { mergeConfig } = require('vite');
 const viteTsConfigPaths = require('vite-tsconfig-paths').default;
-const rootMain = require('../../../.storybook/main');
 
 module.exports = {
-  ...rootMain,
-  core: { ...rootMain.core, builder: '@storybook/builder-vite' },
+  core: { builder: '@storybook/builder-vite' },
   stories: [
-    ...rootMain.stories,
     '../src/app/**/*.stories.mdx',
     '../src/app/**/*.stories.@(js|jsx|ts|tsx)',
   ],
-  addons: [...rootMain.addons],
+  addons: ['@storybook/addon-essentials'],
   async viteFinal(config, { configType }) {
     return mergeConfig(config, {
       plugins: [

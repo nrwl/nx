@@ -2465,6 +2465,17 @@
         "tags": [],
         "originalFilePath": "shared/packages/storybook/configuring-storybook"
       },
+      "/packages/storybook/documents/custom-builder-configs": {
+        "id": "custom-builder-configs",
+        "name": "How to configure Webpack and Vite for Storybook",
+        "description": "This guide explains how to customize the webpack configuration and your vite configuration for Storybook.",
+        "file": "generated/packages/storybook/documents/custom-builder-configs",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/packages/storybook/documents/custom-builder-configs",
+        "tags": [],
+        "originalFilePath": "shared/packages/storybook/custom-builder-configs"
+      },
       "/packages/storybook/documents/storybook-composition-setup": {
         "id": "storybook-composition-setup",
         "name": "Setting up Storybook Composition with Nx",
@@ -2487,17 +2498,6 @@
         "tags": [],
         "originalFilePath": "shared/packages/storybook/angular-storybook-compodoc"
       },
-      "/packages/storybook/documents/angular-storybook-targets": {
-        "id": "angular-storybook-targets",
-        "name": "Angular: Information about the Storybook targets",
-        "description": "This document explains the role of the storybook and build-storybook targets in Angular projects with a Storybook configuration, and specifically which executors are used for them.",
-        "file": "generated/packages/storybook/documents/angular-storybook-targets",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/packages/storybook/documents/angular-storybook-targets",
-        "tags": [],
-        "originalFilePath": "shared/packages/storybook/angular-storybook-targets"
-      },
       "/packages/storybook/documents/angular-configuring-styles": {
         "id": "angular-configuring-styles",
         "name": "Angular: Configuring styles and preprocessor options",
@@ -2508,6 +2508,17 @@
         "path": "/packages/storybook/documents/angular-configuring-styles",
         "tags": [],
         "originalFilePath": "shared/packages/storybook/angular-configuring-styles"
+      },
+      "/packages/storybook/documents/angular-storybook-targets": {
+        "id": "angular-storybook-targets",
+        "name": "Angular: Information about the Storybook targets",
+        "description": "This document explains the role of the storybook and build-storybook targets in Angular projects with a Storybook configuration, and specifically which executors are used for them.",
+        "file": "generated/packages/storybook/documents/angular-storybook-targets",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/packages/storybook/documents/angular-storybook-targets",
+        "tags": [],
+        "originalFilePath": "shared/packages/storybook/angular-storybook-targets"
       },
       "/packages/storybook/documents/angular-browser-target": {
         "id": "angular-browser-target",
@@ -2563,17 +2574,6 @@
         "path": "/packages/storybook/documents/upgrade-storybook-v6-react",
         "tags": [],
         "originalFilePath": "shared/packages/storybook/storybook-v6-react"
-      },
-      "/packages/storybook/documents/custom-builder-configs": {
-        "id": "custom-builder-configs",
-        "name": "How to configure Webpack and Vite for Storybook",
-        "description": "This guide explains how to customize the webpack configuration and your vite configuration for Storybook.",
-        "file": "generated/packages/storybook/documents/custom-builder-configs",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/packages/storybook/documents/custom-builder-configs",
-        "tags": [],
-        "originalFilePath": "shared/packages/storybook/custom-builder-configs"
       }
     },
     "root": "/packages/storybook",

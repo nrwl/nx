@@ -1771,6 +1771,12 @@
               "file": "shared/packages/storybook/configuring-storybook"
             },
             {
+              "id": "custom-builder-configs",
+              "name": "How to configure Webpack and Vite for Storybook",
+              "description": "This guide explains how to customize the webpack configuration and your vite configuration for Storybook.",
+              "file": "shared/packages/storybook/custom-builder-configs"
+            },
+            {
               "id": "storybook-composition-setup",
               "name": "Setting up Storybook Composition with Nx",
               "description": "This guide explains how you can set up Storybook composition on your Nx workspace.",
@@ -1783,16 +1789,16 @@
               "file": "shared/packages/storybook/angular-storybook-compodoc"
             },
             {
-              "id": "angular-storybook-targets",
-              "name": "Angular: Information about the Storybook targets",
-              "description": "This document explains the role of the storybook and build-storybook targets in Angular projects with a Storybook configuration, and specifically which executors are used for them.",
-              "file": "shared/packages/storybook/angular-storybook-targets"
-            },
-            {
               "id": "angular-configuring-styles",
               "name": "Angular: Configuring styles and preprocessor options",
               "description": "This document explains how to configure styles and preprocessor options in Angular projects with a Storybook configuration.",
               "file": "shared/packages/storybook/angular-configuring-styles"
+            },
+            {
+              "id": "angular-storybook-targets",
+              "name": "Angular: Information about the Storybook targets",
+              "description": "This document explains the role of the storybook and build-storybook targets in Angular projects with a Storybook configuration, and specifically which executors are used for them.",
+              "file": "shared/packages/storybook/angular-storybook-targets"
             },
             {
               "id": "angular-browser-target",
@@ -1823,12 +1829,6 @@
               "name": "React: Upgrading to Storybook 6",
               "description": "This guide explains how you can upgrade your Storybook from versions 5.3 and below to Storybook 6, for React projects.",
               "file": "shared/packages/storybook/storybook-v6-react"
-            },
-            {
-              "id": "custom-builder-configs",
-              "name": "How to configure Webpack and Vite for Storybook",
-              "description": "This guide explains how to customize the webpack configuration and your vite configuration for Storybook.",
-              "file": "shared/packages/storybook/custom-builder-configs"
             }
           ]
         },

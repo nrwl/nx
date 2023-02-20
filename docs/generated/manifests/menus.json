@@ -5949,6 +5949,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "How to configure Webpack and Vite for Storybook",
+                "path": "/packages/storybook/documents/custom-builder-configs",
+                "id": "custom-builder-configs",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Setting up Storybook Composition with Nx",
                 "path": "/packages/storybook/documents/storybook-composition-setup",
                 "id": "storybook-composition-setup",
@@ -5965,17 +5973,17 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Angular: Information about the Storybook targets",
-                "path": "/packages/storybook/documents/angular-storybook-targets",
-                "id": "angular-storybook-targets",
+                "name": "Angular: Configuring styles and preprocessor options",
+                "path": "/packages/storybook/documents/angular-configuring-styles",
+                "id": "angular-configuring-styles",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
               },
               {
-                "name": "Angular: Configuring styles and preprocessor options",
-                "path": "/packages/storybook/documents/angular-configuring-styles",
-                "id": "angular-configuring-styles",
+                "name": "Angular: Information about the Storybook targets",
+                "path": "/packages/storybook/documents/angular-storybook-targets",
+                "id": "angular-storybook-targets",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -6016,14 +6024,6 @@
                 "name": "React: Upgrading to Storybook 6",
                 "path": "/packages/storybook/documents/upgrade-storybook-v6-react",
                 "id": "upgrade-storybook-v6-react",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "How to configure Webpack and Vite for Storybook",
-                "path": "/packages/storybook/documents/custom-builder-configs",
-                "id": "custom-builder-configs",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
