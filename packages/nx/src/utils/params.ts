@@ -747,13 +747,13 @@ function getGeneratorDefaults(
   return defaults;
 }
 
-interface Prompt {
+type Prompt = ConstructorParameters<typeof import('enquirer').Prompt>[0] & {
   name: string;
   type: 'input' | 'autocomplete' | 'multiselect' | 'confirm' | 'numeral';
   message: string;
   initial?: any;
   choices?: (string | { name: string; message: string })[];
-}
+};
 
 export function getPromptsForSchema(
   opts: Options,
@@ -781,6 +781,14 @@ export function getPromptsForSchema(
       }
 
       question.message = v['x-prompt'].message;
+      question.validate = (s) => {
+        try {
+          validateProperty(k, s, schema, schema.definitions || {});
+          return true;
+        } catch (e) {
+          return e.message;
+        }
+      };
 
       if (v.type === 'string' && v.enum && Array.isArray(v.enum)) {
         question.type = 'autocomplete';
@@ -796,16 +804,13 @@ export function getPromptsForSchema(
         question.type = 'autocomplete';
         question.choices = Object.keys(projectsConfigurations.projects);
       } else if (v.type === 'number' || v['x-prompt'].type == 'number') {
-        question.message = v['x-prompt'].message;
         question.type = 'numeral';
       } else if (
         v['x-prompt'].type == 'confirmation' ||
         v['x-prompt'].type == 'confirm'
       ) {
-        question.message = v['x-prompt'].message;
         question.type = 'confirm';
       } else if (v['x-prompt'].items) {
-        question.message = v['x-prompt'].message;
         question.type =
           v['x-prompt'].multiselect || v.type === 'array'
             ? 'multiselect'
@@ -822,9 +827,11 @@ export function getPromptsForSchema(
               };
             }
           });
+      } else if (v.type === 'boolean') {
+        question.type = 'confirm';
       } else {
-        question.message = v['x-prompt'].message;
-        question.type = v.type === 'boolean' ? 'confirm' : 'input';
+        question.type = 'input';
+        // Required strings cannot be empty
       }
       prompts.push(question);
     }

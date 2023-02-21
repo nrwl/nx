@@ -1500,7 +1500,11 @@ describe('params', () => {
             name: {
               'x-prompt': 'What is your name?',
             },
+            type: {
+              'x-prompt': 'What type?',
+            },
           },
+          required: ['name'],
         },
         {
           version: 2,
@@ -1509,7 +1513,13 @@ describe('params', () => {
       );
 
       expect(prompts).toEqual([
-        { type: 'input', name: 'name', message: 'What is your name?' },
+        {
+          type: 'input',
+          name: 'name',
+          message: 'What is your name?',
+          validate: expect.any(Function),
+        },
+        { type: 'input', name: 'type', message: 'What type?' },
       ]);
     });
 
