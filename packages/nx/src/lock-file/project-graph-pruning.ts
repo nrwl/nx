@@ -189,13 +189,12 @@ function switchNodeToHoisted(
   );
 
   builder.removeNode(node.name);
-  // node has already been removed in the inverted graph
-  // but we need to remove the dependencies
-  invBuilder.removeDependenciesWithNode(previousName);
+  invBuilder.removeNode(node.name);
 
   // modify the node and re-add it
   node.name = `npm:${node.data.packageName}`;
   builder.addExternalNode(node);
+  invBuilder.addExternalNode(node);
 
   targets.forEach((target) => {
     builder.addExternalNodeDependency(node.name, target);

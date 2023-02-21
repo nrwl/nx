@@ -19,8 +19,9 @@ export function reverse(graph: ProjectGraph): ProjectGraph {
   }
 
   const result = {
-    nodes: graph.nodes,
-    externalNodes: graph.externalNodes,
+    ...graph,
+    nodes: { ...graph.nodes },
+    externalNodes: { ...graph.externalNodes },
     dependencies: {},
   } as ProjectGraph;
   Object.keys(graph.nodes).forEach((n) => (result.dependencies[n] = []));
