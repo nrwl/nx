@@ -145,7 +145,7 @@ jobs:
       GIT_COMMITTER_NAME: Test
       NX_E2E_CI_CACHE_KEY: e2e-circleci-<< parameters.os >>
       SELECTED_PM: << parameters.pm >>
-      NX_E2E_RUN_CYPRESS: 'false'
+      NX_E2E_RUN_CYPRESS: 'true'
       NX_VERBOSE_LOGGING: 'false'
       NX_PERF_LOGGING: 'false'
       NX_NATIVE_HASHER: 'true'
