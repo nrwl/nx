@@ -5,7 +5,6 @@ import * as yargs from 'yargs-parser';
 
 import { readNxJson } from '../config/configuration';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
-import { ProjectConfiguration } from '../config/workspace-json-project-json';
 import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
@@ -28,7 +27,10 @@ export async function nxExecCommand(
     const command = scriptArgV
       .reduce((cmd, arg) => cmd + `"${arg}" `, '')
       .trim();
-    execSync(command, { stdio: 'inherit' });
+    execSync(command, {
+      stdio: 'inherit',
+      env: process.env,
+    });
   } else {
     // nx exec is being ran inside of Nx's context
     return runScriptAsNxTarget(scriptArgV);
