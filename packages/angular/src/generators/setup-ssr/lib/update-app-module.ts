@@ -1,9 +1,9 @@
 import type { Tree } from '@nrwl/devkit';
 import { joinPathFragments, readProjectConfiguration } from '@nrwl/devkit';
 import type { Schema } from '../schema';
-import { tsquery } from '@phenomnomnominal/tsquery';
 
 export function updateAppModule(tree: Tree, schema: Schema) {
+  const { tsquery } = require('@phenomnomnominal/tsquery');
   // read the content of app module
   const projectConfig = readProjectConfiguration(tree, schema.project);
   const pathToAppModule = joinPathFragments(

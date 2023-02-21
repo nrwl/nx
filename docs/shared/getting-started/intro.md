@@ -18,6 +18,10 @@ Get a pre-configured setup. Nx configures your favorite frameworks and lets you 
 
 {% /persona %}
 
+{% /personas %}
+
+{% cards cols="3" %}
+
 {% persona type="react" title="Create a Standalone React app" url="/getting-started/react-standalone-tutorial" %}
 
 A modern React setup with built-in support for Vite, ESLint, Cypress and more. Think CRA but modern, always up-to-date and scalable.
@@ -34,7 +38,15 @@ A modern Angular development experience powered by advanced generators and integ
 
 {% /persona %}
 
-{% /personas %}
+{% persona type="node" title="Create a Standalone Node server" url="/getting-started/node-tutorial" %}
+
+A modern Node server with scaffolding for Express, Fastify or Koa. There's also Docker support built-in.
+
+- [Create a Standalone Node server](/getting-started/node-tutorial)
+
+{% /persona %}
+
+{% /cards %}
 
 ## Adopting Nx
 

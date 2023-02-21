@@ -36,6 +36,7 @@ export const commandsObject = yargs
     handler: async (args) => {
       // Remove the command from the args
       args._ = args._.slice(1);
+
       process.exit(
         await (await import('./generate')).generate(process.cwd(), args)
       );
@@ -281,7 +282,7 @@ export const commandsObject = yargs
     command: 'migrate [packageAndVersion]',
     describe: `Creates a migrations file or runs migrations from the migrations file.
   - Migrate packages and create migrations.json (e.g., nx migrate @nrwl/workspace@latest)
-  - Run migrations (e.g., nx migrate --run-migrations=migrations.json)`,
+  - Run migrations (e.g., nx migrate --run-migrations=migrations.json). Use flag --if-exists to run migrations only if the migrations file exists.`,
     builder: (yargs) =>
       linkToNxDevAndExamples(withMigrationOptions(yargs), 'migrate'),
     handler: () => {
@@ -732,6 +733,18 @@ function withGenerateOptions(yargs: yargs.Argv) {
         'Prints additional information about the commands (e.g., stack traces)',
       type: 'boolean',
       default: false,
+    })
+    .middleware((args) => {
+      if (process.env.NX_INTERACTIVE === 'false') {
+        args.interactive = false;
+      } else {
+        process.env.NX_INTERACTIVE = `${args.interactive}`;
+      }
+      if (process.env.NX_DRY_RUN === 'true') {
+        args.dryRun = true;
+      } else {
+        process.env.NX_DRY_RUN = `${args.dryRun}`;
+      }
     });
 
   if (generatorWillShowHelp) {
@@ -931,6 +944,11 @@ function withMigrationOptions(yargs: yargs.Argv) {
       describe: `Execute migrations from a file (when the file isn't provided, execute migrations from migrations.json)`,
       type: 'string',
     })
+    .option('ifExists', {
+      describe: `Run migrations only if the migrations file exists, if not continues successfully`,
+      type: 'boolean',
+      default: false,
+    })
     .option('from', {
       describe:
         'Use the provided versions for packages instead of the ones installed in node_modules (e.g., --from="@nrwl/react@12.0.0,@nrwl/js@12.0.0")',
@@ -959,14 +977,27 @@ function withMigrationOptions(yargs: yargs.Argv) {
       type: 'boolean',
       default: false,
     })
-    .check(({ createCommits, commitPrefix }) => {
-      if (!createCommits && commitPrefix !== defaultCommitPrefix) {
-        throw new Error(
-          'Error: Providing a custom commit prefix requires --create-commits to be enabled'
-        );
+    .option('excludeAppliedMigrations', {
+      describe:
+        'Exclude migrations that should have been applied on previous updates. To be used with --from',
+      type: 'boolean',
+      default: false,
+    })
+    .check(
+      ({ createCommits, commitPrefix, from, excludeAppliedMigrations }) => {
+        if (!createCommits && commitPrefix !== defaultCommitPrefix) {
+          throw new Error(
+            'Error: Providing a custom commit prefix requires --create-commits to be enabled'
+          );
+        }
+        if (excludeAppliedMigrations && !from) {
+          throw new Error(
+            'Error: Excluding migrations that should have been previously applied requires --from to be set'
+          );
+        }
+        return true;
       }
-      return true;
-    });
+    );
 }
 
 function withWatchOptions(yargs: yargs.Argv) {

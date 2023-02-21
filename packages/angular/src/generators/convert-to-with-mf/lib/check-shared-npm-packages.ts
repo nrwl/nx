@@ -1,7 +1,7 @@
 import type { SourceFile, Node } from 'typescript';
-import { tsquery } from '@phenomnomnominal/tsquery';
 
 export function checkSharedNpmPackagesMatchExpected(ast: SourceFile) {
+  const { tsquery } = require('@phenomnomnominal/tsquery');
   const SHARE_HELPER_SELECTOR =
     'PropertyAssignment:has(Identifier[name=shared]) > CallExpression:has(Identifier[name=share])';
   const SHARED_PACKAGE_CONFIG_SELECTOR =

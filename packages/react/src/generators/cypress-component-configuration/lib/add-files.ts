@@ -6,17 +6,17 @@ import {
   logger,
   parseTargetString,
   ProjectConfiguration,
-  readCachedProjectGraph,
   readProjectConfiguration,
   Tree,
   visitNotIgnoredFiles,
 } from '@nrwl/devkit';
 import { nxVersion } from 'nx/src/utils/versions';
-import * as ts from 'typescript';
 import { getComponentNode } from '../../../utils/ast-utils';
 import { componentTestGenerator } from '../../component-test/component-test';
 import { CypressComponentConfigurationSchema } from '../schema';
 import { FoundTarget } from './update-configs';
+
+let tsModule: typeof import('typescript');
 
 const allowedFileExt = new RegExp(/\.[jt]sx?/g);
 const isSpecFile = new RegExp(/(spec|test)\./g);
@@ -58,7 +58,7 @@ export async function addFiles(
     options.bundler === 'webpack' ||
     (!options.bundler && actualBundler === 'webpack')
   ) {
-    await ensurePackage(tree, '@nrwl/webpack', nxVersion);
+    ensurePackage(tree, '@nrwl/webpack', nxVersion);
   }
 
   if (options.generateTests) {
@@ -97,15 +97,19 @@ async function getBundler(
 }
 
 function isComponent(tree: Tree, filePath: string): boolean {
+  if (!tsModule) {
+    tsModule = require('typescript');
+  }
+
   if (isSpecFile.test(filePath) || !allowedFileExt.test(filePath)) {
     return false;
   }
 
   const content = tree.read(filePath, 'utf-8');
-  const sourceFile = ts.createSourceFile(
+  const sourceFile = tsModule.createSourceFile(
     filePath,
     content,
-    ts.ScriptTarget.Latest,
+    tsModule.ScriptTarget.Latest,
     true
   );
 

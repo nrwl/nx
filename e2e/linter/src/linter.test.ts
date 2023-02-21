@@ -66,6 +66,7 @@ describe('Linter', () => {
           ? cacheInfo.replace(/\\\\/g, '\\')
           : cacheInfo;
       }
+
       const myapp = uniq('myapp');
 
       newProject();
@@ -193,12 +194,18 @@ describe('Linter', () => {
       const invalidtaglib = uniq('invalidtaglib');
       const validtaglib = uniq('validtaglib');
 
-      runCLI(`generate @nrwl/angular:app ${myapp} --tags=validtag`);
-      runCLI(`generate @nrwl/angular:app ${myapp2}`);
-      runCLI(`generate @nrwl/angular:lib ${mylib}`);
-      runCLI(`generate @nrwl/angular:lib ${lazylib}`);
-      runCLI(`generate @nrwl/angular:lib ${invalidtaglib} --tags=invalidtag`);
-      runCLI(`generate @nrwl/angular:lib ${validtaglib} --tags=validtag`);
+      runCLI(
+        `generate @nrwl/angular:app ${myapp} --tags=validtag --no-interactive`
+      );
+      runCLI(`generate @nrwl/angular:app ${myapp2} --no-interactive`);
+      runCLI(`generate @nrwl/angular:lib ${mylib} --no-interactive`);
+      runCLI(`generate @nrwl/angular:lib ${lazylib} --no-interactive`);
+      runCLI(
+        `generate @nrwl/angular:lib ${invalidtaglib} --tags=invalidtag --no-interactive`
+      );
+      runCLI(
+        `generate @nrwl/angular:lib ${validtaglib} --tags=validtag --no-interactive`
+      );
 
       const eslint = readJson('.eslintrc.json');
       eslint.overrides[0].rules[
@@ -516,7 +523,9 @@ export function tslibC(): string {
       const mylib = uniq('mylib');
 
       newProject();
-      runCLI(`generate @nrwl/angular:app ${myapp} --rootProject=true`);
+      runCLI(
+        `generate @nrwl/angular:app ${myapp} --rootProject=true --no-interactive`
+      );
 
       let rootEslint = readJson('.eslintrc.json');
       let e2eEslint = readJson('e2e/.eslintrc.json');
@@ -549,7 +558,7 @@ export function tslibC(): string {
         'plugin:@nrwl/nx/javascript',
       ]);
 
-      runCLI(`generate @nrwl/angular:lib ${mylib}`);
+      runCLI(`generate @nrwl/angular:lib ${mylib} --no-interactive`);
       // should add new tslint
       expect(() => checkFilesExist(`.eslintrc.base.json`)).not.toThrow();
       const appEslint = readJson(`.eslintrc.json`);
@@ -731,6 +740,7 @@ function updateGeneratedRuleImplementation(
 
         return ts.visitEachChild(node, visit, context);
       }
+
       /**
        * Add lib import as a first line of the rule file.
        * Needed for the access of getMessageId in the context report above.

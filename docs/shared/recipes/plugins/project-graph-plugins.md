@@ -86,11 +86,9 @@ You can create 2 types of dependencies.
 
 ### Implicit Dependencies
 
-An implicit dependency is not associated with any file, and can be crated as follows:
+An implicit dependency is not associated with any file, and can be created as follows:
 
 ```typescript
-import { DependencyType } from '@nrwl/devkit';
-
 // Add a new edge
 builder.addImplicitDependency('existing-project', 'new-project');
 ```
@@ -101,22 +99,36 @@ Even though the plugin is written in JavaScript, resolving dependencies of diffe
 
 Because an implicit dependency is not associated with any file, Nx doesn't know when it might change, so it will be recomputed every time.
 
-## Explicit Dependencies
+## Static Dependencies
 
 Nx knows what files have changed since the last invocation. Only those files will be present in the provided `filesToProcess`. You can associate a dependency with a particular file (e.g., if that file contains an import).
+
+```typescript
+// Add a new edge
+builder.addStaticDependency(
+  'existing-project',
+  'new-project',
+  'libs/existing-project/src/index.ts'
+);
+```
+
+If a file hasn't changed since the last invocation, it doesn't need to be reanalyzed. Nx knows what dependencies are associated with what files, so it will reuse this information for the files that haven't changed.
+
+## Dynamic Dependencies
+
+Dynamic dependencies are a special type of explicit dependencies. In contrast to standard `explicit` dependencies, they are only imported in the runtime under specific conditions.
+A typical example would be lazy-loaded routes. Having separation between these two allows us to identify situations where static import breaks the lazy-loading.
 
 ```typescript
 import { DependencyType } from '@nrwl/devkit';
 
 // Add a new edge
-builder.addExplicitDependency(
+builder.addDynamicDependency(
   'existing-project',
-  'libs/existing-project/src/index.ts',
-  'new-project'
+  'lazy-route',
+  'libs/existing-project/src/router-setup.ts'
 );
 ```
-
-If a file hasn't changed since the last invocation, it doesn't need to be reanalyzed. Nx knows what dependencies are associated with what files, so it will reuse this information for the files that haven't changed.
 
 ## Visualizing the Project Graph
 

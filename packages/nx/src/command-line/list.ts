@@ -3,7 +3,7 @@ import { output } from '../utils/output';
 import {
   fetchCommunityPlugins,
   fetchCorePlugins,
-  getInstalledPluginsFromPackageJson,
+  getInstalledPluginsAndCapabilities,
   listCommunityPlugins,
   listCorePlugins,
   listInstalledPlugins,
@@ -49,7 +49,7 @@ export async function listHandler(args: ListArgs): Promise<void> {
     const localPlugins = getLocalWorkspacePlugins(
       readProjectsConfigurationFromProjectGraph(projectGraph)
     );
-    const installedPlugins = getInstalledPluginsFromPackageJson(
+    const installedPlugins = getInstalledPluginsAndCapabilities(
       workspaceRoot,
       corePlugins,
       communityPlugins

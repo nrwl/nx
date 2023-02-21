@@ -3,7 +3,7 @@ title: 'migrate - CLI command'
 description:
   'Creates a migrations file or runs migrations from the migrations file.
   - Migrate packages and create migrations.json (e.g., nx migrate @nrwl/workspace@latest)
-  - Run migrations (e.g., nx migrate --run-migrations=migrations.json)'
+  - Run migrations (e.g., nx migrate --run-migrations=migrations.json). Use flag --if-exists to run migrations only if the migrations file exists.'
 ---
 
 # migrate
@@ -11,7 +11,7 @@ description:
 Creates a migrations file or runs migrations from the migrations file.
 
 - Migrate packages and create migrations.json (e.g., nx migrate @nrwl/workspace@latest)
-- Run migrations (e.g., nx migrate --run-migrations=migrations.json)
+- Run migrations (e.g., nx migrate --run-migrations=migrations.json). Use flag --if-exists to run migrations only if the migrations file exists.
 
 ## Usage
 
@@ -35,7 +35,7 @@ Update @nrwl/workspace to "9.0.0". This will update other packages and will gene
  nx migrate 9.0.0
 ```
 
-Update @nrwl/workspace and generate the list of migrations starting with version 8.0.0 of @nrwl/workspace and @nrwl/node, regardless of what installed locally:
+Update @nrwl/workspace and generate the list of migrations starting with version 8.0.0 of @nrwl/workspace and @nrwl/node, regardless of what is installed locally:
 
 ```shell
  nx migrate @nrwl/workspace@9.0.0 --from="@nrwl/workspace@8.0.0,@nrwl/node@8.0.0"
@@ -57,6 +57,12 @@ Collect package updates and migrations in interactive mode. In this mode, the us
 
 ```shell
  nx migrate latest --interactive
+```
+
+Collect package updates and migrations starting with version 14.5.0 of "nx" (and Nx first-party plugins), regardless of what is installed locally, while excluding migrations that should have been applied on previous updates:
+
+```shell
+ nx migrate latest --from=nx@14.5.0 --exclude-applied-migrations
 ```
 
 Run migrations from the provided migrations.json file. You can modify migrations.json and run this command many times:
@@ -89,6 +95,14 @@ Default: `false`
 
 Automatically create a git commit after each migration runs
 
+### excludeAppliedMigrations
+
+Type: `boolean`
+
+Default: `false`
+
+Exclude migrations that should have been applied on previous updates. To be used with --from
+
 ### from
 
 Type: `string`
@@ -100,6 +114,14 @@ Use the provided versions for packages instead of the ones installed in node_mod
 Type: `boolean`
 
 Show help
+
+### ifExists
+
+Type: `boolean`
+
+Default: `false`
+
+Run migrations only if the migrations file exists, if not continues successfully
 
 ### interactive
 

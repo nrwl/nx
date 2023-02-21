@@ -285,6 +285,8 @@ class TaskHasher {
     visited: string[]
   ) {
     const projectGraphDeps = this.projectGraph.dependencies[projectName] ?? [];
+    // we don't want random order of dependencies to change the hash
+    projectGraphDeps.sort((a, b) => a.target.localeCompare(b.target));
 
     const self = await this.hashSelfInputs(projectName, selfInputs);
     const deps = await this.hashDepsInputs(

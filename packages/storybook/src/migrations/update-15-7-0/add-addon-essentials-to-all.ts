@@ -82,7 +82,7 @@ export default async function (tree: Tree) {
   logger.info(
     `
     Read more about our effort to deprecate the root .storybook folder here:
-    https://nx.dev/packages/storybook/configuring-storybook
+    https://nx.dev/packages/storybook/documents/configuring-storybook
     `
   );
 
@@ -303,6 +303,10 @@ function removeStoriesArrayFromRootIfEmpty(
       rootMainJsTs,
       'PropertyAssignment:has([name="stories"])'
     )?.[0];
+
+    if (!fullStoriesNode) {
+      return false;
+    }
 
     const stringLiterals = tsquery.query(fullStoriesNode, 'StringLiteral');
 

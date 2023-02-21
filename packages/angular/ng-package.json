@@ -22,7 +22,8 @@
     "semver",
     "webpack",
     "http-server",
-    "magic-string"
+    "magic-string",
+    "enquirer"
   ],
   "keepLifecycleScripts": true
 }

@@ -1,10 +1,10 @@
 import type { SourceFile } from 'typescript';
-import { tsquery } from '@phenomnomnominal/tsquery';
 
 export function checkOutputNameMatchesProjectName(
   ast: SourceFile,
   projectName: string
 ) {
+  const { tsquery } = require('@phenomnomnominal/tsquery');
   const OUTPUT_SELECTOR =
     'PropertyAssignment:has(Identifier[name=output]) > ObjectLiteralExpression:has(PropertyAssignment:has(Identifier[name=uniqueName]))';
   const UNIQUENAME_SELECTOR =

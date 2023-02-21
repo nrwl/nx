@@ -48,7 +48,7 @@ describe('angularStories generator: libraries', () => {
 
     beforeEach(async () => {
       tree = await createStorybookTestWorkspaceForLib(libName);
-      await ensurePackage(tree, '@nrwl/storybook', nxVersion);
+      ensurePackage(tree, '@nrwl/storybook', nxVersion);
       cypressProjectGenerator = await (
         await import('@nrwl/storybook')
       ).cypressProjectGenerator;

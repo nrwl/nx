@@ -20,7 +20,7 @@ import { concat, from, Observable, of, zip } from 'rxjs';
 import { catchError, concatMap, map, tap } from 'rxjs/operators';
 import { GenerateOptions } from '../command-line/generate';
 import { ProjectConfiguration } from '../config/workspace-json-project-json';
-import { Tree } from '../generators/tree';
+import { FsTree, Tree } from '../generators/tree';
 import { readJson } from '../generators/utils/json';
 import {
   addProjectConfiguration,
@@ -203,6 +203,8 @@ async function runSchematic(
   return { status: 0, loggingQueue: record.loggingQueue };
 }
 
+type AngularProjectConfiguration = ProjectConfiguration & { prefix?: string };
+
 export class NxScopedHost extends virtualFs.ScopedHost<any> {
   constructor(private root: string) {
     super(new NodeJsSyncHost(), normalize(root));
@@ -226,25 +228,30 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
       concatMap((arg) => {
         const graph = arg[0] as any;
         const ret = (arg[1] || { projects: {} }) as any;
-        const projectJsonReads = [] as Observable<any>[];
+        const projectJsonReads: Observable<
+          [string, ProjectConfiguration & { version: string }]
+        >[] = [];
         for (let projectName of Object.keys(graph.nodes)) {
           if (!ret.projects[projectName]) {
             projectJsonReads.push(
-              this.readExistingProjectJson(
-                join(graph.nodes[projectName].data.root, 'project.json')
+              zip(
+                of(projectName),
+                this.readExistingProjectJson(
+                  join(graph.nodes[projectName].data.root, 'project.json')
+                )
               )
             );
           }
         }
         return zip(...projectJsonReads).pipe(
-          map((projectJsons) => {
-            projectJsons
-              .filter((p) => p !== null)
-              .forEach((p) => {
-                delete p.version;
-                ret.projects[p.name] = {
-                  ...p,
-                  root: graph.nodes[p.name].data.root,
+          map((reads) => {
+            reads
+              .filter(([, p]) => p !== null)
+              .forEach(([projectName, project]) => {
+                delete project.version;
+                ret.projects[projectName] = {
+                  ...project,
+                  root: graph.nodes[projectName].data.root,
                 };
               });
 
@@ -290,9 +297,11 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
                     if (existingConfig.projects[projectName]) {
                       const updatedContent = this.mergeProjectConfiguration(
                         existingConfig.projects[projectName],
-                        projects[projectName]
+                        projects[projectName],
+                        projectName
                       );
                       if (updatedContent) {
+                        delete updatedContent.root;
                         allObservables.push(
                           super.write(
                             path as any,
@@ -337,22 +346,40 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
   }
 
   mergeProjectConfiguration(
-    existing: ProjectConfiguration,
-    updated: ProjectConfiguration
+    existing: AngularProjectConfiguration,
+    updated: AngularProjectConfiguration,
+    projectName: string
   ) {
-    const res = { ...existing };
-
-    if (!res.targets) {
-      res.targets = {};
-    }
-
+    const res: AngularProjectConfiguration = { ...existing };
     let modified = false;
-    for (let target of Object.keys(updated.targets)) {
-      if (!res.targets[target]) {
-        res.targets[target] = updated.targets[target];
+
+    function updatePropertyIfDifferent<
+      T extends Exclude<keyof AngularProjectConfiguration, 'namedInputs'>
+    >(property: T): void {
+      if (typeof res[property] === 'string') {
+        if (res[property] !== updated[property]) {
+          res[property] = updated[property];
+          modified = true;
+        }
+      } else if (
+        JSON.stringify(res[property]) !== JSON.stringify(updated[property])
+      ) {
+        res[property] = updated[property];
         modified = true;
       }
     }
+
+    if (!res.name || (updated.name && res.name !== updated.name)) {
+      res.name ??= updated.name || projectName;
+      modified = true;
+    }
+    updatePropertyIfDifferent('projectType');
+    updatePropertyIfDifferent('sourceRoot');
+    updatePropertyIfDifferent('prefix');
+    updatePropertyIfDifferent('targets');
+    updatePropertyIfDifferent('generators');
+    updatePropertyIfDifferent('implicitDependencies');
+    updatePropertyIfDifferent('tags');
 
     return modified ? res : null;
   }
@@ -388,8 +415,19 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
   }
 }
 
-function arrayBufferToString(buffer: any) {
-  return String.fromCharCode.apply(null, new Uint8Array(buffer));
+export function arrayBufferToString(buffer: any) {
+  const array = new Uint8Array(buffer);
+  let result = '';
+  const chunkSize = 8 * 1024;
+  let i = 0;
+  for (i = 0; i < array.length / chunkSize; i++) {
+    result += String.fromCharCode.apply(
+      null,
+      array.subarray(i * chunkSize, (i + 1) * chunkSize)
+    );
+  }
+  result += String.fromCharCode.apply(null, array.subarray(i * chunkSize));
+  return result;
 }
 
 export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
@@ -480,7 +518,10 @@ export async function generate(
   verbose: boolean
 ) {
   const logger = getLogger(verbose);
-  const fsHost = new NxScopedHost(root);
+  const fsHost = new NxScopeHostUsedForWrappedSchematics(
+    root,
+    new FsTree(root, verbose)
+  );
   const workflow = createWorkflow(fsHost, root, opts);
   const collection = getCollection(workflow, opts.collectionName);
   const schematic = collection.createSchematic(opts.generatorName, true);
@@ -566,7 +607,10 @@ export async function runMigration(
   isVerbose: boolean
 ) {
   const logger = getLogger(isVerbose);
-  const fsHost = new NxScopedHost(root);
+  const fsHost = new NxScopeHostUsedForWrappedSchematics(
+    root,
+    new FsTree(root, isVerbose)
+  );
   const workflow = createWorkflow(fsHost, root, {});
   const collection = resolveMigrationsCollection(packageName);
 

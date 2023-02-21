@@ -33,6 +33,7 @@
     "@nrwl/cypress": "file:../cypress",
     "@nrwl/devkit": "file:../devkit",
     "@nrwl/linter": "file:../linter",
+    "@nrwl/js": "file:../js",
     "@nrwl/workspace": "file:../workspace",
     "dotenv": "~10.0.0",
     "@phenomnomnominal/tsquery": "4.1.1",

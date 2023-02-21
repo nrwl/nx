@@ -10,6 +10,11 @@
     "url": "https://github.com/nxkit/nxkit"
   },
   {
+    "name": "qwik-nx",
+    "description": "Get first class support for Qwik inside of Nx monorepos with Qwik optimized custom executors, generators and a vite plugin",
+    "url": "https://github.com/qwikifiers/qwik-nx"
+  },
+  {
     "name": "@nxkit/style-dictionary",
     "description": "Nx plugin to generate and build Style Dictionary projects inside your Nx workspace",
     "url": "https://github.com/nxkit/nxkit"
@@ -383,5 +388,10 @@
     "name": "@nxrocks/nx-melos",
     "description": "Nx plugin adding first class support for Melos in your Nx workspace",
     "url": "https://github.com/tinesoft/nxrocks/tree/master/packages/nx-melos"
+  },
+  {
+    "name": "@monodon/rust",
+    "description": "Adds Cargo and Rust support",
+    "url": "https://github.com/cammisuli/monodon/tree/main/packages/rust"
   }
 ]

@@ -6,6 +6,7 @@ import { directoryExists, readJsonFile } from '../utils/fileutils';
 import { PackageJson } from '../utils/package-json';
 import * as parser from 'yargs-parser';
 import { generateEncapsulatedNxSetup } from '../nx-init/encapsulated/add-nx-scripts';
+import { prerelease } from 'semver';
 
 export async function initHandler() {
   const args = process.argv.slice(2).join(' ');
@@ -16,7 +17,10 @@ export async function initHandler() {
     },
   }) as any as { encapsulated: boolean };
 
-  const version = process.env.NX_VERSION ?? 'latest';
+  const version =
+    process.env.NX_VERSION ?? prerelease(require('../../package.json').version)
+      ? 'next'
+      : 'latest';
   if (process.env.NX_VERSION) {
     console.log(`Using version ${process.env.NX_VERSION}`);
   }

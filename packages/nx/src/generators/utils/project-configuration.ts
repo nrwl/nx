@@ -180,7 +180,9 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
 } {
   const nxJson = readNxJson(tree);
 
-  const globbedFiles = globForProjectFiles(tree.root, nxJson);
+  const globbedFiles = globForProjectFiles(tree.root, nxJson).map(
+    normalizePath
+  );
   const createdFiles = findCreatedProjectFiles(tree);
   const deletedFiles = findDeletedProjectFiles(tree);
   const projectFiles = [...globbedFiles, ...createdFiles].filter(
@@ -218,7 +220,7 @@ function findCreatedProjectFiles(tree: Tree) {
       }
     }
   }
-  return deduplicateProjectFiles(createdProjectFiles);
+  return deduplicateProjectFiles(createdProjectFiles).map(normalizePath);
 }
 
 /**

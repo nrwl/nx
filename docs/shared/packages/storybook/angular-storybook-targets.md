@@ -17,4 +17,12 @@ That means that you can use the official [Storybook for Angular documentation (e
 
 If you are on Nx version `<14.1.8` and you want to move to the latest version (or any version `>=14.1.8`) you can use the `nx migrate` command, which will take care of migrating your Storybook targets across all your Angular projects using Storybook to use the new schema, the original Storybook executors for Angular. The configuration changes that you need to make will be handled automatically by Nx, so you will not have to do any manual work.
 
-If you have already moved on a version of Nx `>=14.1.8` without using `nx migrate` and now you are having trouble with your Angular projects using Storybook (eg. `Property 'uiFramework' does not match the schema. '@storybook/angular' should be one of ...`), that means that your targets are still using the old schema and they should change. For that, you can use the [`change-storybook-targets` generator](/packages/storybook/generators/change-storybook-targets) which will take care of changing your `storybook` and `build-storybook` targets across your workspace for your Angular projects using Storybook.
+If you have already moved on a version of Nx `>=14.1.8` without using `nx migrate` and now you are having trouble with your Angular projects using Storybook (eg. `Property 'uiFramework' does not match the schema. '@storybook/angular' should be one of ...`), that means that your targets are still using the old schema and they should change. The way to fix that is to call `nx migrate` again like this:
+
+```bash
+nx migrate @nrwl/storybook@14.1.0 --to="@nrwl/storybook@14.2.0"
+```
+
+and follow the instructions that will be printed in the console.
+
+This command will generate a new `migrations.json` file which will contain the "change-storybook-targets" migration script. This script (when called with `yarn nx migrate --run-migrations`) will change the `storybook` and `build-storybook` targets in all your Angular projects that are configured to use Storybook. The new target configuration will use the native Storybook builders (`@storybook/angular:build-storybook` and `@storybook/angular:start-storybook`) instead of the Nx Storybook builders (`@nrwl/storybook:build-storybook` and `@nrwl/storybook:storybook`).

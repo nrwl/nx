@@ -19,12 +19,11 @@ import {
   writeJson,
 } from '@nrwl/devkit';
 import { getImportPath } from 'nx/src/utils/path';
-import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import {
   getRelativePathToRootTsConfig,
-  getRootTsConfigPathInTree,
-} from '@nrwl/workspace/src/utilities/typescript';
+  updateRootTsConfig,
+} from '../../utils/typescript/ts-config';
 import { join } from 'path';
 import { addMinimalPublishScript } from '../../utils/minimal-publish-script';
 import { LibraryGeneratorSchema } from '../../utils/schema';
@@ -35,6 +34,7 @@ import {
   nxVersion,
   typesNodeVersion,
 } from '../../utils/versions';
+import jsInitGenerator from '../init/init';
 
 export async function libraryGenerator(
   tree: Tree,
@@ -54,6 +54,10 @@ export async function projectGenerator(
   destinationDir: string,
   filesDir: string
 ) {
+  await jsInitGenerator(tree, {
+    js: schema.js,
+    skipFormat: true,
+  });
   const tasks: GeneratorCallback[] = [];
   const options = normalizeOptions(tree, schema, destinationDir);
 
@@ -64,7 +68,7 @@ export async function projectGenerator(
   tasks.push(addProjectDependencies(tree, options));
 
   if (options.bundler === 'vite') {
-    await ensurePackage(tree, '@nrwl/vite', nxVersion);
+    ensurePackage(tree, '@nrwl/vite', nxVersion);
     // nx-ignore-next-line
     const { viteConfigurationGenerator } = require('@nrwl/vite');
     const viteTask = await viteConfigurationGenerator(tree, {
@@ -75,10 +79,6 @@ export async function projectGenerator(
       includeLib: true,
     });
     tasks.push(viteTask);
-  }
-
-  if (!schema.skipTsConfig) {
-    updateRootTsConfig(tree, options);
   }
 
   if (schema.bundler === 'webpack' || schema.bundler === 'rollup') {
@@ -99,7 +99,7 @@ export async function projectGenerator(
     options.unitTestRunner === 'vitest' &&
     options.bundler !== 'vite' // Test would have been set up already
   ) {
-    await ensurePackage(tree, '@nrwl/vite', nxVersion);
+    ensurePackage(tree, '@nrwl/vite', nxVersion);
     // nx-ignore-next-line
     const { vitestGenerator } = require('@nrwl/vite');
     const vitestTask = await vitestGenerator(tree, {
@@ -108,6 +108,10 @@ export async function projectGenerator(
       coverageProvider: 'c8',
     });
     tasks.push(vitestTask);
+  }
+
+  if (!schema.skipTsConfig) {
+    updateRootTsConfig(tree, options);
   }
 
   if (!options.skipFormat) {
@@ -158,6 +162,10 @@ function addProject(
       },
     };
 
+    if (options.bundler === 'webpack') {
+      projectConfiguration.targets.build.options.babelUpwardRootMode = true;
+    }
+
     if (options.compiler === 'swc' && options.skipTypeCheck) {
       projectConfiguration.targets.build.options.skipTypeCheck = true;
     }
@@ -191,10 +199,12 @@ function addProject(
   }
 }
 
-export function addLint(
+export async function addLint(
   tree: Tree,
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
+  ensurePackage(tree, '@nrwl/linter', nxVersion);
+  const { lintProjectGenerator } = require('@nrwl/linter');
   return lintProjectGenerator(tree, {
     project: options.name,
     linter: options.linter,
@@ -228,30 +238,6 @@ function updateTsConfig(tree: Tree, options: NormalizedSchema) {
   });
 }
 
-/**
- * Currently `@nrwl/js:library` TypeScript files can be compiled by most NX applications scaffolded via the Plugin system. However, `@nrwl/react:app` is an exception that due to its babel configuration, won't transpile external TypeScript files from packages/libs that do not contain a .babelrc.
- *
- * If a user doesn't explicitly set the flag, to prevent breaking the experience (they see the application failing, and they need to manually add the babelrc themselves), we want to detect whether they have the `@nrwl/web` plugin installed, and generate it automatically for them (even when they do not explicity request it).
- *
- * You can find more details on why this is necessary here:
- * https://github.com/nrwl/nx/pull/10055
- */
-function shouldAddBabelRc(tree: Tree, options: NormalizedSchema) {
-  if (typeof options.includeBabelRc === 'undefined') {
-    const webPluginName = '@nrwl/web';
-
-    const packageJson = readJson(tree, 'package.json');
-
-    const hasNxWebPlugin = Object.keys(
-      packageJson.devDependencies as Record<string, string>
-    ).includes(webPluginName);
-
-    return hasNxWebPlugin;
-  }
-
-  return options.includeBabelRc;
-}
-
 function addBabelRc(tree: Tree, options: NormalizedSchema) {
   const filename = '.babelrc';
 
@@ -283,7 +269,7 @@ function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
   if (options.compiler === 'swc') {
     addSwcDependencies(tree);
     addSwcConfig(tree, options.projectRoot);
-  } else if (shouldAddBabelRc(tree, options)) {
+  } else if (options.includeBabelRc) {
     addBabelRc(tree, options);
   }
 
@@ -320,7 +306,7 @@ async function addJest(
   tree: Tree,
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
-  await ensurePackage(tree, '@nrwl/jest', nxVersion);
+  ensurePackage(tree, '@nrwl/jest', nxVersion);
   const { jestProjectGenerator } = require('@nrwl/jest');
   return await jestProjectGenerator(tree, {
     ...options,
@@ -372,6 +358,7 @@ function normalizeOptions(
     options.buildable = true;
   }
 
+  const { Linter } = require('@nrwl/linter');
   if (options.config === 'npm-scripts') {
     options.unitTestRunner = 'none';
     options.linter = Linter.None;
@@ -433,30 +420,6 @@ function getCaseAwareFileName(options: {
   const normalized = names(options.fileName);
 
   return options.pascalCaseFiles ? normalized.className : normalized.fileName;
-}
-
-function updateRootTsConfig(host: Tree, options: NormalizedSchema) {
-  updateJson(host, getRootTsConfigPathInTree(host), (json) => {
-    const c = json.compilerOptions;
-    c.paths = c.paths || {};
-    delete c.paths[options.name];
-
-    if (c.paths[options.importPath]) {
-      throw new Error(
-        `You already have a library using the import path "${options.importPath}". Make sure to specify a unique one.`
-      );
-    }
-
-    c.paths[options.importPath] = [
-      joinPathFragments(
-        options.projectRoot,
-        './src',
-        'index.' + (options.js ? 'js' : 'ts')
-      ),
-    ];
-
-    return json;
-  });
 }
 
 function addProjectDependencies(

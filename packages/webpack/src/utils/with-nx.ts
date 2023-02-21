@@ -2,7 +2,7 @@ import * as path from 'path';
 import { Configuration, WebpackPluginInstance, ProgressPlugin } from 'webpack';
 import { ExecutorContext } from 'nx/src/config/misc-interfaces';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
-import { readTsConfig } from '@nrwl/workspace/src/utilities/typescript';
+import { readTsConfig } from '@nrwl/js';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import TerserPlugin = require('terser-webpack-plugin');
 import nodeExternals = require('webpack-node-externals');
@@ -350,21 +350,31 @@ export function createLoaderFromCompiler(
       };
     case 'babel':
       const tsConfig = readTsConfig(options.tsConfig);
-      return {
+
+      const babelConfig = {
         test: /\.([jt])sx?$/,
         loader: path.join(__dirname, './web-babel-loader'),
         exclude: /node_modules/,
         options: {
-          rootMode: 'upward',
           cwd: path.join(options.root, options.sourceRoot),
           emitDecoratorMetadata: tsConfig.options.emitDecoratorMetadata,
           isModern: true,
           envName: process.env.NODE_ENV,
-          babelrc: true,
           cacheDirectory: true,
           cacheCompression: false,
         },
       };
+
+      if (options.babelUpwardRootMode) {
+        babelConfig.options['rootMode'] = 'upward';
+        babelConfig.options['babelrc'] = true;
+      } else {
+        babelConfig.options['configFile'] =
+          babelConfig.options?.['babelConfig'] ??
+          path.join(options.root, options.projectRoot, '.babelrc');
+      }
+
+      return babelConfig;
     default:
       return null;
   }

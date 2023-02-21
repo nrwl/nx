@@ -19,7 +19,7 @@ describe('jest', () => {
   });
 
   it('should generate files with --js flag', async () => {
-    jestInitGenerator(tree, { js: true });
+    await jestInitGenerator(tree, { js: true });
 
     expect(tree.exists('jest.config.js')).toBeTruthy();
     expect(
@@ -31,7 +31,7 @@ describe('jest', () => {
   });
 
   it('should generate files ', async () => {
-    jestInitGenerator(tree, {});
+    await jestInitGenerator(tree, {});
 
     expect(tree.exists('jest.config.ts')).toBeTruthy();
     expect(
@@ -64,7 +64,7 @@ export default {
 }
 `;
     tree.write('jest.config.ts', expected);
-    jestInitGenerator(tree, {});
+    await jestInitGenerator(tree, {});
     expect(tree.read('jest.config.ts', 'utf-8')).toEqual(expected);
   });
 
@@ -75,7 +75,7 @@ export default {
       return json;
     });
 
-    jestInitGenerator(tree, {});
+    await jestInitGenerator(tree, {});
 
     const productionFileSet = readJson<NxJsonConfiguration>(tree, 'nx.json')
       .namedInputs.production;
@@ -98,7 +98,7 @@ export default {
       return json;
     });
 
-    jestInitGenerator(tree, {});
+    await jestInitGenerator(tree, {});
 
     let nxJson: NxJsonConfiguration;
     updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
@@ -119,12 +119,12 @@ export default {
       nxJson = json;
       return json;
     });
-    jestInitGenerator(tree, {});
+    await jestInitGenerator(tree, {});
     expect(readJson<NxJsonConfiguration>(tree, 'nx.json')).toEqual(nxJson);
   });
 
   it('should add dependencies', async () => {
-    jestInitGenerator(tree, {});
+    await jestInitGenerator(tree, {});
     const packageJson = readJson(tree, 'package.json');
     expect(packageJson.devDependencies.jest).toBeDefined();
     expect(packageJson.devDependencies['@nrwl/jest']).toBeDefined();
@@ -133,46 +133,46 @@ export default {
     expect(packageJson.devDependencies['ts-node']).toBeDefined();
   });
 
-  it('should make js jest files', () => {
-    jestInitGenerator(tree, { js: true });
+  it('should make js jest files', async () => {
+    await jestInitGenerator(tree, { js: true });
     expect(tree.exists('jest.config.js')).toBeTruthy();
     expect(tree.exists('jest.preset.js')).toBeTruthy();
   });
   describe('Deprecated: --babelJest', () => {
     it('should add babel dependencies', async () => {
-      jestInitGenerator(tree, { babelJest: true });
+      await jestInitGenerator(tree, { babelJest: true });
       const packageJson = readJson(tree, 'package.json');
       expect(packageJson.devDependencies['babel-jest']).toBeDefined();
     });
   });
 
   describe('--compiler', () => {
-    it('should support tsc compiler', () => {
-      jestInitGenerator(tree, { compiler: 'tsc' });
+    it('should support tsc compiler', async () => {
+      await jestInitGenerator(tree, { compiler: 'tsc' });
       const packageJson = readJson(tree, 'package.json');
       expect(packageJson.devDependencies['ts-jest']).toBeDefined();
     });
 
-    it('should support babel compiler', () => {
-      jestInitGenerator(tree, { compiler: 'babel' });
+    it('should support babel compiler', async () => {
+      await jestInitGenerator(tree, { compiler: 'babel' });
       const packageJson = readJson(tree, 'package.json');
       expect(packageJson.devDependencies['babel-jest']).toBeDefined();
     });
 
-    it('should support swc compiler', () => {
-      jestInitGenerator(tree, { compiler: 'swc' });
+    it('should support swc compiler', async () => {
+      await jestInitGenerator(tree, { compiler: 'swc' });
       const packageJson = readJson(tree, 'package.json');
       expect(packageJson.devDependencies['@swc/jest']).toBeDefined();
     });
   });
 
   describe('root project', () => {
-    it('should not add a monorepo jest.config.ts  to the project', () => {
-      jestInitGenerator(tree, { rootProject: true });
+    it('should not add a monorepo jest.config.ts  to the project', async () => {
+      await jestInitGenerator(tree, { rootProject: true });
       expect(tree.exists('jest.config.ts')).toBeFalsy();
     });
 
-    it('should rename the project jest.config.ts to project jest config', () => {
+    it('should rename the project jest.config.ts to project jest config', async () => {
       addProjectConfiguration(tree, 'my-project', {
         root: '.',
         name: 'my-project',
@@ -202,7 +202,7 @@ export default {
 };
 `
       );
-      jestInitGenerator(tree, { rootProject: false });
+      await jestInitGenerator(tree, { rootProject: false });
       expect(tree.exists('jest.config.app.ts')).toBeTruthy();
       expect(tree.read('jest.config.ts', 'utf-8'))
         .toEqual(`import { getJestProjects } from '@nrwl/jest';
@@ -221,7 +221,7 @@ projects: getJestProjects()
       `);
     });
 
-    it('should work with --js', () => {
+    it('should work with --js', async () => {
       addProjectConfiguration(tree, 'my-project', {
         root: '.',
         name: 'my-project',
@@ -251,7 +251,7 @@ module.exports = {
 };
 `
       );
-      jestInitGenerator(tree, { js: true, rootProject: false });
+      await jestInitGenerator(tree, { js: true, rootProject: false });
       expect(tree.exists('jest.config.app.js')).toBeTruthy();
       expect(tree.read('jest.config.js', 'utf-8'))
         .toEqual(`const { getJestProjects } = require('@nrwl/jest');
@@ -275,7 +275,7 @@ projects: getJestProjects()
     });
 
     it('should add the jest extension to the recommended property', async () => {
-      jestInitGenerator(tree, {});
+      await jestInitGenerator(tree, {});
       const extensionsJson = readJson(tree, '.vscode/extensions.json');
       expect(extensionsJson).toMatchInlineSnapshot(`
         Object {

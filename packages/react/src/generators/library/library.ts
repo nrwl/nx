@@ -9,6 +9,7 @@ import {
   updateJson,
 } from '@nrwl/devkit';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+import { updateRootTsConfig } from '@nrwl/js';
 
 import { nxVersion } from '../../utils/versions';
 import componentGenerator from '../component/component';
@@ -20,7 +21,6 @@ import { addRollupBuildTarget } from './lib/add-rollup-build-target';
 import { addLinting } from './lib/add-linting';
 import { updateAppRoutes } from './lib/update-app-routes';
 import { createFiles } from './lib/create-files';
-import { updateBaseTsConfig } from './lib/update-base-tsconfig';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 import { installCommonDependencies } from './lib/install-common-dependencies';
 import { setDefaults } from './lib/set-defaults';
@@ -37,8 +37,6 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
   if (!options.component) {
     options.style = 'none';
   }
-
-  extractTsConfigBase(host);
 
   const initTask = await initGenerator(host, {
     ...options,
@@ -62,13 +60,9 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
 
   createFiles(host, options);
 
-  if (!options.skipTsConfig) {
-    updateBaseTsConfig(host, options);
-  }
-
   // Set up build target
   if (options.buildable && options.bundler === 'vite') {
-    await ensurePackage(host, '@nrwl/vite', nxVersion);
+    ensurePackage(host, '@nrwl/vite', nxVersion);
     const { viteConfigurationGenerator } = await import('@nrwl/vite');
     const viteTask = await viteConfigurationGenerator(host, {
       uiFramework: 'react',
@@ -86,7 +80,7 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
 
   // Set up test target
   if (options.unitTestRunner === 'jest') {
-    await ensurePackage(host, '@nrwl/jest', nxVersion);
+    ensurePackage(host, '@nrwl/jest', nxVersion);
     const { jestProjectGenerator } = await import('@nrwl/jest');
 
     const jestTask = await jestProjectGenerator(host, {
@@ -112,7 +106,7 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
     options.unitTestRunner === 'vitest' &&
     options.bundler !== 'vite' // tests are already configured if bundler is vite
   ) {
-    await ensurePackage(host, '@nrwl/vite', nxVersion);
+    ensurePackage(host, '@nrwl/vite', nxVersion);
     const { vitestGenerator } = await import('@nrwl/vite');
     const vitestTask = await vitestGenerator(host, {
       uiFramework: 'react',
@@ -156,6 +150,11 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
   const routeTask = updateAppRoutes(host, options);
   tasks.push(routeTask);
   setDefaults(host, options);
+
+  extractTsConfigBase(host);
+  if (!options.skipTsConfig) {
+    updateRootTsConfig(host, options);
+  }
 
   if (!options.skipFormat) {
     await formatFiles(host);

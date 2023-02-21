@@ -4,7 +4,12 @@ import { createFiles } from './lib/create-files';
 import { updateTsConfig } from './lib/update-tsconfig';
 import { updateWorkspace } from './lib/update-workspace';
 import { JestProjectSchema } from './schema';
-import { formatFiles, Tree, convertNxGenerator } from '@nrwl/devkit';
+import {
+  formatFiles,
+  Tree,
+  convertNxGenerator,
+  GeneratorCallback,
+} from '@nrwl/devkit';
 
 const schemaDefaults = {
   setupFile: 'none',
@@ -51,9 +56,9 @@ function normalizeOptions(options: JestProjectSchema) {
 export async function jestProjectGenerator(
   tree: Tree,
   schema: JestProjectSchema
-) {
+): Promise<GeneratorCallback> {
   const options = normalizeOptions(schema);
-  const installTask = init(tree, options);
+  const installTask = await init(tree, options);
 
   checkForTestTarget(tree, options);
   createFiles(tree, options);

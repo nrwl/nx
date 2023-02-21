@@ -1,126 +1,95 @@
-# Node Tutorial - Part 2: Project Graph
+---
+title: 'Node Standalone Tutorial - Part 2: Project Graph'
+description: In this tutorial you'll create a backend-focused workspace with Nx.
+---
+
+# Node Standalone Tutorial - Part 2: Project Graph
 
 Run the command: `npx nx graph`. A browser should open up with the following contents:
 
-![Initial Project Graph](/shared/node-tutorial/initial-project-graph.png)
+{% graph height="200px" type="project" jsonFile="shared/node-tutorial/initial-project-graph.json" %}
+{% /graph %}
 
-This is still different from the design from the start of Part 1:
+You'll notice that there is no dependency drawn from `products-api` to the `auth` library. The project graph is derived from the source code of your workspace. Once we actually wire everything up, the project graph will update accordingly.
 
-![Our Workspace Requirements](/shared/node-tutorial/requirements-diagram.svg)
+### `auth`
 
-The Project Graph is derived from the source code of your workspace. Make the following adjustments to your existing projects, so that our Project Graph will match the design:
+Update the contents of the generated `auth.ts` file:
 
-### `products-data-client`
-
-Update the contents of the generated `products-data-client.ts` file:
-
-```typescript {% fileName="libs/products-data-client/src/lib/products-data-client.ts" %}
-export interface Product {
-  id: string;
+```typescript {% fileName="auth/src/lib/auth.ts" %}
+export type AuthResponse = AuthSuccessResponse | AuthFailureResponse;
+export interface AuthSuccessResponse {
+  success: true;
   name: string;
-  price: number;
+}
+export interface AuthFailureResponse {
+  success: false;
 }
 
-export interface ProductsDataClient {
-  getProducts(): Promise<Product[]>;
-  getProductById(id: string): Promise<Product | undefined>;
-}
-
-export const exampleProducts: Record<string, Product> = {
-  '1': { id: '1', name: 'Product 1', price: 100 },
-  '2': { id: '2', name: 'Product 2', price: 200 },
-};
-
-export function createProductsDataClient(): ProductsDataClient {
-  return {
-    getProducts() {
-      return Promise.resolve(Object.values(exampleProducts));
-    },
-    getProductById(id) {
-      return Promise.resolve(exampleProducts[id]);
-    },
-  };
-}
-```
-
-### `products-cli`
-
-Update the generated `main.ts` file of this project to import the `createProductsDataClient()` function.
-
-Use the data client to print the product matching the id provided at the command-line. If no id was provided, print all products as an array:
-
-```typescript {% fileName="apps/products-cli/src/main.ts" %}
-import { createProductsDataClient } from '@my-products/products-data-client';
-
-main();
-
-async function main() {
-  const productsDataClient = createProductsDataClient();
-  const id = getProvidedId();
-  if (id != null) {
-    const product = await productsDataClient.getProductById(id);
-    console.log(JSON.stringify(product, null, 2));
-  } else {
-    const products = await productsDataClient.getProducts();
-    console.log(JSON.stringify(products, null, 2));
-  }
-}
-
-function getProvidedId() {
-  return process.argv[2];
+export function doAuth(): AuthResponse {
+  return { success: true, name: 'Cheddar' };
 }
 ```
 
 ### `products-api`
 
-Update the generated `main.ts` file of this project to also import the `createProductsDataClient()` function.
+Add a post endpoint to the `main.ts` file of the root project that uses the `doAuth()` function.
 
-Use the data client and Express to create an Express app with 2 GET request handlers:
+```typescript {% fileName="src/main.ts" %}
+import express from 'express';
+import { doAuth } from '@products-api/auth';
 
-```javascript {% fileName="apps/products-api/src/main.ts" %}
-/**
- * This is not a production server yet!
- * This is only a minimal backend to get started.
- */
-import * as express from 'express';
-import { createProductsDataClient } from '@my-products/products-data-client';
+const port = process.env.PORT ? Number(process.env.PORT) : 3000;
 
 const app = express();
-const productsDataClient = createProductsDataClient();
 
-app.get('/products', async (_req, res) => {
-  const products = await productsDataClient.getProducts();
-  res.send(products);
+app.get('/', (req, res) => {
+  res.send({ message: 'Hello API' });
 });
 
-app.get('/products/:id', async (req, res) => {
-  const id = req.params.id;
-  const product = await productsDataClient.getProductById(id);
-  if (product == null) {
-    res.status(404).send();
-    return;
-  }
-  res.send(product);
+app.post('/auth', (req, res) => {
+  res.send({ success: true, name: 'Cheddar' });
 });
 
-const port = process.env.port || 3333;
-const server = app.listen(port, () => {
-  console.log(`Listening at http://localhost:${port}`);
+app.listen(port, () => {
+  console.log(`[ ready ] http://localhost:${port}`);
 });
-server.on('error', console.error);
+```
+
+### `e2e`
+
+Update the e2e tests to check the new `/auth` endpoint.
+
+```javascript {% fileName="e2e/src/server/server.spec.ts" %}
+import axios from 'axios';
+
+describe('GET /', () => {
+  it('should return a message', async () => {
+    const res = await axios.get(`/`);
+
+    expect(res.status).toBe(200);
+    expect(res.data).toEqual({ message: 'Hello API' });
+  });
+});
+
+describe('POST /auth', () => {
+  it('should return a status and a name', async () => {
+    const res = await axios.post(`/auth`, {});
+
+    expect(res.status).toBe(200);
+    expect(res.data).toEqual({ success: true, name: 'Cheddar' });
+  });
+});
 ```
 
 Now run `npx nx graph` again:
 
-{% side-by-side %}
-![Matching Graph](/shared/node-tutorial/matching-graph.png)
+{% graph height="200px" type="project" jsonFile="shared/node-tutorial/final-project-graph.json" %}
+{% /graph %}
 
-![Our Workspace Requirements](/shared/node-tutorial/requirements-diagram.svg)
-{% /side-by-side %}
+The graph now shows the dependency between `products-api` and `auth`.
 
-Your graph now matches the original design.
-
-The Project Graph is more than just a visualization - Nx provides tooling to optimize your task-running and even automate your CI based on this graph. This will be covered in more detail in: [4: Workspace Optimization](/node-tutorial/4-workspace-optimization).
+The project graph is more than just a visualization - Nx provides tooling to optimize your task-running and even automate your CI based on this graph. This will be covered in more detail in: [4: Task Pipelines](/node-tutorial/4-task-pipelines).
 
 ## What's Next
 

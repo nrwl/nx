@@ -1,7 +1,6 @@
 import type { Tree } from '@nrwl/devkit';
 import { joinPathFragments } from '@nrwl/devkit';
 import type { NormalizedSchema } from './normalized-schema';
-import { tsquery } from '@phenomnomnominal/tsquery';
 
 export function convertToStandaloneApp(tree: Tree, options: NormalizedSchema) {
   const pathToAppModule = joinPathFragments(
@@ -22,6 +21,7 @@ function updateMainEntrypoint(
   tree: Tree,
   pathToAppModule: string
 ) {
+  const { tsquery } = require('@phenomnomnominal/tsquery');
   let routerModuleSetup: string;
   if (options.routing) {
     const appModuleContents = tree.read(pathToAppModule, 'utf-8');
@@ -63,6 +63,7 @@ bootstrapApplication(AppComponent${
 }).catch((err) => console.error(err));`;
 
 function updateAppComponent(tree: Tree, options: NormalizedSchema) {
+  const { tsquery } = require('@phenomnomnominal/tsquery');
   const pathToAppComponent = joinPathFragments(
     options.appProjectRoot,
     'src/app/app.component.ts'

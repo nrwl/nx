@@ -16,6 +16,7 @@
 
 ## Angular
 /docs/generated/packages/angular/** @Coly010 @leosvelperez
+/docs/shared/packages/angular/** @Coly010 @leosvelperez @isaacplmann @juristr
 /packages/angular/** @Coly010 @leosvelperez
 /e2e/angular-core/** @Coly010 @leosvelperez
 /e2e/angular-extensions/** @Coly010 @leosvelperez

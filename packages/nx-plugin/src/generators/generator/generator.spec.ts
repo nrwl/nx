@@ -1,6 +1,6 @@
 import { readJson, readProjectConfiguration, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { libraryGenerator } from '@nrwl/js';
+import { libraryGenerator as jsLibraryGenerator } from '@nrwl/js';
 import { pluginGenerator } from '../plugin/plugin';
 import { generatorGenerator } from './generator';
 
@@ -91,7 +91,7 @@ describe('NxPlugin Generator Generator', () => {
   });
 
   it('should create generators.json if it is not present', async () => {
-    await libraryGenerator(tree, {
+    await jsLibraryGenerator(tree, {
       name: 'test-js-lib',
       buildable: true,
     });

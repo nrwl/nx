@@ -309,6 +309,16 @@
       "x-completion-type": "file",
       "x-completion-glob": "webpack?(*)@(.js|.ts)",
       "x-priority": "important"
+    },
+    "babelUpwardRootMode": {
+      "type": "boolean",
+      "description": "Whether to set rootmode to upward. See https://babeljs.io/docs/en/options#rootmode",
+      "default": false
+    },
+    "babelConfig": {
+      "type": "string",
+      "description": "Path to the babel configuration file of your project. If not provided, Nx will default to the .babelrc file at the root of your project. See https://babeljs.io/docs/en/config-files",
+      "x-completion-type": "file"
     }
   },
   "required": ["tsConfig", "main"],

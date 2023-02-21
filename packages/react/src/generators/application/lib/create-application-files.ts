@@ -1,9 +1,9 @@
-import { NormalizedSchema } from '../schema';
 import { names, offsetFromRoot, Tree, toJS, generateFiles } from '@nrwl/devkit';
+import { getRelativePathToRootTsConfig } from '@nrwl/js';
 import { join } from 'path';
-import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 import { createTsConfig } from '../../../utils/create-ts-config';
 import { getInSourceVitestTestsTemplate } from '../../../utils/get-in-source-vitest-tests-template';
+import { NormalizedSchema } from '../schema';
 import { getAppTests } from './get-app-tests';
 
 export function createApplicationFiles(host: Tree, options: NormalizedSchema) {

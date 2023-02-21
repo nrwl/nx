@@ -16,13 +16,15 @@ import {
 import { promisify } from 'util';
 import {
   MigrationsJson,
-  PackageJsonUpdateForPackage,
+  MigrationsJsonEntry,
+  PackageJsonUpdateForPackage as PackageUpdate,
   PackageJsonUpdates,
 } from '../config/misc-interfaces';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { flushChanges, FsTree, printChanges } from '../generators/tree';
 import {
   extractFileFromTarball,
+  fileExists,
   JsonReadOptions,
   readJsonFile,
   writeJsonFile,
@@ -31,7 +33,6 @@ import { logger } from '../utils/logger';
 import {
   ArrayPackageGroup,
   NxMigrationsConfiguration,
-  PackageGroup,
   PackageJson,
   readModulePackageJson,
   readNxMigrateConfig,
@@ -49,6 +50,7 @@ import { connectToNxCloudCommand } from './connect';
 import { output } from '../utils/output';
 import { messages, recordStat } from '../utils/ab-testing';
 import { nxVersion } from '../utils/versions';
+import { existsSync } from 'fs';
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
   packageGroup?: ArrayPackageGroup;
@@ -99,7 +101,7 @@ export interface MigratorOptions {
   packageJson: PackageJson;
   getInstalledPackageVersion: (
     pkg: string,
-    overrides: Record<string, string>
+    overrides?: Record<string, string>
   ) => string;
   fetch: (
     pkg: string,
@@ -108,6 +110,7 @@ export interface MigratorOptions {
   from: { [pkg: string]: string };
   to: { [pkg: string]: string };
   interactive?: boolean;
+  excludeAppliedMigrations?: boolean;
 }
 
 export class Migrator {
@@ -117,10 +120,8 @@ export class Migrator {
   private readonly installedPkgVersionOverrides: MigratorOptions['from'];
   private readonly to: MigratorOptions['to'];
   private readonly interactive: MigratorOptions['interactive'];
-  private readonly packageJsonUpdates: Record<
-    string,
-    PackageJsonUpdateForPackage
-  > = {};
+  private readonly excludeAppliedMigrations: MigratorOptions['excludeAppliedMigrations'];
+  private readonly packageUpdates: Record<string, PackageUpdate> = {};
   private readonly collectedVersions: Record<string, string> = {};
 
   constructor(opts: MigratorOptions) {
@@ -130,25 +131,26 @@ export class Migrator {
     this.installedPkgVersionOverrides = opts.from;
     this.to = opts.to;
     this.interactive = opts.interactive;
+    this.excludeAppliedMigrations = opts.excludeAppliedMigrations;
   }
 
-  async updatePackageJson(targetPackage: string, targetVersion: string) {
+  async migrate(targetPackage: string, targetVersion: string) {
     await this.buildPackageJsonUpdates(targetPackage, {
       version: targetVersion,
       addToPackageJson: false,
     });
 
     const migrations = await this.createMigrateJson();
-    return { packageJson: this.packageJsonUpdates, migrations };
+    return { packageUpdates: this.packageUpdates, migrations };
   }
 
   private async createMigrateJson() {
     const migrations = await Promise.all(
-      Object.keys(this.packageJsonUpdates).map(async (packageName) => {
+      Object.keys(this.packageUpdates).map(async (packageName) => {
         const currentVersion = this.getPkgVersion(packageName);
         if (currentVersion === null) return [];
 
-        const { version } = this.packageJsonUpdates[packageName];
+        const { version } = this.packageUpdates[packageName];
         const { generators } = await this.fetch(packageName, version);
 
         if (!generators) return [];
@@ -159,7 +161,7 @@ export class Migrator {
               migration.version &&
               this.gt(migration.version, currentVersion) &&
               this.lte(migration.version, version) &&
-              this.areRequirementsMet(migration.requires)
+              this.areMigrationRequirementsMet(packageName, migration)
           )
           .map(([migrationName, migration]) => ({
             ...migration,
@@ -174,7 +176,7 @@ export class Migrator {
 
   private async buildPackageJsonUpdates(
     targetPackage: string,
-    target: PackageJsonUpdateForPackage
+    target: PackageUpdate
   ): Promise<void> {
     const packagesToCheck =
       await this.populatePackageJsonUpdatesAndGetPackagesToCheck(
@@ -182,7 +184,7 @@ export class Migrator {
         target
       );
     for (const packageToCheck of packagesToCheck) {
-      const filteredUpdates: Record<string, PackageJsonUpdateForPackage> = {};
+      const filteredUpdates: Record<string, PackageUpdate> = {};
       for (const packageUpdate of packageToCheck.updates) {
         if (
           this.areRequirementsMet(packageUpdate.requires, filteredUpdates) &&
@@ -207,7 +209,7 @@ export class Migrator {
 
   private async populatePackageJsonUpdatesAndGetPackagesToCheck(
     targetPackage: string,
-    target: PackageJsonUpdateForPackage
+    target: PackageUpdate
   ): Promise<
     {
       package: string;
@@ -220,7 +222,7 @@ export class Migrator {
     }
 
     if (!this.getPkgVersion(targetPackage)) {
-      this.addPackageJsonUpdate(targetPackage, {
+      this.addPackageUpdate(targetPackage, {
         version: target.version,
         addToPackageJson: target.addToPackageJson || false,
       });
@@ -249,6 +251,11 @@ export class Migrator {
     }
     this.collectedVersions[targetPackage] = targetVersion;
 
+    this.addPackageUpdate(targetPackage, {
+      version: migrationConfig.version,
+      addToPackageJson: target.addToPackageJson || false,
+    });
+
     const { packageJsonUpdates, packageGroupOrder } =
       this.getPackageJsonUpdatesFromMigrationConfig(
         targetPackage,
@@ -256,10 +263,9 @@ export class Migrator {
         migrationConfig
       );
 
-    this.addPackageJsonUpdate(targetPackage, {
-      version: migrationConfig.version,
-      addToPackageJson: target.addToPackageJson || false,
-    });
+    if (!packageJsonUpdates.length) {
+      return [];
+    }
 
     const shouldCheckUpdates = packageJsonUpdates.some(
       (packageJsonUpdate) =>
@@ -273,7 +279,7 @@ export class Migrator {
 
     const packageUpdatesToApply = packageJsonUpdates.reduce(
       (m, c) => ({ ...m, ...c.packages }),
-      {} as Record<string, PackageJsonUpdateForPackage>
+      {} as Record<string, PackageUpdate>
     );
     return (
       await Promise.all(
@@ -351,7 +357,7 @@ export class Migrator {
       );
 
       migrationConfig.packageJsonUpdates ??= {};
-      const packages: Record<string, PackageJsonUpdateForPackage> = {};
+      const packages: Record<string, PackageUpdate> = {};
       migrationConfig.packageJsonUpdates[targetVersion + '--PackageGroup'] = {
         version: targetVersion,
         packages,
@@ -416,7 +422,7 @@ export class Migrator {
               : packageUpdate.addToPackageJson || false,
           };
           return acc;
-        }, {} as Record<string, PackageJsonUpdateForPackage>);
+        }, {} as Record<string, PackageUpdate>);
 
       if (Object.keys(packageJsonUpdate.packages).length) {
         filteredPackageJsonUpdates.push(packageJsonUpdate);
@@ -426,21 +432,18 @@ export class Migrator {
     return filteredPackageJsonUpdates;
   }
 
-  private addPackageJsonUpdate(
-    name: string,
-    packageUpdate: PackageJsonUpdateForPackage
-  ): void {
+  private addPackageUpdate(name: string, packageUpdate: PackageUpdate): void {
     if (
-      !this.packageJsonUpdates[name] ||
-      this.gt(packageUpdate.version, this.packageJsonUpdates[name].version)
+      !this.packageUpdates[name] ||
+      this.gt(packageUpdate.version, this.packageUpdates[name].version)
     ) {
-      this.packageJsonUpdates[name] = packageUpdate;
+      this.packageUpdates[name] = packageUpdate;
     }
   }
 
   private areRequirementsMet(
     requirements: PackageJsonUpdates[string]['requires'],
-    extraPackageUpdatesToCheck?: Record<string, PackageJsonUpdateForPackage>
+    extraPackageUpdatesToCheck?: Record<string, PackageUpdate>
   ): boolean {
     if (!requirements || !Object.keys(requirements).length) {
       return true;
@@ -452,8 +455,8 @@ export class Migrator {
           satisfies(this.getPkgVersion(pkgName), versionRange, {
             includePrerelease: true,
           })) ||
-        (this.packageJsonUpdates[pkgName]?.version &&
-          satisfies(this.packageJsonUpdates[pkgName].version, versionRange, {
+        (this.packageUpdates[pkgName]?.version &&
+          satisfies(this.packageUpdates[pkgName].version, versionRange, {
             includePrerelease: true,
           })) ||
         (extraPackageUpdatesToCheck?.[pkgName]?.version &&
@@ -462,6 +465,55 @@ export class Migrator {
             versionRange,
             { includePrerelease: true }
           ))
+    );
+  }
+
+  private areMigrationRequirementsMet(
+    packageName: string,
+    migration: MigrationsJsonEntry
+  ): boolean {
+    if (!this.excludeAppliedMigrations) {
+      return this.areRequirementsMet(migration.requires);
+    }
+
+    return (
+      (this.wasMigrationSkipped(migration.requires) ||
+        this.isMigrationForHigherVersionThanWhatIsInstalled(
+          packageName,
+          migration
+        )) &&
+      this.areRequirementsMet(migration.requires)
+    );
+  }
+
+  private isMigrationForHigherVersionThanWhatIsInstalled(
+    packageName: string,
+    migration: MigrationsJsonEntry
+  ): boolean {
+    const installedVersion = this.getInstalledPackageVersion(packageName);
+
+    return (
+      migration.version &&
+      (!installedVersion || this.gt(migration.version, installedVersion)) &&
+      this.lte(migration.version, this.packageUpdates[packageName].version)
+    );
+  }
+
+  private wasMigrationSkipped(
+    requirements: PackageJsonUpdates[string]['requires']
+  ): boolean {
+    // no requiremets, so it ran before
+    if (!requirements || !Object.keys(requirements).length) {
+      return false;
+    }
+
+    // at least a requirement was not met, it was skipped
+    return Object.entries(requirements).some(
+      ([pkgName, versionRange]) =>
+        !this.getInstalledPackageVersion(pkgName) ||
+        !satisfies(this.getInstalledPackageVersion(pkgName), versionRange, {
+          includePrerelease: true,
+        })
     );
   }
 
@@ -606,9 +658,14 @@ type GenerateMigrations = {
   from: { [k: string]: string };
   to: { [k: string]: string };
   interactive?: boolean;
+  excludeAppliedMigrations?: boolean;
 };
 
-type RunMigrations = { type: 'runMigrations'; runMigrations: string };
+type RunMigrations = {
+  type: 'runMigrations';
+  runMigrations: string;
+  ifExists: boolean;
+};
 
 export function parseMigrationsOptions(options: {
   [k: string]: any;
@@ -625,19 +682,20 @@ export function parseMigrationsOptions(options: {
     const { targetPackage, targetVersion } = parseTargetPackageAndVersion(
       options['packageAndVersion']
     );
-    const interactive = options.interactive;
     return {
       type: 'generateMigrations',
       targetPackage: normalizeSlashes(targetPackage),
       targetVersion,
       from,
       to,
-      interactive,
+      interactive: options.interactive,
+      excludeAppliedMigrations: options.excludeAppliedMigrations,
     };
   } else {
     return {
       type: 'runMigrations',
       runMigrations: options.runMigrations as string,
+      ifExists: options.ifExists as boolean,
     };
   }
 }
@@ -649,10 +707,10 @@ function createInstalledPackageVersionsResolver(
 
   function getInstalledPackageVersion(
     packageName: string,
-    overrides: Record<string, string>
+    overrides?: Record<string, string>
   ): string | null {
     try {
-      if (overrides[packageName]) {
+      if (overrides?.[packageName]) {
         return overrides[packageName];
       }
 
@@ -924,9 +982,13 @@ function createMigrationsFile(
 
 function updatePackageJson(
   root: string,
-  updatedPackages: Record<string, PackageJsonUpdateForPackage>
+  updatedPackages: Record<string, PackageUpdate>
 ) {
   const packageJsonPath = join(root, 'package.json');
+  if (!existsSync(packageJsonPath)) {
+    return;
+  }
+
   const parseOptions: JsonReadOptions = {};
   const json = readJsonFile(packageJsonPath, parseOptions);
 
@@ -949,6 +1011,37 @@ function updatePackageJson(
   });
 
   writeJsonFile(packageJsonPath, json, {
+    appendNewLine: parseOptions.endsWithNewline,
+  });
+}
+
+function updateInstallationDetails(
+  root: string,
+  updatedPackages: Record<string, PackageUpdate>
+) {
+  const nxJsonPath = join(root, 'nx.json');
+  const parseOptions: JsonReadOptions = {};
+  const nxJson = readJsonFile<NxJsonConfiguration>(nxJsonPath, parseOptions);
+
+  if (!nxJson.installation) {
+    return;
+  }
+
+  const nxVersion = updatedPackages.nx?.version;
+  if (nxVersion) {
+    nxJson.installation.version = nxVersion;
+  }
+
+  if (nxJson.installation.plugins) {
+    for (const dep in nxJson.installation.plugins) {
+      const update = updatedPackages[dep];
+      if (update) {
+        nxJson.installation.plugins[dep] = update.version;
+      }
+    }
+  }
+
+  writeJsonFile(nxJsonPath, nxJson, {
     appendNewLine: parseOptions.endsWithNewline,
   });
 }
@@ -1018,18 +1111,20 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       from: opts.from,
       to: opts.to,
       interactive: opts.interactive,
+      excludeAppliedMigrations: opts.excludeAppliedMigrations,
     });
 
-    const { migrations, packageJson } = await migrator.updatePackageJson(
+    const { migrations, packageUpdates } = await migrator.migrate(
       opts.targetPackage,
       opts.targetVersion
     );
 
-    updatePackageJson(root, packageJson);
+    updatePackageJson(root, packageUpdates);
+    updateInstallationDetails(root, packageUpdates);
 
     if (migrations.length > 0) {
       createMigrationsFile(root, [
-        ...addSplitConfigurationMigrationIfAvailable(from, packageJson),
+        ...addSplitConfigurationMigrationIfAvailable(from, packageUpdates),
         ...migrations,
       ] as any);
     }
@@ -1215,13 +1310,26 @@ export async function executeMigrations(
 
 async function runMigrations(
   root: string,
-  opts: { runMigrations: string },
+  opts: { runMigrations: string; ifExists: boolean },
   isVerbose: boolean,
   shouldCreateCommits = false,
   commitPrefix: string
 ) {
   if (!process.env.NX_MIGRATE_SKIP_INSTALL) {
     runInstall();
+  }
+
+  const migrationsExists: boolean = fileExists(opts.runMigrations);
+
+  if (opts.ifExists && !migrationsExists) {
+    output.log({
+      title: `Migrations file '${opts.runMigrations}' doesn't exist`,
+    });
+    return;
+  } else if (!opts.ifExists && !migrationsExists) {
+    throw new Error(
+      `File '${opts.runMigrations}' doesn't exist, can't run migrations. Use flag --if-exists to run migrations only if the file exists`
+    );
   }
 
   output.log({

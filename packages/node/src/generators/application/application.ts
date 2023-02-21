@@ -20,29 +20,30 @@ import {
   updateProjectConfiguration,
   updateTsConfigsToJs,
 } from '@nrwl/devkit';
-
-import { join } from 'path';
-
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { jestProjectGenerator } from '@nrwl/jest';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+import { getRelativePathToRootTsConfig } from '@nrwl/js';
+import { tsConfigBaseOptions } from '@nrwl/js';
+import { join } from 'path';
 
-import { Schema } from './schema';
 import { initGenerator } from '../init/init';
-import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 import {
   esbuildVersion,
   expressTypingsVersion,
   expressVersion,
+  fastifyAutoloadVersion,
+  fastifyPluginVersion,
+  fastifySensibleVersion,
   fastifyVersion,
   koaTypingsVersion,
   koaVersion,
   nxVersion,
 } from '../../utils/versions';
-
-import * as shared from '@nrwl/workspace/src/utils/create-ts-config';
 import { e2eProjectGenerator } from '../e2e-project/e2e-project';
 import { setupDockerGenerator } from '../setup-docker/setup-docker';
+
+import { Schema } from './schema';
 
 export interface NormalizedSchema extends Schema {
   appProjectRoot: string;
@@ -94,12 +95,14 @@ function getEsBuildConfig(
     executor: '@nrwl/esbuild:esbuild',
     outputs: ['{options.outputPath}'],
     options: {
+      platform: 'node',
       outputPath: joinPathFragments(
         'dist',
         options.rootProject ? options.name : options.appProjectRoot
       ),
       // Use CJS for Node apps for widest compatibility.
       format: ['cjs'],
+      bundle: false,
       main: joinPathFragments(
         project.sourceRoot,
         'main' + (options.js ? '.js' : '.ts')
@@ -294,13 +297,27 @@ function addProjectDependencies(
     },
     fastify: {
       fastify: fastifyVersion,
+      'fastify-plugin': fastifyPluginVersion,
+      '@fastify/autoload': fastifyAutoloadVersion,
+      '@fastify/sensible': fastifySensibleVersion,
     },
+  };
+  const frameworkDevDependencies = {
+    express: {
+      '@types/express': expressTypingsVersion,
+    },
+    koa: {
+      '@types/koa': koaTypingsVersion,
+    },
+    fastify: {},
   };
   return addDependenciesToPackageJson(
     tree,
-    {},
     {
       ...frameworkDependencies[options.framework],
+    },
+    {
+      ...frameworkDevDependencies[options.framework],
       ...bundlers[options.bundler],
     }
   );
@@ -311,7 +328,7 @@ function updateTsConfigOptions(tree: Tree, options: NormalizedSchema) {
     if (options.rootProject) {
       return {
         compilerOptions: {
-          ...shared.tsConfigBaseOptions,
+          ...tsConfigBaseOptions,
           ...json.compilerOptions,
           esModuleInterop: true,
         },
@@ -336,7 +353,7 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
 
   const initTask = await initGenerator(tree, {
-    ...options,
+    ...schema,
     skipFormat: true,
   });
   tasks.push(initTask);

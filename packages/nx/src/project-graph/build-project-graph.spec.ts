@@ -1,14 +1,9 @@
-import '../utils/testing/mock-fs';
+import { TempFs } from '../utils/testing/temp-fs';
+const tempFs = new TempFs('explicit-package-json');
 
-import { vol, fs } from 'memfs';
-
-jest.mock('nx/src/utils/workspace-root', () => ({
-  workspaceRoot: '/root',
-}));
 import { buildProjectGraph } from './build-project-graph';
 import * as fastGlob from 'fast-glob';
 import { defaultFileHasher } from '../hasher/file-hasher';
-import { ProjectsConfigurations } from '../config/workspace-json-project-json';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { stripIndents } from '../utils/strip-indents';
 import { DependencyType } from '../config/project-graph';
@@ -16,7 +11,6 @@ import { DependencyType } from '../config/project-graph';
 describe('project graph', () => {
   let packageJson: any;
   let packageLockJson: any;
-  let projects: ProjectsConfigurations;
   let nxJson: NxJsonConfiguration;
   let tsConfigJson: any;
   let filesJson: any;
@@ -190,8 +184,8 @@ describe('project graph', () => {
       './apps/api/project.json': JSON.stringify(apiProjectJson),
     };
 
-    vol.reset();
-    vol.fromJSON(filesJson, '/root');
+    tempFs.reset();
+    await tempFs.createFiles(filesJson);
     await defaultFileHasher.init();
 
     const globResults = [
@@ -208,17 +202,13 @@ describe('project graph', () => {
   });
 
   it('should throw an appropriate error for an invalid json config', async () => {
-    vol.appendFileSync('/root/tsconfig.base.json', 'invalid');
+    tempFs.appendFile('tsconfig.base.json', 'invalid');
     try {
       await buildProjectGraph();
       fail('Invalid tsconfigs should cause project graph to throw error');
     } catch (e) {
-      expect(e.message).toMatchInlineSnapshot(`
-        "InvalidSymbol in /root/tsconfig.base.json at 1:248
-        [0m[31m[1m>[22m[39m[90m 1 | [39m{\\"compilerOptions\\":{\\"baseUrl\\":\\".\\",\\"paths\\":{\\"@nrwl/shared/util\\":[\\"libs/shared/util/src/index.ts\\"],\\"@nrwl/shared-util-data\\":[\\"libs/shared/util/data/src/index.ts\\"],\\"@nrwl/ui\\":[\\"libs/ui/src/index.ts\\"],\\"@nrwl/lazy-lib\\":[\\"libs/lazy-lib/src/index.ts\\"]}}}invalid[0m
-        [0m [90m   | [39m                                                                                                                                                                                                                                                       [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[0m
-        "
-      `);
+      expect(e.message).toContain(`${tempFs.tempDir}/tsconfig.base.json`);
+      expect(e.message).toContain(`invalid`);
     }
   });
 
@@ -253,7 +243,6 @@ describe('project graph', () => {
     expect(graph.dependencies).toEqual({
       api: [{ source: 'api', target: 'npm:express', type: 'static' }],
       demo: [
-        { source: 'demo', target: 'api', type: 'implicit' },
         {
           source: 'demo',
           target: 'ui',
@@ -263,8 +252,9 @@ describe('project graph', () => {
         {
           source: 'demo',
           target: 'lazy-lib',
-          type: 'static',
+          type: 'dynamic',
         },
+        { source: 'demo', target: 'api', type: 'implicit' },
       ],
       'demo-e2e': [],
       'lazy-lib': [],
@@ -277,15 +267,15 @@ describe('project graph', () => {
         {
           source: 'ui',
           target: 'lazy-lib',
-          type: 'static',
+          type: 'dynamic',
         },
       ],
     });
   });
 
   it('should handle circular dependencies', async () => {
-    fs.writeFileSync(
-      '/root/libs/shared/util/src/index.ts',
+    tempFs.writeFile(
+      'libs/shared/util/src/index.ts',
       `import * as ui from '@nrwl/ui';`
     );
 
@@ -305,7 +295,7 @@ describe('project graph', () => {
         target: 'shared-util',
       },
       {
-        type: DependencyType.static,
+        type: DependencyType.dynamic,
         source: 'ui',
         target: 'lazy-lib',
       },

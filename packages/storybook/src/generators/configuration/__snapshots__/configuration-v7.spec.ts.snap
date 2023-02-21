@@ -443,6 +443,114 @@ exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook confi
 "
 `;
 
+exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/reapp/.storybook/" 1`] = `
+"const config = {
+  stories: [
+    
+    '../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'
+  ],
+  addons: ['@storybook/addon-essentials' 
+    
+  ],
+  framework: {
+    name: '@storybook/react-vite',
+    options: {
+      
+      builder: {
+        viteConfigPath: 'apps/reapp/vite.config.ts',
+      },
+      
+    },
+  },
+};
+
+export default config;
+
+
+
+
+// To customize your Vite configuration you can use the viteFinal field. 
+// Check https://storybook.js.org/docs/react/builders/vite#configuration
+// and https://nx.dev/packages/storybook/documents/custom-builder-configs
+"
+`;
+
+exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/reapp/.storybook/" 2`] = `
+"{
+  \\"extends\\": \\"../tsconfig.json\\",
+  \\"compilerOptions\\": {
+    \\"emitDecoratorMetadata\\": true
+    , \\"outDir\\": \\"\\" 
+  },
+  \\"files\\": [
+    \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
+    \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
+    \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
+  ],
+  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"include\\": [
+    \\"../src/**/*.stories.ts\\",
+    \\"../src/**/*.stories.js\\",
+    \\"../src/**/*.stories.jsx\\",
+    \\"../src/**/*.stories.tsx\\",
+    \\"../src/**/*.stories.mdx\\",
+    \\"*.js\\"]
+}
+"
+`;
+
+exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/reappw/.storybook/" 1`] = `
+"const config = {
+  stories: [
+    
+    '../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'
+  ],
+  addons: ['@storybook/addon-essentials' , '@nrwl/react/plugins/storybook' 
+    
+  ],
+  framework: {
+    name: '@storybook/react-webpack5',
+    options: {
+      
+    },
+  },
+};
+
+export default config;
+
+
+// To customize your webpack configuration you can use the webpackFinal field.
+// Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
+// and https://nx.dev/packages/storybook/documents/custom-builder-configs
+
+
+"
+`;
+
+exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/reappw/.storybook/" 2`] = `
+"{
+  \\"extends\\": \\"../tsconfig.json\\",
+  \\"compilerOptions\\": {
+    \\"emitDecoratorMetadata\\": true
+    , \\"outDir\\": \\"\\" 
+  },
+  \\"files\\": [
+    \\"../../../node_modules/@nrwl/react/typings/styled-jsx.d.ts\\",
+    \\"../../../node_modules/@nrwl/react/typings/cssmodule.d.ts\\",
+    \\"../../../node_modules/@nrwl/react/typings/image.d.ts\\"
+  ],
+  \\"exclude\\": [\\"../**/*.spec.ts\\" , \\"../**/*.spec.js\\", \\"../**/*.spec.tsx\\", \\"../**/*.spec.jsx\\"],
+  \\"include\\": [
+    \\"../src/**/*.stories.ts\\",
+    \\"../src/**/*.stories.js\\",
+    \\"../src/**/*.stories.jsx\\",
+    \\"../src/**/*.stories.tsx\\",
+    \\"../src/**/*.stories.mdx\\",
+    \\"*.js\\"]
+}
+"
+`;
+
 exports[`@nrwl/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/wv1/.storybook/" 1`] = `
 "const config = {
   stories: [
@@ -1704,7 +1812,6 @@ Map {
         "options": Object {
           "configDir": "apps/reapp/.storybook",
           "outputDir": "dist/storybook/reapp",
-          "uiFramework": "@storybook/react",
         },
         "outputs": Array [
           "{options.outputDir}",
@@ -1748,7 +1855,6 @@ Map {
         "options": Object {
           "configDir": "apps/reapp/.storybook",
           "port": 4400,
-          "uiFramework": "@storybook/react",
         },
       },
       "test": Object {
@@ -1864,7 +1970,6 @@ Map {
         "options": Object {
           "configDir": "apps/reappw/.storybook",
           "outputDir": "dist/storybook/reappw",
-          "uiFramework": "@storybook/react",
         },
         "outputs": Array [
           "{options.outputDir}",
@@ -1908,7 +2013,6 @@ Map {
         "options": Object {
           "configDir": "apps/reappw/.storybook",
           "port": 4400,
-          "uiFramework": "@storybook/react",
         },
       },
       "test": Object {

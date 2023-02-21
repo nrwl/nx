@@ -11,13 +11,18 @@ import {
   addRemoteRoute,
   addRemoteToConfig,
 } from '../../../module-federation/ast-utils';
-import * as ts from 'typescript';
+
+let tsModule: typeof import('typescript');
 
 export function updateHostWithRemote(
   host: Tree,
   hostName: string,
   remoteName: string
 ) {
+  if (!tsModule) {
+    tsModule = require('typescript');
+  }
+
   const hostConfig = readProjectConfiguration(host, hostName);
   const moduleFederationConfigPath = joinPathFragments(
     hostConfig.root,
@@ -33,10 +38,10 @@ export function updateHostWithRemote(
     // find the host project path
     // Update remotes inside ${host_path}/src/remotes.d.ts
     let sourceCode = host.read(moduleFederationConfigPath).toString();
-    const source = ts.createSourceFile(
+    const source = tsModule.createSourceFile(
       moduleFederationConfigPath,
       sourceCode,
-      ts.ScriptTarget.Latest,
+      tsModule.ScriptTarget.Latest,
       true
     );
     host.write(
@@ -52,10 +57,10 @@ export function updateHostWithRemote(
 
   if (host.exists(remoteDefsPath)) {
     let sourceCode = host.read(remoteDefsPath).toString();
-    const source = ts.createSourceFile(
+    const source = tsModule.createSourceFile(
       moduleFederationConfigPath,
       sourceCode,
-      ts.ScriptTarget.Latest,
+      tsModule.ScriptTarget.Latest,
       true
     );
     host.write(
@@ -70,10 +75,10 @@ export function updateHostWithRemote(
 
   if (host.exists(appComponentPath)) {
     let sourceCode = host.read(appComponentPath).toString();
-    const source = ts.createSourceFile(
+    const source = tsModule.createSourceFile(
       moduleFederationConfigPath,
       sourceCode,
-      ts.ScriptTarget.Latest,
+      tsModule.ScriptTarget.Latest,
       true
     );
     host.write(

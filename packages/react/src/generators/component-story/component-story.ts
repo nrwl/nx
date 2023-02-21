@@ -7,12 +7,14 @@ import {
   normalizePath,
   Tree,
 } from '@nrwl/devkit';
-import * as ts from 'typescript';
+import type * as ts from 'typescript';
 import {
   findExportDeclarationsForJsx,
   getComponentNode,
 } from '../../utils/ast-utils';
 import { getDefaultsForComponent } from '../../utils/component-props';
+
+let tsModule: typeof import('typescript');
 
 export interface CreateComponentStoriesFileSchema {
   project: string;
@@ -23,6 +25,9 @@ export function createComponentStoriesFile(
   host: Tree,
   { project, componentPath }: CreateComponentStoriesFileSchema
 ) {
+  if (!tsModule) {
+    tsModule = require('typescript');
+  }
   const proj = getProjects(host).get(project);
   const sourceRoot = proj.sourceRoot;
 
@@ -55,10 +60,10 @@ export function createComponentStoriesFile(
     throw new Error(`Failed to read ${componentFilePath}`);
   }
 
-  const sourceFile = ts.createSourceFile(
+  const sourceFile = tsModule.createSourceFile(
     componentFilePath,
     contents,
-    ts.ScriptTarget.Latest,
+    tsModule.ScriptTarget.Latest,
     true
   );
 

@@ -1,4 +1,4 @@
-export { readTsConfig } from './src/utilities/typescript';
+export { readTsConfig } from './src/utilities/ts-config';
 export { ProjectType, projectRootDir } from './src/utils/project-type';
 export {
   renameSync,

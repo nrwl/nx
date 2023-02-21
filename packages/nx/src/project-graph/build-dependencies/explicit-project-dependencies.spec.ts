@@ -1,13 +1,10 @@
-import '../../utils/testing/mock-fs';
-import { vol } from 'memfs';
+import { TempFs } from '../../utils/testing/temp-fs';
+const tempFs = new TempFs('explicit-project-deps');
+
 import { defaultFileHasher } from '../../hasher/file-hasher';
 import { createProjectFileMap } from '../file-map-utils';
 import { ProjectGraphBuilder } from '../project-graph-builder';
 import { buildExplicitTypeScriptDependencies } from './explicit-project-dependencies';
-
-jest.mock('nx/src/utils/workspace-root', () => ({
-  workspaceRoot: '/root',
-}));
 
 // projectName => tsconfig import path
 const dependencyProjectNamesToImportPaths = {
@@ -18,13 +15,13 @@ const dependencyProjectNamesToImportPaths = {
 
 describe('explicit project dependencies', () => {
   beforeEach(() => {
-    vol.reset();
+    tempFs.reset();
   });
 
   describe('static imports, dynamic imports, and commonjs requires', () => {
-    it('should build explicit dependencies for static imports, and top-level dynamic imports and commonjs requires', () => {
+    it('should build explicit dependencies for static imports, and top-level dynamic imports and commonjs requires', async () => {
       const sourceProjectName = 'proj';
-      const { ctx, builder } = createVirtualWorkspace({
+      const { ctx, builder } = await createVirtualWorkspace({
         sourceProjectName,
         sourceProjectFiles: [
           {
@@ -49,28 +46,32 @@ describe('explicit project dependencies', () => {
           sourceProjectName,
           sourceProjectFile: 'libs/proj/index.ts',
           targetProjectName: 'proj2',
+          type: 'static',
         },
         {
           sourceProjectName,
           sourceProjectFile: 'libs/proj/index.ts',
           targetProjectName: 'proj3a',
+          type: 'dynamic',
         },
         {
           sourceProjectName,
           sourceProjectFile: 'libs/proj/index.ts',
           targetProjectName: 'proj4ab',
+          type: 'static',
         },
         {
           sourceProjectName,
           sourceProjectFile: 'libs/proj/index.ts',
           targetProjectName: 'npm:npm-package',
+          type: 'static',
         },
       ]);
     });
 
-    it('should build explicit dependencies for static exports', () => {
+    it('should build explicit dependencies for static exports', async () => {
       const sourceProjectName = 'proj';
-      const { ctx, builder } = createVirtualWorkspace({
+      const { ctx, builder } = await createVirtualWorkspace({
         sourceProjectName,
         sourceProjectFiles: [
           {
@@ -94,23 +95,26 @@ describe('explicit project dependencies', () => {
           sourceProjectName,
           sourceProjectFile: 'libs/proj/index.ts',
           targetProjectName: 'proj2',
+          type: 'static',
         },
         {
           sourceProjectName,
           sourceProjectFile: 'libs/proj/index.ts',
           targetProjectName: 'proj3a',
+          type: 'static',
         },
         {
           sourceProjectName,
           sourceProjectFile: 'libs/proj/index.ts',
           targetProjectName: 'proj4ab',
+          type: 'static',
         },
       ]);
     });
 
-    it(`should build explicit dependencies for TypeScript's import/export require syntax, and side-effectful import`, () => {
+    it(`should build explicit dependencies for TypeScript's import/export require syntax, and side-effectful import`, async () => {
       const sourceProjectName = 'proj';
-      const { ctx, builder } = createVirtualWorkspace({
+      const { ctx, builder } = await createVirtualWorkspace({
         sourceProjectName,
         sourceProjectFiles: [
           {
@@ -134,23 +138,26 @@ describe('explicit project dependencies', () => {
           sourceProjectName,
           sourceProjectFile: 'libs/proj/index.ts',
           targetProjectName: 'proj2',
+          type: 'static',
         },
         {
           sourceProjectName,
           sourceProjectFile: 'libs/proj/index.ts',
           targetProjectName: 'proj3a',
+          type: 'static',
         },
         {
           sourceProjectName,
           sourceProjectFile: 'libs/proj/index.ts',
           targetProjectName: 'proj4ab',
+          type: 'static',
         },
       ]);
     });
 
-    it('should build explicit dependencies for nested dynamic imports and commonjs requires', () => {
+    it('should build explicit dependencies for nested dynamic imports and commonjs requires', async () => {
       const sourceProjectName = 'proj';
-      const { ctx, builder } = createVirtualWorkspace({
+      const { ctx, builder } = await createVirtualWorkspace({
         sourceProjectName,
         sourceProjectFiles: [
           {
@@ -171,7 +178,7 @@ describe('explicit project dependencies', () => {
           },
           {
             path: 'libs/proj/component.tsx',
-            content: `              
+            content: `
               export function App() {
                 import('@proj/my-second-proj')
                 return (
@@ -195,23 +202,26 @@ describe('explicit project dependencies', () => {
           sourceProjectName,
           sourceProjectFile: 'libs/proj/component.tsx',
           targetProjectName: 'proj2',
+          type: 'dynamic',
         },
         {
           sourceProjectName,
           sourceProjectFile: 'libs/proj/nested-dynamic-import.ts',
           targetProjectName: 'proj3a',
+          type: 'dynamic',
         },
         {
           sourceProjectName,
           sourceProjectFile: 'libs/proj/nested-require.ts',
           targetProjectName: 'proj4ab',
+          type: 'static',
         },
       ]);
     });
 
-    it('should build explicit dependencies when relative paths are used', () => {
+    it('should build explicit dependencies when relative paths are used', async () => {
       const sourceProjectName = 'proj';
-      const { ctx, builder } = createVirtualWorkspace({
+      const { ctx, builder } = await createVirtualWorkspace({
         sourceProjectName,
         sourceProjectFiles: [
           {
@@ -239,18 +249,20 @@ describe('explicit project dependencies', () => {
           sourceProjectName,
           sourceProjectFile: 'libs/proj/absolute-path.ts',
           targetProjectName: 'proj3a',
+          type: 'dynamic',
         },
         {
           sourceProjectName,
           sourceProjectFile: 'libs/proj/relative-path.ts',
           targetProjectName: 'proj4ab',
+          type: 'dynamic',
         },
       ]);
     });
 
-    it('should not build explicit dependencies when nx-ignore-next-line comments are present', () => {
+    it('should not build explicit dependencies when nx-ignore-next-line comments are present', async () => {
       const sourceProjectName = 'proj';
-      const { ctx, builder } = createVirtualWorkspace({
+      const { ctx, builder } = await createVirtualWorkspace({
         sourceProjectName,
         sourceProjectFiles: [
           {
@@ -316,15 +328,15 @@ describe('explicit project dependencies', () => {
           {
             path: 'libs/proj/comments-with-excess-whitespace.ts',
             content: `
-              /* 
+              /*
                 nx-ignore-next-line
-                
+
                 */
               require('@proj/proj4ab');
               //     nx-ignore-next-line
               import('@proj/proj4ab');
-              /* 
-                
+              /*
+
               nx-ignore-next-line */
               import { foo } from '@proj/proj4ab';
             `,
@@ -340,9 +352,9 @@ describe('explicit project dependencies', () => {
       expect(res).toEqual([]);
     });
 
-    it('should not build explicit dependencies for stringified or templatized import/require statements', () => {
+    it('should not build explicit dependencies for stringified or templatized import/require statements', async () => {
       const sourceProjectName = 'proj';
-      const { ctx, builder } = createVirtualWorkspace({
+      const { ctx, builder } = await createVirtualWorkspace({
         sourceProjectName,
         sourceProjectFiles: [
           {
@@ -423,9 +435,9 @@ describe('explicit project dependencies', () => {
    * https://angular.io/guide/deprecations#loadchildren-string-syntax
    */
   describe('legacy Angular loadChildren string syntax', () => {
-    it('should build explicit dependencies for legacy Angular loadChildren string syntax', () => {
+    it('should build explicit dependencies for legacy Angular loadChildren string syntax', async () => {
       const sourceProjectName = 'proj';
-      const { ctx, builder } = createVirtualWorkspace({
+      const { ctx, builder } = await createVirtualWorkspace({
         sourceProjectName,
         sourceProjectFiles: [
           {
@@ -467,18 +479,20 @@ describe('explicit project dependencies', () => {
           sourceProjectName,
           sourceProjectFile: 'libs/proj/file-1.ts',
           targetProjectName: 'proj4ab',
+          type: 'dynamic',
         },
         {
           sourceProjectName,
           sourceProjectFile: 'libs/proj/file-2.ts',
           targetProjectName: 'proj3a',
+          type: 'dynamic',
         },
       ]);
     });
 
-    it('should not build explicit dependencies when nx-ignore-next-line comments are present', () => {
+    it('should not build explicit dependencies when nx-ignore-next-line comments are present', async () => {
       const sourceProjectName = 'proj';
-      const { ctx, builder } = createVirtualWorkspace({
+      const { ctx, builder } = await createVirtualWorkspace({
         sourceProjectName,
         sourceProjectFiles: [
           {
@@ -544,7 +558,7 @@ interface VirtualWorkspaceConfig {
  * Prepares a minimal workspace and virtual file-system for the given files and dependency
  * projects in order to be able to execute `buildExplicitTypeScriptDependencies()` in the tests.
  */
-function createVirtualWorkspace(config: VirtualWorkspaceConfig) {
+async function createVirtualWorkspace(config: VirtualWorkspaceConfig) {
   const nxJson = {
     npmScope: 'proj',
   };
@@ -625,9 +639,9 @@ function createVirtualWorkspace(config: VirtualWorkspaceConfig) {
 
   fsJson['./tsconfig.base.json'] = JSON.stringify(tsConfig);
 
-  vol.fromJSON(fsJson, '/root');
+  await tempFs.createFiles(fsJson);
 
-  defaultFileHasher.init();
+  await defaultFileHasher.init();
 
   return {
     ctx: {

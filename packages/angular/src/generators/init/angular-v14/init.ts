@@ -10,6 +10,7 @@ import {
 } from '@nrwl/devkit';
 import { jestInitGenerator } from '@nrwl/jest';
 import { Linter } from '@nrwl/linter';
+import { initGenerator as jsInitGenerator } from '@nrwl/js';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { backwardCompatibleVersions } from '../../../utils/backward-compatible-versions';
 import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
@@ -26,6 +27,14 @@ export async function angularInitGenerator(
 ): Promise<GeneratorCallback> {
   const options = normalizeOptions(rawOptions);
   setDefaults(host, options);
+  await jsInitGenerator(host, {
+    ...options,
+    tsConfigName: options.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
+    js: false,
+    skipFormat: true,
+  });
+
+  const tasks: GeneratorCallback[] = [];
 
   const peerDepsToInstall = [
     '@angular-devkit/core',
@@ -44,18 +53,22 @@ export async function angularInitGenerator(
     }
   });
 
-  const depsTask = !options.skipPackageJson
-    ? updateDependencies(host)
-    : () => {};
+  if (!options.skipPackageJson) {
+    tasks.push(updateDependencies(host));
+  }
+
   const unitTestTask = await addUnitTestRunner(host, options);
+  tasks.push(unitTestTask);
   const e2eTask = addE2ETestRunner(host, options);
+  tasks.push(e2eTask);
+
   addGitIgnoreEntry(host, '.angular');
 
   if (!options.skipFormat) {
     await formatFiles(host);
   }
 
-  return runTasksInSerial(depsTask, unitTestTask, e2eTask);
+  return runTasksInSerial(...tasks);
 }
 
 function normalizeOptions(options: Schema): Required<Schema> {
@@ -67,6 +80,7 @@ function normalizeOptions(options: Schema): Required<Schema> {
     skipPackageJson: options.skipPackageJson ?? false,
     style: options.style ?? 'css',
     unitTestRunner: options.unitTestRunner ?? UnitTestRunner.Jest,
+    rootProject: options.rootProject,
   };
 }
 

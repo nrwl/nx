@@ -9,10 +9,10 @@ import {
   updateJson,
 } from '@nrwl/devkit';
 import { replaceAppNameWithPath } from '@nrwl/workspace/src/utils/cli-config-utils';
+import { getRelativePathToRootTsConfig } from '@nrwl/js';
 import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
 import type { NormalizedSchema } from './normalized-schema';
 import { createTsConfig } from '../../utils/create-ts-config';
-import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 
 export function updateConfigFiles(host: Tree, options: NormalizedSchema) {
   updateTsConfigOptions(host, options);

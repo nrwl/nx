@@ -1,5 +1,4 @@
 import type { SourceFile } from 'typescript';
-import { tsquery } from '@phenomnomnominal/tsquery';
 
 export type IsHostRemoteConfigResult = 'host' | 'remote' | 'both' | false;
 
@@ -12,6 +11,7 @@ const PROPERTY_SELECTOR = 'ObjectLiteralExpression > PropertyAssignment';
 export function isHostRemoteConfig(ast: SourceFile): IsHostRemoteConfigResult {
   let isHost = false;
   let isRemote = false;
+  const { tsquery } = require('@phenomnomnominal/tsquery');
 
   const remotesNodes = tsquery(ast, REMOTES_EXPRESSION_SELECTOR, {
     visitAllChildren: true,
@@ -33,6 +33,7 @@ export function isHostRemoteConfig(ast: SourceFile): IsHostRemoteConfigResult {
 }
 
 export function getRemotesFromHost(ast: SourceFile) {
+  const { tsquery } = require('@phenomnomnominal/tsquery');
   const remotesObjectNodes = tsquery(ast, REMOTES_EXPRESSION_SELECTOR, {
     visitAllChildren: true,
   });
@@ -62,6 +63,7 @@ export function getRemotesFromHost(ast: SourceFile) {
 }
 
 export function getExposedModulesFromRemote(ast: SourceFile) {
+  const { tsquery } = require('@phenomnomnominal/tsquery');
   const exposesObjectNodes = tsquery(ast, EXPOSES_EXPRESSION_SELECTOR, {
     visitAllChildren: true,
   });

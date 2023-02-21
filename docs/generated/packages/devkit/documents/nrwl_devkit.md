@@ -48,7 +48,6 @@ It only uses language primitives and immutable objects
 - [ProjectGraphExternalNode](../../devkit/documents/nrwl_devkit#projectgraphexternalnode)
 - [ProjectGraphProcessorContext](../../devkit/documents/nrwl_devkit#projectgraphprocessorcontext)
 - [ProjectGraphProjectNode](../../devkit/documents/nrwl_devkit#projectgraphprojectnode)
-- [ProjectGraphV4](../../devkit/documents/nrwl_devkit#projectgraphv4)
 
 ### Tree Interfaces
 
@@ -298,18 +297,6 @@ A plugin for Nx
 ### ProjectGraphProjectNode
 
 • **ProjectGraphProjectNode**: `Object`
-
----
-
-### ProjectGraphV4
-
-• **ProjectGraphV4**<`T`\>: `Object`
-
-#### Type parameters
-
-| Name | Type  |
-| :--- | :---- |
-| `T`  | `any` |
 
 ---
 
@@ -1190,14 +1177,14 @@ Detect workspace scope from the package.json name
 
 ### ensurePackage
 
-▸ **ensurePackage**(`tree`, `pkg`, `requiredVersion`, `options?`): `Promise`<`void`\>
+▸ **ensurePackage**(`tree`, `pkg`, `requiredVersion`, `options?`): `void`
 
 Ensure that dependencies and devDependencies from package.json are installed at the required versions.
 
 For example:
 
 ```typescript
-ensurePackage(tree, {}, { '@nrwl/jest': nxVersion });
+ensurePackage(tree, '@nrwl/jest', nxVersion);
 ```
 
 This will check that @nrwl/jest@<nxVersion> exists in devDependencies.
@@ -1217,7 +1204,7 @@ When running with --dryRun, the function will throw when dependencies are missin
 
 #### Returns
 
-`Promise`<`void`\>
+`void`
 
 ---
 

@@ -1,4 +1,4 @@
-import { Node, parse, renderers, transform } from '@markdoc/markdoc';
+import { Node, parse, renderers, Tokenizer, transform } from '@markdoc/markdoc';
 import { load as yamlLoad } from 'js-yaml';
 import React, { ReactNode } from 'react';
 import { Fence } from './lib/nodes/fence.component';
@@ -79,8 +79,15 @@ export const getMarkdocCustomConfig = (
   },
 });
 
-export const parseMarkdown: (markdown: string) => Node = (markdown) =>
-  parse(markdown);
+const tokenizer = new Tokenizer({
+  // Per https://markdoc.dev/docs/syntax#comments this will be on by default in a future version
+  allowComments: true,
+});
+
+export const parseMarkdown: (markdown: string) => Node = (markdown) => {
+  const tokens = tokenizer.tokenize(markdown);
+  return parse(tokens);
+};
 
 export const renderMarkdown: (
   documentContent: string,

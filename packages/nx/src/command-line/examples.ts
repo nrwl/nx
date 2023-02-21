@@ -330,7 +330,7 @@ export const examples: Record<string, Example[]> = {
       command:
         'migrate @nrwl/workspace@9.0.0 --from="@nrwl/workspace@8.0.0,@nrwl/node@8.0.0"',
       description:
-        'Update @nrwl/workspace and generate the list of migrations starting with version 8.0.0 of @nrwl/workspace and @nrwl/node, regardless of what installed locally',
+        'Update @nrwl/workspace and generate the list of migrations starting with version 8.0.0 of @nrwl/workspace and @nrwl/node, regardless of what is installed locally',
     },
     {
       command:
@@ -347,6 +347,11 @@ export const examples: Record<string, Example[]> = {
       command: 'migrate latest --interactive',
       description:
         'Collect package updates and migrations in interactive mode. In this mode, the user will be prompted whether to apply any optional package update and migration',
+    },
+    {
+      command: 'migrate latest --from=nx@14.5.0 --exclude-applied-migrations',
+      description:
+        'Collect package updates and migrations starting with version 14.5.0 of "nx" (and Nx first-party plugins), regardless of what is installed locally, while excluding migrations that should have been applied on previous updates',
     },
     {
       command: 'migrate --run-migrations=migrations.json',

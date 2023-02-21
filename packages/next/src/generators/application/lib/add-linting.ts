@@ -6,7 +6,10 @@ import {
   Tree,
   updateJson,
 } from '@nrwl/devkit';
-import { extendReactEslintJson, extraEslintDependencies } from '@nrwl/react';
+import {
+  extendReactEslintJson,
+  extraEslintDependencies,
+} from '@nrwl/react/src/utils/lint';
 import { NormalizedSchema } from './normalize-options';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 

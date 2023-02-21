@@ -1,6 +1,5 @@
 import {
   addProjectConfiguration,
-  readJson,
   readProjectConfiguration,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';

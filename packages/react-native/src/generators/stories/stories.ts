@@ -20,7 +20,7 @@ export async function createAllStories(
   projectName: string,
   ignorePaths?: string[]
 ) {
-  await ensurePackage(tree, '@nrwl/storybook', nxVersion);
+  ensurePackage(tree, '@nrwl/storybook', nxVersion);
   const { isTheFileAStory } = await import(
     '@nrwl/storybook/src/utils/utilities'
   );

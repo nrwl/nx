@@ -1,14 +1,16 @@
 import { applyChangesToString, ChangeType, Tree } from '@nrwl/devkit';
-import {
-  createSourceFile,
-  isImportDeclaration,
-  ScriptTarget,
-} from 'typescript';
+
+let tsModule: typeof import('typescript');
 
 /**
  * Insert a statement after the last import statement in a file
  */
 export function insertStatement(tree: Tree, path: string, statement: string) {
+  if (!tsModule) {
+    tsModule = require('typescript');
+  }
+  const { createSourceFile, isImportDeclaration, ScriptTarget } = tsModule;
+
   const contents = tree.read(path, 'utf-8');
 
   const sourceFile = createSourceFile(path, contents, ScriptTarget.ESNext);

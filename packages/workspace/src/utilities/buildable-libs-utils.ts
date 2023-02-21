@@ -8,10 +8,12 @@ import {
   stripIndents,
   writeJsonFile,
 } from '@nrwl/devkit';
-import * as ts from 'typescript';
+import type * as ts from 'typescript';
 import { unlinkSync } from 'fs';
 import { output } from './output';
 import { isNpmProject } from 'nx/src/project-graph/operators';
+
+let tsModule: typeof import('typescript');
 
 function isBuildable(target: string, node: ProjectGraphProjectNode): boolean {
   return (
@@ -111,6 +113,9 @@ export function calculateProjectDependencies(
       return project;
     })
     .filter((x) => !!x);
+
+  dependencies.sort((a, b) => (a.name > b.name ? 1 : b.name > a.name ? -1 : 0));
+
   return {
     target,
     dependencies,
@@ -188,13 +193,19 @@ export function computeCompilerOptionsPaths(
 }
 
 function readPaths(tsConfig: string | ts.ParsedCommandLine) {
+  if (!tsModule) {
+    tsModule = require('typescript');
+  }
   try {
     let config: ts.ParsedCommandLine;
     if (typeof tsConfig === 'string') {
-      const configFile = ts.readConfigFile(tsConfig, ts.sys.readFile);
-      config = ts.parseJsonConfigFileContent(
+      const configFile = tsModule.readConfigFile(
+        tsConfig,
+        tsModule.sys.readFile
+      );
+      config = tsModule.parseJsonConfigFileContent(
         configFile.config,
-        ts.sys,
+        tsModule.sys,
         dirname(tsConfig)
       );
     } else {

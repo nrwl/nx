@@ -1,7 +1,6 @@
 import type { Tree } from '@nrwl/devkit';
 import type { NormalizedSchema } from './normalized-schema';
 
-import * as ts from 'typescript';
 import {
   addGlobal,
   replaceNodeValue,
@@ -9,10 +8,16 @@ import {
 import { getDecoratorPropertyValueNode } from '../../../utils/nx-devkit/ast-utils';
 import { nrwlHomeTemplate } from './nrwl-home-tpl';
 
+let tsModule: typeof import('typescript');
+
 export function updateNxComponentTemplate(
   host: Tree,
   options: NormalizedSchema
 ) {
+  if (!tsModule) {
+    tsModule = require('typescript');
+  }
+
   const componentPath = `${options.appProjectRoot}/src/app/nx-welcome.component.ts`;
   const templateNodeValue = getDecoratorPropertyValueNode(
     host,
@@ -24,10 +29,10 @@ export function updateNxComponentTemplate(
 
   replaceNodeValue(
     host,
-    ts.createSourceFile(
+    tsModule.createSourceFile(
       componentPath,
       host.read(componentPath, 'utf-8'),
-      ts.ScriptTarget.Latest,
+      tsModule.ScriptTarget.Latest,
       true
     ),
     componentPath,
@@ -36,10 +41,10 @@ export function updateNxComponentTemplate(
   );
 
   // Fixing extra comma issue `,,`
-  let sourceFile = ts.createSourceFile(
+  let sourceFile = tsModule.createSourceFile(
     componentPath,
     host.read(componentPath, 'utf-8'),
-    ts.ScriptTarget.Latest,
+    tsModule.ScriptTarget.Latest,
     true
   );
   const componentFile = host
@@ -56,10 +61,10 @@ export function updateNxComponentTemplate(
   });
 
   // Add ESLint ignore to pass the lint step
-  sourceFile = ts.createSourceFile(
+  sourceFile = tsModule.createSourceFile(
     componentPath,
     host.read(componentPath, 'utf-8'),
-    ts.ScriptTarget.Latest,
+    tsModule.ScriptTarget.Latest,
     true
   );
   addGlobal(host, sourceFile, componentPath, '/* eslint-disable */');

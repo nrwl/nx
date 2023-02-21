@@ -97,13 +97,13 @@
       "description": "Skip formatting files.",
       "type": "boolean",
       "default": false,
-      "x-priority": "hidden"
+      "x-priority": "internal"
     },
     "skipWorkspaceJson": {
       "description": "Skip updating `workspace.json` with default options based on values provided to this app (e.g. babel, style).",
       "type": "boolean",
       "default": false,
-      "x-priority": "hidden"
+      "x-priority": "internal"
     },
     "unitTestRunner": {
       "type": "string",
@@ -175,7 +175,7 @@
       "description": "Do not add dependencies to `package.json`.",
       "type": "boolean",
       "default": false,
-      "x-priority": "hidden"
+      "x-priority": "internal"
     },
     "rootProject": {
       "description": "Create a application at the root of the workspace",

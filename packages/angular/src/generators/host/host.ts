@@ -37,6 +37,7 @@ export async function host(tree: Tree, options: Schema) {
 
   const appInstallTask = await applicationGenerator(tree, {
     ...options,
+    standalone: options.standalone ?? false,
     routing: true,
     port: 4200,
     skipFormat: true,

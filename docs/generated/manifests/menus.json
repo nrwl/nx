@@ -599,17 +599,25 @@
             "disableCollapsible": false
           },
           {
-            "name": "4 - Workspace Optimization",
-            "path": "/node-tutorial/4-workspace-optimization",
-            "id": "4-workspace-optimization",
+            "name": "4 - Task Pipelines",
+            "path": "/node-tutorial/4-task-pipelines",
+            "id": "4-task-pipelines",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
           {
-            "name": "5 - Summary",
-            "path": "/node-tutorial/5-summary",
-            "id": "5-summary",
+            "name": "5 - Docker Target",
+            "path": "/node-tutorial/5-docker-target",
+            "id": "5-docker-target",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "6 - Summary",
+            "path": "/node-tutorial/6-summary",
+            "id": "6-summary",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -642,17 +650,25 @@
         "disableCollapsible": false
       },
       {
-        "name": "4 - Workspace Optimization",
-        "path": "/node-tutorial/4-workspace-optimization",
-        "id": "4-workspace-optimization",
+        "name": "4 - Task Pipelines",
+        "path": "/node-tutorial/4-task-pipelines",
+        "id": "4-task-pipelines",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
       },
       {
-        "name": "5 - Summary",
-        "path": "/node-tutorial/5-summary",
-        "id": "5-summary",
+        "name": "5 - Docker Target",
+        "path": "/node-tutorial/5-docker-target",
+        "id": "5-docker-target",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "6 - Summary",
+        "path": "/node-tutorial/6-summary",
+        "id": "6-summary",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -3858,14 +3874,6 @@
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
-              },
-              {
-                "id": "change-storybook-targets",
-                "path": "/packages/angular/generators/change-storybook-targets",
-                "name": "change-storybook-targets",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
               }
             ],
             "isExternal": false,
@@ -5933,6 +5941,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "How to configure Webpack and Vite for Storybook",
+                "path": "/packages/storybook/documents/custom-builder-configs",
+                "id": "custom-builder-configs",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Setting up Storybook Composition with Nx",
                 "path": "/packages/storybook/documents/storybook-composition-setup",
                 "id": "storybook-composition-setup",
@@ -5949,17 +5965,17 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Angular: Information about the Storybook targets",
-                "path": "/packages/storybook/documents/angular-storybook-targets",
-                "id": "angular-storybook-targets",
+                "name": "Angular: Configuring styles and preprocessor options",
+                "path": "/packages/storybook/documents/angular-configuring-styles",
+                "id": "angular-configuring-styles",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
               },
               {
-                "name": "Angular: Configuring styles and preprocessor options",
-                "path": "/packages/storybook/documents/angular-configuring-styles",
-                "id": "angular-configuring-styles",
+                "name": "Angular: Information about the Storybook targets",
+                "path": "/packages/storybook/documents/angular-storybook-targets",
+                "id": "angular-storybook-targets",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -6000,14 +6016,6 @@
                 "name": "React: Upgrading to Storybook 6",
                 "path": "/packages/storybook/documents/upgrade-storybook-v6-react",
                 "id": "upgrade-storybook-v6-react",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "How to configure Webpack and Vite for Storybook",
-                "path": "/packages/storybook/documents/custom-builder-configs",
-                "id": "custom-builder-configs",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -6066,14 +6074,6 @@
                 "id": "cypress-project",
                 "path": "/packages/storybook/generators/cypress-project",
                 "name": "cypress-project",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "change-storybook-targets",
-                "path": "/packages/storybook/generators/change-storybook-targets",
-                "name": "change-storybook-targets",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

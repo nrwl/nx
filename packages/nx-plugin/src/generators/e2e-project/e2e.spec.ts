@@ -28,7 +28,7 @@ describe('NxPlugin e2e-project Generator', () => {
         pluginOutputPath: `dist/libs/my-plugin`,
         npmPackageName: '@proj/my-plugin',
       })
-    ).resolves.not.toThrow();
+    ).resolves.toBeDefined();
 
     await expect(
       e2eProjectGenerator(tree, {
@@ -156,5 +156,22 @@ describe('NxPlugin e2e-project Generator', () => {
     expect(
       tree.read(joinPathFragments(root, 'tests/my-plugin.spec.ts'), 'utf-8')
     ).not.toContain("it('should create ");
+  });
+
+  it('should setup the eslint builder', async () => {
+    await e2eProjectGenerator(tree, {
+      pluginName: 'my-plugin',
+      pluginOutputPath: `dist/libs/my-plugin`,
+      npmPackageName: '@proj/my-plugin',
+    });
+
+    const projectsConfigurations = getProjects(tree);
+    expect(projectsConfigurations.get('my-plugin-e2e').targets.lint).toEqual({
+      executor: '@nrwl/linter:eslint',
+      outputs: ['{options.outputFile}'],
+      options: {
+        lintFilePatterns: ['apps/my-plugin-e2e/**/*.ts'],
+      },
+    });
   });
 });

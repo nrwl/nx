@@ -4,6 +4,7 @@ import {
   createFile,
   newProject,
   runCLI,
+  runCypressTests,
   uniq,
   updateFile,
   updateProjectConfig,
@@ -174,18 +175,22 @@ import {CommonModule} from '@angular/common';
     runCLI(
       `generate @nrwl/angular:cypress-component-configuration --project=${appName} --generate-tests --no-interactive`
     );
-    expect(runCLI(`component-test ${appName} --no-watch`)).toContain(
-      'All specs passed!'
-    );
+    if (runCypressTests()) {
+      expect(runCLI(`component-test ${appName} --no-watch`)).toContain(
+        'All specs passed!'
+      );
+    }
   }, 300_000);
 
   it('should successfully component test lib being used in app', () => {
     runCLI(
       `generate @nrwl/angular:cypress-component-configuration --project=${usedInAppLibName} --generate-tests --no-interactive`
     );
-    expect(runCLI(`component-test ${usedInAppLibName} --no-watch`)).toContain(
-      'All specs passed!'
-    );
+    if (runCypressTests()) {
+      expect(runCLI(`component-test ${usedInAppLibName} --no-watch`)).toContain(
+        'All specs passed!'
+      );
+    }
   }, 300_000);
 
   it('should test buildable lib not being used in app', () => {
@@ -260,9 +265,11 @@ describe(InputStandaloneComponent.name, () => {
     runCLI(
       `generate @nrwl/angular:cypress-component-configuration --project=${buildableLibName} --generate-tests --build-target=${appName}:build --no-interactive`
     );
-    expect(runCLI(`component-test ${buildableLibName} --no-watch`)).toContain(
-      'All specs passed!'
-    );
+    if (runCypressTests()) {
+      expect(runCLI(`component-test ${buildableLibName} --no-watch`)).toContain(
+        'All specs passed!'
+      );
+    }
 
     // add tailwind
     runCLI(

@@ -8,8 +8,8 @@ import {
 import {
   getHelperDependenciesFromProjectGraph,
   HelperDependency,
-} from '@nrwl/js/src/utils/compiler-helper-dependency';
-import { readTsConfig } from '@nrwl/workspace/src/utilities/typescript';
+  readTsConfig,
+} from '@nrwl/js';
 import { getLockFileName } from 'nx/src/lock-file/lock-file';
 
 const pluginName = 'GeneratePackageJsonPlugin';

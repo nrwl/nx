@@ -9,7 +9,7 @@ import {
   Tree,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
-import { libraryGenerator } from '@nrwl/js';
+import { libraryGenerator as jsLibraryGenerator } from '@nrwl/js';
 import { addSwcDependencies } from '@nrwl/js/src/utils/swc/add-swc-dependencies';
 import { Linter } from '@nrwl/linter';
 import { swcNodeVersion } from 'nx/src/utils/versions';
@@ -90,7 +90,7 @@ function updateWorkspaceJson(host: Tree, options: NormalizedSchema) {
 export async function pluginGenerator(host: Tree, schema: Schema) {
   const options = normalizeOptions(host, schema);
 
-  await libraryGenerator(host, {
+  await jsLibraryGenerator(host, {
     ...schema,
     config: 'project',
     buildable: true,

@@ -2,6 +2,7 @@ import {
   addDependenciesToPackageJson,
   convertNxGenerator,
   formatFiles,
+  GeneratorCallback,
   removeDependenciesFromPackageJson,
   Tree,
 } from '@nrwl/devkit';
@@ -34,6 +35,7 @@ import {
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { jestInitGenerator } from '@nrwl/jest';
 import { detoxInitGenerator } from '@nrwl/detox';
+import { initGenerator as jsInitGenerator } from '@nrwl/js';
 
 import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
 import { initRootBabelConfig } from './lib/init-root-babel-config';
@@ -41,8 +43,12 @@ import { initRootBabelConfig } from './lib/init-root-babel-config';
 export async function expoInitGenerator(host: Tree, schema: Schema) {
   addGitIgnoreEntry(host);
   initRootBabelConfig(host);
+  await jsInitGenerator(host, {
+    js: schema.js,
+    skipFormat: true,
+  });
 
-  const tasks = [];
+  const tasks: GeneratorCallback[] = [];
 
   if (!schema.skipPackageJson) {
     tasks.push(moveDependency(host));
@@ -50,7 +56,7 @@ export async function expoInitGenerator(host: Tree, schema: Schema) {
   }
 
   if (!schema.unitTestRunner || schema.unitTestRunner === 'jest') {
-    const jestTask = jestInitGenerator(host, {});
+    const jestTask = await jestInitGenerator(host, {});
     tasks.push(jestTask);
   }
 

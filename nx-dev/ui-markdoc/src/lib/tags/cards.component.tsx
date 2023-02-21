@@ -21,9 +21,7 @@ export function Cards({
   };
 
   return (
-    <div
-      className={`not-prose mt-8 grid grid-cols-1 gap-6 ${gridColums[cols]}`}
-    >
+    <div className={`mt-8 grid grid-cols-1 gap-6 ${gridColums[cols]}`}>
       {children}
     </div>
   );

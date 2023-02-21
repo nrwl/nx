@@ -1,3 +1,4 @@
+import type { NxJsonConfiguration } from '@nrwl/devkit';
 import {
   cleanupProject,
   getPublishedVersion,
@@ -5,12 +6,14 @@ import {
   newProject,
   readFile,
   readJson,
+  removeFile,
   runCLI,
   runCLIAsync,
   runCommand,
   tmpProjPath,
   uniq,
   updateFile,
+  updateJson,
 } from '@nrwl/e2e/utils';
 import { renameSync } from 'fs';
 import * as path from 'path';
@@ -368,6 +371,15 @@ describe('migrate', () => {
   });
 
   it('should run migrations', () => {
+    updateJson('nx.json', (j: NxJsonConfiguration) => {
+      j.installation = {
+        version: getPublishedVersion(),
+        plugins: {
+          'migrate-child-package': '1.0.0',
+        },
+      };
+      return j;
+    });
     runCLI(
       'migrate migrate-parent-package@2.0.0 --from="migrate-parent-package@1.0.0"',
       {
@@ -392,6 +404,10 @@ describe('migrate', () => {
       '9.0.0'
     );
     expect(packageJson.devDependencies['migrate-child-package-5']).toEqual(
+      '9.0.0'
+    );
+    const nxJson: NxJsonConfiguration = readJson(`nx.json`);
+    expect(nxJson.installation.plugins['migrate-child-package']).toEqual(
       '9.0.0'
     );
     // should keep new line on package
@@ -516,5 +532,39 @@ describe('migrate', () => {
     expect(output).toContain(
       `Error: Providing a custom commit prefix requires --create-commits to be enabled`
     );
+  });
+
+  it('should fail if no migrations are present', () => {
+    removeFile(`./migrations.json`);
+
+    // Invalid: runs migrations with a custom commit-prefix but without enabling --create-commits
+    const output = runCLI(`migrate --run-migrations`, {
+      env: {
+        ...process.env,
+        NX_MIGRATE_SKIP_INSTALL: 'true',
+        NX_MIGRATE_USE_LOCAL: 'true',
+      },
+      silenceError: true,
+    });
+
+    expect(output).toContain(
+      `File 'migrations.json' doesn't exist, can't run migrations. Use flag --if-exists to run migrations only if the file exists`
+    );
+  });
+
+  it('should not run migrations if no migrations are present and flag --if-exists is used', () => {
+    removeFile(`./migrations.json`);
+
+    // Invalid: runs migrations with a custom commit-prefix but without enabling --create-commits
+    const output = runCLI(`migrate --run-migrations --if-exists`, {
+      env: {
+        ...process.env,
+        NX_MIGRATE_SKIP_INSTALL: 'true',
+        NX_MIGRATE_USE_LOCAL: 'true',
+      },
+      silenceError: true,
+    });
+
+    expect(output).toContain(`Migrations file 'migrations.json' doesn't exist`);
   });
 });

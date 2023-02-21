@@ -14,7 +14,7 @@
       "schema": "./src/generators/init/schema.json",
       "aliases": ["lib"],
       "x-type": "init",
-      "description": "Init placeholder.",
+      "description": "Initialize a TS/JS workspace.",
       "hidden": true
     },
     "convert-to-swc": {
@@ -38,7 +38,7 @@
       "schema": "./src/generators/init/schema.json",
       "aliases": ["lib"],
       "x-type": "init",
-      "description": "Init placeholder.",
+      "description": "Initialize a TS/JS workspace.",
       "hidden": true
     },
     "convert-to-swc": {

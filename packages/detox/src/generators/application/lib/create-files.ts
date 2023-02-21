@@ -6,7 +6,7 @@ import {
   toJS,
   Tree,
 } from '@nrwl/devkit';
-import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
+import { getRelativePathToRootTsConfig } from '@nrwl/js';
 import { join } from 'path';
 import { NormalizedSchema } from './normalize-options';
 

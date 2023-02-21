@@ -1,6 +1,7 @@
 import {
   addDependenciesToPackageJson,
   formatFiles,
+  GeneratorCallback,
   installPackagesTask,
   moveFilesToNewDirectory,
   removeDependenciesFromPackageJson,
@@ -8,6 +9,7 @@ import {
 } from '@nrwl/devkit';
 import { jestProjectGenerator } from '@nrwl/jest';
 import { Linter } from '@nrwl/linter';
+import { updateRootTsConfig } from '@nrwl/js';
 import { lt } from 'semver';
 import init from '../../generators/init/init';
 import { E2eTestRunner } from '../../utils/test-runners';
@@ -30,7 +32,10 @@ import { updateProject } from './lib/update-project';
 import { updateTsConfig } from './lib/update-tsconfig';
 import { Schema } from './schema';
 
-export async function libraryGenerator(tree: Tree, schema: Schema) {
+export async function libraryGenerator(
+  tree: Tree,
+  schema: Schema
+): Promise<GeneratorCallback> {
   // Do some validation checks
   if (!schema.routing && schema.lazy) {
     throw new Error(`To use "--lazy" option, "--routing" must also be set.`);
@@ -56,7 +61,7 @@ export async function libraryGenerator(tree: Tree, schema: Schema) {
   }
 
   const options = normalizeOptions(tree, schema);
-  const { libraryOptions, componentOptions } = options;
+  const { libraryOptions } = options;
 
   await init(tree, {
     ...libraryOptions,
@@ -86,6 +91,8 @@ export async function libraryGenerator(tree: Tree, schema: Schema) {
       libraryOptions.projectRoot
     );
   }
+
+  const { updateProject } = await import('./lib/update-project');
   await updateProject(tree, libraryOptions);
   updateTsConfig(tree, libraryOptions);
   await addUnitTestRunner(tree, libraryOptions);
@@ -121,6 +128,8 @@ export async function libraryGenerator(tree: Tree, schema: Schema) {
     );
     addBuildableLibrariesPostCssDependencies(tree);
   }
+
+  updateRootTsConfig(tree, { ...libraryOptions, js: false });
 
   if (!libraryOptions.skipFormat) {
     await formatFiles(tree);

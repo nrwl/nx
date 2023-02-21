@@ -80,7 +80,10 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
   return runTasksInSerial(...tasks);
 }
 
-export async function applicationGenerator(host: Tree, schema: Schema) {
+export async function applicationGenerator(
+  host: Tree,
+  schema: Schema
+): Promise<GeneratorCallback> {
   const tasks = [];
 
   const options = normalizeOptions(host, schema);
@@ -102,7 +105,7 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
   addProject(host, options);
 
   if (options.bundler === 'vite') {
-    await ensurePackage(host, '@nrwl/vite', nxVersion);
+    ensurePackage(host, '@nrwl/vite', nxVersion);
     const { viteConfigurationGenerator } = await import('@nrwl/vite');
     // We recommend users use `import.meta.env.MODE` and other variables in their code to differentiate between production and development.
     // See: https://vitejs.dev/guide/env-and-mode.html
@@ -123,7 +126,7 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
     });
     tasks.push(viteTask);
   } else if (options.bundler === 'webpack') {
-    await ensurePackage(host, '@nrwl/webpack', nxVersion);
+    ensurePackage(host, '@nrwl/webpack', nxVersion);
 
     const { webpackInitGenerator } = await import('@nrwl/webpack');
     const webpackInitTask = await webpackInitGenerator(host, {
@@ -133,7 +136,7 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
   }
 
   if (options.bundler !== 'vite' && options.unitTestRunner === 'vitest') {
-    await ensurePackage(host, '@nrwl/vite', nxVersion);
+    ensurePackage(host, '@nrwl/vite', nxVersion);
     const { vitestGenerator } = await import('@nrwl/vite');
 
     const vitestTask = await vitestGenerator(host, {

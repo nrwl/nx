@@ -2,7 +2,7 @@ import { readProjectConfiguration, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { join } from 'path';
 import { LibraryGeneratorSchema } from '../../utils/schema';
-import { libraryGenerator } from '../library/library';
+import { libraryGenerator as jsLibraryGenerator } from '../library/library';
 import { convertToSwcGenerator } from './convert-to-swc';
 
 describe('convert to swc', () => {
@@ -28,7 +28,7 @@ describe('convert to swc', () => {
   });
 
   it('should convert tsc to swc', async () => {
-    await libraryGenerator(tree, {
+    await jsLibraryGenerator(tree, {
       ...defaultLibGenerationOptions,
       name: 'tsc-lib',
       buildable: true,

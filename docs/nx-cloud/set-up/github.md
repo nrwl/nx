@@ -4,6 +4,10 @@
 
 The [Nx Cloud GitHub App](https://github.com/marketplace/official-nx-cloud-app) lets you access the result of every run—with all its logs and build insights—straight from your PR.
 
+## Install the App
+
+For the best experience, install the [Nx Cloud GitHub App](https://github.com/marketplace/official-nx-cloud-app). Using the app provides the most seamless authentication experience. This is not required if you wish to authenticate with a personal access token that you generate yourself.
+
 ## Connecting Your Workspace
 
 Once you have installed the Nx Cloud GitHub App, you must link your workspace to the installation. To do this, sign in to Nx Cloud and navigate to the VCS Integrations setup page. This page can be found by clicking on the status card in the sidebar, or by clicking "Workspace Options" -> "VCS Integrations".

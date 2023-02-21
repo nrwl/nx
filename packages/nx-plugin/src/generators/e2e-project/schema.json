@@ -35,6 +35,12 @@
       "default": true,
       "x-deprecated": "Nx only supports standaloneConfig"
     },
+    "linter": {
+      "description": "The tool to use for running lint checks.",
+      "type": "string",
+      "enum": ["eslint", "none"],
+      "default": "eslint"
+    },
     "minimal": {
       "type": "boolean",
       "description": "Generate the e2e project with a minimal setup. This would involve not generating tests for a default executor and generator.",

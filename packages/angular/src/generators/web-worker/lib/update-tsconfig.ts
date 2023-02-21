@@ -4,7 +4,7 @@ import {
   readProjectConfiguration,
   updateJson,
 } from '@nrwl/devkit';
-import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
+import { getRelativePathToRootTsConfig } from '@nrwl/js';
 
 export function updateTsConfig(tree: Tree, project: string): void {
   const { root } = readProjectConfiguration(tree, project);

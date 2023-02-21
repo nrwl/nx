@@ -1,11 +1,12 @@
 import { join } from 'path';
+import { generateFiles, names, toJS, Tree } from '@nrwl/devkit';
+import { getRelativePathToRootTsConfig } from '@nrwl/js';
+
 import { NormalizedSchema } from './normalize-options';
 import {
   createAppJsx,
   createStyleRules,
 } from './create-application-files.helpers';
-import { generateFiles, names, toJS, Tree } from '@nrwl/devkit';
-import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 
 export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
   const templateVariables = {

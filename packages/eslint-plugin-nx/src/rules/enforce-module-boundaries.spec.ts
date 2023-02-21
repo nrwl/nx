@@ -1,6 +1,10 @@
 import 'nx/src/utils/testing/mock-fs';
 
-import type { FileData, ProjectGraph } from '@nrwl/devkit';
+import type {
+  FileData,
+  ProjectGraph,
+  ProjectGraphDependency,
+} from '@nrwl/devkit';
 import { DependencyType } from '@nrwl/devkit';
 import * as parser from '@typescript-eslint/parser';
 import { TSESLint } from '@typescript-eslint/utils';
@@ -284,7 +288,13 @@ describe('Enforce Module Boundaries (eslint)', () => {
             implicitDependencies: [],
             targets: {},
             files: [
-              createFile(`libs/dependsOnPrivate/src/index.ts`, ['privateName']),
+              createFile(`libs/dependsOnPrivate/src/index.ts`, [
+                {
+                  source: 'dependsOnPrivateName',
+                  type: 'static',
+                  target: 'privateName',
+                },
+              ]),
             ],
           },
         },
@@ -298,7 +308,11 @@ describe('Enforce Module Boundaries (eslint)', () => {
             targets: {},
             files: [
               createFile(`libs/dependsOnPrivate2/src/index.ts`, [
-                'privateName',
+                {
+                  source: 'dependsOnPrivateName2',
+                  type: 'static',
+                  target: 'privateName',
+                },
               ]),
             ],
           },
@@ -313,8 +327,12 @@ describe('Enforce Module Boundaries (eslint)', () => {
             targets: {},
             files: [
               createFile(`libs/private/src/index.ts`, [
-                'untaggedName',
-                'taggedName',
+                {
+                  source: 'privateName',
+                  type: 'static',
+                  target: 'untaggedName',
+                },
+                { source: 'privateName', type: 'static', target: 'taggedName' },
               ]),
             ],
           },
@@ -1419,7 +1437,15 @@ Violation detected in:
               tags: [],
               implicitDependencies: [],
               targets: {},
-              files: [createFile(`libs/mylib/src/main.ts`, ['anotherlibName'])],
+              files: [
+                createFile(`libs/mylib/src/main.ts`, [
+                  {
+                    source: 'mylibName',
+                    type: 'static',
+                    target: 'anotherlibName',
+                  },
+                ]),
+              ],
             },
           },
           anotherlibName: {
@@ -1430,7 +1456,15 @@ Violation detected in:
               tags: [],
               implicitDependencies: [],
               targets: {},
-              files: [createFile(`libs/anotherlib/src/main.ts`, ['mylibName'])],
+              files: [
+                createFile(`libs/anotherlib/src/main.ts`, [
+                  {
+                    source: 'anotherlibName',
+                    type: 'static',
+                    target: 'mylibName',
+                  },
+                ]),
+              ],
             },
           },
           myappName: {
@@ -1486,7 +1520,13 @@ Circular file chain:
               implicitDependencies: [],
               targets: {},
               files: [
-                createFile(`libs/mylib/src/main.ts`, ['badcirclelibName']),
+                createFile(`libs/mylib/src/main.ts`, [
+                  {
+                    source: 'badcirclelibName',
+                    type: 'static',
+                    target: 'mylibName',
+                  },
+                ]),
               ],
             },
           },
@@ -1499,8 +1539,20 @@ Circular file chain:
               implicitDependencies: [],
               targets: {},
               files: [
-                createFile(`libs/anotherlib/src/main.ts`, ['mylibName']),
-                createFile(`libs/anotherlib/src/index.ts`, ['mylibName']),
+                createFile(`libs/anotherlib/src/main.ts`, [
+                  {
+                    source: 'anotherlibName',
+                    type: 'static',
+                    target: 'mylibName',
+                  },
+                ]),
+                createFile(`libs/anotherlib/src/index.ts`, [
+                  {
+                    source: 'anotherlibName',
+                    type: 'static',
+                    target: 'mylibName',
+                  },
+                ]),
               ],
             },
           },
@@ -1513,7 +1565,13 @@ Circular file chain:
               implicitDependencies: [],
               targets: {},
               files: [
-                createFile(`libs/badcirclelib/src/main.ts`, ['anotherlibName']),
+                createFile(`libs/badcirclelib/src/main.ts`, [
+                  {
+                    source: 'badcirclelibName',
+                    type: 'static',
+                    target: 'anotherlibName',
+                  },
+                ]),
               ],
             },
           },
@@ -2025,8 +2083,11 @@ const baseConfig = {
 linter.defineParser('@typescript-eslint/parser', parser);
 linter.defineRule(enforceModuleBoundariesRuleName, enforceModuleBoundaries);
 
-function createFile(f: string, deps?: string[]): FileData {
-  return { file: f, hash: '', ...(deps && { deps }) };
+function createFile(
+  f: string,
+  dependencies?: ProjectGraphDependency[]
+): FileData {
+  return { file: f, hash: '', ...(dependencies && { dependencies }) };
 }
 
 function runRule(

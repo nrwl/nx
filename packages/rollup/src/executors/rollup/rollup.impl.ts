@@ -3,7 +3,7 @@ import * as ts from 'typescript';
 import * as rollup from 'rollup';
 import * as peerDepsExternal from 'rollup-plugin-peer-deps-external';
 import { getBabelInputPlugin } from '@rollup/plugin-babel';
-import { dirname, join, parse } from 'path';
+import { dirname, join, parse, resolve } from 'path';
 import { from, Observable, of } from 'rxjs';
 import { catchError, concatMap, last, scan, tap } from 'rxjs/operators';
 import { eachValueFrom } from '@nrwl/devkit/src/utils/rxjs-for-await';
@@ -15,7 +15,7 @@ import {
   computeCompilerOptionsPaths,
   DependentBuildableProjectNode,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
-import resolve from '@rollup/plugin-node-resolve';
+import nodeResolve from '@rollup/plugin-node-resolve';
 
 import { AssetGlobPattern, RollupExecutorOptions } from './schema';
 import { runRollup } from './lib/run-rollup';
@@ -28,6 +28,11 @@ import { deleteOutputDir } from '../../utils/fs';
 import { swc } from './lib/swc-plugin';
 import { validateTypes } from './lib/validate-types';
 import { updatePackageJson } from './lib/update-package-json';
+
+export type RollupExecutorEvent = {
+  success: boolean;
+  outfile?: string;
+};
 
 // These use require because the ES import isn't correct.
 const commonjs = require('@rollup/plugin-commonjs');
@@ -77,6 +82,8 @@ export async function* rollupExecutor(
     npmDeps
   );
 
+  const outfile = resolveOutfile(context, options);
+
   if (options.compiler === 'swc') {
     try {
       await validateTypes({
@@ -92,7 +99,7 @@ export async function* rollupExecutor(
   if (options.watch) {
     const watcher = rollup.watch(rollupOptions);
     return yield* eachValueFrom(
-      new Observable<{ success: boolean }>((obs) => {
+      new Observable<RollupExecutorEvent>((obs) => {
         watcher.on('event', (data) => {
           if (data.code === 'START') {
             logger.info(`Bundling ${context.projectName}...`);
@@ -105,7 +112,7 @@ export async function* rollupExecutor(
               packageJson
             );
             logger.info('Bundle complete. Watching for file changes...');
-            obs.next({ success: true });
+            obs.next({ success: true, outfile });
           } else if (data.code === 'ERROR') {
             logger.error(`Error during bundle: ${data.error.message}`);
             obs.next({ success: false });
@@ -135,12 +142,12 @@ export async function* rollupExecutor(
             })
           )
         ),
-        scan(
+        scan<RollupExecutorEvent>(
           (acc, result) => {
             if (!acc.success) return acc;
             return result;
           },
-          { success: true }
+          { success: true, outfile }
         ),
         last(),
         tap({
@@ -231,7 +238,7 @@ export function createRollupOptions(
           },
         },
       }),
-      resolve({
+      nodeResolve({
         preferBuiltins: true,
         extensions: fileExtensions,
       }),
@@ -339,6 +346,15 @@ function readCompatibleFormats(config: ts.ParsedCommandLine) {
     default:
       return ['esm'];
   }
+}
+
+function resolveOutfile(
+  context: ExecutorContext,
+  options: NormalizedRollupExecutorOptions
+) {
+  if (!options.format?.includes('cjs')) return undefined;
+  const { name } = parse(options.outputFileName ?? options.main);
+  return resolve(context.root, options.outputPath, `${name}.cjs`);
 }
 
 export default rollupExecutor;

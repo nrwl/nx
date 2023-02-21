@@ -32,6 +32,7 @@ describe('create-nx-workspace', () => {
 
     checkFilesExist('package.json');
     checkFilesExist('src/app/app.routes.ts');
+    checkFilesDoNotExist('tsconfig.base.json');
     checkFilesExist('project.json');
   });
 
@@ -83,6 +84,7 @@ describe('create-nx-workspace', () => {
     checkFilesExist('package.json');
     checkFilesExist('project.json');
     checkFilesExist('vite.config.ts');
+    checkFilesDoNotExist('tsconfig.base.json');
   });
 
   it('should create a workspace with a single react app with webpack at the root', () => {
@@ -99,6 +101,7 @@ describe('create-nx-workspace', () => {
     checkFilesExist('package.json');
     checkFilesExist('project.json');
     checkFilesExist('webpack.config.js');
+    checkFilesDoNotExist('tsconfig.base.json');
   });
 
   it('should be able to create an empty workspace built for apps', () => {
@@ -129,6 +132,7 @@ describe('create-nx-workspace', () => {
     });
 
     expectNoAngularDevkit();
+    checkFilesDoNotExist('tsconfig.base.json');
   });
 
   it('should be able to create an empty workspace with ts/js capabilities', () => {

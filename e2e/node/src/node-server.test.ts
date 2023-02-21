@@ -5,22 +5,50 @@ import {
   killPort,
   newProject,
   promisifiedTreeKill,
+  readFile,
   runCLI,
   runCommandUntil,
   uniq,
+  updateFile,
 } from '@nrwl/e2e/utils';
 
 describe('Node Applications + webpack', () => {
-  beforeEach(() => newProject());
+  let proj: string;
+  beforeEach(() => {
+    proj = newProject();
+  });
 
   afterEach(() => cleanupProject());
+
+  function addLibImport(appName: string, libName: string, importPath?: string) {
+    const content = readFile(`apps/${appName}/src/main.ts`);
+    if (importPath) {
+      updateFile(
+        `apps/${appName}/src/main.ts`,
+        `
+      import { ${libName} } from '${importPath}';
+      ${content}
+      console.log(${libName}());
+      `
+      );
+    } else {
+      updateFile(
+        `apps/${appName}/src/main.ts`,
+        `
+      import { ${libName} } from '@${proj}/${libName}';
+      ${content}
+      console.log(${libName}());
+      `
+      );
+    }
+  }
 
   async function runE2eTests(appName: string) {
     process.env.PORT = '5000';
     const childProcess = await runCommandUntil(`serve ${appName}`, (output) => {
       return output.includes('http://localhost:5000');
     });
-    const result = runCLI(`e2e ${appName}-e2e`);
+    const result = runCLI(`e2e ${appName}-e2e --verbose`);
     expect(result).toContain('Setting up...');
     expect(result).toContain('Tearing down..');
     expect(result).toContain('Successfully ran target e2e');
@@ -31,10 +59,14 @@ describe('Node Applications + webpack', () => {
   }
 
   it('should generate an app using webpack', async () => {
+    const testLib1 = uniq('test1');
+    const testLib2 = uniq('test2');
     const expressApp = uniq('expressapp');
     const fastifyApp = uniq('fastifyapp');
     const koaApp = uniq('koaapp');
 
+    runCLI(`generate @nrwl/node:lib ${testLib1}`);
+    runCLI(`generate @nrwl/node:lib ${testLib2} --importPath=@acme/test2`);
     runCLI(
       `generate @nrwl/node:app ${expressApp} --framework=express --no-interactive`
     );
@@ -59,6 +91,13 @@ describe('Node Applications + webpack', () => {
 
     // Only Fastify generates with unit tests since it supports them without additional libraries.
     expect(() => runCLI(`lint ${fastifyApp}`)).not.toThrow();
+
+    addLibImport(expressApp, testLib1);
+    addLibImport(expressApp, testLib2, '@acme/test2');
+    addLibImport(fastifyApp, testLib1);
+    addLibImport(fastifyApp, testLib2, '@acme/test2');
+    addLibImport(koaApp, testLib1);
+    addLibImport(koaApp, testLib2, '@acme/test2');
 
     await runE2eTests(expressApp);
     await runE2eTests(fastifyApp);
