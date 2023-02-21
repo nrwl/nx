@@ -61,7 +61,7 @@ export function Card({
           src={`https://img.youtube.com/vi/${hasYoutubeId}/default.jpg`}
         />
       )}
-      <div className="flex flex-col p-3 pr-0 pb-0">
+      <div className="flex flex-col p-3 pr-0">
         <a href={url} title={title} className="flex items-center font-semibold">
           <span className="absolute inset-0" aria-hidden="true"></span>
           {!hasYoutubeId ? iconMap[type] : null}
