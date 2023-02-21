@@ -12,7 +12,10 @@ import {
 } from '../project-graph/utils/find-project-for-path';
 import { builtinModules } from 'module';
 
-const builtInModuleSet = new Set(builtinModules);
+const builtInModuleSet = new Set<string>([
+  ...builtinModules,
+  ...builtinModules.map((x) => `node:${x}`),
+]);
 
 export class TargetProjectLocator {
   private projectRootMappings = createProjectRootMappings(this.nodes);
