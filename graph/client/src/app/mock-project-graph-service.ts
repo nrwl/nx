@@ -1,5 +1,6 @@
 // nx-ignore-next-line
 import type {
+  DependencyType,
   ProjectGraphDependency,
   ProjectGraphProjectNode,
 } from '@nrwl/devkit';
@@ -28,7 +29,13 @@ export class MockProjectGraphService implements ProjectGraphService {
             {
               file: 'some/file.ts',
               hash: 'ecccd8481d2e5eae0e59928be1bc4c2d071729d7',
-              deps: ['existing-lib-1'],
+              dependencies: [
+                {
+                  target: 'existing-lib-1',
+                  source: 'existing-app-1',
+                  type: 'static' as DependencyType,
+                },
+              ],
             },
           ],
         },

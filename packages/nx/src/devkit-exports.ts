@@ -132,7 +132,6 @@ export type {
   ProjectFileMap,
   FileData,
   ProjectGraph,
-  ProjectGraphV4,
   ProjectGraphDependency,
   ProjectGraphNode,
   ProjectGraphProjectNode,

@@ -168,7 +168,7 @@ function addDependencies(
                   keyMap.get(`${name}@npm:${versionRange}`) ||
                   keyMap.get(`${name}@${versionRange}`);
                 if (target) {
-                  builder.addExternalNodeDependency(node.name, target.name);
+                  builder.addStaticDependency(node.name, target.name);
                 }
               });
             }

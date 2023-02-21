@@ -146,7 +146,9 @@ export function findFilesInCircularPath(
     filePathChain.push(
       Object.keys(files)
         .filter(
-          (key) => files[key].deps && files[key].deps.indexOf(next) !== -1
+          (key) =>
+            files[key].dependencies &&
+            files[key].dependencies.find((d) => d.target === next)
         )
         .map((key) => files[key].file)
     );

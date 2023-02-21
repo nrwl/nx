@@ -111,7 +111,7 @@ function traverseNode(
   graph.dependencies[node.name]?.forEach((dep) => {
     const depNode = graph.externalNodes[dep.target];
     traverseNode(graph, builder, depNode);
-    builder.addExternalNodeDependency(node.name, dep.target);
+    builder.addStaticDependency(node.name, dep.target);
   });
 }
 
@@ -184,11 +184,9 @@ function switchNodeToHoisted(
   builder.addExternalNode(node);
 
   targets.forEach((target) => {
-    builder.addExternalNodeDependency(node.name, target);
+    builder.addStaticDependency(node.name, target);
   });
-  sources.forEach((source) =>
-    builder.addExternalNodeDependency(source, node.name)
-  );
+  sources.forEach((source) => builder.addStaticDependency(source, node.name));
 }
 
 // BFS to find the shortest path to a dependency specified in package.json

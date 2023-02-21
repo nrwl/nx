@@ -1,4 +1,7 @@
-import { buildExplicitTypeScriptDependencies } from './explicit-project-dependencies';
+import {
+  buildExplicitTypeScriptDependencies,
+  ExplicitDependency,
+} from './explicit-project-dependencies';
 import { buildExplicitPackageJsonDependencies } from './explicit-package-json-dependencies';
 import { ProjectFileMap, ProjectGraph } from '../../config/project-graph';
 import { ProjectsConfigurations } from '../../config/workspace-json-project-json';
@@ -14,7 +17,7 @@ export function buildExplicitTypescriptAndPackageJsonDependencies(
   projectGraph: ProjectGraph,
   filesToProcess: ProjectFileMap
 ) {
-  let res = [];
+  let res: ExplicitDependency[] = [];
   if (
     jsPluginConfig.analyzeSourceFiles === undefined ||
     jsPluginConfig.analyzeSourceFiles === true

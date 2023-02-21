@@ -12,7 +12,16 @@ import {
 } from './update-cy-mount-usage';
 import { libraryGenerator } from '@nrwl/workspace';
 import { cypressComponentProject } from '../../generators/cypress-component-project/cypress-component-project';
+
 jest.mock('../../utils/cypress-version');
+// nested code imports graph from the repo, which might have innacurate graph version
+jest.mock('nx/src/project-graph/project-graph', () => ({
+  ...jest.requireActual<any>('nx/src/project-graph/project-graph'),
+  createProjectGraphAsync: jest
+    .fn()
+    .mockImplementation(async () => ({ nodes: {}, dependencies: {} })),
+}));
+
 describe('update cy.mount usage', () => {
   let tree: Tree;
   let mockedInstalledCypressVersion: jest.Mock<

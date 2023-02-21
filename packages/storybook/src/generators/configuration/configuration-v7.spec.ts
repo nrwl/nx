@@ -18,6 +18,14 @@ import { storybook7Version } from '../../utils/versions';
 import configurationGenerator from './configuration';
 import * as variousProjects from './test-configs/various-projects.json';
 
+// nested code imports graph from the repo, which might have innacurate graph version
+jest.mock('nx/src/project-graph/project-graph', () => ({
+  ...jest.requireActual<any>('nx/src/project-graph/project-graph'),
+  createProjectGraphAsync: jest
+    .fn()
+    .mockImplementation(async () => ({ nodes: {}, dependencies: {} })),
+}));
+
 describe('@nrwl/storybook:configuration for Storybook v7', () => {
   describe('basic functionalities', () => {
     let tree: Tree;

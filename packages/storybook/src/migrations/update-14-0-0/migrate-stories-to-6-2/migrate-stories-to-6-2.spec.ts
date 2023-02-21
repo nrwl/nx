@@ -17,6 +17,14 @@ import {
 } from '@nrwl/devkit/ngcli-adapter';
 import { getTsSourceFile } from '@nrwl/storybook/src/utils/utilities';
 
+// nested code imports graph from the repo, which might have innacurate graph version
+jest.mock('nx/src/project-graph/project-graph', () => ({
+  ...jest.requireActual<any>('nx/src/project-graph/project-graph'),
+  createProjectGraphAsync: jest
+    .fn()
+    .mockImplementation(async () => ({ nodes: {}, dependencies: {} })),
+}));
+
 const componentSchematic = wrapAngularDevkitSchematic(
   '@schematics/angular',
   'component'

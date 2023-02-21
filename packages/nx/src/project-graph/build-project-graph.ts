@@ -11,7 +11,10 @@ import {
   shouldRecomputeWholeGraph,
   writeCache,
 } from './nx-deps-cache';
-import { buildImplicitProjectDependencies } from './build-dependencies';
+import {
+  buildImplicitProjectDependencies,
+  ExplicitDependency,
+} from './build-dependencies';
 import { buildWorkspaceProjectNodes } from './build-nodes';
 import * as os from 'os';
 import { buildExplicitTypescriptAndPackageJsonDependencies } from './build-dependencies/build-explicit-typescript-and-package-json-dependencies';
@@ -75,7 +78,7 @@ export async function buildProjectGraphUsingProjectFileMap(
   projectGraphCache: ProjectGraphCache;
 }> {
   const nxJson = readNxJson();
-  const projectGraphVersion = '5.0';
+  const projectGraphVersion = '5.1';
   assertWorkspaceValidity(projectsConfigurations, nxJson);
   const packageJsonDeps = readCombinedDeps();
   const rootTsConfig = readRootTsConfig();
@@ -203,8 +206,8 @@ async function buildProjectGraphUsingContext(
   for (const proj of Object.keys(cachedFileData)) {
     for (const f of updatedBuilder.graph.nodes[proj].data.files) {
       const cached = cachedFileData[proj][f.file];
-      if (cached && cached.deps) {
-        f.deps = [...cached.deps];
+      if (cached && cached.dependencies) {
+        f.dependencies = [...cached.dependencies];
       }
     }
   }
@@ -346,11 +349,19 @@ function buildExplicitDependenciesWithoutWorkers(
     builder.graph,
     ctx.filesToProcess
   ).forEach((r) => {
-    builder.addExplicitDependency(
-      r.sourceProjectName,
-      r.sourceProjectFile,
-      r.targetProjectName
-    );
+    if (r.type === 'static') {
+      builder.addStaticDependency(
+        r.sourceProjectName,
+        r.targetProjectName,
+        r.sourceProjectFile
+      );
+    } else {
+      builder.addDynamicDependency(
+        r.sourceProjectName,
+        r.targetProjectName,
+        r.sourceProjectFile
+      );
+    }
   });
 }
 
@@ -378,12 +389,20 @@ function buildExplicitDependenciesUsingWorkers(
   return new Promise((res, reject) => {
     for (let w of workers) {
       w.on('message', (explicitDependencies) => {
-        explicitDependencies.forEach((r) => {
-          builder.addExplicitDependency(
-            r.sourceProjectName,
-            r.sourceProjectFile,
-            r.targetProjectName
-          );
+        explicitDependencies.forEach((r: ExplicitDependency) => {
+          if (r.type === 'static') {
+            builder.addStaticDependency(
+              r.sourceProjectName,
+              r.targetProjectName,
+              r.sourceProjectFile
+            );
+          } else {
+            builder.addDynamicDependency(
+              r.sourceProjectName,
+              r.targetProjectName,
+              r.sourceProjectFile
+            );
+          }
         });
         if (bins.length > 0) {
           w.postMessage({ filesToProcess: bins.shift() });

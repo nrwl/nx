@@ -3,7 +3,7 @@ import { buildProjectGraph } from './build-project-graph';
 import { output } from '../utils/output';
 import { defaultFileHasher } from '../hasher/file-hasher';
 import { markDaemonAsDisabled, writeDaemonLogs } from '../daemon/tmp-dir';
-import { ProjectGraph, ProjectGraphV4 } from '../config/project-graph';
+import { ProjectGraph } from '../config/project-graph';
 import { stripIndents } from '../utils/strip-indents';
 import {
   ProjectConfiguration,
@@ -47,7 +47,7 @@ export function readCachedProjectGraph(): ProjectGraph {
 
   return projectGraphAdapter(
     projectGraph.version,
-    '5.0',
+    '5.1',
     projectGraph
   ) as ProjectGraph;
 }
@@ -179,43 +179,38 @@ export function projectGraphAdapter(
   sourceVersion: string,
   targetVersion: string,
   projectGraph: ProjectGraph
-): ProjectGraph | ProjectGraphV4 {
+): ProjectGraph {
   if (sourceVersion === targetVersion) {
     return projectGraph;
   }
-  if (+sourceVersion >= 5 && targetVersion === '4.0') {
-    return projectGraphCompat5to4(projectGraph as ProjectGraph);
+  if (+sourceVersion > 5 && +targetVersion === 5) {
+    return projectGraphCompatFileDependencies(projectGraph as ProjectGraph);
   }
   throw new Error(
     `Invalid source or target versions. Source: ${sourceVersion}, Target: ${targetVersion}.
 
-Only backwards compatibility between "5.0" and "4.0" is supported.
+Only backwards compatibility between "5.1" and "5.0" is supported.
 This error can be caused by "@nrwl/..." packages getting out of sync or outdated project graph cache.
 Check the versions running "nx report" and/or remove your "nxdeps.json" file (in node_modules/.cache/nx folder).
     `
   );
 }
 
-/**
- * Backwards compatibility adapter for project Nodes v4 to v5
- * @param {ProjectGraph} projectGraph
- * @returns {ProjectGraph}
- */
-function projectGraphCompat5to4(projectGraph: ProjectGraph): ProjectGraphV4 {
-  const { externalNodes, ...rest } = projectGraph;
-  return {
-    ...rest,
-    nodes: {
-      ...projectGraph.nodes,
-      ...externalNodes,
-    },
-    dependencies: {
-      ...projectGraph.dependencies,
-      ...Object.keys(externalNodes).reduce(
-        (acc, key) => ({ ...acc, [`npm:${key}`]: [] }),
-        {}
-      ),
-    },
-    version: '4.0',
-  };
+function projectGraphCompatFileDependencies(
+  projectGraph: ProjectGraph
+): ProjectGraph {
+  Object.values(projectGraph.nodes).forEach(({ data }) => {
+    if (data.files) {
+      data.files = data.files.map(({ file, hash, dependencies }) => ({
+        file,
+        hash,
+        // map dependencies to array of targets
+        ...(dependencies &&
+          dependencies.length && {
+            deps: [...new Set(dependencies.map((d) => d.target))],
+          }),
+      }));
+    }
+  });
+  return projectGraph;
 }
