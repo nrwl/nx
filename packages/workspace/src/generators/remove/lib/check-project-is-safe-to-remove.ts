@@ -1,4 +1,10 @@
-import { getProjects, logger, ProjectConfiguration, Tree } from '@nrwl/devkit';
+import {
+  getProjects,
+  logger,
+  normalizePath,
+  ProjectConfiguration,
+  Tree,
+} from '@nrwl/devkit';
 import { Schema } from '../schema';
 import { relative } from 'path';
 
@@ -20,7 +26,7 @@ export function checkProjectIsSafeToRemove(
   for (const [_, p] of getProjects(tree)) {
     if (
       project.name !== p.name &&
-      !relative(project.root, p.root).startsWith('../')
+      !normalizePath(relative(project.root, p.root)).startsWith('../')
     ) {
       containedProjects.push(p.name);
     }
