@@ -77,17 +77,7 @@ function addNodes(
 
       const packageName = path.split('node_modules/').pop();
       const version = findV3Version(snapshot, packageName);
-      const node = createNode(
-        packageName,
-        version,
-        path,
-        nodes,
-        keyMap,
-        !path.includes('/node_modules/')
-      );
-      if (node) {
-        builder.addExternalNode(node);
-      }
+      createNode(packageName, version, path, nodes, keyMap);
     });
   } else {
     Object.entries(data.dependencies).forEach(([packageName, snapshot]) => {
@@ -119,6 +109,17 @@ function addNodes(
       }
     });
   }
+
+  // some packages can be both hoisted and nested
+  // so we need to run this check once we have all the nodes and paths
+  for (const [packageName, versionMap] of nodes.entries()) {
+    const hoistedNode = keyMap.get(`node_modules/${packageName}`);
+    hoistedNode.name = `npm:${packageName}`;
+
+    versionMap.forEach((node) => {
+      builder.addExternalNode(node);
+    });
+  }
 }
 
 function addV1Node(
@@ -129,17 +130,7 @@ function addV1Node(
   keyMap: Map<string, ProjectGraphExternalNode>,
   builder: ProjectGraphBuilder
 ) {
-  const node = createNode(
-    packageName,
-    snapshot.version,
-    path,
-    nodes,
-    keyMap,
-    !path.includes('/node_modules/')
-  );
-  if (node) {
-    builder.addExternalNode(node);
-  }
+  createNode(packageName, snapshot.version, path, nodes, keyMap);
 
   // traverse nested dependencies
   if (snapshot.dependencies) {
@@ -161,9 +152,8 @@ function createNode(
   version: string,
   key: string,
   nodes: Map<string, Map<string, ProjectGraphExternalNode>>,
-  keyMap: Map<string, ProjectGraphExternalNode>,
-  isHoisted?: boolean
-): ProjectGraphExternalNode {
+  keyMap: Map<string, ProjectGraphExternalNode>
+) {
   const existingNode = nodes.get(packageName)?.get(version);
   if (existingNode) {
     keyMap.set(key, existingNode);
@@ -172,7 +162,7 @@ function createNode(
 
   const node: ProjectGraphExternalNode = {
     type: 'npm',
-    name: isHoisted ? `npm:${packageName}` : `npm:${packageName}@${version}`,
+    name: `npm:${packageName}@${version}`,
     data: {
       version,
       packageName,
@@ -185,8 +175,6 @@ function createNode(
   } else {
     nodes.get(packageName).set(version, node);
   }
-
-  return node;
 }
 
 function findV3Version(snapshot: NpmDependencyV3, packageName: string): string {

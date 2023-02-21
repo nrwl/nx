@@ -77,11 +77,20 @@ function findNodeMatchingVersion(
   if (versionExpr === '*') {
     return graph.externalNodes[`npm:${packageName}`];
   }
-  const nodes = Object.values(graph.externalNodes).filter(
-    (n) => n.data.packageName === packageName
-  );
+  const nodes = Object.values(graph.externalNodes)
+    .filter((n) => n.data.packageName === packageName)
+    .sort((a, b) => (gte(b.data.version, a.data.version) ? 1 : -1));
+
   if (versionExpr === 'latest') {
     return nodes.sort((a, b) => +gte(b.data.version, a.data.version))[0];
+  }
+  if (
+    satisfies(
+      graph.externalNodes[`npm:${packageName}`].data.version,
+      versionExpr
+    )
+  ) {
+    return graph.externalNodes[`npm:${packageName}`];
   }
   return nodes.find((n) => satisfies(n.data.version, versionExpr));
 }
@@ -136,14 +145,15 @@ function rehoistNodes(
       }
     }
   });
+  // invert dependencies for easier traversal back
+  const invertedGraph = reverse(builder.graph);
+  const invBuilder = new ProjectGraphBuilder(invertedGraph);
 
   // find new hoisted version
   packagesToRehoist.forEach((nestedNodes) => {
     if (nestedNodes.length === 1) {
-      switchNodeToHoisted(nestedNodes[0], builder);
+      switchNodeToHoisted(nestedNodes[0], builder, invBuilder);
     } else {
-      // invert dependencies for easier traversal back
-      const invertedGraph = reverse(builder.graph);
       let minDistance = Infinity;
       let closest;
       nestedNodes.forEach((node) => {
@@ -158,14 +168,15 @@ function rehoistNodes(
           closest = node;
         }
       });
-      switchNodeToHoisted(closest, builder);
+      switchNodeToHoisted(closest, builder, invBuilder);
     }
   });
 }
 
 function switchNodeToHoisted(
   node: ProjectGraphExternalNode,
-  builder: ProjectGraphBuilder
+  builder: ProjectGraphBuilder,
+  invBuilder: ProjectGraphBuilder
 ) {
   // make a copy of current name, all the dependencies and dependents
   const previousName = node.name;
@@ -178,15 +189,21 @@ function switchNodeToHoisted(
   );
 
   builder.removeNode(node.name);
+  invBuilder.removeNode(node.name);
 
   // modify the node and re-add it
   node.name = `npm:${node.data.packageName}`;
   builder.addExternalNode(node);
+  invBuilder.addExternalNode(node);
 
   targets.forEach((target) => {
     builder.addStaticDependency(node.name, target);
+    invBuilder.addStaticDependency(target, node.name);
   });
-  sources.forEach((source) => builder.addStaticDependency(source, node.name));
+  sources.forEach((source) => {
+    builder.addStaticDependency(source, node.name);
+    invBuilder.addStaticDependency(node.name, source);
+  });
 }
 
 // BFS to find the shortest path to a dependency specified in package.json
