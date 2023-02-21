@@ -36,7 +36,8 @@
     "dotenv": "~10.0.0",
     "fast-glob": "3.2.7",
     "fs-extra": "^11.1.0",
-    "tslib": "^2.3.0"
+    "tslib": "^2.3.0",
+    "tsconfig-paths": "^4.1.2"
   },
   "peerDependencies": {
     "esbuild": "~0.17.5"
