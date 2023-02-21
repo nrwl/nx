@@ -49,7 +49,7 @@ export async function addNxToNpmRepo() {
           type: 'multiselect',
           name: 'cacheableOperations',
           message:
-            'Which of the following scripts are cacheable? (Produce the same output given the same input, e.g. build, test and lint usually are, serve and start are not)',
+            'Which of the following scripts are cacheable? (Produce the same output given the same input, e.g. build, test and lint usually are, serve and start are not). You can use spacebar to select one or more scripts.',
           choices: scripts,
         },
       ])) as any
