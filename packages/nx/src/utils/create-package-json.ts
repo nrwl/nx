@@ -179,7 +179,8 @@ function isProductionDependency(
   };
 
   return graph.nodes[dependency.source].data.files.some(
-    (f) => f.deps.some((d) => d === dependency.target) && !isDevFile(f)
+    (f) =>
+      f.deps && f.deps.some((d) => d === dependency.target) && !isDevFile(f)
   );
 }
 
