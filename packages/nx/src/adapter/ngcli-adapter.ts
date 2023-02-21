@@ -203,6 +203,8 @@ async function runSchematic(
   return { status: 0, loggingQueue: record.loggingQueue };
 }
 
+type AngularProjectConfiguration = ProjectConfiguration & { prefix?: string };
+
 export class NxScopedHost extends virtualFs.ScopedHost<any> {
   constructor(private root: string) {
     super(new NodeJsSyncHost(), normalize(root));
@@ -344,27 +346,40 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
   }
 
   mergeProjectConfiguration(
-    existing: ProjectConfiguration,
-    updated: ProjectConfiguration,
+    existing: AngularProjectConfiguration,
+    updated: AngularProjectConfiguration,
     projectName: string
   ) {
-    const res = { ...existing };
-
-    if (!res.targets) {
-      res.targets = {};
-    }
-
+    const res: AngularProjectConfiguration = { ...existing };
     let modified = false;
-    for (let target of Object.keys(updated.targets)) {
-      if (!res.targets[target]) {
-        res.targets[target] = updated.targets[target];
+
+    function updatePropertyIfDifferent<
+      T extends Exclude<keyof AngularProjectConfiguration, 'namedInputs'>
+    >(property: T): void {
+      if (typeof res[property] === 'string') {
+        if (res[property] !== updated[property]) {
+          res[property] = updated[property];
+          modified = true;
+        }
+      } else if (
+        JSON.stringify(res[property]) !== JSON.stringify(updated[property])
+      ) {
+        res[property] = updated[property];
         modified = true;
       }
     }
-    if (!res.name) {
-      res.name = updated.name || projectName;
+
+    if (!res.name || (updated.name && res.name !== updated.name)) {
+      res.name ??= updated.name || projectName;
       modified = true;
     }
+    updatePropertyIfDifferent('projectType');
+    updatePropertyIfDifferent('sourceRoot');
+    updatePropertyIfDifferent('prefix');
+    updatePropertyIfDifferent('targets');
+    updatePropertyIfDifferent('generators');
+    updatePropertyIfDifferent('implicitDependencies');
+    updatePropertyIfDifferent('tags');
 
     return modified ? res : null;
   }
