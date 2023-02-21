@@ -282,7 +282,7 @@ export const commandsObject = yargs
     command: 'migrate [packageAndVersion]',
     describe: `Creates a migrations file or runs migrations from the migrations file.
   - Migrate packages and create migrations.json (e.g., nx migrate @nrwl/workspace@latest)
-  - Run migrations (e.g., nx migrate --run-migrations=migrations.json)`,
+  - Run migrations (e.g., nx migrate --run-migrations=migrations.json). Use flag --if-exists to run migrations only if the migrations file exists.`,
     builder: (yargs) =>
       linkToNxDevAndExamples(withMigrationOptions(yargs), 'migrate'),
     handler: () => {
@@ -943,6 +943,11 @@ function withMigrationOptions(yargs: yargs.Argv) {
     .option('runMigrations', {
       describe: `Execute migrations from a file (when the file isn't provided, execute migrations from migrations.json)`,
       type: 'string',
+    })
+    .option('ifExists', {
+      describe: `Run migrations only if the migrations file exists, if not continues successfully`,
+      type: 'boolean',
+      default: false,
     })
     .option('from', {
       describe:

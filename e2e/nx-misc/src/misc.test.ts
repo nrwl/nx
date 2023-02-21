@@ -6,6 +6,7 @@ import {
   newProject,
   readFile,
   readJson,
+  removeFile,
   runCLI,
   runCLIAsync,
   runCommand,
@@ -531,5 +532,39 @@ describe('migrate', () => {
     expect(output).toContain(
       `Error: Providing a custom commit prefix requires --create-commits to be enabled`
     );
+  });
+
+  it('should fail if no migrations are present', () => {
+    removeFile(`./migrations.json`);
+
+    // Invalid: runs migrations with a custom commit-prefix but without enabling --create-commits
+    const output = runCLI(`migrate --run-migrations`, {
+      env: {
+        ...process.env,
+        NX_MIGRATE_SKIP_INSTALL: 'true',
+        NX_MIGRATE_USE_LOCAL: 'true',
+      },
+      silenceError: true,
+    });
+
+    expect(output).toContain(
+      `File 'migrations.json' doesn't exist, can't run migrations. Use flag --if-exists to run migrations only if the file exists`
+    );
+  });
+
+  it('should not run migrations if no migrations are present and flag --if-exists is used', () => {
+    removeFile(`./migrations.json`);
+
+    // Invalid: runs migrations with a custom commit-prefix but without enabling --create-commits
+    const output = runCLI(`migrate --run-migrations --if-exists`, {
+      env: {
+        ...process.env,
+        NX_MIGRATE_SKIP_INSTALL: 'true',
+        NX_MIGRATE_USE_LOCAL: 'true',
+      },
+      silenceError: true,
+    });
+
+    expect(output).toContain(`Migrations file 'migrations.json' doesn't exist`);
   });
 });

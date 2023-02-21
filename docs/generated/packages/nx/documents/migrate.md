@@ -3,7 +3,7 @@ title: 'migrate - CLI command'
 description:
   'Creates a migrations file or runs migrations from the migrations file.
   - Migrate packages and create migrations.json (e.g., nx migrate @nrwl/workspace@latest)
-  - Run migrations (e.g., nx migrate --run-migrations=migrations.json)'
+  - Run migrations (e.g., nx migrate --run-migrations=migrations.json). Use flag --if-exists to run migrations only if the migrations file exists.'
 ---
 
 # migrate
@@ -11,7 +11,7 @@ description:
 Creates a migrations file or runs migrations from the migrations file.
 
 - Migrate packages and create migrations.json (e.g., nx migrate @nrwl/workspace@latest)
-- Run migrations (e.g., nx migrate --run-migrations=migrations.json)
+- Run migrations (e.g., nx migrate --run-migrations=migrations.json). Use flag --if-exists to run migrations only if the migrations file exists.
 
 ## Usage
 
@@ -114,6 +114,14 @@ Use the provided versions for packages instead of the ones installed in node_mod
 Type: `boolean`
 
 Show help
+
+### ifExists
+
+Type: `boolean`
+
+Default: `false`
+
+Run migrations only if the migrations file exists, if not continues successfully
 
 ### interactive
 
