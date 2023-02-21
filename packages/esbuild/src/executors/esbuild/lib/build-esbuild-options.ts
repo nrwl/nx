@@ -1,12 +1,12 @@
 import * as esbuild from 'esbuild';
 import * as path from 'path';
-import { parse } from 'path';
+import { join, parse } from 'path';
 import {
   ExecutorContext,
-  getImportPath,
   joinPathFragments,
+  ProjectGraphProjectNode,
 } from '@nrwl/devkit';
-import { mkdirSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, writeFileSync } from 'fs';
 
 import { getClientEnvironment } from '../../../utils/environment-variables';
 import {
@@ -63,33 +63,19 @@ export function buildEsbuildOptions(
   } else if (options.platform === 'node' && format === 'cjs') {
     // When target platform Node and target format is CJS, then also transpile workspace libs used by the app.
     // Provide a `require` override in the main entry file so workspace libs can be loaded when running the app.
-    const manifest: Array<{ module: string; root: string }> = []; // Manifest allows the built app to load compiled workspace libs.
+    const paths = getTsConfigCompilerPaths(context);
     const entryPointsFromProjects = getEntryPoints(
       context.projectName,
       context,
       {
         initialEntryPoints: entryPoints,
         recursive: true,
-        onProjectFilesMatched: (currProjectName) => {
-          manifest.push({
-            module: getImportPath(
-              context.nxJsonConfiguration.npmScope,
-              currProjectName
-            ),
-            root: context.projectGraph.nodes[currProjectName].data.root,
-          });
-        },
       }
     );
 
     esbuildOptions.entryPoints = [
       // Write a main entry file that registers workspace libs and then calls the user-defined main.
-      writeTmpEntryWithRequireOverrides(
-        manifest,
-        outExtension,
-        options,
-        context
-      ),
+      writeTmpEntryWithRequireOverrides(paths, outExtension, options, context),
       ...entryPointsFromProjects.map((f) => {
         /**
          * Maintain same directory structure as the workspace, so that other workspace libs may be used by the project.
@@ -156,18 +142,14 @@ export function getOutfile(
 }
 
 function writeTmpEntryWithRequireOverrides(
-  manifest: Array<{ module: string; root: string }>,
+  paths: Record<string, string[]>,
   outExtension: '.cjs' | '.js' | '.mjs',
   options: NormalizedEsBuildExecutorOptions,
   context: ExecutorContext
 ): { in: string; out: string } {
   const project = context.projectGraph?.nodes[context.projectName];
   // Write a temp main entry source that registers workspace libs.
-  const tmpPath = path.join(
-    context.root,
-    'tmp',
-    context.projectGraph?.nodes[context.projectName].name
-  );
+  const tmpPath = path.join(context.root, 'tmp', project.name);
   mkdirSync(tmpPath, { recursive: true });
 
   const { name: mainFileName, dir: mainPathRelativeToDist } = path.parse(
@@ -180,7 +162,8 @@ function writeTmpEntryWithRequireOverrides(
   writeFileSync(
     mainWithRequireOverridesInPath,
     getRegisterFileContent(
-      manifest,
+      project,
+      paths,
       `./${path.join(
         mainPathRelativeToDist,
         `${mainFileName}${outExtension}`
@@ -208,11 +191,37 @@ function writeTmpEntryWithRequireOverrides(
   };
 }
 
-function getRegisterFileContent(
-  manifest: Array<{ module: string; root: string }>,
+export function getRegisterFileContent(
+  project: ProjectGraphProjectNode,
+  paths: Record<string, string[]>,
   mainFile: string,
   outExtension = '.js'
 ) {
+  // Sort by longest prefix so imports match the most specific path.
+  const sortedKeys = Object.keys(paths).sort(
+    (a: string, b: string) => getPrefixLength(b) - getPrefixLength(a)
+  );
+  const manifest: Array<{
+    module: string;
+    pattern: string;
+    exactMatch?: string;
+  }> = sortedKeys.reduce((acc, k) => {
+    let exactMatch: string;
+
+    // Nx generates a single path entry.
+    // If more sophisticated setup is needed, we can consider tsconfig-paths.
+    const pattern = paths[k][0];
+
+    if (/.[cm]?ts$/.test(pattern)) {
+      // Path specifies a single entry point e.g. "a/b/src/index.ts".
+      // This is the default setup.
+      const { dir, name } = path.parse(pattern);
+      exactMatch = path.join(dir, `${name}${outExtension}`);
+    }
+    acc.push({ module: k, exactMatch, pattern });
+    return acc;
+  }, []);
+
   return `
 /**
  * IMPORTANT: Do not modify this file.
@@ -227,26 +236,28 @@ const distPath = __dirname;
 const manifest = ${JSON.stringify(manifest)};
 
 Module._resolveFilename = function(request, parent) {
-  const entry = manifest.find(x => request === x.module || request.startsWith(x.module + '/'));
   let found;
-  if (entry) {
-    if (request === entry.module) {
-      // Known entry paths for libraries. Add more if missing.
-      const candidates = [
-        path.join(distPath, entry.root, 'src/index' + '${outExtension}'),
-        path.join(distPath, entry.root, 'src/main' + '${outExtension}'),
-        path.join(distPath, entry.root, 'index' + '${outExtension}'),
-        path.join(distPath, entry.root, 'main' + '${outExtension}')
-      ];
-      found = candidates.find(f => fs.statSync(f).isFile());
-    } else {
-      const candidate = path.join(distPath, entry.root, request.replace(entry.module, '') + '${outExtension}');
-      if (fs.statSync(candidate).isFile()) {
+  for (const entry of manifest) {
+    if (request === entry.module && entry.exactMatch) {
+      const entry = manifest.find((x) => request === x.module || request.startsWith(x.module + "/"));
+      const candidate = path.join(distPath, entry.exactMatch);
+      if (isFile(candidate)) {
         found = candidate;
+        break;
       }
+    } else {
+      const re = new RegExp(entry.module.replace(/\\*$/, "(?<rest>.*)"));
+      const match = request.match(re);
+
+      if (match?.groups) {
+        const candidate = path.join(distPath, entry.pattern.replace("*", ""), match.groups.rest + ".js");
+        if (isFile(candidate)) {
+          found = candidate;
+        }
+      }
+
     }
   }
-  
   if (found) {
     const modifiedArguments = [found, ...[].slice.call(arguments, 1)];
     return originalResolveFilename.apply(this, modifiedArguments);
@@ -255,7 +266,43 @@ Module._resolveFilename = function(request, parent) {
   }
 };
 
+function isFile(s) {
+  try {
+    return fs.statSync(s).isFile();
+  } catch (_e) {
+    return false;
+  }
+}
+
 // Call the user-defined main.
 require('${mainFile}');
 `;
+}
+
+function getPrefixLength(pattern: string): number {
+  return pattern.substring(0, pattern.indexOf('*')).length;
+}
+
+function getTsConfigCompilerPaths(context: ExecutorContext): {
+  [key: string]: string[];
+} {
+  const tsconfigPaths = require('tsconfig-paths');
+  const tsConfigResult = tsconfigPaths.loadConfig(getRootTsConfigPath(context));
+  if (tsConfigResult.resultType !== 'success') {
+    throw new Error('Cannot load tsconfig file');
+  }
+  return tsConfigResult.paths;
+}
+
+function getRootTsConfigPath(context: ExecutorContext): string | null {
+  for (const tsConfigName of ['tsconfig.base.json', 'tsconfig.json']) {
+    const tsConfigPath = join(context.root, tsConfigName);
+    if (existsSync(tsConfigPath)) {
+      return tsConfigPath;
+    }
+  }
+
+  throw new Error(
+    'Could not find a root tsconfig.json or tsconfig.base.json file.'
+  );
 }

@@ -20,16 +20,27 @@ describe('Node Applications + webpack', () => {
 
   afterEach(() => cleanupProject());
 
-  function addLibImport(appName: string, libName: string) {
+  function addLibImport(appName: string, libName: string, importPath?: string) {
     const content = readFile(`apps/${appName}/src/main.ts`);
-    updateFile(
-      `apps/${appName}/src/main.ts`,
+    if (importPath) {
+      updateFile(
+        `apps/${appName}/src/main.ts`,
+        `
+      import { ${libName} } from '${importPath}';
+      ${content}
+      console.log(${libName}());
       `
+      );
+    } else {
+      updateFile(
+        `apps/${appName}/src/main.ts`,
+        `
       import { ${libName} } from '@${proj}/${libName}';
       ${content}
       console.log(${libName}());
       `
-    );
+      );
+    }
   }
 
   async function runE2eTests(appName: string) {
@@ -48,12 +59,14 @@ describe('Node Applications + webpack', () => {
   }
 
   it('should generate an app using webpack', async () => {
-    const utilLib = uniq('util');
+    const testLib1 = uniq('test1');
+    const testLib2 = uniq('test2');
     const expressApp = uniq('expressapp');
     const fastifyApp = uniq('fastifyapp');
     const koaApp = uniq('koaapp');
 
-    runCLI(`generate @nrwl/node:lib ${utilLib}`);
+    runCLI(`generate @nrwl/node:lib ${testLib1}`);
+    runCLI(`generate @nrwl/node:lib ${testLib2} --importPath=@acme/test2`);
     runCLI(
       `generate @nrwl/node:app ${expressApp} --framework=express --no-interactive`
     );
@@ -79,9 +92,12 @@ describe('Node Applications + webpack', () => {
     // Only Fastify generates with unit tests since it supports them without additional libraries.
     expect(() => runCLI(`lint ${fastifyApp}`)).not.toThrow();
 
-    addLibImport(expressApp, utilLib);
-    addLibImport(fastifyApp, utilLib);
-    addLibImport(koaApp, utilLib);
+    addLibImport(expressApp, testLib1);
+    addLibImport(expressApp, testLib2, '@acme/test2');
+    addLibImport(fastifyApp, testLib1);
+    addLibImport(fastifyApp, testLib2, '@acme/test2');
+    addLibImport(koaApp, testLib1);
+    addLibImport(koaApp, testLib2, '@acme/test2');
 
     await runE2eTests(expressApp);
     await runE2eTests(fastifyApp);
