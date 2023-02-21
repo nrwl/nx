@@ -7,7 +7,7 @@
   "type": "object",
   "examples": [
     {
-      "command": "g plugin my-plugin --directory=plugins --importPath=@myorg/my-plugin",
+      "command": "nx g plugin my-plugin --directory=plugins --importPath=@myorg/my-plugin",
       "description": "Generate `libs/plugins/my-plugin`"
     }
   ],
