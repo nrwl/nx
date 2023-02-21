@@ -9,7 +9,10 @@ import {
   useRef,
   useState,
 } from 'react';
+
 import {
+  FloatingPortal,
+  useClick,
   arrow,
   autoUpdate,
   flip,
@@ -18,8 +21,11 @@ import {
   ReferenceType,
   shift,
   useFloating,
-} from '@floating-ui/react-dom';
-import { FloatingPortal, useFloatingPortalNode } from '@floating-ui/react';
+  useInteractions,
+  useDismiss,
+  useHover,
+  useRole,
+} from '@floating-ui/react';
 
 export type TooltipProps = HTMLAttributes<HTMLDivElement> & {
   open?: boolean;
@@ -28,7 +34,7 @@ export type TooltipProps = HTMLAttributes<HTMLDivElement> & {
   placement?: Placement;
   reference?: ReferenceType;
   openAction?: 'click' | 'hover' | 'manual';
-  floatingPortal?: boolean;
+  strategy?: 'absolute' | 'fixed';
 };
 
 export function Tooltip({
@@ -38,21 +44,25 @@ export function Tooltip({
   placement = 'top',
   reference: externalReference,
   openAction = 'click',
-  floatingPortal = false,
+  strategy = 'absolute',
 }: TooltipProps) {
   const [isOpen, setIsOpen] = useState(open);
   const arrowRef = useRef(null);
+
   const {
     x,
     y,
-    reference,
-    floating,
-    strategy,
+    refs,
+    strategy: appliedStrategy,
     placement: finalPlacement,
     middlewareData: { arrow: { x: arrowX, y: arrowY } = {} },
+    context,
   } = useFloating({
     placement,
-    whileElementsMounted: floatingPortal ? autoUpdate : undefined,
+    whileElementsMounted: strategy === 'fixed' ? autoUpdate : undefined,
+    open: isOpen,
+    onOpenChange: setIsOpen,
+    strategy,
     middleware: [
       offset(6),
       flip(),
@@ -71,64 +81,65 @@ export function Tooltip({
 
   useLayoutEffect(() => {
     if (!!externalReference) {
-      reference(externalReference);
+      refs.setReference(externalReference);
     }
-  }, [reference, externalReference]);
+  }, [refs, externalReference]);
 
-  const cloneProps: Partial<any> & Attributes = { ref: reference };
+  const click = useClick(context, { enabled: openAction === 'click' });
+  const dismiss = useDismiss(context, {
+    enabled: openAction === 'click',
+    referencePress: false,
+    outsidePress: true,
+    outsidePressEvent: 'mousedown',
+  });
+  const hover = useHover(context, { enabled: openAction === 'hover' });
+  const role = useRole(context, { role: 'tooltip' });
 
-  if (openAction === 'click') {
-    cloneProps.onClick = () => setIsOpen(!isOpen);
-  } else if (openAction === 'hover') {
-    cloneProps.onMouseEnter = () => setIsOpen(true);
-    cloneProps.onMouseLeave = () => setIsOpen(false);
-  }
+  const { getReferenceProps, getFloatingProps } = useInteractions([
+    click,
+    hover,
+    dismiss,
+    role,
+  ]);
 
-  let WrapperElement, wrapperProps;
-
-  if (floatingPortal) {
-    WrapperElement = FloatingPortal;
-    wrapperProps = { id: 'graph-ui-tooltip-portal' };
-  } else {
-    WrapperElement = Fragment;
-    wrapperProps = {};
-  }
+  const cloneProps: Partial<any> & Attributes = {
+    ref: refs.setReference,
+    ...getReferenceProps(),
+  };
 
   return (
     <>
       {!externalReference && !!children
         ? cloneElement(children, cloneProps)
         : children}
-      <WrapperElement {...wrapperProps}>
-        {isOpen ? (
+      {isOpen ? (
+        <div
+          ref={refs.setFloating}
+          style={{
+            position: appliedStrategy,
+            top: y ?? 0,
+            left: x ?? 0,
+            width: 'max-content',
+          }}
+          className="z-10 min-w-[250px] rounded-md border border-slate-500"
+          {...getFloatingProps()}
+        >
           <div
-            role="tooltip"
-            ref={floating}
             style={{
-              position: strategy,
-              top: y ?? 0,
-              left: x ?? 0,
-              width: 'max-content',
+              left: arrowX != null ? `${arrowX}px` : '',
+              top: arrowY != null ? `${arrowY}px` : '',
+              right: '',
+              bottom: '',
+              [staticSide]: '-4px',
             }}
-            className="absolute z-0 min-w-[250px] rounded-md border border-slate-500"
-          >
-            <div
-              style={{
-                left: arrowX != null ? `${arrowX}px` : '',
-                top: arrowY != null ? `${arrowY}px` : '',
-                right: '',
-                bottom: '',
-                [staticSide]: '-4px',
-              }}
-              className="absolute -z-10 h-4 w-4 rotate-45 bg-slate-500"
-              ref={arrowRef}
-            ></div>
-            <div className="rounded-md bg-white p-3 dark:bg-slate-900 dark:text-slate-400">
-              {content}
-            </div>
+            className="absolute -z-10 h-4 w-4 rotate-45 bg-slate-500"
+            ref={arrowRef}
+          ></div>
+          <div className="select-text rounded-md bg-white p-3 dark:bg-slate-900 dark:text-slate-400">
+            {content}
           </div>
-        ) : null}
-      </WrapperElement>
+        </div>
+      ) : null}
     </>
   );
 }

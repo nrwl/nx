@@ -1,4 +1,4 @@
-import { VirtualElement } from '@floating-ui/react-dom';
+import { VirtualElement } from '@floating-ui/react';
 import { GraphService } from './graph';
 import {
   TaskNodeTooltipProps,

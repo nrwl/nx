@@ -1,4 +1,4 @@
-import { VirtualElement } from '@floating-ui/react-dom';
+import { VirtualElement } from '@floating-ui/react';
 import { ProjectNodeDataDefinition } from './util-cytoscape/project-node';
 import { TaskNodeDataDefinition } from './util-cytoscape/task-node';
 import { ProjectEdgeDataDefinition } from './util-cytoscape';

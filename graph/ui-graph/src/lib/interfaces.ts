@@ -4,7 +4,7 @@ import type {
   ProjectGraphProjectNode,
   TaskGraph,
 } from '@nrwl/devkit';
-import { VirtualElement } from '@floating-ui/react-dom';
+import { VirtualElement } from '@floating-ui/react';
 import {
   ProjectEdgeNodeTooltipProps,
   ProjectNodeToolTipProps,
