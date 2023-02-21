@@ -831,7 +831,6 @@ export function getPromptsForSchema(
         question.type = 'confirm';
       } else {
         question.type = 'input';
-        // Required strings cannot be empty
       }
       prompts.push(question);
     }
