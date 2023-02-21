@@ -27,6 +27,7 @@ import MiniCssExtractPlugin = require('mini-css-extract-plugin');
 import autoprefixer = require('autoprefixer');
 import postcssImports = require('postcss-import');
 import { NxWebpackExecutionContext } from '@nrwl/webpack/src/utils/config';
+import { RemoveEmptyScriptsPlugin } from '@nrwl/webpack/src/utils/webpack/plugins/remove-empty-scripts-plugin';
 
 interface PostcssOptions {
   (loader: any): any;
@@ -348,7 +349,8 @@ export function withWeb(pluginOptions: WithWebOptions = {}): NxWebpackPlugin {
       // extract global css from js files into own css file
       new MiniCssExtractPlugin({
         filename: `[name]${hashFormat.extract}.css`,
-      })
+      }),
+      new RemoveEmptyScriptsPlugin()
     );
 
     config.output = {
