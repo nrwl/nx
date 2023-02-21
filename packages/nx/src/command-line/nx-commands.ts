@@ -972,14 +972,27 @@ function withMigrationOptions(yargs: yargs.Argv) {
       type: 'boolean',
       default: false,
     })
-    .check(({ createCommits, commitPrefix }) => {
-      if (!createCommits && commitPrefix !== defaultCommitPrefix) {
-        throw new Error(
-          'Error: Providing a custom commit prefix requires --create-commits to be enabled'
-        );
+    .option('excludeAppliedMigrations', {
+      describe:
+        'Exclude migrations that should have been applied on previous updates. To be used with --from',
+      type: 'boolean',
+      default: false,
+    })
+    .check(
+      ({ createCommits, commitPrefix, from, excludeAppliedMigrations }) => {
+        if (!createCommits && commitPrefix !== defaultCommitPrefix) {
+          throw new Error(
+            'Error: Providing a custom commit prefix requires --create-commits to be enabled'
+          );
+        }
+        if (excludeAppliedMigrations && !from) {
+          throw new Error(
+            'Error: Excluding migrations that should have been previously applied requires --from to be set'
+          );
+        }
+        return true;
       }
-      return true;
-    });
+    );
 }
 
 function withWatchOptions(yargs: yargs.Argv) {
