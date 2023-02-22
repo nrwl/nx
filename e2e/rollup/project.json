@@ -7,5 +7,5 @@
     "e2e": {},
     "run-e2e-tests": {}
   },
-  "implicitDependencies": ["rollup"]
+  "implicitDependencies": ["rollup", "js"]
 }

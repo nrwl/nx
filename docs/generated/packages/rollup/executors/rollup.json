@@ -158,7 +158,7 @@
         "default": false
       }
     },
-    "required": ["tsConfig", "project", "main", "outputPath"],
+    "required": ["tsConfig", "main", "outputPath"],
     "definitions": {
       "assetPattern": {
         "oneOf": [

@@ -140,7 +140,7 @@
         "default": false
       }
     },
-    "required": ["tsConfig", "project", "entryFile", "outputPath"],
+    "required": ["tsConfig", "entryFile", "outputPath"],
     "definitions": {
       "assetPattern": {
         "oneOf": [
