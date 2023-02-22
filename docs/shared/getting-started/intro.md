@@ -38,11 +38,11 @@ A modern Angular development experience powered by advanced generators and integ
 
 {% /persona %}
 
-{% persona type="node" title="Create a Standalone Node server" url="/getting-started/node-tutorial" %}
+{% persona type="node" title="Create a Standalone Node server" url="/getting-started/node-server-tutorial" %}
 
 A modern Node server with scaffolding for Express, Fastify or Koa. There's also Docker support built-in.
 
-- [Create a Standalone Node server](/getting-started/node-tutorial)
+- [Create a Standalone Node server](/getting-started/node-server-tutorial)
 
 {% /persona %}
 

@@ -1,9 +1,9 @@
 ---
-title: 'Node Standalone Tutorial - Part 5: Docker Target'
+title: 'Node Server Tutorial - Part 5: Docker Target'
 description: In this tutorial you'll create a backend-focused workspace with Nx.
 ---
 
-# Node Standalone Tutorial - Part 5: Docker Target
+# Node Server Tutorial - Part 5: Docker Target
 
 ## Generate a Micro-service with a Docker File
 
@@ -129,4 +129,4 @@ The `docker-build` command is defined as a target in the `orders-api` `project.j
 
 ## What's Next
 
-- Continue to [6: Summary](/node-tutorial/6-summary)
+- Continue to [6: Summary](/node-server-tutorial/6-summary)

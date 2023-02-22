@@ -1,9 +1,9 @@
 ---
-title: 'Node Standalone Tutorial - Part 3: Task-Running'
+title: 'Node Server Tutorial - Part 3: Task-Running'
 description: In this tutorial you'll create a backend-focused workspace with Nx.
 ---
 
-# Node Standalone Tutorial - Part 3: Task-Running
+# Node Server Tutorial - Part 3: Task-Running
 
 Common tasks include:
 
@@ -67,12 +67,12 @@ You can see that three targets are defined here: `build`, `test` and `lint`.
 The properties of these targets are defined as follows:
 
 - `executor` - which Nx executor to run. The syntax here is: `<plugin name>:<executor name>`
-- `outputs` - this is an array of files that would be created by running this target. (This informs Nx on what to save for it's caching mechanisms you'll learn about in [4 - Task Pipelines](/node-tutorial/4-task-pipelines)).
+- `outputs` - this is an array of files that would be created by running this target. (This informs Nx on what to save for it's caching mechanisms you'll learn about in [4 - Task Pipelines](/node-server-tutorial/4-task-pipelines)).
 - `options` - this is an object defining which executor options to use for the given target. Every Nx executor allows for options as a way to parameterize it's functionality.
 
 ## Running Tasks
 
-![Syntax for Running Tasks in Nx](/shared/node-tutorial/run-target-syntax.svg)
+![Syntax for Running Tasks in Nx](/shared/node-server-tutorial/run-target-syntax.svg)
 
 Run the `build` target for your `auth` project:
 
@@ -151,4 +151,4 @@ Tearing down...
 
 ## What's Next
 
-- Continue to [4: Task Pipelines](/node-tutorial/4-task-pipelines)
+- Continue to [4: Task Pipelines](/node-server-tutorial/4-task-pipelines)

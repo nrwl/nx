@@ -342,7 +342,7 @@ const tutorialBaseUrls = {
   '/(l|latest)/(a|angular)/tutorial/1-code-generation':
     '/angular-tutorial/1-code-generation',
   '/(l|latest)/(a|node)/tutorial/1-code-generation':
-    '/getting-started/node-tutorial',
+    '/getting-started/node-server-tutorial',
   '/(l|latest)/(r|react)/tutorial/1-code-generation':
     '/react-tutorial/1-code-generation',
 };
@@ -376,7 +376,17 @@ const oldNodeTutorialPaths = [
   '/node-tutorial/4-workspace-optimization',
   '/node-tutorial/08-summary',
 ];
-const nodeRedirectDestination = '/getting-started/node-tutorial';
+
+const extraNodeRedirects = {
+  '/getting-started/node-tutorial': '/getting-started/node-server-tutorial',
+  '/node-tutorial/1-code-generation': '/node-server-tutorial/1-code-generation',
+  '/node-tutorial/2-project-graph': '/node-server-tutorial/2-project-graph',
+  '/node-tutorial/3-task-running': '/node-server-tutorial/3-task-running',
+  '/node-tutorial/4-task-pipelines': '/node-server-tutorial/4-task-pipelines',
+  '/node-tutorial/5-docker-target': '/node-server-tutorial/5-docker-target',
+  '/node-tutorial/6-summary': '/node-server-tutorial/6-summary',
+};
+const nodeRedirectDestination = '/getting-started/node-server-tutorial';
 const nodeTutorialRedirects = oldNodeTutorialPaths.reduce((acc, path) => {
   acc[path] = nodeRedirectDestination;
   return acc;
@@ -384,7 +394,8 @@ const nodeTutorialRedirects = oldNodeTutorialPaths.reduce((acc, path) => {
 const tutorialRedirects = Object.assign(
   tutorialBaseUrls,
   reactTutorialRedirects,
-  nodeTutorialRedirects
+  nodeTutorialRedirects,
+  extraNodeRedirects
 );
 
 const oldAngularTutorialPaths = [

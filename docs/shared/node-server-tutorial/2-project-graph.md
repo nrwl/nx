@@ -1,13 +1,13 @@
 ---
-title: 'Node Standalone Tutorial - Part 2: Project Graph'
+title: 'Node Server Tutorial - Part 2: Project Graph'
 description: In this tutorial you'll create a backend-focused workspace with Nx.
 ---
 
-# Node Standalone Tutorial - Part 2: Project Graph
+# Node Server Tutorial - Part 2: Project Graph
 
 Run the command: `npx nx graph`. A browser should open up with the following contents:
 
-{% graph height="200px" type="project" jsonFile="shared/node-tutorial/initial-project-graph.json" %}
+{% graph height="200px" type="project" jsonFile="shared/node-server-tutorial/initial-project-graph.json" %}
 {% /graph %}
 
 You'll notice that there is no dependency drawn from `products-api` to the `auth` library. The project graph is derived from the source code of your workspace. Once we actually wire everything up, the project graph will update accordingly.
@@ -84,13 +84,13 @@ describe('POST /auth', () => {
 
 Now run `npx nx graph` again:
 
-{% graph height="200px" type="project" jsonFile="shared/node-tutorial/final-project-graph.json" %}
+{% graph height="200px" type="project" jsonFile="shared/node-server-tutorial/final-project-graph.json" %}
 {% /graph %}
 
 The graph now shows the dependency between `products-api` and `auth`.
 
-The project graph is more than just a visualization - Nx provides tooling to optimize your task-running and even automate your CI based on this graph. This will be covered in more detail in: [4: Task Pipelines](/node-tutorial/4-task-pipelines).
+The project graph is more than just a visualization - Nx provides tooling to optimize your task-running and even automate your CI based on this graph. This will be covered in more detail in: [4: Task Pipelines](/node-server-tutorial/4-task-pipelines).
 
 ## What's Next
 
-- Continue to [3: Task Running](/node-tutorial/3-task-running)
+- Continue to [3: Task Running](/node-server-tutorial/3-task-running)

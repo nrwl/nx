@@ -1,9 +1,9 @@
 ---
-title: 'Node Standalone Tutorial - Part 6: Summary'
+title: 'Node Server Tutorial - Part 6: Summary'
 description: In this tutorial you'll create a backend-focused workspace with Nx.
 ---
 
-# Node Standalone Tutorial - Part 6: Summary
+# Node Server Tutorial - Part 6: Summary
 
 In this tutorial you:
 

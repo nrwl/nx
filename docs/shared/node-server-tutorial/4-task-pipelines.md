@@ -1,9 +1,9 @@
 ---
-title: 'Node Standalone Tutorial - Part 4: Task Pipelines'
+title: 'Node Server Tutorial - Part 4: Task Pipelines'
 description: In this tutorial you'll create a backend-focused workspace with Nx.
 ---
 
-# Node Standalone Tutorial - Part 4: Task Pipelines
+# Node Server Tutorial - Part 4: Task Pipelines
 
 ## Running Dependent Tasks
 
@@ -220,7 +220,7 @@ You can visualize how our workspace is affected by this change using the command
 npx nx affected:graph
 ```
 
-{% graph height="450px" jsonFile="shared/node-tutorial/affected-project-graph.json" %}
+{% graph height="450px" jsonFile="shared/node-server-tutorial/affected-project-graph.json" %}
 {% /graph %}
 
 The change made to the `products-api` project is also affecting the `e2e` project. This can be leveraged to run tasks only on the projects that were affected by this commit.
@@ -237,4 +237,4 @@ This can be particularly helpful in CI pipelines for larger repos, where most co
 
 ## What's Next
 
-- Continue to [5: Docker Target](/node-tutorial/5-docker-target)
+- Continue to [5: Docker Target](/node-server-tutorial/5-docker-target)

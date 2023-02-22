@@ -79,9 +79,26 @@ describe('Redirect rules configuration', () => {
 
       for (const url of oldNodeTutorialPaths) {
         expect(redirectRules.tutorialRedirects[url]).toEqual(
-          '/getting-started/node-tutorial'
+          '/getting-started/node-server-tutorial'
         );
       }
+
+      const oldNodePathPrefix = '/node-tutorial';
+      const newNodePathPrefix = '/node-server-tutorial';
+      const nodeDestination = [
+        '/1-code-generation',
+        '/2-project-graph',
+        '/3-task-running',
+        '/4-task-pipelines',
+        '/5-docker-target',
+        '/6-summary',
+      ];
+
+      nodeDestination.forEach((des) => {
+        expect(
+          redirectRules.tutorialRedirects[`${oldNodePathPrefix}${des}`]
+        ).toEqual(`${newNodePathPrefix}${des}`);
+      });
     });
   });
 });
