@@ -29,7 +29,7 @@ describe.each([
       "import { ${routeType} } from '@angular/router';
       import { ROUTES } from '@proj/lib';
             export const ROUTES: ${routes} = [
-          {path: 'test', children: ROUTES },]"
+          {path: 'test', children: ROUTES },];"
     `);
   });
 
@@ -53,8 +53,49 @@ describe.each([
     expect(tree.read('routes-file.ts', 'utf-8')).toMatchInlineSnapshot(`
       "import { ${routeType} } from '@angular/router';
             export const ROUTES: ${routes} = [
-          {path: 'test', loadChildren: () => import('@proj/lib').then(m => m.ROUTES) },]"
+          {path: 'test', loadChildren: () => import('@proj/lib').then(m => m.ROUTES) },];"
     `);
+  });
+
+  it('should add a lazy route to a routes file when there is a static route', () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree.write(
+      'routes-file.ts',
+      `import { NxWelcomeComponent } from './nx-welcome.component';
+    import { ${routeType} } from '@angular/router';
+
+    export const appRoutes: ${routes} = [
+      {
+        path: '',
+        component: NxWelcomeComponent
+      },];`
+    );
+
+    // ACT
+    addRoute(
+      tree,
+      'routes-file.ts',
+      `{
+    path: 'mfe-kitchen',
+    loadChildren: () => import('mfe-kitchen/Module').then(m => m.RemoteEntryModule)
+    }`
+    );
+
+    // ASSERT
+    expect(tree.read('routes-file.ts', 'utf-8'))
+      .toEqual(`import { NxWelcomeComponent } from './nx-welcome.component';
+    import { ${routeType} } from '@angular/router';
+
+    export const appRoutes: ${routes} = [
+    {
+    path: 'mfe-kitchen',
+    loadChildren: () => import('mfe-kitchen/Module').then(m => m.RemoteEntryModule)
+    },
+      {
+        path: '',
+        component: NxWelcomeComponent
+      },];`);
   });
 
   it('should add provider along with providers array to the route when providers do not exist', () => {
