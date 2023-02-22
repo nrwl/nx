@@ -10,8 +10,8 @@ import {
 } from '@nrwl/e2e/utils';
 
 describe('Rollup Plugin', () => {
-  beforeEach(() => newProject());
-  afterEach(() => cleanupProject());
+  beforeAll(() => newProject());
+  afterAll(() => cleanupProject());
 
   it('should be able to setup project to build node programs with rollup and different compilers', async () => {
     const myPkg = uniq('my-pkg');
@@ -55,4 +55,10 @@ describe('Rollup Plugin', () => {
     output = runCommand(`node dist/libs/${myPkg}/index.cjs`);
     expect(output).toMatch(/Hello/);
   }, 500000);
+
+  it('should be able to build libs generated with @nrwl/js:lib --bundler rollup', () => {
+    const jsLib = uniq('jslib');
+    runCLI(`generate @nrwl/js:lib ${jsLib} --bundler rollup`);
+    expect(() => runCLI(`build ${jsLib}`)).not.toThrow();
+  });
 });
