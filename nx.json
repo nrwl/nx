@@ -15,6 +15,7 @@
           "build-base",
           "build-native",
           "e2e",
+          "e2e-macos",
           "test",
           "test-native",
           "sitemap",

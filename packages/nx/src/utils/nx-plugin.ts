@@ -23,6 +23,7 @@ import {
 } from '../project-graph/utils/find-project-for-path';
 import { normalizePath } from './path';
 import { join } from 'path';
+import { getNxRequirePaths } from './installation-directory';
 
 export type ProjectTargetConfigurator = (
   file: string
@@ -85,7 +86,7 @@ function loadNxPlugin(moduleName: string, paths: string[], root: string) {
 
 export function loadNxPlugins(
   plugins?: string[],
-  paths = [workspaceRoot, join(workspaceRoot, '.nx', 'installation')],
+  paths = getNxRequirePaths(),
   root = workspaceRoot
 ): NxPlugin[] {
   const result: NxPlugin[] = [];
