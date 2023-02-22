@@ -150,7 +150,7 @@ export const appRoutes: Route[] = [
     {
       path: '',
       component: NxWelcomeComponent
-    },]"
+    },];"
 `;
 
 exports[`Host App Generator --ssr should generate the correct files 9`] = `

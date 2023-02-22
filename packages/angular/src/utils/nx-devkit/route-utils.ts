@@ -75,10 +75,7 @@ export function addRoute(
     0,
     routesArrayNodes[0].getStart() + 1
   )}
-    ${route},${routesFileContents.slice(
-    routesArrayNodes[0].getStart() + 1,
-    -1
-  )}`;
+    ${route},${routesFileContents.slice(routesArrayNodes[0].getStart() + 1)}`;
 
   tree.write(routesFile, newRoutesFileContents);
 }
