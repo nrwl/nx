@@ -113,7 +113,7 @@
     "bundler": {
       "description": "The bundler to use.",
       "type": "string",
-      "enum": ["none", "esbuild", "rollup", "vite", "webpack"],
+      "enum": ["none", "esbuild", "rollup", "vite"],
       "default": "none",
       "x-priority": "important"
     },
