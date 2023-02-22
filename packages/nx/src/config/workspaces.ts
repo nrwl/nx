@@ -38,6 +38,7 @@ import {
   mergeAngularJsonAndGlobProjects,
   shouldMergeAngularProjects,
 } from '../adapter/angular-json';
+import { getNxRequirePaths } from '../utils/installation-directory';
 
 export class Workspaces {
   private cachedProjectsConfig: ProjectsConfigurations;
@@ -598,11 +599,7 @@ export function globForProjectFiles(
 
   if (!ignorePluginInference) {
     projectGlobPatterns.push(
-      ...getGlobPatternsFromPlugins(
-        nxJson,
-        [root, join(root, '.nx', 'installation')],
-        root
-      )
+      ...getGlobPatternsFromPlugins(nxJson, getNxRequirePaths(root), root)
     );
   }
 

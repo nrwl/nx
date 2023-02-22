@@ -19,8 +19,8 @@ import {
   readProjectsConfigurationFromProjectGraph,
 } from '../project-graph/project-graph';
 import { gt, valid } from 'semver';
-import { NxJsonConfiguration } from '../config/nx-json';
 import { findInstalledPlugins } from '../utils/plugins/installed-plugins';
+import { getNxRequirePaths } from '../utils/installation-directory';
 
 const nxPackageJson = readJsonFile<typeof import('../../package.json')>(
   join(__dirname, '../../package.json')
@@ -190,10 +190,7 @@ async function findLocalPlugins() {
 
 function readPackageJson(p: string): PackageJson | null {
   try {
-    return readModulePackageJson(p, [
-      workspaceRoot,
-      join(workspaceRoot, '.nx', 'installation'),
-    ]).packageJson;
+    return readModulePackageJson(p, getNxRequirePaths()).packageJson;
   } catch {
     return null;
   }

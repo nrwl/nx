@@ -8,6 +8,7 @@ import { PackageJson, readModulePackageJson } from '../package-json';
 import { workspaceRoot } from '../workspace-root';
 import { join } from 'path';
 import { NxJsonConfiguration } from '../../config/nx-json';
+import { getNxRequirePaths } from '../installation-directory';
 
 export function findInstalledPlugins(): PackageJson[] {
   const packageJsonDeps = getDependenciesFromPackageJson();
@@ -25,10 +26,7 @@ export function findInstalledPlugins(): PackageJson[] {
 
 function getNxPluginPackageJsonOrNull(pkg: string): PackageJson | null {
   try {
-    const { packageJson } = readModulePackageJson(pkg, [
-      workspaceRoot,
-      join(workspaceRoot, '.nx', ' installation'),
-    ]);
+    const { packageJson } = readModulePackageJson(pkg, getNxRequirePaths());
     return packageJson &&
       [
         'ng-update',
