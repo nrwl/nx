@@ -44,7 +44,7 @@ export async function cypressProjectGenerator(
   const tasks: GeneratorCallback[] = [];
 
   if (!projectAlreadyHasCypress(tree)) {
-    tasks.push(_cypressInitGenerator(tree, {}));
+    tasks.push(await _cypressInitGenerator(tree, {}));
   }
 
   const installTask = await _cypressProjectGenerator(tree, {

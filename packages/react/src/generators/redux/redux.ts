@@ -20,6 +20,7 @@ import {
   Tree,
 } from '@nrwl/devkit';
 import { getRootTsConfigPathInTree } from '@nrwl/js';
+import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 
@@ -65,7 +66,7 @@ function addReduxPackageDependencies(host: Tree) {
 
 function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
 
   const indexFilePath = path.join(
@@ -116,7 +117,7 @@ function addStoreConfiguration(host: Tree, options: NormalizedSchema) {
 
 function updateReducerConfiguration(host: Tree, options: NormalizedSchema) {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
 
   if (!options.appProjectSourcePath) {

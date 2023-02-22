@@ -456,30 +456,11 @@ describe('ensurePackage', () => {
     tree = createTree();
   });
 
-  it('should return successfully when package is present', async () => {
+  it('should return package when present', async () => {
     writeJson(tree, 'package.json', {});
 
-    expect(
-      ensurePackage(tree, '@nrwl/devkit', '>=15.0.0', {
-        throwOnMissing: true,
-      })
-    ).toBeUndefined(); // return void
-  });
-
-  it('should throw when dependencies are missing', async () => {
-    writeJson(tree, 'package.json', {});
-
-    expect(() =>
-      ensurePackage(tree, '@nrwl/does-not-exist', '>=15.0.0', {
-        throwOnMissing: true,
-      })
-    ).toThrow(/-D( -W)? @nrwl\/does-not-exist@>=15.0.0/);
-
-    expect(() =>
-      ensurePackage(tree, '@nrwl/does-not-exist', '>=15.0.0', {
-        dev: false,
-        throwOnMissing: true,
-      })
-    ).toThrow('@nrwl/does-not-exist@>=15.0.0');
+    expect(ensurePackage('@nrwl/devkit', '>=15.0.0')).toEqual(
+      require('@nrwl/devkit')
+    ); // return void
   });
 });

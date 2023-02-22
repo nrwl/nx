@@ -1,6 +1,7 @@
-import { workspaceRoot } from '@nrwl/devkit';
+import { ensurePackage, workspaceRoot } from '@nrwl/devkit';
 import { dirname } from 'path';
 import type * as ts from 'typescript';
+import { typescriptVersion } from '../utils/versions';
 export { compileTypeScript } from './typescript/compilation';
 export type { TypeScriptCompilationOptions } from './typescript/compilation';
 export { findNodes } from './typescript/find-nodes'; // TODO(v16): remove this
@@ -12,7 +13,7 @@ let tsModule: typeof import('typescript');
 
 function readTsConfigOptions(tsConfigPath: string) {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
 
   const readResult = tsModule.readConfigFile(
@@ -78,4 +79,11 @@ function getCompilerHost(tsConfigPath: string) {
     host.getCanonicalFileName
   );
   return { options, host, moduleResolutionCache };
+}
+
+export function ensureTypescript() {
+  return ensurePackage<typeof import('typescript')>(
+    'typescript',
+    typescriptVersion
+  );
 }

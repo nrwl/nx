@@ -7,6 +7,7 @@ Object {
   },
   "devDependencies": Object {
     "@angular/forms": "*",
+    "@nrwl/js": "0.0.1",
     "@nrwl/storybook": "^6.5.15",
     "@storybook/addon-essentials": "^6.5.15",
     "@storybook/angular": "^6.5.15",
@@ -15,6 +16,7 @@ Object {
     "@storybook/manager-webpack5": "^6.5.15",
     "existing": "1.0.0",
     "html-webpack-plugin": "^5.5.0",
+    "typescript": "~4.9.5",
     "webpack": "^5.64.0",
   },
   "name": "test-name",

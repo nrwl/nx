@@ -45,6 +45,7 @@ import type {
 } from '../../utilities';
 import { FileChangeRecorder } from '../../utilities';
 import { ProjectMigrator } from './project.migrator';
+import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 
 type SupportedTargets = 'e2e';
 const supportedTargets: Record<SupportedTargets, Target> = {
@@ -577,6 +578,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
   }
 
   private updateCypress10ConfigFile(configFilePath: string): void {
+    ensureTypescript();
     const { tsquery } = require('@phenomnomnominal/tsquery');
     this.cypressPreset = nxE2EPreset(configFilePath);
 
@@ -657,6 +659,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
     recorder: FileChangeRecorder,
     { ...globalConfig }: CypressCommonConfig
   ): void {
+    ensureTypescript();
     const { tsquery } = require('@phenomnomnominal/tsquery');
     const e2eConfig = {};
     const presetSpreadAssignment = `...nxE2EPreset(__dirname),`;

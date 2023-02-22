@@ -70,8 +70,7 @@ export async function addLint(
   tree: Tree,
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
-  ensurePackage(tree, '@nrwl/linter', nxVersion);
-  const { lintProjectGenerator } = require('@nrwl/linter');
+  const { lintProjectGenerator } = ensurePackage('@nrwl/linter', nxVersion);
   return lintProjectGenerator(tree, {
     project: options.name,
     linter: options.linter,
@@ -172,8 +171,7 @@ async function addJest(
   tree: Tree,
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
-  ensurePackage(tree, '@nrwl/jest', nxVersion);
-  const { jestProjectGenerator } = require('@nrwl/jest');
+  const { jestProjectGenerator } = ensurePackage('@nrwl/jest', nxVersion);
   return await jestProjectGenerator(tree, {
     ...options,
     project: options.name,
@@ -187,14 +185,14 @@ async function addJest(
 }
 
 function addTypescript(tree: Tree, options: NormalizedSchema) {
-  if (!options.js) {
-    ensurePackage(tree, 'typescript', typescriptVersion);
-  }
-
   // add tsconfig.base.json
   if (!options.skipTsConfig && !getRootTsConfigFileName()) {
     generateFiles(tree, joinPathFragments(__dirname, './files/root'), '.', {});
   }
+
+  return !options.js
+    ? addDependenciesToPackageJson(tree, {}, { typescript: typescriptVersion })
+    : () => {};
 }
 
 export async function libraryGenerator(tree: Tree, schema: Schema) {

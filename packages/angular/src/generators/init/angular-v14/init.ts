@@ -1,5 +1,6 @@
 import { cypressInitGenerator } from '@nrwl/cypress';
 import {
+  addDependenciesToPackageJson,
   ensurePackage,
   formatFiles,
   GeneratorCallback,
@@ -27,13 +28,6 @@ export async function angularInitGenerator(
 ): Promise<GeneratorCallback> {
   const options = normalizeOptions(rawOptions);
   setDefaults(host, options);
-  await jsInitGenerator(host, {
-    ...options,
-    tsConfigName: options.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
-    js: false,
-    skipFormat: true,
-  });
-
   const tasks: GeneratorCallback[] = [];
 
   const peerDepsToInstall = [
@@ -49,9 +43,28 @@ export async function angularInitGenerator(
       devkitVersion ??=
         getInstalledPackageVersion(host, '@angular-devkit/build-angular') ??
         backwardCompatibleVersions.angularV14.angularDevkitVersion;
-      ensurePackage(host, pkg, devkitVersion);
+
+      try {
+        ensurePackage(pkg, devkitVersion);
+      } catch {
+        // @schematics/angular cannot be required so this fails but this will still allow wrapping the schematic later on
+      }
+
+      if (!options.skipPackageJson) {
+        tasks.push(
+          addDependenciesToPackageJson(host, {}, { [pkg]: devkitVersion })
+        );
+      }
     }
   });
+
+  const jsTask = await jsInitGenerator(host, {
+    ...options,
+    js: false,
+    tsConfigName: options.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
+    skipFormat: true,
+  });
+  tasks.push(jsTask);
 
   if (!options.skipPackageJson) {
     tasks.push(updateDependencies(host));
@@ -59,7 +72,7 @@ export async function angularInitGenerator(
 
   const unitTestTask = await addUnitTestRunner(host, options);
   tasks.push(unitTestTask);
-  const e2eTask = addE2ETestRunner(host, options);
+  const e2eTask = await addE2ETestRunner(host, options);
   tasks.push(e2eTask);
 
   addGitIgnoreEntry(host, '.angular');
@@ -169,7 +182,10 @@ async function addUnitTestRunner(
   }
 }
 
-function addE2ETestRunner(tree: Tree, options: Schema): GeneratorCallback {
+async function addE2ETestRunner(
+  tree: Tree,
+  options: Schema
+): Promise<GeneratorCallback> {
   switch (options.e2eTestRunner) {
     case E2eTestRunner.Protractor:
       return !options.skipPackageJson
@@ -193,7 +209,7 @@ function addE2ETestRunner(tree: Tree, options: Schema): GeneratorCallback {
           )
         : () => {};
     case E2eTestRunner.Cypress:
-      return cypressInitGenerator(tree, {
+      return await cypressInitGenerator(tree, {
         skipPackageJson: options.skipPackageJson,
       });
     default:

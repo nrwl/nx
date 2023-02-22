@@ -12,6 +12,7 @@ import {
   getComponentNode,
   getComponentPropsInterface,
 } from '../../utils/ast-utils';
+import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 
@@ -32,7 +33,7 @@ export function componentCypressGenerator(
 // TODO: candidate to refactor with the angular component story
 export function getArgsDefaultValue(property: ts.SyntaxKind): string {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const typeNameToDefault: Record<number, any> = {
     [tsModule.SyntaxKind.StringKeyword]: '',
@@ -55,7 +56,7 @@ export function createComponentSpecFile(
   { project, componentPath, js, cypressProject }: CreateComponentSpecFileSchema
 ) {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const e2eProjectName = cypressProject || `${project}-e2e`;
   const projects = getProjects(tree);

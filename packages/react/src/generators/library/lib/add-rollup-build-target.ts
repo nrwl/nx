@@ -20,8 +20,7 @@ export async function addRollupBuildTarget(
   host: Tree,
   options: NormalizedSchema
 ) {
-  ensurePackage(host, '@nrwl/rollup', nxVersion);
-  const { rollupInitGenerator } = await import('@nrwl/rollup');
+  const { rollupInitGenerator } = ensurePackage('@nrwl/rollup', nxVersion);
 
   // These are used in `@nrwl/react/plugins/bundle-rollup`
   addDependenciesToPackageJson(

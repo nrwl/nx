@@ -1,9 +1,8 @@
 import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
-import { ensurePackage, Tree } from '@nrwl/devkit';
+import { Tree } from '@nrwl/devkit';
 import { writeJson } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
-import { nxVersion } from '../../utils/versions';
 import { componentGenerator } from '../component/component';
 import { librarySecondaryEntryPointGenerator } from '../library-secondary-entry-point/library-secondary-entry-point';
 import { libraryGenerator } from '../library/library';
@@ -48,7 +47,6 @@ describe('angularStories generator: libraries', () => {
 
     beforeEach(async () => {
       tree = await createStorybookTestWorkspaceForLib(libName);
-      ensurePackage(tree, '@nrwl/storybook', nxVersion);
       cypressProjectGenerator = await (
         await import('@nrwl/storybook')
       ).cypressProjectGenerator;

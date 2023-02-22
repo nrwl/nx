@@ -11,6 +11,7 @@ import {
   addRemoteRoute,
   addRemoteToConfig,
 } from '../../../module-federation/ast-utils';
+import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 
@@ -20,7 +21,7 @@ export function updateHostWithRemote(
   remoteName: string
 ) {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
 
   const hostConfig = readProjectConfiguration(host, hostName);

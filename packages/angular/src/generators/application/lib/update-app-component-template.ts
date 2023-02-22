@@ -5,6 +5,7 @@ import { replaceNodeValue } from '@nrwl/workspace/src/utilities/ast-utils';
 import { getDecoratorPropertyValueNode } from '../../../utils/nx-devkit/ast-utils';
 
 import { nrwlHomeTemplate } from './nrwl-home-tpl';
+import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 
@@ -13,7 +14,7 @@ export async function updateAppComponentTemplate(
   options: NormalizedSchema
 ) {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
 
   const content = options.routing

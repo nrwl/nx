@@ -1,4 +1,5 @@
 import { applyChangesToString, ChangeType, Tree } from '@nrwl/devkit';
+import { ensureTypescript } from '../../utilities/typescript';
 
 let tsModule: typeof import('typescript');
 
@@ -7,7 +8,7 @@ let tsModule: typeof import('typescript');
  */
 export function insertStatement(tree: Tree, path: string, statement: string) {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const { createSourceFile, isImportDeclaration, ScriptTarget } = tsModule;
 

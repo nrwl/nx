@@ -18,6 +18,7 @@ import { findNodes } from 'nx/src/utils/typescript';
 import { NormalizedSchema } from '../schema';
 import { normalizeSlashes } from './utils';
 import { relative } from 'path';
+import { ensureTypescript } from '../../../utilities/typescript';
 
 let tsModule: typeof import('typescript');
 
@@ -121,7 +122,7 @@ export function updateImports(
  */
 function updateImportPaths(tree: Tree, path: string, from: string, to: string) {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const contents = tree.read(path, 'utf-8');
   const sourceFile = tsModule.createSourceFile(
@@ -149,7 +150,7 @@ function updateImportDeclarations(
   to: string
 ): StringChange[] {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const importDecls = findNodes(
     sourceFile,
@@ -176,7 +177,7 @@ function updateDynamicImports(
   to: string
 ): StringChange[] {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const expressions = findNodes(
     sourceFile,

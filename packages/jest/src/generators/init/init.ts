@@ -191,11 +191,14 @@ export async function jestInitGenerator(
   schema: JestInitSchema
 ): Promise<GeneratorCallback> {
   const options = normalizeOptions(schema);
-  await jsInitGenerator(tree, {
-    js: schema.js,
-    skipFormat: true,
-  });
   const tasks: GeneratorCallback[] = [];
+
+  tasks.push(
+    await jsInitGenerator(tree, {
+      ...schema,
+      skipFormat: true,
+    })
+  );
 
   createJestConfig(tree, options);
 

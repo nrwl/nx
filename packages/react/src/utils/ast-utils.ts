@@ -6,6 +6,7 @@ import {
   StringChange,
   StringInsertion,
 } from '@nrwl/devkit';
+import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 
@@ -14,7 +15,7 @@ export function addImport(
   statement: string
 ): StringChange[] {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
 
   const allImports = findNodes(source, tsModule.SyntaxKind.ImportDeclaration);
@@ -42,7 +43,7 @@ export function findMainRenderStatement(
   source: ts.SourceFile
 ): ts.CallExpression | null {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
 
   // 1. Try to find ReactDOM.render.
@@ -117,7 +118,7 @@ export function findDefaultExportDeclaration(
   | ts.ClassDeclaration
   | null {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const identifier = findDefaultExportIdentifier(source);
   if (identifier) {
@@ -147,7 +148,7 @@ export function findExportDeclarationsForJsx(
   ts.VariableDeclaration | ts.FunctionDeclaration | ts.ClassDeclaration
 > | null {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const variables = findNodes(source, tsModule.SyntaxKind.VariableDeclaration);
   const variableStatements = findNodes(
@@ -231,7 +232,7 @@ export function findDefaultExportIdentifier(
   source: ts.SourceFile
 ): ts.Identifier | null {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const exports = findNodes(
     source,
@@ -248,7 +249,7 @@ export function findDefaultClassOrFunction(
   source: ts.SourceFile | null
 ): ts.FunctionDeclaration | ts.ClassDeclaration | null {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const fns = findNodes(
     source,
@@ -270,7 +271,7 @@ function hasDefaultExportModifier(
   x: ts.ClassDeclaration | ts.FunctionDeclaration
 ) {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   return (
     x.modifiers &&
@@ -284,7 +285,7 @@ export function findComponentImportPath(
   source: ts.SourceFile
 ) {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const allImports = findNodes(
     source,
@@ -308,7 +309,7 @@ export function findComponentImportPath(
 
 export function findElements(source: ts.SourceFile, tagName: string) {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const nodes = findNodes(source, [
     tsModule.SyntaxKind.JsxSelfClosingElement,
@@ -331,7 +332,7 @@ export function findClosestOpening(tagName: string, node: ts.Node) {
 
 export function isTag(tagName: string, node: ts.Node) {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   if (tsModule.isJsxOpeningLikeElement(node)) {
     return (
@@ -355,7 +356,7 @@ export function addInitialRoutes(
   source: ts.SourceFile
 ): StringChange[] {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
 
   const jsxClosingElements = findNodes(source, [
@@ -581,7 +582,7 @@ export function updateReduxStore(
   }
 ): StringChange[] {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const calls = findNodes(
     source,
@@ -651,7 +652,7 @@ export function updateReduxStore(
 
 export function getComponentNode(sourceFile: ts.SourceFile): ts.Node | null {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const defaultExport = findDefaultExport(sourceFile);
 
@@ -674,7 +675,7 @@ export function getComponentPropsInterface(
   cmpDeclaration: ts.Node
 ): ts.InterfaceDeclaration | null {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   let propsTypeName: string = null;
 

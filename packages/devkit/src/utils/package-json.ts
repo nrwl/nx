@@ -1,15 +1,17 @@
 import { execSync } from 'child_process';
+import { Module } from 'module';
 
 import type { Tree } from 'nx/src/generators/tree';
 
 import type { GeneratorCallback } from 'nx/src/config/misc-interfaces';
-import { clean, coerce, gt, satisfies } from 'semver';
+import { clean, coerce, gt } from 'semver';
 
 import { installPackagesTask } from '../tasks/install-packages-task';
 import { requireNx } from '../../nx';
+import { dirSync } from 'tmp';
+import { join } from 'path';
 
-const { readJson, updateJson, getPackageManagerCommand, workspaceRoot } =
-  requireNx();
+const { readJson, updateJson, getPackageManagerCommand } = requireNx();
 
 const UNIDENTIFIED_VERSION = 'UNIDENTIFIED_VERSION';
 const NON_SEMVER_TAGS = {
@@ -360,6 +362,8 @@ function requiresRemovingOfPackages(
   return needsDepsUpdate || needsDevDepsUpdate;
 }
 
+const packageMapCache = new Map<string, any>();
+
 /**
  * @typedef EnsurePackageOptions
  * @type {object}
@@ -368,91 +372,116 @@ function requiresRemovingOfPackages(
  */
 
 /**
+ * @deprecated Use the other function signature without a Tree
+ *
+ * Use a package that has not been installed as a dependency.
+ *
+ * For example:
+ * ```typescript
+ * ensurePackage(tree, '@nrwl/jest', nxVersion)
+ * ```
+ * This install the @nrwl/jest@<nxVersion> and return the module
+ * When running with --dryRun, the function will throw when dependencies are missing.
+ *
+ * @param tree the file system tree
+ * @param pkg the package to check (e.g. @nrwl/jest)
+ * @param requiredVersion the version or semver range to check (e.g. ~1.0.0, >=1.0.0 <2.0.0)
+ * @param {EnsurePackageOptions} options?
+ */
+export function ensurePackage(
+  tree: Tree,
+  pkg: string,
+  requiredVersion: string,
+  options?: { dev?: boolean; throwOnMissing?: boolean }
+): void;
+
+/**
  * Ensure that dependencies and devDependencies from package.json are installed at the required versions.
  *
  * For example:
  * ```typescript
  * ensurePackage(tree, '@nrwl/jest', nxVersion)
  * ```
- * This will check that @nrwl/jest@<nxVersion> exists in devDependencies.
- * If it exists then function returns, otherwise it will install the package before continuing.
- * When running with --dryRun, the function will throw when dependencies are missing.
- *
- * @param tree the file system tree
- * @param pkg the package to check (e.g. @nrwl/jest)
- * @param requiredVersion the version or semver range to check (e.g. ~1.0.0, >=1.0.0 <2.0.0)
- * @param {EnsurePackageOptions} options
+ * @param pkg the package to install and require
+ * @param version the version to install if the package doesn't exist already
  */
-export function ensurePackage(
-  tree: Tree,
+export function ensurePackage<T extends any = any>(
   pkg: string,
-  requiredVersion: string,
-  options: {
-    dev?: boolean;
-    throwOnMissing?: boolean;
-  } = {}
-): void {
-  // Read package and version from root package.json file.
-  const dev = options.dev ?? true;
-  const throwOnMissing =
-    options.throwOnMissing ?? process.env.NX_DRY_RUN === 'true'; // NX_DRY_RUN is set in `packages/nx/src/command-line/nx-commands.ts`
-  const pmc = getPackageManagerCommand();
-
-  let version = getPackageVersion(pkg);
-
-  // Otherwise try to read in from package.json. This is needed for E2E tests to pass.
-  if (!version) {
-    const packageJson = readJson(tree, 'package.json');
-    const field = dev ? 'devDependencies' : 'dependencies';
-    version = packageJson[field]?.[pkg];
+  version: string
+): T;
+export function ensurePackage<T extends any = any>(
+  pkgOrTree: string | Tree,
+  requiredVersionOrPackage: string,
+  maybeRequiredVersion?: string,
+  _?: never
+): T {
+  let pkg: string;
+  let requiredVersion: string;
+  if (typeof pkgOrTree === 'string') {
+    pkg = pkgOrTree;
+    requiredVersion = requiredVersionOrPackage;
+  } else {
+    // Old Signature
+    pkg = requiredVersionOrPackage;
+    requiredVersion = maybeRequiredVersion;
   }
 
-  if (
-    // Special case: When running Nx unit tests, the version read from package.json is "0.0.1".
-    !(
-      pkg.startsWith('@nrwl/') &&
-      (version === '0.0.1' || requiredVersion === '0.0.1')
-    ) &&
-    // Normal case
-    !satisfies(version, requiredVersion, { includePrerelease: true })
-  ) {
-    const installCmd = `${
-      dev ? pmc.addDev : pmc.add
-    } ${pkg}@${requiredVersion}`;
-    if (throwOnMissing) {
-      throw new Error(
-        `Cannot install required package ${pkg} during a dry run. Run the generator without --dryRun, or install the package with "${installCmd}" and try again.`
-      );
-    } else {
-      execSync(installCmd, {
-        cwd: tree.root,
-        stdio: [0, 1, 2],
-      });
+  if (packageMapCache.has(pkg)) {
+    return packageMapCache.get(pkg) as T;
+  }
+
+  try {
+    return require(pkg);
+  } catch (e) {
+    if (e.code !== 'MODULE_NOT_FOUND') {
+      throw e;
     }
   }
+
+  if (process.env.NX_DRY_RUN && process.env.NX_DRY_RUN !== 'false') {
+    throw new Error(
+      'NOTE: This generator does not support --dry-run. If you are running this in Nx Console, it should execute fine once you hit the "Run" button.\n'
+    );
+  }
+
+  const tempDir = dirSync().name;
+  execSync(`${getPackageManagerCommand().addDev} ${pkg}@${requiredVersion}`, {
+    cwd: tempDir,
+    stdio: [0, 1, 2],
+  });
+
+  addToNodePath(join(tempDir, 'node_modules'));
+
+  // Re-initialize the added paths into require
+  (Module as any)._initPaths();
+
+  const result = require(require.resolve(pkg, {
+    paths: [tempDir],
+  }));
+
+  packageMapCache.set(pkg, result);
+
+  return result;
 }
 
-/**
- * Use another process to resolve the package.json path of the package (if it exists).
- * Cannot use `require.resolve` here since there is an unclearable internal cache used by Node that can lead to issues
- * when resolving the package after installation.
- *
- * See: https://github.com/nodejs/node/issues/31803
- */
-function getPackageVersion(pkg: string): undefined | string {
-  try {
-    return execSync(
-      `node -e "console.log(require('${pkg}/package.json').version)"`,
-      {
-        cwd: workspaceRoot,
-        stdio: ['pipe', 'pipe', 'ignore'],
-      }
-    )
-      .toString()
-      .trim();
-  } catch (e) {
-    return undefined;
-  }
+function addToNodePath(dir: string) {
+  // NODE_PATH is a delimited list of paths.
+  // The delimiter is different for windows.
+  const delimiter = require('os').platform() === 'win32' ? ';' : ':';
+
+  const paths = process.env.NODE_PATH
+    ? process.env.NODE_PATH.split(delimiter)
+    : [];
+
+  // Add the tmp path
+  paths.push(dir);
+
+  // Update the env variable.
+  process.env.NODE_PATH = paths.join(delimiter);
+}
+
+function getPackageVersion(pkg: string): string {
+  return require(join(pkg, 'package.json')).version;
 }
 
 /**

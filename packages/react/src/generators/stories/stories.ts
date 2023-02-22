@@ -15,6 +15,7 @@ import {
 } from '@nrwl/devkit';
 import { basename, join } from 'path';
 import minimatch = require('minimatch');
+import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 
@@ -57,7 +58,7 @@ export function containsComponentDeclaration(
   componentPath: string
 ): boolean {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
 
   const contents = tree.read(componentPath, 'utf-8');

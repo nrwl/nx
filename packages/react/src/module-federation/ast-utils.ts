@@ -6,6 +6,7 @@ import {
   findElements,
   addImport,
 } from '../utils/ast-utils';
+import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 
@@ -14,7 +15,7 @@ export function addRemoteToConfig(
   app: string
 ): StringChange[] {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
 
   const assignments = findNodes(

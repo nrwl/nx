@@ -265,16 +265,12 @@ export async function addLinter(host: Tree, options: CypressProjectSchema) {
 
 export async function cypressProjectGenerator(host: Tree, schema: Schema) {
   const options = normalizeOptions(host, schema);
-  await jsInitGenerator(host, {
-    js: schema.js,
-    skipFormat: true,
-  });
   const tasks: GeneratorCallback[] = [];
   const cypressVersion = installedCypressVersion();
   // if there is an installed cypress version, then we don't call
   // init since we want to keep the existing version that is installed
   if (!cypressVersion) {
-    tasks.push(cypressInitGenerator(host, options));
+    tasks.push(await cypressInitGenerator(host, options));
   }
 
   if (schema.bundler === 'vite') {

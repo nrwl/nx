@@ -10,6 +10,7 @@ import {
 } from '@nrwl/devkit';
 import { basename, dirname, extname, relative } from 'path';
 import type { StringLiteral } from 'typescript';
+import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 let tsquery: typeof import('@phenomnomnominal/tsquery').tsquery;
@@ -269,11 +270,12 @@ export function updateImports(
   oldImportPath: string,
   newImportPath: string
 ) {
-  if (!tsquery) {
-    tsquery = require('@phenomnomnominal/tsquery').tsquery;
-  }
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
+  }
+  if (!tsquery) {
+    ensureTypescript();
+    tsquery = require('@phenomnomnominal/tsquery').tsquery;
   }
   const { isCallExpression, isExportDeclaration, isImportDeclaration } =
     tsModule;

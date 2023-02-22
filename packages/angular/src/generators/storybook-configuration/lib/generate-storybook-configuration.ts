@@ -6,8 +6,10 @@ export async function generateStorybookConfiguration(
   tree: Tree,
   options: StorybookConfigurationOptions
 ): Promise<GeneratorCallback> {
-  ensurePackage(tree, '@nrwl/storybook', nxVersion);
-  const { configurationGenerator } = await import('@nrwl/storybook');
+  const { configurationGenerator } = ensurePackage(
+    '@nrwl/storybook',
+    nxVersion
+  );
   return await configurationGenerator(tree, {
     name: options.name,
     uiFramework: '@storybook/angular',

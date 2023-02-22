@@ -1,5 +1,6 @@
 import { cypressInitGenerator } from '@nrwl/cypress';
 import {
+  addDependenciesToPackageJson,
   ensurePackage,
   formatFiles,
   GeneratorCallback,
@@ -50,6 +51,9 @@ export async function angularInitGenerator(
     return;
   }
 
+  const tasks: GeneratorCallback[] = [];
+  const options = normalizeOptions(rawOptions);
+
   const peerDepsToInstall = [
     '@angular-devkit/core',
     '@angular-devkit/schematics',
@@ -63,27 +67,36 @@ export async function angularInitGenerator(
       devkitVersion ??=
         getInstalledPackageVersion(tree, '@angular-devkit/build-angular') ??
         angularDevkitVersion;
-      ensurePackage(tree, pkg, devkitVersion);
+
+      try {
+        ensurePackage(pkg, devkitVersion);
+      } catch {
+        // @schematics/angular cannot be required so this fails but this will still allow wrapping the schematic later on
+      }
+
+      if (!options.skipPackageJson) {
+        tasks.push(
+          addDependenciesToPackageJson(tree, {}, { [pkg]: devkitVersion })
+        );
+      }
     }
   });
-
-  const options = normalizeOptions(rawOptions);
   setDefaults(tree, options);
-  await jsInitGenerator(tree, {
+
+  const jsTask = await jsInitGenerator(tree, {
     ...options,
     tsConfigName: options.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
     js: false,
     skipFormat: true,
   });
-
-  const tasks: GeneratorCallback[] = [];
+  tasks.push(jsTask);
 
   if (!options.skipPackageJson) {
     tasks.push(updateDependencies(tree));
   }
   const unitTestTask = await addUnitTestRunner(tree, options);
   tasks.push(unitTestTask);
-  const e2eTask = addE2ETestRunner(tree, options);
+  const e2eTask = await addE2ETestRunner(tree, options);
   tasks.push(e2eTask);
 
   addGitIgnoreEntry(tree, '.angular');
@@ -191,7 +204,10 @@ async function addUnitTestRunner(
   }
 }
 
-function addE2ETestRunner(tree: Tree, options: Schema): GeneratorCallback {
+async function addE2ETestRunner(
+  tree: Tree,
+  options: Schema
+): Promise<GeneratorCallback> {
   switch (options.e2eTestRunner) {
     case E2eTestRunner.Protractor:
       return !options.skipPackageJson

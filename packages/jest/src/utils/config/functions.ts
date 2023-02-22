@@ -3,6 +3,7 @@ import { applyChangesToString, ChangeType, Tree } from '@nrwl/devkit';
 import { Config } from '@jest/types';
 import { createContext, runInContext } from 'vm';
 import { dirname, join } from 'path';
+import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 
@@ -18,7 +19,7 @@ function findPropertyAssignment(
   propertyName: string
 ) {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
 
   return object.properties.find((prop) => {
@@ -42,7 +43,7 @@ export function addOrUpdateProperty(
   path: string
 ) {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const { SyntaxKind } = tsModule;
 
@@ -153,7 +154,7 @@ export function removeProperty(
   properties: string[]
 ): ts.PropertyAssignment | null {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
 
   const propertyName = properties.shift();
@@ -178,7 +179,7 @@ export function removeProperty(
 
 function isModuleExport(node: ts.Statement) {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
 
   return (
@@ -192,7 +193,7 @@ function isModuleExport(node: ts.Statement) {
 
 function isDefaultExport(node: ts.Statement) {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
 
   return (
@@ -210,7 +211,7 @@ export function jestConfigObjectAst(
   fileContent: string
 ): ts.ObjectLiteralExpression {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
 
   const sourceFile = tsModule.createSourceFile(

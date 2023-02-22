@@ -37,18 +37,21 @@ function updateDependencies(host: Tree) {
 }
 
 export async function nextInitGenerator(host: Tree, schema: InitSchema) {
-  await jsInitGenerator(host, {
-    js: schema.js,
-    skipFormat: true,
-  });
   const tasks: GeneratorCallback[] = [];
+
+  tasks.push(
+    await jsInitGenerator(host, {
+      ...schema,
+      skipFormat: true,
+    })
+  );
 
   if (!schema.unitTestRunner || schema.unitTestRunner === 'jest') {
     const jestTask = await jestInitGenerator(host, schema);
     tasks.push(jestTask);
   }
   if (!schema.e2eTestRunner || schema.e2eTestRunner === 'cypress') {
-    const cypressTask = cypressInitGenerator(host, {});
+    const cypressTask = await cypressInitGenerator(host, {});
     tasks.push(cypressTask);
   }
 

@@ -1,6 +1,7 @@
 import {
   addDependenciesToPackageJson,
   convertNxGenerator,
+  GeneratorCallback,
   readJson,
   readNxJson,
   Tree,
@@ -26,6 +27,7 @@ import {
   webpack5Version,
 } from '../../utils/versions';
 import { Schema } from './schema';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
 function checkDependenciesInstalled(host: Tree, schema: Schema) {
   const packageJson = readJson(host, 'package.json');
@@ -212,15 +214,18 @@ function editRootTsConfig(tree: Tree) {
 }
 
 export async function initGenerator(tree: Tree, schema: Schema) {
-  await jsInitGenerator(tree, {
-    js: schema.js,
-    skipFormat: true,
-  });
-  const installTask = checkDependenciesInstalled(tree, schema);
+  const tasks: GeneratorCallback[] = [];
+  tasks.push(
+    await jsInitGenerator(tree, {
+      ...schema,
+      skipFormat: true,
+    })
+  );
+  tasks.push(checkDependenciesInstalled(tree, schema));
   moveToDevDependencies(tree);
   editRootTsConfig(tree);
   addCacheableOperation(tree);
-  return installTask;
+  return runTasksInSerial(...tasks);
 }
 
 export default initGenerator;

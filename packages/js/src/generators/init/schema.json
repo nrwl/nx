@@ -14,7 +14,11 @@
       "type": "boolean",
       "aliases": ["skip-format"],
       "description": "Skip formatting files.",
-      "default": true,
+      "x-priority": "internal"
+    },
+    "skipPackageJson": {
+      "type": "boolean",
+      "description": "Skip adding package.json dependencies",
       "x-priority": "internal"
     },
     "tsConfigName": {

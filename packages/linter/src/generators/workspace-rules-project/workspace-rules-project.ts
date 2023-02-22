@@ -24,9 +24,9 @@ export const WORKSPACE_RULES_PROJECT_NAME = 'eslint-rules';
 export const WORKSPACE_PLUGIN_DIR = 'tools/eslint-rules';
 
 export async function lintWorkspaceRulesProjectGenerator(tree: Tree) {
-  ensurePackage(tree, '@nrwl/jest/', nxVersion);
-  const { addPropertyToJestConfig, jestProjectGenerator } = await import(
-    '@nrwl/jest'
+  const { addPropertyToJestConfig, jestProjectGenerator } = ensurePackage(
+    '@nrwl/jest',
+    nxVersion
   );
 
   // Noop if the workspace rules project already exists

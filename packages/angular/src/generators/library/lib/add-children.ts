@@ -3,6 +3,7 @@ import { insertImport } from '@nrwl/workspace/src/utilities/ast-utils';
 import { addImportToModule } from '../../../utils/nx-devkit/ast-utils';
 import { NormalizedSchema } from './normalized-schema';
 import { addRoute } from '../../../utils/nx-devkit/route-utils';
+import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 
@@ -14,7 +15,7 @@ export function addChildren(
     throw new Error(`Cannot find '${options.parent}'`);
   }
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
 
   const routeFileSource = tree.read(options.parent, 'utf-8');

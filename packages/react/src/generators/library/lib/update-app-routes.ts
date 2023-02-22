@@ -20,6 +20,7 @@ import {
   reactRouterDomVersion,
   typesReactRouterDomVersion,
 } from '../../../utils/versions';
+import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 
@@ -100,7 +101,7 @@ function readComponent(
     throw new Error(`Cannot find ${path}`);
   }
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
 
   const content = host.read(path, 'utf-8');

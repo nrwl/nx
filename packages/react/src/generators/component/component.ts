@@ -24,6 +24,7 @@ import {
 import { getComponentTests } from './get-component-tests';
 import { NormalizedSchema } from './noramlized-schema';
 import { Schema } from './schema';
+import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 
 export async function componentGenerator(host: Tree, schema: Schema) {
   const options = await normalizeOptions(host, schema);
@@ -105,7 +106,7 @@ function createComponentFiles(host: Tree, options: NormalizedSchema) {
 let tsModule: typeof import('typescript');
 function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const workspace = getProjects(host);
   const isApp = workspace.get(options.project).projectType === 'application';

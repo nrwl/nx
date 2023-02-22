@@ -43,12 +43,15 @@ import { initRootBabelConfig } from './lib/init-root-babel-config';
 export async function expoInitGenerator(host: Tree, schema: Schema) {
   addGitIgnoreEntry(host);
   initRootBabelConfig(host);
-  await jsInitGenerator(host, {
-    js: schema.js,
-    skipFormat: true,
-  });
 
   const tasks: GeneratorCallback[] = [];
+
+  tasks.push(
+    await jsInitGenerator(host, {
+      ...schema,
+      skipFormat: true,
+    })
+  );
 
   if (!schema.skipPackageJson) {
     tasks.push(moveDependency(host));

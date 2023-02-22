@@ -10,6 +10,7 @@ import {
   applyChangesToString,
   addDependenciesToPackageJson,
 } from '@nrwl/devkit';
+import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 
@@ -19,7 +20,7 @@ export function addRouting(host: Tree, options: NormalizedSchema) {
   }
 
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
   const appPath = joinPathFragments(
     options.appProjectRoot,
