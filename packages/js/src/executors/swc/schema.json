@@ -26,7 +26,7 @@
     },
     "swcrc": {
       "type": "string",
-      "description": "The path to the SWC configuration file. Default: .lib.swcrc",
+      "description": "The path to the SWC configuration file. Default: .swcrc",
       "x-completion-type": "file",
       "x-completion-glob": ".swcrc"
     },

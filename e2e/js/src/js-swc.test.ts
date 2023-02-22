@@ -85,7 +85,7 @@ describe('js e2e', () => {
     runCLI(`build ${parentLib}`);
     checkFilesExist(`dist/libs/${parentLib}/package.json`);
 
-    updateJson(`libs/${lib}/.lib.swcrc`, (json) => {
+    updateJson(`libs/${lib}/.swcrc`, (json) => {
       json.jsc.externalHelpers = true;
       return json;
     });
@@ -105,7 +105,7 @@ describe('js e2e', () => {
 
     expect(swcHelpersFromDist).toEqual(swcHelpersFromRoot);
 
-    updateJson(`libs/${lib}/.lib.swcrc`, (json) => {
+    updateJson(`libs/${lib}/.swcrc`, (json) => {
       json.jsc.externalHelpers = false;
       return json;
     });

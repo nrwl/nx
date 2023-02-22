@@ -91,6 +91,7 @@ export async function projectGenerator(
     const lintCallback = await addLint(tree, options);
     tasks.push(lintCallback);
   }
+
   if (options.unitTestRunner === 'jest') {
     const jestCallback = await addJest(tree, options);
     tasks.push(jestCallback);
@@ -268,7 +269,11 @@ function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
 
   if (options.compiler === 'swc') {
     addSwcDependencies(tree);
-    addSwcConfig(tree, options.projectRoot);
+    addSwcConfig(
+      tree,
+      options.projectRoot,
+      options.bundler === 'rollup' ? 'es6' : 'commonjs'
+    );
   } else if (options.includeBabelRc) {
     addBabelRc(tree, options);
   }
