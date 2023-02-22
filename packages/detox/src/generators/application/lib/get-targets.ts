@@ -34,15 +34,17 @@ export function reactNativeTestTarget(
   platform: 'ios.sim' | 'android.emu',
   e2eName: string
 ) {
+  const buildPlatform = platform === 'ios.sim' ? 'ios' : 'android';
+
   return {
     options: {
       detoxConfiguration: `${platform}.debug`,
-      buildTarget: `${e2eName}:build-ios`,
+      buildTarget: `${e2eName}:build-${buildPlatform}}`,
     },
     configurations: {
       production: {
         detoxConfiguration: `${platform}.release`,
-        buildTarget: `${e2eName}:build-ios:production`,
+        buildTarget: `${e2eName}:build-${buildPlatform}:production`,
       },
     },
   };
@@ -52,23 +54,25 @@ export function expoTestTarget(
   platform: 'ios.sim' | 'android.emu',
   e2eName: string
 ) {
+  const buildPlatform = platform === 'ios.sim' ? 'ios' : 'android';
+
   return {
     options: {
       detoxConfiguration: `${platform}.eas`,
-      buildTarget: `${e2eName}:build-ios`,
+      buildTarget: `${e2eName}:build-${buildPlatform}`,
     },
     configurations: {
       local: {
         detoxConfiguration: `${platform}.local`,
-        buildTarget: `${e2eName}:build-ios:local`,
+        buildTarget: `${e2eName}:build-${buildPlatform}:local`,
       },
       bare: {
         detoxConfiguration: `${platform}.debug`,
-        buildTarget: `${e2eName}:build-ios:bare`,
+        buildTarget: `${e2eName}:build-${buildPlatform}:bare`,
       },
       production: {
         detoxConfiguration: `${platform}.release`,
-        buildTarget: `${e2eName}:build-ios:production`,
+        buildTarget: `${e2eName}:build-${buildPlatform}:production`,
       },
     },
   };
