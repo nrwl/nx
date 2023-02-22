@@ -384,7 +384,10 @@ export default createESLintRule<Options, MessageIds>({
 
       // project => npm package
       if (targetProject.type === 'npm') {
-        if (banTransitiveDependencies && !isDirectDependency(targetProject)) {
+        if (
+          banTransitiveDependencies &&
+          !isDirectDependency(sourceProject, targetProject)
+        ) {
           context.report({
             node,
             messageId: 'noTransitiveDependencies',

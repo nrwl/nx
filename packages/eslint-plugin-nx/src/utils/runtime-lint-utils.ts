@@ -335,25 +335,38 @@ export function hasBannedDependencies(
     ]);
 }
 
-export function isDirectDependency(target: ProjectGraphExternalNode): boolean {
-  const fileName = 'package.json';
-  const content = readFileIfExisting(join(workspaceRoot, fileName));
+export function isDirectDependency(
+  source: ProjectGraphProjectNode,
+  target: ProjectGraphExternalNode
+): boolean {
+  return (
+    packageExistsInPackageJson(target.data.packageName, '.') ||
+    packageExistsInPackageJson(target.data.packageName, source.data.root)
+  );
+}
+
+function packageExistsInPackageJson(
+  packageName: string,
+  projectRoot: string
+): boolean {
+  const content = readFileIfExisting(
+    join(workspaceRoot, projectRoot, 'package.json')
+  );
   if (content) {
     const { dependencies, devDependencies, peerDependencies } =
       parseJson(content);
-    if (dependencies && dependencies[target.data.packageName]) {
+    if (dependencies && dependencies[packageName]) {
       return true;
     }
-    if (peerDependencies && peerDependencies[target.data.packageName]) {
+    if (peerDependencies && peerDependencies[packageName]) {
       return true;
     }
-    if (devDependencies && devDependencies[target.data.packageName]) {
+    if (devDependencies && devDependencies[packageName]) {
       return true;
     }
-    return false;
   }
 
-  return true;
+  return false;
 }
 
 /**
