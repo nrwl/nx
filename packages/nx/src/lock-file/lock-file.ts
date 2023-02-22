@@ -3,6 +3,8 @@
  * It encapsulates the package manager specific logic and implementation details.
  */
 
+export const random = 'This is a random change to trigger all the builds on CI';
+
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 

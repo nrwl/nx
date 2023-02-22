@@ -67,3 +67,5 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
 
   return runTasksInSerial(...tasks);
 }
+
+export const random = 'This is a random change to trigger all the builds on CI';
