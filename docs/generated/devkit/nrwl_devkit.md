@@ -128,6 +128,7 @@ It only uses language primitives and immutable objects
 
 ### Utils Variables
 
+- [NX_VERSION](../../devkit/documents/nrwl_devkit#nx_version)
 - [appRootPath](../../devkit/documents/nrwl_devkit#approotpath)
 - [cacheDir](../../devkit/documents/nrwl_devkit#cachedir)
 - [output](../../devkit/documents/nrwl_devkit#output)
@@ -793,6 +794,12 @@ Implementation of a target of a project that handles multiple projects to be bat
 ---
 
 ## Utils Variables
+
+### NX_VERSION
+
+• **NX_VERSION**: `string`
+
+---
 
 ### appRootPath
 

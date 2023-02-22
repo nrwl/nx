@@ -454,3 +454,8 @@ function getPackageVersion(pkg: string): undefined | string {
     return undefined;
   }
 }
+
+/**
+ * @description The version of Nx used by the workspace. Returns null if no version is found.
+ */
+export const NX_VERSION = getPackageVersion('nx');
