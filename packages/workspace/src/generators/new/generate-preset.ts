@@ -4,7 +4,7 @@ import {
   Tree,
 } from '@nrwl/devkit';
 import { Preset } from '../utils/presets';
-import { angularCliVersion, nxVersion } from '../../utils/versions';
+import { nxVersion } from '../../utils/versions';
 import { getNpmPackageVersion } from '../utils/get-npm-package-version';
 import { NormalizedSchema } from './new';
 import { join } from 'path';

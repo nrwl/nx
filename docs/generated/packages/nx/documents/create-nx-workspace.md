@@ -127,7 +127,7 @@ Customizes the initial content of your workspace. Default presets include: ["app
 
 ### routing
 
-Type: `string`
+Type: `boolean`
 
 Add a routing setup when a preset with pregenerated app is selected
 
@@ -141,7 +141,7 @@ Skip initializing a git repository.
 
 ### standaloneApi
 
-Type: `string`
+Type: `boolean`
 
 Use Standalone Components if generating an Angular app
 
