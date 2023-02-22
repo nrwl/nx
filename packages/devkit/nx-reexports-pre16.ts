@@ -109,16 +109,6 @@ export { runExecutor } from 'nx/src/command-line/run';
 /**
  * @category Generators
  */
-export { formatFiles } from './src/generators/format-files';
-
-/**
- * @category Generators
- */
-export { generateFiles } from './src/generators/generate-files';
-
-/**
- * @category Generators
- */
 export {
   addProjectConfiguration,
   readProjectConfiguration,
@@ -139,31 +129,6 @@ export {
   WorkspaceConfiguration,
   getWorkspacePath,
 } from 'nx/src/generators/utils/project-configuration';
-
-/**
- * @category Generators
- */
-export { toJS } from './src/generators/to-js';
-
-/**
- * @category Generators
- */
-export { updateTsConfigsToJs } from './src/generators/update-ts-configs-to-js';
-
-/**
- * @category Generators
- */
-export { visitNotIgnoredFiles } from './src/generators/visit-not-ignored-files';
-
-export {
-  parseTargetString,
-  targetToTargetString,
-} from './src/executors/parse-target-string';
-
-/**
- * @category Executors
- */
-export { readTargetOptions } from './src/executors/read-target-options';
 
 /**
  * @category Project Graph
@@ -212,62 +177,6 @@ export { readJsonFile, writeJsonFile } from 'nx/src/utils/fileutils';
 /**
  * @category Utils
  */
-export {
-  addDependenciesToPackageJson,
-  ensurePackage,
-  removeDependenciesFromPackageJson,
-} from './src/utils/package-json';
-
-/**
- * @category Utils
- */
-export { installPackagesTask } from './src/tasks/install-packages-task';
-
-/**
- * @category Utils
- */
-export { names } from './src/utils/names';
-
-/**
- * @category Utils
- */
-export {
-  getWorkspaceLayout,
-  extractLayoutDirectory,
-} from './src/utils/get-workspace-layout';
-
-/**
- * @category Utils
- */
-export type {
-  StringChange,
-  StringDeletion,
-  StringInsertion,
-} from './src/utils/string-change';
-
-/**
- * @category Utils
- */
-export { applyChangesToString, ChangeType } from './src/utils/string-change';
-
-/**
- * @category Utils
- */
-export { offsetFromRoot } from './src/utils/offset-from-root';
-
-/**
- * @category Utils
- */
-export { convertNxGenerator } from './src/utils/invoke-nx-generator';
-
-/**
- * @category Utils
- */
-export { convertNxExecutor } from './src/utils/convert-nx-executor';
-
-/**
- * @category Utils
- */
 export { stripIndents } from 'nx/src/utils/strip-indents';
 
 /**
@@ -279,35 +188,6 @@ export {
   getImportPath,
   detectWorkspaceScope,
 } from 'nx/src/utils/path';
-
-/**
- * @category Utils
- */
-export { moveFilesToNewDirectory } from './src/utils/move-dir';
-
-/**
- * @category Utils
- */
-export {
-  SharedLibraryConfig,
-  SharedWorkspaceLibraryConfig,
-  AdditionalSharedConfig,
-  applySharedFunction,
-  applyAdditionalShared,
-  mapRemotes,
-  mapRemotesForSSR,
-  getNpmPackageSharedConfig,
-  shareWorkspaceLibraries,
-  sharePackages,
-  getDependentPackagesForProject,
-  ModuleFederationConfig,
-  ModuleFederationLibrary,
-  readRootPackageJson,
-  WorkspaceLibrary,
-  SharedFunction,
-  WorkspaceLibrarySecondaryEntryPoint,
-  Remotes,
-} from './src/utils/module-federation';
 
 // TODO(v16): Change this to export from 'nx/src/utils/workspace-root'
 /**
