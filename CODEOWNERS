@@ -88,11 +88,11 @@
 /e2e/jest/** @barbados-clemens @FrozenPandaz
 
 # Linter
-/docs/generated/packages/eslint-plugin-nx/** @meeroslav @FrozenPandaz
-/docs/generated/packages/linter/** @meeroslav @FrozenPandaz
-/packages/eslint-plugin-nx/** @meeroslav @FrozenPandaz
-/packages/linter/** @meeroslav @FrozenPandaz
-/e2e/linter/** @meeroslav @FrozenPandaz
+/docs/generated/packages/eslint-plugin-nx/** @meeroslav @FrozenPandaz @JamesHenry
+/docs/generated/packages/linter/** @meeroslav @FrozenPandaz @JamesHenry
+/packages/eslint-plugin-nx/** @meeroslav @FrozenPandaz @JamesHenry
+/packages/linter/** @meeroslav @FrozenPandaz @JamesHenry
+/e2e/linter/** @meeroslav @FrozenPandaz @barbados-clemens
 
 # Storybook
 /docs/generated/packages/storybook/** @mandarini @jaysoo @Coly010
