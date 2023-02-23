@@ -3,12 +3,15 @@ import { output } from '../output';
 import type { PluginCapabilities } from './models';
 import { hasElements } from './shared';
 import { readJsonFile } from '../fileutils';
-import { PackageJson } from '../package-json';
+import { PackageJson, readNxMigrateConfig } from '../package-json';
 import { ProjectsConfigurations } from '../../config/workspace-json-project-json';
 import { join } from 'path';
 import { workspaceRoot } from '../workspace-root';
 import { existsSync } from 'fs';
 import { ExecutorsJson, GeneratorsJson } from '../../config/misc-interfaces';
+import { loadNxPlugin } from '../nx-plugin';
+import { getNxRequirePaths } from '../installation-directory';
+import { getPluginCapabilities } from './plugin-capabilities';
 
 export function getLocalWorkspacePlugins(
   projectsConfiguration: ProjectsConfigurations
@@ -18,25 +21,18 @@ export function getLocalWorkspacePlugins(
     const packageJsonPath = join(workspaceRoot, project.root, 'package.json');
     if (existsSync(packageJsonPath)) {
       const packageJson: PackageJson = readJsonFile(packageJsonPath);
-      const capabilities: Partial<PluginCapabilities> = {};
-      const generatorsPath = packageJson.generators ?? packageJson.schematics;
-      const executorsPath = packageJson.executors ?? packageJson.builders;
-      if (generatorsPath) {
-        const file = readJsonFile<GeneratorsJson>(
-          join(workspaceRoot, project.root, generatorsPath)
-        );
-        capabilities.generators = file.generators ?? file.schematics;
-      }
-      if (executorsPath) {
-        const file = readJsonFile<ExecutorsJson>(
-          join(workspaceRoot, project.root, executorsPath)
-        );
-        capabilities.executors = file.executors ?? file.builders;
-      }
-      if (capabilities.executors || capabilities.generators) {
+      const capabilities = getPluginCapabilities(
+        workspaceRoot,
+        packageJson.name
+      );
+      if (
+        capabilities.executors ||
+        capabilities.generators ||
+        capabilities.projectGraphExtension ||
+        capabilities.projectInference
+      ) {
         plugins.set(packageJson.name, {
-          executors: capabilities.executors ?? {},
-          generators: capabilities.generators ?? {},
+          ...capabilities,
           name: packageJson.name,
         });
       }

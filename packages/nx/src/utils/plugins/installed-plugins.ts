@@ -1,6 +1,6 @@
 import * as chalk from 'chalk';
 import { output } from '../output';
-import type { CommunityPlugin, CorePlugin, PluginCapabilities } from './models';
+import type { PluginCapabilities } from './models';
 import { getPluginCapabilities } from './plugin-capabilities';
 import { hasElements } from './shared';
 import { readJsonFile } from '../fileutils';
@@ -66,7 +66,7 @@ function getDependenciesFromNxJson(): string[] {
 }
 
 export function getInstalledPluginsAndCapabilities(
-  workspaceRoot: string,
+  workspaceRoot: string
 ): Map<string, PluginCapabilities> {
   const plugins = findInstalledPlugins().map((p) => p.name);
 
@@ -95,6 +95,12 @@ export function listInstalledPlugins(
     }
     if (hasElements(p.generators)) {
       capabilities.push('generators');
+    }
+    if (p.projectGraphExtension) {
+      capabilities.push('graph-extensions');
+    }
+    if (p.projectInference) {
+      capabilities.push('project-inference');
     }
     bodyLines.push(`${chalk.bold(p.name)} (${capabilities.join()})`);
   }
