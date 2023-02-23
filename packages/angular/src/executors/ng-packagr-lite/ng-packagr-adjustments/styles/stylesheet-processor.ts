@@ -108,6 +108,10 @@ export class StylesheetProcessor {
   }): Promise<string> {
     let key: string | undefined;
 
+    if (content === undefined) {
+      return undefined;
+    }
+
     if (
       this.cacheDirectory &&
       !content.includes('@import') &&
