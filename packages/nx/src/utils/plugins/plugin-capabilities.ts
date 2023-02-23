@@ -90,8 +90,8 @@ export function listPluginCapabilities(pluginName: string) {
 
   const hasBuilders = hasElements(plugin.executors);
   const hasGenerators = hasElements(plugin.generators);
-  const hasProjectGraphExtension = !plugin.projectGraphExtension;
-  const hasProjectInference = !plugin.projectInference;
+  const hasProjectGraphExtension = !!plugin.projectGraphExtension;
+  const hasProjectInference = !!plugin.projectInference;
 
   if (
     !hasBuilders &&
@@ -129,11 +129,11 @@ export function listPluginCapabilities(pluginName: string) {
   }
 
   if (hasProjectGraphExtension) {
-    bodyLines.push(`✔️ Project Graph Extension`);
+    bodyLines.push(`✔️  Project Graph Extension`);
   }
 
   if (hasProjectInference) {
-    bodyLines.push(`✔️ Project Inference`);
+    bodyLines.push(`✔️  Project Inference`);
   }
 
   output.log({

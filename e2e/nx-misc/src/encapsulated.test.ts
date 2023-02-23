@@ -39,7 +39,9 @@ describe('encapsulated nx', () => {
 
     updateJson<NxJsonConfiguration>('nx.json', (json) => {
       json.tasksRunnerOptions.default.options.cacheableOperations = ['echo'];
-      json.installation.plugins['@nrwl/web'] = getPublishedVersion();
+      json.installation.plugins = {
+        '@nrwl/nest': getPublishedVersion(),
+      };
       return json;
     });
 
@@ -63,9 +65,9 @@ describe('encapsulated nx', () => {
     const output = runEncapsulatedNx('report');
     expect(output).toMatch(new RegExp(`nx.*:.*${getPublishedVersion()}`));
     expect(output).toMatch(
-      new RegExp(`@nrwl/web.*:.*${getPublishedVersion()}`)
+      new RegExp(`@nrwl/nest.*:.*${getPublishedVersion()}`)
     );
-    expect(output).not.toContain('@nrwl/js');
+    expect(output).not.toContain('@nrwl/express');
   });
 
   it('should work with nx list', () => {
@@ -84,11 +86,11 @@ describe('encapsulated nx', () => {
 
     expect(installedPluginLines.some((x) => x.includes(`${bold('nx')}`)));
     expect(
-      installedPluginLines.some((x) => x.includes(`${bold('@nrwl/web')}`))
+      installedPluginLines.some((x) => x.includes(`${bold('@nrwl/nest')}`))
     );
 
-    output = runEncapsulatedNx('list @nrwl/web');
-    expect(output).toContain('Capabilities in @nrwl/web');
+    output = runEncapsulatedNx('list @nrwl/nest');
+    expect(output).toContain('Capabilities in @nrwl/nest');
   });
 
   it('should work with basic generators', () => {
