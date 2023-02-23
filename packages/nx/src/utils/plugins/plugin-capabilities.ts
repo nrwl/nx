@@ -7,6 +7,7 @@ import { hasElements } from './shared';
 import { readJsonFile } from '../fileutils';
 import { getPackageManagerCommand } from '../package-manager';
 import { readPluginPackageJson } from '../nx-plugin';
+import { getNxRequirePaths } from '../installation-directory';
 
 function tryGetCollection<T extends object>(
   packageJsonPath: string,
@@ -31,7 +32,7 @@ export function getPluginCapabilities(
 ): PluginCapabilities | null {
   try {
     const { json: packageJson, path: packageJsonPath } =
-      readPluginPackageJson(pluginName);
+      readPluginPackageJson(pluginName, getNxRequirePaths(workspaceRoot));
     return {
       name: pluginName,
       generators:

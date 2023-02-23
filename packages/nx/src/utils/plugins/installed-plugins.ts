@@ -67,34 +67,20 @@ function getDependenciesFromNxJson(): string[] {
 
 export function getInstalledPluginsAndCapabilities(
   workspaceRoot: string,
-  corePlugins: CorePlugin[],
-  communityPlugins: CommunityPlugin[] = []
 ): Map<string, PluginCapabilities> {
-  const plugins = new Set([
-    ...corePlugins.map((p) => p.name),
-    ...communityPlugins.map((p) => p.name),
-    ...findInstalledPlugins().map((p) => p.name),
-  ]);
+  const plugins = findInstalledPlugins().map((p) => p.name);
 
-  return new Map(
-    Array.from(plugins)
-      .filter((name) => {
-        try {
-          // Check for `package.json` existence instead of requiring the module itself
-          // because malformed entries like `main`, may throw false exceptions.
-          readModulePackageJson(name, [workspaceRoot]);
-          return true;
-        } catch {
-          return false;
-        }
-      })
-      .sort()
-      .map<[string, PluginCapabilities]>((name) => [
-        name,
-        getPluginCapabilities(workspaceRoot, name),
-      ])
-      .filter(([, x]) => x && !!(x.generators || x.executors))
-  );
+  const result = new Map<string, PluginCapabilities>();
+  for (const plugin of Array.from(plugins).sort()) {
+    try {
+      const capabilities = getPluginCapabilities(workspaceRoot, plugin);
+      if (capabilities.executors || capabilities.generators) {
+        result.set(plugin, capabilities);
+      }
+    } catch {}
+  }
+
+  return result;
 }
 
 export function listInstalledPlugins(

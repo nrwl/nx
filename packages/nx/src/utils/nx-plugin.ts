@@ -137,7 +137,7 @@ export function mergePluginTargetsWithNxTargets(
 
 export function readPluginPackageJson(
   pluginName: string,
-  paths = [workspaceRoot]
+  paths = getNxRequirePaths()
 ): {
   path: string;
   json: PackageJson;

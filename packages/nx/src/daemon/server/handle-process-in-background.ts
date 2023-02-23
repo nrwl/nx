@@ -1,6 +1,7 @@
 import { HandlerResult } from './server';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { serverLogger } from './logger';
+import { getNxRequirePaths } from 'nx/src/utils/installation-directory';
 
 export async function handleProcessInBackground(payload: {
   type: string;
@@ -10,7 +11,7 @@ export async function handleProcessInBackground(payload: {
   let fn;
   try {
     fn = require(require.resolve(payload.requirePath, {
-      paths: [workspaceRoot],
+      paths: getNxRequirePaths(),
     })).default;
   } catch (e) {
     return {

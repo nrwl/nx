@@ -3,6 +3,7 @@ import {
   cleanupProject,
   getPublishedVersion,
   isNotWindows,
+  newEncapsulatedNxWorkspace,
   newProject,
   readFile,
   readJson,
