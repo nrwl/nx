@@ -1,5 +1,7 @@
+import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 import type { PropertyDeclaration } from 'typescript';
-import { SyntaxKind } from 'typescript';
+
+let tsModule: typeof import('typescript');
 
 export function getArgsDefaultValue(
   property: PropertyDeclaration
@@ -7,13 +9,16 @@ export function getArgsDefaultValue(
   if (!property.initializer) {
     return undefined;
   }
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
   switch (property.initializer.kind) {
-    case SyntaxKind.StringLiteral:
+    case tsModule.SyntaxKind.StringLiteral:
       const returnString = property.initializer.getText().slice(1, -1);
       return returnString.replace(/\s/g, '+');
-    case SyntaxKind.NumericLiteral:
-    case SyntaxKind.TrueKeyword:
-    case SyntaxKind.FalseKeyword:
+    case tsModule.SyntaxKind.NumericLiteral:
+    case tsModule.SyntaxKind.TrueKeyword:
+    case tsModule.SyntaxKind.FalseKeyword:
       return property.initializer.getText();
     default:
       return undefined;

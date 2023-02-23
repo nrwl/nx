@@ -1,5 +1,5 @@
 import { selectorExistsInAST } from './selector-exists-in-ast';
-import { SourceFile } from 'typescript';
+import type { SourceFile } from 'typescript';
 
 export function verifyIsInlineScam(componentAST: SourceFile) {
   const NGMODULE_DECORATOR_SELECTOR =

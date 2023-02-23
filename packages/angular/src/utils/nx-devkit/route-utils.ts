@@ -19,9 +19,8 @@ export function addRoute(
     );
   }
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
-  ensureTypescript();
   const { tsquery } = require('@phenomnomnominal/tsquery');
 
   let routesFileContents = tree.read(routesFile, 'utf-8');

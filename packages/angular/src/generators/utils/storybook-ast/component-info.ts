@@ -5,14 +5,16 @@ import {
   Tree,
   visitNotIgnoredFiles,
 } from '@nrwl/devkit';
-import { tsquery } from '@phenomnomnominal/tsquery';
+import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 import { basename, dirname, extname, relative } from 'path';
 import type { Identifier, SourceFile, Statement } from 'typescript';
-import { SyntaxKind } from 'typescript';
 import { getTsSourceFile } from '../../../utils/nx-devkit/ast-utils';
 import type { EntryPoint } from './entry-point';
 import { getModuleDeclaredComponents } from './module-info';
 import { getAllFilesRecursivelyFromDir } from './tree-utilities';
+
+let tsModule: typeof import('typescript');
+let tsquery: typeof import('@phenomnomnominal/tsquery').tsquery;
 
 export interface ComponentInfo {
   componentFileName: string;
@@ -39,8 +41,11 @@ export function getComponentsInfo(
       return undefined;
     }
 
+    if (!tsModule) {
+      tsModule = ensureTypescript();
+    }
     const imports = file.statements.filter(
-      (statement) => statement.kind === SyntaxKind.ImportDeclaration
+      (statement) => statement.kind === tsModule.SyntaxKind.ImportDeclaration
     );
 
     const componentsInfo = declaredComponents.map((componentName) =>
@@ -105,6 +110,10 @@ export function getStandaloneComponentsInfo(
 }
 
 function getStandaloneComponents(tree: Tree, filePath: string): string[] {
+  if (!tsquery) {
+    ensureTypescript();
+    tsquery = require('@phenomnomnominal/tsquery').tsquery;
+  }
   const fileContent = tree.read(filePath, 'utf-8');
   const ast = tsquery.ast(fileContent);
   const components = tsquery<Identifier>(
@@ -120,20 +129,23 @@ function getComponentImportPath(
   componentName: string,
   imports: Statement[]
 ): string {
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
   const componentImportStatement = imports.find((statement) => {
     const namedImports = statement
       .getChildren()
-      .find((node) => node.kind === SyntaxKind.ImportClause)
+      .find((node) => node.kind === tsModule.SyntaxKind.ImportClause)
       .getChildren()
-      .find((node) => node.kind === SyntaxKind.NamedImports);
+      .find((node) => node.kind === tsModule.SyntaxKind.NamedImports);
 
     if (namedImports === undefined) return false;
 
     const importedIdentifiers = namedImports
       .getChildren()
-      .find((node) => node.kind === SyntaxKind.SyntaxList)
+      .find((node) => node.kind === tsModule.SyntaxKind.SyntaxList)
       .getChildren()
-      .filter((node) => node.kind === SyntaxKind.ImportSpecifier)
+      .filter((node) => node.kind === tsModule.SyntaxKind.ImportSpecifier)
       .map((node) => node.getText());
 
     return importedIdentifiers.includes(componentName);
@@ -141,7 +153,7 @@ function getComponentImportPath(
 
   const importPath = componentImportStatement
     .getChildren()
-    .find((node) => node.kind === SyntaxKind.StringLiteral)
+    .find((node) => node.kind === tsModule.SyntaxKind.StringLiteral)
     .getText()
     .slice(1, -1);
 
@@ -157,6 +169,11 @@ function getComponentInfo(
   componentName: string
 ): ComponentInfo {
   try {
+    if (!tsquery) {
+      ensureTypescript();
+      tsquery = require('@phenomnomnominal/tsquery').tsquery;
+    }
+
     const moduleFolderPath = dirname(moduleFilePath);
 
     // try to get the component from the same file (inline scam)

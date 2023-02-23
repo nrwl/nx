@@ -9,10 +9,7 @@ import {
   updateJson,
   writeJson,
 } from '@nrwl/devkit';
-import {
-  nxVersion,
-  prettierVersion,
-} from '../../utils/versions';
+import { nxVersion, prettierVersion } from '../../utils/versions';
 import { join, join as pathJoin } from 'path';
 import { Preset } from '../utils/presets';
 import { deduceDefaultBase } from '../../utilities/default-base';

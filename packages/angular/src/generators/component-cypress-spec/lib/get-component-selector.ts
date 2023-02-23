@@ -1,13 +1,19 @@
 import type { Tree } from '@nrwl/devkit';
+import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 import { findNodes } from 'nx/src/utils/typescript';
 import type { PropertyAssignment } from 'typescript';
-import { SyntaxKind } from 'typescript';
+
 import {
   getDecoratorMetadata,
   getTsSourceFile,
 } from '../../../utils/nx-devkit/ast-utils';
 
+let tsModule: typeof import('typescript');
+
 export function getComponentSelector(tree: Tree, path: string): string {
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
   const file = getTsSourceFile(tree, path);
 
   const componentDecorators = getDecoratorMetadata(
@@ -20,7 +26,7 @@ export function getComponentSelector(tree: Tree, path: string): string {
   }
   const componentDecorator = componentDecorators[0];
   const selectorNode = <PropertyAssignment>(
-    findNodes(componentDecorator, SyntaxKind.PropertyAssignment).find(
+    findNodes(componentDecorator, tsModule.SyntaxKind.PropertyAssignment).find(
       (node: PropertyAssignment) => node.name.getText() === 'selector'
     )
   );

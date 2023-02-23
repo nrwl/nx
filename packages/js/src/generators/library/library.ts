@@ -12,7 +12,6 @@ import {
   names,
   offsetFromRoot,
   ProjectConfiguration,
-  readJson,
   toJS,
   Tree,
   updateJson,

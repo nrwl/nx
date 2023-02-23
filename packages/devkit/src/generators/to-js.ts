@@ -1,10 +1,16 @@
 import type { Tree } from 'nx/src/generators/tree';
+// eslint-disable-next-line @typescript-eslint/no-restricted-imports
+import { typescriptVersion } from 'nx/src/utils/versions';
+import { ensurePackage } from '../utils/package-json';
 
 /**
  * Rename and transpile any new typescript files created to javascript files
  */
 export function toJS(tree: Tree): void {
-  const { JsxEmit, ScriptTarget, transpile } = require('typescript');
+  const { JsxEmit, ScriptTarget, transpile } = ensurePackage(
+    'typescript',
+    typescriptVersion
+  );
 
   for (const c of tree.listChanges()) {
     if (

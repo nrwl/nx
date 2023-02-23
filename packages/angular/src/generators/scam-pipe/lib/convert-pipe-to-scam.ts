@@ -1,9 +1,11 @@
 import type { Tree } from '@nrwl/devkit';
 import { joinPathFragments, names } from '@nrwl/devkit';
+import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 import { insertImport } from '@nrwl/workspace/src/utilities/ast-utils';
-import { createSourceFile, ScriptTarget } from 'typescript';
 import type { FileInfo } from '../../utils/file-info';
 import type { NormalizedSchema } from '../schema';
+
+let tsModule: typeof import('typescript');
 
 export function convertPipeToScam(
   tree: Tree,
@@ -15,6 +17,9 @@ export function convertPipeToScam(
       `Couldn't find pipe at path ${pipeFileInfo.filePath} to add SCAM setup.`
     );
   }
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
 
   const pipeNames = names(options.name);
   const typeNames = names('pipe');
@@ -22,10 +27,10 @@ export function convertPipeToScam(
 
   if (options.inlineScam) {
     const currentPipeContents = tree.read(pipeFileInfo.filePath, 'utf-8');
-    let source = createSourceFile(
+    let source = tsModule.createSourceFile(
       pipeFileInfo.filePath,
       currentPipeContents,
-      ScriptTarget.Latest,
+      tsModule.ScriptTarget.Latest,
       true
     );
 
