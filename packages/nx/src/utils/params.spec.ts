@@ -1501,6 +1501,7 @@ describe('params', () => {
               'x-prompt': 'What is your name?',
             },
           },
+          required: ['name'],
         },
         {
           version: 2,
@@ -1509,7 +1510,12 @@ describe('params', () => {
       );
 
       expect(prompts).toEqual([
-        { type: 'input', name: 'name', message: 'What is your name?' },
+        {
+          type: 'input',
+          name: 'name',
+          message: 'What is your name?',
+          validate: expect.any(Function),
+        },
       ]);
     });
 
@@ -1531,7 +1537,12 @@ describe('params', () => {
       );
 
       expect(prompts).toEqual([
-        { type: 'confirm', name: 'isAwesome', message: 'Is this awesome?' },
+        {
+          type: 'confirm',
+          name: 'isAwesome',
+          message: 'Is this awesome?',
+          validate: expect.any(Function),
+        },
       ]);
     });
 
@@ -1557,6 +1568,7 @@ describe('params', () => {
           type: 'numeral',
           name: 'age',
           message: 'How old are you?',
+          validate: expect.any(Function),
         },
       ]);
     });
@@ -1589,6 +1601,7 @@ describe('params', () => {
           name: 'pets',
           message: 'What kind of pets do you have?',
           choices: ['Cat', 'Dog', 'Fish'],
+          validate: expect.any(Function),
         },
       ]);
     });
@@ -1628,6 +1641,7 @@ describe('params', () => {
             { message: 'Dog', name: 'dog' },
             { message: 'Fish', name: 'fish' },
           ],
+          validate: expect.any(Function),
         },
       ]);
     });
@@ -1668,6 +1682,7 @@ describe('params', () => {
             { message: 'Dog', name: 'dog' },
             { message: 'Fish', name: 'fish' },
           ],
+          validate: expect.any(Function),
         },
       ]);
     });
@@ -1699,6 +1714,7 @@ describe('params', () => {
             name: 'project',
             message: 'Which project?',
             choices: ['projA', 'projB'],
+            validate: expect.any(Function),
           },
         ]);
       });
@@ -1729,6 +1745,7 @@ describe('params', () => {
             name: 'projectName',
             message: 'Which project?',
             choices: ['projA', 'projB'],
+            validate: expect.any(Function),
           },
         ]);
       });
@@ -1760,6 +1777,7 @@ describe('params', () => {
             name: 'projectName',
             message: 'Which project?',
             choices: ['projA', 'projB'],
+            validate: expect.any(Function),
           },
         ]);
       });
@@ -1793,6 +1811,7 @@ describe('params', () => {
             name: 'yourProject',
             message: 'Which project?',
             choices: ['projA', 'projB'],
+            validate: expect.any(Function),
           },
         ]);
       });
@@ -1822,6 +1841,7 @@ describe('params', () => {
           name: 'name',
           message: 'What is your name?',
           choices: ['Bob', 'Joe', 'Jeff'],
+          validate: expect.any(Function),
         },
       ]);
     });
@@ -1852,6 +1872,7 @@ describe('params', () => {
           message: 'What is your name?',
           choices: ['Bob', 'Joe', 'Jeff'],
           initial: 'Joe',
+          validate: expect.any(Function),
         },
       ]);
     });
@@ -1876,7 +1897,12 @@ describe('params', () => {
       );
 
       expect(prompts).toEqual([
-        { type: 'input', name: 'name', message: 'What is your name?' },
+        {
+          type: 'input',
+          name: 'name',
+          message: 'What is your name?',
+          validate: expect.any(Function),
+        },
       ]);
     });
   });
