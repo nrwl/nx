@@ -287,7 +287,8 @@ Any additional properties will be considered invalid.
     "items": [],
     "multiselect": false
   },
-  "x-deprecated": false
+  "x-deprecated": false,
+  "x-priority": "important"
 }
 ```
 
@@ -768,6 +769,20 @@ This indicates that the property `setupFile` is deprecated without a reason. The
 ```
 
 This indicates that users should use the `tsconfig` property rather than specify this property.
+
+#### `x-priority`
+
+Indicates the priority of a property. Can either be `important` or `internal`. This will be used to sort the properties on `nx.dev`, in Nx Console and when calling a generator with `--help`. `important` properties are displayed right after `required` ones while `internal` properties are shown at the end or hidden.
+
+```json
+{
+  "directory": {
+    "description": "The directory of the new application.",
+    "type": "string",
+    "x-priority": "important"
+  }
+}
+```
 
 #### `number` specific: `multipleOf`
 
