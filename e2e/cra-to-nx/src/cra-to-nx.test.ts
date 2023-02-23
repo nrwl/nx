@@ -29,6 +29,11 @@ describe('nx init (for CRA)', () => {
 
     expect(craToNxOutput).toContain('🎉 Done!');
 
+    const packageJson = readJson('package.json');
+    expect(packageJson.devDependencies['@nrwl/jest']).toBeDefined();
+    expect(packageJson.devDependencies['@nrwl/vite']).toBeUndefined();
+    expect(packageJson.devDependencies['@nrwl/webpack']).toBeDefined();
+
     runCLI(`build ${appName}`);
     checkFilesExist(`dist/apps/${appName}/index.html`);
   });
@@ -48,6 +53,11 @@ describe('nx init (for CRA)', () => {
     );
 
     expect(craToNxOutput).toContain('🎉 Done!');
+
+    const packageJson = readJson('package.json');
+    expect(packageJson.devDependencies['@nrwl/jest']).toBeUndefined();
+    expect(packageJson.devDependencies['@nrwl/vite']).toBeDefined();
+    expect(packageJson.devDependencies['@nrwl/webpack']).toBeUndefined();
 
     const viteConfig = readFile(`apps/${appName}/vite.config.js`);
     expect(viteConfig).toContain('port: 4200'); // default port
