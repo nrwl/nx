@@ -230,6 +230,12 @@
       "version": "15.7.0-beta.1",
       "description": "Install the required angular-devkit packages as we do not directly depend on them anymore",
       "factory": "./src/migrations/update-15-7-0/install-required-packages"
+    },
+    "update-angular-cli-version-15-2-0": {
+      "cli": "nx",
+      "version": "15.8.0-beta.4",
+      "description": "Update the @angular/cli package version to ~15.2.0.",
+      "factory": "./src/migrations/update-15-8-0/update-angular-cli"
     }
   },
   "packageJsonUpdates": {
@@ -1833,6 +1839,68 @@
         },
         "@nguniversal/express-engine": {
           "version": "~15.1.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "15.8.0": {
+      "version": "15.8.0-beta.4",
+      "x-prompt": "Do you want to update the Angular version to v15.2?",
+      "requires": {
+        "@angular/core": ">=15.1.0 <15.2.0",
+        "typescript": ">=4.8.2 <5.0"
+      },
+      "packages": {
+        "@angular-devkit/architect": {
+          "version": "~0.1502.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-angular": {
+          "version": "~15.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-webpack": {
+          "version": "~0.1502.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/core": {
+          "version": "~15.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/schematics": {
+          "version": "~15.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/core": {
+          "version": "~15.2.0",
+          "alwaysAddToPackageJson": true
+        },
+        "@angular/material": {
+          "version": "~15.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/cdk": {
+          "version": "~15.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@schematics/angular": {
+          "version": "~15.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nguniversal/express-engine": {
+          "version": "~15.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nguniversal/build-angular": {
+          "version": "~15.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "ng-packagr": {
+          "version": "~15.2.2",
+          "alwaysAddToPackageJson": false
+        },
+        "zone.js": {
+          "version": "~0.12.0",
           "alwaysAddToPackageJson": false
         }
       }

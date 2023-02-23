@@ -77,7 +77,8 @@
     },
     "verbose": {
       "type": "boolean",
-      "description": "Adds more details to output logging."
+      "description": "Adds more details to output logging.",
+      "default": false
     },
     "pathToManifestFile": {
       "type": "string",
