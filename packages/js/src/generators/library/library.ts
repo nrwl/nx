@@ -83,7 +83,7 @@ export async function projectGenerator(
     });
     tasks.push(viteTask);
   }
-  if (schema.bundler === 'rollup') {
+  if (options.bundler === 'rollup') {
     ensureBabelRootConfigExists(tree);
   }
 
@@ -159,6 +159,13 @@ function addProject(
           options.bundler === 'rollup' ? [] : [`${options.projectRoot}/*.md`],
       },
     };
+
+    if (options.bundler === 'rollup') {
+      projectConfiguration.targets.build.options.project = `${options.projectRoot}/package.json`;
+      if (options.compiler === 'swc') {
+        projectConfiguration.targets.build.options.compiler = 'swc';
+      }
+    }
 
     if (options.compiler === 'swc' && options.skipTypeCheck) {
       projectConfiguration.targets.build.options.skipTypeCheck = true;
