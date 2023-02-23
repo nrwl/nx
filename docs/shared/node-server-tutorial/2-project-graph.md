@@ -39,6 +39,7 @@ Add a post endpoint to the `main.ts` file of the root project that uses the `doA
 import express from 'express';
 import { doAuth } from '@products-api/auth';
 
+const host = process.env.HOST ?? 'localhost';
 const port = process.env.PORT ? Number(process.env.PORT) : 3000;
 
 const app = express();
@@ -48,11 +49,11 @@ app.get('/', (req, res) => {
 });
 
 app.post('/auth', (req, res) => {
-  res.send({ success: true, name: 'Cheddar' });
+  res.send(doAuth());
 });
 
-app.listen(port, () => {
-  console.log(`[ ready ] http://localhost:${port}`);
+app.listen(port, host, () => {
+  console.log(`[ ready ] http://${host}:${port}`);
 });
 ```
 
