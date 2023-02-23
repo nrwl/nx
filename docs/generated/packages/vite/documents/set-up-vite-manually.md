@@ -125,10 +125,10 @@ export default defineConfig({
     ...,
     dts({
       root: '../../',
-      entryRoot: 'packages/one/src',
-      tsConfigFilePath: 'packages/one/tsconfig.lib.json',
-      include: ['packages/one/src/**/*.ts'],
-      outputDir: 'dist/packages/one',
+      entryRoot: 'libs/my-lib/src',
+      tsConfigFilePath: 'libs/my-lib/tsconfig.lib.json',
+      include: ['libs/my-lib/src/**/*.ts'],
+      outputDir: 'dist/libs/my-lib',
       skipDiagnostics: false,
     }),
 ```
