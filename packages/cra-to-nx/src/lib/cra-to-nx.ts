@@ -130,7 +130,6 @@ async function reorgnizeWorkspaceStructure(options: NormalizedOptions) {
 
   if (options.isVite) {
     addDependencies(options.pmc, 'vite', 'vitest', '@vitejs/plugin-react');
-    removeDependencies(options.pmc, '@nrwl/jest');
   } else {
     addDependencies(
       options.pmc,
@@ -184,9 +183,11 @@ function createTempWorkspace(options: NormalizedOptions) {
       options.npxYesFlagNeeded ? '-y' : ''
     } create-nx-workspace@latest temp-workspace --appName=${
       options.reactAppName
-    } --preset=react-monorepo --style=css --bundler=webpack --packageManager=${
-      options.packageManager
-    } ${options.nxCloud ? '--nxCloud' : '--nxCloud=false'}`,
+    } --preset=react-monorepo --style=css --bundler=${
+      options.isVite ? 'vite' : 'webpack'
+    } --packageManager=${options.packageManager} ${
+      options.nxCloud ? '--nxCloud' : '--nxCloud=false'
+    }`,
     { stdio: [0, 1, 2] }
   );
 

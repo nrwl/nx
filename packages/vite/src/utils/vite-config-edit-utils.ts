@@ -1,7 +1,7 @@
 import { applyChangesToString, ChangeType, Tree } from '@nrwl/devkit';
 import { findNodes } from 'nx/src/utils/typescript';
-import ts = require('typescript');
-import { tsquery } from '@phenomnomnominal/tsquery';
+import type * as ts from 'typescript';
+
 import { TargetFlags } from './generator-utils';
 
 export function ensureViteConfigIsCorrect(
@@ -66,6 +66,7 @@ function handleBuildOrTestNode(
   configContentObject: {},
   name: 'build' | 'test'
 ): string | undefined {
+  const { tsquery } = require('@phenomnomnominal/tsquery');
   const buildNode = tsquery.query(
     updatedFileContent,
     `PropertyAssignment:has(Identifier[name="${name}"])`
@@ -166,6 +167,7 @@ function transformCurrentBuildObject(
   if (!returnStatements?.[index]) {
     return undefined;
   }
+  const { tsquery } = require('@phenomnomnominal/tsquery');
   const currentBuildObject = tsquery
     .query(returnStatements[index], 'ObjectLiteralExpression')?.[0]
     .getText();
@@ -205,6 +207,8 @@ function transformConditionalConfig(
   appFileContent: string,
   buildConfigObject: {}
 ): string | undefined {
+  const { tsquery } = require('@phenomnomnominal/tsquery');
+  const { SyntaxKind } = require('typescript');
   const functionBlock = tsquery.query(conditionalConfig[0], 'Block');
 
   const ifStatement = tsquery.query(functionBlock?.[0], 'IfStatement');
@@ -223,10 +227,7 @@ function transformConditionalConfig(
     (binaryExpression) => binaryExpression.getText() === `command === 'serve'`
   );
 
-  const elseKeywordExists = findNodes(
-    ifStatement?.[0],
-    ts.SyntaxKind.ElseKeyword
-  );
+  const elseKeywordExists = findNodes(ifStatement?.[0], SyntaxKind.ElseKeyword);
   const returnStatements: ts.ReturnStatement[] = tsquery.query(
     ifStatement[0],
     'ReturnStatement'
@@ -282,6 +283,8 @@ function handlePluginNode(
   dtsImportLine: string,
   pluginOption: string
 ): string | undefined {
+  const { tsquery } = require('@phenomnomnominal/tsquery');
+
   const file = tsquery.ast(appFileContent);
   const pluginsNode = tsquery.query(
     file,
@@ -382,6 +385,8 @@ function handlePluginNode(
 }
 
 function handleCacheDirNode(appFileContent: string, cacheDir: string): string {
+  const { tsquery } = require('@phenomnomnominal/tsquery');
+
   const file = tsquery.ast(appFileContent);
   const cacheDirNode = tsquery.query(
     file,
