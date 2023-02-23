@@ -49,9 +49,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "Node Tutorial",
-            "path": "/getting-started/node-tutorial",
-            "id": "node-tutorial",
+            "name": "Node Server Tutorial",
+            "path": "/getting-started/node-server-tutorial",
+            "id": "node-server-tutorial",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -100,9 +100,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Node Tutorial",
-        "path": "/getting-started/node-tutorial",
-        "id": "node-tutorial",
+        "name": "Node Server Tutorial",
+        "path": "/getting-started/node-server-tutorial",
+        "id": "node-server-tutorial",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -569,14 +569,14 @@
         "disableCollapsible": false
       },
       {
-        "name": "Node Tutorial",
-        "path": "/node-tutorial",
-        "id": "node-tutorial",
+        "name": "Node Server Tutorial",
+        "path": "/node-server-tutorial",
+        "id": "node-server-tutorial",
         "isExternal": false,
         "children": [
           {
             "name": "1 - Code Generation",
-            "path": "/node-tutorial/1-code-generation",
+            "path": "/node-server-tutorial/1-code-generation",
             "id": "1-code-generation",
             "isExternal": false,
             "children": [],
@@ -584,7 +584,7 @@
           },
           {
             "name": "2 - Project Graph",
-            "path": "/node-tutorial/2-project-graph",
+            "path": "/node-server-tutorial/2-project-graph",
             "id": "2-project-graph",
             "isExternal": false,
             "children": [],
@@ -592,7 +592,7 @@
           },
           {
             "name": "3 - Task Running",
-            "path": "/node-tutorial/3-task-running",
+            "path": "/node-server-tutorial/3-task-running",
             "id": "3-task-running",
             "isExternal": false,
             "children": [],
@@ -600,7 +600,7 @@
           },
           {
             "name": "4 - Task Pipelines",
-            "path": "/node-tutorial/4-task-pipelines",
+            "path": "/node-server-tutorial/4-task-pipelines",
             "id": "4-task-pipelines",
             "isExternal": false,
             "children": [],
@@ -608,7 +608,7 @@
           },
           {
             "name": "5 - Docker Target",
-            "path": "/node-tutorial/5-docker-target",
+            "path": "/node-server-tutorial/5-docker-target",
             "id": "5-docker-target",
             "isExternal": false,
             "children": [],
@@ -616,7 +616,7 @@
           },
           {
             "name": "6 - Summary",
-            "path": "/node-tutorial/6-summary",
+            "path": "/node-server-tutorial/6-summary",
             "id": "6-summary",
             "isExternal": false,
             "children": [],
@@ -627,7 +627,7 @@
       },
       {
         "name": "1 - Code Generation",
-        "path": "/node-tutorial/1-code-generation",
+        "path": "/node-server-tutorial/1-code-generation",
         "id": "1-code-generation",
         "isExternal": false,
         "children": [],
@@ -635,7 +635,7 @@
       },
       {
         "name": "2 - Project Graph",
-        "path": "/node-tutorial/2-project-graph",
+        "path": "/node-server-tutorial/2-project-graph",
         "id": "2-project-graph",
         "isExternal": false,
         "children": [],
@@ -643,7 +643,7 @@
       },
       {
         "name": "3 - Task Running",
-        "path": "/node-tutorial/3-task-running",
+        "path": "/node-server-tutorial/3-task-running",
         "id": "3-task-running",
         "isExternal": false,
         "children": [],
@@ -651,7 +651,7 @@
       },
       {
         "name": "4 - Task Pipelines",
-        "path": "/node-tutorial/4-task-pipelines",
+        "path": "/node-server-tutorial/4-task-pipelines",
         "id": "4-task-pipelines",
         "isExternal": false,
         "children": [],
@@ -659,7 +659,7 @@
       },
       {
         "name": "5 - Docker Target",
-        "path": "/node-tutorial/5-docker-target",
+        "path": "/node-server-tutorial/5-docker-target",
         "id": "5-docker-target",
         "isExternal": false,
         "children": [],
@@ -667,7 +667,7 @@
       },
       {
         "name": "6 - Summary",
-        "path": "/node-tutorial/6-summary",
+        "path": "/node-server-tutorial/6-summary",
         "id": "6-summary",
         "isExternal": false,
         "children": [],

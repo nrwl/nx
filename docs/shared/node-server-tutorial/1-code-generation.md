@@ -1,5 +1,5 @@
 ---
-title: 'Node Standalone Tutorial - Part 1: Code Generation'
+title: 'Node Server Tutorial - Part 1: Code Generation'
 description: In this tutorial you'll create a backend-focused workspace with Nx.
 ---
 
@@ -9,18 +9,18 @@ There are two styles of repos: integrated and package-based. This tutorial shows
 You can find more information on the difference between the two in [our introduction](/getting-started/intro).
 {% /callout %}
 
-# Node Tutorial - Part 1: Code Generation
+# Node Server Tutorial - Part 1: Code Generation
 
 In this tutorial you'll create a backend-focused workspace with Nx.
 
 ## Contents
 
-- [1 - Code Generation](/node-tutorial/1-code-generation)
-- [2 - Project Graph](/node-tutorial/2-project-graph)
-- [3 - Task Running](/node-tutorial/3-task-running)
-- [4 - Task Pipelines](/node-tutorial/4-task-pipelines)
-- [5 - Docker Target](/node-tutorial/5-docker-target)
-- [6 - Summary](/node-tutorial/6-summary)
+- [1 - Code Generation](/node-server-tutorial/1-code-generation)
+- [2 - Project Graph](/node-server-tutorial/2-project-graph)
+- [3 - Task Running](/node-server-tutorial/3-task-running)
+- [4 - Task Pipelines](/node-server-tutorial/4-task-pipelines)
+- [5 - Docker Target](/node-server-tutorial/5-docker-target)
+- [6 - Summary](/node-server-tutorial/6-summary)
 
 ## Your Objective
 
@@ -47,7 +47,7 @@ The `node-server` preset automatically creates a `products-api` application at t
 
 To create the `auth` library, use the `@nrwl/node:lib` generator:
 
-![Nx Generator Syntax](/shared/node-tutorial/generator-syntax.svg)
+![Nx Generator Syntax](/shared/node-server-tutorial/generator-syntax.svg)
 
 ```{% command="npx nx g @nrwl/node:lib auth --buildable" path="~/products-api" %}
 >  NX  Generating @nrwl/node:library
@@ -82,4 +82,4 @@ You have now created three projects:
 
 ## What's Next
 
-- Continue to [2: Project Graph](/node-tutorial/2-project-graph)
+- Continue to [2: Project Graph](/node-server-tutorial/2-project-graph)

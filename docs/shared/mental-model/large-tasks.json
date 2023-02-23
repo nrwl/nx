@@ -27101,51 +27101,51 @@
             "hash": "c0ef1939d0ec60f2d32066ba8b68a24e695a9ae3"
           },
           {
-            "file": "docs/shared/node-tutorial/1-code-generation.md",
+            "file": "docs/shared/node-server-tutorial/1-code-generation.md",
             "hash": "1e221ddc9e89c016158e653d5da711fcebc37c0c"
           },
           {
-            "file": "docs/shared/node-tutorial/2-project-graph.md",
+            "file": "docs/shared/node-server-tutorial/2-project-graph.md",
             "hash": "c860c388bcdddd48246a4ec3bdcec4ca69dc6a07"
           },
           {
-            "file": "docs/shared/node-tutorial/3-task-running.md",
+            "file": "docs/shared/node-server-tutorial/3-task-running.md",
             "hash": "0e94c244aa4e8e1eaa05afbedf3a2e3d9d8f4de8"
           },
           {
-            "file": "docs/shared/node-tutorial/4-workspace-optimization.md",
+            "file": "docs/shared/node-server-tutorial/4-workspace-optimization.md",
             "hash": "94878c75367aa1adb3bf63243acdd9d37e3f0646"
           },
           {
-            "file": "docs/shared/node-tutorial/5-summary.md",
+            "file": "docs/shared/node-server-tutorial/5-summary.md",
             "hash": "0bf6b83aef3bfdbdb96642a0e445c6e06848ee7f"
           },
           {
-            "file": "docs/shared/node-tutorial/generator-syntax.svg",
+            "file": "docs/shared/node-server-tutorial/generator-syntax.svg",
             "hash": "f0dadf08e354178f8fbe41d750e96d1ea45afb54"
           },
           {
-            "file": "docs/shared/node-tutorial/initial-project-graph.png",
+            "file": "docs/shared/node-server-tutorial/initial-project-graph.png",
             "hash": "2b6869b29c87fe4ca531915fc6d1f7edb2136dcd"
           },
           {
-            "file": "docs/shared/node-tutorial/matching-graph.png",
+            "file": "docs/shared/node-server-tutorial/matching-graph.png",
             "hash": "f4b8d2dd0abb027be858ed80d89eb950e7b80a3b"
           },
           {
-            "file": "docs/shared/node-tutorial/project-graph-with-all-affected.png",
+            "file": "docs/shared/node-server-tutorial/project-graph-with-all-affected.png",
             "hash": "4563ebddbbbda7cff979284dc89bb26f3e00ce58"
           },
           {
-            "file": "docs/shared/node-tutorial/project-graph-with-one-affected.png",
+            "file": "docs/shared/node-server-tutorial/project-graph-with-one-affected.png",
             "hash": "dbd2dd8c86a488d7bc1471052fcc1255ab736731"
           },
           {
-            "file": "docs/shared/node-tutorial/requirements-diagram.svg",
+            "file": "docs/shared/node-server-tutorial/requirements-diagram.svg",
             "hash": "d010f3bfb640ce86ce50b5f33a5bcc30ce39a50f"
           },
           {
-            "file": "docs/shared/node-tutorial/run-target-syntax.svg",
+            "file": "docs/shared/node-server-tutorial/run-target-syntax.svg",
             "hash": "305f6316121588423a2000b08d3b133927125604"
           },
           {

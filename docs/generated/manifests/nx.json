@@ -56,13 +56,13 @@
         "tags": []
       },
       {
-        "id": "node-tutorial",
-        "name": "Node Tutorial",
+        "id": "node-server-tutorial",
+        "name": "Node Server Tutorial",
         "description": "",
-        "file": "shared/node-tutorial/1-code-generation",
+        "file": "shared/node-server-tutorial/1-code-generation",
         "itemList": [],
         "isExternal": false,
-        "path": "/getting-started/node-tutorial",
+        "path": "/getting-started/node-server-tutorial",
         "tags": []
       }
     ],
@@ -120,14 +120,14 @@
     "path": "/getting-started/angular-standalone-tutorial",
     "tags": []
   },
-  "/getting-started/node-tutorial": {
-    "id": "node-tutorial",
-    "name": "Node Tutorial",
+  "/getting-started/node-server-tutorial": {
+    "id": "node-server-tutorial",
+    "name": "Node Server Tutorial",
     "description": "",
-    "file": "shared/node-tutorial/1-code-generation",
+    "file": "shared/node-server-tutorial/1-code-generation",
     "itemList": [],
     "isExternal": false,
-    "path": "/getting-started/node-tutorial",
+    "path": "/getting-started/node-server-tutorial",
     "tags": []
   },
   "/core-tutorial": {
@@ -705,135 +705,135 @@
     "path": "/angular-standalone-tutorial/5-summary",
     "tags": []
   },
-  "/node-tutorial": {
-    "id": "node-tutorial",
-    "name": "Node Tutorial",
-    "description": "Learn to use Nx with this Node tutorial where you will learn about all its main feature with a real project.",
+  "/node-server-tutorial": {
+    "id": "node-server-tutorial",
+    "name": "Node Server Tutorial",
+    "description": "Learn to use Nx with this Node Server Tutorial where you will learn about all its main feature with a real project.",
     "file": "",
     "itemList": [
       {
         "id": "1-code-generation",
         "name": "1 - Code Generation",
         "description": "",
-        "file": "shared/node-tutorial/1-code-generation",
+        "file": "shared/node-server-tutorial/1-code-generation",
         "itemList": [],
         "isExternal": false,
-        "path": "/node-tutorial/1-code-generation",
+        "path": "/node-server-tutorial/1-code-generation",
         "tags": []
       },
       {
         "id": "2-project-graph",
         "name": "2 - Project Graph",
         "description": "",
-        "file": "shared/node-tutorial/2-project-graph",
+        "file": "shared/node-server-tutorial/2-project-graph",
         "itemList": [],
         "isExternal": false,
-        "path": "/node-tutorial/2-project-graph",
+        "path": "/node-server-tutorial/2-project-graph",
         "tags": []
       },
       {
         "id": "3-task-running",
         "name": "3 - Task Running",
         "description": "",
-        "file": "shared/node-tutorial/3-task-running",
+        "file": "shared/node-server-tutorial/3-task-running",
         "itemList": [],
         "isExternal": false,
-        "path": "/node-tutorial/3-task-running",
+        "path": "/node-server-tutorial/3-task-running",
         "tags": []
       },
       {
         "id": "4-task-pipelines",
         "name": "4 - Task Pipelines",
         "description": "",
-        "file": "shared/node-tutorial/4-task-pipelines",
+        "file": "shared/node-server-tutorial/4-task-pipelines",
         "itemList": [],
         "isExternal": false,
-        "path": "/node-tutorial/4-task-pipelines",
+        "path": "/node-server-tutorial/4-task-pipelines",
         "tags": []
       },
       {
         "id": "5-docker-target",
         "name": "5 - Docker Target",
         "description": "",
-        "file": "shared/node-tutorial/5-docker-target",
+        "file": "shared/node-server-tutorial/5-docker-target",
         "itemList": [],
         "isExternal": false,
-        "path": "/node-tutorial/5-docker-target",
+        "path": "/node-server-tutorial/5-docker-target",
         "tags": []
       },
       {
         "id": "6-summary",
         "name": "6 - Summary",
         "description": "",
-        "file": "shared/node-tutorial/6-summary",
+        "file": "shared/node-server-tutorial/6-summary",
         "itemList": [],
         "isExternal": false,
-        "path": "/node-tutorial/6-summary",
+        "path": "/node-server-tutorial/6-summary",
         "tags": []
       }
     ],
     "isExternal": false,
-    "path": "/node-tutorial",
+    "path": "/node-server-tutorial",
     "tags": []
   },
-  "/node-tutorial/1-code-generation": {
+  "/node-server-tutorial/1-code-generation": {
     "id": "1-code-generation",
     "name": "1 - Code Generation",
     "description": "",
-    "file": "shared/node-tutorial/1-code-generation",
+    "file": "shared/node-server-tutorial/1-code-generation",
     "itemList": [],
     "isExternal": false,
-    "path": "/node-tutorial/1-code-generation",
+    "path": "/node-server-tutorial/1-code-generation",
     "tags": []
   },
-  "/node-tutorial/2-project-graph": {
+  "/node-server-tutorial/2-project-graph": {
     "id": "2-project-graph",
     "name": "2 - Project Graph",
     "description": "",
-    "file": "shared/node-tutorial/2-project-graph",
+    "file": "shared/node-server-tutorial/2-project-graph",
     "itemList": [],
     "isExternal": false,
-    "path": "/node-tutorial/2-project-graph",
+    "path": "/node-server-tutorial/2-project-graph",
     "tags": []
   },
-  "/node-tutorial/3-task-running": {
+  "/node-server-tutorial/3-task-running": {
     "id": "3-task-running",
     "name": "3 - Task Running",
     "description": "",
-    "file": "shared/node-tutorial/3-task-running",
+    "file": "shared/node-server-tutorial/3-task-running",
     "itemList": [],
     "isExternal": false,
-    "path": "/node-tutorial/3-task-running",
+    "path": "/node-server-tutorial/3-task-running",
     "tags": []
   },
-  "/node-tutorial/4-task-pipelines": {
+  "/node-server-tutorial/4-task-pipelines": {
     "id": "4-task-pipelines",
     "name": "4 - Task Pipelines",
     "description": "",
-    "file": "shared/node-tutorial/4-task-pipelines",
+    "file": "shared/node-server-tutorial/4-task-pipelines",
     "itemList": [],
     "isExternal": false,
-    "path": "/node-tutorial/4-task-pipelines",
+    "path": "/node-server-tutorial/4-task-pipelines",
     "tags": []
   },
-  "/node-tutorial/5-docker-target": {
+  "/node-server-tutorial/5-docker-target": {
     "id": "5-docker-target",
     "name": "5 - Docker Target",
     "description": "",
-    "file": "shared/node-tutorial/5-docker-target",
+    "file": "shared/node-server-tutorial/5-docker-target",
     "itemList": [],
     "isExternal": false,
-    "path": "/node-tutorial/5-docker-target",
+    "path": "/node-server-tutorial/5-docker-target",
     "tags": []
   },
-  "/node-tutorial/6-summary": {
+  "/node-server-tutorial/6-summary": {
     "id": "6-summary",
     "name": "6 - Summary",
     "description": "",
-    "file": "shared/node-tutorial/6-summary",
+    "file": "shared/node-server-tutorial/6-summary",
     "itemList": [],
     "isExternal": false,
-    "path": "/node-tutorial/6-summary",
+    "path": "/node-server-tutorial/6-summary",
     "tags": []
   },
   "/core-features": {
