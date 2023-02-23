@@ -51,6 +51,7 @@ import { output } from '../utils/output';
 import { messages, recordStat } from '../utils/ab-testing';
 import { nxVersion } from '../utils/versions';
 import { existsSync } from 'fs';
+import { workspaceRoot } from '../utils/workspace-root';
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
   packageGroup?: ArrayPackageGroup;
@@ -572,6 +573,7 @@ const LEGACY_NRWL_PACKAGE_GROUP: ArrayPackageGroup = [
   { package: '@nrwl/react-native', version: '*' },
   { package: '@nrwl/detox', version: '*' },
   { package: '@nrwl/expo', version: '*' },
+  { package: '@nrwl/tao', version: '*' },
 ];
 
 function normalizeVersionWithTagCheck(version: string) {
@@ -715,7 +717,14 @@ function createInstalledPackageVersionsResolver(
       }
 
       if (!cache[packageName]) {
-        const { packageJson } = readModulePackageJson(packageName, [root]);
+        const { packageJson, path } = readModulePackageJson(packageName, [
+          root,
+        ]);
+        // old workspaces would have the temp installation of nx in the cache,
+        // so the resolved package is not the one we need
+        if (!path.startsWith(workspaceRoot)) {
+          throw new Error('Resolved a package outside the workspace root.');
+        }
         cache[packageName] = packageJson.version;
       }
 
@@ -723,7 +732,11 @@ function createInstalledPackageVersionsResolver(
     } catch {
       // Support migrating old workspaces without nx package
       if (packageName === 'nx') {
-        return getInstalledPackageVersion('@nrwl/workspace', overrides);
+        cache[packageName] = getInstalledPackageVersion(
+          '@nrwl/workspace',
+          overrides
+        );
+        return cache[packageName];
       }
       return null;
     }
@@ -1311,12 +1324,28 @@ export async function executeMigrations(
 async function runMigrations(
   root: string,
   opts: { runMigrations: string; ifExists: boolean },
+  args: string[],
   isVerbose: boolean,
   shouldCreateCommits = false,
   commitPrefix: string
 ) {
   if (!process.env.NX_MIGRATE_SKIP_INSTALL) {
     runInstall();
+  }
+
+  if (!__dirname.startsWith(workspaceRoot)) {
+    // we are running from a temp installation with nx latest, switch to running
+    // from local installation
+    const pmc = getPackageManagerCommand();
+    execSync(`${pmc.exec} nx migrate ${args.join(' ')}`, {
+      stdio: ['inherit', 'inherit', 'inherit'],
+      env: {
+        ...process.env,
+        NX_MIGRATE_SKIP_INSTALL: 'true',
+        NX_MIGRATE_USE_LOCAL: 'true',
+      },
+    });
+    return;
   }
 
   const migrationsExists: boolean = fileExists(opts.runMigrations);
@@ -1435,7 +1464,11 @@ async function runNxMigration(root: string, packageName: string, name: string) {
   return changes;
 }
 
-export async function migrate(root: string, args: { [k: string]: any }) {
+export async function migrate(
+  root: string,
+  args: { [k: string]: any },
+  rawArgs: string[]
+) {
   if (args['verbose']) {
     process.env.NX_VERBOSE_LOGGING = 'true';
   }
@@ -1448,6 +1481,7 @@ export async function migrate(root: string, args: { [k: string]: any }) {
       await runMigrations(
         root,
         opts,
+        rawArgs,
         args['verbose'],
         args['createCommits'],
         args['commitPrefix']
