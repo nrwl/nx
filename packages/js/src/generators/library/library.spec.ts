@@ -810,6 +810,35 @@ describe('lib', () => {
       });
     });
 
+    describe('bundler=rollup', () => {
+      it('should generate correct options for build', async () => {
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          name: 'myLib',
+          buildable: true,
+          bundler: 'rollup',
+        });
+
+        const config = readProjectConfiguration(tree, 'my-lib');
+        expect(config.targets.build.options.project).toEqual(
+          `libs/my-lib/package.json`
+        );
+      });
+
+      it('should set compiler to swc', async () => {
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          name: 'myLib',
+          buildable: true,
+          bundler: 'rollup',
+          compiler: 'swc',
+        });
+
+        const config = readProjectConfiguration(tree, 'my-lib');
+        expect(config.targets.build.options.compiler).toEqual('swc');
+      });
+    });
+
     describe('--publishable', () => {
       it('should generate the build target', async () => {
         await libraryGenerator(tree, {
