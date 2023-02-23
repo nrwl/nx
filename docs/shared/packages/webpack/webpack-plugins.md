@@ -69,7 +69,7 @@ Extract CSS into a `.css` file.
 
 Type: `boolean`
 
-Generates a `package.json` and pruned lock file with the project's `node_module` dependencies populated for installing in a container. If a `package.json` exists in the project's directory, it will be reused with dependencies populated.
+Generates `index.html` file to the output path. This can be turned off if using a webpack plugin to generate HTML such as `html-webpack-plugin`.
 
 #### index
 
