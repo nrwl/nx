@@ -1,22 +1,16 @@
-import { moduleMetadata, Story, Meta } from '@storybook/angular';
+import { Meta } from '@storybook/angular';
 import { <%=componentName%> } from './<%=componentFileName%>';
 
 export default {
   title: '<%=componentName%>',
-  component: <%=componentName%>,
-  decorators: [
-    moduleMetadata({
-      imports: [],
-    })
-  ],
+  component: <%=componentName%>
 } as Meta<<%=componentName%>>;
 
-const Template: Story<<%=componentName%>> = (args: <%=componentName%>) => ({
-  props: args,
-});
-
-
-export const Primary = Template.bind({});
-Primary.args = {<% for (let prop of props) { %>
+export const Primary = {
+  render: (args: <%=componentName%>) => ({
+    props: args,
+  }),
+  args: {<% for (let prop of props) { %>
     <%= prop.name %>:  <%- prop.defaultValue %>,<% } %>
-}
+  },
+};
