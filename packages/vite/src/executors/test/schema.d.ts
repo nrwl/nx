@@ -7,4 +7,5 @@ export interface VitestExecutorOptions {
   watch?: boolean;
   update?: boolean;
   reportsDirectory?: string;
+  coverage?: boolean;
 }

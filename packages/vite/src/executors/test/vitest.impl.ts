@@ -1,5 +1,5 @@
 import { ExecutorContext, workspaceRoot } from '@nrwl/devkit';
-import { File, Reporter } from 'vitest';
+import { CoverageOptions, File, Reporter } from 'vitest';
 import { VitestExecutorOptions } from './schema';
 import { relative } from 'path';
 
@@ -50,6 +50,14 @@ export async function* vitestExecutor(
   const offset = relative(workspaceRoot, context.cwd);
 
   const nxReporter = new NxReporter(options.watch);
+  // if reportsDirectory is not provides vitest will remove all files in the project root
+  // when coverage is enabled in the vite.config.ts
+  const coverage: CoverageOptions = options.reportsDirectory
+    ? {
+        enabled: options.coverage,
+        reportsDirectory: options.reportsDirectory,
+      }
+    : {};
   const settings = {
     ...options,
     // when running nx from the project root, the root will get appended to the cwd.
@@ -57,15 +65,7 @@ export async function* vitestExecutor(
     // instead if we are not at the root, let the cwd be root.
     root: offset === '' ? projectRoot : '',
     reporters: [...(options.reporters ?? []), 'default', nxReporter],
-    // if reportsDirectory is not provides vitest will remove all files in the project root
-    // when coverage is enabled in the vite.config.ts
-    ...(options.reportsDirectory
-      ? {
-          coverage: {
-            reportsDirectory: options.reportsDirectory,
-          },
-        }
-      : {}),
+    coverage,
   };
 
   const ctx = await startVitest(options.mode, [], settings);
