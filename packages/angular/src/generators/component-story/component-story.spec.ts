@@ -29,22 +29,22 @@ describe('componentStory generator', () => {
       `libs/${libName}/src/lib/test-button/test-button.component.ts`,
       `import { Component, Input } from '@angular/core';
 
-export type ButtonStyle = 'default' | 'primary' | 'accent';
+        export type ButtonStyle = 'default' | 'primary' | 'accent';
 
-@Component({
-  selector: 'proj-test-button',
-  templateUrl: './test-button.component.html',
-  styleUrls: ['./test-button.component.css']
-})
-export class TestButtonComponent {
-  @Input('buttonType') type = 'button';
-  @Input() style: ButtonStyle = 'default';
-  @Input() age?: number;
-  @Input() isOn = false;
-  @Input() message: string | undefined;
-  @Input() anotherProp: any;
-  @Input() anotherNeverProp: never;
-}`
+        @Component({
+          selector: 'proj-test-button',
+          templateUrl: './test-button.component.html',
+          styleUrls: ['./test-button.component.css']
+        })
+        export class TestButtonComponent {
+          @Input('buttonType') type = 'button';
+          @Input() style: ButtonStyle = 'default';
+          @Input() age?: number;
+          @Input() isOn = false;
+          @Input() message: string | undefined;
+          @Input() anotherProp: any;
+          @Input() anotherNeverProp: never;
+        }`
     );
   });
 
@@ -84,7 +84,6 @@ export class TestButtonComponent {
       projectPath: `libs/${libName}`,
     });
 
-    const storiesFileContent = tree.read(storyFile).toString();
-    expect(storiesFileContent).toMatchSnapshot();
+    expect(tree.read(storyFile).toString()).toMatchSnapshot();
   });
 });

@@ -89,10 +89,10 @@ describe('angularStories generator: applications', () => {
     });
 
     expect(
-      tree.exists(
+      tree.read(
         `apps/${appName}/src/app/component-a/component-b/component-b.component.stories.ts`
       )
-    ).toBeTruthy();
+    ).toMatchSnapshot();
     expect(
       tree.exists(
         `apps/${appName}/src/app/component-a/component-a.component.stories.ts`
@@ -110,10 +110,8 @@ describe('angularStories generator: applications', () => {
     angularStoriesGenerator(tree, { name: appName });
 
     expect(
-      tree.exists(
-        `apps/${appName}/src/app/my-scam/my-scam.component.stories.ts`
-      )
-    ).toBeTruthy();
+      tree.read(`apps/${appName}/src/app/my-scam/my-scam.component.stories.ts`)
+    ).toMatchSnapshot();
   });
 
   it('should generate cypress spec file', () => {

@@ -1,4 +1,4 @@
-<% if ( !isPlainJs ) { %>import type { ComponentStory, ComponentMeta } from '@storybook/react';<% } %>
+<% if ( !isPlainJs ) { %>import type { Meta } from '@storybook/react';<% } %>
 import<% if ( !isPlainJs ) { %> { <% } %> <%= componentName %> <% if ( !isPlainJs ) { %> } <% } %> from './<%= componentImportFileName %>';
 
 <% if ( isPlainJs ) { %>
@@ -14,7 +14,7 @@ export default {
 
 
 <% if ( !isPlainJs ) { %>
-const Story: ComponentMeta<typeof <%= componentName %>> = {
+const Story: Meta<typeof <%= componentName %>> = {
   component: <%= componentName %>,
   title: '<%= componentName %>',<% if ( argTypes && argTypes.length > 0 ) { %> 
   argTypes: {<% for (let argType of argTypes) { %>
@@ -25,9 +25,8 @@ const Story: ComponentMeta<typeof <%= componentName %>> = {
 export default Story;
 <% } %>
 
-const Template<% if ( !isPlainJs ) { %>: ComponentStory< typeof <%= componentName %> ><% } %> = (args) => <<%= componentName %> {...args} />;
-
-export const Primary = Template.bind({})
-Primary.args = {<% for (let prop of props) { %>
+export const Primary = {
+  args: {<% for (let prop of props) { %>
     <%= prop.name %>:  <%- prop.defaultValue %>,<% } %>
-}
+  },
+};
