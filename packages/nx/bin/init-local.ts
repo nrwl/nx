@@ -82,15 +82,35 @@ export function rewriteTargetsAndProjects(args: string[]) {
 }
 
 function rewritePositionalArguments(args: string[]) {
-  if (!args[3] || args[3].startsWith('-')) {
-    return ['run', `${wrapIntoQuotesIfNeeded(args[2])}`, ...args.slice(3)];
-  } else {
+  const relevantPositionalArgs = [];
+  const rest = [];
+  for (let i = 2; i < args.length; i++) {
+    if (!args[i].startsWith('-')) {
+      relevantPositionalArgs.push(args[i]);
+      if (relevantPositionalArgs.length === 2) {
+        rest.push(...args.slice(i + 1));
+        break;
+      }
+    } else {
+      rest.push(args[i]);
+    }
+  }
+
+  if (relevantPositionalArgs.length === 1) {
     return [
       'run',
-      `${args[3]}:${wrapIntoQuotesIfNeeded(args[2])}`,
-      ...args.slice(4),
+      `${wrapIntoQuotesIfNeeded(relevantPositionalArgs[0])}`,
+      ...rest,
     ];
   }
+
+  return [
+    'run',
+    `${relevantPositionalArgs[1]}:${wrapIntoQuotesIfNeeded(
+      relevantPositionalArgs[0]
+    )}`,
+    ...rest,
+  ];
 }
 
 function wrapIntoQuotesIfNeeded(arg: string) {
