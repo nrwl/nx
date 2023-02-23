@@ -48,15 +48,15 @@ export default {
   displayName: 'lib1',
   preset: '../../jest.preset.js',
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
-  globals: {
-    'ts-jest': {
-      tsconfig: '<rootDir>/tsconfig.spec.json',
-      stringifyContentPathRegex: '\\\\\\\\.(html|svg)$',
-    }
-  },
   coverageDirectory: '../../coverage/libs/lib1',
   transform: {
-    '^.+\\\\\\\\.(ts|mjs|js|html)$': 'jest-preset-angular'
+    '^.+\\\\\\\\.(ts|mjs|js|html)$': [
+      'jest-preset-angular',
+      {
+        tsconfig: '<rootDir>/tsconfig.spec.json',
+        stringifyContentPathRegex: '\\\\\\\\.(html|svg)$',
+      },
+    ],
   },
   transformIgnorePatterns: ['node_modules/(?!.*\\\\\\\\.mjs$)'],
   snapshotSerializers: [
@@ -73,11 +73,6 @@ exports[`jestProject should create a jest.config.ts 1`] = `
 export default {
   displayName: 'lib1',
   preset: '../../jest.preset.js',
-  globals: {
-    'ts-jest': {
-      tsconfig: '<rootDir>/tsconfig.spec.json',
-    }
-  },
   coverageDirectory: '../../coverage/libs/lib1'
 };
 "
@@ -89,15 +84,15 @@ export default {
   displayName: 'lib1',
   preset: '../../jest.preset.js',
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
-  globals: {
-    'ts-jest': {
-      tsconfig: '<rootDir>/tsconfig.spec.json',
-      stringifyContentPathRegex: '\\\\\\\\.(html|svg)$',
-    }
-  },
   coverageDirectory: '../../coverage/libs/lib1',
   transform: {
-    '^.+\\\\\\\\.(ts|mjs|js|html)$': 'jest-preset-angular'
+    '^.+\\\\\\\\.(ts|mjs|js|html)$': [
+      'jest-preset-angular',
+      {
+        tsconfig: '<rootDir>/tsconfig.spec.json',
+        stringifyContentPathRegex: '\\\\\\\\.(html|svg)$',
+      },
+    ],
   },
   transformIgnorePatterns: ['node_modules/(?!.*\\\\\\\\.mjs$)'],
   snapshotSerializers: [

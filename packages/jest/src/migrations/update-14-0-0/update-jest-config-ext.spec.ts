@@ -16,6 +16,22 @@ const setupDefaults = {
   libName: 'lib-one',
   setParserOptionsProject: false,
 };
+const oldConfig = `
+module.exports = {
+  displayName: 'PLACE_HOLDER',
+  preset: '../../jest.preset.js',
+  globals: {
+    'ts-jest': {
+      tsconfig: '<rootDir>/tsconfig.spec.json',
+    }
+  },
+  transform: {
+    '^.+\\\\.[tj]sx?$': 'ts-jest'
+  },
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+  coverageDirectory: '../../coverage/libs/PLACE_HOLDER'
+};
+`;
 
 async function libSetUp(tree: Tree, options = setupDefaults) {
   jestInitGenerator(tree, {
@@ -30,12 +46,9 @@ async function libSetUp(tree: Tree, options = setupDefaults) {
     `libs/${options.libName}/jest.config.ts`,
     `libs/${options.libName}/jest.config.js`
   );
-  const config = tree.read(`libs/${options.libName}/jest.config.js`, 'utf-8');
   tree.write(
     `libs/${options.libName}/jest.config.js`,
-    config
-      .replace(/\/\* eslint-disable \*\//g, '')
-      .replace(/export default/g, 'module.exports =')
+    oldConfig.replace(/PLACE_HOLDER/g, options.libName)
   );
   updateProjectConfiguration(tree, options.libName, {
     ...readProjectConfiguration(tree, options.libName),

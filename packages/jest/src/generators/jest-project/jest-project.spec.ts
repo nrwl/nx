@@ -250,7 +250,10 @@ describe('jestProject', () => {
       } as JestProjectSchema);
       const jestConfig = jestConfigObject(tree, 'libs/lib1/jest.config.ts');
       expect(jestConfig.transform).toEqual({
-        '^.+\\.[tj]sx?$': 'ts-jest',
+        '^.+\\.[tj]sx?$': [
+          'ts-jest',
+          { tsconfig: '<rootDir>/tsconfig.spec.json' },
+        ],
       });
     });
 
@@ -322,21 +325,6 @@ describe('jestProject', () => {
   });
 
   describe('--babelJest', () => {
-    it('should have globals.ts-jest configured when babelJest is false', async () => {
-      await jestProjectGenerator(tree, {
-        ...defaultOptions,
-        project: 'lib1',
-        babelJest: false,
-      } as JestProjectSchema);
-      const jestConfig = jestConfigObject(tree, 'libs/lib1/jest.config.ts');
-
-      expect(jestConfig.globals).toEqual({
-        'ts-jest': {
-          tsconfig: '<rootDir>/tsconfig.spec.json',
-        },
-      });
-    });
-
     it('should generate proper jest.transform when babelJest is true', async () => {
       await jestProjectGenerator(tree, {
         ...defaultOptions,
@@ -397,11 +385,6 @@ describe('jestProject', () => {
         export default {
           displayName: 'my-project',
           preset: './jest.preset.js',
-          globals: {
-            'ts-jest': {
-              tsconfig: '<rootDir>/tsconfig.spec.json',
-            }
-          },
           coverageDirectory: './coverage/my-project',
           testMatch: [
             '<rootDir>/src/**/__tests__/**/*.[jt]s?(x)',
@@ -435,11 +418,6 @@ describe('jestProject', () => {
         module.exports = {
           displayName: 'my-project',
           preset: './jest.preset.js',
-          globals: {
-            'ts-jest': {
-              tsconfig: '<rootDir>/tsconfig.spec.json',
-            }
-          },
           coverageDirectory: './coverage/my-project',
           testMatch: [
             '<rootDir>/src/**/__tests__/**/*.[jt]s?(x)',

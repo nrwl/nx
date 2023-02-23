@@ -422,30 +422,13 @@ describe('nest libraries', function () {
     const nestlib = uniq('nestlib');
     runCLI(`generate @nrwl/nest:lib ${nestlib}`);
 
-    const jestConfigContent = readFile(`libs/${nestlib}/jest.config.ts`);
-
-    expect(stripIndents`${jestConfigContent}`).toEqual(
-      stripIndents`/* eslint-disable */
-              export default {
-                displayName: '${nestlib}',
-                preset: '../../jest.preset.js',
-                globals: {
-                  'ts-jest': {
-                  tsconfig: '<rootDir>/tsconfig.spec.json',
-                  },
-                },
-                testEnvironment: 'node',
-                 transform: {
-                '^.+\\.[tj]s$': 'ts-jest',
-                },
-                moduleFileExtensions: ['ts', 'js', 'html'],
-                coverageDirectory: '../../coverage/libs/${nestlib}',
-            };
-            `
-    );
-
     const lintResults = runCLI(`lint ${nestlib}`);
     expect(lintResults).toContain('All files pass linting.');
+
+    const testResults = runCLI(`test ${nestlib}`);
+    expect(testResults).toContain(
+      `Successfully ran target test for project ${nestlib}`
+    );
   }, 60000);
 
   it('should be able to generate a nest library w/ service', async () => {
