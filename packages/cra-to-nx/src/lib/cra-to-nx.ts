@@ -48,7 +48,7 @@ function addDependencies(pmc: PackageManagerCommands, ...deps: string[]) {
 
 function removeDependencies(pmc: PackageManagerCommands, ...deps: string[]) {
   const depsArg = deps.join(' ');
-  output.log({ title: `📦 Adding dependencies: ${depsArg}` });
+  output.log({ title: `📦 Removing dependencies: ${depsArg}` });
   execSync(`${pmc.rm} ${depsArg}`, { stdio: [0, 1, 2] });
 }
 

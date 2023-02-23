@@ -45,6 +45,7 @@ jobs:
           - e2e-node
           - e2e-web
           - e2e-storybook,e2e-storybook-angular
+          - e2e-cra-to-nx
           - e2e-workspace-create
           - e2e-react-native
           # - e2e-detox
