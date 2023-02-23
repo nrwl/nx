@@ -10,7 +10,6 @@ import {
   writeJson,
 } from '@nrwl/devkit';
 import {
-  angularCliVersion,
   nxVersion,
   prettierVersion,
   typescriptVersion,
@@ -145,12 +144,10 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
     formattedNames,
     dot: '.',
     tmpl: '',
-    cliCommand: options.preset === Preset.AngularMonorepo ? 'ng' : 'nx',
+    cliCommand: 'nx',
     nxCli: false,
     typescriptVersion,
     prettierVersion,
-    // angular cli is used only when workspace schematics is added to angular cli
-    angularCliVersion,
     ...(options as object),
     nxVersion,
     packageManager: options.packageManager,
