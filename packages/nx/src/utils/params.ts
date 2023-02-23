@@ -783,7 +783,7 @@ export function getPromptsForSchema(
       question.message = v['x-prompt'].message;
       question.validate = (s) => {
         try {
-          validateProperty(k, s, schema, schema.definitions || {});
+          validateProperty(k, s, v, schema.definitions || {});
           return true;
         } catch (e) {
           return e.message;
