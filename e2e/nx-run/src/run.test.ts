@@ -178,6 +178,13 @@ describe('Nx Running Tests', () => {
       runCLI(`build ${myapp}`);
     }, 10000);
 
+    it('should support project name positional arg non-consecutive to target', () => {
+      const myapp = uniq('app');
+      runCLI(`generate @nrwl/web:app ${myapp}`);
+
+      runCLI(`build --verbose ${myapp}`);
+    }, 10000);
+
     it('should run targets from package json', () => {
       const myapp = uniq('app');
       const target = uniq('script');
