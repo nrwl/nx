@@ -353,7 +353,9 @@ export const commandsObject = yargs
     builder: (yargs) => withMigrationOptions(yargs),
     handler: async (args) =>
       process.exit(
-        await (await import('./migrate')).migrate(process.cwd(), args)
+        await (
+          await import('./migrate')
+        ).migrate(process.cwd(), args, process.argv.slice(3))
       ),
   })
   .command({
