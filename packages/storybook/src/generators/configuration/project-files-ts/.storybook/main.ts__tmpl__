@@ -32,7 +32,7 @@ const config: StorybookConfig = {
       ],
     });
   },<% } %>
-} as StorybookConfig;
+}<% if (usesVite) { %> as StorybookConfig<% } %>;
 
 module.exports = config;
 

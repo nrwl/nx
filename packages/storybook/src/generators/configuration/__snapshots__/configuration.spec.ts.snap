@@ -493,7 +493,7 @@ const config: StorybookConfig = {
     
     
   ]
-} as StorybookConfig;
+};
 
 module.exports = config;
 
@@ -548,7 +548,7 @@ const config: StorybookConfig = {
     
     
   ]
-} as StorybookConfig;
+};
 
 module.exports = config;
 
@@ -610,7 +610,7 @@ const config: StorybookConfig = {
     }
      
   ]
-} as StorybookConfig;
+};
 
 module.exports = config;
 
@@ -665,7 +665,7 @@ const config: StorybookConfig = {
     
     
   ]
-} as StorybookConfig;
+};
 
 module.exports = config;
 
@@ -720,7 +720,7 @@ const config: StorybookConfig = {
     , 'storybook-addon-swc' 
     
   ]
-} as StorybookConfig;
+};
 
 module.exports = config;
 
@@ -775,7 +775,7 @@ const config: StorybookConfig = {
     
     
   ]
-} as StorybookConfig;
+};
 
 module.exports = config;
 
