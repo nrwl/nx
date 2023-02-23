@@ -124,6 +124,7 @@ export class Migrator {
   private readonly excludeAppliedMigrations: MigratorOptions['excludeAppliedMigrations'];
   private readonly packageUpdates: Record<string, PackageUpdate> = {};
   private readonly collectedVersions: Record<string, string> = {};
+  private readonly promptAnswers: Record<string, boolean> = {};
 
   constructor(opts: MigratorOptions) {
     this.packageJson = opts.packageJson;
@@ -188,14 +189,13 @@ export class Migrator {
       const filteredUpdates: Record<string, PackageUpdate> = {};
       for (const packageUpdate of packageToCheck.updates) {
         if (
-          this.areRequirementsMet(packageUpdate.requires, filteredUpdates) &&
+          this.areRequirementsMet(packageUpdate.requires) &&
           (!this.interactive ||
-            (await this.runPackageJsonUpdatesConfirmationPrompt(
-              packageUpdate['x-prompt']
-            )))
+            (await this.runPackageJsonUpdatesConfirmationPrompt(packageUpdate)))
         ) {
           Object.entries(packageUpdate.packages).forEach(([name, update]) => {
             filteredUpdates[name] = update;
+            this.packageUpdates[name] = update;
           });
         }
       }
@@ -443,30 +443,28 @@ export class Migrator {
   }
 
   private areRequirementsMet(
-    requirements: PackageJsonUpdates[string]['requires'],
-    extraPackageUpdatesToCheck?: Record<string, PackageUpdate>
+    requirements: PackageJsonUpdates[string]['requires']
   ): boolean {
     if (!requirements || !Object.keys(requirements).length) {
       return true;
     }
 
-    return Object.entries(requirements).every(
-      ([pkgName, versionRange]) =>
-        (this.getPkgVersion(pkgName) &&
-          satisfies(this.getPkgVersion(pkgName), versionRange, {
-            includePrerelease: true,
-          })) ||
-        (this.packageUpdates[pkgName]?.version &&
-          satisfies(this.packageUpdates[pkgName].version, versionRange, {
-            includePrerelease: true,
-          })) ||
-        (extraPackageUpdatesToCheck?.[pkgName]?.version &&
-          satisfies(
-            cleanSemver(extraPackageUpdatesToCheck[pkgName].version),
-            versionRange,
-            { includePrerelease: true }
-          ))
-    );
+    return Object.entries(requirements).every(([pkgName, versionRange]) => {
+      if (this.packageUpdates[pkgName]) {
+        return satisfies(
+          cleanSemver(this.packageUpdates[pkgName].version),
+          versionRange,
+          { includePrerelease: true }
+        );
+      }
+
+      return (
+        this.getPkgVersion(pkgName) &&
+        satisfies(this.getPkgVersion(pkgName), versionRange, {
+          includePrerelease: true,
+        })
+      );
+    });
   }
 
   private areMigrationRequirementsMet(
@@ -519,20 +517,36 @@ export class Migrator {
   }
 
   private async runPackageJsonUpdatesConfirmationPrompt(
-    confirmationPrompt: string
+    packageUpdate: PackageJsonUpdates[string]
   ): Promise<boolean> {
-    if (!confirmationPrompt) {
+    if (!packageUpdate['x-prompt']) {
       return Promise.resolve(true);
+    }
+    const promptKey = this.getPackageUpdatePromptKey(packageUpdate);
+    if (this.promptAnswers[promptKey] !== undefined) {
+      // a same prompt was already answered, skip
+      return Promise.resolve(false);
     }
 
     return await prompt([
       {
         name: 'shouldApply',
         type: 'confirm',
-        message: confirmationPrompt,
+        message: packageUpdate['x-prompt'],
         initial: true,
       },
-    ]).then((a: { shouldApply: boolean }) => a.shouldApply);
+    ]).then(({ shouldApply }: { shouldApply: boolean }) => {
+      this.promptAnswers[promptKey] = shouldApply;
+      return shouldApply;
+    });
+  }
+
+  private getPackageUpdatePromptKey(
+    packageUpdate: PackageJsonUpdates[string]
+  ): string {
+    return Object.entries(packageUpdate.packages)
+      .map(([name, update]) => `${name}:${JSON.stringify(update)}`)
+      .join('|');
   }
 
   private getPkgVersion(pkg: string): string {

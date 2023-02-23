@@ -33,6 +33,7 @@
     "requirements": {},
     "migrations": "./migrations.json",
     "packageGroup": {
+      "@nrwl/js": "*",
       "@nrwl/jest": "*",
       "@nrwl/linter": "*",
       "@nrwl/angular": "*",
@@ -44,7 +45,6 @@
       "@nrwl/eslint-plugin-nx": "*",
       "@nrwl/expo": "*",
       "@nrwl/express": "*",
-      "@nrwl/js": "*",
       "@nrwl/nest": "*",
       "@nrwl/next": "*",
       "@nrwl/node": "*",
