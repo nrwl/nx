@@ -49,7 +49,7 @@ async function addNxToMonorepo() {
   let scriptOutputs = {} as { [script: string]: string };
   let useCloud: boolean;
 
-  if (parsedArgs.yes !== true) {
+  if (parsedArgs.yes !== true && scripts.length > 0) {
     output.log({
       title: `🧑‍🔧 Please answer the following questions about the scripts found in your workspace in order to generate task runner configuration`,
     });
