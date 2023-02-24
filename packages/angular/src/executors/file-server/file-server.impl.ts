@@ -16,7 +16,12 @@ import { Schema } from './schema';
 const pmCmd = platform() === 'win32' ? `npx.cmd` : 'npx';
 
 function getHttpServerArgs(options: Schema) {
-  const args = ['-c-1', '--cors'];
+  const args = ['-c-1'];
+
+  if (options.cors) {
+    args.push(`--cors`);
+  }
+
   if (options.port) {
     args.push(`-p=${options.port}`);
   }

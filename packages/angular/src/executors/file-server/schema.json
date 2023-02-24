@@ -67,6 +67,11 @@
       "type": "boolean",
       "description": "Redirect 404 errors to index.html (useful for SPA's).",
       "default": false
+    },
+    "cors": {
+      "type": "boolean",
+      "description": "Enable CORS",
+      "default": true
     }
   },
   "additionalProperties": false,
