@@ -29,6 +29,12 @@
       "version": "14.1.5-beta.0",
       "description": "Rename option swcrcPath to swcrc, and resolve relative to workspace root",
       "factory": "./src/migrations/update-14-1-5/update-swcrc-path"
+    },
+    "rename-swcrc-config": {
+      "cli": "nx",
+      "version": "15.8.1-beta.0",
+      "description": "Rename .lib.swcrc to .swcrc for better SWC support throughout the workspace",
+      "factory": "./src/migrations/update-15-8-1/rename-swcrc-config"
     }
   },
   "packageJsonUpdates": {
