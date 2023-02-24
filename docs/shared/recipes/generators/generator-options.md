@@ -102,6 +102,35 @@ Dynamic options can prompt the user to select from a list of options. To define 
 
 Running the generator without providing a value for the type will prompt the user to make a selection.
 
+## Selecting a project
+
+There's a special dynamic option property that populates a selection list with your workspace's projects. Add `"x-dropdown": "projects"` to your object to provide the prompt.
+
+```json
+{
+  "$schema": "http://json-schema.org/schema",
+  "id": "my-generator",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Component name",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      }
+    },
+    "project": {
+      "type": "string",
+      "description": "The project where the component will be located.",
+      "x-prompt": "Which project will this component be located in?",
+      "x-dropdown": "projects"
+    }
+  },
+  "required": ["name", "project"]
+}
+```
+
 ## All configurable schema options
 
 Properties tagged with ⚠️ are required. Others are optional.
@@ -288,7 +317,8 @@ Any additional properties will be considered invalid.
     "multiselect": false
   },
   "x-deprecated": false,
-  "x-priority": "important"
+  "x-priority": "important",
+  "x-dropdown": "projects"
 }
 ```
 
@@ -780,6 +810,21 @@ Indicates the priority of a property. Can either be `important` or `internal`. T
     "description": "The directory of the new application.",
     "type": "string",
     "x-priority": "important"
+  }
+}
+```
+
+#### `x-dropdown`
+
+Populates the list of projects in your workspace to a selection prompt.
+
+```json
+{
+  "project": {
+    "description": "The project where the component will be located.",
+    "type": "string",
+    "x-prompt": "Which project will this component be located in?",
+    "x-dropdown": "projects"
   }
 }
 ```
