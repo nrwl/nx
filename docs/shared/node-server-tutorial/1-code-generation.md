@@ -9,6 +9,11 @@ There are two styles of repos: integrated and package-based. This tutorial shows
 You can find more information on the difference between the two in [our introduction](/getting-started/intro).
 {% /callout %}
 
+{% youtube
+src="https://www.youtube.com/embed/-Oe8j-NZcBc"
+title="Tutorial: Node Server"
+width="100%" /%}
+
 # Node Server Tutorial - Part 1: Code Generation
 
 In this tutorial you'll create a backend-focused workspace with Nx.
@@ -31,9 +36,10 @@ For this tutorial, you'll create an Express API application, a library that the 
 Run the command `npx create-nx-workspace@latest` and when prompted, provide the following responses:
 
 ```{% command="npx create-nx-workspace@latest" path="~" %}
-✔ Choose your style                     · node-server
-✔ What framework should be used?        · express
-✔ Repository name                       · products-api
+✔ Choose what to create                 · node-server
+✔ Application name                      · products-api
+✔ What framework should be used? · express
+✔ Would you like to generate a Dockerfile? [https://docs.docker.com/] · Yes
 ✔ Enable distributed caching to make your CI faster · Yes
 ```
 
@@ -41,7 +47,9 @@ Run the command `npx create-nx-workspace@latest` and when prompted, provide the 
 
 The `node-server` preset automatically creates a `products-api` application at the root of the workspace and an `e2e` project that runs against it.
 
-{% callout type="note" title="Framework Options" description="This tutorial uses the `express` framework.  The `node-server` preset also provides starter files for `koa` and `fastify`." /%}
+{% callout type="note" title="Framework Options" %}
+This tutorial uses the `express` framework. The `node-server` preset also provides starter files for `koa` and `fastify`.
+{% /callout %}
 
 ## Generating Libraries
 

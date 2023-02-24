@@ -138,41 +138,24 @@ Here are the outputs defined for the `auth` project:
 
 ```json {% fileName="auth/project.json" %}
 {
-  "name": "shared-ui",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "projectType": "library",
-  "sourceRoot": "shared/ui/src",
-  "prefix": "store",
+  "name": "auth",
   "targets": {
     "build": {
-      "executor": "@nrwl/angular:ng-packagr-lite",
-      "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
+      "executor": "@nrwl/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {}
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
       "options": {
-        "project": "shared/ui/ng-package.json"
-      },
-      "configurations": {
-        "production": {
-          "tsConfig": "shared/ui/tsconfig.lib.prod.json"
-        },
-        "development": {
-          "tsConfig": "shared/ui/tsconfig.lib.json"
-        }
-      },
-      "defaultConfiguration": "production"
+        "outputFile": "dist/auth/lint-report.txt"
+      }
     },
     "test": {
       "executor": "@nrwl/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-      "options": {
-        "jestConfig": "shared/ui/jest.config.ts",
-        "passWithNoTests": true
-      }
-    },
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "lintFilePatterns": ["shared/ui/**/*.ts", "shared/ui/**/*.html"]
-      }
+      "options": {}
     }
   },
   "tags": []
@@ -191,12 +174,13 @@ Run the command:
 git add . && git commit -m "commiting to test affected"
 ```
 
-Then make a change to an endpoint of your `producst-api` project:
+Then make a change to an endpoint of your `products-api` project:
 
 ```ts {% fileName="src/main.ts" %}
 import express from 'express';
 import { doAuth } from '@products-api/auth';
 
+const host = process.env.HOST ?? 'localhost';
 const port = process.env.PORT ? Number(process.env.PORT) : 3000;
 
 const app = express();
@@ -206,11 +190,11 @@ app.get('/', (req, res) => {
 });
 
 app.post('/auth', (req, res) => {
-  return doAuth();
+  res.send(doAuth());
 });
 
-app.listen(port, () => {
-  console.log(`[ ready ] http://localhost:${port}`);
+app.listen(port, host, () => {
+  console.log(`[ ready ] http://${host}:${port}`);
 });
 ```
 
