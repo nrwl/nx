@@ -231,6 +231,7 @@ describe('yarn LockFile utility', () => {
       expect(graph.externalNodes['npm:minimatch']).toMatchInlineSnapshot(`
         Object {
           "data": Object {
+            "hash": "sha512-J7p63hRiAjw1NDEww1W7i37+ByIrOWO5XQQAzZ3VOcL0PNybwpfmV/N05zFAzwQ9USyEcX6t3UO+K5aqBQOIHw==",
             "packageName": "minimatch",
             "version": "3.1.2",
           },
@@ -241,6 +242,7 @@ describe('yarn LockFile utility', () => {
       expect(graph.externalNodes['npm:minimatch@5.1.1']).toMatchInlineSnapshot(`
         Object {
           "data": Object {
+            "hash": "sha512-362NP+zlprccbEt/SkxKfRMHnNY85V74mVnpUpNyr3F35covl09Kec7/sEFLt3RA4oXmewtoaanoIf67SE5Y5g==",
             "packageName": "minimatch",
             "version": "5.1.1",
           },
@@ -251,6 +253,7 @@ describe('yarn LockFile utility', () => {
       expect(graph.externalNodes['npm:postgres']).toMatchInlineSnapshot(`
         Object {
           "data": Object {
+            "hash": "89b0967274cbe05ffc81fee9ce2f0e58aac96f15cf97e916258044ed9a2e6f61",
             "packageName": "postgres",
             "version": "https://codeload.github.com/charsleysa/postgres/tar.gz/3b1a01b2da3e2fafb1a79006f838eff11a8de3cb",
           },
@@ -262,6 +265,7 @@ describe('yarn LockFile utility', () => {
         .toMatchInlineSnapshot(`
         Object {
           "data": Object {
+            "hash": "sha512-zYDdpaj+1Al8Ki3WpY2I9bOAd8NSgFWGT7yR6KemSi25qWwDMNArnR2q6gDEDKSw+KuYY4shFxkY/JpoNF64tg==",
             "packageName": "eslint-plugin-disable-autofix",
             "version": "npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0",
           },
@@ -359,6 +363,7 @@ describe('yarn LockFile utility', () => {
       expect(graph.externalNodes['npm:minimatch']).toMatchInlineSnapshot(`
         Object {
           "data": Object {
+            "hash": "c154e566406683e7bcb746e000b84d74465b3a832c45d59912b9b55cd50dee66e5c4b1e5566dba26154040e51672f9aa450a9aef0c97cfc7336b78b7afb9540a",
             "packageName": "minimatch",
             "version": "3.1.2",
           },
@@ -369,6 +374,7 @@ describe('yarn LockFile utility', () => {
       expect(graph.externalNodes['npm:minimatch@5.1.1']).toMatchInlineSnapshot(`
         Object {
           "data": Object {
+            "hash": "215edd0978320a3354188f84a537d45841f2449af4df4379f79b9b777e71aa4f5722cc9d1717eabd2a70d38ef76ab7b708d24d83ea6a6c909dfd8833de98b437",
             "packageName": "minimatch",
             "version": "5.1.1",
           },
@@ -379,6 +385,7 @@ describe('yarn LockFile utility', () => {
       expect(graph.externalNodes['npm:postgres']).toMatchInlineSnapshot(`
         Object {
           "data": Object {
+            "hash": "521660853e0c9f1c604cf43d32c75e2b4675e2d912eaec7bb6749716539dd53f1dfaf575a422087f6a53362f5162f9a4b8a88cc1dadf9d7580423fc05137767a",
             "packageName": "postgres",
             "version": "https://github.com/charsleysa/postgres.git#commit=3b1a01b2da3e2fafb1a79006f838eff11a8de3cb",
           },
@@ -390,6 +397,7 @@ describe('yarn LockFile utility', () => {
         .toMatchInlineSnapshot(`
         Object {
           "data": Object {
+            "hash": "fb7272c37e5701df14a79d0f8a9d6a0cb521972011ba91d70290eefc33fca589307908a6fb63e2985257b1c7cc3839c076d1c8def0caabddf21a91f13d7c8fc1",
             "packageName": "eslint-plugin-disable-autofix",
             "version": "npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0",
           },
@@ -796,6 +804,7 @@ type-fest@^0.20.2:
       expect(graph.externalNodes['npm:tslib']).toMatchInlineSnapshot(`
         Object {
           "data": Object {
+            "hash": "sha512-336iVw3rtn2BUK7ORdIAHTyxHGRIHVReokCR3XjbckJMK7ms8FysBfhLR8IXnAgy7T0PTPNBWKiH514FOW/WSg==",
             "packageName": "tslib",
             "version": "2.5.0",
           },
@@ -807,6 +816,7 @@ type-fest@^0.20.2:
         .toMatchInlineSnapshot(`
         Object {
           "data": Object {
+            "hash": "sha1-kjNFw/3FHGzfkh58DptD6ZnKpho=",
             "packageName": "@gitlab-examples/semantic-release-npm",
             "version": "2.0.1",
           },
@@ -867,6 +877,7 @@ __metadata:
       expect(graph.externalNodes['npm:tslib']).toMatchInlineSnapshot(`
         Object {
           "data": Object {
+            "hash": "ae3ed5f9ce29932d049908ebfdf21b3a003a85653a9a140d614da6b767a93ef94f460e52c3d787f0e4f383546981713f165037dc2274df212ea9f8a4541004e1",
             "packageName": "tslib",
             "version": "2.5.0",
           },
@@ -878,6 +889,7 @@ __metadata:
         .toMatchInlineSnapshot(`
         Object {
           "data": Object {
+            "hash": "1944ac24ebb3e7c30db4fe743b75f0bb3b82a0c142c9ba435aa8224005fcc2bc709e21cec109c6f67d6290e0abb6032a55eaca38ca950711bf03317d128db30a",
             "packageName": "@gitlab-examples/semantic-release-npm",
             "version": "2.0.1",
           },

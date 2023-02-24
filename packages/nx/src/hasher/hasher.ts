@@ -349,10 +349,10 @@ class TaskHasher {
       hash = n.data.hash;
     } else {
       // unknown dependency
-      // this may occur dependency is not an npm package
+      // this may occur if dependency is not an npm package
       // but rather symlinked in node_modules or it's pointing to a remote git repo
       // in this case we have no information about the versioning of the given package
-      hash = `__${projectName}__`;
+      hash = version ? `__${projectName}@${version}__` : `__${projectName}__`;
     }
     return {
       value: hash,
