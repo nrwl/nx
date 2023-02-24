@@ -52,6 +52,7 @@ import { messages, recordStat } from '../utils/ab-testing';
 import { nxVersion } from '../utils/versions';
 import { existsSync } from 'fs';
 import { workspaceRoot } from '../utils/workspace-root';
+import { isCI } from '../utils/is-ci';
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
   packageGroup?: ArrayPackageGroup;
@@ -1108,7 +1109,8 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     try {
       if (
         ['nx', '@nrwl/workspace'].includes(opts.targetPackage) &&
-        (await isMigratingToNewMajor(from, opts.targetVersion))
+        (await isMigratingToNewMajor(from, opts.targetVersion)) &&
+        !isCI
       ) {
         const useCloud = await connectToNxCloudCommand(
           messages.getPromptMessage('nxCloudMigration')
@@ -1137,7 +1139,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       fetch: createFetcher(),
       from: opts.from,
       to: opts.to,
-      interactive: opts.interactive,
+      interactive: opts.interactive && !isCI,
       excludeAppliedMigrations: opts.excludeAppliedMigrations,
     });
 
