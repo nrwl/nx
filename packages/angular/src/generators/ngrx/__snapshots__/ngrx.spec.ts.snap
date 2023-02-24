@@ -550,6 +550,36 @@ export * from './lib/+state/super-users.actions';
   "
 `;
 
+exports[`ngrx Standalone APIs should add a feature module when route is non-empty 1`] = `
+"import { Routes } from '@angular/router';
+        import { NxWelcomeComponent } from './nx-welcome.component';
+import { provideStore, provideState } from '@ngrx/store';
+import { provideEffects } from '@ngrx/effects';
+import * as fromUsers from './+state/users.reducer';
+import { UsersEffects } from './+state/users.effects'; 
+      export const appRoutes: Routes = [{ path: 'home', component: NxWelcomeComponent , providers: [provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer), provideEffects(UsersEffects)]}];"
+`;
+
+exports[`ngrx Standalone APIs should add a feature module when route is set to default 1`] = `
+"import { Routes } from '@angular/router';
+        import { NxWelcomeComponent } from './nx-welcome.component';
+import { provideStore, provideState } from '@ngrx/store';
+import { provideEffects } from '@ngrx/effects';
+import * as fromUsers from './+state/users.reducer';
+import { UsersEffects } from './+state/users.effects'; 
+      export const appRoutes: Routes = [{ path: '', component: NxWelcomeComponent , providers: [provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer), provideEffects(UsersEffects)]}];"
+`;
+
+exports[`ngrx Standalone APIs should add a feature module when route is undefined 1`] = `
+"import { Routes } from '@angular/router';
+        import { NxWelcomeComponent } from './nx-welcome.component';
+import { provideStore, provideState } from '@ngrx/store';
+import { provideEffects } from '@ngrx/effects';
+import * as fromUsers from './+state/users.reducer';
+import { UsersEffects } from './+state/users.effects'; 
+      export const appRoutes: Routes = [{ path: '', component: NxWelcomeComponent , providers: [provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer), provideEffects(UsersEffects)]}];"
+`;
+
 exports[`ngrx Standalone APIs should add a root module with feature module when minimal is set to false 1`] = `
 "import { bootstrapApplication } from '@angular/platform-browser';
 import { provideRouter, withEnabledBlockingInitialNavigation } from '@angular/router';

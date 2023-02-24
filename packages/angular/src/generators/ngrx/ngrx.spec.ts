@@ -564,6 +564,52 @@ describe('ngrx', () => {
       expect(tree.read('/apps/my-app/src/main.ts', 'utf-8')).toMatchSnapshot();
     });
 
+    it('should add a feature module when route is undefined', async () => {
+      await ngrxGenerator(tree, {
+        ...defaultStandaloneOptions,
+        root: false,
+        route: undefined,
+        parent: 'apps/my-app/src/app/app.routes.ts',
+      });
+
+      expect(
+        tree.read('/apps/my-app/src/app/app.routes.ts', 'utf-8')
+      ).toMatchSnapshot();
+    });
+
+    it('should add a feature module when route is non-empty', async () => {
+      tree.write(
+        'apps/my-app/src/app/app.routes.ts',
+        `import { Routes } from '@angular/router';
+        import { NxWelcomeComponent } from './nx-welcome.component'; 
+      export const appRoutes: Routes = [{ path: 'home', component: NxWelcomeComponent }];`
+      );
+
+      await ngrxGenerator(tree, {
+        ...defaultStandaloneOptions,
+        root: false,
+        route: 'home',
+        parent: 'apps/my-app/src/app/app.routes.ts',
+      });
+
+      expect(
+        tree.read('/apps/my-app/src/app/app.routes.ts', 'utf-8')
+      ).toMatchSnapshot();
+    });
+
+    it('should add a feature module when route is set to default', async () => {
+      await ngrxGenerator(tree, {
+        ...defaultStandaloneOptions,
+        root: false,
+        route: '',
+        parent: 'apps/my-app/src/app/app.routes.ts',
+      });
+
+      expect(
+        tree.read('/apps/my-app/src/app/app.routes.ts', 'utf-8')
+      ).toMatchSnapshot();
+    });
+
     it('should add facade provider when facade is true', async () => {
       await ngrxGenerator(tree, {
         ...defaultStandaloneOptions,
