@@ -35,6 +35,86 @@ describe('Jest Migration - jest 29 update configs', () => {
     expect(actualJestConfigJs).toMatchSnapshot();
   });
 
+  it('should update root preset', async () => {
+    await setup(tree, 'my-lib');
+    await updateConfigsJest29(tree);
+
+    const actualPreset = tree.read('jest.preset.js', 'utf-8');
+    expect(actualPreset).toMatchSnapshot();
+    const actualJestConfigTs = tree.read('libs/my-lib/jest.config.ts', 'utf-8');
+    expect(actualJestConfigTs).toMatchSnapshot();
+    const actualJestConfigJs = tree.read('libs/my-lib/jest.config.js', 'utf-8');
+    expect(actualJestConfigJs).toMatchSnapshot();
+  });
+
+  it('should update root preset if ts-jest is preset', async () => {
+    await setup(tree, 'my-lib');
+    tree.write(
+      'jest.preset.js',
+      `const nxPreset = require('@nrwl/jest/preset').default;
+module.exports = {
+  ...nxPreset,
+  testMatch: ['**/+(*.)+(spec|test).+(ts|js)?(x)'],
+  globals: { 
+    'ts-jest': {
+        tsconfig: '<rootDir>/tsconfig.spec.json' 
+    },
+    something: 'else',
+    abc: [1234, true, {abc: 'yes'}]
+  },
+  transform: {
+    '^.+\\.(ts|js|html)$': 'ts-jest',
+  },
+  resolver: '@nrwl/jest/plugins/resolver',
+  moduleFileExtensions: ['ts', 'js', 'html'],
+  coverageReporters: ['html'],
+};
+`
+    );
+
+    await updateConfigsJest29(tree);
+
+    const actualPreset = tree.read('jest.preset.js', 'utf-8');
+    expect(actualPreset).toMatchSnapshot();
+  });
+
+  it('should NOT update ts-jest with no globals are preset', async () => {
+    await setup(tree, 'my-lib');
+    tree.write(
+      'jest.preset.js',
+      `const nxPreset = require('@nrwl/jest/preset').default;
+module.exports = {
+  ...nxPreset,
+  testMatch: ['**/+(*.)+(spec|test).+(ts|js)?(x)'],
+  transform: {
+    '^.+\\.(ts|js|html)$': 'ts-jest',
+  },
+  resolver: '@nrwl/jest/plugins/resolver',
+  moduleFileExtensions: ['ts', 'js', 'html'],
+  coverageReporters: ['html'],
+};
+`
+    );
+
+    await updateConfigsJest29(tree);
+
+    const actualPreset = tree.read('jest.preset.js', 'utf-8');
+    expect(actualPreset).toMatchSnapshot();
+  });
+
+  it('should add snapshot config with no root preset', async () => {
+    await setup(tree, 'my-lib');
+
+    tree.delete('jest.preset.js');
+
+    await updateConfigsJest29(tree);
+
+    const actualJestConfigTs = tree.read('libs/my-lib/jest.config.ts', 'utf-8');
+    expect(actualJestConfigTs).toMatchSnapshot();
+    const actualJestConfigJs = tree.read('libs/my-lib/jest.config.js', 'utf-8');
+    expect(actualJestConfigJs).toMatchSnapshot();
+  });
+
   it('should work with multiple projects + configs', async () => {
     await setup(tree, 'my-lib');
     await setup(tree, 'another-lib', projectGraph);
