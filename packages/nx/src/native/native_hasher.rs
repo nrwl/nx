@@ -3,6 +3,7 @@
 use crossbeam_channel::unbounded;
 use ignore::WalkBuilder;
 use std::collections::HashMap;
+use std::path::Path;
 use std::thread::{self, available_parallelism};
 use xxhash_rust::xxh3;
 
@@ -28,12 +29,12 @@ fn hash_file(file: String) -> Option<FileData> {
 #[napi]
 fn hash_files(workspace_root: String) -> HashMap<String, String> {
     let mut walker = WalkBuilder::new(&workspace_root);
-    let workspace_root = workspace_root + "/";
-    walker.add_ignore(workspace_root.clone() + ".nxignore");
+    let workspace_root = Path::new(&workspace_root);
+    walker.add_ignore(workspace_root.join(".nxignore"));
 
-    let git_folder = workspace_root.clone() + ".git";
+    let git_folder = workspace_root.join(".git");
     // We should make sure to always ignore node_modules
-    let node_folder = workspace_root.clone() + "node_modules";
+    let node_folder = workspace_root.join("node_modules");
     walker.filter_entry(move |entry| {
         !(entry.path().starts_with(&git_folder) || entry.path().starts_with(&node_folder))
     });
@@ -68,10 +69,17 @@ fn hash_files(workspace_root: String) -> HashMap<String, String> {
                 return Continue;
             };
 
-            let file_path = dir_entry.path().display().to_string();
-            let Some(file_path) = file_path.strip_prefix(&workspace_root) else {
+            let Ok(file_path) = dir_entry.path().strip_prefix(&workspace_root) else {
                 return Continue;
             };
+
+            let Some(file_path) = file_path.to_str() else {
+                return Continue;
+            };
+
+            // convert back-slashes in Windows paths, since the js expects only forward-slash path separators
+            #[cfg(target_os = "windows")]
+            let file_path = file_path.replace('\\', "/");
 
             tx.send((file_path.to_string(), content)).ok();
 
@@ -162,6 +170,3 @@ mod tests {
         );
     }
 }
-//
-
-//
