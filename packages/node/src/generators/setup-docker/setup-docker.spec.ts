@@ -25,7 +25,7 @@ describe('setupDockerGenerator', () => {
             dependsOn: ['build'],
             executor: 'nx:run-commands',
             options: {
-              commands: ['docker build -f api/Dockerfile . -t api'],
+              command: 'docker build -f api/Dockerfile . -t api',
             },
           },
         })
@@ -50,7 +50,7 @@ describe('setupDockerGenerator', () => {
             dependsOn: ['build'],
             executor: 'nx:run-commands',
             options: {
-              commands: ['docker build -f Dockerfile . -t api'],
+              command: 'docker build -f Dockerfile . -t api',
             },
           },
         })
