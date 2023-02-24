@@ -9,8 +9,10 @@ import type { Compiler } from 'webpack';
 export class WebpackNxBuildCoordinationPlugin {
   private currentlyRunning: 'none' | 'nx-build' | 'webpack-build' = 'none';
 
-  constructor(private readonly buildCmd: string) {
-    this.buildChangedProjects();
+  constructor(private readonly buildCmd: string, skipInitialBuild?: boolean) {
+    if (!skipInitialBuild) {
+      this.buildChangedProjects();
+    }
     this.startWatchingBuildableLibs();
   }
 

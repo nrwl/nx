@@ -91,11 +91,9 @@ export function executeWebpackDevServerBuilder(
     const buildTargetTsConfigPath =
       buildTargetConfiguration?.tsConfig ?? buildTarget.options.tsConfig;
     const { tsConfigPath, dependencies: foundDependencies } =
-      createTmpTsConfigForBuildableLibs(
-        buildTargetTsConfigPath,
-        context,
-        parsedBrowserTarget.target
-      );
+      createTmpTsConfigForBuildableLibs(buildTargetTsConfigPath, context, {
+        target: parsedBrowserTarget.target,
+      });
     dependencies = foundDependencies;
 
     // We can't just pass the tsconfig path in memory to the angular builder
