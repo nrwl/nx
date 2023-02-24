@@ -9,7 +9,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { transition, variants } from './motion.helpers';
 
-export function VscodeIntegrationTab(): JSX.Element {
+export function IdeIntegrationTab(): JSX.Element {
   const features = [
     {
       connectionWidth: 'w-96',
