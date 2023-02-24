@@ -1,4 +1,5 @@
 import { existsSync } from 'fs';
+import { defaultHashing } from 'nx/src/hasher/hashing-impl';
 import { join } from 'path';
 
 import { ProjectGraphBuilder } from '../../../../project-graph/project-graph-builder';
@@ -16,13 +17,16 @@ export function buildNpmPackageNodes(builder: ProjectGraphBuilder) {
     ...packageJson.devDependencies,
   };
   Object.keys(deps).forEach((d) => {
-    builder.addExternalNode({
-      type: 'npm',
-      name: `npm:${d}`,
-      data: {
-        version: deps[d],
-        packageName: d,
-      },
-    });
+    if (!builder.graph.externalNodes[`npm:${d}`]) {
+      builder.addExternalNode({
+        type: 'npm',
+        name: `npm:${d}`,
+        data: {
+          version: deps[d],
+          packageName: d,
+          hash: defaultHashing.hashArray([d, deps[d]]),
+        },
+      });
+    }
   });
 }
