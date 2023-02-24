@@ -17,6 +17,7 @@ export async function applicationGenerator(
 ): Promise<GeneratorCallback> {
   const options = normalizeOptions(tree, rawOptions);
   const initTask = await initGenerator(tree, {
+    skipPackageJson: options.skipPackageJson,
     unitTestRunner: options.unitTestRunner,
     skipFormat: true,
   });

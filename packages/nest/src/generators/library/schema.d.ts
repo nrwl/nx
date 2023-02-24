@@ -29,6 +29,7 @@ export interface LibraryGeneratorOptions {
   unitTestRunner?: UnitTestRunner;
   standaloneConfig?: boolean;
   setParserOptionsProject?: boolean;
+  skipPackageJson?: boolean;
 }
 
 export interface NormalizedOptions extends LibraryGeneratorOptions {

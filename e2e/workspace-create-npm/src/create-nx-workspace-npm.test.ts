@@ -1,11 +1,14 @@
+import { forEach } from '@angular-devkit/schematics';
 import {
   checkFilesExist,
   cleanupProject,
   packageInstall,
   readJson,
+  removeFile,
   runCLI,
   runCreateWorkspace,
   uniq,
+  updateJson,
 } from '@nrwl/e2e/utils';
 
 describe('create-nx-workspace --preset=npm', () => {
@@ -25,7 +28,9 @@ describe('create-nx-workspace --preset=npm', () => {
     const appName = uniq('my-app');
 
     expect(() => {
-      runCLI(`generate @nrwl/angular:app ${appName} --no-interactive`);
+      runCLI(
+        `generate @nrwl/angular:app ${appName} --skipPackageJson --no-interactive`
+      );
     }).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
   }, 1_000_000);
@@ -35,7 +40,9 @@ describe('create-nx-workspace --preset=npm', () => {
     const libName = uniq('lib');
 
     expect(() => {
-      runCLI(`generate @nrwl/angular:lib ${libName} --no-interactive`);
+      runCLI(
+        `generate @nrwl/angular:lib ${libName} --skipPackageJson --no-interactive`
+      );
     }).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
     const tsconfig = readJson(`tsconfig.base.json`);
@@ -50,7 +57,9 @@ describe('create-nx-workspace --preset=npm', () => {
     const libName = uniq('lib');
 
     expect(() =>
-      runCLI(`generate @nrwl/workspace:library ${libName} --no-interactive`)
+      runCLI(
+        `generate @nrwl/workspace:library ${libName} --skipPackageJson --no-interactive`
+      )
     ).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
     const tsconfig = readJson(`tsconfig.base.json`);
@@ -65,7 +74,9 @@ describe('create-nx-workspace --preset=npm', () => {
     const libName = uniq('lib');
 
     expect(() =>
-      runCLI(`generate @nrwl/js:library ${libName} --no-interactive`)
+      runCLI(
+        `generate @nrwl/js:library ${libName} --skipPackageJson --no-interactive`
+      )
     ).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
     const tsconfig = readJson(`tsconfig.base.json`);
@@ -80,7 +91,9 @@ describe('create-nx-workspace --preset=npm', () => {
     const appName = uniq('my-app');
 
     expect(() =>
-      runCLI(`generate @nrwl/web:app ${appName} --no-interactive`)
+      runCLI(
+        `generate @nrwl/web:app ${appName} --skipPackageJson --no-interactive`
+      )
     ).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
   });
@@ -91,7 +104,9 @@ describe('create-nx-workspace --preset=npm', () => {
     const appName = uniq('my-app');
 
     expect(() => {
-      runCLI(`generate @nrwl/react:app ${appName} --no-interactive`);
+      runCLI(
+        `generate @nrwl/react:app ${appName} --skipPackageJson --no-interactive`
+      );
     }).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
   });
@@ -102,7 +117,9 @@ describe('create-nx-workspace --preset=npm', () => {
     const libName = uniq('lib');
 
     expect(() => {
-      runCLI(`generate @nrwl/react:lib ${libName} --no-interactive`);
+      runCLI(
+        `generate @nrwl/react:lib ${libName} --skipPackageJson --no-interactive`
+      );
     }).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
     const tsconfig = readJson(`tsconfig.base.json`);
@@ -117,7 +134,9 @@ describe('create-nx-workspace --preset=npm', () => {
     const appName = uniq('my-app');
 
     expect(() => {
-      runCLI(`generate @nrwl/next:app ${appName} --no-interactive`);
+      runCLI(
+        `generate @nrwl/next:app ${appName} --skipPackageJson --no-interactive`
+      );
     }).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
   });
@@ -128,7 +147,9 @@ describe('create-nx-workspace --preset=npm', () => {
     const libName = uniq('lib');
 
     expect(() => {
-      runCLI(`generate @nrwl/next:lib ${libName} --no-interactive`);
+      runCLI(
+        `generate @nrwl/next:lib ${libName} --skipPackageJson --no-interactive`
+      );
     }).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
     const tsconfig = readJson(`tsconfig.base.json`);
@@ -143,7 +164,9 @@ describe('create-nx-workspace --preset=npm', () => {
     const appName = uniq('my-app');
 
     expect(() => {
-      runCLI(`generate @nrwl/react-native:app ${appName} --no-interactive`);
+      runCLI(
+        `generate @nrwl/react-native:app ${appName} --install=false --skipPackageJson --no-interactive`
+      );
     }).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
   });
@@ -154,7 +177,9 @@ describe('create-nx-workspace --preset=npm', () => {
     const libName = uniq('lib');
 
     expect(() => {
-      runCLI(`generate @nrwl/react-native:lib ${libName} --no-interactive`);
+      runCLI(
+        `generate @nrwl/react-native:lib ${libName} --skipPackageJson --no-interactive`
+      );
     }).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
     const tsconfig = readJson(`tsconfig.base.json`);
@@ -169,7 +194,9 @@ describe('create-nx-workspace --preset=npm', () => {
     const appName = uniq('my-app');
 
     expect(() => {
-      runCLI(`generate @nrwl/node:app ${appName} --no-interactive`);
+      runCLI(
+        `generate @nrwl/node:app ${appName} --skipPackageJson --no-interactive`
+      );
     }).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
   });
@@ -180,7 +207,9 @@ describe('create-nx-workspace --preset=npm', () => {
     const libName = uniq('lib');
 
     expect(() => {
-      runCLI(`generate @nrwl/node:lib ${libName} --no-interactive`);
+      runCLI(
+        `generate @nrwl/node:lib ${libName} --skipPackageJson --no-interactive`
+      );
     }).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
     const tsconfig = readJson(`tsconfig.base.json`);
@@ -195,7 +224,9 @@ describe('create-nx-workspace --preset=npm', () => {
     const appName = uniq('my-app');
 
     expect(() => {
-      runCLI(`generate @nrwl/nest:app ${appName} --no-interactive`);
+      runCLI(
+        `generate @nrwl/nest:app ${appName} --skipPackageJson --no-interactive`
+      );
     }).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
   });
@@ -206,7 +237,9 @@ describe('create-nx-workspace --preset=npm', () => {
     const libName = uniq('lib');
 
     expect(() => {
-      runCLI(`generate @nrwl/nest:lib ${libName} --no-interactive`);
+      runCLI(
+        `generate @nrwl/nest:lib ${libName} --skipPackageJson --no-interactive`
+      );
     }).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
     const tsconfig = readJson(`tsconfig.base.json`);
@@ -221,7 +254,9 @@ describe('create-nx-workspace --preset=npm', () => {
     const appName = uniq('my-app');
 
     expect(() => {
-      runCLI(`generate @nrwl/express:app ${appName} --no-interactive`);
+      runCLI(
+        `generate @nrwl/express:app ${appName} --skipPackageJson --no-interactive`
+      );
     }).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
   });

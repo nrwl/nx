@@ -118,6 +118,12 @@
         "description": "Use a custom Express server for the Next.js application.",
         "type": "boolean",
         "default": false
+      },
+      "skipPackageJson": {
+        "type": "boolean",
+        "default": false,
+        "description": "Do not add dependencies to `package.json`.",
+        "x-priority": "internal"
       }
     },
     "required": [],
