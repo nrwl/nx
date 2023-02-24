@@ -9,6 +9,7 @@ import {
 import { ProjectGraphBuilder } from '../project-graph/project-graph-builder';
 import { satisfies } from 'semver';
 import { NormalizedPackageJson } from './utils/package-json';
+import { defaultHashing } from '../hasher/hashing-impl';
 
 /**
  * Yarn
@@ -82,6 +83,10 @@ function addNodes(
         data: {
           version,
           packageName,
+          hash:
+            snapshot.integrity ||
+            snapshot.checksum ||
+            defaultHashing.hashArray([packageName, version]),
         },
       };
 

@@ -17,6 +17,7 @@ import {
   ProjectGraphExternalNode,
 } from '../config/project-graph';
 import { ProjectGraphBuilder } from '../project-graph/project-graph-builder';
+import { defaultHashing } from '../hasher/hashing-impl';
 
 export function parsePnpmLockfile(lockFileContent: string): ProjectGraph {
   const data = parseAndNormalizePnpmLockfile(lockFileContent);
@@ -37,8 +38,8 @@ function addNodes(
 ) {
   const nodes: Map<string, Map<string, ProjectGraphExternalNode>> = new Map();
 
-  Object.entries(data.packages).forEach(([key, value]) => {
-    const packageName = findPackageName(key, value, data);
+  Object.entries(data.packages).forEach(([key, snapshot]) => {
+    const packageName = findPackageName(key, snapshot, data);
     const version = findVersion(key, packageName).split('_')[0];
 
     // we don't need to keep duplicates, we can just track the keys
@@ -54,6 +55,13 @@ function addNodes(
       data: {
         version,
         packageName,
+        hash:
+          snapshot.resolution?.['integrity'] ||
+          defaultHashing.hashArray(
+            snapshot.resolution?.['tarball']
+              ? [snapshot.resolution['tarball']]
+              : [packageName, version]
+          ),
       },
     };
 

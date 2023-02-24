@@ -8,6 +8,7 @@ import {
   ProjectGraphExternalNode,
 } from '../config/project-graph';
 import { NormalizedPackageJson } from './utils/package-json';
+import { defaultHashing } from '../hasher/hashing-impl';
 
 /**
  * NPM
@@ -77,7 +78,7 @@ function addNodes(
 
       const packageName = path.split('node_modules/').pop();
       const version = findV3Version(snapshot, packageName);
-      createNode(packageName, version, path, nodes, keyMap);
+      createNode(packageName, version, path, nodes, keyMap, snapshot);
     });
   } else {
     Object.entries(data.dependencies).forEach(([packageName, snapshot]) => {
@@ -130,7 +131,7 @@ function addV1Node(
   keyMap: Map<string, ProjectGraphExternalNode>,
   builder: ProjectGraphBuilder
 ) {
-  createNode(packageName, snapshot.version, path, nodes, keyMap);
+  createNode(packageName, snapshot.version, path, nodes, keyMap, snapshot);
 
   // traverse nested dependencies
   if (snapshot.dependencies) {
@@ -152,7 +153,8 @@ function createNode(
   version: string,
   key: string,
   nodes: Map<string, Map<string, ProjectGraphExternalNode>>,
-  keyMap: Map<string, ProjectGraphExternalNode>
+  keyMap: Map<string, ProjectGraphExternalNode>,
+  snapshot: NpmDependencyV3 | NpmDependencyV1
 ) {
   const existingNode = nodes.get(packageName)?.get(version);
   if (existingNode) {
@@ -166,6 +168,11 @@ function createNode(
     data: {
       version,
       packageName,
+      hash:
+        snapshot.integrity ||
+        defaultHashing.hashArray(
+          snapshot.resolved ? [snapshot.resolved] : [packageName, version]
+        ),
     },
   };
 
