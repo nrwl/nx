@@ -39,11 +39,15 @@ skip steps 1 and 2.
 > kubectl apply -f examples/mongodb.yml
 ```
 
-You might need to wait a bit for the Pods to be created.
+This will create a secret. You can get the value of the secret as follows:
 
-The default connection string for the Mongo Community Operator should look like
+> kubectl get secret cloud-mongodb-nrwl-api-admin-user -o go-template='{{range $k,$v := .data}}{{"### "}}{{$k}}{{"n"}}{{$v|base64decode}}{{"nn"}}{{end}}'
+
+You might need to wait a bit for the Pods to be created before this secret will be available.
+
+The output of the command can be a bit confusing (you are only interested in the second part of the output). The default connection string for the Mongo Community Operator will look like
 this: `mongodb+srv://admin-user:DB_PASSWORD@cloud-mongodb-svc.default.svc.cluster.local/nrwl-api?replicaSet=cloud-mongodb&ssl=false`
-.
+. You should be able to use this value.
 
 Take this connection string and paste it into your `examples/secret.yml`, replacing the placeholder value.
 
