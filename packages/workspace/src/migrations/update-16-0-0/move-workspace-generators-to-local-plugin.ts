@@ -1,4 +1,5 @@
 import {
+  addDependenciesToPackageJson,
   ensurePackage,
   formatFiles,
   generateFiles,
@@ -11,9 +12,8 @@ import {
   Tree,
   writeJson,
 } from '@nrwl/devkit';
-import type * as pluginGeneratorModule from '@nrwl/nx-plugin/src/generators/plugin/plugin';
+// nx-ignore-next-line
 import * as path from 'path';
-import { Linter } from '@nrwl/linter';
 import {
   GeneratorsJson,
   GeneratorsJsonEntry,
@@ -21,6 +21,7 @@ import {
 import { moveGenerator } from '../../generators/move/move';
 import { nxVersion } from '../../utils/versions';
 import { PackageJson } from 'nx/src/utils/package-json';
+import { runTasksInSerial } from '../../utilities/run-tasks-in-serial';
 
 const PROJECT_NAME = 'workspace-plugin';
 const DESTINATION = `tools/${PROJECT_NAME}`;
@@ -45,6 +46,7 @@ function addFiles(
 }
 
 export default async function (tree: Tree) {
+  const tasks = [];
   if (!tree.children('tools/generators').length) {
     return;
   }
@@ -54,8 +56,22 @@ export default async function (tree: Tree) {
     await updateExistingPlugin(tree, project);
   } else {
     await createNewPlugin(tree);
+    tasks.push(
+      addDependenciesToPackageJson(
+        tree,
+        {},
+        {
+          '@nrwl/nx-plugin': nxVersion,
+          '@nrwl/devkit': nxVersion,
+          // types/node is neccessary for pnpm since it's used in tsconfig and transitive
+          // dependencies are not resolved correctly
+          '@types/node': 'latest',
+        }
+      )
+    );
   }
   await formatFiles(tree);
+  return runTasksInSerial(...tasks);
 }
 
 // Inspired by packages/nx/src/command-line/workspace-generators.ts
@@ -89,7 +105,11 @@ function collectAndMoveGenerators(tree: Tree, destinationProjectRoot: string) {
 async function createNewPlugin(tree: Tree) {
   ensurePackage('@nrwl/nx-plugin', nxVersion);
   const { pluginGenerator } =
-    require('@nrwl/nx-plugin/src/generators/plugin/plugin') as typeof pluginGeneratorModule;
+    // nx-ignore-next-line
+    require('@nrwl/nx-plugin/src/generators/plugin/plugin');
+
+  // nx-ignore-next-line
+  const { Linter } = ensurePackage('@nrwl/linter', nxVersion);
 
   const { npmScope } = getWorkspaceLayout(tree);
   const importPath = npmScope ? `${npmScope}/${PROJECT_NAME}` : PROJECT_NAME;

@@ -6,11 +6,10 @@ import {
   joinPathFragments,
   GeneratorsJson,
   ProjectConfiguration,
-  getProjects,
+  stripIndents,
 } from '@nrwl/devkit';
 
 import generator from './move-workspace-generators-to-local-plugin';
-import workspaceGeneratorGenerator from '@nrwl/workspace/src/generators/workspace-generator/workspace-generator';
 
 describe('local-plugin-from-tools generator', () => {
   let tree: Tree;
@@ -22,7 +21,6 @@ describe('local-plugin-from-tools generator', () => {
   it('should find single workspace generator successfully', async () => {
     await workspaceGeneratorGenerator(tree, {
       name: 'my-generator',
-      skipFormat: false,
     });
     await generator(tree);
     const config = readProjectConfiguration(tree, 'workspace-plugin');
@@ -36,7 +34,6 @@ describe('local-plugin-from-tools generator', () => {
     for (const name of generators) {
       await workspaceGeneratorGenerator(tree, {
         name,
-        skipFormat: false,
       });
     }
 
@@ -55,7 +52,6 @@ describe('local-plugin-from-tools generator', () => {
     for (const name of generators) {
       await workspaceGeneratorGenerator(tree, {
         name,
-        skipFormat: false,
       });
     }
 
@@ -83,7 +79,6 @@ describe('local-plugin-from-tools generator', () => {
     for (const name of generators) {
       await workspaceGeneratorGenerator(tree, {
         name,
-        skipFormat: false,
       });
     }
 
@@ -93,7 +88,6 @@ describe('local-plugin-from-tools generator', () => {
     for (const name of moreGenerators) {
       await workspaceGeneratorGenerator(tree, {
         name,
-        skipFormat: false,
       });
     }
 
@@ -132,4 +126,47 @@ function assertValidGenerator(
 
 function uniq(prefix: string) {
   return `${prefix}${Math.floor(Math.random() * 10000000)}`;
+}
+
+async function workspaceGeneratorGenerator(
+  host: Tree,
+  schema: { name: string }
+) {
+  const outputDirectory = joinPathFragments('tools/generators', schema.name);
+
+  host.write(
+    joinPathFragments(outputDirectory, 'index.ts'),
+    stripIndents`import { Tree, formatFiles, installPackagesTask } from '@nrwl/devkit';
+  import { libraryGenerator } from '@nrwl/workspace/generators';
+  
+  export default async function(tree: Tree, schema: any) {
+    await libraryGenerator(tree, {name: schema.name});
+    await formatFiles(tree);
+    return () => {
+      installPackagesTask(tree)
+    }
+  }`
+  );
+
+  host.write(
+    joinPathFragments(outputDirectory, 'schema.json'),
+    stripIndents`{
+    "$schema": "http://json-schema.org/schema",
+    "cli": "nx",
+    "$id": "<%= name %>",
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "description": "Library name",
+        "$default": {
+          "$source": "argv",
+          "index": 0
+        }
+      }
+    },
+    "required": ["name"]
+  }
+  `
+  );
 }

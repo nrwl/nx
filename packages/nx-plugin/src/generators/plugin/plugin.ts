@@ -22,6 +22,7 @@ import { addTsLibDependencies } from '@nx/js/src/utils/typescript/add-tslib-depe
 import { addSwcRegisterDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
 
 import type { Schema } from './schema';
+import { tsLibVersion } from '@nx/js/src/utils/versions';
 
 const nxVersion = require('../../../package.json').version;
 
@@ -87,6 +88,7 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
   addDependenciesToPackageJson(
     host,
     {
+      tslib: tsLibVersion,
       '@nx/devkit': nxVersion,
     },
     {

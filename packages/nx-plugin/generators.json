@@ -66,11 +66,6 @@
       "factory": "./src/generators/executor/executor#executorSchematic",
       "schema": "./src/generators/executor/schema.json",
       "description": "Create an executor for an Nx Plugin."
-    },
-    "local-plugin-from-tools": {
-      "factory": "./src/generators/local-plugin-from-tools/generator",
-      "schema": "./src/generators/local-plugin-from-tools/schema.json",
-      "description": "Migrate existing workspace-generators to a workspace-tools plugin"
     }
   }
 }

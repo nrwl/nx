@@ -192,6 +192,16 @@ const IGNORE_MATCHES_BY_FILE: Record<string, string[]> = {
       '../../packages/angular/src/migrations/update-12-3-0/update-storybook.ts'
     ),
   ],
+  '@nrwl/nx-plugin': [
+    join(
+      __dirname,
+      '../../packages/workspace/src/migrations/update-16-0-0/move-workspace-generators-to-local-plugin.spec.ts'
+    ),
+    join(
+      __dirname,
+      '../../packages/workspace/src/migrations/update-16-0-0/move-workspace-generators-to-local-plugin.ts'
+    ),
+  ],
 };
 
 export default async function getMissingDependencies(
@@ -239,6 +249,8 @@ export default async function getMissingDependencies(
     ...options,
     package: { dependencies },
   });
+
+  console.log(missing['@nrwl/nx-plugin']);
 
   const packagesMissing = Object.keys(missing).filter(
     (m) =>

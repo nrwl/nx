@@ -94,7 +94,7 @@
       "version": "16.0.0-beta.3",
       "description": "Generates a plugin called 'workspace-plugin' containing your workspace generators.",
       "cli": "nx",
-      "implementation": "./src/migrations/update-16-0-0/move-workspace-generators-to-local-plugin.ts"
+      "implementation": "./src/migrations/update-16-0-0/move-workspace-generators-to-local-plugin"
     }
   },
   "packageJsonUpdates": {

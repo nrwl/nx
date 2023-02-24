@@ -1,42 +1,18 @@
 import { Schema } from './schema';
 import {
   Tree,
-  formatFiles,
-  generateFiles,
-  names,
-  joinPathFragments,
-  addDependenciesToPackageJson,
+  stripIndents,
 } from '@nx/devkit';
-import { nxVersion } from '../../utils/versions';
 
 export default async function (host: Tree, schema: Schema) {
-  const options = normalizeOptions(schema);
+  const message = stripIndents`Workspace Generators are no longer supported. Instead,
+    Nx now supports executing generators or executors from local plugins. To get 
+    started, install @nrwl/nx-plugin and run \`nx g plugin\`.
 
-  generateFiles(
-    host,
-    joinPathFragments(__dirname, 'files'),
-    joinPathFragments('tools/generators', schema.name),
-    options
-  );
+    Afterwards, or if you already have an Nx plugin, you can run 
+    \`nx g generator --project {my-plugin}\` to add a new generator.
+    
+    For more information, see: https://nx.dev/deprecated/workspace-generators`;
 
-  const installTask = addDependenciesToPackageJson(
-    host,
-    {},
-    {
-      '@nx/devkit': nxVersion,
-      // types/node is neccessary for pnpm since it's used in tsconfig and transitive
-      // dependencies are not resolved correctly
-      '@types/node': 'latest',
-    }
-  );
-
-  if (!schema.skipFormat) {
-    await formatFiles(host);
-  }
-  return installTask;
-}
-
-function normalizeOptions(options: Schema): any {
-  const name = names(options.name).fileName;
-  return { ...options, name, tmpl: '' };
+  throw new Error(message);
 }

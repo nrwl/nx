@@ -1,11 +1,11 @@
 ---
 title: 'workspace-generator - CLI command'
-description: 'Runs a workspace generator from the tools/generators directory'
+description: 'Use a local plugin instead. See: https://nx.dev/deprecated/workspace-generators'
 ---
 
 # workspace-generator
 
-Runs a workspace generator from the tools/generators directory
+**Deprecated:** Use a local plugin instead. See: https://nx.dev/deprecated/workspace-generators
 
 ## Usage
 
@@ -22,18 +22,6 @@ Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`
 Type: `boolean`
 
 Show help
-
-### list-generators
-
-Type: `boolean`
-
-List the available workspace-generators
-
-### name
-
-Type: `string`
-
-The name of your generator
 
 ### version
 
