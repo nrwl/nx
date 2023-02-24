@@ -13,6 +13,7 @@ import {
   packageInstall,
   rmDist,
   runCommandUntil,
+  waitUntil,
 } from '@nrwl/e2e/utils';
 
 describe('EsBuild Plugin', () => {
@@ -67,6 +68,31 @@ describe('EsBuild Plugin', () => {
     expect(() => runCLI(`build ${myPkg}`)).toThrow();
     expect(() => runCLI(`build ${myPkg} --skipTypeCheck`)).not.toThrow();
     expect(runCommand(`node dist/libs/${myPkg}/index.js`)).toMatch(/Bye/);
+    // Reset file
+    updateFile(
+      `libs/${myPkg}/src/index.ts`,
+      `
+      console.log('Hello');
+    `
+    );
+
+    /* Test that watch mode copies assets on start, and again on update.
+     */
+    updateFile(`libs/${myPkg}/assets/a.md`, 'initial a');
+    const watchProcess = await runCommandUntil(
+      `build ${myPkg} --watch`,
+      (output) => {
+        return output.includes('watching for changes');
+      }
+    );
+    readFile(`dist/libs/${myPkg}/assets/a.md`).includes('initial a');
+    updateFile(`libs/${myPkg}/assets/a.md`, 'updated a');
+    await expect(
+      waitUntil(() =>
+        readFile(`dist/libs/${myPkg}/assets/a.md`).includes('updated a')
+      )
+    ).resolves.not.toThrow();
+    watchProcess.kill();
   }, 300_000);
 
   it('should support bundling everything or only workspace libs', async () => {

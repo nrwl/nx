@@ -31,18 +31,19 @@ export async function copyAssets(
     callback:
       typeof options?.watch === 'object' ? options.watch.onCopy : undefined,
   });
+  const result: CopyAssetsResult = {
+    success: true,
+  };
+
   if (options.watch) {
-    const dispose = await assetHandler.watchAndProcessOnAssetChange();
-    return {
-      success: true,
-      stop: dispose,
-    };
-  } else {
-    try {
-      await assetHandler.processAllAssetsOnce();
-    } catch {
-      return { success: false };
-    }
-    return { success: true };
+    result.stop = await assetHandler.watchAndProcessOnAssetChange();
   }
+
+  try {
+    await assetHandler.processAllAssetsOnce();
+  } catch {
+    result.success = false;
+  }
+
+  return result;
 }
