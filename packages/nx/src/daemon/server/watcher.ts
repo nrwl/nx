@@ -7,56 +7,24 @@
  */
 import { workspaceRoot } from '../../utils/workspace-root';
 import type { AsyncSubscription, Event } from '@parcel/watcher';
-import { readFileSync } from 'fs';
-import { join, relative } from 'path';
+import { relative } from 'path';
 import { FULL_OS_SOCKET_PATH } from '../socket-utils';
 import { handleServerProcessTermination } from './shutdown-utils';
 import { Server } from 'net';
-import ignore from 'ignore';
 import { normalizePath } from '../../utils/path';
+import {
+  getAlwaysIgnore,
+  getIgnoredGlobs,
+  getIgnoreObject,
+} from '../../utils/ignore';
 import { platform } from 'os';
 
-const ALWAYS_IGNORE = [
-  join(workspaceRoot, 'node_modules'),
-  join(workspaceRoot, '.git'),
-  FULL_OS_SOCKET_PATH,
-];
-
-function getIgnoredGlobs() {
-  return [
-    ...ALWAYS_IGNORE,
-    ...getIgnoredGlobsFromFile(join(workspaceRoot, '.nxignore')),
-    ...getIgnoredGlobsFromFile(join(workspaceRoot, '.gitignore')),
-  ];
-}
-
-function getIgnoredGlobsFromFile(file: string): string[] {
-  try {
-    return readFileSync(file, 'utf-8')
-      .split('\n')
-      .map((i) => i.trim())
-      .filter((i) => !!i && !i.startsWith('#'))
-      .map((i) => (i.startsWith('/') ? join(workspaceRoot, i) : i));
-  } catch (e) {
-    return [];
-  }
-}
+const ALWAYS_IGNORE = [...getAlwaysIgnore(workspaceRoot), FULL_OS_SOCKET_PATH];
 
 export type FileWatcherCallback = (
   err: Error | null,
   changeEvents: Event[] | null
 ) => Promise<void>;
-
-function configureIgnoreObject() {
-  const ig = ignore();
-  try {
-    ig.add(readFileSync(`${workspaceRoot}/.gitignore`, 'utf-8'));
-  } catch {}
-  try {
-    ig.add(readFileSync(`${workspaceRoot}/.nxignore`, 'utf-8'));
-  } catch {}
-  return ig;
-}
 
 export async function subscribeToOutputsChanges(
   cb: FileWatcherCallback
@@ -93,7 +61,7 @@ export async function subscribeToWorkspaceChanges(
    * executed by packages which do not have its necessary native binaries available.
    */
   const watcher = await import('@parcel/watcher');
-  const ignoreObj = configureIgnoreObject();
+  const ignoreObj = getIgnoreObject();
 
   return await watcher.subscribe(
     workspaceRoot,
@@ -136,7 +104,7 @@ export async function subscribeToWorkspaceChanges(
         cb(null, nonIgnoredEvents);
       }
     },
-    watcherOptions(getIgnoredGlobs())
+    watcherOptions(getIgnoredGlobs(workspaceRoot))
   );
 }
 

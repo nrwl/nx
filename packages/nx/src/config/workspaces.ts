@@ -39,6 +39,11 @@ import {
   shouldMergeAngularProjects,
 } from '../adapter/angular-json';
 import { getNxRequirePaths } from '../utils/installation-directory';
+import {
+  ALWAYS_IGNORE,
+  getIgnoredGlobs,
+  getIgnoreObject,
+} from '../utils/ignore';
 
 export class Workspaces {
   private cachedProjectsConfig: ProjectsConfigurations;
@@ -561,7 +566,7 @@ function removeRelativePath(pattern: string): string {
 }
 
 export function globForProjectFiles(
-  root,
+  root: string,
   nxJson?: NxJsonConfiguration,
   ignorePluginInference = false
 ) {
@@ -615,35 +620,30 @@ export function globForProjectFiles(
    * .gitignore and .nxignore files below.
    */
 
-  const ALWAYS_IGNORE = [
+  const staticIgnores = [
     'node_modules',
     '**/node_modules',
     'dist',
     '.git',
     ...globsToExclude,
+    ...getIgnoredGlobs(root, false),
   ];
 
   /**
    * TODO: This utility has been implemented multiple times across the Nx codebase,
    * discuss whether it should be moved to a shared location.
    */
-  const ig = ignore();
-  try {
-    ig.add(readFileSync(`${root}/.gitignore`, 'utf-8'));
-  } catch {}
-  try {
-    ig.add(readFileSync(`${root}/.nxignore`, 'utf-8'));
-  } catch {}
-
-  const globResults = globSync(combinedProjectGlobPattern, {
-    ignore: ALWAYS_IGNORE,
+  const opts = {
+    ignore: staticIgnores,
     absolute: false,
     cwd: root,
     dot: true,
     suppressErrors: true,
-  });
+  };
 
-  projectGlobCache = deduplicateProjectFiles(globResults, ig);
+  const globResults = globSync(combinedProjectGlobPattern, opts);
+
+  projectGlobCache = deduplicateProjectFiles(globResults);
 
   // TODO @vsavkin remove after Nx 16
   if (
@@ -666,15 +666,15 @@ export function globForProjectFiles(
   return projectGlobCache;
 }
 
-export function deduplicateProjectFiles(
-  files: string[],
-  ig?: Ignore
-): string[] {
+/**
+ * @description Loops through files and reduces them to 1 file per project.
+ * @param files Array of files that may represent projects
+ */
+export function deduplicateProjectFiles(files: string[]): string[] {
   const filtered = new Map();
   files.forEach((file) => {
     const projectFolder = dirname(file);
     const projectFile = basename(file);
-    if (ig?.ignores(file)) return; // file is in .gitignore or .nxignoreb
     if (filtered.has(projectFolder) && projectFile !== 'project.json') return;
     filtered.set(projectFolder, projectFile);
   });
