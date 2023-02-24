@@ -18,9 +18,17 @@ export function buildExplicitTypescriptAndPackageJsonDependencies(
   filesToProcess: ProjectFileMap
 ) {
   let res: ExplicitDependency[] = [];
+
+  let typescriptExists = false;
+
+  try {
+    require.resolve('typescript');
+    typescriptExists = true;
+  } catch {}
   if (
-    jsPluginConfig.analyzeSourceFiles === undefined ||
-    jsPluginConfig.analyzeSourceFiles === true
+    typescriptExists &&
+    (jsPluginConfig.analyzeSourceFiles === undefined ||
+      jsPluginConfig.analyzeSourceFiles === true)
   ) {
     res = res.concat(
       buildExplicitTypeScriptDependencies(projectGraph, filesToProcess)
