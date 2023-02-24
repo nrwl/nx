@@ -12,7 +12,6 @@ import {
 import {
   nxVersion,
   prettierVersion,
-  typescriptVersion,
 } from '../../utils/versions';
 import { join, join as pathJoin } from 'path';
 import { Preset } from '../utils/presets';
@@ -146,7 +145,6 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
     tmpl: '',
     cliCommand: 'nx',
     nxCli: false,
-    typescriptVersion,
     prettierVersion,
     ...(options as object),
     nxVersion,
