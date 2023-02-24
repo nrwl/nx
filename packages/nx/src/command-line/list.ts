@@ -49,13 +49,11 @@ export async function listHandler(args: ListArgs): Promise<void> {
     const localPlugins = getLocalWorkspacePlugins(
       readProjectsConfigurationFromProjectGraph(projectGraph)
     );
-    const installedPlugins = getInstalledPluginsAndCapabilities(
-      workspaceRoot,
-      corePlugins,
-      communityPlugins
-    );
+    const installedPlugins = getInstalledPluginsAndCapabilities(workspaceRoot);
 
-    listLocalWorkspacePlugins(localPlugins);
+    if (localPlugins.size) {
+      listLocalWorkspacePlugins(localPlugins);
+    }
     listInstalledPlugins(installedPlugins);
     listCorePlugins(installedPlugins, corePlugins);
     listCommunityPlugins(installedPlugins, communityPlugins);

@@ -6,7 +6,8 @@ import type { PluginCapabilities } from './models';
 import { hasElements } from './shared';
 import { readJsonFile } from '../fileutils';
 import { getPackageManagerCommand } from '../package-manager';
-import { readPluginPackageJson } from '../nx-plugin';
+import { loadNxPlugin, readPluginPackageJson } from '../nx-plugin';
+import { getNxRequirePaths } from '../installation-directory';
 
 function tryGetCollection<T extends object>(
   packageJsonPath: string,
@@ -30,8 +31,15 @@ export function getPluginCapabilities(
   pluginName: string
 ): PluginCapabilities | null {
   try {
-    const { json: packageJson, path: packageJsonPath } =
-      readPluginPackageJson(pluginName);
+    const { json: packageJson, path: packageJsonPath } = readPluginPackageJson(
+      pluginName,
+      getNxRequirePaths(workspaceRoot)
+    );
+    const pluginModule = loadNxPlugin(
+      pluginName,
+      getNxRequirePaths(workspaceRoot),
+      workspaceRoot
+    );
     return {
       name: pluginName,
       generators:
@@ -56,6 +64,8 @@ export function getPluginCapabilities(
         tryGetCollection(packageJsonPath, packageJson.executors, 'builders') ||
         tryGetCollection(packageJsonPath, packageJson.builders, 'executors') ||
         tryGetCollection(packageJsonPath, packageJson.builders, 'builders'),
+      projectGraphExtension: !!pluginModule.processProjectGraph,
+      projectInference: !!pluginModule.projectFilePatterns,
     };
   } catch {
     return null;
@@ -80,8 +90,15 @@ export function listPluginCapabilities(pluginName: string) {
 
   const hasBuilders = hasElements(plugin.executors);
   const hasGenerators = hasElements(plugin.generators);
+  const hasProjectGraphExtension = !!plugin.projectGraphExtension;
+  const hasProjectInference = !!plugin.projectInference;
 
-  if (!hasBuilders && !hasGenerators) {
+  if (
+    !hasBuilders &&
+    !hasGenerators &&
+    !hasProjectGraphExtension &&
+    !hasProjectInference
+  ) {
     output.warn({ title: `No capabilities found in ${pluginName}` });
     return;
   }
@@ -109,6 +126,14 @@ export function listPluginCapabilities(pluginName: string) {
         (name) => `${chalk.bold(name)} : ${plugin.executors[name].description}`
       )
     );
+  }
+
+  if (hasProjectGraphExtension) {
+    bodyLines.push(`✔️  Project Graph Extension`);
+  }
+
+  if (hasProjectInference) {
+    bodyLines.push(`✔️  Project Inference`);
   }
 
   output.log({

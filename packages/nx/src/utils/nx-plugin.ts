@@ -50,7 +50,16 @@ export interface NxPlugin {
 // executing resolution mulitple times.
 let nxPluginCache: Map<string, NxPlugin> = new Map();
 
-function loadNxPlugin(moduleName: string, paths: string[], root: string) {
+export function loadNxPlugin(
+  moduleName: string,
+  paths: string[],
+  root: string
+) {
+  let pluginModule = nxPluginCache.get(moduleName);
+  if (pluginModule) {
+    return pluginModule;
+  }
+
   let pluginPath: string;
   try {
     pluginPath = require.resolve(moduleName, {
@@ -80,7 +89,7 @@ function loadNxPlugin(moduleName: string, paths: string[], root: string) {
       : { name: path.basename(pluginPath) }; // use the name of the file we point to
   const plugin = require(pluginPath) as NxPlugin;
   plugin.name = name;
-
+  nxPluginCache.set(moduleName, plugin);
   return plugin;
 }
 
@@ -100,12 +109,7 @@ export function loadNxPlugins(
 
   plugins ??= [];
   for (const plugin of plugins) {
-    let pluginModule = nxPluginCache.get(plugin);
-    if (!pluginModule) {
-      pluginModule = loadNxPlugin(plugin, paths, root);
-      nxPluginCache.set(plugin, pluginModule);
-    }
-    result.push(pluginModule);
+    result.push(loadNxPlugin(plugin, paths, root));
   }
 
   return result;
@@ -137,7 +141,7 @@ export function mergePluginTargetsWithNxTargets(
 
 export function readPluginPackageJson(
   pluginName: string,
-  paths = [workspaceRoot]
+  paths = getNxRequirePaths()
 ): {
   path: string;
   json: PackageJson;

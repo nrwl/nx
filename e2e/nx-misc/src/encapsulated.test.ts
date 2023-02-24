@@ -9,6 +9,7 @@ import {
   getPublishedVersion,
   uniq,
 } from '@nrwl/e2e/utils';
+import { bold } from 'chalk';
 
 describe('encapsulated nx', () => {
   let runEncapsulatedNx: ReturnType<typeof newEncapsulatedNxWorkspace>;
@@ -36,18 +37,13 @@ describe('encapsulated nx', () => {
       })
     );
 
-    updateJson<NxJsonConfiguration>('nx.json', (json) => ({
-      ...json,
-      tasksRunnerOptions: {
-        default: {
-          ...json.tasksRunnerOptions['default'],
-          options: {
-            ...json.tasksRunnerOptions['default'].options,
-            cacheableOperations: ['echo'],
-          },
-        },
-      },
-    }));
+    updateJson<NxJsonConfiguration>('nx.json', (json) => {
+      json.tasksRunnerOptions.default.options.cacheableOperations = ['echo'];
+      json.installation.plugins = {
+        '@nrwl/nest': getPublishedVersion(),
+      };
+      return json;
+    });
 
     expect(runEncapsulatedNx('echo a')).toContain('Hello from A');
 
@@ -66,9 +62,35 @@ describe('encapsulated nx', () => {
   });
 
   it('should work with nx report', () => {
-    expect(runEncapsulatedNx('report')).toMatch(
-      new RegExp(`nx.*:.*${getPublishedVersion()}`)
+    const output = runEncapsulatedNx('report');
+    expect(output).toMatch(new RegExp(`nx.*:.*${getPublishedVersion()}`));
+    expect(output).toMatch(
+      new RegExp(`@nrwl/nest.*:.*${getPublishedVersion()}`)
     );
+    expect(output).not.toContain('@nrwl/express');
+  });
+
+  it('should work with nx list', () => {
+    let output = runEncapsulatedNx('list');
+    const lines = output.split('\n');
+    const installedPluginStart = lines.findIndex((l) =>
+      l.includes('Installed plugins')
+    );
+    const installedPluginEnd = lines.findIndex((l) =>
+      l.includes('Also available')
+    );
+    const installedPluginLines = lines.slice(
+      installedPluginStart + 1,
+      installedPluginEnd
+    );
+
+    expect(installedPluginLines.some((x) => x.includes(`${bold('nx')}`)));
+    expect(
+      installedPluginLines.some((x) => x.includes(`${bold('@nrwl/nest')}`))
+    );
+
+    output = runEncapsulatedNx('list @nrwl/nest');
+    expect(output).toContain('Capabilities in @nrwl/nest');
   });
 
   it('should work with basic generators', () => {

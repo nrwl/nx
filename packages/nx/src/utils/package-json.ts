@@ -5,6 +5,7 @@ import {
   TargetConfiguration,
 } from '../config/workspace-json-project-json';
 import { readJsonFile } from './fileutils';
+import { getNxRequirePaths } from './installation-directory';
 import { workspaceRoot } from './workspace-root';
 
 export type PackageJsonTargetConfiguration = Omit<
@@ -142,7 +143,7 @@ export function buildTargetFromScript(
  */
 export function readModulePackageJsonWithoutFallbacks(
   moduleSpecifier: string,
-  requirePaths = [workspaceRoot]
+  requirePaths = getNxRequirePaths()
 ): {
   packageJson: PackageJson;
   path: string;
@@ -177,7 +178,7 @@ export function readModulePackageJsonWithoutFallbacks(
  */
 export function readModulePackageJson(
   moduleSpecifier: string,
-  requirePaths = [workspaceRoot]
+  requirePaths = getNxRequirePaths()
 ): {
   packageJson: PackageJson;
   path: string;

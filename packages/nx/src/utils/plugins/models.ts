@@ -7,6 +7,8 @@ export interface PluginCapabilities {
   name: string;
   executors: { [name: string]: ExecutorsJsonEntry };
   generators: { [name: string]: GeneratorsJsonEntry };
+  projectInference: boolean;
+  projectGraphExtension: boolean;
 }
 
 export interface CorePlugin {
