@@ -65,7 +65,7 @@
     "@nrwl/js": "15.7.2",
     "@nrwl/linter": "15.7.2",
     "@nrwl/next": "15.7.2",
-    "@nrwl/nx-cloud": "15.0.3",
+    "@nrwl/nx-cloud": "15.2.0-beta.1",
     "@nrwl/react": "15.7.2",
     "@nrwl/storybook": "15.7.2",
     "@nrwl/web": "15.7.2",
