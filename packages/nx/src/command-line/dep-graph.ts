@@ -436,17 +436,6 @@ let currentDepGraphClientResponse: ProjectGraphClientResponse = {
   exclude: [],
 };
 
-function getIgnoredGlobs(root: string) {
-  const ig = ignore();
-  try {
-    ig.add(readFileSync(`${root}/.gitignore`, 'utf-8'));
-  } catch {}
-  try {
-    ig.add(readFileSync(`${root}/.nxignore`, 'utf-8'));
-  } catch {}
-  return ig;
-}
-
 function debounce(fn: (...args) => void, time: number) {
   let timeout: NodeJS.Timeout;
 

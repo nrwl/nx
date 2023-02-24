@@ -15,6 +15,7 @@ import {
   readProjectsConfigurationFromProjectGraph,
 } from './project-graph';
 import { toOldFormat } from '../adapter/angular-json';
+import { getIgnoreObject } from '../utils/ignore';
 
 export interface Change {
   type: string;
@@ -42,17 +43,6 @@ export function isDeletedFileChange(
   return change.type === 'WholeFileDeleted';
 }
 
-export function readFileIfExisting(path: string) {
-  return existsSync(path) ? readFileSync(path, 'utf-8') : '';
-}
-
-function getIgnoredGlobs() {
-  const ig = ignore();
-  ig.add(readFileIfExisting(`${workspaceRoot}/.gitignore`));
-  ig.add(readFileIfExisting(`${workspaceRoot}/.nxignore`));
-  return ig;
-}
-
 export function calculateFileChanges(
   files: string[],
   allWorkspaceFiles: FileData[],
@@ -61,7 +51,7 @@ export function calculateFileChanges(
     f: string,
     r: void | string
   ) => string = defaultReadFileAtRevision,
-  ignore = getIgnoredGlobs()
+  ignore = getIgnoreObject()
 ): FileChange[] {
   files = files.filter((f) => !ignore.ignores(f));
 

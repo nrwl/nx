@@ -12,7 +12,7 @@ import {
   workspaceRoot,
 } from '@nrwl/devkit';
 import { getPath, pathExists } from './graph-utils';
-import { readFileIfExisting } from 'nx/src/project-graph/file-utils';
+import { readFileIfExisting } from 'nx/src/utils/fileutils';
 import { TargetProjectLocator } from 'nx/src/utils/target-project-locator';
 import {
   findProjectForPath,

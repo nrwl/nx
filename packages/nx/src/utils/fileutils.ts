@@ -8,6 +8,7 @@ import {
   writeFileSync,
   mkdirSync,
   statSync,
+  existsSync,
 } from 'fs';
 import { dirname } from 'path';
 import * as tar from 'tar-stream';
@@ -153,4 +154,8 @@ export async function extractFileFromTarball(
 
     createReadStream(tarballPath).pipe(createGunzip()).pipe(tarExtractStream);
   });
+}
+
+export function readFileIfExisting(path: string) {
+  return existsSync(path) ? readFileSync(path, 'utf-8') : '';
 }
