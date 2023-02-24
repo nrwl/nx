@@ -39,6 +39,11 @@
       "implementation": "./src/executors/storybook/storybook.impl",
       "schema": "./src/executors/storybook/schema.json",
       "description": "Serve React Native Storybook."
+    },
+    "build-ios": {
+      "implementation": "./src/executors/build-ios/build-ios.impl",
+      "schema": "./src/executors/build-ios/schema.json",
+      "description": "Build iOS app"
     }
   },
   "builders": {
@@ -81,6 +86,11 @@
       "implementation": "./src/executors/storybook/compat",
       "schema": "./src/executors/storybook/schema.json",
       "description": "Serve React Native Storybook."
+    },
+    "build-ios": {
+      "implementation": "./src/executors/build-ios/compat",
+      "schema": "./src/executors/build-ios/schema.json",
+      "description": "Build iOS app"
     }
   }
 }

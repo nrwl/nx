@@ -9,20 +9,20 @@ import {
   syncDeps,
 } from '../sync-deps/sync-deps.impl';
 import { podInstall } from '../../utils/pod-install-task';
-import { ReactNativeRunIosOptions } from './schema';
+import { ReactNativeBuildIosOptions } from './schema';
 import { runCliStart } from '../start/start.impl';
 import { getCliOptions } from '../../utils/get-cli-options';
 
-export interface ReactNativeRunIosOutput {
+export interface ReactNativeBuildIosOutput {
   success: boolean;
 }
 
 let childProcess: ChildProcess;
 
 export default async function* runIosExecutor(
-  options: ReactNativeRunIosOptions,
+  options: ReactNativeBuildIosOptions,
   context: ExecutorContext
-): AsyncGenerator<ReactNativeRunIosOutput> {
+): AsyncGenerator<ReactNativeBuildIosOutput> {
   if (platform() !== 'darwin') {
     throw new Error(`The run-ios build requires Mac to run`);
   }
@@ -46,7 +46,7 @@ export default async function* runIosExecutor(
   }
 
   try {
-    const tasks = [runCliRunIOS(context.root, projectRoot, options)];
+    const tasks = [runCliBuildIOS(context.root, projectRoot, options)];
     if (options.packager && options.mode !== 'Release') {
       tasks.push(
         runCliStart(context.root, projectRoot, {
@@ -67,10 +67,10 @@ export default async function* runIosExecutor(
   }
 }
 
-function runCliRunIOS(
+function runCliBuildIOS(
   workspaceRoot: string,
   projectRoot: string,
-  options: ReactNativeRunIosOptions
+  options: ReactNativeBuildIosOptions
 ) {
   return new Promise((resolve, reject) => {
     /**
@@ -79,7 +79,7 @@ function runCliRunIOS(
      */
     childProcess = fork(
       join(workspaceRoot, './node_modules/react-native/cli.js'),
-      ['run-ios', ...createRunIOSOptions(options), '--no-packager'],
+      ['run-ios', ...createBuildIOSOptions(options), '--no-packager'],
       {
         cwd: join(workspaceRoot, projectRoot),
         env: { ...process.env, RCT_METRO_PORT: options.port.toString() },
@@ -105,12 +105,11 @@ function runCliRunIOS(
 
 const nxOptions = ['sync', 'install', 'packager'];
 const startOptions = ['port', 'resetCache'];
-const deprecatedOptions = ['xcodeConfiguration'];
 
-function createRunIOSOptions(options: ReactNativeRunIosOptions) {
-  return getCliOptions<ReactNativeRunIosOptions>(
+function createBuildIOSOptions(options) {
+  return getCliOptions<ReactNativeBuildIosOptions>(
     options,
-    [...nxOptions, ...startOptions, ...deprecatedOptions],
+    [...nxOptions, ...startOptions],
     ['buildFolder']
   );
 }

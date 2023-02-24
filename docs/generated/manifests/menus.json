@@ -5741,6 +5741,14 @@
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
+              },
+              {
+                "id": "build-ios",
+                "path": "/packages/react-native/executors/build-ios",
+                "name": "build-ios",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,

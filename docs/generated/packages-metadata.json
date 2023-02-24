@@ -2227,6 +2227,15 @@
         "originalFilePath": "/packages/react-native/src/executors/storybook/schema.json",
         "path": "react-native/executors/storybook",
         "type": "executor"
+      },
+      {
+        "description": "Build iOS app",
+        "file": "generated/packages/react-native/executors/build-ios.json",
+        "hidden": false,
+        "name": "build-ios",
+        "originalFilePath": "/packages/react-native/src/executors/build-ios/schema.json",
+        "path": "react-native/executors/build-ios",
+        "type": "executor"
       }
     ],
     "generators": [

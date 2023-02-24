@@ -1,28 +1,19 @@
 {
-  "name": "run-ios",
-  "implementation": "/packages/react-native/src/executors/run-ios/run-ios.impl.ts",
+  "name": "build-ios",
+  "implementation": "/packages/react-native/src/executors/build-ios/build-ios.impl.ts",
   "schema": {
-    "version": 2,
-    "outputCapture": "direct-nodejs",
-    "cli": "nx",
-    "$id": "NxReactNativeRunIos",
     "$schema": "http://json-schema.org/schema",
-    "title": "Run iOS application",
-    "description": "Run iOS target options.",
+    "version": 2,
+    "cli": "nx",
+    "title": "React Native Build iOS executor",
+    "description": "Build iOS app",
     "type": "object",
     "presets": [
-      { "name": "Run iOS on a simulator", "keys": ["simulator"] },
-      { "name": "Run iOS on a device", "keys": ["device"] },
-      { "name": "Run iOS on a device with udid", "keys": ["udid"] }
+      { "name": "Build iOS for a simulator", "keys": ["simulator"] },
+      { "name": "Build iOS for a device", "keys": ["device"] },
+      { "name": "Build iOS for a device with udid", "keys": ["udid"] }
     ],
     "properties": {
-      "xcodeConfiguration": {
-        "type": "string",
-        "description": "Explicitly set the Xcode configuration to use.",
-        "default": "Debug",
-        "examples": ["Debug", "Release"],
-        "x-deprecated": "Use `mode` instead. Will be removed in Nx 16."
-      },
       "simulator": {
         "type": "string",
         "description": "Explicitly set simulator to use. Optionally include iOS version between parenthesis at the end to match an exact version: \"iPhone 6 (10.0)\"",
@@ -99,21 +90,13 @@
         "type": "boolean",
         "description": "Launch packager while building",
         "default": true
-      },
-      "listDevices": {
-        "type": "boolean",
-        "description": "List all available iOS devices and simulators and let you choose one to run the app. "
-      },
-      "binaryPath": {
-        "type": "string",
-        "description": "Path relative to project root where pre-built .app binary lives."
       }
     },
-    "examplesFile": "`project.json`:\n\n```json\n{\n  \"name\": \"mobile\",\n  //...\n  \"targets\": {\n    //...\n    \"run-ios\": {\n      \"executor\": \"@nrwl/react-native:run-ios\",\n      \"options\": {}\n    }\n  }\n}\n```\n\n```bash\nnx run mobile:run-ios\n```\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Build the Debug/Release app\" %}\nThe `mode` option allows to specify the xcode configuartion schema, such as `Debug` or `Release`.\n\n```json\n    \"run-ios\": {\n      \"executor\": \"@nrwl/react-native:run-ios\",\n      \"options\": {\n        \"mode\": \"Release\"\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Run on a simulator\" %}\nTo see all the available simulators, run command:\n\n```bash\nxcrun simctl list\n```\n\nThe `simulator` option allows you to launch your iOS app in a specific simulator:\n\n```json\n    \"run-ios\": {\n      \"executor\": \"@nrwl/react-native:build-ios\",\n      \"options\": {\n        \"simulator\": \"iPhone 14 Pro\"\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Build on a device\" %}\nThe `device` option allows you to launch your iOS app in a specific device.\n\n```json\n    \"run-ios\": {\n      \"executor\": \"@nrwl/react-native:build-ios\",\n      \"options\": {\n        \"device\": \"deviceName\"\n      }\n    }\n```\n\n{% /tab %}\n{% /tabs %}\n\n---\n"
+    "required": []
   },
-  "description": "Runs iOS application.",
+  "description": "Build iOS app",
   "aliases": [],
   "hidden": false,
-  "path": "/packages/react-native/src/executors/run-ios/schema.json",
+  "path": "/packages/react-native/src/executors/build-ios/schema.json",
   "type": "executor"
 }

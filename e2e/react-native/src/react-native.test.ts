@@ -2,13 +2,17 @@ import {
   checkFilesExist,
   cleanupProject,
   expectTestsPass,
+  isOSX,
   newProject,
+  promisifiedTreeKill,
   readJson,
   runCLI,
   runCLIAsync,
+  runCommandUntil,
   uniq,
   updateFile,
 } from '@nrwl/e2e/utils';
+import { ChildProcess } from 'child_process';
 import { join } from 'path';
 
 describe('react native', () => {
@@ -17,7 +21,7 @@ describe('react native', () => {
   beforeAll(() => (proj = newProject()));
   afterAll(() => cleanupProject());
 
-  it('should test, create ios and android JS bundles', async () => {
+  it('should test, create ios and android JS bundles, serve and create ios build', async () => {
     const appName = uniq('my-app');
     const libName = uniq('lib');
     const componentName = uniq('component');
@@ -65,7 +69,40 @@ describe('react native', () => {
       checkFilesExist(`dist/apps/${appName}/android/main.jsbundle`);
       checkFilesExist(`dist/apps/${appName}/android/main.map`);
     }).not.toThrow();
-  }, 1000000);
+
+    let process: ChildProcess;
+    const port = 8081;
+
+    try {
+      process = await runCommandUntil(
+        `serve ${appName} --interactive=false --port=${port}`,
+        (output) => {
+          return output.includes(
+            `Packager is ready at http://localhost::${port}`
+          );
+        }
+      );
+    } catch (err) {
+      console.error(err);
+    }
+
+    // port and process cleanup
+    try {
+      if (process && process.pid) {
+        await promisifiedTreeKill(process.pid, 'SIGKILL');
+      }
+    } catch (err) {
+      expect(err).toBeFalsy();
+    }
+
+    if (isOSX()) {
+      expect(async () => {
+        await runCLIAsync(
+          `build-ios ${appName} --mode=Debug --packager=false --listDevices=true`
+        );
+      }).not.toThrow();
+    }
+  }, 1_000_000);
 
   it('should create storybook with application', async () => {
     const appName = uniq('my-app');

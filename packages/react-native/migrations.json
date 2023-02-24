@@ -71,6 +71,12 @@
       "version": "15.0.0-beta.0",
       "description": "Adds babel.config.json to the hash of all tasks",
       "factory": "./src/migrations/update-15-0-0/add-babel-inputs"
+    },
+    "add-build-ios-target": {
+      "cli": "nx",
+      "version": "15.7.2-beta.0",
+      "description": "Add target build-ios for react native apps",
+      "factory": "./src/migrations/update-15-7-2/add-build-ios-target"
     }
   },
   "packageJsonUpdates": {
@@ -1212,6 +1218,43 @@
         },
         "@babel/runtime": {
           "version": "7.20.13",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "15.8.1": {
+      "version": "15.8.1-beta.0",
+      "packages": {
+        "react-native": {
+          "version": "0.71.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-native": {
+          "version": "0.71.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/node": {
+          "version": "18.14.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-native-community/cli": {
+          "version": "10.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-native-community/cli-platform-android": {
+          "version": "10.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-native-community/cli-platform-ios": {
+          "version": "10.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/jest-native": {
+          "version": "5.4.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@babel/runtime": {
+          "version": "7.21.0",
           "alwaysAddToPackageJson": false
         }
       }
