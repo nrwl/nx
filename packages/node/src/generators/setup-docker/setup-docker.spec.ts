@@ -23,10 +23,7 @@ describe('setupDockerGenerator', () => {
         expect.objectContaining({
           'docker-build': {
             dependsOn: ['build'],
-            executor: 'nx:run-commands',
-            options: {
-              command: 'docker build -f api/Dockerfile . -t api',
-            },
+            command: 'docker build -f api/Dockerfile . -t api',
           },
         })
       );
@@ -48,10 +45,7 @@ describe('setupDockerGenerator', () => {
         expect.objectContaining({
           'docker-build': {
             dependsOn: ['build'],
-            executor: 'nx:run-commands',
-            options: {
-              command: 'docker build -f Dockerfile . -t api',
-            },
+            command: 'docker build -f Dockerfile . -t api',
           },
         })
       );

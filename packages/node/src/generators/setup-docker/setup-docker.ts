@@ -53,13 +53,10 @@ export function updateProjectConfig(tree: Tree, options: SetUpDockerOptions) {
 
   projectConfig.targets[`${options.targetName}`] = {
     dependsOn: [`${options.buildTarget}`],
-    executor: 'nx:run-commands',
-    options: {
-      command: `docker build -f ${joinPathFragments(
-        projectConfig.root,
-        'Dockerfile'
-      )} . -t ${options.project}`,
-    },
+    command: `docker build -f ${joinPathFragments(
+      projectConfig.root,
+      'Dockerfile'
+    )} . -t ${options.project}`,
   };
 
   updateProjectConfiguration(tree, options.project, projectConfig);
