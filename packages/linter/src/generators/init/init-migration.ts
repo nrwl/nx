@@ -38,7 +38,7 @@ export function migrateConfigToMonorepoStyle(
 export function findLintTarget(
   project: ProjectConfiguration
 ): TargetConfiguration {
-  return Object.entries(project.targets).find(
+  return Object.entries(project.targets ?? {}).find(
     ([name, target]) =>
       name === 'lint' || target.executor === '@nrwl/linter:eslint'
   )?.[1];
