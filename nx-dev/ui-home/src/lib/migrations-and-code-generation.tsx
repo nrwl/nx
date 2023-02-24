@@ -96,8 +96,8 @@ export function MigrationsAndCodeGeneration(): JSX.Element {
                   </span>
                   <br />
                   <br />
-                  - Package.json has been updated.
-                  <br />- Migrations.json has been generated.
+                  - package.json has been updated.
+                  <br />- migrations.json has been generated.
                 </p>
               </div>
               <div className="mt-8 flex">

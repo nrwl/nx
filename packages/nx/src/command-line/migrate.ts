@@ -1159,9 +1159,9 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     output.success({
       title: `The migrate command has run successfully.`,
       bodyLines: [
-        `- Package.json has been updated.`,
+        `- package.json has been updated.`,
         migrations.length > 0
-          ? `- Migrations.json has been generated.`
+          ? `- migrations.json has been generated.`
           : `- There are no migrations to run, so migrations.json has not been created.`,
       ],
     });
