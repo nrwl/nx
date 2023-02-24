@@ -1310,7 +1310,7 @@ function mapErrorToBodyLines(error: {
   code: number;
   logFile: string;
 }): string[] {
-  if (error.logMessage?.split('\n').filter((line) => !!line).length === 1) {
+  if (error.logMessage?.split('\n').filter((line) => !!line).length < 3) {
     // print entire log message only if it's only a single message
     return [`Error: ${error.logMessage}`];
   }
