@@ -1321,10 +1321,6 @@ function mapErrorToBodyLines(error: {
   return lines;
 }
 
-`>  NX   /Users/miro/Dev/Playground/angular is not an empty directory.
-  Pass --verbose to see the stacktrace.
-`;
-
 function execAndWait(command: string, cwd: string) {
   return new Promise((res, rej) => {
     exec(
