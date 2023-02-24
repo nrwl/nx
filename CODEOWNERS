@@ -1,4 +1,5 @@
 # Any file not covered by a rule below, will default to Jason + Victor and a few select others.
+* @FrozenPandaz @vsavkin
 /packages/**/* @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 /e2e/**/* @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 /scripts/**/* @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
@@ -134,6 +135,7 @@
 /community @AgentEnder @FrozenPandaz
 /CONTRIBUTING.md @FrozenPandaz @isaacplmann
 /CODE_OF_CONDUCT.md @FrozenPandaz @isaacplmann
+/CODEOWNERS @FrozenPandaz @AgentEnder
 
 # Scripts
 /scripts/depcheck @FrozenPandaz @vsavkin
