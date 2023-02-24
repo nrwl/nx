@@ -31,6 +31,11 @@ export function createFiles(tree: Tree, options: JestProjectSchema) {
   generateFiles(tree, join(__dirname, filesFolder), projectConfig.root, {
     tmpl: '',
     ...options,
+    // jsdom is the default
+    testEnvironment:
+      options.testEnvironment === 'none' || options.testEnvironment === 'jsdom'
+        ? ''
+        : options.testEnvironment,
     transformer,
     transformerOptions,
     js: !!options.js,

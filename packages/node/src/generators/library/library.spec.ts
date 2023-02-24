@@ -49,6 +49,12 @@ describe('lib', () => {
           },
         },
       });
+      expect(
+        readJson(tree, 'package.json').devDependencies['jest-environment-jsdom']
+      ).not.toBeDefined();
+      expect(
+        readJson(tree, 'package.json').devDependencies['jest-environment-node']
+      ).toBeDefined();
     });
 
     it('adds srcRootForCompilationRoot', async () => {

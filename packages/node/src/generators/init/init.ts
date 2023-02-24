@@ -47,7 +47,9 @@ export async function initGenerator(tree: Tree, schema: Schema) {
     })
   );
   if (options.unitTestRunner === 'jest') {
-    tasks.push(await jestInitGenerator(tree, schema));
+    tasks.push(
+      await jestInitGenerator(tree, { ...schema, testEnvironment: 'node' })
+    );
   }
 
   tasks.push(updateDependencies(tree));
