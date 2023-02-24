@@ -535,6 +535,10 @@ export function runCypressTests() {
   if (process.env.NX_E2E_RUN_CYPRESS === 'true') {
     ensureCypressInstallation();
     return true;
+  } else {
+    console.warn(
+      'Not running Cypress because NX_E2E_RUN_CYPRESS is not set to true.'
+    );
   }
   return false;
 }

@@ -8,6 +8,7 @@ import {
   uniq,
   updateFile,
   updateProjectConfig,
+  removeFile,
 } from '../../utils';
 import { names } from '@nrwl/devkit';
 
@@ -98,6 +99,21 @@ describe('Angular Cypress Component Tests', () => {
       checkFilesDoNotExist(`tmp/libs/${buildableLibName}/ct-styles.css`);
     }
   }, 300_000);
+
+  it('should test lib with implicit dep on buildTarget', () => {
+    // creates graph like buildableLib -> lib -> app
+    // updates the apps styles and they should apply to the buildableLib
+    // even though app is not directly connected to buildableLib
+    useBuildableLibInLib(projectName, buildableLibName, usedInAppLibName);
+
+    updateBuilableLibTestsToAssertAppStyles(appName, buildableLibName);
+
+    if (runCypressTests()) {
+      expect(runCLI(`component-test ${buildableLibName} --no-watch`)).toContain(
+        'All specs passed!'
+      );
+    }
+  });
 });
 
 function createApp(appName: string) {
@@ -323,5 +339,50 @@ describe(InputStandaloneComponent.name, () => {
   });
 });
 `
+  );
+}
+function useBuildableLibInLib(
+  projectName: string,
+  buildableLibName: string,
+  libName: string
+) {
+  const buildLibNames = names(buildableLibName);
+  // use the buildable lib in lib so now buildableLib has an indirect dep on app
+  updateFile(
+    `libs/${libName}/src/lib/btn-standalone/btn-standalone.component.ts`,
+    `
+import { Component, Input } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { InputStandaloneComponent } from '@${projectName}/${buildLibNames.fileName}';
+@Component({
+  selector: '${projectName}-btn-standalone',
+  standalone: true,
+  imports: [CommonModule, InputStandaloneComponent],
+  template: '<button class="text-green-500">standlone-{{text}}</button>${projectName} <${projectName}-input-standalone></${projectName}-input-standalone>',
+  styles: [],
+})
+export class BtnStandaloneComponent {
+  @Input() text = 'something';
+}
+`
+  );
+}
+
+function updateBuilableLibTestsToAssertAppStyles(
+  appName: string,
+  buildableLibName: string
+) {
+  updateFile(
+    `apps/${appName}/src/styles.css`,
+    `label {color: pink !important;}`
+  );
+
+  removeFile(`libs/${buildableLibName}/src/lib/input/input.component.cy.ts`);
+  updateFile(
+    `libs/${buildableLibName}/src/lib/input-standalone/input-standalone.component.cy.ts`,
+    (content) => {
+      // app styles should now apply
+      return content.replace('rgb(34, 197, 94)', 'rgb(255, 192, 203)');
+    }
   );
 }
