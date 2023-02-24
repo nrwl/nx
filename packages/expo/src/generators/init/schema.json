@@ -8,7 +8,7 @@
     "unitTestRunner": {
       "description": "Adds the specified unit test runner",
       "type": "string",
-      "enum": ["jest", "none"],
+      "enum": ["@testing-library/jest-native", "jest", "none"],
       "default": "jest"
     },
     "skipFormat": {
