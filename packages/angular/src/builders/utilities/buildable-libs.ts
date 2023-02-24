@@ -3,20 +3,20 @@ import {
   createTmpTsConfig,
   DependentBuildableProjectNode,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
-import { readCachedProjectGraph } from '@nrwl/devkit';
+import { ProjectGraph, readCachedProjectGraph } from '@nrwl/devkit';
 import { join } from 'path';
 
 export function createTmpTsConfigForBuildableLibs(
   tsConfigPath: string,
   context: import('@angular-devkit/architect').BuilderContext,
-  target?: string
+  options?: { projectGraph?: ProjectGraph; target?: string }
 ) {
   let dependencies: DependentBuildableProjectNode[];
   const result = calculateProjectDependencies(
-    readCachedProjectGraph(),
+    options?.projectGraph ?? readCachedProjectGraph(),
     context.workspaceRoot,
     context.target.project,
-    target ?? context.target.target,
+    options?.target ?? context.target.target,
     context.target.configuration
   );
   dependencies = result.dependencies;
