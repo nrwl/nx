@@ -1,5 +1,6 @@
-import { Tree } from '@nrwl/devkit';
+import { Tree, updateJson } from '@nrwl/devkit';
 import { jestProjectGenerator } from '@nrwl/jest';
+import { join } from 'path';
 
 export async function addJest(
   host: Tree,
@@ -36,6 +37,23 @@ export async function addJest(
     }
   };`;
   host.write(configPath, content);
+
+  await updateJson(
+    host,
+    join(appProjectRoot, 'tsconfig.spec.json'),
+    (json: any) => {
+      if (
+        json.compilerOptions &&
+        json.compilerOptions.types &&
+        !json.compilerOptions.types.some(
+          (type: string) => type === '@testing-library/jest-native'
+        )
+      ) {
+        json.compilerOptions.types.push('@testing-library/jest-native');
+      }
+      return json;
+    }
+  );
 
   return jestTask;
 }
