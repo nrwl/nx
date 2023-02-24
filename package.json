@@ -273,7 +273,7 @@
     "@docsearch/react": "^3.3.0",
     "@headlessui/react": "^1.7.3",
     "@heroicons/react": "^2.0.12",
-    "@markdoc/markdoc": "0.1.13",
+    "@markdoc/markdoc": "0.2.2",
     "@monaco-editor/react": "^4.4.6",
     "@napi-rs/canvas": "^0.1.19",
     "@swc/helpers": "~0.4.11",
