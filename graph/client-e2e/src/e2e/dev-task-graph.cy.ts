@@ -26,11 +26,11 @@ import * as nxExamplesJson from '../fixtures/nx-examples-project-graph.json';
 
 describe('dev mode - task graph', () => {
   before(() => {
-    cy.intercept('/assets/project-graphs/e2e.json', {
+    cy.intercept('/project-graphs/e2e.json', {
       fixture: 'nx-examples-project-graph.json',
     }).as('getGraph');
 
-    cy.intercept('/assets/task-graphs/e2e.json', {
+    cy.intercept('/task-graphs/e2e.json', {
       fixture: 'nx-examples-task-graphs.json',
     }).as('getTaskGraph');
 
@@ -168,11 +168,11 @@ describe('dev mode - task graph', () => {
 
   describe('loading graph client with url params', () => {
     beforeEach(() => {
-      cy.intercept('/assets/project-graphs/*', {
+      cy.intercept('/project-graphs/*', {
         fixture: 'nx-examples-project-graph.json',
       }).as('getGraph');
 
-      cy.intercept('/assets/task-graphs/e2e.json', {
+      cy.intercept('/task-graphs/e2e.json', {
         fixture: 'nx-examples-task-graphs.json',
       }).as('getTaskGraphs');
     });

@@ -37,7 +37,10 @@ export class RenderGraph {
   constructor(
     private container: string | HTMLElement,
     theme: 'light' | 'dark',
-    private renderMode?: 'nx-console' | 'nx-docs',
+    private renderMode:
+      | 'nx-console'
+      | 'nx-docs'
+      | 'graph-client' = 'graph-client',
     rankDir: 'TB' | 'LR' = 'TB'
   ) {
     this._theme = theme;

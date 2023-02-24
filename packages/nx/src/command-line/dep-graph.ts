@@ -372,6 +372,11 @@ async function startServer(
 
     let pathname = join(__dirname, '../core/graph/', sanitizePath);
 
+    // it's ok to get files from the nested assets directory
+    if (parsedUrl.pathname.startsWith('/assets')) {
+      pathname = join(__dirname, '../core/graph/assets', sanitizePath);
+    }
+
     // if the file is not found or is a directory, return index.html
     if (!existsSync(pathname) || statSync(pathname).isDirectory()) {
       res.writeHead(200, { 'Content-Type': 'text/html' });

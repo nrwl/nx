@@ -1,6 +1,6 @@
 describe('release serve-mode app', () => {
   beforeEach(() => {
-    cy.intercept('/assets/project-graphs/*').as('getGraph');
+    cy.intercept('/project-graphs/*').as('getGraph');
 
     cy.visit('/');
 

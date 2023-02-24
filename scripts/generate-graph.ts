@@ -33,16 +33,16 @@ async function generateGraph(directory: string, name: string) {
   );
 
   ensureDirSync(
-    join(__dirname, '../graph/client/src/assets/generated-project-graphs/')
+    join(__dirname, '../graph/client/public/generated-project-graphs/')
   );
   ensureDirSync(
-    join(__dirname, '../graph/client/src/assets/generated-task-graphs/')
+    join(__dirname, '../graph/client/public/generated-task-graphs/')
   );
 
   writeFileSync(
     join(
       __dirname,
-      '../graph/client/src/assets/generated-project-graphs/',
+      '../graph/client/public/generated-project-graphs/',
       `${name}.json`
     ),
     projectGraphResponse[1]
@@ -51,7 +51,7 @@ async function generateGraph(directory: string, name: string) {
   writeFileSync(
     join(
       __dirname,
-      '../graph/client/src/assets/generated-task-graphs/',
+      '../graph/client/public/generated-task-graphs/',
       `${name}.json`
     ),
     taskGraphResponse[1]

@@ -1,4 +1,5 @@
 import { parseParentDirectoriesFromFilePath } from './util';
+import { test, describe, expect } from 'vitest';
 
 describe('parseParentDirectoriesFromFilePath', () => {
   // path, workspaceRoot, output

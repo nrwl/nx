@@ -1,6 +1,6 @@
 describe('dev mode - app', () => {
   before(() => {
-    cy.intercept('/assets/project-graphs/e2e.json', {
+    cy.intercept('/project-graphs/e2e.json', {
       fixture: 'nx-examples-project-graph.json',
     }).as('getGraph');
     cy.visit('/e2e/projects');

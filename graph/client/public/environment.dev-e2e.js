@@ -10,14 +10,14 @@ window.appConfig = {
     {
       id: 'e2e',
       label: 'e2e',
-      projectGraphUrl: 'assets/project-graphs/e2e.json',
-      taskGraphUrl: 'assets/task-graphs/e2e.json',
+      projectGraphUrl: 'project-graphs/e2e.json',
+      taskGraphUrl: 'task-graphs/e2e.json',
     },
     {
       id: 'affected',
       label: 'affected',
-      projectGraphUrl: 'assets/project-graphs/affected.json',
-      taskGraphUrl: 'assets/task-graphs/affected.json',
+      projectGraphUrl: 'project-graphs/affected.json',
+      taskGraphUrl: 'task-graphs/affected.json',
     },
   ],
   defaultWorkspaceId: 'e2e',

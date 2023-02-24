@@ -25,14 +25,14 @@ function writeFile() {
   let generatedGraphs;
   try {
     generatedGraphs = readdirSync(
-      join(__dirname, '../graph/client/src/assets/generated-project-graphs')
+      join(__dirname, '../graph/client/public/generated-project-graphs')
     ).map((filename) => {
       const id = filename.substring(0, filename.length - 5);
       return {
         id,
         label: id,
-        projectGraphUrl: join('assets/generated-project-graphs/', filename),
-        taskGraphUrl: join('assets/generated-task-graphs/', filename),
+        projectGraphUrl: join('generated-project-graphs/', filename),
+        taskGraphUrl: join('generated-task-graphs/', filename),
       };
     });
   } catch {
@@ -42,14 +42,14 @@ function writeFile() {
   let pregeneratedGraphs;
   try {
     pregeneratedGraphs = readdirSync(
-      join(__dirname, '../graph/client/src/assets/project-graphs')
+      join(__dirname, '../graph/client/public/project-graphs')
     ).map((filename) => {
       const id = filename.substring(0, filename.length - 5);
       return {
         id,
         label: id,
-        projectGraphUrl: join('assets/project-graphs/', filename),
-        taskGraphUrl: join('assets/task-graphs/', filename),
+        projectGraphUrl: join('project-graphs/', filename),
+        taskGraphUrl: join('task-graphs/', filename),
       };
     });
   } catch {
@@ -65,10 +65,10 @@ function writeFile() {
 
   const projects = generatedGraphs.concat(pregeneratedGraphs);
 
-  ensureDirSync(join(__dirname, '../graph/client/src/assets/dev/'));
+  ensureDirSync(join(__dirname, '../graph/client/public/'));
 
   writeFileSync(
-    join(__dirname, '../graph/client/src/assets/dev/', `environment.js`),
+    join(__dirname, '../graph/client/public/', `environment.development.js`),
     generateFileContent(projects)
   );
 }

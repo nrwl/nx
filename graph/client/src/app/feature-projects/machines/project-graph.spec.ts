@@ -1,3 +1,7 @@
+/**
+ * @vitest-environment jsdom
+ */
+
 // nx-ignore-next-line
 import type {
   ProjectGraphDependency,
@@ -5,6 +9,15 @@ import type {
 } from '@nrwl/devkit';
 import { interpret } from 'xstate';
 import { projectGraphMachine } from './project-graph.machine';
+import { it, describe, expect } from 'vitest';
+
+window.environment = 'release';
+window.appConfig = {
+  showDebugger: true,
+  defaultWorkspaceId: 'local',
+  workspaces: [],
+  showExperimentalFeatures: true,
+};
 
 export const mockProjects: ProjectGraphProjectNode[] = [
   {
@@ -12,6 +25,7 @@ export const mockProjects: ProjectGraphProjectNode[] = [
     type: 'app',
     data: {
       root: 'apps/app1',
+      files: [],
     },
   },
   {
@@ -19,6 +33,7 @@ export const mockProjects: ProjectGraphProjectNode[] = [
     type: 'app',
     data: {
       root: 'apps/app2',
+      files: [],
     },
   },
   {
@@ -26,6 +41,7 @@ export const mockProjects: ProjectGraphProjectNode[] = [
     type: 'lib',
     data: {
       root: 'libs/ui-lib',
+      files: [],
     },
   },
   {
@@ -33,6 +49,7 @@ export const mockProjects: ProjectGraphProjectNode[] = [
     type: 'lib',
     data: {
       root: 'libs/feature/lib1',
+      files: [],
     },
   },
   {
@@ -40,6 +57,7 @@ export const mockProjects: ProjectGraphProjectNode[] = [
     type: 'lib',
     data: {
       root: 'libs/feature/lib2',
+      files: [],
     },
   },
   {
@@ -47,6 +65,7 @@ export const mockProjects: ProjectGraphProjectNode[] = [
     type: 'lib',
     data: {
       root: 'libs/auth-lib',
+      files: [],
     },
   },
 ];
@@ -133,76 +152,78 @@ describe('dep-graph machine', () => {
   });
 
   describe('selecting projects', () => {
-    it('should select projects', (done) => {
-      let service = interpret(projectGraphMachine).onTransition((state) => {
-        if (
-          state.matches('customSelected') &&
-          state.context.selectedProjects.includes('app1') &&
-          state.context.selectedProjects.includes('app2')
-        ) {
-          done();
-        }
-      });
+    it('should select projects', () =>
+      new Promise<void>((done) => {
+        let service = interpret(projectGraphMachine).onTransition((state) => {
+          if (
+            state.matches('customSelected') &&
+            state.context.selectedProjects.includes('app1') &&
+            state.context.selectedProjects.includes('app2')
+          ) {
+            done();
+          }
+        });
 
-      service.start();
+        service.start();
 
-      service.send({
-        type: 'setProjects',
-        projects: mockProjects,
-        dependencies: mockDependencies,
-        affectedProjects: [],
-        workspaceLayout: { appsDir: 'apps', libsDir: 'libs' },
-      });
+        service.send({
+          type: 'setProjects',
+          projects: mockProjects,
+          dependencies: mockDependencies,
+          affectedProjects: [],
+          workspaceLayout: { appsDir: 'apps', libsDir: 'libs' },
+        });
 
-      service.send({
-        type: 'selectProject',
-        projectName: 'app1',
-      });
+        service.send({
+          type: 'selectProject',
+          projectName: 'app1',
+        });
 
-      service.send({
-        type: 'selectProject',
-        projectName: 'app2',
-      });
-    });
+        service.send({
+          type: 'selectProject',
+          projectName: 'app2',
+        });
+      }));
   });
 
   describe('deselecting projects', () => {
-    it('should deselect projects', (done) => {
-      let service = interpret(projectGraphMachine).onTransition((state) => {
-        if (
-          state.matches('customSelected') &&
-          !state.context.selectedProjects.includes('app1') &&
-          state.context.selectedProjects.includes('app2')
-        ) {
-          done();
-        }
-      });
+    it('should deselect projects', () =>
+      new Promise<void>((done) => {
+        let service = interpret(projectGraphMachine).onTransition((state) => {
+          if (
+            state.matches('customSelected') &&
+            !state.context.selectedProjects.includes('app1') &&
+            state.context.selectedProjects.includes('app2')
+          ) {
+            done();
+          }
+        });
 
-      service.start();
+        service.start();
 
-      service.send({
-        type: 'setProjects',
-        projects: mockProjects,
-        dependencies: mockDependencies,
-        affectedProjects: [],
-        workspaceLayout: { appsDir: 'apps', libsDir: 'libs' },
-      });
+        service.send({
+          type: 'setProjects',
+          projects: mockProjects,
+          dependencies: mockDependencies,
+          affectedProjects: [],
+          workspaceLayout: { appsDir: 'apps', libsDir: 'libs' },
+        });
 
-      service.send({
-        type: 'selectProject',
-        projectName: 'app1',
-      });
+        service.send({
+          type: 'selectProject',
+          projectName: 'app1',
+        });
 
-      service.send({
-        type: 'selectProject',
-        projectName: 'app2',
-      });
+        service.send({
+          type: 'selectProject',
+          projectName: 'app2',
+        });
 
-      service.send({
-        type: 'deselectProject',
-        projectName: 'app1',
-      });
-    });
+        service.send({
+          type: 'deselectProject',
+          projectName: 'app1',
+        });
+      }));
 
     it('should go to unselected when last project is deselected', () => {
       let result = projectGraphMachine.transition(
@@ -263,34 +284,35 @@ describe('dep-graph machine', () => {
       expect(result.context.focusedProject).toEqual('app1');
     });
 
-    it('should select the projects by the focused project', (done) => {
-      let service = interpret(projectGraphMachine).onTransition((state) => {
-        if (
-          state.matches('focused') &&
-          state.context.selectedProjects.includes('app1') &&
-          state.context.selectedProjects.includes('ui-lib') &&
-          state.context.selectedProjects.includes('feature-lib1') &&
-          state.context.selectedProjects.includes('auth-lib')
-        ) {
-          done();
-        }
-      });
+    it('should select the projects by the focused project', () =>
+      new Promise<void>((done) => {
+        let service = interpret(projectGraphMachine).onTransition((state) => {
+          if (
+            state.matches('focused') &&
+            state.context.selectedProjects.includes('app1') &&
+            state.context.selectedProjects.includes('ui-lib') &&
+            state.context.selectedProjects.includes('feature-lib1') &&
+            state.context.selectedProjects.includes('auth-lib')
+          ) {
+            done();
+          }
+        });
 
-      service.start();
+        service.start();
 
-      service.send({
-        type: 'setProjects',
-        projects: mockProjects,
-        dependencies: mockDependencies,
-        affectedProjects: [],
-        workspaceLayout: { appsDir: 'apps', libsDir: 'libs' },
-      });
-      service.send({
-        type: 'setSearchDepthEnabled',
-        searchDepthEnabled: false,
-      });
-      service.send({ type: 'focusProject', projectName: 'app1' });
-    });
+        service.send({
+          type: 'setProjects',
+          projects: mockProjects,
+          dependencies: mockDependencies,
+          affectedProjects: [],
+          workspaceLayout: { appsDir: 'apps', libsDir: 'libs' },
+        });
+        service.send({
+          type: 'setSearchDepthEnabled',
+          searchDepthEnabled: false,
+        });
+        service.send({ type: 'focusProject', projectName: 'app1' });
+      }));
 
     it('should select no projects on unfocus', () => {
       let result = projectGraphMachine.transition(

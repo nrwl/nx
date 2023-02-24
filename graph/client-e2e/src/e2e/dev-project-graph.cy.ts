@@ -24,7 +24,7 @@ import * as nxExamplesJson from '../fixtures/nx-examples-project-graph.json';
 
 describe('dev mode - project graph', () => {
   before(() => {
-    cy.intercept('/assets/project-graphs/e2e.json', {
+    cy.intercept('/project-graphs/e2e.json', {
       fixture: 'nx-examples-project-graph.json',
     }).as('getGraph');
     cy.visit('/e2e/projects');
@@ -188,7 +188,7 @@ describe('dev mode - project graph', () => {
     });
 
     it('should check all affected project items', () => {
-      cy.intercept('/assets/project-graphs/affected.json', {
+      cy.intercept('/project-graphs/affected.json', {
         fixture: 'affected.json',
       }).as('getAffectedGraph');
 
@@ -203,7 +203,7 @@ describe('dev mode - project graph', () => {
       );
 
       // switch back to Nx Examples graph before proceeding
-      cy.intercept('/assets/project-graphs/e2e.json', {
+      cy.intercept('/project-graphs/e2e.json', {
         fixture: 'nx-examples-project-graph.json',
       }).as('getGraph');
       cy.get('[data-cy=project-select]').select('e2e', { force: true });
@@ -381,7 +381,7 @@ describe('dev mode - project graph', () => {
 
 describe('loading graph client with url params', () => {
   beforeEach(() => {
-    cy.intercept('/assets/project-graphs/*', {
+    cy.intercept('/project-graphs/*', {
       fixture: 'nx-examples-project-graph.json',
     }).as('getGraph');
   });

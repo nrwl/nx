@@ -31,95 +31,20 @@
       }
     },
     "build-base": {
-      "executor": "@nrwl/webpack:webpack",
+      "executor": "@nrwl/vite:build",
       "options": {
-        "maxWorkers": 8,
-        "outputPath": "build/apps/graph",
-        "index": "graph/client/src/index.html",
-        "main": "graph/client/src/main.tsx",
-        "polyfills": "graph/client/src/polyfills.ts",
-        "tsConfig": "graph/client/tsconfig.app.json",
-        "styles": ["graph/client/src/styles.css"],
-        "scripts": [],
-        "assets": [],
-        "webpackConfig": "graph/client/webpack.config.js",
-        "optimization": false,
-        "outputHashing": "none",
-        "sourceMap": true,
-        "extractCss": true,
-        "namedChunks": false,
-        "extractLicenses": false,
-        "vendorChunk": true,
-        "budgets": [
-          {
-            "type": "initial",
-            "maximumWarning": "2mb",
-            "maximumError": "5mb"
-          }
-        ],
-        "babelUpwardRootMode": true
+        "outputPath": "build/apps/graph"
       },
       "configurations": {
         "dev": {
-          "assets": [
-            "graph/client/src/favicon.ico",
-            "graph/client/src/assets/project-graphs/",
-            "graph/client/src/assets/task-graphs/",
-            "graph/client/src/assets/generated-project-graphs/",
-            "graph/client/src/assets/generated-task-graphs/",
-            {
-              "input": "graph/client/src/assets/dev",
-              "output": "/",
-              "glob": "environment.js"
-            }
-          ]
-        },
-        "dev-e2e": {
-          "assets": [
-            "graph/client/src/favicon.ico",
-            "graph/client/src/assets/project-graphs/",
-            "graph/client/src/assets/task-graphs/",
-            {
-              "input": "graph/client/src/assets/dev-e2e",
-              "output": "/",
-              "glob": "environment.js"
-            }
-          ]
-        },
-        "nx-console": {
-          "assets": [
-            "graph/client/src/favicon.ico",
-            {
-              "input": "graph/client/src/assets/project-graphs",
-              "output": "/assets/project-graphs",
-              "glob": "e2e.json"
-            },
-            {
-              "input": "graph/client/src/assets/nx-console",
-              "output": "/",
-              "glob": "environment.js"
-            }
-          ]
+          "optimization": false,
+          "sourceMap": true,
+          "extractCss": false,
+          "namedChunks": true,
+          "extractLicenses": false,
+          "vendorChunk": true
         },
         "release": {
-          "assets": [
-            "graph/client/src/favicon.ico",
-            {
-              "input": "graph/client/src/assets/project-graphs",
-              "output": "/assets/project-graphs",
-              "glob": "e2e.json"
-            },
-            {
-              "input": "graph/client/src/assets/task-graphs",
-              "output": "/assets/task-graphs",
-              "glob": "e2e.json"
-            },
-            {
-              "input": "graph/client/src/assets/release",
-              "output": "/",
-              "glob": "environment.js"
-            }
-          ],
           "optimization": true,
           "sourceMap": false,
           "extractCss": true,
@@ -131,49 +56,6 @@
               "type": "initial",
               "maximumWarning": "2mb",
               "maximumError": "5mb"
-            }
-          ]
-        },
-        "release-static": {
-          "assets": [
-            "graph/client/src/favicon.ico",
-            {
-              "input": "graph/client/src/assets/project-graphs",
-              "output": "/assets/project-graphs",
-              "glob": "e2e.json"
-            },
-            {
-              "input": "graph/client/src/assets/task-graphs",
-              "output": "/assets/task-graphs",
-              "glob": "e2e.json"
-            },
-            {
-              "input": "graph/client/src/assets/release-static",
-              "output": "/",
-              "glob": "environment.js"
-            }
-          ],
-          "optimization": true,
-          "sourceMap": false,
-          "extractCss": true,
-          "namedChunks": false,
-          "extractLicenses": true,
-          "vendorChunk": false,
-          "budgets": [
-            {
-              "type": "initial",
-              "maximumWarning": "2mb",
-              "maximumError": "5mb"
-            }
-          ]
-        },
-        "watch": {
-          "assets": [
-            "graph/client/src/favicon.ico",
-            {
-              "input": "graph/client/src/assets/watch",
-              "output": "/",
-              "glob": "environment.js"
             }
           ]
         }
@@ -182,34 +64,43 @@
       "outputs": ["{options.outputPath}"]
     },
     "serve-base": {
-      "executor": "@nrwl/webpack:dev-server",
+      "executor": "@nrwl/vite:dev-server",
       "configurations": {
         "dev": {
           "buildTarget": "graph-client:build-base:dev",
-          "port": 4201
+          "port": 4201,
+          "mode": "development"
         },
         "nx-console": {
-          "buildTarget": "graph-client:build-base:nx-console",
-          "port": 4202
+          "buildTarget": "graph-client:build-base:dev",
+          "port": 4202,
+          "mode": "nx-console"
         },
         "release": {
           "buildTarget": "graph-client:build-base:release",
-          "port": 4203
+          "port": 4203,
+          "mode": "release"
         },
         "watch": {
-          "buildTarget": "graph-client:build-base:watch",
-          "port": 4204
+          "buildTarget": "graph-client:build-base:dev",
+          "port": 4204,
+          "mode": "watch"
         },
         "release-static": {
-          "buildTarget": "graph-client:build-base:release-static",
-          "port": 4205
+          "buildTarget": "graph-client:build-base:release",
+          "port": 4205,
+          "mode": "release-static"
         },
         "dev-e2e": {
-          "buildTarget": "graph-client:build-base:dev-e2e",
-          "port": 4206
+          "buildTarget": "graph-client:build-base:dev",
+          "port": 4206,
+          "mode": "dev-e2e"
         }
       },
-      "defaultConfiguration": "dev"
+      "defaultConfiguration": "dev",
+      "options": {
+        "buildTarget": "graph-client:build"
+      }
     },
     "serve": {
       "executor": "nx:run-commands",
@@ -241,7 +132,9 @@
       "defaultConfiguration": "dev"
     },
     "lint": {},
-    "test": {},
+    "test": {
+      "executor": "@nrwl/vite:test"
+    },
     "storybook": {
       "executor": "@nrwl/storybook:storybook",
       "options": {
@@ -266,6 +159,21 @@
       "configurations": {
         "ci": {
           "quiet": true
+        }
+      }
+    },
+    "preview": {
+      "executor": "@nrwl/vite:preview-server",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "graph-client:build"
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "graph-client:build:development"
+        },
+        "production": {
+          "buildTarget": "graph-client:build:production"
         }
       }
     }
