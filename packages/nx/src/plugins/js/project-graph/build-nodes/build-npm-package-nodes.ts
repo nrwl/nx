@@ -1,5 +1,5 @@
 import { existsSync } from 'fs';
-import { defaultHashing } from 'nx/src/hasher/hashing-impl';
+import { defaultHashing } from '../../../../hasher/hashing-impl';
 import { join } from 'path';
 
 import { ProjectGraphBuilder } from '../../../../project-graph/project-graph-builder';
