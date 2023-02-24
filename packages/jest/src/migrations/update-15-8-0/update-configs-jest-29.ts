@@ -10,8 +10,11 @@ import { tsquery } from '@phenomnomnominal/tsquery';
 import * as ts from 'typescript';
 import { JestExecutorOptions } from '../../executors/jest/schema';
 import { forEachExecutorOptionsInGraph } from '@nrwl/workspace/src/utilities/executor-options-utils';
+import { findRootJestPreset } from '../../utils/config/find-root-jest-files';
 
 export async function updateConfigsJest29(tree: Tree) {
+  const rootPreset = findRootJestPreset(tree);
+  const targetsWithJest = new Set<string>();
   // have to use graph so the negative configuration targets are expanded
   const graph = await createProjectGraphAsync();
   forEachExecutorOptionsInGraph<JestExecutorOptions>(
@@ -19,17 +22,30 @@ export async function updateConfigsJest29(tree: Tree) {
     '@nrwl/jest:jest',
     (options, projectName, targetName) => {
       if (options.jestConfig && tree.exists(options.jestConfig)) {
-        addSnapshotOptionsToConfig(
-          tree,
-          options.jestConfig,
-          projectName,
-          targetName
-        );
+        targetsWithJest.add(targetName);
+        // if the default root preset exists or if the project doesn't have a 'preset' configured
+        //  -> update snapshot config
+        if (!rootPreset || !hasPresetConfigured(tree, options.jestConfig)) {
+          addSnapshotOptionsToConfig(
+            tree,
+            options.jestConfig,
+            `From within the project directory, run "nx test --update-snapshot"`
+          );
+        }
         updateTsJestOptions(tree, options.jestConfig);
         updateNgJestOptions(tree, options.jestConfig);
       }
     }
   );
+
+  if (rootPreset && tree.exists(rootPreset)) {
+    const cmd = `"nx affected --targets=${Array.from(targetsWithJest).join(
+      ','
+    )} --update-snapshot"`;
+    addSnapshotOptionsToConfig(tree, rootPreset, cmd);
+    updateTsJestOptions(tree, rootPreset);
+    updateNgJestOptions(tree, rootPreset);
+  }
 
   await formatFiles(tree);
   logger.info(stripIndents`NX Jest Snapshot format changed in v29.
@@ -43,8 +59,7 @@ More info: https://jestjs.io/docs/upgrading-to-jest29#snapshot-format`);
 function addSnapshotOptionsToConfig(
   tree: Tree,
   configPath: string,
-  projectName: string,
-  targetName: string
+  updateSnapshotExample: string
 ) {
   const config = tree.read(configPath, 'utf-8');
   const hasSnapshotOptions = tsquery.query(
@@ -66,7 +81,7 @@ ${node.properties.map((p) => getNodeWithComments(config, p)).join(',\n')},
  * It's recommend you update to the latest format.
  * You can do this by removing snapshotFormat property
  * and running tests with --update-snapshot flag.
- * Example: "nx ${targetName} ${projectName} --update-snapshot"
+ * Example: ${updateSnapshotExample}
  * More info: https://jestjs.io/docs/upgrading-to-jest29#snapshot-format
  */
 snapshotFormat: { escapeString: true, printBasicPrototype: true }
@@ -76,6 +91,17 @@ snapshotFormat: { escapeString: true, printBasicPrototype: true }
   );
 
   tree.write(configPath, updatedConfig);
+}
+
+function hasPresetConfigured(tree: Tree, configPath: string): boolean {
+  const contents = tree.read(configPath, 'utf-8');
+
+  return (
+    tsquery.query(
+      contents,
+      `${TS_QUERY_JEST_CONFIG_PREFIX} > ObjectLiteralExpression PropertyAssignment:has(Identifier[name="preset"])`
+    )?.length > 0
+  );
 }
 
 function updateTsJestOptions(tree: Tree, configPath: string) {
