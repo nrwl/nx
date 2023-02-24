@@ -115,7 +115,9 @@ function addNodes(
   // so we need to run this check once we have all the nodes and paths
   for (const [packageName, versionMap] of nodes.entries()) {
     const hoistedNode = keyMap.get(`node_modules/${packageName}`);
-    hoistedNode.name = `npm:${packageName}`;
+    if (hoistedNode) {
+      hoistedNode.name = `npm:${packageName}`;
+    }
 
     versionMap.forEach((node) => {
       builder.addExternalNode(node);
