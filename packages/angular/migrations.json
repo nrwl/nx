@@ -1920,6 +1920,42 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "15.8.0-ngrx": {
+      "version": "15.8.0-beta.6",
+      "requires": {
+        "@angular/core": "^15.0.0"
+      },
+      "packages": {
+        "@ngrx/store": {
+          "version": "~15.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/effects": {
+          "version": "~15.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/entity": {
+          "version": "~15.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/router-store": {
+          "version": "~15.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/schematics": {
+          "version": "~15.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/store-devtools": {
+          "version": "~15.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/component-store": {
+          "version": "~15.3.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

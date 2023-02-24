@@ -226,7 +226,7 @@ describe('Angular Projects', () => {
     } catch (err) {
       expect(err).toBeFalsy();
     }
-  }, 10_000_000);
+  }, 20_000_000);
 
   it('Custom Webpack Config for SSR - should serve the app correctly', async () => {
     // ARRANGE

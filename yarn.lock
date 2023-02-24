@@ -4344,24 +4344,24 @@
   resolved "https://registry.yarnpkg.com/@next/swc-win32-x64-msvc/-/swc-win32-x64-msvc-13.1.1.tgz#c209a37da13be27b722f9c40c40ab4b094866244"
   integrity sha512-mVF0/3/5QAc5EGVnb8ll31nNvf3BWpPY4pBb84tk+BfQglWLqc5AC9q1Ht/YMWiEgs8ALNKEQ3GQnbY0bJF2Gg==
 
-"@ngrx/effects@~15.0.0":
-  version "15.0.0"
-  resolved "https://registry.yarnpkg.com/@ngrx/effects/-/effects-15.0.0.tgz#9d4ab000ca8af8fa9012e4586425541de8b79ec4"
-  integrity sha512-EfYmGYFF1bNLPCRPnfAZnppT47RPwpprZK6HSQQ1fvV0sA0FYKQilg93ictNhDv+0IhMBZJEbR/hBMYyi4rkBg==
+"@ngrx/effects@~15.3.0":
+  version "15.3.0"
+  resolved "https://registry.yarnpkg.com/@ngrx/effects/-/effects-15.3.0.tgz#96af2d8121384d782e278a08b8b3643c1d08ae82"
+  integrity sha512-L+Ie4XFrzYBJOV7hNQvR5hUvG1PSCDd6niwOOJg5nm9zEjSnAxveJ/a3B52pRwge6EYOnrQne97jyArxOzPCJA==
   dependencies:
     tslib "^2.0.0"
 
-"@ngrx/router-store@~15.0.0":
-  version "15.0.0"
-  resolved "https://registry.yarnpkg.com/@ngrx/router-store/-/router-store-15.0.0.tgz#6f132798a421631f9b2015d5273f95a0cc2658d3"
-  integrity sha512-WBgT2uI/CejfYfdi3cjDsp9Q5UZTFnTcTGMTDFT8HujrCD75PxVw8ad9k2GMqp7j96qE13xi+8VRknQyUPx3HA==
+"@ngrx/router-store@~15.3.0":
+  version "15.3.0"
+  resolved "https://registry.yarnpkg.com/@ngrx/router-store/-/router-store-15.3.0.tgz#f932ebcde48a6401c6939f97910a26b9ede75466"
+  integrity sha512-rAaKm6oToXF9pj/IRwsEdv/EYgQscHBfDpiAmPufFwRi/nM/NSfxtV0viZLyOw4buZi0xFwucd3aTFtaqY//vQ==
   dependencies:
     tslib "^2.0.0"
 
-"@ngrx/store@~15.0.0":
-  version "15.0.0"
-  resolved "https://registry.yarnpkg.com/@ngrx/store/-/store-15.0.0.tgz#aec52a4139f6bb11e71752630e437001a77f5dd6"
-  integrity sha512-zGEK7pgL9X1M2d+tF5tJRjN9dUibfPnyAFcI0+375gBkUSU2gJxuphB0NoGPVJMtLFsW+5yI4+kjui7M6nsaYQ==
+"@ngrx/store@~15.3.0":
+  version "15.3.0"
+  resolved "https://registry.yarnpkg.com/@ngrx/store/-/store-15.3.0.tgz#7feb22134dcea6cf779149850078c98be1d70125"
+  integrity sha512-8cd0zWkOZ3TedDQHyOzUxZD1HHa0fU8fgzVX/2eIq6wmnleUxHVOKSJvA+DdE4GRoryFqVhAp17L1r5eC2QYHA==
   dependencies:
     tslib "^2.0.0"
 
