@@ -1,6 +1,7 @@
 import {
   checkFilesDoNotExist,
   checkFilesExist,
+  cleanupProject,
   getSize,
   killPorts,
   newProject,
@@ -107,7 +108,7 @@ describe('Build React libraries and apps', () => {
 
   afterEach(() => {
     killPorts();
-    // cleanupProject();
+    cleanupProject();
   });
 
   describe('Buildable libraries', () => {

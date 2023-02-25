@@ -61,6 +61,26 @@ describe('lib', () => {
       });
     });
 
+    it('should add vite types to tsconfigs', async () => {
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        bundler: 'vite',
+        unitTestRunner: 'vitest',
+      });
+      const tsconfigApp = readJson(tree, 'libs/my-lib/tsconfig.lib.json');
+      expect(tsconfigApp.compilerOptions.types).toEqual([
+        'node',
+        'vite/client',
+      ]);
+      const tsconfigSpec = readJson(tree, 'libs/my-lib/tsconfig.spec.json');
+      expect(tsconfigSpec.compilerOptions.types).toEqual([
+        'vitest/globals',
+        'vitest/importMeta',
+        'vite/client',
+        'node',
+      ]);
+    });
+
     it('should update tags', async () => {
       await libraryGenerator(tree, { ...defaultSchema, tags: 'one,two' });
       const project = readProjectConfiguration(tree, 'my-lib');

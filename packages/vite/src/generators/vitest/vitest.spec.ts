@@ -93,6 +93,8 @@ describe('vitest generator', () => {
             "outDir": "../../dist/out-tsc",
             "types": Array [
               "vitest/globals",
+              "vitest/importMeta",
+              "vite/client",
               "node",
             ],
           },
