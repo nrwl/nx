@@ -104,6 +104,8 @@ you can easily add your `projectId` to save all the screenshots and videos into 
 configuration is documented
 on [the official website](https://docs.cypress.io/guides/references/configuration.html#Options).
 
+For adding more dynamic configurations to your cypress configuration, you can look into using [setupNodeEvents](https://docs.cypress.io/api/plugins/browser-launch-api#Syntax) configuration option.
+
 ## Environment Variables
 
 If you're needing to pass a variable to cypress that you wish to not commit to your repository, i.e. API keys, or dynamic values based on configurations, i.e. API Urls. This is where [Cypress environment variables](https://docs.cypress.io/guides/guides/environment-variables) can be used.
