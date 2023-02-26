@@ -10,10 +10,8 @@ import { NativeFileHasher } from './native-file-hasher';
 function createFileHasher(): FileHasherBase {
   try {
     if (
-      !(
-        process.env.NX_NON_NATIVE_HASHER &&
-        process.env.NX_NON_NATIVE_HASHER == 'false'
-      )
+      !process.env.NX_NON_NATIVE_HASHER ||
+      process.env.NX_NON_NATIVE_HASHER != 'true'
     ) {
       return new NativeFileHasher();
     }
