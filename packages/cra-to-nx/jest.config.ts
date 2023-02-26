@@ -2,14 +2,13 @@
 export default {
   displayName: 'cra-to-nx',
 
-  globals: {},
+  globals: {
+    'ts-jest': {
+      tsConfig: '<rootDir>/tsconfig.spec.json',
+    },
+  },
   transform: {
-    '^.+\\.[tj]sx?$': [
-      'ts-jest',
-      {
-        tsConfig: '<rootDir>/tsconfig.spec.json',
-      },
-    ],
+    '^.+\\.[tj]sx?$': 'ts-jest',
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: '../../coverage/projects/cra-to-nx',

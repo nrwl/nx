@@ -2,14 +2,13 @@
 export default {
   displayName: 'typedoc-theme',
 
-  globals: {},
+  globals: {
+    'ts-jest': {
+      tsconfig: '<rootDir>/tsconfig.spec.json',
+    },
+  },
   transform: {
-    '^.+\\.[tj]sx?$': [
-      'ts-jest',
-      {
-        tsconfig: '<rootDir>/tsconfig.spec.json',
-      },
-    ],
+    '^.+\\.[tj]sx?$': 'ts-jest',
   },
   resolver: '../scripts/patched-jest-resolver.js',
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
