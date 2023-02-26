@@ -1,6 +1,9 @@
 const path = require('path');
 const { createGlobPatternsForDependencies } = require('@nrwl/next/tailwind');
 
+if (!createGlobPatternsForDependencies(__dirname).length)
+  throw Error('GRAPH ISSUE: No dependency found when many are expected.');
+
 module.exports = {
   experimental: {
     optimizeUniversalDefaults: true,
