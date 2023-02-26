@@ -1,10 +1,10 @@
 /* eslint-disable */
 export default {
   transform: {
-    '^.+\\.[tj]sx?$': 'ts-jest',
+    '^.+\\.[tj]sx?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
-  globals: { 'ts-jest': { tsconfig: '<rootDir>/tsconfig.spec.json' } },
+  globals: {},
   displayName: 'eslint-plugin-nx',
   testEnvironment: 'node',
   preset: '../../jest.preset.js',

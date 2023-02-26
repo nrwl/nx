@@ -1,11 +1,11 @@
 /* eslint-disable */
 export default {
   transform: {
-    '^.+\\.[tj]sx?$': 'ts-jest',
+    '^.+\\.[tj]sx?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
   maxWorkers: 1,
-  globals: { 'ts-jest': { tsconfig: '<rootDir>/tsconfig.spec.json' } },
+  globals: {},
   displayName: 'e2e-nx-init',
   preset: '../../jest.preset.js',
 };
