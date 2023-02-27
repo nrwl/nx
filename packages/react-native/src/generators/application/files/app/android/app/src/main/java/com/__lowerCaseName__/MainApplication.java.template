@@ -9,7 +9,7 @@ import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint;
 import com.facebook.react.defaults.DefaultReactNativeHost;
 import com.facebook.soloader.SoLoader;
 import java.util.List;
-import com.lugg.ReactNativeConfig.ReactNativeConfigPackage;
+import com.lugg.RNCConfig.RNCConfigPackage;
 
 public class MainApplication extends Application implements ReactApplication {
 
