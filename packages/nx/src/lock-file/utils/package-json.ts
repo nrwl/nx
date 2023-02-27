@@ -12,9 +12,6 @@ export function getHoistedPackageVersion(packageName: string): string {
     const content = readFileSync(fullPath, 'utf-8');
     return JSON.parse(content)?.version;
   }
-  if (process.env.NX_VERBOSE_LOGGING === 'true') {
-    console.warn(`Could not find ${fullPath}`);
-  }
   return;
 }
 
