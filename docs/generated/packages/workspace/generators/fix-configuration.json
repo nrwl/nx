@@ -4,8 +4,8 @@
   "schema": {
     "$schema": "http://json-schema.org/schema",
     "$id": "SchematicsConvertToNxProject",
-    "title": "Create a custom target to run any command",
-    "description": "Create a custom target to run any command.",
+    "title": "@nrwl/workspace:fix-configuration",
+    "description": "Migrates v1 config to v2 standalone configuration.",
     "type": "object",
     "cli": "nx",
     "examples": [
