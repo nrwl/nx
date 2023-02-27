@@ -1,9 +1,11 @@
 import type { Tree } from '@nrwl/devkit';
 import { joinPathFragments, names } from '@nrwl/devkit';
+import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 import { insertImport } from '@nrwl/workspace/src/utilities/ast-utils';
-import { createSourceFile, ScriptTarget } from 'typescript';
 import type { FileInfo } from '../../utils/file-info';
 import type { NormalizedSchema } from '../schema';
+
+let tsModule: typeof import('typescript');
 
 export function convertComponentToScam(
   tree: Tree,
@@ -20,15 +22,19 @@ export function convertComponentToScam(
   const typeNames = names(options.type ?? 'component');
   const componentClassName = `${componentNames.className}${typeNames.className}`;
 
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
+
   if (options.inlineScam) {
     const currentComponentContents = tree.read(
       componentFileInfo.filePath,
       'utf-8'
     );
-    let source = createSourceFile(
+    let source = tsModule.createSourceFile(
       componentFileInfo.filePath,
       currentComponentContents,
-      ScriptTarget.Latest,
+      tsModule.ScriptTarget.Latest,
       true
     );
 

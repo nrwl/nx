@@ -1,8 +1,7 @@
 import { applyChangesToString, ChangeType, Tree } from '@nrwl/devkit';
 import { findNodes } from 'nx/src/utils/typescript';
-import type * as ts from 'typescript';
-
 import { TargetFlags } from './generator-utils';
+import type { Node, ReturnStatement } from 'typescript';
 
 export function ensureViteConfigIsCorrect(
   tree: Tree,
@@ -76,7 +75,7 @@ function handleBuildOrTestNode(
     return tsquery.replace(
       updatedFileContent,
       `PropertyAssignment:has(Identifier[name="${name}"])`,
-      (node: ts.Node) => {
+      (node: Node) => {
         const found = tsquery.query(node, 'ObjectLiteralExpression');
         return `${name}: {
                   ...${found?.[0].getText()},
@@ -160,7 +159,7 @@ function handleBuildOrTestNode(
 
 function transformCurrentBuildObject(
   index: number,
-  returnStatements: ts.ReturnStatement[],
+  returnStatements: ReturnStatement[],
   appFileContent: string,
   buildConfigObject: {}
 ): string | undefined {
@@ -178,7 +177,7 @@ function transformCurrentBuildObject(
   const newReturnObject = tsquery.replace(
     returnStatements[index].getText(),
     'ObjectLiteralExpression',
-    (_node: ts.Node) => {
+    (_node: Node) => {
       return `{
         ...${currentBuildObject},
         ...${JSON.stringify(buildConfigObject)}
@@ -203,7 +202,7 @@ function transformCurrentBuildObject(
 }
 
 function transformConditionalConfig(
-  conditionalConfig: ts.Node[],
+  conditionalConfig: Node[],
   appFileContent: string,
   buildConfigObject: {}
 ): string | undefined {
@@ -228,7 +227,7 @@ function transformConditionalConfig(
   );
 
   const elseKeywordExists = findNodes(ifStatement?.[0], SyntaxKind.ElseKeyword);
-  const returnStatements: ts.ReturnStatement[] = tsquery.query(
+  const returnStatements: ReturnStatement[] = tsquery.query(
     ifStatement[0],
     'ReturnStatement'
   );
@@ -297,7 +296,7 @@ function handlePluginNode(
     appFileContent = tsquery.replace(
       file.getText(),
       'PropertyAssignment:has(Identifier[name="plugins"])',
-      (node: ts.Node) => {
+      (node: Node) => {
         const found = tsquery.query(node, 'ArrayLiteralExpression');
         return `plugins: [
                     ...${found?.[0].getText()},

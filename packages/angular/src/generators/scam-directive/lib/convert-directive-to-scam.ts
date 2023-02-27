@@ -1,9 +1,11 @@
 import type { Tree } from '@nrwl/devkit';
 import { joinPathFragments, names } from '@nrwl/devkit';
+import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 import { insertImport } from '@nrwl/workspace/src/utilities/ast-utils';
-import { createSourceFile, ScriptTarget } from 'typescript';
 import type { FileInfo } from '../../utils/file-info';
 import type { NormalizedSchema } from '../schema';
+
+let tsModule: typeof import('typescript');
 
 export function convertDirectiveToScam(
   tree: Tree,
@@ -15,6 +17,9 @@ export function convertDirectiveToScam(
       `Couldn't find directive at path ${directiveFileInfo.filePath} to add SCAM setup.`
     );
   }
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
 
   const directiveNames = names(options.name);
   const typeNames = names('directive');
@@ -25,10 +30,10 @@ export function convertDirectiveToScam(
       directiveFileInfo.filePath,
       'utf-8'
     );
-    let source = createSourceFile(
+    let source = tsModule.createSourceFile(
       directiveFileInfo.filePath,
       currentDirectiveContents,
-      ScriptTarget.Latest,
+      tsModule.ScriptTarget.Latest,
       true
     );
 

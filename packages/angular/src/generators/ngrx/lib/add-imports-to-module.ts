@@ -1,8 +1,8 @@
 import type { Tree } from '@nrwl/devkit';
 import { names } from '@nrwl/devkit';
 import { insertImport } from '@nrwl/workspace/src/utilities/ast-utils';
+import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 import type { SourceFile } from 'typescript';
-import { createSourceFile, ScriptTarget } from 'typescript';
 import {
   addImportToModule,
   addProviderToBootstrapApplication,
@@ -10,6 +10,8 @@ import {
 } from '../../../utils/nx-devkit/ast-utils';
 import type { NormalizedNgRxGeneratorOptions } from './normalize-options';
 import { addProviderToRoute } from '../../../utils/nx-devkit/route-utils';
+
+let tsModule: typeof import('typescript');
 
 function addRootStoreImport(
   tree: Tree,
@@ -143,12 +145,15 @@ export function addImportsToModule(
   tree: Tree,
   options: NormalizedNgRxGeneratorOptions
 ): void {
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
   const parentPath = options.module ?? options.parent;
   const sourceText = tree.read(parentPath, 'utf-8');
-  let sourceFile = createSourceFile(
+  let sourceFile = tsModule.createSourceFile(
     parentPath,
     sourceText,
-    ScriptTarget.Latest,
+    tsModule.ScriptTarget.Latest,
     true
   );
 

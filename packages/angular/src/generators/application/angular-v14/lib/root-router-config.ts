@@ -1,21 +1,25 @@
 import type { Tree } from '@nrwl/devkit';
+import { insertImport } from '@nrwl/workspace/src/utilities/ast-utils';
+import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
+import { addImportToModule } from '../../../../utils/nx-devkit/ast-utils';
 import type { NormalizedSchema } from './normalized-schema';
 
-import { insertImport } from '@nrwl/workspace/src/utilities/ast-utils';
-import * as ts from 'typescript';
-import { addImportToModule } from '../../../../utils/nx-devkit/ast-utils';
+let tsModule: typeof import('typescript');
 
 export function addRouterRootConfiguration(
   host: Tree,
   options: NormalizedSchema
 ) {
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
   const modulePath = `${options.appProjectRoot}/src/app/app.module.ts`;
   const moduleSource = host.read(modulePath, 'utf-8');
 
-  let sourceFile = ts.createSourceFile(
+  let sourceFile = tsModule.createSourceFile(
     modulePath,
     moduleSource,
-    ts.ScriptTarget.Latest,
+    tsModule.ScriptTarget.Latest,
     true
   );
 

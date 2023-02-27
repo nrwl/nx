@@ -1,5 +1,4 @@
 import type { Tree } from '@nrwl/devkit';
-import { tsquery } from '@phenomnomnominal/tsquery';
 import { coerce, lt, major } from 'semver';
 import {
   getInstalledAngularVersionInfo,
@@ -36,6 +35,7 @@ export function validateOptions(
   if (lt(angularVersionInfo.version, '14.1.0') || ngrxMajorVersion < 15) {
     const parentPath = options.parent ?? options.module;
     const parentContent = tree.read(parentPath, 'utf-8');
+    const { tsquery } = require('@phenomnomnominal/tsquery');
     const ast = tsquery.ast(parentContent);
 
     const NG_MODULE_DECORATOR_SELECTOR =

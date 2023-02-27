@@ -1,11 +1,17 @@
 import { Tree } from 'nx/src/generators/tree';
-import { Schema } from '../schema';
 import { readProjectConfiguration } from 'nx/src/generators/utils/project-configuration';
 import { generateFiles, joinPathFragments, names } from '@nrwl/devkit';
-import * as ts from 'typescript';
+import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
 import { addRoute } from '../../../utils/nx-devkit/route-utils';
+import { Schema } from '../schema';
+
+let tsModule: typeof import('typescript');
 
 export function updateHostAppRoutes(tree: Tree, options: Schema) {
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
+
   const { sourceRoot } = readProjectConfiguration(tree, options.appName);
 
   const remoteRoutes =
@@ -36,10 +42,10 @@ ${remoteRoutes}
 
   const hostRootRoutingFile = tree.read(pathToHostRootRoutingFile, 'utf-8');
 
-  let sourceFile = ts.createSourceFile(
+  let sourceFile = tsModule.createSourceFile(
     pathToHostRootRoutingFile,
     hostRootRoutingFile,
-    ts.ScriptTarget.Latest,
+    tsModule.ScriptTarget.Latest,
     true
   );
 

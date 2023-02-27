@@ -10,7 +10,6 @@
   "devDependencies": {
     "@nrwl/workspace": "<%= nxVersion %>",
     "nx": "<%= nxVersion %>",
-    "prettier": "<%= prettierVersion %>",
-    "typescript": "<%= typescriptVersion %>"
+    "prettier": "<%= prettierVersion %>"
   }
 }

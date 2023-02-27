@@ -9,11 +9,7 @@ import {
   updateJson,
   writeJson,
 } from '@nrwl/devkit';
-import {
-  nxVersion,
-  prettierVersion,
-  typescriptVersion,
-} from '../../utils/versions';
+import { nxVersion, prettierVersion } from '../../utils/versions';
 import { join, join as pathJoin } from 'path';
 import { Preset } from '../utils/presets';
 import { deduceDefaultBase } from '../../utilities/default-base';
@@ -146,7 +142,6 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
     tmpl: '',
     cliCommand: 'nx',
     nxCli: false,
-    typescriptVersion,
     prettierVersion,
     ...(options as object),
     nxVersion,

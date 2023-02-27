@@ -7,8 +7,6 @@ import {
   updateJson,
 } from '@nrwl/devkit';
 import type { Schema } from '../schema';
-import { tsquery } from '@phenomnomnominal/tsquery';
-import type * as ts from 'typescript';
 import { ArrayLiteralExpression } from 'typescript';
 import { insertImport } from '@nrwl/workspace/src/utilities/ast-utils';
 import { addRoute } from '../../../utils/nx-devkit/route-utils';
@@ -85,6 +83,7 @@ function addRemoteToStaticHost(
   }
 
   const hostMFConfig = tree.read(hostMFConfigPath, 'utf-8');
+  const { tsquery } = require('@phenomnomnominal/tsquery');
   const webpackAst = tsquery.ast(hostMFConfig);
   const mfRemotesNode = tsquery(
     webpackAst,
