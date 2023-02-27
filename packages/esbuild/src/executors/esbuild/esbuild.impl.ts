@@ -47,18 +47,17 @@ export async function* esbuildExecutor(
   const assetsResult = await copyAssets(options, context);
 
   const externalDependencies: DependentBuildableProjectNode[] =
-    options.external.map((name) => {
+    options.external.reduce((acc, name) => {
       const externalNode = context.projectGraph.externalNodes[`npm:${name}`];
-      if (!externalNode)
-        throw new Error(
-          `Cannot find external dependency ${name}. Check your package.json file.`
-        );
-      return {
-        name,
-        outputs: [],
-        node: externalNode,
-      };
-    });
+      if (externalNode) {
+        acc.push({
+          name,
+          outputs: [],
+          node: externalNode,
+        });
+      }
+      return acc;
+    }, []);
 
   if (!options.thirdParty) {
     const thirdPartyDependencies = getExtraDependencies(
