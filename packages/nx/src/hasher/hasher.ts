@@ -1,6 +1,6 @@
 import { exec } from 'child_process';
 import * as minimatch from 'minimatch';
-import { getRootTsConfigFileName } from '../utils/typescript';
+import { getRootTsConfigPath } from '../utils/typescript';
 import { defaultHashing, HashingImpl } from './hashing-impl';
 import {
   FileData,
@@ -175,7 +175,7 @@ export class Hasher {
 
   private readTsConfig() {
     try {
-      const res = readJsonFile(getRootTsConfigFileName());
+      const res = readJsonFile(getRootTsConfigPath());
       res.compilerOptions.paths ??= {};
       return res;
     } catch {

@@ -59,7 +59,7 @@ describe('Hasher', () => {
       },
       '/root'
     );
-    tsUtils.getRootTsConfigFileName = () => '/root/tsconfig.base.json';
+    tsUtils.getRootTsConfigPath = () => '/root/tsconfig.base.json';
   });
 
   afterEach(() => {
