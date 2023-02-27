@@ -46,8 +46,8 @@ describe('Invoke Runner', () => {
       async function main(){
         const r = await initTasksRunner({});
         
-        await r.invoke([{id: '${mylib}:prebuild', target: {project: '${mylib}', target: 'prebuild'}, overrides: {__overrides_unparsed__: ''}}]);
-        await r.invoke([{id: '${mylib}:build', target: {project: '${mylib}', target: 'build'}, overrides: {__overrides_unparsed__: ''}}]);
+        await r.invoke({tasks: [{id: '${mylib}:prebuild', target: {project: '${mylib}', target: 'prebuild'}, overrides: {__overrides_unparsed__: ''}}]});
+        await r.invoke({tasks: [{id: '${mylib}:build', target: {project: '${mylib}', target: 'build'}, overrides: {__overrides_unparsed__: ''}}]});
       }
       
       main().then(q => {
