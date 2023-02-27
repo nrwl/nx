@@ -4,25 +4,17 @@ Nx Console is the UI for Nx. It works for any generator or any architect command
 
 ## Download
 
-### VSCode Plugin: Nx Console
+### Official Integrations
 
-If you are using [VSCode](https://code.visualstudio.com/), you can install the [Nx Console VSCode Plugin](https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console) from Marketplace. The Nx Console VSCode Plugin is **built and maintained by the Nx team**.
+If you are using [VSCode](https://code.visualstudio.com/) or a [JetBrains IDE](https://www.jetbrains.com/) you can install Nx Console from their respective marketplaces. Nx Console for VSCode and JetBrains is **built and maintained by the Nx team**.
 
 {% install-nx-console /%}
 
 - [Install from the VSCode Marketplace](https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console)
+- [Install from the JetBrains Marketplace](https://plugins.jetbrains.com/plugin/21060-nx-console)
 - [Contribute on GitHub](https://github.com/nrwl/nx-console)
 
 ![Nx Console screenshot](/shared/images/nx-console/nx-console-screenshot.webp)
-
-### WebStorm
-
-If you are using [WebStorm](https://www.jetbrains.com/webstorm/), you can install one of the available plugins:
-
-- [nx-webstorm](https://plugins.jetbrains.com/plugin/15000-nx-webstorm)
-- [Nx Console Idea](https://plugins.jetbrains.com/plugin/15101-nx-console-idea)
-
-These plugins are **NOT** built or maintained by the Nx team. They are maintained by independent community contributors.
 
 ### Neovim
 

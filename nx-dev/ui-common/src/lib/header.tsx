@@ -38,9 +38,9 @@ export function Header(): JSX.Element {
       href: '/recipes',
     },
     {
-      name: 'VSCode integration',
+      name: 'Nx Console',
       description:
-        'The official native VSCode extension bringing Nx to your editor.',
+        'The official VSCode & JetBrains plugin bringing Nx to your editor.',
       href: '/core-features/integrate-with-editors#vscode',
     },
     {

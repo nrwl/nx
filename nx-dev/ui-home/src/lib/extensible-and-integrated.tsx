@@ -43,17 +43,18 @@ export function ExtensibleAndIntegrated(): JSX.Element {
             </Link>{' '}
             ,{' '}
             <Link
+              href="/core-features/integrate-with-editors"
+              className="font-medium text-blue-500 dark:text-sky-500"
+              title="Install JetBrains' native plugin for Nx"
+            >
+              JetBrains
+            </Link>{' '}
+            and{' '}
+            <Link
               href="/core-features/integrate-with-editors#neovim"
               className="font-medium text-blue-500 dark:text-sky-500"
             >
               Neovim
-            </Link>{' '}
-            and{' '}
-            <Link
-              href="/core-features/integrate-with-editors#webstorm"
-              className="font-medium text-blue-500 dark:text-sky-500"
-            >
-              Webstorm
             </Link>
             . Generating a new library, running e2e tests, building your app -
             everything just a click away.
