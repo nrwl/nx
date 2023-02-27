@@ -1,6 +1,7 @@
-import { execSync } from 'child_process';
+import { ExecOptions, execSync } from 'child_process';
 import { tmpProjPath } from './paths';
 import { getPackageManagerCommand } from '@nrwl/devkit';
+import { fileExists } from './utils';
 
 /**
  * Run a nx command inside the e2e directory
@@ -15,12 +16,23 @@ export function runNxCommand(
     silenceError: false,
   }
 ): string {
-  try {
-    const pmc = getPackageManagerCommand();
-    return execSync(`${pmc.exec} nx ${command}`, {
+  function _runNxCommand(c) {
+    const execSyncOptions: ExecOptions = {
       cwd: tmpProjPath(),
       env: { ...process.env, ...opts.env },
-    })
+    };
+    if (fileExists('package.json')) {
+      const pmc = getPackageManagerCommand();
+      return execSync(`${pmc.exec} nx ${command}`, execSyncOptions);
+    } else if (process.platform === 'win32') {
+      return execSync(`./nx.bat %${command}`, execSyncOptions);
+    } else {
+      return execSync(`./nx %${command}`, execSyncOptions);
+    }
+  }
+
+  try {
+    return _runNxCommand(command)
       .toString()
       .replace(
         /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
