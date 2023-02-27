@@ -45,21 +45,20 @@ describe('setupSSR', () => {
     `);
     expect(tree.read('apps/app1/src/main.ts', 'utf-8')).toMatchInlineSnapshot(`
       "import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
-
       import { AppModule } from './app/app.module';
 
       function bootstrap() {
         platformBrowserDynamic()
-        .bootstrapModule(AppModule)
-        .catch((err) => console.error(err));
-      };
+          .bootstrapModule(AppModule)
+          .catch((err) => console.error(err));
+      }
 
-
-       if (document.readyState !== 'loading') {
-         bootstrap();
-       } else {
-         document.addEventListener('DOMContentLoaded', bootstrap);
-       }"
+      if (document.readyState !== 'loading') {
+        bootstrap();
+      } else {
+        document.addEventListener('DOMContentLoaded', bootstrap);
+      }
+      "
     `);
     expect(tree.read('apps/app1/tsconfig.server.json', 'utf-8'))
       .toMatchInlineSnapshot(`

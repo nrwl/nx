@@ -25,26 +25,27 @@ export class AppModule { }
 "
 `;
 
-exports[`Host App Generator --ssr should generate the correct files 2`] = `
-"import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+exports[`Host App Generator --ssr should generate the correct files 2`] = `"import('./bootstrap').catch(err => console.error(err))"`;
 
+exports[`Host App Generator --ssr should generate the correct files 3`] = `
+"import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 import { AppModule } from './app/app.module';
 
 function bootstrap() {
   platformBrowserDynamic()
-  .bootstrapModule(AppModule)
-  .catch((err) => console.error(err));
-};
+    .bootstrapModule(AppModule)
+    .catch((err) => console.error(err));
+}
 
-
- if (document.readyState !== 'loading') {
-   bootstrap();
- } else {
-   document.addEventListener('DOMContentLoaded', bootstrap);
- }"
+if (document.readyState !== 'loading') {
+  bootstrap();
+} else {
+  document.addEventListener('DOMContentLoaded', bootstrap);
+}
+"
 `;
 
-exports[`Host App Generator --ssr should generate the correct files 3`] = `
+exports[`Host App Generator --ssr should generate the correct files 4`] = `
 "/***************************************************************************************************
  * Initialize the server environment - for example, adding DOM built-in types to the global scope.
  *
@@ -58,7 +59,7 @@ export { AppServerModule } from './app/app.server.module';
 export { renderModule } from '@angular/platform-server';"
 `;
 
-exports[`Host App Generator --ssr should generate the correct files 4`] = `
+exports[`Host App Generator --ssr should generate the correct files 5`] = `
 "import 'zone.js/dist/zone-node';
 
 import { APP_BASE_HREF } from '@angular/common';
@@ -127,22 +128,22 @@ run();
 export * from './bootstrap.server';"
 `;
 
-exports[`Host App Generator --ssr should generate the correct files 5`] = `"import('./src/main.server');"`;
+exports[`Host App Generator --ssr should generate the correct files 6`] = `"import('./src/main.server');"`;
 
-exports[`Host App Generator --ssr should generate the correct files 6`] = `
+exports[`Host App Generator --ssr should generate the correct files 7`] = `
 "module.exports = {
   name: 'test',
   remotes: []
 }"
 `;
 
-exports[`Host App Generator --ssr should generate the correct files 7`] = `
+exports[`Host App Generator --ssr should generate the correct files 8`] = `
 "const { withModuleFederationForSSR } = require('@nrwl/angular/module-federation');
 const config = require('./module-federation.config');
 module.exports = withModuleFederationForSSR(config)"
 `;
 
-exports[`Host App Generator --ssr should generate the correct files 8`] = `
+exports[`Host App Generator --ssr should generate the correct files 9`] = `
 "import { NxWelcomeComponent } from './nx-welcome.component';
     import { Route } from '@angular/router';
 
@@ -153,7 +154,7 @@ export const appRoutes: Route[] = [
     },];"
 `;
 
-exports[`Host App Generator --ssr should generate the correct files 9`] = `
+exports[`Host App Generator --ssr should generate the correct files 10`] = `
 Object {
   "configurations": Object {
     "development": Object {
@@ -181,7 +182,7 @@ Object {
 }
 `;
 
-exports[`Host App Generator --ssr should generate the correct files 10`] = `
+exports[`Host App Generator --ssr should generate the correct files 11`] = `
 Object {
   "configurations": Object {
     "development": Object {
@@ -196,6 +197,33 @@ Object {
   "defaultConfiguration": "development",
   "executor": "@nrwl/angular:module-federation-dev-ssr",
 }
+`;
+
+exports[`Host App Generator --ssr should not overwrite browser main.ts when using dynamic federation 1`] = `
+"import { setRemoteDefinitions } from '@nrwl/angular/mf';
+
+  fetch('/assets/module-federation.manifest.json')
+  .then((res) => res.json())
+  .then(definitions => setRemoteDefinitions(definitions))
+  .then(() => import('./bootstrap').catch(err => console.error(err)))"
+`;
+
+exports[`Host App Generator --ssr should not overwrite browser main.ts when using dynamic federation 2`] = `
+"import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+import { AppModule } from './app/app.module';
+
+function bootstrap() {
+  platformBrowserDynamic()
+    .bootstrapModule(AppModule)
+    .catch((err) => console.error(err));
+}
+
+if (document.readyState !== 'loading') {
+  bootstrap();
+} else {
+  document.addEventListener('DOMContentLoaded', bootstrap);
+}
+"
 `;
 
 exports[`Host App Generator should generate a host app with a remote 1`] = `

@@ -18,6 +18,11 @@ import {
 export async function addSsr(tree: Tree, options: Schema, appName: string) {
   let project = readProjectConfiguration(tree, appName);
 
+  const originalMain = tree.read(
+    joinPathFragments(project.sourceRoot, 'main.ts'),
+    'utf-8'
+  );
+
   await setupSsr(tree, {
     project: appName,
   });
@@ -35,10 +40,7 @@ export async function addSsr(tree: Tree, options: Schema, appName: string) {
     joinPathFragments(project.sourceRoot, 'main.ts'),
     joinPathFragments(project.sourceRoot, 'bootstrap.ts')
   );
-  tree.write(
-    joinPathFragments(project.sourceRoot, 'main.ts'),
-    `import("./bootstrap")`
-  );
+  tree.write(joinPathFragments(project.sourceRoot, 'main.ts'), originalMain);
 
   generateFiles(tree, joinPathFragments(__dirname, '../files'), project.root, {
     appName,

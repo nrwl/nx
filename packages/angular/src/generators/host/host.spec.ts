@@ -206,6 +206,7 @@ describe('Host App Generator', () => {
       expect(
         tree.read(`apps/test/src/app/app.module.ts`, 'utf-8')
       ).toMatchSnapshot();
+      expect(tree.read(`apps/test/src/main.ts`, 'utf-8')).toMatchSnapshot();
       expect(
         tree.read(`apps/test/src/bootstrap.ts`, 'utf-8')
       ).toMatchSnapshot();
@@ -227,6 +228,24 @@ describe('Host App Generator', () => {
       ).toMatchSnapshot();
       expect(project.targets.server).toMatchSnapshot();
       expect(project.targets['serve-ssr']).toMatchSnapshot();
+    });
+
+    it('should not overwrite browser main.ts when using dynamic federation', async () => {
+      // ARRANGE
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+
+      // ACT
+      await host(tree, {
+        name: 'test',
+        ssr: true,
+        dynamic: true,
+      });
+
+      // ASSERT
+      expect(tree.read(`apps/test/src/main.ts`, 'utf-8')).toMatchSnapshot();
+      expect(
+        tree.read(`apps/test/src/bootstrap.ts`, 'utf-8')
+      ).toMatchSnapshot();
     });
   });
 
