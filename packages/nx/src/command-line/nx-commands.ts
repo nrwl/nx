@@ -268,15 +268,17 @@ export const commandsObject = yargs
       process.exit(0);
     },
   })
-
+  /**
+   * @deprecated(v17): Remove `workspace-generator in v17. Use local plugins.
+   */
   .command({
     command: 'workspace-generator [name]',
-    describe:
+    describe: 'Runs a workspace generator from the tools/generators directory',
+    deprecated:
       'Use a local plugin instead. See: https://nx.dev/deprecated/workspace-generators',
-    deprecated: true,
     aliases: ['workspace-schematic [name]'],
     builder: async (yargs) =>
-      linkToNxDevAndExamples(yargs, 'workspace-generator'),
+      linkToNxDevAndExamples(withGenerateOptions(yargs), 'workspace-generator'),
     handler: workspaceGeneratorHandler,
   })
   .command({
@@ -825,10 +827,11 @@ function withRunOneOptions(yargs: yargs.Argv) {
   }
 }
 
-async function workspaceGeneratorHandler() {
-  await (
-    await import('./workspace-generators')
-  ).workspaceGenerators(process.argv.slice(3));
+/**
+ * @deprecated(v17): Remove `workspace-generator in v17. Use local plugins.
+ */
+async function workspaceGeneratorHandler(args: yargs.Arguments) {
+  await (await import('./workspace-generators')).workspaceGenerators(args);
   process.exit(0);
 }
 

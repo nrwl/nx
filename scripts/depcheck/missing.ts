@@ -250,8 +250,6 @@ export default async function getMissingDependencies(
     package: { dependencies },
   });
 
-  console.log(missing['@nrwl/nx-plugin']);
-
   const packagesMissing = Object.keys(missing).filter(
     (m) =>
       !IGNORE_MATCHES_IN_PACKAGE['*'].includes(m) &&

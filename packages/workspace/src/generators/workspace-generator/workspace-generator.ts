@@ -1,8 +1,5 @@
 import { Schema } from './schema';
-import {
-  Tree,
-  stripIndents,
-} from '@nx/devkit';
+import { Tree, stripIndents } from '@nx/devkit';
 
 export default async function (host: Tree, schema: Schema) {
   const message = stripIndents`Workspace Generators are no longer supported. Instead,
