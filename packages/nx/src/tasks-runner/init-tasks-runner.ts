@@ -21,7 +21,7 @@ export async function initTasksRunner(nxArgs: NxArgs) {
       parallel: number;
     }): Promise<{ status: number; taskGraph: TaskGraph }> => {
       performance.mark('command-execution-begins');
-      const lifeCycle = new InvokeRunnerTerminalOutputLifeCycle(tasks);
+      const lifeCycle = new InvokeRunnerTerminalOutputLifeCycle(opts.tasks);
 
       const taskGraph = {
         roots: opts.tasks.map((task) => task.id),
