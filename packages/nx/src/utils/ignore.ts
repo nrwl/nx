@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs-extra';
 import ignore from 'ignore';
-import { join } from 'path/posix';
 import { readFileIfExisting } from './fileutils';
+import { joinPathFragments } from './path';
 import { workspaceRoot } from './workspace-root';
 
 /**
@@ -18,19 +18,23 @@ export function getIgnoredGlobs(
   if (prependRoot) {
     return [
       ...getAlwaysIgnore(root),
-      ...files.flatMap((f) => getIgnoredGlobsFromFile(join(root, f), root)),
+      ...files.flatMap((f) =>
+        getIgnoredGlobsFromFile(joinPathFragments(root, f), root)
+      ),
     ];
   } else {
     return [
       ...getAlwaysIgnore(),
-      ...files.flatMap((f) => getIgnoredGlobsFromFile(join(root, f))),
+      ...files.flatMap((f) =>
+        getIgnoredGlobsFromFile(joinPathFragments(root, f))
+      ),
     ];
   }
 }
 
 export function getAlwaysIgnore(root?: string) {
   const paths = ['node_modules', '**/node_modules', '.git'];
-  return root ? paths.map((x) => join(root, x)) : paths;
+  return root ? paths.map((x) => joinPathFragments(root, x)) : paths;
 }
 
 export function getIgnoreObject(root: string = workspaceRoot) {
@@ -51,9 +55,9 @@ function getIgnoredGlobsFromFile(file: string, root?: string): string[] {
         continue;
       } else if (trimmed.startsWith('/')) {
         if (root) {
-          results.push(join(root, trimmed));
+          results.push(joinPathFragments(root, trimmed));
         } else {
-          results.push(join('.', trimmed));
+          results.push(joinPathFragments('.', trimmed));
         }
       } else {
         results.push(trimmed);
