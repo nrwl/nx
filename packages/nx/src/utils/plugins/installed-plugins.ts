@@ -74,7 +74,13 @@ export function getInstalledPluginsAndCapabilities(
   for (const plugin of Array.from(plugins).sort()) {
     try {
       const capabilities = getPluginCapabilities(workspaceRoot, plugin);
-      if (capabilities.executors || capabilities.generators) {
+      if (
+        capabilities &&
+        (capabilities.executors ||
+          capabilities.generators ||
+          capabilities.projectGraphExtension ||
+          capabilities.projectInference)
+      ) {
         result.set(plugin, capabilities);
       }
     } catch {}

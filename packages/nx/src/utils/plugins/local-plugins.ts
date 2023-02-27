@@ -3,14 +3,11 @@ import { output } from '../output';
 import type { PluginCapabilities } from './models';
 import { hasElements } from './shared';
 import { readJsonFile } from '../fileutils';
-import { PackageJson, readNxMigrateConfig } from '../package-json';
+import { PackageJson } from '../package-json';
 import { ProjectsConfigurations } from '../../config/workspace-json-project-json';
 import { join } from 'path';
 import { workspaceRoot } from '../workspace-root';
 import { existsSync } from 'fs';
-import { ExecutorsJson, GeneratorsJson } from '../../config/misc-interfaces';
-import { loadNxPlugin } from '../nx-plugin';
-import { getNxRequirePaths } from '../installation-directory';
 import { getPluginCapabilities } from './plugin-capabilities';
 
 export function getLocalWorkspacePlugins(
@@ -26,10 +23,11 @@ export function getLocalWorkspacePlugins(
         packageJson.name
       );
       if (
-        capabilities.executors ||
-        capabilities.generators ||
-        capabilities.projectGraphExtension ||
-        capabilities.projectInference
+        capabilities &&
+        (capabilities.executors ||
+          capabilities.generators ||
+          capabilities.projectGraphExtension ||
+          capabilities.projectInference)
       ) {
         plugins.set(packageJson.name, {
           ...capabilities,
