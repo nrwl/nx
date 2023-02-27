@@ -15,7 +15,7 @@ export function readTargetOptions<T = any>(
   { project, target, configuration }: Target,
   context: ExecutorContext
 ): T {
-  const projectConfiguration = context.projectGraph.nodes[project].data;
+  const projectConfiguration = context.workspace.projects[project];
   const targetConfiguration = projectConfiguration.targets[target];
 
   const ws = new Workspaces(context.root);
@@ -24,7 +24,7 @@ export function readTargetOptions<T = any>(
 
   const defaultProject = ws.calculateDefaultProjectName(
     context.cwd,
-    context.projectsConfigurations,
+    { version: 2, projects: context.workspace.projects },
     context.nxJsonConfiguration
   );
 
