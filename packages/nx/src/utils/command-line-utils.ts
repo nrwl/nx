@@ -5,6 +5,7 @@ import { output } from './output';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { execSync } from 'child_process';
 import { ProjectGraph } from '../config/project-graph';
+import { workspaceRoot } from './workspace-root';
 
 export interface RawNxArgs extends NxArgs {
   prod?: boolean;
@@ -235,12 +236,14 @@ function getFilesUsingBaseAndHead(base: string, head: string): string[] {
   try {
     mergeBase = execSync(`git merge-base "${base}" "${head}"`, {
       maxBuffer: TEN_MEGABYTES,
+      cwd: workspaceRoot,
     })
       .toString()
       .trim();
   } catch {
     mergeBase = execSync(`git merge-base --fork-point "${base}" "${head}"`, {
       maxBuffer: TEN_MEGABYTES,
+      cwd: workspaceRoot,
     })
       .toString()
       .trim();
@@ -251,7 +254,7 @@ function getFilesUsingBaseAndHead(base: string, head: string): string[] {
 }
 
 function parseGitOutput(command: string): string[] {
-  return execSync(command, { maxBuffer: TEN_MEGABYTES })
+  return execSync(command, { maxBuffer: TEN_MEGABYTES, cwd: workspaceRoot })
     .toString('utf-8')
     .split('\n')
     .map((a) => a.trim())
