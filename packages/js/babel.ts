@@ -42,7 +42,7 @@ module.exports = function (api: any, options: NxWebBabelPresetOptions = {}) {
         process.env.NODE_ENV === 'test'
           ? { targets: { node: 'current' }, loose: true }
           : {
-              // Allow importing core-js in entrypoint and use browserlist to select polyfills.
+              // Allow importing core-js in entrypoint and use browserslist to select polyfills.
               useBuiltIns: options.useBuiltIns ?? 'entry',
               corejs: 3,
               // Do not transform modules to CJS
