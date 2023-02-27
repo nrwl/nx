@@ -53,12 +53,11 @@ export function isCtProjectUsingBuildProject(
   if (isProjectDirectDep) {
     return true;
   }
+  const maybeIntermediateProjects = graph.dependencies[
+    parentProjectName
+  ].filter((p) => !graph.externalNodes[p.target]);
 
-  const maybeItermediateProjects = graph.dependencies[parentProjectName].filter(
-    (p) => !graph.externalNodes[p.target]
-  );
-
-  for (const maybeIntermediateProject of maybeItermediateProjects) {
+  for (const maybeIntermediateProject of maybeIntermediateProjects) {
     if (
       isCtProjectUsingBuildProject(
         graph,
