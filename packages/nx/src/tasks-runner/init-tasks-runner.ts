@@ -16,31 +16,32 @@ export async function initTasksRunner(nxArgs: NxArgs) {
   }
   const projectGraph = await createProjectGraphAsync({ exitOnError: true });
   return {
-    invoke: async (
-      tasks: Task[]
-    ): Promise<{ status: number; taskGraph: TaskGraph }> => {
+    invoke: async (opts: {
+      tasks: Task[];
+      parallel: number;
+    }): Promise<{ status: number; taskGraph: TaskGraph }> => {
       performance.mark('command-execution-begins');
       const lifeCycle = new InvokeRunnerTerminalOutputLifeCycle(tasks);
 
       const taskGraph = {
-        roots: tasks.map((task) => task.id),
-        tasks: tasks.reduce((acc, task) => {
+        roots: opts.tasks.map((task) => task.id),
+        tasks: opts.tasks.reduce((acc, task) => {
           acc[task.id] = task;
           return acc;
         }, {} as any),
-        dependencies: tasks.reduce((acc, task) => {
+        dependencies: opts.tasks.reduce((acc, task) => {
           acc[task.id] = [];
           return acc;
         }, {} as any),
       };
 
       const status = await invokeTasksRunner({
-        tasks,
+        tasks: opts.tasks,
         projectGraph,
         taskGraph,
         lifeCycle,
         nxJson,
-        nxArgs,
+        nxArgs: { ...nxArgs, parallel: opts.parallel },
         loadDotEnvFiles: true,
         initiatingProject: null,
       });

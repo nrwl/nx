@@ -18,8 +18,8 @@ export class InvokeRunnerTerminalOutputLifeCycle implements LifeCycle {
       bodyLines: this.tasks.map(
         (task) =>
           `- Task ${task.id} ${
-            task.overrides.__overrides_unparsed__
-              ? `Overrides: ${task.overrides.__overrides_unparsed__}`
+            task.overrides.__overrides_unparsed__.length > 0
+              ? `Overrides: ${task.overrides.__overrides_unparsed__.join(' ')}`
               : ''
           }`
       ),
@@ -34,8 +34,8 @@ export class InvokeRunnerTerminalOutputLifeCycle implements LifeCycle {
       const cached = this.cachedTasks.indexOf(task) !== -1;
       const failed = this.failedTasks.indexOf(task) !== -1;
       return `- Task ${task.id} ${
-        task.overrides.__overrides_unparsed__
-          ? `Overrides: ${task.overrides.__overrides_unparsed__}`
+        task.overrides.__overrides_unparsed__.length > 0
+          ? `Overrides: ${task.overrides.__overrides_unparsed__.join(' ')}`
           : ''
       } ${cached ? 'CACHED' : ''} ${failed ? 'FAILED' : ''}`;
     });
