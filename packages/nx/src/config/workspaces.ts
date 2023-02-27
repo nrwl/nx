@@ -1,10 +1,8 @@
 import { sync as globSync } from 'fast-glob';
-import { existsSync, readFileSync, statSync } from 'fs';
-import ignore, { Ignore } from 'ignore';
+import { existsSync, readFileSync } from 'fs';
 import * as path from 'path';
 import { basename, dirname, extname, join } from 'path';
 import { performance } from 'perf_hooks';
-
 import { workspaceRoot } from '../utils/workspace-root';
 import { readJsonFile } from '../utils/fileutils';
 import { logger, NX_PREFIX } from '../utils/logger';
@@ -39,11 +37,7 @@ import {
   shouldMergeAngularProjects,
 } from '../adapter/angular-json';
 import { getNxRequirePaths } from '../utils/installation-directory';
-import {
-  ALWAYS_IGNORE,
-  getIgnoredGlobs,
-  getIgnoreObject,
-} from '../utils/ignore';
+import { getIgnoredGlobs } from '../utils/ignore';
 
 export class Workspaces {
   private cachedProjectsConfig: ProjectsConfigurations;
