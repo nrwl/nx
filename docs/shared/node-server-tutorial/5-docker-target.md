@@ -92,10 +92,7 @@ The `docker-build` command is defined as a target in the root `project.json` fil
   "targets": {
     "docker-build": {
       "dependsOn": ["build"],
-      "executor": "nx:run-commands",
-      "options": {
-        "commands": ["docker build -f orders-api/Dockerfile . -t orders-api"]
-      }
+      "command": "docker build -f orders-api/Dockerfile . -t orders-api"
     }
   }
 }
