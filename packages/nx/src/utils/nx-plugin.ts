@@ -203,6 +203,7 @@ export function registerPluginTSTranspiler() {
       lib: ['es2021'],
       module: ts.ModuleKind.CommonJS,
       target: ts.ScriptTarget.ES2021,
+      inlineSourceMap: true,
       esModuleInterop: true,
       skipLibCheck: true,
       experimentalDecorators: true,
