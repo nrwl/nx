@@ -1,3 +1,5 @@
+import { execSync } from 'child_process';
+import { writeFileSync } from 'fs-extra';
 import {
   checkFilesDoNotExist,
   checkFilesExist,
@@ -21,7 +23,9 @@ describe('js e2e', () => {
     scope = newProject();
   });
 
-  afterEach(() => cleanupProject());
+  afterEach(() => {
+    cleanupProject();
+  });
 
   it('should create libs with js executors (--compiler=swc)', async () => {
     const lib = uniq('lib');
@@ -115,5 +119,51 @@ describe('js e2e', () => {
     expect(readJson(`dist/libs/${lib}/package.json`)).not.toHaveProperty(
       'peerDependencies.@swc/helpers'
     );
+  }, 240_000);
+
+  it('should handle swcrc path mappings', async () => {
+    const lib = uniq('lib');
+    runCLI(`generate @nrwl/js:lib ${lib} --compiler=swc --no-interactive`);
+
+    // add a dummy x.ts file for path mappings
+    updateFile(
+      `libs/${lib}/src/x.ts`,
+      `
+export function x() {
+  console.log('x');
+}
+    `
+    );
+
+    // update .swcrc to use path mappings
+    updateJson(`libs/${lib}/.swcrc`, (json) => {
+      json.jsc.paths = {
+        'src/*': ['src/*'],
+      };
+      return json;
+    });
+
+    // update lib.ts to use x
+    updateFile(`libs/${lib}/src/lib/${lib}.ts`, () => {
+      return `
+// @ts-ignore
+import { x } from 'src/x';
+
+export function myLib() {
+  console.log(x());
+}
+
+myLib();
+  `;
+    });
+
+    // now run build
+    runCLI(`build ${lib}`);
+
+    // invoke the lib with node
+    const result = execSync(`node dist/libs/${lib}/src/lib/${lib}.js`, {
+      cwd: tmpProjPath(),
+    }).toString();
+    expect(result).toContain('x');
   }, 240_000);
 });
