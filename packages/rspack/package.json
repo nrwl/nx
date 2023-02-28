@@ -19,6 +19,7 @@
   "generators": "./generators.json",
   "executors": "./executors.json",
   "dependencies": {
+    "@nrwl/devkit": "^15.7.2",
     "copy-webpack-plugin": "^10.2.4"
   }
 }
