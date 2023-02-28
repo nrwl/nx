@@ -1,8 +1,8 @@
-export const rspackCoreVersion = '^0.0.22';
-export const rspackDevServerVersion = '^0.0.22';
+export const rspackCoreVersion = '^0.0.23';
+export const rspackDevServerVersion = '^0.0.23';
 
-export const rspackPluginMinifyVersion = '^0.0.22';
-export const rspackLessLoaderVersion = '^0.0.22';
+export const rspackPluginMinifyVersion = '^0.0.23';
+export const rspackLessLoaderVersion = '^0.0.23';
 
 export const reactVersion = '~18.2.0';
 export const reactDomVersion = '~18.2.0';
