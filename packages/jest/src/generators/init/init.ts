@@ -33,6 +33,7 @@ const schemaDefaults = {
   compiler: 'tsc',
   js: false,
   rootProject: false,
+  testEnvironment: 'jsdom',
 } as const;
 
 function generateGlobalConfig(tree: Tree, isJS: boolean) {
@@ -146,13 +147,16 @@ function updateDependencies(tree: Tree, options: NormalizedSchema) {
   const devDeps = {
     '@nrwl/jest': nxVersion,
     jest: jestVersion,
-    'jest-environment-jsdom': jestVersion,
 
     // because the default jest-preset uses ts-jest,
     // jest will throw an error if it's not installed
     // even if not using it in overriding transformers
     'ts-jest': tsJestVersion,
   };
+
+  if (options.testEnvironment !== 'none') {
+    devDeps[`jest-environment-${options.testEnvironment}`] = jestVersion;
+  }
 
   if (!options.js) {
     devDeps['ts-node'] = tsNodeVersion;

@@ -131,6 +131,40 @@ export default {
     expect(packageJson.devDependencies['@types/jest']).toBeDefined();
     expect(packageJson.devDependencies['ts-jest']).toBeDefined();
     expect(packageJson.devDependencies['ts-node']).toBeDefined();
+    expect(packageJson.devDependencies['jest-environment-jsdom']).toBeDefined();
+    expect(
+      packageJson.devDependencies['jest-environment-node']
+    ).not.toBeDefined();
+  });
+
+  it('should add dependencies --testEnvironment=node', async () => {
+    await jestInitGenerator(tree, { testEnvironment: 'node' });
+    const packageJson = readJson(tree, 'package.json');
+    expect(packageJson.devDependencies.jest).toBeDefined();
+    expect(packageJson.devDependencies['@nrwl/jest']).toBeDefined();
+    expect(packageJson.devDependencies['@types/jest']).toBeDefined();
+    expect(packageJson.devDependencies['ts-jest']).toBeDefined();
+    expect(packageJson.devDependencies['ts-node']).toBeDefined();
+    expect(packageJson.devDependencies['jest-environment-node']).toBeDefined();
+    expect(
+      packageJson.devDependencies['jest-environment-jsdom']
+    ).not.toBeDefined();
+  });
+
+  it('should add dependencies --testEnvironment=none', async () => {
+    await jestInitGenerator(tree, { testEnvironment: 'none' });
+    const packageJson = readJson(tree, 'package.json');
+    expect(packageJson.devDependencies.jest).toBeDefined();
+    expect(packageJson.devDependencies['@nrwl/jest']).toBeDefined();
+    expect(packageJson.devDependencies['@types/jest']).toBeDefined();
+    expect(packageJson.devDependencies['ts-jest']).toBeDefined();
+    expect(packageJson.devDependencies['ts-node']).toBeDefined();
+    expect(
+      packageJson.devDependencies['jest-environment-jsdom']
+    ).not.toBeDefined();
+    expect(
+      packageJson.devDependencies['jest-environment-node']
+    ).not.toBeDefined();
   });
 
   it('should make js jest files', async () => {
