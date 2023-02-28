@@ -83,9 +83,18 @@ function ensureUpToDateInstallation() {
         stdio: 'inherit',
       });
     }
-  } catch (e) {
-    console.error('[NX]: Nx wrapper failed to synchronize installation.');
-    console.error(e.stack());
+  } catch (e: unknown) {
+    const messageLines = [
+      '[NX]: Nx wrapper failed to synchronize installation.',
+    ];
+    if (e instanceof Error) {
+      messageLines.push('');
+      messageLines.push(e.message);
+      messageLines.push(e.stack);
+    } else {
+      messageLines.push(e.toString());
+    }
+    console.error(messageLines.join('\n'));
     process.exit(1);
   }
 }
