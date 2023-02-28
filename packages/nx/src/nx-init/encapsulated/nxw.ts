@@ -99,7 +99,8 @@ function ensureUpToDateInstallation() {
   }
 }
 
-if (require.main === module) {
+if (require.main === module && !process.env.NX_WRAPPER_SET) {
+  process.env.NX_WRAPPER_SET = 'true';
   ensureUpToDateInstallation();
   require('./installation/node_modules/nx/bin/nx');
 }
