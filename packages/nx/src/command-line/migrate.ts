@@ -53,6 +53,9 @@ import { nxVersion } from '../utils/versions';
 import { existsSync } from 'fs';
 import { workspaceRoot } from '../utils/workspace-root';
 import { isCI } from '../utils/is-ci';
+import { getNxRequirePaths } from '../utils/installation-directory';
+import { readNxJson } from '../config/configuration';
+import { runNxSync } from '../utils/child-process';
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
   packageGroup?: ArrayPackageGroup;
@@ -100,7 +103,8 @@ function normalizeSlashes(packageName: string): string {
 }
 
 export interface MigratorOptions {
-  packageJson: PackageJson;
+  packageJson?: PackageJson;
+  nxInstallation?: NxJsonConfiguration['installation'];
   getInstalledPackageVersion: (
     pkg: string,
     overrides?: Record<string, string>
@@ -116,7 +120,7 @@ export interface MigratorOptions {
 }
 
 export class Migrator {
-  private readonly packageJson: MigratorOptions['packageJson'];
+  private readonly packageJson?: MigratorOptions['packageJson'];
   private readonly getInstalledPackageVersion: MigratorOptions['getInstalledPackageVersion'];
   private readonly fetch: MigratorOptions['fetch'];
   private readonly installedPkgVersionOverrides: MigratorOptions['from'];
@@ -126,9 +130,11 @@ export class Migrator {
   private readonly packageUpdates: Record<string, PackageUpdate> = {};
   private readonly collectedVersions: Record<string, string> = {};
   private readonly promptAnswers: Record<string, boolean> = {};
+  private readonly nxInstallation: NxJsonConfiguration['installation'] | null;
 
   constructor(opts: MigratorOptions) {
     this.packageJson = opts.packageJson;
+    this.nxInstallation = opts.nxInstallation;
     this.getInstalledPackageVersion = opts.getInstalledPackageVersion;
     this.fetch = opts.fetch;
     this.installedPkgVersionOverrides = opts.from;
@@ -400,38 +406,55 @@ export class Migrator {
         continue;
       }
 
-      const { dependencies, devDependencies } = this.packageJson;
-      packageJsonUpdate.packages = Object.entries(packageJsonUpdate.packages)
-        .filter(
-          ([packageName, packageUpdate]) =>
-            (!packageUpdate.ifPackageInstalled ||
-              this.getPkgVersion(packageUpdate.ifPackageInstalled)) &&
-            (packageUpdate.alwaysAddToPackageJson ||
-              packageUpdate.addToPackageJson ||
-              !!dependencies?.[packageName] ||
-              !!devDependencies?.[packageName]) &&
-            (!this.collectedVersions[packageName] ||
-              this.gt(
-                packageUpdate.version,
-                this.collectedVersions[packageName]
-              ))
-        )
-        .reduce((acc, [packageName, packageUpdate]) => {
-          acc[packageName] = {
+      const dependencies: Record<string, string> = {
+        ...this.packageJson?.dependencies,
+        ...this.packageJson?.devDependencies,
+        ...this.nxInstallation?.plugins,
+        ...(this.nxInstallation && { nx: this.nxInstallation.version }),
+      };
+
+      const filtered: Record<string, PackageUpdate> = {};
+      for (const [packageName, packageUpdate] of Object.entries(
+        packageJsonUpdate.packages
+      )) {
+        if (
+          this.shouldApplyPackageUpdate(
+            packageUpdate,
+            packageName,
+            dependencies
+          )
+        ) {
+          filtered[packageName] = {
             version: packageUpdate.version,
             addToPackageJson: packageUpdate.alwaysAddToPackageJson
               ? 'dependencies'
               : packageUpdate.addToPackageJson || false,
           };
-          return acc;
-        }, {} as Record<string, PackageUpdate>);
-
-      if (Object.keys(packageJsonUpdate.packages).length) {
+        }
+      }
+      if (Object.keys(filtered).length) {
+        packageJsonUpdate.packages = filtered;
         filteredPackageJsonUpdates.push(packageJsonUpdate);
       }
     }
 
     return filteredPackageJsonUpdates;
+  }
+
+  private shouldApplyPackageUpdate(
+    packageUpdate: PackageUpdate,
+    packageName: string,
+    dependencies: Record<string, string>
+  ) {
+    return (
+      (!packageUpdate.ifPackageInstalled ||
+        this.getPkgVersion(packageUpdate.ifPackageInstalled)) &&
+      (packageUpdate.alwaysAddToPackageJson ||
+        packageUpdate.addToPackageJson ||
+        !!dependencies?.[packageName]) &&
+      (!this.collectedVersions[packageName] ||
+        this.gt(packageUpdate.version, this.collectedVersions[packageName]))
+    );
   }
 
   private addPackageUpdate(name: string, packageUpdate: PackageUpdate): void {
@@ -732,9 +755,10 @@ function createInstalledPackageVersionsResolver(
       }
 
       if (!cache[packageName]) {
-        const { packageJson, path } = readModulePackageJson(packageName, [
-          root,
-        ]);
+        const { packageJson, path } = readModulePackageJson(
+          packageName,
+          getNxRequirePaths()
+        );
         // old workspaces would have the temp installation of nx in the cache,
         // so the resolved package is not the one we need
         if (!path.startsWith(workspaceRoot)) {
@@ -1043,7 +1067,7 @@ function updatePackageJson(
   });
 }
 
-function updateInstallationDetails(
+async function updateInstallationDetails(
   root: string,
   updatedPackages: Record<string, PackageUpdate>
 ) {
@@ -1064,7 +1088,9 @@ function updateInstallationDetails(
     for (const dep in nxJson.installation.plugins) {
       const update = updatedPackages[dep];
       if (update) {
-        nxJson.installation.plugins[dep] = update.version;
+        nxJson.installation.plugins[dep] = valid(update.version)
+          ? update.version
+          : await resolvePackageVersionUsingRegistry(dep, update.version);
       }
     }
   }
@@ -1101,10 +1127,13 @@ async function generateMigrationsJsonAndUpdatePackageJson(
 ) {
   const pmc = getPackageManagerCommand();
   try {
-    let originalPackageJson = readJsonFile<PackageJson>(
-      join(root, 'package.json')
-    );
-    const from = readNxVersion(originalPackageJson);
+    const rootPkgJsonPath = join(root, 'package.json');
+    let originalPackageJson = existsSync(rootPkgJsonPath)
+      ? readJsonFile<PackageJson>(rootPkgJsonPath)
+      : null;
+    const originalNxInstallation = readNxJson().installation;
+    const from =
+      originalNxInstallation?.version ?? readNxVersion(originalPackageJson);
 
     try {
       if (
@@ -1135,6 +1164,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
 
     const migrator = new Migrator({
       packageJson: originalPackageJson,
+      nxInstallation: originalNxInstallation,
       getInstalledPackageVersion: createInstalledPackageVersionsResolver(root),
       fetch: createFetcher(),
       from: opts.from,
@@ -1149,7 +1179,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     );
 
     updatePackageJson(root, packageUpdates);
-    updateInstallationDetails(root, packageUpdates);
+    await updateInstallationDetails(root, packageUpdates);
 
     if (migrations.length > 0) {
       createMigrationsFile(root, [
@@ -1352,8 +1382,7 @@ async function runMigrations(
   if (!__dirname.startsWith(workspaceRoot)) {
     // we are running from a temp installation with nx latest, switch to running
     // from local installation
-    const pmc = getPackageManagerCommand();
-    execSync(`${pmc.exec} nx migrate ${args.join(' ')}`, {
+    runNxSync(`migrate ${args.join(' ')}`, {
       stdio: ['inherit', 'inherit', 'inherit'],
       env: {
         ...process.env,

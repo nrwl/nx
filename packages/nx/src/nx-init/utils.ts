@@ -6,6 +6,7 @@ import {
   getPackageManagerCommand,
   PackageManagerCommands,
 } from '../utils/package-manager';
+import { runNxSync } from '../utils/child-process';
 
 export function askAboutNxCloud() {
   return enquirer
@@ -121,12 +122,8 @@ export function runInstall(
 }
 
 export function initCloud(repoRoot: string) {
-  const pmc = getPackageManagerCommand();
-  execSync(
-    `${pmc.exec} nx g @nrwl/nx-cloud:init --installationSource=add-nx-to-monorepo`,
-    {
-      stdio: [0, 1, 2],
-      cwd: repoRoot,
-    }
-  );
+  runNxSync(`g @nrwl/nx-cloud:init --installationSource=add-nx-to-monorepo`, {
+    stdio: [0, 1, 2],
+    cwd: repoRoot,
+  });
 }

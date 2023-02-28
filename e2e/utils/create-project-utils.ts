@@ -17,7 +17,7 @@ import * as isCI from 'is-ci';
 
 import { angularCliVersion } from '@nrwl/workspace/src/utils/versions';
 import { dump } from '@zkochan/js-yaml';
-import { execSync } from 'child_process';
+import { execSync, ExecSyncOptions } from 'child_process';
 
 import { isVerbose } from './get-env-info';
 import { logError, logInfo } from './log-utils';
@@ -372,15 +372,15 @@ export function newLernaWorkspace({
 export function newEncapsulatedNxWorkspace({
   name = uniq('encapsulated'),
   pmc = getPackageManagerCommand(),
-} = {}): (command: string) => string {
+} = {}): (command: string, opts?: Partial<ExecSyncOptions>) => string {
   projName = name;
   ensureDirSync(tmpProjPath());
   runCommand(`${pmc.runUninstalledPackage} nx@latest init --encapsulated`);
-  return (command: string) => {
+  return (command: string, opts: Partial<ExecSyncOptions>) => {
     if (process.platform === 'win32') {
-      return runCommand(`./nx.bat ${command}`);
+      return runCommand(`./nx.bat ${command}`, { ...opts, failOnError: true });
     } else {
-      return runCommand(`./nx ${command}`);
+      return runCommand(`./nx ${command}`, { ...opts, failOnError: true });
     }
   };
 }

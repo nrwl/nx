@@ -10,6 +10,7 @@ import {
 import { existsSync } from 'fs';
 import { join } from 'path';
 import { workspaceRoot } from '../utils/workspace-root';
+import { runNxSync } from '../utils/child-process';
 
 export async function connectToNxCloudIfExplicitlyAsked(opts: {
   [k: string]: any;
@@ -24,13 +25,7 @@ export async function connectToNxCloudIfExplicitlyAsked(opts: {
     output.log({
       title: '--cloud requires the workspace to be connected to Nx Cloud.',
     });
-    const pmc = getPackageManagerCommand();
-    const nxCommand = existsSync(join(workspaceRoot, 'package.json'))
-      ? `${pmc.exec} nx`
-      : process.platform === 'win32'
-      ? './nx.bat'
-      : './nx';
-    execSync(`${nxCommand} connect-to-nx-cloud`, {
+    runNxSync(`connect-to-nx-cloud`, {
       stdio: [0, 1, 2],
     });
     output.success({
@@ -60,11 +55,6 @@ export async function connectToNxCloudCommand(
   const res = await connectToNxCloudPrompt(promptOverride);
   if (!res) return false;
   const pmc = getPackageManagerCommand();
-  const nxCommand = pmc
-    ? `${pmc.exec} nx`
-    : process.platform === 'win32'
-    ? './nx.bat'
-    : './nx';
   if (pmc) {
     execSync(`${pmc.addDev} @nrwl/nx-cloud@latest`);
   } else {
@@ -76,7 +66,7 @@ export async function connectToNxCloudCommand(
       ).toString();
     }
   }
-  execSync(`${nxCommand} g @nrwl/nx-cloud:init`, {
+  runNxSync(`g @nrwl/nx-cloud:init`, {
     stdio: [0, 1, 2],
   });
   return true;

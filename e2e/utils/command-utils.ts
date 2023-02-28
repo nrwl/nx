@@ -66,19 +66,20 @@ export function setMaxWorkers() {
 
 export function runCommand(
   command: string,
-  options?: Partial<ExecSyncOptions>
+  options?: Partial<ExecSyncOptions> & { failOnError?: boolean }
 ): string {
+  const { failOnError, ...childProcessOptions } = options ?? {};
   try {
     const r = execSync(command, {
       cwd: tmpProjPath(),
       stdio: ['pipe', 'pipe', 'pipe'],
       env: {
         ...getStrippedEnvironmentVariables(),
-        ...options?.env,
+        ...childProcessOptions?.env,
         FORCE_COLOR: 'false',
       },
       encoding: 'utf-8',
-      ...options,
+      ...childProcessOptions,
     }).toString();
     if (process.env.NX_VERBOSE_LOGGING) {
       console.log(r);
@@ -87,7 +88,7 @@ export function runCommand(
   } catch (e) {
     // this is intentional
     // npm ls fails if package is not found
-    if (e.stdout || e.stderr) {
+    if (!failOnError && (e.stdout || e.stderr)) {
       return e.stdout?.toString() + e.stderr?.toString();
     }
     throw e;
