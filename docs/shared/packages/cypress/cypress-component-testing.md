@@ -20,7 +20,7 @@ nx g @nrwl/angular:cypress-component-configuration --project=your-project
 
 You can optionally pass in `--generate-tests` to create component tests for all components within the library.
 
-Component testing leverages a build target within your workspace as the base for running the tests. The build target is usually an app within the workspace. By default, the generator attempts to find the build target for you based on the project usage, but you can manually specify the build target to use via the `--build-target` option.
+Component testing supports both applications and libraries. By default, the generator attempts to find the build target for you based on the project's dependent apps. But you can manually specify the build target to use via the `--build-target` option. Note, in most cases, the build target will be from a different project than the one being configured. The only case where the build targets are from the same project is when the component tests are being added to an application.
 
 ```shell
 nx g @nrwl/react:cypress-component-configuration --project=your-project --build-target=my-react-app:build
