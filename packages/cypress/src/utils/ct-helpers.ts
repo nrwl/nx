@@ -39,20 +39,36 @@ export function getTempTailwindPath(context: ExecutorContext) {
 }
 
 /**
- * also returns true if the ct project and build project are the same.
- * i.e. component testing inside an app.
- */
+ * Checks if the childProjectName is a decendent of the parentProjectName
+ * in the project graph
+ **/
 export function isCtProjectUsingBuildProject(
   graph: ProjectGraph,
   parentProjectName: string,
   childProjectName: string
-) {
-  return (
-    parentProjectName === childProjectName ||
-    graph.dependencies[parentProjectName].some(
-      (p) => p.target === childProjectName
-    )
+): boolean {
+  const isProjectDirectDep = graph.dependencies[parentProjectName].some(
+    (p) => p.target === childProjectName
   );
+  if (isProjectDirectDep) {
+    return true;
+  }
+  const maybeIntermediateProjects = graph.dependencies[
+    parentProjectName
+  ].filter((p) => !graph.externalNodes[p.target]);
+
+  for (const maybeIntermediateProject of maybeIntermediateProjects) {
+    if (
+      isCtProjectUsingBuildProject(
+        graph,
+        maybeIntermediateProject.target,
+        childProjectName
+      )
+    ) {
+      return true;
+    }
+  }
+  return false;
 }
 
 export function getProjectConfigByPath(

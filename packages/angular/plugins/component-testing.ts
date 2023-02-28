@@ -22,7 +22,7 @@ import {
   workspaceRoot,
 } from '@nrwl/devkit';
 import { existsSync, lstatSync, mkdirSync, writeFileSync } from 'fs';
-import { dirname, join, relative } from 'path';
+import { dirname, join, relative, sep } from 'path';
 import type { BrowserBuilderSchema } from '../src/builders/webpack-browser/webpack-browser.impl';
 
 /**
@@ -168,13 +168,22 @@ function normalizeBuildTargetOptions(
   );
   const buildOptions = withSchemaDefaults(options);
 
+  // polyfill entries might be local files or files that are resolved from node_modules
+  // like zone.js.
+  // prevents error from webpack saying can't find <offset>/zone.js.
+  const handlePolyfillPath = (polyfill: string) => {
+    const maybeFullPath = join(workspaceRoot, polyfill.split('/').join(sep));
+    if (existsSync(maybeFullPath)) {
+      return joinPathFragments(offset, polyfill);
+    }
+    return polyfill;
+  };
   // paths need to be unix paths for angular devkit
   buildOptions.polyfills =
     Array.isArray(buildOptions.polyfills) && buildOptions.polyfills.length > 0
-      ? (buildOptions.polyfills as string[]).map((p) =>
-          joinPathFragments(offset, p)
-        )
-      : joinPathFragments(offset, buildOptions.polyfills as string);
+      ? (buildOptions.polyfills as string[]).map((p) => handlePolyfillPath(p))
+      : handlePolyfillPath(buildOptions.polyfills as string);
+
   buildOptions.main = joinPathFragments(offset, buildOptions.main);
   buildOptions.index =
     typeof buildOptions.index === 'string'
@@ -197,6 +206,7 @@ function normalizeBuildTargetOptions(
   // then we don't want to have the assets/scripts/styles be included to
   // prevent inclusion of unintended stuff like tailwind
   if (
+    buildContext.projectName === ctContext.projectName ||
     isCtProjectUsingBuildProject(
       ctContext.projectGraph,
       buildContext.projectName,
