@@ -141,7 +141,9 @@ Here are the outputs defined for the `auth` project:
     "build": {
       "executor": "@nrwl/js:tsc",
       "outputs": ["{options.outputPath}"],
-      "options": {}
+      "options": {
+        "outputPath": "dist/auth"
+      }
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
