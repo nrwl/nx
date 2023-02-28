@@ -122,8 +122,6 @@ Nx determines if a project has been modified by looking at the task's defined `i
 
 ### Inputs
 
-Inputs for your task caching includes by default any environment details and all the source code of the projects and dependencies affecting your project.
-
 When you run a task, Nx uses the inputs for your task to create a hash that is used as an index for the task results. If the task has already been run with the same inputs, Nx replays the results stored in the cache.
 
 If this index does not exist, Nx runs the command and if the command succeeds, it stores the result in the cache.

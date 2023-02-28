@@ -46,8 +46,6 @@ Task Caching is informed by "inputs" and "outputs":
 
 ### Inputs
 
-Inputs for your task caching includes by default any environment details and all the source code of the projects and dependencies affecting your project.
-
 When running a task, Nx will determine all the inputs for your task and create a hash that will be used to index your cache. If you've already run this task with the same inputs, your cache will already be populated at this index, and Nx will replay the results stored in the cache.
 
 If this index does not exist, Nx will run the command and if the command succeeds, it will store the result in the cache.
