@@ -69,18 +69,13 @@ export class ProjectGraphBuilder {
   addExternalNode(node: ProjectGraphExternalNode): void {
     // Check if project with the same name already exists
     if (this.graph.externalNodes[node.name]) {
-      // Throw if another version already exists
-      if (
-        this.graph.externalNodes[node.name].data.version !== node.data.version
-      ) {
-        throw new Error(
-          `Multiple projects are named "${node.name}". One is of type "${
-            node.type
-          }" and the other is of type "${
-            this.graph.nodes[node.name].type
-          }". Please resolve the conflicting project names.`
-        );
-      }
+      throw new Error(
+        `Multiple projects are named "${node.name}". One has version "${
+          node.data.version
+        }" and the other has version "${
+          this.graph.externalNodes[node.name].data.version
+        }". Please resolve the conflicting package names.`
+      );
     }
     this.graph.externalNodes[node.name] = node;
   }
