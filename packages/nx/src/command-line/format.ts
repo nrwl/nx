@@ -20,6 +20,7 @@ import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { filterAffected } from '../project-graph/affected/affected-project-graph';
 import { readNxJson } from '../config/configuration';
 import { ProjectGraph } from '../config/project-graph';
+import { chunkify } from '../utils/chunkify';
 
 const PRETTIER_PATH = require.resolve('prettier/bin-prettier');
 
@@ -40,7 +41,7 @@ export async function format(
   );
 
   // Chunkify the patterns array to prevent crashing the windows terminal
-  const chunkList: string[][] = chunkify(patterns, 50);
+  const chunkList: string[][] = chunkify(patterns);
 
   switch (command) {
     case 'write':
@@ -141,14 +142,6 @@ function getPatternsFromProjects(
   projectGraph: ProjectGraph
 ): string[] {
   return getProjectRoots(projects, projectGraph);
-}
-
-function chunkify(target: string[], size: number): string[][] {
-  return target.reduce((current: string[][], value: string, index: number) => {
-    if (index % size === 0) current.push([]);
-    current[current.length - 1].push(value);
-    return current;
-  }, []);
 }
 
 function write(patterns: string[]) {
