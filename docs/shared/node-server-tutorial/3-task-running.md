@@ -12,7 +12,7 @@ Common tasks include:
 - Running your unit tests
 - Linting your code
 
-When you ran your generators in Part 1, you already set up these more common tasks for each project.
+When you ran your generators in Part 1, you already set up these common tasks for each project.
 
 ## Defining Targets
 

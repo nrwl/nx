@@ -8,7 +8,7 @@ Common tasks include:
 - Linting your code
 - Running e2e tests
 
-When you ran your generators in Part 1, you already set up these more common tasks for each project.
+When you ran your generators in Part 1, you already set up these common tasks for each project.
 
 ## Defining Targets
 
