@@ -4,6 +4,12 @@ The `inputs` property of a task allows you to define under what conditions the c
 
 If you find yourself reusing the same `inputs` definitions, you can instead create a `namedInput` in the project configuration or `nx.json` and use that `namedInput` in your `inputs` array.
 
+The `inputs` and `namedInputs` are parsed with the following rules:
+
+1. `{projectRoot}` and `{workspaceRoot}` are replaced with the appropriate path
+2. A `^` character at the beginning of the string means this entry applies to the project dependencies of the project, not the project itself.
+3. Everything else is processed with the [minimatch](https://github.com/isaacs/minimatch) library
+
 Knowing the syntax doesn't always explain how you would use the feature, so here are two scenarios explaining how to customize `inputs` to match your particular set up.
 
 ## Defaults
