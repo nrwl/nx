@@ -5917,14 +5917,6 @@
                 "disableCollapsible": false
               },
               {
-                "name": " Migrate your Nx workspace to Storybook version 7",
-                "path": "/packages/storybook/documents/migrate-storybook-7",
-                "id": "migrate-storybook-7",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "Storybook best practices for making the most out of Nx",
                 "path": "/packages/storybook/documents/best-practices",
                 "id": "best-practices",
@@ -6074,6 +6066,14 @@
                 "id": "cypress-project",
                 "path": "/packages/storybook/generators/cypress-project",
                 "name": "cypress-project",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "migrate-7",
+                "path": "/packages/storybook/generators/migrate-7",
+                "name": "migrate-7",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

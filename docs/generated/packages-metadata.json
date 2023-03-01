@@ -2397,17 +2397,6 @@
         "originalFilePath": "shared/packages/storybook/storybook-7-setup"
       },
       {
-        "id": "migrate-storybook-7",
-        "name": " Migrate your Nx workspace to Storybook version 7",
-        "description": "This guide explains how migrate your Nx workspace to Storybook version 7.",
-        "file": "generated/packages/storybook/documents/migrate-storybook-7",
-        "itemList": [],
-        "isExternal": false,
-        "path": "storybook/documents/migrate-storybook-7",
-        "tags": [],
-        "originalFilePath": "shared/packages/storybook/migrate-storybook-7"
-      },
-      {
         "id": "best-practices",
         "name": "Storybook best practices for making the most out of Nx",
         "description": "The purpose of this guide is to help you set up Storybook in your Nx workspace so that you can get the most out of Nx and its powerful capabilities.",
@@ -2586,6 +2575,15 @@
         "name": "cypress-project",
         "originalFilePath": "/packages/storybook/src/generators/cypress-project/schema.json",
         "path": "storybook/generators/cypress-project",
+        "type": "generator"
+      },
+      {
+        "description": "Migrate to Storybook version 7.",
+        "file": "generated/packages/storybook/generators/migrate-7.json",
+        "hidden": false,
+        "name": "migrate-7",
+        "originalFilePath": "/packages/storybook/src/generators/migrate-7/schema.json",
+        "path": "storybook/generators/migrate-7",
         "type": "generator"
       }
     ],

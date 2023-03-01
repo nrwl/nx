@@ -502,6 +502,8 @@ const packagesDocuments = {
     '/packages/storybook/documents/migrate-webpack-final-react',
   '/storybook/upgrade-storybook-v6-react':
     '/packages/storybook/documents/upgrade-storybook-v6-react',
+  '/packages/storybook/documents/migrate-storybook-7':
+    '/packages/storybook/generators/migrate-7',
   '/linter/eslint-plugin-nx': '/packages/linter/documents/eslint-plugin-nx',
 };
 

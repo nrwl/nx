@@ -16,6 +16,7 @@ import {
   babelPresetTypescriptVersion,
   htmlWebpackPluginVersion,
   litHtmlVersion,
+  litVersion,
   nxVersion,
   reactNativeStorybookLoader,
   storybook7Version,
@@ -62,7 +63,7 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
       schema.uiFramework === '@storybook/web-components-vite' ||
       schema.uiFramework === '@storybook/web-components-webpack5'
     ) {
-      devDependencies['lit-html'] = litHtmlVersion;
+      devDependencies['lit'] = litVersion;
     }
 
     if (schema.uiFramework === '@storybook/react-native') {
