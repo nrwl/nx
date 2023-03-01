@@ -5,7 +5,7 @@ description: 'Print libraries affected by changes'
 
 # affected:libs
 
-    **Deprecated:** Use `nx print-affected --type=lib ...` instead. This command will be removed in v15.
+    **Deprecated:** Use `nx print-affected --type=lib --select=projects` instead. This command will be removed in v15.
 
     Print libraries affected by changes
 

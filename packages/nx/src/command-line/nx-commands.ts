@@ -150,7 +150,7 @@ export const commandsObject = yargs
   .command({
     command: 'affected:apps',
     deprecated:
-      'Use `nx print-affected --type=app ...` instead. This command will be removed in v15.',
+      'Use `nx print-affected --type=app --select=projects` instead. This command will be removed in v15.',
     describe: `Print applications affected by changes`,
     builder: (yargs) =>
       linkToNxDevAndExamples(
@@ -165,7 +165,7 @@ export const commandsObject = yargs
   .command({
     command: 'affected:libs',
     deprecated:
-      'Use `nx print-affected --type=lib ...` instead. This command will be removed in v15.',
+      'Use `nx print-affected --type=lib --select=projects` instead. This command will be removed in v15.',
     describe: 'Print libraries affected by changes',
     builder: (yargs) =>
       linkToNxDevAndExamples(
