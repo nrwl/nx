@@ -4,9 +4,14 @@ import { SwcExecutorOptions } from '../schema';
 export function getSwcrcPath(
   options: SwcExecutorOptions,
   contextRoot: string,
-  projectRoot: string
+  projectRoot: string,
+  temp = false
 ) {
-  return options.swcrc
-    ? join(contextRoot, options.swcrc)
-    : join(contextRoot, projectRoot, '.swcrc');
+  let swcrcPath = options.swcrc ?? join(projectRoot, '.swcrc');
+
+  if (temp) {
+    swcrcPath = join('tmp', swcrcPath.replace('.swcrc', '.generated.swcrc'));
+  }
+
+  return join(contextRoot, swcrcPath);
 }
