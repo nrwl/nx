@@ -85,7 +85,7 @@ root.render(
 ```
 
 ```javascript {% fileName="src/app/app.tsx" %}
-import { RoutesCart } from 'cart';
+import { RoutesCart } from '@store/cart';
 import { Route, Routes } from 'react-router-dom';
 import Shop from './shop/shop';
 
@@ -102,6 +102,10 @@ export function App() {
 
 export default App;
 ```
+
+{% callout type="note" title="Typescript Paths" %}
+When a library is created, Nx adds a new Typescript path to the `tsconfig.base.json` file. The running Typescript server process inside of your editor sometimes doesn't pick up these changes and you have to restart the server to remove inline errors on your import statements. This can be done in VS Code from the command palette when viewing a typescript file (Command-Shift-P) "Typescript: Restart TS server"
+{% /callout %}
 
 ### `shared-ui`
 
@@ -136,7 +140,7 @@ export default Banner;
 Add the `Banner` component to the cart route and link back to the main page:
 
 ```javascript {% fileName="cart/src/lib/cart.tsx" %}
-import { Banner } from 'shared/ui';
+import { Banner } from '@store/shared/ui';
 import { Link } from 'react-router-dom';
 import styles from './cart.module.css';
 
@@ -160,7 +164,7 @@ export default RoutesCart;
 Update the `shop` component to use the `Banner` component and link to the cart.
 
 ```javascript {% fileName="src/app/shop/shop.tsx" %}
-import { Banner } from 'shared/ui';
+import { Banner } from '@store/shared/ui';
 import { Link } from 'react-router-dom';
 import styles from './shop.module.css';
 

@@ -95,6 +95,10 @@ export class AppModule {}
 <router-outlet></router-outlet>
 ```
 
+{% callout type="note" title="Typescript Paths" %}
+When a library is created, Nx adds a new Typescript path to the `tsconfig.base.json` file. The running Typescript server process inside of your editor sometimes doesn't pick up these changes and you have to restart the server to remove inline errors on your import statements. This can be done in VS Code from the command palette when viewing a typescript file (Command-Shift-P) "Typescript: Restart TS server"
+{% /callout %}
+
 ### `shared-ui`
 
 Run the `@nrwl/angular:component` generator with the command:
