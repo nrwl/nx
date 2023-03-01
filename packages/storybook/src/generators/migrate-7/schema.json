@@ -1,0 +1,35 @@
+{
+  "cli": "nx",
+  "title": "Migrate Storybook to version 7.",
+  "description": "Migrate Storybook to version 7.",
+  "$id": "migrate-7",
+  "type": "object",
+  "properties": {
+    "autoAcceptAllPrompts": {
+      "type": "boolean",
+      "description": "Say yes to all the prompts from the Storybook CLI migration scripts.",
+      "default": false
+    },
+    "onlyShowListOfCommands": {
+      "type": "boolean",
+      "description": "Only show the steps that you need to follow in order to migrate. This does NOT make any changes to your code.",
+      "default": false
+    },
+    "noUpgrade": {
+      "type": "boolean",
+      "description": "Skip upgrading Storybook packages. Only use this option if you are already on version 7, and you do not want the latest beta.",
+      "default": false
+    },
+    "onlyPrepare": {
+      "type": "boolean",
+      "description": "Only run the Nx scripts that will prepare your Storybook configuration files for the Storybook CLI automigration.",
+      "default": false
+    },
+    "afterMigration": {
+      "type": "boolean",
+      "description": "Only run the Nx post-migration scripts that make the final adjustments to your workspace.",
+      "default": false
+    }
+  },
+  "examplesFile": "../../../docs/migrate-7-generator-examples.md"
+}

@@ -15,16 +15,20 @@ This is a new feature available on Nx v15.6.0. If you are using an older version
 
 Storybook 7 is a major release that brings a lot of new features and improvements. You can read more about it in the [Storybook 7 beta announcement blog post](https://storybook.js.org/blog/7-0-beta/). Apart from the new features and improvements it introduces, it also brings some breaking changes. You can read more about them in the [Storybook 7 migration docs](https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#from-version-65x-to-700) and the [Storybook 7 migration guide](https://chromatic-ui.notion.site/Storybook-7-migration-guide-dbf41fa347304eb2a5e9c69b34503937). Do note that _version 7 is still in beta_, and so is the Nx support for it. Things are evolving dynamically, so it would be better to _avoid using in production_ on Nx.
 
-Nx provides new generators that allow you to generate Storybook 7 configuration for your projects, by installing the correct dependencies and creating the corresponding version 7 configuration files.
+Nx provides new generators that allow you to generate Storybook 7 configuration for your projects, by installing the correct dependencies and creating the corresponding version 7 configuration files. Nx also provides a [Storybook 7 migration generator](/packages/storybook/generators/migrate-7) that you can use to migrate your existing Storybook configuration to version 7.
 
 So, let's see how to get started with Storybook 7 on Nx workspaces.
+
+## Migrate your existing workspace to Storybook 7
+
+If you already have Storybook configured in your Nx workspace, you can use the [Storybook 7 migrator generator](/packages/storybook/generators/migrate-7) to migrate your existing Storybook configuration to version 7.
 
 ## Setting Up Storybook 7 in a _new_ Nx Workspace
 
 In this guide we will see how to set up Storybook version 7 in a new Nx workspace, or a workspace that does NOT already have Storybook configured.
 
 {% callout type="warning" title="Migrating existing Storybook configuration" %}
-For migrating your existing Nx workspace with existing Storybook configuration to use Storybook version 7, please refer to our [Storybook 7 migration guide](/packages/storybook/documents/migrate-storybook-7).
+For migrating your existing Nx workspace with existing Storybook configuration to use Storybook version 7, please refer to our [Storybook 7 migration generator](/packages/storybook/generators/migrate-7).
 {% /callout %}
 
 ### Add the Storybook plugin

@@ -20,6 +20,12 @@
       "schema": "./src/generators/cypress-project/schema.json",
       "description": "Add cypress e2e app to test a UI library that is set up for Storybook.",
       "hidden": false
+    },
+    "migrate-7": {
+      "factory": "./src/generators/migrate-7/migrate-7#migrate7Schematic",
+      "schema": "./src/generators/migrate-7/schema.json",
+      "description": "Migrate to Storybook version 7.",
+      "hidden": false
     }
   },
   "generators": {
@@ -40,6 +46,12 @@
       "factory": "./src/generators/cypress-project/cypress-project",
       "schema": "./src/generators/cypress-project/schema.json",
       "description": "Add cypress e2e app to test a UI library that is set up for Storybook.",
+      "hidden": false
+    },
+    "migrate-7": {
+      "factory": "./src/generators/migrate-7/migrate-7",
+      "schema": "./src/generators/migrate-7/schema.json",
+      "description": "Migrate to Storybook version 7.",
       "hidden": false
     }
   }
