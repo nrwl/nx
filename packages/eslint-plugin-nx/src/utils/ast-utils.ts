@@ -203,6 +203,13 @@ export function getRelativeImportPath(exportedMember, filePath, basePath) {
         `${modulePath}.ts`
       );
       if (!existsSync(moduleFilePath)) {
+        // might be a tsx file
+        moduleFilePath = joinPathFragments(
+          dirname(filePath),
+          `${modulePath}.tsx`
+        );
+      }
+      if (!existsSync(moduleFilePath)) {
         // might be a index.ts
         moduleFilePath = joinPathFragments(
           dirname(filePath),
