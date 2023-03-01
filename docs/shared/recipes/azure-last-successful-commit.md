@@ -37,7 +37,7 @@ Finally we extract the result in a common [custom variable](https://learn.micros
 
 An example with a default SHA in case no commit is found:
 
-```yaml
+```yaml {% fileName="azure-pipelines.yml" %}
 trigger:
   - main
 pr:
