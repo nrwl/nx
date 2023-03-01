@@ -267,6 +267,7 @@ export async function addLintingToApplication(
     unitTestRunner: options.unitTestRunner,
     skipFormat: true,
     setParserOptionsProject: options.setParserOptionsProject,
+    rootProject: options.rootProject,
   });
 
   return lintTask;
