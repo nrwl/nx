@@ -132,10 +132,13 @@ Examples:
 - `{workspaceRoot}/jest.config.ts`
 - same as `{fileset: "{workspaceRoot}/jest.config.ts}`
 
-{% callout type="note" title="{projectRoot} and {workspaceRoot}" %}
-`{projectRoot}` is a key word that is replaced by the path to the current project's root directory.
-`{workspaceRoot}` is a key word that is replaced by the path to the workspace root directory.
-{% /callout %}
+{% callout type="note" title="inputs syntax" %}
+The `inputs` and `namedInputs` are parsed with the following rules:
+
+1. `{projectRoot}` and `{workspaceRoot}` are replaced with the appropriate path
+2. A `^` character at the beginning of the string means this entry applies to the project dependencies of the project, not the project itself.
+3. Everything else is processed with the [minimatch](https://github.com/isaacs/minimatch) library
+   {% /callout %}
 
 _Runtime Inputs_
 
@@ -231,7 +234,7 @@ Sometimes, multiple targets might write to the same directory. When possible it 
 }
 ```
 
-But if the above is not possible, globs can be specified as outputs to only cache a set of files rather than the whole directory.
+But if the above is not possible, globs (parsed with the [minimatch](https://github.com/isaacs/minimatch) library) can be specified as outputs to only cache a set of files rather than the whole directory.
 
 ```json
 {
@@ -343,7 +346,7 @@ belonging to `myteam` are not depended on by libraries belong to `theirteam`.
 
 ### implicitDependencies
 
-Nx uses powerful source-code analysis to figure out your workspace's project graph. Some dependencies cannot be deduced statically, so you can set them manually like this:
+Nx uses powerful source-code analysis to figure out your workspace's project graph. Some dependencies cannot be deduced statically, so you can set them manually like this. The `implicitDependencies` property is parsed with the [minimatch](https://github.com/isaacs/minimatch) library, so you can review that syntax for more advanced use cases.
 
 {% tabs %}
 {% tab label="package.json" %}
