@@ -1,0 +1,58 @@
+name: Issue Statistics
+
+on:
+  schedule:
+    - cron: "0 0 * * 0"
+  workflow_dispatch:
+
+permissions:
+  issues: read
+  pull-requests: read
+
+jobs:
+  issues-report:
+    runs-on: ubuntu-latest
+    name: Report status
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Use Node.js ${{ matrix.node_version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Yarn cache directory path
+        id: yarn-cache-dir-path
+        shell: bash
+        run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache yarn
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: yarn-${{ hashFiles('yarn.lock') }}
+
+      - name: Install packages
+        run: yarn install --prefer-offline --frozen-lockfile --non-interactive
+
+      - name: Retrieve Previous Results
+        uses: actions/cache@v3
+        with:
+          path: scripts/issues-scraper/data.json
+          key: 'always-hit'
+
+      - name: Collect Issue Data
+        id: collect
+        run: npx ts-node ./scripts/issues-scraper/index.ts
+        env: 
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Send GitHub Action trigger data to Slack workflow
+        id: slack
+        uses: slackapi/slack-github-action@v1.23.0
+        with:
+          payload: ${{ steps.collect.outputs.SLACK_MESSAGE }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_ISSUES_REPORT_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
