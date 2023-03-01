@@ -353,7 +353,7 @@ export function parseFiles(options: NxArgs): { files: string[] } {
 }
 
 function getUncommittedFiles(): string[] {
-  return parseGitOutput(`git diff --name-only --relative HEAD .`);
+  return parseGitOutput(`git diff --name-only --no-renames --relative HEAD .`);
 }
 
 ``;
@@ -378,7 +378,7 @@ function getFilesUsingBaseAndHead(base: string, head: string): string[] {
       .trim();
   }
   return parseGitOutput(
-    `git diff --name-only --relative "${mergeBase}" "${head}"`
+    `git diff --name-only --no-renames --relative "${mergeBase}" "${head}"`
   );
 }
 
