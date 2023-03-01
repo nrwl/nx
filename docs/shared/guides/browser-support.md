@@ -13,26 +13,10 @@ last 2 Edge major versions
 last 2 Safari major version
 last 2 iOS major versions
 Firefox ESR
-not IE 9-11 # For IE 9-11 support, remove 'not'.
+not IE 9-11
 ```
 
 This configuration is used for many tools including babel, autoprefixer, postcss, and more to decide which transforms are necessary on the source code when producing built code to run in the browser.
-
-## Adding Support for IE 11
-
-Adding support for IE or any other browser is as easy as changing the `.browserslistrc` file, following the rules and options listed on the [browserslist documentation](https://github.com/browserslist/browserslist#queries). These changes will affect differential loading and how the code is processed through babel and other tools for producing your builds.
-
-To add support for IE 11 simply change the final line in the `.browserslistrc` file to include IE:
-
-```text
-last 1 Chrome version
-last 1 Firefox version
-last 2 Edge major versions
-last 2 Safari major version
-last 2 iOS major versions
-Firefox ESR
-IE 11
-```
 
 For additional information regarding the format and rule options, please see: https://github.com/browserslist/browserslist#queries
 
