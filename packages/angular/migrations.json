@@ -177,7 +177,7 @@
       "requires": {
         "@angular/core": ">=15.0.0"
       },
-      "description": "Remove browserlist config as it's handled by build-angular",
+      "description": "Remove browserslist config as it's handled by build-angular",
       "factory": "./src/migrations/update-15-2-0/remove-browserlist-config"
     },
     "update-typescript-target": {
