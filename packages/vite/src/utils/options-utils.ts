@@ -19,6 +19,7 @@ import { ViteDevServerExecutorOptions } from '../executors/dev-server/schema';
 import { VitePreviewServerExecutorOptions } from '../executors/preview-server/schema';
 import replaceFiles from '../../plugins/rollup-replace-files.plugin';
 import { ViteBuildExecutorOptions } from '../executors/build/schema';
+import * as path from 'path';
 
 /**
  * Returns the path to the vite config file or undefined when not found.
@@ -70,9 +71,14 @@ export function getViteSharedConfig(
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
 
+  const root = path.relative(
+    context.cwd,
+    joinPathFragments(context.root, projectRoot)
+  );
+
   return {
     mode: options.mode,
-    root: projectRoot,
+    root,
     base: options.base,
     configFile: normalizeViteConfigFilePath(projectRoot, options.configFile),
     plugins: [replaceFiles(options.fileReplacements) as PluginOption],
