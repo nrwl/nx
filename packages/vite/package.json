@@ -39,7 +39,7 @@
   },
   "peerDependencies": {
     "vite": "^4.0.1",
-    "vitest": "^0.25.8"
+    "vitest": ">=0.25.8 <1.0.0"
   },
   "publishConfig": {
     "access": "public"
