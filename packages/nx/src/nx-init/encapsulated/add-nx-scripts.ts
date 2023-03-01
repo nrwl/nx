@@ -11,7 +11,7 @@ import {
 } from '../../generators/tree';
 import { writeJson } from '../../generators/utils/json';
 
-const nxWrapperPath = (p: typeof import('path') = path) =>
+export const nxWrapperPath = (p: typeof import('path') = path) =>
   p.join('.nx', 'nxw.js');
 
 const NODE_MISSING_ERR =
@@ -36,7 +36,7 @@ export function generateEncapsulatedNxSetup(version?: string) {
   const host = new FsTree(process.cwd(), false);
   writeMinimalNxJson(host, version);
   updateGitIgnore(host);
-  host.write(nxWrapperPath(), getNodeScriptContents());
+  host.write(nxWrapperPath(), getNxWrapperContents());
   host.write('nx.bat', BATCH_SCRIPT_CONTENTS);
   host.write('nx', SHELL_SCRIPT_CONTENTS, {
     mode: FsConstants.S_IXUSR | FsConstants.S_IRUSR | FsConstants.S_IWUSR,
@@ -75,7 +75,7 @@ export function updateGitIgnore(host: Tree) {
   );
 }
 
-function getNodeScriptContents() {
+export function getNxWrapperContents() {
   // Read nxw.js, but remove any empty comments or comments that start with `//#: `
   // This removes the sourceMapUrl since it is invalid, as well as any internal comments.
   return readFileSync(path.join(__dirname, 'nxw.js'), 'utf-8').replace(
