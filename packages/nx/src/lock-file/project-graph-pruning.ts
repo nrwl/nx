@@ -120,7 +120,7 @@ function traverseNode(
   graph.dependencies[node.name]?.forEach((dep) => {
     const depNode = graph.externalNodes[dep.target];
     traverseNode(graph, builder, depNode);
-    builder.addStaticDependency(node.name, dep.target);
+    builder.addExternalNodeDependency(node.name, dep.target);
   });
 }
 
@@ -197,12 +197,12 @@ function switchNodeToHoisted(
   invBuilder.addExternalNode(node);
 
   targets.forEach((target) => {
-    builder.addStaticDependency(node.name, target);
-    invBuilder.addStaticDependency(target, node.name);
+    builder.addExternalNodeDependency(node.name, target);
+    invBuilder.addExternalNodeDependency(target, node.name);
   });
   sources.forEach((source) => {
-    builder.addStaticDependency(source, node.name);
-    invBuilder.addStaticDependency(node.name, source);
+    builder.addExternalNodeDependency(source, node.name);
+    invBuilder.addExternalNodeDependency(node.name, source);
   });
 }
 

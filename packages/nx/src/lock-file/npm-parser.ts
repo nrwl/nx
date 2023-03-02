@@ -227,7 +227,7 @@ function addDependencies(
           Object.entries(section).forEach(([name, versionRange]) => {
             const target = findTarget(path, keyMap, name, versionRange);
             if (target) {
-              builder.addStaticDependency(sourceName, target.name);
+              builder.addExternalNodeDependency(sourceName, target.name);
             }
           });
         }
@@ -288,7 +288,7 @@ function addV1NodeDependencies(
     Object.entries(snapshot.requires).forEach(([name, versionRange]) => {
       const target = findTarget(path, keyMap, name, versionRange);
       if (target) {
-        builder.addStaticDependency(source, target.name);
+        builder.addExternalNodeDependency(source, target.name);
       }
     });
   }
@@ -314,7 +314,7 @@ function addV1NodeDependencies(
       ) {
         const target = findTarget(path, keyMap, depName, depSpec);
         if (target) {
-          builder.addStaticDependency(node.name, target.name);
+          builder.addExternalNodeDependency(node.name, target.name);
         }
       }
     });

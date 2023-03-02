@@ -10,14 +10,6 @@ import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import configurationGenerator from './configuration';
 import * as workspaceConfiguration from './test-configs/root-workspace-configuration.json';
 
-// nested code imports graph from the repo, which might have innacurate graph version
-jest.mock('nx/src/project-graph/project-graph', () => ({
-  ...jest.requireActual<any>('nx/src/project-graph/project-graph'),
-  createProjectGraphAsync: jest
-    .fn()
-    .mockImplementation(async () => ({ nodes: {}, dependencies: {} })),
-}));
-
 describe('@nrwl/storybook:configuration for workspaces with Root project', () => {
   describe('basic functionalities', () => {
     let tree: Tree;

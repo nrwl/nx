@@ -243,6 +243,7 @@ describe('project graph', () => {
     expect(graph.dependencies).toEqual({
       api: [{ source: 'api', target: 'npm:express', type: 'static' }],
       demo: [
+        { source: 'demo', target: 'api', type: 'implicit' },
         {
           source: 'demo',
           target: 'ui',
@@ -252,9 +253,8 @@ describe('project graph', () => {
         {
           source: 'demo',
           target: 'lazy-lib',
-          type: 'dynamic',
+          type: 'static',
         },
-        { source: 'demo', target: 'api', type: 'implicit' },
       ],
       'demo-e2e': [],
       'lazy-lib': [],
@@ -267,7 +267,7 @@ describe('project graph', () => {
         {
           source: 'ui',
           target: 'lazy-lib',
-          type: 'dynamic',
+          type: 'static',
         },
       ],
     });
@@ -295,7 +295,7 @@ describe('project graph', () => {
         target: 'shared-util',
       },
       {
-        type: DependencyType.dynamic,
+        type: DependencyType.static,
         source: 'ui',
         target: 'lazy-lib',
       },

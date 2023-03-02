@@ -11,14 +11,6 @@ import { storybookConfigurationGenerator } from './storybook-configuration';
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
 jest.mock('@nrwl/cypress/src/utils/cypress-version');
-// nested code imports graph from the repo, which might have innacurate graph version
-jest.mock('nx/src/project-graph/project-graph', () => ({
-  ...jest.requireActual<any>('nx/src/project-graph/project-graph'),
-  createProjectGraphAsync: jest
-    .fn()
-    .mockImplementation(async () => ({ nodes: {}, dependencies: {} })),
-}));
-
 function listFiles(tree: Tree): string[] {
   const files = new Set<string>();
   tree.listChanges().forEach((change) => {

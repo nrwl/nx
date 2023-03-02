@@ -5,7 +5,6 @@ import { parseJson } from '../../utils/json';
 import { getImportPath, joinPathFragments } from '../../utils/path';
 import { ProjectsConfigurations } from '../../config/workspace-json-project-json';
 import { NxJsonConfiguration } from '../../config/nx-json';
-import { ExplicitDependency } from './explicit-project-dependencies';
 
 class ProjectGraphNodeRecords {}
 
@@ -75,7 +74,7 @@ function processPackageJson(
   sourceProject: string,
   fileName: string,
   graph: ProjectGraph,
-  collectedDeps: ExplicitDependency[],
+  collectedDeps: any[],
   packageNameMap: { [packageName: string]: string }
 ) {
   try {

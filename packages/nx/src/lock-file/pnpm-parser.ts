@@ -130,7 +130,7 @@ function addDependencies(
               builder.graph.externalNodes[`npm:${name}@${version}`] ||
               builder.graph.externalNodes[`npm:${name}`];
             if (target) {
-              builder.addStaticDependency(node.name, target.name);
+              builder.addExternalNodeDependency(node.name, target.name);
             }
           });
         }

@@ -3,7 +3,7 @@ import { buildProjectGraph } from './build-project-graph';
 import { output } from '../utils/output';
 import { defaultFileHasher } from '../hasher/file-hasher';
 import { markDaemonAsDisabled, writeDaemonLogs } from '../daemon/tmp-dir';
-import { ProjectGraph } from '../config/project-graph';
+import { ProjectGraph, ProjectGraphV4 } from '../config/project-graph';
 import { stripIndents } from '../utils/strip-indents';
 import {
   ProjectConfiguration,
@@ -12,6 +12,7 @@ import {
 import { daemonClient } from '../daemon/client/client';
 import { fileExists } from 'nx/src/utils/fileutils';
 import { workspaceRoot } from 'nx/src/utils/workspace-root';
+import { dependencies } from 'webpack';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -47,7 +48,7 @@ export function readCachedProjectGraph(): ProjectGraph {
 
   return projectGraphAdapter(
     projectGraph.version,
-    '5.1',
+    '5.0',
     projectGraph
   ) as ProjectGraph;
 }
@@ -201,13 +202,13 @@ function projectGraphCompatFileDependencies(
 ): ProjectGraph {
   Object.values(projectGraph.nodes).forEach(({ data }) => {
     if (data.files) {
-      data.files = data.files.map(({ file, hash, dependencies }) => ({
+      data.files = data.files.map(({ file, hash, deps }) => ({
         file,
         hash,
         // map dependencies to array of targets
-        ...(dependencies &&
-          dependencies.length && {
-            deps: [...new Set(dependencies.map((d) => d.target))],
+        ...(deps &&
+          deps.length && {
+            deps: [...new Set(deps)],
           }),
       }));
     }

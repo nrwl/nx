@@ -11,14 +11,6 @@ import {
 import { nxVersion, storybookVersion } from './versions';
 import * as targetVariations from './test-configs/different-target-variations.json';
 
-// nested code imports graph from the repo, which might have innacurate graph version
-jest.mock('nx/src/project-graph/project-graph', () => ({
-  ...jest.requireActual<any>('nx/src/project-graph/project-graph'),
-  createProjectGraphAsync: jest
-    .fn()
-    .mockImplementation(async () => ({ nodes: {}, dependencies: {} })),
-}));
-
 const componentSchematic = wrapAngularDevkitSchematic(
   '@schematics/angular',
   'component'
@@ -74,14 +66,14 @@ describe('testing utilities', () => {
         `
       import { Story, Meta } from '@storybook/react';
       import { Button } from './button';
-
+      
       export default {
         component: Button,
         title: 'Button',
       } as Meta;
-
+      
       const Template: Story = (args) => <Button {...args} />;
-
+      
       export const Primary = Template.bind({});
       Primary.args = {};
     `
@@ -91,7 +83,7 @@ describe('testing utilities', () => {
         `test-ui-lib/src/lib/button/button.component.other.ts`,
         `
         import { Button } from './button';
-
+        
         // test test
       `
       );
@@ -100,7 +92,7 @@ describe('testing utilities', () => {
         `test-ui-lib/src/lib/button/button.component.react-native.ts`,
         `
        import { storiesOf } from '@storybook/react-native';
-
+        
         // test test
       `
       );
@@ -109,7 +101,7 @@ describe('testing utilities', () => {
         `test-ui-lib/src/lib/button/button.component.new-syntax.ts`,
         `
        import { ComponentStory } from '@storybook/react';
-
+        
         // test test
       `
       );

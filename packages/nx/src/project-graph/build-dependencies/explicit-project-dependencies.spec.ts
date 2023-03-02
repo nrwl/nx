@@ -46,25 +46,21 @@ describe('explicit project dependencies', () => {
           sourceProjectName,
           sourceProjectFile: 'libs/proj/index.ts',
           targetProjectName: 'proj2',
-          type: 'static',
         },
         {
           sourceProjectName,
           sourceProjectFile: 'libs/proj/index.ts',
           targetProjectName: 'proj3a',
-          type: 'dynamic',
         },
         {
           sourceProjectName,
           sourceProjectFile: 'libs/proj/index.ts',
           targetProjectName: 'proj4ab',
-          type: 'static',
         },
         {
           sourceProjectName,
           sourceProjectFile: 'libs/proj/index.ts',
           targetProjectName: 'npm:npm-package',
-          type: 'static',
         },
       ]);
     });
@@ -95,19 +91,16 @@ describe('explicit project dependencies', () => {
           sourceProjectName,
           sourceProjectFile: 'libs/proj/index.ts',
           targetProjectName: 'proj2',
-          type: 'static',
         },
         {
           sourceProjectName,
           sourceProjectFile: 'libs/proj/index.ts',
           targetProjectName: 'proj3a',
-          type: 'static',
         },
         {
           sourceProjectName,
           sourceProjectFile: 'libs/proj/index.ts',
           targetProjectName: 'proj4ab',
-          type: 'static',
         },
       ]);
     });
@@ -138,19 +131,16 @@ describe('explicit project dependencies', () => {
           sourceProjectName,
           sourceProjectFile: 'libs/proj/index.ts',
           targetProjectName: 'proj2',
-          type: 'static',
         },
         {
           sourceProjectName,
           sourceProjectFile: 'libs/proj/index.ts',
           targetProjectName: 'proj3a',
-          type: 'static',
         },
         {
           sourceProjectName,
           sourceProjectFile: 'libs/proj/index.ts',
           targetProjectName: 'proj4ab',
-          type: 'static',
         },
       ]);
     });
@@ -178,7 +168,7 @@ describe('explicit project dependencies', () => {
           },
           {
             path: 'libs/proj/component.tsx',
-            content: `
+            content: `              
               export function App() {
                 import('@proj/my-second-proj')
                 return (
@@ -202,19 +192,16 @@ describe('explicit project dependencies', () => {
           sourceProjectName,
           sourceProjectFile: 'libs/proj/component.tsx',
           targetProjectName: 'proj2',
-          type: 'dynamic',
         },
         {
           sourceProjectName,
           sourceProjectFile: 'libs/proj/nested-dynamic-import.ts',
           targetProjectName: 'proj3a',
-          type: 'dynamic',
         },
         {
           sourceProjectName,
           sourceProjectFile: 'libs/proj/nested-require.ts',
           targetProjectName: 'proj4ab',
-          type: 'static',
         },
       ]);
     });
@@ -249,13 +236,11 @@ describe('explicit project dependencies', () => {
           sourceProjectName,
           sourceProjectFile: 'libs/proj/absolute-path.ts',
           targetProjectName: 'proj3a',
-          type: 'dynamic',
         },
         {
           sourceProjectName,
           sourceProjectFile: 'libs/proj/relative-path.ts',
           targetProjectName: 'proj4ab',
-          type: 'dynamic',
         },
       ]);
     });
@@ -328,15 +313,15 @@ describe('explicit project dependencies', () => {
           {
             path: 'libs/proj/comments-with-excess-whitespace.ts',
             content: `
-              /*
+              /* 
                 nx-ignore-next-line
-
+                
                 */
               require('@proj/proj4ab');
               //     nx-ignore-next-line
               import('@proj/proj4ab');
-              /*
-
+              /* 
+                
               nx-ignore-next-line */
               import { foo } from '@proj/proj4ab';
             `,
@@ -479,13 +464,11 @@ describe('explicit project dependencies', () => {
           sourceProjectName,
           sourceProjectFile: 'libs/proj/file-1.ts',
           targetProjectName: 'proj4ab',
-          type: 'dynamic',
         },
         {
           sourceProjectName,
           sourceProjectFile: 'libs/proj/file-2.ts',
           targetProjectName: 'proj3a',
-          type: 'dynamic',
         },
       ]);
     });

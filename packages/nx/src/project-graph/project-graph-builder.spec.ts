@@ -25,7 +25,7 @@ describe('ProjectGraphBuilder', () => {
     });
   });
 
-  it(`should add a dependency`, () => {
+  it(`should add an implicit dependency`, () => {
     expect(() =>
       builder.addImplicitDependency('invalid-source', 'target')
     ).toThrowError();
@@ -34,39 +34,10 @@ describe('ProjectGraphBuilder', () => {
     ).toThrowError();
 
     // ignore the self deps
-    builder.addDynamicDependency('source', 'source', 'source/index.ts');
+    builder.addImplicitDependency('source', 'source');
 
-    // don't include duplicates of the same type
+    // don't include duplicates
     builder.addImplicitDependency('source', 'target');
-    builder.addImplicitDependency('source', 'target');
-    builder.addStaticDependency('source', 'target', 'source/index.ts');
-    builder.addDynamicDependency('source', 'target', 'source/index.ts');
-    builder.addStaticDependency('source', 'target', 'source/index.ts');
-
-    const graph = builder.getUpdatedProjectGraph();
-    expect(graph.dependencies).toEqual({
-      source: [
-        {
-          source: 'source',
-          target: 'target',
-          type: 'implicit',
-        },
-        {
-          source: 'source',
-          target: 'target',
-          type: 'static',
-        },
-        {
-          source: 'source',
-          target: 'target',
-          type: 'dynamic',
-        },
-      ],
-      target: [],
-    });
-  });
-
-  it(`should add an implicit dependency`, () => {
     builder.addImplicitDependency('source', 'target');
 
     const graph = builder.getUpdatedProjectGraph();
@@ -125,10 +96,10 @@ describe('ProjectGraphBuilder', () => {
     });
   });
 
-  it(`should use both deps when both implicit and explicit deps are available`, () => {
+  it(`should use implicit dep when both implicit and explicit deps are available`, () => {
     // don't include duplicates
     builder.addImplicitDependency('source', 'target');
-    builder.addStaticDependency('source', 'target', 'source/index.ts');
+    builder.addExplicitDependency('source', 'source/index.ts', 'target');
 
     const graph = builder.getUpdatedProjectGraph();
     expect(graph.dependencies).toEqual({
@@ -137,11 +108,6 @@ describe('ProjectGraphBuilder', () => {
           source: 'source',
           target: 'target',
           type: 'implicit',
-        },
-        {
-          source: 'source',
-          target: 'target',
-          type: 'static',
         },
       ],
       target: [],
@@ -155,7 +121,7 @@ describe('ProjectGraphBuilder', () => {
       data: {} as any,
     });
     builder.addImplicitDependency('source', 'target');
-    builder.addStaticDependency('source', 'target', 'source/index.ts');
+    builder.addExplicitDependency('source', 'source/index.ts', 'target');
     builder.addImplicitDependency('source', 'target2');
     builder.removeDependency('source', 'target');
 

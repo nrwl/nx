@@ -22,14 +22,6 @@ jest.mock('@nrwl/devkit', () => ({
     .fn()
     .mockImplementation(async () => projectGraph),
 }));
-// nested code imports graph from the repo, which might have innacurate graph version
-jest.mock('nx/src/project-graph/project-graph', () => ({
-  ...jest.requireActual<any>('nx/src/project-graph/project-graph'),
-  readCachedProjectGraph: jest
-    .fn()
-    .mockImplementation(async () => projectGraph),
-}));
-
 describe('Cypress Component Testing Configuration', () => {
   let tree: Tree;
   let mockedInstalledCypressVersion: jest.Mock<

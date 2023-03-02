@@ -1,13 +1,6 @@
 jest.mock('@nrwl/devkit');
 jest.mock('@nrwl/devkit');
 jest.mock('@nrwl/workspace/src/utilities/buildable-libs-utils');
-// nested code imports graph from the repo, which might have innacurate graph version
-jest.mock('nx/src/project-graph/project-graph', () => ({
-  ...jest.requireActual<any>('nx/src/project-graph/project-graph'),
-  readCachedProjectGraph: jest
-    .fn()
-    .mockImplementation(async () => ({ nodes: {}, dependencies: {} })),
-}));
 
 import type { ExecutorContext, Target } from '@nrwl/devkit';
 import * as devkit from '@nrwl/devkit';
