@@ -67,6 +67,16 @@ export class ProjectGraphBuilder {
    * Adds a external node to the project graph
    */
   addExternalNode(node: ProjectGraphExternalNode): void {
+    // Check if project with the same name already exists
+    if (this.graph.externalNodes[node.name]) {
+      throw new Error(
+        `Multiple projects are named "${node.name}". One has version "${
+          node.data.version
+        }" and the other has version "${
+          this.graph.externalNodes[node.name].data.version
+        }". Please resolve the conflicting package names.`
+      );
+    }
     this.graph.externalNodes[node.name] = node;
   }
 

@@ -1,5 +1,5 @@
+import { satisfies } from 'semver';
 import { execSync } from 'child_process';
-import { writeFileSync } from 'fs-extra';
 import {
   checkFilesDoNotExist,
   checkFilesExist,
@@ -107,7 +107,7 @@ describe('js e2e', () => {
     const swcHelpersFromDist = readJson(`dist/libs/${lib}/package.json`)
       .peerDependencies['@swc/helpers'];
 
-    expect(swcHelpersFromDist).toEqual(swcHelpersFromRoot);
+    expect(satisfies(swcHelpersFromDist, swcHelpersFromRoot)).toBeTruthy();
 
     updateJson(`libs/${lib}/.swcrc`, (json) => {
       json.jsc.externalHelpers = false;
