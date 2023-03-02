@@ -116,16 +116,19 @@ describe('explicit package json dependencies', () => {
         sourceProjectName: 'proj',
         targetProjectName: 'proj2',
         sourceProjectFile: 'libs/proj/package.json',
+        type: 'static',
       },
       {
         sourceProjectFile: 'libs/proj/package.json',
         sourceProjectName: 'proj',
         targetProjectName: 'npm:external',
+        type: 'static',
       },
       {
         sourceProjectName: 'proj',
         targetProjectName: 'proj3',
         sourceProjectFile: 'libs/proj/package.json',
+        type: 'static',
       },
     ]);
   });
