@@ -7,7 +7,7 @@
 
 # Docs Site + Graph
 /docs/nx-cloud @StalkAltan @rarmatei @isaacplmann @juristr @bcabanes
-/docs/shared @bcabanes @isaacplmann @juristr
+/docs @bcabanes @isaacplmann @juristr
 /graph/** @philipjfulcher @FrozenPandaz @bcabanes
 /images/shared @bcabanes @isaacplmann @juristr
 /nx-dev/** @bcabanes @isaacplmann
