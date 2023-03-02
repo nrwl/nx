@@ -1,8 +1,6 @@
-export interface PresetGeneratorSchema {
+export interface ApplicationGeneratorSchema {
   name: string;
-  less?: boolean;
-  sass?: boolean;
-  stylus?: boolean;
+  style: 'css' | 'scss' | 'less' | 'styl';
   unitTestRunner?: 'none' | 'jest';
   e2eTestRunner?: 'none' | 'cypress';
   directory?: string;
@@ -11,7 +9,7 @@ export interface PresetGeneratorSchema {
   monorepo?: boolean;
 }
 
-export interface NormalizedSchema extends PresetGeneratorSchema {
+export interface NormalizedSchema extends ApplicationGeneratorSchema {
   appProjectRoot: string;
   e2eProjectName: string;
 }

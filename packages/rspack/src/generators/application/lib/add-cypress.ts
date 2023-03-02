@@ -1,8 +1,8 @@
 import { ensurePackage, Tree } from '@nrwl/devkit';
 import { version as nxVersion } from 'nx/package.json';
-import { PresetGeneratorSchema } from '../schema';
+import { NormalizedSchema } from '../schema';
 
-export async function addCypress(host: Tree, options: PresetGeneratorSchema) {
+export async function addCypress(host: Tree, options: NormalizedSchema) {
   if (options.e2eTestRunner !== 'cypress') {
     return () => {
       //nothing

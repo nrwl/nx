@@ -14,11 +14,17 @@
       },
       "x-priority": "important"
     },
-    "style": {
-      "type": "string",
-      "description": "The style solution to use.",
-      "enum": ["none", "css", "sass", "less"],
-      "default": "css"
+    "less": {
+      "type": "boolean",
+      "description": "Use less for styling."
+    },
+    "sass": {
+      "type": "boolean",
+      "description": "Use sass for styling."
+    },
+    "stylus": {
+      "type": "boolean",
+      "description": "Use stylus for styling."
     },
     "unitTestRunner": {
       "type": "string",

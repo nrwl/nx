@@ -5,22 +5,22 @@ import {
   normalizePath,
   Tree,
 } from '@nrwl/devkit';
-import { NormalizedSchema, PresetGeneratorSchema } from '../schema';
+import { ApplicationGeneratorSchema, NormalizedSchema } from '../schema';
 
-export function normalizeDirectory(options: PresetGeneratorSchema) {
+export function normalizeDirectory(options: ApplicationGeneratorSchema) {
   const { projectDirectory } = extractLayoutDirectory(options.directory);
   return projectDirectory
     ? `${names(projectDirectory).fileName}/${names(options.name).fileName}`
     : names(options.name).fileName;
 }
 
-export function normalizeProjectName(options: PresetGeneratorSchema) {
+export function normalizeProjectName(options: ApplicationGeneratorSchema) {
   return normalizeDirectory(options).replace(new RegExp('/', 'g'), '-');
 }
 
 export function normalizeOptions(
   host: Tree,
-  options: PresetGeneratorSchema
+  options: ApplicationGeneratorSchema
 ): NormalizedSchema {
   // --monorepo takes precedence over --rootProject
   // This won't be needed once we add --bundler=rspack to the @nrwl/react:app preset

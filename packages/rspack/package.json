@@ -1,6 +1,6 @@
 {
   "name": "@nrwl/rspack",
-  "version": "15.7.0-beta.1",
+  "version": "0.0.1",
   "type": "commonjs",
   "repository": {
     "type": "git",
@@ -19,7 +19,11 @@
   "generators": "./generators.json",
   "executors": "./executors.json",
   "dependencies": {
-    "@nrwl/devkit": "^15.7.2",
-    "copy-webpack-plugin": "^10.2.4"
+    "@nrwl/linter": "^15.8.1",
+    "@nrwl/devkit": "^15.8.1",
+    "ajv": "^8.12.0",
+    "sass-loader": "^12.2.0",
+    "stylus-loader": "^7.1.0",
+    "less-loader": "11.1.0"
   }
 }

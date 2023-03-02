@@ -1,6 +1,6 @@
 import { Configuration } from '@rspack/core';
 import * as path from 'path';
-import { createCopyPlugin } from './create-copy-plugin';
+import { getCopyPatterns } from './get-copy-patterns';
 import { SharedConfigContext } from './model';
 import { normalizeAssets } from './normalize-assets';
 
@@ -73,6 +73,11 @@ export function withNx(_opts = {}) {
         debug: false,
       },
       builtins: {
+        copy: {
+          patterns: getCopyPatterns(
+            normalizeAssets(options.assets, context.root, sourceRoot)
+          ),
+        },
         html: [
           {
             template: options.indexHtml
@@ -92,15 +97,6 @@ export function withNx(_opts = {}) {
         },
       },
     };
-
-    if (Array.isArray(options.assets) && options.assets.length > 0) {
-      // TODO(jack): uncomment this once copy-webpack-plugin is working
-      //updated.plugins.push(
-      //  createCopyPlugin(
-      //    normalizeAssets(options.assets, context.root, sourceRoot)
-      //  )
-      //);
-    }
 
     if (options.optimization) {
       // eslint-disable-next-line @typescript-eslint/no-var-requires

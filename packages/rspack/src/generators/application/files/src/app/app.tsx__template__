@@ -1,0 +1,10 @@
+import styles from './app.module.<%= style %>';
+import { NxWelcome } from './nx-welcome';
+
+export function App() {
+  return (
+    <div className={styles['container']} data-testid="welcome">
+      <NxWelcome title="<%= name %>" />
+    </div>
+  );
+}
