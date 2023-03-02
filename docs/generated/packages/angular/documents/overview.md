@@ -77,7 +77,7 @@ Read more about:
 - [Library Types](/more-concepts/library-types)
 - [Buildable and Publishable Libraries](/more-concepts/buildable-and-publishable-libraries)
 
-### Using `@schematics/angular`
+### Fallback to `@schematics/angular`
 
 If you try to invoke a generator that is not present in `@nrwl/angular`, the request will automatically be forwarded on to `@schematics/angular`. So, even though there is no `@nrwl/angular:service` generator, the following command will successfully create a service:
 
