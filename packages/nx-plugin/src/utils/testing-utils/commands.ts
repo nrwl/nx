@@ -21,7 +21,7 @@ export function runNxCommand(
       cwd: tmpProjPath(),
       env: { ...process.env, ...opts.env },
     };
-    if (fileExists('package.json')) {
+    if (fileExists(tmpProjPath('package.json'))) {
       const pmc = getPackageManagerCommand();
       return execSync(`${pmc.exec} nx ${command}`, execSyncOptions);
     } else if (process.platform === 'win32') {
