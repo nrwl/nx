@@ -1,12 +1,13 @@
 import { execSync } from 'child_process';
 import { existsSync } from 'fs';
+import { prerelease } from 'semver';
+import * as parser from 'yargs-parser';
+import { addNxToAngularCliRepo } from '../nx-init/add-nx-to-angular-cli-repo';
 import { addNxToNest } from '../nx-init/add-nx-to-nest';
 import { addNxToNpmRepo } from '../nx-init/add-nx-to-npm-repo';
+import { generateEncapsulatedNxSetup } from '../nx-init/encapsulated/add-nx-scripts';
 import { directoryExists, readJsonFile } from '../utils/fileutils';
 import { PackageJson } from '../utils/package-json';
-import * as parser from 'yargs-parser';
-import { generateEncapsulatedNxSetup } from '../nx-init/encapsulated/add-nx-scripts';
-import { prerelease } from 'semver';
 
 export async function initHandler() {
   const args = process.argv.slice(2).join(' ');
@@ -43,10 +44,7 @@ export async function initHandler() {
   } else if (existsSync('package.json')) {
     const packageJson: PackageJson = readJsonFile('package.json');
     if (existsSync('angular.json')) {
-      // TODO(leo): remove make-angular-cli-faster
-      execSync(`npx --yes make-angular-cli-faster@${version} ${args}`, {
-        stdio: [0, 1, 2],
-      });
+      await addNxToAngularCliRepo();
     } else if (isCRA(packageJson)) {
       // TODO(jack): remove cra-to-nx
       execSync(`npx --yes cra-to-nx@${version} ${args}`, {

@@ -108,8 +108,7 @@ export async function addNxToNest(packageJson: PackageJson) {
     repoRoot,
     [],
     [...cacheableOperations, ...nestCacheableScripts],
-    {},
-    packageJson.name
+    {}
   );
 
   const pmc = getPackageManagerCommand();
