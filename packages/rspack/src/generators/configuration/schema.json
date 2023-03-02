@@ -46,12 +46,6 @@
       "type": "string",
       "description": "The style solution to use.",
       "enum": ["none", "css", "scss", "less"]
-    },
-    "skipValidation": {
-      "type": "boolean",
-      "default": false,
-      "description": "Do not perform any validation on existing project.",
-      "x-priority": "internal"
     }
   },
   "required": ["project"]

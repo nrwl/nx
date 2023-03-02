@@ -1,6 +1,6 @@
 import { InitGeneratorSchema } from '../init/schema';
 
-export interface RspackProjectGeneratorSchema extends InitGeneratorSchema {
+export interface ConfigurationSchema extends InitGeneratorSchema {
   project: string;
   main?: string;
   tsConfig?: string;

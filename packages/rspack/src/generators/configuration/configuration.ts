@@ -7,14 +7,13 @@ import {
 } from '@nrwl/devkit';
 import { RspackExecutorSchema } from '../../executors/rspack/schema';
 import rspackInitGenerator from '../init/init';
-import { RspackProjectGeneratorSchema } from './schema';
+import { ConfigurationSchema } from './schema';
 
-export async function rspackProjectGenerator(
+export async function configurationGenerator(
   tree: Tree,
-  options: RspackProjectGeneratorSchema
+  options: ConfigurationSchema
 ) {
   const task = await rspackInitGenerator(tree, options);
-  checkForTargetConflicts(tree, options);
   addBuildTarget(tree, options);
   if (options.uiFramework !== 'none' || options.devServer) {
     addServeTarget(tree, options);
@@ -24,28 +23,7 @@ export async function rspackProjectGenerator(
   return task;
 }
 
-function checkForTargetConflicts(
-  tree: Tree,
-  options: RspackProjectGeneratorSchema
-) {
-  if (options.skipValidation) return;
-
-  const project = readProjectConfiguration(tree, options.project);
-
-  if (project.targets?.build) {
-    throw new Error(
-      `Project "${project.name}" already has a build target. Pass --skipValidation to ignore this error.`
-    );
-  }
-
-  if (options.devServer && project.targets?.serve) {
-    throw new Error(
-      `Project "${project.name}" already has a serve target. Pass --skipValidation to ignore this error.`
-    );
-  }
-}
-
-function determineMain(tree: Tree, options: RspackProjectGeneratorSchema) {
+function determineMain(tree: Tree, options: ConfigurationSchema) {
   if (options.main) return options.main;
 
   const project = readProjectConfiguration(tree, options.project);
@@ -56,7 +34,7 @@ function determineMain(tree: Tree, options: RspackProjectGeneratorSchema) {
   return joinPathFragments(project.root, 'src/main.ts');
 }
 
-function determineTsConfig(tree: Tree, options: RspackProjectGeneratorSchema) {
+function determineTsConfig(tree: Tree, options: ConfigurationSchema) {
   if (options.tsConfig) return options.tsConfig;
 
   const project = readProjectConfiguration(tree, options.project);
@@ -70,11 +48,15 @@ function determineTsConfig(tree: Tree, options: RspackProjectGeneratorSchema) {
   return joinPathFragments(project.root, 'tsconfig.json');
 }
 
-function addBuildTarget(tree: Tree, options: RspackProjectGeneratorSchema) {
+function addBuildTarget(tree: Tree, options: ConfigurationSchema) {
   const project = readProjectConfiguration(tree, options.project);
   const buildOptions: RspackExecutorSchema = {
     target: options.target ?? 'web',
-    outputPath: joinPathFragments('dist', project.root),
+    outputPath: joinPathFragments(
+      'dist',
+      // If standalone project then use the project's name in dist.
+      project.root === '.' ? project.name : project.root
+    ),
     main: determineMain(tree, options),
     tsConfig: determineTsConfig(tree, options),
     rspackConfig: joinPathFragments(project.root, 'rspack.config.js'),
@@ -94,6 +76,7 @@ function addBuildTarget(tree: Tree, options: RspackProjectGeneratorSchema) {
         defaultConfiguration: 'production',
         options: buildOptions,
         configurations: {
+          development: {},
           production: {
             optimization: true,
             sourceMap: false,
@@ -104,7 +87,7 @@ function addBuildTarget(tree: Tree, options: RspackProjectGeneratorSchema) {
   });
 }
 
-function addServeTarget(tree: Tree, options: RspackProjectGeneratorSchema) {
+function addServeTarget(tree: Tree, options: ConfigurationSchema) {
   const project = readProjectConfiguration(tree, options.project);
   updateProjectConfiguration(tree, options.project, {
     ...project,
@@ -113,9 +96,10 @@ function addServeTarget(tree: Tree, options: RspackProjectGeneratorSchema) {
       serve: {
         executor: '@nrwl/rspack:dev-server',
         options: {
-          buildTarget: `${options.project}:build`,
+          buildTarget: `${options.project}:build:development`,
         },
         configurations: {
+          development: {},
           production: {
             buildTarget: `${options.project}:build:production`,
           },
@@ -125,19 +109,22 @@ function addServeTarget(tree: Tree, options: RspackProjectGeneratorSchema) {
   });
 }
 
-function writeRspackConfigFile(
-  tree: Tree,
-  options: RspackProjectGeneratorSchema
-) {
+function writeRspackConfigFile(tree: Tree, options: ConfigurationSchema) {
   const project = readProjectConfiguration(tree, options.project);
 
   tree.write(
     joinPathFragments(project.root, 'rspack.config.js'),
     createConfig(options)
   );
+
+  // Remove previous webpack config if they exist
+  if (tree.exists(joinPathFragments(project.root, 'webpack.config.js')))
+    tree.delete(joinPathFragments(project.root, 'webpack.config.js'));
+  if (tree.exists(joinPathFragments(project.root, 'webpack.config.ts')))
+    tree.delete(joinPathFragments(project.root, 'webpack.config.ts'));
 }
 
-function createConfig(options: RspackProjectGeneratorSchema) {
+function createConfig(options: ConfigurationSchema) {
   if (options.uiFramework === 'react') {
     return `
       const { composePlugins, withNx, withReact } = require('@nrwl/rspack');
@@ -165,4 +152,4 @@ function createConfig(options: RspackProjectGeneratorSchema) {
   }
 }
 
-export default rspackProjectGenerator;
+export default configurationGenerator;

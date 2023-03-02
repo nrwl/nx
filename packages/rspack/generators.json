@@ -3,10 +3,10 @@
   "name": "rspack",
   "version": "0.0.1",
   "generators": {
-    "rspack-project": {
-      "factory": "./src/generators/rspack-project/rspack-project",
-      "schema": "./src/generators/rspack-project/schema.json",
-      "description": "Rspack project generator."
+    "configuration": {
+      "factory": "./src/generators/configuration/configuration",
+      "schema": "./src/generators/configuration/schema.json",
+      "description": "Rspack configuration generator."
     },
     "init": {
       "factory": "./src/generators/init/init",
