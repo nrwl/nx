@@ -1,4 +1,5 @@
-export const nxPreset = {
+import type { Config } from 'jest';
+export const nxPreset: Config = {
   // This is one of the patterns that jest finds by default https://jestjs.io/docs/configuration#testmatch-arraystring
   testMatch: ['**/?(*.)+(spec|test).[jt]s?(x)'],
   resolver: '@nrwl/jest/plugins/resolver',
