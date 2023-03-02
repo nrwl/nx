@@ -29,6 +29,7 @@ import {
 } from '../generators/utils/project-configuration';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { readJsonFile } from '../utils/fileutils';
+import { getNxRequirePaths } from '../utils/installation-directory';
 import { parseJson } from '../utils/json';
 import { NX_ERROR, NX_PREFIX } from '../utils/logger';
 import { readModulePackageJson } from '../utils/package-json';
@@ -643,9 +644,10 @@ function resolveMigrationsCollection(name: string): string {
   if (extname(name)) {
     collectionPath = require.resolve(name);
   } else {
-    const { path: packageJsonPath, packageJson } = readModulePackageJson(name, [
-      process.cwd(),
-    ]);
+    const { path: packageJsonPath, packageJson } = readModulePackageJson(
+      name,
+      getNxRequirePaths(process.cwd())
+    );
 
     let pkgJsonSchematics =
       packageJson['nx-migrations'] ?? packageJson['ng-update'];

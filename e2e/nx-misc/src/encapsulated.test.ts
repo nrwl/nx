@@ -222,6 +222,7 @@ describe('encapsulated nx', () => {
           ...process.env,
           NX_MIGRATE_SKIP_INSTALL: 'true',
           NX_MIGRATE_USE_LOCAL: 'true',
+          NX_WRAPPER_SKIP_INSTALL: 'true',
         },
       }
     );
@@ -254,6 +255,7 @@ describe('encapsulated nx', () => {
         ...process.env,
         NX_MIGRATE_SKIP_INSTALL: 'true',
         NX_MIGRATE_USE_LOCAL: 'true',
+        NX_WRAPPER_SKIP_INSTALL: 'true',
       },
     });
     expect(readFile('file-11')).toEqual('content11');

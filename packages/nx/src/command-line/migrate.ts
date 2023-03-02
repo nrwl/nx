@@ -994,7 +994,7 @@ function readPackageMigrationConfig(
 ): PackageMigrationConfig {
   const { path: packageJsonPath, packageJson: json } = readModulePackageJson(
     packageName,
-    [dir]
+    getNxRequirePaths(dir)
   );
 
   const config = readNxMigrateConfig(json);
@@ -1439,11 +1439,17 @@ async function runMigrations(
 }
 
 function getStringifiedPackageJsonDeps(root: string): string {
-  const { dependencies, devDependencies } = readJsonFile<PackageJson>(
-    join(root, 'package.json')
-  );
+  try {
+    const { dependencies, devDependencies } = readJsonFile<PackageJson>(
+      join(root, 'package.json')
+    );
 
-  return JSON.stringify([dependencies, devDependencies]);
+    return JSON.stringify([dependencies, devDependencies]);
+  } catch {
+    // We don't really care if the .nx/installation property changes,
+    // whenever nxw is invoked it will handle the dep updates.
+    return '';
+  }
 }
 
 function commitChanges(commitMessage: string): string | null {
