@@ -6,19 +6,26 @@
     "rspack-project": {
       "factory": "./src/generators/rspack-project/rspack-project",
       "schema": "./src/generators/rspack-project/schema.json",
-      "description": "rspack generator"
+      "description": "Rspack project generator."
     },
     "init": {
       "factory": "./src/generators/init/init",
       "schema": "./src/generators/init/schema.json",
-      "description": "init generator",
+      "description": "Rspack init generator.",
       "hidden": true
     },
     "preset": {
       "factory": "./src/generators/preset/preset",
       "schema": "./src/generators/preset/schema.json",
-      "description": "preset generator",
+      "description": "React preset generator.",
       "hidden": true
+    },
+    "application": {
+      "factory": "./src/generators/application/application",
+      "schema": "./src/generators/application/schema.json",
+      "aliases": ["app"],
+      "x-type": "application",
+      "description": "React application generator."
     }
   }
 }

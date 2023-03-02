@@ -4,7 +4,9 @@ import * as path from 'path';
 import { SharedConfigContext } from './model';
 
 export interface WithWebOptions {
-  style?: 'css' | 'scss' | 'less';
+  stylePreprocessorOptions?: {
+    includePaths?: string[];
+  };
 }
 
 export function withWeb(opts: WithWebOptions = {}) {
@@ -19,6 +21,22 @@ export function withWeb(opts: WithWebOptions = {}) {
       context.projectGraph.nodes[context.projectName].data.root
     );
 
+    const includePaths: string[] = [];
+    if (opts?.stylePreprocessorOptions?.includePaths?.length > 0) {
+      opts.stylePreprocessorOptions.includePaths.forEach(
+        (includePath: string) =>
+          includePaths.push(path.resolve(context.root, includePath))
+      );
+    }
+
+    let lessPathOptions: { paths?: string[] } = {};
+
+    if (includePaths.length > 0) {
+      lessPathOptions = {
+        paths: includePaths,
+      };
+    }
+
     return {
       ...config,
       module: {
@@ -27,18 +45,55 @@ export function withWeb(opts: WithWebOptions = {}) {
           ...(config.module.rules || []),
           {
             test: /\.css$/,
-            type: 'css/module' as any,
+            type: 'css/module',
           },
-          // TODO(jack): uncomment once supported.
-          // {
-          //   test: /\.s[ac]ss$/,
-          //   use: [{ builtinLoader: 'builtin:sass-loader' }],
-          //   type: 'css',
-          // },
-          opts.style === 'less' && {
+          {
+            test: /\.scss$|\.sass$/,
+            type: 'css/module',
+            use: [
+              {
+                loader: require.resolve('sass-loader'),
+                options: {
+                  sourceMap: !!options.sourceMap,
+                  sassOptions: {
+                    fiber: false,
+                    // bootstrap-sass requires a minimum precision of 8
+                    precision: 8,
+                    includePaths,
+                  },
+                },
+              },
+            ],
+          },
+          {
             test: /.less$/,
-            use: [{ loader: require('@rspack/less-loader') }],
-            type: 'css',
+            type: 'css/module',
+            use: [
+              {
+                loader: require.resolve('less-loader'),
+                options: {
+                  sourceMap: !!options.sourceMap,
+                  lessOptions: {
+                    javascriptEnabled: true,
+                    ...lessPathOptions,
+                  },
+                },
+              },
+            ],
+          },
+          {
+            test: /\.styl$/,
+            use: [
+              {
+                loader: require.resolve('stylus-loader'),
+                options: {
+                  sourceMap: !!options.sourceMap,
+                  stylusOptions: {
+                    include: includePaths,
+                  },
+                },
+              },
+            ],
           },
         ].filter((a): a is ModuleRule => !!a),
       },

@@ -7,15 +7,15 @@ import {
 } from '@nrwl/devkit';
 import { version as nxVersion } from 'nx/package.json';
 import { updateJestConfigContent } from '../../../utils/jest-utils';
-import { PresetGeneratorSchema } from '../schema';
+import { NormalizedSchema } from '../schema';
 
-export async function addJest(host: Tree, options: PresetGeneratorSchema) {
+export async function addJest(host: Tree, options: NormalizedSchema) {
   if (options.unitTestRunner !== 'jest') {
     return () => {
       // nothing
     };
   }
-  
+
   await ensurePackage(host, '@nrwl/jest', nxVersion);
   const { jestProjectGenerator } = await import('@nrwl/jest');
 
@@ -34,7 +34,7 @@ export async function addJest(host: Tree, options: PresetGeneratorSchema) {
   return task;
 }
 
-function updateSpecConfig(host: Tree, options: PresetGeneratorSchema) {
+function updateSpecConfig(host: Tree, options: NormalizedSchema) {
   if (options.unitTestRunner !== 'jest') {
     return;
   }

@@ -142,7 +142,7 @@ function createConfig(options: RspackProjectGeneratorSchema) {
     return `
       const { composePlugins, withNx, withReact } = require('@nrwl/rspack');
 
-      module.exports = composePlugins(withNx(), withReact({ style: '${options.style}' }), (config) => {
+      module.exports = composePlugins(withNx(), withReact(), (config) => {
         return config;
       });
     `;
@@ -150,7 +150,7 @@ function createConfig(options: RspackProjectGeneratorSchema) {
     return `
       const { composePlugins, withNx, withWeb } = require('@nrwl/rspack');
 
-      module.exports = composePlugins(withNx(), withWeb({ style: '${options.style}' }), (config) => {
+      module.exports = composePlugins(withNx(), withWeb(), (config) => {
         return config;
       });
     `;
