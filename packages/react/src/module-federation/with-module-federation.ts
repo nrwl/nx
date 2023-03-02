@@ -51,9 +51,7 @@ export async function withModuleFederation(
     config.plugins.push(
       new ModuleFederationPlugin({
         name: options.name,
-        library: {
-          type: 'module',
-        },
+        library: options.library ?? { type: 'module' },
         filename: 'remoteEntry.js',
         exposes: options.exposes,
         remotes: mappedRemotes,
