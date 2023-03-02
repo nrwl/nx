@@ -35,7 +35,7 @@ describe('Nx Commands', () => {
 
       const s = runCLI('show projects').split('\n');
 
-      expect(s.length).toEqual(4);
+      expect(s.length).toEqual(5);
       expect(s).toContain(app1);
       expect(s).toContain(app2);
       expect(s).toContain(`${app1}-e2e`);
