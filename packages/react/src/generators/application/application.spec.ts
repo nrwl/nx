@@ -44,6 +44,26 @@ describe('app', () => {
       expect(projects.get('my-app-e2e').root).toEqual('apps/my-app-e2e');
     });
 
+    it('should add vite types to tsconfigs', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        bundler: 'vite',
+        unitTestRunner: 'vitest',
+      });
+      const tsconfigApp = readJson(appTree, 'apps/my-app/tsconfig.app.json');
+      expect(tsconfigApp.compilerOptions.types).toEqual([
+        'node',
+        'vite/client',
+      ]);
+      const tsconfigSpec = readJson(appTree, 'apps/my-app/tsconfig.spec.json');
+      expect(tsconfigSpec.compilerOptions.types).toEqual([
+        'vitest/globals',
+        'vitest/importMeta',
+        'vite/client',
+        'node',
+      ]);
+    });
+
     it('should not overwrite default project if already set', async () => {
       const nxJson = readNxJson(appTree);
       nxJson.defaultProject = 'some-awesome-project';
