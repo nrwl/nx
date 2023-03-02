@@ -513,6 +513,8 @@ describe('app', () => {
       ).toMatchInlineSnapshot(`
         Array [
           "vitest/globals",
+          "vitest/importMeta",
+          "vite/client",
           "node",
         ]
       `);
