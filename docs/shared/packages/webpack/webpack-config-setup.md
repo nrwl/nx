@@ -166,15 +166,18 @@ const { merge } = require('webpack-merge');
 const withModuleFederation = require('@nrwl/react/module-federation');
 // or `const withModuleFederation = require('@nrwl/angular/module-federation');`
 
-module.exports = composePlugins(withNx(), (config, { options, context }) => {
-  const federatedModules = await withModuleFederation({
-    // your options here
-  });
+module.exports = composePlugins(
+  withNx(),
+  async (config, { options, context }) => {
+    const federatedModules = await withModuleFederation({
+      // your options here
+    });
 
-  return merge(federatedModules(config, context), {
-    // overwrite values here
-  });
-});
+    return merge(federatedModules(config, context), {
+      // overwrite values here
+    });
+  }
+);
 ```
 
 Reference the [webpack documentation](https://webpack.js.org/configuration/) for details on the structure of the webpack
