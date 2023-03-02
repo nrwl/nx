@@ -1,4 +1,5 @@
 import { spawn } from 'child_process';
+import { chunkify } from '../utils/chunkify';
 import { fileExists } from '../utils/fileutils';
 import { joinPathFragments } from '../utils/path';
 
@@ -12,26 +13,9 @@ export async function getGitHashForFiles(
   );
 
   const res: Map<string, string> = new Map<string, string>();
-  const promises: Promise<Map<string, string>>[] = [];
-  if (filesToHash.length) {
-    // On windows the max length is limited by the length of
-    // the overall comand, rather than the number of individual
-    // arguments. Since file paths are large and rather variable,
-    // we use a smaller batchSize.
-    const batchSize = process.platform === 'win32' ? 250 : 4000;
-    for (
-      let startIndex = 0;
-      startIndex < filesToHash.length;
-      startIndex += batchSize
-    ) {
-      promises.push(
-        getGitHashForBatch(
-          filesToHash.slice(startIndex, startIndex + batchSize),
-          path
-        )
-      );
-    }
-  }
+  const promises: Promise<Map<string, string>>[] = chunkify(filesToHash).map(
+    (files) => getGitHashForBatch(files, path)
+  );
   // Merge batch results into final result set
   const batchResults = await Promise.all(promises);
   for (const batch of batchResults) {
