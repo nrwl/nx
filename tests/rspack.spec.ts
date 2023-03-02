@@ -24,10 +24,16 @@ describe('rspack e2e', () => {
   it('should create rspack project', async () => {
     const project = uniq('myapp');
     await runNxCommandAsync(
-      `generate @nrwl/rspack:preset ${project} --style=css --unitTestRunner=jest --e2eTestRunner=cypress`
+      `generate @nrwl/rspack:preset ${project} --unitTestRunner=jest --e2eTestRunner=cypress`
     );
     let result = await runNxCommandAsync(`build ${project}`);
     expect(result.stdout).toContain('Successfully ran target build');
+
+    result = await runNxCommandAsync(`lint ${project}`);
+    expect(result.stdout).toContain('Successfully ran target lint');
+
+    result = await runNxCommandAsync(`test ${project}`);
+    expect(result.stdout).toContain('Successfully ran target test');
 
     result = await runNxCommandAsync(`e2e e2e`);
     expect(result.stdout).toContain('Successfully ran target e2e');
