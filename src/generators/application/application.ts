@@ -21,7 +21,7 @@ import {
   typesReactDomVersion,
   typesReactVersion,
 } from '../../utils/versions';
-import projectGenerator from '../rspack-project/rspack-project';
+import { configurationGenerator } from '../configuration/configuration';
 import { addCypress } from './lib/add-cypress';
 import { addJest } from './lib/add-jest';
 import { addLinting } from './lib/add-linting';
@@ -63,7 +63,7 @@ export default async function (
     joinPathFragments(offsetFromRoot, 'tsconfig.base.json')
   );
 
-  const projectTask = await projectGenerator(tree, {
+  const projectTask = await configurationGenerator(tree, {
     project: options.name,
     devServer: true,
     tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
