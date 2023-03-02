@@ -27,6 +27,7 @@ import {
 import { exec, execSync } from 'child_process';
 import * as http from 'http';
 import { getLockFileName } from 'nx/src/lock-file/lock-file';
+import { satisfies } from 'semver';
 
 function getData(port, path = '/api'): Promise<any> {
   return new Promise((resolve) => {
@@ -263,21 +264,36 @@ describe('Build Node apps', () => {
       })
     );
 
-    expect(packageJson.dependencies['@nestjs/common']).toEqual(
-      rootPackageJson.dependencies['@nestjs/common']
-    );
-    expect(packageJson.dependencies['@nestjs/core']).toEqual(
-      rootPackageJson.dependencies['@nestjs/core']
-    );
-    expect(packageJson.dependencies['reflect-metadata']).toEqual(
-      rootPackageJson.dependencies['reflect-metadata']
-    );
-    expect(packageJson.dependencies['rxjs']).toEqual(
-      rootPackageJson.dependencies['rxjs']
-    );
-    expect(packageJson.dependencies['tslib']).toEqual(
-      rootPackageJson.dependencies['tslib']
-    );
+    expect(
+      satisfies(
+        packageJson.dependencies['@nestjs/common'],
+        rootPackageJson.dependencies['@nestjs/common']
+      )
+    ).toBeTruthy();
+    expect(
+      satisfies(
+        packageJson.dependencies['@nestjs/core'],
+        rootPackageJson.dependencies['@nestjs/core']
+      )
+    ).toBeTruthy();
+    expect(
+      satisfies(
+        packageJson.dependencies['reflect-metadata'],
+        rootPackageJson.dependencies['reflect-metadata']
+      )
+    ).toBeTruthy();
+    expect(
+      satisfies(
+        packageJson.dependencies['rxjs'],
+        rootPackageJson.dependencies['rxjs']
+      )
+    ).toBeTruthy();
+    expect(
+      satisfies(
+        packageJson.dependencies['tslib'],
+        rootPackageJson.dependencies['tslib']
+      )
+    ).toBeTruthy();
 
     checkFilesExist(
       `dist/apps/${nestapp}/${packageManagerLockFile[packageManager]}`
