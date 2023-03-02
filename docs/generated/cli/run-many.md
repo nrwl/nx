@@ -75,6 +75,14 @@ Type: `string`
 
 Exclude certain projects from being processed
 
+### graph
+
+Type: `boolean`
+
+Default: `false`
+
+Show the task graph of the command
+
 ### help
 
 Type: `boolean`

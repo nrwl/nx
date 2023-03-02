@@ -29,6 +29,7 @@ import { Hasher } from '../hasher/hasher';
 import { hashDependsOnOtherTasks, hashTask } from '../hasher/hash-task';
 import { daemonClient } from '../daemon/client/client';
 import { StoreRunInformationLifeCycle } from './life-cycles/store-run-information-life-cycle';
+import { generateGraph } from 'nx/src/command-line/dep-graph';
 
 async function getTerminalOutputLifeCycle(
   initiatingProject: string,

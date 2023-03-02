@@ -29,6 +29,7 @@ export interface NxArgs {
   plain?: boolean;
   projects?: string[];
   select?: string;
+  graph?: boolean;
   skipNxCache?: boolean;
   outputStyle?: string;
   nxBail?: boolean;

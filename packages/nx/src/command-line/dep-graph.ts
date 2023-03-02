@@ -3,11 +3,10 @@ import { createHash } from 'crypto';
 import { existsSync, readFileSync, statSync, writeFileSync } from 'fs';
 import { copySync, ensureDirSync } from 'fs-extra';
 import * as http from 'http';
-import ignore from 'ignore';
 import * as open from 'open';
 import { basename, dirname, extname, isAbsolute, join, parse } from 'path';
 import { performance } from 'perf_hooks';
-import { URL, URLSearchParams } from 'url';
+import { URL } from 'url';
 import { readNxJson, workspaceLayout } from '../config/configuration';
 import { defaultFileHasher } from '../hasher/file-hasher';
 import { output } from '../utils/output';
@@ -23,6 +22,7 @@ import { createTaskGraph } from '../tasks-runner/create-task-graph';
 import { TargetDefaults, TargetDependencies } from '../config/nx-json';
 import { TaskGraph } from '../config/task-graph';
 import { daemonClient } from '../daemon/client/client';
+import { Server } from 'net';
 
 export interface ProjectGraphClientResponse {
   hash: string;
@@ -175,18 +175,21 @@ export async function generateGraph(
     file?: string;
     host?: string;
     port?: number;
-    focus?: string;
-    exclude?: string[];
     groupByFolder?: boolean;
     watch?: boolean;
     open?: boolean;
+    view: 'projects' | 'tasks';
+    projects?: string[];
+    all?: boolean;
+    target?: string;
+    focus?: string;
+    exclude?: string[];
   },
   affectedProjects: string[]
 ): Promise<void> {
   let graph = pruneExternalNodes(
     await createProjectGraphAsync({ exitOnError: true })
   );
-  const layout = workspaceLayout();
 
   const projects = Object.values(graph.nodes) as ProjectGraphProjectNode[];
   projects.sort((a, b) => {
@@ -299,7 +302,7 @@ export async function generateGraph(
       !!args.file && args.file.endsWith('html') ? 'build' : 'serve'
     );
 
-    await startServer(
+    const { app, url } = await startServer(
       html,
       environmentJs,
       args.host || '127.0.0.1',
@@ -308,9 +311,43 @@ export async function generateGraph(
       affectedProjects,
       args.focus,
       args.groupByFolder,
-      args.exclude,
-      args.open
+      args.exclude
     );
+
+    url.pathname = args.view;
+
+    if (args.focus) {
+      url.pathname += '/' + args.focus;
+    }
+
+    if (args.target) {
+      url.pathname += '/' + args.target;
+    }
+    if (args.all) {
+      url.pathname += '/all';
+    } else if (args.projects) {
+      url.searchParams.append(
+        'projects',
+        args.projects
+          .map((projectName) => encodeURIComponent(projectName))
+          .join(' ')
+      );
+    }
+    if (args.groupByFolder) {
+      url.searchParams.append('groupByFolder', 'true');
+    }
+
+    output.note({
+      title: `Project graph started at ${url.toString()}`,
+    });
+
+    if (args.open) {
+      open(url.toString());
+    }
+
+    return new Promise((res) => {
+      app.once('close', res);
+    });
   }
 }
 
@@ -323,8 +360,7 @@ async function startServer(
   affected: string[] = [],
   focus: string = null,
   groupByFolder: boolean = false,
-  exclude: string[] = [],
-  openBrowser: boolean = true
+  exclude: string[] = []
 ) {
   let unregisterFileWatcher: (() => void) | undefined;
   if (watchForchanges) {
@@ -391,27 +427,6 @@ async function startServer(
     }
   });
 
-  app.listen(port, host);
-
-  output.note({
-    title: `Project graph started at http://${host}:${port}`,
-  });
-
-  if (openBrowser) {
-    let url = `http://${host}:${port}/projects`;
-    let params = new URLSearchParams();
-
-    if (focus) {
-      url += `/${focus}`;
-    }
-
-    if (groupByFolder) {
-      params.append('groupByFolder', 'true');
-    }
-
-    open(`${url}?${params.toString()}`);
-  }
-
   const handleTermination = async (exitCode: number) => {
     if (unregisterFileWatcher) {
       unregisterFileWatcher();
@@ -420,6 +435,12 @@ async function startServer(
   };
   process.on('SIGINT', () => handleTermination(128 + 2));
   process.on('SIGTERM', () => handleTermination(128 + 15));
+
+  return new Promise<{ app: Server; url: URL }>((res) => {
+    app.listen(port, host, () => {
+      res({ app, url: new URL(`http://${host}:${port}`) });
+    });
+  });
 }
 
 let currentDepGraphClientResponse: ProjectGraphClientResponse = {

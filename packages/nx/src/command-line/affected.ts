@@ -117,16 +117,31 @@ export async function affected(
 
       case 'affected': {
         const projectsWithTarget = allProjectsWithTarget(projects, nxArgs);
-        await runCommand(
-          projectsWithTarget,
-          projectGraph,
-          { nxJson },
-          nxArgs,
-          overrides,
-          null,
-          extraTargetDependencies,
-          { excludeTaskDependencies: false, loadDotEnvFiles: true }
-        );
+        if (nxArgs.graph) {
+          const projectNames = projectsWithTarget.map((t) => t.name);
+
+          return await generateGraph(
+            {
+              watch: true,
+              open: true,
+              view: 'tasks',
+              target: nxArgs.targets[0],
+              projects: projectNames,
+            },
+            projectNames
+          );
+        } else {
+          await runCommand(
+            projectsWithTarget,
+            projectGraph,
+            { nxJson },
+            nxArgs,
+            overrides,
+            null,
+            extraTargetDependencies,
+            { excludeTaskDependencies: false, loadDotEnvFiles: true }
+          );
+        }
         break;
       }
     }

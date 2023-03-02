@@ -230,6 +230,11 @@ export class GraphService {
       case 'notifyTaskGraphSetProjects':
         this.taskTraversalGraph.setProjects(event.projects, event.taskGraphs);
         break;
+      case 'notifyTaskGraphSetTasks':
+        elementsToSendToRender = this.taskTraversalGraph.setTasks(
+          event.taskIds
+        );
+        break;
       case 'notifyTaskGraphTasksSelected':
         elementsToSendToRender = this.taskTraversalGraph.selectTask(
           event.taskIds

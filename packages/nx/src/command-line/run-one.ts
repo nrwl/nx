@@ -17,6 +17,7 @@ import {
 } from '../config/workspace-json-project-json';
 import { readNxJson } from '../config/configuration';
 import { workspaceConfigurationCheck } from '../utils/workspace-configuration-check';
+import { generateGraph } from 'nx/src/command-line/dep-graph';
 
 export async function runOne(
   cwd: string,
@@ -63,16 +64,31 @@ export async function runOne(
 
   const { projects } = getProjects(projectGraph, opts.project);
 
-  await runCommand(
-    projects,
-    projectGraph,
-    { nxJson },
-    nxArgs,
-    overrides,
-    opts.project,
-    extraTargetDependencies,
-    extraOptions
-  );
+  if (nxArgs.graph) {
+    const projectNames = projects.map((t) => t.name);
+
+    return await generateGraph(
+      {
+        watch: true,
+        open: true,
+        view: 'tasks',
+        target: nxArgs.targets[0],
+        projects: projectNames,
+      },
+      projectNames
+    );
+  } else {
+    await runCommand(
+      projects,
+      projectGraph,
+      { nxJson },
+      nxArgs,
+      overrides,
+      opts.project,
+      extraTargetDependencies,
+      extraOptions
+    );
+  }
 }
 
 function getProjects(projectGraph: ProjectGraph, project: string): any {

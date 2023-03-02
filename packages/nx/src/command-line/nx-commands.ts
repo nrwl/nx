@@ -501,6 +501,11 @@ function withRunOptions(yargs: yargs.Argv): yargs.Argv {
       default: false,
       hidden: true,
     })
+    .option('graph', {
+      type: 'boolean',
+      describe: 'Show the task graph of the command',
+      default: false,
+    })
     .option('verbose', {
       type: 'boolean',
       describe:
@@ -616,6 +621,16 @@ function withDepGraphOptions(yargs: yargs.Argv): yargs.Argv {
     .option('file', {
       describe:
         'Output file (e.g. --file=output.json or --file=dep-graph.html)',
+      type: 'string',
+    })
+    .option('view', {
+      describe: 'Choose whether to view the projects or task graph',
+      type: 'string',
+      default: 'projects',
+      choices: ['projects', 'tasks'],
+    })
+    .option('target', {
+      describe: 'The target to show tasks for in the task graph',
       type: 'string',
     })
     .option('focus', {
