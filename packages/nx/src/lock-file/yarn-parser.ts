@@ -141,7 +141,11 @@ function findVersion(
   ) {
     return snapshot.resolution.slice(packageName.length + 1);
   }
-  if (!isBerry && !satisfies(snapshot.version, versionRange)) {
+  if (
+    !isBerry &&
+    snapshot.resolved &&
+    !satisfies(snapshot.version, versionRange)
+  ) {
     return snapshot.resolved;
   }
   // otherwise it's a standard version
