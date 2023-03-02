@@ -5,6 +5,11 @@
     "url": "https://github.com/Ahryman40k/nx-vitepress/tree/main/packages/nx-vitepress"
   },
   {
+    "name": "@nightwatch/nx",
+    "description": "The NightwatchJS plugin allows your workspace to use the power of NightwatchJS for E2E and Component Testing on Desktop and Mobile",
+    "url": "https://github.com/nightwatchjs/nightwatch-plugin-nx/"
+  },
+  {
     "name": "@nxkit/playwright",
     "description": "The Playwright plugin allows your workspace to use the power of Playwright end-to-end testing",
     "url": "https://github.com/nxkit/nxkit"
