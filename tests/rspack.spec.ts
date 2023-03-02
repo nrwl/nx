@@ -1,7 +1,9 @@
 import {
   ensureNxProject,
+  listFiles,
   runNxCommandAsync,
   uniq,
+  updateFile,
 } from '@nrwl/nx-plugin/testing';
 
 describe('rspack e2e', () => {
@@ -26,8 +28,12 @@ describe('rspack e2e', () => {
     await runNxCommandAsync(
       `generate @nrwl/rspack:preset ${project} --unitTestRunner=jest --e2eTestRunner=cypress`
     );
-    let result = await runNxCommandAsync(`build ${project}`);
+    let result = await runNxCommandAsync(`build ${project}`, {
+      env: { NODE_ENV: 'production' },
+    });
     expect(result.stdout).toContain('Successfully ran target build');
+    // Make sure expected files are present.
+    expect(listFiles(`dist/${project}`)).toHaveLength(5);
 
     result = await runNxCommandAsync(`lint ${project}`);
     expect(result.stdout).toContain('Successfully ran target lint');
@@ -37,5 +43,16 @@ describe('rspack e2e', () => {
 
     result = await runNxCommandAsync(`e2e e2e`);
     expect(result.stdout).toContain('Successfully ran target e2e');
+
+    // Update app and make sure previous dist files are not present.
+    updateFile(`src/app/app.tsx`, (content) => {
+      return `${content}\nconsole.log('hello');
+    `;
+    });
+    result = await runNxCommandAsync(`build ${project}`, {
+      env: { NODE_ENV: 'production' },
+    });
+    expect(result.stdout).toContain('Successfully ran target build');
+    expect(listFiles(`dist/${project}`)).toHaveLength(5); // same length as before
   }, 120_000);
 });
