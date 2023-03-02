@@ -6,7 +6,7 @@ The `@nrwl/nx-cloud` requires the `NX_BRANCH` environment variables to be set. F
 
 ### NX_CLOUD_ACCESS_TOKEN
 
-You can also configure the access token by setting the `NX_CLOUD_ACCESS_TOKEN` environment variable. `NX_CLOUD_ACCESS_TOKEN` takes precedence over the `accessToken` property. It's common to have a read-only token stored in `nx.json` and a read-write token set via `NX_CLOUD_ACCESS_TOKEN` in CI.
+You can also configure the access token by setting the `NX_CLOUD_ACCESS_TOKEN` environment variable. `NX_CLOUD_ACCESS_TOKEN` takes precedence over the `accessToken` property. It's common to have a read-only token stored in `nx.json` and a read-write token set via `NX_CLOUD_ACCESS_TOKEN` in CI. If you are using this environment variable with Distributed Task Execution, the value on the main and agent jobs must match.
 
 ### NX_CLOUD_DISTRIBUTED_EXECUTION_AGENT_COUNT
 
