@@ -5048,10 +5048,10 @@
     url-loader "^4.1.1"
     webpack-merge "^5.8.0"
 
-"@nrwl/nx-cloud@15.2.0-beta.4":
-  version "15.2.0-beta.4"
-  resolved "https://registry.yarnpkg.com/@nrwl/nx-cloud/-/nx-cloud-15.2.0-beta.4.tgz#856bc0d255313150d77f9d3009a49cfc94db6793"
-  integrity sha512-t/URtO9XwSGFdJFBmjgj1o1rW0KFxU+/rqsbAtss4yMfySAcQl7vDKZEHrbPEMDhATU+xY2/JyFROfxCt1XuQQ==
+"@nrwl/nx-cloud@15.2.0-beta.5":
+  version "15.2.0-beta.5"
+  resolved "https://registry.yarnpkg.com/@nrwl/nx-cloud/-/nx-cloud-15.2.0-beta.5.tgz#eacf26ba72de737677f5e1afebfc07ad98eef8af"
+  integrity sha512-LyEnQAcYTZi+EVVrfjrPW8S0VT8LparpU6yJfbgz/SXZEkbs9GQyTFl/vr84qwIYSulRZ98e6zJQC2RqT42PPQ==
   dependencies:
     axios "^0.21.2"
     chalk "4.1.0"
