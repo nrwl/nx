@@ -17,7 +17,7 @@ export default async function* buildWebExecutor(
   context: ExecutorContext
 ): AsyncGenerator<ReactNativeBuildOutput> {
   logger.warn(
-    '@nrwl/expo:build-web is deprecated and will be removed in Nx 16. Please switch to expo:export --bundler webpack.'
+    '@nrwl/expo:build-web is deprecated and will be removed in Nx 16. Please switch to expo:export-web.'
   );
 
   const projectRoot =

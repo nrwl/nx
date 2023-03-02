@@ -7,7 +7,7 @@ import {
 } from '@nrwl/devkit';
 
 /**
- * Add new @expi/cli targets:
+ * Add new @expo/cli targets:
  * - add target prebuild
  * - add target install
  * - add target update
