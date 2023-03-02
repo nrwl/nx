@@ -2,11 +2,14 @@ import {
   checkFilesExist,
   cleanupProject,
   expectTestsPass,
+  killPorts,
   newProject,
+  promisifiedTreeKill,
   readJson,
   readResolvedConfiguration,
   runCLI,
   runCLIAsync,
+  runCommandUntil,
   uniq,
   updateFile,
 } from '@nrwl/e2e/utils';
@@ -15,9 +18,7 @@ import { join } from 'path';
 describe('expo', () => {
   let proj: string;
 
-  beforeEach(
-    () => (proj = newProject({ name: uniq('proj'), packageManager: 'npm' }))
-  );
+  beforeEach(() => (proj = newProject()));
   afterEach(() => cleanupProject());
 
   it('should test, lint, export, export-web and prebuild', async () => {
@@ -79,6 +80,20 @@ describe('expo', () => {
       `prebuild ${appName} --no-interactive`
     );
     expect(prebuildResult.combinedOutput).toContain('Config synced');
+
+    // run start command
+    const startProcess = await runCommandUntil(
+      `start ${appName} -- --port=8081`,
+      (output) => output.includes(`Web is waiting on http://localhost:8081`)
+    );
+
+    // port and process cleanup
+    try {
+      await promisifiedTreeKill(process.pid, 'SIGKILL');
+      await killPorts(8081);
+    } catch (err) {
+      expect(err).toBeFalsy();
+    }
   }, 1_000_000);
 
   it('should build publishable library', async () => {
