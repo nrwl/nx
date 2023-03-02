@@ -11,7 +11,8 @@ import { requireNx } from '../../nx';
 import { dirSync } from 'tmp';
 import { join } from 'path';
 
-const { readJson, updateJson, getPackageManagerCommand } = requireNx();
+const { readJson, updateJson, getPackageManagerCommand, workspaceRoot } =
+  requireNx();
 
 const UNIDENTIFIED_VERSION = 'UNIDENTIFIED_VERSION';
 const NON_SEMVER_TAGS = {
@@ -450,6 +451,7 @@ export function ensurePackage<T extends any = any>(
     stdio: [0, 1, 2],
   });
 
+  addToNodePath(join(workspaceRoot, 'node_modules'));
   addToNodePath(join(tempDir, 'node_modules'));
 
   // Re-initialize the added paths into require
@@ -472,6 +474,11 @@ function addToNodePath(dir: string) {
   const paths = process.env.NODE_PATH
     ? process.env.NODE_PATH.split(delimiter)
     : [];
+
+  // The path is already in the node path
+  if (paths.includes(dir)) {
+    return;
+  }
 
   // Add the tmp path
   paths.push(dir);
