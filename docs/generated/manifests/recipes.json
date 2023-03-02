@@ -1246,6 +1246,16 @@
         "tags": []
       },
       {
+        "id": "azure-last-successful-commit",
+        "name": "Find the Last Successful Commit in Azure Pipelines",
+        "description": "",
+        "file": "shared/recipes/azure-last-successful-commit",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/other/azure-last-successful-commit",
+        "tags": []
+      },
+      {
         "id": "troubleshoot-cache-misses",
         "name": "Troubleshoot Cache Misses",
         "description": "",
@@ -1558,6 +1568,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/other/dte",
+    "tags": []
+  },
+  "/recipes/other/azure-last-successful-commit": {
+    "id": "azure-last-successful-commit",
+    "name": "Find the Last Successful Commit in Azure Pipelines",
+    "description": "",
+    "file": "shared/recipes/azure-last-successful-commit",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/other/azure-last-successful-commit",
     "tags": []
   },
   "/recipes/other/troubleshoot-cache-misses": {

@@ -2718,6 +2718,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Find the Last Successful Commit in Azure Pipelines",
+            "path": "/recipes/other/azure-last-successful-commit",
+            "id": "azure-last-successful-commit",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Troubleshoot Cache Misses",
             "path": "/recipes/other/troubleshoot-cache-misses",
             "id": "troubleshoot-cache-misses",
@@ -2964,6 +2972,14 @@
         "name": "Large Repo and DTE",
         "path": "/recipes/other/dte",
         "id": "dte",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Find the Last Successful Commit in Azure Pipelines",
+        "path": "/recipes/other/azure-last-successful-commit",
+        "id": "azure-last-successful-commit",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

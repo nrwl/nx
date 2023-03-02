@@ -1143,7 +1143,11 @@
               "id": "dte",
               "file": "shared/examples/dte"
             },
-
+            {
+              "name": "Find the Last Successful Commit in Azure Pipelines",
+              "id": "azure-last-successful-commit",
+              "file": "shared/recipes/azure-last-successful-commit"
+            },
             {
               "name": "Troubleshoot Cache Misses",
               "id": "troubleshoot-cache-misses",
