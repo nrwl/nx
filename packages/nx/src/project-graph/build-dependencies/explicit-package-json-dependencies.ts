@@ -1,6 +1,10 @@
 import { defaultFileRead } from '../file-utils';
 import { join } from 'path';
-import { ProjectFileMap, ProjectGraph } from '../../config/project-graph';
+import {
+  DependencyType,
+  ProjectFileMap,
+  ProjectGraph,
+} from '../../config/project-graph';
 import { parseJson } from '../../utils/json';
 import { getImportPath, joinPathFragments } from '../../utils/path';
 import { ProjectsConfigurations } from '../../config/workspace-json-project-json';
@@ -88,12 +92,14 @@ function processPackageJson(
           sourceProjectName: sourceProject,
           targetProjectName: packageNameMap[d],
           sourceProjectFile: fileName,
+          type: DependencyType.static,
         });
       } else if (graph.externalNodes[`npm:${d}`]) {
         collectedDeps.push({
           sourceProjectName: sourceProject,
           targetProjectName: `npm:${d}`,
           sourceProjectFile: fileName,
+          type: DependencyType.static,
         });
       }
     });
