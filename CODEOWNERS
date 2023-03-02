@@ -6,8 +6,8 @@
 /tools/**/* @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 
 # Docs Site + Graph
-/docs/nx-cloud @StalkAltan @rarmatei @isaacplmann @juristr @bcabanes
 /docs @bcabanes @isaacplmann @juristr
+/docs/nx-cloud @StalkAltan @rarmatei @isaacplmann @juristr @bcabanes
 /graph/** @philipjfulcher @FrozenPandaz @bcabanes
 /images/shared @bcabanes @isaacplmann @juristr
 /nx-dev/** @bcabanes @isaacplmann
