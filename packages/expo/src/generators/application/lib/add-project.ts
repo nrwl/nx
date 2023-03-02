@@ -160,7 +160,7 @@ function getTargets(options: NormalizedSchema) {
   architect['export-web'] = {
     executor: '@nrwl/expo:export',
     options: {
-      bundler: 'webpack',
+      bundler: 'metro',
     },
   };
 
