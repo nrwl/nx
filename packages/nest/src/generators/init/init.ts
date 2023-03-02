@@ -10,14 +10,21 @@ export async function initGenerator(
   rawOptions: InitGeneratorOptions
 ): Promise<GeneratorCallback> {
   const options = normalizeOptions(rawOptions);
+  const tasks: GeneratorCallback[] = [];
+
   const nodeInitTask = await nodeInitGenerator(tree, options);
-  const installPackagesTask = addDependencies(tree);
+  tasks.push(nodeInitTask);
+
+  if (!options.skipPackageJson) {
+    const installPackagesTask = addDependencies(tree);
+    tasks.push(installPackagesTask);
+  }
 
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
 
-  return runTasksInSerial(nodeInitTask, installPackagesTask);
+  return runTasksInSerial(...tasks);
 }
 
 export default initGenerator;

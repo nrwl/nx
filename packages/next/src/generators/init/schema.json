@@ -27,6 +27,12 @@
       "type": "boolean",
       "default": false,
       "description": "Use JavaScript instead of TypeScript"
+    },
+    "skipPackageJson": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not add dependencies to `package.json`.",
+      "x-priority": "internal"
     }
   },
   "required": []

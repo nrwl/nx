@@ -16,4 +16,5 @@ export interface Schema {
   standaloneConfig?: boolean;
   swc?: boolean;
   customServer?: boolean;
+  skipPackageJson?: boolean;
 }

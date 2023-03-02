@@ -58,8 +58,10 @@ export async function nextInitGenerator(host: Tree, schema: InitSchema) {
   const reactTask = await reactInitGenerator(host, schema);
   tasks.push(reactTask);
 
-  const installTask = updateDependencies(host);
-  tasks.push(installTask);
+  if (!schema.skipPackageJson) {
+    const installTask = updateDependencies(host);
+    tasks.push(installTask);
+  }
 
   addGitIgnoreEntry(host);
 

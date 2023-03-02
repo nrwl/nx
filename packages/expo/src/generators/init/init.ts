@@ -59,12 +59,15 @@ export async function expoInitGenerator(host: Tree, schema: Schema) {
   }
 
   if (!schema.unitTestRunner || schema.unitTestRunner === 'jest') {
-    const jestTask = await jestInitGenerator(host, {});
+    const jestTask = await jestInitGenerator(host, schema);
     tasks.push(jestTask);
   }
 
   if (!schema.e2eTestRunner || schema.e2eTestRunner === 'detox') {
-    const detoxTask = await detoxInitGenerator(host, { skipFormat: true });
+    const detoxTask = await detoxInitGenerator(host, {
+      ...schema,
+      skipFormat: true,
+    });
     tasks.push(detoxTask);
   }
 

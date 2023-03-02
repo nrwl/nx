@@ -13,6 +13,7 @@ export async function detoxApplicationGenerator(host: Tree, schema: Schema) {
   const options = normalizeOptions(host, schema);
 
   const initTask = await detoxInitGenerator(host, {
+    ...options,
     skipFormat: true,
   });
   createFiles(host, options);
