@@ -3,8 +3,8 @@ title: Storybook 7 Migration Generator Examples
 description: This page contains examples for the @nrwl/storybook:migrate-7 generator.
 ---
 
-{% callout type="info" title="Available on Nx v15.8" %}
-This is a new feature available on Nx v15.8.0. If you are using an older version of Nx, please [upgrade](/packages/nx/documents/migrate).
+{% callout type="info" title="Available on Nx v15.9" %}
+This is a new feature available on Nx v15.9.0. If you are using an older version of Nx, please [upgrade](/packages/nx/documents/migrate).
 {% /callout %}
 
 {% callout type="warning" title="Storybook 7 is in beta" %}
