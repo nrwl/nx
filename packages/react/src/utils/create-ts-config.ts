@@ -1,6 +1,6 @@
 import { Tree } from 'nx/src/generators/tree';
 import * as shared from '@nrwl/js/src/utils/typescript/create-ts-config';
-import { writeJson } from 'nx/src/generators/utils/json';
+import { updateJson, writeJson } from 'nx/src/generators/utils/json';
 
 export function createTsConfig(
   host: Tree,
@@ -56,6 +56,21 @@ export function createTsConfig(
   }
 
   writeJson(host, `${projectRoot}/tsconfig.json`, json);
+
+  const tsconfigProjectPath = `${projectRoot}/tsconfig.${type}.json`;
+  if (options.bundler === 'vite' && host.exists(tsconfigProjectPath)) {
+    updateJson(host, tsconfigProjectPath, (json) => {
+      json.compilerOptions ??= {};
+
+      const types = new Set(json.compilerOptions.types ?? []);
+      types.add('node');
+      types.add('vite/client');
+
+      json.compilerOptions.types = Array.from(types);
+
+      return json;
+    });
+  }
 }
 
 export function extractTsConfigBase(host: Tree) {
