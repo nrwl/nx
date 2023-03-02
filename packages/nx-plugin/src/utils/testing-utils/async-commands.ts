@@ -43,7 +43,7 @@ export function runNxCommandAsync(
     silenceError: false,
   }
 ): Promise<{ stdout: string; stderr: string }> {
-  if (fileExists('package.json')) {
+  if (fileExists(tmpProjPath('package.json'))) {
     const pmc = getPackageManagerCommand();
     return runCommandAsync(`${pmc.exec} nx ${command}`, opts);
   } else if (process.platform === 'win32') {
