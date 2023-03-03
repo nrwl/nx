@@ -26,6 +26,8 @@ export async function affected(
     (TargetDependencyConfig | string)[]
   > = {}
 ): Promise<void> {
+  throw new Error('hello');
+
   performance.mark('command-execution-begins');
   workspaceConfigurationCheck();
 
