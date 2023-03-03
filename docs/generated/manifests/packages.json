@@ -189,15 +189,6 @@
         "path": "/packages/angular/generators/convert-tslint-to-eslint",
         "type": "generator"
       },
-      "/packages/angular/generators/downgrade-module": {
-        "description": "Sets up a Downgrade Module.",
-        "file": "generated/packages/angular/generators/downgrade-module.json",
-        "hidden": false,
-        "name": "downgrade-module",
-        "originalFilePath": "/packages/angular/src/generators/downgrade-module/schema.json",
-        "path": "/packages/angular/generators/downgrade-module",
-        "type": "generator"
-      },
       "/packages/angular/generators/init": {
         "description": "Initializes the `@nrwl/angular` plugin.",
         "file": "generated/packages/angular/generators/init.json",
