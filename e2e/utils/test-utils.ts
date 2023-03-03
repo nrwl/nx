@@ -1,0 +1,54 @@
+import { joinPathFragments } from '@nrwl/devkit';
+import {
+  getPackageManagerCommand,
+  runCLI,
+  runCLIAsync,
+  runCommand,
+} from './command-utils';
+import { uniq } from './create-project-utils';
+import { readFile } from './file-utils';
+
+type GeneratorsWithDefaultTests =
+  | '@nrwl/js:lib'
+  | '@nrwl/node:lib'
+  | '@nrwl/react:lib'
+  | '@nrwl/react:app'
+  | '@nrwl/next:app'
+  | '@nrwl/angular:app'
+  | '@nrwl/workspace:lib'
+  | '@nrwl/web:app';
+
+/**
+ * Runs the pass in generator and then runs test on
+ * the generated project to make sure the default tests pass.
+ */
+export async function expectJestTestsToPass(
+  generator: GeneratorsWithDefaultTests | string
+) {
+  const name = uniq('proj');
+  const generatedResults = runCLI(
+    `generate ${generator} ${name} --no-interactive`
+  );
+  expect(generatedResults).toContain(`jest.config.ts`);
+
+  const results = await runCLIAsync(`test ${name}`);
+  expect(results.combinedOutput).toContain('Test Suites: 1 passed, 1 total');
+}
+
+export function expectTestsPass(v: { stdout: string; stderr: string }) {
+  expect(v.stderr).toContain('Ran all test suites');
+  expect(v.stderr).not.toContain('fail');
+}
+
+export function expectNoAngularDevkit() {
+  const { list } = getPackageManagerCommand();
+  const result = runCommand(`${list} @angular-devkit/core`);
+  expect(result).not.toContain('@angular-devkit/core');
+}
+
+export function expectNoTsJestInJestConfig(appName: string) {
+  const jestConfig = readFile(
+    joinPathFragments('apps', appName, 'jest.config.ts')
+  );
+  expect(jestConfig).not.toContain('ts-jest');
+}
