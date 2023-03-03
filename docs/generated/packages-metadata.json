@@ -2765,6 +2765,15 @@
         "originalFilePath": "/packages/web/src/generators/application/schema.json",
         "path": "web/generators/application",
         "type": "generator"
+      },
+      {
+        "description": "Add a new static-serve target to a project.",
+        "file": "generated/packages/web/generators/static-config.json",
+        "hidden": false,
+        "name": "static-config",
+        "originalFilePath": "/packages/web/src/generators/static-serve/schema.json",
+        "path": "web/generators/static-config",
+        "type": "generator"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",

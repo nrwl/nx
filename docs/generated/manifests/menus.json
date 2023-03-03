@@ -6293,6 +6293,14 @@
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
+              },
+              {
+                "id": "static-config",
+                "path": "/packages/web/generators/static-config",
+                "name": "static-config",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,
