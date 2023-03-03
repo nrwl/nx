@@ -36,7 +36,8 @@ And add a new library as follows:
 nx g @nrwl/react:lib my-new-lib
 
 # If you want the library to be buildable or publishable to npm
-nx g @nrwl/react:lib my-new-lib --buildable
+nx g @nrwl/react:lib my-new-lib --bundler=vite
+nx g @nrwl/react:lib my-new-lib --bundler=rollup
 nx g @nrwl/react:lib my-new-lib \
 --publishable \
 --importPath=@myorg/my-new-lib
@@ -100,7 +101,7 @@ React applications can be build with:
 nx build my-new-app
 ```
 
-And if you generated a library with `--buildable`, then you can build a library as well:
+And if you generated a library with `--bundler` specified, then you can build a library as well:
 
 ```shell
 nx build my-new-lib
