@@ -33,16 +33,15 @@ export function updateCypressConfig(
       cypressJson.videosFolder = cypressJson.videosFolder.replace(
         project.root,
         schema.relativeToRootDestination
-      );  
+      );
     }
     // screenshotsFolder is not required as it has a default
     if (cypressJson.screenshotsFolder) {
       cypressJson.screenshotsFolder = cypressJson.screenshotsFolder.replace(
         project.root,
         schema.relativeToRootDestination
-      );  
+      );
     }
-    
 
     tree.write(cypressJsonPath, JSON.stringify(cypressJson));
     return tree;

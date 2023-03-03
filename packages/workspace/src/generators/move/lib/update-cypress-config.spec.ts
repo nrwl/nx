@@ -73,9 +73,11 @@ describe('updateCypressConfig', () => {
 
     updateCypressConfig(tree, schema, projectConfig);
 
-    expect(readJson(tree, '/libs/my-destination/cypress.json')).toEqual(cypressJson);
+    expect(readJson(tree, '/libs/my-destination/cypress.json')).toEqual(
+      cypressJson
+    );
   });
-  
+
   it('should handle updating cypress.config.ts', async () => {
     tree.write(
       '/libs/my-destination/cypress.config.ts',
