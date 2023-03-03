@@ -47,9 +47,3 @@ export function getRootTsConfigFileName(): string | null {
 
   return null;
 }
-
-export function getRootTsConfigPath(): string | null {
-  const tsConfigFileName = getRootTsConfigFileName();
-
-  return tsConfigFileName ? join(workspaceRoot, tsConfigFileName) : null;
-}
