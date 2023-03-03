@@ -28,25 +28,25 @@ fn hash_file(file: String) -> Option<FileData> {
 
 #[napi]
 fn hash_files(workspace_root: String) -> HashMap<String, String> {
-    let mut walker = WalkBuilder::new(&workspace_root);
     let workspace_root = Path::new(&workspace_root);
-    walker.add_ignore(workspace_root.join(".nxignore"));
-
+    let nx_ignore = workspace_root.join(".nxignore");
     let git_folder = workspace_root.join(".git");
-    // We should make sure to always ignore node_modules
     let node_folder = workspace_root.join("node_modules");
+
+    let mut walker = WalkBuilder::new(&workspace_root);
+    walker.hidden(false);
+    walker.add_custom_ignore_filename(&nx_ignore);
+
+    // We should make sure to always ignore node_modules and the .git folder
     walker.filter_entry(move |entry| {
         !(entry.path().starts_with(&git_folder) || entry.path().starts_with(&node_folder))
     });
 
-    // dot files are hidden by default. We want to make sure we include those here
-    walker.hidden(false);
-
-    let (sender, reciever) = unbounded::<(String, Vec<u8>)>();
+    let (sender, receiver) = unbounded::<(String, Vec<u8>)>();
 
     let receiver_thread = thread::spawn(move || {
         let mut collection: HashMap<String, String> = HashMap::new();
-        for (path, content) in reciever {
+        for (path, content) in receiver {
             collection.insert(path, xxh3::xxh3_64(&content).to_string());
         }
         collection
@@ -56,7 +56,6 @@ fn hash_files(workspace_root: String) -> HashMap<String, String> {
 
     walker.threads(cpus).build_parallel().run(|| {
         let tx = sender.clone();
-        let workspace_root = workspace_root.clone();
         Box::new(move |entry| {
             use ignore::WalkState::*;
 
@@ -69,7 +68,7 @@ fn hash_files(workspace_root: String) -> HashMap<String, String> {
                 return Continue;
             };
 
-            let Ok(file_path) = dir_entry.path().strip_prefix(&workspace_root) else {
+            let Ok(file_path) = dir_entry.path().strip_prefix(workspace_root) else {
                 return Continue;
             };
 
@@ -155,18 +154,33 @@ mod tests {
     fn handles_nx_ignore() {
         let temp_dir = setup_fs();
 
+        temp_dir
+            .child("nested")
+            .child("child.txt")
+            .write_str("data");
+        temp_dir
+            .child("nested")
+            .child("child-two")
+            .child("grand_child.txt")
+            .write_str("data");
+
         // add nxignore file with baz/
-        temp_dir.child(".nxignore").write_str("baz/").unwrap();
+        temp_dir
+            .child(".nxignore")
+            .write_str(
+                r"baz/
+nested/child.txt
+nested/child-two/
+",
+            )
+            .unwrap();
 
         let content = hash_files(temp_dir.display().to_string());
+        let mut file_names = content.iter().map(|c| c.0).collect::<Vec<_>>();
+        file_names.sort();
         assert_eq!(
-            content,
-            HashMap::from([
-                ("foo.txt".into(), "8455857314690418558".into()),
-                ("test.txt".into(), "6193209363630369380".into()),
-                ("bar.txt".into(), "1707056588989152788".into()),
-                (".nxignore".into(), "5786346484289078730".into())
-            ])
+            file_names,
+            vec!(".nxignore", "bar.txt", "foo.txt", "test.txt")
         );
     }
 }
