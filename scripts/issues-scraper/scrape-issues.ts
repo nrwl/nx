@@ -51,7 +51,8 @@ export async function scrapeIssues(): Promise<ReportData> {
     totalBugCount: totalBugs,
     totalIssueCount: total,
     untriagedIssueCount,
-    collectedDate: new Date().toISOString(),
+    // Format is like: Mar 03 2023
+    collectedDate: new Date().toDateString().split(' ').slice(1).join(' '),
   };
 }
 
