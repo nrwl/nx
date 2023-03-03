@@ -64,7 +64,7 @@ export class Workspaces {
       });
       if (matchingProject) return matchingProject;
     }
-    return nxJson.defaultProject;
+    return nxJson?.defaultProject;
   }
 
   readProjectsConfigurations(opts?: {
