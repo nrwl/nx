@@ -247,14 +247,15 @@ export function packageInstall(
 
 export function runNgNew(
   projectName: string,
-  packageManager = getSelectedPackageManager()
+  packageManager = getSelectedPackageManager(),
+  angularVersion = angularCliVersion
 ): string {
   projName = projectName;
 
   const npmMajorVersion = getNpmMajorVersion();
   const command = `npx ${
     +npmMajorVersion >= 7 ? '--yes' : ''
-  } @angular/cli@${angularCliVersion} new ${projectName} --package-manager=${packageManager}`;
+  } @angular/cli@${angularVersion} new ${projectName} --package-manager=${packageManager}`;
 
   return execSync(command, {
     cwd: e2eCwd,

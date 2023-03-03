@@ -1,6 +1,7 @@
 import { prompt } from 'enquirer';
 import { unlinkSync } from 'fs';
 import { dirname, join, relative, resolve } from 'path';
+import { gte } from 'semver';
 import { toNewFormat } from '../adapter/angular-json';
 import { NxJsonConfiguration } from '../config/nx-json';
 import {
@@ -10,7 +11,7 @@ import {
 import { fileExists, readJsonFile, writeJsonFile } from '../utils/fileutils';
 import { sortObjectByKeys } from '../utils/object-sort';
 import { output } from '../utils/output';
-import { PackageJson } from '../utils/package-json';
+import { PackageJson, readModulePackageJson } from '../utils/package-json';
 import { normalizePath } from '../utils/path';
 import {
   addDepsToPackageJson,
@@ -42,6 +43,24 @@ let workspaceTargets: string[];
 export async function addNxToAngularCliRepo() {
   repoRoot = process.cwd();
 
+  output.log({ title: '🧐 Checking versions compatibility' });
+  if (!isAngularVersionSupported()) {
+    output.error({
+      title:
+        '❌ The installed Angular version is not compatible with the latest version of Nx',
+      bodyLines: [
+        'Please look at https://nx.dev/recipes/adopting-nx/migration-angular#migrating-to-an-integrated-nx-monorepo ' +
+          'to check how to migrate legacy versions that are not supported by the latest Nx version.',
+      ],
+    });
+    process.exit(1);
+  }
+
+  output.success({
+    title:
+      '✅ The Angular version is compatible with the latest version of Nx!',
+  });
+
   output.log({ title: '🐳 Nx initialization' });
   const cacheableOperations = await collectCacheableOperations();
   const useNxCloud = parsedArgs.yes !== true ? await askAboutNxCloud() : false;
@@ -64,6 +83,13 @@ export async function addNxToAngularCliRepo() {
       'Learn more about the changes done to your workspace at https://nx.dev/recipes/adopting-nx/migration-angular.',
     ],
   });
+}
+
+function isAngularVersionSupported(): boolean {
+  const minAngularVersionSupported = '14.0.0';
+  const angularVersion =
+    readModulePackageJson('@angular/core').packageJson.version;
+  return gte(angularVersion, minAngularVersionSupported);
 }
 
 async function collectCacheableOperations(): Promise<string[]> {
