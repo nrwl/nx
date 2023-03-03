@@ -93,7 +93,7 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
   await jsLibraryGenerator(host, {
     ...schema,
     config: 'project',
-    buildable: true,
+    bundler: options.bundler,
     importPath: options.npmPackageName,
   });
 

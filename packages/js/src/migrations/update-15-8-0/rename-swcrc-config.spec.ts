@@ -60,9 +60,8 @@ describe('Rename swcrc file migration', () => {
 async function setup(tree: Tree) {
   await libraryGenerator(tree, {
     name: 'my-lib',
-    compiler: 'swc',
+    bundler: 'swc',
     unitTestRunner: 'jest',
-    buildable: true,
     config: 'project',
   });
 

@@ -439,9 +439,9 @@ describe('Nx Running Tests', () => {
       const libD = uniq('libd-rand');
 
       runCLI(`generate @nrwl/web:app ${appA}`);
-      runCLI(`generate @nrwl/js:lib ${libA} --buildable --defaults`);
-      runCLI(`generate @nrwl/js:lib ${libB} --buildable --defaults`);
-      runCLI(`generate @nrwl/js:lib ${libC} --buildable --defaults`);
+      runCLI(`generate @nrwl/js:lib ${libA} --bundler=tsc --defaults`);
+      runCLI(`generate @nrwl/js:lib ${libB} --bundler=tsc --defaults`);
+      runCLI(`generate @nrwl/js:lib ${libC} --bundler=tsc --defaults`);
       runCLI(`generate @nrwl/node:lib ${libD} --defaults`);
 
       // libA depends on libC

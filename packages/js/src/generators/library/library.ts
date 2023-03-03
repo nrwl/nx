@@ -25,7 +25,7 @@ import {
 } from '../../utils/typescript/ts-config';
 import { join } from 'path';
 import { addMinimalPublishScript } from '../../utils/minimal-publish-script';
-import { LibraryGeneratorSchema } from '../../utils/schema';
+import { LibraryGeneratorSchema, Bundler } from '../../utils/schema';
 import { addSwcConfig } from '../../utils/swc/add-swc-config';
 import { addSwcDependencies } from '../../utils/swc/add-swc-dependencies';
 import {
@@ -94,7 +94,7 @@ export async function projectGenerator(
   if (options.unitTestRunner === 'jest') {
     const jestCallback = await addJest(tree, options);
     tasks.push(jestCallback);
-    if (options.compiler === 'swc') {
+    if (options.bundler === 'swc' || options.bundler === 'rollup') {
       replaceJestConfig(tree, options, `${filesDir}/jest-config`);
     }
   } else if (
@@ -143,12 +143,16 @@ function addProject(
     tags: options.parsedTags,
   };
 
-  if (options.buildable && options.config !== 'npm-scripts') {
+  if (
+    options.bundler &&
+    options.bundler !== 'none' &&
+    options.config !== 'npm-scripts'
+  ) {
     const outputPath = destinationDir
       ? `dist/${destinationDir}/${options.projectDirectory}`
       : `dist/${options.projectDirectory}`;
     projectConfiguration.targets.build = {
-      executor: getBuildExecutor(options),
+      executor: getBuildExecutor(options.bundler),
       outputs: ['{options.outputPath}'],
       options: {
         outputPath,
@@ -162,12 +166,10 @@ function addProject(
 
     if (options.bundler === 'rollup') {
       projectConfiguration.targets.build.options.project = `${options.projectRoot}/package.json`;
-      if (options.compiler === 'swc') {
-        projectConfiguration.targets.build.options.compiler = 'swc';
-      }
+      projectConfiguration.targets.build.options.compiler = 'swc';
     }
 
-    if (options.compiler === 'swc' && options.skipTypeCheck) {
+    if (options.bundler === 'swc' && options.skipTypeCheck) {
       projectConfiguration.targets.build.options.skipTypeCheck = true;
     }
 
@@ -262,16 +264,16 @@ function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
     tmpl: '',
     offsetFromRoot: offsetFromRoot(options.projectRoot),
     rootTsConfigPath: getRelativePathToRootTsConfig(tree, options.projectRoot),
-    buildable: options.buildable === true,
+    buildable: options.bundler && options.bundler !== 'none',
     hasUnitTestRunner: options.unitTestRunner !== 'none',
   });
 
-  if (options.compiler === 'swc') {
+  if (options.bundler === 'swc' || options.bundler === 'rollup') {
     addSwcDependencies(tree);
     addSwcConfig(
       tree,
       options.projectRoot,
-      options.bundler === 'rollup' ? 'es6' : 'commonjs'
+      options.bundler === 'swc' ? 'commonjs' : 'es6'
     );
   } else if (options.includeBabelRc) {
     addBabelRc(tree, options);
@@ -299,7 +301,7 @@ function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
       };
       return json;
     });
-  } else if (!options.buildable) {
+  } else if (!options.bundler || options.bundler === 'none') {
     tree.delete(packageJsonPath);
   }
 
@@ -319,7 +321,12 @@ async function addJest(
     skipSerializers: true,
     testEnvironment: options.testEnvironment,
     skipFormat: true,
-    compiler: options.compiler,
+    compiler:
+      options.bundler === 'swc' || options.bundler === 'tsc'
+        ? options.bundler
+        : options.bundler === 'rollup'
+        ? 'swc'
+        : undefined,
   });
 }
 
@@ -352,24 +359,53 @@ function normalizeOptions(
   options: LibraryGeneratorSchema,
   destinationDir: string
 ): NormalizedSchema {
+  /**
+   * We are deprecating the compiler and the buildable options.
+   * However, we want to keep the existing behavior for now.
+   *
+   * So, if the user has not provided a bundler, we will use the compiler option, if any.
+   *
+   * If the user has not provided a bundler and no compiler, but has set buildable to true,
+   * we will use tsc, since that is the compiler the old generator used to default to, if buildable was true
+   * and no compiler was provided.
+   *
+   * If the user has not provided a bundler and no compiler, and has not set buildable to true, then
+   * set the bundler to none.
+   *
+   * If it's publishable, we need to build the code before publishing it, so again
+   * we default to `tsc`. In the previous version of this, it would set `buildable` to true
+   * and that would default to `tsc`.
+   */
+
+  options.bundler =
+    options.bundler ??
+    options.compiler ??
+    (options.buildable || options.publishable ? 'tsc' : 'none');
+
   if (options.publishable) {
     if (!options.importPath) {
       throw new Error(
         `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`
       );
     }
-    options.buildable = true;
+
+    if (options.bundler === 'none') {
+      // It must be buildable, so default to tsc
+      options.bundler = 'tsc';
+    }
   }
 
   const { Linter } = require('@nrwl/linter');
   if (options.config === 'npm-scripts') {
     options.unitTestRunner = 'none';
     options.linter = Linter.None;
-    options.buildable = false;
+    options.bundler = 'none';
   }
-  options.compiler ??= 'tsc';
 
-  if (options.compiler === 'swc' && options.skipTypeCheck == null) {
+  if (
+    (options.bundler === 'swc' || options.bundler === 'rollup') &&
+    options.skipTypeCheck == null
+  ) {
     options.skipTypeCheck = false;
   }
 
@@ -449,18 +485,26 @@ function addProjectDependencies(
     );
   }
 
+  // Vite is being installed in the next step if bundler is vite
+
   // noop
   return () => {};
 }
 
-function getBuildExecutor(options: NormalizedSchema) {
-  switch (options.bundler) {
+function getBuildExecutor(bundler: Bundler) {
+  switch (bundler) {
     case 'esbuild':
       return `@nrwl/esbuild:esbuild`;
     case 'rollup':
       return `@nrwl/rollup:rollup`;
+    case 'swc':
+    case 'tsc':
+      return `@nrwl/js:${bundler}`;
+    case 'vite':
+      return `@nrwl/vite:build`;
+    case 'none':
     default:
-      return `@nrwl/js:${options.compiler}`;
+      return undefined;
   }
 }
 

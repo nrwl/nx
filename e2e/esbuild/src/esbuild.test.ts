@@ -101,7 +101,7 @@ describe('EsBuild Plugin', () => {
     const parentLib = uniq('parent-lib');
     const childLib = uniq('child-lib');
     runCLI(`generate @nrwl/js:lib ${parentLib} --bundler=esbuild`);
-    runCLI(`generate @nrwl/js:lib ${childLib} --buildable=false`);
+    runCLI(`generate @nrwl/js:lib ${childLib} --bundler=none`);
     updateFile(
       `libs/${parentLib}/src/index.ts`,
       `

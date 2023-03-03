@@ -708,7 +708,7 @@ describe('lib', () => {
         ...defaultOptions,
         name: 'myLib',
         unitTestRunner: 'jest',
-        compiler: 'swc',
+        bundler: 'swc',
         js: true,
       });
 
@@ -727,7 +727,101 @@ describe('lib', () => {
       expect(readme).toContain('nx test my-lib');
     });
 
-    describe('--buildable', () => {
+    describe('--buildable deprecation - replace with other options', () => {
+      it('should NOT generate the build target if bundler is none', async () => {
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          name: 'myLib',
+          bundler: 'none',
+        });
+
+        const config = readProjectConfiguration(tree, 'my-lib');
+        expect(config.targets.build).not.toBeDefined();
+      });
+
+      it('should NOT generate the build target if bundler is undefined', async () => {
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          name: 'myLib',
+        });
+
+        const config = readProjectConfiguration(tree, 'my-lib');
+        expect(config.targets.build).not.toBeDefined();
+      });
+
+      it('should generate the build target', async () => {
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          name: 'myLib',
+          bundler: 'tsc',
+        });
+
+        const config = readProjectConfiguration(tree, 'my-lib');
+        expect(config.targets.build).toEqual({
+          executor: '@nrwl/js:tsc',
+          options: {
+            assets: ['libs/my-lib/*.md'],
+            main: 'libs/my-lib/src/index.ts',
+            outputPath: 'dist/libs/my-lib',
+            tsConfig: 'libs/my-lib/tsconfig.lib.json',
+          },
+          outputs: ['{options.outputPath}'],
+        });
+      });
+
+      it('should generate the build target for swc', async () => {
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          name: 'myLib',
+          bundler: 'swc',
+        });
+
+        const config = readProjectConfiguration(tree, 'my-lib');
+        expect(config.targets.build).toEqual({
+          executor: '@nrwl/js:swc',
+          options: {
+            assets: ['libs/my-lib/*.md'],
+            main: 'libs/my-lib/src/index.ts',
+            outputPath: 'dist/libs/my-lib',
+            tsConfig: 'libs/my-lib/tsconfig.lib.json',
+          },
+          outputs: ['{options.outputPath}'],
+        });
+      });
+
+      it('should generate swcrc for swc', async () => {
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          name: 'myLib',
+          bundler: 'swc',
+        });
+
+        expect(tree.exists('libs/my-lib/.swcrc')).toBeTruthy();
+      });
+
+      it('should setup jest project using swc', async () => {
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          name: 'myLib',
+          bundler: 'swc',
+        });
+
+        const jestConfig = tree.read('libs/my-lib/jest.config.ts').toString();
+        expect(jestConfig).toContain('@swc/jest');
+      });
+
+      it('should generate a package.json file', async () => {
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          name: 'myLib',
+          bundler: 'tsc',
+        });
+
+        expect(tree.exists('libs/my-lib/package.json')).toBeTruthy();
+      });
+    });
+
+    describe('--buildable -- make sure old schema still works - no breaking change', () => {
       it('should generate the build target', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
@@ -805,12 +899,11 @@ describe('lib', () => {
       });
     });
 
-    describe('bundler=rollup', () => {
+    describe('bundler=rollup - no compiler', () => {
       it('should generate correct options for build', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
           name: 'myLib',
-          buildable: true,
           bundler: 'rollup',
         });
 
@@ -820,13 +913,11 @@ describe('lib', () => {
         );
       });
 
-      it('should set compiler to swc', async () => {
+      it('should always set compiler to swc if bundler is rollup', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
           name: 'myLib',
-          buildable: true,
           bundler: 'rollup',
-          compiler: 'swc',
         });
 
         const config = readProjectConfiguration(tree, 'my-lib');
@@ -841,7 +932,7 @@ describe('lib', () => {
           name: 'myLib',
           publishable: true,
           importPath: '@proj/my-lib',
-          compiler: 'tsc',
+          bundler: 'tsc',
         });
 
         const config = readProjectConfiguration(tree, 'my-lib');
@@ -863,7 +954,7 @@ describe('lib', () => {
           name: 'myLib',
           publishable: true,
           importPath: '@proj/my-lib',
-          compiler: 'tsc',
+          bundler: 'tsc',
         });
 
         const config = readProjectConfiguration(tree, 'my-lib');
@@ -883,7 +974,7 @@ describe('lib', () => {
           name: 'myLib',
           publishable: true,
           importPath: '@proj/my-lib',
-          compiler: 'tsc',
+          bundler: 'tsc',
         });
 
         expect(tree.exists('tools/scripts/publish.mjs')).toBeTruthy();
@@ -911,11 +1002,11 @@ describe('lib', () => {
         expect(tree.exists('libs/my-lib/.babelrc')).toBeFalsy();
       });
 
-      it('should not generate a .babelrc when compiler is swc (even if flag is set to true)', async () => {
+      it('should not generate a .babelrc when bundler is swc (even if flag is set to true)', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
           name: 'myLib',
-          compiler: 'swc',
+          bundler: 'swc',
           includeBabelRc: true,
         });
 
