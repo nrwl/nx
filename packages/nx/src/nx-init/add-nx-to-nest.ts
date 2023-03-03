@@ -281,7 +281,7 @@ function getJestOptions(
   delete jestOptions['testRegex'];
   jestOptions['testMatch'] = isE2E
     ? ['<rootDir>/test/**/?(*.)+(e2e-spec|e2e-test).[jt]s?(x)']
-    : ['<rootDir>/src/**/?(*.)+(spec|test).[jt]s?(x)'];
+    : ['<rootDir>/src/**/*(*.)@(spec|test).[jt]s?(x)'];
 
   // set coverage directory for unit test
   if (!isE2E) {
