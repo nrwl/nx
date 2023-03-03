@@ -1,4 +1,4 @@
-import { ensurePackage, workspaceRoot } from '@nrwl/devkit';
+import { ensurePackage, Tree, workspaceRoot } from '@nrwl/devkit';
 import { dirname } from 'path';
 import type * as ts from 'typescript';
 import { typescriptVersion } from '../utils/versions';
@@ -86,4 +86,23 @@ export function ensureTypescript() {
     'typescript',
     typescriptVersion
   );
+}
+
+import {
+  getRelativePathToRootTsConfig as _getRelativePathToRootTsConfig,
+  getRootTsConfigPathInTree as _getRootTsConfigPathInTree,
+} from './ts-config';
+
+/**
+ * @deprecated Please import this from @nrwl/js instead. This function will be removed in v17
+ */
+export function getRelativePathToRootTsConfig(tree: Tree, targetPath: string) {
+  return _getRelativePathToRootTsConfig(tree, targetPath);
+}
+
+/**
+ * @deprecated Please import this from @nrwl/js instead. This function will be removed in v17
+ */
+export function getRootTsConfigPathInTree(tree: Tree) {
+  return _getRootTsConfigPathInTree(tree);
 }
