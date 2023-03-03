@@ -43,16 +43,19 @@ describe('nx init (Angular CLI)', () => {
     checkFilesExist('nx.json', 'project.json');
 
     // check build
-    const coldBuildOutput = runCLI('build');
+    const coldBuildOutput = runCLI(`build ${project} --outputHashing none`);
+    expect(coldBuildOutput).toContain(
+      `> nx run ${project}:build:production --outputHashing none`
+    );
     expect(coldBuildOutput).toContain(
       `Successfully ran target build for project ${project}`
     );
     checkFilesExist(`dist/${project}/main.js`);
 
     // run build again to check is coming from cache
-    const cachedBuildOutput = runCLI('build');
+    const cachedBuildOutput = runCLI(`build ${project} --outputHashing none`);
     expect(cachedBuildOutput).toContain(
-      `> nx run ${project}:build:production  [local cache]`
+      `> nx run ${project}:build:production --outputHashing none  [local cache]`
     );
     expect(cachedBuildOutput).toContain('Nx read the output from the cache');
     expect(cachedBuildOutput).toContain(
