@@ -2,6 +2,7 @@ import { getPackageManagerCommand } from '../utils/package-manager';
 import { execSync } from 'child_process';
 import { isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { output } from '../utils/output';
+import { runNxSync } from '../utils/child-process';
 
 export async function viewLogs(): Promise<number> {
   const pmc = getPackageManagerCommand();
@@ -48,10 +49,9 @@ export async function viewLogs(): Promise<number> {
       output.log({
         title: 'Connecting to Nx Cloud',
       });
-      execSync(
-        `${pmc.exec} nx g @nrwl/nx-cloud:init --installation-source=view-logs`,
-        { stdio: 'ignore' }
-      );
+      runNxSync(`g @nrwl/nx-cloud:init --installation-source=view-logs`, {
+        stdio: 'ignore',
+      });
     } catch (e) {
       output.log({
         title: 'Failed to connect to Nx Cloud',
