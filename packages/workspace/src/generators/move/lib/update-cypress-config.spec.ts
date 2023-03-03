@@ -59,6 +59,23 @@ describe('updateCypressConfig', () => {
     });
   });
 
+  it('should noop if the videos and screenshots folders are not defined', async () => {
+    const cypressJson = {
+      fileServerFolder: '.',
+      fixturesFolder: './src/fixtures',
+      integrationFolder: './src/integration',
+      pluginsFile: './src/plugins/index',
+      supportFile: false,
+      video: false,
+      chromeWebSecurity: false,
+    };
+    writeJson(tree, '/libs/my-destination/cypress.json', cypressJson);
+
+    updateCypressConfig(tree, schema, projectConfig);
+
+    expect(readJson(tree, '/libs/my-destination/cypress.json')).toEqual(cypressJson);
+  });
+  
   it('should handle updating cypress.config.ts', async () => {
     tree.write(
       '/libs/my-destination/cypress.config.ts',
