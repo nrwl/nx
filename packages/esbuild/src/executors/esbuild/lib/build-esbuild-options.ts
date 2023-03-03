@@ -2,6 +2,7 @@ import * as esbuild from 'esbuild';
 import * as path from 'path';
 import { join, parse } from 'path';
 import {
+  normalizePath,
   ExecutorContext,
   joinPathFragments,
   ProjectGraphProjectNode,
@@ -197,6 +198,8 @@ export function getRegisterFileContent(
   mainFile: string,
   outExtension = '.js'
 ) {
+  mainFile = normalizePath(mainFile);
+
   // Sort by longest prefix so imports match the most specific path.
   const sortedKeys = Object.keys(paths).sort(
     (a: string, b: string) => getPrefixLength(b) - getPrefixLength(a)
