@@ -306,7 +306,7 @@ describe('Build Node apps', () => {
     runCLI(`generate @nrwl/node:app ${nodeapp} --bundler=webpack`);
 
     const jslib = uniq('jslib');
-    runCLI(`generate @nrwl/js:lib ${jslib} --buildable`);
+    runCLI(`generate @nrwl/js:lib ${jslib} --bundler=tsc`);
 
     updateFile(
       `apps/${nodeapp}/src/main.ts`,

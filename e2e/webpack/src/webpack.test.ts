@@ -1,7 +1,6 @@
 import {
   cleanupProject,
   newProject,
-  readFile,
   rmDist,
   runCLI,
   runCommand,
@@ -16,7 +15,7 @@ describe('Webpack Plugin', () => {
 
   it('should be able to setup project to build node programs with webpack and different compilers', async () => {
     const myPkg = uniq('my-pkg');
-    runCLI(`generate @nrwl/js:lib ${myPkg} --buildable=false`);
+    runCLI(`generate @nrwl/js:lib ${myPkg} --bundler=none`);
     updateFile(`libs/${myPkg}/src/index.ts`, `console.log('Hello');\n`);
 
     // babel (default)

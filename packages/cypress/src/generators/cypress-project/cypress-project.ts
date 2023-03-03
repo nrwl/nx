@@ -21,10 +21,7 @@ import {
 } from '@nrwl/devkit';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
-import {
-  initGenerator as jsInitGenerator,
-  getRelativePathToRootTsConfig,
-} from '@nrwl/js';
+import { getRelativePathToRootTsConfig } from '@nrwl/js';
 import {
   globalJavaScriptOverrides,
   globalTypeScriptOverrides,

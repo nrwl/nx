@@ -37,10 +37,10 @@ describe('js e2e', () => {
 
   it('should allow wildcard ts path alias', async () => {
     const base = uniq('base');
-    runCLI(`generate @nrwl/js:lib ${base} --buildable --no-interactive`);
+    runCLI(`generate @nrwl/js:lib ${base} --bundler=tsc --no-interactive`);
 
     const lib = uniq('lib');
-    runCLI(`generate @nrwl/js:lib ${lib} --buildable --no-interactive`);
+    runCLI(`generate @nrwl/js:lib ${lib} --bundler=tsc --no-interactive`);
 
     updateFile(`libs/${base}/src/index.ts`, () => {
       return `

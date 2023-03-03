@@ -28,9 +28,7 @@ describe('js e2e', () => {
 
   it('should create libs with js executors (--compiler=tsc)', async () => {
     const lib = uniq('lib');
-    runCLI(
-      `generate @nrwl/js:lib ${lib} --buildable --compiler=tsc --no-interactive`
-    );
+    runCLI(`generate @nrwl/js:lib ${lib} --bundler=tsc --no-interactive`);
     const libPackageJson = readJson(`libs/${lib}/package.json`);
     expect(libPackageJson.scripts).toBeUndefined();
 
@@ -90,9 +88,7 @@ describe('js e2e', () => {
     libBuildProcess.kill();
 
     const parentLib = uniq('parentlib');
-    runCLI(
-      `generate @nrwl/js:lib ${parentLib} --buildable --compiler=tsc --no-interactive`
-    );
+    runCLI(`generate @nrwl/js:lib ${parentLib} --bundler=tsc --no-interactive`);
     const parentLibPackageJson = readJson(`libs/${parentLib}/package.json`);
     expect(parentLibPackageJson.scripts).toBeUndefined();
     expect((await runCLIAsync(`test ${parentLib}`)).combinedOutput).toContain(
@@ -173,9 +169,7 @@ describe('package.json updates', () => {
   it('should update package.json with detected dependencies', async () => {
     const pmc = getPackageManagerCommand();
     const lib = uniq('lib');
-    runCLI(
-      `generate @nrwl/js:lib ${lib} --buildable --compiler=tsc --no-interactive`
-    );
+    runCLI(`generate @nrwl/js:lib ${lib} --bundler=tsc --no-interactive`);
 
     // Add a dependency for this lib to check the built package.json
     runCommand(`${pmc.addProd} react`);

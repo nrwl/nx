@@ -19,35 +19,39 @@ describe('inlining', () => {
   afterEach(() => cleanupProject());
 
   it.each(['tsc', 'swc'])(
-    'should inline libraries with --compiler=%s',
-    async (compiler) => {
+    'should inline libraries with --bundler=%s',
+    async (bundler) => {
       const parent = uniq('parent');
       runCLI(
-        `generate @nrwl/js:lib ${parent} --compiler=${compiler} --no-interactive`
+        `generate @nrwl/js:lib ${parent} --bundler=${bundler} --no-interactive`
       );
 
       const buildable = uniq('buildable');
-      runCLI(`generate @nrwl/js:lib ${buildable} --no-interactive`);
+      runCLI(
+        `generate @nrwl/js:lib ${buildable} --bundler=${bundler} --no-interactive`
+      );
 
       const buildableTwo = uniq('buildabletwo');
-      runCLI(`generate @nrwl/js:lib ${buildableTwo} --no-interactive`);
+      runCLI(
+        `generate @nrwl/js:lib ${buildableTwo} --bundler=${bundler} --no-interactive`
+      );
 
       const nonBuildable = uniq('nonbuildable');
       runCLI(
-        `generate @nrwl/js:lib ${nonBuildable} --buildable=false --no-interactive`
+        `generate @nrwl/js:lib ${nonBuildable} --bundler=none --no-interactive`
       );
 
       updateFile(`libs/${parent}/src/lib/${parent}.ts`, () => {
         return `
-import { ${buildable} } from '@${scope}/${buildable}';
-import { ${buildableTwo} } from '@${scope}/${buildableTwo}';
-import { ${nonBuildable} } from '@${scope}/${nonBuildable}';
+          import { ${buildable} } from '@${scope}/${buildable}';
+          import { ${buildableTwo} } from '@${scope}/${buildableTwo}';
+          import { ${nonBuildable} } from '@${scope}/${nonBuildable}';
 
-export function ${parent}() {
-  ${buildable}();
-  ${buildableTwo}();
-  ${nonBuildable}();
-}
+          export function ${parent}() {
+            ${buildable}();
+            ${buildableTwo}();
+            ${nonBuildable}();
+          }
         `;
       });
 
@@ -98,33 +102,33 @@ export function ${parent}() {
 
   it('should inline nesting libraries', async () => {
     const parent = uniq('parent');
-    runCLI(`generate @nrwl/js:lib ${parent} --no-interactive`);
+    runCLI(`generate @nrwl/js:lib ${parent} --bundler=tsc --no-interactive`);
 
     const child = uniq('child');
-    runCLI(`generate @nrwl/js:lib ${child} --buildable=false --no-interactive`);
+    runCLI(`generate @nrwl/js:lib ${child} --bundler=none --no-interactive`);
 
     const grandChild = uniq('grandchild');
     runCLI(
-      `generate @nrwl/js:lib ${grandChild} --buildable=false --no-interactive`
+      `generate @nrwl/js:lib ${grandChild} --bundler=none --no-interactive`
     );
 
     updateFile(`libs/${parent}/src/lib/${parent}.ts`, () => {
       return `
-import { ${child} } from '@${scope}/${child}';
+        import { ${child} } from '@${scope}/${child}';
 
-export function ${parent}() {
-  ${child}();
-}
+        export function ${parent}() {
+          ${child}();
+        }
         `;
     });
 
     updateFile(`libs/${child}/src/lib/${child}.ts`, () => {
       return `
-import { ${grandChild} } from '@${scope}/${grandChild}';
+        import { ${grandChild} } from '@${scope}/${grandChild}';
 
-export function ${child}() {
-  ${grandChild}();
-}
+        export function ${child}() {
+          ${grandChild}();
+        }
         `;
     });
 

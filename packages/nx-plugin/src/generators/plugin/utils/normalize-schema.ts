@@ -17,6 +17,7 @@ export interface NormalizedSchema extends Schema {
   parsedTags: string[];
   npmScope: string;
   npmPackageName: string;
+  bundler: 'swc' | 'tsc';
 }
 export function normalizeOptions(
   host: Tree,
@@ -44,6 +45,7 @@ export function normalizeOptions(
 
   return {
     ...options,
+    bundler: options.compiler ?? 'tsc',
     fileName,
     npmScope,
     libsDir,
