@@ -24,7 +24,7 @@ export function normalizeOptions(
 ): NormalizedSchema {
   // --monorepo takes precedence over --rootProject
   // This won't be needed once we add --bundler=rspack to the @nrwl/react:app preset
-  const rootProject = !options.monorepo && (options.rootProject ?? true);
+  const rootProject = !options.monorepo && options.rootProject;
   const appDirectory = normalizeDirectory(options);
   const appProjectName = normalizeProjectName(options);
   const e2eProjectName = options.rootProject
