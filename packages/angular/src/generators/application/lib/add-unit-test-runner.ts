@@ -4,7 +4,6 @@ import type { NormalizedSchema } from './normalized-schema';
 import { jestProjectGenerator } from '@nrwl/jest';
 
 import { UnitTestRunner } from '../../../utils/test-runners';
-import karmaProjectGenerator from '../../karma-project/karma-project';
 
 export async function addUnitTestRunner(host: Tree, options: NormalizedSchema) {
   if (options.unitTestRunner === UnitTestRunner.Jest) {
@@ -15,11 +14,6 @@ export async function addUnitTestRunner(host: Tree, options: NormalizedSchema) {
       skipSerializers: false,
       skipPackageJson: options.skipPackageJson,
       rootProject: options.rootProject,
-    });
-  } else if (options.unitTestRunner === UnitTestRunner.Karma) {
-    await karmaProjectGenerator(host, {
-      project: options.name,
-      skipFormat: true,
     });
   }
 }

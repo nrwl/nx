@@ -16,7 +16,6 @@ import { initGenerator as jsInitGenerator } from '@nrwl/js';
 
 import { backwardCompatibleVersions } from '../../../utils/backward-compatible-versions';
 import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
-import { karmaGenerator } from '../../karma/karma';
 import {
   addDependenciesToPackageJsonIfDontExist,
   getInstalledPackageVersion,
@@ -159,10 +158,6 @@ async function addUnitTestRunner(
   options: Schema
 ): Promise<GeneratorCallback> {
   switch (options.unitTestRunner) {
-    case UnitTestRunner.Karma:
-      return await karmaGenerator(tree, {
-        skipPackageJson: options.skipPackageJson,
-      });
     case UnitTestRunner.Jest:
       if (!options.skipPackageJson) {
         addDependenciesToPackageJsonIfDontExist(

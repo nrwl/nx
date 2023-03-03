@@ -30,7 +30,6 @@ import {
   typesJasminewd2Version,
   zoneJsVersion,
 } from '../../utils/versions';
-import { karmaGenerator } from '../karma/karma';
 import {
   addDependenciesToPackageJsonIfDontExist,
   getGeneratorDirectoryForInstalledAngularVersion,
@@ -182,10 +181,6 @@ async function addUnitTestRunner(
   options: Schema
 ): Promise<GeneratorCallback> {
   switch (options.unitTestRunner) {
-    case UnitTestRunner.Karma:
-      return await karmaGenerator(tree, {
-        skipPackageJson: options.skipPackageJson,
-      });
     case UnitTestRunner.Jest:
       if (!options.skipPackageJson) {
         addDependenciesToPackageJsonIfDontExist(

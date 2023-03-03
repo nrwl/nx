@@ -25,11 +25,6 @@ export const tsNodeVersion = '10.9.1';
 
 export const jestPresetAngularVersion = '~13.0.0';
 export const protractorVersion = '~7.0.0';
-export const karmaVersion = '~6.4.0';
-export const karmaChromeLauncherVersion = '~3.1.0';
-export const karmaCoverageVersion = '~2.2.0';
-export const karmaJasmineVersion = '~5.1.0';
-export const karmaJasmineHtmlReporterVersion = '~2.0.0';
 export const jasmineCoreVersion = '~4.2.0';
 export const jasmineSpecReporterVersion = '~7.0.0';
 export const typesJasmineVersion = '~4.0.0';

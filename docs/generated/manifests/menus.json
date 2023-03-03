@@ -3708,22 +3708,6 @@
                 "disableCollapsible": false
               },
               {
-                "id": "karma",
-                "path": "/packages/angular/generators/karma",
-                "name": "karma",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "karma-project",
-                "path": "/packages/angular/generators/karma-project",
-                "name": "karma-project",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
                 "id": "library",
                 "path": "/packages/angular/generators/library",
                 "name": "library",
