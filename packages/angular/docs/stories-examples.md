@@ -1,4 +1,4 @@
-This generator will generate stories for all your components in your project.
+This generator will generate stories for all your components in your project. The stories will be generated using [Component Story Format 3 (CSF3)](https://storybook.js.org/blog/storybook-csf3-is-here/).
 
 ```bash
 nx g @nrwl/angular:stories project-name

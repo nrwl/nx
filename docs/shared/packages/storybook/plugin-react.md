@@ -33,7 +33,7 @@ module.exports = {
 
 ## Auto-generate Stories
 
-The `@nrwl/react:storybook-configuration` generator has the option to automatically generate `*.stories.ts` files for each component declared in the library.
+The `@nrwl/react:storybook-configuration` generator has the option to automatically generate `*.stories.ts` files for each component declared in the library. The stories will be generated using [Component Story Format 3 (CSF3)](https://storybook.js.org/blog/storybook-csf3-is-here/).
 
 ```text
 <some-folder>/
@@ -108,44 +108,50 @@ Changing args in the url query parameters allows your Cypress tests to test diff
 
 ## Example Files
 
-**\*.stories.tsx file**
+Let's take for a example a library in your workspace, under `libs/feature/ui`, called `feature-ui` with a component, called `my-button`.
 
-```typescript
-import { Story, Meta } from '@storybook/react';
-import { Button, ButtonProps } from './button';
+### Story file
 
-export default {
-  component: Button,
-  title: 'Button',
-} as Meta;
+The Storybook configuration generator would generate a Story file that looks like this:
 
-const Template: Story<ButtonProps> = (args) => <Button {...args} />;
+```typescript {% fileName="libs/feature/ui/src/lib/my-button/my-button.stories.tsx" %}
+import type { Meta } from '@storybook/react';
+import { MyButton } from './my-button';
 
-export const Primary = Template.bind({});
-Primary.args = {
-  text: 'Click me!',
-  padding: 0,
-  style: 'default',
+const Story: Meta<typeof MyButton> = {
+  component: MyButton,
+  title: 'MyButton',
+};
+export default Story;
+
+export const Primary = {
+  args: {
+    text: 'Click me!',
+    padding: 0,
+    style: 'default',
+  },
 };
 ```
 
-**Cypress test file**
+### Cypress test file
 
-> Depending on your Cypress version, the file will end with .spec.ts or .cy.ts
+For the library described above, Nx would generate an E2E project called `feature-ui-e2e` with a Cypress test file that looks like this:
 
-```typescript
-describe('shared-ui', () => {
+```typescript {% fileName="apps/feature-ui-e2e/src/e2e/my-button/my-button.cy.ts" %}
+describe('feature-ui: MyButton component', () => {
   beforeEach(() =>
     cy.visit(
-      '/iframe.html?id=buttoncomponent--primary&args=text:Click+me!;padding;style:default'
+      '/iframe.html?id=mybutton--primary&args=text:Click+me!;padding;style:default'
     )
   );
 
-  it('should render the component', () => {
-    cy.get('storybook-trial-button').should('exist');
+  it('should contain the right text', () => {
+    cy.get('button').should('contain', 'Click me!');
   });
 });
 ```
+
+Depending on your Cypress version, the file will end with `.spec.ts` or `.cy.ts`.
 
 ## More Documentation
 
@@ -159,3 +165,5 @@ Here's more information on common migration scenarios for Storybook with Nx. For
 
 - [Upgrading to Storybook 6](/packages/storybook/documents/upgrade-storybook-v6-react)
 - [Migrate to the Nx React Storybook Addon](/packages/storybook/documents/migrate-webpack-final-react)
+- [Set up Storybook version 7](/packages/storybook/documents/storybook-7-setup)
+- [Migrate to Storybook version 7](/packages/storybook/generators/migrate-7)
