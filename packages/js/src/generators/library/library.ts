@@ -158,9 +158,7 @@ function addProject(
         outputPath,
         main: `${options.projectRoot}/src/index` + (options.js ? '.js' : '.ts'),
         tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
-        // TODO(jack): assets for rollup have validation that we need to fix (assets must be under <project-root>/src)
-        assets:
-          options.bundler === 'rollup' ? [] : [`${options.projectRoot}/*.md`],
+        assets: [],
       },
     };
 
@@ -171,6 +169,17 @@ function addProject(
 
     if (options.bundler === 'swc' && options.skipTypeCheck) {
       projectConfiguration.targets.build.options.skipTypeCheck = true;
+    }
+
+    if (
+      !options.minimal &&
+      // TODO(jack): assets for rollup have validation that we need to fix (assets must be under <project-root>/src)
+      options.bundler !== 'rollup'
+    ) {
+      projectConfiguration.targets.build.options.assets ??= [];
+      projectConfiguration.targets.build.options.assets.push(
+        joinPathFragments(options.projectRoot, '*.md')
+      );
     }
 
     if (options.publishable) {
@@ -303,6 +312,10 @@ function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
     });
   } else if (!options.bundler || options.bundler === 'none') {
     tree.delete(packageJsonPath);
+  }
+
+  if (options.minimal) {
+    tree.delete(join(options.projectRoot, 'README.md'));
   }
 
   updateTsConfig(tree, options);
@@ -440,6 +453,8 @@ function normalizeOptions(
 
   const importPath =
     options.importPath || getImportPath(npmScope, projectDirectory);
+
+  options.minimal ??= false;
 
   return {
     ...options,
