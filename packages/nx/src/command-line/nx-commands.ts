@@ -8,6 +8,7 @@ import { workspaceRoot } from '../utils/workspace-root';
 import { getPackageManagerCommand } from '../utils/package-manager';
 import { writeJsonFile } from '../utils/fileutils';
 import { WatchArguments } from './watch';
+import { runNxSync } from '../utils/child-process';
 
 // Ensure that the output takes up the available width of the terminal.
 yargs.wrap(yargs.terminalWidth());
@@ -1090,8 +1091,7 @@ function withListOptions(yargs) {
 
 function runMigration() {
   const runLocalMigrate = () => {
-    const pmc = getPackageManagerCommand();
-    execSync(`${pmc.exec} nx _migrate ${process.argv.slice(3).join(' ')}`, {
+    runNxSync(`_migrate ${process.argv.slice(3).join(' ')}`, {
       stdio: ['inherit', 'inherit', 'inherit'],
     });
   };
