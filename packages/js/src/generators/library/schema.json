@@ -89,7 +89,7 @@
       "type": "boolean",
       "default": true,
       "description": "Generate a buildable library.",
-      "x-priority": "important"
+      "x-deprecated": "Use the `bundler` option for greater control (swc, tsc, rollup, vite, esbuild, none)."
     },
     "setParserOptionsProject": {
       "type": "boolean",
@@ -108,13 +108,14 @@
       "enum": ["tsc", "swc"],
       "default": "tsc",
       "description": "The compiler used by the build and test targets",
-      "x-priority": "important"
+      "x-deprecated": "Use the `bundler` option for greater control (swc, tsc, rollup, vite, esbuild, none)."
     },
     "bundler": {
-      "description": "The bundler to use.",
+      "description": "The bundler to use. Choosing 'none' means this library is not buildable.",
       "type": "string",
-      "enum": ["none", "esbuild", "rollup", "vite"],
+      "enum": ["swc", "tsc", "rollup", "vite", "esbuild", "none"],
       "default": "none",
+      "x-prompt": "Which bundler would you like to use to build the library? Choose 'none' to skip build setup.",
       "x-priority": "important"
     },
     "skipTypeCheck": {

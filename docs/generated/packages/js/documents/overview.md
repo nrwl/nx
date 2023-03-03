@@ -54,13 +54,13 @@ nx g @nrwl/js:lib my-lib
 
 ## Build
 
-You can `build` libraries that are generated with `--buildable` flag.
+You can `build` libraries that are generated with a bundler specified.
 
 ```shell
-nx g @nrwl/js:lib my-buildable-lib --buildable
+nx g @nrwl/js:lib my-buildable-lib --bundler=rollup
 ```
 
-Generating a library with `--buildable` will add a `build` target to the library's `project.json` file allows the library to be built.
+Generating a library with `--bundler` specified will add a `build` target to the library's `project.json` file allows the library to be built.
 
 ```shell
 nx build my-buildable-lib
@@ -95,7 +95,7 @@ Currently, `@nrwl/js` supports the following compilers:
 - Create a buildable library with `swc`
 
 ```shell
-nx g @nrwl/js:lib my-swc-lib --compiler=swc --buildable
+nx g @nrwl/js:lib my-swc-lib --bundler=swc
 ```
 
 - Convert a `tsc` library to use `swc`

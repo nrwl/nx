@@ -95,7 +95,7 @@ describe('NxPlugin Executor Generator', () => {
   it('should create executors.json if it is not present', async () => {
     await jsLibraryGenerator(tree, {
       name: 'test-js-lib',
-      buildable: true,
+      bundler: 'tsc',
     });
     const libConfig = readProjectConfiguration(tree, 'test-js-lib');
     await executorGenerator(tree, {

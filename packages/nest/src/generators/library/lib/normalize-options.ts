@@ -52,7 +52,7 @@ export function toJsLibraryGeneratorOptions(
 ): JsLibraryGeneratorSchema {
   return {
     name: options.name,
-    buildable: options.buildable,
+    bundler: options?.buildable ? 'tsc' : 'none',
     directory: options.directory,
     importPath: options.importPath,
     linter: options.linter,

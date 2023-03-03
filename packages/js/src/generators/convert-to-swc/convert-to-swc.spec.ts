@@ -18,7 +18,7 @@ describe('convert to swc', () => {
     pascalCaseFiles: false,
     strict: true,
     config: 'project',
-    compiler: 'tsc',
+    bundler: 'tsc',
   };
 
   beforeAll(() => {
@@ -31,7 +31,7 @@ describe('convert to swc', () => {
     await jsLibraryGenerator(tree, {
       ...defaultLibGenerationOptions,
       name: 'tsc-lib',
-      buildable: true,
+      bundler: 'tsc',
     });
 
     expect(
