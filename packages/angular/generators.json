@@ -157,11 +157,6 @@
       "schema": "./src/generators/cypress-component-configuration/schema.json",
       "description": "Setup Cypress component testing for a project."
     },
-    "upgrade-module": {
-      "factory": "./src/generators/upgrade-module/compat",
-      "schema": "./src/generators/upgrade-module/schema.json",
-      "description": "Sets up an Upgrade Module."
-    },
     "web-worker": {
       "factory": "./src/generators/web-worker/compat",
       "schema": "./src/generators/web-worker/schema.json",
@@ -322,11 +317,6 @@
       "factory": "./src/generators/cypress-component-configuration/cypress-component-configuration",
       "schema": "./src/generators/cypress-component-configuration/schema.json",
       "description": "Setup Cypress component testing for a project."
-    },
-    "upgrade-module": {
-      "factory": "./src/generators/upgrade-module/upgrade-module",
-      "schema": "./src/generators/upgrade-module/schema.json",
-      "description": "Sets up an Upgrade Module."
     },
     "web-worker": {
       "factory": "./src/generators/web-worker/web-worker",

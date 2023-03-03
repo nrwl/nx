@@ -373,15 +373,6 @@
         "type": "generator"
       },
       {
-        "description": "Sets up an Upgrade Module.",
-        "file": "generated/packages/angular/generators/upgrade-module.json",
-        "hidden": false,
-        "name": "upgrade-module",
-        "originalFilePath": "/packages/angular/src/generators/upgrade-module/schema.json",
-        "path": "angular/generators/upgrade-module",
-        "type": "generator"
-      },
-      {
         "description": "Creates a Web Worker.",
         "file": "generated/packages/angular/generators/web-worker.json",
         "hidden": false,

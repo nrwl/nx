@@ -378,15 +378,6 @@
         "path": "/packages/angular/generators/cypress-component-configuration",
         "type": "generator"
       },
-      "/packages/angular/generators/upgrade-module": {
-        "description": "Sets up an Upgrade Module.",
-        "file": "generated/packages/angular/generators/upgrade-module.json",
-        "hidden": false,
-        "name": "upgrade-module",
-        "originalFilePath": "/packages/angular/src/generators/upgrade-module/schema.json",
-        "path": "/packages/angular/generators/upgrade-module",
-        "type": "generator"
-      },
       "/packages/angular/generators/web-worker": {
         "description": "Creates a Web Worker.",
         "file": "generated/packages/angular/generators/web-worker.json",
