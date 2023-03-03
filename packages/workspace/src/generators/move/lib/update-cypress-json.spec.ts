@@ -58,4 +58,23 @@ describe('updateCypressJson', () => {
       screenshotsFolder: '../../dist/cypress/libs/my-destination/screenshots',
     });
   });
+
+  it('should noop if the videos and screenshots folders are not defined', async () => {
+    const cypressJson = {
+      fileServerFolder: '.',
+      fixturesFolder: './src/fixtures',
+      integrationFolder: './src/integration',
+      pluginsFile: './src/plugins/index',
+      supportFile: false,
+      video: false,
+      chromeWebSecurity: false,
+    };
+    writeJson(tree, '/libs/my-destination/cypress.json', cypressJson);
+
+    updateCypressJson(tree, schema, projectConfig);
+
+    expect(readJson(tree, '/libs/my-destination/cypress.json')).toEqual(
+      cypressJson
+    );
+  });
 });

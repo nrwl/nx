@@ -32,14 +32,20 @@ export function updateCypressJson(
   const cypressJson = JSON.parse(
     tree.read(cypressJsonPath).toString('utf-8')
   ) as PartialCypressJson;
-  cypressJson.videosFolder = cypressJson.videosFolder.replace(
-    project.root,
-    schema.relativeToRootDestination
-  );
-  cypressJson.screenshotsFolder = cypressJson.screenshotsFolder.replace(
-    project.root,
-    schema.relativeToRootDestination
-  );
+
+  if (cypressJson.videosFolder) {
+    cypressJson.videosFolder = cypressJson.videosFolder.replace(
+      project.root,
+      schema.relativeToRootDestination
+    );
+  }
+
+  if (cypressJson.screenshotsFolder) {
+    cypressJson.screenshotsFolder = cypressJson.screenshotsFolder.replace(
+      project.root,
+      schema.relativeToRootDestination
+    );
+  }
 
   tree.write(cypressJsonPath, JSON.stringify(cypressJson));
 }
