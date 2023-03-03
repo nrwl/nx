@@ -44,11 +44,6 @@
       "schema": "./src/generators/convert-tslint-to-eslint/schema.json",
       "description": "Converts a project from TSLint to ESLint."
     },
-    "downgrade-module": {
-      "factory": "./src/generators/downgrade-module/compat",
-      "schema": "./src/generators/downgrade-module/schema.json",
-      "description": "Sets up a Downgrade Module."
-    },
     "init": {
       "factory": "./src/generators/init/init.compat#initSchematic",
       "schema": "./src/generators/init/schema.json",
@@ -214,11 +209,6 @@
       "factory": "./src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint#conversionGenerator",
       "schema": "./src/generators/convert-tslint-to-eslint/schema.json",
       "description": "Converts a project from TSLint to ESLint."
-    },
-    "downgrade-module": {
-      "factory": "./src/generators/downgrade-module/downgrade-module",
-      "schema": "./src/generators/downgrade-module/schema.json",
-      "description": "Sets up a Downgrade Module."
     },
     "init": {
       "factory": "./src/generators/init/init",

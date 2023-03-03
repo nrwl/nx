@@ -3700,14 +3700,6 @@
                 "disableCollapsible": false
               },
               {
-                "id": "downgrade-module",
-                "path": "/packages/angular/generators/downgrade-module",
-                "name": "downgrade-module",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
                 "id": "init",
                 "path": "/packages/angular/generators/init",
                 "name": "init",

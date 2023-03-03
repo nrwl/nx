@@ -31,10 +31,6 @@ describe('nx-dev: Packages Section', () => {
       title: '@nrwl/angular:convert-tslint-to-eslint',
       path: '/packages/angular/generators/convert-tslint-to-eslint',
     },
-    {
-      title: '@nrwl/angular:downgrade-module',
-      path: '/packages/angular/generators/downgrade-module',
-    },
     { title: '@nrwl/angular:init', path: '/packages/angular/generators/init' },
     {
       title: '@nrwl/angular:karma',
