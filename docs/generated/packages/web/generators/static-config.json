@@ -15,7 +15,7 @@
       },
       "outputPath": {
         "type": "string",
-        "description": "Path to the directory of the built files. This is only optional if buildTarget doesn't specify an outputPath executor option."
+        "description": "Path to the directory of the built files. This is only needed if buildTarget doesn't specify an outputPath executor option."
       },
       "targetName": {
         "type": "string",
