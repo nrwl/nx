@@ -573,42 +573,42 @@ describe('migrate', () => {
 
     expect(output).toContain(`Migrations file 'migrations.json' doesn't exist`);
   });
+});
 
-  describeCI('global installation', () => {
-    const pm = getPackageManagerCommand();
-    beforeAll(() => {
-      console.log(
-        '[NX] Warning: Running this test locally will mess with your global installation. This test is ran in CI only for most folks.'
-      );
-      runCommand(`${pm.addGlobal} nx@${getPublishedVersion()}`);
-      newProject();
-    });
+describeCI('global installation', () => {
+  const pm = getPackageManagerCommand();
+  beforeAll(() => {
+    console.log(
+      '[NX] Warning: Running this test locally will mess with your global installation. This test is ran in CI only for most folks.'
+    );
+    newProject();
+    runCommand(`${pm.addGlobal} nx@${getPublishedVersion()}`);
+  });
 
-    afterAll(() => {
-      runCommand(`${pm.removeGlobal} nx@${getPublishedVersion()}`);
-    });
+  afterAll(() => {
+    runCommand(`${pm.removeGlobal} nx`);
+  });
 
-    it('should invoke Nx commands from local repo', () => {
-      updateFile('node_modules/nx/bin/nx.js', `console.log('local install');`);
-      let output: string;
-      expect(() => {
-        output = runCommand('nx graph');
-      }).not.toThrow();
-      expect(output).toContain('local install');
-    });
+  it('should invoke Nx commands from local repo', () => {
+    updateFile('node_modules/nx/bin/nx.js', `console.log('local install');`);
+    let output: string;
+    expect(() => {
+      output = runCommand('nx graph');
+    }).not.toThrow();
+    expect(output).toContain('local install');
+  });
 
-    it('should warn if local Nx has higher major version', () => {
-      updateFile('node_modules/nx/bin/nx.js', `console.log('local install');`);
-      updateJson('node_modules/nx/package.json', (json) => {
-        json.version = `${major(getPublishedVersion()) + 2}.0.0`;
-        return json;
-      });
-      let output: string;
-      expect(() => {
-        output = runCommand('nx graph');
-      }).not.toThrow();
-      expect(output).toContain('Its time to update Nx');
-      expect(output).toContain('local install');
+  it('should warn if local Nx has higher major version', () => {
+    updateFile('node_modules/nx/bin/nx.js', `console.log('local install');`);
+    updateJson('node_modules/nx/package.json', (json) => {
+      json.version = `${major(getPublishedVersion()) + 2}.0.0`;
+      return json;
     });
+    let output: string;
+    expect(() => {
+      output = runCommand('nx graph');
+    }).not.toThrow();
+    expect(output).toContain('Its time to update Nx');
+    expect(output).toContain('local install');
   });
 });

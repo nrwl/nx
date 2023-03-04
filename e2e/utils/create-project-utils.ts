@@ -80,11 +80,12 @@ export function newProject({
       ];
       packageInstall(packages.join(` `), projScope);
 
-      // stop the daemon
-      execSync('nx reset', {
-        cwd: `${e2eCwd}/proj`,
-        stdio: isVerbose() ? 'inherit' : 'pipe',
-      });
+      if (useBackupProject) {
+        // stop the daemon
+        execSync(`${getPackageManagerCommand().runNx} reset`, {
+          cwd: `${e2eCwd}/proj`,
+          stdio: isVerbose() ? 'inherit' : 'pipe',
+        });
 
       moveSync(`${e2eCwd}/proj`, `${tmpBackupProjPath()}`);
     }

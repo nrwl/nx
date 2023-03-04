@@ -113,7 +113,8 @@ function warnIfUsingOutdatedGlobalInstall(localNxVersion?: string) {
   const isOutdatedGlobalInstall =
     globalVersion &&
     ((localNxVersion && major(globalVersion) < major(localNxVersion)) ||
-      (getLatestVersionOfNx() &&
+      (!localNxVersion &&
+        getLatestVersionOfNx() &&
         major(globalVersion) < major(getLatestVersionOfNx())));
 
   // Using a global Nx Install
@@ -142,18 +143,21 @@ function getLocalNxVersion(workspace: WorkspaceTypeAndRoot): string {
   ).version;
 }
 
-let _latest = null;
-function getLatestVersionOfNx(): string {
-  if (!_latest) {
+function memoize(fn: () => string) {
+  let cache: string = null;
+  return () => cache || (cache = fn());
+}
+
+function _getLatestVersionOfNx(): string {
+  try {
+    return execSync('npm view nx@latest version').toString().trim();
+  } catch {
     try {
-      _latest = execSync('npm view nx@latest version').toString().trim();
+      return execSync('pnpm view nx@latest version').toString().trim();
     } catch {
-      try {
-        _latest = execSync('pnpm view nx@latest version').toString().trim();
-      } catch {
-        _latest = null;
-      }
+      return null;
     }
   }
-  return _latest;
 }
+
+const getLatestVersionOfNx = memoize(_getLatestVersionOfNx);
