@@ -1,4 +1,5 @@
 import {
+  checkFilesDoNotExist,
   checkFilesExist,
   cleanupProject,
   createFile,
@@ -141,4 +142,22 @@ describe('env vars', () => {
 
     expect(await killPorts(4200)).toBeTruthy();
   }, 1000000);
+
+  it('should run e2e in parallel', () => {
+    const ngAppName = uniq('ng-app');
+    runCLI(
+      `generate @nrwl/angular:app ${ngAppName} --e2eTestRunner=cypress --linter=eslint --no-interactive`
+    );
+
+    const results = runCLI(
+      `run-many --target=e2e --parallel=2 --port=cypress-auto --output-style=stream`
+    );
+    expect(results).toContain('Using port 4200');
+    expect(results).toContain('Using port 4201');
+    expect(results).toContain('Successfully ran target e2e for 2 projects');
+    checkFilesDoNotExist(
+      `node_modules/@nrwl/cypress/src/executors/cypress/4200.txt`,
+      `node_modules/@nrwl/cypress/src/executors/cypress/4201.txt`
+    );
+  });
 });

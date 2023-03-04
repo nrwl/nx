@@ -67,6 +67,7 @@
         "default": false
       },
       "parallel": {
+        "aliases": ["p"],
         "type": "boolean",
         "description": "Whether or not Cypress should run its tests in parallel (CI only).",
         "default": false
@@ -130,6 +131,13 @@
         "type": "string",
         "description": "A comma delimited list to identify a run with.",
         "aliases": ["t"]
+      },
+      "port": {
+        "oneOf": [
+          { "type": "string", "enum": ["cypress-auto"] },
+          { "type": "number" }
+        ],
+        "description": "Pass a specified port value to the devServerTarget, if the value is 'cypress-auto' a free port will automatically be picked for the devServerTarget."
       }
     },
     "additionalProperties": true,
