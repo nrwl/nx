@@ -489,11 +489,6 @@
               "name": "Encapsulated Nx and the Nx Wrapper",
               "id": "encapsulated-nx-and-the-wrapper",
               "file": "shared/guides/encapsulated-nx-and-the-wrapper"
-            },
-            {
-              "name": "Managing your Global Nx Installation",
-              "id": "global-nx",
-              "file": "shared/guides/global-nx"
             }
           ]
         },
