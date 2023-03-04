@@ -115,6 +115,8 @@ export function getPackageManagerCommand({
   ciInstall: string;
   addProd: string;
   addDev: string;
+  addGlobal: string;
+  removeGlobal: string;
   list: string;
   runLerna: string;
 } {
@@ -136,6 +138,8 @@ export function getPackageManagerCommand({
       addDev: `npm install --legacy-peer-deps -D`,
       list: 'npm ls --depth 10',
       runLerna: `npx lerna`,
+      addGlobal: `npm i -g`,
+      removeGlobal: 'npm rm -g',
     },
     yarn: {
       // `yarn create nx-workspace` is failing due to wrong global path
@@ -150,6 +154,8 @@ export function getPackageManagerCommand({
       addDev: `yarn add -D`,
       list: 'npm ls --depth 10',
       runLerna: `yarn lerna`,
+      addGlobal: 'yarn global add',
+      removeGlobal: 'yarn global remove',
     },
     // Pnpm 3.5+ adds nx to
     pnpm: {
@@ -164,6 +170,8 @@ export function getPackageManagerCommand({
       addDev: `pnpm add -D`,
       list: 'npm ls --depth 10',
       runLerna: `pnpm exec lerna`,
+      addGlobal: 'pnpm i -g',
+      removeGlobal: 'pnpm rm -g',
     },
   }[packageManager.trim() as PackageManager];
 }
