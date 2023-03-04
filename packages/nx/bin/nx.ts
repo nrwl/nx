@@ -6,7 +6,13 @@ import {
 import * as chalk from 'chalk';
 import { initLocal } from './init-local';
 import { output } from '../src/utils/output';
-import { getNxInstallationPath } from 'nx/src/utils/installation-directory';
+import {
+  getNxInstallationPath,
+  getNxRequirePaths,
+} from '../src/utils/installation-directory';
+import { major } from 'semver';
+import { readJsonFile } from '../src/utils/fileutils';
+import { execSync } from 'child_process';
 
 const workspace = findWorkspaceRoot(process.cwd());
 // new is a special case because there is no local workspace to load
@@ -53,6 +59,8 @@ if (
   try {
     localNx = resolveNx(workspace);
   } catch {
+    // If we can't resolve a local copy of Nx, we must be global.
+    warnIfUsingOutdatedGlobalInstall();
     output.error({
       title: `Could not find Nx modules in this workspace.`,
       bodyLines: [`Have you run ${chalk.bold.white(`npm/yarn install`)}?`],
@@ -65,6 +73,7 @@ if (
     initLocal(workspace);
   } else {
     // Nx is being run from globally installed CLI - hand off to the local
+    warnIfUsingOutdatedGlobalInstall(getLocalNxVersion(workspace));
     if (localNx.includes('.nx')) {
       const nxWrapperPath = localNx.replace(/\.nx.*/, '.nx/') + 'nxw.js';
       require(nxWrapperPath);
@@ -93,4 +102,58 @@ function resolveNx(workspace: WorkspaceTypeAndRoot | null) {
       paths: workspace ? [workspace.dir] : undefined,
     });
   }
+}
+
+/**
+ * Assumes currently running Nx is global install.
+ * Warns if out of date by 1 major version or more.
+ */
+function warnIfUsingOutdatedGlobalInstall(localNxVersion?: string) {
+  const globalVersion = require('../package.json').version;
+  const isOutdatedGlobalInstall =
+    globalVersion &&
+    ((localNxVersion && major(globalVersion) < major(localNxVersion)) ||
+      (getLatestVersionOfNx() &&
+        major(globalVersion) < major(getLatestVersionOfNx())));
+
+  // Using a global Nx Install
+  if (isOutdatedGlobalInstall) {
+    const bodyLines = localNxVersion
+      ? ['Its time to update Nx 🎉']
+      : [
+          'Its possible that this is causing Nx to not pick up your workspace properly.',
+        ];
+
+    bodyLines.push(
+      'For more information, see https://nx.dev/more-concepts/global-nx'
+    );
+    output.warn({
+      title: `Its time to update Nx 🎉`,
+      bodyLines,
+    });
+  }
+}
+
+function getLocalNxVersion(workspace: WorkspaceTypeAndRoot): string {
+  return readJsonFile(
+    require.resolve('nx/package.json', {
+      paths: getNxRequirePaths(workspace.dir),
+    })
+  ).version;
+}
+
+let _latest = null;
+function getLatestVersionOfNx(): string {
+  if (!_latest) {
+    try {
+      _latest = execSync('npm view nx@latest version').toString().trim();
+    } catch {
+      try {
+        _latest = execSync('pnpm view nx@latest version').toString().trim();
+      } catch {
+        _latest = null;
+      }
+    }
+  }
+  return _latest;
 }
