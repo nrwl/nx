@@ -135,6 +135,11 @@
     "url": "https://github.com/twittwer/nx-tools/tree/master/libs/compodoc#readme"
   },
   {
+    "name": "@enio.ai/nx-clone",
+    "description": "Generator to instantly replicate your favorite custom Nx projects.",
+    "url": "https://github.com/enio-ireland/enio/tree/develop/packages/nx-clone#readme"
+  },
+  {
     "name": "@enio.ai/nx-install",
     "description": "nx-install is a plugin for Nx workspaces to quickly setup custom install commands via npm.",
     "url": "https://github.com/enio-ireland/enio/tree/develop/packages/nx-install#readme"
