@@ -403,5 +403,10 @@
     "name": "nx-mesh",
     "description": "GraphQL Mesh support for Nx",
     "url": "https://github.com/domjtalbot/nx-mesh"
+  },
+  {
+    "name": "@nxazure/func",
+    "description": "Nx plugin to add Azure Functions support to Nx Workspace.",
+    "url": "https://github.com/AlexPshul/nxazure/tree/master/packages/func"
   }
 ]
