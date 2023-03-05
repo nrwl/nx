@@ -1,5 +1,8 @@
 import { TagsApi } from '@nrwl/nx-dev/data-access-documents/node-only';
-import { DocumentMetadata } from '@nrwl/nx-dev/models-document';
+import {
+  DocumentMetadata,
+  StaticDocumentPaths,
+} from '@nrwl/nx-dev/models-document';
 import {
   FileMetadata,
   IntrinsicPackageMetadata,
@@ -8,10 +11,6 @@ import {
 } from '@nrwl/nx-dev/models-package';
 import { readFileSync } from 'fs';
 import { join } from 'path';
-
-interface StaticDocumentPaths {
-  params: { segments: string[] };
-}
 
 export class PackagesApi {
   private readonly manifest: Record<string, ProcessedPackageMetadata>;

@@ -2,14 +2,11 @@ import {
   DocumentMetadata,
   ProcessedDocument,
   RelatedDocument,
+  StaticDocumentPaths,
 } from '@nrwl/nx-dev/models-document';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { TagsApi } from './tags.api';
-
-interface StaticDocumentPaths {
-  params: { segments: string[] };
-}
 
 export class DocumentsApi {
   private readonly manifest: Record<string, DocumentMetadata>;

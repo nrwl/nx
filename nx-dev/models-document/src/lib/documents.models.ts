@@ -37,3 +37,7 @@ export interface RelatedDocument {
   name: string;
   path: string;
 }
+
+export interface StaticDocumentPaths {
+  params: { segments: string[] };
+}
