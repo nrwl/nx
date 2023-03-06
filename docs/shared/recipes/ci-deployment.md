@@ -2,11 +2,23 @@
 
 A common approach to deploying applications is via docker containers. Some applications can be built into bundles that are environment agnostic, while others depend on OS-specific packages being installed. For these situations, having just bundled code is not enough, we also need to have `package.json`.
 
-Nx packages' executors support the `generatePackageJson` flag which tells the builder to also identify all dependencies and add them to `package.json` which is created next to the built artifacts (usually at `dist/apps/name-of-the-app`). Since version [15.3.3](https://github.com/nrwl/nx/releases/tag/15.3.3), the `package.json` generation will also include the appropriate lock file. This makes the installation in the container significantly faster.
+Nx supports the generation of the project's `package.json` by identifying all the project's dependencies. The generated `package.json` is created next to the built artifacts (usually at `dist/apps/name-of-the-app`).
+
+Additionally, we should generate pruned lock file according to the generated `package.json`. This makes the installation in the container significantly faster as we only need to install a subset of the packages.
+
+## Supported executors
+
+The `@nrwl/webpack:webpack` executor supports the `generatePackageJson` flag which generates both `package.json` as well as the lock file.
+
+Some executors automatically generate output `package.json` and the lock file generation is supported using the `generateLockfile` flag:
+
+- `@nrwl/js:swc`
+- `@nrwl/js:tsc`
+- `@nrwl/next:build`
 
 ## Using a custom executor
 
-If you are using a custom executor, you can still use Nx to generate `package.json` and the lock file. The `createPackageJson` and `createLockFile` functions are exported from `@nrwl/devkit`:
+If you are using a custom executor or an executor that does not support `generatePackgeJson` or `generateLockfile` flags, you can still use Nx to generate `package.json` and the lock file. The `createPackageJson` and `createLockFile` functions are exported from `@nrwl/devkit`:
 
 ```typescript
 import { createPackageJson, createLockFile } from '@nrwl/devkit';
