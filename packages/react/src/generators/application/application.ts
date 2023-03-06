@@ -19,10 +19,11 @@ import {
   formatFiles,
   GeneratorCallback,
   joinPathFragments,
+  runTasksInSerial,
   Tree,
   updateJson,
 } from '@nrwl/devkit';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+
 import reactInitGenerator from '../init/init';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { mapLintPattern } from '@nrwl/linter/src/generators/lint-project/lint-project';

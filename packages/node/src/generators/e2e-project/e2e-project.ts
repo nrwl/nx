@@ -12,13 +12,13 @@ import {
   names,
   offsetFromRoot,
   readProjectConfiguration,
+  runTasksInSerial,
   Tree,
 } from '@nrwl/devkit';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 
 import { Schema } from './schema';
 import { axiosVersion } from '../../utils/versions';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
 export async function e2eProjectGenerator(host: Tree, _options: Schema) {
   const tasks: GeneratorCallback[] = [];

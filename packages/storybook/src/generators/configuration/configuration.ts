@@ -5,9 +5,9 @@ import {
   GeneratorCallback,
   logger,
   readProjectConfiguration,
+  runTasksInSerial,
   Tree,
 } from '@nrwl/devkit';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
 import { cypressProjectGenerator } from '../cypress-project/cypress-project';
 import { StorybookConfigureSchema } from './schema';

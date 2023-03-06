@@ -15,6 +15,7 @@ import {
   offsetFromRoot,
   readNxJson,
   readProjectConfiguration,
+  runTasksInSerial,
   TargetConfiguration,
   Tree,
   updateNxJson,
@@ -23,7 +24,7 @@ import {
 import { jestProjectGenerator } from '@nrwl/jest';
 import { swcCoreVersion } from '@nrwl/js/src/utils/versions';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+
 import { getRelativePathToRootTsConfig } from '@nrwl/js';
 
 import { nxVersion, swcLoaderVersion } from '../../utils/versions';

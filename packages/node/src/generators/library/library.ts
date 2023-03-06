@@ -9,6 +9,7 @@ import {
   names,
   offsetFromRoot,
   readProjectConfiguration,
+  runTasksInSerial,
   toJS,
   Tree,
   updateProjectConfiguration,
@@ -17,7 +18,7 @@ import {
 import { getImportPath } from 'nx/src/utils/path';
 import { Schema } from './schema';
 import { libraryGenerator as workspaceLibraryGenerator } from '@nrwl/workspace/generators';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+
 import { join } from 'path';
 import { addSwcDependencies } from '@nrwl/js/src/utils/swc/add-swc-dependencies';
 import { addSwcConfig } from '@nrwl/js/src/utils/swc/add-swc-config';

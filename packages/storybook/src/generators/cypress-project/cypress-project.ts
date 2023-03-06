@@ -14,12 +14,13 @@ import {
   joinPathFragments,
   readJson,
   readProjectConfiguration,
+  runTasksInSerial,
   Tree,
   updateJson,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
 import { Linter } from '@nrwl/linter';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+
 import { join } from 'path';
 import { safeFileDelete } from '../../utils/utilities';
 

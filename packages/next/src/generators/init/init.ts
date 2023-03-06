@@ -2,9 +2,10 @@ import {
   addDependenciesToPackageJson,
   convertNxGenerator,
   GeneratorCallback,
+  runTasksInSerial,
   Tree,
 } from '@nrwl/devkit';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+
 import { jestInitGenerator } from '@nrwl/jest';
 import { cypressInitGenerator } from '@nrwl/cypress';
 import { reactDomVersion, reactVersion } from '@nrwl/react/src/utils/versions';

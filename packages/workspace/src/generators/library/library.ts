@@ -12,13 +12,14 @@ import {
   names,
   offsetFromRoot,
   ProjectConfiguration,
+  runTasksInSerial,
   toJS,
   Tree,
   updateJson,
 } from '@nrwl/devkit';
 import { getImportPath } from 'nx/src/utils/path';
 import { join } from 'path';
-import { runTasksInSerial } from '../../utilities/run-tasks-in-serial';
+
 import {
   getRelativePathToRootTsConfig,
   getRootTsConfigFileName,

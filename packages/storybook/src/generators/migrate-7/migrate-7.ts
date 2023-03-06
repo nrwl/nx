@@ -4,22 +4,23 @@ import {
   formatFiles,
   GeneratorCallback,
   readJson,
+  runTasksInSerial,
   Tree,
 } from '@nrwl/devkit';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+
 import { output } from 'nx/src/utils/output';
 import { litVersion } from '../../utils/versions';
 import { callAutomigrate, callUpgrade } from './calling-storybook-cli';
 import {
-  removeUiFrameworkFromProjectJson,
-  getAllStorybookInfo,
-  prepareFiles,
-  handleMigrationResult,
   afterMigration,
-  checkWebComponentsInstalled,
   checkStorybookInstalled,
+  checkWebComponentsInstalled,
+  getAllStorybookInfo,
+  handleMigrationResult,
   logResult,
   onlyShowGuide,
+  prepareFiles,
+  removeUiFrameworkFromProjectJson,
 } from './helper-functions';
 import { Schema } from './schema';
 

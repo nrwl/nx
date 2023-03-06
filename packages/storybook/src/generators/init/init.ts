@@ -4,6 +4,7 @@ import {
   GeneratorCallback,
   readJson,
   readNxJson,
+  runTasksInSerial,
   Tree,
   updateJson,
   updateNxJson,
@@ -28,7 +29,6 @@ import {
   webpack5Version,
 } from '../../utils/versions';
 import { Schema } from './schema';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
 function checkDependenciesInstalled(host: Tree, schema: Schema) {
   const packageJson = readJson(host, 'package.json');

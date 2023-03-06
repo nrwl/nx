@@ -14,13 +14,14 @@ import {
   offsetFromRoot,
   ProjectConfiguration,
   readProjectConfiguration,
+  runTasksInSerial,
   stripIndents,
   toJS,
   Tree,
   updateJson,
 } from '@nrwl/devkit';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+
 import { getRelativePathToRootTsConfig } from '@nrwl/js';
 import {
   globalJavaScriptOverrides,

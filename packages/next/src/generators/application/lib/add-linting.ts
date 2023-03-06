@@ -3,6 +3,7 @@ import {
   addDependenciesToPackageJson,
   GeneratorCallback,
   joinPathFragments,
+  runTasksInSerial,
   Tree,
   updateJson,
 } from '@nrwl/devkit';
@@ -11,7 +12,6 @@ import {
   extraEslintDependencies,
 } from '@nrwl/react/src/utils/lint';
 import { NormalizedSchema } from './normalize-options';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
 export async function addLinting(
   host: Tree,

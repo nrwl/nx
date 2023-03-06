@@ -1,14 +1,8 @@
 import { componentGenerator as reactComponentGenerator } from '@nrwl/react';
-import {
-  convertNxGenerator,
-  Tree,
-  names,
-  readProjectConfiguration,
-} from '@nrwl/devkit';
+import { convertNxGenerator, runTasksInSerial, Tree } from '@nrwl/devkit';
 
 import { addStyleDependencies } from '../../utils/styles';
 import { Schema } from './schema';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
 /*
  * This schematic is basically the React component one, but for Next we need

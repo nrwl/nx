@@ -1,5 +1,4 @@
 import {
-  addDependenciesToPackageJson,
   convertNxGenerator,
   formatFiles,
   generateFiles,
@@ -8,10 +7,11 @@ import {
   logger,
   readNxJson,
   readProjectConfiguration,
+  runTasksInSerial,
   Tree,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+
 import { SetUpDockerOptions } from './schema';
 
 function normalizeOptions(

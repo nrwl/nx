@@ -7,16 +7,17 @@ import {
   joinPathFragments,
   offsetFromRoot,
   readProjectConfiguration,
+  runTasksInSerial,
   Tree,
   updateJson,
 } from '@nrwl/devkit';
 import {
   addOrChangeTestTarget,
-  findExistingTargetsInProject,
   createOrEditViteConfig,
+  findExistingTargetsInProject,
 } from '../../utils/generator-utils';
 import { VitestGeneratorSchema } from './schema';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+
 import initGenerator from '../init/init';
 import {
   vitestCoverageC8Version,

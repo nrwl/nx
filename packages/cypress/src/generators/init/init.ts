@@ -4,6 +4,7 @@ import {
   GeneratorCallback,
   readNxJson,
   removeDependenciesFromPackageJson,
+  runTasksInSerial,
   Tree,
   updateNxJson,
 } from '@nrwl/devkit';
@@ -14,7 +15,6 @@ import {
 } from '../../utils/versions';
 import { Schema } from './schema';
 import { initGenerator } from '@nrwl/js';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
 function setupE2ETargetDefaults(tree: Tree) {
   const nxJson = readNxJson(tree);

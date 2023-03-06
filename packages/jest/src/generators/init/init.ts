@@ -5,6 +5,7 @@ import {
   getProjects,
   readNxJson,
   removeDependenciesFromPackageJson,
+  runTasksInSerial,
   stripIndents,
   Tree,
   updateJson,
@@ -12,7 +13,7 @@ import {
   updateProjectConfiguration,
 } from '@nrwl/devkit';
 import { initGenerator as jsInitGenerator } from '@nrwl/js';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+
 import { findRootJestConfig } from '../../utils/config/find-root-jest-files';
 import {
   babelJestVersion,

@@ -13,6 +13,7 @@ import {
   offsetFromRoot,
   ProjectConfiguration,
   readProjectConfiguration,
+  runTasksInSerial,
   TargetConfiguration,
   toJS,
   Tree,
@@ -22,9 +23,8 @@ import {
 } from '@nrwl/devkit';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { jestProjectGenerator } from '@nrwl/jest';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
-import { getRelativePathToRootTsConfig } from '@nrwl/js';
-import { tsConfigBaseOptions } from '@nrwl/js';
+
+import { getRelativePathToRootTsConfig, tsConfigBaseOptions } from '@nrwl/js';
 import { join } from 'path';
 
 import { initGenerator } from '../init/init';

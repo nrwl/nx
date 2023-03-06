@@ -5,11 +5,12 @@ import {
   GeneratorCallback,
   readNxJson,
   removeDependenciesFromPackageJson,
+  runTasksInSerial,
   Tree,
   updateNxJson,
   writeJson,
 } from '@nrwl/devkit';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+
 import { initGenerator as jsInitGenerator } from '@nrwl/js';
 import {
   babelPresetReactVersion,
