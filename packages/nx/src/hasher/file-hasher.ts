@@ -9,6 +9,11 @@ import { NativeFileHasher } from './native-file-hasher';
 
 function createFileHasher(): FileHasherBase {
   try {
+    const dotEnv: typeof import('dotenv') = require('dotenv');
+    try {
+      dotEnv.config();
+    } catch {}
+
     if (
       !process.env.NX_NON_NATIVE_HASHER ||
       process.env.NX_NON_NATIVE_HASHER != 'true'
