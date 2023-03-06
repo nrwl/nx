@@ -9,7 +9,6 @@ import {
 } from '../config/project-graph';
 import { NormalizedPackageJson } from './utils/package-json';
 import { defaultHashing } from '../hasher/hashing-impl';
-import { output } from '../devkit-exports';
 
 /**
  * NPM
@@ -525,15 +524,12 @@ function nestMappedPackages(
   });
 
   if (initialSize === nestedNodes.size) {
-    output.error({
-      title: 'An error occured while creating pruned lockfile',
-      bodyLines: [
-        'Following packages could not be mapped to the lockfile.',
+    throw new Error(
+      [
+        'Following packages could not be mapped to the NPM lockfile:',
         ...Array.from(nestedNodes).map((n) => `- ${n.name}`),
-        '`npm ci` might fail due to missing dependencies in the lockfile. If this happens, please open an issue at `https://github.com/nrwl/nx/issues/new?template=1-bug.yml` and provide a reproduction.',
-        'You can still install your dependencies using full `npm install` that would override the pruned lockfile.',
-      ],
-    });
+      ].join('\n')
+    );
   } else {
     nestMappedPackages(
       invertedGraph,
