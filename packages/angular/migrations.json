@@ -1,5 +1,11 @@
 {
   "schematics": {
+    "install-required-packages": {
+      "cli": "nx",
+      "version": "15.7.0-beta.1",
+      "description": "Install the required angular-devkit packages as we do not directly depend on them anymore",
+      "factory": "./src/migrations/update-15-7-0/install-required-packages"
+    },
     "remove-show-circular-dependencies-option": {
       "cli": "nx",
       "version": "14.2.0-beta.0",
@@ -50,12 +56,6 @@
       },
       "description": "Update the @angular/cli package version to ~14.1.0.",
       "factory": "./src/migrations/update-14-5-2/update-angular-cli"
-    },
-    "update-rxjs-7-5-0": {
-      "cli": "nx",
-      "version": "14.5.7-beta.0",
-      "description": "Update the rxjs package version to ~7.5.0 if RxJS 7 is used in workspace.",
-      "factory": "./src/migrations/update-14-5-7/update-rxjs"
     },
     "update-angular-cli-version-14-2-0": {
       "cli": "nx",
@@ -146,12 +146,6 @@
       },
       "description": "Update the @angular/cli package version to ~15.1.0.",
       "factory": "./src/migrations/update-15-5-0/update-angular-cli"
-    },
-    "install-required-packages": {
-      "cli": "nx",
-      "version": "15.7.0-beta.1",
-      "description": "Install the required angular-devkit packages as we do not directly depend on them anymore",
-      "factory": "./src/migrations/update-15-7-0/install-required-packages"
     },
     "update-angular-cli-version-15-2-0": {
       "cli": "nx",
@@ -573,6 +567,18 @@
         }
       }
     },
+    "14.6.0-rxjs": {
+      "version": "14.6.0-beta.0",
+      "requires": {
+        "rxjs": ">=7.0.0 <7.5.0"
+      },
+      "packages": {
+        "rxjs": {
+          "version": "~7.5.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
     "14.8.0-angular-eslint": {
       "version": "14.8.0-beta.0",
       "packages": {
@@ -915,6 +921,18 @@
         },
         "@ngrx/component-store": {
           "version": "~15.3.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "15.8.6-rxjs": {
+      "version": "15.8.6-beta.0",
+      "requires": {
+        "rxjs": ">=7.5.0 <7.6.0"
+      },
+      "packages": {
+        "rxjs": {
+          "version": "~7.8.0",
           "alwaysAddToPackageJson": false
         }
       }
