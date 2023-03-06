@@ -1524,8 +1524,11 @@ export async function migrate(
     process.env.NX_VERBOSE_LOGGING = 'true';
   }
 
-  const { daemonClient } = await import('../daemon/client/client');
-  daemonClient.stop();
+  try {
+    execSync('nx daemon --stop', {
+      cwd: workspaceRoot,
+    });
+  } catch {}
 
   return handleErrors(process.env.NX_VERBOSE_LOGGING === 'true', async () => {
     const opts = parseMigrationsOptions(args);
