@@ -167,7 +167,8 @@ export function withNx(pluginOptions?: WithNxOptions): NxWebpackPlugin {
         hashFunction: 'xxhash64',
         // Disabled for performance
         pathinfo: false,
-        scriptType: 'module' as const,
+        // Use CJS for Node since it has the widest support.
+        scriptType: options.target === 'node' ? undefined : ('module' as const),
       },
       watch: options.watch,
       watchOptions: {
