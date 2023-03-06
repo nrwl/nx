@@ -97,6 +97,7 @@
         "x-deprecated": "This option will be removed in v16. It is no longer supported by @expo/cli."
       }
     },
+    "examplesFile": "`project.json`:\n\n```json\n{\n  \"name\": \"mobile\",\n  //...\n  \"targets\": {\n    //...\n    \"start\": {\n      \"executor\": \"@nrwl/expo:start\",\n      \"options\": {\n        \"port\": 8081\n      }\n    }\n    //...\n  }\n}\n```\n\n```bash\nnx run mobile:start\n```\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Specify the host\" %}\nThe `host` option allows you to specify the type of host to use. `lan` uses the local network; `tunnel` ues any network by tunnel through ngrok; `localhost` connects to the dev server over localhost.\n\n```json\n    \"start\": {\n      \"executor\": \"@nrwl/expo:start\",\n      \"options\": {\n        \"port\": 8081,\n        \"host\": \"localhost\"\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Starts the server with cache reset\" %}\n\nThe `clear` option allows you to remove Metro bundler cache.\n\n```json\n    \"start\": {\n      \"executor\": \"@nrwl/expo:start\",\n      \"options\": {\n        \"port\": 8081,\n        \"clear\": true\n      }\n    }\n```\n\n{% /tab %}\n{% /tabs %}\n\n---\n",
     "presets": []
   },
   "description": "Start a local dev server for the app or start a Webpack dev server for the web app",
