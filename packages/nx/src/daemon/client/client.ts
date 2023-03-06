@@ -199,7 +199,6 @@ export class DaemonClient {
 
   private closeConnection() {
     this.socketMessenger.close();
-    this._connected = false;
   }
 
   private setUpConnection() {
