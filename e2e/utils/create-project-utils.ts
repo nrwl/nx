@@ -15,7 +15,7 @@ import {
 } from './get-env-info';
 import * as isCI from 'is-ci';
 
-import { angularCliVersion } from '@nrwl/workspace/src/utils/versions';
+import { angularCliVersion as defaultAngularCliVersion } from '@nrwl/workspace/src/utils/versions';
 import { dump } from '@zkochan/js-yaml';
 import { execSync, ExecSyncOptions } from 'child_process';
 
@@ -248,14 +248,14 @@ export function packageInstall(
 export function runNgNew(
   projectName: string,
   packageManager = getSelectedPackageManager(),
-  angularVersion = angularCliVersion
+  angularCliVersion = defaultAngularCliVersion
 ): string {
   projName = projectName;
 
   const npmMajorVersion = getNpmMajorVersion();
   const command = `npx ${
     +npmMajorVersion >= 7 ? '--yes' : ''
-  } @angular/cli@${angularVersion} new ${projectName} --package-manager=${packageManager}`;
+  } @angular/cli@${angularCliVersion} new ${projectName} --package-manager=${packageManager}`;
 
   return execSync(command, {
     cwd: e2eCwd,

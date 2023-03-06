@@ -1,18 +1,17 @@
 import { prompt } from 'enquirer';
 import { unlinkSync } from 'fs';
 import { dirname, join, relative, resolve } from 'path';
-import { gte } from 'semver';
-import { toNewFormat } from '../adapter/angular-json';
-import { NxJsonConfiguration } from '../config/nx-json';
+import { toNewFormat } from '../../adapter/angular-json';
+import { NxJsonConfiguration } from '../../config/nx-json';
 import {
   ProjectConfiguration,
   TargetConfiguration,
-} from '../config/workspace-json-project-json';
-import { fileExists, readJsonFile, writeJsonFile } from '../utils/fileutils';
-import { sortObjectByKeys } from '../utils/object-sort';
-import { output } from '../utils/output';
-import { PackageJson, readModulePackageJson } from '../utils/package-json';
-import { normalizePath } from '../utils/path';
+} from '../../config/workspace-json-project-json';
+import { fileExists, readJsonFile, writeJsonFile } from '../../utils/fileutils';
+import { sortObjectByKeys } from '../../utils/object-sort';
+import { output } from '../../utils/output';
+import { PackageJson } from '../../utils/package-json';
+import { normalizePath } from '../../utils/path';
 import {
   addDepsToPackageJson,
   addVsCodeRecommendedExtensions,
@@ -20,7 +19,8 @@ import {
   createNxJsonFile,
   initCloud,
   runInstall,
-} from './utils';
+} from '../utils';
+import { getLegacyMigrationFunctionIfApplicable } from './legacy-angular-versions';
 import yargsParser = require('yargs-parser');
 
 const defaultCacheableOperations: string[] = [
@@ -44,16 +44,14 @@ export async function addNxToAngularCliRepo() {
   repoRoot = process.cwd();
 
   output.log({ title: '🧐 Checking versions compatibility' });
-  if (!isAngularVersionSupported()) {
-    output.error({
-      title:
-        '❌ The installed Angular version is not compatible with the latest version of Nx',
-      bodyLines: [
-        'Please look at https://nx.dev/recipes/adopting-nx/migration-angular#migrating-to-an-integrated-nx-monorepo ' +
-          'to check how to migrate legacy versions that are not supported by the latest Nx version.',
-      ],
-    });
-    process.exit(1);
+  const legacyMigrationFn = await getLegacyMigrationFunctionIfApplicable(
+    repoRoot,
+    parsedArgs.yes !== true
+  );
+  if (legacyMigrationFn) {
+    output.log({ title: '💽 Running migration for a legacy Angular version' });
+    await legacyMigrationFn();
+    process.exit(0);
   }
 
   output.success({
@@ -83,13 +81,6 @@ export async function addNxToAngularCliRepo() {
       'Learn more about the changes done to your workspace at https://nx.dev/recipes/adopting-nx/migration-angular.',
     ],
   });
-}
-
-function isAngularVersionSupported(): boolean {
-  const minAngularVersionSupported = '14.0.0';
-  const angularVersion =
-    readModulePackageJson('@angular/core').packageJson.version;
-  return gte(angularVersion, minAngularVersionSupported);
 }
 
 async function collectCacheableOperations(): Promise<string[]> {
@@ -136,7 +127,7 @@ function installDependencies(useNxCloud: boolean): void {
 function addPluginDependencies(): void {
   const packageJsonPath = join(repoRoot, 'package.json');
   const packageJson = readJsonFile<PackageJson>(packageJsonPath);
-  const nxVersion = require('../../package.json').version;
+  const nxVersion = require('../../../package.json').version;
 
   packageJson.devDependencies ??= {};
   packageJson.devDependencies['@nrwl/angular'] = nxVersion;

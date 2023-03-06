@@ -25,14 +25,18 @@ describe('nx init (Angular CLI)', () => {
     pmc = getPackageManagerCommand({ packageManager });
   });
 
+  afterEach(() => {
+    cleanupProject();
+  });
+
   it('should successfully convert an Angular CLI workspace to an Nx workspace', () => {
     runNgNew(project, packageManager);
 
     const output = runCommand(
       `${pmc.runUninstalledPackage} nx@${getPublishedVersion()} init -y`
     );
-    expect(output).toContain('Nx is now enabled in your workspace!');
 
+    expect(output).toContain('Nx is now enabled in your workspace!');
     // angular.json should have been deleted
     checkFilesDoNotExist('angular.json');
     // check nx config files exist
@@ -57,25 +61,5 @@ describe('nx init (Angular CLI)', () => {
     expect(cachedBuildOutput).toContain(
       `Successfully ran target build for project ${project}`
     );
-
-    cleanupProject();
-  });
-
-  it('should not convert an Angular CLI workspace when using an unsupported Angular version', () => {
-    runNgNew(project, packageManager, '13.0.0');
-
-    const output = runCommand(
-      `${pmc.runUninstalledPackage} nx@${getPublishedVersion()} init -y`
-    );
-    expect(output).toContain(
-      'The installed Angular version is not compatible with the latest version of Nx'
-    );
-
-    // angular.json should not have been deleted
-    checkFilesExist('angular.json');
-    // check nx config files were not created
-    checkFilesDoNotExist('nx.json', 'project.json');
-
-    cleanupProject({ skipReset: true });
   });
 });
