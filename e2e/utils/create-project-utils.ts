@@ -39,10 +39,9 @@ export function newProject({
   packageManager = getSelectedPackageManager(),
 } = {}): string {
   try {
-    const useBackupProject = packageManager !== 'pnpm';
-    const projScope = useBackupProject ? 'proj' : name;
+    const projScope = 'proj';
 
-    if (!useBackupProject || !directoryExists(tmpBackupProjPath())) {
+    if (!directoryExists(tmpBackupProjPath())) {
       runCreateWorkspace(projScope, {
         preset: 'empty',
         packageManager,
@@ -80,20 +79,16 @@ export function newProject({
       ];
       packageInstall(packages.join(` `), projScope);
 
-      if (useBackupProject) {
-        // stop the daemon
-        execSync('nx reset', {
-          cwd: `${e2eCwd}/proj`,
-          stdio: isVerbose() ? 'inherit' : 'pipe',
-        });
+      // stop the daemon
+      execSync('nx reset', {
+        cwd: `${e2eCwd}/proj`,
+        stdio: isVerbose() ? 'inherit' : 'pipe',
+      });
 
-        moveSync(`${e2eCwd}/proj`, `${tmpBackupProjPath()}`);
-      }
+      moveSync(`${e2eCwd}/proj`, `${tmpBackupProjPath()}`);
     }
     projName = name;
-    if (useBackupProject) {
-      copySync(`${tmpBackupProjPath()}`, `${tmpProjPath()}`);
-    }
+    copySync(`${tmpBackupProjPath()}`, `${tmpProjPath()}`);
 
     if (process.env.NX_VERBOSE_LOGGING == 'true') {
       logInfo(`NX`, `E2E test is creating a project: ${tmpProjPath()}`);
@@ -376,7 +371,7 @@ export function newEncapsulatedNxWorkspace({
   projName = name;
   ensureDirSync(tmpProjPath());
   runCommand(`${pmc.runUninstalledPackage} nx@latest init --encapsulated`);
-  return (command: string, opts: Partial<ExecSyncOptions>) => {
+  return (command: string, opts: Partial<ExecSyncOptions> | undefined) => {
     if (process.platform === 'win32') {
       return runCommand(`./nx.bat ${command}`, { ...opts, failOnError: true });
     } else {
