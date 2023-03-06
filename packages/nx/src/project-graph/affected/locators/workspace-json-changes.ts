@@ -5,7 +5,6 @@ import {
   JsonChange,
 } from '../../../utils/json-diff';
 import { TouchedProjectLocator } from '../affected-project-graph-models';
-import { workspaceRoot } from 'nx/src/utils/workspace-root';
 
 export const getTouchedProjectsInWorkspaceJson: TouchedProjectLocator<
   WholeFileChange | JsonChange

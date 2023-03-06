@@ -9,7 +9,7 @@ import { TouchedProjectLocator } from '../affected-project-graph-models';
 import {
   ProjectGraphExternalNode,
   ProjectGraphProjectNode,
-} from 'nx/src/config/project-graph';
+} from '../../../config/project-graph';
 
 export const getTouchedNpmPackages: TouchedProjectLocator<
   WholeFileChange | JsonChange

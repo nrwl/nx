@@ -10,7 +10,7 @@ import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { readNxJson } from '../config/configuration';
 import { output } from '../utils/output';
 import { findMatchingProjects } from '../utils/find-matching-projects';
-import { workspaceConfigurationCheck } from 'nx/src/utils/workspace-configuration-check';
+import { workspaceConfigurationCheck } from '../utils/workspace-configuration-check';
 
 export async function runMany(
   args: { [k: string]: any },
