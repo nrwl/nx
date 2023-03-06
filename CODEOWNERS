@@ -121,6 +121,7 @@
 /packages/nx/src/adapter @AgentEnder @leosvelperez
 /packages/nx/src/native @vsavkin @FrozenPandaz @Cammisuli
 /packages/nx/src/lock-file @meeroslav @FrozenPandaz
+/packages/nx/src/nx-init/angular/** @Coly010 @leosvelperez @FrozenPandaz
 /e2e/nx*/** @FrozenPandaz @AgentEnder @vsavkin
 /packages/workspace/** @FrozenPandaz @AgentEnder @vsavkin
 /e2e/workspace/** @FrozenPandaz @AgentEnder @vsavkin
