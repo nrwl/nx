@@ -37,15 +37,15 @@
 /e2e/cra-to-nx/** @jaysoo @xiongemi @mandarini @ndcunningham
 
 # React Native
-/docs/generated/packages/detox/** @xiongemi @jaysoo
-/docs/generated/packages/expo/** @xiongemi @jaysoo
-/docs/generated/packages/react-native/** @xiongemi @jaysoo
-/packages/detox/** @xiongemi @jaysoo
-/e2e/detox/** @xiongemi @jaysoo
-/packages/expo/** @xiongemi @jaysoo
-/e2e/expo/** @xiongemi @jaysoo
-/packages/react-native/** @xiongemi @jaysoo
-/e2e/react-native/** @xiongemi @jaysoo
+/docs/generated/packages/detox/** @xiongemi @jaysoo @ndcunningham
+/docs/generated/packages/expo/** @xiongemi @jaysoo @ndcunningham
+/docs/generated/packages/react-native/** @xiongemi @jaysoo @ndcunningham
+/packages/detox/** @xiongemi @jaysoo @ndcunningham
+/e2e/detox/** @xiongemi @jaysoo @ndcunningham
+/packages/expo/** @xiongemi @jaysoo @ndcunningham
+/e2e/expo/** @xiongemi @jaysoo @ndcunningham
+/packages/react-native/** @xiongemi @jaysoo @ndcunningham
+/e2e/react-native/** @xiongemi @jaysoo @ndcunningham
 
 ## Node
 /docs/generated/packages/node/** @nartc @ndcunningham @jaysoo
