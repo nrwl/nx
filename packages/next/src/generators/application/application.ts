@@ -1,5 +1,9 @@
-import { convertNxGenerator, formatFiles, Tree } from '@nrwl/devkit';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+import {
+  convertNxGenerator,
+  formatFiles,
+  runTasksInSerial,
+  Tree,
+} from '@nrwl/devkit';
 
 import { normalizeOptions } from './lib/normalize-options';
 import { Schema } from './schema';

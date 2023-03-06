@@ -12,20 +12,21 @@ import {
   names,
   offsetFromRoot,
   ProjectConfiguration,
+  runTasksInSerial,
   toJS,
   Tree,
   updateJson,
   writeJson,
 } from '@nrwl/devkit';
 import { getImportPath } from 'nx/src/utils/path';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+
 import {
   getRelativePathToRootTsConfig,
   updateRootTsConfig,
 } from '../../utils/typescript/ts-config';
 import { join } from 'path';
 import { addMinimalPublishScript } from '../../utils/minimal-publish-script';
-import { LibraryGeneratorSchema, Bundler } from '../../utils/schema';
+import { Bundler, LibraryGeneratorSchema } from '../../utils/schema';
 import { addSwcConfig } from '../../utils/swc/add-swc-config';
 import { addSwcDependencies } from '../../utils/swc/add-swc-dependencies';
 import {

@@ -3,6 +3,7 @@ import {
   GeneratorCallback,
   joinPathFragments,
   readProjectConfiguration,
+  runTasksInSerial,
   Tree,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
@@ -15,7 +16,7 @@ import { updateModuleFederationE2eProject } from './lib/update-module-federation
 
 import { Schema } from './schema';
 import remoteGenerator from '../remote/remote';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+
 import setupSsrGenerator from '../setup-ssr/setup-ssr';
 import { setupSsrForHost } from './lib/setup-ssr-for-host';
 

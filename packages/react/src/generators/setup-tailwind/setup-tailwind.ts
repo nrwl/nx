@@ -7,8 +7,8 @@ import {
   joinPathFragments,
   logger,
   readProjectConfiguration,
+  runTasksInSerial,
 } from '@nrwl/devkit';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
 import {
   autoprefixerVersion,

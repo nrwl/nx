@@ -5,9 +5,9 @@ import {
   joinPathFragments,
   names,
   readProjectConfiguration,
+  runTasksInSerial,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
 import type { Schema } from '../schema';
 import { moduleFederationNodeVersion } from '../../../utils/versions';

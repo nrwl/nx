@@ -4,10 +4,11 @@ import {
   formatFiles,
   GeneratorCallback,
   removeDependenciesFromPackageJson,
+  runTasksInSerial,
   Tree,
 } from '@nrwl/devkit';
 import { jestInitGenerator } from '@nrwl/jest';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+
 import { initGenerator as jsInitGenerator } from '@nrwl/js';
 import {
   nxVersion,

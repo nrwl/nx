@@ -4,10 +4,11 @@ import {
   formatFiles,
   GeneratorCallback,
   removeDependenciesFromPackageJson,
+  runTasksInSerial,
   Tree,
 } from '@nrwl/devkit';
 import { jestVersion, typesNodeVersion } from '@nrwl/jest/src/utils/versions';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+
 import { Schema } from './schema';
 import {
   detoxVersion,

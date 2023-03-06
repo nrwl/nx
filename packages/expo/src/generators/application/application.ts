@@ -1,10 +1,10 @@
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import {
   convertNxGenerator,
-  Tree,
   formatFiles,
-  joinPathFragments,
   GeneratorCallback,
+  joinPathFragments,
+  runTasksInSerial,
+  Tree,
 } from '@nrwl/devkit';
 
 import { addLinting } from '../../utils/add-linting';

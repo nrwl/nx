@@ -1,8 +1,8 @@
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import {
   addDependenciesToPackageJson,
   joinPathFragments,
+  runTasksInSerial,
   Tree,
   updateJson,
 } from '@nrwl/devkit';

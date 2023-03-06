@@ -6,10 +6,10 @@ import {
   joinPathFragments,
   names,
   readProjectConfiguration,
+  runTasksInSerial,
   Tree,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
 import { normalizeOptions } from '../application/lib/normalize-options';
 import applicationGenerator from '../application/application';

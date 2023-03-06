@@ -8,12 +8,13 @@ import {
   joinPathFragments,
   names,
   offsetFromRoot,
+  runTasksInSerial,
   TargetConfiguration,
   toJS,
   Tree,
   updateJson,
 } from '@nrwl/devkit';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+
 import { getRelativePathToRootTsConfig, updateRootTsConfig } from '@nrwl/js';
 import init from '../init/init';
 import { addLinting } from '../../utils/add-linting';

@@ -5,10 +5,11 @@ import {
   formatFiles,
   GeneratorCallback,
   removeDependenciesFromPackageJson,
+  runTasksInSerial,
   Tree,
 } from '@nrwl/devkit';
 import { Schema } from './schema';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+
 import { addBabelInputs } from '@nrwl/js/src/utils/add-babel-inputs';
 import { jestInitGenerator } from '@nrwl/jest';
 import { detoxInitGenerator } from '@nrwl/detox';

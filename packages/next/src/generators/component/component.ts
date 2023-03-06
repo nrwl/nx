@@ -1,7 +1,12 @@
-import { convertNxGenerator, getProjects, Tree } from '@nrwl/devkit';
+import {
+  convertNxGenerator,
+  getProjects,
+  runTasksInSerial,
+  Tree,
+} from '@nrwl/devkit';
 import type { SupportedStyles } from '@nrwl/react';
 import { componentGenerator as reactComponentGenerator } from '@nrwl/react';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+
 import { addStyleDependencies } from '../../utils/styles';
 
 interface Schema {

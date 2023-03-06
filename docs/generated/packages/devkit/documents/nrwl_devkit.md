@@ -185,6 +185,7 @@ It only uses language primitives and immutable objects
 - [removeProjectConfiguration](../../devkit/documents/nrwl_devkit#removeprojectconfiguration)
 - [reverse](../../devkit/documents/nrwl_devkit#reverse)
 - [runExecutor](../../devkit/documents/nrwl_devkit#runexecutor)
+- [runTasksInSerial](../../devkit/documents/nrwl_devkit#runtasksinserial)
 - [serializeJson](../../devkit/documents/nrwl_devkit#serializejson)
 - [sharePackages](../../devkit/documents/nrwl_devkit#sharepackages)
 - [shareWorkspaceLibraries](../../devkit/documents/nrwl_devkit#shareworkspacelibraries)
@@ -2047,6 +2048,24 @@ Note that the return value is a promise of an iterator, so you need to await bef
 #### Returns
 
 `Promise`<`AsyncIterableIterator`<`T`\>\>
+
+---
+
+### runTasksInSerial
+
+▸ **runTasksInSerial**(...`tasks`): [`GeneratorCallback`](../../devkit/documents/nrwl_devkit#generatorcallback)
+
+Run tasks in serial
+
+#### Parameters
+
+| Name       | Type                                                                          | Description                 |
+| :--------- | :---------------------------------------------------------------------------- | :-------------------------- |
+| `...tasks` | [`GeneratorCallback`](../../devkit/documents/nrwl_devkit#generatorcallback)[] | The tasks to run in serial. |
+
+#### Returns
+
+[`GeneratorCallback`](../../devkit/documents/nrwl_devkit#generatorcallback)
 
 ---
 

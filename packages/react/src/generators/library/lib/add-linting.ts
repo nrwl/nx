@@ -2,8 +2,7 @@ import { Tree } from 'nx/src/generators/tree';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { joinPathFragments } from 'nx/src/utils/path';
 import { updateJson } from 'nx/src/generators/utils/json';
-import { addDependenciesToPackageJson } from '@nrwl/devkit';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+import { addDependenciesToPackageJson, runTasksInSerial } from '@nrwl/devkit';
 
 import { NormalizedSchema } from '../schema';
 import {

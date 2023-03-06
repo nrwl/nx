@@ -1,4 +1,10 @@
-import { formatFiles, getProjects, stripIndents, Tree } from '@nrwl/devkit';
+import {
+  formatFiles,
+  getProjects,
+  runTasksInSerial,
+  stripIndents,
+  Tree,
+} from '@nrwl/devkit';
 import type { Schema } from './schema';
 import applicationGenerator from '../application/application';
 import remoteGenerator from '../remote/remote';
@@ -6,7 +12,7 @@ import { normalizeProjectName } from '../utils/project';
 import { setupMf } from '../setup-mf/setup-mf';
 import { E2eTestRunner } from '../../utils/test-runners';
 import { addSsr } from './lib';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+
 import { getInstalledAngularVersionInfo } from '../utils/version-utils';
 import { lt } from 'semver';
 

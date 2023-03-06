@@ -1,3 +1,4 @@
+import type { Tree } from '@nrwl/devkit';
 import {
   addProjectConfiguration,
   convertNxGenerator,
@@ -9,16 +10,15 @@ import {
   joinPathFragments,
   names,
   readProjectConfiguration,
+  runTasksInSerial,
   updateProjectConfiguration,
 } from '@nrwl/devkit';
-import type { Tree } from '@nrwl/devkit';
 import { jestProjectGenerator } from '@nrwl/jest';
 import { getRelativePathToRootTsConfig } from '@nrwl/js';
 import * as path from 'path';
 
 import type { Schema } from './schema';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
 interface NormalizedSchema extends Schema {
   projectRoot: string;

@@ -3,22 +3,23 @@ import {
   formatFiles,
   GeneratorCallback,
   readProjectConfiguration,
+  runTasksInSerial,
   Tree,
 } from '@nrwl/devkit';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+
 import {
-  findExistingTargetsInProject,
   addOrChangeBuildTarget,
   addOrChangeServeTarget,
-  editTsConfig,
-  moveAndEditIndexHtml,
-  createOrEditViteConfig,
-  handleUnsupportedUserProvidedTargets,
-  handleUnknownExecutors,
-  UserProvidedTargetName,
-  TargetFlags,
   addPreviewTarget,
+  createOrEditViteConfig,
   deleteWebpackConfig,
+  editTsConfig,
+  findExistingTargetsInProject,
+  handleUnknownExecutors,
+  handleUnsupportedUserProvidedTargets,
+  moveAndEditIndexHtml,
+  TargetFlags,
+  UserProvidedTargetName,
 } from '../../utils/generator-utils';
 
 import initGenerator from '../init/init';

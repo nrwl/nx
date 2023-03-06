@@ -6,13 +6,14 @@ import {
   GeneratorCallback,
   logger,
   readNxJson,
+  runTasksInSerial,
   Tree,
   updateNxJson,
 } from '@nrwl/devkit';
 import { jestInitGenerator } from '@nrwl/jest';
 import { Linter } from '@nrwl/linter';
 import { initGenerator as jsInitGenerator } from '@nrwl/js';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+
 import { backwardCompatibleVersions } from '../../../utils/backward-compatible-versions';
 import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
 import { karmaGenerator } from '../../karma/karma';

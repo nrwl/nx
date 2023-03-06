@@ -31,6 +31,11 @@ export { updateTsConfigsToJs } from './src/generators/update-ts-configs-to-js';
 /**
  * @category Generators
  */
+export { runTasksInSerial } from './src/generators/run-tasks-in-serial';
+
+/**
+ * @category Generators
+ */
 export { visitNotIgnoredFiles } from './src/generators/visit-not-ignored-files';
 
 export {

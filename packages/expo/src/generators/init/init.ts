@@ -4,34 +4,34 @@ import {
   formatFiles,
   GeneratorCallback,
   removeDependenciesFromPackageJson,
+  runTasksInSerial,
   Tree,
 } from '@nrwl/devkit';
 import { Schema } from './schema';
 import {
-  expoVersion,
+  babelPresetExpoVersion,
+  deprecatedExpoCliVersion,
+  easCliVersion,
+  expoCliVersion,
+  expoMetroConfigVersion,
   expoSplashScreenVersion,
   expoStatusBarVersion,
-  nxVersion,
-  reactNativeVersion,
-  reactNativeWebVersion,
-  typesReactNativeVersion,
-  expoMetroConfigVersion,
+  expoVersion,
   metroVersion,
-  testingLibraryReactNativeVersion,
-  testingLibraryJestNativeVersion,
+  nxVersion,
+  reactDomVersion,
   reactNativeSvgTransformerVersion,
   reactNativeSvgVersion,
-  expoCliVersion,
-  babelPresetExpoVersion,
-  easCliVersion,
-  deprecatedExpoCliVersion,
-  reactVersion,
+  reactNativeVersion,
+  reactNativeWebVersion,
   reactTestRendererVersion,
+  reactVersion,
+  testingLibraryJestNativeVersion,
+  testingLibraryReactNativeVersion,
+  typesReactNativeVersion,
   typesReactVersion,
-  reactDomVersion,
 } from '../../utils/versions';
 
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { jestInitGenerator } from '@nrwl/jest';
 import { detoxInitGenerator } from '@nrwl/detox';
 import { initGenerator as jsInitGenerator } from '@nrwl/js';

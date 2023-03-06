@@ -5,10 +5,11 @@ import {
   formatFiles,
   GeneratorCallback,
   joinPathFragments,
+  runTasksInSerial,
   Tree,
   updateJson,
 } from '@nrwl/devkit';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+
 import { updateRootTsConfig } from '@nrwl/js';
 
 import { nxVersion } from '../../utils/versions';

@@ -9,10 +9,11 @@ import {
   joinPathFragments,
   logger,
   names,
+  runTasksInSerial,
   toJS,
   Tree,
 } from '@nrwl/devkit';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+
 import { addStyledModuleDependencies } from '../../rules/add-styled-dependencies';
 import { assertValidStyle } from '../../utils/assertion';
 import { addImport } from '../../utils/ast-utils';
@@ -104,6 +105,7 @@ function createComponentFiles(host: Tree, options: NormalizedSchema) {
 }
 
 let tsModule: typeof import('typescript');
+
 function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
   if (!tsModule) {
     tsModule = ensureTypescript();

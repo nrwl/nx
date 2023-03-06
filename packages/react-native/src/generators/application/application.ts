@@ -1,11 +1,12 @@
 import { join } from 'path';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+
 import {
   convertNxGenerator,
-  Tree,
   formatFiles,
   GeneratorCallback,
   joinPathFragments,
+  runTasksInSerial,
+  Tree,
 } from '@nrwl/devkit';
 
 import { runPodInstall } from '../../utils/pod-install-task';
