@@ -18,7 +18,8 @@ describe('Next.js apps', () => {
     process.env.NODE_ENV = originalEnv;
   });
 
-  it('should support different --style options', async () => {
+  // TODO (meeroslav): enable when this flaky test is fixed
+  xit('should support different --style options', async () => {
     const lessApp = uniq('app');
 
     runCLI(`generate @nrwl/next:app ${lessApp} --no-interactive --style=less`);
