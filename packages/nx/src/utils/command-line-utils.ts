@@ -166,6 +166,10 @@ export function splitArgsIntoNxArgsAndOverrides(
         });
       }
     }
+
+    if (nxArgs.base) {
+      nxArgs.base = getMergeBase(nxArgs.base, nxArgs.head);
+    }
   }
 
   if (!nxArgs.skipNxCache) {
@@ -231,25 +235,33 @@ function getUntrackedFiles(): string[] {
   return parseGitOutput(`git ls-files --others --exclude-standard`);
 }
 
-function getFilesUsingBaseAndHead(base: string, head: string): string[] {
-  let mergeBase: string;
+function getMergeBase(base: string, head: string = 'HEAD') {
   try {
-    mergeBase = execSync(`git merge-base "${base}" "${head}"`, {
+    return execSync(`git merge-base "${base}" "${head}"`, {
       maxBuffer: TEN_MEGABYTES,
       cwd: workspaceRoot,
+      stdio: 'pipe',
     })
       .toString()
       .trim();
   } catch {
-    mergeBase = execSync(`git merge-base --fork-point "${base}" "${head}"`, {
-      maxBuffer: TEN_MEGABYTES,
-      cwd: workspaceRoot,
-    })
-      .toString()
-      .trim();
+    try {
+      return execSync(`git merge-base --fork-point "${base}" "${head}"`, {
+        maxBuffer: TEN_MEGABYTES,
+        cwd: workspaceRoot,
+        stdio: 'pipe',
+      })
+        .toString()
+        .trim();
+    } catch {
+      return base;
+    }
   }
+}
+
+function getFilesUsingBaseAndHead(base: string, head: string): string[] {
   return parseGitOutput(
-    `git diff --name-only --no-renames --relative "${mergeBase}" "${head}"`
+    `git diff --name-only --no-renames --relative "${base}" "${head}"`
   );
 }
 
