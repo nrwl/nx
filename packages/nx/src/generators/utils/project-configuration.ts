@@ -59,6 +59,7 @@ export function addProjectConfiguration(
     );
   }
 
+  delete (projectConfiguration as any).$schema;
   writeJson(tree, projectConfigFile, {
     name: projectName,
     $schema: getRelativeProjectJsonSchemaPath(tree, projectConfiguration),
