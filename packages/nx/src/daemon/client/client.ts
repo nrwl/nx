@@ -188,9 +188,18 @@ export class DaemonClient {
   }
 
   private async sendToDaemonViaQueue(messageToDaemon: Message): Promise<any> {
-    return this.queue.sendToQueue(() =>
-      this.sendMessageToDaemon(messageToDaemon)
-    );
+    return this.queue
+      .sendToQueue(() => this.sendMessageToDaemon(messageToDaemon))
+      .then(() => {
+        if (this.queue.isEmpty()) {
+          this.closeConnection();
+        }
+      });
+  }
+
+  private closeConnection() {
+    this.socketMessenger.close();
+    this._connected = false;
   }
 
   private setUpConnection() {
