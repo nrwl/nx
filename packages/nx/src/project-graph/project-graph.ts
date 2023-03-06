@@ -10,8 +10,8 @@ import {
   ProjectsConfigurations,
 } from '../config/workspace-json-project-json';
 import { daemonClient } from '../daemon/client/client';
-import { fileExists } from 'nx/src/utils/fileutils';
-import { workspaceRoot } from 'nx/src/utils/workspace-root';
+import { fileExists } from '../utils/fileutils';
+import { workspaceRoot } from '../utils/workspace-root';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.

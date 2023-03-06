@@ -2,7 +2,7 @@ import { workspaceRoot } from './workspace-root';
 import { existsSync } from 'fs';
 import { join } from 'path';
 import { output } from './output';
-import { readJsonFile } from 'nx/src/utils/fileutils';
+import { readJsonFile } from '../utils/fileutils';
 
 //TODO: vsavkin remove after Nx 18
 export function workspaceConfigurationCheck() {

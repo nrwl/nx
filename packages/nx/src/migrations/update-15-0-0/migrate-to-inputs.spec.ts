@@ -8,7 +8,7 @@ import {
 } from '../../generators/utils/project-configuration';
 import { readJson, writeJson } from '../../generators/utils/json';
 import migrateToInputs from './migrate-to-inputs';
-import { NxJsonConfiguration } from 'nx/src/config/nx-json';
+import { NxJsonConfiguration } from '../../config/nx-json';
 
 describe('15.0.0 migration (migrate-to-inputs)', () => {
   let tree: Tree;

@@ -1,7 +1,7 @@
 import {
   getNxWrapperContents,
   nxWrapperPath,
-} from 'nx/src/nx-init/encapsulated/add-nx-scripts';
+} from '../../nx-init/encapsulated/add-nx-scripts';
 import { normalizePath } from '../../utils/path';
 import { Tree } from '../../generators/tree';
 

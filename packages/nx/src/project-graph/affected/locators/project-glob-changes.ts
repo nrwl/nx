@@ -11,7 +11,7 @@ import {
   getGlobPatternsFromPlugins,
 } from '../../../config/workspaces';
 import { workspaceRoot } from '../../../utils/workspace-root';
-import { getNxRequirePaths } from 'nx/src/utils/installation-directory';
+import { getNxRequirePaths } from '../../../utils/installation-directory';
 
 export const getTouchedProjectsFromProjectGlobChanges: TouchedProjectLocator<
   WholeFileChange | JsonChange | DeletedFileChange
