@@ -55,6 +55,7 @@ function addBuildTarget(tree: Tree, options: WebpackProjectGeneratorSchema) {
     main: options.main ?? joinPathFragments(project.root, 'src/main.ts'),
     tsConfig:
       options.tsConfig ?? joinPathFragments(project.root, 'tsconfig.app.json'),
+    webpackConfig: joinPathFragments(project.root, 'webpack.config.js'),
   };
 
   if (options.webpackConfig) {
@@ -67,6 +68,35 @@ function addBuildTarget(tree: Tree, options: WebpackProjectGeneratorSchema) {
     buildOptions.babelUpwardRootMode = true;
   }
 
+  if (options.target === 'node') {
+    tree.write(
+      joinPathFragments(project.root, 'webpack.config.js'),
+      `
+const { composePlugins, withNx } = require('@nrwl/webpack');
+
+// Nx plugins for webpack.
+module.exports = composePlugins(withNx(), (config) => {
+  // Update the webpack config as needed here.
+  // e.g. \`config.plugins.push(new MyPlugin())\`
+  return config;
+});
+`
+    );
+  } else {
+    tree.write(
+      joinPathFragments(project.root, 'webpack.config.js'),
+      `
+const { composePlugins, withNx, withWeb } = require('@nrwl/webpack');
+
+// Nx plugins for webpack.
+module.exports = composePlugins(withNx(), withWeb(), (config) => {
+  // Update the webpack config as needed here.
+  // e.g. \`config.plugins.push(new MyPlugin())\`
+  return config;
+});
+`
+    );
+  }
   updateProjectConfiguration(tree, options.project, {
     ...project,
     targets: {

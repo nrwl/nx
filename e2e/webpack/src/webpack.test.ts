@@ -22,8 +22,25 @@ describe('Webpack Plugin', () => {
     runCLI(
       `generate @nrwl/webpack:webpack-project ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts`
     );
+
+    // Test `scriptType` later during during.
+    updateFile(
+      `libs/${myPkg}/webpack.config.js`,
+      `
+const { composePlugins, withNx } = require('@nrwl/webpack');
+
+module.exports = composePlugins(withNx(), (config) => {
+  console.log('scriptType is ' + config.output.scriptType);
+  return config;
+});
+`
+    );
+
     rmDist();
-    runCLI(`build ${myPkg}`);
+
+    const buildOutput = runCLI(`build ${myPkg}`);
+    // Ensure scriptType is not set if we're in Node (it only applies to Web).
+    expect(buildOutput).toContain('scriptType is undefined');
     let output = runCommand(`node dist/libs/${myPkg}/main.js`);
     expect(output).toMatch(/Hello/);
     expect(output).not.toMatch(/Conflicting/);
