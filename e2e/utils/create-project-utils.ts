@@ -39,7 +39,7 @@ export function newProject({
   packageManager = getSelectedPackageManager(),
 } = {}): string {
   try {
-    const useBackupProject = packageManager !== 'pnpm';
+    const useBackupProject = /*packageManager !== 'pnpm'*/ true;
     const projScope = useBackupProject ? 'proj' : name;
 
     if (!useBackupProject || !directoryExists(tmpBackupProjPath())) {
@@ -376,7 +376,7 @@ export function newEncapsulatedNxWorkspace({
   projName = name;
   ensureDirSync(tmpProjPath());
   runCommand(`${pmc.runUninstalledPackage} nx@latest init --encapsulated`);
-  return (command: string, opts: Partial<ExecSyncOptions>) => {
+  return (command: string, opts: Partial<ExecSyncOptions> | undefined) => {
     if (process.platform === 'win32') {
       return runCommand(`./nx.bat ${command}`, { ...opts, failOnError: true });
     } else {
