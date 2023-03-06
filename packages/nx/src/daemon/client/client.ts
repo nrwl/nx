@@ -190,10 +190,11 @@ export class DaemonClient {
   private async sendToDaemonViaQueue(messageToDaemon: Message): Promise<any> {
     return this.queue
       .sendToQueue(() => this.sendMessageToDaemon(messageToDaemon))
-      .then(() => {
+      .then((value) => {
         if (this.queue.isEmpty()) {
           this.closeConnection();
         }
+        return value;
       });
   }
 
