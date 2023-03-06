@@ -1,4 +1,4 @@
-import { Task } from 'nx/src/config/task-graph';
+import { Task } from '../../config/task-graph';
 import { TaskStatus } from '../tasks-runner';
 import { StoreRunInformationLifeCycle } from './store-run-information-life-cycle';
 describe('StoreRunInformationLifeCycle', () => {

@@ -9,7 +9,7 @@ import {
   initCloud,
   runInstall,
 } from './utils';
-import { joinPathFragments } from 'nx/src/utils/path';
+import { joinPathFragments } from '../utils/path';
 import { PackageJson } from '../utils/package-json';
 import {
   getPackageManagerCommand,
