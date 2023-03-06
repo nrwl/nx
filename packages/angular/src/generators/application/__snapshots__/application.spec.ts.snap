@@ -147,7 +147,7 @@ exports[`app at the root should accept numbers in the path 1`] = `"src/9-website
 
 exports[`app nested should create project configs 1`] = `
 Object {
-  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "my-dir-my-app",
   "prefix": "proj",
   "projectType": "application",
@@ -296,7 +296,7 @@ Object {
 
 exports[`app not nested should create project configs 1`] = `
 Object {
-  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "my-app",
   "prefix": "proj",
   "projectType": "application",
