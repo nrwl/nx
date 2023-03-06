@@ -3868,14 +3868,6 @@
                 "disableCollapsible": false
               },
               {
-                "id": "upgrade-module",
-                "path": "/packages/angular/generators/upgrade-module",
-                "name": "upgrade-module",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
                 "id": "web-worker",
                 "path": "/packages/angular/generators/web-worker",
                 "name": "web-worker",

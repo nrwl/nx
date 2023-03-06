@@ -89,10 +89,6 @@ describe('nx-dev: Packages Section', () => {
       path: '/packages/angular/generators/storybook-configuration',
     },
     {
-      title: '@nrwl/angular:upgrade-module',
-      path: '/packages/angular/generators/upgrade-module',
-    },
-    {
       title: '@nrwl/angular:web-worker',
       path: '/packages/angular/generators/web-worker',
     },
