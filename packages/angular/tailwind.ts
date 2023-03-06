@@ -1,4 +1,4 @@
-import { createGlobPatternsForDependencies as workspaceGenerateGlobs } from '@nrwl/workspace/src/utilities/generate-globs';
+import { createGlobPatternsForDependencies as jsGenerateGlobs } from '@nrwl/js/src/utils/generate-globs';
 
 /**
  * Generates a set of glob patterns based off the source root of the app and its dependencies
@@ -10,7 +10,7 @@ export function createGlobPatternsForDependencies(
   fileGlobPattern: string = '/**/!(*.stories|*.spec).{ts,html}'
 ) {
   try {
-    return workspaceGenerateGlobs(dirPath, fileGlobPattern);
+    return jsGenerateGlobs(dirPath, fileGlobPattern);
   } catch {
     /**
      * It should not be possible to reach this point when the utility is invoked as part of the normal
