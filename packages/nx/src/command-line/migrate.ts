@@ -1525,9 +1525,9 @@ export async function migrate(
   }
 
   try {
-    runNxSync("daemon --stop", {
-      cwd: workspaceRoot
-    })
+    runNxSync('daemon --stop', {
+      cwd: workspaceRoot,
+    });
   } catch {}
 
   return handleErrors(process.env.NX_VERBOSE_LOGGING === 'true', async () => {
