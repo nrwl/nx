@@ -71,7 +71,7 @@ export async function addNxToAngularCliRepo() {
 
   if (useNxCloud) {
     output.log({ title: '🛠️ Setting up Nx Cloud' });
-    initCloud(repoRoot);
+    initCloud(repoRoot, 'nx-init-angular');
   }
 
   output.success({

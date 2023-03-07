@@ -135,7 +135,7 @@ export async function addNxToNest(packageJson: PackageJson) {
   runInstall(repoRoot);
 
   if (useCloud) {
-    initCloud(repoRoot);
+    initCloud(repoRoot, 'nx-init-nest');
   }
 
   printFinalMessage();

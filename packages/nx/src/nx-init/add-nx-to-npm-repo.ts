@@ -93,7 +93,7 @@ export async function addNxToNpmRepo() {
   runInstall(repoRoot, pmc);
 
   if (useCloud) {
-    initCloud(repoRoot);
+    initCloud(repoRoot, 'nx-init-npm-repo');
   }
 
   printFinalMessage();

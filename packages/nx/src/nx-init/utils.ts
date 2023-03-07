@@ -121,11 +121,22 @@ export function runInstall(
   execSync(pmc.install, { stdio: [0, 1, 2], cwd: repoRoot });
 }
 
-export function initCloud(repoRoot: string) {
-  runNxSync(`g @nrwl/nx-cloud:init --installationSource=add-nx-to-monorepo`, {
-    stdio: [0, 1, 2],
-    cwd: repoRoot,
-  });
+export function initCloud(
+  repoRoot: string,
+  installationSource:
+    | 'nx-init-angular'
+    | 'nx-init-cra'
+    | 'nx-init-monorepo'
+    | 'nx-init-nest'
+    | 'nx-init-npm-repo'
+) {
+  runNxSync(
+    `g @nrwl/nx-cloud:init --installationSource=${installationSource}`,
+    {
+      stdio: [0, 1, 2],
+      cwd: repoRoot,
+    }
+  );
 }
 
 export function addVsCodeRecommendedExtensions(
