@@ -55,7 +55,12 @@ const IGNORE_MATCHES_IN_PACKAGE = {
   ],
   cli: ['nx'],
   cypress: ['cypress', '@angular-devkit/schematics', '@nrwl/cypress', 'vite'],
-  devkit: ['@angular-devkit/architect', 'rxjs', 'webpack'],
+  devkit: [
+    '@angular-devkit/architect',
+    '@angular-devkit/schematics',
+    'rxjs',
+    'webpack',
+  ],
   'eslint-plugin-nx': ['@angular-eslint/eslint-plugin'],
   jest: [
     'jest',
