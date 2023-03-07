@@ -19,6 +19,7 @@ import { dirname, extname, join, resolve } from 'path';
 import { concat, from, Observable, of, zip } from 'rxjs';
 import { catchError, concatMap, map, tap } from 'rxjs/operators';
 import { GenerateOptions } from '../command-line/generate';
+import { NxJsonConfiguration } from '../config/nx-json';
 import { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { FsTree, Tree } from '../generators/tree';
 import { readJson } from '../generators/utils/json';
@@ -213,7 +214,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
 
   read(path: Path): Observable<FileBuffer> {
     if (path === 'angular.json' || path === '/angular.json') {
-      return this.readMergedProjectConfiguration().pipe(
+      return this.readMergedWorkspaceConfiguration().pipe(
         map((r) => Buffer.from(JSON.stringify(toOldFormat(r))))
       );
     } else {
@@ -221,23 +222,24 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
     }
   }
 
-  private readMergedProjectConfiguration() {
+  private readMergedWorkspaceConfiguration() {
     return zip(
       from(createProjectGraphAsync()),
-      this.readExistingAngularJson()
+      this.readExistingAngularJson(),
+      this.readJson<NxJsonConfiguration>('nx.json')
     ).pipe(
-      concatMap((arg) => {
-        const graph = arg[0] as any;
-        const ret = (arg[1] || { projects: {} }) as any;
-        const projectJsonReads: Observable<
-          [string, ProjectConfiguration & { version: string }]
-        >[] = [];
+      concatMap(([graph, angularJson, nxJson]) => {
+        const workspaceConfig = (angularJson || { projects: {} }) as any;
+        workspaceConfig.cli ??= nxJson.cli;
+        workspaceConfig.schematics ??= nxJson.generators;
+        const projectJsonReads: Observable<[string, ProjectConfiguration]>[] =
+          [];
         for (let projectName of Object.keys(graph.nodes)) {
-          if (!ret.projects[projectName]) {
+          if (!workspaceConfig.projects[projectName]) {
             projectJsonReads.push(
               zip(
                 of(projectName),
-                this.readExistingProjectJson(
+                this.readJson<ProjectConfiguration>(
                   join(graph.nodes[projectName].data.root, 'project.json')
                 )
               )
@@ -249,14 +251,13 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
             reads
               .filter(([, p]) => p !== null)
               .forEach(([projectName, project]) => {
-                delete project.version;
-                ret.projects[projectName] = {
+                workspaceConfig.projects[projectName] = {
                   ...project,
                   root: graph.nodes[projectName].data.root,
                 };
               });
 
-            return ret;
+            return workspaceConfig;
           })
         );
       }),
@@ -274,7 +275,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
       const root = this.root;
 
       return zip(
-        this.readMergedProjectConfiguration(),
+        this.readMergedWorkspaceConfiguration(),
         this.readExistingAngularJson()
       ).pipe(
         concatMap((arg) => {
@@ -386,20 +387,10 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
   }
 
   readExistingAngularJson() {
-    return super
-      .exists('angular.json' as any)
-      .pipe(
-        concatMap((r) =>
-          r
-            ? super
-                .read('angular.json' as any)
-                .pipe(map((r) => parseJson(arrayBufferToString(r))))
-            : of(null)
-        )
-      );
+    return this.readJson('angular.json');
   }
 
-  readExistingProjectJson(path: string) {
+  private readJson<T = any>(path: string): Observable<T> {
     return super
       .exists(path as any)
       .pipe(
@@ -407,9 +398,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
           r
             ? super
                 .read(path as any)
-                .pipe(
-                  map((r) => toNewFormat(parseJson(arrayBufferToString(r))))
-                )
+                .pipe(map((r) => parseJson(arrayBufferToString(r))))
             : of(null)
         )
       );
