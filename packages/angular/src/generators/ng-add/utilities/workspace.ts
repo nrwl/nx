@@ -11,7 +11,7 @@ import {
 } from '@nrwl/devkit';
 import { Linter, lintInitGenerator } from '@nrwl/linter';
 import { DEFAULT_NRWL_PRETTIER_CONFIG } from '@nrwl/workspace/src/generators/new/generate-workspace-files';
-import { deduceDefaultBase } from '@nrwl/workspace/src/utilities/default-base';
+import { deduceDefaultBase } from 'nx/src/utils/default-base';
 import { resolveUserExistingPrettierConfig } from '@nrwl/workspace/src/utilities/prettier';
 import { getRootTsConfigPathInTree } from '@nrwl/js';
 import { prettierVersion } from '@nrwl/workspace/src/utils/versions';
