@@ -7,8 +7,11 @@ import {
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { ciWorkflowGenerator } from './ci-workflow';
+import * as defaultBase from '../../utilities/default-base';
 
 describe('lib', () => {
+  jest.spyOn(defaultBase, 'deduceDefaultBase').mockReturnValue('main');
+
   let tree: Tree;
 
   beforeEach(() => {
