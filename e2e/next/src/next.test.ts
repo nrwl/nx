@@ -1,4 +1,5 @@
 import { detectPackageManager, joinPathFragments } from '@nrwl/devkit';
+import { capitalize } from '@nrwl/devkit/src/utils/string-utils';
 import {
   checkFilesExist,
   cleanupProject,
@@ -17,7 +18,6 @@ import {
   updateFile,
   updateProjectConfig,
 } from '@nrwl/e2e/utils';
-import { stringUtils } from '@nrwl/workspace';
 import * as http from 'http';
 import { checkApp } from './utils';
 
@@ -111,7 +111,7 @@ describe('Next.js Applications', () => {
           import dynamic from 'next/dynamic';
 
           const TestComponent = dynamic(
-              () => import('@${proj}/${nextLib}').then(d => d.${stringUtils.capitalize(
+              () => import('@${proj}/${nextLib}').then(d => d.${capitalize(
         nextLib
       )})
             );
