@@ -70,7 +70,10 @@ export * from './src/utils/rules/ng-add';
 export { updateKarmaConf } from './src/utils/rules/update-karma-conf';
 export { visitNotIgnoredFiles } from './src/utils/rules/visit-not-ignored-files';
 import * as strings from './src/utils/strings';
+
+// TODO(v17): Remove this export.
 export { checkAndCleanWithSemver } from './src/utils/version-utils';
+
 export { updatePackagesInPackageJson } from './src/utils/update-packages-in-package-json';
 
 export { libraryGenerator } from './src/generators/library/library';
