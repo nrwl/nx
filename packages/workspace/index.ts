@@ -49,7 +49,6 @@ export {
 export {
   getNpmScope,
   getWorkspacePath,
-  replaceAppNameWithPath,
   editTarget,
   parseTarget,
   serializeTarget,
