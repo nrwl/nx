@@ -1,6 +1,7 @@
 export * from './utils/typescript/load-ts-transformers';
 export * from './utils/typescript/print-diagnostics';
 export * from './utils/typescript/run-type-check';
+export * from './utils/typescript/get-source-nodes';
 export * from './utils/compiler-helper-dependency';
 export * from './utils/typescript/ts-config';
 export * from './utils/typescript/create-ts-config';
