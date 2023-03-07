@@ -406,6 +406,7 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
       name: options.rootProject ? 'e2e' : `${options.name}-e2e`,
       project: options.name,
       port: options.port,
+      isNest: options.isNest,
     });
     tasks.push(e2eTask);
   }

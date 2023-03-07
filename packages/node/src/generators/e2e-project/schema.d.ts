@@ -7,4 +7,5 @@ export interface Schema {
   linter?: 'eslint' | 'none';
   formatFile?: boolean;
   rootProject?: boolean;
+  isNest?: boolean;
 }

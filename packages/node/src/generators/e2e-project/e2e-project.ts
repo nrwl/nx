@@ -43,7 +43,7 @@ export async function e2eProjectGenerator(host: Tree, _options: Schema) {
   if (options.projectType === 'server') {
     generateFiles(
       host,
-      path.join(__dirname, 'files/server'),
+      path.join(__dirname, 'files/server/common'),
       options.e2eProjectRoot,
       {
         ...options,
@@ -52,6 +52,20 @@ export async function e2eProjectGenerator(host: Tree, _options: Schema) {
         tmpl: '',
       }
     );
+
+    if (options.isNest) {
+      generateFiles(
+        host,
+        path.join(__dirname, 'files/server/nest'),
+        options.e2eProjectRoot,
+        {
+          ...options,
+          ...names(options.rootProject ? 'server' : options.project),
+          offsetFromRoot: offsetFromRoot(options.e2eProjectRoot),
+          tmpl: '',
+        }
+      );
+    }
   } else if (options.projectType === 'cli') {
     const mainFile = appProject.targets.build?.options?.outputPath;
     generateFiles(
