@@ -4,9 +4,9 @@ exports[`lib should generate azure CI config 1`] = `
 "name: CI
 
 trigger:
-  - master
+  - main
 pr:
-  - master
+  - main
 
 variables:
   CI: 'true'
@@ -125,7 +125,7 @@ jobs:
           name: Install dependencies
           command: yarn install --frozen-lockfile
       - nx/set-shas:
-          main-branch-name: 'master'
+          main-branch-name: 'main'
       - run:
           name: Initialize the Nx Cloud distributed CI run
           command: yarn nx-cloud start-ci-run --stop-agents-after=\\"build\\" --agent-count=3
@@ -167,7 +167,7 @@ exports[`lib should generate github CI config 1`] = `
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
 
 jobs:
@@ -175,7 +175,7 @@ jobs:
     name: Nx Cloud - Main Job
     uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.11.3
     with:
-      main-branch-name: master
+      main-branch-name: main
       number-of-agents: 3
       init-commands: |
         yarn nx-cloud start-ci-run --stop-agents-after=\\"build\\" --agent-count=3
@@ -200,7 +200,7 @@ exports[`lib should generate github CI config with custom name 1`] = `
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
 
 jobs:
@@ -208,7 +208,7 @@ jobs:
     name: Nx Cloud - Main Job
     uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.11.3
     with:
-      main-branch-name: master
+      main-branch-name: main
       number-of-agents: 3
       init-commands: |
         yarn nx-cloud start-ci-run --stop-agents-after=\\"build\\" --agent-count=3
