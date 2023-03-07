@@ -1,7 +1,7 @@
 import { chain, noop } from '@angular-devkit/schematics';
 import { updateJsonInTree } from './ast-utils';
 import { readFileSync } from 'fs';
-import { checkAndCleanWithSemver } from './version-utils';
+import { checkAndCleanWithSemver } from '@nrwl/devkit/src/utils/semver';
 import { lt } from 'semver';
 import { addInstallTask } from './rules/add-install-task';
 

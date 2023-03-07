@@ -1,6 +1,9 @@
 import { valid } from 'semver';
 
-export function checkAndCleanWithSemver(pkgName: string, version: string) {
+export function checkAndCleanWithSemver(
+  pkgName: string,
+  version: string
+): string {
   let newVersion = version;
 
   if (valid(newVersion)) {

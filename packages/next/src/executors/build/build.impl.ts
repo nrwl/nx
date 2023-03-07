@@ -16,7 +16,7 @@ import {
   calculateProjectDependencies,
   DependentBuildableProjectNode,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
-import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-utils';
+import { checkAndCleanWithSemver } from '@nrwl/devkit/src/utils/semver';
 
 import { prepareConfig } from '../../utils/config';
 import { updatePackageJson } from './lib/update-package-json';
