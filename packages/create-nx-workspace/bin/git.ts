@@ -78,6 +78,13 @@ export async function initializeGitRepo(
     await execute(['init']);
     await execute(['checkout', '-b', defaultBase]); // Git < 2.28 doesn't support -b on git init.
   }
+  await execute([
+    'config',
+    '--local',
+    '--add',
+    'init.defaultBranch',
+    defaultBase,
+  ]);
   await execute(['add', '.']);
   if (options.commit) {
     const message = options.commit.message || 'initial commit';
