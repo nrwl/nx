@@ -63,7 +63,7 @@ export function Hero(): JSX.Element {
               </ButtonLink>
 
               <CopyToClipboard
-                text="npx create-nx-workspace"
+                text="npx create-nx-workspace@latest"
                 onCopy={() => {
                   setCopied(true);
                 }}
