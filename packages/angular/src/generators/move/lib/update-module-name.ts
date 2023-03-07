@@ -5,7 +5,7 @@ import {
   Tree,
   visitNotIgnoredFiles,
 } from '@nrwl/devkit';
-import { getNewProjectName } from '@nrwl/workspace/src/generators/move/lib/utils';
+import { getNewProjectName } from '../../utils/get-new-project-name';
 import { join } from 'path';
 import { Schema } from '../schema';
 
