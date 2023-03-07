@@ -101,8 +101,7 @@ async function addNxToMonorepo() {
     repoRoot,
     targetDefaults,
     cacheableOperations,
-    scriptOutputs,
-    undefined
+    scriptOutputs
   );
 
   addDepsToPackageJson(repoRoot, useCloud);
@@ -111,7 +110,7 @@ async function addNxToMonorepo() {
   runInstall(repoRoot);
 
   if (useCloud) {
-    initCloud(repoRoot);
+    initCloud(repoRoot, 'nx-init-monorepo');
   }
 
   printFinalMessage();
