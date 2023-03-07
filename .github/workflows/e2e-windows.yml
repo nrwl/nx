@@ -73,7 +73,6 @@ jobs:
         package_manager:
           - npm
         project:
-          - e2e-add-nx-to-monorepo
           - e2e-angular-core
           - e2e-angular-extensions
           - e2e-cra-to-nx
@@ -101,8 +100,6 @@ jobs:
           - e2e-workspace-create-npm
         include:
           # codeowner groups
-          - project: e2e-add-nx-to-monorepo
-            codeowners: 'S04SYHYKGNP'
           - project: e2e-angular-core
             codeowners: 'S04SS457V38'
           - project: e2e-angular-extensions
@@ -156,8 +153,6 @@ jobs:
         exclude:
           # exclude non-CNW/Lerna tests from non-LTS node versions
           - node_version: 16
-            project: e2e-add-nx-to-monorepo
-          - node_version: 16
             project: e2e-angular-core
           - node_version: 16
             project: e2e-angular-extensions
@@ -201,8 +196,6 @@ jobs:
             project: e2e-vite
           - node_version: 16
             project: e2e-webpack
-          - node_version: 19
-            project: e2e-add-nx-to-monorepo
           - node_version: 19
             project: e2e-angular-core
           - node_version: 19

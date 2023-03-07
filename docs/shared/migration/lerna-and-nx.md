@@ -63,7 +63,7 @@ By default `useNx` will be set to `false`, so you have to explicitly opt-in.
 
 **3. Create a nx.json (optional but recommended)**
 
-Nx works even without `nx.json` but to configure some more details such as the `cacheableOperations` of your monorepo in particular, create a `nx.json` at the root of the monorepo. Alternatively you can also just run `npx nx init` to have one generated. Specify the cacheable operations, usually something like `build`, `test`, `lint` etc, depending on your workspace setup:
+Nx works even without `nx.json` but to configure some more details such as the `cacheableOperations` of your monorepo in particular, create a `nx.json` at the root of the monorepo. Alternatively you can also just run `npx nx@latest init` to have one generated. Specify the cacheable operations, usually something like `build`, `test`, `lint` etc, depending on your workspace setup:
 
 ```json {% fileName="nx.json" %}
 {
@@ -90,7 +90,7 @@ This does not include distributed caching or distributed task execution powered 
 Nx can be added to an existing Lerna monorepo by running the following command:
 
 ```shell
-npx add-nx-to-monorepo
+npx nx@latest init
 ```
 
 This will

@@ -1,12 +1,5 @@
 [
   {
-    "name": "add-nx-to-monorepo",
-    "packageName": "add-nx-to-monorepo",
-    "description": "Make any monorepo faster by adding Nx to it",
-    "path": "generated/packages/add-nx-to-monorepo.json",
-    "schemas": { "executors": [], "generators": [] }
-  },
-  {
     "name": "angular",
     "packageName": "angular",
     "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, Cypress, Karma, and Protractor. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Upgrading AngularJS applications \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",

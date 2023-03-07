@@ -3682,14 +3682,6 @@
     "id": "packages",
     "menu": [
       {
-        "id": "add-nx-to-monorepo",
-        "path": "/packages/add-nx-to-monorepo",
-        "name": "add-nx-to-monorepo",
-        "children": [],
-        "isExternal": false,
-        "disableCollapsible": false
-      },
-      {
         "id": "angular",
         "path": "/packages/angular",
         "name": "angular",

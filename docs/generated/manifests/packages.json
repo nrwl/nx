@@ -1,16 +1,4 @@
 {
-  "add-nx-to-monorepo": {
-    "githubRoot": "https://github.com/nrwl/nx/blob/master",
-    "name": "add-nx-to-monorepo",
-    "packageName": "add-nx-to-monorepo",
-    "description": "Make any monorepo faster by adding Nx to it",
-    "documents": {},
-    "root": "/packages/add-nx-to-monorepo",
-    "source": "/packages/add-nx-to-monorepo/src",
-    "executors": {},
-    "generators": {},
-    "path": "/packages/add-nx-to-monorepo"
-  },
   "angular": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "angular",

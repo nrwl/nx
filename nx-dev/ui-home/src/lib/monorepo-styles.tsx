@@ -118,9 +118,7 @@ export function MonorepoStyles(): JSX.Element {
                   </span>{' '}
                   <span>$</span>
                 </p>
-                <p className="typing mt-0.5 flex-1 pl-2">
-                  npx add-nx-to-monorepo
-                </p>
+                <p className="typing mt-0.5 flex-1 pl-2">npx nx@latest init</p>
               </div>
               <div className="mt-4 flex">
                 <p className="typing flex-1 items-center pl-2">
@@ -130,14 +128,6 @@ export function MonorepoStyles(): JSX.Element {
                   🐳 Nx initialization
                 </p>
               </div>
-              <div className="mt-4 flex">
-                <p className="typing flex-1 items-center pl-2">
-                  <span className="mr-2 bg-pink-300 px-1 py-0.5 dark:bg-fuchsia-600">
-                    NX
-                  </span>
-                  🧑‍🔧 Analyzing the source code and creating configuration files
-                </p>
-              </div>{' '}
               <div className="mt-4 flex">
                 <p className="typing flex-1 items-center pl-2">
                   <span className="mr-2 bg-pink-300 px-1 py-0.5 dark:bg-fuchsia-600">

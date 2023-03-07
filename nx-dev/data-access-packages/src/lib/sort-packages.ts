@@ -28,7 +28,6 @@ export function filterMigrationPackages<ItemType extends { name: string }>(
   itemList: ItemType[]
 ): ItemType[] {
   const nxPackageNames = [
-    'add-nx-to-monorepo',
     'create-nx-workspace',
     'create-nx-plugin',
     'cra-to-nx',

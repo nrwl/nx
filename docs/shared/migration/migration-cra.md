@@ -7,7 +7,7 @@ Create-React-App (CRA) is one of the most widely used tool for creating, buildin
 The easiest way to setup Nx in your CRA project is to use the automated migration tool.
 
 ```shell
-npx nx init
+npx nx@latest init
 ```
 
 {% callout type="note" title="Want to migrate to a monorepo instead?" %}
@@ -25,7 +25,7 @@ You will notice that the project now uses [Vite](https://vitejs.dev/) and [Vites
 test your application. Vite is a next-gen tooling for building frontend applications, and is much faster than Webpack (
 which CRA uses).
 
-If you do not want to use Vite, you can run `npx nx init --vite=false` instead.
+If you do not want to use Vite, you can run `npx nx@latest init --vite=false` instead.
 {% /callout %}
 
 ## Try Nx
