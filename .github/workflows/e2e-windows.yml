@@ -25,21 +25,32 @@ jobs:
         package_manager:
           - npm
         packages:
+          - e2e-add-nx-to-monorepo
           - e2e-angular-core
           - e2e-angular-extensions
-          - e2e-nx-run,e2e-nx-misc,e2e-nx-plugin
           - e2e-cra-to-nx
-          - e2e-make-angular-cli-faster
-          - e2e-jest
-          - e2e-linter
           - e2e-cypress
-          - e2e-react
+          - e2e-esbuild
+          - e2e-jest
+          - e2e-js
+          - e2e-lerna-smoke-tests
+          - e2e-linter
+          - e2e-make-angular-cli-faster
           - e2e-next
           - e2e-node
+          - e2e-nx-init
+          - e2e-nx-misc
+          - e2e-nx-plugin
+          - e2e-nx-run
+          - e2e-react
           - e2e-web
-          - e2e-storybook,e2e-storybook-angular
+          - e2e-rollup
+          - e2e-storybook
+          - e2e-storybook-angular
+          - e2e-vite
+          - e2e-webpack
           - e2e-workspace-create
-          - e2e-add-nx-to-monorepo
+          - e2e-e2e-workspace-create-npm
           - e2e-graph-client
       fail-fast: false
 
@@ -95,7 +106,7 @@ jobs:
         sudo: false # disable sudo for windows debugging
 
   report:
-    if: ${{ always() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
+    if: ${{ success() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
     needs: e2e
     runs-on: ubuntu-latest
     name: Report status
@@ -104,8 +115,8 @@ jobs:
         uses: ravsamhq/notify-slack-action@v1
         with:
           status: ${{ needs.e2e.result }}
-          message_format: '{emoji} *{workflow}* {status_message} (last commit <{commit_url}|{commit_sha}>)'
-          notification_title: '{workflow} has {status_message}'
-          footer: '<{run_url}|View Run>'
+          message_format: '{emoji} Workflow has {status_message}'
+          notification_title: '{workflow}'
+          footer: '<{run_url}|View Run> / Last commit <{commit_url}|{commit_sha}>'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
