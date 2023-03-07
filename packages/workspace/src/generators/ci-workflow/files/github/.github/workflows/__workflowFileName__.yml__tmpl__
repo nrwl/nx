@@ -11,6 +11,7 @@ jobs:
     name: Nx Cloud - Main Job
     uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.11.3
     with:
+      main-branch-name: <%= mainBranch %>
       number-of-agents: 3
       init-commands: |
         <%= packageManagerPrefix %> nx-cloud start-ci-run --stop-agents-after="build" --agent-count=3
