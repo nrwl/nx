@@ -17,6 +17,7 @@ import { parsePnpmLockfile, stringifyPnpmLockfile } from './pnpm-parser';
 import { parseYarnLockfile, stringifyYarnLockfile } from './yarn-parser';
 import { pruneProjectGraph } from './project-graph-pruning';
 import { normalizePackageJson } from './utils/package-json';
+import { output } from '../utils/output';
 
 const YARN_LOCK_FILE = 'yarn.lock';
 const NPM_LOCK_FILE = 'package-lock.json';
@@ -77,17 +78,25 @@ export function lockFileHash(
 export function parseLockFile(
   packageManager: PackageManager = detectPackageManager(workspaceRoot)
 ): ProjectGraph {
-  if (packageManager === 'yarn') {
-    const content = readFileSync(YARN_LOCK_PATH, 'utf8');
-    return parseYarnLockfile(content);
-  }
-  if (packageManager === 'pnpm') {
-    const content = readFileSync(PNPM_LOCK_PATH, 'utf8');
-    return parsePnpmLockfile(content);
-  }
-  if (packageManager === 'npm') {
-    const content = readFileSync(NPM_LOCK_PATH, 'utf8');
-    return parseNpmLockfile(content);
+  try {
+    if (packageManager === 'yarn') {
+      const content = readFileSync(YARN_LOCK_PATH, 'utf8');
+      return parseYarnLockfile(content);
+    }
+    if (packageManager === 'pnpm') {
+      const content = readFileSync(PNPM_LOCK_PATH, 'utf8');
+      return parsePnpmLockfile(content);
+    }
+    if (packageManager === 'npm') {
+      const content = readFileSync(NPM_LOCK_PATH, 'utf8');
+      return parseNpmLockfile(content);
+    }
+  } catch (e) {
+    output.error({
+      title: `Failed to parse ${packageManager} lockfile`,
+      bodyLines: errorBodyLines(e),
+    });
+    return;
   }
   throw new Error(`Unknown package manager: ${packageManager}`);
 }
@@ -127,19 +136,47 @@ export function createLockFile(
   const normalizedPackageJson = normalizePackageJson(packageJson);
   const content = readFileSync(getLockFileName(packageManager), 'utf8');
 
-  if (packageManager === 'yarn') {
-    const graph = parseYarnLockfile(content);
-    const prunedGraph = pruneProjectGraph(graph, packageJson);
-    return stringifyYarnLockfile(prunedGraph, content, normalizedPackageJson);
+  try {
+    if (packageManager === 'yarn') {
+      const graph = parseYarnLockfile(content);
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      return stringifyYarnLockfile(prunedGraph, content, normalizedPackageJson);
+    }
+    if (packageManager === 'pnpm') {
+      const graph = parsePnpmLockfile(content);
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      return stringifyPnpmLockfile(prunedGraph, content, normalizedPackageJson);
+    }
+    if (packageManager === 'npm') {
+      const graph = parseNpmLockfile(content);
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      return stringifyNpmLockfile(prunedGraph, content, normalizedPackageJson);
+    }
+  } catch (e) {
+    const additionalInfo = [
+      'To prevent the build from breaking we are returning the root lock file.',
+    ];
+    if (packageManager === 'npm') {
+      additionalInfo.push(
+        'If you run `npm install --package-lock-only` in your output folder it will regenerate the correct pruned lockfile.'
+      );
+    }
+    output.error({
+      title: 'An error occured while creating pruned lockfile',
+      bodyLines: errorBodyLines(e, additionalInfo),
+    });
+    return content;
   }
-  if (packageManager === 'pnpm') {
-    const graph = parsePnpmLockfile(content);
-    const prunedGraph = pruneProjectGraph(graph, packageJson);
-    return stringifyPnpmLockfile(prunedGraph, content, normalizedPackageJson);
-  }
-  if (packageManager === 'npm') {
-    const graph = parseNpmLockfile(content);
-    const prunedGraph = pruneProjectGraph(graph, packageJson);
-    return stringifyNpmLockfile(prunedGraph, content, normalizedPackageJson);
-  }
+}
+
+// generate body lines for error message
+function errorBodyLines(originalError: Error, additionalInfo: string[] = []) {
+  return [
+    'Please open an issue at `https://github.com/nrwl/nx/issues/new?template=1-bug.yml` and provide a reproduction.',
+
+    ...additionalInfo,
+
+    `\nOriginal error: ${originalError.message}\n\n`,
+    originalError.stack,
+  ];
 }
