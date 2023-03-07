@@ -123,8 +123,8 @@
 /packages/nx/src/lock-file @meeroslav @FrozenPandaz
 /e2e/nx*/** @FrozenPandaz @AgentEnder @vsavkin
 /packages/workspace/** @FrozenPandaz @AgentEnder @vsavkin
-/e2e/workspace/** @FrozenPandaz @AgentEnder @vsavkin
-/e2e/workspace-create/** @FrozenPandaz @vsavkin
+/e2e/workspace-create/** @FrozenPandaz @AgentEnder @vsavkin
+/e2e/workspace-create-npm/** @FrozenPandaz @vsavkin
 
 /packages/add-nx-to-monorepo/** @vsavkin @FrozenPandaz @AgentEnder
 /e2e/add-nx-to-monorepo/** @vsavkin @FrozenPandaz @AgentEnder
