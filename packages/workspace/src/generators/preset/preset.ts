@@ -11,10 +11,10 @@ import { Preset } from '../utils/presets';
 
 export async function presetGenerator(tree: Tree, options: Schema) {
   options = normalizeOptions(options);
-  await createPreset(tree, options);
-  await formatFiles(tree);
-  return () => {
+  const presetTask = await createPreset(tree, options);
+  return async () => {
     installPackagesTask(tree);
+    if (presetTask) await presetTask();
   };
 }
 
@@ -28,7 +28,7 @@ async function createPreset(tree: Tree, options: Schema) {
       applicationGenerator: angularApplicationGenerator,
     } = require('@nrwl' + '/angular/generators');
 
-    await angularApplicationGenerator(tree, {
+    return angularApplicationGenerator(tree, {
       name: options.name,
       style: options.style,
       linter: options.linter,
@@ -40,7 +40,7 @@ async function createPreset(tree: Tree, options: Schema) {
       applicationGenerator: angularApplicationGenerator,
     } = require('@nrwl' + '/angular/generators');
 
-    await angularApplicationGenerator(tree, {
+    return angularApplicationGenerator(tree, {
       name: options.name,
       style: options.style,
       linter: options.linter,
@@ -53,7 +53,7 @@ async function createPreset(tree: Tree, options: Schema) {
       applicationGenerator: reactApplicationGenerator,
     } = require('@nrwl' + '/react');
 
-    await reactApplicationGenerator(tree, {
+    return reactApplicationGenerator(tree, {
       name: options.name,
       style: options.style,
       linter: options.linter,
@@ -64,7 +64,7 @@ async function createPreset(tree: Tree, options: Schema) {
       applicationGenerator: reactApplicationGenerator,
     } = require('@nrwl' + '/react');
 
-    await reactApplicationGenerator(tree, {
+    return reactApplicationGenerator(tree, {
       name: options.name,
       style: options.style,
       linter: options.linter,
@@ -77,7 +77,7 @@ async function createPreset(tree: Tree, options: Schema) {
     const { applicationGenerator: nextApplicationGenerator } = require('@nrwl' +
       '/next');
 
-    await nextApplicationGenerator(tree, {
+    return nextApplicationGenerator(tree, {
       name: options.name,
       style: options.style,
       linter: options.linter,
@@ -86,7 +86,7 @@ async function createPreset(tree: Tree, options: Schema) {
     const { applicationGenerator: webApplicationGenerator } = require('@nrwl' +
       '/web');
 
-    await webApplicationGenerator(tree, {
+    return webApplicationGenerator(tree, {
       name: options.name,
       style: options.style,
       linter: options.linter,
@@ -96,7 +96,7 @@ async function createPreset(tree: Tree, options: Schema) {
     const { applicationGenerator: nestApplicationGenerator } = require('@nrwl' +
       '/nest');
 
-    await nestApplicationGenerator(tree, {
+    return nestApplicationGenerator(tree, {
       name: options.name,
       linter: options.linter,
     });
@@ -104,36 +104,38 @@ async function createPreset(tree: Tree, options: Schema) {
     const {
       applicationGenerator: expressApplicationGenerator,
     } = require('@nrwl' + '/express');
-    await expressApplicationGenerator(tree, {
+    return expressApplicationGenerator(tree, {
       name: options.name,
       linter: options.linter,
     });
   } else if (options.preset === Preset.ReactNative) {
     const { reactNativeApplicationGenerator } = require('@nrwl' +
       '/react-native');
-    await reactNativeApplicationGenerator(tree, {
+    return reactNativeApplicationGenerator(tree, {
       name: options.name,
       linter: options.linter,
       e2eTestRunner: 'detox',
     });
   } else if (options.preset === Preset.Expo) {
     const { expoApplicationGenerator } = require('@nrwl' + '/expo');
-    await expoApplicationGenerator(tree, {
+    return expoApplicationGenerator(tree, {
       name: options.name,
       linter: options.linter,
       e2eTestRunner: 'detox',
     });
   } else if (options.preset === Preset.TS) {
     const c = readNxJson(tree);
+    const { initGenerator } = require('@nrwl' + '/js');
     c.workspaceLayout = {
       appsDir: 'packages',
       libsDir: 'packages',
     };
     updateNxJson(tree, c);
+    return initGenerator(tree, {});
   } else if (options.preset === Preset.NodeServer) {
     const { applicationGenerator: nodeApplicationGenerator } = require('@nrwl' +
       '/node');
-    await nodeApplicationGenerator(tree, {
+    return nodeApplicationGenerator(tree, {
       name: options.name,
       linter: options.linter,
       standaloneConfig: options.standaloneConfig,

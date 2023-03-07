@@ -46,8 +46,6 @@ export async function newGenerator(host: Tree, options: Schema) {
   const isCustomPreset = !Object.values(Preset).includes(options.preset as any);
   addCloudDependencies(host, options);
 
-  await formatFiles(host);
-
   return async () => {
     installPackagesTask(host, false, options.directory, options.packageManager);
     // TODO: move all of these into create-nx-workspace

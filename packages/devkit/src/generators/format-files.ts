@@ -24,6 +24,7 @@ export async function formatFiles(tree: Tree): Promise<void> {
   const files = new Set(
     tree.listChanges().filter((file) => file.type !== 'DELETE')
   );
+
   await Promise.all(
     Array.from(files).map(async (file) => {
       const systemPath = path.join(tree.root, file.path);

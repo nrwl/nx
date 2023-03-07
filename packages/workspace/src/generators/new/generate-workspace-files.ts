@@ -9,15 +9,11 @@ import {
   updateJson,
   writeJson,
 } from '@nrwl/devkit';
-import { nxVersion, prettierVersion } from '../../utils/versions';
+import { nxVersion } from '../../utils/versions';
 import { join, join as pathJoin } from 'path';
 import { Preset } from '../utils/presets';
 import { deduceDefaultBase } from '../../utilities/default-base';
 import { NormalizedSchema } from './new';
-
-export const DEFAULT_NRWL_PRETTIER_CONFIG = {
-  singleQuote: true,
-};
 
 export async function generateWorkspaceFiles(
   tree: Tree,
@@ -30,7 +26,6 @@ export async function generateWorkspaceFiles(
   createReadme(tree, options);
   createFiles(tree, options);
   createNxJson(tree, options);
-  createPrettierrc(tree, options);
 
   const [packageMajor] = getPackageManagerVersion(
     options.packageManager as PackageManager
@@ -142,7 +137,6 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
     tmpl: '',
     cliCommand: 'nx',
     nxCli: false,
-    prettierVersion,
     ...(options as object),
     nxVersion,
     packageManager: options.packageManager,
@@ -159,14 +153,6 @@ function createReadme(
     appName,
     name,
   });
-}
-
-function createPrettierrc(tree: Tree, options: NormalizedSchema) {
-  writeJson(
-    tree,
-    join(options.directory, '.prettierrc'),
-    DEFAULT_NRWL_PRETTIER_CONFIG
-  );
 }
 
 // ensure that pnpm install add all the missing peer deps

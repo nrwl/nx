@@ -28,7 +28,7 @@ export default async function update(host: Tree) {
 
     // check swcExclude build options
     const exclude =
-      config?.targets?.build?.options['swcExclude'] || defaultExclude;
+      config?.targets?.build?.options?.['swcExclude'] || defaultExclude;
     updateJson(host, libSwcrcPath, (swcrc) => {
       swcrc['exclude'] = exclude;
       return swcrc;

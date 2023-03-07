@@ -9,11 +9,6 @@ export {
 
 export { names } from '@nrwl/devkit';
 
-export {
-  ExistingPrettierConfig,
-  resolveUserExistingPrettierConfig,
-} from './src/utilities/prettier';
-
 export { output } from './src/utilities/output';
 
 export {

@@ -329,7 +329,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
 
   return {
     ...options,
-    prefix: options.prefix ?? npmScope,
+    prefix: options.prefix ?? npmScope ?? 'app',
     name: names(options.name).fileName,
     compiler: options.compiler ?? 'babel',
     bundler: options.bundler ?? 'webpack',

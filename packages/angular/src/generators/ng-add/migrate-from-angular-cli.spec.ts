@@ -6,7 +6,7 @@ import {
   writeJson,
 } from '@nrwl/devkit';
 import { createTree } from '@nrwl/devkit/testing';
-import * as prettierUtils from '@nrwl/workspace/src/utilities/prettier';
+import * as prettierUtils from '@nrwl/js/src/utils/prettier';
 import { migrateFromAngularCli } from './migrate-from-angular-cli';
 
 describe('workspace', () => {
