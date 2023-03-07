@@ -74,7 +74,9 @@ commands:
     steps:
       - run:
           name: Install PNPM
-          command: npm install --prefix=$HOME/.local -g pnpm@6.32.4
+          command: |
+            corepack enable
+            corepack prepare pnpm@7.29.0 --activate
 
   setup:
     parameters:
