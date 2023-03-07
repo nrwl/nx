@@ -527,7 +527,12 @@ function nestMappedPackages(
   });
 
   if (initialSize === nestedNodes.size) {
-    throw Error('Loop detected while pruning. Please report this issue.');
+    throw new Error(
+      [
+        'Following packages could not be mapped to the NPM lockfile:',
+        ...Array.from(nestedNodes).map((n) => `- ${n.name}`),
+      ].join('\n')
+    );
   } else {
     nestMappedPackages(
       invertedGraph,
