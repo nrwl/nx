@@ -146,7 +146,8 @@
 
 # CI
 /.circleci/** @meeroslav @vsavkin @FrozenPandaz
-/.github/** @meeroslav @vsavkin @FrozenPandaz
+/.github/** @meeroslav @vsavkin @FrozenPandaz @JamesHenry
+/.husky/** @meeroslav @vsavkin @FrozenPandaz
 /packages/workspace/src/generators/ci-workflow/** @meeroslav @StalkAltan @vsavkin
 
 # Global Files
