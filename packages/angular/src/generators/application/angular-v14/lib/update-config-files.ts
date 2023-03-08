@@ -8,7 +8,6 @@ import {
   removeProjectConfiguration,
   updateJson,
 } from '@nrwl/devkit';
-import { replaceAppNameWithPath } from '@nrwl/workspace/src/utils/cli-config-utils';
 import { getRelativePathToRootTsConfig } from '@nrwl/js';
 import { E2eTestRunner, UnitTestRunner } from '../../../../utils/test-runners';
 import type { NormalizedSchema } from './normalized-schema';
@@ -16,6 +15,7 @@ import {
   createTsConfig,
   extractTsConfigBase,
 } from '../../../utils/create-ts-config';
+import { replaceAppNameWithPath } from '../../../../utils/cli-config-utils';
 
 export function updateConfigFiles(host: Tree, options: NormalizedSchema) {
   if (!options.rootProject) {
