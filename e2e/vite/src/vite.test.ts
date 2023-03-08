@@ -13,22 +13,47 @@ import {
   runCLI,
   runCLIAsync,
   runCommandUntil,
+  runCreateWorkspace,
   tmpProjPath,
   uniq,
   updateFile,
   updateProjectConfig,
 } from '@nrwl/e2e/utils';
+import { execSync } from 'child_process';
 
 const myApp = uniq('my-app');
 
 describe('Vite Plugin', () => {
   let proj: string;
 
+  it('katerina test', () => {
+    const result = execSync(
+      'npx --yes create-nx-workspace@16.0.0 proj --preset=react-monorepo --bundler=asdfasd --no-nxCloud --no-interactive --package-manager=npm --appName=kat',
+      {
+        cwd: './tmp',
+        stdio: 'inherit',
+        encoding: 'utf-8',
+        env: { CI: 'true', ...process.env },
+      }
+    );
+
+    console.log('HI KAT', result);
+  });
+
+  it('katerina test 3', () => {
+    runCreateWorkspace('proj', {
+      preset: 'react-monorepo',
+      bundler: 'asdfasd' as any,
+      appName: 'kat',
+      packageManager: 'npm',
+    });
+  });
+
   describe('Vite on React apps', () => {
     describe('convert React webpack app to vite using the vite:configuration generator', () => {
       beforeEach(() => {
         proj = newProject();
-        runCLI(`generate @nrwl/react:app ${myApp} --bundler=webpack`);
+        runCLI(`generate @nrwl/react:app ${myApp} --bundler=kndnjsu`);
         runCLI(`generate @nrwl/vite:configuration ${myApp}`);
       });
       afterEach(() => cleanupProject());
@@ -59,6 +84,23 @@ describe('Vite Plugin', () => {
           `Successfully ran target test for project ${myApp}`
         );
       });
+    });
+
+    describe('set up new React lib with --bundler=none option', () => {
+      const myLib = uniq('my-lib');
+      beforeEach(() => {
+        proj = newProject();
+        runCLI(`generate @nrwl/react:lib ${myLib} --bundler=none`);
+      });
+      afterEach(() => cleanupProject());
+      it('should build application', async () => {
+        console.log(
+          `Katerina will attemps to build non-builable lib with command being "build ${myLib}"`
+        );
+        runCLI(`build ${myLib}`);
+        expect(fileExists(`dist/libs/${myLib}/assets/index.js`)).toBeFalsy();
+        rmDist();
+      }, 200000);
     });
 
     describe('set up new React app with --bundler=vite option', () => {

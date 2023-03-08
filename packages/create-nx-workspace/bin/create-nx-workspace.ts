@@ -252,7 +252,7 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
   } = parsedArgs;
 
   output.log({
-    title: `Nx is creating your v${nxVersion} workspace.`,
+    title: `Katerina, Nx is creating your v${nxVersion} workspace.`,
     bodyLines: [
       'To make sure the command works reliably in all environments, and that the preset is applied correctly,',
       `Nx will run "${packageManager} install" several times. Please wait.`,

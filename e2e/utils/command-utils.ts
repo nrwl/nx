@@ -72,16 +72,16 @@ export function runCommand(
   try {
     const r = execSync(command, {
       cwd: tmpProjPath(),
-      stdio: ['pipe', 'pipe', 'pipe'],
+      stdio: isVerbose() ? 'inherit' : ['pipe', 'pipe', 'pipe'],
       env: {
         ...getStrippedEnvironmentVariables(),
         ...childProcessOptions?.env,
         FORCE_COLOR: 'false',
-      },
+      } as NodeJS.ProcessEnv,
       encoding: 'utf-8',
       ...childProcessOptions,
     }).toString();
-    if (process.env.NX_VERBOSE_LOGGING) {
+    if (isVerbose()) {
       console.log(r);
     }
     return r;
@@ -189,6 +189,7 @@ export function runCommandAsync(
           CI: 'true',
           ...(opts.env || getStrippedEnvironmentVariables()),
           FORCE_COLOR: 'false',
+          NODE_ENV: 'development',
         },
         encoding: 'utf-8',
       },
@@ -218,14 +219,17 @@ export function runCommandUntil(
       CI: 'true',
       ...getStrippedEnvironmentVariables(),
       FORCE_COLOR: 'false',
+      NODE_ENV: 'development',
     },
   });
+
   return new Promise((res, rej) => {
     let output = '';
     let complete = false;
 
     function checkCriteria(c) {
       output += c.toString();
+
       if (criteria(stripConsoleColors(output)) && !complete) {
         complete = true;
         res(p);
@@ -274,8 +278,11 @@ export function runNgAdd(
     packageInstall(packageName, undefined, version);
     return execSync(pmc.run(`ng g ${packageName}:ng-add`, command ?? ''), {
       cwd: tmpProjPath(),
-      stdio: 'pipe',
-      env: { ...(opts.env || getStrippedEnvironmentVariables()) },
+      stdio: isVerbose() ? 'inherit' : 'pipe',
+      env: {
+        ...(opts.env || getStrippedEnvironmentVariables()),
+        NODE_ENV: 'development',
+      },
       encoding: 'utf-8',
     })
       .toString()
@@ -307,15 +314,20 @@ export function runCLI(
     const pm = getPackageManagerCommand();
     const logs = execSync(`${pm.runNx} ${command}`, {
       cwd: opts.cwd || tmpProjPath(),
-      env: { CI: 'true', ...getStrippedEnvironmentVariables(), ...opts.env },
+      env: {
+        CI: 'true',
+        ...getStrippedEnvironmentVariables(),
+        ...opts.env,
+        NODE_ENV: 'development',
+      },
       encoding: 'utf-8',
-      stdio: 'pipe',
+      stdio: isVerbose() ? 'inherit' : 'pipe',
       maxBuffer: 50 * 1024 * 1024,
     });
     const r = stripConsoleColors(logs);
 
     if (isVerbose()) {
-      console.log(logs);
+      console.log('Katerina 1', logs);
     }
 
     const needsMaxWorkers = /g.*(express|nest|node|web|react):app.*/;
@@ -329,7 +341,7 @@ export function runCLI(
       return stripConsoleColors(e.stdout?.toString() + e.stderr?.toString());
     } else {
       logError(
-        `Original command: ${command}`,
+        `Katerina 2 Original command: ${command}`,
         `${e.stdout?.toString()}\n\n${e.stderr?.toString()}`
       );
       throw e;
@@ -348,9 +360,13 @@ export function runLernaCLI(
     const pm = getPackageManagerCommand();
     const logs = execSync(`${pm.runLerna} ${command}`, {
       cwd: opts.cwd || tmpProjPath(),
-      env: { CI: 'true', ...(opts.env || getStrippedEnvironmentVariables()) },
+      env: {
+        CI: 'true',
+        ...(opts.env || getStrippedEnvironmentVariables()),
+        NODE_ENV: 'development',
+      },
       encoding: 'utf-8',
-      stdio: 'pipe',
+      stdio: isVerbose() ? 'inherit' : 'pipe',
       maxBuffer: 50 * 1024 * 1024,
     });
     const r = stripConsoleColors(logs);

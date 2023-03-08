@@ -90,7 +90,7 @@ export function newProject({
     projName = name;
     copySync(`${tmpBackupProjPath()}`, `${tmpProjPath()}`);
 
-    if (process.env.NX_VERBOSE_LOGGING == 'true') {
+    if (isVerbose()) {
       logInfo(`NX`, `E2E test is creating a project: ${tmpProjPath()}`);
     }
     return projScope;
@@ -214,10 +214,15 @@ export function runCreatePlugin(
 
   const create = execSync(command, {
     cwd: e2eCwd,
-    stdio: ['pipe', 'pipe', 'pipe'],
+    stdio: isVerbose() ? 'inherit' : ['pipe', 'pipe', 'pipe'],
     env: process.env,
     encoding: 'utf-8',
   });
+
+  if (isVerbose()) {
+    console.log('Hello 8', create.toString());
+  }
+
   return create ? create.toString() : '';
 }
 
@@ -237,7 +242,7 @@ export function packageInstall(
     `${mode === 'dev' ? pm.addDev : pm.addProd} ${pkgsWithVersions}`,
     {
       cwd,
-      stdio: ['pipe', 'pipe', 'pipe'],
+      stdio: isVerbose() ? 'inherit' : ['pipe', 'pipe', 'pipe'],
       env: process.env,
       encoding: 'utf-8',
     }
@@ -259,7 +264,7 @@ export function runNgNew(
 
   return execSync(command, {
     cwd: e2eCwd,
-    stdio: ['pipe', 'pipe', 'pipe'],
+    stdio: isVerbose() ? 'inherit' : ['pipe', 'pipe', 'pipe'],
     env: process.env,
     encoding: 'utf-8',
   }).toString();
@@ -290,7 +295,7 @@ export function newLernaWorkspace({
       );
     }
 
-    if (process.env.NX_VERBOSE_LOGGING == 'true') {
+    if (isVerbose()) {
       logInfo(`NX`, `E2E test has created a lerna workspace: ${tmpProjPath()}`);
     }
 

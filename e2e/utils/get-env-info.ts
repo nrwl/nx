@@ -52,10 +52,11 @@ export const e2eRoot = isCI
   : '/tmp/nx-e2e';
 
 export function isVerbose() {
-  return (
-    process.env.NX_VERBOSE_LOGGING === 'true' ||
-    process.argv.includes('--verbose')
-  );
+  // return (
+  //   process.env.NX_VERBOSE_LOGGING === 'true' ||
+  //   process.argv.includes('--verbose')
+  // );
+  return true;
 }
 
 export const e2eCwd = `${e2eRoot}/nx`;
