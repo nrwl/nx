@@ -278,12 +278,11 @@ export class ProjectGraphBuilder {
     if (!this.graph.dependencies[sourceProjectName]) {
       this.graph.dependencies[sourceProjectName] = [];
     }
-    // do not add duplicate
-    if (
-      this.graph.dependencies[sourceProjectName].find(
-        (d) => d.target === targetProjectName && d.type === type
-      )
-    ) {
+    const isDuplicate = !!this.graph.dependencies[sourceProjectName].find(
+      (d) => d.target === targetProjectName && d.type === type
+    );
+    // do not add duplicate to project
+    if (isDuplicate && !sourceProjectFile) {
       return;
     }
 
@@ -315,6 +314,10 @@ export class ProjectGraphBuilder {
       if (!fileData.dependencies.find((t) => t.target === targetProjectName)) {
         fileData.dependencies.push(dependency);
       }
+    }
+
+    if (isDuplicate) {
+      return;
     }
 
     this.graph.dependencies[sourceProjectName].push(dependency);
