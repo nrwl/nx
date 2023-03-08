@@ -212,7 +212,7 @@ describe('lib', () => {
         ).toBeTruthy();
         expect(tree.exists('libs/my-dir/my-lib/src/index.ts')).toBeTruthy();
         expect(tree.exists(`libs/my-dir/my-lib/.eslintrc.json`)).toBeTruthy();
-        expect(tree.exists(`libs/my-dir/my-lib/package.json`)).toBeFalsy();
+        expect(tree.exists(`libs/my-dir/my-lib/package.json`)).toBeTruthy();
       });
 
       it('should update project configuration', async () => {
@@ -739,14 +739,14 @@ describe('lib', () => {
         expect(config.targets.build).not.toBeDefined();
       });
 
-      it('should NOT generate the build target if bundler is undefined', async () => {
+      it('should still generate the build target if bundler is undefined', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
           name: 'myLib',
         });
 
         const config = readProjectConfiguration(tree, 'my-lib');
-        expect(config.targets.build).not.toBeDefined();
+        expect(config.targets.build).toBeDefined();
       });
 
       it('should generate the build target', async () => {
