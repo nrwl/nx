@@ -40,7 +40,7 @@ export function logSuccess(title: string, body?: string) {
  * @returns
  */
 export function stripConsoleColors(log: string): string {
-  return log.replace(
+  return log?.replace(
     /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
     ''
   );

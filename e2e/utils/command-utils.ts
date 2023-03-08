@@ -72,16 +72,16 @@ export function runCommand(
   try {
     const r = execSync(command, {
       cwd: tmpProjPath(),
-      stdio: ['pipe', 'pipe', 'pipe'],
+      stdio: isVerbose() ? 'inherit' : 'pipe',
       env: {
         ...getStrippedEnvironmentVariables(),
         ...childProcessOptions?.env,
         FORCE_COLOR: 'false',
-      },
+      } as any,
       encoding: 'utf-8',
       ...childProcessOptions,
-    }).toString();
-    if (process.env.NX_VERBOSE_LOGGING) {
+    })?.toString();
+    if (isVerbose()) {
       console.log(r);
     }
     return r;
@@ -189,7 +189,7 @@ export function runCommandAsync(
           CI: 'true',
           ...(opts.env || getStrippedEnvironmentVariables()),
           FORCE_COLOR: 'false',
-        },
+        } as any,
         encoding: 'utf-8',
       },
       (err, stdout, stderr) => {
@@ -218,14 +218,14 @@ export function runCommandUntil(
       CI: 'true',
       ...getStrippedEnvironmentVariables(),
       FORCE_COLOR: 'false',
-    },
+    } as any,
   });
   return new Promise((res, rej) => {
     let output = '';
     let complete = false;
 
     function checkCriteria(c) {
-      output += c.toString();
+      output += c?.toString();
       if (criteria(stripConsoleColors(output)) && !complete) {
         complete = true;
         res(p);
@@ -274,18 +274,18 @@ export function runNgAdd(
     packageInstall(packageName, undefined, version);
     return execSync(pmc.run(`ng g ${packageName}:ng-add`, command ?? ''), {
       cwd: tmpProjPath(),
-      stdio: 'pipe',
-      env: { ...(opts.env || getStrippedEnvironmentVariables()) },
+      stdio: isVerbose() ? 'inherit' : 'pipe',
+      env: { ...(opts.env || getStrippedEnvironmentVariables()) } as any,
       encoding: 'utf-8',
     })
-      .toString()
-      .replace(
+      ?.toString()
+      ?.replace(
         /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
         ''
       );
   } catch (e) {
     if (opts.silenceError) {
-      return e.stdout.toString();
+      return e.stdout?.toString();
     } else {
       logError(
         `Ng Add failed: ${command}`,
@@ -307,9 +307,13 @@ export function runCLI(
     const pm = getPackageManagerCommand();
     const logs = execSync(`${pm.runNx} ${command}`, {
       cwd: opts.cwd || tmpProjPath(),
-      env: { CI: 'true', ...getStrippedEnvironmentVariables(), ...opts.env },
+      env: {
+        CI: 'true',
+        ...getStrippedEnvironmentVariables(),
+        ...opts.env,
+      } as any,
       encoding: 'utf-8',
-      stdio: 'pipe',
+      stdio: isVerbose() ? 'inherit' : 'pipe',
       maxBuffer: 50 * 1024 * 1024,
     });
     const r = stripConsoleColors(logs);
@@ -348,9 +352,12 @@ export function runLernaCLI(
     const pm = getPackageManagerCommand();
     const logs = execSync(`${pm.runLerna} ${command}`, {
       cwd: opts.cwd || tmpProjPath(),
-      env: { CI: 'true', ...(opts.env || getStrippedEnvironmentVariables()) },
+      env: {
+        CI: 'true',
+        ...(opts.env || getStrippedEnvironmentVariables()),
+      } as any,
       encoding: 'utf-8',
-      stdio: 'pipe',
+      stdio: isVerbose() ? 'inherit' : 'pipe',
       maxBuffer: 50 * 1024 * 1024,
     });
     const r = stripConsoleColors(logs);
@@ -359,7 +366,7 @@ export function runLernaCLI(
       console.log(logs);
     }
 
-    return r;
+    return r ?? logs;
   } catch (e) {
     if (opts.silenceError) {
       return stripConsoleColors(e.stdout?.toString() + e.stderr?.toString());

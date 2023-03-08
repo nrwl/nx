@@ -70,7 +70,7 @@ export function getNpmMajorVersion(): string {
 }
 
 export function getLatestLernaVersion(): string {
-  const lernaVersion = execSync(`npm view lerna version`).toString().trim();
+  const lernaVersion = execSync(`npm view lerna version`)?.toString().trim();
   return lernaVersion;
 }
 
