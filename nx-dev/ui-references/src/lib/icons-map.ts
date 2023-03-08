@@ -20,6 +20,7 @@ export const iconsMap: Record<string, string> = {
   react: '/images/icons/react.svg',
   'react-native': '/images/icons/react.svg',
   rollup: '/images/icons/rollup.svg',
+  rspack: '/images/icons/rspack.svg',
   storybook: '/images/icons/storybook.svg',
   vite: '/images/icons/vite.svg',
   web: '/images/icons/html5.svg',
